@@ -18,7 +18,7 @@ const guestStaleAfter = 30 * 24 * time.Hour
 const guestUsernamePrefix = "guest_"
 
 // registerGuestAccountCleanup schedules a daily job that deletes guest user
-// records (and their cascaded game_states/classifications) that were created
+// records (and their cascaded game_states) that were created
 // more than guestStaleAfter ago and never upgraded to a full account.
 func registerGuestAccountCleanup(app core.App) {
 	app.Cron().MustAdd("guest_account_cleanup", "0 3 * * *", func() {

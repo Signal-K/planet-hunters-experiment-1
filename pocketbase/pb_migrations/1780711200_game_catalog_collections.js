@@ -115,7 +115,6 @@ migrate((app) => {
         { type: 'text',   name: 'difficulty',            max: 10 },
         { type: 'bool',   name: 'locked' },
         { type: 'number', name: 'sequence',              required: true },
-        { type: 'bool',   name: 'requires_classification' },
         { type: 'text',   name: 'unlock_at',             max: 100 },
         { type: 'json',   name: 'requires_minerals',     maxSize: 1000 },
         { type: 'number', name: 'requires_cargo_min' },

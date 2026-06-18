@@ -55,7 +55,7 @@ migrate((app) => {
 
   upsert('rocket_parts', 'slug', [
     { slug: 'hull-mk1', name: 'Hull MK1', part_type: 'chassis', tier: 1, locked: false, img: '/parts/basic_hull_t1.png', mass: 2, cargo_capacity: 6 },
-    { slug: 'hull-mk2', name: 'Hull MK2', part_type: 'chassis', tier: 2, locked: false, img: '/parts/reinforced_hull_t2.png', mass: 3, cargo_capacity: 10 },
+    { slug: 'hull-mk2', name: 'SR2 Unibody Frame', part_type: 'chassis', tier: 2, locked: false, img: '/parts/reinforced_hull_t2.png', mass: 3, cargo_capacity: 10 },
     { slug: 'hull-cargo', name: 'Cargo Bay T1', part_type: 'chassis', tier: 1, locked: false, img: '/parts/cargo_bay_t1.png', mass: 2, cargo_capacity: 14 },
     { slug: 'ion-a1', name: 'Ion Drive A1', part_type: 'propulsion', tier: 1, locked: false, img: '/parts/basic_thruster_t1.png', power: 40, max_orbit: 5 },
     { slug: 'fusion-b2', name: 'Fusion Drive B2', part_type: 'propulsion', tier: 2, locked: false, img: '/parts/fusion_drive_t2.png', power: 80, max_orbit: 7 },
@@ -73,10 +73,8 @@ migrate((app) => {
   ])
 
   upsert('missions_catalog', 'slug', [
-    { slug: 'm1-iron', title: 'Iron Reserve Order', contractor_slug: 'contractor-03a', brief: 'Contractor Slot 03A needs a starter iron shipment from a reachable asteroid.', tag: 'STARTER', difficulty: 'L1', locked: false, sequence: 1, requires_classification: false, unlock_at: '', requires_minerals: JSON.stringify({ iron: 6 }), requires_cargo_min: 6, requires_drill_tier: 1, requires_max_orbit: 4, payout_francs: 1080000, payout_xp: 108, payout_affinity: 10 },
-    { slug: 'm2-silicon', title: 'Silicon Bulk Order', contractor_slug: 'contractor-03b', brief: 'Contractor Slot 03B needs raw silicon for electronics-grade supply contracts.', tag: 'BULK', difficulty: 'L2', locked: false, sequence: 2, requires_classification: false, unlock_at: 'Complete M1', requires_minerals: JSON.stringify({ silicon: 8 }), requires_cargo_min: 8, requires_drill_tier: 1, requires_max_orbit: 5, payout_francs: 2916000, payout_xp: 291.6, payout_affinity: 8 },
-    { slug: 'm3-nickel-cobalt', title: 'Nickel-Cobalt Assay', contractor_slug: 'contractor-04a', brief: 'Contractor Slot 04A wants battery metals from confirmed belt targets only.', tag: 'PROSPECT', difficulty: 'L2', locked: true, sequence: 3, requires_classification: false, unlock_at: 'Complete M2', requires_minerals: JSON.stringify({ nickel: 4, cobalt: 2 }), requires_cargo_min: 6, requires_drill_tier: 2, requires_max_orbit: 5, payout_francs: 5062500, payout_xp: 506.25, payout_affinity: 15 },
-    { slug: 'm4-gold-reserve', title: 'Gold Reserve Run', contractor_slug: 'contractor-04b', brief: 'Contractor Slot 04B has a premium gold order from the main belt.', tag: 'COMMAND', difficulty: 'L3', locked: true, sequence: 4, requires_classification: false, unlock_at: 'Complete M3', requires_minerals: JSON.stringify({ gold: 4 }), requires_cargo_min: 4, requires_drill_tier: 2, requires_max_orbit: 6, payout_francs: 16800000, payout_xp: 1680, payout_affinity: 20 },
+    { slug: 'm1-iron', title: 'Iron Reserve Order', contractor_slug: 'contractor-03a', brief: 'Contractor Slot 03A needs a starter iron shipment from a reachable asteroid.', tag: 'STARTER', difficulty: 'L1', locked: false, sequence: 1, unlock_at: '', requires_minerals: JSON.stringify({ iron: 6 }), requires_cargo_min: 6, requires_drill_tier: 1, requires_max_orbit: 4, payout_francs: 1080000, payout_xp: 108, payout_affinity: 10 },
+    { slug: 'm2-silicon', title: 'Silicon Bulk Order', contractor_slug: 'contractor-03b', brief: 'Contractor Slot 03B needs raw silicon for electronics-grade supply contracts.', tag: 'BULK', difficulty: 'L2', locked: false, sequence: 2, unlock_at: 'Complete M1', requires_minerals: JSON.stringify({ silicon: 8 }), requires_cargo_min: 8, requires_drill_tier: 1, requires_max_orbit: 5, payout_francs: 2916000, payout_xp: 291.6, payout_affinity: 8 },
   ])
 }, (app) => {
   const slugs = {
@@ -85,7 +83,7 @@ migrate((app) => {
     contractors: ['contractor-03a', 'contractor-03b', 'contractor-04a', 'contractor-04b', 'contractor-06a', 'contractor-06b', 'contractor-08a', 'contractor-08b', 'contractor-10a', 'contractor-10b'],
     rocket_parts: ['hull-mk1', 'hull-mk2', 'hull-cargo', 'ion-a1', 'fusion-b2', 'ion-a3', 'hand-drill', 'laser-t2', 'plasma-t3'],
     mission_templates: ['starter-bulk', 'volatile-bulk', 'metal-prospect', 'command-reserve'],
-    missions_catalog: ['m1-iron', 'm2-silicon', 'm3-nickel-cobalt', 'm4-gold-reserve'],
+    missions_catalog: ['m1-iron', 'm2-silicon'],
   }
   for (const [col, list] of Object.entries(slugs)) {
     const inList = list.map(s => `'${s}'`).join(',')

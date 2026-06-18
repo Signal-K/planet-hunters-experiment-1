@@ -25,16 +25,8 @@ const presetCases: Array<{ key: string; assertion: () => void }> = [
     key: 'm2-fab',
     assertion: () => {
       cy.contains('LAUNCH').should('be.visible')
-      cy.contains('Hull MK2').should('be.visible')
+      cy.contains('Starter Rocket 2').should('be.visible')
     },
-  },
-  {
-    key: 'm3-hub',
-    assertion: () => cy.contains('Earth Base').should('be.visible'),
-  },
-  {
-    key: 'freeops',
-    assertion: () => cy.contains('Earth Base').should('be.visible'),
   },
 ]
 
@@ -72,8 +64,7 @@ describe('DEV panel UI', () => {
     cy.get('[data-testid="dev-shortcuts-panel"]').should('be.visible')
     cy.get('[data-testid="dev-group-mission-1"]').should('exist')
     cy.get('[data-testid="dev-group-mission-2"]').should('exist')
-    cy.get('[data-testid="dev-group-mission-3"]').should('exist')
-    cy.get('[data-testid="dev-group-free-ops"]').should('exist')
+    cy.get('[data-testid^="dev-group-"]').should('have.length', 2)
   })
 
   it('each mission group has the expected shot buttons', () => {
@@ -83,11 +74,9 @@ describe('DEV panel UI', () => {
     cy.get('[data-testid="dev-shot-m1-fab"]').should('exist')
     // M2 shots
     cy.get('[data-testid="dev-shot-m2-hub"]').should('exist')
+    cy.get('[data-testid="dev-shot-m2-rocket-buy"]').should('exist')
     cy.get('[data-testid="dev-shot-m2-fab"]').should('exist')
-    // M3 shots
-    cy.get('[data-testid="dev-shot-m3-hub"]').should('exist')
-    // Free Ops
-    cy.get('[data-testid="dev-shot-freeops"]').should('exist')
+    cy.get('[data-testid^="dev-shot-"]').should('have.length', 10)
   })
 
   it('clicking M2 Hub navigates to hub with M2 coach, no Save Progress prompt', () => {
@@ -97,10 +86,18 @@ describe('DEV panel UI', () => {
     cy.contains('Create a free account').should('not.exist')
   })
 
-  it('clicking M2 Fab shows fab screen with SR2 hull', () => {
+  it('clicking M2 rocket purchase shows purchasable SR2', () => {
+    cy.get('[data-testid="dev-shortcuts-toggle"]').click()
+    cy.get('[data-testid="dev-shot-m2-rocket-buy"]').click()
+    cy.contains('Select Rocket').should('be.visible')
+    cy.contains('Starter Rocket 2').should('be.visible')
+    cy.contains('Purchase').should('be.visible')
+  })
+
+  it('clicking M2 Fab shows fab screen after SR2 purchase', () => {
     cy.get('[data-testid="dev-shortcuts-toggle"]').click()
     cy.get('[data-testid="dev-shot-m2-fab"]').click()
-    cy.contains('Hull MK2').should('be.visible')
+    cy.contains('Starter Rocket 2').should('be.visible')
     cy.contains('LAUNCH').should('be.visible')
   })
 

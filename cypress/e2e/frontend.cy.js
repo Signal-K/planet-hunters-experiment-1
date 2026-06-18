@@ -47,55 +47,7 @@ describe('Landnam frontend stack', () => {
             state: { screen: 'hub', tutorial: true },
           },
         }).its('body.state.screen').should('eq', 'hub')
-
-        cy.request({
-          method: 'POST',
-          url: `${pocketbaseUrl}/api/collections/classifications/records`,
-          headers: { Authorization: auth.token },
-          body: {
-            user: user.id,
-            candidate: 'tess-451b',
-            verdict: 'planet',
-          },
-        }).its('body').should('include', {
-          candidate: 'tess-451b',
-          verdict: 'planet',
-        })
       })
     })
-  })
-
-  it('classifies the lightcurve signal and returns to target picking', () => {
-    cy.visit('/game', {
-      onBeforeLoad(win) {
-        win.localStorage.setItem('landnam-game-state-v1', JSON.stringify({
-          screen: 'classify',
-          missionId: 'm3-nickel-cobalt',
-          targetId: null,
-          tutorial: true,
-          doneSteps: {},
-          player: {
-            francs: 9500000000,
-            level: 2,
-            xp: 300,
-            activeMission: null,
-            missionCount: 1,
-            pendingLaunch: false,
-            placed: ['launchpad', 'control'],
-            controlBuilt: true,
-            missionsDone: 2,
-            freeOperations: false,
-          },
-        }))
-      },
-    })
-
-    cy.contains('Classify Signal').should('be.visible')
-    cy.contains('Transit Photometry').should('exist')
-    cy.contains('button', 'Planet').click()
-    cy.contains('Candidate Confirmed').should('be.visible')
-    cy.contains('button', 'Submit Classification').click()
-    cy.contains('Pick Target').should('be.visible')
-    cy.contains('Continue · Build').should('be.visible')
   })
 })

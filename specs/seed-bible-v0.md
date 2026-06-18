@@ -20,7 +20,7 @@ Default build: Hull MK1 chassis + Ion Drive A1 propulsion + Hand Drill. Cargo ca
 
 ### Structures
 
-5 blueprints in `STRUCTURES`: Launchpad (free, always), Control Base (500M, after M1), Satellite Uplink (1.2B, tier 2), Refinery (800M, tier 2), Vehicle Garage (600M, tier 2). Prices are in-game francs.
+Current active onboarding structure: Launchpad (free, always). Refinery and Vehicle Garage remain data placeholders for later design.
 
 ### Market Templates
 
@@ -28,7 +28,7 @@ Default build: Hull MK1 chassis + Ion Drive A1 propulsion + Hand Drill. Cargo ca
 
 ### Mission Templates
 
-4 resource-collection templates map to mission tags: STARTER, BULK, PROSPECT, COMMAND. Each defines eligible mineral keys, cargo range, drill tier min, orbit max, contractor role, payout multiplier, and payout formula. Target scouting and infrastructure templates are reserved for Free Ops/future work.
+Current active onboarding missions are M1 Iron Reserve Order and M2 Silicon Bulk Order. Mission templates can still describe resource-collection tuning, but M3 and later mission rows should not be seeded from older plans.
 
 ## Config JSON vs Schema Work
 

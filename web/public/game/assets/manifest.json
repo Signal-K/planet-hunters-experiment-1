@@ -1,5 +1,13 @@
 {
-  "ship": "/parts/mining_drill_t1.png",
-  "ore_iron": "/parts/cargo_bay_t1.png",
-  "ore_gold": "/parts/cargo_bay_t1.png"
+  "ship_sr1": "/game/assets/ships/ship_sr1.png",
+  "ship_sr2": "/game/assets/ships/ship_sr2.png",
+  "ship_sr3": "/game/assets/ships/ship_sr3.png",
+  "ore_iron":    "/game/assets/ores/ore_iron.png",
+  "ore_silicon": "/game/assets/ores/ore_silicon.png",
+  "ore_ice":     "/game/assets/ores/ore_ice.png",
+  "ore_carbon":  "/game/assets/ores/ore_carbon.png",
+  "ore_nickel":  "/game/assets/ores/ore_nickel.png",
+  "ore_cobalt":  "/game/assets/ores/ore_cobalt.png",
+  "ore_gold":    "/game/assets/ores/ore_gold.png",
+  "ore_rare":    "/game/assets/ores/ore_rare.png"
 }

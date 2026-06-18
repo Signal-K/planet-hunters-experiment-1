@@ -62,31 +62,6 @@ func ensureCollections(app core.App) {
 		}
 	}
 
-	// classifications
-	if _, err := app.FindCollectionByNameOrId("classifications"); err != nil {
-		classifications := core.NewBaseCollection("classifications")
-		classifications.ListRule = types.Pointer("user = @request.auth.id")
-		classifications.ViewRule = types.Pointer("user = @request.auth.id")
-		classifications.CreateRule = types.Pointer("@request.auth.id != \"\" && user = @request.auth.id")
-		classifications.UpdateRule = types.Pointer("user = @request.auth.id")
-		classifications.DeleteRule = types.Pointer("user = @request.auth.id")
-		classifications.Fields.Add(&core.RelationField{
-			Name: "user", Required: true, MaxSelect: 1,
-			CollectionId: users.Id, CascadeDelete: true,
-		})
-		classifications.Fields.Add(&core.TextField{Name: "candidate", Required: true, Max: 80})
-		classifications.Fields.Add(&core.SelectField{
-			Name: "verdict", Required: true, MaxSelect: 1,
-			Values: []string{"planet", "not_planet"},
-		})
-		classifications.Indexes = []string{
-			"CREATE INDEX idx_classifications_user_candidate ON classifications (user, candidate)",
-		}
-		if err := app.Save(classifications); err != nil {
-			log.Printf("failed to save classifications: %v", err)
-		}
-	}
-
 	emptyStr := types.Pointer("")
 
 	// minerals
@@ -193,7 +168,6 @@ func ensureCollections(app core.App) {
 		col.Fields.Add(&core.TextField{Name: "difficulty", Max: 10})
 		col.Fields.Add(&core.BoolField{Name: "locked"})
 		col.Fields.Add(&core.NumberField{Name: "sequence", Required: true})
-		col.Fields.Add(&core.BoolField{Name: "requires_classification"})
 		col.Fields.Add(&core.TextField{Name: "unlock_at", Max: 100})
 		col.Fields.Add(&core.JSONField{Name: "requires_minerals", MaxSize: 1000})
 		col.Fields.Add(&core.NumberField{Name: "requires_cargo_min"})
@@ -401,7 +375,7 @@ func seedCatalog(app core.App) {
 		part
 	}{
 		{"hull-mk1", part{"Hull MK1", "chassis", "/parts/basic_hull_t1.png", 1, false, 2, 6, 0, 0, 0}},
-		{"hull-mk2", part{"Hull MK2", "chassis", "/parts/reinforced_hull_t2.png", 2, false, 3, 10, 0, 0, 0}},
+		{"hull-mk2", part{"SR2 Unibody Frame", "chassis", "/parts/reinforced_hull_t2.png", 2, false, 3, 10, 0, 0, 0}},
 		{"hull-cargo", part{"Cargo Bay T1", "chassis", "/parts/cargo_bay_t1.png", 1, false, 2, 14, 0, 0, 0}},
 		{"ion-a1", part{"Ion Drive A1", "propulsion", "/parts/basic_thruster_t1.png", 1, false, 0, 0, 40, 5, 0}},
 		{"fusion-b2", part{"Fusion Drive B2", "propulsion", "/parts/fusion_drive_t2.png", 2, false, 0, 0, 80, 7, 0}},
@@ -475,8 +449,6 @@ func seedCatalog(app core.App) {
 	missionSeeds := []missionSeed{
 		{"m1-iron", "Iron Reserve Order", "Contractor Slot 03A needs a starter iron shipment from a reachable asteroid.", "contractor-03a", "starter-bulk", "", 1, 6, 10, false, map[string]float64{"iron": 6}},
 		{"m2-silicon", "Silicon Bulk Order", "Contractor Slot 03B needs raw silicon for electronics-grade supply contracts.", "contractor-03b", "volatile-bulk", "Complete M1", 2, 8, 8, false, map[string]float64{"silicon": 8}},
-		{"m3-nickel-cobalt", "Nickel-Cobalt Assay", "Contractor Slot 04A wants battery metals from confirmed belt targets only.", "contractor-04a", "metal-prospect", "Complete M2", 3, 6, 15, true, map[string]float64{"nickel": 4, "cobalt": 2}},
-		{"m4-gold-reserve", "Gold Reserve Run", "Contractor Slot 04B has a premium gold order from the main belt.", "contractor-04b", "command-reserve", "Complete M3", 4, 4, 20, true, map[string]float64{"gold": 4}},
 	}
 	templateBySlug := map[string]missionTemplate{}
 	for _, t := range templates {
@@ -492,7 +464,7 @@ func seedCatalog(app core.App) {
 			"title": m.title, "brief": m.brief,
 			"contractor_slug": m.contractorSlug, "tag": t.tag,
 			"difficulty": t.difficulty, "locked": m.locked,
-			"sequence": m.sequence, "requires_classification": false,
+			"sequence": m.sequence,
 			"unlock_at":          m.unlockAt,
 			"requires_minerals":  m.minerals,
 			"requires_cargo_min": m.amount, "requires_drill_tier": t.drillTier,

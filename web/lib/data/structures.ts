@@ -13,10 +13,8 @@ export const REFINERY_RECIPES: RefineryRecipe[] = [
 
 export const STRUCTURES: StructureBlueprint[] = [
   { id: 'launchpad', name: 'Launchpad',     kind: 'launchpad', cost: 0,          unlocksAt: 'always',      description: 'Rocket assembly and launch operations.' },
-  { id: 'control',   name: 'Control Base',  kind: 'control',   cost: 500_000_000, unlocksAt: 'After M1',     description: 'Mission control center — unlocks contract board.' },
-  { id: 'satellite', name: 'Satellite Uplink', kind: 'satellite', cost: 1_200_000_000, unlocksAt: 'Tier 2',   description: 'Orbital relay for deep-space comms.' },
-  { id: 'refinery',  name: 'Refinery',      kind: 'refinery',  cost: 800_000_000,  unlocksAt: 'Tier 2',     description: 'On-site ore processing increases sale price.' },
-  { id: 'garage',    name: 'Vehicle Garage', kind: 'garage',    cost: 600_000_000,  unlocksAt: 'Tier 2',     description: 'Surface rover maintenance and upgrades.' },
+  { id: 'refinery',  name: 'Refinery',      kind: 'refinery',  cost: 800_000_000,  unlocksAt: 'Pending post-onboarding design', description: 'On-site ore processing increases sale price.' },
+  { id: 'garage',    name: 'Vehicle Garage', kind: 'garage',    cost: 600_000_000,  unlocksAt: 'Pending post-onboarding design', description: 'Surface rover maintenance and upgrades.' },
 ]
 
 export const MARKET_TEMPLATES: MarketTemplate[] = [

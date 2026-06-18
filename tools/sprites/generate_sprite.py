@@ -54,17 +54,26 @@ ASPECT_RATIO_ALIASES = {
 }
 
 STYLE_SUFFIX = (
-    "2D flat vector game sprite, mobile game UI icon style. "
-    "Dark slate blue-grey rounded rectangle body (#1e2d3d) with dark navy outline (#0d1520), "
-    "notched clipped corners on the short ends, subtle lighter inner panel in the centre, "
-    "orange (#f5a623) accent details: one horizontal indicator bar and one filled orange circle indicator, "
-    "small dark dot rivets along the bottom and top edges, "
-    "soft grey oval drop shadow directly beneath the shape, "
-    "white background. "
-    "Flat shading only — no photorealistic gradients, no 3D rendering, no depth-of-field, "
-    "no painterly brushwork, no specular highlights. "
-    "Clean vector illustration, spacecraft module icon, top-down orthographic view. "
-    "Output should look hand-drawn in Figma or Illustrator, not rendered in Blender."
+    "2D flat game sprite icon in the style of Master of Orion 2 or Stellaris unit icons. "
+    "Strict 2D orthographic view — side view for ships, top-down for structures. "
+    "Color palette: hull in muted steel blue-grey (#1e2d3d / #2c4a6b), "
+    "cyan-teal accent trim (#00e5ff / #4ab8c1), amber indicator detail (#f5a623), "
+    "dark navy outline (#0d1520 / #0a0f1e), pure black or transparent background. "
+    "Flat shading ONLY — no gradients, no specular highlights, no ambient occlusion, "
+    "no normal maps, no rim lighting. "
+    "Crisp clean silhouette, single isolated object centered in frame, no scene context. "
+    "Looks like a Figma or Illustrator vector export — NOT a Blender render."
+)
+
+# Passed as negative_prompt to Flux to hard-block photorealistic / 3D styles.
+NEGATIVE_PROMPT = (
+    "3D render, blender, cinema 4d, unreal engine, octane, corona, arnold, "
+    "photorealistic, ray tracing, depth of field, bokeh, ambient occlusion, "
+    "subsurface scattering, specular highlight, normal map, bump map, "
+    "painterly, watercolor, oil painting, sketch, pencil drawing, "
+    "white background, grey background, gradient background, "
+    "scene, landscape, environment, multiple objects, "
+    "person, human, text, label, border, frame, decorative elements"
 )
 
 POLL_INTERVAL = 1.5
@@ -132,6 +141,7 @@ def create_prediction(prompt: str, model_slug: str, token: str, aspect_ratio: st
         body={
             "input": {
                 "prompt": prompt,
+                "negative_prompt": NEGATIVE_PROMPT,
                 "num_outputs": 1,
                 "output_format": "png",
                 "output_quality": 100,

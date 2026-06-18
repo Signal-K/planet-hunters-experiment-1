@@ -13,7 +13,9 @@
       "Edit",
       "Write",
       "Bash",
-      "mcp__knowns__project"
+      "mcp__knowns__project",
+      "mcp__knowns__help",
+      "mcp__Claude_Preview__preview_start"
     ]
   },
   "enabledMcpjsonServers": [

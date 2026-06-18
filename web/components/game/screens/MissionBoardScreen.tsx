@@ -5,7 +5,7 @@ import Image from 'next/image'
 import TopBar from '@/components/ui/TopBar'
 import Panel from '@/components/ui/Panel'
 import StatusPill from '@/components/ui/StatusPill'
-import { compatibleTargetsFor } from '@/lib/data'
+import { compatibleTargetsFor, MISSIONS as AUTHORED_MISSIONS } from '@/lib/data'
 import type { Catalog } from '@/lib/catalog'
 
 interface MissionBoardScreenProps {
@@ -45,7 +45,7 @@ export default function MissionBoardScreen({ onBack, onPick, missionsDone, freeO
       <div style={{ position: 'absolute', inset: 0 }}>
         <Image src="/earth-day.jpg" alt="" fill style={{ objectFit: 'cover', filter: 'brightness(0.3)' }} />
       </div>
-        <TopBar eyebrow={freeOperations ? 'EARTH BASE · FREE OPS' : `EARTH BASE · M${Math.min(missionsDone + 1, 4)}`} title="Mission Board" onBack={onBack} />
+        <TopBar eyebrow={freeOperations ? 'EARTH BASE · FREE OPS' : `EARTH BASE · M${Math.min(missionsDone + 1, AUTHORED_MISSIONS.length)}`} title="Mission Board" onBack={onBack} />
 
       <div style={{ position: 'absolute', inset: 0, paddingTop: hasCoach ? 110 : 72, paddingBottom: hasCoach ? 190 : 96, overflowY: 'auto' }}>
         <div style={{ padding: '0 14px 8px 14px', display: 'flex', alignItems: 'center', gap: 8 }}>

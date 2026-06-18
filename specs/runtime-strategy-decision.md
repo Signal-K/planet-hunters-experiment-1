@@ -77,7 +77,7 @@ Electron was rejected because:
 
 ### 4. UI stays in React
 
-- Screens like Hub, Market, Mission Board, Refinery, Satellite are UI-heavy — they stay in React/Tailwind.
+- Screens like Hub, Market, Mission Board, and Refinery are UI-heavy — they stay in React/Tailwind.
 - Only interactive game scenes (Mining, Transit, Asteroid fields, Rocket animations) move to PixiJS.
 - This avoids a costly full rewrite and preserves the existing 13 screen components.
 

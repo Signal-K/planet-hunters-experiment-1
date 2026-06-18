@@ -2,7 +2,7 @@ import { Graphics, Container } from 'pixi.js'
 import type { Component, ComponentData } from '../types'
 import type { GameObject } from '../GameObject'
 
-export type ShapeKind = 'triangle' | 'circle' | 'rect'
+export type ShapeKind = 'triangle' | 'circle' | 'rect' | 'diamond'
 
 export interface ShapeRendererData {
   type: 'ShapeRenderer'
@@ -75,6 +75,9 @@ export class ShapeRenderer implements Component {
       case 'rect':
         g.rect(-w / 2, -h / 2, w, h)
         break
+      case 'diamond':
+        g.poly([0, -h / 2, w / 2, 0, 0, h / 2, -w / 2, 0])
+        break
     }
     g.fill(fill)
     if (this.strokeColor) {
@@ -91,9 +94,18 @@ export class ShapeRenderer implements Component {
     this.graphics.scale.set(t.scale.x, t.scale.y)
   }
 
+  /** Apply a PixiJS multiply-tint to the graphics (0xffffff = no tint). Draw ores in white
+   * and call this with the mineral color so flashing just resets to 0xffffff. */
+  setTint(tint: number): void {
+    if (this.graphics) this.graphics.tint = tint
+  }
+
   destroy(): void {
-    this.graphics?.destroy()
-    this.graphics = null
+    if (this.graphics) {
+      this.graphics.parent?.removeChild(this.graphics)
+      this.graphics.destroy()
+      this.graphics = null
+    }
   }
 
   toJSON(): ComponentData {

@@ -1,0 +1,78 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+#
+# Generate procedural Landnam assets (space backgrounds, ore icons).
+# Run from the Landnam repo root or from tools/ruby-asset-pipeline/.
+#
+# Usage:
+#   ruby tools/ruby-asset-pipeline/bin/generate_assets ores
+#   ruby tools/ruby-asset-pipeline/bin/generate_assets backgrounds
+#   ruby tools/ruby-asset-pipeline/bin/generate_assets all
+#
+# Output lands in web/public/game/assets/ by default.
+
+$LOAD_PATH.unshift(File.join(__dir__, '..', 'lib'))
+
+require 'space_background'
+require 'ore_icon'
+
+# Resolve web/public/game/assets/ relative to this script regardless of cwd
+REPO_ROOT  = File.expand_path(File.join(__dir__, '..', '..', '..'))
+WEB_ASSETS = File.join(REPO_ROOT, 'web', 'public', 'game', 'assets')
+ORES_DIR   = File.join(WEB_ASSETS, 'ores')
+SHIPS_DIR  = File.join(WEB_ASSETS, 'ships')
+BG_DIR     = File.join(WEB_ASSETS, 'backgrounds')
+
+def generate_ores
+  puts "Generating ore icons → #{ORES_DIR}"
+  paths = OreIcon.generate_all(output_dir: ORES_DIR)
+  paths.each { |p| puts "  ✓ #{File.basename(p)}" }
+end
+
+def generate_backgrounds
+  puts "Generating space backgrounds → #{BG_DIR}"
+
+  # Asteroid-belt scene (close targets, M1)
+  path = SpaceBackground.generate(
+    width: 600, height: 300, seed: 1001,
+    output_path: File.join(BG_DIR, 'mining_asteroid_close.png')
+  )
+  puts "  ✓ #{File.basename(path)}"
+
+  # Far-belt asteroid scene (M2)
+  path = SpaceBackground.generate(
+    width: 600, height: 300, seed: 2002,
+    output_path: File.join(BG_DIR, 'mining_asteroid_far.png')
+  )
+  puts "  ✓ #{File.basename(path)}"
+
+  # Reserved planet-style background palette for future direction.
+  path = SpaceBackground.generate(
+    width: 600, height: 300, seed: 3003,
+    output_path: File.join(BG_DIR, 'mining_planet_exo.png')
+  )
+  puts "  ✓ #{File.basename(path)}"
+
+  # Large star-map background (1024×512 for full map view)
+  path = SpaceBackground.generate(
+    width: 1024, height: 512, seed: 4004,
+    output_path: File.join(BG_DIR, 'starmap.png')
+  )
+  puts "  ✓ #{File.basename(path)}"
+end
+
+command = ARGV[0] || 'all'
+
+case command
+when 'ores'
+  generate_ores
+when 'backgrounds'
+  generate_backgrounds
+when 'all'
+  generate_ores
+  generate_backgrounds
+  puts "\nDone."
+else
+  warn "Unknown command: #{command}. Use: ores | backgrounds | all"
+  exit 1
+end

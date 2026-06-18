@@ -20,6 +20,7 @@ export class GameObject {
   children: GameObject[] = []
   components: Component[] = []
   active = true
+  private _started = false
 
   constructor(id: string, name: string, transform?: Partial<TransformData>) {
     this.id = id
@@ -43,6 +44,8 @@ export class GameObject {
   }
 
   start(): void {
+    if (this._started) return
+    this._started = true
     for (const comp of this.components) comp.start()
     for (const child of this.children) child.start()
   }

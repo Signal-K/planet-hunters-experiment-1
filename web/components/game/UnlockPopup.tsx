@@ -2,7 +2,7 @@
 
 import React from 'react'
 
-type UnlockKind = 'sr2' | 'freeops' | 'loan'
+type UnlockKind = 'sr2' | 'loan'
 
 interface UnlockPopupProps {
   kind: string
@@ -23,27 +23,18 @@ const UNLOCKS: Record<string, {
   eyebrow: string
   title: string
   body: string
-  art: 'rocket' | 'star' | 'coin'
+  art: 'rocket' | 'coin'
   stats: [string, string][]
   cta: string
 }> = {
   sr2: {
     accent: '#3fa9ff',
-    eyebrow: 'Vehicle Unlocked',
+    eyebrow: 'Vehicle Available',
     title: 'STARTER ROCKET 2',
-    body: 'Mission 2 needs 8 silicon — more than SR1 can carry. Hull MK2 holds 10 units. Swap it in the Fabricator before you launch.',
+    body: 'Mission 2 needs 8 silicon — more than SR1 can carry. SR2 holds 10 units and has a stronger drill. Purchase it for 1.3B ▲ in the vehicle selection step before launch.',
     art: 'rocket',
-    stats: [['CARGO', 'MK2 ×1.5'], ['DRIVE', 'FUSION B2'], ['DRILL', 'LASER T2']],
+    stats: [['CARGO', '10 UNITS'], ['COST', '1.3B ▲'], ['DRILL', 'TIER 2']],
     cta: 'Got it',
-  },
-  freeops: {
-    accent: '#f5a623',
-    eyebrow: 'M1–M3 Complete',
-    title: 'FREE OPERATIONS',
-    body: 'You\'re on your own now. The full mission board is open, the Satellite Uplink can classify TESS lightcurves, and every confirmed planet adds 1% to your discovery payouts.',
-    art: 'star',
-    stats: [['MISSIONS', '∞'], ['CLASSIFY', 'ACTIVE'], ['DISCOVERY', '+10%']],
-    cta: 'Take Command',
   },
   loan: {
     accent: '#ffb347',
@@ -84,14 +75,6 @@ function CoinArt() {
   )
 }
 
-function StarArt({ accent }: { accent: string }) {
-  return (
-    <svg width="96" height="96" viewBox="0 0 96 96">
-      <path d="M48 8 L58 38 L90 39 L64 58 L74 90 L48 70 L22 90 L32 58 L6 39 L38 38 Z" fill={accent} stroke="#fff" strokeWidth="1.5" opacity="0.95"/>
-    </svg>
-  )
-}
-
 export default function UnlockPopup({ kind, onClose, onDismiss }: UnlockPopupProps) {
   const u = UNLOCKS[kind] ?? UNLOCKS.sr2
 
@@ -122,7 +105,6 @@ export default function UnlockPopup({ kind, onClose, onDismiss }: UnlockPopupPro
             <div style={{ position: 'absolute', inset: -8, borderRadius: 999, background: `radial-gradient(circle, ${u.accent}44, transparent 70%)` }} />
             {u.art === 'rocket' && <RocketArt accent={u.accent} />}
             {u.art === 'coin' && <CoinArt />}
-            {u.art === 'star' && <StarArt accent={u.accent} />}
           </div>
 
           <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 24, fontWeight: 800, letterSpacing: '0.04em', color: '#fff', textShadow: `0 0 18px ${u.accent}88` }}>{u.title}</div>

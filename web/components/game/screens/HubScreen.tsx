@@ -35,8 +35,6 @@ export default function HubScreen({ player, hasCoach, onGoBuilding, onNav, onUpg
   const effectivePlots: Record<string, number> = {
     ...placementPlots,
     ...(legacyPlaced('launchpad') ? { launchpad: 1 } : {}),
-    ...(legacyPlaced('control') ? { control: 2 } : {}),
-    ...(legacyPlaced('satellite') ? { satellite: 0 } : {}),
   }
 
   useEffect(() => {
@@ -56,7 +54,7 @@ export default function HubScreen({ player, hasCoach, onGoBuilding, onNav, onUpg
     // scales to canvas height). calc(22% - 42px) puts the icon bottom at that boundary so the
     // structure appears planted on the visible grass/soil line on any screen height.
     .map(e => ({ left: e.transform.position.x, bottom: 'calc(22% - 42px)' } as React.CSSProperties))
-  const POST_M3_STRUCTURES = ['control', 'satellite', 'refinery']
+  const POST_M3_STRUCTURES = ['refinery']
   const structureForPlot = (plot: number) => {
     const kind = Object.entries(effectivePlots).find(([, p]) => p === plot)?.[0] ?? null
     if (kind && POST_M3_STRUCTURES.includes(kind) && player.missionsDone < 3) return null
@@ -71,24 +69,6 @@ export default function HubScreen({ player, hasCoach, onGoBuilding, onNav, onUpg
         hot: !!player.pendingLaunch,
         w: 98,
         onClick: () => onGoBuilding('launchpad'),
-      }
-    }
-    if (kind === 'control') {
-      return {
-        kind, label: 'Control',
-        sub: player.missionCount + ' JOBS',
-        status: 'warn' as const,
-        w: 84,
-        onClick: () => onGoBuilding('missions'),
-      }
-    }
-    if (kind === 'satellite') {
-      return {
-        kind, label: 'Satellite',
-        sub: 'SCANNING',
-        status: 'ok' as const,
-        w: 78,
-        onClick: () => onGoBuilding('satellite'),
       }
     }
     if (kind === 'refinery') {
@@ -152,8 +132,8 @@ export default function HubScreen({ player, hasCoach, onGoBuilding, onNav, onUpg
         </div>
       </div>
 
-      {/* Progression card — visible even during tutorial, shifted down when coach pill is present */}
-      <ProgressionCard player={player} onGoBuilding={onGoBuilding} onNav={onNav} top={hasCoach ? 152 : 132} />
+      {/* Progression card — hidden when tutorial coach is active to avoid conflicting guidance */}
+      {!hasCoach && <ProgressionCard player={player} onGoBuilding={onGoBuilding} onNav={onNav} top={132} />}
 
       {/* Surface buildings */}
       <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}>
@@ -181,6 +161,11 @@ export default function HubScreen({ player, hasCoach, onGoBuilding, onNav, onUpg
               <button onClick={() => onGoBuilding('build')} style={{ padding: '5px 14px', background: 'rgba(57,211,106,0.15)', backdropFilter: 'blur(6px)', border: '1px solid rgba(57,211,106,0.5)', borderRadius: 999, fontFamily: 'var(--ln-font-display)', fontSize: 9, fontWeight: 700, letterSpacing: '0.14em', color: '#39d36a', textTransform: 'uppercase', cursor: 'pointer' }}>
                 + New Structure
               </button>
+              {player.placed.includes('launchpad') && (
+                <button onClick={() => onGoBuilding('hangar')} style={{ padding: '5px 14px', background: 'rgba(135,207,250,0.12)', backdropFilter: 'blur(6px)', border: '1px solid rgba(135,207,250,0.4)', borderRadius: 999, fontFamily: 'var(--ln-font-display)', fontSize: 9, fontWeight: 700, letterSpacing: '0.14em', color: '#9EDCFF', textTransform: 'uppercase', cursor: 'pointer' }}>
+                  Hangar
+                </button>
+              )}
               {player.placed.includes('launchpad') && !player.launchpadUpgraded && onUpgradeLaunchpad && (
                 <button onClick={onUpgradeLaunchpad} style={{ padding: '5px 14px', background: 'rgba(245,166,35,0.15)', backdropFilter: 'blur(6px)', border: '1px solid rgba(245,166,35,0.5)', borderRadius: 999, fontFamily: 'var(--ln-font-display)', fontSize: 9, fontWeight: 700, letterSpacing: '0.14em', color: '#f5a623', textTransform: 'uppercase', cursor: 'pointer' }}>
                   Upgrade Launchpad (₣1B)

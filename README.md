@@ -2,13 +2,13 @@
 
 ![Spec Coverage](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/YOUR_USERNAME/YOUR_GIST_ID/raw/spec-coverage.json)
 
-A hybrid resource management game and citizen science platform where players explore the solar system, conduct mining missions to real astronomical targets, and contribute to actual scientific discovery.
+A resource management game where players build a launchpad, buy single-use starter rockets, accept contractor jobs, fly to nearby targets, mine minerals, sell cargo, and reinvest.
 
 > **Migration complete:** Landnam is now 100% Next.js/React — no Godot dependencies. The legacy Godot project (`scene/`) is excluded from the repository and is not used in any build or development workflow.
 
 ## 🎮 Game Overview
 
-Landnám combines economic progression with authentic data from space telescopes. In the current release path, players scan the cosmos using real TESS-style planet-candidate data, select targets for resource extraction missions, and analyze celestial objects in a planet-hunting loop that mirrors real astronomical research workflows.
+Landnám’s current release path is focused on the onboarding mining loop. M1 teaches launchpad, mission, target, preflight, mining, and debrief. M2 teaches the newer SR2 purchase flow with a larger single-use starter rocket. M3 is not yet fully described and should not be implemented or documented from older plans.
 
 ## 📋 Spec-Driven Development
 
@@ -35,16 +35,13 @@ See [Specifications Index](/.knowns/docs/specs/specifications-index.md) for comp
 ### Prerequisites
 
 - Node.js 18+
-- Supabase (local or remote)
+- Node.js 18+
 
 ### Setup
 
 ```bash
 # Install dependencies
 npm install
-
-# Start Supabase (local)
-supabase start
 
 # Run development server
 npm run dev
@@ -75,9 +72,9 @@ npx cypress run
 
 ## 📊 Project Status
 
-- **Mission System**: 5 missions implemented (M1-M5)
-- **Citizen Science**: Integration planned
-- **Platforms**: Web, Desktop (Electron)
+- **Mission System**: active onboarding data is M1-M2
+- **M3**: pending new product direction
+- **Platforms**: Web/PWA
 
 ## 🔗 Links
 

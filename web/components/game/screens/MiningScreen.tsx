@@ -8,10 +8,11 @@ import { PrimaryBtn } from '@/components/ui/Button'
 import MiningCanvas from './MiningCanvas'
 
 const MINING_GUIDE = [
-  { label: 'FIRE LASER', desc: 'Fires your mining laser at the asteroid. Collect ore by hitting ore veins.' },
+  { label: 'FIRE LASER', desc: 'Fires your mining laser at the asteroid. Collect ore by hitting ore veins (Space/F).' },
+  { label: 'DRONE STATUS', desc: 'Your automated drone helps stabilize the craft and collects nearby floating debris.' },
+  { label: 'INVENTORY', desc: 'Shows collected vs. required per mineral. Fill all slots to unlock return.' },
+  { label: 'MISSION GOALS', desc: 'Combined ore progress and value context for the current contract.' },
   { label: 'RETURN HOME', desc: 'Return to base. Only enabled once your cargo meets the mission order.' },
-  { label: 'ORE COUNTER', desc: 'Shows collected vs. required per mineral. Fill all slots to unlock return.' },
-  { label: 'TOTAL', desc: 'Combined ore progress across all required minerals for this contract.' },
 ]
 
 export default function MiningScreen({ mission, target, onComplete, onBack, minerals }: {
@@ -21,9 +22,11 @@ export default function MiningScreen({ mission, target, onComplete, onBack, mine
   onBack: () => void
   minerals: Record<string, MineralMeta>
 }) {
+  const MAX_CHARGES = 5
   const cargoRef = useRef<Record<string, number>>({})
   const [cargo, setCargo] = useState<Record<string, number>>({})
   const fireRef = useRef<(() => void) | null>(null)
+  const [laserCharges, setLaserCharges] = useState(MAX_CHARGES)
 
   const orderFilled = Object.entries(mission.requires.minerals).every(
     ([id, amount]) => (cargoRef.current[id] ?? 0) >= amount
@@ -35,9 +38,18 @@ export default function MiningScreen({ mission, target, onComplete, onBack, mine
       [mineral]: (cargoRef.current[mineral] ?? 0) + 1,
     }
     setCargo(cargoRef.current)
-  }, [])
+    setLaserCharges(c => Math.min(MAX_CHARGES, c + 1))
+  }, [MAX_CHARGES])
+
+  // Slow auto-recharge: +1 charge every 2s
+  useEffect(() => {
+    const timer = setInterval(() => setLaserCharges(c => Math.min(MAX_CHARGES, c + 1)), 2000)
+    return () => clearInterval(timer)
+  }, [MAX_CHARGES])
 
   function fireLaser() {
+    if (laserCharges <= 0) return
+    setLaserCharges(c => c - 1)
     fireRef.current?.()
   }
 
@@ -50,7 +62,8 @@ export default function MiningScreen({ mission, target, onComplete, onBack, mine
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [laserCharges])
 
   function handleReturn() {
     if (orderFilled) onComplete(cargoRef.current)
@@ -78,6 +91,8 @@ export default function MiningScreen({ mission, target, onComplete, onBack, mine
           </div>
         </div>
       )}
+
+      <div style={{ height: 148, flexShrink: 0 }} />
 
       <div className="mining-viewport">
         <div className="mining-stars" />
@@ -117,13 +132,31 @@ export default function MiningScreen({ mission, target, onComplete, onBack, mine
         </Panel>
 
         <div className="mining-actions">
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '2px 2px' }}>
+            <span style={{ fontFamily: 'var(--ln-font-display)', fontSize: 9, fontWeight: 800, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'var(--ln-text-muted)' }}>
+              Laser Energy
+            </span>
+            <span style={{ display: 'inline-flex', gap: 6, alignItems: 'center' }}>
+              {Array.from({ length: MAX_CHARGES }, (_, i) => (
+                <span key={i} style={{
+                  display: 'inline-block', width: 10, height: 10, borderRadius: '50%',
+                  background: i < laserCharges ? 'var(--ln-cyan)' : 'rgba(255,255,255,0.1)',
+                  boxShadow: i < laserCharges ? '0 0 6px var(--ln-cyan)' : 'none',
+                  transition: 'background 200ms, box-shadow 200ms',
+                }} />
+              ))}
+              <span style={{ fontFamily: 'var(--ln-font-mono)', fontSize: 11, color: laserCharges > 0 ? 'var(--ln-cyan-bright)' : 'var(--ln-text-muted)', marginLeft: 4, minWidth: 24, textAlign: 'right' }}>
+                {laserCharges}/{MAX_CHARGES}
+              </span>
+            </span>
+          </div>
           <PrimaryBtn
             kind="cyan"
-            disabled={false}
+            disabled={laserCharges <= 0}
             testId="fire-laser-btn"
             onClick={fireLaser}
           >
-            FIRE LASER
+            {laserCharges > 0 ? 'FIRE LASER' : 'CHARGING…'}
           </PrimaryBtn>
           <PrimaryBtn
             kind="amber"

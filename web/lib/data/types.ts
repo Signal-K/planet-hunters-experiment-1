@@ -9,7 +9,6 @@ export interface Mission {
   difficulty: string
   locked: boolean
   sequence: number
-  requiresClassification?: boolean
   unlockAt?: string
   requires: {
     minerals: Record<string, number>
@@ -129,6 +128,18 @@ export interface Star {
   dist: string
 }
 
+export interface StarterRocket {
+  id: string
+  name: string
+  tier: number
+  costFrancs: number
+  missionsRequired: number
+  locked: boolean
+  stats: { cargo: number; maxOrbit: number; drillTier: number }
+  img: string
+  unlockHint: string
+}
+
 export interface TutorialStep {
   id: number
   screen: string
@@ -137,7 +148,7 @@ export interface TutorialStep {
   action?: string
   manual?: boolean
   anchor: 'top' | 'bottom' | 'center'
-  spot: { x: number; y: number; w: number; h: number } | null
+  spot: { x: number; y: number; w: number; h: number; fromBottom?: boolean } | null
   cta: string
 }
 

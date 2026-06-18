@@ -46,7 +46,6 @@ export function toMission(r: any): Mission {
     difficulty: r.difficulty ?? 'L1',
     locked: r.locked ?? false,
     sequence: r.sequence,
-    requiresClassification: r.requires_classification ?? false,
     unlockAt: r.unlock_at || undefined,
     requires: {
       minerals,

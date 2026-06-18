@@ -29,24 +29,6 @@ export function Building({ kind, label, sub, status, hot, w, style, onClick }: B
             {hot && <circle cx="66" cy="54" r="18" fill="#f5a623" opacity="0.15"><animate attributeName="r" values="16;22;16" dur="1.6s" repeatCount="indefinite"/></circle>}
           </svg>
         )}
-        {kind === 'control' && (
-          <svg width={w} height={w * 0.6} viewBox="0 0 84 60">
-            <rect x="8" y="14" width="68" height="42" rx="3" fill="#0e1c2e" stroke="#f5a623" strokeWidth="1.2"/>
-            <rect x="14" y="20" width="22" height="16" rx="2" fill="#1a2e44" stroke="#3fa9ff" strokeWidth="0.8"/>
-            <rect x="14" y="42" width="56" height="6" fill="#1a3050"/>
-            <circle cx="30" cy="28" r="3" fill="#f5a623" opacity="0.9"/>
-            <rect x="44" y="20" width="24" height="16" rx="2" fill="#1a2e44" stroke="#3fa9ff" strokeWidth="0.8"/>
-          </svg>
-        )}
-        {kind === 'satellite' && (
-          <svg width={w} height={w * 0.6} viewBox="0 0 78 60">
-            <rect x="28" y="16" width="22" height="28" rx="3" fill="#0e1c2e" stroke="#39d36a" strokeWidth="1.2"/>
-            <rect x="4" y="24" width="24" height="12" fill="#1a3050" stroke="#3fa9ff" strokeWidth="0.8" rx="1"/>
-            <rect x="50" y="24" width="24" height="12" fill="#1a3050" stroke="#3fa9ff" strokeWidth="0.8" rx="1"/>
-            <circle cx="39" cy="30" r="4" fill="#39d36a" opacity="0.8"/>
-            <line x1="39" y1="10" x2="39" y2="16" stroke="#a9b8ce" strokeWidth="1.5"/>
-          </svg>
-        )}
         {kind === 'refinery' && (
           <svg width={w} height={w * 0.6} viewBox="0 0 84 60">
             <rect x="6" y="20" width="72" height="30" rx="3" fill="#0e1c2e" stroke="#f5a623" strokeWidth="1.2"/>

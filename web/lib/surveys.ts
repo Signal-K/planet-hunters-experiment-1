@@ -45,7 +45,7 @@ export const SURVEY_DEFS: Record<string, Survey> = {
     id: '019e5a4e-6b23-0000-dbb1-0bed0fad9910',
     name: 'Landnám: Mission Difficulty Friction',
     questions: [
-      { id: 'dc3d2d2a-b5d1-4486-8706-7e8a99bc1394', type: 'multiple_choice', question: 'What part of the mission was most difficult?', choices: ['Knowing where to go next', 'Mining — too hard or too slow', 'Managing my budget', 'Understanding the scanner', 'The contractor system', 'Nothing was too hard'] },
+      { id: 'dc3d2d2a-b5d1-4486-8706-7e8a99bc1394', type: 'multiple_choice', question: 'What part of the mission was most difficult?', choices: ['Knowing where to go next', 'Mining — too hard or too slow', 'Managing my budget', 'Buying the right rocket', 'The contractor system', 'Nothing was too hard'] },
       { id: '5290ee4c-d52c-4dac-8b39-3e430531fdec', type: 'rating', question: 'How frustrated did you feel?', scale: 5 },
     ],
   },
@@ -57,17 +57,9 @@ export const SURVEY_DEFS: Record<string, Survey> = {
       { id: 'ccf81db7-dd5c-430a-ae75-a58532bbd72c', type: 'rating', question: 'How satisfying was completing that mission?', scale: 5 },
     ],
   },
-  lnm_planet_discovery: {
-    id: '019e5a4e-6528-0000-b69d-e5745079ffd5',
-    name: 'Landnám: Planet Discovery Excitement',
-    questions: [
-      { id: 'eca91038-cef1-40df-9029-21f1be12c892', type: 'rating', question: 'How exciting was it to find your first planet candidate?', scale: 5 },
-      { id: '3c06c2ed-5607-46e9-a27d-2c30e0d01758', type: 'multiple_choice', question: 'Did you know this is a real unconfirmed exoplanet candidate from TESS data?', choices: ['Yes — that is why I use the scanner', 'Yes, I had read about it', 'No — I had no idea!', 'I suspected but was not sure'] },
-    ],
-  },
   lnm_end_of_content: {
     id: '019e5a4e-532f-0000-da2b-18527d4e3299',
-    name: 'Landnám: End of Content (M4)',
+    name: 'Landnám: End of Current Content',
     questions: [
       { id: '66066619-9456-4c0e-b03e-2e727ed16f01', type: 'rating', question: 'Overall, how would you rate your Landnám experience?', scale: 5 },
       { id: '36c5efc0-60da-4118-af26-717f3560e2e7', type: 'multiple_choice', question: 'What would keep you playing if there was more content?', choices: ['More missions and story', 'New mechanics or ships', 'Competitive or co-op play', 'Deeper planet science', 'Better rewards and progression', 'Nothing — I am done for now'] },

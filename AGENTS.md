@@ -13,7 +13,7 @@ If the parent Knowns project is not writable, write proposed task/doc/context up
 
 Landnam uses three PocketBase instances. If parent repo is accessible, read `@doc/backend-architecture` for full detail. If sandboxed:
 
-- **Shared backend** (port 8090) — auth + astronomy (celestial_bodies, classifications, ecosystem_profiles)
+- **Shared backend** (port 8090) — auth + shared platform data
 - **Landnam backend** (port 8091 Docker / 8093 local) — game state (game_states, minerals, contractors, locations, rocket_parts, missions_catalog)
 - **Saily backend** (port 8092) — game state
 

@@ -43,11 +43,11 @@ describe('suggestBuild', () => {
   })
 
   it('suggests best available drill when mission requires locked tier', () => {
-    // M3 requires drill_tier: 2 but laser-t2 is unavailable until after M1.
-    // suggestBuild should fall back to the best available drill (laser-t2 at missionsDone >= 1).
-    const m3 = MISSIONS.find(m => m.id === 'm3-nickel-cobalt')!
+    // A higher-tier drill requirement should use laser-t2 once it is available after M1.
+    const m2 = MISSIONS.find(m => m.id === 'm2-silicon')!
+    const missionWithDrill2 = { ...m2, requires: { ...m2.requires, drill_tier: 2 } }
     const belt = TARGETS.find(t => t.id === 'belt')!
-    const build = suggestBuild({ mission: m3, target: belt, missionsDone: 2, parts: PARTS })
+    const build = suggestBuild({ mission: missionWithDrill2, target: belt, missionsDone: 2, parts: PARTS })
     expect(build.drill).toBe('laser-t2')
   })
 
@@ -95,10 +95,10 @@ describe('validateBuild', () => {
   })
 
   it('flags propulsion that cannot reach the target orbit', () => {
-    const m3 = MISSIONS.find(m => m.id === 'm3-nickel-cobalt')!
+    const m2 = MISSIONS.find(m => m.id === 'm2-silicon')!
     const farTarget = TARGETS.find(t => t.id === 'jupiter')!
     const result = validateBuild({
-      mission: m3,
+      mission: m2,
       target: farTarget,
       rocket: { chassis: 'hull-mk1', propulsion: 'ion-a1', drill: 'hand-drill' },
       parts: PARTS,
@@ -191,6 +191,6 @@ describe('seed bible v0 catalog', () => {
   it('builds resource-collection missions from mission templates', () => {
     expect(MISSION_TEMPLATES.every(t => t.mineralKeys.length > 0)).toBe(true)
     expect(MISSIONS.every(m => MISSION_TEMPLATES.some(t => t.tag === m.tag))).toBe(true)
-    expect(MISSIONS.every(m => !m.requiresClassification)).toBe(true)
+    expect(MISSIONS.map(m => m.id)).toEqual(['m1-iron', 'm2-silicon'])
   })
 })

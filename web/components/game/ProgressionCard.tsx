@@ -98,15 +98,16 @@ export default function ProgressionCard({ player, onGoBuilding, onNav, top = 132
     )
   }
 
-  // Star Map card — always visible; discovered count derived from missionsDone
-  // (each completed mission unlocks a new target system).
+  // Star Map card — always visible; discovered count derived from seen_planets
+  // with a fallback to missionsDone for legacy sessions.
+  const discoveredCount = Math.max(player.seen_planets?.length ?? 0, player.missionsDone)
   cards.push(
     <CardButton
       key="star-map"
       testId="progression-card-star-map"
       accent="#c87cff"
       eyebrow="Star Map"
-      title={`Discovered: ${player.missionsDone} / ???`}
+      title={`Discovered: ${discoveredCount} / ???`}
       cta="Explore"
       onClick={() => onNav('missions')}
     />
@@ -115,7 +116,7 @@ export default function ProgressionCard({ player, onGoBuilding, onNav, top = 132
   if (cards.length === 0) return null
 
   return (
-    <div style={{ position: 'absolute', left: 14, right: 14, top, zIndex: 8, maxWidth: 300, pointerEvents: 'auto', display: 'flex', flexDirection: 'column', gap: 6 }}>
+    <div style={{ position: 'absolute', right: 14, top, zIndex: 8, width: 'calc(100% - 28px)', maxWidth: 280, pointerEvents: 'auto', display: 'flex', flexDirection: 'column', gap: 6 }}>
       {cards}
     </div>
   )

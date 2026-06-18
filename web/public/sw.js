@@ -2,7 +2,7 @@
 // pass-through for PocketBase API calls so the game handles cold-start
 // delays itself rather than serving stale API responses.
 
-const CACHE = 'landnam-shell-v2'
+const CACHE = 'landnam-shell-v3'
 
 const SHELL = [
   '/',
@@ -51,7 +51,8 @@ self.addEventListener('fetch', event => {
     event.respondWith(
       fetch(request)
         .then(res => {
-          caches.open(CACHE).then(c => c.put(request, res.clone()))
+          const toCache = res.clone()
+          caches.open(CACHE).then(c => c.put(request, toCache))
           return res
         })
         .catch(() => caches.match(request))
@@ -66,7 +67,10 @@ self.addEventListener('fetch', event => {
       caches.match(request).then(cached => {
         if (cached) return cached
         return fetch(request).then(res => {
-          if (res.ok) caches.open(CACHE).then(c => c.put(request, res.clone()))
+          if (res.ok) {
+            const toCache = res.clone()
+            caches.open(CACHE).then(c => c.put(request, toCache))
+          }
           return res
         })
       })
@@ -78,7 +82,10 @@ self.addEventListener('fetch', event => {
   event.respondWith(
     fetch(request)
       .then(res => {
-        if (res.ok) caches.open(CACHE).then(c => c.put(request, res.clone()))
+        if (res.ok) {
+          const toCache = res.clone()
+          caches.open(CACHE).then(c => c.put(request, toCache))
+        }
         return res
       })
       .catch(async () => {

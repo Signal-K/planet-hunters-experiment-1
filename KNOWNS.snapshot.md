@@ -35,18 +35,10 @@ If the parent repo is not accessible, write the proposed worklog record into `.k
 - @task-0u1hg4 Fix tutorial popup covering contractor panel buttons + unreadable Choose button colour [urgent priority=high labels=project-landnam,bug,tutorial,ui,contractors,desktop,experiment1]
 - @task-illty2 Add welcoming intro message for first sign-in and progress reset [todo priority=medium labels=project-landnam,ux,tutorial,onboarding,desktop,experiment1]
 - @task-LANvzpwke Scrap and redesign tutorial system from scratch [archived priority=high labels=project-landnam,godot,tutorial,ux,architecture] — Obsoleted by web migration; Godot removed
-- @task-LANaa6vht Remove M4 dead code and non-v1 mission references from codebase [archived priority=medium labels=project-landnam,godot,missions,cleanup,deferred] — Obsoleted by web migration; Godot removed
-- @task-LANi7qewb Purge Scanner/Satellite Station from active codebase (deferred feature) [archived priority=medium labels=project-landnam,godot,cleanup,scanner,deferred] — Obsoleted by web migration; Godot removed
-- @task-LANpcdjg5 Fix M3 review overlay — replace ColorRect.new() with ModalBase.tscn [archived priority=medium labels=project-landnam,godot,ui,cleanup] — Obsoleted by web migration; Godot removed
-- @task-LANnledn7 Fix ControlStation.gd UIManager discovery — replace group-search with autoload ref [archived priority=medium labels=project-landnam,godot,architecture,cleanup] — Obsoleted by web migration; Godot removed
 - @task-LANnlucrn Landnam Health Audit - Review [in-progress priority=medium labels=project-landnam,documentation,quality]
-- @task-LANfwf2jt Verify live consensus and rewards after production classification fix [blocked priority=high]
 - @task-LANxgcipb Future: redesign asteroid review flow for parity with planet hunters [todo priority=low labels=project-landnam,deferred,asteroids,design,post-release]
-- @task-LANlkzqm0 Future: penalties for incorrect unconfirmed-target classifications [blocked priority=low labels=project-landnam,citizen-science,future,balancing]
 - @task-45wpy1 Generate advanced R&D room batch [blocked priority=medium labels=project-landnam,art-pipeline,rooms,future-content]
 - @task-LANkgu42s Generate usage-state variant pack for all rooms [blocked priority=high labels=project-landnam,art-pipeline,states,rooms]
-- @task-LANxx1lbc Run prompt batches L3 progression sets (M4 + Free Ops) [blocked priority=high labels=project-landnam,art-pipeline,rooms,prompts]
-- @task-LANci4oe8 Run prompt batches L2 progression sets (M2 + M3) [blocked priority=high labels=project-landnam,art-pipeline,rooms,prompts]
 - @task-LANj6tbdr Run prompt batch L1/M1 StarterRocket1 core set [blocked priority=high labels=project-landnam,art-pipeline,rooms,prompts]
 - @task-5el2jk Improve mobile UI panel - start with asteroid bundler [on-hold priority=medium labels=project-landnam,ui,mobile,improvements,panels]
 
@@ -65,7 +57,6 @@ If the parent repo is not accessible, write the proposed worklog record into `.k
 - @task-gkl8b9 Fix mobile zoom and layout issues across all game screens [done priority=high labels=project-landnam,mobile,ui,zoom,layout]
 - @task-g1ezj2 SHOW HUD button covers mining session goals on mobile [done priority=high labels=project-landnam,mobile,ux,hud,mining]
 - @task-fwzxys Fix survey triggers: gate surveys behind mechanic use [done priority=high labels=project-landnam,surveys,ux,mobile]
-- @task-xh84lt Design the Control Station active mission card [done priority=high labels=project-landnam]
 - @task-vvgprh Set up experience system [done priority=medium labels=project-landnam,Experience,Research,Launch,Data]
 - @task-gd6xvv New players see pre-built game state on fresh load — committed dev save files in repo [archived priority=high labels=project-landnam,critical,bug,save-state,godot,vercel] — Obsoleted by web migration; Godot removed
 - @task-oqovlg Write in-universe project briefs for the 6 named contractors [done priority=low labels=project-landnam]

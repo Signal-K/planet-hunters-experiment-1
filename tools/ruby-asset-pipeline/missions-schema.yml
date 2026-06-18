@@ -1,8 +1,6 @@
 # Mission/template definition schema for Landnam resource-collection missions.
 #
-# The v0 seed uses template-driven resource_collection missions only. Target
-# scouting and infrastructure mission types are intentionally reserved for
-# later Free Ops work.
+# The current seed uses active onboarding resource_collection missions only.
 #
 # Schema:
 #
@@ -143,53 +141,4 @@ missions:
     reward:
       affinity: 8
 
-  - id: m3-nickel-cobalt
-    template: metal-prospect
-    title: Nickel-Cobalt Assay
-    brief: Contractor Slot 04A wants battery metals from confirmed belt targets only.
-    contractor: contractor-04a
-    sequence: 3
-    locked: true
-    unlock:
-      requires_mission: m2-silicon
-      label: Complete M2
-    requires:
-      minerals:
-        nickel: 4
-        cobalt: 2
-    reward:
-      affinity: 15
-
-  - id: m4-gold-reserve
-    template: command-reserve
-    title: Gold Reserve Run
-    brief: Contractor Slot 04B has a premium gold order from the main belt.
-    contractor: contractor-04b
-    sequence: 4
-    locked: true
-    unlock:
-      requires_mission: m3-nickel-cobalt
-      label: Complete M3
-    requires:
-      minerals:
-        gold: 4
-    reward:
-      affinity: 20
-    events:
-      - trigger: debrief_complete
-        kind: screen_transition
-        payload:
-          target_screen: hub
-          toast: "Free Operations unlocked — explore on your own"
-
-event_chains:
-  - id: m3-handoff
-    trigger: fires_after_mission
-    mission_id: m3-nickel-cobalt
-    events:
-      - kind: toast
-        payload:
-          message: "M3 complete — Free Operations begins"
-      - kind: screen_transition
-        payload:
-          target_screen: hub
+event_chains: []

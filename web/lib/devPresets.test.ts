@@ -5,12 +5,12 @@ import { resolvePreset, DEV_GROUPS } from './devPresets'
 const ALL_KEYS = DEV_GROUPS.flatMap(g => g.shots.map(s => s.key))
 
 describe('DEV_GROUPS', () => {
-  it('has at least one group per tutorial mission plus free ops', () => {
+  it('has groups for the currently active onboarding missions', () => {
     const labels = DEV_GROUPS.map(g => g.label)
     expect(labels).toContain('Mission 1')
     expect(labels).toContain('Mission 2')
-    expect(labels).toContain('Mission 3')
-    expect(labels).toContain('Free Ops')
+    expect(labels).not.toContain('Mission 3')
+    expect(labels).toHaveLength(2)
   })
 
   it('every shot key resolves to a non-null preset', () => {
@@ -93,7 +93,20 @@ describe('resolvePreset — Mission 2 arc', () => {
     expect(p.doneSteps![20]).toBeUndefined()
   })
 
-  it('m2-fab: missionsDone=1, fab screen, SR2 config, M2 mission + eros', () => {
+  it('m2-rocket-buy: missionsDone=1, rocket purchase screen, M2 mission + eros', () => {
+    const p = resolvePreset('m2-rocket-buy')!
+    expect(p.screen).toBe('rocket-buy')
+    expect(p.player!.missionsDone).toBe(1)
+    expect(p.missionId).toBe('m2-silicon')
+    expect(p.targetId).toBe('eros')
+    expect(p.rocket!.chassis).toBe('hull-mk1')
+    expect(p.rocket!.propulsion).toBe('ion-a1')
+    expect(p.rocket!.drill).toBe('hand-drill')
+    expect(p.doneSteps![20]).toBe(true)
+    expect(p.doneSteps![21]).toBeUndefined()
+  })
+
+  it('m2-fab: missionsDone=1, fab screen after SR2 purchase, M2 mission + eros', () => {
     const p = resolvePreset('m2-fab')!
     expect(p.screen).toBe('fab')
     expect(p.player!.missionsDone).toBe(1)
@@ -102,9 +115,9 @@ describe('resolvePreset — Mission 2 arc', () => {
     expect(p.rocket!.chassis).toBe('hull-mk2')
     expect(p.rocket!.propulsion).toBe('fusion-b2')
     expect(p.rocket!.drill).toBe('laser-t2')
-    // Step 20 done (hub coach seen), step 21 not yet (fab coach should show)
+    // Steps 20 and 21 are done before arriving at the post-purchase fab screen.
     expect(p.doneSteps![20]).toBe(true)
-    expect(p.doneSteps![21]).toBeUndefined()
+    expect(p.doneSteps![21]).toBe(true)
   })
 
   it('m2-mining: missionsDone=1, mining screen with active M2 mission', () => {
@@ -123,37 +136,7 @@ describe('resolvePreset — Mission 2 arc', () => {
   })
 })
 
-describe('resolvePreset — Mission 3 arc', () => {
-  it('m3-hub: missionsDone=2, hub, control station built', () => {
-    const p = resolvePreset('m3-hub')!
-    expect(p.screen).toBe('hub')
-    expect(p.player!.missionsDone).toBe(2)
-    expect(p.player!.controlBuilt).toBe(true)
-    expect(p.player!.placed).toContain('control')
-  })
-
-  it('m3-fab: missionsDone=2, fab, M3 mission', () => {
-    const p = resolvePreset('m3-fab')!
-    expect(p.screen).toBe('fab')
-    expect(p.player!.missionsDone).toBe(2)
-    expect(p.missionId).toBe('m3-nickel-cobalt')
-    expect(p.targetId).toBe('belt')
-  })
-})
-
-describe('resolvePreset — Free Ops', () => {
-  it('freeops: missionsDone=3, freeOperations=true, all buildings', () => {
-    const p = resolvePreset('freeops')!
-    expect(p.screen).toBe('hub')
-    expect(p.player!.missionsDone).toBe(3)
-    expect(p.player!.freeOperations).toBe(true)
-    expect(p.player!.placed).toContain('satellite')
-    expect(p.player!.placed).toContain('refinery')
-    expect(p.tutorial).toBe(false)
-  })
-})
-
-describe('resolvePreset — no popup or buildGate leakage', () => {
+describe('resolvePreset — no popup leakage', () => {
   it('no preset returns a non-null popup', () => {
     for (const key of ALL_KEYS) {
       const p = resolvePreset(key)!

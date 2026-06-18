@@ -4,15 +4,15 @@ import { toTarget, toMission, toPart } from './catalog'
 describe('Landnam Catalog Mapping', () => {
   it('maps a raw database record to a Target object', () => {
     const raw = {
-      slug: 'tess-451',
-      name: 'TESS-451',
-      body_type: 'planet',
+      slug: 'eros',
+      name: 'Eros',
+      body_type: 'asteroid',
       orbit: 3,
       difficulty: 'Medium',
       minerals: '["Iron", "Silica"]'
     }
     const target = toTarget(raw)
-    expect(target.id).toBe('tess-451')
+    expect(target.id).toBe('eros')
     expect(target.minerals).toEqual(['Iron', 'Silica'])
   })
 

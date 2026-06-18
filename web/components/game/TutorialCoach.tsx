@@ -3,6 +3,7 @@
 import React, { useState } from 'react'
 import CoachAvatar from '@/components/layout/CoachAvatar'
 import type { TutorialStep } from '@/lib/data'
+import { TUTORIAL_RAIL } from '@/lib/tutorial-layout'
 
 interface TutorialCoachProps {
   stepIndex: number
@@ -19,15 +20,17 @@ export default function TutorialCoach({ stepIndex, steps, step, total, onManualN
   const spot = step.spot
   const manual = !!step.manual
   const compactTop = step.screen === 'build'
-    ? 92
+    ? TUTORIAL_RAIL.BOTTOM_PILL_Y
     : step.screen === 'targets'
       ? undefined
     : spot
-      ? (spot.y + spot.h / 2 < 437 ? undefined : 84)
-      : (step.anchor === 'bottom' ? undefined : 84)
+      ? (spot.y + spot.h / 2 < 437 ? undefined : TUTORIAL_RAIL.TOP_PILL_Y)
+      : (step.anchor === 'bottom' ? undefined : TUTORIAL_RAIL.TOP_PILL_Y)
+  // 110 = radial-nav height (88px) + safe-area margin; must clear the bottom nav.
+  const NAV_CLEARANCE = 110
   const compactBottom = step.screen === 'targets'
-    ? 92
-    : compactTop == null ? 110 : undefined
+    ? TUTORIAL_RAIL.BOTTOM_PILL_Y
+    : compactTop == null ? NAV_CLEARANCE : undefined
 
   const dots = (
     <div style={{ display: 'flex', gap: 4 }}>
@@ -43,43 +46,65 @@ export default function TutorialCoach({ stepIndex, steps, step, total, onManualN
     </div>
   )
 
-  const ring = spot && (
-    <>
-      <div style={{
-        position: 'absolute',
-        left: spot.x,
-        top: spot.y,
-        width: spot.w,
-        height: spot.h,
-        borderRadius: 14,
-        boxShadow: `0 0 0 9999px rgba(3,6,12,${manual ? '0.62' : '0.42'})`,
-        border: '2px solid #f5a623',
-        animation: 'coach-spot 1.4s ease-in-out infinite',
-        pointerEvents: 'none',
-      }} />
-      {!collapsed && (
-        <div style={{
-          position: 'absolute',
-          left: Math.min(Math.max(spot.x + spot.w / 2 - 13, 12), 364),
-          top: step.anchor === 'top' ? spot.y + spot.h + 4 : spot.y - 34,
-          animation: 'coach-point 1s ease-in-out infinite',
-          pointerEvents: 'none',
-        }}>
-          <svg
-            width="26"
-            height="30"
-            viewBox="0 0 26 30"
-            style={{
-              transform: step.anchor === 'top' ? 'rotate(180deg)' : 'none',
-              filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.6))',
-            }}
-          >
-            <path d="M13 2 L13 22 M13 22 L6 15 M13 22 L20 15" stroke="#f5a623" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
-          </svg>
-        </div>
-      )}
-    </>
-  )
+  const arrowLeft = spot ? Math.min(Math.max(spot.x + spot.w / 2 - 13, 12), 364) : 0
+  const ring = spot && (() => {
+    const ringStyle: React.CSSProperties = {
+      position: 'absolute',
+      left: spot.x,
+      width: spot.w,
+      height: spot.h,
+      borderRadius: 14,
+      boxShadow: `0 0 0 9999px rgba(3,6,12,${manual ? '0.62' : '0.42'})`,
+      border: '2px solid #f5a623',
+      animation: 'coach-spot 1.4s ease-in-out infinite',
+      pointerEvents: 'none',
+    }
+    if (spot.fromBottom) {
+      ringStyle.bottom = spot.y
+    } else {
+      ringStyle.top = spot.y
+    }
+
+    const arrowStyle: React.CSSProperties = {
+      position: 'absolute',
+      left: arrowLeft,
+      animation: 'coach-point 1s ease-in-out infinite',
+      pointerEvents: 'none',
+    }
+    // fromBottom: arrow sits above the ring (both bottom-anchored), pointing down into the ring
+    // anchor=top: arrow sits below the ring pointing up
+    // default:    arrow sits above the ring pointing down
+    let arrowRotate = 'none'
+    if (spot.fromBottom) {
+      arrowStyle.bottom = spot.y + spot.h + 4
+    } else if (step.anchor === 'top') {
+      arrowStyle.top = spot.y + spot.h + 4
+      arrowRotate = 'rotate(180deg)'
+    } else {
+      arrowStyle.top = spot.y - 34
+    }
+
+    return (
+      <>
+        <div style={ringStyle} />
+        {!collapsed && (
+          <div style={arrowStyle}>
+            <svg
+              width="26"
+              height="30"
+              viewBox="0 0 26 30"
+              style={{
+                transform: arrowRotate,
+                filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.6))',
+              }}
+            >
+              <path d="M13 2 L13 22 M13 22 L6 15 M13 22 L20 15" stroke="#f5a623" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
+            </svg>
+          </div>
+        )}
+      </>
+    )
+  })()
 
   if (manual) {
     const cardTop = step.anchor === 'top' ? 150 : step.anchor === 'center' ? 330 : 520

@@ -18,11 +18,11 @@
 
 ## What this project is
 
-Landnam is a citizen science mining game in the Star Sailors ecosystem.
+Landnam is a mining and resource-management game in the Star Sailors ecosystem.
 Players manage a space program: build rockets, accept contractor jobs, fly to
-asteroids, mine minerals, classify TESS lightcurve data, sell cargo, and
-reinvest. The MVP arc is M1–M3 only (mine asteroid → better rocket + more
-minerals → exoplanet visit). No Mission 4, no scanner gate, no XP/level gating.
+targets, mine minerals, sell cargo, and reinvest. The active onboarding scope is
+M1 and M2. M2 uses the newer SR2 purchase flow. M3 is not yet fully described;
+do not revive earlier onboarding or post-onboarding plans.
 
 ## Tech stack
 
@@ -52,14 +52,14 @@ Design rules (never violate):
 
 This project uses a hub-and-spoke PocketBase topology with three backends. For full detail, read @doc/backend-architecture in the parent Navigation Knowns.
 
-**Shared backend** (auth + astronomy data — port 8090, `NEXT_PUBLIC_SHARED_PB_URL`):
+**Shared backend** (auth + shared data — port 8090, `NEXT_PUBLIC_SHARED_PB_URL`):
 - `lib/pb.ts` → `pbShared` connects here
-- Collections: celestial_bodies, classifications, ecosystem_profiles, leaderboard_stats, internal_apps
+- Collections: users plus shared platform data
 - Auth: users register here, tokens verified by game backends via HTTP delegation
 
 **Landnam backend** (game data — port 8091 Docker / 8093 dev, `NEXT_PUBLIC_LANDNAM_PB_URL`):
 - `lib/pb-landnam.ts` → `pbLandnam` connects here
-- Collections: game_states (user JSON), classifications, minerals, contractors, locations, rocket_parts, missions_catalog
+- Collections: game_states (user JSON), minerals, contractors, locations, rocket_parts, missions_catalog
 - Seed data is defined in `pocketbase/main.go` — `ensureCollections()` + `seedCatalog()`
 
 **Auth flow**: User gets JWT from shared backend → sends token to Landnam API → Landnam verifies via shared backend's `/api/collections/users/auth-refresh`.
@@ -80,8 +80,9 @@ PocketBase superuser (both): `liam@skinetics.tech` / `ThisIsATestPassword`
 
 - Parts unlock via `missionsRequired` field (not level/XP — those are removed)
 - `suggestBuild()` in `data.ts` takes `missionsDone` (not `level`)
-- M1 complete → Tier 2 parts unlocked; M2 complete → Tier 3 parts
-- Structures unlock by mission count: Control Station after M1, Satellite/Refinery after M2
+- M1 complete → SR2 is available as a purchasable prebuilt starter rocket
+- Starter rockets are single-use/unibody during onboarding
+- Post-onboarding custom shipbuilding is not active until a new design is written
 
 ## Testing
 

@@ -1,0 +1,37 @@
+[
+  {
+    "name": "ship_sr1",
+    "prompt": "Tier 1 mining rocket, side profile view, compact single-stage rocket with a blunt cylindrical body, small stubby fins, single exhaust nozzle at the bottom, muted steel-blue hull with cyan trim stripe, amber porthole window, Master of Orion 2 unit icon style",
+    "aspect_ratio": "1:2"
+  },
+  {
+    "name": "ship_sr2",
+    "prompt": "Tier 2 mining rocket, side profile view, two-stage rocket with a longer cylindrical body, four delta fins, twin exhaust nozzles, reinforced hull panels, muted steel-blue with cyan accent bands and amber indicator lights, Master of Orion 2 unit icon style",
+    "aspect_ratio": "1:2"
+  },
+  {
+    "name": "ship_sr3",
+    "prompt": "Tier 3 advanced mining rocket, side profile view, sleek multi-stage rocket with swept back fins, ion thruster array at base, angular hull plating, deep navy-blue with bright cyan glow trim and amber warning stripes, Master of Orion 2 unit icon style",
+    "aspect_ratio": "1:2"
+  },
+  {
+    "name": "structure_launchpad",
+    "prompt": "Space program launch pad, top-down orthographic icon, concrete launch platform with steel gantry arms extending outward, flame trench in center, steel-blue and grey industrial structure, amber warning lights at corners, Master of Orion 2 building icon style",
+    "aspect_ratio": "1:1"
+  },
+  {
+    "name": "structure_control_station",
+    "prompt": "Mission control building, top-down orthographic icon, rectangular prefab building with satellite dish on roof, antenna array, solar panel wings, reinforced blast windows, dark grey and steel blue, cyan status indicator lights, Master of Orion 2 building icon style",
+    "aspect_ratio": "1:1"
+  },
+  {
+    "name": "structure_satellite_station",
+    "prompt": "Orbital satellite tracking station, top-down orthographic icon, circular dish array base, large parabolic dish in center, radar dome, communication masts, dark steel-blue structure with cyan dish surface and amber power node, Master of Orion 2 building icon style",
+    "aspect_ratio": "1:1"
+  },
+  {
+    "name": "structure_scanner_station",
+    "prompt": "Planetary scanner station, top-down orthographic icon, triangular sensor array layout, three scanning pylons with emitter tips, central processor unit, cables connecting the pylons, dark navy base with teal emitter glow and amber core, Master of Orion 2 building icon style",
+    "aspect_ratio": "1:1"
+  }
+]

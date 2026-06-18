@@ -10,7 +10,7 @@ export const M1_STEPS: TutorialStep[] = [
   { id: 1, screen: 'hub',     title: 'Open a Mission',
     body: 'Open the radial menu, then choose MISSIONS to see the contract board.',
     action: 'Tap menu, then MISSIONS',
-    anchor: 'bottom', spot: { x: 169, y: 786, w: 64, h: 64 }, cta: 'the menu' },
+    anchor: 'bottom', spot: { x: 169, y: 24, w: 64, h: 64, fromBottom: true }, cta: 'the menu' },
   { id: 2, screen: 'missions', title: 'Lock a Contract',
     body: 'Pick a mining company. They name the minerals they want and pay a bonus on delivery.',
     action: 'Tap a contract card',
@@ -20,7 +20,7 @@ export const M1_STEPS: TutorialStep[] = [
     action: 'Tap a target, then Continue',
     anchor: 'bottom', spot: { x: 36, y: 204, w: 330, h: 482 }, cta: 'a target' },
   { id: 4, screen: 'fab',      title: 'Assemble the Rocket',
-    body: 'Your Starter Rocket is pre-loaded with compatible parts. Swap any slot to experiment, or keep the suggested build.',
+    body: 'Your Starter Rocket is pre-loaded with compatible parts for this contract. Confirm the build looks good, then launch.',
     manual: true,
     anchor: 'top', spot: { x: 14, y: 154, w: 374, h: 250 }, cta: 'Got it' },
   { id: 5, screen: 'fab',      title: 'Launch',
@@ -38,14 +38,14 @@ export const M1_STEPS: TutorialStep[] = [
 ]
 
 export const M2_STEPS: TutorialStep[] = [
-  { id: 20, screen: 'hub', title: 'Starter Rocket 2 Ready',
-    body: 'Mission 2 needs 8 silicon — more than your MK1 hull can carry. Hull MK2 is now unlocked in the Fabricator. Open Missions when ready.',
+  { id: 20, screen: 'hub', title: 'Starter Rocket 2 Available',
+    body: 'Mission 2 needs 8 silicon — more than SR1 can carry. Purchase SR2 (1.3B ▲) in the vehicle step before launch. Open Missions when ready.',
     manual: true,
     anchor: 'bottom', spot: null, cta: 'Got it' },
-  { id: 21, screen: 'fab', title: 'Upgrade Your Hull',
-    body: 'Swap your Chassis slot to Hull MK2. It holds 10 units — enough to fill the silicon order in one run.',
+  { id: 21, screen: 'rocket-buy', title: 'Purchase Your Rocket',
+    body: 'SR2 has a larger cargo bay and stronger drill — enough for the silicon order. Purchase it here to continue.',
     manual: true,
-    anchor: 'top', spot: { x: 14, y: 154, w: 374, h: 200 }, cta: 'Got it' },
+    anchor: 'top', spot: { x: 14, y: 154, w: 374, h: 320 }, cta: 'Got it' },
 ]
 
 export const PROGRESSION_STEPS: TutorialStep[] = [

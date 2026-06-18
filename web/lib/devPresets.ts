@@ -22,7 +22,6 @@ const BASE_PLAYER: Player = {
 }
 
 const M1_DONE: Record<number, boolean> = { 0: true, 1: true, 2: true, 3: true, 4: true, 5: true, 6: true, 9: true }
-const M2_DONE: Record<number, boolean> = { ...M1_DONE, 20: true, 21: true }
 
 export interface DevShot {
   key: string
@@ -53,24 +52,10 @@ export const DEV_GROUPS: DevGroup[] = [
     color: '#3fa9ff',
     shots: [
       { key: 'm2-hub',    label: 'Hub',     hint: 'SR2 unlocked, M2 coach active' },
-      { key: 'm2-fab',    label: 'Fab',     hint: 'M2 silicon + Eros, SR2 config' },
+      { key: 'm2-rocket-buy', label: 'Rocket', hint: 'M2 silicon + Eros, SR2 purchase step' },
+      { key: 'm2-fab',    label: 'Fab',     hint: 'M2 silicon + Eros after SR2 purchase' },
       { key: 'm2-mining', label: 'Mining',  hint: 'In mining with silicon target' },
       { key: 'm2-market', label: 'Market',  hint: '8 silicon in stash, sell screen' },
-    ],
-  },
-  {
-    label: 'Mission 3',
-    color: '#70e070',
-    shots: [
-      { key: 'm3-hub',    label: 'Hub',     hint: 'missionsDone=2, M3 available' },
-      { key: 'm3-fab',    label: 'Fab',     hint: 'M3 mission + belt target, SR2 config' },
-    ],
-  },
-  {
-    label: 'Free Ops',
-    color: '#f5a623',
-    shots: [
-      { key: 'freeops',   label: 'Hub',     hint: 'All 3 done, full sandbox' },
     ],
   },
 ]
@@ -139,11 +124,21 @@ export function resolvePreset(name: string): Partial<GameState> | null {
         lastCargo: null, popup: null,
       }
 
+    case 'm2-rocket-buy':
+      return {
+        screen: 'rocket-buy',
+        player: { ...BASE_PLAYER, missionsDone: 1 },
+        tutorial: true, doneSteps: { ...M1_DONE, 20: true },
+        missionId: 'm2-silicon', targetId: 'eros',
+        rocket: { chassis: 'hull-mk1', propulsion: 'ion-a1', drill: 'hand-drill' },
+        lastCargo: null, popup: null,
+      }
+
     case 'm2-fab':
       return {
         screen: 'fab',
-        player: { ...BASE_PLAYER, missionsDone: 1 },
-        tutorial: true, doneSteps: { ...M1_DONE, 20: true },
+        player: { ...BASE_PLAYER, missionsDone: 1, francs: BASE_PLAYER.francs - 1_300_000_000 },
+        tutorial: true, doneSteps: { ...M1_DONE, 20: true, 21: true },
         missionId: 'm2-silicon', targetId: 'eros',
         rocket: { chassis: 'hull-mk2', propulsion: 'fusion-b2', drill: 'laser-t2' },
         lastCargo: null, popup: null,
@@ -167,45 +162,6 @@ export function resolvePreset(name: string): Partial<GameState> | null {
         missionId: null, targetId: null,
         rocket: { chassis: 'hull-mk2', propulsion: 'fusion-b2', drill: 'laser-t2' },
         lastCargo: { silicon: 8 }, popup: null,
-      }
-
-    // ── Mission 3 ──
-    case 'm3-hub':
-      return {
-        screen: 'hub',
-        player: { ...BASE_PLAYER, missionsDone: 2, controlBuilt: true, placed: ['launchpad', 'control'], placementPlots: { launchpad: 0, control: 1 } },
-        tutorial: false, doneSteps: {},
-        missionId: null, targetId: null,
-        rocket: { chassis: 'hull-mk2', propulsion: 'fusion-b2', drill: 'laser-t2' },
-        lastCargo: null, popup: null,
-      }
-
-    case 'm3-fab':
-      return {
-        screen: 'fab',
-        player: { ...BASE_PLAYER, missionsDone: 2, controlBuilt: true, placed: ['launchpad', 'control'], placementPlots: { launchpad: 0, control: 1 } },
-        tutorial: false, doneSteps: M2_DONE,
-        missionId: 'm3-nickel-cobalt', targetId: 'belt',
-        rocket: { chassis: 'hull-mk2', propulsion: 'fusion-b2', drill: 'laser-t2' },
-        lastCargo: null, popup: null,
-      }
-
-    // ── Free Ops ──
-    case 'freeops':
-      return {
-        screen: 'hub',
-        player: {
-          ...BASE_PLAYER,
-          missionsDone: 3, freeOperations: true,
-          controlBuilt: true,
-          placed: ['launchpad', 'control', 'satellite', 'refinery'],
-          placementPlots: { launchpad: 0, control: 1, satellite: 2, refinery: 3 },
-          francs: 50_000_000_000,
-        },
-        tutorial: false, doneSteps: {},
-        missionId: null, targetId: null,
-        rocket: { chassis: 'hull-mk3', propulsion: 'ion-a3', drill: 'plasma-t3' },
-        lastCargo: null, popup: null,
       }
 
     default:

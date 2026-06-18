@@ -83,10 +83,7 @@ describe('PocketBase Guest Auth Pattern', () => {
       tutorial: true,
       doneSteps: {},
       popup: null,
-      buildGate: false,
       menuOpen: false,
-      classification: null,
-      classificationError: null,
     }
   }
 

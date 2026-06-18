@@ -32,10 +32,7 @@ function visitWithState(state: Partial<GameState>) {
     tutorial: true,
     doneSteps: {},
     popup: null,
-    buildGate: false,
     menuOpen: false,
-    classification: null,
-    classificationError: null,
   }
   cy.visit('/game', {
     onBeforeLoad(win) {
@@ -75,10 +72,7 @@ function fullState(overrides: Partial<GameState> = {}): GameState {
     tutorial: true,
     doneSteps: {},
     popup: null,
-    buildGate: false,
     menuOpen: false,
-    classification: null,
-    classificationError: null,
     ...overrides,
   }
 }
@@ -434,7 +428,7 @@ describe('Full Game Loop — Landnam', () => {
         tutorial: false,
       }))
       cy.contains('STARTER ROCKET 2').should('be.visible')
-      cy.contains('Hull MK2').should('be.visible')
+      cy.contains('Purchase it for 1.3B').should('be.visible')
     })
 
     it('M2 coach step 20 shows on hub after M1 — no controlBuilt needed', () => {
@@ -464,13 +458,13 @@ describe('Full Game Loop — Landnam', () => {
         },
         tutorial: true,
       }))
-      cy.contains('Starter Rocket 2 Ready').should('be.visible')
-      cy.contains('Hull MK2').should('be.visible')
+      cy.contains('Starter Rocket 2 Available').should('be.visible')
+      cy.contains('Purchase SR2').should('be.visible')
     })
   })
 
   describe('Phase 7: M2 — Silicon Bulk Order', () => {
-    it('M2 accessible on mission board after M1 without Control Base', () => {
+    it('M2 accessible on mission board after M1 without old Control Base gate', () => {
       visitWithState(fullState({
         screen: 'missions',
         doneSteps: { 1: true },
@@ -500,9 +494,9 @@ describe('Full Game Loop — Landnam', () => {
       cy.get('[data-testid="mission-card-m2-silicon"]').should('have.attr', 'data-mission-id', 'm2-silicon')
     })
 
-    it('M2 fab shows Hull MK2 and hull-upgrade coach step', () => {
+    it('M2 rocket purchase shows SR2 and purchase coach step', () => {
       visitWithState(fullState({
-        screen: 'fab',
+        screen: 'rocket-buy',
         missionId: 'm2-silicon',
         targetId: 'eros',
         doneSteps: { 1: true, 2: true, 3: true, 4: true, 5: true, 6: true, 9: true, 20: true },
@@ -528,11 +522,11 @@ describe('Full Game Loop — Landnam', () => {
         },
         tutorial: true,
       }))
-      cy.contains('Hull MK2').should('be.visible')
-      cy.contains('Upgrade Your Hull').should('be.visible')
+      cy.contains('Starter Rocket 2').should('be.visible')
+      cy.contains('Purchase Your Rocket').should('be.visible')
     })
 
-    it('M2 fab launch button visible with SR2 parts', () => {
+    it('M2 preflight launch button visible with prebuilt SR2', () => {
       visitWithState(fullState({
         screen: 'fab',
         missionId: 'm2-silicon',
@@ -561,8 +555,8 @@ describe('Full Game Loop — Landnam', () => {
         },
         tutorial: false,
       }))
-      cy.contains('Hull MK2').should('be.visible')
-      cy.contains('Fusion Drive B2').should('be.visible')
+      cy.contains('Starter Rocket 2').should('be.visible')
+      cy.contains('PREBUILT').should('be.visible')
       cy.get('[data-testid="launch-btn"]').should('be.visible')
     })
   })

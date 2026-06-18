@@ -8,7 +8,7 @@ export type { Screen, Player, GameState } from '@/lib/game-types'
 
 let toastSeq = 0
 function nextToastId() { return `t${++toastSeq}` }
-import { type Mission, type Target, type RocketConfig, MISSIONS, TARGETS, PROGRESSION_STEPS, suggestBuild, REFINERY_RECIPES, MINERAL_META } from '@/lib/data'
+import { type Mission, type Target, type RocketConfig, MISSIONS, TARGETS, PROGRESSION_STEPS, suggestBuild, REFINERY_RECIPES, MINERAL_META, STARTER_ROCKETS } from '@/lib/data'
 import { resolvePreset } from '@/lib/devPresets'
 import { pbShared } from '@/lib/pb'
 import { ensureGuestAuth, hasStoredCredentials, isGuestAccount, upgradeGuestAccount } from '@/lib/guestAuth'
@@ -39,6 +39,7 @@ const DEFAULT_STATE: GameState = {
     launchpadUpgraded: false,
     loanDebt: 0,
     loanOffered: false,
+    seen_planets: [],
   },
   missionId: null,
   targetId: null,
@@ -47,10 +48,7 @@ const DEFAULT_STATE: GameState = {
   tutorial: true,
   doneSteps: {},
   popup: null,
-  buildGate: false,
   menuOpen: false,
-  classification: null,
-  classificationError: null,
 }
 
 const STORAGE_KEY = 'landnam-game-state-v1'
@@ -59,11 +57,7 @@ const UPGRADE_SNOOZE_MS = 24 * 60 * 60 * 1000
 const LOAN_AMOUNT = 5_000_000_000
 const LOAN_REPAYMENT = Math.ceil(LOAN_AMOUNT * 1.08 / 2)
 const BANKRUPTCY_THRESHOLD = 500_000_000
-
-function firstOpenPlot(placementPlots: Record<string, number>, kinds: string[]) {
-  const occupied = new Set(kinds.map(kind => placementPlots[kind]).filter((plot): plot is number => typeof plot === 'number'))
-  return [0, 1, 2, 3].find(plot => !occupied.has(plot)) ?? 0
-}
+const VALID_SCREENS: Screen[] = ['intro', 'build', 'hub', 'missions', 'galaxy', 'targets', 'fab', 'transit', 'mining', 'debrief', 'refinery', 'market', 'hangar', 'rocket-buy']
 
 function loadState(): GameState {
   if (typeof window === 'undefined') return DEFAULT_STATE
@@ -71,9 +65,14 @@ function loadState(): GameState {
     const raw = localStorage.getItem(STORAGE_KEY)
     if (!raw) return DEFAULT_STATE
     const parsed = JSON.parse(raw) as Partial<GameState>
+    const screen = parsed.screen && VALID_SCREENS.includes(parsed.screen) ? parsed.screen : DEFAULT_STATE.screen
+    const missionId = parsed.missionId && MISSIONS.some(m => m.id === parsed.missionId) ? parsed.missionId : null
     return {
       ...DEFAULT_STATE,
       ...parsed,
+      screen,
+      missionId,
+      targetId: missionId ? parsed.targetId ?? null : null,
       player: { ...DEFAULT_STATE.player, ...parsed.player },
     }
   } catch {
@@ -110,7 +109,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
         tutorial: false,
         missionId: MISSIONS[0]?.id ?? null,
         targetId: TARGETS[0]?.id ?? null,
-        player: { ...DEFAULT_STATE.player, missionsDone: 1, controlBuilt: true, refineryBuilt: true, placed: ['control', 'launchpad', 'refinery', 'satellite'] },
+        player: { ...DEFAULT_STATE.player, missionsDone: 1, refineryBuilt: true, placed: ['launchpad', 'refinery'] },
       })
       setHydrated(true)
       return
@@ -295,6 +294,14 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     setState(s => ({ ...s, tutorial: v }))
   }, [])
 
+  const skipTutorial = useCallback((stepIds: number[]) => {
+    setState(s => ({
+      ...s,
+      tutorial: false,
+      doneSteps: stepIds.reduce((acc, id) => ({ ...acc, [id]: true }), s.doneSteps),
+    }))
+  }, [])
+
   const setDoneSteps: React.Dispatch<React.SetStateAction<Record<number, boolean>>> = useCallback(
     (update) => setState(s => ({
       ...s,
@@ -305,10 +312,6 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
 
   const setPopup = useCallback((v: string | null) => {
     setState(s => ({ ...s, popup: v }))
-  }, [])
-
-  const setBuildGate = useCallback((v: boolean) => {
-    setState(s => ({ ...s, buildGate: v }))
   }, [])
 
   const setMenuOpen = useCallback((v: boolean) => {
@@ -341,16 +344,17 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
   }, [addToast])
 
   const onPickMission = useCallback((id: string) => {
-    setState(s => ({
-      ...s,
-      missionId: id,
-      targetId: null,
-      classification: null,
-      screen: catalog.missions.find(m => m.id === id)?.requiresClassification ? 'classify' : 'targets',
-      doneSteps: { ...s.doneSteps, 2: true },
-    }))
-    enqueueSurvey('lnm_contractor_pick')
-  }, [catalog.missions])
+    setState(s => {
+      if (s.player.missionsDone >= 1) enqueueSurvey('lnm_contractor_pick')
+      return {
+        ...s,
+        missionId: id,
+        targetId: null,
+        screen: 'targets',
+        doneSteps: { ...s.doneSteps, 2: true },
+      }
+    })
+  }, [])
 
   const onStartRefine = useCallback((recipeId: string) => {
     const recipe = REFINERY_RECIPES.find(r => r.id === recipeId)
@@ -392,61 +396,6 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     })
   }, [])
 
-  const classifyCandidate = useCallback((verdict: 'planet' | 'not_planet' | 'unsure', subjectId: string, dipMarkers: number[]) => {
-    if (verdict === 'planet') enqueueSurvey('lnm_planet_discovery', 2500)
-    setState(s => {
-      if (verdict === 'not_planet') {
-        return {
-          ...s,
-          classification: null,
-          targetId: null,
-          player: { ...s.player },
-          screen: 'targets',
-          doneSteps: { ...s.doneSteps, 30: true },
-        }
-      }
-      return {
-        ...s,
-        classification: verdict === 'planet' ? { candidateId: subjectId, verdict } : s.classification,
-        targetId: null,
-        screen: 'targets',
-        doneSteps: { ...s.doneSteps, 30: true },
-      }
-    })
-
-    const userId = pbShared.authStore.record?.id
-    if (userId && subjectId) {
-      pbShared.collection('subject_classifications').create({
-        subject: subjectId,
-        user: userId,
-        verdict,
-        dip_markers: JSON.stringify(dipMarkers),
-        response_time_ms: 0,
-      }).then(() => {
-        setState(s => ({ ...s, classificationError: null }))
-      }).catch((err: unknown) => {
-        const msg = (err as { message?: string; status?: string })?.message
-          ?? (err as { message?: string; status?: string })?.status
-          ?? 'Classification write failed'
-        setState(s => ({ ...s, classificationError: msg }))
-        addToast('Classification sync failed — will retry next session', 'warn')
-      })
-    }
-  }, [addToast])
-
-  const onSatelliteClassify = useCallback((verdict: 'planet' | 'not_planet' | 'unsure') => {
-    // All verdicts (including unsure) count toward researchAnnotations —
-    // participation-based, not accuracy-based. Unsure subjects get routed
-    // to more users on the backend via unsure_count weighting.
-    setState(s => ({
-      ...s,
-      player: {
-        ...s.player,
-        researchAnnotations: s.player.researchAnnotations + 1,
-      },
-    }))
-  }, [])
-
   const upgradeLaunchpad = useCallback(() => {
     setState(s => {
       if (s.player.launchpadUpgraded || s.player.francs < 1_000_000_000) return s
@@ -486,14 +435,27 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
   const onPickTarget = useCallback((id: string) => {
     setState(s => {
       const mission = s.missionId ? catalog.missions.find(m => m.id === s.missionId) ?? null : null
-      const target = catalog.targets.find(t => t.id === id) ?? null
+    const target = catalog.targets.find(t => t.id === id) ?? null
       const next = suggestBuild({ mission, target, missionsDone: s.player.missionsDone, launchpadUpgraded: s.player.launchpadUpgraded, parts: catalog.parts })
       return {
         ...s,
         targetId: id,
         rocket: next,
-        screen: 'fab',
+        screen: 'rocket-buy',
         doneSteps: { ...s.doneSteps, 3: true },
+      }
+    })
+  }, [])
+
+  const onPurchaseRocket = useCallback((rocketId: string) => {
+    setState(s => {
+      const rocket = STARTER_ROCKETS.find(r => r.id === rocketId)
+      if (!rocket) return s
+      if (s.player.francs < rocket.costFrancs) return s
+      return {
+        ...s,
+        player: { ...s.player, francs: s.player.francs - rocket.costFrancs },
+        screen: 'fab',
       }
     })
   }, [])
@@ -541,7 +503,6 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     const newMissionsDone = stateRef.current.player.missionsDone + 1
     setState(s => {
       const missionsDone = s.player.missionsDone + 1
-      const freeOperations = missionsDone >= 3
       const mission = s.missionId ? MISSIONS.find(m => m.id === s.missionId) : null
       const missionContractor = mission?.contractor
       const contractor = missionContractor
@@ -567,6 +528,12 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       }
       const loanOffered = s.player.loanOffered
       const showLoanOffer = !loanOffered && francs < BANKRUPTCY_THRESHOLD && loanDebt === 0
+      
+      const seen_planets = [...(s.player.seen_planets ?? [])]
+      if (s.targetId && !seen_planets.includes(s.targetId)) {
+        seen_planets.push(s.targetId)
+      }
+
       return {
         ...s,
         player: {
@@ -574,20 +541,21 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
           francs,
           activeMission: null,
           missionsDone,
-          missionCount: freeOperations ? MISSIONS.length : Math.max(0, Math.min(1, MISSIONS.length - missionsDone)),
-          freeOperations,
+          missionCount: Math.max(0, Math.min(1, MISSIONS.length - missionsDone)),
+          freeOperations: false,
           contractorMissions,
           contractorCooldowns,
           stash,
           lastContractor: contractor,
           loanDebt,
           loanOffered: loanOffered || showLoanOffer,
+          seen_planets,
         },
         lastCargo: null,
         missionId: null,
         targetId: null,
-        tutorial: !freeOperations,
-        popup: missionsDone === 1 ? 'sr2' : freeOperations ? 'freeops' : showLoanOffer ? 'loan' : s.popup,
+        tutorial: missionsDone < MISSIONS.length,
+        popup: missionsDone === 1 ? 'sr2' : showLoanOffer ? 'loan' : s.popup,
         doneSteps: { ...s.doneSteps, 9: true },
         screen: 'market',
       }
@@ -595,7 +563,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     addToast(`Mission payout received: +${(total / 1_000_000).toFixed(0)}M F`, 'ok')
     enqueueSurvey('lnm_mission_friction', 2000)
     if (newMissionsDone === 1) enqueueSurvey('lnm_progression_feel', 8000)
-    if (newMissionsDone >= 3) enqueueSurvey('lnm_end_of_content', 5000)
+    if (newMissionsDone >= MISSIONS.length) enqueueSurvey('lnm_end_of_content', 5000)
   }, [addToast])
 
   const coachManualNext = useCallback(() => {
@@ -658,29 +626,6 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     }))
   }, [])
 
-  const buildControlStation = useCallback(() => {
-    const cost = 500_000_000
-    setState(s => {
-      if (s.player.francs < cost || s.player.controlBuilt) return s
-      addToast('Control Station construction complete', 'ok')
-      return {
-        ...s,
-        buildGate: false,
-        player: {
-          ...s.player,
-          francs: s.player.francs - cost,
-          controlBuilt: true,
-          missionCount: 1,
-          placed: Array.from(new Set([...s.player.placed, 'control'])),
-          placementPlots: {
-            ...s.player.placementPlots,
-            control: firstOpenPlot(s.player.placementPlots, ['launchpad', 'control', 'satellite']),
-          },
-        },
-      }
-    })
-  }, [addToast])
-
   const signInFromGate = useCallback(async (email: string, password: string) => {
     setAuthGateError(null)
     try {
@@ -729,20 +674,18 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       setLastCargo,
       setTutorial,
       setDoneSteps,
+      skipTutorial,
       setPopup,
-      setBuildGate,
       setMenuOpen,
       onPickMission,
       onPickTarget,
+      onPurchaseRocket,
       onLaunch,
       onMiningDone,
       onDebriefDone,
       coachManualNext,
       completeStep,
       resetGame,
-      buildControlStation,
-      classifyCandidate,
-      onSatelliteClassify,
       upgradeLaunchpad,
       sellMinerals,
       onStartRefine,

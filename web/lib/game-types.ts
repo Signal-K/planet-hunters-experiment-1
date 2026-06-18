@@ -14,10 +14,10 @@ export type Screen =
   | 'transit'
   | 'mining'
   | 'debrief'
-  | 'classify'
   | 'refinery'
-  | 'satellite'
   | 'market'
+  | 'hangar'
+  | 'rocket-buy'
 
 export interface Player {
   francs: number
@@ -41,6 +41,7 @@ export interface Player {
   lastContractor?: string
   loanDebt: number
   loanOffered: boolean
+  seen_planets?: string[]
 }
 
 export interface GameState {
@@ -53,10 +54,7 @@ export interface GameState {
   tutorial: boolean
   doneSteps: Record<number, boolean>
   popup: string | null
-  buildGate: boolean
   menuOpen: boolean
-  classification: { candidateId: string; verdict: 'planet' | 'not_planet' } | null
-  classificationError: string | null
 }
 
 import type React from 'react'
@@ -79,20 +77,18 @@ export interface GameActions {
   setLastCargo: (c: Record<string, number> | null) => void
   setTutorial: (v: boolean) => void
   setDoneSteps: React.Dispatch<React.SetStateAction<Record<number, boolean>>>
+  skipTutorial: (stepIds: number[]) => void
   setPopup: (v: string | null) => void
-  setBuildGate: (v: boolean) => void
   setMenuOpen: (v: boolean) => void
   onPickMission: (id: string) => void
   onPickTarget: (id: string) => void
+  onPurchaseRocket: (rocketId: string) => void
   onLaunch: () => void
   onMiningDone: (cargo: Record<string, number>) => void
   onDebriefDone: (total: number, affinity: number, consumed?: Record<string, number>) => void
   coachManualNext: () => void
   completeStep: (id: number) => void
   resetGame: () => void
-  buildControlStation: () => void
-  classifyCandidate: (verdict: 'planet' | 'not_planet' | 'unsure', subjectId: string, dipMarkers: number[]) => void
-  onSatelliteClassify: (verdict: 'planet' | 'not_planet' | 'unsure') => void
   upgradeLaunchpad: () => void
   sellMinerals: (mineralId: string, amount: number) => void
   onStartRefine: (recipeId: string) => void

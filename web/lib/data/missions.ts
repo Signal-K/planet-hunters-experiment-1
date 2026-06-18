@@ -36,8 +36,6 @@ interface ResourceMissionSeed {
 const RESOURCE_MISSION_SEEDS: ResourceMissionSeed[] = [
   { id: 'm1-iron', title: 'Iron Reserve Order', brief: 'Contractor Slot 03A needs a starter iron shipment from a reachable asteroid.', contractor: 'contractor-03a', template: 'starter-bulk', sequence: 1, minerals: { iron: 6 }, locked: false, affinity: 10 },
   { id: 'm2-silicon', title: 'Silicon Bulk Order', brief: 'Contractor Slot 03B needs raw silicon for electronics-grade supply contracts.', contractor: 'contractor-03b', template: 'volatile-bulk', sequence: 2, minerals: { silicon: 8 }, locked: false, unlockAt: 'Complete M1', affinity: 8 },
-  { id: 'm3-nickel-cobalt', title: 'Nickel-Cobalt Assay', brief: 'Contractor Slot 04A wants battery metals from confirmed belt targets only.', contractor: 'contractor-04a', template: 'metal-prospect', sequence: 3, minerals: { nickel: 4, cobalt: 2 }, locked: true, unlockAt: 'Complete M2', affinity: 15 },
-  { id: 'm4-gold-reserve', title: 'Gold Reserve Run', brief: 'Contractor Slot 04B has a premium gold order from the main belt.', contractor: 'contractor-04b', template: 'command-reserve', sequence: 4, minerals: { gold: 4 }, locked: true, unlockAt: 'Complete M3', affinity: 20 },
 ]
 
 function buildResourceMission(seed: ResourceMissionSeed): Mission {

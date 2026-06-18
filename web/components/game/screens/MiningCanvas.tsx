@@ -1,28 +1,31 @@
 'use client'
 
 import { useEffect, useRef } from 'react'
-import { Application, Graphics } from 'pixi.js'
+import { Application, Container, Graphics } from 'pixi.js'
 import { Scene, GameLoop, InputManager, RuntimeContext, screenToWorld } from '@/lib/engine'
 import { wireShapeRenderers } from '@/lib/engine/components/ShapeRenderer'
-import { MiningController, SHIP_X, SHIP_Y, SURFACE_Y } from '@/lib/engine/scripts/MiningController'
+import type { ShapeKind } from '@/lib/engine/components/ShapeRenderer'
+import { MiningController, SHIP_X } from '@/lib/engine/scripts/MiningController'
 import type { MineralMeta } from '@/lib/data'
 
-const WORLD_WIDTH = 600
-const WORLD_HEIGHT = 300
+// Tile width must be a multiple of 16 (ridgeH period) for seamless wrapping
+const SURFACE_TILE_W = 320
 
-interface MiningCanvasProps {
-  minerals: string[]
-  mineralMeta: Record<string, MineralMeta>
-  onCollect: (mineral: string) => void
-  /** Imperative handle: parent calls this to fire a laser (e.g. from a button). */
-  fireRef: React.MutableRefObject<(() => void) | null>
+const MINERAL_SHAPES: Record<string, ShapeKind> = {
+  iron:    'circle',
+  silicon: 'diamond',
+  ice:     'circle',
+  carbon:  'rect',
+  nickel:  'diamond',
+  cobalt:  'triangle',
+  gold:    'circle',
+  rare:    'diamond',
 }
 
 const SKY_COLOR = 0x03060c
 
-function buildStars(): Graphics {
+function buildStars(worldW: number, surfaceY: number): Graphics {
   const g = new Graphics()
-  // Deterministic star positions (fractions of world width × sky height)
   const stars: [number, number, number, number][] = [
     [0.08, 0.13, 1.2, 0.30], [0.20, 0.42, 0.8, 0.18], [0.35, 0.08, 1.5, 0.28],
     [0.44, 0.55, 1.0, 0.15], [0.55, 0.22, 0.9, 0.22], [0.63, 0.48, 1.2, 0.12],
@@ -31,62 +34,97 @@ function buildStars(): Graphics {
     [0.28, 0.30, 0.8, 0.16], [0.68, 0.62, 1.2, 0.18], [0.04, 0.75, 1.0, 0.12],
   ]
   for (const [fx, fy, r, alpha] of stars) {
-    g.circle(fx * WORLD_WIDTH, fy * (SURFACE_Y - 8), r).fill({ color: 0xffffff, alpha })
+    g.circle(fx * worldW, fy * (surfaceY - 8), r).fill({ color: 0xffffff, alpha })
   }
   return g
 }
 
-function buildSurface(): Graphics {
+function buildSurfaceTile(tileH: number): Graphics {
   const g = new Graphics()
-  // Base rock fill
-  g.rect(0, SURFACE_Y + 6, WORLD_WIDTH, WORLD_HEIGHT - SURFACE_Y - 6).fill(0x1a1006)
-  // Jagged rocky edge — deterministic heights so it doesn't change on hot-reload
+  g.rect(0, 6, SURFACE_TILE_W, tileH - 6).fill(0x1a1006)
   const ridgeH = [0, -10, -14, -7, -18, -11, -5, -16, -12, -8, -15, -9, -19, -6, -13, -10, -17, -4, -11, -8]
-  const edge: number[] = [0, WORLD_HEIGHT]
-  for (let i = 0; i <= WORLD_WIDTH; i += 16) {
-    edge.push(i, SURFACE_Y + 6 + ridgeH[Math.floor(i / 16) % ridgeH.length])
+  const edge: number[] = [0, tileH]
+  for (let i = 0; i <= SURFACE_TILE_W; i += 16) {
+    edge.push(i, 6 + ridgeH[Math.floor(i / 16) % ridgeH.length])
   }
-  edge.push(WORLD_WIDTH, WORLD_HEIGHT)
+  edge.push(SURFACE_TILE_W, tileH)
   g.poly(edge).fill(0x2d1e0c)
-  // Rock texture: dark crater patches
   const patches: [number, number][] = [
-    [45, 14], [110, 22], [185, 10], [250, 18], [330, 12],
-    [400, 20], [465, 9], [535, 16], [80, 26], [210, 8], [355, 24], [505, 14],
+    [32, 14], [85, 22], [140, 10], [195, 18], [248, 12], [295, 20],
+    [60, 8],  [125, 26], [175, 9],  [230, 16], [275, 24], [310, 11],
   ]
   for (const [px, pr] of patches) {
-    g.circle(px, SURFACE_Y + 22, pr).fill({ color: 0x110c04, alpha: 0.6 })
+    g.circle(px, 22, pr).fill({ color: 0x110c04, alpha: 0.6 })
   }
   return g
 }
 
-function buildShip(): Graphics {
+function buildAimGuide(shipY: number, surfaceY: number): Graphics {
   const g = new Graphics()
-  // Engine glow
-  g.circle(-22, 0, 9).fill({ color: 0xff6600, alpha: 0.55 })
-  g.circle(-20, 0, 5).fill({ color: 0xffcc44, alpha: 0.8 })
-  // Wing fins (top and bottom)
-  g.poly([-10, 7, 6, 7, 2, 22, -14, 22]).fill(0x1b3d78)
-  g.poly([-10, -7, 6, -7, 2, -22, -14, -22]).fill(0x1b3d78)
-  // Main fuselage
-  g.rect(-16, -8, 38, 16).fill(0x2c6ab5)
-  // Nose cone
-  g.poly([22, -8, 37, 0, 22, 8]).fill(0x6ab4f0)
-  // Engine bell
-  g.rect(-24, -7, 9, 14).fill(0x142848)
-  // Cockpit
-  g.circle(6, 0, 5).fill(0x0f2036)
-  g.circle(6, 0, 3).fill(0x4aaaff)
-  g.x = SHIP_X
-  g.y = SHIP_Y
-  return g
-}
-
-function buildAimGuide(): Graphics {
-  const g = new Graphics()
-  for (let y = SHIP_Y + 22; y < SURFACE_Y - 10; y += 11) {
+  for (let y = shipY + 22; y < surfaceY - 10; y += 11) {
     g.circle(SHIP_X, y, 1.2).fill({ color: 0x9becff, alpha: 0.18 })
   }
   return g
+}
+
+function buildShip(shipY: number): Graphics {
+  const g = new Graphics()
+
+  // Engine exhaust layers
+  g.ellipse(-30, 0, 18, 10).fill({ color: 0xff2200, alpha: 0.18 })
+  g.ellipse(-27, 0, 12, 7).fill({ color: 0xff6600, alpha: 0.45 })
+  g.ellipse(-24, 0, 7, 4).fill({ color: 0xffcc22, alpha: 0.82 })
+  g.circle(-22, 0, 3).fill({ color: 0xfff0aa, alpha: 1 })
+
+  // Swept delta wings (drawn behind fuselage)
+  g.poly([-6, 6, 18, 6, 10, 24, -20, 18]).fill(0x0d2040)
+  g.poly([-6, -6, 18, -6, 10, -24, -20, -18]).fill(0x0d2040)
+  // Wing leading-edge highlight
+  g.poly([18, -6, 18, -8, -4, -8, -6, -6]).fill({ color: 0x2f6aaa, alpha: 0.55 })
+  g.poly([18, 6, 18, 8, -4, 8, -6, 6]).fill({ color: 0x2f6aaa, alpha: 0.55 })
+
+  // Engine cowling (rear block)
+  g.rect(-26, -5, 10, 10).fill(0x071220)
+  g.rect(-25, -3, 5, 6).fill(0x132c50)
+
+  // Main fuselage — elongated torpedo
+  g.poly([-18, -8, 30, -6, 42, 0, 30, 6, -18, 8, -23, 4, -23, -4]).fill(0x1a4282)
+
+  // Fuselage dorsal highlight (top third, lighter)
+  g.poly([-2, -7, 28, -5.5, 28, -2, -2, -3]).fill({ color: 0x3a78c8, alpha: 0.42 })
+
+  // Wing-root fairings where wings meet body
+  g.poly([-2, -6, 16, -6, 14, -10, -8, -10]).fill(0x12305c)
+  g.poly([-2, 6, 16, 6, 14, 10, -8, 10]).fill(0x12305c)
+
+  // Cockpit surround
+  g.ellipse(14, 0, 14, 8).fill(0x050d1a)
+  // Cockpit glass with two-tone reflection
+  g.ellipse(15, -1, 11, 5.5).fill({ color: 0x1e66bb, alpha: 0.65 })
+  g.ellipse(17, -2, 6, 2.8).fill({ color: 0x6ab8f0, alpha: 0.75 })
+  g.ellipse(19, -2.5, 2.5, 1.2).fill({ color: 0xc4e8ff, alpha: 0.6 })
+
+  // Nose cone
+  g.poly([30, -5.5, 44, 0, 30, 5.5]).fill(0x1e5096)
+  g.poly([30, -3, 42, 0, 30, 3]).fill({ color: 0x4a90d8, alpha: 0.45 })
+
+  // Laser emitter barrel
+  g.rect(42, -1.8, 10, 3.6).fill(0x0a1e3a)
+  g.rect(43, -0.8, 8, 1.6).fill(0x1a4470)
+  // Emitter tip glow
+  g.circle(52, 0, 3).fill({ color: 0x44bbff, alpha: 0.9 })
+  g.circle(52, 0, 1.6).fill({ color: 0xccf2ff, alpha: 1 })
+
+  g.x = SHIP_X
+  g.y = shipY
+  return g
+}
+
+interface MiningCanvasProps {
+  minerals: string[]
+  mineralMeta: Record<string, MineralMeta>
+  onCollect: (mineral: string) => void
+  fireRef: React.MutableRefObject<(() => void) | null>
 }
 
 export default function MiningCanvas({ minerals, mineralMeta, onCollect, fireRef }: MiningCanvasProps) {
@@ -104,54 +142,81 @@ export default function MiningCanvas({ minerals, mineralMeta, onCollect, fireRef
     let destroyed = false
 
     ;(async () => {
-      const [sceneData] = await Promise.all([
-        Scene.load('/game/scenes/mining.scene.json'),
-        app.init({
-          canvas,
-          width: WORLD_WIDTH,
-          height: WORLD_HEIGHT,
-          background: SKY_COLOR,
-          antialias: false,
-          autoDensity: true,
-        }),
-      ])
-      if (destroyed) { if (app.renderer) app.destroy(); return }
+      try {
+        // Read from the parent container — it has a resolved flex height,
+        // while the canvas itself (position:absolute) may read 0 before PixiJS sets it.
+        const parent = canvas.parentElement!
+        const worldW = Math.max(300, parent.clientWidth)
+        const worldH = Math.max(200, parent.clientHeight)
+        const dpr = window.devicePixelRatio || 1
+        const surfaceY = Math.round(worldH * 0.62)
+        const shipY = Math.round(worldH * 0.22)
+        const tileH = worldH - surfaceY
 
-      // autoDensity sets px inline sizes; override so canvas fills the 2:1 viewport
-      canvas.style.width = '100%'
-      canvas.style.height = '100%'
+        const [sceneData] = await Promise.all([
+          Scene.load('/game/scenes/mining.scene.json'),
+          app.init({
+            canvas,
+            width: worldW,
+            height: worldH,
+            background: SKY_COLOR,
+            antialias: true,
+            autoDensity: true,
+            resolution: dpr,
+          }),
+        ])
+        if (destroyed) return
 
-      // Stars in sky, then asteroid surface at bottom
-      app.stage.addChildAt(buildStars(), 0)
-      app.stage.addChildAt(buildSurface(), 1)
+        app.stage.addChild(buildStars(worldW, surfaceY))
 
-      const { scene, entityData } = Scene.fromData(sceneData)
-      wireShapeRenderers(app.stage, entityData, scene)
+        const surfaceContainer = new Container()
+        surfaceContainer.y = surfaceY
+        for (let i = 0; i < 3; i++) {
+          const t = buildSurfaceTile(tileH)
+          t.x = i * SURFACE_TILE_W
+          surfaceContainer.addChild(t)
+        }
+        app.stage.addChild(surfaceContainer)
 
-      const controllerObj = scene.find('mining-controller')
-      const controller = new MiningController(new RuntimeContext(), {
-        container: app.stage,
-        worldWidth: WORLD_WIDTH,
-        worldHeight: WORLD_HEIGHT,
-        minerals,
-        mineralColors: Object.fromEntries(Object.entries(mineralMeta).map(([id, m]) => [id, m.color])),
-        onCollect: mineral => onCollectRef.current(mineral),
-      })
-      controllerObj?.addComponent(controller)
+        const { scene, entityData } = Scene.fromData(sceneData)
+        wireShapeRenderers(app.stage, entityData, scene)
 
-      input = new InputManager(canvas, WORLD_WIDTH, WORLD_HEIGHT)
-      input.onAny(event => {
-        if (event.type === 'pointerdown') controller.fireLaser()
-      })
-      fireRef.current = () => controller.fireLaser()
+        const mineralLaserAccess = Object.fromEntries(
+          Object.entries(mineralMeta).map(([id, m]) => [id, m.laserAccess ?? 1])
+        )
 
-      loop = new GameLoop(scene, app)
-      loop.start()
+        const controllerObj = scene.find('mining-controller')
+        const controller = new MiningController(new RuntimeContext(), {
+          container: app.stage,
+          worldWidth: worldW,
+          worldHeight: worldH,
+          surfaceY,
+          shipY,
+          minerals,
+          mineralColors: Object.fromEntries(Object.entries(mineralMeta).map(([id, m]) => [id, m.color])),
+          mineralLaserAccess,
+          mineralShapes: MINERAL_SHAPES,
+          onCollect: mineral => onCollectRef.current(mineral),
+          onScroll: scrollX => {
+            surfaceContainer.x = -(scrollX % SURFACE_TILE_W)
+          },
+        })
+        controllerObj?.addComponent(controller)
 
-      // Ship and aim guide added last — always render above ores/lasers
-      // (ship at y=72, ores at y=190 — no spatial overlap regardless of z-order)
-      app.stage.addChild(buildAimGuide())
-      app.stage.addChild(buildShip())
+        input = new InputManager(canvas, worldW, worldH)
+        input.onAny(event => {
+          if (event.type === 'pointerdown') controller.fireLaser()
+        })
+        fireRef.current = () => controller.fireLaser()
+
+        app.stage.addChild(buildAimGuide(shipY, surfaceY))
+        app.stage.addChild(buildShip(shipY))
+
+        loop = new GameLoop(scene, app)
+        loop.start()
+      } catch (err) {
+        console.error('[MiningCanvas] init failed:', err)
+      }
     })()
 
     return () => {
@@ -173,5 +238,4 @@ export default function MiningCanvas({ minerals, mineralMeta, onCollect, fireRef
   )
 }
 
-// re-exported for tests that need to convert pointer events to world space
-export { screenToWorld, WORLD_WIDTH, WORLD_HEIGHT }
+export { screenToWorld }

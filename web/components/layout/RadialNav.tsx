@@ -97,8 +97,11 @@ export default function RadialNav({ current, onNav }: RadialNavProps) {
         <div
           onClick={() => setOpen(false)}
           style={{
-            position: 'fixed',
-            inset: 0,
+            position: 'absolute',
+            top: -9999,
+            left: 0,
+            right: 0,
+            bottom: 0,
             pointerEvents: 'auto',
             background: 'radial-gradient(60% 50% at 50% 100%, rgba(3,6,12,0.55), transparent 70%)',
           }}

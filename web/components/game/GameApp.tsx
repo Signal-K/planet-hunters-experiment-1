@@ -2,7 +2,7 @@
 
 import { useMemo } from 'react'
 import { GameProvider, type Screen, useGame } from '@/game-context'
-import { M1_STEPS, M2_STEPS, PROGRESSION_STEPS, suggestBuild } from '@/lib/data'
+import { M1_STEPS, M2_STEPS, PROGRESSION_STEPS } from '@/lib/data'
 import IntroScreen from '@/components/game/screens/IntroScreen'
 import AssemblyScreen from '@/components/game/screens/AssemblyScreen'
 import BuildPlaceScreen from '@/components/game/screens/BuildPlaceScreen'
@@ -12,12 +12,11 @@ import MiningScreen from '@/components/game/screens/MiningScreen'
 import MissionBoardScreen from '@/components/game/screens/MissionBoardScreen'
 import TargetPickerScreen from '@/components/game/screens/TargetPickerScreen'
 import TransitScreen from '@/components/game/screens/TransitScreen'
-import ClassifyLightcurveScreen from '@/components/game/screens/ClassifyLightcurveScreen'
 import RefineryScreen from '@/components/game/screens/RefineryScreen'
-import SatelliteScreen from '@/components/game/screens/SatelliteScreen'
 import MarketScreen from '@/components/game/screens/MarketScreen'
+import HangarScreen from '@/components/game/screens/HangarScreen'
+import RocketPurchaseScreen from '@/components/game/screens/RocketPurchaseScreen'
 import TutorialCoach from '@/components/game/TutorialCoach'
-import BuildGatePrompt from '@/components/game/BuildGatePrompt'
 import SaveProgressPrompt from '@/components/game/SaveProgressPrompt'
 import UnlockPopup from '@/components/game/UnlockPopup'
 import RadialNav from '@/components/layout/RadialNav'
@@ -47,7 +46,9 @@ function GameCanvas() {
         ...s,
         action: 'Tap MISSIONS',
         anchor: 'bottom' as const,
-        spot: { x: 104, y: 704, w: 72, h: 72 },
+        // MISSIONS button is always 104px from canvas bottom (bottom:28 + dy:-76.2 ≈ 104px)
+        // x is stable across canvas widths (portrait-canvas ≈ 390-402px, button centered ~142px)
+        spot: { x: 100, y: 104, w: 76, h: 58, fromBottom: true },
       }
     }
     return s
@@ -96,7 +97,6 @@ function GameCanvas() {
           <BuildPlaceScreen
             onBack={() => game.go('hub')}
             hasCoach={hasCoach}
-            missionsDone={game.player.missionsDone}
             onPlaced={(kind, plot) => {
               game.setPlayer(player => ({
                 ...player,
@@ -114,9 +114,8 @@ function GameCanvas() {
             hasCoach={hasCoach}
             onNav={screen => goFromNav(screen)}
             onGoBuilding={building => {
-              if (building === 'control' && !game.player.controlBuilt) return game.setBuildGate(true)
               if (building === 'refinery') return game.go('refinery')
-              if (building === 'satellite') return game.go('satellite')
+              if (building === 'hangar') return game.go('hangar')
               if (building === 'launchpad' || building === 'missions') return goFromNav('missions')
             }}
             onUpgradeLaunchpad={() => game.upgradeLaunchpad()}
@@ -133,18 +132,8 @@ function GameCanvas() {
             contractorCooldowns={game.player.contractorCooldowns}
           />
         )}
-        {game.screen === 'classify' && game.mission && (
-          <ClassifyLightcurveScreen onBack={() => game.go('missions')} onSubmit={game.classifyCandidate} hasCoach={hasCoach} classificationError={game.classificationError} />
-        )}
         {game.screen === 'targets' && game.mission && (
           <TargetPickerScreen mission={game.mission} onBack={() => game.go('missions')} onPick={game.onPickTarget} hasCoach={hasCoach} catalog={game.catalog} />
-        )}
-        {game.screen === 'satellite' && (
-          <SatelliteScreen
-            annotations={game.player.researchAnnotations}
-            onClassify={game.onSatelliteClassify}
-            onBack={() => game.go('hub')}
-          />
         )}
         {game.screen === 'market' && (
           <MarketScreen
@@ -153,6 +142,13 @@ function GameCanvas() {
             onSell={game.sellMinerals}
             onBack={() => game.go('hub')}
             contractorId={game.player.lastContractor}
+          />
+        )}
+        {game.screen === 'hangar' && (
+          <HangarScreen
+            francs={game.player.francs}
+            missionsDone={game.player.missionsDone}
+            onBack={() => game.go('hub')}
           />
         )}
         {game.screen === 'refinery' && (
@@ -168,6 +164,14 @@ function GameCanvas() {
             onCollect={game.onCollectRefined}
           />
         )}
+        {game.screen === 'rocket-buy' && game.mission && game.target && (
+          <RocketPurchaseScreen
+            missionsDone={game.player.missionsDone}
+            francs={game.player.francs}
+            onPurchase={game.onPurchaseRocket}
+            onBack={() => game.go('targets')}
+          />
+        )}
         {game.screen === 'fab' && game.mission && game.target && (
           <AssemblyScreen
             mission={game.mission}
@@ -175,11 +179,8 @@ function GameCanvas() {
             rocket={game.rocket}
             parts={game.catalog.parts}
             missionsDone={game.player.missionsDone}
-            onChange={(slot, id) => game.setRocket(rocket => ({ ...rocket, [slot]: id }))}
-            onSuggest={() => game.setRocket(suggestBuild({ mission: game.mission, target: game.target, missionsDone: game.player.missionsDone, launchpadUpgraded: game.player.launchpadUpgraded, parts: game.catalog.parts }))}
-            onExplained={() => game.completeStep(4)}
             onLaunch={game.onLaunch}
-            onBack={() => game.go(game.mission?.requiresClassification ? 'classify' : 'targets')}
+            onBack={() => game.go('rocket-buy')}
             hasCoach={hasCoach}
           />
         )}
@@ -206,18 +207,8 @@ function GameCanvas() {
             step={coach}
             total={coachSteps.length}
             onManualNext={game.coachManualNext}
-            onSkip={() => {
-              game.setTutorial(false)
-              game.setDoneSteps(prev => {
-                const next = { ...prev }
-                for (const step of coachSteps) next[step.id] = true
-                return next
-              })
-            }}
+            onSkip={() => game.skipTutorial(coachSteps.map(s => s.id))}
           />
-        )}
-        {game.buildGate && (
-          <BuildGatePrompt francs={game.player.francs} onBuild={game.buildControlStation} onClose={() => game.setBuildGate(false)} />
         )}
         {game.popup && game.screen !== 'market' && (
           <UnlockPopup
@@ -231,14 +222,12 @@ function GameCanvas() {
               game.setPopup(null)
               if (popup === 'sr2') {
                 game.go('hub')
-              } else if (popup === 'freeops') {
-                game.go('hub')
               }
             }}
             onDismiss={game.popup === 'loan' ? () => game.setPopup(null) : undefined}
           />
         )}
-        {game.upgradePromptOpen && !game.popup && !game.buildGate && (
+        {game.upgradePromptOpen && !game.popup && (
           <SaveProgressPrompt onUpgrade={game.upgradeAccount} onDismiss={game.dismissUpgradePrompt} />
         )}
         {game.authGateOpen && (
