@@ -5,7 +5,7 @@ import Image from 'next/image'
 import TopBar from '@/components/ui/TopBar'
 import Panel from '@/components/ui/Panel'
 import StatusPill from '@/components/ui/StatusPill'
-import { compatibleTargetsFor } from '@/lib/data'
+import { compatibleTargetsFor, contractorAffinityBonus, contractorUnlocked } from '@/lib/data'
 import type { Catalog } from '@/lib/catalog'
 
 interface MissionBoardScreenProps {
@@ -15,6 +15,7 @@ interface MissionBoardScreenProps {
   freeOperations: boolean
   hasCoach?: boolean
   catalog: Catalog
+  contractorMissions?: Record<string, number>
   contractorCooldowns?: Record<string, number>
 }
 
@@ -26,7 +27,7 @@ function formatCooldown(remaining: number): string {
   return `${mins}m ${secs}s`
 }
 
-export default function MissionBoardScreen({ onBack, onPick, missionsDone, freeOperations, hasCoach, catalog, contractorCooldowns }: MissionBoardScreenProps) {
+export default function MissionBoardScreen({ onBack, onPick, missionsDone, freeOperations, hasCoach, catalog, contractorMissions, contractorCooldowns }: MissionBoardScreenProps) {
   const { missions: MISSIONS, contractors: CONTRACTORS, minerals: MINERAL_META, targets } = catalog
   const [tick, setTick] = useState(Date.now())
   useEffect(() => {
@@ -39,7 +40,11 @@ export default function MissionBoardScreen({ onBack, onPick, missionsDone, freeO
     const expiry = contractorCooldowns[contractor]
     return expiry && expiry > now
   }
-  const available = MISSIONS.filter(m => freeOperations || m.sequence === missionsDone + 1)
+  const sequence = missionsDone + 1
+  const available = MISSIONS.filter(m => {
+    const contractor = CONTRACTORS[m.contractor]
+    return !!contractor && (freeOperations || contractorUnlocked(contractor, sequence)) && (freeOperations || m.sequence === sequence)
+  })
   return (
     <div style={{ width: '100%', height: '100%', position: 'relative', background: '#06090f' }}>
       <div style={{ position: 'absolute', inset: 0 }}>
@@ -59,10 +64,15 @@ export default function MissionBoardScreen({ onBack, onPick, missionsDone, freeO
         <div style={{ padding: '0 14px', display: 'flex', flexDirection: 'column', gap: 10 }}>
           {MISSIONS.map(m => {
             const cooldown = isOnCooldown(m.contractor)
-            const unlocked = !cooldown && (freeOperations || available.some(item => item.id === m.id))
             const contractor = CONTRACTORS[m.contractor]
+            if (!contractor) return null
+            const contractorReady = freeOperations || contractorUnlocked(contractor, sequence)
+            const unlocked = !cooldown && contractorReady && (freeOperations || available.some(item => item.id === m.id))
             const mTargets = compatibleTargetsFor(m, targets)
             const accent = contractor.color
+            const affinityMultiplier = contractorAffinityBonus(contractor, contractorMissions?.[contractor.id] ?? 0)
+            const affinityBonus = Math.round(m.payout.francs * affinityMultiplier)
+            const displayPayout = m.payout.francs + affinityBonus
             return (
               <button key={m.id} data-mission-id={m.id} data-testid={`mission-card-${m.id}`} onClick={() => unlocked && onPick(m.id)} style={{ background: 'transparent', border: 'none', padding: 0, textAlign: 'left', cursor: unlocked ? 'pointer' : 'not-allowed', opacity: unlocked ? 1 : 0.5, outline: '2px solid transparent', outlineOffset: 2 }} className="mission-card-btn">
                 <Panel accent={accent} style={{ padding: 12 }}>
@@ -76,6 +86,7 @@ export default function MissionBoardScreen({ onBack, onPick, missionsDone, freeO
                         <span style={{ fontFamily: 'var(--ln-font-mono)', fontSize: 9, letterSpacing: '0.16em', color: '#5d7390', textTransform: 'uppercase', marginLeft: 'auto' }}>{m.tag}</span>
                       </div>
                       <div style={{ fontFamily: 'var(--ln-font-display)', fontWeight: 800, fontSize: 16, color: '#e6efff', marginTop: 2 }}>{m.title}</div>
+                      <div style={{ fontFamily: 'var(--ln-font-mono)', fontSize: 9, color: '#7ec8ff', letterSpacing: '0.1em', textTransform: 'uppercase', marginTop: 2 }}>Wants · {contractor.mineralPreferences.join(' / ')} · +{Math.round(contractor.payoutPremium * 100)}%</div>
                       <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 12, color: '#a9b8ce', marginTop: 2, lineHeight: 1.4 }}>{m.brief}</div>
                     </div>
                   </div>
@@ -95,13 +106,14 @@ export default function MissionBoardScreen({ onBack, onPick, missionsDone, freeO
                   </div>
 
                   <div style={{ marginTop: 10, display: 'flex', alignItems: 'center', gap: 10, paddingTop: 10, borderTop: '1px dashed rgba(63,169,255,0.18)' }}>
-                    <div style={{ fontFamily: 'var(--ln-font-display)', fontWeight: 800, fontSize: 18, color: '#f5a623' }}>▲ {m.payout.francs.toLocaleString()}</div>
+                    <div style={{ fontFamily: 'var(--ln-font-display)', fontWeight: 800, fontSize: 18, color: '#f5a623' }}>▲ {displayPayout.toLocaleString()}</div>
                     <span style={{ fontFamily: 'var(--ln-font-mono)', fontSize: 11, letterSpacing: '0.16em', color: '#7ec8ff' }}>+{m.payout.affinity} AFF</span>
+                    {affinityBonus > 0 && <span style={{ fontFamily: 'var(--ln-font-mono)', fontSize: 10, letterSpacing: '0.12em', color: '#39d36a' }}>+{Math.round(affinityMultiplier * 100)}%</span>}
                     <span style={{ flex: 1 }} />
                     {cooldown
                       ? <StatusPill kind="crit">Cooldown {formatCooldown(contractorCooldowns![m.contractor] - now)}</StatusPill>
                       : !unlocked
-                        ? <StatusPill kind="mute">Locked · {m.sequence <= missionsDone ? 'Completed' : m.unlockAt}</StatusPill>
+                        ? <StatusPill kind="mute">Locked · {!contractorReady ? `L${contractor.unlockTier}` : m.sequence <= missionsDone ? 'Completed' : m.unlockAt}</StatusPill>
                         : <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '4px 10px', borderRadius: 8, background: accent, color: '#06121f', fontFamily: 'var(--ln-font-display)', fontWeight: 800, fontSize: 11, letterSpacing: '0.14em', textTransform: 'uppercase' }}>
                             {mTargets.length} target{mTargets.length !== 1 ? 's' : ''} ›
                           </span>}

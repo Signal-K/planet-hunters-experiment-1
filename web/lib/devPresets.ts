@@ -17,6 +17,7 @@ const BASE_PLAYER: Player = {
   missionsDone: 0,
   freeOperations: false,
   contractorMissions: {},
+  contractorStreaks: {},
   contractorCooldowns: {},
   researchAnnotations: 0,
   refineryBuilt: false,

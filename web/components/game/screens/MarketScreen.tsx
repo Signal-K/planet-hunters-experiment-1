@@ -33,7 +33,7 @@ export default function MarketScreen({ stash, francs, onSell, onBack, contractor
   function contractorPrice(basePrice: number, mineralId: string): number {
     if (!contractor) return basePrice
     const pref = contractor.mineralPreferences.includes(mineralId)
-    return pref ? Math.round(basePrice * 1.25) : basePrice
+    return pref ? Math.round(basePrice * (1 + contractor.payoutPremium)) : basePrice
   }
 
   function handleSell(mineralId: string) {
@@ -64,7 +64,7 @@ export default function MarketScreen({ stash, francs, onSell, onBack, contractor
               {contractor.name} Premium
             </div>
             <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 11, color: '#a9b8ce', marginTop: 2 }}>
-              Preferred minerals sell at 1.25× market rate
+              Preferred minerals sell at {Math.round((1 + contractor.payoutPremium) * 100)}% market rate
             </div>
           </Panel>
         )}

@@ -1,20 +1,181 @@
-// Landnam game data — contractors
+// Landnam game data — contractors and contractor economy
 
 import type { Contractor, ContractorSlot } from './types'
 
+export const CONTRACTOR_COOLDOWN_MS = 30 * 60 * 1000
+export const CONTRACTOR_STREAK_LIMIT = 2
+export const MAX_AFFINITY_BONUS = 0.15
+
 export const CONTRACTOR_SLOTS: ContractorSlot[] = [
-  { id: 'contractor-03a', name: 'Contractor Slot 03A', color: '#d97150', initial: '3A', unlockTier: 3, projectType: 'Starter smelting throughput', mineralPreferences: ['iron', 'silicon'], payoutNotes: 'Low rate, steady volume', affinityNotes: '+10 per delivery', uiRole: 'starter' },
-  { id: 'contractor-03b', name: 'Contractor Slot 03B', color: '#9becff', initial: '3B', unlockTier: 3, projectType: 'Volatile handling', mineralPreferences: ['ice', 'carbon'], payoutNotes: 'Medium pay, bulk orders', affinityNotes: '+8 per delivery', uiRole: 'bulk' },
-  { id: 'contractor-04a', name: 'Contractor Slot 04A', color: '#ffd166', initial: '4A', unlockTier: 4, projectType: 'Precious-metal assay', mineralPreferences: ['gold', 'nickel'], payoutNotes: 'High pay, low volume', affinityNotes: '+15 per delivery', uiRole: 'prospect' },
-  { id: 'contractor-04b', name: 'Contractor Slot 04B', color: '#a8d8ea', initial: '4B', unlockTier: 4, projectType: 'Construction aggregates', mineralPreferences: ['iron', 'carbon'], payoutNotes: 'Low rate, large orders', affinityNotes: '+6 per delivery', uiRole: 'bulk' },
-  { id: 'contractor-06a', name: 'Contractor Slot 06A', color: '#70e070', initial: '6A', unlockTier: 6, projectType: 'Deep-core sampling', mineralPreferences: ['nickel', 'cobalt'], payoutNotes: 'Mixed-bag premium', affinityNotes: '+12 per delivery', uiRole: 'prospect' },
-  { id: 'contractor-06b', name: 'Contractor Slot 06B', color: '#c084ff', initial: '6B', unlockTier: 6, projectType: 'Rare-gas refining', mineralPreferences: ['rare', 'gold'], payoutNotes: 'High tier, small batches', affinityNotes: '+20 per delivery', uiRole: 'command' },
-  { id: 'contractor-08a', name: 'Contractor Slot 08A', color: '#ff8c42', initial: '8A', unlockTier: 8, projectType: 'Solar-grade silicon', mineralPreferences: ['silicon', 'ice'], payoutNotes: 'Premium purity contracts', affinityNotes: '+10 per delivery', uiRole: 'command' },
-  { id: 'contractor-08b', name: 'Contractor Slot 08B', color: '#5fcde6', initial: '8B', unlockTier: 8, projectType: 'Outer-belt volatiles', mineralPreferences: ['ice', 'carbon'], payoutNotes: 'Medium rate, special cargo', affinityNotes: '+8 per delivery', uiRole: 'bulk' },
-  { id: 'contractor-10a', name: 'Contractor Slot 10A', color: '#f5a623', initial: '10A', unlockTier: 10, projectType: 'Strategic minerals', mineralPreferences: ['gold', 'rare', 'cobalt'], payoutNotes: 'High payout, rare minerals', affinityNotes: '+25 per delivery', uiRole: 'science' },
-  { id: 'contractor-10b', name: 'Contractor Slot 10B', color: '#39d36a', initial: '10B', unlockTier: 10, projectType: 'Base expansion reserves', mineralPreferences: ['iron', 'silicon', 'nickel'], payoutNotes: 'Balanced late-game contracts', affinityNotes: '+12 per delivery', uiRole: 'starter' },
+  {
+    id: 'hearth-smelters',
+    name: 'Hearth Smelters',
+    color: '#d97150',
+    initial: 'HS',
+    unlockTier: 1,
+    projectType: 'Starter smelting and hull plate supply',
+    mineralPreferences: ['iron', 'silicon'],
+    payoutPremium: 0.20,
+    affinityBonusPerMission: 0.025,
+    payoutNotes: '20% premium on preferred structural minerals',
+    affinityNotes: '+2.5% payout per completed Hearth job, capped at +15%',
+    uiRole: 'starter',
+  },
+  {
+    id: 'orbital-glassworks',
+    name: 'Orbital Glassworks',
+    color: '#b9d8ff',
+    initial: 'OG',
+    unlockTier: 1,
+    projectType: 'Solar glass and electronics substrate contracts',
+    mineralPreferences: ['silicon', 'carbon'],
+    payoutPremium: 0.20,
+    affinityBonusPerMission: 0.025,
+    payoutNotes: '20% premium on silicon and carbon runs',
+    affinityNotes: '+2.5% payout per completed Glassworks job, capped at +15%',
+    uiRole: 'starter',
+  },
+  {
+    id: 'coldstream-volatiles',
+    name: 'Coldstream Volatiles',
+    color: '#9becff',
+    initial: 'CV',
+    unlockTier: 1,
+    projectType: 'Water, carbon, and propellant reserve handling',
+    mineralPreferences: ['ice', 'carbon'],
+    payoutPremium: 0.22,
+    affinityBonusPerMission: 0.02,
+    payoutNotes: '22% premium on volatile supply',
+    affinityNotes: '+2% payout per completed Coldstream job, capped at +15%',
+    uiRole: 'bulk',
+  },
+  {
+    id: 'atlas-aggregate',
+    name: 'Atlas Aggregate',
+    color: '#a8d8ea',
+    initial: 'AA',
+    unlockTier: 2,
+    projectType: 'Bulk construction feedstock and orbital ballast',
+    mineralPreferences: ['iron', 'carbon'],
+    payoutPremium: 0.18,
+    affinityBonusPerMission: 0.02,
+    payoutNotes: '18% premium on high-volume construction cargo',
+    affinityNotes: '+2% payout per completed Atlas job, capped at +15%',
+    uiRole: 'bulk',
+  },
+  {
+    id: 'helioforge-metals',
+    name: 'Helioforge Metals',
+    color: '#ffd166',
+    initial: 'HF',
+    unlockTier: 2,
+    projectType: 'Nickel, cobalt, and precious-metal assay',
+    mineralPreferences: ['nickel', 'cobalt', 'gold'],
+    payoutPremium: 0.24,
+    affinityBonusPerMission: 0.03,
+    payoutNotes: '24% premium on metal assay orders',
+    affinityNotes: '+3% payout per completed Helioforge job, capped at +15%',
+    uiRole: 'prospect',
+  },
+  {
+    id: 'kepler-materials',
+    name: 'Kepler Materials',
+    color: '#70e070',
+    initial: 'KM',
+    unlockTier: 3,
+    projectType: 'Deep-core sampling and battery material reserves',
+    mineralPreferences: ['nickel', 'cobalt'],
+    payoutPremium: 0.22,
+    affinityBonusPerMission: 0.03,
+    payoutNotes: '22% premium on deep-core metals',
+    affinityNotes: '+3% payout per completed Kepler job, capped at +15%',
+    uiRole: 'prospect',
+  },
+  {
+    id: 'nightjar-systems',
+    name: 'Nightjar Systems',
+    color: '#c084ff',
+    initial: 'NS',
+    unlockTier: 3,
+    projectType: 'Rare gas capture and ion drive reserves',
+    mineralPreferences: ['rare', 'gold'],
+    payoutPremium: 0.28,
+    affinityBonusPerMission: 0.035,
+    payoutNotes: '28% premium on rare strategic cargo',
+    affinityNotes: '+3.5% payout per completed Nightjar job, capped at +15%',
+    uiRole: 'command',
+  },
+  {
+    id: 'solgrid-dynamics',
+    name: 'Solgrid Dynamics',
+    color: '#ff8c42',
+    initial: 'SD',
+    unlockTier: 4,
+    projectType: 'Solar-grid expansion and high-purity silicon',
+    mineralPreferences: ['silicon', 'ice'],
+    payoutPremium: 0.24,
+    affinityBonusPerMission: 0.025,
+    payoutNotes: '24% premium on solar-grid inputs',
+    affinityNotes: '+2.5% payout per completed Solgrid job, capped at +15%',
+    uiRole: 'command',
+  },
+  {
+    id: 'lumen-research',
+    name: 'Lumen Research',
+    color: '#f5a623',
+    initial: 'LR',
+    unlockTier: 4,
+    projectType: 'Strategic sample reserve and sensor research',
+    mineralPreferences: ['gold', 'rare', 'cobalt'],
+    payoutPremium: 0.30,
+    affinityBonusPerMission: 0.035,
+    payoutNotes: '30% premium on research-critical minerals',
+    affinityNotes: '+3.5% payout per completed Lumen job, capped at +15%',
+    uiRole: 'science',
+  },
+  {
+    id: 'pioneer-works',
+    name: 'Pioneer Works',
+    color: '#39d36a',
+    initial: 'PW',
+    unlockTier: 5,
+    projectType: 'Base expansion reserves and general frontier supply',
+    mineralPreferences: ['iron', 'silicon', 'nickel'],
+    payoutPremium: 0.20,
+    affinityBonusPerMission: 0.025,
+    payoutNotes: '20% premium on balanced expansion cargo',
+    affinityNotes: '+2.5% payout per completed Pioneer job, capped at +15%',
+    uiRole: 'starter',
+  },
 ]
 
 export const CONTRACTORS: Record<string, Contractor> = Object.fromEntries(
-  CONTRACTOR_SLOTS.map(c => [c.id, { id: c.id, name: c.name, color: c.color, initial: c.initial }])
+  CONTRACTOR_SLOTS.map(c => [c.id, toContractor(c)])
 )
+
+export function toContractor(slot: ContractorSlot): Contractor {
+  return {
+    id: slot.id,
+    name: slot.name,
+    color: slot.color,
+    initial: slot.initial,
+    unlockTier: slot.unlockTier,
+    projectType: slot.projectType,
+    mineralPreferences: slot.mineralPreferences,
+    payoutPremium: slot.payoutPremium,
+    affinityBonusPerMission: slot.affinityBonusPerMission,
+  }
+}
+
+export function contractorAffinityBonus(contractor: Contractor, completedJobs = 0): number {
+  return Math.min(MAX_AFFINITY_BONUS, completedJobs * contractor.affinityBonusPerMission)
+}
+
+export function contractorPayoutMultiplier(contractor: Contractor, completedJobs = 0): number {
+  return 1 + contractor.payoutPremium + contractorAffinityBonus(contractor, completedJobs)
+}
+
+export function contractorUnlocked(contractor: Contractor, sequence: number): boolean {
+  return contractor.unlockTier <= sequence
+}
+

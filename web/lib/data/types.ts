@@ -65,6 +65,11 @@ export interface Contractor {
   name: string
   color: string
   initial: string
+  unlockTier: number
+  projectType: string
+  mineralPreferences: string[]
+  payoutPremium: number
+  affinityBonusPerMission: number
 }
 
 export interface ContractorSlot {
@@ -75,6 +80,8 @@ export interface ContractorSlot {
   unlockTier: number
   projectType: string
   mineralPreferences: string[]
+  payoutPremium: number
+  affinityBonusPerMission: number
   payoutNotes: string
   affinityNotes: string
   uiRole: 'starter' | 'bulk' | 'prospect' | 'command' | 'science'

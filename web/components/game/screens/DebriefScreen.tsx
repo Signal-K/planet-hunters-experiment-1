@@ -1,8 +1,8 @@
 'use client'
 
 import { useState } from 'react'
-import type { Mission, Target, MineralMeta } from '@/lib/data'
-import { sellCargo, calibrateOnboardingPayout } from '@/lib/data'
+import type { Mission, Target, MineralMeta, Contractor } from '@/lib/data'
+import { sellCargo, calibrateOnboardingPayout, contractorAffinityBonus } from '@/lib/data'
 import Panel from '@/components/ui/Panel'
 import TopBar from '@/components/ui/TopBar'
 import { PrimaryBtn } from '@/components/ui/Button'
@@ -14,12 +14,14 @@ const DEBRIEF_GUIDE = [
   { label: 'MINERAL VALUE', desc: 'Market rate for every unit of ore in your cargo. You always receive this regardless of contract status.' },
 ]
 
-export default function DebriefScreen({ mission, target, cargo, onDone, minerals, freeOperations, annotations, missionsDone }: {
+export default function DebriefScreen({ mission, target, cargo, onDone, minerals, contractors, contractorMissions, freeOperations, annotations, missionsDone }: {
   mission: Mission
   target: Target
   cargo: Record<string, number>
   onDone: (total: number, affinity: number, consumed?: Record<string, number>) => void
   minerals: Record<string, MineralMeta>
+  contractors: Record<string, Contractor>
+  contractorMissions?: Record<string, number>
   freeOperations?: boolean
   annotations?: number
   missionsDone?: number
@@ -28,8 +30,12 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
   const [guideOpen, setGuideOpen] = useState(false)
   const subtotal = sellCargo(cargo, minerals)
   const delivered = Object.entries(mission.requires.minerals).every(([id, amount]) => (cargo[id] ?? 0) >= amount)
+  const contractor = contractors[mission.contractor]
+  const affinityMultiplier = contractor ? contractorAffinityBonus(contractor, contractorMissions?.[contractor.id] ?? 0) : 0
+  const affinityBonus = delivered ? Math.round(mission.payout.francs * affinityMultiplier) : 0
+  const contractPayout = delivered ? mission.payout.francs + affinityBonus : 0
   const discoveryBonus = freeOperations ? Math.round(subtotal * (0.10 + 0.01 * (annotations ?? 0))) : 0
-  const rawTotal = subtotal + (delivered ? mission.payout.francs : 0) + discoveryBonus
+  const rawTotal = subtotal + contractPayout + discoveryBonus
   const total = calibrateOnboardingPayout(rawTotal, missionsDone ?? 0)
 
   return (
@@ -67,6 +73,7 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
             <div className="reward-label">Francs Earned</div>
             <div className="order-row"><span>Mineral Value</span><strong>▲ {subtotal.toLocaleString()}</strong></div>
             {delivered && <div className="order-row"><span>Contract Payout</span><strong>▲ {mission.payout.francs.toLocaleString()}</strong></div>}
+            {affinityBonus > 0 && <div className="order-row"><span>Contractor Affinity Bonus</span><strong>▲ {affinityBonus.toLocaleString()}</strong></div>}
             {discoveryBonus > 0 && (
               <>
                 <div className="order-row"><span>Base Discovery (10%)</span><strong>▲ {Math.round(subtotal * 0.10).toLocaleString()}</strong></div>

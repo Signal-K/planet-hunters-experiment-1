@@ -8,7 +8,7 @@ export type { Screen, Player, GameState } from '@/lib/game-types'
 
 let toastSeq = 0
 function nextToastId() { return `t${++toastSeq}` }
-import { type Mission, type Target, type RocketConfig, MISSIONS, TARGETS, PROGRESSION_STEPS, suggestBuild, REFINERY_RECIPES, MINERAL_META, STARTER_ROCKETS } from '@/lib/data'
+import { type Mission, type Target, type RocketConfig, MISSIONS, TARGETS, PROGRESSION_STEPS, suggestBuild, REFINERY_RECIPES, MINERAL_META, STARTER_ROCKETS, CONTRACTOR_COOLDOWN_MS, CONTRACTOR_STREAK_LIMIT } from '@/lib/data'
 import { resolvePreset } from '@/lib/devPresets'
 import { pbShared } from '@/lib/pb'
 import { ensureGuestAuth, hasStoredCredentials, isGuestAccount, upgradeGuestAccount } from '@/lib/guestAuth'
@@ -31,6 +31,7 @@ const DEFAULT_STATE: GameState = {
     missionsDone: 0,
     freeOperations: false,
     contractorMissions: {},
+    contractorStreaks: {},
     contractorCooldowns: {},
     researchAnnotations: 0,
     refineryBuilt: false,
@@ -507,12 +508,16 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       const missionContractor = mission?.contractor
       const contractor = missionContractor
       const contractorMissions = { ...s.player.contractorMissions }
+      const contractorStreaks = { ...(s.player.contractorStreaks ?? {}) }
       const contractorCooldowns = { ...s.player.contractorCooldowns }
       if (contractor) {
-        const count = (contractorMissions[contractor] ?? 0) + 1
-        contractorMissions[contractor] = count
-        if (count >= 2) {
-          contractorCooldowns[contractor] = Date.now() + 30 * 60 * 1000
+        contractorMissions[contractor] = (contractorMissions[contractor] ?? 0) + 1
+        const streak = (contractorStreaks[contractor] ?? 0) + 1
+        if (streak >= CONTRACTOR_STREAK_LIMIT) {
+          contractorStreaks[contractor] = 0
+          contractorCooldowns[contractor] = Date.now() + CONTRACTOR_COOLDOWN_MS
+        } else {
+          contractorStreaks[contractor] = streak
         }
       }
       const stash = { ...(s.player.stash ?? {}) }
@@ -544,6 +549,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
           missionCount: catalog.missions.filter(m => m.sequence === missionsDone + 1).length,
           freeOperations: false,
           contractorMissions,
+          contractorStreaks,
           contractorCooldowns,
           stash,
           lastContractor: contractor,

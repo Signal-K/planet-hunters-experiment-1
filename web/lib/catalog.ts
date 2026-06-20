@@ -1,6 +1,6 @@
 import { pbLandnam } from './pb-landnam'
 import type { Target, Mission, Part, MineralMeta, Contractor } from './data'
-import { TARGETS, MISSIONS, PARTS, MINERAL_META, CONTRACTORS } from './data'
+import { TARGETS, MISSIONS, PARTS, MINERAL_META, CONTRACTORS, CONTRACTOR_SLOTS, toContractor as slotToContractor } from './data'
 
 export interface Catalog {
   targets: Target[]
@@ -61,6 +61,36 @@ export function toMission(r: any): Mission {
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function toContractor(r: any): Contractor {
+  const fallback = CONTRACTOR_SLOTS.find(c => c.id === r.slug)
+  const mineralPreferences = Array.isArray(r.mineral_preferences)
+    ? r.mineral_preferences
+    : (r.mineral_preferences ? JSON.parse(r.mineral_preferences) : fallback?.mineralPreferences ?? [])
+  return {
+    ...(fallback ? slotToContractor(fallback) : {
+      id: r.slug,
+      name: r.name,
+      color: r.color ?? '#87CFFA',
+      initial: r.initial ?? String(r.name ?? r.slug).slice(0, 2).toUpperCase(),
+      unlockTier: r.unlock_tier ?? 1,
+      projectType: r.project_type ?? 'General contracting',
+      mineralPreferences,
+      payoutPremium: 0.2,
+      affinityBonusPerMission: 0.025,
+    }),
+    id: r.slug,
+    name: r.name ?? fallback?.name ?? r.slug,
+    color: r.color ?? fallback?.color ?? '#87CFFA',
+    initial: r.initial ?? fallback?.initial ?? String(r.name ?? r.slug).slice(0, 2).toUpperCase(),
+    unlockTier: r.unlock_tier ?? fallback?.unlockTier ?? 1,
+    projectType: r.project_type ?? fallback?.projectType ?? 'General contracting',
+    mineralPreferences,
+    payoutPremium: r.payout_premium ?? fallback?.payoutPremium ?? 0.2,
+    affinityBonusPerMission: r.affinity_bonus_per_mission ?? fallback?.affinityBonusPerMission ?? 0.025,
+  }
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function toPart(r: any): Part {
   return {
     id: r.slug,
@@ -88,6 +118,9 @@ export async function fetchCatalog(): Promise<Catalog> {
 
   const generatedFallbackMissions = MISSIONS
   const catalogMissions = missions.map(toMission)
+  const catalogContractors = Object.fromEntries(
+    contractors.map(r => [r.slug, toContractor(r)])
+  )
 
   return {
     targets: locations.map(toTarget),
@@ -100,8 +133,6 @@ export async function fetchCatalog(): Promise<Catalog> {
     minerals: Object.fromEntries(
       minerals.map(r => [r.slug, { name: r.name, sym: r.sym, color: r.color, price: r.base_price, rarity: r.rarity ?? 'common', constructionUse: r.construction_use ?? '', laserAccess: r.laser_access ?? 1 }])
     ),
-    contractors: Object.fromEntries(
-      contractors.map(r => [r.slug, { id: r.slug, name: r.name, color: r.color, initial: r.initial }])
-    ),
+    contractors: Object.keys(catalogContractors).length > 0 ? catalogContractors : CONTRACTORS,
   }
 }

@@ -32,6 +32,7 @@ export interface Player {
   debriefPending?: boolean
   stash?: Record<string, number>
   contractorMissions: Record<string, number>
+  contractorStreaks?: Record<string, number>
   contractorCooldowns: Record<string, number>
   researchAnnotations: number
   refineryBuilt: boolean

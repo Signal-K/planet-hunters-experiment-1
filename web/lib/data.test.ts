@@ -179,8 +179,10 @@ describe('calibrateOnboardingPayout', () => {
 describe('seed bible v0 catalog', () => {
   it('defines ten mechanical contractor slots at the spec unlock tiers', () => {
     expect(CONTRACTOR_SLOTS).toHaveLength(10)
-    expect(CONTRACTOR_SLOTS.map(c => c.unlockTier)).toEqual([3, 3, 4, 4, 6, 6, 8, 8, 10, 10])
-    expect(CONTRACTOR_SLOTS.every(c => c.name.startsWith('Contractor Slot'))).toBe(true)
+    expect(CONTRACTOR_SLOTS.map(c => c.unlockTier)).toEqual([1, 1, 1, 2, 2, 3, 3, 4, 4, 5])
+    expect(CONTRACTOR_SLOTS.every(c => !c.name.startsWith('Contractor Slot'))).toBe(true)
+    expect(CONTRACTOR_SLOTS.every(c => c.mineralPreferences.length > 0)).toBe(true)
+    expect(CONTRACTOR_SLOTS.every(c => c.payoutPremium >= 0.18)).toBe(true)
   })
 
   it('keeps Landnam targets to real solar-system bodies for the seed catalog', () => {
@@ -194,5 +196,9 @@ describe('seed bible v0 catalog', () => {
     expect(MISSIONS.filter(m => m.sequence === 1).length).toBeGreaterThan(1)
     expect(MISSIONS.filter(m => m.sequence === 2).length).toBeGreaterThan(1)
     expect(MISSIONS.every(m => m.id.startsWith('generated-'))).toBe(true)
+    expect(MISSIONS.every(m => {
+      const contractor = CONTRACTOR_SLOTS.find(c => c.id === m.contractor)
+      return contractor && contractor.unlockTier <= m.sequence
+    })).toBe(true)
   })
 })

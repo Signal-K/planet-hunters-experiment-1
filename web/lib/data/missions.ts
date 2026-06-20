@@ -1,7 +1,7 @@
 // Landnam game data — generated mission fallback
 
 import type { Mission, MissionTemplate } from './types'
-import { CONTRACTOR_SLOTS } from './contractors'
+import { CONTRACTOR_SLOTS, contractorPayoutMultiplier } from './contractors'
 import { MINERAL_META } from './minerals'
 
 export const MISSION_TEMPLATES: MissionTemplate[] = [
@@ -48,8 +48,11 @@ const MINERAL_LABELS: Record<string, string> = {
   rare: 'Xenon',
 }
 
-function selectMinerals(template: MissionTemplate, index: number, count: number): string[] {
-  return Array.from({ length: count }, (_, offset) => template.mineralKeys[(index + offset) % template.mineralKeys.length])
+function selectMinerals(template: MissionTemplate, preferences: string[], index: number, count: number): string[] {
+  const preferred = template.mineralKeys.filter(mineral => preferences.includes(mineral))
+  const remaining = template.mineralKeys.filter(mineral => !preferences.includes(mineral))
+  const candidates = [...preferred, ...remaining]
+  return Array.from({ length: count }, (_, offset) => candidates[(index + offset) % candidates.length])
 }
 
 function amountFor(template: MissionTemplate, sequence: number, amountBias: number, mineralIndex: number): number {
@@ -62,26 +65,28 @@ function amountFor(template: MissionTemplate, sequence: number, amountBias: numb
 export function generateMissions(count = OFFLINE_MISSION_COUNT): Mission[] {
   return COMPLEXITY_BANDS.slice(0, count).map((band, index) => {
     const template = MISSION_TEMPLATES.find(t => t.id === band.templateId) ?? MISSION_TEMPLATES[0]
+    const unlockedContractors = CONTRACTOR_SLOTS.filter(c => c.unlockTier <= band.sequence)
+    const contractorPool = unlockedContractors.filter(c => c.uiRole === template.contractorRole)
+    const fallbackPool = contractorPool.length > 0 ? contractorPool : unlockedContractors
+    const contractor = fallbackPool[band.contractorOffset % fallbackPool.length] ?? CONTRACTOR_SLOTS[0]
     const minerals = Object.fromEntries(
-      selectMinerals(template, index, band.mineralCount).map((mineral, mineralIndex) => [
+      selectMinerals(template, contractor.mineralPreferences, index, band.mineralCount).map((mineral, mineralIndex) => [
         mineral,
         amountFor(template, band.sequence, band.amountBias, mineralIndex),
       ])
     )
     const cargoMin = Object.values(minerals).reduce((sum, amount) => sum + amount, 0)
-    const contractorPool = CONTRACTOR_SLOTS.filter(c => c.uiRole === template.contractorRole)
-    const contractor = contractorPool[band.contractorOffset % Math.max(1, contractorPool.length)] ?? CONTRACTOR_SLOTS[band.contractorOffset % CONTRACTOR_SLOTS.length]
     const mineralNames = Object.keys(minerals).map(mineral => MINERAL_LABELS[mineral] ?? MINERAL_META[mineral]?.name ?? mineral)
     const primary = mineralNames.join(' + ')
     const francs = Object.entries(minerals).reduce(
-      (sum, [mineral, amount]) => sum + (MINERAL_META[mineral]?.price ?? 0) * amount * 1500 * template.payoutMultiplier,
+      (sum, [mineral, amount]) => sum + (MINERAL_META[mineral]?.price ?? 0) * amount * 1500 * template.payoutMultiplier * contractorPayoutMultiplier(contractor),
       0
     )
 
     return {
       id: `generated-s${band.sequence}-${template.id}-${index + 1}`,
       title: `${primary} ${template.tag.toLowerCase().replace('-', ' ')} order`,
-      brief: `${contractor.name} needs ${primary.toLowerCase()} from any compatible body. Generated fallback contract, complexity ${band.sequence}.`,
+      brief: `${contractor.name} needs ${primary.toLowerCase()} for ${contractor.projectType.toLowerCase()}. Preferred cargo earns a contractor premium; affinity improves future payouts.`,
       contractor: contractor.id,
       tag: template.tag,
       difficulty: template.difficulty,
