@@ -31,7 +31,7 @@ describe('Smoke — Landnam', () => {
   it('shows the transit rocket at the movement angle without a trajectory pointer', () => {
     visitWithState({
       screen: 'transit',
-      missionId: 'm1-iron',
+      missionId: 'generated-s1-starter-bulk-1',
       targetId: 'mars',
       tutorial: false,
     })
@@ -47,7 +47,7 @@ describe('Smoke — Landnam', () => {
   it('enforces cargo resolution before reward collection', () => {
     visitWithState({
       screen: 'debrief',
-      missionId: 'm1-iron',
+      missionId: 'generated-s1-starter-bulk-1',
       targetId: 'mars',
       lastCargo: { iron: 4 },
       tutorial: false,

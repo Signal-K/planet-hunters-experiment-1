@@ -1,6 +1,8 @@
-// Landnam game data — missions
+// Landnam game data — generated mission fallback
 
 import type { Mission, MissionTemplate } from './types'
+import { CONTRACTOR_SLOTS } from './contractors'
+import { MINERAL_META } from './minerals'
 
 export const MISSION_TEMPLATES: MissionTemplate[] = [
   { id: 'starter-bulk', tag: 'STARTER', difficulty: 'L1', mineralKeys: ['iron', 'silicon', 'carbon'], cargoRange: [4, 8], drillTierMin: 1, orbitMax: 4, payoutMultiplier: 1.0, contractorRole: 'starter', payoutFormula: 'mineral price * amount * 1500 * multiplier' },
@@ -9,64 +11,98 @@ export const MISSION_TEMPLATES: MissionTemplate[] = [
   { id: 'command-reserve', tag: 'COMMAND', difficulty: 'L3', mineralKeys: ['gold', 'rare', 'cobalt'], cargoRange: [3, 6], drillTierMin: 2, orbitMax: 6, payoutMultiplier: 3.5, contractorRole: 'command', payoutFormula: 'mineral price * amount * 1500 * multiplier' },
 ]
 
-const SEED_MINERAL_PRICES: Record<string, number> = {
-  iron: 120,
-  silicon: 180,
-  carbon: 60,
-  ice: 90,
-  nickel: 150,
-  cobalt: 450,
-  gold: 800,
-  rare: 2000,
-}
+const ONBOARDING_SEQUENCE_COUNT = 2
+export const OFFLINE_MISSION_COUNT = 12
 
-interface ResourceMissionSeed {
-  id: string
-  title: string
-  brief: string
-  contractor: string
-  template: string
+interface MissionComplexity {
   sequence: number
-  minerals: Record<string, number>
-  locked: boolean
-  unlockAt?: string
-  affinity: number
+  templateId: string
+  mineralCount: number
+  amountBias: number
+  contractorOffset: number
 }
 
-const RESOURCE_MISSION_SEEDS: ResourceMissionSeed[] = [
-  { id: 'm1-iron', title: 'Iron Reserve Order', brief: 'Contractor Slot 03A needs a starter iron shipment from a reachable asteroid.', contractor: 'contractor-03a', template: 'starter-bulk', sequence: 1, minerals: { iron: 6 }, locked: false, affinity: 10 },
-  { id: 'm2-silicon', title: 'Silicon Bulk Order', brief: 'Contractor Slot 03B needs raw silicon for electronics-grade supply contracts.', contractor: 'contractor-03b', template: 'volatile-bulk', sequence: 2, minerals: { silicon: 8 }, locked: false, unlockAt: 'Complete M1', affinity: 8 },
+const COMPLEXITY_BANDS: MissionComplexity[] = [
+  { sequence: 1, templateId: 'starter-bulk', mineralCount: 1, amountBias: 0, contractorOffset: 0 },
+  { sequence: 1, templateId: 'starter-bulk', mineralCount: 1, amountBias: 1, contractorOffset: 1 },
+  { sequence: 1, templateId: 'volatile-bulk', mineralCount: 1, amountBias: 0, contractorOffset: 2 },
+  { sequence: 2, templateId: 'starter-bulk', mineralCount: 1, amountBias: 2, contractorOffset: 3 },
+  { sequence: 2, templateId: 'volatile-bulk', mineralCount: 1, amountBias: 2, contractorOffset: 4 },
+  { sequence: 2, templateId: 'metal-prospect', mineralCount: 1, amountBias: 0, contractorOffset: 5 },
+  { sequence: 3, templateId: 'volatile-bulk', mineralCount: 2, amountBias: 1, contractorOffset: 6 },
+  { sequence: 3, templateId: 'metal-prospect', mineralCount: 2, amountBias: 1, contractorOffset: 7 },
+  { sequence: 3, templateId: 'command-reserve', mineralCount: 1, amountBias: 0, contractorOffset: 8 },
+  { sequence: 4, templateId: 'metal-prospect', mineralCount: 2, amountBias: 2, contractorOffset: 9 },
+  { sequence: 4, templateId: 'command-reserve', mineralCount: 2, amountBias: 1, contractorOffset: 0 },
+  { sequence: 4, templateId: 'command-reserve', mineralCount: 3, amountBias: 2, contractorOffset: 1 },
 ]
 
-function buildResourceMission(seed: ResourceMissionSeed): Mission {
-  const template = MISSION_TEMPLATES.find(t => t.id === seed.template) ?? MISSION_TEMPLATES[0]
-  const cargoMin = Object.values(seed.minerals).reduce((sum, amount) => sum + amount, 0)
-  const francs = Object.entries(seed.minerals).reduce(
-    (sum, [mineral, amount]) => sum + (SEED_MINERAL_PRICES[mineral] ?? 0) * amount * 1500 * template.payoutMultiplier,
-    0
-  )
-
-  return {
-    id: seed.id,
-    title: seed.title,
-    brief: seed.brief,
-    contractor: seed.contractor,
-    tag: template.tag,
-    difficulty: template.difficulty,
-    locked: seed.locked,
-    sequence: seed.sequence,
-    unlockAt: seed.unlockAt,
-    requires: {
-      minerals: seed.minerals,
-      cargo_min: cargoMin,
-      drill_tier: template.drillTierMin,
-      max_orbit: template.orbitMax,
-    },
-    payout: { francs, affinity: seed.affinity },
-  }
+const MINERAL_LABELS: Record<string, string> = {
+  iron: 'Iron',
+  silicon: 'Silicon',
+  carbon: 'Carbon',
+  ice: 'Volatile',
+  nickel: 'Nickel',
+  cobalt: 'Cobalt',
+  gold: 'Gold',
+  rare: 'Xenon',
 }
 
-export const MISSIONS: Mission[] = RESOURCE_MISSION_SEEDS.map(buildResourceMission)
+function selectMinerals(template: MissionTemplate, index: number, count: number): string[] {
+  return Array.from({ length: count }, (_, offset) => template.mineralKeys[(index + offset) % template.mineralKeys.length])
+}
+
+function amountFor(template: MissionTemplate, sequence: number, amountBias: number, mineralIndex: number): number {
+  const [min, max] = template.cargoRange
+  const span = max - min + 1
+  const raw = min + ((sequence + amountBias + mineralIndex * 2) % span)
+  return Math.min(max, raw + Math.max(0, sequence - ONBOARDING_SEQUENCE_COUNT))
+}
+
+export function generateMissions(count = OFFLINE_MISSION_COUNT): Mission[] {
+  return COMPLEXITY_BANDS.slice(0, count).map((band, index) => {
+    const template = MISSION_TEMPLATES.find(t => t.id === band.templateId) ?? MISSION_TEMPLATES[0]
+    const minerals = Object.fromEntries(
+      selectMinerals(template, index, band.mineralCount).map((mineral, mineralIndex) => [
+        mineral,
+        amountFor(template, band.sequence, band.amountBias, mineralIndex),
+      ])
+    )
+    const cargoMin = Object.values(minerals).reduce((sum, amount) => sum + amount, 0)
+    const contractorPool = CONTRACTOR_SLOTS.filter(c => c.uiRole === template.contractorRole)
+    const contractor = contractorPool[band.contractorOffset % Math.max(1, contractorPool.length)] ?? CONTRACTOR_SLOTS[band.contractorOffset % CONTRACTOR_SLOTS.length]
+    const mineralNames = Object.keys(minerals).map(mineral => MINERAL_LABELS[mineral] ?? MINERAL_META[mineral]?.name ?? mineral)
+    const primary = mineralNames.join(' + ')
+    const francs = Object.entries(minerals).reduce(
+      (sum, [mineral, amount]) => sum + (MINERAL_META[mineral]?.price ?? 0) * amount * 1500 * template.payoutMultiplier,
+      0
+    )
+
+    return {
+      id: `generated-s${band.sequence}-${template.id}-${index + 1}`,
+      title: `${primary} ${template.tag.toLowerCase().replace('-', ' ')} order`,
+      brief: `${contractor.name} needs ${primary.toLowerCase()} from any compatible body. Generated fallback contract, complexity ${band.sequence}.`,
+      contractor: contractor.id,
+      tag: template.tag,
+      difficulty: template.difficulty,
+      locked: false,
+      sequence: band.sequence,
+      unlockAt: band.sequence > 1 ? `Complete ${band.sequence - 1} contract${band.sequence > 2 ? 's' : ''}` : undefined,
+      requires: {
+        minerals,
+        cargo_min: cargoMin,
+        drill_tier: template.drillTierMin,
+        max_orbit: template.orbitMax,
+      },
+      payout: {
+        francs: Math.round(francs),
+        affinity: Math.max(4, Math.round(6 + band.sequence * 2 + cargoMin / 3)),
+      },
+    }
+  })
+}
+
+export const MISSIONS: Mission[] = generateMissions()
 
 // Baseline cost of assembling the starter SR1 rocket (hull-mk1 + ion-a1 + hand-drill).
 // Used as the reference point for onboarding payout floors.

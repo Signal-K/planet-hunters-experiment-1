@@ -130,7 +130,7 @@ export const STAR_LINKS: [string, string][] = [
 
 export function compatibleTargetsFor(mission: Mission, targets: Target[] = TARGETS): Target[] {
   const required = Object.keys(mission.requires.minerals)
-  const isM1 = mission.id === 'm1-iron' || mission.sequence === 1
+  const isM1 = mission.sequence === 1
 
   return targets.filter(t => {
     const basicCompat = t.orbit <= mission.requires.max_orbit &&

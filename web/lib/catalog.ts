@@ -86,9 +86,12 @@ export async function fetchCatalog(): Promise<Catalog> {
     pbLandnam.collection('missions_catalog').getFullList({ sort: 'sequence' }),
   ])
 
+  const generatedFallbackMissions = MISSIONS
+  const catalogMissions = missions.map(toMission)
+
   return {
     targets: locations.map(toTarget),
-    missions: missions.map(toMission),
+    missions: catalogMissions.length > 0 ? catalogMissions : generatedFallbackMissions,
     parts: {
       chassis:    parts.filter(p => p.part_type === 'chassis').map(toPart),
       propulsion: parts.filter(p => p.part_type === 'propulsion').map(toPart),

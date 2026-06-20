@@ -46,21 +46,52 @@ const ANGLES: Record<string, number> = {
 const RADII: Record<number, number> = { 1: 36, 2: 60, 3: 84, 4: 108, 5: 132, 6: 158, 7: 184, 8: 208 }
 
 function PlanetSVG({ id, size }: { id: string; size: number }) {
-  const colors: Record<string, { fill: string; stroke: string }> = {
-    mercury: { fill: '#8a7060', stroke: '#a08070' },
-    venus:   { fill: '#e8c870', stroke: '#d4a840' },
-    earth:   { fill: '#2a6ea4', stroke: '#4a9ec4' },
-    mars:    { fill: '#c1440e', stroke: '#e05020' },
-    belt:    { fill: '#8a7a5a', stroke: '#aaa080' },
-    jupiter: { fill: '#c8a060', stroke: '#e0b870' },
-    saturn:  { fill: '#e0c880', stroke: '#c8a860' },
-    neptune: { fill: '#2040c0', stroke: '#4060e0' },
+  const gradientId = React.useId()
+  const colors: Record<string, { fill: string; low: string; stroke: string; mark: string }> = {
+    mercury: { fill: '#8a7060', low: '#4d4038', stroke: '#a08070', mark: '#c1a292' },
+    venus:   { fill: '#e8c870', low: '#9f7434', stroke: '#d4a840', mark: '#fff0a8' },
+    earth:   { fill: '#2a6ea4', low: '#123152', stroke: '#4a9ec4', mark: '#54b36a' },
+    mars:    { fill: '#c1440e', low: '#5e2414', stroke: '#e05020', mark: '#f08a45' },
+    belt:    { fill: '#8a7a5a', low: '#3e372c', stroke: '#aaa080', mark: '#d0c29a' },
+    jupiter: { fill: '#c8a060', low: '#6f4f2a', stroke: '#e0b870', mark: '#f2d39a' },
+    saturn:  { fill: '#e0c880', low: '#8a7145', stroke: '#c8a860', mark: '#fff2b8' },
+    neptune: { fill: '#2040c0', low: '#091d66', stroke: '#4060e0', mark: '#79a2ff' },
+    ceres:   { fill: '#8e8f86', low: '#444740', stroke: '#b7b8ac', mark: '#d2d0bf' },
   }
-  const col = colors[id] ?? { fill: '#607080', stroke: '#809090' }
+  const asteroidIds = new Set(['eros', 'vesta', 'itokawa', 'ryugu', 'psyche', 'bennu', 'ceres'])
+  const col = colors[id] ?? { fill: '#607080', low: '#283340', stroke: '#809090', mark: '#aab8bd' }
   const r = size / 2
+  const isAsteroid = asteroidIds.has(id)
+  const asteroidPoints = `${r * 0.52},${r * 0.08} ${r * 1.26},${r * 0.2} ${r * 1.82},${r * 0.72} ${r * 1.58},${r * 1.48} ${r * 0.9},${r * 1.88} ${r * 0.2},${r * 1.44} ${r * 0.08},${r * 0.62}`
   return (
     <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
-      <circle cx={r} cy={r} r={r - 1} fill={col.fill} stroke={col.stroke} strokeWidth={1.5}/>
+      <defs>
+        <radialGradient id={`${gradientId}-body`} cx="35%" cy="30%" r="70%">
+          <stop offset="0%" stopColor={col.mark}/>
+          <stop offset="45%" stopColor={col.fill}/>
+          <stop offset="100%" stopColor={col.low}/>
+        </radialGradient>
+        <clipPath id={`${gradientId}-clip`}>
+          {isAsteroid
+            ? <polygon points={asteroidPoints} />
+            : <circle cx={r} cy={r} r={r - 1} />}
+        </clipPath>
+      </defs>
+      {isAsteroid
+        ? <polygon points={asteroidPoints} fill={`url(#${gradientId}-body)`} stroke={col.stroke} strokeWidth={1.5} />
+        : <circle cx={r} cy={r} r={r - 1} fill={`url(#${gradientId}-body)`} stroke={col.stroke} strokeWidth={1.5}/>}
+      <g clipPath={`url(#${gradientId}-clip)`} opacity={0.9}>
+        {id === 'jupiter' || id === 'saturn' || id === 'venus'
+          ? <>
+              <path d={`M${r * -0.1} ${r * 0.7} C${r * 0.5} ${r * 0.52}, ${r * 1.2} ${r * 0.9}, ${r * 2.1} ${r * 0.66}`} stroke={col.mark} strokeWidth={Math.max(1, size * 0.08)} opacity={0.45} fill="none"/>
+              <path d={`M${r * -0.1} ${r * 1.18} C${r * 0.5} ${r * 1.0}, ${r * 1.2} ${r * 1.35}, ${r * 2.1} ${r * 1.1}`} stroke={col.low} strokeWidth={Math.max(1, size * 0.1)} opacity={0.45} fill="none"/>
+            </>
+          : <>
+              <circle cx={r * 0.72} cy={r * 0.78} r={r * 0.16} fill={col.low} opacity={0.45}/>
+              <circle cx={r * 1.28} cy={r * 0.62} r={r * 0.11} fill={col.mark} opacity={0.35}/>
+              <path d={`M${r * 0.25} ${r * 1.28} C${r * 0.72} ${r * 1.08}, ${r * 1.24} ${r * 1.45}, ${r * 1.8} ${r * 1.18}`} stroke={col.mark} strokeWidth={1} opacity={0.3} fill="none"/>
+            </>}
+      </g>
       {id === 'saturn' && <ellipse cx={r} cy={r} rx={r * 1.6} ry={r * 0.35} fill="none" stroke={col.stroke} strokeWidth={1.5} opacity={0.7}/>}
       {id === 'belt' && <>
         <circle cx={r * 0.6} cy={r * 0.7} r={r * 0.22} fill={col.stroke} opacity={0.7}/>

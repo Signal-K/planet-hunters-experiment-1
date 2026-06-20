@@ -32,7 +32,7 @@ describe('sellCargo', () => {
 })
 
 describe('suggestBuild', () => {
-  const m1 = MISSIONS.find(m => m.id === 'm1-iron')!
+  const m1 = MISSIONS.find(m => m.sequence === 1)!
   const target = TARGETS.find(t => t.id === 'mars')!
 
   it('suggests starter parts before any missions are done', () => {
@@ -44,7 +44,7 @@ describe('suggestBuild', () => {
 
   it('suggests best available drill when mission requires locked tier', () => {
     // A higher-tier drill requirement should use laser-t2 once it is available after M1.
-    const m2 = MISSIONS.find(m => m.id === 'm2-silicon')!
+    const m2 = MISSIONS.find(m => m.sequence === 2)!
     const missionWithDrill2 = { ...m2, requires: { ...m2.requires, drill_tier: 2 } }
     const belt = TARGETS.find(t => t.id === 'belt')!
     const build = suggestBuild({ mission: missionWithDrill2, target: belt, missionsDone: 2, parts: PARTS })
@@ -54,7 +54,7 @@ describe('suggestBuild', () => {
   it('treats launchpadUpgraded as having completed at least one mission', () => {
     // laser-t2 has missionsRequired: 1 — unavailable at missionsDone: 0 without upgrade.
     // A drill_tier: 2 requirement falls back to hand-drill without upgrade, but gets laser-t2 with it.
-    const m1 = MISSIONS.find(m => m.id === 'm1-iron')!
+    const m1 = MISSIONS.find(m => m.sequence === 1)!
     const target = TARGETS.find(t => t.id === 'mars')!
     const missionWithDrill2 = { ...m1, requires: { ...m1.requires, drill_tier: 2 } }
     const withoutUpgrade = suggestBuild({ mission: missionWithDrill2, target, missionsDone: 0, parts: PARTS })
@@ -65,7 +65,7 @@ describe('suggestBuild', () => {
 })
 
 describe('validateBuild', () => {
-  const m1 = MISSIONS.find(m => m.id === 'm1-iron')!
+  const m1 = MISSIONS.find(m => m.sequence === 1)!
   const mars = TARGETS.find(t => t.id === 'mars')!
 
   it('passes when the rocket meets all mission requirements', () => {
@@ -95,7 +95,7 @@ describe('validateBuild', () => {
   })
 
   it('flags propulsion that cannot reach the target orbit', () => {
-    const m2 = MISSIONS.find(m => m.id === 'm2-silicon')!
+    const m2 = MISSIONS.find(m => m.sequence === 2)!
     const farTarget = TARGETS.find(t => t.id === 'jupiter')!
     const result = validateBuild({
       mission: m2,
@@ -110,7 +110,7 @@ describe('validateBuild', () => {
 
 describe('compatibleTargetsFor', () => {
   it('restricts M1 to asteroid targets that carry the required minerals', () => {
-    const m1 = MISSIONS.find(m => m.id === 'm1-iron')!
+    const m1 = MISSIONS.find(m => m.sequence === 1)!
     const compatible = compatibleTargetsFor(m1, TARGETS)
     expect(compatible.every(t => t.type === 'asteroid')).toBe(true)
     expect(compatible.every(t => t.minerals.includes('iron'))).toBe(true)
@@ -118,7 +118,7 @@ describe('compatibleTargetsFor', () => {
   })
 
   it('allows planets for later missions that require their minerals', () => {
-    const m2 = MISSIONS.find(m => m.id === 'm2-silicon')!
+    const m2 = MISSIONS.find(m => m.sequence === 2)!
     const compatible = compatibleTargetsFor(m2, TARGETS)
     expect(compatible.some(t => t.type === 'planet')).toBe(true)
   })
@@ -130,23 +130,23 @@ describe('rateMission', () => {
   })
 
   it('returns 1 when cargo requirements are not met', () => {
-    const m1 = MISSIONS.find(m => m.id === 'm1-iron')!
-    expect(rateMission({ mission: m1, cargo: { iron: 1 }, elapsed: 10 })).toBe(1)
+    const m1 = MISSIONS.find(m => m.sequence === 1)!
+    expect(rateMission({ mission: m1, cargo: {}, elapsed: 10 })).toBe(1)
   })
 
   it('returns 3 stars for a fast delivery that meets requirements', () => {
-    const m1 = MISSIONS.find(m => m.id === 'm1-iron')!
-    expect(rateMission({ mission: m1, cargo: { iron: 6 }, elapsed: 20 })).toBe(3)
+    const m1 = MISSIONS.find(m => m.sequence === 1)!
+    expect(rateMission({ mission: m1, cargo: m1.requires.minerals, elapsed: 20 })).toBe(3)
   })
 
   it('returns 2 stars for a medium-speed delivery', () => {
-    const m1 = MISSIONS.find(m => m.id === 'm1-iron')!
-    expect(rateMission({ mission: m1, cargo: { iron: 6 }, elapsed: 45 })).toBe(2)
+    const m1 = MISSIONS.find(m => m.sequence === 1)!
+    expect(rateMission({ mission: m1, cargo: m1.requires.minerals, elapsed: 45 })).toBe(2)
   })
 
   it('returns 1 star for a slow delivery', () => {
-    const m1 = MISSIONS.find(m => m.id === 'm1-iron')!
-    expect(rateMission({ mission: m1, cargo: { iron: 6 }, elapsed: 90 })).toBe(1)
+    const m1 = MISSIONS.find(m => m.sequence === 1)!
+    expect(rateMission({ mission: m1, cargo: m1.requires.minerals, elapsed: 90 })).toBe(1)
   })
 })
 
@@ -191,6 +191,8 @@ describe('seed bible v0 catalog', () => {
   it('builds resource-collection missions from mission templates', () => {
     expect(MISSION_TEMPLATES.every(t => t.mineralKeys.length > 0)).toBe(true)
     expect(MISSIONS.every(m => MISSION_TEMPLATES.some(t => t.tag === m.tag))).toBe(true)
-    expect(MISSIONS.map(m => m.id)).toEqual(['m1-iron', 'm2-silicon'])
+    expect(MISSIONS.filter(m => m.sequence === 1).length).toBeGreaterThan(1)
+    expect(MISSIONS.filter(m => m.sequence === 2).length).toBeGreaterThan(1)
+    expect(MISSIONS.every(m => m.id.startsWith('generated-'))).toBe(true)
   })
 })

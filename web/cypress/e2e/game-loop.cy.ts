@@ -109,21 +109,21 @@ describe('Full Game Loop — Landnam', () => {
 
     it('mission board shows M1 card when landing on missions screen with launchpad built', () => {
       visitWithState(fullState({ screen: 'missions', doneSteps: { 1: true } }))
-      cy.get('[data-testid="mission-card-m1-iron"]').should('be.visible')
-      cy.get('[data-testid="mission-card-m1-iron"]').should('have.attr', 'data-mission-id', 'm1-iron')
-      cy.contains('Iron Reserve Order').should('be.visible')
+      cy.get('[data-testid="mission-card-generated-s1-starter-bulk-1"]').should('be.visible')
+      cy.get('[data-testid="mission-card-generated-s1-starter-bulk-1"]').should('have.attr', 'data-mission-id', 'generated-s1-starter-bulk-1')
+      cy.contains('Iron starter order').should('be.visible')
     })
 
     it('picking M1 transitions to target picker', () => {
       visitWithState(fullState({ screen: 'missions', missionId: null, doneSteps: { 1: true } }))
-      cy.get('[data-testid="mission-card-m1-iron"]').click()
+      cy.get('[data-testid="mission-card-generated-s1-starter-bulk-1"]').click()
       cy.contains('Continue · Build').should('be.visible')
     })
 
     it('target picker shows compatible targets for M1', () => {
       visitWithState(fullState({
         screen: 'targets',
-        missionId: 'm1-iron',
+        missionId: 'generated-s1-starter-bulk-1',
         doneSteps: { 1: true, 2: true },
       }))
       cy.contains('Compatible').should('be.visible')
@@ -135,7 +135,7 @@ describe('Full Game Loop — Landnam', () => {
     it('assembly screen shows rocket parts and launch button', () => {
       visitWithState(fullState({
         screen: 'fab',
-        missionId: 'm1-iron',
+        missionId: 'generated-s1-starter-bulk-1',
         targetId: 'mars',
         rocket: { chassis: 'hull-mk1', propulsion: 'ion-a1', drill: 'hand-drill' },
         doneSteps: { 1: true, 2: true, 3: true },
@@ -149,7 +149,7 @@ describe('Full Game Loop — Landnam', () => {
     it('launch transitions to transit screen', () => {
       visitWithState(fullState({
         screen: 'fab',
-        missionId: 'm1-iron',
+        missionId: 'generated-s1-starter-bulk-1',
         targetId: 'mars',
         rocket: { chassis: 'hull-mk1', propulsion: 'ion-a1', drill: 'hand-drill' },
         doneSteps: { 1: true, 2: true, 3: true, 4: true, 5: false },
@@ -182,12 +182,12 @@ describe('Full Game Loop — Landnam', () => {
     it('transit screen shows rocket without trajectory pointer', () => {
       visitWithState(fullState({
         screen: 'transit',
-        missionId: 'm1-iron',
+        missionId: 'generated-s1-starter-bulk-1',
         targetId: 'mars',
         doneSteps: { 1: true, 2: true, 3: true, 5: true },
         player: {
           francs: 9_500_000_000,
-          activeMission: { id: 'm1-iron', label: 'Iron Reserve Order → Mars' },
+          activeMission: { id: 'generated-s1-starter-bulk-1', label: 'Iron starter order → Mars' },
           missionCount: 1,
           pendingLaunch: false,
           placed: ['launchpad'],
@@ -214,12 +214,12 @@ describe('Full Game Loop — Landnam', () => {
     it('mining screen renders ore nodes and controls', () => {
       visitWithState(fullState({
         screen: 'mining',
-        missionId: 'm1-iron',
+        missionId: 'generated-s1-starter-bulk-1',
         targetId: 'mars',
         doneSteps: { 1: true, 2: true, 3: true, 5: true, 6: false },
         player: {
           francs: 9_500_000_000,
-          activeMission: { id: 'm1-iron', label: 'Iron Reserve Order → Mars' },
+          activeMission: { id: 'generated-s1-starter-bulk-1', label: 'Iron starter order → Mars' },
           missionCount: 1,
           pendingLaunch: false,
           placed: ['launchpad'],
@@ -250,13 +250,13 @@ describe('Full Game Loop — Landnam', () => {
       const cargo = { iron: 4 }
       visitWithState(fullState({
         screen: 'debrief',
-        missionId: 'm1-iron',
+        missionId: 'generated-s1-starter-bulk-1',
         targetId: 'mars',
         lastCargo: cargo,
         doneSteps: { 1: true, 2: true, 3: true, 5: true, 6: true, 9: false },
         player: {
           francs: 9_500_000_000,
-          activeMission: { id: 'm1-iron', label: 'Iron Reserve Order → Mars' },
+          activeMission: { id: 'generated-s1-starter-bulk-1', label: 'Iron starter order → Mars' },
           missionCount: 1,
           pendingLaunch: false,
           placed: ['launchpad'],
@@ -286,13 +286,13 @@ describe('Full Game Loop — Landnam', () => {
       const cargo = { iron: 6 }
       visitWithState(fullState({
         screen: 'debrief',
-        missionId: 'm1-iron',
+        missionId: 'generated-s1-starter-bulk-1',
         targetId: 'mars',
         lastCargo: cargo,
         doneSteps: { 1: true, 2: true, 3: true, 5: true, 6: true },
         player: {
           francs: 9_500_000_000,
-          activeMission: { id: 'm1-iron', label: 'Iron Reserve Order → Mars' },
+          activeMission: { id: 'generated-s1-starter-bulk-1', label: 'Iron starter order → Mars' },
           missionCount: 1,
           pendingLaunch: false,
           placed: ['launchpad'],
@@ -352,13 +352,13 @@ describe('Full Game Loop — Landnam', () => {
       // M1 requires 6 iron; player mined 8 so 2 are excess after delivery
       visitWithState(fullState({
         screen: 'debrief',
-        missionId: 'm1-iron',
+        missionId: 'generated-s1-starter-bulk-1',
         targetId: 'mars',
         lastCargo: { iron: 8 },
         doneSteps: { 1: true, 2: true, 3: true, 5: true, 6: true },
         player: {
           francs: 9_500_000_000,
-          activeMission: { id: 'm1-iron', label: 'Iron Reserve Order → Mars' },
+          activeMission: { id: 'generated-s1-starter-bulk-1', label: 'Iron starter order → Mars' },
           stash: { iron: 8 },
           missionCount: 1,
           pendingLaunch: false,
@@ -463,7 +463,7 @@ describe('Full Game Loop — Landnam', () => {
     })
   })
 
-  describe('Phase 7: M2 — Silicon Bulk Order', () => {
+  describe('Phase 7: M2 — Iron starter order', () => {
     it('M2 accessible on mission board after M1 without old Control Base gate', () => {
       visitWithState(fullState({
         screen: 'missions',
@@ -490,14 +490,14 @@ describe('Full Game Loop — Landnam', () => {
         },
         tutorial: false,
       }))
-      cy.get('[data-testid="mission-card-m2-silicon"]').should('be.visible')
-      cy.get('[data-testid="mission-card-m2-silicon"]').should('have.attr', 'data-mission-id', 'm2-silicon')
+      cy.get('[data-testid="mission-card-generated-s2-starter-bulk-4"]').should('be.visible')
+      cy.get('[data-testid="mission-card-generated-s2-starter-bulk-4"]').should('have.attr', 'data-mission-id', 'generated-s2-starter-bulk-4')
     })
 
     it('M2 rocket purchase shows SR2 and purchase coach step', () => {
       visitWithState(fullState({
         screen: 'rocket-buy',
-        missionId: 'm2-silicon',
+        missionId: 'generated-s2-starter-bulk-4',
         targetId: 'eros',
         doneSteps: { 1: true, 2: true, 3: true, 4: true, 5: true, 6: true, 9: true, 20: true },
         player: {
@@ -529,7 +529,7 @@ describe('Full Game Loop — Landnam', () => {
     it('M2 preflight launch button visible with prebuilt SR2', () => {
       visitWithState(fullState({
         screen: 'fab',
-        missionId: 'm2-silicon',
+        missionId: 'generated-s2-starter-bulk-4',
         targetId: 'eros',
         doneSteps: { 1: true, 2: true, 3: true, 4: true, 5: true, 6: true, 9: true, 20: true, 21: true },
         rocket: { chassis: 'hull-mk2', propulsion: 'fusion-b2', drill: 'laser-t2' },

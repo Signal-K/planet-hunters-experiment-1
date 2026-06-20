@@ -66,7 +66,7 @@ function loadState(): GameState {
     if (!raw) return DEFAULT_STATE
     const parsed = JSON.parse(raw) as Partial<GameState>
     const screen = parsed.screen && VALID_SCREENS.includes(parsed.screen) ? parsed.screen : DEFAULT_STATE.screen
-    const missionId = parsed.missionId && MISSIONS.some(m => m.id === parsed.missionId) ? parsed.missionId : null
+    const missionId = typeof parsed.missionId === 'string' ? parsed.missionId : null
     return {
       ...DEFAULT_STATE,
       ...parsed,
@@ -435,7 +435,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
   const onPickTarget = useCallback((id: string) => {
     setState(s => {
       const mission = s.missionId ? catalog.missions.find(m => m.id === s.missionId) ?? null : null
-    const target = catalog.targets.find(t => t.id === id) ?? null
+      const target = catalog.targets.find(t => t.id === id) ?? null
       const next = suggestBuild({ mission, target, missionsDone: s.player.missionsDone, launchpadUpgraded: s.player.launchpadUpgraded, parts: catalog.parts })
       return {
         ...s,
@@ -445,7 +445,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
         doneSteps: { ...s.doneSteps, 3: true },
       }
     })
-  }, [])
+  }, [catalog.missions, catalog.parts, catalog.targets])
 
   const onPurchaseRocket = useCallback((rocketId: string) => {
     setState(s => {
@@ -463,8 +463,8 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
   const onLaunch = useCallback(() => {
     const isFirstEver = stateRef.current.player.missionsDone === 0
     setState(s => {
-      const mission = s.missionId ? MISSIONS.find(m => m.id === s.missionId) : null
-      const target = s.targetId ? TARGETS.find(t => t.id === s.targetId) : null
+      const mission = s.missionId ? catalog.missions.find(m => m.id === s.missionId) : null
+      const target = s.targetId ? catalog.targets.find(t => t.id === s.targetId) : null
       return {
         ...s,
         player: {
@@ -479,7 +479,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       }
     })
     if (isFirstEver) enqueueSurvey('lnm_first_launch', 4000)
-  }, [])
+  }, [catalog.missions, catalog.targets])
 
   const onMiningDone = useCallback((cargo: Record<string, number>) => {
     setState(s => {
@@ -503,7 +503,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     const newMissionsDone = stateRef.current.player.missionsDone + 1
     setState(s => {
       const missionsDone = s.player.missionsDone + 1
-      const mission = s.missionId ? MISSIONS.find(m => m.id === s.missionId) : null
+      const mission = s.missionId ? catalog.missions.find(m => m.id === s.missionId) : null
       const missionContractor = mission?.contractor
       const contractor = missionContractor
       const contractorMissions = { ...s.player.contractorMissions }
@@ -541,7 +541,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
           francs,
           activeMission: null,
           missionsDone,
-          missionCount: Math.max(0, Math.min(1, MISSIONS.length - missionsDone)),
+          missionCount: catalog.missions.filter(m => m.sequence === missionsDone + 1).length,
           freeOperations: false,
           contractorMissions,
           contractorCooldowns,
@@ -554,7 +554,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
         lastCargo: null,
         missionId: null,
         targetId: null,
-        tutorial: missionsDone < MISSIONS.length,
+        tutorial: catalog.missions.some(m => m.sequence === missionsDone + 1),
         popup: missionsDone === 1 ? 'sr2' : showLoanOffer ? 'loan' : s.popup,
         doneSteps: { ...s.doneSteps, 9: true },
         screen: 'market',
@@ -563,8 +563,8 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     addToast(`Mission payout received: +${(total / 1_000_000).toFixed(0)}M F`, 'ok')
     enqueueSurvey('lnm_mission_friction', 2000)
     if (newMissionsDone === 1) enqueueSurvey('lnm_progression_feel', 8000)
-    if (newMissionsDone >= MISSIONS.length) enqueueSurvey('lnm_end_of_content', 5000)
-  }, [addToast])
+    if (!catalog.missions.some(m => m.sequence === newMissionsDone + 1)) enqueueSurvey('lnm_end_of_content', 5000)
+  }, [addToast, catalog.missions])
 
   const coachManualNext = useCallback(() => {
     setState(s => {
@@ -597,7 +597,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
   const abandonMission = useCallback(() => {
     if (!confirm('Abort this mission? You will lose 10% of the mission payout as a penalty.')) return
     setState(s => {
-      const mission = s.missionId ? MISSIONS.find(m => m.id === s.missionId) : null
+      const mission = s.missionId ? catalog.missions.find(m => m.id === s.missionId) : null
       const penalty = mission ? Math.round(mission.payout.francs * 0.1) : 0
       return {
         ...s,
@@ -611,7 +611,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
         screen: 'hub',
       }
     })
-  }, [])
+  }, [catalog.missions])
 
   const acceptLoan = useCallback(() => {
     setState(s => ({
