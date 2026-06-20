@@ -15,6 +15,7 @@ import { ensureGuestAuth, hasStoredCredentials, isGuestAccount, upgradeGuestAcco
 import { pbLandnam } from '@/lib/pb-landnam'
 import { type Catalog, STATIC_CATALOG, fetchCatalog } from '@/lib/catalog'
 import { enqueueSurvey } from '@/lib/surveys'
+import { identifyUser } from '@/lib/posthog'
 
 const GameContext = createContext<(GameState & GameActions) | null>(null)
 
@@ -127,6 +128,8 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     }
     setState(loadState())
     setHydrated(true)
+    const record = pbShared.authStore.record
+    if (record?.id) identifyUser(record.id, record.email ? { email: record.email } : undefined)
   }, [])
 
   useEffect(() => {
@@ -138,6 +141,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     backendLoadedFor.current = null
     setBackendReady(false)
     setAuthUserId(record?.id ?? null)
+    if (record?.id) identifyUser(record.id, record.email ? { email: record.email } : undefined)
   }), [])
 
   // Detect returning-user-on-new-device: no local game state but credentials

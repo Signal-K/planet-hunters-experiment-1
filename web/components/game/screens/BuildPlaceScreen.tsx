@@ -115,7 +115,7 @@ export default function BuildPlaceScreen({ onPlaced, onBack, hasCoach }: BuildPl
             </Panel>
           </div>
 
-          <div style={{ position: 'absolute', left: 0, right: 0, top: 702, height: 3, zIndex: 6, background: 'linear-gradient(90deg, transparent, rgba(255,225,160,0.55) 20%, rgba(255,225,160,0.55) 80%, transparent)' }} />
+          <div style={{ position: 'absolute', left: 0, right: 0, bottom: 172, height: 3, zIndex: 6, background: 'linear-gradient(90deg, transparent, rgba(255,225,160,0.55) 20%, rgba(255,225,160,0.55) 80%, transparent)' }} />
 
           <div style={{ position: 'absolute', inset: 0, zIndex: 10, pointerEvents: 'none' }}>
             {plotEntities
@@ -129,7 +129,7 @@ export default function BuildPlaceScreen({ onPlaced, onBack, hasCoach }: BuildPl
                 const idx = (entity.components.find(c => c.type === 'BuildPlot')?.index as number) ?? 0
                 const on = cell === idx
                 return (
-                  <button key={idx} data-testid={`build-plot-${idx}`} onClick={() => setCell(idx)} style={{ position: 'absolute', left: entity.transform.position.x, top: entity.transform.position.y, width: 86, cursor: 'pointer', background: 'transparent', border: 'none', padding: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', pointerEvents: 'auto' }}>
+                  <button key={idx} data-testid={`build-plot-${idx}`} onClick={() => setCell(idx)} style={{ position: 'absolute', left: entity.transform.position.x, bottom: Math.round(874 - entity.transform.position.y - 96), width: 86, cursor: 'pointer', background: 'transparent', border: 'none', padding: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', pointerEvents: 'auto' }}>
                     <div style={{ width: 64, height: 64, marginBottom: 2, opacity: on ? 1 : 0, transform: on ? 'translateY(0)' : 'translateY(6px)', transition: 'all 160ms', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 32 }}>
                       {on && <span style={{ color: 'var(--ln-amber)' }}><StructureIcon kind={picked} size={40} /></span>}
                     </div>

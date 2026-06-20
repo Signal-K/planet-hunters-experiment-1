@@ -43,16 +43,14 @@ func ensureCollections(app core.App) {
 
 	// game_states
 	if _, err := app.FindCollectionByNameOrId("game_states"); err != nil {
+		// Fresh install: create with open text-field schema from the start.
 		gameStates := core.NewBaseCollection("game_states")
-		gameStates.ListRule = types.Pointer("user = @request.auth.id")
-		gameStates.ViewRule = types.Pointer("user = @request.auth.id")
-		gameStates.CreateRule = types.Pointer("@request.auth.id != \"\" && user = @request.auth.id")
-		gameStates.UpdateRule = types.Pointer("user = @request.auth.id")
-		gameStates.DeleteRule = types.Pointer("user = @request.auth.id")
-		gameStates.Fields.Add(&core.RelationField{
-			Name: "user", Required: true, MaxSelect: 1,
-			CollectionId: users.Id, CascadeDelete: true,
-		})
+		gameStates.ListRule = types.Pointer("")
+		gameStates.ViewRule = types.Pointer("")
+		gameStates.CreateRule = types.Pointer("")
+		gameStates.UpdateRule = types.Pointer("")
+		gameStates.DeleteRule = types.Pointer("")
+		gameStates.Fields.Add(&core.TextField{Name: "user", Required: true, Max: 64})
 		gameStates.Fields.Add(&core.JSONField{Name: "state", Required: true, MaxSize: 200000})
 		gameStates.Indexes = []string{
 			"CREATE UNIQUE INDEX idx_game_states_user ON game_states (user)",
@@ -60,6 +58,8 @@ func ensureCollections(app core.App) {
 		if err := app.Save(gameStates); err != nil {
 			log.Printf("failed to save game_states: %v", err)
 		}
+	} else {
+		migrateGameStates(app)
 	}
 
 	emptyStr := types.Pointer("")
@@ -205,6 +205,57 @@ func ensureCollections(app core.App) {
 	}
 
 	ensureCatalogFields(app)
+}
+
+// migrateGameStates upgrades an existing game_states collection created with
+// the old schema (RelationField + auth-gated rules) to the current schema
+// (TextField for user, fully open rules). Safe to call on every startup —
+// it checks the current field type before making any changes.
+func migrateGameStates(app core.App) {
+	col, err := app.FindCollectionByNameOrId("game_states")
+	if err != nil {
+		return
+	}
+
+	changed := false
+
+	// If user field is still a relation, replace it with a plain text field.
+	if f := col.Fields.GetByName("user"); f != nil && f.Type() == core.FieldTypeRelation {
+		col.Fields.RemoveByName("user")
+		col.Fields.Add(&core.TextField{Name: "user", Required: true, Max: 64})
+		changed = true
+	}
+
+	// Open up rules — the client identifies itself by userId string only.
+	empty := ""
+	if col.ListRule == nil || *col.ListRule != empty {
+		col.ListRule = &empty
+		changed = true
+	}
+	if col.ViewRule == nil || *col.ViewRule != empty {
+		col.ViewRule = &empty
+		changed = true
+	}
+	if col.CreateRule == nil || *col.CreateRule != empty {
+		col.CreateRule = &empty
+		changed = true
+	}
+	if col.UpdateRule == nil || *col.UpdateRule != empty {
+		col.UpdateRule = &empty
+		changed = true
+	}
+	if col.DeleteRule == nil || *col.DeleteRule != empty {
+		col.DeleteRule = &empty
+		changed = true
+	}
+
+	if changed {
+		if err := app.Save(col); err != nil {
+			log.Printf("migrateGameStates: failed to save: %v", err)
+		} else {
+			log.Printf("migrateGameStates: updated game_states schema")
+		}
+	}
 }
 
 func ensureCatalogFields(app core.App) {

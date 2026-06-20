@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useEffect, useState } from 'react'
-import { SURVEY_DEFS, submitSurveyResponse, trackSurveyShown, type Survey, type SurveyQuestion } from '@/lib/surveys'
+import { SURVEY_DEFS, submitSurveyResponse, trackSurveyShown, onSurveyDismissed, type Survey, type SurveyQuestion } from '@/lib/surveys'
 
 type Responses = Record<string, string | number>
 
@@ -138,6 +138,7 @@ export default function SurveySheet() {
       setTimeout(() => {
         setSurveyKey(null)
         setSurvey(null)
+        onSurveyDismissed()
       }, 1600)
     }
   }
@@ -145,6 +146,7 @@ export default function SurveySheet() {
   function handleSkip() {
     setSurveyKey(null)
     setSurvey(null)
+    onSurveyDismissed()
   }
 
   return (

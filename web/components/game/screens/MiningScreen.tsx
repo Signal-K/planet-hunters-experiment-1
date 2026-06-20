@@ -7,6 +7,23 @@ import Panel from '@/components/ui/Panel'
 import { PrimaryBtn } from '@/components/ui/Button'
 import MiningCanvas from './MiningCanvas'
 
+const ORE_SHAPES: Record<string, 'circle' | 'diamond' | 'rect' | 'triangle'> = {
+  iron: 'circle', silicon: 'diamond', ice: 'circle',
+  carbon: 'rect', nickel: 'diamond', cobalt: 'triangle',
+  gold: 'circle', rare: 'diamond',
+}
+
+function OreShapeIcon({ id, color, size = 14 }: { id: string; color: string; size?: number }) {
+  const shape = ORE_SHAPES[id] ?? 'circle'
+  if (shape === 'diamond')
+    return <svg width={size} height={size} viewBox="0 0 14 14" aria-hidden="true"><polygon points="7,1 13,7 7,13 1,7" fill={color} /></svg>
+  if (shape === 'rect')
+    return <svg width={size} height={size} viewBox="0 0 14 14" aria-hidden="true"><rect x="2" y="3" width="10" height="8" rx="1" fill={color} /></svg>
+  if (shape === 'triangle')
+    return <svg width={size} height={size} viewBox="0 0 14 14" aria-hidden="true"><polygon points="7,1 13,13 1,13" fill={color} /></svg>
+  return <svg width={size} height={size} viewBox="0 0 14 14" aria-hidden="true"><circle cx="7" cy="7" r="6" fill={color} /></svg>
+}
+
 const MINING_GUIDE = [
   { label: 'FIRE LASER', desc: 'Fires your mining laser at the asteroid. Collect ore by hitting ore veins (Space/F).' },
   { label: 'DRONE STATUS', desc: 'Your automated drone helps stabilize the craft and collects nearby floating debris.' },
@@ -70,7 +87,9 @@ export default function MiningScreen({ mission, target, onComplete, onBack, mine
   }
 
   const totalNeeded = Object.entries(mission.requires.minerals).reduce((sum, [, v]) => sum + v, 0)
-  const totalCollected = Object.entries(cargoRef.current).reduce((sum, [, v]) => sum + v, 0)
+  const totalCollected = Object.entries(mission.requires.minerals).reduce(
+    (sum, [id, amount]) => sum + Math.min(cargo[id] ?? 0, amount), 0
+  )
   const [guideOpen, setGuideOpen] = useState(false)
 
   return (
@@ -98,7 +117,7 @@ export default function MiningScreen({ mission, target, onComplete, onBack, mine
         <div className="mining-stars" />
 
         <MiningCanvas
-          minerals={target.minerals}
+          minerals={Object.keys(mission.requires.minerals)}
           mineralMeta={minerals}
           onCollect={collectMineral}
           fireRef={fireRef}
@@ -108,16 +127,22 @@ export default function MiningScreen({ mission, target, onComplete, onBack, mine
       <div className="mining-controls">
         <Panel accent="var(--ln-amber)" variant="compact">
           <div className="mining-stats-row">
-            {Object.entries(mission.requires.minerals).map(([id, amount]) => (
-              <div className="mineral-stat" key={id}>
-                <span className="mineral-stat-icon" style={{ color: minerals[id]?.color }}>
-                  {minerals[id]?.sym}
-                </span>
-                <span className="mineral-stat-count">
-                  {Math.min(cargo[id] ?? 0, amount)}/{amount}
-                </span>
-              </div>
-            ))}
+            {Object.entries(mission.requires.minerals).map(([id, amount]) => {
+              const collected = Math.min(cargo[id] ?? 0, amount)
+              const done = collected >= amount
+              const color = minerals[id]?.color ?? '#fff'
+              return (
+                <div className="mineral-stat" key={id} style={{ gap: 5 }}>
+                  <OreShapeIcon id={id} color={done ? 'var(--ln-text-muted)' : color} size={13} />
+                  <span style={{ fontFamily: 'var(--ln-font-display)', fontSize: 10, fontWeight: 700, letterSpacing: '0.06em', color: done ? 'var(--ln-text-muted)' : color, textTransform: 'uppercase' }}>
+                    {minerals[id]?.name ?? id}
+                  </span>
+                  <span className="mineral-stat-count" style={{ color: done ? 'var(--ln-text-muted)' : 'var(--ln-text)' }}>
+                    {collected}/{amount}
+                  </span>
+                </div>
+              )
+            })}
             <div className="mineral-stat total-stat">
               <span>Total</span>
               <span>{totalCollected}/{totalNeeded}</span>

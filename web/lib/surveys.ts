@@ -95,28 +95,45 @@ function markSurveyShown(surveyKey: string) {
   localStorage.setItem(SHOWN_STORAGE_KEY, JSON.stringify([...shown]))
 }
 
+const surveyQueue: string[] = []
+let queueDispatching = false
+
+function tryDispatch() {
+  if (queueDispatching || surveyQueue.length === 0) return
+  const key = surveyQueue.shift()!
+  queueDispatching = true
+  window.dispatchEvent(new CustomEvent('landnam:survey', { detail: { surveyKey: key } }))
+}
+
+export function onSurveyDismissed() {
+  queueDispatching = false
+  setTimeout(tryDispatch, 1500)
+}
+
 export function enqueueSurvey(surveyKey: string, delayMs = 1800) {
   if (typeof window === 'undefined') return
   const def = SURVEY_DEFS[surveyKey]
   if (!def) return
   if (getShownSurveys().has(surveyKey)) return
   markSurveyShown(surveyKey)
-  setTimeout(() => {
-    window.dispatchEvent(new CustomEvent('landnam:survey', { detail: { surveyKey } }))
-  }, delayMs)
+  surveyQueue.push(surveyKey)
+  setTimeout(tryDispatch, delayMs)
 }
 
 export function submitSurveyResponse(surveyKey: string, responses: Record<string, string | number>) {
   const def = SURVEY_DEFS[surveyKey]
   if (!def) return
   initPostHog()
+  // PostHog expects index-based keys: $survey_response (first), $survey_response_1, $survey_response_2 …
   const payload: Record<string, string | number> = {
     $survey_id: def.id,
     $survey_name: def.name,
   }
-  for (const [qId, value] of Object.entries(responses)) {
-    payload[`$survey_response_${qId}`] = value
-  }
+  def.questions.forEach((q, i) => {
+    const value = responses[q.id]
+    if (value == null) return
+    payload[i === 0 ? '$survey_response' : `$survey_response_${i}`] = value
+  })
   posthog.capture('survey sent', payload)
 }
 
