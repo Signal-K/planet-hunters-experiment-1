@@ -2,13 +2,13 @@ name: Web CI
 
 on:
   push:
-    branches: [master, main, "claude/**"]
+    branches: [master, main, "sprint/**", "claude/**"]
     paths:
       - "web/**"
       - "pocketbase/pb_migrations/**"
       - ".github/workflows/web-ci.yml"
   pull_request:
-    branches: [master, main]
+    branches: [master, main, "sprint/**"]
     paths:
       - "web/**"
       - "pocketbase/pb_migrations/**"

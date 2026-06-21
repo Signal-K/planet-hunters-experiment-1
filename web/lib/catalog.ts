@@ -47,6 +47,14 @@ export function toMission(r: any): Mission {
     locked: r.locked ?? false,
     sequence: r.sequence,
     unlockAt: r.unlock_at || undefined,
+    targetId: (r.getString?.('target_id') ?? r.target_id ?? '') || undefined,
+    payload: (r.getString?.('payload_type') ?? r.payload_type ?? '')
+      ? {
+          type: (r.getString?.('payload_type') ?? r.payload_type) as 'rover',
+          name: r.getString?.('payload_name') ?? r.payload_name ?? '',
+          cargoCost: r.getFloat?.('payload_cargo_cost') ?? r.payload_cargo_cost ?? 0,
+        }
+      : undefined,
     requires: {
       minerals,
       cargo_min: r.requires_cargo_min ?? 0,
@@ -102,7 +110,7 @@ export function toPart(r: any): Part {
     cargo: r.cargo_capacity || undefined,
     power: r.power || undefined,
     max_orbit: r.max_orbit || undefined,
-    rate: r.drill_rate || undefined,
+    rate: r.drill_rate != null ? r.drill_rate : undefined,
     missionsRequired: r.missions_required || undefined,
   }
 }

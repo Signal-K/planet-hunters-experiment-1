@@ -176,9 +176,35 @@ func ensureCollections(app core.App) {
 		col.Fields.Add(&core.NumberField{Name: "payout_francs"})
 		col.Fields.Add(&core.NumberField{Name: "payout_xp"})
 		col.Fields.Add(&core.NumberField{Name: "payout_affinity"})
+		col.Fields.Add(&core.TextField{Name: "target_id", Max: 80})
+		col.Fields.Add(&core.SelectField{Name: "payload_type", MaxSelect: 1, Values: []string{"rover"}})
+		col.Fields.Add(&core.TextField{Name: "payload_name", Max: 120})
+		col.Fields.Add(&core.NumberField{Name: "payload_cargo_cost"})
 		col.Indexes = []string{"CREATE UNIQUE INDEX idx_missions_catalog_slug ON missions_catalog (slug)"}
 		if err := app.Save(col); err != nil {
 			log.Printf("failed to save missions_catalog: %v", err)
+		}
+	}
+
+	// onboarding_feedback
+	if _, err := app.FindCollectionByNameOrId("onboarding_feedback"); err != nil {
+		col := core.NewBaseCollection("onboarding_feedback")
+		col.ListRule = nil
+		col.ViewRule = nil
+		col.CreateRule = emptyStr
+		col.UpdateRule = nil
+		col.DeleteRule = nil
+		col.Fields.Add(&core.TextField{Name: "user_id", Max: 64})
+		col.Fields.Add(&core.SelectField{
+			Name: "mission_id", Required: true, MaxSelect: 1,
+			Values: []string{"m1", "m2", "m3", "end_of_content"},
+		})
+		col.Fields.Add(&core.NumberField{Name: "rating"})
+		col.Fields.Add(&core.TextField{Name: "freetext", Max: 600})
+		col.Fields.Add(&core.TextField{Name: "option_choice", Max: 200})
+		col.Fields.Add(&core.BoolField{Name: "dismissed"})
+		if err := app.Save(col); err != nil {
+			log.Printf("failed to save onboarding_feedback: %v", err)
 		}
 	}
 
@@ -279,6 +305,17 @@ func ensureCatalogFields(app core.App) {
 		addTextIfMissing(contractors, "ui_role", false)
 		if err := app.Save(contractors); err != nil {
 			log.Printf("failed to update contractors schema: %v", err)
+		}
+	}
+
+	missionsCatalog, err := app.FindCollectionByNameOrId("missions_catalog")
+	if err == nil {
+		addTextIfMissing(missionsCatalog, "target_id", false)
+		addSelectIfMissing(missionsCatalog, "payload_type", []string{"rover"}, false)
+		addTextIfMissing(missionsCatalog, "payload_name", false)
+		addNumberIfMissing(missionsCatalog, "payload_cargo_cost", false)
+		if err := app.Save(missionsCatalog); err != nil {
+			log.Printf("failed to update missions_catalog schema: %v", err)
 		}
 	}
 }
@@ -405,6 +442,7 @@ func seedCatalog(app core.App) {
 		{"psyche", location{"16 Psyche", "asteroid", "L2", "Exposed metallic core of an ancient body. Extremely high iron and nickel grades.", 4, []string{"iron", "nickel", "gold"}, false}},
 		{"belt", location{"Asteroid Belt", "asteroid", "L2", "Varied deposits: iron, silicon, nickel, cobalt, gold, and xenon pockets. The prospector's playground.", 5, []string{"iron", "silicon", "nickel", "cobalt", "gold", "rare"}, true}},
 		{"ceres", location{"1 Ceres", "asteroid", "L2", "Dwarf planet at the belt's inner edge. Ice-rich mantle beneath a silicate crust.", 5, []string{"ice", "silicon"}, false}},
+		{"lutetia", location{"21 Lutetia", "asteroid", "L2", "A large metallic asteroid in the outer belt. Dense nickel-cobalt deposits under a regolith crust.", 6, []string{"nickel", "cobalt"}, false}},
 	}
 	for _, l := range locations {
 		seedRecord(app, "locations", l.slug, map[string]any{
@@ -434,6 +472,7 @@ func seedCatalog(app core.App) {
 		{"hand-drill", part{"Hand Drill", "drill", "/parts/mining_drill_t1.png", 1, false, 0, 0, 0, 0, 1}},
 		{"laser-t2", part{"Laser T2", "drill", "/parts/mining_drill_t1.png", 2, false, 0, 0, 0, 0, 2}},
 		{"plasma-t3", part{"Plasma T3", "drill", "/parts/mining_drill_t1.png", 3, true, 0, 0, 0, 0, 4}},
+		{"cargo-module-t1", part{"Cargo Module T1", "drill", "/parts/drill-hand.png", 1, false, 0, 0, 0, 0, 0}},
 	}
 	for _, p := range parts {
 		fields := map[string]any{

@@ -43,6 +43,13 @@ export interface Player {
   loanDebt: number
   loanOffered: boolean
   seen_planets?: string[]
+  roverDeployments?: Array<{
+    roverId: string
+    targetId: string
+    contractorId: string
+    timestamp: number
+  }>
+  contractorTerritories?: Record<string, string[]>
 }
 
 export interface GameState {

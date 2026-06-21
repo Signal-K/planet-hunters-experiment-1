@@ -1,4 +1,6 @@
 import { initPostHog, posthog } from '@/lib/posthog'
+import { pbShared } from '@/lib/pb'
+import { pbLandnam } from '@/lib/pb-landnam'
 
 export type SurveyQuestionType = 'rating' | 'multiple_choice' | 'open'
 
@@ -74,6 +76,31 @@ export const SURVEY_DEFS: Record<string, Survey> = {
       { id: '10781cf1-e118-4c74-b14a-18871b1238f1', type: 'rating', question: 'How strong is your urge to keep playing right now?', scale: 5 },
     ],
   },
+  lnm_m1_complete: {
+    id: '019e5a4e-7001-0000-0001-000000000001',
+    name: 'Landnám: M1 Mission Feedback',
+    questions: [
+      { id: 'm1-rating', type: 'rating', question: 'How was that mission?', scale: 5 },
+      { id: 'm1-freetext', type: 'open', question: 'Anything confusing?' },
+    ],
+  },
+  lnm_m2_complete: {
+    id: '019e5a4e-7002-0000-0002-000000000002',
+    name: 'Landnám: M2 Mission Feedback',
+    questions: [
+      { id: 'm2-rating', type: 'rating', question: 'How was that mission?', scale: 5 },
+      { id: 'm2-freetext', type: 'open', question: 'Anything confusing?' },
+    ],
+  },
+  lnm_m3_complete: {
+    id: '019e5a4e-7003-0000-0003-000000000003',
+    name: 'Landnám: M3 Onboarding Graduation',
+    questions: [
+      { id: 'm3-rating', type: 'rating', question: 'How are you feeling about the game so far?', scale: 5 },
+      { id: 'm3-choice', type: 'multiple_choice', question: 'What would make you most likely to keep playing?', choices: ['More missions', 'Better rewards', 'More to build'] },
+      { id: 'm3-freetext', type: 'open', question: 'Anything else you want us to know?' },
+    ],
+  },
 }
 
 const SHOWN_STORAGE_KEY = 'landnam-surveys-shown'
@@ -120,6 +147,30 @@ export function enqueueSurvey(surveyKey: string, delayMs = 1800) {
   setTimeout(tryDispatch, delayMs)
 }
 
+const ONBOARDING_MISSION_ID: Record<string, string> = {
+  lnm_m1_complete: 'm1',
+  lnm_m2_complete: 'm2',
+  lnm_m3_complete: 'm3',
+  lnm_end_of_content: 'end_of_content',
+}
+
+function storeSurveyInPb(missionId: string, responses: Record<string, string | number>, dismissed: boolean) {
+  if (typeof window === 'undefined') return
+  const userId = pbShared.authStore.record?.id ?? null
+  const ratingVal = Object.values(responses).find(v => typeof v === 'number')
+  const textVals = Object.values(responses).filter(v => typeof v === 'string')
+  const freetext = textVals.find(v => (v as string).length > 10) ?? null
+  const optionChoice = textVals.find(v => (v as string).length <= 80) ?? null
+  pbLandnam.collection('onboarding_feedback').create({
+    user_id: userId ?? '',
+    mission_id: missionId,
+    rating: ratingVal ?? null,
+    freetext: freetext ?? null,
+    option_choice: optionChoice ?? null,
+    dismissed,
+  }).catch(() => {/* non-critical — PostHog is source of truth */})
+}
+
 export function submitSurveyResponse(surveyKey: string, responses: Record<string, string | number>) {
   const def = SURVEY_DEFS[surveyKey]
   if (!def) return
@@ -135,6 +186,9 @@ export function submitSurveyResponse(surveyKey: string, responses: Record<string
     payload[i === 0 ? '$survey_response' : `$survey_response_${i}`] = value
   })
   posthog.capture('survey sent', payload)
+
+  const missionId = ONBOARDING_MISSION_ID[surveyKey]
+  if (missionId) storeSurveyInPb(missionId, responses, false)
 }
 
 export function trackSurveyShown(surveyKey: string) {

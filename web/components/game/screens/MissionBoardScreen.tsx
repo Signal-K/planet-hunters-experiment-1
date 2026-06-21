@@ -45,6 +45,58 @@ export default function MissionBoardScreen({ onBack, onPick, missionsDone, freeO
     const contractor = CONTRACTORS[m.contractor]
     return !!contractor && (freeOperations || contractorUnlocked(contractor, sequence)) && (freeOperations || m.sequence === sequence)
   })
+
+  const onboardingComplete = !freeOperations && available.length === 0 && missionsDone >= 1
+
+  if (onboardingComplete) {
+    return (
+      <div style={{ width: '100%', height: '100%', position: 'relative', background: '#06090f' }}>
+        <div style={{ position: 'absolute', inset: 0 }}>
+          <Image src="/earth-day.jpg" alt="" fill style={{ objectFit: 'cover', filter: 'brightness(0.18) saturate(0.6)' }} />
+        </div>
+        <TopBar eyebrow="EARTH BASE · COMPLETE" title="Mission Board" onBack={onBack} />
+        <div style={{
+          position: 'absolute', inset: 0, paddingTop: 72,
+          display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+          padding: '72px 32px 64px',
+        }}>
+          <div style={{
+            width: 64, height: 64, borderRadius: 999, marginBottom: 24,
+            background: 'radial-gradient(circle at 38% 36%, #7ec8ff33, #1a3a5c22)',
+            border: '1.5px solid rgba(126,200,255,0.3)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+          }}>
+            <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+              <circle cx="14" cy="14" r="10" stroke="#7ec8ff" strokeWidth="1.5" strokeDasharray="3 2" />
+              <circle cx="14" cy="14" r="3.5" fill="#7ec8ff" opacity="0.7" />
+            </svg>
+          </div>
+
+          <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 10, fontWeight: 700, letterSpacing: '0.22em', color: 'var(--ln-cyan)', textTransform: 'uppercase', marginBottom: 10 }}>
+            Training Arc Complete
+          </div>
+          <div style={{ fontFamily: 'var(--ln-font-display)', fontWeight: 800, fontSize: 22, color: '#e6efff', textAlign: 'center', lineHeight: 1.25, marginBottom: 16 }}>
+            Three Operations Down
+          </div>
+          <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 14, color: '#7a96b4', textAlign: 'center', lineHeight: 1.6, maxWidth: 280, marginBottom: 32 }}>
+            You&apos;ve completed the current build of Landnám. The next phase — Free Ops, contractor board, and the full asteroid belt — is on its way.
+          </div>
+
+          <div style={{
+            padding: '12px 16px', borderRadius: 10,
+            border: '1px solid rgba(126,200,255,0.15)',
+            background: 'rgba(8,16,28,0.6)',
+            fontFamily: 'var(--ln-font-mono)', fontSize: 11,
+            color: '#4a6a88', letterSpacing: '0.14em', textAlign: 'center',
+            textTransform: 'uppercase',
+          }}>
+            More missions loading · Sprint 5
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div style={{ width: '100%', height: '100%', position: 'relative', background: '#06090f' }}>
       <div style={{ position: 'absolute', inset: 0 }}>

@@ -42,6 +42,8 @@ const DEFAULT_STATE: GameState = {
     loanDebt: 0,
     loanOffered: false,
     seen_planets: [],
+    roverDeployments: [],
+    contractorTerritories: {},
   },
   missionId: null,
   targetId: null,
@@ -572,7 +574,12 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     })
     addToast(`Mission payout received: +${(total / 1_000_000).toFixed(0)}M F`, 'ok')
     enqueueSurvey('lnm_mission_friction', 2000)
-    if (newMissionsDone === 1) enqueueSurvey('lnm_progression_feel', 8000)
+    if (newMissionsDone === 1) {
+      enqueueSurvey('lnm_m1_complete', 3000)
+      enqueueSurvey('lnm_progression_feel', 8000)
+    }
+    if (newMissionsDone === 2) enqueueSurvey('lnm_m2_complete', 3000)
+    if (newMissionsDone === 3) enqueueSurvey('lnm_m3_complete', 5000)
     if (!catalog.missions.some(m => m.sequence === newMissionsDone + 1)) enqueueSurvey('lnm_end_of_content', 5000)
   }, [addToast, catalog.missions])
 

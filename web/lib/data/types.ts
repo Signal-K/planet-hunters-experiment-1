@@ -1,5 +1,11 @@
 // Landnam game data — all shared types and interfaces
 
+export interface MissionPayload {
+  type: 'rover'
+  name: string
+  cargoCost: number
+}
+
 export interface Mission {
   id: string
   title: string
@@ -10,6 +16,8 @@ export interface Mission {
   locked: boolean
   sequence: number
   unlockAt?: string
+  targetId?: string
+  payload?: MissionPayload
   requires: {
     minerals: Record<string, number>
     cargo_min: number
