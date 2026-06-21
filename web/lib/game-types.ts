@@ -63,6 +63,7 @@ export interface GameState {
   doneSteps: Record<number, boolean>
   popup: string | null
   menuOpen: boolean
+  pendingTerritoryClaimFor?: { targetId: string; contractorId: string }
 }
 
 import type React from 'react'
@@ -111,4 +112,5 @@ export interface GameActions {
   dismissUpgradePrompt: () => void
   upgradeAccount: (email: string, password: string) => Promise<void>
   awaitingRemoteState: boolean
+  clearTerritoryClaimPopup: () => void
 }

@@ -107,7 +107,33 @@ export function generateMissions(count = OFFLINE_MISSION_COUNT): Mission[] {
   })
 }
 
-export const MISSIONS: Mission[] = generateMissions()
+export const AUTHORED_MISSIONS: Mission[] = [
+  {
+    id: 'lnm_m3_ore_delivery',
+    title: 'Lutetia Survey Drop',
+    brief: 'Kepler Materials needs a survey rover delivered to 21 Lutetia. Swap your mining laser for the Cargo Module, fly out, and collect a small ore sample on the way home.',
+    contractor: 'kepler-materials',
+    tag: 'DELIVERY',
+    difficulty: 'L2',
+    locked: false,
+    sequence: 3,
+    unlockAt: 'Complete 2 contracts',
+    targetId: 'lutetia',
+    payload: { type: 'rover', name: 'KI Survey Rover Mk1', cargoCost: 3 },
+    requires: {
+      minerals: { nickel: 2 },
+      cargo_min: 4,
+      drill_tier: 1,
+      max_orbit: 7,
+    },
+    payout: {
+      francs: 800_000,
+      affinity: 18,
+    },
+  },
+]
+
+export const MISSIONS: Mission[] = [...generateMissions(), ...AUTHORED_MISSIONS]
 
 // Baseline cost of assembling the starter SR1 rocket (hull-mk1 + ion-a1 + hand-drill).
 // Used as the reference point for onboarding payout floors.

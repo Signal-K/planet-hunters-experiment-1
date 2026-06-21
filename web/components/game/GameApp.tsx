@@ -27,6 +27,7 @@ import ToastLayer from '@/components/ui/ToastLayer'
 import { initPostHog } from '@/lib/posthog'
 import DevShortcuts from '@/components/dev/DevShortcuts'
 import AuthGateSheet from '@/components/game/AuthGateSheet'
+import TerritoryClaimPopup from '@/components/game/TerritoryClaimPopup'
 
 if (typeof window !== 'undefined') initPostHog()
 
@@ -237,6 +238,13 @@ function GameCanvas() {
             onSignIn={game.signInFromGate}
             onCreateAccount={game.createAccountFromGate}
             onSkip={game.skipAuthGate}
+          />
+        )}
+        {game.pendingTerritoryClaimFor && (
+          <TerritoryClaimPopup
+            targetId={game.pendingTerritoryClaimFor.targetId}
+            contractorId={game.pendingTerritoryClaimFor.contractorId}
+            onDismiss={game.clearTerritoryClaimPopup}
           />
         )}
       </div>

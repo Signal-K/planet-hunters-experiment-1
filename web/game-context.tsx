@@ -338,6 +338,10 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     setUpgradePromptOpen(false)
   }, [])
 
+  const clearTerritoryClaimPopup = useCallback(() => {
+    setState(s => ({ ...s, pendingTerritoryClaimFor: undefined, screen: 'market' }))
+  }, [])
+
   const upgradeAccount = useCallback(async (email: string, password: string) => {
     const { emailChangeRequested } = await upgradeGuestAccount(email, password)
     localStorage.removeItem(UPGRADE_SNOOZE_KEY)
@@ -353,6 +357,20 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
   const onPickMission = useCallback((id: string) => {
     setState(s => {
       if (s.player.missionsDone >= 1) enqueueSurvey('lnm_contractor_pick')
+      const mission = catalog.missions.find(m => m.id === id) ?? null
+      if (mission?.targetId) {
+        // Fixed-target mission: pre-select target and skip TargetPickerScreen
+        const target = catalog.targets.find(t => t.id === mission.targetId) ?? null
+        const next = suggestBuild({ mission, target, missionsDone: s.player.missionsDone, launchpadUpgraded: s.player.launchpadUpgraded, parts: catalog.parts })
+        return {
+          ...s,
+          missionId: id,
+          targetId: mission.targetId,
+          rocket: next,
+          screen: 'rocket-buy',
+          doneSteps: { ...s.doneSteps, 2: true, 3: true },
+        }
+      }
       return {
         ...s,
         missionId: id,
@@ -361,7 +379,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
         doneSteps: { ...s.doneSteps, 2: true },
       }
     })
-  }, [])
+  }, [catalog.missions, catalog.parts, catalog.targets])
 
   const onStartRefine = useCallback((recipeId: string) => {
     const recipe = REFINERY_RECIPES.find(r => r.id === recipeId)
@@ -545,6 +563,24 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
         seen_planets.push(s.targetId)
       }
 
+      const effectiveTargetId = mission?.targetId ?? s.targetId ?? ''
+      let roverDeployments = [...(s.player.roverDeployments ?? [])]
+      let contractorTerritories = { ...(s.player.contractorTerritories ?? {}) }
+      let pendingTerritoryClaimFor: { targetId: string; contractorId: string } | undefined
+      if (mission?.payload?.type === 'rover' && contractor && effectiveTargetId) {
+        roverDeployments = [...roverDeployments, {
+          roverId: `${mission.id}-rover-${Date.now()}`,
+          targetId: effectiveTargetId,
+          contractorId: contractor,
+          timestamp: Date.now(),
+        }]
+        const prev = contractorTerritories[contractor] ?? []
+        if (!prev.includes(effectiveTargetId)) {
+          contractorTerritories = { ...contractorTerritories, [contractor]: [...prev, effectiveTargetId] }
+        }
+        pendingTerritoryClaimFor = { targetId: effectiveTargetId, contractorId: contractor }
+      }
+
       return {
         ...s,
         player: {
@@ -562,6 +598,8 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
           loanDebt,
           loanOffered: loanOffered || showLoanOffer,
           seen_planets,
+          roverDeployments,
+          contractorTerritories,
         },
         lastCargo: null,
         missionId: null,
@@ -569,7 +607,8 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
         tutorial: catalog.missions.some(m => m.sequence === missionsDone + 1),
         popup: missionsDone === 1 ? 'sr2' : showLoanOffer ? 'loan' : s.popup,
         doneSteps: { ...s.doneSteps, 9: true },
-        screen: 'market',
+        screen: pendingTerritoryClaimFor ? s.screen : 'market',
+        pendingTerritoryClaimFor,
       }
     })
     addToast(`Mission payout received: +${(total / 1_000_000).toFixed(0)}M F`, 'ok')
@@ -716,6 +755,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       upgradePromptOpen,
       dismissUpgradePrompt,
       upgradeAccount,
+      clearTerritoryClaimPopup,
       awaitingRemoteState,
       authGateOpen,
       authGateError,
