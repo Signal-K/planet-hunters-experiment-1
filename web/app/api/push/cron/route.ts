@@ -2,13 +2,12 @@ import { NextRequest, NextResponse } from 'next/server'
 import webpush from 'web-push'
 import PocketBase from 'pocketbase'
 
-webpush.setVapidDetails(
-  process.env.VAPID_SUBJECT!,
-  process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!,
-  process.env.VAPID_PRIVATE_KEY!,
-)
-
 export async function GET(req: NextRequest) {
+  webpush.setVapidDetails(
+    process.env.VAPID_SUBJECT!,
+    process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!,
+    process.env.VAPID_PRIVATE_KEY!,
+  )
   const secret = process.env.CRON_SECRET
   if (secret) {
     const auth = req.headers.get('authorization') ?? req.nextUrl.searchParams.get('secret')
