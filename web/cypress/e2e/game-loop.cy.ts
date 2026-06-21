@@ -132,17 +132,17 @@ describe('Full Game Loop — Landnam', () => {
   })
 
   describe('Phase 3: Rocket Assembly → Launch', () => {
-    it('assembly screen shows rocket parts and launch button', () => {
+    it('assembly screen shows prebuilt starter rocket and launch button', () => {
+      // AssemblyScreen was refactored to show a prebuilt starter rocket (not individual parts)
       visitWithState(fullState({
         screen: 'fab',
         missionId: 'generated-s1-starter-bulk-1',
         targetId: 'mars',
         rocket: { chassis: 'hull-mk1', propulsion: 'ion-a1', drill: 'hand-drill' },
-        doneSteps: { 1: true, 2: true, 3: true },
+        doneSteps: { 1: true, 2: true, 3: true, 4: true, 5: false },
       }))
-      cy.contains('Hull MK1').should('be.visible')
-      cy.contains('Ion Drive A1').should('be.visible')
-      cy.contains('Hand Drill').should('be.visible')
+      cy.contains('Starter Rocket 1').should('be.visible')
+      cy.contains('PREBUILT').should('be.visible')
       cy.get('[data-testid="launch-btn"]').should('be.visible')
     })
 
@@ -344,7 +344,7 @@ describe('Full Game Loop — Landnam', () => {
         tutorial: false,
       }))
       cy.contains('STARTER ROCKET 2').should('be.visible')
-      cy.contains('Vehicle Unlocked').should('be.visible')
+      cy.contains('Vehicle Available').should('be.visible')
       cy.contains('Got it').should('be.visible')
     })
 
@@ -396,7 +396,7 @@ describe('Full Game Loop — Landnam', () => {
       // Returning to hub shows the deferred SR2 unlock popup
       cy.get('[aria-label="back"]').click()
       cy.contains('STARTER ROCKET 2').should('be.visible')
-      cy.contains('Vehicle Unlocked').should('be.visible')
+      cy.contains('Vehicle Available').should('be.visible')
     })
   })
 
@@ -490,7 +490,7 @@ describe('Full Game Loop — Landnam', () => {
         },
         tutorial: false,
       }))
-      cy.get('[data-testid="mission-card-generated-s2-starter-bulk-4"]').should('be.visible')
+      cy.get('[data-testid="mission-card-generated-s2-starter-bulk-4"]').scrollIntoView().should('be.visible')
       cy.get('[data-testid="mission-card-generated-s2-starter-bulk-4"]').should('have.attr', 'data-mission-id', 'generated-s2-starter-bulk-4')
     })
 

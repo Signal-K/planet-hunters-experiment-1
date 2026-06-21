@@ -4,7 +4,7 @@
   "description": "Portrait-canvas space mining browser game",
   "start_url": "/game",
   "display": "standalone",
-  "orientation": "portrait",
+  "orientation": "any",
   "background_color": "#030912",
   "theme_color": "#030912",
   "icons": [

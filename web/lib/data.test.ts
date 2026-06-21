@@ -109,18 +109,36 @@ describe('validateBuild', () => {
 })
 
 describe('compatibleTargetsFor', () => {
-  it('restricts M1 to asteroid targets that carry the required minerals', () => {
+  it('restricts M1 to asteroid targets within orbit range (any minerals)', () => {
     const m1 = MISSIONS.find(m => m.sequence === 1)!
     const compatible = compatibleTargetsFor(m1, TARGETS)
     expect(compatible.every(t => t.type === 'asteroid')).toBe(true)
-    expect(compatible.every(t => t.minerals.includes('iron'))).toBe(true)
     expect(compatible.every(t => t.orbit <= m1.requires.max_orbit)).toBe(true)
   })
 
-  it('allows planets for later missions that require their minerals', () => {
+  it('restricts M2 to asteroid targets (onboarding, no planet access)', () => {
     const m2 = MISSIONS.find(m => m.sequence === 2)!
     const compatible = compatibleTargetsFor(m2, TARGETS)
+    expect(compatible.every(t => t.type === 'asteroid')).toBe(true)
+  })
+
+  it('allows planets for M3+ missions that require their minerals', () => {
+    // Synthesise a sequence-3 mission without a fixed targetId that requires ice
+    const m3: import('./data/types').Mission = {
+      id: 'test-m3', title: 'Test', brief: '', contractor: 'kepler-materials',
+      tag: 'BULK', difficulty: 'L2', locked: false, sequence: 3,
+      requires: { minerals: { ice: 2 }, cargo_min: 2, drill_tier: 1, max_orbit: 8 },
+      payout: { francs: 0, affinity: 0 },
+    }
+    const compatible = compatibleTargetsFor(m3, TARGETS)
     expect(compatible.some(t => t.type === 'planet')).toBe(true)
+  })
+
+  it('returns only the fixed target for M3 rover delivery missions', () => {
+    const m3 = MISSIONS.find(m => m.id === 'lnm_m3_ore_delivery')!
+    const compatible = compatibleTargetsFor(m3, TARGETS)
+    expect(compatible).toHaveLength(1)
+    expect(compatible[0].id).toBe('lutetia')
   })
 })
 
@@ -191,14 +209,27 @@ describe('seed bible v0 catalog', () => {
   })
 
   it('builds resource-collection missions from mission templates', () => {
+    const generated = MISSIONS.filter(m => m.id.startsWith('generated-'))
     expect(MISSION_TEMPLATES.every(t => t.mineralKeys.length > 0)).toBe(true)
-    expect(MISSIONS.every(m => MISSION_TEMPLATES.some(t => t.tag === m.tag))).toBe(true)
-    expect(MISSIONS.filter(m => m.sequence === 1).length).toBeGreaterThan(1)
-    expect(MISSIONS.filter(m => m.sequence === 2).length).toBeGreaterThan(1)
-    expect(MISSIONS.every(m => m.id.startsWith('generated-'))).toBe(true)
-    expect(MISSIONS.every(m => {
+    // Generated missions must map to a known template tag
+    expect(generated.every(m => MISSION_TEMPLATES.some(t => t.tag === m.tag))).toBe(true)
+    expect(generated.filter(m => m.sequence === 1).length).toBeGreaterThan(1)
+    expect(generated.filter(m => m.sequence === 2).length).toBeGreaterThan(1)
+    expect(generated.every(m => {
       const contractor = CONTRACTOR_SLOTS.find(c => c.id === m.contractor)
       return contractor && contractor.unlockTier <= m.sequence
     })).toBe(true)
+  })
+
+  it('authored missions have required fields and valid target references', () => {
+    const authored = MISSIONS.filter(m => !m.id.startsWith('generated-'))
+    expect(authored.length).toBeGreaterThan(0)
+    expect(authored.every(m => m.id && m.title && m.contractor)).toBe(true)
+    // M3 authored: lnm_m3_ore_delivery targets lutetia with rover payload
+    const m3 = authored.find(m => m.id === 'lnm_m3_ore_delivery')
+    expect(m3).toBeDefined()
+    expect(m3?.targetId).toBe('lutetia')
+    expect(m3?.payload?.type).toBe('rover')
+    expect(TARGETS.some(t => t.id === m3?.targetId)).toBe(true)
   })
 })

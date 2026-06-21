@@ -88,17 +88,19 @@ export const SURVEY_DEFS: Record<string, Survey> = {
     id: '019e5a4e-7002-0000-0002-000000000002',
     name: 'Landnám: M2 Mission Feedback',
     questions: [
-      { id: 'm2-rating', type: 'rating', question: 'How was that mission?', scale: 5 },
-      { id: 'm2-freetext', type: 'open', question: 'Anything confusing?' },
+      { id: 'm2-rocket-clarity', type: 'multiple_choice', question: 'How clear was the SR2 purchase step?', choices: ['Totally clear', 'A bit confusing', 'I wasn\'t sure why I needed a new rocket', 'I missed it at first'] },
+      { id: 'm2-rating', type: 'rating', question: 'How satisfying was completing that mission?', scale: 5 },
+      { id: 'm2-freetext', type: 'open', question: 'Anything that slowed you down?' },
     ],
   },
   lnm_m3_complete: {
     id: '019e5a4e-7003-0000-0003-000000000003',
     name: 'Landnám: M3 Onboarding Graduation',
     questions: [
-      { id: 'm3-rating', type: 'rating', question: 'How are you feeling about the game so far?', scale: 5 },
-      { id: 'm3-choice', type: 'multiple_choice', question: 'What would make you most likely to keep playing?', choices: ['More missions', 'Better rewards', 'More to build'] },
-      { id: 'm3-freetext', type: 'open', question: 'Anything else you want us to know?' },
+      { id: 'm3-delivery-clarity', type: 'multiple_choice', question: 'How clear was it that M3 was a delivery mission, not a mining run?', choices: ['Crystal clear', 'Mostly clear', 'A bit confusing', 'I didn\'t realise until I launched'] },
+      { id: 'm3-travel-feel', type: 'multiple_choice', question: 'How did the travel time feel?', choices: ['Too long', 'About right', 'Too short — felt too instant', 'I didn\'t notice it'] },
+      { id: 'm3-rating', type: 'rating', question: 'How are you feeling about the game after three missions?', scale: 5 },
+      { id: 'm3-freetext', type: 'open', question: 'Anything we should know before you play more?' },
     ],
   },
 }

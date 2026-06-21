@@ -48,7 +48,23 @@ export const M2_STEPS: TutorialStep[] = [
     anchor: 'top', spot: { x: 14, y: 154, w: 374, h: 320 }, cta: 'Got it' },
 ]
 
+export const M3_STEPS: TutorialStep[] = [
+  { id: 30, screen: 'hub', title: 'Delivery Mission',
+    body: 'M3 is a cargo run, not a mining contract. You\'ll carry a survey rover to Lutetia — the Cargo Module replaces your drill for this job.',
+    manual: true,
+    anchor: 'bottom', spot: null, cta: 'Got it' },
+  { id: 31, screen: 'rocket-buy', title: 'Cargo Module Installed',
+    body: 'Your SR2 has been configured with the Cargo Module T1 for this mission. It carries the rover payload instead of a drill head.',
+    manual: true,
+    anchor: 'top', spot: { x: 14, y: 154, w: 374, h: 320 }, cta: 'Got it' },
+  { id: 32, screen: 'fab', title: 'Ready to Launch',
+    body: 'Cargo Module is active — no drill needed for this delivery. Confirm and launch when ready.',
+    manual: true,
+    anchor: 'top', spot: { x: 14, y: 154, w: 374, h: 250 }, cta: 'Got it' },
+]
+
 export const PROGRESSION_STEPS: TutorialStep[] = [
   ...M1_STEPS,
   ...M2_STEPS,
+  ...M3_STEPS,
 ]

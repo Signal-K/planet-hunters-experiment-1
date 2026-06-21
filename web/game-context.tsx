@@ -55,6 +55,8 @@ const DEFAULT_STATE: GameState = {
   menuOpen: false,
 }
 
+const ORBIT_MS_PER_UNIT = 2 * 60 * 1000 // 2 minutes per orbit unit
+
 const STORAGE_KEY = 'landnam-game-state-v1'
 const UPGRADE_SNOOZE_KEY = 'landnam-upgrade-prompt-snooze-until'
 const UPGRADE_SNOOZE_MS = 24 * 60 * 60 * 1000
@@ -362,6 +364,8 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
         // Fixed-target mission: pre-select target and skip TargetPickerScreen
         const target = catalog.targets.find(t => t.id === mission.targetId) ?? null
         const next = suggestBuild({ mission, target, missionsDone: s.player.missionsDone, launchpadUpgraded: s.player.launchpadUpgraded, parts: catalog.parts })
+        // Cargo-payload missions use Cargo Module T1 in the drill slot instead of a drill
+        if (mission.payload?.type === 'rover') next.drill = 'cargo-module-t1'
         return {
           ...s,
           missionId: id,
@@ -490,11 +494,15 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     setState(s => {
       const mission = s.missionId ? catalog.missions.find(m => m.id === s.missionId) : null
       const target = s.targetId ? catalog.targets.find(t => t.id === s.targetId) : null
+      const arrivalAt = (!s.tutorial && target)
+        ? Date.now() + target.orbit * ORBIT_MS_PER_UNIT
+        : null
       return {
         ...s,
         player: {
           ...s.player,
           pendingLaunch: false,
+          arrivalAt,
           activeMission: mission && target
             ? { id: mission.id, label: mission.title + ' → ' + target.name }
             : null,
@@ -515,7 +523,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       return {
         ...s,
         lastCargo: cargo,
-        player: { ...s.player, stash },
+        player: { ...s.player, stash, arrivalAt: null },
         screen: 'debrief',
         doneSteps: { ...s.doneSteps, 6: true },
       }

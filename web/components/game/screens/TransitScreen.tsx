@@ -6,27 +6,74 @@ import { Scene } from '@/lib/engine'
 import TopBar from '@/components/ui/TopBar'
 import { GhostBtn, PrimaryBtn } from '@/components/ui/Button'
 
-export default function TransitScreen({ target, onArrive, onBack, onAbandon }: { target: Target; onArrive: () => void; onBack: () => void; onAbandon?: () => void }) {
-  const [progress, setProgress] = useState(12)
+function formatEta(ms: number): string {
+  if (ms <= 0) return '00:00'
+  const totalSecs = Math.ceil(ms / 1000)
+  const mins = Math.floor(totalSecs / 60)
+  const secs = totalSecs % 60
+  return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`
+}
 
-  useEffect(() => {
-    const timer = window.setInterval(() => setProgress(value => Math.min(100, value + 2)), 100)
-    return () => window.clearInterval(timer)
-  }, [])
+interface Props {
+  target: Target
+  arrivalAt?: number | null
+  onArrive: () => void
+  onBack: () => void
+  onAbandon?: () => void
+}
 
-  // Arriving always opens the mining scene — prefetch its JSON now so the
-  // fetch is already resolved (via Scene.load's cache) by the time
-  // MiningCanvas mounts, removing it from the visible transition stutter.
+export default function TransitScreen({ target, arrivalAt, onArrive, onBack, onAbandon }: Props) {
+  const isTimed = typeof arrivalAt === 'number'
+
+  // Timed mode: derive progress and ETA from real timestamps
+  const [now, setNow] = useState(() => Date.now())
+
+  // Instant (tutorial) mode: fake progress bar
+  const [fakeProgress, setFakeProgress] = useState(12)
+
   useEffect(() => {
     void Scene.load('/game/scenes/mining.scene.json')
   }, [])
 
+  // Tick real clock for timed mode
   useEffect(() => {
-    if (progress === 100) {
-      const timer = window.setTimeout(onArrive, 350)
-      return () => window.clearTimeout(timer)
+    if (!isTimed) return
+    const id = window.setInterval(() => setNow(Date.now()), 500)
+    return () => window.clearInterval(id)
+  }, [isTimed])
+
+  // Fake progress for tutorial/instant mode
+  useEffect(() => {
+    if (isTimed) return
+    const id = window.setInterval(() => setFakeProgress(v => Math.min(100, v + 2)), 100)
+    return () => window.clearInterval(id)
+  }, [isTimed])
+
+  // Arrive triggers
+  useEffect(() => {
+    if (isTimed) {
+      if (now >= arrivalAt!) {
+        const timer = window.setTimeout(onArrive, 350)
+        return () => window.clearTimeout(timer)
+      }
+    } else {
+      if (fakeProgress === 100) {
+        const timer = window.setTimeout(onArrive, 350)
+        return () => window.clearTimeout(timer)
+      }
     }
-  }, [onArrive, progress])
+  }, [isTimed, now, arrivalAt, fakeProgress, onArrive])
+
+  // For timed mode we don't know the exact launch time, so track elapsed since mount
+  const [mountedAt] = useState(() => Date.now())
+  const totalMs = isTimed && arrivalAt ? Math.max(1, arrivalAt - mountedAt) : 1
+
+  const progress = isTimed
+    ? Math.min(100, Math.max(0, Math.round(((now - mountedAt) / totalMs) * 100)))
+    : fakeProgress
+
+  const etaMs = isTimed ? Math.max(0, arrivalAt! - now) : 0
+  const arrived = isTimed ? now >= arrivalAt! : fakeProgress >= 100
 
   return (
     <div className="game-screen transit-screen">
@@ -47,11 +94,20 @@ export default function TransitScreen({ target, onArrive, onBack, onAbandon }: {
       </div>
 
       <div className="transit-readout">
-        <div><span>Transit</span><strong>{progress}%</strong></div>
+        {isTimed ? (
+          <>
+            <div><span>ETA</span><strong>{arrived ? 'ARRIVED' : formatEta(etaMs)}</strong></div>
+            <div><span>Orbit</span><strong>{target.orbit}</strong></div>
+          </>
+        ) : (
+          <div><span>Transit</span><strong>{fakeProgress}%</strong></div>
+        )}
         <div className="progress-track"><span style={{ width: `${progress}%` }} /></div>
       </div>
       <div className="sticky-actions">
-        <PrimaryBtn onClick={onArrive} disabled={progress < 100}>Arrive{progress < 100 ? ` · ${progress}%` : ''}</PrimaryBtn>
+        <PrimaryBtn onClick={onArrive} disabled={!arrived}>
+          {arrived ? 'Arrive' : isTimed ? `En Route · ${formatEta(etaMs)}` : `Arrive · ${fakeProgress}%`}
+        </PrimaryBtn>
         {onAbandon && <GhostBtn onClick={onAbandon}>Abort Mission</GhostBtn>}
       </div>
     </div>

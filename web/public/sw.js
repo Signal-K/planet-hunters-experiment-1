@@ -1,6 +1,7 @@
 // Landnam service worker — cache-first for app shell and static assets,
 // pass-through for PocketBase API calls so the game handles cold-start
 // delays itself rather than serving stale API responses.
+// Also handles Web Push notifications (opt-in).
 
 const CACHE = 'landnam-shell-v3'
 
@@ -94,5 +95,30 @@ self.addEventListener('fetch', event => {
         const offline = await caches.match('/offline')
         return offline ?? new Response('Offline', { status: 503, headers: { 'Content-Type': 'text/plain' } })
       })
+  )
+})
+
+self.addEventListener('push', event => {
+  let data = { title: 'Landnam', body: 'Something happened in your space program.' }
+  try { data = event.data?.json() ?? data } catch {}
+  event.waitUntil(
+    self.registration.showNotification(data.title, {
+      body: data.body,
+      icon: '/icons/icon-192.png',
+      badge: '/icons/icon-192.png',
+      data: data.url ?? '/game',
+    })
+  )
+})
+
+self.addEventListener('notificationclick', event => {
+  event.notification.close()
+  const url = event.notification.data ?? '/game'
+  event.waitUntil(
+    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(clients => {
+      const existing = clients.find(c => c.url.includes('/game'))
+      if (existing) return existing.focus()
+      return self.clients.openWindow(url)
+    })
   )
 })

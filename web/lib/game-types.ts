@@ -42,6 +42,7 @@ export interface Player {
   lastContractor?: string
   loanDebt: number
   loanOffered: boolean
+  arrivalAt?: number | null
   seen_planets?: string[]
   roverDeployments?: Array<{
     roverId: string

@@ -230,6 +230,41 @@ func ensureCollections(app core.App) {
 		}
 	}
 
+	if _, err := app.FindCollectionByNameOrId("scheduled_notifications"); err != nil {
+		col := core.NewBaseCollection("scheduled_notifications")
+		col.ListRule = nil
+		col.ViewRule = nil
+		col.CreateRule = types.Pointer("")
+		col.UpdateRule = types.Pointer("")
+		col.DeleteRule = nil
+		col.Fields.Add(&core.TextField{Name: "endpoint", Required: true, Max: 512})
+		col.Fields.Add(&core.JSONField{Name: "keys", MaxSize: 512})
+		col.Fields.Add(&core.NumberField{Name: "scheduled_for", Required: true})
+		col.Fields.Add(&core.TextField{Name: "title", Required: true, Max: 120})
+		col.Fields.Add(&core.TextField{Name: "body", Required: true, Max: 300})
+		col.Fields.Add(&core.BoolField{Name: "sent"})
+		col.Indexes = []string{"CREATE INDEX idx_scheduled_notifications_due ON scheduled_notifications (scheduled_for, sent)"}
+		if err := app.Save(col); err != nil {
+			log.Printf("failed to save scheduled_notifications: %v", err)
+		}
+	}
+
+	if _, err := app.FindCollectionByNameOrId("push_subscriptions"); err != nil {
+		col := core.NewBaseCollection("push_subscriptions")
+		col.ListRule = nil
+		col.ViewRule = nil
+		col.CreateRule = types.Pointer("")
+		col.UpdateRule = nil
+		col.DeleteRule = types.Pointer("")
+		col.Fields.Add(&core.TextField{Name: "endpoint", Required: true, Max: 512})
+		col.Fields.Add(&core.JSONField{Name: "keys", MaxSize: 512})
+		col.Fields.Add(&core.TextField{Name: "user_id", Max: 64})
+		col.Indexes = []string{"CREATE UNIQUE INDEX idx_push_subscriptions_endpoint ON push_subscriptions (endpoint)"}
+		if err := app.Save(col); err != nil {
+			log.Printf("failed to save push_subscriptions: %v", err)
+		}
+	}
+
 	ensureCatalogFields(app)
 }
 
