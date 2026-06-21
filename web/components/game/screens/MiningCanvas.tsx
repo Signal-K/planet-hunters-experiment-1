@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useRef } from 'react'
-import { Application, Container, Graphics } from 'pixi.js'
+import { Application, Assets, Container, Graphics, type Texture } from 'pixi.js'
 import { Scene, GameLoop, InputManager, RuntimeContext, screenToWorld } from '@/lib/engine'
 import { wireShapeRenderers } from '@/lib/engine/components/ShapeRenderer'
 import type { ShapeKind } from '@/lib/engine/components/ShapeRenderer'
@@ -153,6 +153,16 @@ export default function MiningCanvas({ minerals, mineralMeta, onCollect, fireRef
         const shipY = Math.round(worldH * 0.22)
         const tileH = worldH - surfaceY
 
+        // Preload ore sprites — one PNG per mineral key
+        const oreTextures: Record<string, Texture> = {}
+        await Promise.allSettled(
+          minerals.map(id =>
+            Assets.load(`/game/assets/ores/ore_${id}.png`)
+              .then((t: Texture) => { oreTextures[id] = t })
+              .catch(() => {})
+          )
+        )
+
         const [sceneData] = await Promise.all([
           Scene.load('/game/scenes/mining.scene.json'),
           app.init({
@@ -196,6 +206,7 @@ export default function MiningCanvas({ minerals, mineralMeta, onCollect, fireRef
           mineralColors: Object.fromEntries(Object.entries(mineralMeta).map(([id, m]) => [id, m.color])),
           mineralLaserAccess,
           mineralShapes: MINERAL_SHAPES,
+          mineralTextures: oreTextures,
           onCollect: mineral => onCollectRef.current(mineral),
           onScroll: scrollX => {
             surfaceContainer.x = -(scrollX % SURFACE_TILE_W)

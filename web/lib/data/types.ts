@@ -1,5 +1,11 @@
 // Landnam game data — all shared types and interfaces
 
+export interface MissionPayload {
+  type: 'rover'
+  name: string
+  cargoCost: number
+}
+
 export interface Mission {
   id: string
   title: string
@@ -10,6 +16,8 @@ export interface Mission {
   locked: boolean
   sequence: number
   unlockAt?: string
+  targetId?: string
+  payload?: MissionPayload
   requires: {
     minerals: Record<string, number>
     cargo_min: number
@@ -65,6 +73,11 @@ export interface Contractor {
   name: string
   color: string
   initial: string
+  unlockTier: number
+  projectType: string
+  mineralPreferences: string[]
+  payoutPremium: number
+  affinityBonusPerMission: number
 }
 
 export interface ContractorSlot {
@@ -75,6 +88,8 @@ export interface ContractorSlot {
   unlockTier: number
   projectType: string
   mineralPreferences: string[]
+  payoutPremium: number
+  affinityBonusPerMission: number
   payoutNotes: string
   affinityNotes: string
   uiRole: 'starter' | 'bulk' | 'prospect' | 'command' | 'science'

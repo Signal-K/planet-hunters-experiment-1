@@ -54,10 +54,8 @@ export default function HubScreen({ player, hasCoach, onGoBuilding, onNav, onUpg
     // scales to canvas height). calc(22% - 42px) puts the icon bottom at that boundary so the
     // structure appears planted on the visible grass/soil line on any screen height.
     .map(e => ({ left: e.transform.position.x, bottom: 'calc(22% - 42px)' } as React.CSSProperties))
-  const POST_M3_STRUCTURES = ['refinery']
   const structureForPlot = (plot: number) => {
     const kind = Object.entries(effectivePlots).find(([, p]) => p === plot)?.[0] ?? null
-    if (kind && POST_M3_STRUCTURES.includes(kind) && player.missionsDone < 3) return null
     return kind
   }
   const structureProps = (kind: string) => {

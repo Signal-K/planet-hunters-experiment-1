@@ -1,0 +1,30 @@
+name: PocketBase Deploy
+
+on:
+  push:
+    branches:
+      - main
+      - "sprint/**"
+    paths:
+      - "pocketbase/**"
+      - ".github/workflows/pb-deploy.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    name: Deploy to Fly.io
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: superfly/flyctl-actions/setup-flyctl@master
+
+      - name: Deploy PocketBase
+        working-directory: pocketbase
+        run: flyctl deploy --remote-only
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}

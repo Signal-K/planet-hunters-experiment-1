@@ -1,4 +1,4 @@
-// Landnam game data — prebuilt starter rockets (SR1–SR5)
+// Landnam game data — prebuilt starter rockets
 // Players purchase a rocket per mission. SR1 is always free. SR2+ require Francs + mission history.
 
 import type { StarterRocket } from './types'
@@ -25,17 +25,6 @@ export const STARTER_ROCKETS: StarterRocket[] = [
     stats: { cargo: 10, maxOrbit: 7, drillTier: 2 },
     img: '/parts/reinforced_hull_t2.png',
     unlockHint: 'Unlocks after M1',
-  },
-  {
-    id: 'sr3',
-    name: 'Starter Rocket 3',
-    tier: 3,
-    costFrancs: 4_000_000_000,
-    missionsRequired: 3,
-    locked: true,
-    stats: { cargo: 18, maxOrbit: 9, drillTier: 3 },
-    img: '/parts/reinforced_hull_t2.png',
-    unlockHint: 'Unlocks after M3',
   },
   {
     id: 'sr4',

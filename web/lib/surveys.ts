@@ -1,4 +1,6 @@
 import { initPostHog, posthog } from '@/lib/posthog'
+import { pbShared } from '@/lib/pb'
+import { pbLandnam } from '@/lib/pb-landnam'
 
 export type SurveyQuestionType = 'rating' | 'multiple_choice' | 'open'
 
@@ -74,6 +76,33 @@ export const SURVEY_DEFS: Record<string, Survey> = {
       { id: '10781cf1-e118-4c74-b14a-18871b1238f1', type: 'rating', question: 'How strong is your urge to keep playing right now?', scale: 5 },
     ],
   },
+  lnm_m1_complete: {
+    id: '019e5a4e-7001-0000-0001-000000000001',
+    name: 'Landnám: M1 Mission Feedback',
+    questions: [
+      { id: 'm1-rating', type: 'rating', question: 'How was that mission?', scale: 5 },
+      { id: 'm1-freetext', type: 'open', question: 'Anything confusing?' },
+    ],
+  },
+  lnm_m2_complete: {
+    id: '019e5a4e-7002-0000-0002-000000000002',
+    name: 'Landnám: M2 Mission Feedback',
+    questions: [
+      { id: 'm2-rocket-clarity', type: 'multiple_choice', question: 'How clear was the SR2 purchase step?', choices: ['Totally clear', 'A bit confusing', 'I wasn\'t sure why I needed a new rocket', 'I missed it at first'] },
+      { id: 'm2-rating', type: 'rating', question: 'How satisfying was completing that mission?', scale: 5 },
+      { id: 'm2-freetext', type: 'open', question: 'Anything that slowed you down?' },
+    ],
+  },
+  lnm_m3_complete: {
+    id: '019e5a4e-7003-0000-0003-000000000003',
+    name: 'Landnám: M3 Onboarding Graduation',
+    questions: [
+      { id: 'm3-delivery-clarity', type: 'multiple_choice', question: 'How clear was it that M3 was a delivery mission, not a mining run?', choices: ['Crystal clear', 'Mostly clear', 'A bit confusing', 'I didn\'t realise until I launched'] },
+      { id: 'm3-travel-feel', type: 'multiple_choice', question: 'How did the travel time feel?', choices: ['Too long', 'About right', 'Too short — felt too instant', 'I didn\'t notice it'] },
+      { id: 'm3-rating', type: 'rating', question: 'How are you feeling about the game after three missions?', scale: 5 },
+      { id: 'm3-freetext', type: 'open', question: 'Anything we should know before you play more?' },
+    ],
+  },
 }
 
 const SHOWN_STORAGE_KEY = 'landnam-surveys-shown'
@@ -95,29 +124,73 @@ function markSurveyShown(surveyKey: string) {
   localStorage.setItem(SHOWN_STORAGE_KEY, JSON.stringify([...shown]))
 }
 
+const surveyQueue: string[] = []
+let queueDispatching = false
+
+function tryDispatch() {
+  if (queueDispatching || surveyQueue.length === 0) return
+  const key = surveyQueue.shift()!
+  queueDispatching = true
+  window.dispatchEvent(new CustomEvent('landnam:survey', { detail: { surveyKey: key } }))
+}
+
+export function onSurveyDismissed() {
+  queueDispatching = false
+  setTimeout(tryDispatch, 1500)
+}
+
 export function enqueueSurvey(surveyKey: string, delayMs = 1800) {
   if (typeof window === 'undefined') return
   const def = SURVEY_DEFS[surveyKey]
   if (!def) return
   if (getShownSurveys().has(surveyKey)) return
   markSurveyShown(surveyKey)
-  setTimeout(() => {
-    window.dispatchEvent(new CustomEvent('landnam:survey', { detail: { surveyKey } }))
-  }, delayMs)
+  surveyQueue.push(surveyKey)
+  setTimeout(tryDispatch, delayMs)
+}
+
+const ONBOARDING_MISSION_ID: Record<string, string> = {
+  lnm_m1_complete: 'm1',
+  lnm_m2_complete: 'm2',
+  lnm_m3_complete: 'm3',
+  lnm_end_of_content: 'end_of_content',
+}
+
+function storeSurveyInPb(missionId: string, responses: Record<string, string | number>, dismissed: boolean) {
+  if (typeof window === 'undefined') return
+  const userId = pbShared.authStore.record?.id ?? null
+  const ratingVal = Object.values(responses).find(v => typeof v === 'number')
+  const textVals = Object.values(responses).filter(v => typeof v === 'string')
+  const freetext = textVals.find(v => (v as string).length > 10) ?? null
+  const optionChoice = textVals.find(v => (v as string).length <= 80) ?? null
+  pbLandnam.collection('onboarding_feedback').create({
+    user_id: userId ?? '',
+    mission_id: missionId,
+    rating: ratingVal ?? null,
+    freetext: freetext ?? null,
+    option_choice: optionChoice ?? null,
+    dismissed,
+  }).catch(() => {/* non-critical — PostHog is source of truth */})
 }
 
 export function submitSurveyResponse(surveyKey: string, responses: Record<string, string | number>) {
   const def = SURVEY_DEFS[surveyKey]
   if (!def) return
   initPostHog()
+  // PostHog expects index-based keys: $survey_response (first), $survey_response_1, $survey_response_2 …
   const payload: Record<string, string | number> = {
     $survey_id: def.id,
     $survey_name: def.name,
   }
-  for (const [qId, value] of Object.entries(responses)) {
-    payload[`$survey_response_${qId}`] = value
-  }
+  def.questions.forEach((q, i) => {
+    const value = responses[q.id]
+    if (value == null) return
+    payload[i === 0 ? '$survey_response' : `$survey_response_${i}`] = value
+  })
   posthog.capture('survey sent', payload)
+
+  const missionId = ONBOARDING_MISSION_ID[surveyKey]
+  if (missionId) storeSurveyInPb(missionId, responses, false)
 }
 
 export function trackSurveyShown(surveyKey: string) {

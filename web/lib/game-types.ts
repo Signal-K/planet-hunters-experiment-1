@@ -32,6 +32,7 @@ export interface Player {
   debriefPending?: boolean
   stash?: Record<string, number>
   contractorMissions: Record<string, number>
+  contractorStreaks?: Record<string, number>
   contractorCooldowns: Record<string, number>
   researchAnnotations: number
   refineryBuilt: boolean
@@ -41,7 +42,15 @@ export interface Player {
   lastContractor?: string
   loanDebt: number
   loanOffered: boolean
+  arrivalAt?: number | null
   seen_planets?: string[]
+  roverDeployments?: Array<{
+    roverId: string
+    targetId: string
+    contractorId: string
+    timestamp: number
+  }>
+  contractorTerritories?: Record<string, string[]>
 }
 
 export interface GameState {
@@ -55,6 +64,7 @@ export interface GameState {
   doneSteps: Record<number, boolean>
   popup: string | null
   menuOpen: boolean
+  pendingTerritoryClaimFor?: { targetId: string; contractorId: string }
 }
 
 import type React from 'react'
@@ -103,4 +113,5 @@ export interface GameActions {
   dismissUpgradePrompt: () => void
   upgradeAccount: (email: string, password: string) => Promise<void>
   awaitingRemoteState: boolean
+  clearTerritoryClaimPopup: () => void
 }

@@ -109,9 +109,9 @@ export default function TutorialCoach({ stepIndex, steps, step, total, onManualN
   if (manual) {
     const cardTop = step.anchor === 'top' ? 150 : step.anchor === 'center' ? 330 : 520
     return (
-      <div style={{ position: 'absolute', inset: 0, zIndex: 80, pointerEvents: 'none' }} data-testid="tutorial-coach-overlay">
+      <div style={{ position: 'absolute', inset: 0, zIndex: 96, pointerEvents: 'none' }} data-testid="tutorial-coach-overlay">
         {ring ?? <div style={{ position: 'absolute', inset: 0, background: 'rgba(3,6,12,0.45)' }} />}
-        <div style={{ position: 'absolute', left: 14, right: 14, top: cardTop, zIndex: 82, pointerEvents: 'auto' }}>
+        <div style={{ position: 'absolute', left: 14, right: 14, top: cardTop, zIndex: 98, pointerEvents: 'auto' }}>
           <div style={{
             background: 'linear-gradient(180deg, #0d1c30 0%, #081120 100%)',
             border: '1px solid rgba(135,207,250,0.5)',
@@ -150,7 +150,7 @@ export default function TutorialCoach({ stepIndex, steps, step, total, onManualN
   }
 
   return (
-      <div style={{ position: 'absolute', inset: 0, zIndex: 80, pointerEvents: 'none' }} data-testid="tutorial-coach-overlay">
+      <div style={{ position: 'absolute', inset: 0, zIndex: 96, pointerEvents: 'none' }} data-testid="tutorial-coach-overlay">
         {ring}
         <div style={{
           position: 'absolute',
@@ -158,7 +158,7 @@ export default function TutorialCoach({ stepIndex, steps, step, total, onManualN
           right: 12,
           top: compactTop,
           bottom: compactBottom,
-          zIndex: 82,
+          zIndex: 98,
           pointerEvents: 'none',
           overflow: 'visible',
           maxHeight: compactTop != null && compactBottom == null ? 'calc(100dvh - 170px)' : undefined,
@@ -178,7 +178,7 @@ export default function TutorialCoach({ stepIndex, steps, step, total, onManualN
               <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                 <span style={{ fontFamily: 'var(--ln-font-display)', fontSize: 8, fontWeight: 800, letterSpacing: '0.2em', color: '#f5a623', textTransform: 'uppercase' }}>{step.title}</span>
                 <span style={{ flex: 1 }} />
-                <span style={{ fontFamily: 'var(--ln-font-mono)', fontSize: 9, color: '#7a8294' }}>{stepIndex + 1}/{total}</span>
+                {dots}
               </div>
               <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 12, color: '#dfe9f7', lineHeight: 1.25, marginTop: 1, whiteSpace: 'normal', overflow: 'visible', wordBreak: 'break-word' }}>
                 <span aria-hidden="true" style={{ color: 'var(--ln-amber)', marginRight: 4 }}>›</span>
@@ -187,7 +187,6 @@ export default function TutorialCoach({ stepIndex, steps, step, total, onManualN
             </div>
             <button onClick={onSkip} style={{ flexShrink: 0, background: 'transparent', border: 'none', cursor: 'pointer', fontFamily: 'var(--ln-font-display)', fontSize: 9, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: '#5d7390', pointerEvents: 'auto' }}>Skip</button>
           </div>
-          <div style={{ marginTop: 6, display: 'flex', justifyContent: 'center' }}>{dots}</div>
         </div>
       </div>
   )

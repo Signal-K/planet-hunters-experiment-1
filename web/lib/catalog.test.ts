@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { toTarget, toMission, toPart } from './catalog'
+import { toTarget, toMission, toPart, toContractor } from './catalog'
 
 describe('Landnam Catalog Mapping', () => {
   it('maps a raw database record to a Target object', () => {
@@ -33,6 +33,23 @@ describe('Landnam Catalog Mapping', () => {
     expect(mission.id).toBe('m1')
     expect(mission.payout.francs).toBe(5000)
     expect(mission.requires.minerals).toEqual({ Water: 10 })
+  })
+
+  it('maps a raw contractor record with economy fields', () => {
+    const contractor = toContractor({
+      slug: 'hearth-smelters',
+      name: 'Hearth Smelters',
+      color: '#d97150',
+      initial: 'HS',
+      unlock_tier: 1,
+      project_type: 'Starter smelting',
+      mineral_preferences: '["iron","silicon"]',
+      payout_premium: 0.2,
+      affinity_bonus_per_mission: 0.025,
+    })
+    expect(contractor.projectType).toBe('Starter smelting')
+    expect(contractor.mineralPreferences).toEqual(['iron', 'silicon'])
+    expect(contractor.payoutPremium).toBe(0.2)
   })
 
   it('maps a raw part record with stats', () => {

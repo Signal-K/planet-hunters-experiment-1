@@ -23,13 +23,15 @@
     "react": "19.2.7",
     "react-dom": "19.2.7",
     "recharts": "^3.8.1",
-    "resend": "^6.12.4"
+    "resend": "^6.12.4",
+    "web-push": "^3.6.7"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@types/web-push": "^3.6.4",
     "@vitejs/plugin-react": "^6.0.2",
     "cypress": "^15.16.0",
     "jsdom": "^29.1.1",

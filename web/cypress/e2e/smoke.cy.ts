@@ -3,6 +3,8 @@ describe('Smoke — Landnam', () => {
     cy.visit('/game', {
       onBeforeLoad(win) {
         win.localStorage.setItem('landnam-game-state-v1', JSON.stringify(state))
+        // Suppress AuthGateSheet so it doesn't cover interactive elements
+        win.localStorage.setItem('landnam-guest-credentials', JSON.stringify({ email: 'e2e@landnam.guest', password: 'e2e-guest-test' }))
       },
     })
   }
@@ -31,7 +33,7 @@ describe('Smoke — Landnam', () => {
   it('shows the transit rocket at the movement angle without a trajectory pointer', () => {
     visitWithState({
       screen: 'transit',
-      missionId: 'm1-iron',
+      missionId: 'generated-s1-starter-bulk-1',
       targetId: 'mars',
       tutorial: false,
     })
@@ -47,7 +49,7 @@ describe('Smoke — Landnam', () => {
   it('enforces cargo resolution before reward collection', () => {
     visitWithState({
       screen: 'debrief',
-      missionId: 'm1-iron',
+      missionId: 'generated-s1-starter-bulk-1',
       targetId: 'mars',
       lastCargo: { iron: 4 },
       tutorial: false,

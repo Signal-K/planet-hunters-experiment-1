@@ -99,6 +99,16 @@ export const TARGETS: Target[] = [
     brief: 'Dwarf planet at the belt\'s inner edge. Ice-rich mantle beneath a silicate crust.',
     minerals: ['ice', 'silicon'],
   },
+  {
+    id: 'lutetia',
+    name: '21 Lutetia',
+    type: 'asteroid' as const,
+    orbit: 6,
+    difficulty: 'L2',
+    brief: 'A large metallic asteroid in the outer belt. Dense nickel-cobalt deposits under a regolith crust.',
+    minerals: ['nickel', 'cobalt'],
+    recommended: false,
+  },
   // ── Outer planets ──────────────────────────────────────────────────────────
   {
     id: 'jupiter',
@@ -129,13 +139,17 @@ export const STAR_LINKS: [string, string][] = [
 ]
 
 export function compatibleTargetsFor(mission: Mission, targets: Target[] = TARGETS): Target[] {
+  // M3+ fixed-target missions: only the designated target is valid
+  if (mission.targetId) return targets.filter(t => t.id === mission.targetId)
+
   const required = Object.keys(mission.requires.minerals)
-  const isM1 = mission.id === 'm1-iron' || mission.sequence === 1
+  const isOnboarding = mission.sequence <= 2
 
   return targets.filter(t => {
-    const basicCompat = t.orbit <= mission.requires.max_orbit &&
-                        required.every(mineral => t.minerals.includes(mineral))
-    if (isM1) return basicCompat && t.type === 'asteroid'
-    return basicCompat
+    const inRange = t.orbit <= mission.requires.max_orbit
+    // M1/M2: contractor doesn't constrain location — any reachable asteroid is valid
+    if (isOnboarding) return inRange && t.type === 'asteroid'
+    // M3+: target must have the required minerals
+    return inRange && required.every(mineral => t.minerals.includes(mineral))
   })
 }

@@ -1,4 +1,4 @@
-import { Container } from 'pixi.js'
+import { Container, Sprite, type Texture } from 'pixi.js'
 import { ScriptBehaviour } from '../components/ScriptBehaviour'
 import { ShapeRenderer } from '../components/ShapeRenderer'
 import type { ShapeKind } from '../components/ShapeRenderer'
@@ -39,6 +39,7 @@ export interface MiningControllerOptions {
   mineralLaserAccess?: Record<string, number>
   /** Shape per mineral key — defaults to 'circle' if not provided. */
   mineralShapes?: Record<string, ShapeKind>
+  mineralTextures?: Record<string, Texture>
   onCollect: (mineral: string) => void
   /** Called every update with the total horizontal scroll distance so callers can sync visual layers. */
   onScroll?: (scrollX: number) => void
@@ -46,7 +47,8 @@ export interface MiningControllerOptions {
 
 interface OreEntity {
   go: GameObject
-  renderer: ShapeRenderer
+  renderer: ShapeRenderer | null
+  sprite: Sprite | null
   mineral: string
   hp: number
   maxHp: number
@@ -91,12 +93,12 @@ export class MiningController extends ScriptBehaviour {
 
     for (const ore of this.ores) {
       ore.go.transform.position.x -= dx
+      if (ore.sprite) ore.sprite.x = ore.go.transform.position.x
 
       if (ore.flashTimer > 0) {
         ore.flashTimer = Math.max(0, ore.flashTimer - dt)
         if (ore.flashTimer <= 0) {
-          // Restore: damaged ores are darker based on remaining hp
-          ore.renderer.setTint(this.damagedTint(ore))
+          this.applyTint(ore, this.damagedTint(ore))
         }
       }
     }
@@ -146,28 +148,44 @@ export class MiningController extends ScriptBehaviour {
     const depth = cfg.depthMin + Math.random() * (cfg.depthMax - cfg.depthMin)
     const y = (this.opts.surfaceY ?? SURFACE_Y) + depth
 
-    const shape: ShapeKind = this.opts.mineralShapes?.[mineral] ?? 'circle'
     const colorHex = this.opts.mineralColors[mineral] ?? '#ffffff'
     const mineralColor = parseInt(colorHex.replace('#', ''), 16)
 
     const go = new GameObject(`ore-${this.oreCounter++}`, 'Ore', { position: { x, y } })
-    const renderer = new ShapeRenderer(
-      {
-        shape,
-        width: radius * 2,
-        height: radius * 2,
-        color: '#ffffff',      // draw white; mineral color applied via tint
-        strokeColor: ORE_STROKE,
-        strokeWidth: tier > 1 ? 2 + tier : 1.5,
-      },
-      this.opts.container
-    )
-    go.addComponent(renderer)
-    this.gameObject.addChild(go)
-    go.start()
-    renderer.setTint(mineralColor)
 
-    this.ores.push({ go, renderer, mineral, hp: maxHp, maxHp, radius, flashTimer: 0, mineralColor })
+    const texture = this.opts.mineralTextures?.[mineral]
+    let renderer: ShapeRenderer | null = null
+    let sprite: Sprite | null = null
+
+    if (texture) {
+      sprite = new Sprite(texture)
+      const size = radius * 2
+      sprite.width = size
+      sprite.height = size
+      sprite.anchor.set(0.5)
+      sprite.x = x
+      sprite.y = y
+      this.opts.container.addChild(sprite)
+    } else {
+      const shape: ShapeKind = this.opts.mineralShapes?.[mineral] ?? 'circle'
+      renderer = new ShapeRenderer(
+        {
+          shape,
+          width: radius * 2,
+          height: radius * 2,
+          color: '#ffffff',
+          strokeColor: ORE_STROKE,
+          strokeWidth: tier > 1 ? 2 + tier : 1.5,
+        },
+        this.opts.container
+      )
+      go.addComponent(renderer)
+      go.start()
+      renderer.setTint(mineralColor)
+    }
+
+    this.gameObject.addChild(go)
+    this.ores.push({ go, renderer, sprite, mineral, hp: maxHp, maxHp, radius, flashTimer: 0, mineralColor })
   }
 
   private resolveCollisions(): void {
@@ -187,13 +205,22 @@ export class MiningController extends ScriptBehaviour {
 
         if (ore.hp <= 0) {
           ore.go.active = false
+          if (ore.sprite) ore.sprite.visible = false
           this.opts.onCollect(ore.mineral)
         } else {
           ore.flashTimer = FLASH_DURATION
-          ore.renderer.setTint(0xffffff)
+          this.applyTint(ore, 0xffffff)
         }
         break
       }
+    }
+  }
+
+  private applyTint(ore: OreEntity, tint: number): void {
+    if (ore.sprite) {
+      ore.sprite.tint = tint
+    } else {
+      ore.renderer?.setTint(tint)
     }
   }
 
@@ -202,6 +229,10 @@ export class MiningController extends ScriptBehaviour {
       if (ore.go.active && ore.go.transform.position.x > -(ore.radius * 2)) return true
       ore.go.destroy()
       this.gameObject.children = this.gameObject.children.filter(c => c !== ore.go)
+      if (ore.sprite) {
+        this.opts.container.removeChild(ore.sprite)
+        ore.sprite.destroy()
+      }
       return false
     })
 

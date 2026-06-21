@@ -305,9 +305,42 @@ button { cursor: pointer; }
 .reward-total { margin-top: var(--ln-s-1); color: var(--ln-amber); font: 800 32px var(--ln-font-display); }
 .reward-xp { margin-top: var(--ln-s-2); color: var(--ln-info); font: 700 12px var(--ln-font-mono); letter-spacing: var(--ln-tr-label); }
 
-@media (max-height: 760px) {
+@media (max-height: 760px) and (max-width: 1023px) {
   .portrait-canvas { border-radius: var(--ln-r-xl); }
   .screen-scroll { padding-top: 68px; }
+}
+
+/* Desktop: fill the full viewport */
+@media (min-width: 1024px) {
+  .game-stage {
+    padding: 0;
+  }
+  .portrait-canvas {
+    width: 100vw;
+    height: 100dvh;
+    max-height: none;
+    border-radius: 0;
+    border: none;
+    box-shadow: none;
+  }
+  .sticky-actions { padding-bottom: var(--ln-s-5); }
+}
+
+/* Mobile landscape: fill landscape viewport with adjusted chrome */
+@media (orientation: landscape) and (max-width: 1023px) {
+  .game-stage {
+    padding: 0;
+  }
+  .portrait-canvas {
+    width: calc(100dvw - var(--ln-s-2));
+    height: calc(100dvh - var(--ln-s-2));
+    max-height: none;
+    border-radius: var(--ln-r-lg);
+  }
+  .screen-scroll {
+    padding-top: 52px;
+    padding-bottom: 88px;
+  }
 }
 
 @keyframes coach-bob { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-2px); } }

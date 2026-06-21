@@ -1,4 +1,10 @@
 import type { GameState, Player } from '@/game-context'
+import { MISSIONS } from '@/lib/data'
+
+const FIRST_MISSION = MISSIONS.find(m => m.sequence === 1) ?? MISSIONS[0]
+const SECOND_MISSION = MISSIONS.find(m => m.sequence === 2) ?? MISSIONS[1] ?? FIRST_MISSION
+const FIRST_MINERAL = Object.keys(FIRST_MISSION.requires.minerals)[0] ?? 'iron'
+const SECOND_MINERAL = Object.keys(SECOND_MISSION.requires.minerals)[0] ?? 'silicon'
 
 const BASE_PLAYER: Player = {
   francs: 15_000_000_000,
@@ -11,6 +17,7 @@ const BASE_PLAYER: Player = {
   missionsDone: 0,
   freeOperations: false,
   contractorMissions: {},
+  contractorStreaks: {},
   contractorCooldowns: {},
   researchAnnotations: 0,
   refineryBuilt: false,
@@ -42,7 +49,7 @@ export const DEV_GROUPS: DevGroup[] = [
     shots: [
       { key: 'm1-intro',  label: 'Intro',   hint: 'Fresh start, no progress' },
       { key: 'm1-hub',    label: 'Hub',     hint: 'Launchpad built, M1 coach active' },
-      { key: 'm1-fab',    label: 'Fab',     hint: 'M1 mission + Eros picked, at fab' },
+      { key: 'm1-fab',    label: 'Fab',     hint: 'First generated mission + Eros picked, at fab' },
       { key: 'm1-mining', label: 'Mining',  hint: 'In mining with iron target' },
       { key: 'm1-debrief',label: 'Debrief', hint: 'Post-mine debrief, 6 iron' },
     ],
@@ -52,10 +59,10 @@ export const DEV_GROUPS: DevGroup[] = [
     color: '#3fa9ff',
     shots: [
       { key: 'm2-hub',    label: 'Hub',     hint: 'SR2 unlocked, M2 coach active' },
-      { key: 'm2-rocket-buy', label: 'Rocket', hint: 'M2 silicon + Eros, SR2 purchase step' },
-      { key: 'm2-fab',    label: 'Fab',     hint: 'M2 silicon + Eros after SR2 purchase' },
-      { key: 'm2-mining', label: 'Mining',  hint: 'In mining with silicon target' },
-      { key: 'm2-market', label: 'Market',  hint: '8 silicon in stash, sell screen' },
+      { key: 'm2-rocket-buy', label: 'Rocket', hint: 'Second generated mission + Eros, SR2 purchase step' },
+      { key: 'm2-fab',    label: 'Fab',     hint: 'Second generated mission + Eros after SR2 purchase' },
+      { key: 'm2-mining', label: 'Mining',  hint: 'In mining with second generated target' },
+      { key: 'm2-market', label: 'Market',  hint: 'Second mission cargo in stash, sell screen' },
     ],
   },
 ]
@@ -88,7 +95,7 @@ export function resolvePreset(name: string): Partial<GameState> | null {
         screen: 'fab',
         player: { ...BASE_PLAYER, missionsDone: 0 },
         tutorial: true, doneSteps: { 0: true, 1: true, 2: true, 3: true },
-        missionId: 'm1-iron', targetId: 'eros',
+        missionId: FIRST_MISSION.id, targetId: 'eros',
         rocket: { chassis: 'hull-mk1', propulsion: 'ion-a1', drill: 'hand-drill' },
         lastCargo: null, popup: null,
       }
@@ -96,9 +103,9 @@ export function resolvePreset(name: string): Partial<GameState> | null {
     case 'm1-mining':
       return {
         screen: 'mining',
-        player: { ...BASE_PLAYER, missionsDone: 0, activeMission: { id: 'm1-iron', label: 'Iron Reserve Order → Eros' } },
+        player: { ...BASE_PLAYER, missionsDone: 0, activeMission: { id: FIRST_MISSION.id, label: `${FIRST_MISSION.title} → Eros` } },
         tutorial: true, doneSteps: { 0: true, 1: true, 2: true, 3: true, 4: true, 5: true },
-        missionId: 'm1-iron', targetId: 'eros',
+        missionId: FIRST_MISSION.id, targetId: 'eros',
         rocket: { chassis: 'hull-mk1', propulsion: 'ion-a1', drill: 'hand-drill' },
         lastCargo: null, popup: null,
       }
@@ -106,11 +113,11 @@ export function resolvePreset(name: string): Partial<GameState> | null {
     case 'm1-debrief':
       return {
         screen: 'debrief',
-        player: { ...BASE_PLAYER, missionsDone: 0, stash: { iron: 6 } },
+        player: { ...BASE_PLAYER, missionsDone: 0, stash: { [FIRST_MINERAL]: FIRST_MISSION.requires.minerals[FIRST_MINERAL] ?? 1 } },
         tutorial: true, doneSteps: { 0: true, 1: true, 2: true, 3: true, 4: true, 5: true, 6: true },
-        missionId: 'm1-iron', targetId: 'eros',
+        missionId: FIRST_MISSION.id, targetId: 'eros',
         rocket: { chassis: 'hull-mk1', propulsion: 'ion-a1', drill: 'hand-drill' },
-        lastCargo: { iron: 6 }, popup: null,
+        lastCargo: FIRST_MISSION.requires.minerals, popup: null,
       }
 
     // ── Mission 2 ──
@@ -129,7 +136,7 @@ export function resolvePreset(name: string): Partial<GameState> | null {
         screen: 'rocket-buy',
         player: { ...BASE_PLAYER, missionsDone: 1 },
         tutorial: true, doneSteps: { ...M1_DONE, 20: true },
-        missionId: 'm2-silicon', targetId: 'eros',
+        missionId: SECOND_MISSION.id, targetId: 'eros',
         rocket: { chassis: 'hull-mk1', propulsion: 'ion-a1', drill: 'hand-drill' },
         lastCargo: null, popup: null,
       }
@@ -139,7 +146,7 @@ export function resolvePreset(name: string): Partial<GameState> | null {
         screen: 'fab',
         player: { ...BASE_PLAYER, missionsDone: 1, francs: BASE_PLAYER.francs - 1_300_000_000 },
         tutorial: true, doneSteps: { ...M1_DONE, 20: true, 21: true },
-        missionId: 'm2-silicon', targetId: 'eros',
+        missionId: SECOND_MISSION.id, targetId: 'eros',
         rocket: { chassis: 'hull-mk2', propulsion: 'fusion-b2', drill: 'laser-t2' },
         lastCargo: null, popup: null,
       }
@@ -147,9 +154,9 @@ export function resolvePreset(name: string): Partial<GameState> | null {
     case 'm2-mining':
       return {
         screen: 'mining',
-        player: { ...BASE_PLAYER, missionsDone: 1, activeMission: { id: 'm2-silicon', label: 'Silicon Bulk Order → Eros' } },
+        player: { ...BASE_PLAYER, missionsDone: 1, activeMission: { id: SECOND_MISSION.id, label: `${SECOND_MISSION.title} → Eros` } },
         tutorial: true, doneSteps: { ...M1_DONE, 20: true, 21: true },
-        missionId: 'm2-silicon', targetId: 'eros',
+        missionId: SECOND_MISSION.id, targetId: 'eros',
         rocket: { chassis: 'hull-mk2', propulsion: 'fusion-b2', drill: 'laser-t2' },
         lastCargo: null, popup: null,
       }
@@ -157,11 +164,11 @@ export function resolvePreset(name: string): Partial<GameState> | null {
     case 'm2-market':
       return {
         screen: 'market',
-        player: { ...BASE_PLAYER, missionsDone: 1, stash: { silicon: 8 }, lastContractor: 'contractor-03b' },
+        player: { ...BASE_PLAYER, missionsDone: 1, stash: { [SECOND_MINERAL]: SECOND_MISSION.requires.minerals[SECOND_MINERAL] ?? 1 }, lastContractor: SECOND_MISSION.contractor },
         tutorial: false, doneSteps: M1_DONE,
         missionId: null, targetId: null,
         rocket: { chassis: 'hull-mk2', propulsion: 'fusion-b2', drill: 'laser-t2' },
-        lastCargo: { silicon: 8 }, popup: null,
+        lastCargo: SECOND_MISSION.requires.minerals, popup: null,
       }
 
     default:

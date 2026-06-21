@@ -43,16 +43,14 @@ func ensureCollections(app core.App) {
 
 	// game_states
 	if _, err := app.FindCollectionByNameOrId("game_states"); err != nil {
+		// Fresh install: create with open text-field schema from the start.
 		gameStates := core.NewBaseCollection("game_states")
-		gameStates.ListRule = types.Pointer("user = @request.auth.id")
-		gameStates.ViewRule = types.Pointer("user = @request.auth.id")
-		gameStates.CreateRule = types.Pointer("@request.auth.id != \"\" && user = @request.auth.id")
-		gameStates.UpdateRule = types.Pointer("user = @request.auth.id")
-		gameStates.DeleteRule = types.Pointer("user = @request.auth.id")
-		gameStates.Fields.Add(&core.RelationField{
-			Name: "user", Required: true, MaxSelect: 1,
-			CollectionId: users.Id, CascadeDelete: true,
-		})
+		gameStates.ListRule = types.Pointer("")
+		gameStates.ViewRule = types.Pointer("")
+		gameStates.CreateRule = types.Pointer("")
+		gameStates.UpdateRule = types.Pointer("")
+		gameStates.DeleteRule = types.Pointer("")
+		gameStates.Fields.Add(&core.TextField{Name: "user", Required: true, Max: 64})
 		gameStates.Fields.Add(&core.JSONField{Name: "state", Required: true, MaxSize: 200000})
 		gameStates.Indexes = []string{
 			"CREATE UNIQUE INDEX idx_game_states_user ON game_states (user)",
@@ -60,6 +58,8 @@ func ensureCollections(app core.App) {
 		if err := app.Save(gameStates); err != nil {
 			log.Printf("failed to save game_states: %v", err)
 		}
+	} else {
+		migrateGameStates(app)
 	}
 
 	emptyStr := types.Pointer("")
@@ -176,9 +176,35 @@ func ensureCollections(app core.App) {
 		col.Fields.Add(&core.NumberField{Name: "payout_francs"})
 		col.Fields.Add(&core.NumberField{Name: "payout_xp"})
 		col.Fields.Add(&core.NumberField{Name: "payout_affinity"})
+		col.Fields.Add(&core.TextField{Name: "target_id", Max: 80})
+		col.Fields.Add(&core.SelectField{Name: "payload_type", MaxSelect: 1, Values: []string{"rover"}})
+		col.Fields.Add(&core.TextField{Name: "payload_name", Max: 120})
+		col.Fields.Add(&core.NumberField{Name: "payload_cargo_cost"})
 		col.Indexes = []string{"CREATE UNIQUE INDEX idx_missions_catalog_slug ON missions_catalog (slug)"}
 		if err := app.Save(col); err != nil {
 			log.Printf("failed to save missions_catalog: %v", err)
+		}
+	}
+
+	// onboarding_feedback
+	if _, err := app.FindCollectionByNameOrId("onboarding_feedback"); err != nil {
+		col := core.NewBaseCollection("onboarding_feedback")
+		col.ListRule = nil
+		col.ViewRule = nil
+		col.CreateRule = emptyStr
+		col.UpdateRule = nil
+		col.DeleteRule = nil
+		col.Fields.Add(&core.TextField{Name: "user_id", Max: 64})
+		col.Fields.Add(&core.SelectField{
+			Name: "mission_id", Required: true, MaxSelect: 1,
+			Values: []string{"m1", "m2", "m3", "end_of_content"},
+		})
+		col.Fields.Add(&core.NumberField{Name: "rating"})
+		col.Fields.Add(&core.TextField{Name: "freetext", Max: 600})
+		col.Fields.Add(&core.TextField{Name: "option_choice", Max: 200})
+		col.Fields.Add(&core.BoolField{Name: "dismissed"})
+		if err := app.Save(col); err != nil {
+			log.Printf("failed to save onboarding_feedback: %v", err)
 		}
 	}
 
@@ -204,7 +230,93 @@ func ensureCollections(app core.App) {
 		}
 	}
 
+	if _, err := app.FindCollectionByNameOrId("scheduled_notifications"); err != nil {
+		col := core.NewBaseCollection("scheduled_notifications")
+		col.ListRule = nil
+		col.ViewRule = nil
+		col.CreateRule = types.Pointer("")
+		col.UpdateRule = types.Pointer("")
+		col.DeleteRule = nil
+		col.Fields.Add(&core.TextField{Name: "endpoint", Required: true, Max: 512})
+		col.Fields.Add(&core.JSONField{Name: "keys", MaxSize: 512})
+		col.Fields.Add(&core.NumberField{Name: "scheduled_for", Required: true})
+		col.Fields.Add(&core.TextField{Name: "title", Required: true, Max: 120})
+		col.Fields.Add(&core.TextField{Name: "body", Required: true, Max: 300})
+		col.Fields.Add(&core.BoolField{Name: "sent"})
+		col.Indexes = []string{"CREATE INDEX idx_scheduled_notifications_due ON scheduled_notifications (scheduled_for, sent)"}
+		if err := app.Save(col); err != nil {
+			log.Printf("failed to save scheduled_notifications: %v", err)
+		}
+	}
+
+	if _, err := app.FindCollectionByNameOrId("push_subscriptions"); err != nil {
+		col := core.NewBaseCollection("push_subscriptions")
+		col.ListRule = nil
+		col.ViewRule = nil
+		col.CreateRule = types.Pointer("")
+		col.UpdateRule = nil
+		col.DeleteRule = types.Pointer("")
+		col.Fields.Add(&core.TextField{Name: "endpoint", Required: true, Max: 512})
+		col.Fields.Add(&core.JSONField{Name: "keys", MaxSize: 512})
+		col.Fields.Add(&core.TextField{Name: "user_id", Max: 64})
+		col.Indexes = []string{"CREATE UNIQUE INDEX idx_push_subscriptions_endpoint ON push_subscriptions (endpoint)"}
+		if err := app.Save(col); err != nil {
+			log.Printf("failed to save push_subscriptions: %v", err)
+		}
+	}
+
 	ensureCatalogFields(app)
+}
+
+// migrateGameStates upgrades an existing game_states collection created with
+// the old schema (RelationField + auth-gated rules) to the current schema
+// (TextField for user, fully open rules). Safe to call on every startup —
+// it checks the current field type before making any changes.
+func migrateGameStates(app core.App) {
+	col, err := app.FindCollectionByNameOrId("game_states")
+	if err != nil {
+		return
+	}
+
+	changed := false
+
+	// If user field is still a relation, replace it with a plain text field.
+	if f := col.Fields.GetByName("user"); f != nil && f.Type() == core.FieldTypeRelation {
+		col.Fields.RemoveByName("user")
+		col.Fields.Add(&core.TextField{Name: "user", Required: true, Max: 64})
+		changed = true
+	}
+
+	// Open up rules — the client identifies itself by userId string only.
+	empty := ""
+	if col.ListRule == nil || *col.ListRule != empty {
+		col.ListRule = &empty
+		changed = true
+	}
+	if col.ViewRule == nil || *col.ViewRule != empty {
+		col.ViewRule = &empty
+		changed = true
+	}
+	if col.CreateRule == nil || *col.CreateRule != empty {
+		col.CreateRule = &empty
+		changed = true
+	}
+	if col.UpdateRule == nil || *col.UpdateRule != empty {
+		col.UpdateRule = &empty
+		changed = true
+	}
+	if col.DeleteRule == nil || *col.DeleteRule != empty {
+		col.DeleteRule = &empty
+		changed = true
+	}
+
+	if changed {
+		if err := app.Save(col); err != nil {
+			log.Printf("migrateGameStates: failed to save: %v", err)
+		} else {
+			log.Printf("migrateGameStates: updated game_states schema")
+		}
+	}
 }
 
 func ensureCatalogFields(app core.App) {
@@ -228,6 +340,17 @@ func ensureCatalogFields(app core.App) {
 		addTextIfMissing(contractors, "ui_role", false)
 		if err := app.Save(contractors); err != nil {
 			log.Printf("failed to update contractors schema: %v", err)
+		}
+	}
+
+	missionsCatalog, err := app.FindCollectionByNameOrId("missions_catalog")
+	if err == nil {
+		addTextIfMissing(missionsCatalog, "target_id", false)
+		addSelectIfMissing(missionsCatalog, "payload_type", []string{"rover"}, false)
+		addTextIfMissing(missionsCatalog, "payload_name", false)
+		addNumberIfMissing(missionsCatalog, "payload_cargo_cost", false)
+		if err := app.Save(missionsCatalog); err != nil {
+			log.Printf("failed to update missions_catalog schema: %v", err)
 		}
 	}
 }
@@ -354,6 +477,7 @@ func seedCatalog(app core.App) {
 		{"psyche", location{"16 Psyche", "asteroid", "L2", "Exposed metallic core of an ancient body. Extremely high iron and nickel grades.", 4, []string{"iron", "nickel", "gold"}, false}},
 		{"belt", location{"Asteroid Belt", "asteroid", "L2", "Varied deposits: iron, silicon, nickel, cobalt, gold, and xenon pockets. The prospector's playground.", 5, []string{"iron", "silicon", "nickel", "cobalt", "gold", "rare"}, true}},
 		{"ceres", location{"1 Ceres", "asteroid", "L2", "Dwarf planet at the belt's inner edge. Ice-rich mantle beneath a silicate crust.", 5, []string{"ice", "silicon"}, false}},
+		{"lutetia", location{"21 Lutetia", "asteroid", "L2", "A large metallic asteroid in the outer belt. Dense nickel-cobalt deposits under a regolith crust.", 6, []string{"nickel", "cobalt"}, false}},
 	}
 	for _, l := range locations {
 		seedRecord(app, "locations", l.slug, map[string]any{
@@ -383,6 +507,7 @@ func seedCatalog(app core.App) {
 		{"hand-drill", part{"Hand Drill", "drill", "/parts/mining_drill_t1.png", 1, false, 0, 0, 0, 0, 1}},
 		{"laser-t2", part{"Laser T2", "drill", "/parts/mining_drill_t1.png", 2, false, 0, 0, 0, 0, 2}},
 		{"plasma-t3", part{"Plasma T3", "drill", "/parts/mining_drill_t1.png", 3, true, 0, 0, 0, 0, 4}},
+		{"cargo-module-t1", part{"Cargo Module T1", "drill", "/parts/drill-hand.png", 1, false, 0, 0, 0, 0, 0}},
 	}
 	for _, p := range parts {
 		fields := map[string]any{

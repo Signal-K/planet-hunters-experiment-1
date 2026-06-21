@@ -1,8 +1,11 @@
 import { describe, it, expect } from 'vitest'
 import { resolvePreset, DEV_GROUPS } from './devPresets'
+import { MISSIONS } from './data'
 
 // Every key listed in DEV_GROUPS must resolve to a valid preset
 const ALL_KEYS = DEV_GROUPS.flatMap(g => g.shots.map(s => s.key))
+const FIRST_MISSION = MISSIONS.find(m => m.sequence === 1)!
+const SECOND_MISSION = MISSIONS.find(m => m.sequence === 2)!
 
 describe('DEV_GROUPS', () => {
   it('has groups for the currently active onboarding missions', () => {
@@ -53,10 +56,10 @@ describe('resolvePreset — Mission 1 arc', () => {
     expect(p.player!.missionsDone).toBe(0)
   })
 
-  it('m1-fab: fab screen, m1-iron mission, eros target, SR1 config', () => {
+  it('m1-fab: fab screen, generated mission, eros target, SR1 config', () => {
     const p = resolvePreset('m1-fab')!
     expect(p.screen).toBe('fab')
-    expect(p.missionId).toBe('m1-iron')
+    expect(p.missionId).toBe(FIRST_MISSION.id)
     expect(p.targetId).toBe('eros')
     expect(p.rocket!.chassis).toBe('hull-mk1')
     expect(p.rocket!.propulsion).toBe('ion-a1')
@@ -66,15 +69,15 @@ describe('resolvePreset — Mission 1 arc', () => {
   it('m1-mining: mining screen with active M1 mission', () => {
     const p = resolvePreset('m1-mining')!
     expect(p.screen).toBe('mining')
-    expect(p.missionId).toBe('m1-iron')
+    expect(p.missionId).toBe(FIRST_MISSION.id)
     expect(p.player!.activeMission).not.toBeNull()
   })
 
-  it('m1-debrief: debrief screen with 6 iron in stash and lastCargo', () => {
+  it('m1-debrief: debrief screen with first mission cargo in stash and lastCargo', () => {
     const p = resolvePreset('m1-debrief')!
     expect(p.screen).toBe('debrief')
-    expect(p.player!.stash).toEqual({ iron: 6 })
-    expect(p.lastCargo).toEqual({ iron: 6 })
+    expect(p.player!.stash).toEqual(FIRST_MISSION.requires.minerals)
+    expect(p.lastCargo).toEqual(FIRST_MISSION.requires.minerals)
     expect(p.player!.missionsDone).toBe(0)
   })
 })
@@ -97,7 +100,7 @@ describe('resolvePreset — Mission 2 arc', () => {
     const p = resolvePreset('m2-rocket-buy')!
     expect(p.screen).toBe('rocket-buy')
     expect(p.player!.missionsDone).toBe(1)
-    expect(p.missionId).toBe('m2-silicon')
+    expect(p.missionId).toBe(SECOND_MISSION.id)
     expect(p.targetId).toBe('eros')
     expect(p.rocket!.chassis).toBe('hull-mk1')
     expect(p.rocket!.propulsion).toBe('ion-a1')
@@ -110,7 +113,7 @@ describe('resolvePreset — Mission 2 arc', () => {
     const p = resolvePreset('m2-fab')!
     expect(p.screen).toBe('fab')
     expect(p.player!.missionsDone).toBe(1)
-    expect(p.missionId).toBe('m2-silicon')
+    expect(p.missionId).toBe(SECOND_MISSION.id)
     expect(p.targetId).toBe('eros')
     expect(p.rocket!.chassis).toBe('hull-mk2')
     expect(p.rocket!.propulsion).toBe('fusion-b2')
@@ -123,15 +126,15 @@ describe('resolvePreset — Mission 2 arc', () => {
   it('m2-mining: missionsDone=1, mining screen with active M2 mission', () => {
     const p = resolvePreset('m2-mining')!
     expect(p.screen).toBe('mining')
-    expect(p.missionId).toBe('m2-silicon')
-    expect(p.player!.activeMission?.id).toBe('m2-silicon')
+    expect(p.missionId).toBe(SECOND_MISSION.id)
+    expect(p.player!.activeMission?.id).toBe(SECOND_MISSION.id)
   })
 
-  it('m2-market: market screen with 8 silicon in stash', () => {
+  it('m2-market: market screen with second mission cargo in stash', () => {
     const p = resolvePreset('m2-market')!
     expect(p.screen).toBe('market')
-    expect(p.player!.stash).toEqual({ silicon: 8 })
-    expect(p.lastCargo).toEqual({ silicon: 8 })
+    expect(p.player!.stash).toEqual(SECOND_MISSION.requires.minerals)
+    expect(p.lastCargo).toEqual(SECOND_MISSION.requires.minerals)
     expect(p.player!.missionsDone).toBe(1)
   })
 })

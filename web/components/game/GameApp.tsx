@@ -1,8 +1,8 @@
 'use client'
 
-import { useMemo } from 'react'
+import { useMemo, useEffect, useRef } from 'react'
 import { GameProvider, type Screen, useGame } from '@/game-context'
-import { M1_STEPS, M2_STEPS, PROGRESSION_STEPS } from '@/lib/data'
+import { M1_STEPS, M2_STEPS, M3_STEPS, PROGRESSION_STEPS } from '@/lib/data'
 import IntroScreen from '@/components/game/screens/IntroScreen'
 import AssemblyScreen from '@/components/game/screens/AssemblyScreen'
 import BuildPlaceScreen from '@/components/game/screens/BuildPlaceScreen'
@@ -27,15 +27,48 @@ import ToastLayer from '@/components/ui/ToastLayer'
 import { initPostHog } from '@/lib/posthog'
 import DevShortcuts from '@/components/dev/DevShortcuts'
 import AuthGateSheet from '@/components/game/AuthGateSheet'
+import TerritoryClaimPopup from '@/components/game/TerritoryClaimPopup'
 
 if (typeof window !== 'undefined') initPostHog()
 
 function GameCanvas() {
   const game = useGame()
+  const scheduledFor = useRef<number | null>(null)
+
+  // When a timed transit starts, schedule a push notification.
+  useEffect(() => {
+    const arrivalAt = game.player.arrivalAt
+    if (game.screen !== 'transit' || !arrivalAt) return
+    if (scheduledFor.current === arrivalAt) return
+    scheduledFor.current = arrivalAt
+
+    async function schedule() {
+      if (!('serviceWorker' in navigator)) return
+      const reg = await navigator.serviceWorker.ready
+      const sub = await reg.pushManager.getSubscription()
+      if (!sub) return
+      const mission = game.mission
+      const target = game.target
+      await fetch('/api/push/schedule', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          endpoint: sub.endpoint,
+          keys: sub.toJSON().keys,
+          scheduledFor: arrivalAt,
+          title: mission ? `${mission.title} — ARRIVED` : 'ROCKET ARRIVED',
+          body: target ? `Your rocket has reached ${target.name}. Time to mine.` : 'Your rocket has arrived at its destination.',
+        }),
+      })
+    }
+    void schedule()
+  }, [game.screen, game.player.arrivalAt, game.mission, game.target])
+
   const coachSteps = useMemo(() => {
     if (!game.tutorial) return []
     if (game.player.missionsDone === 0) return M1_STEPS
     if (game.player.missionsDone === 1) return M2_STEPS
+    if (game.player.missionsDone === 2) return M3_STEPS
     return []
   }, [game.player.missionsDone, game.tutorial])
 
@@ -129,6 +162,7 @@ function GameCanvas() {
             freeOperations={game.player.freeOperations}
             hasCoach={hasCoach}
             catalog={game.catalog}
+            contractorMissions={game.player.contractorMissions}
             contractorCooldowns={game.player.contractorCooldowns}
           />
         )}
@@ -185,13 +219,13 @@ function GameCanvas() {
           />
         )}
         {game.screen === 'transit' && game.target && (
-          <TransitScreen target={game.target} onBack={() => game.go('hub')} onArrive={() => game.go('mining')} onAbandon={game.abandonMission} />
+          <TransitScreen target={game.target} arrivalAt={game.player.arrivalAt} onBack={() => game.go('hub')} onArrive={() => game.go('mining')} onAbandon={game.abandonMission} />
         )}
         {game.screen === 'mining' && game.mission && game.target && (
           <MiningScreen mission={game.mission} target={game.target} onBack={() => game.go('hub')} onComplete={game.onMiningDone} minerals={game.catalog.minerals} />
         )}
         {game.screen === 'debrief' && game.mission && game.target && (
-          <DebriefScreen mission={game.mission} target={game.target} cargo={game.lastCargo ?? {}} onDone={game.onDebriefDone} minerals={game.catalog.minerals} freeOperations={game.player.freeOperations} annotations={game.player.researchAnnotations} missionsDone={game.player.missionsDone} />
+          <DebriefScreen mission={game.mission} target={game.target} cargo={game.lastCargo ?? {}} onDone={game.onDebriefDone} minerals={game.catalog.minerals} contractors={game.catalog.contractors} contractorMissions={game.player.contractorMissions} freeOperations={game.player.freeOperations} annotations={game.player.researchAnnotations} missionsDone={game.player.missionsDone} />
         )}
 
         <ToastLayer toasts={game.toasts} onDismiss={game.dismissToast} />
@@ -236,6 +270,13 @@ function GameCanvas() {
             onSignIn={game.signInFromGate}
             onCreateAccount={game.createAccountFromGate}
             onSkip={game.skipAuthGate}
+          />
+        )}
+        {game.pendingTerritoryClaimFor && (
+          <TerritoryClaimPopup
+            targetId={game.pendingTerritoryClaimFor.targetId}
+            contractorId={game.pendingTerritoryClaimFor.contractorId}
+            onDismiss={game.clearTerritoryClaimPopup}
           />
         )}
       </div>

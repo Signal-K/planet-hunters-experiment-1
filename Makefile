@@ -53,7 +53,7 @@ e2e:
 
 e2e-open:
 	$(MAKE) up
-	npx cypress open --config baseUrl=http://127.0.0.1:3000
+	cd web && npx cypress open --config-file cypress.config.ts --config baseUrl=http://127.0.0.1:3000
 
 web-dev:
 	cd web && npm run dev
