@@ -21,6 +21,8 @@ const BASE_PLAYER: Player = {
   contractorCooldowns: {},
   researchAnnotations: 0,
   refineryBuilt: false,
+  refineryUnlocked: false,
+  refineryUnlockNotified: false,
   refineryQueue: [],
   refinedGoods: {},
   launchpadUpgraded: false,

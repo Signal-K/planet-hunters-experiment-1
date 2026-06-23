@@ -100,7 +100,9 @@ export interface StructureBlueprint {
   name: string
   kind: string
   cost: number
+  costMaterials?: Record<string, number>
   unlocksAt: string
+  unlockTrigger?: 'always' | 'contractor-mission-trigger' | 'manual'
   description: string
 }
 
@@ -163,7 +165,7 @@ export interface TutorialStep {
   action?: string
   manual?: boolean
   anchor: 'top' | 'bottom' | 'center'
-  spot: { x: number; y: number; w: number; h: number; fromBottom?: boolean } | null
+  spot: { x: number; y: number; w: number; h: number; fromBottom?: boolean; fromCenter?: boolean; right?: number } | null
   cta: string
 }
 

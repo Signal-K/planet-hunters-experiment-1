@@ -32,14 +32,15 @@ const MINING_GUIDE = [
   { label: 'RETURN HOME', desc: 'Return to base. Only enabled once your cargo meets the mission order.' },
 ]
 
-export default function MiningScreen({ mission, target, onComplete, onBack, minerals }: {
+export default function MiningScreen({ mission, target, onComplete, onBack, minerals, laserChargeCap }: {
   mission: Mission
   target: Target
   onComplete: (cargo: Record<string, number>) => void
   onBack: () => void
   minerals: Record<string, MineralMeta>
+  laserChargeCap?: number
 }) {
-  const MAX_CHARGES = 5
+  const MAX_CHARGES = Math.max(1, laserChargeCap ?? 5)
   const cargoRef = useRef<Record<string, number>>({})
   const [cargo, setCargo] = useState<Record<string, number>>({})
   const fireRef = useRef<(() => void) | null>(null)
@@ -55,14 +56,7 @@ export default function MiningScreen({ mission, target, onComplete, onBack, mine
       [mineral]: (cargoRef.current[mineral] ?? 0) + 1,
     }
     setCargo(cargoRef.current)
-    setLaserCharges(c => Math.min(MAX_CHARGES, c + 1))
-  }, [MAX_CHARGES])
-
-  // Slow auto-recharge: +1 charge every 2s
-  useEffect(() => {
-    const timer = setInterval(() => setLaserCharges(c => Math.min(MAX_CHARGES, c + 1)), 2000)
-    return () => clearInterval(timer)
-  }, [MAX_CHARGES])
+  }, [])
 
   function fireLaser() {
     if (laserCharges <= 0) return
@@ -83,7 +77,7 @@ export default function MiningScreen({ mission, target, onComplete, onBack, mine
   }, [laserCharges])
 
   function handleReturn() {
-    if (orderFilled) onComplete(cargoRef.current)
+    if (orderFilled || laserCharges <= 0) onComplete(cargoRef.current)
   }
 
   const totalNeeded = Object.entries(mission.requires.minerals).reduce((sum, [, v]) => sum + v, 0)
@@ -181,15 +175,15 @@ export default function MiningScreen({ mission, target, onComplete, onBack, mine
             testId="fire-laser-btn"
             onClick={fireLaser}
           >
-            {laserCharges > 0 ? 'FIRE LASER' : 'CHARGING…'}
+            {laserCharges > 0 ? 'FIRE LASER' : 'DEPLETED'}
           </PrimaryBtn>
           <PrimaryBtn
             kind="amber"
-            disabled={!orderFilled}
+            disabled={!orderFilled && laserCharges > 0}
             testId="return-home-btn"
             onClick={handleReturn}
           >
-            {orderFilled ? 'RETURN HOME' : 'FILL ORDER TO RETURN'}
+            {orderFilled ? 'RETURN HOME' : laserCharges <= 0 ? 'LASER DEPLETED · RETURN' : 'FILL ORDER TO RETURN'}
           </PrimaryBtn>
           <button
             data-testid="mining-guide-btn"

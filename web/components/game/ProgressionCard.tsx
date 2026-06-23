@@ -67,7 +67,7 @@ export default function ProgressionCard({ player, onGoBuilding, onNav, top = 132
         eyebrow="Mission In Progress"
         title={player.activeMission.label}
         cta="Resume Mission"
-        onClick={() => onNav('transit')}
+        onClick={() => onNav(player.missionPhase ?? 'transit')}
       />
     )
   } else if (player.pendingLaunch) {
@@ -85,6 +85,19 @@ export default function ProgressionCard({ player, onGoBuilding, onNav, top = 132
   }
 
   if (!player.activeMission && player.missionsDone > 0) {
+    if ((player.skillPoints ?? 0) > 0) {
+      cards.push(
+        <CardButton
+          key="skills"
+          testId="progression-card-skills"
+          accent="var(--ln-cyan)"
+          eyebrow="Skill Points"
+          title={`${player.skillPoints ?? 0} SP available`}
+          cta="Train"
+          onClick={() => onGoBuilding('skills')}
+        />
+      )
+    }
     cards.push(
       <CardButton
         key="next-mission"

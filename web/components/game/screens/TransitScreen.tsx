@@ -5,6 +5,7 @@ import type { Target } from '@/lib/data'
 import { Scene } from '@/lib/engine'
 import TopBar from '@/components/ui/TopBar'
 import { GhostBtn, PrimaryBtn } from '@/components/ui/Button'
+import { UI_ZONES } from '@/lib/ui-zones'
 
 function formatEta(ms: number): string {
   if (ms <= 0) return '00:00'
@@ -104,7 +105,7 @@ export default function TransitScreen({ target, arrivalAt, onArrive, onBack, onA
         )}
         <div className="progress-track"><span style={{ width: `${progress}%` }} /></div>
       </div>
-      <div className="sticky-actions">
+      <div className="sticky-actions" data-ui-zone={UI_ZONES.bottomActions}>
         <PrimaryBtn onClick={onArrive} disabled={!arrived}>
           {arrived ? 'Arrive' : isTimed ? `En Route · ${formatEta(etaMs)}` : `Arrive · ${fakeProgress}%`}
         </PrimaryBtn>

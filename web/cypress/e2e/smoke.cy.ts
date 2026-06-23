@@ -60,4 +60,63 @@ describe('Smoke — Landnam', () => {
     cy.contains('Francs Earned').should('be.visible')
     cy.get('[data-testid="collect-reward-btn"]').should('be.visible')
   })
+
+  it('persists the Skill Tree screen and unlocks an available node', () => {
+    visitWithState({
+      screen: 'skills',
+      player: {
+        skillPoints: 1,
+        unlockedSkillNodes: [],
+      },
+      tutorial: false,
+    })
+
+    cy.contains('Skill Tree').should('be.visible')
+    cy.get('[data-testid="skill-points-total"]').should('contain', '1')
+    cy.reload()
+    cy.contains('Skill Tree').should('be.visible')
+    cy.get('[data-testid="skill-node-laser-charge-1"]').click()
+    cy.get('[data-testid="skill-points-total"]').should('contain', '0')
+    cy.get('[data-testid="skill-node-laser-charge-1"]').should('contain', 'Unlocked')
+  })
+
+  it('shows Free Ops contractor missions after M3', () => {
+    visitWithState({
+      screen: 'missions',
+      tutorial: false,
+      player: {
+        missionsDone: 3,
+        freeOperations: true,
+        contractorMissions: {},
+        contractorCooldowns: {},
+      },
+    })
+
+    cy.contains('EARTH BASE · FREE OPS').should('be.visible')
+    cy.contains('Helios Propulsion Depot').should('be.visible')
+    cy.contains('Arcturus Battery Systems').should('be.visible')
+    cy.contains('Ferrum Orbital Construction').should('be.visible')
+    cy.contains('Refinery contracts detected').should('be.visible')
+  })
+
+  it('shows refinery as buildable from structure seed data in Free Ops', () => {
+    visitWithState({
+      screen: 'build',
+      tutorial: false,
+      player: {
+        francs: 1_000_000_000,
+        missionsDone: 3,
+        freeOperations: true,
+        refineryUnlocked: true,
+        placed: ['launchpad'],
+        placementPlots: { launchpad: 0 },
+        stash: { aluminium: 20, copper: 10 },
+      },
+    })
+
+    cy.contains('Refinery').should('be.visible')
+    cy.contains('800,000,000').should('be.visible')
+    cy.contains('20 aluminium').should('be.visible')
+    cy.contains('10 copper').should('be.visible')
+  })
 })

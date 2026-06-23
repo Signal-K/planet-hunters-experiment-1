@@ -3,6 +3,7 @@
 import React from 'react'
 import type { Screen } from '@/game-context'
 import { useGame } from '@/game-context'
+import { UI_ZONES } from '@/lib/ui-zones'
 
 interface NavItem {
   id: string
@@ -78,13 +79,14 @@ export default function RadialNav({ current, onNav }: RadialNavProps) {
   const game = useGame()
   const open = game.menuOpen
   const setOpen = game.setMenuOpen
+  const [resetPending, setResetPending] = React.useState(false)
   const N = MENU.length
   const spread = 150
   const start = -90 - spread / 2
   const radius = 96
 
   return (
-    <div style={{
+    <div data-ui-zone={UI_ZONES.bottomNav} style={{
       position: 'absolute',
       left: 0,
       right: 0,
@@ -95,7 +97,7 @@ export default function RadialNav({ current, onNav }: RadialNavProps) {
     }}>
       {open && (
         <div
-          onClick={() => setOpen(false)}
+          onClick={() => { setOpen(false); setResetPending(false) }}
           style={{
             position: 'absolute',
             top: -9999,
@@ -118,6 +120,7 @@ export default function RadialNav({ current, onNav }: RadialNavProps) {
         return (
           <button
             key={m.id}
+            data-testid={`radial-nav-${m.id}`}
             onClick={() => { if (!locked) onNav(m.id); setOpen(false) }}
             aria-disabled={locked}
             style={{
@@ -201,6 +204,7 @@ export default function RadialNav({ current, onNav }: RadialNavProps) {
 
       {/* Central hub button */}
       <button
+        data-testid="radial-nav-toggle"
         onClick={() => setOpen(!open)}
         style={{
           position: 'absolute',
@@ -250,13 +254,14 @@ export default function RadialNav({ current, onNav }: RadialNavProps) {
         )}
       </button>
 
-      {open && (
+      {open && !resetPending && (
         <button
-          onClick={game.resetGame}
+          data-testid="radial-nav-reset"
+          onClick={() => setResetPending(true)}
           style={{
             position: 'absolute',
             left: '50%',
-            bottom: 120,
+            bottom: 190,
             transform: 'translateX(-50%)',
             background: 'rgba(255, 59, 48, 0.15)',
             border: '1px solid rgba(255, 59, 48, 0.3)',
@@ -275,6 +280,57 @@ export default function RadialNav({ current, onNav }: RadialNavProps) {
         >
           Reset Progress
         </button>
+      )}
+      {open && resetPending && (
+        <div style={{
+          position: 'absolute',
+          left: '50%',
+          bottom: 185,
+          transform: 'translateX(-50%)',
+          display: 'flex',
+          gap: 6,
+          zIndex: 50,
+          pointerEvents: 'auto',
+        }}>
+          <button
+            data-testid="radial-nav-reset-confirm"
+            onClick={(e) => { e.stopPropagation(); game.resetGame(); setResetPending(false); setOpen(false) }}
+            style={{
+              background: 'rgba(255, 59, 48, 0.25)',
+              border: '1px solid rgba(255, 59, 48, 0.7)',
+              borderRadius: 6,
+              padding: '5px 12px',
+              cursor: 'pointer',
+              fontFamily: 'var(--ln-font-display)',
+              fontSize: 8,
+              fontWeight: 800,
+              color: '#ff4b40',
+              textTransform: 'uppercase',
+              letterSpacing: '0.12em',
+            }}
+          >
+            Confirm Reset
+          </button>
+          <button
+            data-testid="radial-nav-reset-cancel"
+            onClick={(e) => { e.stopPropagation(); setResetPending(false) }}
+            style={{
+              background: 'rgba(93, 115, 144, 0.2)',
+              border: '1px solid rgba(93, 115, 144, 0.4)',
+              borderRadius: 6,
+              padding: '5px 10px',
+              cursor: 'pointer',
+              fontFamily: 'var(--ln-font-display)',
+              fontSize: 8,
+              fontWeight: 800,
+              color: '#5d7390',
+              textTransform: 'uppercase',
+              letterSpacing: '0.12em',
+            }}
+          >
+            Cancel
+          </button>
+        </div>
       )}
     </div>
   )

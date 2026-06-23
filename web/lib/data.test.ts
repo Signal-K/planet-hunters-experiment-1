@@ -10,9 +10,21 @@ import {
   MINERAL_META,
   MISSIONS,
   MISSION_TEMPLATES,
+  STRUCTURES,
   TARGETS,
   PARTS,
   CONTRACTOR_SLOTS,
+  BASE_LASER_CHARGES,
+  canAffordStructure,
+  canUnlockSkillNode,
+  effectiveCargoCapacity,
+  effectiveMaxOrbit,
+  FREE_OPS_START_MISSIONS_DONE,
+  generateFreeOpsMissions,
+  getLaserChargeCap,
+  REFINERY_RECIPES,
+  structureUnlocked,
+  travelDurationMs,
 } from './data'
 
 describe('sellCargo', () => {
@@ -105,6 +117,47 @@ describe('validateBuild', () => {
     })
     expect(result.ok).toBe(false)
     expect(result.problems.some(p => p.includes('Propulsion'))).toBe(true)
+  })
+})
+
+describe('skill nodes', () => {
+  it('requires enough SP and prevents duplicate unlocks', () => {
+    expect(canUnlockSkillNode({ id: 'laser-charge-1', skillPoints: 1, unlockedSkillNodes: [] })).toBe(true)
+    expect(canUnlockSkillNode({ id: 'near-range-1', skillPoints: 1, unlockedSkillNodes: [] })).toBe(false)
+    expect(canUnlockSkillNode({ id: 'laser-charge-1', skillPoints: 3, unlockedSkillNodes: ['laser-charge-1'] })).toBe(false)
+  })
+
+  it('applies Sprint 5 node effects to laser, cargo, range, and travel time', () => {
+    const unlocked = ['laser-charge-1', 'cargo-slot-1', 'near-range-1']
+    expect(getLaserChargeCap(unlocked)).toBe(BASE_LASER_CHARGES + 2)
+    expect(effectiveCargoCapacity({ id: 'cargo-test', name: 'Cargo Test', tier: 1, locked: false, img: '', cargo: 10 }, unlocked)).toBe(12)
+    expect(effectiveMaxOrbit({ id: 'drive-test', name: 'Drive Test', tier: 1, locked: false, img: '', max_orbit: 5 }, unlocked)).toBe(6)
+    expect(travelDurationMs({ id: 'target-test', name: 'Target Test', type: 'asteroid', orbit: 4, difficulty: 'L1', brief: '', minerals: [] }, unlocked, 1000)).toBe(3400)
+  })
+
+  it('lets Cargo Slot I satisfy marginal cargo requirements', () => {
+    const parts = {
+      ...PARTS,
+      chassis: [{ id: 'tight', name: 'Tight Hull', tier: 1, locked: false, img: '', cargo: 5, mass: 1 }],
+    }
+    const mission = { ...MISSIONS[0], requires: { ...MISSIONS[0].requires, cargo_min: 6 } }
+    const target = TARGETS.find(t => t.id === 'mars')!
+    const locked = validateBuild({
+      mission,
+      target,
+      rocket: { chassis: 'tight', propulsion: 'ion-a1', drill: 'hand-drill' },
+      parts,
+      unlockedSkillNodes: [],
+    })
+    const unlocked = validateBuild({
+      mission,
+      target,
+      rocket: { chassis: 'tight', propulsion: 'ion-a1', drill: 'hand-drill' },
+      parts,
+      unlockedSkillNodes: ['cargo-slot-1'],
+    })
+    expect(locked.ok).toBe(false)
+    expect(unlocked.ok).toBe(true)
   })
 })
 
@@ -203,6 +256,59 @@ describe('seed bible v0 catalog', () => {
     expect(CONTRACTOR_SLOTS.every(c => c.payoutPremium >= 0.18)).toBe(true)
   })
 
+  it('seeds the three Sprint 5 Free Ops contractors at L1', () => {
+    const l1Contractors = CONTRACTOR_SLOTS.filter(c => c.unlockTier === 1)
+    expect(l1Contractors.map(c => c.name)).toEqual([
+      'Helios Propulsion Depot',
+      'Arcturus Battery Systems',
+      'Ferrum Orbital Construction',
+    ])
+    expect(l1Contractors.map(c => c.mineralPreferences)).toEqual([
+      ['hydrogen'],
+      ['cobalt', 'copper'],
+      ['aluminium', 'copper'],
+    ])
+  })
+
+  it('includes the Sprint 5 mineral taxonomy without dropping onboarding minerals', () => {
+    expect(Object.keys(MINERAL_META)).toEqual(expect.arrayContaining([
+      'gold', 'uranium', 'cobalt', 'copper', 'aluminium', 'hydrogen',
+      'iron', 'silicon', 'carbon', 'ice', 'nickel',
+    ]))
+  })
+
+  it('defines six refined mineral recipes at the locked multipliers', () => {
+    const byInput = Object.fromEntries(REFINERY_RECIPES.map(recipe => [recipe.input.mineral, recipe]))
+    const expected = {
+      gold: 2.2,
+      uranium: 2.5,
+      cobalt: 1.9,
+      copper: 1.7,
+      aluminium: 1.6,
+      hydrogen: 2.0,
+    }
+    for (const [mineral, multiplier] of Object.entries(expected)) {
+      expect(byInput[mineral]?.output.name).toBe(`Refined ${MINERAL_META[mineral].name}`)
+      expect(byInput[mineral]?.output.price).toBeCloseTo(MINERAL_META[mineral].price * multiplier)
+    }
+  })
+
+  it('defines mission-triggered refinery structure seed data with Francs and material costs', () => {
+    const refinery = STRUCTURES.find(structure => structure.id === 'refinery')
+    expect(refinery).toMatchObject({
+      kind: 'refinery',
+      cost: 800_000_000,
+      costMaterials: { aluminium: 20, copper: 10 },
+      unlockTrigger: 'contractor-mission-trigger',
+    })
+    expect(refinery && structureUnlocked(refinery, { refineryUnlocked: false })).toBe(false)
+    expect(refinery && structureUnlocked(refinery, { refineryUnlocked: true })).toBe(true)
+    expect(refinery && canAffordStructure(refinery, {
+      francs: 800_000_000,
+      stash: { aluminium: 20, copper: 10 },
+    })).toBe(true)
+  })
+
   it('keeps Landnam targets to real solar-system bodies for the seed catalog', () => {
     const blocked = ['tess-451b', 'koi-7923-belt']
     expect(TARGETS.map(t => t.id)).not.toEqual(expect.arrayContaining(blocked))
@@ -211,6 +317,11 @@ describe('seed bible v0 catalog', () => {
   it('builds resource-collection missions from mission templates', () => {
     const generated = MISSIONS.filter(m => m.id.startsWith('generated-'))
     expect(MISSION_TEMPLATES.every(t => t.mineralKeys.length > 0)).toBe(true)
+    expect(MISSION_TEMPLATES.map(t => t.id)).toEqual(expect.arrayContaining([
+      'freeops-delivery',
+      'freeops-mining-survey',
+      'freeops-bulk-run',
+    ]))
     // Generated missions must map to a known template tag
     expect(generated.every(m => MISSION_TEMPLATES.some(t => t.tag === m.tag))).toBe(true)
     expect(generated.filter(m => m.sequence === 1).length).toBeGreaterThan(1)
@@ -219,6 +330,19 @@ describe('seed bible v0 catalog', () => {
       const contractor = CONTRACTOR_SLOTS.find(c => c.id === m.contractor)
       return contractor && contractor.unlockTier <= m.sequence
     })).toBe(true)
+  })
+
+  it('generates 0-2 Free Ops missions per starting contractor after M3', () => {
+    const missions = generateFreeOpsMissions()
+    const startingContractorIds = CONTRACTOR_SLOTS.filter(c => c.unlockTier === 1).map(c => c.id)
+    expect(new Set(missions.map(m => m.contractor))).toEqual(new Set(startingContractorIds))
+    for (const contractorId of startingContractorIds) {
+      const offers = missions.filter(m => m.contractor === contractorId)
+      expect(offers.length).toBeGreaterThanOrEqual(0)
+      expect(offers.length).toBeLessThanOrEqual(2)
+    }
+    expect(missions.every(m => m.sequence === FREE_OPS_START_MISSIONS_DONE + 1)).toBe(true)
+    expect(missions.every(m => compatibleTargetsFor(m, TARGETS).length > 0)).toBe(true)
   })
 
   it('authored missions have required fields and valid target references', () => {

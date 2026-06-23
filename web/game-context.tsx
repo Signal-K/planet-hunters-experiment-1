@@ -8,7 +8,7 @@ export type { Screen, Player, GameState } from '@/lib/game-types'
 
 let toastSeq = 0
 function nextToastId() { return `t${++toastSeq}` }
-import { type Mission, type Target, type RocketConfig, MISSIONS, TARGETS, PROGRESSION_STEPS, suggestBuild, REFINERY_RECIPES, MINERAL_META, STARTER_ROCKETS, CONTRACTOR_COOLDOWN_MS, CONTRACTOR_STREAK_LIMIT } from '@/lib/data'
+import { type Mission, type Target, type RocketConfig, MISSIONS, TARGETS, PROGRESSION_STEPS, suggestBuild, REFINERY_RECIPES, MINERAL_META, STARTER_ROCKETS, CONTRACTOR_COOLDOWN_MS, CONTRACTOR_STREAK_LIMIT, FREE_OPS_START_MISSIONS_DONE, canUnlockSkillNode, getLaserChargeCap, getSkillNode, travelDurationMs, CONTRACTOR_SLOTS, generateDailyContractorPool, refreshPoolIfStale, todayDateKey } from '@/lib/data'
 import { resolvePreset } from '@/lib/devPresets'
 import { pbShared } from '@/lib/pb'
 import { ensureGuestAuth, hasStoredCredentials, isGuestAccount, upgradeGuestAccount } from '@/lib/guestAuth'
@@ -16,6 +16,7 @@ import { pbLandnam } from '@/lib/pb-landnam'
 import { type Catalog, STATIC_CATALOG, fetchCatalog } from '@/lib/catalog'
 import { enqueueSurvey } from '@/lib/surveys'
 import { identifyUser } from '@/lib/posthog'
+import { applyTutorialSkip } from '@/lib/tutorial-skip'
 
 const GameContext = createContext<(GameState & GameActions) | null>(null)
 
@@ -30,12 +31,16 @@ const DEFAULT_STATE: GameState = {
     placementPlots: {},
     controlBuilt: false,
     missionsDone: 0,
+    skillPoints: 0,
+    unlockedSkillNodes: [],
     freeOperations: false,
     contractorMissions: {},
     contractorStreaks: {},
     contractorCooldowns: {},
     researchAnnotations: 0,
     refineryBuilt: false,
+    refineryUnlocked: false,
+    refineryUnlockNotified: false,
     refineryQueue: [],
     refinedGoods: {},
     launchpadUpgraded: false,
@@ -63,24 +68,52 @@ const UPGRADE_SNOOZE_MS = 24 * 60 * 60 * 1000
 const LOAN_AMOUNT = 5_000_000_000
 const LOAN_REPAYMENT = Math.ceil(LOAN_AMOUNT * 1.08 / 2)
 const BANKRUPTCY_THRESHOLD = 500_000_000
-const VALID_SCREENS: Screen[] = ['intro', 'build', 'hub', 'missions', 'galaxy', 'targets', 'fab', 'transit', 'mining', 'debrief', 'refinery', 'market', 'hangar', 'rocket-buy']
+const VALID_SCREENS: Screen[] = ['intro', 'build', 'hub', 'missions', 'galaxy', 'targets', 'fab', 'transit', 'mining', 'debrief', 'refinery', 'market', 'hangar', 'rocket-buy', 'skills']
+
+const MISSION_CONTEXT_SCREENS = new Set<Screen>(['targets', 'rocket-buy', 'fab', 'transit', 'mining', 'debrief'])
+const TARGET_CONTEXT_SCREENS = new Set<Screen>(['rocket-buy', 'fab', 'transit', 'mining', 'debrief'])
+
+function normalizeState(input: Partial<GameState>): GameState {
+  const screen = input.screen && VALID_SCREENS.includes(input.screen) ? input.screen : DEFAULT_STATE.screen
+  const missionId = typeof input.missionId === 'string' ? input.missionId : null
+  const targetId = missionId && typeof input.targetId === 'string' ? input.targetId : null
+  return {
+    ...DEFAULT_STATE,
+    ...input,
+    screen,
+    missionId,
+    targetId,
+    rocket: { ...DEFAULT_STATE.rocket, ...input.rocket },
+    player: { ...DEFAULT_STATE.player, ...input.player },
+    doneSteps: { ...DEFAULT_STATE.doneSteps, ...input.doneSteps },
+  }
+}
+
+function repairStateRoute(input: GameState): GameState {
+  const mission = input.missionId
+    ? (MISSIONS.find(m => m.id === input.missionId)
+       ?? input.player.dailyContractorPool?.missions.find(m => m.id === input.missionId)
+       ?? null)
+    : null
+  const target = input.targetId ? TARGETS.find(t => t.id === input.targetId) ?? null : null
+  if (MISSION_CONTEXT_SCREENS.has(input.screen) && !mission) {
+    return { ...input, screen: 'missions', missionId: null, targetId: null }
+  }
+  if (TARGET_CONTEXT_SCREENS.has(input.screen) && !target) {
+    return { ...input, screen: mission ? 'targets' : 'missions', targetId: null }
+  }
+  if (input.screen === 'targets' && mission?.targetId) {
+    return { ...input, screen: 'rocket-buy', targetId: mission.targetId }
+  }
+  return input
+}
 
 function loadState(): GameState {
   if (typeof window === 'undefined') return DEFAULT_STATE
   try {
     const raw = localStorage.getItem(STORAGE_KEY)
     if (!raw) return DEFAULT_STATE
-    const parsed = JSON.parse(raw) as Partial<GameState>
-    const screen = parsed.screen && VALID_SCREENS.includes(parsed.screen) ? parsed.screen : DEFAULT_STATE.screen
-    const missionId = typeof parsed.missionId === 'string' ? parsed.missionId : null
-    return {
-      ...DEFAULT_STATE,
-      ...parsed,
-      screen,
-      missionId,
-      targetId: missionId ? parsed.targetId ?? null : null,
-      player: { ...DEFAULT_STATE.player, ...parsed.player },
-    }
+    return repairStateRoute(normalizeState(JSON.parse(raw) as Partial<GameState>))
   } catch {
     return DEFAULT_STATE
   }
@@ -188,6 +221,49 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     if (state.player.missionsDone > 0) enqueueSurvey('lnm_return_visit', 3000)
   }, [hydrated]) // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Initialise / refresh the daily contractor pool when freeOperations unlocks or the calendar day changes.
+  useEffect(() => {
+    if (!hydrated || isPreview.current || !state.player.freeOperations) return
+    const today = todayDateKey()
+    if (state.player.dailyContractorPool?.date === today) return
+    setState(s => ({
+      ...s,
+      player: {
+        ...s.player,
+        dailyContractorPool: refreshPoolIfStale(
+          s.player.dailyContractorPool,
+          s.player.missionsDone,
+          CONTRACTOR_SLOTS,
+          MINERAL_META,
+        ),
+      },
+    }))
+  }, [hydrated, state.player.freeOperations, state.player.dailyContractorPool?.date]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Poll every minute to catch the midnight rollover while the app is open.
+  useEffect(() => {
+    if (!state.player.freeOperations) return
+    const id = setInterval(() => {
+      const today = todayDateKey()
+      setState(s => {
+        if (!s.player.freeOperations || s.player.dailyContractorPool?.date === today) return s
+        return {
+          ...s,
+          player: {
+            ...s.player,
+            dailyContractorPool: {
+              date: today,
+              missions: generateDailyContractorPool(today, s.player.missionsDone, CONTRACTOR_SLOTS, MINERAL_META),
+              acceptedId: null,
+              completedIds: [],
+            },
+          },
+        }
+      })
+    }, 60_000)
+    return () => clearInterval(id)
+  }, [state.player.freeOperations])
+
   // Periodically nudge guest players to save their progress to a full
   // account. Re-checked whenever a mission completes (missionsDone changes)
   // and respects a snooze window set when the player dismisses the prompt.
@@ -209,7 +285,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       backendRecordId.current = record.id
       backendLoadedFor.current = authUserId!
       const remoteState = record.state as Partial<GameState>
-      setState(current => ({ ...current, ...remoteState }))
+      setState(current => repairStateRoute(normalizeState({ ...current, ...remoteState })))
       setBackendReady(true)
     }
 
@@ -304,11 +380,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
   }, [])
 
   const skipTutorial = useCallback((stepIds: number[]) => {
-    setState(s => ({
-      ...s,
-      tutorial: false,
-      doneSteps: stepIds.reduce((acc, id) => ({ ...acc, [id]: true }), s.doneSteps),
-    }))
+    setState(s => applyTutorialSkip(s, stepIds))
   }, [])
 
   const setDoneSteps: React.Dispatch<React.SetStateAction<Record<number, boolean>>> = useCallback(
@@ -344,6 +416,22 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     setState(s => ({ ...s, pendingTerritoryClaimFor: undefined, screen: 'market' }))
   }, [])
 
+  useEffect(() => {
+    if (!hydrated) return
+    if (state.screen !== 'missions' || !state.player.freeOperations || state.player.refineryUnlockNotified) return
+    const hasContractorBoard = catalog.missions.some(m => m.id.startsWith('freeops-'))
+    if (!hasContractorBoard) return
+    setState(s => ({
+      ...s,
+      player: {
+        ...s.player,
+        refineryUnlocked: true,
+        refineryUnlockNotified: true,
+      },
+    }))
+    addToast('Refinery contracts detected — build the refinery at Earth Base', 'info')
+  }, [addToast, catalog.missions, hydrated, state.player.freeOperations, state.player.refineryUnlockNotified, state.screen])
+
   const upgradeAccount = useCallback(async (email: string, password: string) => {
     const { emailChangeRequested } = await upgradeGuestAccount(email, password)
     localStorage.removeItem(UPGRADE_SNOOZE_KEY)
@@ -358,16 +446,22 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
 
   const onPickMission = useCallback((id: string) => {
     setState(s => {
+      if (s.screen !== 'missions') return s
       if (s.player.missionsDone >= 1) enqueueSurvey('lnm_contractor_pick')
-      const mission = catalog.missions.find(m => m.id === id) ?? null
+      const mission = catalog.missions.find(m => m.id === id)
+        ?? s.player.dailyContractorPool?.missions.find(m => m.id === id)
+        ?? null
+      if (!mission) return s
+      const dailyContractorPool = (s.player.dailyContractorPool && id.startsWith('dcp-'))
+        ? { ...s.player.dailyContractorPool, acceptedId: id }
+        : s.player.dailyContractorPool
+      const base = { ...s, player: { ...s.player, dailyContractorPool } }
       if (mission?.targetId) {
-        // Fixed-target mission: pre-select target and skip TargetPickerScreen
         const target = catalog.targets.find(t => t.id === mission.targetId) ?? null
-        const next = suggestBuild({ mission, target, missionsDone: s.player.missionsDone, launchpadUpgraded: s.player.launchpadUpgraded, parts: catalog.parts })
-        // Cargo-payload missions use Cargo Module T1 in the drill slot instead of a drill
+        const next = suggestBuild({ mission, target, missionsDone: s.player.missionsDone, launchpadUpgraded: s.player.launchpadUpgraded, parts: catalog.parts, unlockedSkillNodes: s.player.unlockedSkillNodes ?? [] })
         if (mission.payload?.type === 'rover') next.drill = 'cargo-module-t1'
         return {
-          ...s,
+          ...base,
           missionId: id,
           targetId: mission.targetId,
           rocket: next,
@@ -376,7 +470,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
         }
       }
       return {
-        ...s,
+        ...base,
         missionId: id,
         targetId: null,
         screen: 'targets',
@@ -463,9 +557,11 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
 
   const onPickTarget = useCallback((id: string) => {
     setState(s => {
+      if (s.screen !== 'targets' || !s.missionId) return s
       const mission = s.missionId ? catalog.missions.find(m => m.id === s.missionId) ?? null : null
       const target = catalog.targets.find(t => t.id === id) ?? null
-      const next = suggestBuild({ mission, target, missionsDone: s.player.missionsDone, launchpadUpgraded: s.player.launchpadUpgraded, parts: catalog.parts })
+      if (!mission || !target) return s
+      const next = suggestBuild({ mission, target, missionsDone: s.player.missionsDone, launchpadUpgraded: s.player.launchpadUpgraded, parts: catalog.parts, unlockedSkillNodes: s.player.unlockedSkillNodes ?? [] })
       return {
         ...s,
         targetId: id,
@@ -478,6 +574,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
 
   const onPurchaseRocket = useCallback((rocketId: string) => {
     setState(s => {
+      if (s.screen !== 'rocket-buy' || !s.missionId || !s.targetId) return s
       const rocket = STARTER_ROCKETS.find(r => r.id === rocketId)
       if (!rocket) return s
       if (s.player.francs < rocket.costFrancs) return s
@@ -490,12 +587,26 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
   }, [])
 
   const onLaunch = useCallback(() => {
-    const isFirstEver = stateRef.current.player.missionsDone === 0
+    const current = stateRef.current
+    if (current.screen !== 'fab' || !current.missionId || !current.targetId) return
+    const currentMission = catalog.missions.find(m => m.id === current.missionId)
+      ?? current.player.dailyContractorPool?.missions.find(m => m.id === current.missionId)
+      ?? null
+    const currentTarget = catalog.targets.find(t => t.id === current.targetId) ?? null
+    if (!currentMission || !currentTarget) return
+    const isFirstEver = current.player.missionsDone === 0
     setState(s => {
-      const mission = s.missionId ? catalog.missions.find(m => m.id === s.missionId) : null
+      if (s.screen !== 'fab' || !s.missionId || !s.targetId) return s
+      const mission = s.missionId
+        ? (catalog.missions.find(m => m.id === s.missionId)
+           ?? s.player.dailyContractorPool?.missions.find(m => m.id === s.missionId)
+           ?? null)
+        : null
       const target = s.targetId ? catalog.targets.find(t => t.id === s.targetId) : null
-      const arrivalAt = (!s.tutorial && target)
-        ? Date.now() + target.orbit * ORBIT_MS_PER_UNIT
+      if (!mission || !target) return s
+      const timedTransit = s.player.missionsDone >= FREE_OPS_START_MISSIONS_DONE
+      const arrivalAt = (timedTransit && target)
+        ? Date.now() + travelDurationMs(target, s.player.unlockedSkillNodes ?? [], ORBIT_MS_PER_UNIT)
         : null
       return {
         ...s,
@@ -503,6 +614,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
           ...s.player,
           pendingLaunch: false,
           arrivalAt,
+          missionPhase: 'transit',
           activeMission: mission && target
             ? { id: mission.id, label: mission.title + ' → ' + target.name }
             : null,
@@ -516,6 +628,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
 
   const onMiningDone = useCallback((cargo: Record<string, number>) => {
     setState(s => {
+      if (s.screen !== 'mining' || !s.missionId || !s.targetId) return s
       const stash = { ...(s.player.stash ?? {}) }
       for (const [id, amount] of Object.entries(cargo)) {
         stash[id] = (stash[id] ?? 0) + amount
@@ -523,7 +636,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       return {
         ...s,
         lastCargo: cargo,
-        player: { ...s.player, stash, arrivalAt: null },
+        player: { ...s.player, stash, arrivalAt: null, missionPhase: 'debrief' },
         screen: 'debrief',
         doneSteps: { ...s.doneSteps, 6: true },
       }
@@ -533,10 +646,17 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
   }, [addToast])
 
   const onDebriefDone = useCallback((total: number, _affinity: number = 0, consumed: Record<string, number> = {}) => {
-    const newMissionsDone = stateRef.current.player.missionsDone + 1
+    const current = stateRef.current
+    if (current.screen !== 'debrief' || !current.missionId || !current.targetId || !current.lastCargo) return
+    const newMissionsDone = current.player.missionsDone + 1
     setState(s => {
+      if (s.screen !== 'debrief' || !s.missionId || !s.targetId || !s.lastCargo) return s
       const missionsDone = s.player.missionsDone + 1
-      const mission = s.missionId ? catalog.missions.find(m => m.id === s.missionId) : null
+      const mission = s.missionId
+        ? (catalog.missions.find(m => m.id === s.missionId)
+           ?? s.player.dailyContractorPool?.missions.find(m => m.id === s.missionId)
+           ?? null)
+        : null
       const missionContractor = mission?.contractor
       const contractor = missionContractor
       const contractorMissions = { ...s.player.contractorMissions }
@@ -589,15 +709,25 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
         pendingTerritoryClaimFor = { targetId: effectiveTargetId, contractorId: contractor }
       }
 
+      const completedDailyPool = (s.missionId?.startsWith('dcp-') && s.player.dailyContractorPool)
+        ? {
+          ...s.player.dailyContractorPool,
+          acceptedId: null,
+          completedIds: [...s.player.dailyContractorPool.completedIds, s.missionId],
+        }
+        : s.player.dailyContractorPool
+
       return {
         ...s,
         player: {
           ...s.player,
           francs,
           activeMission: null,
+          missionPhase: undefined,
           missionsDone,
+          skillPoints: (s.player.skillPoints ?? 0) + 1,
           missionCount: catalog.missions.filter(m => m.sequence === missionsDone + 1).length,
-          freeOperations: false,
+          freeOperations: missionsDone >= FREE_OPS_START_MISSIONS_DONE,
           contractorMissions,
           contractorStreaks,
           contractorCooldowns,
@@ -608,11 +738,12 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
           seen_planets,
           roverDeployments,
           contractorTerritories,
+          dailyContractorPool: completedDailyPool,
         },
         lastCargo: null,
         missionId: null,
         targetId: null,
-        tutorial: catalog.missions.some(m => m.sequence === missionsDone + 1),
+        tutorial: missionsDone < FREE_OPS_START_MISSIONS_DONE && catalog.missions.some(m => m.sequence === missionsDone + 1),
         popup: missionsDone === 1 ? 'sr2' : showLoanOffer ? 'loan' : s.popup,
         doneSteps: { ...s.doneSteps, 9: true },
         screen: pendingTerritoryClaimFor ? s.screen : 'market',
@@ -648,7 +779,6 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
   }, [])
 
   const resetGame = useCallback(() => {
-    if (!confirm('Are you sure you want to reset all progress?')) return
     setState(DEFAULT_STATE)
     localStorage.removeItem(STORAGE_KEY)
     if (authUserId && backendRecordId.current) {
@@ -661,14 +791,24 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
   const abandonMission = useCallback(() => {
     if (!confirm('Abort this mission? You will lose 10% of the mission payout as a penalty.')) return
     setState(s => {
-      const mission = s.missionId ? catalog.missions.find(m => m.id === s.missionId) : null
+      const mission = s.missionId
+        ? (catalog.missions.find(m => m.id === s.missionId)
+           ?? s.player.dailyContractorPool?.missions.find(m => m.id === s.missionId)
+           ?? null)
+        : null
       const penalty = mission ? Math.round(mission.payout.francs * 0.1) : 0
+      const dailyContractorPool = (s.missionId?.startsWith('dcp-') && s.player.dailyContractorPool)
+        ? { ...s.player.dailyContractorPool, acceptedId: null }
+        : s.player.dailyContractorPool
       return {
         ...s,
         player: {
           ...s.player,
           francs: Math.max(0, s.player.francs - penalty),
           activeMission: null,
+          missionPhase: undefined,
+          arrivalAt: null,
+          dailyContractorPool,
         },
         missionId: null,
         targetId: null,
@@ -688,6 +828,26 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
         loanOffered: true,
       },
     }))
+  }, [])
+
+  const unlockSkillNode = useCallback((id: string) => {
+    const node = getSkillNode(id)
+    if (!node) return
+    setState(s => {
+      if (!canUnlockSkillNode({
+        id,
+        skillPoints: s.player.skillPoints ?? 0,
+        unlockedSkillNodes: s.player.unlockedSkillNodes ?? [],
+      })) return s
+      return {
+        ...s,
+        player: {
+          ...s.player,
+          skillPoints: (s.player.skillPoints ?? 0) - node.cost,
+          unlockedSkillNodes: [...(s.player.unlockedSkillNodes ?? []), node.id],
+        },
+      }
+    })
   }, [])
 
   const signInFromGate = useCallback(async (email: string, password: string) => {
@@ -723,13 +883,18 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     })
   }, [addToast])
 
-  const mission = state.missionId ? catalog.missions.find(m => m.id === state.missionId) ?? null : null
+  const mission = state.missionId
+    ? (catalog.missions.find(m => m.id === state.missionId)
+       ?? state.player.dailyContractorPool?.missions.find(m => m.id === state.missionId)
+       ?? null)
+    : null
   const target = state.targetId ? catalog.targets.find(t => t.id === state.targetId) ?? null : null
 
   return (
     <GameContext.Provider value={{
       ...state,
       catalog,
+      authUserId,
       go,
       setPlayer,
       setMissionId,
@@ -754,6 +919,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       sellMinerals,
       onStartRefine,
       onCollectRefined,
+      unlockSkillNode,
       acceptLoan,
       abandonMission,
       toasts,
@@ -770,6 +936,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       signInFromGate,
       createAccountFromGate,
       skipAuthGate,
+      laserChargeCap: getLaserChargeCap(state.player.unlockedSkillNodes ?? []),
     }}>
       {children}
     </GameContext.Provider>

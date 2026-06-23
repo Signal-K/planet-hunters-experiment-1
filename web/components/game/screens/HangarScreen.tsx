@@ -4,6 +4,7 @@ import Image from 'next/image'
 import TopBar from '@/components/ui/TopBar'
 import { STARTER_ROCKETS } from '@/lib/data'
 import type { StarterRocket } from '@/lib/data'
+import { UI_ZONES } from '@/lib/ui-zones'
 
 interface HangarScreenProps {
   francs: number
@@ -78,7 +79,7 @@ export default function HangarScreen({ francs: _francs, missionsDone, onBack, on
   return (
     <div className="game-screen">
       <TopBar eyebrow="LAUNCHPAD · HANGAR" title="Rocket Fleet" onBack={onBack} />
-      <div className="screen-scroll" style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+      <div className="screen-scroll" data-ui-zone={UI_ZONES.screenContent} style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
         {STARTER_ROCKETS.map(rocket => (
           <RocketCard key={rocket.id} rocket={rocket} missionsDone={missionsDone} onSelect={onSelect} />
         ))}

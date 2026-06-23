@@ -1,6 +1,6 @@
 import { pbLandnam } from './pb-landnam'
-import type { Target, Mission, Part, MineralMeta, Contractor } from './data'
-import { TARGETS, MISSIONS, PARTS, MINERAL_META, CONTRACTORS, CONTRACTOR_SLOTS, toContractor as slotToContractor } from './data'
+import type { Target, Mission, Part, MineralMeta, Contractor, StructureBlueprint } from './data'
+import { TARGETS, MISSIONS, PARTS, MINERAL_META, CONTRACTORS, CONTRACTOR_SLOTS, STRUCTURES, toContractor as slotToContractor } from './data'
 
 export interface Catalog {
   targets: Target[]
@@ -8,6 +8,7 @@ export interface Catalog {
   parts: { chassis: Part[]; propulsion: Part[]; drill: Part[] }
   minerals: Record<string, MineralMeta>
   contractors: Record<string, Contractor>
+  structures: StructureBlueprint[]
 }
 
 export const STATIC_CATALOG: Catalog = {
@@ -16,6 +17,7 @@ export const STATIC_CATALOG: Catalog = {
   parts: PARTS,
   minerals: MINERAL_META,
   contractors: CONTRACTORS,
+  structures: STRUCTURES,
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -115,13 +117,30 @@ export function toPart(r: any): Part {
   }
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function toStructure(r: any): StructureBlueprint {
+  return {
+    id: r.slug,
+    name: r.name,
+    kind: r.kind ?? r.slug,
+    cost: r.cost_francs ?? 0,
+    costMaterials: typeof r.cost_materials === 'object' && !Array.isArray(r.cost_materials)
+      ? r.cost_materials
+      : (r.cost_materials ? JSON.parse(r.cost_materials) : undefined),
+    unlocksAt: r.unlocks_at ?? '',
+    unlockTrigger: r.unlock_trigger_type || undefined,
+    description: r.description ?? '',
+  }
+}
+
 export async function fetchCatalog(): Promise<Catalog> {
-  const [locations, minerals, contractors, parts, missions] = await Promise.all([
+  const [locations, minerals, contractors, parts, missions, structures] = await Promise.all([
     pbLandnam.collection('locations').getFullList({ sort: 'orbit,name' }),
     pbLandnam.collection('minerals').getFullList(),
     pbLandnam.collection('contractors').getFullList({ sort: 'unlock_tier' }),
     pbLandnam.collection('rocket_parts').getFullList({ sort: 'part_type,tier' }),
     pbLandnam.collection('missions_catalog').getFullList({ sort: 'sequence' }),
+    pbLandnam.collection('structure_blueprints').getFullList({ sort: 'slug' }),
   ])
 
   const generatedFallbackMissions = MISSIONS
@@ -142,5 +161,6 @@ export async function fetchCatalog(): Promise<Catalog> {
       minerals.map(r => [r.slug, { name: r.name, sym: r.sym, color: r.color, price: r.base_price, rarity: r.rarity ?? 'common', constructionUse: r.construction_use ?? '', laserAccess: r.laser_access ?? 1 }])
     ),
     contractors: Object.keys(catalogContractors).length > 0 ? catalogContractors : CONTRACTORS,
+    structures: structures.length > 0 ? structures.map(toStructure) : STRUCTURES,
   }
 }

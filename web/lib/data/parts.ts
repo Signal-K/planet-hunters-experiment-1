@@ -1,6 +1,7 @@
 // Landnam game data — rocket parts
 
 import type { Part, Mission, Target, RocketConfig, BuildCheck } from './types'
+import { effectiveCargoCapacity, effectiveMaxOrbit } from './skills'
 
 export const PARTS: { chassis: Part[]; propulsion: Part[]; drill: Part[] } = {
   chassis: [
@@ -29,6 +30,7 @@ export function suggestBuild(opts: {
   missionsDone: number
   launchpadUpgraded?: boolean
   parts?: typeof PARTS
+  unlockedSkillNodes?: string[]
 }): RocketConfig {
   const { mission, target, parts = PARTS } = opts
   const orbit = target?.orbit ?? 4
@@ -42,11 +44,11 @@ export function suggestBuild(opts: {
     return true
   }
   const bestAvail = <T extends Part>(arr: T[]) => [...arr].reverse().find(p => available(p)) ?? arr[0]
-  const prop = parts.propulsion.find(p => available(p) && (p.max_orbit ?? 0) >= orbit)
+  const prop = parts.propulsion.find(p => available(p) && effectiveMaxOrbit(p, opts.unlockedSkillNodes) >= orbit)
     ?? bestAvail(parts.propulsion)
   const drill = parts.drill.find(p => available(p) && (p.tier ?? 0) >= drillTier)
     ?? bestAvail(parts.drill)
-  const chassis = parts.chassis.find(p => available(p) && (p.cargo ?? 0) >= cargoMin)
+  const chassis = parts.chassis.find(p => available(p) && effectiveCargoCapacity(p, opts.unlockedSkillNodes) >= cargoMin)
     ?? bestAvail(parts.chassis)
 
   return { chassis: chassis.id, propulsion: prop.id, drill: drill.id }
@@ -57,6 +59,7 @@ export function validateBuild(opts: {
   target: Target
   rocket: RocketConfig
   parts?: typeof PARTS
+  unlockedSkillNodes?: string[]
 }): BuildCheck {
   const { mission, target, rocket, parts = PARTS } = opts
   const chassis = parts.chassis.find(p => p.id === rocket.chassis) ?? parts.chassis[0]
@@ -64,11 +67,13 @@ export function validateBuild(opts: {
   const drill = parts.drill.find(p => p.id === rocket.drill) ?? parts.drill[0]
 
   const problems: string[] = []
-  if ((propulsion.max_orbit ?? 0) < target.orbit) {
-    problems.push(`Propulsion can only reach Orbit ${propulsion.max_orbit}, target is Orbit ${target.orbit}`)
+  const maxOrbit = effectiveMaxOrbit(propulsion, opts.unlockedSkillNodes)
+  if (maxOrbit < target.orbit) {
+    problems.push(`Propulsion can only reach Orbit ${maxOrbit}, target is Orbit ${target.orbit}`)
   }
-  if ((chassis.cargo ?? 0) < mission.requires.cargo_min) {
-    problems.push(`Chassis cargo (${chassis.cargo}U) below mission minimum (${mission.requires.cargo_min}U)`)
+  const cargoCapacity = effectiveCargoCapacity(chassis, opts.unlockedSkillNodes)
+  if (cargoCapacity < mission.requires.cargo_min) {
+    problems.push(`Chassis cargo (${cargoCapacity}U) below mission minimum (${mission.requires.cargo_min}U)`)
   }
   // cargo-module-t1 is a valid drill-slot occupant (rate === 0 is intentional for cargo missions)
   if (drill.id !== 'cargo-module-t1' && (drill.tier ?? 0) < mission.requires.drill_tier) {

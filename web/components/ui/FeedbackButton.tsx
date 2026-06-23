@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react'
 import { submitFeedback } from '@/lib/posthog'
+import { UI_ZONES } from '@/lib/ui-zones'
 
 export default function FeedbackButton() {
   const [open, setOpen] = useState(false)
@@ -28,6 +29,7 @@ export default function FeedbackButton() {
   return (
     <>
       <button
+        data-ui-zone={UI_ZONES.feedbackLauncher}
         onClick={() => setOpen(true)}
         style={{
           position: 'absolute', bottom: 12, right: 12, zIndex: 80,
@@ -45,7 +47,7 @@ export default function FeedbackButton() {
       </button>
 
       {open && (
-        <div style={{ position: 'absolute', inset: 0, zIndex: 96, display: 'flex', alignItems: 'flex-end' }}>
+        <div data-ui-zone={UI_ZONES.modalOverlay} style={{ position: 'absolute', inset: 0, zIndex: 96, display: 'flex', alignItems: 'flex-end' }}>
           <div
             style={{ position: 'absolute', inset: 0, background: 'rgba(3,6,12,0.7)' }}
             onClick={() => setOpen(false)}

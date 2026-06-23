@@ -1,5 +1,7 @@
 describe('PocketBase Guest Auth Pattern', () => {
   const pbUrl = Cypress.env('POCKETBASE_URL') || 'http://localhost:8090'
+  // game_states lives on the Landnam game backend, not the shared auth backend
+  const landnamPbUrl = Cypress.env('LANDNAM_PB_URL') || 'http://localhost:8091'
   const STORAGE_KEY = 'landnam-game-state-v1'
   const PB_AUTH_KEY = 'pocketbase_auth'
 
@@ -46,7 +48,7 @@ describe('PocketBase Guest Auth Pattern', () => {
     if (token && record?.id) {
       cy.request({
         method: 'DELETE',
-        url: `${pbUrl}/api/collections/game_states/records?filter=${encodeURIComponent(`user = "${record.id}"`)}`,
+        url: `${landnamPbUrl}/api/collections/game_states/records?filter=${encodeURIComponent(`user = "${record.id}"`)}`,
         headers: { Authorization: `Bearer ${token}` },
         failOnStatusCode: false,
       })
@@ -105,7 +107,7 @@ describe('PocketBase Guest Auth Pattern', () => {
 
     cy.request({
       method: 'GET',
-      url: `${pbUrl}/api/collections/game_states/records?filter=${encodeURIComponent(`user = "${record.id}"`)}`,
+      url: `${landnamPbUrl}/api/collections/game_states/records?filter=${encodeURIComponent(`user = "${record.id}"`)}`,
       headers: { Authorization: `Bearer ${token}` },
     }).then(({ body }) => {
       expect(body.items).to.have.length(1)

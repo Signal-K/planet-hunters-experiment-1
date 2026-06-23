@@ -190,7 +190,27 @@ export function submitSurveyResponse(surveyKey: string, responses: Record<string
   posthog.capture('survey sent', payload)
 
   const missionId = ONBOARDING_MISSION_ID[surveyKey]
-  if (missionId) storeSurveyInPb(missionId, responses, false)
+  if (missionId) {
+    storeSurveyInPb(missionId, responses, false)
+    const values = Object.values(responses)
+    const rating = (values.find(v => typeof v === 'number') as number | undefined) ?? null
+    const textVals = values.filter((v): v is string => typeof v === 'string')
+    const freetext = textVals.find(v => v.length > 80) ?? null
+    const choice = textVals.find(v => v.length <= 80) ?? null
+    fetch('/api/milestone-feedback', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        surveyKey,
+        surveyName: def.name,
+        milestone: missionId,
+        rating,
+        choice,
+        freetext,
+        userId: pbShared.authStore.record?.id ?? null,
+      }),
+    }).catch(() => {})
+  }
 }
 
 export function trackSurveyShown(surveyKey: string) {

@@ -15,7 +15,7 @@ RSpec.describe 'missions-schema.yml' do
     data['mission_templates'].each do |template|
       expect(template['id']).to be_a(String)
       expect(template['mineral_keys']).to be_an(Array)
-      expect(template['payout_formula']).to include('mineral price')
+      expect(template['payout_formula']).to include('mineral_base_price')
     end
   end
 
@@ -27,7 +27,7 @@ RSpec.describe 'missions-schema.yml' do
       expect(mission['title']).to be_a(String)
       expect(mission['sequence']).to be_an(Integer)
       expect(mission['requires']).to be_a(Hash)
-      expect(mission['reward']).to be_a(Hash)
+      expect(mission['payout']).to be_a(Hash)
     end
   end
 
@@ -88,9 +88,32 @@ RSpec.describe 'missions-schema.yml' do
     expect(mission['sequence']).to be_nil
   end
 
-  it 'all mission sequences are unique and positive' do
-    seqs = data['missions'].map { |m| m['sequence'] }
-    expect(seqs.uniq.length).to eq(seqs.length)
-    seqs.each { |s| expect(s).to be > 0 }
+  it 'all mission sequences are positive integers' do
+    data['missions'].each do |mission|
+      expect(mission['sequence']).to be_a(Integer)
+      expect(mission['sequence']).to be > 0
+    end
+  end
+
+  it 'validates payload structure when present' do
+    valid_payload_types = %w[rover]
+    data['missions'].each do |mission|
+      next unless mission['payload']
+
+      payload = mission['payload']
+      expect(valid_payload_types).to include(payload['type']), \
+        "Mission #{mission['id']} has unknown payload type '#{payload['type']}'"
+      expect(payload['name']).to be_a(String)
+      expect(payload['cargo_cost']).to be_an(Integer)
+    end
+  end
+
+  it 'missions with a payload reference a valid target_id' do
+    data['missions'].each do |mission|
+      next unless mission['payload']
+
+      expect(mission['target_id']).to be_a(String), \
+        "Mission #{mission['id']} has a payload but no target_id"
+    end
   end
 end

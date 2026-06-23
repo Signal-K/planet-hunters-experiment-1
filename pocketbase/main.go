@@ -230,6 +230,49 @@ func ensureCollections(app core.App) {
 		}
 	}
 
+	// skill_nodes
+	if _, err := app.FindCollectionByNameOrId("skill_nodes"); err != nil {
+		col := core.NewBaseCollection("skill_nodes")
+		col.ListRule = emptyStr
+		col.ViewRule = emptyStr
+		col.Fields.Add(&core.TextField{Name: "slug", Required: true, Max: 40})
+		col.Fields.Add(&core.TextField{Name: "name", Required: true, Max: 120})
+		col.Fields.Add(&core.SelectField{
+			Name: "branch", Required: true, MaxSelect: 1,
+			Values: []string{"mining", "cargo", "range"},
+		})
+		col.Fields.Add(&core.NumberField{Name: "cost", Required: true})
+		col.Fields.Add(&core.TextField{Name: "description", Max: 300})
+		col.Fields.Add(&core.TextField{Name: "effect_key", Required: true, Max: 80})
+		col.Fields.Add(&core.NumberField{Name: "effect_value"})
+		col.Indexes = []string{"CREATE UNIQUE INDEX idx_skill_nodes_slug ON skill_nodes (slug)"}
+		if err := app.Save(col); err != nil {
+			log.Printf("failed to save skill_nodes: %v", err)
+		}
+	}
+
+	// structure_blueprints
+	if _, err := app.FindCollectionByNameOrId("structure_blueprints"); err != nil {
+		col := core.NewBaseCollection("structure_blueprints")
+		col.ListRule = emptyStr
+		col.ViewRule = emptyStr
+		col.Fields.Add(&core.TextField{Name: "slug", Required: true, Max: 40})
+		col.Fields.Add(&core.TextField{Name: "name", Required: true, Max: 120})
+		col.Fields.Add(&core.TextField{Name: "kind", Required: true, Max: 40})
+		col.Fields.Add(&core.NumberField{Name: "cost_francs"})
+		col.Fields.Add(&core.JSONField{Name: "cost_materials", MaxSize: 1000})
+		col.Fields.Add(&core.SelectField{
+			Name: "unlock_trigger_type", MaxSelect: 1,
+			Values: []string{"always", "contractor-mission-trigger", "manual"},
+		})
+		col.Fields.Add(&core.TextField{Name: "unlocks_at", Max: 200})
+		col.Fields.Add(&core.TextField{Name: "description", Max: 400})
+		col.Indexes = []string{"CREATE UNIQUE INDEX idx_structure_blueprints_slug ON structure_blueprints (slug)"}
+		if err := app.Save(col); err != nil {
+			log.Printf("failed to save structure_blueprints: %v", err)
+		}
+	}
+
 	if _, err := app.FindCollectionByNameOrId("scheduled_notifications"); err != nil {
 		col := core.NewBaseCollection("scheduled_notifications")
 		col.ListRule = nil
@@ -414,6 +457,10 @@ func seedCatalog(app core.App) {
 		{"ice", mineral{"Ice", "H2O", "#9becff", "uncommon", "volatile supply", "Propellant, life support", 90, 1}},
 		{"nickel", mineral{"Nickel", "Ni", "#b0b8c4", "uncommon", "alloy demand", "Alloys, battery production", 150, 1}},
 		{"cobalt", mineral{"Cobalt", "Co", "#4f9cf7", "uncommon", "battery demand", "Battery cathodes, superalloys", 450, 2}},
+		{"copper", mineral{"Copper", "Cu", "#c9824b", "common", "conductive supply", "Conductors, heat exchangers, wiring", 260, 1}},
+		{"aluminium", mineral{"Aluminium", "Al", "#c7d0dc", "common", "light structural supply", "Lightweight frames, tanks, trusses", 210, 1}},
+		{"hydrogen", mineral{"Hydrogen", "H", "#9becff", "uncommon", "propellant logistics", "Propellant, reactor feedstock", 140, 1}},
+		{"uranium", mineral{"Uranium", "U", "#8fd16a", "rare", "compact power supply", "Compact power systems, shielding", 1200, 2}},
 		{"gold", mineral{"Gold", "Au", "#ffd166", "rare", "premium assay", "Circuitry, radiation shielding", 800, 2}},
 		{"rare", mineral{"Xenon", "Xe", "#c084ff", "exotic", "advanced propellant", "Quantum sensors, ion propellant", 2000, 3}},
 	}
@@ -435,9 +482,9 @@ func seedCatalog(app core.App) {
 		slug string
 		contractor
 	}{
-		{"contractor-03a", contractor{"Contractor Slot 03A", "#d97150", "3A", "starter smelting throughput", "Low rate, steady volume", "+10 per delivery", "starter", 3, []string{"iron", "silicon"}}},
-		{"contractor-03b", contractor{"Contractor Slot 03B", "#9becff", "3B", "volatile handling", "Medium pay, bulk orders", "+8 per delivery", "bulk", 3, []string{"ice", "carbon"}}},
-		{"contractor-04a", contractor{"Contractor Slot 04A", "#ffd166", "4A", "precious-metal assay", "High pay, low volume", "+15 per delivery", "prospect", 4, []string{"gold", "nickel"}}},
+		{"helios-propulsion-depot", contractor{"Helios Propulsion Depot", "#f5a623", "HP", "fuel logistics and orbital propellant reserves", "20% premium on hydrogen and propellant runs", "+2.5% payout per completed Helios job", "starter", 1, []string{"hydrogen"}}},
+		{"arcturus-battery-systems", contractor{"Arcturus Battery Systems", "#4f9cf7", "AB", "energy storage manufacturing and cathode supply", "22% premium on cobalt and copper battery inputs", "+2.5% payout per completed Arcturus job", "prospect", 1, []string{"cobalt", "copper"}}},
+		{"ferrum-orbital-construction", contractor{"Ferrum Orbital Construction", "#c7d0dc", "FO", "in-space manufacturing and structural assembly", "18% premium on aluminium and copper construction cargo", "+2% payout per completed Ferrum job", "bulk", 1, []string{"aluminium", "copper"}}},
 		{"contractor-04b", contractor{"Contractor Slot 04B", "#a8d8ea", "4B", "construction aggregates", "Low rate, large orders", "+6 per delivery", "bulk", 4, []string{"iron", "carbon"}}},
 		{"contractor-06a", contractor{"Contractor Slot 06A", "#70e070", "6A", "deep-core sampling", "Mixed-bag premium", "+12 per delivery", "prospect", 6, []string{"nickel", "cobalt"}}},
 		{"contractor-06b", contractor{"Contractor Slot 06B", "#c084ff", "6B", "rare-gas refining", "High tier, small batches", "+20 per delivery", "command", 6, []string{"rare", "gold"}}},
@@ -471,11 +518,11 @@ func seedCatalog(app core.App) {
 		{"jupiter", location{"Jupiter", "planet", "L3", "Gas giant moons, ice and silicate rich, high gravity penalty.", 6, []string{"ice", "silicon"}, false}},
 		{"eros", location{"433 Eros", "asteroid", "L1", "Elongated near-Earth rock with dense iron-nickel core. First commercial prospect on file.", 2, []string{"iron", "silicon"}, true}},
 		{"bennu", location{"101955 Bennu", "asteroid", "L1", "Carbon-rich near-Earth asteroid. Loose rubble pile, low gravity, easy approach.", 2, []string{"iron", "carbon"}, false}},
-		{"itokawa", location{"25143 Itokawa", "asteroid", "L1", "Stony near-Earth rubble pile with accessible nickel-iron traces.", 2, []string{"iron", "nickel"}, false}},
+		{"itokawa", location{"25143 Itokawa", "asteroid", "L1", "Stony near-Earth rubble pile with accessible nickel-iron traces.", 2, []string{"iron", "nickel", "copper"}, false}},
 		{"ryugu", location{"162173 Ryugu", "asteroid", "L1", "Carbonaceous near-Earth asteroid with hydrated minerals and dark regolith.", 3, []string{"carbon", "ice"}, false}},
 		{"vesta", location{"4 Vesta", "asteroid", "L1", "Differentiated protoplanet. Basaltic crust over a heavy iron mantle.", 3, []string{"iron", "silicon"}, false}},
-		{"psyche", location{"16 Psyche", "asteroid", "L2", "Exposed metallic core of an ancient body. Extremely high iron and nickel grades.", 4, []string{"iron", "nickel", "gold"}, false}},
-		{"belt", location{"Asteroid Belt", "asteroid", "L2", "Varied deposits: iron, silicon, nickel, cobalt, gold, and xenon pockets. The prospector's playground.", 5, []string{"iron", "silicon", "nickel", "cobalt", "gold", "rare"}, true}},
+		{"psyche", location{"16 Psyche", "asteroid", "L2", "Exposed metallic core of an ancient body. Extremely high iron and nickel grades.", 4, []string{"iron", "nickel", "gold", "cobalt"}, false}},
+		{"belt", location{"Asteroid Belt", "asteroid", "L2", "Varied deposits: iron, silicon, nickel, cobalt, gold, copper, aluminium, hydrogen, uranium, and xenon pockets. The prospector's playground.", 5, []string{"iron", "silicon", "nickel", "cobalt", "gold", "rare", "copper", "aluminium", "hydrogen", "uranium"}, true}},
 		{"ceres", location{"1 Ceres", "asteroid", "L2", "Dwarf planet at the belt's inner edge. Ice-rich mantle beneath a silicate crust.", 5, []string{"ice", "silicon"}, false}},
 		{"lutetia", location{"21 Lutetia", "asteroid", "L2", "A large metallic asteroid in the outer belt. Dense nickel-cobalt deposits under a regolith crust.", 6, []string{"nickel", "cobalt"}, false}},
 	}
@@ -547,6 +594,9 @@ func seedCatalog(app core.App) {
 		{"volatile-bulk", missionTemplate{"BULK", "L2", "bulk", "mineral_base_price * amount * 1450 * multiplier", []string{"ice", "carbon", "silicon"}, 8, 14, 1, 5, 1.35}},
 		{"metal-prospect", missionTemplate{"PROSPECT", "L2", "prospect", "mineral_base_price * amount * 1350 * multiplier", []string{"nickel", "cobalt", "gold"}, 3, 8, 2, 5, 2.25}},
 		{"command-reserve", missionTemplate{"COMMAND", "L3", "command", "mineral_base_price * amount * 1300 * multiplier", []string{"gold", "rare", "cobalt"}, 3, 6, 2, 6, 3.5}},
+		{"freeops-delivery", missionTemplate{"DELIVERY", "L1", "starter", "mineral_base_price * amount * 1500 * multiplier", []string{"hydrogen", "cobalt", "copper", "aluminium"}, 4, 10, 1, 5, 1.25}},
+		{"freeops-mining-survey", missionTemplate{"SURVEY", "L1", "prospect", "mineral_base_price * amount * 1500 * multiplier", []string{"cobalt", "copper", "aluminium", "gold"}, 3, 7, 1, 5, 1.55}},
+		{"freeops-bulk-run", missionTemplate{"BULK", "L1", "bulk", "mineral_base_price * amount * 1500 * multiplier", []string{"hydrogen", "aluminium", "copper"}, 8, 16, 1, 5, 1.15}},
 	}
 	for _, t := range templates {
 		seedRecord(app, "mission_templates", t.slug, map[string]any{
@@ -557,6 +607,48 @@ func seedCatalog(app core.App) {
 			"payout_multiplier": t.payoutMultiplier,
 			"contractor_role":   t.contractorRole,
 			"payout_formula":    t.payoutFormula,
+		})
+	}
+
+	type skillNode struct {
+		name, branch, description, effectKey string
+		cost, effectValue                    float64
+	}
+	skillNodes := []struct {
+		slug string
+		skillNode
+	}{
+		{"laser-charge-1", skillNode{"Laser Charge I", "mining", "Mining laser starts each mission with +2 charges.", "laser_charge_cap_bonus", 1, 2}},
+		{"cargo-slot-1", skillNode{"Cargo Slot I", "cargo", "Cargo capacity is increased by 20%.", "cargo_capacity_multiplier", 1, 1.2}},
+		{"near-range-1", skillNode{"Near-Range I", "range", "L1 travel time is reduced by 15% and near-range reach improves.", "near_range_efficiency", 2, 0.85}},
+	}
+	for _, s := range skillNodes {
+		seedRecord(app, "skill_nodes", s.slug, map[string]any{
+			"name": s.name, "branch": s.branch, "cost": s.cost,
+			"description": s.description, "effect_key": s.effectKey,
+			"effect_value": s.effectValue,
+		})
+	}
+
+	type structureBlueprint struct {
+		name, kind, unlockTrigger, unlocksAt, description string
+		cost                                              float64
+		materials                                         map[string]float64
+	}
+	structures := []struct {
+		slug string
+		structureBlueprint
+	}{
+		{"launchpad", structureBlueprint{"Launchpad", "launchpad", "always", "always", "Rocket assembly and launch operations.", 0, map[string]float64{}}},
+		{"refinery", structureBlueprint{"Refinery", "refinery", "contractor-mission-trigger", "First contractor mission requiring refined minerals", "Refines raw minerals into higher-value contractor-grade materials.", 800000000, map[string]float64{"aluminium": 20, "copper": 10}}},
+	}
+	for _, s := range structures {
+		seedRecord(app, "structure_blueprints", s.slug, map[string]any{
+			"name": s.name, "kind": s.kind, "cost_francs": s.cost,
+			"cost_materials":      s.materials,
+			"unlock_trigger_type": s.unlockTrigger,
+			"unlocks_at":          s.unlocksAt,
+			"description":         s.description,
 		})
 	}
 
@@ -589,7 +681,7 @@ func seedCatalog(app core.App) {
 			"title": m.title, "brief": m.brief,
 			"contractor_slug": m.contractorSlug, "tag": t.tag,
 			"difficulty": t.difficulty, "locked": m.locked,
-			"sequence": m.sequence,
+			"sequence":           m.sequence,
 			"unlock_at":          m.unlockAt,
 			"requires_minerals":  m.minerals,
 			"requires_cargo_min": m.amount, "requires_drill_tier": t.drillTier,

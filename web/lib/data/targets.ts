@@ -50,7 +50,7 @@ export const TARGETS: Target[] = [
     orbit: 2,
     difficulty: 'L1',
     brief: 'Stony near-Earth rubble pile with accessible nickel-iron traces.',
-    minerals: ['iron', 'nickel'],
+    minerals: ['iron', 'nickel', 'copper'],
   },
   {
     id: 'ryugu',
@@ -68,7 +68,7 @@ export const TARGETS: Target[] = [
     orbit: 4,
     difficulty: 'L2',
     brief: 'Exposed metallic core of an ancient body. Extremely high iron and nickel grades.',
-    minerals: ['iron', 'nickel', 'gold'],
+    minerals: ['iron', 'nickel', 'gold', 'cobalt'],
   },
   {
     id: 'bennu',
@@ -87,7 +87,7 @@ export const TARGETS: Target[] = [
     orbit: 5,
     difficulty: 'L2',
     brief: 'Varied deposits: iron, silicon, nickel, cobalt, gold, and xenon pockets. The prospector\'s playground.',
-    minerals: ['iron', 'silicon', 'nickel', 'cobalt', 'gold', 'rare'],
+    minerals: ['iron', 'silicon', 'nickel', 'cobalt', 'gold', 'rare', 'copper', 'aluminium', 'hydrogen', 'uranium'],
     recommended: true,
   },
   {

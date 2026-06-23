@@ -2,6 +2,7 @@
 
 import React from 'react'
 import { IconBtn } from './Button'
+import { UI_ZONES } from '@/lib/ui-zones'
 
 interface TopBarProps {
   eyebrow?: string
@@ -31,7 +32,7 @@ function MenuIcon() {
 
 export default function TopBar({ eyebrow, title, onBack, right, dense }: TopBarProps) {
   return (
-    <div style={{
+    <div data-ui-zone={UI_ZONES.topChrome} style={{
       position: 'absolute',
       top: 0,
       left: 0,

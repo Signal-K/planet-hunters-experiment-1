@@ -56,9 +56,10 @@ export function PrimaryBtn({ children, onClick, disabled, full = true, kind = 'c
   )
 }
 
-export function GhostBtn({ children, onClick, full = true }: ButtonProps) {
+export function GhostBtn({ children, onClick, full = true, testId }: ButtonProps) {
   return (
     <button
+      data-testid={testId}
       onClick={onClick}
       style={{
         width: full ? '100%' : 'auto',
