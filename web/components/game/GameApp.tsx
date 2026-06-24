@@ -18,6 +18,7 @@ import MarketScreen from '@/components/game/screens/MarketScreen'
 import HangarScreen from '@/components/game/screens/HangarScreen'
 import RocketPurchaseScreen from '@/components/game/screens/RocketPurchaseScreen'
 import SkillTreeScreen from '@/components/game/screens/SkillTreeScreen'
+import ScanStationScreen from '@/components/game/screens/ScanStationScreen'
 import TutorialCoach from '@/components/game/TutorialCoach'
 import SaveProgressPrompt from '@/components/game/SaveProgressPrompt'
 import UnlockPopup from '@/components/game/UnlockPopup'
@@ -209,6 +210,7 @@ function GameCanvas() {
                 placed: Array.from(new Set([...player.placed, kind])),
                 placementPlots: { ...player.placementPlots, [kind]: plot },
                 refineryBuilt: kind === 'refinery' ? true : player.refineryBuilt,
+                scannerBuilt: kind === 'scan-station' ? true : player.scannerBuilt,
               }))
               game.completeStep(0)
               game.go('hub')
@@ -224,6 +226,7 @@ function GameCanvas() {
               if (building === 'refinery') return game.go('refinery')
               if (building === 'hangar') return game.go('hangar')
               if (building === 'skills') return game.go('skills')
+              if (building === 'scan-station') return game.go('scan-station')
               if (building === 'launchpad' || building === 'missions') return goFromNav('missions')
             }}
             onUpgradeLaunchpad={() => game.upgradeLaunchpad()}
@@ -273,6 +276,15 @@ function GameCanvas() {
             onBack={() => game.go('hub')}
             onStartRefine={game.onStartRefine}
             onCollect={game.onCollectRefined}
+          />
+        )}
+        {game.screen === 'scan-station' && (
+          <ScanStationScreen
+            player={game.player}
+            targets={game.catalog.targets}
+            onBack={() => game.go('hub')}
+            onStartScan={game.startScan}
+            onCollectScan={game.collectScan}
           />
         )}
         {game.screen === 'skills' && (

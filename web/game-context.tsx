@@ -8,7 +8,7 @@ export type { Screen, Player, GameState } from '@/lib/game-types'
 
 let toastSeq = 0
 function nextToastId() { return `t${++toastSeq}` }
-import { type Mission, type Target, type RocketConfig, MISSIONS, TARGETS, PROGRESSION_STEPS, suggestBuild, REFINERY_RECIPES, MINERAL_META, STARTER_ROCKETS, CONTRACTOR_COOLDOWN_MS, CONTRACTOR_STREAK_LIMIT, FREE_OPS_START_MISSIONS_DONE, canUnlockSkillNode, getLaserChargeCap, getSkillNode, travelDurationMs, CONTRACTOR_SLOTS, generateDailyContractorPool, refreshPoolIfStale, todayDateKey } from '@/lib/data'
+import { type Mission, type Target, type RocketConfig, MISSIONS, TARGETS, PROGRESSION_STEPS, suggestBuild, REFINERY_RECIPES, MINERAL_META, STARTER_ROCKETS, CONTRACTOR_COOLDOWN_MS, CONTRACTOR_STREAK_LIMIT, FREE_OPS_START_MISSIONS_DONE, canUnlockSkillNode, getLaserChargeCap, getSkillNode, travelDurationMs, CONTRACTOR_SLOTS, generateDailyContractorPool, refreshPoolIfStale, todayDateKey, SCANS_PER_DAY, SCAN_DURATION_MS } from '@/lib/data'
 import { resolvePreset } from '@/lib/devPresets'
 import { pbShared } from '@/lib/pb'
 import { ensureGuestAuth, hasStoredCredentials, isGuestAccount, upgradeGuestAccount } from '@/lib/guestAuth'
@@ -68,7 +68,7 @@ const UPGRADE_SNOOZE_MS = 24 * 60 * 60 * 1000
 const LOAN_AMOUNT = 5_000_000_000
 const LOAN_REPAYMENT = Math.ceil(LOAN_AMOUNT * 1.08 / 2)
 const BANKRUPTCY_THRESHOLD = 500_000_000
-const VALID_SCREENS: Screen[] = ['intro', 'build', 'hub', 'missions', 'galaxy', 'targets', 'fab', 'transit', 'mining', 'debrief', 'refinery', 'market', 'hangar', 'rocket-buy', 'skills']
+const VALID_SCREENS: Screen[] = ['intro', 'build', 'hub', 'missions', 'galaxy', 'targets', 'fab', 'transit', 'mining', 'debrief', 'refinery', 'market', 'hangar', 'rocket-buy', 'skills', 'scan-station']
 
 const MISSION_CONTEXT_SCREENS = new Set<Screen>(['targets', 'rocket-buy', 'fab', 'transit', 'mining', 'debrief'])
 const TARGET_CONTEXT_SCREENS = new Set<Screen>(['rocket-buy', 'fab', 'transit', 'mining', 'debrief'])
@@ -534,6 +534,49 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     })
   }, [])
 
+  const buildScanner = useCallback(() => {
+    setState(s => {
+      if (s.player.scannerBuilt) return s
+      return { ...s, player: { ...s.player, scannerBuilt: true } }
+    })
+  }, [])
+
+  const startScan = useCallback((targetId: string) => {
+    setState(s => {
+      const today = todayDateKey()
+      const scanDate = s.player.scanDate ?? ''
+      const scansUsedToday = scanDate === today ? (s.player.scansUsedToday ?? 0) : 0
+      if (scansUsedToday >= SCANS_PER_DAY) return s
+      if (s.player.activeScan) return s
+      if (!s.player.scannerBuilt) return s
+      return {
+        ...s,
+        player: {
+          ...s.player,
+          activeScan: { targetId, completesAt: Date.now() + SCAN_DURATION_MS },
+          scansUsedToday: scansUsedToday + 1,
+          scanDate: today,
+        },
+      }
+    })
+  }, [])
+
+  const collectScan = useCallback(() => {
+    setState(s => {
+      const scan = s.player.activeScan
+      if (!scan || Date.now() < scan.completesAt) return s
+      const prev = s.player.targetScanCounts ?? {}
+      return {
+        ...s,
+        player: {
+          ...s.player,
+          activeScan: null,
+          targetScanCounts: { ...prev, [scan.targetId]: (prev[scan.targetId] ?? 0) + 1 },
+        },
+      }
+    })
+  }, [])
+
   const sellMinerals = useCallback((mineralId: string, amount: number) => {
     setState(s => {
       const stash = { ...(s.player.stash ?? {}) }
@@ -923,6 +966,9 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       unlockSkillNode,
       acceptLoan,
       abandonMission,
+      buildScanner,
+      startScan,
+      collectScan,
       toasts,
       dismissToast,
       mission,

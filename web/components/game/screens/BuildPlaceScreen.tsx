@@ -85,7 +85,7 @@ export default function BuildPlaceScreen({ onPlaced, onBack, hasCoach, player }:
             {catalog.map(c => {
               const on = c.id === picked
               const alreadyBuilt = player.placed.includes(c.id)
-              const unlocked = structureUnlocked(c, { refineryUnlocked: player.refineryUnlocked, placed: player.placed }) && !alreadyBuilt
+              const unlocked = structureUnlocked(c, { refineryUnlocked: player.refineryUnlocked, placed: player.placed, freeOperations: player.freeOperations }) && !alreadyBuilt
               const affordable = canAffordStructure(c, { francs: player.francs, stash: player.stash })
               const canSelect = unlocked && affordable
               return (

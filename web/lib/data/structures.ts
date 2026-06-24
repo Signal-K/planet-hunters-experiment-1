@@ -23,10 +23,24 @@ export const STRUCTURES: StructureBlueprint[] = [
     unlockTrigger: 'contractor-mission-trigger',
     description: 'Refines raw minerals into higher-value contractor-grade materials.',
   },
+  {
+    id: 'scan-station',
+    name: 'Scanning Station',
+    kind: 'scan-station',
+    cost: 0,
+    unlocksAt: 'Free Operations',
+    unlockTrigger: 'always',
+    description: 'Scans remote targets to map mineral deposits, craters, and landmarks. Up to 5 scans per day, 10 minutes each.',
+  },
   { id: 'garage', name: 'Vehicle Garage', kind: 'garage', cost: 600_000_000, unlocksAt: 'Future sprint', unlockTrigger: 'manual', description: 'Surface rover maintenance and upgrades.' },
 ]
 
-export function structureUnlocked(structure: StructureBlueprint, opts: { refineryUnlocked?: boolean; placed?: string[] } = {}): boolean {
+export const SCANS_PER_DAY = 5
+export const SCAN_DURATION_MS = 10 * 60 * 1000
+export const SCANS_REQUIRED_TO_MAP = 3
+
+export function structureUnlocked(structure: StructureBlueprint, opts: { refineryUnlocked?: boolean; placed?: string[]; freeOperations?: boolean } = {}): boolean {
+  if (structure.id === 'scan-station') return !!opts.freeOperations
   if (structure.unlockTrigger === 'always') return true
   if (structure.id === 'refinery') return !!opts.refineryUnlocked || !!opts.placed?.includes('refinery')
   return false

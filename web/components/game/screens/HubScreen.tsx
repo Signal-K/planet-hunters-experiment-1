@@ -79,6 +79,20 @@ export default function HubScreen({ player, hasCoach, onGoBuilding, onNav, onUpg
         onClick: () => onGoBuilding('refinery'),
       }
     }
+    if (kind === 'scan-station') {
+      const today = new Date().toISOString().slice(0, 10)
+      const scanDate = player.scanDate ?? ''
+      const scansUsed = scanDate === today ? (player.scansUsedToday ?? 0) : 0
+      const hasScan = !!player.activeScan && Date.now() >= player.activeScan.completesAt
+      return {
+        kind, label: 'Scanner',
+        sub: hasScan ? 'DATA READY' : `${5 - scansUsed}/5 SCANS`,
+        status: (hasScan ? 'warn' : 'ok') as 'ok' | 'warn',
+        hot: hasScan,
+        w: 80,
+        onClick: () => onGoBuilding('scan-station'),
+      }
+    }
     return {
       kind, label: kind,
       sub: 'BUILT',

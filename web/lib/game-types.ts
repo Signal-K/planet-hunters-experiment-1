@@ -26,6 +26,7 @@ export type Screen =
   | 'hangar'
   | 'rocket-buy'
   | 'skills'
+  | 'scan-station'
 
 export interface Player {
   francs: number
@@ -65,6 +66,11 @@ export interface Player {
   }>
   contractorTerritories?: Record<string, string[]>
   dailyContractorPool?: DailyContractorPool
+  scannerBuilt?: boolean
+  scansUsedToday?: number
+  scanDate?: string
+  activeScan?: { targetId: string; completesAt: number } | null
+  targetScanCounts?: Record<string, number>
 }
 
 export interface GameState {
@@ -120,6 +126,9 @@ export interface GameActions {
   unlockSkillNode: (id: string) => void
   acceptLoan: () => void
   abandonMission: () => void
+  buildScanner: () => void
+  startScan: (targetId: string) => void
+  collectScan: () => void
   toasts: Toast[]
   dismissToast: (id: string) => void
   mission: Mission | null

@@ -28,6 +28,9 @@ import {
   effectiveCargoCapacity,
   effectiveMaxOrbit,
   FREE_OPS_START_MISSIONS_DONE,
+  SCANS_PER_DAY,
+  SCAN_DURATION_MS,
+  SCANS_REQUIRED_TO_MAP,
   generateFreeOpsMissions,
   getShipInteriorLayout,
   hasShipCustomizer,
@@ -484,5 +487,26 @@ describe('seed bible v0 catalog', () => {
     expect(m3?.targetId).toBe('lutetia')
     expect(m3?.payload?.type).toBe('rover')
     expect(TARGETS.some(t => t.id === m3?.targetId)).toBe(true)
+  })
+})
+
+describe('Scanning station constants and structure seed', () => {
+  it('exports expected scan constants', () => {
+    expect(SCANS_PER_DAY).toBe(5)
+    expect(SCAN_DURATION_MS).toBe(10 * 60 * 1000)
+    expect(SCANS_REQUIRED_TO_MAP).toBe(3)
+  })
+
+  it('defines a scan-station structure with free cost and freeOperations unlock', () => {
+    const scanner = STRUCTURES.find(s => s.id === 'scan-station')
+    expect(scanner).toBeDefined()
+    expect(scanner?.cost).toBe(0)
+    expect(scanner && structureUnlocked(scanner, { freeOperations: false })).toBe(false)
+    expect(scanner && structureUnlocked(scanner, { freeOperations: true })).toBe(true)
+  })
+
+  it('scan-station is not unlocked for launchpad-only context', () => {
+    const scanner = STRUCTURES.find(s => s.id === 'scan-station')
+    expect(scanner && structureUnlocked(scanner, { placed: ['launchpad'] })).toBe(false)
   })
 })
