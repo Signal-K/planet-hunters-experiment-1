@@ -379,13 +379,13 @@ button { cursor: pointer; }
   .screen-scroll--coach { padding-top: var(--tutorial-content-top); }
 }
 
-/* Desktop: fill the full viewport */
+/* Desktop: fill the full viewport, offset by sidebar width (72px) */
 @media (min-width: 1024px) {
   .game-stage {
-    padding: 0;
+    padding: 0 0 0 72px;
   }
   .portrait-canvas {
-    width: 100vw;
+    width: calc(100vw - 72px);
     height: 100dvh;
     max-height: none;
     border-radius: 0;
@@ -398,6 +398,17 @@ button { cursor: pointer; }
 /* Desktop sidebar — hidden on mobile, fixed panel at lg+ */
 .desktop-sidebar {
   display: none;
+}
+
+/* Radial nav — hidden on desktop (sidebar replaces it) */
+.mobile-radial-nav {
+  display: contents;
+}
+
+@media (min-width: 1024px) {
+  .mobile-radial-nav {
+    display: none;
+  }
 }
 
 @media (min-width: 1024px) {
@@ -414,6 +425,10 @@ button { cursor: pointer; }
     border-right: 1px solid var(--ln-hairline);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
+  }
+
+  .build-plot-button {
+    transform: translateX(72px);
   }
 }
 
@@ -441,6 +456,10 @@ button { cursor: pointer; }
 @keyframes coach-spot {
   0%,100% { box-shadow: 0 0 0 9999px rgba(3,6,12,0.5), 0 0 0 0 rgba(245,166,35,0); }
   50% { box-shadow: 0 0 0 9999px rgba(3,6,12,0.5), 0 0 18px 3px rgba(245,166,35,0.6); }
+}
+@keyframes coach-spot-pulse {
+  0%,100% { border-color: rgba(63,169,255,0.4); box-shadow: 0 0 8px rgba(63,169,255,0.15); }
+  50% { border-color: rgba(63,169,255,0.9); box-shadow: 0 0 20px rgba(63,169,255,0.45); }
 }
 @keyframes coach-glow {
   0%,100% { box-shadow: 0 0 8px 2px rgba(245,166,35,0.2); border-color: rgba(245,166,35,0.7); }

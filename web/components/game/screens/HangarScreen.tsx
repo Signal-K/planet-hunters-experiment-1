@@ -171,6 +171,7 @@ export default function HangarScreen({ francs: _francs, missionsDone, unlockedSk
 
         {customizerUnlocked && (
           <button
+            data-testid="open-ship-customizer"
             onClick={() => setCustomizerOpen(true)}
             style={{
               display: 'flex',

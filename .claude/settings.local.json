@@ -19,7 +19,8 @@
       "Skill(run)",
       "mcp__vellem__add_note",
       "mcp__vellem__list_folders",
-      "Skill(schedule)"
+      "Skill(schedule)",
+      "Skill(update-config)"
     ]
   },
   "enabledMcpjsonServers": [

@@ -131,6 +131,16 @@ export default function TargetPickerScreen({ mission, onBack, onPick, hasCoach, 
           {hasCoach && <TutorialHighlight borderRadius={14} />}
         </div>
 
+        {/* Off-screen buttons per target — E2E test hooks; force-click via {force:true} */}
+        <div style={{ position: 'fixed', left: -600, top: 0 }}>
+          {compat.map(t => (
+            <button key={t.id} data-testid={`target-${t.id}`} aria-label={`Select ${t.name}`}
+              onClick={() => setPicked(t.id)}
+              style={{ width: 4, height: 4 }}
+            />
+          ))}
+        </div>
+
         {/* Picked target detail */}
         {pickedTarget && (
           <div style={{ padding: '10px 14px 0 14px' }}>

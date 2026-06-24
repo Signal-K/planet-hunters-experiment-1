@@ -96,6 +96,7 @@ import type { Catalog } from '@/lib/catalog'
 
 export interface GameActions {
   catalog: Catalog
+  hydrated: boolean
   authUserId: string | null
   authGateOpen: boolean
   authGateError: string | null

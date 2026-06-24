@@ -53,6 +53,7 @@ export function ShipCustomizerCanvas({ layout, activeKind, installedParts, onSlo
     div.appendChild(canvas)
 
     const app = new Application()
+    let initialized = false
     let destroyed = false
     let phase = 0
 
@@ -66,7 +67,8 @@ export function ShipCustomizerCanvas({ layout, activeKind, installedParts, onSlo
         autoDensity: true,
         resolution: typeof window !== 'undefined' ? window.devicePixelRatio ?? 1 : 1,
       })
-      if (destroyed) { app.destroy(true); return }
+      initialized = true
+      if (destroyed) { try { app.destroy() } catch (_) { /* pixi v8 cleanup */ } canvas.remove(); return }
 
       const world = new Container()
       app.stage.addChild(world)
@@ -82,7 +84,7 @@ export function ShipCustomizerCanvas({ layout, activeKind, installedParts, onSlo
         }
       } catch { /* missing hull — canvas stays dark */ }
 
-      if (destroyed) { app.destroy(true); return }
+      if (destroyed) { try { app.destroy() } catch { /* pixi v8 cleanup */ }; canvas.remove(); return }
 
       // Slot visuals
       const slotVisuals = new Map<string, SlotVisuals>()
@@ -128,7 +130,7 @@ export function ShipCustomizerCanvas({ layout, activeKind, installedParts, onSlo
           } catch { /* missing room sprite — label fallback */ }
         })
       )
-      if (destroyed) { app.destroy(true); return }
+      if (destroyed) { try { app.destroy() } catch { /* pixi v8 cleanup */ }; canvas.remove(); return }
 
       let prevInstalledHash = ''
 
@@ -272,8 +274,11 @@ export function ShipCustomizerCanvas({ layout, activeKind, installedParts, onSlo
 
     return () => {
       destroyed = true
-      canvas.remove()
-      app.destroy(true)
+      if (initialized) {
+        try { app.destroy() } catch { /* pixi v8 cleanup */ }
+        canvas.remove()
+      }
+      // else: async init will call try { app.destroy() } catch { /* pixi v8 cleanup */ } + canvas.remove() when it resolves
     }
   }, [layout])
 

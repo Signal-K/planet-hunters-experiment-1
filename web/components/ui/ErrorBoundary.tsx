@@ -7,6 +7,7 @@ import { PrimaryBtn } from './Button'
 interface Props {
   children?: ReactNode
   fallback?: ReactNode
+  onError?: (error: Error) => void
 }
 
 interface State {
@@ -26,6 +27,7 @@ class ErrorBoundary extends Component<Props, State> {
 
   public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     console.error('Uncaught error:', error, errorInfo)
+    this.props.onError?.(error)
   }
 
   public render() {

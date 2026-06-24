@@ -16,13 +16,18 @@ interface ConstructionTargetCanvasProps {
 }
 
 export default function ConstructionTargetCanvas({ state, selectedPad, onSelectPad }: ConstructionTargetCanvasProps) {
-  const canvasRef = useRef<HTMLCanvasElement>(null)
+  const containerRef = useRef<HTMLDivElement>(null)
   const stateRef = useRef({ state, selectedPad, onSelectPad })
   stateRef.current = { state, selectedPad, onSelectPad }
 
   useEffect(() => {
-    const canvas = canvasRef.current
-    if (!canvas) return
+    const parent = containerRef.current
+    if (!parent) return
+
+    const canvas = document.createElement('canvas')
+    canvas.dataset.testid = 'construction-target-canvas'
+    canvas.style.cssText = 'display:block;width:100%;height:100%;'
+    parent.appendChild(canvas)
 
     const app = new Application()
     let loop: GameLoop | null = null
@@ -30,7 +35,6 @@ export default function ConstructionTargetCanvas({ state, selectedPad, onSelectP
 
     ;(async () => {
       try {
-        const parent = canvas.parentElement!
         const worldW = Math.max(280, parent.clientWidth)
         const worldH = Math.max(180, parent.clientHeight)
         const surfaceY = Math.round(worldH * 0.60)
@@ -79,15 +83,13 @@ export default function ConstructionTargetCanvas({ state, selectedPad, onSelectP
     return () => {
       destroyed = true
       loop?.stop()
-      if (app.renderer) app.destroy()
+      if (app.renderer) {
+        try { app.destroy() } catch (_) { /* pixi v8 cleanup */ }
+        canvas.remove()
+      }
+      // else: async init will return early (destroyed=true) then canvas is orphaned — acceptable in StrictMode
     }
   }, [])
 
-  return (
-    <canvas
-      ref={canvasRef}
-      data-testid="construction-target-canvas"
-      style={{ display: 'block', width: '100%', height: '100%' }}
-    />
-  )
+  return <div ref={containerRef} style={{ display: 'block', width: '100%', height: '100%' }} />
 }

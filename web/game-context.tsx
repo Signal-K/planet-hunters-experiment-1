@@ -194,6 +194,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     <GameContext.Provider value={{
       ...state,
       catalog,
+      hydrated,
       authUserId: auth.authUserId,
       mission,
       target,

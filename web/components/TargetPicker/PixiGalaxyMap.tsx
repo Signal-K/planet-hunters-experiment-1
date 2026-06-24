@@ -276,7 +276,7 @@ interface PixiGalaxyMapProps {
 }
 
 export default function PixiGalaxyMap(props: PixiGalaxyMapProps) {
-  const canvasRef = useRef<HTMLCanvasElement>(null)
+  const containerRef = useRef<HTMLDivElement>(null)
   const redrawRef = useRef<(() => void) | null>(null)
   const propsRef = useRef(props)
   propsRef.current = props
@@ -284,15 +284,20 @@ export default function PixiGalaxyMap(props: PixiGalaxyMapProps) {
   const compatibleKey = useMemo(() => [...props.compatibleIds].sort().join(','), [props.compatibleIds])
 
   useEffect(() => {
-    const canvas = canvasRef.current
-    const parent = canvas?.parentElement
-    if (!canvas || !parent) return
+    const parent = containerRef.current
+    if (!parent) return
+
+    // Create canvas fresh each time so React StrictMode's double-invoke never
+    // hands a stale WebGL context to a new Application instance.
+    const canvas = document.createElement('canvas')
+    canvas.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;display:block;'
+    canvas.dataset.testid = 'target-picker-pixi-map'
+    parent.appendChild(canvas)
 
     const app = new Application()
-    // Three separate layers so the ticker only updates bodies, not static bg/orbits
-    const bgLayer     = new Container()
-    const orbitLayer  = new Container()
-    const bodyLayer   = new Container()
+    const bgLayer    = new Container()
+    const orbitLayer = new Container()
+    const bodyLayer  = new Container()
 
     let bodies: EntityData[] = []
     let orbitPhase = 0
@@ -323,7 +328,7 @@ export default function PixiGalaxyMap(props: PixiGalaxyMapProps) {
       if (!initialized || destroyed) return
       const { centerX, centerY } = getCenterAndScale()
       drawBodies(bodyLayer, propsRef.current, bodies, width, height, orbitPhase)
-      void centerX; void centerY  // used inside drawBodies
+      void centerX; void centerY
     }
 
     const redraw = () => {
@@ -347,13 +352,12 @@ export default function PixiGalaxyMap(props: PixiGalaxyMapProps) {
           preserveDrawingBuffer: true,
           resolution: dpr,
         })
-        if (destroyed) { app.destroy(); return }
+        if (destroyed) { try { app.destroy() } catch (_) { /* pixi v8 cleanup */ } canvas.remove(); return }
 
         app.stage.addChild(bgLayer, orbitLayer, bodyLayer)
         initialized = true
         observer.observe(parent)
 
-        // AC4: orbit animation — bodies slowly drift along orbital paths each tick
         app.ticker.add(ticker => {
           if (destroyed) return
           orbitPhase += 0.00042 * ticker.deltaTime
@@ -378,20 +382,22 @@ export default function PixiGalaxyMap(props: PixiGalaxyMapProps) {
       destroyed = true
       redrawRef.current = null
       observer.disconnect()
-      if (app.renderer) app.destroy()
+      if (initialized) {
+        try { app.destroy() } catch { /* pixi v8 cleanup */ }
+        canvas.remove()
+      }
+      // else: async init will call try { app.destroy() } catch { /* pixi v8 cleanup */ } + canvas.remove() when it resolves
     }
   }, [])
 
-  // Redraw static + bodies on relevant prop changes (prop-driven, separate from ticker)
   useEffect(() => {
     redrawRef.current?.()
   }, [props.mission.requires.max_orbit, props.pickedId, compatibleKey, props.targets])
 
   return (
-    <canvas
-      ref={canvasRef}
-      data-testid="target-picker-pixi-map"
-      style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', display: 'block' }}
+    <div
+      ref={containerRef}
+      style={{ position: 'absolute', inset: 0 }}
     />
   )
 }

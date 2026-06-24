@@ -1,6 +1,7 @@
 'use client'
 
 import { useMemo, useEffect, useRef, useState, useCallback } from 'react'
+import { useRouter } from 'next/navigation'
 import { LaunchSequenceCanvas } from '@/components/game/LaunchSequenceCanvas'
 import { GameProvider, type Screen, useGame } from '@/game-context'
 import { M1_STEPS, M2_STEPS, M3_STEPS, PROGRESSION_STEPS } from '@/lib/data'
@@ -35,11 +36,13 @@ import DevShortcuts from '@/components/dev/DevShortcuts'
 import AuthGateSheet from '@/components/game/AuthGateSheet'
 import TerritoryClaimPopup from '@/components/game/TerritoryClaimPopup'
 import { UI_ZONES } from '@/lib/ui-zones'
+import ErrorBoundary from '@/components/ui/ErrorBoundary'
 
 if (typeof window !== 'undefined') initPostHog()
 
 function GameCanvas() {
   const game = useGame()
+  const router = useRouter()
   const arrivalScheduledFor = useRef<number | null>(null)
   const returnScheduledKey = useRef<string | null>(null)
   const [launchPending, setLaunchPending] = useState(false)
@@ -185,7 +188,7 @@ function GameCanvas() {
             returning={game.player.missionsDone > 0 || game.player.placed.length > 0}
             missionsDone={game.player.missionsDone}
             totalEarned={game.player.francs}
-            awaitingRemoteState={game.awaitingRemoteState}
+            awaitingRemoteState={!game.hydrated}
           />
         )}
         {game.screen === 'build' && (
@@ -263,7 +266,12 @@ function GameCanvas() {
             francs={game.player.francs}
             missionsDone={game.player.missionsDone}
             unlockedSkillNodes={game.player.unlockedSkillNodes ?? []}
-            onBack={() => game.go('hub')}
+            onBack={() => {
+              game.go('hub')
+              if (window.location.pathname.includes('/game/ship-customizer')) {
+                router.replace('/game')
+              }
+            }}
           />
         )}
         {game.screen === 'refinery' && (
@@ -340,7 +348,7 @@ function GameCanvas() {
               game.setPlayer(player => ({ ...player, missionPhase: 'mining' }))
               game.go('hub')
             }}
-            onComplete={game.onMiningDone}
+            onComplete={(cargo) => { game.completeStep(6); game.onMiningDone(cargo) }}
             minerals={game.catalog.minerals}
             laserChargeCap={game.laserChargeCap}
           />
@@ -359,17 +367,22 @@ function GameCanvas() {
 
         {/* Launch sequence — plays between fab confirmation and transit */}
         {launchPending && (
-          <LaunchSequenceCanvas
-            rocketName="Starter Rocket 1"
-            targetName={game.target?.name ?? 'TARGET'}
-            onComplete={handleLaunchComplete}
-          />
+          <ErrorBoundary
+            fallback={null}
+            onError={handleLaunchComplete}
+          >
+            <LaunchSequenceCanvas
+              rocketName="Starter Rocket 1"
+              targetName={game.target?.name ?? 'TARGET'}
+              onComplete={handleLaunchComplete}
+            />
+          </ErrorBoundary>
         )}
 
         <ToastLayer toasts={game.toasts} onDismiss={game.dismissToast} />
         {showFeedback && <FeedbackButton />}
         <SurveySheet />
-        {showNav && <RadialNav current={currentNav} onNav={goFromNav} />}
+        {showNav && <div className="mobile-radial-nav"><RadialNav current={currentNav} onNav={goFromNav} /></div>}
         <Sidebar current={currentNav} onNav={goFromNav} />
 
         {coach && (

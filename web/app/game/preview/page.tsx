@@ -1,16 +1,14 @@
 'use client'
 
 import { Suspense, useEffect, useState } from 'react'
-import { useSearchParams } from 'next/navigation'
+import { useSearchParams, redirect } from 'next/navigation'
 import { GameCanvas } from '@/lib/engine/GameCanvas'
 import { Scene } from '@/lib/engine/Scene'
 import type { SceneData } from '@/lib/engine/types'
 
-/**
- * Headless scene preview used by Forge to render the actual PixiJS scene
- * (rather than a SwiftUI simulation) inside a WebView.
- */
+// Headless scene preview used by Forge — dev only
 export default function ScenePreviewPage() {
+  if (process.env.NODE_ENV !== 'development') redirect('/game')
   return (
     <Suspense fallback={null}>
       <ScenePreview />

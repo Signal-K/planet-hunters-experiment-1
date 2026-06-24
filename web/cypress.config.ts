@@ -12,6 +12,8 @@ const profiles: Record<string, Cypress.EndToEndConfigOptions> = {
       'cypress/e2e/ship-customizer.cy.ts',
       'cypress/e2e/m3-territory.cy.ts',
       'cypress/e2e/tutorial-m1.cy.ts',
+      'cypress/e2e/actual-play.cy.ts',
+      'cypress/e2e/bug-hunt.cy.ts',
     ],
     // Portrait canvas: existing tests target the 402px canvas, not the desktop layout.
     // m3-territory.cy.ts overrides viewport per-test where desktop behaviour is needed.

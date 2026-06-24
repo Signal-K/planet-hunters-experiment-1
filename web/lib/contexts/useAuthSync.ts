@@ -33,6 +33,7 @@ export function useAuthSync({
 
   const backendRecordId = useRef<string | null>(null)
   const backendLoadedFor = useRef<string | null>(null)
+  const authGateDismissed = useRef(false)
 
   // Track auth identity changes
   useEffect(() => pbShared.authStore.onChange((_token, record) => {
@@ -43,12 +44,13 @@ export function useAuthSync({
     if (record?.id) identifyUser(record.id, record.email ? { email: record.email } : undefined)
   }), [])
 
-  // Returning user on new device: no local state but credentials exist
+  // Returning full-account user on a new device: no local state but an active
+  // session can hydrate from the backend. Stored guest credentials should not
+  // block local play while auth warms or falls back offline.
   useEffect(() => {
     if (!hydrated || isPreview) return
     const noLocalState = !localStorage.getItem(storageKey)
-    const isReturning = hasStoredCredentials() || pbShared.authStore.isValid
-    if (noLocalState && isReturning) setAwaitingRemoteState(true)
+    if (noLocalState && pbShared.authStore.isValid) setAwaitingRemoteState(true)
   }, [hydrated, isPreview, storageKey])
 
   // Clear awaitingRemoteState once backend load completes
@@ -59,6 +61,7 @@ export function useAuthSync({
   // Show auth gate for brand-new users (no stored credentials, no active session)
   useEffect(() => {
     if (!hydrated || isPreview) return
+    if (authGateDismissed.current) return
     if (pbShared.authStore.isValid || hasStoredCredentials()) return
     setAuthGateOpen(true)
   }, [hydrated, isPreview])
@@ -188,6 +191,7 @@ export function useAuthSync({
   }, [])
 
   const skipAuthGate = useCallback(() => {
+    authGateDismissed.current = true
     setAuthGateOpen(false)
     ensureGuestAuth().catch(() => {
       addToast('Offline mode — progress saved on this device only', 'warn')

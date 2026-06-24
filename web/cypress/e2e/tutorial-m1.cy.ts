@@ -146,9 +146,9 @@ function playM1() {
   // Mission board → pick M1
   cy.get('[data-testid="mission-card-generated-s1-starter-bulk-1"]').click()
 
-  // Target picker → pick Mars, then confirm
+  // Target picker → pick Eros (recommended asteroid for M1), then confirm
   cy.contains('Pick Target', { timeout: 8000 }).should('be.visible')
-  cy.get('[data-testid="target-mars"]').click()
+  cy.get('[data-testid="target-eros"]').click({ force: true })
   cy.contains('Continue').click() // "Continue · Build →" button appears after target pick
 
   // Rocket purchase — SR1 is free so button says "Launch with Starter Rocket 1"

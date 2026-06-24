@@ -36,9 +36,27 @@ export default function TutorialCoach({ stepIndex, steps, step, total, onManualN
   )
 
 
+  const spot = step.spot
+  const spotStyle: React.CSSProperties | null = spot ? {
+    position: 'absolute',
+    left: spot.fromCenter ? `calc(50% + ${spot.x}px)` : spot.x,
+    top: spot.fromBottom ? undefined : spot.y,
+    bottom: spot.fromBottom ? spot.y : undefined,
+    width: spot.right !== undefined ? undefined : spot.w,
+    right: spot.right !== undefined ? spot.right : undefined,
+    height: spot.h,
+    borderRadius: 10,
+    border: '2px solid rgba(63,169,255,0.6)',
+    boxShadow: '0 0 16px rgba(63,169,255,0.3)',
+    pointerEvents: 'none',
+    zIndex: 97,
+    animation: 'coach-spot-pulse 1.8s ease-in-out infinite',
+  } : null
+
   if (manual) {
     return (
       <div style={{ position: 'absolute', inset: 0, zIndex: 96, pointerEvents: 'none' }} data-testid="tutorial-coach-overlay">
+        {spotStyle && <div data-testid="tutorial-coach-spot" style={spotStyle} />}
         <div data-ui-zone={UI_ZONES.tutorialRail} data-testid="tutorial-coach-block" style={{ position: 'absolute', left: 14, right: 14, top: coachRail.top, maxHeight: coachRail.height, zIndex: 98, pointerEvents: 'auto', overflowY: 'auto' }}>
           <div style={{
             background: 'linear-gradient(180deg, #0d1c30 0%, #081120 100%)',
@@ -79,6 +97,7 @@ export default function TutorialCoach({ stepIndex, steps, step, total, onManualN
 
   return (
       <div style={{ position: 'absolute', inset: 0, zIndex: 96, pointerEvents: 'none' }} data-testid="tutorial-coach-overlay">
+        {spotStyle && <div data-testid="tutorial-coach-spot" style={spotStyle} />}
         <div data-ui-zone={UI_ZONES.tutorialRail} data-testid="tutorial-coach-block" style={{
           position: 'absolute',
           left: 12,

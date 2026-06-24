@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { ShipCustomizerCanvas } from '@/components/game/ShipCustomizerCanvas'
+import ErrorBoundary from '@/components/ui/ErrorBoundary'
 import {
   calculateShipSuccessChance,
   canConfirmCustomizerBuild,
@@ -144,16 +145,18 @@ export default function ShipInteriorPreview({
 
       {/* ── SHIP DIAGRAM (PixiJS) ──────────────────────────────────── */}
       <div style={{ flex: 'none', maxHeight: '28%' }}>
-        <ShipCustomizerCanvas
-          layout={layout}
-          activeKind={step.kind}
-          installedParts={buildState.installed}
-          onSlotClick={kind => {
-            const idx = buildSteps.findIndex(s => s.kind === kind)
-            if (idx >= 0) setStepIndex(idx)
-          }}
-          confirmed={buildState.confirmed}
-        />
+        <ErrorBoundary fallback={<div style={{ height: 80, background: 'rgba(8,12,22,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'var(--ln-font-mono)', fontSize: 10, color: 'var(--ln-text-muted)', letterSpacing: '0.1em' }}>DIAGRAM UNAVAILABLE</div>}>
+          <ShipCustomizerCanvas
+            layout={layout}
+            activeKind={step.kind}
+            installedParts={buildState.installed}
+            onSlotClick={kind => {
+              const idx = buildSteps.findIndex(s => s.kind === kind)
+              if (idx >= 0) setStepIndex(idx)
+            }}
+            confirmed={buildState.confirmed}
+          />
+        </ErrorBoundary>
       </div>
 
       {/* data-testid anchors for Cypress slot tests (invisible, mirrors slot state) */}
@@ -207,7 +210,7 @@ export default function ShipInteriorPreview({
       </div>
 
       {/* ── STEP CONTENT (fills remaining) ───────────────────────────── */}
-      <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', padding: '8px 10px 6px' }}>
+      <div data-testid="ship-build-step" style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', padding: '8px 10px 6px' }}>
         {/* Step title + desc */}
         <div style={{ flex: 'none', marginBottom: 6 }}>
           <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 8, fontWeight: 900, letterSpacing: '0.16em', color: 'var(--ln-crimson)', textTransform: 'uppercase' }}>
@@ -276,7 +279,10 @@ export default function ShipInteriorPreview({
         background: 'rgba(6,9,15,0.92)',
       }}>
         {/* Stage summary chips */}
-        <div style={{ display: 'flex', gap: 3, padding: '5px 10px 0', overflowX: 'auto' }}>
+        <div style={{ display: 'flex', gap: 3, padding: '5px 10px 0', overflowX: 'auto', flexWrap: 'wrap', alignItems: 'center' }}>
+          <span data-testid="ship-review" data-installed={installedIds.length} data-total={buildSteps.length} style={{ fontFamily: 'var(--ln-font-display)', fontSize: 7, color: 'var(--ln-text-muted)', fontWeight: 700, letterSpacing: '0.08em', marginRight: 4 }}>
+            {buildState.confirmed ? 'Configuration confirmed' : `${installedIds.length}/${buildSteps.length} stages selected`}
+          </span>
           {buildSteps.map(item => {
             const part = buildState.installed[item.kind] ? customizerPartById(buildState.installed[item.kind]!) : undefined
             const active = item.kind === step.kind
@@ -317,39 +323,47 @@ export default function ShipInteriorPreview({
             Back
           </button>
 
-          {/* Centre: refund or confirm */}
-          {readyToConfirm && !buildState.confirmed ? (
+          {/* Centre: refund + confirm stacked */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+            {!buildState.confirmed && (
+              <button
+                data-testid="ship-refund-step"
+                onClick={removeCurrentPart}
+                disabled={!currentInstalled}
+                style={{
+                  minHeight: 28, borderRadius: 6,
+                  border: `1px solid ${currentInstalled ? 'rgba(200,41,62,0.38)' : 'rgba(255,255,255,0.08)'}`,
+                  background: currentInstalled ? 'rgba(200,41,62,0.09)' : 'transparent',
+                  color: currentInstalled ? 'var(--ln-crimson-bright)' : 'var(--ln-text-ghost)',
+                  fontFamily: 'var(--ln-font-display)', fontSize: 9, fontWeight: 900,
+                  letterSpacing: '0.1em', textTransform: 'uppercase',
+                  cursor: currentInstalled ? 'pointer' : 'not-allowed',
+                  opacity: currentInstalled ? 1 : 0.4,
+                }}
+              >
+                Refund Step
+              </button>
+            )}
             <button
               data-testid="confirm-ship-config"
-              onClick={confirmBuild}
+              onClick={buildState.confirmed ? undefined : confirmBuild}
+              disabled={!readyToConfirm || buildState.confirmed}
               style={{
-                minHeight: 36, borderRadius: 7, border: 'none',
-                background: 'linear-gradient(180deg, #6cf09a, #1ea54a)',
-                color: '#02180c', fontFamily: 'var(--ln-font-display)', fontSize: 9,
-                fontWeight: 900, letterSpacing: '0.12em', textTransform: 'uppercase', cursor: 'pointer',
+                minHeight: 28, borderRadius: 6,
+                border: 'none',
+                background: readyToConfirm && !buildState.confirmed
+                  ? 'linear-gradient(180deg, #6cf09a, #1ea54a)'
+                  : 'rgba(57,211,106,0.12)',
+                color: readyToConfirm && !buildState.confirmed ? '#02180c' : 'var(--ln-ok)',
+                fontFamily: 'var(--ln-font-display)', fontSize: 9,
+                fontWeight: 900, letterSpacing: '0.12em', textTransform: 'uppercase',
+                cursor: readyToConfirm && !buildState.confirmed ? 'pointer' : 'not-allowed',
+                opacity: readyToConfirm || buildState.confirmed ? 1 : 0.45,
               }}
             >
-              Confirm Configuration
+              {buildState.confirmed ? 'Configuration Confirmed' : 'Confirm Configuration'}
             </button>
-          ) : (
-            <button
-              data-testid="ship-refund-step"
-              onClick={removeCurrentPart}
-              disabled={!currentInstalled || buildState.confirmed}
-              style={{
-                minHeight: 36, borderRadius: 7,
-                border: `1px solid ${currentInstalled && !buildState.confirmed ? 'rgba(200,41,62,0.38)' : 'rgba(255,255,255,0.08)'}`,
-                background: currentInstalled && !buildState.confirmed ? 'rgba(200,41,62,0.09)' : 'transparent',
-                color: currentInstalled && !buildState.confirmed ? 'var(--ln-crimson-bright)' : 'var(--ln-text-ghost)',
-                fontFamily: 'var(--ln-font-display)', fontSize: 9, fontWeight: 900,
-                letterSpacing: '0.1em', textTransform: 'uppercase',
-                cursor: currentInstalled && !buildState.confirmed ? 'pointer' : 'not-allowed',
-                opacity: currentInstalled && !buildState.confirmed ? 1 : 0.4,
-              }}
-            >
-              Refund Step
-            </button>
-          )}
+          </div>
 
           <button
             data-testid="ship-step-next"

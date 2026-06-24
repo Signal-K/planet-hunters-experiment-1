@@ -47,6 +47,7 @@ export function LaunchSequenceCanvas({ rocketName, targetName, onComplete }: Pro
     div.appendChild(canvas)
 
     const app = new Application()
+    let initialized = false
     let destroyed = false
     let elapsed = 0
 
@@ -60,10 +61,11 @@ export function LaunchSequenceCanvas({ rocketName, targetName, onComplete }: Pro
         autoDensity: true,
         resolution: typeof window !== 'undefined' ? (window.devicePixelRatio ?? 1) : 1,
       })
-      if (destroyed) { app.destroy(true); return }
+      initialized = true
+      if (destroyed) { try { app.destroy() } catch (_) { /* pixi v8 cleanup */ } canvas.remove(); return }
 
       const textures = await loadTextures()
-      if (destroyed) { app.destroy(true); return }
+      if (destroyed) { try { app.destroy() } catch (_) { /* pixi v8 cleanup */ } canvas.remove(); return }
 
       const scene = buildLaunchScene(app, textures, {
         rocketName,
@@ -79,8 +81,10 @@ export function LaunchSequenceCanvas({ rocketName, targetName, onComplete }: Pro
 
     return () => {
       destroyed = true
-      canvas.remove()
-      app.destroy(true)
+      if (initialized) {
+        try { app.destroy() } catch { /* pixi v8 cleanup */ }
+        canvas.remove()
+      }
     }
   }, [])
 

@@ -93,9 +93,11 @@ describe('Smoke — Landnam', () => {
     })
 
     cy.contains('EARTH BASE · FREE OPS').should('be.visible')
-    cy.contains('Helios Propulsion Depot').should('be.visible')
-    cy.contains('Arcturus Battery Systems').should('be.visible')
-    cy.contains('Ferrum Orbital Construction').should('be.visible')
+    // Contractor names are inside buttons (Cypress prefers button elements),
+    // so we scroll to find them rather than relying on initial viewport visibility.
+    cy.get('[data-testid^="mission-card-freeops-helios"]').first().scrollIntoView().should('be.visible')
+    cy.get('[data-testid^="mission-card-freeops-arcturus"]').first().scrollIntoView().should('be.visible')
+    cy.get('[data-testid^="mission-card-freeops-ferrum"]').first().scrollIntoView().should('be.visible')
     cy.contains('Refinery contracts detected').should('be.visible')
   })
 

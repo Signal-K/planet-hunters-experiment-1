@@ -47,7 +47,7 @@ export default function TopBar({ eyebrow, title, onBack, right, dense }: TopBarP
     }}>
       <div style={{ pointerEvents: 'auto' }}>
         {onBack
-          ? <IconBtn onClick={onBack} ariaLabel="back"><BackIcon /></IconBtn>
+          ? <IconBtn onClick={onBack} ariaLabel="back" testId="top-bar-back"><BackIcon /></IconBtn>
           : <IconBtn ariaLabel="menu"><MenuIcon /></IconBtn>
         }
       </div>

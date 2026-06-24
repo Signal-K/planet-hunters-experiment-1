@@ -8,6 +8,7 @@ import { PrimaryBtn } from '@/components/ui/Button'
 import type { Mission, Target } from '@/lib/data'
 import { MINERAL_META } from '@/lib/data'
 import { UI_ZONES } from '@/lib/ui-zones'
+import RoverMiningCanvas from './RoverMiningCanvas'
 
 const ROVER_MINING_DURATION_MS = 2 * 60 * 1000
 
@@ -49,70 +50,71 @@ export default function RoverMiningScreen({ mission, target, onComplete, onBack 
   }, [done])
 
   return (
-    <div className="game-screen">
+    <div className="game-screen" style={{ display: 'flex', flexDirection: 'column' }}>
       <TopBar eyebrow={`SURFACE OPS · ${target.name.toUpperCase()}`} title="Rover Mining" onBack={onBack} />
-      <div className="screen-scroll" data-ui-zone={UI_ZONES.screenContent}>
 
-        <Panel accent={done ? 'var(--ln-ok)' : 'var(--ln-amber)'} style={{ padding: 12 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
+      {/* PixiJS rover scene — grows to fill available space */}
+      <div style={{ flex: 1, position: 'relative', minHeight: 0, marginTop: 56 }}>
+        <RoverMiningCanvas target={target} done={done} />
+      </div>
+
+      {/* HUD strip — status + timer + cargo */}
+      <div data-ui-zone={UI_ZONES.screenContent} style={{
+        padding: '10px 16px',
+        background: 'linear-gradient(180deg, transparent, var(--ln-void) 18%)',
+        flexShrink: 0,
+      }}>
+        <Panel accent={done ? 'var(--ln-ok)' : 'var(--ln-amber)'} style={{ padding: 10, marginBottom: 8 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: done ? 0 : 8 }}>
             <RoverIcon done={done} />
             <div>
-              <div style={{ fontFamily: 'var(--ln-font-display)', fontWeight: 800, fontSize: 15, color: done ? 'var(--ln-ok)' : 'var(--ln-amber)' }}>
+              <div style={{ fontFamily: 'var(--ln-font-display)', fontWeight: 800, fontSize: 14, color: done ? 'var(--ln-ok)' : 'var(--ln-amber)' }}>
                 {done ? 'EXTRACTION COMPLETE' : 'EXTRACTING DEPOSITS'}
               </div>
-              <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 12, color: '#a9b8ce', marginTop: 2 }}>
+              <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 11, color: '#a9b8ce', marginTop: 2 }}>
                 {mission.title}
               </div>
             </div>
           </div>
           {!done && (
             <>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 5 }}>
                 <span style={{ fontFamily: 'var(--ln-font-display)', fontSize: 9, fontWeight: 700, letterSpacing: '0.18em', color: '#6b7fa3' }}>OPERATION PROGRESS</span>
-                <span style={{ fontFamily: 'var(--ln-font-mono)', fontSize: 16, fontWeight: 700, color: 'var(--ln-amber)' }}>{countdown}</span>
+                <span style={{ fontFamily: 'var(--ln-font-mono)', fontSize: 15, fontWeight: 700, color: 'var(--ln-amber)' }}>{countdown}</span>
               </div>
-              <div style={{ height: 6, background: 'rgba(245,166,35,0.15)', borderRadius: 3, overflow: 'hidden' }}>
+              <div style={{ height: 5, background: 'rgba(245,166,35,0.15)', borderRadius: 3, overflow: 'hidden' }}>
                 <div style={{ height: '100%', width: `${progressPct}%`, background: 'var(--ln-amber)', borderRadius: 3, transition: 'width 1s linear' }} />
               </div>
             </>
           )}
         </Panel>
 
-        <Panel style={{ padding: 12, marginTop: 10 }}>
-          <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 9, fontWeight: 700, letterSpacing: '0.22em', color: '#6b7fa3', textTransform: 'uppercase', marginBottom: 8 }}>
-            PROJECTED YIELD
-          </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-            {Object.entries(cargo).map(([mineral, amount]) => {
-              const meta = MINERAL_META[mineral]
-              return (
-                <div key={mineral} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 30, height: 30, borderRadius: 6, background: (meta?.color ?? '#888') + '22', border: `1px solid ${meta?.color ?? '#888'}55`, fontFamily: 'var(--ln-font-mono)', fontSize: 11, fontWeight: 700, color: meta?.color ?? '#888' }}>
-                    {meta?.sym ?? mineral.slice(0, 2).toUpperCase()}
-                  </span>
-                  <span style={{ flex: 1, fontFamily: 'var(--ln-font-display)', fontSize: 13, color: '#e8f0fe' }}>
-                    {meta?.name ?? mineral}
-                  </span>
-                  <span style={{ fontFamily: 'var(--ln-font-mono)', fontSize: 13, fontWeight: 700, color: '#6b7fa3' }}>
-                    ×{amount}
-                  </span>
-                </div>
-              )
-            })}
-          </div>
-          <div style={{ marginTop: 8, fontSize: 10, color: '#6b7fa3', fontFamily: 'var(--ln-font-body)' }}>
-            Starter rover. Works on any target type — no gravity or pressure restrictions.
-          </div>
-        </Panel>
+        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 8 }}>
+          {Object.entries(cargo).map(([mineral, amount]) => {
+            const meta = MINERAL_META[mineral]
+            return (
+              <div key={mineral} style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '4px 8px', borderRadius: 6, background: (meta?.color ?? '#888') + '18', border: `1px solid ${meta?.color ?? '#888'}44` }}>
+                <span style={{ fontFamily: 'var(--ln-font-mono)', fontSize: 10, fontWeight: 700, color: meta?.color ?? '#888' }}>
+                  {meta?.sym ?? mineral.slice(0, 2).toUpperCase()}
+                </span>
+                <span style={{ fontFamily: 'var(--ln-font-display)', fontSize: 11, color: '#e8f0fe' }}>×{amount}</span>
+              </div>
+            )
+          })}
+        </div>
 
-        {done && (
-          <div style={{ marginTop: 12 }}>
+        {done ? (
+          <>
             <StatusPill kind="ok">ROVER RETURNED — MINERALS SECURED</StatusPill>
-            <div style={{ marginTop: 10 }}>
+            <div style={{ marginTop: 8 }}>
               <PrimaryBtn kind="green" onClick={() => onComplete(cargo)}>
                 COLLECT CARGO
               </PrimaryBtn>
             </div>
+          </>
+        ) : (
+          <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 9, letterSpacing: '0.15em', color: '#6b7fa3', textTransform: 'uppercase' }}>
+            Use joystick to drive rover · Drill auto-activates when stationary
           </div>
         )}
       </div>
@@ -123,7 +125,7 @@ export default function RoverMiningScreen({ mission, target, onComplete, onBack 
 function RoverIcon({ done }: { done: boolean }) {
   const color = done ? 'var(--ln-ok)' : 'var(--ln-amber)'
   return (
-    <svg width={32} height={32} viewBox="0 0 32 32" fill="none" aria-hidden="true">
+    <svg width={28} height={28} viewBox="0 0 32 32" fill="none" aria-hidden="true">
       <rect x="8" y="12" width="16" height="10" rx="2" stroke={color} strokeWidth="1.5" />
       <path d="M8 17h16M13 12V9m6 3V9" stroke={color} strokeWidth="1.5" strokeLinecap="round" />
       <circle cx="10" cy="24" r="2.5" stroke={color} strokeWidth="1.5" />

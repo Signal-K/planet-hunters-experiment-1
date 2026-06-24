@@ -127,7 +127,8 @@ describe('Full Game Loop — Landnam', () => {
         doneSteps: { 1: true, 2: true },
       }))
       cy.contains('Compatible').should('be.visible')
-      cy.contains('Mars').should('be.visible')
+      // M1 compat = asteroids with orbit ≤ 4; 433 Eros is recommended and auto-selected
+      cy.contains('433 Eros').should('be.visible')
     })
   })
 

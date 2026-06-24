@@ -1,6 +1,6 @@
 import { pbLandnam } from './pb-landnam'
 import type { Target, Mission, Part, MineralMeta, Contractor, StructureBlueprint } from './data'
-import { TARGETS, MISSIONS, PARTS, MINERAL_META, CONTRACTORS, CONTRACTOR_SLOTS, STRUCTURES, toContractor as slotToContractor } from './data'
+import { TARGETS, MISSIONS, PARTS, MINERAL_META, CONTRACTORS, CONTRACTOR_SLOTS, STRUCTURES, toContractor as slotToContractor, generateFreeOpsMissions, generateMissions } from './data'
 
 export interface Catalog {
   targets: Target[]
@@ -148,10 +148,22 @@ export async function fetchCatalog(): Promise<Catalog> {
   const catalogContractors = Object.fromEntries(
     contractors.map(r => [r.slug, toContractor(r)])
   )
+  // Always include generated onboarding + freeops missions — PocketBase only seeds authored missions.
+  const baseMissions = catalogMissions.length > 0 ? catalogMissions : generatedFallbackMissions
+  const generatedMissions = generateMissions()
+  const freeOpsMissions = generateFreeOpsMissions()
+  const pbIds = new Set(baseMissions.map(m => m.id))
+  const generatedToMerge = generatedMissions.filter(m => !pbIds.has(m.id))
+  const freeOpsIds = new Set(freeOpsMissions.map(m => m.id))
+  const allMissions = [
+    ...baseMissions.filter(m => !freeOpsIds.has(m.id)),
+    ...generatedToMerge.filter(m => !freeOpsIds.has(m.id)),
+    ...freeOpsMissions,
+  ]
 
   return {
     targets: locations.map(toTarget),
-    missions: catalogMissions.length > 0 ? catalogMissions : generatedFallbackMissions,
+    missions: allMissions,
     parts: {
       chassis:    parts.filter(p => p.part_type === 'chassis').map(toPart),
       propulsion: parts.filter(p => p.part_type === 'propulsion').map(toPart),

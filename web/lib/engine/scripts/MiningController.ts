@@ -7,6 +7,8 @@ import type { RuntimeContext } from '../RuntimeContext'
 import type { EntityBounds } from '../InputManager'
 
 export const SCROLL_SPEED = 48
+export const SCROLL_SPEED_MIN = 16
+export const SCROLL_SPEED_MAX = 96
 const LASER_SPEED = 480
 export const SHIP_X = 80
 export const SHIP_Y = 112
@@ -73,10 +75,16 @@ export class MiningController extends ScriptBehaviour {
   private oreCounter = 0
   private laserCounter = 0
   private totalScrollX = 0
+  private scrollSpeed = SCROLL_SPEED
 
   constructor(context: RuntimeContext, opts: MiningControllerOptions) {
     super(context)
     this.opts = opts
+  }
+
+  /** Override the terrain scroll speed (px/s). Clamped to SCROLL_SPEED_MIN..SCROLL_SPEED_MAX. */
+  setScrollSpeed(speed: number): void {
+    this.scrollSpeed = Math.max(SCROLL_SPEED_MIN, Math.min(SCROLL_SPEED_MAX, speed))
   }
 
   start(): void {
@@ -88,7 +96,7 @@ export class MiningController extends ScriptBehaviour {
   }
 
   update(dt: number): void {
-    const dx = SCROLL_SPEED * dt
+    const dx = this.scrollSpeed * dt
     this.totalScrollX += dx
 
     for (const ore of this.ores) {
