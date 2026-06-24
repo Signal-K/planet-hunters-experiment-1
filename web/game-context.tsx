@@ -68,10 +68,10 @@ const UPGRADE_SNOOZE_MS = 24 * 60 * 60 * 1000
 const LOAN_AMOUNT = 5_000_000_000
 const LOAN_REPAYMENT = Math.ceil(LOAN_AMOUNT * 1.08 / 2)
 const BANKRUPTCY_THRESHOLD = 500_000_000
-const VALID_SCREENS: Screen[] = ['intro', 'build', 'hub', 'missions', 'galaxy', 'targets', 'fab', 'transit', 'mining', 'debrief', 'refinery', 'market', 'hangar', 'rocket-buy', 'skills', 'scan-station']
+const VALID_SCREENS: Screen[] = ['intro', 'build', 'hub', 'missions', 'galaxy', 'targets', 'fab', 'transit', 'mining', 'debrief', 'refinery', 'market', 'hangar', 'rocket-buy', 'skills', 'scan-station', 'rover-mining']
 
-const MISSION_CONTEXT_SCREENS = new Set<Screen>(['targets', 'rocket-buy', 'fab', 'transit', 'mining', 'debrief'])
-const TARGET_CONTEXT_SCREENS = new Set<Screen>(['rocket-buy', 'fab', 'transit', 'mining', 'debrief'])
+const MISSION_CONTEXT_SCREENS = new Set<Screen>(['targets', 'rocket-buy', 'fab', 'transit', 'mining', 'rover-mining', 'debrief'])
+const TARGET_CONTEXT_SCREENS = new Set<Screen>(['rocket-buy', 'fab', 'transit', 'mining', 'rover-mining', 'debrief'])
 
 function normalizeState(input: Partial<GameState>): GameState {
   const screen = input.screen && VALID_SCREENS.includes(input.screen) ? input.screen : DEFAULT_STATE.screen
@@ -689,6 +689,23 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     enqueueSurvey('lnm_mining_feel', 2000)
   }, [addToast])
 
+  const onRoverMiningDone = useCallback((cargo: Record<string, number>) => {
+    setState(s => {
+      if (s.screen !== 'rover-mining' || !s.missionId || !s.targetId) return s
+      const stash = { ...(s.player.stash ?? {}) }
+      for (const [id, amount] of Object.entries(cargo)) {
+        stash[id] = (stash[id] ?? 0) + amount
+      }
+      return {
+        ...s,
+        lastCargo: cargo,
+        player: { ...s.player, stash, arrivalAt: null, missionPhase: 'debrief' },
+        screen: 'debrief',
+      }
+    })
+    addToast('Rover has returned — minerals secured', 'ok')
+  }, [addToast])
+
   const onDebriefDone = useCallback((total: number, _affinity: number = 0, consumed: Record<string, number> = {}) => {
     const current = stateRef.current
     if (current.screen !== 'debrief' || !current.missionId || !current.targetId || !current.lastCargo) return
@@ -969,6 +986,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       buildScanner,
       startScan,
       collectScan,
+      onRoverMiningDone,
       toasts,
       dismissToast,
       mission,

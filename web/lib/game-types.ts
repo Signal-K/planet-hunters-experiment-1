@@ -27,6 +27,7 @@ export type Screen =
   | 'rocket-buy'
   | 'skills'
   | 'scan-station'
+  | 'rover-mining'
 
 export interface Player {
   francs: number
@@ -129,6 +130,7 @@ export interface GameActions {
   buildScanner: () => void
   startScan: (targetId: string) => void
   collectScan: () => void
+  onRoverMiningDone: (cargo: Record<string, number>) => void
   toasts: Toast[]
   dismissToast: (id: string) => void
   mission: Mission | null

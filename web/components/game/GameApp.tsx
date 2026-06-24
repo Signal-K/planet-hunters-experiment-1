@@ -19,6 +19,7 @@ import HangarScreen from '@/components/game/screens/HangarScreen'
 import RocketPurchaseScreen from '@/components/game/screens/RocketPurchaseScreen'
 import SkillTreeScreen from '@/components/game/screens/SkillTreeScreen'
 import ScanStationScreen from '@/components/game/screens/ScanStationScreen'
+import RoverMiningScreen from '@/components/game/screens/RoverMiningScreen'
 import TutorialCoach from '@/components/game/TutorialCoach'
 import SaveProgressPrompt from '@/components/game/SaveProgressPrompt'
 import UnlockPopup from '@/components/game/UnlockPopup'
@@ -324,8 +325,9 @@ function GameCanvas() {
             arrivalAt={game.player.arrivalAt}
             onBack={() => game.go('hub')}
             onArrive={() => {
+              const isRoverMission = game.mission?.survey?.onWorldVehicle === 'starter-rover'
               game.setPlayer(player => ({ ...player, missionPhase: 'mining' }))
-              game.go('mining')
+              game.go(isRoverMission ? 'rover-mining' : 'mining')
             }}
             onAbandon={game.abandonMission}
           />
@@ -341,6 +343,14 @@ function GameCanvas() {
             onComplete={game.onMiningDone}
             minerals={game.catalog.minerals}
             laserChargeCap={game.laserChargeCap}
+          />
+        )}
+        {game.screen === 'rover-mining' && game.mission && game.target && (
+          <RoverMiningScreen
+            mission={game.mission}
+            target={game.target}
+            onComplete={game.onRoverMiningDone}
+            onBack={() => game.go('hub')}
           />
         )}
         {game.screen === 'debrief' && game.mission && game.target && (
