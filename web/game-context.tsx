@@ -8,7 +8,7 @@ export type { Screen, Player, GameState } from '@/lib/game-types'
 
 let toastSeq = 0
 function nextToastId() { return `t${++toastSeq}` }
-import { type Mission, type Target, type RocketConfig, MISSIONS, TARGETS, PROGRESSION_STEPS, suggestBuild, REFINERY_RECIPES, MINERAL_META, STARTER_ROCKETS, CONTRACTOR_COOLDOWN_MS, CONTRACTOR_STREAK_LIMIT, FREE_OPS_START_MISSIONS_DONE, canUnlockSkillNode, getLaserChargeCap, getSkillNode, travelDurationMs, CONTRACTOR_SLOTS, generateDailyContractorPool, refreshPoolIfStale, todayDateKey, SCANS_PER_DAY, SCAN_DURATION_MS } from '@/lib/data'
+import { type Mission, type Target, type RocketConfig, MISSIONS, TARGETS, PROGRESSION_STEPS, suggestBuild, REFINERY_RECIPES, MINERAL_META, STARTER_ROCKETS, CONTRACTOR_COOLDOWN_MS, CONTRACTOR_STREAK_LIMIT, FREE_OPS_START_MISSIONS_DONE, getLaserChargeCap, travelDurationMs, CONTRACTOR_SLOTS, generateDailyContractorPool, refreshPoolIfStale, todayDateKey } from '@/lib/data'
 import { resolvePreset } from '@/lib/devPresets'
 import { pbShared } from '@/lib/pb'
 import { ensureGuestAuth, hasStoredCredentials, isGuestAccount, upgradeGuestAccount } from '@/lib/guestAuth'
@@ -17,6 +17,10 @@ import { type Catalog, STATIC_CATALOG, fetchCatalog } from '@/lib/catalog'
 import { enqueueSurvey } from '@/lib/surveys'
 import { identifyUser } from '@/lib/posthog'
 import { applyTutorialSkip } from '@/lib/tutorial-skip'
+import { applyBuildScanner, applyStartScan, applyCollectScan } from '@/lib/systems/ScanSystem'
+import { applyMiningDone, applyRoverMiningDone } from '@/lib/systems/MiningSystem'
+import { applySellMinerals, applyStartRefine, applyCollectRefined, applyUpgradeLaunchpad } from '@/lib/systems/EconomySystem'
+import { applyUnlockSkillNode, applyAcceptLoan, applyAbandonMission } from '@/lib/systems/ProgressionSystem'
 
 const GameContext = createContext<(GameState & GameActions) | null>(null)
 
@@ -483,120 +487,23 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
   const onStartRefine = useCallback((recipeId: string) => {
     const recipe = REFINERY_RECIPES.find(r => r.id === recipeId)
     if (!recipe) return
-    setState(s => {
-      const stash = { ...(s.player.stash ?? {}) }
-      const current = stash[recipe.input.mineral] ?? 0
-      if (current < recipe.input.amount || s.player.francs < recipe.cost) return s
-      stash[recipe.input.mineral] = current - recipe.input.amount
-      return {
-        ...s,
-        player: {
-          ...s.player,
-          francs: s.player.francs - recipe.cost,
-          stash,
-          refineryQueue: [...s.player.refineryQueue, { recipeId, startedAt: Date.now() }],
-        },
-      }
-    })
+    setState(s => applyStartRefine(s, recipe))
   }, [])
 
   const onCollectRefined = useCallback((recipeId: string) => {
-    setState(s => {
-      const queue = [...s.player.refineryQueue]
-      const idx = queue.findIndex(q => q.recipeId === recipeId)
-      if (idx < 0) return s
-      const started = queue[idx].startedAt
-      const recipe = REFINERY_RECIPES.find(r => r.id === recipeId)
-      if (!recipe || (Date.now() - started) / 1000 < recipe.time) return s
-      queue.splice(idx, 1)
-      return {
-        ...s,
-        player: {
-          ...s.player,
-          refineryQueue: queue,
-          refinedGoods: { ...s.player.refinedGoods, [recipeId]: (s.player.refinedGoods[recipeId] ?? 0) + 1 },
-        },
-      }
-    })
+    const recipe = REFINERY_RECIPES.find(r => r.id === recipeId)
+    if (!recipe) return
+    setState(s => applyCollectRefined(s, recipe))
   }, [])
 
-  const upgradeLaunchpad = useCallback(() => {
-    setState(s => {
-      if (s.player.launchpadUpgraded || s.player.francs < 1_000_000_000) return s
-      return {
-        ...s,
-        player: {
-          ...s.player,
-          francs: s.player.francs - 1_000_000_000,
-          launchpadUpgraded: true,
-        },
-      }
-    })
-  }, [])
+  const upgradeLaunchpad = useCallback(() => { setState(s => applyUpgradeLaunchpad(s)) }, [])
 
-  const buildScanner = useCallback(() => {
-    setState(s => {
-      if (s.player.scannerBuilt) return s
-      return { ...s, player: { ...s.player, scannerBuilt: true } }
-    })
-  }, [])
-
-  const startScan = useCallback((targetId: string) => {
-    setState(s => {
-      const today = todayDateKey()
-      const scanDate = s.player.scanDate ?? ''
-      const scansUsedToday = scanDate === today ? (s.player.scansUsedToday ?? 0) : 0
-      if (scansUsedToday >= SCANS_PER_DAY) return s
-      if (s.player.activeScan) return s
-      if (!s.player.scannerBuilt) return s
-      return {
-        ...s,
-        player: {
-          ...s.player,
-          activeScan: { targetId, completesAt: Date.now() + SCAN_DURATION_MS },
-          scansUsedToday: scansUsedToday + 1,
-          scanDate: today,
-        },
-      }
-    })
-  }, [])
-
-  const collectScan = useCallback(() => {
-    setState(s => {
-      const scan = s.player.activeScan
-      if (!scan || Date.now() < scan.completesAt) return s
-      const prev = s.player.targetScanCounts ?? {}
-      return {
-        ...s,
-        player: {
-          ...s.player,
-          activeScan: null,
-          targetScanCounts: { ...prev, [scan.targetId]: (prev[scan.targetId] ?? 0) + 1 },
-        },
-      }
-    })
-  }, [])
+  const buildScanner = useCallback(() => { setState(s => applyBuildScanner(s)) }, [])
+  const startScan = useCallback((targetId: string) => { setState(s => applyStartScan(s, targetId)) }, [])
+  const collectScan = useCallback(() => { setState(s => applyCollectScan(s)) }, [])
 
   const sellMinerals = useCallback((mineralId: string, amount: number) => {
-    setState(s => {
-      const stash = { ...(s.player.stash ?? {}) }
-      const held = stash[mineralId] ?? 0
-      const sellAmount = Math.min(amount, held)
-      if (sellAmount <= 0) return s
-      const meta = MINERAL_META[mineralId]
-      if (!meta) return s
-      const revenue = meta.price * sellAmount
-      stash[mineralId] = held - sellAmount
-      if (stash[mineralId] <= 0) delete stash[mineralId]
-      return {
-        ...s,
-        player: {
-          ...s.player,
-          francs: s.player.francs + revenue,
-          stash,
-        },
-      }
-    })
+    setState(s => applySellMinerals(s, mineralId, amount))
   }, [])
 
   const onPickTarget = useCallback((id: string) => {
@@ -671,38 +578,13 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
   }, [catalog.missions, catalog.targets])
 
   const onMiningDone = useCallback((cargo: Record<string, number>) => {
-    setState(s => {
-      if (s.screen !== 'mining' || !s.missionId || !s.targetId) return s
-      const stash = { ...(s.player.stash ?? {}) }
-      for (const [id, amount] of Object.entries(cargo)) {
-        stash[id] = (stash[id] ?? 0) + amount
-      }
-      return {
-        ...s,
-        lastCargo: cargo,
-        player: { ...s.player, stash, arrivalAt: null, missionPhase: 'debrief' },
-        screen: 'debrief',
-        doneSteps: { ...s.doneSteps, 6: true },
-      }
-    })
+    setState(s => applyMiningDone(s, cargo))
     addToast('Rocket has returned — cargo secured', 'ok')
     enqueueSurvey('lnm_mining_feel', 2000)
   }, [addToast])
 
   const onRoverMiningDone = useCallback((cargo: Record<string, number>) => {
-    setState(s => {
-      if (s.screen !== 'rover-mining' || !s.missionId || !s.targetId) return s
-      const stash = { ...(s.player.stash ?? {}) }
-      for (const [id, amount] of Object.entries(cargo)) {
-        stash[id] = (stash[id] ?? 0) + amount
-      }
-      return {
-        ...s,
-        lastCargo: cargo,
-        player: { ...s.player, stash, arrivalAt: null, missionPhase: 'debrief' },
-        screen: 'debrief',
-      }
-    })
+    setState(s => applyRoverMiningDone(s, cargo))
     addToast('Rover has returned — minerals secured', 'ok')
   }, [addToast])
 
@@ -851,64 +733,13 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
 
   const abandonMission = useCallback(() => {
     if (!confirm('Abort this mission? You will lose 10% of the mission payout as a penalty.')) return
-    setState(s => {
-      const mission = s.missionId
-        ? (catalog.missions.find(m => m.id === s.missionId)
-           ?? s.player.dailyContractorPool?.missions.find(m => m.id === s.missionId)
-           ?? null)
-        : null
-      const penalty = mission ? Math.round(mission.payout.francs * 0.1) : 0
-      const dailyContractorPool = (s.missionId?.startsWith('dcp-') && s.player.dailyContractorPool)
-        ? { ...s.player.dailyContractorPool, acceptedId: null }
-        : s.player.dailyContractorPool
-      return {
-        ...s,
-        player: {
-          ...s.player,
-          francs: Math.max(0, s.player.francs - penalty),
-          activeMission: null,
-          missionPhase: undefined,
-          arrivalAt: null,
-          dailyContractorPool,
-        },
-        missionId: null,
-        targetId: null,
-        screen: 'hub',
-      }
-    })
+    setState(s => applyAbandonMission(s, catalog.missions))
   }, [catalog.missions])
 
-  const acceptLoan = useCallback(() => {
-    setState(s => ({
-      ...s,
-      popup: null,
-      player: {
-        ...s.player,
-        francs: s.player.francs + LOAN_AMOUNT,
-        loanDebt: s.player.loanDebt + LOAN_AMOUNT * 1.08,
-        loanOffered: true,
-      },
-    }))
-  }, [])
+  const acceptLoan = useCallback(() => { setState(s => applyAcceptLoan(s)) }, [])
 
   const unlockSkillNode = useCallback((id: string) => {
-    const node = getSkillNode(id)
-    if (!node) return
-    setState(s => {
-      if (!canUnlockSkillNode({
-        id,
-        skillPoints: s.player.skillPoints ?? 0,
-        unlockedSkillNodes: s.player.unlockedSkillNodes ?? [],
-      })) return s
-      return {
-        ...s,
-        player: {
-          ...s.player,
-          skillPoints: (s.player.skillPoints ?? 0) - node.cost,
-          unlockedSkillNodes: [...(s.player.unlockedSkillNodes ?? []), node.id],
-        },
-      }
-    })
+    setState(s => applyUnlockSkillNode(s, id))
   }, [])
 
   const signInFromGate = useCallback(async (email: string, password: string) => {
