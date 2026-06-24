@@ -47,6 +47,29 @@ export interface ContractorStructureRecord {
   startedAt?: number
 }
 
+export type DailyQuestKind = 'scan' | 'land' | 'map'
+export type DailyQuestTargetScope = 'any' | 'any-asteroid' | 'any-planet' | 'specific'
+
+export interface DailyQuestTemplate {
+  id: string
+  kind: DailyQuestKind
+  title: string
+  brief: string
+  targetScope: DailyQuestTargetScope
+  targetId?: string
+  count: number
+  payout: { francs: number; affinity: number }
+  requiresScannerBuilt?: boolean
+  requiresSurveyClear?: boolean
+}
+
+export interface DailyQuestProgress {
+  questId: string
+  progress: number
+  completed: boolean
+  date: string
+}
+
 export interface Mission {
   id: string
   title: string

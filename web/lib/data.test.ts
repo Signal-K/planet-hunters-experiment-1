@@ -43,6 +43,9 @@ import {
   selectedCustomizerPartIds,
   structureUnlocked,
   travelDurationMs,
+  DAILY_QUEST_TEMPLATES,
+  getDailyQuestTemplate,
+  todayKey,
 } from './data'
 
 describe('sellCargo', () => {
@@ -548,5 +551,34 @@ describe('Scanning station constants and structure seed', () => {
   it('scan-station is not unlocked for launchpad-only context', () => {
     const scanner = STRUCTURES.find(s => s.id === 'scan-station')
     expect(scanner && structureUnlocked(scanner, { placed: ['launchpad'] })).toBe(false)
+  })
+})
+
+describe('Daily quest framework', () => {
+  it('exports at least one scan, land, and map quest template', () => {
+    const kinds = DAILY_QUEST_TEMPLATES.map(q => q.kind)
+    expect(kinds).toContain('scan')
+    expect(kinds).toContain('land')
+    expect(kinds).toContain('map')
+  })
+
+  it('getDailyQuestTemplate resolves by id', () => {
+    const q = getDailyQuestTemplate('daily-scan-5-asteroids')
+    expect(q).toBeDefined()
+    expect(q?.count).toBe(5)
+    expect(q?.targetScope).toBe('any-asteroid')
+    expect(getDailyQuestTemplate('nonexistent')).toBeUndefined()
+  })
+
+  it('all quest templates have positive payout', () => {
+    for (const q of DAILY_QUEST_TEMPLATES) {
+      expect(q.payout.francs).toBeGreaterThan(0)
+      expect(q.payout.affinity).toBeGreaterThan(0)
+    }
+  })
+
+  it('todayKey returns an ISO date string', () => {
+    const key = todayKey()
+    expect(key).toMatch(/^\d{4}-\d{2}-\d{2}$/)
   })
 })

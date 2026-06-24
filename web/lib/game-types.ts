@@ -73,6 +73,7 @@ export interface Player {
   activeScan?: { targetId: string; completesAt: number } | null
   targetScanCounts?: Record<string, number>
   contractorStructures?: import('@/lib/data').ContractorStructureRecord[]
+  dailyQuestProgress?: import('@/lib/data').DailyQuestProgress[]
 }
 
 export interface GameState {
