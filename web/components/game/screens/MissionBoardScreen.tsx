@@ -5,7 +5,7 @@ import Image from 'next/image'
 import TopBar from '@/components/ui/TopBar'
 import Panel from '@/components/ui/Panel'
 import StatusPill from '@/components/ui/StatusPill'
-import { compatibleTargetsFor, contractorAffinityBonus, contractorUnlocked, FREE_OPS_START_MISSIONS_DONE } from '@/lib/data'
+import { compatibleTargetsFor, contractorAffinityBonus, contractorUnlocked, FREE_OPS_START_MISSIONS_DONE, CONTRACTOR_AFFINITY_MISSION_THRESHOLD, MISSION_TEMPLATES, CONTRACTOR_SLOTS } from '@/lib/data'
 import type { DailyContractorPool } from '@/lib/data'
 import type { Catalog } from '@/lib/catalog'
 import { TUTORIAL_CONTENT_TOP } from '@/lib/tutorial-layout'
@@ -210,6 +210,80 @@ export default function MissionBoardScreen({ onBack, onPick, missionsDone, freeO
           })
         })()}
         </div>
+
+        {freeOperations && <AffinityAdvancedSection contractors={catalog.contractors} contractorMissions={contractorMissions} />}
+      </div>
+    </div>
+  )
+}
+
+const ADVANCED_ROLES = new Set(
+  MISSION_TEMPLATES
+    .filter(t => t.tag === 'CONSTRUCT' || t.tag === 'SCAN')
+    .map(t => t.contractorRole)
+)
+
+const SLOT_ROLE_MAP = new Map(CONTRACTOR_SLOTS.map(s => [s.id, s.uiRole]))
+
+function AffinityAdvancedSection({
+  contractors,
+  contractorMissions,
+}: {
+  contractors: Catalog['contractors']
+  contractorMissions?: Record<string, number>
+}) {
+  const advancedContractors = Object.values(contractors).filter(c => {
+    const role = SLOT_ROLE_MAP.get(c.id)
+    return role !== undefined && ADVANCED_ROLES.has(role)
+  })
+  if (advancedContractors.length === 0) return null
+
+  return (
+    <div style={{ padding: '0 14px', marginTop: 24, marginBottom: 16 }}>
+      <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 9, fontWeight: 700, letterSpacing: '0.22em', color: '#6b7fa3', textTransform: 'uppercase', marginBottom: 8 }}>
+        Advanced Ops · Affinity Unlock
+      </div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+        {advancedContractors.map(contractor => {
+          const done = contractorMissions?.[contractor.id] ?? 0
+          const unlocked = done >= CONTRACTOR_AFFINITY_MISSION_THRESHOLD
+          const pct = Math.min(100, (done / CONTRACTOR_AFFINITY_MISSION_THRESHOLD) * 100)
+          const contractorRole = SLOT_ROLE_MAP.get(contractor.id) ?? ''
+          const advancedTags = MISSION_TEMPLATES
+            .filter(t => t.contractorRole === contractorRole && (t.tag === 'CONSTRUCT' || t.tag === 'SCAN'))
+            .map(t => t.tag)
+          const uniqueTags = [...new Set(advancedTags)]
+
+          return (
+            <Panel key={contractor.id} accent={unlocked ? 'var(--ln-ok)' : contractor.color} style={{ padding: 12 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <div style={{ width: 36, height: 36, borderRadius: 999, background: `${contractor.color}22`, border: `1.5px solid ${contractor.color}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'var(--ln-font-display)', fontWeight: 800, fontSize: 12, color: contractor.color, flexShrink: 0 }}>
+                  {contractor.initial}
+                </div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <span style={{ fontFamily: 'var(--ln-font-display)', fontSize: 10, fontWeight: 700, color: contractor.color, textTransform: 'uppercase', letterSpacing: '0.15em' }}>{contractor.name}</span>
+                    <span style={{ flex: 1 }} />
+                    <StatusPill kind={unlocked ? 'ok' : 'mute'}>{unlocked ? 'UNLOCKED' : `${done}/${CONTRACTOR_AFFINITY_MISSION_THRESHOLD}`}</StatusPill>
+                  </div>
+                  <div style={{ fontFamily: 'var(--ln-font-mono)', fontSize: 9, color: '#6b7fa3', letterSpacing: '0.1em', textTransform: 'uppercase', marginTop: 2 }}>
+                    {uniqueTags.join(' · ')} MISSIONS AVAILABLE AT {CONTRACTOR_AFFINITY_MISSION_THRESHOLD} OPS
+                  </div>
+                </div>
+              </div>
+              {!unlocked && (
+                <div style={{ marginTop: 8 }}>
+                  <div style={{ height: 4, background: `${contractor.color}22`, borderRadius: 2, overflow: 'hidden' }}>
+                    <div style={{ height: '100%', width: `${pct}%`, background: contractor.color, borderRadius: 2, transition: 'width 0.4s ease' }} />
+                  </div>
+                  <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 9, color: '#6b7fa3', marginTop: 4, letterSpacing: '0.12em' }}>
+                    {CONTRACTOR_AFFINITY_MISSION_THRESHOLD - done} more operation{CONTRACTOR_AFFINITY_MISSION_THRESHOLD - done !== 1 ? 's' : ''} to unlock advanced contracts
+                  </div>
+                </div>
+              )}
+            </Panel>
+          )
+        })}
       </div>
     </div>
   )

@@ -5,6 +5,7 @@ import type { Contractor, ContractorSlot } from './types'
 export const CONTRACTOR_COOLDOWN_MS = 30 * 60 * 1000
 export const CONTRACTOR_STREAK_LIMIT = 2
 export const MAX_AFFINITY_BONUS = 0.15
+export const CONTRACTOR_AFFINITY_MISSION_THRESHOLD = 5
 
 export const CONTRACTOR_SLOTS: ContractorSlot[] = [
   {
