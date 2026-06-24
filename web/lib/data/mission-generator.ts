@@ -1,4 +1,4 @@
-import type { ContractorSlot, MineralMeta, Mission, MissionTemplate } from './types'
+import type { ContractorSlot, MineralMeta, Mission, MissionTemplate, MissionConstructionPlan } from './types'
 
 export const FREE_OPS_START_MISSIONS_DONE = 3
 export const ONBOARDING_SEQUENCE_COUNT = 2
@@ -40,6 +40,10 @@ export interface PocketBaseMissionTemplateSeed {
   unlocks_landing?: boolean
   on_world_vehicle?: string
   on_world_any_target?: boolean
+  construction_structure_kind?: string
+  construction_required_materials?: Record<string, number>
+  construction_placement_mode?: string
+  construction_build_time_ms?: number
 }
 
 export interface PocketBaseMissionSeed {
@@ -82,6 +86,27 @@ const STARTER_ROVER_SURVEY = {
   anyTargetType: true,
 } satisfies MissionTemplate['survey']
 
+const FUEL_DEPOT_CONSTRUCTION: MissionConstructionPlan = {
+  structureKind: 'fuel-depot',
+  requiredMaterials: { hydrogen: 8, aluminium: 6 },
+  placementMode: 'confirm',
+  buildTimeMs: 20 * 60 * 1000,
+} satisfies MissionConstructionPlan
+
+const BATTERY_STATION_CONSTRUCTION: MissionConstructionPlan = {
+  structureKind: 'battery-station',
+  requiredMaterials: { cobalt: 6, nickel: 4, copper: 4 },
+  placementMode: 'confirm',
+  buildTimeMs: 25 * 60 * 1000,
+} satisfies MissionConstructionPlan
+
+const FABRICATION_PAD_CONSTRUCTION: MissionConstructionPlan = {
+  structureKind: 'fabrication-pad',
+  requiredMaterials: { iron: 12, silicon: 6, aluminium: 4 },
+  placementMode: 'confirm',
+  buildTimeMs: 35 * 60 * 1000,
+} satisfies MissionConstructionPlan
+
 export const DEFAULT_MISSION_TEMPLATES: MissionTemplate[] = [
   { id: 'starter-bulk', tag: 'STARTER', difficulty: 'L1', mineralKeys: ['iron', 'silicon', 'carbon'], cargoRange: [4, 8], drillTierMin: 1, orbitMax: 4, payoutMultiplier: 1.0, contractorRole: 'starter', payoutFormula: 'mineral price * amount * 1500 * multiplier' },
   { id: 'volatile-bulk', tag: 'BULK', difficulty: 'L2', mineralKeys: ['ice', 'carbon', 'silicon'], cargoRange: [8, 14], drillTierMin: 1, orbitMax: 5, payoutMultiplier: 1.35, contractorRole: 'bulk', payoutFormula: 'mineral price * amount * 1500 * multiplier' },
@@ -92,6 +117,9 @@ export const DEFAULT_MISSION_TEMPLATES: MissionTemplate[] = [
   { id: 'freeops-bulk-run', tag: 'BULK', difficulty: 'L1', mineralKeys: ['hydrogen', 'aluminium', 'copper'], cargoRange: [8, 16], drillTierMin: 1, orbitMax: 5, payoutMultiplier: 1.15, contractorRole: 'bulk', payoutFormula: 'mineral price * amount * 1500 * multiplier' },
   { id: 'freeops-station-scan', tag: 'SCAN', difficulty: 'L1', mineralKeys: ['cobalt', 'copper', 'aluminium', 'gold'], cargoRange: [0, 0], drillTierMin: 1, orbitMax: 5, payoutMultiplier: 0.85, contractorRole: 'prospect', payoutFormula: 'scan fee + mapped deposit bonus', survey: SCANNING_STATION_SURVEY },
   { id: 'freeops-rover-landing', tag: 'ROVER', difficulty: 'L1', mineralKeys: ['cobalt', 'copper', 'aluminium', 'hydrogen'], cargoRange: [2, 5], drillTierMin: 1, orbitMax: 5, payoutMultiplier: 1.7, contractorRole: 'starter', payoutFormula: 'mineral price * amount * 1500 * multiplier + landing bonus', survey: STARTER_ROVER_SURVEY },
+  { id: 'construct-fuel-depot', tag: 'CONSTRUCT', difficulty: 'L2', mineralKeys: ['hydrogen', 'aluminium', 'copper'], cargoRange: [8, 14], drillTierMin: 1, orbitMax: 5, payoutMultiplier: 2.8, contractorRole: 'prospect', payoutFormula: 'structure value * 2 + delivery bonus', construction: FUEL_DEPOT_CONSTRUCTION },
+  { id: 'construct-battery-station', tag: 'CONSTRUCT', difficulty: 'L2', mineralKeys: ['cobalt', 'nickel', 'copper', 'gold'], cargoRange: [8, 14], drillTierMin: 2, orbitMax: 6, payoutMultiplier: 3.2, contractorRole: 'command', payoutFormula: 'structure value * 2 + delivery bonus', construction: BATTERY_STATION_CONSTRUCTION },
+  { id: 'construct-fabrication-pad', tag: 'CONSTRUCT', difficulty: 'L3', mineralKeys: ['iron', 'silicon', 'aluminium', 'carbon'], cargoRange: [10, 18], drillTierMin: 2, orbitMax: 6, payoutMultiplier: 3.6, contractorRole: 'bulk', payoutFormula: 'structure value * 2 + delivery bonus', construction: FABRICATION_PAD_CONSTRUCTION },
 ]
 
 export const DEFAULT_COMPLEXITY_BANDS: MissionComplexity[] = [
@@ -262,6 +290,10 @@ export function missionTemplatesToPocketBaseRows(templates = DEFAULT_MISSION_TEM
     unlocks_landing: template.survey?.unlocksLanding,
     on_world_vehicle: template.survey?.onWorldVehicle,
     on_world_any_target: template.survey?.anyTargetType,
+    construction_structure_kind: template.construction?.structureKind,
+    construction_required_materials: template.construction?.requiredMaterials,
+    construction_placement_mode: template.construction?.placementMode,
+    construction_build_time_ms: template.construction?.buildTimeMs,
   }))
 }
 

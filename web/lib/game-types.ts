@@ -72,6 +72,7 @@ export interface Player {
   scanDate?: string
   activeScan?: { targetId: string; completesAt: number } | null
   targetScanCounts?: Record<string, number>
+  contractorStructures?: import('@/lib/data').ContractorStructureRecord[]
 }
 
 export interface GameState {

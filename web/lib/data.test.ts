@@ -31,6 +31,8 @@ import {
   SCANS_PER_DAY,
   SCAN_DURATION_MS,
   SCANS_REQUIRED_TO_MAP,
+  TARGET_STRUCTURES,
+  findTargetStructure,
   generateFreeOpsMissions,
   getShipInteriorLayout,
   hasShipCustomizer,
@@ -487,6 +489,44 @@ describe('seed bible v0 catalog', () => {
     expect(m3?.targetId).toBe('lutetia')
     expect(m3?.payload?.type).toBe('rover')
     expect(TARGETS.some(t => t.id === m3?.targetId)).toBe(true)
+  })
+})
+
+describe('Construction mission templates and target structure blueprints', () => {
+  it('defines three Sprint 6 construction templates (fuel-depot, battery-station, fabrication-pad)', () => {
+    const constructTemplates = MISSION_TEMPLATES.filter(t => t.tag === 'CONSTRUCT')
+    expect(constructTemplates.map(t => t.id)).toEqual(
+      expect.arrayContaining(['construct-fuel-depot', 'construct-battery-station', 'construct-fabrication-pad'])
+    )
+  })
+
+  it('construction templates carry a construction plan with structureKind, materials, and buildTimeMs', () => {
+    const fuelDepot = MISSION_TEMPLATES.find(t => t.id === 'construct-fuel-depot')
+    expect(fuelDepot?.construction).toMatchObject({
+      structureKind: 'fuel-depot',
+      placementMode: 'confirm',
+      buildTimeMs: 20 * 60 * 1000,
+    })
+    expect(fuelDepot?.construction?.requiredMaterials).toMatchObject({ hydrogen: 8, aluminium: 6 })
+  })
+
+  it('TARGET_STRUCTURES covers all three contractor archetypes', () => {
+    const roles = TARGET_STRUCTURES.map(s => s.contractorRole)
+    expect(roles).toEqual(expect.arrayContaining(['prospect', 'command', 'bulk']))
+  })
+
+  it('TARGET_STRUCTURES entries have required fields and valid build times', () => {
+    for (const s of TARGET_STRUCTURES) {
+      expect(s.id).toBeTruthy()
+      expect(s.buildTimeMs).toBeGreaterThan(0)
+      expect(Object.keys(s.requiredMaterials).length).toBeGreaterThan(0)
+    }
+  })
+
+  it('findTargetStructure resolves a known structure kind', () => {
+    const depot = findTargetStructure('fuel-depot')
+    expect(depot?.name).toBe('Fuel Depot')
+    expect(findTargetStructure('nonexistent')).toBeUndefined()
   })
 })
 

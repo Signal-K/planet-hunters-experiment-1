@@ -18,6 +18,35 @@ export interface MissionSurveyPlan {
   anyTargetType?: boolean
 }
 
+export type ConstructionPlacementMode = 'confirm' | 'grid' | 'free'
+
+export interface MissionConstructionPlan {
+  structureKind: string
+  requiredMaterials: Record<string, number>
+  placementMode: ConstructionPlacementMode
+  buildTimeMs: number
+}
+
+export type TargetStructureState = 'delivered' | 'under-construction' | 'operational'
+
+export interface TargetStructureBlueprint {
+  id: string
+  name: string
+  kind: string
+  contractorRole: string
+  requiredMaterials: Record<string, number>
+  buildTimeMs: number
+  description: string
+}
+
+export interface ContractorStructureRecord {
+  targetId: string
+  structureKind: string
+  contractorId: string
+  state: TargetStructureState
+  startedAt?: number
+}
+
 export interface Mission {
   id: string
   title: string
@@ -31,6 +60,7 @@ export interface Mission {
   targetId?: string
   payload?: MissionPayload
   survey?: MissionSurveyPlan
+  construction?: MissionConstructionPlan
   requires: {
     minerals: Record<string, number>
     cargo_min: number
@@ -139,6 +169,7 @@ export interface MissionTemplate {
   contractorRole: ContractorSlot['uiRole']
   payoutFormula: string
   survey?: MissionSurveyPlan
+  construction?: MissionConstructionPlan
 }
 
 export interface RefineryRecipe {

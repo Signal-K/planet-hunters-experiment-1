@@ -158,6 +158,10 @@ migrate((app) => {
         { type: 'bool',   name: 'unlocks_landing' },
         { type: 'select', name: 'on_world_vehicle',   maxSelect: 1, values: ['starter-rover'] },
         { type: 'bool',   name: 'on_world_any_target' },
+        { type: 'text',   name: 'construction_structure_kind', max: 60 },
+        { type: 'json',   name: 'construction_required_materials', maxSize: 1000 },
+        { type: 'select', name: 'construction_placement_mode', maxSelect: 1, values: ['confirm', 'grid', 'free'] },
+        { type: 'number', name: 'construction_build_time_ms' },
       ],
       indexes: ['CREATE UNIQUE INDEX idx_mission_templates_slug ON mission_templates (slug)'],
     }))
