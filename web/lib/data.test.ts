@@ -427,6 +427,8 @@ describe('seed bible v0 catalog', () => {
       'freeops-delivery',
       'freeops-mining-survey',
       'freeops-bulk-run',
+      'freeops-station-scan',
+      'freeops-rover-landing',
     ]))
     // Generated missions must map to a known template tag
     expect(generated.every(m => MISSION_TEMPLATES.some(t => t.tag === m.tag))).toBe(true)
@@ -436,6 +438,27 @@ describe('seed bible v0 catalog', () => {
       const contractor = CONTRACTOR_SLOTS.find(c => c.id === m.contractor)
       return contractor && contractor.unlockTier <= m.sequence
     })).toBe(true)
+  })
+
+  it('defines Sprint 6 survey templates for station scans and starter rover landing', () => {
+    const stationScan = MISSION_TEMPLATES.find(t => t.id === 'freeops-station-scan')
+    expect(stationScan?.survey).toMatchObject({
+      scanRequired: true,
+      scanCount: 3,
+      scanSource: 'station',
+      depositsToMap: 2,
+      revealsMinerals: true,
+      unlocksLanding: true,
+    })
+
+    const roverLanding = MISSION_TEMPLATES.find(t => t.id === 'freeops-rover-landing')
+    expect(roverLanding?.survey).toMatchObject({
+      scanRequired: true,
+      scanSource: 'rover',
+      onWorldVehicle: 'starter-rover',
+      anyTargetType: true,
+      unlocksLanding: true,
+    })
   })
 
   it('generates 0-2 Free Ops missions per starting contractor after M3', () => {

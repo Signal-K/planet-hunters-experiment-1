@@ -32,12 +32,14 @@ migrate((app) => {
     { slug: 'freeops-delivery', tag: 'DELIVERY', difficulty: 'L1', mineral_keys: JSON.stringify(['hydrogen', 'cobalt', 'copper', 'aluminium']), cargo_min: 4, cargo_max: 10, drill_tier_min: 1, orbit_max: 5, payout_multiplier: 1.25, contractor_role: 'starter', payout_formula: 'mineral price * amount * 1500 * multiplier' },
     { slug: 'freeops-mining-survey', tag: 'SURVEY', difficulty: 'L1', mineral_keys: JSON.stringify(['cobalt', 'copper', 'aluminium', 'gold']), cargo_min: 3, cargo_max: 7, drill_tier_min: 1, orbit_max: 5, payout_multiplier: 1.55, contractor_role: 'prospect', payout_formula: 'mineral price * amount * 1500 * multiplier' },
     { slug: 'freeops-bulk-run', tag: 'BULK', difficulty: 'L1', mineral_keys: JSON.stringify(['hydrogen', 'aluminium', 'copper']), cargo_min: 8, cargo_max: 16, drill_tier_min: 1, orbit_max: 5, payout_multiplier: 1.15, contractor_role: 'bulk', payout_formula: 'mineral price * amount * 1500 * multiplier' },
+    { slug: 'freeops-station-scan', tag: 'SCAN', difficulty: 'L1', mineral_keys: JSON.stringify(['cobalt', 'copper', 'aluminium', 'gold']), cargo_min: 0, cargo_max: 0, drill_tier_min: 1, orbit_max: 5, payout_multiplier: 0.85, contractor_role: 'prospect', payout_formula: 'scan fee + mapped deposit bonus', scan_required: true, scan_count: 3, scan_source: 'station', deposits_to_map: 2, reveals_minerals: true, reveals_landmarks: JSON.stringify(['crater field', 'high-albedo ridge']), unlocks_landing: true, on_world_any_target: false },
+    { slug: 'freeops-rover-landing', tag: 'ROVER', difficulty: 'L1', mineral_keys: JSON.stringify(['cobalt', 'copper', 'aluminium', 'hydrogen']), cargo_min: 2, cargo_max: 5, drill_tier_min: 1, orbit_max: 5, payout_multiplier: 1.7, contractor_role: 'starter', payout_formula: 'mineral price * amount * 1500 * multiplier + landing bonus', scan_required: true, scan_count: 1, scan_source: 'rover', deposits_to_map: 1, reveals_minerals: true, reveals_landmarks: JSON.stringify(['surface deposit']), unlocks_landing: true, on_world_vehicle: 'starter-rover', on_world_any_target: true },
   ])
 }, (app) => {
   const slugs = {
     minerals: ['copper', 'aluminium', 'hydrogen', 'uranium'],
     contractors: ['helios-propulsion-depot', 'arcturus-battery-systems', 'ferrum-orbital-construction'],
-    mission_templates: ['freeops-delivery', 'freeops-mining-survey', 'freeops-bulk-run'],
+    mission_templates: ['freeops-delivery', 'freeops-mining-survey', 'freeops-bulk-run', 'freeops-station-scan', 'freeops-rover-landing'],
   }
   for (const [col, list] of Object.entries(slugs)) {
     const inList = list.map(s => `'${s}'`).join(',')

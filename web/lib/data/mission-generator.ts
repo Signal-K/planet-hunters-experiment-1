@@ -31,6 +31,15 @@ export interface PocketBaseMissionTemplateSeed {
   payout_multiplier: number
   contractor_role: string
   payout_formula: string
+  scan_required?: boolean
+  scan_count?: number
+  scan_source?: string
+  deposits_to_map?: number
+  reveals_minerals?: boolean
+  reveals_landmarks?: string[]
+  unlocks_landing?: boolean
+  on_world_vehicle?: string
+  on_world_any_target?: boolean
 }
 
 export interface PocketBaseMissionSeed {
@@ -51,6 +60,28 @@ export interface PocketBaseMissionSeed {
   payout_affinity: number
 }
 
+const SCANNING_STATION_SURVEY = {
+  scanRequired: true,
+  scanCount: 3,
+  scanSource: 'station',
+  depositsToMap: 2,
+  revealsMinerals: true,
+  revealsLandmarks: ['crater field', 'high-albedo ridge'],
+  unlocksLanding: true,
+} satisfies MissionTemplate['survey']
+
+const STARTER_ROVER_SURVEY = {
+  scanRequired: true,
+  scanCount: 1,
+  scanSource: 'rover',
+  depositsToMap: 1,
+  revealsMinerals: true,
+  revealsLandmarks: ['surface deposit'],
+  unlocksLanding: true,
+  onWorldVehicle: 'starter-rover',
+  anyTargetType: true,
+} satisfies MissionTemplate['survey']
+
 export const DEFAULT_MISSION_TEMPLATES: MissionTemplate[] = [
   { id: 'starter-bulk', tag: 'STARTER', difficulty: 'L1', mineralKeys: ['iron', 'silicon', 'carbon'], cargoRange: [4, 8], drillTierMin: 1, orbitMax: 4, payoutMultiplier: 1.0, contractorRole: 'starter', payoutFormula: 'mineral price * amount * 1500 * multiplier' },
   { id: 'volatile-bulk', tag: 'BULK', difficulty: 'L2', mineralKeys: ['ice', 'carbon', 'silicon'], cargoRange: [8, 14], drillTierMin: 1, orbitMax: 5, payoutMultiplier: 1.35, contractorRole: 'bulk', payoutFormula: 'mineral price * amount * 1500 * multiplier' },
@@ -59,6 +90,8 @@ export const DEFAULT_MISSION_TEMPLATES: MissionTemplate[] = [
   { id: 'freeops-delivery', tag: 'DELIVERY', difficulty: 'L1', mineralKeys: ['hydrogen', 'cobalt', 'copper', 'aluminium'], cargoRange: [4, 10], drillTierMin: 1, orbitMax: 5, payoutMultiplier: 1.25, contractorRole: 'starter', payoutFormula: 'mineral price * amount * 1500 * multiplier' },
   { id: 'freeops-mining-survey', tag: 'SURVEY', difficulty: 'L1', mineralKeys: ['cobalt', 'copper', 'aluminium', 'gold'], cargoRange: [3, 7], drillTierMin: 1, orbitMax: 5, payoutMultiplier: 1.55, contractorRole: 'prospect', payoutFormula: 'mineral price * amount * 1500 * multiplier' },
   { id: 'freeops-bulk-run', tag: 'BULK', difficulty: 'L1', mineralKeys: ['hydrogen', 'aluminium', 'copper'], cargoRange: [8, 16], drillTierMin: 1, orbitMax: 5, payoutMultiplier: 1.15, contractorRole: 'bulk', payoutFormula: 'mineral price * amount * 1500 * multiplier' },
+  { id: 'freeops-station-scan', tag: 'SCAN', difficulty: 'L1', mineralKeys: ['cobalt', 'copper', 'aluminium', 'gold'], cargoRange: [0, 0], drillTierMin: 1, orbitMax: 5, payoutMultiplier: 0.85, contractorRole: 'prospect', payoutFormula: 'scan fee + mapped deposit bonus', survey: SCANNING_STATION_SURVEY },
+  { id: 'freeops-rover-landing', tag: 'ROVER', difficulty: 'L1', mineralKeys: ['cobalt', 'copper', 'aluminium', 'hydrogen'], cargoRange: [2, 5], drillTierMin: 1, orbitMax: 5, payoutMultiplier: 1.7, contractorRole: 'starter', payoutFormula: 'mineral price * amount * 1500 * multiplier + landing bonus', survey: STARTER_ROVER_SURVEY },
 ]
 
 export const DEFAULT_COMPLEXITY_BANDS: MissionComplexity[] = [
@@ -153,6 +186,7 @@ export function generateMissionsFromRules(input: MissionGeneratorInput, count = 
         francs: Math.round(francs),
         affinity: Math.max(4, Math.round(6 + band.sequence * 2 + cargoMin / 3)),
       },
+      survey: template.survey,
     }
   })
 }
@@ -170,13 +204,20 @@ export function generateFreeOpsMissionsFromRules(input: MissionGeneratorInput): 
     return matchingTemplates.map((template, templateIndex) => {
       const mineral = template.mineralKeys.find(key => contractor.mineralPreferences.includes(key))
         ?? template.mineralKeys[(contractorIndex + templateIndex) % template.mineralKeys.length]
-      const amount = template.cargoRange[0] + contractorIndex + templateIndex
+      const scanOnly = template.cargoRange[0] === 0 && template.cargoRange[1] === 0
+      const amount = scanOnly ? 0 : template.cargoRange[0] + contractorIndex + templateIndex
       const mineralName = input.minerals[mineral]?.name ?? mineral
-      const francs = (input.minerals[mineral]?.price ?? 0) * amount * 1500 * template.payoutMultiplier * payoutMultiplier(contractor)
+      const francs = scanOnly
+        ? 250_000 * template.payoutMultiplier * payoutMultiplier(contractor)
+        : (input.minerals[mineral]?.price ?? 0) * amount * 1500 * template.payoutMultiplier * payoutMultiplier(contractor)
       return {
         id: `freeops-${contractor.id}-${template.id}-${templateIndex + 1}`,
-        title: `${mineralName} ${template.tag.toLowerCase()} contract`,
-        brief: `${contractor.name} needs ${amount} units of ${mineralName.toLowerCase()} delivered from a reachable asteroid. ${contractor.projectType}.`,
+        title: scanOnly
+          ? `${contractor.name} target mapping scan`
+          : `${mineralName} ${template.tag.toLowerCase()} contract`,
+        brief: scanOnly
+          ? `${contractor.name} needs a reachable target mapped before landing crews commit. Run station scans to reveal minerals, deposits, and landmarks.`
+          : `${contractor.name} needs ${amount} units of ${mineralName.toLowerCase()} delivered from a reachable asteroid. ${contractor.projectType}.`,
         contractor: contractor.id,
         tag: template.tag,
         difficulty: template.difficulty,
@@ -184,7 +225,7 @@ export function generateFreeOpsMissionsFromRules(input: MissionGeneratorInput): 
         sequence: FREE_OPS_START_MISSIONS_DONE + 1,
         unlockAt: 'Complete M3',
         requires: {
-          minerals: { [mineral]: amount },
+          minerals: scanOnly ? {} : { [mineral]: amount },
           cargo_min: amount,
           drill_tier: template.drillTierMin,
           max_orbit: template.orbitMax,
@@ -193,6 +234,7 @@ export function generateFreeOpsMissionsFromRules(input: MissionGeneratorInput): 
           francs: Math.round(francs),
           affinity: Math.max(5, Math.round(8 + amount / 2)),
         },
+        survey: template.survey,
       } satisfies Mission
     })
   })
@@ -211,6 +253,15 @@ export function missionTemplatesToPocketBaseRows(templates = DEFAULT_MISSION_TEM
     payout_multiplier: template.payoutMultiplier,
     contractor_role: template.contractorRole,
     payout_formula: template.payoutFormula,
+    scan_required: template.survey?.scanRequired,
+    scan_count: template.survey?.scanCount,
+    scan_source: template.survey?.scanSource,
+    deposits_to_map: template.survey?.depositsToMap,
+    reveals_minerals: template.survey?.revealsMinerals,
+    reveals_landmarks: template.survey?.revealsLandmarks,
+    unlocks_landing: template.survey?.unlocksLanding,
+    on_world_vehicle: template.survey?.onWorldVehicle,
+    on_world_any_target: template.survey?.anyTargetType,
   }))
 }
 

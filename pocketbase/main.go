@@ -224,6 +224,15 @@ func ensureCollections(app core.App) {
 		col.Fields.Add(&core.NumberField{Name: "payout_multiplier"})
 		col.Fields.Add(&core.TextField{Name: "contractor_role", Max: 40})
 		col.Fields.Add(&core.TextField{Name: "payout_formula", Max: 300})
+		col.Fields.Add(&core.BoolField{Name: "scan_required"})
+		col.Fields.Add(&core.NumberField{Name: "scan_count"})
+		col.Fields.Add(&core.SelectField{Name: "scan_source", MaxSelect: 1, Values: []string{"station", "satellite", "rover"}})
+		col.Fields.Add(&core.NumberField{Name: "deposits_to_map"})
+		col.Fields.Add(&core.BoolField{Name: "reveals_minerals"})
+		col.Fields.Add(&core.JSONField{Name: "reveals_landmarks", MaxSize: 1000})
+		col.Fields.Add(&core.BoolField{Name: "unlocks_landing"})
+		col.Fields.Add(&core.SelectField{Name: "on_world_vehicle", MaxSelect: 1, Values: []string{"starter-rover"}})
+		col.Fields.Add(&core.BoolField{Name: "on_world_any_target"})
 		col.Indexes = []string{"CREATE UNIQUE INDEX idx_mission_templates_slug ON mission_templates (slug)"}
 		if err := app.Save(col); err != nil {
 			log.Printf("failed to save mission_templates: %v", err)
@@ -396,6 +405,22 @@ func ensureCatalogFields(app core.App) {
 			log.Printf("failed to update missions_catalog schema: %v", err)
 		}
 	}
+
+	missionTemplates, err := app.FindCollectionByNameOrId("mission_templates")
+	if err == nil {
+		addBoolIfMissing(missionTemplates, "scan_required", false)
+		addNumberIfMissing(missionTemplates, "scan_count", false)
+		addSelectIfMissing(missionTemplates, "scan_source", []string{"station", "satellite", "rover"}, false)
+		addNumberIfMissing(missionTemplates, "deposits_to_map", false)
+		addBoolIfMissing(missionTemplates, "reveals_minerals", false)
+		addJSONIfMissing(missionTemplates, "reveals_landmarks", false)
+		addBoolIfMissing(missionTemplates, "unlocks_landing", false)
+		addSelectIfMissing(missionTemplates, "on_world_vehicle", []string{"starter-rover"}, false)
+		addBoolIfMissing(missionTemplates, "on_world_any_target", false)
+		if err := app.Save(missionTemplates); err != nil {
+			log.Printf("failed to update mission_templates schema: %v", err)
+		}
+	}
 }
 
 func addTextIfMissing(collection *core.Collection, name string, required bool) {
@@ -413,6 +438,12 @@ func addNumberIfMissing(collection *core.Collection, name string, required bool)
 func addJSONIfMissing(collection *core.Collection, name string, required bool) {
 	if collection.Fields.GetByName(name) == nil {
 		collection.Fields.Add(&core.JSONField{Name: name, Required: required})
+	}
+}
+
+func addBoolIfMissing(collection *core.Collection, name string, required bool) {
+	if collection.Fields.GetByName(name) == nil {
+		collection.Fields.Add(&core.BoolField{Name: name, Required: required})
 	}
 }
 
@@ -585,29 +616,50 @@ func seedCatalog(app core.App) {
 		mineralKeys                                    []string
 		cargoMin, cargoMax, drillTier, orbitMax        float64
 		payoutMultiplier                               float64
+		scanRequired, revealsMinerals                  bool
+		scanCount, depositsToMap                       float64
+		scanSource, onWorldVehicle                     string
+		revealsLandmarks                               []string
+		unlocksLanding, onWorldAnyTarget               bool
 	}
 	templates := []struct {
 		slug string
 		missionTemplate
 	}{
-		{"starter-bulk", missionTemplate{"STARTER", "L1", "starter", "mineral_base_price * amount * 1600 * multiplier", []string{"iron", "silicon", "carbon"}, 4, 8, 1, 4, 1.0}},
-		{"volatile-bulk", missionTemplate{"BULK", "L2", "bulk", "mineral_base_price * amount * 1450 * multiplier", []string{"ice", "carbon", "silicon"}, 8, 14, 1, 5, 1.35}},
-		{"metal-prospect", missionTemplate{"PROSPECT", "L2", "prospect", "mineral_base_price * amount * 1350 * multiplier", []string{"nickel", "cobalt", "gold"}, 3, 8, 2, 5, 2.25}},
-		{"command-reserve", missionTemplate{"COMMAND", "L3", "command", "mineral_base_price * amount * 1300 * multiplier", []string{"gold", "rare", "cobalt"}, 3, 6, 2, 6, 3.5}},
-		{"freeops-delivery", missionTemplate{"DELIVERY", "L1", "starter", "mineral_base_price * amount * 1500 * multiplier", []string{"hydrogen", "cobalt", "copper", "aluminium"}, 4, 10, 1, 5, 1.25}},
-		{"freeops-mining-survey", missionTemplate{"SURVEY", "L1", "prospect", "mineral_base_price * amount * 1500 * multiplier", []string{"cobalt", "copper", "aluminium", "gold"}, 3, 7, 1, 5, 1.55}},
-		{"freeops-bulk-run", missionTemplate{"BULK", "L1", "bulk", "mineral_base_price * amount * 1500 * multiplier", []string{"hydrogen", "aluminium", "copper"}, 8, 16, 1, 5, 1.15}},
+		{"starter-bulk", missionTemplate{tag: "STARTER", difficulty: "L1", contractorRole: "starter", payoutFormula: "mineral_base_price * amount * 1600 * multiplier", mineralKeys: []string{"iron", "silicon", "carbon"}, cargoMin: 4, cargoMax: 8, drillTier: 1, orbitMax: 4, payoutMultiplier: 1.0}},
+		{"volatile-bulk", missionTemplate{tag: "BULK", difficulty: "L2", contractorRole: "bulk", payoutFormula: "mineral_base_price * amount * 1450 * multiplier", mineralKeys: []string{"ice", "carbon", "silicon"}, cargoMin: 8, cargoMax: 14, drillTier: 1, orbitMax: 5, payoutMultiplier: 1.35}},
+		{"metal-prospect", missionTemplate{tag: "PROSPECT", difficulty: "L2", contractorRole: "prospect", payoutFormula: "mineral_base_price * amount * 1350 * multiplier", mineralKeys: []string{"nickel", "cobalt", "gold"}, cargoMin: 3, cargoMax: 8, drillTier: 2, orbitMax: 5, payoutMultiplier: 2.25}},
+		{"command-reserve", missionTemplate{tag: "COMMAND", difficulty: "L3", contractorRole: "command", payoutFormula: "mineral_base_price * amount * 1300 * multiplier", mineralKeys: []string{"gold", "rare", "cobalt"}, cargoMin: 3, cargoMax: 6, drillTier: 2, orbitMax: 6, payoutMultiplier: 3.5}},
+		{"freeops-delivery", missionTemplate{tag: "DELIVERY", difficulty: "L1", contractorRole: "starter", payoutFormula: "mineral_base_price * amount * 1500 * multiplier", mineralKeys: []string{"hydrogen", "cobalt", "copper", "aluminium"}, cargoMin: 4, cargoMax: 10, drillTier: 1, orbitMax: 5, payoutMultiplier: 1.25}},
+		{"freeops-mining-survey", missionTemplate{tag: "SURVEY", difficulty: "L1", contractorRole: "prospect", payoutFormula: "mineral_base_price * amount * 1500 * multiplier", mineralKeys: []string{"cobalt", "copper", "aluminium", "gold"}, cargoMin: 3, cargoMax: 7, drillTier: 1, orbitMax: 5, payoutMultiplier: 1.55}},
+		{"freeops-bulk-run", missionTemplate{tag: "BULK", difficulty: "L1", contractorRole: "bulk", payoutFormula: "mineral_base_price * amount * 1500 * multiplier", mineralKeys: []string{"hydrogen", "aluminium", "copper"}, cargoMin: 8, cargoMax: 16, drillTier: 1, orbitMax: 5, payoutMultiplier: 1.15}},
+		{"freeops-station-scan", missionTemplate{tag: "SCAN", difficulty: "L1", contractorRole: "prospect", payoutFormula: "scan fee + mapped deposit bonus", mineralKeys: []string{"cobalt", "copper", "aluminium", "gold"}, cargoMin: 0, cargoMax: 0, drillTier: 1, orbitMax: 5, payoutMultiplier: 0.85, scanRequired: true, scanCount: 3, scanSource: "station", depositsToMap: 2, revealsMinerals: true, revealsLandmarks: []string{"crater field", "high-albedo ridge"}, unlocksLanding: true}},
+		{"freeops-rover-landing", missionTemplate{tag: "ROVER", difficulty: "L1", contractorRole: "starter", payoutFormula: "mineral_base_price * amount * 1500 * multiplier + landing bonus", mineralKeys: []string{"cobalt", "copper", "aluminium", "hydrogen"}, cargoMin: 2, cargoMax: 5, drillTier: 1, orbitMax: 5, payoutMultiplier: 1.7, scanRequired: true, scanCount: 1, scanSource: "rover", depositsToMap: 1, revealsMinerals: true, revealsLandmarks: []string{"surface deposit"}, unlocksLanding: true, onWorldVehicle: "starter-rover", onWorldAnyTarget: true}},
 	}
 	for _, t := range templates {
-		seedRecord(app, "mission_templates", t.slug, map[string]any{
+		fields := map[string]any{
 			"tag": t.tag, "difficulty": t.difficulty,
 			"mineral_keys": t.mineralKeys,
 			"cargo_min":    t.cargoMin, "cargo_max": t.cargoMax,
 			"drill_tier_min": t.drillTier, "orbit_max": t.orbitMax,
-			"payout_multiplier": t.payoutMultiplier,
-			"contractor_role":   t.contractorRole,
-			"payout_formula":    t.payoutFormula,
-		})
+			"payout_multiplier":   t.payoutMultiplier,
+			"contractor_role":     t.contractorRole,
+			"payout_formula":      t.payoutFormula,
+			"scan_required":       t.scanRequired,
+			"scan_count":          t.scanCount,
+			"deposits_to_map":     t.depositsToMap,
+			"reveals_minerals":    t.revealsMinerals,
+			"reveals_landmarks":   t.revealsLandmarks,
+			"unlocks_landing":     t.unlocksLanding,
+			"on_world_any_target": t.onWorldAnyTarget,
+		}
+		if t.scanSource != "" {
+			fields["scan_source"] = t.scanSource
+		}
+		if t.onWorldVehicle != "" {
+			fields["on_world_vehicle"] = t.onWorldVehicle
+		}
+		seedRecord(app, "mission_templates", t.slug, fields)
 	}
 
 	type skillNode struct {

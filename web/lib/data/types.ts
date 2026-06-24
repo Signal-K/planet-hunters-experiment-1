@@ -6,6 +6,18 @@ export interface MissionPayload {
   cargoCost: number
 }
 
+export interface MissionSurveyPlan {
+  scanRequired: boolean
+  scanCount: number
+  scanSource: 'station' | 'satellite' | 'rover'
+  depositsToMap: number
+  revealsMinerals: boolean
+  revealsLandmarks: string[]
+  unlocksLanding: boolean
+  onWorldVehicle?: 'starter-rover'
+  anyTargetType?: boolean
+}
+
 export interface Mission {
   id: string
   title: string
@@ -18,6 +30,7 @@ export interface Mission {
   unlockAt?: string
   targetId?: string
   payload?: MissionPayload
+  survey?: MissionSurveyPlan
   requires: {
     minerals: Record<string, number>
     cargo_min: number
@@ -125,6 +138,7 @@ export interface MissionTemplate {
   payoutMultiplier: number
   contractorRole: ContractorSlot['uiRole']
   payoutFormula: string
+  survey?: MissionSurveyPlan
 }
 
 export interface RefineryRecipe {
