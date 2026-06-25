@@ -1,0 +1,63 @@
+import { useCallback } from 'react'
+import { REFINERY_RECIPES } from '@/lib/data'
+import { applySellMinerals, applyStartRefine, applyCollectRefined, applyUpgradeLaunchpad } from '@/lib/systems/EconomySystem'
+import { applyBuildScanner, applyStartScan, applyCollectScan } from '@/lib/systems/ScanSystem'
+import { applyUnlockSkillNode, applyAcceptLoan, applyAbandonMission } from '@/lib/systems/ProgressionSystem'
+import type { Catalog } from '@/lib/catalog'
+import type { GameState } from '@/lib/game-types'
+import type { Mission } from '@/lib/data'
+
+export function useEconomyActions(
+  setState: React.Dispatch<React.SetStateAction<GameState>>,
+  getCatalogMissions: () => Mission[],
+) {
+  const sellMinerals = useCallback((mineralId: string, amount: number) => {
+    setState(s => applySellMinerals(s, mineralId, amount))
+  }, [setState])
+
+  const onStartRefine = useCallback((recipeId: string) => {
+    const recipe = REFINERY_RECIPES.find(r => r.id === recipeId)
+    if (!recipe) return
+    setState(s => applyStartRefine(s, recipe))
+  }, [setState])
+
+  const onCollectRefined = useCallback((recipeId: string) => {
+    const recipe = REFINERY_RECIPES.find(r => r.id === recipeId)
+    if (!recipe) return
+    setState(s => applyCollectRefined(s, recipe))
+  }, [setState])
+
+  const upgradeLaunchpad = useCallback(() => {
+    setState(s => applyUpgradeLaunchpad(s))
+  }, [setState])
+
+  const buildScanner = useCallback(() => {
+    setState(s => applyBuildScanner(s))
+  }, [setState])
+
+  const startScan = useCallback((targetId: string) => {
+    setState(s => applyStartScan(s, targetId))
+  }, [setState])
+
+  const collectScan = useCallback(() => {
+    setState(s => applyCollectScan(s))
+  }, [setState])
+
+  const unlockSkillNode = useCallback((id: string) => {
+    setState(s => applyUnlockSkillNode(s, id))
+  }, [setState])
+
+  const acceptLoan = useCallback(() => {
+    setState(s => applyAcceptLoan(s))
+  }, [setState])
+
+  const abandonMission = useCallback(() => {
+    if (!confirm('Abort this mission? You will lose 10% of the mission payout as a penalty.')) return
+    setState(s => applyAbandonMission(s, getCatalogMissions()))
+  }, [setState, getCatalogMissions])
+
+  return {
+    sellMinerals, onStartRefine, onCollectRefined, upgradeLaunchpad,
+    buildScanner, startScan, collectScan, unlockSkillNode, acceptLoan, abandonMission,
+  }
+}

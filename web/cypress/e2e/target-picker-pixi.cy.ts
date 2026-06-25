@@ -46,4 +46,18 @@ describe('TargetPicker Pixi galaxy map', () => {
     visitTargetPicker()
     expectPixiMapToFillAndRender()
   })
+
+  // Regression guard for h20xtc: map must expand to fill available vertical space
+  // (old fixed height was 360px on non-coach screens; flex fill gives ~520px on mobile)
+  it('map fills available height — no dead vertical space (h20xtc)', () => {
+    cy.viewport(390, 844)
+    visitTargetPicker()
+    cy.get('[data-testid="target-picker-pixi-map"]', { timeout: 10000 })
+      .should('be.visible')
+      .should($canvas => {
+        const rect = $canvas[0].getBoundingClientRect()
+        // Must be substantially taller than the old fixed 360px
+        expect(rect.height).to.be.greaterThan(400)
+      })
+  })
 })
