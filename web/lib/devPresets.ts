@@ -21,6 +21,8 @@ const BASE_PLAYER: Player = {
   contractorCooldowns: {},
   researchAnnotations: 0,
   refineryBuilt: false,
+  refineryUnlocked: false,
+  refineryUnlockNotified: false,
   refineryQueue: [],
   refinedGoods: {},
   launchpadUpgraded: false,
@@ -63,6 +65,13 @@ export const DEV_GROUPS: DevGroup[] = [
       { key: 'm2-fab',    label: 'Fab',     hint: 'Second generated mission + Eros after SR2 purchase' },
       { key: 'm2-mining', label: 'Mining',  hint: 'In mining with second generated target' },
       { key: 'm2-market', label: 'Market',  hint: 'Second mission cargo in stash, sell screen' },
+    ],
+  },
+  {
+    label: 'Systems',
+    color: '#39d36a',
+    shots: [
+      { key: 'ship-customizer', label: 'Ship Customiser', hint: 'Unlocked hangar interior view with SR1 room slots' },
     ],
   },
 ]
@@ -169,6 +178,24 @@ export function resolvePreset(name: string): Partial<GameState> | null {
         missionId: null, targetId: null,
         rocket: { chassis: 'hull-mk2', propulsion: 'fusion-b2', drill: 'laser-t2' },
         lastCargo: SECOND_MISSION.requires.minerals, popup: null,
+      }
+
+    case 'ship-customizer':
+      return {
+        screen: 'hangar',
+        player: {
+          ...BASE_PLAYER,
+          missionsDone: 1,
+          skillPoints: 0,
+          unlockedSkillNodes: ['ship-customizer-1'],
+        },
+        tutorial: false,
+        doneSteps: M1_DONE,
+        missionId: SECOND_MISSION.id,
+        targetId: 'eros',
+        rocket: { chassis: 'hull-mk1', propulsion: 'ion-a1', drill: 'hand-drill' },
+        lastCargo: null,
+        popup: null,
       }
 
     default:

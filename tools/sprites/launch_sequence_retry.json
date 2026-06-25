@@ -1,0 +1,56 @@
+[
+  {
+    "name": "launch_rocket_nose",
+    "profile": "launch_rocket_part",
+    "prompt": "SR1 rocket nose cone and payload fairing section, vertical portrait pointing upward, aerodynamic ogive nose cap, faint payload separation ring near base of cone, cyan sensor port dots on tip, amber explosive bolt markers at base ring, streamlined silhouette narrowing to a blunt rounded point, isolated fairing only no body",
+    "aspect_ratio": "2:3"
+  },
+  {
+    "name": "launch_booster_left",
+    "profile": "launch_rocket_part",
+    "prompt": "Single detachable strap-on solid rocket booster, vertical portrait orientation pointing upward, tall narrow cylinder with tapered top cap and small fins at base, visible strut attachment point on right side for mating to main hull, small engine nozzle bell at very bottom, amber hazard stripe band, cyan separation charge ring near top strut, isolated booster no main body",
+    "aspect_ratio": "2:3"
+  },
+  {
+    "name": "launch_stage_lower",
+    "profile": "launch_rocket_part",
+    "prompt": "SR1 rocket first stage lower section with engine cluster, vertical portrait pointing upward, short wide cylindrical fuel tank section, four engine nozzle bells at base arranged in square pattern, cyan propellant crossfeed pipes, orange-amber thermal shielding on engine bells, stage separation ring at very top with pyrotechnic bolt markers, isolated lower stage only no upper hull",
+    "aspect_ratio": "2:3"
+  },
+  {
+    "name": "launch_engine_bell",
+    "profile": "launch_rocket_part",
+    "prompt": "Single large main rocket engine bell and nozzle assembly pointing downward in frame, flared expanding nozzle cone with regenerative cooling channel ribs, cyan fuel injector manifold ring at top throat, amber heat discoloration at nozzle exit, gimbal mounting bracket visible at top, isolated engine bell only on black background",
+    "aspect_ratio": "1:1"
+  },
+  {
+    "name": "launch_plume_core",
+    "profile": "launch_effect",
+    "prompt": "Rocket engine exhaust plume core sprite, vertical flame column pointing downward in frame, bright blue-white intensely hot core at top narrowing to fierce cyan-white jet, chunky pixel diamond shock cells visible in the jet column, hot core fading toward lower edge, pure black background, isolated flame effect for animation layering",
+    "aspect_ratio": "2:3"
+  },
+  {
+    "name": "launch_smoke_puff",
+    "profile": "launch_effect",
+    "prompt": "Billowing rocket launch smoke cloud puff, single large chunky smoke ball, rounded lumpy silhouette, dark steel grey and blue-grey pixel shading, bright white-cyan highlight on top lobe, amber-brown tinge at dark underside, centered in square frame, isolated smoke puff for particle system instantiation",
+    "aspect_ratio": "1:1"
+  },
+  {
+    "name": "launch_bg_launchpad",
+    "profile": "launch_background",
+    "prompt": "Pixel-art rocket launch site ground scene, ultra-wide panoramic view, concrete launch pad apron with blast deflector trench running left-to-right, two steel launch support towers with service arm gantries, distant scrubland horizon under deep navy pre-dawn sky, small amber flood lights on towers, no rocket visible, ground level perspective, seamless width for parallax pan",
+    "aspect_ratio": "21:9"
+  },
+  {
+    "name": "launch_bg_clouds",
+    "profile": "launch_background",
+    "prompt": "Pixel-art cloud layer panoramic strip for parallax scrolling, wide horizontal band of stratocumulus clouds against deep blue twilight sky, chunky silhouetted cloud tops with cyan atmospheric rim lighting, darker cloud undersides, sparse cloud gaps revealing dark navy sky, no ground no horizon no rocket, seamless repeatable cloud band for vertical parallax",
+    "aspect_ratio": "21:9"
+  },
+  {
+    "name": "launch_bg_high_atmosphere",
+    "profile": "launch_background",
+    "prompt": "Pixel-art high atmosphere and upper stratosphere panoramic layer, very sparse thin cirrus cloud wisps fading out against deep blue-black sky transitioning to near-space black, subtle cyan atmospheric scattering glow at bottom edge, pure space black at top edge, faint star pixel dots appearing in upper portion, wide seamless band for rocket ascent background parallax",
+    "aspect_ratio": "21:9"
+  }
+]

@@ -20,12 +20,19 @@ describe('Guest account auto-creation', () => {
   })
 
   it('creates a guest PB account on first visit and persists credentials', () => {
+    cy.clearAllSessionStorage()
+    cy.clearAllCookies()
+
     cy.visit('/game', {
       onBeforeLoad(win) {
         win.localStorage.clear()
       },
     })
 
+    // New users see the AuthGateSheet — click "Continue without account" to trigger guest creation
+    cy.get('[data-testid="auth-gate-skip"]', { timeout: 10000 }).click()
+
+    // Wait for ensureGuestAuth to succeed: both keys must be set
     cy.window({ timeout: 15000 }).should(win => {
       expect(win.localStorage.getItem(PB_AUTH_KEY)).to.not.be.null
       expect(win.localStorage.getItem(GUEST_CREDENTIALS_KEY)).to.not.be.null
@@ -33,10 +40,9 @@ describe('Guest account auto-creation', () => {
 
     cy.window().then(win => {
       const auth = JSON.parse(win.localStorage.getItem(PB_AUTH_KEY) || '{}')
+      const creds = JSON.parse(win.localStorage.getItem(GUEST_CREDENTIALS_KEY) || '{}')
       expect(auth.token).to.be.a('string').and.not.empty
       expect(auth.record.name).to.eq('Anonymous Explorer')
-
-      const creds = JSON.parse(win.localStorage.getItem(GUEST_CREDENTIALS_KEY) || '{}')
       expect(creds.email).to.match(/^guest_.+@landnam\.guest$/)
 
       createdUserId = auth.record.id
@@ -53,6 +59,9 @@ describe('Guest account auto-creation', () => {
         win.localStorage.clear()
       },
     })
+
+    // New users see the AuthGateSheet — click "Continue without account" to trigger guest creation
+    cy.get('[data-testid="auth-gate-skip"]', { timeout: 10000 }).click()
 
     cy.window({ timeout: 15000 }).should(win => {
       expect(win.localStorage.getItem(GUEST_CREDENTIALS_KEY)).to.not.be.null

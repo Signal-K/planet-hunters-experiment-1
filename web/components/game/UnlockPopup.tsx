@@ -1,6 +1,7 @@
 'use client'
 
 import React from 'react'
+import { UI_ZONES } from '@/lib/ui-zones'
 
 type UnlockKind = 'sr2' | 'loan'
 
@@ -79,8 +80,8 @@ export default function UnlockPopup({ kind, onClose, onDismiss }: UnlockPopupPro
   const u = UNLOCKS[kind] ?? UNLOCKS.sr2
 
   return (
-    <div style={{ position: 'absolute', inset: 0, zIndex: 90, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-      <div onClick={onClose} style={{ position: 'absolute', inset: 0, background: 'rgba(3,6,12,0.8)', backdropFilter: 'blur(3px)' }} />
+    <div data-ui-zone={UI_ZONES.modalOverlay} style={{ position: 'absolute', inset: 0, zIndex: 90, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <div data-testid="unlock-popup-scrim" onClick={onDismiss ?? onClose} style={{ position: 'absolute', inset: 0, background: 'rgba(3,6,12,0.8)', backdropFilter: 'blur(3px)' }} />
       <div style={{
         position: 'relative', width: 320, maxWidth: '90%',
         background: 'linear-gradient(180deg, #0d1c30 0%, #060d18 100%)',
@@ -119,7 +120,7 @@ export default function UnlockPopup({ kind, onClose, onDismiss }: UnlockPopupPro
             ))}
           </div>
 
-          <button onClick={onClose} style={{
+          <button data-testid="unlock-popup-primary" onClick={onClose} style={{
             width: '100%', marginTop: 18, padding: '14px', borderRadius: 12, border: 'none', cursor: 'pointer',
             background: `linear-gradient(180deg, ${u.accent}, ${darkenColor(u.accent, 0.35)})`,
             color: '#04121f', fontFamily: 'var(--ln-font-display)', fontSize: 14, fontWeight: 800,
@@ -127,7 +128,7 @@ export default function UnlockPopup({ kind, onClose, onDismiss }: UnlockPopupPro
             boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.4), 0 4px 0 rgba(0,0,0,0.3)',
           }}>{u.cta}</button>
           {onDismiss && (
-            <button onClick={onDismiss} style={{
+            <button data-testid="unlock-popup-secondary" onClick={onDismiss} style={{
               width: '100%', marginTop: 8, padding: '10px', borderRadius: 10, cursor: 'pointer',
               background: 'transparent', border: '1px solid rgba(169,184,206,0.2)',
               color: 'rgba(169,184,206,0.5)', fontFamily: 'var(--ln-font-display)', fontSize: 11, fontWeight: 700,

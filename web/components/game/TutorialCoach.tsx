@@ -1,9 +1,10 @@
 'use client'
 
-import React, { useState } from 'react'
+import { useState } from 'react'
 import CoachAvatar from '@/components/layout/CoachAvatar'
 import type { TutorialStep } from '@/lib/data'
-import { TUTORIAL_RAIL } from '@/lib/tutorial-layout'
+import { reserved_rect } from '@/lib/tutorial-layout'
+import { UI_ZONES } from '@/lib/ui-zones'
 
 interface TutorialCoachProps {
   stepIndex: number
@@ -17,20 +18,8 @@ interface TutorialCoachProps {
 export default function TutorialCoach({ stepIndex, steps, step, total, onManualNext, onSkip }: TutorialCoachProps) {
   const [collapsed, setCollapsed] = useState(false)
   if (!step) return null
-  const spot = step.spot
   const manual = !!step.manual
-  const compactTop = step.screen === 'build'
-    ? TUTORIAL_RAIL.BOTTOM_PILL_Y
-    : step.screen === 'targets'
-      ? undefined
-    : spot
-      ? (spot.y + spot.h / 2 < 437 ? undefined : TUTORIAL_RAIL.TOP_PILL_Y)
-      : (step.anchor === 'bottom' ? undefined : TUTORIAL_RAIL.TOP_PILL_Y)
-  // 110 = radial-nav height (88px) + safe-area margin; must clear the bottom nav.
-  const NAV_CLEARANCE = 110
-  const compactBottom = step.screen === 'targets'
-    ? TUTORIAL_RAIL.BOTTOM_PILL_Y
-    : compactTop == null ? NAV_CLEARANCE : undefined
+  const coachRail = reserved_rect(step.anchor === 'bottom' ? 'bottom' : 'top')
 
   const dots = (
     <div style={{ display: 'flex', gap: 4 }}>
@@ -46,77 +35,34 @@ export default function TutorialCoach({ stepIndex, steps, step, total, onManualN
     </div>
   )
 
-  const arrowLeft = spot ? Math.min(Math.max(spot.x + spot.w / 2 - 13, 12), 364) : 0
-  const ring = spot && (() => {
-    const ringStyle: React.CSSProperties = {
-      position: 'absolute',
-      left: spot.x,
-      width: spot.w,
-      height: spot.h,
-      borderRadius: 14,
-      boxShadow: `0 0 0 9999px rgba(3,6,12,${manual ? '0.62' : '0.42'})`,
-      border: '2px solid #f5a623',
-      animation: 'coach-spot 1.4s ease-in-out infinite',
-      pointerEvents: 'none',
-    }
-    if (spot.fromBottom) {
-      ringStyle.bottom = spot.y
-    } else {
-      ringStyle.top = spot.y
-    }
 
-    const arrowStyle: React.CSSProperties = {
-      position: 'absolute',
-      left: arrowLeft,
-      animation: 'coach-point 1s ease-in-out infinite',
-      pointerEvents: 'none',
-    }
-    // fromBottom: arrow sits above the ring (both bottom-anchored), pointing down into the ring
-    // anchor=top: arrow sits below the ring pointing up
-    // default:    arrow sits above the ring pointing down
-    let arrowRotate = 'none'
-    if (spot.fromBottom) {
-      arrowStyle.bottom = spot.y + spot.h + 4
-    } else if (step.anchor === 'top') {
-      arrowStyle.top = spot.y + spot.h + 4
-      arrowRotate = 'rotate(180deg)'
-    } else {
-      arrowStyle.top = spot.y - 34
-    }
-
-    return (
-      <>
-        <div style={ringStyle} />
-        {!collapsed && (
-          <div style={arrowStyle}>
-            <svg
-              width="26"
-              height="30"
-              viewBox="0 0 26 30"
-              style={{
-                transform: arrowRotate,
-                filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.6))',
-              }}
-            >
-              <path d="M13 2 L13 22 M13 22 L6 15 M13 22 L20 15" stroke="#f5a623" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
-            </svg>
-          </div>
-        )}
-      </>
-    )
-  })()
+  const spot = step.spot
+  const spotStyle: React.CSSProperties | null = spot ? {
+    position: 'absolute',
+    left: spot.fromCenter ? `calc(50% + ${spot.x}px)` : spot.x,
+    top: spot.fromBottom ? undefined : spot.y,
+    bottom: spot.fromBottom ? spot.y : undefined,
+    width: spot.right !== undefined ? undefined : spot.w,
+    right: spot.right !== undefined ? spot.right : undefined,
+    height: spot.h,
+    borderRadius: 10,
+    border: '2px solid rgba(63,169,255,0.6)',
+    boxShadow: '0 0 16px rgba(63,169,255,0.3)',
+    pointerEvents: 'none',
+    zIndex: 97,
+    animation: 'coach-spot-pulse 1.8s ease-in-out infinite',
+  } : null
 
   if (manual) {
-    const cardTop = step.anchor === 'top' ? 150 : step.anchor === 'center' ? 330 : 520
     return (
       <div style={{ position: 'absolute', inset: 0, zIndex: 96, pointerEvents: 'none' }} data-testid="tutorial-coach-overlay">
-        {ring ?? <div style={{ position: 'absolute', inset: 0, background: 'rgba(3,6,12,0.45)' }} />}
-        <div style={{ position: 'absolute', left: 14, right: 14, top: cardTop, zIndex: 98, pointerEvents: 'auto' }}>
+        {spotStyle && <div data-testid="tutorial-coach-spot" style={spotStyle} />}
+        <div data-ui-zone={UI_ZONES.tutorialRail} data-testid="tutorial-coach-block" style={{ position: 'absolute', left: 14, right: 14, top: coachRail.top, maxHeight: coachRail.height, zIndex: 98, pointerEvents: 'auto', overflowY: 'auto' }}>
           <div style={{
             background: 'linear-gradient(180deg, #0d1c30 0%, #081120 100%)',
             border: '1px solid rgba(135,207,250,0.5)',
             borderRadius: 16,
-            padding: 14,
+            padding: 12,
             boxShadow: '0 12px 36px rgba(0,0,0,0.6), 0 0 24px rgba(63,169,255,0.25)',
           }}>
             <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
@@ -127,11 +73,11 @@ export default function TutorialCoach({ stepIndex, steps, step, total, onManualN
                   <span style={{ flex: 1 }} />
                   <span style={{ fontFamily: 'var(--ln-font-mono)', fontSize: 10, color: '#7a8294', letterSpacing: '0.12em' }}>{stepIndex + 1} / {total}</span>
                 </div>
-                <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 15, fontWeight: 800, color: '#e6efff', marginTop: 4 }}>{step.title}</div>
-                <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 13, color: '#a9b8ce', marginTop: 4, lineHeight: 1.45, wordBreak: 'break-word' }}>{step.body}</div>
+                <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 14, fontWeight: 800, color: '#e6efff', marginTop: 3 }}>{step.title}</div>
+                <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 12, color: '#a9b8ce', marginTop: 3, lineHeight: 1.35, wordBreak: 'break-word' }}>{step.body}</div>
               </div>
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 12 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 8 }}>
               {dots}
               <span style={{ flex: 1 }} />
               <button onClick={onSkip} style={{ background: 'transparent', border: 'none', cursor: 'pointer', fontFamily: 'var(--ln-font-display)', fontSize: 10, fontWeight: 700, letterSpacing: '0.16em', textTransform: 'uppercase', color: '#5d7390' }}>Skip</button>
@@ -151,17 +97,16 @@ export default function TutorialCoach({ stepIndex, steps, step, total, onManualN
 
   return (
       <div style={{ position: 'absolute', inset: 0, zIndex: 96, pointerEvents: 'none' }} data-testid="tutorial-coach-overlay">
-        {ring}
-        <div style={{
+        {spotStyle && <div data-testid="tutorial-coach-spot" style={spotStyle} />}
+        <div data-ui-zone={UI_ZONES.tutorialRail} data-testid="tutorial-coach-block" style={{
           position: 'absolute',
           left: 12,
           right: 12,
-          top: compactTop,
-          bottom: compactBottom,
+          top: coachRail.top,
+          maxHeight: coachRail.height,
           zIndex: 98,
           pointerEvents: 'none',
           overflow: 'visible',
-          maxHeight: compactTop != null && compactBottom == null ? 'calc(100dvh - 170px)' : undefined,
           overflowY: 'auto',
         }}>
           <div style={{

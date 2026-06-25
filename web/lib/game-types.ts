@@ -1,7 +1,14 @@
 // Landnam game — shared type definitions
 // Extracted from game-context.tsx so they can be imported without pulling in React context.
 
-import type { RocketConfig } from '@/lib/data'
+import type { RocketConfig, Mission, Target } from '@/lib/data'
+
+export interface DailyContractorPool {
+  date: string        // 'YYYY-MM-DD'
+  missions: Mission[]
+  acceptedId: string | null
+  completedIds: string[]
+}
 
 export type Screen =
   | 'intro'
@@ -18,16 +25,22 @@ export type Screen =
   | 'market'
   | 'hangar'
   | 'rocket-buy'
+  | 'skills'
+  | 'scan-station'
+  | 'rover-mining'
 
 export interface Player {
   francs: number
   activeMission: { id: string; label: string } | null
+  missionPhase?: 'transit' | 'mining' | 'debrief'
   missionCount: number
   pendingLaunch: boolean
   placed: string[]
   placementPlots: Record<string, number>
   controlBuilt: boolean
   missionsDone: number
+  skillPoints?: number
+  unlockedSkillNodes?: string[]
   freeOperations: boolean
   debriefPending?: boolean
   stash?: Record<string, number>
@@ -36,6 +49,8 @@ export interface Player {
   contractorCooldowns: Record<string, number>
   researchAnnotations: number
   refineryBuilt: boolean
+  refineryUnlocked?: boolean
+  refineryUnlockNotified?: boolean
   refineryQueue: { recipeId: string; startedAt: number }[]
   refinedGoods: Record<string, number>
   launchpadUpgraded: boolean
@@ -51,6 +66,14 @@ export interface Player {
     timestamp: number
   }>
   contractorTerritories?: Record<string, string[]>
+  dailyContractorPool?: DailyContractorPool
+  scannerBuilt?: boolean
+  scansUsedToday?: number
+  scanDate?: string
+  activeScan?: { targetId: string; completesAt: number } | null
+  targetScanCounts?: Record<string, number>
+  contractorStructures?: import('@/lib/data').ContractorStructureRecord[]
+  dailyQuestProgress?: import('@/lib/data').DailyQuestProgress[]
 }
 
 export interface GameState {
@@ -68,12 +91,13 @@ export interface GameState {
 }
 
 import type React from 'react'
-import type { Mission, Target } from '@/lib/data'
 import type { Toast } from '@/components/ui/ToastLayer'
 import type { Catalog } from '@/lib/catalog'
 
 export interface GameActions {
   catalog: Catalog
+  hydrated: boolean
+  authUserId: string | null
   authGateOpen: boolean
   authGateError: string | null
   signInFromGate: (email: string, password: string) => Promise<void>
@@ -103,8 +127,13 @@ export interface GameActions {
   sellMinerals: (mineralId: string, amount: number) => void
   onStartRefine: (recipeId: string) => void
   onCollectRefined: (recipeId: string) => void
+  unlockSkillNode: (id: string) => void
   acceptLoan: () => void
   abandonMission: () => void
+  buildScanner: () => void
+  startScan: (targetId: string) => void
+  collectScan: () => void
+  onRoverMiningDone: (cargo: Record<string, number>) => void
   toasts: Toast[]
   dismissToast: (id: string) => void
   mission: Mission | null
@@ -114,4 +143,5 @@ export interface GameActions {
   upgradeAccount: (email: string, password: string) => Promise<void>
   awaitingRemoteState: boolean
   clearTerritoryClaimPopup: () => void
+  laserChargeCap: number
 }

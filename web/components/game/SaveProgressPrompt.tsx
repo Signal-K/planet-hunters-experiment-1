@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState } from 'react'
+import { UI_ZONES } from '@/lib/ui-zones'
 
 interface SaveProgressPromptProps {
   onUpgrade: (email: string, password: string) => Promise<void>
@@ -27,7 +28,7 @@ export default function SaveProgressPrompt({ onUpgrade, onDismiss }: SaveProgres
   }
 
   return (
-    <div style={{ position: 'absolute', inset: 0, zIndex: 89, display: 'flex', alignItems: 'flex-end' }}>
+    <div data-ui-zone={UI_ZONES.modalOverlay} style={{ position: 'absolute', inset: 0, zIndex: 89, display: 'flex', alignItems: 'flex-end' }}>
       <div onClick={onDismiss} style={{ position: 'absolute', inset: 0, background: 'rgba(3,6,12,0.7)' }} />
       <div style={{
         position: 'relative', width: '100%',

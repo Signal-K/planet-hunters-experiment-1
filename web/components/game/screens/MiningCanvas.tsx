@@ -1,12 +1,13 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
+import { useCallback, useEffect, useRef } from 'react'
 import { Application, Assets, Container, Graphics, type Texture } from 'pixi.js'
 import { Scene, GameLoop, InputManager, RuntimeContext, screenToWorld } from '@/lib/engine'
 import { wireShapeRenderers } from '@/lib/engine/components/ShapeRenderer'
 import type { ShapeKind } from '@/lib/engine/components/ShapeRenderer'
-import { MiningController, SHIP_X } from '@/lib/engine/scripts/MiningController'
+import { MiningController, SHIP_X, SCROLL_SPEED, SCROLL_SPEED_MIN, SCROLL_SPEED_MAX } from '@/lib/engine/scripts/MiningController'
 import type { MineralMeta } from '@/lib/data'
+import VirtualJoystick from '@/components/ui/VirtualJoystick'
 
 // Tile width must be a multiple of 16 (ridgeH period) for seamless wrapping
 const SURFACE_TILE_W = 320
@@ -128,13 +129,29 @@ interface MiningCanvasProps {
 }
 
 export default function MiningCanvas({ minerals, mineralMeta, onCollect, fireRef }: MiningCanvasProps) {
-  const canvasRef = useRef<HTMLCanvasElement>(null)
+  const containerRef = useRef<HTMLDivElement>(null)
   const onCollectRef = useRef(onCollect)
   onCollectRef.current = onCollect
+  const controllerRef = useRef<MiningController | null>(null)
+  const joystickDxRef = useRef(0)
+
+  const handleJoystick = useCallback((dx: number, _dy: number) => {
+    joystickDxRef.current = dx
+    const controller = controllerRef.current
+    if (!controller) return
+    // dx: -1 = slow down, 0 = normal, +1 = fast forward
+    const speed = SCROLL_SPEED + dx * (dx > 0 ? SCROLL_SPEED_MAX - SCROLL_SPEED : SCROLL_SPEED - SCROLL_SPEED_MIN)
+    controller.setScrollSpeed(speed)
+  }, [])
 
   useEffect(() => {
-    const canvas = canvasRef.current
-    if (!canvas) return
+    const parent = containerRef.current
+    if (!parent) return
+
+    const canvas = document.createElement('canvas')
+    canvas.dataset.testid = 'mining-canvas'
+    canvas.style.cssText = 'display:block;width:100%;height:100%;'
+    parent.appendChild(canvas)
 
     const app = new Application()
     let loop: GameLoop | null = null
@@ -143,9 +160,6 @@ export default function MiningCanvas({ minerals, mineralMeta, onCollect, fireRef
 
     ;(async () => {
       try {
-        // Read from the parent container — it has a resolved flex height,
-        // while the canvas itself (position:absolute) may read 0 before PixiJS sets it.
-        const parent = canvas.parentElement!
         const worldW = Math.max(300, parent.clientWidth)
         const worldH = Math.max(200, parent.clientHeight)
         const dpr = window.devicePixelRatio || 1
@@ -213,6 +227,7 @@ export default function MiningCanvas({ minerals, mineralMeta, onCollect, fireRef
           },
         })
         controllerObj?.addComponent(controller)
+        controllerRef.current = controller
 
         input = new InputManager(canvas, worldW, worldH)
         input.onAny(event => {
@@ -233,19 +248,35 @@ export default function MiningCanvas({ minerals, mineralMeta, onCollect, fireRef
     return () => {
       destroyed = true
       fireRef.current = null
+      controllerRef.current = null
       loop?.stop()
       input?.destroy()
-      if (app.renderer) app.destroy()
+      if (app.renderer) {
+        try { app.destroy() } catch (_) { /* pixi v8 cleanup */ }
+        canvas.remove()
+      }
+      // else: async init returns early (destroyed=true), canvas stays briefly then is GC'd with parent
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   return (
-    <canvas
-      ref={canvasRef}
-      data-testid="mining-canvas"
-      className="mining-canvas"
-    />
+    <div ref={containerRef} className="mining-canvas" data-testid="mining-canvas" style={{ position: 'relative' }}>
+      {/* Joystick for scroll speed: left = slow, right = fast forward */}
+      <div style={{
+        position: 'absolute',
+        bottom: 16,
+        left: 16,
+        zIndex: 20,
+        pointerEvents: 'auto',
+      }}>
+        <VirtualJoystick
+          size={72}
+          onChange={handleJoystick}
+          label="SPEED"
+        />
+      </div>
+    </div>
   )
 }
 

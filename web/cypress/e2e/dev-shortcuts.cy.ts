@@ -64,7 +64,7 @@ describe('DEV panel UI', () => {
     cy.get('[data-testid="dev-shortcuts-panel"]').should('be.visible')
     cy.get('[data-testid="dev-group-mission-1"]').should('exist')
     cy.get('[data-testid="dev-group-mission-2"]').should('exist')
-    cy.get('[data-testid^="dev-group-"]').should('have.length', 2)
+    cy.get('[data-testid^="dev-group-"]').should('have.length', 3)
   })
 
   it('each mission group has the expected shot buttons', () => {
@@ -76,7 +76,7 @@ describe('DEV panel UI', () => {
     cy.get('[data-testid="dev-shot-m2-hub"]').should('exist')
     cy.get('[data-testid="dev-shot-m2-rocket-buy"]').should('exist')
     cy.get('[data-testid="dev-shot-m2-fab"]').should('exist')
-    cy.get('[data-testid^="dev-shot-"]').should('have.length', 10)
+    cy.get('[data-testid^="dev-shot-"]').should('have.length', 11)
   })
 
   it('clicking M2 Hub navigates to hub with M2 coach, no Save Progress prompt', () => {

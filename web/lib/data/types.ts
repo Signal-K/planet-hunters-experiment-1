@@ -6,6 +6,70 @@ export interface MissionPayload {
   cargoCost: number
 }
 
+export interface MissionSurveyPlan {
+  scanRequired: boolean
+  scanCount: number
+  scanSource: 'station' | 'satellite' | 'rover'
+  depositsToMap: number
+  revealsMinerals: boolean
+  revealsLandmarks: string[]
+  unlocksLanding: boolean
+  onWorldVehicle?: 'starter-rover'
+  anyTargetType?: boolean
+}
+
+export type ConstructionPlacementMode = 'confirm' | 'grid' | 'free'
+
+export interface MissionConstructionPlan {
+  structureKind: string
+  requiredMaterials: Record<string, number>
+  placementMode: ConstructionPlacementMode
+  buildTimeMs: number
+}
+
+export type TargetStructureState = 'delivered' | 'under-construction' | 'operational'
+
+export interface TargetStructureBlueprint {
+  id: string
+  name: string
+  kind: string
+  contractorRole: string
+  requiredMaterials: Record<string, number>
+  buildTimeMs: number
+  description: string
+}
+
+export interface ContractorStructureRecord {
+  targetId: string
+  structureKind: string
+  contractorId: string
+  state: TargetStructureState
+  startedAt?: number
+}
+
+export type DailyQuestKind = 'scan' | 'land' | 'map'
+export type DailyQuestTargetScope = 'any' | 'any-asteroid' | 'any-planet' | 'specific'
+
+export interface DailyQuestTemplate {
+  id: string
+  kind: DailyQuestKind
+  title: string
+  brief: string
+  targetScope: DailyQuestTargetScope
+  targetId?: string
+  count: number
+  payout: { francs: number; affinity: number }
+  requiresScannerBuilt?: boolean
+  requiresSurveyClear?: boolean
+}
+
+export interface DailyQuestProgress {
+  questId: string
+  progress: number
+  completed: boolean
+  date: string
+}
+
 export interface Mission {
   id: string
   title: string
@@ -18,6 +82,8 @@ export interface Mission {
   unlockAt?: string
   targetId?: string
   payload?: MissionPayload
+  survey?: MissionSurveyPlan
+  construction?: MissionConstructionPlan
   requires: {
     minerals: Record<string, number>
     cargo_min: number
@@ -100,7 +166,9 @@ export interface StructureBlueprint {
   name: string
   kind: string
   cost: number
+  costMaterials?: Record<string, number>
   unlocksAt: string
+  unlockTrigger?: 'always' | 'contractor-mission-trigger' | 'manual'
   description: string
 }
 
@@ -123,6 +191,8 @@ export interface MissionTemplate {
   payoutMultiplier: number
   contractorRole: ContractorSlot['uiRole']
   payoutFormula: string
+  survey?: MissionSurveyPlan
+  construction?: MissionConstructionPlan
 }
 
 export interface RefineryRecipe {
@@ -163,7 +233,7 @@ export interface TutorialStep {
   action?: string
   manual?: boolean
   anchor: 'top' | 'bottom' | 'center'
-  spot: { x: number; y: number; w: number; h: number; fromBottom?: boolean } | null
+  spot: { x: number; y: number; w: number; h: number; fromBottom?: boolean; fromCenter?: boolean; right?: number } | null
   cta: string
 }
 

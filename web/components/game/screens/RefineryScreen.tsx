@@ -1,11 +1,12 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import TopBar from '@/components/ui/TopBar'
 import Panel from '@/components/ui/Panel'
 import StatusPill from '@/components/ui/StatusPill'
 import { PrimaryBtn, GhostBtn } from '@/components/ui/Button'
 import { type RefineryRecipe, REFINERY_RECIPES } from '@/lib/data'
+import { UI_ZONES } from '@/lib/ui-zones'
 
 interface RefineryScreenProps {
   player: { francs: number; stash?: Record<string, number>; refineryQueue: { recipeId: string; startedAt: number }[]; refinedGoods: Record<string, number> }
@@ -15,7 +16,7 @@ interface RefineryScreenProps {
 }
 
 export default function RefineryScreen({ player, onBack, onStartRefine, onCollect }: RefineryScreenProps) {
-  const now = Date.now()
+  const [now, setNow] = useState(() => Date.now())
   const [selected, setSelected] = useState<string | null>(null)
   const stash = player.stash ?? {}
 
@@ -25,10 +26,16 @@ export default function RefineryScreen({ player, onBack, onStartRefine, onCollec
   const progressPct = runningRecipe ? Math.min(100, (elapsed / runningRecipe.time) * 100) : 0
   const done = runningRecipe ? elapsed >= runningRecipe.time : false
 
+  useEffect(() => {
+    if (!runningRecipe || done) return
+    const id = window.setInterval(() => setNow(Date.now()), 1000)
+    return () => window.clearInterval(id)
+  }, [done, runningRecipe])
+
   return (
     <div className="game-screen">
       <TopBar eyebrow="EARTH BASE · INDUSTRY" title="Refinery" onBack={onBack} />
-      <div className="screen-scroll">
+      <div className="screen-scroll" data-ui-zone={UI_ZONES.screenContent}>
         <Panel accent="var(--ln-amber)" style={{ padding: 12 }}>
           <div style={{ fontFamily: 'var(--ln-font-display)', fontWeight: 800, fontSize: 15, color: '#f5a623' }}>On-site Ore Processing</div>
           <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 12, color: '#a9b8ce', marginTop: 4 }}>Refine raw minerals into higher-value refined goods.</div>
@@ -52,7 +59,7 @@ export default function RefineryScreen({ player, onBack, onStartRefine, onCollec
                 )}
               </div>
               {done && (
-                <GhostBtn onClick={() => onCollect(running.recipeId)}>Collect</GhostBtn>
+                <GhostBtn testId="refinery-collect-btn" onClick={() => onCollect(running.recipeId)}>Collect</GhostBtn>
               )}
             </div>
           </Panel>
@@ -112,7 +119,7 @@ export default function RefineryScreen({ player, onBack, onStartRefine, onCollec
         </div>
       </div>
       {selected && (
-        <div className="sticky-actions">
+        <div className="sticky-actions" data-ui-zone={UI_ZONES.bottomActions}>
           <PrimaryBtn onClick={() => { onStartRefine(selected); setSelected(null) }}>Start Refinement</PrimaryBtn>
         </div>
       )}

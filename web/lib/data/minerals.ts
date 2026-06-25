@@ -11,6 +11,10 @@ export const MINERAL_META: Record<string, MineralMeta> = {
   rare:    { name: 'Xenon',   sym: 'Xe', color: '#c084ff', price: 2000,  rarity: 'exotic',   constructionUse: 'Quantum sensors, ion propellant',           laserAccess: 3 },
   nickel:  { name: 'Nickel',  sym: 'Ni', color: '#b0b8c4', price: 150,   rarity: 'uncommon', constructionUse: 'Alloys, battery production',              laserAccess: 1 },
   cobalt:  { name: 'Cobalt',  sym: 'Co', color: '#4f9cf7', price: 450,   rarity: 'uncommon', constructionUse: 'Battery cathodes, superalloys',          laserAccess: 2 },
+  copper:  { name: 'Copper',  sym: 'Cu', color: '#c9824b', price: 260,   rarity: 'common',   constructionUse: 'Conductors, heat exchangers, wiring',      laserAccess: 1 },
+  aluminium: { name: 'Aluminium', sym: 'Al', color: '#c7d0dc', price: 210, rarity: 'common', constructionUse: 'Lightweight frames, tanks, trusses',       laserAccess: 1 },
+  hydrogen: { name: 'Hydrogen', sym: 'H', color: '#9becff', price: 140,  rarity: 'uncommon', constructionUse: 'Propellant, reactor feedstock',           laserAccess: 1 },
+  uranium: { name: 'Uranium', sym: 'U', color: '#8fd16a', price: 1200,   rarity: 'rare',     constructionUse: 'Compact power systems, shielding',         laserAccess: 2 },
 }
 
 export const MINERAL_COLORS: Record<string, string> = {
@@ -22,6 +26,10 @@ export const MINERAL_COLORS: Record<string, string> = {
   rare: '#c084ff',
   nickel: '#b0b8c4',
   cobalt: '#4f9cf7',
+  copper: '#c9824b',
+  aluminium: '#c7d0dc',
+  hydrogen: '#9becff',
+  uranium: '#8fd16a',
 }
 
 export function sellCargo(cargo: Record<string, number>, minerals: Record<string, MineralMeta> = MINERAL_META): number {

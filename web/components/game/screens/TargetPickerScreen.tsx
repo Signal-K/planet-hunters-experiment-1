@@ -1,33 +1,16 @@
 'use client'
 
-import React, { useEffect, useState } from 'react'
+import React, { useState } from 'react'
 import TopBar from '@/components/ui/TopBar'
 import Panel from '@/components/ui/Panel'
 import StatusPill from '@/components/ui/StatusPill'
 import { PrimaryBtn } from '@/components/ui/Button'
 import { compatibleTargetsFor, type Mission, type Target } from '@/lib/data'
 import type { Catalog } from '@/lib/catalog'
-import { Scene } from '@/lib/engine/Scene'
-import type { EntityData } from '@/lib/engine/types'
-
-// Map center for target-picker.scene.json (viewport 374x360) — entity positions
-// are canvas-absolute so Forge can drag them; screen-space placement is relative
-// to this center.
-const MAP_CENTER = { x: 187, y: 180 }
-
-const DEFAULT_BODIES: EntityData[] = [
-  { id: 'mercury', name: 'Mercury', transform: { position: { x: 153.17, y: 167.69 }, rotation: 0, scale: { x: 1, y: 1 } }, components: [{ type: 'CelestialBody', orbit: 1 }] },
-  { id: 'mars', name: 'Mars', transform: { position: { x: 104.23, y: 249.45 }, rotation: 0, scale: { x: 1, y: 1 } }, components: [{ type: 'CelestialBody', orbit: 4 }] },
-  { id: 'eros', name: '433 Eros', transform: { position: { x: 229.43, y: 222.43 }, rotation: 0, scale: { x: 1, y: 1 } }, components: [{ type: 'CelestialBody', orbit: 2 }] },
-  { id: 'vesta', name: '4 Vesta', transform: { position: { x: 240.99, y: 115.66 }, rotation: 0, scale: { x: 1, y: 1 } }, components: [{ type: 'CelestialBody', orbit: 3 }] },
-  { id: 'psyche', name: '16 Psyche', transform: { position: { x: 196.42, y: 287.59 }, rotation: 0, scale: { x: 1, y: 1 } }, components: [{ type: 'CelestialBody', orbit: 4 }] },
-  { id: 'bennu', name: '101955 Bennu', transform: { position: { x: 127.91, y: 190.42 }, rotation: 0, scale: { x: 1, y: 1 } }, components: [{ type: 'CelestialBody', orbit: 2 }] },
-  { id: 'itokawa', name: '25143 Itokawa', transform: { position: { x: 263.0, y: 190.0 }, rotation: 0, scale: { x: 1, y: 1 } }, components: [{ type: 'CelestialBody', orbit: 2 }] },
-  { id: 'ryugu', name: '162173 Ryugu', transform: { position: { x: 82.0, y: 112.0 }, rotation: 0, scale: { x: 1, y: 1 } }, components: [{ type: 'CelestialBody', orbit: 3 }] },
-  { id: 'belt', name: 'Asteroid Belt', transform: { position: { x: 141.85, y: 55.95 }, rotation: 0, scale: { x: 1, y: 1 } }, components: [{ type: 'CelestialBody', orbit: 5 }] },
-  { id: 'ceres', name: '1 Ceres', transform: { position: { x: 57.03, y: 157.08 }, rotation: 0, scale: { x: 1, y: 1 } }, components: [{ type: 'CelestialBody', orbit: 5 }] },
-  { id: 'jupiter', name: 'Jupiter', transform: { position: { x: 323.83, y: 259 }, rotation: 0, scale: { x: 1, y: 1 } }, components: [{ type: 'CelestialBody', orbit: 6 }] },
-]
+import { TUTORIAL_CONTENT_TOP } from '@/lib/tutorial-layout'
+import { UI_ZONES } from '@/lib/ui-zones'
+import TutorialHighlight from '@/components/game/TutorialHighlight'
+import GalaxyMap from '@/components/TargetPicker/GalaxyMap'
 
 interface TargetPickerScreenProps {
   mission: Mission
@@ -36,14 +19,6 @@ interface TargetPickerScreenProps {
   hasCoach?: boolean
   catalog: Catalog
 }
-
-const ANGLES: Record<string, number> = {
-  mercury: 200, venus: 320, earth: 70, mars: 140,
-  eros: 45, bennu: 170, itokawa: 10, ryugu: 230, vesta: 310, psyche: 85,
-  belt: 250, ceres: 190,
-  jupiter: 30, saturn: 340, neptune: 120,
-}
-const RADII: Record<number, number> = { 1: 36, 2: 60, 3: 84, 4: 108, 5: 132, 6: 158, 7: 184, 8: 208 }
 
 function PlanetSVG({ id, size }: { id: string; size: number }) {
   const gradientId = React.useId()
@@ -103,25 +78,6 @@ function PlanetSVG({ id, size }: { id: string; size: number }) {
   )
 }
 
-function SunSVG({ size }: { size: number }) {
-  const r = size / 2
-  return (
-    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
-      <circle cx={r} cy={r} r={r * 0.7} fill="#ffe1a8"/>
-      <circle cx={r} cy={r} r={r * 0.85} fill="none" stroke="#f5a623" strokeWidth={1.5} opacity={0.5}/>
-    </svg>
-  )
-}
-
-function Greebly({ pos }: { pos: 'tl' | 'tr' | 'bl' | 'br' }) {
-  const sty: React.CSSProperties = { position: 'absolute', width: 18, height: 18, pointerEvents: 'none' }
-  if (pos === 'tl') Object.assign(sty, { top: 8, left: 8, borderTop: '1.5px solid #87CFFA', borderLeft: '1.5px solid #87CFFA' })
-  if (pos === 'tr') Object.assign(sty, { top: 8, right: 8, borderTop: '1.5px solid #87CFFA', borderRight: '1.5px solid #87CFFA' })
-  if (pos === 'bl') Object.assign(sty, { bottom: 8, left: 8, borderBottom: '1.5px solid #87CFFA', borderLeft: '1.5px solid #87CFFA' })
-  if (pos === 'br') Object.assign(sty, { bottom: 8, right: 8, borderBottom: '1.5px solid #87CFFA', borderRight: '1.5px solid #87CFFA' })
-  return <div style={sty} />
-}
-
 export default function TargetPickerScreen({ mission, onBack, onPick, hasCoach, catalog }: TargetPickerScreenProps) {
   const { targets: TARGETS, minerals: MINERAL_META } = catalog
   const compat = compatibleTargetsFor(mission, TARGETS)
@@ -130,33 +86,21 @@ export default function TargetPickerScreen({ mission, onBack, onPick, hasCoach, 
   const [picked, setPicked] = useState<string>(
     compat.find(t => t.recommended)?.id ?? compat[0]?.id ?? ''
   )
-  const [bodies, setBodies] = useState<EntityData[]>(DEFAULT_BODIES)
-
-  useEffect(() => {
-    Scene.load('/game/scenes/target-picker.scene.json')
-      .then(data => { if (data.entities?.length) setBodies(data.entities) })
-      .catch(() => {})
-  }, [])
-
-  function place(t: Target) {
-    const body = bodies.find(b => b.id === t.id)
-    if (body) return { x: body.transform.position.x - MAP_CENTER.x, y: body.transform.position.y - MAP_CENTER.y }
-    const a = ((ANGLES[t.id] ?? 0) * Math.PI) / 180
-    const r = RADII[t.orbit] ?? 84
-    return { x: Math.cos(a) * r, y: Math.sin(a) * r }
-  }
 
   const pickedTarget = TARGETS.find(x => x.id === picked)
   const targetPickerScrollStyle: React.CSSProperties = {
     position: 'absolute',
     inset: 0,
-    paddingTop: hasCoach ? 146 : 72,
+    paddingTop: hasCoach ? TUTORIAL_CONTENT_TOP : 72,
     paddingBottom: hasCoach ? 154 : 96,
-    overflowY: 'auto',
+    display: 'flex',
+    flexDirection: 'column',
+    overflow: 'hidden',
   }
   const mapStyle: React.CSSProperties = {
-    margin: '6px 14px',
-    height: hasCoach ? 290 : 360,
+    margin: '4px 14px 6px 14px',
+    flex: 1,
+    minHeight: 0,
     borderRadius: 14,
     background: 'radial-gradient(60% 60% at 50% 50%, #0a1422 0%, #03060a 90%)',
     border: '1px solid #434C5E',
@@ -168,7 +112,7 @@ export default function TargetPickerScreen({ mission, onBack, onPick, hasCoach, 
     <div style={{ width: '100%', height: '100%', position: 'relative', background: '#03060c' }}>
       <TopBar eyebrow={mission.title.toUpperCase()} title="Pick Target" onBack={onBack} />
 
-      <div style={targetPickerScrollStyle}>
+      <div style={targetPickerScrollStyle} data-ui-zone={UI_ZONES.screenContent}>
         <div style={{ padding: '0 14px 6px 14px', display: 'flex', alignItems: 'center', gap: 8 }}>
           <span style={{ fontFamily: 'var(--ln-font-display)', fontSize: 10, fontWeight: 700, letterSpacing: '0.22em', color: 'var(--ln-text-muted)', textTransform: 'uppercase' }}>Compatible · {compat.length}</span>
           <span style={{ flex: 1 }} />
@@ -177,45 +121,24 @@ export default function TargetPickerScreen({ mission, onBack, onPick, hasCoach, 
 
         {/* System map */}
         <div style={mapStyle}>
-          {/* Stars */}
-          <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(1px 1px at 8% 12%, #fff8, transparent 60%), radial-gradient(1px 1px at 44% 18%, #fff5, transparent 60%), radial-gradient(1.4px 1.4px at 58% 30%, #fff7, transparent 60%), radial-gradient(1px 1px at 84% 76%, #fff5, transparent 60%), radial-gradient(1.2px 1.2px at 26% 76%, #fff6, transparent 60%), radial-gradient(1px 1px at 80% 92%, #fff5, transparent 60%)' }} />
-          {/* Grid */}
-          <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', background: 'repeating-linear-gradient(0deg, transparent 0 39px, rgba(135,207,250,0.06) 39px 40px), repeating-linear-gradient(90deg, transparent 0 39px, rgba(135,207,250,0.06) 39px 40px)' }} />
-          <Greebly pos="tl" /><Greebly pos="tr" /><Greebly pos="bl" /><Greebly pos="br" />
+          <GalaxyMap
+            mission={mission}
+            targets={TARGETS}
+            compatibleIds={compatIds}
+            pickedId={picked}
+            onPick={setPicked}
+          />
+          {hasCoach && <TutorialHighlight borderRadius={14} />}
+        </div>
 
-          {/* Orbits */}
-          {[1,2,3,4,5,6,7,8].map(o => {
-            const tOnOrbit = TARGETS.find(t => t.orbit === o)
-            const reachable = !!tOnOrbit && o <= mission.requires.max_orbit
-            return (
-              <div key={o} style={{ position: 'absolute', left: '50%', top: '50%', transform: 'translate(-50%,-50%)', width: RADII[o]*2, height: RADII[o]*2, borderRadius: 999, border: `1px ${reachable ? 'solid' : 'dashed'} ${reachable ? 'rgba(239,231,211,0.16)' : 'rgba(255,90,106,0.22)'}` }} />
-            )
-          })}
-
-          {/* Range disc */}
-          <div style={{ position: 'absolute', left: '50%', top: '50%', transform: 'translate(-50%,-50%)', width: (RADII[mission.requires.max_orbit] ?? 132)*2 + 24, height: (RADII[mission.requires.max_orbit] ?? 132)*2 + 24, borderRadius: 999, border: '1px solid rgba(245,166,35,0.4)', boxShadow: 'inset 0 0 40px rgba(245,166,35,0.05)', pointerEvents: 'none' }} />
-
-          {/* Sun */}
-          <div style={{ position: 'absolute', left: '50%', top: '50%', transform: 'translate(-50%,-50%)' }}>
-            <SunSVG size={44} />
-          </div>
-
-          {/* Planets */}
-          {TARGETS.map(t => {
-            const p = place(t)
-            const isCompat = compatIds.has(t.id)
-            const isPicked = t.id === picked
-            return (
-              <button key={t.id} data-testid={`target-${t.id}`} onClick={() => isCompat && setPicked(t.id)} style={{ position: 'absolute', left: '50%', top: '50%', marginLeft: p.x, marginTop: p.y, transform: 'translate(-50%,-50%)', background: 'transparent', border: 'none', padding: 0, cursor: isCompat ? 'pointer' : 'not-allowed', opacity: isCompat ? 1 : 0.25, filter: isCompat ? 'none' : 'grayscale(1)' }}>
-                <div style={{ position: 'relative', borderRadius: 999, outline: isPicked ? '2px solid #f5a623' : 'none', outlineOffset: 4, boxShadow: isPicked ? '0 0 22px rgba(245,166,35,0.6)' : 'none' }}>
-                  <PlanetSVG id={t.id} size={t.id === 'belt' ? 36 : 26} />
-                </div>
-                <div style={{ position: 'absolute', top: 'calc(100% + 4px)', left: '50%', transform: 'translateX(-50%)', fontFamily: 'var(--ln-font-mono)', fontSize: 9, color: isPicked ? '#f5a623' : '#cde4ff', letterSpacing: '0.06em', whiteSpace: 'nowrap', background: 'rgba(8,12,22,0.7)', padding: '1px 5px', borderRadius: 3 }}>
-                  {t.name}
-                </div>
-              </button>
-            )
-          })}
+        {/* Off-screen buttons per target — E2E test hooks; force-click via {force:true} */}
+        <div style={{ position: 'fixed', left: -600, top: 0 }}>
+          {compat.map(t => (
+            <button key={t.id} data-testid={`target-${t.id}`} aria-label={`Select ${t.name}`}
+              onClick={() => setPicked(t.id)}
+              style={{ width: 4, height: 4 }}
+            />
+          ))}
         </div>
 
         {/* Picked target detail */}
@@ -261,7 +184,7 @@ export default function TargetPickerScreen({ mission, onBack, onPick, hasCoach, 
       </div>
 
       {pickedTarget && (
-        <div className="sticky-actions" style={hasCoach ? { zIndex: 90 } : undefined}>
+        <div className="sticky-actions" data-ui-zone={UI_ZONES.bottomActions} style={hasCoach ? { zIndex: 90 } : undefined}>
           <PrimaryBtn onClick={() => onPick(pickedTarget.id)}>Continue · Build →</PrimaryBtn>
         </div>
       )}

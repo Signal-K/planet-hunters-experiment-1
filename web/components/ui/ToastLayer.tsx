@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { UI_ZONES } from '@/lib/ui-zones'
 
 export interface Toast {
   id: string
@@ -15,7 +16,7 @@ interface ToastLayerProps {
 
 export default function ToastLayer({ toasts, onDismiss }: ToastLayerProps) {
   return (
-    <div style={{ position: 'absolute', top: 52, right: 10, left: 10, zIndex: 85, pointerEvents: 'none', display: 'flex', flexDirection: 'column', gap: 6 }}>
+    <div data-ui-zone={UI_ZONES.toastStack} style={{ position: 'absolute', top: 52, right: 10, left: 10, zIndex: 85, pointerEvents: 'none', display: 'flex', flexDirection: 'column', gap: 6 }}>
       {toasts.map(t => (
         <ToastItem key={t.id} toast={t} onDismiss={onDismiss} />
       ))}

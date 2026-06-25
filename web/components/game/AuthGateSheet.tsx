@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState } from 'react'
+import { UI_ZONES } from '@/lib/ui-zones'
 
 interface AuthGateSheetProps {
   error: string | null
@@ -41,18 +42,10 @@ export default function AuthGateSheet({ error, onSignIn, onCreateAccount, onSkip
   }
 
   return (
-    <div style={{ position: 'absolute', inset: 0, zIndex: 92, display: 'flex', alignItems: 'flex-end' }}>
-      <div style={{ position: 'absolute', inset: 0, background: 'rgba(3,6,12,0.72)' }} />
-      <div style={{
-        position: 'relative', width: '100%',
-        background: 'linear-gradient(180deg, #0d1c30, #060d18)',
-        borderTopLeftRadius: 20, borderTopRightRadius: 20,
-        border: '1px solid rgba(63,169,255,0.4)',
-        padding: '18px 16px 28px',
-        boxShadow: '0 -16px 48px rgba(0,0,0,0.7)',
-        animation: 'gate-up 360ms cubic-bezier(.16,1,.3,1)',
-      }}>
-        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 14 }}>
+    <div className="auth-gate" data-ui-zone={UI_ZONES.modalOverlay}>
+      <div className="auth-gate__scrim" />
+      <div className="auth-gate__panel">
+        <div className="auth-gate__handle">
           <div style={{ width: 40, height: 4, borderRadius: 2, background: 'rgba(255,255,255,0.2)' }} />
         </div>
 

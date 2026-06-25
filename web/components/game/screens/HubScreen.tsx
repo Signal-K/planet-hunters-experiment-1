@@ -10,6 +10,7 @@ import { AmbientStars } from '@/components/game/hub/AmbientStars'
 import { Cloud } from '@/components/game/hub/Cloud'
 import { SoilCrossSection } from '@/components/game/hub/SoilCrossSection'
 import { Building, EmptyPlot } from '@/components/game/hub/Building'
+import { TUTORIAL_CONTENT_TOP } from '@/lib/tutorial-layout'
 
 const DEFAULT_PLOTS: EntityData[] = [
   { id: 'plot-0', name: 'Plot 0', transform: { position: { x: 22, y: 570 }, rotation: 0, scale: { x: 1, y: 1 } }, components: [{ type: 'BuildPlot', index: 0 }] },
@@ -78,6 +79,20 @@ export default function HubScreen({ player, hasCoach, onGoBuilding, onNav, onUpg
         onClick: () => onGoBuilding('refinery'),
       }
     }
+    if (kind === 'scan-station') {
+      const today = new Date().toISOString().slice(0, 10)
+      const scanDate = player.scanDate ?? ''
+      const scansUsed = scanDate === today ? (player.scansUsedToday ?? 0) : 0
+      const hasScan = !!player.activeScan && Date.now() >= player.activeScan.completesAt
+      return {
+        kind, label: 'Scanner',
+        sub: hasScan ? 'DATA READY' : `${5 - scansUsed}/5 SCANS`,
+        status: (hasScan ? 'warn' : 'ok') as 'ok' | 'warn',
+        hot: hasScan,
+        w: 80,
+        onClick: () => onGoBuilding('scan-station'),
+      }
+    }
     return {
       kind, label: kind,
       sub: 'BUILT',
@@ -131,7 +146,7 @@ export default function HubScreen({ player, hasCoach, onGoBuilding, onNav, onUpg
       </div>
 
       {/* Progression card — hidden when tutorial coach is active to avoid conflicting guidance */}
-      {!hasCoach && <ProgressionCard player={player} onGoBuilding={onGoBuilding} onNav={onNav} top={132} />}
+      {!hasCoach && <ProgressionCard player={player} onGoBuilding={onGoBuilding} onNav={onNav} top={TUTORIAL_CONTENT_TOP} />}
 
       {/* Surface buildings */}
       <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}>

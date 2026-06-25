@@ -18,12 +18,16 @@ beforeEach(() => {
     body: { token: 'e2e-token', record: { id: 'e2e-user', email: 'e2e@landnam.guest' } },
   }).as('pbAuthRefreshGet')
 
+  // Return 404 for game_states so the real PB record for 'e2e-user' never overrides test localStorage state
+  cy.intercept('GET', '**/api/collections/game_states/records*', { statusCode: 404, body: { code: 404, message: 'The requested resource wasn\'t found.' } }).as('pbGameState')
+
   // Fail catalog calls fast so the game falls back to static data immediately
   cy.intercept('GET', '**/api/collections/locations/records*', { statusCode: 503, body: {} }).as('pbLocations')
   cy.intercept('GET', '**/api/collections/minerals/records*', { statusCode: 503, body: {} }).as('pbMinerals')
   cy.intercept('GET', '**/api/collections/contractors/records*', { statusCode: 503, body: {} }).as('pbContractors')
   cy.intercept('GET', '**/api/collections/rocket_parts/records*', { statusCode: 503, body: {} }).as('pbParts')
   cy.intercept('GET', '**/api/collections/missions_catalog/records*', { statusCode: 503, body: {} }).as('pbMissions')
+  cy.intercept('GET', '**/api/collections/structure_blueprints/records*', { statusCode: 503, body: {} }).as('pbStructures')
 
 
   // Pre-mark all surveys as seen before every page load so SurveySheet never fires in tests.

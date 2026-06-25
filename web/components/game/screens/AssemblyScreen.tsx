@@ -7,6 +7,8 @@ import type { Catalog } from '@/lib/catalog'
 import Panel from '@/components/ui/Panel'
 import TopBar from '@/components/ui/TopBar'
 import { PrimaryBtn } from '@/components/ui/Button'
+import { UI_ZONES } from '@/lib/ui-zones'
+import TutorialHighlight from '@/components/game/TutorialHighlight'
 
 interface AssemblyScreenProps {
   mission: Mission
@@ -14,9 +16,11 @@ interface AssemblyScreenProps {
   rocket: RocketConfig
   parts: Catalog['parts']
   missionsDone: number
+  unlockedSkillNodes: string[]
   onLaunch: () => void
   onBack: () => void
   hasCoach?: boolean
+  coachManual?: boolean
 }
 
 function getRequiredRocket(missionsDone: number) {
@@ -25,13 +29,16 @@ function getRequiredRocket(missionsDone: number) {
 }
 
 export default function AssemblyScreen(props: AssemblyScreenProps) {
-  const check = validateBuild({ mission: props.mission, target: props.target, rocket: props.rocket, parts: props.parts })
+  const highlightContent = props.hasCoach && props.coachManual
+  const highlightLaunch = props.hasCoach && !props.coachManual
+  const check = validateBuild({ mission: props.mission, target: props.target, rocket: props.rocket, parts: props.parts, unlockedSkillNodes: props.unlockedSkillNodes })
   const starterRocket = getRequiredRocket(props.missionsDone)
 
   return (
     <div className="game-screen blueprint-screen">
       <TopBar eyebrow="LAUNCHPAD · PREFLIGHT" title="Confirm Rocket" onBack={props.onBack} />
-      <div className={`screen-scroll assembly-scroll${props.hasCoach ? ' screen-scroll--coach' : ''}`}>
+      <div className={`screen-scroll assembly-scroll${props.hasCoach ? ' screen-scroll--coach' : ''}`} data-ui-zone={UI_ZONES.screenContent} style={{ position: 'relative' }}>
+        {highlightContent && <TutorialHighlight />}
         <Panel accent="var(--ln-amber)" style={{ padding: 'var(--ln-s-3)' }}>
           <div className="context-row">
             <div><span className="ln-micro">Mission</span><strong>{props.mission.title}</strong></div>
@@ -62,7 +69,8 @@ export default function AssemblyScreen(props: AssemblyScreenProps) {
           <span />{check.ok ? 'Build compatible · Ready for launch' : check.problems.join(' · ')}
         </div>
       </div>
-      <div className="sticky-actions">
+      <div className="sticky-actions" data-ui-zone={UI_ZONES.bottomActions} style={{ position: 'relative' }}>
+        {highlightLaunch && <TutorialHighlight borderRadius={8} />}
         <PrimaryBtn kind="amber" disabled={!check.ok} testId="launch-btn" onClick={props.onLaunch}>Confirm Launch</PrimaryBtn>
       </div>
     </div>

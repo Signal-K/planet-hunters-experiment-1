@@ -9,10 +9,38 @@ const profiles: Record<string, Cypress.EndToEndConfigOptions> = {
       'cypress/e2e/smoke.cy.ts',
       'cypress/e2e/game-loop.cy.ts',
       'cypress/e2e/dev-shortcuts.cy.ts',
+      'cypress/e2e/ship-customizer.cy.ts',
       'cypress/e2e/m3-territory.cy.ts',
+      'cypress/e2e/tutorial-m1.cy.ts',
+      'cypress/e2e/actual-play.cy.ts',
+      'cypress/e2e/bug-hunt.cy.ts',
     ],
     // Portrait canvas: existing tests target the 402px canvas, not the desktop layout.
     // m3-territory.cy.ts overrides viewport per-test where desktop behaviour is needed.
+    viewportWidth: 390,
+    viewportHeight: 844,
+  },
+  'tutorial-rail': {
+    baseUrl: 'http://localhost:3000',
+    specPattern: ['cypress/e2e/tutorial-rail.cy.ts'],
+    viewportWidth: 390,
+    viewportHeight: 844,
+  },
+  'interaction-order': {
+    baseUrl: 'http://localhost:3000',
+    specPattern: ['cypress/e2e/interaction-order.cy.ts'],
+    viewportWidth: 390,
+    viewportHeight: 844,
+  },
+  'ui-zones': {
+    baseUrl: 'http://localhost:3000',
+    specPattern: ['cypress/e2e/ui-zones.cy.ts'],
+    viewportWidth: 390,
+    viewportHeight: 844,
+  },
+  'clean-start-loop': {
+    baseUrl: 'http://localhost:3000',
+    specPattern: ['cypress/e2e/clean-start-loop.cy.ts'],
     viewportWidth: 390,
     viewportHeight: 844,
   },

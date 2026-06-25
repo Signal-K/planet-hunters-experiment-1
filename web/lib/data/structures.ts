@@ -3,19 +3,53 @@
 import type { StructureBlueprint, RefineryRecipe, MarketTemplate } from './types'
 
 export const REFINERY_RECIPES: RefineryRecipe[] = [
-  { id: 'refine-steel', name: 'Smelt Steel', input: { mineral: 'iron', amount: 4 }, output: { name: 'Steel Beam', sym: 'FeS', color: '#b0b8c4', price: 600 }, time: 30, cost: 50000 },
-  { id: 'refine-wafer', name: 'Fabricate Wafers', input: { mineral: 'silicon', amount: 3 }, output: { name: 'Silicon Wafer', sym: 'SiW', color: '#7ec8ff', price: 900 }, time: 45, cost: 75000 },
-  { id: 'refine-goldbar', name: 'Cast Gold Bars', input: { mineral: 'gold', amount: 3 }, output: { name: 'Gold Bar', sym: 'AuB', color: '#ffd166', price: 3200 }, time: 60, cost: 100000 },
-  { id: 'refine-xe', name: 'Compress Xenon', input: { mineral: 'rare', amount: 2 }, output: { name: 'Xenon Canister', sym: 'XeC', color: '#c084ff', price: 6000 }, time: 90, cost: 150000 },
-  { id: 'refine-nickel', name: 'Purify Nickel', input: { mineral: 'nickel', amount: 4 }, output: { name: 'Nickel Alloy', sym: 'NiA', color: '#b0b8c4', price: 500 }, time: 25, cost: 40000 },
-  { id: 'refine-cobalt', name: 'Refine Cobalt', input: { mineral: 'cobalt', amount: 3 }, output: { name: 'Cobalt Cathode', sym: 'CoC', color: '#4f9cf7', price: 1800 }, time: 50, cost: 80000 },
+  { id: 'refined-gold', name: 'Refined Gold', input: { mineral: 'gold', amount: 3 }, output: { name: 'Refined Gold', sym: 'Au+', color: '#ffd166', price: 1760 }, time: 3600, cost: 100000 },
+  { id: 'refined-uranium', name: 'Refined Uranium', input: { mineral: 'uranium', amount: 3 }, output: { name: 'Refined Uranium', sym: 'U+', color: '#8fd16a', price: 3000 }, time: 3600, cost: 150000 },
+  { id: 'refined-cobalt', name: 'Refined Cobalt', input: { mineral: 'cobalt', amount: 3 }, output: { name: 'Refined Cobalt', sym: 'Co+', color: '#4f9cf7', price: 855 }, time: 3000, cost: 80000 },
+  { id: 'refined-copper', name: 'Refined Copper', input: { mineral: 'copper', amount: 4 }, output: { name: 'Refined Copper', sym: 'Cu+', color: '#c9824b', price: 442 }, time: 2400, cost: 60000 },
+  { id: 'refined-aluminium', name: 'Refined Aluminium', input: { mineral: 'aluminium', amount: 4 }, output: { name: 'Refined Aluminium', sym: 'Al+', color: '#c7d0dc', price: 336 }, time: 2400, cost: 60000 },
+  { id: 'refined-hydrogen', name: 'Refined Hydrogen', input: { mineral: 'hydrogen', amount: 4 }, output: { name: 'Refined Hydrogen', sym: 'H+', color: '#9becff', price: 280 }, time: 1800, cost: 50000 },
 ]
 
 export const STRUCTURES: StructureBlueprint[] = [
-  { id: 'launchpad', name: 'Launchpad',     kind: 'launchpad', cost: 0,          unlocksAt: 'always',      description: 'Rocket assembly and launch operations.' },
-  { id: 'refinery',  name: 'Refinery',      kind: 'refinery',  cost: 800_000_000,  unlocksAt: 'Pending post-onboarding design', description: 'On-site ore processing increases sale price.' },
-  { id: 'garage',    name: 'Vehicle Garage', kind: 'garage',    cost: 600_000_000,  unlocksAt: 'Pending post-onboarding design', description: 'Surface rover maintenance and upgrades.' },
+  { id: 'launchpad', name: 'Launchpad', kind: 'launchpad', cost: 0, unlocksAt: 'always', unlockTrigger: 'always', description: 'Rocket assembly and launch operations.' },
+  {
+    id: 'refinery',
+    name: 'Refinery',
+    kind: 'refinery',
+    cost: 800_000_000,
+    costMaterials: { aluminium: 20, copper: 10 },
+    unlocksAt: 'First contractor mission requiring refined minerals',
+    unlockTrigger: 'contractor-mission-trigger',
+    description: 'Refines raw minerals into higher-value contractor-grade materials.',
+  },
+  {
+    id: 'scan-station',
+    name: 'Scanning Station',
+    kind: 'scan-station',
+    cost: 0,
+    unlocksAt: 'Free Operations',
+    unlockTrigger: 'always',
+    description: 'Scans remote targets to map mineral deposits, craters, and landmarks. Up to 5 scans per day, 10 minutes each.',
+  },
+  { id: 'garage', name: 'Vehicle Garage', kind: 'garage', cost: 600_000_000, unlocksAt: 'Future sprint', unlockTrigger: 'manual', description: 'Surface rover maintenance and upgrades.' },
 ]
+
+export const SCANS_PER_DAY = 5
+export const SCAN_DURATION_MS = 10 * 60 * 1000
+export const SCANS_REQUIRED_TO_MAP = 3
+
+export function structureUnlocked(structure: StructureBlueprint, opts: { refineryUnlocked?: boolean; placed?: string[]; freeOperations?: boolean } = {}): boolean {
+  if (structure.id === 'scan-station') return !!opts.freeOperations
+  if (structure.unlockTrigger === 'always') return true
+  if (structure.id === 'refinery') return !!opts.refineryUnlocked || !!opts.placed?.includes('refinery')
+  return false
+}
+
+export function canAffordStructure(structure: StructureBlueprint, opts: { francs: number; stash?: Record<string, number> }): boolean {
+  if (opts.francs < structure.cost) return false
+  return Object.entries(structure.costMaterials ?? {}).every(([mineral, amount]) => (opts.stash?.[mineral] ?? 0) >= amount)
+}
 
 export const MARKET_TEMPLATES: MarketTemplate[] = [
   { id: 'spot',     label: 'Spot Price',     currency: '₣', baseRate: 1.0, volatility: 0.05 },

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { toTarget, toMission, toPart, toContractor } from './catalog'
+import { toTarget, toMission, toPart, toContractor, toStructure } from './catalog'
 
 describe('Landnam Catalog Mapping', () => {
   it('maps a raw database record to a Target object', () => {
@@ -74,5 +74,20 @@ describe('Landnam Catalog Mapping', () => {
     const raw = { slug: 'hull-mk3', name: 'Hull MK3', tier: 4, locked: true }
     const locked = toPart(raw)
     expect(locked.locked).toBe(true)
+  })
+
+  it('maps a structure blueprint with materials and unlock trigger', () => {
+    const structure = toStructure({
+      slug: 'refinery',
+      name: 'Refinery',
+      kind: 'refinery',
+      cost_francs: 800_000_000,
+      cost_materials: '{"aluminium":20,"copper":10}',
+      unlocks_at: 'First contractor mission requiring refined minerals',
+      unlock_trigger_type: 'contractor-mission-trigger',
+      description: 'Refines raw ore.',
+    })
+    expect(structure.costMaterials).toEqual({ aluminium: 20, copper: 10 })
+    expect(structure.unlockTrigger).toBe('contractor-mission-trigger')
   })
 })

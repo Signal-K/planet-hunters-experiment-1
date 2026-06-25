@@ -56,9 +56,10 @@ export function PrimaryBtn({ children, onClick, disabled, full = true, kind = 'c
   )
 }
 
-export function GhostBtn({ children, onClick, full = true }: ButtonProps) {
+export function GhostBtn({ children, onClick, full = true, testId }: ButtonProps) {
   return (
     <button
+      data-testid={testId}
       onClick={onClick}
       style={{
         width: full ? '100%' : 'auto',
@@ -84,12 +85,14 @@ export function IconBtn({
   children,
   onClick,
   ariaLabel,
+  testId,
   color = '#cde4ff',
   size = 38,
 }: {
   children: React.ReactNode
   onClick?: () => void
   ariaLabel?: string
+  testId?: string
   color?: string
   size?: number
 }) {
@@ -97,6 +100,7 @@ export function IconBtn({
     <button
       onClick={onClick}
       aria-label={ariaLabel}
+      data-testid={testId}
       style={{
         width: size,
         height: size,

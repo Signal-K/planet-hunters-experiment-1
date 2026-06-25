@@ -1,23 +1,29 @@
 'use client'
 
-import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react'
-import type { Toast } from '@/components/ui/ToastLayer'
-import { type Screen, type Player, type GameState, type GameActions } from '@/lib/game-types'
+import React, { createContext, useContext, useState, useEffect, useRef, useCallback } from 'react'
+import type { Screen, Player, GameState, GameActions } from '@/lib/game-types'
+import type { Mission, Target, RocketConfig } from '@/lib/data'
+import { MISSIONS, TARGETS, getLaserChargeCap } from '@/lib/data'
+import { resolvePreset } from '@/lib/devPresets'
+import { pbShared } from '@/lib/pb'
+import { identifyUser } from '@/lib/posthog'
+import { enqueueSurvey } from '@/lib/surveys'
+import { useUIActions } from '@/lib/contexts/useUIActions'
+import { useAuthSync } from '@/lib/contexts/useAuthSync'
+import { useCatalogSync } from '@/lib/contexts/useCatalogSync'
+import { useGameLoop } from '@/lib/contexts/useGameLoop'
+import { useTutorialActions } from '@/lib/contexts/useTutorialActions'
+import { useEconomyActions } from '@/lib/contexts/useEconomyActions'
 
 export type { Screen, Player, GameState } from '@/lib/game-types'
 
-let toastSeq = 0
-function nextToastId() { return `t${++toastSeq}` }
-import { type Mission, type Target, type RocketConfig, MISSIONS, TARGETS, PROGRESSION_STEPS, suggestBuild, REFINERY_RECIPES, MINERAL_META, STARTER_ROCKETS, CONTRACTOR_COOLDOWN_MS, CONTRACTOR_STREAK_LIMIT } from '@/lib/data'
-import { resolvePreset } from '@/lib/devPresets'
-import { pbShared } from '@/lib/pb'
-import { ensureGuestAuth, hasStoredCredentials, isGuestAccount, upgradeGuestAccount } from '@/lib/guestAuth'
-import { pbLandnam } from '@/lib/pb-landnam'
-import { type Catalog, STATIC_CATALOG, fetchCatalog } from '@/lib/catalog'
-import { enqueueSurvey } from '@/lib/surveys'
-import { identifyUser } from '@/lib/posthog'
+// ── State shape helpers ────────────────────────────────────────────────────────
 
-const GameContext = createContext<(GameState & GameActions) | null>(null)
+const STORAGE_KEY = 'landnam-game-state-v1'
+
+const VALID_SCREENS: Screen[] = ['intro', 'build', 'hub', 'missions', 'galaxy', 'targets', 'fab', 'transit', 'mining', 'debrief', 'refinery', 'market', 'hangar', 'rocket-buy', 'skills', 'scan-station', 'rover-mining']
+const MISSION_CONTEXT_SCREENS = new Set<Screen>(['targets', 'rocket-buy', 'fab', 'transit', 'mining', 'rover-mining', 'debrief'])
+const TARGET_CONTEXT_SCREENS = new Set<Screen>(['rocket-buy', 'fab', 'transit', 'mining', 'rover-mining', 'debrief'])
 
 const DEFAULT_STATE: GameState = {
   screen: 'intro',
@@ -30,12 +36,16 @@ const DEFAULT_STATE: GameState = {
     placementPlots: {},
     controlBuilt: false,
     missionsDone: 0,
+    skillPoints: 0,
+    unlockedSkillNodes: [],
     freeOperations: false,
     contractorMissions: {},
     contractorStreaks: {},
     contractorCooldowns: {},
     researchAnnotations: 0,
     refineryBuilt: false,
+    refineryUnlocked: false,
+    refineryUnlockNotified: false,
     refineryQueue: [],
     refinedGoods: {},
     launchpadUpgraded: false,
@@ -55,58 +65,74 @@ const DEFAULT_STATE: GameState = {
   menuOpen: false,
 }
 
-const ORBIT_MS_PER_UNIT = 2 * 60 * 1000 // 2 minutes per orbit unit
+function normalizeState(input: Partial<GameState>): GameState {
+  const screen = input.screen && VALID_SCREENS.includes(input.screen) ? input.screen : DEFAULT_STATE.screen
+  const missionId = typeof input.missionId === 'string' ? input.missionId : null
+  const targetId = missionId && typeof input.targetId === 'string' ? input.targetId : null
+  return {
+    ...DEFAULT_STATE,
+    ...input,
+    screen,
+    missionId,
+    targetId,
+    rocket: { ...DEFAULT_STATE.rocket, ...input.rocket },
+    player: { ...DEFAULT_STATE.player, ...input.player },
+    doneSteps: { ...DEFAULT_STATE.doneSteps, ...input.doneSteps },
+  }
+}
 
-const STORAGE_KEY = 'landnam-game-state-v1'
-const UPGRADE_SNOOZE_KEY = 'landnam-upgrade-prompt-snooze-until'
-const UPGRADE_SNOOZE_MS = 24 * 60 * 60 * 1000
-const LOAN_AMOUNT = 5_000_000_000
-const LOAN_REPAYMENT = Math.ceil(LOAN_AMOUNT * 1.08 / 2)
-const BANKRUPTCY_THRESHOLD = 500_000_000
-const VALID_SCREENS: Screen[] = ['intro', 'build', 'hub', 'missions', 'galaxy', 'targets', 'fab', 'transit', 'mining', 'debrief', 'refinery', 'market', 'hangar', 'rocket-buy']
+function repairStateRoute(input: GameState): GameState {
+  const mission = input.missionId
+    ? (MISSIONS.find(m => m.id === input.missionId)
+       ?? input.player.dailyContractorPool?.missions.find(m => m.id === input.missionId)
+       ?? null)
+    : null
+  const target = input.targetId ? TARGETS.find(t => t.id === input.targetId) ?? null : null
+  if (MISSION_CONTEXT_SCREENS.has(input.screen) && !mission) {
+    return { ...input, screen: 'missions', missionId: null, targetId: null }
+  }
+  if (TARGET_CONTEXT_SCREENS.has(input.screen) && !target) {
+    return { ...input, screen: mission ? 'targets' : 'missions', targetId: null }
+  }
+  if (input.screen === 'targets' && mission?.targetId) {
+    return { ...input, screen: 'rocket-buy', targetId: mission.targetId }
+  }
+  return input
+}
+
+function normalizeAndRepair(partial: Partial<GameState>): GameState {
+  return repairStateRoute(normalizeState(partial))
+}
 
 function loadState(): GameState {
   if (typeof window === 'undefined') return DEFAULT_STATE
   try {
     const raw = localStorage.getItem(STORAGE_KEY)
     if (!raw) return DEFAULT_STATE
-    const parsed = JSON.parse(raw) as Partial<GameState>
-    const screen = parsed.screen && VALID_SCREENS.includes(parsed.screen) ? parsed.screen : DEFAULT_STATE.screen
-    const missionId = typeof parsed.missionId === 'string' ? parsed.missionId : null
-    return {
-      ...DEFAULT_STATE,
-      ...parsed,
-      screen,
-      missionId,
-      targetId: missionId ? parsed.targetId ?? null : null,
-      player: { ...DEFAULT_STATE.player, ...parsed.player },
-    }
+    return normalizeAndRepair(JSON.parse(raw) as Partial<GameState>)
   } catch {
     return DEFAULT_STATE
   }
 }
 
+// ── Context ────────────────────────────────────────────────────────────────────
+
+const GameContext = createContext<(GameState & GameActions) | null>(null)
+
 export function GameProvider({ children }: { children: React.ReactNode }) {
   const [state, setState] = useState<GameState>(DEFAULT_STATE)
   const stateRef = useRef(state)
   stateRef.current = state
-  const [hydrated, setHydrated] = useState(false)
-  const [catalog, setCatalog] = useState<Catalog>(STATIC_CATALOG)
-  const [toasts, setToasts] = useState<Toast[]>([])
-  const [authUserId, setAuthUserId] = useState<string | null>(pbShared.authStore.record?.id ?? null)
-  const backendRecordId = useRef<string | null>(null)
-  const backendLoadedFor = useRef<string | null>(null)
-  const isPreview = useRef(false)
-  const [backendReady, setBackendReady] = useState(false)
-  const [upgradePromptOpen, setUpgradePromptOpen] = useState(false)
-  const [awaitingRemoteState, setAwaitingRemoteState] = useState(false)
-  const [authGateOpen, setAuthGateOpen] = useState(false)
-  const [authGateError, setAuthGateError] = useState<string | null>(null)
 
+  const [hydrated, setHydrated] = useState(false)
+  const isPreview = useRef(false)
+
+  // ── Hydration ──────────────────────────────────────────────────────────────
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
     const previewScreen = params.get('preview')
-    const presetName = params.get('preset')
+    const routePreset = window.location.pathname.endsWith('/game/ship-customizer') ? 'ship-customizer' : null
+    const presetName = routePreset ?? params.get('preset')
     if (previewScreen) {
       isPreview.current = true
       setState({
@@ -125,7 +151,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       if (preset) {
         isPreview.current = true
         setState({ ...DEFAULT_STATE, ...preset })
-        window.history.replaceState({}, '', window.location.pathname)
+        if (!routePreset) window.history.replaceState({}, '', window.location.pathname)
         setHydrated(true)
         return
       }
@@ -136,640 +162,91 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     if (record?.id) identifyUser(record.id, record.email ? { email: record.email } : undefined)
   }, [])
 
-  useEffect(() => {
-    fetchCatalog().then(setCatalog).catch(() => {})
-  }, [])
-
-  useEffect(() => pbShared.authStore.onChange((_token, record) => {
-    backendRecordId.current = null
-    backendLoadedFor.current = null
-    setBackendReady(false)
-    setAuthUserId(record?.id ?? null)
-    if (record?.id) identifyUser(record.id, record.email ? { email: record.email } : undefined)
-  }), [])
-
-  // Detect returning-user-on-new-device: no local game state but credentials
-  // exist (stored guest email or a valid auth record). Show a reconnecting
-  // screen instead of the new-player intro until the remote state loads.
-  useEffect(() => {
-    if (!hydrated || isPreview.current) return
-    const noLocalState = !localStorage.getItem(STORAGE_KEY)
-    const isReturning = hasStoredCredentials() || pbShared.authStore.isValid
-    if (noLocalState && isReturning) setAwaitingRemoteState(true)
-  }, [hydrated])
-
-  // Clear once remote state has been merged in (or if we know it never will).
-  useEffect(() => {
-    if (backendReady) setAwaitingRemoteState(false)
-  }, [backendReady])
-
-  // Show an auth gate for brand-new users (no stored credentials, no active
-  // session). Returning guests and signed-in users skip straight to the game.
-  useEffect(() => {
-    if (!hydrated || isPreview.current) return
-    if (pbShared.authStore.isValid || hasStoredCredentials()) return
-    setAuthGateOpen(true)
-  }, [hydrated])
-
-  // Restore a returning guest's session. New users go through the auth gate
-  // above and call skipAuthGate() / signInFromGate() instead.
-  useEffect(() => {
-    if (isPreview.current) return
-    if (pbShared.authStore.isValid) return
-    if (!hasStoredCredentials()) return
-    ensureGuestAuth().catch(() => {
-      addToast('Offline mode — progress saved on this device only', 'warn')
-      setAwaitingRemoteState(false)
-    })
-  }, [])
-
+  // Survey on return visit
   useEffect(() => {
     if (!hydrated || isPreview.current) return
     if (state.player.missionsDone > 0) enqueueSurvey('lnm_return_visit', 3000)
   }, [hydrated]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Periodically nudge guest players to save their progress to a full
-  // account. Re-checked whenever a mission completes (missionsDone changes)
-  // and respects a snooze window set when the player dismisses the prompt.
-  useEffect(() => {
-    if (!hydrated || isPreview.current) return
-    if (state.player.missionsDone < 1) return
-    if (!isGuestAccount()) return
-    const snoozeUntil = Number(localStorage.getItem(UPGRADE_SNOOZE_KEY) ?? 0)
-    if (Date.now() < snoozeUntil) return
-    setUpgradePromptOpen(true)
-  }, [hydrated, state.player.missionsDone, authUserId])
-
-  useEffect(() => {
-    if (!hydrated || isPreview.current || !authUserId || backendLoadedFor.current === authUserId) return
-    let active = true
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    function applyRecord(record: any) {
-      backendRecordId.current = record.id
-      backendLoadedFor.current = authUserId!
-      const remoteState = record.state as Partial<GameState>
-      setState(current => ({ ...current, ...remoteState }))
-      setBackendReady(true)
-    }
-
-    // pbLandnam may be cold-starting independently of pbShared (they're
-    // separate Fly machines). Retry once after 4 s on network failure.
-    pbLandnam.collection('game_states')
-      .getFirstListItem(`user = "${authUserId}"`)
-      .then(record => { if (active) applyRecord(record) })
-      .catch(error => {
-        if (!active) return
-        if (typeof error === 'object' && error && 'status' in error && error.status === 404) {
-          backendLoadedFor.current = authUserId!
-          setBackendReady(true)
-          return
-        }
-        // Network error — Landnam backend may still be warming. Retry after 4 s.
-        setTimeout(() => {
-          if (!active) return
-          pbLandnam.collection('game_states')
-            .getFirstListItem(`user = "${authUserId}"`)
-            .then(record => { if (active) applyRecord(record) })
-            .catch(err => {
-              if (!active) return
-              if (typeof err === 'object' && err && 'status' in err && err.status === 404) {
-                backendLoadedFor.current = authUserId!
-                setBackendReady(true)
-              }
-              // Still failing after retry — stay in localStorage-only mode.
-            })
-        }, 4000)
-      })
-
-    return () => { active = false }
-  }, [authUserId, hydrated])
-
+  // Persist state to localStorage
   useEffect(() => {
     if (!hydrated || isPreview.current) return
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state))
   }, [state, hydrated])
 
-  useEffect(() => {
-    if (!hydrated || isPreview.current || !authUserId || !backendReady || backendLoadedFor.current !== authUserId) return
-    const timer = window.setTimeout(async () => {
-      const payload = { user: authUserId, state }
-      try {
-        if (backendRecordId.current) {
-          await pbLandnam.collection('game_states').update(backendRecordId.current, payload)
-        } else {
-          const record = await pbLandnam.collection('game_states').create(payload)
-          backendRecordId.current = record.id
-        }
-      } catch {
-        // Local storage remains the offline source of truth until the data link recovers.
-      }
-    }, 400)
-    return () => window.clearTimeout(timer)
-  }, [authUserId, hydrated, backendReady, state])
+  // ── Domain hooks ───────────────────────────────────────────────────────────
+  const ui      = useUIActions(setState)
+  const auth    = useAuthSync({ state, setState, stateRef, hydrated, isPreview: isPreview.current, addToast: ui.addToast, normalizeAndRepair, storageKey: STORAGE_KEY })
+  const { catalog } = useCatalogSync(state, setState, hydrated, isPreview.current, ui.addToast)
+  const loop    = useGameLoop({ stateRef, setState, catalog, addToast: ui.addToast })
+  const tutorial = useTutorialActions(setState)
+  const economy = useEconomyActions(setState, useCallback(() => catalog.missions, [catalog.missions]))
 
-  const go = useCallback((screen: Screen) => {
-    setState(s => ({ ...s, screen }))
-  }, [])
-
-  const setPlayer: React.Dispatch<React.SetStateAction<Player>> = useCallback(
-    (update) => setState(s => ({
-      ...s,
-      player: typeof update === 'function' ? update(s.player) : update,
-    })),
-    []
-  )
-
-  const setMissionId = useCallback((id: string | null) => {
-    setState(s => ({ ...s, missionId: id }))
-  }, [])
-
-  const setTargetId = useCallback((id: string | null) => {
-    setState(s => ({ ...s, targetId: id }))
-  }, [])
-
-  const setRocket = useCallback((r: RocketConfig | ((prev: RocketConfig) => RocketConfig)) => {
-    setState(s => ({
-      ...s,
-      rocket: typeof r === 'function' ? r(s.rocket) : r,
-    }))
-  }, [])
-
-  const setLastCargo = useCallback((c: Record<string, number> | null) => {
-    setState(s => ({ ...s, lastCargo: c }))
-  }, [])
-
-  const setTutorial = useCallback((v: boolean) => {
-    setState(s => ({ ...s, tutorial: v }))
-  }, [])
-
-  const skipTutorial = useCallback((stepIds: number[]) => {
-    setState(s => ({
-      ...s,
-      tutorial: false,
-      doneSteps: stepIds.reduce((acc, id) => ({ ...acc, [id]: true }), s.doneSteps),
-    }))
-  }, [])
-
-  const setDoneSteps: React.Dispatch<React.SetStateAction<Record<number, boolean>>> = useCallback(
-    (update) => setState(s => ({
-      ...s,
-      doneSteps: typeof update === 'function' ? update(s.doneSteps) : update,
-    })),
-    []
-  )
-
-  const setPopup = useCallback((v: string | null) => {
-    setState(s => ({ ...s, popup: v }))
-  }, [])
-
-  const setMenuOpen = useCallback((v: boolean) => {
-    setState(s => ({ ...s, menuOpen: v }))
-  }, [])
-
-  const addToast = useCallback((message: string, kind: Toast['kind'] = 'info') => {
-    setToasts(ts => [...ts, { id: nextToastId(), message, kind }])
-  }, [])
-
-  const dismissToast = useCallback((id: string) => {
-    setToasts(ts => ts.filter(t => t.id !== id))
-  }, [])
-
-  const dismissUpgradePrompt = useCallback(() => {
-    localStorage.setItem(UPGRADE_SNOOZE_KEY, String(Date.now() + UPGRADE_SNOOZE_MS))
-    setUpgradePromptOpen(false)
-  }, [])
-
-  const clearTerritoryClaimPopup = useCallback(() => {
-    setState(s => ({ ...s, pendingTerritoryClaimFor: undefined, screen: 'market' }))
-  }, [])
-
-  const upgradeAccount = useCallback(async (email: string, password: string) => {
-    const { emailChangeRequested } = await upgradeGuestAccount(email, password)
-    localStorage.removeItem(UPGRADE_SNOOZE_KEY)
-    setUpgradePromptOpen(false)
-    addToast(
-      emailChangeRequested
-        ? 'Account saved — check your email to confirm your new address'
-        : 'Account saved — your new password is active now',
-      'ok'
-    )
-  }, [addToast])
-
-  const onPickMission = useCallback((id: string) => {
-    setState(s => {
-      if (s.player.missionsDone >= 1) enqueueSurvey('lnm_contractor_pick')
-      const mission = catalog.missions.find(m => m.id === id) ?? null
-      if (mission?.targetId) {
-        // Fixed-target mission: pre-select target and skip TargetPickerScreen
-        const target = catalog.targets.find(t => t.id === mission.targetId) ?? null
-        const next = suggestBuild({ mission, target, missionsDone: s.player.missionsDone, launchpadUpgraded: s.player.launchpadUpgraded, parts: catalog.parts })
-        // Cargo-payload missions use Cargo Module T1 in the drill slot instead of a drill
-        if (mission.payload?.type === 'rover') next.drill = 'cargo-module-t1'
-        return {
-          ...s,
-          missionId: id,
-          targetId: mission.targetId,
-          rocket: next,
-          screen: 'rocket-buy',
-          doneSteps: { ...s.doneSteps, 2: true, 3: true },
-        }
-      }
-      return {
-        ...s,
-        missionId: id,
-        targetId: null,
-        screen: 'targets',
-        doneSteps: { ...s.doneSteps, 2: true },
-      }
-    })
-  }, [catalog.missions, catalog.parts, catalog.targets])
-
-  const onStartRefine = useCallback((recipeId: string) => {
-    const recipe = REFINERY_RECIPES.find(r => r.id === recipeId)
-    if (!recipe) return
-    setState(s => {
-      const stash = { ...(s.player.stash ?? {}) }
-      const current = stash[recipe.input.mineral] ?? 0
-      if (current < recipe.input.amount || s.player.francs < recipe.cost) return s
-      stash[recipe.input.mineral] = current - recipe.input.amount
-      return {
-        ...s,
-        player: {
-          ...s.player,
-          francs: s.player.francs - recipe.cost,
-          stash,
-          refineryQueue: [...s.player.refineryQueue, { recipeId, startedAt: Date.now() }],
-        },
-      }
-    })
-  }, [])
-
-  const onCollectRefined = useCallback((recipeId: string) => {
-    setState(s => {
-      const queue = [...s.player.refineryQueue]
-      const idx = queue.findIndex(q => q.recipeId === recipeId)
-      if (idx < 0) return s
-      const started = queue[idx].startedAt
-      const recipe = REFINERY_RECIPES.find(r => r.id === recipeId)
-      if (!recipe || (Date.now() - started) / 1000 < recipe.time) return s
-      queue.splice(idx, 1)
-      return {
-        ...s,
-        player: {
-          ...s.player,
-          refineryQueue: queue,
-          refinedGoods: { ...s.player.refinedGoods, [recipeId]: (s.player.refinedGoods[recipeId] ?? 0) + 1 },
-        },
-      }
-    })
-  }, [])
-
-  const upgradeLaunchpad = useCallback(() => {
-    setState(s => {
-      if (s.player.launchpadUpgraded || s.player.francs < 1_000_000_000) return s
-      return {
-        ...s,
-        player: {
-          ...s.player,
-          francs: s.player.francs - 1_000_000_000,
-          launchpadUpgraded: true,
-        },
-      }
-    })
-  }, [])
-
-  const sellMinerals = useCallback((mineralId: string, amount: number) => {
-    setState(s => {
-      const stash = { ...(s.player.stash ?? {}) }
-      const held = stash[mineralId] ?? 0
-      const sellAmount = Math.min(amount, held)
-      if (sellAmount <= 0) return s
-      const meta = MINERAL_META[mineralId]
-      if (!meta) return s
-      const revenue = meta.price * sellAmount
-      stash[mineralId] = held - sellAmount
-      if (stash[mineralId] <= 0) delete stash[mineralId]
-      return {
-        ...s,
-        player: {
-          ...s.player,
-          francs: s.player.francs + revenue,
-          stash,
-        },
-      }
-    })
-  }, [])
-
-  const onPickTarget = useCallback((id: string) => {
-    setState(s => {
-      const mission = s.missionId ? catalog.missions.find(m => m.id === s.missionId) ?? null : null
-      const target = catalog.targets.find(t => t.id === id) ?? null
-      const next = suggestBuild({ mission, target, missionsDone: s.player.missionsDone, launchpadUpgraded: s.player.launchpadUpgraded, parts: catalog.parts })
-      return {
-        ...s,
-        targetId: id,
-        rocket: next,
-        screen: 'rocket-buy',
-        doneSteps: { ...s.doneSteps, 3: true },
-      }
-    })
-  }, [catalog.missions, catalog.parts, catalog.targets])
-
-  const onPurchaseRocket = useCallback((rocketId: string) => {
-    setState(s => {
-      const rocket = STARTER_ROCKETS.find(r => r.id === rocketId)
-      if (!rocket) return s
-      if (s.player.francs < rocket.costFrancs) return s
-      return {
-        ...s,
-        player: { ...s.player, francs: s.player.francs - rocket.costFrancs },
-        screen: 'fab',
-      }
-    })
-  }, [])
-
-  const onLaunch = useCallback(() => {
-    const isFirstEver = stateRef.current.player.missionsDone === 0
-    setState(s => {
-      const mission = s.missionId ? catalog.missions.find(m => m.id === s.missionId) : null
-      const target = s.targetId ? catalog.targets.find(t => t.id === s.targetId) : null
-      const arrivalAt = (!s.tutorial && target)
-        ? Date.now() + target.orbit * ORBIT_MS_PER_UNIT
-        : null
-      return {
-        ...s,
-        player: {
-          ...s.player,
-          pendingLaunch: false,
-          arrivalAt,
-          activeMission: mission && target
-            ? { id: mission.id, label: mission.title + ' → ' + target.name }
-            : null,
-        },
-        screen: 'transit',
-        doneSteps: { ...s.doneSteps, 5: true },
-      }
-    })
-    if (isFirstEver) enqueueSurvey('lnm_first_launch', 4000)
-  }, [catalog.missions, catalog.targets])
-
-  const onMiningDone = useCallback((cargo: Record<string, number>) => {
-    setState(s => {
-      const stash = { ...(s.player.stash ?? {}) }
-      for (const [id, amount] of Object.entries(cargo)) {
-        stash[id] = (stash[id] ?? 0) + amount
-      }
-      return {
-        ...s,
-        lastCargo: cargo,
-        player: { ...s.player, stash, arrivalAt: null },
-        screen: 'debrief',
-        doneSteps: { ...s.doneSteps, 6: true },
-      }
-    })
-    addToast('Rocket has returned — cargo secured', 'ok')
-    enqueueSurvey('lnm_mining_feel', 2000)
-  }, [addToast])
-
-  const onDebriefDone = useCallback((total: number, _affinity: number = 0, consumed: Record<string, number> = {}) => {
-    const newMissionsDone = stateRef.current.player.missionsDone + 1
-    setState(s => {
-      const missionsDone = s.player.missionsDone + 1
-      const mission = s.missionId ? catalog.missions.find(m => m.id === s.missionId) : null
-      const missionContractor = mission?.contractor
-      const contractor = missionContractor
-      const contractorMissions = { ...s.player.contractorMissions }
-      const contractorStreaks = { ...(s.player.contractorStreaks ?? {}) }
-      const contractorCooldowns = { ...s.player.contractorCooldowns }
-      if (contractor) {
-        contractorMissions[contractor] = (contractorMissions[contractor] ?? 0) + 1
-        const streak = (contractorStreaks[contractor] ?? 0) + 1
-        if (streak >= CONTRACTOR_STREAK_LIMIT) {
-          contractorStreaks[contractor] = 0
-          contractorCooldowns[contractor] = Date.now() + CONTRACTOR_COOLDOWN_MS
-        } else {
-          contractorStreaks[contractor] = streak
-        }
-      }
-      const stash = { ...(s.player.stash ?? {}) }
-      for (const [id, amount] of Object.entries(consumed)) {
-        stash[id] = Math.max(0, (stash[id] ?? 0) - amount)
-      }
-      let loanDebt = s.player.loanDebt
-      let francs = s.player.francs + total
-      if (loanDebt > 0) {
-        const payment = Math.min(LOAN_REPAYMENT, loanDebt)
-        francs = Math.max(0, francs - payment)
-        loanDebt = Math.max(0, loanDebt - payment)
-      }
-      const loanOffered = s.player.loanOffered
-      const showLoanOffer = !loanOffered && francs < BANKRUPTCY_THRESHOLD && loanDebt === 0
-      
-      const seen_planets = [...(s.player.seen_planets ?? [])]
-      if (s.targetId && !seen_planets.includes(s.targetId)) {
-        seen_planets.push(s.targetId)
-      }
-
-      const effectiveTargetId = mission?.targetId ?? s.targetId ?? ''
-      let roverDeployments = [...(s.player.roverDeployments ?? [])]
-      let contractorTerritories = { ...(s.player.contractorTerritories ?? {}) }
-      let pendingTerritoryClaimFor: { targetId: string; contractorId: string } | undefined
-      if (mission?.payload?.type === 'rover' && contractor && effectiveTargetId) {
-        roverDeployments = [...roverDeployments, {
-          roverId: `${mission.id}-rover-${Date.now()}`,
-          targetId: effectiveTargetId,
-          contractorId: contractor,
-          timestamp: Date.now(),
-        }]
-        const prev = contractorTerritories[contractor] ?? []
-        if (!prev.includes(effectiveTargetId)) {
-          contractorTerritories = { ...contractorTerritories, [contractor]: [...prev, effectiveTargetId] }
-        }
-        pendingTerritoryClaimFor = { targetId: effectiveTargetId, contractorId: contractor }
-      }
-
-      return {
-        ...s,
-        player: {
-          ...s.player,
-          francs,
-          activeMission: null,
-          missionsDone,
-          missionCount: catalog.missions.filter(m => m.sequence === missionsDone + 1).length,
-          freeOperations: false,
-          contractorMissions,
-          contractorStreaks,
-          contractorCooldowns,
-          stash,
-          lastContractor: contractor,
-          loanDebt,
-          loanOffered: loanOffered || showLoanOffer,
-          seen_planets,
-          roverDeployments,
-          contractorTerritories,
-        },
-        lastCargo: null,
-        missionId: null,
-        targetId: null,
-        tutorial: catalog.missions.some(m => m.sequence === missionsDone + 1),
-        popup: missionsDone === 1 ? 'sr2' : showLoanOffer ? 'loan' : s.popup,
-        doneSteps: { ...s.doneSteps, 9: true },
-        screen: pendingTerritoryClaimFor ? s.screen : 'market',
-        pendingTerritoryClaimFor,
-      }
-    })
-    addToast(`Mission payout received: +${(total / 1_000_000).toFixed(0)}M F`, 'ok')
-    enqueueSurvey('lnm_mission_friction', 2000)
-    if (newMissionsDone === 1) {
-      enqueueSurvey('lnm_m1_complete', 3000)
-      enqueueSurvey('lnm_progression_feel', 8000)
-    }
-    if (newMissionsDone === 2) enqueueSurvey('lnm_m2_complete', 3000)
-    if (newMissionsDone === 3) enqueueSurvey('lnm_m3_complete', 5000)
-    if (!catalog.missions.some(m => m.sequence === newMissionsDone + 1)) enqueueSurvey('lnm_end_of_content', 5000)
-  }, [addToast, catalog.missions])
-
-  const coachManualNext = useCallback(() => {
-    setState(s => {
-      const stepsHere = s.tutorial
-        ? PROGRESSION_STEPS.filter(
-            (step) => step.screen === s.screen && !s.doneSteps[step.id]
-          )
-        : []
-      const coach = stepsHere[0]
-      if (!coach) return s
-      return { ...s, doneSteps: { ...s.doneSteps, [coach.id]: true } }
-    })
-  }, [])
-
-  const completeStep = useCallback((id: number) => {
-    setState(s => ({ ...s, doneSteps: { ...s.doneSteps, [id]: true } }))
-  }, [])
-
-  const resetGame = useCallback(() => {
-    if (!confirm('Are you sure you want to reset all progress?')) return
-    setState(DEFAULT_STATE)
-    localStorage.removeItem(STORAGE_KEY)
-    if (authUserId && backendRecordId.current) {
-      pbLandnam.collection('game_states').delete(backendRecordId.current)
-        .catch(() => {})
-      backendRecordId.current = null
-    }
-  }, [authUserId])
-
-  const abandonMission = useCallback(() => {
-    if (!confirm('Abort this mission? You will lose 10% of the mission payout as a penalty.')) return
-    setState(s => {
-      const mission = s.missionId ? catalog.missions.find(m => m.id === s.missionId) : null
-      const penalty = mission ? Math.round(mission.payout.francs * 0.1) : 0
-      return {
-        ...s,
-        player: {
-          ...s.player,
-          francs: Math.max(0, s.player.francs - penalty),
-          activeMission: null,
-        },
-        missionId: null,
-        targetId: null,
-        screen: 'hub',
-      }
-    })
-  }, [catalog.missions])
-
-  const acceptLoan = useCallback(() => {
-    setState(s => ({
-      ...s,
-      popup: null,
-      player: {
-        ...s.player,
-        francs: s.player.francs + LOAN_AMOUNT,
-        loanDebt: s.player.loanDebt + LOAN_AMOUNT * 1.08,
-        loanOffered: true,
-      },
-    }))
-  }, [])
-
-  const signInFromGate = useCallback(async (email: string, password: string) => {
-    setAuthGateError(null)
-    try {
-      await pbShared.collection('users').authWithPassword(email, password)
-      setAuthGateOpen(false)
-    } catch (e) {
-      const msg = e instanceof Error ? e.message : 'Sign in failed'
-      setAuthGateError(msg)
-      throw new Error(msg)
-    }
-  }, [])
-
-  const createAccountFromGate = useCallback(async (email: string, password: string) => {
-    setAuthGateError(null)
-    try {
-      await pbShared.collection('users').create({ email, password, passwordConfirm: password, name: '' })
-      await pbShared.collection('users').authWithPassword(email, password)
-      setAuthGateOpen(false)
-    } catch (e) {
-      const msg = e instanceof Error ? e.message : 'Account creation failed'
-      setAuthGateError(msg)
-      throw new Error(msg)
-    }
-  }, [])
-
-  const skipAuthGate = useCallback(() => {
-    setAuthGateOpen(false)
-    ensureGuestAuth().catch(() => {
-      addToast('Offline mode — progress saved on this device only', 'warn')
-      setAwaitingRemoteState(false)
-    })
-  }, [addToast])
-
-  const mission = state.missionId ? catalog.missions.find(m => m.id === state.missionId) ?? null : null
+  // ── Derived values ─────────────────────────────────────────────────────────
+  const mission = state.missionId
+    ? (catalog.missions.find(m => m.id === state.missionId)
+       ?? state.player.dailyContractorPool?.missions.find(m => m.id === state.missionId)
+       ?? null)
+    : null
   const target = state.targetId ? catalog.targets.find(t => t.id === state.targetId) ?? null : null
 
   return (
     <GameContext.Provider value={{
       ...state,
       catalog,
-      go,
-      setPlayer,
-      setMissionId,
-      setTargetId,
-      setRocket,
-      setLastCargo,
-      setTutorial,
-      setDoneSteps,
-      skipTutorial,
-      setPopup,
-      setMenuOpen,
-      onPickMission,
-      onPickTarget,
-      onPurchaseRocket,
-      onLaunch,
-      onMiningDone,
-      onDebriefDone,
-      coachManualNext,
-      completeStep,
-      resetGame,
-      upgradeLaunchpad,
-      sellMinerals,
-      onStartRefine,
-      onCollectRefined,
-      acceptLoan,
-      abandonMission,
-      toasts,
-      dismissToast,
+      hydrated,
+      authUserId: auth.authUserId,
       mission,
       target,
-      upgradePromptOpen,
-      dismissUpgradePrompt,
-      upgradeAccount,
-      clearTerritoryClaimPopup,
-      awaitingRemoteState,
-      authGateOpen,
-      authGateError,
-      signInFromGate,
-      createAccountFromGate,
-      skipAuthGate,
+      toasts: ui.toasts,
+      laserChargeCap: getLaserChargeCap(state.player.unlockedSkillNodes ?? []),
+      // UI
+      go: ui.go,
+      setPopup: ui.setPopup,
+      setMenuOpen: ui.setMenuOpen,
+      dismissToast: ui.dismissToast,
+      clearTerritoryClaimPopup: ui.clearTerritoryClaimPopup,
+      // Auth
+      upgradePromptOpen: auth.upgradePromptOpen,
+      dismissUpgradePrompt: auth.dismissUpgradePrompt,
+      upgradeAccount: auth.upgradeAccount,
+      awaitingRemoteState: auth.awaitingRemoteState,
+      authGateOpen: auth.authGateOpen,
+      authGateError: auth.authGateError,
+      signInFromGate: auth.signInFromGate,
+      createAccountFromGate: auth.createAccountFromGate,
+      skipAuthGate: auth.skipAuthGate,
+      resetGame: useCallback(() => auth.resetGame(DEFAULT_STATE), [auth.resetGame]), // eslint-disable-line react-hooks/rules-of-hooks
+      // Game loop
+      setPlayer: loop.setPlayer,
+      setMissionId: loop.setMissionId,
+      setTargetId: loop.setTargetId,
+      setRocket: loop.setRocket,
+      setLastCargo: loop.setLastCargo,
+      onPickMission: loop.onPickMission,
+      onPickTarget: loop.onPickTarget,
+      onPurchaseRocket: loop.onPurchaseRocket,
+      onLaunch: loop.onLaunch,
+      onMiningDone: loop.onMiningDone,
+      onRoverMiningDone: loop.onRoverMiningDone,
+      onDebriefDone: loop.onDebriefDone,
+      // Tutorial
+      setTutorial: tutorial.setTutorial,
+      skipTutorial: tutorial.skipTutorial,
+      setDoneSteps: tutorial.setDoneSteps,
+      completeStep: tutorial.completeStep,
+      coachManualNext: tutorial.coachManualNext,
+      // Economy
+      sellMinerals: economy.sellMinerals,
+      onStartRefine: economy.onStartRefine,
+      onCollectRefined: economy.onCollectRefined,
+      upgradeLaunchpad: economy.upgradeLaunchpad,
+      buildScanner: economy.buildScanner,
+      startScan: economy.startScan,
+      collectScan: economy.collectScan,
+      unlockSkillNode: economy.unlockSkillNode,
+      acceptLoan: economy.acceptLoan,
+      abandonMission: economy.abandonMission,
     }}>
       {children}
     </GameContext.Provider>

@@ -1,0 +1,12 @@
+{
+  "name": "construction-target",
+  "background": "#06090f",
+  "entities": [
+    {
+      "id": "construction-controller",
+      "name": "Construction Controller",
+      "transform": { "position": { "x": 0, "y": 0 }, "rotation": 0, "scale": { "x": 1, "y": 1 } },
+      "components": [{ "type": "ConstructionController" }]
+    }
+  ]
+}

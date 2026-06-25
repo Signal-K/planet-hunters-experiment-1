@@ -6,8 +6,12 @@ import TopBar from '@/components/ui/TopBar'
 import Panel from '@/components/ui/Panel'
 import { PrimaryBtn } from '@/components/ui/Button'
 import StatusPill from '@/components/ui/StatusPill'
+import { canAffordStructure, STRUCTURES, structureUnlocked } from '@/lib/data'
+import type { StructureBlueprint } from '@/lib/data'
 import { Scene } from '@/lib/engine/Scene'
 import type { EntityData } from '@/lib/engine/types'
+import { TUTORIAL_CONTENT_TOP } from '@/lib/tutorial-layout'
+import { UI_ZONES } from '@/lib/ui-zones'
 
 const DEFAULT_PLOTS: EntityData[] = [
   { id: 'plot-0', name: 'Plot 0', transform: { position: { x: 14, y: 628 }, rotation: 0, scale: { x: 1, y: 1 } }, components: [{ type: 'BuildPlot', index: 0 }] },
@@ -20,11 +24,14 @@ interface BuildPlaceScreenProps {
   onPlaced: (kind: string, plot: number) => void
   onBack: () => void
   hasCoach?: boolean
+  player: {
+    francs: number
+    stash?: Record<string, number>
+    placed: string[]
+    freeOperations: boolean
+    refineryUnlocked?: boolean
+  }
 }
-
-const CATALOG = [
-  { id: 'launchpad', name: 'Launchpad', cost: 0, desc: 'Assemble rockets and launch mining missions.', avail: true },
-]
 
 function StructureIcon({ kind, size = 32 }: { kind: string; size?: number }) {
   if (kind === 'launchpad') {
@@ -33,7 +40,15 @@ function StructureIcon({ kind, size = 32 }: { kind: string; size?: number }) {
   return <svg width={size} height={size} viewBox="0 0 32 32" fill="none" aria-hidden="true"><path d="M5 13h22v14H5zM3 13l4-8h18l4 8" stroke="currentColor" strokeWidth="2"/><path d="M10 27V17h6v10m4-8h4" stroke="currentColor" strokeWidth="2"/></svg>
 }
 
-export default function BuildPlaceScreen({ onPlaced, onBack, hasCoach }: BuildPlaceScreenProps) {
+function formatStructureCost(structure: StructureBlueprint): string {
+  const mineralCost = Object.entries(structure.costMaterials ?? {})
+    .map(([mineral, amount]) => `${amount} ${mineral}`)
+    .join(' · ')
+  const francs = structure.cost === 0 ? 'Free' : `₣${structure.cost.toLocaleString()}`
+  return mineralCost ? `${francs} · ${mineralCost}` : francs
+}
+
+export default function BuildPlaceScreen({ onPlaced, onBack, hasCoach, player }: BuildPlaceScreenProps) {
   const [phase, setPhase] = useState<'pick' | 'place'>('pick')
   const [picked, setPicked] = useState('launchpad')
   const [cell, setCell] = useState<number | null>(null)
@@ -45,7 +60,8 @@ export default function BuildPlaceScreen({ onPlaced, onBack, hasCoach }: BuildPl
       .catch(() => {})
   }, [])
 
-  const sel = CATALOG.find(c => c.id === picked) ?? CATALOG[0]
+  const catalog = STRUCTURES.filter(structure => structure.id !== 'garage')
+  const sel = catalog.find(c => c.id === picked) ?? catalog[0]
 
   return (
     <div style={{ width: '100%', height: '100%', position: 'relative' }}>
@@ -61,16 +77,19 @@ export default function BuildPlaceScreen({ onPlaced, onBack, hasCoach }: BuildPl
       />
 
       {phase === 'pick' && (
-        <div style={{ position: 'absolute', inset: 0, paddingTop: hasCoach ? 184 : 128, paddingBottom: 96, overflowY: 'auto' }}>
+        <div data-ui-zone={UI_ZONES.screenContent} style={{ position: 'absolute', inset: 0, paddingTop: hasCoach ? TUTORIAL_CONTENT_TOP : 128, paddingBottom: 96, overflowY: 'auto' }}>
           <div style={{ padding: '0 14px 8px' }}>
             <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 10, fontWeight: 700, letterSpacing: '0.22em', color: 'var(--ln-text-muted)', textTransform: 'uppercase' }}>Available Structures</div>
           </div>
           <div style={{ padding: '0 14px', display: 'flex', flexDirection: 'column', gap: 10 }}>
-            {CATALOG.map(c => {
+            {catalog.map(c => {
               const on = c.id === picked
-              const unlocked = c.avail
+              const alreadyBuilt = player.placed.includes(c.id)
+              const unlocked = structureUnlocked(c, { refineryUnlocked: player.refineryUnlocked, placed: player.placed, freeOperations: player.freeOperations }) && !alreadyBuilt
+              const affordable = canAffordStructure(c, { francs: player.francs, stash: player.stash })
+              const canSelect = unlocked && affordable
               return (
-                <button key={c.id} onClick={() => unlocked && setPicked(c.id)} style={{ background: 'transparent', border: 'none', padding: 0, textAlign: 'left', cursor: unlocked ? 'pointer' : 'not-allowed', opacity: unlocked ? 1 : 0.5 }}>
+                <button key={c.id} onClick={() => canSelect && setPicked(c.id)} style={{ background: 'transparent', border: 'none', padding: 0, textAlign: 'left', cursor: canSelect ? 'pointer' : 'not-allowed', opacity: canSelect ? 1 : 0.5 }}>
                   <Panel accent={on ? '#f5a623' : '#3fa9ff'} style={{ padding: 10 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                       <div style={{ width: 48, height: 48, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(10,18,29,0.8)', borderRadius: 8, border: `1px solid ${on ? '#f5a623' : '#3fa9ff'}40` }}>
@@ -78,11 +97,13 @@ export default function BuildPlaceScreen({ onPlaced, onBack, hasCoach }: BuildPl
                       </div>
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <div style={{ fontFamily: 'var(--ln-font-display)', fontWeight: 800, fontSize: 15, color: on ? '#f5a623' : '#e6efff', letterSpacing: '0.02em' }}>{c.name}</div>
-                        <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 11, color: '#a9b8ce', marginTop: 2, lineHeight: 1.35 }}>{c.desc}</div>
+                        <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 11, color: '#a9b8ce', marginTop: 2, lineHeight: 1.35 }}>{c.description}</div>
                         <div style={{ marginTop: 6 }}>
-                          {c.avail
-                            ? <StatusPill kind={c.cost === 0 ? 'ok' : 'amber'}>{c.cost === 0 ? 'Free · Starter' : `▲ ${c.cost}`}</StatusPill>
-                            : <StatusPill kind="mute">Locked</StatusPill>}
+                          {alreadyBuilt
+                            ? <StatusPill kind="mute">Built</StatusPill>
+                            : unlocked
+                              ? <StatusPill kind={affordable ? (c.cost === 0 ? 'ok' : 'amber') : 'crit'}>{affordable ? formatStructureCost(c) : 'Need materials'}</StatusPill>
+                              : <StatusPill kind="mute">{c.unlocksAt}</StatusPill>}
                         </div>
                       </div>
                       {on && <span style={{ color: '#f5a623', fontSize: 22 }}>✓</span>}
@@ -96,17 +117,17 @@ export default function BuildPlaceScreen({ onPlaced, onBack, hasCoach }: BuildPl
       )}
 
       {phase === 'pick' && (
-        <div className="sticky-actions">
-          <PrimaryBtn kind="amber" onClick={() => setPhase('place')}>Select a Plot →</PrimaryBtn>
+        <div className="sticky-actions" data-ui-zone={UI_ZONES.bottomActions}>
+          <PrimaryBtn kind="amber" disabled={!canAffordStructure(sel, { francs: player.francs, stash: player.stash }) || !structureUnlocked(sel, { refineryUnlocked: player.refineryUnlocked, placed: player.placed }) || player.placed.includes(sel.id)} onClick={() => setPhase('place')}>Select a Plot →</PrimaryBtn>
         </div>
       )}
 
       {phase === 'place' && (
         <>
-          <div style={{ position: 'absolute', left: 14, right: 14, top: hasCoach ? 166 : 130, zIndex: 12 }}>
+          <div style={{ position: 'absolute', left: 14, right: 14, top: hasCoach ? TUTORIAL_CONTENT_TOP : 130, zIndex: 12 }}>
             <Panel accent="#f5a623" style={{ padding: 10 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                <span style={{ color: 'var(--ln-amber)' }}><StructureIcon kind="launchpad" size={28} /></span>
+                <span style={{ color: 'var(--ln-amber)' }}><StructureIcon kind={picked} size={28} /></span>
                 <div style={{ flex: 1 }}>
                   <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 9, fontWeight: 800, letterSpacing: '0.2em', color: '#f5a623', textTransform: 'uppercase' }}>Placing · {sel.name}</div>
                   <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 12, color: '#a9b8ce', marginTop: 2 }}>{cell == null ? 'Tap a glowing pad on the surface.' : 'Pad chosen — confirm to build here.'}</div>
@@ -129,7 +150,7 @@ export default function BuildPlaceScreen({ onPlaced, onBack, hasCoach }: BuildPl
                 const idx = (entity.components.find(c => c.type === 'BuildPlot')?.index as number) ?? 0
                 const on = cell === idx
                 return (
-                  <button key={idx} data-testid={`build-plot-${idx}`} onClick={() => setCell(idx)} style={{ position: 'absolute', left: entity.transform.position.x, bottom: Math.round(874 - entity.transform.position.y - 96), width: 86, cursor: 'pointer', background: 'transparent', border: 'none', padding: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', pointerEvents: 'auto' }}>
+                  <button key={idx} className="build-plot-button" data-testid={`build-plot-${idx}`} onClick={() => setCell(idx)} style={{ position: 'absolute', left: entity.transform.position.x, bottom: Math.round(874 - entity.transform.position.y - 96), width: 86, cursor: 'pointer', background: 'transparent', border: 'none', padding: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', pointerEvents: 'auto' }}>
                     <div style={{ width: 64, height: 64, marginBottom: 2, opacity: on ? 1 : 0, transform: on ? 'translateY(0)' : 'translateY(6px)', transition: 'all 160ms', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 32 }}>
                       {on && <span style={{ color: 'var(--ln-amber)' }}><StructureIcon kind={picked} size={40} /></span>}
                     </div>
@@ -141,7 +162,7 @@ export default function BuildPlaceScreen({ onPlaced, onBack, hasCoach }: BuildPl
               })}
           </div>
 
-          <div className="sticky-actions">
+          <div className="sticky-actions" data-ui-zone={UI_ZONES.bottomActions}>
             <PrimaryBtn kind="amber" disabled={cell == null} onClick={() => cell != null && onPlaced(picked, cell)}>Confirm · Build Here →</PrimaryBtn>
           </div>
         </>

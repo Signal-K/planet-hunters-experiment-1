@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
+import { UI_ZONES } from '@/lib/ui-zones'
 
 type Health = 'checking' | 'warming' | 'online' | 'offline'
 
@@ -48,7 +49,7 @@ export default function BackendStatus() {
                            'CONNECTING'
 
   return (
-    <div className={`backend-status backend-status--${health}`} title="PocketBase backend status">
+    <div data-ui-zone={UI_ZONES.statusUtility} className={`backend-status backend-status--${health}`} title="PocketBase backend status">
       <span aria-hidden="true" />
       DATA LINK · {label}
     </div>

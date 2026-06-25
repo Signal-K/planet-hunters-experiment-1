@@ -1,0 +1,20 @@
+[
+  {
+    "name": "launch_bg_launchpad",
+    "profile": "launch_background",
+    "prompt": "Pixel-art rocket launch site ground scene, wide panoramic view, concrete launch pad apron with blast deflector trench running left-to-right, two steel launch support towers with service arm gantries, distant scrubland horizon under deep navy pre-dawn sky, small amber flood lights on towers, no rocket visible, ground level perspective, seamless width for parallax pan",
+    "aspect_ratio": "16:9"
+  },
+  {
+    "name": "launch_bg_clouds",
+    "profile": "launch_background",
+    "prompt": "Pixel-art cloud layer panoramic strip for parallax scrolling, wide horizontal band of stratocumulus clouds against deep blue twilight sky, chunky silhouetted cloud tops with cyan atmospheric rim lighting, darker cloud undersides, sparse cloud gaps revealing dark navy sky, no ground no horizon no rocket, seamless repeatable cloud band for vertical parallax",
+    "aspect_ratio": "16:9"
+  },
+  {
+    "name": "launch_bg_high_atmosphere",
+    "profile": "launch_background",
+    "prompt": "Pixel-art high atmosphere and upper stratosphere panoramic layer, very sparse thin cirrus cloud wisps fading out against deep blue-black sky transitioning to near-space black, subtle cyan atmospheric scattering glow at bottom edge, pure space black at top edge, faint star pixel dots appearing in upper portion, wide seamless band for rocket ascent background parallax",
+    "aspect_ratio": "16:9"
+  }
+]

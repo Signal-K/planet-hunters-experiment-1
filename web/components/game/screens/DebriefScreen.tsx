@@ -1,11 +1,13 @@
 'use client'
 
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import type { Mission, Target, MineralMeta, Contractor } from '@/lib/data'
 import { sellCargo, calibrateOnboardingPayout, contractorAffinityBonus } from '@/lib/data'
 import Panel from '@/components/ui/Panel'
 import TopBar from '@/components/ui/TopBar'
 import { PrimaryBtn } from '@/components/ui/Button'
+import { UI_ZONES } from '@/lib/ui-zones'
+import TutorialHighlight from '@/components/game/TutorialHighlight'
 
 const DEBRIEF_GUIDE = [
   { label: 'RESOLVE CARGO', desc: 'Confirm your haul and see the full breakdown of mineral value, contract bonus, and any discovery reward.' },
@@ -14,7 +16,7 @@ const DEBRIEF_GUIDE = [
   { label: 'MINERAL VALUE', desc: 'Market rate for every unit of ore in your cargo. You always receive this regardless of contract status.' },
 ]
 
-export default function DebriefScreen({ mission, target, cargo, onDone, minerals, contractors, contractorMissions, freeOperations, annotations, missionsDone }: {
+export default function DebriefScreen({ mission, target, cargo, onDone, minerals, contractors, contractorMissions, freeOperations, annotations, missionsDone, hasCoach }: {
   mission: Mission
   target: Target
   cargo: Record<string, number>
@@ -25,9 +27,12 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
   freeOperations?: boolean
   annotations?: number
   missionsDone?: number
+  hasCoach?: boolean
 }) {
   const [step, setStep] = useState(0)
   const [guideOpen, setGuideOpen] = useState(false)
+  const [collecting, setCollecting] = useState(false)
+  const collectingRef = useRef(false)
   const subtotal = sellCargo(cargo, minerals)
   const delivered = Object.entries(mission.requires.minerals).every(([id, amount]) => (cargo[id] ?? 0) >= amount)
   const contractor = contractors[mission.contractor]
@@ -56,7 +61,7 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
           </div>
         </div>
       )}
-      <div className="screen-scroll debrief-scroll">
+      <div className="screen-scroll debrief-scroll" data-ui-zone={UI_ZONES.screenContent}>
         <div className="success-mark">✓</div>
         <h2>Returned</h2>
         <p>From {target.name} · Sol III orbit re-entry</p>
@@ -86,11 +91,22 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
           </Panel>
         )}
       </div>
-      <div className="sticky-actions">
+      <div className="sticky-actions" data-ui-zone={UI_ZONES.bottomActions} style={{ position: 'relative' }}>
+        {hasCoach && step === 1 && <TutorialHighlight borderRadius={8} />}
         {step === 0 ? (
           <PrimaryBtn kind="cyan" testId="resolve-cargo-btn" onClick={() => setStep(1)}>Resolve Cargo</PrimaryBtn>
         ) : (
-          <PrimaryBtn kind="amber" testId="collect-reward-btn" onClick={() => onDone(total, delivered ? mission.payout.affinity : 0, delivered ? mission.requires.minerals : {})}>Collect Reward</PrimaryBtn>
+          <PrimaryBtn
+            kind="amber"
+            testId="collect-reward-btn"
+            disabled={collecting}
+            onClick={() => {
+              if (collectingRef.current) return
+              collectingRef.current = true
+              setCollecting(true)
+              onDone(total, delivered ? mission.payout.affinity : 0, delivered ? mission.requires.minerals : {})
+            }}
+          >Collect Reward</PrimaryBtn>
         )}
         <button
           data-testid="debrief-guide-btn"

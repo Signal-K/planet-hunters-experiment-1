@@ -103,3 +103,36 @@ npm run test:e2e           # start-server-and-test + cypress (offline profile)
 6. Use `appendNotes` in tasks (never `notes` for progress updates)
 
 <!-- LANDNAM PROJECT REQUIREMENTS END -->
+
+## Tickets & Sprints
+
+**Sprint label format: `sprint-YYYY-MM-DD` where the date is the Saturday ending the sprint.**
+Never use numbered sprints (`sprint-6`, `sprint-7`, etc.) — always use the end date.
+
+```bash
+# Create a ticket assigned to the current sprint
+knowns task create "Title" \
+  --priority high \
+  --label "project-landnam" \
+  --label "sprint-2026-06-27"
+
+# Add sprint label to an existing ticket
+knowns task edit <id> --labels "project-landnam,sprint-2026-06-27,other-labels"
+
+# List tickets in the current sprint
+knowns task list --plain --label "sprint-2026-06-27"
+
+# Mark a ticket in-progress when starting work
+knowns task status <id> in-progress
+
+# Mark done when complete
+knowns task status <id> done
+```
+
+**Required labels on every ticket:**
+- Project label: `project-landnam`, `project-saily`, `project-compass`, etc.
+- Sprint label: `sprint-YYYY-MM-DD` (only for work scheduled this sprint)
+
+**Compass** is the macOS task board at `/Applications/Compass.app`. It reads from `~/Navigation/.knowns/`. The "This Week" board view shows tasks whose labels match the current sprint. After editing task labels via CLI, Compass auto-refreshes within ~2 seconds.
+
+To find the current sprint Saturday: run `date +%Y-%m-%d` and count to the nearest Saturday.

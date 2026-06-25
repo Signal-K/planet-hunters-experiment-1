@@ -6,13 +6,8 @@ import Panel from '@/components/ui/Panel'
 import { PrimaryBtn, GhostBtn } from '@/components/ui/Button'
 import { STARTER_ROCKETS } from '@/lib/data'
 import type { StarterRocket } from '@/lib/data'
-
-interface RocketPurchaseScreenProps {
-  missionsDone: number
-  francs: number
-  onPurchase: (rocketId: string) => void
-  onBack: () => void
-}
+import { UI_ZONES } from '@/lib/ui-zones'
+import TutorialHighlight from '@/components/game/TutorialHighlight'
 
 function formatFrancs(n: number): string {
   if (n >= 1_000_000_000) return `${(n / 1_000_000_000).toFixed(1)}B ▲`
@@ -25,7 +20,15 @@ function getRequiredRocket(missionsDone: number): StarterRocket {
   return eligible.sort((a, b) => b.tier - a.tier)[0] ?? STARTER_ROCKETS[0]
 }
 
-export default function RocketPurchaseScreen({ missionsDone, francs, onPurchase, onBack }: RocketPurchaseScreenProps) {
+interface RocketPurchaseScreenProps {
+  missionsDone: number
+  francs: number
+  onPurchase: (rocketId: string) => void
+  onBack: () => void
+  hasCoach?: boolean
+}
+
+export default function RocketPurchaseScreen({ missionsDone, francs, onPurchase, onBack, hasCoach }: RocketPurchaseScreenProps) {
   const rocket = getRequiredRocket(missionsDone)
   const isFree = rocket.costFrancs === 0
   const canAfford = francs >= rocket.costFrancs
@@ -33,7 +36,9 @@ export default function RocketPurchaseScreen({ missionsDone, francs, onPurchase,
   return (
     <div className="game-screen">
       <TopBar eyebrow="LAUNCHPAD · VEHICLE" title="Select Rocket" onBack={onBack} />
-      <div className="screen-scroll" style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+      <div className="screen-scroll" data-ui-zone={UI_ZONES.screenContent} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+        <div style={{ position: 'relative' }}>
+          {hasCoach && <TutorialHighlight />}
         <Panel accent="var(--ln-cyan)" style={{ padding: 16 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
             <div style={{
@@ -59,6 +64,7 @@ export default function RocketPurchaseScreen({ missionsDone, francs, onPurchase,
             </div>
           </div>
         </Panel>
+        </div>
 
         {!isFree && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8, padding: '0 2px' }}>
@@ -83,7 +89,7 @@ export default function RocketPurchaseScreen({ missionsDone, francs, onPurchase,
         </div>
       </div>
 
-      <div className="sticky-actions">
+      <div className="sticky-actions" data-ui-zone={UI_ZONES.bottomActions}>
         {isFree ? (
           <PrimaryBtn kind="cyan" onClick={() => onPurchase(rocket.id)}>
             Launch with {rocket.name}

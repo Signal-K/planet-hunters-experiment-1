@@ -1,27 +1,31 @@
-// TutorialLayoutZone — encodes the reserved/content rect contract for the tutorial rail.
+// TutorialLayoutZone - encodes the reserved/content rect contract for the tutorial rail.
 //
-// The tutorial coach always renders in the reserved_rect (top pill strip or bottom strip).
-// Interactive gameplay UI must render in content_rect so they do not overlap.
+// The tutorial coach always renders in the reserved_rect.
+// Interactive gameplay UI must render in content_rect so it never overlaps onboarding copy.
 //
 // Canonical contract: @doc/Landnam-docs_specs_missions_tutorial-rail-user-flow-contract
 
 export const TUTORIAL_RAIL = {
-  // Pill height including shadow bleed (px)
-  PILL_HEIGHT: 56,
-  // Top offset where the compact pill sits when the coach is at the top
-  TOP_PILL_Y: 84,
-  // Bottom offset where the compact pill sits when the coach is at the bottom
+  // Top HUD/back buttons occupy this area.
+  TOP_CHROME_HEIGHT: 68,
+  // Dedicated space for onboarding/tutorial blocks. Gameplay buttons must stay out of it.
+  RESERVED_TOP: 76,
+  RESERVED_HEIGHT: 116,
+  // Compact pill height including shadow bleed (px).
+  PILL_HEIGHT: 64,
+  // Legacy bottom clearance for screens with sticky actions/radial nav.
   BOTTOM_PILL_Y: 92,
-  // Minimum margin between coach pill and interactive content (px)
-  CONTENT_MARGIN: 8,
+  // Minimum margin between the tutorial rail and interactive content (px).
+  CONTENT_MARGIN: 12,
 } as const
 
-/** Returns the rect (top, height) reserved by the tutorial rail for a given anchor. */
+export const TUTORIAL_CONTENT_TOP =
+  TUTORIAL_RAIL.RESERVED_TOP + TUTORIAL_RAIL.RESERVED_HEIGHT + TUTORIAL_RAIL.CONTENT_MARGIN
+
+/** Returns the dedicated tutorial rect (top, height). */
 export function reserved_rect(anchor: 'top' | 'bottom'): { top: number; height: number } {
-  if (anchor === 'top') {
-    return { top: TUTORIAL_RAIL.TOP_PILL_Y, height: TUTORIAL_RAIL.PILL_HEIGHT + TUTORIAL_RAIL.CONTENT_MARGIN }
-  }
-  return { top: 0, height: 0 }
+  void anchor
+  return { top: TUTORIAL_RAIL.RESERVED_TOP, height: TUTORIAL_RAIL.RESERVED_HEIGHT }
 }
 
 /** Returns the available content rect given a tutorial anchor. */
@@ -29,9 +33,6 @@ export function content_rect(
   anchor: 'top' | 'bottom',
   canvasHeight: number
 ): { top: number; bottom: number } {
-  if (anchor === 'top') {
-    const reserved = reserved_rect('top')
-    return { top: reserved.top + reserved.height, bottom: canvasHeight - TUTORIAL_RAIL.BOTTOM_PILL_Y }
-  }
-  return { top: 0, bottom: canvasHeight - TUTORIAL_RAIL.BOTTOM_PILL_Y - TUTORIAL_RAIL.PILL_HEIGHT }
+  void anchor
+  return { top: TUTORIAL_CONTENT_TOP, bottom: canvasHeight - TUTORIAL_RAIL.BOTTOM_PILL_Y }
 }
