@@ -132,6 +132,13 @@ export function ShipCustomizerCanvas({ layout, activeKind, installedParts, onSlo
 
       let prevInstalledHash = ''
 
+      // Camera state for category-focus zoom
+      const ZOOM_FOCUSED = 1.35
+      const CAM_LERP = 5.5
+      let camZoom = 1.0
+      let camX = 0.0
+      let camY = 0.0
+
       app.ticker.add(ticker => {
         phase += ticker.deltaTime * 0.025
         const dt = ticker.deltaTime / 60
@@ -139,6 +146,25 @@ export function ShipCustomizerCanvas({ layout, activeKind, installedParts, onSlo
         const { activeKind: ak, installedParts: ip } = stateRef.current
         const installedHash = Object.entries(ip).sort().map(([k, v]) => `${k}:${v}`).join('|')
         const hashChanged = installedHash !== prevInstalledHash
+
+        // ── Camera: zoom onto active slot ───────────────────────────────
+        const activeSlot = layout.slots.find(s => s.kind === ak)
+        if (activeSlot) {
+          const cx = (activeSlot.x / 100 + activeSlot.w / 200) * W
+          const cy = (activeSlot.y / 100 + activeSlot.h / 200) * H
+          const targetZoom = ZOOM_FOCUSED
+          // Camera offset to center the slot, clamped so world fills canvas
+          const rawCamX = W / 2 - cx * targetZoom
+          const rawCamY = H / 2 - cy * targetZoom
+          const minCamX = W * (1 - targetZoom)   // world right edge ≥ screen right
+          const minCamY = H * (1 - targetZoom)
+          const targetCamX = Math.min(0, Math.max(minCamX, rawCamX))
+          const targetCamY = Math.min(0, Math.max(minCamY, rawCamY))
+
+          camZoom += (targetZoom - camZoom) * Math.min(1, CAM_LERP * dt)
+          camX    += (targetCamX - camX)    * Math.min(1, CAM_LERP * dt)
+          camY    += (targetCamY - camY)    * Math.min(1, CAM_LERP * dt)
+        }
 
         for (const slot of layout.slots) {
           const vis = slotVisuals.get(slot.kind)
@@ -238,7 +264,9 @@ export function ShipCustomizerCanvas({ layout, activeKind, installedParts, onSlo
 
         if (hashChanged) prevInstalledHash = installedHash
 
-        world.y = Math.sin(phase * 0.38) * 2.2
+        world.scale.set(camZoom)
+        world.x = camX
+        world.y = camY + Math.sin(phase * 0.38) * 2.2
       })
     })()
 

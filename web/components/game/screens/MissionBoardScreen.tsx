@@ -62,7 +62,8 @@ export default function MissionBoardScreen({ onBack, onPick, missionsDone, freeO
         if (freeOperations) {
           return freeOpsMissionPool.some(item => item.id === m.id) && !isOnCooldown(m.contractor)
         }
-        return contractorUnlocked(contractor, sequence) && m.sequence === sequence
+        // Onboarding: sequence is the only gate — contractor unlock tiers don't apply
+        return m.sequence === sequence
       })
 
   const completedToday = useDailyPool
@@ -141,13 +142,20 @@ export default function MissionBoardScreen({ onBack, onPick, missionsDone, freeO
             const list = useDailyPool
               ? [...available, ...completedToday]
               : freeOperations ? available : MISSIONS
-            const firstValidIdx = list.findIndex(m => CONTRACTORS[m.contractor] && !isCompletedToday(m.id))
+            const firstValidIdx = list.findIndex(m => {
+              if (isCompletedToday(m.id)) return false
+              if (!useDailyPool && isOnCooldown(m.contractor)) return false
+              const ctr = CONTRACTORS[m.contractor]
+              if (!ctr) return false
+              const cr = freeOperations || m.sequence === sequence || contractorUnlocked(ctr, sequence)
+              return cr && (freeOperations || available.some(item => item.id === m.id))
+            })
             return list.map((m, idx) => {
             const completedToday_ = isCompletedToday(m.id)
             const cooldown = !useDailyPool && isOnCooldown(m.contractor)
             const contractor = CONTRACTORS[m.contractor]
             if (!contractor) return null
-            const contractorReady = freeOperations || contractorUnlocked(contractor, sequence)
+            const contractorReady = freeOperations || m.sequence === sequence || contractorUnlocked(contractor, sequence)
             const unlocked = !completedToday_ && !cooldown && contractorReady && (freeOperations || available.some(item => item.id === m.id))
             const mTargets = compatibleTargetsFor(m, targets)
             const accent = contractor.color

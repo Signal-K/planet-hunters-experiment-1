@@ -97,6 +97,42 @@ VIEWPORTS.forEach(({ label, w, h }) => {
   })
 })
 
+// ─── Mission board: coach highlight points to a tappable card ─────────────────
+//
+// Regression guard for the contractor-unlock-tier bug: in production the old
+// contractor-03a record had unlock_tier=3, so M1 rendered as "LOCKED · L3"
+// and the tutorial coach highlighted the locked card. Tapping did nothing.
+//
+// This test verifies that on the mission board:
+//   (a) the coach-highlighted card does NOT show a "Locked" status pill
+//   (b) clicking the highlighted card navigates away (not a silent no-op)
+
+describe('Mission board — coach highlight is on a tappable card (mobile 390×844)', () => {
+  beforeEach(() => cy.viewport(390, 844))
+
+  it('highlighted mission card is not locked and navigates on tap', () => {
+    cy.visit('/game', { onBeforeLoad: visitHub })
+
+    // Navigate to mission board
+    cy.get('[data-testid="radial-nav-toggle"]', { timeout: 10000 }).click()
+    cy.get('[data-testid="radial-nav-missions"]').click()
+    cy.contains('Mission Board', { timeout: 8000 }).should('be.visible')
+
+    // The TutorialHighlight wraps the first unlocked card — find it.
+    // The highlight renders a sibling element inside the button, so we look at
+    // the button that contains the tutorial highlight child.
+    cy.get('[data-testid^="mission-card-"]').filter(':has([data-testid="tutorial-highlight"])').first().as('highlightedCard')
+
+    // Highlighted card must NOT show a "Locked" status — that would mean the
+    // coach is pointing at an untappable card (the bug).
+    cy.get('@highlightedCard').should('not.contain.text', 'Locked')
+
+    // Clicking it must navigate to the target picker (not a silent no-op).
+    cy.get('@highlightedCard').click()
+    cy.contains('Pick Target', { timeout: 8000 }).should('be.visible')
+  })
+})
+
 // ─── Shared M1 play-through steps ─────────────────────────────────────────────
 
 function playM1() {
