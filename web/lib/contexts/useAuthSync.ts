@@ -3,6 +3,7 @@ import { pbShared } from '@/lib/pb'
 import { pbLandnam } from '@/lib/pb-landnam'
 import { ensureGuestAuth, hasStoredCredentials, isGuestAccount, upgradeGuestAccount } from '@/lib/guestAuth'
 import { identifyUser } from '@/lib/posthog'
+import { DEFAULT_STATE } from '@/lib/game-state'
 import type { GameState } from '@/lib/game-types'
 import type { Toast } from '@/components/ui/ToastLayer'
 
@@ -220,13 +221,17 @@ export function useAuthSync({
     try {
       await pbShared.collection('users').create({ email, password, passwordConfirm: password, name: '' })
       await pbShared.collection('users').authWithPassword(email, password)
+      // Brand-new account: discard any local guest/dev state so the player
+      // starts from scratch with the intro tutorial.
+      localStorage.removeItem(storageKey)
+      setState(DEFAULT_STATE)
       setAuthGateOpen(false)
     } catch (e) {
       const msg = e instanceof Error ? e.message : 'Account creation failed'
       setAuthGateError(msg)
       throw new Error(msg)
     }
-  }, [])
+  }, [setState, storageKey])
 
   const skipAuthGate = useCallback(() => {
     authGateDismissed.current = true
@@ -246,11 +251,17 @@ export function useAuthSync({
     }
   }, [authUserId, setState, storageKey])
 
+  const signOut = useCallback(() => {
+    pbShared.authStore.clear()
+    localStorage.removeItem(storageKey)
+    setState(DEFAULT_STATE)
+  }, [setState, storageKey])
+
   return {
     authUserId, backendReady,
     upgradePromptOpen, dismissUpgradePrompt, upgradeAccount,
     awaitingRemoteState,
     authGateOpen, authGateError, signInFromGate, createAccountFromGate, skipAuthGate,
-    resetGame,
+    resetGame, signOut,
   }
 }

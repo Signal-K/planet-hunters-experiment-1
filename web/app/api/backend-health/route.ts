@@ -7,7 +7,9 @@ export async function GET() {
     ?? process.env.NEXT_PUBLIC_SHARED_PB_URL
     ?? 'http://localhost:8090'
   
-  const landnamUrl = process.env.NEXT_PUBLIC_LANDNAM_PB_URL
+  const landnamUrl = process.env.POCKETBASE_LANDNAM_INTERNAL_URL
+    ?? process.env.POCKETBASE_INTERNAL_URL
+    ?? process.env.NEXT_PUBLIC_LANDNAM_PB_URL
     ?? 'http://localhost:8093'
 
   const results = {

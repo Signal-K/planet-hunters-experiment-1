@@ -33,12 +33,16 @@ export default function HubPixiCanvas({ buildings }: HubPixiCanvasProps) {
     let destroyed = false
 
     ;(async () => {
+      // Measure actual container height so GROUND_Y matches the SVG grass line
+      // (which lives at 78% of the container height, not the fixed HUB_H value).
+      const containerH = div.clientHeight || HUB_H
+
       await app.init({
         canvas,
         width: HUB_W,
-        height: HUB_H,
+        height: containerH,
         backgroundAlpha: 0,
-        antialias: false,   // crisp pixel art
+        antialias: false,
         resolution: Math.min(window.devicePixelRatio || 1, 2),
         autoDensity: true,
       })
@@ -51,7 +55,8 @@ export default function HubPixiCanvas({ buildings }: HubPixiCanvasProps) {
         return
       }
 
-      scene = buildHubScene(app, buildingsRef.current, nullTextures())
+      const groundY = containerH * (1 - 0.22)
+      scene = buildHubScene(app, buildingsRef.current, nullTextures(), { groundY })
 
       let elapsed = 0
       app.ticker.add((ticker) => {

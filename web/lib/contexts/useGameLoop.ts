@@ -7,8 +7,9 @@ import {
 import { applyMiningDone, applyRoverMiningDone } from '@/lib/systems/MiningSystem'
 import { enqueueSurvey } from '@/lib/surveys'
 import type { Catalog } from '@/lib/catalog'
-import type { GameState } from '@/lib/game-types'
+import type { GameState, LicenseGrade } from '@/lib/game-types'
 import type { Toast } from '@/components/ui/ToastLayer'
+import { applyGainResearchXP, applyUpgradeLicenseGrade, applyUnlockBlueprint } from '@/lib/systems/ProgressionSystem'
 
 const ORBIT_MS_PER_UNIT = 2 * 60 * 1000
 
@@ -167,6 +168,23 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
     addToast('Rover has returned — minerals secured', 'ok')
   }, [addToast, setState])
 
+  const gainResearchXP = useCallback((amount: number) => {
+    setState(s => applyGainResearchXP(s, amount))
+  }, [setState])
+
+  const upgradeLicenseGrade = useCallback((grade: Exclude<LicenseGrade, 'Grade I'>) => {
+    setState(s => applyUpgradeLicenseGrade(s, grade))
+  }, [setState])
+
+  const unlockBlueprint = useCallback((
+    blueprintId: string,
+    costFrancs = 0,
+    costXP = 0,
+    costMaterials: Record<string, number> = {},
+  ) => {
+    setState(s => applyUnlockBlueprint(s, blueprintId, costFrancs, costXP, costMaterials))
+  }, [setState])
+
   const onDebriefDone = useCallback((total: number, _affinity = 0, consumed: Record<string, number> = {}) => {
     const current = stateRef.current
     if (current.screen !== 'debrief' || !current.missionId || !current.targetId || !current.lastCargo) return
@@ -280,5 +298,6 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
     setPlayer, setMissionId, setTargetId, setRocket, setLastCargo,
     onPickMission, onPickTarget, onPurchaseRocket, onLaunch,
     onMiningDone, onRoverMiningDone, onDebriefDone,
+    gainResearchXP, upgradeLicenseGrade, unlockBlueprint,
   }
 }

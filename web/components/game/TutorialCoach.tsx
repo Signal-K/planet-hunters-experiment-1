@@ -52,11 +52,10 @@ export default function TutorialCoach({ stepIndex, steps, step, total, onManualN
     right: spot.right !== undefined ? spot.right : undefined,
     height: spot.h,
     borderRadius: 10,
-    border: '2px solid rgba(63,169,255,0.6)',
-    boxShadow: '0 0 16px rgba(63,169,255,0.3)',
+    border: '2px solid rgba(245,166,35,0.01)',
     pointerEvents: 'none',
     zIndex: 97,
-    animation: 'coach-spot-pulse 1.8s ease-in-out infinite',
+    animation: 'coach-spot 1.4s ease-in-out infinite',
   } : null
 
   if (manual) {

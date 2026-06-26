@@ -2,7 +2,7 @@
 
 export function SoilCrossSection() {
   return (
-    <div style={{ position: 'absolute', left: 0, right: 0, bottom: 96, height: 168, zIndex: 4, pointerEvents: 'none' }}>
+    <div style={{ position: 'absolute', left: 0, right: 0, bottom: 0, top: '78%', zIndex: 4, pointerEvents: 'none', overflow: 'hidden' }}>
       <div style={{ position: 'absolute', left: 0, right: 0, top: 0, height: 0, borderTop: '1.5px dashed rgba(255,225,160,0.5)' }} />
       <div style={{ position: 'absolute', left: 0, right: 0, top: 0, height: 18, background: 'linear-gradient(180deg, rgba(60,40,20,0.5), transparent)' }} />
       <svg width="100%" height="100%" viewBox="0 0 402 168" preserveAspectRatio="none" style={{ position: 'absolute', inset: 0 }}>

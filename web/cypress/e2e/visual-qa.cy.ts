@@ -137,7 +137,6 @@ describe('Visual QA — game screens and mining canvas', () => {
     cy.screenshot('02-hub-setup')
 
     // Place launchpad
-    cy.contains('button', 'Select a Plot').click()
     cy.get('[data-testid="build-plot-0"]').click()
     cy.screenshot('03-plot-selected')
     cy.contains('button', 'Confirm · Build Here').click()

@@ -29,6 +29,8 @@ export type Screen =
   | 'scan-station'
   | 'rover-mining'
 
+export type LicenseGrade = 'Grade I' | 'Grade II' | 'Grade III'
+
 export interface Player {
   francs: number
   activeMission: { id: string; label: string } | null
@@ -74,6 +76,9 @@ export interface Player {
   targetScanCounts?: Record<string, number>
   contractorStructures?: import('@/lib/data').ContractorStructureRecord[]
   dailyQuestProgress?: import('@/lib/data').DailyQuestProgress[]
+  licenseGrade?: LicenseGrade
+  researchXP?: number
+  unlockedBlueprints?: string[]
 }
 
 export interface GameState {
@@ -104,6 +109,7 @@ export interface GameActions {
   createAccountFromGate: (email: string, password: string) => Promise<void>
   skipAuthGate: () => void
   go: (screen: Screen) => void
+  setScreenFromUrl: (screen: Screen) => void
   setPlayer: React.Dispatch<React.SetStateAction<Player>>
   setMissionId: (id: string | null) => void
   setTargetId: (id: string | null) => void
@@ -123,6 +129,7 @@ export interface GameActions {
   coachManualNext: () => void
   completeStep: (id: number) => void
   resetGame: () => void
+  signOut: () => void
   upgradeLaunchpad: () => void
   sellMinerals: (mineralId: string, amount: number) => void
   onStartRefine: (recipeId: string) => void
@@ -134,6 +141,9 @@ export interface GameActions {
   startScan: (targetId: string) => void
   collectScan: () => void
   onRoverMiningDone: (cargo: Record<string, number>) => void
+  gainResearchXP: (amount: number) => void
+  upgradeLicenseGrade: (grade: Exclude<LicenseGrade, 'Grade I'>) => void
+  unlockBlueprint: (blueprintId: string, costFrancs?: number, costXP?: number, costMaterials?: Record<string, number>) => void
   toasts: Toast[]
   dismissToast: (id: string) => void
   mission: Mission | null

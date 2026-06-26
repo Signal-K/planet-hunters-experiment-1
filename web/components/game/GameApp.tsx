@@ -34,6 +34,7 @@ import ToastLayer from '@/components/ui/ToastLayer'
 import { initPostHog } from '@/lib/posthog'
 import DevShortcuts from '@/components/dev/DevShortcuts'
 import AuthGateSheet from '@/components/game/AuthGateSheet'
+import SettingsSheet from '@/components/game/SettingsSheet'
 import TerritoryClaimPopup from '@/components/game/TerritoryClaimPopup'
 import { UI_ZONES } from '@/lib/ui-zones'
 import ErrorBoundary from '@/components/ui/ErrorBoundary'
@@ -46,6 +47,7 @@ function GameCanvas() {
   const arrivalScheduledFor = useRef<number | null>(null)
   const returnScheduledKey = useRef<string | null>(null)
   const [launchPending, setLaunchPending] = useState(false)
+  const [settingsOpen, setSettingsOpen] = useState(false)
 
   const handleLaunch = useCallback(() => {
     setLaunchPending(true)
@@ -383,7 +385,8 @@ function GameCanvas() {
         {showFeedback && <FeedbackButton />}
         <SurveySheet />
         {showNav && <div className="mobile-radial-nav"><RadialNav current={currentNav} onNav={goFromNav} /></div>}
-        <Sidebar current={currentNav} onNav={goFromNav} />
+        <Sidebar current={currentNav} onNav={goFromNav} onSettings={() => setSettingsOpen(true)} />
+        {settingsOpen && <SettingsSheet onClose={() => setSettingsOpen(false)} />}
 
         {coach && (
           <TutorialCoach

@@ -1,9 +1,10 @@
 'use client'
 
 import React, { createContext, useContext, useState, useEffect, useRef, useCallback } from 'react'
-import type { Screen, Player, GameState, GameActions } from '@/lib/game-types'
-import type { Mission, Target, RocketConfig } from '@/lib/data'
+import { useRouter } from 'next/navigation'
+import type { Screen, GameState, GameActions } from '@/lib/game-types'
 import { MISSIONS, TARGETS, getLaserChargeCap } from '@/lib/data'
+import { DEFAULT_STATE, loadState, normalizeAndRepair } from '@/lib/game-state'
 import { resolvePreset } from '@/lib/devPresets'
 import { pbShared } from '@/lib/pb'
 import { identifyUser } from '@/lib/posthog'
@@ -20,100 +21,6 @@ export type { Screen, Player, GameState } from '@/lib/game-types'
 // ── State shape helpers ────────────────────────────────────────────────────────
 
 const STORAGE_KEY = 'landnam-game-state-v1'
-
-const VALID_SCREENS: Screen[] = ['intro', 'build', 'hub', 'missions', 'galaxy', 'targets', 'fab', 'transit', 'mining', 'debrief', 'refinery', 'market', 'hangar', 'rocket-buy', 'skills', 'scan-station', 'rover-mining']
-const MISSION_CONTEXT_SCREENS = new Set<Screen>(['targets', 'rocket-buy', 'fab', 'transit', 'mining', 'rover-mining', 'debrief'])
-const TARGET_CONTEXT_SCREENS = new Set<Screen>(['rocket-buy', 'fab', 'transit', 'mining', 'rover-mining', 'debrief'])
-
-const DEFAULT_STATE: GameState = {
-  screen: 'intro',
-  player: {
-    francs: 10_000_000_000,
-    activeMission: null,
-    missionCount: 1,
-    pendingLaunch: false,
-    placed: [],
-    placementPlots: {},
-    controlBuilt: false,
-    missionsDone: 0,
-    skillPoints: 0,
-    unlockedSkillNodes: [],
-    freeOperations: false,
-    contractorMissions: {},
-    contractorStreaks: {},
-    contractorCooldowns: {},
-    researchAnnotations: 0,
-    refineryBuilt: false,
-    refineryUnlocked: false,
-    refineryUnlockNotified: false,
-    refineryQueue: [],
-    refinedGoods: {},
-    launchpadUpgraded: false,
-    loanDebt: 0,
-    loanOffered: false,
-    seen_planets: [],
-    roverDeployments: [],
-    contractorTerritories: {},
-  },
-  missionId: null,
-  targetId: null,
-  rocket: { chassis: 'hull-mk1', propulsion: 'ion-a1', drill: 'hand-drill' },
-  lastCargo: null,
-  tutorial: true,
-  doneSteps: {},
-  popup: null,
-  menuOpen: false,
-}
-
-function normalizeState(input: Partial<GameState>): GameState {
-  const screen = input.screen && VALID_SCREENS.includes(input.screen) ? input.screen : DEFAULT_STATE.screen
-  const missionId = typeof input.missionId === 'string' ? input.missionId : null
-  const targetId = missionId && typeof input.targetId === 'string' ? input.targetId : null
-  return {
-    ...DEFAULT_STATE,
-    ...input,
-    screen,
-    missionId,
-    targetId,
-    rocket: { ...DEFAULT_STATE.rocket, ...input.rocket },
-    player: { ...DEFAULT_STATE.player, ...input.player },
-    doneSteps: { ...DEFAULT_STATE.doneSteps, ...input.doneSteps },
-  }
-}
-
-function repairStateRoute(input: GameState): GameState {
-  const mission = input.missionId
-    ? (MISSIONS.find(m => m.id === input.missionId)
-       ?? input.player.dailyContractorPool?.missions.find(m => m.id === input.missionId)
-       ?? null)
-    : null
-  const target = input.targetId ? TARGETS.find(t => t.id === input.targetId) ?? null : null
-  if (MISSION_CONTEXT_SCREENS.has(input.screen) && !mission) {
-    return { ...input, screen: 'missions', missionId: null, targetId: null }
-  }
-  if (TARGET_CONTEXT_SCREENS.has(input.screen) && !target) {
-    return { ...input, screen: mission ? 'targets' : 'missions', targetId: null }
-  }
-  if (input.screen === 'targets' && mission?.targetId) {
-    return { ...input, screen: 'rocket-buy', targetId: mission.targetId }
-  }
-  return input
-}
-
-function normalizeAndRepair(partial: Partial<GameState>): GameState {
-  return repairStateRoute(normalizeState(partial))
-}
-
-function loadState(): GameState {
-  if (typeof window === 'undefined') return DEFAULT_STATE
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY)
-    if (!raw) return DEFAULT_STATE
-    return normalizeAndRepair(JSON.parse(raw) as Partial<GameState>)
-  } catch {
-    return DEFAULT_STATE
-  }
-}
 
 // ── Context ────────────────────────────────────────────────────────────────────
 
@@ -156,7 +63,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
         return
       }
     }
-    setState(loadState())
+    setState(loadState(STORAGE_KEY))
     setHydrated(true)
     const record = pbShared.authStore.record
     if (record?.id) identifyUser(record.id, record.email ? { email: record.email } : undefined)
@@ -174,6 +81,8 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state))
   }, [state, hydrated])
 
+  const router = useRouter()
+
   // ── Domain hooks ───────────────────────────────────────────────────────────
   const ui      = useUIActions(setState)
   const auth    = useAuthSync({ state, setState, stateRef, hydrated, isPreview: isPreview.current, addToast: ui.addToast, normalizeAndRepair, storageKey: STORAGE_KEY })
@@ -181,6 +90,16 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
   const loop    = useGameLoop({ stateRef, setState, catalog, addToast: ui.addToast })
   const tutorial = useTutorialActions(setState)
   const economy = useEconomyActions(setState, useCallback(() => catalog.missions, [catalog.missions]))
+
+  // Sync game.screen → URL on every screen change.
+  // skipNextUrlSync prevents a loop when the change was triggered BY a URL change.
+  useEffect(() => {
+    if (ui.skipNextUrlSync.current) {
+      ui.skipNextUrlSync.current = false
+      return
+    }
+    router.push(`/game/${state.screen}`)
+  }, [state.screen]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Derived values ─────────────────────────────────────────────────────────
   const mission = state.missionId
@@ -202,6 +121,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       laserChargeCap: getLaserChargeCap(state.player.unlockedSkillNodes ?? []),
       // UI
       go: ui.go,
+      setScreenFromUrl: ui.setScreenFromUrl,
       setPopup: ui.setPopup,
       setMenuOpen: ui.setMenuOpen,
       dismissToast: ui.dismissToast,
@@ -217,6 +137,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       createAccountFromGate: auth.createAccountFromGate,
       skipAuthGate: auth.skipAuthGate,
       resetGame: useCallback(() => auth.resetGame(DEFAULT_STATE), [auth.resetGame]), // eslint-disable-line react-hooks/rules-of-hooks
+      signOut: auth.signOut,
       // Game loop
       setPlayer: loop.setPlayer,
       setMissionId: loop.setMissionId,
@@ -230,6 +151,9 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       onMiningDone: loop.onMiningDone,
       onRoverMiningDone: loop.onRoverMiningDone,
       onDebriefDone: loop.onDebriefDone,
+      gainResearchXP: loop.gainResearchXP,
+      upgradeLicenseGrade: loop.upgradeLicenseGrade,
+      unlockBlueprint: loop.unlockBlueprint,
       // Tutorial
       setTutorial: tutorial.setTutorial,
       skipTutorial: tutorial.skipTutorial,

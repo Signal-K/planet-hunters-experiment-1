@@ -1,13 +1,12 @@
 'use client'
 
 import React, { useEffect, useState } from 'react'
-import Image from 'next/image'
 import type { Player, Screen } from '@/game-context'
 import ProgressionCard from '@/components/game/ProgressionCard'
 import { Scene } from '@/lib/engine/Scene'
 import type { EntityData } from '@/lib/engine/types'
-import { AmbientStars } from '@/components/game/hub/AmbientStars'
 import { Cloud } from '@/components/game/hub/Cloud'
+import { HubWorldBackground } from '@/components/game/hub/HubWorldBackground'
 import { SoilCrossSection } from '@/components/game/hub/SoilCrossSection'
 import { Building, EmptyPlot } from '@/components/game/hub/Building'
 import HubPixiCanvas from '@/components/game/hub/HubPixiCanvas'
@@ -54,9 +53,9 @@ export default function HubScreen({ player, hasCoach, onGoBuilding, onNav, onUpg
   })
 
   const plotStyles: React.CSSProperties[] = sortedEntities
-    // earth-day.png green/brown boundary is always at 22% from canvas bottom (objectFit:cover
-    // scales to canvas height). calc(22% - 42px) puts the icon bottom at that boundary so the
-    // structure appears planted on the visible grass/soil line on any screen height.
+    // SVG grass is at 78% from top = 22% from bottom. calc(22% - 42px) puts the label
+    // bottom 42px underground so the visible building base sits at the grass line.
+    // left uses absolute px to match PixiJS canvas (always 402px wide from left edge).
     .map(e => ({ left: e.transform.position.x, bottom: 'calc(22% - 42px)' } as React.CSSProperties))
 
   const structureForPlot = (plot: number) => {
@@ -121,17 +120,14 @@ export default function HubScreen({ player, hasCoach, onGoBuilding, onNav, onUpg
 
   return (
     <div style={{ width: '100%', height: '100%', position: 'relative', overflow: 'hidden' }}>
-      {/* Earth backdrop */}
-      <div style={{ position: 'absolute', inset: 0 }}>
-        <Image src="/scenes/earth-day.png" alt="Earth" fill style={{ objectFit: 'cover' }} priority />
-        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, rgba(6,9,15,0.0) 0%, transparent 22%, transparent 74%, rgba(6,9,15,0.45) 100%)' }} />
-      </div>
+      {/* World background: CSS sky + SVG terrain (fills full viewport) */}
+      <HubWorldBackground />
 
-      {/* Drifting clouds */}
-      <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '42%', overflow: 'hidden', pointerEvents: 'none' }}>
-        <AmbientStars />
-        <Cloud style={{ left: '-30%', top: 40, opacity: 0.7, transform: 'scale(0.8)' }} dur="62s" delay="0s" />
-        <Cloud style={{ left: '-30%', top: 96, opacity: 0.5, transform: 'scale(0.55)' }} dur="80s" delay="-30s" />
+      {/* CSS clouds drift over the sky layer */}
+      <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '42%', overflow: 'hidden', pointerEvents: 'none', zIndex: 4 }}>
+        <Cloud style={{ left: '-30%', top: 40, opacity: 0.55, transform: 'scale(0.8)' }} dur="62s" delay="0s" />
+        <Cloud style={{ left: '-30%', top: 96, opacity: 0.38, transform: 'scale(0.55)' }} dur="80s" delay="-30s" />
+        <Cloud style={{ left: '-30%', top: 160, opacity: 0.28, transform: 'scale(0.42)' }} dur="100s" delay="-55s" />
       </div>
 
       {/* Top HUD: title + resources */}

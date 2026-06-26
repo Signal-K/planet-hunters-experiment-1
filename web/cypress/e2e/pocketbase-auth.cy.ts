@@ -71,6 +71,9 @@ describe('PocketBase Guest Auth Pattern', () => {
         contractorMissions: {},
         contractorCooldowns: {},
         researchAnnotations: 0,
+        licenseGrade: 'Grade II',
+        researchXP: 42,
+        unlockedBlueprints: ['scan-array'],
         refineryBuilt: false,
         refineryQueue: [],
         refinedGoods: {},
@@ -113,6 +116,9 @@ describe('PocketBase Guest Auth Pattern', () => {
       expect(body.items).to.have.length(1)
       const savedState = body.items[0].state as Record<string, unknown>
       expect(savedState.screen).to.eq('hub')
+      expect((savedState.player as Record<string, unknown>).licenseGrade).to.eq('Grade II')
+      expect((savedState.player as Record<string, unknown>).researchXP).to.eq(42)
+      expect((savedState.player as Record<string, unknown>).unlockedBlueprints).to.deep.eq(['scan-array'])
     })
 
     cy.clearAllLocalStorage()
@@ -131,6 +137,9 @@ describe('PocketBase Guest Auth Pattern', () => {
       const restored = JSON.parse(win.localStorage.getItem(STORAGE_KEY) || '{}')
       expect(restored.screen).to.eq('hub')
       expect(restored.player.francs).to.eq(9_500_000_000)
+      expect(restored.player.licenseGrade).to.eq('Grade II')
+      expect(restored.player.researchXP).to.eq(42)
+      expect(restored.player.unlockedBlueprints).to.deep.eq(['scan-array'])
     })
   })
 })

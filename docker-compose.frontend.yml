@@ -42,8 +42,9 @@ services:
       KNOWNS_CANONICAL_ROOT: /knowns
       KNOWNS_OUTBOX: /knowns-outbox
       POCKETBASE_INTERNAL_URL: http://pocketbase:8090
-      NEXT_PUBLIC_SHARED_PB_URL: http://pocketbase:8090
-      NEXT_PUBLIC_LANDNAM_PB_URL: http://pocketbase:8090
+      POCKETBASE_LANDNAM_INTERNAL_URL: http://pocketbase:8090
+      NEXT_PUBLIC_SHARED_PB_URL: http://localhost:8093
+      NEXT_PUBLIC_LANDNAM_PB_URL: http://localhost:8093
       NEXT_TELEMETRY_DISABLED: "1"
       WATCHPACK_POLLING: "true"
       CHOKIDAR_USEPOLLING: "true"

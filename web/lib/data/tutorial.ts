@@ -5,8 +5,9 @@ import type { TutorialStep } from './types'
 export const M1_STEPS: TutorialStep[] = [
   { id: 0, screen: 'build',   title: 'Build a Launchpad',
     body: 'Every base starts here. Select the Launchpad, then tap a plot to place it on your land.',
-    action: 'Tap SELECT A PLOT, then a pad',
-    anchor: 'bottom', spot: null, cta: 'Build Launchpad' },
+    action: 'Pick a structure, then tap a pad',
+    anchor: 'bottom', spot: { x: 12, y: 58, w: 378, h: 40, fromBottom: true }, cta: 'Build Launchpad',
+    desktopSpot: { x: 12, y: 58, w: 378, right: 12, h: 40, fromBottom: true } },
   { id: 1, screen: 'hub',     title: 'Open a Mission',
     body: 'Open the radial menu, then choose MISSIONS to see the contract board.',
     action: 'Tap menu, then MISSIONS',

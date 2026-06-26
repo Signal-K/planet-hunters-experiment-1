@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react'
+import { useRef, useState, useCallback } from 'react'
 import type { Toast } from '@/components/ui/ToastLayer'
 import type { Screen, GameState } from '@/lib/game-types'
 
@@ -9,8 +9,18 @@ export function useUIActions(
   setState: React.Dispatch<React.SetStateAction<GameState>>,
 ) {
   const [toasts, setToasts] = useState<Toast[]>([])
+  // Set by setScreenFromUrl to tell the URL-sync effect to skip one cycle
+  const skipNextUrlSync = useRef(false)
 
   const go = useCallback((screen: Screen) => {
+    setState(s => ({ ...s, screen }))
+  }, [setState])
+
+  // Called by the [screen] page component when the URL changes (browser back/forward).
+  // Updates state.screen WITHOUT triggering the URL-sync effect so we don't create
+  // a push that fights the navigation.
+  const setScreenFromUrl = useCallback((screen: Screen) => {
+    skipNextUrlSync.current = true
     setState(s => ({ ...s, screen }))
   }, [setState])
 
@@ -34,5 +44,5 @@ export function useUIActions(
     setState(s => ({ ...s, pendingTerritoryClaimFor: undefined, screen: 'market' }))
   }, [setState])
 
-  return { go, setPopup, setMenuOpen, addToast, dismissToast, clearTerritoryClaimPopup, toasts }
+  return { go, setScreenFromUrl, skipNextUrlSync, setPopup, setMenuOpen, addToast, dismissToast, clearTerritoryClaimPopup, toasts }
 }

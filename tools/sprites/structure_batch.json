@@ -1,0 +1,79 @@
+[
+  {
+    "name": "pad_base",
+    "profile": "structure_component",
+    "prompt": "Launchpad base platform, space program ground structure component, side-view elevation, wide flat concrete launch platform with central flame trench slot, steel grating panels, hazard stripe edges, anchor bolt flanges, muted concrete grey with cyan indicator strips and amber hazard corners, modular 2:1 wide tile that joins to vertical tower above it",
+    "aspect_ratio": "2:1",
+    "count": 2
+  },
+  {
+    "name": "pad_tower",
+    "profile": "structure_component",
+    "prompt": "Launchpad support tower, space program ground structure component, side-view elevation, tall narrow vertical steel lattice tower with ladder rungs, horizontal crossbraces every 40px, cable conduits running vertically, panel access hatches, muted navy-blue steel with cyan safety strips and amber work lights, modular 1:4 tall tile that mounts above the launch platform",
+    "aspect_ratio": "1:4",
+    "count": 2
+  },
+  {
+    "name": "pad_gantry",
+    "profile": "structure_component",
+    "prompt": "Launchpad gantry arm assembly, space program ground structure component, side-view elevation, horizontal swing arm extending from tower with vehicle umbilical connector at tip, hinge mechanism at base, cable runs, small work platform at tip, steel-blue metal with cyan power cable and amber coupling ring at connector end, modular tile that attaches to tower top",
+    "aspect_ratio": "2:1",
+    "count": 2
+  },
+  {
+    "name": "cmd_foundation",
+    "profile": "structure_component",
+    "prompt": "Command center foundation slab, space program ground structure component, side-view elevation, wide reinforced concrete base with equipment cable conduits running through it, ground anchors and seismic isolators visible at sides, blast-protection walls on each end, concrete grey with cyan cable channel and amber marker lights, modular 3:1 wide short base tile",
+    "aspect_ratio": "3:1",
+    "count": 2
+  },
+  {
+    "name": "cmd_building",
+    "profile": "structure_component",
+    "prompt": "Command center main building, space program ground structure component, side-view elevation, boxy prefab modular building with reinforced blast windows in 2 rows, external cable conduit runs, blast-proof door at base, horizontal panel seam lines, HVAC unit on upper wall, muted navy-blue hull with cyan window glow and amber status panel, modular 3:2 tile that sits above the foundation",
+    "aspect_ratio": "3:2",
+    "count": 2
+  },
+  {
+    "name": "cmd_antenna",
+    "profile": "structure_component",
+    "prompt": "Command center rooftop antenna array, space program ground structure component, side-view elevation, multi-element antenna array with phased-array dish and mast, dipole elements, cable runs down to building, blinking status beacon at mast top, steel-grey with cyan dish surface and amber beacon light, modular square tile that mounts on rooftop",
+    "aspect_ratio": "1:1",
+    "count": 2
+  },
+  {
+    "name": "depot_base",
+    "profile": "structure_component",
+    "prompt": "Storage depot foundation platform, space program ground structure component, side-view elevation, wide industrial concrete base platform with pipe stub connections at top, drain channels, equipment pad outlines, concrete grey with cyan pipe fittings and amber warning markers at corners, modular 3:1 wide short base tile",
+    "aspect_ratio": "3:1",
+    "count": 2
+  },
+  {
+    "name": "depot_tank",
+    "profile": "structure_component",
+    "prompt": "Storage depot main pressure tank, space program ground structure component, side-view elevation, tall cylindrical pressure vessel with domed top and flat base flange, band weld seams, pressure gauge and valve manifold on side, inspection ladder, muted steel-blue with cyan pressure indicator band and amber valve handles, modular 1:2 tall tank tile",
+    "aspect_ratio": "1:2",
+    "count": 2
+  },
+  {
+    "name": "depot_pipes",
+    "profile": "structure_component",
+    "prompt": "Storage depot pipe manifold assembly, space program ground structure component, side-view elevation, horizontal pipe header with multiple branch valves and flow meters, insulation jacket sections, pipe support clamps, flange connections at each end for joining multiple tanks, steel-grey pipes with cyan flow indicator and amber valve bodies, modular 3:1 wide pipe tile",
+    "aspect_ratio": "3:1",
+    "count": 2
+  },
+  {
+    "name": "scan_tripod",
+    "profile": "structure_component",
+    "prompt": "Scanner station tripod base, space program ground structure component, side-view elevation, three-leg A-frame steel tripod with equipment mount platform at apex, cable conduit runs down each leg, vibration dampers at foot pads, leveling adjusters, muted steel-grey with cyan cable runs and amber damper details, modular square tile base",
+    "aspect_ratio": "1:1",
+    "count": 2
+  },
+  {
+    "name": "scan_dish",
+    "profile": "structure_component",
+    "prompt": "Scanner station parabolic dish, space program ground structure component, side-view elevation, medium parabolic reflector dish with rib struts from rim to focal point, feed horn at focus, az-el mount at base hub, cable wrap, dish tilted 20 degrees, muted gunmetal-grey dish with cyan focal feed and amber az-el mount, modular square tile that mounts on tripod",
+    "aspect_ratio": "1:1",
+    "count": 2
+  }
+]

@@ -55,9 +55,8 @@ describe('Ship Customiser staged build', () => {
     cy.get('[data-testid="ship-review"]').should('have.attr', 'data-installed', '4')
 
     cy.get('[data-testid="confirm-ship-config"]').should('not.be.disabled').click()
-    cy.get('[data-testid="ship-review"]').should('contain', 'Configuration confirmed')
-    cy.get('[data-testid="confirm-ship-config"]').should('contain', 'Configuration Confirmed').and('be.disabled')
-    cy.get('[data-testid="ship-step-engine"]').should('be.disabled')
-    cy.get('[data-testid="choose-cargo-payload-t1"]').should('be.disabled')
+    // onClose() fires immediately after confirm, so the interior unmounts and the fleet page returns
+    cy.get('[data-testid="ship-interior-sr1"]').should('not.exist')
+    cy.contains('Rocket Fleet').should('be.visible')
   })
 })

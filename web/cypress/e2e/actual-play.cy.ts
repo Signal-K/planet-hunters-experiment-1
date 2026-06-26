@@ -53,7 +53,6 @@ function playM1FromIntro() {
   cy.get('[data-testid="intro-begin-btn"]').click({ force: true })
 
   cy.contains('EARTH BASE · SETUP', { timeout: 10000 }).should('be.visible')
-  cy.contains('button', 'Select a Plot').click()
   cy.get('[data-testid="build-plot-0"]').click()
   cy.contains('button', 'Confirm · Build Here').click()
 

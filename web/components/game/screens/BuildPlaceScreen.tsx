@@ -3,14 +3,11 @@
 import React, { useEffect, useState } from 'react'
 import Image from 'next/image'
 import TopBar from '@/components/ui/TopBar'
-import Panel from '@/components/ui/Panel'
 import { PrimaryBtn } from '@/components/ui/Button'
-import StatusPill from '@/components/ui/StatusPill'
 import { canAffordStructure, STRUCTURES, structureUnlocked } from '@/lib/data'
 import type { StructureBlueprint } from '@/lib/data'
 import { Scene } from '@/lib/engine/Scene'
 import type { EntityData } from '@/lib/engine/types'
-import { TUTORIAL_CONTENT_TOP } from '@/lib/tutorial-layout'
 import { UI_ZONES } from '@/lib/ui-zones'
 
 const DEFAULT_PLOTS: EntityData[] = [
@@ -19,6 +16,12 @@ const DEFAULT_PLOTS: EntityData[] = [
   { id: 'plot-2', name: 'Plot 2', transform: { position: { x: 206, y: 628 }, rotation: 0, scale: { x: 1, y: 1 } }, components: [{ type: 'BuildPlot', index: 2 }] },
   { id: 'plot-3', name: 'Plot 3', transform: { position: { x: 302, y: 628 }, rotation: 0, scale: { x: 1, y: 1 } }, components: [{ type: 'BuildPlot', index: 3 }] },
 ]
+
+const STRUCTURE_COLORS: Record<string, string> = {
+  launchpad: '#3fa9ff',
+  refinery: '#f5a623',
+  'scan-station': '#39d36a',
+}
 
 interface BuildPlaceScreenProps {
   onPlaced: (kind: string, plot: number) => void
@@ -49,7 +52,6 @@ function formatStructureCost(structure: StructureBlueprint): string {
 }
 
 export default function BuildPlaceScreen({ onPlaced, onBack, hasCoach, player }: BuildPlaceScreenProps) {
-  const [phase, setPhase] = useState<'pick' | 'place'>('pick')
   const [picked, setPicked] = useState('launchpad')
   const [cell, setCell] = useState<number | null>(null)
   const [plotEntities, setPlotEntities] = useState<EntityData[]>(DEFAULT_PLOTS)
@@ -60,113 +62,233 @@ export default function BuildPlaceScreen({ onPlaced, onBack, hasCoach, player }:
       .catch(() => {})
   }, [])
 
-  const catalog = STRUCTURES.filter(structure => structure.id !== 'garage')
+  const catalog = STRUCTURES.filter(s => s.id !== 'garage')
   const sel = catalog.find(c => c.id === picked) ?? catalog[0]
 
+  useEffect(() => {
+    if (!catalog.find(c => c.id === picked)) {
+      const first = catalog.find(c =>
+        structureUnlocked(c, { refineryUnlocked: player.refineryUnlocked, placed: player.placed, freeOperations: player.freeOperations })
+        && canAffordStructure(c, { francs: player.francs, stash: player.stash })
+      )
+      if (first) setPicked(first.id)
+    }
+  }, [])
+
+  function handlePick(id: string) {
+    setPicked(id)
+    setCell(null)
+  }
+
   return (
-    <div style={{ width: '100%', height: '100%', position: 'relative' }}>
+    <div style={{ width: '100%', height: '100%', position: 'relative', overflow: 'hidden' }}>
+      {/* Earth background */}
       <div style={{ position: 'absolute', inset: 0 }}>
-        <Image src="/scenes/earth-day.png" alt="" fill priority style={{ objectFit: 'cover', filter: `brightness(${phase === 'place' ? 0.65 : 0.88})` }} />
-        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, rgba(6,9,15,0.45) 0%, transparent 25%, transparent 74%, rgba(6,9,15,0.45) 100%)' }} />
+        <Image src="/scenes/earth-day.png" alt="" fill priority style={{ objectFit: 'cover', filter: 'brightness(0.6)' }} />
+        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, rgba(6,9,15,0.50) 0%, transparent 22%, transparent 68%, rgba(6,9,15,0.55) 100%)' }} />
       </div>
 
-      <TopBar
-        eyebrow={phase === 'pick' ? 'EARTH BASE · SETUP' : 'PLACE STRUCTURE'}
-        title={phase === 'pick' ? 'Build' : 'Choose a Plot'}
-        onBack={phase === 'place' ? () => setPhase('pick') : onBack}
-      />
+      <TopBar eyebrow="EARTH BASE · SETUP" title="Build" onBack={onBack} />
 
-      {phase === 'pick' && (
-        <div data-ui-zone={UI_ZONES.screenContent} style={{ position: 'absolute', inset: 0, paddingTop: hasCoach ? TUTORIAL_CONTENT_TOP : 128, paddingBottom: 96, overflowY: 'auto' }}>
-          <div style={{ padding: '0 14px 8px' }}>
-            <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 10, fontWeight: 700, letterSpacing: '0.22em', color: 'var(--ln-text-muted)', textTransform: 'uppercase' }}>Available Structures</div>
-          </div>
-          <div style={{ padding: '0 14px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+      {/* Plot pads */}
+      <div style={{ position: 'absolute', inset: 0, zIndex: 10, pointerEvents: 'none' }}>
+        {plotEntities
+          .slice()
+          .sort((a, b) => {
+            const ai = (a.components.find(c => c.type === 'BuildPlot')?.index as number) ?? 0
+            const bi = (b.components.find(c => c.type === 'BuildPlot')?.index as number) ?? 0
+            return ai - bi
+          })
+          .map(entity => {
+            const idx = (entity.components.find(c => c.type === 'BuildPlot')?.index as number) ?? 0
+            const on = cell === idx
+            const color = STRUCTURE_COLORS[picked] ?? '#3fa9ff'
+            return (
+              <button
+                key={idx}
+                className="build-plot-button"
+                data-testid={`build-plot-${idx}`}
+                onClick={() => setCell(on ? null : idx)}
+                style={{
+                  position: 'absolute',
+                  left: entity.transform.position.x,
+                  bottom: Math.round(874 - entity.transform.position.y - 96),
+                  width: 86,
+                  cursor: 'pointer',
+                  background: 'transparent',
+                  border: 'none',
+                  padding: 0,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  pointerEvents: 'auto',
+                }}
+              >
+                <div style={{
+                  width: 64,
+                  height: 64,
+                  marginBottom: 4,
+                  opacity: on ? 1 : 0,
+                  transform: on ? 'translateY(0) scale(1)' : 'translateY(10px) scale(0.85)',
+                  transition: 'all 200ms cubic-bezier(0.34, 1.56, 0.64, 1)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  filter: on ? 'drop-shadow(0 0 12px rgba(245,166,35,0.6))' : 'none',
+                }}>
+                  {on && <span style={{ color: 'var(--ln-amber)' }}><StructureIcon kind={picked} size={44} /></span>}
+                </div>
+                <div style={{
+                  width: '100%',
+                  height: 30,
+                  borderRadius: '50% / 60%',
+                  background: on
+                    ? `radial-gradient(ellipse at 50% 35%, ${color}88, ${color}15 70%)`
+                    : 'radial-gradient(ellipse at 50% 35%, rgba(135,207,250,0.22), rgba(135,207,250,0.04) 70%)',
+                  border: `2px ${on ? 'solid' : 'dashed'} ${on ? color : 'rgba(135,207,250,0.4)'}`,
+                  boxShadow: on ? `0 0 24px ${color}66` : '0 2px 6px rgba(0,0,0,0.4)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  transition: 'all 200ms',
+                }}>
+                  {on
+                    ? <span style={{ fontFamily: 'var(--ln-font-mono)', fontSize: 16, fontWeight: 800, color, marginTop: -1 }}>⌄</span>
+                    : <span style={{ fontFamily: 'var(--ln-font-mono)', fontSize: 20, fontWeight: 800, color: 'rgba(135,207,250,0.7)', marginTop: -2 }}>+</span>}
+                </div>
+              </button>
+            )
+          })}
+      </div>
+
+      {/* Structure picker — compact strip below plots, above sticky actions */}
+      <div data-ui-zone={UI_ZONES.screenContent} style={{
+        position: 'absolute',
+        left: 0, right: 0,
+        bottom: 48,
+        zIndex: 12,
+        pointerEvents: 'none',
+      }}>
+        <div style={{
+          background: 'linear-gradient(180deg, transparent 0%, rgba(6,9,15,0.60) 20%, rgba(6,9,15,0.85) 100%)',
+          backdropFilter: 'blur(4px)',
+          WebkitBackdropFilter: 'blur(4px)',
+          padding: '10px 12px 0',
+        }}>
+          <div style={{
+            display: 'flex',
+            gap: 8,
+            overflowX: 'auto',
+            scrollSnapType: 'x mandatory',
+            WebkitOverflowScrolling: 'touch',
+            paddingBottom: 4,
+            pointerEvents: 'auto',
+            scrollbarWidth: 'none',
+          }}>
             {catalog.map(c => {
               const on = c.id === picked
               const alreadyBuilt = player.placed.includes(c.id)
               const unlocked = structureUnlocked(c, { refineryUnlocked: player.refineryUnlocked, placed: player.placed, freeOperations: player.freeOperations }) && !alreadyBuilt
               const affordable = canAffordStructure(c, { francs: player.francs, stash: player.stash })
               const canSelect = unlocked && affordable
+              const color = STRUCTURE_COLORS[c.id] ?? '#3fa9ff'
               return (
-                <button key={c.id} onClick={() => canSelect && setPicked(c.id)} style={{ background: 'transparent', border: 'none', padding: 0, textAlign: 'left', cursor: canSelect ? 'pointer' : 'not-allowed', opacity: canSelect ? 1 : 0.5 }}>
-                  <Panel accent={on ? '#f5a623' : '#3fa9ff'} style={{ padding: 10 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                      <div style={{ width: 48, height: 48, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(10,18,29,0.8)', borderRadius: 8, border: `1px solid ${on ? '#f5a623' : '#3fa9ff'}40` }}>
-                        <span style={{ color: on ? 'var(--ln-amber)' : 'var(--ln-cyan)' }}><StructureIcon kind={c.id} /></span>
+                <button
+                  key={c.id}
+                  onClick={() => canSelect && handlePick(c.id)}
+                  disabled={!canSelect}
+                  style={{
+                    flex: '0 0 auto',
+                    scrollSnapAlign: 'start',
+                    background: on
+                      ? `linear-gradient(180deg, ${color}22, ${color}08)`
+                      : 'rgba(10,18,29,0.70)',
+                    border: `1px solid ${on ? color : 'rgba(135,207,250,0.12)'}`,
+                    borderRadius: 10,
+                    padding: '6px 10px',
+                    cursor: canSelect ? 'pointer' : 'default',
+                    opacity: canSelect || alreadyBuilt ? 1 : 0.4,
+                    textAlign: 'left',
+                    minWidth: 90,
+                    maxWidth: 120,
+                    transition: 'all 150ms',
+                    outline: 'none',
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <span style={{ color: on ? color : 'var(--ln-cyan)', flexShrink: 0 }}>
+                      <StructureIcon kind={c.id} size={20} />
+                    </span>
+                    <div style={{ minWidth: 0 }}>
+                      <div style={{
+                        fontFamily: 'var(--ln-font-display)',
+                        fontWeight: 800,
+                        fontSize: 10,
+                        color: on ? color : '#c8d6ea',
+                        letterSpacing: '0.01em',
+                        whiteSpace: 'nowrap',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                      }}>{c.name}</div>
+                      <div style={{
+                        fontFamily: 'var(--ln-font-mono)',
+                        fontSize: 8,
+                        color: on ? color : '#7a8294',
+                        marginTop: 1,
+                        fontWeight: 700,
+                        letterSpacing: '0.04em',
+                      }}>
+                        {alreadyBuilt ? 'BUILT' : unlocked ? (c.cost === 0 ? 'FREE' : `₣${(c.cost / 1_000_000).toFixed(0)}M`) : c.unlocksAt}
                       </div>
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ fontFamily: 'var(--ln-font-display)', fontWeight: 800, fontSize: 15, color: on ? '#f5a623' : '#e6efff', letterSpacing: '0.02em' }}>{c.name}</div>
-                        <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 11, color: '#a9b8ce', marginTop: 2, lineHeight: 1.35 }}>{c.description}</div>
-                        <div style={{ marginTop: 6 }}>
-                          {alreadyBuilt
-                            ? <StatusPill kind="mute">Built</StatusPill>
-                            : unlocked
-                              ? <StatusPill kind={affordable ? (c.cost === 0 ? 'ok' : 'amber') : 'crit'}>{affordable ? formatStructureCost(c) : 'Need materials'}</StatusPill>
-                              : <StatusPill kind="mute">{c.unlocksAt}</StatusPill>}
-                        </div>
-                      </div>
-                      {on && <span style={{ color: '#f5a623', fontSize: 22 }}>✓</span>}
                     </div>
-                  </Panel>
+                  </div>
                 </button>
               )
             })}
           </div>
+
+          {/* Status line */}
+          <div style={{
+            pointerEvents: 'none',
+            padding: '6px 2px 10px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 6,
+          }}>
+            <span style={{ color: STRUCTURE_COLORS[picked] ?? '#3fa9ff', flexShrink: 0 }}>
+              <StructureIcon kind={picked} size={14} />
+            </span>
+            <span style={{
+              fontFamily: 'var(--ln-font-body)',
+              fontSize: 11,
+              color: '#a9b8ce',
+              whiteSpace: 'nowrap',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+            }}>
+              {cell == null
+                ? `Select a plot for the ${sel.name}`
+                : `Place ${sel.name} here?`}
+            </span>
+          </div>
         </div>
-      )}
+      </div>
 
-      {phase === 'pick' && (
-        <div className="sticky-actions" data-ui-zone={UI_ZONES.bottomActions}>
-          <PrimaryBtn kind="amber" disabled={!canAffordStructure(sel, { francs: player.francs, stash: player.stash }) || !structureUnlocked(sel, { refineryUnlocked: player.refineryUnlocked, placed: player.placed }) || player.placed.includes(sel.id)} onClick={() => setPhase('place')}>Select a Plot →</PrimaryBtn>
-        </div>
-      )}
+      {/* Glow line */}
+      <div style={{
+        position: 'absolute',
+        left: 0, right: 0,
+        bottom: 44,
+        height: 2,
+        zIndex: 6,
+        background: 'linear-gradient(90deg, transparent, rgba(255,225,160,0.35) 15%, rgba(255,225,160,0.35) 85%, transparent)',
+      }} />
 
-      {phase === 'place' && (
-        <>
-          <div style={{ position: 'absolute', left: 14, right: 14, top: hasCoach ? TUTORIAL_CONTENT_TOP : 130, zIndex: 12 }}>
-            <Panel accent="#f5a623" style={{ padding: 10 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                <span style={{ color: 'var(--ln-amber)' }}><StructureIcon kind={picked} size={28} /></span>
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 9, fontWeight: 800, letterSpacing: '0.2em', color: '#f5a623', textTransform: 'uppercase' }}>Placing · {sel.name}</div>
-                  <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 12, color: '#a9b8ce', marginTop: 2 }}>{cell == null ? 'Tap a glowing pad on the surface.' : 'Pad chosen — confirm to build here.'}</div>
-                </div>
-              </div>
-            </Panel>
-          </div>
-
-          <div style={{ position: 'absolute', left: 0, right: 0, bottom: 172, height: 3, zIndex: 6, background: 'linear-gradient(90deg, transparent, rgba(255,225,160,0.55) 20%, rgba(255,225,160,0.55) 80%, transparent)' }} />
-
-          <div style={{ position: 'absolute', inset: 0, zIndex: 10, pointerEvents: 'none' }}>
-            {plotEntities
-              .slice()
-              .sort((a, b) => {
-                const ai = (a.components.find(c => c.type === 'BuildPlot')?.index as number) ?? 0
-                const bi = (b.components.find(c => c.type === 'BuildPlot')?.index as number) ?? 0
-                return ai - bi
-              })
-              .map(entity => {
-                const idx = (entity.components.find(c => c.type === 'BuildPlot')?.index as number) ?? 0
-                const on = cell === idx
-                return (
-                  <button key={idx} className="build-plot-button" data-testid={`build-plot-${idx}`} onClick={() => setCell(idx)} style={{ position: 'absolute', left: entity.transform.position.x, bottom: Math.round(874 - entity.transform.position.y - 96), width: 86, cursor: 'pointer', background: 'transparent', border: 'none', padding: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', pointerEvents: 'auto' }}>
-                    <div style={{ width: 64, height: 64, marginBottom: 2, opacity: on ? 1 : 0, transform: on ? 'translateY(0)' : 'translateY(6px)', transition: 'all 160ms', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 32 }}>
-                      {on && <span style={{ color: 'var(--ln-amber)' }}><StructureIcon kind={picked} size={40} /></span>}
-                    </div>
-                    <div style={{ width: '100%', height: 30, borderRadius: '50% / 60%', background: on ? 'radial-gradient(ellipse at 50% 35%, rgba(245,166,35,0.5), rgba(245,166,35,0.12) 70%)' : 'radial-gradient(ellipse at 50% 35%, rgba(135,207,250,0.28), rgba(135,207,250,0.05) 70%)', border: `2px dashed ${on ? '#f5a623' : 'rgba(135,207,250,0.6)'}`, boxShadow: on ? '0 0 22px rgba(245,166,35,0.55)' : '0 2px 6px rgba(0,0,0,0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', animation: on ? 'none' : 'pad-pulse 1.8s ease-in-out infinite', transition: 'all 160ms' }}>
-                      {!on && <span style={{ fontFamily: 'var(--ln-font-mono)', fontSize: 20, fontWeight: 800, color: 'rgba(135,207,250,0.85)', marginTop: -2 }}>+</span>}
-                    </div>
-                  </button>
-                )
-              })}
-          </div>
-
-          <div className="sticky-actions" data-ui-zone={UI_ZONES.bottomActions}>
-            <PrimaryBtn kind="amber" disabled={cell == null} onClick={() => cell != null && onPlaced(picked, cell)}>Confirm · Build Here →</PrimaryBtn>
-          </div>
-        </>
-      )}
+      <div className="sticky-actions" data-ui-zone={UI_ZONES.bottomActions} style={{ zIndex: 15 }}>
+        <PrimaryBtn kind="amber" disabled={cell == null} onClick={() => cell != null && onPlaced(picked, cell)}>
+          Confirm · Build Here →
+        </PrimaryBtn>
+      </div>
     </div>
   )
 }

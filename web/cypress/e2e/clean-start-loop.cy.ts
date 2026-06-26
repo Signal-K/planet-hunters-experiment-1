@@ -80,7 +80,6 @@ describe('Clean start full game loop', () => {
     cy.get('[data-testid="intro-begin-btn"]').click()
     cy.contains('EARTH BASE · SETUP').should('be.visible')
     cy.contains('Build a Launchpad').should('be.visible')
-    cy.contains('button', 'Select a Plot').click()
     cy.get('[data-testid="build-plot-0"]').click()
     cy.contains('button', 'Confirm · Build Here').click()
 

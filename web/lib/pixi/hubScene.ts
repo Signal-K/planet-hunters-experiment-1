@@ -340,7 +340,9 @@ export function buildHubScene(
   app: Application,
   buildings: HubBuildingDef[],
   tex: HubTextures,
+  opts: { groundY?: number } = {},
 ): { update: (elapsed: number, dt: number) => void; destroy: () => void } {
+  const groundY = opts.groundY ?? GROUND_Y
   const root = new Container()
   app.stage.addChild(root)
 
@@ -359,9 +361,9 @@ export function buildHubScene(
       default:             result = buildCommandCenter(tex); break
     }
 
-    // Position: center of building at plotX + w/2, ground at GROUND_Y
+    // Position: center of building at plotX + w/2, base at runtime ground line
     result.root.x = def.plotX + def.w / 2
-    result.root.y = GROUND_Y
+    result.root.y = groundY
     root.addChild(result.root)
     buildingContainers.push(result.root)
     allAnims.push(...result.animatables)
