@@ -61,6 +61,12 @@ interface ComingSoonSheetProps {
   target?: Date
 }
 
+function formatSprintLabel(date: Date) {
+  const day = date.getUTCDate()
+  const month = date.toLocaleString('en', { month: 'long', timeZone: 'UTC' })
+  return `Sprint · ${day} ${month} · 10:00 AEST`
+}
+
 export function ComingSoonSheet({ feature, description, onClose, target = NEXT_SPRINT_UTC }: ComingSoonSheetProps) {
   return (
     <div
@@ -112,7 +118,7 @@ export function ComingSoonSheet({ feature, description, onClose, target = NEXT_S
           fontFamily: 'var(--ln-font-display)', fontSize: 8, letterSpacing: '0.18em',
           color: 'var(--ln-text-muted)', textTransform: 'uppercase', marginBottom: 20,
         }}>
-          Sprint · 5 July · 10:00 AEST
+          {formatSprintLabel(target)}
         </div>
 
         <button

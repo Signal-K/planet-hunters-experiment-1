@@ -13,13 +13,23 @@ services:
       timeout: 3s
       retries: 10
 
+  shared-pb:
+    image: ghcr.io/muchobien/pocketbase:0.39.0
+    ports:
+      - "8090:8090"
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8090/api/health"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
   pocketbase:
     build:
       context: ./pocketbase
       args:
         POCKETBASE_VERSION: "0.39.0"
     ports:
-      - "8093:8090"
+      - "8091:8090"
     volumes:
       - pocketbase-data:/pb/pb_data
     healthcheck:
@@ -41,10 +51,10 @@ services:
     environment:
       KNOWNS_CANONICAL_ROOT: /knowns
       KNOWNS_OUTBOX: /knowns-outbox
-      POCKETBASE_INTERNAL_URL: http://pocketbase:8090
+      POCKETBASE_INTERNAL_URL: http://shared-pb:8090
       POCKETBASE_LANDNAM_INTERNAL_URL: http://pocketbase:8090
-      NEXT_PUBLIC_SHARED_PB_URL: http://localhost:8093
-      NEXT_PUBLIC_LANDNAM_PB_URL: http://localhost:8093
+      NEXT_PUBLIC_SHARED_PB_URL: http://localhost:8090
+      NEXT_PUBLIC_LANDNAM_PB_URL: http://localhost:8091
       NEXT_TELEMETRY_DISABLED: "1"
       WATCHPACK_POLLING: "true"
       CHOKIDAR_USEPOLLING: "true"
@@ -52,6 +62,8 @@ services:
       - "3000:3000"
     depends_on:
       pocketbase:
+        condition: service_healthy
+      shared-pb:
         condition: service_healthy
       geometry-service:
         condition: service_healthy

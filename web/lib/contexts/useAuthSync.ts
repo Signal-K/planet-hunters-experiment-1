@@ -161,7 +161,7 @@ export function useAuthSync({
   useEffect(() => {
     if (!hydrated || isPreview || !authUserId || !backendReady || backendLoadedFor.current !== authUserId) return
     const timer = window.setTimeout(async () => {
-      const payload = { user: authUserId, state }
+      const payload = { user: authUserId, state, missions_done: state.player.missionsDone }
       try {
         if (backendRecordId.current) {
           await pbLandnam.collection('game_states').update(backendRecordId.current, payload)

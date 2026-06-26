@@ -10,6 +10,8 @@ import type { Catalog } from '@/lib/catalog'
 import type { GameState, LicenseGrade } from '@/lib/game-types'
 import type { Toast } from '@/components/ui/ToastLayer'
 import { applyGainResearchXP, applyUpgradeLicenseGrade, applyUnlockBlueprint } from '@/lib/systems/ProgressionSystem'
+import { pbShared } from '@/lib/pb'
+import { pbLandnam } from '@/lib/pb-landnam'
 
 const ORBIT_MS_PER_UNIT = 2 * 60 * 1000
 
@@ -285,6 +287,17 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
       }
     })
     addToast(`Mission payout received: +${(total / 1_000_000).toFixed(0)}M F`, 'ok')
+    const userId = pbShared.authStore.record?.id
+    if (userId) {
+      pbLandnam.collection('mission_log').create({
+        user: userId,
+        mission_id: current.missionId,
+        target_id: current.targetId,
+        payout_francs: total,
+        minerals_delivered: consumed,
+        missions_done_after: newMissionsDone,
+      }).catch(() => {})
+    }
     enqueueSurvey('lnm_mission_friction', 2000)
     if (newMissionsDone === 1) {
       enqueueSurvey('lnm_m1_complete', 3000)
