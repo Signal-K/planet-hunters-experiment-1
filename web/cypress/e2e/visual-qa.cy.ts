@@ -35,6 +35,10 @@ function suppressSurveysAndUpgrade(win: Window) {
 }
 
 function loadPreset(win: Window, preset: object) {
+  // Remove PocketBase auth tokens left by earlier tests — if present they
+  // allow the SDK to restore a valid session, triggering a backend load that
+  // overrides the preset state with whatever the previous test saved.
+  win.localStorage.removeItem('pocketbase_auth')
   suppressSurveysAndUpgrade(win)
   win.localStorage.setItem(STORAGE_KEY, JSON.stringify(preset))
 }
@@ -179,8 +183,9 @@ describe('Visual QA — game screens and mining canvas', () => {
     cy.get('[data-testid="mining-canvas"]').invoke('prop', 'clientWidth').should('be.gt', 0)
     cy.get('[data-testid="mining-canvas"]').invoke('prop', 'clientHeight').should('be.gt', 0)
 
-    // Fire several lasers — some will hit, some miss
-    for (let i = 0; i < 8; i++) {
+    // Fire exactly 5 lasers (matching the 5 laser-energy charges).
+    // Firing more would deplete the button and cause it to become disabled.
+    for (let i = 0; i < 5; i++) {
       cy.get('[data-testid="fire-laser-btn"]').should('not.be.disabled').click()
       cy.wait(200)
     }
@@ -217,7 +222,9 @@ describe('Visual QA — game screens and mining canvas', () => {
     })
 
     skipAuthGateIfShown()
-    cy.contains('MISSION TRANSIT', { timeout: 12000 }).should('be.visible')
+    // Preset state loads directly into the mining screen — there is no transit
+    // phase, so check for the mining screen header rather than 'MISSION TRANSIT'.
+    cy.contains('Mining Run', { timeout: 12000 }).should('be.visible')
     cy.get('[data-testid="mining-canvas"]', { timeout: 20000 }).should('be.visible')
     cy.wait(2000) // give PixiJS time to paint a first frame
 
@@ -233,10 +240,9 @@ describe('Visual QA — game screens and mining canvas', () => {
       .invoke('prop', 'height')
       .should('be.gt', 0)
 
-    // Fire rapidly — some lasers will miss → flash overlay activates
-    // The overlay is always in DOM; on miss it jumps to opacity:1 then fades.
-    // We fire enough to guarantee at least one miss and capture the frame.
-    for (let i = 0; i < 15; i++) {
+    // Fire all 5 laser charges — some will miss → flash overlay activates.
+    // 5 is the energy cap; firing more makes the button disabled.
+    for (let i = 0; i < 5; i++) {
       cy.get('[data-testid="fire-laser-btn"]').should('not.be.disabled').click()
       cy.wait(100)
     }
