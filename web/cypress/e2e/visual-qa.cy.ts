@@ -24,6 +24,14 @@ const ALL_SURVEYS = [
 function suppressSurveysAndUpgrade(win: Window) {
   win.localStorage.setItem(SURVEY_KEY, JSON.stringify(ALL_SURVEYS))
   win.localStorage.setItem(SNOOZE_KEY, String(Date.now() + 365 * 24 * 60 * 60 * 1000))
+  // Set fake guest credentials so hasStoredCredentials() returns true and the
+  // auth gate never appears. ensureGuestAuth() will fail to re-auth with these
+  // non-existent credentials and fall back to offline mode — the game is fully
+  // functional from localStorage without a live PocketBase session.
+  win.localStorage.setItem('landnam-guest-credentials', JSON.stringify({
+    email: 'ci_seed_guest@landnam.guest',
+    password: 'GuestPassword123!',
+  }))
 }
 
 function loadPreset(win: Window, preset: object) {
@@ -97,6 +105,12 @@ function navToMissions() {
 // ── tests ─────────────────────────────────────────────────────────────────────
 
 describe('Visual QA — game screens and mining canvas', () => {
+  // PixiJS v8 can throw _cancelResize errors during teardown when component
+  // cleanup races async app.init(). Suppress — the visual content is unaffected.
+  Cypress.on('uncaught:exception', (err) => {
+    if (err.message.includes('_cancelResize')) return false
+    return true
+  })
   // ── 1. Full M1 playthrough with screenshots at every screen ────────────────
   it('M1 full playthrough — portrait 390×844 — screenshots at every screen', () => {
     cy.viewport(390, 844)
@@ -202,6 +216,7 @@ describe('Visual QA — game screens and mining canvas', () => {
       },
     })
 
+    skipAuthGateIfShown()
     cy.contains('MISSION TRANSIT', { timeout: 12000 }).should('be.visible')
     cy.get('[data-testid="mining-canvas"]', { timeout: 20000 }).should('be.visible')
     cy.wait(2000) // give PixiJS time to paint a first frame
@@ -262,6 +277,7 @@ describe('Visual QA — game screens and mining canvas', () => {
       },
     })
 
+    skipAuthGateIfShown()
     cy.contains('Pick Target', { timeout: 12000 }).should('be.visible')
     cy.wait(1000) // let orbital animation start
     cy.screenshot('target-picker-orbital-animation')
@@ -300,6 +316,7 @@ describe('Visual QA — game screens and mining canvas', () => {
       },
     })
 
+    skipAuthGateIfShown()
     cy.contains('Earth Base', { timeout: 12000 }).should('be.visible')
     cy.get('[data-testid="building-launchpad"]').should('be.visible')
     cy.screenshot('hub-launchpad-visible')

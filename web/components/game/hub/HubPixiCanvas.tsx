@@ -43,7 +43,13 @@ export default function HubPixiCanvas({ buildings }: HubPixiCanvasProps) {
         autoDensity: true,
       })
 
-      if (destroyed) { app.destroy(true); return }
+      // Check destroyed AFTER init — if unmount raced the async init, clean up
+      // now and bail. Guard with try/catch: PixiJS v8 _cancelResize can throw
+      // if the renderer never fully initialised.
+      if (destroyed) {
+        try { app.destroy(true) } catch (_) {}
+        return
+      }
 
       scene = buildHubScene(app, buildingsRef.current, nullTextures())
 
@@ -57,7 +63,11 @@ export default function HubPixiCanvas({ buildings }: HubPixiCanvasProps) {
     return () => {
       destroyed = true
       scene?.destroy()
-      app.destroy(true, { children: true })
+      // Only destroy if the renderer was fully initialised — avoids PixiJS v8
+      // _cancelResize errors when cleanup races the async app.init().
+      if (app.renderer) {
+        try { app.destroy(true, { children: true }) } catch (_) {}
+      }
       canvas.remove()
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
