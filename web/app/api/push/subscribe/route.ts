@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import PocketBase from 'pocketbase'
+import { withPbRetry } from '@/lib/pbRetry'
 
 export async function POST(req: NextRequest) {
   const { subscription, userId } = await req.json()
@@ -10,18 +11,18 @@ export async function POST(req: NextRequest) {
   const pb = new PocketBase(process.env.NEXT_PUBLIC_LANDNAM_PB_URL)
 
   try {
-    const existing = await pb.collection('push_subscriptions').getFirstListItem(
-      `endpoint = "${subscription.endpoint}"`
-    ).catch(() => null)
+    await withPbRetry(async () => {
+      const existing = await pb.collection('push_subscriptions').getFirstListItem(
+        `endpoint = "${subscription.endpoint}"`
+      ).catch(() => null)
 
-    if (existing) {
-      return NextResponse.json({ ok: true })
-    }
-
-    await pb.collection('push_subscriptions').create({
-      endpoint: subscription.endpoint,
-      keys: subscription.keys,
-      user_id: userId ?? '',
+      if (!existing) {
+        await pb.collection('push_subscriptions').create({
+          endpoint: subscription.endpoint,
+          keys: subscription.keys,
+          user_id: userId ?? '',
+        })
+      }
     })
 
     return NextResponse.json({ ok: true })

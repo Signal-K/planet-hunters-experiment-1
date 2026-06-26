@@ -34,10 +34,23 @@ function continueWithoutAccountIfShown() {
   })
 }
 
+function navToMissions() {
+  cy.window().then(win => {
+    const isDesktop = win.innerWidth >= 1024
+    if (isDesktop) {
+      cy.get('[data-testid="radial-nav-toggle"]').should('not.be.visible')
+      cy.get('[data-testid="sidebar-nav-missions"]').should('be.visible').click()
+    } else {
+      cy.get('[data-testid="radial-nav-toggle"]').should('be.visible').click()
+      cy.get('[data-testid="radial-nav-missions"]').should('be.visible').click()
+    }
+  })
+}
+
 function playM1FromIntro() {
   continueWithoutAccountIfShown()
   cy.contains('LANDNAM', { timeout: 10000 }).should('be.visible')
-  cy.get('[data-testid="intro-begin-btn"]').click()
+  cy.get('[data-testid="intro-begin-btn"]').click({ force: true })
 
   cy.contains('EARTH BASE · SETUP', { timeout: 10000 }).should('be.visible')
   cy.contains('button', 'Select a Plot').click()
@@ -46,15 +59,14 @@ function playM1FromIntro() {
 
   cy.contains('Earth Base', { timeout: 10000 }).should('be.visible')
   cy.get('[data-testid="building-launchpad"]').should('be.visible')
-  cy.get('[data-testid="radial-nav-toggle"]').click()
-  cy.get('[data-testid="radial-nav-missions"]').click()
+  navToMissions()
 
   cy.contains('Mission Board', { timeout: 10000 }).should('be.visible')
   cy.get('[data-testid="mission-card-generated-s1-starter-bulk-1"]').click()
 
   cy.contains('Pick Target', { timeout: 10000 }).should('be.visible')
   cy.get('[data-testid="target-eros"]').click({ force: true })
-  cy.contains('Continue').click()
+  cy.get('[data-testid="continue-build-btn"]').should('be.visible').click()
 
   cy.contains('Select Rocket', { timeout: 10000 }).should('be.visible')
   cy.contains('button', 'Launch with Starter Rocket 1').click()

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import webpush from 'web-push'
 import PocketBase from 'pocketbase'
+import { withPbRetry } from '@/lib/pbRetry'
 
 export async function GET(req: NextRequest) {
   webpush.setVapidDetails(
@@ -19,9 +20,11 @@ export async function GET(req: NextRequest) {
   const pb = new PocketBase(process.env.NEXT_PUBLIC_LANDNAM_PB_URL)
   const now = Date.now()
 
-  const records = await pb.collection('scheduled_notifications').getFullList({
-    filter: `scheduled_for <= ${now} && sent = false`,
-  })
+  const records = await withPbRetry(() =>
+    pb.collection('scheduled_notifications').getFullList({
+      filter: `scheduled_for <= ${now} && sent = false`,
+    })
+  )
 
   if (records.length === 0) {
     return NextResponse.json({ sent: 0, failed: 0 })

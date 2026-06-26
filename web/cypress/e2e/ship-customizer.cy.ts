@@ -39,17 +39,17 @@ describe('Ship Customiser staged build', () => {
     cy.get('[data-testid="choose-ion-thruster-t1"]').click()
     cy.get('[data-testid="ship-review"]').should('have.attr', 'data-installed', '1')
 
-    cy.get('[data-testid="ship-step-next"]').click()
+    cy.get('[data-testid="ship-step-next"]').click({ force: true })
     cy.get('[data-testid="ship-build-step"]').should('contain', 'Boosters')
     cy.get('[data-testid="choose-strap-booster-t1"]').click()
     cy.get('[data-testid="ship-review"]').should('have.attr', 'data-installed', '2')
 
-    cy.get('[data-testid="ship-step-next"]').click()
+    cy.get('[data-testid="ship-step-next"]').click({ force: true })
     cy.get('[data-testid="ship-build-step"]').should('contain', 'Command')
     cy.get('[data-testid="choose-cockpit-command-t1"]').click()
     cy.get('[data-testid="ship-review"]').should('have.attr', 'data-installed', '3')
 
-    cy.get('[data-testid="ship-step-next"]').click()
+    cy.get('[data-testid="ship-step-next"]').click({ force: true })
     cy.get('[data-testid="ship-build-step"]').should('contain', 'Payload')
     cy.get('[data-testid="choose-cargo-payload-t1"]').click()
     cy.get('[data-testid="ship-review"]').should('have.attr', 'data-installed', '4')

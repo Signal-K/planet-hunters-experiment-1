@@ -123,6 +123,20 @@ STYLE_PROFILES = {
         "readable depth cues through color and silhouette only. "
         f"{COMMON_STYLE}"
     ),
+    "structure_component": (
+        "Single modular ground structure component sprite tile for a 2D side-scrolling space management game. "
+        "STRICT SIDE-VIEW (left-right elevation), NOT top-down. "
+        "Isolated structural piece on pure black background — no surrounding scene, no ground plane, no sky. "
+        "The component must tile/stack cleanly with adjacent components: flat top and bottom edges "
+        "for vertical stacking, flat left and right edges for horizontal joining. "
+        "Pixel-art style: chunky dark outlines (2px), visible panel lines, bolted flanges, cable conduits, "
+        "hand-placed pixel detail. Crisp, readable silhouette at small display sizes. "
+        "Sci-fi industrial aesthetic inspired by real space program infrastructure — not fantasy. "
+        f"{LANDNAM_PALETTE} "
+        "No text, no labels, no UI elements, no crew, no vehicles. "
+        "Pure black background only. Transparent margins around the component (component fills ~80% of frame). "
+        "Readable at 64×64px display size."
+    ),
 }
 
 # Passed as negative_prompt to Flux to hard-block photorealistic / 3D styles.

@@ -235,6 +235,10 @@ export interface TutorialStep {
   anchor: 'top' | 'bottom' | 'center'
   spot: { x: number; y: number; w: number; h: number; fromBottom?: boolean; fromCenter?: boolean; right?: number } | null
   cta: string
+  /** Overrides for desktop layout (sidebar nav replaces radial menu) */
+  desktopBody?: string
+  desktopAction?: string
+  desktopSpot?: TutorialStep['spot']
 }
 
 export interface RocketConfig {

@@ -1,4 +1,4 @@
-import { Container, Sprite, type Texture } from 'pixi.js'
+import { Container, Graphics, Sprite, type Texture } from 'pixi.js'
 import { ScriptBehaviour } from '../components/ScriptBehaviour'
 import { ShapeRenderer } from '../components/ShapeRenderer'
 import type { ShapeKind } from '../components/ShapeRenderer'
@@ -43,6 +43,8 @@ export interface MiningControllerOptions {
   mineralShapes?: Record<string, ShapeKind>
   mineralTextures?: Record<string, Texture>
   onCollect: (mineral: string) => void
+  /** Called when a laser exits the world without hitting any ore (miss). */
+  onMiss?: () => void
   /** Called every update with the total horizontal scroll distance so callers can sync visual layers. */
   onScroll?: (scrollX: number) => void
 }
@@ -63,6 +65,14 @@ interface LaserEntity {
   go: GameObject
 }
 
+interface Particle {
+  g: Graphics
+  vx: number
+  vy: number
+  life: number
+  maxLife: number
+}
+
 /**
  * Side-scrolling mining: ship cruises at the top, asteroid surface at the
  * bottom. Player fires laser DOWNWARD at ore nodes embedded in the rock.
@@ -72,6 +82,7 @@ export class MiningController extends ScriptBehaviour {
   private opts: MiningControllerOptions
   private ores: OreEntity[] = []
   private lasers: LaserEntity[] = []
+  private particles: Particle[] = []
   private oreCounter = 0
   private laserCounter = 0
   private totalScrollX = 0
@@ -124,6 +135,7 @@ export class MiningController extends ScriptBehaviour {
 
     this.resolveCollisions()
     this.removeOffscreen()
+    this.updateParticles(dt)
 
     this.opts.onScroll?.(this.totalScrollX)
   }
@@ -214,6 +226,7 @@ export class MiningController extends ScriptBehaviour {
         if (ore.hp <= 0) {
           ore.go.active = false
           if (ore.sprite) ore.sprite.visible = false
+          this.spawnParticleBurst(ore.go.transform.position.x, ore.go.transform.position.y, ore.mineralColor, ore.radius)
           this.opts.onCollect(ore.mineral)
         } else {
           ore.flashTimer = FLASH_DURATION
@@ -246,9 +259,42 @@ export class MiningController extends ScriptBehaviour {
 
     this.lasers = this.lasers.filter(laser => {
       if (laser.go.active && laser.go.transform.position.y < this.opts.worldHeight + LASER_SIZE.height) return true
+      const wasMiss = laser.go.active
       laser.go.destroy()
       this.gameObject.children = this.gameObject.children.filter(c => c !== laser.go)
+      if (wasMiss) this.opts.onMiss?.()
       return false
+    })
+  }
+
+  private spawnParticleBurst(x: number, y: number, color: number, radius: number): void {
+    const count = 8
+    for (let i = 0; i < count; i++) {
+      const angle = (i / count) * Math.PI * 2 + Math.random() * 0.5
+      const speed = 50 + Math.random() * 70
+      const size = 1.5 + Math.random() * 2.5
+      const g = new Graphics()
+      g.circle(0, 0, size).fill({ color, alpha: 1 })
+      g.x = x + (Math.random() - 0.5) * radius
+      g.y = y + (Math.random() - 0.5) * radius
+      this.opts.container.addChild(g)
+      const life = 0.3 + Math.random() * 0.15
+      this.particles.push({ g, vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed, life, maxLife: life })
+    }
+  }
+
+  private updateParticles(dt: number): void {
+    this.particles = this.particles.filter(p => {
+      p.life -= dt
+      if (p.life <= 0) {
+        this.opts.container.removeChild(p.g)
+        p.g.destroy()
+        return false
+      }
+      p.g.x += p.vx * dt
+      p.g.y += p.vy * dt
+      p.g.alpha = p.life / p.maxLife
+      return true
     })
   }
 

@@ -10,7 +10,10 @@ import { AmbientStars } from '@/components/game/hub/AmbientStars'
 import { Cloud } from '@/components/game/hub/Cloud'
 import { SoilCrossSection } from '@/components/game/hub/SoilCrossSection'
 import { Building, EmptyPlot } from '@/components/game/hub/Building'
+import HubPixiCanvas from '@/components/game/hub/HubPixiCanvas'
+import ErrorBoundary from '@/components/ui/ErrorBoundary'
 import { TUTORIAL_CONTENT_TOP } from '@/lib/tutorial-layout'
+import type { HubBuildingDef } from '@/lib/pixi/hubScene'
 
 const DEFAULT_PLOTS: EntityData[] = [
   { id: 'plot-0', name: 'Plot 0', transform: { position: { x: 22, y: 570 }, rotation: 0, scale: { x: 1, y: 1 } }, components: [{ type: 'BuildPlot', index: 0 }] },
@@ -44,21 +47,35 @@ export default function HubScreen({ player, hasCoach, onGoBuilding, onNav, onUpg
       .catch(() => {})
   }, [])
 
-  const plotStyles: React.CSSProperties[] = plotEntities
-    .slice()
-    .sort((a, b) => {
-      const ai = (a.components.find(c => c.type === 'BuildPlot')?.index as number) ?? 0
-      const bi = (b.components.find(c => c.type === 'BuildPlot')?.index as number) ?? 0
-      return ai - bi
-    })
+  const sortedEntities = plotEntities.slice().sort((a, b) => {
+    const ai = (a.components.find(c => c.type === 'BuildPlot')?.index as number) ?? 0
+    const bi = (b.components.find(c => c.type === 'BuildPlot')?.index as number) ?? 0
+    return ai - bi
+  })
+
+  const plotStyles: React.CSSProperties[] = sortedEntities
     // earth-day.png green/brown boundary is always at 22% from canvas bottom (objectFit:cover
     // scales to canvas height). calc(22% - 42px) puts the icon bottom at that boundary so the
     // structure appears planted on the visible grass/soil line on any screen height.
     .map(e => ({ left: e.transform.position.x, bottom: 'calc(22% - 42px)' } as React.CSSProperties))
+
   const structureForPlot = (plot: number) => {
     const kind = Object.entries(effectivePlots).find(([, p]) => p === plot)?.[0] ?? null
     return kind
   }
+
+  const BUILDING_W: Record<string, number> = { launchpad: 98, refinery: 84, 'scan-station': 80, command: 84 }
+  const hubBuildings: HubBuildingDef[] = sortedEntities.flatMap((e, plot) => {
+    const kind = structureForPlot(plot)
+    if (!kind) return []
+    return [{
+      kind,
+      plotX: e.transform.position.x,
+      w: BUILDING_W[kind] ?? 78,
+      hot: kind === 'launchpad' ? !!player.pendingLaunch : kind === 'scan-station' ? (!!player.activeScan && Date.now() >= player.activeScan.completesAt) : false,
+      status: 'ok' as const,
+    }]
+  })
   const structureProps = (kind: string) => {
     if (kind === 'launchpad') {
       return {
@@ -148,7 +165,12 @@ export default function HubScreen({ player, hasCoach, onGoBuilding, onNav, onUpg
       {/* Progression card — hidden when tutorial coach is active to avoid conflicting guidance */}
       {!hasCoach && <ProgressionCard player={player} onGoBuilding={onGoBuilding} onNav={onNav} top={TUTORIAL_CONTENT_TOP} />}
 
-      {/* Surface buildings */}
+      {/* PixiJS building sprites — ErrorBoundary prevents WebGL failures from crashing the hub */}
+      <ErrorBoundary fallback={null}>
+        <HubPixiCanvas buildings={hubBuildings} />
+      </ErrorBoundary>
+
+      {/* Surface buildings — transparent hit areas + labels over PixiJS sprites */}
       <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}>
         <div style={{ position: 'absolute', inset: 0, pointerEvents: 'auto' }}>
           {plotStyles.map((style, plot) => {

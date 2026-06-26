@@ -5,6 +5,7 @@ import CoachAvatar from '@/components/layout/CoachAvatar'
 import type { TutorialStep } from '@/lib/data'
 import { reserved_rect } from '@/lib/tutorial-layout'
 import { UI_ZONES } from '@/lib/ui-zones'
+import { useIsDesktop } from '@/lib/hooks/useIsDesktop'
 
 interface TutorialCoachProps {
   stepIndex: number
@@ -17,9 +18,14 @@ interface TutorialCoachProps {
 
 export default function TutorialCoach({ stepIndex, steps, step, total, onManualNext, onSkip }: TutorialCoachProps) {
   const [collapsed, setCollapsed] = useState(false)
+  const isDesktop = useIsDesktop()
   if (!step) return null
   const manual = !!step.manual
   const coachRail = reserved_rect(step.anchor === 'bottom' ? 'bottom' : 'top')
+
+  const resolvedBody = (isDesktop && step.desktopBody !== undefined) ? step.desktopBody : step.body
+  const resolvedAction = (isDesktop && step.desktopAction !== undefined) ? step.desktopAction : step.action
+  const resolvedSpot = (isDesktop && 'desktopSpot' in step) ? step.desktopSpot : step.spot
 
   const dots = (
     <div style={{ display: 'flex', gap: 4 }}>
@@ -36,7 +42,7 @@ export default function TutorialCoach({ stepIndex, steps, step, total, onManualN
   )
 
 
-  const spot = step.spot
+  const spot = resolvedSpot
   const spotStyle: React.CSSProperties | null = spot ? {
     position: 'absolute',
     left: spot.fromCenter ? `calc(50% + ${spot.x}px)` : spot.x,
@@ -74,14 +80,14 @@ export default function TutorialCoach({ stepIndex, steps, step, total, onManualN
                   <span style={{ fontFamily: 'var(--ln-font-mono)', fontSize: 10, color: '#7a8294', letterSpacing: '0.12em' }}>{stepIndex + 1} / {total}</span>
                 </div>
                 <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 14, fontWeight: 800, color: '#e6efff', marginTop: 3 }}>{step.title}</div>
-                <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 12, color: '#a9b8ce', marginTop: 3, lineHeight: 1.35, wordBreak: 'break-word' }}>{step.body}</div>
+                <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 12, color: '#a9b8ce', marginTop: 3, lineHeight: 1.35, wordBreak: 'break-word' }}>{resolvedBody}</div>
               </div>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 8 }}>
               {dots}
               <span style={{ flex: 1 }} />
               <button onClick={onSkip} style={{ background: 'transparent', border: 'none', cursor: 'pointer', fontFamily: 'var(--ln-font-display)', fontSize: 10, fontWeight: 700, letterSpacing: '0.16em', textTransform: 'uppercase', color: '#5d7390' }}>Skip</button>
-              <button onClick={onManualNext} style={{
+              <button data-testid="coach-got-it-btn" onClick={onManualNext} style={{
                 padding: '8px 16px', borderRadius: 10, cursor: 'pointer', border: 'none',
                 background: 'linear-gradient(180deg, #6cc2ff, #2d8de0)', color: '#06121f',
                 fontFamily: 'var(--ln-font-display)', fontSize: 12, fontWeight: 800,
@@ -127,7 +133,7 @@ export default function TutorialCoach({ stepIndex, steps, step, total, onManualN
               </div>
               <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 12, color: '#dfe9f7', lineHeight: 1.25, marginTop: 1, whiteSpace: 'normal', overflow: 'visible', wordBreak: 'break-word' }}>
                 <span aria-hidden="true" style={{ color: 'var(--ln-amber)', marginRight: 4 }}>›</span>
-                {step.action ?? ('Tap ' + step.cta)}
+                {resolvedAction ?? ((isDesktop ? 'Click ' : 'Tap ') + step.cta)}
               </div>
             </div>
             <button onClick={onSkip} style={{ flexShrink: 0, background: 'transparent', border: 'none', cursor: 'pointer', fontFamily: 'var(--ln-font-display)', fontSize: 9, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: '#5d7390', pointerEvents: 'auto' }}>Skip</button>

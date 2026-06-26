@@ -25,6 +25,13 @@ export function useAuthSync({
   addToast, normalizeAndRepair, storageKey,
 }: AuthSyncOpts) {
   const [authUserId, setAuthUserId] = useState<string | null>(pbShared.authStore.record?.id ?? null)
+
+  // Pre-emptive warmup ping — Fly machines stop when idle. Firing this early
+  // means the machine is live by the time auth + state-load requests arrive.
+  useEffect(() => {
+    if (isPreview) return
+    pbLandnam.health.check().catch(() => {})
+  }, [isPreview])
   const [backendReady, setBackendReady] = useState(false)
   const [upgradePromptOpen, setUpgradePromptOpen] = useState(false)
   const [awaitingRemoteState, setAwaitingRemoteState] = useState(false)
@@ -100,34 +107,54 @@ export function useAuthSync({
       setBackendReady(true)
     }
 
+    function handleLoadFailure(err: unknown) {
+      if (!active) return
+      if (typeof err === 'object' && err && 'status' in err && (err as { status: number }).status === 404) {
+        // Confirmed no record — safe to create one on next save
+        backendLoadedFor.current = authUserId!
+        setBackendReady(true)
+        return
+      }
+      // Network / availability error (Fly cold-start, timeout, etc.)
+      // Only unblock persisting if the device already has local state — otherwise we
+      // risk overwriting a real backend record with a blank slate from a new device.
+      const hasLocalState = !!localStorage.getItem(storageKey)
+      if (hasLocalState) {
+        backendLoadedFor.current = authUserId!
+        setBackendReady(true)
+      }
+      // Devices with no local state remain in awaitingRemoteState so the user
+      // sees a loading indicator rather than playing from empty state.
+    }
+
     pbLandnam.collection('game_states')
       .getFirstListItem(`user = "${authUserId}"`)
       .then(record => { if (active) applyRecord(record) })
       .catch(error => {
         if (!active) return
-        if (typeof error === 'object' && error && 'status' in error && error.status === 404) {
-          backendLoadedFor.current = authUserId!
-          setBackendReady(true)
-          return
-        }
-        // Retry once after 4s — Landnam backend may still be warming
-        setTimeout(() => {
+        // Retry with escalating backoff — Fly cold-start can take 10-15s
+        const delays = [4000, 12000, 25000]
+        let attempt = 0
+        function retry() {
           if (!active) return
           pbLandnam.collection('game_states')
             .getFirstListItem(`user = "${authUserId}"`)
             .then(record => { if (active) applyRecord(record) })
             .catch(err => {
               if (!active) return
-              if (typeof err === 'object' && err && 'status' in err && err.status === 404) {
-                backendLoadedFor.current = authUserId!
-                setBackendReady(true)
+              attempt++
+              if (attempt < delays.length) {
+                setTimeout(retry, delays[attempt])
+              } else {
+                handleLoadFailure(err)
               }
             })
-        }, 4000)
+        }
+        setTimeout(retry, delays[0])
       })
 
     return () => { active = false }
-  }, [authUserId, hydrated, isPreview, setState, normalizeAndRepair])
+  }, [authUserId, hydrated, isPreview, setState, normalizeAndRepair, storageKey])
 
   // Persist state to backend (debounced 400ms)
   useEffect(() => {
@@ -138,8 +165,19 @@ export function useAuthSync({
         if (backendRecordId.current) {
           await pbLandnam.collection('game_states').update(backendRecordId.current, payload)
         } else {
-          const record = await pbLandnam.collection('game_states').create(payload)
-          backendRecordId.current = record.id
+          try {
+            const record = await pbLandnam.collection('game_states').create(payload)
+            backendRecordId.current = record.id
+          } catch (createErr: unknown) {
+            // UNIQUE constraint: a record already exists but we couldn't load it (backend
+            // was unavailable on session start). Look it up and update instead.
+            if (typeof createErr === 'object' && createErr !== null && 'status' in createErr
+              && ((createErr as { status: number }).status === 400 || (createErr as { status: number }).status === 409)) {
+              const existing = await pbLandnam.collection('game_states').getFirstListItem(`user = "${authUserId}"`)
+              backendRecordId.current = existing.id
+              await pbLandnam.collection('game_states').update(existing.id, payload)
+            }
+          }
         }
       } catch {
         // Local storage remains the offline source of truth until the data link recovers.

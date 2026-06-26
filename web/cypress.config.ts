@@ -11,6 +11,7 @@ const profiles: Record<string, Cypress.EndToEndConfigOptions> = {
       'cypress/e2e/dev-shortcuts.cy.ts',
       'cypress/e2e/ship-customizer.cy.ts',
       'cypress/e2e/m3-territory.cy.ts',
+      'cypress/e2e/target-picker-pixi.cy.ts',
       'cypress/e2e/tutorial-m1.cy.ts',
       'cypress/e2e/actual-play.cy.ts',
       'cypress/e2e/bug-hunt.cy.ts',
@@ -48,6 +49,15 @@ const profiles: Record<string, Cypress.EndToEndConfigOptions> = {
     baseUrl: process.env.CYPRESS_baseUrl || 'http://localhost:3000',
     specPattern: ['cypress/e2e/**/*.cy.{js,jsx,ts,tsx}'],
   },
+  // Visual QA profile: headed Chrome, screenshots at every step, video always on.
+  // Run with: CYPRESS_PROFILE=visual npx cypress run --browser chrome --headed
+  // Or open interactively: CYPRESS_PROFILE=visual npx cypress open --browser chrome
+  visual: {
+    baseUrl: process.env.CYPRESS_baseUrl || 'http://localhost:3099',
+    specPattern: ['cypress/e2e/visual-qa.cy.ts'],
+    viewportWidth: 390,
+    viewportHeight: 844,
+  },
 }
 
 const active = profiles[profile] ?? profiles.offline
@@ -58,7 +68,8 @@ export default defineConfig({
     supportFile: 'cypress/support/e2e.ts',
     viewportWidth: active.viewportWidth ?? 1280,
     viewportHeight: active.viewportHeight ?? 720,
-    video: process.env.CI ? true : false,
+    // Always record video for visual profile; otherwise only in CI
+    video: profile === 'visual' ? true : (process.env.CI ? true : false),
     screenshotOnRunFailure: true,
     defaultCommandTimeout: 10000,
     pageLoadTimeout: 60000,

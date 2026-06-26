@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useRef } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { Application, Assets, Container, Graphics, type Texture } from 'pixi.js'
 import { Scene, GameLoop, InputManager, RuntimeContext, screenToWorld } from '@/lib/engine'
 import { wireShapeRenderers } from '@/lib/engine/components/ShapeRenderer'
@@ -134,6 +134,14 @@ export default function MiningCanvas({ minerals, mineralMeta, onCollect, fireRef
   onCollectRef.current = onCollect
   const controllerRef = useRef<MiningController | null>(null)
   const joystickDxRef = useRef(0)
+  const [missFlash, setMissFlash] = useState(false)
+  const missFlashTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const onMissRef = useRef<(() => void) | null>(null)
+  onMissRef.current = () => {
+    if (missFlashTimerRef.current) clearTimeout(missFlashTimerRef.current)
+    setMissFlash(true)
+    missFlashTimerRef.current = setTimeout(() => setMissFlash(false), 280)
+  }
 
   const handleJoystick = useCallback((dx: number, _dy: number) => {
     joystickDxRef.current = dx
@@ -209,6 +217,7 @@ export default function MiningCanvas({ minerals, mineralMeta, onCollect, fireRef
           Object.entries(mineralMeta).map(([id, m]) => [id, m.laserAccess ?? 1])
         )
 
+        const shakeState = { timer: 0 }
         const controllerObj = scene.find('mining-controller')
         const controller = new MiningController(new RuntimeContext(), {
           container: app.stage,
@@ -222,9 +231,25 @@ export default function MiningCanvas({ minerals, mineralMeta, onCollect, fireRef
           mineralShapes: MINERAL_SHAPES,
           mineralTextures: oreTextures,
           onCollect: mineral => onCollectRef.current(mineral),
+          onMiss: () => {
+            shakeState.timer = 0.28
+            onMissRef.current?.()
+          },
           onScroll: scrollX => {
             surfaceContainer.x = -(scrollX % SURFACE_TILE_W)
           },
+        })
+
+        app.ticker.add(ticker => {
+          if (shakeState.timer > 0) {
+            shakeState.timer -= ticker.deltaMS / 1000
+            const t = Math.max(0, shakeState.timer / 0.28)
+            app.stage.x = (Math.random() - 0.5) * 6 * t
+            app.stage.y = (Math.random() - 0.5) * 4 * t
+          } else if (app.stage.x !== 0 || app.stage.y !== 0) {
+            app.stage.x = 0
+            app.stage.y = 0
+          }
         })
         controllerObj?.addComponent(controller)
         controllerRef.current = controller
@@ -262,6 +287,12 @@ export default function MiningCanvas({ minerals, mineralMeta, onCollect, fireRef
 
   return (
     <div ref={containerRef} className="mining-canvas" data-testid="mining-canvas" style={{ position: 'relative' }}>
+      <div style={{
+        position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 10,
+        background: 'rgba(255,34,0,0.22)',
+        opacity: missFlash ? 1 : 0,
+        transition: missFlash ? 'none' : 'opacity 280ms ease-out',
+      }} />
       {/* Joystick for scroll speed: left = slow, right = fast forward */}
       <div style={{
         position: 'absolute',
