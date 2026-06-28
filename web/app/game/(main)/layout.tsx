@@ -103,7 +103,8 @@ function GameChrome({ children }: { children: ReactNode }) {
         ...s,
         action: 'Tap MISSIONS',
         anchor: 'bottom' as const,
-        spot: { x: -96, y: 104, w: 76, h: 58, fromBottom: true, fromCenter: true },
+        coachId: 'radial-missions',
+        dir: 'down' as const,
       }
     }
     return s
@@ -149,12 +150,12 @@ function GameChrome({ children }: { children: ReactNode }) {
 
         <ToastLayer toasts={game.toasts} onDismiss={game.dismissToast} />
         {showFeedback && <FeedbackButton />}
-        <SurveySheet />
+        <SurveySheet blockWhile={!!game.popup || !!coach || !!game.pendingTerritoryClaimFor} />
         {showNav && <div className="mobile-radial-nav"><RadialNav current={currentNav} onNav={goFromNav} /></div>}
         <Sidebar current={currentNav} onNav={goFromNav} onSettings={() => setSettingsOpen(true)} />
         {settingsOpen && <SettingsSheet onClose={() => setSettingsOpen(false)} />}
 
-        {coach && (
+        {coach && !game.popup && (
           <TutorialCoach
             key={coach.id}
             stepIndex={coachIndex}

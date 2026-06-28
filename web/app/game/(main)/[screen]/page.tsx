@@ -240,9 +240,12 @@ function ScreenContent({
             game.setPlayer(player => ({ ...player, missionPhase: 'mining' }))
             game.go('hub')
           }}
-          onComplete={(cargo) => { game.completeStep(6); game.onMiningDone(cargo) }}
+          onComplete={(cargo) => { game.completeStep(6); game.completeStep(7); game.onMiningDone(cargo) }}
           minerals={game.catalog.minerals}
           laserChargeCap={game.laserChargeCap}
+          hasCoach={hasCoach}
+          coachManual={coach?.manual ?? false}
+          onCoachDone={() => game.completeStep(6)}
         />
       )
 

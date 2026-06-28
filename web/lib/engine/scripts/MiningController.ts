@@ -13,12 +13,21 @@ const LASER_SPEED = 480
 export const SHIP_X = 80
 export const SHIP_Y = 112
 export const SURFACE_Y = 320
-const HIT_TOLERANCE = 28
+// Wider than ship X so ore movement during laser flight doesn't cause misses on tall screens
+const HIT_TOLERANCE = 48
 const LASER_SIZE = { width: 4, height: 16 }
 const LASER_COLOR = '#9becff'
 const ORE_STROKE = '#0a0a12'
 const MAX_ORES = 60
 const FLASH_DURATION = 0.14
+
+/** Organic ore gap distribution: 20% tight cluster, 50% normal, 30% wide open space */
+function oreGap(): number {
+  const r = Math.random()
+  if (r < 0.20) return 55  + Math.random() * 40   // close follow-on
+  if (r < 0.70) return 100 + Math.random() * 100  // normal spacing
+  return 220 + Math.random() * 160                 // barren stretch
+}
 
 /** Per-laser-tier ore properties: radius, hp, depth range within rock surface */
 const ORE_TIER: Record<number, { radius: number; maxHp: number; depthMin: number; depthMax: number }> = {
@@ -47,6 +56,8 @@ export interface MiningControllerOptions {
   onMiss?: () => void
   /** Called every update with the total horizontal scroll distance so callers can sync visual layers. */
   onScroll?: (scrollX: number) => void
+  /** Called when any ore enters or leaves the "fire now" window around SHIP_X. */
+  onOreNearby?: (near: boolean) => void
 }
 
 interface OreEntity {
@@ -63,6 +74,7 @@ interface OreEntity {
 
 interface LaserEntity {
   go: GameObject
+  prevY: number
 }
 
 interface Particle {
@@ -87,6 +99,7 @@ export class MiningController extends ScriptBehaviour {
   private laserCounter = 0
   private totalScrollX = 0
   private scrollSpeed = SCROLL_SPEED
+  private oreNearState = false
 
   constructor(context: RuntimeContext, opts: MiningControllerOptions) {
     super(context)
@@ -99,10 +112,24 @@ export class MiningController extends ScriptBehaviour {
   }
 
   start(): void {
-    let x = 200
-    for (let i = 0; i < 20; i++) {
-      x += i === 0 ? 0 : 120 + Math.random() * 60
+    let x = 160
+    let count = 0
+    while (count < 20) {
       this.spawnOre(x)
+      count++
+      // Occasionally spawn a close companion (cluster of 2-3)
+      const clusterRoll = Math.random()
+      if (clusterRoll < 0.18 && count < 20) {
+        x += 45 + Math.random() * 35
+        this.spawnOre(x)
+        count++
+        if (Math.random() < 0.35 && count < 20) {
+          x += 40 + Math.random() * 30
+          this.spawnOre(x)
+          count++
+        }
+      }
+      x += oreGap()
     }
   }
 
@@ -123,13 +150,14 @@ export class MiningController extends ScriptBehaviour {
     }
 
     const last = this.ores[this.ores.length - 1]
-    const needsSpawn = !last || last.go.transform.position.x < this.opts.worldWidth + 100
+    const needsSpawn = !last || last.go.transform.position.x < this.opts.worldWidth + 120
     if (needsSpawn && this.ores.length < MAX_ORES) {
       const lastX = last ? last.go.transform.position.x : 0
-      this.spawnOre(lastX + 120 + Math.random() * 60)
+      this.spawnOre(lastX + oreGap())
     }
 
     for (const laser of this.lasers) {
+      laser.prevY = laser.go.transform.position.y
       laser.go.transform.position.y += LASER_SPEED * dt
     }
 
@@ -138,6 +166,12 @@ export class MiningController extends ScriptBehaviour {
     this.updateParticles(dt)
 
     this.opts.onScroll?.(this.totalScrollX)
+
+    const anyNear = this.ores.some(o => o.go.active && Math.abs(o.go.transform.position.x - SHIP_X) < 120)
+    if (anyNear !== this.oreNearState) {
+      this.oreNearState = anyNear
+      this.opts.onOreNearby?.(anyNear)
+    }
   }
 
   fireLaser(): void {
@@ -152,7 +186,7 @@ export class MiningController extends ScriptBehaviour {
     )
     this.gameObject.addChild(go)
     go.start()
-    this.lasers.push({ go })
+    this.lasers.push({ go, prevY: go.transform.position.y })
   }
 
   getScrollX(): number {
@@ -217,7 +251,10 @@ export class MiningController extends ScriptBehaviour {
         const ox = ore.go.transform.position.x
         const oy = ore.go.transform.position.y
 
-        if (ly < oy - ore.radius || ly > oy + ore.radius) continue
+        // Swept Y check: did the laser travel THROUGH the ore's Y band this frame?
+        const minTravelY = Math.min(laser.prevY, ly)
+        const maxTravelY = Math.max(laser.prevY, ly)
+        if (maxTravelY < oy - ore.radius || minTravelY > oy + ore.radius) continue
         if (Math.abs(lx - ox) >= HIT_TOLERANCE) continue
 
         ore.hp -= 1

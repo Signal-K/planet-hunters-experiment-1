@@ -161,7 +161,7 @@ body {
 button { cursor: pointer; }
 
 :root {
-  --tutorial-content-top: 204px;
+  --tutorial-content-top: 152px;
 }
 
 .game-stage {
@@ -317,6 +317,7 @@ button { cursor: pointer; }
 }
 .mining-stars { position: absolute; inset: 0; background: radial-gradient(1px 1px at 20% 30%, rgba(255,255,255,.3), transparent), radial-gradient(1px 1px at 40% 70%, rgba(255,255,255,.2), transparent), radial-gradient(1.5px 1.5px at 60% 20%, rgba(255,255,255,.25), transparent), radial-gradient(1px 1px at 80% 50%, rgba(255,255,255,.15), transparent), radial-gradient(1px 1px at 10% 80%, rgba(255,255,255,.2), transparent), radial-gradient(1.5px 1.5px at 90% 10%, rgba(255,255,255,.3), transparent); animation: star-drift 3s linear infinite; }
 @keyframes star-drift { from { transform: translateX(0); } to { transform: translateX(-40px); } }
+@keyframes mining-arrow-bounce { 0%,100% { transform: translateY(0); opacity: 0.7; } 50% { transform: translateY(8px); opacity: 1; } }
 .ore-deposit { position: absolute; width: 36px; height: 36px; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; gap: 3px; z-index: 5; }
 .ore-icon { width: 30px; height: 30px; display: grid; place-items: center; border-radius: 50%; border: 1.5px solid var(--ore); color: var(--ore); background: color-mix(in srgb, var(--ore) 14%, var(--ln-void)); font: 800 11px var(--ln-font-mono); box-shadow: 0 0 14px color-mix(in srgb, var(--ore) 40%, transparent); }
 .ore-hp-bar { width: 30px; height: 3px; overflow: hidden; border-radius: 2px; background: rgba(255,255,255,.1); }
@@ -466,6 +467,32 @@ button { cursor: pointer; }
   50% { box-shadow: 0 0 20px 5px rgba(245,166,35,0.45); border-color: rgba(245,166,35,1); }
 }
 @keyframes coach-point { 0%,100% { transform: translateY(0); } 50% { transform: translateY(6px); } }
+
+/* Direction arrow animations in coach pill */
+.coach-dir-down  { animation: coach-dir-down  0.9s ease-in-out infinite; }
+.coach-dir-up    { animation: coach-dir-up    0.9s ease-in-out infinite; }
+.coach-dir-left  { animation: coach-dir-left  0.9s ease-in-out infinite; }
+.coach-dir-right { animation: coach-dir-right 0.9s ease-in-out infinite; }
+@keyframes coach-dir-down  { 0%,100% { transform: translateY(0); } 50% { transform: translateY(3px); } }
+@keyframes coach-dir-up    { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-3px); } }
+@keyframes coach-dir-left  { 0%,100% { transform: translateX(0); } 50% { transform: translateX(-3px); } }
+@keyframes coach-dir-right { 0%,100% { transform: translateX(0); } 50% { transform: translateX(3px); } }
+
+/* CSS-driven element highlighting: set data-coach-target on <html> to pulse the target.
+   Works across position:fixed boundaries — no coordinate measurement needed. */
+@keyframes coach-target-pulse {
+  0%,100% { box-shadow: 0 0 0 2px rgba(245,166,35,0.65), 0 0 10px rgba(245,166,35,0.15); }
+  50%      { box-shadow: 0 0 0 3px rgba(245,166,35,1),    0 0 28px rgba(245,166,35,0.45); }
+}
+html[data-coach-target="sidebar-missions"] [data-coach-id="sidebar-missions"],
+html[data-coach-target="radial-toggle"]   [data-coach-id="radial-toggle"],
+html[data-coach-target="radial-missions"] [data-coach-id="radial-missions"] {
+  animation: coach-target-pulse 1.4s ease-in-out infinite;
+}
+html[data-coach-target="build-structure-strip"] [data-coach-id="build-structure-strip"] {
+  animation: coach-target-pulse 1.4s ease-in-out infinite;
+  border-radius: 8px;
+}
 @keyframes radial-pulse { 0% { transform: scale(1); opacity: 0.7; } 100% { transform: scale(1.5); opacity: 0; } }
 @keyframes pad-pulse { 0%,100% { transform: scale(1); opacity: 0.85; } 50% { transform: scale(1.05); opacity: 1; } }
 @keyframes cloud-drift { from { transform: translateX(0); } to { transform: translateX(460px); } }

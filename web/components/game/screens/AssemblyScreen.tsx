@@ -37,7 +37,7 @@ export default function AssemblyScreen(props: AssemblyScreenProps) {
   return (
     <div className="game-screen blueprint-screen">
       <TopBar eyebrow="LAUNCHPAD · PREFLIGHT" title="Confirm Rocket" onBack={props.onBack} />
-      <div className={`screen-scroll assembly-scroll${props.hasCoach ? ' screen-scroll--coach' : ''}`} data-ui-zone={UI_ZONES.screenContent} style={{ position: 'relative' }}>
+      <div className="screen-scroll assembly-scroll" data-ui-zone={UI_ZONES.screenContent} style={{ paddingTop: props.hasCoach ? (props.coachManual ? 248 : 152) : undefined }}>
         {highlightContent && <TutorialHighlight />}
         <Panel accent="var(--ln-amber)" style={{ padding: 'var(--ln-s-3)' }}>
           <div className="context-row">
@@ -69,10 +69,12 @@ export default function AssemblyScreen(props: AssemblyScreenProps) {
           <span />{check.ok ? 'Build compatible · Ready for launch' : check.problems.join(' · ')}
         </div>
       </div>
-      <div className="sticky-actions" data-ui-zone={UI_ZONES.bottomActions} style={{ position: 'relative' }}>
-        {highlightLaunch && <TutorialHighlight borderRadius={8} />}
-        <PrimaryBtn kind="amber" disabled={!check.ok} testId="launch-btn" onClick={props.onLaunch}>Confirm Launch</PrimaryBtn>
-      </div>
+      {!props.coachManual && (
+        <div className="sticky-actions" data-ui-zone={UI_ZONES.bottomActions}>
+          {highlightLaunch && <TutorialHighlight borderRadius={8} />}
+          <PrimaryBtn kind="amber" disabled={!check.ok} testId="launch-btn" onClick={props.onLaunch}>Confirm Launch</PrimaryBtn>
+        </div>
+      )}
     </div>
   )
 }

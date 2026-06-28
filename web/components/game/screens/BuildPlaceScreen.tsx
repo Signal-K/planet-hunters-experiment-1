@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import Image from 'next/image'
 import TopBar from '@/components/ui/TopBar'
 import { PrimaryBtn } from '@/components/ui/Button'
@@ -55,11 +55,24 @@ export default function BuildPlaceScreen({ onPlaced, onBack, hasCoach, player }:
   const [picked, setPicked] = useState('launchpad')
   const [cell, setCell] = useState<number | null>(null)
   const [plotEntities, setPlotEntities] = useState<EntityData[]>(DEFAULT_PLOTS)
+  const containerRef = useRef<HTMLDivElement>(null)
+  const [containerH, setContainerH] = useState(874)
 
   useEffect(() => {
     Scene.load('/game/scenes/build-place.scene.json')
       .then(data => { if (data.entities?.length) setPlotEntities(data.entities) })
       .catch(() => {})
+  }, [])
+
+  useEffect(() => {
+    const el = containerRef.current
+    if (!el) return
+    const ro = new ResizeObserver(([entry]) => {
+      setContainerH(entry.contentRect.height)
+    })
+    ro.observe(el)
+    setContainerH(el.getBoundingClientRect().height)
+    return () => ro.disconnect()
   }, [])
 
   const catalog = STRUCTURES.filter(s => s.id !== 'garage')
@@ -81,7 +94,7 @@ export default function BuildPlaceScreen({ onPlaced, onBack, hasCoach, player }:
   }
 
   return (
-    <div style={{ width: '100%', height: '100%', position: 'relative', overflow: 'hidden' }}>
+    <div ref={containerRef} style={{ width: '100%', height: '100%', position: 'relative', overflow: 'hidden' }}>
       {/* Earth background */}
       <div style={{ position: 'absolute', inset: 0 }}>
         <Image src="/scenes/earth-day.png" alt="" fill priority style={{ objectFit: 'cover', filter: 'brightness(0.6)' }} />
@@ -111,8 +124,8 @@ export default function BuildPlaceScreen({ onPlaced, onBack, hasCoach, player }:
                 onClick={() => setCell(on ? null : idx)}
                 style={{
                   position: 'absolute',
-                  left: entity.transform.position.x,
-                  bottom: Math.round(874 - entity.transform.position.y - 96),
+                  left: `calc(${(entity.transform.position.x / 402) * 100}%)`,
+                  bottom: Math.round((1 - entity.transform.position.y / 874) * containerH - 96),
                   width: 86,
                   cursor: 'pointer',
                   background: 'transparent',
@@ -162,7 +175,7 @@ export default function BuildPlaceScreen({ onPlaced, onBack, hasCoach, player }:
       </div>
 
       {/* Structure picker — compact strip below plots, above sticky actions */}
-      <div data-ui-zone={UI_ZONES.screenContent} style={{
+      <div data-ui-zone={UI_ZONES.screenContent} data-coach-id="build-structure-strip" style={{
         position: 'absolute',
         left: 0, right: 0,
         bottom: 48,

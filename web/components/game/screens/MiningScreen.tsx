@@ -3,7 +3,6 @@
 import { useRef, useState, useCallback, useEffect } from 'react'
 import type { Mission, Target, MineralMeta } from '@/lib/data'
 import TopBar from '@/components/ui/TopBar'
-import Panel from '@/components/ui/Panel'
 import { PrimaryBtn } from '@/components/ui/Button'
 import MiningCanvas from './MiningCanvas'
 
@@ -24,27 +23,103 @@ function OreShapeIcon({ id, color, size = 14 }: { id: string; color: string; siz
   return <svg width={size} height={size} viewBox="0 0 14 14" aria-hidden="true"><circle cx="7" cy="7" r="6" fill={color} /></svg>
 }
 
+// Horizontal drag track — left = slow, center = normal, right = fast forward
+// Thumb snaps back to center on release
+function ScrollTrack({ scrollRef }: { scrollRef: React.MutableRefObject<((dx: number) => void) | null> }) {
+  const trackRef = useRef<HTMLDivElement>(null)
+  const [pos, setPos] = useState(0.5)   // 0..1, 0.5 = center = normal speed
+  const [active, setActive] = useState(false)
+
+  const applyAt = (clientX: number) => {
+    const rect = trackRef.current?.getBoundingClientRect()
+    if (!rect) return
+    const p = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width))
+    setPos(p)
+    scrollRef.current?.(p * 2 - 1)  // maps 0..1 → -1..1
+  }
+
+  const release = () => {
+    setActive(false)
+    setPos(0.5)
+    scrollRef.current?.(0)
+  }
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+      <div style={{
+        fontFamily: 'var(--ln-font-display)', fontSize: 8, fontWeight: 800,
+        letterSpacing: '0.22em', color: 'var(--ln-text-muted)', textTransform: 'uppercase',
+        textAlign: 'center',
+      }}>
+        SCROLL
+      </div>
+      <div
+        ref={trackRef}
+        style={{
+          position: 'relative', flex: 1, height: 36, borderRadius: 8,
+          background: 'rgba(255,255,255,0.05)',
+          border: `1px solid ${active ? 'rgba(100,180,255,0.4)' : 'rgba(100,180,255,0.15)'}`,
+          cursor: 'pointer', touchAction: 'none',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          transition: 'border-color 120ms',
+        }}
+        onPointerDown={e => {
+          setActive(true)
+          e.currentTarget.setPointerCapture(e.pointerId)
+          applyAt(e.clientX)
+        }}
+        onPointerMove={e => { if (active) applyAt(e.clientX) }}
+        onPointerUp={release}
+        onPointerCancel={release}
+      >
+        {/* End labels */}
+        <span style={{ position: 'absolute', left: 6, fontSize: 9, color: 'rgba(135,207,250,0.35)', lineHeight: 1 }}>◀</span>
+        <span style={{ position: 'absolute', right: 6, fontSize: 9, color: 'rgba(135,207,250,0.35)', lineHeight: 1 }}>▶</span>
+        {/* Center tick */}
+        <div style={{ position: 'absolute', top: '30%', bottom: '30%', left: '50%', width: 1, background: 'rgba(255,255,255,0.1)' }} />
+        {/* Thumb */}
+        <div style={{
+          position: 'absolute',
+          left: `calc(${pos * 100}% - 10px)`,
+          width: 20, height: 20, borderRadius: '50%',
+          background: active ? 'rgba(63,169,255,0.85)' : 'rgba(135,207,250,0.25)',
+          border: `1.5px solid ${active ? 'rgba(135,207,250,0.8)' : 'rgba(135,207,250,0.4)'}`,
+          boxShadow: active ? '0 0 10px rgba(63,169,255,0.5)' : 'none',
+          transition: active ? 'background 80ms, border-color 80ms, box-shadow 80ms' : 'left 180ms ease-out, background 120ms, border-color 120ms, box-shadow 120ms',
+        }} />
+      </div>
+    </div>
+  )
+}
+
 const MINING_GUIDE = [
   { label: 'FIRE LASER', desc: 'Fires your mining laser at the asteroid. Collect ore by hitting ore veins (Space/F).' },
-  { label: 'DRONE STATUS', desc: 'Your automated drone helps stabilize the craft and collects nearby floating debris.' },
+  { label: 'SCROLL', desc: 'Drag the scroll track left to slow down, right to fast-forward camera movement.' },
   { label: 'INVENTORY', desc: 'Shows collected vs. required per mineral. Fill all slots to unlock return.' },
-  { label: 'MISSION GOALS', desc: 'Combined ore progress and value context for the current contract.' },
   { label: 'RETURN HOME', desc: 'Return to base. Only enabled once your cargo meets the mission order.' },
 ]
 
-export default function MiningScreen({ mission, target, onComplete, onBack, minerals, laserChargeCap }: {
+export default function MiningScreen({ mission, target, onComplete, onBack, minerals, laserChargeCap, hasCoach, coachManual, onCoachDone }: {
   mission: Mission
   target: Target
   onComplete: (cargo: Record<string, number>) => void
   onBack: () => void
   minerals: Record<string, MineralMeta>
   laserChargeCap?: number
+  hasCoach?: boolean
+  coachManual?: boolean
+  onCoachDone?: () => void
 }) {
   const MAX_CHARGES = Math.max(1, laserChargeCap ?? 5)
   const cargoRef = useRef<Record<string, number>>({})
   const [cargo, setCargo] = useState<Record<string, number>>({})
   const fireRef = useRef<(() => void) | null>(null)
+  const scrollRef = useRef<((dx: number) => void) | null>(null)
   const [laserCharges, setLaserCharges] = useState(MAX_CHARGES)
+  const firedRef = useRef(false)
+  const oreNearRef = useRef<((near: boolean) => void) | null>(null)
+  const [oreNear, setOreNear] = useState(false)
+  oreNearRef.current = (near: boolean) => setOreNear(near)
 
   const orderFilled = Object.entries(mission.requires.minerals).every(
     ([id, amount]) => (cargoRef.current[id] ?? 0) >= amount
@@ -62,6 +137,10 @@ export default function MiningScreen({ mission, target, onComplete, onBack, mine
     if (laserCharges <= 0) return
     setLaserCharges(c => c - 1)
     fireRef.current?.()
+    if (!firedRef.current && coachManual) {
+      firedRef.current = true
+      onCoachDone?.()
+    }
   }
 
   useEffect(() => {
@@ -105,70 +184,92 @@ export default function MiningScreen({ mission, target, onComplete, onBack, mine
         </div>
       )}
 
-      <div style={{ height: 148, flexShrink: 0 }} />
+      {hasCoach && <div style={{ height: coachManual ? 248 : 152, flexShrink: 0 }} />}
 
       <div className="mining-viewport">
         <div className="mining-stars" />
-
         <MiningCanvas
           minerals={Object.keys(mission.requires.minerals)}
           mineralMeta={minerals}
           onCollect={collectMineral}
           fireRef={fireRef}
+          scrollRef={scrollRef}
+          oreNearRef={oreNearRef}
         />
       </div>
 
       <div className="mining-controls">
-        <Panel accent="var(--ln-amber)" variant="compact">
-          <div className="mining-stats-row">
+        {/* ── Stats + charge strip ──────────────────────────────────────────── */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, minHeight: 28 }}>
+          {/* Mineral counts */}
+          <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap', flex: 1 }}>
             {Object.entries(mission.requires.minerals).map(([id, amount]) => {
               const collected = Math.min(cargo[id] ?? 0, amount)
               const done = collected >= amount
               const color = minerals[id]?.color ?? '#fff'
               return (
-                <div className="mineral-stat" key={id} style={{ gap: 5 }}>
-                  <OreShapeIcon id={id} color={done ? 'var(--ln-text-muted)' : color} size={13} />
-                  <span style={{ fontFamily: 'var(--ln-font-display)', fontSize: 10, fontWeight: 700, letterSpacing: '0.06em', color: done ? 'var(--ln-text-muted)' : color, textTransform: 'uppercase' }}>
+                <div key={id} style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                  <OreShapeIcon id={id} color={done ? 'var(--ln-text-muted)' : color} size={11} />
+                  <span style={{
+                    fontFamily: 'var(--ln-font-display)', fontSize: 10, fontWeight: 700,
+                    letterSpacing: '0.06em', textTransform: 'uppercase',
+                    color: done ? 'var(--ln-text-muted)' : color,
+                  }}>
                     {minerals[id]?.name ?? id}
                   </span>
-                  <span className="mineral-stat-count" style={{ color: done ? 'var(--ln-text-muted)' : 'var(--ln-text)' }}>
+                  <span style={{
+                    fontFamily: 'var(--ln-font-mono)', fontSize: 10,
+                    color: done ? 'var(--ln-text-muted)' : 'var(--ln-text)',
+                  }}>
                     {collected}/{amount}
                   </span>
                 </div>
               )
             })}
-            <div className="mineral-stat total-stat">
-              <span>Total</span>
-              <span>{totalCollected}/{totalNeeded}</span>
-            </div>
           </div>
-          <div className="mining-progress-track">
-            <div
-              className="mining-progress-fill"
-              style={{ width: `${Math.min(100, (totalCollected / totalNeeded) * 100)}%` }}
-            />
+          {/* Total */}
+          <span style={{ fontFamily: 'var(--ln-font-mono)', fontSize: 10, color: 'var(--ln-cyan-bright)', flexShrink: 0 }}>
+            {totalCollected}/{totalNeeded}
+          </span>
+          {/* Charge dots */}
+          <div style={{ display: 'flex', gap: 3, alignItems: 'center', flexShrink: 0 }}>
+            {Array.from({ length: MAX_CHARGES }, (_, i) => (
+              <span key={i} style={{
+                display: 'inline-block', width: 7, height: 7, borderRadius: '50%',
+                background: i < laserCharges ? 'var(--ln-cyan)' : 'rgba(255,255,255,0.1)',
+                boxShadow: i < laserCharges ? '0 0 4px var(--ln-cyan)' : 'none',
+                transition: 'background 200ms, box-shadow 200ms',
+              }} />
+            ))}
           </div>
-        </Panel>
+          {/* Guide */}
+          <button
+            data-testid="mining-guide-btn"
+            onClick={() => setGuideOpen(o => !o)}
+            style={{ padding: '2px 7px', borderRadius: 5, background: 'rgba(8,12,22,0.7)', border: '1px solid rgba(100,180,255,0.28)', fontFamily: 'var(--ln-font-display)', fontSize: 9, fontWeight: 800, letterSpacing: '0.12em', color: '#87CFFA', cursor: 'pointer', textTransform: 'uppercase', flexShrink: 0 }}
+          >
+            ?
+          </button>
+        </div>
 
-        <div className="mining-actions">
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '2px 2px' }}>
-            <span style={{ fontFamily: 'var(--ln-font-display)', fontSize: 9, fontWeight: 800, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'var(--ln-text-muted)' }}>
-              Laser Energy
-            </span>
-            <span style={{ display: 'inline-flex', gap: 6, alignItems: 'center' }}>
-              {Array.from({ length: MAX_CHARGES }, (_, i) => (
-                <span key={i} style={{
-                  display: 'inline-block', width: 10, height: 10, borderRadius: '50%',
-                  background: i < laserCharges ? 'var(--ln-cyan)' : 'rgba(255,255,255,0.1)',
-                  boxShadow: i < laserCharges ? '0 0 6px var(--ln-cyan)' : 'none',
-                  transition: 'background 200ms, box-shadow 200ms',
-                }} />
-              ))}
-              <span style={{ fontFamily: 'var(--ln-font-mono)', fontSize: 11, color: laserCharges > 0 ? 'var(--ln-cyan-bright)' : 'var(--ln-text-muted)', marginLeft: 4, minWidth: 24, textAlign: 'right' }}>
-                {laserCharges}/{MAX_CHARGES}
-              </span>
-            </span>
-          </div>
+        {/* Progress bar */}
+        <div className="mining-progress-track">
+          <div
+            className="mining-progress-fill"
+            style={{ width: `${Math.min(100, (totalCollected / totalNeeded) * 100)}%` }}
+          />
+        </div>
+
+        {/* ── Action row: Fire · Fill/Return · Scroll ───────────────────────── */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 88px', gap: 8, alignItems: 'stretch' }}>
+          <div style={{
+            borderRadius: 10,
+            boxShadow: hasCoach && oreNear
+              ? '0 0 0 2px rgba(63,169,255,0.7), 0 0 18px rgba(63,169,255,0.35)'
+              : 'none',
+            animation: hasCoach && oreNear ? 'ln-pulse 0.75s ease-in-out infinite' : 'none',
+            transition: 'box-shadow 150ms',
+          }}>
           <PrimaryBtn
             kind="cyan"
             disabled={laserCharges <= 0}
@@ -177,21 +278,16 @@ export default function MiningScreen({ mission, target, onComplete, onBack, mine
           >
             {laserCharges > 0 ? 'FIRE LASER' : 'DEPLETED'}
           </PrimaryBtn>
+          </div>
           <PrimaryBtn
             kind="amber"
             disabled={!orderFilled && laserCharges > 0}
             testId="return-home-btn"
             onClick={handleReturn}
           >
-            {orderFilled ? 'RETURN HOME' : laserCharges <= 0 ? 'LASER DEPLETED · RETURN' : 'FILL ORDER TO RETURN'}
+            {orderFilled ? 'RETURN' : laserCharges <= 0 ? 'RETURN' : 'FILL ORDER'}
           </PrimaryBtn>
-          <button
-            data-testid="mining-guide-btn"
-            onClick={() => setGuideOpen(o => !o)}
-            style={{ padding: '8px 12px', borderRadius: 8, background: 'rgba(8,12,22,0.7)', border: '1px solid rgba(100,180,255,0.35)', fontFamily: 'var(--ln-font-display)', fontSize: 10, fontWeight: 800, letterSpacing: '0.14em', color: '#87CFFA', cursor: 'pointer', textTransform: 'uppercase' }}
-          >
-            ? Guide
-          </button>
+          <ScrollTrack scrollRef={scrollRef} />
         </div>
       </div>
     </div>

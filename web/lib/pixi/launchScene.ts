@@ -177,43 +177,38 @@ export function buildLaunchScene(
     }
   }
 
-  // ── Rocket assembly ───────────────────────────────────────────────────────
+  // ── Rocket (single sprite — stageLower is the best full-rocket art) ─────────
+  // Only stageLower and body have black backgrounds suitable for screen blending.
+  // All other assets (nose, boosterL, engineBell) have white/grey bgs and must not be used.
   const rocketRoot = new Container()
   rocketRoot.x = W / 2
   rocketRoot.y = H - 100
   app.stage.addChild(rocketRoot)
 
-  function makePart(t: Texture | null, w: number, h: number, anchorX = 0.5, anchorY = 1.0): Sprite {
-    const s = t ? new Sprite(t) : new Sprite(Texture.WHITE)
-    if (!t) s.tint = 0x1e3a5a
-    s.width = w; s.height = h
-    s.anchor.set(anchorX, anchorY)
-    return s
+  const rocketTex = tex.stageLower ?? tex.body
+  if (rocketTex) {
+    const rocketImg = new Sprite(rocketTex)
+    rocketImg.anchor.set(0.5, 1)
+    rocketImg.width = 88
+    rocketImg.height = 240
+    rocketImg.blendMode = 'screen'
+    rocketRoot.addChild(rocketImg)
+  } else {
+    // Procedural fallback: blue silhouette
+    const g = new Graphics()
+    g.rect(-16, -220, 32, 220).fill(0x1e3a5a)
+    g.poly([-16, -220, 0, -268, 16, -220]).fill(0x2a4d6e)
+    g.rect(-26, -175, 10, 115).fill(0x142236)
+    g.rect(16, -175, 10, 115).fill(0x142236)
+    rocketRoot.addChild(g)
   }
 
-  const stageLower = makePart(tex.stageLower ?? tex.engineBell, 54, 60, 0.5, 0)
-  stageLower.y = 0
-  rocketRoot.addChild(stageLower)
-
-  const body = makePart(tex.body, 48, 140, 0.5, 1)
-  body.y = -60
-  rocketRoot.addChild(body)
-
-  const nose = makePart(tex.nose, 36, 70, 0.5, 1)
-  nose.y = -200
-  rocketRoot.addChild(nose)
-
-  const boosterL = makePart(tex.boosterL, 20, 100, 0.5, 0)
-  boosterL.x = -38; boosterL.y = -40
-  rocketRoot.addChild(boosterL)
-
-  const boosterR = makePart(tex.boosterL, 20, 100, 0.5, 0)
-  boosterR.x = 38; boosterR.y = -40; boosterR.scale.x = -1
-  rocketRoot.addChild(boosterR)
-
-  const engineBell = makePart(tex.engineBell ?? tex.stageLower, 36, 40, 0.5, 0)
-  engineBell.y = 20
-  rocketRoot.addChild(engineBell)
+  // Procedural debris shapes (replace sprite-based debris from old multi-part assembly)
+  function makeDebrisRect(color: number, w: number, h: number): Graphics {
+    const g = new Graphics()
+    g.rect(-w / 2, -h / 2, w, h).fill({ color, alpha: 0.85 })
+    return g
+  }
 
   // ── Plume ─────────────────────────────────────────────────────────────────
   const plumeContainer = new Container()
@@ -353,37 +348,25 @@ export function buildLaunchScene(
       p.sprite.alpha = lr * 0.55
     }
 
-    // Booster separation
+    // Booster separation — procedural debris rectangles
     if (!boostersSeparated && elapsed >= T.boosterSep) {
       boostersSeparated = true
-      for (const [sprite, vx] of [[boosterL, -55], [boosterR, 55]] as [Sprite, number][]) {
-        if (sprite.parent) {
-          const wx = rocketRoot.x + sprite.x
-          const wy = rocketRoot.y + sprite.y
-          sprite.parent.removeChild(sprite)
-          sprite.x = wx; sprite.y = wy
-          app.stage.addChild(sprite)
-          debris.push({ sprite, vx, vy: 30, rot: vx < 0 ? 0.05 : -0.05, life: 3 })
-        }
+      for (const [vx, vy, rot] of [[-55, 30, 0.05], [55, 30, -0.05]] as [number, number, number][]) {
+        const d = makeDebrisRect(0x2a4060, 10, 60)
+        d.x = rocketRoot.x + vx * 0.15
+        d.y = rocketRoot.y - 80
+        app.stage.addChild(d)
+        debris.push({ sprite: d, vx, vy, rot, life: 3 })
       }
     }
 
-    // Stage separation
+    // Stage separation — procedural debris
     if (!stageSeparated && elapsed >= T.stageSep) {
       stageSeparated = true
-      for (const [sprite, vy, rot] of [
-        [stageLower, 70, 0.02],
-        [engineBell, 80, 0.03],
-      ] as [Sprite, number, number][]) {
-        if (sprite.parent) {
-          const wx = rocketRoot.x
-          const wy = rocketRoot.y + sprite.y
-          sprite.parent.removeChild(sprite)
-          sprite.x = wx; sprite.y = wy
-          app.stage.addChild(sprite)
-          debris.push({ sprite, vx: (Math.random() - 0.5) * 15, vy, rot, life: 4 })
-        }
-      }
+      const lower = makeDebrisRect(0x1e3250, 32, 55)
+      lower.x = rocketRoot.x; lower.y = rocketRoot.y - 10
+      app.stage.addChild(lower)
+      debris.push({ sprite: lower, vx: (Math.random() - 0.5) * 15, vy: 70, rot: 0.02, life: 4 })
     }
 
     // Debris motion

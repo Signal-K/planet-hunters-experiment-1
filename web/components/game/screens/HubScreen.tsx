@@ -55,8 +55,8 @@ export default function HubScreen({ player, hasCoach, onGoBuilding, onNav, onUpg
   const plotStyles: React.CSSProperties[] = sortedEntities
     // SVG grass is at 78% from top = 22% from bottom. calc(22% - 42px) puts the label
     // bottom 42px underground so the visible building base sits at the grass line.
-    // left uses absolute px to match PixiJS canvas (always 402px wide from left edge).
-    .map(e => ({ left: e.transform.position.x, bottom: 'calc(22% - 42px)' } as React.CSSProperties))
+    // left uses scene-proportional % so it matches the CSS-stretched PixiJS canvas (HUB_W=402).
+    .map(e => ({ left: `calc(${(e.transform.position.x / 402) * 100}%)`, bottom: 'calc(22% - 42px)' } as React.CSSProperties))
 
   const structureForPlot = (plot: number) => {
     const kind = Object.entries(effectivePlots).find(([, p]) => p === plot)?.[0] ?? null

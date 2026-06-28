@@ -103,6 +103,7 @@ export default function Sidebar({ current, onNav, onSettings }: SidebarProps) {
             <button
               key={item.id}
               data-testid={`sidebar-nav-${item.id}`}
+              data-coach-id={item.id === 'missions' ? 'sidebar-missions' : undefined}
               onClick={() => { if (!locked) onNav(item.id) }}
               aria-disabled={locked}
               aria-current={active ? 'page' : undefined}

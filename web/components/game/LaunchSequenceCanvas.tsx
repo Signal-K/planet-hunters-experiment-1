@@ -91,7 +91,7 @@ export function LaunchSequenceCanvas({ rocketName, targetName, onComplete }: Pro
   return (
     <div
       ref={divRef}
-      style={{ position: 'absolute', inset: 0, background: '#000', overflow: 'hidden' }}
+      style={{ position: 'absolute', inset: 0, background: '#000', overflow: 'hidden', zIndex: 100 }}
     />
   )
 }

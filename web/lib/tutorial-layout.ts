@@ -10,7 +10,7 @@ export const TUTORIAL_RAIL = {
   TOP_CHROME_HEIGHT: 68,
   // Dedicated space for onboarding/tutorial blocks. Gameplay buttons must stay out of it.
   RESERVED_TOP: 76,
-  RESERVED_HEIGHT: 116,
+  RESERVED_HEIGHT: 64,
   // Compact pill height including shadow bleed (px).
   PILL_HEIGHT: 64,
   // Legacy bottom clearance for screens with sticky actions/radial nav.
@@ -19,8 +19,13 @@ export const TUTORIAL_RAIL = {
   CONTENT_MARGIN: 12,
 } as const
 
+// For screens where the coach step is a compact action card (~56px tall)
 export const TUTORIAL_CONTENT_TOP =
   TUTORIAL_RAIL.RESERVED_TOP + TUTORIAL_RAIL.RESERVED_HEIGHT + TUTORIAL_RAIL.CONTENT_MARGIN
+
+// For screens where the coach step is a manual (full) card (~160px tall)
+export const TUTORIAL_MANUAL_CONTENT_TOP =
+  TUTORIAL_RAIL.RESERVED_TOP + 160 + TUTORIAL_RAIL.CONTENT_MARGIN
 
 /** Returns the dedicated tutorial rect (top, height). */
 export function reserved_rect(anchor: 'top' | 'bottom'): { top: number; height: number } {

@@ -139,9 +139,15 @@ export default function MissionBoardScreen({ onBack, onPick, missionsDone, freeO
 
         <div style={{ padding: '0 14px', display: 'flex', flexDirection: 'column', gap: 10 }}>
           {(() => {
-            const list = useDailyPool
+            const rawList = useDailyPool
               ? [...available, ...completedToday]
               : freeOperations ? available : MISSIONS
+            // Available missions first; locked/completed at the bottom
+            const isAvailable = (m: typeof rawList[0]) =>
+              !isCompletedToday(m.id) &&
+              !(!useDailyPool && isOnCooldown(m.contractor)) &&
+              (freeOperations || available.some(item => item.id === m.id))
+            const list = [...rawList].sort((a, b) => Number(!isAvailable(a)) - Number(!isAvailable(b)))
             const firstValidIdx = list.findIndex(m => {
               if (isCompletedToday(m.id)) return false
               if (!useDailyPool && isOnCooldown(m.contractor)) return false

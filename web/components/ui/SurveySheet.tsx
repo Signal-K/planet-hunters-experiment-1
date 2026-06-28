@@ -94,18 +94,26 @@ function OpenQuestion({ question, value, onChange }: { question: SurveyQuestion;
   )
 }
 
-export default function SurveySheet() {
+export default function SurveySheet({ blockWhile }: { blockWhile?: boolean }) {
   const [surveyKey, setSurveyKey] = useState<string | null>(null)
   const [survey, setSurvey] = useState<Survey | null>(null)
   const [qIndex, setQIndex] = useState(0)
   const [responses, setResponses] = useState<Responses>({})
   const [done, setDone] = useState(false)
+  const pendingKeyRef = React.useRef<string | null>(null)
+  const blockWhileRef = React.useRef(blockWhile)
+  blockWhileRef.current = blockWhile
 
+  // Receive survey events; defer if a popup/coach/territory overlay is blocking
   useEffect(() => {
     const handler = (e: Event) => {
       const { surveyKey: key } = (e as CustomEvent<{ surveyKey: string }>).detail
       const def = SURVEY_DEFS[key]
       if (!def) return
+      if (blockWhileRef.current) {
+        pendingKeyRef.current = key
+        return
+      }
       setSurveyKey(key)
       setSurvey(def)
       setQIndex(0)
@@ -116,6 +124,23 @@ export default function SurveySheet() {
     window.addEventListener('landnam:survey', handler)
     return () => window.removeEventListener('landnam:survey', handler)
   }, [])
+
+  // When all overlays clear, show any deferred survey
+  useEffect(() => {
+    if (blockWhile || !pendingKeyRef.current || surveyKey) return
+    const key = pendingKeyRef.current
+    pendingKeyRef.current = null
+    const def = SURVEY_DEFS[key]
+    if (!def) return
+    setTimeout(() => {
+      setSurveyKey(key)
+      setSurvey(def)
+      setQIndex(0)
+      setResponses({})
+      setDone(false)
+      trackSurveyShown(key)
+    }, 800)
+  }, [blockWhile, surveyKey])
 
   if (!survey || !surveyKey) return null
 

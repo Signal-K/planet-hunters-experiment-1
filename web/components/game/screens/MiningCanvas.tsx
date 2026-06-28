@@ -1,13 +1,12 @@
 'use client'
 
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Application, Assets, Container, Graphics, type Texture } from 'pixi.js'
 import { Scene, GameLoop, InputManager, RuntimeContext, screenToWorld } from '@/lib/engine'
 import { wireShapeRenderers } from '@/lib/engine/components/ShapeRenderer'
 import type { ShapeKind } from '@/lib/engine/components/ShapeRenderer'
 import { MiningController, SHIP_X, SCROLL_SPEED, SCROLL_SPEED_MIN, SCROLL_SPEED_MAX } from '@/lib/engine/scripts/MiningController'
 import type { MineralMeta } from '@/lib/data'
-import VirtualJoystick from '@/components/ui/VirtualJoystick'
 
 // Tile width must be a multiple of 16 (ridgeH period) for seamless wrapping
 const SURFACE_TILE_W = 320
@@ -126,14 +125,15 @@ interface MiningCanvasProps {
   mineralMeta: Record<string, MineralMeta>
   onCollect: (mineral: string) => void
   fireRef: React.MutableRefObject<(() => void) | null>
+  scrollRef: React.MutableRefObject<((dx: number) => void) | null>
+  oreNearRef?: React.MutableRefObject<((near: boolean) => void) | null>
 }
 
-export default function MiningCanvas({ minerals, mineralMeta, onCollect, fireRef }: MiningCanvasProps) {
+export default function MiningCanvas({ minerals, mineralMeta, onCollect, fireRef, scrollRef, oreNearRef }: MiningCanvasProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const onCollectRef = useRef(onCollect)
   onCollectRef.current = onCollect
   const controllerRef = useRef<MiningController | null>(null)
-  const joystickDxRef = useRef(0)
   const [missFlash, setMissFlash] = useState(false)
   const missFlashTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const onMissRef = useRef<(() => void) | null>(null)
@@ -143,30 +143,22 @@ export default function MiningCanvas({ minerals, mineralMeta, onCollect, fireRef
     missFlashTimerRef.current = setTimeout(() => setMissFlash(false), 280)
   }
 
-  const handleJoystick = useCallback((dx: number, _dy: number) => {
-    joystickDxRef.current = dx
-    const controller = controllerRef.current
-    if (!controller) return
-    // dx: -1 = slow down, 0 = normal, +1 = fast forward
-    const speed = SCROLL_SPEED + dx * (dx > 0 ? SCROLL_SPEED_MAX - SCROLL_SPEED : SCROLL_SPEED - SCROLL_SPEED_MIN)
-    controller.setScrollSpeed(speed)
-  }, [])
-
   useEffect(() => {
     const parent = containerRef.current
     if (!parent) return
 
     const canvas = document.createElement('canvas')
     canvas.dataset.testid = 'mining-canvas'
-    canvas.style.cssText = 'display:block;width:100%;height:100%;'
+    canvas.style.cssText = 'display:block;position:absolute;inset:0;'
     parent.appendChild(canvas)
 
     const app = new Application()
     let loop: GameLoop | null = null
     let input: InputManager | null = null
     let destroyed = false
+    let rafId = 0
 
-    ;(async () => {
+    const doInit = async () => {
       try {
         const worldW = Math.max(300, parent.clientWidth)
         const worldH = Math.max(200, parent.clientHeight)
@@ -203,7 +195,8 @@ export default function MiningCanvas({ minerals, mineralMeta, onCollect, fireRef
 
         const surfaceContainer = new Container()
         surfaceContainer.y = surfaceY
-        for (let i = 0; i < 3; i++) {
+        const numTiles = Math.ceil(worldW / SURFACE_TILE_W) + 2
+        for (let i = 0; i < numTiles; i++) {
           const t = buildSurfaceTile(tileH)
           t.x = i * SURFACE_TILE_W
           surfaceContainer.addChild(t)
@@ -238,6 +231,7 @@ export default function MiningCanvas({ minerals, mineralMeta, onCollect, fireRef
           onScroll: scrollX => {
             surfaceContainer.x = -(scrollX % SURFACE_TILE_W)
           },
+          onOreNearby: (near) => { oreNearRef?.current?.(near) },
         })
 
         app.ticker.add(ticker => {
@@ -259,6 +253,10 @@ export default function MiningCanvas({ minerals, mineralMeta, onCollect, fireRef
           if (event.type === 'pointerdown') controller.fireLaser()
         })
         fireRef.current = () => controller.fireLaser()
+        scrollRef.current = (dx: number) => {
+          const speed = SCROLL_SPEED + dx * (dx > 0 ? SCROLL_SPEED_MAX - SCROLL_SPEED : SCROLL_SPEED - SCROLL_SPEED_MIN)
+          controller.setScrollSpeed(speed)
+        }
 
         app.stage.addChild(buildAimGuide(shipY, surfaceY))
         app.stage.addChild(buildShip(shipY))
@@ -268,11 +266,17 @@ export default function MiningCanvas({ minerals, mineralMeta, onCollect, fireRef
       } catch (err) {
         console.error('[MiningCanvas] init failed:', err)
       }
-    })()
+    }
+
+    // Defer one rAF so the browser finishes flex layout before we measure
+    rafId = requestAnimationFrame(() => { doInit() })
 
     return () => {
+      cancelAnimationFrame(rafId)
       destroyed = true
       fireRef.current = null
+      scrollRef.current = null
+      if (oreNearRef) oreNearRef.current = null
       controllerRef.current = null
       loop?.stop()
       input?.destroy()
@@ -286,27 +290,13 @@ export default function MiningCanvas({ minerals, mineralMeta, onCollect, fireRef
   }, [])
 
   return (
-    <div ref={containerRef} className="mining-canvas" data-testid="mining-canvas" style={{ position: 'relative' }}>
+    <div ref={containerRef} className="mining-canvas" data-testid="mining-canvas">
       <div style={{
         position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 10,
         background: 'rgba(255,34,0,0.22)',
         opacity: missFlash ? 1 : 0,
         transition: missFlash ? 'none' : 'opacity 280ms ease-out',
       }} />
-      {/* Joystick for scroll speed: left = slow, right = fast forward */}
-      <div style={{
-        position: 'absolute',
-        bottom: 16,
-        left: 16,
-        zIndex: 20,
-        pointerEvents: 'auto',
-      }}>
-        <VirtualJoystick
-          size={72}
-          onChange={handleJoystick}
-          label="SPEED"
-        />
-      </div>
     </div>
   )
 }
