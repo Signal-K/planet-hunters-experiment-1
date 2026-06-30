@@ -12,7 +12,8 @@ export interface TransitScene {
   update(elapsed: number, dt: number): void
 }
 
-const LAYER_SPEEDS = [0.15, 0.3, 0.55]
+// How fast each star layer scrolls (deeper = faster parallax)
+const LAYER_SPEEDS = [18, 36, 65]   // px/s — gives clear sense of upward travel
 const LAYER_COUNTS = [55, 32, 18]
 
 function mkStarLayer(W: number, H: number, count: number, layer: number): Graphics {
@@ -127,10 +128,10 @@ export function buildTransitScene(app: Application, opts: TransitSceneOptions): 
 
   return {
     update(elapsed, _dt) {
-      // star parallax drift
+      // Stars scroll downward (rocket flying upward) — each layer at different speed for parallax.
+      // Modulo H produces seamless looping since stars tile vertically.
       for (let i = 0; i < starContainers.length; i++) {
-        starContainers[i].x = Math.sin(elapsed * 0.025 * LAYER_SPEEDS[i]) * 5 * (i + 1)
-        starContainers[i].y = Math.sin(elapsed * 0.018 * LAYER_SPEEDS[i] + 1) * 3 * (i + 1)
+        starContainers[i].y = (elapsed * LAYER_SPEEDS[i]) % H
       }
 
       const progress = opts.getProgress()
@@ -145,11 +146,14 @@ export function buildTransitScene(app: Application, opts: TransitSceneOptions): 
       label.y = planetCY + r + 8
       label.alpha = Math.max(0, (p - 0.1) / 0.2)
 
-      // rocket — fixed lower-left, bobbing
-      const rx = W * 0.18
-      const ry = H * 0.75 + Math.sin(elapsed * 1.7) * 2.5
+      // Rocket travels from bottom toward the planet as progress increases.
+      // startY → just below the planet's current edge, eased with pow(0.6).
+      const rocketStartY = H * 0.88
+      const rocketEndY = planetCY + Math.max(r, 30) + 70
+      const travelY = rocketStartY + (rocketEndY - rocketStartY) * Math.pow(p, 0.6)
+      const bob = Math.sin(elapsed * 1.7) * 2.5
       const flicker = 0.5 + Math.sin(elapsed * 14) * 0.5
-      drawRocket(rocketG, rx, ry, flicker)
+      drawRocket(rocketG, cx, travelY + bob, flicker)
     },
   }
 }
