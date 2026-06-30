@@ -10,9 +10,9 @@ interface RingState {
   round: boolean
 }
 
-const DOWN_PATH = "2,2 13,14 24,2"
-const UP_PATH   = "2,14 13,2 24,14"
-const LEFT_PATH = "14,2 2,13 14,24"
+const DOWN_PATH  = "2,2 13,14 24,2"
+const UP_PATH    = "2,14 13,2 24,14"
+const LEFT_PATH  = "14,2 2,13 14,24"
 const RIGHT_PATH = "2,2 14,13 2,24"
 
 function Chevron({ path, horiz }: { path: string; horiz: boolean }) {
@@ -28,21 +28,30 @@ function Chevron({ path, horiz }: { path: string; horiz: boolean }) {
   )
 }
 
+function isVisible(el: HTMLElement): boolean {
+  const s = getComputedStyle(el)
+  return s.display !== 'none' && s.visibility !== 'hidden' && parseFloat(s.opacity) > 0.05
+}
+
+// coachId may be a '|'-delimited priority list — first visible element wins.
+// e.g. 'radial-missions|radial-toggle': points to MISSIONS when menu is open,
+// falls back to the toggle button when the menu is closed.
 export default function CoachPointer({ coachId, dir }: { coachId: string; dir?: string }) {
   const [ring, setRing] = useState<RingState | null>(null)
+  const ids = coachId.split('|')
 
   useLayoutEffect(() => {
     let cancelled = false
 
     function measure() {
       if (cancelled) return
-      const els = Array.from(document.querySelectorAll<HTMLElement>(`[data-coach-id="${coachId}"]`))
-      const el = els.find(e => {
-        const s = getComputedStyle(e)
-        return s.display !== 'none' && s.visibility !== 'hidden' && parseFloat(s.opacity) > 0.05
-      })
-      if (!el) { setRing(null); return }
-      const r = el.getBoundingClientRect()
+      let found: HTMLElement | null = null
+      for (const id of ids) {
+        const match = Array.from(document.querySelectorAll<HTMLElement>(`[data-coach-id="${id}"]`)).find(isVisible)
+        if (match) { found = match; break }
+      }
+      if (!found) { setRing(null); return }
+      const r = found.getBoundingClientRect()
       if (r.width === 0 && r.height === 0) { setRing(null); return }
       const isRound = r.height >= r.width * 0.7 && r.height <= r.width * 1.4
       if (!cancelled) setRing({ top: r.top, left: r.left, width: r.width, height: r.height, round: isRound })
@@ -52,26 +61,24 @@ export default function CoachPointer({ coachId, dir }: { coachId: string; dir?: 
     const t = setTimeout(measure, 450)
     window.addEventListener('resize', measure)
     return () => { cancelled = true; clearTimeout(t); window.removeEventListener('resize', measure) }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [coachId])
 
   if (!ring) return null
 
   const PAD = 6
   const cx = ring.left + ring.width / 2
-  const cy = ring.top + ring.height / 2
 
   const arrows = dir ? [0, 1, 2].map(i => {
     const style: React.CSSProperties = {
       position: 'fixed',
       pointerEvents: 'none',
       zIndex: 9998,
-      animation: `coach-arrow-bounce 0.9s ease-in-out infinite`,
+      animation: 'coach-arrow-bounce 0.9s ease-in-out infinite',
       animationDelay: `${i * 0.16}s`,
       opacity: 1 - i * 0.2,
     }
     const W = 26, H = 16, GAP = 5
-    // Arrows stack away from the element — each further away than the last,
-    // so index 0 is closest to the element and 2 is furthest (leading the eye in)
     if (dir === 'down') {
       return <div key={i} style={{ ...style, top: ring.top - PAD - H - i * (H + GAP), left: cx - W / 2 }}><Chevron path={DOWN_PATH} horiz={false}/></div>
     }
@@ -79,9 +86,11 @@ export default function CoachPointer({ coachId, dir }: { coachId: string; dir?: 
       return <div key={i} style={{ ...style, top: ring.top + ring.height + PAD + i * (H + GAP), left: cx - W / 2 }}><Chevron path={UP_PATH} horiz={false}/></div>
     }
     if (dir === 'left') {
+      const cy = ring.top + ring.height / 2
       return <div key={i} style={{ ...style, top: cy - 13, left: ring.left + ring.width + PAD + i * (16 + GAP) }}><Chevron path={LEFT_PATH} horiz={true}/></div>
     }
     if (dir === 'right') {
+      const cy = ring.top + ring.height / 2
       return <div key={i} style={{ ...style, top: cy - 13, left: ring.left - PAD - (i + 1) * (16 + GAP) }}><Chevron path={RIGHT_PATH} horiz={true}/></div>
     }
     return null
