@@ -110,7 +110,9 @@ export default function MiningScreen({ mission, target, onComplete, onBack, mine
   coachManual?: boolean
   onCoachDone?: () => void
 }) {
-  const MAX_CHARGES = Math.max(1, laserChargeCap ?? 5)
+  // Onboarding gets more charges so the tutorial first-fire (which auto-dismisses the coach)
+  // doesn't leave the player short of what the order requires. 20 covers any M1 order with room for misses.
+  const MAX_CHARGES = hasCoach ? 20 : Math.max(1, laserChargeCap ?? 5)
   const cargoRef = useRef<Record<string, number>>({})
   const [cargo, setCargo] = useState<Record<string, number>>({})
   const fireRef = useRef<(() => void) | null>(null)
