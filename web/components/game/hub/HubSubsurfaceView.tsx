@@ -61,14 +61,14 @@ export function HubSubsurfaceView() {
           <ellipse key={`sa${i}`} cx={cx} cy={cy} rx={rx} ry={ry} fill="#1e1008" fillOpacity="0.65"/>
         ))}
 
-        {/* Iron (Fe) ore deposits — orange-red, near topsoil */}
+        {/* Platinum (Pt) ore deposits — silver-white, near topsoil */}
         {([
           [78, 68, 9], [162, 88, 7], [298, 44, 8], [358, 110, 7], [120, 140, 6],
         ] as [number,number,number][]).map(([cx,cy,r], i) => (
-          <g key={`fea${i}`}>
-            <circle cx={cx} cy={cy} r={r*1.8} fill="#d97150" fillOpacity="0.12"/>
-            <circle cx={cx} cy={cy} r={r} fill="#d97150" fillOpacity="0.9"/>
-            <circle cx={cx-r*0.3} cy={cy-r*0.3} r={r*0.35} fill="#ff9a78" fillOpacity="0.7"/>
+          <g key={`pta${i}`}>
+            <circle cx={cx} cy={cy} r={r*1.8} fill="#e8e4d8" fillOpacity="0.12"/>
+            <circle cx={cx} cy={cy} r={r} fill="#e8e4d8" fillOpacity="0.9"/>
+            <circle cx={cx-r*0.3} cy={cy-r*0.3} r={r*0.35} fill="#ffffff" fillOpacity="0.7"/>
           </g>
         ))}
 
@@ -77,7 +77,7 @@ export function HubSubsurfaceView() {
         <path d={`M0,${A_H} Q100,${A_H - 5} 200,${A_H + 3} T${W},${A_H}`} stroke="#ff9a7822" strokeWidth="1" fill="none"/>
 
         {/* Stratum label A */}
-        <text x="14" y="22" fontFamily="monospace" fontSize="9" letterSpacing="2" fill="#9c8d70" fillOpacity="0.7" textAnchor="start" style={{ textTransform: 'uppercase' }}>A · TOPSOIL</text>
+        <text x="14" y="22" fontFamily="monospace" fontSize="9" letterSpacing="2" fill="#9c8d70" fillOpacity="0.7" textAnchor="start" style={{ textTransform: 'uppercase' }}>A · TOPSOIL · Pt</text>
 
         {/* ── B Horizon — subsoil / iron-clay ────────────────────────── */}
         <rect x="0" y={B_TOP} width={W} height={B_H} fill="url(#sub-soil-b)"/>
@@ -105,26 +105,26 @@ export function HubSubsurfaceView() {
           />
         ))}
 
-        {/* Silicon (Si) deposits — blue-white, in subsoil */}
+        {/* Palladium (Pd) deposits — lavender-silver, in subsoil */}
         {([
           [92, 38, 8], [230, 56, 7], [340, 30, 8], [170, 100, 7], [58, 120, 6],
           [300, 116, 7],
         ] as [number,number,number][]).map(([cx,cy,r], i) => (
-          <g key={`sib${i}`}>
-            <circle cx={cx} cy={B_TOP+cy} r={r*1.8} fill="#b9d8ff" fillOpacity="0.10"/>
-            <circle cx={cx} cy={B_TOP+cy} r={r}     fill="#b9d8ff" fillOpacity="0.88"/>
-            <circle cx={cx-r*0.3} cy={B_TOP+cy-r*0.3} r={r*0.35} fill="#e0f0ff" fillOpacity="0.7"/>
+          <g key={`pdb${i}`}>
+            <circle cx={cx} cy={B_TOP+cy} r={r*1.8} fill="#d4cce8" fillOpacity="0.10"/>
+            <circle cx={cx} cy={B_TOP+cy} r={r}     fill="#d4cce8" fillOpacity="0.88"/>
+            <circle cx={cx-r*0.3} cy={B_TOP+cy-r*0.3} r={r*0.35} fill="#ede8f8" fillOpacity="0.7"/>
           </g>
         ))}
 
-        {/* Nickel (Ni) deposits — green-gray, subsoil deep */}
+        {/* Iridium (Ir) deposits — steel gray, subsoil deep */}
         {([
           [145, 128, 7], [275, 140, 8], [390, 120, 6],
         ] as [number,number,number][]).map(([cx,cy,r], i) => (
-          <g key={`nib${i}`}>
-            <circle cx={cx} cy={B_TOP+cy} r={r*1.8} fill="#7fc98d" fillOpacity="0.10"/>
-            <circle cx={cx} cy={B_TOP+cy} r={r}     fill="#7fc98d" fillOpacity="0.85"/>
-            <circle cx={cx-r*0.3} cy={B_TOP+cy-r*0.3} r={r*0.35} fill="#b8f0c4" fillOpacity="0.7"/>
+          <g key={`irb${i}`}>
+            <circle cx={cx} cy={B_TOP+cy} r={r*1.8} fill="#b8b4cc" fillOpacity="0.10"/>
+            <circle cx={cx} cy={B_TOP+cy} r={r}     fill="#b8b4cc" fillOpacity="0.85"/>
+            <circle cx={cx-r*0.3} cy={B_TOP+cy-r*0.3} r={r*0.35} fill="#d8d4e8" fillOpacity="0.7"/>
           </g>
         ))}
 
@@ -134,7 +134,7 @@ export function HubSubsurfaceView() {
         <polygon points={`${W},${C_TOP-14} ${W-28},${C_TOP} ${W},${C_TOP}`} fill="#1e1208"/>
 
         {/* Stratum label B */}
-        <text x="14" y={B_TOP + 18} fontFamily="monospace" fontSize="9" letterSpacing="2" fill="#9c8d70" fillOpacity="0.7" textAnchor="start">B · SUBSOIL</text>
+        <text x="14" y={B_TOP + 18} fontFamily="monospace" fontSize="9" letterSpacing="2" fill="#9c8d70" fillOpacity="0.7" textAnchor="start">B · SUBSOIL · Pd / Ir</text>
 
         {/* ── C Horizon — bedrock ─────────────────────────────────────── */}
         <rect x="0" y={C_TOP} width={W} height={H - C_TOP} fill="url(#sub-soil-c)"/>
@@ -153,30 +153,30 @@ export function HubSubsurfaceView() {
           />
         ))}
 
-        {/* Gold (Au) deposits — amber, deep in bedrock */}
+        {/* Rhodium (Rh) deposits — warm silver, deep in bedrock */}
         {([
           [68, 40, 6], [195, 60, 7], [322, 45, 6], [138, 110, 5], [280, 100, 7],
         ] as [number,number,number][]).map(([cx,cy,r], i) => (
-          <g key={`auc${i}`}>
-            <circle cx={cx} cy={C_TOP+cy} r={r*2}   fill="#ffd166" fillOpacity="0.09"/>
-            <circle cx={cx} cy={C_TOP+cy} r={r}     fill="#ffd166" fillOpacity="0.85"/>
-            <circle cx={cx-r*0.3} cy={C_TOP+cy-r*0.3} r={r*0.4} fill="#fff0b0" fillOpacity="0.8"/>
+          <g key={`rhc${i}`}>
+            <circle cx={cx} cy={C_TOP+cy} r={r*2}   fill="#f0e8d4" fillOpacity="0.09"/>
+            <circle cx={cx} cy={C_TOP+cy} r={r}     fill="#f0e8d4" fillOpacity="0.85"/>
+            <circle cx={cx-r*0.3} cy={C_TOP+cy-r*0.3} r={r*0.4} fill="#fffaf0" fillOpacity="0.8"/>
           </g>
         ))}
 
-        {/* Cobalt (Co) deposits — blue-purple, bedrock */}
+        {/* Gold (Au) deposits — amber, bedrock (transition/late mineral) */}
         {([
           [152, 80, 7], [300, 70, 6], [45, 130, 5], [240, 130, 7],
         ] as [number,number,number][]).map(([cx,cy,r], i) => (
-          <g key={`coc${i}`}>
-            <circle cx={cx} cy={C_TOP+cy} r={r*1.8} fill="#8080ff" fillOpacity="0.10"/>
-            <circle cx={cx} cy={C_TOP+cy} r={r}     fill="#8080ff" fillOpacity="0.85"/>
-            <circle cx={cx-r*0.3} cy={C_TOP+cy-r*0.3} r={r*0.35} fill="#c0c0ff" fillOpacity="0.7"/>
+          <g key={`auc${i}`}>
+            <circle cx={cx} cy={C_TOP+cy} r={r*1.8} fill="#ffd166" fillOpacity="0.10"/>
+            <circle cx={cx} cy={C_TOP+cy} r={r}     fill="#ffd166" fillOpacity="0.85"/>
+            <circle cx={cx-r*0.3} cy={C_TOP+cy-r*0.3} r={r*0.35} fill="#fff0b0" fillOpacity="0.7"/>
           </g>
         ))}
 
         {/* Stratum label C */}
-        <text x="14" y={C_TOP + 18} fontFamily="monospace" fontSize="9" letterSpacing="2" fill="#9c8d70" fillOpacity="0.7" textAnchor="start">C · BEDROCK</text>
+        <text x="14" y={C_TOP + 18} fontFamily="monospace" fontSize="9" letterSpacing="2" fill="#9c8d70" fillOpacity="0.7" textAnchor="start">C · BEDROCK · Rh / Au</text>
       </svg>
 
       {/* Depth ruler on right edge */}

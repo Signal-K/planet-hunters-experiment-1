@@ -108,10 +108,10 @@ const FABRICATION_PAD_CONSTRUCTION: MissionConstructionPlan = {
 } satisfies MissionConstructionPlan
 
 export const DEFAULT_MISSION_TEMPLATES: MissionTemplate[] = [
-  { id: 'starter-bulk', tag: 'STARTER', difficulty: 'L1', mineralKeys: ['iron', 'silicon', 'carbon'], cargoRange: [4, 8], drillTierMin: 1, orbitMax: 4, payoutMultiplier: 1.0, contractorRole: 'starter', payoutFormula: 'mineral price * amount * 1500 * multiplier' },
-  { id: 'volatile-bulk', tag: 'BULK', difficulty: 'L2', mineralKeys: ['ice', 'carbon', 'silicon'], cargoRange: [8, 14], drillTierMin: 1, orbitMax: 5, payoutMultiplier: 1.35, contractorRole: 'bulk', payoutFormula: 'mineral price * amount * 1500 * multiplier' },
-  { id: 'metal-prospect', tag: 'PROSPECT', difficulty: 'L2', mineralKeys: ['nickel', 'cobalt', 'gold'], cargoRange: [3, 8], drillTierMin: 2, orbitMax: 5, payoutMultiplier: 2.25, contractorRole: 'prospect', payoutFormula: 'mineral price * amount * 1500 * multiplier' },
-  { id: 'command-reserve', tag: 'COMMAND', difficulty: 'L3', mineralKeys: ['gold', 'rare', 'cobalt'], cargoRange: [3, 6], drillTierMin: 2, orbitMax: 6, payoutMultiplier: 3.5, contractorRole: 'command', payoutFormula: 'mineral price * amount * 1500 * multiplier' },
+  { id: 'starter-bulk', tag: 'STARTER', difficulty: 'L1', mineralKeys: ['platinum', 'palladium'], cargoRange: [4, 8], drillTierMin: 1, orbitMax: 4, payoutMultiplier: 1.0, contractorRole: 'starter', payoutFormula: 'mineral price * amount * 1500 * multiplier' },
+  { id: 'volatile-bulk', tag: 'BULK',    difficulty: 'L2', mineralKeys: ['palladium', 'platinum', 'iridium'], cargoRange: [4, 8], drillTierMin: 1, orbitMax: 5, payoutMultiplier: 1.35, contractorRole: 'bulk', payoutFormula: 'mineral price * amount * 1500 * multiplier' },
+  { id: 'metal-prospect', tag: 'PROSPECT', difficulty: 'L2', mineralKeys: ['iridium', 'rhodium', 'gold'], cargoRange: [3, 6], drillTierMin: 2, orbitMax: 5, payoutMultiplier: 2.25, contractorRole: 'prospect', payoutFormula: 'mineral price * amount * 1500 * multiplier' },
+  { id: 'command-reserve', tag: 'COMMAND', difficulty: 'L3', mineralKeys: ['rhodium', 'rare', 'iridium'], cargoRange: [2, 4], drillTierMin: 2, orbitMax: 6, payoutMultiplier: 3.5, contractorRole: 'command', payoutFormula: 'mineral price * amount * 1500 * multiplier' },
   { id: 'freeops-delivery', tag: 'DELIVERY', difficulty: 'L1', mineralKeys: ['hydrogen', 'cobalt', 'copper', 'aluminium'], cargoRange: [4, 10], drillTierMin: 1, orbitMax: 5, payoutMultiplier: 1.25, contractorRole: 'starter', payoutFormula: 'mineral price * amount * 1500 * multiplier' },
   { id: 'freeops-mining-survey', tag: 'SURVEY', difficulty: 'L1', mineralKeys: ['cobalt', 'copper', 'aluminium', 'gold'], cargoRange: [3, 7], drillTierMin: 1, orbitMax: 5, payoutMultiplier: 1.55, contractorRole: 'prospect', payoutFormula: 'mineral price * amount * 1500 * multiplier' },
   { id: 'freeops-bulk-run', tag: 'BULK', difficulty: 'L1', mineralKeys: ['hydrogen', 'aluminium', 'copper'], cargoRange: [8, 16], drillTierMin: 1, orbitMax: 5, payoutMultiplier: 1.15, contractorRole: 'bulk', payoutFormula: 'mineral price * amount * 1500 * multiplier' },
@@ -138,18 +138,22 @@ export const DEFAULT_COMPLEXITY_BANDS: MissionComplexity[] = [
 ]
 
 const MINERAL_LABELS: Record<string, string> = {
-  iron: 'Iron',
-  silicon: 'Silicon',
-  carbon: 'Carbon',
-  ice: 'Volatile',
-  nickel: 'Nickel',
-  cobalt: 'Cobalt',
-  copper: 'Copper',
+  platinum:  'Platinum',
+  palladium: 'Palladium',
+  iridium:   'Iridium',
+  rhodium:   'Rhodium',
+  gold:      'Gold',
+  rare:      'Xenon',
+  iron:      'Iron',
+  silicon:   'Silicon',
+  carbon:    'Carbon',
+  ice:       'Volatile',
+  nickel:    'Nickel',
+  cobalt:    'Cobalt',
+  copper:    'Copper',
   aluminium: 'Aluminium',
-  hydrogen: 'Hydrogen',
-  uranium: 'Uranium',
-  gold: 'Gold',
-  rare: 'Xenon',
+  hydrogen:  'Hydrogen',
+  uranium:   'Uranium',
 }
 
 function payoutMultiplier(contractor: ContractorSlot): number {

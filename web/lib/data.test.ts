@@ -378,9 +378,9 @@ describe('seed bible v0 catalog', () => {
       'Ferrum Orbital Construction',
     ])
     expect(l1Contractors.map(c => c.mineralPreferences)).toEqual([
-      ['hydrogen'],
-      ['cobalt', 'copper'],
-      ['aluminium', 'copper'],
+      ['platinum', 'palladium'],
+      ['palladium', 'iridium'],
+      ['platinum', 'iridium'],
     ])
   })
 

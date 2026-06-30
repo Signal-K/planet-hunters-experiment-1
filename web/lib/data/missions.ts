@@ -36,7 +36,7 @@ export const AUTHORED_MISSIONS: Mission[] = [
     targetId: 'lutetia',
     payload: { type: 'rover', name: 'KI Survey Rover Mk1', cargoCost: 3 },
     requires: {
-      minerals: { nickel: 2 },
+      minerals: { palladium: 2 },
       cargo_min: 4,
       drill_tier: 1,
       max_orbit: 7,
