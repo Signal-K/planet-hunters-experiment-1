@@ -18,7 +18,7 @@ export function HubSubsurfaceView() {
       <svg
         width="100%" height="100%"
         viewBox={`0 0 ${W} ${H}`}
-        preserveAspectRatio="none"
+        preserveAspectRatio="xMidYMid slice"
         style={{ position: 'absolute', inset: 0, display: 'block' }}
       >
         <defs>

@@ -32,9 +32,6 @@ export function SoilCrossSection() {
           <path d="M360 0 q 8 20, -4 48"/>
         </g>
       </svg>
-      <div style={{ position: 'absolute', right: 14, top: 58, padding: '3px 8px', background: 'rgba(8,12,22,0.7)', border: '1px solid rgba(122,80,40,0.55)', borderRadius: 999, fontFamily: 'var(--ln-font-mono)', fontSize: 9, letterSpacing: '0.22em', textTransform: 'uppercase', color: '#9c8d70' }}>
-        · Subsurface ·
-      </div>
     </div>
   )
 }
