@@ -45,27 +45,37 @@ export const M1_STEPS: TutorialStep[] = [
 ]
 
 export const M2_STEPS: TutorialStep[] = [
-  { id: 20, screen: 'hub', title: 'SR2 Unlocked',
-    body: 'Bigger cargo bay, stronger drill — select it at the rocket step.',
-    manual: true,
-    anchor: 'bottom', spot: null, cta: 'Got it' },
-  { id: 21, screen: 'rocket-buy', title: 'Purchase Your Rocket',
-    body: 'SR2 carries more cargo than SR1.',
+  // Step 20: hub — action step (auto-dismisses when user navigates to missions).
+  // Mirrors M1 step 1: highlights the radial menu so the user knows exactly what to tap.
+  { id: 20, screen: 'hub', title: 'Guided Ops · Mission 2',
+    body: 'SR2 is now available — bigger cargo bay and stronger drill. You\'re still in guided operations. Accept a new mining contract to continue.',
+    action: 'Tap menu, then MISSIONS',
+    anchor: 'bottom', spot: null, cta: 'Missions', coachId: 'radial-toggle', dir: 'down',
+    desktopBody: 'SR2 is now available — bigger cargo bay and stronger drill. You\'re still in guided operations. Click MISSIONS to continue.',
+    desktopAction: 'Click MISSIONS in the sidebar',
+    desktopCoachId: 'sidebar-missions', desktopDir: 'left' },
+  { id: 21, screen: 'rocket-buy', title: 'SR2 — Select Your Rocket',
+    body: 'SR2 has been assigned to this mission. It carries more ore than SR1 and reaches deeper mineral tiers.',
     manual: true,
     anchor: 'top', spot: null, cta: 'Got it' },
 ]
 
 export const M3_STEPS: TutorialStep[] = [
-  { id: 30, screen: 'hub', title: 'Delivery Mission',
-    body: 'This mission delivers equipment — your rocket carries cargo instead of drilling.',
-    manual: true,
-    anchor: 'bottom', spot: null, cta: 'Got it' },
-  { id: 31, screen: 'rocket-buy', title: 'Cargo Module Installed',
-    body: 'Your rocket is fitted for this delivery — no drill needed.',
+  // Step 30: hub — action step (auto-dismisses when user navigates to missions).
+  // Mirrors M1 step 1 and M2 step 20.
+  { id: 30, screen: 'hub', title: 'Guided Ops · Mission 3',
+    body: 'This is a delivery contract — no drilling involved. Your rocket carries pre-loaded cargo to the target. You\'re still in guided operations. Accept the next contract to continue.',
+    action: 'Tap menu, then MISSIONS',
+    anchor: 'bottom', spot: null, cta: 'Missions', coachId: 'radial-toggle', dir: 'down',
+    desktopBody: 'This is a delivery contract — no drilling involved. You\'re still in guided operations. Click MISSIONS to continue.',
+    desktopAction: 'Click MISSIONS in the sidebar',
+    desktopCoachId: 'sidebar-missions', desktopDir: 'left' },
+  { id: 31, screen: 'rocket-buy', title: 'Cargo Rocket — No Drill',
+    body: 'This rocket carries a cargo module instead of a mining drill — it delivers equipment, not ore.',
     manual: true,
     anchor: 'top', spot: null, cta: 'Got it' },
-  { id: 32, screen: 'fab', title: 'Ready to Launch',
-    body: 'Cargo Module loaded — this rocket delivers, not drills.',
+  { id: 32, screen: 'fab', title: 'Ready to Deliver',
+    body: 'Cargo module loaded and secured. Launch when ready — no ore collection on this run.',
     manual: true,
     anchor: 'top', spot: null, cta: 'Got it' },
 ]
