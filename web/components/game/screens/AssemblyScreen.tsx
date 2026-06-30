@@ -69,12 +69,10 @@ export default function AssemblyScreen(props: AssemblyScreenProps) {
           <span />{check.ok ? 'Build compatible · Ready for launch' : check.problems.join(' · ')}
         </div>
       </div>
-      {!props.coachManual && (
-        <div className="sticky-actions" data-ui-zone={UI_ZONES.bottomActions}>
-          {highlightLaunch && <TutorialHighlight borderRadius={8} />}
-          <PrimaryBtn kind="amber" disabled={!check.ok} testId="launch-btn" onClick={props.onLaunch}>Confirm Launch</PrimaryBtn>
-        </div>
-      )}
+      <div className="sticky-actions" data-ui-zone={UI_ZONES.bottomActions}>
+        {highlightLaunch && <TutorialHighlight borderRadius={8} />}
+        <PrimaryBtn kind="amber" disabled={!check.ok} testId="launch-btn" onClick={props.onLaunch}>Confirm Launch</PrimaryBtn>
+      </div>
     </div>
   )
 }
