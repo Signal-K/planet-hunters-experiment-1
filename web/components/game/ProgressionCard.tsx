@@ -2,6 +2,7 @@
 
 import React from 'react'
 import type { Player, Screen } from '@/game-context'
+import { FREE_OPS_START_MISSIONS_DONE } from '@/lib/data/mission-generator'
 
 interface ProgressionCardProps {
   player: Player
@@ -84,8 +85,10 @@ export default function ProgressionCard({ player, onGoBuilding, onNav, top = 132
     )
   }
 
+  const inOnboarding = player.missionsDone < FREE_OPS_START_MISSIONS_DONE
+
   if (!player.activeMission && player.missionsDone > 0) {
-    if ((player.skillPoints ?? 0) > 0) {
+    if (!inOnboarding && (player.skillPoints ?? 0) > 0) {
       cards.push(
         <CardButton
           key="skills"

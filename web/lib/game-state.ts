@@ -1,5 +1,6 @@
 import type { GameState, LicenseGrade, Player, Screen } from '@/lib/game-types'
 import { MISSIONS, TARGETS } from '@/lib/data'
+import { FREE_OPS_START_MISSIONS_DONE } from '@/lib/data/mission-generator'
 
 // Represents untrusted/partial saved state (e.g. from localStorage or remote sync)
 // where player fields are optional since older saves may be missing new fields.
@@ -94,6 +95,14 @@ export function repairStateRoute(input: GameState): GameState {
   }
   if (input.screen === 'targets' && mission?.targetId) {
     return { ...input, screen: 'rocket-buy', targetId: mission.targetId }
+  }
+  // Repair the tutorial flag: during onboarding (missionsDone < FREE_OPS_START_MISSIONS_DONE),
+  // tutorial must always be active. It can become false if the catalog had no next-sequence
+  // mission at the moment onDebriefDone ran, leaving M2/M3 coach permanently dark.
+  // Explicit skips are still respected: skipTutorial marks every step done, so the coach
+  // finds no matching step and hides itself without needing tutorial=false.
+  if (input.player.missionsDone < FREE_OPS_START_MISSIONS_DONE && !input.tutorial) {
+    return { ...input, tutorial: true }
   }
   return input
 }
