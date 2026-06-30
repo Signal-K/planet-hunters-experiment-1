@@ -134,6 +134,12 @@ export function toStructure(r: any): StructureBlueprint {
 }
 
 export async function fetchCatalog(): Promise<Catalog> {
+  // TESS/KOI exoplanet targets are a separate science feature — never Landnam mining targets.
+  // Filter them out defensively here so stale PB rows can't bleed into the game catalog.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const isSolarTarget = (r: any) =>
+    !String(r.slug ?? '').startsWith('tess-') && !String(r.slug ?? '').startsWith('koi-') && !String(r.slug ?? '').startsWith('hd-')
+
   const [locations, minerals, contractors, parts, missions, structures] = await Promise.all([
     pbLandnam.collection('locations').getFullList({ sort: 'orbit,name' }),
     pbLandnam.collection('minerals').getFullList(),
@@ -162,7 +168,7 @@ export async function fetchCatalog(): Promise<Catalog> {
   ]
 
   return {
-    targets: locations.map(toTarget),
+    targets: locations.filter(isSolarTarget).map(toTarget),
     missions: allMissions,
     parts: {
       chassis:    parts.filter(p => p.part_type === 'chassis').map(toPart),
