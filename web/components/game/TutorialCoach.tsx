@@ -111,7 +111,10 @@ export default function TutorialCoach({ stepIndex, steps, step, total, onManualN
     )
   }
 
-  // ── Active instruction (compact card) ──────────────────────────────────────
+  // Direction the target element is relative to the card
+  const dir = (isDesktop ? (step.desktopDir ?? step.dir) : step.dir) ?? null
+
+  // ── Active instruction card ─────────────────────────────────────────────────
   return (
     <div style={{ position: 'absolute', inset: 0, zIndex: 96, pointerEvents: 'none' }} data-testid="tutorial-coach-overlay">
       {resolvedCoachId && <CoachPointer coachId={resolvedCoachId} />}
@@ -129,25 +132,25 @@ export default function TutorialCoach({ stepIndex, steps, step, total, onManualN
         <div style={{
           display: 'flex',
           alignItems: 'center',
-          gap: 10,
-          background: 'linear-gradient(160deg, rgba(10,22,42,0.97), rgba(6,13,26,0.97))',
-          border: '1px solid rgba(245,166,35,0.55)',
-          borderRadius: 14,
-          padding: '9px 14px 9px 9px',
-          boxShadow: '0 8px 28px rgba(0,0,0,0.55), 0 0 0 1px rgba(245,166,35,0.08)',
+          gap: 12,
+          background: 'linear-gradient(160deg, rgba(10,22,42,0.98), rgba(6,13,26,0.98))',
+          border: '1.5px solid rgba(245,166,35,0.7)',
+          borderRadius: 16,
+          padding: '12px 16px 12px 12px',
+          boxShadow: '0 8px 32px rgba(0,0,0,0.6), 0 0 24px rgba(245,166,35,0.12)',
+          animation: 'coach-glow 2s ease-in-out infinite',
         }}>
           {/* Avatar */}
           <div style={{ flexShrink: 0 }}>
-            <CoachAvatar size={36} talking />
+            <CoachAvatar size={44} talking />
           </div>
 
           {/* Text */}
           <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 8, fontWeight: 800, letterSpacing: '0.22em', color: 'var(--ln-amber)', textTransform: 'uppercase', marginBottom: 2 }}>
+            <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 10, fontWeight: 800, letterSpacing: '0.2em', color: 'var(--ln-amber)', textTransform: 'uppercase', marginBottom: 4 }}>
               {step.title}
             </div>
-            <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 12.5, color: '#deeeff', lineHeight: 1.25, wordBreak: 'break-word' }}>
-              <span aria-hidden="true" style={{ color: 'var(--ln-amber)', fontWeight: 800, marginRight: 5 }}>›</span>
+            <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 14, color: '#e8f4ff', lineHeight: 1.35, wordBreak: 'break-word' }}>
               {resolvedAction ?? ((isDesktop ? 'Click ' : 'Tap ') + step.cta)}
             </div>
           </div>
@@ -157,6 +160,40 @@ export default function TutorialCoach({ stepIndex, steps, step, total, onManualN
             {progress}
           </div>
         </div>
+
+        {/* Directional arrow pointing toward the target element */}
+        {dir && (
+          <div style={{
+            display: 'flex',
+            flexDirection: dir === 'down' ? 'column' : 'row',
+            alignItems: 'center',
+            justifyContent: dir === 'right' ? 'flex-end' : dir === 'left' ? 'flex-start' : 'center',
+            marginTop: dir === 'down' ? 6 : 0,
+            marginLeft: dir === 'right' ? 0 : 0,
+            gap: 3,
+            pointerEvents: 'none',
+          }}>
+            {[0, 1, 2].map(i => (
+              <div key={i} style={{
+                width: dir === 'down' || dir === 'up' ? 28 : 16,
+                height: dir === 'down' || dir === 'up' ? 16 : 28,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                animation: `coach-arrow-bounce ${0.9 + i * 0.12}s ease-in-out infinite`,
+                animationDelay: `${i * 0.18}s`,
+                opacity: 1 - i * 0.18,
+              }}>
+                <svg
+                  width={dir === 'down' || dir === 'up' ? 22 : 14}
+                  height={dir === 'down' || dir === 'up' ? 14 : 22}
+                  viewBox="0 0 22 14"
+                  style={{ transform: dir === 'up' ? 'rotate(180deg)' : dir === 'left' ? 'rotate(90deg)' : dir === 'right' ? 'rotate(-90deg)' : undefined }}
+                >
+                  <polyline points="2,2 11,12 20,2" fill="none" stroke="#f5a623" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   )
