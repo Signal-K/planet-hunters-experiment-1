@@ -351,8 +351,11 @@ function GameCanvas() {
               game.go('hub')
             }}
             onComplete={(cargo) => { game.completeStep(6); game.onMiningDone(cargo) }}
+            onAbandon={game.abandonMission}
             minerals={game.catalog.minerals}
             laserChargeCap={game.laserChargeCap}
+            hasCoach={hasCoach}
+            coachManual={coach?.manual ?? false}
           />
         )}
         {game.screen === 'rover-mining' && game.mission && game.target && (

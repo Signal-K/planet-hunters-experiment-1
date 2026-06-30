@@ -7,6 +7,7 @@ import { PrimaryBtn } from '@/components/ui/Button'
 import MiningCanvas from './MiningCanvas'
 
 const ORE_SHAPES: Record<string, 'circle' | 'diamond' | 'rect' | 'triangle'> = {
+  platinum: 'diamond', palladium: 'circle', iridium: 'triangle', rhodium: 'rect',
   iron: 'circle', silicon: 'diamond', ice: 'circle',
   carbon: 'rect', nickel: 'diamond', cobalt: 'triangle',
   gold: 'circle', rare: 'diamond',
@@ -99,11 +100,12 @@ const MINING_GUIDE = [
   { label: 'RETURN HOME', desc: 'Return to base. Only enabled once your cargo meets the mission order.' },
 ]
 
-export default function MiningScreen({ mission, target, onComplete, onBack, minerals, laserChargeCap, hasCoach, coachManual, onCoachDone }: {
+export default function MiningScreen({ mission, target, onComplete, onBack, onAbandon, minerals, laserChargeCap, hasCoach, coachManual, onCoachDone }: {
   mission: Mission
   target: Target
   onComplete: (cargo: Record<string, number>) => void
   onBack: () => void
+  onAbandon?: () => void
   minerals: Record<string, MineralMeta>
   laserChargeCap?: number
   hasCoach?: boolean
@@ -113,6 +115,7 @@ export default function MiningScreen({ mission, target, onComplete, onBack, mine
   // Onboarding gets more charges so the tutorial first-fire (which auto-dismisses the coach)
   // doesn't leave the player short of what the order requires. 20 covers any M1 order with room for misses.
   const MAX_CHARGES = hasCoach ? 20 : Math.max(1, laserChargeCap ?? 5)
+  const LOW_CHARGE_THRESHOLD = Math.max(2, Math.ceil(MAX_CHARGES * 0.2))
   const cargoRef = useRef<Record<string, number>>({})
   const [cargo, setCargo] = useState<Record<string, number>>({})
   const fireRef = useRef<(() => void) | null>(null)
@@ -124,10 +127,13 @@ export default function MiningScreen({ mission, target, onComplete, onBack, mine
   const [oreNear, setOreNear] = useState(false)
   oreNearRef.current = (near: boolean) => setOreNear(near)
 
-  // During onboarding, depleted charges without filling the order = tutorial fail
-  const tutorialFailed = hasCoach && laserCharges === 0 && !Object.entries(mission.requires.minerals).every(
+  const orderFilled = Object.entries(mission.requires.minerals).every(
     ([id, amount]) => (cargoRef.current[id] ?? 0) >= amount
   )
+
+  // Charges depleted without filling the order — always show recovery options, not just during coaching
+  const runFailed = laserCharges === 0 && !orderFilled
+  const chargesLow = !orderFilled && laserCharges > 0 && laserCharges <= LOW_CHARGE_THRESHOLD
 
   function handleTryAgain() {
     cargoRef.current = {}
@@ -136,10 +142,6 @@ export default function MiningScreen({ mission, target, onComplete, onBack, mine
     firedRef.current = false
     setRunKey(k => k + 1)
   }
-
-  const orderFilled = Object.entries(mission.requires.minerals).every(
-    ([id, amount]) => (cargoRef.current[id] ?? 0) >= amount
-  )
 
   const collectMineral = useCallback((mineral: string) => {
     cargoRef.current = {
@@ -202,15 +204,33 @@ export default function MiningScreen({ mission, target, onComplete, onBack, mine
 
       {hasCoach && <div style={{ height: coachManual ? 248 : 152, flexShrink: 0 }} />}
 
-      {/* Onboarding fail overlay — only shown during tutorial when charges are depleted without filling order */}
-      {tutorialFailed && (
-        <div style={{ position: 'absolute', inset: 0, zIndex: 80, background: 'rgba(3,6,12,0.88)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 16, padding: 32 }}>
+      {/* Laser depleted without filling order — always shown, not gated on hasCoach */}
+      {runFailed && (
+        <div style={{ position: 'absolute', inset: 0, zIndex: 80, background: 'rgba(3,6,12,0.92)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 16, padding: 32 }}>
           <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 11, fontWeight: 800, letterSpacing: '0.22em', color: 'var(--ln-crit)', textTransform: 'uppercase' }}>Laser Depleted</div>
           <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 22, fontWeight: 800, color: '#e6efff', textAlign: 'center', lineHeight: 1.2 }}>Order Not Filled</div>
-          <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 13, color: '#a9b8ce', textAlign: 'center', lineHeight: 1.5 }}>Fire your laser at ore deposits — aim carefully so each shot lands. Try again to restart the mining run.</div>
-          <button onClick={handleTryAgain} style={{ marginTop: 8, padding: '14px 32px', background: 'var(--ln-cyan)', border: 'none', borderRadius: 10, fontFamily: 'var(--ln-font-display)', fontSize: 13, fontWeight: 800, letterSpacing: '0.14em', color: '#000', cursor: 'pointer', textTransform: 'uppercase' }}>
-            Try Again
-          </button>
+          <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 13, color: '#a9b8ce', textAlign: 'center', lineHeight: 1.5 }}>
+            {totalCollected}/{totalNeeded} units collected. Fire at ore veins — each shot must hit a deposit.
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10, width: '100%', maxWidth: 280, marginTop: 8 }}>
+            <button onClick={handleTryAgain} style={{ padding: '14px 0', background: 'var(--ln-cyan)', border: 'none', borderRadius: 10, fontFamily: 'var(--ln-font-display)', fontSize: 13, fontWeight: 800, letterSpacing: '0.14em', color: '#000', cursor: 'pointer', textTransform: 'uppercase' }}>
+              Try Again
+            </button>
+            {onAbandon && (
+              <button onClick={onAbandon} style={{ padding: '12px 0', background: 'transparent', border: '1px solid rgba(255,80,80,0.35)', borderRadius: 10, fontFamily: 'var(--ln-font-display)', fontSize: 11, fontWeight: 800, letterSpacing: '0.14em', color: '#ff6060', cursor: 'pointer', textTransform: 'uppercase' }}>
+                Scrub Mission
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Low-charge warning banner — fades in when running short without filling the order */}
+      {chargesLow && (
+        <div style={{ position: 'absolute', top: hasCoach ? (coachManual ? 248 : 152) : 56, left: 0, right: 0, zIndex: 40, display: 'flex', justifyContent: 'center', pointerEvents: 'none' }}>
+          <div style={{ margin: '8px 16px', padding: '6px 14px', background: 'rgba(255,100,60,0.18)', border: '1px solid rgba(255,100,60,0.45)', borderRadius: 8, fontFamily: 'var(--ln-font-display)', fontSize: 10, fontWeight: 800, letterSpacing: '0.18em', color: '#ff7040', textTransform: 'uppercase' }}>
+            {laserCharges} charge{laserCharges !== 1 ? 's' : ''} remaining — order not filled
+          </div>
         </div>
       )}
 
