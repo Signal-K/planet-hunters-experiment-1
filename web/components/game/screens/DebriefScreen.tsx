@@ -36,7 +36,7 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
     <div className="game-screen debrief-screen">
       <TopBar eyebrow="MISSION COMPLETE" title="Debrief" />
 
-      <div className="screen-scroll" style={{ display: 'flex', flexDirection: 'column', gap: 12 }} data-ui-zone={UI_ZONES.screenContent}>
+      <div className={`screen-scroll${hasCoach ? ' screen-scroll--coach' : ''}`} style={{ display: 'flex', flexDirection: 'column', gap: 12 }} data-ui-zone={UI_ZONES.screenContent}>
 
         {/* ── Hero ─────────────────────────────────────────────────────────── */}
         <div style={{ textAlign: 'center', paddingTop: 16, paddingBottom: 8 }}>

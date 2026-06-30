@@ -92,7 +92,7 @@ export default function RocketPurchaseScreen({ missionsDone, francs, onPurchase,
   return (
     <div className="game-screen">
       <TopBar eyebrow="LAUNCHPAD · VEHICLE" title="Select Rocket" onBack={onBack} />
-      <div className="screen-scroll" data-ui-zone={UI_ZONES.screenContent} style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
+      <div className={`screen-scroll${hasCoach ? ' screen-scroll--coach-manual' : ''}`} data-ui-zone={UI_ZONES.screenContent} style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
 
         {/* Rocket hero image */}
         <div style={{
