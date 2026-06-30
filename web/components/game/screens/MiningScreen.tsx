@@ -2,6 +2,7 @@
 
 import { useRef, useState, useCallback, useEffect } from 'react'
 import type { Mission, Target, MineralMeta } from '@/lib/data'
+import { FREE_OPS_START_MISSIONS_DONE } from '@/lib/data'
 import TopBar from '@/components/ui/TopBar'
 import { PrimaryBtn } from '@/components/ui/Button'
 import MiningCanvas from './MiningCanvas'
@@ -112,9 +113,15 @@ export default function MiningScreen({ mission, target, onComplete, onBack, onAb
   coachManual?: boolean
   onCoachDone?: () => void
 }) {
-  // Onboarding gets more charges so the tutorial first-fire (which auto-dismisses the coach)
-  // doesn't leave the player short of what the order requires. 20 covers any M1 order with room for misses.
-  const MAX_CHARGES = hasCoach ? 20 : Math.max(1, laserChargeCap ?? 5)
+  // Charge count is mission-aware, not coach-aware.
+  // During onboarding (sequence <= FREE_OPS_START_MISSIONS_DONE): always 3× the ore required,
+  // minimum 20, so the player can never be softlocked by low charges regardless of coach state.
+  // Post-onboarding: respect laserChargeCap from skill nodes.
+  const totalOreNeeded = Object.values(mission.requires.minerals).reduce((sum, v) => sum + v, 0)
+  const isOnboarding = typeof mission.sequence === 'number' && mission.sequence <= FREE_OPS_START_MISSIONS_DONE
+  const MAX_CHARGES = isOnboarding
+    ? Math.max(20, totalOreNeeded * 3)
+    : Math.max(1, laserChargeCap ?? 5)
   const LOW_CHARGE_THRESHOLD = Math.max(2, Math.ceil(MAX_CHARGES * 0.2))
   const cargoRef = useRef<Record<string, number>>({})
   const [cargo, setCargo] = useState<Record<string, number>>({})
