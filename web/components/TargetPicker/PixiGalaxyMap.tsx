@@ -143,21 +143,21 @@ function drawOrbits(layer: Container, props: PixiGalaxyMapProps, cx: number, cy:
   layer.addChild(g, sun)
 }
 
-// ── Draw a single body ───────────────────────────────────────────────────────
+interface HitRegion { id: string; x: number; y: number; r: number; compatible: boolean }
+
+// ── Draw a single body (NO pixi interaction — native canvas hit test handles it)
 function drawBody(
   layer: Container,
   target: Target,
   sx: number, sy: number,
   isCompatible: boolean, isPicked: boolean,
   alpha: number,
-  onPick: (id: string) => void,
+  hits: HitRegion[],
 ) {
   const marker = new Container()
   marker.x = sx; marker.y = sy
   marker.alpha = alpha * (isCompatible ? 1 : 0.28)
-  marker.eventMode = (isCompatible && alpha > 0.3) ? 'static' : 'none'
-  marker.cursor = isCompatible ? 'pointer' : 'default'
-  if (isCompatible && alpha > 0.3) marker.on('pointertap', () => onPick(target.id))
+  marker.eventMode = 'none' // all click handling via native canvas listener
 
   const radius = BELT_BODY_IDS.has(target.id) ? 14 : 13
   const colors = bodyColors(target)
@@ -197,6 +197,8 @@ function drawBody(
   labelBg.roundRect(-(label.width + 10) / 2, radius + 3, label.width + 10, 15, 3).fill({ color: 0x080c16, alpha: 0.74 })
   marker.addChild(labelBg, label)
   layer.addChild(marker)
+
+  hits.push({ id: target.id, x: sx, y: sy, r: (BELT_BODY_IDS.has(target.id) ? 14 : 13) + 10, compatible: isCompatible })
 }
 
 // ── Draw the full scene ───────────────────────────────────────────────────────
@@ -207,15 +209,17 @@ function drawScene(
   w: number, h: number,
   orbitPhase: number,
   transition: number,
+  hits: HitRegion[],
 ) {
   layer.removeChildren().forEach(c => c.destroy({ children: true }))
+  hits.length = 0 // reset hit regions each frame
   const cx = w / 2, cy = h / 2
   const scale = computeScale(w, h, transition)
   const eased = transition < 0.5 ? 2 * transition * transition : 1 - Math.pow(-2 * transition + 2, 2) / 2
   const planetAlpha = 1 - eased
   const beltAlpha   = eased
 
-  // ── Belt zone decoration (no interaction — click is handled by DOM button) ─
+  // ── Belt zone decoration (no interaction — click handled by DOM button) ───────
   if (planetAlpha > 0.02) {
     const beltMidR = BELT_MID_ORBIT_R * scale
     const beltBandW = (RADII[5] - RADII[3]) * scale
@@ -227,17 +231,14 @@ function drawScene(
       const rad = (beltMidR - beltBandW * 0.4) + r * beltBandW * 0.8
       zone.circle(cx + Math.cos(ang) * rad, cy + Math.sin(ang) * rad, 1.2).fill({ color: 0x8a7a5a, alpha: 0.55 * planetAlpha })
     }
-    zone.eventMode = 'none' // DOM handles click, no pixi interaction needed
+    zone.eventMode = 'none'
     layer.addChild(zone)
   }
 
-  // ── Solar-view bodies: planets + any target that isn't a belt asteroid ───────
-  // This includes TESS exoplanets, survey targets, etc. — anything not in BELT_BODY_IDS
-  // Belt asteroids are only shown in belt view.
+  // ── Solar-view bodies ────────────────────────────────────────────────────────
   if (planetAlpha > 0.02) {
     for (const target of props.targets) {
       if (target.id === 'belt' || BELT_BODY_IDS.has(target.id)) continue
-      // Use known angle or fall back to deterministic hash-based angle
       const knownAngle = ANGLES[target.id]
       const baseAngle = (knownAngle ?? (hashId(target.id) % 360)) * Math.PI / 180
       const drift = orbitPhase / Math.sqrt(Math.max(1, target.orbit))
@@ -247,22 +248,22 @@ function drawScene(
       if (body) {
         pos = { x: body.transform.position.x - MAP_CENTER.x, y: body.transform.position.y - MAP_CENTER.y }
       } else {
-        const r = RADII[target.orbit] ?? 84
-        pos = { x: Math.cos(angle) * r, y: Math.sin(angle) * r }
+        const orbR = RADII[target.orbit] ?? 84
+        pos = { x: Math.cos(angle) * orbR, y: Math.sin(angle) * orbR }
       }
-      drawBody(layer, target, cx + pos.x * scale, cy + pos.y * scale, props.compatibleIds.has(target.id), target.id === props.pickedId, planetAlpha, props.onPick)
+      drawBody(layer, target, cx + pos.x * scale, cy + pos.y * scale, props.compatibleIds.has(target.id), target.id === props.pickedId, planetAlpha, hits)
     }
   }
 
-  // ── Belt asteroids ───────────────────────────────────────────────────────────
+  // ── Belt asteroids ────────────────────────────────────────────────────────────
   if (beltAlpha > 0.02) {
     const beltTargets = props.targets.filter(t => BELT_BODY_IDS.has(t.id))
     beltTargets.forEach((target, i) => {
       const spreadAngle = (BELT_SPREAD_ANGLES[target.id] ?? (i / Math.max(1, beltTargets.length)) * 360) * Math.PI / 180
       const drift = orbitPhase * 0.5 / Math.sqrt(target.orbit)
       const angle = spreadAngle + drift
-      const r = RADII[Math.min(target.orbit, 4)] ?? RADII[4]
-      drawBody(layer, target, cx + Math.cos(angle) * r * scale, cy + Math.sin(angle) * r * scale, props.compatibleIds.has(target.id), target.id === props.pickedId, beltAlpha, props.onPick)
+      const orbR = RADII[Math.min(target.orbit, 4)] ?? RADII[4]
+      drawBody(layer, target, cx + Math.cos(angle) * orbR * scale, cy + Math.sin(angle) * orbR * scale, props.compatibleIds.has(target.id), target.id === props.pickedId, beltAlpha, hits)
     })
   }
 }
@@ -289,6 +290,7 @@ export default function PixiGalaxyMap(props: PixiGalaxyMapProps) {
   const transitionRef       = useRef(0)
   const transitionTargetRef = useRef(0)
   const redrawOrbitRef = useRef<((t?: number) => void) | null>(null)
+  const hitsRef = useRef<HitRegion[]>([])
   const propsRef = useRef(props)
   propsRef.current = props
 
@@ -362,7 +364,19 @@ export default function PixiGalaxyMap(props: PixiGalaxyMapProps) {
             drawOrbits(orbitLayer, propsRef.current, w / 2, h / 2, scale, transitionRef.current)
           }
           orbitPhase += 0.00042 * ticker.deltaTime
-          drawScene(bodyLayer, propsRef.current, bodies, w, h, orbitPhase, transitionRef.current)
+          drawScene(bodyLayer, propsRef.current, bodies, w, h, orbitPhase, transitionRef.current, hitsRef.current)
+        })
+
+        // Single native hit-test handler — bypasses PixiJS interactive objects
+        // (which break when markers are destroyed+recreated every frame).
+        canvas.addEventListener('pointerdown', e => {
+          const rect = canvas.getBoundingClientRect()
+          const dprLocal = window.devicePixelRatio || 1
+          const mx = (e.clientX - rect.left) * (w / rect.width)
+          const my = (e.clientY - rect.top) * (h / rect.height)
+          void dprLocal
+          const hit = hitsRef.current.find(b => b.compatible && Math.hypot(mx - b.x, my - b.y) <= b.r)
+          if (hit) propsRef.current.onPick(hit.id)
         })
 
         Scene.load('/game/scenes/target-picker.scene.json')
