@@ -116,10 +116,24 @@ export default function MiningScreen({ mission, target, onComplete, onBack, mine
   const fireRef = useRef<(() => void) | null>(null)
   const scrollRef = useRef<((dx: number) => void) | null>(null)
   const [laserCharges, setLaserCharges] = useState(MAX_CHARGES)
+  const [runKey, setRunKey] = useState(0)  // bump to reset MiningCanvas
   const firedRef = useRef(false)
   const oreNearRef = useRef<((near: boolean) => void) | null>(null)
   const [oreNear, setOreNear] = useState(false)
   oreNearRef.current = (near: boolean) => setOreNear(near)
+
+  // During onboarding, depleted charges without filling the order = tutorial fail
+  const tutorialFailed = hasCoach && laserCharges === 0 && !Object.entries(mission.requires.minerals).every(
+    ([id, amount]) => (cargoRef.current[id] ?? 0) >= amount
+  )
+
+  function handleTryAgain() {
+    cargoRef.current = {}
+    setCargo({})
+    setLaserCharges(MAX_CHARGES)
+    firedRef.current = false
+    setRunKey(k => k + 1)
+  }
 
   const orderFilled = Object.entries(mission.requires.minerals).every(
     ([id, amount]) => (cargoRef.current[id] ?? 0) >= amount
@@ -186,9 +200,22 @@ export default function MiningScreen({ mission, target, onComplete, onBack, mine
 
       {hasCoach && <div style={{ height: coachManual ? 248 : 152, flexShrink: 0 }} />}
 
+      {/* Onboarding fail overlay — only shown during tutorial when charges are depleted without filling order */}
+      {tutorialFailed && (
+        <div style={{ position: 'absolute', inset: 0, zIndex: 80, background: 'rgba(3,6,12,0.88)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 16, padding: 32 }}>
+          <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 11, fontWeight: 800, letterSpacing: '0.22em', color: 'var(--ln-crit)', textTransform: 'uppercase' }}>Laser Depleted</div>
+          <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 22, fontWeight: 800, color: '#e6efff', textAlign: 'center', lineHeight: 1.2 }}>Order Not Filled</div>
+          <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 13, color: '#a9b8ce', textAlign: 'center', lineHeight: 1.5 }}>Fire your laser at ore deposits — aim carefully so each shot lands. Try again to restart the mining run.</div>
+          <button onClick={handleTryAgain} style={{ marginTop: 8, padding: '14px 32px', background: 'var(--ln-cyan)', border: 'none', borderRadius: 10, fontFamily: 'var(--ln-font-display)', fontSize: 13, fontWeight: 800, letterSpacing: '0.14em', color: '#000', cursor: 'pointer', textTransform: 'uppercase' }}>
+            Try Again
+          </button>
+        </div>
+      )}
+
       <div className="mining-viewport">
         <div className="mining-stars" />
         <MiningCanvas
+          key={runKey}
           minerals={Object.keys(mission.requires.minerals)}
           mineralMeta={minerals}
           onCollect={collectMineral}

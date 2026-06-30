@@ -204,7 +204,7 @@ export default function MissionBoardScreen({ onBack, onPick, missionsDone, freeO
 
                   <div style={{ marginTop: 10, display: 'flex', alignItems: 'center', gap: 10, paddingTop: 10, borderTop: '1px dashed rgba(63,169,255,0.18)' }}>
                     <div style={{ fontFamily: 'var(--ln-font-display)', fontWeight: 800, fontSize: 18, color: '#f5a623' }}>▲ {displayPayout.toLocaleString()}</div>
-                    <span style={{ fontFamily: 'var(--ln-font-mono)', fontSize: 11, letterSpacing: '0.16em', color: '#7ec8ff' }}>+{m.payout.affinity} AFF</span>
+                    <span style={{ fontFamily: 'var(--ln-font-mono)', fontSize: 11, letterSpacing: '0.16em', color: '#7ec8ff' }}>+{m.payout.affinity} Affinity</span>
                     {affinityBonus > 0 && <span style={{ fontFamily: 'var(--ln-font-mono)', fontSize: 10, letterSpacing: '0.12em', color: '#39d36a' }}>+{Math.round(affinityMultiplier * 100)}%</span>}
                     <span style={{ flex: 1 }} />
                     {completedToday_

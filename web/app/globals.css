@@ -468,15 +468,11 @@ button { cursor: pointer; }
 }
 @keyframes coach-point { 0%,100% { transform: translateY(0); } 50% { transform: translateY(6px); } }
 
-/* Direction arrow animations in coach pill */
-.coach-dir-down  { animation: coach-dir-down  0.9s ease-in-out infinite; }
-.coach-dir-up    { animation: coach-dir-up    0.9s ease-in-out infinite; }
-.coach-dir-left  { animation: coach-dir-left  0.9s ease-in-out infinite; }
-.coach-dir-right { animation: coach-dir-right 0.9s ease-in-out infinite; }
-@keyframes coach-dir-down  { 0%,100% { transform: translateY(0); } 50% { transform: translateY(3px); } }
-@keyframes coach-dir-up    { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-3px); } }
-@keyframes coach-dir-left  { 0%,100% { transform: translateX(0); } 50% { transform: translateX(-3px); } }
-@keyframes coach-dir-right { 0%,100% { transform: translateX(0); } 50% { transform: translateX(3px); } }
+/* Coach element highlight ring animation */
+@keyframes coach-ring-pulse {
+  0%, 100% { opacity: 0.65; box-shadow: 0 0 0 3px rgba(63,169,255,0.12), 0 0 14px rgba(63,169,255,0.3); }
+  50% { opacity: 1; box-shadow: 0 0 0 5px rgba(63,169,255,0.22), 0 0 26px rgba(63,169,255,0.55); }
+}
 
 /* CSS-driven element highlighting: set data-coach-target on <html> to pulse the target.
    Works across position:fixed boundaries — no coordinate measurement needed. */

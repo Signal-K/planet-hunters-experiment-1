@@ -116,7 +116,7 @@ export default function TargetPickerScreen({ mission, onBack, onPick, hasCoach, 
         <div style={{ padding: '0 14px 6px 14px', display: 'flex', alignItems: 'center', gap: 8 }}>
           <span style={{ fontFamily: 'var(--ln-font-display)', fontSize: 10, fontWeight: 700, letterSpacing: '0.22em', color: 'var(--ln-text-muted)', textTransform: 'uppercase' }}>Compatible · {compat.length}</span>
           <span style={{ flex: 1 }} />
-          <StatusPill kind="amber" dim>Reach ≤ Orbit {mission.requires.max_orbit}</StatusPill>
+          <StatusPill kind="amber" dim>Rocket range · Orbit ≤ {mission.requires.max_orbit}</StatusPill>
         </div>
 
         {/* System map */}
@@ -157,17 +157,39 @@ export default function TargetPickerScreen({ mission, onBack, onPick, hasCoach, 
               {!hasCoach && (
                 <div style={{ marginTop: 10, fontFamily: 'var(--ln-font-body)', fontSize: 12, color: '#a9b8ce', lineHeight: 1.4 }}>{pickedTarget.brief}</div>
               )}
-              <div style={{ marginTop: hasCoach ? 6 : 10, display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-                {pickedTarget.minerals.map(min => {
-                  const meta = MINERAL_META[min]
-                  const needed = mission.requires.minerals[min]
-                  return (
-                    <div key={min} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '3px 8px', background: 'rgba(8,16,28,0.7)', border: `1px solid ${meta.color}${needed ? 'aa' : '55'}`, borderRadius: 6, boxShadow: needed ? `0 0 12px ${meta.color}33` : 'none' }}>
-                      <span style={{ fontFamily: 'var(--ln-font-mono)', fontSize: 10, fontWeight: 800, color: meta.color }}>{meta.sym}</span>
-                      <span style={{ fontFamily: 'var(--ln-font-display)', fontSize: 11, fontWeight: 700, color: meta.color }}>{meta.name}{needed ? ` · need ${needed}` : ''}</span>
-                    </div>
-                  )
-                })}
+              {/* Mission needs — minerals required by the contract */}
+              {Object.keys(mission.requires.minerals).length > 0 && (
+                <div style={{ marginTop: hasCoach ? 6 : 10 }}>
+                  <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 8, fontWeight: 700, letterSpacing: '0.22em', color: 'var(--ln-text-muted)', textTransform: 'uppercase', marginBottom: 5 }}>Mission needs</div>
+                  <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                    {Object.entries(mission.requires.minerals).map(([min, qty]) => {
+                      const meta = MINERAL_META[min]
+                      const available = pickedTarget.minerals.includes(min)
+                      return (
+                        <div key={min} style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '4px 9px', background: available ? 'rgba(8,16,28,0.7)' : 'rgba(220,50,50,0.08)', border: `1px solid ${available ? (meta?.color ?? '#fff') + 'cc' : 'rgba(220,50,50,0.4)'}`, borderRadius: 6, boxShadow: available ? `0 0 10px ${meta?.color ?? '#fff'}33` : 'none' }}>
+                          <span style={{ fontFamily: 'var(--ln-font-mono)', fontSize: 10, fontWeight: 800, color: available ? (meta?.color ?? '#fff') : '#ff5a6a' }}>{meta?.sym ?? min}</span>
+                          <span style={{ fontFamily: 'var(--ln-font-display)', fontSize: 11, fontWeight: 700, color: available ? (meta?.color ?? '#fff') : '#ff5a6a' }}>{meta?.name ?? min} ×{qty}</span>
+                          {!available && <span style={{ fontFamily: 'var(--ln-font-display)', fontSize: 9, color: '#ff5a6a', letterSpacing: '0.12em' }}>NOT HERE</span>}
+                        </div>
+                      )
+                    })}
+                  </div>
+                </div>
+              )}
+              {/* Target deposits — what this asteroid actually has */}
+              <div style={{ marginTop: 8 }}>
+                <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 8, fontWeight: 700, letterSpacing: '0.22em', color: 'var(--ln-text-muted)', textTransform: 'uppercase', marginBottom: 5 }}>Available here</div>
+                <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                  {pickedTarget.minerals.map(min => {
+                    const meta = MINERAL_META[min]
+                    return (
+                      <div key={min} style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '3px 8px', background: 'rgba(8,16,28,0.5)', border: `1px solid ${meta?.color ?? '#fff'}44`, borderRadius: 6 }}>
+                        <span style={{ fontFamily: 'var(--ln-font-mono)', fontSize: 10, fontWeight: 800, color: meta?.color ?? '#fff' }}>{meta?.sym ?? min}</span>
+                        <span style={{ fontFamily: 'var(--ln-font-display)', fontSize: 11, color: (meta?.color ?? '#fff') + 'aa' }}>{meta?.name ?? min}</span>
+                      </div>
+                    )
+                  })}
+                </div>
               </div>
             </Panel>
           </div>

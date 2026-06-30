@@ -20,6 +20,8 @@ const LASER_COLOR = '#9becff'
 const ORE_STROKE = '#0a0a12'
 const MAX_ORES = 60
 const FLASH_DURATION = 0.14
+// Laser stops this far below the surface — deep enough to reach all ore tiers (max depth 96) + buffer
+const LASER_MAX_DEPTH = 124
 
 /** Organic ore gap distribution: 20% tight cluster, 50% normal, 30% wide open space */
 function oreGap(): number {
@@ -294,8 +296,9 @@ export class MiningController extends ScriptBehaviour {
       return false
     })
 
+    const laserFloor = (this.opts.surfaceY ?? SURFACE_Y) + LASER_MAX_DEPTH
     this.lasers = this.lasers.filter(laser => {
-      if (laser.go.active && laser.go.transform.position.y < this.opts.worldHeight + LASER_SIZE.height) return true
+      if (laser.go.active && laser.go.transform.position.y < laserFloor) return true
       const wasMiss = laser.go.active
       laser.go.destroy()
       this.gameObject.children = this.gameObject.children.filter(c => c !== laser.go)
