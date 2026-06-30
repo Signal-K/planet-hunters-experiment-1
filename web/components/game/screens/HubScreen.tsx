@@ -165,7 +165,7 @@ export default function HubScreen({ player, hasCoach, onGoBuilding, onNav, onUpg
           </div>
 
           {/* Soil cross-section with subsurface button */}
-          <SoilCrossSection onSubsurface={!hasCoach ? () => setSubsurface(true) : undefined} />
+          <SoilCrossSection />
         </div>
 
         {/* ─── BELOW GROUND ─── bottom half of slider */}
@@ -247,6 +247,9 @@ export default function HubScreen({ player, hasCoach, onGoBuilding, onNav, onUpg
               )}
               <button onClick={() => setEditMode(v => !v)} style={{ padding: '5px 14px', background: editMode ? 'rgba(245,166,35,0.25)' : 'rgba(8,16,28,0.75)', backdropFilter: 'blur(6px)', border: editMode ? '1px solid rgba(245,166,35,0.6)' : '1px solid rgba(135,207,250,0.4)', borderRadius: 999, fontFamily: 'var(--ln-font-display)', fontSize: 9, fontWeight: 700, letterSpacing: '0.22em', color: editMode ? '#f5a623' : '#9EDCFF', textTransform: 'uppercase', cursor: 'pointer', animation: !editMode && player.placed.length < 4 ? 'pad-pulse 2s ease-in-out infinite' : 'none' }}>
                 {editMode ? 'Done' : 'Edit · Build'}
+              </button>
+              <button onClick={() => setSubsurface(true)} style={{ padding: '5px 14px', background: 'rgba(8,12,22,0.75)', backdropFilter: 'blur(6px)', border: '1px solid rgba(122,80,40,0.55)', borderRadius: 999, fontFamily: 'var(--ln-font-display)', fontSize: 9, fontWeight: 700, letterSpacing: '0.22em', color: '#9c8d70', textTransform: 'uppercase', cursor: 'pointer' }}>
+                Subsurface ↓
               </button>
             </>
           )}
