@@ -1,6 +1,10 @@
 'use client'
 
-export function SoilCrossSection() {
+interface SoilCrossSectionProps {
+  onSubsurface?: () => void
+}
+
+export function SoilCrossSection({ onSubsurface }: SoilCrossSectionProps) {
   return (
     <div style={{ position: 'absolute', left: 0, right: 0, bottom: 0, top: '78%', zIndex: 4, pointerEvents: 'none', overflow: 'hidden' }}>
       <div style={{ position: 'absolute', left: 0, right: 0, top: 0, height: 0, borderTop: '1.5px dashed rgba(255,225,160,0.5)' }} />
@@ -32,9 +36,28 @@ export function SoilCrossSection() {
           <path d="M360 0 q 8 20, -4 48"/>
         </g>
       </svg>
-      <div style={{ position: 'absolute', right: 14, top: 58, padding: '3px 8px', background: 'rgba(8,12,22,0.7)', border: '1px solid rgba(122,80,40,0.55)', borderRadius: 999, fontFamily: 'var(--ln-font-mono)', fontSize: 9, letterSpacing: '0.22em', textTransform: 'uppercase', color: '#9c8d70' }}>
-        · Subsurface ·
-      </div>
+      {onSubsurface ? (
+        <button
+          onClick={onSubsurface}
+          style={{
+            position: 'absolute', right: 14, top: 58,
+            padding: '3px 8px',
+            background: 'rgba(8,12,22,0.7)',
+            border: '1px solid rgba(122,80,40,0.55)',
+            borderRadius: 999,
+            fontFamily: 'var(--ln-font-mono)', fontSize: 9,
+            letterSpacing: '0.22em', textTransform: 'uppercase',
+            color: '#9c8d70', cursor: 'pointer',
+            pointerEvents: 'auto',
+          }}
+        >
+          Subsurface ↓
+        </button>
+      ) : (
+        <div style={{ position: 'absolute', right: 14, top: 58, padding: '3px 8px', background: 'rgba(8,12,22,0.7)', border: '1px solid rgba(122,80,40,0.55)', borderRadius: 999, fontFamily: 'var(--ln-font-mono)', fontSize: 9, letterSpacing: '0.22em', textTransform: 'uppercase', color: '#9c8d70' }}>
+          · Subsurface ·
+        </div>
+      )}
     </div>
   )
 }
