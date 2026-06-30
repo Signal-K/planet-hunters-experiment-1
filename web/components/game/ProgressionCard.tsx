@@ -9,6 +9,7 @@ interface ProgressionCardProps {
   onGoBuilding: (b: string) => void
   onNav: (s: Screen) => void
   top?: number
+  onComingSoon?: (feature: string, description: string) => void
 }
 
 function CardButton({ accent, eyebrow, title, cta, onClick, testId }: {
@@ -56,7 +57,7 @@ function CardButton({ accent, eyebrow, title, cta, onClick, testId }: {
   )
 }
 
-export default function ProgressionCard({ player, onGoBuilding, onNav, top = 132 }: ProgressionCardProps) {
+export default function ProgressionCard({ player, onGoBuilding, onNav, top = 132, onComingSoon }: ProgressionCardProps) {
   const cards: React.ReactElement[] = []
 
   if (player.activeMission) {
@@ -96,19 +97,20 @@ export default function ProgressionCard({ player, onGoBuilding, onNav, top = 132
           accent="var(--ln-cyan)"
           eyebrow="Skill Points"
           title={`${player.skillPoints ?? 0} SP available`}
-          cta="Train"
-          onClick={() => onGoBuilding('skills')}
+          cta="Coming Soon"
+          onClick={() => onComingSoon?.('Skill Tree', 'Train your crew and unlock upgraded drilling, cargo, and orbital capabilities.')}
         />
       )
     }
+    const justFinishedOnboarding = player.missionsDone === FREE_OPS_START_MISSIONS_DONE
     cards.push(
       <CardButton
         key="next-mission"
         testId="progression-card-next-mission"
         accent="#39d36a"
-        eyebrow="Next Mission"
-        title="New contract available"
-        cta="View Missions"
+        eyebrow={justFinishedOnboarding ? 'Onboarding Complete' : 'Next Mission'}
+        title={justFinishedOnboarding ? 'Choose your first free contract' : 'New contract available'}
+        cta="Browse Contracts"
         onClick={() => onNav('missions')}
       />
     )

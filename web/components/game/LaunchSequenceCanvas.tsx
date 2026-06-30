@@ -52,10 +52,12 @@ export function LaunchSequenceCanvas({ rocketName, targetName, onComplete }: Pro
     let elapsed = 0
 
     ;(async () => {
+      const cw = div.offsetWidth  || LAUNCH_W
+      const ch = div.offsetHeight || LAUNCH_H
       await app.init({
         canvas,
-        width: LAUNCH_W,
-        height: LAUNCH_H,
+        width: cw,
+        height: ch,
         background: 0x000000,
         antialias: true,
         autoDensity: true,

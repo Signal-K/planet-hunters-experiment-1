@@ -57,26 +57,21 @@ export function buildLaunchScene(
   tex: LaunchTextures,
   opts: { rocketName: string; targetName: string; onComplete: () => void },
 ) {
-  const W = LAUNCH_W
-  const H = LAUNCH_H
+  const W = app.screen.width
+  const H = app.screen.height
   const T = LAUNCH_TIMELINE
 
   // ── Sky ───────────────────────────────────────────────────────────────────
+  // Single rect fill avoids any sub-pixel seam artifacts from tiled strips.
   const skyGfx = new Graphics()
   app.stage.addChild(skyGfx)
 
-  function drawSky(progress: number) {
-    const upper = Math.min(1, progress / 0.8)
-    const strips = 32
-    skyGfx.clear()
-    for (let i = 0; i < strips; i++) {
-      const frac = i / strips
-      const r = Math.round((6  + (10 - 6)  * frac) * (1 - upper))
-      const g = Math.round((12 + (24 - 12) * frac) * (1 - upper))
-      const b = Math.round((28 + (60 - 28) * frac) * (1 - upper))
-      const color = (r << 16) | (g << 8) | b
-      skyGfx.rect(0, (i / strips) * H, W, H / strips + 1).fill({ color })
-    }
+  function drawSky(skyT: number) {
+    // skyT: 0 = night blue, 1 = black (space)
+    const r = Math.round(6  * (1 - skyT))
+    const g = Math.round(12 * (1 - skyT))
+    const b = Math.round(28 * (1 - skyT))
+    skyGfx.clear().rect(0, 0, W, H).fill((r << 16) | (g << 8) | b)
   }
   drawSky(0)
 
@@ -97,7 +92,8 @@ export function buildLaunchScene(
 
   if (tex.bgPad) {
     const s = new Sprite(tex.bgPad)
-    s.width = W; s.height = 120; s.y = H - 120
+    const padH = Math.round(tex.bgPad.height * (W / tex.bgPad.width))
+    s.width = W; s.height = padH; s.y = H - padH
     padContainer.addChild(s)
   }
 
@@ -117,18 +113,24 @@ export function buildLaunchScene(
   padContainer.addChild(towerGfx)
 
   // ── Cloud layers ──────────────────────────────────────────────────────────
+  // Tile the cloud texture vertically to fill the full canvas height.
+  // Source asset is 1344×768 landscape — scale to canvas width and repeat vertically.
   const cloudContainer = new Container()
-  cloudContainer.y = H * 0.35
+  cloudContainer.y = 0
   app.stage.addChild(cloudContainer)
 
   if (tex.bgClouds) {
-    const c1 = new Sprite(tex.bgClouds); c1.width = W; c1.height = 90
-    const c2 = new Sprite(tex.bgClouds); c2.width = W; c2.height = 90; c2.x = W
-    cloudContainer.addChild(c1, c2)
+    const cloudScaledH = Math.round(tex.bgClouds.height * (W / tex.bgClouds.width))
+    const tileCount = Math.ceil(H / cloudScaledH) + 1
+    for (let i = 0; i < tileCount; i++) {
+      const s = new Sprite(tex.bgClouds)
+      s.width = W; s.height = cloudScaledH; s.y = i * cloudScaledH
+      cloudContainer.addChild(s)
+    }
   } else {
     for (let i = 0; i < 6; i++) {
       const cg = new Graphics()
-      cg.circle((i / 6) * W + 20, Math.random() * 30, 20 + Math.random() * 30)
+      cg.circle((i / 6) * W + 20, H * 0.3 + Math.random() * H * 0.3, 20 + Math.random() * 30)
         .fill({ color: 0x1a2a4e, alpha: 0.7 })
       cloudContainer.addChild(cg)
     }
@@ -289,7 +291,7 @@ export function buildLaunchScene(
     // Parallax
     padContainer.y       = -cameraY
     smokeContainer.y     = -cameraY
-    cloudContainer.y     = H * 0.35 - cameraY * 0.55
+    cloudContainer.y     = -cameraY * 0.55
     highAtmosContainer.y = H * 0.12 - cameraY * 0.3
     rocketRoot.y         = H - 100 - rocketAltitude + cameraY
 

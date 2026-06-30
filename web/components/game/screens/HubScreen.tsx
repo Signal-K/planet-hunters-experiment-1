@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from 'react'
 import type { Player, Screen } from '@/game-context'
 import ProgressionCard from '@/components/game/ProgressionCard'
+import { ComingSoonSheet } from '@/components/game/ComingSoonSheet'
 import { Scene } from '@/lib/engine/Scene'
 import type { EntityData } from '@/lib/engine/types'
 import { Cloud } from '@/components/game/hub/Cloud'
@@ -34,6 +35,7 @@ export default function HubScreen({ player, hasCoach, onGoBuilding, onNav, onUpg
   const [editMode, setEditMode] = useState(false)
   const [plotEntities, setPlotEntities] = useState<EntityData[]>(DEFAULT_PLOTS)
   const [subsurface, setSubsurface] = useState(false)
+  const [comingSoon, setComingSoon] = useState<{ feature: string; description: string } | null>(null)
   const placed = player.placed ?? []
   const placementPlots = player.placementPlots ?? {}
   const legacyPlaced = (kind: string) => placed.includes(kind) && placementPlots[kind] == null
@@ -213,7 +215,13 @@ export default function HubScreen({ player, hasCoach, onGoBuilding, onNav, onUpg
 
       {/* Progression card — hidden when tutorial coach is active */}
       {!hasCoach && !subsurface && (
-        <ProgressionCard player={player} onGoBuilding={onGoBuilding} onNav={onNav} top={TUTORIAL_CONTENT_TOP} />
+        <>
+          <ProgressionCard player={player} onGoBuilding={onGoBuilding} onNav={onNav} top={TUTORIAL_CONTENT_TOP}
+            onComingSoon={(feature, description) => setComingSoon({ feature, description })} />
+          {comingSoon && (
+            <ComingSoonSheet feature={comingSoon.feature} description={comingSoon.description} onClose={() => setComingSoon(null)} />
+          )}
+        </>
       )}
 
       {/* Bottom toolbar — hidden during tutorial */}
