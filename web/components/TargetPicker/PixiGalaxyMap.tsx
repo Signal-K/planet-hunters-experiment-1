@@ -168,6 +168,12 @@ function drawBody(
     glow.circle(0, 0, radius + 9).fill({ color: LN_CYAN, alpha: 0.18 })
     glow.circle(0, 0, radius + 5).stroke({ width: 2, color: LN_CYAN, alpha: 0.95 })
     marker.addChild(glow)
+  } else if (isCompatible) {
+    // Amber ring on compatible-but-not-yet-selected bodies so they're discoverable
+    const ring = new Graphics()
+    ring.circle(0, 0, radius + 6).stroke({ width: 1.5, color: LN_AMBER, alpha: 0.7 })
+    ring.circle(0, 0, radius + 10).fill({ color: LN_AMBER, alpha: 0.06 })
+    marker.addChild(ring)
   }
 
   const g = new Graphics()
@@ -382,6 +388,10 @@ export default function PixiGalaxyMap(props: PixiGalaxyMapProps) {
     redrawOrbitRef.current?.()
   }, [props.mission.requires.max_orbit, props.pickedId, compatibleKey, props.targets])
 
+  // How many compatible targets are belt asteroids vs solar bodies?
+  const compatBeltCount = [...props.compatibleIds].filter(id => BELT_BODY_IDS.has(id)).length
+  const compatSolarCount = [...props.compatibleIds].filter(id => !BELT_BODY_IDS.has(id)).length
+
   return (
     <div ref={containerRef} style={{ position: 'absolute', inset: 0 }}>
       {/* Belt zone click — DOM button positioned over the belt ring label */}
@@ -438,7 +448,36 @@ export default function PixiGalaxyMap(props: PixiGalaxyMapProps) {
           }}
         >
           <span style={{ fontSize: 12 }}>‹</span> Solar System
+          {compatSolarCount > 0 && (
+            <span style={{ marginLeft: 4, background: 'rgba(245,166,35,0.2)', border: '1px solid rgba(245,166,35,0.5)', borderRadius: 4, padding: '1px 5px', color: '#f5a623', fontSize: 9 }}>
+              {compatSolarCount} target{compatSolarCount !== 1 ? 's' : ''} there
+            </span>
+          )}
         </button>
+      )}
+
+      {/* Belt empty state — no compatible targets in the asteroid belt for this mission */}
+      {view === 'belt' && compatBeltCount === 0 && (
+        <div style={{
+          position: 'absolute',
+          bottom: 16,
+          left: 12,
+          right: 12,
+          zIndex: 10,
+          background: 'rgba(8,12,20,0.92)',
+          border: '1px solid rgba(245,166,35,0.3)',
+          borderRadius: 10,
+          padding: '10px 14px',
+          fontFamily: 'var(--ln-font-body), system-ui, sans-serif',
+          fontSize: 12,
+          color: '#f5a623',
+          lineHeight: 1.4,
+          pointerEvents: 'none',
+        }}>
+          <span style={{ fontFamily: 'var(--ln-font-display)', fontWeight: 700, fontSize: 11, letterSpacing: '0.1em', textTransform: 'uppercase' }}>No targets here</span>
+          <br/>
+          <span style={{ color: '#a9b8ce' }}>This mission needs minerals not found in the asteroid belt. Return to the solar system to pick a compatible target.</span>
+        </div>
       )}
     </div>
   )
