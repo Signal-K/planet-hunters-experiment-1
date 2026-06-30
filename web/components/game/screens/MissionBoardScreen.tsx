@@ -139,15 +139,20 @@ export default function MissionBoardScreen({ onBack, onPick, missionsDone, freeO
 
         <div style={{ padding: '0 14px', display: 'flex', flexDirection: 'column', gap: 10 }}>
           {(() => {
+            // During onboarding show only the sequence-matched missions (available).
+            // During free-ops show available missions (+ completed-today for daily pool).
+            // Never show locked/future missions during onboarding.
             const rawList = useDailyPool
               ? [...available, ...completedToday]
-              : freeOperations ? available : MISSIONS
-            // Available missions first; locked/completed at the bottom
+              : available
+            // In free-ops daily-pool mode, available missions first, completed at the bottom
             const isAvailable = (m: typeof rawList[0]) =>
               !isCompletedToday(m.id) &&
               !(!useDailyPool && isOnCooldown(m.contractor)) &&
               (freeOperations || available.some(item => item.id === m.id))
-            const list = [...rawList].sort((a, b) => Number(!isAvailable(a)) - Number(!isAvailable(b)))
+            const list = useDailyPool
+              ? [...rawList].sort((a, b) => Number(!isAvailable(a)) - Number(!isAvailable(b)))
+              : rawList
             const firstValidIdx = list.findIndex(m => {
               if (isCompletedToday(m.id)) return false
               if (!useDailyPool && isOnCooldown(m.contractor)) return false
@@ -179,11 +184,11 @@ export default function MissionBoardScreen({ onBack, onPick, missionsDone, freeO
                     </div>
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                        <span style={{ fontFamily: 'var(--ln-font-display)', fontSize: 9, fontWeight: 700, letterSpacing: '0.2em', color: accent, textTransform: 'uppercase' }}>{contractor.name}</span>
+                        <span style={{ fontFamily: 'var(--ln-font-display)', fontSize: 14, fontWeight: 800, color: accent, letterSpacing: '0.01em' }}>{contractor.name}</span>
                         <span style={{ fontFamily: 'var(--ln-font-mono)', fontSize: 9, letterSpacing: '0.16em', color: '#5d7390', textTransform: 'uppercase', marginLeft: 'auto' }}>{m.tag}</span>
                       </div>
-                      <div style={{ fontFamily: 'var(--ln-font-display)', fontWeight: 800, fontSize: 16, color: '#e6efff', marginTop: 2 }}>{m.title}</div>
-                      <div style={{ fontFamily: 'var(--ln-font-mono)', fontSize: 9, color: '#7ec8ff', letterSpacing: '0.1em', textTransform: 'uppercase', marginTop: 2 }}>Wants · {contractor.mineralPreferences.join(' / ')} · +{Math.round(contractor.payoutPremium * 100)}%</div>
+                      <div style={{ fontFamily: 'var(--ln-font-display)', fontWeight: 700, fontSize: 13, color: '#c8d8ee', marginTop: 2 }}>{m.title}</div>
+                      <div style={{ fontFamily: 'var(--ln-font-mono)', fontSize: 9, color: '#7ec8ff', letterSpacing: '0.1em', textTransform: 'uppercase', marginTop: 3 }}>Wants · {contractor.mineralPreferences.join(' / ')} · +{Math.round(contractor.payoutPremium * 100)}%</div>
                       <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 12, color: '#a9b8ce', marginTop: 2, lineHeight: 1.4 }}>{m.brief}</div>
                     </div>
                   </div>
