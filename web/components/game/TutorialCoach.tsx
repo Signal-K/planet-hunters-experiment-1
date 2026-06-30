@@ -111,13 +111,14 @@ export default function TutorialCoach({ stepIndex, steps, step, total, onManualN
     )
   }
 
-  // Direction the target element is relative to the card
-  const dir = (isDesktop ? (step.desktopDir ?? step.dir) : step.dir) ?? null
+  // Direction the target element is relative to the card — passed to CoachPointer
+  // so arrows render adjacent to the target button, not below the coach card.
+  const resolvedDir = (isDesktop ? (step.desktopDir ?? step.dir) : step.dir) ?? undefined
 
   // ── Active instruction card ─────────────────────────────────────────────────
   return (
     <div style={{ position: 'absolute', inset: 0, zIndex: 96, pointerEvents: 'none' }} data-testid="tutorial-coach-overlay">
-      {resolvedCoachId && <CoachPointer coachId={resolvedCoachId} />}
+      {resolvedCoachId && <CoachPointer coachId={resolvedCoachId} dir={resolvedDir} />}
       <div
         data-ui-zone={UI_ZONES.tutorialRail}
         data-testid="tutorial-coach-block"
@@ -161,39 +162,6 @@ export default function TutorialCoach({ stepIndex, steps, step, total, onManualN
           </div>
         </div>
 
-        {/* Directional arrow pointing toward the target element */}
-        {dir && (
-          <div style={{
-            display: 'flex',
-            flexDirection: dir === 'down' ? 'column' : 'row',
-            alignItems: 'center',
-            justifyContent: dir === 'right' ? 'flex-end' : dir === 'left' ? 'flex-start' : 'center',
-            marginTop: dir === 'down' ? 6 : 0,
-            marginLeft: dir === 'right' ? 0 : 0,
-            gap: 3,
-            pointerEvents: 'none',
-          }}>
-            {[0, 1, 2].map(i => (
-              <div key={i} style={{
-                width: dir === 'down' || dir === 'up' ? 28 : 16,
-                height: dir === 'down' || dir === 'up' ? 16 : 28,
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                animation: `coach-arrow-bounce ${0.9 + i * 0.12}s ease-in-out infinite`,
-                animationDelay: `${i * 0.18}s`,
-                opacity: 1 - i * 0.18,
-              }}>
-                <svg
-                  width={dir === 'down' || dir === 'up' ? 22 : 14}
-                  height={dir === 'down' || dir === 'up' ? 14 : 22}
-                  viewBox="0 0 22 14"
-                  style={{ transform: dir === 'up' ? 'rotate(180deg)' : dir === 'left' ? 'rotate(90deg)' : dir === 'right' ? 'rotate(-90deg)' : undefined }}
-                >
-                  <polyline points="2,2 11,12 20,2" fill="none" stroke="#f5a623" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-              </div>
-            ))}
-          </div>
-        )}
       </div>
     </div>
   )
