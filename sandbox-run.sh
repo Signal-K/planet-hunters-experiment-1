@@ -31,7 +31,7 @@ done
 echo "Server ready after ${TRIES} polls. Running Cypress offline suite..."
 
 npx cypress run --config-file cypress.config.ts \
-  --spec "cypress/e2e/smoke.cy.ts,cypress/e2e/game-loop.cy.ts" \
+  --spec "cypress/e2e/smoke/smoke.cy.ts,cypress/e2e/smoke/game-loop.cy.ts" \
   2>&1 | tee /output/sandbox.log
 EXIT=${PIPESTATUS[0]}
 
