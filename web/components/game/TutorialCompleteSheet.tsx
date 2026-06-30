@@ -1,0 +1,85 @@
+'use client'
+
+import React from 'react'
+import { PrimaryBtn } from '@/components/ui/Button'
+
+const ACK_KEY = 'ln_tutorial_complete_ack'
+
+export function useTutorialCompleteAck(missionsDone: number, threshold: number) {
+  const [show, setShow] = React.useState(() => {
+    if (typeof window === 'undefined') return false
+    return missionsDone >= threshold && !localStorage.getItem(ACK_KEY)
+  })
+
+  const dismiss = React.useCallback(() => {
+    localStorage.setItem(ACK_KEY, '1')
+    setShow(false)
+  }, [])
+
+  return { show, dismiss }
+}
+
+export function TutorialCompleteSheet({ onDone }: { onDone: () => void }) {
+  return (
+    <div
+      style={{
+        position: 'absolute', inset: 0, zIndex: 200,
+        background: 'rgba(1,5,14,0.88)', backdropFilter: 'blur(8px)',
+        display: 'flex', flexDirection: 'column', justifyContent: 'flex-end',
+      }}
+      onClick={onDone}
+    >
+      <div
+        style={{
+          background: 'linear-gradient(180deg, #081828 0%, #06121f 100%)',
+          border: '1px solid rgba(57,211,106,0.25)',
+          borderTopLeftRadius: 22, borderTopRightRadius: 22,
+          padding: '32px 24px 48px',
+        }}
+        onClick={e => e.stopPropagation()}
+      >
+        <div style={{ width: 36, height: 3, background: 'rgba(57,211,106,0.3)', borderRadius: 2, margin: '0 auto 28px' }} />
+
+        <div style={{ textAlign: 'center', marginBottom: 28 }}>
+          <div style={{
+            fontFamily: 'var(--ln-font-display)', fontSize: 9, fontWeight: 800,
+            letterSpacing: '0.26em', color: '#39d36a', textTransform: 'uppercase',
+            marginBottom: 12,
+          }}>
+            Tutorial Complete
+          </div>
+          <div style={{
+            fontFamily: 'var(--ln-font-display)', fontSize: 26, fontWeight: 800,
+            color: '#e6efff', letterSpacing: '0.02em', lineHeight: 1.15,
+            marginBottom: 14,
+          }}>
+            Program Online
+          </div>
+          <div style={{
+            fontFamily: 'var(--ln-font-body)', fontSize: 14, color: '#a9b8ce',
+            lineHeight: 1.6, maxWidth: 300, margin: '0 auto',
+          }}>
+            You have completed the onboarding missions. Your space program is now operational — browse contracts, pick targets, and build your base your way.
+          </div>
+        </div>
+
+        <div style={{ display: 'flex', gap: 8, justifyContent: 'center', marginBottom: 28 }}>
+          {['Choose contracts', 'Pick targets', 'Grow your base'].map(label => (
+            <div key={label} style={{
+              padding: '6px 10px', borderRadius: 8,
+              background: 'rgba(57,211,106,0.08)',
+              border: '1px solid rgba(57,211,106,0.22)',
+              fontFamily: 'var(--ln-font-display)', fontSize: 8, fontWeight: 800,
+              letterSpacing: '0.16em', color: '#39d36a', textTransform: 'uppercase',
+              textAlign: 'center',
+            }}>
+              {label}
+            </div>
+          ))}
+        </div>
+
+        <PrimaryBtn kind="green" onClick={onDone}>Start Playing</PrimaryBtn>
+      </div>
+    </div>
+  )
+}

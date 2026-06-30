@@ -4,6 +4,8 @@ import React, { useEffect, useState } from 'react'
 
 // July 5, 2026 10:00 AEST = 00:00 UTC
 export const NEXT_SPRINT_UTC = new Date('2026-07-05T00:00:00Z')
+// July 12, 2026 10:00 AEST
+export const SPRINT_AFTER_NEXT_UTC = new Date('2026-07-12T00:00:00Z')
 
 function CountdownUnit({ value, label }: { value: number; label: string }) {
   return (

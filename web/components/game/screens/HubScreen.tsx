@@ -3,7 +3,8 @@
 import React, { useEffect, useState } from 'react'
 import type { Player, Screen } from '@/game-context'
 import ProgressionCard from '@/components/game/ProgressionCard'
-import { ComingSoonSheet } from '@/components/game/ComingSoonSheet'
+import { ComingSoonSheet, SPRINT_AFTER_NEXT_UTC } from '@/components/game/ComingSoonSheet'
+import { TutorialCompleteSheet, useTutorialCompleteAck } from '@/components/game/TutorialCompleteSheet'
 import { Scene } from '@/lib/engine/Scene'
 import type { EntityData } from '@/lib/engine/types'
 import { Cloud } from '@/components/game/hub/Cloud'
@@ -14,6 +15,7 @@ import { Building, EmptyPlot } from '@/components/game/hub/Building'
 import HubPixiCanvas from '@/components/game/hub/HubPixiCanvas'
 import ErrorBoundary from '@/components/ui/ErrorBoundary'
 import { TUTORIAL_CONTENT_TOP } from '@/lib/tutorial-layout'
+import { FREE_OPS_START_MISSIONS_DONE } from '@/lib/data/mission-generator'
 import type { HubBuildingDef } from '@/lib/pixi/hubScene'
 
 const DEFAULT_PLOTS: EntityData[] = [
@@ -35,7 +37,8 @@ export default function HubScreen({ player, hasCoach, onGoBuilding, onNav, onUpg
   const [editMode, setEditMode] = useState(false)
   const [plotEntities, setPlotEntities] = useState<EntityData[]>(DEFAULT_PLOTS)
   const [subsurface, setSubsurface] = useState(false)
-  const [comingSoon, setComingSoon] = useState<{ feature: string; description: string } | null>(null)
+  const [comingSoon, setComingSoon] = useState<{ feature: string; description: string; target?: Date } | null>(null)
+  const { show: showTutorialComplete, dismiss: dismissTutorialComplete } = useTutorialCompleteAck(player.missionsDone, FREE_OPS_START_MISSIONS_DONE)
   const placed = player.placed ?? []
   const placementPlots = player.placementPlots ?? {}
   const legacyPlaced = (kind: string) => placed.includes(kind) && placementPlots[kind] == null
@@ -217,9 +220,12 @@ export default function HubScreen({ player, hasCoach, onGoBuilding, onNav, onUpg
       {!hasCoach && !subsurface && (
         <>
           <ProgressionCard player={player} onGoBuilding={onGoBuilding} onNav={onNav} top={TUTORIAL_CONTENT_TOP}
-            onComingSoon={(feature, description) => setComingSoon({ feature, description })} />
+            onComingSoon={(feature, description, target) => setComingSoon({ feature, description, target })} />
           {comingSoon && (
-            <ComingSoonSheet feature={comingSoon.feature} description={comingSoon.description} onClose={() => setComingSoon(null)} />
+            <ComingSoonSheet feature={comingSoon.feature} description={comingSoon.description} target={comingSoon.target} onClose={() => setComingSoon(null)} />
+          )}
+          {showTutorialComplete && !comingSoon && (
+            <TutorialCompleteSheet onDone={dismissTutorialComplete} />
           )}
         </>
       )}
@@ -256,7 +262,10 @@ export default function HubScreen({ player, hasCoach, onGoBuilding, onNav, onUpg
               <button onClick={() => setEditMode(v => !v)} style={{ padding: '5px 14px', background: editMode ? 'rgba(245,166,35,0.25)' : 'rgba(8,16,28,0.75)', backdropFilter: 'blur(6px)', border: editMode ? '1px solid rgba(245,166,35,0.6)' : '1px solid rgba(135,207,250,0.4)', borderRadius: 999, fontFamily: 'var(--ln-font-display)', fontSize: 9, fontWeight: 700, letterSpacing: '0.22em', color: editMode ? '#f5a623' : '#9EDCFF', textTransform: 'uppercase', cursor: 'pointer', animation: !editMode && player.placed.length < 4 ? 'pad-pulse 2s ease-in-out infinite' : 'none' }}>
                 {editMode ? 'Done' : 'Edit · Build'}
               </button>
-              <button onClick={() => setSubsurface(true)} style={{ padding: '5px 14px', background: 'rgba(8,12,22,0.75)', backdropFilter: 'blur(6px)', border: '1px solid rgba(122,80,40,0.55)', borderRadius: 999, fontFamily: 'var(--ln-font-display)', fontSize: 9, fontWeight: 700, letterSpacing: '0.22em', color: '#9c8d70', textTransform: 'uppercase', cursor: 'pointer' }}>
+              <button
+                onClick={() => setComingSoon({ feature: 'Subsurface Operations', description: 'Drill deep into your base planet to mine rare subterranean minerals and build underground structures.', target: SPRINT_AFTER_NEXT_UTC })}
+                style={{ padding: '5px 14px', background: 'rgba(8,12,22,0.75)', backdropFilter: 'blur(6px)', border: '1px solid rgba(122,80,40,0.55)', borderRadius: 999, fontFamily: 'var(--ln-font-display)', fontSize: 9, fontWeight: 700, letterSpacing: '0.22em', color: '#9c8d70', textTransform: 'uppercase', cursor: 'pointer' }}
+              >
                 Subsurface ↓
               </button>
             </>
