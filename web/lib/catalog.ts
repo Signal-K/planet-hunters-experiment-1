@@ -169,9 +169,14 @@ export async function fetchCatalog(): Promise<Catalog> {
       propulsion: parts.filter(p => p.part_type === 'propulsion').map(toPart),
       drill:      parts.filter(p => p.part_type === 'drill').map(toPart),
     },
-    minerals: Object.fromEntries(
-      minerals.map(r => [r.slug, { name: r.name, sym: r.sym, color: r.color, price: r.base_price, rarity: r.rarity ?? 'common', constructionUse: r.construction_use ?? '', laserAccess: r.laser_access ?? 1 }])
-    ),
+    // Merge static MINERAL_META first so any key not yet seeded in PocketBase
+    // still resolves (avoids crashes when missions reference new minerals).
+    minerals: {
+      ...MINERAL_META,
+      ...Object.fromEntries(
+        minerals.map(r => [r.slug, { name: r.name, sym: r.sym, color: r.color, price: r.base_price, rarity: r.rarity ?? 'common', constructionUse: r.construction_use ?? '', laserAccess: r.laser_access ?? 1 }])
+      ),
+    },
     contractors: Object.keys(catalogContractors).length > 0 ? catalogContractors : CONTRACTORS,
     structures: structures.length > 0 ? structures.map(toStructure) : STRUCTURES,
   }

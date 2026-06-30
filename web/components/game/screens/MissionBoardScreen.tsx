@@ -196,6 +196,7 @@ export default function MissionBoardScreen({ onBack, onPick, missionsDone, freeO
                   <div style={{ marginTop: 10, display: 'flex', flexWrap: 'wrap', gap: 6, alignItems: 'center' }}>
                     {Object.entries(m.requires.minerals).map(([k, v]) => {
                       const meta = MINERAL_META[k]
+                      if (!meta) return null
                       return (
                         <div key={k} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '3px 8px', background: 'rgba(8,16,28,0.7)', border: `1px solid ${meta.color}55`, borderRadius: 6 }}>
                           <span style={{ fontFamily: 'var(--ln-font-mono)', fontSize: 10, fontWeight: 800, color: meta.color }}>{meta.sym}</span>
