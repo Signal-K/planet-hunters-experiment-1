@@ -26,7 +26,8 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
 
   const delivered = Object.entries(mission.requires.minerals).every(([id, amount]) => (cargo[id] ?? 0) >= amount)
   const contractor = contractors[mission.contractor]
-  const affinityMultiplier = contractor ? contractorAffinityBonus(contractor, contractorMissions?.[contractor.id] ?? 0) : 0
+  const isStoryMission = mission.tag === 'STORY' || mission.payload?.type === 'satellite'
+  const affinityMultiplier = contractor && !isStoryMission ? contractorAffinityBonus(contractor, contractorMissions?.[contractor.id] ?? 0) : 0
   const affinityBonus = delivered ? Math.round(mission.payout.francs * affinityMultiplier) : 0
   const contractPayout = delivered ? mission.payout.francs + affinityBonus : 0
   const rawTotal = contractPayout
@@ -108,10 +109,10 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
             animation: 'unlock-in 0.35s ease-out',
           }}>
             <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 9, fontWeight: 800, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'var(--ln-text-dim)', marginBottom: 10 }}>
-              Contract Payment · {contractor?.name ?? 'Contractor'}
+              {isStoryMission ? 'Mission Authorization' : `Contract Payment · ${contractor?.name ?? 'Contractor'}`}
             </div>
-            <PayRow label="Order fulfillment" value={mission.payout.francs} />
-            {affinityBonus > 0 && <PayRow label="Affinity bonus" value={affinityBonus} />}
+            <PayRow label={isStoryMission ? 'Mission funding' : 'Order fulfillment'} value={mission.payout.francs} />
+            {!isStoryMission && affinityBonus > 0 && <PayRow label="Affinity bonus" value={affinityBonus} />}
             <div style={{ marginTop: 10, paddingTop: 10, borderTop: '1px solid rgba(245,166,35,0.25)', display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
               <span style={{ fontFamily: 'var(--ln-font-display)', fontSize: 10, fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--ln-text-dim)' }}>
                 Total

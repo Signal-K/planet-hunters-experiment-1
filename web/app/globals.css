@@ -267,6 +267,13 @@ button { cursor: pointer; }
 .screen-scroll { position: absolute; inset: 0; overflow-y: auto; padding: 76px var(--ln-s-3) 118px; }
 .screen-scroll--coach { padding-top: var(--tutorial-content-top); }
 .screen-scroll--coach-manual { padding-top: var(--tutorial-manual-content-top); }
+/* 118px only fits the base 3-button verdict row. TessDiscoveryScreen/
+   transit-demo add a "CLEAR MARKS" ghost button below it once a region is
+   marked, which grows .sticky-actions by ~50px past that reservation and
+   overlaps the readout cards above it (Liam, 2026-07-03: overlap screenshot
+   showing EQ. TEMP behind CONFIRM TRANSIT). Apply this whenever that extra
+   row is visible. */
+.screen-scroll--tall-actions { padding-bottom: 172px; }
 .blueprint-screen {
   background:
     repeating-linear-gradient(0deg, transparent 0 19px, rgba(63,169,255,0.06) 19px 20px),
@@ -296,6 +303,67 @@ button { cursor: pointer; }
 .compatibility--ok { color: var(--ln-ok); border: 1px solid var(--ln-ok); background: var(--ln-ok-soft); }
 .compatibility--bad { color: var(--ln-crit); border: 1px solid var(--ln-crit); background: var(--ln-crit-soft); }
 .sticky-actions { position: absolute; z-index: 30; left: 0; right: 0; bottom: 0; padding: var(--ln-s-2) var(--ln-s-3) var(--ln-s-5); background: linear-gradient(180deg, transparent, rgba(6,9,15,.94) 34%, var(--ln-void)); }
+
+.mission-setup-screen {
+  background:
+    radial-gradient(ellipse at 50% 12%, rgba(63,169,255,0.09), transparent 32%),
+    linear-gradient(180deg, #07101c 0%, #03060c 100%);
+}
+
+.mission-setup-content {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  grid-template-rows: minmax(280px, 48%) minmax(0, 1fr);
+  gap: 14px;
+  width: min(100%, 1120px);
+  margin: 0 auto;
+  padding: 82px 14px 110px;
+  overflow: hidden;
+}
+
+.mission-setup-frame {
+  position: relative;
+  min-height: 0;
+  overflow: hidden;
+  border: 1px solid rgba(135,207,250,0.22);
+  border-radius: 14px;
+  background: linear-gradient(180deg, rgba(9,18,31,0.78), rgba(5,10,18,0.88));
+}
+
+.mission-setup-card {
+  position: relative;
+  min-height: 0;
+  overflow: hidden;
+  border: 1px solid rgba(245,166,35,0.32);
+  border-radius: 14px;
+  background: linear-gradient(180deg, rgba(18,34,54,0.78) 0%, rgba(10,18,29,0.86) 100%);
+}
+
+.mission-setup-card-scroll {
+  height: 100%;
+  overflow-y: auto;
+  padding: 18px;
+}
+
+.mission-setup-actions {
+  left: 50%;
+  right: auto;
+  width: min(100%, 1120px);
+  transform: translateX(-50%);
+  padding-left: 14px;
+  padding-right: 14px;
+}
+
+@media (max-width: 760px) {
+  .mission-setup-content {
+    grid-template-rows: minmax(320px, 45%) minmax(0, 1fr);
+    gap: 12px;
+  }
+  .mission-setup-card-scroll {
+    padding: 14px;
+  }
+}
 
 .transit-screen { background: radial-gradient(circle at 80% 18%, rgba(63,169,255,.14), transparent 24%), var(--ln-bg-stars), var(--ln-void); }
 .transit-stage { position: absolute; inset: 80px 0 190px; overflow: hidden; }
@@ -431,9 +499,6 @@ button { cursor: pointer; }
     -webkit-backdrop-filter: blur(12px);
   }
 
-  .build-plot-button {
-    transform: translateX(72px);
-  }
 }
 
 /* Mobile landscape: fill landscape viewport with adjusted chrome */

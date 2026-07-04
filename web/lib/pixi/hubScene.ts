@@ -361,8 +361,8 @@ export function buildHubScene(
       default:             result = buildCommandCenter(tex); break
     }
 
-    // Position: center of building at plotX + w/2, base at runtime ground line
-    result.root.x = def.plotX + def.w / 2
+    // Position: scene plot coordinates are building centers.
+    result.root.x = def.plotX
     result.root.y = groundY
     root.addChild(result.root)
     buildingContainers.push(result.root)

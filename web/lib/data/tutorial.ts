@@ -5,8 +5,11 @@ import type { TutorialStep } from './types'
 export const M1_STEPS: TutorialStep[] = [
   { id: 0, screen: 'build',   title: 'Build a Launchpad',
     body: 'Your first structure — all missions launch from here.',
-    action: 'Pick a structure, then tap a pad',
-    anchor: 'bottom', spot: null, coachId: 'build-structure-strip', dir: 'down', cta: 'Build Launchpad' },
+    action: 'Tap a build pad, then confirm',
+    anchor: 'bottom', spot: null, coachId: 'build-confirm|build-plot-0', dir: 'down', cta: 'Build Launchpad',
+    desktopBody: 'Your first structure — all missions launch from here.',
+    desktopAction: 'Click a build pad, then confirm placement',
+    desktopCoachId: 'build-confirm|build-plot-0', desktopDir: 'down' },
   { id: 1, screen: 'hub',     title: 'Open a Mission',
     body: 'Mining contracts are on the mission board.',
     action: 'Tap menu, then MISSIONS',

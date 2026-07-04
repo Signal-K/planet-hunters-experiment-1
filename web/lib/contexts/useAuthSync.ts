@@ -10,6 +10,35 @@ import type { Toast } from '@/components/ui/ToastLayer'
 const UPGRADE_SNOOZE_KEY = 'landnam-upgrade-prompt-snooze-until'
 const UPGRADE_SNOOZE_MS = 24 * 60 * 60 * 1000
 
+function responseStatus(err: unknown): number | null {
+  if (typeof err === 'object' && err && 'status' in err && typeof err.status === 'number') return err.status
+  return null
+}
+
+function authErrorMessage(err: unknown, fallback: string): string {
+  if (typeof err !== 'object' || !err) return fallback
+  const data = 'data' in err ? err.data as unknown : null
+  const fieldMessages: string[] = []
+
+  if (typeof data === 'object' && data) {
+    const message = 'message' in data && typeof data.message === 'string' ? data.message : null
+    const fields = 'data' in data && typeof data.data === 'object' && data.data ? data.data : null
+    if (fields) {
+      Object.values(fields).forEach(value => {
+        if (typeof value === 'object' && value && 'message' in value && typeof value.message === 'string') {
+          fieldMessages.push(value.message)
+        }
+      })
+    }
+    if (fieldMessages.length > 0) return fieldMessages.join(' ')
+    if (message && !/^failed$/i.test(message)) return message
+  }
+
+  if (err instanceof Error && err.message && !/^failed$/i.test(err.message)) return err.message
+  const status = responseStatus(err)
+  return status ? `${fallback} (${status})` : fallback
+}
+
 interface AuthSyncOpts {
   state: GameState
   setState: React.Dispatch<React.SetStateAction<GameState>>
@@ -42,6 +71,27 @@ export function useAuthSync({
   const backendRecordId = useRef<string | null>(null)
   const backendLoadedFor = useRef<string | null>(null)
   const authGateDismissed = useRef(false)
+
+  const saveRemoteState = useCallback(async (userId: string, nextState: GameState) => {
+    const payload = { user: userId, state: nextState, missions_done: nextState.player.missionsDone }
+    if (backendRecordId.current) {
+      await pbLandnam.collection('game_states').update(backendRecordId.current, payload)
+      return
+    }
+
+    try {
+      const record = await pbLandnam.collection('game_states').create(payload)
+      backendRecordId.current = record.id
+    } catch (createErr: unknown) {
+      // UNIQUE constraint: a record already exists but we couldn't load it (backend
+      // was unavailable on session start). Look it up and update instead.
+      const status = responseStatus(createErr)
+      if (status !== 400 && status !== 409) throw createErr
+      const existing = await pbLandnam.collection('game_states').getFirstListItem(`user = "${userId}"`)
+      backendRecordId.current = existing.id
+      await pbLandnam.collection('game_states').update(existing.id, payload)
+    }
+  }, [])
 
   // Track auth identity changes
   useEffect(() => pbShared.authStore.onChange((_token, record) => {
@@ -133,6 +183,10 @@ export function useAuthSync({
       .then(record => { if (active) applyRecord(record) })
       .catch(error => {
         if (!active) return
+        if (responseStatus(error) === 404) {
+          handleLoadFailure(error)
+          return
+        }
         // Retry with escalating backoff — Fly cold-start can take 10-15s
         const delays = [4000, 12000, 25000]
         let attempt = 0
@@ -143,6 +197,10 @@ export function useAuthSync({
             .then(record => { if (active) applyRecord(record) })
             .catch(err => {
               if (!active) return
+              if (responseStatus(err) === 404) {
+                handleLoadFailure(err)
+                return
+              }
               attempt++
               if (attempt < delays.length) {
                 setTimeout(retry, delays[attempt])
@@ -161,31 +219,14 @@ export function useAuthSync({
   useEffect(() => {
     if (!hydrated || isPreview || !authUserId || !backendReady || backendLoadedFor.current !== authUserId) return
     const timer = window.setTimeout(async () => {
-      const payload = { user: authUserId, state, missions_done: state.player.missionsDone }
       try {
-        if (backendRecordId.current) {
-          await pbLandnam.collection('game_states').update(backendRecordId.current, payload)
-        } else {
-          try {
-            const record = await pbLandnam.collection('game_states').create(payload)
-            backendRecordId.current = record.id
-          } catch (createErr: unknown) {
-            // UNIQUE constraint: a record already exists but we couldn't load it (backend
-            // was unavailable on session start). Look it up and update instead.
-            if (typeof createErr === 'object' && createErr !== null && 'status' in createErr
-              && ((createErr as { status: number }).status === 400 || (createErr as { status: number }).status === 409)) {
-              const existing = await pbLandnam.collection('game_states').getFirstListItem(`user = "${authUserId}"`)
-              backendRecordId.current = existing.id
-              await pbLandnam.collection('game_states').update(existing.id, payload)
-            }
-          }
-        }
+        await saveRemoteState(authUserId, state)
       } catch {
         // Local storage remains the offline source of truth until the data link recovers.
       }
     }, 400)
     return () => window.clearTimeout(timer)
-  }, [authUserId, hydrated, isPreview, backendReady, state])
+  }, [authUserId, hydrated, isPreview, backendReady, state, saveRemoteState])
 
   const dismissUpgradePrompt = useCallback(() => {
     localStorage.setItem(UPGRADE_SNOOZE_KEY, String(Date.now() + UPGRADE_SNOOZE_MS))
@@ -210,7 +251,7 @@ export function useAuthSync({
       await pbShared.collection('users').authWithPassword(email, password)
       setAuthGateOpen(false)
     } catch (e) {
-      const msg = e instanceof Error ? e.message : 'Sign in failed'
+      const msg = authErrorMessage(e, 'Sign in failed')
       setAuthGateError(msg)
       throw new Error(msg)
     }
@@ -227,7 +268,7 @@ export function useAuthSync({
       setState(DEFAULT_STATE)
       setAuthGateOpen(false)
     } catch (e) {
-      const msg = e instanceof Error ? e.message : 'Account creation failed'
+      const msg = authErrorMessage(e, 'Account creation failed')
       setAuthGateError(msg)
       throw new Error(msg)
     }
@@ -251,11 +292,30 @@ export function useAuthSync({
     }
   }, [authUserId, setState, storageKey])
 
-  const signOut = useCallback(() => {
+  const signOut = useCallback(async () => {
+    const signedOutUserId = authUserId
+    const shouldFlush = signedOutUserId
+      && backendReady
+      && backendLoadedFor.current === signedOutUserId
+      && !isPreview
+
+    if (shouldFlush) {
+      try {
+        await saveRemoteState(signedOutUserId, stateRef.current)
+      } catch {
+        addToast('Could not sync latest progress before sign out', 'warn')
+      }
+    }
+
     pbShared.authStore.clear()
     localStorage.removeItem(storageKey)
     setState(DEFAULT_STATE)
-  }, [setState, storageKey])
+    setAwaitingRemoteState(false)
+    setUpgradePromptOpen(false)
+    setAuthGateError(null)
+    authGateDismissed.current = false
+    if (!isPreview) setAuthGateOpen(true)
+  }, [addToast, authUserId, backendReady, isPreview, saveRemoteState, setState, stateRef, storageKey])
 
   return {
     authUserId, backendReady,

@@ -102,6 +102,43 @@ export default function ProgressionCard({ player, onGoBuilding, onNav, top = 132
         />
       )
     }
+    if (!inOnboarding && !player.satelliteMonitoringBuilt) {
+      cards.push(
+        <CardButton
+          key="sms"
+          testId="progression-card-sms"
+          accent="#7ec8ff"
+          eyebrow="New Facility"
+          title="Build a Satellite Monitoring Station"
+          cta="Build"
+          onClick={() => onGoBuilding('build')}
+        />
+      )
+    } else if (!inOnboarding && player.satelliteMonitoringBuilt && !player.transitSatelliteLaunchedAt) {
+      cards.push(
+        <CardButton
+          key="telescope"
+          testId="progression-card-transit-satellite"
+          accent="#7ec8ff"
+          eyebrow="Science Mission"
+          title="Launch a transit telescope"
+          cta="Open Mission"
+          onClick={() => onNav('missions')}
+        />
+      )
+    } else if (!inOnboarding && player.transitSatelliteLaunchedAt) {
+      cards.push(
+        <CardButton
+          key="daily-candidates"
+          testId="progression-card-tess-candidates"
+          accent="#7ec8ff"
+          eyebrow="Daily Downlink"
+          title="Classify today's transit candidates"
+          cta="Review"
+          onClick={() => onNav('galaxy')}
+        />
+      )
+    }
     const justFinishedOnboarding = player.missionsDone === FREE_OPS_START_MISSIONS_DONE
     cards.push(
       <CardButton

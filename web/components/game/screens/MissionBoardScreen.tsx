@@ -53,9 +53,11 @@ export default function MissionBoardScreen({ onBack, onPick, missionsDone, freeO
 
   // In daily pool mode, the display list is the pool itself (available + completed).
   // In legacy freeops mode, fall back to the catalog freeops- missions with cooldowns.
-  const freeOpsMissionPool = MISSIONS.filter(m => m.id.startsWith('freeops-'))
+  const storyMissionPool = freeOperations ? MISSIONS.filter(m => m.tag === 'STORY') : []
+  const freeOpsMissionPool = MISSIONS.filter(m => m.id.startsWith('freeops-') || m.id.startsWith('exo-survey-') || m.tag === 'STORY')
+  const exoplanetSurveyPool = freeOperations ? MISSIONS.filter(m => m.id.startsWith('exo-survey-')) : []
   const available = useDailyPool
-    ? dailyContractorPool!.missions.filter(m => !isCompletedToday(m.id))
+    ? [...storyMissionPool, ...dailyContractorPool!.missions.filter(m => !isCompletedToday(m.id)), ...exoplanetSurveyPool]
     : MISSIONS.filter(m => {
         const contractor = CONTRACTORS[m.contractor]
         if (!contractor) return false
@@ -166,11 +168,12 @@ export default function MissionBoardScreen({ onBack, onPick, missionsDone, freeO
             const cooldown = !useDailyPool && isOnCooldown(m.contractor)
             const contractor = CONTRACTORS[m.contractor]
             if (!contractor) return null
+            const isStoryMission = m.tag === 'STORY'
             const contractorReady = freeOperations || m.sequence === sequence || contractorUnlocked(contractor, sequence)
             const unlocked = !completedToday_ && !cooldown && contractorReady && (freeOperations || available.some(item => item.id === m.id))
             const mTargets = compatibleTargetsFor(m, targets)
             const accent = contractor.color
-            const affinityMultiplier = contractorAffinityBonus(contractor, contractorMissions?.[contractor.id] ?? 0)
+            const affinityMultiplier = isStoryMission ? 0 : contractorAffinityBonus(contractor, contractorMissions?.[contractor.id] ?? 0)
             const affinityBonus = Math.round(m.payout.francs * affinityMultiplier)
             const displayPayout = m.payout.francs + affinityBonus
             const isHighlighted = hasCoach && idx === firstValidIdx
@@ -188,7 +191,9 @@ export default function MissionBoardScreen({ onBack, onPick, missionsDone, freeO
                         <span style={{ fontFamily: 'var(--ln-font-mono)', fontSize: 9, letterSpacing: '0.16em', color: '#5d7390', textTransform: 'uppercase', marginLeft: 'auto' }}>{m.tag}</span>
                       </div>
                       <div style={{ fontFamily: 'var(--ln-font-display)', fontWeight: 700, fontSize: 13, color: '#c8d8ee', marginTop: 2 }}>{m.title}</div>
-                      <div style={{ fontFamily: 'var(--ln-font-mono)', fontSize: 9, color: '#7ec8ff', letterSpacing: '0.1em', textTransform: 'uppercase', marginTop: 3 }}>Wants · {contractor.mineralPreferences.join(' / ')} · +{Math.round(contractor.payoutPremium * 100)}%</div>
+                      <div style={{ fontFamily: 'var(--ln-font-mono)', fontSize: 9, color: '#7ec8ff', letterSpacing: '0.1em', textTransform: 'uppercase', marginTop: 3 }}>
+                        {isStoryMission ? 'Story mission · Not a contractor request' : `Wants · ${contractor.mineralPreferences.join(' / ')} · +${Math.round(contractor.payoutPremium * 100)}%`}
+                      </div>
                       <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 12, color: '#a9b8ce', marginTop: 2, lineHeight: 1.4 }}>{m.brief}</div>
                     </div>
                   </div>
@@ -210,7 +215,7 @@ export default function MissionBoardScreen({ onBack, onPick, missionsDone, freeO
 
                   <div style={{ marginTop: 10, display: 'flex', alignItems: 'center', gap: 10, paddingTop: 10, borderTop: '1px dashed rgba(63,169,255,0.18)' }}>
                     <div style={{ fontFamily: 'var(--ln-font-display)', fontWeight: 800, fontSize: 18, color: '#f5a623' }}>▲ {displayPayout.toLocaleString()}</div>
-                    <span style={{ fontFamily: 'var(--ln-font-mono)', fontSize: 11, letterSpacing: '0.16em', color: '#7ec8ff' }}>+{m.payout.affinity} Affinity</span>
+                    {!isStoryMission && <span style={{ fontFamily: 'var(--ln-font-mono)', fontSize: 11, letterSpacing: '0.16em', color: '#7ec8ff' }}>+{m.payout.affinity} Affinity</span>}
                     {affinityBonus > 0 && <span style={{ fontFamily: 'var(--ln-font-mono)', fontSize: 10, letterSpacing: '0.12em', color: '#39d36a' }}>+{Math.round(affinityMultiplier * 100)}%</span>}
                     <span style={{ flex: 1 }} />
                     {completedToday_

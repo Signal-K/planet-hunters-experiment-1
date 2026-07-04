@@ -283,12 +283,19 @@ type MapView = 'solar' | 'belt'
 // Belt button label position in pixels, computed from canvas size
 interface BeltLabelPos { x: number; y: number }
 
+function preferredView(compatibleIds: Set<string>): MapView {
+  const ids = [...compatibleIds]
+  if (ids.length > 0 && ids.every(id => BELT_BODY_IDS.has(id))) return 'belt'
+  return 'solar'
+}
+
 export default function PixiGalaxyMap(props: PixiGalaxyMapProps) {
   const containerRef = useRef<HTMLDivElement>(null)
-  const [view, setView] = useState<MapView>('solar')
+  const initialView = preferredView(props.compatibleIds)
+  const [view, setView] = useState<MapView>(initialView)
   const [beltLabelPos, setBeltLabelPos] = useState<BeltLabelPos | null>(null)
-  const transitionRef       = useRef(0)
-  const transitionTargetRef = useRef(0)
+  const transitionRef       = useRef(initialView === 'belt' ? 1 : 0)
+  const transitionTargetRef = useRef(initialView === 'belt' ? 1 : 0)
   const redrawOrbitRef = useRef<((t?: number) => void) | null>(null)
   const hitsRef = useRef<HitRegion[]>([])
   const propsRef = useRef(props)
@@ -401,6 +408,12 @@ export default function PixiGalaxyMap(props: PixiGalaxyMapProps) {
   useEffect(() => {
     redrawOrbitRef.current?.()
   }, [props.mission.requires.max_orbit, props.pickedId, compatibleKey, props.targets])
+
+  useEffect(() => {
+    const nextView = preferredView(props.compatibleIds)
+    transitionTargetRef.current = nextView === 'belt' ? 1 : 0
+    setView(nextView)
+  }, [compatibleKey, props.compatibleIds])
 
   // How many compatible targets are belt asteroids vs solar bodies?
   const compatBeltCount = [...props.compatibleIds].filter(id => BELT_BODY_IDS.has(id)).length

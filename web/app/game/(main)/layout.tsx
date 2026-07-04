@@ -127,12 +127,12 @@ function GameChrome({ children }: { children: ReactNode }) {
     if (id === 'fab') { game.go(game.mission && game.target ? 'fab' : 'missions'); return }
     if (id === 'market') { game.go('market'); return }
     if (id === 'skills') { game.go('skills'); return }
-    game.go(id === 'galaxy' ? 'missions' : id as Parameters<typeof game.go>[0])
+    game.go(id as Parameters<typeof game.go>[0])
   }
 
   const currentNav = ['missions', 'targets'].includes(currentScreen)
     ? 'missions'
-    : currentScreen === 'fab' ? 'fab' : currentScreen === 'skills' ? 'skills' : 'hub'
+    : currentScreen === 'galaxy' ? 'galaxy' : currentScreen === 'fab' ? 'fab' : currentScreen === 'skills' ? 'skills' : 'hub'
 
   return (
     <main className="game-stage" aria-label="Landnam game">
@@ -152,8 +152,6 @@ function GameChrome({ children }: { children: ReactNode }) {
         {showFeedback && <FeedbackButton />}
         <SurveySheet blockWhile={!!game.popup || !!coach || !!game.pendingTerritoryClaimFor} />
         {showNav && <div className="mobile-radial-nav"><RadialNav current={currentNav} onNav={goFromNav} /></div>}
-        <Sidebar current={currentNav} onNav={goFromNav} onSettings={() => setSettingsOpen(true)} />
-        {settingsOpen && <SettingsSheet onClose={() => setSettingsOpen(false)} />}
 
         {coach && !game.popup && (
           <TutorialCoach
@@ -198,6 +196,16 @@ function GameChrome({ children }: { children: ReactNode }) {
           />
         )}
       </div>
+
+      {/* Sidebar (position:fixed, desktop only) lives outside .portrait-canvas
+          on purpose: that box has `isolation: isolate` + `overflow: hidden`
+          for the mobile-canvas illusion, which scopes/clips a nested fixed
+          descendant's effective stacking in ways that made the sidebar
+          unreliable to click on desktop (Liam, 2026-07-04: "buttons in the
+          sidebar on desktop do not work"). Keeping it a sibling of
+          .portrait-canvas inside .game-stage removes that ambiguity. */}
+      <Sidebar current={currentNav} onNav={goFromNav} onSettings={() => setSettingsOpen(true)} />
+      {settingsOpen && <SettingsSheet onClose={() => setSettingsOpen(false)} />}
     </main>
   )
 }

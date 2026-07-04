@@ -70,7 +70,7 @@ export default function HubScreen({ player, hasCoach, onGoBuilding, onNav, onUpg
     return kind
   }
 
-  const BUILDING_W: Record<string, number> = { launchpad: 98, refinery: 84, 'scan-station': 80, command: 84 }
+  const BUILDING_W: Record<string, number> = { launchpad: 98, refinery: 84, 'scan-station': 80, 'satellite-monitoring-station': 86, command: 84 }
   const hubBuildings: HubBuildingDef[] = sortedEntities.flatMap((e, plot) => {
     const kind = structureForPlot(plot)
     if (!kind) return []
@@ -114,6 +114,15 @@ export default function HubScreen({ player, hasCoach, onGoBuilding, onNav, onUpg
         hot: hasScan,
         w: 80,
         onClick: () => onGoBuilding('scan-station'),
+      }
+    }
+    if (kind === 'satellite-monitoring-station') {
+      return {
+        kind, label: 'S.M.S.',
+        sub: player.transitSatelliteLaunchedAt ? 'TELESCOPE LIVE' : 'READY',
+        status: (player.transitSatelliteLaunchedAt ? 'ok' : 'info') as 'ok' | 'info',
+        w: 86,
+        onClick: () => onGoBuilding('satellite-monitoring-station'),
       }
     }
     return {

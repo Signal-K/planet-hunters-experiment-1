@@ -1,6 +1,7 @@
 describe('Smoke — Landnam', () => {
   const visitWithState = (state: Record<string, unknown>) => {
-    cy.visit('/game', {
+    const screen = typeof state.screen === 'string' ? state.screen : 'hub'
+    cy.visit(`/game/${screen}`, {
       onBeforeLoad(win) {
         win.localStorage.setItem('landnam-game-state-v1', JSON.stringify(state))
         // Suppress AuthGateSheet so it doesn't cover interactive elements

@@ -119,7 +119,7 @@ describe('Visual QA — game screens and mining canvas', () => {
   it('M1 full playthrough — portrait 390×844 — screenshots at every screen', () => {
     cy.viewport(390, 844)
 
-    cy.visit('/game', {
+    cy.visit('/game/intro', {
       onBeforeLoad(win) {
         win.localStorage.clear()
         suppressSurveysAndUpgrade(win)
@@ -214,7 +214,7 @@ describe('Visual QA — game screens and mining canvas', () => {
   it('mining canvas — renders non-blank, miss flash overlay activates', () => {
     cy.viewport(390, 844)
 
-    cy.visit('/game', {
+    cy.visit('/game/mining', {
       onBeforeLoad(win) {
         loadPreset(win, MINING_STATE)
       },
@@ -265,7 +265,7 @@ describe('Visual QA — game screens and mining canvas', () => {
     cy.viewport(390, 844)
 
     const FAB_STATE = {
-      screen: 'target-picker',
+      screen: 'targets',
       player: { ...BASE_PLAYER, missionsDone: 0 },
       tutorial: true,
       doneSteps: { 0: true, 1: true, 2: true },
@@ -276,7 +276,7 @@ describe('Visual QA — game screens and mining canvas', () => {
       popup: null,
     }
 
-    cy.visit('/game', {
+    cy.visit('/game/targets', {
       onBeforeLoad(win) {
         loadPreset(win, FAB_STATE)
       },
@@ -315,7 +315,7 @@ describe('Visual QA — game screens and mining canvas', () => {
       popup: null,
     }
 
-    cy.visit('/game', {
+    cy.visit('/game/hub', {
       onBeforeLoad(win) {
         loadPreset(win, HUB_STATE)
       },

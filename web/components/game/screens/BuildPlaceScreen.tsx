@@ -1,7 +1,6 @@
 'use client'
 
 import React, { useEffect, useRef, useState } from 'react'
-import Image from 'next/image'
 import TopBar from '@/components/ui/TopBar'
 import { PrimaryBtn } from '@/components/ui/Button'
 import { canAffordStructure, STRUCTURES, structureUnlocked } from '@/lib/data'
@@ -9,18 +8,24 @@ import type { StructureBlueprint } from '@/lib/data'
 import { Scene } from '@/lib/engine/Scene'
 import type { EntityData } from '@/lib/engine/types'
 import { UI_ZONES } from '@/lib/ui-zones'
+import { HubWorldBackground } from '@/components/game/hub/HubWorldBackground'
+import { SoilCrossSection } from '@/components/game/hub/SoilCrossSection'
+import HubPixiCanvas from '@/components/game/hub/HubPixiCanvas'
+import ErrorBoundary from '@/components/ui/ErrorBoundary'
+import type { HubBuildingDef } from '@/lib/pixi/hubScene'
 
 const DEFAULT_PLOTS: EntityData[] = [
-  { id: 'plot-0', name: 'Plot 0', transform: { position: { x: 14, y: 628 }, rotation: 0, scale: { x: 1, y: 1 } }, components: [{ type: 'BuildPlot', index: 0 }] },
-  { id: 'plot-1', name: 'Plot 1', transform: { position: { x: 110, y: 628 }, rotation: 0, scale: { x: 1, y: 1 } }, components: [{ type: 'BuildPlot', index: 1 }] },
-  { id: 'plot-2', name: 'Plot 2', transform: { position: { x: 206, y: 628 }, rotation: 0, scale: { x: 1, y: 1 } }, components: [{ type: 'BuildPlot', index: 2 }] },
-  { id: 'plot-3', name: 'Plot 3', transform: { position: { x: 302, y: 628 }, rotation: 0, scale: { x: 1, y: 1 } }, components: [{ type: 'BuildPlot', index: 3 }] },
+  { id: 'plot-0', name: 'Plot 0', transform: { position: { x: 60, y: 570 }, rotation: 0, scale: { x: 1, y: 1 } }, components: [{ type: 'BuildPlot', index: 0 }] },
+  { id: 'plot-1', name: 'Plot 1', transform: { position: { x: 154, y: 570 }, rotation: 0, scale: { x: 1, y: 1 } }, components: [{ type: 'BuildPlot', index: 1 }] },
+  { id: 'plot-2', name: 'Plot 2', transform: { position: { x: 248, y: 570 }, rotation: 0, scale: { x: 1, y: 1 } }, components: [{ type: 'BuildPlot', index: 2 }] },
+  { id: 'plot-3', name: 'Plot 3', transform: { position: { x: 342, y: 570 }, rotation: 0, scale: { x: 1, y: 1 } }, components: [{ type: 'BuildPlot', index: 3 }] },
 ]
 
 const STRUCTURE_COLORS: Record<string, string> = {
   launchpad: '#3fa9ff',
   refinery: '#f5a623',
   'scan-station': '#39d36a',
+  'satellite-monitoring-station': '#7ec8ff',
 }
 
 interface BuildPlaceScreenProps {
@@ -56,37 +61,47 @@ export default function BuildPlaceScreen({ onPlaced, onBack, hasCoach, player }:
   const [cell, setCell] = useState<number | null>(null)
   const [plotEntities, setPlotEntities] = useState<EntityData[]>(DEFAULT_PLOTS)
   const containerRef = useRef<HTMLDivElement>(null)
-  const [containerH, setContainerH] = useState(874)
 
   useEffect(() => {
-    Scene.load('/game/scenes/build-place.scene.json')
+    Scene.load('/game/scenes/hub.scene.json')
       .then(data => { if (data.entities?.length) setPlotEntities(data.entities) })
       .catch(() => {})
   }, [])
 
-  useEffect(() => {
-    const el = containerRef.current
-    if (!el) return
-    const ro = new ResizeObserver(([entry]) => {
-      setContainerH(entry.contentRect.height)
-    })
-    ro.observe(el)
-    setContainerH(el.getBoundingClientRect().height)
-    return () => ro.disconnect()
-  }, [])
-
   const catalog = STRUCTURES.filter(s => s.id !== 'garage')
   const sel = catalog.find(c => c.id === picked) ?? catalog[0]
+  const sortedEntities = plotEntities.slice().sort((a, b) => {
+    const ai = (a.components.find(c => c.type === 'BuildPlot')?.index as number) ?? 0
+    const bi = (b.components.find(c => c.type === 'BuildPlot')?.index as number) ?? 0
+    return ai - bi
+  })
+  const previewBuildings: HubBuildingDef[] = cell == null
+    ? []
+    : sortedEntities.flatMap(entity => {
+      const idx = (entity.components.find(c => c.type === 'BuildPlot')?.index as number) ?? 0
+      if (idx !== cell) return []
+      return [{
+        kind: picked,
+        plotX: entity.transform.position.x,
+        w: picked === 'launchpad' ? 98 : picked === 'refinery' ? 84 : 80,
+        hot: false,
+        status: 'ok' as const,
+      }]
+    })
+  const canSelectStructure = (structure: StructureBlueprint) => {
+    const alreadyBuilt = player.placed.includes(structure.id)
+    return !alreadyBuilt
+      && structureUnlocked(structure, { refineryUnlocked: player.refineryUnlocked, placed: player.placed, freeOperations: player.freeOperations })
+      && canAffordStructure(structure, { francs: player.francs, stash: player.stash })
+  }
 
   useEffect(() => {
-    if (!catalog.find(c => c.id === picked)) {
-      const first = catalog.find(c =>
-        structureUnlocked(c, { refineryUnlocked: player.refineryUnlocked, placed: player.placed, freeOperations: player.freeOperations })
-        && canAffordStructure(c, { francs: player.francs, stash: player.stash })
-      )
+    const current = catalog.find(c => c.id === picked)
+    if (!current || !canSelectStructure(current)) {
+      const first = catalog.find(canSelectStructure)
       if (first) setPicked(first.id)
     }
-  }, [])
+  }, [catalog, picked, player.francs, player.freeOperations, player.placed, player.refineryUnlocked, player.stash])
 
   function handlePick(id: string) {
     setPicked(id)
@@ -97,21 +112,19 @@ export default function BuildPlaceScreen({ onPlaced, onBack, hasCoach, player }:
     <div ref={containerRef} style={{ width: '100%', height: '100%', position: 'relative', overflow: 'hidden' }}>
       {/* Earth background */}
       <div style={{ position: 'absolute', inset: 0 }}>
-        <Image src="/scenes/earth-day.png" alt="" fill priority style={{ objectFit: 'cover', filter: 'brightness(0.6)' }} />
-        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, rgba(6,9,15,0.50) 0%, transparent 22%, transparent 68%, rgba(6,9,15,0.55) 100%)' }} />
+        <HubWorldBackground />
+        <ErrorBoundary fallback={null}>
+          <HubPixiCanvas buildings={previewBuildings} />
+        </ErrorBoundary>
+        <SoilCrossSection />
+        <div style={{ position: 'absolute', inset: 0, zIndex: 5, background: 'linear-gradient(180deg, rgba(6,9,15,0.62) 0%, rgba(6,9,15,0.18) 24%, transparent 62%, rgba(6,9,15,0.25) 100%)' }} />
       </div>
 
       <TopBar eyebrow="EARTH BASE · SETUP" title="Build" onBack={onBack} />
 
       {/* Plot pads */}
       <div style={{ position: 'absolute', inset: 0, zIndex: 10, pointerEvents: 'none' }}>
-        {plotEntities
-          .slice()
-          .sort((a, b) => {
-            const ai = (a.components.find(c => c.type === 'BuildPlot')?.index as number) ?? 0
-            const bi = (b.components.find(c => c.type === 'BuildPlot')?.index as number) ?? 0
-            return ai - bi
-          })
+        {sortedEntities
           .map(entity => {
             const idx = (entity.components.find(c => c.type === 'BuildPlot')?.index as number) ?? 0
             const on = cell === idx
@@ -121,12 +134,14 @@ export default function BuildPlaceScreen({ onPlaced, onBack, hasCoach, player }:
                 key={idx}
                 className="build-plot-button"
                 data-testid={`build-plot-${idx}`}
+                data-coach-id={idx === 0 ? 'build-plot-0' : undefined}
                 onClick={() => setCell(on ? null : idx)}
                 style={{
                   position: 'absolute',
                   left: `calc(${(entity.transform.position.x / 402) * 100}%)`,
-                  bottom: Math.round((1 - entity.transform.position.y / 874) * containerH - 96),
+                  bottom: 'calc(22% - 20px)',
                   width: 86,
+                  transform: 'translateX(-50%)',
                   cursor: 'pointer',
                   background: 'transparent',
                   border: 'none',
@@ -141,7 +156,7 @@ export default function BuildPlaceScreen({ onPlaced, onBack, hasCoach, player }:
                   width: 64,
                   height: 64,
                   marginBottom: 4,
-                  opacity: on ? 1 : 0,
+                  opacity: 0,
                   transform: on ? 'translateY(0) scale(1)' : 'translateY(10px) scale(0.85)',
                   transition: 'all 200ms cubic-bezier(0.34, 1.56, 0.64, 1)',
                   display: 'flex',
@@ -280,8 +295,8 @@ export default function BuildPlaceScreen({ onPlaced, onBack, hasCoach, player }:
               textOverflow: 'ellipsis',
             }}>
               {cell == null
-                ? `Select a plot for the ${sel.name}`
-                : `Place ${sel.name} here?`}
+                ? `Select a plot for the ${sel.name} · ${formatStructureCost(sel)}`
+                : `Place ${sel.name} here? · ${formatStructureCost(sel)}`}
             </span>
           </div>
         </div>
@@ -297,7 +312,12 @@ export default function BuildPlaceScreen({ onPlaced, onBack, hasCoach, player }:
         background: 'linear-gradient(90deg, transparent, rgba(255,225,160,0.35) 15%, rgba(255,225,160,0.35) 85%, transparent)',
       }} />
 
-      <div className="sticky-actions" data-ui-zone={UI_ZONES.bottomActions} style={{ zIndex: 15 }}>
+      <div
+        className="sticky-actions"
+        data-ui-zone={UI_ZONES.bottomActions}
+        data-coach-id={cell != null ? 'build-confirm' : undefined}
+        style={{ zIndex: 15 }}
+      >
         <PrimaryBtn kind="amber" disabled={cell == null} onClick={() => cell != null && onPlaced(picked, cell)}>
           Confirm · Build Here →
         </PrimaryBtn>

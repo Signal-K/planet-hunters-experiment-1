@@ -8,12 +8,14 @@ import { applyMiningDone, applyRoverMiningDone } from '@/lib/systems/MiningSyste
 import { enqueueSurvey } from '@/lib/surveys'
 import type { Catalog } from '@/lib/catalog'
 import type { GameState, LicenseGrade } from '@/lib/game-types'
+import type { Target, TessVerdict, TransitRange } from '@/lib/data'
 import type { Toast } from '@/components/ui/ToastLayer'
 import { applyGainResearchXP, applyUpgradeLicenseGrade, applyUnlockBlueprint } from '@/lib/systems/ProgressionSystem'
 import { pbShared } from '@/lib/pb'
 import { pbLandnam } from '@/lib/pb-landnam'
 
 const ORBIT_MS_PER_UNIT = 2 * 60 * 1000
+const STORY_MISSION_CONTRACTOR_ID = 'mission-control'
 
 const LOAN_AMOUNT = 5_000_000_000
 const LOAN_REPAYMENT = Math.ceil(LOAN_AMOUNT * 1.08 / 2)
@@ -57,11 +59,12 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
   const onPickMission = useCallback((id: string) => {
     setState(s => {
       if (s.screen !== 'missions') return s
-      if (s.player.missionsDone >= 1) enqueueSurvey('lnm_contractor_pick')
       const mission = catalog.missions.find(m => m.id === id)
         ?? s.player.dailyContractorPool?.missions.find(m => m.id === id)
         ?? null
       if (!mission) return s
+      const isStoryMission = mission.contractor === STORY_MISSION_CONTRACTOR_ID || mission.tag === 'STORY'
+      if (s.player.missionsDone >= 1 && !isStoryMission) enqueueSurvey('lnm_contractor_pick')
       const dailyContractorPool = (s.player.dailyContractorPool && id.startsWith('dcp-'))
         ? { ...s.player.dailyContractorPool, acceptedId: id }
         : s.player.dailyContractorPool
@@ -187,6 +190,81 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
     setState(s => applyUnlockBlueprint(s, blueprintId, costFrancs, costXP, costMaterials))
   }, [setState])
 
+  const launchTransitSatellite = useCallback(() => {
+    setState(s => {
+      if (!s.player.freeOperations || !s.player.satelliteMonitoringBuilt || s.player.transitSatelliteLaunchedAt) return s
+      return {
+        ...s,
+        player: {
+          ...s.player,
+          transitSatelliteLaunchedAt: Date.now(),
+          transitSatelliteLevel: Math.max(1, s.player.transitSatelliteLevel ?? 1),
+        },
+      }
+    })
+  }, [setState])
+
+  const submitTessClassification = useCallback((subjectId: string, verdict: TessVerdict, ranges: TransitRange[], discoveredTarget?: Target) => {
+    const submittedAt = Date.now()
+    const roundedRanges = ranges
+      .map(range => ({ x1: Math.round(range.x1 * 1000) / 1000, x2: Math.round(range.x2 * 1000) / 1000 }))
+      .sort((a, b) => a.x1 - b.x1)
+
+    setState(s => {
+      const existing = s.player.tessClassifications?.[subjectId]
+      return {
+        ...s,
+        player: {
+          ...s.player,
+          researchAnnotations: existing ? s.player.researchAnnotations : s.player.researchAnnotations + 1,
+          researchXP: (s.player.researchXP ?? 0) + (existing ? 0 : 15),
+          tessClassifications: {
+            ...(s.player.tessClassifications ?? {}),
+            [subjectId]: { subjectId, verdict, ranges: roundedRanges, submittedAt },
+          },
+          discoveredExoplanetTargets: verdict === 'planet' && discoveredTarget
+            ? {
+                ...(s.player.discoveredExoplanetTargets ?? {}),
+                [discoveredTarget.id]: discoveredTarget,
+              }
+            : s.player.discoveredExoplanetTargets,
+          // Consume the satellite-pointing choice once the target it named
+          // has actually been reviewed — otherwise a stale pointing choice
+          // would keep re-selecting an already-classified candidate.
+          satelliteTargetId: s.player.satelliteTargetId === subjectId ? null : s.player.satelliteTargetId,
+        },
+      }
+    })
+
+    const userId = pbShared.authStore.record?.id
+    if (userId) {
+      // subject_classifications.dip_markers is a JSON array of single x
+      // positions (see backend/migrations/7_subjects_pipeline.go) — the
+      // shared backend schema predates the range-drag interaction, so we
+      // submit each range's midpoint as its representative marker rather
+      // than the full [x1,x2] pair.
+      const dipMarkers = roundedRanges.map(range => Math.round(((range.x1 + range.x2) / 2) * 1000) / 1000)
+      pbShared.collection('subject_classifications').create({
+        user: userId,
+        subject: subjectId,
+        verdict,
+        dip_markers: dipMarkers,
+      }).catch(error => {
+        console.warn('[TESS] classification submit failed', error)
+      })
+    }
+  }, [setState])
+
+  // Player picks where the satellite points for the *next* daily downlink
+  // (see PixiGalaxyStarMap / TessDiscoveryScreen) — this doesn't change today's
+  // candidate, just what dailyTessCandidates prefers once today's is done.
+  const chooseSatelliteTarget = useCallback((subjectId: string) => {
+    setState(s => ({
+      ...s,
+      player: { ...s.player, satelliteTargetId: subjectId, pendingRepick: false },
+    }))
+  }, [setState])
+
   const onDebriefDone = useCallback((total: number, _affinity = 0, consumed: Record<string, number> = {}) => {
     const current = stateRef.current
     if (current.screen !== 'debrief' || !current.missionId || !current.targetId || !current.lastCargo) return
@@ -200,10 +278,11 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
            ?? null)
         : null
       const contractor = mission?.contractor
+      const isStoryMission = mission?.contractor === STORY_MISSION_CONTRACTOR_ID || mission?.tag === 'STORY'
       const contractorMissions = { ...s.player.contractorMissions }
       const contractorStreaks = { ...(s.player.contractorStreaks ?? {}) }
       const contractorCooldowns = { ...s.player.contractorCooldowns }
-      if (contractor) {
+      if (contractor && !isStoryMission) {
         contractorMissions[contractor] = (contractorMissions[contractor] ?? 0) + 1
         const streak = (contractorStreaks[contractor] ?? 0) + 1
         if (streak >= CONTRACTOR_STREAK_LIMIT) {
@@ -267,13 +346,19 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
           contractorStreaks,
           contractorCooldowns,
           stash,
-          lastContractor: contractor,
+          lastContractor: isStoryMission ? s.player.lastContractor : contractor,
           loanDebt,
           loanOffered: loanOffered || showLoanOffer,
           seen_planets,
           roverDeployments,
           contractorTerritories,
           dailyContractorPool: completedDailyPool,
+          transitSatelliteLaunchedAt: mission?.payload?.type === 'satellite'
+            ? (s.player.transitSatelliteLaunchedAt ?? Date.now())
+            : s.player.transitSatelliteLaunchedAt,
+          transitSatelliteLevel: mission?.payload?.type === 'satellite'
+            ? Math.max(1, s.player.transitSatelliteLevel ?? 1)
+            : s.player.transitSatelliteLevel,
         },
         lastCargo: null,
         missionId: null,
@@ -312,6 +397,6 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
     setPlayer, setMissionId, setTargetId, setRocket, setLastCargo,
     onPickMission, onPickTarget, onPurchaseRocket, onLaunch,
     onMiningDone, onRoverMiningDone, onDebriefDone,
-    gainResearchXP, upgradeLicenseGrade, unlockBlueprint,
+    gainResearchXP, upgradeLicenseGrade, unlockBlueprint, launchTransitSatellite, submitTessClassification, chooseSatelliteTarget,
   }
 }

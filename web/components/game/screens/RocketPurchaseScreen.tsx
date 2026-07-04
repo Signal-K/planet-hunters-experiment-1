@@ -1,12 +1,11 @@
 'use client'
 
 import Image from 'next/image'
-import TopBar from '@/components/ui/TopBar'
 import { PrimaryBtn, GhostBtn } from '@/components/ui/Button'
 import { STARTER_ROCKETS } from '@/lib/data'
 import type { StarterRocket } from '@/lib/data'
-import { UI_ZONES } from '@/lib/ui-zones'
 import TutorialHighlight from '@/components/game/TutorialHighlight'
+import MissionSetupShell from '@/components/game/screens/MissionSetupShell'
 
 function formatFrancs(n: number): string {
   if (n >= 1_000_000_000) return `${(n / 1_000_000_000).toFixed(1)}B ▲`
@@ -90,47 +89,58 @@ export default function RocketPurchaseScreen({ missionsDone, francs, onPurchase,
   ]
 
   return (
-    <div className="game-screen">
-      <TopBar eyebrow="LAUNCHPAD · VEHICLE" title="Select Rocket" onBack={onBack} />
-      <div className={`screen-scroll${hasCoach ? ' screen-scroll--coach-manual' : ''}`} data-ui-zone={UI_ZONES.screenContent} style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
-
-        {/* Rocket hero image */}
+    <MissionSetupShell
+      eyebrow="LAUNCHPAD · VEHICLE"
+      title="Select Rocket"
+      onBack={onBack}
+      hasCoach={hasCoach}
+      coachManual={hasCoach}
+      actions={isFree ? (
+        <PrimaryBtn kind="cyan" onClick={() => onPurchase(rocket.id)}>
+          Launch with {rocket.name}
+        </PrimaryBtn>
+      ) : (
+        <>
+          <div style={{ marginBottom: 8 }}><GhostBtn full onClick={onBack}>Back</GhostBtn></div>
+          <PrimaryBtn kind="amber" disabled={!canAfford} onClick={() => onPurchase(rocket.id)}>
+            Purchase · {formatFrancs(rocket.costFrancs)}
+          </PrimaryBtn>
+        </>
+      )}
+    >
+      <div className="mission-setup-frame" style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        background: 'radial-gradient(ellipse at 50% 54%, rgba(63,169,255,0.16) 0%, rgba(63,169,255,0.05) 36%, transparent 72%)',
+      }}>
+        {hasCoach && <TutorialHighlight borderRadius={14} />}
+        <Image
+          src={rocket.img}
+          alt={rocket.name}
+          width={260} height={170}
+          style={{ objectFit: 'contain', filter: 'drop-shadow(0 10px 28px rgba(63,169,255,0.38))' }}
+          priority
+        />
         <div style={{
-          position: 'relative',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          height: 180,
-          background: 'radial-gradient(ellipse at 50% 60%, rgba(63,169,255,0.12) 0%, transparent 70%)',
-          borderBottom: '1px solid rgba(135,207,250,0.1)',
-          marginBottom: 20,
+          position: 'absolute', bottom: 16, left: 0, right: 0,
+          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
         }}>
-          {hasCoach && <TutorialHighlight borderRadius={0} />}
-          <Image
-            src={rocket.img}
-            alt={rocket.name}
-            width={200} height={140}
-            style={{ objectFit: 'contain', filter: 'drop-shadow(0 8px 24px rgba(63,169,255,0.35))' }}
-            priority
-          />
-          <div style={{
-            position: 'absolute', bottom: 12, left: 0, right: 0,
-            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+          <span style={{
+            padding: '4px 12px', borderRadius: 999,
+            background: isFree ? 'rgba(57,211,106,0.18)' : 'rgba(245,166,35,0.18)',
+            border: `1px solid ${isFree ? 'rgba(57,211,106,0.5)' : 'rgba(245,166,35,0.5)'}`,
+            fontFamily: 'var(--ln-font-display)', fontSize: 10, fontWeight: 800,
+            letterSpacing: '0.2em', textTransform: 'uppercase',
+            color: isFree ? '#39d36a' : '#f5a623',
           }}>
-            <span style={{
-              padding: '3px 10px', borderRadius: 999,
-              background: isFree ? 'rgba(57,211,106,0.18)' : 'rgba(245,166,35,0.18)',
-              border: `1px solid ${isFree ? 'rgba(57,211,106,0.5)' : 'rgba(245,166,35,0.5)'}`,
-              fontFamily: 'var(--ln-font-display)', fontSize: 9, fontWeight: 800,
-              letterSpacing: '0.2em', textTransform: 'uppercase',
-              color: isFree ? '#39d36a' : '#f5a623',
-            }}>
-              SR{rocket.tier} · {isFree ? 'INCLUDED' : formatFrancs(rocket.costFrancs)}
-            </span>
-          </div>
+            SR{rocket.tier} · {isFree ? 'INCLUDED' : formatFrancs(rocket.costFrancs)}
+          </span>
         </div>
+      </div>
 
-        <div style={{ padding: '0 14px', display: 'flex', flexDirection: 'column', gap: 20 }}>
-
-          {/* Name + description */}
+      <div className="mission-setup-card">
+        <div className="mission-setup-card-scroll" style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
           <div>
             <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 22, fontWeight: 800, color: 'var(--ln-text)', letterSpacing: '-0.01em' }}>
               {rocket.name}
@@ -141,7 +151,6 @@ export default function RocketPurchaseScreen({ missionsDone, francs, onPurchase,
             </div>
           </div>
 
-          {/* Stat blocks */}
           <div style={{ display: 'flex', gap: 8 }}>
             <StatBlock
               label="Cargo"
@@ -160,7 +169,6 @@ export default function RocketPurchaseScreen({ missionsDone, francs, onPurchase,
             />
           </div>
 
-          {/* Installed modules */}
           <div>
             <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 9, fontWeight: 700, letterSpacing: '0.22em', color: 'var(--ln-text-muted)', textTransform: 'uppercase', marginBottom: 8 }}>
               Installed Modules
@@ -170,7 +178,6 @@ export default function RocketPurchaseScreen({ missionsDone, francs, onPurchase,
             </div>
           </div>
 
-          {/* Cost section (paid rockets only) */}
           {!isFree && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 0, background: 'rgba(6,12,22,0.5)', borderRadius: 10, border: '1px solid rgba(135,207,250,0.12)', overflow: 'hidden' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 14px', borderBottom: '1px solid rgba(135,207,250,0.08)' }}>
@@ -189,27 +196,11 @@ export default function RocketPurchaseScreen({ missionsDone, francs, onPurchase,
             </div>
           )}
 
-          {/* Footer note */}
           <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 10, color: '#445566', letterSpacing: '0.08em', lineHeight: 1.6, paddingBottom: 8 }}>
             Rockets are single-use. Each mission requires a fresh vehicle.
           </div>
         </div>
       </div>
-
-      <div className="sticky-actions" data-ui-zone={UI_ZONES.bottomActions}>
-        {isFree ? (
-          <PrimaryBtn kind="cyan" onClick={() => onPurchase(rocket.id)}>
-            Launch with {rocket.name}
-          </PrimaryBtn>
-        ) : (
-          <>
-            <div style={{ marginBottom: 8 }}><GhostBtn full onClick={onBack}>Back</GhostBtn></div>
-            <PrimaryBtn kind="amber" disabled={!canAfford} onClick={() => onPurchase(rocket.id)}>
-              Purchase · {formatFrancs(rocket.costFrancs)}
-            </PrimaryBtn>
-          </>
-        )}
-      </div>
-    </div>
+    </MissionSetupShell>
   )
 }

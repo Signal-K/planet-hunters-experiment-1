@@ -34,9 +34,10 @@ function visitWithState(state: Partial<GameState>) {
     popup: null,
     menuOpen: false,
   }
-  cy.visit('/game', {
+  const nextState = { ...defaults, ...state }
+  cy.visit(`/game/${nextState.screen}`, {
     onBeforeLoad(win) {
-      win.localStorage.setItem(STORAGE_KEY, JSON.stringify({ ...defaults, ...state }))
+      win.localStorage.setItem(STORAGE_KEY, JSON.stringify(nextState))
       win.localStorage.setItem('landnam-guest-credentials', JSON.stringify({ email: 'e2e@landnam.guest', password: 'e2e-guest-test' }))
     },
   })

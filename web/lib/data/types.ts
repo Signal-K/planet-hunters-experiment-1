@@ -1,7 +1,7 @@
 // Landnam game data — all shared types and interfaces
 
 export interface MissionPayload {
-  type: 'rover'
+  type: 'rover' | 'satellite'
   name: string
   cargoCost: number
 }
@@ -99,7 +99,7 @@ export interface Mission {
 export interface Target {
   id: string
   name: string
-  type: 'planet' | 'asteroid'
+  type: 'planet' | 'asteroid' | 'exoplanet'
   orbit: number
   difficulty: string
   brief: string

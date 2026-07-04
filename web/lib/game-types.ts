@@ -1,7 +1,7 @@
 // Landnam game — shared type definitions
 // Extracted from game-context.tsx so they can be imported without pulling in React context.
 
-import type { RocketConfig, Mission, Target } from '@/lib/data'
+import type { RocketConfig, Mission, Target, TessClassification, TessVerdict, TransitRange } from '@/lib/data'
 
 export interface DailyContractorPool {
   date: string        // 'YYYY-MM-DD'
@@ -70,10 +70,29 @@ export interface Player {
   contractorTerritories?: Record<string, string[]>
   dailyContractorPool?: DailyContractorPool
   scannerBuilt?: boolean
+  satelliteMonitoringBuilt?: boolean
+  satelliteMonitoringLevel?: number
+  transitSatelliteLevel?: number
+  transitSatelliteLaunchedAt?: number | null
   scansUsedToday?: number
   scanDate?: string
   activeScan?: { targetId: string; completesAt: number } | null
   targetScanCounts?: Record<string, number>
+  tessClassifications?: Record<string, TessClassification>
+  // Player's satellite-pointing choice for the *next* daily downlink,
+  // picked from the PixiGalaxyStarMap after classifying today's candidate.
+  // Consumed (cleared) once that candidate becomes today's daily pick.
+  satelliteTargetId?: string | null
+  // True when a global "5 players confirmed a planet" event happened that
+  // this player hasn't acted on yet — lets them re-pick their satellite
+  // target immediately instead of waiting for the normal daily cycle. See
+  // ~/Navigation/workspace/decisions/citizen-science-consensus-cross-post-and-immediate-repick.md
+  pendingRepick?: boolean
+  // Last confirmed_at value (from GET /api/ss/subjects/last-confirmed) this
+  // player has already been notified about, so the poller doesn't re-fire
+  // the same event every check.
+  lastSeenConfirmedAt?: string | null
+  discoveredExoplanetTargets?: Record<string, Target>
   contractorStructures?: import('@/lib/data').ContractorStructureRecord[]
   dailyQuestProgress?: import('@/lib/data').DailyQuestProgress[]
   licenseGrade?: LicenseGrade
@@ -140,6 +159,9 @@ export interface GameActions {
   buildScanner: () => void
   startScan: (targetId: string) => void
   collectScan: () => void
+  launchTransitSatellite: () => void
+  submitTessClassification: (subjectId: string, verdict: TessVerdict, ranges: TransitRange[], discoveredTarget?: Target) => void
+  chooseSatelliteTarget: (subjectId: string) => void
   onRoverMiningDone: (cargo: Record<string, number>) => void
   gainResearchXP: (amount: number) => void
   upgradeLicenseGrade: (grade: Exclude<LicenseGrade, 'Grade I'>) => void

@@ -23,6 +23,7 @@ import HangarScreen from '@/components/game/screens/HangarScreen'
 import RocketPurchaseScreen from '@/components/game/screens/RocketPurchaseScreen'
 import SkillTreeScreen from '@/components/game/screens/SkillTreeScreen'
 import ScanStationScreen from '@/components/game/screens/ScanStationScreen'
+import TessDiscoveryScreen from '@/components/game/screens/TessDiscoveryScreen'
 
 const VALID_SCREENS = new Set<Screen>([
   'intro', 'build', 'hub', 'missions', 'galaxy', 'targets', 'fab',
@@ -119,6 +120,8 @@ function ScreenContent({
               placementPlots: { ...player.placementPlots, [kind]: plot },
               refineryBuilt: kind === 'refinery' ? true : player.refineryBuilt,
               scannerBuilt: kind === 'scan-station' ? true : player.scannerBuilt,
+              satelliteMonitoringBuilt: kind === 'satellite-monitoring-station' ? true : player.satelliteMonitoringBuilt,
+              satelliteMonitoringLevel: kind === 'satellite-monitoring-station' ? Math.max(1, player.satelliteMonitoringLevel ?? 1) : player.satelliteMonitoringLevel,
             }))
             game.completeStep(0)
             game.go('hub')
@@ -137,6 +140,7 @@ function ScreenContent({
             if (building === 'hangar') return game.go('hangar')
             if (building === 'skills') return game.go('skills')
             if (building === 'scan-station') return game.go('scan-station')
+            if (building === 'satellite-monitoring-station') return game.go('galaxy')
             if (building === 'launchpad' || building === 'missions') {
               game.completeStep(1)
               game.go('missions')
@@ -147,7 +151,6 @@ function ScreenContent({
       )
 
     case 'missions':
-    case 'galaxy':
       return (
         <MissionBoardScreen
           onBack={() => game.go('hub')}
@@ -159,6 +162,18 @@ function ScreenContent({
           contractorMissions={game.player.contractorMissions}
           contractorCooldowns={game.player.contractorCooldowns}
           dailyContractorPool={game.player.dailyContractorPool}
+        />
+      )
+
+    case 'galaxy':
+      return (
+        <TessDiscoveryScreen
+          player={game.player}
+          onBack={() => game.go('hub')}
+          onBuildStation={() => game.go('build')}
+          onOpenMissions={() => game.go('missions')}
+          onSubmit={game.submitTessClassification}
+          onChooseTarget={game.chooseSatelliteTarget}
         />
       )
 
@@ -223,6 +238,21 @@ function ScreenContent({
           onBack={() => game.go('hub')}
           onArrive={() => {
             const isRoverMission = game.mission?.survey?.onWorldVehicle === 'starter-rover'
+            if (game.mission?.payload?.type === 'satellite' || game.target?.type === 'exoplanet') {
+              game.setPlayer(player => ({
+                ...player,
+                missionPhase: 'debrief',
+                transitSatelliteLaunchedAt: game.mission?.payload?.type === 'satellite'
+                  ? (player.transitSatelliteLaunchedAt ?? Date.now())
+                  : player.transitSatelliteLaunchedAt,
+                transitSatelliteLevel: game.mission?.payload?.type === 'satellite'
+                  ? Math.max(1, player.transitSatelliteLevel ?? 1)
+                  : player.transitSatelliteLevel,
+              }))
+              game.setLastCargo({})
+              game.go('debrief')
+              return
+            }
             game.setPlayer(player => ({ ...player, missionPhase: 'mining' }))
             game.go(isRoverMission ? 'rover-mining' : 'mining')
           }}
