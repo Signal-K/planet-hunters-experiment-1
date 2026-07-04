@@ -1,4 +1,4 @@
-import { Container, Sprite, type Texture } from 'pixi.js'
+import { Container, Graphics, Sprite, type Texture } from 'pixi.js'
 import { ScriptBehaviour } from '../components/ScriptBehaviour'
 import { ShapeRenderer } from '../components/ShapeRenderer'
 import type { ShapeKind } from '../components/ShapeRenderer'
@@ -13,12 +13,23 @@ const LASER_SPEED = 480
 export const SHIP_X = 80
 export const SHIP_Y = 112
 export const SURFACE_Y = 320
-const HIT_TOLERANCE = 28
+// Wider than ship X so ore movement during laser flight doesn't cause misses on tall screens
+const HIT_TOLERANCE = 48
 const LASER_SIZE = { width: 4, height: 16 }
 const LASER_COLOR = '#9becff'
 const ORE_STROKE = '#0a0a12'
 const MAX_ORES = 60
 const FLASH_DURATION = 0.14
+// Laser stops this far below the surface — deep enough to reach all ore tiers (max depth 96) + buffer
+const LASER_MAX_DEPTH = 124
+
+/** Organic ore gap distribution: 20% tight cluster, 50% normal, 30% wide open space */
+function oreGap(): number {
+  const r = Math.random()
+  if (r < 0.20) return 55  + Math.random() * 40   // close follow-on
+  if (r < 0.70) return 100 + Math.random() * 100  // normal spacing
+  return 220 + Math.random() * 160                 // barren stretch
+}
 
 /** Per-laser-tier ore properties: radius, hp, depth range within rock surface */
 const ORE_TIER: Record<number, { radius: number; maxHp: number; depthMin: number; depthMax: number }> = {
@@ -43,8 +54,12 @@ export interface MiningControllerOptions {
   mineralShapes?: Record<string, ShapeKind>
   mineralTextures?: Record<string, Texture>
   onCollect: (mineral: string) => void
+  /** Called when a laser exits the world without hitting any ore (miss). */
+  onMiss?: () => void
   /** Called every update with the total horizontal scroll distance so callers can sync visual layers. */
   onScroll?: (scrollX: number) => void
+  /** Called when any ore enters or leaves the "fire now" window around SHIP_X. */
+  onOreNearby?: (near: boolean) => void
 }
 
 interface OreEntity {
@@ -61,6 +76,15 @@ interface OreEntity {
 
 interface LaserEntity {
   go: GameObject
+  prevY: number
+}
+
+interface Particle {
+  g: Graphics
+  vx: number
+  vy: number
+  life: number
+  maxLife: number
 }
 
 /**
@@ -72,10 +96,12 @@ export class MiningController extends ScriptBehaviour {
   private opts: MiningControllerOptions
   private ores: OreEntity[] = []
   private lasers: LaserEntity[] = []
+  private particles: Particle[] = []
   private oreCounter = 0
   private laserCounter = 0
   private totalScrollX = 0
   private scrollSpeed = SCROLL_SPEED
+  private oreNearState = false
 
   constructor(context: RuntimeContext, opts: MiningControllerOptions) {
     super(context)
@@ -88,10 +114,24 @@ export class MiningController extends ScriptBehaviour {
   }
 
   start(): void {
-    let x = 200
-    for (let i = 0; i < 20; i++) {
-      x += i === 0 ? 0 : 120 + Math.random() * 60
+    let x = 160
+    let count = 0
+    while (count < 20) {
       this.spawnOre(x)
+      count++
+      // Occasionally spawn a close companion (cluster of 2-3)
+      const clusterRoll = Math.random()
+      if (clusterRoll < 0.18 && count < 20) {
+        x += 45 + Math.random() * 35
+        this.spawnOre(x)
+        count++
+        if (Math.random() < 0.35 && count < 20) {
+          x += 40 + Math.random() * 30
+          this.spawnOre(x)
+          count++
+        }
+      }
+      x += oreGap()
     }
   }
 
@@ -112,20 +152,28 @@ export class MiningController extends ScriptBehaviour {
     }
 
     const last = this.ores[this.ores.length - 1]
-    const needsSpawn = !last || last.go.transform.position.x < this.opts.worldWidth + 100
+    const needsSpawn = !last || last.go.transform.position.x < this.opts.worldWidth + 120
     if (needsSpawn && this.ores.length < MAX_ORES) {
       const lastX = last ? last.go.transform.position.x : 0
-      this.spawnOre(lastX + 120 + Math.random() * 60)
+      this.spawnOre(lastX + oreGap())
     }
 
     for (const laser of this.lasers) {
+      laser.prevY = laser.go.transform.position.y
       laser.go.transform.position.y += LASER_SPEED * dt
     }
 
     this.resolveCollisions()
     this.removeOffscreen()
+    this.updateParticles(dt)
 
     this.opts.onScroll?.(this.totalScrollX)
+
+    const anyNear = this.ores.some(o => o.go.active && Math.abs(o.go.transform.position.x - SHIP_X) < 120)
+    if (anyNear !== this.oreNearState) {
+      this.oreNearState = anyNear
+      this.opts.onOreNearby?.(anyNear)
+    }
   }
 
   fireLaser(): void {
@@ -140,7 +188,7 @@ export class MiningController extends ScriptBehaviour {
     )
     this.gameObject.addChild(go)
     go.start()
-    this.lasers.push({ go })
+    this.lasers.push({ go, prevY: go.transform.position.y })
   }
 
   getScrollX(): number {
@@ -205,7 +253,10 @@ export class MiningController extends ScriptBehaviour {
         const ox = ore.go.transform.position.x
         const oy = ore.go.transform.position.y
 
-        if (ly < oy - ore.radius || ly > oy + ore.radius) continue
+        // Swept Y check: did the laser travel THROUGH the ore's Y band this frame?
+        const minTravelY = Math.min(laser.prevY, ly)
+        const maxTravelY = Math.max(laser.prevY, ly)
+        if (maxTravelY < oy - ore.radius || minTravelY > oy + ore.radius) continue
         if (Math.abs(lx - ox) >= HIT_TOLERANCE) continue
 
         ore.hp -= 1
@@ -214,6 +265,7 @@ export class MiningController extends ScriptBehaviour {
         if (ore.hp <= 0) {
           ore.go.active = false
           if (ore.sprite) ore.sprite.visible = false
+          this.spawnParticleBurst(ore.go.transform.position.x, ore.go.transform.position.y, ore.mineralColor, ore.radius)
           this.opts.onCollect(ore.mineral)
         } else {
           ore.flashTimer = FLASH_DURATION
@@ -244,11 +296,45 @@ export class MiningController extends ScriptBehaviour {
       return false
     })
 
+    const laserFloor = (this.opts.surfaceY ?? SURFACE_Y) + LASER_MAX_DEPTH
     this.lasers = this.lasers.filter(laser => {
-      if (laser.go.active && laser.go.transform.position.y < this.opts.worldHeight + LASER_SIZE.height) return true
+      if (laser.go.active && laser.go.transform.position.y < laserFloor) return true
+      const wasMiss = laser.go.active
       laser.go.destroy()
       this.gameObject.children = this.gameObject.children.filter(c => c !== laser.go)
+      if (wasMiss) this.opts.onMiss?.()
       return false
+    })
+  }
+
+  private spawnParticleBurst(x: number, y: number, color: number, radius: number): void {
+    const count = 8
+    for (let i = 0; i < count; i++) {
+      const angle = (i / count) * Math.PI * 2 + Math.random() * 0.5
+      const speed = 50 + Math.random() * 70
+      const size = 1.5 + Math.random() * 2.5
+      const g = new Graphics()
+      g.circle(0, 0, size).fill({ color, alpha: 1 })
+      g.x = x + (Math.random() - 0.5) * radius
+      g.y = y + (Math.random() - 0.5) * radius
+      this.opts.container.addChild(g)
+      const life = 0.3 + Math.random() * 0.15
+      this.particles.push({ g, vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed, life, maxLife: life })
+    }
+  }
+
+  private updateParticles(dt: number): void {
+    this.particles = this.particles.filter(p => {
+      p.life -= dt
+      if (p.life <= 0) {
+        this.opts.container.removeChild(p.g)
+        p.g.destroy()
+        return false
+      }
+      p.g.x += p.vx * dt
+      p.g.y += p.vy * dt
+      p.g.alpha = p.life / p.maxLife
+      return true
     })
   }
 

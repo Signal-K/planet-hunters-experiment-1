@@ -1,4 +1,4 @@
-.PHONY: help up down build logs e2e e2e-open web-dev web-build web-check pb-reset docker-prune migrate seed \
+.PHONY: help up down build logs e2e e2e-open web-dev web-build web-check pb-reset pb-stop docker-prune migrate seed \
         kanban-up kanban-down
 
 FRONTEND_COMPOSE := docker compose -f docker-compose.frontend.yml
@@ -9,7 +9,7 @@ help:
 	@echo "Landnam — available targets"
 	@echo ""
 	@echo "  Dev"
-	@echo "    up             Start frontend + PocketBase (:3000 / :8093)"
+	@echo "    up             Start frontend + PocketBase (:3000 / shared :8090 / landnam :8091)"
 	@echo "    down           Stop the stack"
 	@echo "    build          (Re)build images — run after package.json changes"
 	@echo "    logs           Follow stack logs"
@@ -19,14 +19,18 @@ help:
 	@echo "    web-dev        Run Next.js dev server locally (no Docker)"
 	@echo "    web-build      Production build locally"
 	@echo "    web-check      Typecheck + production build"
+	@echo "    pb-stop        Stop PocketBase services only (keeps volumes)"
 	@echo "    pb-reset       Remove local PocketBase data volume"
 	@echo "    docker-prune   Remove all unused Docker data"
 	@echo "    kanban-up/down Kanban board on :4444"
 
 up:
-	$(FRONTEND_COMPOSE) up -d --remove-orphans pocketbase web
-	@echo "Landnam:    http://localhost:3000/game"
-	@echo "PocketBase: http://localhost:8093/_/"
+	@$(FRONTEND_COMPOSE) up -d --remove-orphans shared-pb pocketbase 2>&1 \
+	  | grep -v "port is already allocated" || true
+	$(FRONTEND_COMPOSE) up -d --no-deps --remove-orphans geometry-service web
+	@echo "Landnam:         http://localhost:3000/game"
+	@echo "Shared PB:       http://localhost:8090/_/"
+	@echo "Landnam PB:      http://localhost:8091/_/"
 
 down:
 	$(FRONTEND_COMPOSE) down --remove-orphans
@@ -35,7 +39,7 @@ build:
 	$(FRONTEND_COMPOSE) build pocketbase web
 
 logs:
-	$(FRONTEND_COMPOSE) logs -f pocketbase web
+	$(FRONTEND_COMPOSE) logs -f shared-pb pocketbase web
 
 test-e2e:
 	@status=0; \
@@ -65,6 +69,9 @@ web-check:
 	cd web && npm run typecheck
 	cd web && npm run build
 
+pb-stop:
+	$(FRONTEND_COMPOSE) stop shared-pb pocketbase
+
 pb-reset:
 	$(FRONTEND_COMPOSE) down -v --remove-orphans
 
@@ -76,13 +83,13 @@ docker-prune:
 migrate:
 	$(FRONTEND_COMPOSE) up -d pocketbase
 	@echo "Waiting for PocketBase to apply migrations..."
-	@sleep 3
+	@sleep 5
 	@echo "Migrations applied."
 	$(FRONTEND_COMPOSE) stop pocketbase
 
 seed:
 	$(FRONTEND_COMPOSE) up -d pocketbase
-	@sleep 2
+	@sleep 3
 	@echo "Running seed data insertion..."
 	@cd pocketbase && go run . seed 2>/dev/null || echo "Run pocketbase and visit /_/ to seed via UI or insert seed records manually."
 	$(FRONTEND_COMPOSE) stop pocketbase

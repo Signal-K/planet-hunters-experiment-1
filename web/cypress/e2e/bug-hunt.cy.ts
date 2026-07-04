@@ -198,9 +198,9 @@ describe('Bug hunt — edge cases', () => {
     })
     cy.contains('EARTH BASE · FREE OPS', { timeout: 8000 }).should('be.visible')
     // Helios on cooldown: no Helios mission cards shown in legacy freeops mode (filtered out)
-    cy.get('[data-testid^="mission-card-freeops-helios"]').should('not.exist')
+    cy.get('[data-testid^="mission-card-freeops-helios-propulsion-depot"]').should('not.exist')
     // Other contractors' missions still show
-    cy.get('[data-testid^="mission-card-freeops-arcturus"]').first().scrollIntoView().should('be.visible')
+    cy.get('[data-testid^="mission-card-freeops-arcturus-battery-systems"]').first().scrollIntoView().should('be.visible')
   })
 
   // ─── 7. Transit → back does not softlock the player ──────────────────────────

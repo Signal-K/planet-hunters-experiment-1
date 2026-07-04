@@ -3,6 +3,14 @@
 
 Landnam uses the parent Navigation repo as the canonical Knowns/tickets source. If the parent filesystem is visible, use `.knowns-bridge.json` to locate `../.knowns` and operate on that canonical project. If this repo is sandboxed by itself, read `KNOWNS.snapshot.md` for read-only ticket context.
 
+When a Knowns MCP/tool call reports that no project is loaded, or setting the project to `/Users/scroobz/Navigation/Landnam` fails because `Landnam/.knowns/config.json` does not exist, do not fall back to ad hoc behavior or treat Knowns as unavailable. Immediately connect Knowns to the parent project root:
+
+```json
+mcp__knowns__project({ "action": "set", "projectRoot": "/Users/scroobz/Navigation" })
+```
+
+For CLI workflows, run Knowns commands from `/Users/scroobz/Navigation` or otherwise point them at the parent repo. The live `.knowns` store belongs to `~/Navigation`, not `~/Navigation/Landnam`.
+
 Do not create or maintain a separate live `.knowns` project inside Landnam unless the user explicitly changes this architecture.
 
 If the parent Knowns project is not writable, write proposed task/doc/context updates into `.knowns-outbox/` as small Markdown or JSON files and mention them in your final response. Do not treat outbox files as accepted state; a parent-capable agent must collect them with `make knowns-outbox-collect` and apply accepted changes to canonical Knowns.

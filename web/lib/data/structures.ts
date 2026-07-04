@@ -32,6 +32,15 @@ export const STRUCTURES: StructureBlueprint[] = [
     unlockTrigger: 'always',
     description: 'Scans remote targets to map mineral deposits, craters, and landmarks. Up to 5 scans per day, 10 minutes each.',
   },
+  {
+    id: 'satellite-monitoring-station',
+    name: 'Satellite Monitoring Station',
+    kind: 'satellite-monitoring-station',
+    cost: 0,
+    unlocksAt: 'Free Operations',
+    unlockTrigger: 'always',
+    description: 'Monitors player-launched transit telescopes and downlinks daily TESS-style candidates for classification.',
+  },
   { id: 'garage', name: 'Vehicle Garage', kind: 'garage', cost: 600_000_000, unlocksAt: 'Future sprint', unlockTrigger: 'manual', description: 'Surface rover maintenance and upgrades.' },
 ]
 
@@ -41,6 +50,7 @@ export const SCANS_REQUIRED_TO_MAP = 3
 
 export function structureUnlocked(structure: StructureBlueprint, opts: { refineryUnlocked?: boolean; placed?: string[]; freeOperations?: boolean } = {}): boolean {
   if (structure.id === 'scan-station') return !!opts.freeOperations
+  if (structure.id === 'satellite-monitoring-station') return !!opts.freeOperations
   if (structure.unlockTrigger === 'always') return true
   if (structure.id === 'refinery') return !!opts.refineryUnlocked || !!opts.placed?.includes('refinery')
   return false

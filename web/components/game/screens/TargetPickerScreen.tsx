@@ -1,16 +1,13 @@
 'use client'
 
 import React, { useState } from 'react'
-import TopBar from '@/components/ui/TopBar'
-import Panel from '@/components/ui/Panel'
 import StatusPill from '@/components/ui/StatusPill'
 import { PrimaryBtn } from '@/components/ui/Button'
 import { compatibleTargetsFor, type Mission, type Target } from '@/lib/data'
 import type { Catalog } from '@/lib/catalog'
-import { TUTORIAL_CONTENT_TOP } from '@/lib/tutorial-layout'
-import { UI_ZONES } from '@/lib/ui-zones'
 import TutorialHighlight from '@/components/game/TutorialHighlight'
 import GalaxyMap from '@/components/TargetPicker/GalaxyMap'
+import MissionSetupShell from '@/components/game/screens/MissionSetupShell'
 
 interface TargetPickerScreenProps {
   mission: Mission
@@ -80,7 +77,8 @@ function PlanetSVG({ id, size }: { id: string; size: number }) {
 
 export default function TargetPickerScreen({ mission, onBack, onPick, hasCoach, catalog }: TargetPickerScreenProps) {
   const { targets: TARGETS, minerals: MINERAL_META } = catalog
-  const compat = compatibleTargetsFor(mission, TARGETS)
+  // 'belt' is a zone marker, not a pickable destination — filter it out
+  const compat = compatibleTargetsFor(mission, TARGETS).filter(t => t.id !== 'belt')
   const compatIds = new Set(compat.map(t => t.id))
   // Default pick first compatible, prioritizing recommended if they are actually in compat
   const [picked, setPicked] = useState<string>(
@@ -88,39 +86,29 @@ export default function TargetPickerScreen({ mission, onBack, onPick, hasCoach, 
   )
 
   const pickedTarget = TARGETS.find(x => x.id === picked)
-  const targetPickerScrollStyle: React.CSSProperties = {
-    position: 'absolute',
-    inset: 0,
-    paddingTop: hasCoach ? TUTORIAL_CONTENT_TOP : 72,
-    paddingBottom: hasCoach ? 154 : 96,
-    display: 'flex',
-    flexDirection: 'column',
-    overflow: 'hidden',
-  }
   const mapStyle: React.CSSProperties = {
-    margin: '4px 14px 6px 14px',
-    flex: 1,
-    minHeight: 0,
-    borderRadius: 14,
     background: 'radial-gradient(60% 60% at 50% 50%, #0a1422 0%, #03060a 90%)',
-    border: '1px solid #434C5E',
     position: 'relative',
-    overflow: 'hidden',
+    height: '100%',
   }
 
   return (
-    <div style={{ width: '100%', height: '100%', position: 'relative', background: '#03060c' }}>
-      <TopBar eyebrow={mission.title.toUpperCase()} title="Pick Target" onBack={onBack} />
-
-      <div style={targetPickerScrollStyle} data-ui-zone={UI_ZONES.screenContent}>
-        <div style={{ padding: '0 14px 6px 14px', display: 'flex', alignItems: 'center', gap: 8 }}>
+    <MissionSetupShell
+      eyebrow={mission.title.toUpperCase()}
+      title="Pick Target"
+      onBack={onBack}
+      hasCoach={hasCoach}
+      actions={pickedTarget && (
+        <PrimaryBtn testId="continue-build-btn" onClick={() => onPick(pickedTarget.id)}>Continue · Build →</PrimaryBtn>
+      )}
+    >
+      <div style={{ display: 'grid', gridTemplateRows: 'auto minmax(0, 1fr)', minHeight: 0 }}>
+        <div style={{ padding: '0 0 8px', display: 'flex', alignItems: 'center', gap: 8 }}>
           <span style={{ fontFamily: 'var(--ln-font-display)', fontSize: 10, fontWeight: 700, letterSpacing: '0.22em', color: 'var(--ln-text-muted)', textTransform: 'uppercase' }}>Compatible · {compat.length}</span>
           <span style={{ flex: 1 }} />
-          <StatusPill kind="amber" dim>Reach ≤ Orbit {mission.requires.max_orbit}</StatusPill>
+          <StatusPill kind="amber" dim>Rocket range · Orbit ≤ {mission.requires.max_orbit}</StatusPill>
         </div>
-
-        {/* System map */}
-        <div style={mapStyle}>
+        <div className="mission-setup-frame" style={mapStyle}>
           <GalaxyMap
             mission={mission}
             targets={TARGETS}
@@ -130,21 +118,21 @@ export default function TargetPickerScreen({ mission, onBack, onPick, hasCoach, 
           />
           {hasCoach && <TutorialHighlight borderRadius={14} />}
         </div>
+      </div>
 
-        {/* Off-screen buttons per target — E2E test hooks; force-click via {force:true} */}
-        <div style={{ position: 'fixed', left: -600, top: 0 }}>
-          {compat.map(t => (
-            <button key={t.id} data-testid={`target-${t.id}`} aria-label={`Select ${t.name}`}
-              onClick={() => setPicked(t.id)}
-              style={{ width: 4, height: 4 }}
-            />
-          ))}
-        </div>
+      {/* Off-screen buttons per target — E2E test hooks; force-click via {force:true} */}
+      <div style={{ position: 'fixed', left: -600, top: 0 }}>
+        {compat.map(t => (
+          <button key={t.id} data-testid={`target-${t.id}`} aria-label={`Select ${t.name}`}
+            onClick={() => setPicked(t.id)}
+            style={{ width: 4, height: 4 }}
+          />
+        ))}
+      </div>
 
-        {/* Picked target detail */}
-        {pickedTarget && (
-          <div style={{ padding: '10px 14px 0 14px' }}>
-            <Panel accent="#f5a623">
+      {pickedTarget ? (
+        <div className="mission-setup-card">
+          <div className="mission-setup-card-scroll">
               <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                 <PlanetSVG id={pickedTarget.id} size={48} />
                 <div style={{ flex: 1, minWidth: 0 }}>
@@ -157,37 +145,51 @@ export default function TargetPickerScreen({ mission, onBack, onPick, hasCoach, 
               {!hasCoach && (
                 <div style={{ marginTop: 10, fontFamily: 'var(--ln-font-body)', fontSize: 12, color: '#a9b8ce', lineHeight: 1.4 }}>{pickedTarget.brief}</div>
               )}
-              <div style={{ marginTop: hasCoach ? 6 : 10, display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-                {pickedTarget.minerals.map(min => {
-                  const meta = MINERAL_META[min]
-                  const needed = mission.requires.minerals[min]
-                  return (
-                    <div key={min} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '3px 8px', background: 'rgba(8,16,28,0.7)', border: `1px solid ${meta.color}${needed ? 'aa' : '55'}`, borderRadius: 6, boxShadow: needed ? `0 0 12px ${meta.color}33` : 'none' }}>
-                      <span style={{ fontFamily: 'var(--ln-font-mono)', fontSize: 10, fontWeight: 800, color: meta.color }}>{meta.sym}</span>
-                      <span style={{ fontFamily: 'var(--ln-font-display)', fontSize: 11, fontWeight: 700, color: meta.color }}>{meta.name}{needed ? ` · need ${needed}` : ''}</span>
-                    </div>
-                  )
-                })}
+              {/* Mission needs — minerals required by the contract */}
+              {Object.keys(mission.requires.minerals).length > 0 && (
+                <div style={{ marginTop: hasCoach ? 6 : 10 }}>
+                  <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 8, fontWeight: 700, letterSpacing: '0.22em', color: 'var(--ln-text-muted)', textTransform: 'uppercase', marginBottom: 5 }}>Mission needs</div>
+                  <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                    {Object.entries(mission.requires.minerals).map(([min, qty]) => {
+                      const meta = MINERAL_META[min]
+                      const available = pickedTarget.minerals.includes(min)
+                      return (
+                        <div key={min} style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '4px 9px', background: available ? 'rgba(8,16,28,0.7)' : 'rgba(220,50,50,0.08)', border: `1px solid ${available ? (meta?.color ?? '#fff') + 'cc' : 'rgba(220,50,50,0.4)'}`, borderRadius: 6, boxShadow: available ? `0 0 10px ${meta?.color ?? '#fff'}33` : 'none' }}>
+                          <span style={{ fontFamily: 'var(--ln-font-mono)', fontSize: 10, fontWeight: 800, color: available ? (meta?.color ?? '#fff') : '#ff5a6a' }}>{meta?.sym ?? min}</span>
+                          <span style={{ fontFamily: 'var(--ln-font-display)', fontSize: 11, fontWeight: 700, color: available ? (meta?.color ?? '#fff') : '#ff5a6a' }}>{meta?.name ?? min} ×{qty}</span>
+                          {!available && <span style={{ fontFamily: 'var(--ln-font-display)', fontSize: 9, color: '#ff5a6a', letterSpacing: '0.12em' }}>NOT HERE</span>}
+                        </div>
+                      )
+                    })}
+                  </div>
+                </div>
+              )}
+              {/* Target deposits — what this asteroid actually has */}
+              <div style={{ marginTop: 8 }}>
+                <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 8, fontWeight: 700, letterSpacing: '0.22em', color: 'var(--ln-text-muted)', textTransform: 'uppercase', marginBottom: 5 }}>Available here</div>
+                <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                  {pickedTarget.minerals.map(min => {
+                    const meta = MINERAL_META[min]
+                    return (
+                      <div key={min} style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '3px 8px', background: 'rgba(8,16,28,0.5)', border: `1px solid ${meta?.color ?? '#fff'}44`, borderRadius: 6 }}>
+                        <span style={{ fontFamily: 'var(--ln-font-mono)', fontSize: 10, fontWeight: 800, color: meta?.color ?? '#fff' }}>{meta?.sym ?? min}</span>
+                        <span style={{ fontFamily: 'var(--ln-font-display)', fontSize: 11, color: (meta?.color ?? '#fff') + 'aa' }}>{meta?.name ?? min}</span>
+                      </div>
+                    )
+                  })}
+                </div>
               </div>
-            </Panel>
           </div>
-        )}
-
-        {compat.length === 0 && (
-          <div style={{ padding: '14px' }}>
-            <Panel accent="#ff5a6a">
-              <div style={{ fontFamily: 'var(--ln-font-display)', fontWeight: 800, fontSize: 14, color: '#ff8290' }}>No reachable targets.</div>
-              <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 12, color: '#a9b8ce', marginTop: 4 }}>Wait for higher-tier propulsion or pick a different mission.</div>
-            </Panel>
-          </div>
-        )}
-      </div>
-
-      {pickedTarget && (
-        <div className="sticky-actions" data-ui-zone={UI_ZONES.bottomActions} style={hasCoach ? { zIndex: 90 } : undefined}>
-          <PrimaryBtn onClick={() => onPick(pickedTarget.id)}>Continue · Build →</PrimaryBtn>
         </div>
-      )}
-    </div>
+      ) : compat.length === 0 ? (
+        <div className="mission-setup-card">
+          <div className="mission-setup-card-scroll">
+            <div style={{ fontFamily: 'var(--ln-font-display)', fontWeight: 800, fontSize: 14, color: '#ff8290' }}>No reachable targets.</div>
+            <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 12, color: '#a9b8ce', marginTop: 4 }}>Wait for higher-tier propulsion or pick a different mission.</div>
+          </div>
+        </div>
+      ) : <div />}
+
+    </MissionSetupShell>
   )
 }

@@ -1,7 +1,7 @@
 // Landnam game data — prebuilt starter rockets
 // Players purchase a rocket per mission. SR1 is always free. SR2+ require Francs + mission history.
 
-import type { StarterRocket } from './types'
+import type { RocketConfig, StarterRocket } from './types'
 
 export const STARTER_ROCKETS: StarterRocket[] = [
   {
@@ -49,3 +49,22 @@ export const STARTER_ROCKETS: StarterRocket[] = [
     unlockHint: 'Coming soon',
   },
 ]
+
+const STARTER_ROCKET_BY_CHASSIS: Record<string, string> = {
+  'hull-mk1': 'sr1',
+  'hull-mk2': 'sr2',
+  'hull-mk3': 'sr2',
+}
+
+export function starterRocketForConfig(rocket: Pick<RocketConfig, 'chassis'> | null | undefined): StarterRocket {
+  const id = rocket ? STARTER_ROCKET_BY_CHASSIS[rocket.chassis] : undefined
+  return STARTER_ROCKETS.find(starter => starter.id === id) ?? STARTER_ROCKETS[0]
+}
+
+export function rocketDisplayForConfig(rocket: Pick<RocketConfig, 'chassis'> | null | undefined): {
+  name: string
+  img: string
+} {
+  const starter = starterRocketForConfig(rocket)
+  return { name: starter.name, img: starter.img }
+}

@@ -104,7 +104,7 @@ describe('Tutorial rail regression', () => {
         cy.viewport(viewport.width, viewport.height)
       })
 
-      it('keeps radial Missions and other gameplay buttons out of the tutorial rail', () => {
+      it('keeps missions nav and other gameplay buttons out of the tutorial rail', () => {
         visitWithState(fullState({
           screen: 'hub',
           tutorial: true,
@@ -113,7 +113,18 @@ describe('Tutorial rail regression', () => {
         }))
 
         cy.get('[data-testid="tutorial-coach-block"]').should('contain', 'Open a Mission')
-        cy.get('[data-testid="radial-nav-missions"]').should('be.visible')
+
+        // On desktop the sidebar missions button is always visible;
+        // on mobile the radial menu is open (menuOpen: true) so radial-nav-missions shows.
+        cy.window().then(win => {
+          if (win.innerWidth >= 1024) {
+            cy.get('[data-testid="sidebar-nav-missions"]').should('be.visible')
+            cy.get('[data-testid="radial-nav-toggle"]').should('not.be.visible')
+          } else {
+            cy.get('[data-testid="radial-nav-missions"]').should('be.visible')
+          }
+        })
+
         assertGameplayButtonsAvoidCoachBlock()
       })
 

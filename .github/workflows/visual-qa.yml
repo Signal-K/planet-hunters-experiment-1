@@ -1,0 +1,252 @@
+name: Visual QA
+
+on:
+  push:
+    branches: [main, "sprint/**", "claude/**"]
+    paths:
+      - "web/**"
+      - "pocketbase/**"
+      - ".github/workflows/visual-qa.yml"
+  pull_request:
+    branches: [main, "sprint/**"]
+    paths:
+      - "web/**"
+      - "pocketbase/**"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  visual-qa:
+    name: Headed Chrome — full game playthrough
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # ── Shared PocketBase (vanilla) ─────────────────────────────────────────
+      - name: Download shared PocketBase
+        run: |
+          PB_VERSION=0.27.0
+          curl -fsSL \
+            "https://github.com/pocketbase/pocketbase/releases/download/v${PB_VERSION}/pocketbase_${PB_VERSION}_linux_amd64.zip" \
+            -o /tmp/pb-shared.zip
+          unzip -q /tmp/pb-shared.zip pocketbase -d /tmp/pb-shared-bin
+
+      - name: Start shared PocketBase
+        run: |
+          mkdir -p /tmp/pb-shared-data
+          /tmp/pb-shared-bin/pocketbase serve \
+            --http=127.0.0.1:8090 \
+            --dir=/tmp/pb-shared-data &
+          # Give PB time to write its initial DB, then create superuser
+          sleep 3
+          /tmp/pb-shared-bin/pocketbase superuser create \
+            ci@landnam.test CiTestPassword123! \
+            --dir=/tmp/pb-shared-data 2>/dev/null || true
+
+      # ── Landnam PocketBase (custom binary) ──────────────────────────────────
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: pocketbase/go.mod
+          cache-dependency-path: pocketbase/go.sum
+
+      - name: Build Landnam PocketBase
+        working-directory: pocketbase
+        run: go build -o /tmp/landnam-pb .
+
+      - name: Start Landnam PocketBase
+        run: |
+          mkdir -p /tmp/pb-landnam-data
+          /tmp/landnam-pb serve \
+            --http=127.0.0.1:8091 \
+            --dir=/tmp/pb-landnam-data &
+          sleep 3
+          /tmp/landnam-pb superuser create \
+            ci@landnam.test CiTestPassword123! \
+            --dir=/tmp/pb-landnam-data 2>/dev/null || true
+
+      - name: Wait for PocketBase health
+        run: |
+          echo "Waiting for PocketBase instances..."
+          for i in {1..20}; do
+            shared_ok=$(curl -sf http://127.0.0.1:8090/api/health && echo 1 || echo 0)
+            landnam_ok=$(curl -sf http://127.0.0.1:8091/api/health && echo 1 || echo 0)
+            if [ "$shared_ok" = "1" ] && [ "$landnam_ok" = "1" ]; then
+              echo "Both PocketBase instances ready."
+              break
+            fi
+            echo "Attempt $i/20 — shared=$shared_ok landnam=$landnam_ok"
+            sleep 2
+          done
+
+      # ── Node / Chrome ────────────────────────────────────────────────────────
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+
+      - name: Install dependencies
+        working-directory: web
+        run: npm ci
+
+      - uses: browser-actions/setup-chrome@v1
+        with:
+          chrome-version: stable
+
+      # ── Cypress visual run ────────────────────────────────────────────────────
+      # cypress-io/github-action@v6 automatically starts Xvfb on Linux,
+      # enabling --headed Chrome in a headless runner environment.
+      - name: Run visual QA — headed Chrome
+        id: cypress
+        uses: cypress-io/github-action@v6
+        continue-on-error: true
+        with:
+          working-directory: web
+          browser: chrome
+          headed: true
+          install: false
+          start: npm run dev
+          wait-on: "http://localhost:3099"
+          wait-on-timeout: 90
+        env:
+          CYPRESS_PROFILE: visual
+          CYPRESS_baseUrl: http://localhost:3099
+          NEXT_PUBLIC_LANDNAM_PB_URL: http://127.0.0.1:8091
+          NEXT_PUBLIC_SHARED_PB_URL: http://127.0.0.1:8090
+          PORT: 3099
+          CI: true
+
+      # ── Artifacts ─────────────────────────────────────────────────────────────
+      - name: Upload screenshots
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: visual-qa-screenshots-${{ github.sha }}
+          path: web/cypress/screenshots/
+          if-no-files-found: warn
+          retention-days: 30
+
+      - name: Upload videos
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: visual-qa-videos-${{ github.sha }}
+          path: web/cypress/videos/
+          if-no-files-found: warn
+          retention-days: 14
+
+      # ── Analysis: step summary + PR comment ───────────────────────────────────
+      - name: Analyse results and post summary
+        if: always()
+        uses: actions/github-script@v7
+        env:
+          CYPRESS_OUTCOME: ${{ steps.cypress.outcome }}
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const fs = require('fs')
+            const path = require('path')
+
+            const outcome = process.env.CYPRESS_OUTCOME  // 'success' | 'failure' | 'cancelled'
+            const passed = outcome === 'success'
+            const statusIcon = passed ? '✅' : '❌'
+            const sha = context.sha.slice(0, 7)
+            const runUrl = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`
+
+            // Collect screenshots, grouped by test name
+            const screenshotsBase = 'web/cypress/screenshots'
+            const screenshots = []
+            function walk(dir) {
+              if (!fs.existsSync(dir)) return
+              for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+                const full = path.join(dir, entry.name)
+                if (entry.isDirectory()) walk(full)
+                else if (entry.name.endsWith('.png')) {
+                  screenshots.push(full.replace(screenshotsBase + '/', ''))
+                }
+              }
+            }
+            walk(screenshotsBase)
+            screenshots.sort()
+
+            // Parse mochawesome JSON if available (cypress-io/github-action may write it)
+            let testRows = ''
+            const mocha = 'web/cypress/results/mochawesome.json'
+            if (fs.existsSync(mocha)) {
+              const results = JSON.parse(fs.readFileSync(mocha, 'utf8'))
+              const rows = []
+              function collectTests(suite) {
+                for (const t of (suite.tests || [])) {
+                  const icon = t.pass ? '✅' : t.fail ? '❌' : '⏭️'
+                  rows.push(`| ${icon} \`${t.fullTitle}\` | ${t.duration}ms |`)
+                }
+                for (const s of (suite.suites || [])) collectTests(s)
+              }
+              for (const s of (results.results || [])) collectTests(s)
+              if (rows.length) {
+                testRows = `\n## Tests\n\n| Result | Duration |\n|---|---|\n${rows.join('\n')}\n`
+              }
+            }
+
+            // Group screenshots by prefix (test name comes before first ' -- ')
+            const groups = {}
+            for (const s of screenshots) {
+              const name = path.basename(s, '.png')
+              const test = s.split('/')[0] || 'other'
+              ;(groups[test] = groups[test] || []).push(name)
+            }
+
+            let screenshotSection = '\n## Screenshots\n\n'
+            if (screenshots.length === 0) {
+              screenshotSection += '_No screenshots captured._\n'
+            } else {
+              screenshotSection += `${screenshots.length} screenshots captured — download the **visual-qa-screenshots** artifact to view them.\n\n`
+              for (const [group, names] of Object.entries(groups)) {
+                screenshotSection += `**${group}**\n`
+                screenshotSection += names.map(n => `  - \`${n}\``).join('\n') + '\n\n'
+              }
+            }
+
+            const md = `# ${statusIcon} Visual QA — \`${sha}\`
+
+            **Outcome**: ${passed ? 'All tests passed' : 'One or more tests failed'}
+            **Commit**: \`${context.sha.slice(0, 7)}\` on \`${context.ref.replace('refs/heads/', '')}\`
+            **Run**: [View full logs and download artifacts](${runUrl})
+            ${testRows}${screenshotSection}
+            ---
+            _Screenshots are pixel-accurate captures from a headed Chrome browser playing through the game._
+            `.replace(/^            /gm, '')
+
+            // Write to GitHub step summary
+            await core.summary.addRaw(md).write()
+
+            // Comment or update existing comment on PRs
+            if (context.eventName === 'pull_request') {
+              const { data: comments } = await github.rest.issues.listComments({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+              })
+              const existing = comments.find(c =>
+                c.user.type === 'Bot' && c.body.startsWith('# ') && c.body.includes('Visual QA')
+              )
+              const payload = {
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: md,
+              }
+              if (existing) {
+                await github.rest.issues.updateComment({ ...payload, comment_id: existing.id })
+              } else {
+                await github.rest.issues.createComment({ ...payload, issue_number: context.issue.number })
+              }
+            }
+
+            // Fail the workflow if Cypress failed
+            if (!passed) {
+              core.setFailed(`Visual QA failed — check screenshots and videos in the artifacts.`)
+            }

@@ -11,33 +11,32 @@ export interface BuildingProps {
   w: number
   style?: React.CSSProperties
   onClick: () => void
+  // Small numeric badge in the top-right corner — used for the SMS
+  // daily-candidate-queue count (see HubScreen's satellite-monitoring-station
+  // wiring). Omit or pass 0 to hide.
+  badge?: number
 }
 
-export function Building({ kind, label, sub, status, hot, w, style, onClick }: BuildingProps) {
+export function Building({ kind, label, sub, status, hot, w, style, onClick, badge }: BuildingProps) {
   const statusColors = { ok: '#39d36a', warn: '#ffb347', info: '#7ec8ff' }
   const color = statusColors[status]
   return (
     <button data-testid={`building-${kind}`} onClick={onClick} style={{ position: 'absolute', background: 'transparent', border: 'none', padding: 0, cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, ...style }}>
-      <div style={{ width: w, height: w * 0.6, position: 'relative', display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
-        {kind === 'launchpad' && (
-          <svg width={w} height={w * 0.6} viewBox="0 0 132 80">
-            <rect x="10" y="50" width="112" height="8" fill="#2a3a4a" stroke="#3fa9ff" strokeWidth="1"/>
-            <rect x="44" y="10" width="44" height="44" rx="4" fill="#0e1c2e" stroke="#3fa9ff" strokeWidth="1.2"/>
-            <rect x="54" y="20" width="24" height="28" rx="3" fill="#1a3050" stroke="#6cc2ff" strokeWidth="1"/>
-            <circle cx="66" cy="34" r="5" fill="#f5a623" opacity="0.9"/>
-            <path d="M58 54 L74 54 L72 44 L60 44 Z" fill="#d68a0d" opacity="0.8"/>
-            {hot && <circle cx="66" cy="54" r="18" fill="#f5a623" opacity="0.15"><animate attributeName="r" values="16;22;16" dur="1.6s" repeatCount="indefinite"/></circle>}
-          </svg>
-        )}
-        {kind === 'refinery' && (
-          <svg width={w} height={w * 0.6} viewBox="0 0 84 60">
-            <rect x="6" y="20" width="72" height="30" rx="3" fill="#0e1c2e" stroke="#f5a623" strokeWidth="1.2"/>
-            <rect x="20" y="8" width="12" height="14" rx="2" fill="#1a3050" stroke="#f5a623" strokeWidth="0.8"/>
-            <rect x="52" y="8" width="12" height="14" rx="2" fill="#1a3050" stroke="#f5a623" strokeWidth="0.8"/>
-            <circle cx="26" cy="14" r="3" fill="#f5a623" opacity="0.6"/>
-            <circle cx="58" cy="14" r="3" fill="#f5a623" opacity="0.6"/>
-            <path d="M26 22 L42 20 L58 22" stroke="#f5a623" strokeWidth="1" fill="none" opacity="0.5"/>
-          </svg>
+      {/* Visual rendered by HubPixiCanvas — this spacer keeps label position aligned */}
+      <div style={{ width: w, height: w * 0.6, position: 'relative' }}>
+        {!!badge && badge > 0 && (
+          <span
+            data-testid={`building-${kind}-badge`}
+            style={{
+              position: 'absolute', top: -4, right: -4, minWidth: 16, height: 16, padding: '0 4px',
+              borderRadius: 999, background: 'var(--ln-amber)', border: '1px solid rgba(6,9,15,0.8)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontFamily: 'var(--ln-font-display)', fontWeight: 800, fontSize: 9, color: '#0a0f1a',
+              boxShadow: '0 0 8px rgba(245,166,35,0.6)',
+            }}
+          >
+            {badge > 9 ? '9+' : badge}
+          </span>
         )}
       </div>
       <div style={{

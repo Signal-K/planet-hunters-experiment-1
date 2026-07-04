@@ -20,7 +20,9 @@
     "test:e2e:interaction-order": "CYPRESS_PROFILE=interaction-order start-server-and-test dev http://localhost:3000 cypress:run:interaction-order",
     "test:e2e:ui-zones": "CYPRESS_PROFILE=ui-zones start-server-and-test dev http://localhost:3000 cypress:run:ui-zones",
     "test:e2e:clean-start-loop": "CYPRESS_PROFILE=clean-start-loop start-server-and-test dev http://localhost:3000 cypress:run:clean-start-loop",
-    "test:e2e:pb": "CYPRESS_PROFILE=with-pb start-server-and-test dev http://localhost:3000 cypress:run"
+    "test:e2e:pb": "CYPRESS_PROFILE=with-pb start-server-and-test dev http://localhost:3000 cypress:run",
+    "cypress:open:visual": "env -u ELECTRON_RUN_AS_NODE CYPRESS_PROFILE=visual cypress open --browser chrome",
+    "cypress:run:visual": "env -u ELECTRON_RUN_AS_NODE CYPRESS_PROFILE=visual cypress run --browser chrome --headed"
   },
   "dependencies": {
     "framer-motion": "^12.40.0",

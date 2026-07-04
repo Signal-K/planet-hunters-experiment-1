@@ -1,15 +1,17 @@
 'use client'
 
-import React, { createContext, useContext, useState, useEffect, useRef, useCallback } from 'react'
-import type { Screen, Player, GameState, GameActions } from '@/lib/game-types'
-import type { Mission, Target, RocketConfig } from '@/lib/data'
-import { MISSIONS, TARGETS, getLaserChargeCap } from '@/lib/data'
+import React, { createContext, useContext, useState, useEffect, useRef, useCallback, useMemo } from 'react'
+import { useRouter } from 'next/navigation'
+import type { Screen, GameState, GameActions } from '@/lib/game-types'
+import { MISSIONS, TARGETS, getLaserChargeCap, type Contractor, type Mission, type Target } from '@/lib/data'
+import { DEFAULT_STATE, loadState, normalizeAndRepair } from '@/lib/game-state'
 import { resolvePreset } from '@/lib/devPresets'
 import { pbShared } from '@/lib/pb'
 import { identifyUser } from '@/lib/posthog'
 import { enqueueSurvey } from '@/lib/surveys'
 import { useUIActions } from '@/lib/contexts/useUIActions'
 import { useAuthSync } from '@/lib/contexts/useAuthSync'
+import { useConfirmedDiscoveryPoll } from '@/lib/contexts/useConfirmedDiscoveryPoll'
 import { useCatalogSync } from '@/lib/contexts/useCatalogSync'
 import { useGameLoop } from '@/lib/contexts/useGameLoop'
 import { useTutorialActions } from '@/lib/contexts/useTutorialActions'
@@ -20,99 +22,30 @@ export type { Screen, Player, GameState } from '@/lib/game-types'
 // ── State shape helpers ────────────────────────────────────────────────────────
 
 const STORAGE_KEY = 'landnam-game-state-v1'
+const STORY_MISSION_CONTRACTOR_ID = 'mission-control'
+const TRANSIT_TELESCOPE_TARGET_ID = 'earth-orbit-transit-telescope'
+const TRANSIT_TELESCOPE_MISSION_ID = 'story-transit-telescope-launch'
 
-const VALID_SCREENS: Screen[] = ['intro', 'build', 'hub', 'missions', 'galaxy', 'targets', 'fab', 'transit', 'mining', 'debrief', 'refinery', 'market', 'hangar', 'rocket-buy', 'skills', 'scan-station', 'rover-mining']
-const MISSION_CONTEXT_SCREENS = new Set<Screen>(['targets', 'rocket-buy', 'fab', 'transit', 'mining', 'rover-mining', 'debrief'])
-const TARGET_CONTEXT_SCREENS = new Set<Screen>(['rocket-buy', 'fab', 'transit', 'mining', 'rover-mining', 'debrief'])
-
-const DEFAULT_STATE: GameState = {
-  screen: 'intro',
-  player: {
-    francs: 10_000_000_000,
-    activeMission: null,
-    missionCount: 1,
-    pendingLaunch: false,
-    placed: [],
-    placementPlots: {},
-    controlBuilt: false,
-    missionsDone: 0,
-    skillPoints: 0,
-    unlockedSkillNodes: [],
-    freeOperations: false,
-    contractorMissions: {},
-    contractorStreaks: {},
-    contractorCooldowns: {},
-    researchAnnotations: 0,
-    refineryBuilt: false,
-    refineryUnlocked: false,
-    refineryUnlockNotified: false,
-    refineryQueue: [],
-    refinedGoods: {},
-    launchpadUpgraded: false,
-    loanDebt: 0,
-    loanOffered: false,
-    seen_planets: [],
-    roverDeployments: [],
-    contractorTerritories: {},
-  },
-  missionId: null,
-  targetId: null,
-  rocket: { chassis: 'hull-mk1', propulsion: 'ion-a1', drill: 'hand-drill' },
-  lastCargo: null,
-  tutorial: true,
-  doneSteps: {},
-  popup: null,
-  menuOpen: false,
+const MISSION_CONTROL_CONTRACTOR: Contractor = {
+  id: STORY_MISSION_CONTRACTOR_ID,
+  name: 'Mission Control',
+  color: '#7ec8ff',
+  initial: 'MC',
+  unlockTier: 0,
+  projectType: 'Story mission',
+  mineralPreferences: [],
+  payoutPremium: 0,
+  affinityBonusPerMission: 0,
 }
 
-function normalizeState(input: Partial<GameState>): GameState {
-  const screen = input.screen && VALID_SCREENS.includes(input.screen) ? input.screen : DEFAULT_STATE.screen
-  const missionId = typeof input.missionId === 'string' ? input.missionId : null
-  const targetId = missionId && typeof input.targetId === 'string' ? input.targetId : null
-  return {
-    ...DEFAULT_STATE,
-    ...input,
-    screen,
-    missionId,
-    targetId,
-    rocket: { ...DEFAULT_STATE.rocket, ...input.rocket },
-    player: { ...DEFAULT_STATE.player, ...input.player },
-    doneSteps: { ...DEFAULT_STATE.doneSteps, ...input.doneSteps },
-  }
-}
-
-function repairStateRoute(input: GameState): GameState {
-  const mission = input.missionId
-    ? (MISSIONS.find(m => m.id === input.missionId)
-       ?? input.player.dailyContractorPool?.missions.find(m => m.id === input.missionId)
-       ?? null)
-    : null
-  const target = input.targetId ? TARGETS.find(t => t.id === input.targetId) ?? null : null
-  if (MISSION_CONTEXT_SCREENS.has(input.screen) && !mission) {
-    return { ...input, screen: 'missions', missionId: null, targetId: null }
-  }
-  if (TARGET_CONTEXT_SCREENS.has(input.screen) && !target) {
-    return { ...input, screen: mission ? 'targets' : 'missions', targetId: null }
-  }
-  if (input.screen === 'targets' && mission?.targetId) {
-    return { ...input, screen: 'rocket-buy', targetId: mission.targetId }
-  }
-  return input
-}
-
-function normalizeAndRepair(partial: Partial<GameState>): GameState {
-  return repairStateRoute(normalizeState(partial))
-}
-
-function loadState(): GameState {
-  if (typeof window === 'undefined') return DEFAULT_STATE
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY)
-    if (!raw) return DEFAULT_STATE
-    return normalizeAndRepair(JSON.parse(raw) as Partial<GameState>)
-  } catch {
-    return DEFAULT_STATE
-  }
+const TRANSIT_TELESCOPE_TARGET: Target = {
+  id: TRANSIT_TELESCOPE_TARGET_ID,
+  name: 'Earth Orbit',
+  type: 'planet',
+  orbit: 1,
+  difficulty: 'L1',
+  brief: 'Low Earth orbit deployment lane for a transit telescope monitored from the Earth-base SMS.',
+  minerals: [],
 }
 
 // ── Context ────────────────────────────────────────────────────────────────────
@@ -156,7 +89,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
         return
       }
     }
-    setState(loadState())
+    setState(loadState(STORAGE_KEY))
     setHydrated(true)
     const record = pbShared.authStore.record
     if (record?.id) identifyUser(record.id, record.email ? { email: record.email } : undefined)
@@ -174,26 +107,117 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state))
   }, [state, hydrated])
 
+  const router = useRouter()
+
   // ── Domain hooks ───────────────────────────────────────────────────────────
   const ui      = useUIActions(setState)
   const auth    = useAuthSync({ state, setState, stateRef, hydrated, isPreview: isPreview.current, addToast: ui.addToast, normalizeAndRepair, storageKey: STORAGE_KEY })
+  useConfirmedDiscoveryPoll({ stateRef, setState, hydrated, addToast: ui.addToast })
   const { catalog } = useCatalogSync(state, setState, hydrated, isPreview.current, ui.addToast)
-  const loop    = useGameLoop({ stateRef, setState, catalog, addToast: ui.addToast })
+  const runtimeCatalog = useMemo(() => {
+    const discoveredTargets = Object.values(state.player.discoveredExoplanetTargets ?? {})
+    const shouldOfferTransitTelescopeMission = state.player.freeOperations && state.player.satelliteMonitoringBuilt && !state.player.transitSatelliteLaunchedAt
+    const hasActiveTransitTelescopeMission = state.missionId === TRANSIT_TELESCOPE_MISSION_ID || state.targetId === TRANSIT_TELESCOPE_TARGET_ID
+    const shouldIncludeTransitTelescopeMission = shouldOfferTransitTelescopeMission || hasActiveTransitTelescopeMission
+    if (discoveredTargets.length === 0 && !shouldIncludeTransitTelescopeMission) return catalog
+
+    const existingTargetIds = new Set(catalog.targets.map(target => target.id))
+    const mergedTargets = [
+      ...catalog.targets,
+      ...(shouldIncludeTransitTelescopeMission && !existingTargetIds.has(TRANSIT_TELESCOPE_TARGET.id) ? [TRANSIT_TELESCOPE_TARGET] : []),
+      ...discoveredTargets.filter(target => !existingTargetIds.has(target.id)),
+    ]
+    const existingMissionIds = new Set(catalog.missions.map(mission => mission.id))
+    const transitTelescopeMission: Mission[] = shouldIncludeTransitTelescopeMission && !existingMissionIds.has(TRANSIT_TELESCOPE_MISSION_ID)
+      ? [{
+          id: TRANSIT_TELESCOPE_MISSION_ID,
+          title: 'Launch Transit Telescope',
+          brief: 'Mission Control authorizes a story operation to place a TESS-class telescope in Earth orbit. This is not a contractor request.',
+          contractor: STORY_MISSION_CONTRACTOR_ID,
+          tag: 'STORY',
+          difficulty: 'L1',
+          locked: false,
+          sequence: state.player.missionsDone + 1,
+          unlockAt: 'Build Satellite Monitoring Station',
+          targetId: TRANSIT_TELESCOPE_TARGET_ID,
+          payload: {
+            type: 'satellite',
+            name: 'Transit Telescope',
+            cargoCost: 0,
+          },
+          requires: {
+            minerals: {},
+            cargo_min: 0,
+            drill_tier: 1,
+            max_orbit: 1,
+          },
+          payout: {
+            francs: 150_000,
+            affinity: 0,
+          },
+        }]
+      : []
+    const surveyMissions: Mission[] = discoveredTargets
+      .map((target, index) => ({
+        id: `exo-survey-${target.id}`,
+        title: `${target.name} survey flight`,
+        brief: `Follow up the satellite discovery with a crewed survey mission to ${target.name}. This target is plotted in the star map.`,
+        contractor: 'lumen-research',
+        tag: 'SCIENCE',
+        difficulty: target.difficulty,
+        locked: false,
+        sequence: state.player.missionsDone + 1,
+        unlockAt: 'Classify a satellite candidate',
+        targetId: target.id,
+        requires: {
+          minerals: {},
+          cargo_min: 0,
+          drill_tier: 1,
+          max_orbit: target.orbit,
+        },
+        payout: {
+          francs: 500_000 + index * 75_000,
+          affinity: 6,
+        },
+      }))
+      .filter(mission => !existingMissionIds.has(mission.id))
+
+    return {
+      ...catalog,
+      contractors: {
+        ...catalog.contractors,
+        ...(shouldIncludeTransitTelescopeMission ? { [STORY_MISSION_CONTRACTOR_ID]: MISSION_CONTROL_CONTRACTOR } : {}),
+      },
+      targets: mergedTargets,
+      missions: [...catalog.missions, ...transitTelescopeMission, ...surveyMissions],
+    }
+  }, [catalog, state.missionId, state.player.discoveredExoplanetTargets, state.player.freeOperations, state.player.missionsDone, state.player.satelliteMonitoringBuilt, state.player.transitSatelliteLaunchedAt, state.targetId])
+  const loop    = useGameLoop({ stateRef, setState, catalog: runtimeCatalog, addToast: ui.addToast })
   const tutorial = useTutorialActions(setState)
-  const economy = useEconomyActions(setState, useCallback(() => catalog.missions, [catalog.missions]))
+  const economy = useEconomyActions(setState, useCallback(() => runtimeCatalog.missions, [runtimeCatalog.missions]))
+
+  // Sync game.screen → URL on every screen change.
+  // skipNextUrlSync prevents a loop when the change was triggered BY a URL change.
+  useEffect(() => {
+    if (ui.skipNextUrlSync.current) {
+      ui.skipNextUrlSync.current = false
+      return
+    }
+    router.push(`/game/${state.screen}`)
+  }, [state.screen]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Derived values ─────────────────────────────────────────────────────────
   const mission = state.missionId
-    ? (catalog.missions.find(m => m.id === state.missionId)
+    ? (runtimeCatalog.missions.find(m => m.id === state.missionId)
        ?? state.player.dailyContractorPool?.missions.find(m => m.id === state.missionId)
        ?? null)
     : null
-  const target = state.targetId ? catalog.targets.find(t => t.id === state.targetId) ?? null : null
+  const target = state.targetId ? runtimeCatalog.targets.find(t => t.id === state.targetId) ?? null : null
 
   return (
     <GameContext.Provider value={{
       ...state,
-      catalog,
+      catalog: runtimeCatalog,
       hydrated,
       authUserId: auth.authUserId,
       mission,
@@ -202,6 +226,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       laserChargeCap: getLaserChargeCap(state.player.unlockedSkillNodes ?? []),
       // UI
       go: ui.go,
+      setScreenFromUrl: ui.setScreenFromUrl,
       setPopup: ui.setPopup,
       setMenuOpen: ui.setMenuOpen,
       dismissToast: ui.dismissToast,
@@ -217,6 +242,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       createAccountFromGate: auth.createAccountFromGate,
       skipAuthGate: auth.skipAuthGate,
       resetGame: useCallback(() => auth.resetGame(DEFAULT_STATE), [auth.resetGame]), // eslint-disable-line react-hooks/rules-of-hooks
+      signOut: auth.signOut,
       // Game loop
       setPlayer: loop.setPlayer,
       setMissionId: loop.setMissionId,
@@ -230,6 +256,12 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       onMiningDone: loop.onMiningDone,
       onRoverMiningDone: loop.onRoverMiningDone,
       onDebriefDone: loop.onDebriefDone,
+      gainResearchXP: loop.gainResearchXP,
+      upgradeLicenseGrade: loop.upgradeLicenseGrade,
+      unlockBlueprint: loop.unlockBlueprint,
+      launchTransitSatellite: loop.launchTransitSatellite,
+      submitTessClassification: loop.submitTessClassification,
+      chooseSatelliteTarget: loop.chooseSatelliteTarget,
       // Tutorial
       setTutorial: tutorial.setTutorial,
       skipTutorial: tutorial.skipTutorial,

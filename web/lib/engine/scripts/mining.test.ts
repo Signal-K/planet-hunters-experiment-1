@@ -15,8 +15,9 @@ vi.mock('pixi.js', () => ({
     this.tint = 0xffffff
     this.scale = { set: vi.fn() }
   }),
-  Container: vi.fn().mockImplementation(function (this: { addChild: () => void }) {
+  Container: vi.fn().mockImplementation(function (this: { addChild: () => void; removeChild: () => void }) {
     this.addChild = vi.fn()
+    this.removeChild = vi.fn()
   }),
 }))
 

@@ -7,7 +7,7 @@
       "id": "plot-0",
       "name": "Plot 0",
       "transform": {
-        "position": { "x": 22, "y": 570 },
+        "position": { "x": 60, "y": 570 },
         "rotation": 0,
         "scale": { "x": 1, "y": 1 }
       },
@@ -19,7 +19,7 @@
       "id": "plot-1",
       "name": "Plot 1",
       "transform": {
-        "position": { "x": 112, "y": 570 },
+        "position": { "x": 154, "y": 570 },
         "rotation": 0,
         "scale": { "x": 1, "y": 1 }
       },
@@ -31,7 +31,7 @@
       "id": "plot-2",
       "name": "Plot 2",
       "transform": {
-        "position": { "x": 210, "y": 570 },
+        "position": { "x": 248, "y": 570 },
         "rotation": 0,
         "scale": { "x": 1, "y": 1 }
       },
@@ -43,7 +43,7 @@
       "id": "plot-3",
       "name": "Plot 3",
       "transform": {
-        "position": { "x": 300, "y": 570 },
+        "position": { "x": 342, "y": 570 },
         "rotation": 0,
         "scale": { "x": 1, "y": 1 }
       },

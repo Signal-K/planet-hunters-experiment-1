@@ -1,10 +1,12 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import CoachAvatar from '@/components/layout/CoachAvatar'
+import CoachPointer from './CoachPointer'
 import type { TutorialStep } from '@/lib/data'
 import { reserved_rect } from '@/lib/tutorial-layout'
 import { UI_ZONES } from '@/lib/ui-zones'
+import { useIsDesktop } from '@/lib/hooks/useIsDesktop'
 
 interface TutorialCoachProps {
   stepIndex: number
@@ -16,78 +18,92 @@ interface TutorialCoachProps {
 }
 
 export default function TutorialCoach({ stepIndex, steps, step, total, onManualNext, onSkip }: TutorialCoachProps) {
-  const [collapsed, setCollapsed] = useState(false)
+  const isDesktop = useIsDesktop()
+
   if (!step) return null
   const manual = !!step.manual
   const coachRail = reserved_rect(step.anchor === 'bottom' ? 'bottom' : 'top')
 
-  const dots = (
-    <div style={{ display: 'flex', gap: 4 }}>
+  const resolvedBody   = (isDesktop && step.desktopBody   !== undefined) ? step.desktopBody   : step.body
+  const resolvedAction = (isDesktop && step.desktopAction !== undefined) ? step.desktopAction : step.action
+  const resolvedCoachId = (isDesktop && step.desktopCoachId !== undefined) ? step.desktopCoachId : step.coachId
+
+  // Set data-coach-target on <html> for CSS element highlighting (works across fixed/absolute boundaries)
+  useEffect(() => {
+    const html = document.documentElement
+    if (resolvedCoachId) html.setAttribute('data-coach-target', resolvedCoachId)
+    return () => { html.removeAttribute('data-coach-target') }
+  }, [resolvedCoachId])
+
+  const progress = (
+    <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
       {steps.map((s, i) => (
         <span key={i} style={{
-          width: i === stepIndex ? 16 : 6,
+          width: i === stepIndex ? 18 : 6,
           height: 6,
           borderRadius: 999,
-          background: i < stepIndex ? '#39d36a' : i === stepIndex ? '#f5a623' : 'rgba(135,207,250,0.25)',
-          transition: 'all 200ms',
+          background: i < stepIndex ? '#39d36a' : i === stepIndex ? '#f5a623' : 'rgba(135,207,250,0.2)',
+          transition: 'all 250ms',
+          flexShrink: 0,
         }} />
       ))}
     </div>
   )
 
-
-  const spot = step.spot
-  const spotStyle: React.CSSProperties | null = spot ? {
-    position: 'absolute',
-    left: spot.fromCenter ? `calc(50% + ${spot.x}px)` : spot.x,
-    top: spot.fromBottom ? undefined : spot.y,
-    bottom: spot.fromBottom ? spot.y : undefined,
-    width: spot.right !== undefined ? undefined : spot.w,
-    right: spot.right !== undefined ? spot.right : undefined,
-    height: spot.h,
-    borderRadius: 10,
-    border: '2px solid rgba(63,169,255,0.6)',
-    boxShadow: '0 0 16px rgba(63,169,255,0.3)',
-    pointerEvents: 'none',
-    zIndex: 97,
-    animation: 'coach-spot-pulse 1.8s ease-in-out infinite',
-  } : null
-
+  // ── Manual (full card) ──────────────────────────────────────────────────────
   if (manual) {
     return (
       <div style={{ position: 'absolute', inset: 0, zIndex: 96, pointerEvents: 'none' }} data-testid="tutorial-coach-overlay">
-        {spotStyle && <div data-testid="tutorial-coach-spot" style={spotStyle} />}
-        <div data-ui-zone={UI_ZONES.tutorialRail} data-testid="tutorial-coach-block" style={{ position: 'absolute', left: 14, right: 14, top: coachRail.top, maxHeight: coachRail.height, zIndex: 98, pointerEvents: 'auto', overflowY: 'auto' }}>
+        {resolvedCoachId && <CoachPointer coachId={resolvedCoachId} />}
+        <div
+          data-ui-zone={UI_ZONES.tutorialRail}
+          data-testid="tutorial-coach-block"
+          style={{ position: 'absolute', left: 14, right: 14, top: coachRail.top, maxHeight: 160, zIndex: 98, pointerEvents: 'auto', overflowY: 'auto' }}
+        >
           <div style={{
-            background: 'linear-gradient(180deg, #0d1c30 0%, #081120 100%)',
-            border: '1px solid rgba(135,207,250,0.5)',
-            borderRadius: 16,
-            padding: 12,
-            boxShadow: '0 12px 36px rgba(0,0,0,0.6), 0 0 24px rgba(63,169,255,0.25)',
+            background: 'linear-gradient(160deg, rgba(10,22,42,0.98) 0%, rgba(6,13,26,0.98) 100%)',
+            border: '1px solid rgba(135,207,250,0.4)',
+            borderRadius: 14,
+            padding: '10px 12px 10px',
+            boxShadow: '0 16px 48px rgba(0,0,0,0.7), 0 0 0 1px rgba(63,169,255,0.08)',
           }}>
-            <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
-              <CoachAvatar size={40} talking />
+            <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
+              <CoachAvatar size={36} talking />
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <span style={{ fontFamily: 'var(--ln-font-display)', fontSize: 9, fontWeight: 800, letterSpacing: '0.2em', color: '#87CFFA', textTransform: 'uppercase' }}>Mission Coach</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
+                  <span style={{ fontFamily: 'var(--ln-font-display)', fontSize: 9, fontWeight: 800, letterSpacing: '0.22em', color: 'var(--ln-cyan)', textTransform: 'uppercase' }}>
+                    Mission Coach
+                  </span>
                   <span style={{ flex: 1 }} />
-                  <span style={{ fontFamily: 'var(--ln-font-mono)', fontSize: 10, color: '#7a8294', letterSpacing: '0.12em' }}>{stepIndex + 1} / {total}</span>
+                  <span style={{ fontFamily: 'var(--ln-font-mono)', fontSize: 9, color: '#4a5a6e', letterSpacing: '0.1em' }}>
+                    {stepIndex + 1} / {total}
+                  </span>
                 </div>
-                <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 14, fontWeight: 800, color: '#e6efff', marginTop: 3 }}>{step.title}</div>
-                <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 12, color: '#a9b8ce', marginTop: 3, lineHeight: 1.35, wordBreak: 'break-word' }}>{step.body}</div>
+                <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 13, fontWeight: 800, color: '#e8f0ff', lineHeight: 1.2, marginBottom: 3 }}>
+                  {step.title}
+                </div>
+                <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 11.5, color: '#9ab0c8', lineHeight: 1.4, wordBreak: 'break-word' }}>
+                  {resolvedBody}
+                </div>
               </div>
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 8 }}>
-              {dots}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 8 }}>
+              {progress}
               <span style={{ flex: 1 }} />
-              <button onClick={onSkip} style={{ background: 'transparent', border: 'none', cursor: 'pointer', fontFamily: 'var(--ln-font-display)', fontSize: 10, fontWeight: 700, letterSpacing: '0.16em', textTransform: 'uppercase', color: '#5d7390' }}>Skip</button>
-              <button onClick={onManualNext} style={{
-                padding: '8px 16px', borderRadius: 10, cursor: 'pointer', border: 'none',
-                background: 'linear-gradient(180deg, #6cc2ff, #2d8de0)', color: '#06121f',
-                fontFamily: 'var(--ln-font-display)', fontSize: 12, fontWeight: 800,
-                letterSpacing: '0.1em', textTransform: 'uppercase', boxShadow: '0 3px 0 rgba(0,0,0,0.3)',
-                display: 'inline-flex', alignItems: 'center', gap: 6,
-              }}>Got it <span>›</span></button>
+              <button
+                data-testid="coach-got-it-btn"
+                onClick={onManualNext}
+                style={{
+                  padding: '8px 18px', borderRadius: 10, cursor: 'pointer', border: 'none',
+                  background: 'linear-gradient(180deg, #6cc2ff 0%, #2d8de0 100%)',
+                  color: '#06121f', fontFamily: 'var(--ln-font-display)', fontSize: 12, fontWeight: 800,
+                  letterSpacing: '0.1em', textTransform: 'uppercase',
+                  boxShadow: '0 3px 0 rgba(0,0,0,0.35), 0 0 16px rgba(63,169,255,0.3)',
+                  display: 'inline-flex', alignItems: 'center', gap: 6,
+                }}
+              >
+                Got it <span style={{ fontSize: 14 }}>›</span>
+              </button>
             </div>
           </div>
         </div>
@@ -95,44 +111,58 @@ export default function TutorialCoach({ stepIndex, steps, step, total, onManualN
     )
   }
 
+  // Direction the target element is relative to the card — passed to CoachPointer
+  // so arrows render adjacent to the target button, not below the coach card.
+  const resolvedDir = (isDesktop ? (step.desktopDir ?? step.dir) : step.dir) ?? undefined
+
+  // ── Active instruction card ─────────────────────────────────────────────────
   return (
-      <div style={{ position: 'absolute', inset: 0, zIndex: 96, pointerEvents: 'none' }} data-testid="tutorial-coach-overlay">
-        {spotStyle && <div data-testid="tutorial-coach-spot" style={spotStyle} />}
-        <div data-ui-zone={UI_ZONES.tutorialRail} data-testid="tutorial-coach-block" style={{
+    <div style={{ position: 'absolute', inset: 0, zIndex: 96, pointerEvents: 'none' }} data-testid="tutorial-coach-overlay">
+      {resolvedCoachId && <CoachPointer coachId={resolvedCoachId} dir={resolvedDir} />}
+      <div
+        data-ui-zone={UI_ZONES.tutorialRail}
+        data-testid="tutorial-coach-block"
+        style={{
           position: 'absolute',
-          left: 12,
-          right: 12,
+          left: 12, right: 12,
           top: coachRail.top,
-          maxHeight: coachRail.height,
           zIndex: 98,
-          pointerEvents: 'none',
-          overflow: 'visible',
-          overflowY: 'auto',
+          pointerEvents: 'auto',
+        }}
+      >
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 12,
+          background: 'linear-gradient(160deg, rgba(10,22,42,0.98), rgba(6,13,26,0.98))',
+          border: '1.5px solid rgba(245,166,35,0.7)',
+          borderRadius: 16,
+          padding: '12px 16px 12px 12px',
+          boxShadow: '0 8px 32px rgba(0,0,0,0.6), 0 0 24px rgba(245,166,35,0.12)',
+          animation: 'coach-glow 2s ease-in-out infinite',
         }}>
-          <div style={{
-            display: 'flex', alignItems: 'center', gap: 10,
-            background: 'linear-gradient(180deg, rgba(13,28,48,0.96), rgba(8,17,32,0.96))',
-            border: '1px solid rgba(245,166,35,0.5)', borderRadius: 999,
-            padding: '7px 12px 7px 7px',
-            boxShadow: '0 8px 24px rgba(0,0,0,0.5)',
-          }}>
-            <button onClick={() => setCollapsed(c => !c)} style={{ background: 'transparent', border: 'none', padding: 0, cursor: 'pointer', flexShrink: 0, pointerEvents: 'auto' }}>
-              <CoachAvatar size={34} talking={!collapsed} />
-            </button>
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                <span style={{ fontFamily: 'var(--ln-font-display)', fontSize: 8, fontWeight: 800, letterSpacing: '0.2em', color: '#f5a623', textTransform: 'uppercase' }}>{step.title}</span>
-                <span style={{ flex: 1 }} />
-                {dots}
-              </div>
-              <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 12, color: '#dfe9f7', lineHeight: 1.25, marginTop: 1, whiteSpace: 'normal', overflow: 'visible', wordBreak: 'break-word' }}>
-                <span aria-hidden="true" style={{ color: 'var(--ln-amber)', marginRight: 4 }}>›</span>
-                {step.action ?? ('Tap ' + step.cta)}
-              </div>
+          {/* Avatar */}
+          <div style={{ flexShrink: 0 }}>
+            <CoachAvatar size={44} talking />
+          </div>
+
+          {/* Text */}
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 10, fontWeight: 800, letterSpacing: '0.2em', color: 'var(--ln-amber)', textTransform: 'uppercase', marginBottom: 4 }}>
+              {step.title}
             </div>
-            <button onClick={onSkip} style={{ flexShrink: 0, background: 'transparent', border: 'none', cursor: 'pointer', fontFamily: 'var(--ln-font-display)', fontSize: 9, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: '#5d7390', pointerEvents: 'auto' }}>Skip</button>
+            <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 14, color: '#e8f4ff', lineHeight: 1.35, wordBreak: 'break-word' }}>
+              {resolvedAction ?? ((isDesktop ? 'Click ' : 'Tap ') + step.cta)}
+            </div>
+          </div>
+
+          {/* Progress */}
+          <div style={{ flexShrink: 0 }}>
+            {progress}
           </div>
         </div>
+
       </div>
+    </div>
   )
 }

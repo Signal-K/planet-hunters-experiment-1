@@ -3,11 +3,41 @@ import { pbShared } from '@/lib/pb'
 import { pbLandnam } from '@/lib/pb-landnam'
 import { ensureGuestAuth, hasStoredCredentials, isGuestAccount, upgradeGuestAccount } from '@/lib/guestAuth'
 import { identifyUser } from '@/lib/posthog'
+import { DEFAULT_STATE } from '@/lib/game-state'
 import type { GameState } from '@/lib/game-types'
 import type { Toast } from '@/components/ui/ToastLayer'
 
 const UPGRADE_SNOOZE_KEY = 'landnam-upgrade-prompt-snooze-until'
 const UPGRADE_SNOOZE_MS = 24 * 60 * 60 * 1000
+
+function responseStatus(err: unknown): number | null {
+  if (typeof err === 'object' && err && 'status' in err && typeof err.status === 'number') return err.status
+  return null
+}
+
+function authErrorMessage(err: unknown, fallback: string): string {
+  if (typeof err !== 'object' || !err) return fallback
+  const data = 'data' in err ? err.data as unknown : null
+  const fieldMessages: string[] = []
+
+  if (typeof data === 'object' && data) {
+    const message = 'message' in data && typeof data.message === 'string' ? data.message : null
+    const fields = 'data' in data && typeof data.data === 'object' && data.data ? data.data : null
+    if (fields) {
+      Object.values(fields).forEach(value => {
+        if (typeof value === 'object' && value && 'message' in value && typeof value.message === 'string') {
+          fieldMessages.push(value.message)
+        }
+      })
+    }
+    if (fieldMessages.length > 0) return fieldMessages.join(' ')
+    if (message && !/^failed$/i.test(message)) return message
+  }
+
+  if (err instanceof Error && err.message && !/^failed$/i.test(err.message)) return err.message
+  const status = responseStatus(err)
+  return status ? `${fallback} (${status})` : fallback
+}
 
 interface AuthSyncOpts {
   state: GameState
@@ -25,6 +55,13 @@ export function useAuthSync({
   addToast, normalizeAndRepair, storageKey,
 }: AuthSyncOpts) {
   const [authUserId, setAuthUserId] = useState<string | null>(pbShared.authStore.record?.id ?? null)
+
+  // Pre-emptive warmup ping — Fly machines stop when idle. Firing this early
+  // means the machine is live by the time auth + state-load requests arrive.
+  useEffect(() => {
+    if (isPreview) return
+    pbLandnam.health.check().catch(() => {})
+  }, [isPreview])
   const [backendReady, setBackendReady] = useState(false)
   const [upgradePromptOpen, setUpgradePromptOpen] = useState(false)
   const [awaitingRemoteState, setAwaitingRemoteState] = useState(false)
@@ -34,6 +71,27 @@ export function useAuthSync({
   const backendRecordId = useRef<string | null>(null)
   const backendLoadedFor = useRef<string | null>(null)
   const authGateDismissed = useRef(false)
+
+  const saveRemoteState = useCallback(async (userId: string, nextState: GameState) => {
+    const payload = { user: userId, state: nextState, missions_done: nextState.player.missionsDone }
+    if (backendRecordId.current) {
+      await pbLandnam.collection('game_states').update(backendRecordId.current, payload)
+      return
+    }
+
+    try {
+      const record = await pbLandnam.collection('game_states').create(payload)
+      backendRecordId.current = record.id
+    } catch (createErr: unknown) {
+      // UNIQUE constraint: a record already exists but we couldn't load it (backend
+      // was unavailable on session start). Look it up and update instead.
+      const status = responseStatus(createErr)
+      if (status !== 400 && status !== 409) throw createErr
+      const existing = await pbLandnam.collection('game_states').getFirstListItem(`user = "${userId}"`)
+      backendRecordId.current = existing.id
+      await pbLandnam.collection('game_states').update(existing.id, payload)
+    }
+  }, [])
 
   // Track auth identity changes
   useEffect(() => pbShared.authStore.onChange((_token, record) => {
@@ -100,53 +158,75 @@ export function useAuthSync({
       setBackendReady(true)
     }
 
+    function handleLoadFailure(err: unknown) {
+      if (!active) return
+      if (typeof err === 'object' && err && 'status' in err && (err as { status: number }).status === 404) {
+        // Confirmed no record — safe to create one on next save
+        backendLoadedFor.current = authUserId!
+        setBackendReady(true)
+        return
+      }
+      // Network / availability error (Fly cold-start, timeout, etc.)
+      // Only unblock persisting if the device already has local state — otherwise we
+      // risk overwriting a real backend record with a blank slate from a new device.
+      const hasLocalState = !!localStorage.getItem(storageKey)
+      if (hasLocalState) {
+        backendLoadedFor.current = authUserId!
+        setBackendReady(true)
+      }
+      // Devices with no local state remain in awaitingRemoteState so the user
+      // sees a loading indicator rather than playing from empty state.
+    }
+
     pbLandnam.collection('game_states')
       .getFirstListItem(`user = "${authUserId}"`)
       .then(record => { if (active) applyRecord(record) })
       .catch(error => {
         if (!active) return
-        if (typeof error === 'object' && error && 'status' in error && error.status === 404) {
-          backendLoadedFor.current = authUserId!
-          setBackendReady(true)
+        if (responseStatus(error) === 404) {
+          handleLoadFailure(error)
           return
         }
-        // Retry once after 4s — Landnam backend may still be warming
-        setTimeout(() => {
+        // Retry with escalating backoff — Fly cold-start can take 10-15s
+        const delays = [4000, 12000, 25000]
+        let attempt = 0
+        function retry() {
           if (!active) return
           pbLandnam.collection('game_states')
             .getFirstListItem(`user = "${authUserId}"`)
             .then(record => { if (active) applyRecord(record) })
             .catch(err => {
               if (!active) return
-              if (typeof err === 'object' && err && 'status' in err && err.status === 404) {
-                backendLoadedFor.current = authUserId!
-                setBackendReady(true)
+              if (responseStatus(err) === 404) {
+                handleLoadFailure(err)
+                return
+              }
+              attempt++
+              if (attempt < delays.length) {
+                setTimeout(retry, delays[attempt])
+              } else {
+                handleLoadFailure(err)
               }
             })
-        }, 4000)
+        }
+        setTimeout(retry, delays[0])
       })
 
     return () => { active = false }
-  }, [authUserId, hydrated, isPreview, setState, normalizeAndRepair])
+  }, [authUserId, hydrated, isPreview, setState, normalizeAndRepair, storageKey])
 
   // Persist state to backend (debounced 400ms)
   useEffect(() => {
     if (!hydrated || isPreview || !authUserId || !backendReady || backendLoadedFor.current !== authUserId) return
     const timer = window.setTimeout(async () => {
-      const payload = { user: authUserId, state }
       try {
-        if (backendRecordId.current) {
-          await pbLandnam.collection('game_states').update(backendRecordId.current, payload)
-        } else {
-          const record = await pbLandnam.collection('game_states').create(payload)
-          backendRecordId.current = record.id
-        }
+        await saveRemoteState(authUserId, state)
       } catch {
         // Local storage remains the offline source of truth until the data link recovers.
       }
     }, 400)
     return () => window.clearTimeout(timer)
-  }, [authUserId, hydrated, isPreview, backendReady, state])
+  }, [authUserId, hydrated, isPreview, backendReady, state, saveRemoteState])
 
   const dismissUpgradePrompt = useCallback(() => {
     localStorage.setItem(UPGRADE_SNOOZE_KEY, String(Date.now() + UPGRADE_SNOOZE_MS))
@@ -171,7 +251,7 @@ export function useAuthSync({
       await pbShared.collection('users').authWithPassword(email, password)
       setAuthGateOpen(false)
     } catch (e) {
-      const msg = e instanceof Error ? e.message : 'Sign in failed'
+      const msg = authErrorMessage(e, 'Sign in failed')
       setAuthGateError(msg)
       throw new Error(msg)
     }
@@ -182,13 +262,17 @@ export function useAuthSync({
     try {
       await pbShared.collection('users').create({ email, password, passwordConfirm: password, name: '' })
       await pbShared.collection('users').authWithPassword(email, password)
+      // Brand-new account: discard any local guest/dev state so the player
+      // starts from scratch with the intro tutorial.
+      localStorage.removeItem(storageKey)
+      setState(DEFAULT_STATE)
       setAuthGateOpen(false)
     } catch (e) {
-      const msg = e instanceof Error ? e.message : 'Account creation failed'
+      const msg = authErrorMessage(e, 'Account creation failed')
       setAuthGateError(msg)
       throw new Error(msg)
     }
-  }, [])
+  }, [setState, storageKey])
 
   const skipAuthGate = useCallback(() => {
     authGateDismissed.current = true
@@ -208,11 +292,36 @@ export function useAuthSync({
     }
   }, [authUserId, setState, storageKey])
 
+  const signOut = useCallback(async () => {
+    const signedOutUserId = authUserId
+    const shouldFlush = signedOutUserId
+      && backendReady
+      && backendLoadedFor.current === signedOutUserId
+      && !isPreview
+
+    if (shouldFlush) {
+      try {
+        await saveRemoteState(signedOutUserId, stateRef.current)
+      } catch {
+        addToast('Could not sync latest progress before sign out', 'warn')
+      }
+    }
+
+    pbShared.authStore.clear()
+    localStorage.removeItem(storageKey)
+    setState(DEFAULT_STATE)
+    setAwaitingRemoteState(false)
+    setUpgradePromptOpen(false)
+    setAuthGateError(null)
+    authGateDismissed.current = false
+    if (!isPreview) setAuthGateOpen(true)
+  }, [addToast, authUserId, backendReady, isPreview, saveRemoteState, setState, stateRef, storageKey])
+
   return {
     authUserId, backendReady,
     upgradePromptOpen, dismissUpgradePrompt, upgradeAccount,
     awaitingRemoteState,
     authGateOpen, authGateError, signInFromGate, createAccountFromGate, skipAuthGate,
-    resetGame,
+    resetGame, signOut,
   }
 }

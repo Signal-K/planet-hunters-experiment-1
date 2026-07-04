@@ -18,18 +18,20 @@ function formatEta(ms: number): string {
 
 interface Props {
   target: Target
+  rocketImageSrc?: string
   arrivalAt?: number | null
   onArrive: () => void
   onBack: () => void
   onAbandon?: () => void
 }
 
-export default function TransitScreen({ target, arrivalAt, onArrive, onBack, onAbandon }: Props) {
+export default function TransitScreen({ target, rocketImageSrc, arrivalAt, onArrive, onBack, onAbandon }: Props) {
   const isTimed = typeof arrivalAt === 'number'
   const [now, setNow] = useState(() => Date.now())
   const [fakeProgress, setFakeProgress] = useState(12)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const sceneRef = useRef<TransitScene | null>(null)
+  const progressRef = useRef(isTimed ? 0 : 12)
 
   useEffect(() => {
     void Scene.load('/game/scenes/mining.scene.json')
@@ -64,6 +66,14 @@ export default function TransitScreen({ target, arrivalAt, onArrive, onBack, onA
     }
   }, [isTimed, now, arrivalAt, fakeProgress, onArrive])
 
+  // Keep progressRef current so the PixiJS scene always gets live progress
+  const [mountedAt] = useState(() => Date.now())
+  const totalMs = isTimed && arrivalAt ? Math.max(1, arrivalAt - mountedAt) : 1
+  const progress = isTimed
+    ? Math.min(100, Math.max(0, Math.round(((now - mountedAt) / totalMs) * 100)))
+    : fakeProgress
+  useEffect(() => { progressRef.current = progress }, [progress])
+
   // PixiJS backdrop
   useEffect(() => {
     const canvas = canvasRef.current
@@ -73,8 +83,6 @@ export default function TransitScreen({ target, arrivalAt, onArrive, onBack, onA
     let rafId = 0
     let lastT = 0
     let elapsed = 0
-
-    const progressRef = { current: isTimed ? 0 : fakeProgress }
 
     async function init() {
       const { Application } = await import('pixi.js')
@@ -94,6 +102,7 @@ export default function TransitScreen({ target, arrivalAt, onArrive, onBack, onA
       const scene = buildTransitScene(app, {
         targetName: target.name,
         targetKind: kind,
+        rocketImageSrc,
         getProgress: () => progressRef.current,
       })
       sceneRef.current = scene
@@ -119,11 +128,6 @@ export default function TransitScreen({ target, arrivalAt, onArrive, onBack, onA
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  const [mountedAt] = useState(() => Date.now())
-  const totalMs = isTimed && arrivalAt ? Math.max(1, arrivalAt - mountedAt) : 1
-  const progress = isTimed
-    ? Math.min(100, Math.max(0, Math.round(((now - mountedAt) / totalMs) * 100)))
-    : fakeProgress
   const etaMs = isTimed ? Math.max(0, arrivalAt! - now) : 0
   const arrived = isTimed ? now >= arrivalAt! : fakeProgress >= 100
 

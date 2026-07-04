@@ -121,6 +121,7 @@ export default function RadialNav({ current, onNav }: RadialNavProps) {
           <button
             key={m.id}
             data-testid={`radial-nav-${m.id}`}
+            data-coach-id={m.id === 'missions' ? 'radial-missions' : undefined}
             onClick={() => { if (!locked) onNav(m.id); setOpen(false) }}
             aria-disabled={locked}
             style={{
@@ -205,6 +206,7 @@ export default function RadialNav({ current, onNav }: RadialNavProps) {
       {/* Central hub button */}
       <button
         data-testid="radial-nav-toggle"
+        data-coach-id="radial-toggle"
         onClick={() => setOpen(!open)}
         style={{
           position: 'absolute',

@@ -46,6 +46,10 @@ import {
   DAILY_QUEST_TEMPLATES,
   getDailyQuestTemplate,
   todayKey,
+  dailyTessCandidates,
+  isReviewableTessSubject,
+  tessCandidateToExoplanetTarget,
+  toTessCandidate,
 } from './data'
 
 describe('sellCargo', () => {
@@ -378,9 +382,9 @@ describe('seed bible v0 catalog', () => {
       'Ferrum Orbital Construction',
     ])
     expect(l1Contractors.map(c => c.mineralPreferences)).toEqual([
-      ['hydrogen'],
-      ['cobalt', 'copper'],
-      ['aluminium', 'copper'],
+      ['platinum', 'palladium'],
+      ['palladium', 'iridium'],
+      ['platinum', 'iridium'],
     ])
   })
 
@@ -552,6 +556,14 @@ describe('Scanning station constants and structure seed', () => {
     const scanner = STRUCTURES.find(s => s.id === 'scan-station')
     expect(scanner && structureUnlocked(scanner, { placed: ['launchpad'] })).toBe(false)
   })
+
+  it('defines a satellite monitoring station unlocked in Free Operations', () => {
+    const station = STRUCTURES.find(s => s.id === 'satellite-monitoring-station')
+    expect(station).toBeDefined()
+    expect(station?.cost).toBe(0)
+    expect(station && structureUnlocked(station, { freeOperations: false })).toBe(false)
+    expect(station && structureUnlocked(station, { freeOperations: true })).toBe(true)
+  })
 })
 
 describe('Daily quest framework', () => {
@@ -580,5 +592,82 @@ describe('Daily quest framework', () => {
   it('todayKey returns an ISO date string', () => {
     const key = todayKey()
     expect(key).toMatch(/^\d{4}-\d{2}-\d{2}$/)
+  })
+})
+
+describe('TESS live subject filtering', () => {
+  const baseSubject = {
+    id: 'pb-subject-1',
+    tic_id: '123456789',
+    toi_id: '1234.01',
+    sectors: 'Sector 9',
+    subject_type: 'transit',
+    lightcurve_points: [{ x: 0, y: 1 }, { x: 1, y: 0.998 }],
+    period_days: 2.4,
+    depth_pct: 0.12,
+    gold_label: '',
+    consensus: '',
+  }
+
+  it('allows only unresolved transit subjects for player review', () => {
+    expect(isReviewableTessSubject(baseSubject)).toBe(true)
+    expect(isReviewableTessSubject({ ...baseSubject, subject_type: 'rv' })).toBe(false)
+    expect(isReviewableTessSubject({ ...baseSubject, gold_label: 'planet' })).toBe(false)
+    expect(isReviewableTessSubject({ ...baseSubject, gold_label: 'not_planet' })).toBe(false)
+    expect(isReviewableTessSubject({ ...baseSubject, consensus: 'planet' })).toBe(false)
+    expect(isReviewableTessSubject({ ...baseSubject, consensus: 'not_planet' })).toBe(false)
+    expect(isReviewableTessSubject({ ...baseSubject, tfopwg_disp: 'KP' })).toBe(false)
+    expect(isReviewableTessSubject({ ...baseSubject, tfopwg_disp: 'CP' })).toBe(false)
+    expect(isReviewableTessSubject({ ...baseSubject, tfopwg_disp: 'FP' })).toBe(false)
+  })
+
+  it('maps live subject records into TESS candidates with lightcurve points', () => {
+    const candidate = toTessCandidate(baseSubject)
+
+    expect(candidate.id).toBe('pb-subject-1')
+    expect(candidate.ticId).toBe('TIC 123456789')
+    expect(candidate.toi).toBe('TOI 1234.01')
+    expect(candidate.periodDays).toBe(2.4)
+    expect(candidate.depthPpm).toBe(1200)
+    expect(candidate.lightcurvePoints).toEqual([{ x: 0, y: 1 }, { x: 1, y: 0.998 }])
+  })
+
+  it('selects a stable daily subset of live TESS candidates', () => {
+    const candidates = Array.from({ length: 6 }, (_, index) => toTessCandidate({
+      ...baseSubject,
+      id: `subject-${index}`,
+      tic_id: `${123456780 + index}`,
+      toi_id: `12${index}.01`,
+    }))
+
+    const dayOne = dailyTessCandidates(candidates, '2026-07-02', 1)
+    const dayOneRepeat = dailyTessCandidates(candidates, '2026-07-02', 1)
+    const dayTwo = dailyTessCandidates(candidates, '2026-07-03', 1)
+
+    expect(dayOne).toHaveLength(1)
+    expect(dayOne.map(candidate => candidate.id)).toEqual(dayOneRepeat.map(candidate => candidate.id))
+    expect(dayOne.map(candidate => candidate.id)).not.toEqual(dayTwo.map(candidate => candidate.id))
+  })
+
+  it('keeps the daily downlink to one anomaly regardless of station or telescope level', () => {
+    const candidates = Array.from({ length: 9 }, (_, index) => toTessCandidate({
+      ...baseSubject,
+      id: `scaled-subject-${index}`,
+      tic_id: `${223456780 + index}`,
+      toi_id: `22${index}.01`,
+    }))
+
+    expect(dailyTessCandidates(candidates, '2026-07-02', 1)).toHaveLength(1)
+    expect(dailyTessCandidates(candidates, '2026-07-02', 3)).toHaveLength(1)
+    expect(dailyTessCandidates(candidates, '2026-07-02', 5)).toHaveLength(1)
+  })
+
+  it('converts planet classifications into star-map exoplanet targets', () => {
+    const target = tessCandidateToExoplanetTarget(toTessCandidate(baseSubject))
+
+    expect(target.id).toBe('exo-pb-subject-1')
+    expect(target.type).toBe('exoplanet')
+    expect(target.name).toBe('TOI 1234.01')
+    expect(target.brief).toContain('star map')
   })
 })

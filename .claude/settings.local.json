@@ -20,7 +20,10 @@
       "mcp__vellem__add_note",
       "mcp__vellem__list_folders",
       "Skill(schedule)",
-      "Skill(update-config)"
+      "Skill(update-config)",
+      "Skill(claude-in-chrome)",
+      "mcp__knowns__decision",
+      "mcp__zennotes__append_to_note"
     ]
   },
   "enabledMcpjsonServers": [

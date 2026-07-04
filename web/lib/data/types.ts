@@ -1,7 +1,7 @@
 // Landnam game data — all shared types and interfaces
 
 export interface MissionPayload {
-  type: 'rover'
+  type: 'rover' | 'satellite'
   name: string
   cargoCost: number
 }
@@ -99,7 +99,7 @@ export interface Mission {
 export interface Target {
   id: string
   name: string
-  type: 'planet' | 'asteroid'
+  type: 'planet' | 'asteroid' | 'exoplanet'
   orbit: number
   difficulty: string
   brief: string
@@ -235,6 +235,16 @@ export interface TutorialStep {
   anchor: 'top' | 'bottom' | 'center'
   spot: { x: number; y: number; w: number; h: number; fromBottom?: boolean; fromCenter?: boolean; right?: number } | null
   cta: string
+  /** data-coach-id of the element to highlight via CSS (set on <html> as data-coach-target). */
+  coachId?: string
+  /** Direction arrow shown in coach pill: points user toward the target. */
+  dir?: 'up' | 'down' | 'left' | 'right'
+  /** Overrides for desktop layout (sidebar nav replaces radial menu) */
+  desktopBody?: string
+  desktopAction?: string
+  desktopSpot?: TutorialStep['spot']
+  desktopCoachId?: string
+  desktopDir?: 'up' | 'down' | 'left' | 'right'
 }
 
 export interface RocketConfig {

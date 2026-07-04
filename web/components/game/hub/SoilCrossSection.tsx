@@ -2,7 +2,7 @@
 
 export function SoilCrossSection() {
   return (
-    <div style={{ position: 'absolute', left: 0, right: 0, bottom: 96, height: 168, zIndex: 4, pointerEvents: 'none' }}>
+    <div style={{ position: 'absolute', left: 0, right: 0, bottom: 0, top: '78%', zIndex: 4, pointerEvents: 'none', overflow: 'hidden' }}>
       <div style={{ position: 'absolute', left: 0, right: 0, top: 0, height: 0, borderTop: '1.5px dashed rgba(255,225,160,0.5)' }} />
       <div style={{ position: 'absolute', left: 0, right: 0, top: 0, height: 18, background: 'linear-gradient(180deg, rgba(60,40,20,0.5), transparent)' }} />
       <svg width="100%" height="100%" viewBox="0 0 402 168" preserveAspectRatio="none" style={{ position: 'absolute', inset: 0 }}>
@@ -32,9 +32,6 @@ export function SoilCrossSection() {
           <path d="M360 0 q 8 20, -4 48"/>
         </g>
       </svg>
-      <div style={{ position: 'absolute', right: 14, top: 58, padding: '3px 8px', background: 'rgba(8,12,22,0.7)', border: '1px solid rgba(122,80,40,0.55)', borderRadius: 999, fontFamily: 'var(--ln-font-mono)', fontSize: 9, letterSpacing: '0.22em', textTransform: 'uppercase', color: '#9c8d70' }}>
-        · Subsurface ·
-      </div>
     </div>
   )
 }

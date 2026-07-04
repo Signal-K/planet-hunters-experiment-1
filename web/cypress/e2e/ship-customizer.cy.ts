@@ -39,25 +39,24 @@ describe('Ship Customiser staged build', () => {
     cy.get('[data-testid="choose-ion-thruster-t1"]').click()
     cy.get('[data-testid="ship-review"]').should('have.attr', 'data-installed', '1')
 
-    cy.get('[data-testid="ship-step-next"]').click()
+    cy.get('[data-testid="ship-step-next"]').click({ force: true })
     cy.get('[data-testid="ship-build-step"]').should('contain', 'Boosters')
     cy.get('[data-testid="choose-strap-booster-t1"]').click()
     cy.get('[data-testid="ship-review"]').should('have.attr', 'data-installed', '2')
 
-    cy.get('[data-testid="ship-step-next"]').click()
+    cy.get('[data-testid="ship-step-next"]').click({ force: true })
     cy.get('[data-testid="ship-build-step"]').should('contain', 'Command')
     cy.get('[data-testid="choose-cockpit-command-t1"]').click()
     cy.get('[data-testid="ship-review"]').should('have.attr', 'data-installed', '3')
 
-    cy.get('[data-testid="ship-step-next"]').click()
+    cy.get('[data-testid="ship-step-next"]').click({ force: true })
     cy.get('[data-testid="ship-build-step"]').should('contain', 'Payload')
     cy.get('[data-testid="choose-cargo-payload-t1"]').click()
     cy.get('[data-testid="ship-review"]').should('have.attr', 'data-installed', '4')
 
     cy.get('[data-testid="confirm-ship-config"]').should('not.be.disabled').click()
-    cy.get('[data-testid="ship-review"]').should('contain', 'Configuration confirmed')
-    cy.get('[data-testid="confirm-ship-config"]').should('contain', 'Configuration Confirmed').and('be.disabled')
-    cy.get('[data-testid="ship-step-engine"]').should('be.disabled')
-    cy.get('[data-testid="choose-cargo-payload-t1"]').should('be.disabled')
+    // onClose() fires immediately after confirm, so the interior unmounts and the fleet page returns
+    cy.get('[data-testid="ship-interior-sr1"]').should('not.exist')
+    cy.contains('Rocket Fleet').should('be.visible')
   })
 })

@@ -5,10 +5,9 @@ import type { Mission, RocketConfig, Target } from '@/lib/data'
 import { STARTER_ROCKETS, validateBuild } from '@/lib/data'
 import type { Catalog } from '@/lib/catalog'
 import Panel from '@/components/ui/Panel'
-import TopBar from '@/components/ui/TopBar'
 import { PrimaryBtn } from '@/components/ui/Button'
-import { UI_ZONES } from '@/lib/ui-zones'
 import TutorialHighlight from '@/components/game/TutorialHighlight'
+import MissionSetupShell from '@/components/game/screens/MissionSetupShell'
 
 interface AssemblyScreenProps {
   mission: Mission
@@ -35,11 +34,33 @@ export default function AssemblyScreen(props: AssemblyScreenProps) {
   const starterRocket = getRequiredRocket(props.missionsDone)
 
   return (
-    <div className="game-screen blueprint-screen">
-      <TopBar eyebrow="LAUNCHPAD · PREFLIGHT" title="Confirm Rocket" onBack={props.onBack} />
-      <div className={`screen-scroll assembly-scroll${props.hasCoach ? ' screen-scroll--coach' : ''}`} data-ui-zone={UI_ZONES.screenContent} style={{ position: 'relative' }}>
+    <MissionSetupShell
+      eyebrow="LAUNCHPAD · PREFLIGHT"
+      title="Confirm Rocket"
+      onBack={props.onBack}
+      hasCoach={props.hasCoach}
+      coachManual={props.coachManual}
+      actions={
+        <div style={{ position: 'relative' }}>
+          {highlightLaunch && <TutorialHighlight borderRadius={8} />}
+          <PrimaryBtn kind="amber" disabled={!check.ok} testId="launch-btn" onClick={props.onLaunch}>Confirm Launch</PrimaryBtn>
+        </div>
+      }
+    >
+      <div className="mission-setup-frame" style={{
+        display: 'grid',
+        alignItems: 'center',
+        justifyItems: 'center',
+        padding: 18,
+        background: 'radial-gradient(ellipse at 50% 54%, rgba(245,166,35,0.10) 0%, rgba(63,169,255,0.05) 42%, transparent 78%)',
+      }}>
         {highlightContent && <TutorialHighlight />}
-        <Panel accent="var(--ln-amber)" style={{ padding: 'var(--ln-s-3)' }}>
+        <Image src={starterRocket.img} alt="" width={240} height={150} style={{ objectFit: 'contain', filter: 'drop-shadow(0 10px 28px rgba(63,169,255,0.32))' }} />
+      </div>
+
+      <div className="mission-setup-card">
+        <div className="mission-setup-card-scroll" style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+        <Panel accent="var(--ln-amber)" style={{ padding: 'var(--ln-s-3)', flex: '0 0 auto' }}>
           <div className="context-row">
             <div><span className="ln-micro">Mission</span><strong>{props.mission.title}</strong></div>
             <div><span className="ln-micro">Target</span><strong className="amber">{props.target.name}</strong></div>
@@ -68,11 +89,8 @@ export default function AssemblyScreen(props: AssemblyScreenProps) {
         <div className={check.ok ? 'compatibility compatibility--ok' : 'compatibility compatibility--bad'}>
           <span />{check.ok ? 'Build compatible · Ready for launch' : check.problems.join(' · ')}
         </div>
+        </div>
       </div>
-      <div className="sticky-actions" data-ui-zone={UI_ZONES.bottomActions} style={{ position: 'relative' }}>
-        {highlightLaunch && <TutorialHighlight borderRadius={8} />}
-        <PrimaryBtn kind="amber" disabled={!check.ok} testId="launch-btn" onClick={props.onLaunch}>Confirm Launch</PrimaryBtn>
-      </div>
-    </div>
+    </MissionSetupShell>
   )
 }

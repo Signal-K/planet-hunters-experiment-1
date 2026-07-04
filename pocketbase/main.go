@@ -52,6 +52,7 @@ func ensureCollections(app core.App) {
 		gameStates.DeleteRule = types.Pointer("")
 		gameStates.Fields.Add(&core.TextField{Name: "user", Required: true, Max: 64})
 		gameStates.Fields.Add(&core.JSONField{Name: "state", Required: true, MaxSize: 200000})
+		gameStates.Fields.Add(&core.NumberField{Name: "missions_done", Required: false})
 		gameStates.Indexes = []string{
 			"CREATE UNIQUE INDEX idx_game_states_user ON game_states (user)",
 		}
@@ -186,25 +187,10 @@ func ensureCollections(app core.App) {
 		}
 	}
 
-	// onboarding_feedback
-	if _, err := app.FindCollectionByNameOrId("onboarding_feedback"); err != nil {
-		col := core.NewBaseCollection("onboarding_feedback")
-		col.ListRule = nil
-		col.ViewRule = nil
-		col.CreateRule = emptyStr
-		col.UpdateRule = nil
-		col.DeleteRule = nil
-		col.Fields.Add(&core.TextField{Name: "user_id", Max: 64})
-		col.Fields.Add(&core.SelectField{
-			Name: "mission_id", Required: true, MaxSelect: 1,
-			Values: []string{"m1", "m2", "m3", "end_of_content"},
-		})
-		col.Fields.Add(&core.NumberField{Name: "rating"})
-		col.Fields.Add(&core.TextField{Name: "freetext", Max: 600})
-		col.Fields.Add(&core.TextField{Name: "option_choice", Max: 200})
-		col.Fields.Add(&core.BoolField{Name: "dismissed"})
-		if err := app.Save(col); err != nil {
-			log.Printf("failed to save onboarding_feedback: %v", err)
+	// onboarding_feedback — removed; surveys are handled by PostHog
+	if col, err := app.FindCollectionByNameOrId("onboarding_feedback"); err == nil {
+		if err := app.Delete(col); err != nil {
+			log.Printf("failed to drop onboarding_feedback: %v", err)
 		}
 	}
 
@@ -317,6 +303,28 @@ func ensureCollections(app core.App) {
 		}
 	}
 
+	// mission_log — append-only completed-mission log; one row per mission finished
+	if _, err := app.FindCollectionByNameOrId("mission_log"); err != nil {
+		missionLog := core.NewBaseCollection("mission_log")
+		missionLog.ListRule = types.Pointer("")
+		missionLog.ViewRule = types.Pointer("")
+		missionLog.CreateRule = types.Pointer("")
+		missionLog.UpdateRule = types.Pointer("")
+		missionLog.DeleteRule = types.Pointer("")
+		missionLog.Fields.Add(&core.TextField{Name: "user", Required: true, Max: 64})
+		missionLog.Fields.Add(&core.TextField{Name: "mission_id", Required: true, Max: 100})
+		missionLog.Fields.Add(&core.TextField{Name: "target_id", Required: false, Max: 100})
+		missionLog.Fields.Add(&core.NumberField{Name: "payout_francs", Required: false})
+		missionLog.Fields.Add(&core.JSONField{Name: "minerals_delivered", Required: false, MaxSize: 4096})
+		missionLog.Fields.Add(&core.NumberField{Name: "missions_done_after", Required: false})
+		missionLog.Indexes = []string{
+			"CREATE INDEX idx_mission_log_user ON mission_log (user)",
+		}
+		if err := app.Save(missionLog); err != nil {
+			log.Printf("failed to save mission_log: %v", err)
+		}
+	}
+
 	ensureCatalogFields(app)
 }
 
@@ -359,6 +367,12 @@ func migrateGameStates(app core.App) {
 	}
 	if col.DeleteRule == nil || *col.DeleteRule != empty {
 		col.DeleteRule = &empty
+		changed = true
+	}
+
+	// Add missions_done column if missing (for analytics queries without JSON parsing).
+	if col.Fields.GetByName("missions_done") == nil {
+		col.Fields.Add(&core.NumberField{Name: "missions_done", Required: false})
 		changed = true
 	}
 

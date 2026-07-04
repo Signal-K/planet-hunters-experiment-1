@@ -1,16 +1,23 @@
 'use client'
 
 import React, { useEffect, useState } from 'react'
-import Image from 'next/image'
 import type { Player, Screen } from '@/game-context'
 import ProgressionCard from '@/components/game/ProgressionCard'
+import { ComingSoonSheet, SPRINT_AFTER_NEXT_UTC } from '@/components/game/ComingSoonSheet'
+import { TutorialCompleteSheet, useTutorialCompleteAck } from '@/components/game/TutorialCompleteSheet'
 import { Scene } from '@/lib/engine/Scene'
 import type { EntityData } from '@/lib/engine/types'
-import { AmbientStars } from '@/components/game/hub/AmbientStars'
 import { Cloud } from '@/components/game/hub/Cloud'
+import { HubWorldBackground } from '@/components/game/hub/HubWorldBackground'
 import { SoilCrossSection } from '@/components/game/hub/SoilCrossSection'
+import { HubSubsurfaceView } from '@/components/game/hub/HubSubsurfaceView'
 import { Building, EmptyPlot } from '@/components/game/hub/Building'
+import HubPixiCanvas from '@/components/game/hub/HubPixiCanvas'
+import ErrorBoundary from '@/components/ui/ErrorBoundary'
 import { TUTORIAL_CONTENT_TOP } from '@/lib/tutorial-layout'
+import { FREE_OPS_START_MISSIONS_DONE } from '@/lib/data/mission-generator'
+import type { HubBuildingDef } from '@/lib/pixi/hubScene'
+import { fetchReviewableTessCandidates } from '@/lib/tess-subjects'
 
 const DEFAULT_PLOTS: EntityData[] = [
   { id: 'plot-0', name: 'Plot 0', transform: { position: { x: 22, y: 570 }, rotation: 0, scale: { x: 1, y: 1 } }, components: [{ type: 'BuildPlot', index: 0 }] },
@@ -30,6 +37,10 @@ interface HubScreenProps {
 export default function HubScreen({ player, hasCoach, onGoBuilding, onNav, onUpgradeLaunchpad }: HubScreenProps) {
   const [editMode, setEditMode] = useState(false)
   const [plotEntities, setPlotEntities] = useState<EntityData[]>(DEFAULT_PLOTS)
+  const [subsurface, setSubsurface] = useState(false)
+  const [comingSoon, setComingSoon] = useState<{ feature: string; description: string; target?: Date } | null>(null)
+  const [tessQueueCount, setTessQueueCount] = useState(0)
+  const { show: showTutorialComplete, dismiss: dismissTutorialComplete } = useTutorialCompleteAck(player.missionsDone, FREE_OPS_START_MISSIONS_DONE)
   const placed = player.placed ?? []
   const placementPlots = player.placementPlots ?? {}
   const legacyPlaced = (kind: string) => placed.includes(kind) && placementPlots[kind] == null
@@ -44,21 +55,56 @@ export default function HubScreen({ player, hasCoach, onGoBuilding, onNav, onUpg
       .catch(() => {})
   }, [])
 
-  const plotStyles: React.CSSProperties[] = plotEntities
-    .slice()
-    .sort((a, b) => {
-      const ai = (a.components.find(c => c.type === 'BuildPlot')?.index as number) ?? 0
-      const bi = (b.components.find(c => c.type === 'BuildPlot')?.index as number) ?? 0
-      return ai - bi
-    })
-    // earth-day.png green/brown boundary is always at 22% from canvas bottom (objectFit:cover
-    // scales to canvas height). calc(22% - 42px) puts the icon bottom at that boundary so the
-    // structure appears planted on the visible grass/soil line on any screen height.
-    .map(e => ({ left: e.transform.position.x, bottom: 'calc(22% - 42px)' } as React.CSSProperties))
+  // SMS daily-candidate-queue badge (LN-014): count of live TESS subjects
+  // still awaiting this player's review, i.e. not yet in tessClassifications.
+  // Mirrors TessDiscoveryScreen's own gating (SMS built + telescope launched)
+  // so the badge never promises a queue the classify flow can't show yet.
+  useEffect(() => {
+    if (!player.freeOperations || !player.satelliteMonitoringBuilt || !player.transitSatelliteLaunchedAt) {
+      setTessQueueCount(0)
+      return
+    }
+    let cancelled = false
+    fetchReviewableTessCandidates()
+      .then(candidates => {
+        if (cancelled) return
+        const classifications = player.tessClassifications ?? {}
+        const unresolved = candidates.filter(c => !classifications[c.id])
+        setTessQueueCount(unresolved.length)
+      })
+      .catch(() => { if (!cancelled) setTessQueueCount(0) })
+    return () => { cancelled = true }
+  }, [player.freeOperations, player.satelliteMonitoringBuilt, player.transitSatelliteLaunchedAt, player.tessClassifications])
+
+  const sortedEntities = plotEntities.slice().sort((a, b) => {
+    const ai = (a.components.find(c => c.type === 'BuildPlot')?.index as number) ?? 0
+    const bi = (b.components.find(c => c.type === 'BuildPlot')?.index as number) ?? 0
+    return ai - bi
+  })
+
+  const plotStyles: React.CSSProperties[] = sortedEntities
+    // SVG grass is at 78% from top = 22% from bottom. calc(22% - 42px) puts the label
+    // bottom 42px underground so the visible building base sits at the grass line.
+    // left uses scene-proportional % so it matches the CSS-stretched PixiJS canvas (HUB_W=402).
+    .map(e => ({ left: `calc(${(e.transform.position.x / 402) * 100}%)`, bottom: 'calc(22% - 42px)' } as React.CSSProperties))
+
   const structureForPlot = (plot: number) => {
     const kind = Object.entries(effectivePlots).find(([, p]) => p === plot)?.[0] ?? null
     return kind
   }
+
+  const BUILDING_W: Record<string, number> = { launchpad: 98, refinery: 84, 'scan-station': 80, 'satellite-monitoring-station': 86, command: 84 }
+  const hubBuildings: HubBuildingDef[] = sortedEntities.flatMap((e, plot) => {
+    const kind = structureForPlot(plot)
+    if (!kind) return []
+    return [{
+      kind,
+      plotX: e.transform.position.x,
+      w: BUILDING_W[kind] ?? 78,
+      hot: kind === 'launchpad' ? !!player.pendingLaunch : kind === 'scan-station' ? (!!player.activeScan && Date.now() >= player.activeScan.completesAt) : false,
+      status: 'ok' as const,
+    }]
+  })
   const structureProps = (kind: string) => {
     if (kind === 'launchpad') {
       return {
@@ -93,6 +139,16 @@ export default function HubScreen({ player, hasCoach, onGoBuilding, onNav, onUpg
         onClick: () => onGoBuilding('scan-station'),
       }
     }
+    if (kind === 'satellite-monitoring-station') {
+      return {
+        kind, label: 'S.M.S.',
+        sub: player.transitSatelliteLaunchedAt ? 'TELESCOPE LIVE' : 'READY',
+        status: (player.transitSatelliteLaunchedAt ? 'ok' : 'info') as 'ok' | 'info',
+        w: 86,
+        badge: tessQueueCount,
+        onClick: () => onGoBuilding('satellite-monitoring-station'),
+      }
+    }
     return {
       kind, label: kind,
       sub: 'BUILT',
@@ -104,29 +160,77 @@ export default function HubScreen({ player, hasCoach, onGoBuilding, onNav, onUpg
 
   return (
     <div style={{ width: '100%', height: '100%', position: 'relative', overflow: 'hidden' }}>
-      {/* Earth backdrop */}
-      <div style={{ position: 'absolute', inset: 0 }}>
-        <Image src="/scenes/earth-day.png" alt="Earth" fill style={{ objectFit: 'cover' }} priority />
-        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, rgba(6,9,15,0.0) 0%, transparent 22%, transparent 74%, rgba(6,9,15,0.45) 100%)' }} />
-      </div>
 
-      {/* Drifting clouds */}
-      <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '42%', overflow: 'hidden', pointerEvents: 'none' }}>
-        <AmbientStars />
-        <Cloud style={{ left: '-30%', top: 40, opacity: 0.7, transform: 'scale(0.8)' }} dur="62s" delay="0s" />
-        <Cloud style={{ left: '-30%', top: 96, opacity: 0.5, transform: 'scale(0.55)' }} dur="80s" delay="-30s" />
-      </div>
+      {/* ── Sliding world: surface (top 50%) + subsurface (bottom 50%) ── */}
+      <div style={{
+        position: 'absolute', left: 0, right: 0,
+        top: subsurface ? '-100%' : '0%',
+        height: '200%',
+        transition: 'top 0.55s cubic-bezier(0.4, 0, 0.2, 1)',
+        willChange: 'top',
+      }}>
 
-      {/* Top HUD: title + resources */}
+        {/* ─── ABOVE GROUND ─── top half of slider */}
+        <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '50%', overflow: 'hidden' }}>
+          {/* World background: CSS sky + SVG terrain */}
+          <HubWorldBackground />
+
+          {/* CSS clouds */}
+          <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '42%', overflow: 'hidden', pointerEvents: 'none', zIndex: 4 }}>
+            <Cloud style={{ left: '-30%', top: 40, opacity: 0.55, transform: 'scale(0.8)' }} dur="62s" delay="0s" />
+            <Cloud style={{ left: '-30%', top: 96, opacity: 0.38, transform: 'scale(0.55)' }} dur="80s" delay="-30s" />
+            <Cloud style={{ left: '-30%', top: 160, opacity: 0.28, transform: 'scale(0.42)' }} dur="100s" delay="-55s" />
+          </div>
+
+          {/* PixiJS building sprites */}
+          <ErrorBoundary fallback={null}>
+            <HubPixiCanvas buildings={hubBuildings} />
+          </ErrorBoundary>
+
+          {/* Surface buildings — hit areas + labels */}
+          <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}>
+            <div style={{ position: 'absolute', inset: 0, pointerEvents: 'auto' }}>
+              {plotStyles.map((style, plot) => {
+                const kind = structureForPlot(plot)
+                if (!kind) {
+                  if (!editMode) return null
+                  return <EmptyPlot key={plot} plot={plot} w={78} style={style} onClick={() => onGoBuilding('build')} />
+                }
+                const building = structureProps(kind)
+                return <Building key={kind} {...building} style={style} />
+              })}
+            </div>
+          </div>
+
+          {/* Soil cross-section with subsurface button */}
+          <SoilCrossSection />
+        </div>
+
+        {/* ─── BELOW GROUND ─── bottom half of slider */}
+        <div style={{ position: 'absolute', top: '50%', left: 0, right: 0, height: '50%', overflow: 'hidden' }}>
+          <HubSubsurfaceView />
+        </div>
+
+      </div>
+      {/* ── End sliding world ── */}
+
+      {/* Top HUD — always fixed above the slide */}
       <div style={{
         position: 'absolute', top: 0, left: 0, right: 0, zIndex: 18,
         padding: '16px 14px 22px',
-        background: 'linear-gradient(180deg, rgba(6,9,15,0.85) 0%, rgba(6,9,15,0.35) 60%, transparent 100%)',
+        background: subsurface
+          ? 'linear-gradient(180deg, rgba(6,3,0,0.9) 0%, rgba(6,3,0,0.5) 60%, transparent 100%)'
+          : 'linear-gradient(180deg, rgba(6,9,15,0.85) 0%, rgba(6,9,15,0.35) 60%, transparent 100%)',
         display: 'flex', alignItems: 'flex-start', gap: 10, pointerEvents: 'none',
+        transition: 'background 0.55s',
       }}>
         <div style={{ pointerEvents: 'auto' }}>
-          <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 9, fontWeight: 700, letterSpacing: '0.22em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.6)' }}>EARTH BASE · OPS {player.missionsDone}</div>
-          <h1 style={{ margin: '2px 0 0', fontFamily: 'var(--ln-font-display)', fontSize: 24, fontWeight: 800, letterSpacing: '-0.01em', color: '#fff', lineHeight: 1, textShadow: '0 2px 10px rgba(0,0,0,0.7)' }}>Earth Base</h1>
+          <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 9, fontWeight: 700, letterSpacing: '0.22em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.6)' }}>
+            {subsurface ? 'EARTH BASE · SUBSURFACE' : `EARTH BASE · OPS ${player.missionsDone}`}
+          </div>
+          <h1 style={{ margin: '2px 0 0', fontFamily: 'var(--ln-font-display)', fontSize: 24, fontWeight: 800, letterSpacing: '-0.01em', color: '#fff', lineHeight: 1, textShadow: '0 2px 10px rgba(0,0,0,0.7)' }}>
+            {subsurface ? 'Subsurface' : 'Earth Base'}
+          </h1>
         </div>
         <span style={{ flex: 1 }} />
         <div style={{ display: 'flex', flexDirection: 'column', gap: 6, alignItems: 'flex-end', pointerEvents: 'auto' }}>
@@ -145,50 +249,60 @@ export default function HubScreen({ player, hasCoach, onGoBuilding, onNav, onUpg
         </div>
       </div>
 
-      {/* Progression card — hidden when tutorial coach is active to avoid conflicting guidance */}
-      {!hasCoach && <ProgressionCard player={player} onGoBuilding={onGoBuilding} onNav={onNav} top={TUTORIAL_CONTENT_TOP} />}
+      {/* Progression card — hidden when tutorial coach is active */}
+      {!hasCoach && !subsurface && (
+        <>
+          <ProgressionCard player={player} onGoBuilding={onGoBuilding} onNav={onNav} top={TUTORIAL_CONTENT_TOP}
+            onComingSoon={(feature, description, target) => setComingSoon({ feature, description, target })} />
+          {comingSoon && (
+            <ComingSoonSheet feature={comingSoon.feature} description={comingSoon.description} target={comingSoon.target} onClose={() => setComingSoon(null)} />
+          )}
+          {showTutorialComplete && !comingSoon && (
+            <TutorialCompleteSheet onDone={dismissTutorialComplete} />
+          )}
+        </>
+      )}
 
-      {/* Surface buildings */}
-      <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}>
-        <div style={{ position: 'absolute', inset: 0, pointerEvents: 'auto' }}>
-          {plotStyles.map((style, plot) => {
-            const kind = structureForPlot(plot)
-            if (!kind) {
-              if (!editMode) return null
-              return <EmptyPlot key={plot} plot={plot} w={78} style={style} onClick={() => onGoBuilding('build')} />
-            }
-            const building = structureProps(kind)
-            return <Building key={kind} {...building} style={style} />
-          })}
-        </div>
-      </div>
-
-      {/* Soil cross-section */}
-      <SoilCrossSection />
-
-      {/* Edit / Build mode toggle — hidden during tutorial to avoid conflicting overlays. Acts as long-press analog (iOS home screen style). */}
+      {/* Bottom toolbar — hidden during tutorial */}
       {!hasCoach && (
-        <div style={{ position: 'absolute', left: 0, right: 0, bottom: 110, zIndex: 5, display: 'flex', justifyContent: 'center', gap: 8 }}>
-          {editMode && (
+        <div style={{ position: 'absolute', left: 0, right: 0, bottom: 110, zIndex: 20, display: 'flex', justifyContent: 'center', gap: 8 }}>
+          {subsurface ? (
+            <button
+              onClick={() => setSubsurface(false)}
+              style={{ padding: '5px 14px', background: 'rgba(8,16,28,0.75)', backdropFilter: 'blur(6px)', border: '1px solid rgba(122,80,40,0.55)', borderRadius: 999, fontFamily: 'var(--ln-font-display)', fontSize: 9, fontWeight: 700, letterSpacing: '0.22em', color: '#9c8d70', textTransform: 'uppercase', cursor: 'pointer' }}
+            >
+              ↑ Surface
+            </button>
+          ) : (
             <>
-              <button onClick={() => onGoBuilding('build')} style={{ padding: '5px 14px', background: 'rgba(57,211,106,0.15)', backdropFilter: 'blur(6px)', border: '1px solid rgba(57,211,106,0.5)', borderRadius: 999, fontFamily: 'var(--ln-font-display)', fontSize: 9, fontWeight: 700, letterSpacing: '0.14em', color: '#39d36a', textTransform: 'uppercase', cursor: 'pointer' }}>
-                + New Structure
+              {editMode && (
+                <>
+                  <button onClick={() => onGoBuilding('build')} style={{ padding: '5px 14px', background: 'rgba(57,211,106,0.15)', backdropFilter: 'blur(6px)', border: '1px solid rgba(57,211,106,0.5)', borderRadius: 999, fontFamily: 'var(--ln-font-display)', fontSize: 9, fontWeight: 700, letterSpacing: '0.14em', color: '#39d36a', textTransform: 'uppercase', cursor: 'pointer' }}>
+                    + New Structure
+                  </button>
+                  {player.placed.includes('launchpad') && (
+                    <button onClick={() => onGoBuilding('hangar')} style={{ padding: '5px 14px', background: 'rgba(135,207,250,0.12)', backdropFilter: 'blur(6px)', border: '1px solid rgba(135,207,250,0.4)', borderRadius: 999, fontFamily: 'var(--ln-font-display)', fontSize: 9, fontWeight: 700, letterSpacing: '0.14em', color: '#9EDCFF', textTransform: 'uppercase', cursor: 'pointer' }}>
+                      Hangar
+                    </button>
+                  )}
+                  {player.placed.includes('launchpad') && !player.launchpadUpgraded && onUpgradeLaunchpad && (
+                    <button onClick={onUpgradeLaunchpad} style={{ padding: '5px 14px', background: 'rgba(245,166,35,0.15)', backdropFilter: 'blur(6px)', border: '1px solid rgba(245,166,35,0.5)', borderRadius: 999, fontFamily: 'var(--ln-font-display)', fontSize: 9, fontWeight: 700, letterSpacing: '0.14em', color: '#f5a623', textTransform: 'uppercase', cursor: 'pointer' }}>
+                      Upgrade Launchpad (₣1B)
+                    </button>
+                  )}
+                </>
+              )}
+              <button onClick={() => setEditMode(v => !v)} style={{ padding: '5px 14px', background: editMode ? 'rgba(245,166,35,0.25)' : 'rgba(8,16,28,0.75)', backdropFilter: 'blur(6px)', border: editMode ? '1px solid rgba(245,166,35,0.6)' : '1px solid rgba(135,207,250,0.4)', borderRadius: 999, fontFamily: 'var(--ln-font-display)', fontSize: 9, fontWeight: 700, letterSpacing: '0.22em', color: editMode ? '#f5a623' : '#9EDCFF', textTransform: 'uppercase', cursor: 'pointer', animation: !editMode && player.placed.length < 4 ? 'pad-pulse 2s ease-in-out infinite' : 'none' }}>
+                {editMode ? 'Done' : 'Edit · Build'}
               </button>
-              {player.placed.includes('launchpad') && (
-                <button onClick={() => onGoBuilding('hangar')} style={{ padding: '5px 14px', background: 'rgba(135,207,250,0.12)', backdropFilter: 'blur(6px)', border: '1px solid rgba(135,207,250,0.4)', borderRadius: 999, fontFamily: 'var(--ln-font-display)', fontSize: 9, fontWeight: 700, letterSpacing: '0.14em', color: '#9EDCFF', textTransform: 'uppercase', cursor: 'pointer' }}>
-                  Hangar
-                </button>
-              )}
-              {player.placed.includes('launchpad') && !player.launchpadUpgraded && onUpgradeLaunchpad && (
-                <button onClick={onUpgradeLaunchpad} style={{ padding: '5px 14px', background: 'rgba(245,166,35,0.15)', backdropFilter: 'blur(6px)', border: '1px solid rgba(245,166,35,0.5)', borderRadius: 999, fontFamily: 'var(--ln-font-display)', fontSize: 9, fontWeight: 700, letterSpacing: '0.14em', color: '#f5a623', textTransform: 'uppercase', cursor: 'pointer' }}>
-                  Upgrade Launchpad (₣1B)
-                </button>
-              )}
+              <button
+                onClick={() => setComingSoon({ feature: 'Subsurface Operations', description: 'Drill deep into your base planet to mine rare subterranean minerals and build underground structures.', target: SPRINT_AFTER_NEXT_UTC })}
+                style={{ padding: '5px 14px', background: 'rgba(8,12,22,0.75)', backdropFilter: 'blur(6px)', border: '1px solid rgba(122,80,40,0.55)', borderRadius: 999, fontFamily: 'var(--ln-font-display)', fontSize: 9, fontWeight: 700, letterSpacing: '0.22em', color: '#9c8d70', textTransform: 'uppercase', cursor: 'pointer' }}
+              >
+                Subsurface ↓
+              </button>
             </>
           )}
-          <button onClick={() => setEditMode(v => !v)} style={{ padding: '5px 14px', background: editMode ? 'rgba(245,166,35,0.25)' : 'rgba(8,16,28,0.75)', backdropFilter: 'blur(6px)', border: editMode ? '1px solid rgba(245,166,35,0.6)' : '1px solid rgba(135,207,250,0.4)', borderRadius: 999, fontFamily: 'var(--ln-font-display)', fontSize: 9, fontWeight: 700, letterSpacing: '0.22em', color: editMode ? '#f5a623' : '#9EDCFF', textTransform: 'uppercase', cursor: 'pointer', animation: !editMode && player.placed.length < 4 ? 'pad-pulse 2s ease-in-out infinite' : 'none' }}>
-            {editMode ? 'Done' : 'Edit · Build'}
-          </button>
         </div>
       )}
     </div>

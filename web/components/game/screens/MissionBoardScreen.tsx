@@ -10,7 +10,7 @@ import type { DailyContractorPool } from '@/lib/data'
 import type { Catalog } from '@/lib/catalog'
 import { TUTORIAL_CONTENT_TOP } from '@/lib/tutorial-layout'
 import { UI_ZONES } from '@/lib/ui-zones'
-import TutorialHighlight from '@/components/game/TutorialHighlight'
+import MissionCard from '@/components/game/MissionCard'
 
 interface MissionBoardScreenProps {
   onBack: () => void
@@ -53,9 +53,11 @@ export default function MissionBoardScreen({ onBack, onPick, missionsDone, freeO
 
   // In daily pool mode, the display list is the pool itself (available + completed).
   // In legacy freeops mode, fall back to the catalog freeops- missions with cooldowns.
-  const freeOpsMissionPool = MISSIONS.filter(m => m.id.startsWith('freeops-'))
+  const storyMissionPool = freeOperations ? MISSIONS.filter(m => m.tag === 'STORY') : []
+  const freeOpsMissionPool = MISSIONS.filter(m => m.id.startsWith('freeops-') || m.id.startsWith('exo-survey-') || m.tag === 'STORY')
+  const exoplanetSurveyPool = freeOperations ? MISSIONS.filter(m => m.id.startsWith('exo-survey-')) : []
   const available = useDailyPool
-    ? dailyContractorPool!.missions.filter(m => !isCompletedToday(m.id))
+    ? [...storyMissionPool, ...dailyContractorPool!.missions.filter(m => !isCompletedToday(m.id)), ...exoplanetSurveyPool]
     : MISSIONS.filter(m => {
         const contractor = CONTRACTORS[m.contractor]
         if (!contractor) return false
@@ -139,9 +141,20 @@ export default function MissionBoardScreen({ onBack, onPick, missionsDone, freeO
 
         <div style={{ padding: '0 14px', display: 'flex', flexDirection: 'column', gap: 10 }}>
           {(() => {
-            const list = useDailyPool
+            // During onboarding show only the sequence-matched missions (available).
+            // During free-ops show available missions (+ completed-today for daily pool).
+            // Never show locked/future missions during onboarding.
+            const rawList = useDailyPool
               ? [...available, ...completedToday]
-              : freeOperations ? available : MISSIONS
+              : available
+            // In free-ops daily-pool mode, available missions first, completed at the bottom
+            const isAvailable = (m: typeof rawList[0]) =>
+              !isCompletedToday(m.id) &&
+              !(!useDailyPool && isOnCooldown(m.contractor)) &&
+              (freeOperations || available.some(item => item.id === m.id))
+            const list = useDailyPool
+              ? [...rawList].sort((a, b) => Number(!isAvailable(a)) - Number(!isAvailable(b)))
+              : rawList
             const firstValidIdx = list.findIndex(m => {
               if (isCompletedToday(m.id)) return false
               if (!useDailyPool && isOnCooldown(m.contractor)) return false
@@ -155,65 +168,38 @@ export default function MissionBoardScreen({ onBack, onPick, missionsDone, freeO
             const cooldown = !useDailyPool && isOnCooldown(m.contractor)
             const contractor = CONTRACTORS[m.contractor]
             if (!contractor) return null
+            const isStoryMission = m.tag === 'STORY'
             const contractorReady = freeOperations || m.sequence === sequence || contractorUnlocked(contractor, sequence)
             const unlocked = !completedToday_ && !cooldown && contractorReady && (freeOperations || available.some(item => item.id === m.id))
             const mTargets = compatibleTargetsFor(m, targets)
-            const accent = contractor.color
-            const affinityMultiplier = contractorAffinityBonus(contractor, contractorMissions?.[contractor.id] ?? 0)
+            const affinityMultiplier = isStoryMission ? 0 : contractorAffinityBonus(contractor, contractorMissions?.[contractor.id] ?? 0)
             const affinityBonus = Math.round(m.payout.francs * affinityMultiplier)
             const displayPayout = m.payout.francs + affinityBonus
             const isHighlighted = hasCoach && idx === firstValidIdx
+            const cardState = completedToday_ ? 'completed' as const
+              : cooldown ? 'cooldown' as const
+              : !unlocked ? 'locked' as const
+              : 'available' as const
+            const lockedDetail = !contractorReady ? `L${contractor.unlockTier}` : m.sequence <= missionsDone ? 'Completed' : m.unlockAt
+            const cooldownLabel = cooldown ? formatCooldown(contractorCooldowns![m.contractor] - now) : undefined
             return (
-              <button key={m.id} data-mission-id={m.id} data-testid={`mission-card-${m.id}`} onClick={() => unlocked && onPick(m.id)} style={{ background: 'transparent', border: 'none', padding: 0, textAlign: 'left', cursor: unlocked ? 'pointer' : 'not-allowed', opacity: (unlocked || completedToday_) ? (completedToday_ ? 0.45 : 1) : 0.5, outline: '2px solid transparent', outlineOffset: 2, position: 'relative' }} className="mission-card-btn">
-                {isHighlighted && <TutorialHighlight />}
-                <Panel accent={accent} style={{ padding: 12 }}>
-                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
-                    <div style={{ width: 44, height: 44, flexShrink: 0, borderRadius: 999, background: `${accent}22`, border: `1.5px solid ${accent}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'var(--ln-font-display)', fontWeight: 800, fontSize: 13, color: accent }}>
-                      {contractor.initial}
-                    </div>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                        <span style={{ fontFamily: 'var(--ln-font-display)', fontSize: 9, fontWeight: 700, letterSpacing: '0.2em', color: accent, textTransform: 'uppercase' }}>{contractor.name}</span>
-                        <span style={{ fontFamily: 'var(--ln-font-mono)', fontSize: 9, letterSpacing: '0.16em', color: '#5d7390', textTransform: 'uppercase', marginLeft: 'auto' }}>{m.tag}</span>
-                      </div>
-                      <div style={{ fontFamily: 'var(--ln-font-display)', fontWeight: 800, fontSize: 16, color: '#e6efff', marginTop: 2 }}>{m.title}</div>
-                      <div style={{ fontFamily: 'var(--ln-font-mono)', fontSize: 9, color: '#7ec8ff', letterSpacing: '0.1em', textTransform: 'uppercase', marginTop: 2 }}>Wants · {contractor.mineralPreferences.join(' / ')} · +{Math.round(contractor.payoutPremium * 100)}%</div>
-                      <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 12, color: '#a9b8ce', marginTop: 2, lineHeight: 1.4 }}>{m.brief}</div>
-                    </div>
-                  </div>
-
-                  <div style={{ marginTop: 10, display: 'flex', flexWrap: 'wrap', gap: 6, alignItems: 'center' }}>
-                    {Object.entries(m.requires.minerals).map(([k, v]) => {
-                      const meta = MINERAL_META[k]
-                      return (
-                        <div key={k} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '3px 8px', background: 'rgba(8,16,28,0.7)', border: `1px solid ${meta.color}55`, borderRadius: 6 }}>
-                          <span style={{ fontFamily: 'var(--ln-font-mono)', fontSize: 10, fontWeight: 800, color: meta.color }}>{meta.sym}</span>
-                          <span style={{ fontFamily: 'var(--ln-font-display)', fontSize: 11, fontWeight: 800, color: meta.color }}>×{v}</span>
-                        </div>
-                      )
-                    })}
-                    <span style={{ flex: 1 }} />
-                    <StatusPill kind={m.difficulty.startsWith('L') && parseInt(m.difficulty.slice(1)) > 2 ? 'crit' : 'info'} dim>{m.difficulty}</StatusPill>
-                  </div>
-
-                  <div style={{ marginTop: 10, display: 'flex', alignItems: 'center', gap: 10, paddingTop: 10, borderTop: '1px dashed rgba(63,169,255,0.18)' }}>
-                    <div style={{ fontFamily: 'var(--ln-font-display)', fontWeight: 800, fontSize: 18, color: '#f5a623' }}>▲ {displayPayout.toLocaleString()}</div>
-                    <span style={{ fontFamily: 'var(--ln-font-mono)', fontSize: 11, letterSpacing: '0.16em', color: '#7ec8ff' }}>+{m.payout.affinity} AFF</span>
-                    {affinityBonus > 0 && <span style={{ fontFamily: 'var(--ln-font-mono)', fontSize: 10, letterSpacing: '0.12em', color: '#39d36a' }}>+{Math.round(affinityMultiplier * 100)}%</span>}
-                    <span style={{ flex: 1 }} />
-                    {completedToday_
-                      ? <StatusPill kind="ok" dim>Done · Resets Tomorrow</StatusPill>
-                      : cooldown
-                        ? <StatusPill kind="crit">Cooldown {formatCooldown(contractorCooldowns![m.contractor] - now)}</StatusPill>
-                        : !unlocked
-                          ? <StatusPill kind="mute">Locked · {!contractorReady ? `L${contractor.unlockTier}` : m.sequence <= missionsDone ? 'Completed' : m.unlockAt}</StatusPill>
-                          : <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '4px 10px', borderRadius: 8, background: accent, color: '#06121f', fontFamily: 'var(--ln-font-display)', fontWeight: 800, fontSize: 11, letterSpacing: '0.14em', textTransform: 'uppercase' }}>
-                              {mTargets.length} target{mTargets.length !== 1 ? 's' : ''} ›
-                            </span>}
-                  </div>
-                </Panel>
-              </button>
-
+              <MissionCard
+                key={m.id}
+                mission={m}
+                contractor={contractor}
+                mineralMeta={MINERAL_META}
+                targetCount={mTargets.length}
+                displayPayout={displayPayout}
+                affinityMultiplier={affinityMultiplier}
+                affinityReward={m.payout.affinity}
+                unlocked={unlocked}
+                isStoryMission={isStoryMission}
+                cardState={cardState}
+                lockedDetail={lockedDetail}
+                cooldownLabel={cooldownLabel}
+                highlighted={isHighlighted}
+                onPick={() => onPick(m.id)}
+              />
             )
           })
         })()}

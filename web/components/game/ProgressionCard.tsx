@@ -2,12 +2,14 @@
 
 import React from 'react'
 import type { Player, Screen } from '@/game-context'
+import { FREE_OPS_START_MISSIONS_DONE } from '@/lib/data/mission-generator'
 
 interface ProgressionCardProps {
   player: Player
   onGoBuilding: (b: string) => void
   onNav: (s: Screen) => void
   top?: number
+  onComingSoon?: (feature: string, description: string, target?: Date) => void
 }
 
 function CardButton({ accent, eyebrow, title, cta, onClick, testId }: {
@@ -38,7 +40,7 @@ function CardButton({ accent, eyebrow, title, cta, onClick, testId }: {
       }} />
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 8, fontWeight: 800, letterSpacing: '0.2em', color: accent, textTransform: 'uppercase' }}>{eyebrow}</div>
-        <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 13, fontWeight: 800, color: '#e6efff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{title}</div>
+        <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 13, fontWeight: 800, color: '#e6efff', lineHeight: 1.3 }}>{title}</div>
       </div>
       <span style={{
         flexShrink: 0,
@@ -55,7 +57,7 @@ function CardButton({ accent, eyebrow, title, cta, onClick, testId }: {
   )
 }
 
-export default function ProgressionCard({ player, onGoBuilding, onNav, top = 132 }: ProgressionCardProps) {
+export default function ProgressionCard({ player, onGoBuilding, onNav, top = 132, onComingSoon }: ProgressionCardProps) {
   const cards: React.ReactElement[] = []
 
   if (player.activeMission) {
@@ -84,8 +86,10 @@ export default function ProgressionCard({ player, onGoBuilding, onNav, top = 132
     )
   }
 
+  const inOnboarding = player.missionsDone < FREE_OPS_START_MISSIONS_DONE
+
   if (!player.activeMission && player.missionsDone > 0) {
-    if ((player.skillPoints ?? 0) > 0) {
+    if (!inOnboarding && (player.skillPoints ?? 0) > 0) {
       cards.push(
         <CardButton
           key="skills"
@@ -93,38 +97,61 @@ export default function ProgressionCard({ player, onGoBuilding, onNav, top = 132
           accent="var(--ln-cyan)"
           eyebrow="Skill Points"
           title={`${player.skillPoints ?? 0} SP available`}
-          cta="Train"
-          onClick={() => onGoBuilding('skills')}
+          cta="Coming Soon"
+          onClick={() => onComingSoon?.('Skill Tree', 'Train your crew and unlock upgraded drilling, cargo, and orbital capabilities.')}
         />
       )
     }
+    if (!inOnboarding && !player.satelliteMonitoringBuilt) {
+      cards.push(
+        <CardButton
+          key="sms"
+          testId="progression-card-sms"
+          accent="#7ec8ff"
+          eyebrow="New Facility"
+          title="Build a Satellite Monitoring Station"
+          cta="Build"
+          onClick={() => onGoBuilding('build')}
+        />
+      )
+    } else if (!inOnboarding && player.satelliteMonitoringBuilt && !player.transitSatelliteLaunchedAt) {
+      cards.push(
+        <CardButton
+          key="telescope"
+          testId="progression-card-transit-satellite"
+          accent="#7ec8ff"
+          eyebrow="Science Mission"
+          title="Launch a transit telescope"
+          cta="Open Mission"
+          onClick={() => onNav('missions')}
+        />
+      )
+    } else if (!inOnboarding && player.transitSatelliteLaunchedAt) {
+      cards.push(
+        <CardButton
+          key="daily-candidates"
+          testId="progression-card-tess-candidates"
+          accent="#7ec8ff"
+          eyebrow="Daily Downlink"
+          title="Classify today's transit candidates"
+          cta="Review"
+          onClick={() => onNav('galaxy')}
+        />
+      )
+    }
+    const justFinishedOnboarding = player.missionsDone === FREE_OPS_START_MISSIONS_DONE
     cards.push(
       <CardButton
         key="next-mission"
         testId="progression-card-next-mission"
         accent="#39d36a"
-        eyebrow="Next Mission"
-        title="New contract available"
-        cta="View Missions"
+        eyebrow={justFinishedOnboarding ? 'Onboarding Complete' : 'Next Mission'}
+        title={justFinishedOnboarding ? 'Choose your first free contract' : 'New contract available'}
+        cta="Browse Contracts"
         onClick={() => onNav('missions')}
       />
     )
   }
-
-  // Star Map card — always visible; discovered count derived from seen_planets
-  // with a fallback to missionsDone for legacy sessions.
-  const discoveredCount = Math.max(player.seen_planets?.length ?? 0, player.missionsDone)
-  cards.push(
-    <CardButton
-      key="star-map"
-      testId="progression-card-star-map"
-      accent="#c87cff"
-      eyebrow="Star Map"
-      title={`Discovered: ${discoveredCount} / ???`}
-      cta="Explore"
-      onClick={() => onNav('missions')}
-    />
-  )
 
   if (cards.length === 0) return null
 

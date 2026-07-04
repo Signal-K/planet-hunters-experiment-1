@@ -4,7 +4,7 @@ import { useMemo, useEffect, useRef, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { LaunchSequenceCanvas } from '@/components/game/LaunchSequenceCanvas'
 import { GameProvider, type Screen, useGame } from '@/game-context'
-import { M1_STEPS, M2_STEPS, M3_STEPS, PROGRESSION_STEPS } from '@/lib/data'
+import { M1_STEPS, M2_STEPS, M3_STEPS, PROGRESSION_STEPS, rocketDisplayForConfig } from '@/lib/data'
 import IntroScreen from '@/components/game/screens/IntroScreen'
 import AssemblyScreen from '@/components/game/screens/AssemblyScreen'
 import BuildPlaceScreen from '@/components/game/screens/BuildPlaceScreen'
@@ -21,6 +21,7 @@ import RocketPurchaseScreen from '@/components/game/screens/RocketPurchaseScreen
 import SkillTreeScreen from '@/components/game/screens/SkillTreeScreen'
 import ScanStationScreen from '@/components/game/screens/ScanStationScreen'
 import RoverMiningScreen from '@/components/game/screens/RoverMiningScreen'
+import TessDiscoveryScreen from '@/components/game/screens/TessDiscoveryScreen'
 import TutorialCoach from '@/components/game/TutorialCoach'
 import SaveProgressPrompt from '@/components/game/SaveProgressPrompt'
 import UnlockPopup from '@/components/game/UnlockPopup'
@@ -34,6 +35,7 @@ import ToastLayer from '@/components/ui/ToastLayer'
 import { initPostHog } from '@/lib/posthog'
 import DevShortcuts from '@/components/dev/DevShortcuts'
 import AuthGateSheet from '@/components/game/AuthGateSheet'
+import SettingsSheet from '@/components/game/SettingsSheet'
 import TerritoryClaimPopup from '@/components/game/TerritoryClaimPopup'
 import { UI_ZONES } from '@/lib/ui-zones'
 import ErrorBoundary from '@/components/ui/ErrorBoundary'
@@ -46,6 +48,7 @@ function GameCanvas() {
   const arrivalScheduledFor = useRef<number | null>(null)
   const returnScheduledKey = useRef<string | null>(null)
   const [launchPending, setLaunchPending] = useState(false)
+  const [settingsOpen, setSettingsOpen] = useState(false)
 
   const handleLaunch = useCallback(() => {
     setLaunchPending(true)
@@ -55,6 +58,7 @@ function GameCanvas() {
     setLaunchPending(false)
     game.onLaunch()
   }, [game.onLaunch])
+  const rocketDisplay = rocketDisplayForConfig(game.rocket)
 
   // When a timed transit starts, schedule a push notification.
   useEffect(() => {
@@ -159,12 +163,12 @@ function GameCanvas() {
       game.go('skills')
       return
     }
-    game.go(id === 'galaxy' ? 'missions' : id as Screen)
+    game.go(id as Screen)
   }
 
   const currentNav = game.screen === 'missions' || game.screen === 'targets'
     ? 'missions'
-    : game.screen === 'fab' ? 'fab' : game.screen === 'skills' ? 'skills' : 'hub'
+    : game.screen === 'galaxy' ? 'galaxy' : game.screen === 'fab' ? 'fab' : game.screen === 'skills' ? 'skills' : 'hub'
   const showNav = ['hub', 'missions', 'skills'].includes(game.screen)
   const showFeedback = ['hub', 'missions', 'market', 'hangar', 'skills'].includes(game.screen)
     && !showNav
@@ -213,9 +217,11 @@ function GameCanvas() {
                 }), { ...(player.stash ?? {}) }),
                 placed: Array.from(new Set([...player.placed, kind])),
                 placementPlots: { ...player.placementPlots, [kind]: plot },
-                refineryBuilt: kind === 'refinery' ? true : player.refineryBuilt,
-                scannerBuilt: kind === 'scan-station' ? true : player.scannerBuilt,
-              }))
+              refineryBuilt: kind === 'refinery' ? true : player.refineryBuilt,
+              scannerBuilt: kind === 'scan-station' ? true : player.scannerBuilt,
+              satelliteMonitoringBuilt: kind === 'satellite-monitoring-station' ? true : player.satelliteMonitoringBuilt,
+              satelliteMonitoringLevel: kind === 'satellite-monitoring-station' ? Math.max(1, player.satelliteMonitoringLevel ?? 1) : player.satelliteMonitoringLevel,
+            }))
               game.completeStep(0)
               game.go('hub')
             }}
@@ -231,6 +237,7 @@ function GameCanvas() {
               if (building === 'hangar') return game.go('hangar')
               if (building === 'skills') return game.go('skills')
               if (building === 'scan-station') return game.go('scan-station')
+              if (building === 'satellite-monitoring-station') return game.go('galaxy')
               if (building === 'launchpad' || building === 'missions') return goFromNav('missions')
             }}
             onUpgradeLaunchpad={() => game.upgradeLaunchpad()}
@@ -247,6 +254,16 @@ function GameCanvas() {
             contractorMissions={game.player.contractorMissions}
             contractorCooldowns={game.player.contractorCooldowns}
             dailyContractorPool={game.player.dailyContractorPool}
+          />
+        )}
+        {game.screen === 'galaxy' && (
+          <TessDiscoveryScreen
+            player={game.player}
+            onBack={() => game.go('hub')}
+            onBuildStation={() => game.go('build')}
+            onOpenMissions={() => game.go('missions')}
+            onSubmit={game.submitTessClassification}
+            onChooseTarget={game.chooseSatelliteTarget}
           />
         )}
         {game.screen === 'targets' && game.mission && (
@@ -330,10 +347,26 @@ function GameCanvas() {
         {game.screen === 'transit' && game.target && (
           <TransitScreen
             target={game.target}
+            rocketImageSrc={rocketDisplay.img}
             arrivalAt={game.player.arrivalAt}
             onBack={() => game.go('hub')}
             onArrive={() => {
               const isRoverMission = game.mission?.survey?.onWorldVehicle === 'starter-rover'
+              if (game.mission?.payload?.type === 'satellite' || game.target?.type === 'exoplanet') {
+                game.setPlayer(player => ({
+                  ...player,
+                  missionPhase: 'debrief',
+                  transitSatelliteLaunchedAt: game.mission?.payload?.type === 'satellite'
+                    ? (player.transitSatelliteLaunchedAt ?? Date.now())
+                    : player.transitSatelliteLaunchedAt,
+                  transitSatelliteLevel: game.mission?.payload?.type === 'satellite'
+                    ? Math.max(1, player.transitSatelliteLevel ?? 1)
+                    : player.transitSatelliteLevel,
+                }))
+                game.setLastCargo({})
+                game.go('debrief')
+                return
+              }
               game.setPlayer(player => ({ ...player, missionPhase: 'mining' }))
               game.go(isRoverMission ? 'rover-mining' : 'mining')
             }}
@@ -349,8 +382,11 @@ function GameCanvas() {
               game.go('hub')
             }}
             onComplete={(cargo) => { game.completeStep(6); game.onMiningDone(cargo) }}
+            onAbandon={game.abandonMission}
             minerals={game.catalog.minerals}
             laserChargeCap={game.laserChargeCap}
+            hasCoach={hasCoach}
+            coachManual={coach?.manual ?? false}
           />
         )}
         {game.screen === 'rover-mining' && game.mission && game.target && (
@@ -372,7 +408,8 @@ function GameCanvas() {
             onError={handleLaunchComplete}
           >
             <LaunchSequenceCanvas
-              rocketName="Starter Rocket 1"
+              rocketName={rocketDisplay.name}
+              rocketImageSrc={rocketDisplay.img}
               targetName={game.target?.name ?? 'TARGET'}
               onComplete={handleLaunchComplete}
             />
@@ -383,9 +420,8 @@ function GameCanvas() {
         {showFeedback && <FeedbackButton />}
         <SurveySheet />
         {showNav && <div className="mobile-radial-nav"><RadialNav current={currentNav} onNav={goFromNav} /></div>}
-        <Sidebar current={currentNav} onNav={goFromNav} />
 
-        {coach && (
+        {coach && !launchPending && (
           <TutorialCoach
             key={coach.id}
             stepIndex={coachIndex}
@@ -432,6 +468,16 @@ function GameCanvas() {
           />
         )}
       </div>
+
+      {/* Sidebar (position:fixed, desktop only) lives outside .portrait-canvas
+          on purpose: that box has `isolation: isolate` + `overflow: hidden`
+          for the mobile-canvas illusion, which scopes/clips a nested fixed
+          descendant's effective stacking in ways that made the sidebar
+          unreliable to click on desktop (Liam, 2026-07-04: "buttons in the
+          sidebar on desktop do not work"). Keeping it a sibling of
+          .portrait-canvas inside .game-stage removes that ambiguity. */}
+      <Sidebar current={currentNav} onNav={goFromNav} onSettings={() => setSettingsOpen(true)} />
+      {settingsOpen && <SettingsSheet onClose={() => setSettingsOpen(false)} />}
     </main>
   )
 }

@@ -134,6 +134,12 @@ export function toStructure(r: any): StructureBlueprint {
 }
 
 export async function fetchCatalog(): Promise<Catalog> {
+  // TESS/KOI exoplanet targets are a separate science feature — never Landnam mining targets.
+  // Filter them out defensively here so stale PB rows can't bleed into the game catalog.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const isSolarTarget = (r: any) =>
+    !String(r.slug ?? '').startsWith('tess-') && !String(r.slug ?? '').startsWith('koi-') && !String(r.slug ?? '').startsWith('hd-')
+
   const [locations, minerals, contractors, parts, missions, structures] = await Promise.all([
     pbLandnam.collection('locations').getFullList({ sort: 'orbit,name' }),
     pbLandnam.collection('minerals').getFullList(),
@@ -162,16 +168,21 @@ export async function fetchCatalog(): Promise<Catalog> {
   ]
 
   return {
-    targets: locations.map(toTarget),
+    targets: locations.filter(isSolarTarget).map(toTarget),
     missions: allMissions,
     parts: {
       chassis:    parts.filter(p => p.part_type === 'chassis').map(toPart),
       propulsion: parts.filter(p => p.part_type === 'propulsion').map(toPart),
       drill:      parts.filter(p => p.part_type === 'drill').map(toPart),
     },
-    minerals: Object.fromEntries(
-      minerals.map(r => [r.slug, { name: r.name, sym: r.sym, color: r.color, price: r.base_price, rarity: r.rarity ?? 'common', constructionUse: r.construction_use ?? '', laserAccess: r.laser_access ?? 1 }])
-    ),
+    // Merge static MINERAL_META first so any key not yet seeded in PocketBase
+    // still resolves (avoids crashes when missions reference new minerals).
+    minerals: {
+      ...MINERAL_META,
+      ...Object.fromEntries(
+        minerals.map(r => [r.slug, { name: r.name, sym: r.sym, color: r.color, price: r.base_price, rarity: r.rarity ?? 'common', constructionUse: r.construction_use ?? '', laserAccess: r.laser_access ?? 1 }])
+      ),
+    },
     contractors: Object.keys(catalogContractors).length > 0 ? catalogContractors : CONTRACTORS,
     structures: structures.length > 0 ? structures.map(toStructure) : STRUCTURES,
   }
