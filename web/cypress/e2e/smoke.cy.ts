@@ -1,4 +1,30 @@
 describe('Smoke — Landnam', () => {
+  const dailyPoolMission = (
+    contractor: string,
+    mineral: string,
+    amount: number,
+    title: string,
+  ) => ({
+    id: `dcp-e2e-${contractor}`,
+    title,
+    brief: `${title} fixture for the Free Ops mission board smoke test.`,
+    contractor,
+    tag: 'STARTER',
+    difficulty: 'L1',
+    locked: false,
+    sequence: 4,
+    requires: {
+      minerals: { [mineral]: amount },
+      cargo_min: amount,
+      drill_tier: 1,
+      max_orbit: 4,
+    },
+    payout: {
+      francs: 750_000,
+      affinity: 8,
+    },
+  })
+
   const visitWithState = (state: Record<string, unknown>) => {
     const screen = typeof state.screen === 'string' ? state.screen : 'hub'
     cy.visit(`/game/${screen}`, {
@@ -81,6 +107,8 @@ describe('Smoke — Landnam', () => {
   })
 
   it('shows Free Ops contractor missions after M3', () => {
+    const date = new Date()
+    const dateKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
     visitWithState({
       screen: 'missions',
       tutorial: false,
@@ -89,11 +117,21 @@ describe('Smoke — Landnam', () => {
         freeOperations: true,
         contractorMissions: {},
         contractorCooldowns: {},
+        dailyContractorPool: {
+          date: dateKey,
+          acceptedId: null,
+          completedIds: [],
+          missions: [
+            dailyPoolMission('helios-propulsion-depot', 'platinum', 5, 'Helios Propulsion Depot starter contract'),
+            dailyPoolMission('arcturus-battery-systems', 'palladium', 5, 'Arcturus Battery Systems starter contract'),
+            dailyPoolMission('ferrum-orbital-construction', 'platinum', 5, 'Ferrum Orbital Construction starter contract'),
+          ],
+        },
       },
     })
 
     cy.contains('EARTH BASE · FREE OPS').should('be.visible')
-    cy.get('[data-testid^="mission-card-freeops-"]').should('have.length.at.least', 3)
+    cy.get('[data-testid^="mission-card-dcp-e2e-"]').should('have.length.at.least', 3)
     cy.contains('Helios Propulsion Depot').should('be.visible')
     cy.contains('Arcturus Battery Systems').scrollIntoView().should('be.visible')
   })
