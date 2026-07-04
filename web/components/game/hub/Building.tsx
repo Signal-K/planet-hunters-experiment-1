@@ -11,15 +11,34 @@ export interface BuildingProps {
   w: number
   style?: React.CSSProperties
   onClick: () => void
+  // Small numeric badge in the top-right corner — used for the SMS
+  // daily-candidate-queue count (see HubScreen's satellite-monitoring-station
+  // wiring). Omit or pass 0 to hide.
+  badge?: number
 }
 
-export function Building({ kind, label, sub, status, hot, w, style, onClick }: BuildingProps) {
+export function Building({ kind, label, sub, status, hot, w, style, onClick, badge }: BuildingProps) {
   const statusColors = { ok: '#39d36a', warn: '#ffb347', info: '#7ec8ff' }
   const color = statusColors[status]
   return (
     <button data-testid={`building-${kind}`} onClick={onClick} style={{ position: 'absolute', background: 'transparent', border: 'none', padding: 0, cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, ...style }}>
       {/* Visual rendered by HubPixiCanvas — this spacer keeps label position aligned */}
-      <div style={{ width: w, height: w * 0.6 }} />
+      <div style={{ width: w, height: w * 0.6, position: 'relative' }}>
+        {!!badge && badge > 0 && (
+          <span
+            data-testid={`building-${kind}-badge`}
+            style={{
+              position: 'absolute', top: -4, right: -4, minWidth: 16, height: 16, padding: '0 4px',
+              borderRadius: 999, background: 'var(--ln-amber)', border: '1px solid rgba(6,9,15,0.8)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontFamily: 'var(--ln-font-display)', fontWeight: 800, fontSize: 9, color: '#0a0f1a',
+              boxShadow: '0 0 8px rgba(245,166,35,0.6)',
+            }}
+          >
+            {badge > 9 ? '9+' : badge}
+          </span>
+        )}
+      </div>
       <div style={{
         padding: '4px 10px', borderRadius: 999,
         background: 'rgba(8,12,22,0.8)', backdropFilter: 'blur(6px)',

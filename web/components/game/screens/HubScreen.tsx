@@ -17,6 +17,7 @@ import ErrorBoundary from '@/components/ui/ErrorBoundary'
 import { TUTORIAL_CONTENT_TOP } from '@/lib/tutorial-layout'
 import { FREE_OPS_START_MISSIONS_DONE } from '@/lib/data/mission-generator'
 import type { HubBuildingDef } from '@/lib/pixi/hubScene'
+import { fetchReviewableTessCandidates } from '@/lib/tess-subjects'
 
 const DEFAULT_PLOTS: EntityData[] = [
   { id: 'plot-0', name: 'Plot 0', transform: { position: { x: 22, y: 570 }, rotation: 0, scale: { x: 1, y: 1 } }, components: [{ type: 'BuildPlot', index: 0 }] },
@@ -38,6 +39,7 @@ export default function HubScreen({ player, hasCoach, onGoBuilding, onNav, onUpg
   const [plotEntities, setPlotEntities] = useState<EntityData[]>(DEFAULT_PLOTS)
   const [subsurface, setSubsurface] = useState(false)
   const [comingSoon, setComingSoon] = useState<{ feature: string; description: string; target?: Date } | null>(null)
+  const [tessQueueCount, setTessQueueCount] = useState(0)
   const { show: showTutorialComplete, dismiss: dismissTutorialComplete } = useTutorialCompleteAck(player.missionsDone, FREE_OPS_START_MISSIONS_DONE)
   const placed = player.placed ?? []
   const placementPlots = player.placementPlots ?? {}
@@ -52,6 +54,27 @@ export default function HubScreen({ player, hasCoach, onGoBuilding, onNav, onUpg
       .then(data => { if (data.entities?.length) setPlotEntities(data.entities) })
       .catch(() => {})
   }, [])
+
+  // SMS daily-candidate-queue badge (LN-014): count of live TESS subjects
+  // still awaiting this player's review, i.e. not yet in tessClassifications.
+  // Mirrors TessDiscoveryScreen's own gating (SMS built + telescope launched)
+  // so the badge never promises a queue the classify flow can't show yet.
+  useEffect(() => {
+    if (!player.freeOperations || !player.satelliteMonitoringBuilt || !player.transitSatelliteLaunchedAt) {
+      setTessQueueCount(0)
+      return
+    }
+    let cancelled = false
+    fetchReviewableTessCandidates()
+      .then(candidates => {
+        if (cancelled) return
+        const classifications = player.tessClassifications ?? {}
+        const unresolved = candidates.filter(c => !classifications[c.id])
+        setTessQueueCount(unresolved.length)
+      })
+      .catch(() => { if (!cancelled) setTessQueueCount(0) })
+    return () => { cancelled = true }
+  }, [player.freeOperations, player.satelliteMonitoringBuilt, player.transitSatelliteLaunchedAt, player.tessClassifications])
 
   const sortedEntities = plotEntities.slice().sort((a, b) => {
     const ai = (a.components.find(c => c.type === 'BuildPlot')?.index as number) ?? 0
@@ -122,6 +145,7 @@ export default function HubScreen({ player, hasCoach, onGoBuilding, onNav, onUpg
         sub: player.transitSatelliteLaunchedAt ? 'TELESCOPE LIVE' : 'READY',
         status: (player.transitSatelliteLaunchedAt ? 'ok' : 'info') as 'ok' | 'info',
         w: 86,
+        badge: tessQueueCount,
         onClick: () => onGoBuilding('satellite-monitoring-station'),
       }
     }
