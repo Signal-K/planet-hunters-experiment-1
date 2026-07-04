@@ -3,10 +3,11 @@
  * No React, no PixiJS Application lifecycle — just scene graph construction
  * and a per-frame update function returned to the caller.
  *
- * Fully procedural: no PNG/Sprite assets. Palette matches the design tokens
- * in web/app/globals.css and the vector style established by hubScene.ts.
+ * Uses the selected rocket art when available, with a procedural fallback.
+ * Palette matches the design tokens in web/app/globals.css and the vector
+ * style established by hubScene.ts.
  */
-import { Application, Container, Graphics, Sprite, Text, TextStyle, Texture } from 'pixi.js'
+import { Application, Assets, Container, Graphics, Sprite, Text, TextStyle, Texture } from 'pixi.js'
 
 // ─── Palette (mirrors web/app/globals.css --ln-* tokens) ──────────────────────
 const C = {
@@ -122,7 +123,7 @@ function buildRocket(): {
 // Caller owns the Application lifecycle.
 export function buildLaunchScene(
   app: Application,
-  opts: { rocketName: string; targetName: string; onComplete: () => void },
+  opts: { rocketName: string; rocketImageSrc?: string; targetName: string; onComplete: () => void },
 ) {
   const W = app.screen.width
   const H = app.screen.height
@@ -257,6 +258,28 @@ export function buildLaunchScene(
 
   const { root: rocketVisual, boosterL, boosterR, lowerStage } = buildRocket()
   rocketRoot.addChild(rocketVisual)
+  let usesRocketSprite = false
+  const rocketSprite = new Sprite(Texture.EMPTY)
+  rocketSprite.anchor.set(0.5)
+  rocketSprite.rotation = Math.PI / 2
+  rocketSprite.visible = false
+  rocketRoot.addChild(rocketSprite)
+  if (opts.rocketImageSrc) {
+    void Assets.load<Texture>(opts.rocketImageSrc).then(texture => {
+      rocketSprite.texture = texture
+      const longEdge = Math.min(H * 0.34, 260)
+      const thickEdge = Math.min(W * 0.48, 170)
+      const scale = Math.min(longEdge / Math.max(texture.width, 1), thickEdge / Math.max(texture.height, 1))
+      rocketSprite.scale.set(scale)
+      rocketSprite.visible = true
+      rocketVisual.visible = false
+      usesRocketSprite = true
+    }).catch(() => {
+      rocketSprite.visible = false
+      rocketVisual.visible = true
+      usesRocketSprite = false
+    })
+  }
 
   // ── Plume ─────────────────────────────────────────────────────────────────
   const plumeContainer = new Container()
@@ -394,6 +417,7 @@ export function buildLaunchScene(
     if (!boostersSeparated && elapsed >= T.boosterSep) {
       boostersSeparated = true
       for (const [boosterGfx, vx, rot] of [[boosterL, -55, 0.05], [boosterR, 55, -0.05]] as [Graphics, number, number][]) {
+        if (usesRocketSprite) continue
         const worldPos = boosterGfx.getGlobalPosition()
         const localPos = app.stage.toLocal(worldPos)
         rocketVisual.removeChild(boosterGfx)
@@ -409,15 +433,17 @@ export function buildLaunchScene(
     // Stage separation — detach the real lower-stage part
     if (!stageSeparated && elapsed >= T.stageSep) {
       stageSeparated = true
-      const worldPos = lowerStage.getGlobalPosition()
-      const localPos = app.stage.toLocal(worldPos)
-      rocketVisual.removeChild(lowerStage)
-      const wrap = new Container()
-      wrap.addChild(lowerStage)
-      lowerStage.position.set(0, 0)
-      wrap.x = localPos.x; wrap.y = localPos.y
-      app.stage.addChild(wrap)
-      debris.push({ sprite: wrap, vx: (Math.random() - 0.5) * 15, vy: 70, rot: 0.02, life: 4 })
+      if (!usesRocketSprite) {
+        const worldPos = lowerStage.getGlobalPosition()
+        const localPos = app.stage.toLocal(worldPos)
+        rocketVisual.removeChild(lowerStage)
+        const wrap = new Container()
+        wrap.addChild(lowerStage)
+        lowerStage.position.set(0, 0)
+        wrap.x = localPos.x; wrap.y = localPos.y
+        app.stage.addChild(wrap)
+        debris.push({ sprite: wrap, vx: (Math.random() - 0.5) * 15, vy: 70, rot: 0.02, life: 4 })
+      }
     }
 
     // Debris motion

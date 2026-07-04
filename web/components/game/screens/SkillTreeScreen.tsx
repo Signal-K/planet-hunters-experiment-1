@@ -12,7 +12,7 @@ export default function SkillTreeScreen({ skillPoints, onBack }: {
   // Full-screen coming soon — skill tree is a future sprint feature.
   // Render as a full-screen sheet with no close action (back nav exits instead).
   return (
-    <div className="game-screen" style={{ position: 'relative' }}>
+    <div className="game-screen" style={{ position: 'relative', width: '100%', height: '100%', minHeight: '100%' }}>
       <TopBar eyebrow="EARTH BASE · TRAINING" title="Skill Tree" onBack={onBack} />
       <ComingSoonSheet
         feature="Skill Tree"

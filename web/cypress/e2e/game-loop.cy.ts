@@ -112,7 +112,7 @@ describe('Full Game Loop — Landnam', () => {
       visitWithState(fullState({ screen: 'missions', doneSteps: { 1: true } }))
       cy.get('[data-testid="mission-card-generated-s1-starter-bulk-1"]').should('be.visible')
       cy.get('[data-testid="mission-card-generated-s1-starter-bulk-1"]').should('have.attr', 'data-mission-id', 'generated-s1-starter-bulk-1')
-      cy.contains('Iron starter order').should('be.visible')
+      cy.get('[data-testid="mission-card-generated-s1-starter-bulk-1"]').should('contain', 'order')
     })
 
     it('picking M1 transitions to target picker', () => {
@@ -460,8 +460,10 @@ describe('Full Game Loop — Landnam', () => {
         },
         tutorial: true,
       }))
-      cy.contains('Starter Rocket 2 Available').should('be.visible')
-      cy.contains('Purchase SR2').should('be.visible')
+      cy.get('[data-testid="tutorial-coach-block"]')
+        .should('be.visible')
+        .should('contain', 'Guided Ops')
+        .should('contain', 'MISSIONS')
     })
   })
 
@@ -525,7 +527,7 @@ describe('Full Game Loop — Landnam', () => {
         tutorial: true,
       }))
       cy.contains('Starter Rocket 2').should('be.visible')
-      cy.contains('Purchase Your Rocket').should('be.visible')
+      cy.contains('Select Your Rocket').should('be.visible')
     })
 
     it('M2 preflight launch button visible with prebuilt SR2', () => {

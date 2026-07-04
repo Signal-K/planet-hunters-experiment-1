@@ -331,6 +331,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
           completedIds: [...s.player.dailyContractorPool.completedIds, s.missionId],
         }
         : s.player.dailyContractorPool
+      const popup = showLoanOffer ? 'loan' : missionsDone === 1 ? 'sr2' : s.popup
       return {
         ...s,
         player: {
@@ -364,10 +365,9 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
         missionId: null,
         targetId: null,
         tutorial: missionsDone < FREE_OPS_START_MISSIONS_DONE && catalog.missions.some(m => m.sequence === missionsDone + 1),
-        // SR2 popup is redundant with M2 coach step 20; only show it outside onboarding
-        popup: showLoanOffer ? 'loan' : s.popup,
+        popup,
         doneSteps: { ...s.doneSteps, 9: true },
-        screen: pendingTerritoryClaimFor ? s.screen : 'hub',
+        screen: pendingTerritoryClaimFor ? s.screen : 'market',
         pendingTerritoryClaimFor,
       }
     })

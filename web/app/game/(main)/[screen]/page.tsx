@@ -3,7 +3,7 @@
 import { use, useEffect, useState, useCallback } from 'react'
 import { notFound } from 'next/navigation'
 import { useGame } from '@/game-context'
-import { M1_STEPS, M2_STEPS, M3_STEPS } from '@/lib/data'
+import { M1_STEPS, M2_STEPS, M3_STEPS, rocketDisplayForConfig } from '@/lib/data'
 import type { Screen } from '@/lib/game-types'
 import ErrorBoundary from '@/components/ui/ErrorBoundary'
 import { LaunchSequenceCanvas } from '@/components/game/LaunchSequenceCanvas'
@@ -75,6 +75,7 @@ function ScreenContent({
     setLaunchPending(false)
     game.onLaunch()
   }, [game.onLaunch])
+  const rocketDisplay = rocketDisplayForConfig(game.rocket)
 
   // Derive the coach step for coachManual (needed by AssemblyScreen)
   const coachSteps = !game.tutorial ? [] :
@@ -220,7 +221,8 @@ function ScreenContent({
           {launchPending && (
             <ErrorBoundary fallback={null} onError={handleLaunchComplete}>
               <LaunchSequenceCanvas
-                rocketName="Starter Rocket 1"
+                rocketName={rocketDisplay.name}
+                rocketImageSrc={rocketDisplay.img}
                 targetName={game.target.name}
                 onComplete={handleLaunchComplete}
               />
@@ -234,6 +236,7 @@ function ScreenContent({
       return (
         <TransitScreen
           target={game.target}
+          rocketImageSrc={rocketDisplay.img}
           arrivalAt={game.player.arrivalAt}
           onBack={() => game.go('hub')}
           onArrive={() => {

@@ -32,13 +32,14 @@ function CountdownUnit({ value, label }: { value: number; label: string }) {
 }
 
 function Countdown({ target }: { target: Date }) {
-  const [, tick] = useState(0)
+  const [now, setNow] = useState<number | null>(null)
   useEffect(() => {
-    const id = setInterval(() => tick(n => n + 1), 1000)
+    setNow(Date.now())
+    const id = setInterval(() => setNow(Date.now()), 1000)
     return () => clearInterval(id)
   }, [])
 
-  const diff = Math.max(0, target.getTime() - Date.now())
+  const diff = now === null ? 0 : Math.max(0, target.getTime() - now)
   const days  = Math.floor(diff / 86_400_000)
   const hours = Math.floor((diff % 86_400_000) / 3_600_000)
   const mins  = Math.floor((diff % 3_600_000) / 60_000)

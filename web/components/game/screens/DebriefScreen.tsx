@@ -21,6 +21,7 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
   missionsDone?: number
   hasCoach?: boolean
 }) {
+  const [resolved, setResolved] = useState(false)
   const [collecting, setCollecting] = useState(false)
   const collectingRef = useRef(false)
 
@@ -100,19 +101,27 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
         </div>
 
         {/* ── Contract payment ─────────────────────────────────────────────── */}
-        {delivered ? (
+        {resolved && (
           <div style={{
             background: 'rgba(8,14,26,0.7)',
             border: '1px solid var(--ln-hairline)',
-            borderLeft: '3px solid var(--ln-amber)',
+            borderLeft: `3px solid ${delivered ? 'var(--ln-amber)' : 'var(--ln-crit)'}`,
             borderRadius: 12, padding: '12px 16px',
             animation: 'unlock-in 0.35s ease-out',
           }}>
             <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 9, fontWeight: 800, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'var(--ln-text-dim)', marginBottom: 10 }}>
-              {isStoryMission ? 'Mission Authorization' : `Contract Payment · ${contractor?.name ?? 'Contractor'}`}
+              Francs Earned
             </div>
-            <PayRow label={isStoryMission ? 'Mission funding' : 'Order fulfillment'} value={mission.payout.francs} />
-            {!isStoryMission && affinityBonus > 0 && <PayRow label="Affinity bonus" value={affinityBonus} />}
+            {delivered ? (
+              <>
+                <PayRow label={isStoryMission ? 'Mission funding' : `Order fulfillment · ${contractor?.name ?? 'Contractor'}`} value={mission.payout.francs} />
+                {!isStoryMission && affinityBonus > 0 && <PayRow label="Affinity bonus" value={affinityBonus} />}
+              </>
+            ) : (
+              <p style={{ margin: 0, fontFamily: 'var(--ln-font-body)', fontSize: 13, color: 'var(--ln-text-dim)', lineHeight: 1.5 }}>
+                Contract bonus forfeited — order was not fully delivered.
+              </p>
+            )}
             <div style={{ marginTop: 10, paddingTop: 10, borderTop: '1px solid rgba(245,166,35,0.25)', display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
               <span style={{ fontFamily: 'var(--ln-font-display)', fontSize: 10, fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--ln-text-dim)' }}>
                 Total
@@ -122,7 +131,8 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
               </span>
             </div>
           </div>
-        ) : (
+        )}
+        {!delivered && !resolved && (
           <div style={{
             background: 'rgba(8,14,26,0.7)',
             border: '1px solid rgba(220,50,50,0.2)',
@@ -139,19 +149,29 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
 
       <div className="sticky-actions" data-ui-zone={UI_ZONES.bottomActions}>
         {hasCoach && <TutorialHighlight borderRadius={8} />}
-        <PrimaryBtn
-          kind={delivered ? 'amber' : 'cyan'}
-          testId="collect-reward-btn"
-          disabled={collecting}
-          onClick={() => {
-            if (collectingRef.current) return
-            collectingRef.current = true
-            setCollecting(true)
-            onDone(total, delivered ? mission.payout.affinity : 0, delivered ? mission.requires.minerals : {})
-          }}
-        >
-          {delivered ? `Collect ▲ ${total.toLocaleString()}` : 'Return to Base'}
-        </PrimaryBtn>
+        {!resolved ? (
+          <PrimaryBtn
+            kind={delivered ? 'amber' : 'cyan'}
+            testId="resolve-cargo-btn"
+            onClick={() => setResolved(true)}
+          >
+            Resolve Cargo
+          </PrimaryBtn>
+        ) : (
+          <PrimaryBtn
+            kind={delivered ? 'amber' : 'cyan'}
+            testId="collect-reward-btn"
+            disabled={collecting}
+            onClick={() => {
+              if (collectingRef.current) return
+              collectingRef.current = true
+              setCollecting(true)
+              onDone(total, delivered ? mission.payout.affinity : 0, delivered ? mission.requires.minerals : {})
+            }}
+          >
+            {delivered ? `Collect ▲ ${total.toLocaleString()}` : 'Return to Base'}
+          </PrimaryBtn>
+        )}
       </div>
     </div>
   )

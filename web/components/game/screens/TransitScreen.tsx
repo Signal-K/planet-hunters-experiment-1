@@ -18,13 +18,14 @@ function formatEta(ms: number): string {
 
 interface Props {
   target: Target
+  rocketImageSrc?: string
   arrivalAt?: number | null
   onArrive: () => void
   onBack: () => void
   onAbandon?: () => void
 }
 
-export default function TransitScreen({ target, arrivalAt, onArrive, onBack, onAbandon }: Props) {
+export default function TransitScreen({ target, rocketImageSrc, arrivalAt, onArrive, onBack, onAbandon }: Props) {
   const isTimed = typeof arrivalAt === 'number'
   const [now, setNow] = useState(() => Date.now())
   const [fakeProgress, setFakeProgress] = useState(12)
@@ -101,6 +102,7 @@ export default function TransitScreen({ target, arrivalAt, onArrive, onBack, onA
       const scene = buildTransitScene(app, {
         targetName: target.name,
         targetKind: kind,
+        rocketImageSrc,
         getProgress: () => progressRef.current,
       })
       sceneRef.current = scene

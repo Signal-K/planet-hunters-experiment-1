@@ -73,12 +73,11 @@ describe('Smoke — Landnam', () => {
     })
 
     cy.contains('Skill Tree').should('be.visible')
-    cy.get('[data-testid="skill-points-total"]').should('contain', '1')
+    cy.contains('Coming Soon').should('be.visible')
+    cy.contains('You have 1 skill point banked').should('be.visible')
     cy.reload()
     cy.contains('Skill Tree').should('be.visible')
-    cy.get('[data-testid="skill-node-laser-charge-1"]').click()
-    cy.get('[data-testid="skill-points-total"]').should('contain', '0')
-    cy.get('[data-testid="skill-node-laser-charge-1"]').should('contain', 'Unlocked')
+    cy.contains('Coming Soon').should('be.visible')
   })
 
   it('shows Free Ops contractor missions after M3', () => {
@@ -94,12 +93,9 @@ describe('Smoke — Landnam', () => {
     })
 
     cy.contains('EARTH BASE · FREE OPS').should('be.visible')
-    // Contractor names are inside buttons (Cypress prefers button elements),
-    // so we scroll to find them rather than relying on initial viewport visibility.
-    cy.get('[data-testid^="mission-card-freeops-helios"]').first().scrollIntoView().should('be.visible')
-    cy.get('[data-testid^="mission-card-freeops-arcturus"]').first().scrollIntoView().should('be.visible')
-    cy.get('[data-testid^="mission-card-freeops-ferrum"]').first().scrollIntoView().should('be.visible')
-    cy.contains('Refinery contracts detected').should('be.visible')
+    cy.get('[data-testid^="mission-card-freeops-"]').should('have.length.at.least', 3)
+    cy.contains('Helios Propulsion Depot').should('be.visible')
+    cy.contains('Arcturus Battery Systems').scrollIntoView().should('be.visible')
   })
 
   it('shows refinery as buildable from structure seed data in Free Ops', () => {

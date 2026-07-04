@@ -1,10 +1,11 @@
-import { Application, Graphics, Container, Text, TextStyle } from 'pixi.js'
+import { Application, Assets, Graphics, Container, Sprite, Text, TextStyle, Texture } from 'pixi.js'
 
 export type TargetKind = 'asteroid' | 'planet' | 'moon'
 
 export interface TransitSceneOptions {
   targetName: string
   targetKind?: TargetKind
+  rocketImageSrc?: string
   getProgress: () => number  // 0..100
 }
 
@@ -108,6 +109,26 @@ export function buildTransitScene(app: Application, opts: TransitSceneOptions): 
   const rocketG = new Graphics()
   app.stage.addChild(rocketG)
 
+  const rocketSprite = new Sprite(Texture.EMPTY)
+  rocketSprite.anchor.set(0.5)
+  rocketSprite.rotation = Math.PI / 2
+  rocketSprite.visible = false
+  app.stage.addChild(rocketSprite)
+  if (opts.rocketImageSrc) {
+    void Assets.load<Texture>(opts.rocketImageSrc).then(texture => {
+      rocketSprite.texture = texture
+      const longEdge = Math.min(H * 0.18, 110)
+      const thickEdge = Math.min(W * 0.16, 48)
+      const scale = Math.min(longEdge / Math.max(texture.width, 1), thickEdge / Math.max(texture.height, 1))
+      rocketSprite.scale.set(scale)
+      rocketSprite.visible = true
+      rocketG.visible = false
+    }).catch(() => {
+      rocketSprite.visible = false
+      rocketG.visible = true
+    })
+  }
+
   // Target name label (fades in as planet grows)
   const labelStyle = new TextStyle({
     fontFamily: 'Oxanium, monospace',
@@ -153,7 +174,12 @@ export function buildTransitScene(app: Application, opts: TransitSceneOptions): 
       const travelY = rocketStartY + (rocketEndY - rocketStartY) * Math.pow(p, 0.6)
       const bob = Math.sin(elapsed * 1.7) * 2.5
       const flicker = 0.5 + Math.sin(elapsed * 14) * 0.5
-      drawRocket(rocketG, cx, travelY + bob, flicker)
+      if (rocketSprite.visible) {
+        rocketSprite.x = cx
+        rocketSprite.y = travelY + bob
+      } else {
+        drawRocket(rocketG, cx, travelY + bob, flicker)
+      }
     },
   }
 }

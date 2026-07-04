@@ -6,11 +6,12 @@ import { buildLaunchScene, LAUNCH_W, LAUNCH_H } from '@/lib/pixi/launchScene'
 
 interface Props {
   rocketName: string
+  rocketImageSrc?: string
   targetName: string
   onComplete: () => void
 }
 
-export function LaunchSequenceCanvas({ rocketName, targetName, onComplete }: Props) {
+export function LaunchSequenceCanvas({ rocketName, rocketImageSrc, targetName, onComplete }: Props) {
   const divRef = useRef<HTMLDivElement>(null)
   const completeRef = useRef(onComplete)
   completeRef.current = onComplete
@@ -45,6 +46,7 @@ export function LaunchSequenceCanvas({ rocketName, targetName, onComplete }: Pro
 
       const scene = buildLaunchScene(app, {
         rocketName,
+        rocketImageSrc,
         targetName,
         onComplete: () => completeRef.current(),
       })
@@ -62,7 +64,7 @@ export function LaunchSequenceCanvas({ rocketName, targetName, onComplete }: Pro
         canvas.remove()
       }
     }
-  }, [])
+  }, [rocketImageSrc, rocketName, targetName])
 
   return (
     <div

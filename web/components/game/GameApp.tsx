@@ -4,7 +4,7 @@ import { useMemo, useEffect, useRef, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { LaunchSequenceCanvas } from '@/components/game/LaunchSequenceCanvas'
 import { GameProvider, type Screen, useGame } from '@/game-context'
-import { M1_STEPS, M2_STEPS, M3_STEPS, PROGRESSION_STEPS } from '@/lib/data'
+import { M1_STEPS, M2_STEPS, M3_STEPS, PROGRESSION_STEPS, rocketDisplayForConfig } from '@/lib/data'
 import IntroScreen from '@/components/game/screens/IntroScreen'
 import AssemblyScreen from '@/components/game/screens/AssemblyScreen'
 import BuildPlaceScreen from '@/components/game/screens/BuildPlaceScreen'
@@ -58,6 +58,7 @@ function GameCanvas() {
     setLaunchPending(false)
     game.onLaunch()
   }, [game.onLaunch])
+  const rocketDisplay = rocketDisplayForConfig(game.rocket)
 
   // When a timed transit starts, schedule a push notification.
   useEffect(() => {
@@ -346,6 +347,7 @@ function GameCanvas() {
         {game.screen === 'transit' && game.target && (
           <TransitScreen
             target={game.target}
+            rocketImageSrc={rocketDisplay.img}
             arrivalAt={game.player.arrivalAt}
             onBack={() => game.go('hub')}
             onArrive={() => {
@@ -406,7 +408,8 @@ function GameCanvas() {
             onError={handleLaunchComplete}
           >
             <LaunchSequenceCanvas
-              rocketName="Starter Rocket 1"
+              rocketName={rocketDisplay.name}
+              rocketImageSrc={rocketDisplay.img}
               targetName={game.target?.name ?? 'TARGET'}
               onComplete={handleLaunchComplete}
             />
