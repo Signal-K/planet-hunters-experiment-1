@@ -432,6 +432,7 @@ button { cursor: pointer; }
 @keyframes ln-pulse { 0%, 100% { opacity: 0.2; transform: scale(0.85); } 50% { opacity: 1; transform: scale(1); } }
 
 .mission-card-btn:focus-visible { outline-color: var(--ln-cyan) !important; outline-offset: 2px !important; }
+.mission-card-pulse { animation: ln-pulse 2s ease-in-out infinite; }
 .mission-card-btn:hover { outline-color: rgba(63,169,255,0.35) !important; outline-offset: 2px !important; }
 .debrief-scroll p { color: var(--ln-text-dim); }
 .reward-label { color: var(--ln-text-dim); }

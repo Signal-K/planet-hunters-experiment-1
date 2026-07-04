@@ -3,6 +3,18 @@
 
 > **Canonical guidance**: Read `KNOWNS.md` in the repository root for full workflow rules. This file covers Landnam-specific repo layout and conventions only.
 
+## Knowns Project Root
+
+Landnam does not own a live `.knowns` store. The canonical Knowns project is the parent Star Sailors workspace at `~/Navigation` (`/Users/scroobz/Navigation`), with live data in `~/Navigation/.knowns`.
+
+If a Knowns MCP/tool call reports no project loaded, or setting the project to `~/Navigation/Landnam` fails because `Landnam/.knowns/config.json` does not exist, immediately connect to the parent project instead:
+
+```json
+mcp__knowns__project({ "action": "set", "projectRoot": "/Users/scroobz/Navigation" })
+```
+
+For CLI workflows, run `knowns ...` commands from `/Users/scroobz/Navigation` or otherwise target that parent repo. Do not create a separate live `.knowns` store inside `Landnam` unless explicitly instructed.
+
 ## Repo Layout
 
 ```

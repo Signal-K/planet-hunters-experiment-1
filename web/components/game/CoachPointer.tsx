@@ -99,6 +99,7 @@ export default function CoachPointer({ coachId, dir }: { coachId: string; dir?: 
   return (
     <>
       <div
+        data-testid="tutorial-coach-ring"
         style={{
           position: 'fixed',
           top: ring.top - PAD,

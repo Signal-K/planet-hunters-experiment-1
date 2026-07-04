@@ -2,8 +2,26 @@
  * Pure scene logic for the rocket launch sequence.
  * No React, no PixiJS Application lifecycle — just scene graph construction
  * and a per-frame update function returned to the caller.
+ *
+ * Fully procedural: no PNG/Sprite assets. Palette matches the design tokens
+ * in web/app/globals.css and the vector style established by hubScene.ts.
  */
 import { Application, Container, Graphics, Sprite, Text, TextStyle, Texture } from 'pixi.js'
+
+// ─── Palette (mirrors web/app/globals.css --ln-* tokens) ──────────────────────
+const C = {
+  void:      0x06090f,
+  bg:        0x0a121d,
+  surface:   0x122236,
+  surface2:  0x18304b,
+  surface3:  0x1f3d5e,
+  cyan:      0x3fa9ff,
+  cyanBright:0x6cc2ff,
+  amber:     0xf5a623,
+  amberBright:0xffc25c,
+  crimson:   0xc8293e,
+  text:      0xe6efff,
+} as const
 
 // ─── Timeline ────────────────────────────────────────────────────────────────
 export const LAUNCH_TIMELINE = {
@@ -21,21 +39,6 @@ export const LAUNCH_TIMELINE = {
 export const LAUNCH_W = 390
 export const LAUNCH_H = 780
 
-// ─── Texture bag (all nullable — scene uses procedural fallbacks) ─────────────
-export interface LaunchTextures {
-  body:       Texture | null
-  nose:       Texture | null
-  boosterL:   Texture | null
-  stageLower: Texture | null
-  engineBell: Texture | null
-  plumeCore:  Texture | null
-  plumeOuter: Texture | null
-  smoke:      Texture | null
-  bgPad:      Texture | null
-  bgClouds:   Texture | null
-  bgHighAtmos:Texture | null
-}
-
 interface SmokeParticle {
   sprite: Sprite
   vx: number; vy: number
@@ -44,17 +47,81 @@ interface SmokeParticle {
 }
 
 interface DebrisItem {
-  sprite: Sprite | Container
+  sprite: Container
   vx: number; vy: number; rot: number
   life: number
 }
 
+interface CloudPuff {
+  g: Graphics
+  x: number; y: number; r: number
+}
+
+// ─── Soft circular texture (generated once, reused by every smoke particle) ──
+function makeSoftCircleTexture(app: Application, radius: number): Texture {
+  const g = new Graphics()
+  const steps = 5
+  for (let i = steps; i >= 1; i--) {
+    const t = i / steps
+    g.circle(radius, radius, radius * t).fill({ color: 0xdfe8f2, alpha: 0.16 * (1 - t) + 0.04 })
+  }
+  return app.renderer.generateTexture(g)
+}
+
+// ─── Rocket parts ──────────────────────────────────────────────────────────
+function buildRocket(): {
+  root: Container
+  boosterL: Graphics
+  boosterR: Graphics
+  lowerStage: Container
+} {
+  const root = new Container()
+
+  // Lower stage (body tube + engine bell) — separates as one unit at stageSep
+  const lowerStage = new Container()
+  const body = new Graphics()
+  body.rect(-16, -175, 32, 115).fill(C.surface2)
+  body.rect(-16, -175, 32, 4).fill(C.surface3)
+  body.rect(-16, -90, 32, 3).fill(C.cyan) // stripe / stage separation ring
+  lowerStage.addChild(body)
+
+  const engineBell = new Graphics()
+  engineBell.poly([-14, -60, 14, -60, 20, -20, -20, -20]).fill(C.void)
+  engineBell.poly([-14, -60, 14, -60, 17, -35, -17, -35]).fill(C.surface3)
+  lowerStage.addChild(engineBell)
+  root.addChild(lowerStage)
+
+  // Upper body + nose cone — stays attached
+  const upper = new Graphics()
+  upper.rect(-16, -220, 32, 45).fill(C.surface2)
+  upper.rect(-14, -218, 4, 41).fill({ color: C.cyanBright, alpha: 0.4 })
+  upper.poly([-16, -220, 0, -268, 16, -220]).fill(C.surface3)
+  upper.poly([-6, -222, 0, -260, 6, -222]).fill({ color: C.amber, alpha: 0.5 })
+  root.addChild(upper)
+
+  // Side boosters — each separates independently at boosterSep
+  function makeBooster(side: 1 | -1): Graphics {
+    const g = new Graphics()
+    g.rect(-6, -175, 12, 100).fill(C.surface)
+    g.rect(-6, -175, 12, 4).fill(C.surface3)
+    g.poly([-6, -175, 0, -195, 6, -175]).fill(C.surface2)
+    g.rect(-6, -85, 12, 20).fill(C.void)
+    g.x = side * 22
+    return g
+  }
+  const boosterL = makeBooster(-1)
+  const boosterR = makeBooster(1)
+  root.addChild(boosterL)
+  root.addChild(boosterR)
+
+  return { root, boosterL, boosterR, lowerStage }
+}
+
 // ─── buildLaunchScene ─────────────────────────────────────────────────────────
-// Sets up the full PixiJS scene graph, returns an update(elapsed, dt) function
-// and a destroy() for cleanup. Caller owns the Application lifecycle.
+// Sets up the full PixiJS scene graph, returns an update(elapsed, dt) function.
+// Caller owns the Application lifecycle.
 export function buildLaunchScene(
   app: Application,
-  tex: LaunchTextures,
   opts: { rocketName: string; targetName: string; onComplete: () => void },
 ) {
   const W = app.screen.width
@@ -62,15 +129,15 @@ export function buildLaunchScene(
   const T = LAUNCH_TIMELINE
 
   // ── Sky ───────────────────────────────────────────────────────────────────
-  // Single rect fill avoids any sub-pixel seam artifacts from tiled strips.
   const skyGfx = new Graphics()
   app.stage.addChild(skyGfx)
 
   function drawSky(skyT: number) {
-    // skyT: 0 = night blue, 1 = black (space)
-    const r = Math.round(6  * (1 - skyT))
-    const g = Math.round(12 * (1 - skyT))
-    const b = Math.round(28 * (1 - skyT))
+    // skyT: 0 = night blue (--ln-void/--ln-bg), 1 = black (space)
+    const r0 = 0x06, g0 = 0x09, b0 = 0x0f
+    const r = Math.round(r0 * (1 - skyT))
+    const g = Math.round(g0 * (1 - skyT))
+    const b = Math.round(b0 * (1 - skyT))
     skyGfx.clear().rect(0, 0, W, H).fill((r << 16) | (g << 8) | b)
   }
   drawSky(0)
@@ -86,87 +153,90 @@ export function buildLaunchScene(
     phase: Math.random() * Math.PI * 2,
   }))
 
-  // ── Launchpad background ──────────────────────────────────────────────────
+  // ── Launchpad ground + towers (procedural) ────────────────────────────────
   const padContainer = new Container()
   app.stage.addChild(padContainer)
 
-  if (tex.bgPad) {
-    const s = new Sprite(tex.bgPad)
-    const padH = Math.round(tex.bgPad.height * (W / tex.bgPad.width))
-    s.width = W; s.height = padH; s.y = H - padH
-    padContainer.addChild(s)
-  }
-
-  // Procedural launchpad ground + towers (always rendered under/over bg sprite)
   const groundGfx = new Graphics()
-  groundGfx.rect(0, H - 60, W, 60).fill({ color: 0x0a1628 })
-  groundGfx.rect(0, H - 62, W, 2).fill({ color: 0x1a3a5e })
+  groundGfx.rect(0, H - 60, W, 60).fill({ color: C.void })
+  groundGfx.rect(0, H - 62, W, 2).fill({ color: C.surface3 })
+  // flame trench
+  groundGfx.rect(W / 2 - 14, H - 60, 28, 60).fill({ color: 0x030509 })
+  // hazard stripe accents
+  groundGfx.rect(W * 0.08, H - 60, 16, 6).fill({ color: C.amber, alpha: 0.6 })
+  groundGfx.rect(W * 0.86, H - 60, 16, 6).fill({ color: C.amber, alpha: 0.6 })
   padContainer.addChild(groundGfx)
 
   const towerGfx = new Graphics()
-  towerGfx.rect(W * 0.15,      H - 240, 8, 220).fill({ color: 0x1a2d42 })
-  towerGfx.rect(W * 0.75,      H - 260, 8, 240).fill({ color: 0x1a2d42 })
-  towerGfx.rect(W * 0.15 + 8,  H - 180, 40, 3).fill({ color: 0x1e3a52 })
-  towerGfx.rect(W * 0.75 - 40, H - 200, 40, 3).fill({ color: 0x1e3a52 })
-  towerGfx.circle(W * 0.15 + 4, H - 242, 3).fill({ color: 0xf5a623, alpha: 0.9 })
-  towerGfx.circle(W * 0.75 + 4, H - 262, 3).fill({ color: 0xf5a623, alpha: 0.9 })
+  towerGfx.rect(W * 0.15,      H - 240, 8, 220).fill({ color: C.surface })
+  towerGfx.rect(W * 0.75,      H - 260, 8, 240).fill({ color: C.surface })
+  towerGfx.rect(W * 0.15 + 8,  H - 180, 40, 3).fill({ color: C.surface3 })
+  towerGfx.rect(W * 0.75 - 40, H - 200, 40, 3).fill({ color: C.surface3 })
+  towerGfx.circle(W * 0.15 + 4, H - 242, 3).fill({ color: C.amber, alpha: 0.9 })
+  towerGfx.circle(W * 0.75 + 4, H - 262, 3).fill({ color: C.amber, alpha: 0.9 })
   padContainer.addChild(towerGfx)
 
-  // ── Cloud layers ──────────────────────────────────────────────────────────
-  // Tile the cloud texture vertically to fill the full canvas height.
-  // Source asset is 1344×768 landscape — scale to canvas width and repeat vertically.
+  // ── Cloud layers (vector, parallax depth) ─────────────────────────────────
   const cloudContainer = new Container()
-  cloudContainer.y = 0
   app.stage.addChild(cloudContainer)
 
-  if (tex.bgClouds) {
-    const cloudScaledH = Math.round(tex.bgClouds.height * (W / tex.bgClouds.width))
-    const tileCount = Math.ceil(H / cloudScaledH) + 1
-    for (let i = 0; i < tileCount; i++) {
-      const s = new Sprite(tex.bgClouds)
-      s.width = W; s.height = cloudScaledH; s.y = i * cloudScaledH
-      cloudContainer.addChild(s)
+  const cloudLayers: { container: Container; puffs: CloudPuff[]; speed: number; parallax: number }[] = []
+  const layerDefs = [
+    { count: 5, yMin: 0.55, yMax: 0.82, rMin: 34, rMax: 58, color: C.surface,  alpha: 0.55, speed: 4,  parallax: 0.4 },
+    { count: 4, yMin: 0.35, yMax: 0.6,  rMin: 24, rMax: 40, color: C.surface2, alpha: 0.45, speed: 7,  parallax: 0.6 },
+    { count: 3, yMin: 0.15, yMax: 0.35, rMin: 16, rMax: 26, color: C.surface3, alpha: 0.35, speed: 10, parallax: 0.8 },
+  ]
+  for (const def of layerDefs) {
+    const container = new Container()
+    const puffs: CloudPuff[] = []
+    for (let i = 0; i < def.count; i++) {
+      const x = Math.random() * W
+      const y = H * (def.yMin + Math.random() * (def.yMax - def.yMin))
+      const r = def.rMin + Math.random() * (def.rMax - def.rMin)
+      const g = new Graphics()
+      g.circle(0, 0, r).fill({ color: def.color, alpha: def.alpha })
+      g.circle(r * 0.6, r * 0.15, r * 0.7).fill({ color: def.color, alpha: def.alpha })
+      g.circle(-r * 0.6, r * 0.1, r * 0.6).fill({ color: def.color, alpha: def.alpha })
+      g.x = x; g.y = y
+      container.addChild(g)
+      puffs.push({ g, x, y, r })
     }
-  } else {
-    for (let i = 0; i < 6; i++) {
-      const cg = new Graphics()
-      cg.circle((i / 6) * W + 20, H * 0.3 + Math.random() * H * 0.3, 20 + Math.random() * 30)
-        .fill({ color: 0x1a2a4e, alpha: 0.7 })
-      cloudContainer.addChild(cg)
-    }
+    cloudContainer.addChild(container)
+    cloudLayers.push({ container, puffs, speed: def.speed, parallax: def.parallax })
   }
 
-  // ── High atmosphere ───────────────────────────────────────────────────────
+  // ── High atmosphere band (vector gradient via stacked bands) ──────────────
   const highAtmosContainer = new Container()
   highAtmosContainer.y = H * 0.12
   highAtmosContainer.alpha = 0
   app.stage.addChild(highAtmosContainer)
 
-  if (tex.bgHighAtmos) {
-    const ha = new Sprite(tex.bgHighAtmos); ha.width = W; ha.height = 70
-    highAtmosContainer.addChild(ha)
+  const atmosBandCount = 6
+  for (let i = 0; i < atmosBandCount; i++) {
+    const t = i / (atmosBandCount - 1)
+    const band = new Graphics()
+    band.rect(0, i * (70 / atmosBandCount), W, 70 / atmosBandCount + 1)
+      .fill({ color: C.cyan, alpha: 0.35 * (1 - t) })
+    highAtmosContainer.addChild(band)
   }
 
   // ── Smoke pool ────────────────────────────────────────────────────────────
+  const smokeTexture = makeSoftCircleTexture(app, 24)
   const smokePool: SmokeParticle[] = []
   const smokeContainer = new Container()
   app.stage.addChild(smokeContainer)
 
   function spawnSmoke(x: number, y: number) {
-    const s = tex.smoke ? new Sprite(tex.smoke) : (() => {
-      const p = new Sprite(Texture.WHITE)
-      p.tint = 0x2a3a4e; p.width = 24; p.height = 24; p.anchor.set(0.5, 0.5)
-      return p
-    })()
-    if (tex.smoke) (s as Sprite).anchor.set(0.5, 0.5)
-    const scale = 0.4 + Math.random() * 0.6
+    const s = new Sprite(smokeTexture)
+    s.anchor.set(0.5, 0.5)
+    const scale = 0.6 + Math.random() * 0.8
     s.scale.set(scale)
     s.x = x + (Math.random() - 0.5) * 30
     s.y = y
     s.alpha = 0.7
     smokeContainer.addChild(s)
     smokePool.push({
-      sprite: s as Sprite,
+      sprite: s,
       vx: (Math.random() - 0.5) * 25,
       vy: -15 - Math.random() * 20,
       life: 1.5 + Math.random() * 1.0,
@@ -179,63 +249,26 @@ export function buildLaunchScene(
     }
   }
 
-  // ── Rocket (single sprite — stageLower is the best full-rocket art) ─────────
-  // Only stageLower and body have black backgrounds suitable for screen blending.
-  // All other assets (nose, boosterL, engineBell) have white/grey bgs and must not be used.
+  // ── Rocket ────────────────────────────────────────────────────────────────
   const rocketRoot = new Container()
   rocketRoot.x = W / 2
   rocketRoot.y = H - 100
   app.stage.addChild(rocketRoot)
 
-  const rocketTex = tex.stageLower ?? tex.body
-  if (rocketTex) {
-    const rocketImg = new Sprite(rocketTex)
-    rocketImg.anchor.set(0.5, 1)
-    rocketImg.width = 88
-    rocketImg.height = 240
-    rocketImg.blendMode = 'screen'
-    rocketRoot.addChild(rocketImg)
-  } else {
-    // Procedural fallback: blue silhouette
-    const g = new Graphics()
-    g.rect(-16, -220, 32, 220).fill(0x1e3a5a)
-    g.poly([-16, -220, 0, -268, 16, -220]).fill(0x2a4d6e)
-    g.rect(-26, -175, 10, 115).fill(0x142236)
-    g.rect(16, -175, 10, 115).fill(0x142236)
-    rocketRoot.addChild(g)
-  }
-
-  // Procedural debris shapes (replace sprite-based debris from old multi-part assembly)
-  function makeDebrisRect(color: number, w: number, h: number): Graphics {
-    const g = new Graphics()
-    g.rect(-w / 2, -h / 2, w, h).fill({ color, alpha: 0.85 })
-    return g
-  }
+  const { root: rocketVisual, boosterL, boosterR, lowerStage } = buildRocket()
+  rocketRoot.addChild(rocketVisual)
 
   // ── Plume ─────────────────────────────────────────────────────────────────
   const plumeContainer = new Container()
   app.stage.addChildAt(plumeContainer, app.stage.children.indexOf(rocketRoot))
   const plumeGfx = new Graphics()
-
-  const plumeOuter = tex.plumeOuter ? (() => {
-    const s = new Sprite(tex.plumeOuter!)
-    s.anchor.set(0.5, 0); s.width = 80; s.height = 120; s.alpha = 0
-    plumeContainer.addChild(s); return s
-  })() : null
-
-  const plumeCore = tex.plumeCore ? (() => {
-    const s = new Sprite(tex.plumeCore!)
-    s.anchor.set(0.5, 0); s.width = 36; s.height = 90; s.alpha = 0
-    plumeContainer.addChild(s); return s
-  })() : null
-
   plumeContainer.addChild(plumeGfx)
 
   // ── HUD ───────────────────────────────────────────────────────────────────
   const hudStyle = new TextStyle({
     fontFamily: '"Oxanium", "Turret Road", monospace',
     fontSize: 10, fontWeight: '800',
-    fill: 0x3fa9ff, letterSpacing: 2,
+    fill: C.cyan, letterSpacing: 2,
   })
   const destLabel = new Text({ text: `TRANSIT → ${opts.targetName.toUpperCase()}`, style: hudStyle })
   destLabel.anchor.set(0.5, 0); destLabel.x = W / 2; destLabel.y = H * 0.88; destLabel.alpha = 0
@@ -243,7 +276,7 @@ export function buildLaunchScene(
 
   const shipLabel = new Text({
     text: opts.rocketName.toUpperCase(),
-    style: new TextStyle({ ...hudStyle, fill: 0xe6efff, fontSize: 8, letterSpacing: 1.5 }),
+    style: new TextStyle({ ...hudStyle, fill: C.text, fontSize: 8, letterSpacing: 1.5 }),
   })
   shipLabel.anchor.set(0.5, 1); shipLabel.x = W / 2; shipLabel.y = H * 0.10; shipLabel.alpha = 0
   app.stage.addChild(shipLabel)
@@ -262,6 +295,7 @@ export function buildLaunchScene(
   let rocketAltitude = 0
   let cameraY = 0
   let done = false
+  let cloudDrift = 0
 
   function update(elapsed: number, dt: number) {
     if (done) return
@@ -291,14 +325,23 @@ export function buildLaunchScene(
     // Parallax
     padContainer.y       = -cameraY
     smokeContainer.y     = -cameraY
-    cloudContainer.y     = -cameraY * 0.55
     highAtmosContainer.y = H * 0.12 - cameraY * 0.3
     rocketRoot.y         = H - 100 - rocketAltitude + cameraY
+
+    // Cloud drift + parallax
+    cloudDrift += dt
+    for (let i = 0; i < cloudLayers.length; i++) {
+      const layer = cloudLayers[i]
+      layer.container.y = -cameraY * layer.parallax
+      for (const puff of layer.puffs) {
+        puff.g.x = ((puff.x + cloudDrift * layer.speed) % (W + 120)) - 60
+      }
+    }
 
     // Sky
     const skyT = Math.max(0, Math.min(1, (elapsed - T.upperAtmos) / (T.blackout - T.upperAtmos)))
     drawSky(skyT)
-    cloudContainer.alpha     = Math.max(0, 1 - Math.max(0, (elapsed - 3.5) / 1.5))
+    cloudContainer.alpha    = Math.max(0, 1 - Math.max(0, (elapsed - 3.5) / 1.5))
     highAtmosContainer.alpha = Math.max(0, Math.min(0.8, (elapsed - 3.0) / 1.5))
       * Math.max(0, 1 - (elapsed - T.upperAtmos) / 1.0)
 
@@ -323,16 +366,13 @@ export function buildLaunchScene(
       const pw = 28 * plumeScale
       plumeGfx
         .rect(W / 2 - pw / 2, plumeY, pw, ph).fill({ color: 0xe0f8ff, alpha: plumeAlpha * 0.9 })
-        .rect(W / 2 - pw, plumeY, pw * 2, ph * 1.3).fill({ color: 0x3fa9ff, alpha: plumeAlpha * 0.3 })
-        .circle(W / 2, plumeY + ph * 0.3, pw * 1.4).fill({ color: 0xf5a623, alpha: plumeAlpha * 0.25 })
+        .rect(W / 2 - pw, plumeY, pw * 2, ph * 1.3).fill({ color: C.cyan, alpha: plumeAlpha * 0.3 })
+        .circle(W / 2, plumeY + ph * 0.3, pw * 1.4).fill({ color: C.amber, alpha: plumeAlpha * 0.25 })
       if (rocketAltitude < 60) {
         const glowR = (60 - rocketAltitude) * 2 * plumeScale
-        plumeGfx.circle(W / 2, H - cameraY, glowR).fill({ color: 0xf5a623, alpha: 0.18 * plumeAlpha })
+        plumeGfx.circle(W / 2, H - cameraY, glowR).fill({ color: C.amber, alpha: 0.18 * plumeAlpha })
       }
     }
-
-    if (plumeOuter) { plumeOuter.alpha = plumeAlpha * 0.7; plumeOuter.scale.set(plumeScale); plumeOuter.y = plumeY }
-    if (plumeCore)  { plumeCore.alpha  = plumeAlpha;       plumeCore.scale.set(plumeScale * 0.8); plumeCore.y = plumeY }
 
     // Smoke
     if ((igniting || (flying && elapsed < T.liftoff + 3.5)) && elapsed % 0.06 < dt) {
@@ -350,25 +390,34 @@ export function buildLaunchScene(
       p.sprite.alpha = lr * 0.55
     }
 
-    // Booster separation — procedural debris rectangles
+    // Booster separation — detach the real booster parts
     if (!boostersSeparated && elapsed >= T.boosterSep) {
       boostersSeparated = true
-      for (const [vx, vy, rot] of [[-55, 30, 0.05], [55, 30, -0.05]] as [number, number, number][]) {
-        const d = makeDebrisRect(0x2a4060, 10, 60)
-        d.x = rocketRoot.x + vx * 0.15
-        d.y = rocketRoot.y - 80
-        app.stage.addChild(d)
-        debris.push({ sprite: d, vx, vy, rot, life: 3 })
+      for (const [boosterGfx, vx, rot] of [[boosterL, -55, 0.05], [boosterR, 55, -0.05]] as [Graphics, number, number][]) {
+        const worldPos = boosterGfx.getGlobalPosition()
+        const localPos = app.stage.toLocal(worldPos)
+        rocketVisual.removeChild(boosterGfx)
+        const wrap = new Container()
+        wrap.addChild(boosterGfx)
+        boosterGfx.position.set(0, 0)
+        wrap.x = localPos.x; wrap.y = localPos.y
+        app.stage.addChild(wrap)
+        debris.push({ sprite: wrap, vx, vy: 30, rot, life: 3 })
       }
     }
 
-    // Stage separation — procedural debris
+    // Stage separation — detach the real lower-stage part
     if (!stageSeparated && elapsed >= T.stageSep) {
       stageSeparated = true
-      const lower = makeDebrisRect(0x1e3250, 32, 55)
-      lower.x = rocketRoot.x; lower.y = rocketRoot.y - 10
-      app.stage.addChild(lower)
-      debris.push({ sprite: lower, vx: (Math.random() - 0.5) * 15, vy: 70, rot: 0.02, life: 4 })
+      const worldPos = lowerStage.getGlobalPosition()
+      const localPos = app.stage.toLocal(worldPos)
+      rocketVisual.removeChild(lowerStage)
+      const wrap = new Container()
+      wrap.addChild(lowerStage)
+      lowerStage.position.set(0, 0)
+      wrap.x = localPos.x; wrap.y = localPos.y
+      app.stage.addChild(wrap)
+      debris.push({ sprite: wrap, vx: (Math.random() - 0.5) * 15, vy: 70, rot: 0.02, life: 4 })
     }
 
     // Debris motion

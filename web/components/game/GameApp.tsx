@@ -418,7 +418,7 @@ function GameCanvas() {
         <SurveySheet />
         {showNav && <div className="mobile-radial-nav"><RadialNav current={currentNav} onNav={goFromNav} /></div>}
 
-        {coach && (
+        {coach && !launchPending && (
           <TutorialCoach
             key={coach.id}
             stepIndex={coachIndex}

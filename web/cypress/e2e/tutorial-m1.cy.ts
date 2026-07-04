@@ -110,10 +110,20 @@ function completeMining() {
   // Launch animation is 8.5s — allow 15s for the animation to complete and transit to appear
   cy.contains('MISSION TRANSIT', { timeout: 15000 }).should('be.visible')
   cy.get('[data-testid="mining-canvas"]', { timeout: 20000 }).should('be.visible')
-  for (let i = 0; i < 5; i++) {
-    cy.get('[data-testid="fire-laser-btn"]').should('not.be.disabled').click()
+  // Firing doesn't guarantee a hit — the laser only collects ore that's swept
+  // through the firing zone at that instant (real-time collision, not per-click).
+  // Fire repeatedly with a short pause between shots so ore has time to drift
+  // into range, stopping as soon as the order is filled (return-home-btn enables).
+  function fireUntilFilled(attemptsLeft: number) {
+    cy.get('[data-testid="return-home-btn"]').then($btn => {
+      if (!$btn.is(':disabled') || attemptsLeft <= 0) return
+      cy.get('[data-testid="fire-laser-btn"]').click()
+      cy.wait(400)
+      fireUntilFilled(attemptsLeft - 1)
+    })
   }
-  cy.get('[data-testid="return-home-btn"]').should('not.be.disabled').click()
+  fireUntilFilled(25)
+  cy.get('[data-testid="return-home-btn"]', { timeout: 10000 }).should('not.be.disabled').click()
 }
 
 function completeDebrief() {
@@ -133,6 +143,10 @@ function playM1() {
   navToMissions()
 
   // Step 2: pick M1 contract
+  // Small settle wait: the coach action-card is a fresh mount here (font/layout
+  // can still be settling right after the missions-screen transition), and an
+  // early actionability check can otherwise see a transient overlap.
+  cy.wait(300)
   cy.get('[data-testid="mission-card-generated-s1-starter-bulk-1"]')
     .should('be.visible').click()
 
@@ -157,16 +171,18 @@ function playM1() {
 // ─── Full M2 play-through ─────────────────────────────────────────────────────
 //
 // Starts from hub with missionsDone=1 and M2 tutorial active.
-// Step 20 is a manual coach card on hub; step 21 is on rocket-buy.
+// Step 20 is an action coach card on hub (auto-dismisses on nav); step 21 is
+// a manual coach card on rocket-buy.
 
 function playM2() {
   cy.contains('Earth Base', { timeout: 10000 }).should('be.visible')
 
-  // M2 step 20: manual coach on hub — dismiss it
+  // M2 step 20: hub action step (not manual — no "got it" button, it
+  // auto-dismisses when the player navigates to missions). Current copy is
+  // 'Guided Ops · Mission 2' (see lib/data/tutorial.ts M2_STEPS[0]).
   cy.get('[data-testid="tutorial-coach-block"]')
     .should('be.visible')
-    .should('contain', 'Starter Rocket 2 Available')
-  cy.get('[data-testid="coach-got-it-btn"]').should('be.visible').click()
+    .should('contain', 'Guided Ops')
 
   // Navigate to missions using the layout-correct nav
   navToMissions()
@@ -180,11 +196,12 @@ function playM2() {
   cy.get('[data-testid="target-eros"]').should('exist').click({ force: true })
   cy.get('[data-testid="continue-build-btn"]').should('be.visible').click()
 
-  // Rocket purchase screen — step 21 fires here
+  // Rocket purchase screen — step 21 fires here (manual card, current copy is
+  // 'SR2 — Select Your Rocket', see lib/data/tutorial.ts M2_STEPS[1])
   cy.contains('Select Rocket', { timeout: 8000 }).should('be.visible')
   cy.get('[data-testid="tutorial-coach-block"]')
     .should('be.visible')
-    .should('contain', 'Purchase Your Rocket')
+    .should('contain', 'Select Your Rocket')
   cy.get('[data-testid="coach-got-it-btn"]').should('be.visible').click()
 
   // Purchase SR2
@@ -206,11 +223,12 @@ function playM2() {
 function playM3ToLaunch() {
   cy.contains('Earth Base', { timeout: 10000 }).should('be.visible')
 
-  // Step 30: manual coach on hub
+  // Step 30: hub action step (not manual — auto-dismisses on nav, like M2's
+  // step 20). Current copy is 'Guided Ops · Mission 3' (lib/data/tutorial.ts
+  // M3_STEPS[0]).
   cy.get('[data-testid="tutorial-coach-block"]')
     .should('be.visible')
-    .should('contain', 'Delivery Mission')
-  cy.get('[data-testid="coach-got-it-btn"]').should('be.visible').click()
+    .should('contain', 'Guided Ops')
 
   // Navigate to missions
   navToMissions()
@@ -219,20 +237,22 @@ function playM3ToLaunch() {
   cy.get('[data-testid="mission-card-lnm_m3_ore_delivery"]')
     .scrollIntoView().should('be.visible').click()
 
-  // Rocket-buy — step 31 fires here (no target picker since targetId is preset)
+  // Rocket-buy — step 31 fires here (no target picker since targetId is preset).
+  // Current copy is 'Cargo Rocket — No Drill' (lib/data/tutorial.ts M3_STEPS[1]).
   cy.contains('Select Rocket', { timeout: 8000 }).should('be.visible')
   cy.get('[data-testid="tutorial-coach-block"]')
     .should('be.visible')
-    .should('contain', 'Cargo Module Installed')
+    .should('contain', 'Cargo Rocket')
   cy.get('[data-testid="coach-got-it-btn"]').should('be.visible').click()
 
   // Proceed with configured rocket
   cy.contains('button', /Launch with|Purchase/).should('be.visible').click()
 
-  // Fab — step 32 fires here
+  // Fab — step 32 fires here. Current copy is 'Ready to Deliver'
+  // (lib/data/tutorial.ts M3_STEPS[2]).
   cy.get('[data-testid="tutorial-coach-block"]', { timeout: 8000 })
     .should('be.visible')
-    .should('contain', 'Ready to Launch')
+    .should('contain', 'Ready to Deliver')
   cy.get('[data-testid="coach-got-it-btn"]').should('be.visible').click()
 
   // Launch
@@ -288,18 +308,22 @@ describe('Mobile layout: radial nav visible, sidebar hidden', () => {
     cy.get('[data-testid="sidebar-nav-missions"]').should('not.be.visible')
   })
 
-  it('tutorial spot on step 1 overlaps the radial toggle on mobile', () => {
+  it('tutorial coach ring on step 1 overlaps the radial toggle on mobile', () => {
+    // The old 'spot' rectangle concept (tutorial-coach-spot) was replaced by
+    // CoachPointer's measured ring (tutorial-coach-ring), which highlights
+    // whichever element matches step.coachId ('radial-missions|radial-toggle'
+    // for step 1) — see lib/data/tutorial.ts and components/game/CoachPointer.tsx.
     visitHub({ doneSteps: { 0: true } })
     cy.contains('Earth Base', { timeout: 10000 }).should('be.visible')
     cy.get('[data-testid="tutorial-coach-block"]').should('contain', 'Open a Mission')
-    cy.get('[data-testid="tutorial-coach-spot"]').should('be.visible').then($spot => {
-      const s = $spot[0].getBoundingClientRect()
+    cy.get('[data-testid="tutorial-coach-ring"]').should('be.visible').then($ring => {
+      const s = $ring[0].getBoundingClientRect()
       cy.get('[data-testid="radial-nav-toggle"]').then($btn => {
         const b = $btn[0].getBoundingClientRect()
-        expect(s.left, 'spot left < btn right').to.be.lessThan(b.right)
-        expect(s.right, 'spot right > btn left').to.be.greaterThan(b.left)
-        expect(s.top, 'spot top < btn bottom').to.be.lessThan(b.bottom)
-        expect(s.bottom, 'spot bottom > btn top').to.be.greaterThan(b.top)
+        expect(s.left, 'ring left < btn right').to.be.lessThan(b.right)
+        expect(s.right, 'ring right > btn left').to.be.greaterThan(b.left)
+        expect(s.top, 'ring top < btn bottom').to.be.lessThan(b.bottom)
+        expect(s.bottom, 'ring bottom > btn top').to.be.greaterThan(b.top)
       })
     })
   })

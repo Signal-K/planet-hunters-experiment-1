@@ -1,36 +1,13 @@
 'use client'
 
 import { useEffect, useRef } from 'react'
-import { Application, Assets, Texture } from 'pixi.js'
-import { buildLaunchScene, LAUNCH_W, LAUNCH_H, type LaunchTextures } from '@/lib/pixi/launchScene'
-
-const ASSET_PATHS = {
-  body:        '/game/assets/launch/launch_rocket_body.png',
-  nose:        '/game/assets/launch/launch_rocket_nose.png',
-  boosterL:    '/game/assets/launch/launch_booster_left.png',
-  stageLower:  '/game/assets/launch/launch_stage_lower.png',
-  engineBell:  '/game/assets/launch/launch_engine_bell.png',
-  plumeCore:   '/game/assets/launch/launch_plume_core.png',
-  plumeOuter:  '/game/assets/launch/launch_plume_outer.png',
-  smoke:       '/game/assets/launch/launch_smoke_puff.png',
-  bgPad:       '/game/assets/launch/launch_bg_launchpad.png',
-  bgClouds:    '/game/assets/launch/launch_bg_clouds.png',
-  bgHighAtmos: '/game/assets/launch/launch_bg_high_atmosphere.png',
-} satisfies Record<keyof LaunchTextures, string>
+import { Application } from 'pixi.js'
+import { buildLaunchScene, LAUNCH_W, LAUNCH_H } from '@/lib/pixi/launchScene'
 
 interface Props {
   rocketName: string
   targetName: string
   onComplete: () => void
-}
-
-async function loadTextures(): Promise<LaunchTextures> {
-  async function tryLoad(src: string): Promise<Texture | null> {
-    try { return await Assets.load<Texture>(src) } catch { return null }
-  }
-  const [body, nose, boosterL, stageLower, engineBell, plumeCore, plumeOuter, smoke, bgPad, bgClouds, bgHighAtmos] =
-    await Promise.all(Object.values(ASSET_PATHS).map(tryLoad))
-  return { body, nose, boosterL, stageLower, engineBell, plumeCore, plumeOuter, smoke, bgPad, bgClouds, bgHighAtmos }
 }
 
 export function LaunchSequenceCanvas({ rocketName, targetName, onComplete }: Props) {
@@ -66,10 +43,7 @@ export function LaunchSequenceCanvas({ rocketName, targetName, onComplete }: Pro
       initialized = true
       if (destroyed) { try { app.destroy() } catch (_) { /* pixi v8 cleanup */ } canvas.remove(); return }
 
-      const textures = await loadTextures()
-      if (destroyed) { try { app.destroy() } catch (_) { /* pixi v8 cleanup */ } canvas.remove(); return }
-
-      const scene = buildLaunchScene(app, textures, {
+      const scene = buildLaunchScene(app, {
         rocketName,
         targetName,
         onComplete: () => completeRef.current(),
