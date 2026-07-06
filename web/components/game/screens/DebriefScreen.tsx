@@ -27,7 +27,7 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
   const collectingRef = useRef(false)
 
   const delivered = Object.entries(mission.requires.minerals).every(([id, amount]) => (cargo[id] ?? 0) >= amount)
-  const contractor = contractors[mission.contractor]
+  const contractor = mission.contractor ? contractors[mission.contractor] : undefined
   const isStoryMission = mission.tag === 'STORY' || mission.payload?.type === 'satellite'
   const affinityMultiplier = contractor && !isStoryMission ? contractorAffinityBonus(contractor, contractorMissions?.[contractor.id] ?? 0) : 0
   const affinityBonus = delivered ? Math.round(mission.payout.francs * affinityMultiplier) : 0

@@ -40,8 +40,8 @@ export default function MissionBoardScreen({ onBack, onPick, missionsDone, freeO
     return () => clearInterval(id)
   }, [])
   const now = tick
-  const isOnCooldown = (contractor: string) => {
-    if (!contractorCooldowns) return false
+  const isOnCooldown = (contractor: string | undefined) => {
+    if (!contractorCooldowns || !contractor) return false
     const expiry = contractorCooldowns[contractor]
     return expiry && expiry > now
   }
@@ -66,7 +66,7 @@ export default function MissionBoardScreen({ onBack, onPick, missionsDone, freeO
     ? [...storyMissionPool, ...dailyContractorPool!.missions.filter(m => !isCompletedToday(m.id)), ...exoplanetSurveyPool]
     : MISSIONS.filter(m => {
         const customMission = !m.contractor
-        if (!customMission && !CONTRACTORS[m.contractor]) return false
+        if (m.contractor && !CONTRACTORS[m.contractor]) return false
         if (freeOperations) {
           return customMission || (freeOpsMissionPool.some(item => item.id === m.id) && !isOnCooldown(m.contractor))
         }

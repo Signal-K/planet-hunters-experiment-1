@@ -33,8 +33,8 @@ export const AUTHORED_MISSIONS: Mission[] = [
     sequence: 3,
     unlockAt: 'Complete 2 contracts',
     requires: {
-      minerals: { palladium: 2 },
-      cargo_min: 4,
+      minerals: { nickel: 2 },
+      cargo_min: 2,
       drill_tier: 1,
       max_orbit: 6,
     },

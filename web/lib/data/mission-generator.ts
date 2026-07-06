@@ -302,7 +302,9 @@ export function missionTemplatesToPocketBaseRows(templates = DEFAULT_MISSION_TEM
 }
 
 export function missionsToPocketBaseRows(missions: Mission[]): PocketBaseMissionSeed[] {
-  return missions.map(mission => ({
+  return missions
+    .filter((mission): mission is Mission & { contractor: string } => !!mission.contractor)
+    .map(mission => ({
     slug: mission.id,
     title: mission.title,
     brief: mission.brief,
