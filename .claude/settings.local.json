@@ -33,7 +33,11 @@
       "mcp__zennotes__write_note",
       "mcp__zennotes__move_note",
       "mcp__claude_ai_Plate__create_section",
-      "mcp__claude_ai_Plate__create_tasks"
+      "mcp__claude_ai_Plate__create_tasks",
+      "mcp__claude_ai_Plate__list_workspaces",
+      "mcp__claude_ai_Plate__list_projects",
+      "mcp__claude_ai_Plate__list_tasks",
+      "mcp__claude_ai_Plate__list_sections"
     ]
   },
   "enabledMcpjsonServers": [

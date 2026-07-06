@@ -54,7 +54,7 @@ Tokens are in `web/app/globals.css`. Key CSS variables:
 - `--ln-font-display` (Oxanium), `--ln-font-body` (system), `--ln-font-mono` (monospace)
 
 Design rules (never violate):
-- Portrait canvas only — the game renders in `portrait-canvas` class
+- All views must support landscape/desktop mode — every screen must work at desktop breakpoints, not just mobile portrait
 - 8pt spacing rhythm: 4, 8, 12, 16, 24, 32, 48, 64px only
 - No emoji. Status = shape + color + label
 - UPPERCASE + letter-spacing for all instrument labels and CTAs
