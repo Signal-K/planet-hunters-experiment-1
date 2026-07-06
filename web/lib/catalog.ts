@@ -1,6 +1,6 @@
 import { pbLandnam } from './pb-landnam'
 import type { Target, Mission, Part, MineralMeta, Contractor, StructureBlueprint } from './data'
-import { TARGETS, MISSIONS, PARTS, MINERAL_META, CONTRACTORS, CONTRACTOR_SLOTS, STRUCTURES, toContractor as slotToContractor, generateFreeOpsMissions, generateMissions } from './data'
+import { TARGETS, MISSIONS, AUTHORED_MISSIONS, PARTS, MINERAL_META, CONTRACTORS, CONTRACTOR_SLOTS, STRUCTURES, toContractor as slotToContractor, generateFreeOpsMissions, generateMissions } from './data'
 
 export interface Catalog {
   targets: Target[]
@@ -36,6 +36,9 @@ export function toTarget(r: any): Target {
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function toMission(r: any): Mission {
+  if (r.slug === 'lnm_m3_ore_delivery' || r.slug === 'm3-nickel-cobalt' || r.slug === 'm3-gold') {
+    return AUTHORED_MISSIONS[0]
+  }
   const minerals = typeof r.requires_minerals === 'object' && !Array.isArray(r.requires_minerals)
     ? r.requires_minerals
     : JSON.parse(r.requires_minerals || '{}')
@@ -68,6 +71,17 @@ export function toMission(r: any): Mission {
       affinity: r.payout_affinity ?? 0,
     },
   }
+}
+
+function withCorrectedM3(missions: Mission[]): Mission[] {
+  const correctedM3 = AUTHORED_MISSIONS[0]
+  const withoutLegacyM3 = missions.filter(m =>
+    m.id !== 'lnm_m3_ore_delivery' &&
+    m.id !== 'm3-nickel-cobalt' &&
+    m.id !== 'm3-gold' &&
+    m.id !== correctedM3.id
+  )
+  return [...withoutLegacyM3, correctedM3].sort((a, b) => a.sequence - b.sequence)
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -150,7 +164,7 @@ export async function fetchCatalog(): Promise<Catalog> {
   ])
 
   const generatedFallbackMissions = MISSIONS
-  const catalogMissions = missions.map(toMission)
+  const catalogMissions = missions.length > 0 ? withCorrectedM3(missions.map(toMission)) : []
   const catalogContractors = Object.fromEntries(
     contractors.map(r => [r.slug, toContractor(r)])
   )

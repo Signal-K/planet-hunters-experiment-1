@@ -45,6 +45,8 @@ export interface Player {
   unlockedSkillNodes?: string[]
   freeOperations: boolean
   debriefPending?: boolean
+  returningToEarth?: boolean
+  shipDestroyed?: boolean
   stash?: Record<string, number>
   contractorMissions: Record<string, number>
   contractorStreaks?: Record<string, number>
@@ -144,6 +146,7 @@ export interface GameActions {
   onPurchaseRocket: (rocketId: string) => void
   onLaunch: () => void
   onMiningDone: (cargo: Record<string, number>) => void
+  onReturnArrived: () => void
   onDebriefDone: (total: number, affinity: number, consumed?: Record<string, number>) => void
   coachManualNext: () => void
   completeStep: (id: number) => void

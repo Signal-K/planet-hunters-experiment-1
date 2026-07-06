@@ -74,7 +74,7 @@ export interface Mission {
   id: string
   title: string
   brief: string
-  contractor: string
+  contractor?: string
   tag: string
   difficulty: string
   locked: boolean

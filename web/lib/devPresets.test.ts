@@ -131,9 +131,9 @@ describe('resolvePreset — Mission 2 arc', () => {
     expect(p.player!.activeMission?.id).toBe(SECOND_MISSION.id)
   })
 
-  it('m2-market: market screen with second mission cargo in stash', () => {
-    const p = resolvePreset('m2-market')!
-    expect(p.screen).toBe('market')
+  it('m2-post-debrief: hub screen with second mission cargo retained in stash', () => {
+    const p = resolvePreset('m2-post-debrief')!
+    expect(p.screen).toBe('hub')
     expect(p.player!.stash).toEqual(SECOND_MISSION.requires.minerals)
     expect(p.lastCargo).toEqual(SECOND_MISSION.requires.minerals)
     expect(p.player!.missionsDone).toBe(1)

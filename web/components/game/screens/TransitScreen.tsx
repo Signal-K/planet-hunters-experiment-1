@@ -20,12 +20,13 @@ interface Props {
   target: Target
   rocketImageSrc?: string
   arrivalAt?: number | null
+  returning?: boolean
   onArrive: () => void
   onBack: () => void
   onAbandon?: () => void
 }
 
-export default function TransitScreen({ target, rocketImageSrc, arrivalAt, onArrive, onBack, onAbandon }: Props) {
+export default function TransitScreen({ target, rocketImageSrc, arrivalAt, returning = false, onArrive, onBack, onAbandon }: Props) {
   const isTimed = typeof arrivalAt === 'number'
   const [now, setNow] = useState(() => Date.now())
   const [fakeProgress, setFakeProgress] = useState(12)
@@ -130,10 +131,11 @@ export default function TransitScreen({ target, rocketImageSrc, arrivalAt, onArr
 
   const etaMs = isTimed ? Math.max(0, arrivalAt! - now) : 0
   const arrived = isTimed ? now >= arrivalAt! : fakeProgress >= 100
+  const destinationName = returning ? 'Earth' : target.name
 
   return (
     <div className="game-screen transit-screen">
-      <TopBar eyebrow="MISSION TRANSIT" title={`Outbound · ${target.name}`} onBack={onBack} />
+      <TopBar eyebrow="MISSION TRANSIT" title={`${returning ? 'Inbound' : 'Outbound'} · ${destinationName}`} onBack={onBack} />
 
       {/* PixiJS backdrop fills the transit-stage zone */}
       <div className="transit-stage" style={{ overflow: 'hidden' }}>
@@ -154,7 +156,7 @@ export default function TransitScreen({ target, rocketImageSrc, arrivalAt, onArr
         {isTimed ? (
           <>
             <div><span>ETA</span><strong>{arrived ? 'ARRIVED' : formatEta(etaMs)}</strong></div>
-            <div><span>Orbit</span><strong>{target.orbit}</strong></div>
+            <div><span>{returning ? 'Recovery' : 'Orbit'}</span><strong>{returning ? 'Earth' : target.orbit}</strong></div>
           </>
         ) : (
           <div><span>Transit</span><strong>{fakeProgress}%</strong></div>
@@ -164,7 +166,7 @@ export default function TransitScreen({ target, rocketImageSrc, arrivalAt, onArr
 
       <div className="sticky-actions" data-ui-zone={UI_ZONES.bottomActions}>
         <PrimaryBtn onClick={onArrive} disabled={!arrived}>
-          {arrived ? 'Arrive' : isTimed ? `En Route · ${formatEta(etaMs)}` : `Arrive · ${fakeProgress}%`}
+          {arrived ? (returning ? 'Recover Ship' : 'Arrive') : isTimed ? `En Route · ${formatEta(etaMs)}` : `${returning ? 'Return' : 'Arrive'} · ${fakeProgress}%`}
         </PrimaryBtn>
         {onAbandon && <GhostBtn onClick={onAbandon}>Abort Mission</GhostBtn>}
       </div>

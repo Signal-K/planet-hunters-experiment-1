@@ -4,7 +4,7 @@ import {
   getLaserChargeCap, travelDurationMs, suggestBuild,
   CONTRACTOR_COOLDOWN_MS, CONTRACTOR_STREAK_LIMIT,
 } from '@/lib/data'
-import { applyMiningDone, applyRoverMiningDone } from '@/lib/systems/MiningSystem'
+import { applyMiningDone, applyReturnArrived, applyRoverMiningDone } from '@/lib/systems/MiningSystem'
 import { enqueueSurvey } from '@/lib/surveys'
 import type { Catalog } from '@/lib/catalog'
 import type { GameState, LicenseGrade } from '@/lib/game-types'
@@ -163,9 +163,21 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
   }, [catalog.missions, catalog.targets, setState, stateRef])
 
   const onMiningDone = useCallback((cargo: Record<string, number>) => {
-    setState(s => applyMiningDone(s, cargo))
-    addToast('Rocket has returned — cargo secured', 'ok')
+    setState(s => {
+      const target = s.targetId ? catalog.targets.find(t => t.id === s.targetId) : null
+      const timedTransit = s.player.missionsDone >= FREE_OPS_START_MISSIONS_DONE
+      const arrivalAt = (timedTransit && target)
+        ? Date.now() + travelDurationMs(target, s.player.unlockedSkillNodes ?? [], ORBIT_MS_PER_UNIT)
+        : null
+      return applyMiningDone(s, cargo, arrivalAt)
+    })
+    addToast('Order filled — return to Earth for recovery', 'ok')
     enqueueSurvey('lnm_mining_feel', 2000)
+  }, [addToast, catalog.targets, setState])
+
+  const onReturnArrived = useCallback(() => {
+    setState(s => applyReturnArrived(s))
+    addToast('Earth recovery complete — ship destroyed and cargo secured', 'ok')
   }, [addToast, setState])
 
   const onRoverMiningDone = useCallback((cargo: Record<string, number>) => {
@@ -339,6 +351,9 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
           francs,
           activeMission: null,
           missionPhase: undefined,
+          debriefPending: false,
+          returningToEarth: false,
+          shipDestroyed: false,
           missionsDone,
           skillPoints: (s.player.skillPoints ?? 0) + 1,
           missionCount: catalog.missions.filter(m => m.sequence === missionsDone + 1).length,
@@ -396,7 +411,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
   return {
     setPlayer, setMissionId, setTargetId, setRocket, setLastCargo,
     onPickMission, onPickTarget, onPurchaseRocket, onLaunch,
-    onMiningDone, onRoverMiningDone, onDebriefDone,
+    onMiningDone, onReturnArrived, onRoverMiningDone, onDebriefDone,
     gainResearchXP, upgradeLicenseGrade, unlockBlueprint, launchTransitSatellite, submitTessClassification, chooseSatelliteTarget,
   }
 }

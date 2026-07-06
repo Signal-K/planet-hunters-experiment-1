@@ -369,7 +369,8 @@ button { cursor: pointer; }
 .transit-stage { position: absolute; inset: 80px 0 190px; overflow: hidden; }
 .target-orb { position: absolute; right: 26px; top: 24px; width: 76px; height: 76px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, var(--ln-amber-bright), var(--ln-amber-press) 55%, var(--ln-void)); box-shadow: 0 0 40px var(--ln-amber-soft); }
 .target-orb span { position: absolute; top: calc(100% + 8px); left: 50%; transform: translateX(-50%); color: var(--ln-amber); font: 700 10px var(--ln-font-mono); letter-spacing: var(--ln-tr-label); text-transform: uppercase; white-space: nowrap; }
-.rocket-mark { position: absolute; transform: translate(-50%, -50%) rotate(56deg); transition: left 100ms linear, top 100ms linear; filter: drop-shadow(0 0 12px rgba(63,169,255,.7)); animation: rocket-thrust 0.3s ease-in-out infinite alternate; }
+.rocket-mark { position: absolute; transform: translate3d(-50%, -50%, 0) rotate(56deg); transform-origin: center; transition: left 100ms linear, top 100ms linear; filter: drop-shadow(0 0 12px rgba(63,169,255,.7)); animation: rocket-thrust 0.3s ease-in-out infinite alternate; backface-visibility: hidden; will-change: transform, filter; }
+.rocket-mark svg { display: block; overflow: visible; }
 @keyframes rocket-thrust { from { filter: drop-shadow(0 0 8px rgba(63,169,255,.5)); } to { filter: drop-shadow(0 0 16px rgba(63,169,255,.9)); } }
 .transit-readout { position: absolute; left: var(--ln-s-3); right: var(--ln-s-3); bottom: var(--ln-s-5); display: grid; gap: var(--ln-s-3); }
 .transit-readout > div:first-child { display: flex; justify-content: space-between; color: var(--ln-text-muted); font: 700 11px var(--ln-font-display); letter-spacing: var(--ln-tr-loose); text-transform: uppercase; }

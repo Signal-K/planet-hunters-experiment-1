@@ -23,7 +23,17 @@
       "Skill(update-config)",
       "Skill(claude-in-chrome)",
       "mcp__knowns__decision",
-      "mcp__zennotes__append_to_note"
+      "mcp__zennotes__append_to_note",
+      "mcp__zennotes__vault_info",
+      "mcp__zennotes__search_by_title",
+      "mcp__zennotes__read_note",
+      "mcp__zennotes__list_notes",
+      "WebFetch(domain:github.com)",
+      "mcp__zennotes__create_note",
+      "mcp__zennotes__write_note",
+      "mcp__zennotes__move_note",
+      "mcp__claude_ai_Plate__create_section",
+      "mcp__claude_ai_Plate__create_tasks"
     ]
   },
   "enabledMcpjsonServers": [

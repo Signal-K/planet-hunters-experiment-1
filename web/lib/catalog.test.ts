@@ -35,6 +35,21 @@ describe('Landnam Catalog Mapping', () => {
     expect(mission.requires.minerals).toEqual({ Water: 10 })
   })
 
+  it('normalizes legacy M3 catalog records to the corrected custom mining mission', () => {
+    const mission = toMission({
+      slug: 'lnm_m3_ore_delivery',
+      title: 'Legacy Delivery',
+      contractor_slug: 'kepler-materials',
+      requires_minerals: '{"nickel":2}',
+      target_id: 'lutetia',
+      payload_type: 'rover',
+    })
+    expect(mission.id).toBe('lnm_m3_custom_mining')
+    expect(mission.contractor).toBeUndefined()
+    expect(mission.targetId).toBeUndefined()
+    expect(mission.payload).toBeUndefined()
+  })
+
   it('maps a raw contractor record with economy fields', () => {
     const contractor = toContractor({
       slug: 'hearth-smelters',

@@ -64,7 +64,7 @@ export const DEV_GROUPS: DevGroup[] = [
       { key: 'm2-rocket-buy', label: 'Rocket', hint: 'Second generated mission + Eros, SR2 purchase step' },
       { key: 'm2-fab',    label: 'Fab',     hint: 'Second generated mission + Eros after SR2 purchase' },
       { key: 'm2-mining', label: 'Mining',  hint: 'In mining with second generated target' },
-      { key: 'm2-market', label: 'Market',  hint: 'Second mission cargo in stash, sell screen' },
+      { key: 'm2-post-debrief', label: 'Done',  hint: 'Second mission complete, returned to hub with stash retained' },
     ],
   },
   {
@@ -170,9 +170,9 @@ export function resolvePreset(name: string): Partial<GameState> | null {
         lastCargo: null, popup: null,
       }
 
-    case 'm2-market':
+    case 'm2-post-debrief':
       return {
-        screen: 'market',
+        screen: 'hub',
         player: { ...BASE_PLAYER, missionsDone: 1, stash: { [SECOND_MINERAL]: SECOND_MISSION.requires.minerals[SECOND_MINERAL] ?? 1 }, lastContractor: SECOND_MISSION.contractor },
         tutorial: false, doneSteps: M1_DONE,
         missionId: null, targetId: null,

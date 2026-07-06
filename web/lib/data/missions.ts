@@ -24,26 +24,23 @@ export function generateFreeOpsMissions(): Mission[] {
 
 export const AUTHORED_MISSIONS: Mission[] = [
   {
-    id: 'lnm_m3_ore_delivery',
-    title: 'Lutetia Survey Drop',
-    brief: 'Kepler Materials needs a survey rover delivered to 21 Lutetia. Swap your mining laser for the Cargo Module, fly out, and collect a small ore sample on the way home.',
-    contractor: 'kepler-materials',
-    tag: 'DELIVERY',
+    id: 'lnm_m3_custom_mining',
+    title: 'Independent Prospect',
+    brief: 'No contractor this time. Pick a reachable target, mine what looks valuable, and bring the haul home for your own account. This is the start of custom operations.',
+    tag: 'FREE OPS',
     difficulty: 'L2',
     locked: false,
     sequence: 3,
     unlockAt: 'Complete 2 contracts',
-    targetId: 'lutetia',
-    payload: { type: 'rover', name: 'KI Survey Rover Mk1', cargoCost: 3 },
     requires: {
       minerals: { palladium: 2 },
       cargo_min: 4,
       drill_tier: 1,
-      max_orbit: 7,
+      max_orbit: 6,
     },
     payout: {
-      francs: 800_000,
-      affinity: 18,
+      francs: 0,
+      affinity: 0,
     },
   },
 ]

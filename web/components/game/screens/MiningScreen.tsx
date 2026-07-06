@@ -98,7 +98,8 @@ const MINING_GUIDE = [
   { label: 'FIRE LASER', desc: 'Fires your mining laser at the asteroid. Collect ore by hitting ore veins (Space/F).' },
   { label: 'SCROLL', desc: 'Drag the scroll track left to slow down, right to fast-forward camera movement.' },
   { label: 'INVENTORY', desc: 'Shows collected vs. required per mineral. Fill all slots to unlock return.' },
-  { label: 'RETURN HOME', desc: 'Return to base. Only enabled once your cargo meets the mission order.' },
+  { label: 'MISSION GOALS', desc: 'Combined ore progress and value context for the current contract.' },
+  { label: 'RETURN HOME', desc: 'Return to Earth for recovery and ship destruction. Payout is unlocked after landing.' },
 ]
 
 export default function MiningScreen({ mission, target, onComplete, onBack, onAbandon, minerals, laserChargeCap, hasCoach, coachManual, onCoachDone }: {
@@ -341,7 +342,7 @@ export default function MiningScreen({ mission, target, onComplete, onBack, onAb
             testId="return-home-btn"
             onClick={handleReturn}
           >
-            {orderFilled ? 'RETURN' : laserCharges <= 0 ? 'RETURN' : 'FILL ORDER'}
+            {orderFilled ? 'RETURN TO EARTH' : laserCharges <= 0 ? 'RETURN TO EARTH' : 'FILL ORDER TO RETURN'}
           </PrimaryBtn>
           <ScrollTrack scrollRef={scrollRef} />
         </div>

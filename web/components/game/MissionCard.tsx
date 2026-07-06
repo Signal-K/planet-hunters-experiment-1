@@ -8,7 +8,7 @@ type CardState = 'available' | 'locked' | 'cooldown' | 'completed'
 
 interface MissionCardProps {
   mission: Mission
-  contractor: Contractor
+  contractor?: Contractor | null
   mineralMeta: Record<string, MineralMeta>
   targetCount: number
   displayPayout: number
@@ -46,7 +46,7 @@ export default function MissionCard({
   onPick,
 }: MissionCardProps) {
   const [expanded, setExpanded] = useState(false)
-  const accent = contractor.color
+  const accent = contractor?.color ?? 'var(--ln-amber)'
   const difficultyTier = mission.difficulty.startsWith('L') ? parseInt(mission.difficulty.slice(1), 10) : NaN
   const difficultyColor = difficultyTier <= 1 ? 'var(--ln-ok)' : difficultyTier === 2 ? 'var(--ln-amber)' : 'var(--ln-crimson)'
   const isAvailable = cardState === 'available'
@@ -84,10 +84,10 @@ export default function MissionCard({
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             font: '700 13px var(--ln-font-display)', color: accent,
           }}>
-            {contractor.initial}
+            {contractor?.initial ?? 'OP'}
           </div>
           <div style={{ textAlign: 'center', font: '700 10px var(--ln-font-display)', color: 'var(--ln-text)', textTransform: 'uppercase', letterSpacing: '0.02em', lineHeight: 1.15 }}>
-            {contractor.name}
+            {contractor?.name ?? 'Free Ops'}
           </div>
           <div style={{ font: '600 8px var(--ln-font-mono)', color: 'var(--ln-text-muted)', letterSpacing: '0.09em', textTransform: 'uppercase' }}>
             {mission.tag}
@@ -116,7 +116,9 @@ export default function MissionCard({
           <div style={{ padding: '10px 14px 0', font: '600 9px var(--ln-font-mono)', color: 'var(--ln-text-muted)', letterSpacing: '0.07em', textTransform: 'uppercase', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
             {isStoryMission
               ? 'Story mission · Not a contractor request'
-              : `Wants ${contractor.mineralPreferences.join(' / ')} · +${Math.round(contractor.payoutPremium * 100)}%`}
+              : contractor
+                ? `Wants ${contractor.mineralPreferences.join(' / ')} · +${Math.round(contractor.payoutPremium * 100)}%`
+                : 'Choose target · keep the haul · market-led mining'}
           </div>
 
           <div style={{ padding: '4px 14px 0', font: '700 12px var(--ln-font-display)', color: 'var(--ln-text)', textTransform: 'uppercase', letterSpacing: '0.01em' }}>
@@ -140,7 +142,7 @@ export default function MissionCard({
 
           {expanded && (
             <div style={{ margin: '0 14px 12px', padding: 12, border: `1px solid ${accent}30`, background: 'var(--ln-void)', display: 'flex', flexDirection: 'column', gap: 10 }}>
-              <div style={{ font: '400 11px/1.5 var(--ln-font-display)', color: 'var(--ln-text-dim)' }}>{contractor.projectType}</div>
+              <div style={{ font: '400 11px/1.5 var(--ln-font-display)', color: 'var(--ln-text-dim)' }}>{contractor?.projectType ?? 'Custom mining run · market value only'}</div>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
                 {Object.entries(mission.requires.minerals).map(([k, v]) => {
                   const meta = mineralMeta[k]
@@ -152,9 +154,11 @@ export default function MissionCard({
                   )
                 })}
               </div>
-              <div style={{ font: '600 9px var(--ln-font-mono)', color: 'var(--ln-text-muted)', letterSpacing: '0.06em', textTransform: 'uppercase' }}>
-                +{Math.round(contractor.affinityBonusPerMission * 100)}% affinity per completed job
-              </div>
+              {contractor && (
+                <div style={{ font: '600 9px var(--ln-font-mono)', color: 'var(--ln-text-muted)', letterSpacing: '0.06em', textTransform: 'uppercase' }}>
+                  +{Math.round(contractor.affinityBonusPerMission * 100)}% affinity per completed job
+                </div>
+              )}
             </div>
           )}
 

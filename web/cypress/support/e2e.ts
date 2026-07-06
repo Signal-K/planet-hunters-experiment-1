@@ -28,6 +28,8 @@ beforeEach(() => {
   cy.intercept('GET', '**/api/collections/rocket_parts/records*', { statusCode: 503, body: {} }).as('pbParts')
   cy.intercept('GET', '**/api/collections/missions_catalog/records*', { statusCode: 503, body: {} }).as('pbMissions')
   cy.intercept('GET', '**/api/collections/structure_blueprints/records*', { statusCode: 503, body: {} }).as('pbStructures')
+  cy.intercept('POST', '**/api/collections/game_states/records', { statusCode: 200, body: { id: 'e2e-game-state' } }).as('pbGameStateCreate')
+  cy.intercept('PATCH', '**/api/collections/game_states/records/*', { statusCode: 200, body: { id: 'e2e-game-state' } }).as('pbGameStateUpdate')
 
 
   // Pre-mark all surveys as seen before every page load so SurveySheet never fires in tests.

@@ -110,6 +110,8 @@ describe('Full Game Loop — Landnam', () => {
 
     it('mission board shows M1 card when landing on missions screen with launchpad built', () => {
       visitWithState(fullState({ screen: 'missions', doneSteps: { 1: true } }))
+      cy.get('[data-testid="tutorial-coach-highlight"]').should('be.visible')
+      cy.contains('wanted minerals and bonus').should('be.visible')
       cy.get('[data-testid="mission-card-generated-s1-starter-bulk-1"]').should('be.visible')
       cy.get('[data-testid="mission-card-generated-s1-starter-bulk-1"]').should('have.attr', 'data-mission-id', 'generated-s1-starter-bulk-1')
       cy.get('[data-testid="mission-card-generated-s1-starter-bulk-1"]').should('contain', 'order')
@@ -118,7 +120,18 @@ describe('Full Game Loop — Landnam', () => {
     it('picking M1 transitions to target picker', () => {
       visitWithState(fullState({ screen: 'missions', missionId: null, doneSteps: { 1: true } }))
       cy.get('[data-testid="mission-card-generated-s1-starter-bulk-1"]').click()
-      cy.contains('Continue · Build').should('be.visible')
+      cy.contains('Pick Target').should('be.visible')
+      cy.contains('Continue · Build').should('not.exist')
+    })
+
+    it('M1 target tap proceeds directly to assembly during onboarding', () => {
+      visitWithState(fullState({
+        screen: 'targets',
+        missionId: 'generated-s1-starter-bulk-1',
+        doneSteps: { 1: true, 2: true },
+      }))
+      cy.get('[data-testid="target-eros"]').click()
+      cy.get('[data-testid="launch-btn"]').should('be.visible')
     })
 
     it('target picker shows compatible targets for M1', () => {
@@ -248,6 +261,54 @@ describe('Full Game Loop — Landnam', () => {
   })
 
   describe('Phase 5: Debrief → Collect Reward', () => {
+    it('requires Earth return and ship recovery before debrief reward is available', () => {
+      const cargo = { iron: 6 }
+      visitWithState(fullState({
+        screen: 'transit',
+        missionId: 'generated-s1-starter-bulk-1',
+        targetId: 'mars',
+        lastCargo: cargo,
+        doneSteps: { 1: true, 2: true, 3: true, 5: true, 6: false },
+        player: {
+          francs: 9_500_000_000,
+          activeMission: { id: 'generated-s1-starter-bulk-1', label: 'Iron starter order → Mars' },
+          missionCount: 1,
+          pendingLaunch: false,
+          placed: ['launchpad'],
+          placementPlots: { launchpad: 0 },
+          controlBuilt: false,
+          missionsDone: 0,
+          freeOperations: false,
+          debriefPending: true,
+          returningToEarth: true,
+          shipDestroyed: false,
+          contractorMissions: {},
+          contractorCooldowns: {},
+          researchAnnotations: 0,
+          refineryBuilt: false,
+          refineryQueue: [],
+          refinedGoods: {},
+          launchpadUpgraded: false,
+          loanDebt: 0,
+          loanOffered: false,
+        },
+      }))
+
+      cy.contains('Inbound · Earth').should('be.visible')
+      cy.get('[data-testid="collect-reward-btn"]').should('not.exist')
+      cy.window().then(win => {
+        const saved = JSON.parse(win.localStorage.getItem(STORAGE_KEY) ?? '{}')
+        expect(saved.player.francs).to.equal(9_500_000_000)
+      })
+
+      cy.contains('Recover Ship', { timeout: 8000 }).click()
+      cy.contains('MISSION COMPLETE').should('be.visible')
+      cy.contains('ship destroyed on Earth return').should('be.visible')
+      cy.get('[data-testid="collect-reward-btn"]').should('not.exist')
+      cy.get('[data-testid="resolve-cargo-btn"]').click()
+      cy.get('[data-testid="collect-reward-btn"]').should('be.visible')
+    })
+
     it('debrief enforces cargo resolution before reward collection', () => {
       const cargo = { iron: 4 }
       visitWithState(fullState({
@@ -350,7 +411,7 @@ describe('Full Game Loop — Landnam', () => {
       cy.contains('Got it').should('be.visible')
     })
 
-    it('M1 completion: market is accessible before SR2 popup, excess minerals can be sold', () => {
+    it('M1 completion returns to hub with SR2 popup and does not open the market', () => {
       // M1 requires 6 iron; player mined 8 so 2 are excess after delivery
       visitWithState(fullState({
         screen: 'debrief',
@@ -385,18 +446,7 @@ describe('Full Game Loop — Landnam', () => {
       cy.get('[data-testid="resolve-cargo-btn"]').click()
       cy.get('[data-testid="collect-reward-btn"]').click()
 
-      // Market screen must be interactable — SR2 popup must NOT block it
-      cy.contains('Commodity Exchange').should('be.visible')
-      cy.contains('STARTER ROCKET 2').should('not.exist')
-
-      // 2 excess iron units remain in stash after consuming 6 for delivery
-      cy.contains('Iron').should('be.visible')
-      cy.contains('Sell All Minerals').should('be.visible').click()
-      cy.contains('Confirm').should('be.visible').click()
-      cy.contains('No minerals in stash').should('be.visible')
-
-      // Returning to hub shows the deferred SR2 unlock popup
-      cy.get('[aria-label="back"]').click()
+      cy.contains('Commodity Exchange').should('not.exist')
       cy.contains('STARTER ROCKET 2').should('be.visible')
       cy.contains('Vehicle Available').should('be.visible')
     })

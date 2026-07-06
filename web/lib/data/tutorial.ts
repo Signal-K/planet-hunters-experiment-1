@@ -64,23 +64,18 @@ export const M2_STEPS: TutorialStep[] = [
 ]
 
 export const M3_STEPS: TutorialStep[] = [
-  // Step 30: hub — action step (auto-dismisses when user navigates to missions).
-  // Mirrors M1 step 1 and M2 step 20.
-  { id: 30, screen: 'hub', title: 'Guided Ops · Mission 3',
-    body: 'This is a delivery contract — no drilling involved. Your rocket carries pre-loaded cargo to the target. You\'re still in guided operations. Accept the next contract to continue.',
-    action: 'Tap menu, then MISSIONS',
-    anchor: 'bottom', spot: null, cta: 'Missions', coachId: 'radial-missions|radial-toggle', dir: 'down',
-    desktopBody: 'This is a delivery contract — no drilling involved. You\'re still in guided operations. Click MISSIONS to continue.',
-    desktopAction: 'Click MISSIONS in the sidebar',
-    desktopCoachId: 'sidebar-missions', desktopDir: 'left' },
-  { id: 31, screen: 'rocket-buy', title: 'Cargo Rocket — No Drill',
-    body: 'This rocket carries a cargo module instead of a mining drill — it delivers equipment, not ore.',
+  { id: 30, screen: 'hub', title: 'Your Own Run',
+    body: 'M3 has no contractor. Pick a target yourself, mine what looks valuable, and bring the haul home for your own operation.',
     manual: true,
-    anchor: 'top', spot: null, cta: 'Got it' },
-  { id: 32, screen: 'fab', title: 'Ready to Deliver',
-    body: 'Cargo module loaded and secured. Launch when ready — no ore collection on this run.',
+    anchor: 'bottom', spot: null, cta: 'Got it' },
+  { id: 31, screen: 'rocket-buy', title: 'Choose The Vehicle',
+    body: 'This is a custom mining run, so keep the drill installed. Buy the best reachable starter rocket and prepare to launch.',
     manual: true,
-    anchor: 'top', spot: null, cta: 'Got it' },
+    anchor: 'top', spot: { x: 14, y: 154, w: 374, h: 320 }, cta: 'Got it' },
+  { id: 32, screen: 'fab', title: 'Confirm Mining Loadout',
+    body: 'You chose the target and you keep the haul. Confirm the mining loadout and launch when ready.',
+    manual: true,
+    anchor: 'top', spot: { x: 14, y: 154, w: 374, h: 250 }, cta: 'Got it' },
 ]
 
 export const PROGRESSION_STEPS: TutorialStep[] = [
