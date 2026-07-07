@@ -50,6 +50,7 @@ import {
   isReviewableTessSubject,
   tessCandidateToExoplanetTarget,
   toTessCandidate,
+  SELF_DIRECTED_MINING_MISSION_ID,
 } from './data'
 
 describe('sellCargo', () => {
@@ -496,6 +497,16 @@ describe('seed bible v0 catalog', () => {
     }
     // No generic generated missions leak into the curated M3 slot.
     expect(MISSIONS.some(m => m.id.startsWith('generated-') && m.sequence === 3)).toBe(false)
+  })
+
+  it('Free Ops self-directed mining mission has no contractor and reachable requirements', () => {
+    const selfDirected = MISSIONS.find(m => m.id === SELF_DIRECTED_MINING_MISSION_ID)
+    expect(selfDirected).toBeDefined()
+    expect(selfDirected?.contractor).toBeUndefined()
+    expect(selfDirected?.targetId).toBeUndefined()
+    expect(selfDirected?.sequence).toBe(FREE_OPS_START_MISSIONS_DONE + 1)
+    const compatible = compatibleTargetsFor(selfDirected!, TARGETS)
+    expect(compatible.length).toBeGreaterThan(0)
   })
 
   it('authored relay mission is a two-leg mine-then-deliver job with a real contractor', () => {

@@ -5,7 +5,7 @@ import Image from 'next/image'
 import TopBar from '@/components/ui/TopBar'
 import Panel from '@/components/ui/Panel'
 import StatusPill from '@/components/ui/StatusPill'
-import { compatibleTargetsFor, contractorAffinityBonus, contractorUnlocked, FREE_OPS_START_MISSIONS_DONE, CONTRACTOR_AFFINITY_MISSION_THRESHOLD, MISSION_TEMPLATES, CONTRACTOR_SLOTS } from '@/lib/data'
+import { compatibleTargetsFor, contractorAffinityBonus, contractorUnlocked, FREE_OPS_START_MISSIONS_DONE, CONTRACTOR_AFFINITY_MISSION_THRESHOLD, MISSION_TEMPLATES, CONTRACTOR_SLOTS, SELF_DIRECTED_MINING_MISSION_ID } from '@/lib/data'
 import type { DailyContractorPool } from '@/lib/data'
 import type { Catalog } from '@/lib/catalog'
 import { TUTORIAL_CONTENT_TOP } from '@/lib/tutorial-layout'
@@ -65,9 +65,16 @@ export default function MissionBoardScreen({ onBack, onPick, missionsDone, freeO
   // Hand-authored "mine then deliver" logistics jobs are always offered in Free Ops,
   // independent of the daily-rotating contractor pool.
   const logisticsMissionPool = freeOperations ? MISSIONS.filter(m => !!m.deliveryTargetId && !isOnCooldown(m.contractor)) : []
+  // Self-directed mining has no contractor, no daily limit, and no cooldown —
+  // always launchable from its own dedicated Free Ops panel below (not a card
+  // in the regular list, since it isn't tied to a contractor or a pool slot).
+  const contractorPoolExhausted = useDailyPool
+    && dailyContractorPool!.missions.length > 0
+    && dailyContractorPool!.missions.every(m => isCompletedToday(m.id))
   const available = useDailyPool
     ? [...storyMissionPool, ...logisticsMissionPool, ...dailyContractorPool!.missions.filter(m => !isCompletedToday(m.id)), ...exoplanetSurveyPool]
     : MISSIONS.filter(m => {
+        if (m.id === SELF_DIRECTED_MINING_MISSION_ID) return false
         const customMission = !m.contractor
         if (m.contractor && !CONTRACTORS[m.contractor]) return false
         if (freeOperations) {
@@ -140,6 +147,34 @@ export default function MissionBoardScreen({ onBack, onPick, missionsDone, freeO
         <TopBar eyebrow={freeOperations ? 'EARTH BASE · FREE OPS' : `EARTH BASE · L${missionsDone + 1}`} title="Mission Board" onBack={onBack} />
 
       <div data-ui-zone={UI_ZONES.screenContent} style={{ position: 'absolute', inset: 0, paddingTop: hasCoach ? TUTORIAL_CONTENT_TOP : 72, paddingBottom: hasCoach ? 190 : 96, overflowY: 'auto' }}>
+        {freeOperations && (
+          <div style={{ padding: '0 14px 10px 14px' }}>
+            <Panel accent={contractorPoolExhausted ? 'var(--ln-ok)' : 'var(--ln-cyan)'} style={{ padding: 12 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+                <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 10, fontWeight: 800, letterSpacing: '0.22em', color: contractorPoolExhausted ? 'var(--ln-ok)' : 'var(--ln-cyan)', textTransform: 'uppercase' }}>
+                  Free Ops · Self-Directed Mining
+                </div>
+              </div>
+              <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 12, color: '#a9b8ce', lineHeight: 1.45, marginBottom: 10 }}>
+                {contractorPoolExhausted
+                  ? "Today's contractor requests are done. Launch a self-directed run — pick any reachable target and sell the haul yourself at market price."
+                  : 'No contractor, no daily limit. Pick any reachable target, mine what looks valuable, and sell the haul yourself at market price.'}
+              </div>
+              <button
+                data-testid="self-directed-mining-btn"
+                onClick={() => onPick(SELF_DIRECTED_MINING_MISSION_ID)}
+                style={{
+                  width: '100%', padding: '10px 16px', borderRadius: 8, border: 'none', cursor: 'pointer',
+                  background: contractorPoolExhausted ? 'var(--ln-ok)' : 'var(--ln-cyan)',
+                  color: '#06090f', fontFamily: 'var(--ln-font-display)', fontWeight: 800, fontSize: 11,
+                  letterSpacing: '0.14em', textTransform: 'uppercase',
+                }}
+              >
+                Launch Self-Directed Run
+              </button>
+            </Panel>
+          </div>
+        )}
         {freeOperations && (
           <div style={{ padding: '0 14px 10px 14px', display: 'flex', flexDirection: 'column', gap: 10 }}>
             <Panel accent="var(--ln-amber)" style={{ padding: 12 }}>

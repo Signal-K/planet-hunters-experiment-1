@@ -33,6 +33,9 @@ export function generateFreeOpsMissions(): Mission[] {
 // mining now lives in Free Ops instead (see generateFreeOpsMissions).
 export const M3_SEQUENCE = 3
 
+// Free Ops self-directed mining — no contractor, no daily limit, no cooldown.
+export const SELF_DIRECTED_MINING_MISSION_ID = 'freeops-self-directed-mining'
+
 export const AUTHORED_MISSIONS: Mission[] = [
   {
     id: 'lnm_m3_relay_bennu_vesta',
@@ -101,6 +104,30 @@ export const AUTHORED_MISSIONS: Mission[] = [
     payout: {
       francs: 900_000,
       affinity: 4,
+    },
+  },
+  // Free Ops self-directed mining: no contractor, no daily limit, no cooldown —
+  // the player picks any reachable target and sells the haul themselves at
+  // market price. This is the self-directed mining teaching moment that used
+  // to fill the M3 onboarding slot before M3 became a contractor transport job.
+  {
+    id: SELF_DIRECTED_MINING_MISSION_ID,
+    title: 'Self-Directed Mining Run',
+    brief: 'No contractor, no daily limit. Pick any reachable target, mine what looks valuable, and sell the haul yourself at market price.',
+    tag: 'FREE OPS',
+    difficulty: 'L2',
+    locked: false,
+    sequence: FREE_OPS_START_MISSIONS_DONE + 1,
+    unlockAt: 'Complete M3',
+    requires: {
+      minerals: { iron: 2, silicon: 2 },
+      cargo_min: 4,
+      drill_tier: 1,
+      max_orbit: 8,
+    },
+    payout: {
+      francs: 0,
+      affinity: 0,
     },
   },
 ]
