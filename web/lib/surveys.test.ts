@@ -23,8 +23,8 @@ describe('buildPostHogSurveyPayload', () => {
   it('emits PostHog survey responses in current and legacy formats', () => {
     const survey = SURVEY_DEFS.lnm_m3_complete
     const payload = buildPostHogSurveyPayload(survey, {
-      'm3-custom-clarity': 'Mostly clear',
-      'm3-target-choice': 'Meaningful',
+      'm3-transport-clarity': 'Mostly clear',
+      'm3-contractor-choice': 'Meaningful',
       'm3-rating': 5,
     })
 
@@ -35,14 +35,14 @@ describe('buildPostHogSurveyPayload', () => {
       $survey_response: 'Mostly clear',
       $survey_response_1: 'Meaningful',
       $survey_response_2: 5,
-      '$survey_response_m3-custom-clarity': 'Mostly clear',
-      '$survey_response_m3-target-choice': 'Meaningful',
+      '$survey_response_m3-transport-clarity': 'Mostly clear',
+      '$survey_response_m3-contractor-choice': 'Meaningful',
       '$survey_response_m3-rating': 5,
     })
     expect(payload.$survey_submission_id).toEqual(expect.any(String))
     expect(payload.$survey_questions).toEqual([
-      { id: 'm3-custom-clarity', question: survey.questions[0].question, response: 'Mostly clear' },
-      { id: 'm3-target-choice', question: survey.questions[1].question, response: 'Meaningful' },
+      { id: 'm3-transport-clarity', question: survey.questions[0].question, response: 'Mostly clear' },
+      { id: 'm3-contractor-choice', question: survey.questions[1].question, response: 'Meaningful' },
       { id: 'm3-rating', question: survey.questions[2].question, response: 5 },
       { id: 'm3-freetext', question: survey.questions[3].question, response: undefined },
     ])

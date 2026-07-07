@@ -110,9 +110,15 @@ export const SURVEY_DEFS: Record<string, Survey> = {
     id: '019f36f7-9396-0000-9271-74f9bba0546a',
     name: 'Landnám: M3 Onboarding Graduation',
     posthogUrl: 'https://us.posthog.com/project/199773/surveys/019f36f7-9396-0000-9271-74f9bba0546a',
+    // M3 changed from a contractor-free self-directed mining run to a
+    // two-leg contractor transport job (pick between two contractors, mine
+    // at a preset pickup target, deliver to a preset second target) — see
+    // [[Decide: M3 becomes a transport mission]]. Local question copy
+    // updated to match; the live PostHog survey definition at posthogUrl
+    // above should be updated to match separately.
     questions: [
-      { id: 'm3-custom-clarity', type: 'multiple_choice', question: 'How clear was it that M3 was your first custom mining run?', choices: ['Crystal clear', 'Mostly clear', 'A bit confusing', 'I still thought it was a contractor job'] },
-      { id: 'm3-target-choice', type: 'multiple_choice', question: 'How did choosing your own target feel?', choices: ['Meaningful', 'Fine but simple', 'Confusing', 'I did not notice I had a choice'] },
+      { id: 'm3-transport-clarity', type: 'multiple_choice', question: 'How clear was it that this was a two-stop delivery job — mine, then drop cargo at a second target?', choices: ['Crystal clear', 'Mostly clear', 'A bit confusing', 'I did not realize there were two stops'] },
+      { id: 'm3-contractor-choice', type: 'multiple_choice', question: 'How did picking between the two contractors feel?', choices: ['Meaningful', 'Fine but simple', 'Confusing', 'I did not notice I had a choice'] },
       { id: 'm3-rating', type: 'rating', question: 'How are you feeling about the game after three missions?', scale: 5 },
       { id: 'm3-freetext', type: 'open', question: 'Anything we should know before you play more?' },
     ],
