@@ -2,6 +2,22 @@
 
 import type { ContractorSlot, MineralMeta, Mission } from './types'
 import { DEFAULT_MISSION_TEMPLATES, FREE_OPS_START_MISSIONS_DONE } from './mission-generator'
+import { CONTRACTOR_AFFINITY_MISSION_THRESHOLD } from './contractors'
+
+// Base daily slots per contractor, before affinity bonus slots.
+export const BASE_DAILY_SLOTS_PER_CONTRACTOR = 3
+
+// Affinity "level" = one level per CONTRACTOR_AFFINITY_MISSION_THRESHOLD
+// completed missions with that contractor (reusing the existing threshold
+// convention, e.g. contractors.ts's advanced-unlock gate). Bonus slots =
+// (level - 1), capped at +5, and permanent once reached (a function of
+// total completed jobs, which never decreases).
+export const MAX_AFFINITY_BONUS_SLOTS = 5
+
+export function affinityBonusSlots(completedJobs: number): number {
+  const level = 1 + Math.floor(completedJobs / CONTRACTOR_AFFINITY_MISSION_THRESHOLD)
+  return Math.min(MAX_AFFINITY_BONUS_SLOTS, level - 1)
+}
 
 export interface DailyContractorPool {
   date: string        // 'YYYY-MM-DD' — pool is valid for this calendar day
@@ -23,6 +39,7 @@ function djb2(s: string): number {
 }
 
 function maxTierForProgress(missionsDone: number): number {
+  if (missionsDone >= 12) return 5
   if (missionsDone >= 9) return 4
   if (missionsDone >= 6) return 3
   if (missionsDone >= 5) return 2
@@ -34,6 +51,7 @@ export function generateDailyContractorPool(
   missionsDone: number,
   contractors: ContractorSlot[],
   minerals: Record<string, MineralMeta>,
+  contractorMissions: Record<string, number> = {},
 ): Mission[] {
   const maxTier = maxTierForProgress(missionsDone)
   const eligible = contractors.filter(c => c.unlockTier <= maxTier)
@@ -43,8 +61,9 @@ export function generateDailyContractorPool(
   for (const contractor of eligible) {
     const roleTemplates = baseTemplates.filter(t => t.contractorRole === contractor.uiRole)
     const templatePool = roleTemplates.length > 0 ? roleTemplates : baseTemplates
+    const slotCount = BASE_DAILY_SLOTS_PER_CONTRACTOR + affinityBonusSlots(contractorMissions[contractor.id] ?? 0)
 
-    for (let slot = 0; slot < 2; slot++) {
+    for (let slot = 0; slot < slotCount; slot++) {
       const tSeed = djb2(`${date}:${contractor.id}:${slot}:t`)
       const mSeed = djb2(`${date}:${contractor.id}:${slot}:m`)
       const aSeed = djb2(`${date}:${contractor.id}:${slot}:a`)
@@ -94,12 +113,13 @@ export function refreshPoolIfStale(
   missionsDone: number,
   contractors: ContractorSlot[],
   minerals: Record<string, MineralMeta>,
+  contractorMissions: Record<string, number> = {},
 ): DailyContractorPool {
   const today = todayDateKey()
   if (existing?.date === today) return existing
   return {
     date: today,
-    missions: generateDailyContractorPool(today, missionsDone, contractors, minerals),
+    missions: generateDailyContractorPool(today, missionsDone, contractors, minerals, contractorMissions),
     acceptedId: null,
     completedIds: [],
   }

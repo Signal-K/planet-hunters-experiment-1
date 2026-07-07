@@ -133,6 +133,12 @@ describe('M3 — Transport contractor pick and Free Ops unlock', () => {
       cy.get('[data-testid="resolve-cargo-btn"]').click()
       cy.get('[data-testid="collect-reward-btn"]').click()
       cy.get('[role="dialog"][aria-label="Territory established"]').should('not.exist')
+      // Debrief routes to the Market screen (sell your haul) rather than
+      // straight back to the mission board — navigate there to see the
+      // Free Ops explanation.
+      cy.get('[data-testid="top-bar-back"]').click()
+      cy.get('[data-testid="radial-nav-toggle"]').click()
+      cy.get('[data-testid="radial-nav-missions"]').click()
       cy.contains('Custom Missions Unlocked').should('be.visible')
       cy.contains('Free Ops · Hot Minerals').should('be.visible')
       cy.contains('Infrastructure').should('be.visible')
