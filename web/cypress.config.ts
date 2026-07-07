@@ -13,6 +13,7 @@ const profiles: Record<string, Cypress.EndToEndConfigOptions> = {
       'cypress/e2e/m3-territory.cy.ts',
       'cypress/e2e/target-picker-pixi.cy.ts',
       'cypress/e2e/tutorial-m1.cy.ts',
+      'cypress/e2e/tess-discovery-desktop-layout.cy.ts',
       'cypress/e2e/actual-play.cy.ts',
       'cypress/e2e/bug-hunt.cy.ts',
     ],

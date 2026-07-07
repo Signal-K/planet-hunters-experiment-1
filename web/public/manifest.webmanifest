@@ -1,7 +1,7 @@
 {
   "name": "Landnam — Space Mining",
   "short_name": "Landnam",
-  "description": "Portrait-canvas space mining browser game",
+  "description": "Space mining browser game — portrait and desktop/landscape supported",
   "start_url": "/game",
   "display": "standalone",
   "orientation": "any",
