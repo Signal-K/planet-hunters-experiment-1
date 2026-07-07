@@ -111,9 +111,13 @@ function completeMining() {
   cy.contains('MISSION TRANSIT', { timeout: 15000 }).should('be.visible')
   cy.get('[data-testid="mining-canvas"]', { timeout: 20000 }).should('be.visible')
   // Firing doesn't guarantee a hit — the laser only collects ore that's swept
-  // through the firing zone at that instant (real-time collision, not per-click).
+  // through the firing zone at that instant (real-time collision, not per-click),
+  // with organic gaps between ore (avg ~1 every 3+ seconds at default scroll speed).
   // Fire repeatedly with a short pause between shots so ore has time to drift
   // into range, stopping as soon as the order is filled (return-home-btn enables).
+  // Budget generously (up to ~48s) since M2's order needs 8 units — 25 attempts
+  // at 400ms (10s) was too short a window and could hit "Laser Depleted" before
+  // the order filled.
   function fireUntilFilled(attemptsLeft: number) {
     cy.get('[data-testid="return-home-btn"]').then($btn => {
       if (!$btn.is(':disabled') || attemptsLeft <= 0) return
@@ -122,7 +126,7 @@ function completeMining() {
       fireUntilFilled(attemptsLeft - 1)
     })
   }
-  fireUntilFilled(25)
+  fireUntilFilled(120)
   cy.get('[data-testid="return-home-btn"]', { timeout: 10000 }).should('not.be.disabled').click()
 }
 
@@ -147,8 +151,16 @@ function playM1() {
   // can still be settling right after the missions-screen transition), and an
   // early actionability check can otherwise see a transient overlap.
   cy.wait(300)
+  // Cypress's actionability check intermittently reports this card as "covered"
+  // by the tutorial coach card, but measuring both elements' real
+  // getBoundingClientRect() at click time shows a large gap (coach bottom
+  // ~150-160px, card top ~260-270px on both viewports) and
+  // document.elementFromPoint(cardCenter) resolves to the card itself — this
+  // is the same class of Cypress false-positive as the coach-ring visibility
+  // check above, not a real layout overlap. Force the click like the other
+  // canvas/coach-adjacent interactions in this file.
   cy.get('[data-testid="mission-card-generated-s1-starter-bulk-1"]')
-    .should('be.visible').click()
+    .should('be.visible').click({ force: true })
 
   // Step 3: pick target
   cy.contains('Pick Target', { timeout: 8000 }).should('be.visible')
@@ -316,7 +328,11 @@ describe('Mobile layout: radial nav visible, sidebar hidden', () => {
     visitHub({ doneSteps: { 0: true } })
     cy.contains('Earth Base', { timeout: 10000 }).should('be.visible')
     cy.get('[data-testid="tutorial-coach-block"]').should('contain', 'Open a Mission')
-    cy.get('[data-testid="tutorial-coach-ring"]').should('be.visible').then($ring => {
+    // The ring is a decorative, pointerEvents:'none' overlay — Cypress's
+    // be.visible check uses elementFromPoint, which always reports it as
+    // "covered" by whatever's underneath since it's excluded from hit-testing.
+    // Assert existence + the bounding-rect overlap instead of visibility.
+    cy.get('[data-testid="tutorial-coach-ring"]').should('exist').then($ring => {
       const s = $ring[0].getBoundingClientRect()
       cy.get('[data-testid="radial-nav-toggle"]').then($btn => {
         const b = $btn[0].getBoundingClientRect()

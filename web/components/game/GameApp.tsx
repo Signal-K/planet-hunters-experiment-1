@@ -59,6 +59,9 @@ function GameCanvas() {
     game.onLaunch()
   }, [game.onLaunch])
   const rocketDisplay = rocketDisplayForConfig(game.rocket)
+  const transitTarget = game.player.headingToDelivery && game.deliveryTargetId
+    ? game.catalog.targets.find(t => t.id === game.deliveryTargetId) ?? game.target
+    : game.target
 
   // When a timed transit starts, schedule a push notification.
   useEffect(() => {
@@ -349,9 +352,9 @@ function GameCanvas() {
             coachManual={coach?.manual ?? false}
           />
         )}
-        {game.screen === 'transit' && game.target && (
+        {game.screen === 'transit' && transitTarget && (
           <TransitScreen
-            target={game.target}
+            target={transitTarget}
             rocketImageSrc={rocketDisplay.img}
             arrivalAt={game.player.arrivalAt}
             returning={!!game.player.returningToEarth}
@@ -359,6 +362,10 @@ function GameCanvas() {
             onArrive={() => {
               if (game.player.returningToEarth) {
                 game.onReturnArrived()
+                return
+              }
+              if (game.player.headingToDelivery) {
+                game.onDeliveryArrived()
                 return
               }
               const isRoverMission = game.mission?.survey?.onWorldVehicle === 'starter-rover'

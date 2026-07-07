@@ -43,6 +43,29 @@ export const AUTHORED_MISSIONS: Mission[] = [
       affinity: 0,
     },
   },
+  {
+    id: 'lnm_relay_psyche_ceres',
+    title: 'Deep-Core Relay',
+    brief: 'Kepler Materials needs nickel and cobalt extracted at 16 Psyche, then ferried onward to their Ceres depot before you fly home. Two stops, one payout.',
+    contractor: 'kepler-materials',
+    tag: 'TRANSPORT',
+    difficulty: 'L2',
+    locked: false,
+    sequence: FREE_OPS_START_MISSIONS_DONE + 1,
+    unlockAt: 'Complete 3 contracts',
+    targetId: 'psyche',
+    deliveryTargetId: 'ceres',
+    requires: {
+      minerals: { nickel: 2, cobalt: 2 },
+      cargo_min: 4,
+      drill_tier: 1,
+      max_orbit: 5,
+    },
+    payout: {
+      francs: 900_000,
+      affinity: 4,
+    },
+  },
 ]
 
 export const MISSIONS: Mission[] = [...generateMissions(), ...AUTHORED_MISSIONS, ...generateFreeOpsMissions()]

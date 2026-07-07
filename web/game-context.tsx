@@ -254,6 +254,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       onPurchaseRocket: loop.onPurchaseRocket,
       onLaunch: loop.onLaunch,
       onMiningDone: loop.onMiningDone,
+      onDeliveryArrived: loop.onDeliveryArrived,
       onReturnArrived: loop.onReturnArrived,
       onRoverMiningDone: loop.onRoverMiningDone,
       onDebriefDone: loop.onDebriefDone,

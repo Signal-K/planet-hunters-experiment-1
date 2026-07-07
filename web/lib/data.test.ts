@@ -497,6 +497,17 @@ describe('seed bible v0 catalog', () => {
     expect(m3?.targetId).toBeUndefined()
     expect(m3?.payload).toBeUndefined()
   })
+
+  it('authored relay mission is a two-leg mine-then-deliver job with a real contractor', () => {
+    const relay = MISSIONS.find(m => m.id === 'lnm_relay_psyche_ceres')
+    expect(relay).toBeDefined()
+    expect(relay?.contractor).toBe('kepler-materials')
+    expect(relay?.targetId).toBe('psyche')
+    expect(relay?.deliveryTargetId).toBe('ceres')
+    expect(TARGETS.some(t => t.id === relay?.targetId)).toBe(true)
+    expect(TARGETS.some(t => t.id === relay?.deliveryTargetId)).toBe(true)
+    expect(CONTRACTOR_SLOTS.some(c => c.id === relay?.contractor)).toBe(true)
+  })
 })
 
 describe('Construction mission templates and target structure blueprints', () => {

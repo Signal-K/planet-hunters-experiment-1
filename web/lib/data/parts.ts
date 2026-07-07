@@ -31,9 +31,12 @@ export function suggestBuild(opts: {
   launchpadUpgraded?: boolean
   parts?: typeof PARTS
   unlockedSkillNodes?: string[]
+  // For two-leg "mine then deliver" missions — ensures the suggested
+  // propulsion also reaches the delivery leg, not just the pickup target.
+  deliveryTarget?: Target | null
 }): RocketConfig {
   const { mission, target, parts = PARTS } = opts
-  const orbit = target?.orbit ?? 4
+  const orbit = Math.max(target?.orbit ?? 4, opts.deliveryTarget?.orbit ?? 0)
   const drillTier = mission?.requires.drill_tier ?? 1
   const cargoMin = mission?.requires.cargo_min ?? 6
   const effectiveMissionsDone = opts.launchpadUpgraded ? Math.max(opts.missionsDone, 1) : opts.missionsDone

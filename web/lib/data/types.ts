@@ -81,6 +81,9 @@ export interface Mission {
   sequence: number
   unlockAt?: string
   targetId?: string
+  // When set, this is a two-leg "mine then deliver" job: mine/collect cargo
+  // at targetId, then fly to deliveryTargetId before the Earth-return leg.
+  deliveryTargetId?: string
   payload?: MissionPayload
   survey?: MissionSurveyPlan
   construction?: MissionConstructionPlan

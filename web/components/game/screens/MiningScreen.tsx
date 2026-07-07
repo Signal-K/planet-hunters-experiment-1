@@ -115,13 +115,16 @@ export default function MiningScreen({ mission, target, onComplete, onBack, onAb
   onCoachDone?: () => void
 }) {
   // Charge count is mission-aware, not coach-aware.
-  // During onboarding (sequence <= FREE_OPS_START_MISSIONS_DONE): always 3× the ore required,
-  // minimum 20, so the player can never be softlocked by low charges regardless of coach state.
+  // During onboarding (sequence <= FREE_OPS_START_MISSIONS_DONE): always 6× the ore required,
+  // minimum 30, so the player can never be softlocked by low charges regardless of coach state.
+  // Ore only sits in the firing zone briefly as it scrolls through (organic gaps average
+  // ~1 ore every few seconds), so most shots miss even with good aim — a tight multiplier
+  // here (previously 3x/20) could exhaust charges before the order fills on a real playthrough.
   // Post-onboarding: respect laserChargeCap from skill nodes.
   const totalOreNeeded = Object.values(mission.requires.minerals).reduce((sum, v) => sum + v, 0)
   const isOnboarding = typeof mission.sequence === 'number' && mission.sequence <= FREE_OPS_START_MISSIONS_DONE
   const MAX_CHARGES = isOnboarding
-    ? Math.max(20, totalOreNeeded * 3)
+    ? Math.max(30, totalOreNeeded * 6)
     : Math.max(1, laserChargeCap ?? 5)
   const LOW_CHARGE_THRESHOLD = Math.max(2, Math.ceil(MAX_CHARGES * 0.2))
   const cargoRef = useRef<Record<string, number>>({})

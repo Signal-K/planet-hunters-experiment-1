@@ -20,6 +20,8 @@ interface MissionCardProps {
   lockedDetail?: string
   cooldownLabel?: string
   highlighted?: boolean
+  // Set for two-leg "mine then deliver" missions, e.g. "Vesta → Ceres".
+  routeLabel?: string
   onPick: () => void
 }
 
@@ -43,6 +45,7 @@ export default function MissionCard({
   lockedDetail,
   cooldownLabel,
   highlighted,
+  routeLabel,
   onPick,
 }: MissionCardProps) {
   const [expanded, setExpanded] = useState(false)
@@ -124,6 +127,12 @@ export default function MissionCard({
           <div style={{ padding: '4px 14px 0', font: '700 12px var(--ln-font-display)', color: 'var(--ln-text)', textTransform: 'uppercase', letterSpacing: '0.01em' }}>
             {mission.title}
           </div>
+
+          {routeLabel && (
+            <div style={{ padding: '2px 14px 0', font: '700 9px var(--ln-font-mono)', color: 'var(--ln-cyan)', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+              {routeLabel}
+            </div>
+          )}
 
           <div style={{ margin: '10px 14px 8px', padding: 12, background: 'var(--ln-surface)', borderLeft: '2px solid var(--ln-cyan)' }}>
             <div style={{ font: '400 15px/1.5 var(--ln-font-display)', color: 'var(--ln-text)' }}>{mission.brief}</div>

@@ -47,6 +47,9 @@ export interface Player {
   debriefPending?: boolean
   returningToEarth?: boolean
   shipDestroyed?: boolean
+  // True while in transit toward a two-leg mission's deliveryTargetId, after
+  // mining/pickup at the primary target and before the Earth-return leg.
+  headingToDelivery?: boolean
   stash?: Record<string, number>
   contractorMissions: Record<string, number>
   contractorStreaks?: Record<string, number>
@@ -107,6 +110,9 @@ export interface GameState {
   player: Player
   missionId: string | null
   targetId: string | null
+  // Set for two-leg "mine then deliver" missions — the second-leg
+  // destination, distinct from targetId (the mining/pickup target).
+  deliveryTargetId?: string | null
   rocket: RocketConfig
   lastCargo: Record<string, number> | null
   tutorial: boolean
@@ -146,6 +152,7 @@ export interface GameActions {
   onPurchaseRocket: (rocketId: string) => void
   onLaunch: () => void
   onMiningDone: (cargo: Record<string, number>) => void
+  onDeliveryArrived: () => void
   onReturnArrived: () => void
   onDebriefDone: (total: number, affinity: number, consumed?: Record<string, number>) => void
   coachManualNext: () => void

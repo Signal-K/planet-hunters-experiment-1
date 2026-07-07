@@ -62,13 +62,16 @@ export default function MissionBoardScreen({ onBack, onPick, missionsDone, freeO
   const storyMissionPool = freeOperations ? MISSIONS.filter(m => m.tag === 'STORY') : []
   const freeOpsMissionPool = MISSIONS.filter(m => m.id.startsWith('freeops-') || m.id.startsWith('exo-survey-') || m.tag === 'STORY')
   const exoplanetSurveyPool = freeOperations ? MISSIONS.filter(m => m.id.startsWith('exo-survey-')) : []
+  // Hand-authored "mine then deliver" logistics jobs are always offered in Free Ops,
+  // independent of the daily-rotating contractor pool.
+  const logisticsMissionPool = freeOperations ? MISSIONS.filter(m => !!m.deliveryTargetId && !isOnCooldown(m.contractor)) : []
   const available = useDailyPool
-    ? [...storyMissionPool, ...dailyContractorPool!.missions.filter(m => !isCompletedToday(m.id)), ...exoplanetSurveyPool]
+    ? [...storyMissionPool, ...logisticsMissionPool, ...dailyContractorPool!.missions.filter(m => !isCompletedToday(m.id)), ...exoplanetSurveyPool]
     : MISSIONS.filter(m => {
         const customMission = !m.contractor
         if (m.contractor && !CONTRACTORS[m.contractor]) return false
         if (freeOperations) {
-          return customMission || (freeOpsMissionPool.some(item => item.id === m.id) && !isOnCooldown(m.contractor))
+          return customMission || !!m.deliveryTargetId || (freeOpsMissionPool.some(item => item.id === m.id) && !isOnCooldown(m.contractor))
         }
         // Onboarding: sequence is the only gate — contractor unlock tiers don't apply
         return m.sequence === sequence
@@ -207,7 +210,7 @@ export default function MissionBoardScreen({ onBack, onPick, missionsDone, freeO
             const cooldown = !useDailyPool && isOnCooldown(m.contractor)
             const contractor = m.contractor ? CONTRACTORS[m.contractor] : null
             if (m.contractor && !contractor) return null
-            const isStoryMission = m.tag === 'STORY'
+            const isStoryMission = m.tag === 'STORY' && !m.deliveryTargetId
             const contractorReady = freeOperations || m.sequence === sequence || (!!contractor && contractorUnlocked(contractor, sequence))
             const unlocked = !completedToday_ && !cooldown && contractorReady && (freeOperations || available.some(item => item.id === m.id))
             const mTargets = compatibleTargetsFor(m, targets)
@@ -221,6 +224,9 @@ export default function MissionBoardScreen({ onBack, onPick, missionsDone, freeO
               : 'available' as const
             const lockedDetail = !contractorReady ? (contractor ? `L${contractor.unlockTier}` : 'Locked') : m.sequence <= missionsDone ? 'Completed' : m.unlockAt
             const cooldownLabel = cooldown && m.contractor ? formatCooldown(contractorCooldowns![m.contractor] - now) : undefined
+            const routeLabel = m.deliveryTargetId
+              ? `${targets.find(t => t.id === m.targetId)?.name ?? m.targetId} → ${targets.find(t => t.id === m.deliveryTargetId)?.name ?? m.deliveryTargetId}`
+              : undefined
             return (
               <MissionCard
                 key={m.id}
@@ -237,6 +243,7 @@ export default function MissionBoardScreen({ onBack, onPick, missionsDone, freeO
                 lockedDetail={lockedDetail}
                 cooldownLabel={cooldownLabel}
                 highlighted={isHighlighted}
+                routeLabel={routeLabel}
                 onPick={() => onPick(m.id)}
               />
             )

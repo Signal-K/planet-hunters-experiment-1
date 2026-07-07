@@ -115,9 +115,15 @@ export function applyAbandonMission(s: GameState, missions: Mission[]): GameStat
       missionPhase: undefined,
       arrivalAt: null,
       dailyContractorPool,
+      headingToDelivery: false,
+      debriefPending: false,
+      returningToEarth: false,
+      shipDestroyed: false,
     },
     missionId: null,
     targetId: null,
+    deliveryTargetId: null,
+    lastCargo: null,
     screen: 'hub',
   }
 }
