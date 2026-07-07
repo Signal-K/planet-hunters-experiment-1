@@ -15,32 +15,69 @@ export { FREE_OPS_START_MISSIONS_DONE, OFFLINE_MISSION_COUNT }
 export const MISSION_TEMPLATES = DEFAULT_MISSION_TEMPLATES
 
 export function generateMissions(count = OFFLINE_MISSION_COUNT): Mission[] {
+  // Sequence 3 (M3) is exclusively the authored transport-contractor list
+  // above — drop any generically-generated sequence-3 bands so the M3 board
+  // only ever shows the curated contractor choices.
   return generateMissionsFromRules({ contractors: CONTRACTOR_SLOTS, minerals: MINERAL_META }, count)
+    .filter(m => m.sequence !== 3)
 }
 
 export function generateFreeOpsMissions(): Mission[] {
   return generateFreeOpsMissionsFromRules({ contractors: CONTRACTOR_SLOTS, minerals: MINERAL_META })
 }
 
+// M3 onboarding: the player picks between two contractors offering a
+// two-leg transport job (mine at the pickup target, deliver to a second
+// target, then fly home) — the self-directed "Independent Prospect" custom
+// mining mission that used to fill this slot has been cut; self-directed
+// mining now lives in Free Ops instead (see generateFreeOpsMissions).
+export const M3_SEQUENCE = 3
+
 export const AUTHORED_MISSIONS: Mission[] = [
   {
-    id: 'lnm_m3_custom_mining',
-    title: 'Independent Prospect',
-    brief: 'No contractor this time. Pick a reachable target, mine what looks valuable, and bring the haul home for your own account. This is the start of custom operations.',
-    tag: 'FREE OPS',
-    difficulty: 'L2',
+    id: 'lnm_m3_relay_bennu_vesta',
+    title: 'Belt Courier Run',
+    brief: 'Atlas Aggregate needs iron and carbon lifted from Bennu, then dropped at their Vesta depot before you head home. Two stops, one payout.',
+    contractor: 'atlas-aggregate',
+    tag: 'TRANSPORT',
+    difficulty: 'L1',
     locked: false,
-    sequence: 3,
+    sequence: M3_SEQUENCE,
     unlockAt: 'Complete 2 contracts',
+    targetId: 'bennu',
+    deliveryTargetId: 'vesta',
     requires: {
-      minerals: { nickel: 2 },
-      cargo_min: 2,
+      minerals: { iron: 3, carbon: 2 },
+      cargo_min: 5,
       drill_tier: 1,
-      max_orbit: 6,
+      max_orbit: 4,
     },
     payout: {
-      francs: 0,
-      affinity: 0,
+      francs: 600_000,
+      affinity: 3,
+    },
+  },
+  {
+    id: 'lnm_m3_relay_itokawa_eros',
+    title: 'Nickel Line Handoff',
+    brief: 'Helioforge Metals needs nickel pulled from Itokawa, then handed off at Eros before you fly home. Two stops, one payout.',
+    contractor: 'helioforge-metals',
+    tag: 'TRANSPORT',
+    difficulty: 'L1',
+    locked: false,
+    sequence: M3_SEQUENCE,
+    unlockAt: 'Complete 2 contracts',
+    targetId: 'itokawa',
+    deliveryTargetId: 'eros',
+    requires: {
+      minerals: { nickel: 3 },
+      cargo_min: 3,
+      drill_tier: 1,
+      max_orbit: 4,
+    },
+    payout: {
+      francs: 600_000,
+      affinity: 3,
     },
   },
   {

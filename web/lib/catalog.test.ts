@@ -35,7 +35,7 @@ describe('Landnam Catalog Mapping', () => {
     expect(mission.requires.minerals).toEqual({ Water: 10 })
   })
 
-  it('normalizes legacy M3 catalog records to the corrected custom mining mission', () => {
+  it('normalizes legacy M3 catalog records to one of the corrected transport-contractor missions', () => {
     const mission = toMission({
       slug: 'lnm_m3_ore_delivery',
       title: 'Legacy Delivery',
@@ -44,10 +44,9 @@ describe('Landnam Catalog Mapping', () => {
       target_id: 'lutetia',
       payload_type: 'rover',
     })
-    expect(mission.id).toBe('lnm_m3_custom_mining')
-    expect(mission.contractor).toBeUndefined()
-    expect(mission.targetId).toBeUndefined()
-    expect(mission.payload).toBeUndefined()
+    expect(mission.sequence).toBe(3)
+    expect(mission.deliveryTargetId).toBeDefined()
+    expect(mission.contractor).toBeDefined()
   })
 
   it('maps a raw contractor record with economy fields', () => {

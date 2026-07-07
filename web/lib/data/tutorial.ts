@@ -64,18 +64,21 @@ export const M2_STEPS: TutorialStep[] = [
 ]
 
 export const M3_STEPS: TutorialStep[] = [
-  { id: 30, screen: 'hub', title: 'Your Own Run',
-    body: 'M3 has no contractor. Pick a target yourself, mine what looks valuable, and bring the haul home for your own operation.',
+  { id: 30, screen: 'hub', title: 'Guided Ops · Mission 3',
+    body: 'Two contractors have transport work this time: mine at the pickup site, then deliver to a second target before heading home. Pick one to continue.',
+    action: 'Tap menu, then MISSIONS',
+    anchor: 'bottom', spot: null, cta: 'Missions', coachId: 'radial-missions|radial-toggle', dir: 'down',
+    desktopBody: 'Two contractors have transport work this time: mine at the pickup site, then deliver to a second target before heading home. Click MISSIONS to continue.',
+    desktopAction: 'Click MISSIONS in the sidebar',
+    desktopCoachId: 'sidebar-missions', desktopDir: 'left' },
+  { id: 31, screen: 'rocket-buy', title: 'Two-Stop Route',
+    body: 'This contract has two legs — pickup, then delivery. Buy a rocket with enough range to reach both before launching.',
     manual: true,
-    anchor: 'bottom', spot: null, cta: 'Got it' },
-  { id: 31, screen: 'rocket-buy', title: 'Choose The Vehicle',
-    body: 'This is a custom mining run, so keep the drill installed. Buy the best reachable starter rocket and prepare to launch.',
+    anchor: 'top', spot: null, cta: 'Got it' },
+  { id: 32, screen: 'fab', title: 'Confirm The Run',
+    body: 'Confirm your loadout and launch. You will get a new heading once the pickup cargo is secured.',
     manual: true,
-    anchor: 'top', spot: { x: 14, y: 154, w: 374, h: 320 }, cta: 'Got it' },
-  { id: 32, screen: 'fab', title: 'Confirm Mining Loadout',
-    body: 'You chose the target and you keep the haul. Confirm the mining loadout and launch when ready.',
-    manual: true,
-    anchor: 'top', spot: { x: 14, y: 154, w: 374, h: 250 }, cta: 'Got it' },
+    anchor: 'top', spot: null, cta: 'Got it' },
 ]
 
 export const PROGRESSION_STEPS: TutorialStep[] = [

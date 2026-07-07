@@ -305,13 +305,6 @@ describe('compatibleTargetsFor', () => {
     expect(compatible.some(t => t.type === 'planet')).toBe(true)
   })
 
-  it('lets the corrected M3 use target picker for compatible mining targets', () => {
-    const m3 = MISSIONS.find(m => m.id === 'lnm_m3_custom_mining')!
-    const compatible = compatibleTargetsFor(m3, TARGETS)
-    expect(compatible.length).toBeGreaterThan(1)
-    expect(compatible.every(t => t.orbit <= m3.requires.max_orbit)).toBe(true)
-    expect(compatible.every(t => t.minerals.includes('nickel'))).toBe(true)
-  })
 })
 
 describe('rateMission', () => {
@@ -487,15 +480,22 @@ describe('seed bible v0 catalog', () => {
     expect(missions.every(m => compatibleTargetsFor(m, TARGETS).length > 0)).toBe(true)
   })
 
-  it('authored M3 is a contractor-free custom mining tutorial', () => {
+  it('authored M3 is a two-contractor transport-job choice, not self-directed mining', () => {
     const authored = MISSIONS.filter(m => !m.id.startsWith('generated-'))
     expect(authored.length).toBeGreaterThan(0)
     expect(authored.every(m => m.id && m.title)).toBe(true)
-    const m3 = authored.find(m => m.id === 'lnm_m3_custom_mining')
-    expect(m3).toBeDefined()
-    expect(m3?.contractor).toBeUndefined()
-    expect(m3?.targetId).toBeUndefined()
-    expect(m3?.payload).toBeUndefined()
+    const m3Missions = authored.filter(m => m.sequence === 3)
+    expect(m3Missions.length).toBe(2)
+    for (const m3 of m3Missions) {
+      expect(m3.contractor).toBeDefined()
+      expect(m3.targetId).toBeDefined()
+      expect(m3.deliveryTargetId).toBeDefined()
+      expect(TARGETS.some(t => t.id === m3.targetId)).toBe(true)
+      expect(TARGETS.some(t => t.id === m3.deliveryTargetId)).toBe(true)
+      expect(CONTRACTOR_SLOTS.some(c => c.id === m3.contractor)).toBe(true)
+    }
+    // No generic generated missions leak into the curated M3 slot.
+    expect(MISSIONS.some(m => m.id.startsWith('generated-') && m.sequence === 3)).toBe(false)
   })
 
   it('authored relay mission is a two-leg mine-then-deliver job with a real contractor', () => {

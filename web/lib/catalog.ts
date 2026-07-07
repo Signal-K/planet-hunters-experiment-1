@@ -1,6 +1,6 @@
 import { pbLandnam } from './pb-landnam'
 import type { Target, Mission, Part, MineralMeta, Contractor, StructureBlueprint } from './data'
-import { TARGETS, MISSIONS, AUTHORED_MISSIONS, PARTS, MINERAL_META, CONTRACTORS, CONTRACTOR_SLOTS, STRUCTURES, toContractor as slotToContractor, generateFreeOpsMissions, generateMissions } from './data'
+import { TARGETS, MISSIONS, AUTHORED_MISSIONS, M3_SEQUENCE, PARTS, MINERAL_META, CONTRACTORS, CONTRACTOR_SLOTS, STRUCTURES, toContractor as slotToContractor, generateFreeOpsMissions, generateMissions } from './data'
 
 export interface Catalog {
   targets: Target[]
@@ -36,8 +36,8 @@ export function toTarget(r: any): Target {
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function toMission(r: any): Mission {
-  if (r.slug === 'lnm_m3_ore_delivery' || r.slug === 'm3-nickel-cobalt' || r.slug === 'm3-gold') {
-    return AUTHORED_MISSIONS[0]
+  if (r.slug === 'lnm_m3_ore_delivery' || r.slug === 'm3-nickel-cobalt' || r.slug === 'm3-gold' || r.slug === 'lnm_m3_custom_mining') {
+    return AUTHORED_MISSIONS.find(m => m.sequence === M3_SEQUENCE) ?? AUTHORED_MISSIONS[0]
   }
   const minerals = typeof r.requires_minerals === 'object' && !Array.isArray(r.requires_minerals)
     ? r.requires_minerals
@@ -74,14 +74,17 @@ export function toMission(r: any): Mission {
 }
 
 function withCorrectedM3(missions: Mission[]): Mission[] {
-  const correctedM3 = AUTHORED_MISSIONS[0]
+  const correctedM3 = AUTHORED_MISSIONS.filter(m => m.sequence === M3_SEQUENCE)
+  const correctedM3Ids = new Set(correctedM3.map(m => m.id))
   const withoutLegacyM3 = missions.filter(m =>
     m.id !== 'lnm_m3_ore_delivery' &&
     m.id !== 'm3-nickel-cobalt' &&
     m.id !== 'm3-gold' &&
-    m.id !== correctedM3.id
+    m.id !== 'lnm_m3_custom_mining' &&
+    m.sequence !== M3_SEQUENCE &&
+    !correctedM3Ids.has(m.id)
   )
-  return [...withoutLegacyM3, correctedM3].sort((a, b) => a.sequence - b.sequence)
+  return [...withoutLegacyM3, ...correctedM3].sort((a, b) => a.sequence - b.sequence)
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any

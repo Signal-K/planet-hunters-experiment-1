@@ -1,4 +1,4 @@
-// E2E tests for M3 custom mining, target choice, and post-onboarding Free Ops.
+// E2E tests for M3 transport-contractor pick and post-onboarding Free Ops.
 
 import type { GameState } from '@/game-context'
 
@@ -46,13 +46,14 @@ function visitWithState(state: Partial<GameState>) {
   })
 }
 
-describe('M3 — Custom mining and Free Ops unlock', () => {
+describe('M3 — Transport contractor pick and Free Ops unlock', () => {
   describe('Mission board — M3 availability', () => {
-    it('shows M3 custom mining mission card when missionsDone === 2', () => {
+    it('shows both M3 transport-contractor mission cards when missionsDone === 2', () => {
       visitWithState({ screen: 'missions' })
-      cy.contains('Independent Prospect').scrollIntoView().should('be.visible')
-      cy.contains('No contractor this time').should('be.visible')
-      cy.get('[data-testid="mission-card-lnm_m3_custom_mining"]').scrollIntoView().should('be.visible')
+      cy.contains('Belt Courier Run').scrollIntoView().should('be.visible')
+      cy.contains('Nickel Line Handoff').scrollIntoView().should('be.visible')
+      cy.get('[data-testid="mission-card-lnm_m3_relay_bennu_vesta"]').scrollIntoView().should('be.visible')
+      cy.get('[data-testid="mission-card-lnm_m3_relay_itokawa_eros"]').scrollIntoView().should('be.visible')
       cy.contains('Contractor Request').should('not.exist')
     })
 
@@ -89,45 +90,45 @@ describe('M3 — Custom mining and Free Ops unlock', () => {
     })
   })
 
-  describe('Custom target choice', () => {
-    it('picking M3 mission goes to target picker', () => {
+  describe('M3 transport mission — preset route', () => {
+    it('picking an M3 mission skips the target picker and goes straight to rocket-buy', () => {
       visitWithState({ screen: 'missions' })
-      cy.get('[data-testid="mission-card-lnm_m3_custom_mining"]').scrollIntoView().click()
-      cy.contains('Pick Target').should('be.visible')
-      cy.contains('Compatible').should('be.visible')
+      cy.get('[data-testid="mission-card-lnm_m3_relay_bennu_vesta"]').scrollIntoView().click()
+      cy.contains('Select Rocket', { timeout: 8000 }).should('be.visible')
+      cy.contains('Pick Target').should('not.exist')
     })
 
     it('fab screen for M3 keeps mining drill installed', () => {
       visitWithState({
         screen: 'fab',
-        missionId: 'lnm_m3_custom_mining',
-        targetId: 'psyche',
+        missionId: 'lnm_m3_relay_bennu_vesta',
+        targetId: 'bennu',
         rocket: { chassis: 'hull-mk2', propulsion: 'fusion-b2', drill: 'laser-t2' },
       })
-      cy.contains('Independent Prospect').should('be.visible')
+      cy.contains('Belt Courier Run').should('be.visible')
       cy.contains('Cargo Module').should('not.exist')
       cy.get('[data-testid="launch-btn"]').should('be.visible')
     })
   })
 
   describe('No territory claim during M3', () => {
-    it('does not render territory popup for custom mining', () => {
+    it('does not render territory popup for the transport contract (no rover payload)', () => {
       visitWithState({
         screen: 'debrief',
-        missionId: 'lnm_m3_custom_mining',
-        targetId: 'psyche',
-        lastCargo: { nickel: 2 },
+        missionId: 'lnm_m3_relay_bennu_vesta',
+        targetId: 'bennu',
+        lastCargo: { iron: 3, carbon: 2 },
       })
       cy.get('[role="dialog"][aria-label="Territory established"]').should('not.exist')
-      cy.contains('Independent Prospect').should('be.visible')
+      cy.contains('Belt Courier Run').should('be.visible')
     })
 
     it('collecting M3 reward opens Free Ops explanation on mission board', () => {
       visitWithState({
         screen: 'debrief',
-        missionId: 'lnm_m3_custom_mining',
-        targetId: 'psyche',
-        lastCargo: { nickel: 2 },
+        missionId: 'lnm_m3_relay_bennu_vesta',
+        targetId: 'bennu',
+        lastCargo: { iron: 3, carbon: 2 },
       })
       cy.get('[data-testid="resolve-cargo-btn"]').click()
       cy.get('[data-testid="collect-reward-btn"]').click()
