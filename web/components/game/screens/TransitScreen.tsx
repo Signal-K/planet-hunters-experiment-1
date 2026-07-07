@@ -84,12 +84,13 @@ export default function TransitScreen({ target, rocketImageSrc, arrivalAt, retur
     let rafId = 0
     let lastT = 0
     let elapsed = 0
+    let destroyed = false
 
     async function init() {
       const { Application } = await import('pixi.js')
       const { buildTransitScene } = await import('@/lib/pixi/transitScene')
 
-      if (!canvas) return
+      if (!canvas || destroyed) return
       app = new Application()
       await app.init({
         canvas,
@@ -98,6 +99,15 @@ export default function TransitScreen({ target, rocketImageSrc, arrivalAt, retur
         backgroundAlpha: 0,
         antialias: true,
       })
+
+      // Check destroyed AFTER init — if unmount raced the async init, clean up
+      // now and bail. Guard with try/catch: PixiJS v8 _cancelResize can throw
+      // if the renderer never fully initialised.
+      if (destroyed) {
+        try { app.destroy() } catch (_) { /* pixi v8 cleanup */ }
+        app = null
+        return
+      }
 
       const kind = target.type === 'planet' ? 'planet' : 'asteroid'
       const scene = buildTransitScene(app, {
@@ -123,7 +133,10 @@ export default function TransitScreen({ target, rocketImageSrc, arrivalAt, retur
 
     return () => {
       cancelAnimationFrame(rafId)
-      app?.destroy()
+      destroyed = true
+      if (app?.renderer) {
+        try { app.destroy() } catch (_) { /* pixi v8 cleanup */ }
+      }
       sceneRef.current = null
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps

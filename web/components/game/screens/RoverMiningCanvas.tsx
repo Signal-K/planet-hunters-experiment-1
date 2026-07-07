@@ -28,6 +28,7 @@ export default function RoverMiningCanvas({ target, done }: Props) {
     let rafId = 0
     let lastT = 0
     let elapsed = 0
+    let destroyed = false
 
     const mineralColors: Record<string, string> = {}
     for (const m of target.minerals) {
@@ -38,7 +39,7 @@ export default function RoverMiningCanvas({ target, done }: Props) {
       const { Application } = await import('pixi.js')
       const { buildRoverScene } = await import('@/lib/pixi/roverScene')
 
-      if (!canvas) return
+      if (!canvas || destroyed) return
       app = new Application()
       await app.init({
         canvas,
@@ -47,6 +48,15 @@ export default function RoverMiningCanvas({ target, done }: Props) {
         backgroundAlpha: 0,
         antialias: true,
       })
+
+      // Check destroyed AFTER init — if unmount raced the async init, clean up
+      // now and bail. Guard with try/catch: PixiJS v8 _cancelResize can throw
+      // if the renderer never fully initialised.
+      if (destroyed) {
+        try { app.destroy() } catch (_) { /* pixi v8 cleanup */ }
+        app = null
+        return
+      }
 
       const scene = buildRoverScene(app, {
         targetName: target.name,
@@ -71,7 +81,10 @@ export default function RoverMiningCanvas({ target, done }: Props) {
 
     return () => {
       cancelAnimationFrame(rafId)
-      app?.destroy()
+      destroyed = true
+      if (app?.renderer) {
+        try { app.destroy() } catch (_) { /* pixi v8 cleanup */ }
+      }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])

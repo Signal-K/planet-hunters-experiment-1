@@ -322,14 +322,16 @@ export default function MiningScreen({ mission, target, onComplete, onBack, onAb
 
         {/* ── Action row: Fire · Fill/Return · Scroll ───────────────────────── */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 88px', gap: 8, alignItems: 'stretch' }}>
-          <div style={{
-            borderRadius: 10,
-            boxShadow: hasCoach && oreNear
-              ? '0 0 0 2px rgba(63,169,255,0.7), 0 0 18px rgba(63,169,255,0.35)'
-              : 'none',
-            animation: hasCoach && oreNear ? 'ln-pulse 0.75s ease-in-out infinite' : 'none',
-            transition: 'box-shadow 150ms',
-          }}>
+          <div
+            data-ore-near={oreNear}
+            style={{
+              borderRadius: 10,
+              boxShadow: hasCoach && oreNear
+                ? '0 0 0 2px rgba(63,169,255,0.7), 0 0 18px rgba(63,169,255,0.35)'
+                : 'none',
+              animation: hasCoach && oreNear ? 'ln-pulse 0.75s ease-in-out infinite' : 'none',
+              transition: 'box-shadow 150ms',
+            }}>
           <PrimaryBtn
             kind="cyan"
             disabled={laserCharges <= 0}

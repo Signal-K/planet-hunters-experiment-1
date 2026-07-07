@@ -122,22 +122,27 @@ function completeMining() {
   cy.contains('MISSION TRANSIT', { timeout: 15000 }).should('be.visible')
   cy.get('[data-testid="mining-canvas"]', { timeout: 20000 }).should('be.visible')
   // Firing doesn't guarantee a hit — the laser only collects ore that's swept
-  // through the firing zone at that instant (real-time collision, not per-click),
-  // with organic gaps between ore (avg ~1 every 3+ seconds at default scroll speed).
-  // Fire repeatedly with a short pause between shots so ore has time to drift
-  // into range, stopping as soon as the order is filled (return-home-btn enables).
-  // Budget generously (up to ~48s) since M2's order needs 8 units — 25 attempts
-  // at 400ms (10s) was too short a window and could hit "Laser Depleted" before
-  // the order filled.
-  function fireUntilFilled(attemptsLeft: number) {
+  // through the firing zone at that instant (real-time collision, not per-click).
+  // Blind-firing on a fixed interval regardless of ore position was unreliable
+  // (could exhaust laser charges — "Laser Depleted" — well before the order
+  // filled, since most shots landed while no ore was in range). MiningScreen
+  // exposes a `data-ore-near` attribute (the same signal that drives the
+  // tutorial-coach pulse ring) — poll it and only fire while it's true, same
+  // as how a player would time shots by watching the pulse.
+  function fireWhenNear(attemptsLeft: number) {
     cy.get('[data-testid="return-home-btn"]').then($btn => {
       if (!$btn.is(':disabled') || attemptsLeft <= 0) return
-      cy.get('[data-testid="fire-laser-btn"]').click()
-      cy.wait(400)
-      fireUntilFilled(attemptsLeft - 1)
+      cy.get('[data-testid="fire-laser-btn"]').then($fireBtn => {
+        if ($fireBtn.is(':disabled')) return // laser depleted — nothing more to try
+        cy.get('[data-ore-near]').invoke('attr', 'data-ore-near').then(near => {
+          if (near === 'true') cy.get('[data-testid="fire-laser-btn"]').click()
+          cy.wait(120)
+          fireWhenNear(attemptsLeft - 1)
+        })
+      })
     })
   }
-  fireUntilFilled(120)
+  fireWhenNear(400)
   cy.get('[data-testid="return-home-btn"]', { timeout: 10000 }).should('not.be.disabled').click()
 }
 
