@@ -51,6 +51,9 @@ export interface Player {
   // mining/pickup at the primary target and before the Earth-return leg.
   headingToDelivery?: boolean
   stash?: Record<string, number>
+  // Cumulative units sold on the open market per mineral — drives the
+  // supply/demand price dip in EconomySystem's open-market sell price.
+  marketSupply?: Record<string, number>
   contractorMissions: Record<string, number>
   contractorStreaks?: Record<string, number>
   contractorCooldowns: Record<string, number>
