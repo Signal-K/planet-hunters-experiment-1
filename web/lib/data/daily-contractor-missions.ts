@@ -85,7 +85,7 @@ export function generateDailyContractorPool(
       missions.push({
         id: `dcp-${date}-${contractor.id}-${slot}`,
         title: `${meta?.name ?? mineralKey} ${template.tag.toLowerCase()} contract`,
-        brief: `${contractor.name} needs ${amount} units of ${(meta?.name ?? mineralKey).toLowerCase()} for ${contractor.projectType.toLowerCase()}. Preferred cargo earns a contractor premium.`,
+        brief: `${contractor.name} needs ${amount} units of ${(meta?.name ?? mineralKey).toLowerCase()} for ${contractor.projectType.toLowerCase()}. Preferred cargo earns a client premium.`,
         contractor: contractor.id,
         tag: template.tag,
         difficulty: template.difficulty,

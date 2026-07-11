@@ -16,6 +16,8 @@ const profiles: Record<string, Cypress.EndToEndConfigOptions> = {
       'cypress/e2e/tess-discovery-desktop-layout.cy.ts',
       'cypress/e2e/actual-play.cy.ts',
       'cypress/e2e/bug-hunt.cy.ts',
+      'cypress/e2e/transit-telescope-mission.cy.ts',
+      'cypress/e2e/mission-delivery-debrief.cy.ts',
     ],
     // Portrait canvas: existing tests target the 402px canvas, not the desktop layout.
     // m3-territory.cy.ts overrides viewport per-test where desktop behaviour is needed.

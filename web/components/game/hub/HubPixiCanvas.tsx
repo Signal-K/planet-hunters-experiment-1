@@ -31,15 +31,36 @@ export default function HubPixiCanvas({ buildings }: HubPixiCanvasProps) {
     const app = new Application()
     let scene: ReturnType<typeof buildHubScene> | null = null
     let destroyed = false
+    let ro: ResizeObserver | null = null
+
+    // Rebuilds the scene at the div's current size. Needed on desktop, where
+    // the container can be far wider than HUB_W=402 (the coordinate space
+    // building x-positions are authored in) — without rescaling, PixiJS's
+    // autoDensity pins canvas.style.width to the literal render width (402px)
+    // instead of stretching to fill the container, so every building renders
+    // squeezed into a 402px-wide band on the left regardless of plot chosen.
+    function rebuild() {
+      if (!div) return
+      const containerW = div.clientWidth || HUB_W
+      const containerH = div.clientHeight || HUB_H
+      const scaleX = containerW / HUB_W
+
+      if (app.renderer) {
+        app.renderer.resize(containerW, containerH)
+      }
+
+      scene?.destroy()
+      const groundY = containerH * (1 - 0.22)
+      scene = buildHubScene(app, buildingsRef.current, nullTextures(), { groundY, scaleX })
+    }
 
     ;(async () => {
-      // Measure actual container height so GROUND_Y matches the SVG grass line
-      // (which lives at 78% of the container height, not the fixed HUB_H value).
+      const containerW = div.clientWidth || HUB_W
       const containerH = div.clientHeight || HUB_H
 
       await app.init({
         canvas,
-        width: HUB_W,
+        width: containerW,
         height: containerH,
         backgroundAlpha: 0,
         antialias: false,
@@ -55,8 +76,10 @@ export default function HubPixiCanvas({ buildings }: HubPixiCanvasProps) {
         return
       }
 
-      const groundY = containerH * (1 - 0.22)
-      scene = buildHubScene(app, buildingsRef.current, nullTextures(), { groundY })
+      rebuild()
+
+      ro = new ResizeObserver(() => rebuild())
+      ro.observe(div)
 
       let elapsed = 0
       app.ticker.add((ticker) => {
@@ -67,6 +90,7 @@ export default function HubPixiCanvas({ buildings }: HubPixiCanvasProps) {
 
     return () => {
       destroyed = true
+      ro?.disconnect()
       scene?.destroy()
       // Only destroy if the renderer was fully initialised — avoids PixiJS v8
       // _cancelResize errors when cleanup races the async app.init().
@@ -76,7 +100,7 @@ export default function HubPixiCanvas({ buildings }: HubPixiCanvasProps) {
       canvas.remove()
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])  // mount once — buildings update via buildingsRef
+  }, [])  // mount once — buildings update via buildingsRef; resize handled by ResizeObserver
 
   return (
     <div

@@ -26,13 +26,17 @@ interface Props {
   onAbandon?: () => void
 }
 
+const FAKE_PROGRESS_START = 12
+const FAKE_PROGRESS_DURATION_MS = 4400 // (100 - 12) / 2 * 100ms steps, matches the old increment rate
+
 export default function TransitScreen({ target, rocketImageSrc, arrivalAt, returning = false, onArrive, onBack, onAbandon }: Props) {
   const isTimed = typeof arrivalAt === 'number'
   const [now, setNow] = useState(() => Date.now())
-  const [fakeProgress, setFakeProgress] = useState(12)
+  const [fakeStartedAt] = useState(() => Date.now())
+  const [fakeProgress, setFakeProgress] = useState(FAKE_PROGRESS_START)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const sceneRef = useRef<TransitScene | null>(null)
-  const progressRef = useRef(isTimed ? 0 : 12)
+  const progressRef = useRef(isTimed ? 0 : FAKE_PROGRESS_START)
 
   useEffect(() => {
     void Scene.load('/game/scenes/mining.scene.json')
@@ -42,15 +46,31 @@ export default function TransitScreen({ target, rocketImageSrc, arrivalAt, retur
   useEffect(() => {
     if (!isTimed) return
     const id = window.setInterval(() => setNow(Date.now()), 500)
-    return () => window.clearInterval(id)
+    const onVisible = () => { if (!document.hidden) setNow(Date.now()) }
+    document.addEventListener('visibilitychange', onVisible)
+    return () => {
+      window.clearInterval(id)
+      document.removeEventListener('visibilitychange', onVisible)
+    }
   }, [isTimed])
 
-  // Fake progress for tutorial/instant mode
+  // Fake progress for tutorial/instant mode — derived from a fixed start
+  // timestamp (not an incrementing counter) so it self-corrects instead of
+  // stalling when background-tab throttling suspends the interval.
   useEffect(() => {
     if (isTimed) return
-    const id = window.setInterval(() => setFakeProgress(v => Math.min(100, v + 2)), 100)
-    return () => window.clearInterval(id)
-  }, [isTimed])
+    const tick = () => {
+      const elapsed = Date.now() - fakeStartedAt
+      setFakeProgress(Math.min(100, FAKE_PROGRESS_START + (elapsed / FAKE_PROGRESS_DURATION_MS) * (100 - FAKE_PROGRESS_START)))
+    }
+    const id = window.setInterval(tick, 100)
+    const onVisible = () => { if (!document.hidden) tick() }
+    document.addEventListener('visibilitychange', onVisible)
+    return () => {
+      window.clearInterval(id)
+      document.removeEventListener('visibilitychange', onVisible)
+    }
+  }, [isTimed, fakeStartedAt])
 
   // Arrive triggers
   useEffect(() => {
@@ -181,6 +201,9 @@ export default function TransitScreen({ target, rocketImageSrc, arrivalAt, retur
         <PrimaryBtn onClick={onArrive} disabled={!arrived}>
           {arrived ? (returning ? 'Recover Ship' : 'Arrive') : isTimed ? `En Route · ${formatEta(etaMs)}` : `${returning ? 'Return' : 'Arrive'} · ${fakeProgress}%`}
         </PrimaryBtn>
+        {process.env.NODE_ENV === 'development' && !arrived && (
+          <GhostBtn testId="transit-skip-btn" onClick={onArrive}>Skip ▸</GhostBtn>
+        )}
         {onAbandon && <GhostBtn onClick={onAbandon}>Abort Mission</GhostBtn>}
       </div>
     </div>

@@ -201,7 +201,7 @@ export default function HangarScreen({ francs: _francs, missionsDone, unlockedSk
                 Customiser Online
               </div>
               <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 11, color: 'var(--ln-text-muted)', marginTop: 2 }}>
-                Configure SR1 room modules
+                Configure Explorer room modules
               </div>
             </div>
             <span style={{ flexShrink: 0, fontFamily: 'var(--ln-font-display)', fontSize: 12, color: 'var(--ln-crimson-bright)', opacity: 0.7 }}>›</span>

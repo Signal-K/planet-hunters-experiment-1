@@ -60,6 +60,12 @@ Design rules (never violate):
 - UPPERCASE + letter-spacing for all instrument labels and CTAs
 - Hairlines: ghosted cyan at 18% alpha (`--ln-hairline`)
 
+## Narrative & content rules
+
+- No fictional wrapper on mainline citizen-science content: a player should never need lore or backstory to understand a mission — just "here's a project, here's a dataset." Real science, real terminology.
+- Slight fictional framing (e.g. "potentially alien artifacts," mirroring real SETI false-positive workflows) is permitted only in the most speculative, latest-unlocked tier of content — never in early/mid-game missions.
+- Decided 2026-07-08; see [[decide-scifi-narrative-vs-citizen-science-boundary]] in workspace for full context.
+
 ## Backend connections
 
 This project uses a hub-and-spoke PocketBase topology with three backends. For full detail, read @doc/backend-architecture in the parent Navigation Knowns.

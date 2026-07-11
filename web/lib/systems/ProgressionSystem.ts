@@ -18,6 +18,10 @@ export function applyUnlockSkillNode(s: GameState, id: string): GameState {
   if (!canUnlockSkillNode({ id, skillPoints: s.player.skillPoints ?? 0, unlockedSkillNodes: s.player.unlockedSkillNodes ?? [] })) return s
   return {
     ...s,
+    // The Ship Customizer node flips on the hangar's interior/room view — surface
+    // that moment with the same unlock-popup treatment as new vehicles, rather
+    // than letting it become available silently.
+    popup: node.id === 'ship-customizer-1' ? 'ship-customizer' : s.popup,
     player: {
       ...s.player,
       skillPoints: (s.player.skillPoints ?? 0) - node.cost,

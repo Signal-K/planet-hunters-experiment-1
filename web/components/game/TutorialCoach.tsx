@@ -151,6 +151,11 @@ export default function TutorialCoach({ stepIndex, steps, step, total, onManualN
             <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 10, fontWeight: 800, letterSpacing: '0.2em', color: 'var(--ln-amber)', textTransform: 'uppercase', marginBottom: 4 }}>
               {step.title}
             </div>
+            {resolvedBody && (
+              <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 12.5, color: '#9ab0c8', lineHeight: 1.35, wordBreak: 'break-word', marginBottom: 4 }}>
+                {resolvedBody}
+              </div>
+            )}
             <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 14, color: '#e8f4ff', lineHeight: 1.35, wordBreak: 'break-word' }}>
               {resolvedAction ?? ((isDesktop ? 'Click ' : 'Tap ') + step.cta)}
             </div>

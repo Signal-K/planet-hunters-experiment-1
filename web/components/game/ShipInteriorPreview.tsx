@@ -108,7 +108,7 @@ export default function ShipInteriorPreview({
       }}>
         <div>
           <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 8, fontWeight: 800, letterSpacing: '0.18em', color: 'var(--ln-text-muted)', textTransform: 'uppercase' }}>
-            BUILD CONFIG · SR1
+            BUILD CONFIG · EXPLORER
           </div>
           <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginTop: 1 }}>
             <span style={{ fontFamily: 'var(--ln-font-display)', fontSize: 18, fontWeight: 800, color: 'var(--ln-text)' }} data-testid="ship-budget">

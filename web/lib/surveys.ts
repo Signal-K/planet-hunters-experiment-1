@@ -46,8 +46,8 @@ export const SURVEY_DEFS: Record<string, Survey> = {
     name: 'Planet Hunters: Contractor First Impression',
     posthogUrl: 'https://us.posthog.com/project/199773/surveys/019ccaf8-4299-0000-b3ad-92a57ab75b95',
     questions: [
-      { id: '2be9f42f-5e1f-4eb2-8a33-2c203aa228d5', type: 'multiple_choice', question: 'Why did you pick this contractor?', choices: ['Their resource bonuses', 'The company name', 'First one listed', 'Not sure'] },
-      { id: '1df4602a-a982-4f8e-bbfe-3c1543af32b2', type: 'rating', question: 'How clear was it what signing this contractor would give you?', scale: 5 },
+      { id: '2be9f42f-5e1f-4eb2-8a33-2c203aa228d5', type: 'multiple_choice', question: 'Why did you pick this client?', choices: ['Their resource bonuses', 'The company name', 'First one listed', 'Not sure'] },
+      { id: '1df4602a-a982-4f8e-bbfe-3c1543af32b2', type: 'rating', question: 'How clear was it what signing this client would give you?', scale: 5 },
     ],
   },
   lnm_mission_friction: {
@@ -55,7 +55,7 @@ export const SURVEY_DEFS: Record<string, Survey> = {
     name: 'Landnám: Mission Difficulty Friction',
     posthogUrl: 'https://us.posthog.com/project/199773/surveys/019e5a4e-6b23-0000-dbb1-0bed0fad9910',
     questions: [
-      { id: 'dc3d2d2a-b5d1-4486-8706-7e8a99bc1394', type: 'multiple_choice', question: 'What part of the mission was most difficult?', choices: ['Knowing where to go next', 'Mining — too hard or too slow', 'Managing my budget', 'Understanding the scanner', 'The contractor system', 'Nothing was too hard'] },
+      { id: 'dc3d2d2a-b5d1-4486-8706-7e8a99bc1394', type: 'multiple_choice', question: 'What part of the mission was most difficult?', choices: ['Knowing where to go next', 'Mining — too hard or too slow', 'Managing my budget', 'Understanding the scanner', 'The client system', 'Nothing was too hard'] },
       { id: '5290ee4c-d52c-4dac-8b39-3e430531fdec', type: 'rating', question: 'How frustrated did you feel?', scale: 5 },
     ],
   },
@@ -92,6 +92,7 @@ export const SURVEY_DEFS: Record<string, Survey> = {
     name: 'Landnám: M1 Mission Feedback',
     posthogUrl: 'https://us.posthog.com/project/199773/surveys/019f36f7-3d1d-0000-08d3-3c4d0d132f2e',
     questions: [
+      { id: 'm1-mission-choice', type: 'multiple_choice', question: 'How did picking a contract from a few options feel?', choices: ['Meaningful', 'Fine but simple', 'Confusing', 'I did not notice I had a choice'] },
       { id: 'm1-rating', type: 'rating', question: 'How was that mission?', scale: 5 },
       { id: 'm1-freetext', type: 'open', question: 'Anything confusing?' },
     ],
@@ -101,7 +102,8 @@ export const SURVEY_DEFS: Record<string, Survey> = {
     name: 'Landnám: M2 Mission Feedback',
     posthogUrl: 'https://us.posthog.com/project/199773/surveys/019f36f7-5cd2-0000-ab19-7335d90b1e4a',
     questions: [
-      { id: 'm2-rocket-clarity', type: 'multiple_choice', question: 'How clear was the SR2 purchase step?', choices: ['Totally clear', 'A bit confusing', 'I wasn\'t sure why I needed a new rocket', 'I missed it at first'] },
+      { id: 'm2-mission-choice', type: 'multiple_choice', question: 'How did picking a contract from a few options feel?', choices: ['Meaningful', 'Fine but simple', 'Confusing', 'I did not notice I had a choice'] },
+      { id: 'm2-rocket-clarity', type: 'multiple_choice', question: 'How clear was the Prospector purchase step?', choices: ['Totally clear', 'A bit confusing', 'I wasn\'t sure why I needed a new rocket', 'I missed it at first'] },
       { id: 'm2-rating', type: 'rating', question: 'How satisfying was completing that mission?', scale: 5 },
       { id: 'm2-freetext', type: 'open', question: 'Anything that slowed you down?' },
     ],
@@ -113,12 +115,11 @@ export const SURVEY_DEFS: Record<string, Survey> = {
     // M3 changed from a contractor-free self-directed mining run to a
     // two-leg contractor transport job (pick between two contractors, mine
     // at a preset pickup target, deliver to a preset second target) — see
-    // [[Decide: M3 becomes a transport mission]]. Local question copy
-    // updated to match; the live PostHog survey definition at posthogUrl
-    // above should be updated to match separately.
+    // [[Decide: M3 becomes a transport mission]]. Live PostHog survey
+    // definition at posthogUrl updated to match (2026-07-10).
     questions: [
       { id: 'm3-transport-clarity', type: 'multiple_choice', question: 'How clear was it that this was a two-stop delivery job — mine, then drop cargo at a second target?', choices: ['Crystal clear', 'Mostly clear', 'A bit confusing', 'I did not realize there were two stops'] },
-      { id: 'm3-contractor-choice', type: 'multiple_choice', question: 'How did picking between the two contractors feel?', choices: ['Meaningful', 'Fine but simple', 'Confusing', 'I did not notice I had a choice'] },
+      { id: 'm3-contractor-choice', type: 'multiple_choice', question: 'How did picking between the two clients feel?', choices: ['Meaningful', 'Fine but simple', 'Confusing', 'I did not notice I had a choice'] },
       { id: 'm3-rating', type: 'rating', question: 'How are you feeling about the game after three missions?', scale: 5 },
       { id: 'm3-freetext', type: 'open', question: 'Anything we should know before you play more?' },
     ],

@@ -118,7 +118,7 @@ export default function MissionCard({
 
           <div style={{ padding: '10px 14px 0', font: '600 9px var(--ln-font-mono)', color: 'var(--ln-text-muted)', letterSpacing: '0.07em', textTransform: 'uppercase', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
             {isStoryMission
-              ? 'Story mission · Not a contractor request'
+              ? 'Story mission · Not a client request'
               : contractor
                 ? `Wants ${contractor.mineralPreferences.join(' / ')} · +${Math.round(contractor.payoutPremium * 100)}%`
                 : 'Choose target · keep the haul · market-led mining'}
@@ -145,7 +145,7 @@ export default function MissionCard({
             onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.stopPropagation(); setExpanded(v => !v) } }}
             style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '2px 14px 10px', cursor: 'pointer', font: '700 9px var(--ln-font-mono)', color: 'var(--ln-cyan)', letterSpacing: '0.09em', textTransform: 'uppercase' }}
           >
-            <span>{expanded ? 'HIDE CONTRACTOR INFO' : 'CONTRACTOR INFO'}</span>
+            <span>{expanded ? 'HIDE CLIENT INFO' : 'CLIENT INFO'}</span>
             <span style={{ transform: expanded ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 120ms ease-out', display: 'inline-block' }}>▾</span>
           </div>
 

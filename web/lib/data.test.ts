@@ -335,9 +335,10 @@ describe('rateMission', () => {
 })
 
 describe('calibrateOnboardingPayout', () => {
-  const floor1 = Math.round(STARTER_ROCKET_COST * 1.5)
+  const floor1 = Math.round(STARTER_ROCKET_COST * 0.15)
+  const floor2 = Math.round(STARTER_ROCKET_COST * 1.05)
 
-  it('enforces a floor of 1.5× rocket cost on the first mission', () => {
+  it('enforces a floor of 0.15× the Prospector cost on the first mission', () => {
     expect(calibrateOnboardingPayout(0, 0)).toBe(floor1)
     expect(calibrateOnboardingPayout(floor1 - 1, 0)).toBe(floor1)
   })
@@ -346,12 +347,14 @@ describe('calibrateOnboardingPayout', () => {
     expect(calibrateOnboardingPayout(floor1 + 100_000, 0)).toBe(floor1 + 100_000)
   })
 
-  it('nudges second-mission payout toward 1.15× rocket cost', () => {
-    const target = Math.round(STARTER_ROCKET_COST * 1.15)
-    const rawBelow = target - 10_000
-    const result = calibrateOnboardingPayout(rawBelow, 1)
-    expect(result).toBeGreaterThanOrEqual(rawBelow)
-    expect(result).toBeLessThanOrEqual(target)
+  it('enforces a floor of 1.05× the Prospector cost on the second mission, so two missions cover the mandatory purchase', () => {
+    expect(calibrateOnboardingPayout(0, 1)).toBe(floor2)
+    expect(calibrateOnboardingPayout(floor2 - 1, 1)).toBe(floor2)
+    expect(floor1 + floor2).toBeGreaterThan(STARTER_ROCKET_COST)
+  })
+
+  it('does not reduce a second-mission payout already above the floor', () => {
+    expect(calibrateOnboardingPayout(floor2 + 100_000, 1)).toBe(floor2 + 100_000)
   })
 
   it('leaves payouts unchanged for missions after the second', () => {

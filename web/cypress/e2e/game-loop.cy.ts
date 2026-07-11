@@ -156,7 +156,7 @@ describe('Full Game Loop — Landnam', () => {
         rocket: { chassis: 'hull-mk1', propulsion: 'ion-a1', drill: 'hand-drill' },
         doneSteps: { 1: true, 2: true, 3: true, 4: true, 5: false },
       }))
-      cy.contains('Starter Rocket 1').should('be.visible')
+      cy.contains('Explorer').should('be.visible')
       cy.contains('PREBUILT').should('be.visible')
       cy.get('[data-testid="launch-btn"]').should('be.visible')
     })
@@ -379,7 +379,7 @@ describe('Full Game Loop — Landnam', () => {
       cy.get('[data-testid="resolve-cargo-btn"]').should('be.visible')
     })
 
-    it('shows SR2 unlock popup after M1 completion', () => {
+    it('shows Prospector unlock popup after M1 completion', () => {
       visitWithState(fullState({
         screen: 'hub',
         doneSteps: { 1: true, 2: true, 3: true, 5: true, 6: true, 9: true },
@@ -411,7 +411,7 @@ describe('Full Game Loop — Landnam', () => {
       cy.contains('Got it').should('be.visible')
     })
 
-    it('M1 completion returns to hub with SR2 popup and does not open the market', () => {
+    it('M1 completion returns to hub with Prospector popup and does not open the market', () => {
       // M1 requires 6 iron; player mined 8 so 2 are excess after delivery
       visitWithState(fullState({
         screen: 'debrief',
@@ -452,8 +452,8 @@ describe('Full Game Loop — Landnam', () => {
     })
   })
 
-  describe('Phase 6: Post-M1 → SR2 unlock', () => {
-    it('SR2 popup shows after M1 completion', () => {
+  describe('Phase 6: Post-M1 → Prospector unlock', () => {
+    it('Prospector popup shows after M1 completion', () => {
       visitWithState(fullState({
         screen: 'hub',
         popup: 'sr2',
@@ -548,7 +548,7 @@ describe('Full Game Loop — Landnam', () => {
       cy.get('[data-testid="mission-card-generated-s2-starter-bulk-4"]').should('have.attr', 'data-mission-id', 'generated-s2-starter-bulk-4')
     })
 
-    it('M2 rocket purchase shows SR2 and purchase coach step', () => {
+    it('M2 rocket purchase shows Prospector and purchase coach step', () => {
       visitWithState(fullState({
         screen: 'rocket-buy',
         missionId: 'generated-s2-starter-bulk-4',
@@ -576,11 +576,11 @@ describe('Full Game Loop — Landnam', () => {
         },
         tutorial: true,
       }))
-      cy.contains('Starter Rocket 2').should('be.visible')
+      cy.contains('Prospector').should('be.visible')
       cy.contains('Select Your Rocket').should('be.visible')
     })
 
-    it('M2 preflight launch button visible with prebuilt SR2', () => {
+    it('M2 preflight launch button visible with prebuilt Prospector', () => {
       visitWithState(fullState({
         screen: 'fab',
         missionId: 'generated-s2-starter-bulk-4',
@@ -609,7 +609,7 @@ describe('Full Game Loop — Landnam', () => {
         },
         tutorial: false,
       }))
-      cy.contains('Starter Rocket 2').should('be.visible')
+      cy.contains('Prospector').should('be.visible')
       cy.contains('PREBUILT').should('be.visible')
       cy.get('[data-testid="launch-btn"]').should('be.visible')
     })

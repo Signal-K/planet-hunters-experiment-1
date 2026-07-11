@@ -1,12 +1,12 @@
 // Landnam game data — prebuilt starter rockets
-// Players purchase a rocket per mission. SR1 is always free. SR2+ require Francs + mission history.
+// Players purchase a rocket per mission. Explorer (SR1) is always free. Prospector (SR2)+ require Francs + mission history.
 
 import type { RocketConfig, StarterRocket } from './types'
 
 export const STARTER_ROCKETS: StarterRocket[] = [
   {
     id: 'sr1',
-    name: 'Starter Rocket 1',
+    name: 'Explorer',
     tier: 1,
     costFrancs: 0,
     missionsRequired: 0,
@@ -17,13 +17,13 @@ export const STARTER_ROCKETS: StarterRocket[] = [
   },
   {
     id: 'sr2',
-    name: 'Starter Rocket 2',
+    name: 'Prospector',
     tier: 2,
     costFrancs: 1_300_000_000,
     missionsRequired: 1,
     locked: false,
     stats: { cargo: 10, maxOrbit: 7, drillTier: 2 },
-    img: '/parts/reinforced_hull_t2.png',
+    img: '/game/assets/ships/ship_sr2.png',
     unlockHint: 'Unlocks after M1',
   },
   {

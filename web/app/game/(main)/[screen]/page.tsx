@@ -36,12 +36,18 @@ export default function ScreenPage({ params }: { params: Promise<{ screen: strin
   const game = useGame()
 
   // When the URL changes (browser back/forward), sync it into game state
-  // without pushing another history entry.
+  // without pushing another history entry. Gated on `hydrated` so this
+  // can't race the initial hydration effect in GameProvider (which does a
+  // plain-value setState and would otherwise silently clobber this sync —
+  // e.g. a fresh player redirected from /game to /game/hub would get stuck
+  // with game.screen desynced at 'intro', permanently hiding the tutorial
+  // coach since it keys off game.screen, not the URL).
   useEffect(() => {
+    if (!game.hydrated) return
     if (VALID_SCREENS.has(screen as Screen) && game.screen !== screen) {
       game.setScreenFromUrl(screen as Screen)
     }
-  }, [screen]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [screen, game.hydrated]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Coach: lightweight derivation without importing the full hook
   const coachSteps = !game.tutorial ? [] :
@@ -76,6 +82,15 @@ function ScreenContent({
     game.onLaunch()
   }, [game.onLaunch])
   const rocketDisplay = rocketDisplayForConfig(game.rocket)
+  const transitTarget = game.player.headingToDelivery && game.deliveryTargetId
+    ? game.catalog.targets.find(t => t.id === game.deliveryTargetId) ?? game.target
+    : game.target
+  // Debrief should attribute the Earth-return leg to the ship's last waypoint —
+  // for two-leg "mine then deliver" missions that's the delivery target, not
+  // the original mining site, otherwise the delivery stop reads as if it never happened.
+  const debriefOriginTarget = game.mission?.deliveryTargetId
+    ? game.catalog.targets.find(t => t.id === game.mission!.deliveryTargetId) ?? game.target
+    : game.target
 
   // Derive the coach step for coachManual (needed by AssemblyScreen)
   const coachSteps = !game.tutorial ? [] :
@@ -107,6 +122,7 @@ function ScreenContent({
             placed: game.player.placed,
             freeOperations: game.player.freeOperations,
             refineryUnlocked: !!game.player.refineryUnlocked,
+            placementPlots: game.player.placementPlots,
           }}
           onPlaced={(kind, plot) => {
             const structure = game.catalog.structures.find(s => s.id === kind)
@@ -232,14 +248,23 @@ function ScreenContent({
       )
 
     case 'transit':
-      if (!game.target) return null
+      if (!transitTarget) return null
       return (
         <TransitScreen
-          target={game.target}
+          target={transitTarget}
           rocketImageSrc={rocketDisplay.img}
           arrivalAt={game.player.arrivalAt}
+          returning={!!game.player.returningToEarth}
           onBack={() => game.go('hub')}
           onArrive={() => {
+            if (game.player.returningToEarth) {
+              game.onReturnArrived()
+              return
+            }
+            if (game.player.headingToDelivery) {
+              game.onDeliveryArrived()
+              return
+            }
             const isRoverMission = game.mission?.survey?.onWorldVehicle === 'starter-rover'
             if (game.mission?.payload?.type === 'satellite' || game.target?.type === 'exoplanet') {
               game.setPlayer(player => ({
@@ -276,6 +301,7 @@ function ScreenContent({
           onComplete={(cargo) => { game.completeStep(6); game.completeStep(7); game.onMiningDone(cargo) }}
           minerals={game.catalog.minerals}
           laserChargeCap={game.laserChargeCap}
+          laserTier={game.catalog.parts.drill.find(p => p.id === game.rocket.drill)?.tier ?? 1}
           hasCoach={hasCoach}
           coachManual={coach?.manual ?? false}
           onCoachDone={() => game.completeStep(6)}
@@ -298,7 +324,7 @@ function ScreenContent({
       return (
         <DebriefScreen
           mission={game.mission}
-          target={game.target}
+          target={debriefOriginTarget ?? game.target}
           cargo={game.lastCargo ?? {}}
           onDone={game.onDebriefDone}
           minerals={game.catalog.minerals}

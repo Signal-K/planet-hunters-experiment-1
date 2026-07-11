@@ -102,7 +102,7 @@ const MINING_GUIDE = [
   { label: 'RETURN HOME', desc: 'Return to Earth for recovery and ship destruction. Payout is unlocked after landing.' },
 ]
 
-export default function MiningScreen({ mission, target, onComplete, onBack, onAbandon, minerals, laserChargeCap, hasCoach, coachManual, onCoachDone }: {
+export default function MiningScreen({ mission, target, onComplete, onBack, onAbandon, minerals, laserChargeCap, laserTier, hasCoach, coachManual, onCoachDone }: {
   mission: Mission
   target: Target
   onComplete: (cargo: Record<string, number>) => void
@@ -110,6 +110,8 @@ export default function MiningScreen({ mission, target, onComplete, onBack, onAb
   onAbandon?: () => void
   minerals: Record<string, MineralMeta>
   laserChargeCap?: number
+  /** Equipped drill/laser part tier (1-3). Gates how deep ore is reachable — deeper veins tease an upgrade. */
+  laserTier?: number
   hasCoach?: boolean
   coachManual?: boolean
   onCoachDone?: () => void
@@ -120,12 +122,15 @@ export default function MiningScreen({ mission, target, onComplete, onBack, onAb
   // Ore only sits in the firing zone briefly as it scrolls through (organic gaps average
   // ~1 ore every few seconds), so most shots miss even with good aim — a tight multiplier
   // here (previously 3x/20) could exhaust charges before the order fills on a real playthrough.
-  // Post-onboarding: respect laserChargeCap from skill nodes.
+  // Post-onboarding: respect laserChargeCap from skill nodes, but never let it drop below
+  // 4× the ore required — laserChargeCap is a flat 5-7 from skill nodes regardless of mission
+  // size, so a harder Free Ops order (e.g. 8 units of one mineral) could demand more hits than
+  // the skill-based cap could ever supply, making the mission mathematically unwinnable.
   const totalOreNeeded = Object.values(mission.requires.minerals).reduce((sum, v) => sum + v, 0)
   const isOnboarding = typeof mission.sequence === 'number' && mission.sequence <= FREE_OPS_START_MISSIONS_DONE
   const MAX_CHARGES = isOnboarding
     ? Math.max(30, totalOreNeeded * 6)
-    : Math.max(1, laserChargeCap ?? 5)
+    : Math.max(laserChargeCap ?? 5, totalOreNeeded * 4)
   const LOW_CHARGE_THRESHOLD = Math.max(2, Math.ceil(MAX_CHARGES * 0.2))
   const cargoRef = useRef<Record<string, number>>({})
   const [cargo, setCargo] = useState<Record<string, number>>({})
@@ -137,6 +142,16 @@ export default function MiningScreen({ mission, target, onComplete, onBack, onAb
   const oreNearRef = useRef<((near: boolean) => void) | null>(null)
   const [oreNear, setOreNear] = useState(false)
   oreNearRef.current = (near: boolean) => setOreNear(near)
+
+  // Kept current every render (cheap Set build) so the "fire now" flash only
+  // lights up for ore whose mineral is still short of the order — not any
+  // ore in the deposit's full mineral pool.
+  const neededMineralsRef = useRef<Set<string> | null>(null)
+  neededMineralsRef.current = new Set(
+    Object.entries(mission.requires.minerals)
+      .filter(([id, amount]) => (cargo[id] ?? 0) < amount)
+      .map(([id]) => id)
+  )
 
   const orderFilled = Object.entries(mission.requires.minerals).every(
     ([id, amount]) => (cargoRef.current[id] ?? 0) >= amount
@@ -187,6 +202,17 @@ export default function MiningScreen({ mission, target, onComplete, onBack, onAb
   function handleReturn() {
     if (orderFilled || laserCharges <= 0) onComplete(cargoRef.current)
   }
+
+  // Deposit contains the target's full mineral pool, not just the mission's objective —
+  // otherwise a single-mineral order (e.g. silicon) makes every ore in the field identical.
+  // The required mineral(s) are weighted 2x so onboarding orders still fill at a reasonable pace.
+  const depositMinerals = (() => {
+    const required = Object.keys(mission.requires.minerals)
+    const pool = target.minerals && target.minerals.length > 0 ? target.minerals : required
+    const others = pool.filter(m => !required.includes(m))
+    const weighted = [...required, ...required, ...others]
+    return weighted.length > 0 ? weighted : required
+  })()
 
   const totalNeeded = Object.entries(mission.requires.minerals).reduce((sum, [, v]) => sum + v, 0)
   const totalCollected = Object.entries(mission.requires.minerals).reduce(
@@ -249,16 +275,27 @@ export default function MiningScreen({ mission, target, onComplete, onBack, onAb
         <div className="mining-stars" />
         <MiningCanvas
           key={runKey}
-          minerals={Object.keys(mission.requires.minerals)}
+          minerals={depositMinerals}
           mineralMeta={minerals}
+          laserTier={laserTier}
           onCollect={collectMineral}
           fireRef={fireRef}
           scrollRef={scrollRef}
           oreNearRef={oreNearRef}
+          neededMineralsRef={neededMineralsRef}
         />
       </div>
 
       <div className="mining-controls">
+        {/* Caption — clarifies the fractions below are mission-order fulfillment, not cargo capacity */}
+        <div style={{
+          fontFamily: 'var(--ln-font-display)', fontSize: 8, fontWeight: 700,
+          letterSpacing: '0.16em', textTransform: 'uppercase', color: 'var(--ln-text-muted)',
+          marginBottom: 4,
+        }}>
+          Order Progress
+        </div>
+
         {/* ── Stats + charge strip ──────────────────────────────────────────── */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, minHeight: 28 }}>
           {/* Mineral counts */}

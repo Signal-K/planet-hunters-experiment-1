@@ -9,6 +9,7 @@ import { GhostBtn, PrimaryBtn } from '@/components/ui/Button'
 import ObservatoryChart from '@/components/game/ObservatoryChart'
 import TelescopeConsole from '@/components/game/TelescopeConsole'
 import ObservatoryReadout from '@/components/game/ObservatoryReadout'
+import CommentsPanel from '@/components/game/CommentsPanel'
 import ObservatoryCoach, { useObservatoryCoach } from '@/components/game/ObservatoryCoach'
 import PixiGalaxyStarMap from '@/components/game/PixiGalaxyStarMap'
 import SolSystemPreview from '@/components/game/SolSystemPreview'
@@ -141,7 +142,7 @@ export default function TessDiscoveryScreen({ player, onBack, onBuildStation, on
         icon={<Radio size={22} />}
         tone="amber"
         title="Launch Transit Telescope"
-        body="A story mission is available from Mission Control. It is not attached to a contractor."
+        body="A story mission is available from Mission Control. It is not attached to a client."
         onBack={onBack}
         action={<PrimaryBtn testId="open-transit-telescope-mission-btn" kind="amber" onClick={onOpenMissions}>Open Mission Board</PrimaryBtn>}
       />
@@ -364,6 +365,7 @@ export default function TessDiscoveryScreen({ player, onBack, onBuildStation, on
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12, overflowY: 'auto' }}>
             <ObservatoryReadout stats={stats} />
+            <CommentsPanel recordType="classification" recordId={candidate.id} />
             <div style={{ marginTop: 'auto' }} data-ui-zone={UI_ZONES.bottomActions}>
               {verdictActions}
             </div>
@@ -373,6 +375,9 @@ export default function TessDiscoveryScreen({ player, onBack, onBuildStation, on
         <>
           <div className={`screen-scroll${!classification && markCount > 0 ? ' screen-scroll--tall-actions' : ''}`} data-ui-zone={UI_ZONES.screenContent}>
             {chartPanel(true)}
+            <div style={{ marginTop: 12 }}>
+              <CommentsPanel recordType="classification" recordId={candidate.id} />
+            </div>
           </div>
           <div className="sticky-actions" data-ui-zone={UI_ZONES.bottomActions}>
             {verdictActions}

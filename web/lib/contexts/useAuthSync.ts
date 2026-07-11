@@ -261,18 +261,24 @@ export function useAuthSync({
     setAuthGateError(null)
     try {
       await pbShared.collection('users').create({ email, password, passwordConfirm: password, name: '' })
-      await pbShared.collection('users').authWithPassword(email, password)
+      const authResult = await pbShared.collection('users').authWithPassword(email, password)
       // Brand-new account: discard any local guest/dev state so the player
       // starts from scratch with the intro tutorial.
       localStorage.removeItem(storageKey)
       setState(DEFAULT_STATE)
+      // Create the Landnam game_states record synchronously here, before the
+      // gate closes — otherwise it only exists once the debounced persist
+      // effect fires, and closing the tab before then leaves no record at all.
+      await saveRemoteState(authResult.record.id, DEFAULT_STATE)
+      backendLoadedFor.current = authResult.record.id
+      setBackendReady(true)
       setAuthGateOpen(false)
     } catch (e) {
       const msg = authErrorMessage(e, 'Account creation failed')
       setAuthGateError(msg)
       throw new Error(msg)
     }
-  }, [setState, storageKey])
+  }, [saveRemoteState, setState, storageKey])
 
   const skipAuthGate = useCallback(() => {
     authGateDismissed.current = true

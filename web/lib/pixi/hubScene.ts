@@ -340,9 +340,16 @@ export function buildHubScene(
   app: Application,
   buildings: HubBuildingDef[],
   tex: HubTextures,
-  opts: { groundY?: number } = {},
+  opts: { groundY?: number; scaleX?: number } = {},
 ): { update: (elapsed: number, dt: number) => void; destroy: () => void } {
   const groundY = opts.groundY ?? GROUND_Y
+  // scaleX converts scene-authored plotX (defined in the fixed HUB_W=402
+  // coordinate space) to the app's actual render width, which on desktop is
+  // the real container width, not HUB_W. Without this, buildings render at
+  // their raw 402-space x — squeezed into the first ~402px of a much wider
+  // canvas — while the DOM plot labels position via CSS percentage and
+  // stretch correctly, so the two visibly disagree on wide screens.
+  const scaleX = opts.scaleX ?? 1
   const root = new Container()
   app.stage.addChild(root)
 
@@ -362,7 +369,7 @@ export function buildHubScene(
     }
 
     // Position: scene plot coordinates are building centers.
-    result.root.x = def.plotX
+    result.root.x = def.plotX * scaleX
     result.root.y = groundY
     root.addChild(result.root)
     buildingContainers.push(result.root)

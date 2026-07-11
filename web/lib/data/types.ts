@@ -135,6 +135,11 @@ export interface MineralMeta {
   rarity: 'common' | 'uncommon' | 'rare' | 'exotic'
   constructionUse: string
   laserAccess: number
+  // True for minerals that are abundant on Earth (iron, carbon, etc.) — Earth
+  // already has plentiful supply, so contracts delivering back to Earth should
+  // never request these; they only make sense for off-world construction jobs
+  // (deliveryTargetId set to a non-Earth site).
+  earthAbundant?: boolean
 }
 
 export interface Contractor {

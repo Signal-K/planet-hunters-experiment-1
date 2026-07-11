@@ -41,7 +41,7 @@ export function useUIActions(
   }, [])
 
   const clearTerritoryClaimPopup = useCallback(() => {
-    setState(s => ({ ...s, pendingTerritoryClaimFor: undefined, screen: 'market' }))
+    setState(s => ({ ...s, pendingTerritoryClaimFor: undefined, screen: s.tutorial ? 'hub' : 'market' }))
   }, [setState])
 
   return { go, setScreenFromUrl, skipNextUrlSync, setPopup, setMenuOpen, addToast, dismissToast, clearTerritoryClaimPopup, toasts }

@@ -5,6 +5,9 @@ const FIRST_MISSION = MISSIONS.find(m => m.sequence === 1) ?? MISSIONS[0]
 const SECOND_MISSION = MISSIONS.find(m => m.sequence === 2) ?? MISSIONS[1] ?? FIRST_MISSION
 const FIRST_MINERAL = Object.keys(FIRST_MISSION.requires.minerals)[0] ?? 'iron'
 const SECOND_MINERAL = Object.keys(SECOND_MISSION.requires.minerals)[0] ?? 'silicon'
+// M3 is the two-leg "mine then deliver" contractor choice — Belt Courier Run
+// (Bennu -> Vesta) is the authored pick used for these dev shots.
+const THIRD_MISSION = MISSIONS.find(m => m.id === 'lnm_m3_relay_bennu_vesta') ?? MISSIONS.find(m => m.sequence === 3) ?? SECOND_MISSION
 
 const BASE_PLAYER: Player = {
   francs: 15_000_000_000,
@@ -31,6 +34,7 @@ const BASE_PLAYER: Player = {
 }
 
 const M1_DONE: Record<number, boolean> = { 0: true, 1: true, 2: true, 3: true, 4: true, 5: true, 6: true, 9: true }
+const M1_AND_M2_DONE: Record<number, boolean> = { ...M1_DONE, 20: true, 21: true }
 
 export interface DevShot {
   key: string
@@ -60,18 +64,28 @@ export const DEV_GROUPS: DevGroup[] = [
     label: 'Mission 2',
     color: '#3fa9ff',
     shots: [
-      { key: 'm2-hub',    label: 'Hub',     hint: 'SR2 unlocked, M2 coach active' },
-      { key: 'm2-rocket-buy', label: 'Rocket', hint: 'Second generated mission + Eros, SR2 purchase step' },
-      { key: 'm2-fab',    label: 'Fab',     hint: 'Second generated mission + Eros after SR2 purchase' },
+      { key: 'm2-hub',    label: 'Hub',     hint: 'Prospector unlocked, M2 coach active' },
+      { key: 'm2-rocket-buy', label: 'Rocket', hint: 'Second generated mission + Eros, Prospector purchase step' },
+      { key: 'm2-fab',    label: 'Fab',     hint: 'Second generated mission + Eros after Prospector purchase' },
       { key: 'm2-mining', label: 'Mining',  hint: 'In mining with second generated target' },
       { key: 'm2-post-debrief', label: 'Done',  hint: 'Second mission complete, returned to hub with stash retained' },
+    ],
+  },
+  {
+    label: 'Mission 3',
+    color: '#c084fc',
+    shots: [
+      { key: 'm3-hub',     label: 'Hub',     hint: 'M1+M2 done, M3 coach active — replay the two-leg contractor pick' },
+      { key: 'm3-fab',     label: 'Fab',     hint: 'Belt Courier Run accepted (Bennu -> Vesta), at fab' },
+      { key: 'm3-mining',  label: 'Mining',  hint: 'In mining at Bennu, delivery leg to Vesta pending' },
+      { key: 'm3-debrief', label: 'Debrief', hint: 'Two-leg run complete, delivered at Vesta then returned' },
     ],
   },
   {
     label: 'Systems',
     color: '#39d36a',
     shots: [
-      { key: 'ship-customizer', label: 'Ship Customiser', hint: 'Unlocked hangar interior view with SR1 room slots' },
+      { key: 'ship-customizer', label: 'Ship Customiser', hint: 'Unlocked hangar interior view with Explorer room slots' },
     ],
   },
 ]
@@ -178,6 +192,47 @@ export function resolvePreset(name: string): Partial<GameState> | null {
         missionId: null, targetId: null,
         rocket: { chassis: 'hull-mk2', propulsion: 'fusion-b2', drill: 'laser-t2' },
         lastCargo: SECOND_MISSION.requires.minerals, popup: null,
+      }
+
+    // ── Mission 3 (two-leg "mine then deliver" contractor pick) ──
+    case 'm3-hub':
+      return {
+        screen: 'hub',
+        player: { ...BASE_PLAYER, missionsDone: 2 },
+        tutorial: true, doneSteps: M1_AND_M2_DONE,
+        missionId: null, targetId: null, deliveryTargetId: null,
+        rocket: { chassis: 'hull-mk2', propulsion: 'fusion-b2', drill: 'laser-t2' },
+        lastCargo: null, popup: null,
+      }
+
+    case 'm3-fab':
+      return {
+        screen: 'fab',
+        player: { ...BASE_PLAYER, missionsDone: 2, francs: BASE_PLAYER.francs - 1_300_000_000 },
+        tutorial: true, doneSteps: { ...M1_AND_M2_DONE, 30: true, 31: true },
+        missionId: THIRD_MISSION.id, targetId: THIRD_MISSION.targetId ?? 'bennu', deliveryTargetId: THIRD_MISSION.deliveryTargetId ?? 'vesta',
+        rocket: { chassis: 'hull-mk2', propulsion: 'fusion-b2', drill: 'laser-t2' },
+        lastCargo: null, popup: null,
+      }
+
+    case 'm3-mining':
+      return {
+        screen: 'mining',
+        player: { ...BASE_PLAYER, missionsDone: 2, activeMission: { id: THIRD_MISSION.id, label: `${THIRD_MISSION.title} → ${THIRD_MISSION.targetId}` } },
+        tutorial: true, doneSteps: { ...M1_AND_M2_DONE, 30: true, 31: true, 32: true },
+        missionId: THIRD_MISSION.id, targetId: THIRD_MISSION.targetId ?? 'bennu', deliveryTargetId: THIRD_MISSION.deliveryTargetId ?? 'vesta',
+        rocket: { chassis: 'hull-mk2', propulsion: 'fusion-b2', drill: 'laser-t2' },
+        lastCargo: null, popup: null,
+      }
+
+    case 'm3-debrief':
+      return {
+        screen: 'debrief',
+        player: { ...BASE_PLAYER, missionsDone: 2 },
+        tutorial: true, doneSteps: { ...M1_AND_M2_DONE, 30: true, 31: true, 32: true },
+        missionId: THIRD_MISSION.id, targetId: THIRD_MISSION.targetId ?? 'bennu', deliveryTargetId: THIRD_MISSION.deliveryTargetId ?? 'vesta',
+        rocket: { chassis: 'hull-mk2', propulsion: 'fusion-b2', drill: 'laser-t2' },
+        lastCargo: THIRD_MISSION.requires.minerals, popup: null,
       }
 
     case 'ship-customizer':

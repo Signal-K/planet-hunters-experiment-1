@@ -3,7 +3,7 @@
 import React from 'react'
 import { UI_ZONES } from '@/lib/ui-zones'
 
-type UnlockKind = 'sr2' | 'loan'
+type UnlockKind = 'sr2' | 'loan' | 'ship-customizer'
 
 interface UnlockPopupProps {
   kind: string
@@ -24,15 +24,15 @@ const UNLOCKS: Record<string, {
   eyebrow: string
   title: string
   body: string
-  art: 'rocket' | 'coin'
+  art: 'rocket' | 'coin' | 'rooms'
   stats: [string, string][]
   cta: string
 }> = {
   sr2: {
     accent: '#3fa9ff',
     eyebrow: 'Vehicle Available',
-    title: 'STARTER ROCKET 2',
-    body: 'Mission 2 needs 8 silicon — more than SR1 can carry. SR2 holds 10 units and has a stronger drill. Purchase it for 1.3B ▲ in the vehicle selection step before launch.',
+    title: 'PROSPECTOR',
+    body: 'Mission 2 needs 8 silicon — more than Explorer can carry. Prospector holds 10 units and has a stronger drill. Purchase it for 1.3B ▲ in the vehicle selection step before launch.',
     art: 'rocket',
     stats: [['CARGO', '10 UNITS'], ['COST', '1.3B ▲'], ['DRILL', 'TIER 2']],
     cta: 'Got it',
@@ -45,6 +45,15 @@ const UNLOCKS: Record<string, {
     art: 'coin',
     stats: [['ADVANCE', '5,000 F'], ['TERM', '2 RUNS'], ['RATE', '8%']],
     cta: 'Accept Loan',
+  },
+  'ship-customizer': {
+    accent: '#39d36a',
+    eyebrow: 'Facility Unlocked',
+    title: 'SHIP ROOMS',
+    body: 'The hangar now shows a full interior view of your ship — slot rooms to customise layout, capacity, and crew stations. Open Hangar from the base menu to explore it.',
+    art: 'rooms',
+    stats: [['VIEW', 'INTERIOR'], ['SLOTS', 'CUSTOM'], ['ACCESS', 'HANGAR']],
+    cta: 'Open Hangar',
   },
 }
 
@@ -62,6 +71,20 @@ function RocketArt({ accent }: { accent: string }) {
       <circle cx="48" cy="42" r="6" fill="#f5a623" stroke="#1a2230"/>
       <path d="M34 60 L22 78 L34 72 M62 60 L74 78 L62 72" fill={accent} stroke="#1a2230"/>
       <path d="M40 70 L48 90 L56 70" fill="#f5a623"/>
+    </svg>
+  )
+}
+
+function RoomsArt({ accent }: { accent: string }) {
+  return (
+    <svg width="96" height="96" viewBox="0 0 96 96">
+      <rect x="16" y="16" width="64" height="64" rx="6" fill="none" stroke={accent} strokeWidth="2"/>
+      <line x1="48" y1="16" x2="48" y2="80" stroke={accent} strokeWidth="1.4" opacity="0.6"/>
+      <line x1="16" y1="48" x2="80" y2="48" stroke={accent} strokeWidth="1.4" opacity="0.6"/>
+      <rect x="22" y="22" width="20" height="20" rx="3" fill={`${accent}33`} stroke={accent} strokeWidth="1.2"/>
+      <rect x="54" y="22" width="20" height="20" rx="3" fill="none" stroke={accent} strokeWidth="1.2" strokeDasharray="3 3"/>
+      <rect x="22" y="54" width="20" height="20" rx="3" fill="none" stroke={accent} strokeWidth="1.2" strokeDasharray="3 3"/>
+      <rect x="54" y="54" width="20" height="20" rx="3" fill={`${accent}33`} stroke={accent} strokeWidth="1.2"/>
     </svg>
   )
 }
@@ -106,6 +129,7 @@ export default function UnlockPopup({ kind, onClose, onDismiss }: UnlockPopupPro
             <div style={{ position: 'absolute', inset: -8, borderRadius: 999, background: `radial-gradient(circle, ${u.accent}44, transparent 70%)` }} />
             {u.art === 'rocket' && <RocketArt accent={u.accent} />}
             {u.art === 'coin' && <CoinArt />}
+            {u.art === 'rooms' && <RoomsArt accent={u.accent} />}
           </div>
 
           <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 24, fontWeight: 800, letterSpacing: '0.04em', color: '#fff', textShadow: `0 0 18px ${u.accent}88` }}>{u.title}</div>

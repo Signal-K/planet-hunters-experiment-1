@@ -95,7 +95,7 @@ describe('Clean start full game loop', () => {
     cy.contains('Continue · Build').click()
 
     cy.contains('Select Rocket').should('be.visible')
-    cy.contains('button', 'Launch with Starter Rocket 1').click()
+    cy.contains('button', 'Launch with Explorer').click()
 
     cy.contains('Confirm Rocket').should('be.visible')
     cy.get('[data-testid="launch-btn"]').click()
@@ -115,15 +115,19 @@ describe('Clean start full game loop', () => {
     cy.get('[data-testid="resolve-cargo-btn"]').click()
     cy.get('[data-testid="collect-reward-btn"]').click()
 
-    cy.contains('Commodity Exchange', { timeout: 10_000 }).should('be.visible')
+    // Still in guided onboarding after M1 — debrief returns to hub, not market.
+    // The Prospector unlock is announced inline by the tutorial coach
+    // (lib/data/tutorial.ts step 20) instead of the 'sr2' popup, which is
+    // suppressed while stillInTutorial is true.
+    cy.get('[data-testid="building-launchpad"]', { timeout: 10_000 }).should('be.visible')
     readSavedState().then(state => {
-      expect(state.screen).to.eq('market')
+      expect(state.screen).to.eq('hub')
       expect(state.player.missionsDone).to.eq(1)
       expect(state.player.placed).to.include('launchpad')
       expect(state.player.activeMission).to.eq(null)
       expect(state.missionId).to.eq(null)
       expect(state.targetId).to.eq(null)
-      expect(state.popup).to.eq('sr2')
+      expect(state.popup).to.not.eq('sr2')
     })
   })
 })

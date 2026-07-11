@@ -200,7 +200,9 @@ export async function fetchCatalog(): Promise<Catalog> {
         minerals.map(r => [r.slug, { name: r.name, sym: r.sym, color: r.color, price: r.base_price, rarity: r.rarity ?? 'common', constructionUse: r.construction_use ?? '', laserAccess: r.laser_access ?? 1 }])
       ),
     },
-    contractors: Object.keys(catalogContractors).length > 0 ? catalogContractors : CONTRACTORS,
+    // Merge static CONTRACTORS first so contractors not yet seeded in PocketBase
+    // (e.g. newly added M3 authored-mission contractors) still resolve.
+    contractors: { ...CONTRACTORS, ...catalogContractors },
     structures: structures.length > 0 ? structures.map(toStructure) : STRUCTURES,
   }
 }

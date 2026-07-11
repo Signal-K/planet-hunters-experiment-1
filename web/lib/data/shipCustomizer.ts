@@ -124,7 +124,7 @@ export const CUSTOMIZER_PARTS: CustomizerPart[] = [
     successBonus: 10,
     mass: 2,
     power: -1,
-    description: 'Secured mineral racks. Best for contractor delivery runs.',
+    description: 'Secured mineral racks. Best for client delivery runs.',
   },
   {
     id: 'mining-payload-t1',

@@ -34,6 +34,12 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
   const contractPayout = delivered ? mission.payout.francs + affinityBonus : 0
   const rawTotal = contractPayout
   const total = calibrateOnboardingPayout(rawTotal, missionsDone ?? 0)
+  // Two-leg jobs (mine at targetId, drop at deliveryTargetId) are paid for both
+  // services — split the flat contract payout into mining/transport lines so
+  // that's visible, rather than implying it's a single flat fee.
+  const isTwoLegJob = !!mission.deliveryTargetId
+  const miningFee = isTwoLegJob ? Math.round(mission.payout.francs * 0.5) : 0
+  const transportFee = isTwoLegJob ? mission.payout.francs - miningFee : 0
 
   return (
     <div className="game-screen debrief-screen">
@@ -115,7 +121,14 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
             </div>
             {delivered ? (
               <>
-                <PayRow label={isStoryMission ? 'Mission funding' : `Order fulfillment · ${contractor?.name ?? 'Contractor'}`} value={mission.payout.francs} />
+                {isTwoLegJob ? (
+                  <>
+                    <PayRow label={`Mining fee · ${contractor?.name ?? 'Client'}`} value={miningFee} />
+                    <PayRow label="Transport fee · relay delivery" value={transportFee} />
+                  </>
+                ) : (
+                  <PayRow label={isStoryMission ? 'Mission funding' : `Order fulfillment · ${contractor?.name ?? 'Client'}`} value={mission.payout.francs} />
+                )}
                 {!isStoryMission && affinityBonus > 0 && <PayRow label="Affinity bonus" value={affinityBonus} />}
               </>
             ) : (

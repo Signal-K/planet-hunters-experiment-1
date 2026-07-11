@@ -157,8 +157,8 @@ export default function MissionBoardScreen({ onBack, onPick, missionsDone, freeO
               </div>
               <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 12, color: '#a9b8ce', lineHeight: 1.45, marginBottom: 10 }}>
                 {contractorPoolExhausted
-                  ? "Today's contractor requests are done. Launch a self-directed run — pick any reachable target and sell the haul yourself at market price."
-                  : 'No contractor, no daily limit. Pick any reachable target, mine what looks valuable, and sell the haul yourself at market price.'}
+                  ? "Today's client requests are done. Launch a self-directed run — pick any reachable target and sell the haul yourself at market price."
+                  : 'No client, no daily limit. Pick any reachable target, mine what looks valuable, and sell the haul yourself at market price.'}
               </div>
               <button
                 data-testid="self-directed-mining-btn"
@@ -202,7 +202,7 @@ export default function MissionBoardScreen({ onBack, onPick, missionsDone, freeO
                 Infrastructure
               </div>
               <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 12, color: '#a9b8ce', lineHeight: 1.45 }}>
-                Client work includes satellite launches for contractors. Own infrastructure is where you place your satellite and expand personal operations.
+                Client work includes satellite launches for clients. Own infrastructure is where you place your satellite and expand personal operations.
               </div>
             </Panel>
           </div>
@@ -210,7 +210,7 @@ export default function MissionBoardScreen({ onBack, onPick, missionsDone, freeO
 
         <div style={{ padding: '0 14px 8px 14px', display: 'flex', alignItems: 'center', gap: 8 }}>
           <span style={{ fontFamily: 'var(--ln-font-display)', fontSize: 10, fontWeight: 700, letterSpacing: '0.22em', color: 'var(--ln-text-muted)', textTransform: 'uppercase' }}>
-            {freeOperations ? 'Contractor Requests' : 'Active Contracts'} · {available.length}
+            {freeOperations ? 'Client Requests' : 'Active Contracts'} · {available.length}
           </span>
           <span style={{ flex: 1 }} />
           <StatusPill kind="amber" dim>Sort · Payout</StatusPill>
@@ -287,6 +287,44 @@ export default function MissionBoardScreen({ onBack, onPick, missionsDone, freeO
         </div>
 
         {freeOperations && <AffinityAdvancedSection contractors={catalog.contractors} contractorMissions={contractorMissions} />}
+        {freeOperations && <ComingSoonMissionsSection />}
+      </div>
+    </div>
+  )
+}
+
+const FUTURE_MISSION_TYPES = [
+  { id: 'rovers', label: 'Rover Deployment', brief: 'Deploy surface rovers to scout and sample landing sites.' },
+  { id: 'colonies', label: 'Colonies', brief: 'Establish a permanent surface colony beyond a single outpost.' },
+  { id: 'settlements', label: 'Settlements', brief: 'Grow a colony into a self-sustaining settlement network.' },
+] as const
+
+function ComingSoonMissionsSection() {
+  return (
+    <div style={{ padding: '0 14px', marginTop: 24, marginBottom: 16 }}>
+      <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 9, fontWeight: 700, letterSpacing: '0.22em', color: '#6b7fa3', textTransform: 'uppercase', marginBottom: 8 }}>
+        Future Operations
+      </div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+        {FUTURE_MISSION_TYPES.map(type => (
+          <Panel key={type.id} accent="var(--ln-text-muted)" style={{ padding: 12, opacity: 0.6, cursor: 'not-allowed' }}>
+            <div
+              aria-disabled="true"
+              style={{ display: 'flex', alignItems: 'center', gap: 10 }}
+            >
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <span style={{ fontFamily: 'var(--ln-font-display)', fontSize: 10, fontWeight: 700, color: 'var(--ln-text-muted)', textTransform: 'uppercase', letterSpacing: '0.15em' }}>{type.label}</span>
+                  <span style={{ flex: 1 }} />
+                  <StatusPill kind="mute">Coming Soon</StatusPill>
+                </div>
+                <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 12, color: '#6b7fa3', lineHeight: 1.45, marginTop: 4 }}>
+                  {type.brief}
+                </div>
+              </div>
+            </div>
+          </Panel>
+        ))}
       </div>
     </div>
   )

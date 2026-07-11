@@ -62,6 +62,12 @@ function GameCanvas() {
   const transitTarget = game.player.headingToDelivery && game.deliveryTargetId
     ? game.catalog.targets.find(t => t.id === game.deliveryTargetId) ?? game.target
     : game.target
+  // Debrief should attribute the Earth-return leg to the ship's last waypoint —
+  // for two-leg "mine then deliver" missions that's the delivery target, not
+  // the original mining site, otherwise the delivery stop reads as if it never happened.
+  const debriefOriginTarget = game.mission?.deliveryTargetId
+    ? game.catalog.targets.find(t => t.id === game.mission!.deliveryTargetId) ?? game.target
+    : game.target
 
   // When a timed transit starts, schedule a push notification.
   useEffect(() => {
@@ -213,6 +219,7 @@ function GameCanvas() {
               placed: game.player.placed,
               freeOperations: game.player.freeOperations,
               refineryUnlocked: !!game.player.refineryUnlocked,
+              placementPlots: game.player.placementPlots,
             }}
             onPlaced={(kind, plot) => {
               const structure = game.catalog.structures.find(s => s.id === kind)
@@ -403,6 +410,7 @@ function GameCanvas() {
             onAbandon={game.abandonMission}
             minerals={game.catalog.minerals}
             laserChargeCap={game.laserChargeCap}
+            laserTier={game.catalog.parts.drill.find(p => p.id === game.rocket.drill)?.tier ?? 1}
             hasCoach={hasCoach}
             coachManual={coach?.manual ?? false}
           />
@@ -416,7 +424,7 @@ function GameCanvas() {
           />
         )}
         {game.screen === 'debrief' && game.mission && game.target && (
-          <DebriefScreen mission={game.mission} target={game.target} cargo={game.lastCargo ?? {}} onDone={game.onDebriefDone} minerals={game.catalog.minerals} contractors={game.catalog.contractors} contractorMissions={game.player.contractorMissions} freeOperations={game.player.freeOperations} annotations={game.player.researchAnnotations} missionsDone={game.player.missionsDone} hasCoach={hasCoach} shipDestroyed={!!game.player.shipDestroyed} />
+          <DebriefScreen mission={game.mission} target={debriefOriginTarget ?? game.target} cargo={game.lastCargo ?? {}} onDone={game.onDebriefDone} minerals={game.catalog.minerals} contractors={game.catalog.contractors} contractorMissions={game.player.contractorMissions} freeOperations={game.player.freeOperations} annotations={game.player.researchAnnotations} missionsDone={game.player.missionsDone} hasCoach={hasCoach} shipDestroyed={!!game.player.shipDestroyed} />
         )}
 
         {/* Launch sequence — plays between fab confirmation and transit */}
@@ -462,6 +470,9 @@ function GameCanvas() {
               game.setPopup(null)
               if (popup === 'sr2') {
                 game.go('hub')
+              }
+              if (popup === 'ship-customizer') {
+                game.go('hangar')
               }
             }}
             onDismiss={game.popup === 'loan' ? () => game.setPopup(null) : undefined}

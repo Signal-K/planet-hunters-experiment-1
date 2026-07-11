@@ -373,7 +373,17 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
           completedIds: [...s.player.dailyContractorPool.completedIds, s.missionId],
         }
         : s.player.dailyContractorPool
-      const popup = showLoanOffer ? 'loan' : missionsDone === 1 ? 'sr2' : s.popup
+      const stillInTutorial = missionsDone < FREE_OPS_START_MISSIONS_DONE && catalog.missions.some(m => m.sequence === missionsDone + 1)
+      // Skip the Prospector upsell popup during guided onboarding — the tutorial
+      // coach already delivers the same "Prospector available" message inline
+      // (lib/data/tutorial.ts step 20), and the popup pre-empts the coach.
+      const popup = showLoanOffer ? 'loan' : (missionsDone === 1 && !stillInTutorial) ? 'sr2' : s.popup
+      // M3 (the last onboarding mission) also flips freeOperations true on this
+      // same tick, which would otherwise auto-open the market straight out of
+      // debrief with no player action requesting it. Land on hub for that one
+      // boundary mission; auto-market-open only kicks in for Free Ops missions
+      // completed after onboarding has actually ended.
+      const justFinishedOnboarding = missionsDone === FREE_OPS_START_MISSIONS_DONE
       return {
         ...s,
         player: {
@@ -409,10 +419,10 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
         lastCargo: null,
         missionId: null,
         targetId: null,
-        tutorial: missionsDone < FREE_OPS_START_MISSIONS_DONE && catalog.missions.some(m => m.sequence === missionsDone + 1),
+        tutorial: stillInTutorial,
         popup,
         doneSteps: { ...s.doneSteps, 9: true },
-        screen: pendingTerritoryClaimFor ? s.screen : 'market',
+        screen: pendingTerritoryClaimFor ? s.screen : ((stillInTutorial || justFinishedOnboarding) ? 'hub' : 'market'),
         pendingTerritoryClaimFor,
       }
     })

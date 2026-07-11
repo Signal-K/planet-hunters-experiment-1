@@ -7,7 +7,10 @@ export async function POST(req: NextRequest) {
   }
 
   const apiKey = process.env.NEXT_PUBLIC_POSTHOG_KEY
-  if (!apiKey) return NextResponse.json({ ok: true })
+  if (!apiKey) {
+    console.error('[api/surveys] NEXT_PUBLIC_POSTHOG_KEY missing at runtime — cannot forward survey response')
+    return NextResponse.json({ error: 'posthog not configured' }, { status: 500 })
+  }
 
   const host = process.env.NEXT_PUBLIC_POSTHOG_HOST ?? 'https://us.i.posthog.com'
   const response = await fetch(`${host.replace(/\/$/, '')}/capture/`, {
@@ -22,7 +25,10 @@ export async function POST(req: NextRequest) {
         captured_from: 'survey_api',
       },
     }),
-  }).catch(() => null)
+  }).catch(err => {
+    console.error('[api/surveys] posthog capture request failed', err)
+    return null
+  })
   if (!response?.ok) {
     return NextResponse.json({ error: 'posthog capture failed' }, { status: 502 })
   }

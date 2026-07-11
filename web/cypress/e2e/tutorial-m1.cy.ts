@@ -183,9 +183,9 @@ function playM1() {
   cy.get('[data-testid="target-eros"]').should('exist').click({ force: true })
   cy.get('[data-testid="continue-build-btn"]').should('be.visible').click()
 
-  // Step 4: rocket selection — SR1 is free
+  // Step 4: rocket selection — Explorer is free
   cy.contains('Select Rocket', { timeout: 8000 }).should('be.visible')
-  cy.contains('button', 'Launch with Starter Rocket 1').should('be.visible').click()
+  cy.contains('button', 'Launch with Explorer').should('be.visible').click()
 
   // Step 5: assembly → confirm launch
   cy.get('[data-testid="launch-btn"]', { timeout: 8000 }).should('be.visible').click()
@@ -225,14 +225,14 @@ function playM2() {
   cy.get('[data-testid="continue-build-btn"]').should('be.visible').click()
 
   // Rocket purchase screen — step 21 fires here (manual card, current copy is
-  // 'SR2 — Select Your Rocket', see lib/data/tutorial.ts M2_STEPS[1])
+  // 'Prospector — Select Your Rocket', see lib/data/tutorial.ts M2_STEPS[1])
   cy.contains('Select Rocket', { timeout: 8000 }).should('be.visible')
   cy.get('[data-testid="tutorial-coach-block"]')
     .should('be.visible')
     .should('contain', 'Select Your Rocket')
   cy.get('[data-testid="coach-got-it-btn"]').should('be.visible').click()
 
-  // Purchase SR2
+  // Purchase Prospector
   cy.contains('button', /Purchase/).should('be.visible').click()
 
   // Fab → launch
