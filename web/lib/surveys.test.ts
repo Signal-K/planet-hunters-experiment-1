@@ -47,4 +47,24 @@ describe('buildPostHogSurveyPayload', () => {
       { id: 'm3-freetext', question: survey.questions[3].question, response: undefined },
     ])
   })
+
+  // Review coverage for "Update PostHog surveys for new M1-M3 mission
+  // structure" (update-posthog-surveys-m1-m3-mission-structure): M3 became
+  // a contractor transport mission, so the old self-directed-mining survey
+  // copy must never reappear, and M1-M3 must each ask about the new
+  // contractor/mission choice step.
+  it('never asks the stale self-directed-mining M3 questions ("first custom mining run" / "choosing your own target")', () => {
+    const allQuestionText = Object.values(SURVEY_DEFS)
+      .flatMap(survey => survey.questions.map(q => q.question))
+      .join(' ')
+    expect(allQuestionText).not.toMatch(/custom mining run/i)
+    expect(allQuestionText).not.toMatch(/choosing your own target/i)
+  })
+
+  it('M1, M2, and M3 each ask about the new contractor/mission choice step', () => {
+    for (const key of ['lnm_m1_complete', 'lnm_m2_complete', 'lnm_m3_complete'] as const) {
+      const questionIds = SURVEY_DEFS[key].questions.map(q => q.id)
+      expect(questionIds.some(id => id.includes('mission-choice') || id.includes('contractor-choice'))).toBe(true)
+    }
+  })
 })
