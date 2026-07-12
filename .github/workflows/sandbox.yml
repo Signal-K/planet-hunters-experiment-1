@@ -30,10 +30,22 @@ jobs:
       - name: Run sandbox
         run: |
           mkdir -p sandbox/output
-          docker run --rm \
-            --shm-size=256mb \
-            -v "${{ github.workspace }}/sandbox/output:/output" \
-            landnam-sandbox:ci
+          # 256mb shm-size is a known cause of intermittent Chrome/Cypress
+          # hangs on the first real page render under Xvfb (insufficient
+          # shared memory for the renderer) — this has produced sporadic
+          # 60s page-load timeouts on this job's first cy.visit for weeks.
+          # Bump to 1gb, and retry once if it still happens (transient CI
+          # resource contention), before failing the job.
+          for attempt in 1 2; do
+            if docker run --rm \
+              --shm-size=1gb \
+              -v "${{ github.workspace }}/sandbox/output:/output" \
+              landnam-sandbox:ci; then
+              break
+            fi
+            if [ "$attempt" -eq 2 ]; then exit 1; fi
+            echo "Sandbox run failed, retrying once (attempt $attempt)..."
+          done
 
       - name: Upload sandbox output
         if: always()
