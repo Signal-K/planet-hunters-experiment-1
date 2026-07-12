@@ -154,7 +154,24 @@ export function useAuthSync({
     function applyRecord(record: any) {
       backendRecordId.current = record.id
       backendLoadedFor.current = authUserId!
-      setState(current => normalizeAndRepair({ ...current, ...(record.state as Partial<GameState>) }))
+      setState(current => {
+        const merged = { ...current, ...(record.state as Partial<GameState>) }
+        // This load can resolve many seconds after mount (Fly cold-start retry
+        // ladder above). If the player has already advanced past the default
+        // screen/mission/target locally in that window, an older remote record
+        // must not clobber their in-flight progress — only bring in remote
+        // fields that aren't part of the active navigation flow.
+        const localHasProgressed = current.screen !== DEFAULT_STATE.screen
+          || current.missionId !== null
+          || current.targetId !== null
+        if (localHasProgressed) {
+          merged.screen = current.screen
+          merged.missionId = current.missionId
+          merged.targetId = current.targetId
+          merged.doneSteps = current.doneSteps
+        }
+        return normalizeAndRepair(merged)
+      })
       setBackendReady(true)
     }
 
