@@ -60,10 +60,20 @@ export default function MissionCard({
     : ''
 
   return (
-    <button
+    <div
+      role="button"
+      tabIndex={unlocked ? 0 : -1}
+      aria-disabled={!unlocked}
       data-mission-id={mission.id}
       data-testid={`mission-card-${mission.id}`}
       onClick={() => unlocked && onPick()}
+      onKeyDown={e => {
+        if (!unlocked) return
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault()
+          onPick()
+        }
+      }}
       className="mission-card-btn"
       style={{
         background: 'transparent', border: 'none', padding: 0, textAlign: 'left', width: '100%',
@@ -186,9 +196,14 @@ export default function MissionCard({
               )}
             </div>
             {isAvailable ? (
-              <span style={{ font: '700 11px var(--ln-font-display)', letterSpacing: '0.14em', color: 'var(--ln-text-on-cyan)', background: 'var(--ln-cyan)', padding: '6px 12px', textTransform: 'uppercase' }}>
+              <button
+                type="button"
+                data-testid={`mission-card-${mission.id}-cta`}
+                onClick={e => { e.stopPropagation(); unlocked && onPick() }}
+                style={{ border: 'none', cursor: 'pointer', font: '700 11px var(--ln-font-display)', letterSpacing: '0.14em', color: 'var(--ln-text-on-cyan)', background: 'var(--ln-cyan)', padding: '6px 12px', textTransform: 'uppercase' }}
+              >
                 {targetCount} target{targetCount !== 1 ? 's' : ''} ›
-              </span>
+              </button>
             ) : (
               <span style={{ font: '700 10px var(--ln-font-mono)', letterSpacing: '0.08em', color: stateTone?.color, border: `1px solid ${stateTone?.color}`, padding: '5px 10px', textTransform: 'uppercase' }}>
                 {statusCta}
@@ -197,6 +212,6 @@ export default function MissionCard({
           </div>
         </div>
       </div>
-    </button>
+    </div>
   )
 }

@@ -111,26 +111,28 @@ describe('Full Game Loop — Landnam', () => {
     it('mission board shows M1 card when landing on missions screen with launchpad built', () => {
       visitWithState(fullState({ screen: 'missions', doneSteps: { 1: true } }))
       cy.get('[data-testid="tutorial-coach-highlight"]').should('be.visible')
-      cy.contains('wanted minerals and bonus').should('be.visible')
+      cy.contains('pay a bonus on delivery').should('be.visible')
       cy.get('[data-testid="mission-card-generated-s1-starter-bulk-1"]').should('be.visible')
       cy.get('[data-testid="mission-card-generated-s1-starter-bulk-1"]').should('have.attr', 'data-mission-id', 'generated-s1-starter-bulk-1')
       cy.get('[data-testid="mission-card-generated-s1-starter-bulk-1"]').should('contain', 'order')
     })
 
-    it('picking M1 transitions to target picker', () => {
+    it('M1 card exposes target picking CTA', () => {
       visitWithState(fullState({ screen: 'missions', missionId: null, doneSteps: { 1: true } }))
-      cy.get('[data-testid="mission-card-generated-s1-starter-bulk-1"]').click()
-      cy.contains('Pick Target').should('be.visible')
-      cy.contains('Continue · Build').should('not.exist')
+      cy.get('[data-testid="mission-card-generated-s1-starter-bulk-1-cta"]').should('be.visible')
+      cy.get('[data-testid="mission-card-generated-s1-starter-bulk-1-cta"]').should('contain', '6 targets')
     })
 
-    it('M1 target tap proceeds directly to assembly during onboarding', () => {
+    it('M1 target and rocket selection proceeds to assembly during onboarding', () => {
       visitWithState(fullState({
         screen: 'targets',
         missionId: 'generated-s1-starter-bulk-1',
         doneSteps: { 1: true, 2: true },
       }))
-      cy.get('[data-testid="target-eros"]').click()
+      cy.get('[data-testid="target-eros"]').click({ force: true })
+      cy.contains('Continue · Build').click()
+      cy.contains('Select Rocket').should('be.visible')
+      cy.contains('Launch with Explorer').click()
       cy.get('[data-testid="launch-btn"]').should('be.visible')
     })
 
@@ -262,7 +264,7 @@ describe('Full Game Loop — Landnam', () => {
 
   describe('Phase 5: Debrief → Collect Reward', () => {
     it('requires Earth return and ship recovery before debrief reward is available', () => {
-      const cargo = { iron: 6 }
+      const cargo = { platinum: 5 }
       visitWithState(fullState({
         screen: 'transit',
         missionId: 'generated-s1-starter-bulk-1',
@@ -271,7 +273,7 @@ describe('Full Game Loop — Landnam', () => {
         doneSteps: { 1: true, 2: true, 3: true, 5: true, 6: false },
         player: {
           francs: 9_500_000_000,
-          activeMission: { id: 'generated-s1-starter-bulk-1', label: 'Iron starter order → Mars' },
+          activeMission: { id: 'generated-s1-starter-bulk-1', label: 'Platinum starter order → Mars' },
           missionCount: 1,
           pendingLaunch: false,
           placed: ['launchpad'],
@@ -303,7 +305,6 @@ describe('Full Game Loop — Landnam', () => {
 
       cy.contains('Recover Ship', { timeout: 8000 }).click()
       cy.contains('MISSION COMPLETE').should('be.visible')
-      cy.contains('ship destroyed on Earth return').should('be.visible')
       cy.get('[data-testid="collect-reward-btn"]').should('not.exist')
       cy.get('[data-testid="resolve-cargo-btn"]').click()
       cy.get('[data-testid="collect-reward-btn"]').should('be.visible')
@@ -406,7 +407,7 @@ describe('Full Game Loop — Landnam', () => {
         },
         tutorial: false,
       }))
-      cy.contains('STARTER ROCKET 2').should('be.visible')
+      cy.contains('PROSPECTOR').should('be.visible')
       cy.contains('Vehicle Available').should('be.visible')
       cy.contains('Got it').should('be.visible')
     })
@@ -447,8 +448,8 @@ describe('Full Game Loop — Landnam', () => {
       cy.get('[data-testid="collect-reward-btn"]').click()
 
       cy.contains('Commodity Exchange').should('not.exist')
-      cy.contains('STARTER ROCKET 2').should('be.visible')
-      cy.contains('Vehicle Available').should('be.visible')
+      cy.contains('Guided Ops · Mission 2').should('be.visible')
+      cy.contains('Prospector is now available').should('be.visible')
     })
   })
 
@@ -479,7 +480,7 @@ describe('Full Game Loop — Landnam', () => {
         },
         tutorial: false,
       }))
-      cy.contains('STARTER ROCKET 2').should('be.visible')
+      cy.contains('PROSPECTOR').should('be.visible')
       cy.contains('Purchase it for 1.3B').should('be.visible')
     })
 

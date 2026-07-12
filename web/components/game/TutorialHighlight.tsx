@@ -3,7 +3,7 @@
 export default function TutorialHighlight({ borderRadius = 12 }: { borderRadius?: number }) {
   return (
     <div
-      data-testid="tutorial-highlight"
+      data-testid="tutorial-coach-highlight"
       style={{
         position: 'absolute',
         inset: 0,
