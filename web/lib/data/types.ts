@@ -74,13 +74,16 @@ export interface Mission {
   id: string
   title: string
   brief: string
-  contractor: string
+  contractor?: string
   tag: string
   difficulty: string
   locked: boolean
   sequence: number
   unlockAt?: string
   targetId?: string
+  // When set, this is a two-leg "mine then deliver" job: mine/collect cargo
+  // at targetId, then fly to deliveryTargetId before the Earth-return leg.
+  deliveryTargetId?: string
   payload?: MissionPayload
   survey?: MissionSurveyPlan
   construction?: MissionConstructionPlan
@@ -132,6 +135,11 @@ export interface MineralMeta {
   rarity: 'common' | 'uncommon' | 'rare' | 'exotic'
   constructionUse: string
   laserAccess: number
+  // True for minerals that are abundant on Earth (iron, carbon, etc.) — Earth
+  // already has plentiful supply, so contracts delivering back to Earth should
+  // never request these; they only make sense for off-world construction jobs
+  // (deliveryTargetId set to a non-Earth site).
+  earthAbundant?: boolean
 }
 
 export interface Contractor {

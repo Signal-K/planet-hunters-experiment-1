@@ -179,7 +179,7 @@ describe('Visual QA — game screens and mining canvas', () => {
     // Rocket/fab screen
     cy.contains('Select Rocket', { timeout: 10000 }).should('be.visible')
     cy.screenshot('07-rocket-picker')
-    cy.contains('button', 'Launch with Starter Rocket 1').click()
+    cy.contains('button', 'Launch with Explorer').click()
 
     // Launch confirmation
     cy.get('[data-testid="launch-btn"]', { timeout: 10000 }).should('be.visible')
@@ -212,9 +212,10 @@ describe('Visual QA — game screens and mining canvas', () => {
     cy.get('[data-testid="resolve-cargo-btn"]').click()
     cy.get('[data-testid="collect-reward-btn"]').click()
 
-    // Market
-    cy.contains('Commodity Exchange', { timeout: 10000 }).should('be.visible')
-    cy.screenshot('12-market-post-mission')
+    // Guided M2 handoff
+    cy.contains('Guided Ops · Mission 2', { timeout: 10000 }).should('be.visible')
+    cy.contains('Prospector is now available').should('be.visible')
+    cy.screenshot('12-hub-post-mission')
 
     // Final state assertion
     cy.window().then(win => {

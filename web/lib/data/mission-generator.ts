@@ -128,7 +128,11 @@ export const DEFAULT_COMPLEXITY_BANDS: MissionComplexity[] = [
   { sequence: 1, templateId: 'volatile-bulk', mineralCount: 1, amountBias: 0, contractorOffset: 2 },
   { sequence: 2, templateId: 'starter-bulk', mineralCount: 1, amountBias: 2, contractorOffset: 3 },
   { sequence: 2, templateId: 'volatile-bulk', mineralCount: 1, amountBias: 2, contractorOffset: 4 },
-  { sequence: 2, templateId: 'metal-prospect', mineralCount: 1, amountBias: 0, contractorOffset: 5 },
+  // mineralCount: 2 (not 1) — a single-mineral metal-prospect order tops out at
+  // cargoRange max 6, which Explorer's stock hull (cargo 6) can still clear. M2 is
+  // meant to force a Prospector purchase across every onboarding option, so this band
+  // needs two minerals to push cargo_min past Explorer's ceiling.
+  { sequence: 2, templateId: 'metal-prospect', mineralCount: 2, amountBias: 0, contractorOffset: 5 },
   { sequence: 3, templateId: 'volatile-bulk', mineralCount: 2, amountBias: 1, contractorOffset: 6 },
   { sequence: 3, templateId: 'metal-prospect', mineralCount: 2, amountBias: 1, contractorOffset: 7 },
   { sequence: 3, templateId: 'command-reserve', mineralCount: 1, amountBias: 0, contractorOffset: 8 },
@@ -160,9 +164,21 @@ function payoutMultiplier(contractor: ContractorSlot): number {
   return 1 + contractor.payoutPremium
 }
 
-function selectMinerals(template: MissionTemplate, preferences: string[], index: number, count: number): string[] {
-  const preferred = template.mineralKeys.filter(mineral => preferences.includes(mineral))
-  const remaining = template.mineralKeys.filter(mineral => !preferences.includes(mineral))
+// CONSTRUCT missions build/deploy structures at the target itself — cargo
+// never routes back to Earth, so Earth-abundant minerals (iron, carbon, ...)
+// are fine there. Every other template implicitly returns cargo to Earth
+// (no deliveryTargetId), so it makes no sense to request minerals Earth
+// already has in abundance — filter those out, falling back to the full
+// list only if that would leave nothing to mine.
+function deliveryEligibleMineralKeys(template: MissionTemplate, minerals: Record<string, MineralMeta>): string[] {
+  if (template.tag === 'CONSTRUCT') return template.mineralKeys
+  const filtered = template.mineralKeys.filter(key => !minerals[key]?.earthAbundant)
+  return filtered.length > 0 ? filtered : template.mineralKeys
+}
+
+function selectMinerals(mineralKeys: string[], preferences: string[], index: number, count: number): string[] {
+  const preferred = mineralKeys.filter(mineral => preferences.includes(mineral))
+  const remaining = mineralKeys.filter(mineral => !preferences.includes(mineral))
   const candidates = [...preferred, ...remaining]
   return Array.from({ length: count }, (_, offset) => candidates[(index + offset) % candidates.length])
 }
@@ -184,8 +200,9 @@ export function generateMissionsFromRules(input: MissionGeneratorInput, count = 
     const contractorPool = unlockedContractors.filter(c => c.uiRole === template.contractorRole)
     const fallbackPool = contractorPool.length > 0 ? contractorPool : unlockedContractors
     const contractor = fallbackPool[band.contractorOffset % fallbackPool.length] ?? input.contractors[0]
+    const eligibleMineralKeys = deliveryEligibleMineralKeys(template, input.minerals)
     const minerals = Object.fromEntries(
-      selectMinerals(template, contractor.mineralPreferences, index, band.mineralCount).map((mineral, mineralIndex) => [
+      selectMinerals(eligibleMineralKeys, contractor.mineralPreferences, index, band.mineralCount).map((mineral, mineralIndex) => [
         mineral,
         amountFor(template, band.sequence, band.amountBias, mineralIndex),
       ])
@@ -201,7 +218,7 @@ export function generateMissionsFromRules(input: MissionGeneratorInput, count = 
     return {
       id: `generated-s${band.sequence}-${template.id}-${index + 1}`,
       title: `${primary} ${template.tag.toLowerCase().replace('-', ' ')} order`,
-      brief: `${contractor.name} needs ${primary.toLowerCase()} for ${contractor.projectType.toLowerCase()}. Preferred cargo earns a contractor premium; affinity improves future payouts.`,
+      brief: `${contractor.name} needs ${primary.toLowerCase()} for ${contractor.projectType.toLowerCase()}. Preferred cargo earns a client premium; affinity improves future payouts.`,
       contractor: contractor.id,
       tag: template.tag,
       difficulty: template.difficulty,
@@ -234,8 +251,9 @@ export function generateFreeOpsMissionsFromRules(input: MissionGeneratorInput): 
       .slice(0, 2)
 
     return matchingTemplates.map((template, templateIndex) => {
-      const mineral = template.mineralKeys.find(key => contractor.mineralPreferences.includes(key))
-        ?? template.mineralKeys[(contractorIndex + templateIndex) % template.mineralKeys.length]
+      const eligibleMineralKeys = deliveryEligibleMineralKeys(template, input.minerals)
+      const mineral = eligibleMineralKeys.find(key => contractor.mineralPreferences.includes(key))
+        ?? eligibleMineralKeys[(contractorIndex + templateIndex) % eligibleMineralKeys.length]
       const scanOnly = template.cargoRange[0] === 0 && template.cargoRange[1] === 0
       const amount = scanOnly ? 0 : template.cargoRange[0] + contractorIndex + templateIndex
       const mineralName = input.minerals[mineral]?.name ?? mineral
@@ -302,7 +320,9 @@ export function missionTemplatesToPocketBaseRows(templates = DEFAULT_MISSION_TEM
 }
 
 export function missionsToPocketBaseRows(missions: Mission[]): PocketBaseMissionSeed[] {
-  return missions.map(mission => ({
+  return missions
+    .filter((mission): mission is Mission & { contractor: string } => !!mission.contractor)
+    .map(mission => ({
     slug: mission.id,
     title: mission.title,
     brief: mission.brief,

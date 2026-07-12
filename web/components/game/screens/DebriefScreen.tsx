@@ -8,7 +8,7 @@ import { PrimaryBtn } from '@/components/ui/Button'
 import { UI_ZONES } from '@/lib/ui-zones'
 import TutorialHighlight from '@/components/game/TutorialHighlight'
 
-export default function DebriefScreen({ mission, target, cargo, onDone, minerals, contractors, contractorMissions, freeOperations, annotations, missionsDone, hasCoach }: {
+export default function DebriefScreen({ mission, target, cargo, onDone, minerals, contractors, contractorMissions, freeOperations, annotations, missionsDone, hasCoach, shipDestroyed }: {
   mission: Mission
   target: Target
   cargo: Record<string, number>
@@ -20,19 +20,26 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
   annotations?: number
   missionsDone?: number
   hasCoach?: boolean
+  shipDestroyed?: boolean
 }) {
   const [resolved, setResolved] = useState(false)
   const [collecting, setCollecting] = useState(false)
   const collectingRef = useRef(false)
 
   const delivered = Object.entries(mission.requires.minerals).every(([id, amount]) => (cargo[id] ?? 0) >= amount)
-  const contractor = contractors[mission.contractor]
-  const isStoryMission = mission.tag === 'STORY' || mission.payload?.type === 'satellite'
+  const contractor = mission.contractor ? contractors[mission.contractor] : undefined
+  const isStoryMission = !mission.deliveryTargetId && (mission.tag === 'STORY' || mission.payload?.type === 'satellite')
   const affinityMultiplier = contractor && !isStoryMission ? contractorAffinityBonus(contractor, contractorMissions?.[contractor.id] ?? 0) : 0
   const affinityBonus = delivered ? Math.round(mission.payout.francs * affinityMultiplier) : 0
   const contractPayout = delivered ? mission.payout.francs + affinityBonus : 0
   const rawTotal = contractPayout
   const total = calibrateOnboardingPayout(rawTotal, missionsDone ?? 0)
+  // Two-leg jobs (mine at targetId, drop at deliveryTargetId) are paid for both
+  // services — split the flat contract payout into mining/transport lines so
+  // that's visible, rather than implying it's a single flat fee.
+  const isTwoLegJob = !!mission.deliveryTargetId
+  const miningFee = isTwoLegJob ? Math.round(mission.payout.francs * 0.5) : 0
+  const transportFee = isTwoLegJob ? mission.payout.francs - miningFee : 0
 
   return (
     <div className="game-screen debrief-screen">
@@ -44,10 +51,10 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
         <div style={{ textAlign: 'center', paddingTop: 16, paddingBottom: 8 }}>
           <div className="success-mark">✓</div>
           <h2 style={{ margin: '12px 0 4px', color: 'var(--ln-text)', font: '800 28px var(--ln-font-display)', letterSpacing: '0.12em', textTransform: 'uppercase' }}>
-            Returned
+            {shipDestroyed ? 'Recovered' : 'Returned'}
           </h2>
           <p style={{ margin: 0, color: 'var(--ln-text-dim)', font: '11px var(--ln-font-mono)', letterSpacing: '0.14em', textTransform: 'uppercase' }}>
-            From {target.name} · Sol III orbit re-entry
+            {shipDestroyed ? `From ${target.name} · ship destroyed on Earth return` : `From ${target.name} · Sol III orbit re-entry`}
           </p>
         </div>
 
@@ -114,7 +121,14 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
             </div>
             {delivered ? (
               <>
-                <PayRow label={isStoryMission ? 'Mission funding' : `Order fulfillment · ${contractor?.name ?? 'Contractor'}`} value={mission.payout.francs} />
+                {isTwoLegJob ? (
+                  <>
+                    <PayRow label={`Mining fee · ${contractor?.name ?? 'Client'}`} value={miningFee} />
+                    <PayRow label="Transport fee · relay delivery" value={transportFee} />
+                  </>
+                ) : (
+                  <PayRow label={isStoryMission ? 'Mission funding' : `Order fulfillment · ${contractor?.name ?? 'Client'}`} value={mission.payout.francs} />
+                )}
                 {!isStoryMission && affinityBonus > 0 && <PayRow label="Affinity bonus" value={affinityBonus} />}
               </>
             ) : (
@@ -155,7 +169,7 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
             testId="resolve-cargo-btn"
             onClick={() => setResolved(true)}
           >
-            Resolve Cargo
+            {shipDestroyed ? 'Resolve Recovered Cargo' : 'Resolve Cargo'}
           </PrimaryBtn>
         ) : (
           <PrimaryBtn

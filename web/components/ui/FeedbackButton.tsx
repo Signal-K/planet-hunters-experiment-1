@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState } from 'react'
-import { submitFeedback } from '@/lib/posthog'
+import { posthog } from '@/lib/posthog'
 import { UI_ZONES } from '@/lib/ui-zones'
 
 export default function FeedbackButton() {
@@ -12,11 +12,10 @@ export default function FeedbackButton() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     if (!text.trim()) return
-    submitFeedback(text.trim())
     fetch('/api/feedback', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ text: text.trim() }),
+      body: JSON.stringify({ text: text.trim(), distinctId: posthog.get_distinct_id?.() }),
     }).catch(() => {})
     setSent(true)
     setTimeout(() => {

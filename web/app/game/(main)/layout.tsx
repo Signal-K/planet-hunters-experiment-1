@@ -173,6 +173,7 @@ function GameChrome({ children }: { children: ReactNode }) {
               if (popup === 'loan') { game.acceptLoan(); return }
               game.setPopup(null)
               if (popup === 'sr2') game.go('hub')
+              if (popup === 'ship-customizer') game.go('hangar')
             }}
             onDismiss={game.popup === 'loan' ? () => game.setPopup(null) : undefined}
           />

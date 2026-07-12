@@ -22,6 +22,13 @@ const MAX_ORES = 60
 const FLASH_DURATION = 0.14
 // Laser stops this far below the surface — deep enough to reach all ore tiers (max depth 96) + buffer
 const LASER_MAX_DEPTH = 124
+// Laser reach per equipped drill tier — deliberately stops just short of the next tier's
+// depth band so higher-tier ore is visibly present but genuinely unreachable until upgraded.
+const LASER_DEPTH_BY_TIER: Record<number, number> = {
+  1: 30,
+  2: 60,
+  3: LASER_MAX_DEPTH,
+}
 
 /** Organic ore gap distribution: 20% tight cluster, 50% normal, 30% wide open space */
 function oreGap(): number {
@@ -50,6 +57,8 @@ export interface MiningControllerOptions {
   mineralColors: Record<string, string>
   /** laserAccess tier per mineral (1=common, 2=uncommon, 3=exotic). Drives size/depth/hp. */
   mineralLaserAccess?: Record<string, number>
+  /** Equipped drill/laser part tier (1-3). Caps how deep the laser can travel before fizzling out. */
+  maxLaserTier?: number
   /** Shape per mineral key — defaults to 'circle' if not provided. */
   mineralShapes?: Record<string, ShapeKind>
   mineralTextures?: Record<string, Texture>
@@ -60,6 +69,13 @@ export interface MiningControllerOptions {
   onScroll?: (scrollX: number) => void
   /** Called when any ore enters or leaves the "fire now" window around SHIP_X. */
   onOreNearby?: (near: boolean) => void
+  /**
+   * Live-updating set of mineral keys still needed to fill the order. When
+   * set, the "fire now" window only lights up for ore whose mineral is still
+   * needed — an ore of an already-satisfied or off-order mineral never flashes.
+   * Omit (or leave `current` null) to flash for any ore, regardless of mineral.
+   */
+  neededMineralsRef?: { current: Set<string> | null }
 }
 
 interface OreEntity {
@@ -169,7 +185,10 @@ export class MiningController extends ScriptBehaviour {
 
     this.opts.onScroll?.(this.totalScrollX)
 
-    const anyNear = this.ores.some(o => o.go.active && Math.abs(o.go.transform.position.x - SHIP_X) < 120)
+    const needed = this.opts.neededMineralsRef?.current
+    const anyNear = this.ores.some(o => o.go.active
+      && Math.abs(o.go.transform.position.x - SHIP_X) < HIT_TOLERANCE
+      && (!needed || needed.has(o.mineral)))
     if (anyNear !== this.oreNearState) {
       this.oreNearState = anyNear
       this.opts.onOreNearby?.(anyNear)
@@ -296,7 +315,9 @@ export class MiningController extends ScriptBehaviour {
       return false
     })
 
-    const laserFloor = (this.opts.surfaceY ?? SURFACE_Y) + LASER_MAX_DEPTH
+    const tier = this.opts.maxLaserTier ?? 3
+    const laserDepth = LASER_DEPTH_BY_TIER[tier] ?? LASER_DEPTH_BY_TIER[3]
+    const laserFloor = (this.opts.surfaceY ?? SURFACE_Y) + laserDepth
     this.lasers = this.lasers.filter(laser => {
       if (laser.go.active && laser.go.transform.position.y < laserFloor) return true
       const wasMiss = laser.go.active

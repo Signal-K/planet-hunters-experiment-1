@@ -110,15 +110,30 @@ describe('Full Game Loop — Landnam', () => {
 
     it('mission board shows M1 card when landing on missions screen with launchpad built', () => {
       visitWithState(fullState({ screen: 'missions', doneSteps: { 1: true } }))
+      cy.get('[data-testid="tutorial-coach-highlight"]').should('be.visible')
+      cy.contains('pay a bonus on delivery').should('be.visible')
       cy.get('[data-testid="mission-card-generated-s1-starter-bulk-1"]').should('be.visible')
       cy.get('[data-testid="mission-card-generated-s1-starter-bulk-1"]').should('have.attr', 'data-mission-id', 'generated-s1-starter-bulk-1')
       cy.get('[data-testid="mission-card-generated-s1-starter-bulk-1"]').should('contain', 'order')
     })
 
-    it('picking M1 transitions to target picker', () => {
+    it('M1 card exposes target picking CTA', () => {
       visitWithState(fullState({ screen: 'missions', missionId: null, doneSteps: { 1: true } }))
-      cy.get('[data-testid="mission-card-generated-s1-starter-bulk-1"]').click()
-      cy.contains('Continue · Build').should('be.visible')
+      cy.get('[data-testid="mission-card-generated-s1-starter-bulk-1-cta"]').should('be.visible')
+      cy.get('[data-testid="mission-card-generated-s1-starter-bulk-1-cta"]').should('contain', '6 targets')
+    })
+
+    it('M1 target and rocket selection proceeds to assembly during onboarding', () => {
+      visitWithState(fullState({
+        screen: 'targets',
+        missionId: 'generated-s1-starter-bulk-1',
+        doneSteps: { 1: true, 2: true },
+      }))
+      cy.get('[data-testid="target-eros"]').click({ force: true })
+      cy.contains('Continue · Build').click()
+      cy.contains('Select Rocket').should('be.visible')
+      cy.contains('Launch with Explorer').click()
+      cy.get('[data-testid="launch-btn"]').should('be.visible')
     })
 
     it('target picker shows compatible targets for M1', () => {
@@ -143,7 +158,7 @@ describe('Full Game Loop — Landnam', () => {
         rocket: { chassis: 'hull-mk1', propulsion: 'ion-a1', drill: 'hand-drill' },
         doneSteps: { 1: true, 2: true, 3: true, 4: true, 5: false },
       }))
-      cy.contains('Starter Rocket 1').should('be.visible')
+      cy.contains('Explorer').should('be.visible')
       cy.contains('PREBUILT').should('be.visible')
       cy.get('[data-testid="launch-btn"]').should('be.visible')
     })
@@ -248,6 +263,53 @@ describe('Full Game Loop — Landnam', () => {
   })
 
   describe('Phase 5: Debrief → Collect Reward', () => {
+    it('requires Earth return and ship recovery before debrief reward is available', () => {
+      const cargo = { platinum: 5 }
+      visitWithState(fullState({
+        screen: 'transit',
+        missionId: 'generated-s1-starter-bulk-1',
+        targetId: 'mars',
+        lastCargo: cargo,
+        doneSteps: { 1: true, 2: true, 3: true, 5: true, 6: false },
+        player: {
+          francs: 9_500_000_000,
+          activeMission: { id: 'generated-s1-starter-bulk-1', label: 'Platinum starter order → Mars' },
+          missionCount: 1,
+          pendingLaunch: false,
+          placed: ['launchpad'],
+          placementPlots: { launchpad: 0 },
+          controlBuilt: false,
+          missionsDone: 0,
+          freeOperations: false,
+          debriefPending: true,
+          returningToEarth: true,
+          shipDestroyed: false,
+          contractorMissions: {},
+          contractorCooldowns: {},
+          researchAnnotations: 0,
+          refineryBuilt: false,
+          refineryQueue: [],
+          refinedGoods: {},
+          launchpadUpgraded: false,
+          loanDebt: 0,
+          loanOffered: false,
+        },
+      }))
+
+      cy.contains('Inbound · Earth').should('be.visible')
+      cy.get('[data-testid="collect-reward-btn"]').should('not.exist')
+      cy.window().then(win => {
+        const saved = JSON.parse(win.localStorage.getItem(STORAGE_KEY) ?? '{}')
+        expect(saved.player.francs).to.equal(9_500_000_000)
+      })
+
+      cy.contains('Recover Ship', { timeout: 8000 }).click()
+      cy.contains('MISSION COMPLETE').should('be.visible')
+      cy.get('[data-testid="collect-reward-btn"]').should('not.exist')
+      cy.get('[data-testid="resolve-cargo-btn"]').click()
+      cy.get('[data-testid="collect-reward-btn"]').should('be.visible')
+    })
+
     it('debrief enforces cargo resolution before reward collection', () => {
       const cargo = { iron: 4 }
       visitWithState(fullState({
@@ -318,7 +380,7 @@ describe('Full Game Loop — Landnam', () => {
       cy.get('[data-testid="resolve-cargo-btn"]').should('be.visible')
     })
 
-    it('shows SR2 unlock popup after M1 completion', () => {
+    it('shows Prospector unlock popup after M1 completion', () => {
       visitWithState(fullState({
         screen: 'hub',
         doneSteps: { 1: true, 2: true, 3: true, 5: true, 6: true, 9: true },
@@ -345,12 +407,12 @@ describe('Full Game Loop — Landnam', () => {
         },
         tutorial: false,
       }))
-      cy.contains('STARTER ROCKET 2').should('be.visible')
+      cy.contains('PROSPECTOR').should('be.visible')
       cy.contains('Vehicle Available').should('be.visible')
       cy.contains('Got it').should('be.visible')
     })
 
-    it('M1 completion: market is accessible before SR2 popup, excess minerals can be sold', () => {
+    it('M1 completion returns to hub with Prospector popup and does not open the market', () => {
       // M1 requires 6 iron; player mined 8 so 2 are excess after delivery
       visitWithState(fullState({
         screen: 'debrief',
@@ -385,25 +447,14 @@ describe('Full Game Loop — Landnam', () => {
       cy.get('[data-testid="resolve-cargo-btn"]').click()
       cy.get('[data-testid="collect-reward-btn"]').click()
 
-      // Market screen must be interactable — SR2 popup must NOT block it
-      cy.contains('Commodity Exchange').should('be.visible')
-      cy.contains('STARTER ROCKET 2').should('not.exist')
-
-      // 2 excess iron units remain in stash after consuming 6 for delivery
-      cy.contains('Iron').should('be.visible')
-      cy.contains('Sell All Minerals').should('be.visible').click()
-      cy.contains('Confirm').should('be.visible').click()
-      cy.contains('No minerals in stash').should('be.visible')
-
-      // Returning to hub shows the deferred SR2 unlock popup
-      cy.get('[aria-label="back"]').click()
-      cy.contains('STARTER ROCKET 2').should('be.visible')
-      cy.contains('Vehicle Available').should('be.visible')
+      cy.contains('Commodity Exchange').should('not.exist')
+      cy.contains('Guided Ops · Mission 2').should('be.visible')
+      cy.contains('Prospector is now available').should('be.visible')
     })
   })
 
-  describe('Phase 6: Post-M1 → SR2 unlock', () => {
-    it('SR2 popup shows after M1 completion', () => {
+  describe('Phase 6: Post-M1 → Prospector unlock', () => {
+    it('Prospector popup shows after M1 completion', () => {
       visitWithState(fullState({
         screen: 'hub',
         popup: 'sr2',
@@ -429,7 +480,7 @@ describe('Full Game Loop — Landnam', () => {
         },
         tutorial: false,
       }))
-      cy.contains('STARTER ROCKET 2').should('be.visible')
+      cy.contains('PROSPECTOR').should('be.visible')
       cy.contains('Purchase it for 1.3B').should('be.visible')
     })
 
@@ -498,7 +549,7 @@ describe('Full Game Loop — Landnam', () => {
       cy.get('[data-testid="mission-card-generated-s2-starter-bulk-4"]').should('have.attr', 'data-mission-id', 'generated-s2-starter-bulk-4')
     })
 
-    it('M2 rocket purchase shows SR2 and purchase coach step', () => {
+    it('M2 rocket purchase shows Prospector and purchase coach step', () => {
       visitWithState(fullState({
         screen: 'rocket-buy',
         missionId: 'generated-s2-starter-bulk-4',
@@ -526,11 +577,11 @@ describe('Full Game Loop — Landnam', () => {
         },
         tutorial: true,
       }))
-      cy.contains('Starter Rocket 2').should('be.visible')
+      cy.contains('Prospector').should('be.visible')
       cy.contains('Select Your Rocket').should('be.visible')
     })
 
-    it('M2 preflight launch button visible with prebuilt SR2', () => {
+    it('M2 preflight launch button visible with prebuilt Prospector', () => {
       visitWithState(fullState({
         screen: 'fab',
         missionId: 'generated-s2-starter-bulk-4',
@@ -559,7 +610,7 @@ describe('Full Game Loop — Landnam', () => {
         },
         tutorial: false,
       }))
-      cy.contains('Starter Rocket 2').should('be.visible')
+      cy.contains('Prospector').should('be.visible')
       cy.contains('PREBUILT').should('be.visible')
       cy.get('[data-testid="launch-btn"]').should('be.visible')
     })

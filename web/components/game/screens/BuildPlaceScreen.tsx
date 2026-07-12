@@ -38,6 +38,7 @@ interface BuildPlaceScreenProps {
     placed: string[]
     freeOperations: boolean
     refineryUnlocked?: boolean
+    placementPlots?: Record<string, number>
   }
 }
 
@@ -75,6 +76,14 @@ export default function BuildPlaceScreen({ onPlaced, onBack, hasCoach, player }:
     const bi = (b.components.find(c => c.type === 'BuildPlot')?.index as number) ?? 0
     return ai - bi
   })
+
+  const placementPlots = player.placementPlots ?? {}
+  // Pre-placementPlots saves always put the launchpad in plot 0 (mirrors HubScreen's legacy handling).
+  const legacyLaunchpadPlot0 = player.placed.includes('launchpad') && placementPlots.launchpad == null
+  const occupiedPlots = new Set<number>([
+    ...Object.values(placementPlots),
+    ...(legacyLaunchpadPlot0 ? [0] : []),
+  ])
   const previewBuildings: HubBuildingDef[] = cell == null
     ? []
     : sortedEntities.flatMap(entity => {
@@ -128,6 +137,7 @@ export default function BuildPlaceScreen({ onPlaced, onBack, hasCoach, player }:
           .map(entity => {
             const idx = (entity.components.find(c => c.type === 'BuildPlot')?.index as number) ?? 0
             const on = cell === idx
+            const taken = occupiedPlots.has(idx)
             const color = STRUCTURE_COLORS[picked] ?? '#3fa9ff'
             return (
               <button
@@ -135,14 +145,16 @@ export default function BuildPlaceScreen({ onPlaced, onBack, hasCoach, player }:
                 className="build-plot-button"
                 data-testid={`build-plot-${idx}`}
                 data-coach-id={idx === 0 ? 'build-plot-0' : undefined}
-                onClick={() => setCell(on ? null : idx)}
+                onClick={() => !taken && setCell(on ? null : idx)}
+                disabled={taken}
                 style={{
                   position: 'absolute',
                   left: `calc(${(entity.transform.position.x / 402) * 100}%)`,
                   bottom: 'calc(22% - 20px)',
                   width: 86,
                   transform: 'translateX(-50%)',
-                  cursor: 'pointer',
+                  cursor: taken ? 'not-allowed' : 'pointer',
+                  opacity: taken ? 0.35 : 1,
                   background: 'transparent',
                   border: 'none',
                   padding: 0,

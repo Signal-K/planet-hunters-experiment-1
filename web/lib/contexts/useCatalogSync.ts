@@ -32,6 +32,7 @@ export function useCatalogSync(
           s.player.missionsDone,
           CONTRACTOR_SLOTS,
           MINERAL_META,
+          s.player.contractorMissions,
         ),
       },
     }))
@@ -51,7 +52,7 @@ export function useCatalogSync(
             ...s.player,
             dailyContractorPool: {
               date: today,
-              missions: generateDailyContractorPool(today, s.player.missionsDone, CONTRACTOR_SLOTS, MINERAL_META),
+              missions: generateDailyContractorPool(today, s.player.missionsDone, CONTRACTOR_SLOTS, MINERAL_META, s.player.contractorMissions),
               acceptedId: null,
               completedIds: [],
             },

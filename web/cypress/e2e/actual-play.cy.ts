@@ -68,7 +68,7 @@ function playM1FromIntro() {
   cy.get('[data-testid="continue-build-btn"]').should('be.visible').click()
 
   cy.contains('Select Rocket', { timeout: 10000 }).should('be.visible')
-  cy.contains('button', 'Launch with Starter Rocket 1').click()
+  cy.contains('button', 'Launch with Explorer').click()
 
   cy.get('[data-testid="launch-btn"]', { timeout: 10000 }).should('be.visible')
   cy.get('[data-testid="launch-btn"]').click()
@@ -84,7 +84,8 @@ function playM1FromIntro() {
   cy.get('[data-testid="resolve-cargo-btn"]').click()
   cy.get('[data-testid="collect-reward-btn"]').click()
 
-  cy.contains('Commodity Exchange', { timeout: 10000 }).should('be.visible')
+  // Still in guided onboarding after M1 — debrief returns to hub, not market.
+  cy.get('[data-testid="building-launchpad"]', { timeout: 10000 }).should('be.visible')
 }
 
 describe('Actual local playthroughs', () => {
@@ -93,7 +94,7 @@ describe('Actual local playthroughs', () => {
     startFresh()
     playM1FromIntro()
     savedState().then(state => {
-      expect(state.screen).to.eq('market')
+      expect(state.screen).to.eq('hub')
       expect(state.player.missionsDone).to.eq(1)
       expect(state.player.placed).to.include('launchpad')
     })

@@ -16,6 +16,17 @@ const STORAGE_KEY = 'landnam-game-state-v1'
 const SURVEY_KEY = 'landnam-surveys-shown'
 const SNOOZE_KEY = 'landnam-upgrade-prompt-snooze-until'
 
+// PixiJS v8 can throw _cancelResize during teardown when component cleanup
+// races an in-flight async app.init() (e.g. MiningCanvas/HubPixiCanvas torn
+// down mid-transition) — an uncaught rejection Next's error boundary turns
+// into a full-screen "SIGNAL INTERRUPTED" crash. Same known issue and same
+// suppression already used in visual-qa.cy.ts; the visual content/game state
+// is unaffected, so this is a teardown-only artifact, not a real failure.
+Cypress.on('uncaught:exception', (err) => {
+  if (err.message.includes('_cancelResize')) return false
+  return true
+})
+
 const ALL_SURVEY_KEYS = [
   'lnm_first_launch', 'lnm_mining_feel', 'lnm_contractor_pick',
   'lnm_mission_friction', 'lnm_progression_feel', 'lnm_end_of_content',
@@ -112,17 +123,26 @@ function completeMining() {
   cy.get('[data-testid="mining-canvas"]', { timeout: 20000 }).should('be.visible')
   // Firing doesn't guarantee a hit — the laser only collects ore that's swept
   // through the firing zone at that instant (real-time collision, not per-click).
-  // Fire repeatedly with a short pause between shots so ore has time to drift
-  // into range, stopping as soon as the order is filled (return-home-btn enables).
-  function fireUntilFilled(attemptsLeft: number) {
+  // Blind-firing on a fixed interval regardless of ore position was unreliable
+  // (could exhaust laser charges — "Laser Depleted" — well before the order
+  // filled, since most shots landed while no ore was in range). MiningScreen
+  // exposes a `data-ore-near` attribute (the same signal that drives the
+  // tutorial-coach pulse ring) — poll it and only fire while it's true, same
+  // as how a player would time shots by watching the pulse.
+  function fireWhenNear(attemptsLeft: number) {
     cy.get('[data-testid="return-home-btn"]').then($btn => {
       if (!$btn.is(':disabled') || attemptsLeft <= 0) return
-      cy.get('[data-testid="fire-laser-btn"]').click()
-      cy.wait(400)
-      fireUntilFilled(attemptsLeft - 1)
+      cy.get('[data-testid="fire-laser-btn"]').then($fireBtn => {
+        if ($fireBtn.is(':disabled')) return // laser depleted — nothing more to try
+        cy.get('[data-ore-near]').invoke('attr', 'data-ore-near').then(near => {
+          if (near === 'true') cy.get('[data-testid="fire-laser-btn"]').click()
+          cy.wait(120)
+          fireWhenNear(attemptsLeft - 1)
+        })
+      })
     })
   }
-  fireUntilFilled(25)
+  fireWhenNear(400)
   cy.get('[data-testid="return-home-btn"]', { timeout: 10000 }).should('not.be.disabled').click()
 }
 
@@ -147,17 +167,25 @@ function playM1() {
   // can still be settling right after the missions-screen transition), and an
   // early actionability check can otherwise see a transient overlap.
   cy.wait(300)
+  // Cypress's actionability check intermittently reports this card as "covered"
+  // by the tutorial coach card, but measuring both elements' real
+  // getBoundingClientRect() at click time shows a large gap (coach bottom
+  // ~150-160px, card top ~260-270px on both viewports) and
+  // document.elementFromPoint(cardCenter) resolves to the card itself — this
+  // is the same class of Cypress false-positive as the coach-ring visibility
+  // check above, not a real layout overlap. Force the click like the other
+  // canvas/coach-adjacent interactions in this file.
   cy.get('[data-testid="mission-card-generated-s1-starter-bulk-1"]')
-    .should('be.visible').click()
+    .should('be.visible').click({ force: true })
 
   // Step 3: pick target
   cy.contains('Pick Target', { timeout: 8000 }).should('be.visible')
   cy.get('[data-testid="target-eros"]').should('exist').click({ force: true })
   cy.get('[data-testid="continue-build-btn"]').should('be.visible').click()
 
-  // Step 4: rocket selection — SR1 is free
+  // Step 4: rocket selection — Explorer is free
   cy.contains('Select Rocket', { timeout: 8000 }).should('be.visible')
-  cy.contains('button', 'Launch with Starter Rocket 1').should('be.visible').click()
+  cy.contains('button', 'Launch with Explorer').should('be.visible').click()
 
   // Step 5: assembly → confirm launch
   cy.get('[data-testid="launch-btn"]', { timeout: 8000 }).should('be.visible').click()
@@ -197,14 +225,14 @@ function playM2() {
   cy.get('[data-testid="continue-build-btn"]').should('be.visible').click()
 
   // Rocket purchase screen — step 21 fires here (manual card, current copy is
-  // 'SR2 — Select Your Rocket', see lib/data/tutorial.ts M2_STEPS[1])
+  // 'Prospector — Select Your Rocket', see lib/data/tutorial.ts M2_STEPS[1])
   cy.contains('Select Rocket', { timeout: 8000 }).should('be.visible')
   cy.get('[data-testid="tutorial-coach-block"]')
     .should('be.visible')
     .should('contain', 'Select Your Rocket')
   cy.get('[data-testid="coach-got-it-btn"]').should('be.visible').click()
 
-  // Purchase SR2
+  // Purchase Prospector
   cy.contains('button', /Purchase/).should('be.visible').click()
 
   // Fab → launch
@@ -216,9 +244,11 @@ function playM2() {
 
 // ─── Full M3 play-through ─────────────────────────────────────────────────────
 //
-// M3 uses a rover delivery instead of mining. The rover canvas requires joystick
-// input which cannot be automated reliably, so this test covers M3 up through
-// the launch and separately verifies the debrief handles rover completion.
+// M3 is now a two-leg contractor transport job (mine at a pickup target, then
+// deliver to a second target before flying home) — see [[Decide: M3 becomes
+// a transport mission]]. Both M3 missions have preset targetId/deliveryTargetId,
+// so picking one skips the target picker and goes straight to rocket-buy, same
+// as the old self-directed M3 flow it replaced.
 
 function playM3ToLaunch() {
   cy.contains('Earth Base', { timeout: 10000 }).should('be.visible')
@@ -233,32 +263,35 @@ function playM3ToLaunch() {
   // Navigate to missions
   navToMissions()
 
-  // Pick M3 (Lutetia Survey Drop — has preset targetId: lutetia, so goes directly to rocket-buy)
-  cy.get('[data-testid="mission-card-lnm_m3_ore_delivery"]')
+  // Pick one of the two M3 transport-contractor missions.
+  cy.get('[data-testid="mission-card-lnm_m3_relay_bennu_vesta"]')
     .scrollIntoView().should('be.visible').click()
 
   // Rocket-buy — step 31 fires here (no target picker since targetId is preset).
-  // Current copy is 'Cargo Rocket — No Drill' (lib/data/tutorial.ts M3_STEPS[1]).
+  // Current copy is 'Two-Stop Route' (lib/data/tutorial.ts M3_STEPS[1]).
   cy.contains('Select Rocket', { timeout: 8000 }).should('be.visible')
   cy.get('[data-testid="tutorial-coach-block"]')
     .should('be.visible')
-    .should('contain', 'Cargo Rocket')
+    .should('contain', 'Two-Stop Route')
   cy.get('[data-testid="coach-got-it-btn"]').should('be.visible').click()
 
-  // Proceed with configured rocket
-  cy.contains('button', /Launch with|Purchase/).should('be.visible').click()
+  // Purchase the suggested rocket
+  cy.contains('button', /Purchase/).should('be.visible').click()
 
-  // Fab — step 32 fires here. Current copy is 'Ready to Deliver'
+  // Fab — step 32 fires here. Current copy is 'Confirm The Run'
   // (lib/data/tutorial.ts M3_STEPS[2]).
   cy.get('[data-testid="tutorial-coach-block"]', { timeout: 8000 })
     .should('be.visible')
-    .should('contain', 'Ready to Deliver')
+    .should('contain', 'Confirm The Run')
   cy.get('[data-testid="coach-got-it-btn"]').should('be.visible').click()
 
   // Launch
   cy.get('[data-testid="launch-btn"]', { timeout: 8000 }).should('be.visible').click()
 
-  // Transit begins — rover delivery screen follows (not mining-canvas)
+  completeMining()
+
+  // Cargo secured for the pickup leg — the two-leg mechanic routes to the
+  // delivery target next, not straight home.
   cy.contains('MISSION TRANSIT', { timeout: 15000 }).should('be.visible')
 }
 
@@ -316,7 +349,11 @@ describe('Mobile layout: radial nav visible, sidebar hidden', () => {
     visitHub({ doneSteps: { 0: true } })
     cy.contains('Earth Base', { timeout: 10000 }).should('be.visible')
     cy.get('[data-testid="tutorial-coach-block"]').should('contain', 'Open a Mission')
-    cy.get('[data-testid="tutorial-coach-ring"]').should('be.visible').then($ring => {
+    // The ring is a decorative, pointerEvents:'none' overlay — Cypress's
+    // be.visible check uses elementFromPoint, which always reports it as
+    // "covered" by whatever's underneath since it's excluded from hit-testing.
+    // Assert existence + the bounding-rect overlap instead of visibility.
+    cy.get('[data-testid="tutorial-coach-ring"]').should('exist').then($ring => {
       const s = $ring[0].getBoundingClientRect()
       cy.get('[data-testid="radial-nav-toggle"]').then($btn => {
         const b = $btn[0].getBoundingClientRect()

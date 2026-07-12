@@ -1,5 +1,4 @@
-// E2E tests for M3 features: rover delivery, fixed-target missions, TerritoryClaimPopup,
-// and post-onboarding holding screen.
+// E2E tests for M3 transport-contractor pick and post-onboarding Free Ops.
 
 import type { GameState } from '@/game-context'
 
@@ -47,12 +46,15 @@ function visitWithState(state: Partial<GameState>) {
   })
 }
 
-describe('M3 — Rover delivery and territory claim', () => {
+describe('M3 — Transport contractor pick and Free Ops unlock', () => {
   describe('Mission board — M3 availability', () => {
-    it('shows M3 mission card (Lutetia Survey Drop) when missionsDone === 2', () => {
+    it('shows both M3 transport-contractor mission cards when missionsDone === 2', () => {
       visitWithState({ screen: 'missions' })
-      cy.contains('Lutetia Survey Drop').scrollIntoView().should('be.visible')
-      cy.get('[data-testid="mission-card-lnm_m3_ore_delivery"]').scrollIntoView().should('be.visible')
+      cy.contains('Belt Courier Run').scrollIntoView().should('be.visible')
+      cy.contains('Nickel Line Handoff').scrollIntoView().should('be.visible')
+      cy.get('[data-testid="mission-card-lnm_m3_relay_bennu_vesta"]').scrollIntoView().should('be.visible')
+      cy.get('[data-testid="mission-card-lnm_m3_relay_itokawa_eros"]').scrollIntoView().should('be.visible')
+      cy.contains('Contractor Request').should('not.exist')
     })
 
     it('shows post-onboarding holding screen when missionsDone >= 1 and no missions available', () => {
@@ -88,59 +90,58 @@ describe('M3 — Rover delivery and territory claim', () => {
     })
   })
 
-  describe('Fixed-target missions — M3 skips target picker', () => {
-    it('picking M3 mission goes directly to rocket-buy without visiting target picker', () => {
+  describe('M3 transport mission — preset route', () => {
+    it('picking an M3 mission skips the target picker and goes straight to rocket-buy', () => {
       visitWithState({ screen: 'missions' })
-      cy.get('[data-testid="mission-card-lnm_m3_ore_delivery"]').scrollIntoView().click()
-      // Should land on rocket-buy, NOT targets screen
-      cy.contains('Select Rocket').should('be.visible')
-      cy.contains('Compatible').should('not.exist')
+      cy.get('[data-testid="mission-card-lnm_m3_relay_bennu_vesta"]').scrollIntoView().click()
+      cy.contains('Select Rocket', { timeout: 8000 }).should('be.visible')
+      cy.contains('Pick Target').should('not.exist')
     })
 
-    it('fab screen for M3 shows Cargo Module slot', () => {
+    it('fab screen for M3 keeps mining drill installed', () => {
       visitWithState({
         screen: 'fab',
-        missionId: 'lnm_m3_ore_delivery',
-        targetId: 'lutetia',
-        rocket: { chassis: 'hull-mk2', propulsion: 'fusion-b2', drill: 'cargo-module-t1' },
+        missionId: 'lnm_m3_relay_bennu_vesta',
+        targetId: 'bennu',
+        rocket: { chassis: 'hull-mk2', propulsion: 'fusion-b2', drill: 'laser-t2' },
       })
-      cy.contains('Lutetia Survey Drop').should('be.visible')
+      cy.contains('Belt Courier Run').should('be.visible')
+      cy.contains('Cargo Module').should('not.exist')
       cy.get('[data-testid="launch-btn"]').should('be.visible')
     })
   })
 
-  describe('TerritoryClaimPopup', () => {
-    it('renders territory popup with contractor and target names', () => {
+  describe('No territory claim during M3', () => {
+    it('does not render territory popup for the transport contract (no rover payload)', () => {
       visitWithState({
         screen: 'debrief',
-        missionId: 'lnm_m3_ore_delivery',
-        targetId: 'lutetia',
-        lastCargo: { nickel: 2 },
-        pendingTerritoryClaimFor: { targetId: 'lutetia', contractorId: 'kepler-materials' },
+        missionId: 'lnm_m3_relay_bennu_vesta',
+        targetId: 'bennu',
+        lastCargo: { iron: 3, carbon: 2 },
       })
-      cy.get('[role="dialog"][aria-label="Territory established"]').should('be.visible')
-      cy.contains('Territory Established').should('be.visible')
-      cy.contains('Claim Confirmed').should('be.visible')
-      cy.contains('21 Lutetia').should('be.visible')
-    })
-
-    it('UNDERSTOOD button dismisses the popup and goes to market', () => {
-      visitWithState({
-        screen: 'debrief',
-        missionId: 'lnm_m3_ore_delivery',
-        targetId: 'lutetia',
-        lastCargo: { nickel: 2 },
-        pendingTerritoryClaimFor: { targetId: 'lutetia', contractorId: 'kepler-materials' },
-      })
-      cy.get('[role="dialog"]').should('be.visible')
-      cy.contains('UNDERSTOOD').click()
-      cy.get('[role="dialog"]').should('not.exist')
-      cy.contains('Commodity Exchange').should('be.visible')
-    })
-
-    it('territory popup does not appear without pendingTerritoryClaimFor', () => {
-      visitWithState({ screen: 'hub' })
       cy.get('[role="dialog"][aria-label="Territory established"]').should('not.exist')
+      cy.contains('Belt Courier Run').should('be.visible')
+    })
+
+    it('collecting M3 reward opens Free Ops explanation on mission board', () => {
+      visitWithState({
+        screen: 'debrief',
+        missionId: 'lnm_m3_relay_bennu_vesta',
+        targetId: 'bennu',
+        lastCargo: { iron: 3, carbon: 2 },
+      })
+      cy.get('[data-testid="resolve-cargo-btn"]').click()
+      cy.get('[data-testid="collect-reward-btn"]').click()
+      cy.get('[role="dialog"][aria-label="Territory established"]').should('not.exist')
+      // Debrief routes to the Market screen (sell your haul) rather than
+      // straight back to the mission board — navigate there to see the
+      // Free Ops explanation.
+      cy.get('[data-testid="top-bar-back"]').click()
+      cy.get('[data-testid="radial-nav-toggle"]').click()
+      cy.get('[data-testid="radial-nav-missions"]').click()
+      cy.contains('Custom Missions Unlocked').should('be.visible')
+      cy.contains('Free Ops · Hot Minerals').should('be.visible')
+      cy.contains('Infrastructure').should('be.visible')
     })
   })
 
@@ -170,8 +171,8 @@ describe('M3 — Rover delivery and territory claim', () => {
           launchpadUpgraded: false,
           loanDebt: 0,
           loanOffered: false,
-          roverDeployments: [{ roverId: 'test-rover', targetId: 'lutetia', contractorId: 'kepler-materials', timestamp: Date.now() }],
-          contractorTerritories: { 'kepler-materials': ['lutetia'] },
+          roverDeployments: [],
+          contractorTerritories: {},
         },
       })
       cy.contains('Training Arc Complete').should('be.visible')

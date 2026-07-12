@@ -6,7 +6,7 @@ import { effectiveCargoCapacity, effectiveMaxOrbit } from './skills'
 export const PARTS: { chassis: Part[]; propulsion: Part[]; drill: Part[] } = {
   chassis: [
     { id: 'hull-mk1', name: 'Hull MK1', tier: 1, locked: false, img: '/parts/starter_rocket_t1.png', mass: 2, cargo: 6 },
-    { id: 'hull-mk2', name: 'SR2 Unibody Frame', tier: 2, locked: false, img: '/parts/reinforced_hull_t2.png', mass: 3, cargo: 10, missionsRequired: 1 },
+    { id: 'hull-mk2', name: 'Prospector Unibody Frame', tier: 2, locked: false, img: '/parts/reinforced_hull_t2.png', mass: 3, cargo: 10, missionsRequired: 1 },
     { id: 'hull-cargo', name: 'Cargo Bay T1', tier: 1, locked: false, img: '/parts/cargo_bay_t1.png', mass: 2, cargo: 14, missionsRequired: 1 },
     { id: 'hull-mk3', name: 'Hull MK3 – Heavy Frame', tier: 3, locked: true, img: '/parts/reinforced_hull_t2.png', mass: 4, cargo: 18, missionsRequired: 2 },
     { id: 'hull-hauler', name: 'Bulk Hauler Chassis', tier: 3, locked: true, img: '/parts/cargo_bay_t1.png', mass: 3, cargo: 24, missionsRequired: 2 },
@@ -31,9 +31,12 @@ export function suggestBuild(opts: {
   launchpadUpgraded?: boolean
   parts?: typeof PARTS
   unlockedSkillNodes?: string[]
+  // For two-leg "mine then deliver" missions — ensures the suggested
+  // propulsion also reaches the delivery leg, not just the pickup target.
+  deliveryTarget?: Target | null
 }): RocketConfig {
   const { mission, target, parts = PARTS } = opts
-  const orbit = target?.orbit ?? 4
+  const orbit = Math.max(target?.orbit ?? 4, opts.deliveryTarget?.orbit ?? 0)
   const drillTier = mission?.requires.drill_tier ?? 1
   const cargoMin = mission?.requires.cargo_min ?? 6
   const effectiveMissionsDone = opts.launchpadUpgraded ? Math.max(opts.missionsDone, 1) : opts.missionsDone

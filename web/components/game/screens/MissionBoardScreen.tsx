@@ -5,7 +5,7 @@ import Image from 'next/image'
 import TopBar from '@/components/ui/TopBar'
 import Panel from '@/components/ui/Panel'
 import StatusPill from '@/components/ui/StatusPill'
-import { compatibleTargetsFor, contractorAffinityBonus, contractorUnlocked, FREE_OPS_START_MISSIONS_DONE, CONTRACTOR_AFFINITY_MISSION_THRESHOLD, MISSION_TEMPLATES, CONTRACTOR_SLOTS } from '@/lib/data'
+import { compatibleTargetsFor, contractorAffinityBonus, contractorUnlocked, FREE_OPS_START_MISSIONS_DONE, CONTRACTOR_AFFINITY_MISSION_THRESHOLD, MISSION_TEMPLATES, CONTRACTOR_SLOTS, SELF_DIRECTED_MINING_MISSION_ID } from '@/lib/data'
 import type { DailyContractorPool } from '@/lib/data'
 import type { Catalog } from '@/lib/catalog'
 import { TUTORIAL_CONTENT_TOP } from '@/lib/tutorial-layout'
@@ -40,13 +40,19 @@ export default function MissionBoardScreen({ onBack, onPick, missionsDone, freeO
     return () => clearInterval(id)
   }, [])
   const now = tick
-  const isOnCooldown = (contractor: string) => {
-    if (!contractorCooldowns) return false
+  const isOnCooldown = (contractor: string | undefined) => {
+    if (!contractorCooldowns || !contractor) return false
     const expiry = contractorCooldowns[contractor]
     return expiry && expiry > now
   }
   const isCompletedToday = (id: string) =>
     dailyContractorPool?.completedIds.includes(id) ?? false
+  const mineralEntries = Object.values(MINERAL_META)
+  const averageMineralPrice = mineralEntries.reduce((sum, mineral) => sum + mineral.price, 0) / Math.max(1, mineralEntries.length)
+  const hotMinerals = mineralEntries
+    .filter(mineral => mineral.price > averageMineralPrice)
+    .sort((a, b) => b.price - a.price)
+    .slice(0, 3)
 
   const useDailyPool = freeOperations && !!dailyContractorPool
   const sequence = missionsDone + 1
@@ -56,13 +62,23 @@ export default function MissionBoardScreen({ onBack, onPick, missionsDone, freeO
   const storyMissionPool = freeOperations ? MISSIONS.filter(m => m.tag === 'STORY') : []
   const freeOpsMissionPool = MISSIONS.filter(m => m.id.startsWith('freeops-') || m.id.startsWith('exo-survey-') || m.tag === 'STORY')
   const exoplanetSurveyPool = freeOperations ? MISSIONS.filter(m => m.id.startsWith('exo-survey-')) : []
+  // Hand-authored "mine then deliver" logistics jobs are always offered in Free Ops,
+  // independent of the daily-rotating contractor pool.
+  const logisticsMissionPool = freeOperations ? MISSIONS.filter(m => !!m.deliveryTargetId && !isOnCooldown(m.contractor)) : []
+  // Self-directed mining has no contractor, no daily limit, and no cooldown —
+  // always launchable from its own dedicated Free Ops panel below (not a card
+  // in the regular list, since it isn't tied to a contractor or a pool slot).
+  const contractorPoolExhausted = useDailyPool
+    && dailyContractorPool!.missions.length > 0
+    && dailyContractorPool!.missions.every(m => isCompletedToday(m.id))
   const available = useDailyPool
-    ? [...storyMissionPool, ...dailyContractorPool!.missions.filter(m => !isCompletedToday(m.id)), ...exoplanetSurveyPool]
+    ? [...storyMissionPool, ...logisticsMissionPool, ...dailyContractorPool!.missions.filter(m => !isCompletedToday(m.id)), ...exoplanetSurveyPool]
     : MISSIONS.filter(m => {
-        const contractor = CONTRACTORS[m.contractor]
-        if (!contractor) return false
+        if (m.id === SELF_DIRECTED_MINING_MISSION_ID) return false
+        const customMission = !m.contractor
+        if (m.contractor && !CONTRACTORS[m.contractor]) return false
         if (freeOperations) {
-          return freeOpsMissionPool.some(item => item.id === m.id) && !isOnCooldown(m.contractor)
+          return customMission || !!m.deliveryTargetId || (freeOpsMissionPool.some(item => item.id === m.id) && !isOnCooldown(m.contractor))
         }
         // Onboarding: sequence is the only gate — contractor unlock tiers don't apply
         return m.sequence === sequence
@@ -104,8 +120,8 @@ export default function MissionBoardScreen({ onBack, onPick, missionsDone, freeO
           <div style={{ fontFamily: 'var(--ln-font-display)', fontWeight: 800, fontSize: 22, color: '#e6efff', textAlign: 'center', lineHeight: 1.25, marginBottom: 16 }}>
             Three Operations Down
           </div>
-          <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 14, color: '#7a96b4', textAlign: 'center', lineHeight: 1.6, maxWidth: 280, marginBottom: 32 }}>
-            You&apos;ve completed the current build of Landnám. The next phase — Free Ops, contractor board, and the full asteroid belt — is on its way.
+          <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 14, color: '#7a96b4', textAlign: 'center', lineHeight: 1.6, maxWidth: 300, marginBottom: 32 }}>
+            Custom missions are unlocked. Pick contractor requests, build infrastructure, or mine high-value minerals for your own account.
           </div>
 
           <div style={{
@@ -116,7 +132,7 @@ export default function MissionBoardScreen({ onBack, onPick, missionsDone, freeO
             color: '#4a6a88', letterSpacing: '0.14em', textAlign: 'center',
             textTransform: 'uppercase',
           }}>
-            More missions loading · Sprint 5
+            Open Free Ops from the mission board
           </div>
         </div>
       </div>
@@ -131,9 +147,70 @@ export default function MissionBoardScreen({ onBack, onPick, missionsDone, freeO
         <TopBar eyebrow={freeOperations ? 'EARTH BASE · FREE OPS' : `EARTH BASE · L${missionsDone + 1}`} title="Mission Board" onBack={onBack} />
 
       <div data-ui-zone={UI_ZONES.screenContent} style={{ position: 'absolute', inset: 0, paddingTop: hasCoach ? TUTORIAL_CONTENT_TOP : 72, paddingBottom: hasCoach ? 190 : 96, overflowY: 'auto' }}>
+        {freeOperations && (
+          <div style={{ padding: '0 14px 10px 14px' }}>
+            <Panel accent={contractorPoolExhausted ? 'var(--ln-ok)' : 'var(--ln-cyan)'} style={{ padding: 12 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+                <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 10, fontWeight: 800, letterSpacing: '0.22em', color: contractorPoolExhausted ? 'var(--ln-ok)' : 'var(--ln-cyan)', textTransform: 'uppercase' }}>
+                  Free Ops · Self-Directed Mining
+                </div>
+              </div>
+              <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 12, color: '#a9b8ce', lineHeight: 1.45, marginBottom: 10 }}>
+                {contractorPoolExhausted
+                  ? "Today's client requests are done. Launch a self-directed run — pick any reachable target and sell the haul yourself at market price."
+                  : 'No client, no daily limit. Pick any reachable target, mine what looks valuable, and sell the haul yourself at market price.'}
+              </div>
+              <button
+                data-testid="self-directed-mining-btn"
+                onClick={() => onPick(SELF_DIRECTED_MINING_MISSION_ID)}
+                style={{
+                  width: '100%', padding: '10px 16px', borderRadius: 8, border: 'none', cursor: 'pointer',
+                  background: contractorPoolExhausted ? 'var(--ln-ok)' : 'var(--ln-cyan)',
+                  color: '#06090f', fontFamily: 'var(--ln-font-display)', fontWeight: 800, fontSize: 11,
+                  letterSpacing: '0.14em', textTransform: 'uppercase',
+                }}
+              >
+                Launch Self-Directed Run
+              </button>
+            </Panel>
+          </div>
+        )}
+        {freeOperations && (
+          <div style={{ padding: '0 14px 10px 14px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+            <Panel accent="var(--ln-amber)" style={{ padding: 12 }}>
+              <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 10, fontWeight: 800, letterSpacing: '0.22em', color: 'var(--ln-amber)', textTransform: 'uppercase', marginBottom: 6 }}>
+                Custom Missions Unlocked
+              </div>
+              <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 12, color: '#a9b8ce', lineHeight: 1.45 }}>
+                Contractor requests pay fixed bonuses. Infrastructure work grows operations for clients or for you. Free Ops highlights minerals above average market value so you can choose what is worth mining now.
+              </div>
+            </Panel>
+            <Panel accent="var(--ln-ok)" style={{ padding: 12 }}>
+              <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 10, fontWeight: 800, letterSpacing: '0.22em', color: 'var(--ln-ok)', textTransform: 'uppercase', marginBottom: 8 }}>
+                Free Ops · Hot Minerals
+              </div>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                {hotMinerals.map(mineral => (
+                  <span key={mineral.name} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '4px 8px', borderRadius: 6, border: `1px solid ${mineral.color}66`, background: 'rgba(8,16,28,0.72)', fontFamily: 'var(--ln-font-mono)', fontSize: 10, color: mineral.color }}>
+                    <strong>{mineral.sym}</strong> ▲{mineral.price.toLocaleString()}
+                  </span>
+                ))}
+              </div>
+            </Panel>
+            <Panel accent="var(--ln-cyan)" style={{ padding: 12 }}>
+              <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 10, fontWeight: 800, letterSpacing: '0.22em', color: 'var(--ln-cyan)', textTransform: 'uppercase', marginBottom: 6 }}>
+                Infrastructure
+              </div>
+              <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 12, color: '#a9b8ce', lineHeight: 1.45 }}>
+                Client work includes satellite launches for clients. Own infrastructure is where you place your satellite and expand personal operations.
+              </div>
+            </Panel>
+          </div>
+        )}
+
         <div style={{ padding: '0 14px 8px 14px', display: 'flex', alignItems: 'center', gap: 8 }}>
           <span style={{ fontFamily: 'var(--ln-font-display)', fontSize: 10, fontWeight: 700, letterSpacing: '0.22em', color: 'var(--ln-text-muted)', textTransform: 'uppercase' }}>
-            Active Contracts · {available.length}
+            {freeOperations ? 'Client Requests' : 'Active Contracts'} · {available.length}
           </span>
           <span style={{ flex: 1 }} />
           <StatusPill kind="amber" dim>Sort · Payout</StatusPill>
@@ -158,21 +235,21 @@ export default function MissionBoardScreen({ onBack, onPick, missionsDone, freeO
             const firstValidIdx = list.findIndex(m => {
               if (isCompletedToday(m.id)) return false
               if (!useDailyPool && isOnCooldown(m.contractor)) return false
-              const ctr = CONTRACTORS[m.contractor]
-              if (!ctr) return false
-              const cr = freeOperations || m.sequence === sequence || contractorUnlocked(ctr, sequence)
+              const ctr = m.contractor ? CONTRACTORS[m.contractor] : null
+              if (m.contractor && !ctr) return false
+              const cr = freeOperations || m.sequence === sequence || (!!ctr && contractorUnlocked(ctr, sequence))
               return cr && (freeOperations || available.some(item => item.id === m.id))
             })
             return list.map((m, idx) => {
             const completedToday_ = isCompletedToday(m.id)
             const cooldown = !useDailyPool && isOnCooldown(m.contractor)
-            const contractor = CONTRACTORS[m.contractor]
-            if (!contractor) return null
-            const isStoryMission = m.tag === 'STORY'
-            const contractorReady = freeOperations || m.sequence === sequence || contractorUnlocked(contractor, sequence)
+            const contractor = m.contractor ? CONTRACTORS[m.contractor] : null
+            if (m.contractor && !contractor) return null
+            const isStoryMission = m.tag === 'STORY' && !m.deliveryTargetId
+            const contractorReady = freeOperations || m.sequence === sequence || (!!contractor && contractorUnlocked(contractor, sequence))
             const unlocked = !completedToday_ && !cooldown && contractorReady && (freeOperations || available.some(item => item.id === m.id))
             const mTargets = compatibleTargetsFor(m, targets)
-            const affinityMultiplier = isStoryMission ? 0 : contractorAffinityBonus(contractor, contractorMissions?.[contractor.id] ?? 0)
+            const affinityMultiplier = isStoryMission || !contractor ? 0 : contractorAffinityBonus(contractor, contractorMissions?.[contractor.id] ?? 0)
             const affinityBonus = Math.round(m.payout.francs * affinityMultiplier)
             const displayPayout = m.payout.francs + affinityBonus
             const isHighlighted = hasCoach && idx === firstValidIdx
@@ -180,8 +257,11 @@ export default function MissionBoardScreen({ onBack, onPick, missionsDone, freeO
               : cooldown ? 'cooldown' as const
               : !unlocked ? 'locked' as const
               : 'available' as const
-            const lockedDetail = !contractorReady ? `L${contractor.unlockTier}` : m.sequence <= missionsDone ? 'Completed' : m.unlockAt
-            const cooldownLabel = cooldown ? formatCooldown(contractorCooldowns![m.contractor] - now) : undefined
+            const lockedDetail = !contractorReady ? (contractor ? `L${contractor.unlockTier}` : 'Locked') : m.sequence <= missionsDone ? 'Completed' : m.unlockAt
+            const cooldownLabel = cooldown && m.contractor ? formatCooldown(contractorCooldowns![m.contractor] - now) : undefined
+            const routeLabel = m.deliveryTargetId
+              ? `${targets.find(t => t.id === m.targetId)?.name ?? m.targetId} → ${targets.find(t => t.id === m.deliveryTargetId)?.name ?? m.deliveryTargetId}`
+              : undefined
             return (
               <MissionCard
                 key={m.id}
@@ -198,6 +278,7 @@ export default function MissionBoardScreen({ onBack, onPick, missionsDone, freeO
                 lockedDetail={lockedDetail}
                 cooldownLabel={cooldownLabel}
                 highlighted={isHighlighted}
+                routeLabel={routeLabel}
                 onPick={() => onPick(m.id)}
               />
             )
@@ -206,6 +287,44 @@ export default function MissionBoardScreen({ onBack, onPick, missionsDone, freeO
         </div>
 
         {freeOperations && <AffinityAdvancedSection contractors={catalog.contractors} contractorMissions={contractorMissions} />}
+        {freeOperations && <ComingSoonMissionsSection />}
+      </div>
+    </div>
+  )
+}
+
+const FUTURE_MISSION_TYPES = [
+  { id: 'rovers', label: 'Rover Deployment', brief: 'Deploy surface rovers to scout and sample landing sites.' },
+  { id: 'colonies', label: 'Colonies', brief: 'Establish a permanent surface colony beyond a single outpost.' },
+  { id: 'settlements', label: 'Settlements', brief: 'Grow a colony into a self-sustaining settlement network.' },
+] as const
+
+function ComingSoonMissionsSection() {
+  return (
+    <div style={{ padding: '0 14px', marginTop: 24, marginBottom: 16 }}>
+      <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 9, fontWeight: 700, letterSpacing: '0.22em', color: '#6b7fa3', textTransform: 'uppercase', marginBottom: 8 }}>
+        Future Operations
+      </div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+        {FUTURE_MISSION_TYPES.map(type => (
+          <Panel key={type.id} accent="var(--ln-text-muted)" style={{ padding: 12, opacity: 0.6, cursor: 'not-allowed' }}>
+            <div
+              aria-disabled="true"
+              style={{ display: 'flex', alignItems: 'center', gap: 10 }}
+            >
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <span style={{ fontFamily: 'var(--ln-font-display)', fontSize: 10, fontWeight: 700, color: 'var(--ln-text-muted)', textTransform: 'uppercase', letterSpacing: '0.15em' }}>{type.label}</span>
+                  <span style={{ flex: 1 }} />
+                  <StatusPill kind="mute">Coming Soon</StatusPill>
+                </div>
+                <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 12, color: '#6b7fa3', lineHeight: 1.45, marginTop: 4 }}>
+                  {type.brief}
+                </div>
+              </div>
+            </div>
+          </Panel>
+        ))}
       </div>
     </div>
   )

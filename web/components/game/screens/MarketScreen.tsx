@@ -6,16 +6,18 @@ import Panel from '@/components/ui/Panel'
 import { PrimaryBtn } from '@/components/ui/Button'
 import StatusPill from '@/components/ui/StatusPill'
 import { MINERAL_META, CONTRACTOR_SLOTS } from '@/lib/data'
+import { openMarketSellPrice } from '@/lib/systems/EconomySystem'
 
 interface MarketScreenProps {
   stash: Record<string, number>
+  marketSupply?: Record<string, number>
   francs: number
   onSell: (mineralId: string, amount: number) => void
   onBack: () => void
   contractorId?: string
 }
 
-export default function MarketScreen({ stash, francs, onSell, onBack, contractorId }: MarketScreenProps) {
+export default function MarketScreen({ stash, marketSupply, francs, onSell, onBack, contractorId }: MarketScreenProps) {
   const [confirming, setConfirming] = useState<string | null>(null)
   const [sellAllConfirm, setSellAllConfirm] = useState(false)
 
@@ -23,10 +25,14 @@ export default function MarketScreen({ stash, francs, onSell, onBack, contractor
 
   const contractor = contractorId ? CONTRACTOR_SLOTS.find(c => c.id === contractorId) ?? null : null
 
+  function marketPrice(mineralId: string, basePrice: number): number {
+    return openMarketSellPrice(basePrice, marketSupply?.[mineralId] ?? 0)
+  }
+
   function totalValue() {
     return entries.reduce((sum, [id, qty]) => {
       const meta = MINERAL_META[id]
-      return sum + (meta ? meta.price * qty : 0)
+      return sum + (meta ? marketPrice(id, meta.price) * qty : 0)
     }, 0)
   }
 
@@ -96,7 +102,8 @@ export default function MarketScreen({ stash, francs, onSell, onBack, contractor
         {entries.map(([id, qty]) => {
           const meta = MINERAL_META[id]
           if (!meta) return null
-          const marketValue = meta.price * qty
+          const mp = marketPrice(id, meta.price)
+          const marketValue = mp * qty
           const cp = contractorPrice(meta.price, id)
           const contractorValue = cp * qty
           const showContractor = contractor && cp !== meta.price
@@ -117,7 +124,7 @@ export default function MarketScreen({ stash, francs, onSell, onBack, contractor
                   <div>
                     <div style={{ fontFamily: 'var(--ln-font-display)', fontWeight: 800, fontSize: 14, color: '#e6efff' }}>{meta.name}</div>
                     <div style={{ fontFamily: 'var(--ln-font-mono)', fontSize: 10, color: '#7a8294' }}>
-                      {qty} units · ₣{meta.price}/u
+                      {qty} units · ₣{mp}/u
                       {showContractor && (
                         <span style={{ color: contractor.color, marginLeft: 8 }}>
                           · Contract ₣{cp}/u

@@ -4,7 +4,7 @@ import {
   getLaserChargeCap, travelDurationMs, suggestBuild,
   CONTRACTOR_COOLDOWN_MS, CONTRACTOR_STREAK_LIMIT,
 } from '@/lib/data'
-import { applyMiningDone, applyRoverMiningDone } from '@/lib/systems/MiningSystem'
+import { applyDeliveryArrived, applyMiningDone, applyReturnArrived, applyRoverMiningDone } from '@/lib/systems/MiningSystem'
 import { enqueueSurvey } from '@/lib/surveys'
 import type { Catalog } from '@/lib/catalog'
 import type { GameState, LicenseGrade } from '@/lib/game-types'
@@ -63,7 +63,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
         ?? s.player.dailyContractorPool?.missions.find(m => m.id === id)
         ?? null
       if (!mission) return s
-      const isStoryMission = mission.contractor === STORY_MISSION_CONTRACTOR_ID || mission.tag === 'STORY'
+      const isStoryMission = mission.contractor === STORY_MISSION_CONTRACTOR_ID || (mission.tag === 'STORY' && !mission.deliveryTargetId)
       if (s.player.missionsDone >= 1 && !isStoryMission) enqueueSurvey('lnm_contractor_pick')
       const dailyContractorPool = (s.player.dailyContractorPool && id.startsWith('dcp-'))
         ? { ...s.player.dailyContractorPool, acceptedId: id }
@@ -71,12 +71,14 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
       const base = { ...s, player: { ...s.player, dailyContractorPool } }
       if (mission?.targetId) {
         const target = catalog.targets.find(t => t.id === mission.targetId) ?? null
-        const next = suggestBuild({ mission, target, missionsDone: s.player.missionsDone, launchpadUpgraded: s.player.launchpadUpgraded, parts: catalog.parts, unlockedSkillNodes: s.player.unlockedSkillNodes ?? [] })
+        const deliveryTarget = mission.deliveryTargetId ? catalog.targets.find(t => t.id === mission.deliveryTargetId) ?? null : null
+        const next = suggestBuild({ mission, target, deliveryTarget, missionsDone: s.player.missionsDone, launchpadUpgraded: s.player.launchpadUpgraded, parts: catalog.parts, unlockedSkillNodes: s.player.unlockedSkillNodes ?? [] })
         if (mission.payload?.type === 'rover') next.drill = 'cargo-module-t1'
         return {
           ...base,
           missionId: id,
           targetId: mission.targetId,
+          deliveryTargetId: mission.deliveryTargetId ?? null,
           rocket: next,
           screen: 'rocket-buy',
           doneSteps: { ...s.doneSteps, 2: true, 3: true },
@@ -86,6 +88,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
         ...base,
         missionId: id,
         targetId: null,
+        deliveryTargetId: mission.deliveryTargetId ?? null,
         screen: 'targets',
         doneSteps: { ...s.doneSteps, 2: true },
       }
@@ -163,15 +166,54 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
   }, [catalog.missions, catalog.targets, setState, stateRef])
 
   const onMiningDone = useCallback((cargo: Record<string, number>) => {
-    setState(s => applyMiningDone(s, cargo))
-    addToast('Rocket has returned — cargo secured', 'ok')
+    let hasDelivery = false
+    setState(s => {
+      hasDelivery = !!s.deliveryTargetId
+      const nextLegTarget = hasDelivery
+        ? catalog.targets.find(t => t.id === s.deliveryTargetId)
+        : (s.targetId ? catalog.targets.find(t => t.id === s.targetId) : null)
+      const timedTransit = s.player.missionsDone >= FREE_OPS_START_MISSIONS_DONE
+      const arrivalAt = (timedTransit && nextLegTarget)
+        ? Date.now() + travelDurationMs(nextLegTarget, s.player.unlockedSkillNodes ?? [], ORBIT_MS_PER_UNIT)
+        : null
+      return applyMiningDone(s, cargo, arrivalAt)
+    })
+    addToast(hasDelivery ? 'Cargo secured — course set for delivery' : 'Order filled — return to Earth for recovery', 'ok')
     enqueueSurvey('lnm_mining_feel', 2000)
+  }, [addToast, catalog.targets, setState])
+
+  const onDeliveryArrived = useCallback(() => {
+    setState(s => {
+      const deliveryTarget = s.deliveryTargetId ? catalog.targets.find(t => t.id === s.deliveryTargetId) : null
+      const timedTransit = s.player.missionsDone >= FREE_OPS_START_MISSIONS_DONE
+      const arrivalAt = (timedTransit && deliveryTarget)
+        ? Date.now() + travelDurationMs(deliveryTarget, s.player.unlockedSkillNodes ?? [], ORBIT_MS_PER_UNIT)
+        : null
+      return applyDeliveryArrived(s, arrivalAt)
+    })
+    addToast('Delivered — course set for Earth', 'ok')
+  }, [addToast, catalog.targets, setState])
+
+  const onReturnArrived = useCallback(() => {
+    setState(s => applyReturnArrived(s))
+    addToast('Earth recovery complete — ship destroyed and cargo secured', 'ok')
   }, [addToast, setState])
 
   const onRoverMiningDone = useCallback((cargo: Record<string, number>) => {
-    setState(s => applyRoverMiningDone(s, cargo))
-    addToast('Rover has returned — minerals secured', 'ok')
-  }, [addToast, setState])
+    let hasDelivery = false
+    setState(s => {
+      hasDelivery = !!s.deliveryTargetId
+      const nextLegTarget = hasDelivery
+        ? catalog.targets.find(t => t.id === s.deliveryTargetId)
+        : (s.targetId ? catalog.targets.find(t => t.id === s.targetId) : null)
+      const timedTransit = s.player.missionsDone >= FREE_OPS_START_MISSIONS_DONE
+      const arrivalAt = (timedTransit && nextLegTarget)
+        ? Date.now() + travelDurationMs(nextLegTarget, s.player.unlockedSkillNodes ?? [], ORBIT_MS_PER_UNIT)
+        : null
+      return applyRoverMiningDone(s, cargo, arrivalAt)
+    })
+    addToast(hasDelivery ? 'Cargo secured — course set for delivery' : 'Rover cargo secured — return to Earth for recovery', 'ok')
+  }, [addToast, catalog.targets, setState])
 
   const gainResearchXP = useCallback((amount: number) => {
     setState(s => applyGainResearchXP(s, amount))
@@ -278,7 +320,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
            ?? null)
         : null
       const contractor = mission?.contractor
-      const isStoryMission = mission?.contractor === STORY_MISSION_CONTRACTOR_ID || mission?.tag === 'STORY'
+      const isStoryMission = mission?.contractor === STORY_MISSION_CONTRACTOR_ID || (mission?.tag === 'STORY' && !mission?.deliveryTargetId)
       const contractorMissions = { ...s.player.contractorMissions }
       const contractorStreaks = { ...(s.player.contractorStreaks ?? {}) }
       const contractorCooldowns = { ...s.player.contractorCooldowns }
@@ -331,7 +373,17 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
           completedIds: [...s.player.dailyContractorPool.completedIds, s.missionId],
         }
         : s.player.dailyContractorPool
-      const popup = showLoanOffer ? 'loan' : missionsDone === 1 ? 'sr2' : s.popup
+      const stillInTutorial = missionsDone < FREE_OPS_START_MISSIONS_DONE && catalog.missions.some(m => m.sequence === missionsDone + 1)
+      // Skip the Prospector upsell popup during guided onboarding — the tutorial
+      // coach already delivers the same "Prospector available" message inline
+      // (lib/data/tutorial.ts step 20), and the popup pre-empts the coach.
+      const popup = showLoanOffer ? 'loan' : (missionsDone === 1 && !stillInTutorial) ? 'sr2' : s.popup
+      // M3 (the last onboarding mission) also flips freeOperations true on this
+      // same tick, which would otherwise auto-open the market straight out of
+      // debrief with no player action requesting it. Land on hub for that one
+      // boundary mission; auto-market-open only kicks in for Free Ops missions
+      // completed after onboarding has actually ended.
+      const justFinishedOnboarding = missionsDone === FREE_OPS_START_MISSIONS_DONE
       return {
         ...s,
         player: {
@@ -339,6 +391,9 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
           francs,
           activeMission: null,
           missionPhase: undefined,
+          debriefPending: false,
+          returningToEarth: false,
+          shipDestroyed: false,
           missionsDone,
           skillPoints: (s.player.skillPoints ?? 0) + 1,
           missionCount: catalog.missions.filter(m => m.sequence === missionsDone + 1).length,
@@ -364,10 +419,10 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
         lastCargo: null,
         missionId: null,
         targetId: null,
-        tutorial: missionsDone < FREE_OPS_START_MISSIONS_DONE && catalog.missions.some(m => m.sequence === missionsDone + 1),
+        tutorial: stillInTutorial,
         popup,
         doneSteps: { ...s.doneSteps, 9: true },
-        screen: pendingTerritoryClaimFor ? s.screen : 'market',
+        screen: pendingTerritoryClaimFor ? s.screen : ((stillInTutorial || justFinishedOnboarding) ? 'hub' : 'market'),
         pendingTerritoryClaimFor,
       }
     })
@@ -396,7 +451,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
   return {
     setPlayer, setMissionId, setTargetId, setRocket, setLastCargo,
     onPickMission, onPickTarget, onPurchaseRocket, onLaunch,
-    onMiningDone, onRoverMiningDone, onDebriefDone,
+    onMiningDone, onDeliveryArrived, onReturnArrived, onRoverMiningDone, onDebriefDone,
     gainResearchXP, upgradeLicenseGrade, unlockBlueprint, launchTransitSatellite, submitTessClassification, chooseSatelliteTarget,
   }
 }

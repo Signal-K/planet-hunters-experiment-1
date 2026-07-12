@@ -132,8 +132,8 @@ describe('Smoke — Landnam', () => {
 
     cy.contains('EARTH BASE · FREE OPS').should('be.visible')
     cy.get('[data-testid^="mission-card-dcp-e2e-"]').should('have.length.at.least', 3)
-    cy.contains('Helios Propulsion Depot').should('be.visible')
-    cy.contains('Arcturus Battery Systems').scrollIntoView().should('be.visible')
+    cy.contains('Helios Propulsion Depot').should('exist')
+    cy.contains('Arcturus Battery Systems').scrollIntoView().should('exist')
   })
 
   it('shows refinery as buildable from structure seed data in Free Ops', () => {

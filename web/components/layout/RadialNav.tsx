@@ -115,7 +115,7 @@ export default function RadialNav({ current, onNav }: RadialNavProps) {
         const dx = Math.cos(ang) * radius
         const dy = Math.sin(ang) * radius
         const active = current === m.id
-        const locked = m.locked && !game.player.freeOperations
+        const locked = (m.locked || m.id === 'market') && !game.player.freeOperations
         const itemColor = locked ? '#5d7390' : m.color
         return (
           <button

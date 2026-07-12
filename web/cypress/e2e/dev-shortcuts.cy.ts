@@ -18,14 +18,31 @@ const presetCases: Array<{ key: string; assertion: () => void }> = [
     key: 'm2-hub',
     assertion: () => {
       cy.contains('Earth Base').should('be.visible')
-      cy.contains('Starter Rocket 2').should('be.visible')
+      cy.contains('Prospector').should('be.visible')
     },
   },
   {
     key: 'm2-fab',
     assertion: () => {
       cy.contains('LAUNCH').should('be.visible')
-      cy.contains('Starter Rocket 2').should('be.visible')
+      cy.contains('Prospector').should('be.visible')
+    },
+  },
+  {
+    key: 'm3-hub',
+    assertion: () => {
+      cy.contains('Earth Base').should('be.visible')
+      cy.contains('Guided Ops').should('be.visible')
+    },
+  },
+  {
+    key: 'm3-debrief',
+    assertion: () => {
+      // Regression coverage for the Belt Courier Run bug: the debrief must
+      // attribute the return leg to the delivery target (Vesta), not the
+      // original mining site (Bennu).
+      cy.contains('From 4 Vesta').should('be.visible')
+      cy.contains('From 101955 Bennu').should('not.exist')
     },
   },
 ]
@@ -64,7 +81,8 @@ describe('DEV panel UI', () => {
     cy.get('[data-testid="dev-shortcuts-panel"]').should('be.visible')
     cy.get('[data-testid="dev-group-mission-1"]').should('exist')
     cy.get('[data-testid="dev-group-mission-2"]').should('exist')
-    cy.get('[data-testid^="dev-group-"]').should('have.length', 3)
+    cy.get('[data-testid="dev-group-mission-3"]').should('exist')
+    cy.get('[data-testid^="dev-group-"]').should('have.length', 4)
   })
 
   it('each mission group has the expected shot buttons', () => {
@@ -76,29 +94,48 @@ describe('DEV panel UI', () => {
     cy.get('[data-testid="dev-shot-m2-hub"]').should('exist')
     cy.get('[data-testid="dev-shot-m2-rocket-buy"]').should('exist')
     cy.get('[data-testid="dev-shot-m2-fab"]').should('exist')
-    cy.get('[data-testid^="dev-shot-"]').should('have.length', 11)
+    // M3 shots
+    cy.get('[data-testid="dev-shot-m3-hub"]').should('exist')
+    cy.get('[data-testid="dev-shot-m3-fab"]').should('exist')
+    cy.get('[data-testid="dev-shot-m3-mining"]').should('exist')
+    cy.get('[data-testid="dev-shot-m3-debrief"]').should('exist')
+    cy.get('[data-testid^="dev-shot-"]').should('have.length', 15)
   })
 
   it('clicking M2 Hub navigates to hub with M2 coach, no Save Progress prompt', () => {
     cy.get('[data-testid="dev-shortcuts-toggle"]').click()
     cy.get('[data-testid="dev-shot-m2-hub"]').click()
-    cy.contains('Starter Rocket 2').should('be.visible')
+    cy.contains('Prospector').should('be.visible')
     cy.contains('Create a free account').should('not.exist')
   })
 
-  it('clicking M2 rocket purchase shows purchasable SR2', () => {
+  it('clicking M2 rocket purchase shows purchasable Prospector', () => {
     cy.get('[data-testid="dev-shortcuts-toggle"]').click()
     cy.get('[data-testid="dev-shot-m2-rocket-buy"]').click()
     cy.contains('Select Rocket').should('be.visible')
-    cy.contains('Starter Rocket 2').should('be.visible')
+    cy.contains('Prospector').should('be.visible')
     cy.contains('Purchase').should('be.visible')
   })
 
-  it('clicking M2 Fab shows fab screen after SR2 purchase', () => {
+  it('clicking M2 Fab shows fab screen after Prospector purchase', () => {
     cy.get('[data-testid="dev-shortcuts-toggle"]').click()
     cy.get('[data-testid="dev-shot-m2-fab"]').click()
-    cy.contains('Starter Rocket 2').should('be.visible')
+    cy.contains('Prospector').should('be.visible')
     cy.contains('LAUNCH').should('be.visible')
+  })
+
+  it('clicking M3 Hub lands back on the two-leg contractor pick, replaying mission 3', () => {
+    cy.get('[data-testid="dev-shortcuts-toggle"]').click()
+    cy.get('[data-testid="dev-shot-m3-hub"]').click()
+    cy.contains('Guided Ops · Mission 3').should('be.visible')
+    cy.contains('Create a free account').should('not.exist')
+  })
+
+  it('clicking M3 Debrief shows the two-leg mission attributed to the delivery target', () => {
+    cy.get('[data-testid="dev-shortcuts-toggle"]').click()
+    cy.get('[data-testid="dev-shot-m3-debrief"]').click()
+    cy.contains('From 4 Vesta').should('be.visible')
+    cy.contains('From 101955 Bennu').should('not.exist')
   })
 
   it('closes panel when DEV button clicked again', () => {

@@ -10,7 +10,9 @@ export const TUTORIAL_RAIL = {
   TOP_CHROME_HEIGHT: 68,
   // Dedicated space for onboarding/tutorial blocks. Gameplay buttons must stay out of it.
   RESERVED_TOP: 76,
-  RESERVED_HEIGHT: 64,
+  // Measured action-card height (avatar row + padding, single-line action
+  // text) is ~71px in practice; a little headroom for longer per-step copy.
+  RESERVED_HEIGHT: 84,
   // Compact pill height including shadow bleed (px).
   PILL_HEIGHT: 64,
   // Legacy bottom clearance for screens with sticky actions/radial nav.

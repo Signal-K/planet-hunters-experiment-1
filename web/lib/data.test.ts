@@ -50,6 +50,7 @@ import {
   isReviewableTessSubject,
   tessCandidateToExoplanetTarget,
   toTessCandidate,
+  SELF_DIRECTED_MINING_MISSION_ID,
 } from './data'
 
 describe('sellCargo', () => {
@@ -305,12 +306,6 @@ describe('compatibleTargetsFor', () => {
     expect(compatible.some(t => t.type === 'planet')).toBe(true)
   })
 
-  it('returns only the fixed target for M3 rover delivery missions', () => {
-    const m3 = MISSIONS.find(m => m.id === 'lnm_m3_ore_delivery')!
-    const compatible = compatibleTargetsFor(m3, TARGETS)
-    expect(compatible).toHaveLength(1)
-    expect(compatible[0].id).toBe('lutetia')
-  })
 })
 
 describe('rateMission', () => {
@@ -340,9 +335,10 @@ describe('rateMission', () => {
 })
 
 describe('calibrateOnboardingPayout', () => {
-  const floor1 = Math.round(STARTER_ROCKET_COST * 1.5)
+  const floor1 = Math.round(STARTER_ROCKET_COST * 0.15)
+  const floor2 = Math.round(STARTER_ROCKET_COST * 1.05)
 
-  it('enforces a floor of 1.5× rocket cost on the first mission', () => {
+  it('enforces a floor of 0.15× the Prospector cost on the first mission', () => {
     expect(calibrateOnboardingPayout(0, 0)).toBe(floor1)
     expect(calibrateOnboardingPayout(floor1 - 1, 0)).toBe(floor1)
   })
@@ -351,12 +347,14 @@ describe('calibrateOnboardingPayout', () => {
     expect(calibrateOnboardingPayout(floor1 + 100_000, 0)).toBe(floor1 + 100_000)
   })
 
-  it('nudges second-mission payout toward 1.15× rocket cost', () => {
-    const target = Math.round(STARTER_ROCKET_COST * 1.15)
-    const rawBelow = target - 10_000
-    const result = calibrateOnboardingPayout(rawBelow, 1)
-    expect(result).toBeGreaterThanOrEqual(rawBelow)
-    expect(result).toBeLessThanOrEqual(target)
+  it('enforces a floor of 1.05× the Prospector cost on the second mission, so two missions cover the mandatory purchase', () => {
+    expect(calibrateOnboardingPayout(0, 1)).toBe(floor2)
+    expect(calibrateOnboardingPayout(floor2 - 1, 1)).toBe(floor2)
+    expect(floor1 + floor2).toBeGreaterThan(STARTER_ROCKET_COST)
+  })
+
+  it('does not reduce a second-mission payout already above the floor', () => {
+    expect(calibrateOnboardingPayout(floor2 + 100_000, 1)).toBe(floor2 + 100_000)
   })
 
   it('leaves payouts unchanged for missions after the second', () => {
@@ -486,16 +484,43 @@ describe('seed bible v0 catalog', () => {
     expect(missions.every(m => compatibleTargetsFor(m, TARGETS).length > 0)).toBe(true)
   })
 
-  it('authored missions have required fields and valid target references', () => {
+  it('authored M3 is a two-contractor transport-job choice, not self-directed mining', () => {
     const authored = MISSIONS.filter(m => !m.id.startsWith('generated-'))
     expect(authored.length).toBeGreaterThan(0)
-    expect(authored.every(m => m.id && m.title && m.contractor)).toBe(true)
-    // M3 authored: lnm_m3_ore_delivery targets lutetia with rover payload
-    const m3 = authored.find(m => m.id === 'lnm_m3_ore_delivery')
-    expect(m3).toBeDefined()
-    expect(m3?.targetId).toBe('lutetia')
-    expect(m3?.payload?.type).toBe('rover')
-    expect(TARGETS.some(t => t.id === m3?.targetId)).toBe(true)
+    expect(authored.every(m => m.id && m.title)).toBe(true)
+    const m3Missions = authored.filter(m => m.sequence === 3)
+    expect(m3Missions.length).toBe(2)
+    for (const m3 of m3Missions) {
+      expect(m3.contractor).toBeDefined()
+      expect(m3.targetId).toBeDefined()
+      expect(m3.deliveryTargetId).toBeDefined()
+      expect(TARGETS.some(t => t.id === m3.targetId)).toBe(true)
+      expect(TARGETS.some(t => t.id === m3.deliveryTargetId)).toBe(true)
+      expect(CONTRACTOR_SLOTS.some(c => c.id === m3.contractor)).toBe(true)
+    }
+    // No generic generated missions leak into the curated M3 slot.
+    expect(MISSIONS.some(m => m.id.startsWith('generated-') && m.sequence === 3)).toBe(false)
+  })
+
+  it('Free Ops self-directed mining mission has no contractor and reachable requirements', () => {
+    const selfDirected = MISSIONS.find(m => m.id === SELF_DIRECTED_MINING_MISSION_ID)
+    expect(selfDirected).toBeDefined()
+    expect(selfDirected?.contractor).toBeUndefined()
+    expect(selfDirected?.targetId).toBeUndefined()
+    expect(selfDirected?.sequence).toBe(FREE_OPS_START_MISSIONS_DONE + 1)
+    const compatible = compatibleTargetsFor(selfDirected!, TARGETS)
+    expect(compatible.length).toBeGreaterThan(0)
+  })
+
+  it('authored relay mission is a two-leg mine-then-deliver job with a real contractor', () => {
+    const relay = MISSIONS.find(m => m.id === 'lnm_relay_psyche_ceres')
+    expect(relay).toBeDefined()
+    expect(relay?.contractor).toBe('kepler-materials')
+    expect(relay?.targetId).toBe('psyche')
+    expect(relay?.deliveryTargetId).toBe('ceres')
+    expect(TARGETS.some(t => t.id === relay?.targetId)).toBe(true)
+    expect(TARGETS.some(t => t.id === relay?.deliveryTargetId)).toBe(true)
+    expect(CONTRACTOR_SLOTS.some(c => c.id === relay?.contractor)).toBe(true)
   })
 })
 

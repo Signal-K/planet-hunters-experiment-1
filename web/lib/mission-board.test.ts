@@ -55,7 +55,7 @@ function computeAvailableOnboarding(
 ): Mission[] {
   const sequence = missionsDone + 1
   return missions.filter(m => {
-    const contractor = contractors[m.contractor]
+    const contractor = m.contractor ? contractors[m.contractor] : undefined
     if (!contractor) return false
     // Fixed: sequence match is the only gate — contractor unlockTier doesn't apply
     return m.sequence === sequence
@@ -92,7 +92,7 @@ function computeFirstValidIdx(
   const sequence = missionsDone + 1
   return list.findIndex(m => {
     if (completedIds.has(m.id)) return false
-    const ctr = contractors[m.contractor]
+    const ctr = m.contractor ? contractors[m.contractor] : undefined
     if (!ctr) return false
     const cr = freeOperations || m.sequence === sequence || contractorUnlocked(ctr, sequence)
     return cr && (freeOperations || available.some(item => item.id === m.id))

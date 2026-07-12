@@ -8,7 +8,7 @@ type CardState = 'available' | 'locked' | 'cooldown' | 'completed'
 
 interface MissionCardProps {
   mission: Mission
-  contractor: Contractor
+  contractor?: Contractor | null
   mineralMeta: Record<string, MineralMeta>
   targetCount: number
   displayPayout: number
@@ -20,6 +20,8 @@ interface MissionCardProps {
   lockedDetail?: string
   cooldownLabel?: string
   highlighted?: boolean
+  // Set for two-leg "mine then deliver" missions, e.g. "Vesta → Ceres".
+  routeLabel?: string
   onPick: () => void
 }
 
@@ -43,10 +45,11 @@ export default function MissionCard({
   lockedDetail,
   cooldownLabel,
   highlighted,
+  routeLabel,
   onPick,
 }: MissionCardProps) {
   const [expanded, setExpanded] = useState(false)
-  const accent = contractor.color
+  const accent = contractor?.color ?? 'var(--ln-amber)'
   const difficultyTier = mission.difficulty.startsWith('L') ? parseInt(mission.difficulty.slice(1), 10) : NaN
   const difficultyColor = difficultyTier <= 1 ? 'var(--ln-ok)' : difficultyTier === 2 ? 'var(--ln-amber)' : 'var(--ln-crimson)'
   const isAvailable = cardState === 'available'
@@ -57,10 +60,20 @@ export default function MissionCard({
     : ''
 
   return (
-    <button
+    <div
+      role="button"
+      tabIndex={unlocked ? 0 : -1}
+      aria-disabled={!unlocked}
       data-mission-id={mission.id}
       data-testid={`mission-card-${mission.id}`}
       onClick={() => unlocked && onPick()}
+      onKeyDown={e => {
+        if (!unlocked) return
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault()
+          onPick()
+        }
+      }}
       className="mission-card-btn"
       style={{
         background: 'transparent', border: 'none', padding: 0, textAlign: 'left', width: '100%',
@@ -84,10 +97,10 @@ export default function MissionCard({
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             font: '700 13px var(--ln-font-display)', color: accent,
           }}>
-            {contractor.initial}
+            {contractor?.initial ?? 'OP'}
           </div>
           <div style={{ textAlign: 'center', font: '700 10px var(--ln-font-display)', color: 'var(--ln-text)', textTransform: 'uppercase', letterSpacing: '0.02em', lineHeight: 1.15 }}>
-            {contractor.name}
+            {contractor?.name ?? 'Free Ops'}
           </div>
           <div style={{ font: '600 8px var(--ln-font-mono)', color: 'var(--ln-text-muted)', letterSpacing: '0.09em', textTransform: 'uppercase' }}>
             {mission.tag}
@@ -115,13 +128,21 @@ export default function MissionCard({
 
           <div style={{ padding: '10px 14px 0', font: '600 9px var(--ln-font-mono)', color: 'var(--ln-text-muted)', letterSpacing: '0.07em', textTransform: 'uppercase', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
             {isStoryMission
-              ? 'Story mission · Not a contractor request'
-              : `Wants ${contractor.mineralPreferences.join(' / ')} · +${Math.round(contractor.payoutPremium * 100)}%`}
+              ? 'Story mission · Not a client request'
+              : contractor
+                ? `Wants ${contractor.mineralPreferences.join(' / ')} · +${Math.round(contractor.payoutPremium * 100)}%`
+                : 'Choose target · keep the haul · market-led mining'}
           </div>
 
           <div style={{ padding: '4px 14px 0', font: '700 12px var(--ln-font-display)', color: 'var(--ln-text)', textTransform: 'uppercase', letterSpacing: '0.01em' }}>
             {mission.title}
           </div>
+
+          {routeLabel && (
+            <div style={{ padding: '2px 14px 0', font: '700 9px var(--ln-font-mono)', color: 'var(--ln-cyan)', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+              {routeLabel}
+            </div>
+          )}
 
           <div style={{ margin: '10px 14px 8px', padding: 12, background: 'var(--ln-surface)', borderLeft: '2px solid var(--ln-cyan)' }}>
             <div style={{ font: '400 15px/1.5 var(--ln-font-display)', color: 'var(--ln-text)' }}>{mission.brief}</div>
@@ -134,13 +155,13 @@ export default function MissionCard({
             onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.stopPropagation(); setExpanded(v => !v) } }}
             style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '2px 14px 10px', cursor: 'pointer', font: '700 9px var(--ln-font-mono)', color: 'var(--ln-cyan)', letterSpacing: '0.09em', textTransform: 'uppercase' }}
           >
-            <span>{expanded ? 'HIDE CONTRACTOR INFO' : 'CONTRACTOR INFO'}</span>
+            <span>{expanded ? 'HIDE CLIENT INFO' : 'CLIENT INFO'}</span>
             <span style={{ transform: expanded ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 120ms ease-out', display: 'inline-block' }}>▾</span>
           </div>
 
           {expanded && (
             <div style={{ margin: '0 14px 12px', padding: 12, border: `1px solid ${accent}30`, background: 'var(--ln-void)', display: 'flex', flexDirection: 'column', gap: 10 }}>
-              <div style={{ font: '400 11px/1.5 var(--ln-font-display)', color: 'var(--ln-text-dim)' }}>{contractor.projectType}</div>
+              <div style={{ font: '400 11px/1.5 var(--ln-font-display)', color: 'var(--ln-text-dim)' }}>{contractor?.projectType ?? 'Custom mining run · market value only'}</div>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
                 {Object.entries(mission.requires.minerals).map(([k, v]) => {
                   const meta = mineralMeta[k]
@@ -152,9 +173,11 @@ export default function MissionCard({
                   )
                 })}
               </div>
-              <div style={{ font: '600 9px var(--ln-font-mono)', color: 'var(--ln-text-muted)', letterSpacing: '0.06em', textTransform: 'uppercase' }}>
-                +{Math.round(contractor.affinityBonusPerMission * 100)}% affinity per completed job
-              </div>
+              {contractor && (
+                <div style={{ font: '600 9px var(--ln-font-mono)', color: 'var(--ln-text-muted)', letterSpacing: '0.06em', textTransform: 'uppercase' }}>
+                  +{Math.round(contractor.affinityBonusPerMission * 100)}% affinity per completed job
+                </div>
+              )}
             </div>
           )}
 
@@ -173,9 +196,14 @@ export default function MissionCard({
               )}
             </div>
             {isAvailable ? (
-              <span style={{ font: '700 11px var(--ln-font-display)', letterSpacing: '0.14em', color: 'var(--ln-text-on-cyan)', background: 'var(--ln-cyan)', padding: '6px 12px', textTransform: 'uppercase' }}>
+              <button
+                type="button"
+                data-testid={`mission-card-${mission.id}-cta`}
+                onClick={e => { e.stopPropagation(); unlocked && onPick() }}
+                style={{ border: 'none', cursor: 'pointer', font: '700 11px var(--ln-font-display)', letterSpacing: '0.14em', color: 'var(--ln-text-on-cyan)', background: 'var(--ln-cyan)', padding: '6px 12px', textTransform: 'uppercase' }}
+              >
                 {targetCount} target{targetCount !== 1 ? 's' : ''} ›
-              </span>
+              </button>
             ) : (
               <span style={{ font: '700 10px var(--ln-font-mono)', letterSpacing: '0.08em', color: stateTone?.color, border: `1px solid ${stateTone?.color}`, padding: '5px 10px', textTransform: 'uppercase' }}>
                 {statusCta}
@@ -184,6 +212,6 @@ export default function MissionCard({
           </div>
         </div>
       </div>
-    </button>
+    </div>
   )
 }

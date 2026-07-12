@@ -123,13 +123,17 @@ function buildShip(shipY: number): Graphics {
 interface MiningCanvasProps {
   minerals: string[]
   mineralMeta: Record<string, MineralMeta>
+  /** Equipped drill/laser part tier (1-3). Gates how deep the laser can reach. */
+  laserTier?: number
   onCollect: (mineral: string) => void
   fireRef: React.MutableRefObject<(() => void) | null>
   scrollRef: React.MutableRefObject<((dx: number) => void) | null>
   oreNearRef?: React.MutableRefObject<((near: boolean) => void) | null>
+  /** Live-updating set of mineral keys still needed to fill the order — see MiningControllerOptions.neededMineralsRef. */
+  neededMineralsRef?: React.MutableRefObject<Set<string> | null>
 }
 
-export default function MiningCanvas({ minerals, mineralMeta, onCollect, fireRef, scrollRef, oreNearRef }: MiningCanvasProps) {
+export default function MiningCanvas({ minerals, mineralMeta, laserTier, onCollect, fireRef, scrollRef, oreNearRef, neededMineralsRef }: MiningCanvasProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const onCollectRef = useRef(onCollect)
   onCollectRef.current = onCollect
@@ -221,6 +225,7 @@ export default function MiningCanvas({ minerals, mineralMeta, onCollect, fireRef
           minerals,
           mineralColors: Object.fromEntries(Object.entries(mineralMeta).map(([id, m]) => [id, m.color])),
           mineralLaserAccess,
+          maxLaserTier: laserTier,
           mineralShapes: MINERAL_SHAPES,
           mineralTextures: oreTextures,
           onCollect: mineral => onCollectRef.current(mineral),
@@ -232,6 +237,7 @@ export default function MiningCanvas({ minerals, mineralMeta, onCollect, fireRef
             surfaceContainer.x = -(scrollX % SURFACE_TILE_W)
           },
           onOreNearby: (near) => { oreNearRef?.current?.(near) },
+          neededMineralsRef,
         })
 
         app.ticker.add(ticker => {

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Re-creates the four in-game micro-surveys in PostHog.
 # Use this if surveys need to be recreated (e.g. on a new project).
-# After running, update MICRO_SURVEY_IDS in react-shell.js with the returned IDs.
+# After running, update SURVEY_DEFS in web/lib/surveys.ts with the returned IDs.
 #
 # Required env vars (Vercel names supported first):
 #   Posthog_Personal_Token=phx_...   or  POSTHOG_PERSONAL_API_KEY=phx_...
@@ -62,4 +62,4 @@ create_survey "planet_found" "$SURVEYS_DIR/micro_survey_planet_found.json"
 create_survey "difficulty"  "$SURVEYS_DIR/micro_survey_difficulty.json"
 
 echo ""
-echo "Done. Copy the IDs above into MICRO_SURVEY_IDS in react-shell.js."
+echo "Done. Copy the IDs above into SURVEY_DEFS in web/lib/surveys.ts."

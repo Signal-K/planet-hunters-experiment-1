@@ -54,11 +54,17 @@ Tokens are in `web/app/globals.css`. Key CSS variables:
 - `--ln-font-display` (Oxanium), `--ln-font-body` (system), `--ln-font-mono` (monospace)
 
 Design rules (never violate):
-- Portrait canvas only — the game renders in `portrait-canvas` class
+- All views must support landscape/desktop mode — every screen must work at desktop breakpoints, not just mobile portrait
 - 8pt spacing rhythm: 4, 8, 12, 16, 24, 32, 48, 64px only
 - No emoji. Status = shape + color + label
 - UPPERCASE + letter-spacing for all instrument labels and CTAs
 - Hairlines: ghosted cyan at 18% alpha (`--ln-hairline`)
+
+## Narrative & content rules
+
+- No fictional wrapper on mainline citizen-science content: a player should never need lore or backstory to understand a mission — just "here's a project, here's a dataset." Real science, real terminology.
+- Slight fictional framing (e.g. "potentially alien artifacts," mirroring real SETI false-positive workflows) is permitted only in the most speculative, latest-unlocked tier of content — never in early/mid-game missions.
+- Decided 2026-07-08; see [[decide-scifi-narrative-vs-citizen-science-boundary]] in workspace for full context.
 
 ## Backend connections
 

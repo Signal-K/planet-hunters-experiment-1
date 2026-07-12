@@ -19,10 +19,4 @@ export function identifyUser(userId: string, props?: Record<string, string>) {
   posthog.identify(userId, props)
 }
 
-export function submitFeedback(text: string) {
-  if (typeof window === 'undefined') return
-  initPostHog()
-  posthog.capture('feedback_submitted', { text, source: 'in_game_button' })
-}
-
 export { posthog }

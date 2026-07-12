@@ -277,4 +277,32 @@ describe('Bug hunt — edge cases', () => {
     cy.get('body').should('exist')
     cy.get('[data-testid="error-boundary-fallback"]').should('not.exist')
   })
+
+  // ─── 11. Legacy save predating placementPlots: launchpad renders at the
+  // real onboarding slot (plot 0), not the old hardcoded fallback (plot 1) ──
+  const legacySaveState = stateWith({
+    screen: 'hub',
+    tutorial: false,
+    player: {
+      placed: ['launchpad'],
+      placementPlots: {}, // simulates a save from before this field existed
+      missionsDone: 1,
+      francs: 10_000_000_000,
+    },
+  })
+
+  it('legacy pre-placementPlots save renders launchpad at plot 0 (mobile)', () => {
+    cy.visit('/game', { onBeforeLoad: baseLoad({ [STORAGE_KEY]: legacySaveState }) })
+    cy.get('[data-testid="building-launchpad"]', { timeout: 8000 })
+      .should('have.attr', 'style')
+      .and('match', /left:\s*calc\(14\.9253/)
+  })
+
+  it('legacy pre-placementPlots save renders launchpad at plot 0 (desktop)', () => {
+    cy.viewport(1440, 900)
+    cy.visit('/game', { onBeforeLoad: baseLoad({ [STORAGE_KEY]: legacySaveState }) })
+    cy.get('[data-testid="building-launchpad"]', { timeout: 8000 })
+      .should('have.attr', 'style')
+      .and('match', /left:\s*calc\(14\.9253/)
+  })
 })

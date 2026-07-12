@@ -59,6 +59,15 @@ function GameCanvas() {
     game.onLaunch()
   }, [game.onLaunch])
   const rocketDisplay = rocketDisplayForConfig(game.rocket)
+  const transitTarget = game.player.headingToDelivery && game.deliveryTargetId
+    ? game.catalog.targets.find(t => t.id === game.deliveryTargetId) ?? game.target
+    : game.target
+  // Debrief should attribute the Earth-return leg to the ship's last waypoint —
+  // for two-leg "mine then deliver" missions that's the delivery target, not
+  // the original mining site, otherwise the delivery stop reads as if it never happened.
+  const debriefOriginTarget = game.mission?.deliveryTargetId
+    ? game.catalog.targets.find(t => t.id === game.mission!.deliveryTargetId) ?? game.target
+    : game.target
 
   // When a timed transit starts, schedule a push notification.
   useEffect(() => {
@@ -169,12 +178,17 @@ function GameCanvas() {
   const currentNav = game.screen === 'missions' || game.screen === 'targets'
     ? 'missions'
     : game.screen === 'galaxy' ? 'galaxy' : game.screen === 'fab' ? 'fab' : game.screen === 'skills' ? 'skills' : 'hub'
-  const showNav = ['hub', 'missions', 'skills'].includes(game.screen)
+  const showHub = game.screen === 'hub' || (game.screen === 'market' && !game.player.freeOperations)
+  const showNav = (showHub || ['missions', 'skills', 'targets'].includes(game.screen)) && !(game.screen === 'targets' && hasCoach)
   const showFeedback = ['hub', 'missions', 'market', 'hangar', 'skills'].includes(game.screen)
     && !showNav
     && !game.popup
     && !game.upgradePromptOpen
     && !game.authGateOpen
+
+  useEffect(() => {
+    if (game.screen === 'market' && !game.player.freeOperations) game.go('hub')
+  }, [game.screen, game.player.freeOperations, game.go])
 
   return (
     <main className="game-stage" aria-label="Landnam game">
@@ -205,6 +219,7 @@ function GameCanvas() {
               placed: game.player.placed,
               freeOperations: game.player.freeOperations,
               refineryUnlocked: !!game.player.refineryUnlocked,
+              placementPlots: game.player.placementPlots,
             }}
             onPlaced={(kind, plot) => {
               const structure = game.catalog.structures.find(s => s.id === kind)
@@ -227,7 +242,7 @@ function GameCanvas() {
             }}
           />
         )}
-        {game.screen === 'hub' && (
+        {showHub && (
           <HubScreen
             player={game.player}
             hasCoach={hasCoach}
@@ -269,9 +284,10 @@ function GameCanvas() {
         {game.screen === 'targets' && game.mission && (
           <TargetPickerScreen mission={game.mission} onBack={() => game.go('missions')} onPick={game.onPickTarget} hasCoach={hasCoach} catalog={game.catalog} />
         )}
-        {game.screen === 'market' && (
+        {game.screen === 'market' && game.player.freeOperations && (
           <MarketScreen
             stash={game.player.stash ?? {}}
+            marketSupply={game.player.marketSupply ?? {}}
             francs={game.player.francs}
             onSell={game.sellMinerals}
             onBack={() => game.go('hub')}
@@ -344,13 +360,22 @@ function GameCanvas() {
             coachManual={coach?.manual ?? false}
           />
         )}
-        {game.screen === 'transit' && game.target && (
+        {game.screen === 'transit' && transitTarget && (
           <TransitScreen
-            target={game.target}
+            target={transitTarget}
             rocketImageSrc={rocketDisplay.img}
             arrivalAt={game.player.arrivalAt}
+            returning={!!game.player.returningToEarth}
             onBack={() => game.go('hub')}
             onArrive={() => {
+              if (game.player.returningToEarth) {
+                game.onReturnArrived()
+                return
+              }
+              if (game.player.headingToDelivery) {
+                game.onDeliveryArrived()
+                return
+              }
               const isRoverMission = game.mission?.survey?.onWorldVehicle === 'starter-rover'
               if (game.mission?.payload?.type === 'satellite' || game.target?.type === 'exoplanet') {
                 game.setPlayer(player => ({
@@ -385,6 +410,7 @@ function GameCanvas() {
             onAbandon={game.abandonMission}
             minerals={game.catalog.minerals}
             laserChargeCap={game.laserChargeCap}
+            laserTier={game.catalog.parts.drill.find(p => p.id === game.rocket.drill)?.tier ?? 1}
             hasCoach={hasCoach}
             coachManual={coach?.manual ?? false}
           />
@@ -398,7 +424,7 @@ function GameCanvas() {
           />
         )}
         {game.screen === 'debrief' && game.mission && game.target && (
-          <DebriefScreen mission={game.mission} target={game.target} cargo={game.lastCargo ?? {}} onDone={game.onDebriefDone} minerals={game.catalog.minerals} contractors={game.catalog.contractors} contractorMissions={game.player.contractorMissions} freeOperations={game.player.freeOperations} annotations={game.player.researchAnnotations} missionsDone={game.player.missionsDone} hasCoach={hasCoach} />
+          <DebriefScreen mission={game.mission} target={debriefOriginTarget ?? game.target} cargo={game.lastCargo ?? {}} onDone={game.onDebriefDone} minerals={game.catalog.minerals} contractors={game.catalog.contractors} contractorMissions={game.player.contractorMissions} freeOperations={game.player.freeOperations} annotations={game.player.researchAnnotations} missionsDone={game.player.missionsDone} hasCoach={hasCoach} shipDestroyed={!!game.player.shipDestroyed} />
         )}
 
         {/* Launch sequence — plays between fab confirmation and transit */}
@@ -444,6 +470,9 @@ function GameCanvas() {
               game.setPopup(null)
               if (popup === 'sr2') {
                 game.go('hub')
+              }
+              if (popup === 'ship-customizer') {
+                game.go('hangar')
               }
             }}
             onDismiss={game.popup === 'loan' ? () => game.setPopup(null) : undefined}

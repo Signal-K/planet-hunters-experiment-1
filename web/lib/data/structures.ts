@@ -19,9 +19,9 @@ export const STRUCTURES: StructureBlueprint[] = [
     kind: 'refinery',
     cost: 800_000_000,
     costMaterials: { aluminium: 20, copper: 10 },
-    unlocksAt: 'First contractor mission requiring refined minerals',
+    unlocksAt: 'First client mission requiring refined minerals',
     unlockTrigger: 'contractor-mission-trigger',
-    description: 'Refines raw minerals into higher-value contractor-grade materials.',
+    description: 'Refines raw minerals into higher-value client-grade materials.',
   },
   {
     id: 'scan-station',

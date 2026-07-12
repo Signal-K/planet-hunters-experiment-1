@@ -139,7 +139,7 @@ export const STAR_LINKS: [string, string][] = [
 ]
 
 export function compatibleTargetsFor(mission: Mission, targets: Target[] = TARGETS): Target[] {
-  // M3+ fixed-target missions: only the designated target is valid
+  // Explicit fixed-target missions: only the designated target is valid.
   if (mission.targetId) return targets.filter(t => t.id === mission.targetId)
 
   const required = Object.keys(mission.requires.minerals)
@@ -149,7 +149,7 @@ export function compatibleTargetsFor(mission: Mission, targets: Target[] = TARGE
     const inRange = t.orbit <= mission.requires.max_orbit
     // M1/M2: contractor doesn't constrain location — any reachable asteroid is valid
     if (isOnboarding) return inRange && t.type === 'asteroid'
-    // M3+: target must have the required minerals
+    // M3+ custom and free-ops missions: target must have the required minerals.
     return inRange && required.every(mineral => t.minerals.includes(mineral))
   })
 }

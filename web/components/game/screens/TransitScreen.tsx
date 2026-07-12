@@ -20,18 +20,23 @@ interface Props {
   target: Target
   rocketImageSrc?: string
   arrivalAt?: number | null
+  returning?: boolean
   onArrive: () => void
   onBack: () => void
   onAbandon?: () => void
 }
 
-export default function TransitScreen({ target, rocketImageSrc, arrivalAt, onArrive, onBack, onAbandon }: Props) {
+const FAKE_PROGRESS_START = 12
+const FAKE_PROGRESS_DURATION_MS = 4400 // (100 - 12) / 2 * 100ms steps, matches the old increment rate
+
+export default function TransitScreen({ target, rocketImageSrc, arrivalAt, returning = false, onArrive, onBack, onAbandon }: Props) {
   const isTimed = typeof arrivalAt === 'number'
   const [now, setNow] = useState(() => Date.now())
-  const [fakeProgress, setFakeProgress] = useState(12)
+  const [fakeStartedAt] = useState(() => Date.now())
+  const [fakeProgress, setFakeProgress] = useState(FAKE_PROGRESS_START)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const sceneRef = useRef<TransitScene | null>(null)
-  const progressRef = useRef(isTimed ? 0 : 12)
+  const progressRef = useRef(isTimed ? 0 : FAKE_PROGRESS_START)
 
   useEffect(() => {
     void Scene.load('/game/scenes/mining.scene.json')
@@ -41,15 +46,31 @@ export default function TransitScreen({ target, rocketImageSrc, arrivalAt, onArr
   useEffect(() => {
     if (!isTimed) return
     const id = window.setInterval(() => setNow(Date.now()), 500)
-    return () => window.clearInterval(id)
+    const onVisible = () => { if (!document.hidden) setNow(Date.now()) }
+    document.addEventListener('visibilitychange', onVisible)
+    return () => {
+      window.clearInterval(id)
+      document.removeEventListener('visibilitychange', onVisible)
+    }
   }, [isTimed])
 
-  // Fake progress for tutorial/instant mode
+  // Fake progress for tutorial/instant mode — derived from a fixed start
+  // timestamp (not an incrementing counter) so it self-corrects instead of
+  // stalling when background-tab throttling suspends the interval.
   useEffect(() => {
     if (isTimed) return
-    const id = window.setInterval(() => setFakeProgress(v => Math.min(100, v + 2)), 100)
-    return () => window.clearInterval(id)
-  }, [isTimed])
+    const tick = () => {
+      const elapsed = Date.now() - fakeStartedAt
+      setFakeProgress(Math.min(100, FAKE_PROGRESS_START + (elapsed / FAKE_PROGRESS_DURATION_MS) * (100 - FAKE_PROGRESS_START)))
+    }
+    const id = window.setInterval(tick, 100)
+    const onVisible = () => { if (!document.hidden) tick() }
+    document.addEventListener('visibilitychange', onVisible)
+    return () => {
+      window.clearInterval(id)
+      document.removeEventListener('visibilitychange', onVisible)
+    }
+  }, [isTimed, fakeStartedAt])
 
   // Arrive triggers
   useEffect(() => {
@@ -83,12 +104,13 @@ export default function TransitScreen({ target, rocketImageSrc, arrivalAt, onArr
     let rafId = 0
     let lastT = 0
     let elapsed = 0
+    let destroyed = false
 
     async function init() {
       const { Application } = await import('pixi.js')
       const { buildTransitScene } = await import('@/lib/pixi/transitScene')
 
-      if (!canvas) return
+      if (!canvas || destroyed) return
       app = new Application()
       await app.init({
         canvas,
@@ -97,6 +119,15 @@ export default function TransitScreen({ target, rocketImageSrc, arrivalAt, onArr
         backgroundAlpha: 0,
         antialias: true,
       })
+
+      // Check destroyed AFTER init — if unmount raced the async init, clean up
+      // now and bail. Guard with try/catch: PixiJS v8 _cancelResize can throw
+      // if the renderer never fully initialised.
+      if (destroyed) {
+        try { app.destroy() } catch (_) { /* pixi v8 cleanup */ }
+        app = null
+        return
+      }
 
       const kind = target.type === 'planet' ? 'planet' : 'asteroid'
       const scene = buildTransitScene(app, {
@@ -122,7 +153,10 @@ export default function TransitScreen({ target, rocketImageSrc, arrivalAt, onArr
 
     return () => {
       cancelAnimationFrame(rafId)
-      app?.destroy()
+      destroyed = true
+      if (app?.renderer) {
+        try { app.destroy() } catch (_) { /* pixi v8 cleanup */ }
+      }
       sceneRef.current = null
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -130,10 +164,11 @@ export default function TransitScreen({ target, rocketImageSrc, arrivalAt, onArr
 
   const etaMs = isTimed ? Math.max(0, arrivalAt! - now) : 0
   const arrived = isTimed ? now >= arrivalAt! : fakeProgress >= 100
+  const destinationName = returning ? 'Earth' : target.name
 
   return (
     <div className="game-screen transit-screen">
-      <TopBar eyebrow="MISSION TRANSIT" title={`Outbound · ${target.name}`} onBack={onBack} />
+      <TopBar eyebrow="MISSION TRANSIT" title={`${returning ? 'Inbound' : 'Outbound'} · ${destinationName}`} onBack={onBack} />
 
       {/* PixiJS backdrop fills the transit-stage zone */}
       <div className="transit-stage" style={{ overflow: 'hidden' }}>
@@ -154,7 +189,7 @@ export default function TransitScreen({ target, rocketImageSrc, arrivalAt, onArr
         {isTimed ? (
           <>
             <div><span>ETA</span><strong>{arrived ? 'ARRIVED' : formatEta(etaMs)}</strong></div>
-            <div><span>Orbit</span><strong>{target.orbit}</strong></div>
+            <div><span>{returning ? 'Recovery' : 'Orbit'}</span><strong>{returning ? 'Earth' : target.orbit}</strong></div>
           </>
         ) : (
           <div><span>Transit</span><strong>{fakeProgress}%</strong></div>
@@ -164,8 +199,11 @@ export default function TransitScreen({ target, rocketImageSrc, arrivalAt, onArr
 
       <div className="sticky-actions" data-ui-zone={UI_ZONES.bottomActions}>
         <PrimaryBtn onClick={onArrive} disabled={!arrived}>
-          {arrived ? 'Arrive' : isTimed ? `En Route · ${formatEta(etaMs)}` : `Arrive · ${fakeProgress}%`}
+          {arrived ? (returning ? 'Recover Ship' : 'Arrive') : isTimed ? `En Route · ${formatEta(etaMs)}` : `${returning ? 'Return' : 'Arrive'} · ${fakeProgress}%`}
         </PrimaryBtn>
+        {process.env.NODE_ENV === 'development' && !arrived && (
+          <GhostBtn testId="transit-skip-btn" onClick={onArrive}>Skip ▸</GhostBtn>
+        )}
         {onAbandon && <GhostBtn onClick={onAbandon}>Abort Mission</GhostBtn>}
       </div>
     </div>

@@ -70,6 +70,22 @@ export function LaunchSequenceCanvas({ rocketName, rocketImageSrc, targetName, o
     <div
       ref={divRef}
       style={{ position: 'absolute', inset: 0, background: '#000', overflow: 'hidden', zIndex: 100 }}
-    />
+    >
+      {process.env.NODE_ENV === 'development' && (
+        <button
+          data-testid="launch-sequence-skip-btn"
+          onClick={() => completeRef.current()}
+          style={{
+            position: 'absolute', bottom: 24, right: 24, zIndex: 101,
+            padding: '8px 16px', borderRadius: 8, cursor: 'pointer',
+            background: 'rgba(8,16,28,0.72)', border: '1px solid rgba(126,200,255,0.4)',
+            color: '#7ec8ff', fontFamily: 'var(--ln-font-display)', fontWeight: 800, fontSize: 11,
+            letterSpacing: '0.12em', textTransform: 'uppercase',
+          }}
+        >
+          Skip ▸
+        </button>
+      )}
+    </div>
   )
 }

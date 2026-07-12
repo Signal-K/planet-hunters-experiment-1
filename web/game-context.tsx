@@ -132,7 +132,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       ? [{
           id: TRANSIT_TELESCOPE_MISSION_ID,
           title: 'Launch Transit Telescope',
-          brief: 'Mission Control authorizes a story operation to place a TESS-class telescope in Earth orbit. This is not a contractor request.',
+          brief: 'Mission Control authorizes a story operation to place a TESS-class telescope in Earth orbit. This is not a client request.',
           contractor: STORY_MISSION_CONTRACTOR_ID,
           tag: 'STORY',
           difficulty: 'L1',
@@ -254,6 +254,8 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       onPurchaseRocket: loop.onPurchaseRocket,
       onLaunch: loop.onLaunch,
       onMiningDone: loop.onMiningDone,
+      onDeliveryArrived: loop.onDeliveryArrived,
+      onReturnArrived: loop.onReturnArrived,
       onRoverMiningDone: loop.onRoverMiningDone,
       onDebriefDone: loop.onDebriefDone,
       gainResearchXP: loop.gainResearchXP,

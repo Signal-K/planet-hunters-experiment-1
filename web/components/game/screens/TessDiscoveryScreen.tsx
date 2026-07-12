@@ -9,6 +9,7 @@ import { GhostBtn, PrimaryBtn } from '@/components/ui/Button'
 import ObservatoryChart from '@/components/game/ObservatoryChart'
 import TelescopeConsole from '@/components/game/TelescopeConsole'
 import ObservatoryReadout from '@/components/game/ObservatoryReadout'
+import CommentsPanel from '@/components/game/CommentsPanel'
 import ObservatoryCoach, { useObservatoryCoach } from '@/components/game/ObservatoryCoach'
 import PixiGalaxyStarMap from '@/components/game/PixiGalaxyStarMap'
 import SolSystemPreview from '@/components/game/SolSystemPreview'
@@ -17,6 +18,7 @@ import { dailyTessCandidates, deriveObservatoryStats, sectorWindows, tessCandida
 import type { Player } from '@/lib/game-types'
 import { UI_ZONES } from '@/lib/ui-zones'
 import { fetchReviewableTessCandidates } from '@/lib/tess-subjects'
+import { useIsDesktop } from '@/lib/hooks/useIsDesktop'
 
 interface TessDiscoveryScreenProps {
   player: Player
@@ -104,6 +106,7 @@ export default function TessDiscoveryScreen({ player, onBack, onBuildStation, on
   // above them, or its call order breaks the moment a gate flag flips
   // (e.g. satelliteMonitoringBuilt going false -> true mid-session).
   const coach = useObservatoryCoach()
+  const isDesktop = useIsDesktop()
 
   if (!player.freeOperations) {
     return (
@@ -139,7 +142,7 @@ export default function TessDiscoveryScreen({ player, onBack, onBuildStation, on
         icon={<Radio size={22} />}
         tone="amber"
         title="Launch Transit Telescope"
-        body="A story mission is available from Mission Control. It is not attached to a contractor."
+        body="A story mission is available from Mission Control. It is not attached to a client."
         onBack={onBack}
         action={<PrimaryBtn testId="open-transit-telescope-mission-btn" kind="amber" onClick={onOpenMissions}>Open Mission Board</PrimaryBtn>}
       />
@@ -191,11 +194,13 @@ export default function TessDiscoveryScreen({ player, onBack, onBuildStation, on
   // separate, explicit toggle rather than folded into `classification`.
   const showMap = classification != null || forceMapView
 
-  return (
-    <div className="game-screen">
-      <TopBar eyebrow="TESS ANOMALY" title={candidate.toi} onBack={onBack} />
-      <div className={`screen-scroll${!classification && markCount > 0 ? ' screen-scroll--tall-actions' : ''}`} data-ui-zone={UI_ZONES.screenContent}>
-        <Panel accent="var(--ln-amber)" style={{ padding: 12, marginTop: 12 }}>
+  // Chart/candidate panel — shared between the mobile single-column layout
+  // and the left (55%) column of the desktop two-column layout (kkhyll's
+  // originally-specified split, never built until now). `includeReadout`
+  // keeps ObservatoryReadout nested inside this panel on mobile (unchanged
+  // from before) while desktop pulls it into the right column instead.
+  const chartPanel = (includeReadout: boolean) => (
+    <Panel accent="var(--ln-amber)" style={{ padding: 12, marginTop: 12 }}>
           <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10, marginBottom: 10 }}>
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
@@ -316,39 +321,71 @@ export default function TessDiscoveryScreen({ player, onBack, onBuildStation, on
             </div>
           )}
 
-          <div style={{ marginTop: 10 }}>
-            <ObservatoryReadout stats={stats} />
-          </div>
-        </Panel>
+          {includeReadout && (
+            <div style={{ marginTop: 10 }}>
+              <ObservatoryReadout stats={stats} />
+            </div>
+          )}
+    </Panel>
+  )
+
+  const verdictActions = (
+    classification ? (
+      <div style={{ textAlign: 'center' }}>
+        <StatusPill kind="ok">ANNOTATION SAVED</StatusPill>
       </div>
+    ) : (
+      <>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 8 }}>
+          {VERDICT_ACTIONS.map(action => (
+            <VerdictButton
+              key={action.id}
+              action={action}
+              disabled={action.requiresMark && markCount === 0}
+              onClick={() => castVerdict(action.id)}
+            />
+          ))}
+        </div>
+        {markCount > 0 && (
+          <div style={{ marginTop: 8 }}>
+            <GhostBtn onClick={() => setRanges([])}>CLEAR MARKS</GhostBtn>
+          </div>
+        )}
+      </>
+    )
+  )
+
+  return (
+    <div className="game-screen" data-testid="tess-discovery-screen">
+      <TopBar eyebrow="TESS ANOMALY" title={candidate.toi} onBack={onBack} />
+      {isDesktop ? (
+        <div data-testid="tess-discovery-desktop-grid" style={{ position: 'absolute', inset: 0, top: 72, display: 'grid', gridTemplateColumns: '55% 45%', gap: 16, padding: '0 var(--ln-s-4) var(--ln-s-4)' }}>
+          <div style={{ overflowY: 'auto' }} data-ui-zone={UI_ZONES.screenContent}>
+            {chartPanel(false)}
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12, overflowY: 'auto' }}>
+            <ObservatoryReadout stats={stats} />
+            <CommentsPanel recordType="classification" recordId={candidate.id} />
+            <div style={{ marginTop: 'auto' }} data-ui-zone={UI_ZONES.bottomActions}>
+              {verdictActions}
+            </div>
+          </div>
+        </div>
+      ) : (
+        <>
+          <div className={`screen-scroll${!classification && markCount > 0 ? ' screen-scroll--tall-actions' : ''}`} data-ui-zone={UI_ZONES.screenContent}>
+            {chartPanel(true)}
+            <div style={{ marginTop: 12 }}>
+              <CommentsPanel recordType="classification" recordId={candidate.id} />
+            </div>
+          </div>
+          <div className="sticky-actions" data-ui-zone={UI_ZONES.bottomActions}>
+            {verdictActions}
+          </div>
+        </>
+      )}
 
       {showCoach && <ObservatoryCoach onDismiss={coach.dismiss} />}
-
-      <div className="sticky-actions" data-ui-zone={UI_ZONES.bottomActions}>
-        {classification ? (
-          <div style={{ textAlign: 'center' }}>
-            <StatusPill kind="ok">ANNOTATION SAVED</StatusPill>
-          </div>
-        ) : (
-          <>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 8 }}>
-              {VERDICT_ACTIONS.map(action => (
-                <VerdictButton
-                  key={action.id}
-                  action={action}
-                  disabled={action.requiresMark && markCount === 0}
-                  onClick={() => castVerdict(action.id)}
-                />
-              ))}
-            </div>
-            {markCount > 0 && (
-              <div style={{ marginTop: 8 }}>
-                <GhostBtn onClick={() => setRanges([])}>CLEAR MARKS</GhostBtn>
-              </div>
-            )}
-          </>
-        )}
-      </div>
     </div>
   )
 }

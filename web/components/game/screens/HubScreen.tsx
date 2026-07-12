@@ -20,10 +20,10 @@ import type { HubBuildingDef } from '@/lib/pixi/hubScene'
 import { fetchReviewableTessCandidates } from '@/lib/tess-subjects'
 
 const DEFAULT_PLOTS: EntityData[] = [
-  { id: 'plot-0', name: 'Plot 0', transform: { position: { x: 22, y: 570 }, rotation: 0, scale: { x: 1, y: 1 } }, components: [{ type: 'BuildPlot', index: 0 }] },
-  { id: 'plot-1', name: 'Plot 1', transform: { position: { x: 112, y: 570 }, rotation: 0, scale: { x: 1, y: 1 } }, components: [{ type: 'BuildPlot', index: 1 }] },
-  { id: 'plot-2', name: 'Plot 2', transform: { position: { x: 210, y: 570 }, rotation: 0, scale: { x: 1, y: 1 } }, components: [{ type: 'BuildPlot', index: 2 }] },
-  { id: 'plot-3', name: 'Plot 3', transform: { position: { x: 300, y: 570 }, rotation: 0, scale: { x: 1, y: 1 } }, components: [{ type: 'BuildPlot', index: 3 }] },
+  { id: 'plot-0', name: 'Plot 0', transform: { position: { x: 60, y: 570 }, rotation: 0, scale: { x: 1, y: 1 } }, components: [{ type: 'BuildPlot', index: 0 }] },
+  { id: 'plot-1', name: 'Plot 1', transform: { position: { x: 154, y: 570 }, rotation: 0, scale: { x: 1, y: 1 } }, components: [{ type: 'BuildPlot', index: 1 }] },
+  { id: 'plot-2', name: 'Plot 2', transform: { position: { x: 248, y: 570 }, rotation: 0, scale: { x: 1, y: 1 } }, components: [{ type: 'BuildPlot', index: 2 }] },
+  { id: 'plot-3', name: 'Plot 3', transform: { position: { x: 342, y: 570 }, rotation: 0, scale: { x: 1, y: 1 } }, components: [{ type: 'BuildPlot', index: 3 }] },
 ]
 
 interface HubScreenProps {
@@ -44,9 +44,12 @@ export default function HubScreen({ player, hasCoach, onGoBuilding, onNav, onUpg
   const placed = player.placed ?? []
   const placementPlots = player.placementPlots ?? {}
   const legacyPlaced = (kind: string) => placed.includes(kind) && placementPlots[kind] == null
+  // Pre-placementPlots saves always went through the guided tutorial, which
+  // coaches the player to the first build pad (data-coach-id="build-plot-0"
+  // in BuildPlaceScreen) — plot 0, not 1.
   const effectivePlots: Record<string, number> = {
     ...placementPlots,
-    ...(legacyPlaced('launchpad') ? { launchpad: 1 } : {}),
+    ...(legacyPlaced('launchpad') ? { launchpad: 0 } : {}),
   }
 
   useEffect(() => {
