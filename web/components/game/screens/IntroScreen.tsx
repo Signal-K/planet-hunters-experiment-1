@@ -32,7 +32,7 @@ export default function IntroScreen({
       {awaitingRemoteState ? (
         <div className="intro-content">
           <div className="intro-badge">SPACE MINING OPERATIONS</div>
-          <img className="intro-logo-mark" src="/icons/landnam-logo-mark.svg" alt="" aria-hidden="true" />
+          <img className="intro-logo-mark" src="/icons/landnam-logo-mark.png" alt="" aria-hidden="true" />
           <h1 className="intro-title">LANDNAM</h1>
           <p className="intro-welcome">Welcome back, Commander.</p>
           <p className="intro-subtitle">Restoring your mission data&hellip;</p>
@@ -43,7 +43,7 @@ export default function IntroScreen({
       ) : (
         <div className="intro-content">
           <div className="intro-badge">SPACE MINING OPERATIONS</div>
-          <img className="intro-logo-mark" src="/icons/landnam-logo-mark.svg" alt="" aria-hidden="true" />
+          <img className="intro-logo-mark" src="/icons/landnam-logo-mark.png" alt="" aria-hidden="true" />
           <h1 className="intro-title">LANDNAM</h1>
           <p className="intro-welcome">{returning ? 'Welcome back, Commander.' : 'Welcome, Commander.'}</p>
           <p className="intro-subtitle">

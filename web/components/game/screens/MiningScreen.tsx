@@ -203,6 +203,13 @@ export default function MiningScreen({ mission, target, onComplete, onBack, onAb
     if (orderFilled || laserCharges <= 0) onComplete(cargoRef.current)
   }
 
+  // Local-dev-only shortcut: fills the order instantly so testing later
+  // screens doesn't require playing the mining minigame by hand each time.
+  function handleDevSkip() {
+    cargoRef.current = { ...mission.requires.minerals }
+    onComplete(cargoRef.current)
+  }
+
   // Deposit contains the target's full mineral pool, not just the mission's objective —
   // otherwise a single-mineral order (e.g. silicon) makes every ore in the field identical.
   // The required mineral(s) are weighted 2x so onboarding orders still fill at a reasonable pace.
@@ -223,6 +230,29 @@ export default function MiningScreen({ mission, target, onComplete, onBack, onAb
   return (
     <div className="game-screen mining-screen">
       <TopBar eyebrow={`${target.name.toUpperCase()} · SURFACE`} title="Mining Run" onBack={onBack} />
+
+      {process.env.NODE_ENV === 'development' && (
+        <button
+          data-testid="dev-skip-mining-btn"
+          onClick={handleDevSkip}
+          style={{
+            position: 'absolute', top: 8, right: 8, zIndex: 999,
+            padding: '3px 8px',
+            background: '#0e1a0e',
+            border: '1px solid #3a7a3a',
+            borderRadius: 6,
+            color: '#5aff5a',
+            fontFamily: 'var(--ln-font-mono)',
+            fontSize: 10,
+            fontWeight: 700,
+            letterSpacing: '0.12em',
+            cursor: 'pointer',
+            opacity: 0.8,
+          }}
+        >
+          ⚡ SKIP MINING
+        </button>
+      )}
 
       {guideOpen && (
         <div style={{ position: 'absolute', inset: 0, zIndex: 70, background: 'rgba(3,6,12,0.82)', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', padding: 16, gap: 8 }} onClick={() => setGuideOpen(false)}>
