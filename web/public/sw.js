@@ -3,7 +3,7 @@
 // delays itself rather than serving stale API responses.
 // Also handles Web Push notifications (opt-in).
 
-const CACHE = 'landnam-shell-v3'
+const CACHE = 'landnam-shell-v4'
 
 const SHELL = [
   '/',
@@ -62,8 +62,15 @@ self.addEventListener('fetch', event => {
   }
 
   // Static assets are content-addressed — cache-first is always safe and
-  // makes repeat visits instant.
-  if (url.pathname.startsWith('/_next/static/') || url.pathname.startsWith('/game/')) {
+  // makes repeat visits instant. Screen routes (/game/hub, /game/market, ...)
+  // must NOT match here: they're dynamic app navigation, not static files,
+  // and were previously getting permanently cache-first'd by this same
+  // '/game/' prefix check — a stale first-cached screen (e.g. /game/market,
+  // the common post-mission landing screen) would then be served forever
+  // regardless of actual game state. Only match real static files (an
+  // extension in the last path segment) under /game/.
+  const isGameStaticAsset = url.pathname.startsWith('/game/') && /\.[a-zA-Z0-9]+$/.test(url.pathname)
+  if (url.pathname.startsWith('/_next/static/') || isGameStaticAsset) {
     event.respondWith(
       caches.match(request).then(cached => {
         if (cached) return cached
@@ -73,7 +80,7 @@ self.addEventListener('fetch', event => {
             caches.open(CACHE).then(c => c.put(request, toCache))
           }
           return res
-        })
+        }).catch(() => new Response('', { status: 504 }))
       })
     )
     return
