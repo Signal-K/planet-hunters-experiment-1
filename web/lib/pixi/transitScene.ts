@@ -1,6 +1,6 @@
 import { Application, Assets, Graphics, Container, Sprite, Text, TextStyle, Texture } from 'pixi.js'
 
-export type TargetKind = 'asteroid' | 'planet' | 'moon'
+export type TargetKind = 'asteroid' | 'planet' | 'moon' | 'earth'
 
 export interface TransitSceneOptions {
   targetName: string
@@ -29,21 +29,83 @@ function mkStarLayer(W: number, H: number, count: number, layer: number): Graphi
   return g
 }
 
-function drawPlanet(g: Graphics, cx: number, cy: number, r: number, kind: TargetKind) {
+// Stylized landmasses in spherical (longitude, latitude) terms so Earth can
+// slowly rotate like a real globe instead of sitting as a static painted
+// disc — loosely Africa/Eurasia/Americas-shaped, not geographically exact.
+const EARTH_CONTINENTS: { lon: number; lat: number; w: number; h: number }[] = [
+  { lon: 0.15, lat: -0.05, w: 0.30, h: 0.46 },   // Africa-ish
+  { lon: 0.95, lat: 0.42, w: 0.40, h: 0.24 },    // Eurasia-ish
+  { lon: -1.35, lat: 0.10, w: 0.22, h: 0.50 },   // Americas-ish
+  { lon: -2.5, lat: -0.35, w: 0.14, h: 0.14 },   // Antarctica-adjacent island
+  { lon: 2.7, lat: -0.30, w: 0.16, h: 0.12 },    // Australia-ish
+]
+
+const EARTH_CLOUDS: { lon: number; lat: number; w: number; h: number }[] = [
+  { lon: 0.6, lat: -0.5, w: 0.34, h: 0.09 },
+  { lon: -0.4, lat: 0.15, w: 0.26, h: 0.08 },
+  { lon: 1.8, lat: 0.55, w: 0.3, h: 0.09 },
+  { lon: -2.0, lat: -0.1, w: 0.22, h: 0.07 },
+  { lon: 3.3, lat: 0.05, w: 0.28, h: 0.08 },
+]
+
+function drawGlobeFeature(
+  g: Graphics, cx: number, cy: number, r: number,
+  feature: { lon: number; lat: number; w: number; h: number },
+  rotation: number, color: number, baseAlpha: number,
+) {
+  const angle = feature.lon + rotation
+  const cosA = Math.cos(angle)
+  if (cosA < -0.2) return  // far side of the globe — not visible
+  const visibility = Math.max(0, Math.min(1, cosA + 0.2))
+  const xProj = Math.sin(angle) * 0.82
+  const wScale = Math.max(0.1, visibility)
+  g.ellipse(cx + r * xProj, cy + r * feature.lat * 0.8, Math.max(0.5, r * feature.w * wScale), r * feature.h)
+    .fill({ color, alpha: baseAlpha * Math.min(1, visibility * 1.6) })
+}
+
+function drawPlanet(g: Graphics, cx: number, cy: number, r: number, kind: TargetKind, rotation = 0) {
   g.clear()
   if (r < 1) return
 
   // glow
-  if (kind === 'planet') {
+  if (kind === 'earth') {
+    g.circle(cx, cy, r + r * 0.42).fill({ color: 0x3fa9ff, alpha: 0.13 })
+    g.circle(cx, cy, r + r * 0.18).fill({ color: 0x6cc2ff, alpha: 0.24 })
+    g.circle(cx, cy, r + r * 0.05).fill({ color: 0xbfe8ff, alpha: 0.16 })
+  } else if (kind === 'planet') {
     g.circle(cx, cy, r + r * 0.35).fill({ color: 0x0d5e8a, alpha: 0.12 })
     g.circle(cx, cy, r + r * 0.15).fill({ color: 0x0b7ab8, alpha: 0.18 })
   } else if (kind === 'moon') {
     g.circle(cx, cy, r + r * 0.2).fill({ color: 0x556080, alpha: 0.1 })
   }
 
-  // body
-  const bodyColor = kind === 'asteroid' ? 0x3d3020 : kind === 'moon' ? 0x5a6070 : 0x1b4e70
+  // body — deep ocean base with a lighter mid-tone band so the sphere reads
+  // as lit rather than a flat disc
+  const bodyColor = kind === 'asteroid' ? 0x3d3020 : kind === 'moon' ? 0x5a6070 : kind === 'earth' ? 0x0f4c85 : 0x1b4e70
   g.circle(cx, cy, r).fill(bodyColor)
+
+  if (kind === 'earth' && r > 6) {
+    if (r > 10) {
+      g.circle(cx, cy, r).fill({ color: 0x2378c4, alpha: 0.4 })
+    }
+    for (const feature of EARTH_CONTINENTS) {
+      drawGlobeFeature(g, cx, cy, r, feature, rotation, 0x3c8f4a, 0.9)
+    }
+    if (r > 8) {
+      // polar ice caps — fixed at the poles regardless of rotation
+      g.ellipse(cx, cy - r * 0.86, r * 0.5, r * 0.18).fill({ color: 0xf0f8ff, alpha: 0.8 })
+      g.ellipse(cx, cy + r * 0.86, r * 0.46, r * 0.16).fill({ color: 0xf0f8ff, alpha: 0.75 })
+    }
+    if (r > 18) {
+      for (const cloud of EARTH_CLOUDS) {
+        drawGlobeFeature(g, cx, cy, r, cloud, rotation * 0.6, 0xffffff, 0.35)
+      }
+    }
+    if (r > 14) {
+      // specular sun glint, offset toward the light source (top-left, matching the terminator below)
+      g.ellipse(cx - r * 0.32, cy - r * 0.3, r * 0.22, r * 0.14).fill({ color: 0xeaf6ff, alpha: 0.14 })
+    }
+  }
 
   if (kind === 'planet' && r > 16) {
     // atmosphere bands
@@ -161,7 +223,7 @@ export function buildTransitScene(app: Application, opts: TransitSceneOptions): 
       const maxR = Math.min(W * 0.52, H * 0.52)
       const r = minR + (maxR - minR) * Math.pow(p, 1.5)
 
-      drawPlanet(planetG, cx, planetCY, r, kind)
+      drawPlanet(planetG, cx, planetCY, r, kind, elapsed * 0.22)
 
       // label below planet, fades in past 10%
       label.y = planetCY + r + 8

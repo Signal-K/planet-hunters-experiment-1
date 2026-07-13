@@ -2,7 +2,7 @@ import { useCallback } from 'react'
 import {
   MISSIONS, TARGETS, STARTER_ROCKETS, FREE_OPS_START_MISSIONS_DONE,
   getLaserChargeCap, travelDurationMs, suggestBuild,
-  CONTRACTOR_COOLDOWN_MS, CONTRACTOR_STREAK_LIMIT,
+  CONTRACTOR_COOLDOWN_MS, CONTRACTOR_STREAK_LIMIT, calibrateOnboardingPayout,
 } from '@/lib/data'
 import { applyDeliveryArrived, applyMiningDone, applyReturnArrived, applyRoverMiningDone } from '@/lib/systems/MiningSystem'
 import { enqueueSurvey } from '@/lib/surveys'
@@ -307,10 +307,13 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
     }))
   }, [setState])
 
-  const onDebriefDone = useCallback((total: number, _affinity = 0, consumed: Record<string, number> = {}) => {
+  const onDebriefDone = useCallback((rawTotal: number, _affinity = 0, consumed: Record<string, number> = {}) => {
     const current = stateRef.current
     if (current.screen !== 'debrief' || !current.missionId || !current.targetId || !current.lastCargo) return
     const newMissionsDone = current.player.missionsDone + 1
+    // Onboarding payout floor — see calibrateOnboardingPayout's doc for why
+    // (M1/M2 must earn enough to cover the Prospector purchase M2 forces).
+    const total = calibrateOnboardingPayout(rawTotal, current.player.missionsDone)
     setState(s => {
       if (s.screen !== 'debrief' || !s.missionId || !s.targetId || !s.lastCargo) return s
       const missionsDone = s.player.missionsDone + 1

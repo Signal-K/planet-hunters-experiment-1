@@ -57,7 +57,10 @@ export const AUTHORED_MISSIONS: Mission[] = [
       max_orbit: 4,
     },
     payout: {
-      francs: 600_000,
+      // M3 still forces a fresh SR2 purchase (rockets are single-use) —
+      // this needs to comfortably clear that 1.3B cost like M1/M2's payout
+      // floor does, without ballooning into a jackpot for a two-leg job.
+      francs: 1_450_000_000,
       affinity: 3,
     },
   },
@@ -80,7 +83,10 @@ export const AUTHORED_MISSIONS: Mission[] = [
       max_orbit: 4,
     },
     payout: {
-      francs: 600_000,
+      // M3 still forces a fresh SR2 purchase (rockets are single-use) —
+      // this needs to comfortably clear that 1.3B cost like M1/M2's payout
+      // floor does, without ballooning into a jackpot for a two-leg job.
+      francs: 1_450_000_000,
       affinity: 3,
     },
   },

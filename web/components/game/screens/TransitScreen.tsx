@@ -129,9 +129,9 @@ export default function TransitScreen({ target, rocketImageSrc, arrivalAt, retur
         return
       }
 
-      const kind = target.type === 'planet' ? 'planet' : 'asteroid'
+      const kind = returning ? 'earth' : target.type === 'planet' ? 'planet' : 'asteroid'
       const scene = buildTransitScene(app, {
-        targetName: target.name,
+        targetName: returning ? 'Earth' : target.name,
         targetKind: kind,
         rocketImageSrc,
         getProgress: () => progressRef.current,
