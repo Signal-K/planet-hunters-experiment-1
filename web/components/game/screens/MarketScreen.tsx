@@ -6,18 +6,19 @@ import Panel from '@/components/ui/Panel'
 import { PrimaryBtn } from '@/components/ui/Button'
 import StatusPill from '@/components/ui/StatusPill'
 import { MINERAL_META, CONTRACTOR_SLOTS } from '@/lib/data'
-import { openMarketSellPrice } from '@/lib/systems/EconomySystem'
+import { openMarketSellPrice, decayedUnitsSold } from '@/lib/systems/EconomySystem'
 
 interface MarketScreenProps {
   stash: Record<string, number>
   marketSupply?: Record<string, number>
+  marketSupplyUpdatedAt?: Record<string, number>
   francs: number
   onSell: (mineralId: string, amount: number) => void
   onBack: () => void
   contractorId?: string
 }
 
-export default function MarketScreen({ stash, marketSupply, francs, onSell, onBack, contractorId }: MarketScreenProps) {
+export default function MarketScreen({ stash, marketSupply, marketSupplyUpdatedAt, francs, onSell, onBack, contractorId }: MarketScreenProps) {
   const [confirming, setConfirming] = useState<string | null>(null)
   const [sellAllConfirm, setSellAllConfirm] = useState(false)
 
@@ -26,7 +27,8 @@ export default function MarketScreen({ stash, marketSupply, francs, onSell, onBa
   const contractor = contractorId ? CONTRACTOR_SLOTS.find(c => c.id === contractorId) ?? null : null
 
   function marketPrice(mineralId: string, basePrice: number): number {
-    return openMarketSellPrice(basePrice, marketSupply?.[mineralId] ?? 0)
+    const unitsSold = decayedUnitsSold(marketSupply?.[mineralId] ?? 0, marketSupplyUpdatedAt?.[mineralId])
+    return openMarketSellPrice(basePrice, unitsSold)
   }
 
   function totalValue() {

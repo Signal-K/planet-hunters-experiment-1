@@ -53,6 +53,7 @@ GodotTest/
 node_modules/
 web/.next/
 pocketbase/pb_data/
+pocketbase/landnam-backend
 
 # Large binaries
 *.so

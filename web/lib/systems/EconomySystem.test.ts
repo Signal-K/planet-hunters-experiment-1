@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import type { GameState } from '@/lib/game-types'
 import { MINERAL_META } from '@/lib/data'
-import { applySellMinerals, openMarketSellPrice, supplyDipMultiplier } from './EconomySystem'
+import { applySellMinerals, decayedUnitsSold, openMarketSellPrice, supplyDipMultiplier } from './EconomySystem'
 
 function makeState(overrides: Partial<GameState['player']> = {}): GameState {
   return {
@@ -76,5 +76,23 @@ describe('applySellMinerals', () => {
   it('is a no-op when nothing is held', () => {
     const s = makeState({ stash: {} })
     expect(applySellMinerals(s, 'iron', 5)).toBe(s)
+  })
+
+  it('recovers supply over real elapsed time instead of capping out permanently', () => {
+    const twoHoursAgo = Date.now() - 2 * 60 * 60 * 1000
+    const s = makeState({
+      stash: { iron: 10 },
+      marketSupply: { iron: 60 }, // at the max dip
+      marketSupplyUpdatedAt: { iron: twoHoursAgo },
+    })
+    const next = applySellMinerals(s, 'iron', 1)
+    const meta = MINERAL_META.iron
+    // Full recovery window elapsed, so this sale should price as if no
+    // supply pressure existed at all (unitsSold effectively back to 0).
+    expect(next.player.francs).toBe(openMarketSellPrice(meta.price, 0) * 1)
+  })
+
+  it('treats missing marketSupplyUpdatedAt as no decay (legacy save data)', () => {
+    expect(decayedUnitsSold(50, undefined)).toBe(50)
   })
 })

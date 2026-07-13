@@ -73,6 +73,10 @@ export function generateDailyContractorPool(
       const preferred = template.mineralKeys.filter(k => contractor.mineralPreferences.includes(k))
       const fallback = template.mineralKeys.filter(k => !contractor.mineralPreferences.includes(k))
       const candidates = preferred.length > 0 ? [...preferred, ...fallback] : fallback
+      // Defensive: a template with no mineralKeys, or an inverted cargoRange,
+      // would otherwise produce a NaN/undefined mineral or amount below —
+      // skip this slot rather than push a broken mission into the pool.
+      if (candidates.length === 0 || template.cargoRange[1] < template.cargoRange[0]) continue
       const mineralKey = candidates[mSeed % candidates.length]
 
       const [min, max] = template.cargoRange
