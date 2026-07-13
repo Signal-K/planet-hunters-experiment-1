@@ -288,6 +288,7 @@ function GameCanvas() {
           <MarketScreen
             stash={game.player.stash ?? {}}
             marketSupply={game.player.marketSupply ?? {}}
+            marketSupplyUpdatedAt={game.player.marketSupplyUpdatedAt ?? {}}
             francs={game.player.francs}
             onSell={game.sellMinerals}
             onBack={() => game.go('hub')}

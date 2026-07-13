@@ -17,13 +17,30 @@ export function supplyDipMultiplier(unitsSold: number): number {
   return Math.max(1 - MAX_SUPPLY_DIP, 1 - unitsSold * SUPPLY_DIP_PER_UNIT)
 }
 
+// Supply pressure recovers over real time so a mineral's price isn't
+// permanently discounted once a player has ever sold enough of it — full
+// recovery from the max dip takes this long of real-world elapsed time.
+const SUPPLY_RECOVERY_WINDOW_MS = 2 * 60 * 60 * 1000
+const FULL_DIP_UNITS = MAX_SUPPLY_DIP / SUPPLY_DIP_PER_UNIT
+
+// Effective (decayed) units-sold value to price against, given the raw
+// stored counter and when it was last updated. Missing `lastSoldAt` (e.g.
+// save data from before this decay was introduced) is treated as "just now"
+// — no retroactive decay, no penalty either.
+export function decayedUnitsSold(unitsSold: number, lastSoldAt: number | undefined, now: number = Date.now()): number {
+  if (unitsSold <= 0 || lastSoldAt == null) return Math.max(0, unitsSold)
+  const elapsed = Math.max(0, now - lastSoldAt)
+  const recovered = (elapsed / SUPPLY_RECOVERY_WINDOW_MS) * FULL_DIP_UNITS
+  return Math.max(0, unitsSold - recovered)
+}
+
 // Effective open-market unit price after the raw-sale discount and any
 // supply pressure built up from previous sales of this mineral.
 export function openMarketSellPrice(basePrice: number, unitsSold: number): number {
   return Math.round(basePrice * OPEN_MARKET_SELL_RATE * supplyDipMultiplier(unitsSold))
 }
 
-export function applySellMinerals(s: GameState, mineralId: string, amount: number): GameState {
+export function applySellMinerals(s: GameState, mineralId: string, amount: number, now: number = Date.now()): GameState {
   const stash = { ...(s.player.stash ?? {}) }
   const held = stash[mineralId] ?? 0
   const sellAmount = Math.min(amount, held)
@@ -31,12 +48,14 @@ export function applySellMinerals(s: GameState, mineralId: string, amount: numbe
   const meta = MINERAL_META[mineralId]
   if (!meta) return s
   const marketSupply = { ...(s.player.marketSupply ?? {}) }
-  const unitsSold = marketSupply[mineralId] ?? 0
+  const marketSupplyUpdatedAt = { ...(s.player.marketSupplyUpdatedAt ?? {}) }
+  const unitsSold = decayedUnitsSold(marketSupply[mineralId] ?? 0, marketSupplyUpdatedAt[mineralId], now)
   const revenue = openMarketSellPrice(meta.price, unitsSold) * sellAmount
   marketSupply[mineralId] = unitsSold + sellAmount
+  marketSupplyUpdatedAt[mineralId] = now
   stash[mineralId] = held - sellAmount
   if (stash[mineralId] <= 0) delete stash[mineralId]
-  return { ...s, player: { ...s.player, francs: s.player.francs + revenue, stash, marketSupply } }
+  return { ...s, player: { ...s.player, francs: s.player.francs + revenue, stash, marketSupply, marketSupplyUpdatedAt } }
 }
 
 export function applyStartRefine(s: GameState, recipe: RefineryRecipe): GameState {

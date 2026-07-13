@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" fill="none" role="img" aria-labelledby="title desc">
+  <title id="title">Landnam logo mark</title>
+  <desc id="desc">A minimal chalk-line rocket, magnifying glass, and mining drill mark.</desc>
+  <g stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="61" cy="58" r="34" stroke="#3fa9ff" stroke-width="5" opacity="0.92"/>
+    <path d="M84.5 82.5L109 107" stroke="#3fa9ff" stroke-width="6" opacity="0.92"/>
+
+    <path d="M42 84C47 61 62 38 90 24C93 42 88 59 76 71C66 80 54 84 42 84Z" stroke="#efe7d3" stroke-width="5"/>
+    <path d="M49 78L31 96L53 89" stroke="#efe7d3" stroke-width="5"/>
+    <circle cx="70" cy="51" r="7" stroke="#efe7d3" stroke-width="4"/>
+    <path d="M47 83L38 102" stroke="#efe7d3" stroke-width="4" opacity="0.55"/>
+    <path d="M55 89L47 110" stroke="#efe7d3" stroke-width="3" opacity="0.38"/>
+
+    <path d="M77 76L92 91" stroke="#f5a623" stroke-width="5"/>
+    <path d="M94 93L105 85L98 101L116 94L107 112" stroke="#f5a623" stroke-width="5"/>
+    <path d="M89 88L82 95" stroke="#f5a623" stroke-width="4" opacity="0.55"/>
+
+    <path d="M27 39L38 34" stroke="#efe7d3" stroke-width="3" opacity="0.42"/>
+    <path d="M23 55H34" stroke="#efe7d3" stroke-width="3" opacity="0.34"/>
+    <path d="M34 25L42 17" stroke="#efe7d3" stroke-width="3" opacity="0.3"/>
+  </g>
+</svg>

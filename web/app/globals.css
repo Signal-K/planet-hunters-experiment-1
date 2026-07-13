@@ -421,6 +421,7 @@ button { cursor: pointer; }
 .intro-overlay { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(6,9,15,0.3) 0%, rgba(6,9,15,0.7) 50%, rgba(6,9,15,0.92) 100%); }
 .intro-content { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px 32px; text-align: center; z-index: 1; }
 .intro-badge { color: var(--ln-cyan); font: 700 11px var(--ln-font-mono); letter-spacing: 0.22em; text-transform: uppercase; margin-bottom: 12px; }
+.intro-logo-mark { width: 104px; height: 104px; margin: 0 0 8px; filter: drop-shadow(0 0 18px rgba(63,169,255,0.28)); }
 .intro-title { color: #fff; font: 800 52px var(--ln-font-display); letter-spacing: 0.08em; text-transform: uppercase; text-shadow: 0 0 40px rgba(63,169,255,0.3); margin: 0 0 10px; }
 .intro-welcome { color: var(--ln-amber); font: 700 16px var(--ln-font-display); letter-spacing: 0.08em; margin: 0 0 8px; }
 .intro-subtitle { color: var(--ln-text-dim); font: 400 14px/1.5 var(--ln-font-body); max-width: 280px; margin: 0 0 36px; }

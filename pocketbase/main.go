@@ -2,11 +2,14 @@ package main
 
 import (
 	"log"
+	"os"
 
 	"github.com/pocketbase/pocketbase"
 	"github.com/pocketbase/pocketbase/core"
 	"github.com/pocketbase/pocketbase/plugins/migratecmd"
 	"github.com/pocketbase/pocketbase/tools/types"
+
+	"landnam-backend/sharedauth"
 )
 
 func main() {
@@ -16,6 +19,13 @@ func main() {
 		Automigrate: true,
 	})
 
+	sharedPBURL := os.Getenv("SHARED_PB_URL")
+	if sharedPBURL == "" {
+		sharedPBURL = "http://localhost:8090"
+		log.Print("warning: SHARED_PB_URL is empty; defaulting to http://localhost:8090 for local dev")
+	}
+	sharedAuth := sharedauth.New(sharedPBURL)
+
 	app.OnServe().BindFunc(func(se *core.ServeEvent) error {
 		ensureCollections(app)
 		seedCatalog(app)
@@ -24,6 +34,7 @@ func main() {
 	})
 
 	registerGuestSignupRateLimit(app)
+	registerLandnamAuthExchange(app, sharedAuth)
 
 	if err := app.Start(); err != nil {
 		log.Fatal(err)
@@ -45,11 +56,11 @@ func ensureCollections(app core.App) {
 	if _, err := app.FindCollectionByNameOrId("game_states"); err != nil {
 		// Fresh install: create with open text-field schema from the start.
 		gameStates := core.NewBaseCollection("game_states")
-		gameStates.ListRule = types.Pointer("")
-		gameStates.ViewRule = types.Pointer("")
-		gameStates.CreateRule = types.Pointer("")
-		gameStates.UpdateRule = types.Pointer("")
-		gameStates.DeleteRule = types.Pointer("")
+		gameStates.ListRule = types.Pointer("user = @request.auth.id")
+		gameStates.ViewRule = types.Pointer("user = @request.auth.id")
+		gameStates.CreateRule = types.Pointer("@request.auth.id != \"\" && user = @request.auth.id")
+		gameStates.UpdateRule = types.Pointer("user = @request.auth.id")
+		gameStates.DeleteRule = types.Pointer("user = @request.auth.id")
 		gameStates.Fields.Add(&core.TextField{Name: "user", Required: true, Max: 64})
 		gameStates.Fields.Add(&core.JSONField{Name: "state", Required: true, MaxSize: 200000})
 		gameStates.Fields.Add(&core.NumberField{Name: "missions_done", Required: false})
@@ -306,11 +317,15 @@ func ensureCollections(app core.App) {
 	// mission_log — append-only completed-mission log; one row per mission finished
 	if _, err := app.FindCollectionByNameOrId("mission_log"); err != nil {
 		missionLog := core.NewBaseCollection("mission_log")
-		missionLog.ListRule = types.Pointer("")
-		missionLog.ViewRule = types.Pointer("")
-		missionLog.CreateRule = types.Pointer("")
-		missionLog.UpdateRule = types.Pointer("")
-		missionLog.DeleteRule = types.Pointer("")
+		// Append-only, write-only from the client (see useGameLoop.ts — only
+		// `.create()` is ever called). No client read path exists, so list/view/
+		// update/delete are superuser-only (nil), while create is scoped to the
+		// authenticated owner.
+		missionLog.ListRule = nil
+		missionLog.ViewRule = nil
+		missionLog.CreateRule = types.Pointer("@request.auth.id != \"\" && user = @request.auth.id")
+		missionLog.UpdateRule = nil
+		missionLog.DeleteRule = nil
 		missionLog.Fields.Add(&core.TextField{Name: "user", Required: true, Max: 64})
 		missionLog.Fields.Add(&core.TextField{Name: "mission_id", Required: true, Max: 100})
 		missionLog.Fields.Add(&core.TextField{Name: "target_id", Required: false, Max: 100})
@@ -323,6 +338,8 @@ func ensureCollections(app core.App) {
 		if err := app.Save(missionLog); err != nil {
 			log.Printf("failed to save mission_log: %v", err)
 		}
+	} else {
+		migrateMissionLog(app)
 	}
 
 	ensureCatalogFields(app)
@@ -347,26 +364,29 @@ func migrateGameStates(app core.App) {
 		changed = true
 	}
 
-	// Open up rules — the client identifies itself by userId string only.
-	empty := ""
-	if col.ListRule == nil || *col.ListRule != empty {
-		col.ListRule = &empty
+	// Ownership rules — the client now authenticates via the landnam-auth
+	// token exchange (see landnam_auth.go), so @request.auth.id is populated
+	// with the same id already stored in each record's "user" field.
+	const ownerRule = "user = @request.auth.id"
+	const createRule = "@request.auth.id != \"\" && user = @request.auth.id"
+	if col.ListRule == nil || *col.ListRule != ownerRule {
+		col.ListRule = types.Pointer(ownerRule)
 		changed = true
 	}
-	if col.ViewRule == nil || *col.ViewRule != empty {
-		col.ViewRule = &empty
+	if col.ViewRule == nil || *col.ViewRule != ownerRule {
+		col.ViewRule = types.Pointer(ownerRule)
 		changed = true
 	}
-	if col.CreateRule == nil || *col.CreateRule != empty {
-		col.CreateRule = &empty
+	if col.CreateRule == nil || *col.CreateRule != createRule {
+		col.CreateRule = types.Pointer(createRule)
 		changed = true
 	}
-	if col.UpdateRule == nil || *col.UpdateRule != empty {
-		col.UpdateRule = &empty
+	if col.UpdateRule == nil || *col.UpdateRule != ownerRule {
+		col.UpdateRule = types.Pointer(ownerRule)
 		changed = true
 	}
-	if col.DeleteRule == nil || *col.DeleteRule != empty {
-		col.DeleteRule = &empty
+	if col.DeleteRule == nil || *col.DeleteRule != ownerRule {
+		col.DeleteRule = types.Pointer(ownerRule)
 		changed = true
 	}
 
@@ -381,6 +401,50 @@ func migrateGameStates(app core.App) {
 			log.Printf("migrateGameStates: failed to save: %v", err)
 		} else {
 			log.Printf("migrateGameStates: updated game_states schema")
+		}
+	}
+}
+
+// migrateMissionLog upgrades an existing mission_log collection from its
+// previous fully-open rules to append-only-from-client rules: create is
+// scoped to the authenticated owner, list/view/update/delete are
+// superuser-only (nil) since the client never reads this collection back
+// (see useGameLoop.ts — only `.create()` is ever called against it).
+func migrateMissionLog(app core.App) {
+	col, err := app.FindCollectionByNameOrId("mission_log")
+	if err != nil {
+		return
+	}
+
+	changed := false
+	const createRule = "@request.auth.id != \"\" && user = @request.auth.id"
+
+	if col.ListRule != nil {
+		col.ListRule = nil
+		changed = true
+	}
+	if col.ViewRule != nil {
+		col.ViewRule = nil
+		changed = true
+	}
+	if col.CreateRule == nil || *col.CreateRule != createRule {
+		col.CreateRule = types.Pointer(createRule)
+		changed = true
+	}
+	if col.UpdateRule != nil {
+		col.UpdateRule = nil
+		changed = true
+	}
+	if col.DeleteRule != nil {
+		col.DeleteRule = nil
+		changed = true
+	}
+
+	if changed {
+		if err := app.Save(col); err != nil {
+			log.Printf("migrateMissionLog: failed to save: %v", err)
+		} else {
+			log.Printf("migrateMissionLog: updated mission_log schema")
 		}
 	}
 }
