@@ -25,6 +25,7 @@
     "cypress:run:visual": "env -u ELECTRON_RUN_AS_NODE CYPRESS_PROFILE=visual cypress run --browser chrome --headed"
   },
   "dependencies": {
+    "@vercel/analytics": "^2.0.1",
     "framer-motion": "^12.40.0",
     "lucide-react": "^1.17.0",
     "next": "16.2.9",
