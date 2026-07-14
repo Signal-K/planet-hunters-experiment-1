@@ -31,7 +31,7 @@ export const TARGETS: Target[] = [
     orbit: 2,
     difficulty: 'L1',
     brief: 'Elongated near-Earth rock with dense iron-nickel core. First commercial prospect on file.',
-    minerals: ['iron', 'silicon'],
+    minerals: ['iron', 'silicon', 'platinum', 'palladium'],
     recommended: true,
   },
   {
@@ -41,7 +41,7 @@ export const TARGETS: Target[] = [
     orbit: 3,
     difficulty: 'L1',
     brief: 'Differentiated protoplanet. Basaltic crust over a heavy iron mantle.',
-    minerals: ['iron', 'silicon'],
+    minerals: ['iron', 'silicon', 'platinum', 'palladium'],
   },
   {
     id: 'itokawa',
@@ -50,7 +50,7 @@ export const TARGETS: Target[] = [
     orbit: 2,
     difficulty: 'L1',
     brief: 'Stony near-Earth rubble pile with accessible nickel-iron traces.',
-    minerals: ['iron', 'nickel', 'copper', 'platinum'],
+    minerals: ['iron', 'nickel', 'copper', 'platinum', 'palladium'],
   },
   {
     id: 'ryugu',
@@ -59,7 +59,7 @@ export const TARGETS: Target[] = [
     orbit: 3,
     difficulty: 'L1',
     brief: 'Carbonaceous near-Earth asteroid with hydrated minerals and dark regolith.',
-    minerals: ['carbon', 'ice'],
+    minerals: ['carbon', 'ice', 'platinum', 'palladium'],
   },
   {
     id: 'psyche',
@@ -68,7 +68,7 @@ export const TARGETS: Target[] = [
     orbit: 4,
     difficulty: 'L2',
     brief: 'Exposed metallic core of an ancient body. Extremely high iron and nickel grades.',
-    minerals: ['iron', 'nickel', 'gold', 'cobalt', 'palladium'],
+    minerals: ['iron', 'nickel', 'gold', 'cobalt', 'platinum', 'palladium'],
   },
   {
     id: 'bennu',
@@ -77,7 +77,7 @@ export const TARGETS: Target[] = [
     orbit: 2,
     difficulty: 'L1',
     brief: 'Carbon-rich near-Earth asteroid. Loose rubble pile, low gravity, easy approach.',
-    minerals: ['iron', 'carbon'],
+    minerals: ['iron', 'carbon', 'platinum', 'palladium'],
   },
   // ── Main belt / outer (orbit 5+) ───────────────────────────────────────────
   {
