@@ -429,6 +429,7 @@ function GameCanvas() {
             hasCoach={hasCoach}
             coachManual={coach?.manual ?? false}
             addToast={game.addToast}
+            deliveryTargetName={game.mission?.deliveryTargetId ? game.catalog.targets.find(t => t.id === game.mission?.deliveryTargetId)?.name : undefined}
           />
         )}
         {game.screen === 'rover-mining' && game.mission && game.target && (

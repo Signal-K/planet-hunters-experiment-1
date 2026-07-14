@@ -94,15 +94,19 @@ function ScrollTrack({ scrollRef }: { scrollRef: React.MutableRefObject<((dx: nu
   )
 }
 
-const MINING_GUIDE = [
-  { label: 'FIRE LASER', desc: 'Fires your mining laser at the asteroid. Collect ore by hitting ore veins (Space/F).' },
-  { label: 'SCROLL', desc: 'Drag the scroll track left to slow down, right to fast-forward camera movement.' },
-  { label: 'INVENTORY', desc: 'Shows collected vs. required per mineral. Fill all slots to unlock return.' },
-  { label: 'MISSION GOALS', desc: 'Combined ore progress and value context for the current contract.' },
-  { label: 'RETURN HOME', desc: 'Return to Earth for recovery and ship destruction. Payout is unlocked after landing.' },
-]
+function miningGuide(deliveryTargetName?: string) {
+  return [
+    { label: 'FIRE LASER', desc: 'Fires your mining laser at the asteroid. Collect ore by hitting ore veins (Space/F).' },
+    { label: 'SCROLL', desc: 'Drag the scroll track left to slow down, right to fast-forward camera movement.' },
+    { label: 'INVENTORY', desc: 'Shows collected vs. required per mineral. Fill all slots to unlock return.' },
+    { label: 'MISSION GOALS', desc: 'Combined ore progress and value context for the current contract.' },
+    deliveryTargetName
+      ? { label: 'DELIVER CARGO', desc: `Head to ${deliveryTargetName} to drop off this cargo. Payout is unlocked after delivery.` }
+      : { label: 'RETURN HOME', desc: 'Return to Earth for recovery and ship destruction. Payout is unlocked after landing.' },
+  ]
+}
 
-export default function MiningScreen({ mission, target, onComplete, onBack, onAbandon, minerals, laserChargeCap, laserTier, hasCoach, coachManual, onCoachDone, addToast }: {
+export default function MiningScreen({ mission, target, onComplete, onBack, onAbandon, minerals, laserChargeCap, laserTier, hasCoach, coachManual, onCoachDone, addToast, deliveryTargetName }: {
   mission: Mission
   target: Target
   onComplete: (cargo: Record<string, number>) => void
@@ -117,6 +121,8 @@ export default function MiningScreen({ mission, target, onComplete, onBack, onAb
   onCoachDone?: () => void
   /** Transient Temple-Run-style hints ("Nice shot!", "You don't need that yet") — tutorial-scoped, not the persistent coach banner. */
   addToast?: (message: string, kind?: 'info' | 'ok' | 'warn') => void
+  /** Set for two-leg "mine then deliver" missions (mission.deliveryTargetId) — swaps the return button's copy from "Return to Earth" to "Deliver to {name}" since the ship isn't heading home yet. */
+  deliveryTargetName?: string
 }) {
   // Charge count is mission-aware, not coach-aware.
   // During onboarding (sequence <= FREE_OPS_START_MISSIONS_DONE): always 6× the ore required,
@@ -285,7 +291,7 @@ export default function MiningScreen({ mission, target, onComplete, onBack, onAb
         <div style={{ position: 'absolute', inset: 0, zIndex: 70, background: 'rgba(3,6,12,0.82)', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', padding: 16, gap: 8 }} onClick={() => setGuideOpen(false)}>
           <div style={{ background: 'rgba(8,16,30,0.97)', border: '1px solid rgba(100,180,255,0.3)', borderRadius: 14, padding: 14 }} onClick={e => e.stopPropagation()}>
             <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 9, fontWeight: 800, letterSpacing: '0.2em', color: '#87CFFA', textTransform: 'uppercase', marginBottom: 10 }}>Mining Controls</div>
-            {MINING_GUIDE.map(item => (
+            {miningGuide(deliveryTargetName).map(item => (
               <div key={item.label} style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
                 <span style={{ fontFamily: 'var(--ln-font-display)', fontSize: 10, fontWeight: 800, letterSpacing: '0.1em', color: '#f5a623', whiteSpace: 'nowrap', minWidth: 90 }}>{item.label}</span>
                 <span style={{ fontFamily: 'var(--ln-font-body)', fontSize: 12, color: '#a9b8ce', lineHeight: 1.4 }}>{item.desc}</span>
@@ -441,7 +447,10 @@ export default function MiningScreen({ mission, target, onComplete, onBack, onAb
             testId="return-home-btn"
             onClick={handleReturn}
           >
-            {orderFilled ? 'RETURN TO EARTH' : laserCharges <= 0 ? 'RETURN TO EARTH' : 'FILL ORDER TO RETURN'}
+            {(() => {
+              const destination = deliveryTargetName ? `DELIVER TO ${deliveryTargetName.toUpperCase()}` : 'RETURN TO EARTH'
+              return orderFilled || laserCharges <= 0 ? destination : `FILL ORDER TO ${deliveryTargetName ? 'DELIVER' : 'RETURN'}`
+            })()}
           </PrimaryBtn>
           <ScrollTrack scrollRef={scrollRef} />
         </div>
