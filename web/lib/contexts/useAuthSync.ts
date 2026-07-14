@@ -89,21 +89,24 @@ export function useAuthSync({
 
     try {
       // Set the record's own id to the (deterministic, already-unique) userId
-      // on first create. Two tabs/devices opening a brand-new session at the
-      // same time both reach this branch with backendRecordId.current still
-      // null and can race here -- the loser's create() 400s on the unique
-      // constraint. Because the id is deterministic rather than server-
-      // generated, the loser already knows the winner's record id without
-      // needing a getFirstListItem lookup, which avoids a real race window:
-      // Fly's read path could still return a 404 for a row that had just
-      // committed a moment earlier via the winning create.
+      // on first create, so a racing loser (two tabs/devices opening a
+      // brand-new session at once) can recover without a getFirstListItem
+      // lookup, which has its own race window on Fly (a just-committed row
+      // can still 404 on immediate read).
       const record = await pbLandnam.collection('game_states').create({ id: userId, ...payload })
       backendRecordId.current = record.id
     } catch (createErr: unknown) {
       const status = responseStatus(createErr)
       if (status !== 400 && status !== 409) throw createErr
-      backendRecordId.current = userId
-      await pbLandnam.collection('game_states').update(userId, payload)
+      // The unique-constraint loser isn't always a fresh concurrent create —
+      // it can also be a pre-existing record from before this deterministic-
+      // id scheme shipped, whose real id is NOT userId. Look it up rather
+      // than assuming; a lookup miss here just means the winner's create
+      // hasn't replicated yet, so rethrow and let the next periodic save
+      // retry instead of writing to a record id that doesn't exist.
+      const existing = await pbLandnam.collection('game_states').getFirstListItem(`user = "${userId}"`)
+      backendRecordId.current = existing.id
+      await pbLandnam.collection('game_states').update(existing.id, payload)
     }
   }, [])
 

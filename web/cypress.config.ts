@@ -21,6 +21,7 @@ const profiles: Record<string, Cypress.EndToEndConfigOptions> = {
       'cypress/e2e/mine-then-deliver-flow.cy.ts',
       'cypress/e2e/coming-soon-missions-wall.cy.ts',
       'cypress/e2e/service-worker-caching.cy.ts',
+      'cypress/e2e/game-state-save-race.cy.ts',
     ],
     // Portrait canvas: existing tests target the 402px canvas, not the desktop layout.
     // m3-territory.cy.ts overrides viewport per-test where desktop behaviour is needed.
