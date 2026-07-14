@@ -3,8 +3,8 @@
 import Image from 'next/image'
 import { useState } from 'react'
 import TopBar from '@/components/ui/TopBar'
-import { STARTER_ROCKETS, hasShipCustomizer } from '@/lib/data'
-import type { StarterRocket } from '@/lib/data'
+import { STARTER_ROCKETS, hasShipCustomizer, calculateShipSuccessChance, selectedCustomizerPartIds, getBuildSequence } from '@/lib/data'
+import type { StarterRocket, InstalledCustomizerPartsByKind } from '@/lib/data'
 import { UI_ZONES } from '@/lib/ui-zones'
 import ShipInteriorPreview from '@/components/game/ShipInteriorPreview'
 
@@ -12,6 +12,8 @@ interface HangarScreenProps {
   francs: number
   missionsDone: number
   unlockedSkillNodes?: string[]
+  shipCustomizerParts?: InstalledCustomizerPartsByKind
+  onConfirmShipCustomizerBuild?: (installed: InstalledCustomizerPartsByKind, prevInstalled: InstalledCustomizerPartsByKind) => boolean
   onBack: () => void
   onSelect?: (rocketId: string) => void
 }
@@ -160,9 +162,14 @@ function RocketCard({ rocket, missionsDone, onSelect }: { rocket: StarterRocket;
   )
 }
 
-export default function HangarScreen({ francs: _francs, missionsDone, unlockedSkillNodes, onBack, onSelect }: HangarScreenProps) {
+export default function HangarScreen({ francs, missionsDone, unlockedSkillNodes, shipCustomizerParts, onConfirmShipCustomizerBuild, onBack, onSelect }: HangarScreenProps) {
   const customizerUnlocked = hasShipCustomizer(unlockedSkillNodes)
   const [customizerOpen, setCustomizerOpen] = useState(false)
+  const installed = shipCustomizerParts ?? {}
+  const sequence = getBuildSequence(missionsDone)
+  const installedIds = selectedCustomizerPartIds(installed, sequence)
+  const hasLoadout = installedIds.length > 0
+  const successChance = hasLoadout ? calculateShipSuccessChance(installedIds, sequence) : null
 
   return (
     <div className="game-screen">
@@ -200,8 +207,10 @@ export default function HangarScreen({ francs: _francs, missionsDone, unlockedSk
               <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 9, fontWeight: 800, letterSpacing: '0.18em', color: 'var(--ln-crimson)', textTransform: 'uppercase' }}>
                 Customiser Online
               </div>
-              <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 11, color: 'var(--ln-text-muted)', marginTop: 2 }}>
-                Configure Explorer room modules
+              <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 11, color: 'var(--ln-text-muted)', marginTop: 2 }} data-testid="ship-customizer-loadout-summary">
+                {hasLoadout
+                  ? `${installedIds.length}/${sequence.length} modules fitted · ${successChance}% success`
+                  : 'Configure Explorer room modules'}
               </div>
             </div>
             <span style={{ flexShrink: 0, fontFamily: 'var(--ln-font-display)', fontSize: 12, color: 'var(--ln-crimson-bright)', opacity: 0.7 }}>›</span>
@@ -217,8 +226,10 @@ export default function HangarScreen({ francs: _francs, missionsDone, unlockedSk
         <div style={{ position: 'absolute', inset: 0, zIndex: 10 }}>
           <ShipInteriorPreview
             rocketId="sr1"
-            startingFrancs={_francs}
+            startingFrancs={francs}
             missionsDone={missionsDone}
+            installedParts={installed}
+            onConfirm={onConfirmShipCustomizerBuild}
             onClose={() => setCustomizerOpen(false)}
           />
         </div>

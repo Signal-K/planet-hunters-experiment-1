@@ -110,6 +110,10 @@ export interface Player {
   licenseGrade?: LicenseGrade
   researchXP?: number
   unlockedBlueprints?: string[]
+  // Persisted ship-customiser loadout for the player's owned Explorer (sr1) —
+  // part id installed per room slot. Confirmed builds deduct real francs and
+  // survive across sessions instead of resetting to a fresh 3B mock budget.
+  shipCustomizerParts?: Partial<Record<import('@/lib/data').ShipRoomKind, string>>
 }
 
 export interface GameState {
@@ -180,6 +184,7 @@ export interface GameActions {
   submitTessClassification: (subjectId: string, verdict: TessVerdict, ranges: TransitRange[], discoveredTarget?: Target) => void
   chooseSatelliteTarget: (subjectId: string) => void
   onRoverMiningDone: (cargo: Record<string, number>) => void
+  confirmShipCustomizerBuild: (installed: Partial<Record<import('@/lib/data').ShipRoomKind, string>>, prevInstalled: Partial<Record<import('@/lib/data').ShipRoomKind, string>>) => boolean
   gainResearchXP: (amount: number) => void
   upgradeLicenseGrade: (grade: Exclude<LicenseGrade, 'Grade I'>) => void
   unlockBlueprint: (blueprintId: string, costFrancs?: number, costXP?: number, costMaterials?: Record<string, number>) => void

@@ -79,8 +79,12 @@ export default defineConfig({
     screenshotOnRunFailure: true,
     defaultCommandTimeout: 10000,
     pageLoadTimeout: 60000,
+    // A failing spec re-runs `retries.runMode` times before being reported —
+    // every extra retry multiplies that spec's full timeout budget. 2 retries
+    // (3 attempts) on a genuinely broken spec can add tens of minutes to a
+    // local run. CI keeps 2 to absorb real flake; local/agent runs fail fast.
     retries: {
-      runMode: 2,
+      runMode: process.env.CI ? 2 : 1,
       openMode: 0,
     },
   },

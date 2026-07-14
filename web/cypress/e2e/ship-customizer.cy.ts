@@ -58,5 +58,9 @@ describe('Ship Customiser staged build', () => {
     // onClose() fires immediately after confirm, so the interior unmounts and the fleet page returns
     cy.get('[data-testid="ship-interior-sr1"]').should('not.exist')
     cy.contains('Rocket Fleet').should('be.visible')
+
+    // Confirmed loadout is real game state, not a mock that resets on close —
+    // the Hangar reflects it immediately without needing to reopen the modal.
+    cy.get('[data-testid="ship-customizer-loadout-summary"]').should('contain', '4/4 modules fitted')
   })
 })

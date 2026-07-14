@@ -1,11 +1,11 @@
 import { useCallback } from 'react'
 import { REFINERY_RECIPES } from '@/lib/data'
-import { applySellMinerals, applyStartRefine, applyCollectRefined, applyUpgradeLaunchpad } from '@/lib/systems/EconomySystem'
+import { applySellMinerals, applyStartRefine, applyCollectRefined, applyUpgradeLaunchpad, applyConfirmShipCustomizerBuild } from '@/lib/systems/EconomySystem'
 import { applyBuildScanner, applyStartScan, applyCollectScan } from '@/lib/systems/ScanSystem'
 import { applyUnlockSkillNode, applyAcceptLoan, applyAbandonMission } from '@/lib/systems/ProgressionSystem'
 import type { Catalog } from '@/lib/catalog'
 import type { GameState } from '@/lib/game-types'
-import type { Mission } from '@/lib/data'
+import type { Mission, ShipRoomKind } from '@/lib/data'
 
 export function useEconomyActions(
   setState: React.Dispatch<React.SetStateAction<GameState>>,
@@ -56,8 +56,22 @@ export function useEconomyActions(
     setState(s => applyAbandonMission(s, getCatalogMissions()))
   }, [setState, getCatalogMissions])
 
+  const confirmShipCustomizerBuild = useCallback((
+    installed: Partial<Record<ShipRoomKind, string>>,
+    prevInstalled: Partial<Record<ShipRoomKind, string>>,
+  ) => {
+    let applied = false
+    setState(s => {
+      const result = applyConfirmShipCustomizerBuild(s, installed, prevInstalled)
+      applied = result.ok
+      return result.state
+    })
+    return applied
+  }, [setState])
+
   return {
     sellMinerals, onStartRefine, onCollectRefined, upgradeLaunchpad,
     buildScanner, startScan, collectScan, unlockSkillNode, acceptLoan, abandonMission,
+    confirmShipCustomizerBuild,
   }
 }

@@ -216,6 +216,16 @@ export default function TessDiscoveryScreen({ player, onBack, onBuildStation, on
             </StatusPill>
           </div>
 
+          <div
+            data-testid="tess-data-provenance"
+            style={{
+              fontFamily: 'var(--ln-font-mono)', fontSize: 8, letterSpacing: '0.06em', color: '#4a5a75',
+              textTransform: 'uppercase', marginBottom: 8, marginTop: -4,
+            }}
+          >
+            Real light-curve data · NASA TESS / Planet Hunters — your call feeds live classification consensus
+          </div>
+
           {!classification && sectors.length > 1 && (
             <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 8 }}>
               {sectors.map((sector, index) => (

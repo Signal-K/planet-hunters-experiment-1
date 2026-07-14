@@ -2,8 +2,8 @@
 // Covers: sell minerals, refinery queue, launchpad upgrade.
 
 import type { GameState } from '@/lib/game-types'
-import type { RefineryRecipe } from '@/lib/data'
-import { MINERAL_META } from '@/lib/data'
+import type { RefineryRecipe, ShipRoomKind } from '@/lib/data'
+import { MINERAL_META, customizerPartById } from '@/lib/data'
 
 // Sell to open market (raw): ~80% of market price — see [[Economy and Minerals]].
 export const OPEN_MARKET_SELL_RATE = 0.8
@@ -94,4 +94,36 @@ export function applyCollectRefined(s: GameState, recipe: RefineryRecipe): GameS
 export function applyUpgradeLaunchpad(s: GameState): GameState {
   if (s.player.launchpadUpgraded || s.player.francs < 1_000_000_000) return s
   return { ...s, player: { ...s.player, francs: s.player.francs - 1_000_000_000, launchpadUpgraded: true } }
+}
+
+// Ship customiser: swaps/upgrades individual room parts on the player's owned
+// Explorer. Only charges the price delta for slots that actually changed —
+// an unchanged slot (already owned from a prior confirm) is free to re-confirm.
+// Returns whether the build was applied (false if the player can't afford it).
+export function applyConfirmShipCustomizerBuild(
+  s: GameState,
+  installed: Partial<Record<ShipRoomKind, string>>,
+  prevInstalled: Partial<Record<ShipRoomKind, string>>,
+): { state: GameState; ok: boolean } {
+  let netCost = 0
+  for (const kind of Object.keys(installed) as ShipRoomKind[]) {
+    const nextId = installed[kind]
+    const prevId = prevInstalled[kind]
+    if (nextId === prevId) continue
+    const nextPrice = nextId ? customizerPartById(nextId)?.price ?? 0 : 0
+    const prevPrice = prevId ? customizerPartById(prevId)?.price ?? 0 : 0
+    netCost += nextPrice - prevPrice
+  }
+  if (netCost > s.player.francs) return { state: s, ok: false }
+  return {
+    ok: true,
+    state: {
+      ...s,
+      player: {
+        ...s.player,
+        francs: s.player.francs - netCost,
+        shipCustomizerParts: installed,
+      },
+    },
+  }
 }

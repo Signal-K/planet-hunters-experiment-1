@@ -12,7 +12,12 @@ import RoverMiningCanvas from './RoverMiningCanvas'
 
 const ROVER_MINING_DURATION_MS = 2 * 60 * 1000
 
-function generateRoverCargo(target: Target): Record<string, number> {
+// Rover cargo mirrors what the mission actually requires — same contract as
+// the laser MiningScreen's mission.requires.minerals — so a rover deployment
+// yields real, usable mission cargo instead of an arbitrary fixed haul.
+function generateRoverCargo(mission: Mission, target: Target): Record<string, number> {
+  const required = mission.requires.minerals
+  if (Object.keys(required).length > 0) return { ...required }
   const cargo: Record<string, number> = {}
   const minerals = target.minerals.slice(0, 3)
   minerals.forEach((mineral, i) => {
@@ -36,7 +41,7 @@ export default function RoverMiningScreen({ mission, target, onComplete, onBack 
   const done = elapsed >= ROVER_MINING_DURATION_MS
   const progressPct = Math.min(100, (elapsed / ROVER_MINING_DURATION_MS) * 100)
   const remaining = Math.max(0, ROVER_MINING_DURATION_MS - elapsed)
-  const cargo = generateRoverCargo(target)
+  const cargo = generateRoverCargo(mission, target)
 
   const totalSec = Math.ceil(remaining / 1000)
   const min = Math.floor(totalSec / 60)

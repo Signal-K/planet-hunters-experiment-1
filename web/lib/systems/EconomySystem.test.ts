@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import type { GameState } from '@/lib/game-types'
-import { MINERAL_META } from '@/lib/data'
-import { applySellMinerals, decayedUnitsSold, openMarketSellPrice, supplyDipMultiplier } from './EconomySystem'
+import { MINERAL_META, customizerPartById } from '@/lib/data'
+import { applySellMinerals, applyConfirmShipCustomizerBuild, decayedUnitsSold, openMarketSellPrice, supplyDipMultiplier } from './EconomySystem'
 
 function makeState(overrides: Partial<GameState['player']> = {}): GameState {
   return {
@@ -94,5 +94,42 @@ describe('applySellMinerals', () => {
 
   it('treats missing marketSupplyUpdatedAt as no decay (legacy save data)', () => {
     expect(decayedUnitsSold(50, undefined)).toBe(50)
+  })
+})
+
+describe('applyConfirmShipCustomizerBuild', () => {
+  const engineT1 = customizerPartById('ion-thruster-t1')!
+  const engineT2 = customizerPartById('pulse-thruster-t1')!
+  const boosterT1 = customizerPartById('strap-booster-t1')!
+
+  it('charges full price for a newly installed slot and persists the loadout', () => {
+    const s = makeState({ francs: engineT1.price + 1_000 })
+    const { state, ok } = applyConfirmShipCustomizerBuild(s, { engine: engineT1.id }, {})
+    expect(ok).toBe(true)
+    expect(state.player.francs).toBe(1_000)
+    expect(state.player.shipCustomizerParts).toEqual({ engine: engineT1.id })
+  })
+
+  it('only charges the price delta for a slot that was already owned', () => {
+    const delta = engineT2.price - engineT1.price
+    const s = makeState({ francs: delta + 1_000, shipCustomizerParts: { engine: engineT1.id } })
+    const { state, ok } = applyConfirmShipCustomizerBuild(s, { engine: engineT2.id }, { engine: engineT1.id })
+    expect(ok).toBe(true)
+    expect(state.player.francs).toBe(1_000)
+  })
+
+  it('does not charge for slots that are unchanged from the prior confirm', () => {
+    const s = makeState({ francs: 1_000, shipCustomizerParts: { engine: engineT1.id } })
+    const { state, ok } = applyConfirmShipCustomizerBuild(s, { engine: engineT1.id }, { engine: engineT1.id })
+    expect(ok).toBe(true)
+    expect(state.player.francs).toBe(1_000)
+  })
+
+  it('rejects the build and leaves state untouched when the player cannot afford it', () => {
+    const s = makeState({ francs: 100, shipCustomizerParts: {} })
+    const { state, ok } = applyConfirmShipCustomizerBuild(s, { booster: boosterT1.id }, {})
+    expect(ok).toBe(false)
+    expect(state).toBe(s)
+    expect(state.player.francs).toBe(100)
   })
 })

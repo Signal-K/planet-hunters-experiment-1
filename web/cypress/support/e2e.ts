@@ -3,6 +3,12 @@ import './commands'
 // Stub PocketBase auth so the AuthGateSheet never opens in offline E2E runs.
 // Also stub catalog calls so the game uses static fallback data without network errors.
 beforeEach(() => {
+  // Stub the app's own backend-health probe so BackendStatus resolves to
+  // 'online' on the first check instead of polling every 2s for the whole
+  // test — real PocketBase is never running in offline e2e runs, and every
+  // unstubbed poll is wasted wall-clock time across 15+ specs.
+  cy.intercept('GET', '/api/backend-health', { statusCode: 200, body: { ok: true } }).as('backendHealth')
+
   cy.intercept('POST', '**/api/collections/users/auth-with-password', {
     statusCode: 200,
     body: { token: 'e2e-token', record: { id: 'e2e-user', email: 'e2e@landnam.guest' } },

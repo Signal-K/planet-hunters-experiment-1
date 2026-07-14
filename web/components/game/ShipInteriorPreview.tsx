@@ -16,12 +16,14 @@ import {
   refundCustomizerPart,
   selectedCustomizerPartIds,
 } from '@/lib/data'
-import type { CustomizerPart, ShipRoomKind } from '@/lib/data'
+import type { CustomizerPart, InstalledCustomizerPartsByKind, ShipRoomKind } from '@/lib/data'
 
 interface ShipInteriorPreviewProps {
   rocketId: string
   startingFrancs?: number
   missionsDone?: number
+  installedParts?: InstalledCustomizerPartsByKind
+  onConfirm?: (installed: InstalledCustomizerPartsByKind, prevInstalled: InstalledCustomizerPartsByKind) => boolean
   onClose?: () => void
 }
 
@@ -52,10 +54,15 @@ export default function ShipInteriorPreview({
   rocketId,
   startingFrancs = 3_000_000_000,
   missionsDone = 0,
+  installedParts,
+  onConfirm,
   onClose,
 }: ShipInteriorPreviewProps) {
   const layout = getShipInteriorLayout(rocketId)
-  const [buildState, setBuildState] = useState(() => createCustomizerBuildState(startingFrancs))
+  const [buildState, setBuildState] = useState(() => ({
+    ...createCustomizerBuildState(startingFrancs),
+    installed: installedParts ?? {},
+  }))
   const [stepIndex, setStepIndex] = useState(0)
   if (!layout) return null
 
@@ -78,8 +85,14 @@ export default function ShipInteriorPreview({
   }
   function confirmBuild() {
     const result = confirmCustomizerBuild(buildState, sequence)
+    if (!result.ok) {
+      setBuildState(result.state)
+      return
+    }
+    const applied = onConfirm ? onConfirm(result.state.installed, installedParts ?? {}) : true
+    if (!applied) return
     setBuildState(result.state)
-    if (result.ok) onClose?.()
+    onClose?.()
   }
 
   const isFirst = stepIndex === 0

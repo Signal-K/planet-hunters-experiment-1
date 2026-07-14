@@ -199,6 +199,12 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
   // Sync game.screen → URL on every screen change.
   // skipNextUrlSync prevents a loop when the change was triggered BY a URL change.
   useEffect(() => {
+    // Before hydration resolves, state.screen is still DEFAULT_STATE's 'intro'
+    // regardless of route (preview/preset routes included) — pushing here races
+    // the hydration effect's setState and can leave the URL on /game/intro
+    // (dropping preview/isPreview routing) before the real screen lands a tick
+    // later. Wait for hydration so only the real screen ever reaches the URL.
+    if (!hydrated) return
     if (ui.skipNextUrlSync.current) {
       ui.skipNextUrlSync.current = false
       return
@@ -281,6 +287,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       unlockSkillNode: economy.unlockSkillNode,
       acceptLoan: economy.acceptLoan,
       abandonMission: economy.abandonMission,
+      confirmShipCustomizerBuild: economy.confirmShipCustomizerBuild,
     }}>
       {children}
     </GameContext.Provider>
