@@ -622,18 +622,25 @@ func seedCatalog(app core.App) {
 		slug string
 		location
 	}{
-		{"mercury", location{"Mercury", "planet", "L2", "Scorched inner planet, rich in iron and trace silicates.", 1, []string{"iron", "silicon"}, false}},
-		{"mars", location{"Mars", "planet", "L1", "Iron-rich rusty plains, well-mapped, starter-friendly.", 4, []string{"iron", "silicon"}, true}},
-		{"jupiter", location{"Jupiter", "planet", "L3", "Gas giant moons, ice and silicate rich, high gravity penalty.", 6, []string{"ice", "silicon"}, false}},
-		{"eros", location{"433 Eros", "asteroid", "L1", "Elongated near-Earth rock with dense iron-nickel core. First commercial prospect on file.", 2, []string{"iron", "silicon"}, true}},
-		{"bennu", location{"101955 Bennu", "asteroid", "L1", "Carbon-rich near-Earth asteroid. Loose rubble pile, low gravity, easy approach.", 2, []string{"iron", "carbon"}, false}},
-		{"itokawa", location{"25143 Itokawa", "asteroid", "L1", "Stony near-Earth rubble pile with accessible nickel-iron traces.", 2, []string{"iron", "nickel", "copper"}, false}},
-		{"ryugu", location{"162173 Ryugu", "asteroid", "L1", "Carbonaceous near-Earth asteroid with hydrated minerals and dark regolith.", 3, []string{"carbon", "ice"}, false}},
-		{"vesta", location{"4 Vesta", "asteroid", "L1", "Differentiated protoplanet. Basaltic crust over a heavy iron mantle.", 3, []string{"iron", "silicon"}, false}},
-		{"psyche", location{"16 Psyche", "asteroid", "L2", "Exposed metallic core of an ancient body. Extremely high iron and nickel grades.", 4, []string{"iron", "nickel", "gold", "cobalt"}, false}},
-		{"belt", location{"Asteroid Belt", "asteroid", "L2", "Varied deposits: iron, silicon, nickel, cobalt, gold, copper, aluminium, hydrogen, uranium, and xenon pockets. The prospector's playground.", 5, []string{"iron", "silicon", "nickel", "cobalt", "gold", "rare", "copper", "aluminium", "hydrogen", "uranium"}, true}},
-		{"ceres", location{"1 Ceres", "asteroid", "L2", "Dwarf planet at the belt's inner edge. Ice-rich mantle beneath a silicate crust.", 5, []string{"ice", "silicon"}, false}},
-		{"lutetia", location{"21 Lutetia", "asteroid", "L2", "A large metallic asteroid in the outer belt. Dense nickel-cobalt deposits under a regolith crust.", 6, []string{"nickel", "cobalt"}, false}},
+		// Kept in sync by hand with web/lib/data/targets.ts + target-archetypes.ts
+		// (composition-archetype-derived minerals) — see the 2026-07-14
+		// prod-patches-target-mineral-mismatch ticket. This Go seed is a
+		// separate copy from that TS data; the live PocketBase `locations`
+		// collection is what the deployed app actually reads (falling back to
+		// the TS static array only when this backend is unreachable), so any
+		// future change to target-archetypes.ts's mineral pools must be
+		// mirrored here too, or production silently drifts from local again.
+		{"mercury", location{"Mercury", "planet", "L2", "Scorched inner planet, rich in iron and trace silicates.", 1, []string{"iron", "silicon", "aluminium", "nickel"}, false}},
+		{"mars", location{"Mars", "planet", "L1", "Iron-rich rusty plains, well-mapped, starter-friendly.", 4, []string{"iron", "silicon", "aluminium", "nickel", "platinum", "uranium"}, true}},
+		{"jupiter", location{"Jupiter", "planet", "L3", "Gas giant moons, ice and silicate rich, high gravity penalty.", 6, []string{"ice", "silicon", "hydrogen", "uranium", "rare"}, false}},
+		{"eros", location{"433 Eros", "asteroid", "L1", "Elongated near-Earth rock with dense iron-nickel core. First commercial prospect on file.", 2, []string{"iron", "silicon", "aluminium", "nickel", "platinum"}, true}},
+		{"bennu", location{"101955 Bennu", "asteroid", "L1", "Carbon-rich near-Earth asteroid. Loose rubble pile, low gravity, easy approach.", 2, []string{"carbon", "ice", "hydrogen", "palladium"}, false}},
+		{"itokawa", location{"25143 Itokawa", "asteroid", "L1", "Stony near-Earth rubble pile with accessible nickel-iron traces.", 2, []string{"iron", "silicon", "aluminium", "nickel", "platinum"}, false}},
+		{"ryugu", location{"162173 Ryugu", "asteroid", "L1", "Carbonaceous near-Earth asteroid with hydrated minerals and dark regolith.", 3, []string{"carbon", "ice", "hydrogen", "palladium"}, false}},
+		{"vesta", location{"4 Vesta", "asteroid", "L1", "Differentiated protoplanet. Basaltic crust over a heavy iron mantle.", 3, []string{"iron", "silicon", "aluminium", "nickel", "platinum"}, false}},
+		{"psyche", location{"16 Psyche", "asteroid", "L2", "Exposed metallic core of an ancient body. Extremely high iron and nickel grades — the richest known prospecting site on file.", 4, []string{"iron", "nickel", "cobalt", "copper", "gold", "platinum", "palladium", "rhodium", "iridium", "rare"}, false}},
+		{"ceres", location{"1 Ceres", "asteroid", "L2", "Dwarf planet at the belt's inner edge. Ice-rich mantle beneath a carbon-dark crust.", 5, []string{"carbon", "ice", "hydrogen", "palladium", "iridium", "rhodium"}, false}},
+		{"lutetia", location{"21 Lutetia", "asteroid", "L2", "A large carbonaceous asteroid in the outer belt. Hydrated minerals under a dark regolith crust.", 6, []string{"carbon", "ice", "hydrogen", "palladium", "iridium", "rhodium"}, false}},
 	}
 	for _, l := range locations {
 		seedRecord(app, "locations", l.slug, map[string]any{

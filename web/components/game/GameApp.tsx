@@ -186,13 +186,17 @@ function GameCanvas() {
     && !game.upgradePromptOpen
     && !game.authGateOpen
 
-  // Defer survey popups while the player is mid-animation or mid-gameplay so
-  // the sheet never slides up over the mining canvas or another active
-  // screen — surveys queue and wait for the next quiet moment instead.
+  // Allowlist, not a blocklist — surveys should only ever appear in a scene
+  // AFTER an action (a genuine "resting" screen), never while a player is
+  // mid-setup or mid-execution of a mission. A blocklist of "screens to
+  // avoid" rots exactly like the target/mineral bypass did earlier: miss one
+  // screen (targets, rocket-buy) and a survey slides up mid-setup again the
+  // moment the player leaves the one screen that WAS blocked (e.g. debrief).
+  const SURVEY_SAFE_SCREENS: Screen[] = ['hub', 'missions', 'market', 'hangar', 'skills', 'galaxy', 'refinery']
   const surveyBlocked = launchPending
     || !!coach
     || !!game.popup
-    || ['transit', 'mining', 'rover-mining', 'fab', 'debrief'].includes(game.screen)
+    || !SURVEY_SAFE_SCREENS.includes(game.screen)
 
   useEffect(() => {
     if (game.screen === 'market' && !game.player.freeOperations) game.go('hub')
