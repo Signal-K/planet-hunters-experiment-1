@@ -1,124 +1,129 @@
 // Landnam game data — targets and stars
 
 import type { Target, Star, Mission } from './types'
+import { mineralsForArchetype } from './target-archetypes'
+import { ONBOARDING_SEQUENCE_COUNT } from './mission-generator'
+
+// A landmark target: real body, hand-authored id/name/brief for narrative
+// recognizability, minerals derived from its composition archetype + orbit
+// (see target-archetypes.ts) rather than hand-picked, so every new template
+// or mineral tier is automatically satisfiable everywhere it's plausible —
+// no more per-target patching chasing whichever mineral a mission happens
+// to need this week.
+function landmark(t: Omit<Target, 'minerals'> & { archetype: NonNullable<Target['archetype']> }): Target {
+  return { ...t, minerals: mineralsForArchetype(t.archetype, t.orbit) }
+}
 
 export const TARGETS: Target[] = [
   // ── Inner solar system planets ─────────────────────────────────────────────
-  {
+  landmark({
     id: 'mercury',
     name: 'Mercury',
     type: 'planet',
     orbit: 1,
     difficulty: 'L2',
     brief: 'Scorched inner planet, rich in iron and trace silicates.',
-    minerals: ['iron', 'silicon'],
-  },
-  {
+    archetype: 'S',
+  }),
+  landmark({
     id: 'mars',
     name: 'Mars',
     type: 'planet',
     orbit: 4,
     difficulty: 'L1',
     brief: 'Iron-rich rusty plains, well-mapped, starter-friendly.',
-    minerals: ['iron', 'silicon'],
+    archetype: 'S',
     recommended: true,
-  },
+  }),
   // ── Near-Earth and inner belt asteroids (orbit 1–4) ────────────────────────
-  {
+  landmark({
     id: 'eros',
     name: '433 Eros',
     type: 'asteroid',
     orbit: 2,
     difficulty: 'L1',
     brief: 'Elongated near-Earth rock with dense iron-nickel core. First commercial prospect on file.',
-    minerals: ['iron', 'silicon', 'platinum', 'palladium'],
+    archetype: 'S',
     recommended: true,
-  },
-  {
+  }),
+  landmark({
     id: 'vesta',
     name: '4 Vesta',
     type: 'asteroid',
     orbit: 3,
     difficulty: 'L1',
     brief: 'Differentiated protoplanet. Basaltic crust over a heavy iron mantle.',
-    minerals: ['iron', 'silicon', 'platinum', 'palladium'],
-  },
-  {
+    archetype: 'S',
+  }),
+  landmark({
     id: 'itokawa',
     name: '25143 Itokawa',
     type: 'asteroid',
     orbit: 2,
     difficulty: 'L1',
     brief: 'Stony near-Earth rubble pile with accessible nickel-iron traces.',
-    minerals: ['iron', 'nickel', 'copper', 'platinum', 'palladium'],
-  },
-  {
+    archetype: 'S',
+  }),
+  landmark({
     id: 'ryugu',
     name: '162173 Ryugu',
     type: 'asteroid',
     orbit: 3,
     difficulty: 'L1',
     brief: 'Carbonaceous near-Earth asteroid with hydrated minerals and dark regolith.',
-    minerals: ['carbon', 'ice', 'platinum', 'palladium'],
-  },
-  {
+    archetype: 'C',
+  }),
+  landmark({
     id: 'psyche',
     name: '16 Psyche',
     type: 'asteroid',
     orbit: 4,
     difficulty: 'L2',
-    brief: 'Exposed metallic core of an ancient body. Extremely high iron and nickel grades.',
-    minerals: ['iron', 'nickel', 'gold', 'cobalt', 'platinum', 'palladium'],
-  },
-  {
+    brief: 'Exposed metallic core of an ancient body. Extremely high iron and nickel grades — the richest known prospecting site on file.',
+    archetype: 'M',
+  }),
+  landmark({
     id: 'bennu',
     name: '101955 Bennu',
     type: 'asteroid',
     orbit: 2,
     difficulty: 'L1',
     brief: 'Carbon-rich near-Earth asteroid. Loose rubble pile, low gravity, easy approach.',
-    minerals: ['iron', 'carbon', 'platinum', 'palladium'],
-  },
+    archetype: 'C',
+  }),
   // ── Main belt / outer (orbit 5+) ───────────────────────────────────────────
-  {
-    id: 'belt',
-    name: 'Asteroid Belt',
-    type: 'asteroid',
-    orbit: 5,
-    difficulty: 'L2',
-    brief: 'Varied deposits: iron, silicon, nickel, cobalt, gold, and xenon pockets. The prospector\'s playground.',
-    minerals: ['iron', 'silicon', 'nickel', 'cobalt', 'gold', 'rare', 'copper', 'aluminium', 'hydrogen', 'uranium', 'iridium'],
-    recommended: true,
-  },
-  {
+  // 'The belt' is a region, not a destination — every belt body is its own
+  // real, individually pickable target (see BELT_BODY_IDS in PixiGalaxyMap),
+  // not a single catch-all zone entry.
+  landmark({
     id: 'ceres',
     name: '1 Ceres',
     type: 'asteroid',
     orbit: 5,
     difficulty: 'L2',
-    brief: 'Dwarf planet at the belt\'s inner edge. Ice-rich mantle beneath a silicate crust.',
-    minerals: ['ice', 'silicon'],
-  },
-  {
+    brief: 'Dwarf planet at the belt\'s inner edge. Ice-rich mantle beneath a carbon-dark crust.',
+    archetype: 'C',
+  }),
+  landmark({
     id: 'lutetia',
     name: '21 Lutetia',
-    type: 'asteroid' as const,
+    type: 'asteroid',
     orbit: 6,
     difficulty: 'L2',
-    brief: 'A large metallic asteroid in the outer belt. Dense nickel-cobalt deposits under a regolith crust.',
-    minerals: ['nickel', 'cobalt', 'rhodium'],
+    brief: 'A large carbonaceous asteroid in the outer belt. Hydrated minerals under a dark regolith crust.',
+    archetype: 'C',
     recommended: false,
-  },
+  }),
   // ── Outer planets ──────────────────────────────────────────────────────────
-  {
+  landmark({
     id: 'jupiter',
     name: 'Jupiter',
     type: 'planet',
     orbit: 6,
     difficulty: 'L3',
     brief: 'Gas giant moons, ice and silicate rich, high gravity penalty.',
-    minerals: ['ice', 'silicon'],
-  },
+    archetype: 'gas-giant',
+  }),
 ]
 
 export const STARS: Star[] = [
@@ -143,9 +148,16 @@ export function compatibleTargetsFor(mission: Mission, targets: Target[] = TARGE
   if (mission.targetId) return targets.filter(t => t.id === mission.targetId)
 
   const required = Object.keys(mission.requires.minerals)
+  // Onboarding (M1/M2) stays scoped to asteroids — planets unlock as
+  // targets from M3 onward. Unlike the old isOnboarding bypass this never
+  // skips the mineral check; it only narrows which *type* of body onboarding
+  // is allowed to offer, honestly, alongside the same requirement everyone
+  // else has to satisfy.
+  const isOnboarding = mission.sequence <= ONBOARDING_SEQUENCE_COUNT
 
   return targets.filter(t => {
     const inRange = t.orbit <= mission.requires.max_orbit
-    return inRange && required.every(mineral => t.minerals.includes(mineral))
+    const typeOk = !isOnboarding || t.type === 'asteroid'
+    return inRange && typeOk && required.every(mineral => t.minerals.includes(mineral))
   })
 }

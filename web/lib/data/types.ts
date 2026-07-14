@@ -107,6 +107,9 @@ export interface Target {
   difficulty: string
   brief: string
   minerals: string[]
+  // Composition archetype driving `minerals` (see target-archetypes.ts) —
+  // absent for exoplanet targets, which aren't part of the mining economy.
+  archetype?: import('./target-archetypes').TargetArchetype
   recommended?: boolean
 }
 

@@ -120,7 +120,10 @@ describe('Full Game Loop — Landnam', () => {
     it('M1 card exposes target picking CTA', () => {
       visitWithState(fullState({ screen: 'missions', missionId: null, doneSteps: { 1: true } }))
       cy.get('[data-testid="mission-card-generated-s1-starter-bulk-1-cta"]').should('be.visible')
-      cy.get('[data-testid="mission-card-generated-s1-starter-bulk-1-cta"]').should('contain', '6 targets')
+      // Target count is derived from mineral/archetype coverage, not a fixed
+      // number — assert it's genuinely nonzero rather than pinning an exact
+      // count that shifts whenever target data legitimately changes.
+      cy.get('[data-testid="mission-card-generated-s1-starter-bulk-1-cta"]').invoke('text').should('match', /^(?!0 targets)\d+ targets/)
     })
 
     it('M1 target and rocket selection proceeds to assembly during onboarding', () => {

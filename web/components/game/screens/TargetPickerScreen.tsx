@@ -77,8 +77,7 @@ function PlanetSVG({ id, size }: { id: string; size: number }) {
 
 export default function TargetPickerScreen({ mission, onBack, onPick, hasCoach, catalog }: TargetPickerScreenProps) {
   const { targets: TARGETS, minerals: MINERAL_META } = catalog
-  // 'belt' is a zone marker, not a pickable destination — filter it out
-  const compat = compatibleTargetsFor(mission, TARGETS).filter(t => t.id !== 'belt')
+  const compat = compatibleTargetsFor(mission, TARGETS)
   const compatIds = new Set(compat.map(t => t.id))
   const quickPickForOnboarding = hasCoach && mission.sequence === 1
   // Default pick first compatible, prioritizing recommended if they are actually in compat

@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Application, Container, Graphics, Text } from 'pixi.js'
-import type { Mission, Target } from '@/lib/data'
+import type { Mission, Target, TargetArchetype } from '@/lib/data'
 import { Scene } from '@/lib/engine/Scene'
 import type { EntityData } from '@/lib/engine/types'
 
@@ -12,8 +12,10 @@ const LN_AMBER = 0xf5a623
 
 // ── Body classification ──────────────────────────────────────────────────────
 const PLANET_IDS    = new Set(['mercury', 'venus', 'earth', 'mars', 'jupiter', 'saturn', 'neptune'])
+// The belt is a region, not a Target — every body here is a real, individually
+// pickable target (see lib/data/targets.ts); this set only groups them for the
+// zoomed-in "belt view" rendering below.
 const BELT_BODY_IDS = new Set(['ceres', 'vesta', 'eros', 'ryugu', 'psyche', 'bennu', 'lutetia', 'itokawa'])
-// 'belt' is NOT a selectable target — it's a zone marker only
 
 // ── Orbital constants ────────────────────────────────────────────────────────
 const MAP_CENTER = { x: 187, y: 180 }
@@ -34,19 +36,15 @@ const RADII: Record<number, number> = { 1: 36, 2: 60, 3: 84, 4: 108, 5: 132, 6: 
 const BELT_MID_ORBIT_R = (RADII[3] + RADII[5]) / 2 // 108 — midpoint of belt zone
 
 // ── Spectral palette ─────────────────────────────────────────────────────────
-type SpectralClass = 'C' | 'S' | 'M' | 'planet'
-const SPECTRAL: Record<string, SpectralClass> = {
-  bennu: 'C', ryugu: 'C', ceres: 'C', lutetia: 'C',
-  eros: 'S', itokawa: 'S', vesta: 'S',
-  psyche: 'M',
-  mercury: 'planet', venus: 'planet', earth: 'planet', mars: 'planet',
-  jupiter: 'planet', saturn: 'planet', neptune: 'planet',
-}
-const SPECTRAL_PALETTE: Record<SpectralClass, { fill: number; low: number; stroke: number; mark: number }> = {
+// Colors key off the target's real composition archetype (target.archetype,
+// see lib/data/target-archetypes.ts) instead of a separately-maintained
+// per-id map — the two can no longer drift out of sync.
+const SPECTRAL_PALETTE: Record<TargetArchetype, { fill: number; low: number; stroke: number; mark: number }> = {
   C: { fill: 0x3c3a36, low: 0x1e1c1a, stroke: 0x5a5450, mark: 0x7a7268 },
   S: { fill: 0x8a6040, low: 0x4a3020, stroke: 0xaa8060, mark: 0xd0a880 },
   M: { fill: 0x8090a0, low: 0x3c4a56, stroke: 0xa8bccc, mark: 0xd0e0ec },
-  planet: { fill: 0x607080, low: 0x283340, stroke: 0x809090, mark: 0xaab8bd },
+  icy: { fill: 0x7ec8dc, low: 0x2e4a54, stroke: 0x9ee0f0, mark: 0xd4f4fa },
+  'gas-giant': { fill: 0xc8a060, low: 0x6f4f2a, stroke: 0xe0b870, mark: 0xf2d39a },
 }
 const PLANET_COLORS: Record<string, { fill: number; low: number; stroke: number; mark: number }> = {
   mercury: { fill: 0x8a7060, low: 0x4d4038, stroke: 0xa08070, mark: 0xc1a292 },
@@ -87,7 +85,7 @@ function seededFloat(seed: number, index: number): number {
 
 function bodyColors(target: Target) {
   if (PLANET_COLORS[target.id]) return PLANET_COLORS[target.id]
-  return SPECTRAL_PALETTE[SPECTRAL[target.id] ?? 'C']
+  return SPECTRAL_PALETTE[target.archetype ?? 'C']
 }
 
 function asteroidSilhouette(id: string): [number, number][] {
@@ -238,7 +236,7 @@ function drawScene(
   // ── Solar-view bodies ────────────────────────────────────────────────────────
   if (planetAlpha > 0.02) {
     for (const target of props.targets) {
-      if (target.id === 'belt' || BELT_BODY_IDS.has(target.id)) continue
+      if (BELT_BODY_IDS.has(target.id)) continue
       const knownAngle = ANGLES[target.id]
       const baseAngle = (knownAngle ?? (hashId(target.id) % 360)) * Math.PI / 180
       const drift = orbitPhase / Math.sqrt(Math.max(1, target.orbit))
