@@ -88,16 +88,22 @@ export function useAuthSync({
     }
 
     try {
-      const record = await pbLandnam.collection('game_states').create(payload)
+      // Set the record's own id to the (deterministic, already-unique) userId
+      // on first create. Two tabs/devices opening a brand-new session at the
+      // same time both reach this branch with backendRecordId.current still
+      // null and can race here -- the loser's create() 400s on the unique
+      // constraint. Because the id is deterministic rather than server-
+      // generated, the loser already knows the winner's record id without
+      // needing a getFirstListItem lookup, which avoids a real race window:
+      // Fly's read path could still return a 404 for a row that had just
+      // committed a moment earlier via the winning create.
+      const record = await pbLandnam.collection('game_states').create({ id: userId, ...payload })
       backendRecordId.current = record.id
     } catch (createErr: unknown) {
-      // UNIQUE constraint: a record already exists but we couldn't load it (backend
-      // was unavailable on session start). Look it up and update instead.
       const status = responseStatus(createErr)
       if (status !== 400 && status !== 409) throw createErr
-      const existing = await pbLandnam.collection('game_states').getFirstListItem(`user = "${userId}"`)
-      backendRecordId.current = existing.id
-      await pbLandnam.collection('game_states').update(existing.id, payload)
+      backendRecordId.current = userId
+      await pbLandnam.collection('game_states').update(userId, payload)
     }
   }, [])
 
