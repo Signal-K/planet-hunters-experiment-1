@@ -329,6 +329,11 @@ button { cursor: pointer; }
   border: 1px solid rgba(135,207,250,0.22);
   border-radius: 14px;
   background: linear-gradient(180deg, rgba(9,18,31,0.78), rgba(5,10,18,0.88));
+  /* Forces its own compositing layer on mount. Without this, content painted
+     inside this nested position:absolute + overflow:hidden frame (e.g. the
+     rocket stat values / rocket image on Select Rocket and Confirm Rocket)
+     can fail to paint on first render until any scroll forces a repaint. */
+  transform: translateZ(0);
 }
 
 .mission-setup-card {
@@ -338,6 +343,7 @@ button { cursor: pointer; }
   border: 1px solid rgba(245,166,35,0.32);
   border-radius: 14px;
   background: linear-gradient(180deg, rgba(18,34,54,0.78) 0%, rgba(10,18,29,0.86) 100%);
+  transform: translateZ(0);
 }
 
 .mission-setup-card-scroll {
