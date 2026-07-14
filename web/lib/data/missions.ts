@@ -145,23 +145,25 @@ export const MISSIONS: Mission[] = [...generateMissions(), ...AUTHORED_MISSIONS,
 
 // Cost of the Prospector (SR2) — the rocket M2 forces every onboarding player
 // to buy (see DEFAULT_COMPLEXITY_BANDS comment in mission-generator.ts). Used
-// as the reference point for onboarding payout floors so that M1+M2 income
-// covers that purchase; keeps early-game money hard to lose without the
-// payouts scaling up indefinitely (the floors only apply to missions 1 and 2).
+// as the reference point for onboarding payout floors. The SR2 purchase gate
+// sits between M1 and M2 — you must already own it to fly M2 — so M1's floor
+// alone (not "M1+M2 combined") has to cover the purchase; M2's payout arrives
+// too late to help fund it.
 export const STARTER_ROCKET_COST = STARTER_ROCKETS.find(r => r.id === 'sr2')?.costFrancs ?? 1_300_000_000
 
 /**
- * Ensures the first mission pays a solid floor (0.15× the Prospector's cost)
- * and the second mission — paid out right after the mandatory Prospector
- * purchase — floors at 1.05× that cost, so two missions' income covers the
- * rocket that M2 forces the player to buy.
+ * Ensures the first mission pays a floor of 1.05× the Prospector's cost —
+ * enough on its own to afford the mandatory SR2 purchase gating M2, since
+ * that purchase happens before M2's payout is ever collected. The second
+ * mission floors at 1.05× as well, so progression stays comfortable rather
+ * than tight, right after the forced purchase.
  *
  * @param rawNet - the raw payout before calibration
  * @param missionsDone - missions completed before this one
  */
 export function calibrateOnboardingPayout(rawNet: number, missionsDone: number): number {
   if (missionsDone === 0) {
-    return Math.max(rawNet, Math.round(STARTER_ROCKET_COST * 0.15))
+    return Math.max(rawNet, Math.round(STARTER_ROCKET_COST * 1.05))
   }
   if (missionsDone === 1) {
     return Math.max(rawNet, Math.round(STARTER_ROCKET_COST * 1.05))

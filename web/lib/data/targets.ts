@@ -50,7 +50,7 @@ export const TARGETS: Target[] = [
     orbit: 2,
     difficulty: 'L1',
     brief: 'Stony near-Earth rubble pile with accessible nickel-iron traces.',
-    minerals: ['iron', 'nickel', 'copper'],
+    minerals: ['iron', 'nickel', 'copper', 'platinum'],
   },
   {
     id: 'ryugu',
@@ -68,7 +68,7 @@ export const TARGETS: Target[] = [
     orbit: 4,
     difficulty: 'L2',
     brief: 'Exposed metallic core of an ancient body. Extremely high iron and nickel grades.',
-    minerals: ['iron', 'nickel', 'gold', 'cobalt'],
+    minerals: ['iron', 'nickel', 'gold', 'cobalt', 'palladium'],
   },
   {
     id: 'bennu',
@@ -87,7 +87,7 @@ export const TARGETS: Target[] = [
     orbit: 5,
     difficulty: 'L2',
     brief: 'Varied deposits: iron, silicon, nickel, cobalt, gold, and xenon pockets. The prospector\'s playground.',
-    minerals: ['iron', 'silicon', 'nickel', 'cobalt', 'gold', 'rare', 'copper', 'aluminium', 'hydrogen', 'uranium'],
+    minerals: ['iron', 'silicon', 'nickel', 'cobalt', 'gold', 'rare', 'copper', 'aluminium', 'hydrogen', 'uranium', 'iridium'],
     recommended: true,
   },
   {
@@ -106,7 +106,7 @@ export const TARGETS: Target[] = [
     orbit: 6,
     difficulty: 'L2',
     brief: 'A large metallic asteroid in the outer belt. Dense nickel-cobalt deposits under a regolith crust.',
-    minerals: ['nickel', 'cobalt'],
+    minerals: ['nickel', 'cobalt', 'rhodium'],
     recommended: false,
   },
   // ── Outer planets ──────────────────────────────────────────────────────────
@@ -143,13 +143,9 @@ export function compatibleTargetsFor(mission: Mission, targets: Target[] = TARGE
   if (mission.targetId) return targets.filter(t => t.id === mission.targetId)
 
   const required = Object.keys(mission.requires.minerals)
-  const isOnboarding = mission.sequence <= 2
 
   return targets.filter(t => {
     const inRange = t.orbit <= mission.requires.max_orbit
-    // M1/M2: contractor doesn't constrain location — any reachable asteroid is valid
-    if (isOnboarding) return inRange && t.type === 'asteroid'
-    // M3+ custom and free-ops missions: target must have the required minerals.
     return inRange && required.every(mineral => t.minerals.includes(mineral))
   })
 }

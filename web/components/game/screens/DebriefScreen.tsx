@@ -130,6 +130,7 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
                   <PayRow label={isStoryMission ? 'Mission funding' : `Order fulfillment · ${contractor?.name ?? 'Client'}`} value={mission.payout.francs} />
                 )}
                 {!isStoryMission && affinityBonus > 0 && <PayRow label="Affinity bonus" value={affinityBonus} />}
+                {total > rawTotal && <PayRow label="Onboarding bonus" value={total - rawTotal} />}
               </>
             ) : (
               <p style={{ margin: 0, fontFamily: 'var(--ln-font-body)', fontSize: 13, color: 'var(--ln-text-dim)', lineHeight: 1.5 }}>

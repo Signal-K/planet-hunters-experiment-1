@@ -335,22 +335,22 @@ describe('rateMission', () => {
 })
 
 describe('calibrateOnboardingPayout', () => {
-  const floor1 = Math.round(STARTER_ROCKET_COST * 0.15)
+  const floor1 = Math.round(STARTER_ROCKET_COST * 1.05)
   const floor2 = Math.round(STARTER_ROCKET_COST * 1.05)
 
-  it('enforces a floor of 0.15× the Prospector cost on the first mission', () => {
+  it('enforces a floor of 1.05× the Prospector cost on the first mission, so it alone covers the mandatory purchase gating M2', () => {
     expect(calibrateOnboardingPayout(0, 0)).toBe(floor1)
     expect(calibrateOnboardingPayout(floor1 - 1, 0)).toBe(floor1)
+    expect(floor1).toBeGreaterThan(STARTER_ROCKET_COST)
   })
 
   it('does not reduce a first-mission payout already above the floor', () => {
     expect(calibrateOnboardingPayout(floor1 + 100_000, 0)).toBe(floor1 + 100_000)
   })
 
-  it('enforces a floor of 1.05× the Prospector cost on the second mission, so two missions cover the mandatory purchase', () => {
+  it('enforces a floor of 1.05× the Prospector cost on the second mission', () => {
     expect(calibrateOnboardingPayout(0, 1)).toBe(floor2)
     expect(calibrateOnboardingPayout(floor2 - 1, 1)).toBe(floor2)
-    expect(floor1 + floor2).toBeGreaterThan(STARTER_ROCKET_COST)
   })
 
   it('does not reduce a second-mission payout already above the floor', () => {

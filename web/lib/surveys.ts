@@ -155,9 +155,16 @@ function tryDispatch() {
   window.dispatchEvent(new CustomEvent('landnam:survey', { detail: { surveyKey: key } }))
 }
 
+// Gap before the next queued survey is allowed to appear. Several surveys
+// can legitimately queue back-to-back (e.g. M1-complete + progression-feel +
+// M2's contractor-pick all landing within a few seconds of each other) —
+// without a real gap they'd stack into a rapid-fire interrogation the moment
+// the player reaches a quiet screen. This spaces them out instead.
+const NEXT_SURVEY_GAP_MS = 60_000
+
 export function onSurveyDismissed() {
   queueDispatching = false
-  setTimeout(tryDispatch, 1500)
+  setTimeout(tryDispatch, NEXT_SURVEY_GAP_MS)
 }
 
 export function enqueueSurvey(surveyKey: string, delayMs = 1800) {

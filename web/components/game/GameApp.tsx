@@ -186,6 +186,14 @@ function GameCanvas() {
     && !game.upgradePromptOpen
     && !game.authGateOpen
 
+  // Defer survey popups while the player is mid-animation or mid-gameplay so
+  // the sheet never slides up over the mining canvas or another active
+  // screen — surveys queue and wait for the next quiet moment instead.
+  const surveyBlocked = launchPending
+    || !!coach
+    || !!game.popup
+    || ['transit', 'mining', 'rover-mining', 'fab', 'debrief'].includes(game.screen)
+
   useEffect(() => {
     if (game.screen === 'market' && !game.player.freeOperations) game.go('hub')
   }, [game.screen, game.player.freeOperations, game.go])
@@ -300,6 +308,8 @@ function GameCanvas() {
             francs={game.player.francs}
             missionsDone={game.player.missionsDone}
             unlockedSkillNodes={game.player.unlockedSkillNodes ?? []}
+            shipCustomizerParts={game.player.shipCustomizerParts}
+            onConfirmShipCustomizerBuild={game.confirmShipCustomizerBuild}
             onBack={() => {
               game.go('hub')
               if (window.location.pathname.includes('/game/ship-customizer')) {
@@ -445,7 +455,7 @@ function GameCanvas() {
 
         <ToastLayer toasts={game.toasts} onDismiss={game.dismissToast} />
         {showFeedback && <FeedbackButton />}
-        <SurveySheet />
+        <SurveySheet blockWhile={surveyBlocked} />
         {showNav && <div className="mobile-radial-nav"><RadialNav current={currentNav} onNav={goFromNav} /></div>}
 
         {coach && !launchPending && (
