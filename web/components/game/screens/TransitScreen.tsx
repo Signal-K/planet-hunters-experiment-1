@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import type { Target } from '@/lib/data'
+import type { Target, MineralMeta } from '@/lib/data'
 import { Scene } from '@/lib/engine'
 import TopBar from '@/components/ui/TopBar'
 import { GhostBtn, PrimaryBtn } from '@/components/ui/Button'
@@ -24,13 +24,23 @@ interface Props {
   onArrive: () => void
   onBack: () => void
   onAbandon?: () => void
+  /** Two-leg "mine then deliver" missions: true while this leg is the delivery hop (mission.deliveryTargetId), not the Earth-return leg. */
+  isDelivery?: boolean
+  /** Cargo being carried on this leg — shown as a manifest during delivery so it reads as "you're delivering what you just mined," not a generic hop. */
+  cargo?: Record<string, number> | null
+  minerals?: Record<string, MineralMeta>
 }
 
 const FAKE_PROGRESS_START = 12
 const FAKE_PROGRESS_DURATION_MS = 4400 // (100 - 12) / 2 * 100ms steps, matches the old increment rate
+// Delivery gets a touch more weight than the outbound mining hop — at the
+// old shared duration it read as a perfunctory instant skip rather than a
+// real leg of the mission.
+const DELIVERY_FAKE_PROGRESS_DURATION_MS = 7000
 
-export default function TransitScreen({ target, rocketImageSrc, arrivalAt, returning = false, onArrive, onBack, onAbandon }: Props) {
+export default function TransitScreen({ target, rocketImageSrc, arrivalAt, returning = false, onArrive, onBack, onAbandon, isDelivery = false, cargo, minerals }: Props) {
   const isTimed = typeof arrivalAt === 'number'
+  const fakeDurationMs = isDelivery ? DELIVERY_FAKE_PROGRESS_DURATION_MS : FAKE_PROGRESS_DURATION_MS
   const [now, setNow] = useState(() => Date.now())
   const [fakeStartedAt] = useState(() => Date.now())
   const [fakeProgress, setFakeProgress] = useState(FAKE_PROGRESS_START)
@@ -61,7 +71,7 @@ export default function TransitScreen({ target, rocketImageSrc, arrivalAt, retur
     if (isTimed) return
     const tick = () => {
       const elapsed = Date.now() - fakeStartedAt
-      setFakeProgress(Math.min(100, FAKE_PROGRESS_START + (elapsed / FAKE_PROGRESS_DURATION_MS) * (100 - FAKE_PROGRESS_START)))
+      setFakeProgress(Math.min(100, FAKE_PROGRESS_START + (elapsed / fakeDurationMs) * (100 - FAKE_PROGRESS_START)))
     }
     const id = window.setInterval(tick, 100)
     const onVisible = () => { if (!document.hidden) tick() }
@@ -70,7 +80,7 @@ export default function TransitScreen({ target, rocketImageSrc, arrivalAt, retur
       window.clearInterval(id)
       document.removeEventListener('visibilitychange', onVisible)
     }
-  }, [isTimed, fakeStartedAt])
+  }, [isTimed, fakeStartedAt, fakeDurationMs])
 
   // Arrive triggers
   useEffect(() => {
@@ -165,10 +175,12 @@ export default function TransitScreen({ target, rocketImageSrc, arrivalAt, retur
   const etaMs = isTimed ? Math.max(0, arrivalAt! - now) : 0
   const arrived = isTimed ? now >= arrivalAt! : fakeProgress >= 100
   const destinationName = returning ? 'Earth' : target.name
+  const legLabel = returning ? 'Inbound' : isDelivery ? 'Delivery' : 'Outbound'
+  const cargoEntries = isDelivery && cargo ? Object.entries(cargo).filter(([, amount]) => amount > 0) : []
 
   return (
     <div className="game-screen transit-screen">
-      <TopBar eyebrow="MISSION TRANSIT" title={`${returning ? 'Inbound' : 'Outbound'} · ${destinationName}`} onBack={onBack} />
+      <TopBar eyebrow="MISSION TRANSIT" title={`${legLabel} · ${destinationName}`} onBack={onBack} />
 
       {/* PixiJS backdrop fills the transit-stage zone */}
       <div className="transit-stage" style={{ overflow: 'hidden' }}>
@@ -196,6 +208,25 @@ export default function TransitScreen({ target, rocketImageSrc, arrivalAt, retur
         )}
         <div className="progress-track"><span style={{ width: `${progress}%` }} /></div>
       </div>
+
+      {cargoEntries.length > 0 && (
+        <div style={{
+          margin: '0 16px 12px', padding: '10px 14px',
+          background: 'rgba(8,14,26,0.7)', border: '1px solid var(--ln-hairline)',
+          borderLeft: '3px solid var(--ln-amber)', borderRadius: 12,
+        }}>
+          <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 9, fontWeight: 800, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'var(--ln-text-dim)', marginBottom: 6 }}>
+            Delivering to {target.name}
+          </div>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+            {cargoEntries.map(([id, amount]) => (
+              <span key={id} style={{ fontFamily: 'var(--ln-font-mono)', fontSize: 12, color: 'var(--ln-text)' }}>
+                {amount} {minerals?.[id]?.name ?? id}
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
 
       <div className="sticky-actions" data-ui-zone={UI_ZONES.bottomActions}>
         <PrimaryBtn onClick={onArrive} disabled={!arrived}>

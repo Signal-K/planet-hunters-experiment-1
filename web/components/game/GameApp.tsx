@@ -381,6 +381,9 @@ function GameCanvas() {
             rocketImageSrc={rocketDisplay.img}
             arrivalAt={game.player.arrivalAt}
             returning={!!game.player.returningToEarth}
+            isDelivery={!!game.player.headingToDelivery}
+            cargo={game.lastCargo}
+            minerals={game.catalog.minerals}
             onBack={() => game.go('hub')}
             onArrive={() => {
               if (game.player.returningToEarth) {
