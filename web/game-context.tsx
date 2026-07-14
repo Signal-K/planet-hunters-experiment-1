@@ -229,6 +229,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       mission,
       target,
       toasts: ui.toasts,
+      addToast: ui.addToast,
       laserChargeCap: getLaserChargeCap(state.player.unlockedSkillNodes ?? []),
       // UI
       go: ui.go,

@@ -102,7 +102,7 @@ const MINING_GUIDE = [
   { label: 'RETURN HOME', desc: 'Return to Earth for recovery and ship destruction. Payout is unlocked after landing.' },
 ]
 
-export default function MiningScreen({ mission, target, onComplete, onBack, onAbandon, minerals, laserChargeCap, laserTier, hasCoach, coachManual, onCoachDone }: {
+export default function MiningScreen({ mission, target, onComplete, onBack, onAbandon, minerals, laserChargeCap, laserTier, hasCoach, coachManual, onCoachDone, addToast }: {
   mission: Mission
   target: Target
   onComplete: (cargo: Record<string, number>) => void
@@ -115,6 +115,8 @@ export default function MiningScreen({ mission, target, onComplete, onBack, onAb
   hasCoach?: boolean
   coachManual?: boolean
   onCoachDone?: () => void
+  /** Transient Temple-Run-style hints ("Nice shot!", "You don't need that yet") — tutorial-scoped, not the persistent coach banner. */
+  addToast?: (message: string, kind?: 'info' | 'ok' | 'warn') => void
 }) {
   // Charge count is mission-aware, not coach-aware.
   // During onboarding (sequence <= FREE_OPS_START_MISSIONS_DONE): always 6× the ore required,
@@ -139,6 +141,9 @@ export default function MiningScreen({ mission, target, onComplete, onBack, onAb
   const [laserCharges, setLaserCharges] = useState(MAX_CHARGES)
   const [runKey, setRunKey] = useState(0)  // bump to reset MiningCanvas
   const firedRef = useRef(false)
+  const hintedFirstHitRef = useRef(false)
+  const hintedWrongOreRef = useRef(false)
+  const hintedOrderFilledRef = useRef(false)
   const oreNearRef = useRef<((near: boolean) => void) | null>(null)
   const [oreNear, setOreNear] = useState(false)
   oreNearRef.current = (near: boolean) => setOreNear(near)
@@ -175,7 +180,29 @@ export default function MiningScreen({ mission, target, onComplete, onBack, onAb
       [mineral]: (cargoRef.current[mineral] ?? 0) + 1,
     }
     setCargo(cargoRef.current)
-  }, [])
+
+    // Temple-Run-style transient hints — tutorial-scoped, separate from the
+    // persistent coach banner. Each fires at most once per run.
+    if (hasCoach && addToast) {
+      const isNeeded = mineral in mission.requires.minerals
+        && (cargoRef.current[mineral] ?? 0) <= mission.requires.minerals[mineral]
+      if (!hintedFirstHitRef.current) {
+        hintedFirstHitRef.current = true
+        addToast('Nice shot!', 'ok')
+      } else if (!isNeeded && !hintedWrongOreRef.current) {
+        hintedWrongOreRef.current = true
+        const name = minerals[mineral]?.name ?? mineral
+        addToast(`You don't need ${name} for this order — skip it`, 'warn')
+      }
+      const nowFilled = Object.entries(mission.requires.minerals).every(
+        ([id, amount]) => (cargoRef.current[id] ?? 0) >= amount
+      )
+      if (nowFilled && !hintedOrderFilledRef.current) {
+        hintedOrderFilledRef.current = true
+        addToast('Order filled — tap RETURN', 'ok')
+      }
+    }
+  }, [hasCoach, addToast, mission.requires.minerals, minerals])
 
   function fireLaser() {
     if (laserCharges <= 0) return

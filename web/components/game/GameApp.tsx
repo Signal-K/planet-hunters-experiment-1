@@ -428,6 +428,7 @@ function GameCanvas() {
             laserTier={game.catalog.parts.drill.find(p => p.id === game.rocket.drill)?.tier ?? 1}
             hasCoach={hasCoach}
             coachManual={coach?.manual ?? false}
+            addToast={game.addToast}
           />
         )}
         {game.screen === 'rover-mining' && game.mission && game.target && (

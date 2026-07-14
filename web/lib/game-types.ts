@@ -189,6 +189,7 @@ export interface GameActions {
   upgradeLicenseGrade: (grade: Exclude<LicenseGrade, 'Grade I'>) => void
   unlockBlueprint: (blueprintId: string, costFrancs?: number, costXP?: number, costMaterials?: Record<string, number>) => void
   toasts: Toast[]
+  addToast: (message: string, kind?: Toast['kind']) => void
   dismissToast: (id: string) => void
   mission: Mission | null
   target: Target | null
