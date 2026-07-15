@@ -29,11 +29,10 @@ func main() {
 	app.OnServe().BindFunc(func(se *core.ServeEvent) error {
 		ensureCollections(app)
 		seedCatalog(app)
-		registerGuestAccountCleanup(app)
+		registerGuestStateArchival(app)
 		return se.Next()
 	})
 
-	registerGuestSignupRateLimit(app)
 	registerLandnamAuthExchange(app, sharedAuth)
 
 	if err := app.Start(); err != nil {
