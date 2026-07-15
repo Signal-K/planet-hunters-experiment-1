@@ -91,6 +91,15 @@ function ScreenContent({
   const debriefOriginTarget = game.mission?.deliveryTargetId
     ? game.catalog.targets.find(t => t.id === game.mission!.deliveryTargetId) ?? game.target
     : game.target
+  // MiningScreen's return button reads "RETURN TO EARTH" unless told this is
+  // a two-leg "mine then deliver" run — without this, every M3-style mission
+  // silently shows the wrong destination on the mining screen itself (still
+  // correct everywhere else, since transitTarget/debriefOriginTarget above
+  // already handle the delivery leg). GameApp.tsx's mining case already
+  // computes this the same way; this file's mining case was just missing it.
+  const deliveryTargetName = game.mission?.deliveryTargetId
+    ? game.catalog.targets.find(t => t.id === game.mission!.deliveryTargetId)?.name
+    : undefined
 
   // Derive the coach step for coachManual (needed by AssemblyScreen)
   const coachSteps = !game.tutorial ? [] :
@@ -98,6 +107,15 @@ function ScreenContent({
     game.player.missionsDone === 1 ? M2_STEPS :
     game.player.missionsDone === 2 ? M3_STEPS : []
   const coach = coachSteps.find(s => s.screen === screen && !game.doneSteps[s.id]) ?? null
+
+  // Market is a Free Ops feature — a player without freeOperations landing
+  // here directly (bookmarked URL, back/forward) shouldn't see a locked
+  // screen render at all. GameApp.tsx already had this guard; it was
+  // missing here entirely, so real players could reach an "unlocked"
+  // market before actually earning it.
+  useEffect(() => {
+    if (screen === 'market' && !game.player.freeOperations) game.go('hub')
+  }, [screen, game.player.freeOperations, game.go])
 
   switch (screen) {
     case 'intro':
@@ -151,8 +169,18 @@ function ScreenContent({
         <HubScreen
           player={game.player}
           hasCoach={hasCoach}
-          onNav={s => game.go(s)}
+          // Mirrors layout.tsx's goFromNav (used by the sidebar/radial nav)
+          // — a plain game.go(s) passthrough here meant HubScreen's own
+          // "browse contracts"/"resume mission" CTAs never fired
+          // completeStep(1), so tutorial step 1 only completed via the
+          // sidebar, not via the card that actually prompts the player to
+          // tap it.
+          onNav={s => {
+            if (s === 'missions') { game.completeStep(1); game.go('missions'); return }
+            game.go(s)
+          }}
           onGoBuilding={building => {
+            if (building === 'build') return game.go('build')
             if (building === 'refinery') return game.go('refinery')
             if (building === 'hangar') return game.go('hangar')
             if (building === 'skills') return game.go('skills')
@@ -255,6 +283,15 @@ function ScreenContent({
           rocketImageSrc={rocketDisplay.img}
           arrivalAt={game.player.arrivalAt}
           returning={!!game.player.returningToEarth}
+          // Same GameApp.tsx-only bug as deliveryTargetName on MiningScreen:
+          // without isDelivery/cargo/minerals, the delivery leg silently
+          // reused the plain outbound-leg transit scene in production —
+          // "Outbound · Vesta" instead of "Delivery · Vesta" with the cargo
+          // manifest card, so the leg read as identical to any other trip
+          // instead of "you're delivering what you just mined."
+          isDelivery={!!game.player.headingToDelivery}
+          cargo={game.lastCargo}
+          minerals={game.catalog.minerals}
           onBack={() => game.go('hub')}
           onArrive={() => {
             if (game.player.returningToEarth) {
@@ -305,6 +342,9 @@ function ScreenContent({
           hasCoach={hasCoach}
           coachManual={coach?.manual ?? false}
           onCoachDone={() => game.completeStep(6)}
+          deliveryTargetName={deliveryTargetName}
+          onAbandon={game.abandonMission}
+          addToast={game.addToast}
         />
       )
 
@@ -334,6 +374,7 @@ function ScreenContent({
           annotations={game.player.researchAnnotations}
           missionsDone={game.player.missionsDone}
           hasCoach={hasCoach}
+          shipDestroyed={!!game.player.shipDestroyed}
         />
       )
 
@@ -356,6 +397,8 @@ function ScreenContent({
       return (
         <MarketScreen
           stash={game.player.stash ?? {}}
+          marketSupply={game.player.marketSupply ?? {}}
+          marketSupplyUpdatedAt={game.player.marketSupplyUpdatedAt ?? {}}
           francs={game.player.francs}
           onSell={game.sellMinerals}
           onBack={() => game.go('hub')}
@@ -369,6 +412,8 @@ function ScreenContent({
           francs={game.player.francs}
           missionsDone={game.player.missionsDone}
           unlockedSkillNodes={game.player.unlockedSkillNodes ?? []}
+          shipCustomizerParts={game.player.shipCustomizerParts}
+          onConfirmShipCustomizerBuild={game.confirmShipCustomizerBuild}
           onBack={() => game.go('hub')}
         />
       )
