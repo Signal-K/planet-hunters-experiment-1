@@ -66,6 +66,18 @@ Design rules (never violate):
 - Slight fictional framing (e.g. "potentially alien artifacts," mirroring real SETI false-positive workflows) is permitted only in the most speculative, latest-unlocked tier of content — never in early/mid-game missions.
 - Decided 2026-07-08; see [[decide-scifi-narrative-vs-citizen-science-boundary]] in workspace for full context.
 
+## Standing product rules
+
+Durable rules pulled from sprint-planning discussion (Craft doc "Landnam sprint proposals"), not one-off sprint scope. These apply to every sprint and to every agent working in this repo (Claude, Codex, OpenCode) — treat them the same as the Design rules above: never violate without an explicit new decision.
+
+- **Terminology: clients, not contractors.** "Contractor"/"subcontractor" naming is retired in-game. Use "client" for whoever issues a mission. Do not reintroduce "contractor" wording in new UI copy, survey copy, or code identifiers — this includes live PostHog survey definitions, not just local code (see the 2026-07-12 client-terminology sync in Saily/Landnam PostHog surveys).
+- **Docker must never require network access.** `make up` and every container in `docker-compose.yml` must start and run fully offline. Never add a build/run step that fetches updates or external resources at container start; if a base image needs bumping, do that as an explicit, separate maintenance action, never as a side effect of a normal `make up`.
+- **PostHog surveys must be live, real, and non-blocking.** Every survey ID referenced in code must resolve to a real, non-archived PostHog survey — no demo/dummy/placeholder IDs. Survey popups must never block or cover gameplay UI. Every sprint, audit answered-vs-ignored survey volume against the milestone events meant to trigger them (see the `per-sprint-survey-audit-process` ticket pattern for the checklist) — this is a standing process, not a one-off task.
+- **Onboarding mission content mapping** — do not reorder without a new design decision:
+  - Mission 1 — pick a mission, pick a target, build and send a rocket
+  - Mission 2 — unlock a new, larger-capacity rocket; expose a mission-tier indicator to the player
+  - Mission 3 — introduce clients requesting non-mineral cargo; payout is a service fee, not the cargo's raw value
+
 ## Backend connections
 
 This project uses a hub-and-spoke PocketBase topology with three backends. For full detail, read @doc/backend-architecture in the parent Navigation Knowns.
@@ -119,38 +131,31 @@ npm run test:e2e           # start-server-and-test + cypress (offline profile)
 4. No Godot, no Electron. `.scene.json` files under `web/public/game/scenes/` ARE used — they describe entity layout/placement (shared `SceneData`/`EntityData` model in `web/lib/engine/types.ts`) for both PixiJS canvas screens and DOM screens, and are edited via Forge. See @doc/specs/landnam-screen-entityscene-dx-standard
 5. Read KNOWNS docs for game design decisions before changing game logic
 6. Use `appendNotes` in tasks (never `notes` for progress updates)
+7. See "Standing product rules" above for terminology, Docker-offline, and PostHog-survey requirements — these bind every agent, not just Claude
 
 <!-- LANDNAM PROJECT REQUIREMENTS END -->
 
 ## Tickets & Sprints
 
-**Sprint label format: `sprint-YYYY-MM-DD` where the date is the Saturday ending the sprint.**
-Never use numbered sprints (`sprint-6`, `sprint-7`, etc.) — always use the end date.
+**Canonical source: `~/Navigation/workspace/` (ZenNotes-backed).** Knowns is being phased out for planning — do not create or edit `knowns task` entries for new Landnam work. Read `~/Navigation/CLAUDE.md` for the full workflow; the short version:
 
 ```bash
-# Create a ticket assigned to the current sprint
-knowns task create "Title" \
-  --priority high \
-  --label "project-landnam" \
-  --label "sprint-2026-06-27"
-
-# Add sprint label to an existing ticket
-knowns task edit <id> --labels "project-landnam,sprint-2026-06-27,other-labels"
-
-# List tickets in the current sprint
-knowns task list --plain --label "sprint-2026-06-27"
-
-# Mark a ticket in-progress when starting work
-knowns task status <id> in-progress
-
-# Mark done when complete
-knowns task status <id> done
+cd ~/Navigation
+cat workspace/Current.md                                  # active board: what's active/in-review/blocked/next
+python3 scripts/workspace_board.py                         # regenerate board after any frontmatter change
+python3 scripts/workspace_ticket.py list --project landnam --sprint <active-sprint-slug>
+python3 scripts/workspace_ticket.py show <ticket-id-or-slug>
+python3 scripts/workspace_ticket.py update <ticket-id-or-slug> --status in-review --heading "Implementation Evidence" --note "..."
 ```
 
-**Required labels on every ticket:**
-- Project label: `project-landnam`, `project-saily`, `project-compass`, etc.
-- Sprint label: `sprint-YYYY-MM-DD` (only for work scheduled this sprint)
+Tickets live at `workspace/projects/landnam/tickets/<sprint>/*.md`, specs/docs at `workspace/projects/landnam/docs/`.
 
-**Compass** is the macOS task board at `/Applications/Compass.app`. It reads from `~/Navigation/.knowns/`. The "This Week" board view shows tasks whose labels match the current sprint. After editing task labels via CLI, Compass auto-refreshes within ~2 seconds.
+**Sprint label format: `sprint-YYYY-MM-DD`** where the date is the Saturday ending the sprint (never numbered sprints like `sprint-6`). Sprint frontmatter must match a `workspace/sprints/<slug>/README.md` with `status: active` — check this fresh each session, there can be more than one active sprint across projects.
+
+Status lifecycle: `todo` → `in-progress` → `in-review` (only Liam marks `done`).
+
+Open decisions needing Liam's input go in a `status: blocked` ticket, each question formatted as `**N. Question text` (no closing `**`) followed by a blank `> Answer:` line — `workspace_board.py` surfaces these under "Open Questions" in `Current.md`. **When Liam answers a question in chat, write the `> Answer:` line back into the ticket in the same turn** — an answer that only exists in conversation is not resolved, and leaving it unwritten is exactly what causes "I already answered this" complaints.
+
+**Compass** (`/Applications/Compass.app`) reads `~/Navigation/.knowns/` for its board, but ticket state of record is the workspace ticket files above — Compass reflects them, it does not own them.
 
 To find the current sprint Saturday: run `date +%Y-%m-%d` and count to the nearest Saturday.

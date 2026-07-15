@@ -70,7 +70,9 @@
       "mcp__plate__list_statuses",
       "mcp__plate__update_tasks",
       "mcp__plate__create_comment",
-      "mcp__plate__get_task"
+      "mcp__plate__get_task",
+      "Skill(artifact-design)",
+      "mcp__posthog__exec"
     ]
   },
   "enabledMcpjsonServers": [

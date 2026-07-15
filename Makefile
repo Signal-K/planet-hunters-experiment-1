@@ -1,5 +1,4 @@
-.PHONY: help up pb-up pb-stop down build logs e2e e2e-open web-dev web-build web-check pb-reset docker-prune migrate seed \
-        kanban-up kanban-down
+.PHONY: help up pb-up pb-stop down build web-deps logs e2e e2e-open web-dev web-build web-check pb-reset docker-prune migrate seed
 
 FRONTEND_COMPOSE := docker compose -f docker-compose.frontend.yml
 PARENT_COMPOSE   := docker compose -p navigation -f ../docker-compose.yml
@@ -14,7 +13,11 @@ help:
 	@echo "    pb-up          Start parent-owned shared + Landnam PocketBase only"
 	@echo "    pb-stop        Stop parent-owned shared + Landnam PocketBase only"
 	@echo "    down           Stop the stack"
-	@echo "    build          (Re)build images — run after package.json changes"
+	@echo "    build          Rebuild images — only affects a fresh volume; see web-deps"
+	@echo "    web-deps       Sync node_modules inside the running web container — run this"
+	@echo "                   after web/package.json changes, or 'up' will 500 on missing"
+	@echo "                   modules. 'build' alone does NOT fix it: web_node_modules is a"
+	@echo "                   named volume that shadows whatever the rebuilt image installs"
 	@echo "    logs           Follow stack logs"
 	@echo "    e2e            Run Cypress against the frontend Docker stack"
 	@echo "    test-e2e       Run Cypress against full E2E stack (shared-pb + landnam-pb + next-app)"
@@ -25,10 +28,9 @@ help:
 	@echo "    pb-stop        Stop PocketBase services only (keeps volumes)"
 	@echo "    pb-reset       Remove local PocketBase data volume"
 	@echo "    docker-prune   Remove all unused Docker data"
-	@echo "    kanban-up/down Kanban board on :4444"
 
 up: pb-up
-	$(FRONTEND_COMPOSE) up -d --remove-orphans geometry-service web
+	$(FRONTEND_COMPOSE) up -d --remove-orphans web
 	@echo "Landnam:         http://localhost:3000/game"
 	@echo "Shared PB:       http://localhost:8090/_/"
 	@echo "Landnam PB:      http://localhost:8091/_/"
@@ -47,6 +49,16 @@ down:
 build:
 	$(PARENT_COMPOSE) build backend landnam-backend
 	$(FRONTEND_COMPOSE) build web
+
+# web_node_modules is a named Docker volume — it is only ever populated from
+# the image on first creation, so rebuilding the image (`make build`) does
+# NOT refresh it once it exists. Run this explicitly whenever web/package.json
+# or package-lock.json changes; otherwise the next `make up` serves 500s for
+# every route (Module not found) against an already-running or freshly
+# restarted container. Requires network access — that's expected here, this
+# is the explicit maintenance action, not an automatic `make up` side effect.
+web-deps:
+	$(FRONTEND_COMPOSE) exec web npm install
 
 logs:
 	$(PARENT_COMPOSE) logs -f backend landnam-backend
@@ -99,10 +111,3 @@ seed:
 	@sleep 3
 	@echo "Running seed data insertion..."
 	@cd pocketbase && go run . seed 2>/dev/null || echo "Run pocketbase and visit /_/ to seed via UI or insert seed records manually."
-
-kanban-up:
-	@lsof -ti :4444 | xargs kill -9 2>/dev/null || true
-	@cd kanban-go && KNOWNS_DIR=$(CURDIR)/.knowns PORT=4444 go run .
-
-kanban-down:
-	@lsof -ti :4444 | xargs kill -9 2>/dev/null && echo "Stopped :4444" || echo "Nothing on :4444"

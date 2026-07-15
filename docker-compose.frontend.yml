@@ -1,19 +1,4 @@
 services:
-  geometry-service:
-    build:
-      context: ./tools/geometry-service
-      dockerfile: Dockerfile
-    pull_policy: never
-    ports:
-      - "4002:4002"
-    environment:
-      PORT: "4002"
-    healthcheck:
-      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:4002/health"]
-      interval: 5s
-      timeout: 3s
-      retries: 10
-
   web:
     build:
       context: ./web
@@ -37,9 +22,6 @@ services:
       CHOKIDAR_USEPOLLING: "true"
     ports:
       - "3000:3000"
-    depends_on:
-      geometry-service:
-        condition: service_healthy
     healthcheck:
       test: ["CMD", "wget", "-qO-", "http://127.0.0.1:3000/api/backend-health"]
       interval: 5s
