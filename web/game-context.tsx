@@ -226,6 +226,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       catalog: runtimeCatalog,
       hydrated,
       authUserId: auth.authUserId,
+      landnamSynced: auth.landnamSynced,
       mission,
       target,
       toasts: ui.toasts,

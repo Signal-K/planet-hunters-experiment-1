@@ -28,6 +28,7 @@ import UnlockPopup from '@/components/game/UnlockPopup'
 import RadialNav from '@/components/layout/RadialNav'
 import Sidebar from '@/components/Sidebar/Sidebar'
 import BackendStatus from '@/components/game/BackendStatus'
+import LandnamSyncStatus from '@/components/game/LandnamSyncStatus'
 import { PushOptIn } from '@/components/game/PushOptIn'
 import FeedbackButton from '@/components/ui/FeedbackButton'
 import SurveySheet from '@/components/ui/SurveySheet'
@@ -206,6 +207,7 @@ function GameCanvas() {
     <main className="game-stage" aria-label="Landnam game">
       <div className="portrait-canvas">
         <BackendStatus />
+        <LandnamSyncStatus />
         {game.player.freeOperations && game.screen === 'hub' && (
           <div data-ui-zone={UI_ZONES.ambientPrompt} style={{ position: 'absolute', top: 12, right: 12, zIndex: 12 }}>
             <PushOptIn userId={game.authUserId ?? undefined} />

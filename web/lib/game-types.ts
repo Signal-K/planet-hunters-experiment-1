@@ -141,6 +141,7 @@ export interface GameActions {
   catalog: Catalog
   hydrated: boolean
   authUserId: string | null
+  landnamSynced: boolean
   authGateOpen: boolean
   authGateError: string | null
   signInFromGate: (email: string, password: string) => Promise<void>

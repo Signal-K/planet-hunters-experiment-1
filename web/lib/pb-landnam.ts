@@ -1,7 +1,18 @@
-import PocketBase, { type RecordModel } from 'pocketbase'
+import PocketBase, { LocalAuthStore, type RecordModel } from 'pocketbase'
 
+// Explicit, distinct storage key — PocketBase's SDK defaults every client to
+// the same localStorage key ('pocketbase_auth') when none is given, so
+// without this, pbLandnam's authStore.save() (called after every exchange —
+// see exchangeLandnamAuth below) silently overwrites pbShared's session in
+// storage, and vice versa on the next pbShared write. Whichever client saved
+// last wins in storage, so a page reload can load the wrong backend's token
+// into either client. pbLandnam's session is always re-derivable from
+// pbShared via the exchange, so giving it its own key here is a safe,
+// no-migration fix — pbShared intentionally keeps the SDK's default key so
+// existing players' stored sessions keep working.
 export const pbLandnam = new PocketBase(
-  process.env.NEXT_PUBLIC_LANDNAM_PB_URL || 'http://localhost:8093'
+  process.env.NEXT_PUBLIC_LANDNAM_PB_URL || 'http://localhost:8093',
+  new LocalAuthStore('pocketbase_auth_landnam')
 )
 
 /**

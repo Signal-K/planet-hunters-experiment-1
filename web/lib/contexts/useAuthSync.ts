@@ -72,10 +72,20 @@ export function useAuthSync({
   // mission_log calls are gated on this so they don't race an unauthenticated
   // pbLandnam client — see the exchange effect below.
   const [landnamAuthAttempted, setLandnamAuthAttempted] = useState(false)
+  // Whether the exchange has actually succeeded — distinct from
+  // landnamAuthAttempted, which only means "the initial attempt is done,
+  // one way or the other" (so the game_states effects can proceed with
+  // their own offline-tolerant fallback). landnamSynced is what's actually
+  // true: does this device have a working, mirrored Landnam identity right
+  // now. Drives the background re-sync loop below and the UI's "not
+  // synced" indicator.
+  const [landnamSynced, setLandnamSynced] = useState(false)
 
   const backendRecordId = useRef<string | null>(null)
   const backendLoadedFor = useRef<string | null>(null)
   const landnamAuthAttemptedFor = useRef<string | null>(null)
+  const landnamRetryDelay = useRef(60_000)
+  const landnamRetryInFlight = useRef(false)
   const authGateDismissed = useRef(false)
   const lastPersistedMissionsDone = useRef<number | null>(null)
   const lastPersistedTutorial = useRef<boolean | null>(null)
@@ -115,8 +125,10 @@ export function useAuthSync({
     backendRecordId.current = null
     backendLoadedFor.current = null
     landnamAuthAttemptedFor.current = null
+    landnamRetryDelay.current = 60_000
     setBackendReady(false)
     setLandnamAuthAttempted(false)
+    setLandnamSynced(false)
     setAuthUserId(record?.id ?? null)
     if (record?.id) identifyUser(record.id, record.email ? { email: record.email } : undefined)
   }), [])
@@ -130,7 +142,9 @@ export function useAuthSync({
   // the attempt done so the game_states load/persist effects below proceed
   // and fall back to their own existing offline-tolerant handling (their
   // calls will simply fail authorization and be treated like any other
-  // network/availability error).
+  // network/availability error). Unlike landnamAuthAttempted, landnamSynced
+  // stays false on failure — the background re-sync effect below picks up
+  // from there instead of giving up permanently for this session.
   useEffect(() => {
     if (isPreview || !authUserId) return
     if (landnamAuthAttemptedFor.current === authUserId) return
@@ -138,6 +152,7 @@ export function useAuthSync({
     if (pbLandnam.authStore.isValid && pbLandnam.authStore.record?.id === authUserId) {
       landnamAuthAttemptedFor.current = authUserId
       setLandnamAuthAttempted(true)
+      setLandnamSynced(true)
       return
     }
 
@@ -149,6 +164,7 @@ export function useAuthSync({
       if (!active) return
       landnamAuthAttemptedFor.current = authUserId
       setLandnamAuthAttempted(true)
+      setLandnamSynced(success)
       if (!success) {
         addToast('Offline mode — progress saved on this device only', 'warn')
       }
@@ -174,6 +190,61 @@ export function useAuthSync({
 
     return () => { active = false }
   }, [addToast, authUserId, isPreview])
+
+  // Background re-sync: the initial ladder above gives up after ~9s of
+  // retries (covers a Fly cold start, not much more). Without this, a
+  // slower cold start, a brief network blip, or the backend restarting
+  // mid-session permanently strands the device in local-only mode for the
+  // rest of the tab's life — there was previously no further attempt even
+  // after the backend recovered (this is exactly how a stray
+  // shared-backend guest account with no matching Landnam row happens).
+  // Runs a slow backstop (starts at 60s, doubles up to a 10min cap on
+  // repeated failure, resets on success) plus an immediate retry whenever
+  // the tab regains focus.
+  useEffect(() => {
+    if (isPreview || !authUserId || landnamSynced) return
+    if (!landnamAuthAttempted) return // let the initial ladder above finish first
+    if (!pbShared.authStore.isValid || !pbShared.authStore.token) return
+
+    let active = true
+    let timer: ReturnType<typeof setTimeout> | null = null
+
+    async function retry() {
+      if (!active || landnamRetryInFlight.current) return
+      landnamRetryInFlight.current = true
+      try {
+        const { token, record } = await exchangeLandnamAuth(pbShared.authStore.token!)
+        if (!active) return
+        pbLandnam.authStore.save(token, record)
+        landnamRetryDelay.current = 60_000
+        setLandnamSynced(true)
+      } catch {
+        if (!active) return
+        landnamRetryDelay.current = Math.min(landnamRetryDelay.current * 2, 600_000)
+        schedule()
+      } finally {
+        landnamRetryInFlight.current = false
+      }
+    }
+
+    function schedule() {
+      if (timer) clearTimeout(timer)
+      timer = setTimeout(retry, landnamRetryDelay.current)
+    }
+
+    function onVisibilityChange() {
+      if (document.visibilityState === 'visible') retry()
+    }
+
+    schedule()
+    document.addEventListener('visibilitychange', onVisibilityChange)
+
+    return () => {
+      active = false
+      if (timer) clearTimeout(timer)
+      document.removeEventListener('visibilitychange', onVisibilityChange)
+    }
+  }, [authUserId, isPreview, landnamAuthAttempted, landnamSynced])
 
   // Returning full-account user on a new device: no local state but an active
   // session can hydrate from the backend. Stored guest credentials should not
@@ -447,6 +518,7 @@ export function useAuthSync({
 
   return {
     authUserId, backendReady,
+    landnamSynced,
     upgradePromptOpen, dismissUpgradePrompt, upgradeAccount,
     awaitingRemoteState,
     authGateOpen, authGateError, signInFromGate, createAccountFromGate, skipAuthGate,

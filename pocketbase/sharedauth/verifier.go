@@ -21,6 +21,12 @@ type User struct {
 	Token string
 }
 
+// ErrTokenInvalid means the shared backend actively rejected the token
+// (expired/invalid session) — retrying the same token will never succeed.
+// Any other error from VerifyBearerToken (network failure, timeout, 5xx)
+// is transient and worth retrying.
+var ErrTokenInvalid = errors.New("shared auth token rejected")
+
 type Verifier struct {
 	SharedBaseURL string
 	Client        *http.Client
@@ -69,6 +75,9 @@ func (v *Verifier) VerifyBearerToken(token string) (*User, error) {
 	}
 	defer resp.Body.Close()
 
+	if resp.StatusCode == http.StatusUnauthorized || resp.StatusCode == http.StatusForbidden {
+		return nil, ErrTokenInvalid
+	}
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
 		return nil, fmt.Errorf("shared auth refresh failed: %s", resp.Status)
 	}

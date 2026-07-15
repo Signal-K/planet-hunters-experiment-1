@@ -208,6 +208,22 @@ button { cursor: pointer; }
 .backend-status--online { color: var(--ln-ok); }
 .backend-status--offline { color: var(--ln-crit); }
 
+.sync-status {
+  position: absolute;
+  left: var(--ln-s-3);
+  bottom: var(--ln-s-2);
+  z-index: 96;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ln-s-1);
+  color: var(--ln-amber);
+  font: 700 8px var(--ln-font-display);
+  letter-spacing: var(--ln-tr-label);
+  text-transform: uppercase;
+  pointer-events: none;
+}
+.sync-status span { width: 5px; height: 5px; border-radius: var(--ln-r-pill); background: currentColor; }
+
 .auth-gate {
   position: absolute;
   inset: 0;

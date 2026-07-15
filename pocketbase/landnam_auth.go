@@ -1,11 +1,14 @@
 package main
 
 import (
+	"errors"
 	"log"
 	"net/http"
+	"strings"
 
 	"github.com/pocketbase/pocketbase/core"
 	"github.com/pocketbase/pocketbase/tools/security"
+	"github.com/pocketbase/pocketbase/tools/types"
 
 	"landnam-backend/sharedauth"
 )
@@ -33,7 +36,19 @@ func registerLandnamAuthExchange(app core.App, verifier *sharedauth.Verifier) {
 			token := sharedauth.BearerToken(e.Request)
 			sharedUser, err := verifier.VerifyBearerToken(token)
 			if err != nil {
-				return e.JSON(http.StatusUnauthorized, map[string]any{
+				// ErrTokenInvalid (shared backend actively rejected the token) is
+				// expected traffic — an expired session — and not worth logging.
+				// Anything else (network failure, timeout, 5xx) means the shared
+				// backend was unreachable, which is worth surfacing since this
+				// exchange was previously silent on every failure path here,
+				// making stalled guest->Landnam mirrors (a session that never
+				// gets a users row) undiagnosable from server logs alone.
+				status := http.StatusUnauthorized
+				if !errors.Is(err, sharedauth.ErrTokenInvalid) {
+					status = http.StatusBadGateway
+					log.Printf("landnam-auth exchange: shared backend unreachable: %v", err)
+				}
+				return e.JSON(status, map[string]any{
 					"error": err.Error(),
 				})
 			}
@@ -56,16 +71,26 @@ func registerLandnamAuthExchange(app core.App, verifier *sharedauth.Verifier) {
 						record.Set("displayName", sharedUser.Email)
 					}
 				}
+				if usersCollection.Fields.GetByName("guest") != nil {
+					record.Set("guest", strings.HasSuffix(sharedUser.Email, guestEmailSuffix))
+				}
 				// Auth collections require a password; the client never signs in
 				// with it directly — only via this exchange — so a random value
 				// scoped to this record is sufficient.
 				record.SetPassword(security.RandomString(32))
-				if err := app.Save(record); err != nil {
-					log.Printf("landnam-auth exchange: failed to create user %s: %v", sharedUser.ID, err)
-					return e.JSON(http.StatusInternalServerError, map[string]any{
-						"error": "failed to provision user",
-					})
-				}
+			}
+
+			// Set on every successful exchange, not just creation — this is the
+			// "last seen" signal that makes the admin UI's users table actually
+			// useful for "which users are in Landnam" (see main.go's migrateUsers).
+			if usersCollection.Fields.GetByName("lastExchangeAt") != nil {
+				record.Set("lastExchangeAt", types.NowDateTime())
+			}
+			if err := app.Save(record); err != nil {
+				log.Printf("landnam-auth exchange: failed to save user %s: %v", sharedUser.ID, err)
+				return e.JSON(http.StatusInternalServerError, map[string]any{
+					"error": "failed to provision user",
+				})
 			}
 
 			landnamToken, err := record.NewAuthToken()

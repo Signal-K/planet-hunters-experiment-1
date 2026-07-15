@@ -1,4 +1,4 @@
-.PHONY: help up pb-up pb-stop down build web-deps logs e2e e2e-open web-dev web-build web-check pb-reset docker-prune migrate seed
+.PHONY: help up up-ecosystem pb-up pb-stop down build web-deps logs e2e e2e-open web-dev web-build web-check pb-reset docker-prune migrate seed
 
 FRONTEND_COMPOSE := docker compose -f docker-compose.frontend.yml
 PARENT_COMPOSE   := docker compose -p navigation -f ../docker-compose.yml
@@ -10,10 +10,22 @@ help:
 	@echo ""
 	@echo "  Dev"
 	@echo "    up             Start frontend + parent-owned PocketBase (:3000 / shared :8090 / landnam :8091)"
+	@echo "                   Landnam-only — for a full Star Sailors session (Saily/Atlas too), see up-ecosystem"
+	@echo "    up-ecosystem   Start the full Star Sailors stack via the root ~/Navigation Makefile"
+	@echo "                   (shared, Landnam, Saily, Atlas backends + forge-service) — opt-in, does"
+	@echo "                   not change what plain 'up' starts"
 	@echo "    pb-up          Start parent-owned shared + Landnam PocketBase only"
 	@echo "    pb-stop        Stop parent-owned shared + Landnam PocketBase only"
 	@echo "    down           Stop the stack"
-	@echo "    build          Rebuild images — only affects a fresh volume; see web-deps"
+	@echo "    build          Rebuild images — only affects a fresh volume; see web-deps."
+	@echo "                   Go backend changes (pocketbase/*.go) need this too — unlike the"
+	@echo "                   web container, landnam-backend/backend do NOT hot-reload; a"
+	@echo "                   running container keeps serving the old compiled binary until"
+	@echo "                   you rebuild the image AND recreate the container, e.g.:"
+	@echo "                     docker compose -p navigation -f ../docker-compose.yml \\"
+	@echo "                       build landnam-backend && \\"
+	@echo "                     docker compose -p navigation -f ../docker-compose.yml \\"
+	@echo "                       up -d landnam-backend"
 	@echo "    web-deps       Sync node_modules inside the running web container — run this"
 	@echo "                   after web/package.json changes, or 'up' will 500 on missing"
 	@echo "                   modules. 'build' alone does NOT fix it: web_node_modules is a"
@@ -34,6 +46,9 @@ up: pb-up
 	@echo "Landnam:         http://localhost:3000/game"
 	@echo "Shared PB:       http://localhost:8090/_/"
 	@echo "Landnam PB:      http://localhost:8091/_/"
+
+up-ecosystem:
+	$(MAKE) -C .. up
 
 pb-up:
 	$(PARENT_COMPOSE) up -d backend landnam-backend

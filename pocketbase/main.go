@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 	"os"
+	"strings"
 
 	"github.com/pocketbase/pocketbase"
 	"github.com/pocketbase/pocketbase/core"
@@ -46,9 +47,13 @@ func ensureCollections(app core.App) {
 	if err != nil {
 		users = core.NewAuthCollection("users")
 		users.Fields.Add(&core.TextField{Name: "displayName", Max: 80})
+		users.Fields.Add(&core.DateField{Name: "lastExchangeAt"})
+		users.Fields.Add(&core.BoolField{Name: "guest"})
 		if err := app.Save(users); err != nil {
 			log.Printf("failed to save users collection: %v", err)
 		}
+	} else {
+		migrateUsers(app)
 	}
 
 	// game_states
@@ -342,6 +347,65 @@ func ensureCollections(app core.App) {
 	}
 
 	ensureCatalogFields(app)
+}
+
+// migrateUsers adds lastExchangeAt/guest fields (2026-07-15, for admin-UI
+// visibility into who's playing — see workspace ticket
+// landnam-auth-reliability-visibility-2026-07-15) to an existing users
+// collection, and backfills guest for any rows created before the field
+// existed so historical guest accounts aren't misclassified as full
+// accounts. Safe to call on every startup.
+func migrateUsers(app core.App) {
+	col, err := app.FindCollectionByNameOrId("users")
+	if err != nil {
+		return
+	}
+
+	changed := false
+	backfillGuest := col.Fields.GetByName("guest") == nil
+
+	if col.Fields.GetByName("lastExchangeAt") == nil {
+		col.Fields.Add(&core.DateField{Name: "lastExchangeAt"})
+		changed = true
+	}
+	if backfillGuest {
+		col.Fields.Add(&core.BoolField{Name: "guest"})
+		changed = true
+	}
+
+	if changed {
+		if err := app.Save(col); err != nil {
+			log.Printf("migrateUsers: failed to save: %v", err)
+			return
+		}
+		log.Printf("migrateUsers: updated users schema")
+	}
+
+	if !backfillGuest {
+		return
+	}
+
+	guests, err := app.FindRecordsByFilter(
+		col.Id,
+		"email ~ {:suffix}",
+		"",
+		0,
+		0,
+		map[string]any{"suffix": guestEmailSuffix},
+	)
+	if err != nil {
+		log.Printf("migrateUsers: guest backfill query failed: %v", err)
+		return
+	}
+	for _, rec := range guests {
+		if !strings.HasSuffix(rec.GetString("email"), guestEmailSuffix) {
+			continue
+		}
+		rec.Set("guest", true)
+		if err := app.Save(rec); err != nil {
+			log.Printf("migrateUsers: failed to backfill guest flag for %s: %v", rec.Id, err)
+		}
+	}
 }
 
 // migrateGameStates upgrades an existing game_states collection created with
