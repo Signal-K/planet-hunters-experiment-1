@@ -260,6 +260,7 @@ function GameCanvas() {
             hasCoach={hasCoach}
             onNav={screen => goFromNav(screen)}
             onGoBuilding={building => {
+              if (building === 'build') return game.go('build')
               if (building === 'refinery') return game.go('refinery')
               if (building === 'hangar') return game.go('hangar')
               if (building === 'skills') return game.go('skills')

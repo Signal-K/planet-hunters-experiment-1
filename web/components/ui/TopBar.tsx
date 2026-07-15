@@ -10,6 +10,13 @@ interface TopBarProps {
   onBack?: () => void
   right?: React.ReactNode
   dense?: boolean
+  // Fully opaque header instead of the default fade-to-transparent gradient.
+  // The default gradient reads fine over a scenic/canvas background (Hub,
+  // Mining), but on screens that scroll a dense list of text cards directly
+  // underneath (Mission Board, Market, ...), the header's own title text
+  // sits in the low-opacity tail of the gradient and the scrolled-past card
+  // text shows straight through it — solid avoids that.
+  solid?: boolean
 }
 
 function BackIcon() {
@@ -30,7 +37,7 @@ function MenuIcon() {
   )
 }
 
-export default function TopBar({ eyebrow, title, onBack, right, dense }: TopBarProps) {
+export default function TopBar({ eyebrow, title, onBack, right, dense, solid }: TopBarProps) {
   return (
     <div data-ui-zone={UI_ZONES.topChrome} style={{
       position: 'absolute',
@@ -39,7 +46,13 @@ export default function TopBar({ eyebrow, title, onBack, right, dense }: TopBarP
       right: 0,
       zIndex: 20,
       padding: '18px 14px 12px 14px',
-      background: 'linear-gradient(180deg, rgba(6,9,15,0.92) 0%, rgba(6,9,15,0.5) 70%, transparent 100%)',
+      // Fully opaque (alpha 1, not e.g. 0.97) — verified against a live page
+      // that even 3% transparency on a near-black background is visible as
+      // faint bleed-through text behind bright card copy scrolling beneath it.
+      background: solid
+        ? '#06090f'
+        : 'linear-gradient(180deg, rgba(6,9,15,0.92) 0%, rgba(6,9,15,0.5) 70%, transparent 100%)',
+      borderBottom: solid ? '1px solid var(--ln-hairline)' : 'none',
       display: 'flex',
       alignItems: 'center',
       gap: 10,

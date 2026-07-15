@@ -167,8 +167,19 @@ export default function MiningCanvas({ minerals, mineralMeta, laserTier, onColle
         const worldW = Math.max(300, parent.clientWidth)
         const worldH = Math.max(200, parent.clientHeight)
         const dpr = window.devicePixelRatio || 1
-        const surfaceY = Math.round(worldH * 0.62)
-        const shipY = Math.round(worldH * 0.22)
+        // Ship-to-surface gap is where the laser fires and ore drifts — the
+        // only part of the sky that's actually gameplay, not empty
+        // starfield. Percentage-of-height sizing (0.62/0.22, gap ~40% of
+        // worldH) looks fine at the aspect ratios this was tuned against,
+        // but on a tall narrow phone viewport worldH balloons well past
+        // those and the *pixel* gap balloons with it — most of the screen
+        // ends up empty sky above a small static ship. Cap shipY and the
+        // gap to roughly the original fixed-scene proportions (SHIP_Y=112,
+        // SURFACE_Y=320 → 208px gap) and let any extra height become ground
+        // (tileH below), which already reads as filled/intentional via the
+        // dirt texture rather than empty.
+        const shipY = Math.round(Math.min(worldH * 0.22, 140))
+        const surfaceY = Math.round(Math.min(worldH * 0.62, shipY + 220))
         const tileH = worldH - surfaceY
 
         // Preload ore sprites — one PNG per mineral key

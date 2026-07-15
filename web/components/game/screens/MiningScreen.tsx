@@ -421,10 +421,17 @@ export default function MiningScreen({ mission, target, onComplete, onBack, onAb
         </div>
 
         {/* ── Action row: Fire · Fill/Return · Scroll ───────────────────────── */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 88px', gap: 8, alignItems: 'stretch' }}>
+        {/* minWidth: 0 on every grid item overrides <button>'s default
+            min-width:auto (sized to its longest unbreakable word) — without
+            it, "FILL ORDER TO RETURN"/"DELIVER TO <target>" refuses to
+            shrink below its own min-content width and the row overflows
+            past the container on narrow mobile viewports, pushing
+            ScrollTrack half off-screen instead of the whole row fitting. */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 80px', gap: 8, alignItems: 'stretch', minWidth: 0 }}>
           <div
             data-ore-near={oreNear}
             style={{
+              minWidth: 0,
               borderRadius: 10,
               boxShadow: hasCoach && oreNear
                 ? '0 0 0 2px rgba(63,169,255,0.7), 0 0 18px rgba(63,169,255,0.35)'
@@ -441,6 +448,7 @@ export default function MiningScreen({ mission, target, onComplete, onBack, onAb
             {laserCharges > 0 ? 'FIRE LASER' : 'DEPLETED'}
           </PrimaryBtn>
           </div>
+          <div style={{ minWidth: 0 }}>
           <PrimaryBtn
             kind="amber"
             disabled={!orderFilled && laserCharges > 0}
@@ -452,7 +460,10 @@ export default function MiningScreen({ mission, target, onComplete, onBack, onAb
               return orderFilled || laserCharges <= 0 ? destination : `FILL ORDER TO ${deliveryTargetName ? 'DELIVER' : 'RETURN'}`
             })()}
           </PrimaryBtn>
-          <ScrollTrack scrollRef={scrollRef} />
+          </div>
+          <div style={{ minWidth: 0 }}>
+            <ScrollTrack scrollRef={scrollRef} />
+          </div>
         </div>
       </div>
     </div>

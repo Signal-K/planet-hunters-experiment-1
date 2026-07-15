@@ -16,8 +16,11 @@ describe('DEV_GROUPS', () => {
     // M3 (the two-leg "mine then deliver" contractor pick) shipped this
     // sprint, so it must be replayable via the DEV panel like M1/M2.
     expect(labels).toContain('Mission 3')
+    // Post-onboarding story mission (telescope launch) — replayable once
+    // free ops + the satellite monitoring station are built.
+    expect(labels).toContain('First Satellite Launch')
     expect(labels).toContain('Systems')
-    expect(labels).toHaveLength(4)
+    expect(labels).toHaveLength(5)
   })
 
   it('every shot key resolves to a non-null preset', () => {

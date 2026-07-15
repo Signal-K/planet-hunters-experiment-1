@@ -24,6 +24,32 @@ interface MissionBoardScreenProps {
   dailyContractorPool?: DailyContractorPool
 }
 
+// "Custom Missions Unlocked" / "Infrastructure" are one-time explainer copy,
+// not live data (unlike the Hot Minerals panel below them) — they used to
+// render unconditionally on every Free Ops visit, permanently cluttering the
+// board. Dismiss-once, same localStorage-ack pattern as TutorialCompleteSheet.
+const EXPLAINER_ACK_KEY = 'ln_missionboard_freeops_explainer_ack'
+
+// `alreadyExperienced` backfills players who reached Free Ops before this
+// dismiss tracking existed (i.e. everyone's save at ship time) — anyone who
+// has ever completed a contractor mission has plainly already seen how Free
+// Ops works and should never see this explainer, not even once. Without
+// this, every existing deep-progress save hits the "first time" case on its
+// next Mission Board visit purely because the ack key was never set,
+// regardless of how many hours they've actually played.
+function useFreeOpsExplainerAck(alreadyExperienced: boolean) {
+  const [show, setShow] = useState(() => {
+    if (alreadyExperienced) return false
+    if (typeof window === 'undefined') return true
+    return !localStorage.getItem(EXPLAINER_ACK_KEY)
+  })
+  const dismiss = () => {
+    localStorage.setItem(EXPLAINER_ACK_KEY, '1')
+    setShow(false)
+  }
+  return { show, dismiss }
+}
+
 function formatCooldown(remaining: number): string {
   if (remaining <= 0) return '0m'
   const mins = Math.ceil(remaining / 60000)
@@ -39,6 +65,9 @@ export default function MissionBoardScreen({ onBack, onPick, missionsDone, freeO
     const id = setInterval(() => setTick(Date.now()), 10000)
     return () => clearInterval(id)
   }, [])
+  const hasPriorFreeOpsExperience = Object.keys(contractorMissions ?? {}).length > 0
+    || (dailyContractorPool?.completedIds.length ?? 0) > 0
+  const { show: showFreeOpsExplainer, dismiss: dismissFreeOpsExplainer } = useFreeOpsExplainerAck(hasPriorFreeOpsExperience)
   const now = tick
   const isOnCooldown = (contractor: string | undefined) => {
     if (!contractorCooldowns || !contractor) return false
@@ -96,7 +125,7 @@ export default function MissionBoardScreen({ onBack, onPick, missionsDone, freeO
         <div style={{ position: 'absolute', inset: 0 }}>
           <Image src="/earth-day.jpg" alt="" fill style={{ objectFit: 'cover', filter: 'brightness(0.18) saturate(0.6)' }} />
         </div>
-        <TopBar eyebrow="EARTH BASE · COMPLETE" title="Mission Board" onBack={onBack} />
+        <TopBar eyebrow="EARTH BASE · COMPLETE" title="Mission Board" onBack={onBack} solid />
         <div data-ui-zone={UI_ZONES.screenContent} style={{
           position: 'absolute', inset: 0, paddingTop: 72,
           display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
@@ -144,9 +173,12 @@ export default function MissionBoardScreen({ onBack, onPick, missionsDone, freeO
       <div style={{ position: 'absolute', inset: 0 }}>
         <Image src="/earth-day.jpg" alt="" fill style={{ objectFit: 'cover', filter: 'brightness(0.3)' }} />
       </div>
-        <TopBar eyebrow={freeOperations ? 'EARTH BASE · FREE OPS' : `EARTH BASE · L${missionsDone + 1}`} title="Mission Board" onBack={onBack} />
+        <TopBar eyebrow={freeOperations ? 'EARTH BASE · FREE OPS' : `EARTH BASE · L${missionsDone + 1}`} title="Mission Board" onBack={onBack} solid />
 
-      <div data-ui-zone={UI_ZONES.screenContent} style={{ position: 'absolute', inset: 0, paddingTop: hasCoach ? TUTORIAL_CONTENT_TOP : 72, paddingBottom: hasCoach ? 190 : 96, overflowY: 'auto' }}>
+      {/* paddingBottom clears the floating RadialNav central button (bottom:24,
+          height:64, plus its glow) — 96 left the last list row's payout/target
+          row directly underneath it on mobile. */}
+      <div data-ui-zone={UI_ZONES.screenContent} style={{ position: 'absolute', inset: 0, paddingTop: hasCoach ? TUTORIAL_CONTENT_TOP : 72, paddingBottom: hasCoach ? 190 : 128, overflowY: 'auto' }}>
         {freeOperations && (
           <div style={{ padding: '0 14px 10px 14px' }}>
             <Panel accent={contractorPoolExhausted ? 'var(--ln-ok)' : 'var(--ln-cyan)'} style={{ padding: 12 }}>
@@ -177,14 +209,28 @@ export default function MissionBoardScreen({ onBack, onPick, missionsDone, freeO
         )}
         {freeOperations && (
           <div style={{ padding: '0 14px 10px 14px', display: 'flex', flexDirection: 'column', gap: 10 }}>
-            <Panel accent="var(--ln-amber)" style={{ padding: 12 }}>
-              <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 10, fontWeight: 800, letterSpacing: '0.22em', color: 'var(--ln-amber)', textTransform: 'uppercase', marginBottom: 6 }}>
-                Custom Missions Unlocked
-              </div>
-              <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 12, color: '#a9b8ce', lineHeight: 1.45 }}>
-                Contractor requests pay fixed bonuses. Infrastructure work grows operations for clients or for you. Free Ops highlights minerals above average market value so you can choose what is worth mining now.
-              </div>
-            </Panel>
+            {showFreeOpsExplainer && (
+              <Panel accent="var(--ln-amber)" style={{ padding: 12, position: 'relative' }}>
+                <button
+                  data-testid="dismiss-freeops-explainer"
+                  onClick={dismissFreeOpsExplainer}
+                  aria-label="Dismiss"
+                  style={{
+                    position: 'absolute', top: 8, right: 8, width: 20, height: 20, borderRadius: 6,
+                    border: '1px solid rgba(245,166,35,0.4)', background: 'rgba(8,16,28,0.6)',
+                    color: 'var(--ln-amber)', fontSize: 12, lineHeight: 1, cursor: 'pointer',
+                  }}
+                >
+                  ×
+                </button>
+                <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 10, fontWeight: 800, letterSpacing: '0.22em', color: 'var(--ln-amber)', textTransform: 'uppercase', marginBottom: 6 }}>
+                  Custom Missions Unlocked
+                </div>
+                <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 12, color: '#a9b8ce', lineHeight: 1.45, paddingRight: 20 }}>
+                  Contractor requests pay fixed bonuses. Infrastructure work grows operations for clients or for you — own infrastructure is where you place your satellite and expand personal operations. Free Ops highlights minerals above average market value so you can choose what is worth mining now.
+                </div>
+              </Panel>
+            )}
             <Panel accent="var(--ln-ok)" style={{ padding: 12 }}>
               <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 10, fontWeight: 800, letterSpacing: '0.22em', color: 'var(--ln-ok)', textTransform: 'uppercase', marginBottom: 8 }}>
                 Free Ops · Hot Minerals
@@ -195,14 +241,6 @@ export default function MissionBoardScreen({ onBack, onPick, missionsDone, freeO
                     <strong>{mineral.sym}</strong> ▲{mineral.price.toLocaleString()}
                   </span>
                 ))}
-              </div>
-            </Panel>
-            <Panel accent="var(--ln-cyan)" style={{ padding: 12 }}>
-              <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 10, fontWeight: 800, letterSpacing: '0.22em', color: 'var(--ln-cyan)', textTransform: 'uppercase', marginBottom: 6 }}>
-                Infrastructure
-              </div>
-              <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 12, color: '#a9b8ce', lineHeight: 1.45 }}>
-                Client work includes satellite launches for clients. Own infrastructure is where you place your satellite and expand personal operations.
               </div>
             </Panel>
           </div>

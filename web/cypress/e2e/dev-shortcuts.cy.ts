@@ -82,7 +82,8 @@ describe('DEV panel UI', () => {
     cy.get('[data-testid="dev-group-mission-1"]').should('exist')
     cy.get('[data-testid="dev-group-mission-2"]').should('exist')
     cy.get('[data-testid="dev-group-mission-3"]').should('exist')
-    cy.get('[data-testid^="dev-group-"]').should('have.length', 4)
+    cy.get('[data-testid="dev-group-first-satellite-launch"]').should('exist')
+    cy.get('[data-testid^="dev-group-"]').should('have.length', 5)
   })
 
   it('each mission group has the expected shot buttons', () => {
@@ -99,7 +100,12 @@ describe('DEV panel UI', () => {
     cy.get('[data-testid="dev-shot-m3-fab"]').should('exist')
     cy.get('[data-testid="dev-shot-m3-mining"]').should('exist')
     cy.get('[data-testid="dev-shot-m3-debrief"]').should('exist')
-    cy.get('[data-testid^="dev-shot-"]').should('have.length', 15)
+    // First Satellite Launch shots
+    cy.get('[data-testid="dev-shot-telescope-hub"]').should('exist')
+    cy.get('[data-testid="dev-shot-telescope-fab"]').should('exist')
+    cy.get('[data-testid="dev-shot-telescope-transit"]').should('exist')
+    cy.get('[data-testid="dev-shot-telescope-debrief"]').should('exist')
+    cy.get('[data-testid^="dev-shot-"]').should('have.length', 19)
   })
 
   it('clicking M2 Hub navigates to hub with M2 coach, no Save Progress prompt', () => {

@@ -407,7 +407,17 @@ button { cursor: pointer; }
 .mining-controls {
   z-index: 10;
   padding: var(--ln-s-2) var(--ln-s-3) var(--ln-s-5);
-  display: grid; gap: var(--ln-s-2);
+  display: grid;
+  /* minmax(0, 1fr), not the bare implicit "auto" column display:grid gives
+     you by default — an auto column sizes to its widest child's max-content
+     regardless of min-width:0 on that child, so the action row (Fire/Fill/
+     Scroll) still overflowed past this container's own bounds on narrow
+     screens even after being told it could shrink internally. This is also
+     a flex item of .mining-screen's column, which defaults to
+     min-width:auto too, so min-width:0 here covers both levels. */
+  grid-template-columns: minmax(0, 1fr);
+  min-width: 0;
+  gap: var(--ln-s-2);
   background: linear-gradient(0deg, rgba(3,6,12,0.98) 0%, rgba(3,6,12,0.88) 100%);
 }
 .mining-stats-row { display: flex; gap: var(--ln-s-3); align-items: center; flex-wrap: wrap; }

@@ -35,6 +35,24 @@ const BASE_PLAYER: Player = {
 
 const M1_DONE: Record<number, boolean> = { 0: true, 1: true, 2: true, 3: true, 4: true, 5: true, 6: true, 9: true }
 const M1_AND_M2_DONE: Record<number, boolean> = { ...M1_DONE, 20: true, 21: true }
+const M1_M2_M3_DONE: Record<number, boolean> = { ...M1_AND_M2_DONE, 30: true, 31: true, 32: true }
+
+// Story mission synthesized at runtime in game-context.tsx once free ops +
+// the satellite monitoring station are unlocked — not in MISSIONS, so these
+// presets set the ids directly rather than looking a mission up by sequence.
+const TRANSIT_TELESCOPE_TARGET_ID = 'earth-orbit-transit-telescope'
+const TRANSIT_TELESCOPE_MISSION_ID = 'story-transit-telescope-launch'
+
+const POST_ONBOARDING_PLAYER: Player = {
+  ...BASE_PLAYER,
+  missionsDone: 3,
+  placed: ['launchpad', 'satellite-monitoring-station'],
+  placementPlots: { launchpad: 0, 'satellite-monitoring-station': 1 },
+  freeOperations: true,
+  satelliteMonitoringBuilt: true,
+  satelliteMonitoringLevel: 1,
+  transitSatelliteLaunchedAt: null,
+}
 
 export interface DevShot {
   key: string
@@ -79,6 +97,16 @@ export const DEV_GROUPS: DevGroup[] = [
       { key: 'm3-fab',     label: 'Fab',     hint: 'Belt Courier Run accepted (Bennu -> Vesta), at fab' },
       { key: 'm3-mining',  label: 'Mining',  hint: 'In mining at Bennu, delivery leg to Vesta pending' },
       { key: 'm3-debrief', label: 'Debrief', hint: 'Two-leg run complete, delivered at Vesta then returned' },
+    ],
+  },
+  {
+    label: 'First Satellite Launch',
+    color: '#f5d947',
+    shots: [
+      { key: 'telescope-hub',    label: 'Hub',      hint: 'Post-onboarding, free ops + monitoring station built, story mission on the board' },
+      { key: 'telescope-fab',    label: 'Fab',      hint: 'Transit telescope mission accepted, at fab' },
+      { key: 'telescope-transit',label: 'Transit',  hint: 'Telescope en route to Earth orbit' },
+      { key: 'telescope-debrief',label: 'Debrief',  hint: 'Telescope deployed, satellite launched' },
     ],
   },
   {
@@ -233,6 +261,47 @@ export function resolvePreset(name: string): Partial<GameState> | null {
         missionId: THIRD_MISSION.id, targetId: THIRD_MISSION.targetId ?? 'bennu', deliveryTargetId: THIRD_MISSION.deliveryTargetId ?? 'vesta',
         rocket: { chassis: 'hull-mk2', propulsion: 'fusion-b2', drill: 'laser-t2' },
         lastCargo: THIRD_MISSION.requires.minerals, popup: null,
+      }
+
+    // ── First Satellite Launch (post-onboarding story mission) ──
+    case 'telescope-hub':
+      return {
+        screen: 'hub',
+        player: POST_ONBOARDING_PLAYER,
+        tutorial: false, doneSteps: M1_M2_M3_DONE,
+        missionId: null, targetId: null,
+        rocket: { chassis: 'hull-mk2', propulsion: 'fusion-b2', drill: 'laser-t2' },
+        lastCargo: null, popup: null,
+      }
+
+    case 'telescope-fab':
+      return {
+        screen: 'fab',
+        player: POST_ONBOARDING_PLAYER,
+        tutorial: false, doneSteps: M1_M2_M3_DONE,
+        missionId: TRANSIT_TELESCOPE_MISSION_ID, targetId: TRANSIT_TELESCOPE_TARGET_ID,
+        rocket: { chassis: 'hull-mk2', propulsion: 'fusion-b2', drill: 'laser-t2' },
+        lastCargo: null, popup: null,
+      }
+
+    case 'telescope-transit':
+      return {
+        screen: 'transit',
+        player: { ...POST_ONBOARDING_PLAYER, activeMission: { id: TRANSIT_TELESCOPE_MISSION_ID, label: 'Launch Transit Telescope → Earth Orbit' }, arrivalAt: Date.now() + 60_000 },
+        tutorial: false, doneSteps: M1_M2_M3_DONE,
+        missionId: TRANSIT_TELESCOPE_MISSION_ID, targetId: TRANSIT_TELESCOPE_TARGET_ID,
+        rocket: { chassis: 'hull-mk2', propulsion: 'fusion-b2', drill: 'laser-t2' },
+        lastCargo: null, popup: null,
+      }
+
+    case 'telescope-debrief':
+      return {
+        screen: 'debrief',
+        player: { ...POST_ONBOARDING_PLAYER, transitSatelliteLaunchedAt: Date.now(), transitSatelliteLevel: 1 },
+        tutorial: false, doneSteps: M1_M2_M3_DONE,
+        missionId: TRANSIT_TELESCOPE_MISSION_ID, targetId: TRANSIT_TELESCOPE_TARGET_ID,
+        rocket: { chassis: 'hull-mk2', propulsion: 'fusion-b2', drill: 'laser-t2' },
+        lastCargo: {}, popup: null,
       }
 
     case 'ship-customizer':
