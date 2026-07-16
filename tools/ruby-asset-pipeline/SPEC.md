@@ -1,35 +1,31 @@
 # Ruby Asset Pipeline — Implementation Spec
 
-Formal spec for the Ruby asset pipeline, building on the design exploration.
-Covers directory layout, Rake task interface, output conventions, sprite
-generation parameters, seed data schemas, and the local-only vs CI boundary.
+Formal spec for the Ruby asset pipeline's seed-data ETL, building on the
+design exploration. Covers directory layout, Rake task interface, output
+conventions, seed data schemas, and the local-only vs CI boundary.
+
+Procedural sprite generation (`sprites:generate`, `SpriteGenerator`,
+`SpaceBackground`, `OreIcon`) was retired 2026-07-16 in favor of
+`tools/sprites/generate_sprite.py` (Replicate/Flux-based external
+generation). The ChunkyPNG spike findings that informed the original sprite
+work are preserved in git history (see the pre-2026-07-16 revision of this
+file) but no longer describe live code.
 
 ## Directory layout
 
 ```
 tools/ruby-asset-pipeline/
-├── Rakefile          # sprites:generate, seed:import, mock:start
-├── Gemfile           # chunky_png, rspec, rake
+├── Rakefile          # seed:import, mock:start
+├── Gemfile           # rspec, rake
 ├── .ruby-version     # pinned MRI version
 ├── lib/
-│   ├── sprite_generator.rb   # ChunkyPNG-based sprite generation
 │   └── seed_importer.rb      # catalog -> PocketBase seed JSON
-├── output/
-│   └── sprites/      # generated PNGs (committed, deterministic)
 ├── mock/             # Sinatra prototyping stubs (see mock/README.md)
 ├── spec/             # RSpec tests
 └── missions-schema.yml  # YAML mission/event definition schema
 ```
 
 ## Rake task interface
-
-### `rake sprites:generate[part_type,variant]`
-
-- `part_type` — logical part name, e.g. `hull`, `booster`, `drill`.
-- `variant` — tier/variant suffix, e.g. `t1`, `t2`.
-- Output: `output/sprites/<part_type>_<variant>.png`, 512x512 RGBA PNG.
-- Deterministic: same inputs always produce the same PNG bytes. Output is
-  committed to the repo, not generated in CI.
 
 ### `rake seed:import[source,collection]`
 
@@ -44,20 +40,6 @@ tools/ruby-asset-pipeline/
 
 - Boots the Sinatra mock API (see `mock/README.md`) on port 4500 for
   endpoint prototyping.
-
-## Sprite generation parameters
-
-Sprite generation follows the parameter schema in
-@doc/Landnam-docs_game-art_rocket-part-sprite-generation-spec:
-
-- `hull_color` — base hull fill color (RGBA)
-- `panel_color` — panel line stroke color
-- `window_color` — window/hatch fill color
-- `panel_lines` — array of x-offsets for vertical panel seam lines
-- `windows` — array of `[x, y, w, h]` rectangles for windows/hatches
-
-`SpriteGenerator.generate` accepts a `spec:` hash overriding `DEFAULT_SPEC`
-for these fields.
 
 ## Seed data ETL pipeline
 
@@ -75,17 +57,13 @@ for these fields.
 
 | Artifact | Where it runs | Why |
 |---|---|---|
-| Sprites (`sprites:generate`) | Local only | Deterministic output, committed as PNGs — no benefit to re-running in CI. |
 | Seed data (`seed:import`) | CI (`seed-data.yml`) + local | Operates on evolving catalog data; CI keeps `backend/migrations/` in sync with source changes. |
 | Mock API stubs (`mock/`) | Local only | Prototyping aid, never deployed. |
 
 ## Testing
 
-RSpec covers both primary tasks:
-
 | Spec file | Coverage |
 |---|---|
-| `spec/sprite_generator_spec.rb` | `SpriteGenerator.generate` — 512×512 PNG dimensions |
 | `spec/seed_importer_spec.rb` | `SeedImporter.load_source` (missing file, valid JSON), `SeedImporter.import` (output path, JSON content, dir creation) |
 | `spec/missions_schema_spec.rb` | `missions-schema.yml` structure validation |
 
@@ -94,34 +72,8 @@ Run locally: `bundle exec rspec spec/`
 CI runs RSpec before `rake seed:import` in `.github/workflows/seed-data.yml`
 and in the `seed-data` service in `docker-compose.ci.yml`.
 
-## ChunkyPNG Spike Findings
-
-Discovered during @task-4f921e. ChunkyPNG is sufficient for the full Tier 1
-sprite requirement with one constraint:
-
-| Capability | Status | Notes |
-|---|---|---|
-| 512×512 RGBA PNG generation | ✓ Works | No size limit in practice |
-| Filled rectangles (`rect` with fill color) | ✓ Works | Hull, window, and hatch shapes |
-| Single-pixel lines (`line`) | ✓ Works | Panel lines, edge trim |
-| Per-pixel access (`set_pixel`) | ✓ Works | For advanced procedural fill |
-| Anti-aliased lines / curves | ✗ Not supported | ChunkyPNG is pixel-grid only |
-| Bezier / spline curves | ✗ Not supported | Would require manual rasterisation |
-| Text rendering | ✗ Not supported | Labels must be composited externally |
-| Multi-layer blend modes | ✗ Not supported | Blending must be done per-pixel manually |
-| JPEG / WebP output | ✗ Not supported | PNG only (acceptable for game sprites) |
-| External system dependencies | ✓ None required | Pure Ruby; `gem install chunky_png` is sufficient |
-
-**Verdict**: ChunkyPNG handles all Tier 1 sprite operations (geometric shapes,
-panel lines, filled windows/hatches). Anti-aliasing and curves are out of
-scope for the spike. If smooth curves become a requirement, migrate to Vips
-(via `ruby-vips`) or Imagemagick (`mini_magick`), both of which have system
-library deps but add full anti-aliasing and blend mode support.
-
 ## References
 
-- @doc/Landnam-docs_game-art_rocket-part-sprite-generation-spec — sprite
-  parameter contract.
 - `tools/ruby-asset-pipeline/missions-schema.yml` — YAML mission/event
   definition schema (task 018394).
 - `.github/workflows/seed-data.yml` — CI workflow running rspec + seed:import.

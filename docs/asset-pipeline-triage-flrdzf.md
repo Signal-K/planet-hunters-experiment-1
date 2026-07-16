@@ -251,7 +251,7 @@ tools/sprites/output/_generated/
 
 ## Follow-Up Implementation Checklist
 
-1. Generate missing ore icons for `copper`, `aluminium`, `hydrogen`, and `uranium`; update `tools/ruby-asset-pipeline/lib/ore_icon.rb` so `generate_assets ores` produces all `MINERAL_META` keys.
+1. Generate missing ore icons for `copper`, `aluminium`, `hydrogen`, and `uranium` via `tools/sprites/generate_sprite.py` (the `ore_icon.rb`/`generate_assets` Ruby path referenced here was retired 2026-07-16) so all `MINERAL_META` keys have a stable icon.
 2. Populate `web/public/game/assets/ships/` with complete exterior ship sprites (`ship_sr1.png`, `ship_sr2.png`, `ship_sr3.png`) and add container/stage sprites for hull/stage layers.
 3. Add room/module sprites under `web/public/game/assets/rooms/` for the open/interior ship view.
 4. Move `tools/sprites/generate_sprite.py` default output away from `web/public/parts/_generated` to `tools/sprites/output/_generated`.

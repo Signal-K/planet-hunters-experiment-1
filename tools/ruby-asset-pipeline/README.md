@@ -1,20 +1,21 @@
 # Ruby Asset Pipeline
 
-Local-only sprite generation and seed-data ETL for Landnam.
+Seed-data ETL for Landnam.
+
+Procedural sprite generation (`sprite_generator.rb`, `space_background.rb`,
+`ore_icon.rb`) was retired 2026-07-16 — superseded by
+`tools/sprites/generate_sprite.py` (Replicate/Flux-based external generation),
+which is the actively-used path for new sprite/background assets.
 
 ## Setup
 
 ```bash
 cd tools/ruby-asset-pipeline
-gem install chunky_png   # only dependency required for sprite generation
-bundle install            # full toolchain (rspec, rake)
+bundle install
 ```
 
 ## Tasks
 
-- `rake sprites:generate[part_type,variant]` — generates a 512x512 procedural
-  rocket part PNG to `output/sprites/`. Sprites are deterministic and committed
-  as PNGs (not run in CI).
 - `rake seed:import[source,collection]` — imports catalog data from `source`
   (a JSON file) and writes a PocketBase-compatible seed file to
   `backend/migrations/<collection>.seed.json`. Runs in CI (see

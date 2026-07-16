@@ -1,18 +1,5 @@
 require 'rake'
 
-namespace :sprites do
-  desc 'Generate a procedural rocket part PNG sprite. Usage: rake sprites:generate[part_type,variant]'
-  task :generate, [:part_type, :variant] do |_t, args|
-    require_relative 'lib/sprite_generator'
-
-    part_type = args[:part_type] || 'hull'
-    variant = args[:variant] || 't1'
-
-    output_path = SpriteGenerator.generate(part_type: part_type, variant: variant)
-    puts "Generated sprite: #{output_path}"
-  end
-end
-
 namespace :mock do
   desc 'Boot the Sinatra mock API stub server'
   task :start do
