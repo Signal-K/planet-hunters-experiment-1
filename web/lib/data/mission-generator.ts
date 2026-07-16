@@ -183,6 +183,18 @@ function selectMinerals(mineralKeys: string[], preferences: string[], index: num
   return Array.from({ length: count }, (_, offset) => candidates[(index + offset) % candidates.length])
 }
 
+// A template's drillTierMin is a flat floor, but the specific minerals a
+// mission ends up requiring (selectMinerals can pick any exotic mineral out
+// of a template's mineralKeys) may need a deeper laser reach than that floor
+// — MiningController physically can't collect ore whose laserAccess tier
+// exceeds the equipped drill (see LASER_DEPTH_BY_TIER in MiningController.ts),
+// so a mission requiring e.g. iridium (laserAccess 2) with drill_tier stuck
+// at a template's tier-1 floor would be unwinnable no matter what the player
+// builds. Always raise the requirement to cover the actual selected minerals.
+export function requiredDrillTier(mineralIds: string[], templateFloor: number, minerals: Record<string, MineralMeta>): number {
+  return mineralIds.reduce((tier, id) => Math.max(tier, minerals[id]?.laserAccess ?? 1), templateFloor)
+}
+
 function amountFor(template: MissionTemplate, sequence: number, amountBias: number, mineralIndex: number): number {
   const [min, max] = template.cargoRange
   const span = max - min + 1
@@ -228,7 +240,7 @@ export function generateMissionsFromRules(input: MissionGeneratorInput, count = 
       requires: {
         minerals,
         cargo_min: cargoMin,
-        drill_tier: template.drillTierMin,
+        drill_tier: requiredDrillTier(Object.keys(minerals), template.drillTierMin, input.minerals),
         max_orbit: template.orbitMax,
       },
       payout: {
@@ -277,7 +289,7 @@ export function generateFreeOpsMissionsFromRules(input: MissionGeneratorInput): 
         requires: {
           minerals: scanOnly ? {} : { [mineral]: amount },
           cargo_min: amount,
-          drill_tier: template.drillTierMin,
+          drill_tier: scanOnly ? template.drillTierMin : requiredDrillTier([mineral], template.drillTierMin, input.minerals),
           max_orbit: template.orbitMax,
         },
         payout: {

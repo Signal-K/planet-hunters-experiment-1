@@ -105,7 +105,9 @@ export const AUTHORED_MISSIONS: Mission[] = [
     requires: {
       minerals: { nickel: 2, cobalt: 2 },
       cargo_min: 4,
-      drill_tier: 1,
+      // cobalt's laserAccess is 2 (see minerals.ts) — a tier-1 drill can
+      // never physically reach cobalt-depth ore, so this floor must match.
+      drill_tier: 2,
       max_orbit: 5,
     },
     payout: {
@@ -131,7 +133,8 @@ export const AUTHORED_MISSIONS: Mission[] = [
       // minerals (iron, silicon, carbon, ...) — Earth already has plenty.
       minerals: { nickel: 2, cobalt: 2 },
       cargo_min: 4,
-      drill_tier: 1,
+      // cobalt's laserAccess is 2 (see minerals.ts) — same floor as above.
+      drill_tier: 2,
       max_orbit: 8,
     },
     payout: {

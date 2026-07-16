@@ -57,12 +57,32 @@ export const CONTRACTOR_SLOTS: ContractorSlot[] = [
     initial: 'AA',
     unlockTier: 2,
     projectType: 'Bulk construction feedstock and orbital ballast',
-    mineralPreferences: ['iron', 'carbon'],
+    // Silicate/stony (S-type) bulk rock, not carbonaceous — "carbon" here
+    // didn't match a real S-archetype composition (see target-archetypes.ts);
+    // carbon now belongs to Ceres Volatiles Collective's C-type profile.
+    mineralPreferences: ['iron', 'silicon'],
     payoutPremium: 0.18,
     affinityBonusPerMission: 0.02,
     payoutNotes: '18% premium on high-volume construction cargo',
     affinityNotes: '+2% payout per completed Atlas job, capped at +15%',
     uiRole: 'bulk',
+  },
+  {
+    id: 'ceres-volatiles-collective',
+    name: 'Ceres Volatiles Collective',
+    color: '#5ee6c0',
+    initial: 'CV',
+    unlockTier: 2,
+    projectType: 'Volatile extraction and carbonaceous feedstock reserves',
+    // Dedicated C-type (carbonaceous/volatiles) specialist — the roster
+    // otherwise skewed heavily M-type (platinum-group); carbon/ice/hydrogen
+    // mirror the C archetype's common/uncommon pool in target-archetypes.ts.
+    mineralPreferences: ['carbon', 'ice', 'hydrogen'],
+    payoutPremium: 0.20,
+    affinityBonusPerMission: 0.025,
+    payoutNotes: '20% premium on carbonaceous and volatile feedstock',
+    affinityNotes: '+2.5% payout per completed Ceres job, capped at +15%',
+    uiRole: 'prospect',
   },
   {
     id: 'helioforge-metals',
@@ -99,12 +119,32 @@ export const CONTRACTOR_SLOTS: ContractorSlot[] = [
     initial: 'NS',
     unlockTier: 3,
     projectType: 'Rare gas capture and ion drive reserves',
-    mineralPreferences: ['rare', 'gold'],
+    // "Rare gas capture" is an icy/gas-giant profile, not a metallic one —
+    // 'gold' didn't belong here (see target-archetypes.ts); 'hydrogen'
+    // matches both icy and gas-giant pools instead.
+    mineralPreferences: ['rare', 'hydrogen'],
     payoutPremium: 0.28,
     affinityBonusPerMission: 0.035,
     payoutNotes: '28% premium on rare strategic cargo',
     affinityNotes: '+3.5% payout per completed Nightjar job, capped at +15%',
     uiRole: 'command',
+  },
+  {
+    id: 'vulcan-core-metallurgy',
+    name: 'Vulcan Core Metallurgy',
+    color: '#e85d5d',
+    initial: 'VC',
+    unlockTier: 4,
+    projectType: 'Deep metallic-core assay and platinum-group refinement',
+    // Second M-type (metallic prospecting) specialist beyond Helios/Ferrum/
+    // Arcturus, which already lean platinum-group at L1 — this one targets
+    // the M archetype's rare/exotic tier instead of duplicating them.
+    mineralPreferences: ['platinum', 'rhodium'],
+    payoutPremium: 0.26,
+    affinityBonusPerMission: 0.03,
+    payoutNotes: '26% premium on refined platinum-group core assay',
+    affinityNotes: '+3% payout per completed Vulcan job, capped at +15%',
+    uiRole: 'prospect',
   },
   {
     id: 'solgrid-dynamics',

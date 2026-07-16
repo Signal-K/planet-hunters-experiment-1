@@ -1,7 +1,7 @@
 // Daily contractor mission pool — deterministic per calendar day, resets at midnight.
 
 import type { ContractorSlot, MineralMeta, Mission } from './types'
-import { DEFAULT_MISSION_TEMPLATES, FREE_OPS_START_MISSIONS_DONE } from './mission-generator'
+import { DEFAULT_MISSION_TEMPLATES, FREE_OPS_START_MISSIONS_DONE, requiredDrillTier } from './mission-generator'
 import { CONTRACTOR_AFFINITY_MISSION_THRESHOLD } from './contractors'
 
 // Base daily slots per contractor, before affinity bonus slots.
@@ -98,7 +98,7 @@ export function generateDailyContractorPool(
         requires: {
           minerals: { [mineralKey]: amount },
           cargo_min: amount,
-          drill_tier: template.drillTierMin,
+          drill_tier: requiredDrillTier([mineralKey], template.drillTierMin, minerals),
           max_orbit: template.orbitMax,
         },
         payout: {

@@ -364,9 +364,9 @@ describe('calibrateOnboardingPayout', () => {
 })
 
 describe('seed bible v0 catalog', () => {
-  it('defines ten mechanical contractor slots at the spec unlock tiers', () => {
-    expect(CONTRACTOR_SLOTS).toHaveLength(10)
-    expect(CONTRACTOR_SLOTS.map(c => c.unlockTier)).toEqual([1, 1, 1, 2, 2, 3, 3, 4, 4, 5])
+  it('defines twelve mechanical contractor slots at the spec unlock tiers', () => {
+    expect(CONTRACTOR_SLOTS).toHaveLength(12)
+    expect(CONTRACTOR_SLOTS.map(c => c.unlockTier)).toEqual([1, 1, 1, 2, 2, 2, 3, 3, 4, 4, 4, 5])
     expect(CONTRACTOR_SLOTS.every(c => !c.name.startsWith('Contractor Slot'))).toBe(true)
     expect(CONTRACTOR_SLOTS.every(c => c.mineralPreferences.length > 0)).toBe(true)
     expect(CONTRACTOR_SLOTS.every(c => c.payoutPremium >= 0.18)).toBe(true)
