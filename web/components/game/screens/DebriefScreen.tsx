@@ -1,14 +1,15 @@
 'use client'
 
 import { useRef, useState } from 'react'
-import type { Mission, Target, MineralMeta, Contractor } from '@/lib/data'
-import { calibrateOnboardingPayout, contractorAffinityBonus } from '@/lib/data'
+import type { Mission, Target, MineralMeta, Contractor, RocketConfig } from '@/lib/data'
+import { calibrateOnboardingPayout, contractorAffinityBonus, rocketDisplayForConfig } from '@/lib/data'
 import TopBar from '@/components/ui/TopBar'
 import { PrimaryBtn } from '@/components/ui/Button'
 import { UI_ZONES } from '@/lib/ui-zones'
 import TutorialHighlight from '@/components/game/TutorialHighlight'
+import { ScrapSequenceCanvas } from '@/components/game/ScrapSequenceCanvas'
 
-export default function DebriefScreen({ mission, target, cargo, onDone, minerals, contractors, contractorMissions, freeOperations, annotations, missionsDone, hasCoach, shipDestroyed }: {
+export default function DebriefScreen({ mission, target, cargo, onDone, minerals, contractors, contractorMissions, freeOperations, annotations, missionsDone, hasCoach, shipDestroyed, rocket }: {
   mission: Mission
   target: Target
   cargo: Record<string, number>
@@ -21,10 +22,17 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
   missionsDone?: number
   hasCoach?: boolean
   shipDestroyed?: boolean
+  rocket?: Pick<RocketConfig, 'chassis'>
 }) {
   const [resolved, setResolved] = useState(false)
   const [collecting, setCollecting] = useState(false)
   const collectingRef = useRef(false)
+  // Single-use hull recovery (SR1-SR5 during M1-M3 onboarding) plays a scrap
+  // animation right after cargo is resolved. Once reusable rockets ship
+  // post-onboarding, gate this on that system's own flag instead of
+  // `shipDestroyed` — a reusable hull shouldn't play this at all.
+  const [scrapping, setScrapping] = useState(false)
+  const rocketDisplay = rocketDisplayForConfig(rocket)
 
   const delivered = Object.entries(mission.requires.minerals).every(([id, amount]) => (cargo[id] ?? 0) >= amount)
   const contractor = mission.contractor ? contractors[mission.contractor] : undefined
@@ -168,7 +176,10 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
           <PrimaryBtn
             kind={delivered ? 'amber' : 'cyan'}
             testId="resolve-cargo-btn"
-            onClick={() => setResolved(true)}
+            onClick={() => {
+              setResolved(true)
+              if (shipDestroyed) setScrapping(true)
+            }}
           >
             {shipDestroyed ? 'Resolve Recovered Cargo' : 'Resolve Cargo'}
           </PrimaryBtn>
@@ -188,6 +199,13 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
           </PrimaryBtn>
         )}
       </div>
+
+      {scrapping && (
+        <ScrapSequenceCanvas
+          rocketImageSrc={rocketDisplay.img}
+          onComplete={() => setScrapping(false)}
+        />
+      )}
     </div>
   )
 }
