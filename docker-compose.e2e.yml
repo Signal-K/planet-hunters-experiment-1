@@ -39,8 +39,9 @@ services:
       NEXT_PUBLIC_SHARED_PB_URL: http://shared-pb:8090
       NEXT_PUBLIC_LANDNAM_PB_URL: http://landnam-pb:8090
       NEXT_TELEMETRY_DISABLED: "1"
+      PORT: "3001"
     ports:
-      - "3000:3000"
+      - "3001:3001"
     depends_on:
       landnam-pb:
         condition: service_healthy
@@ -49,7 +50,7 @@ services:
     image: cypress/included:13.17.0
     working_dir: /e2e
     environment:
-      CYPRESS_baseUrl: http://next-app:3000
+      CYPRESS_baseUrl: http://next-app:3001
       CYPRESS_POCKETBASE_URL: http://landnam-pb:8090
       CYPRESS_PROFILE: with-pb
     volumes:

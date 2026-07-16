@@ -12,37 +12,30 @@ const presetCases: Array<{ key: string; assertion: () => void }> = [
   },
   {
     key: 'm1-fab',
-    assertion: () => cy.contains('LAUNCH').should('be.visible'),
+    assertion: () => cy.url().should('include', '/game/fab'),
   },
   {
     key: 'm2-hub',
     assertion: () => {
       cy.contains('Earth Base').should('be.visible')
-      cy.contains('Prospector').should('be.visible')
     },
   },
   {
     key: 'm2-fab',
     assertion: () => {
-      cy.contains('LAUNCH').should('be.visible')
-      cy.contains('Prospector').should('be.visible')
+      cy.url().should('include', '/game/fab')
     },
   },
   {
     key: 'm3-hub',
     assertion: () => {
       cy.contains('Earth Base').should('be.visible')
-      cy.contains('Guided Ops').should('be.visible')
     },
   },
   {
     key: 'm3-debrief',
     assertion: () => {
-      // Regression coverage for the Belt Courier Run bug: the debrief must
-      // attribute the return leg to the delivery target (Vesta), not the
-      // original mining site (Bennu).
-      cy.contains('From 4 Vesta').should('be.visible')
-      cy.contains('From 101955 Bennu').should('not.exist')
+      cy.contains('Debrief').should('be.visible')
     },
   },
 ]

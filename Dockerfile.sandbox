@@ -46,7 +46,7 @@ COPY sandbox-run.sh /sandbox-run.sh
 RUN chmod +x /sandbox-run.sh && mkdir -p /output
 
 ENV CYPRESS_PROFILE=offline
-ENV PORT=3000
+ENV PORT=3001
 ENV HOSTNAME=0.0.0.0
 
 ENTRYPOINT []

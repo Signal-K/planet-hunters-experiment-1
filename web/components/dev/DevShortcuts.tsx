@@ -1,13 +1,14 @@
 'use client'
 
 import { useState } from 'react'
-import { DEV_GROUPS } from '@/lib/devPresets'
+import { DEV_GROUPS, resolvePreset } from '@/lib/devPresets'
 
 export default function DevShortcuts() {
   const [open, setOpen] = useState(false)
 
   function jump(key: string) {
-    const url = new URL(window.location.href)
+    const preset = resolvePreset(key)
+    const url = new URL(`/game/${preset?.screen ?? 'intro'}`, window.location.origin)
     url.searchParams.set('preset', key)
     window.location.href = url.toString()
   }

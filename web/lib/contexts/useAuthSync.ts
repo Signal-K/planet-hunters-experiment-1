@@ -268,6 +268,13 @@ export function useAuthSync({
     setAuthGateOpen(true)
   }, [hydrated, isPreview])
 
+  // If background guest/session restoration succeeds after the gate was
+  // opened, close it. This can happen on route bridges and fast local loads
+  // where the "brand-new user" check wins the race by a render.
+  useEffect(() => {
+    if (authUserId) setAuthGateOpen(false)
+  }, [authUserId])
+
   // Restore returning guest session
   useEffect(() => {
     if (isPreview) return

@@ -2,7 +2,7 @@ import { defineConfig } from 'cypress'
 
 export default defineConfig({
   e2e: {
-    baseUrl: 'http://localhost:3000',
+    baseUrl: 'http://localhost:3001',
     specPattern: ['cypress/e2e/pocketbase-auth.cy.ts', 'cypress/e2e/guest-auth.cy.ts'],
     supportFile: false,
     viewportWidth: 390,

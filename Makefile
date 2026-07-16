@@ -9,7 +9,7 @@ help:
 	@echo "Landnam — available targets"
 	@echo ""
 	@echo "  Dev"
-	@echo "    up             Start frontend + parent-owned PocketBase (:3000 / shared :8090 / landnam :8091)"
+	@echo "    up             Start frontend + parent-owned PocketBase (:3001 / shared :8090 / landnam :8091)"
 	@echo "                   Landnam-only — for a full Star Sailors session (Saily/Atlas too), see up-ecosystem"
 	@echo "    up-ecosystem   Start the full Star Sailors stack via the root ~/Navigation Makefile"
 	@echo "                   (shared, Landnam, Saily, Atlas backends + forge-service) — opt-in, does"
@@ -43,7 +43,7 @@ help:
 
 up: pb-up
 	$(FRONTEND_COMPOSE) up -d --remove-orphans web
-	@echo "Landnam:         http://localhost:3000/game"
+	@echo "Landnam:         http://localhost:3001/game"
 	@echo "Shared PB:       http://localhost:8090/_/"
 	@echo "Landnam PB:      http://localhost:8091/_/"
 
@@ -59,7 +59,7 @@ pb-stop:
 down:
 	$(FRONTEND_COMPOSE) down --remove-orphans
 	$(PARENT_COMPOSE) stop landnam-backend backend
-	@lsof -ti :3000 | xargs kill -9 2>/dev/null && echo "Killed process on :3000" || true
+	@lsof -ti :3001 | xargs kill -9 2>/dev/null && echo "Killed process on :3001" || true
 
 build:
 	$(PARENT_COMPOSE) build backend landnam-backend
@@ -95,7 +95,7 @@ e2e:
 
 e2e-open:
 	$(MAKE) up
-	cd web && npx cypress open --config-file cypress.config.ts --config baseUrl=http://127.0.0.1:3000
+	cd web && npx cypress open --config-file cypress.config.ts --config baseUrl=http://127.0.0.1:3001
 
 web-dev:
 	cd web && npm run dev

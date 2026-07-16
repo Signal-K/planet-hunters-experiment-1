@@ -7,15 +7,15 @@ export DISPLAY=:99
 
 echo "Starting Next.js standalone server..."
 cd /sandbox/.next/standalone
-PORT=3000 HOSTNAME=0.0.0.0 node server.js &
+PORT=3001 HOSTNAME=0.0.0.0 node server.js &
 SERVER_PID=$!
 cd /sandbox
 
-echo "Waiting for server on localhost:3000..."
+echo "Waiting for server on localhost:3001..."
 TRIES=0
 until node -e "
 var http = require('http');
-http.get('http://localhost:3000/', function(r) {
+http.get('http://localhost:3001/', function(r) {
   process.exit(r.statusCode < 500 ? 0 : 1);
 }).on('error', function() { process.exit(1); });
 " 2>/dev/null; do

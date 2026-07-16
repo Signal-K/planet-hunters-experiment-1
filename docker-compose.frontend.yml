@@ -18,12 +18,13 @@ services:
       NEXT_PUBLIC_SHARED_PB_URL: http://localhost:8090
       NEXT_PUBLIC_LANDNAM_PB_URL: http://localhost:8091
       NEXT_TELEMETRY_DISABLED: "1"
+      PORT: "3001"
       WATCHPACK_POLLING: "true"
       CHOKIDAR_USEPOLLING: "true"
     ports:
-      - "3000:3000"
+      - "3001:3001"
     healthcheck:
-      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:3000/api/backend-health"]
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:3001/api/backend-health"]
       interval: 5s
       timeout: 3s
       retries: 20
@@ -32,7 +33,7 @@ services:
     image: cypress/included:13.17.0
     working_dir: /e2e
     environment:
-      CYPRESS_baseUrl: http://web:3000
+      CYPRESS_baseUrl: http://web:3001
       CYPRESS_POCKETBASE_URL: http://pocketbase:8090
       CYPRESS_PROFILE: with-pb
       KNOWNS_CANONICAL_ROOT: /knowns

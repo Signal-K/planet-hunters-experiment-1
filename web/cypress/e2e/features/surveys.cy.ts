@@ -1,4 +1,4 @@
-import { SURVEY_DEFS } from '../../lib/survey-defs'
+import { SURVEY_DEFS } from '@/lib/survey-defs'
 
 const STORAGE_KEY = 'landnam-game-state-v1'
 const SURVEY_STORAGE_KEY = 'landnam-surveys-shown'
