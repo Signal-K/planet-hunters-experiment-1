@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from 'next/server'
 
 const FEEDBACK_SURVEY = {
   id: '019e7269-3773-0000-a6d1-d944a8724a09',
-  name: 'Landnám: Feedback',
+  name: '[Landnam / Support] Feedback Beacon',
   questions: [
     {
       id: '3c33b3c8-d0fd-48e2-9361-2f6f3835e842',

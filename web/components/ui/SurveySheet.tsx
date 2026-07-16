@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react'
 import { SURVEY_DEFS, submitSurveyResponse, trackSurveyShown, onSurveyDismissed, type Survey, type SurveyQuestion } from '@/lib/surveys'
 
 type Responses = Record<string, string | number>
+type SurveyTestWindow = Window & { __landnamTriggerSurvey?: (surveyKey: string) => void }
 
 function RatingQuestion({ question, value, onChange }: { question: SurveyQuestion; value: number | undefined; onChange: (v: number) => void }) {
   const scale = question.scale ?? 5
@@ -20,6 +21,7 @@ function RatingQuestion({ question, value, onChange }: { question: SurveyQuestio
           <button
             key={n}
             type="button"
+            data-testid={`survey-rating-${n}`}
             onClick={() => onChange(n)}
             style={{
               width: 48, height: 48, borderRadius: 12, border: 'none',
@@ -54,6 +56,7 @@ function MultipleChoiceQuestion({ question, value, onChange }: { question: Surve
           <button
             key={choice}
             type="button"
+            data-testid="survey-choice"
             onClick={() => onChange(choice)}
             style={{
               padding: '10px 14px', borderRadius: 10, border: 'none', textAlign: 'left',
@@ -79,6 +82,7 @@ function OpenQuestion({ question, value, onChange }: { question: SurveyQuestion;
         {question.question}
       </div>
       <textarea
+        data-testid="survey-open-response"
         value={value ?? ''}
         onChange={e => onChange(e.target.value)}
         rows={3}
@@ -104,6 +108,17 @@ export default function SurveySheet({ blockWhile }: { blockWhile?: boolean }) {
   const blockWhileRef = React.useRef(blockWhile)
   blockWhileRef.current = blockWhile
 
+  const showSurvey = React.useCallback((key: string) => {
+    const def = SURVEY_DEFS[key]
+    if (!def) return
+    setSurveyKey(key)
+    setSurvey(def)
+    setQIndex(0)
+    setResponses({})
+    setDone(false)
+    trackSurveyShown(key)
+  }, [])
+
   // Receive survey events; defer if a popup/coach/territory overlay is blocking
   useEffect(() => {
     const handler = (e: Event) => {
@@ -114,16 +129,20 @@ export default function SurveySheet({ blockWhile }: { blockWhile?: boolean }) {
         pendingKeyRef.current = key
         return
       }
-      setSurveyKey(key)
-      setSurvey(def)
-      setQIndex(0)
-      setResponses({})
-      setDone(false)
-      trackSurveyShown(key)
+      showSurvey(key)
     }
     window.addEventListener('landnam:survey', handler)
     return () => window.removeEventListener('landnam:survey', handler)
-  }, [])
+  }, [showSurvey])
+
+  useEffect(() => {
+    if (process.env.NODE_ENV === 'production') return
+    const testWindow = window as SurveyTestWindow
+    testWindow.__landnamTriggerSurvey = showSurvey
+    return () => {
+      delete testWindow.__landnamTriggerSurvey
+    }
+  }, [showSurvey])
 
   // When all overlays clear, show any deferred survey
   useEffect(() => {
@@ -133,14 +152,9 @@ export default function SurveySheet({ blockWhile }: { blockWhile?: boolean }) {
     const def = SURVEY_DEFS[key]
     if (!def) return
     setTimeout(() => {
-      setSurveyKey(key)
-      setSurvey(def)
-      setQIndex(0)
-      setResponses({})
-      setDone(false)
-      trackSurveyShown(key)
+      showSurvey(key)
     }, 800)
-  }, [blockWhile, surveyKey])
+  }, [blockWhile, surveyKey, showSurvey])
 
   if (!survey || !surveyKey) return null
 
@@ -175,7 +189,7 @@ export default function SurveySheet({ blockWhile }: { blockWhile?: boolean }) {
   }
 
   return (
-    <div style={{ position: 'absolute', inset: 0, zIndex: 94, display: 'flex', alignItems: 'flex-end', pointerEvents: 'none' }}>
+    <div data-testid="survey-sheet" style={{ position: 'absolute', inset: 0, zIndex: 94, display: 'flex', alignItems: 'flex-end', pointerEvents: 'none' }}>
       <div style={{ position: 'absolute', inset: 0, background: 'rgba(3,6,12,0.55)', pointerEvents: 'auto' }} onClick={handleSkip} />
       <div style={{
         position: 'relative', width: '100%', pointerEvents: 'auto',
@@ -205,17 +219,24 @@ export default function SurveySheet({ blockWhile }: { blockWhile?: boolean }) {
         ) : question ? (
           <>
             {question.type === 'rating' && (
-              <RatingQuestion question={question} value={currentValue as number | undefined} onChange={handleSetResponse} />
+              <div data-testid="survey-question" data-question-id={question.id} data-question-type={question.type}>
+                <RatingQuestion question={question} value={currentValue as number | undefined} onChange={handleSetResponse} />
+              </div>
             )}
             {question.type === 'multiple_choice' && (
-              <MultipleChoiceQuestion question={question} value={currentValue as string | undefined} onChange={handleSetResponse} />
+              <div data-testid="survey-question" data-question-id={question.id} data-question-type={question.type}>
+                <MultipleChoiceQuestion question={question} value={currentValue as string | undefined} onChange={handleSetResponse} />
+              </div>
             )}
             {question.type === 'open' && (
-              <OpenQuestion question={question} value={currentValue as string | undefined} onChange={handleSetResponse} />
+              <div data-testid="survey-question" data-question-id={question.id} data-question-type={question.type}>
+                <OpenQuestion question={question} value={currentValue as string | undefined} onChange={handleSetResponse} />
+              </div>
             )}
 
             <button
               type="button"
+              data-testid="survey-next"
               onClick={handleNext}
               disabled={!canAdvance}
               style={{

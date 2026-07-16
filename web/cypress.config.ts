@@ -52,6 +52,13 @@ const profiles: Record<string, Cypress.EndToEndConfigOptions> = {
     viewportWidth: 390,
     viewportHeight: 844,
   },
+  surveys: {
+    baseUrl: 'http://localhost:3000',
+    specPattern: ['cypress/e2e/surveys.cy.ts'],
+    viewportWidth: 390,
+    viewportHeight: 844,
+    env: { allowSurveys: true },
+  },
   'with-pb': {
     baseUrl: process.env.CYPRESS_baseUrl || 'http://localhost:3000',
     specPattern: ['cypress/e2e/**/*.cy.{js,jsx,ts,tsx}'],
