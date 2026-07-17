@@ -50,6 +50,9 @@ import {
   isReviewableTessSubject,
   tessCandidateToExoplanetTarget,
   toTessCandidate,
+  archetypeForDiscovery,
+  spectralClassForTeff,
+  SUN_TEFF_K,
   SELF_DIRECTED_MINING_MISSION_ID,
 } from './data'
 
@@ -306,6 +309,32 @@ describe('compatibleTargetsFor', () => {
     expect(compatible.some(t => t.type === 'planet')).toBe(true)
   })
 
+  it('makes a discovered exoplanet target reachable by an ordinary generated mission (not just its one-off survey flight)', () => {
+    // A hot-host, close-in discovery archetypes to 'M' — mirrors what
+    // generateMissionsFromRules templates like 'metal-prospect' actually
+    // request (iridium/rhodium/gold), proving discovered targets don't need
+    // a dedicated generator path: they're picked up the same way any other
+    // target is, via compatibleTargetsFor's live mineral/orbit match.
+    const discovered = tessCandidateToExoplanetTarget(
+      toTessCandidate({
+        id: 'discovered-1', tic_id: '999999999', toi_id: '999.01',
+        sectors: 'Sector 9', subject_type: 'transit',
+        period_days: 2.4, depth_pct: 0.12, st_teff: 9500,
+      }),
+      2, // measured period days -> close orbit
+    )
+    expect(discovered.type).toBe('exoplanet')
+    expect(discovered.archetype).toBe('M')
+
+    const metalProspect: import('./data/types').Mission = {
+      id: 'test-metal-prospect', title: 'Test', brief: '', contractor: 'kepler-materials',
+      tag: 'PROSPECT', difficulty: 'L2', locked: false, sequence: 5,
+      requires: { minerals: { iridium: 2 }, cargo_min: 2, drill_tier: 2, max_orbit: 5 },
+      payout: { francs: 0, affinity: 0 },
+    }
+    const compatible = compatibleTargetsFor(metalProspect, [...TARGETS, discovered])
+    expect(compatible.some(t => t.id === discovered.id)).toBe(true)
+  })
 })
 
 describe('rateMission', () => {
@@ -687,12 +716,58 @@ describe('TESS live subject filtering', () => {
     expect(dailyTessCandidates(candidates, '2026-07-02', 5)).toHaveLength(1)
   })
 
-  it('converts planet classifications into star-map exoplanet targets', () => {
+  it('converts planet classifications into star-map exoplanet targets with a real archetype and minerals', () => {
     const target = tessCandidateToExoplanetTarget(toTessCandidate(baseSubject))
 
     expect(target.id).toBe('exo-pb-subject-1')
     expect(target.type).toBe('exoplanet')
     expect(target.name).toBe('TOI 1234.01')
     expect(target.brief).toContain('star map')
+    expect(target.archetype).toBeDefined()
+    expect(target.minerals.length).toBeGreaterThan(0)
+    for (const mineral of target.minerals) {
+      expect(MINERAL_META[mineral]).toBeDefined()
+    }
+  })
+
+  it('reads st_teff from the subject record and falls back to SUN_TEFF_K when absent', () => {
+    expect(toTessCandidate({ ...baseSubject, st_teff: 9500 }).starTeffK).toBe(9500)
+    expect(toTessCandidate(baseSubject).starTeffK).toBeUndefined()
+    expect(tessCandidateToExoplanetTarget(toTessCandidate(baseSubject)).archetype)
+      .toBe(archetypeForDiscovery(toTessCandidate(baseSubject).periodDays, SUN_TEFF_K))
+  })
+
+  it('prefers the player-measured period over the candidate\'s catalog period', () => {
+    const candidate = toTessCandidate({ ...baseSubject, period_days: 2.4, st_teff: 9500 }) // hot host
+    const shortMeasured = tessCandidateToExoplanetTarget(candidate, 3) // still close-in -> M
+    const longMeasured = tessCandidateToExoplanetTarget(candidate, 300) // now long-period -> gas-giant
+    expect(shortMeasured.archetype).toBe('M')
+    expect(longMeasured.archetype).toBe('gas-giant')
+  })
+})
+
+describe('archetypeForDiscovery', () => {
+  it('maps close-in worlds to M around hot hosts and C around cool hosts', () => {
+    expect(archetypeForDiscovery(2, 9500)).toBe('M')
+    expect(archetypeForDiscovery(2, 4500)).toBe('C')
+  })
+
+  it('maps long-period worlds to gas-giant around hot hosts and icy around cool hosts', () => {
+    expect(archetypeForDiscovery(400, 9500)).toBe('gas-giant')
+    expect(archetypeForDiscovery(400, 4500)).toBe('icy')
+  })
+
+  it('maps mid-period worlds to S around hot hosts and icy around cool hosts', () => {
+    expect(archetypeForDiscovery(50, 9500)).toBe('S')
+    expect(archetypeForDiscovery(50, 4500)).toBe('icy')
+  })
+})
+
+describe('spectralClassForTeff', () => {
+  it('classifies real reference temperatures onto standard spectral boundaries', () => {
+    expect(spectralClassForTeff(3000)).toBe('M') // red dwarf
+    expect(spectralClassForTeff(SUN_TEFF_K)).toBe('G') // Sun
+    expect(spectralClassForTeff(9500)).toBe('A') // Sirius-class
+    expect(spectralClassForTeff(35000)).toBe('O') // blue giant
   })
 })

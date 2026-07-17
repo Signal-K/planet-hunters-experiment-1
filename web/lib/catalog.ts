@@ -151,8 +151,11 @@ export function toStructure(r: any): StructureBlueprint {
 }
 
 export async function fetchCatalog(): Promise<Catalog> {
-  // TESS/KOI exoplanet targets are a separate science feature — never Landnam mining targets.
-  // Filter them out defensively here so stale PB rows can't bleed into the game catalog.
+  // The `locations` collection is Landnam's authored solar-system catalog only.
+  // Discovered exoplanet targets (now real, minable targets — see
+  // tessCandidateToExoplanetTarget) are generated client-side from confirmed
+  // TESS classifications, not seeded here, so filter out any stray tess-/koi-/
+  // hd- prefixed rows defensively in case a stale PB row bleeds in.
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const isSolarTarget = (r: any) =>
     !String(r.slug ?? '').startsWith('tess-') && !String(r.slug ?? '').startsWith('koi-') && !String(r.slug ?? '').startsWith('hd-')

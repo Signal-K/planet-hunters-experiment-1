@@ -107,8 +107,10 @@ export interface Target {
   difficulty: string
   brief: string
   minerals: string[]
-  // Composition archetype driving `minerals` (see target-archetypes.ts) —
-  // absent for exoplanet targets, which aren't part of the mining economy.
+  // Composition archetype driving `minerals` (see target-archetypes.ts).
+  // Exoplanet targets get one too, assigned from the player-measured
+  // orbital period + host star type at discovery time — see
+  // archetypeForDiscovery() in tess-candidates.ts.
   archetype?: import('./target-archetypes').TargetArchetype
   recommended?: boolean
 }

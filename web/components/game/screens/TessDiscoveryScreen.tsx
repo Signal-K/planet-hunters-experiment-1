@@ -14,7 +14,7 @@ import ObservatoryCoach, { useObservatoryCoach } from '@/components/game/Observa
 import PixiGalaxyStarMap from '@/components/game/PixiGalaxyStarMap'
 import SolSystemPreview from '@/components/game/SolSystemPreview'
 import NebulaBackdrop from '@/components/game/NebulaBackdrop'
-import { dailyTessCandidates, deriveObservatoryStats, sectorWindows, tessCandidateToExoplanetTarget, tessLightcurvePoints, type Target, type TessCandidate, type TessClassification, type TessVerdict, type TransitRange } from '@/lib/data'
+import { dailyTessCandidates, deriveObservatoryStats, periodFromRanges, sectorWindows, tessCandidateToExoplanetTarget, tessLightcurvePoints, type Target, type TessCandidate, type TessClassification, type TessVerdict, type TransitRange } from '@/lib/data'
 import type { Player } from '@/lib/game-types'
 import { UI_ZONES } from '@/lib/ui-zones'
 import { fetchReviewableTessCandidates } from '@/lib/tess-subjects'
@@ -179,7 +179,8 @@ export default function TessDiscoveryScreen({ player, onBack, onBuildStation, on
 
   const castVerdict = (id: TessVerdict) => {
     if (classification) return
-    onSubmit(candidate.id, id, ranges, id === 'planet' ? tessCandidateToExoplanetTarget(candidate) : undefined)
+    const measuredPeriod = periodFromRanges(ranges)
+    onSubmit(candidate.id, id, ranges, id === 'planet' ? tessCandidateToExoplanetTarget(candidate, measuredPeriod) : undefined)
   }
 
   const activeRanges = classification?.ranges ?? ranges
