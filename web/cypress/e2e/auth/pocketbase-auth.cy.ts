@@ -1,14 +1,17 @@
 describe('PocketBase Guest Auth Pattern', () => {
-  const pbUrl = Cypress.env('POCKETBASE_URL') || 'http://localhost:8090'
+  const pbUrl = Cypress.env('SHARED_PB_URL') || 'http://localhost:8090'
   // game_states lives on the Landnam game backend, not the shared auth backend
-  const landnamPbUrl = Cypress.env('LANDNAM_PB_URL') || 'http://localhost:8091'
+  const landnamPbUrl = Cypress.env('LANDNAM_PB_URL') || Cypress.env('POCKETBASE_URL') || 'http://localhost:8091'
   const STORAGE_KEY = 'landnam-game-state-v1'
   const PB_AUTH_KEY = 'pocketbase_auth'
+  const LANDNAM_AUTH_KEY = 'pocketbase_auth_landnam'
 
   let guestId: string
   let guestPassword: string
   let token: string
+  let landnamToken: string
   let record: Record<string, unknown>
+  let landnamRecord: Record<string, unknown>
 
   before(() => {
     guestId = `guest_${Math.random().toString(36).substring(7)}`
@@ -26,11 +29,33 @@ describe('PocketBase Guest Auth Pattern', () => {
       }).then(({ body: auth }) => {
         token = auth.token
         record = auth.record
+        cy.request({
+          method: 'POST',
+          url: `${pbUrl}/api/collections/users/auth-refresh`,
+          headers: { Authorization: `Bearer ${token}` },
+        }).its('body.record.id').should('eq', record.id)
+        cy.request({
+          method: 'POST',
+          url: `${landnamPbUrl}/api/landnam-auth/exchange`,
+          headers: { Authorization: `Bearer ${token}` },
+        }).then(({ body: landnamAuth }) => {
+          landnamToken = landnamAuth.token
+          landnamRecord = landnamAuth.record
+          expect(landnamRecord.lastExchangeAt).to.be.a('string').and.not.be.empty
+        })
       })
     })
   })
 
   after(() => {
+    if (record?.id && landnamToken) {
+      cy.request({
+        method: 'DELETE',
+        url: `${landnamPbUrl}/api/collections/game_states/records/${record.id}`,
+        headers: { Authorization: `Bearer ${landnamToken}` },
+        failOnStatusCode: false,
+      })
+    }
     if (record?.id) {
       cy.request({
         method: 'DELETE',
@@ -45,12 +70,22 @@ describe('PocketBase Guest Auth Pattern', () => {
     cy.clearAllSessionStorage()
     cy.clearAllLocalStorage()
     // Clean any game_states left over from a failed previous run
-    if (token && record?.id) {
+    if (landnamToken && record?.id) {
       cy.request({
-        method: 'DELETE',
+        method: 'GET',
         url: `${landnamPbUrl}/api/collections/game_states/records?filter=${encodeURIComponent(`user = "${record.id}"`)}`,
-        headers: { Authorization: `Bearer ${token}` },
+        headers: { Authorization: `Bearer ${landnamToken}` },
         failOnStatusCode: false,
+      }).then(({ body }) => {
+        const items = Array.isArray(body?.items) ? body.items : []
+        items.forEach((item: { id: string }) => {
+          cy.request({
+            method: 'DELETE',
+            url: `${landnamPbUrl}/api/collections/game_states/records/${item.id}`,
+            headers: { Authorization: `Bearer ${landnamToken}` },
+            failOnStatusCode: false,
+          })
+        })
       })
     }
   })
@@ -61,12 +96,12 @@ describe('PocketBase Guest Auth Pattern', () => {
       player: {
         francs: 9_500_000_000,
         activeMission: null,
-        missionCount: 1,
+        missionCount: 2,
         pendingLaunch: false,
         placed: ['launchpad'],
         placementPlots: { launchpad: 0 },
         controlBuilt: false,
-        missionsDone: 0,
+        missionsDone: 1,
         freeOperations: false,
         contractorMissions: {},
         contractorCooldowns: {},
@@ -85,7 +120,7 @@ describe('PocketBase Guest Auth Pattern', () => {
       targetId: null,
       rocket: { chassis: 'hull-mk1', propulsion: 'ion-a1', drill: 'hand-drill' },
       lastCargo: null,
-      tutorial: true,
+      tutorial: false,
       doneSteps: {},
       popup: null,
       menuOpen: false,
@@ -94,10 +129,11 @@ describe('PocketBase Guest Auth Pattern', () => {
 
   function injectAuth(win: Window) {
     win.localStorage.setItem(PB_AUTH_KEY, JSON.stringify({ token, record }))
+    win.localStorage.setItem(LANDNAM_AUTH_KEY, JSON.stringify({ token: landnamToken, record: landnamRecord }))
   }
 
   it('should persist game state to PB and restore it after localStorage is cleared', () => {
-    cy.visit('/game', {
+    cy.visit('/game/hub', {
       onBeforeLoad(win) {
         win.localStorage.clear()
         injectAuth(win)
@@ -106,12 +142,17 @@ describe('PocketBase Guest Auth Pattern', () => {
     })
 
     cy.contains('BASE', { timeout: 15000 }).should('be.visible')
+    cy.window().then(win => {
+      expect(win.localStorage.getItem(PB_AUTH_KEY), PB_AUTH_KEY).to.contain(record.id as string)
+      expect(win.localStorage.getItem(LANDNAM_AUTH_KEY), LANDNAM_AUTH_KEY).to.contain(record.id as string)
+      expect(win.localStorage.getItem(STORAGE_KEY), STORAGE_KEY).to.contain('Grade II')
+    })
     cy.wait(3000)
 
     cy.request({
       method: 'GET',
       url: `${landnamPbUrl}/api/collections/game_states/records?filter=${encodeURIComponent(`user = "${record.id}"`)}`,
-      headers: { Authorization: `Bearer ${token}` },
+      headers: { Authorization: `Bearer ${landnamToken}` },
     }).then(({ body }) => {
       expect(body.items).to.have.length(1)
       const savedState = body.items[0].state as Record<string, unknown>
@@ -123,7 +164,7 @@ describe('PocketBase Guest Auth Pattern', () => {
 
     cy.clearAllLocalStorage()
 
-    cy.visit('/game', {
+    cy.visit('/game/hub', {
       onBeforeLoad(win) {
         win.localStorage.clear()
         injectAuth(win)

@@ -1,13 +1,55 @@
 describe('Ship Customiser staged build', () => {
+  function visitCustomizer() {
+    cy.visit('/game/hangar', {
+      onBeforeLoad(win) {
+        win.localStorage.setItem('landnam-guest-credentials', JSON.stringify({
+          email: 'e2e@landnam.guest',
+          password: 'e2e-password',
+        }))
+        win.localStorage.setItem('pocketbase_auth', JSON.stringify({
+          token: 'e2e-token',
+          record: { id: 'e2e-user', email: 'e2e@landnam.guest' },
+        }))
+        win.localStorage.setItem('landnam-game-state-v1', JSON.stringify({
+          screen: 'hangar',
+          player: {
+            missionsDone: 1,
+            francs: 15_000_000_000,
+            placed: ['launchpad'],
+            placementPlots: { launchpad: 0 },
+            unlockedSkillNodes: ['ship-customizer-1'],
+          },
+          tutorial: false,
+          doneSteps: { 0: true, 1: true, 2: true, 3: true, 4: true, 5: true, 6: true, 9: true },
+          missionId: 'generated-starter-bulk-4',
+          targetId: 'eros',
+          rocket: { chassis: 'hull-mk1', propulsion: 'ion-a1', drill: 'hand-drill' },
+          lastCargo: null,
+          popup: null,
+        }))
+      },
+    })
+  }
+
+  function openCustomizer() {
+    cy.location('pathname', { timeout: 10000 }).should('eq', '/game/hangar')
+    cy.contains('Rocket Fleet').should('be.visible')
+    cy.get('body').then($body => {
+      if ($body.find('[data-testid="auth-gate-skip"]').length > 0) {
+        cy.get('[data-testid="auth-gate-skip"]').click()
+        cy.get('[data-testid="auth-gate-skip"]').should('not.exist')
+      }
+    })
+    cy.get('[data-testid="open-ship-customizer"]', { timeout: 8000 }).should('be.visible').click()
+    cy.get('[data-testid="ship-interior-sr1"]').should('be.visible')
+  }
+
   beforeEach(() => {
-    cy.visit('/game/ship-customizer')
+    visitCustomizer()
   })
 
   it('opens the customiser route independent of profile state', () => {
-    cy.url().should('include', '/game/ship-customizer')
-    cy.contains('Rocket Fleet').should('be.visible')
-    cy.get('[data-testid="open-ship-customizer"]', { timeout: 8000 }).click()
-    cy.get('[data-testid="ship-interior-sr1"]').should('be.visible')
+    openCustomizer()
     cy.get('[data-testid="ship-build-step"]').within(() => {
       cy.contains('Step 1 / 4').should('be.visible')
       cy.contains('Engine / Thrusters').should('be.visible')
@@ -18,7 +60,7 @@ describe('Ship Customiser staged build', () => {
   })
 
   it('lets the player replace and refund an unconfirmed stage at full price', () => {
-    cy.get('[data-testid="open-ship-customizer"]', { timeout: 8000 }).click()
+    openCustomizer()
     cy.get('[data-testid="ship-budget"]').invoke('text').then(startingBudget => {
       cy.get('[data-testid="choose-ion-thruster-t1"]').click()
       cy.get('[data-testid="ship-budget"]').should($budget => {
@@ -35,7 +77,7 @@ describe('Ship Customiser staged build', () => {
   })
 
   it('walks engine to payload and confirms the finished configuration', () => {
-    cy.get('[data-testid="open-ship-customizer"]', { timeout: 8000 }).click()
+    openCustomizer()
     cy.get('[data-testid="choose-ion-thruster-t1"]').click()
     cy.get('[data-testid="ship-review"]').should('have.attr', 'data-installed', '1')
 

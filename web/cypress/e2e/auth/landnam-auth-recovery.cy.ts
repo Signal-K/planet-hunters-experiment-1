@@ -10,7 +10,7 @@
 // a page reload.
 
 describe('Landnam auth exchange self-healing', () => {
-  const pbUrl = Cypress.env('POCKETBASE_URL') || 'http://localhost:8090'
+  const pbUrl = Cypress.env('SHARED_PB_URL') || 'http://localhost:8090'
   const PB_AUTH_KEY = 'pocketbase_auth'
 
   let guestId: string

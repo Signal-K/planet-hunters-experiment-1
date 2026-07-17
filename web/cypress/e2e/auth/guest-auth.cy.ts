@@ -1,5 +1,5 @@
 describe('Guest account auto-creation', () => {
-  const pbUrl = Cypress.env('POCKETBASE_URL') || 'http://localhost:8090'
+  const pbUrl = Cypress.env('SHARED_PB_URL') || 'http://localhost:8090'
   const PB_AUTH_KEY = 'pocketbase_auth'
   const GUEST_CREDENTIALS_KEY = 'landnam-guest-credentials'
 

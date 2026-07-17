@@ -15,6 +15,9 @@ export const pbLandnam = new PocketBase(
   new LocalAuthStore('pocketbase_auth_landnam')
 )
 
+let exchangeInFlight: Promise<{ token: string; record: RecordModel }> | null = null
+let exchangeInFlightFor: string | null = null
+
 /**
  * Exchanges a verified shared-backend session token for a real, native
  * PocketBase auth token scoped to Landnam's own "users" auth collection.
@@ -34,13 +37,20 @@ export async function exchangeLandnamAuth(sharedToken: string): Promise<{
   token: string
   record: RecordModel
 }> {
+  if (exchangeInFlight && exchangeInFlightFor === sharedToken) return exchangeInFlight
   const base = (process.env.NEXT_PUBLIC_LANDNAM_PB_URL || 'http://localhost:8093').replace(/\/$/, '')
-  const res = await fetch(`${base}/api/landnam-auth/exchange`, {
+  exchangeInFlightFor = sharedToken
+  exchangeInFlight = fetch(`${base}/api/landnam-auth/exchange`, {
     method: 'POST',
     headers: { Authorization: `Bearer ${sharedToken}` },
+  }).then(res => {
+    if (!res.ok) {
+      throw new Error(`landnam-auth exchange failed: ${res.status}`)
+    }
+    return res.json()
+  }).finally(() => {
+    exchangeInFlight = null
+    exchangeInFlightFor = null
   })
-  if (!res.ok) {
-    throw new Error(`landnam-auth exchange failed: ${res.status}`)
-  }
-  return res.json()
+  return exchangeInFlight
 }

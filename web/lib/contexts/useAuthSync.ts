@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
+import type { RecordModel } from 'pocketbase'
 import { pbShared } from '@/lib/pb'
 import { pbLandnam, exchangeLandnamAuth } from '@/lib/pb-landnam'
 import { ensureGuestAuth, hasStoredCredentials, isGuestAccount, upgradeGuestAccount } from '@/lib/guestAuth'
@@ -37,6 +38,18 @@ function authErrorMessage(err: unknown, fallback: string): string {
   if (err instanceof Error && err.message && !/^failed$/i.test(err.message)) return err.message
   const status = responseStatus(err)
   return status ? `${fallback} (${status})` : fallback
+}
+
+function storedSharedAuth(): { token?: string; record: RecordModel | null } | null {
+  if (typeof window === 'undefined') return null
+  try {
+    const raw = localStorage.getItem('pocketbase_auth')
+    if (!raw) return null
+    const parsed = JSON.parse(raw) as { record?: RecordModel, model?: RecordModel }
+    return { token: (parsed as { token?: string }).token, record: parsed.record ?? parsed.model ?? null }
+  } catch {
+    return null
+  }
 }
 
 interface AuthSyncOpts {
@@ -90,6 +103,21 @@ export function useAuthSync({
   const lastPersistedMissionsDone = useRef<number | null>(null)
   const lastPersistedTutorial = useRef<boolean | null>(null)
 
+  useEffect(() => {
+    if (!hydrated || isPreview) return
+    const stored = storedSharedAuth()
+    if (!pbShared.authStore.record && stored?.token && stored.record) {
+      pbShared.authStore.save(stored.token, stored.record)
+    }
+    const record = pbShared.authStore.record ?? stored?.record
+    if (!record?.id) {
+      pbLandnam.authStore.clear()
+    }
+    if (record?.id && record.id !== authUserId) {
+      setAuthUserId(record.id)
+    }
+  }, [authUserId, hydrated, isPreview])
+
   const saveRemoteState = useCallback(async (userId: string, nextState: GameState) => {
     const payload = { user: userId, state: nextState, missions_done: nextState.player.missionsDone }
     if (backendRecordId.current) {
@@ -129,6 +157,7 @@ export function useAuthSync({
     setBackendReady(false)
     setLandnamAuthAttempted(false)
     setLandnamSynced(false)
+    if (!record) pbLandnam.authStore.clear()
     setAuthUserId(record?.id ?? null)
     if (record?.id) identifyUser(record.id, record.email ? { email: record.email } : undefined)
   }), [])
@@ -342,9 +371,15 @@ export function useAuthSync({
     function handleLoadFailure(err: unknown) {
       if (!active) return
       if (typeof err === 'object' && err && 'status' in err && (err as { status: number }).status === 404) {
-        // Confirmed no record — safe to create one on next save
+        // Confirmed no record. If this device already has a local save, create
+        // immediately instead of waiting for the debounced persist effect; the
+        // first-sync path is the one most likely to be interrupted by route
+        // redirects or test remounts.
         backendLoadedFor.current = authUserId!
         setBackendReady(true)
+        if (localStorage.getItem(storageKey)) {
+          saveRemoteState(authUserId!, stateRef.current).catch(() => {})
+        }
         return
       }
       // Network / availability error (Fly cold-start, timeout, etc.)
@@ -394,7 +429,7 @@ export function useAuthSync({
       })
 
     return () => { active = false }
-  }, [authUserId, hydrated, isPreview, landnamAuthAttempted, setState, normalizeAndRepair, storageKey])
+  }, [authUserId, hydrated, isPreview, landnamAuthAttempted, setState, normalizeAndRepair, saveRemoteState, stateRef, storageKey])
 
   // Persist state to backend. Debounced 400ms for ordinary state churn, but
   // flushed immediately (0ms) whenever missionsDone or tutorial changes — an
@@ -514,6 +549,7 @@ export function useAuthSync({
     }
 
     pbShared.authStore.clear()
+    pbLandnam.authStore.clear()
     localStorage.removeItem(storageKey)
     setState(DEFAULT_STATE)
     setAwaitingRemoteState(false)

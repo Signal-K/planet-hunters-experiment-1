@@ -30,10 +30,13 @@ export const SHIP_ROOM_ASSETS: Record<ShipRoomKind, string> = {
   engine: '/game/assets/rooms/engine_room_t1.png',
   booster: '/game/assets/rooms/mining_room_t1.png',
   payload: '/game/assets/rooms/cargo_bay_t1.png',
-  'fuel-stage': '/game/assets/rooms/fuel_stage_t1.png',
-  fairing: '/game/assets/rooms/fairing_t1.png',
-  'docking-port': '/game/assets/rooms/docking_port_t1.png',
-  'heat-shield': '/game/assets/rooms/heat_shield_t1.png',
+  // Dedicated art for these later room kinds is not in the current asset pack.
+  // Reuse the closest existing room panels so confirmed builds never request
+  // missing images while keeping the slot kinds distinct in game state.
+  'fuel-stage': '/game/assets/rooms/engine_room_t1.png',
+  fairing: '/game/assets/rooms/cockpit_t1.png',
+  'docking-port': '/game/assets/rooms/cargo_bay_t1.png',
+  'heat-shield': '/game/assets/rooms/mining_room_t1.png',
 }
 
 export const SHIP_INTERIOR_LAYOUTS: Record<string, ShipInteriorLayout> = {

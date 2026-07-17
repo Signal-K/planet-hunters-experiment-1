@@ -2,7 +2,7 @@ services:
   shared-pb:
     image: ghcr.io/muchobien/pocketbase:0.39.0
     ports:
-      - "8090:8090"
+      - "18090:8090"
     healthcheck:
       test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8090/api/health"]
       interval: 5s
@@ -14,8 +14,10 @@ services:
       context: ./pocketbase
       args:
         POCKETBASE_VERSION: "0.39.0"
+    environment:
+      SHARED_PB_URL: http://shared-pb:8090
     ports:
-      - "8091:8090"
+      - "18091:8090"
     volumes:
       - pocketbase-e2e-data:/pb/pb_data
     depends_on:
@@ -41,7 +43,7 @@ services:
       NEXT_TELEMETRY_DISABLED: "1"
       PORT: "3001"
     ports:
-      - "3001:3001"
+      - "13001:3001"
     depends_on:
       landnam-pb:
         condition: service_healthy
@@ -51,6 +53,8 @@ services:
     working_dir: /e2e
     environment:
       CYPRESS_baseUrl: http://next-app:3001
+      CYPRESS_SHARED_PB_URL: http://shared-pb:8090
+      CYPRESS_LANDNAM_PB_URL: http://landnam-pb:8090
       CYPRESS_POCKETBASE_URL: http://landnam-pb:8090
       CYPRESS_PROFILE: with-pb
     volumes:

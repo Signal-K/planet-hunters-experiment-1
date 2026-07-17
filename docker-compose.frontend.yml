@@ -34,7 +34,9 @@ services:
     working_dir: /e2e
     environment:
       CYPRESS_baseUrl: http://web:3001
-      CYPRESS_POCKETBASE_URL: http://pocketbase:8090
+      CYPRESS_SHARED_PB_URL: http://host.docker.internal:8090
+      CYPRESS_LANDNAM_PB_URL: http://host.docker.internal:8091
+      CYPRESS_POCKETBASE_URL: http://host.docker.internal:8091
       CYPRESS_PROFILE: with-pb
       KNOWNS_CANONICAL_ROOT: /knowns
       KNOWNS_OUTBOX: /knowns-outbox

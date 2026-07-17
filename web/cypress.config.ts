@@ -38,6 +38,7 @@ const profiles: Record<string, Cypress.EndToEndConfigOptions> = {
     specPattern: ['cypress/e2e/auth/**/*.cy.{js,jsx,ts,tsx}'],
     viewportWidth: 390,
     viewportHeight: 844,
+    env: { livePocketBase: true },
   },
   full: {
     baseUrl: 'http://localhost:3001',
@@ -85,6 +86,7 @@ const profiles: Record<string, Cypress.EndToEndConfigOptions> = {
   'with-pb': {
     baseUrl: process.env.CYPRESS_baseUrl || 'http://localhost:3001',
     specPattern: ['cypress/e2e/**/*.cy.{js,jsx,ts,tsx}'],
+    env: { livePocketBase: true },
   },
   // Visual QA profile: headed Chrome, screenshots at every step, video always on.
   // Run with: CYPRESS_PROFILE=visual npx cypress run --browser chrome --headed
