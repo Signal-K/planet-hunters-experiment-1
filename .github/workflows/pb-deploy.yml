@@ -1,10 +1,14 @@
 name: PocketBase Deploy
 
+# Deploys straight to the one real Fly app (signal-k-landnam) for every branch,
+# not just main — there is no separate staging Fly app (budget reasons). Note
+# PocketBase runs with Automigrate: true (pocketbase/main.go), so any
+# pb_migrations/*.js on the pushed branch runs against the live prod database
+# the moment this deploys. The validate job exists to keep an unbuildable or
+# test-failing branch from ever reaching that step.
+
 on:
   push:
-    branches:
-      - main
-      - "sprint/**"
     paths:
       - "pocketbase/**"
       - ".github/workflows/pb-deploy.yml"
@@ -14,9 +18,28 @@ permissions:
   contents: read
 
 jobs:
+  validate:
+    name: Build, vet & test
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: pocketbase
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: pocketbase/go.mod
+
+      - run: go build ./...
+      - run: go vet ./...
+      - run: go test ./...
+
   deploy:
     name: Deploy to Fly.io
     runs-on: ubuntu-latest
+    needs: validate
 
     steps:
       - uses: actions/checkout@v4
