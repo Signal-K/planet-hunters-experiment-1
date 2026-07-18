@@ -7,6 +7,7 @@ import { M1_STEPS, M2_STEPS, M3_STEPS } from '@/lib/data'
 import type { Screen } from '@/lib/game-types'
 import { ScreenContent } from '@/components/game/GameScreenRouter'
 import TutorialCoach from '@/components/game/TutorialCoach'
+import MissionTicker from '@/components/game/MissionTicker'
 import SaveProgressPrompt from '@/components/game/SaveProgressPrompt'
 import UnlockPopup from '@/components/game/UnlockPopup'
 import RadialNav from '@/components/layout/RadialNav'
@@ -180,6 +181,9 @@ function GameCanvas() {
         }} />
 
         <ToastLayer toasts={game.toasts} onDismiss={game.dismissToast} />
+        {!coach && !game.popup && !game.upgradePromptOpen && !game.authGateOpen && (
+          <MissionTicker player={game.player} screen={game.screen} onResume={game.go} />
+        )}
         {showFeedback && <FeedbackButton />}
         <SurveySheet blockWhile={surveyBlocked} />
         {showNav && <div className="mobile-radial-nav"><RadialNav current={currentNav} onNav={goFromNav} /></div>}

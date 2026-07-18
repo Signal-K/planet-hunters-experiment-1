@@ -7,15 +7,8 @@ import TopBar from '@/components/ui/TopBar'
 import { PrimaryBtn } from '@/components/ui/Button'
 import MiningCanvas from './MiningCanvas'
 
-const ORE_SHAPES: Record<string, 'circle' | 'diamond' | 'rect' | 'triangle'> = {
-  platinum: 'diamond', palladium: 'circle', iridium: 'triangle', rhodium: 'rect',
-  iron: 'circle', silicon: 'diamond', ice: 'circle',
-  carbon: 'rect', nickel: 'diamond', cobalt: 'triangle',
-  gold: 'circle', rare: 'diamond',
-}
-
-function OreShapeIcon({ id, color, size = 14 }: { id: string; color: string; size?: number }) {
-  const shape = ORE_SHAPES[id] ?? 'circle'
+function OreShapeIcon({ id, color, size = 14, minerals }: { id: string; color: string; size?: number; minerals: Record<string, MineralMeta> }) {
+  const shape = minerals[id]?.shape ?? 'circle'
   if (shape === 'diamond')
     return <svg width={size} height={size} viewBox="0 0 14 14" aria-hidden="true"><polygon points="7,1 13,7 7,13 1,7" fill={color} /></svg>
   if (shape === 'rect')
@@ -369,7 +362,7 @@ export default function MiningScreen({ mission, target, onComplete, onBack, onAb
               const color = minerals[id]?.color ?? '#fff'
               return (
                 <div key={id} style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                  <OreShapeIcon id={id} color={done ? 'var(--ln-text-muted)' : color} size={11} />
+                  <OreShapeIcon id={id} color={done ? 'var(--ln-text-muted)' : color} size={11} minerals={minerals} />
                   <span style={{
                     fontFamily: 'var(--ln-font-display)', fontSize: 10, fontWeight: 700,
                     letterSpacing: '0.06em', textTransform: 'uppercase',

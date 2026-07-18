@@ -4,23 +4,11 @@ import { useEffect, useRef, useState } from 'react'
 import { Application, Assets, Container, Graphics, type Texture } from 'pixi.js'
 import { Scene, GameLoop, InputManager, RuntimeContext, screenToWorld } from '@/lib/engine'
 import { wireShapeRenderers } from '@/lib/engine/components/ShapeRenderer'
-import type { ShapeKind } from '@/lib/engine/components/ShapeRenderer'
 import { MiningController, SHIP_X, SCROLL_SPEED, SCROLL_SPEED_MIN, SCROLL_SPEED_MAX } from '@/lib/engine/scripts/MiningController'
 import type { MineralMeta } from '@/lib/data'
 
 // Tile width must be a multiple of 16 (ridgeH period) for seamless wrapping
 const SURFACE_TILE_W = 320
-
-const MINERAL_SHAPES: Record<string, ShapeKind> = {
-  iron:    'circle',
-  silicon: 'diamond',
-  ice:     'circle',
-  carbon:  'rect',
-  nickel:  'diamond',
-  cobalt:  'triangle',
-  gold:    'circle',
-  rare:    'diamond',
-}
 
 const SKY_COLOR = 0x03060c
 
@@ -237,7 +225,7 @@ export default function MiningCanvas({ minerals, mineralMeta, laserTier, onColle
           mineralColors: Object.fromEntries(Object.entries(mineralMeta).map(([id, m]) => [id, m.color])),
           mineralLaserAccess,
           maxLaserTier: laserTier,
-          mineralShapes: MINERAL_SHAPES,
+          mineralShapes: Object.fromEntries(Object.entries(mineralMeta).map(([id, m]) => [id, m.shape ?? 'circle'])),
           mineralTextures: oreTextures,
           onCollect: mineral => onCollectRef.current(mineral),
           onMiss: () => {
