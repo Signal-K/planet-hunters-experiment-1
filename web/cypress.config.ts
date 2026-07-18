@@ -93,7 +93,7 @@ const profiles: Record<string, Cypress.EndToEndConfigOptions> = {
   // Or open interactively: CYPRESS_PROFILE=visual npx cypress open --browser chrome
   visual: {
     baseUrl: process.env.CYPRESS_baseUrl || 'http://localhost:3099',
-    specPattern: ['cypress/e2e/visual/visual-qa.cy.ts'],
+    specPattern: ['cypress/e2e/visual/**/*.cy.{js,jsx,ts,tsx}'],
     viewportWidth: 390,
     viewportHeight: 844,
   },
