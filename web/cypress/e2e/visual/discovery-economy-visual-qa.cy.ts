@@ -61,8 +61,25 @@ function visitWithState(path: string, screen: GameState['screen'], playerOverrid
 
   cy.visit(path, {
     onBeforeLoad(win) {
-      win.localStorage.setItem(STORAGE_KEY, JSON.stringify(full))
+      // Remove any real PocketBase auth token left by an earlier test — if
+      // present, the SDK restores a valid session and the "brand-new user"
+      // auth-gate check never even runs (see useAuthSync.ts's authGateOpen
+      // effect), which would make this a false negative for other specs
+      // rather than a false positive for us. Matches visual-qa.cy.ts's
+      // loadPreset, which established this pattern first.
+      win.localStorage.removeItem('pocketbase_auth')
+      // Fake guest credentials make hasStoredCredentials() true, which is
+      // what actually suppresses the auth gate on mount (see useAuthSync.ts)
+      // — ensureGuestAuth() then fails to re-auth with these non-existent
+      // credentials and falls back to offline mode, same as
+      // visual-qa.cy.ts's suppressSurveysAndUpgrade.
       win.localStorage.setItem('landnam-guest-credentials', JSON.stringify({ email: 'e2e@landnam.guest', password: 'e2e-guest-test' }))
+      // ObservatoryCoach is a separate one-time beat from the main M1-M3
+      // tutorial (gated by its own localStorage key, not GameState.tutorial)
+      // — mark it seen so it doesn't render its banner/spacer over the
+      // chart during the drag-mark gesture below.
+      win.localStorage.setItem('landnam_observatory_coach_seen_v1', '1')
+      win.localStorage.setItem(STORAGE_KEY, JSON.stringify(full))
     },
   })
 }
@@ -102,6 +119,15 @@ describe('Visual QA — discovery -> economy pipeline', () => {
 
     visitWithState('/game', 'galaxy', {})
     cy.wait('@subjects')
+
+    // The injected fake guest credentials only satisfy hasStoredCredentials()
+    // — the app still fires ensureGuestAuth() in the background, which fails
+    // against the real local PocketBase (no such account), deletes the fake
+    // credentials, and races to create a real one. Until that resolves, the
+    // "Welcome Back" auth gate can render on top of everything below. A fixed
+    // cy.wait() guesses at that race; asserting the gate is gone (with
+    // Cypress's built-in retry) actually waits for it.
+    cy.contains('Welcome Back', { timeout: 15000 }).should('not.exist')
 
     cy.contains('TESS ANOMALY', { timeout: 15000 }).should('be.visible')
     cy.get('[data-testid="observatory-chart-canvas"]', { timeout: 15000 }).first().should('be.visible')
@@ -187,7 +213,12 @@ describe('Visual QA — discovery -> economy pipeline', () => {
 
     visitWithState('/game', 'missions', {
       discoveredExoplanetTargets: { [discovered.id]: discovered },
+      freeOperations: true,
     })
+
+    // See the matching comment in the first test — waits out the
+    // ensureGuestAuth() race instead of guessing at a fixed delay.
+    cy.contains('Welcome Back', { timeout: 15000 }).should('not.exist')
 
     cy.contains('Mission Board', { timeout: 15000 }).should('be.visible')
     cy.get(`[data-testid="mission-card-exo-survey-${discovered.id}"]`, { timeout: 10000 })
@@ -196,11 +227,16 @@ describe('Visual QA — discovery -> economy pipeline', () => {
       .should('be.visible')
     cy.screenshot('discovery-04-mission-board-survey-flight')
 
-    // Click the CTA button specifically, not the card container — the fixed
-    // "Mission Board" header can visually overlap the card's own top edge
-    // once scrolled, which would otherwise route the click there instead.
-    // Cypress's own .click() auto-scrolls its target into view first.
-    cy.get(`[data-testid="mission-card-exo-survey-${discovered.id}-cta"]`).click({ force: true })
+    // The exo-survey mission card above is fixed to this one target
+    // (game-context.tsx sets targetId directly when generating it), so
+    // picking it intentionally skips the target picker and jumps straight to
+    // rocket-buy with the target pre-selected — proving that flow doesn't
+    // prove the target is reachable any *other* way. Self-Directed Mining
+    // has no fixed targetId, so it's the ordinary mission -> target-picker
+    // path this test is actually meant to exercise; it requires nickel +
+    // cobalt and orbit <= 8, which every 'M'-archetype discovery satisfies
+    // (see mineralsForArchetype / tessCandidateToExoplanetTarget).
+    cy.get('[data-testid="self-directed-mining-btn"]').scrollIntoView().click({ force: true })
     cy.contains('Pick Target', { timeout: 10000 }).should('be.visible')
 
     cy.get(`[data-testid="target-${discovered.id}"]`).click({ force: true })

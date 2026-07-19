@@ -145,6 +145,12 @@ export interface MineralMeta {
   // never request these; they only make sense for off-world construction jobs
   // (deliveryTargetId set to a non-Earth site).
   earthAbundant?: boolean
+  // Ore node shape in the mining minigame. Single source of truth for both the
+  // order-progress legend icon and the actual in-canvas ore render — several
+  // minerals (esp. platinum-group metals) share near-identical pale colors, so
+  // shape is what actually disambiguates them on screen. Defaults to 'circle'
+  // when unset.
+  shape?: 'circle' | 'diamond' | 'rect' | 'triangle'
 }
 
 export interface Contractor {
