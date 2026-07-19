@@ -163,6 +163,7 @@ export interface Contractor {
   mineralPreferences: string[]
   payoutPremium: number
   affinityBonusPerMission: number
+  uiRole: ContractorSlot['uiRole']
 }
 
 export interface ContractorSlot {

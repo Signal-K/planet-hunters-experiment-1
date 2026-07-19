@@ -36,6 +36,7 @@ const MISSION_CONTROL_CONTRACTOR: Contractor = {
   mineralPreferences: [],
   payoutPremium: 0,
   affinityBonusPerMission: 0,
+  uiRole: 'command',
 }
 
 const TRANSIT_TELESCOPE_TARGET: Target = {

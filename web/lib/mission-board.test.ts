@@ -26,6 +26,7 @@ function makeContractor(id: string, unlockTier: number): Contractor {
     mineralPreferences: [],
     payoutPremium: 0.2,
     affinityBonusPerMission: 0.025,
+    uiRole: 'starter',
   }
 }
 

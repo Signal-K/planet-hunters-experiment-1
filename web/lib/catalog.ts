@@ -104,6 +104,7 @@ export function toContractor(r: any): Contractor {
       mineralPreferences,
       payoutPremium: 0.2,
       affinityBonusPerMission: 0.025,
+      uiRole: 'starter',
     }),
     id: r.slug,
     name: r.name ?? fallback?.name ?? r.slug,
@@ -114,6 +115,7 @@ export function toContractor(r: any): Contractor {
     mineralPreferences,
     payoutPremium: r.payout_premium ?? fallback?.payoutPremium ?? 0.2,
     affinityBonusPerMission: r.affinity_bonus_per_mission ?? fallback?.affinityBonusPerMission ?? 0.025,
+    uiRole: fallback?.uiRole ?? 'starter',
   }
 }
 
