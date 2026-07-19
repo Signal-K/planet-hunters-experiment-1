@@ -17,6 +17,7 @@ import MiningCanvas from './MiningCanvas'
 // no daily limit) — the two are different moments and were previously
 // conflated, leaving the mining screen with zero "no client" first-entry cue.
 const FREE_OPS_MINING_ACK_KEY = 'ln_mining_freeops_first_entry_ack'
+const FREE_OPS_FIRST_SUCCESS_ACK_KEY = 'ln_mining_freeops_first_success_ack'
 
 function useFreeOpsMiningAck(alreadyExperienced: boolean) {
   const [show, setShow] = useState(() => {
@@ -29,6 +30,18 @@ function useFreeOpsMiningAck(alreadyExperienced: boolean) {
     setShow(false)
   }
   return { show, dismiss }
+}
+
+function useFreeOpsFirstSuccessAck() {
+  const [dismissed, setDismissed] = useState(() => {
+    if (typeof window === 'undefined') return false
+    return !!localStorage.getItem(FREE_OPS_FIRST_SUCCESS_ACK_KEY)
+  })
+  const dismiss = () => {
+    localStorage.setItem(FREE_OPS_FIRST_SUCCESS_ACK_KEY, '1')
+    setDismissed(true)
+  }
+  return { dismissed, dismiss }
 }
 
 function OreShapeIcon({ id, color, size = 14, minerals }: { id: string; color: string; size?: number; minerals: Record<string, MineralMeta> }) {
@@ -281,6 +294,8 @@ export default function MiningScreen({ mission, target, onComplete, onBack, onAb
 
   const isFreeOps = !mission.contractor
   const { show: showFreeOpsMiningExplainer, dismiss: dismissFreeOpsMiningExplainer } = useFreeOpsMiningAck(!isFreeOps || !!hasPriorFreeOpsExperience)
+  const { dismissed: freeOpsFirstSuccessDismissed, dismiss: dismissFreeOpsFirstSuccess } = useFreeOpsFirstSuccessAck()
+  const showFreeOpsSuccessPopup = isFreeOps && orderFilled && !freeOpsFirstSuccessDismissed
 
   return (
     <div className="game-screen mining-screen">
@@ -352,6 +367,33 @@ export default function MiningScreen({ mission, target, onComplete, onBack, onAb
             ))}
             <button onClick={() => setGuideOpen(false)} style={{ marginTop: 4, width: '100%', padding: '8px 0', background: 'rgba(100,180,255,0.1)', border: '1px solid rgba(100,180,255,0.3)', borderRadius: 8, fontFamily: 'var(--ln-font-display)', fontSize: 11, fontWeight: 800, letterSpacing: '0.14em', color: '#87CFFA', cursor: 'pointer', textTransform: 'uppercase' }}>Close</button>
           </div>
+        </div>
+      )}
+
+      {showFreeOpsSuccessPopup && (
+        <div data-testid="freeops-first-success-popup" style={{ position: 'absolute', inset: 0, zIndex: 75, background: 'rgba(3,6,12,0.76)', display: 'flex', alignItems: 'flex-end', padding: 16 }}>
+          <Panel accent="var(--ln-ok)" style={{ padding: 14, width: '100%', boxShadow: '0 18px 48px rgba(0,0,0,0.55)' }}>
+            <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 10, fontWeight: 800, letterSpacing: '0.22em', color: 'var(--ln-ok)', textTransform: 'uppercase', marginBottom: 6 }}>
+              First Free Ops Haul Secured
+            </div>
+            <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 13, color: '#dbe8f8', lineHeight: 1.45 }}>
+              This cargo is yours. Return to Earth, recover the ship, then sell the haul on the open market instead of handing it to a client.
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginTop: 12 }}>
+              <button
+                onClick={dismissFreeOpsFirstSuccess}
+                style={{ padding: '11px 10px', borderRadius: 8, border: '1px solid rgba(57,211,106,0.45)', background: 'rgba(57,211,106,0.12)', color: 'var(--ln-ok)', fontFamily: 'var(--ln-font-display)', fontSize: 10, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', cursor: 'pointer' }}
+              >
+                Review Cargo
+              </button>
+              <button
+                onClick={() => { dismissFreeOpsFirstSuccess(); handleReturn() }}
+                style={{ padding: '11px 10px', borderRadius: 8, border: 'none', background: 'var(--ln-ok)', color: '#04120b', fontFamily: 'var(--ln-font-display)', fontSize: 10, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', cursor: 'pointer' }}
+              >
+                Return Now
+              </button>
+            </div>
+          </Panel>
         </div>
       )}
 

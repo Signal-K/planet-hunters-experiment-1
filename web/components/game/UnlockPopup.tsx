@@ -32,10 +32,10 @@ const UNLOCKS: Record<string, {
     accent: '#3fa9ff',
     eyebrow: 'Vehicle Available',
     title: 'PROSPECTOR',
-    body: 'Mission 2 needs 8 silicon — more than Explorer can carry. Prospector holds 10 units and has a stronger drill. Purchase it for 1.3B ▲ in the vehicle selection step before launch.',
+    body: 'Mission 2 needs 8 silicon — more than Explorer can carry. Prospector is the first heavier workhorse: larger cargo bay, stronger drill, and enough range for deeper starter targets.',
     art: 'rocket',
-    stats: [['CARGO', '10 UNITS'], ['COST', '1.3B ▲'], ['DRILL', 'TIER 2']],
-    cta: 'Got it',
+    stats: [['CARGO', '10 UNITS'], ['DRILL', 'TIER 2'], ['ROLE', 'BULK RUNS']],
+    cta: 'Select Prospector',
   },
   loan: {
     accent: '#ffb347',
@@ -65,12 +65,20 @@ function RocketArt({ accent }: { accent: string }) {
           <stop offset="0%" stopColor="#eaf3ff"/>
           <stop offset="100%" stopColor="#7a93b5"/>
         </linearGradient>
+        <linearGradient id="ua-cargo" x1="0" x2="0" y1="0" y2="1">
+          <stop offset="0%" stopColor={accent}/>
+          <stop offset="100%" stopColor="#0d3158"/>
+        </linearGradient>
       </defs>
-      <path d="M48 8 L62 34 L62 70 L34 70 L34 34 Z" fill="url(#ua-body)" stroke="#1a2230" strokeWidth="1.2"/>
-      <path d="M48 8 L62 34 L34 34 Z" fill={accent}/>
-      <circle cx="48" cy="42" r="6" fill="#f5a623" stroke="#1a2230"/>
-      <path d="M34 60 L22 78 L34 72 M62 60 L74 78 L62 72" fill={accent} stroke="#1a2230"/>
-      <path d="M40 70 L48 90 L56 70" fill="#f5a623"/>
+      <path d="M48 6 L64 32 L62 73 L34 73 L32 32 Z" fill="url(#ua-body)" stroke="#1a2230" strokeWidth="1.2"/>
+      <path d="M48 6 L64 32 L32 32 Z" fill={accent} stroke="#1a2230" strokeWidth="1"/>
+      <rect x="39" y="47" width="18" height="20" rx="3" fill="url(#ua-cargo)" stroke="#1a2230" strokeWidth="1"/>
+      <circle cx="48" cy="39" r="5.5" fill="#f5a623" stroke="#1a2230"/>
+      <path d="M33 57 L19 79 L35 70 M63 57 L77 79 L61 70" fill={accent} stroke="#1a2230"/>
+      <path d="M25 78 C27 69 31 64 36 61" fill="none" stroke="#7ec8ff" strokeWidth="2" strokeLinecap="round" opacity="0.75"/>
+      <path d="M71 78 C69 69 65 64 60 61" fill="none" stroke="#7ec8ff" strokeWidth="2" strokeLinecap="round" opacity="0.75"/>
+      <path d="M40 73 L48 91 L56 73" fill="#f5a623"/>
+      <path d="M43 78 L48 92 L53 78" fill="#ff6b35" opacity="0.72"/>
     </svg>
   )
 }
