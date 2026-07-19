@@ -3,6 +3,7 @@
 import React, { useState } from 'react'
 import type { Mission, Contractor, MineralMeta } from '@/lib/data'
 import TutorialHighlight from '@/components/game/TutorialHighlight'
+import ContractorMark from '@/components/ui/ContractorMark'
 
 type CardState = 'available' | 'locked' | 'cooldown' | 'completed'
 
@@ -92,13 +93,11 @@ export default function MissionCard({
           width: 76, flex: 'none', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8,
           padding: '14px 8px', borderRight: `1px solid ${accent}30`, background: 'var(--ln-surface)',
         }}>
-          <div style={{
-            width: 36, height: 36, borderRadius: 999, border: `2px solid ${accent}`,
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            font: '700 13px var(--ln-font-display)', color: accent,
-          }}>
-            {contractor?.initial ?? 'OP'}
-          </div>
+          <ContractorMark
+            initial={contractor?.initial ?? 'OP'}
+            color={accent}
+            uiRole={contractor?.uiRole ?? 'starter'}
+          />
           <div style={{ textAlign: 'center', font: '700 10px var(--ln-font-display)', color: 'var(--ln-text)', textTransform: 'uppercase', letterSpacing: '0.02em', lineHeight: 1.15 }}>
             {contractor?.name ?? 'Free Ops'}
           </div>
