@@ -91,6 +91,9 @@ export default function TessDiscoveryScreen({ player, onBack, onBuildStation, on
   }, [classifications, player.freeOperations, player.satelliteMonitoringBuilt, player.satelliteMonitoringLevel, player.transitSatelliteLaunchedAt, player.transitSatelliteLevel, player.satelliteTargetId])
 
   const classification: TessClassification | undefined = candidate ? classifications[candidate.id] : undefined
+  const discoveredTarget = candidate && classification?.verdict === 'planet'
+    ? tessCandidateToExoplanetTarget(candidate, periodFromRanges(classification.ranges))
+    : null
   const points = useMemo(() => candidate ? tessLightcurvePoints(candidate) : [], [candidate])
   const sectors = useMemo(() => candidate ? sectorWindows(points, candidate.sector) : [], [candidate, points])
   const activeSector = sectors[Math.min(sectorIndex, Math.max(0, sectors.length - 1))]
@@ -366,6 +369,26 @@ export default function TessDiscoveryScreen({ player, onBack, onBuildStation, on
     )
   )
 
+  const payoffPanel = classification ? (
+    <Panel accent={classification.verdict === 'planet' ? 'var(--ln-ok)' : 'var(--ln-cyan)'} style={{ padding: 12 }}>
+      <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 10, fontWeight: 800, letterSpacing: '0.22em', color: classification.verdict === 'planet' ? 'var(--ln-ok)' : 'var(--ln-cyan)', textTransform: 'uppercase', marginBottom: 6 }}>
+        Discovery Logged
+      </div>
+      <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 13, color: '#dbe8f8', lineHeight: 1.45 }}>
+        {classification.verdict === 'planet' && discoveredTarget
+          ? `${candidate.host} is now a candidate world in your operations map. Point tomorrow's satellite at the next unresolved star to keep the discovery pipeline moving.`
+          : 'Your annotation was saved to the review queue. Noise marks matter: they keep the shared feed clean for the next real transit.'}
+      </div>
+      {classification.verdict === 'planet' && discoveredTarget && (
+        <div data-testid="tess-discovery-payoff" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 8, marginTop: 10 }}>
+          <PayoffStat label="Target" value={discoveredTarget.name} />
+          <PayoffStat label="Orbit" value={`L${discoveredTarget.orbit}`} />
+          <PayoffStat label="Minerals" value={discoveredTarget.minerals.slice(0, 2).join(' / ')} />
+        </div>
+      )}
+    </Panel>
+  ) : null
+
   return (
     <div className="game-screen" data-testid="tess-discovery-screen">
       <TopBar eyebrow="TESS ANOMALY" title={candidate.toi} onBack={onBack} />
@@ -376,6 +399,7 @@ export default function TessDiscoveryScreen({ player, onBack, onBuildStation, on
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12, overflowY: 'auto' }}>
             <ObservatoryReadout stats={stats} />
+            {payoffPanel}
             <CommentsPanel recordType="classification" recordId={candidate.id} />
             <div style={{ marginTop: 'auto' }} data-ui-zone={UI_ZONES.bottomActions}>
               {verdictActions}
@@ -386,6 +410,7 @@ export default function TessDiscoveryScreen({ player, onBack, onBuildStation, on
         <>
           <div className={`screen-scroll${!classification && markCount > 0 ? ' screen-scroll--tall-actions' : ''}`} data-ui-zone={UI_ZONES.screenContent}>
             {chartPanel(true)}
+            {payoffPanel && <div style={{ marginTop: 12 }}>{payoffPanel}</div>}
             <div style={{ marginTop: 12 }}>
               <CommentsPanel recordType="classification" recordId={candidate.id} />
             </div>
@@ -397,6 +422,15 @@ export default function TessDiscoveryScreen({ player, onBack, onBuildStation, on
       )}
 
       {showCoach && <ObservatoryCoach onDismiss={coach.dismiss} />}
+    </div>
+  )
+}
+
+function PayoffStat({ label, value }: { label: string; value: string }) {
+  return (
+    <div style={{ minWidth: 0, padding: '7px 6px', borderRadius: 7, background: 'rgba(8,16,28,0.72)', border: '1px solid rgba(57,211,106,0.22)' }}>
+      <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 8, fontWeight: 800, letterSpacing: '0.12em', color: 'var(--ln-text-muted)', textTransform: 'uppercase' }}>{label}</div>
+      <div style={{ fontFamily: 'var(--ln-font-mono)', fontSize: 10, fontWeight: 800, color: '#e8f0fe', marginTop: 2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', textTransform: 'uppercase' }}>{value}</div>
     </div>
   )
 }

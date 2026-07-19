@@ -32,6 +32,14 @@ const STATE_TONE: Record<Exclude<CardState, 'available'>, { label: string; color
   completed: { label: 'COMPLETED TODAY', color: 'var(--ln-ok)' },
 }
 
+const ROLE_LABELS: Record<Contractor['uiRole'], string> = {
+  starter: 'Starter operations',
+  bulk: 'Bulk freight',
+  prospect: 'Prospecting',
+  command: 'Strategic command',
+  science: 'Research',
+}
+
 export default function MissionCard({
   mission,
   contractor,
@@ -59,6 +67,7 @@ export default function MissionCard({
     : cardState === 'completed' ? 'Claimed'
     : cardState === 'locked' ? (lockedDetail ?? 'Locked')
     : ''
+  const fuelTimerLabel = routeLabel ? 'Two-leg burn' : mission.deliveryTargetId ? 'Delivery burn' : difficultyTier >= 3 ? 'Long burn' : 'Standard burn'
 
   return (
     <div
@@ -143,6 +152,17 @@ export default function MissionCard({
             </div>
           )}
 
+          <div style={{ display: 'flex', gap: 6, padding: '8px 14px 0', flexWrap: 'wrap' }}>
+            <span style={{ font: '700 8px var(--ln-font-mono)', color: 'var(--ln-amber)', letterSpacing: '0.08em', textTransform: 'uppercase', border: '1px solid rgba(245,166,35,0.35)', background: 'rgba(245,166,35,0.08)', padding: '3px 6px', borderRadius: 3 }}>
+              Fuel timer · {fuelTimerLabel}
+            </span>
+            {contractor && (
+              <span style={{ font: '700 8px var(--ln-font-mono)', color: accent, letterSpacing: '0.08em', textTransform: 'uppercase', border: `1px solid ${accent}55`, background: `${accent}12`, padding: '3px 6px', borderRadius: 3 }}>
+                {ROLE_LABELS[contractor.uiRole]}
+              </span>
+            )}
+          </div>
+
           <div style={{ margin: '10px 14px 8px', padding: 12, background: 'var(--ln-surface)', borderLeft: '2px solid var(--ln-cyan)' }}>
             <div style={{ font: '400 15px/1.5 var(--ln-font-display)', color: 'var(--ln-text)' }}>{mission.brief}</div>
           </div>
@@ -160,7 +180,28 @@ export default function MissionCard({
 
           {expanded && (
             <div style={{ margin: '0 14px 12px', padding: 12, border: `1px solid ${accent}30`, background: 'var(--ln-void)', display: 'flex', flexDirection: 'column', gap: 10 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <ContractorMark
+                  initial={contractor?.initial ?? 'OP'}
+                  color={accent}
+                  uiRole={contractor?.uiRole ?? 'starter'}
+                  size={44}
+                />
+                <div style={{ minWidth: 0 }}>
+                  <div style={{ font: '700 9px var(--ln-font-mono)', color: accent, letterSpacing: '0.12em', textTransform: 'uppercase' }}>
+                    {contractor ? ROLE_LABELS[contractor.uiRole] : 'Independent operator'}
+                  </div>
+                  <div style={{ font: '700 13px var(--ln-font-display)', color: 'var(--ln-text)', marginTop: 2 }}>
+                    {contractor?.name ?? 'Free Ops'}
+                  </div>
+                </div>
+              </div>
               <div style={{ font: '400 11px/1.5 var(--ln-font-display)', color: 'var(--ln-text-dim)' }}>{contractor?.projectType ?? 'Custom mining run · market value only'}</div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 6 }}>
+                <DossierStat label="Premium" value={contractor ? `+${Math.round(contractor.payoutPremium * 100)}%` : 'Market'} color={accent} />
+                <DossierStat label="Affinity" value={contractor ? `+${Math.round(contractor.affinityBonusPerMission * 1000) / 10}%` : 'None'} color={accent} />
+                <DossierStat label="Timer" value={fuelTimerLabel} color="var(--ln-amber)" />
+              </div>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
                 {Object.entries(mission.requires.minerals).map(([k, v]) => {
                   const meta = mineralMeta[k]
@@ -211,6 +252,15 @@ export default function MissionCard({
           </div>
         </div>
       </div>
+    </div>
+  )
+}
+
+function DossierStat({ label, value, color }: { label: string; value: string; color: string }) {
+  return (
+    <div style={{ minWidth: 0, padding: '6px 5px', borderRadius: 4, background: 'rgba(8,16,28,0.72)', border: `1px solid ${color}44` }}>
+      <div style={{ font: '700 7px var(--ln-font-mono)', color: 'var(--ln-text-muted)', letterSpacing: '0.1em', textTransform: 'uppercase' }}>{label}</div>
+      <div style={{ font: '800 10px var(--ln-font-display)', color, marginTop: 2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', textTransform: 'uppercase' }}>{value}</div>
     </div>
   )
 }

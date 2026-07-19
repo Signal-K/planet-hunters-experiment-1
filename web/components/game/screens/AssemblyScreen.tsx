@@ -1,6 +1,8 @@
 'use client'
 
 import Image from 'next/image'
+import type { ReactNode } from 'react'
+import { Boxes, Gauge, Orbit, Pickaxe } from 'lucide-react'
 import type { Mission, RocketConfig, Target } from '@/lib/data'
 import { STARTER_ROCKETS, validateBuild } from '@/lib/data'
 import type { Catalog } from '@/lib/catalog'
@@ -25,6 +27,22 @@ interface AssemblyScreenProps {
 function getRequiredRocket(missionsDone: number) {
   const eligible = STARTER_ROCKETS.filter(r => !r.locked && r.missionsRequired <= missionsDone)
   return eligible.sort((a, b) => b.tier - a.tier)[0] ?? STARTER_ROCKETS[0]
+}
+
+function VehicleStat({ icon, label, value }: { icon: ReactNode; label: string; value: string }) {
+  return (
+    <div style={{
+      display: 'flex', alignItems: 'center', gap: 7, padding: '7px 8px',
+      borderRadius: 7, background: 'rgba(8,16,28,0.72)', border: '1px solid rgba(126,200,255,0.18)',
+      minWidth: 0,
+    }}>
+      <div style={{ width: 22, height: 22, display: 'grid', placeItems: 'center', color: 'var(--ln-cyan)' }}>{icon}</div>
+      <div style={{ minWidth: 0 }}>
+        <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 8, fontWeight: 800, letterSpacing: '0.14em', color: 'var(--ln-text-muted)', textTransform: 'uppercase' }}>{label}</div>
+        <div style={{ fontFamily: 'var(--ln-font-mono)', fontSize: 11, fontWeight: 800, color: '#e8f0fe', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{value}</div>
+      </div>
+    </div>
+  )
 }
 
 export default function AssemblyScreen(props: AssemblyScreenProps) {
@@ -80,6 +98,12 @@ export default function AssemblyScreen(props: AssemblyScreenProps) {
                 <div className="ln-card-title">{starterRocket.name}</div>
                 <div className="ln-micro">PREBUILT · CARGO {starterRocket.stats.cargo} · ORB {starterRocket.stats.maxOrbit} · DRILL T{starterRocket.stats.drillTier}</div>
               </div>
+            </div>
+            <div data-testid="assembly-room-iconography" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 8, marginTop: 10 }}>
+              <VehicleStat icon={<Boxes size={15} />} label="Cargo Bay" value={`${starterRocket.stats.cargo} units`} />
+              <VehicleStat icon={<Orbit size={15} />} label="Orbit" value={`L${starterRocket.stats.maxOrbit}`} />
+              <VehicleStat icon={<Pickaxe size={15} />} label="Drill" value={`Tier ${starterRocket.stats.drillTier}`} />
+              <VehicleStat icon={<Gauge size={15} />} label="Hull" value="Single use" />
             </div>
           </Panel>
           <div style={{ marginTop: 8, fontFamily: 'var(--ln-font-body)', fontSize: 12, color: 'var(--ln-text-dim)', lineHeight: 1.45 }}>
