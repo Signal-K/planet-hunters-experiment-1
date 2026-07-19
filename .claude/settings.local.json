@@ -72,7 +72,14 @@
       "mcp__plate__create_comment",
       "mcp__plate__get_task",
       "Skill(artifact-design)",
-      "mcp__posthog__exec"
+      "mcp__posthog__exec",
+      "mcp__desk__list_projects",
+      "mcp__desk__list_tickets",
+      "mcp__desk__get_ticket",
+      "mcp__desk__update_ticket",
+      "mcp__desk__add_comment",
+      "mcp__desk__reconcile_statuses",
+      "mcp__desk__list_story_boards"
     ]
   },
   "enabledMcpjsonServers": [
