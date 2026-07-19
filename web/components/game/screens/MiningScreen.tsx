@@ -5,7 +5,31 @@ import type { Mission, Target, MineralMeta } from '@/lib/data'
 import { FREE_OPS_START_MISSIONS_DONE } from '@/lib/data'
 import TopBar from '@/components/ui/TopBar'
 import { PrimaryBtn } from '@/components/ui/Button'
+import Panel from '@/components/ui/Panel'
+import StatusPill from '@/components/ui/StatusPill'
 import MiningCanvas from './MiningCanvas'
+
+// First-time-entering-Free-Ops-mining explainer — dismiss-once, same
+// localStorage-ack pattern as MissionBoardScreen's EXPLAINER_ACK_KEY, but
+// scoped to the mining screen itself. The board explainer covers the board's
+// contractor/infrastructure/custom split; this covers what changes once
+// you're actually mining with no client attached (sell the haul yourself,
+// no daily limit) — the two are different moments and were previously
+// conflated, leaving the mining screen with zero "no client" first-entry cue.
+const FREE_OPS_MINING_ACK_KEY = 'ln_mining_freeops_first_entry_ack'
+
+function useFreeOpsMiningAck(alreadyExperienced: boolean) {
+  const [show, setShow] = useState(() => {
+    if (alreadyExperienced) return false
+    if (typeof window === 'undefined') return true
+    return !localStorage.getItem(FREE_OPS_MINING_ACK_KEY)
+  })
+  const dismiss = () => {
+    localStorage.setItem(FREE_OPS_MINING_ACK_KEY, '1')
+    setShow(false)
+  }
+  return { show, dismiss }
+}
 
 function OreShapeIcon({ id, color, size = 14, minerals }: { id: string; color: string; size?: number; minerals: Record<string, MineralMeta> }) {
   const shape = minerals[id]?.shape ?? 'circle'
@@ -99,7 +123,7 @@ function miningGuide(deliveryTargetName?: string) {
   ]
 }
 
-export default function MiningScreen({ mission, target, onComplete, onBack, onAbandon, minerals, laserChargeCap, laserTier, hasCoach, coachManual, onCoachDone, addToast, deliveryTargetName }: {
+export default function MiningScreen({ mission, target, onComplete, onBack, onAbandon, minerals, laserChargeCap, laserTier, hasCoach, coachManual, onCoachDone, addToast, deliveryTargetName, hasPriorFreeOpsExperience }: {
   mission: Mission
   target: Target
   onComplete: (cargo: Record<string, number>) => void
@@ -116,6 +140,8 @@ export default function MiningScreen({ mission, target, onComplete, onBack, onAb
   addToast?: (message: string, kind?: 'info' | 'ok' | 'warn') => void
   /** Set for two-leg "mine then deliver" missions (mission.deliveryTargetId) — swaps the return button's copy from "Return to Earth" to "Deliver to {name}" since the ship isn't heading home yet. */
   deliveryTargetName?: string
+  /** True once the player has completed any contractor mission — suppresses the Free Ops first-entry explainer for players who reached self-directed mining before this ack tracking existed. */
+  hasPriorFreeOpsExperience?: boolean
 }) {
   // Charge count is mission-aware, not coach-aware.
   // During onboarding (sequence <= FREE_OPS_START_MISSIONS_DONE): always 6× the ore required,
@@ -253,9 +279,43 @@ export default function MiningScreen({ mission, target, onComplete, onBack, onAb
   )
   const [guideOpen, setGuideOpen] = useState(false)
 
+  const isFreeOps = !mission.contractor
+  const { show: showFreeOpsMiningExplainer, dismiss: dismissFreeOpsMiningExplainer } = useFreeOpsMiningAck(!isFreeOps || !!hasPriorFreeOpsExperience)
+
   return (
     <div className="game-screen mining-screen">
-      <TopBar eyebrow={`${target.name.toUpperCase()} · SURFACE`} title="Mining Run" onBack={onBack} />
+      <TopBar
+        eyebrow={`${target.name.toUpperCase()} · SURFACE`}
+        title="Mining Run"
+        onBack={onBack}
+        right={isFreeOps ? <StatusPill kind="amber">Free Ops · No Client</StatusPill> : undefined}
+      />
+
+      {/* First-time-in-Free-Ops-mining explainer — dismiss-once, mirrors the mission-board explainer's ack pattern but covers what changes about the mining run itself (sell the haul yourself, no daily limit). */}
+      {isFreeOps && showFreeOpsMiningExplainer && (
+        <div style={{ position: 'absolute', top: 64, left: 14, right: 14, zIndex: 60 }}>
+          <Panel accent="var(--ln-amber)" style={{ padding: 12, position: 'relative' }}>
+            <button
+              data-testid="dismiss-freeops-mining-explainer"
+              onClick={dismissFreeOpsMiningExplainer}
+              aria-label="Dismiss"
+              style={{
+                position: 'absolute', top: 8, right: 8, width: 20, height: 20, borderRadius: 6,
+                border: '1px solid rgba(245,166,35,0.4)', background: 'rgba(8,16,28,0.6)',
+                color: 'var(--ln-amber)', fontSize: 12, lineHeight: 1, cursor: 'pointer',
+              }}
+            >
+              ×
+            </button>
+            <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 10, fontWeight: 800, letterSpacing: '0.22em', color: 'var(--ln-amber)', textTransform: 'uppercase', marginBottom: 6 }}>
+              No Client On This Run
+            </div>
+            <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 12, color: '#a9b8ce', lineHeight: 1.45, paddingRight: 20 }}>
+              You picked the target and the order. No daily limit — mine what looks valuable, then sell the haul yourself at market price instead of a fixed contractor payout.
+            </div>
+          </Panel>
+        </div>
+      )}
 
       {process.env.NODE_ENV === 'development' && (
         <button

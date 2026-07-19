@@ -297,6 +297,10 @@ export function ScreenContent({
           deliveryTargetName={deliveryTargetName}
           onAbandon={game.abandonMission}
           addToast={game.addToast}
+          hasPriorFreeOpsExperience={
+            Object.keys(game.player.contractorMissions ?? {}).length > 0
+            || (game.player.dailyContractorPool?.completedIds.length ?? 0) > 0
+          }
         />
       )
 
