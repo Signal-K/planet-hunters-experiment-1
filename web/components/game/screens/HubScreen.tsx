@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react'
 import type { Player, Screen } from '@/game-context'
 import ProgressionCard from '@/components/game/ProgressionCard'
 import { ComingSoonSheet, SPRINT_AFTER_NEXT_UTC } from '@/components/game/ComingSoonSheet'
+import ConfirmActionSheet from '@/components/game/ConfirmActionSheet'
 import { TutorialCompleteSheet, useTutorialCompleteAck } from '@/components/game/TutorialCompleteSheet'
 import { Scene } from '@/lib/engine/Scene'
 import type { EntityData } from '@/lib/engine/types'
@@ -39,6 +40,7 @@ export default function HubScreen({ player, hasCoach, onGoBuilding, onNav, onUpg
   const [plotEntities, setPlotEntities] = useState<EntityData[]>(DEFAULT_PLOTS)
   const [subsurface, setSubsurface] = useState(false)
   const [comingSoon, setComingSoon] = useState<{ feature: string; description: string; target?: Date } | null>(null)
+  const [confirmingLaunchpadUpgrade, setConfirmingLaunchpadUpgrade] = useState(false)
   const [tessQueueCount, setTessQueueCount] = useState(0)
   const { show: showTutorialComplete, dismiss: dismissTutorialComplete } = useTutorialCompleteAck(player.missionsDone, FREE_OPS_START_MISSIONS_DONE)
   const placed = player.placed ?? []
@@ -266,6 +268,17 @@ export default function HubScreen({ player, hasCoach, onGoBuilding, onNav, onUpg
         </>
       )}
 
+      {confirmingLaunchpadUpgrade && onUpgradeLaunchpad && (
+        <ConfirmActionSheet
+          eyebrow="Upgrade"
+          title="Upgrade Launchpad"
+          description="Spend ₣1,000,000,000 to permanently upgrade the launchpad. This can't be undone."
+          confirmLabel="Confirm Upgrade (₣1B)"
+          onConfirm={() => { onUpgradeLaunchpad(); setConfirmingLaunchpadUpgrade(false) }}
+          onDismiss={() => setConfirmingLaunchpadUpgrade(false)}
+        />
+      )}
+
       {/* Bottom toolbar — hidden during tutorial */}
       {!hasCoach && (
         <div style={{ position: 'absolute', left: 0, right: 0, bottom: 110, zIndex: 20, display: 'flex', justifyContent: 'center', gap: 8 }}>
@@ -289,7 +302,7 @@ export default function HubScreen({ player, hasCoach, onGoBuilding, onNav, onUpg
                     </button>
                   )}
                   {player.placed.includes('launchpad') && !player.launchpadUpgraded && onUpgradeLaunchpad && (
-                    <button onClick={onUpgradeLaunchpad} style={{ padding: '5px 14px', background: 'rgba(245,166,35,0.15)', backdropFilter: 'blur(6px)', border: '1px solid rgba(245,166,35,0.5)', borderRadius: 999, fontFamily: 'var(--ln-font-display)', fontSize: 9, fontWeight: 700, letterSpacing: '0.14em', color: '#f5a623', textTransform: 'uppercase', cursor: 'pointer' }}>
+                    <button onClick={() => setConfirmingLaunchpadUpgrade(true)} style={{ padding: '5px 14px', background: 'rgba(245,166,35,0.15)', backdropFilter: 'blur(6px)', border: '1px solid rgba(245,166,35,0.5)', borderRadius: 999, fontFamily: 'var(--ln-font-display)', fontSize: 9, fontWeight: 700, letterSpacing: '0.14em', color: '#f5a623', textTransform: 'uppercase', cursor: 'pointer' }}>
                       Upgrade Launchpad (₣1B)
                     </button>
                   )}

@@ -27,6 +27,20 @@ export const STARTER_ROCKETS: StarterRocket[] = [
     unlockHint: 'Unlocks after M1',
   },
   {
+    // Coming-soon tease, not yet purchasable — decided cost/unlock condition
+    // (rocket-and-room-system.md, 2026-06-18) is 4.0B F at L3/M3, but stats
+    // aren't finalized so this stays locked like sr4/sr5 until they are.
+    id: 'sr3',
+    name: 'Starter Rocket 3',
+    tier: 3,
+    costFrancs: 4_000_000_000,
+    missionsRequired: 999,
+    locked: true,
+    stats: { cargo: 0, maxOrbit: 0, drillTier: 0 },
+    img: '/parts/basic_hull_t1.png',
+    unlockHint: 'Unlocks at L3/M3 · 4.0B F',
+  },
+  {
     id: 'sr4',
     name: 'Starter Rocket 4',
     tier: 4,
