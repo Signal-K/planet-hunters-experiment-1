@@ -322,8 +322,14 @@ export default function ObservatoryChart({ points, ranges, onRange, onRemoveRang
       canvas.removeEventListener('pointercancel', handleCancel)
       if (app.renderer) {
         try { app.destroy() } catch { /* pixi v8 cleanup */ }
-        canvas.remove()
       }
+      // Unconditional: gating this behind app.renderer left a dead, listener-
+      // free canvas orphaned in the DOM whenever cleanup fired before the
+      // rAF-deferred doInit() had finished initialising Pixi (e.g. React
+      // StrictMode's dev-only mount -> cleanup -> remount cycle) — two
+      // canvases then matched the same data-testid, and anything selecting
+      // "the" chart canvas could grab the dead one instead of the live one.
+      canvas.remove()
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [height])
