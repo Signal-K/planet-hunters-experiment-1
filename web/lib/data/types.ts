@@ -164,6 +164,8 @@ export interface Contractor {
   payoutPremium: number
   affinityBonusPerMission: number
   uiRole: ContractorSlot['uiRole']
+  payoutNotes?: string
+  affinityNotes?: string
 }
 
 export interface ContractorSlot {

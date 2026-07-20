@@ -206,6 +206,8 @@ export function toContractor(slot: ContractorSlot): Contractor {
     payoutPremium: slot.payoutPremium,
     affinityBonusPerMission: slot.affinityBonusPerMission,
     uiRole: slot.uiRole,
+    payoutNotes: slot.payoutNotes,
+    affinityNotes: slot.affinityNotes,
   }
 }
 
