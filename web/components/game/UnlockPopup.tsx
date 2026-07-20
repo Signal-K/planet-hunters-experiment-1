@@ -1,6 +1,7 @@
 'use client'
 
 import React from 'react'
+import Image from 'next/image'
 import { UI_ZONES } from '@/lib/ui-zones'
 
 type UnlockKind = 'sr2' | 'loan' | 'ship-customizer'
@@ -25,6 +26,9 @@ const UNLOCKS: Record<string, {
   title: string
   body: string
   art: 'rocket' | 'coin' | 'rooms'
+  /** Real generated hull art (STS-157) to show instead of the generic
+   * RocketArt placeholder — set only where that art actually exists. */
+  imgSrc?: string
   stats: [string, string][]
   cta: string
 }> = {
@@ -34,6 +38,7 @@ const UNLOCKS: Record<string, {
     title: 'PROSPECTOR',
     body: 'Mission 2 needs 8 silicon — more than Explorer can carry. Prospector is the first heavier workhorse: larger cargo bay, stronger drill, and enough range for deeper starter targets.',
     art: 'rocket',
+    imgSrc: '/game/assets/ships/ship_sr2.png',
     stats: [['CARGO', '10 UNITS'], ['DRILL', 'TIER 2'], ['ROLE', 'BULK RUNS']],
     cta: 'Select Prospector',
   },
@@ -135,9 +140,15 @@ export default function UnlockPopup({ kind, onClose, onDismiss }: UnlockPopupPro
 
           <div style={{ margin: '14px auto', width: 96, height: 96, position: 'relative' }}>
             <div style={{ position: 'absolute', inset: -8, borderRadius: 999, background: `radial-gradient(circle, ${u.accent}44, transparent 70%)` }} />
-            {u.art === 'rocket' && <RocketArt accent={u.accent} />}
-            {u.art === 'coin' && <CoinArt />}
-            {u.art === 'rooms' && <RoomsArt accent={u.accent} />}
+            {u.imgSrc ? (
+              <Image src={u.imgSrc} alt="" width={96} height={96} style={{ objectFit: 'contain', position: 'relative' }} />
+            ) : (
+              <>
+                {u.art === 'rocket' && <RocketArt accent={u.accent} />}
+                {u.art === 'coin' && <CoinArt />}
+                {u.art === 'rooms' && <RoomsArt accent={u.accent} />}
+              </>
+            )}
           </div>
 
           <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 24, fontWeight: 800, letterSpacing: '0.04em', color: '#fff', textShadow: `0 0 18px ${u.accent}88` }}>{u.title}</div>

@@ -106,6 +106,7 @@ export default function MissionCard({
             initial={contractor?.initial ?? 'OP'}
             color={accent}
             uiRole={contractor?.uiRole ?? 'starter'}
+            contractorId={contractor?.id}
           />
           <div style={{ textAlign: 'center', font: '700 10px var(--ln-font-display)', color: 'var(--ln-text)', textTransform: 'uppercase', letterSpacing: '0.02em', lineHeight: 1.15 }}>
             {contractor?.name ?? 'Free Ops'}
@@ -185,6 +186,7 @@ export default function MissionCard({
                   initial={contractor?.initial ?? 'OP'}
                   color={accent}
                   uiRole={contractor?.uiRole ?? 'starter'}
+                  contractorId={contractor?.id}
                   size={44}
                 />
                 <div style={{ minWidth: 0 }}>
