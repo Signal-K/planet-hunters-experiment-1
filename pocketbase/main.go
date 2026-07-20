@@ -277,10 +277,18 @@ func ensureCollections(app core.App) {
 		})
 		col.Fields.Add(&core.TextField{Name: "unlocks_at", Max: 200})
 		col.Fields.Add(&core.TextField{Name: "description", Max: 400})
+		// Maps this canonical structure to the takeon StructureType used to
+		// render/simulate it in a mining/exploration voxel scene (a launchpad
+		// is one structure with two perspectives, not two structures — see
+		// "Structures & worldbuilding in Landnam", Craft). Empty for
+		// structures with no voxel-scene presence.
+		col.Fields.Add(&core.TextField{Name: "takeon_type", Max: 40})
 		col.Indexes = []string{"CREATE UNIQUE INDEX idx_structure_blueprints_slug ON structure_blueprints (slug)"}
 		if err := app.Save(col); err != nil {
 			log.Printf("failed to save structure_blueprints: %v", err)
 		}
+	} else {
+		migrateStructureBlueprints(app)
 	}
 
 	if _, err := app.FindCollectionByNameOrId("scheduled_notifications"); err != nil {
@@ -381,10 +389,12 @@ func ensureCollections(app core.App) {
 	// structures — one row per placed structure instance, split out from
 	// voxel_worlds so placed structures are queryable/listable (e.g. "all
 	// structures across my targets", contractor/notification hooks) without
-	// deserialising the whole world blob. blueprint_slug is a plain string,
-	// not a relation, matching the loose-coupling pattern used elsewhere
-	// (missions_catalog.contractor_slug) — it may reference either a
-	// structure_blueprints row or a takeon-native StructureType.
+	// deserialising the whole world blob. blueprint_slug always references
+	// structure_blueprints.slug (the canonical structure) — a launchpad is
+	// one structure with two perspectives, not two catalogs. When rendering
+	// a structure inside a voxel scene, resolve
+	// structure_blueprints[blueprint_slug].takeon_type to get the takeon
+	// StructureType to instantiate.
 	if _, err := app.FindCollectionByNameOrId("structures"); err != nil {
 		col := core.NewBaseCollection("structures")
 		col.ListRule = types.Pointer("user = @request.auth.id")
@@ -578,6 +588,24 @@ func migrateMissionLog(app core.App) {
 		} else {
 			log.Printf("migrateMissionLog: updated mission_log schema")
 		}
+	}
+}
+
+// migrateStructureBlueprints backfills the takeon_type field onto an
+// existing structure_blueprints collection (added after initial launch).
+func migrateStructureBlueprints(app core.App) {
+	col, err := app.FindCollectionByNameOrId("structure_blueprints")
+	if err != nil {
+		return
+	}
+	if col.Fields.GetByName("takeon_type") != nil {
+		return
+	}
+	col.Fields.Add(&core.TextField{Name: "takeon_type", Max: 40})
+	if err := app.Save(col); err != nil {
+		log.Printf("migrateStructureBlueprints: failed to save: %v", err)
+	} else {
+		log.Printf("migrateStructureBlueprints: added takeon_type field")
 	}
 }
 
@@ -900,16 +928,35 @@ func seedCatalog(app core.App) {
 	}
 
 	type structureBlueprint struct {
-		name, kind, unlockTrigger, unlocksAt, description string
-		cost                                              float64
-		materials                                         map[string]float64
+		name, kind, unlockTrigger, unlocksAt, description, takeonType string
+		cost                                                          float64
+		materials                                                     map[string]float64
 	}
+	// A structure is one game object with (up to) two perspectives: its hub
+	// view and — for structures that exist inside a mining/exploration
+	// target scene — its takeon voxel-scene rendering. takeonType maps to
+	// that scene's StructureType; it's not a second catalog entry. See
+	// "Structures & worldbuilding in Landnam" (Craft): "clicking on the
+	// launchpad will open a view... 2D & 3D perspectives."
+	//
+	// Costs below are real product decisions only for launchpad/refinery
+	// (pre-existing). The eight new entries (solar-array through pylon) are
+	// takeon's mining-outpost structures with no Landnam economy pass done
+	// yet — cost_francs 0 is a placeholder, not a design decision.
 	structures := []struct {
 		slug string
 		structureBlueprint
 	}{
-		{"launchpad", structureBlueprint{"Launchpad", "launchpad", "always", "always", "Rocket assembly and launch operations.", 0, map[string]float64{}}},
-		{"refinery", structureBlueprint{"Refinery", "refinery", "contractor-mission-trigger", "First contractor mission requiring refined minerals", "Refines raw minerals into higher-value contractor-grade materials.", 800000000, map[string]float64{"aluminium": 20, "copper": 10}}},
+		{"launchpad", structureBlueprint{"Launchpad", "launchpad", "always", "always", "Rocket assembly and launch operations.", "launch-pad", 0, map[string]float64{}}},
+		{"refinery", structureBlueprint{"Refinery", "refinery", "contractor-mission-trigger", "First contractor mission requiring refined minerals", "Refines raw minerals into higher-value contractor-grade materials.", "refinery", 800000000, map[string]float64{"aluminium": 20, "copper": 10}}},
+		{"solar-array", structureBlueprint{"Solar Array", "solar-array", "manual", "", "Fixed panel farm. Recharges a rover quickly within range (daylight only).", "solar-array", 0, map[string]float64{}}},
+		{"beacon", structureBlueprint{"Nav Beacon", "beacon", "manual", "", "Marks a site on the map and lights the area at night.", "beacon", 0, map[string]float64{}}},
+		{"drill-rig", structureBlueprint{"Auto-Drill Rig", "drill-rig", "manual", "", "Slowly mines the column beneath it; buffers ore for pickup.", "drill-rig", 0, map[string]float64{}}},
+		{"cache", structureBlueprint{"Supply Cache", "cache", "manual", "", "Deposit cargo here to bank it as mission yield and free up the hold.", "cache", 0, map[string]float64{}}},
+		{"habitat-frame", structureBlueprint{"Habitat Frame", "habitat-frame", "manual", "", "The first bones of a permanent outpost. Completes into a habitat once powered.", "habitat-frame", 0, map[string]float64{}}},
+		{"habitat", structureBlueprint{"Habitat", "habitat", "manual", "Completed by upgrading a habitat-frame — not placed directly", "A finished pressurised outpost. Recharges and slowly repairs a rover parked alongside it.", "habitat", 0, map[string]float64{}}},
+		{"generator", structureBlueprint{"Generator", "generator", "manual", "", "Radioisotope plant. Powers nearby structures day and night.", "generator", 0, map[string]float64{}}},
+		{"pylon", structureBlueprint{"Power Pylon", "pylon", "manual", "", "Relays power onward, extending the grid to distant drills and pads.", "pylon", 0, map[string]float64{}}},
 	}
 	for _, s := range structures {
 		seedRecord(app, "structure_blueprints", s.slug, map[string]any{
@@ -918,6 +965,7 @@ func seedCatalog(app core.App) {
 			"unlock_trigger_type": s.unlockTrigger,
 			"unlocks_at":          s.unlocksAt,
 			"description":         s.description,
+			"takeon_type":         s.takeonType,
 		})
 	}
 
