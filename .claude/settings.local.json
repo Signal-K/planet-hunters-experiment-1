@@ -79,7 +79,13 @@
       "mcp__desk__update_ticket",
       "mcp__desk__add_comment",
       "mcp__desk__reconcile_statuses",
-      "mcp__desk__list_story_boards"
+      "mcp__desk__list_story_boards",
+      "mcp__desk__list_craft_library",
+      "WebFetch(domain:voxel-game.com)",
+      "mcp__desk__create_ticket",
+      "mcp__desk__link_tickets",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "mcp__desk__search"
     ]
   },
   "enabledMcpjsonServers": [
