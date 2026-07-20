@@ -346,6 +346,75 @@ func ensureCollections(app core.App) {
 		migrateMissionLog(app)
 	}
 
+	// voxel_worlds — one row per (user, target): the bulk takeon MissionState
+	// for that target (sparse voxel edits, rover snapshot, photos). Mirrors
+	// game_states' per-user JSON-blob pattern, but keyed per target since a
+	// player has one voxel world per mining/exploration target, not one
+	// global world. See STS-403/404 (Desk) for the design decision.
+	if _, err := app.FindCollectionByNameOrId("voxel_worlds"); err != nil {
+		col := core.NewBaseCollection("voxel_worlds")
+		col.ListRule = types.Pointer("user = @request.auth.id")
+		col.ViewRule = types.Pointer("user = @request.auth.id")
+		col.CreateRule = types.Pointer("@request.auth.id != \"\" && user = @request.auth.id")
+		col.UpdateRule = types.Pointer("user = @request.auth.id")
+		col.DeleteRule = types.Pointer("user = @request.auth.id")
+		col.Fields.Add(&core.TextField{Name: "user", Required: true, Max: 64})
+		col.Fields.Add(&core.TextField{Name: "target_id", Required: true, Max: 80})
+		col.Fields.Add(&core.NumberField{Name: "seed"})
+		col.Fields.Add(&core.NumberField{Name: "schema_version"})
+		col.Fields.Add(&core.TextField{Name: "status", Max: 20})
+		// Sparse voxel edit deltas ("x,y,z" -> material), takeon's own delta
+		// save model — not a per-chunk table. Chunking is a client-side
+		// render cache (takeon's chunk-cached isometric renderer), not a
+		// storage concern, so there's no separate chunks collection.
+		col.Fields.Add(&core.JSONField{Name: "edits", MaxSize: 2000000})
+		col.Fields.Add(&core.JSONField{Name: "rover", MaxSize: 20000})
+		col.Fields.Add(&core.JSONField{Name: "photos", MaxSize: 200000})
+		col.Indexes = []string{
+			"CREATE UNIQUE INDEX idx_voxel_worlds_user_target ON voxel_worlds (user, target_id)",
+		}
+		if err := app.Save(col); err != nil {
+			log.Printf("failed to save voxel_worlds: %v", err)
+		}
+	}
+
+	// structures — one row per placed structure instance, split out from
+	// voxel_worlds so placed structures are queryable/listable (e.g. "all
+	// structures across my targets", contractor/notification hooks) without
+	// deserialising the whole world blob. blueprint_slug is a plain string,
+	// not a relation, matching the loose-coupling pattern used elsewhere
+	// (missions_catalog.contractor_slug) — it may reference either a
+	// structure_blueprints row or a takeon-native StructureType.
+	if _, err := app.FindCollectionByNameOrId("structures"); err != nil {
+		col := core.NewBaseCollection("structures")
+		col.ListRule = types.Pointer("user = @request.auth.id")
+		col.ViewRule = types.Pointer("user = @request.auth.id")
+		col.CreateRule = types.Pointer("@request.auth.id != \"\" && user = @request.auth.id")
+		col.UpdateRule = types.Pointer("user = @request.auth.id")
+		col.DeleteRule = types.Pointer("user = @request.auth.id")
+		col.Fields.Add(&core.TextField{Name: "user", Required: true, Max: 64})
+		col.Fields.Add(&core.TextField{Name: "target_id", Required: true, Max: 80})
+		col.Fields.Add(&core.TextField{Name: "structure_id", Required: true, Max: 40})
+		col.Fields.Add(&core.TextField{Name: "blueprint_slug", Required: true, Max: 40})
+		col.Fields.Add(&core.SelectField{
+			Name: "category", MaxSelect: 1,
+			Values: []string{"functional", "decorative"},
+		})
+		col.Fields.Add(&core.NumberField{Name: "pos_x", Required: true})
+		col.Fields.Add(&core.NumberField{Name: "pos_y", Required: true})
+		col.Fields.Add(&core.NumberField{Name: "facing"}) // 0-3, iso-space SE/SW/NW/NE per takeon's convention
+		col.Fields.Add(&core.JSONField{Name: "buffer", MaxSize: 2000})
+		col.Fields.Add(&core.NumberField{Name: "cooldown_until"})
+		col.Fields.Add(&core.NumberField{Name: "progress"})
+		col.Indexes = []string{
+			"CREATE UNIQUE INDEX idx_structures_user_target_structure ON structures (user, target_id, structure_id)",
+			"CREATE INDEX idx_structures_user_target ON structures (user, target_id)",
+		}
+		if err := app.Save(col); err != nil {
+			log.Printf("failed to save structures: %v", err)
+		}
+	}
+
 	ensureCatalogFields(app)
 }
 
