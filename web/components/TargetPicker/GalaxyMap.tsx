@@ -9,9 +9,10 @@ interface GalaxyMapProps {
   compatibleIds: Set<string>
   pickedId: string
   onPick: (id: string) => void
+  hasCoach?: boolean
 }
 
-export default function GalaxyMap({ mission, targets, compatibleIds, pickedId, onPick }: GalaxyMapProps) {
+export default function GalaxyMap({ mission, targets, compatibleIds, pickedId, onPick, hasCoach }: GalaxyMapProps) {
   return (
     <PixiGalaxyMap
       mission={mission}
@@ -19,6 +20,7 @@ export default function GalaxyMap({ mission, targets, compatibleIds, pickedId, o
       compatibleIds={compatibleIds}
       pickedId={pickedId}
       onPick={onPick}
+      hasCoach={hasCoach}
     />
   )
 }

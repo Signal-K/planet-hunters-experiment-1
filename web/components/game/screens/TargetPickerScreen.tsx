@@ -127,6 +127,7 @@ export default function TargetPickerScreen({ mission, onBack, onPick, hasCoach, 
               compatibleIds={compatIds}
               pickedId={picked}
               onPick={setPicked}
+              hasCoach={hasCoach}
             />
             {hasCoach && <TutorialHighlight borderRadius={14} />}
           </div>

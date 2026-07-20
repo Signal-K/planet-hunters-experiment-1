@@ -274,6 +274,13 @@ interface PixiGalaxyMapProps {
   compatibleIds: Set<string>
   pickedId: string
   onPick: (id: string) => void
+  // Screen-owned content already starts below the reserved tutorial rail
+  // (see TUTORIAL_CONTENT_TOP), but that budget assumes a single-line coach
+  // step. Steps with both body and action text (e.g. "Choose a Destination")
+  // render taller than the budget at narrow viewports, so this button's own
+  // top:10 can still land under the coach card. Nudge it down further while
+  // a coach step is active on this screen.
+  hasCoach?: boolean
 }
 
 type MapView = 'solar' | 'belt'
@@ -454,7 +461,7 @@ export default function PixiGalaxyMap(props: PixiGalaxyMapProps) {
           onClick={goToSolar}
           style={{
             position: 'absolute',
-            top: 10,
+            top: props.hasCoach ? 74 : 10,
             left: 10,
             zIndex: 10,
             display: 'flex', alignItems: 'center', gap: 5,
