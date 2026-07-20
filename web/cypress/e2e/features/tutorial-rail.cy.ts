@@ -108,20 +108,19 @@ describe('Tutorial rail regression', () => {
         visitWithState(fullState({
           screen: 'hub',
           tutorial: true,
-          menuOpen: true,
           doneSteps: { 0: true },
         }))
 
         cy.get('[data-testid="tutorial-coach-block"]').should('contain', 'Open a Mission')
 
         // On desktop the sidebar missions button is always visible;
-        // on mobile the radial menu is open (menuOpen: true) so radial-nav-missions shows.
+        // on mobile the bottom tab bar's Missions tab is always visible.
         cy.window().then(win => {
           if (win.innerWidth >= 1024) {
             cy.get('[data-testid="sidebar-nav-missions"]').should('be.visible')
-            cy.get('[data-testid="radial-nav-toggle"]').should('not.be.visible')
+            cy.get('[data-testid="bottom-tab-missions"]').should('not.be.visible')
           } else {
-            cy.get('[data-testid="radial-nav-missions"]').should('be.visible')
+            cy.get('[data-testid="bottom-tab-missions"]').should('be.visible')
           }
         })
 
@@ -182,8 +181,13 @@ describe('Tutorial rail regression', () => {
         cy.contains('[data-testid="tutorial-coach-overlay"] button', 'Skip').click()
         cy.get('[data-testid="tutorial-coach-overlay"]').should('not.exist')
         cy.get('[data-testid="building-launchpad"]').should('be.visible')
-        cy.get('[data-testid="radial-nav-toggle"]').click()
-        cy.get('[data-testid="radial-nav-missions"]').click()
+        cy.window().then(win => {
+          if (win.innerWidth >= 1024) {
+            cy.get('[data-testid="sidebar-nav-missions"]').click()
+          } else {
+            cy.get('[data-testid="bottom-tab-missions"]').click()
+          }
+        })
         cy.get('[data-testid="mission-card-generated-s1-starter-bulk-1"]').should('be.visible').click()
         cy.contains('Continue · Build').should('be.visible')
       })

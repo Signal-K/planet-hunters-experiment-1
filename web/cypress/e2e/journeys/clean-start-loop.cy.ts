@@ -85,8 +85,7 @@ describe('Clean start full game loop', () => {
 
     cy.contains('Earth Base', { timeout: 10_000 }).should('be.visible')
     cy.get('[data-testid="building-launchpad"]').should('be.visible')
-    cy.get('[data-testid="radial-nav-toggle"]').click()
-    cy.get('[data-testid="radial-nav-missions"]').click()
+    cy.get('[data-testid="bottom-tab-missions"]').click()
 
     cy.contains('Mission Board').should('be.visible')
     cy.get('[data-testid="mission-card-generated-s1-starter-bulk-1"]').click()

@@ -137,8 +137,7 @@ describe('M3 — Transport contractor pick and Free Ops unlock', () => {
       // straight back to the mission board — navigate there to see the
       // Free Ops explanation.
       cy.get('[data-testid="top-bar-back"]').click()
-      cy.get('[data-testid="radial-nav-toggle"]').click()
-      cy.get('[data-testid="radial-nav-missions"]').click()
+      cy.get('[data-testid="bottom-tab-missions"]').click()
       cy.contains('Custom Missions Unlocked').should('be.visible')
       cy.contains('Free Ops · Hot Minerals').should('be.visible')
       cy.contains('Infrastructure').should('be.visible')

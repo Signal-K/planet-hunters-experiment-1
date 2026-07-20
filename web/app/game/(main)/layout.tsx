@@ -7,7 +7,7 @@ import { M1_STEPS, M2_STEPS, M3_STEPS } from '@/lib/data'
 import TutorialCoach from '@/components/game/TutorialCoach'
 import SaveProgressPrompt from '@/components/game/SaveProgressPrompt'
 import UnlockPopup from '@/components/game/UnlockPopup'
-import RadialNav from '@/components/layout/RadialNav'
+import BottomTabBar from '@/components/layout/BottomTabBar'
 import Sidebar from '@/components/Sidebar/Sidebar'
 import BackendStatus from '@/components/game/BackendStatus'
 import LandnamSyncStatus from '@/components/game/LandnamSyncStatus'
@@ -98,18 +98,8 @@ function GameChrome({ children }: { children: ReactNode }) {
   }, [game.player.missionsDone, game.tutorial])
 
   const coach = useMemo(() => {
-    const s = coachSteps.find(step => step.screen === game.screen && !game.doneSteps[step.id]) ?? null
-    if (s && s.id === 1 && game.menuOpen) {
-      return {
-        ...s,
-        action: 'Tap MISSIONS',
-        anchor: 'bottom' as const,
-        coachId: 'radial-missions',
-        dir: 'down' as const,
-      }
-    }
-    return s
-  }, [coachSteps, game.doneSteps, game.screen, game.menuOpen])
+    return coachSteps.find(step => step.screen === game.screen && !game.doneSteps[step.id]) ?? null
+  }, [coachSteps, game.doneSteps, game.screen])
 
   const coachIndex = coach ? coachSteps.findIndex(step => step.id === coach.id) : -1
   const hasCoach = !!coach
@@ -148,12 +138,12 @@ function GameChrome({ children }: { children: ReactNode }) {
         {process.env.NODE_ENV === 'development' && <DevShortcuts />}
 
         {/* Current screen (injected by [screen]/page.tsx) */}
-        {children}
+        <div className="game-screen-area">{children}</div>
 
         <ToastLayer toasts={game.toasts} onDismiss={game.dismissToast} />
         {showFeedback && <FeedbackButton />}
         <SurveySheet blockWhile={!!game.popup || !!coach || !!game.pendingTerritoryClaimFor} />
-        {showNav && <div className="mobile-radial-nav"><RadialNav current={currentNav} onNav={goFromNav} /></div>}
+        {showNav && <BottomTabBar current={currentNav} onNav={goFromNav} />}
 
         {coach && !game.popup && (
           <TutorialCoach

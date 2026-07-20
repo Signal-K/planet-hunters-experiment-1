@@ -129,22 +129,6 @@ function assertZoneAvoids(zone: string, forbidden: string) {
   })
 }
 
-function assertElementsAvoid(subjectSelector: string, blockerSelector: string) {
-  cy.get(subjectSelector).should('be.visible').then($subject => {
-    const subjectRect = $subject[0].getBoundingClientRect()
-    cy.get(blockerSelector).each($blocker => {
-      const blocker = $blocker[0]
-      const style = getComputedStyle(blocker)
-      const blockerRect = blocker.getBoundingClientRect()
-      if (style.display === 'none' || style.visibility === 'hidden' || blockerRect.width === 0 || blockerRect.height === 0) return
-      expect(
-        rectsIntersect(subjectRect, blockerRect),
-        `${subjectSelector} must not overlap ${$blocker.attr('data-testid') ?? blockerSelector}`
-      ).to.equal(false)
-    })
-  })
-}
-
 function assertTransactionalScreenZones() {
   cy.get('[data-ui-zone="bottom-actions"]').should('be.visible')
   assertKnownZonesOnly()
@@ -224,21 +208,6 @@ describe('UI zone contract', () => {
         assertZoneAvoids('ambient-prompt', 'tutorial-rail')
         assertZoneAvoids('bottom-nav', 'tutorial-rail')
         assertNoZone('feedback-launcher')
-      })
-
-      it('keeps Reset Progress out of the expanded radial buttons', () => {
-        visitWithState({
-          screen: 'hub',
-          tutorial: false,
-          player: { freeOperations: true, missionsDone: 3 },
-        })
-
-        cy.get('[data-testid="radial-nav-toggle"]').click()
-        cy.get('[data-testid="radial-nav-reset"]').should('be.visible')
-        assertElementsAvoid(
-          '[data-testid="radial-nav-reset"]',
-          '[data-testid^="radial-nav-"]:not([data-testid="radial-nav-reset"]):not([data-testid="radial-nav-toggle"])'
-        )
       })
 
       it('keeps target picker continue actions free of global nav, prompts, and feedback', () => {

@@ -10,7 +10,7 @@ import TutorialCoach from '@/components/game/TutorialCoach'
 import MissionTicker from '@/components/game/MissionTicker'
 import SaveProgressPrompt from '@/components/game/SaveProgressPrompt'
 import UnlockPopup from '@/components/game/UnlockPopup'
-import RadialNav from '@/components/layout/RadialNav'
+import BottomTabBar from '@/components/layout/BottomTabBar'
 import Sidebar from '@/components/Sidebar/Sidebar'
 import BackendStatus from '@/components/game/BackendStatus'
 import LandnamSyncStatus from '@/components/game/LandnamSyncStatus'
@@ -102,19 +102,8 @@ function GameCanvas() {
   }, [game.player.missionsDone, game.tutorial])
 
   const coach = useMemo(() => {
-    const s = coachSteps.find(step => step.screen === game.screen && !game.doneSteps[step.id]) ?? null
-    if (s && s.id === 1 && game.menuOpen) {
-      return {
-        ...s,
-        action: 'Tap MISSIONS',
-        anchor: 'bottom' as const,
-        // MISSIONS button is always 104px from canvas bottom (bottom:28 + |dy|:-76.2 ≈ 104px)
-        // x is center-relative: button center = 50% + dx (-57.8px), spot left = center - w/2 = 50% - 95.8px
-        spot: { x: -96, y: 104, w: 76, h: 58, fromBottom: true, fromCenter: true },
-      }
-    }
-    return s
-  }, [coachSteps, game.doneSteps, game.screen, game.menuOpen])
+    return coachSteps.find(step => step.screen === game.screen && !game.doneSteps[step.id]) ?? null
+  }, [coachSteps, game.doneSteps, game.screen])
 
   const coachIndex = coach ? coachSteps.findIndex(step => step.id === coach.id) : -1
   const hasCoach = !!coach
@@ -173,12 +162,14 @@ function GameCanvas() {
           </div>
         )}
         {process.env.NODE_ENV === 'development' && <DevShortcuts />}
-        <ScreenContent screen={game.screen} game={game} hasCoach={hasCoach} onBackFromHangar={() => {
-          game.go('hub')
-          if (window.location.pathname.includes('/game/ship-customizer')) {
-            router.replace('/game')
-          }
-        }} />
+        <div className="game-screen-area">
+          <ScreenContent screen={game.screen} game={game} hasCoach={hasCoach} onBackFromHangar={() => {
+            game.go('hub')
+            if (window.location.pathname.includes('/game/ship-customizer')) {
+              router.replace('/game')
+            }
+          }} />
+        </div>
 
         <ToastLayer toasts={game.toasts} onDismiss={game.dismissToast} />
         {!coach && !game.popup && !game.upgradePromptOpen && !game.authGateOpen && (
@@ -186,7 +177,7 @@ function GameCanvas() {
         )}
         {showFeedback && <FeedbackButton />}
         <SurveySheet blockWhile={surveyBlocked} />
-        {showNav && <div className="mobile-radial-nav"><RadialNav current={currentNav} onNav={goFromNav} /></div>}
+        {showNav && <BottomTabBar current={currentNav} onNav={goFromNav} />}
 
         {coach && (
           <TutorialCoach

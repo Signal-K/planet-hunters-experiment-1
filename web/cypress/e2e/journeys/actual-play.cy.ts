@@ -38,11 +38,10 @@ function navToMissions() {
   cy.window().then(win => {
     const isDesktop = win.innerWidth >= 1024
     if (isDesktop) {
-      cy.get('[data-testid="radial-nav-toggle"]').should('not.be.visible')
+      cy.get('[data-testid="bottom-tab-missions"]').should('not.be.visible')
       cy.get('[data-testid="sidebar-nav-missions"]').should('be.visible').click()
     } else {
-      cy.get('[data-testid="radial-nav-toggle"]').should('be.visible').click()
-      cy.get('[data-testid="radial-nav-missions"]').should('be.visible').click()
+      cy.get('[data-testid="bottom-tab-missions"]').should('be.visible').click()
     }
   })
 }

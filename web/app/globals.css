@@ -98,6 +98,8 @@
   --ln-s-7: 48px;
   --ln-s-8: 64px;
 
+  --ln-nav-h: 64px;
+
   --ln-font-display: "Oxanium", "Turret Road", system-ui, sans-serif;
   --ln-font-body:    "Oxanium", system-ui, sans-serif;
   --ln-font-mono:    "Turret Road", ui-monospace, "Geist Mono", monospace;
@@ -178,6 +180,8 @@ button { cursor: pointer; }
 
 .portrait-canvas {
   position: relative;
+  display: flex;
+  flex-direction: column;
   width: min(402px, calc(100vw - var(--ln-s-4)));
   height: min(874px, calc(100dvh - var(--ln-s-4)));
   max-height: 874px;
@@ -187,6 +191,19 @@ button { cursor: pointer; }
   border-radius: 28px;
   box-shadow: var(--ln-shadow-modal), var(--ln-glow-cyan);
   isolation: isolate;
+}
+
+/* Flex row above .bottom-tab-bar — screen content's own overflow-y:auto
+   box naturally ends above the bar instead of guessing its height via
+   per-screen paddingBottom hacks. */
+.game-screen-area { flex: 1; min-height: 0; position: relative; overflow: hidden; }
+
+.bottom-tab-bar {
+  flex: none;
+  height: var(--ln-nav-h);
+  display: flex;
+  background: var(--ln-surface);
+  border-top: 1px solid var(--ln-hairline-strong);
 }
 
 .game-screen { position: absolute; inset: 0; overflow: hidden; background: var(--ln-bg); }
@@ -223,6 +240,19 @@ button { cursor: pointer; }
   pointer-events: none;
 }
 .sync-status span { width: 5px; height: 5px; border-radius: var(--ln-r-pill); background: currentColor; }
+
+/* When .bottom-tab-bar is present it permanently occupies the bottom
+   var(--ln-nav-h), unlike the old floating radial nav — lift these corner
+   indicators above it so they don't sit on top of the tab labels. Scoped to
+   the same breakpoint the bar itself uses (hidden at 1024px+, sidebar takes
+   over), so it stays inert on desktop where the bar exists in the DOM but
+   is not visible. */
+@media (max-width: 1023px) {
+  .portrait-canvas:has(.bottom-tab-bar) .backend-status,
+  .portrait-canvas:has(.bottom-tab-bar) .sync-status {
+    bottom: calc(var(--ln-nav-h) + var(--ln-s-2));
+  }
+}
 
 .auth-gate {
   position: absolute;
@@ -280,16 +310,18 @@ button { cursor: pointer; }
   }
 }
 
-.screen-scroll { position: absolute; inset: 0; overflow-y: auto; padding: 76px var(--ln-s-3) 118px; }
+.screen-scroll { position: absolute; inset: 0; overflow-y: auto; padding: 76px var(--ln-s-3) var(--ln-s-5); }
 .screen-scroll--coach { padding-top: var(--tutorial-content-top); }
 .screen-scroll--coach-manual { padding-top: var(--tutorial-manual-content-top); }
-/* 118px only fits the base 3-button verdict row. TessDiscoveryScreen/
-   transit-demo add a "CLEAR MARKS" ghost button below it once a region is
-   marked, which grows .sticky-actions by ~50px past that reservation and
-   overlaps the readout cards above it (Liam, 2026-07-03: overlap screenshot
-   showing EQ. TEMP behind CONFIRM TRANSIT). Apply this whenever that extra
-   row is visible. */
-.screen-scroll--tall-actions { padding-bottom: 172px; }
+/* .screen-scroll lives inside .game-screen-area, which already stops above
+   .bottom-tab-bar — this padding-bottom only needs to fit the base 3-button
+   verdict row now, not nav clearance too. TessDiscoveryScreen/transit-demo
+   add a "CLEAR MARKS" ghost button below it once a region is marked, which
+   grows .sticky-actions by ~50px past that reservation and overlaps the
+   readout cards above it (Liam, 2026-07-03: overlap screenshot showing
+   EQ. TEMP behind CONFIRM TRANSIT). Apply this whenever that extra row is
+   visible. */
+.screen-scroll--tall-actions { padding-bottom: 78px; }
 .blueprint-screen {
   background:
     repeating-linear-gradient(0deg, transparent 0 19px, rgba(63,169,255,0.06) 19px 20px),
@@ -507,13 +539,9 @@ button { cursor: pointer; }
   display: none;
 }
 
-/* Radial nav — hidden on desktop (sidebar replaces it) */
-.mobile-radial-nav {
-  display: contents;
-}
-
+/* Bottom tab bar — hidden on desktop (sidebar replaces it) */
 @media (min-width: 1024px) {
-  .mobile-radial-nav {
+  .bottom-tab-bar {
     display: none;
   }
 }
@@ -549,7 +577,7 @@ button { cursor: pointer; }
   }
   .screen-scroll {
     padding-top: 52px;
-    padding-bottom: 88px;
+    padding-bottom: var(--ln-s-4);
   }
   .screen-scroll--coach {
     padding-top: var(--tutorial-content-top);
@@ -592,15 +620,13 @@ button { cursor: pointer; }
   50%      { box-shadow: 0 0 0 3px rgba(245,166,35,1),    0 0 28px rgba(245,166,35,0.45); }
 }
 html[data-coach-target="sidebar-missions"] [data-coach-id="sidebar-missions"],
-html[data-coach-target="radial-toggle"]   [data-coach-id="radial-toggle"],
-html[data-coach-target="radial-missions"] [data-coach-id="radial-missions"] {
+html[data-coach-target="bottom-tab-missions"] [data-coach-id="bottom-tab-missions"] {
   animation: coach-target-pulse 1.4s ease-in-out infinite;
 }
 html[data-coach-target="build-structure-strip"] [data-coach-id="build-structure-strip"] {
   animation: coach-target-pulse 1.4s ease-in-out infinite;
   border-radius: 8px;
 }
-@keyframes radial-pulse { 0% { transform: scale(1); opacity: 0.7; } 100% { transform: scale(1.5); opacity: 0; } }
 @keyframes pad-pulse { 0%,100% { transform: scale(1); opacity: 0.85; } 50% { transform: scale(1.05); opacity: 1; } }
 @keyframes cloud-drift { from { transform: translateX(0); } to { transform: translateX(460px); } }
 @keyframes unlock-in { from { transform: scale(0.85); opacity: 0; } to { transform: scale(1); opacity: 1; } }

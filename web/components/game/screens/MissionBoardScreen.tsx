@@ -175,10 +175,10 @@ export default function MissionBoardScreen({ onBack, onPick, missionsDone, freeO
       </div>
         <TopBar eyebrow={freeOperations ? 'EARTH BASE · FREE OPS' : `EARTH BASE · L${missionsDone + 1}`} title="Mission Board" onBack={onBack} solid />
 
-      {/* paddingBottom clears the floating RadialNav central button (bottom:24,
-          height:64, plus its glow) — 96 left the last list row's payout/target
-          row directly underneath it on mobile. */}
-      <div data-ui-zone={UI_ZONES.screenContent} style={{ position: 'absolute', inset: 0, paddingTop: hasCoach ? TUTORIAL_CONTENT_TOP : 72, paddingBottom: hasCoach ? 190 : 128, overflowY: 'auto' }}>
+      {/* .bottom-tab-bar now reserves its own flex row above this screen, so
+          paddingBottom only needs breathing room plus the coach panel's own
+          footprint when it's showing — no more nav-clearance guesswork. */}
+      <div data-ui-zone={UI_ZONES.screenContent} style={{ position: 'absolute', inset: 0, paddingTop: hasCoach ? TUTORIAL_CONTENT_TOP : 72, paddingBottom: hasCoach ? 94 : 32, overflowY: 'auto' }}>
         {freeOperations && (
           <div style={{ padding: '0 14px 10px 14px' }}>
             <Panel accent={contractorPoolExhausted ? 'var(--ln-ok)' : 'var(--ln-cyan)'} style={{ padding: 12 }}>
