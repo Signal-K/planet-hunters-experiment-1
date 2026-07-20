@@ -7,12 +7,13 @@ import Panel from '@/components/ui/Panel'
 import StatusPill from '@/components/ui/StatusPill'
 import { IconBtn } from '@/components/ui/Button'
 import { compatibleTargetsFor, contractorAffinityBonus, contractorUnlocked, FREE_OPS_START_MISSIONS_DONE, CONTRACTOR_AFFINITY_MISSION_THRESHOLD, MISSION_TEMPLATES, CONTRACTOR_SLOTS, SELF_DIRECTED_MINING_MISSION_ID } from '@/lib/data'
-import type { DailyContractorPool } from '@/lib/data'
+import type { DailyContractorPool, Mission } from '@/lib/data'
 import type { Catalog } from '@/lib/catalog'
 import { TUTORIAL_CONTENT_TOP } from '@/lib/tutorial-layout'
 import { UI_ZONES } from '@/lib/ui-zones'
 import MissionCard from '@/components/game/MissionCard'
 import ClientBonusGuideSheet from '@/components/game/ClientBonusGuideSheet'
+import ContractorMark from '@/components/ui/ContractorMark'
 
 function InfoIcon() {
   return (
@@ -206,6 +207,7 @@ export default function MissionBoardScreen({ onBack, onPick, missionsDone, freeO
           paddingBottom only needs breathing room plus the coach panel's own
           footprint when it's showing — no more nav-clearance guesswork. */}
       <div data-ui-zone={UI_ZONES.screenContent} style={{ position: 'absolute', inset: 0, paddingTop: hasCoach ? TUTORIAL_CONTENT_TOP : 72, paddingBottom: hasCoach ? 94 : 32, overflowY: 'auto' }}>
+        <PlayfieldBand topMission={available[0]} contractors={CONTRACTORS} activeCount={available.length} freeOperations={freeOperations} />
         {freeOperations && (
           <div style={{ padding: '0 14px 10px 14px' }}>
             <Panel accent={contractorPoolExhausted ? 'var(--ln-ok)' : 'var(--ln-cyan)'} style={{ padding: 12 }}>
@@ -362,6 +364,70 @@ export default function MissionBoardScreen({ onBack, onPick, missionsDone, freeO
           sequence={sequence}
         />
       )}
+    </div>
+  )
+}
+
+// "Playfield" band — ported from the Open Design "Client Bonus" mockup's map
+// header (see web/components/game/previews/MissionFlowPreview.tsx for the
+// full decorative version with tile-grid/biome art), restyled onto real dark
+// --ln-* tokens and driven by the top real mission instead of fake preview
+// data. Deliberately skips the OD prototype's animated tile-grid/greeblies —
+// this band's job is orienting the player toward the top contract, not
+// reproducing the mockup's decorative flourish.
+function PlayfieldBand({
+  topMission,
+  contractors,
+  activeCount,
+  freeOperations,
+}: {
+  topMission?: Mission
+  contractors: Catalog['contractors']
+  activeCount: number
+  freeOperations: boolean
+}) {
+  const contractor = topMission?.contractor ? contractors[topMission.contractor] : null
+  const accent = contractor?.color ?? 'var(--ln-amber)'
+  const blurb = !topMission
+    ? 'No contracts on the board right now.'
+    : contractor
+      ? `${contractor.name} wants ${contractor.mineralPreferences.join(' / ')}. Premium changes payout, not mined cargo.`
+      : 'Self-directed run. Mine what you want and sell at market value.'
+
+  return (
+    <div style={{ padding: '0 14px 10px 14px' }}>
+      <div style={{
+        display: 'flex', alignItems: 'center', gap: 12, padding: 12,
+        borderRadius: 10, border: `1px solid ${accent}45`,
+        background: 'linear-gradient(160deg, var(--ln-surface-2) 0%, var(--ln-void) 100%)',
+        boxShadow: 'var(--ln-shadow-card)',
+      }}>
+        <ContractorMark
+          initial={contractor?.initial ?? 'OP'}
+          color={accent}
+          uiRole={contractor?.uiRole ?? 'starter'}
+          contractorId={contractor?.id}
+          size={40}
+        />
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <span style={{ fontFamily: 'var(--ln-font-display)', fontSize: 10, fontWeight: 800, letterSpacing: '0.18em', color: accent, textTransform: 'uppercase' }}>
+              {topMission ? topMission.title : 'Board scan'}
+            </span>
+          </div>
+          <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 11.5, color: 'var(--ln-text-dim)', lineHeight: 1.4, marginTop: 2 }}>
+            {blurb}
+          </div>
+        </div>
+        <div style={{ flex: 'none', textAlign: 'right' }}>
+          <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 9, fontWeight: 700, letterSpacing: '0.14em', color: 'var(--ln-text-muted)', textTransform: 'uppercase' }}>
+            {freeOperations ? 'Client requests' : 'Active contracts'}
+          </div>
+          <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 16, fontWeight: 800, color: 'var(--ln-text)' }}>
+            {activeCount}
+          </div>
+        </div>
+      </div>
     </div>
   )
 }

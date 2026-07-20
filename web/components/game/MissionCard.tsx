@@ -40,6 +40,62 @@ const ROLE_LABELS: Record<Contractor['uiRole'], string> = {
   science: 'Research',
 }
 
+// Always-visible cargo/premium/affinity chip row — ported from the Open
+// Design "Client Bonus" mockup's contract-card chips (see
+// web/components/game/previews/missionFlowPreviewData.ts for the source
+// pattern), restyled onto real --ln-* dark tokens and driven by real
+// mission/contractor data instead of the preview's fixed sample jobs.
+function MetricChips({
+  mission,
+  contractor,
+  mineralMeta,
+  accent,
+}: {
+  mission: Mission
+  contractor?: Contractor | null
+  mineralMeta: Record<string, MineralMeta>
+  accent: string
+}) {
+  const mineralEntries = Object.entries(mission.requires.minerals)
+  const cargoValue = mineralEntries.length === 0
+    ? 'Any'
+    : mineralEntries.map(([k, v]) => `${v} ${mineralMeta[k]?.sym ?? k}`).join(' / ')
+  const chips: { label: string; value: string; empty?: boolean }[] = [
+    { label: 'Cargo', value: cargoValue },
+    contractor
+      ? { label: 'Premium', value: `+${Math.round(contractor.payoutPremium * 100)}%` }
+      : { label: 'Premium', value: 'None', empty: true },
+    contractor
+      ? { label: 'Affinity', value: `+${Math.round(contractor.affinityBonusPerMission * 1000) / 10}%` }
+      : { label: 'Affinity', value: 'None', empty: true },
+  ]
+  return (
+    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 6, padding: '8px 14px 0' }}>
+      {chips.map(chip => (
+        <div
+          key={chip.label}
+          style={{
+            minWidth: 0, padding: 6, borderRadius: 4,
+            border: `1px solid ${chip.empty ? 'var(--ln-hairline)' : `${accent}45`}`,
+            background: 'var(--ln-void)',
+          }}
+        >
+          <div style={{ font: '700 8px var(--ln-font-mono)', color: 'var(--ln-text-muted)', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+            {chip.label}
+          </div>
+          <div style={{
+            font: '800 12px var(--ln-font-display)', marginTop: 2,
+            color: chip.empty ? 'var(--ln-text-muted)' : accent,
+            whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+          }}>
+            {chip.value}
+          </div>
+        </div>
+      ))}
+    </div>
+  )
+}
+
 export default function MissionCard({
   mission,
   contractor,
@@ -127,14 +183,6 @@ export default function MissionCard({
 
         {/* MAIN COLUMN */}
         <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
-          {stateTone && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 14px 0' }}>
-              <span style={{ font: '700 9px var(--ln-font-mono)', letterSpacing: '0.1em', color: stateTone.color, textTransform: 'uppercase' }}>
-                {cardState === 'cooldown' && cooldownLabel ? `COOLDOWN · ${cooldownLabel}` : stateTone.label}
-              </span>
-            </div>
-          )}
-
           <div style={{ padding: '10px 14px 0', font: '600 9px var(--ln-font-mono)', color: 'var(--ln-text-muted)', letterSpacing: '0.07em', textTransform: 'uppercase', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
             {isStoryMission
               ? 'Story mission · Not a client request'
@@ -143,8 +191,22 @@ export default function MissionCard({
                 : 'Choose target · keep the haul · market-led mining'}
           </div>
 
-          <div style={{ padding: '4px 14px 0', font: '700 12px var(--ln-font-display)', color: 'var(--ln-text)', textTransform: 'uppercase', letterSpacing: '0.01em' }}>
-            {mission.title}
+          {/* Title + always-visible state chip — ported from the OD mockup's
+              contract-top row (kicker/title on the left, state badge on the
+              right), restyled onto dark tokens. */}
+          <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8, padding: '4px 14px 0' }}>
+            <div style={{ font: '700 12px var(--ln-font-display)', color: 'var(--ln-text)', textTransform: 'uppercase', letterSpacing: '0.01em' }}>
+              {mission.title}
+            </div>
+            <span style={{
+              flex: 'none', font: '700 8px var(--ln-font-mono)', letterSpacing: '0.08em', textTransform: 'uppercase',
+              padding: '3px 6px', borderRadius: 3,
+              color: stateTone?.color ?? 'var(--ln-ok)',
+              border: `1px solid ${stateTone?.color ?? 'var(--ln-ok)'}`,
+              background: `${stateTone?.color ?? 'var(--ln-ok)'}12`,
+            }}>
+              {cardState === 'cooldown' && cooldownLabel ? cooldownLabel : stateTone?.label ?? 'READY'}
+            </span>
           </div>
 
           {routeLabel && (
@@ -152,6 +214,8 @@ export default function MissionCard({
               {routeLabel}
             </div>
           )}
+
+          <MetricChips mission={mission} contractor={contractor} mineralMeta={mineralMeta} accent={accent} />
 
           <div style={{ display: 'flex', gap: 6, padding: '8px 14px 0', flexWrap: 'wrap' }}>
             <span style={{ font: '700 8px var(--ln-font-mono)', color: 'var(--ln-amber)', letterSpacing: '0.08em', textTransform: 'uppercase', border: '1px solid rgba(245,166,35,0.35)', background: 'rgba(245,166,35,0.08)', padding: '3px 6px', borderRadius: 3 }}>
