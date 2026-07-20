@@ -91,6 +91,18 @@ export default function TutorialCoach({ stepIndex, steps, step, total, onManualN
               {progress}
               <span style={{ flex: 1 }} />
               <button
+                data-testid="coach-skip-btn"
+                onClick={onSkip}
+                style={{
+                  padding: '8px 12px', borderRadius: 10, cursor: 'pointer', border: '1px solid rgba(154,176,200,0.3)',
+                  background: 'transparent',
+                  color: '#9ab0c8', fontFamily: 'var(--ln-font-display)', fontSize: 11, fontWeight: 700,
+                  letterSpacing: '0.1em', textTransform: 'uppercase',
+                }}
+              >
+                Skip
+              </button>
+              <button
                 data-testid="coach-got-it-btn"
                 onClick={onManualNext}
                 style={{
@@ -161,9 +173,21 @@ export default function TutorialCoach({ stepIndex, steps, step, total, onManualN
             </div>
           </div>
 
-          {/* Progress */}
-          <div style={{ flexShrink: 0 }}>
+          {/* Progress + skip */}
+          <div style={{ flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 6 }}>
             {progress}
+            <button
+              data-testid="coach-skip-btn"
+              onClick={onSkip}
+              style={{
+                padding: '4px 8px', borderRadius: 8, cursor: 'pointer', border: '1px solid rgba(154,176,200,0.3)',
+                background: 'transparent',
+                color: '#9ab0c8', fontFamily: 'var(--ln-font-display)', fontSize: 9, fontWeight: 700,
+                letterSpacing: '0.1em', textTransform: 'uppercase', whiteSpace: 'nowrap',
+              }}
+            >
+              Skip
+            </button>
           </div>
         </div>
 

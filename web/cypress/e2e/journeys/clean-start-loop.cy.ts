@@ -71,6 +71,14 @@ describe('Clean start full game loop', () => {
     cy.get('[data-testid="auth-gate-submit"]').click()
 
     cy.contains('LANDNAM', { timeout: 10_000 }).should('be.visible')
+    // The intro title paints before React's state-persistence effect commits
+    // its first localStorage.setItem — retry until the write lands instead of
+    // reading it as a one-shot right after the DOM assertion above.
+    cy.window({ timeout: 10_000 }).should(win => {
+      const raw = win.localStorage.getItem(STORAGE_KEY)
+      expect(raw, 'persisted game state').to.be.a('string')
+      expect(JSON.parse(raw as string).screen).to.eq('intro')
+    })
     readSavedState().then(state => {
       expect(state.screen).to.eq('intro')
       expect(state.player.missionsDone).to.eq(0)
