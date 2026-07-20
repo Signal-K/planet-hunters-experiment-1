@@ -3,7 +3,7 @@
 import Image from 'next/image'
 import { PrimaryBtn, GhostBtn } from '@/components/ui/Button'
 import { STARTER_ROCKETS } from '@/lib/data'
-import type { StarterRocket } from '@/lib/data'
+import type { StarterRocket, Mission } from '@/lib/data'
 import TutorialHighlight from '@/components/game/TutorialHighlight'
 import MissionSetupShell from '@/components/game/screens/MissionSetupShell'
 
@@ -71,15 +71,19 @@ function getRequiredRocket(missionsDone: number): StarterRocket {
 interface RocketPurchaseScreenProps {
   missionsDone: number
   francs: number
+  mission?: Mission | null
+  deliveryTargetName?: string | null
   onPurchase: (rocketId: string) => void
   onBack: () => void
   hasCoach?: boolean
 }
 
-export default function RocketPurchaseScreen({ missionsDone, francs, onPurchase, onBack, hasCoach }: RocketPurchaseScreenProps) {
+export default function RocketPurchaseScreen({ missionsDone, francs, mission, deliveryTargetName, onPurchase, onBack, hasCoach }: RocketPurchaseScreenProps) {
   const rocket = getRequiredRocket(missionsDone)
   const isFree = rocket.costFrancs === 0
   const canAfford = francs >= rocket.costFrancs
+  const missionPayout = mission?.payout.francs
+  const estProfit = missionPayout !== undefined ? missionPayout - rocket.costFrancs : undefined
 
   const modules: string[] = [
     'Unibody Airframe',
@@ -115,6 +119,17 @@ export default function RocketPurchaseScreen({ missionsDone, francs, onPurchase,
         background: 'radial-gradient(ellipse at 50% 54%, rgba(63,169,255,0.16) 0%, rgba(63,169,255,0.05) 36%, transparent 72%)',
       }}>
         {hasCoach && <TutorialHighlight borderRadius={14} />}
+        {deliveryTargetName && (
+          <div style={{
+            position: 'absolute', top: 12, left: 12, right: 12,
+            padding: '8px 12px', borderRadius: 6,
+            background: 'rgba(6,12,22,0.78)', border: '1px solid rgba(63,169,255,0.35)',
+            fontFamily: 'var(--ln-font-display)', fontSize: 10, fontWeight: 700,
+            letterSpacing: '0.08em', color: 'var(--ln-cyan)', textTransform: 'uppercase', textAlign: 'center',
+          }}>
+            Two-stop job · Deliver to {deliveryTargetName} before returning to Earth
+          </div>
+        )}
         <Image
           src={rocket.img}
           alt={rocket.name}
@@ -180,14 +195,33 @@ export default function RocketPurchaseScreen({ missionsDone, francs, onPurchase,
 
           {!isFree && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 0, background: 'rgba(6,12,22,0.5)', borderRadius: 10, border: '1px solid rgba(135,207,250,0.12)', overflow: 'hidden' }}>
+              {missionPayout !== undefined && (
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 14px', borderBottom: '1px solid rgba(135,207,250,0.08)' }}>
+                  <span style={{ fontFamily: 'var(--ln-font-display)', fontSize: 10, fontWeight: 700, letterSpacing: '0.14em', color: 'var(--ln-text-muted)', textTransform: 'uppercase' }}>Mission Payout (base)</span>
+                  <span style={{ fontFamily: 'var(--ln-font-display)', fontSize: 15, fontWeight: 800, color: 'var(--ln-cyan)' }}>{formatFrancs(missionPayout)}</span>
+                </div>
+              )}
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 14px', borderBottom: '1px solid rgba(135,207,250,0.08)' }}>
                 <span style={{ fontFamily: 'var(--ln-font-display)', fontSize: 10, fontWeight: 700, letterSpacing: '0.14em', color: 'var(--ln-text-muted)', textTransform: 'uppercase' }}>Vehicle Cost</span>
                 <span style={{ fontFamily: 'var(--ln-font-display)', fontSize: 15, fontWeight: 800, color: 'var(--ln-amber)' }}>{formatFrancs(rocket.costFrancs)}</span>
               </div>
+              {estProfit !== undefined && (
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 14px', borderBottom: '1px solid rgba(135,207,250,0.08)' }}>
+                  <span style={{ fontFamily: 'var(--ln-font-display)', fontSize: 10, fontWeight: 700, letterSpacing: '0.14em', color: 'var(--ln-text-muted)', textTransform: 'uppercase' }}>Est. Profit</span>
+                  <span style={{ fontFamily: 'var(--ln-font-display)', fontSize: 15, fontWeight: 800, color: estProfit >= 0 ? 'var(--ln-ok)' : 'var(--ln-crimson)' }}>
+                    {estProfit >= 0 ? '+' : '−'}{formatFrancs(Math.abs(estProfit))}
+                  </span>
+                </div>
+              )}
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 14px' }}>
                 <span style={{ fontFamily: 'var(--ln-font-display)', fontSize: 10, fontWeight: 700, letterSpacing: '0.14em', color: 'var(--ln-text-muted)', textTransform: 'uppercase' }}>Your Balance</span>
                 <span style={{ fontFamily: 'var(--ln-font-display)', fontSize: 15, fontWeight: 800, color: canAfford ? 'var(--ln-text)' : 'var(--ln-crimson)' }}>{formatFrancs(francs)}</span>
               </div>
+              {missionPayout !== undefined && (
+                <div style={{ padding: '6px 14px 10px', fontFamily: 'var(--ln-font-body)', fontSize: 10, color: '#6a7e94', borderTop: '1px solid rgba(135,207,250,0.08)' }}>
+                  The rocket is a one-time purchase; the mission payout is what you collect at debrief. Client premiums and affinity bonuses can raise the payout above the base figure shown.
+                </div>
+              )}
               {!canAfford && (
                 <div style={{ padding: '8px 14px 10px', fontFamily: 'var(--ln-font-display)', fontSize: 11, color: 'var(--ln-crimson)', letterSpacing: '0.06em', borderTop: '1px solid rgba(220,50,50,0.2)' }}>
                   Insufficient Francs — sell minerals or complete contractor missions to raise funds.

@@ -217,7 +217,7 @@ export default function MissionCard({
               </div>
               {contractor && (
                 <div style={{ font: '600 9px var(--ln-font-mono)', color: 'var(--ln-text-muted)', letterSpacing: '0.06em', textTransform: 'uppercase' }}>
-                  +{Math.round(contractor.affinityBonusPerMission * 100)}% affinity per completed job
+                  Premium is a flat payout bonus for every {contractor.name} job. Affinity stacks +{Math.round(contractor.affinityBonusPerMission * 1000) / 10}% per completed {contractor.name} job, capped at +15% total.
                 </div>
               )}
             </div>

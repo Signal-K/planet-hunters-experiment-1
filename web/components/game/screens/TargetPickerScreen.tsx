@@ -86,6 +86,7 @@ export default function TargetPickerScreen({ mission, onBack, onPick, hasCoach, 
   )
 
   const pickedTarget = TARGETS.find(x => x.id === picked)
+  const deliveryTarget = mission.deliveryTargetId ? TARGETS.find(t => t.id === mission.deliveryTargetId) : undefined
   const mapStyle: React.CSSProperties = {
     background: 'radial-gradient(60% 60% at 50% 50%, #0a1422 0%, #03060a 90%)',
     position: 'relative',
@@ -102,21 +103,33 @@ export default function TargetPickerScreen({ mission, onBack, onPick, hasCoach, 
         <PrimaryBtn testId="continue-build-btn" onClick={() => onPick(pickedTarget.id)}>Continue · Build →</PrimaryBtn>
       )}
     >
-      <div style={{ display: 'grid', gridTemplateRows: 'auto minmax(0, 1fr)', minHeight: 0 }}>
-        <div style={{ padding: '0 0 8px', display: 'flex', alignItems: 'center', gap: 8 }}>
-          <span style={{ fontFamily: 'var(--ln-font-display)', fontSize: 10, fontWeight: 700, letterSpacing: '0.22em', color: 'var(--ln-text-muted)', textTransform: 'uppercase' }}>Compatible · {compat.length}</span>
-          <span style={{ flex: 1 }} />
-          <StatusPill kind="amber" dim>Rocket range · Orbit ≤ {mission.requires.max_orbit}</StatusPill>
-        </div>
-        <div className="mission-setup-frame" style={mapStyle}>
-          <GalaxyMap
-            mission={mission}
-            targets={TARGETS}
-            compatibleIds={compatIds}
-            pickedId={picked}
-            onPick={setPicked}
-          />
-          {hasCoach && <TutorialHighlight borderRadius={14} />}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 8, minHeight: 0 }}>
+        {deliveryTarget && (
+          <div style={{
+            padding: '8px 12px', borderRadius: 6,
+            background: 'rgba(63,169,255,0.08)', border: '1px solid rgba(63,169,255,0.3)',
+            fontFamily: 'var(--ln-font-display)', fontSize: 10, fontWeight: 700,
+            letterSpacing: '0.08em', color: 'var(--ln-cyan)', textTransform: 'uppercase',
+          }}>
+            Two-stop job · Mine here, then deliver cargo to {deliveryTarget.name} before returning to Earth
+          </div>
+        )}
+        <div style={{ display: 'grid', gridTemplateRows: 'auto minmax(0, 1fr)', minHeight: 0, flex: 1 }}>
+          <div style={{ padding: '0 0 8px', display: 'flex', alignItems: 'center', gap: 8 }}>
+            <span style={{ fontFamily: 'var(--ln-font-display)', fontSize: 10, fontWeight: 700, letterSpacing: '0.22em', color: 'var(--ln-text-muted)', textTransform: 'uppercase' }}>Compatible · {compat.length}</span>
+            <span style={{ flex: 1 }} />
+            <StatusPill kind="amber" dim>Rocket range · Orbit ≤ {mission.requires.max_orbit}</StatusPill>
+          </div>
+          <div className="mission-setup-frame" style={mapStyle}>
+            <GalaxyMap
+              mission={mission}
+              targets={TARGETS}
+              compatibleIds={compatIds}
+              pickedId={picked}
+              onPick={setPicked}
+            />
+            {hasCoach && <TutorialHighlight borderRadius={14} />}
+          </div>
         </div>
       </div>
 

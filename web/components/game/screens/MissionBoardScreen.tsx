@@ -5,12 +5,24 @@ import Image from 'next/image'
 import TopBar from '@/components/ui/TopBar'
 import Panel from '@/components/ui/Panel'
 import StatusPill from '@/components/ui/StatusPill'
+import { IconBtn } from '@/components/ui/Button'
 import { compatibleTargetsFor, contractorAffinityBonus, contractorUnlocked, FREE_OPS_START_MISSIONS_DONE, CONTRACTOR_AFFINITY_MISSION_THRESHOLD, MISSION_TEMPLATES, CONTRACTOR_SLOTS, SELF_DIRECTED_MINING_MISSION_ID } from '@/lib/data'
 import type { DailyContractorPool } from '@/lib/data'
 import type { Catalog } from '@/lib/catalog'
 import { TUTORIAL_CONTENT_TOP } from '@/lib/tutorial-layout'
 import { UI_ZONES } from '@/lib/ui-zones'
 import MissionCard from '@/components/game/MissionCard'
+import ClientBonusGuideSheet from '@/components/game/ClientBonusGuideSheet'
+
+function InfoIcon() {
+  return (
+    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="12" r="9" />
+      <line x1="12" y1="11" x2="12" y2="16.5" />
+      <circle cx="12" cy="7.5" r="0.5" fill="currentColor" />
+    </svg>
+  )
+}
 
 interface MissionBoardScreenProps {
   onBack: () => void
@@ -65,6 +77,7 @@ export default function MissionBoardScreen({ onBack, onPick, missionsDone, freeO
     const id = setInterval(() => setTick(Date.now()), 10000)
     return () => clearInterval(id)
   }, [])
+  const [showClientBonusGuide, setShowClientBonusGuide] = useState(false)
   const hasPriorFreeOpsExperience = Object.keys(contractorMissions ?? {}).length > 0
     || (dailyContractorPool?.completedIds.length ?? 0) > 0
   const { show: showFreeOpsExplainer, dismiss: dismissFreeOpsExplainer } = useFreeOpsExplainerAck(hasPriorFreeOpsExperience)
@@ -173,7 +186,21 @@ export default function MissionBoardScreen({ onBack, onPick, missionsDone, freeO
       <div style={{ position: 'absolute', inset: 0 }}>
         <Image src="/earth-day.jpg" alt="" fill style={{ objectFit: 'cover', filter: 'brightness(0.3)' }} />
       </div>
-        <TopBar eyebrow={freeOperations ? 'EARTH BASE · FREE OPS' : `EARTH BASE · L${missionsDone + 1}`} title="Mission Board" onBack={onBack} solid />
+        <TopBar
+          eyebrow={freeOperations ? 'EARTH BASE · FREE OPS' : `EARTH BASE · L${missionsDone + 1}`}
+          title="Mission Board"
+          onBack={onBack}
+          solid
+          right={
+            <IconBtn
+              ariaLabel="Client bonus guide"
+              testId="client-bonus-guide-btn"
+              onClick={() => setShowClientBonusGuide(true)}
+            >
+              <InfoIcon />
+            </IconBtn>
+          }
+        />
 
       {/* .bottom-tab-bar now reserves its own flex row above this screen, so
           paddingBottom only needs breathing room plus the coach panel's own
@@ -327,6 +354,14 @@ export default function MissionBoardScreen({ onBack, onPick, missionsDone, freeO
         {freeOperations && <AffinityAdvancedSection contractors={catalog.contractors} contractorMissions={contractorMissions} />}
         {freeOperations && <ComingSoonMissionsSection />}
       </div>
+
+      {showClientBonusGuide && (
+        <ClientBonusGuideSheet
+          onClose={() => setShowClientBonusGuide(false)}
+          contractorMissions={contractorMissions}
+          sequence={sequence}
+        />
+      )}
     </div>
   )
 }

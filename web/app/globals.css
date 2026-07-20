@@ -126,27 +126,44 @@
   --ln-d-slow:      420ms;
 }
 
-.theme-atlas {
-  --ln-bg:          #050608;
-  --ln-bg-grid:     #0a0c10;
-  --ln-surface:     #0c0e12;
-  --ln-surface-2:   #11141a;
-  --ln-surface-3:   #181c25;
+/* ─── Light editorial theme — reference/guide/market/menu surfaces only.
+   Operations screens (Launchpad, Mining HUD, Transit, Debrief, live Mission
+   Board) stay on .theme-deep. See workspace/decisions/
+   landnam-light-theme-for-reference-and-menu-surfaces.md. ─── */
+.theme-light {
+  --ln-void:        #f4f1ea;
+  --ln-bg:          #faf8f3;
+  --ln-bg-grid:     #f0ecE2;
+  --ln-surface:     #ffffff;
+  --ln-surface-2:   #f2eee4;
+  --ln-surface-3:   #e8e2d3;
+  --ln-overlay:     rgba(244, 241, 234, 0.82);
 
-  --ln-text:        #efe7d3;
-  --ln-text-dim:    #b5ad99;
-  --ln-text-muted:  #6b6552;
-  --ln-text-ghost:  rgba(239, 231, 211, 0.32);
+  --ln-cyan:        #1c7fbf;
+  --ln-cyan-bright: #2a94d8;
+  --ln-cyan-press:  #145f8f;
+  --ln-cyan-soft:   rgba(28, 127, 191, 0.10);
+  --ln-cyan-border: rgba(28, 127, 191, 0.32);
 
-  --ln-cyan:        #efe7d3;
-  --ln-amber:       #f5a623;
-  --ln-amber-bright:#ffc25c;
+  --ln-amber:        #b5730a;
+  --ln-amber-bright: #d68a0d;
+  --ln-amber-press:  #8f5a08;
+  --ln-amber-soft:   rgba(181, 115, 10, 0.12);
+  --ln-amber-border: rgba(181, 115, 10, 0.4);
 
-  --ln-hairline:        rgba(239, 231, 211, 0.10);
-  --ln-hairline-strong: rgba(239, 231, 211, 0.32);
-  --ln-divider:         rgba(239, 231, 211, 0.10);
+  --ln-text:        #1c1a14;
+  --ln-text-dim:    #4a4536;
+  --ln-text-muted:  #7a7460;
+  --ln-text-ghost:  rgba(28, 26, 20, 0.35);
+  --ln-text-on-cyan:  #f4f1ea;
+  --ln-text-on-amber: #f4f1ea;
 
-  --ln-font-display: "Turret Road", "Oxanium", system-ui, sans-serif;
+  --ln-hairline:        rgba(28, 26, 20, 0.12);
+  --ln-hairline-strong: rgba(28, 26, 20, 0.28);
+  --ln-divider:         rgba(28, 26, 20, 0.10);
+
+  --ln-shadow-card:  0 1px 0 rgba(255,255,255,0.6) inset, 0 4px 16px rgba(28,26,20,0.10);
+  --ln-shadow-modal: 0 24px 64px rgba(28,26,20,0.22);
 }
 
 /* base resets */

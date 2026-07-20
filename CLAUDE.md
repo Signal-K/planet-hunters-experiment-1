@@ -59,6 +59,7 @@ Design rules (never violate):
 - No emoji. Status = shape + color + label
 - UPPERCASE + letter-spacing for all instrument labels and CTAs
 - Hairlines: ghosted cyan at 18% alpha (`--ln-hairline`)
+- **Theme is split by surface type, not global.** Operations screens (Launchpad, Mining HUD, Transit, Debrief, live Mission Board contract list) use the dark command-deck theme (`.theme-deep`, the default). Reference/guide/market/menu-style surfaces (e.g. `ClientBonusGuideSheet`) use the light editorial theme (`.theme-light`) — background/surface/text go light, `--ln-cyan`/`--ln-amber` stay as accents. This is not a user-facing toggle. See `workspace/decisions/landnam-light-theme-for-reference-and-menu-surfaces.md` for full rationale.
 
 ## Narrative & content rules
 

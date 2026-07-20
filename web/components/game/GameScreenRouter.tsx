@@ -192,17 +192,22 @@ export function ScreenContent({
         />
       )
 
-    case 'rocket-buy':
+    case 'rocket-buy': {
       if (!game.mission || !game.target) return null
+      const deliveryTargetId = game.mission.deliveryTargetId
+      const deliveryTargetName = deliveryTargetId ? game.catalog.targets.find(t => t.id === deliveryTargetId)?.name : null
       return (
         <RocketPurchaseScreen
           missionsDone={game.player.missionsDone}
           francs={game.player.francs}
+          mission={game.mission}
+          deliveryTargetName={deliveryTargetName}
           onPurchase={game.onPurchaseRocket}
           onBack={() => game.go(game.mission?.targetId ? 'missions' : 'targets')}
           hasCoach={hasCoach}
         />
       )
+    }
 
     case 'fab':
       if (!game.mission || !game.target) return null
