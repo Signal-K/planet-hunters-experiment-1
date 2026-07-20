@@ -37,6 +37,8 @@
     "cypress:run:visual": "env -u ELECTRON_RUN_AS_NODE CYPRESS_PROFILE=visual cypress run --browser chrome --headed"
   },
   "dependencies": {
+    "@takeon/engine": "file:vendor/takeon/takeon-engine-0.2.0.tgz",
+    "@takeon/pixi": "file:vendor/takeon/takeon-pixi-0.2.0.tgz",
     "@vercel/analytics": "^2.0.1",
     "lucide-react": "^1.17.0",
     "next": "16.2.9",
