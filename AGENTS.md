@@ -151,3 +151,13 @@ Status lifecycle: `Todo` → `In Progress` → `Done`. Desk trusts the status fi
 **The old `workspace/projects/landnam/tickets/<sprint>/*.md` + `workspace_ticket.py` / `workspace_board.py` / `Current.md` system is retired.** Don't create new ticket files there, don't run those scripts to change ticket state, and don't treat `Current.md` as the operational board (it's archived). `workspace/projects/landnam/docs/` is unaffected — it remains the right place for long-form specs and decisions.
 
 **Compass** (`/Applications/Compass.app`) previously read `~/Navigation/.knowns/`; that board is superseded by Desk for ticket state of record.
+
+## Documentation & Decisions: Craft, Desk, ZenNotes
+
+As of 2026-07-21, this supersedes the "`workspace/projects/landnam/docs/`... remains the right place for long-form specs and decisions" line above:
+
+- **Craft** — long-form writing: planning docs, ideation, proposals, spec drafts, playtest/feedback triage write-ups, research notes. Every Craft doc tied to active Landnam work must be **tagged** and **attached to its Desk ticket(s)/story** (`attach_craft_doc`) — don't leave it floating with no ticket link.
+- **ZenNotes** (`~/Navigation/workspace`, ZenNotes MCP) — canonical home for **decisions and rules**: finalized specs, mission definitions and their limits (e.g. what Mission 3 is and its constraints), gameplay/design decisions. This is what to search first for authoritative rules — not Craft, not ad-hoc Knowns docs. The "Standing product rules" and "Narrative & content rules" sections above are the kind of content that belongs here going forward.
+- **Desk** — tickets/stories/epics only. A ticket references Craft (planning context) and ZenNotes (rules/decisions) rather than duplicating their content.
+
+Flow: research/ideation in Craft → tag + attach to the Desk ticket once it needs review or action → once a decision lands, write the durable rule/spec into ZenNotes, not just a Craft doc or ticket comment.
