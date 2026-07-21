@@ -58,7 +58,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
 
   const onPickMission = useCallback((id: string) => {
     setState(s => {
-      if (s.screen !== 'missions') return s
+      if (s.screen !== 'missions' || s.player.activeMission) return s
       const mission = catalog.missions.find(m => m.id === id)
         ?? s.player.dailyContractorPool?.missions.find(m => m.id === id)
         ?? null
@@ -128,14 +128,14 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
 
   const onLaunch = useCallback(() => {
     const current = stateRef.current
-    if (current.screen !== 'fab' || !current.missionId || !current.targetId) return
+    if (current.screen !== 'fab' || !current.missionId || !current.targetId || current.player.activeMission) return
     const currentMission = catalog.missions.find(m => m.id === current.missionId)
       ?? current.player.dailyContractorPool?.missions.find(m => m.id === current.missionId)
       ?? null
     if (!currentMission) return
     const isFirstEver = current.player.missionsDone === 0
     setState(s => {
-      if (s.screen !== 'fab' || !s.missionId || !s.targetId) return s
+      if (s.screen !== 'fab' || !s.missionId || !s.targetId || s.player.activeMission) return s
       const mission = s.missionId
         ? (catalog.missions.find(m => m.id === s.missionId)
            ?? s.player.dailyContractorPool?.missions.find(m => m.id === s.missionId)

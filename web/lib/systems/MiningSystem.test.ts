@@ -87,6 +87,12 @@ describe('applyMiningDone', () => {
     const s = makeState({ screen: 'hub' })
     expect(applyMiningDone(s, { nickel: 2 }, null)).toBe(s)
   })
+
+  it('clears miningCargoInProgress once the run completes, since it is only needed to survive a Back-to-hub pause', () => {
+    const s = makeState({ screen: 'mining', player: { miningCargoInProgress: { nickel: 1 } } })
+    const next = applyMiningDone(s, { nickel: 2 }, 1_000)
+    expect(next.player.miningCargoInProgress).toBeUndefined()
+  })
 })
 
 describe('applyRoverMiningDone', () => {

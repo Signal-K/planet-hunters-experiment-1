@@ -35,6 +35,12 @@ export interface Player {
   francs: number
   activeMission: { id: string; label: string } | null
   missionPhase?: 'transit' | 'mining' | 'debrief'
+  // Ore collected so far during an in-progress mining run, preserved across a
+  // "Back to hub" pause so resuming the mission doesn't silently discard
+  // already-collected cargo (that cargo only lived in MiningScreen's local
+  // state before this, and was lost on remount). Cleared once the mission
+  // completes or is abandoned.
+  miningCargoInProgress?: Record<string, number>
   missionCount: number
   pendingLaunch: boolean
   placed: string[]

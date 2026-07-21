@@ -136,11 +136,12 @@ function miningGuide(deliveryTargetName?: string) {
   ]
 }
 
-export default function MiningScreen({ mission, target, onComplete, onBack, onAbandon, minerals, laserChargeCap, laserTier, hasCoach, coachManual, onCoachDone, addToast, deliveryTargetName, hasPriorFreeOpsExperience }: {
+export default function MiningScreen({ mission, target, onComplete, onBack, onAbandon, minerals, laserChargeCap, laserTier, hasCoach, coachManual, onCoachDone, addToast, deliveryTargetName, hasPriorFreeOpsExperience, initialCargo }: {
   mission: Mission
   target: Target
   onComplete: (cargo: Record<string, number>) => void
-  onBack: () => void
+  /** Called with whatever's been collected so far (may be empty) — the caller is responsible for persisting it so a later resume doesn't lose progress. */
+  onBack: (cargo: Record<string, number>) => void
   onAbandon?: () => void
   minerals: Record<string, MineralMeta>
   laserChargeCap?: number
@@ -155,6 +156,8 @@ export default function MiningScreen({ mission, target, onComplete, onBack, onAb
   deliveryTargetName?: string
   /** True once the player has completed any contractor mission — suppresses the Free Ops first-entry explainer for players who reached self-directed mining before this ack tracking existed. */
   hasPriorFreeOpsExperience?: boolean
+  /** Cargo already collected before a prior "Back to hub" pause on this same mission, restored so the player doesn't lose it on resume. */
+  initialCargo?: Record<string, number>
 }) {
   // Charge count is mission-aware, not coach-aware.
   // During onboarding (sequence <= FREE_OPS_START_MISSIONS_DONE): always 6× the ore required,
@@ -172,8 +175,8 @@ export default function MiningScreen({ mission, target, onComplete, onBack, onAb
     ? Math.max(30, totalOreNeeded * 6)
     : Math.max(laserChargeCap ?? 5, totalOreNeeded * 4)
   const LOW_CHARGE_THRESHOLD = Math.max(2, Math.ceil(MAX_CHARGES * 0.2))
-  const cargoRef = useRef<Record<string, number>>({})
-  const [cargo, setCargo] = useState<Record<string, number>>({})
+  const cargoRef = useRef<Record<string, number>>(initialCargo ?? {})
+  const [cargo, setCargo] = useState<Record<string, number>>(initialCargo ?? {})
   const fireRef = useRef<(() => void) | null>(null)
   const scrollRef = useRef<((dx: number) => void) | null>(null)
   const [laserCharges, setLaserCharges] = useState(MAX_CHARGES)
@@ -302,7 +305,7 @@ export default function MiningScreen({ mission, target, onComplete, onBack, onAb
       <TopBar
         eyebrow={`${target.name.toUpperCase()} · SURFACE`}
         title="Mining Run"
-        onBack={onBack}
+        onBack={() => onBack(cargoRef.current)}
         right={isFreeOps ? <StatusPill kind="amber">Free Ops · No Client</StatusPill> : undefined}
       />
 

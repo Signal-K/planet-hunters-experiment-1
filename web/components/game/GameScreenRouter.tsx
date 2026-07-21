@@ -288,8 +288,13 @@ export function ScreenContent({
         <MiningScreen
           mission={game.mission}
           target={game.target}
-          onBack={() => {
-            game.setPlayer(player => ({ ...player, missionPhase: 'mining' }))
+          initialCargo={game.player.miningCargoInProgress}
+          onBack={(cargo) => {
+            game.setPlayer(player => ({
+              ...player,
+              missionPhase: 'mining',
+              miningCargoInProgress: Object.keys(cargo).length > 0 ? cargo : undefined,
+            }))
             game.go('hub')
           }}
           onComplete={(cargo) => { game.completeStep(6); game.completeStep(7); game.onMiningDone(cargo) }}

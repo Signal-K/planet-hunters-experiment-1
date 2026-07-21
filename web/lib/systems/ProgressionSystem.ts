@@ -117,6 +117,7 @@ export function applyAbandonMission(s: GameState, missions: Mission[]): GameStat
       francs: Math.max(0, s.player.francs - penalty),
       activeMission: null,
       missionPhase: undefined,
+      miningCargoInProgress: undefined,
       arrivalAt: null,
       dailyContractorPool,
       headingToDelivery: false,
