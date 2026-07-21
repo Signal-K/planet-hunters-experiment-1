@@ -31,10 +31,12 @@ interface RoverMiningScreenProps {
   target: Target
   onComplete: (cargo: Record<string, number>) => void
   onBack: () => void
+  /** Wall-clock start of this run, restored across a Back-to-hub pause so the extraction timer doesn't restart. */
+  startedAt?: number
 }
 
-export default function RoverMiningScreen({ mission, target, onComplete, onBack }: RoverMiningScreenProps) {
-  const [startedAt] = useState(() => Date.now())
+export default function RoverMiningScreen({ mission, target, onComplete, onBack, startedAt: startedAtProp }: RoverMiningScreenProps) {
+  const [startedAt] = useState(() => startedAtProp ?? Date.now())
   const [now, setNow] = useState(() => Date.now())
 
   const elapsed = now - startedAt

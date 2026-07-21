@@ -41,6 +41,11 @@ export interface Player {
   // state before this, and was lost on remount). Cleared once the mission
   // completes or is abandoned.
   miningCargoInProgress?: Record<string, number>
+  // Wall-clock start of an in-progress rover mining run, persisted so a
+  // Back-to-hub pause and resume doesn't restart the extraction timer from
+  // zero (RoverMiningScreen would otherwise re-init its own Date.now() on
+  // remount). Cleared once the run completes or is abandoned.
+  roverMiningStartedAt?: number
   missionCount: number
   pendingLaunch: boolean
   placed: string[]

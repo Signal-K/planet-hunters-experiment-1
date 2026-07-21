@@ -25,6 +25,7 @@ function startReturnLeg(s: GameState, cargo: Record<string, number>, arrivalAt: 
       arrivalAt,
       missionPhase: 'transit',
       miningCargoInProgress: undefined,
+      roverMiningStartedAt: undefined,
       headingToDelivery: hasDelivery,
       debriefPending: !hasDelivery,
       returningToEarth: !hasDelivery,

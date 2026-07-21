@@ -275,7 +275,11 @@ export function ScreenContent({
               game.go('debrief')
               return
             }
-            game.setPlayer(player => ({ ...player, missionPhase: 'mining' }))
+            game.setPlayer(player => ({
+              ...player,
+              missionPhase: 'mining',
+              roverMiningStartedAt: isRoverMission ? Date.now() : player.roverMiningStartedAt,
+            }))
             game.go(isRoverMission ? 'rover-mining' : 'mining')
           }}
           onAbandon={game.abandonMission}
@@ -320,8 +324,12 @@ export function ScreenContent({
         <RoverMiningScreen
           mission={game.mission}
           target={game.target}
+          startedAt={game.player.roverMiningStartedAt}
           onComplete={game.onRoverMiningDone}
-          onBack={() => game.go('hub')}
+          onBack={() => {
+            game.setPlayer(player => ({ ...player, missionPhase: 'mining' }))
+            game.go('hub')
+          }}
         />
       )
 

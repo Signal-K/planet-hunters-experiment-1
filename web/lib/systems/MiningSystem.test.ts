@@ -96,6 +96,12 @@ describe('applyMiningDone', () => {
 })
 
 describe('applyRoverMiningDone', () => {
+  it('clears roverMiningStartedAt once the run completes', () => {
+    const s = makeState({ screen: 'rover-mining', player: { roverMiningStartedAt: Date.now() } })
+    const next = applyRoverMiningDone(s, { ice: 3 }, 500)
+    expect(next.player.roverMiningStartedAt).toBeUndefined()
+  })
+
   it('mirrors applyMiningDone for the delivery/return branching', () => {
     const s = makeState({ screen: 'rover-mining', deliveryTargetId: 'ceres' })
     const next = applyRoverMiningDone(s, { ice: 3 }, 500)
