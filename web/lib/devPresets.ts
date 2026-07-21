@@ -8,6 +8,7 @@ const SECOND_MINERAL = Object.keys(SECOND_MISSION.requires.minerals)[0] ?? 'sili
 // M3 is the two-leg "mine then deliver" contractor choice — Belt Courier Run
 // (Bennu -> Vesta) is the authored pick used for these dev shots.
 const THIRD_MISSION = MISSIONS.find(m => m.id === 'lnm_m3_relay_bennu_vesta') ?? MISSIONS.find(m => m.sequence === 3) ?? SECOND_MISSION
+const ROVER_MISSION = MISSIONS.find(m => m.survey?.onWorldVehicle === 'starter-rover') ?? THIRD_MISSION
 
 const BASE_PLAYER: Player = {
   francs: 15_000_000_000,
@@ -110,9 +111,14 @@ export const DEV_GROUPS: DevGroup[] = [
     ],
   },
   {
-    label: 'Systems',
+    label: 'Recent UI',
     color: '#39d36a',
     shots: [
+      { key: 'ui-mission-board', label: 'Mission Board', hint: 'Recent OD layout restyle with client cards' },
+      { key: 'ui-skill-tree', label: 'Skill Tree', hint: 'License Grade and research XP progress screen' },
+      { key: 'ui-target-picker', label: 'Target Picker', hint: 'Solar map target selection with a mission loaded' },
+      { key: 'ui-tess-discovery', label: 'TESS Console', hint: 'Satellite monitoring and classification screen' },
+      { key: 'ui-rover-mining', label: 'Rover Mining', hint: 'Starter-rover on-world mining timer state' },
       { key: 'ship-customizer', label: 'Ship Customiser', hint: 'Unlocked hangar interior view with Explorer room slots' },
     ],
   },
@@ -318,6 +324,101 @@ export function resolvePreset(name: string): Partial<GameState> | null {
         missionId: SECOND_MISSION.id,
         targetId: 'eros',
         rocket: { chassis: 'hull-mk1', propulsion: 'ion-a1', drill: 'hand-drill' },
+        lastCargo: null,
+        popup: null,
+      }
+
+    // ── Recently overhauled UI surfaces ──
+    case 'ui-mission-board':
+      return {
+        screen: 'missions',
+        player: {
+          ...BASE_PLAYER,
+          missionsDone: 2,
+          freeOperations: true,
+          contractorMissions: { 'helios-propulsion-depot': 2, 'lumen-research': 1 },
+          lastContractor: 'helios-propulsion-depot',
+        },
+        tutorial: false,
+        doneSteps: M1_AND_M2_DONE,
+        missionId: null,
+        targetId: null,
+        rocket: { chassis: 'hull-mk2', propulsion: 'fusion-b2', drill: 'laser-t2' },
+        lastCargo: null,
+        popup: null,
+      }
+
+    case 'ui-skill-tree':
+      return {
+        screen: 'skills',
+        player: {
+          ...POST_ONBOARDING_PLAYER,
+          missionsDone: 3,
+          researchXP: 260,
+          skillPoints: 3,
+          licenseGrade: 'Grade II',
+          unlockedSkillNodes: ['laser-capacitor-1', 'ship-customizer-1'],
+          refineryBuilt: true,
+          launchpadUpgraded: true,
+          transitSatelliteLaunchedAt: Date.now(),
+        },
+        tutorial: false,
+        doneSteps: M1_M2_M3_DONE,
+        missionId: null,
+        targetId: null,
+        rocket: { chassis: 'hull-mk2', propulsion: 'fusion-b2', drill: 'laser-t2' },
+        lastCargo: null,
+        popup: null,
+      }
+
+    case 'ui-target-picker':
+      return {
+        screen: 'targets',
+        player: { ...BASE_PLAYER, missionsDone: 2 },
+        tutorial: false,
+        doneSteps: M1_AND_M2_DONE,
+        missionId: THIRD_MISSION.id,
+        targetId: null,
+        deliveryTargetId: THIRD_MISSION.deliveryTargetId ?? 'vesta',
+        rocket: { chassis: 'hull-mk2', propulsion: 'fusion-b2', drill: 'laser-t2' },
+        lastCargo: null,
+        popup: null,
+      }
+
+    case 'ui-tess-discovery':
+      return {
+        screen: 'galaxy',
+        player: {
+          ...POST_ONBOARDING_PLAYER,
+          transitSatelliteLaunchedAt: Date.now() - 86_400_000,
+          transitSatelliteLevel: 1,
+          researchAnnotations: 3,
+          researchXP: 180,
+        },
+        tutorial: false,
+        doneSteps: M1_M2_M3_DONE,
+        missionId: null,
+        targetId: null,
+        rocket: { chassis: 'hull-mk2', propulsion: 'fusion-b2', drill: 'laser-t2' },
+        lastCargo: null,
+        popup: null,
+      }
+
+    case 'ui-rover-mining':
+      return {
+        screen: 'rover-mining',
+        player: {
+          ...BASE_PLAYER,
+          missionsDone: 2,
+          activeMission: { id: ROVER_MISSION.id, label: `${ROVER_MISSION.title} → ${ROVER_MISSION.targetId ?? 'bennu'}` },
+          roverMiningStartedAt: Date.now() - 45_000,
+        },
+        tutorial: false,
+        doneSteps: M1_AND_M2_DONE,
+        missionId: ROVER_MISSION.id,
+        targetId: ROVER_MISSION.targetId ?? THIRD_MISSION.targetId ?? 'bennu',
+        deliveryTargetId: ROVER_MISSION.deliveryTargetId ?? null,
+        rocket: { chassis: 'hull-mk2', propulsion: 'fusion-b2', drill: 'laser-t2' },
         lastCargo: null,
         popup: null,
       }

@@ -135,7 +135,7 @@ function GameChrome({ children }: { children: ReactNode }) {
             <PushOptIn userId={game.authUserId ?? undefined} />
           </div>
         )}
-        {process.env.NODE_ENV === 'development' && <DevShortcuts />}
+        <DevShortcuts />
 
         {/* Current screen (injected by [screen]/page.tsx) */}
         <div className="game-screen-area">{children}</div>

@@ -161,7 +161,7 @@ function GameCanvas() {
             <PushOptIn userId={game.authUserId ?? undefined} />
           </div>
         )}
-        {process.env.NODE_ENV === 'development' && <DevShortcuts />}
+        <DevShortcuts />
         <div className="game-screen-area">
           <ScreenContent screen={game.screen} game={game} hasCoach={hasCoach} onBackFromHangar={() => {
             game.go('hub')

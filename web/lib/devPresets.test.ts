@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { resolvePreset, DEV_GROUPS } from './devPresets'
+import { presetForMissionRoute, presetForUiRoute } from './devRoutes'
 import { MISSIONS } from './data'
 
 // Every key listed in DEV_GROUPS must resolve to a valid preset
@@ -19,7 +20,7 @@ describe('DEV_GROUPS', () => {
     // Post-onboarding story mission (telescope launch) — replayable once
     // free ops + the satellite monitoring station are built.
     expect(labels).toContain('First Satellite Launch')
-    expect(labels).toContain('Systems')
+    expect(labels).toContain('Recent UI')
     expect(labels).toHaveLength(5)
   })
 
@@ -199,6 +200,58 @@ describe('resolvePreset — ship customizer', () => {
     expect(p.player!.unlockedSkillNodes).toContain('ship-customizer-1')
     expect(p.missionId).toBe(SECOND_MISSION.id)
     expect(p.targetId).toBe('eros')
+  })
+})
+
+describe('resolvePreset — recent UI surfaces', () => {
+  it('opens the live Mission Board restyle with Free Ops context', () => {
+    const p = resolvePreset('ui-mission-board')!
+    expect(p.screen).toBe('missions')
+    expect(p.player!.freeOperations).toBe(true)
+    expect(p.player!.missionsDone).toBe(2)
+  })
+
+  it('opens the new Skill Tree with research progress and unlocked nodes', () => {
+    const p = resolvePreset('ui-skill-tree')!
+    expect(p.screen).toBe('skills')
+    expect(p.player!.researchXP).toBeGreaterThan(0)
+    expect(p.player!.unlockedSkillNodes).toContain('ship-customizer-1')
+  })
+
+  it('opens Target Picker with a real mission loaded', () => {
+    const p = resolvePreset('ui-target-picker')!
+    expect(p.screen).toBe('targets')
+    expect(p.missionId).toBe(THIRD_MISSION.id)
+    expect(p.targetId).toBeNull()
+  })
+
+  it('opens the TESS discovery console with the satellite built and launched', () => {
+    const p = resolvePreset('ui-tess-discovery')!
+    expect(p.screen).toBe('galaxy')
+    expect(p.player!.satelliteMonitoringBuilt).toBe(true)
+    expect(p.player!.transitSatelliteLaunchedAt).not.toBeNull()
+  })
+
+  it('opens rover mining with an active mission and timer state', () => {
+    const p = resolvePreset('ui-rover-mining')!
+    expect(p.screen).toBe('rover-mining')
+    expect(p.player!.activeMission).not.toBeNull()
+    expect(p.player!.roverMiningStartedAt).toBeGreaterThan(0)
+  })
+})
+
+describe('dev shortcut routes', () => {
+  it('maps dedicated mission URLs to preset keys', () => {
+    expect(presetForMissionRoute(['m1'])).toBe('m1-hub')
+    expect(presetForMissionRoute(['m2', 'rocket'])).toBe('m2-rocket-buy')
+    expect(presetForMissionRoute(['m3', 'mining'])).toBe('m3-mining')
+    expect(presetForMissionRoute(['telescope', 'transit'])).toBe('telescope-transit')
+  })
+
+  it('maps dedicated UI URLs to recent UI preset keys', () => {
+    expect(presetForUiRoute(['mission-board'])).toBe('ui-mission-board')
+    expect(presetForUiRoute(['skill-tree'])).toBe('ui-skill-tree')
+    expect(presetForUiRoute(['ship-customizer'])).toBe('ship-customizer')
   })
 })
 

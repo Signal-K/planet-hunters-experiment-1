@@ -1,5 +1,6 @@
 import { notFound, redirect } from 'next/navigation'
 import { resolvePreset } from '@/lib/devPresets'
+import { isDevLauncherEnabled } from '@/lib/devAccess'
 
 // Local-only demo entry point — /game/demo/<preset> drops straight into a
 // named mission-type state (see lib/devPresets.ts) instead of playing
@@ -15,7 +16,7 @@ import { resolvePreset } from '@/lib/devPresets'
 // dropping all preset state back to the real save/default. Landing directly
 // on the (main) route sidesteps that remount entirely.
 export default async function DemoPresetPage({ params }: { params: Promise<{ preset: string }> }) {
-  if (process.env.NODE_ENV !== 'development') redirect('/game')
+  if (!isDevLauncherEnabled()) redirect('/game')
   const { preset } = await params
   const resolved = resolvePreset(preset)
   if (!resolved) notFound()
