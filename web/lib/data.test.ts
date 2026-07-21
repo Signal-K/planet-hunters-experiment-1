@@ -703,7 +703,7 @@ describe('TESS live subject filtering', () => {
     expect(dayOne.map(candidate => candidate.id)).not.toEqual(dayTwo.map(candidate => candidate.id))
   })
 
-  it('keeps the daily downlink to one anomaly regardless of station or telescope level', () => {
+  it('scales the daily downlink by station or telescope level', () => {
     const candidates = Array.from({ length: 9 }, (_, index) => toTessCandidate({
       ...baseSubject,
       id: `scaled-subject-${index}`,
@@ -712,8 +712,23 @@ describe('TESS live subject filtering', () => {
     }))
 
     expect(dailyTessCandidates(candidates, '2026-07-02', 1)).toHaveLength(1)
-    expect(dailyTessCandidates(candidates, '2026-07-02', 3)).toHaveLength(1)
-    expect(dailyTessCandidates(candidates, '2026-07-02', 5)).toHaveLength(1)
+    expect(dailyTessCandidates(candidates, '2026-07-02', 3)).toHaveLength(3)
+    expect(dailyTessCandidates(candidates, '2026-07-02', 5)).toHaveLength(5)
+  })
+
+  it('includes the satellite-pointing choice before filling the daily downlink', () => {
+    const candidates = Array.from({ length: 5 }, (_, index) => toTessCandidate({
+      ...baseSubject,
+      id: `preferred-subject-${index}`,
+      tic_id: `${323456780 + index}`,
+      toi_id: `32${index}.01`,
+    }))
+
+    const daily = dailyTessCandidates(candidates, '2026-07-02', 3, 'preferred-subject-4')
+
+    expect(daily).toHaveLength(3)
+    expect(daily[0]?.id).toBe('preferred-subject-4')
+    expect(new Set(daily.map(candidate => candidate.id))).toHaveProperty('size', 3)
   })
 
   it('converts planet classifications into star-map exoplanet targets with a real archetype and minerals', () => {

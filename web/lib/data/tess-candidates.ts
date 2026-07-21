@@ -96,14 +96,20 @@ export function nextUnclassifiedTessCandidate(candidates: TessCandidate[], class
 // `preferredId` is the player's satellite-pointing choice (see
 // Player.satelliteTargetId) — if it's still in the reviewable pool, honour
 // it over the deterministic daily hash pick.
-export function dailyTessCandidates(candidates: TessCandidate[], dateKey: string, _stationLevel = 1, preferredId?: string | null): TessCandidate[] {
+export function dailyTessCandidates(candidates: TessCandidate[], dateKey: string, stationLevel = 1, preferredId?: string | null): TessCandidate[] {
   if (candidates.length === 0) return []
+  const dailyCount = Math.min(candidates.length, Math.max(1, Math.floor(stationLevel)))
+  const picked: TessCandidate[] = []
   if (preferredId) {
     const preferred = candidates.find(candidate => candidate.id === preferredId)
-    if (preferred) return [preferred]
+    if (preferred) picked.push(preferred)
   }
   const start = hashId(dateKey) % candidates.length
-  return [candidates[start]]
+  for (let offset = 0; picked.length < dailyCount && offset < candidates.length; offset += 1) {
+    const candidate = candidates[(start + offset) % candidates.length]
+    if (!picked.some(existing => existing.id === candidate.id)) picked.push(candidate)
+  }
+  return picked
 }
 
 // ── Real sectors from the data source ────────────────────────────────────

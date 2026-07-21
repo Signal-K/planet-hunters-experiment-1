@@ -40,9 +40,9 @@ const VERDICT_ACTIONS: Array<{ id: TessVerdict; label: string; requiresMark: boo
 
 export default function TessDiscoveryScreen({ player, onBack, onBuildStation, onOpenMissions, onSubmit, onChooseTarget }: TessDiscoveryScreenProps) {
   const classifications = player.tessClassifications ?? {}
-  // dailyTessCandidates resolves to today's single candidate — either the
+  // dailyTessCandidates resolves to today's level-scaled downlink — either the
   // player's satellite-pointing pick (player.satelliteTargetId, chosen via
-  // PixiGalaxyStarMap after a prior classification) or a deterministic daily
+  // PixiGalaxyStarMap after a prior classification) plus a deterministic daily
   // hash fallback. `pool` keeps the full reviewable list around so the
   // pointing map has something to plot.
   const [candidate, setCandidate] = useState<TessCandidate | null>(null)
@@ -69,9 +69,10 @@ export default function TessDiscoveryScreen({ player, onBack, onBuildStation, on
         if (cancelled) return
         const today = new Date().toISOString().slice(0, 10)
         const stationLevel = Math.max(player.satelliteMonitoringLevel ?? 1, player.transitSatelliteLevel ?? 1)
-        const [daily] = dailyTessCandidates(liveCandidates, today, stationLevel, player.satelliteTargetId)
+        const dailyCandidates = dailyTessCandidates(liveCandidates, today, stationLevel, player.satelliteTargetId)
+        const nextDaily = dailyCandidates.find(dailyCandidate => !classifications[dailyCandidate.id])
         setPool(liveCandidates)
-        setCandidate(daily ?? null)
+        setCandidate(nextDaily ?? null)
         setRanges([])
         setSectorIndex(0)
         setViewingSol(false)
@@ -376,8 +377,8 @@ export default function TessDiscoveryScreen({ player, onBack, onBuildStation, on
       </div>
       <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 13, color: '#dbe8f8', lineHeight: 1.45 }}>
         {classification.verdict === 'planet' && discoveredTarget
-          ? `${candidate.host} is now a candidate world in your operations map. Point tomorrow's satellite at the next unresolved star to keep the discovery pipeline moving.`
-          : 'Your annotation was saved to the review queue. Noise marks matter: they keep the shared feed clean for the next real transit.'}
+          ? `${candidate.host} is now a candidate world in your operations map. A survey flight is available from the Mission Board, and this first submission awarded research XP.`
+          : 'Your annotation was saved to the review queue. Noise marks matter: they keep the shared feed clean for the next real transit, and first submissions award research XP.'}
       </div>
       {classification.verdict === 'planet' && discoveredTarget && (
         <div data-testid="tess-discovery-payoff" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 8, marginTop: 10 }}>

@@ -416,7 +416,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
             ? (s.player.transitSatelliteLaunchedAt ?? Date.now())
             : s.player.transitSatelliteLaunchedAt,
           transitSatelliteLevel: mission?.payload?.type === 'satellite'
-            ? Math.max(1, s.player.transitSatelliteLevel ?? 1)
+            ? Math.max(1, s.player.transitSatelliteLevel ?? 1) + 1
             : s.player.transitSatelliteLevel,
         },
         lastCargo: null,
