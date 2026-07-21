@@ -257,8 +257,7 @@ export default function HubScreen({ player, hasCoach, onGoBuilding, onNav, onUpg
       {/* Progression card — hidden when tutorial coach is active */}
       {!hasCoach && !subsurface && (
         <>
-          <ProgressionCard player={player} onGoBuilding={onGoBuilding} onNav={onNav} top={TUTORIAL_CONTENT_TOP}
-            onComingSoon={(feature, description, target) => setComingSoon({ feature, description, target })} />
+          <ProgressionCard player={player} onGoBuilding={onGoBuilding} onNav={onNav} top={TUTORIAL_CONTENT_TOP} />
           {comingSoon && (
             <ComingSoonSheet feature={comingSoon.feature} description={comingSoon.description} target={comingSoon.target} onClose={() => setComingSoon(null)} />
           )}

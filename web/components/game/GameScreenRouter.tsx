@@ -400,6 +400,17 @@ export function ScreenContent({
           unlockedSkillNodes={game.player.unlockedSkillNodes ?? []}
           onUnlock={game.unlockSkillNode}
           onBack={() => game.go('hub')}
+          researchXP={game.player.researchXP ?? 0}
+          licenseGrade={game.player.licenseGrade ?? 'Grade I'}
+          onUpgradeLicenseGrade={game.upgradeLicenseGrade}
+          firsts={{
+            firstMissionDone: game.player.missionsDone > 0,
+            firstSatelliteLaunched: !!game.player.transitSatelliteLaunchedAt,
+            firstTessClassification: Object.keys(game.player.tessClassifications ?? {}).length > 0,
+            firstBlueprintUnlocked: (game.player.unlockedBlueprints ?? []).length > 0,
+            refineryBuilt: game.player.refineryBuilt,
+            launchpadUpgraded: game.player.launchpadUpgraded,
+          }}
         />
       )
 

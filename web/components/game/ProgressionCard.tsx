@@ -9,7 +9,6 @@ interface ProgressionCardProps {
   onGoBuilding: (b: string) => void
   onNav: (s: Screen) => void
   top?: number
-  onComingSoon?: (feature: string, description: string, target?: Date) => void
 }
 
 function CardButton({ accent, eyebrow, title, cta, onClick, testId }: {
@@ -57,7 +56,7 @@ function CardButton({ accent, eyebrow, title, cta, onClick, testId }: {
   )
 }
 
-export default function ProgressionCard({ player, onGoBuilding, onNav, top = 132, onComingSoon }: ProgressionCardProps) {
+export default function ProgressionCard({ player, onGoBuilding, onNav, top = 132 }: ProgressionCardProps) {
   const cards: React.ReactElement[] = []
 
   if (player.activeMission) {
@@ -97,8 +96,8 @@ export default function ProgressionCard({ player, onGoBuilding, onNav, top = 132
           accent="var(--ln-cyan)"
           eyebrow="Skill Points"
           title={`${player.skillPoints ?? 0} SP available`}
-          cta="Coming Soon"
-          onClick={() => onComingSoon?.('Skill Tree', 'Train your crew and unlock upgraded drilling, cargo, and orbital capabilities.')}
+          cta="Open Skill Tree"
+          onClick={() => onNav('skills')}
         />
       )
     }

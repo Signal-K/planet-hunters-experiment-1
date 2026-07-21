@@ -75,13 +75,13 @@ describe('research progression', () => {
   })
 
   it('gates license grade upgrades by Research XP and prevents downgrades', () => {
-    const blocked = applyUpgradeLicenseGrade(makeState({ player: { researchXP: 99 } }), 'Grade II')
+    const blocked = applyUpgradeLicenseGrade(makeState({ player: { researchXP: 149 } }), 'Grade II')
     expect(blocked.player.licenseGrade).toBe('Grade I')
 
-    const gradeTwo = applyUpgradeLicenseGrade(makeState({ player: { researchXP: 100 } }), 'Grade II')
+    const gradeTwo = applyUpgradeLicenseGrade(makeState({ player: { researchXP: 150 } }), 'Grade II')
     expect(gradeTwo.player.licenseGrade).toBe('Grade II')
 
-    const alreadyGradeTwo = { ...gradeTwo, player: { ...gradeTwo.player, researchXP: 300 } }
+    const alreadyGradeTwo = { ...gradeTwo, player: { ...gradeTwo.player, researchXP: 500 } }
     const noDowngrade = applyUpgradeLicenseGrade(alreadyGradeTwo, 'Grade II')
     expect(noDowngrade).toBe(alreadyGradeTwo)
   })
