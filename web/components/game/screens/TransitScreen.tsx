@@ -5,6 +5,7 @@ import type { Target, MineralMeta } from '@/lib/data'
 import { Scene } from '@/lib/engine'
 import TopBar from '@/components/ui/TopBar'
 import { GhostBtn, PrimaryBtn } from '@/components/ui/Button'
+import ConfirmActionSheet from '@/components/game/ConfirmActionSheet'
 import { UI_ZONES } from '@/lib/ui-zones'
 import type { TransitScene } from '@/lib/pixi/transitScene'
 import { formatCountdown } from '@/lib/format'
@@ -92,6 +93,7 @@ export default function TransitScreen({ target, rocketImageSrc, arrivalAt, retur
 
   // Keep progressRef current so the PixiJS scene always gets live progress
   const [mountedAt] = useState(() => Date.now())
+  const [confirmingAbandon, setConfirmingAbandon] = useState(false)
   const totalMs = isTimed && arrivalAt ? Math.max(1, arrivalAt - mountedAt) : 1
   const progress = isTimed
     ? Math.min(100, Math.max(0, Math.round(((now - mountedAt) / totalMs) * 100)))
@@ -234,8 +236,19 @@ export default function TransitScreen({ target, rocketImageSrc, arrivalAt, retur
         {process.env.NODE_ENV === 'development' && !arrived && (
           <GhostBtn testId="transit-skip-btn" onClick={onArrive}>Skip ▸</GhostBtn>
         )}
-        {onAbandon && <GhostBtn onClick={onAbandon}>Abort Mission</GhostBtn>}
+        {onAbandon && <GhostBtn onClick={() => setConfirmingAbandon(true)}>Abort Mission</GhostBtn>}
       </div>
+
+      {confirmingAbandon && onAbandon && (
+        <ConfirmActionSheet
+          eyebrow="Mission Transit"
+          title="Abort Mission"
+          description="Abort this mission in transit? Cargo and mission progress will be lost."
+          confirmLabel="Confirm Abort"
+          onConfirm={() => { setConfirmingAbandon(false); onAbandon() }}
+          onDismiss={() => setConfirmingAbandon(false)}
+        />
+      )}
     </div>
   )
 }

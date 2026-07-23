@@ -9,6 +9,7 @@ import Panel from '@/components/ui/Panel'
 import StatusPill from '@/components/ui/StatusPill'
 import IconBadge from '@/components/ui/IconBadge'
 import SegmentedBar from '@/components/ui/SegmentedBar'
+import ConfirmActionSheet from '@/components/game/ConfirmActionSheet'
 import MiningCanvas from './MiningCanvas'
 
 // Out There: Omega Edition bolt glyph — used inside the charge-meter IconBadge.
@@ -312,6 +313,7 @@ export default function MiningScreen({ mission, target, onComplete, onBack, onAb
     (sum, [id, amount]) => sum + Math.min(cargo[id] ?? 0, amount), 0
   )
   const [guideOpen, setGuideOpen] = useState(false)
+  const [confirmingAbandon, setConfirmingAbandon] = useState(false)
 
   const isFreeOps = !mission.contractor
   const { show: showFreeOpsMiningExplainer, dismiss: dismissFreeOpsMiningExplainer } = useFreeOpsMiningAck(!isFreeOps || !!hasPriorFreeOpsExperience)
@@ -433,7 +435,7 @@ export default function MiningScreen({ mission, target, onComplete, onBack, onAb
               Try Again
             </button>
             {onAbandon && (
-              <button onClick={onAbandon} style={{ padding: '12px 0', background: 'transparent', border: '1px solid rgba(255,80,80,0.35)', borderRadius: 10, fontFamily: 'var(--ln-font-display)', fontSize: 11, fontWeight: 800, letterSpacing: '0.14em', color: '#ff6060', cursor: 'pointer', textTransform: 'uppercase' }}>
+              <button onClick={() => setConfirmingAbandon(true)} style={{ padding: '12px 0', background: 'transparent', border: '1px solid rgba(255,80,80,0.35)', borderRadius: 10, fontFamily: 'var(--ln-font-display)', fontSize: 11, fontWeight: 800, letterSpacing: '0.14em', color: '#ff6060', cursor: 'pointer', textTransform: 'uppercase' }}>
                 Scrub Mission
               </button>
             )}
@@ -592,6 +594,17 @@ export default function MiningScreen({ mission, target, onComplete, onBack, onAb
           </div>
         </div>
       </div>
+
+      {confirmingAbandon && onAbandon && (
+        <ConfirmActionSheet
+          eyebrow="Mining Run"
+          title="Scrub Mission"
+          description={`Abandon this run? ${totalCollected} of ${totalNeeded} units collected will be lost.`}
+          confirmLabel="Confirm Scrub"
+          onConfirm={() => { setConfirmingAbandon(false); onAbandon() }}
+          onDismiss={() => setConfirmingAbandon(false)}
+        />
+      )}
     </div>
   )
 }

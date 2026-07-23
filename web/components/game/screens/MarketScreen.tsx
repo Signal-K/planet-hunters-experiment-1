@@ -5,6 +5,7 @@ import TopBar from '@/components/ui/TopBar'
 import Panel from '@/components/ui/Panel'
 import { PrimaryBtn } from '@/components/ui/Button'
 import StatusPill from '@/components/ui/StatusPill'
+import ConfirmActionSheet from '@/components/game/ConfirmActionSheet'
 import { MINERAL_META, CONTRACTOR_SLOTS } from '@/lib/data'
 import { openMarketSellPrice, decayedUnitsSold } from '@/lib/systems/EconomySystem'
 import { formatFrancs } from '@/lib/format'
@@ -87,22 +88,21 @@ export default function MarketScreen({ stash, marketSupply, marketSupplyUpdatedA
           </Panel>
         )}
 
-        {entries.length > 0 && !sellAllConfirm && (
+        {entries.length > 0 && (
           <PrimaryBtn kind="amber" onClick={() => setSellAllConfirm(true)}>Sell All Minerals</PrimaryBtn>
         )}
         {sellAllConfirm && (
-          <Panel accent="var(--ln-amber)">
-            <div className="flex items-center justify-between">
-              <span style={{ fontFamily: 'var(--ln-font-display)', fontSize: 13, fontWeight: 800, color: '#f5a623' }}>Sell entire inventory for ₣{formatFrancs(totalValue())}?</span>
-              <div className="flex gap-2">
-                <PrimaryBtn kind="amber" onClick={() => {
-                  entries.forEach(([id]) => onSell(id, stash[id]))
-                  setSellAllConfirm(false)
-                }}>Confirm</PrimaryBtn>
-                <PrimaryBtn kind="amber" onClick={() => setSellAllConfirm(false)}>Cancel</PrimaryBtn>
-              </div>
-            </div>
-          </Panel>
+          <ConfirmActionSheet
+            eyebrow="Commodity Exchange"
+            title="Sell Entire Inventory"
+            description={`Sell all cargo for ₣${formatFrancs(totalValue())}? This can't be undone.`}
+            confirmLabel={`Confirm Sell (₣${formatFrancs(totalValue())})`}
+            onConfirm={() => {
+              entries.forEach(([id]) => onSell(id, stash[id]))
+              setSellAllConfirm(false)
+            }}
+            onDismiss={() => setSellAllConfirm(false)}
+          />
         )}
 
         {entries.map(([id, qty]) => {
@@ -143,20 +143,24 @@ export default function MarketScreen({ stash, marketSupply, marketSupplyUpdatedA
                   <div style={{ fontFamily: 'var(--ln-font-display)', fontWeight: 800, fontSize: 16, color: '#f5a623' }}>
                     ₣{formatFrancs(showContractor ? contractorValue : marketValue)}
                   </div>
-                  {confirming === id ? (
-                    <div className="flex gap-1">
-                      <PrimaryBtn kind="amber" onClick={() => handleSell(id)}>Confirm</PrimaryBtn>
-                      <PrimaryBtn kind="amber" onClick={() => setConfirming(null)}>Cancel</PrimaryBtn>
-                    </div>
-                  ) : (
-                    <PrimaryBtn kind="amber" onClick={() => setConfirming(id)}>Sell All</PrimaryBtn>
-                  )}
+                  <PrimaryBtn kind="amber" onClick={() => setConfirming(id)}>Sell All</PrimaryBtn>
                 </div>
               </div>
             </Panel>
           )
         })}
       </div>
+
+      {confirming && MINERAL_META[confirming] && (
+        <ConfirmActionSheet
+          eyebrow="Commodity Exchange"
+          title={`Sell All ${MINERAL_META[confirming].name}`}
+          description={`Sell ${stash[confirming] ?? 0} units for ₣${formatFrancs((contractor ? contractorPrice(MINERAL_META[confirming].price, confirming) : marketPrice(confirming, MINERAL_META[confirming].price)) * (stash[confirming] ?? 0))}? This can't be undone.`}
+          confirmLabel="Confirm Sell"
+          onConfirm={() => handleSell(confirming)}
+          onDismiss={() => setConfirming(null)}
+        />
+      )}
     </div>
   )
 }
