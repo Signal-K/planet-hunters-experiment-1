@@ -6,6 +6,7 @@ import Panel from '@/components/ui/Panel'
 import { PrimaryBtn } from '@/components/ui/Button'
 import StatusPill from '@/components/ui/StatusPill'
 import ConfirmActionSheet from '@/components/game/ConfirmActionSheet'
+import MineralChip from '@/components/game/MineralChip'
 import { MINERAL_META, CONTRACTOR_SLOTS } from '@/lib/data'
 import { openMarketSellPrice, decayedUnitsSold } from '@/lib/systems/EconomySystem'
 import { formatFrancs } from '@/lib/format'
@@ -117,16 +118,7 @@ export default function MarketScreen({ stash, marketSupply, marketSupplyUpdatedA
             <Panel key={id}>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div style={{
-                    width: 36, height: 36, borderRadius: 8,
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    fontSize: 16, fontWeight: 800,
-                    background: meta.color + '22',
-                    border: `1px solid ${meta.color}`,
-                    color: meta.color,
-                  }}>
-                    {meta.sym}
-                  </div>
+                  <MineralChip mineral={id} variant="avatar" size={36} />
                   <div>
                     <div style={{ fontFamily: 'var(--ln-font-display)', fontWeight: 800, fontSize: 14, color: '#e6efff' }}>{meta.name}</div>
                     <div style={{ fontFamily: 'var(--ln-font-mono)', fontSize: 10, color: '#7a8294' }}>

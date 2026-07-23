@@ -5,6 +5,7 @@ import TopBar from '@/components/ui/TopBar'
 import Panel from '@/components/ui/Panel'
 import StatusPill from '@/components/ui/StatusPill'
 import { PrimaryBtn, GhostBtn } from '@/components/ui/Button'
+import MineralChip from '@/components/game/MineralChip'
 import { type RefineryRecipe, REFINERY_RECIPES } from '@/lib/data'
 import { UI_ZONES } from '@/lib/ui-zones'
 import { formatFrancs } from '@/lib/format'
@@ -45,9 +46,7 @@ export default function RefineryScreen({ player, onBack, onStartRefine, onCollec
         {runningRecipe && (
           <Panel accent={done ? 'var(--ln-ok)' : 'var(--ln-cyan)'} style={{ padding: 12, marginTop: 10 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-              <div style={{ width: 40, height: 40, borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, fontWeight: 800, background: runningRecipe.output.color + '22', border: `1px solid ${runningRecipe.output.color}`, color: runningRecipe.output.color }}>
-                {runningRecipe.output.sym}
-              </div>
+              <MineralChip meta={runningRecipe.output} variant="avatar" size={40} />
               <div style={{ flex: 1 }}>
                 <div style={{ fontFamily: 'var(--ln-font-display)', fontWeight: 800, fontSize: 14, color: '#e6efff' }}>{runningRecipe.name} {done && '✓'}</div>
                 <div style={{ fontFamily: 'var(--ln-font-mono)', fontSize: 10, color: '#7a8294' }}>
@@ -97,9 +96,7 @@ export default function RefineryScreen({ player, onBack, onStartRefine, onCollec
               >
                 <Panel accent={selected === recipe.id ? 'var(--ln-amber)' : 'var(--ln-cyan)'} style={{ padding: 10 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                    <div style={{ width: 44, height: 44, borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, fontWeight: 800, background: recipe.output.color + '22', border: `1px solid ${recipe.output.color}`, color: recipe.output.color }}>
-                      {recipe.output.sym}
-                    </div>
+                    <MineralChip meta={recipe.output} variant="avatar" size={44} />
                     <div style={{ flex: 1 }}>
                       <div style={{ fontFamily: 'var(--ln-font-display)', fontWeight: 800, fontSize: 14, color: '#e6efff' }}>{recipe.name}</div>
                       <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 11, color: '#a9b8ce' }}>

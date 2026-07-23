@@ -5,6 +5,7 @@ import type { Mission, Contractor, MineralMeta } from '@/lib/data'
 import TutorialHighlight from '@/components/game/TutorialHighlight'
 import ContractorMark from '@/components/ui/ContractorMark'
 import MissionMetrics from '@/components/game/MissionMetrics'
+import MineralChip from '@/components/game/MineralChip'
 
 type CardState = 'available' | 'locked' | 'cooldown' | 'completed'
 
@@ -218,15 +219,9 @@ export default function MissionCard({
               </div>
 
               <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 10 }}>
-                {Object.entries(mission.requires.minerals).map(([k, v]) => {
-                  const meta = mineralMeta[k]
-                  if (!meta) return null
-                  return (
-                    <span key={k} style={{ font: '600 9px var(--ln-font-mono)', color: meta.color, letterSpacing: '0.06em', background: `${meta.color}18`, border: `1px solid ${meta.color}`, padding: '2px 6px', borderRadius: 2 }}>
-                      {meta.name} ×{v} <span style={{ opacity: 0.65 }}>({meta.sym})</span>
-                    </span>
-                  )
-                })}
+                {Object.entries(mission.requires.minerals).map(([k, v]) => (
+                  <MineralChip key={k} meta={mineralMeta[k]} mineral={k} count={v} />
+                ))}
                 <span style={{ font: '600 9px var(--ln-font-mono)', color: 'var(--ln-text)', opacity: 0.75, letterSpacing: '0.06em', background: 'var(--ln-shell)', border: '1px solid var(--ln-border)', padding: '2px 6px', borderRadius: 2 }}>
                   {fuelTimerLabel}
                 </span>
