@@ -1,7 +1,10 @@
 import { describe, expect, it } from 'vitest'
 import type { GameState } from '@/lib/game-types'
+import { MISSIONS } from '@/lib/data'
 import {
   applyGainResearchXP,
+  applyAbandonMission,
+  LICENSE_GRADE_XP_GATES,
   applyUnlockBlueprint,
   applyUpgradeLicenseGrade,
 } from './ProgressionSystem'
@@ -86,6 +89,20 @@ describe('research progression', () => {
     expect(noDowngrade).toBe(alreadyGradeTwo)
   })
 
+  it('uses the retuned STS-492 License Grade gates through Grade III', () => {
+    expect(LICENSE_GRADE_XP_GATES).toMatchObject({
+      'Grade I': 0,
+      'Grade II': 150,
+      'Grade III': 500,
+    })
+
+    const blocked = applyUpgradeLicenseGrade(makeState({ player: { researchXP: 499, licenseGrade: 'Grade II' } }), 'Grade III')
+    expect(blocked.player.licenseGrade).toBe('Grade II')
+
+    const upgraded = applyUpgradeLicenseGrade(makeState({ player: { researchXP: 500, licenseGrade: 'Grade II' } }), 'Grade III')
+    expect(upgraded.player.licenseGrade).toBe('Grade III')
+  })
+
   it('unlocks a blueprint by spending Francs, Research XP, and materials once', () => {
     const state = makeState({
       player: {
@@ -126,5 +143,33 @@ describe('research progression', () => {
     expect(next.player.activeScan).toBeNull()
     expect(next.player.targetScanCounts?.mars).toBe(1)
     expect(next.player.researchXP).toBe(15)
+  })
+
+  it('clears paused mining and rover state when abandoning an active mission', () => {
+    const state = makeState({
+      screen: 'mining',
+      missionId: 'generated-s1-starter-bulk-1',
+      targetId: 'eros',
+      player: {
+        activeMission: { id: 'generated-s1-starter-bulk-1', label: 'Iron starter order -> Eros' },
+        miningCargoInProgress: { iron: 2 },
+        roverMiningStartedAt: 123456,
+        arrivalAt: Date.now() + 60_000,
+        headingToDelivery: true,
+        debriefPending: true,
+        returningToEarth: true,
+      },
+    })
+
+    const next = applyAbandonMission(state, MISSIONS)
+
+    expect(next.screen).toBe('hub')
+    expect(next.player.activeMission).toBeNull()
+    expect(next.player.miningCargoInProgress).toBeUndefined()
+    expect(next.player.roverMiningStartedAt).toBeUndefined()
+    expect(next.player.arrivalAt).toBeNull()
+    expect(next.player.headingToDelivery).toBe(false)
+    expect(next.player.debriefPending).toBe(false)
+    expect(next.player.returningToEarth).toBe(false)
   })
 })

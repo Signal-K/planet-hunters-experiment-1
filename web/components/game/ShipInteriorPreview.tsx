@@ -17,6 +17,7 @@ import {
   selectedCustomizerPartIds,
 } from '@/lib/data'
 import type { CustomizerPart, InstalledCustomizerPartsByKind, ShipRoomKind } from '@/lib/data'
+import { formatFrancs } from '@/lib/format'
 
 interface ShipInteriorPreviewProps {
   rocketId: string
@@ -42,12 +43,6 @@ const STEP_DETAILS: Record<ShipRoomKind, Omit<BuildStep, 'kind'>> = {
   fairing:       { title: 'Payload Fairing',      body: 'Nose cone protects cargo during ascent. Jettisoned at separation altitude.' },
   'docking-port':{ title: 'Docking Port',         body: 'Enables cargo transfer at orbital stations or relay depots.' },
   'heat-shield': { title: 'Re-entry Shield',      body: 'Protects the return vehicle and payload during atmospheric deceleration.' },
-}
-
-function formatFrancs(n: number): string {
-  if (n >= 1_000_000_000) return `${(n / 1_000_000_000).toFixed(1)}B`
-  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(0)}M`
-  return n.toLocaleString()
 }
 
 export default function ShipInteriorPreview({
@@ -125,7 +120,7 @@ export default function ShipInteriorPreview({
           </div>
           <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginTop: 1 }}>
             <span style={{ fontFamily: 'var(--ln-font-display)', fontSize: 18, fontWeight: 800, color: 'var(--ln-text)' }} data-testid="ship-budget">
-              {formatFrancs(buildState.balance)} ▲
+              {formatFrancs(buildState.balance, { compact: true })} ▲
             </span>
             <span style={{ fontFamily: 'var(--ln-font-display)', fontSize: 10, color: 'var(--ln-text-muted)' }}>remaining</span>
           </div>
@@ -273,7 +268,7 @@ export default function ShipInteriorPreview({
                 </div>
                 <div style={{ flex: 'none', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 4 }}>
                   <span style={{ fontFamily: 'var(--ln-font-mono)', fontSize: 9, color: 'var(--ln-crimson)' }}>
-                    {formatFrancs(part.price)} ▲
+                    {formatFrancs(part.price, { compact: true })} ▲
                   </span>
                   <span style={{ fontFamily: 'var(--ln-font-display)', fontSize: 9, fontWeight: 900, color: selected ? 'var(--ln-ok)' : 'var(--ln-cyan)', letterSpacing: '0.07em', textTransform: 'uppercase' }}>
                     {selected ? 'Installed' : `+${part.successBonus}%`}

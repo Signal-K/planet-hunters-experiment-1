@@ -42,10 +42,15 @@ export function toMission(r: any): Mission {
   const minerals = typeof r.requires_minerals === 'object' && !Array.isArray(r.requires_minerals)
     ? r.requires_minerals
     : JSON.parse(r.requires_minerals || '{}')
+  const fallbackContractor = r.contractor_slug ? CONTRACTORS[r.contractor_slug] : undefined
+  const rawBrief = r.brief ?? ''
+  const brief = fallbackContractor && /^Contractor Slot\s+/i.test(rawBrief)
+    ? rawBrief.replace(/Contractor Slot\s+\d+[A-Z]?/i, fallbackContractor.name)
+    : rawBrief
   return {
     id: r.slug,
     title: r.title,
-    brief: r.brief ?? '',
+    brief,
     contractor: r.contractor_slug,
     tag: r.tag ?? '',
     difficulty: r.difficulty ?? 'L1',
@@ -90,6 +95,8 @@ function withCorrectedM3(missions: Mission[]): Mission[] {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function toContractor(r: any): Contractor {
   const fallback = CONTRACTOR_SLOTS.find(c => c.id === r.slug)
+  const rawName = typeof r.name === 'string' ? r.name.trim() : ''
+  const hasPlaceholderName = /^Contractor Slot\s+\d+[A-Z]?$/i.test(rawName)
   const mineralPreferences = Array.isArray(r.mineral_preferences)
     ? r.mineral_preferences
     : (r.mineral_preferences ? JSON.parse(r.mineral_preferences) : fallback?.mineralPreferences ?? [])
@@ -107,7 +114,7 @@ export function toContractor(r: any): Contractor {
       uiRole: 'starter',
     }),
     id: r.slug,
-    name: r.name ?? fallback?.name ?? r.slug,
+    name: (!hasPlaceholderName && rawName) ? rawName : (fallback?.name ?? rawName) || r.slug,
     color: r.color ?? fallback?.color ?? '#87CFFA',
     initial: r.initial ?? fallback?.initial ?? String(r.name ?? r.slug).slice(0, 2).toUpperCase(),
     unlockTier: r.unlock_tier ?? fallback?.unlockTier ?? 1,

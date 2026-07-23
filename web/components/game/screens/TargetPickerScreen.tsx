@@ -7,7 +7,10 @@ import { compatibleTargetsFor, type Mission, type Target } from '@/lib/data'
 import type { Catalog } from '@/lib/catalog'
 import TutorialHighlight from '@/components/game/TutorialHighlight'
 import GalaxyMap from '@/components/TargetPicker/GalaxyMap'
-import MissionSetupShell from '@/components/game/screens/MissionSetupShell'
+import MissionSetupShell, {
+  MissionSetupCard,
+  MissionSetupFrame,
+} from '@/components/game/screens/MissionSetupShell'
 
 interface TargetPickerScreenProps {
   mission: Mission
@@ -95,10 +98,17 @@ export default function TargetPickerScreen({ mission, onBack, onPick, hasCoach, 
 
   return (
     <MissionSetupShell
+      className="mission-setup-screen--target"
       eyebrow={mission.title.toUpperCase()}
       title="Pick Target"
       onBack={onBack}
       hasCoach={hasCoach}
+      step="Target"
+      stepDescription={
+        deliveryTarget
+          ? `Choose a mining site, then deliver cargo to ${deliveryTarget.name} before returning to Earth.`
+          : 'Choose a reachable mining site, then continue to build your rocket.'
+      }
       actions={pickedTarget && (
         <PrimaryBtn testId="continue-build-btn" onClick={() => onPick(pickedTarget.id)}>Continue · Build →</PrimaryBtn>
       )}
@@ -120,7 +130,17 @@ export default function TargetPickerScreen({ mission, onBack, onPick, hasCoach, 
             <span style={{ flex: 1 }} />
             <StatusPill kind="amber" dim>Rocket range · Orbit ≤ {mission.requires.max_orbit}</StatusPill>
           </div>
-          <div className="mission-setup-frame" style={mapStyle}>
+          <MissionSetupFrame style={mapStyle}>
+            <div style={{ position: 'absolute', top: 10, left: 12, right: 12, zIndex: 5, display: 'flex', alignItems: 'center', gap: 10, pointerEvents: 'none' }}>
+              <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 10, fontWeight: 800, letterSpacing: '0.2em', color: 'var(--ln-cyan)', textTransform: 'uppercase' }}>
+                Stellar OS
+              </div>
+              <div style={{ display: 'flex', gap: 5, fontFamily: 'var(--ln-font-mono)', fontSize: 9, letterSpacing: '0.12em', textTransform: 'uppercase' }}>
+                <span style={{ padding: '4px 7px', border: '1px solid rgba(63,169,255,0.55)', borderRadius: 4, color: 'var(--ln-text)', background: 'rgba(8,16,28,0.78)' }}>Solar System</span>
+                <span style={{ padding: '4px 7px', border: '1px solid rgba(135,207,250,0.18)', borderRadius: 4, color: 'var(--ln-text-muted)', background: 'rgba(8,16,28,0.56)' }}>Target Acquisition</span>
+              </div>
+              <span style={{ marginLeft: 'auto', fontFamily: 'var(--ln-font-mono)', fontSize: 9, color: 'var(--ln-text-muted)', letterSpacing: '0.1em' }}>RANGE LOCK · L{mission.requires.max_orbit}</span>
+            </div>
             <GalaxyMap
               mission={mission}
               targets={TARGETS}
@@ -129,8 +149,18 @@ export default function TargetPickerScreen({ mission, onBack, onPick, hasCoach, 
               onPick={setPicked}
               hasCoach={hasCoach}
             />
+            <div style={{ position: 'absolute', left: 12, right: 12, bottom: 10, zIndex: 5, display: 'flex', alignItems: 'center', gap: 12, padding: '8px 10px', border: '1px solid rgba(135,207,250,0.2)', borderRadius: 6, background: 'rgba(3,6,10,0.88)', pointerEvents: 'none' }}>
+              <div style={{ minWidth: 0, flex: 1 }}>
+                <div style={{ fontFamily: 'var(--ln-font-mono)', fontSize: 8, color: 'var(--ln-text-muted)', letterSpacing: '0.16em', textTransform: 'uppercase' }}>Selected body</div>
+                <div style={{ marginTop: 2, fontFamily: 'var(--ln-font-display)', fontSize: 13, fontWeight: 800, color: 'var(--ln-text)', textTransform: 'uppercase' }}>{pickedTarget?.name ?? 'Awaiting selection'}</div>
+              </div>
+              <div style={{ textAlign: 'right', fontFamily: 'var(--ln-font-mono)', fontSize: 9, color: 'var(--ln-text-dim)', lineHeight: 1.5 }}>
+                <div>{compat.length} reachable targets</div>
+                <div>{pickedTarget ? `Orbit ${pickedTarget.orbit} · ${pickedTarget.difficulty}` : 'Select an amber marker'}</div>
+              </div>
+            </div>
             {hasCoach && <TutorialHighlight borderRadius={14} />}
-          </div>
+          </MissionSetupFrame>
         </div>
       </div>
 
@@ -145,8 +175,7 @@ export default function TargetPickerScreen({ mission, onBack, onPick, hasCoach, 
       </div>
 
       {pickedTarget ? (
-        <div className="mission-setup-card">
-          <div className="mission-setup-card-scroll">
+        <MissionSetupCard>
               <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                 <PlanetSVG id={pickedTarget.id} size={48} />
                 <div style={{ flex: 1, minWidth: 0 }}>
@@ -193,15 +222,12 @@ export default function TargetPickerScreen({ mission, onBack, onPick, hasCoach, 
                   })}
                 </div>
               </div>
-          </div>
-        </div>
+        </MissionSetupCard>
       ) : compat.length === 0 ? (
-        <div className="mission-setup-card">
-          <div className="mission-setup-card-scroll">
-            <div style={{ fontFamily: 'var(--ln-font-display)', fontWeight: 800, fontSize: 14, color: '#ff8290' }}>No reachable targets.</div>
-            <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 12, color: '#a9b8ce', marginTop: 4 }}>Wait for higher-tier propulsion or pick a different mission.</div>
-          </div>
-        </div>
+        <MissionSetupCard>
+          <div style={{ fontFamily: 'var(--ln-font-display)', fontWeight: 800, fontSize: 14, color: '#ff8290' }}>No reachable targets.</div>
+          <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 12, color: '#a9b8ce', marginTop: 4 }}>Wait for higher-tier propulsion or pick a different mission.</div>
+        </MissionSetupCard>
       ) : <div />}
 
     </MissionSetupShell>

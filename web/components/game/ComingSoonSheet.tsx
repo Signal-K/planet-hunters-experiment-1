@@ -1,6 +1,8 @@
 'use client'
 
 import React, { useEffect, useState } from 'react'
+import { formatCountdownUnit } from '@/lib/format'
+import Sheet from '@/components/ui/Sheet'
 
 // July 5, 2026 10:00 AEST = 00:00 UTC
 export const NEXT_SPRINT_UTC = new Date('2026-07-05T00:00:00Z')
@@ -19,7 +21,7 @@ function CountdownUnit({ value, label }: { value: number; label: string }) {
         fontFamily: 'var(--ln-font-display)', fontSize: 26, fontWeight: 800,
         color: '#9becff', letterSpacing: '0.02em', lineHeight: 1,
       }}>
-        {String(value).padStart(2, '0')}
+        {formatCountdownUnit(value)}
       </div>
       <div style={{
         fontFamily: 'var(--ln-font-display)', fontSize: 7, letterSpacing: '0.22em',
@@ -70,25 +72,18 @@ function formatSprintLabel(date: Date) {
 
 export function ComingSoonSheet({ feature, description, onClose, target = NEXT_SPRINT_UTC }: ComingSoonSheetProps) {
   return (
-    <div
-      style={{
-        position: 'absolute', inset: 0, zIndex: 200,
-        background: 'rgba(1,5,14,0.82)', backdropFilter: 'blur(6px)',
-        display: 'flex', flexDirection: 'column', justifyContent: 'flex-end',
-      }}
-      onClick={onClose}
-    >
-      <div
-        style={{
+    <Sheet
+      onDismiss={onClose}
+      zIndex={200}
+      scrimStyle={{ background: 'rgba(1,5,14,0.82)', backdropFilter: 'blur(6px)' }}
+      panelStyle={{
           background: '#06121f',
           border: '1px solid rgba(63,169,255,0.18)',
-          borderTopLeftRadius: 20, borderTopRightRadius: 20,
           padding: '28px 20px 44px',
-        }}
-        onClick={e => e.stopPropagation()}
-      >
-        {/* Drag handle */}
-        <div style={{ width: 36, height: 3, background: 'rgba(63,169,255,0.25)', borderRadius: 2, margin: '0 auto 24px' }} />
+      }}
+      handleContainerStyle={{ marginBottom: 24 }}
+      handleStyle={{ width: 36, height: 3, background: 'rgba(63,169,255,0.25)' }}
+    >
 
         <div style={{ textAlign: 'center' }}>
           <div style={{
@@ -137,7 +132,6 @@ export function ComingSoonSheet({ feature, description, onClose, target = NEXT_S
         >
           Got It
         </button>
-      </div>
-    </div>
+    </Sheet>
   )
 }

@@ -9,6 +9,7 @@ import { SCANS_PER_DAY, SCAN_DURATION_MS, SCANS_REQUIRED_TO_MAP, MINERAL_META, t
 import type { Target } from '@/lib/data'
 import type { Player } from '@/lib/game-types'
 import { UI_ZONES } from '@/lib/ui-zones'
+import { formatCountdown } from '@/lib/format'
 
 interface ScanStationScreenProps {
   player: Player
@@ -16,14 +17,6 @@ interface ScanStationScreenProps {
   onBack: () => void
   onStartScan: (targetId: string) => void
   onCollectScan: () => void
-}
-
-function formatCountdown(ms: number): string {
-  if (ms <= 0) return '00:00'
-  const totalSec = Math.ceil(ms / 1000)
-  const min = Math.floor(totalSec / 60)
-  const sec = totalSec % 60
-  return `${String(min).padStart(2, '0')}:${String(sec).padStart(2, '0')}`
 }
 
 function revealedMinerals(target: Target, scanCount: number): string[] {

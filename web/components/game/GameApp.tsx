@@ -115,7 +115,15 @@ function GameCanvas() {
       return
     }
     if (id === 'fab') {
-      game.go(game.mission && game.target ? 'fab' : 'missions')
+      if (!game.player.freeOperations) {
+        game.go('hub')
+        return
+      }
+      // The Build tab is an entry point, not a resume button. Clear any
+      // completed/stale mission context so it opens the Free Ops chooser.
+      game.setMissionId(null)
+      game.setTargetId(null)
+      game.go('fab')
       return
     }
     if (id === 'market') {

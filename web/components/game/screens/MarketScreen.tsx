@@ -7,6 +7,7 @@ import { PrimaryBtn } from '@/components/ui/Button'
 import StatusPill from '@/components/ui/StatusPill'
 import { MINERAL_META, CONTRACTOR_SLOTS } from '@/lib/data'
 import { openMarketSellPrice, decayedUnitsSold } from '@/lib/systems/EconomySystem'
+import { formatFrancs } from '@/lib/format'
 
 interface MarketScreenProps {
   stash: Record<string, number>
@@ -15,10 +16,11 @@ interface MarketScreenProps {
   francs: number
   onSell: (mineralId: string, amount: number) => void
   onBack: () => void
+  onOpenMissions: () => void
   contractorId?: string
 }
 
-export default function MarketScreen({ stash, marketSupply, marketSupplyUpdatedAt, francs, onSell, onBack, contractorId }: MarketScreenProps) {
+export default function MarketScreen({ stash, marketSupply, marketSupplyUpdatedAt, francs, onSell, onBack, onOpenMissions, contractorId }: MarketScreenProps) {
   const [confirming, setConfirming] = useState<string | null>(null)
   const [sellAllConfirm, setSellAllConfirm] = useState(false)
 
@@ -55,14 +57,14 @@ export default function MarketScreen({ stash, marketSupply, marketSupplyUpdatedA
   return (
     <div className="flex flex-col min-h-screen bg-[#0a0f1a] text-white">
       <TopBar title="Commodity Exchange" onBack={onBack} right={
-        <StatusPill kind="amber">₣{francs.toLocaleString()}</StatusPill>
+        <StatusPill kind="amber">₣{formatFrancs(francs)}</StatusPill>
       } />
 
       <div className="flex-1 p-4 space-y-4 overflow-y-auto">
         <Panel>
           <div style={{ fontFamily: 'var(--ln-font-display)', fontWeight: 800, fontSize: 15, color: '#f5a623' }}>Mineral Inventory</div>
           <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 12, color: '#a9b8ce', marginTop: 4 }}>
-            Total estimated value: ₣{totalValue().toLocaleString()}
+            Total estimated value: ₣{formatFrancs(totalValue())}
           </div>
         </Panel>
 
@@ -78,8 +80,10 @@ export default function MarketScreen({ stash, marketSupply, marketSupplyUpdatedA
         )}
 
         {entries.length === 0 && (
-          <Panel>
-            <p className="text-sm text-[#a9b8ce]">No minerals in stash. Complete mining missions to acquire ore.</p>
+          <Panel accent="var(--ln-cyan)" style={{ padding: 14 }}>
+            <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 15, fontWeight: 800, color: 'var(--ln-text)' }}>No cargo to sell yet</div>
+            <p className="text-sm text-[#a9b8ce]" style={{ margin: '6px 0 12px', lineHeight: 1.45 }}>The exchange becomes useful after a mining run. Choose a contractor job or launch a self-directed run, then bring the ore home.</p>
+            <PrimaryBtn onClick={onOpenMissions}>Find a Mining Run</PrimaryBtn>
           </Panel>
         )}
 
@@ -89,7 +93,7 @@ export default function MarketScreen({ stash, marketSupply, marketSupplyUpdatedA
         {sellAllConfirm && (
           <Panel accent="var(--ln-amber)">
             <div className="flex items-center justify-between">
-              <span style={{ fontFamily: 'var(--ln-font-display)', fontSize: 13, fontWeight: 800, color: '#f5a623' }}>Sell entire inventory for ₣{totalValue().toLocaleString()}?</span>
+              <span style={{ fontFamily: 'var(--ln-font-display)', fontSize: 13, fontWeight: 800, color: '#f5a623' }}>Sell entire inventory for ₣{formatFrancs(totalValue())}?</span>
               <div className="flex gap-2">
                 <PrimaryBtn kind="amber" onClick={() => {
                   entries.forEach(([id]) => onSell(id, stash[id]))
@@ -137,7 +141,7 @@ export default function MarketScreen({ stash, marketSupply, marketSupplyUpdatedA
                 </div>
                 <div className="flex items-center gap-2">
                   <div style={{ fontFamily: 'var(--ln-font-display)', fontWeight: 800, fontSize: 16, color: '#f5a623' }}>
-                    ₣{showContractor ? contractorValue.toLocaleString() : marketValue.toLocaleString()}
+                    ₣{formatFrancs(showContractor ? contractorValue : marketValue)}
                   </div>
                   {confirming === id ? (
                     <div className="flex gap-1">

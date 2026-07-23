@@ -85,7 +85,27 @@
       "mcp__desk__create_ticket",
       "mcp__desk__link_tickets",
       "WebFetch(domain:raw.githubusercontent.com)",
-      "mcp__desk__search"
+      "mcp__desk__search",
+      "mcp__desk__update_subtask",
+      "mcp__desk__close_sprint",
+      "mcp__desk__list_workflow_states",
+      "mcp__desk__attach_craft_doc",
+      "mcp__desk__add_inbox_item",
+      "mcp__zennotes__search_text",
+      "mcp__zennotes__replace_in_note",
+      "mcp__desk__remove_craft_doc",
+      "WebFetch(domain:www.gameuidatabase.com)",
+      "WebFetch(domain:gameuidatabase.com)",
+      "WebFetch(domain:kenney.nl)",
+      "WebFetch(domain:interfaceingame.com)",
+      "WebFetch(domain:store.steampowered.com)",
+      "WebFetch(domain:mysingingmonsters.fandom.com)",
+      "WebFetch(domain:tiny-space-program.fandom.com)",
+      "WebFetch(domain:minecraft.wiki)",
+      "WebFetch(domain:steamcommunity.com)",
+      "WebFetch(domain:play.google.com)",
+      "Skill(artifact-capabilities)",
+      "WebFetch(domain:claude.ai)"
     ]
   },
   "enabledMcpjsonServers": [

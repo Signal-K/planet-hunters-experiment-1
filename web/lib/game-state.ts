@@ -115,6 +115,12 @@ export function repairStateRoute(input: GameState): GameState {
   if (TARGET_CONTEXT_SCREENS.has(input.screen) && !target && !hasRuntimeTarget) {
     return { ...input, screen: mission ? 'targets' : 'missions', targetId: null }
   }
+  // A bare onboarding fab route is not a valid entry point. The Build tab is
+  // locked until Free Ops; only a real selected mission may reach assembly
+  // during the coached onboarding flow.
+  if (input.screen === 'fab' && !input.player.freeOperations && (!mission || !target)) {
+    return { ...input, screen: 'hub', missionId: null, targetId: null }
+  }
   if (input.screen === 'targets' && mission?.targetId) {
     return { ...input, screen: 'rocket-buy', targetId: mission.targetId }
   }

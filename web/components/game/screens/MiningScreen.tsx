@@ -7,7 +7,25 @@ import TopBar from '@/components/ui/TopBar'
 import { PrimaryBtn } from '@/components/ui/Button'
 import Panel from '@/components/ui/Panel'
 import StatusPill from '@/components/ui/StatusPill'
+import IconBadge from '@/components/ui/IconBadge'
+import SegmentedBar from '@/components/ui/SegmentedBar'
 import MiningCanvas from './MiningCanvas'
+
+// Out There: Omega Edition bolt glyph — used inside the charge-meter IconBadge.
+// Kept local since it's a one-off HUD glyph, not a shared icon set yet.
+function LaserBoltIcon({ size = 14 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+      <path d="M12 3l1.6 5.4L19 10l-5.4 1.6L12 17l-1.6-5.4L5 10l5.4-1.6z" />
+    </svg>
+  )
+}
+
+// Fixed pip counts for the HUD segmented bars — decoupled from MAX_CHARGES /
+// totalNeeded so the bar reads as a clean meter instead of one pip per unit
+// (which would sprawl to 30+ pips on post-onboarding runs).
+const CHARGE_SEGMENTS = 10
+const ORDER_SEGMENTS = 12
 
 // First-time-entering-Free-Ops-mining explainer — dismiss-once, same
 // localStorage-ack pattern as MissionBoardScreen's EXPLAINER_ACK_KEY, but
@@ -458,20 +476,26 @@ export default function MiningScreen({ mission, target, onComplete, onBack, onAb
         </div>
 
         {/* ── Stats + charge strip ──────────────────────────────────────────── */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, minHeight: 28 }}>
-          {/* Mineral counts */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, minHeight: 28, flexWrap: 'wrap' }}>
+          {/* Mineral counts — bordered icon-badge tile per Out There: Omega icon language */}
           <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap', flex: 1 }}>
             {Object.entries(mission.requires.minerals).map(([id, amount]) => {
               const collected = Math.min(cargo[id] ?? 0, amount)
               const done = collected >= amount
               const color = minerals[id]?.color ?? '#fff'
+              const badgeColor = done ? 'var(--ln-text-muted)' : color
               return (
-                <div key={id} style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                  <OreShapeIcon id={id} color={done ? 'var(--ln-text-muted)' : color} size={11} minerals={minerals} />
+                <div key={id} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <IconBadge
+                    size={20}
+                    icon={<OreShapeIcon id={id} color={badgeColor} size={11} minerals={minerals} />}
+                    active={!done}
+                    style={{ borderColor: badgeColor, boxShadow: 'none' }}
+                  />
                   <span style={{
                     fontFamily: 'var(--ln-font-display)', fontSize: 10, fontWeight: 700,
                     letterSpacing: '0.06em', textTransform: 'uppercase',
-                    color: done ? 'var(--ln-text-muted)' : color,
+                    color: badgeColor,
                   }}>
                     {minerals[id]?.name ?? id}
                   </span>
@@ -489,16 +513,19 @@ export default function MiningScreen({ mission, target, onComplete, onBack, onAb
           <span style={{ fontFamily: 'var(--ln-font-mono)', fontSize: 10, color: 'var(--ln-cyan-bright)', flexShrink: 0 }}>
             {totalCollected}/{totalNeeded}
           </span>
-          {/* Charge dots */}
-          <div style={{ display: 'flex', gap: 3, alignItems: 'center', flexShrink: 0 }}>
-            {Array.from({ length: MAX_CHARGES }, (_, i) => (
-              <span key={i} style={{
-                display: 'inline-block', width: 7, height: 7, borderRadius: '50%',
-                background: i < laserCharges ? 'var(--ln-cyan)' : 'rgba(255,255,255,0.1)',
-                boxShadow: i < laserCharges ? '0 0 4px var(--ln-cyan)' : 'none',
-                transition: 'background 200ms, box-shadow 200ms',
-              }} />
-            ))}
+          {/* Charge meter — bordered laser badge + segmented bar, Out There: Omega chrome */}
+          <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexShrink: 0 }}>
+            <IconBadge size={20} icon={<LaserBoltIcon size={11} />} tone="cyan" active={laserCharges > 0} />
+            <SegmentedBar
+              segments={CHARGE_SEGMENTS}
+              filled={(laserCharges / MAX_CHARGES) * CHARGE_SEGMENTS}
+              tone={laserCharges > 0 ? 'cyan' : 'crit'}
+              height={7}
+              style={{ width: 60 }}
+            />
+            <span style={{ fontFamily: 'var(--ln-font-mono)', fontSize: 9.5, color: 'var(--ln-text-dim)' }}>
+              {laserCharges}/{MAX_CHARGES}
+            </span>
           </div>
           {/* Guide */}
           <button
@@ -510,13 +537,14 @@ export default function MiningScreen({ mission, target, onComplete, onBack, onAb
           </button>
         </div>
 
-        {/* Progress bar */}
-        <div className="mining-progress-track">
-          <div
-            className="mining-progress-fill"
-            style={{ width: `${Math.min(100, (totalCollected / totalNeeded) * 100)}%` }}
-          />
-        </div>
+        {/* Order progress — segmented bar, Out There: Omega chrome */}
+        <SegmentedBar
+          segments={ORDER_SEGMENTS}
+          filled={(totalCollected / totalNeeded) * ORDER_SEGMENTS}
+          tone="cyan"
+          height={6}
+          style={{ marginTop: 6, marginBottom: 6 }}
+        />
 
         {/* ── Action row: Fire · Fill/Return · Scroll ───────────────────────── */}
         {/* minWidth: 0 on every grid item overrides <button>'s default

@@ -13,6 +13,7 @@ import { SoilCrossSection } from '@/components/game/hub/SoilCrossSection'
 import HubPixiCanvas from '@/components/game/hub/HubPixiCanvas'
 import ErrorBoundary from '@/components/ui/ErrorBoundary'
 import type { HubBuildingDef } from '@/lib/pixi/hubScene'
+import { formatFrancs } from '@/lib/format'
 
 const DEFAULT_PLOTS: EntityData[] = [
   { id: 'plot-0', name: 'Plot 0', transform: { position: { x: 60, y: 570 }, rotation: 0, scale: { x: 1, y: 1 } }, components: [{ type: 'BuildPlot', index: 0 }] },
@@ -53,7 +54,7 @@ function formatStructureCost(structure: StructureBlueprint): string {
   const mineralCost = Object.entries(structure.costMaterials ?? {})
     .map(([mineral, amount]) => `${amount} ${mineral}`)
     .join(' · ')
-  const francs = structure.cost === 0 ? 'Free' : `₣${structure.cost.toLocaleString()}`
+  const francs = structure.cost === 0 ? 'Free' : `₣${formatFrancs(structure.cost)}`
   return mineralCost ? `${francs} · ${mineralCost}` : francs
 }
 

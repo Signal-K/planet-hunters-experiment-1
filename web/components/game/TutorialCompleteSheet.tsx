@@ -2,6 +2,7 @@
 
 import React from 'react'
 import { PrimaryBtn } from '@/components/ui/Button'
+import Sheet from '@/components/ui/Sheet'
 
 const ACK_KEY = 'ln_tutorial_complete_ack'
 
@@ -21,24 +22,19 @@ export function useTutorialCompleteAck(missionsDone: number, threshold: number) 
 
 export function TutorialCompleteSheet({ onDone }: { onDone: () => void }) {
   return (
-    <div
-      style={{
-        position: 'absolute', inset: 0, zIndex: 200,
-        background: 'rgba(1,5,14,0.88)', backdropFilter: 'blur(8px)',
-        display: 'flex', flexDirection: 'column', justifyContent: 'flex-end',
-      }}
-      onClick={onDone}
-    >
-      <div
-        style={{
+    <Sheet
+      onDismiss={onDone}
+      zIndex={200}
+      scrimStyle={{ background: 'rgba(1,5,14,0.88)', backdropFilter: 'blur(8px)' }}
+      panelStyle={{
           background: 'linear-gradient(180deg, #081828 0%, #06121f 100%)',
           border: '1px solid rgba(57,211,106,0.25)',
           borderTopLeftRadius: 22, borderTopRightRadius: 22,
           padding: '32px 24px 48px',
-        }}
-        onClick={e => e.stopPropagation()}
-      >
-        <div style={{ width: 36, height: 3, background: 'rgba(57,211,106,0.3)', borderRadius: 2, margin: '0 auto 28px' }} />
+      }}
+      handleContainerStyle={{ marginBottom: 28 }}
+      handleStyle={{ width: 36, height: 3, background: 'rgba(57,211,106,0.3)' }}
+    >
 
         <div style={{ textAlign: 'center', marginBottom: 28 }}>
           <div style={{
@@ -79,7 +75,6 @@ export function TutorialCompleteSheet({ onDone }: { onDone: () => void }) {
         </div>
 
         <PrimaryBtn kind="green" onClick={onDone}>Start Playing</PrimaryBtn>
-      </div>
-    </div>
+    </Sheet>
   )
 }

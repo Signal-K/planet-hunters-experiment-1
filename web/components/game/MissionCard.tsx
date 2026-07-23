@@ -4,6 +4,7 @@ import React, { useState } from 'react'
 import type { Mission, Contractor, MineralMeta } from '@/lib/data'
 import TutorialHighlight from '@/components/game/TutorialHighlight'
 import ContractorMark from '@/components/ui/ContractorMark'
+import MissionMetrics from '@/components/game/MissionMetrics'
 
 type CardState = 'available' | 'locked' | 'cooldown' | 'completed'
 
@@ -25,7 +26,6 @@ interface MissionCardProps {
   routeLabel?: string
   onPick: () => void
 }
-
 const STATE_TONE: Record<Exclude<CardState, 'available'>, { label: string; color: string }> = {
   locked: { label: 'LOCKED', color: 'var(--ln-text-muted)' },
   cooldown: { label: 'COOLDOWN', color: 'var(--ln-amber)' },
@@ -38,62 +38,6 @@ const ROLE_LABELS: Record<Contractor['uiRole'], string> = {
   prospect: 'Prospecting',
   command: 'Strategic command',
   science: 'Research',
-}
-
-// Always-visible cargo/premium/affinity chip row — ported from the Open
-// Design "Client Bonus" mockup's contract-card chips (see
-// web/components/game/previews/missionFlowPreviewData.ts for the source
-// pattern), restyled onto real --ln-* dark tokens and driven by real
-// mission/contractor data instead of the preview's fixed sample jobs.
-function MetricChips({
-  mission,
-  contractor,
-  mineralMeta,
-  accent,
-}: {
-  mission: Mission
-  contractor?: Contractor | null
-  mineralMeta: Record<string, MineralMeta>
-  accent: string
-}) {
-  const mineralEntries = Object.entries(mission.requires.minerals)
-  const cargoValue = mineralEntries.length === 0
-    ? 'Any'
-    : mineralEntries.map(([k, v]) => `${v} ${mineralMeta[k]?.sym ?? k}`).join(' / ')
-  const chips: { label: string; value: string; empty?: boolean }[] = [
-    { label: 'Cargo', value: cargoValue },
-    contractor
-      ? { label: 'Premium', value: `+${Math.round(contractor.payoutPremium * 100)}%` }
-      : { label: 'Premium', value: 'None', empty: true },
-    contractor
-      ? { label: 'Affinity', value: `+${Math.round(contractor.affinityBonusPerMission * 1000) / 10}%` }
-      : { label: 'Affinity', value: 'None', empty: true },
-  ]
-  return (
-    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 6, padding: '8px 14px 0' }}>
-      {chips.map(chip => (
-        <div
-          key={chip.label}
-          style={{
-            minWidth: 0, padding: 6, borderRadius: 4,
-            border: `1px solid ${chip.empty ? 'var(--ln-hairline)' : `${accent}45`}`,
-            background: 'var(--ln-void)',
-          }}
-        >
-          <div style={{ font: '700 8px var(--ln-font-mono)', color: 'var(--ln-text-muted)', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
-            {chip.label}
-          </div>
-          <div style={{
-            font: '800 12px var(--ln-font-display)', marginTop: 2,
-            color: chip.empty ? 'var(--ln-text-muted)' : accent,
-            whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
-          }}>
-            {chip.value}
-          </div>
-        </div>
-      ))}
-    </div>
-  )
 }
 
 export default function MissionCard({
@@ -151,7 +95,7 @@ export default function MissionCard({
       {highlighted && <TutorialHighlight />}
       <div style={{
         background: 'var(--ln-void)', border: `1px solid ${accent}45`, display: 'flex',
-        boxShadow: '0 12px 32px -16px rgba(0,0,0,0.55)', fontFamily: 'var(--ln-font-display)',
+        boxShadow: 'var(--ln-shadow-card)', fontFamily: 'var(--ln-font-display)',
       }}>
         {/* LEFT RAIL: contractor identity + status/difficulty */}
         <div style={{
@@ -167,7 +111,7 @@ export default function MissionCard({
           <div style={{ textAlign: 'center', font: '700 10px var(--ln-font-display)', color: 'var(--ln-text)', textTransform: 'uppercase', letterSpacing: '0.02em', lineHeight: 1.15 }}>
             {contractor?.name ?? 'Free Ops'}
           </div>
-          <div style={{ font: '600 8px var(--ln-font-mono)', color: 'var(--ln-text-muted)', letterSpacing: '0.09em', textTransform: 'uppercase' }}>
+          <div style={{ font: '600 8px var(--ln-font-mono)', color: 'var(--ln-text)', opacity: 0.65, letterSpacing: '0.09em', textTransform: 'uppercase' }}>
             {mission.tag}
           </div>
 
@@ -187,7 +131,7 @@ export default function MissionCard({
             {isStoryMission
               ? 'Story mission · Not a client request'
               : contractor
-                ? `Wants ${contractor.mineralPreferences.join(' / ')} · +${Math.round(contractor.payoutPremium * 100)}%`
+                ? `Wants ${contractor.mineralPreferences.map(id => mineralMeta[id]?.name ?? id).join(' / ')} · +${Math.round(contractor.payoutPremium * 100)}% pay`
                 : 'Choose target · keep the haul · market-led mining'}
           </div>
 
@@ -215,7 +159,12 @@ export default function MissionCard({
             </div>
           )}
 
-          <MetricChips mission={mission} contractor={contractor} mineralMeta={mineralMeta} accent={accent} />
+          <MissionMetrics mission={mission} contractor={contractor} mineralMeta={mineralMeta} />
+          {contractor && (
+            <div style={{ margin: '4px 14px 0', font: '600 9px/1.4 var(--ln-font-mono)', color: 'var(--ln-text-muted)', letterSpacing: '0.02em' }}>
+              Changes this job&apos;s payout only — does not increase minerals mined.
+            </div>
+          )}
 
           <div style={{ display: 'flex', gap: 6, padding: '8px 14px 0', flexWrap: 'wrap' }}>
             <span style={{ font: '700 8px var(--ln-font-mono)', color: 'var(--ln-amber)', letterSpacing: '0.08em', textTransform: 'uppercase', border: '1px solid rgba(245,166,35,0.35)', background: 'rgba(245,166,35,0.08)', padding: '3px 6px', borderRadius: 3 }}>
@@ -235,29 +184,70 @@ export default function MissionCard({
           <div
             role="button"
             tabIndex={0}
-            data-testid={`mission-card-${mission.id}-dossier-open`}
-            onClick={e => { e.stopPropagation(); setExpanded(true) }}
-            onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.stopPropagation(); setExpanded(true) } }}
-            style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '2px 14px 10px', cursor: 'pointer', font: '700 9px var(--ln-font-mono)', color: 'var(--ln-cyan)', letterSpacing: '0.09em', textTransform: 'uppercase' }}
+            data-testid={`mission-card-${mission.id}-details-toggle`}
+            onClick={e => { e.stopPropagation(); setExpanded(p => !p) }}
+            onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.stopPropagation(); setExpanded(p => !p) } }}
+            style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '2px 14px 10px', cursor: 'pointer', font: '700 9px var(--ln-font-mono)', color: 'var(--ln-cyan)', letterSpacing: '0.09em', textTransform: 'uppercase', userSelect: 'none' }}
           >
-            <span>CLIENT DOSSIER</span>
-            <span style={{ display: 'inline-block' }}>▸</span>
+            <span style={{ display: 'inline-block', transition: 'transform 0.15s', transform: expanded ? 'rotate(90deg)' : 'rotate(0deg)' }}>▸</span>
+            <span>{expanded ? 'HIDE DETAILS' : 'MISSION DETAILS'}</span>
           </div>
 
           {expanded && (
-            <ContractorDossierModal
-              contractor={contractor}
-              accent={accent}
-              fuelTimerLabel={fuelTimerLabel}
-              mission={mission}
-              mineralMeta={mineralMeta}
-              onClose={() => setExpanded(false)}
-            />
+            <div style={{ margin: '0 14px 10px', padding: 12, background: 'var(--ln-surface)', border: '1px solid var(--ln-border)', borderRadius: 4 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+                <ContractorMark
+                  initial={contractor?.initial ?? 'OP'}
+                  color={accent}
+                  uiRole={contractor?.uiRole ?? 'starter'}
+                  contractorId={contractor?.id}
+                  size={32}
+                />
+                <div>
+                  <div style={{ font: '700 9px var(--ln-font-mono)', color: accent, letterSpacing: '0.1em', textTransform: 'uppercase' }}>
+                    {contractor ? ROLE_LABELS[contractor.uiRole] : 'Independent'}
+                  </div>
+                  <div style={{ font: '700 13px var(--ln-font-display)', color: 'var(--ln-text)', marginTop: 1 }}>
+                    {contractor?.name ?? 'Free Ops'}
+                  </div>
+                </div>
+              </div>
+
+              <div style={{ font: '400 11px/1.5 var(--ln-font-display)', color: 'var(--ln-text)', opacity: 0.78, marginBottom: 10 }}>
+                {contractor?.projectType ?? 'Custom mining run · market value only'}
+              </div>
+
+              <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 10 }}>
+                {Object.entries(mission.requires.minerals).map(([k, v]) => {
+                  const meta = mineralMeta[k]
+                  if (!meta) return null
+                  return (
+                    <span key={k} style={{ font: '600 9px var(--ln-font-mono)', color: meta.color, letterSpacing: '0.06em', background: `${meta.color}18`, border: `1px solid ${meta.color}`, padding: '2px 6px', borderRadius: 2 }}>
+                      {meta.name} ×{v} <span style={{ opacity: 0.65 }}>({meta.sym})</span>
+                    </span>
+                  )
+                })}
+                <span style={{ font: '600 9px var(--ln-font-mono)', color: 'var(--ln-text)', opacity: 0.75, letterSpacing: '0.06em', background: 'var(--ln-shell)', border: '1px solid var(--ln-border)', padding: '2px 6px', borderRadius: 2 }}>
+                  {fuelTimerLabel}
+                </span>
+              </div>
+
+              {contractor && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 6, paddingTop: 10, borderTop: '1px solid var(--ln-border)' }}>
+                  <div style={{ font: '500 11px/1.4 var(--ln-font-display)', color: 'var(--ln-text)' }}>
+                    {contractor.payoutNotes}
+                  </div>
+                  <div style={{ font: '500 11px/1.4 var(--ln-font-display)', color: 'var(--ln-text)', opacity: 0.78 }}>
+                    {contractor.affinityNotes}
+                  </div>
+                </div>
+              )}
+            </div>
           )}
 
           <div style={{ marginTop: 'auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, padding: '10px 14px', borderTop: `1px solid ${accent}30`, background: 'var(--ln-surface-2)' }}>
             <div>
-              <div style={{ font: '700 18px var(--ln-font-mono)', color: isAvailable ? 'var(--ln-amber)' : 'var(--ln-text-muted)' }}>
+              <div style={{ font: '700 18px var(--ln-font-mono)', color: isAvailable ? 'var(--ln-amber)' : 'var(--ln-text)', opacity: isAvailable ? 1 : 0.6 }}>
                 ▲ {displayPayout.toLocaleString()}
                 {affinityMultiplier > 0 && (
                   <span style={{ fontSize: 10, letterSpacing: '0.12em', color: 'var(--ln-ok)', marginLeft: 6 }}>+{Math.round(affinityMultiplier * 100)}%</span>
@@ -285,119 +275,6 @@ export default function MissionCard({
             )}
           </div>
         </div>
-      </div>
-    </div>
-  )
-}
-
-function DossierStat({ label, value, color }: { label: string; value: string; color: string }) {
-  return (
-    <div style={{ minWidth: 0, padding: '6px 5px', borderRadius: 4, background: 'rgba(8,16,28,0.72)', border: `1px solid ${color}44` }}>
-      <div style={{ font: '700 7px var(--ln-font-mono)', color: 'var(--ln-text-muted)', letterSpacing: '0.1em', textTransform: 'uppercase' }}>{label}</div>
-      <div style={{ font: '800 10px var(--ln-font-display)', color, marginTop: 2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', textTransform: 'uppercase' }}>{value}</div>
-    </div>
-  )
-}
-
-// Full-screen contractor dossier — a dedicated overlay (not an inline
-// expand) so client identity/economics read as their own "screen", per
-// STS-235. Surfaces the per-contractor payoutNotes/affinityNotes copy
-// authored in lib/data/contractors.ts, which previously had no UI consumer.
-function ContractorDossierModal({
-  contractor,
-  accent,
-  fuelTimerLabel,
-  mission,
-  mineralMeta,
-  onClose,
-}: {
-  contractor?: Contractor | null
-  accent: string
-  fuelTimerLabel: string
-  mission: Mission
-  mineralMeta: Record<string, MineralMeta>
-  onClose: () => void
-}) {
-  return (
-    <div
-      data-testid="contractor-dossier-modal"
-      style={{ position: 'fixed', inset: 0, zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-      onClick={e => e.stopPropagation()}
-    >
-      <div
-        data-testid="contractor-dossier-scrim"
-        onClick={onClose}
-        style={{ position: 'absolute', inset: 0, background: 'rgba(3,6,12,0.8)', backdropFilter: 'blur(3px)' }}
-      />
-      <div style={{
-        position: 'relative', width: 340, maxWidth: '90%', maxHeight: '85vh', overflowY: 'auto',
-        background: 'linear-gradient(180deg, #0d1c30 0%, #060d18 100%)',
-        border: `1px solid ${accent}88`, borderRadius: 16, padding: 20,
-        boxShadow: `0 20px 60px rgba(0,0,0,0.7), 0 0 40px ${accent}33`,
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <ContractorMark
-            initial={contractor?.initial ?? 'OP'}
-            color={accent}
-            uiRole={contractor?.uiRole ?? 'starter'}
-            contractorId={contractor?.id}
-            size={48}
-          />
-          <div style={{ minWidth: 0 }}>
-            <div style={{ font: '700 9px var(--ln-font-mono)', color: accent, letterSpacing: '0.12em', textTransform: 'uppercase' }}>
-              {contractor ? ROLE_LABELS[contractor.uiRole] : 'Independent operator'}
-            </div>
-            <div style={{ font: '700 15px var(--ln-font-display)', color: 'var(--ln-text)', marginTop: 2 }}>
-              {contractor?.name ?? 'Free Ops'}
-            </div>
-          </div>
-        </div>
-
-        <div style={{ font: '400 12px/1.5 var(--ln-font-display)', color: 'var(--ln-text-dim)', marginTop: 12 }}>
-          {contractor?.projectType ?? 'Custom mining run · market value only'}
-        </div>
-
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 6, marginTop: 12 }}>
-          <DossierStat label="Premium" value={contractor ? `+${Math.round(contractor.payoutPremium * 100)}%` : 'Market'} color={accent} />
-          <DossierStat label="Affinity" value={contractor ? `+${Math.round(contractor.affinityBonusPerMission * 1000) / 10}%` : 'None'} color={accent} />
-          <DossierStat label="Timer" value={fuelTimerLabel} color="var(--ln-amber)" />
-        </div>
-
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 12 }}>
-          {Object.entries(mission.requires.minerals).map(([k, v]) => {
-            const meta = mineralMeta[k]
-            if (!meta) return null
-            return (
-              <span key={k} style={{ font: '600 9px var(--ln-font-mono)', color: meta.color, letterSpacing: '0.06em', background: `${meta.color}1a`, border: `1px solid ${meta.color}`, padding: '2px 6px', borderRadius: 2 }}>
-                {meta.sym} ×{v}
-              </span>
-            )
-          })}
-        </div>
-
-        {contractor && (
-          <div style={{ marginTop: 14, paddingTop: 14, borderTop: `1px solid ${accent}30`, display: 'flex', flexDirection: 'column', gap: 8 }}>
-            <div style={{ font: '600 10px/1.5 var(--ln-font-display)', color: 'var(--ln-text)' }}>
-              {contractor.payoutNotes}
-            </div>
-            <div style={{ font: '600 10px/1.5 var(--ln-font-display)', color: 'var(--ln-text-dim)' }}>
-              {contractor.affinityNotes}
-            </div>
-          </div>
-        )}
-
-        <button
-          type="button"
-          data-testid="contractor-dossier-close"
-          onClick={onClose}
-          style={{
-            width: '100%', marginTop: 16, padding: '10px', borderRadius: 8, cursor: 'pointer',
-            background: 'transparent', border: `1px solid ${accent}55`, color: accent,
-            font: '700 10px var(--ln-font-mono)', letterSpacing: '0.12em', textTransform: 'uppercase',
-          }}
-        >
-          Close dossier
-        </button>
       </div>
     </div>
   )

@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState } from 'react'
-import { UI_ZONES } from '@/lib/ui-zones'
+import Sheet from '@/components/ui/Sheet'
 
 interface AuthGateSheetProps {
   error: string | null
@@ -42,12 +42,13 @@ export default function AuthGateSheet({ error, onSignIn, onCreateAccount, onSkip
   }
 
   return (
-    <div className="auth-gate" data-ui-zone={UI_ZONES.modalOverlay}>
-      <div className="auth-gate__scrim" />
-      <div className="auth-gate__panel">
-        <div className="auth-gate__handle">
-          <div style={{ width: 40, height: 4, borderRadius: 2, background: 'rgba(255,255,255,0.2)' }} />
-        </div>
+    <Sheet
+      className="auth-gate"
+      panelClassName="auth-gate__panel"
+      dismissOnBackdrop={false}
+      zIndex={92}
+      handleStyle={{ background: 'rgba(255,255,255,0.2)' }}
+    >
 
         <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 9, fontWeight: 800, letterSpacing: '0.22em', color: '#3fa9ff', textTransform: 'uppercase' }}>
           Landnam · Space Mining
@@ -142,7 +143,6 @@ export default function AuthGateSheet({ error, onSignIn, onCreateAccount, onSkip
         >
           Continue without account
         </button>
-      </div>
-    </div>
+    </Sheet>
   )
 }

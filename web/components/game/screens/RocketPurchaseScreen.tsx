@@ -1,17 +1,18 @@
 'use client'
 
-import Image from 'next/image'
+import { useState } from 'react'
 import { PrimaryBtn, GhostBtn } from '@/components/ui/Button'
-import { STARTER_ROCKETS } from '@/lib/data'
-import type { StarterRocket, Mission } from '@/lib/data'
+import type { Mission } from '@/lib/data'
 import TutorialHighlight from '@/components/game/TutorialHighlight'
-import MissionSetupShell from '@/components/game/screens/MissionSetupShell'
-
-function formatFrancs(n: number): string {
-  if (n >= 1_000_000_000) return `${(n / 1_000_000_000).toFixed(1)}B ▲`
-  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(0)}M ▲`
-  return `${n.toLocaleString()} ▲`
-}
+import RocketStatCard from '@/components/game/RocketStatCard'
+import CostSummaryRow from '@/components/game/CostSummaryRow'
+import MissionSetupShell, {
+  MissionSetupCard,
+  MissionSetupFrame,
+} from '@/components/game/screens/MissionSetupShell'
+import { formatFrancs } from '@/lib/format'
+import { getRequiredStarterRocket } from '@/lib/rockets'
+import RocketCutaway, { type RocketRoomKey } from '@/components/game/RocketCutaway'
 
 function orbitLabel(maxOrbit: number): string {
   if (maxOrbit <= 3) return 'Near-Earth'
@@ -33,21 +34,6 @@ function cargoLabel(cargo: number): string {
   return 'Large payload'
 }
 
-function StatBlock({ label, value, sub }: { label: string; value: string; sub: string }) {
-  return (
-    <div style={{
-      flex: 1, padding: '10px 10px 8px',
-      background: 'rgba(6,12,22,0.6)',
-      borderRadius: 8,
-      border: '1px solid rgba(135,207,250,0.14)',
-    }}>
-      <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 8, fontWeight: 700, letterSpacing: '0.2em', color: 'var(--ln-text-muted)', textTransform: 'uppercase' }}>{label}</div>
-      <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 18, fontWeight: 800, color: 'var(--ln-cyan)', marginTop: 4, letterSpacing: '-0.01em' }}>{value}</div>
-      <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 10, color: '#6a7e94', marginTop: 3, lineHeight: 1.3 }}>{sub}</div>
-    </div>
-  )
-}
-
 function ModuleChip({ label }: { label: string }) {
   return (
     <div style={{
@@ -63,11 +49,6 @@ function ModuleChip({ label }: { label: string }) {
   )
 }
 
-function getRequiredRocket(missionsDone: number): StarterRocket {
-  const eligible = STARTER_ROCKETS.filter(r => !r.locked && r.missionsRequired <= missionsDone)
-  return eligible.sort((a, b) => b.tier - a.tier)[0] ?? STARTER_ROCKETS[0]
-}
-
 interface RocketPurchaseScreenProps {
   missionsDone: number
   francs: number
@@ -79,7 +60,8 @@ interface RocketPurchaseScreenProps {
 }
 
 export default function RocketPurchaseScreen({ missionsDone, francs, mission, deliveryTargetName, onPurchase, onBack, hasCoach }: RocketPurchaseScreenProps) {
-  const rocket = getRequiredRocket(missionsDone)
+  const [activeRoom, setActiveRoom] = useState<RocketRoomKey | null>(null)
+  const rocket = getRequiredStarterRocket(missionsDone)
   const isFree = rocket.costFrancs === 0
   const canAfford = francs >= rocket.costFrancs
   const missionPayout = mission?.payout.francs
@@ -94,11 +76,20 @@ export default function RocketPurchaseScreen({ missionsDone, francs, mission, de
 
   return (
     <MissionSetupShell
+      className="mission-setup-screen--rocket"
       eyebrow="LAUNCHPAD · VEHICLE"
       title="Select Rocket"
       onBack={onBack}
       hasCoach={hasCoach}
       coachManual={hasCoach}
+      step="Rocket"
+      stepDescription={
+        isFree
+          ? `${rocket.name} is included — continue to the Relay preflight check.`
+          : canAfford
+            ? `Purchase ${rocket.name} to continue to the Relay preflight check.`
+            : `Purchase ${rocket.name} to continue — insufficient Francs right now.`
+      }
       actions={isFree ? (
         <PrimaryBtn kind="cyan" onClick={() => onPurchase(rocket.id)}>
           Launch with {rocket.name}
@@ -107,12 +98,12 @@ export default function RocketPurchaseScreen({ missionsDone, francs, mission, de
         <>
           <div style={{ marginBottom: 8 }}><GhostBtn full onClick={onBack}>Back</GhostBtn></div>
           <PrimaryBtn kind="amber" disabled={!canAfford} onClick={() => onPurchase(rocket.id)}>
-            Purchase · {formatFrancs(rocket.costFrancs)}
+            Purchase · {formatFrancs(rocket.costFrancs, { compact: true })} ▲
           </PrimaryBtn>
         </>
       )}
     >
-      <div className="mission-setup-frame" style={{
+      <MissionSetupFrame style={{
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -130,16 +121,11 @@ export default function RocketPurchaseScreen({ missionsDone, francs, mission, de
             Two-stop job · Deliver to {deliveryTargetName} before returning to Earth
           </div>
         )}
-        <Image
-          src={rocket.img}
-          alt={rocket.name}
-          width={260} height={170}
-          style={{ objectFit: 'contain', filter: 'drop-shadow(0 10px 28px rgba(63,169,255,0.38))' }}
-          priority
-        />
+        <RocketCutaway rocket={rocket} activeRoom={activeRoom} onToggle={room => setActiveRoom(current => current === room ? null : room)} />
         <div style={{
-          position: 'absolute', bottom: 16, left: 0, right: 0,
-          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+          position: 'absolute', top: deliveryTargetName ? 54 : 14, right: 16,
+          display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 8,
+          zIndex: 2,
         }}>
           <span style={{
             padding: '4px 12px', borderRadius: 999,
@@ -149,13 +135,12 @@ export default function RocketPurchaseScreen({ missionsDone, francs, mission, de
             letterSpacing: '0.2em', textTransform: 'uppercase',
             color: isFree ? '#39d36a' : '#f5a623',
           }}>
-            SR{rocket.tier} · {isFree ? 'INCLUDED' : formatFrancs(rocket.costFrancs)}
+            SR{rocket.tier} · {isFree ? 'INCLUDED' : `${formatFrancs(rocket.costFrancs, { compact: true })} ▲`}
           </span>
         </div>
-      </div>
+      </MissionSetupFrame>
 
-      <div className="mission-setup-card">
-        <div className="mission-setup-card-scroll" style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
+      <MissionSetupCard scrollStyle={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
           <div>
             <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 22, fontWeight: 800, color: 'var(--ln-text)', letterSpacing: '-0.01em' }}>
               {rocket.name}
@@ -167,20 +152,20 @@ export default function RocketPurchaseScreen({ missionsDone, francs, mission, de
           </div>
 
           <div style={{ display: 'flex', gap: 8 }}>
-            <StatBlock
+            <RocketStatCard
               label="Cargo"
               value={`${rocket.stats.cargo}U`}
-              sub={cargoLabel(rocket.stats.cargo)}
+              detail={cargoLabel(rocket.stats.cargo)}
             />
-            <StatBlock
+            <RocketStatCard
               label="Max Orbit"
               value={`ORB ${rocket.stats.maxOrbit}`}
-              sub={orbitLabel(rocket.stats.maxOrbit)}
+              detail={orbitLabel(rocket.stats.maxOrbit)}
             />
-            <StatBlock
+            <RocketStatCard
               label="Drill"
               value={`T${rocket.stats.drillTier}`}
-              sub={drillLabel(rocket.stats.drillTier)}
+              detail={drillLabel(rocket.stats.drillTier)}
             />
           </div>
 
@@ -196,27 +181,13 @@ export default function RocketPurchaseScreen({ missionsDone, francs, mission, de
           {!isFree && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 0, background: 'rgba(6,12,22,0.5)', borderRadius: 10, border: '1px solid rgba(135,207,250,0.12)', overflow: 'hidden' }}>
               {missionPayout !== undefined && (
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 14px', borderBottom: '1px solid rgba(135,207,250,0.08)' }}>
-                  <span style={{ fontFamily: 'var(--ln-font-display)', fontSize: 10, fontWeight: 700, letterSpacing: '0.14em', color: 'var(--ln-text-muted)', textTransform: 'uppercase' }}>Mission Payout (base)</span>
-                  <span style={{ fontFamily: 'var(--ln-font-display)', fontSize: 15, fontWeight: 800, color: 'var(--ln-cyan)' }}>{formatFrancs(missionPayout)}</span>
-                </div>
+                <CostSummaryRow label="Mission Payout (base)" value={`${formatFrancs(missionPayout, { compact: true })} ▲`} color="var(--ln-cyan)" />
               )}
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 14px', borderBottom: '1px solid rgba(135,207,250,0.08)' }}>
-                <span style={{ fontFamily: 'var(--ln-font-display)', fontSize: 10, fontWeight: 700, letterSpacing: '0.14em', color: 'var(--ln-text-muted)', textTransform: 'uppercase' }}>Vehicle Cost</span>
-                <span style={{ fontFamily: 'var(--ln-font-display)', fontSize: 15, fontWeight: 800, color: 'var(--ln-amber)' }}>{formatFrancs(rocket.costFrancs)}</span>
-              </div>
+              <CostSummaryRow label="Vehicle Cost" value={`${formatFrancs(rocket.costFrancs, { compact: true })} ▲`} color="var(--ln-amber)" />
               {estProfit !== undefined && (
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 14px', borderBottom: '1px solid rgba(135,207,250,0.08)' }}>
-                  <span style={{ fontFamily: 'var(--ln-font-display)', fontSize: 10, fontWeight: 700, letterSpacing: '0.14em', color: 'var(--ln-text-muted)', textTransform: 'uppercase' }}>Est. Profit</span>
-                  <span style={{ fontFamily: 'var(--ln-font-display)', fontSize: 15, fontWeight: 800, color: estProfit >= 0 ? 'var(--ln-ok)' : 'var(--ln-crimson)' }}>
-                    {estProfit >= 0 ? '+' : '−'}{formatFrancs(Math.abs(estProfit))}
-                  </span>
-                </div>
+                <CostSummaryRow label="Est. Profit" value={`${estProfit >= 0 ? '+' : '−'}${formatFrancs(Math.abs(estProfit), { compact: true })} ▲`} color={estProfit >= 0 ? 'var(--ln-ok)' : 'var(--ln-crimson)'} />
               )}
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 14px' }}>
-                <span style={{ fontFamily: 'var(--ln-font-display)', fontSize: 10, fontWeight: 700, letterSpacing: '0.14em', color: 'var(--ln-text-muted)', textTransform: 'uppercase' }}>Your Balance</span>
-                <span style={{ fontFamily: 'var(--ln-font-display)', fontSize: 15, fontWeight: 800, color: canAfford ? 'var(--ln-text)' : 'var(--ln-crimson)' }}>{formatFrancs(francs)}</span>
-              </div>
+              <CostSummaryRow label="Your Balance" value={`${formatFrancs(francs, { compact: true })} ▲`} color={canAfford ? 'var(--ln-text)' : 'var(--ln-crimson)'} last />
               {missionPayout !== undefined && (
                 <div style={{ padding: '6px 14px 10px', fontFamily: 'var(--ln-font-body)', fontSize: 10, color: '#6a7e94', borderTop: '1px solid rgba(135,207,250,0.08)' }}>
                   The rocket is a one-time purchase; the mission payout is what you collect at debrief. Client premiums and affinity bonuses can raise the payout above the base figure shown.
@@ -233,8 +204,7 @@ export default function RocketPurchaseScreen({ missionsDone, francs, mission, de
           <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 10, color: '#445566', letterSpacing: '0.08em', lineHeight: 1.6, paddingBottom: 8 }}>
             Rockets are single-use. Each mission requires a fresh vehicle.
           </div>
-        </div>
-      </div>
+      </MissionSetupCard>
     </MissionSetupShell>
   )
 }

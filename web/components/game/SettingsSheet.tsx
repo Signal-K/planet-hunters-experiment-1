@@ -3,8 +3,8 @@
 import React, { useState } from 'react'
 import { useGame } from '@/game-context'
 import { pbShared } from '@/lib/pb'
-import { UI_ZONES } from '@/lib/ui-zones'
 import { DEV_GROUPS } from '@/lib/devPresets'
+import Sheet from '@/components/ui/Sheet'
 
 interface SettingsSheetProps {
   onClose: () => void
@@ -89,18 +89,17 @@ export default function SettingsSheet({ onClose }: SettingsSheetProps) {
   }
 
   return (
-    <div data-ui-zone={UI_ZONES.modalOverlay} style={{ position: 'absolute', inset: 0, zIndex: 89, display: 'flex', alignItems: 'flex-end' }}>
-      <div onClick={onClose} style={{ position: 'absolute', inset: 0, background: 'rgba(3,6,12,0.7)' }} />
-      <div style={{
-        position: 'relative', width: '100%',
+    <Sheet
+      onDismiss={onClose}
+      showHandle={false}
+      panelStyle={{
         background: 'linear-gradient(180deg, #0d1c30, #060d18)',
-        borderTopLeftRadius: 20, borderTopRightRadius: 20,
         border: '1px solid rgba(63,169,255,0.2)',
         padding: '18px 20px 32px',
         boxShadow: '0 -12px 40px rgba(0,0,0,0.6)',
-        animation: 'gate-up 360ms cubic-bezier(.16,1,.3,1)',
         maxHeight: '80dvh', overflowY: 'auto',
-      }}>
+      }}
+    >
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 18 }}>
           <div>
             <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 9, fontWeight: 800, letterSpacing: '0.22em', color: '#3fa9ff', textTransform: 'uppercase' }}>Landnam</div>
@@ -193,7 +192,6 @@ export default function SettingsSheet({ onClose }: SettingsSheetProps) {
             ))}
           </Section>
         )}
-      </div>
-    </div>
+    </Sheet>
   )
 }

@@ -2,6 +2,7 @@
 
 import React from 'react'
 import { CONTRACTOR_SLOTS, MAX_AFFINITY_BONUS, contractorAffinityBonus, contractorUnlocked } from '@/lib/data'
+import Sheet from '@/components/ui/Sheet'
 
 interface ClientBonusGuideSheetProps {
   onClose: () => void
@@ -27,29 +28,22 @@ export default function ClientBonusGuideSheet({ onClose, contractorMissions, seq
   const rateGroups = Array.from(new Set(CONTRACTOR_SLOTS.map(c => c.affinityBonusPerMission))).sort((a, b) => a - b)
 
   return (
-    <div
+    <Sheet
       className="theme-light"
-      style={{
-        position: 'absolute', inset: 0, zIndex: 200,
-        background: 'rgba(28,26,20,0.45)', backdropFilter: 'blur(6px)',
-        display: 'flex', flexDirection: 'column', justifyContent: 'flex-end',
-      }}
-      onClick={onClose}
-    >
-      <div
-        data-testid="client-bonus-guide-sheet"
-        style={{
+      onDismiss={onClose}
+      zIndex={200}
+      scrimStyle={{ background: 'rgba(28,26,20,0.45)', backdropFilter: 'blur(6px)' }}
+      panelTestId="client-bonus-guide-sheet"
+      panelStyle={{
           background: 'var(--ln-surface)',
           border: '1px solid var(--ln-hairline)',
-          borderTopLeftRadius: 20, borderTopRightRadius: 20,
           padding: '20px 20px 32px',
           maxHeight: '86vh', overflowY: 'auto',
           boxShadow: 'var(--ln-shadow-modal)',
-        }}
-        onClick={e => e.stopPropagation()}
-      >
-        {/* Drag handle */}
-        <div style={{ width: 36, height: 3, background: 'var(--ln-hairline-strong)', borderRadius: 2, margin: '0 auto 24px' }} />
+      }}
+      handleContainerStyle={{ marginBottom: 24 }}
+      handleStyle={{ width: 36, height: 3, background: 'var(--ln-hairline-strong)' }}
+    >
 
         {/* Header */}
         <div style={{ marginBottom: 28 }}>
@@ -185,8 +179,7 @@ export default function ClientBonusGuideSheet({ onClose, contractorMissions, seq
         >
           Got It
         </button>
-      </div>
-    </div>
+    </Sheet>
   )
 }
 

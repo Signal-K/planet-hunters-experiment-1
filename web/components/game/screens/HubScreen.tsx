@@ -19,6 +19,62 @@ import { TUTORIAL_CONTENT_TOP } from '@/lib/tutorial-layout'
 import { FREE_OPS_START_MISSIONS_DONE } from '@/lib/data/mission-generator'
 import type { HubBuildingDef } from '@/lib/pixi/hubScene'
 import { fetchReviewableTessCandidates } from '@/lib/tess-subjects'
+import { formatFrancs } from '@/lib/format'
+import { MINERAL_META } from '@/lib/data'
+import IconBadge from '@/components/ui/IconBadge'
+
+// ── Ref-B bordered-icon-badge glyphs for Hub chrome (HUD strip + bottom tabs) ──
+// Simple white-line icons, no fill — matches the mockup's `i-*` <symbol> set.
+function FrancGlyph() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7"><circle cx="12" cy="12" r="9" /><path d="M9 8h5M9 12h4M10 8v9" /></svg>
+  )
+}
+function JobsGlyph() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7"><rect x="4" y="4" width="16" height="16" rx="1.5" /><path d="M4 10h16M10 4v16" /></svg>
+  )
+}
+function MineralGlyph({ shape, color }: { shape?: string; color: string }) {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.7">
+      {shape === 'circle' && <circle cx="12" cy="12" r="8" />}
+      {shape === 'diamond' && <path d="M12 3l9 9-9 9-9-9z" />}
+      {shape === 'triangle' && <path d="M12 4l8 16H4z" />}
+      {shape === 'rect' && <rect x="4" y="6" width="16" height="12" rx="1.5" />}
+    </svg>
+  )
+}
+function BuildGlyph() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M3 21h18M6 21V9l6-5 6 5v12M10 21v-6h4v6" /></svg>
+  )
+}
+function PlusGlyph() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 5v14M5 12h14" /></svg>
+  )
+}
+function HangarGlyph() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><rect x="4" y="7" width="16" height="13" rx="1.5" /><path d="M4 7l2-4h12l2 4" /></svg>
+  )
+}
+function UpgradeGlyph() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M13 2L4 14h6l-1 8 9-12h-6z" /></svg>
+  )
+}
+function SurfaceGlyph() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M12 19V5M5 12l7-7 7 7" /></svg>
+  )
+}
+function SubsurfaceGlyph() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M12 5v14M5 12l7 7 7-7" /></svg>
+  )
+}
 
 const DEFAULT_PLOTS: EntityData[] = [
   { id: 'plot-0', name: 'Plot 0', transform: { position: { x: 60, y: 570 }, rotation: 0, scale: { x: 1, y: 1 } }, components: [{ type: 'BuildPlot', index: 0 }] },
@@ -239,17 +295,34 @@ export default function HubScreen({ player, hasCoach, onGoBuilding, onNav, onUpg
         </div>
         <span style={{ flex: 1 }} />
         <div style={{ display: 'flex', flexDirection: 'column', gap: 6, alignItems: 'flex-end', pointerEvents: 'auto' }}>
-          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '5px 11px', background: 'rgba(8,12,22,0.7)', backdropFilter: 'blur(6px)', border: '1px solid rgba(245,166,35,0.5)', borderRadius: 999, fontFamily: 'var(--ln-font-display)', fontSize: 12, fontWeight: 800, letterSpacing: '0.04em', color: '#f5a623' }}>
-            ▲ {player.francs.toLocaleString()}
-          </span>
-          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '4px 10px', background: 'rgba(8,12,22,0.7)', backdropFilter: 'blur(6px)', border: '1px solid rgba(255,179,71,0.4)', borderRadius: 999, fontFamily: 'var(--ln-font-display)', fontSize: 9, fontWeight: 800, letterSpacing: '0.16em', color: '#ffb347', textTransform: 'uppercase' }}>
-            <span style={{ width: 4, height: 4, borderRadius: 999, background: '#ffb347', boxShadow: '0 0 6px #ffb347' }} />
-            {player.missionCount} Jobs
-          </span>
-          {player.stash && Object.keys(player.stash).length > 0 && (
-            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '4px 10px', background: 'rgba(8,12,22,0.7)', backdropFilter: 'blur(6px)', border: '1px solid rgba(57,211,106,0.4)', borderRadius: 999, fontFamily: 'var(--ln-font-display)', fontSize: 9, fontWeight: 800, letterSpacing: '0.16em', color: '#39d36a', textTransform: 'uppercase' }}>
-              {Object.keys(player.stash).length} Minerals
+          {/* Ref-B resource chip row: bordered icon tile + amount, mirrors the mockup's .res-chip */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '5px 9px 5px 6px', background: 'rgba(8,12,22,0.7)', backdropFilter: 'blur(6px)', border: '1px solid rgba(245,166,35,0.5)', borderRadius: 8 }}>
+            <IconBadge icon={<FrancGlyph />} size={20} tone="amber" active />
+            <span style={{ fontFamily: 'var(--ln-font-display)', fontSize: 12, fontWeight: 800, letterSpacing: '0.04em', color: '#f5a623' }}>
+              {formatFrancs(player.francs)}
             </span>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '4px 8px 4px 5px', background: 'rgba(8,12,22,0.7)', backdropFilter: 'blur(6px)', border: '1px solid rgba(255,179,71,0.4)', borderRadius: 7 }}>
+            <IconBadge icon={<JobsGlyph />} size={18} tone="amber" active />
+            <span style={{ fontFamily: 'var(--ln-font-display)', fontSize: 9, fontWeight: 800, letterSpacing: '0.16em', color: '#ffb347', textTransform: 'uppercase' }}>
+              {player.missionCount} Jobs
+            </span>
+          </div>
+          {player.stash && Object.keys(player.stash).length > 0 && (
+            <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'flex-end', gap: 5, maxWidth: 220 }}>
+              {Object.entries(player.stash).map(([kind, qty]) => {
+                const meta = MINERAL_META[kind]
+                if (!meta || !qty) return null
+                return (
+                  <div key={kind} style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '3px 8px 3px 4px', background: 'rgba(8,12,22,0.7)', backdropFilter: 'blur(6px)', border: `1px solid ${meta.color}66`, borderRadius: 7 }}>
+                    <IconBadge icon={<MineralGlyph shape={meta.shape} color={meta.color} />} size={16} tone="ok" style={{ borderColor: `${meta.color}88`, color: meta.color }} />
+                    <span style={{ fontFamily: 'var(--ln-font-display)', fontSize: 9, fontWeight: 800, letterSpacing: '0.1em', color: meta.color, textTransform: 'uppercase' }}>
+                      {qty}
+                    </span>
+                  </div>
+                )
+              })}
+            </div>
           )}
         </div>
       </div>
@@ -284,37 +357,45 @@ export default function HubScreen({ player, hasCoach, onGoBuilding, onNav, onUpg
           {subsurface ? (
             <button
               onClick={() => setSubsurface(false)}
-              style={{ padding: '5px 14px', background: 'rgba(8,16,28,0.75)', backdropFilter: 'blur(6px)', border: '1px solid rgba(122,80,40,0.55)', borderRadius: 999, fontFamily: 'var(--ln-font-display)', fontSize: 9, fontWeight: 700, letterSpacing: '0.22em', color: '#9c8d70', textTransform: 'uppercase', cursor: 'pointer' }}
+              style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '5px 14px 5px 8px', background: 'rgba(8,16,28,0.75)', backdropFilter: 'blur(6px)', border: '1px solid rgba(122,80,40,0.55)', borderRadius: 999, cursor: 'pointer' }}
             >
-              ↑ Surface
+              <IconBadge icon={<SurfaceGlyph />} size={18} tone="mute" style={{ borderColor: 'rgba(156,141,112,0.6)', color: '#9c8d70' }} />
+              <span style={{ fontFamily: 'var(--ln-font-display)', fontSize: 9, fontWeight: 700, letterSpacing: '0.22em', color: '#9c8d70', textTransform: 'uppercase' }}>Surface</span>
             </button>
           ) : (
             <>
               {editMode && (
                 <>
-                  <button onClick={() => onGoBuilding('build')} style={{ padding: '5px 14px', background: 'rgba(57,211,106,0.15)', backdropFilter: 'blur(6px)', border: '1px solid rgba(57,211,106,0.5)', borderRadius: 999, fontFamily: 'var(--ln-font-display)', fontSize: 9, fontWeight: 700, letterSpacing: '0.14em', color: '#39d36a', textTransform: 'uppercase', cursor: 'pointer' }}>
-                    + New Structure
+                  <button onClick={() => onGoBuilding('build')} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '5px 14px 5px 8px', background: 'rgba(57,211,106,0.15)', backdropFilter: 'blur(6px)', border: '1px solid rgba(57,211,106,0.5)', borderRadius: 999, cursor: 'pointer' }}>
+                    <IconBadge icon={<PlusGlyph />} size={18} tone="ok" active />
+                    <span style={{ fontFamily: 'var(--ln-font-display)', fontSize: 9, fontWeight: 700, letterSpacing: '0.14em', color: '#39d36a', textTransform: 'uppercase' }}>New Structure</span>
                   </button>
                   {player.placed.includes('launchpad') && (
-                    <button onClick={() => onGoBuilding('hangar')} style={{ padding: '5px 14px', background: 'rgba(135,207,250,0.12)', backdropFilter: 'blur(6px)', border: '1px solid rgba(135,207,250,0.4)', borderRadius: 999, fontFamily: 'var(--ln-font-display)', fontSize: 9, fontWeight: 700, letterSpacing: '0.14em', color: '#9EDCFF', textTransform: 'uppercase', cursor: 'pointer' }}>
-                      Hangar
+                    <button onClick={() => onGoBuilding('hangar')} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '5px 14px 5px 8px', background: 'rgba(135,207,250,0.12)', backdropFilter: 'blur(6px)', border: '1px solid rgba(135,207,250,0.4)', borderRadius: 999, cursor: 'pointer' }}>
+                      <IconBadge icon={<HangarGlyph />} size={18} tone="cyan" active style={{ color: '#9EDCFF', borderColor: 'rgba(158,220,255,0.6)' }} />
+                      <span style={{ fontFamily: 'var(--ln-font-display)', fontSize: 9, fontWeight: 700, letterSpacing: '0.14em', color: '#9EDCFF', textTransform: 'uppercase' }}>Hangar</span>
                     </button>
                   )}
                   {player.placed.includes('launchpad') && !player.launchpadUpgraded && onUpgradeLaunchpad && (
-                    <button onClick={() => setConfirmingLaunchpadUpgrade(true)} style={{ padding: '5px 14px', background: 'rgba(245,166,35,0.15)', backdropFilter: 'blur(6px)', border: '1px solid rgba(245,166,35,0.5)', borderRadius: 999, fontFamily: 'var(--ln-font-display)', fontSize: 9, fontWeight: 700, letterSpacing: '0.14em', color: '#f5a623', textTransform: 'uppercase', cursor: 'pointer' }}>
-                      Upgrade Launchpad (₣1B)
+                    <button onClick={() => setConfirmingLaunchpadUpgrade(true)} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '5px 14px 5px 8px', background: 'rgba(245,166,35,0.15)', backdropFilter: 'blur(6px)', border: '1px solid rgba(245,166,35,0.5)', borderRadius: 999, cursor: 'pointer' }}>
+                      <IconBadge icon={<UpgradeGlyph />} size={18} tone="amber" active />
+                      <span style={{ fontFamily: 'var(--ln-font-display)', fontSize: 9, fontWeight: 700, letterSpacing: '0.14em', color: '#f5a623', textTransform: 'uppercase' }}>Upgrade Launchpad (₣1B)</span>
                     </button>
                   )}
                 </>
               )}
-              <button onClick={() => setEditMode(v => !v)} style={{ padding: '5px 14px', background: editMode ? 'rgba(245,166,35,0.25)' : 'rgba(8,16,28,0.75)', backdropFilter: 'blur(6px)', border: editMode ? '1px solid rgba(245,166,35,0.6)' : '1px solid rgba(135,207,250,0.4)', borderRadius: 999, fontFamily: 'var(--ln-font-display)', fontSize: 9, fontWeight: 700, letterSpacing: '0.22em', color: editMode ? '#f5a623' : '#9EDCFF', textTransform: 'uppercase', cursor: 'pointer', animation: !editMode && player.placed.length < 4 ? 'pad-pulse 2s ease-in-out infinite' : 'none' }}>
-                {editMode ? 'Done' : 'Edit · Build'}
+              <button onClick={() => setEditMode(v => !v)} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '5px 14px 5px 8px', background: editMode ? 'rgba(245,166,35,0.25)' : 'rgba(8,16,28,0.75)', backdropFilter: 'blur(6px)', border: editMode ? '1px solid rgba(245,166,35,0.6)' : '1px solid rgba(135,207,250,0.4)', borderRadius: 999, cursor: 'pointer', animation: !editMode && player.placed.length < 4 ? 'pad-pulse 2s ease-in-out infinite' : 'none' }}>
+                <IconBadge icon={<BuildGlyph />} size={18} tone={editMode ? 'amber' : 'cyan'} active style={editMode ? undefined : { color: '#9EDCFF', borderColor: 'rgba(158,220,255,0.6)' }} />
+                <span style={{ fontFamily: 'var(--ln-font-display)', fontSize: 9, fontWeight: 700, letterSpacing: '0.22em', color: editMode ? '#f5a623' : '#9EDCFF', textTransform: 'uppercase' }}>
+                  {editMode ? 'Done' : 'Edit · Build'}
+                </span>
               </button>
               <button
                 onClick={() => setComingSoon({ feature: 'Subsurface Operations', description: 'Drill deep into your base planet to mine rare subterranean minerals and build underground structures.', target: SPRINT_AFTER_NEXT_UTC })}
-                style={{ padding: '5px 14px', background: 'rgba(8,12,22,0.75)', backdropFilter: 'blur(6px)', border: '1px solid rgba(122,80,40,0.55)', borderRadius: 999, fontFamily: 'var(--ln-font-display)', fontSize: 9, fontWeight: 700, letterSpacing: '0.22em', color: '#9c8d70', textTransform: 'uppercase', cursor: 'pointer' }}
+                style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '5px 14px 5px 8px', background: 'rgba(8,12,22,0.75)', backdropFilter: 'blur(6px)', border: '1px solid rgba(122,80,40,0.55)', borderRadius: 999, cursor: 'pointer' }}
               >
-                Subsurface ↓
+                <IconBadge icon={<SubsurfaceGlyph />} size={18} tone="mute" style={{ borderColor: 'rgba(156,141,112,0.6)', color: '#9c8d70' }} />
+                <span style={{ fontFamily: 'var(--ln-font-display)', fontSize: 9, fontWeight: 700, letterSpacing: '0.22em', color: '#9c8d70', textTransform: 'uppercase' }}>Subsurface</span>
               </button>
             </>
           )}

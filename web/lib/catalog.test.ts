@@ -66,6 +66,26 @@ describe('Landnam Catalog Mapping', () => {
     expect(contractor.payoutPremium).toBe(0.2)
   })
 
+  it('replaces legacy contractor slot placeholders with the named contractor', () => {
+    const contractor = toContractor({
+      slug: 'helios-propulsion-depot',
+      name: 'Contractor Slot 03A',
+      mineral_preferences: '["platinum"]',
+    })
+    expect(contractor.name).toBe('Helios Propulsion Depot')
+  })
+
+  it('rewrites legacy mission briefs to use the named contractor', () => {
+    const mission = toMission({
+      slug: 'm1-iron',
+      title: 'Iron Reserve Order',
+      contractor_slug: 'helios-propulsion-depot',
+      brief: 'Contractor Slot 03A needs a starter iron shipment.',
+      requires_minerals: '{}',
+    })
+    expect(mission.brief).toContain('Helios Propulsion Depot needs')
+  })
+
   it('maps a raw part record with stats', () => {
     const raw = {
       slug: 'drill-t1',

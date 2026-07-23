@@ -8,6 +8,7 @@ import { PrimaryBtn } from '@/components/ui/Button'
 import { UI_ZONES } from '@/lib/ui-zones'
 import TutorialHighlight from '@/components/game/TutorialHighlight'
 import { ScrapSequenceCanvas } from '@/components/game/ScrapSequenceCanvas'
+import { formatFrancs } from '@/lib/format'
 
 export default function DebriefScreen({ mission, target, cargo, onDone, minerals, contractors, contractorMissions, freeOperations, annotations, missionsDone, hasCoach, shipDestroyed, rocket }: {
   mission: Mission
@@ -150,7 +151,7 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
                 Total
               </span>
               <span style={{ fontFamily: 'var(--ln-font-display)', fontSize: 28, fontWeight: 800, color: 'var(--ln-amber)', lineHeight: 1 }}>
-                ▲ {total.toLocaleString()}
+                ▲ {formatFrancs(total)}
               </span>
             </div>
           </div>
@@ -195,7 +196,7 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
               onDone(total, delivered ? mission.payout.affinity : 0, delivered ? mission.requires.minerals : {})
             }}
           >
-            {delivered ? `Collect ▲ ${total.toLocaleString()}` : 'Return to Base'}
+            {delivered ? `Collect ▲ ${formatFrancs(total)}` : 'Return to Base'}
           </PrimaryBtn>
         )}
       </div>
@@ -214,7 +215,7 @@ function PayRow({ label, value }: { label: string; value: number }) {
   return (
     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '4px 0', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
       <span style={{ fontFamily: 'var(--ln-font-body)', fontSize: 12, color: 'var(--ln-text-dim)' }}>{label}</span>
-      <span style={{ fontFamily: 'var(--ln-font-mono)', fontSize: 12, color: 'var(--ln-amber)' }}>▲ {value.toLocaleString()}</span>
+      <span style={{ fontFamily: 'var(--ln-font-mono)', fontSize: 12, color: 'var(--ln-amber)' }}>▲ {formatFrancs(value)}</span>
     </div>
   )
 }

@@ -7,6 +7,7 @@ import { STARTER_ROCKETS, hasShipCustomizer, calculateShipSuccessChance, selecte
 import type { StarterRocket, InstalledCustomizerPartsByKind } from '@/lib/data'
 import { UI_ZONES } from '@/lib/ui-zones'
 import ShipInteriorPreview from '@/components/game/ShipInteriorPreview'
+import { formatFrancs } from '@/lib/format'
 
 interface HangarScreenProps {
   francs: number
@@ -16,12 +17,6 @@ interface HangarScreenProps {
   onConfirmShipCustomizerBuild?: (installed: InstalledCustomizerPartsByKind, prevInstalled: InstalledCustomizerPartsByKind) => boolean
   onBack: () => void
   onSelect?: (rocketId: string) => void
-}
-
-function formatFrancs(n: number): string {
-  if (n >= 1_000_000_000) return `${(n / 1_000_000_000).toFixed(1)}B ▲`
-  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(0)}M ▲`
-  return `${n.toLocaleString()} ▲`
 }
 
 const STAT_MAX: Record<string, number> = { cargo: 20, maxOrbit: 10, drillTier: 5 }
@@ -140,7 +135,7 @@ function RocketCard({ rocket, missionsDone, onSelect }: { rocket: StarterRocket;
                 boxShadow: '0 0 14px rgba(200,41,62,0.35)',
               }}
             >
-              {formatFrancs(rocket.costFrancs)}
+              {formatFrancs(rocket.costFrancs, { compact: true })} ▲
             </button>
           )}
           {isAvailable && !hasCost && (

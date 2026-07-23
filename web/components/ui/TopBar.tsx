@@ -50,8 +50,8 @@ export default function TopBar({ eyebrow, title, onBack, right, dense, solid }: 
       // that even 3% transparency on a near-black background is visible as
       // faint bleed-through text behind bright card copy scrolling beneath it.
       background: solid
-        ? '#06090f'
-        : 'linear-gradient(180deg, rgba(6,9,15,0.92) 0%, rgba(6,9,15,0.5) 70%, transparent 100%)',
+        ? 'var(--ln-shell)'
+        : 'linear-gradient(180deg, var(--ln-shell) 0%, color-mix(in srgb, var(--ln-shell) 50%, transparent) 70%, transparent 100%)',
       borderBottom: solid ? '1px solid var(--ln-hairline)' : 'none',
       display: 'flex',
       alignItems: 'center',

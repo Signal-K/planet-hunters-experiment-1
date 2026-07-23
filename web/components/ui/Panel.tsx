@@ -33,7 +33,7 @@ export default function Panel({ children, style, accent = '#3fa9ff', variant = '
   return (
     <div style={{
       position: 'relative',
-      background: 'linear-gradient(180deg, rgba(18,34,54,0.78) 0%, rgba(10,18,29,0.82) 100%)',
+      background: 'var(--ln-panel-2)',
       border: `1px solid ${accent}40`,
       borderRadius: 12,
       padding: variant === 'compact' ? 10 : 14,

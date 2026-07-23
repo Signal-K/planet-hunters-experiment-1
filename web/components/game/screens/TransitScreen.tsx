@@ -7,14 +7,7 @@ import TopBar from '@/components/ui/TopBar'
 import { GhostBtn, PrimaryBtn } from '@/components/ui/Button'
 import { UI_ZONES } from '@/lib/ui-zones'
 import type { TransitScene } from '@/lib/pixi/transitScene'
-
-function formatEta(ms: number): string {
-  if (ms <= 0) return '00:00'
-  const totalSecs = Math.ceil(ms / 1000)
-  const mins = Math.floor(totalSecs / 60)
-  const secs = totalSecs % 60
-  return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`
-}
+import { formatCountdown } from '@/lib/format'
 
 interface Props {
   target: Target
@@ -200,7 +193,7 @@ export default function TransitScreen({ target, rocketImageSrc, arrivalAt, retur
       <div className="transit-readout">
         {isTimed ? (
           <>
-            <div><span>ETA</span><strong>{arrived ? 'ARRIVED' : formatEta(etaMs)}</strong></div>
+            <div><span>ETA</span><strong>{arrived ? 'ARRIVED' : formatCountdown(etaMs)}</strong></div>
             <div><span>{returning ? 'Recovery' : 'Orbit'}</span><strong>{returning ? 'Earth' : target.orbit}</strong></div>
           </>
         ) : (
@@ -228,9 +221,15 @@ export default function TransitScreen({ target, rocketImageSrc, arrivalAt, retur
         </div>
       )}
 
+      {/* No StepFooter here on purpose — this screen is the actual flight,
+          which sits outside the 4-step Mission → Target → Rocket → Relay
+          setup stepper (see StepFooter.tsx), and "Transit" as a step label
+          collides with TESS's real transit-photometry mechanic elsewhere in
+          this codebase. The ETA/orbit readout above already covers
+          "what's happening now" for this screen. */}
       <div className="sticky-actions" data-ui-zone={UI_ZONES.bottomActions}>
         <PrimaryBtn onClick={onArrive} disabled={!arrived}>
-          {arrived ? (returning ? 'Recover Ship' : 'Arrive') : isTimed ? `En Route · ${formatEta(etaMs)}` : `${returning ? 'Return' : 'Arrive'} · ${fakeProgress}%`}
+          {arrived ? (returning ? 'Recover Ship' : 'Arrive') : isTimed ? `En Route · ${formatCountdown(etaMs)}` : `${returning ? 'Return' : 'Arrive'} · ${fakeProgress}%`}
         </PrimaryBtn>
         {process.env.NODE_ENV === 'development' && !arrived && (
           <GhostBtn testId="transit-skip-btn" onClick={onArrive}>Skip ▸</GhostBtn>

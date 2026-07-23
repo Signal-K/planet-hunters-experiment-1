@@ -2,7 +2,7 @@
 
 import React from 'react'
 import Image from 'next/image'
-import { UI_ZONES } from '@/lib/ui-zones'
+import Sheet from '@/components/ui/Sheet'
 
 type UnlockKind = 'sr2' | 'loan' | 'ship-customizer'
 
@@ -116,16 +116,20 @@ export default function UnlockPopup({ kind, onClose, onDismiss }: UnlockPopupPro
   const u = UNLOCKS[kind] ?? UNLOCKS.sr2
 
   return (
-    <div data-ui-zone={UI_ZONES.modalOverlay} style={{ position: 'absolute', inset: 0, zIndex: 90, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-      <div data-testid="unlock-popup-scrim" onClick={onDismiss ?? onClose} style={{ position: 'absolute', inset: 0, background: 'rgba(3,6,12,0.8)', backdropFilter: 'blur(3px)' }} />
-      <div style={{
-        position: 'relative', width: 320, maxWidth: '90%',
+    <Sheet
+      variant="centered"
+      onDismiss={onDismiss ?? onClose}
+      zIndex={90}
+      backdropTestId="unlock-popup-scrim"
+      scrimStyle={{ background: 'rgba(3,6,12,0.8)', backdropFilter: 'blur(3px)' }}
+      panelStyle={{
+        width: 320, maxWidth: '90%',
         background: 'linear-gradient(180deg, #0d1c30 0%, #060d18 100%)',
         border: `1px solid ${u.accent}88`,
         borderRadius: 20, padding: 22, textAlign: 'center',
         boxShadow: `0 20px 60px rgba(0,0,0,0.7), 0 0 40px ${u.accent}33`,
-        animation: 'unlock-in 420ms cubic-bezier(.16,1,.3,1)',
-      }}>
+      }}
+    >
         <div style={{ position: 'absolute', inset: 0, borderRadius: 20, overflow: 'hidden', pointerEvents: 'none' }}>
           <div style={{
             position: 'absolute', left: '50%', top: 70, width: 300, height: 300,
@@ -179,7 +183,6 @@ export default function UnlockPopup({ kind, onClose, onDismiss }: UnlockPopupPro
             }}>Decline</button>
           )}
         </div>
-      </div>
-    </div>
+    </Sheet>
   )
 }
