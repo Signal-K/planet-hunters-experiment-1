@@ -105,7 +105,8 @@
       "WebFetch(domain:steamcommunity.com)",
       "WebFetch(domain:play.google.com)",
       "Skill(artifact-capabilities)",
-      "WebFetch(domain:claude.ai)"
+      "WebFetch(domain:claude.ai)",
+      "mcp__zennotes__list_folders"
     ]
   },
   "enabledMcpjsonServers": [
