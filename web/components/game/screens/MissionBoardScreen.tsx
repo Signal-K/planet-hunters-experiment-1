@@ -429,7 +429,7 @@ export default function MissionBoardScreen({ onBack, onPick, missionsDone, freeO
                   </div>
                 </div>
                 <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 12, color: 'var(--ln-text-dim)', lineHeight: 1.45, paddingRight: 20 }}>
-                  Contractor requests pay fixed bonuses. Infrastructure work grows operations for clients or for you — own infrastructure is where you place your satellite and expand personal operations. Free Ops highlights minerals above average market value so you can choose what is worth mining now.
+                  Client requests pay fixed bonuses. Infrastructure work grows operations for clients or for you — own infrastructure is where you place your satellite and expand personal operations. Free Ops highlights minerals above average market value so you can choose what is worth mining now.
                 </div>
               </Panel>
             )}

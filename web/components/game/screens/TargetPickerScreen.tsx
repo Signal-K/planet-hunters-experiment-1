@@ -113,7 +113,8 @@ export default function TargetPickerScreen({ mission, onBack, onPick, hasCoach, 
         <PrimaryBtn testId="continue-build-btn" onClick={() => onPick(pickedTarget.id)}>Continue · Build →</PrimaryBtn>
       )}
     >
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 8, minHeight: 0 }}>
+      <div className="mission-board-layout" style={{ minHeight: 0, flex: 1 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8, minHeight: 0 }}>
         {deliveryTarget && (
           <div style={{
             padding: '8px 12px', borderRadius: 6,
@@ -162,8 +163,9 @@ export default function TargetPickerScreen({ mission, onBack, onPick, hasCoach, 
             {hasCoach && <TutorialHighlight borderRadius={14} />}
           </MissionSetupFrame>
         </div>
-      </div>
+        </div>
 
+      <div className="mission-board-detail">
       {/* Off-screen buttons per target — E2E test hooks; force-click via {force:true} */}
       <div style={{ position: 'fixed', left: -600, top: 0 }}>
         {compat.map(t => (
@@ -229,6 +231,8 @@ export default function TargetPickerScreen({ mission, onBack, onPick, hasCoach, 
           <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 12, color: '#a9b8ce', marginTop: 4 }}>Wait for higher-tier propulsion or pick a different mission.</div>
         </MissionSetupCard>
       ) : <div />}
+      </div>
+      </div>
 
     </MissionSetupShell>
   )

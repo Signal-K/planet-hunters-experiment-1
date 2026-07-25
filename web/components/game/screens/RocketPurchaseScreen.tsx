@@ -12,6 +12,7 @@ import MissionSetupShell, {
 } from '@/components/game/screens/MissionSetupShell'
 import { formatFrancs } from '@/lib/format'
 import { getRequiredStarterRocket } from '@/lib/rockets'
+import { calibrateOnboardingPayout } from '@/lib/data'
 import RocketCutaway, { type RocketRoomKey } from '@/components/game/RocketCutaway'
 
 function orbitLabel(maxOrbit: number): string {
@@ -64,7 +65,7 @@ export default function RocketPurchaseScreen({ missionsDone, francs, mission, de
   const rocket = getRequiredStarterRocket(missionsDone)
   const isFree = rocket.costFrancs === 0
   const canAfford = francs >= rocket.costFrancs
-  const missionPayout = mission?.payout.francs
+  const missionPayout = mission ? calibrateOnboardingPayout(mission.payout.francs, missionsDone) : undefined
   const estProfit = missionPayout !== undefined ? missionPayout - rocket.costFrancs : undefined
 
   const modules: string[] = [

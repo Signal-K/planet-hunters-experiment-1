@@ -36,11 +36,11 @@ export default function FreeOpsBuildScreen({ onBack, onMissions, onInfrastructur
         </Panel>
 
         <Panel accent="var(--ln-amber)" style={{ padding: 14 }}>
-          <div className="ln-section-label">Contractor work</div>
+          <div className="ln-section-label">Client work</div>
           <div style={{ margin: '6px 0 12px', fontFamily: 'var(--ln-font-body)', fontSize: 13, lineHeight: 1.45, color: 'var(--ln-text-dim)' }}>
             Find a client request first. Once you accept it, Build will show the selected target, mission, and the rocket needed to launch.
           </div>
-          <PrimaryBtn kind="amber" onClick={onMissions}>Browse Contractor Missions</PrimaryBtn>
+          <PrimaryBtn kind="amber" onClick={onMissions}>Browse Client Missions</PrimaryBtn>
         </Panel>
       </div>
     </div>

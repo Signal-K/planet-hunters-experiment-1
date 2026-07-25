@@ -84,7 +84,7 @@ export default function MarketScreen({ stash, marketSupply, marketSupplyUpdatedA
         {entries.length === 0 && (
           <Panel accent="var(--ln-cyan)" style={{ padding: 14 }}>
             <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 15, fontWeight: 800, color: 'var(--ln-text)' }}>No cargo to sell yet</div>
-            <p className="text-sm text-[#a9b8ce]" style={{ margin: '6px 0 12px', lineHeight: 1.45 }}>The exchange becomes useful after a mining run. Choose a contractor job or launch a self-directed run, then bring the ore home.</p>
+            <p className="text-sm text-[#a9b8ce]" style={{ margin: '6px 0 12px', lineHeight: 1.45 }}>The exchange becomes useful after a mining run. Choose a client job or launch a self-directed run, then bring the ore home.</p>
             <PrimaryBtn onClick={onOpenMissions}>Find a Mining Run</PrimaryBtn>
           </Panel>
         )}
