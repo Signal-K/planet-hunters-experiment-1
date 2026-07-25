@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Boxes, Gauge, Orbit, Pickaxe, Route } from 'lucide-react'
+import { Boxes, Check, Gauge, Orbit, Pickaxe, Route, X } from 'lucide-react'
 import type { Mission, RocketConfig, Target } from '@/lib/data'
 import { STARTER_ROCKETS, validateBuild } from '@/lib/data'
 import type { Catalog } from '@/lib/catalog'
@@ -167,11 +167,31 @@ export default function AssemblyScreen(props: AssemblyScreenProps) {
             Starter rockets are unibody vehicles during onboarding. Parts are not editable until the post-onboarding rocket system is redesigned.
           </div>
         </section>
-        <div className={check.ok ? 'compatibility compatibility--ok' : 'compatibility compatibility--bad'}>
-          <span />{check.ok ? 'Build compatible · Ready for launch' : check.problems.join(' · ')}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8, borderTop: '1px solid var(--ln-hairline)', paddingTop: 10, marginTop: 2 }}>
+          <ChecklistRow ok label={`Contract confirmed — ${props.mission.title}`} />
+          <ChecklistRow ok label={`Target confirmed — ${props.target.name}`} />
+          {check.ok
+            ? <ChecklistRow ok label="Rocket built — ready for launch" />
+            : check.problems.map(problem => <ChecklistRow key={problem} ok={false} label={problem} />)}
         </div>
       </MissionSetupCard>
     </MissionSetupShell>
+  )
+}
+
+function ChecklistRow({ ok, label }: { ok: boolean; label: string }) {
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 8, font: '700 12px var(--ln-font-display)', color: ok ? 'var(--ln-text-dim)' : 'var(--ln-crimson)' }}>
+      <span style={{
+        width: 18, height: 18, borderRadius: 999, flexShrink: 0,
+        display: 'grid', placeItems: 'center',
+        background: ok ? 'rgba(90,208,126,0.16)' : 'rgba(200,41,62,0.16)',
+        color: ok ? 'var(--ln-ok)' : 'var(--ln-crimson)',
+      }}>
+        {ok ? <Check size={11} /> : <X size={11} />}
+      </span>
+      {label}
+    </div>
   )
 }
 
