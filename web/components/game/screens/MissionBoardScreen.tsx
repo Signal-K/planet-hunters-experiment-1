@@ -12,14 +12,26 @@ import type { Catalog } from '@/lib/catalog'
 import { TUTORIAL_CONTENT_TOP } from '@/lib/tutorial-layout'
 import { UI_ZONES } from '@/lib/ui-zones'
 import MissionCard from '@/components/game/MissionCard'
+import MissionDetailPanel from '@/components/game/MissionDetailPanel'
 import ClientBonusGuideSheet from '@/components/game/ClientBonusGuideSheet'
-import ContractorMark from '@/components/ui/ContractorMark'
 import StepFooter from '@/components/game/StepFooter'
 import MissionBoardSection from '@/components/game/MissionBoardSection'
 import MissionBoardCompleteState from '@/components/game/MissionBoardCompleteState'
 import IconBadge from '@/components/ui/IconBadge'
 import SegmentedBar from '@/components/ui/SegmentedBar'
 import { formatFrancs } from '@/lib/format'
+import styles from './MissionBoard.module.css'
+
+function CornerBracket({ position }: { position: 'tl' | 'tr' | 'bl' | 'br' }) {
+  const cls = { tl: styles.cornerBracketTl, tr: styles.cornerBracketTr, bl: styles.cornerBracketBl, br: styles.cornerBracketBr }[position]
+  return (
+    <div className={`${styles.cornerBracket} ${cls}`}>
+      <svg viewBox="0 0 24 24" fill="none" stroke="rgba(112,217,234,0.35)" strokeWidth="1.8">
+        <path d="M2 22V2h20" />
+      </svg>
+    </div>
+  )
+}
 
 function InfoIcon() {
   return (
@@ -33,24 +45,8 @@ function InfoIcon() {
 
 // Out There: Omega Edition icon-language glyphs — bordered white-line marks
 // rendered inside <IconBadge>, matching the mockup's symbol sprite
-// (i-missions/i-sort/i-market/i-note/i-rover/etc.) reinterpreted as plain
+// (i-missions/i-market/i-note/i-rover/etc.) reinterpreted as plain
 // stroke icons rather than a hidden <symbol> sprite sheet.
-function ListIcon() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-      <rect x="5" y="3" width="14" height="18" rx="1.5" />
-      <path d="M9 8h6M9 12h6M9 16h4" />
-    </svg>
-  )
-}
-
-function SortIcon() {
-  return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M4 7h11M4 12h7M4 17h4M17 6v13M17 6l-3 3M17 6l3 3" />
-    </svg>
-  )
-}
 
 function MarketIcon() {
   return (
@@ -152,6 +148,7 @@ export default function MissionBoardScreen({ onBack, onPick, missionsDone, freeO
     return () => clearInterval(id)
   }, [])
   const [showClientBonusGuide, setShowClientBonusGuide] = useState(false)
+  const [previewId, setPreviewId] = useState<string | null>(null)
   const hasPriorFreeOpsExperience = Object.keys(contractorMissions ?? {}).length > 0
     || (dailyContractorPool?.completedIds.length ?? 0) > 0
   const { show: showFreeOpsExplainer, dismiss: dismissFreeOpsExplainer } = useFreeOpsExplainerAck(hasPriorFreeOpsExperience)
@@ -210,11 +207,67 @@ export default function MissionBoardScreen({ onBack, onPick, missionsDone, freeO
     return <MissionBoardCompleteState onBack={onBack} />
   }
 
+  // During onboarding show only the sequence-matched missions (available).
+  // During free-ops show available missions (+ completed-today for daily pool).
+  // Never show locked/future missions during onboarding.
+  const rawList = useDailyPool ? [...available, ...completedToday] : available
+  // In free-ops daily-pool mode, available missions first, completed at the bottom
+  const isListedAvailable = (m: typeof rawList[0]) =>
+    !isCompletedToday(m.id) &&
+    !(!useDailyPool && isOnCooldown(m.contractor)) &&
+    (freeOperations || available.some(item => item.id === m.id))
+  const missionList = useDailyPool
+    ? [...rawList].sort((a, b) => Number(!isListedAvailable(a)) - Number(!isListedAvailable(b)))
+    : rawList
+  const firstValidIdx = missionList.findIndex(m => {
+    if (isCompletedToday(m.id)) return false
+    if (!useDailyPool && isOnCooldown(m.contractor)) return false
+    const ctr = m.contractor ? CONTRACTORS[m.contractor] : null
+    if (m.contractor && !ctr) return false
+    const cr = freeOperations || m.sequence === sequence || (!!ctr && contractorUnlocked(ctr, sequence))
+    return cr && (freeOperations || available.some(item => item.id === m.id))
+  })
+  const hasContractorMission = missionList.some(m => !!m.contractor)
+  const cardModels = missionList
+    .map((m, idx) => {
+      const completedToday_ = isCompletedToday(m.id)
+      const cooldown = !useDailyPool && isOnCooldown(m.contractor)
+      const contractor = m.contractor ? CONTRACTORS[m.contractor] : null
+      if (m.contractor && !contractor) return null
+      const isStoryMission = m.tag === 'STORY' && !m.deliveryTargetId
+      const contractorReady = freeOperations || m.sequence === sequence || (!!contractor && contractorUnlocked(contractor, sequence))
+      const unlocked = !completedToday_ && !cooldown && contractorReady && (freeOperations || available.some(item => item.id === m.id))
+      const mTargets = compatibleTargetsFor(m, targets)
+      const affinityMultiplier = isStoryMission || !contractor ? 0 : contractorAffinityBonus(contractor, contractorMissions?.[contractor.id] ?? 0)
+      const affinityBonus = Math.round(m.payout.francs * affinityMultiplier)
+      const displayPayout = m.payout.francs + affinityBonus
+      const isHighlighted = hasCoach && idx === firstValidIdx
+      const cardState = completedToday_ ? 'completed' as const
+        : cooldown ? 'cooldown' as const
+        : !unlocked ? 'locked' as const
+        : 'available' as const
+      const lockedDetail = !contractorReady ? (contractor ? `L${contractor.unlockTier}` : 'Locked') : m.sequence <= missionsDone ? 'Completed' : m.unlockAt
+      const cooldownLabel = cooldown && m.contractor ? formatCooldown(contractorCooldowns![m.contractor] - now) : undefined
+      const routeLabel = m.deliveryTargetId
+        ? `${targets.find(t => t.id === m.targetId)?.name ?? m.targetId} → ${targets.find(t => t.id === m.deliveryTargetId)?.name ?? m.deliveryTargetId}`
+        : undefined
+      return {
+        mission: m, contractor, targetCount: mTargets.length, displayPayout, affinityMultiplier,
+        affinityReward: m.payout.affinity, unlocked, isStoryMission, cardState, lockedDetail,
+        cooldownLabel, isHighlighted, routeLabel,
+      }
+    })
+    .filter((c): c is NonNullable<typeof c> => c !== null)
+
+  const effectivePreviewId = previewId ?? cardModels.find(c => c.unlocked)?.mission.id ?? cardModels[0]?.mission.id ?? null
+  const previewModel = cardModels.find(c => c.mission.id === effectivePreviewId) ?? null
+
   return (
     <div style={{ width: '100%', height: '100%', position: 'relative', background: 'var(--ln-shell)' }}>
       <div style={{ position: 'absolute', inset: 0 }}>
         <Image src="/earth-day.jpg" alt="" fill style={{ objectFit: 'cover', filter: 'brightness(0.3) saturate(0.7)' }} />
       </div>
+      <div className="ln-starfield" style={{ position: 'absolute', inset: 0, opacity: 0.6, pointerEvents: 'none' }} />
         <TopBar
           eyebrow={freeOperations ? 'EARTH BASE · FREE OPS' : `EARTH BASE · L${missionsDone + 1}`}
           title="Mission Board"
@@ -235,7 +288,95 @@ export default function MissionBoardScreen({ onBack, onPick, missionsDone, freeO
           paddingBottom only needs breathing room plus the coach panel's own
           footprint when it's showing — no more nav-clearance guesswork. */}
       <div data-ui-zone={UI_ZONES.screenContent} style={{ position: 'absolute', inset: 0, paddingTop: hasCoach ? TUTORIAL_CONTENT_TOP : 72, paddingBottom: hasCoach ? 138 : 76, overflowY: 'auto' }}>
-        <PlayfieldBand topMission={available[0]} contractors={CONTRACTORS} mineralMeta={MINERAL_META} activeCount={available.length} freeOperations={freeOperations} />
+        {/* Direct transcription of the OD mockup's `.body-layout` — no
+            summary banner above it (the mockup has none; the earlier
+            PlayfieldBand strip was this screen's own invention, not in the
+            reference, and was cut). */}
+        <div style={{ padding: '14px' }} className={styles.layout}>
+          <div className={styles.canvas}>
+            <CornerBracket position="tl" /><CornerBracket position="tr" />
+            <CornerBracket position="bl" /><CornerBracket position="br" />
+            <div className={styles.boardHeader}>
+              <div>
+                <div className={styles.boardHeaderTitle}>{freeOperations ? 'Client Requests' : 'Active Contracts'}</div>
+                <div className={styles.boardHeaderSub}>Client jobs &amp; market runs</div>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <span className={styles.boardHeaderCount}>{available.length} open</span>
+                <span className={styles.sortSelect}>Payout</span>
+              </div>
+            </div>
+
+            <div className={styles.cardList}>
+              {cardModels.map(c => (
+                <MissionCard
+                  key={c.mission.id}
+                  mission={c.mission}
+                  contractor={c.contractor}
+                  mineralMeta={MINERAL_META}
+                  targetCount={c.targetCount}
+                  displayPayout={c.displayPayout}
+                  unlocked={c.unlocked}
+                  isStoryMission={c.isStoryMission}
+                  cardState={c.cardState}
+                  lockedDetail={c.lockedDetail}
+                  cooldownLabel={c.cooldownLabel}
+                  highlighted={c.isHighlighted}
+                  previewed={c.mission.id === effectivePreviewId}
+                  routeLabel={c.routeLabel}
+                  onPick={() => onPick(c.mission.id)}
+                  onPreview={() => setPreviewId(c.mission.id)}
+                />
+              ))}
+            </div>
+
+            {hasContractorMission && (
+              <div className={styles.disclaimer}>
+                Changes this job&apos;s payout only — does not increase minerals mined.
+              </div>
+            )}
+          </div>
+
+          <div className={styles.panel}>
+            <div className={styles.panelHeader}><h3>Contract Detail</h3></div>
+            <div className={styles.panelBody}>
+              {previewModel ? (
+                <MissionDetailPanel
+                  mission={previewModel.mission}
+                  contractor={previewModel.contractor}
+                  mineralMeta={MINERAL_META}
+                  targetCount={previewModel.targetCount}
+                  displayPayout={previewModel.displayPayout}
+                  affinityReward={previewModel.affinityReward}
+                  unlocked={previewModel.unlocked}
+                  isStoryMission={previewModel.isStoryMission}
+                  cardState={previewModel.cardState}
+                  lockedDetail={previewModel.lockedDetail}
+                  cooldownLabel={previewModel.cooldownLabel}
+                  routeLabel={previewModel.routeLabel}
+                  onPick={() => onPick(previewModel.mission.id)}
+                />
+              ) : (
+                <MissionDetailPanel
+                  mission={null}
+                  mineralMeta={MINERAL_META}
+                  targetCount={0}
+                  displayPayout={0}
+                  affinityReward={0}
+                  unlocked={false}
+                  isStoryMission={false}
+                  cardState="locked"
+                  onPick={() => {}}
+                />
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Free Ops-only surfaces below the main board — not in the OD
+            mockup at all (it has no Free Ops variant), kept below the
+            primary contract-board view rather than stacked above it so the
+            view that matches the reference is what's on screen first. */}
         {freeOperations && (
           <div style={{ padding: '0 14px 10px 14px' }}>
             <Panel accent={contractorPoolExhausted ? 'var(--ln-ok)' : 'var(--ln-cyan)'} style={{ padding: 12 }}>
@@ -268,22 +409,22 @@ export default function MissionBoardScreen({ onBack, onPick, missionsDone, freeO
         {freeOperations && (
           <div style={{ padding: '0 14px 10px 14px', display: 'flex', flexDirection: 'column', gap: 10 }}>
             {showFreeOpsExplainer && (
-              <Panel accent="var(--ln-amber)" style={{ padding: 12, position: 'relative' }}>
+              <Panel accent="var(--ln-cyan)" style={{ padding: 12, position: 'relative' }}>
                 <button
                   data-testid="dismiss-freeops-explainer"
                   onClick={dismissFreeOpsExplainer}
                   aria-label="Dismiss"
                   style={{
                     position: 'absolute', top: 8, right: 8, width: 20, height: 20, borderRadius: 6,
-                    border: '1px solid rgba(245,166,35,0.4)', background: 'rgba(8,16,28,0.6)',
-                    color: 'var(--ln-amber)', fontSize: 12, lineHeight: 1, cursor: 'pointer',
+                    border: '1px solid rgba(112,217,234,0.4)', background: 'rgba(8,16,28,0.6)',
+                    color: 'var(--ln-cyan)', fontSize: 12, lineHeight: 1, cursor: 'pointer',
                   }}
                 >
                   ×
                 </button>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
-                  <IconBadge icon={<NoteIcon />} tone="amber" active size={22} />
-                  <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 10, fontWeight: 800, letterSpacing: '0.22em', color: 'var(--ln-amber)', textTransform: 'uppercase' }}>
+                  <IconBadge icon={<NoteIcon />} tone="cyan" active size={22} />
+                  <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 10, fontWeight: 800, letterSpacing: '0.22em', color: 'var(--ln-cyan)', textTransform: 'uppercase' }}>
                     Custom Missions Unlocked
                   </div>
                 </div>
@@ -310,120 +451,6 @@ export default function MissionBoardScreen({ onBack, onPick, missionsDone, freeO
           </div>
         )}
 
-        {/* Contract list, boxed as a single dark panel — the dark-theme
-            equivalent of the OD mockup's clipboard/parchment container
-            (rejected material, kept IA: a bounded "board" holding the
-            header row, the cards, and a single disclaimer line). */}
-        <div style={{ padding: '0 14px 14px 14px' }}>
-          <Panel accent="var(--ln-cyan)" style={{ padding: 14 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
-              <IconBadge icon={<ListIcon />} tone="cyan" active size={30} />
-              <div style={{ display: 'flex', flexDirection: 'column', lineHeight: 1.2, minWidth: 0 }}>
-                <span style={{ fontFamily: 'var(--ln-font-display)', fontSize: 13, fontWeight: 800, color: 'var(--ln-text)', textTransform: 'uppercase', letterSpacing: '0.03em' }}>
-                  {freeOperations ? 'Client Requests' : 'Active Contracts'}
-                </span>
-                <span style={{ fontFamily: 'var(--ln-font-mono)', fontSize: 10, color: 'var(--ln-text-muted)', letterSpacing: '0.1em', textTransform: 'uppercase' }}>
-                  {available.length} open
-                </span>
-              </div>
-              <span style={{ flex: 1 }} />
-              <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '5px 10px', borderRadius: 7, border: '1px solid var(--ln-hairline-strong)', background: 'rgba(13,52,104,0.5)', flexShrink: 0 }}>
-                <SortIcon />
-                <span style={{ fontFamily: 'var(--ln-font-display)', fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', color: 'var(--ln-amber)', textTransform: 'uppercase' }}>
-                  Sort · Payout
-                </span>
-              </div>
-            </div>
-
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-              {(() => {
-                // During onboarding show only the sequence-matched missions (available).
-                // During free-ops show available missions (+ completed-today for daily pool).
-                // Never show locked/future missions during onboarding.
-                const rawList = useDailyPool
-                  ? [...available, ...completedToday]
-                  : available
-                // In free-ops daily-pool mode, available missions first, completed at the bottom
-                const isAvailable = (m: typeof rawList[0]) =>
-                  !isCompletedToday(m.id) &&
-                  !(!useDailyPool && isOnCooldown(m.contractor)) &&
-                  (freeOperations || available.some(item => item.id === m.id))
-                const list = useDailyPool
-                  ? [...rawList].sort((a, b) => Number(!isAvailable(a)) - Number(!isAvailable(b)))
-                  : rawList
-                const firstValidIdx = list.findIndex(m => {
-                  if (isCompletedToday(m.id)) return false
-                  if (!useDailyPool && isOnCooldown(m.contractor)) return false
-                  const ctr = m.contractor ? CONTRACTORS[m.contractor] : null
-                  if (m.contractor && !ctr) return false
-                  const cr = freeOperations || m.sequence === sequence || (!!ctr && contractorUnlocked(ctr, sequence))
-                  return cr && (freeOperations || available.some(item => item.id === m.id))
-                })
-                const hasContractorMission = list.some(m => !!m.contractor)
-                const cards = list.map((m, idx) => {
-                const completedToday_ = isCompletedToday(m.id)
-                const cooldown = !useDailyPool && isOnCooldown(m.contractor)
-                const contractor = m.contractor ? CONTRACTORS[m.contractor] : null
-                if (m.contractor && !contractor) return null
-                const isStoryMission = m.tag === 'STORY' && !m.deliveryTargetId
-                const contractorReady = freeOperations || m.sequence === sequence || (!!contractor && contractorUnlocked(contractor, sequence))
-                const unlocked = !completedToday_ && !cooldown && contractorReady && (freeOperations || available.some(item => item.id === m.id))
-                const mTargets = compatibleTargetsFor(m, targets)
-                const affinityMultiplier = isStoryMission || !contractor ? 0 : contractorAffinityBonus(contractor, contractorMissions?.[contractor.id] ?? 0)
-                const affinityBonus = Math.round(m.payout.francs * affinityMultiplier)
-                const displayPayout = m.payout.francs + affinityBonus
-                const isHighlighted = hasCoach && idx === firstValidIdx
-                const cardState = completedToday_ ? 'completed' as const
-                  : cooldown ? 'cooldown' as const
-                  : !unlocked ? 'locked' as const
-                  : 'available' as const
-                const lockedDetail = !contractorReady ? (contractor ? `L${contractor.unlockTier}` : 'Locked') : m.sequence <= missionsDone ? 'Completed' : m.unlockAt
-                const cooldownLabel = cooldown && m.contractor ? formatCooldown(contractorCooldowns![m.contractor] - now) : undefined
-                const routeLabel = m.deliveryTargetId
-                  ? `${targets.find(t => t.id === m.targetId)?.name ?? m.targetId} → ${targets.find(t => t.id === m.deliveryTargetId)?.name ?? m.deliveryTargetId}`
-                  : undefined
-                return (
-                  <MissionCard
-                    key={m.id}
-                    mission={m}
-                    contractor={contractor}
-                    mineralMeta={MINERAL_META}
-                    targetCount={mTargets.length}
-                    displayPayout={displayPayout}
-                    affinityMultiplier={affinityMultiplier}
-                    affinityReward={m.payout.affinity}
-                    unlocked={unlocked}
-                    isStoryMission={isStoryMission}
-                    cardState={cardState}
-                    lockedDetail={lockedDetail}
-                    cooldownLabel={cooldownLabel}
-                    highlighted={isHighlighted}
-                    routeLabel={routeLabel}
-                    onPick={() => onPick(m.id)}
-                  />
-                )
-              })
-                return (
-                  <>
-                    {cards}
-                    {hasContractorMission && (
-                      <div style={{
-                        display: 'flex', alignItems: 'center', gap: 8, marginTop: 2, padding: '10px 12px',
-                        background: 'rgba(112,217,234,0.05)', border: '1px dashed var(--ln-hairline-strong)', borderRadius: 6,
-                      }}>
-                        <span style={{ color: 'var(--ln-text-muted)', flexShrink: 0 }}><NoteIcon /></span>
-                        <span style={{ fontFamily: 'var(--ln-font-body)', fontSize: 11.5, fontStyle: 'italic', color: 'var(--ln-text-dim)' }}>
-                          Client pay bonuses change this job&apos;s payout only — they never increase how much gets mined.
-                        </span>
-                      </div>
-                    )}
-                  </>
-                )
-              })()}
-            </div>
-          </Panel>
-        </div>
-
         {freeOperations && <AffinityAdvancedSection contractors={catalog.contractors} contractorMissions={contractorMissions} />}
         {freeOperations && <ComingSoonMissionsSection />}
       </div>
@@ -446,72 +473,6 @@ export default function MissionBoardScreen({ onBack, onPick, missionsDone, freeO
           sequence={sequence}
         />
       )}
-    </div>
-  )
-}
-
-// "Playfield" band — ported from the Open Design "Client Bonus" mockup's map
-// header (see web/components/game/previews/MissionFlowPreview.tsx for the
-// full decorative version with tile-grid/biome art), restyled onto real dark
-// --ln-* tokens and driven by the top real mission instead of fake preview
-// data. Deliberately skips the OD prototype's animated tile-grid/greeblies —
-// this band's job is orienting the player toward the top contract, not
-// reproducing the mockup's decorative flourish.
-function PlayfieldBand({
-  topMission,
-  contractors,
-  mineralMeta,
-  activeCount,
-  freeOperations,
-}: {
-  topMission?: Mission
-  contractors: Catalog['contractors']
-  mineralMeta: Catalog['minerals']
-  activeCount: number
-  freeOperations: boolean
-}) {
-  const contractor = topMission?.contractor ? contractors[topMission.contractor] : null
-  const accent = contractor?.color ?? 'var(--ln-amber)'
-  const blurb = !topMission
-    ? 'No contracts on the board right now.'
-    : contractor
-      ? `${contractor.name} wants ${contractor.mineralPreferences.map(id => mineralMeta[id]?.name ?? id).join(' / ')}. Premium changes payout, not mined cargo.`
-      : 'Self-directed run. Mine what you want and sell at market value.'
-
-  return (
-    <div style={{ padding: '0 14px 10px 14px' }}>
-      <div style={{
-        display: 'flex', alignItems: 'center', gap: 12, padding: 12,
-        borderRadius: 10, border: `1px solid ${accent}45`,
-        background: 'linear-gradient(160deg, var(--ln-surface-2) 0%, var(--ln-void) 100%)',
-        boxShadow: 'var(--ln-shadow-card)',
-      }}>
-        <ContractorMark
-          initial={contractor?.initial ?? 'OP'}
-          color={accent}
-          uiRole={contractor?.uiRole ?? 'starter'}
-          contractorId={contractor?.id}
-          size={40}
-        />
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-            <span style={{ fontFamily: 'var(--ln-font-display)', fontSize: 10, fontWeight: 800, letterSpacing: '0.18em', color: accent, textTransform: 'uppercase' }}>
-              {topMission ? topMission.title : 'Board scan'}
-            </span>
-          </div>
-          <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 11.5, color: 'var(--ln-text-dim)', lineHeight: 1.4, marginTop: 2 }}>
-            {blurb}
-          </div>
-        </div>
-        <div style={{ flex: 'none', textAlign: 'right' }}>
-          <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 9, fontWeight: 700, letterSpacing: '0.14em', color: 'var(--ln-text-muted)', textTransform: 'uppercase' }}>
-            {freeOperations ? 'Client requests' : 'Active contracts'}
-          </div>
-          <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 16, fontWeight: 800, color: 'var(--ln-text)' }}>
-            {activeCount}
-          </div>
-        </div>
-      </div>
     </div>
   )
 }

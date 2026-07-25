@@ -103,11 +103,21 @@ export const DEV_GROUPS: DevGroup[] = [
   {
     label: 'First Satellite Launch',
     color: '#f5d947',
+    // Full walkable flow, in order: build SMS -> accept the fixed story
+    // mission -> fab -> physical transit to Earth orbit (dev "Skip ▸" button
+    // on that screen fast-forwards the ETA) -> debrief/satellite deployed ->
+    // TESS Console, where "pointing" (PixiGalaxyStarMap) and "waiting for
+    // the transit" (daily candidate rotation, keyed by calendar date) live —
+    // that screen has its own dev-only "+1 DAY" control since it has no
+    // in-scene timer to skip, unlike the rocket ETA. See the "Transit" vs
+    // "transit-photometry" naming note in TransitScreen.tsx and the ZenNotes
+    // decision doc for why these are two unrelated screens sharing a word.
     shots: [
-      { key: 'telescope-hub',    label: 'Hub',      hint: 'Post-onboarding, free ops + monitoring station built, story mission on the board' },
-      { key: 'telescope-fab',    label: 'Fab',      hint: 'Transit telescope mission accepted, at fab' },
-      { key: 'telescope-transit',label: 'Transit',  hint: 'Telescope en route to Earth orbit' },
-      { key: 'telescope-debrief',label: 'Debrief',  hint: 'Telescope deployed, satellite launched' },
+      { key: 'telescope-hub',      label: 'Hub',      hint: 'Post-onboarding, free ops + monitoring station built, story mission on the board' },
+      { key: 'telescope-fab',      label: 'Fab',      hint: 'Transit telescope mission accepted, at fab' },
+      { key: 'telescope-transit',  label: 'Transit',  hint: 'Rocket physically en route to Earth orbit to deploy the telescope — dev "Skip ▸" button fast-forwards this' },
+      { key: 'telescope-debrief',  label: 'Debrief',  hint: 'Telescope deployed, satellite launched' },
+      { key: 'ui-tess-discovery',  label: 'Console',  hint: 'Satellite already in orbit — point it (star map) and review the daily transit-photometry candidate. Stationary, no travel. Use the on-screen dev "+1 DAY" control to preview future days without waiting.' },
     ],
   },
   {

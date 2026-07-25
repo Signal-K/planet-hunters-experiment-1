@@ -151,6 +151,73 @@
   --ln-d-slow:      420ms;
 }
 
+/* ─── Glass HUD surface layer — additive to .theme-deep, not a replacement.
+   Scoped to the mission-creation flow (Mission Board / Target / Rocket /
+   Launch / Mining / Debrief) per the Open Design "Full Panel Re-skin"
+   reference (brand-spec.md, 2026-07-24). Uses dark-tinted translucency
+   (navy, not white) so it composes with the existing light --ln-text
+   tokens — the brand-spec's literal rgba(255,255,255,0.20) white glass
+   was avoided on purpose: that read is what got reverted 2026-07-23 for
+   washing out text contrast. Corner brackets already exist in Panel.tsx's
+   <Corners>; this only adds the frosted-glass surface + starfield backdrop. */
+:root {
+  /* Literal values from the OD reference's landnam-design-system.css
+   * (--ln-panel / --ln-panel-2 / --ln-panel-border). Earlier passes
+   * substituted a dark-navy tint here out of caution about repeating a
+   * past legibility regression — verified in the OD project's own
+   * rendered screenshots (2026-07-25) that literal white glass over a
+   * dark backdrop stays legible; the earlier substitution was itself the
+   * reason the UI kept reading as "unchanged navy", not a fix for anything. */
+  --ln-glass-panel:    rgba(255, 255, 255, 0.20);
+  --ln-glass-panel-2:  rgba(255, 255, 255, 0.28);
+  --ln-glass-border:   rgba(255, 255, 255, 0.45);
+  --ln-glass-blur:     blur(8px);
+}
+
+.ln-starfield {
+  position: relative;
+  background-color: var(--ln-shell);
+  background-image:
+    radial-gradient(1px 1px at 6% 22%, rgba(255,255,255,0.5), transparent),
+    radial-gradient(1.5px 1.5px at 28% 55%, rgba(112,217,234,0.4), transparent),
+    radial-gradient(1px 1px at 45% 15%, rgba(255,255,255,0.4), transparent),
+    radial-gradient(1px 1px at 68% 78%, rgba(112,217,234,0.35), transparent),
+    radial-gradient(1.5px 1.5px at 82% 30%, rgba(255,255,255,0.3), transparent),
+    radial-gradient(ellipse at 28% 45%, rgba(112,217,234,0.05) 0%, transparent 50%),
+    radial-gradient(ellipse at 72% 35%, rgba(90,208,126,0.03) 0%, transparent 45%),
+    radial-gradient(ellipse at 50% 70%, rgba(245,166,35,0.02) 0%, transparent 40%);
+  background-repeat: repeat, repeat, repeat, repeat, repeat, no-repeat, no-repeat, no-repeat;
+}
+
+.ln-glass-panel {
+  background: var(--ln-glass-panel);
+  border: 1px solid var(--ln-glass-border);
+  backdrop-filter: var(--ln-glass-blur);
+  -webkit-backdrop-filter: var(--ln-glass-blur);
+}
+
+/* Mission Board two-column "canvas + Contract Detail" layout — ported from
+   the OD "Full Panel Re-skin" mission-board mockup's `.body-layout` (stacked
+   below 821px, side-by-side with a fixed-width sticky detail panel above
+   it — same breakpoint the mission-setup-* classes already use). */
+.mission-board-layout {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+@media (min-width: 821px) {
+  .mission-board-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 320px;
+    align-items: start;
+    gap: 14px;
+  }
+  .mission-board-detail {
+    position: sticky;
+    top: 12px;
+  }
+}
+
 /* ─── Light editorial theme — reference/guide/market/menu surfaces only.
    Operations screens (Launchpad, Mining HUD, Transit, Debrief, live Mission
    Board) stay on .theme-deep. See workspace/decisions/
@@ -490,6 +557,12 @@ button { cursor: pointer; }
   border: 1px solid rgba(135,207,250,0.22);
   border-radius: 14px;
   background: linear-gradient(180deg, rgba(9,18,31,0.78), rgba(5,10,18,0.88));
+  /* Glass HUD (Open Design "Full Panel Re-skin", 2026-07-25): dark-tinted
+     translucency + blur, layered on top of this class's pre-existing
+     gradient rather than replacing it, since it's already structurally a
+     translucent panel. */
+  backdrop-filter: var(--ln-glass-blur);
+  -webkit-backdrop-filter: var(--ln-glass-blur);
   /* Forces its own compositing layer on mount. Without this, content painted
      inside this nested position:absolute + overflow:hidden frame (e.g. the
      rocket stat values / rocket image on Select Rocket and Confirm Rocket)
@@ -504,6 +577,8 @@ button { cursor: pointer; }
   border: 1px solid rgba(245,166,35,0.32);
   border-radius: 14px;
   background: linear-gradient(180deg, rgba(18,34,54,0.78) 0%, rgba(10,18,29,0.86) 100%);
+  backdrop-filter: var(--ln-glass-blur);
+  -webkit-backdrop-filter: var(--ln-glass-blur);
   transform: translateZ(0);
 }
 

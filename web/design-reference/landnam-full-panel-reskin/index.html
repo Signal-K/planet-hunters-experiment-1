@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Landnam — Rocket Construction</title>
+<style>
+  :root {
+    --ln-void: #000d1f;
+    --ln-surface: #002351;
+    --ln-panel-2: #0d3468;
+    --ln-cyan: #70d9ea;
+    --ln-ok: #5ad07e;
+    --ln-amber: #f5a623;
+    --ln-text: #b1c6e5;
+    --ln-text-dim: #91adc2;
+    --ln-text-muted: #647788;
+    --font-display: 'Oxanium', system-ui, -apple-system, sans-serif;
+    --font-body: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; min-height: 100%;
+    background: radial-gradient(ellipse at 30% -10%, #001338 0%, var(--ln-void) 55%, #00081a 100%);
+    color: var(--ln-text);
+    font-family: var(--font-body);
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 56px 28px 80px; }
+  .head { margin-bottom: 40px; }
+  .kicker { font-family: var(--font-display); font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ln-cyan); }
+  h1 { font-family: var(--font-display); font-size: 32px; margin: 10px 0 8px; color: #eaf6fa; letter-spacing: 0.01em; }
+  .head p { max-width: 62ch; color: var(--ln-text-dim); font-size: 14.5px; line-height: 1.6; margin: 0; }
+
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 18px; }
+  .card {
+    display: block; text-decoration: none; color: inherit;
+    border: 1px solid rgba(112,217,234,0.18); border-radius: 10px;
+    background: var(--ln-surface); overflow: hidden;
+    transition: transform .15s, border-color .15s;
+  }
+  .card:hover { transform: translateY(-3px); border-color: rgba(112,217,234,0.4); }
+  .card-art { height: 130px; position: relative; overflow: hidden; }
+  .card-body { padding: 16px 18px 18px; }
+  .card-body h2 { font-family: var(--font-display); font-size: 15.5px; margin: 0 0 5px; color: #eaf6fa; }
+  .card-body p { font-size: 12.5px; color: var(--ln-text-dim); line-height: 1.5; margin: 0; }
+  .card-tag {
+    display: inline-block; margin-top: 10px; font-family: var(--font-display); font-size: 10px;
+    letter-spacing: 0.06em; text-transform: uppercase; color: var(--ln-cyan);
+  }
+
+  .art-mission { background: linear-gradient(160deg, #ede0c4, #d8c69a); }
+  .art-rocket { background: repeating-linear-gradient(0deg, rgba(112,217,234,0.08) 0 1px, transparent 1px 24px), repeating-linear-gradient(90deg, rgba(112,217,234,0.08) 0 1px, transparent 1px 24px), radial-gradient(circle at 50% 60%, #012a5c, #00112c); }
+  .art-mining { background: linear-gradient(180deg, #050a1c, #000000); }
+  .art-base { background: radial-gradient(ellipse at 50% 0%, #1c3a2c, #06120d); }
+
+  .note {
+    margin-top: 44px; padding: 16px 18px; border-radius: 8px;
+    background: rgba(245,166,35,0.08); border: 1px solid rgba(245,166,35,0.22);
+    font-size: 12.5px; color: #e8b055; line-height: 1.6;
+  }
+  .note b { color: var(--ln-amber); }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="module" src="/src/main.jsx"></script>
+<!-- The original static panel gallery remains below as a reference artifact. -->
+<div class="wrap">
+  <div class="head">
+    <div class="kicker">Landnam · Design</div>
+    <h1>Full Panel Re-skin</h1>
+    <p>Four Landnam surfaces re-skinned with the isometric-game material language from Reference A and the bordered white-line icon-badge system from Reference B (Out There: Omega Edition). All shipped, player-validated mechanics — payout-bonus clarity, wayfinding step footer, two-leg delivery warning — are preserved.</p>
+  </div>
+
+  <div class="grid">
+    <a class="card" href="landnam-mission-board.html">
+      <div class="card-art art-mission"></div>
+      <div class="card-body">
+        <h2>Mission Board</h2>
+        <p>Parchment clipboard with binder clip, real client contracts, cargo/pay-bonus/affinity chip row.</p>
+        <span class="card-tag">Open panel →</span>
+      </div>
+    </a>
+    <a class="card" href="landnam-rocket-construction.html">
+      <div class="card-art art-rocket"></div>
+      <div class="card-body">
+        <h2>Rocket Construction</h2>
+        <p>Blueprint-grid HUD, cel-shaded rocket, pip-bar stats, sticky-note annotations, wayfinding footer.</p>
+        <span class="card-tag">Open panel →</span>
+      </div>
+    </a>
+    <a class="card" href="landnam-mining-run.html">
+      <div class="card-art art-mining"></div>
+      <div class="card-body">
+        <h2>Mining Run</h2>
+        <p>Isometric asteroid surface, glow-ringed target ore vs. dimmed off-order ore, order-progress bar.</p>
+        <span class="card-tag">Open panel →</span>
+      </div>
+    </a>
+    <a class="card" href="landnam-earth-base.html">
+      <div class="card-art art-base"></div>
+      <div class="card-body">
+        <h2>Earth Base / Hub</h2>
+        <p>Resource HUD strip, building side-panel, bottom tabs against a flagged placeholder diorama.</p>
+        <span class="card-tag">Open panel →</span>
+      </div>
+    </a>
+  </div>
+
+  <div class="note">
+    <b>Biggest lift, flagged:</b> Earth Base's painted isometric diorama needs real building/character illustration assets that an HTML/CSS mockup can't fabricate. The chrome (HUD strip, side panel, tabs) is production-ready; the scene itself is a block-out placeholder — see the in-panel flag before porting to React.
+  </div>
+</div>
+</body>
+</html>

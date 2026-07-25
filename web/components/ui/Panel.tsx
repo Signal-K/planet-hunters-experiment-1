@@ -27,17 +27,20 @@ interface PanelProps {
   style?: React.CSSProperties
   accent?: string
   variant?: 'default' | 'compact'
+  /** 'glass' = Open Design "Glass HUD" frosted surface (dark-tinted translucency,
+   * not the literal white glass, to keep --ln-text legible — see globals.css). */
+  surface?: 'solid' | 'glass'
 }
 
-export default function Panel({ children, style, accent = '#3fa9ff', variant = 'default' }: PanelProps) {
+export default function Panel({ children, style, accent = '#3fa9ff', variant = 'default', surface = 'solid' }: PanelProps) {
   return (
-    <div style={{
+    <div className={surface === 'glass' ? 'ln-glass-panel' : undefined} style={{
       position: 'relative',
-      background: 'var(--ln-panel-2)',
-      border: `1px solid ${accent}40`,
+      background: surface === 'glass' ? undefined : 'var(--ln-panel-2)',
+      border: surface === 'glass' ? undefined : `1px solid ${accent}40`,
       borderRadius: 12,
       padding: variant === 'compact' ? 10 : 14,
-      backdropFilter: 'blur(8px)',
+      backdropFilter: surface === 'glass' ? undefined : 'blur(8px)',
       ...style,
     }}>
       <Corners c={accent} />

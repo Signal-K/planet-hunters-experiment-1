@@ -97,7 +97,7 @@ export default function RocketPurchaseScreen({ missionsDone, francs, mission, de
       ) : (
         <>
           <div style={{ marginBottom: 8 }}><GhostBtn full onClick={onBack}>Back</GhostBtn></div>
-          <PrimaryBtn kind="amber" disabled={!canAfford} onClick={() => onPurchase(rocket.id)}>
+          <PrimaryBtn kind="cyan" disabled={!canAfford} onClick={() => onPurchase(rocket.id)}>
             Purchase · {formatFrancs(rocket.costFrancs, { compact: true })} ▲
           </PrimaryBtn>
         </>

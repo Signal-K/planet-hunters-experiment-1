@@ -1,0 +1,649 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+<title>Landnam — Rocket Construction</title>
+<link rel="stylesheet" href="landnam-design-system.css" />
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Oxanium:wght@400;700;800&family=Turret+Road:wght@400;700;800&display=swap');
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+  html,body{min-height:100dvh;background:var(--space-bg-far);color:var(--ln-text);font-family:var(--font-body)}
+  body{
+    background:radial-gradient(ellipse at 20% -10%, #2a4170 0%, var(--space-bg) 45%, var(--space-bg-far) 80%);
+    display:flex;align-items:center;justify-content:center;padding:16px
+  }
+  body::before{
+    content:'';position:fixed;inset:0;pointer-events:none;
+    background-image:radial-gradient(1px 1px at 8% 16%, rgba(255,255,255,0.6), transparent),
+      radial-gradient(1.5px 1.5px at 22% 48%, rgba(108,212,255,0.5), transparent),
+      radial-gradient(1px 1px at 35% 72%, rgba(255,255,255,0.5), transparent),
+      radial-gradient(1px 1px at 52% 22%, rgba(255,255,255,0.4), transparent),
+      radial-gradient(1.5px 1.5px at 65% 82%, rgba(108,212,255,0.4), transparent),
+      radial-gradient(1px 1px at 78% 35%, rgba(255,255,255,0.5), transparent),
+      radial-gradient(1px 1px at 92% 58%, rgba(255,255,255,0.3), transparent);
+    background-size:200px 200px;z-index:0
+  }
+
+  .stage{position:relative;z-index:1;width:min(1320px,100%)}
+
+    .app{
+    background:var(--ln-panel);border:2px solid rgba(108,212,255,0.08);border-radius:var(--radius-md);
+    backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);overflow:hidden;
+    box-shadow:0 30px 80px rgba(0,0,0,0.4);display:flex;flex-direction:column
+  }
+
+  /* ── Topbar ── */
+  .topbar{display:flex;align-items:center;justify-content:space-between;padding:8px 16px;background:rgba(14,21,38,0.6);border-bottom:2px solid rgba(108,212,255,0.06);box-shadow:0 1px 0 rgba(0,0,0,0.2)}
+  .topbar-left{display:flex;align-items:center;gap:10px}
+  .lv-badge{
+    display:flex;align-items:center;gap:4px;padding:3px 8px 3px 5px;border-radius:999px;
+    border:1px solid rgba(108,212,255,0.18);background:rgba(108,212,255,0.06);
+    font-family:var(--font-display);font-weight:800;font-size:8.5px;letter-spacing:0.06em;text-transform:uppercase;color:var(--ln-cyan)
+  }
+  .lv-badge .lv-i{width:14px;height:14px;border-radius:50%;background:rgba(108,212,255,0.15);display:grid;place-items:center}
+  .topbar-title{font-family:var(--font-display);font-weight:800;font-size:14px;letter-spacing:0.02em;color:var(--ln-text)}
+  .topbar-right{display:flex;align-items:center;gap:8px}
+  .cr-display{display:flex;align-items:center;gap:4px;padding:3px 10px 3px 6px;border-radius:5px;border:1px solid rgba(224,165,39,0.3);background:rgba(224,165,39,0.07);font-family:var(--font-numeric);font-weight:700;font-size:12px;color:var(--ln-amber)}
+
+  /* ── Body layout ──
+     Always a single stacked column (canvas on top, parts tray below) —
+     never a left-content/right-sidebar split, at any viewport width. */
+  .body-layout{display:flex;flex-direction:column;flex:1;min-height:0}
+
+  /* ── Rocket canvas ── */
+  .top-zone{flex:1;display:flex;flex-direction:column;min-height:0}
+  .canvas{
+    position:relative;flex:1;display:flex;align-items:center;justify-content:center;padding:18px 22px 10px;
+    background:
+      repeating-linear-gradient(0deg, rgba(108,212,255,0.07) 0px, rgba(108,212,255,0.07) 1px, transparent 1px, transparent 22px),
+      repeating-linear-gradient(90deg, rgba(108,212,255,0.07) 0px, rgba(108,212,255,0.07) 1px, transparent 1px, transparent 22px),
+      radial-gradient(ellipse at 50% 40%, #101f40 0%, #08101e 65%, #040810 100%)
+  }
+  .df{position:absolute;z-index:5;pointer-events:none}
+  .df-tl{top:10px;left:16px}.df-tr{top:10px;right:16px;text-align:right}.df-bl{bottom:14px;left:16px}
+  .df-l{font-family:var(--font-display);font-weight:700;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:rgba(108,212,255,0.6)}
+  .df-v{font-family:var(--font-numeric);font-size:16px;color:var(--ln-cyan);margin-top:2px}
+
+  /* ── Telescope reticle / concentric ring frame ── */
+  .reticle-frame{position:absolute;z-index:1;pointer-events:none;top:50%;left:50%;transform:translate(-50%,-50%)}
+  .reticle-frame svg{display:block;width:640px;height:400px;overflow:visible}
+
+  .hull{
+    position:relative;width:100%;max-width:560px;aspect-ratio:580/300;z-index:3
+  }
+  .hull-outline{
+    position:absolute;inset:0;border:1.5px dashed rgba(108,212,255,0.12);border-radius:3px;
+    clip-path:polygon(12% 0%, 88% 0%, 100% 18%, 100% 88%, 88% 100%, 12% 100%, 0% 88%, 0% 18%);
+    background:rgba(108,212,255,0.012)
+  }
+
+  /* ── Slots ── */
+  .slot{
+    position:absolute;z-index:3;border:1.5px dashed rgba(108,212,255,0.12);border-radius:3px;
+    transition:border-color .2s,background .15s,box-shadow .2s;cursor:pointer
+  }
+  .slot.drag-over{border-color:var(--ln-cyan);background:rgba(108,212,255,0.08);box-shadow:0 0 16px rgba(108,212,255,0.2)}
+  .slot.filled{border-style:solid;border-color:rgba(108,212,255,0.35);background:rgba(14,21,38,0.3)}
+  .slot.filled:hover{border-color:var(--ln-crimson);box-shadow:0 0 10px rgba(255,68,56,0.12)}
+  .slot.filled:hover .rm{opacity:1}
+
+  .sl{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-family:var(--font-display);font-weight:700;font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:rgba(108,212,255,0.16);pointer-events:none}
+  .slot.filled .sl{display:none}
+
+  .rm{position:absolute;top:-5px;right:-5px;width:18px;height:18px;border-radius:50%;background:var(--ln-crimson);color:#fff;font-size:10px;line-height:17px;text-align:center;opacity:0;transition:opacity .12s;pointer-events:auto;cursor:pointer}
+
+  .s-payload{left:10%;top:14%;width:46%;height:28%}
+  .s-fuel{left:40%;top:18%;width:22%;height:22%;border-radius:50%/35%}
+  .s-engine{left:16%;top:48%;width:36%;height:24%;clip-path:polygon(8% 0%,92% 0%,100% 100%,0% 100%)}
+  .s-strut{left:8%;top:76%;width:54%;height:18%;border-style:dotted}
+
+  .ip{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;pointer-events:none}
+  .ip svg{width:24px;height:24px}
+  .ip .ip-l{font-family:var(--font-display);font-size:9.5px;font-weight:800;letter-spacing:.02em;text-transform:uppercase;color:var(--ln-text);text-align:center;line-height:1.2;margin-top:3px}
+
+  /* ── Parts panel ── */
+  .panel{border-top:4px solid rgba(108,212,255,0.1);background:rgba(14,21,38,0.4);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);display:flex;flex-direction:column;position:relative}
+  .panel::before{content:'';position:absolute;top:-4px;left:0;right:75%;height:4px;background:var(--ln-cyan);opacity:.35;pointer-events:none}
+  .ph{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:linear-gradient(90deg,rgba(108,212,255,0.08) 0%,rgba(108,212,255,0.03) 40%,transparent 75%);border-bottom:3px solid rgba(108,212,255,0.08)}
+  .ph h3{font-family:var(--font-display);font-weight:800;font-size:13px;letter-spacing:.12em;text-transform:uppercase;color:var(--ln-cyan);text-shadow:0 0 8px rgba(108,212,255,0.15)}
+  .ph .ph-c{font-family:var(--font-numeric);font-size:12.5px;color:var(--ln-text-muted)}
+
+  .pb{flex:1;display:flex;gap:10px;padding:10px 16px 12px;overflow-x:auto;overflow-y:hidden;align-items:stretch}
+  .pb::-webkit-scrollbar{height:3px}.pb::-webkit-scrollbar-track{background:transparent}.pb::-webkit-scrollbar-thumb{background:rgba(108,212,255,.16);border-radius:2px}
+
+  .pg{display:flex;flex-direction:column;gap:8px;flex-shrink:0}
+  .pg-l{font-family:var(--font-display);font-weight:700;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:rgba(108,212,255,0.5);padding:0 2px}
+
+  .vc{
+    display:flex;align-items:center;gap:12px;padding:11px 14px 11px 10px;border-radius:6px;border:1px solid rgba(108,212,255,.14);
+    background:rgba(108,212,255,.03);cursor:grab;transition:background .1s,border-color .1s;
+    user-select:none;flex-shrink:0;touch-action:none;min-width:180px
+  }
+  .vc:active{cursor:grabbing}
+  .vc:hover{background:rgba(108,212,255,.07);border-color:rgba(108,212,255,.22)}
+  .vc.installed{border-color:rgba(47,191,106,0.3);background:rgba(47,191,106,0.05);cursor:default;opacity:.5}
+  .vc.locked{opacity:.35;cursor:not-allowed}
+  .vc.dragging{opacity:.25}
+
+  .vci{
+    width:44px;height:44px;border-radius:6px;display:grid;place-items:center;flex-shrink:0;position:relative
+  }
+  .vci svg{width:26px;height:26px}
+  .vci .vci-t{
+    position:absolute;top:-4px;right:-4px;width:16px;height:16px;border-radius:50%;
+    font-family:var(--font-display);font-weight:800;font-size:9px;text-align:center;line-height:16px;color:#fff
+  }
+  .vci-info{min-width:0}
+  .vci-n{font-family:var(--font-display);font-weight:700;font-size:13.5px;letter-spacing:.01em;text-transform:uppercase;color:var(--ln-text)}
+  .vci-c{display:flex;align-items:center;gap:6px;margin-top:4px}
+  .vci-c cc{display:flex;align-items:center;gap:3px;font-family:var(--font-numeric);font-size:10.5px;color:var(--ln-text-muted)}
+  .vci-c cc svg{width:11px;height:11px;stroke:currentColor;fill:none;stroke-width:1.6}
+
+  .va{flex-shrink:0}
+  .va .va-b{
+    font-family:var(--font-display);font-weight:800;font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;
+    padding:7px 14px;border-radius:4px;border:none;cursor:pointer;transition:filter .1s;white-space:nowrap
+  }
+  .va .va-b:hover{filter:brightness(1.2)}
+  .vc.installed .va .va-b{display:none}
+  .vc.locked .va .va-b{display:none}
+  .vc .i-lbl{display:none;font-family:var(--font-display);font-weight:700;font-size:10.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--ln-ok);white-space:nowrap}
+  .vc.installed .i-lbl{display:inline}
+
+  .pf{display:flex;align-items:center;justify-content:space-between;padding:10px 16px 12px;border-top:2px solid rgba(108,212,255,0.08);gap:8px}
+  .pf .pf-h{font-family:var(--font-display);font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--ln-text-muted)}
+  .pf .pf-h svg{width:12px;height:12px;vertical-align:middle;stroke:currentColor;fill:none;stroke-width:1.6}
+  .pf .btn-p{
+    font-family:var(--font-display);font-weight:800;font-size:13px;letter-spacing:.06em;text-transform:uppercase;
+    padding:10px 22px;border:none;border-radius:6px;cursor:pointer;transition:filter .1s,transform .08s;display:flex;align-items:center;gap:8px
+  }
+  .pf .btn-p:active{transform:scale(.96)}
+  .pf .btn-p:disabled{opacity:.3;filter:none!important;transform:none!important;cursor:not-allowed}
+  .pf .btn-p svg{width:16px;height:16px}
+
+  .confirm-sheet .btn-primary{font-size:12px;padding:9px 22px;min-height:38px;gap:7px}
+
+  /* ── Step bar ── */
+  .sw{padding:16px 20px 22px;text-align:center;border-top:2px solid rgba(108,212,255,0.1);background:rgba(14,21,38,.35)}
+  .scap{font-family:var(--font-display);font-weight:700;font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--ln-text-muted);margin-bottom:10px}
+  .sbar{display:flex;align-items:center;justify-content:center;gap:10px}
+  .sp{display:flex;align-items:center;gap:5px;font-family:var(--font-display);font-weight:700;font-size:13px;letter-spacing:.02em;padding:9px 20px;border-radius:999px;border:1px solid rgba(255,255,255,.14);color:var(--ln-text-dim);background:rgba(255,255,255,.04);white-space:nowrap;cursor:pointer;transition:background .1s}
+  .sp:hover{background:rgba(255,255,255,.08)}
+  .sp.done{color:var(--ln-ok);border-color:rgba(47,191,106,.3)}
+  .sp.cur{color:#0e1526;background:var(--ln-cyan);border-color:var(--ln-cyan);font-weight:800;cursor:default}
+  .sa{color:var(--ln-text-muted);font-size:16px;flex-shrink:0}
+
+  .presets{background:rgba(108,212,255,0.015);border-bottom:3px solid rgba(108,212,255,0.06);box-shadow:inset 0 -1px 0 rgba(0,0,0,0.15)}
+  .pr{display:flex;gap:6px;padding:8px 16px 10px;overflow-x:auto}
+  .pr-b{font-family:var(--font-display);font-weight:700;font-size:10px;letter-spacing:.06em;text-transform:uppercase;padding:6px 12px;border-radius:4px;border:1px solid rgba(108,212,255,.16);background:transparent;color:var(--ln-text-dim);cursor:pointer;transition:background .1s,border-color .1s,color .1s;white-space:nowrap;flex-shrink:0}
+  .pr-b:hover{background:rgba(108,212,255,.06);border-color:rgba(108,212,255,.25)}
+  .pr-b.active{background:rgba(108,212,255,.12);border-color:var(--ln-cyan);color:var(--ln-cyan)}
+
+  .dg{
+    position:fixed;z-index:1000;pointer-events:none;opacity:.85;width:40px;height:40px;
+    border-radius:4px;background:rgba(14,21,38,.95);border:2px solid var(--ln-cyan);
+    box-shadow:0 4px 20px rgba(108,212,255,.2);display:grid;place-items:center;transform:translate(-50%,-50%)
+  }
+  .dg svg{width:18px;height:18px}
+
+  @media(min-width:821px){
+    /* Wider viewport = more breathing room on the same stacked layout,
+       never a side column. Canvas and parts tray both stay full stage
+       width so their edges line up instead of forming two mismatched
+       columns. */
+    .app{height:min(860px,calc(100vh - 32px));overflow:hidden}
+    .body-layout{overflow-y:auto}
+    .canvas{min-height:360px}
+    .ph{padding:12px 24px}
+    .pb{padding:14px 24px 16px;gap:14px}
+    .pg{gap:10px}
+    .vc{min-width:210px}
+    .pf{padding:12px 24px 16px}
+  }
+
+  @media(max-width:820px){
+    body{padding:0}
+    .stage{width:100%;height:100dvh;max-height:100dvh}
+    .app{border-radius:0;border:none;height:100dvh;max-height:100dvh;overflow:hidden}
+    .body-layout{flex:1;overflow:hidden}
+    .top-zone{flex:1;min-height:0}
+    .canvas{flex:1;padding:12px 14px 6px}
+    .panel{flex:0 0 auto;max-height:38%;overflow:hidden}
+    .pb{padding:5px 10px 6px}
+    .hull{max-width:100%}
+    .df-tr2{display:none}
+  }
+  /* ── Texture: canvas nebula glow ── */
+  /* ── Bold corner L-brackets with greeblie stamps ── */
+  .cb{position:absolute;z-index:5;pointer-events:none;width:28px;height:28px}
+  .cb svg{display:block;width:100%;height:100%}
+  .cb-tl{top:-2px;left:-2px}.cb-tr{top:-2px;right:-2px;transform:scaleX(-1)}.cb-bl{bottom:-2px;left:-2px;transform:scaleY(-1)}.cb-br{bottom:-2px;right:-2px;transform:scale(-1,-1)}
+
+  .canvas-bg-glow{position:absolute;inset:0;pointer-events:none;z-index:1;
+    background:
+      radial-gradient(ellipse at 28% 45%, rgba(108,212,255,0.05) 0%, transparent 50%),
+      radial-gradient(ellipse at 72% 35%, rgba(47,191,106,0.035) 0%, transparent 45%),
+      radial-gradient(ellipse at 50% 70%, rgba(224,165,39,0.025) 0%, transparent 40%)
+  }
+
+  /* ── Texture: hologram scanline overlay ── */
+  .canvas-scan{
+    position:absolute;inset:0;pointer-events:none;z-index:1;
+    background:repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(108,212,255,0.006) 3px, rgba(108,212,255,0.006) 4px)
+  }
+
+  /* ── Texture: slot filled glow ── */
+  .slot.filled::after{
+    content:'';position:absolute;inset:-2px;border-radius:5px;pointer-events:none;z-index:-1;
+    background:linear-gradient(135deg, rgba(108,212,255,0.06), transparent 65%);
+    transition:opacity .3s
+  }
+
+  /* ── Texture: part card hover glow ── */
+  .vc:hover{
+    box-shadow:0 0 14px rgba(108,212,255,0.05)
+  }
+
+  @media(max-width:480px){
+    .vc{min-width:150px;padding:8px 10px}
+    .vci{width:36px;height:36px}.vci svg{width:22px;height:22px}
+    .vci-n{font-size:11px}
+    .ph{padding:8px 12px}.ph h3{font-size:11px}
+    .pf{padding:8px 12px 10px}
+    .pf .btn-p{font-size:12px;padding:8px 18px}
+  }
+</style>
+</head>
+<body>
+<svg style="display:none" aria-hidden="true">
+  <symbol id="i-steel" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 14l3-8h10l3 8-8 5z"/><path d="M7 6l5 13 5-13"/></symbol>
+  <symbol id="i-silicon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 2l4 4-4 4-4-4z"/><path d="M12 10l4 4-4 4-4-4z"/></symbol>
+  <symbol id="i-platinum" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="3"/><ellipse cx="12" cy="12" rx="9" ry="3.4"/></symbol>
+  <symbol id="i-coin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="9"/><path d="M12 7v10M8 10h6a2 2 0 1 0 0-4H8m0 8h7"/></symbol>
+
+  <symbol id="i-gold" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><polygon points="12,2 15,9 22,9 16,13 18,20 12,16 6,20 8,13 2,9 9,9"/></symbol>
+  <symbol id="i-ice" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 2l5 5-5 5-5-5z"/><path d="M12 12l5 5-5 5-5-5z"/><path d="M2 12l5-5 5 5-5 5z"/><path d="M22 12l-5-5-5 5 5 5z"/></symbol>
+
+  <symbol id="i-pv1" viewBox="0 0 24 24" fill="none" stroke-width="1.5">
+    <rect x="4" y="6" width="16" height="12" rx="2" fill="rgba(108,212,255,0.08)" stroke="#6cd4ff"/>
+    <rect x="7" y="9" width="4" height="6" rx=".5" fill="rgba(108,212,255,0.12)" stroke="#6cd4ff"/>
+    <rect x="13" y="9" width="4" height="6" rx=".5" fill="rgba(108,212,255,0.12)" stroke="#6cd4ff"/>
+    <path d="M4 12h16" stroke="#6cd4ff" opacity=".4"/>
+  </symbol>
+  <symbol id="i-pv2" viewBox="0 0 24 24" fill="none" stroke-width="1.5">
+    <rect x="3" y="5" width="18" height="14" rx="2.5" fill="rgba(108,212,255,0.06)" stroke="#6cd4ff"/>
+    <rect x="6" y="8" width="5" height="8" rx="1" fill="rgba(108,212,255,0.1)" stroke="#6cd4ff"/>
+    <rect x="13" y="8" width="5" height="8" rx="1" fill="rgba(108,212,255,0.1)" stroke="#6cd4ff"/>
+    <path d="M10 20l2-2 2 2" stroke="#6cd4ff" opacity=".3" stroke-width="1"/>
+    <circle cx="12" cy="16" r="1.5" fill="rgba(108,212,255,0.15)" stroke="#6cd4ff"/>
+  </symbol>
+
+  <symbol id="i-fv1" viewBox="0 0 24 24" fill="none" stroke-width="1.5">
+    <rect x="8" y="5" width="8" height="14" rx="3.5" fill="rgba(224,165,39,0.08)" stroke="#e0a527"/>
+    <path d="M8 11h8" stroke="#e0a527" opacity=".4"/>
+    <path d="M10 3l2 2 2-2" stroke="#e0a527" opacity=".5" stroke-width="1.2"/>
+    <path d="M8 16h8" stroke="#e0a527" opacity=".3" stroke-width="1"/>
+  </symbol>
+  <symbol id="i-fv2" viewBox="0 0 24 24" fill="none" stroke-width="1.5">
+    <rect x="7" y="4" width="10" height="16" rx="4" fill="rgba(224,165,39,0.06)" stroke="#e0a527"/>
+    <rect x="9" y="6" width="6" height="5" rx="1" fill="rgba(224,165,39,0.1)" stroke="#e0a527"/>
+    <path d="M9 13h6" stroke="#e0a527" opacity=".4"/>
+    <ellipse cx="12" cy="19" rx="4" ry="2" fill="rgba(224,165,39,0.08)" stroke="#e0a527" opacity=".5"/>
+    <circle cx="12" cy="7" r="1" fill="rgba(224,165,39,0.2)"/>
+  </symbol>
+
+  <symbol id="i-ev1" viewBox="0 0 24 24" fill="none" stroke-width="1.5">
+    <path d="M10 5h4l1 6-1 3H9l-1-3z" fill="rgba(47,191,106,0.08)" stroke="#2fbf6a"/>
+    <path d="M9 14l-1 3M15 14l1 3" stroke="#2fbf6a" opacity=".6" stroke-width="1.2"/>
+    <path d="M8 17h8" stroke="#2fbf6a" opacity=".3"/>
+    <circle cx="12" cy="9" r="1.5" fill="rgba(47,191,106,0.15)" stroke="#2fbf6a"/>
+  </symbol>
+  <symbol id="i-ev2" viewBox="0 0 24 24" fill="none" stroke-width="1.5">
+    <path d="M8 4h8l1.5 7-1 3.5h-9l-1-3.5z" fill="rgba(47,191,106,0.06)" stroke="#2fbf6a"/>
+    <rect x="9" y="13" width="6" height="4" rx="1.5" fill="rgba(47,191,106,0.1)" stroke="#2fbf6a"/>
+    <path d="M9 19l-1 2M15 19l1 2" stroke="#2fbf6a" opacity=".5" stroke-width="1.2"/>
+    <circle cx="12" cy="7" r="2" fill="rgba(47,191,106,0.12)" stroke="#2fbf6a" opacity=".7"/>
+  </symbol>
+
+  <symbol id="i-sv1" viewBox="0 0 24 24" fill="none" stroke-width="1.5">
+    <path d="M5 7l3-2.5 8 2.5 4 1.5v7l-4 1.5-8 2.5-3-2.5V7z" fill="rgba(106,114,128,0.08)" stroke="#6a7280"/>
+    <path d="M8 4.5v15" stroke="#6a7280" opacity=".3"/>
+    <path d="M16 7v13" stroke="#6a7280" opacity=".2"/>
+    <circle cx="12" cy="12" r="1.5" fill="rgba(106,114,128,0.12)" stroke="#6a7280" opacity=".5"/>
+  </symbol>
+  <symbol id="i-sv2" viewBox="0 0 24 24" fill="none" stroke-width="1.5">
+    <path d="M6 15l3-2h6l3 2v-4l-3-2H9l-3 2z" fill="rgba(106,114,128,0.06)" stroke="#6a7280"/>
+    <path d="M6 9l3-2h6l3 2" stroke="#6a7280" opacity=".5"/>
+    <path d="M9 7v6M15 7v6" stroke="#6a7280" opacity=".3"/>
+    <circle cx="12" cy="12" r="3" fill="rgba(106,114,128,0.08)" stroke="#6a7280" opacity=".4"/>
+    <circle cx="12" cy="12" r="1" fill="rgba(106,114,128,0.15)"/>
+  </symbol>
+
+  <symbol id="i-pv3" viewBox="0 0 24 24" fill="none" stroke-width="1.5">
+    <rect x="3" y="4" width="18" height="16" rx="1.5" fill="rgba(108,212,255,0.06)" stroke="#6cd4ff"/>
+    <rect x="5" y="6" width="6" height="5" rx=".5" fill="rgba(108,212,255,0.12)" stroke="#6cd4ff"/>
+    <rect x="13" y="6" width="6" height="5" rx=".5" fill="rgba(108,212,255,0.12)" stroke="#6cd4ff"/>
+    <rect x="5" y="13" width="6" height="5" rx=".5" fill="rgba(108,212,255,0.12)" stroke="#6cd4ff"/>
+    <rect x="13" y="13" width="6" height="5" rx=".5" fill="rgba(108,212,255,0.12)" stroke="#6cd4ff"/>
+    <path d="M3 10h18" stroke="#6cd4ff" opacity=".15"/>
+    <circle cx="12" cy="10" r=".8" fill="rgba(108,212,255,0.25)"/>
+  </symbol>
+  <symbol id="i-fv3" viewBox="0 0 24 24" fill="none" stroke-width="1.5">
+    <rect x="4" y="5" width="7" height="14" rx="2" fill="rgba(224,165,39,0.06)" stroke="#e0a527"/>
+    <rect x="13" y="5" width="7" height="14" rx="2" fill="rgba(224,165,39,0.06)" stroke="#e0a527"/>
+    <path d="M11 7h2v2h-2zM11 15h2v2h-2z" fill="rgba(224,165,39,0.1)" stroke="#e0a527"/>
+    <path d="M6 10h3M15 10h3" stroke="#e0a527" opacity=".25"/>
+    <path d="M7.5 5v-1.5M16.5 5v-1.5" stroke="#e0a527" opacity=".45" stroke-width="1.2"/>
+    <path d="M6 19l1.5 1.5M18 19l-1.5 1.5" stroke="#e0a527" opacity=".35" stroke-width="1"/>
+  </symbol>
+  <symbol id="i-ev3" viewBox="0 0 24 24" fill="none" stroke-width="1.5">
+    <path d="M6 5l3-2h6l3 2v5l-2 2-4 3-4-3-2-2V5z" fill="rgba(47,191,106,0.06)" stroke="#2fbf6a"/>
+    <rect x="7" y="12" width="10" height="4" rx="1" fill="rgba(47,191,106,0.1)" stroke="#2fbf6a"/>
+    <path d="M7 16l-1 2.5M17 16l1 2.5" stroke="#2fbf6a" opacity=".5" stroke-width="1.2"/>
+    <path d="M5 18.5h14" stroke="#2fbf6a" opacity=".15"/>
+    <circle cx="12" cy="8" r="2.5" fill="rgba(47,191,106,0.08)" stroke="#2fbf6a" opacity=".45"/>
+    <path d="M9 8h6" stroke="#2fbf6a" opacity=".3" stroke-width=".8"/>
+  </symbol>
+  <symbol id="i-sv3" viewBox="0 0 24 24" fill="none" stroke-width="1.5">
+    <polygon points="12,2 21,7 21,17 12,22 3,17 3,7" fill="rgba(106,114,128,0.06)" stroke="#6a7280"/>
+    <polygon points="12,6 17,9 17,15 12,18 7,15 7,9" fill="rgba(106,114,128,0.08)" stroke="#6a7280" opacity=".45"/>
+    <circle cx="12" cy="12" r="2.5" fill="rgba(106,114,128,0.1)" stroke="#6a7280" opacity=".35"/>
+    <line x1="12" y1="2" x2="12" y2="6" stroke="#6a7280" opacity=".25"/>
+    <line x1="12" y1="18" x2="12" y2="22" stroke="#6a7280" opacity=".25"/>
+    <circle cx="12" cy="12" r=".8" fill="rgba(106,114,128,0.2)"/>
+  </symbol>
+
+  <symbol id="i-c" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M4 12l5 5L20 6"/></symbol>
+  <symbol id="i-w" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L3 18l3 3 6.3-6.3a4 4 0 0 0 5.4-5.4l-2.6 2.6-2-2z"/></symbol>
+  <symbol id="i-m" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="5" y="2" width="14" height="20" rx="7"/><path d="M12 6v4"/></symbol>
+  <symbol id="i-l" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></symbol>
+</svg>
+
+<div class="stage">
+  <div class="app">
+    <div class="topbar">
+      <div class="topbar-left">
+        <div class="lv-badge"><span class="lv-i"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="#6cd4ff" stroke-width="2"><circle cx="12" cy="12" r="6"/><path d="M12 8v5l3 2"/></svg></span> Lv. <span id="mLv">3</span></div>
+        <div class="topbar-title">Rocket Construction</div>
+      </div>
+      <div class="topbar-right">
+        <div class="cr-display"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#e0a527" stroke-width="1.7"><circle cx="12" cy="12" r="8"/><path d="M12 8v8M9 12h6"/></svg> <span id="cAmt">12,450</span></div>
+      </div>
+    </div>
+
+    <div class="body-layout">
+      <div class="top-zone">
+        <div class="canvas">
+          <div class="df df-tl"><div class="df-l">Assembly</div><div class="df-v">STATUS: <span id="bStatus">EMPTY</span></div></div>
+          <div class="df df-tr"><div class="df-l">Parts</div><div class="df-v"><span id="pCount">0</span>/4</div></div>
+          <div class="cb cb-tl"><svg viewBox="0 0 28 28" fill="none" stroke="rgba(108,212,255,0.5)" stroke-width="2"><path d="M2 26V2h24"/><circle cx="7" cy="7" r="1.5" fill="rgba(108,212,255,0.5)"/><circle cx="2" cy="2" r="2" fill="rgba(108,212,255,0.15)" stroke="rgba(108,212,255,0.3)" stroke-width="1"/><path d="M6 2v1.5M8 2v1.5M2 8h1.5M2 10h1.5M2 6h1.5M2 4h1.5" stroke-width=".8"/></svg></div>
+          <div class="cb cb-tr"><svg viewBox="0 0 28 28" fill="none" stroke="rgba(108,212,255,0.5)" stroke-width="2"><path d="M2 26V2h24"/><circle cx="7" cy="7" r="1.5" fill="rgba(108,212,255,0.5)"/><circle cx="2" cy="2" r="2" fill="rgba(108,212,255,0.15)" stroke="rgba(108,212,255,0.3)" stroke-width="1"/><path d="M6 2v1.5M8 2v1.5M2 8h1.5M2 10h1.5M2 6h1.5M2 4h1.5" stroke-width=".8"/></svg></div>
+          <div class="cb cb-bl"><svg viewBox="0 0 28 28" fill="none" stroke="rgba(108,212,255,0.5)" stroke-width="2"><path d="M2 26V2h24"/><circle cx="7" cy="7" r="1.5" fill="rgba(108,212,255,0.5)"/><circle cx="2" cy="2" r="2" fill="rgba(108,212,255,0.15)" stroke="rgba(108,212,255,0.3)" stroke-width="1"/><path d="M6 2v1.5M8 2v1.5M2 8h1.5M2 10h1.5M2 6h1.5M2 4h1.5" stroke-width=".8"/></svg></div>
+          <div class="cb cb-br"><svg viewBox="0 0 28 28" fill="none" stroke="rgba(108,212,255,0.5)" stroke-width="2"><path d="M2 26V2h24"/><circle cx="7" cy="7" r="1.5" fill="rgba(108,212,255,0.5)"/><circle cx="2" cy="2" r="2" fill="rgba(108,212,255,0.15)" stroke="rgba(108,212,255,0.3)" stroke-width="1"/><path d="M6 2v1.5M8 2v1.5M2 8h1.5M2 10h1.5M2 6h1.5M2 4h1.5" stroke-width=".8"/></svg></div>
+          <div class="reticle-frame"><svg viewBox="0 0 540 340" fill="none" stroke="rgba(108,212,255,0.09)" stroke-width="1"><circle cx="270" cy="170" r="140"/><circle cx="270" cy="170" r="155"/><circle cx="270" cy="170" r="168" stroke-dasharray="3 6"/><path d="M270 20v40M270 300v40M40 170h50M450 170h50" stroke-width=".8"/></svg></div>
+
+          <div class="canvas-bg-glow"></div>
+          <div class="canvas-scan"></div>
+
+          <div class="df df-bl"><div class="df-l">Vessel <span class="status-dot online" style="vertical-align:middle;margin-left:2px"></span></div><div class="df-v">EXPLORER-MK3</div></div>
+
+          <div class="hull" id="hull">
+            <div class="hull-outline"></div>
+            <div class="slot s-payload" data-s="payload" data-p=""><div class="sl">Payload</div></div>
+            <div class="slot s-fuel" data-s="fuel" data-p=""><div class="sl">Fuel</div></div>
+            <div class="slot s-engine" data-s="engine" data-p=""><div class="sl">Engine</div></div>
+            <div class="slot s-strut" data-s="structure" data-p=""><div class="sl">Frame</div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="presets">
+          <div class="pr">
+            <button class="pr-b" data-preset="cargo">Cargo Hauler</button>
+            <button class="pr-b" data-preset="speed">Speed Runner</button>
+            <button class="pr-b" data-preset="tank">Long Ranger</button>
+            <button class="pr-b" data-preset="prospect">Prospector</button>
+          </div>
+        </div>
+        <div class="ph"><h3>Parts</h3><span class="ph-c" id="pAvail">6 avail</span></div>
+        <div class="pb" id="pb"></div>
+        <div class="pf">
+          <span class="pf-h"><svg><use href="#i-m"/></svg> Add or drag</span>
+          <button class="btn-p" id="cBtn" disabled style="background:var(--ln-cyan);color:#0e1526"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L3 18l3 3 6.3-6.3a4 4 0 0 0 5.4-5.4l-2.6 2.6-2-2z"/></svg>Build</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="sw">
+      <div class="scap">Step 3 of 4</div>
+      <div class="sbar">
+        <span class="sp done" data-href="landnam-mission-board.html"><svg style="width:12px;height:12px"><use href="#i-c"/></svg>Mission</span>
+        <span class="sa">&rarr;</span>
+        <span class="sp done" data-href="landnam-target.html"><svg style="width:12px;height:12px"><use href="#i-c"/></svg>Target</span>
+        <span class="sa">&rarr;</span>
+        <span class="sp cur">Rocket</span>
+        <span class="sa">&rarr;</span>
+        <span class="sp" id="swLaunch">Launch</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="confirm-overlay" id="cOverlay">
+  <div class="confirm-sheet">
+    <h3>Confirm Build</h3>
+    <p>Build this rocket configuration. Resources will be deducted immediately.</p>
+    <div style="margin-bottom:var(--space-4);font-size:10px;color:var(--ln-text-dim)"><span id="cParts">0</span>/4 parts</div>
+    <div class="confirm-actions">
+      <button class="btn-ghost" id="cancelC">Cancel</button>
+      <button class="btn-primary btn-amber" id="finalC">Confirm Build (₣12.4M)</button>
+    </div>
+  </div>
+</div>
+
+<div class="dg" id="dg" style="display:none"></div>
+
+<script>
+  var PART_VARIANTS = [
+    { id:'pv1',type:'payload',name:'Payload V1',slot:'payload',icon:'i-pv1',stats:{cargo:4},cost:{steel:15,silicon:5},tier:1,locked:false,
+      color:'#6cd4ff',bg:'rgba(108,212,255,0.08)' },
+    { id:'pv2',type:'payload',name:'Payload V2',slot:'payload',icon:'i-pv2',stats:{cargo:8},cost:{steel:30,platinum:4},tier:2,locked:true,
+      color:'#6cd4ff',bg:'rgba(108,212,255,0.12)' },
+    { id:'fv1',type:'fuel',name:'Fuel V1',slot:'fuel',icon:'i-fv1',stats:{range:3},cost:{steel:10,silicon:8},tier:1,locked:false,
+      color:'#e0a527',bg:'rgba(224,165,39,0.08)' },
+    { id:'fv2',type:'fuel',name:'Fuel V2',slot:'fuel',icon:'i-fv2',stats:{range:6},cost:{steel:20,platinum:6},tier:2,locked:true,
+      color:'#e0a527',bg:'rgba(224,165,39,0.12)' },
+    { id:'ev1',type:'engine',name:'Engine V1',slot:'engine',icon:'i-ev1',stats:{drill:2,speed:3},cost:{steel:20,silicon:12},tier:1,locked:false,
+      color:'#2fbf6a',bg:'rgba(47,191,106,0.08)' },
+    { id:'ev2',type:'engine',name:'Engine V2',slot:'engine',icon:'i-ev2',stats:{drill:4,speed:5},cost:{steel:35,platinum:8},tier:2,locked:true,
+      color:'#2fbf6a',bg:'rgba(47,191,106,0.12)' },
+    { id:'sv1',type:'structure',name:'Frame V1',slot:'structure',icon:'i-sv1',stats:{orbit:1,durability:2},cost:{steel:12},tier:1,locked:false,
+      color:'#6a7280',bg:'rgba(106,114,128,0.08)' },
+    { id:'sv2',type:'structure',name:'Frame V2',slot:'structure',icon:'i-sv2',stats:{orbit:3,durability:4},cost:{steel:25,platinum:2},tier:2,locked:true,
+      color:'#6a7280',bg:'rgba(106,114,128,0.12)' },
+    { id:'pv3',type:'payload',name:'Payload V3',slot:'payload',icon:'i-pv3',stats:{cargo:12},cost:{steel:45,platinum:10,gold:5},tier:3,locked:true,
+      color:'#6cd4ff',bg:'rgba(108,212,255,0.16)' },
+    { id:'fv3',type:'fuel',name:'Fuel V3',slot:'fuel',icon:'i-fv3',stats:{range:10},cost:{steel:30,platinum:12,ice:5},tier:3,locked:true,
+      color:'#e0a527',bg:'rgba(224,165,39,0.16)' },
+    { id:'ev3',type:'engine',name:'Engine V3',slot:'engine',icon:'i-ev3',stats:{drill:6,speed:9},cost:{steel:50,platinum:15,gold:3},tier:3,locked:true,
+      color:'#2fbf6a',bg:'rgba(47,191,106,0.16)' },
+    { id:'sv3',type:'structure',name:'Frame V3',slot:'structure',icon:'i-sv3',stats:{orbit:5,durability:8},cost:{steel:40,platinum:8,gold:3},tier:3,locked:true,
+      color:'#6a7280',bg:'rgba(106,114,128,0.16)' }
+  ];
+
+  var RI={steel:'i-steel',silicon:'i-silicon',platinum:'i-platinum',gold:'i-gold',ice:'i-ice'};
+  var GL={payload:'PAYLOAD',fuel:'FUEL',engine:'ENGINE',structure:'STRUCTURE'};
+  var GR=['payload','fuel','engine','structure'];
+  var TC={payload:'var(--ln-cyan)',fuel:'var(--ln-amber)',engine:'var(--ln-ok)',structure:'#6a7280'};
+
+  var installed={};
+  var pb=document.getElementById('pb');
+  var hull=document.getElementById('hull');
+  var pCount=document.getElementById('pCount');
+  var bStatus=document.getElementById('bStatus');
+  var cBtn=document.getElementById('cBtn');
+  var cOverlay=document.getElementById('cOverlay');
+  var cParts=document.getElementById('cParts');
+  var dg=document.getElementById('dg');
+  var pAvail=document.getElementById('pAvail');
+
+  function render(){
+    pb.innerHTML='';
+    GR.forEach(function(g){
+      var vs=PART_VARIANTS.filter(function(p){return p.type===g});
+      var ge=document.createElement('div');ge.className='pg';
+      var h=document.createElement('div');h.className='pg-l';h.textContent=GL[g];ge.appendChild(h);
+      vs.forEach(function(pt){
+        var c=document.createElement('div');
+        c.className='vc'+(pt.locked?' locked':'');
+        c.dataset.pid=pt.id;c.draggable=!pt.locked;
+        var ch='';
+        Object.keys(pt.cost).forEach(function(r){ch+='<cc><svg><use href="#'+RI[r]+'"/></svg>'+pt.cost[r]+'</cc>'});
+        c.innerHTML=
+          '<div class="vci" style="border:1px solid '+pt.color+';background:'+pt.bg+'">'+
+            '<svg style="stroke:'+pt.color+'"><use href="#'+pt.icon+'"/></svg>'+
+            (pt.tier>1?'<span class="vci-t" style="background:'+pt.color+'">'+pt.tier+'</span>':'')+
+          '</div>'+
+          '<div class="vci-info">'+
+            '<div class="vci-n">'+pt.name+(pt.locked?' <svg style="width:8px;height:8px;vertical-align:middle" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>':'')+'</div>'+
+            (ch?'<div class="vci-c">'+ch+'</div>':'')+
+          '</div>'+
+          '<div class="va">'+
+            (pt.locked?'':'<button class="va-b" data-pid="'+pt.id+'" style="background:'+pt.color+';color:#0e1526">Add</button>')+
+            '<span class="i-lbl"><svg style="width:8px;height:8px;vertical-align:middle" viewBox="0 0 24 24" fill="none" stroke="#2fbf6a" stroke-width="2.5"><path d="M4 12l5 5L20 6"/></svg></span>'+
+          '</div>';
+        ge.appendChild(c);
+      });
+      pb.appendChild(ge);
+    });
+    sync();
+  }
+
+  function gp(id){return PART_VARIANTS.find(function(p){return p.id===id})}
+
+  function sync(){
+    document.querySelectorAll('.vc').forEach(function(c){
+      var pid=c.dataset.pid;
+      var ii=Object.values(installed).indexOf(pid)!==-1;
+      c.classList.toggle('installed',ii);
+      c.draggable=!ii&&!c.classList.contains('locked');
+    });
+    var a=PART_VARIANTS.filter(function(p){return!p.locked}).length;
+    pAvail.textContent=a+' avail';
+  }
+
+  function inst(pid){
+    var pt=gp(pid);if(!pt||pt.locked)return;
+    var s=pt.slot;if(installed[s]===pid)return;
+    var se=hull.querySelector('[data-s="'+s+'"]');if(!se)return;
+    installed[s]=pid;se.classList.add('filled');se.dataset.p=pid;
+    var i=document.createElement('div');i.className='ip';
+    i.innerHTML='<svg style="stroke:'+pt.color+'"><use href="#'+pt.icon+'"/></svg><div class="ip-l" style="color:'+pt.color+'">'+pt.name+'</div>';
+    var ex=se.querySelector('.ip');if(ex)ex.remove();se.appendChild(i);
+    var rb=se.querySelector('.rm');if(rb)rb.remove();
+    var r=document.createElement('div');r.className='rm';r.textContent='\u00d7';
+    r.addEventListener('click',function(e){e.stopPropagation();rem(s);});
+    se.appendChild(r);upd();sync();
+  }
+
+  function rem(s){
+    if(!installed[s])return;delete installed[s];
+    var se=hull.querySelector('[data-s="'+s+'"]');
+    if(se){se.classList.remove('filled');se.dataset.p='';
+      var i=se.querySelector('.ip');if(i)i.remove();
+      var r=se.querySelector('.rm');if(r)r.remove();
+    }upd();sync();
+  }
+
+  function upd(){
+    var st={cargo:0,orbit:0,drill:0,speed:0,range:0,durability:0};
+    Object.values(installed).forEach(function(pid){
+      var pt=gp(pid);if(pt)Object.keys(pt.stats).forEach(function(k){st[k]=(st[k]||0)+pt.stats[k]});
+    });
+    var m={cargo:'sCargo',orbit:'sOrbit',drill:'sDrill',speed:'sSpeed',range:'sRange',durability:'sDurability'};
+    Object.keys(m).forEach(function(k){
+      var el=document.getElementById(m[k]);if(!el)return;
+      var v=st[k];if(v>0){el.textContent=v;el.classList.remove('empty')}else{el.textContent='--';el.classList.add('empty')}
+    });
+    var c=Object.keys(installed).length;
+    pCount.textContent=c;bStatus.textContent=c===0?'EMPTY':c>=4?'COMPLETE':'IN PROGRESS';
+    cBtn.disabled=c===0;cParts.textContent=c;
+  }
+
+  pb.addEventListener('click',function(e){
+    var b=e.target.closest('.va-b');if(!b)return;
+    var pid=b.dataset.pid;var pt=gp(pid);if(!pt||pt.locked)return;inst(pid);
+  });
+  hull.addEventListener('click',function(e){
+    if(e.target.closest('.rm'))return;
+    var se=e.target.closest('.slot');if(!se)return;
+    var s=se.dataset.s;if(installed[s])rem(s);
+  });
+
+  var dd=null;
+  document.addEventListener('dragstart',function(e){
+    var c=e.target.closest('.vc');if(!c||c.classList.contains('installed')||c.classList.contains('locked')){e.preventDefault();return}
+    var pid=c.dataset.pid;var pt=gp(pid);if(!pt){e.preventDefault();return}
+    dd={pid:pid,s:pt.slot};c.classList.add('dragging');
+    var gi=c.querySelector('.vci svg').cloneNode(true);
+    dg.innerHTML='';dg.appendChild(gi);dg.style.display='grid';
+    e.dataTransfer.setDragImage(dg,20,20);e.dataTransfer.effectAllowed='copy';
+    var ts=hull.querySelector('[data-s="'+pt.slot+'"]');if(ts)ts.classList.add('drag-over');
+  });
+  document.addEventListener('drag',function(e){if(dd){dg.style.left=e.clientX+'px';dg.style.top=e.clientY+'px'}});
+  document.addEventListener('dragover',function(e){e.preventDefault();e.dataTransfer.dropEffect='copy'});
+  document.addEventListener('dragenter',function(e){var s=e.target.closest('.slot');if(s&&dd&&s.dataset.s===dd.s)s.classList.add('drag-over')});
+  document.addEventListener('dragleave',function(e){var s=e.target.closest('.slot');if(s)s.classList.remove('drag-over')});
+  document.addEventListener('drop',function(e){
+    e.preventDefault();document.querySelectorAll('.slot.drag-over').forEach(function(s){s.classList.remove('drag-over')});
+    if(!dd){cDS();return}inst(dd.pid);dd=null;cDS();
+  });
+  document.addEventListener('dragend',function(){dd=null;cDS()});
+  function cDS(){dg.style.display='none';document.querySelectorAll('.vc.dragging').forEach(function(c){c.classList.remove('dragging')});document.querySelectorAll('.slot.drag-over').forEach(function(s){s.classList.remove('drag-over')})}
+
+  cBtn.addEventListener('click',function(){if(cBtn.disabled)return;cOverlay.classList.add('open')});
+  document.getElementById('cancelC').addEventListener('click',function(){cOverlay.classList.remove('open')});
+  document.getElementById('finalC').addEventListener('click',function(){
+    cOverlay.classList.remove('open');bStatus.textContent='BUILT';
+    cBtn.disabled=false;cBtn.onclick=function(){window.location.href='landnam-launch.html'};
+    cBtn.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M4 12l5 5L20 6"/></svg>Continue to Launch';
+    var swL=document.getElementById('swLaunch');
+    swL.classList.add('done');swL.dataset.href='landnam-launch.html';swL.style.cursor='pointer';
+    swL.innerHTML='<svg style="width:12px;height:12px"><use href="#i-c"/></svg>Launch';
+    swL.addEventListener('click',function(){window.location.href='landnam-launch.html'});
+  });
+  cOverlay.addEventListener('click',function(e){if(e.target===cOverlay)cOverlay.classList.remove('open')});
+
+  /* ── Presets ── */
+  var PRESETS={
+    cargo:{label:'Cargo Hauler',parts:{payload:'pv1',fuel:'fv1',engine:'ev1',structure:'sv1'}},
+    speed:{label:'Speed Runner',parts:{payload:null,fuel:'fv1',engine:'ev1',structure:null}},
+    tank:{label:'Long Ranger',parts:{payload:null,fuel:'fv1',engine:null,structure:'sv1'}},
+    prospect:{label:'Prospector',parts:{payload:'pv1',fuel:null,engine:null,structure:'sv1'}}
+  };
+  document.querySelectorAll('.pr-b').forEach(function(b){
+    b.addEventListener('click',function(){
+      document.querySelectorAll('.pr-b').forEach(function(x){x.classList.remove('active')});
+      b.classList.add('active');
+      var p=PRESETS[b.dataset.preset];if(!p)return;
+      GR.forEach(function(s){rem(s)});
+      Object.keys(p.parts).forEach(function(slot){
+        var pid=p.parts[slot];
+        if(pid)inst(pid);
+      });
+    });
+  });
+
+  /* ── Step nav links ── */
+  document.querySelectorAll('.sp[data-href]').forEach(function(sp){
+    sp.addEventListener('click',function(){window.location.href=sp.dataset.href});
+    sp.style.cursor='pointer';
+  });
+
+  render();upd();
+</script>
+</body>
+</html>

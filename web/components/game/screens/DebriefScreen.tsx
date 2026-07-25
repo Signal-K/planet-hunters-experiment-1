@@ -69,7 +69,7 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
 
         {/* ── Delivery receipt ─────────────────────────────────────────────── */}
         <div style={{
-          background: 'rgba(8,14,26,0.7)',
+          background: 'rgba(8,14,26,0.7)', backdropFilter: 'var(--ln-glass-blur)', WebkitBackdropFilter: 'var(--ln-glass-blur)',
           border: '1px solid var(--ln-hairline)',
           borderLeft: `3px solid ${delivered ? 'var(--ln-ok)' : 'var(--ln-crit)'}`,
           borderRadius: 12, padding: '12px 16px',
@@ -119,7 +119,7 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
         {/* ── Contract payment ─────────────────────────────────────────────── */}
         {resolved && (
           <div style={{
-            background: 'rgba(8,14,26,0.7)',
+            background: 'rgba(8,14,26,0.7)', backdropFilter: 'var(--ln-glass-blur)', WebkitBackdropFilter: 'var(--ln-glass-blur)',
             border: '1px solid var(--ln-hairline)',
             borderLeft: `3px solid ${delivered ? 'var(--ln-amber)' : 'var(--ln-crit)'}`,
             borderRadius: 12, padding: '12px 16px',
@@ -158,7 +158,7 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
         )}
         {!delivered && !resolved && (
           <div style={{
-            background: 'rgba(8,14,26,0.7)',
+            background: 'rgba(8,14,26,0.7)', backdropFilter: 'var(--ln-glass-blur)', WebkitBackdropFilter: 'var(--ln-glass-blur)',
             border: '1px solid rgba(220,50,50,0.2)',
             borderLeft: '3px solid var(--ln-crit)',
             borderRadius: 12, padding: '12px 16px',

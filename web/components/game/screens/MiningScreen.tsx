@@ -332,7 +332,7 @@ export default function MiningScreen({ mission, target, onComplete, onBack, onAb
       {/* First-time-in-Free-Ops-mining explainer — dismiss-once, mirrors the mission-board explainer's ack pattern but covers what changes about the mining run itself (sell the haul yourself, no daily limit). */}
       {isFreeOps && showFreeOpsMiningExplainer && (
         <div style={{ position: 'absolute', top: 64, left: 14, right: 14, zIndex: 60 }}>
-          <Panel accent="var(--ln-amber)" style={{ padding: 12, position: 'relative' }}>
+          <Panel accent="var(--ln-amber)" surface="glass" style={{ padding: 12, position: 'relative' }}>
             <button
               data-testid="dismiss-freeops-mining-explainer"
               onClick={dismissFreeOpsMiningExplainer}
@@ -395,7 +395,7 @@ export default function MiningScreen({ mission, target, onComplete, onBack, onAb
 
       {showFreeOpsSuccessPopup && (
         <div data-testid="freeops-first-success-popup" style={{ position: 'absolute', inset: 0, zIndex: 75, background: 'rgba(3,6,12,0.76)', display: 'flex', alignItems: 'flex-end', padding: 16 }}>
-          <Panel accent="var(--ln-ok)" style={{ padding: 14, width: '100%', boxShadow: '0 18px 48px rgba(0,0,0,0.55)' }}>
+          <Panel accent="var(--ln-ok)" surface="glass" style={{ padding: 14, width: '100%', boxShadow: '0 18px 48px rgba(0,0,0,0.55)' }}>
             <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 10, fontWeight: 800, letterSpacing: '0.22em', color: 'var(--ln-ok)', textTransform: 'uppercase', marginBottom: 6 }}>
               First Free Ops Haul Secured
             </div>

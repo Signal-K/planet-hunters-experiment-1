@@ -1,0 +1,359 @@
+/* Direct transcription of the OD reference's landnam-mission-board.html —
+   selectors/values ported as literally as a real production PWA screen
+   (full-bleed, no floating centered card chrome) allows. Source:
+   open-design/.od/projects/eb21a3d2-afa6-4cba-bfed-46bb544e7844/
+   landnam-mission-board.html + landnam-design-system.css, 2026-07-25. */
+
+.canvas {
+  position: relative;
+  padding: 22px 24px 10px;
+  background:
+    repeating-linear-gradient(0deg, rgba(112,217,234,0.06) 0px, rgba(112,217,234,0.06) 1px, transparent 1px, transparent 26px),
+    repeating-linear-gradient(90deg, rgba(112,217,234,0.06) 0px, rgba(112,217,234,0.06) 1px, transparent 1px, transparent 26px),
+    radial-gradient(ellipse at 50% 30%, #101f40 0%, #08101e 65%, #040810 100%);
+  border-radius: 8px;
+}
+
+.cornerBracket {
+  position: absolute;
+  z-index: 5;
+  pointer-events: none;
+  width: 24px;
+  height: 24px;
+}
+.cornerBracketTl { top: -1px; left: -1px; }
+.cornerBracketTr { top: -1px; right: -1px; transform: scaleX(-1); }
+.cornerBracketBl { bottom: -1px; left: -1px; transform: scaleY(-1); }
+.cornerBracketBr { bottom: -1px; right: -1px; transform: scale(-1, -1); }
+
+.boardHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+  position: relative;
+  z-index: 2;
+}
+.boardHeaderTitle {
+  font-family: var(--ln-font-display);
+  font-weight: 800;
+  font-size: 19px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ln-text);
+}
+.boardHeaderSub {
+  font-family: var(--ln-font-display);
+  font-weight: 700;
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ln-text-muted);
+  margin-top: 2px;
+}
+.boardHeaderCount {
+  font-family: var(--ln-font-mono);
+  font-size: 13px;
+  color: var(--ln-cyan);
+  letter-spacing: 0.05em;
+}
+
+.sortSelect {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 10px;
+  border-radius: 4px;
+  border: 1px solid rgba(112,217,234,.16);
+  background: rgba(112,217,234,.05);
+  font-family: var(--ln-font-display);
+  font-weight: 700;
+  font-size: 10px;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: var(--ln-text-muted);
+}
+
+.cardList {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  position: relative;
+  z-index: 2;
+}
+
+.card {
+  display: grid;
+  grid-template-columns: 44px 1fr auto;
+  gap: 14px;
+  align-items: center;
+  padding: 16px 18px;
+  border-radius: 6px;
+  border: 1px solid rgba(112,217,234,.14);
+  background: rgba(112,217,234,.03);
+  cursor: pointer;
+  transition: background .12s, border-color .12s, box-shadow .12s;
+  position: relative;
+  text-align: left;
+  width: 100%;
+}
+.card:hover { background: rgba(112,217,234,.06); border-color: rgba(112,217,234,.28); }
+.cardSelected {
+  border-color: rgba(112,217,234,0.5);
+  background: rgba(112,217,234,0.08);
+  box-shadow: 0 0 0 1px rgba(112,217,234,0.2);
+}
+.cardLocked, .cardCooldown { opacity: 0.5; cursor: default; }
+.cardLocked:hover, .cardCooldown:hover { background: rgba(112,217,234,.03); border-color: rgba(112,217,234,.14); }
+.cardDone { opacity: 0.4; cursor: default; }
+
+.mark {
+  width: 44px;
+  height: 44px;
+  border-radius: 6px;
+  display: grid;
+  place-items: center;
+  font-family: var(--ln-font-display);
+  font-weight: 800;
+  font-size: 13px;
+  letter-spacing: 0.02em;
+  flex-shrink: 0;
+  color: #141018;
+}
+
+.cardMain { min-width: 0; }
+.cardTitle {
+  font-family: var(--ln-font-display);
+  font-weight: 800;
+  font-size: 15px;
+  letter-spacing: 0.01em;
+  text-transform: uppercase;
+  color: var(--ln-text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.cardClient {
+  font-family: var(--ln-font-display);
+  font-weight: 600;
+  font-size: 11px;
+  letter-spacing: 0.03em;
+  color: var(--ln-text-dim);
+  margin-top: 3px;
+}
+.cardWants {
+  font-family: var(--ln-font-body);
+  font-size: 13px;
+  color: var(--ln-text-muted);
+  margin-top: 6px;
+}
+.cardWants b { color: var(--ln-text-dim); font-weight: 700; }
+.cardRoute {
+  font-family: var(--ln-font-mono);
+  font-weight: 700;
+  font-size: 9px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ln-cyan);
+  margin-top: 3px;
+}
+.cardTags { display: flex; gap: 5px; margin-top: 8px; flex-wrap: wrap; }
+
+.tag {
+  font-family: var(--ln-font-mono);
+  font-weight: 700;
+  font-size: 9.5px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 3px 7px;
+  border-radius: 3px;
+  border: 1px solid rgba(255,255,255,.08);
+  background: rgba(255,255,255,.04);
+  color: var(--ln-text-muted);
+}
+.tagBurn { color: rgba(224,165,39,0.75); border-color: rgba(224,165,39,0.24); background: rgba(224,165,39,0.08); }
+.tagJob { color: var(--ln-cyan); border-color: rgba(112,217,234,0.2); background: rgba(112,217,234,0.06); }
+.tagTwostop { color: var(--ln-ok); border-color: rgba(90,208,126,0.2); background: rgba(90,208,126,0.06); }
+
+.cardSide { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; flex-shrink: 0; }
+.cardPay {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-family: var(--ln-font-mono);
+  font-weight: 800;
+  font-size: 17px;
+  color: var(--ln-text);
+  white-space: nowrap;
+}
+.cardPayIcon { color: var(--ln-amber); }
+.cardBtn {
+  font-family: var(--ln-font-display);
+  font-weight: 800;
+  font-size: 10.5px;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  padding: 8px 16px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  white-space: nowrap;
+  background: var(--ln-cyan);
+  color: var(--ln-text-on-cyan);
+}
+.cardBtn:hover { filter: brightness(1.15); }
+.cardBtnDisabled {
+  background: rgba(112,217,234,0.1);
+  color: var(--ln-text-muted);
+  cursor: not-allowed;
+}
+
+.disclaimer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+  padding: 8px 12px;
+  border: 1px dashed rgba(112,217,234,0.14);
+  border-radius: 4px;
+  font-family: var(--ln-font-body);
+  font-size: 11px;
+  color: var(--ln-text-muted);
+  font-style: italic;
+}
+
+/* ── Contract Detail panel ── */
+.panel {
+  position: relative;
+  background: var(--ln-glass-panel);
+  border: 1px solid var(--ln-glass-border);
+  backdrop-filter: var(--ln-glass-blur);
+  -webkit-backdrop-filter: var(--ln-glass-blur);
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+}
+.panelHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 16px;
+  background: linear-gradient(90deg, rgba(112,217,234,0.08), transparent 60%);
+  border-bottom: 2px solid rgba(112,217,234,0.08);
+  border-radius: 8px 8px 0 0;
+}
+.panelHeader h3 {
+  font-family: var(--ln-font-display);
+  font-weight: 800;
+  font-size: 12px;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--ln-cyan);
+}
+.panelBody { flex: 1; min-height: 0; padding: 14px 16px; display: flex; flex-direction: column; gap: 10px; }
+
+.emptyState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  gap: 10px;
+  text-align: center;
+  padding: 24px 12px;
+}
+.emptyIcon {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 1.5px dashed rgba(112,217,234,0.16);
+  display: grid;
+  place-items: center;
+  color: rgba(112,217,234,0.25);
+}
+.emptyLabel {
+  font-family: var(--ln-font-display);
+  font-weight: 700;
+  font-size: 11px;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: rgba(112,217,234,0.28);
+}
+.emptyDesc { font-family: var(--ln-font-body); font-size: 12px; color: var(--ln-text-muted); line-height: 1.5; max-width: 32ch; }
+
+.detailHeading { font-family: var(--ln-font-display); font-weight: 800; font-size: 17px; letter-spacing: 0.02em; text-transform: uppercase; color: var(--ln-text); }
+.detailClient { font-family: var(--ln-font-display); font-weight: 600; font-size: 11px; letter-spacing: 0.05em; color: var(--ln-text-dim); }
+.detailWants { font-family: var(--ln-font-body); font-size: 12.5px; color: var(--ln-text-muted); padding-top: 4px; border-top: 1px solid rgba(255,255,255,.06); }
+.detailWants b { color: var(--ln-text-dim); font-weight: 700; }
+.detailRow { display: flex; gap: 6px; flex-wrap: wrap; }
+.detailChip {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px 10px;
+  border-radius: 4px;
+  font-family: var(--ln-font-display);
+  font-weight: 700;
+  font-size: 10.5px;
+  letter-spacing: .05em;
+  text-transform: uppercase;
+  border: 1px solid rgba(255,255,255,.08);
+  background: rgba(255,255,255,.03);
+  color: var(--ln-text-dim);
+}
+.detailChip b { font-family: var(--ln-font-mono); font-weight: 800; color: var(--ln-text); }
+.detailChipPay { color: rgba(224,165,39,0.8); border-color: rgba(224,165,39,0.24); background: rgba(224,165,39,0.06); }
+.detailChipPay b { color: rgba(224,165,39,0.9); }
+.detailChipAff { color: var(--ln-ok); border-color: rgba(90,208,126,0.2); background: rgba(90,208,126,0.05); }
+.detailChipAff b { color: var(--ln-ok); }
+
+.detailCta {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-family: var(--ln-font-display);
+  font-weight: 800;
+  font-size: 12.5px;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  padding: 11px 20px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  background: var(--ln-cyan);
+  color: var(--ln-text-on-cyan);
+}
+.detailCta:disabled { background: rgba(112,217,234,0.1); color: var(--ln-text-muted); cursor: not-allowed; }
+
+.detailDisclaimer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border: 1px dashed rgba(112,217,234,0.12);
+  border-radius: 4px;
+  font-family: var(--ln-font-body);
+  font-size: 11px;
+  color: var(--ln-text-muted);
+  font-style: italic;
+}
+
+/* ── Two-column layout — mockup's .body-layout, 821px breakpoint kept
+   identical to the mockup's own since it's the exact width where the
+   320px fixed detail panel plus a usable card list stop fighting for
+   space. ── */
+.layout {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+@media (min-width: 821px) {
+  .layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 320px;
+    align-items: start;
+    gap: 14px;
+  }
+  .panel { position: sticky; top: 12px; }
+}

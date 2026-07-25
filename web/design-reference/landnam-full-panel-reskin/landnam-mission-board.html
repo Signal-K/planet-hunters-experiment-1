@@ -1,0 +1,512 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+<title>Landnam — Mission Board</title>
+<link rel="stylesheet" href="landnam-design-system.css" />
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Oxanium:wght@400;700;800&family=Turret+Road:wght@400;700;800&display=swap');
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+  html,body{min-height:100dvh;background:var(--space-bg-far);color:var(--ln-text);font-family:var(--font-body)}
+  body{
+    background:radial-gradient(ellipse at 30% -15%, #2a4170 0%, var(--space-bg) 45%, var(--space-bg-far) 80%);
+    display:flex;align-items:center;justify-content:center;padding:16px
+  }
+  body::before{
+    content:'';position:fixed;inset:0;pointer-events:none;
+    background-image:radial-gradient(1px 1px at 6% 22%, rgba(255,255,255,0.5), transparent),
+      radial-gradient(1.5px 1.5px at 28% 55%, rgba(108,212,255,0.4), transparent),
+      radial-gradient(1px 1px at 45% 15%, rgba(255,255,255,0.4), transparent),
+      radial-gradient(1px 1px at 68% 78%, rgba(108,212,255,0.35), transparent),
+      radial-gradient(1.5px 1.5px at 82% 30%, rgba(255,255,255,0.3), transparent);
+    background-size:180px 180px;z-index:0
+  }
+
+  .stage{position:relative;z-index:1;width:min(1320px,100%)}
+
+  .app{
+    background:var(--ln-panel);border:2px solid rgba(108,212,255,0.08);border-radius:var(--radius-md);
+    backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);overflow:hidden;
+    box-shadow:0 30px 80px rgba(0,0,0,0.4);display:flex;flex-direction:column
+  }
+
+  /* ── Topbar ── */
+  .topbar{display:flex;align-items:center;justify-content:space-between;padding:8px 16px;background:rgba(14,21,38,0.6);border-bottom:2px solid rgba(108,212,255,0.06);box-shadow:0 1px 0 rgba(0,0,0,0.2)}
+  .topbar-left{display:flex;align-items:center;gap:10px}
+  .lv-badge{
+    display:flex;align-items:center;gap:4px;padding:3px 8px 3px 5px;border-radius:999px;
+    border:1px solid rgba(108,212,255,0.18);background:rgba(108,212,255,0.06);
+    font-family:var(--font-display);font-weight:800;font-size:8.5px;letter-spacing:0.06em;text-transform:uppercase;color:var(--ln-cyan)
+  }
+  .lv-badge .lv-i{width:14px;height:14px;border-radius:50%;background:rgba(108,212,255,0.15);display:grid;place-items:center}
+  .topbar-title{font-family:var(--font-display);font-weight:800;font-size:14px;letter-spacing:0.02em;color:var(--ln-text)}
+  .topbar-right{display:flex;align-items:center;gap:8px}
+  .cr-display{display:flex;align-items:center;gap:4px;padding:3px 10px 3px 6px;border-radius:5px;border:1px solid rgba(224,165,39,0.3);background:rgba(224,165,39,0.07);font-family:var(--font-numeric);font-weight:700;font-size:12px;color:var(--ln-amber)}
+
+  /* ── Body layout ── */
+  .body-layout{display:flex;flex:1;min-height:0}
+
+  /* ── Board canvas ── */
+  .top-zone{flex:1;display:flex;flex-direction:column;min-height:0}
+  .canvas{
+    position:relative;flex:1;display:flex;flex-direction:column;padding:22px 24px 10px;
+    background:
+      repeating-linear-gradient(0deg, rgba(108,212,255,0.06) 0px, rgba(108,212,255,0.06) 1px, transparent 1px, transparent 26px),
+      repeating-linear-gradient(90deg, rgba(108,212,255,0.06) 0px, rgba(108,212,255,0.06) 1px, transparent 1px, transparent 26px),
+      radial-gradient(ellipse at 50% 30%, #101f40 0%, #08101e 65%, #040810 100%)
+  }
+
+  /* ── Corner brackets ── */
+  .cb{position:absolute;z-index:5;pointer-events:none;width:24px;height:24px}
+  .cb svg{display:block;width:100%;height:100%}
+  .cb-tl{top:-1px;left:-1px}.cb-tr{top:-1px;right:-1px;transform:scaleX(-1)}.cb-bl{bottom:-1px;left:-1px;transform:scaleY(-1)}.cb-br{bottom:-1px;right:-1px;transform:scale(-1,-1)}
+
+  .canvas-bg-glow{position:absolute;inset:0;pointer-events:none;z-index:1;
+    background:
+      radial-gradient(ellipse at 28% 45%, rgba(108,212,255,0.04) 0%, transparent 50%),
+      radial-gradient(ellipse at 72% 35%, rgba(47,191,106,0.025) 0%, transparent 45%),
+      radial-gradient(ellipse at 50% 70%, rgba(224,165,39,0.02) 0%, transparent 40%)
+  }
+
+  /* ── Board header ── */
+  .bh{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;position:relative;z-index:2;flex-shrink:0}
+  .bh h2{font-family:var(--font-display);font-weight:800;font-size:19px;letter-spacing:0.06em;text-transform:uppercase;color:var(--ln-text)}
+  .bh .bh-sub{font-family:var(--font-display);font-weight:700;font-size:11px;letter-spacing:0.1em;text-transform:uppercase;color:var(--ln-text-muted);margin-top:2px}
+  .bh .bh-count{font-family:var(--font-numeric);font-size:13px;color:var(--ln-cyan);letter-spacing:0.05em}
+
+  /* ── Contract grid ──
+     Sized so exactly ~3 cards are visible before scrolling; a partial 4th
+     card peeks at the bottom as a scroll affordance. */
+  .cl{display:flex;flex-direction:column;gap:14px;position:relative;z-index:2;overflow-y:auto;max-height:392px;padding:2px 6px 2px 2px;margin-right:-6px}
+  .cl::-webkit-scrollbar{width:4px}.cl::-webkit-scrollbar-track{background:transparent}.cl::-webkit-scrollbar-thumb{background:rgba(108,212,255,.18);border-radius:2px}
+
+  .cc{
+    display:grid;grid-template-columns:44px 1fr auto;gap:14px;align-items:center;
+    padding:16px 18px;border-radius:6px;border:1px solid rgba(108,212,255,.14);
+    background:rgba(108,212,255,.03);cursor:pointer;transition:background .12s,border-color .12s,box-shadow .12s;position:relative;flex-shrink:0;
+    box-shadow:0 1px 0 rgba(0,0,0,.2)
+  }
+  .cc:hover{background:rgba(108,212,255,.06);border-color:rgba(108,212,255,.28)}
+  .cc.selected{border-color:rgba(108,212,255,0.5);background:rgba(108,212,255,0.08);box-shadow:0 0 0 1px rgba(108,212,255,0.2)}
+  .cc.locked,.cc.cooldown{opacity:0.5;cursor:default}
+  .cc.locked:hover,.cc.cooldown:hover{background:rgba(108,212,255,.03);border-color:rgba(108,212,255,.14)}
+  .cc.done{opacity:0.4;cursor:default}
+
+  .cm{width:44px;height:44px;border-radius:6px;display:grid;place-items:center;font-family:var(--font-display);font-weight:800;font-size:13px;letter-spacing:0.02em;flex-shrink:0}
+
+  .cc-main{min-width:0}
+  .cc-title{font-family:var(--font-display);font-weight:800;font-size:15px;letter-spacing:0.01em;text-transform:uppercase;color:var(--ln-text)}
+  .cc-client{font-family:var(--font-display);font-weight:600;font-size:11px;letter-spacing:0.03em;color:var(--ln-text-dim);margin-top:3px}
+  .cc-wants{font-family:var(--font-body);font-size:13px;color:var(--ln-text-muted);margin-top:6px}
+  .cc-wants b{color:var(--ln-text-dim);font-weight:700}
+  .cc-tags{display:flex;gap:5px;margin-top:8px;flex-wrap:wrap}
+  .ct{
+    font-family:var(--font-display);font-weight:700;font-size:9.5px;letter-spacing:0.06em;text-transform:uppercase;
+    padding:3px 7px;border-radius:3px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.04);color:var(--ln-text-muted)
+  }
+  .ct.burn{color:rgba(224,165,39,0.75);border-color:rgba(224,165,39,0.24);background:rgba(224,165,39,0.08)}
+  .ct.job{color:rgba(108,212,255,0.7);border-color:rgba(108,212,255,0.2);background:rgba(108,212,255,0.06)}
+  .ct.twostop{color:rgba(47,191,106,0.7);border-color:rgba(47,191,106,0.2);background:rgba(47,191,106,0.06)}
+
+  .cc-side{display:flex;flex-direction:column;align-items:flex-end;gap:8px;flex-shrink:0}
+  .cc-pay{display:flex;align-items:center;gap:4px;font-family:var(--font-numeric);font-weight:800;font-size:17px;color:var(--ln-text);white-space:nowrap}
+  .cc-pay svg{width:12px;height:12px;fill:var(--ln-amber);color:var(--ln-amber)}
+  .cc-btn{
+    font-family:var(--font-display);font-weight:800;font-size:10.5px;letter-spacing:0.07em;text-transform:uppercase;
+    padding:8px 16px;border:none;border-radius:4px;cursor:pointer;transition:filter .1s;white-space:nowrap;
+    background:var(--ln-cyan);color:#0e1526
+  }
+  .cc-btn:hover{filter:brightness(1.15)}
+  .cc-btn:disabled{background:rgba(108,212,255,0.1);color:var(--ln-text-muted);cursor:not-allowed;filter:none}
+  .cc-btn:active{transform:scale(.96)}
+
+  .mr{display:flex;align-items:center;gap:4px;margin-top:1px}
+  .mr-cc{
+    display:flex;align-items:center;gap:3px;font-family:var(--font-display);font-weight:700;font-size:8px;letter-spacing:0.04em;
+    padding:2px 6px;border-radius:2px;background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.04);color:var(--ln-text-dim)
+  }
+  .mr-cc .mr-v{font-family:var(--font-numeric);font-weight:800;color:var(--ln-text)}
+  .mr-cc.pay .mr-v{color:rgba(224,165,39,0.8)}
+  .mr-cc.aff .mr-v{color:var(--ln-ok)}
+
+  .disclaimer{
+    display:flex;align-items:center;gap:8px;margin-top:12px;padding:8px 12px;
+    border:1px dashed rgba(108,212,255,0.14);border-radius:4px;
+    font-family:var(--font-body);font-size:11px;color:var(--ln-text-muted);font-style:italic;flex-shrink:0
+  }
+  .disclaimer svg{width:13px;height:13px;flex-shrink:0;stroke:rgba(108,212,255,0.3)}
+
+  /* ── Panel ── */
+  .panel{border-top:3px solid rgba(108,212,255,0.08);background:rgba(14,21,38,0.4);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);display:flex;flex-direction:column;position:relative}
+  .panel::before{content:'';position:absolute;top:-3px;left:0;right:80%;height:3px;background:var(--ln-cyan);opacity:.3;pointer-events:none}
+  .ph{display:flex;align-items:center;justify-content:space-between;padding:10px 16px;background:linear-gradient(90deg,rgba(108,212,255,0.08),transparent 60%);border-bottom:2px solid rgba(108,212,255,0.08)}
+  .ph h3{font-family:var(--font-display);font-weight:800;font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--ln-cyan)}
+
+  .pd{flex:1;min-height:0;padding:14px 16px;overflow-y:auto;display:flex;flex-direction:column;gap:10px}
+  .pd::-webkit-scrollbar{width:3px}.pd::-webkit-scrollbar-track{background:transparent}.pd::-webkit-scrollbar-thumb{background:rgba(108,212,255,.16);border-radius:2px}
+
+  .pd-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;flex:1;gap:10px;text-align:center;padding:24px 12px}
+  .pd-empty .pd-e-icon{width:36px;height:36px;border-radius:50%;border:1.5px dashed rgba(108,212,255,0.16);display:grid;place-items:center;color:rgba(108,212,255,0.25)}
+  .pd-empty .pd-e-icon svg{width:18px;height:18px}
+  .pd-empty .pd-e-l{font-family:var(--font-display);font-weight:700;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:rgba(108,212,255,0.28)}
+  .pd-empty .pd-e-d{font-family:var(--font-body);font-size:12px;color:var(--ln-text-muted);line-height:1.5;max-width:32ch}
+
+  .pd-det{display:none}
+  .pd-det.vis{display:flex;flex-direction:column;gap:10px}
+  .pd-det .pd-h{font-family:var(--font-display);font-weight:800;font-size:17px;letter-spacing:0.02em;text-transform:uppercase;color:var(--ln-text)}
+  .pd-det .pd-cl{font-family:var(--font-display);font-weight:600;font-size:11px;letter-spacing:0.05em;color:var(--ln-text-dim)}
+  .pd-det .pd-wh{font-family:var(--font-body);font-size:12.5px;color:var(--ln-text-muted);padding-top:4px;border-top:1px solid rgba(255,255,255,.06)}
+  .pd-det .pd-wh b{color:var(--ln-text-dim);font-weight:700}
+  .pd-row{display:flex;gap:6px;flex-wrap:wrap}
+  .pd-chip{
+    display:flex;align-items:center;gap:4px;padding:5px 10px;border-radius:4px;
+    font-family:var(--font-display);font-weight:700;font-size:10.5px;letter-spacing:.05em;text-transform:uppercase;
+    border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.03);color:var(--ln-text-dim)
+  }
+  .pd-chip .pd-cv{font-family:var(--font-numeric);font-weight:800;color:var(--ln-text)}
+  .pd-chip.pay{color:rgba(224,165,39,0.8);border-color:rgba(224,165,39,0.24);background:rgba(224,165,39,0.06)}
+  .pd-chip.pay .pd-cv{color:rgba(224,165,39,0.9)}
+  .pd-chip.aff{color:var(--ln-ok);border-color:rgba(47,191,106,0.2);background:rgba(47,191,106,0.05)}
+  .pd-chip.aff .pd-cv{color:var(--ln-ok)}
+
+  .pd-cta{
+    display:flex;gap:4px;margin-top:4px
+  }
+  .pd-cta .btn-p{
+    font-family:var(--font-display);font-weight:800;font-size:12.5px;letter-spacing:.06em;text-transform:uppercase;
+    padding:11px 20px;border:none;border-radius:5px;cursor:pointer;transition:filter .1s;display:flex;align-items:center;gap:6px;flex:1;justify-content:center
+  }
+  .pd-cta .btn-p:active{transform:scale(.97)}
+  .pd-cta .btn-p svg{width:13px;height:13px}
+  .pd-disclaimer{
+    display:flex;align-items:center;gap:8px;padding:8px 12px;
+    border:1px dashed rgba(108,212,255,0.12);border-radius:4px;
+    font-family:var(--font-body);font-size:11px;color:var(--ln-text-muted);font-style:italic
+  }
+  .pd-disclaimer svg{width:12px;height:12px;flex-shrink:0;stroke:rgba(108,212,255,0.25)}
+
+  .sort-select{
+    display:flex;align-items:center;gap:5px;padding:5px 10px;border-radius:4px;
+    border:1px solid rgba(108,212,255,.16);background:rgba(108,212,255,.05);
+    font-family:var(--font-display);font-weight:700;font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--ln-text-muted);cursor:pointer;transition:background .1s
+  }
+  .sort-select:hover{background:rgba(108,212,255,.08)}
+
+  /* ── Step bar ── */
+  .sw{padding:16px 20px 22px;text-align:center;border-top:2px solid rgba(108,212,255,0.1);background:rgba(14,21,38,.35)}
+  .scap{font-family:var(--font-display);font-weight:700;font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--ln-text-muted);margin-bottom:10px}
+  .sbar{display:flex;align-items:center;justify-content:center;gap:10px}
+  .sp{display:flex;align-items:center;gap:5px;font-family:var(--font-display);font-weight:700;font-size:13px;letter-spacing:.02em;padding:9px 20px;border-radius:999px;border:1px solid rgba(255,255,255,.14);color:var(--ln-text-dim);background:rgba(255,255,255,.04);white-space:nowrap;cursor:pointer;transition:background .1s}
+  .sp:hover{background:rgba(255,255,255,.08)}
+  .sp.done{color:var(--ln-ok);border-color:rgba(47,191,106,.3)}
+  .sp.cur{color:#0e1526;background:var(--ln-cyan);border-color:var(--ln-cyan);font-weight:800;cursor:default}
+  .sa{color:var(--ln-text-muted);font-size:16px;flex-shrink:0}
+
+  @media(min-width:821px){
+    .app{height:min(860px,calc(100vh - 32px));overflow:hidden}
+    .body-layout{flex-direction:row}
+    .top-zone{border-right:2px solid rgba(108,212,255,0.06);box-shadow:1px 0 0 rgba(0,0,0,0.1);overflow-y:auto}
+    .panel{width:320px;border-top:none;flex-shrink:0;min-height:0}
+    .canvas{min-height:0}
+    .cl{max-height:none;flex:1;min-height:0}
+  }
+
+  @media(max-width:820px){
+    body{padding:0}
+    .stage{width:100%}
+    .app{border-radius:0;border:none;min-height:100dvh}
+    .body-layout{flex-direction:column;flex:1}
+    .top-zone{flex:none;min-height:40vh;display:flex;flex-direction:column}
+    .canvas{flex:1;padding:14px 14px 8px}
+    .cl{max-height:min(52vh,392px)}
+    .panel{flex:none;min-height:24vh;max-height:34vh}
+    .cc{grid-template-columns:40px 1fr;padding:14px}
+    .cc-side{grid-column:1/-1;flex-direction:row;justify-content:space-between;align-items:center;margin-top:8px;padding-left:58px}
+    .mr{flex-wrap:wrap}
+    .cb,.canvas-bg-glow{display:none}
+  }
+</style>
+</head>
+<body>
+<svg style="display:none" aria-hidden="true">
+  <symbol id="i-steel" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 14l3-8h10l3 8-8 5z"/><path d="M7 6l5 13 5-13"/></symbol>
+  <symbol id="i-silicon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 2l4 4-4 4-4-4z"/><path d="M12 10l4 4-4 4-4-4z"/></symbol>
+  <symbol id="i-platinum" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="3"/><ellipse cx="12" cy="12" rx="9" ry="3.4"/></symbol>
+  <symbol id="i-coin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="9"/><path d="M12 7v10M8 10h6a2 2 0 1 0 0-4H8m0 8h7"/></symbol>
+  <symbol id="i-c" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M4 12l5 5L20 6"/></symbol>
+  <symbol id="i-t" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="4"/><circle cx="12" cy="12" r="8"/></symbol>
+  <symbol id="i-n" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 8v5l3 2"/><circle cx="12" cy="12" r="9"/></symbol>
+  <symbol id="i-l" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></symbol>
+  <symbol id="i-w" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L3 18l3 3 6.3-6.3a4 4 0 0 0 5.4-5.4l-2.6 2.6-2-2z"/></symbol>
+  <symbol id="i-cl" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 7l3-3 3 3M4 17l3 3 3-3M17 4v16M14 7l3-3 3 3"/></symbol>
+</svg>
+
+<div class="stage">
+  <div class="app">
+    <div class="topbar">
+      <div class="topbar-left">
+        <div class="lv-badge"><span class="lv-i"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="#6cd4ff" stroke-width="2"><circle cx="12" cy="12" r="6"/><path d="M12 8v5l3 2"/></svg></span> Lv. <span id="mLv">3</span></div>
+        <div class="topbar-title">Mission Board</div>
+      </div>
+      <div class="topbar-right">
+        <div class="cr-display"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#e0a527" stroke-width="1.7"><circle cx="12" cy="12" r="8"/><path d="M12 8v8M9 12h6"/></svg> <span id="cAmt">12,450</span></div>
+      </div>
+    </div>
+
+    <div class="body-layout">
+      <div class="top-zone">
+        <div class="canvas">
+          <div class="cb cb-tl"><svg viewBox="0 0 24 24" fill="none" stroke="rgba(108,212,255,0.35)" stroke-width="1.8"><path d="M2 22V2h20"/></svg></div>
+          <div class="cb cb-tr"><svg viewBox="0 0 24 24" fill="none" stroke="rgba(108,212,255,0.35)" stroke-width="1.8"><path d="M2 22V2h20"/></svg></div>
+          <div class="cb cb-bl"><svg viewBox="0 0 24 24" fill="none" stroke="rgba(108,212,255,0.35)" stroke-width="1.8"><path d="M2 22V2h20"/></svg></div>
+          <div class="cb cb-br"><svg viewBox="0 0 24 24" fill="none" stroke="rgba(108,212,255,0.35)" stroke-width="1.8"><path d="M2 22V2h20"/></svg></div>
+          <div class="canvas-bg-glow"></div>
+
+          <div class="bh">
+            <div>
+              <h2>Active Contracts</h2>
+              <div class="bh-sub">Client jobs &amp; market runs</div>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px">
+              <span class="bh-count" id="openCount">3 open</span>
+              <span class="sort-select"><svg style="width:8px;height:8px"><use href="#i-cl"/></svg> Payout</span>
+            </div>
+          </div>
+
+          <div class="cl" id="contractList">
+            <div class="cc" data-id="helios-thruster">
+              <div class="cm" style="background:#f5a623;color:#1a1203">HP</div>
+              <div class="cc-main">
+                <div class="cc-title">Thruster Feedstock Run</div>
+                <div class="cc-client">Helios Propulsion Depot</div>
+                <div class="cc-wants">Wants <b>Platinum</b> / <b>Palladium</b> &middot; +20% pay</div>
+                <div class="cc-tags">
+                  <span class="ct burn">Standard burn</span>
+                  <span class="ct job">Starter ops</span>
+                </div>
+              </div>
+              <div class="cc-side">
+                <div class="cc-pay"><svg><use href="#i-coin"/></svg>1,080,000</div>
+                <button class="cc-btn">Select</button>
+              </div>
+            </div>
+
+            <div class="cc" data-id="ferrum-structural">
+              <div class="cm" style="background:#c7d0dc;color:#161c22">FO</div>
+              <div class="cc-main">
+                <div class="cc-title">Structural Alloy Bulk Order</div>
+                <div class="cc-client">Ferrum Orbital Construction</div>
+                <div class="cc-wants">Wants <b>Platinum</b> / <b>Iridium</b> &middot; +18% pay</div>
+                <div class="cc-tags">
+                  <span class="ct burn">Bulk freight</span>
+                  <span class="ct twostop">Two-stop job</span>
+                </div>
+              </div>
+              <div class="cc-side">
+                <div class="cc-pay"><svg><use href="#i-coin"/></svg>16,726,500</div>
+                <button class="cc-btn">Select</button>
+              </div>
+            </div>
+
+            <div class="cc" data-id="arcturus-fuel">
+              <div class="cm" style="background:#4f9cf7;color:#04121f">AB</div>
+              <div class="cc-main">
+                <div class="cc-title">Fuel-Cell Catalyst Order</div>
+                <div class="cc-client">Arcturus Battery Systems</div>
+                <div class="cc-wants">Wants <b>Palladium</b> / <b>Iridium</b> &middot; +22% pay</div>
+                <div class="cc-tags">
+                  <span class="ct burn">Cooldown &middot; 3h 20m</span>
+                </div>
+              </div>
+              <div class="cc-side">
+                <div class="cc-pay"><svg><use href="#i-coin"/></svg>9,080,000</div>
+                <button class="cc-btn" disabled>Cooldown</button>
+              </div>
+            </div>
+
+            <div class="cc" data-id="vulcan-deepcore">
+              <div class="cm" style="background:#e85d5d;color:#2a0808">VC</div>
+              <div class="cc-main">
+                <div class="cc-title">Deep-Core Assay Contract</div>
+                <div class="cc-client">Vulcan Core Metallurgy</div>
+                <div class="cc-wants">Wants <b>Platinum</b> / <b>Rhodium</b> &middot; +26% pay</div>
+                <div class="cc-tags">
+                  <span class="ct job">High value</span>
+                  <span class="ct burn">Extended burn</span>
+                </div>
+              </div>
+              <div class="cc-side">
+                <div class="cc-pay"><svg><use href="#i-coin"/></svg>18,432,000</div>
+                <button class="cc-btn">Select</button>
+              </div>
+            </div>
+
+            <div class="cc locked" data-id="atlas-ballast">
+              <div class="cm" style="background:#a8d8ea;color:#0e2733">AA</div>
+              <div class="cc-main">
+                <div class="cc-title">Ballast Construction Feedstock</div>
+                <div class="cc-client">Atlas Aggregate</div>
+                <div class="cc-wants">Wants <b>Iron</b> / <b>Silicon</b> &middot; +18% pay</div>
+                <div class="cc-tags">
+                  <span class="ct job">Locked &middot; Tier 2</span>
+                </div>
+              </div>
+              <div class="cc-side">
+                <div class="cc-pay"><svg><use href="#i-coin"/></svg>1,080,000</div>
+                <button class="cc-btn" disabled>Locked</button>
+              </div>
+            </div>
+
+            <div class="cc done" data-id="meridian-haul">
+              <div class="cm" style="background:#2fbf6a;color:#0a1f12">MH</div>
+              <div class="cc-main">
+                <div class="cc-title">Ice-Rich Regolith Haul</div>
+                <div class="cc-client">Meridian Haulage</div>
+                <div class="cc-wants">Wants <b>Ice</b> / <b>Silicon</b> &middot; +14% pay</div>
+                <div class="cc-tags">
+                  <span class="ct job">Completed today</span>
+                </div>
+              </div>
+              <div class="cc-side">
+                <div class="cc-pay"><svg><use href="#i-coin"/></svg>&mdash;</div>
+                <button class="cc-btn" disabled>Done</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="disclaimer">
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8"><path d="M12 8v5l3 2"/><circle cx="12" cy="12" r="9"/></svg>
+            Changes this job's payout only &mdash; does not increase minerals mined.
+          </div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="ph"><h3>Contract Detail</h3></div>
+        <div class="pd" id="panelDetail">
+          <div class="pd-empty" id="pdEmpty">
+            <div class="pd-e-icon"><svg><use href="#i-t"/></svg></div>
+            <div class="pd-e-l">Select a contract</div>
+            <div class="pd-e-d">Pick a client contract from the board to view details, resource requirements, and payout breakdown.</div>
+          </div>
+          <div class="pd-det" id="pdDet">
+            <div class="pd-h" id="pdTitle">Thruster Feedstock Run</div>
+            <div class="pd-cl" id="pdClient">Helios Propulsion Depot</div>
+            <div class="pd-wh" id="pdWants">Wants <b>Platinum</b> / <b>Palladium</b> &middot; +20% pay</div>
+            <div class="pd-row">
+              <div class="pd-chip"><span class="pd-cv" id="pdCargo">6U</span>&nbsp;Cargo</div>
+              <div class="pd-chip pay"><span class="pd-cv" id="pdPayBonus">+20%</span>&nbsp;Pay bonus</div>
+              <div class="pd-chip aff"><span class="pd-cv" id="pdAffinity">+5.0%</span>&nbsp;Affinity</div>
+            </div>
+            <div class="pd-row" id="pdTags"></div>
+            <div class="pd-cta">
+              <button class="btn-p" id="pdCta" style="background:var(--ln-cyan);color:#0e1526"><svg><use href="#i-w"/></svg>Continue</button>
+            </div>
+            <div class="pd-disclaimer">
+              <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8"><path d="M12 8v5l3 2"/><circle cx="12" cy="12" r="9"/></svg>
+              Changes this job's payout only &mdash; does not increase minerals mined.
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="sw">
+      <div class="scap">Step 1 of 4</div>
+      <div class="sbar">
+        <span class="sp cur">Mission</span>
+        <span class="sa">&rarr;</span>
+        <span class="sp">Target</span>
+        <span class="sa">&rarr;</span>
+        <span class="sp">Rocket</span>
+        <span class="sa">&rarr;</span>
+        <span class="sp">Launch</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  var CONTRACTS = {
+    'helios-thruster': { title:'Thruster Feedstock Run', client:'Helios Propulsion Depot', wants:'Wants <b>Platinum</b> / <b>Palladium</b> &middot; +20% pay', cargo:'6U', payBonus:'+20%', affinity:'+5.0%', tags:['Standard burn','Starter ops'], cta:'Continue to Target', href:'landnam-target.html', color:'#f5a623' },
+    'ferrum-structural': { title:'Structural Alloy Bulk Order', client:'Ferrum Orbital Construction', wants:'Wants <b>Platinum</b> / <b>Iridium</b> &middot; +18% pay', cargo:'12U', payBonus:'+18%', affinity:'+4.0%', tags:['Bulk freight','Two-stop job'], cta:'Continue to Target', href:'landnam-target.html', color:'#c7d0dc' },
+    'arcturus-fuel': { title:'Fuel-Cell Catalyst Order', client:'Arcturus Battery Systems', wants:'Wants <b>Palladium</b> / <b>Iridium</b> &middot; +22% pay', cargo:'8U', payBonus:'+22%', affinity:'+7.5%', tags:['Cooldown 3h 20m'], cta:'Cooldown', href:null, color:'#4f9cf7' },
+    'vulcan-deepcore': { title:'Deep-Core Assay Contract', client:'Vulcan Core Metallurgy', wants:'Wants <b>Platinum</b> / <b>Rhodium</b> &middot; +26% pay', cargo:'10U', payBonus:'+26%', affinity:'+8.0%', tags:['High value','Extended burn'], cta:'Continue to Target', href:'landnam-target.html', color:'#e85d5d' },
+    'atlas-ballast': { title:'Ballast Construction Feedstock', client:'Atlas Aggregate', wants:'Wants <b>Iron</b> / <b>Silicon</b> &middot; +18% pay', cargo:'6U', payBonus:'+18%', affinity:'+4.0%', tags:['Locked Tier 2'], cta:'Locked', href:null, color:'#a8d8ea' },
+    'meridian-haul': { title:'Ice-Rich Regolith Haul', client:'Meridian Haulage', wants:'Wants <b>Ice</b> / <b>Silicon</b> &middot; +14% pay', cargo:'8U', payBonus:'+14%', affinity:'+3.0%', tags:['Completed today'], cta:'Done', href:null, color:'#2fbf6a' }
+  };
+
+  var pdEmpty = document.getElementById('pdEmpty');
+  var pdDet = document.getElementById('pdDet');
+  var pdTitle = document.getElementById('pdTitle');
+  var pdClient = document.getElementById('pdClient');
+  var pdWants = document.getElementById('pdWants');
+  var pdCargo = document.getElementById('pdCargo');
+  var pdPayBonus = document.getElementById('pdPayBonus');
+  var pdAffinity = document.getElementById('pdAffinity');
+  var pdTags = document.getElementById('pdTags');
+  var pdCta = document.getElementById('pdCta');
+
+  var selectedId = null;
+
+  function showDetail(id) {
+    var c = CONTRACTS[id];
+    if (!c) return;
+    selectedId = id;
+    pdEmpty.style.display = 'none';
+    pdDet.classList.add('vis');
+    pdTitle.textContent = c.title;
+    pdClient.textContent = c.client;
+    pdWants.innerHTML = c.wants;
+    pdCargo.textContent = c.cargo;
+    pdPayBonus.textContent = c.payBonus;
+    pdAffinity.textContent = c.affinity;
+    pdTags.innerHTML = '';
+    c.tags.forEach(function(t) {
+      var el = document.createElement('span');
+      el.className = 'ct';
+      el.textContent = t;
+      pdTags.appendChild(el);
+    });
+    pdCta.textContent = c.cta;
+    if (c.href) {
+      pdCta.disabled = false;
+      pdCta.style.background = 'var(--ln-cyan)';
+      pdCta.style.color = '#0e1526';
+      pdCta.onclick = function() { window.location.href = c.href; };
+    } else {
+      pdCta.disabled = true;
+      pdCta.style.background = 'rgba(108,212,255,0.1)';
+      pdCta.style.color = 'var(--ln-text-muted)';
+    }
+  }
+
+  document.querySelectorAll('.cc:not(.locked):not(.cooldown):not(.done)').forEach(function(el) {
+    el.addEventListener('click', function(e) {
+      if (e.target.closest('.cc-btn')) return;
+      var id = el.dataset.id;
+      document.querySelectorAll('.cc').forEach(function(c) { c.classList.remove('selected'); });
+      el.classList.add('selected');
+      showDetail(id);
+    });
+    var btn = el.querySelector('.cc-btn');
+    if (btn && !btn.disabled) {
+      btn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        var id = el.dataset.id;
+        document.querySelectorAll('.cc').forEach(function(c) { c.classList.remove('selected'); });
+        el.classList.add('selected');
+        showDetail(id);
+      });
+    }
+  });
+
+  document.querySelectorAll('.sp[data-href]').forEach(function(sp) {
+    sp.addEventListener('click', function() { window.location.href = sp.dataset.href; });
+    sp.style.cursor = 'pointer';
+  });
+</script>
+</body>
+</html>
