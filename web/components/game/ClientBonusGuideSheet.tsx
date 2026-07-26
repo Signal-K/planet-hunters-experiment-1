@@ -1,13 +1,13 @@
 'use client'
 
 import React from 'react'
-import { CONTRACTOR_SLOTS, MAX_AFFINITY_BONUS, contractorAffinityBonus, contractorUnlocked } from '@/lib/data'
+import { CLIENT_SLOTS, MAX_AFFINITY_BONUS, clientAffinityBonus, clientUnlocked } from '@/lib/data'
 import Sheet from '@/components/ui/Sheet'
 
 interface ClientBonusGuideSheetProps {
   onClose: () => void
   // Optional live-state props — omit either to show the guide as reference-only.
-  contractorMissions?: Record<string, number>
+  clientMissions?: Record<string, number>
   sequence?: number
 }
 
@@ -24,8 +24,8 @@ function jobsToCap(ratePerJob: number): number {
   return Math.ceil(MAX_AFFINITY_BONUS / ratePerJob)
 }
 
-export default function ClientBonusGuideSheet({ onClose, contractorMissions, sequence }: ClientBonusGuideSheetProps) {
-  const rateGroups = Array.from(new Set(CONTRACTOR_SLOTS.map(c => c.affinityBonusPerMission))).sort((a, b) => a - b)
+export default function ClientBonusGuideSheet({ onClose, clientMissions, sequence }: ClientBonusGuideSheetProps) {
+  const rateGroups = Array.from(new Set(CLIENT_SLOTS.map(c => c.affinityBonusPerMission))).sort((a, b) => a - b)
 
   return (
     <Sheet
@@ -98,7 +98,7 @@ export default function ClientBonusGuideSheet({ onClose, contractorMissions, seq
                 <span style={{ fontFamily: 'var(--ln-font-display)', fontWeight: 700, color: 'var(--ln-text)', minWidth: 62 }}>+{pct(rate)}/job</span>
                 <span style={{ fontFamily: 'var(--ln-font-display)', fontWeight: 700, color: 'var(--ln-amber)', minWidth: 76 }}>{jobsToCap(rate)} jobs to cap</span>
                 <span style={{ fontFamily: 'var(--ln-font-body)', color: 'var(--ln-text-muted)' }}>
-                  {CONTRACTOR_SLOTS.filter(c => c.affinityBonusPerMission === rate).map(c => c.initial).join(' · ')}
+                  {CLIENT_SLOTS.filter(c => c.affinityBonusPerMission === rate).map(c => c.initial).join(' · ')}
                 </span>
               </div>
             ))}
@@ -108,11 +108,11 @@ export default function ClientBonusGuideSheet({ onClose, contractorMissions, seq
         {/* Comparing clients */}
         <SectionLabel>Comparing Clients</SectionLabel>
         <div style={{ display: 'grid', gap: 2, marginBottom: 28 }}>
-          {CONTRACTOR_SLOTS.slice().sort((a, b) => a.unlockTier - b.unlockTier).map(client => {
-            const completed = contractorMissions?.[client.id] ?? 0
-            const affinityEarned = contractorAffinityBonus({ ...client }, completed)
+          {CLIENT_SLOTS.slice().sort((a, b) => a.unlockTier - b.unlockTier).map(client => {
+            const completed = clientMissions?.[client.id] ?? 0
+            const affinityEarned = clientAffinityBonus({ ...client }, completed)
             const total = client.payoutPremium + affinityEarned
-            const locked = sequence !== undefined && !contractorUnlocked({ ...client }, sequence)
+            const locked = sequence !== undefined && !clientUnlocked({ ...client }, sequence)
 
             return (
               <div

@@ -1,6 +1,6 @@
 /**
  * Review coverage for "Segment M1-M3 onboarding: distinct mission types per
- * milestone, with contractor/mission choice and affinity"
+ * milestone, with client/mission choice and affinity"
  * (segment-m1-m3-onboarding-mission-types).
  *
  * Exercises the ticket's own acceptance criteria directly against the real
@@ -22,14 +22,14 @@ describe('Onboarding mission structure (M1-M3)', () => {
     expect(MISSIONS.find(m => m.id === 'lnm_m3_custom_mining')).toBeUndefined()
   })
 
-  it('M1 presents more than one contractor/mission choice, not a single railroaded mission', () => {
+  it('M1 presents more than one client/mission choice, not a single railroaded mission', () => {
     const m1 = MISSIONS.filter(m => m.sequence === 1)
     expect(m1.length).toBeGreaterThan(1)
-    const contractors = new Set(m1.map(m => m.contractor))
-    expect(contractors.size).toBeGreaterThan(1)
+    const clients = new Set(m1.map(m => m.client))
+    expect(clients.size).toBeGreaterThan(1)
   })
 
-  it('M2 presents more than one contractor/mission choice', () => {
+  it('M2 presents more than one client/mission choice', () => {
     const m2 = MISSIONS.filter(m => m.sequence === 2)
     expect(m2.length).toBeGreaterThan(1)
   })
@@ -43,11 +43,11 @@ describe('Onboarding mission structure (M1-M3)', () => {
     }
   })
 
-  it('M3 presents a short list of contractors offering transport work, each a two-leg mine-then-deliver job', () => {
+  it('M3 presents a short list of clients offering transport work, each a two-leg mine-then-deliver job', () => {
     const m3 = MISSIONS.filter(m => m.sequence === 3)
     expect(m3.length).toBeGreaterThanOrEqual(2)
-    const contractors = new Set(m3.map(m => m.contractor))
-    expect(contractors.size).toBe(m3.length)
+    const clients = new Set(m3.map(m => m.client))
+    expect(clients.size).toBe(m3.length)
     for (const mission of m3) {
       expect(mission.tag).toBe('TRANSPORT')
       expect(mission.deliveryTargetId).toBeTruthy()

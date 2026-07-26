@@ -29,7 +29,7 @@ export default function MissionBoardCompleteState({ onBack }: { onBack: () => vo
           Three Operations Down
         </div>
         <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 14, color: 'var(--ln-text-dim)', textAlign: 'center', lineHeight: 1.6, maxWidth: 300, marginBottom: 32 }}>
-          Custom missions are unlocked. Pick contractor requests, build infrastructure, or mine high-value minerals for your own account.
+          Custom missions are unlocked. Pick client requests, build infrastructure, or mine high-value minerals for your own account.
         </div>
         <div style={{ padding: '12px 16px', borderRadius: 10, border: '1px solid var(--ln-cyan-border)', background: 'var(--ln-overlay)', fontFamily: 'var(--ln-font-mono)', fontSize: 11, color: 'var(--ln-cyan-bright)', letterSpacing: '0.14em', textAlign: 'center', textTransform: 'uppercase' }}>
           Open Free Ops from the mission board

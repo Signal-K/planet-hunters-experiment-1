@@ -31,8 +31,8 @@ describe('game state hydration normalization', () => {
         controlBuilt: false,
         missionsDone: 0,
         freeOperations: false,
-        contractorMissions: {},
-        contractorCooldowns: {},
+        clientMissions: {},
+        clientCooldowns: {},
         researchAnnotations: 0,
         refineryBuilt: false,
         refineryQueue: [],
@@ -166,5 +166,35 @@ describe('game state hydration normalization', () => {
     globalThis.localStorage.setItem(storageKey, '{broken')
     expect(loadState(storageKey)).toBe(DEFAULT_STATE)
     globalThis.localStorage.removeItem(storageKey)
+  })
+
+  it('migrates pre-STS-535 saves that still use "contractor"-named fields', () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const legacySave: any = {
+      screen: 'hub',
+      player: {
+        contractorMissions: { 'helios-propulsion-depot': 3 },
+        contractorStreaks: { 'helios-propulsion-depot': 1 },
+        contractorCooldowns: { 'atlas-aggregate': 1234567890 },
+        lastContractor: 'helios-propulsion-depot',
+        contractorTerritories: { 'eros': ['helios-propulsion-depot'] },
+        dailyContractorPool: { date: '2026-07-25', missions: [], acceptedId: null, completedIds: [] },
+        contractorStructures: [{ targetId: 'eros', structureKind: 'depot', contractorId: 'helios-propulsion-depot', state: 'operational' }],
+        roverDeployments: [{ roverId: 'r1', targetId: 'eros', contractorId: 'helios-propulsion-depot', timestamp: 1 }],
+      },
+      pendingTerritoryClaimFor: { targetId: 'eros', contractorId: 'helios-propulsion-depot' },
+    }
+
+    const normalized = normalizeState(legacySave)
+
+    expect(normalized.player.clientMissions).toEqual({ 'helios-propulsion-depot': 3 })
+    expect(normalized.player.clientStreaks).toEqual({ 'helios-propulsion-depot': 1 })
+    expect(normalized.player.clientCooldowns).toEqual({ 'atlas-aggregate': 1234567890 })
+    expect(normalized.player.lastClient).toBe('helios-propulsion-depot')
+    expect(normalized.player.clientTerritories).toEqual({ eros: ['helios-propulsion-depot'] })
+    expect(normalized.player.dailyClientPool?.date).toBe('2026-07-25')
+    expect(normalized.player.clientStructures?.[0]?.clientId).toBe('helios-propulsion-depot')
+    expect(normalized.player.roverDeployments?.[0]?.clientId).toBe('helios-propulsion-depot')
+    expect(normalized.pendingTerritoryClaimFor?.clientId).toBe('helios-propulsion-depot')
   })
 })

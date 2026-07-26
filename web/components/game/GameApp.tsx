@@ -232,7 +232,7 @@ function GameCanvas() {
         {game.pendingTerritoryClaimFor && (
           <TerritoryClaimPopup
             targetId={game.pendingTerritoryClaimFor.targetId}
-            contractorId={game.pendingTerritoryClaimFor.contractorId}
+            clientId={game.pendingTerritoryClaimFor.clientId}
             onDismiss={game.clearTerritoryClaimPopup}
           />
         )}

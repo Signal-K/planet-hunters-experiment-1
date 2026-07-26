@@ -1,12 +1,12 @@
 import type { Catalog } from './catalog'
-import type { Contractor, Mission, Target } from './data'
+import type { Client, Mission, Target } from './data'
 
-export const STORY_MISSION_CONTRACTOR_ID = 'mission-control'
+export const STORY_MISSION_CLIENT_ID = 'mission-control'
 export const TRANSIT_TELESCOPE_TARGET_ID = 'earth-orbit-transit-telescope'
 export const TRANSIT_TELESCOPE_MISSION_ID = 'story-transit-telescope-launch'
 
-export const MISSION_CONTROL_CONTRACTOR: Contractor = {
-  id: STORY_MISSION_CONTRACTOR_ID,
+export const MISSION_CONTROL_CLIENT: Client = {
+  id: STORY_MISSION_CLIENT_ID,
   name: 'Mission Control',
   color: '#7ec8ff',
   initial: 'MC',
@@ -67,7 +67,7 @@ export function buildRuntimeCatalog({
         id: TRANSIT_TELESCOPE_MISSION_ID,
         title: 'Launch Transit Telescope',
         brief: 'Mission Control authorizes a story operation to place a TESS-class telescope in Earth orbit. This is not a client request.',
-        contractor: STORY_MISSION_CONTRACTOR_ID,
+        client: STORY_MISSION_CLIENT_ID,
         tag: 'STORY',
         difficulty: 'L1',
         locked: false,
@@ -96,7 +96,7 @@ export function buildRuntimeCatalog({
       id: `exo-survey-${target.id}`,
       title: `${target.name} survey flight`,
       brief: `Follow up the satellite discovery with a crewed survey mission to ${target.name}. This target is plotted in the star map.`,
-      contractor: 'lumen-research',
+      client: 'lumen-research',
       tag: 'SCIENCE',
       difficulty: target.difficulty,
       locked: false,
@@ -118,9 +118,9 @@ export function buildRuntimeCatalog({
 
   return {
     ...catalog,
-    contractors: {
-      ...catalog.contractors,
-      ...(shouldIncludeTransitTelescopeMission ? { [STORY_MISSION_CONTRACTOR_ID]: MISSION_CONTROL_CONTRACTOR } : {}),
+    clients: {
+      ...catalog.clients,
+      ...(shouldIncludeTransitTelescopeMission ? { [STORY_MISSION_CLIENT_ID]: MISSION_CONTROL_CLIENT } : {}),
     },
     targets: mergedTargets,
     missions: [...catalog.missions, ...transitTelescopeMission, ...surveyMissions],

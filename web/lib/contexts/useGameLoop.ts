@@ -2,7 +2,7 @@ import { useCallback } from 'react'
 import {
   MISSIONS, TARGETS, STARTER_ROCKETS, FREE_OPS_START_MISSIONS_DONE,
   getLaserChargeCap, travelDurationMs, suggestBuild,
-  CONTRACTOR_COOLDOWN_MS, CONTRACTOR_STREAK_LIMIT, calibrateOnboardingPayout,
+  CLIENT_COOLDOWN_MS, CLIENT_STREAK_LIMIT, calibrateOnboardingPayout,
 } from '@/lib/data'
 import { applyDeliveryArrived, applyMiningDone, applyReturnArrived, applyRoverMiningDone } from '@/lib/systems/MiningSystem'
 import { enqueueSurvey } from '@/lib/surveys'
@@ -15,7 +15,7 @@ import { pbShared } from '@/lib/pb'
 import { pbLandnam } from '@/lib/pb-landnam'
 
 const ORBIT_MS_PER_UNIT = 2 * 60 * 1000
-const STORY_MISSION_CONTRACTOR_ID = 'mission-control'
+const STORY_MISSION_CLIENT_ID = 'mission-control'
 
 const LOAN_AMOUNT = 5_000_000_000
 const LOAN_REPAYMENT = Math.ceil(LOAN_AMOUNT * 1.08 / 2)
@@ -60,15 +60,15 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
     setState(s => {
       if (s.screen !== 'missions' || s.player.activeMission) return s
       const mission = catalog.missions.find(m => m.id === id)
-        ?? s.player.dailyContractorPool?.missions.find(m => m.id === id)
+        ?? s.player.dailyClientPool?.missions.find(m => m.id === id)
         ?? null
       if (!mission) return s
-      const isStoryMission = mission.contractor === STORY_MISSION_CONTRACTOR_ID || (mission.tag === 'STORY' && !mission.deliveryTargetId)
+      const isStoryMission = mission.client === STORY_MISSION_CLIENT_ID || (mission.tag === 'STORY' && !mission.deliveryTargetId)
       if (s.player.missionsDone >= 1 && !isStoryMission) enqueueSurvey('lnm_contractor_pick')
-      const dailyContractorPool = (s.player.dailyContractorPool && id.startsWith('dcp-'))
-        ? { ...s.player.dailyContractorPool, acceptedId: id }
-        : s.player.dailyContractorPool
-      const base = { ...s, player: { ...s.player, dailyContractorPool } }
+      const dailyClientPool = (s.player.dailyClientPool && id.startsWith('dcp-'))
+        ? { ...s.player.dailyClientPool, acceptedId: id }
+        : s.player.dailyClientPool
+      const base = { ...s, player: { ...s.player, dailyClientPool } }
       if (mission?.targetId) {
         const target = catalog.targets.find(t => t.id === mission.targetId) ?? null
         const deliveryTarget = mission.deliveryTargetId ? catalog.targets.find(t => t.id === mission.deliveryTargetId) ?? null : null
@@ -130,7 +130,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
     const current = stateRef.current
     if (current.screen !== 'fab' || !current.missionId || !current.targetId || current.player.activeMission) return
     const currentMission = catalog.missions.find(m => m.id === current.missionId)
-      ?? current.player.dailyContractorPool?.missions.find(m => m.id === current.missionId)
+      ?? current.player.dailyClientPool?.missions.find(m => m.id === current.missionId)
       ?? null
     if (!currentMission) return
     const isFirstEver = current.player.missionsDone === 0
@@ -138,7 +138,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
       if (s.screen !== 'fab' || !s.missionId || !s.targetId || s.player.activeMission) return s
       const mission = s.missionId
         ? (catalog.missions.find(m => m.id === s.missionId)
-           ?? s.player.dailyContractorPool?.missions.find(m => m.id === s.missionId)
+           ?? s.player.dailyClientPool?.missions.find(m => m.id === s.missionId)
            ?? null)
         : null
       const target = s.targetId ? catalog.targets.find(t => t.id === s.targetId) : null
@@ -319,22 +319,22 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
       const missionsDone = s.player.missionsDone + 1
       const mission = s.missionId
         ? (catalog.missions.find(m => m.id === s.missionId)
-           ?? s.player.dailyContractorPool?.missions.find(m => m.id === s.missionId)
+           ?? s.player.dailyClientPool?.missions.find(m => m.id === s.missionId)
            ?? null)
         : null
-      const contractor = mission?.contractor
-      const isStoryMission = mission?.contractor === STORY_MISSION_CONTRACTOR_ID || (mission?.tag === 'STORY' && !mission?.deliveryTargetId)
-      const contractorMissions = { ...s.player.contractorMissions }
-      const contractorStreaks = { ...(s.player.contractorStreaks ?? {}) }
-      const contractorCooldowns = { ...s.player.contractorCooldowns }
-      if (contractor && !isStoryMission) {
-        contractorMissions[contractor] = (contractorMissions[contractor] ?? 0) + 1
-        const streak = (contractorStreaks[contractor] ?? 0) + 1
-        if (streak >= CONTRACTOR_STREAK_LIMIT) {
-          contractorStreaks[contractor] = 0
-          contractorCooldowns[contractor] = Date.now() + CONTRACTOR_COOLDOWN_MS
+      const client = mission?.client
+      const isStoryMission = mission?.client === STORY_MISSION_CLIENT_ID || (mission?.tag === 'STORY' && !mission?.deliveryTargetId)
+      const clientMissions = { ...s.player.clientMissions }
+      const clientStreaks = { ...(s.player.clientStreaks ?? {}) }
+      const clientCooldowns = { ...s.player.clientCooldowns }
+      if (client && !isStoryMission) {
+        clientMissions[client] = (clientMissions[client] ?? 0) + 1
+        const streak = (clientStreaks[client] ?? 0) + 1
+        if (streak >= CLIENT_STREAK_LIMIT) {
+          clientStreaks[client] = 0
+          clientCooldowns[client] = Date.now() + CLIENT_COOLDOWN_MS
         } else {
-          contractorStreaks[contractor] = streak
+          clientStreaks[client] = streak
         }
       }
       const stash = { ...(s.player.stash ?? {}) }
@@ -354,28 +354,28 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
       if (s.targetId && !seen_planets.includes(s.targetId)) seen_planets.push(s.targetId)
       const effectiveTargetId = mission?.targetId ?? s.targetId ?? ''
       let roverDeployments = [...(s.player.roverDeployments ?? [])]
-      let contractorTerritories = { ...(s.player.contractorTerritories ?? {}) }
-      let pendingTerritoryClaimFor: { targetId: string; contractorId: string } | undefined
-      if (mission?.payload?.type === 'rover' && contractor && effectiveTargetId) {
+      let clientTerritories = { ...(s.player.clientTerritories ?? {}) }
+      let pendingTerritoryClaimFor: { targetId: string; clientId: string } | undefined
+      if (mission?.payload?.type === 'rover' && client && effectiveTargetId) {
         roverDeployments = [...roverDeployments, {
           roverId: `${mission.id}-rover-${Date.now()}`,
           targetId: effectiveTargetId,
-          contractorId: contractor,
+          clientId: client,
           timestamp: Date.now(),
         }]
-        const prev = contractorTerritories[contractor] ?? []
+        const prev = clientTerritories[client] ?? []
         if (!prev.includes(effectiveTargetId)) {
-          contractorTerritories = { ...contractorTerritories, [contractor]: [...prev, effectiveTargetId] }
+          clientTerritories = { ...clientTerritories, [client]: [...prev, effectiveTargetId] }
         }
-        pendingTerritoryClaimFor = { targetId: effectiveTargetId, contractorId: contractor }
+        pendingTerritoryClaimFor = { targetId: effectiveTargetId, clientId: client }
       }
-      const completedDailyPool = (s.missionId?.startsWith('dcp-') && s.player.dailyContractorPool)
+      const completedDailyPool = (s.missionId?.startsWith('dcp-') && s.player.dailyClientPool)
         ? {
-          ...s.player.dailyContractorPool,
+          ...s.player.dailyClientPool,
           acceptedId: null,
-          completedIds: [...s.player.dailyContractorPool.completedIds, s.missionId],
+          completedIds: [...s.player.dailyClientPool.completedIds, s.missionId],
         }
-        : s.player.dailyContractorPool
+        : s.player.dailyClientPool
       const stillInTutorial = missionsDone < FREE_OPS_START_MISSIONS_DONE && catalog.missions.some(m => m.sequence === missionsDone + 1)
       // Skip the Prospector upsell popup during guided onboarding — the tutorial
       // coach already delivers the same "Prospector available" message inline
@@ -401,17 +401,17 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
           skillPoints: (s.player.skillPoints ?? 0) + 1,
           missionCount: catalog.missions.filter(m => m.sequence === missionsDone + 1).length,
           freeOperations: missionsDone >= FREE_OPS_START_MISSIONS_DONE,
-          contractorMissions,
-          contractorStreaks,
-          contractorCooldowns,
+          clientMissions,
+          clientStreaks,
+          clientCooldowns,
           stash,
-          lastContractor: isStoryMission ? s.player.lastContractor : contractor,
+          lastClient: isStoryMission ? s.player.lastClient : client,
           loanDebt,
           loanOffered: loanOffered || showLoanOffer,
           seen_planets,
           roverDeployments,
-          contractorTerritories,
-          dailyContractorPool: completedDailyPool,
+          clientTerritories,
+          dailyClientPool: completedDailyPool,
           transitSatelliteLaunchedAt: mission?.payload?.type === 'satellite'
             ? (s.player.transitSatelliteLaunchedAt ?? Date.now())
             : s.player.transitSatelliteLaunchedAt,

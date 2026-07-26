@@ -1,16 +1,16 @@
 'use client'
 
-import type { Contractor, MineralMeta, Mission } from '@/lib/data'
+import type { Client, MineralMeta, Mission } from '@/lib/data'
 
 interface MissionMetricsProps {
   mission: Mission
-  contractor?: Contractor | null
+  client?: Client | null
   mineralMeta: Record<string, MineralMeta>
 }
 
-export default function MissionMetrics({ mission, contractor, mineralMeta }: MissionMetricsProps) {
+export default function MissionMetrics({ mission, client, mineralMeta }: MissionMetricsProps) {
   const mineralEntries = Object.entries(mission.requires.minerals)
-  const affinityToCap = contractor ? Math.round(0.15 / contractor.affinityBonusPerMission) : 0
+  const affinityToCap = client ? Math.round(0.15 / client.affinityBonusPerMission) : 0
 
   return (
     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 1, margin: '8px 14px 0', borderRadius: 4, overflow: 'hidden', background: 'var(--ln-border)' }}>
@@ -35,19 +35,19 @@ export default function MissionMetrics({ mission, contractor, mineralMeta }: Mis
         )}
       </div>
 
-      <div title={contractor ? contractor.payoutNotes : undefined} style={{ padding: '6px 8px', background: 'var(--ln-panel-2)', cursor: contractor ? 'help' : undefined }}>
+      <div title={client ? client.payoutNotes : undefined} style={{ padding: '6px 8px', background: 'var(--ln-panel-2)', cursor: client ? 'help' : undefined }}>
         <MetricLabel>Payout bonus</MetricLabel>
-        <div style={{ font: '800 12px var(--ln-font-display)', color: contractor ? 'var(--ln-cyan)' : 'var(--ln-text-muted)' }}>
-          {contractor ? `+${Math.round(contractor.payoutPremium * 100)}%` : 'None'}
+        <div style={{ font: '800 12px var(--ln-font-display)', color: client ? 'var(--ln-cyan)' : 'var(--ln-text-muted)' }}>
+          {client ? `+${Math.round(client.payoutPremium * 100)}%` : 'None'}
         </div>
       </div>
 
       <div style={{ padding: '6px 8px', background: 'var(--ln-panel-2)' }}>
         <MetricLabel>Affinity</MetricLabel>
-        {contractor ? (
+        {client ? (
           <>
             <div style={{ font: '800 12px var(--ln-font-display)', color: 'var(--ln-text)' }}>
-              +{Math.round(contractor.affinityBonusPerMission * 1000) / 10}%<span style={{ fontSize: 10, fontWeight: 600 }}>/job</span>
+              +{Math.round(client.affinityBonusPerMission * 1000) / 10}%<span style={{ fontSize: 10, fontWeight: 600 }}>/job</span>
             </div>
             <div style={{ font: '600 8px var(--ln-font-mono)', color: 'var(--ln-text-muted)', marginTop: 2 }}>{affinityToCap} to cap</div>
           </>

@@ -31,7 +31,7 @@ const ORDER_SEGMENTS = 12
 // First-time-entering-Free-Ops-mining explainer — dismiss-once, same
 // localStorage-ack pattern as MissionBoardScreen's EXPLAINER_ACK_KEY, but
 // scoped to the mining screen itself. The board explainer covers the board's
-// contractor/infrastructure/custom split; this covers what changes once
+// client/infrastructure/custom split; this covers what changes once
 // you're actually mining with no client attached (sell the haul yourself,
 // no daily limit) — the two are different moments and were previously
 // conflated, leaving the mining screen with zero "no client" first-entry cue.
@@ -173,7 +173,7 @@ export default function MiningScreen({ mission, target, onComplete, onBack, onAb
   addToast?: (message: string, kind?: 'info' | 'ok' | 'warn') => void
   /** Set for two-leg "mine then deliver" missions (mission.deliveryTargetId) — swaps the return button's copy from "Return to Earth" to "Deliver to {name}" since the ship isn't heading home yet. */
   deliveryTargetName?: string
-  /** True once the player has completed any contractor mission — suppresses the Free Ops first-entry explainer for players who reached self-directed mining before this ack tracking existed. */
+  /** True once the player has completed any client mission — suppresses the Free Ops first-entry explainer for players who reached self-directed mining before this ack tracking existed. */
   hasPriorFreeOpsExperience?: boolean
   /** Cargo already collected before a prior "Back to hub" pause on this same mission, restored so the player doesn't lose it on resume. */
   initialCargo?: Record<string, number>
@@ -315,7 +315,7 @@ export default function MiningScreen({ mission, target, onComplete, onBack, onAb
   const [guideOpen, setGuideOpen] = useState(false)
   const [confirmingAbandon, setConfirmingAbandon] = useState(false)
 
-  const isFreeOps = !mission.contractor
+  const isFreeOps = !mission.client
   const { show: showFreeOpsMiningExplainer, dismiss: dismissFreeOpsMiningExplainer } = useFreeOpsMiningAck(!isFreeOps || !!hasPriorFreeOpsExperience)
   const { dismissed: freeOpsFirstSuccessDismissed, dismiss: dismissFreeOpsFirstSuccess } = useFreeOpsFirstSuccessAck()
   const showFreeOpsSuccessPopup = isFreeOps && orderFilled && !freeOpsFirstSuccessDismissed
@@ -349,7 +349,7 @@ export default function MiningScreen({ mission, target, onComplete, onBack, onAb
               No Client On This Run
             </div>
             <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 12, color: '#a9b8ce', lineHeight: 1.45, paddingRight: 20 }}>
-              You picked the target and the order. No daily limit — mine what looks valuable, then sell the haul yourself at market price instead of a fixed contractor payout.
+              You picked the target and the order. No daily limit — mine what looks valuable, then sell the haul yourself at market price instead of a fixed client payout.
             </div>
           </Panel>
         </div>

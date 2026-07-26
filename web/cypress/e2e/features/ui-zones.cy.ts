@@ -40,9 +40,9 @@ function fullState(overrides: StateOverride = {}): GameState {
     skillPoints: 0,
     unlockedSkillNodes: [],
     freeOperations: false,
-    contractorMissions: {},
-    contractorStreaks: {},
-    contractorCooldowns: {},
+    clientMissions: {},
+    clientStreaks: {},
+    clientCooldowns: {},
     researchAnnotations: 0,
     refineryBuilt: false,
     refineryUnlocked: false,
@@ -54,7 +54,7 @@ function fullState(overrides: StateOverride = {}): GameState {
     loanOffered: false,
     seen_planets: [],
     roverDeployments: [],
-    contractorTerritories: {},
+    clientTerritories: {},
     ...overrides.player,
   }
 

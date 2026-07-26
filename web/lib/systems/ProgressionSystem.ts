@@ -109,13 +109,13 @@ export function applyAcceptLoan(s: GameState): GameState {
 export function applyAbandonMission(s: GameState, missions: Mission[]): GameState {
   const mission = s.missionId
     ? (missions.find(m => m.id === s.missionId)
-       ?? s.player.dailyContractorPool?.missions.find(m => m.id === s.missionId)
+       ?? s.player.dailyClientPool?.missions.find(m => m.id === s.missionId)
        ?? null)
     : null
   const penalty = mission ? Math.round(mission.payout.francs * 0.1) : 0
-  const dailyContractorPool = (s.missionId?.startsWith('dcp-') && s.player.dailyContractorPool)
-    ? { ...s.player.dailyContractorPool, acceptedId: null }
-    : s.player.dailyContractorPool
+  const dailyClientPool = (s.missionId?.startsWith('dcp-') && s.player.dailyClientPool)
+    ? { ...s.player.dailyClientPool, acceptedId: null }
+    : s.player.dailyClientPool
   return {
     ...s,
     player: {
@@ -126,7 +126,7 @@ export function applyAbandonMission(s: GameState, missions: Mission[]): GameStat
       miningCargoInProgress: undefined,
       roverMiningStartedAt: undefined,
       arrivalAt: null,
-      dailyContractorPool,
+      dailyClientPool,
       headingToDelivery: false,
       debriefPending: false,
       returningToEarth: false,

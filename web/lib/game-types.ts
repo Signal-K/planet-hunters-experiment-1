@@ -3,7 +3,7 @@
 
 import type { RocketConfig, Mission, Target, TessClassification, TessVerdict, TransitRange } from '@/lib/data'
 
-export interface DailyContractorPool {
+export interface DailyClientPool {
   date: string        // 'YYYY-MM-DD'
   missions: Mission[]
   acceptedId: string | null
@@ -69,9 +69,9 @@ export interface Player {
   // capping out permanently once enough of a mineral has ever been sold.
   marketSupply?: Record<string, number>
   marketSupplyUpdatedAt?: Record<string, number>
-  contractorMissions: Record<string, number>
-  contractorStreaks?: Record<string, number>
-  contractorCooldowns: Record<string, number>
+  clientMissions: Record<string, number>
+  clientStreaks?: Record<string, number>
+  clientCooldowns: Record<string, number>
   researchAnnotations: number
   refineryBuilt: boolean
   refineryUnlocked?: boolean
@@ -79,7 +79,7 @@ export interface Player {
   refineryQueue: { recipeId: string; startedAt: number }[]
   refinedGoods: Record<string, number>
   launchpadUpgraded: boolean
-  lastContractor?: string
+  lastClient?: string
   loanDebt: number
   loanOffered: boolean
   arrivalAt?: number | null
@@ -87,11 +87,11 @@ export interface Player {
   roverDeployments?: Array<{
     roverId: string
     targetId: string
-    contractorId: string
+    clientId: string
     timestamp: number
   }>
-  contractorTerritories?: Record<string, string[]>
-  dailyContractorPool?: DailyContractorPool
+  clientTerritories?: Record<string, string[]>
+  dailyClientPool?: DailyClientPool
   scannerBuilt?: boolean
   satelliteMonitoringBuilt?: boolean
   satelliteMonitoringLevel?: number
@@ -116,7 +116,7 @@ export interface Player {
   // the same event every check.
   lastSeenConfirmedAt?: string | null
   discoveredExoplanetTargets?: Record<string, Target>
-  contractorStructures?: import('@/lib/data').ContractorStructureRecord[]
+  clientStructures?: import('@/lib/data').ClientStructureRecord[]
   dailyQuestProgress?: import('@/lib/data').DailyQuestProgress[]
   licenseGrade?: LicenseGrade
   researchXP?: number
@@ -141,7 +141,7 @@ export interface GameState {
   doneSteps: Record<number, boolean>
   popup: string | null
   menuOpen: boolean
-  pendingTerritoryClaimFor?: { targetId: string; contractorId: string }
+  pendingTerritoryClaimFor?: { targetId: string; clientId: string }
 }
 
 import type React from 'react'

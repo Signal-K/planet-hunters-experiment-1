@@ -1,7 +1,7 @@
 // Ported from the Open Design prototype at
 // open-design/.od/projects/00593938-0432-4fe2-ab6f-c5213e91038a/landnam-client-bonus.html
 // (the `jobs` object in its inline <script>). Local-only preview data — not
-// wired to the real catalog (compare `lib/data.ts` MISSION_TEMPLATES/CONTRACTOR_SLOTS).
+// wired to the real catalog (compare `lib/data.ts` MISSION_TEMPLATES/CLIENT_SLOTS).
 
 export type JobKey = 'helios' | 'meridian' | 'vanta' | 'orbitex' | 'market'
 

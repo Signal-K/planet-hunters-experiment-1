@@ -14,7 +14,7 @@ describe('DEV_GROUPS', () => {
     const labels = DEV_GROUPS.map(g => g.label)
     expect(labels).toContain('Mission 1')
     expect(labels).toContain('Mission 2')
-    // M3 (the two-leg "mine then deliver" contractor pick) shipped this
+    // M3 (the two-leg "mine then deliver" client pick) shipped this
     // sprint, so it must be replayable via the DEV panel like M1/M2.
     expect(labels).toContain('Mission 3')
     // Post-onboarding story mission (telescope launch) — replayable once

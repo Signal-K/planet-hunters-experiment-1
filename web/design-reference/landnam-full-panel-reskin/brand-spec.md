@@ -71,7 +71,7 @@ All mineral icons are 24×24 outline SVGs with `stroke="currentColor"`, rendered
 - **Icon Badge** — bordered tile (Out There style), 28×28px, 1.5px white border, bg rgba(0,0,0,0.3).
 - **Chip** — compact label with border and tinted background.
 - **Segmented Bar** — row of segments for stat/value indicators.
-- **Contractor Mark** — 40px circular badge with initials.
+- **Client Mark** — 40px circular badge with initials.
 - **Confirm Action Sheet** — overlay dialog that gates every irreversible action. Title + description + Cancel/Confirm.
 
 ## Texture & Rendering — Chunky, Cel-Shaded, No Grain
@@ -155,7 +155,7 @@ Each variant card in the parts tray shows:
 ## Interaction Logic
 
 Grounded from `MissionBoardScreen.tsx` / `MiningScreen.tsx` / `useGameLoop.ts`:
-- Contractor-vs-freeform mission split
+- Client-vs-freeform mission split
 - Locked/cooldown/completed states shown disabled, never hidden
 - Two-leg delivery must be shown before commit
 - Payout premium never mines more cargo

@@ -1,22 +1,22 @@
 'use client'
 
 import React from 'react'
-import type { ContractorSlot } from '@/lib/data'
+import type { ClientSlot } from '@/lib/data'
 
-// Contractor tier visual identity (STS-239) — a small role-keyed geometric
+// Client tier visual identity (STS-239) — a small role-keyed geometric
 // glyph behind the initials, same "shape + color + label, no emoji"
-// vocabulary as OreShapeIcon (MiningScreen). Distinguishes contractor tiers
+// vocabulary as OreShapeIcon (MiningScreen). Distinguishes client tiers
 // (uiRole) at a glance instead of every dossier reading as an identical
 // initials circle regardless of role.
-type UiRole = ContractorSlot['uiRole']
+type UiRole = ClientSlot['uiRole']
 
-// Bespoke per-contractor marks (STS-240/STS-241) — a handful of named
-// contractors get their own glyph instead of sharing their uiRole's shape
-// with every other contractor at that tier (e.g. Nightjar Systems and
+// Bespoke per-client marks (STS-240/STS-241) — a handful of named
+// clients get their own glyph instead of sharing their uiRole's shape
+// with every other client at that tier (e.g. Nightjar Systems and
 // Solgrid Dynamics are both 'command' and would otherwise be identical).
 // Still shape+color+label only, no illustration/emoji — same vocabulary as
-// RoleGlyph, just keyed by contractor id instead of role.
-const CONTRACTOR_GLYPHS: Record<string, (color: string, size: number) => React.ReactNode> = {
+// RoleGlyph, just keyed by client id instead of role.
+const CLIENT_GLYPHS: Record<string, (color: string, size: number) => React.ReactNode> = {
   // Helios Propulsion Depot — thruster/propulsion: a horizontal arrow with
   // exhaust flare, pointing toward delivery.
   'helios-propulsion-depot': (color, s) => {
@@ -191,7 +191,7 @@ function RoleGlyph({ role, color, size }: { role: UiRole; color: string; size: n
   const mid = s / 2
   switch (role) {
     case 'command':
-      // Diamond — authority / directs other contractors' priority.
+      // Diamond — authority / directs other clients' priority.
       return <polygon points={`${mid},0 ${s},${mid} ${mid},${s} 0,${mid}`} fill="none" stroke={color} strokeWidth={1.5} opacity={0.55} />
     case 'science':
       // Hexagon — precision / research.
@@ -217,22 +217,22 @@ function RoleGlyph({ role, color, size }: { role: UiRole; color: string; size: n
   }
 }
 
-export default function ContractorMark({
+export default function ClientMark({
   initial,
   color,
   uiRole,
-  contractorId,
+  clientId,
   size = 36,
 }: {
   initial: string
   color: string
   uiRole: UiRole
-  /** Opts into a bespoke per-contractor glyph (see CONTRACTOR_GLYPHS) when
+  /** Opts into a bespoke per-client glyph (see CLIENT_GLYPHS) when
    * one exists for this id; falls back to the shared role glyph otherwise. */
-  contractorId?: string
+  clientId?: string
   size?: number
 }) {
-  const bespoke = contractorId ? CONTRACTOR_GLYPHS[contractorId] : undefined
+  const bespoke = clientId ? CLIENT_GLYPHS[clientId] : undefined
   return (
     <div style={{ position: 'relative', width: size, height: size, flexShrink: 0 }}>
       <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} style={{ position: 'absolute', inset: 0 }} aria-hidden="true">

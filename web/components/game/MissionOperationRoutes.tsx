@@ -108,8 +108,8 @@ export default function MissionOperationRoutes({
           onAbandon={game.abandonMission}
           addToast={game.addToast}
           hasPriorFreeOpsExperience={
-            Object.keys(game.player.contractorMissions ?? {}).length > 0
-            || (game.player.dailyContractorPool?.completedIds.length ?? 0) > 0
+            Object.keys(game.player.clientMissions ?? {}).length > 0
+            || (game.player.dailyClientPool?.completedIds.length ?? 0) > 0
           }
         />
       )
@@ -138,14 +138,15 @@ export default function MissionOperationRoutes({
           cargo={game.lastCargo ?? {}}
           onDone={game.onDebriefDone}
           minerals={game.catalog.minerals}
-          contractors={game.catalog.contractors}
-          contractorMissions={game.player.contractorMissions}
+          clients={game.catalog.clients}
+          clientMissions={game.player.clientMissions}
           freeOperations={game.player.freeOperations}
           annotations={game.player.researchAnnotations}
           missionsDone={game.player.missionsDone}
           hasCoach={hasCoach}
           shipDestroyed={!!game.player.shipDestroyed}
           rocket={game.rocket}
+          deliveryTargetName={deliveryTargetName}
         />
       )
   }

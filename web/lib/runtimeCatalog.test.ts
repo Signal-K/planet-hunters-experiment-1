@@ -15,7 +15,7 @@ describe('buildRuntimeCatalog', () => {
 
     expect(catalog.targets.some(target => target.id === TRANSIT_TELESCOPE_TARGET_ID)).toBe(true)
     expect(catalog.missions.some(mission => mission.id === TRANSIT_TELESCOPE_MISSION_ID)).toBe(true)
-    expect(catalog.contractors['mission-control']?.name).toBe('Mission Control')
+    expect(catalog.clients['mission-control']?.name).toBe('Mission Control')
   })
 
   it('keeps the active transit telescope target in the catalog during route repair', () => {
@@ -30,7 +30,7 @@ describe('buildRuntimeCatalog', () => {
     })
 
     expect(catalog.targets.some(target => target.id === TRANSIT_TELESCOPE_TARGET_ID)).toBe(true)
-    expect(catalog.contractors['mission-control']?.name).toBe('Mission Control')
+    expect(catalog.clients['mission-control']?.name).toBe('Mission Control')
   })
 
   it('turns discovered exoplanets into reachable survey missions and catalog targets', () => {
@@ -61,7 +61,7 @@ describe('buildRuntimeCatalog', () => {
     expect(surveyMission).toMatchObject({
       targetId: discovered.id,
       tag: 'SCIENCE',
-      contractor: 'lumen-research',
+      client: 'lumen-research',
       requires: expect.objectContaining({ max_orbit: discovered.orbit }),
     })
   })

@@ -18,7 +18,7 @@ describe('StepFooter', () => {
 
   it('supports inline placement inside an existing action bar', () => {
     const markup = renderToStaticMarkup(
-      <StepFooter step="Relay" description="Proceed to target." inline />,
+      <StepFooter step="Launch" description="Proceed to target." inline />,
     )
 
     expect(markup).not.toContain('position:absolute')

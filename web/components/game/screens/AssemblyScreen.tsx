@@ -62,7 +62,7 @@ export default function AssemblyScreen(props: AssemblyScreenProps) {
       onBack={props.onBack}
       hasCoach={props.hasCoach}
       coachManual={props.coachManual}
-      step="Relay"
+      step="Launch"
       stepDescription={
         check.ok
           ? 'Build checks pass — confirm launch to depart for ' + props.target.name + '.'

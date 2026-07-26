@@ -39,7 +39,7 @@ function tryDispatch() {
 
 // Gap before the next queued survey is allowed to appear. Several surveys
 // can legitimately queue back-to-back (e.g. M1-complete + progression-feel +
-// M2's contractor-pick all landing within a few seconds of each other) —
+// M2's client-pick all landing within a few seconds of each other) —
 // without a real gap they'd stack into a rapid-fire interrogation the moment
 // the player reaches a quiet screen. This spaces them out instead.
 const NEXT_SURVEY_GAP_MS = 60_000

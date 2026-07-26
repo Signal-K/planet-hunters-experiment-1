@@ -33,16 +33,16 @@ export interface TargetStructureBlueprint {
   id: string
   name: string
   kind: string
-  contractorRole: string
+  clientRole: string
   requiredMaterials: Record<string, number>
   buildTimeMs: number
   description: string
 }
 
-export interface ContractorStructureRecord {
+export interface ClientStructureRecord {
   targetId: string
   structureKind: string
-  contractorId: string
+  clientId: string
   state: TargetStructureState
   startedAt?: number
 }
@@ -74,7 +74,7 @@ export interface Mission {
   id: string
   title: string
   brief: string
-  contractor?: string
+  client?: string
   tag: string
   difficulty: string
   locked: boolean
@@ -153,7 +153,7 @@ export interface MineralMeta {
   shape?: 'circle' | 'diamond' | 'rect' | 'triangle'
 }
 
-export interface Contractor {
+export interface Client {
   id: string
   name: string
   color: string
@@ -163,12 +163,12 @@ export interface Contractor {
   mineralPreferences: string[]
   payoutPremium: number
   affinityBonusPerMission: number
-  uiRole: ContractorSlot['uiRole']
+  uiRole: ClientSlot['uiRole']
   payoutNotes?: string
   affinityNotes?: string
 }
 
-export interface ContractorSlot {
+export interface ClientSlot {
   id: string
   name: string
   color: string
@@ -211,7 +211,7 @@ export interface MissionTemplate {
   drillTierMin: number
   orbitMax: number
   payoutMultiplier: number
-  contractorRole: ContractorSlot['uiRole']
+  clientRole: ClientSlot['uiRole']
   payoutFormula: string
   survey?: MissionSurveyPlan
   construction?: MissionConstructionPlan

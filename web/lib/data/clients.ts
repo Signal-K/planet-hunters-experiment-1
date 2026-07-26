@@ -1,13 +1,13 @@
-// Landnam game data — contractors and contractor economy
+// Landnam game data — clients and client economy
 
-import type { Contractor, ContractorSlot } from './types'
+import type { Client, ClientSlot } from './types'
 
-export const CONTRACTOR_COOLDOWN_MS = 30 * 60 * 1000
-export const CONTRACTOR_STREAK_LIMIT = 2
+export const CLIENT_COOLDOWN_MS = 30 * 60 * 1000
+export const CLIENT_STREAK_LIMIT = 2
 export const MAX_AFFINITY_BONUS = 0.15
-export const CONTRACTOR_AFFINITY_MISSION_THRESHOLD = 5
+export const CLIENT_AFFINITY_MISSION_THRESHOLD = 5
 
-export const CONTRACTOR_SLOTS: ContractorSlot[] = [
+export const CLIENT_SLOTS: ClientSlot[] = [
   {
     id: 'helios-propulsion-depot',
     name: 'Helios Propulsion Depot',
@@ -190,11 +190,11 @@ export const CONTRACTOR_SLOTS: ContractorSlot[] = [
   },
 ]
 
-export const CONTRACTORS: Record<string, Contractor> = Object.fromEntries(
-  CONTRACTOR_SLOTS.map(c => [c.id, toContractor(c)])
+export const CLIENTS: Record<string, Client> = Object.fromEntries(
+  CLIENT_SLOTS.map(c => [c.id, toClient(c)])
 )
 
-export function toContractor(slot: ContractorSlot): Contractor {
+export function toClient(slot: ClientSlot): Client {
   return {
     id: slot.id,
     name: slot.name,
@@ -211,14 +211,14 @@ export function toContractor(slot: ContractorSlot): Contractor {
   }
 }
 
-export function contractorAffinityBonus(contractor: Contractor, completedJobs = 0): number {
-  return Math.min(MAX_AFFINITY_BONUS, completedJobs * contractor.affinityBonusPerMission)
+export function clientAffinityBonus(client: Client, completedJobs = 0): number {
+  return Math.min(MAX_AFFINITY_BONUS, completedJobs * client.affinityBonusPerMission)
 }
 
-export function contractorPayoutMultiplier(contractor: Contractor, completedJobs = 0): number {
-  return 1 + contractor.payoutPremium + contractorAffinityBonus(contractor, completedJobs)
+export function clientPayoutMultiplier(client: Client, completedJobs = 0): number {
+  return 1 + client.payoutPremium + clientAffinityBonus(client, completedJobs)
 }
 
-export function contractorUnlocked(contractor: Contractor, sequence: number): boolean {
-  return contractor.unlockTier <= sequence
+export function clientUnlocked(client: Client, sequence: number): boolean {
+  return client.unlockTier <= sequence
 }

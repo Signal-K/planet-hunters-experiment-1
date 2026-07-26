@@ -23,7 +23,7 @@ const EMPTY_SOL_MISSION: Mission = {
   id: 'satellite-sol-preview',
   title: 'Satellite Preview',
   brief: '',
-  contractor: '',
+  client: '',
   tag: 'PREVIEW',
   difficulty: 'L1',
   locked: false,

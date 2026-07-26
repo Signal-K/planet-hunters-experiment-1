@@ -48,9 +48,9 @@ function basePlayer(overrides: Record<string, unknown> = {}) {
     skillPoints: 0,
     unlockedSkillNodes: [],
     freeOperations: false,
-    contractorMissions: {},
-    contractorStreaks: {},
-    contractorCooldowns: {},
+    clientMissions: {},
+    clientStreaks: {},
+    clientCooldowns: {},
     researchAnnotations: 0,
     refineryBuilt: false,
     refineryUnlocked: false,
@@ -62,7 +62,7 @@ function basePlayer(overrides: Record<string, unknown> = {}) {
     loanOffered: false,
     seen_planets: [],
     roverDeployments: [],
-    contractorTerritories: {},
+    clientTerritories: {},
     ...overrides,
   }
 }
@@ -243,7 +243,7 @@ function playM2() {
 
 // ─── Full M3 play-through ─────────────────────────────────────────────────────
 //
-// M3 is now a two-leg contractor transport job (mine at a pickup target, then
+// M3 is now a two-leg client transport job (mine at a pickup target, then
 // deliver to a second target before flying home) — see [[Decide: M3 becomes
 // a transport mission]]. Both M3 missions have preset targetId/deliveryTargetId,
 // so picking one skips the target picker and goes straight to rocket-buy, same
@@ -262,7 +262,7 @@ function playM3ToLaunch() {
   // Navigate to missions
   navToMissions()
 
-  // Pick one of the two M3 transport-contractor missions.
+  // Pick one of the two M3 transport-client missions.
   cy.get('[data-testid="mission-card-lnm_m3_relay_bennu_vesta"]')
     .scrollIntoView().should('be.visible').click()
 

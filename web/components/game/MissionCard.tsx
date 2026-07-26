@@ -1,7 +1,7 @@
 'use client'
 
 import React from 'react'
-import type { Mission, Contractor, MineralMeta } from '@/lib/data'
+import type { Mission, Client, MineralMeta } from '@/lib/data'
 import TutorialHighlight from '@/components/game/TutorialHighlight'
 import styles from '@/components/game/screens/MissionBoard.module.css'
 
@@ -9,7 +9,7 @@ type CardState = 'available' | 'locked' | 'cooldown' | 'completed'
 
 interface MissionCardProps {
   mission: Mission
-  contractor?: Contractor | null
+  client?: Client | null
   mineralMeta: Record<string, MineralMeta>
   targetCount: number
   displayPayout: number
@@ -31,13 +31,13 @@ interface MissionCardProps {
 
 export function missionCardTags({
   mission,
-  contractor,
+  client,
   isStoryMission,
   cardState,
   lockedDetail,
   cooldownLabel,
   routeLabel,
-}: Pick<MissionCardProps, 'mission' | 'contractor' | 'isStoryMission' | 'cardState' | 'lockedDetail' | 'cooldownLabel' | 'routeLabel'>): { tone: 'burn' | 'job' | 'twostop'; label: string }[] {
+}: Pick<MissionCardProps, 'mission' | 'client' | 'isStoryMission' | 'cardState' | 'lockedDetail' | 'cooldownLabel' | 'routeLabel'>): { tone: 'burn' | 'job' | 'twostop'; label: string }[] {
   const difficultyTier = mission.difficulty.startsWith('L') ? parseInt(mission.difficulty.slice(1), 10) : NaN
   const fuelTimerLabel = routeLabel ? 'Two-leg burn' : mission.deliveryTargetId ? 'Delivery burn' : difficultyTier >= 3 ? 'Long burn' : 'Standard burn'
   if (cardState === 'cooldown' && cooldownLabel) return [{ tone: 'burn', label: `Cooldown · ${cooldownLabel}` }]
@@ -46,7 +46,7 @@ export function missionCardTags({
   const tags: { tone: 'burn' | 'job' | 'twostop'; label: string }[] = [{ tone: 'burn', label: fuelTimerLabel }]
   if (routeLabel) tags.push({ tone: 'twostop', label: 'Two-stop job' })
   if (isStoryMission) tags.push({ tone: 'job', label: 'Story mission' })
-  else if (contractor) tags.push({ tone: 'job', label: contractor.uiRole === 'bulk' ? 'Bulk freight' : 'Starter operations' })
+  else if (client) tags.push({ tone: 'job', label: client.uiRole === 'bulk' ? 'Bulk freight' : 'Starter operations' })
   else tags.push({ tone: 'job', label: 'Self-directed' })
   return tags
 }
@@ -55,7 +55,7 @@ const TAG_CLASS = { burn: styles.tagBurn, job: styles.tagJob, twostop: styles.ta
 
 export default function MissionCard({
   mission,
-  contractor,
+  client,
   mineralMeta,
   targetCount,
   displayPayout,
@@ -70,10 +70,10 @@ export default function MissionCard({
   onPick,
   onPreview,
 }: MissionCardProps) {
-  const accent = contractor?.color ?? '#6cd4ff'
+  const accent = client?.color ?? '#6cd4ff'
   const isAvailable = cardState === 'available'
-  const tags = missionCardTags({ mission, contractor, isStoryMission, cardState, lockedDetail, cooldownLabel, routeLabel })
-  const statusCta = cardState === 'cooldown' ? (cooldownLabel ?? 'On cooldown')
+  const tags = missionCardTags({ mission, client, isStoryMission, cardState, lockedDetail, cooldownLabel, routeLabel })
+  const statusCta = cardState === 'cooldown' ? 'Cooldown'
     : cardState === 'completed' ? 'Claimed'
     : cardState === 'locked' ? (lockedDetail ?? 'Locked')
     : ''
@@ -98,15 +98,15 @@ export default function MissionCard({
       style={{ position: 'relative' }}
     >
       {highlighted && <TutorialHighlight />}
-      <div className={styles.mark} style={{ background: accent }}>{contractor?.initial ?? 'OP'}</div>
+      <div className={styles.mark} style={{ background: accent }}>{client?.initial ?? 'OP'}</div>
       <div className={styles.cardMain}>
         <div className={styles.cardTitle}>{mission.title}</div>
-        <div className={styles.cardClient}>{contractor?.name ?? (isStoryMission ? 'Story mission' : 'Free Ops')}</div>
+        <div className={styles.cardClient}>{client?.name ?? (isStoryMission ? 'Story mission' : 'Free Ops')}</div>
         <div className={styles.cardWants}>
           {isStoryMission
             ? 'Story mission · not a client request'
-            : contractor
-              ? <>Wants <b>{contractor.mineralPreferences.map(id => mineralMeta[id]?.name ?? id).join(' / ')}</b> · +{Math.round(contractor.payoutPremium * 100)}% pay</>
+            : client
+              ? <>Wants <b>{client.mineralPreferences.map(id => mineralMeta[id]?.name ?? id).join(' / ')}</b> · +{Math.round(client.payoutPremium * 100)}% pay</>
               : 'Choose target · keep the haul · market-led mining'}
         </div>
         {routeLabel && <div className={styles.cardRoute}>{routeLabel}</div>}

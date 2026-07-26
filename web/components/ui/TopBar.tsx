@@ -3,6 +3,7 @@
 import React from 'react'
 import { IconBtn } from './Button'
 import { UI_ZONES } from '@/lib/ui-zones'
+import { formatFrancs } from '@/lib/format'
 
 interface TopBarProps {
   eyebrow?: string
@@ -17,6 +18,14 @@ interface TopBarProps {
   // sits in the low-opacity tail of the gradient and the scrolled-past card
   // text shows straight through it — solid avoids that.
   solid?: boolean
+  // Player level pill ("LV. 3") shown left of the title, per the design
+  // doc's Topbar spec (§2.1: "[LV badge + icon] [Screen Title] ...
+  // [Credit Balance]", consistent across all screens).
+  levelBadge?: string
+  // Credit balance chip shown at the far right, before any custom `right`
+  // content. Omit to leave the balance off (most screens don't need it in
+  // the header — they show francs elsewhere).
+  credits?: number
 }
 
 function BackIcon() {
@@ -37,7 +46,25 @@ function MenuIcon() {
   )
 }
 
-export default function TopBar({ eyebrow, title, onBack, right, dense, solid }: TopBarProps) {
+function ClockIcon() {
+  return (
+    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="12" r="9" />
+      <path d="M12 7v5l3.5 2" />
+    </svg>
+  )
+}
+
+function CoinIcon() {
+  return (
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="12" r="9" />
+      <path d="M9.5 15.5V9.5a2 2 0 0 1 2-2h1a2 2 0 0 1 0 4h-3.5" />
+    </svg>
+  )
+}
+
+export default function TopBar({ eyebrow, title, onBack, right, dense, solid, levelBadge, credits }: TopBarProps) {
   return (
     <div data-ui-zone={UI_ZONES.topChrome} style={{
       position: 'absolute',
@@ -58,11 +85,24 @@ export default function TopBar({ eyebrow, title, onBack, right, dense, solid }: 
       gap: 10,
       pointerEvents: 'none',
     }}>
-      <div style={{ pointerEvents: 'auto' }}>
+      <div style={{ pointerEvents: 'auto', display: 'flex', alignItems: 'center', gap: 8 }}>
         {onBack
           ? <IconBtn onClick={onBack} ariaLabel="back" testId="top-bar-back"><BackIcon /></IconBtn>
           : <IconBtn ariaLabel="menu"><MenuIcon /></IconBtn>
         }
+        {levelBadge && (
+          <span style={{
+            display: 'flex', alignItems: 'center', gap: 4,
+            padding: '3px 8px', borderRadius: 999,
+            border: '1px solid rgba(112,217,234,0.4)',
+            background: 'rgba(112,217,234,0.08)',
+            color: 'var(--ln-cyan)',
+            fontFamily: 'var(--ln-font-display)', fontWeight: 800, fontSize: 9,
+            letterSpacing: '0.08em', textTransform: 'uppercase', whiteSpace: 'nowrap',
+          }}>
+            <ClockIcon /> {levelBadge}
+          </span>
+        )}
       </div>
       <div style={{ flex: 1, pointerEvents: 'none' }}>
         {eyebrow && (
@@ -92,7 +132,22 @@ export default function TopBar({ eyebrow, title, onBack, right, dense, solid }: 
           </h1>
         )}
       </div>
-      <div style={{ pointerEvents: 'auto', display: 'flex', gap: 6 }}>{right}</div>
+      <div style={{ pointerEvents: 'auto', display: 'flex', alignItems: 'center', gap: 6 }}>
+        {credits !== undefined && (
+          <span style={{
+            display: 'flex', alignItems: 'center', gap: 4,
+            padding: '4px 9px', borderRadius: 999,
+            border: '1px solid rgba(224,165,39,0.4)',
+            background: 'rgba(224,165,39,0.08)',
+            color: 'var(--ln-amber)',
+            fontFamily: 'var(--ln-font-mono)', fontWeight: 800, fontSize: 11,
+            whiteSpace: 'nowrap',
+          }}>
+            <CoinIcon /> {formatFrancs(credits)}
+          </span>
+        )}
+        {right}
+      </div>
     </div>
   )
 }

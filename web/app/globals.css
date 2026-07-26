@@ -328,8 +328,14 @@ button { cursor: pointer; }
   flex: none;
   height: var(--ln-nav-h);
   display: flex;
-  background: var(--ln-surface);
-  border-top: 1px solid var(--ln-hairline-strong);
+  /* Glass HUD register, not a flat solid bar — matches the translucent
+     dark-panel chrome (.bp-panel/.hud-chip/.scene-btn) in the Open Design
+     reference (open-design/.od/projects/
+     a531c672-4e0b-4c34-bd0f-19a33add20c6/landnam-earth-base-v2.html). */
+  background: rgba(6, 11, 22, 0.82);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border-top: 1px solid rgba(255, 255, 255, 0.14);
 }
 
 .game-screen { position: absolute; inset: 0; overflow: hidden; background: var(--ln-bg); }

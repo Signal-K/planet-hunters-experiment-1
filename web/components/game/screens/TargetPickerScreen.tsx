@@ -7,10 +7,14 @@ import { compatibleTargetsFor, type Mission, type Target } from '@/lib/data'
 import type { Catalog } from '@/lib/catalog'
 import TutorialHighlight from '@/components/game/TutorialHighlight'
 import GalaxyMap from '@/components/TargetPicker/GalaxyMap'
+import MineralChip from '@/components/game/MineralChip'
 import MissionSetupShell, {
   MissionSetupCard,
   MissionSetupFrame,
 } from '@/components/game/screens/MissionSetupShell'
+
+const RARITY_RANK: Record<string, number> = { exotic: 3, rare: 2, uncommon: 1, common: 0 }
+const DEPOSIT_MIX_CAP = 6
 
 interface TargetPickerScreenProps {
   mission: Mission
@@ -90,11 +94,23 @@ export default function TargetPickerScreen({ mission, onBack, onPick, hasCoach, 
 
   const pickedTarget = TARGETS.find(x => x.id === picked)
   const deliveryTarget = mission.deliveryTargetId ? TARGETS.find(t => t.id === mission.deliveryTargetId) : undefined
-  const mapStyle: React.CSSProperties = {
-    background: 'radial-gradient(60% 60% at 50% 50%, #0a1422 0%, #03060a 90%)',
-    position: 'relative',
-    height: '100%',
-  }
+  const pickedIsCompatible = pickedTarget ? compatIds.has(pickedTarget.id) : false
+  const missionMineralKeys = Object.keys(mission.requires.minerals)
+
+  // Deposit mix — required minerals sort first (regardless of rarity), then
+  // by rarity descending, capped with a "+N more" overflow like the design.
+  const depositMixAll = pickedTarget
+    ? [...pickedTarget.minerals].sort((a, b) => {
+        const aWanted = missionMineralKeys.includes(a) ? 1 : 0
+        const bWanted = missionMineralKeys.includes(b) ? 1 : 0
+        if (aWanted !== bWanted) return bWanted - aWanted
+        const aRank = RARITY_RANK[MINERAL_META[a]?.rarity ?? 'common'] ?? 0
+        const bRank = RARITY_RANK[MINERAL_META[b]?.rarity ?? 'common'] ?? 0
+        return bRank - aRank
+      })
+    : []
+  const depositMixShown = depositMixAll.slice(0, DEPOSIT_MIX_CAP)
+  const depositMixOverflow = Math.max(0, depositMixAll.length - DEPOSIT_MIX_CAP)
 
   return (
     <MissionSetupShell
@@ -131,35 +147,14 @@ export default function TargetPickerScreen({ mission, onBack, onPick, hasCoach, 
             <span style={{ flex: 1 }} />
             <StatusPill kind="amber" dim>Rocket range · Orbit ≤ {mission.requires.max_orbit}</StatusPill>
           </div>
-          <MissionSetupFrame style={mapStyle}>
-            <div style={{ position: 'absolute', top: 10, left: 12, right: 12, zIndex: 5, display: 'flex', alignItems: 'center', gap: 10, pointerEvents: 'none' }}>
-              <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 10, fontWeight: 800, letterSpacing: '0.2em', color: 'var(--ln-cyan)', textTransform: 'uppercase' }}>
-                Stellar OS
-              </div>
-              <div style={{ display: 'flex', gap: 5, fontFamily: 'var(--ln-font-mono)', fontSize: 9, letterSpacing: '0.12em', textTransform: 'uppercase' }}>
-                <span style={{ padding: '4px 7px', border: '1px solid rgba(63,169,255,0.55)', borderRadius: 4, color: 'var(--ln-text)', background: 'rgba(8,16,28,0.78)' }}>Solar System</span>
-                <span style={{ padding: '4px 7px', border: '1px solid rgba(135,207,250,0.18)', borderRadius: 4, color: 'var(--ln-text-muted)', background: 'rgba(8,16,28,0.56)' }}>Target Acquisition</span>
-              </div>
-              <span style={{ marginLeft: 'auto', fontFamily: 'var(--ln-font-mono)', fontSize: 9, color: 'var(--ln-text-muted)', letterSpacing: '0.1em' }}>RANGE LOCK · L{mission.requires.max_orbit}</span>
-            </div>
+          <MissionSetupFrame style={{ position: 'relative', height: '100%' }}>
             <GalaxyMap
               mission={mission}
               targets={TARGETS}
               compatibleIds={compatIds}
               pickedId={picked}
               onPick={setPicked}
-              hasCoach={hasCoach}
             />
-            <div style={{ position: 'absolute', left: 12, right: 12, bottom: 10, zIndex: 5, display: 'flex', alignItems: 'center', gap: 12, padding: '8px 10px', border: '1px solid rgba(135,207,250,0.2)', borderRadius: 6, background: 'rgba(3,6,10,0.88)', pointerEvents: 'none' }}>
-              <div style={{ minWidth: 0, flex: 1 }}>
-                <div style={{ fontFamily: 'var(--ln-font-mono)', fontSize: 8, color: 'var(--ln-text-muted)', letterSpacing: '0.16em', textTransform: 'uppercase' }}>Selected body</div>
-                <div style={{ marginTop: 2, fontFamily: 'var(--ln-font-display)', fontSize: 13, fontWeight: 800, color: 'var(--ln-text)', textTransform: 'uppercase' }}>{pickedTarget?.name ?? 'Awaiting selection'}</div>
-              </div>
-              <div style={{ textAlign: 'right', fontFamily: 'var(--ln-font-mono)', fontSize: 9, color: 'var(--ln-text-dim)', lineHeight: 1.5 }}>
-                <div>{compat.length} reachable targets</div>
-                <div>{pickedTarget ? `Orbit ${pickedTarget.orbit} · ${pickedTarget.difficulty}` : 'Select an amber marker'}</div>
-              </div>
-            </div>
             {hasCoach && <TutorialHighlight borderRadius={14} />}
           </MissionSetupFrame>
         </div>
@@ -178,50 +173,47 @@ export default function TargetPickerScreen({ mission, onBack, onPick, hasCoach, 
 
       {pickedTarget ? (
         <MissionSetupCard>
+              {missionMineralKeys.length > 0 && (
+                <div style={{
+                  display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12,
+                  padding: '8px 10px', borderRadius: 6,
+                  border: '1px dashed var(--ln-amber-border)', background: 'var(--ln-amber-soft)',
+                }}>
+                  <span style={{ fontFamily: 'var(--ln-font-body)', fontSize: 11, color: 'var(--ln-text-dim)', lineHeight: 1.4 }}>
+                    Contract wants{' '}
+                    <b style={{ color: 'var(--ln-amber)', fontWeight: 700 }}>
+                      {missionMineralKeys.map(m => MINERAL_META[m]?.name ?? m).join(', ')}
+                    </b>
+                  </span>
+                </div>
+              )}
+
               <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                 <PlanetSVG id={pickedTarget.id} size={48} />
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 9, fontWeight: 700, letterSpacing: '0.2em', color: '#f5a623', textTransform: 'uppercase' }}>Target Selected</div>
-                  <div style={{ fontFamily: 'var(--ln-font-display)', fontWeight: 800, fontSize: 20, color: '#e6efff', letterSpacing: '0.02em' }}>{pickedTarget.name}</div>
+                  <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 9, fontWeight: 700, letterSpacing: '0.2em', color: pickedIsCompatible ? 'var(--ln-ok)' : 'var(--ln-crit)', textTransform: 'uppercase' }}>
+                    {pickedIsCompatible ? 'Reachable' : 'Not compatible'}
+                  </div>
+                  <div style={{ fontFamily: 'var(--ln-font-display)', fontWeight: 800, fontSize: 20, color: 'var(--ln-text)', letterSpacing: '0.02em' }}>{pickedTarget.name}</div>
                   {pickedTarget.recommended && <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 9, color: 'var(--ln-ok)', letterSpacing: '0.14em', textTransform: 'uppercase' }}>Recommended</div>}
-                  <div style={{ fontFamily: 'var(--ln-font-mono)', fontSize: 10, letterSpacing: '0.16em', color: '#7a8294', textTransform: 'uppercase' }}>Orbit {pickedTarget.orbit} · {pickedTarget.difficulty}</div>
+                  <div style={{ fontFamily: 'var(--ln-font-mono)', fontSize: 10, letterSpacing: '0.16em', color: 'var(--ln-text-muted)', textTransform: 'uppercase' }}>Orbit {pickedTarget.orbit} · {pickedTarget.difficulty}</div>
                 </div>
               </div>
               {!hasCoach && (
-                <div style={{ marginTop: 10, fontFamily: 'var(--ln-font-body)', fontSize: 12, color: '#a9b8ce', lineHeight: 1.4 }}>{pickedTarget.brief}</div>
+                <div style={{ marginTop: 10, fontFamily: 'var(--ln-font-body)', fontSize: 12, color: 'var(--ln-text-dim)', lineHeight: 1.4 }}>{pickedTarget.brief}</div>
               )}
-              {/* Mission needs — minerals required by the contract */}
-              {Object.keys(mission.requires.minerals).length > 0 && (
-                <div style={{ marginTop: hasCoach ? 6 : 10 }}>
-                  <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 8, fontWeight: 700, letterSpacing: '0.22em', color: 'var(--ln-text-muted)', textTransform: 'uppercase', marginBottom: 5 }}>Mission needs</div>
-                  <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-                    {Object.entries(mission.requires.minerals).map(([min, qty]) => {
-                      const meta = MINERAL_META[min]
-                      const available = pickedTarget.minerals.includes(min)
-                      return (
-                        <div key={min} style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '4px 9px', background: available ? 'rgba(8,16,28,0.7)' : 'rgba(220,50,50,0.08)', border: `1px solid ${available ? (meta?.color ?? '#fff') + 'cc' : 'rgba(220,50,50,0.4)'}`, borderRadius: 6, boxShadow: available ? `0 0 10px ${meta?.color ?? '#fff'}33` : 'none' }}>
-                          <span style={{ fontFamily: 'var(--ln-font-mono)', fontSize: 10, fontWeight: 800, color: available ? (meta?.color ?? '#fff') : '#ff5a6a' }}>{meta?.sym ?? min}</span>
-                          <span style={{ fontFamily: 'var(--ln-font-display)', fontSize: 11, fontWeight: 700, color: available ? (meta?.color ?? '#fff') : '#ff5a6a' }}>{meta?.name ?? min} ×{qty}</span>
-                          {!available && <span style={{ fontFamily: 'var(--ln-font-display)', fontSize: 9, color: '#ff5a6a', letterSpacing: '0.12em' }}>NOT HERE</span>}
-                        </div>
-                      )
-                    })}
-                  </div>
-                </div>
-              )}
-              {/* Target deposits — what this asteroid actually has */}
-              <div style={{ marginTop: 8 }}>
-                <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 8, fontWeight: 700, letterSpacing: '0.22em', color: 'var(--ln-text-muted)', textTransform: 'uppercase', marginBottom: 5 }}>Available here</div>
+              {/* Deposit mix — required minerals first, then rarest first, capped */}
+              <div style={{ marginTop: hasCoach ? 6 : 10 }}>
+                <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 8, fontWeight: 700, letterSpacing: '0.22em', color: 'var(--ln-text-muted)', textTransform: 'uppercase', marginBottom: 5 }}>Deposit mix</div>
                 <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-                  {pickedTarget.minerals.map(min => {
-                    const meta = MINERAL_META[min]
-                    return (
-                      <div key={min} style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '3px 8px', background: 'rgba(8,16,28,0.5)', border: `1px solid ${meta?.color ?? '#fff'}44`, borderRadius: 6 }}>
-                        <span style={{ fontFamily: 'var(--ln-font-mono)', fontSize: 10, fontWeight: 800, color: meta?.color ?? '#fff' }}>{meta?.sym ?? min}</span>
-                        <span style={{ fontFamily: 'var(--ln-font-display)', fontSize: 11, color: (meta?.color ?? '#fff') + 'aa' }}>{meta?.name ?? min}</span>
-                      </div>
-                    )
-                  })}
+                  {depositMixShown.map(min => (
+                    <MineralChip key={min} meta={MINERAL_META[min] ? { name: MINERAL_META[min].name, sym: MINERAL_META[min].sym, color: MINERAL_META[min].color } : { name: min, sym: min, color: '#ffffff' }} />
+                  ))}
+                  {depositMixOverflow > 0 && (
+                    <span style={{ display: 'inline-flex', alignItems: 'center', padding: '3px 8px', fontFamily: 'var(--ln-font-mono)', fontSize: 10, color: 'var(--ln-text-muted)' }}>
+                      +{depositMixOverflow} more
+                    </span>
+                  )}
                 </div>
               </div>
         </MissionSetupCard>

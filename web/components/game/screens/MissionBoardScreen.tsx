@@ -6,8 +6,8 @@ import TopBar from '@/components/ui/TopBar'
 import Panel from '@/components/ui/Panel'
 import StatusPill from '@/components/ui/StatusPill'
 import { IconBtn } from '@/components/ui/Button'
-import { compatibleTargetsFor, contractorAffinityBonus, contractorUnlocked, FREE_OPS_START_MISSIONS_DONE, CONTRACTOR_AFFINITY_MISSION_THRESHOLD, MISSION_TEMPLATES, CONTRACTOR_SLOTS, SELF_DIRECTED_MINING_MISSION_ID } from '@/lib/data'
-import type { DailyContractorPool, Mission } from '@/lib/data'
+import { compatibleTargetsFor, clientAffinityBonus, clientUnlocked, FREE_OPS_START_MISSIONS_DONE, CLIENT_AFFINITY_MISSION_THRESHOLD, MISSION_TEMPLATES, CLIENT_SLOTS, SELF_DIRECTED_MINING_MISSION_ID } from '@/lib/data'
+import type { DailyClientPool, Mission } from '@/lib/data'
 import type { Catalog } from '@/lib/catalog'
 import { TUTORIAL_CONTENT_TOP } from '@/lib/tutorial-layout'
 import { UI_ZONES } from '@/lib/ui-zones'
@@ -101,9 +101,10 @@ interface MissionBoardScreenProps {
   freeOperations: boolean
   hasCoach?: boolean
   catalog: Catalog
-  contractorMissions?: Record<string, number>
-  contractorCooldowns?: Record<string, number>
-  dailyContractorPool?: DailyContractorPool
+  clientMissions?: Record<string, number>
+  clientCooldowns?: Record<string, number>
+  dailyClientPool?: DailyClientPool
+  francs?: number
 }
 
 // "Custom Missions Unlocked" / "Infrastructure" are one-time explainer copy,
@@ -114,7 +115,7 @@ const EXPLAINER_ACK_KEY = 'ln_missionboard_freeops_explainer_ack'
 
 // `alreadyExperienced` backfills players who reached Free Ops before this
 // dismiss tracking existed (i.e. everyone's save at ship time) — anyone who
-// has ever completed a contractor mission has plainly already seen how Free
+// has ever completed a client mission has plainly already seen how Free
 // Ops works and should never see this explainer, not even once. Without
 // this, every existing deep-progress save hits the "first time" case on its
 // next Mission Board visit purely because the ack key was never set,
@@ -140,8 +141,8 @@ function formatCooldown(remaining: number): string {
   return `${mins}m ${secs}s`
 }
 
-export default function MissionBoardScreen({ onBack, onPick, missionsDone, freeOperations, hasCoach, catalog, contractorMissions, contractorCooldowns, dailyContractorPool }: MissionBoardScreenProps) {
-  const { missions: MISSIONS, contractors: CONTRACTORS, minerals: MINERAL_META, targets } = catalog
+export default function MissionBoardScreen({ onBack, onPick, missionsDone, freeOperations, hasCoach, catalog, clientMissions, clientCooldowns, dailyClientPool, francs }: MissionBoardScreenProps) {
+  const { missions: MISSIONS, clients: CLIENTS, minerals: MINERAL_META, targets } = catalog
   const [tick, setTick] = useState(Date.now())
   useEffect(() => {
     const id = setInterval(() => setTick(Date.now()), 10000)
@@ -149,17 +150,17 @@ export default function MissionBoardScreen({ onBack, onPick, missionsDone, freeO
   }, [])
   const [showClientBonusGuide, setShowClientBonusGuide] = useState(false)
   const [previewId, setPreviewId] = useState<string | null>(null)
-  const hasPriorFreeOpsExperience = Object.keys(contractorMissions ?? {}).length > 0
-    || (dailyContractorPool?.completedIds.length ?? 0) > 0
+  const hasPriorFreeOpsExperience = Object.keys(clientMissions ?? {}).length > 0
+    || (dailyClientPool?.completedIds.length ?? 0) > 0
   const { show: showFreeOpsExplainer, dismiss: dismissFreeOpsExplainer } = useFreeOpsExplainerAck(hasPriorFreeOpsExperience)
   const now = tick
-  const isOnCooldown = (contractor: string | undefined) => {
-    if (!contractorCooldowns || !contractor) return false
-    const expiry = contractorCooldowns[contractor]
+  const isOnCooldown = (client: string | undefined) => {
+    if (!clientCooldowns || !client) return false
+    const expiry = clientCooldowns[client]
     return expiry && expiry > now
   }
   const isCompletedToday = (id: string) =>
-    dailyContractorPool?.completedIds.includes(id) ?? false
+    dailyClientPool?.completedIds.includes(id) ?? false
   const mineralEntries = Object.values(MINERAL_META)
   const averageMineralPrice = mineralEntries.reduce((sum, mineral) => sum + mineral.price, 0) / Math.max(1, mineralEntries.length)
   const hotMinerals = mineralEntries
@@ -167,7 +168,7 @@ export default function MissionBoardScreen({ onBack, onPick, missionsDone, freeO
     .sort((a, b) => b.price - a.price)
     .slice(0, 3)
 
-  const useDailyPool = freeOperations && !!dailyContractorPool
+  const useDailyPool = freeOperations && !!dailyClientPool
   const sequence = missionsDone + 1
 
   // In daily pool mode, the display list is the pool itself (available + completed).
@@ -176,29 +177,29 @@ export default function MissionBoardScreen({ onBack, onPick, missionsDone, freeO
   const freeOpsMissionPool = MISSIONS.filter(m => m.id.startsWith('freeops-') || m.id.startsWith('exo-survey-') || m.tag === 'STORY')
   const exoplanetSurveyPool = freeOperations ? MISSIONS.filter(m => m.id.startsWith('exo-survey-')) : []
   // Hand-authored "mine then deliver" logistics jobs are always offered in Free Ops,
-  // independent of the daily-rotating contractor pool.
-  const logisticsMissionPool = freeOperations ? MISSIONS.filter(m => !!m.deliveryTargetId && !isOnCooldown(m.contractor)) : []
-  // Self-directed mining has no contractor, no daily limit, and no cooldown —
+  // independent of the daily-rotating client pool.
+  const logisticsMissionPool = freeOperations ? MISSIONS.filter(m => !!m.deliveryTargetId && !isOnCooldown(m.client)) : []
+  // Self-directed mining has no client, no daily limit, and no cooldown —
   // always launchable from its own dedicated Free Ops panel below (not a card
-  // in the regular list, since it isn't tied to a contractor or a pool slot).
-  const contractorPoolExhausted = useDailyPool
-    && dailyContractorPool!.missions.length > 0
-    && dailyContractorPool!.missions.every(m => isCompletedToday(m.id))
+  // in the regular list, since it isn't tied to a client or a pool slot).
+  const clientPoolExhausted = useDailyPool
+    && dailyClientPool!.missions.length > 0
+    && dailyClientPool!.missions.every(m => isCompletedToday(m.id))
   const available = useDailyPool
-    ? [...storyMissionPool, ...logisticsMissionPool, ...dailyContractorPool!.missions.filter(m => !isCompletedToday(m.id)), ...exoplanetSurveyPool]
+    ? [...storyMissionPool, ...logisticsMissionPool, ...dailyClientPool!.missions.filter(m => !isCompletedToday(m.id)), ...exoplanetSurveyPool]
     : MISSIONS.filter(m => {
         if (m.id === SELF_DIRECTED_MINING_MISSION_ID) return false
-        const customMission = !m.contractor
-        if (m.contractor && !CONTRACTORS[m.contractor]) return false
+        const customMission = !m.client
+        if (m.client && !CLIENTS[m.client]) return false
         if (freeOperations) {
-          return customMission || !!m.deliveryTargetId || (freeOpsMissionPool.some(item => item.id === m.id) && !isOnCooldown(m.contractor))
+          return customMission || !!m.deliveryTargetId || (freeOpsMissionPool.some(item => item.id === m.id) && !isOnCooldown(m.client))
         }
-        // Onboarding: sequence is the only gate — contractor unlock tiers don't apply
+        // Onboarding: sequence is the only gate — client unlock tiers don't apply
         return m.sequence === sequence
       })
 
   const completedToday = useDailyPool
-    ? dailyContractorPool!.missions.filter(m => isCompletedToday(m.id))
+    ? dailyClientPool!.missions.filter(m => isCompletedToday(m.id))
     : []
 
   const onboardingComplete = !freeOperations && available.length === 0 && missionsDone >= FREE_OPS_START_MISSIONS_DONE
@@ -214,31 +215,31 @@ export default function MissionBoardScreen({ onBack, onPick, missionsDone, freeO
   // In free-ops daily-pool mode, available missions first, completed at the bottom
   const isListedAvailable = (m: typeof rawList[0]) =>
     !isCompletedToday(m.id) &&
-    !(!useDailyPool && isOnCooldown(m.contractor)) &&
+    !(!useDailyPool && isOnCooldown(m.client)) &&
     (freeOperations || available.some(item => item.id === m.id))
   const missionList = useDailyPool
     ? [...rawList].sort((a, b) => Number(!isListedAvailable(a)) - Number(!isListedAvailable(b)))
     : rawList
   const firstValidIdx = missionList.findIndex(m => {
     if (isCompletedToday(m.id)) return false
-    if (!useDailyPool && isOnCooldown(m.contractor)) return false
-    const ctr = m.contractor ? CONTRACTORS[m.contractor] : null
-    if (m.contractor && !ctr) return false
-    const cr = freeOperations || m.sequence === sequence || (!!ctr && contractorUnlocked(ctr, sequence))
+    if (!useDailyPool && isOnCooldown(m.client)) return false
+    const ctr = m.client ? CLIENTS[m.client] : null
+    if (m.client && !ctr) return false
+    const cr = freeOperations || m.sequence === sequence || (!!ctr && clientUnlocked(ctr, sequence))
     return cr && (freeOperations || available.some(item => item.id === m.id))
   })
-  const hasContractorMission = missionList.some(m => !!m.contractor)
+  const hasClientMission = missionList.some(m => !!m.client)
   const cardModels = missionList
     .map((m, idx) => {
       const completedToday_ = isCompletedToday(m.id)
-      const cooldown = !useDailyPool && isOnCooldown(m.contractor)
-      const contractor = m.contractor ? CONTRACTORS[m.contractor] : null
-      if (m.contractor && !contractor) return null
+      const cooldown = !useDailyPool && isOnCooldown(m.client)
+      const client = m.client ? CLIENTS[m.client] : null
+      if (m.client && !client) return null
       const isStoryMission = m.tag === 'STORY' && !m.deliveryTargetId
-      const contractorReady = freeOperations || m.sequence === sequence || (!!contractor && contractorUnlocked(contractor, sequence))
-      const unlocked = !completedToday_ && !cooldown && contractorReady && (freeOperations || available.some(item => item.id === m.id))
+      const clientReady = freeOperations || m.sequence === sequence || (!!client && clientUnlocked(client, sequence))
+      const unlocked = !completedToday_ && !cooldown && clientReady && (freeOperations || available.some(item => item.id === m.id))
       const mTargets = compatibleTargetsFor(m, targets)
-      const affinityMultiplier = isStoryMission || !contractor ? 0 : contractorAffinityBonus(contractor, contractorMissions?.[contractor.id] ?? 0)
+      const affinityMultiplier = isStoryMission || !client ? 0 : clientAffinityBonus(client, clientMissions?.[client.id] ?? 0)
       const affinityBonus = Math.round(m.payout.francs * affinityMultiplier)
       const displayPayout = m.payout.francs + affinityBonus
       const isHighlighted = hasCoach && idx === firstValidIdx
@@ -246,13 +247,13 @@ export default function MissionBoardScreen({ onBack, onPick, missionsDone, freeO
         : cooldown ? 'cooldown' as const
         : !unlocked ? 'locked' as const
         : 'available' as const
-      const lockedDetail = !contractorReady ? (contractor ? `L${contractor.unlockTier}` : 'Locked') : m.sequence <= missionsDone ? 'Completed' : m.unlockAt
-      const cooldownLabel = cooldown && m.contractor ? formatCooldown(contractorCooldowns![m.contractor] - now) : undefined
+      const lockedDetail = !clientReady ? (client ? `L${client.unlockTier}` : 'Locked') : m.sequence <= missionsDone ? 'Completed' : m.unlockAt
+      const cooldownLabel = cooldown && m.client ? formatCooldown(clientCooldowns![m.client] - now) : undefined
       const routeLabel = m.deliveryTargetId
         ? `${targets.find(t => t.id === m.targetId)?.name ?? m.targetId} → ${targets.find(t => t.id === m.deliveryTargetId)?.name ?? m.deliveryTargetId}`
         : undefined
       return {
-        mission: m, contractor, targetCount: mTargets.length, displayPayout, affinityMultiplier,
+        mission: m, client, targetCount: mTargets.length, displayPayout, affinityMultiplier,
         affinityReward: m.payout.affinity, unlocked, isStoryMission, cardState, lockedDetail,
         cooldownLabel, isHighlighted, routeLabel,
       }
@@ -273,6 +274,8 @@ export default function MissionBoardScreen({ onBack, onPick, missionsDone, freeO
           title="Mission Board"
           onBack={onBack}
           solid
+          levelBadge={`LV. ${missionsDone + 1}`}
+          credits={francs}
           right={
             <IconBtn
               ariaLabel="Client bonus guide"
@@ -312,7 +315,7 @@ export default function MissionBoardScreen({ onBack, onPick, missionsDone, freeO
                 <MissionCard
                   key={c.mission.id}
                   mission={c.mission}
-                  contractor={c.contractor}
+                  client={c.client}
                   mineralMeta={MINERAL_META}
                   targetCount={c.targetCount}
                   displayPayout={c.displayPayout}
@@ -330,7 +333,7 @@ export default function MissionBoardScreen({ onBack, onPick, missionsDone, freeO
               ))}
             </div>
 
-            {hasContractorMission && (
+            {hasClientMission && (
               <div className={styles.disclaimer}>
                 Changes this job&apos;s payout only — does not increase minerals mined.
               </div>
@@ -343,7 +346,7 @@ export default function MissionBoardScreen({ onBack, onPick, missionsDone, freeO
               {previewModel ? (
                 <MissionDetailPanel
                   mission={previewModel.mission}
-                  contractor={previewModel.contractor}
+                  client={previewModel.client}
                   mineralMeta={MINERAL_META}
                   targetCount={previewModel.targetCount}
                   displayPayout={previewModel.displayPayout}
@@ -379,15 +382,15 @@ export default function MissionBoardScreen({ onBack, onPick, missionsDone, freeO
             view that matches the reference is what's on screen first. */}
         {freeOperations && (
           <div style={{ padding: '0 14px 10px 14px' }}>
-            <Panel accent={contractorPoolExhausted ? 'var(--ln-ok)' : 'var(--ln-cyan)'} style={{ padding: 12 }}>
+            <Panel accent={clientPoolExhausted ? 'var(--ln-ok)' : 'var(--ln-cyan)'} style={{ padding: 12 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
-                <IconBadge icon={<MarketIcon />} tone={contractorPoolExhausted ? 'ok' : 'cyan'} active size={26} />
-                <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 10, fontWeight: 800, letterSpacing: '0.22em', color: contractorPoolExhausted ? 'var(--ln-ok)' : 'var(--ln-cyan)', textTransform: 'uppercase' }}>
+                <IconBadge icon={<MarketIcon />} tone={clientPoolExhausted ? 'ok' : 'cyan'} active size={26} />
+                <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 10, fontWeight: 800, letterSpacing: '0.22em', color: clientPoolExhausted ? 'var(--ln-ok)' : 'var(--ln-cyan)', textTransform: 'uppercase' }}>
                   Free Ops · Self-Directed Mining
                 </div>
               </div>
               <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 12, color: 'var(--ln-text-dim)', lineHeight: 1.45, marginBottom: 10 }}>
-                {contractorPoolExhausted
+                {clientPoolExhausted
                   ? "Today's client requests are done. Launch a self-directed run — pick any reachable target and sell the haul yourself at market price."
                   : 'No client, no daily limit. Pick any reachable target, mine what looks valuable, and sell the haul yourself at market price.'}
               </div>
@@ -396,7 +399,7 @@ export default function MissionBoardScreen({ onBack, onPick, missionsDone, freeO
                 onClick={() => onPick(SELF_DIRECTED_MINING_MISSION_ID)}
                 style={{
                   width: '100%', padding: '10px 16px', borderRadius: 8, border: 'none', cursor: 'pointer',
-                  background: contractorPoolExhausted ? 'var(--ln-ok)' : 'var(--ln-cyan)',
+                  background: clientPoolExhausted ? 'var(--ln-ok)' : 'var(--ln-cyan)',
                   color: 'var(--ln-text-on-cyan)', fontFamily: 'var(--ln-font-display)', fontWeight: 800, fontSize: 11,
                   letterSpacing: '0.14em', textTransform: 'uppercase',
                 }}
@@ -451,7 +454,7 @@ export default function MissionBoardScreen({ onBack, onPick, missionsDone, freeO
           </div>
         )}
 
-        {freeOperations && <AffinityAdvancedSection contractors={catalog.contractors} contractorMissions={contractorMissions} />}
+        {freeOperations && <AffinityAdvancedSection clients={catalog.clients} clientMissions={clientMissions} />}
         {freeOperations && <ComingSoonMissionsSection />}
       </div>
 
@@ -469,7 +472,7 @@ export default function MissionBoardScreen({ onBack, onPick, missionsDone, freeO
       {showClientBonusGuide && (
         <ClientBonusGuideSheet
           onClose={() => setShowClientBonusGuide(false)}
-          contractorMissions={contractorMissions}
+          clientMissions={clientMissions}
           sequence={sequence}
         />
       )}
@@ -513,57 +516,57 @@ function ComingSoonMissionsSection() {
 const ADVANCED_ROLES = new Set(
   MISSION_TEMPLATES
     .filter(t => t.tag === 'CONSTRUCT' || t.tag === 'SCAN')
-    .map(t => t.contractorRole)
+    .map(t => t.clientRole)
 )
 
-const SLOT_ROLE_MAP = new Map(CONTRACTOR_SLOTS.map(s => [s.id, s.uiRole]))
+const SLOT_ROLE_MAP = new Map(CLIENT_SLOTS.map(s => [s.id, s.uiRole]))
 
 function AffinityAdvancedSection({
-  contractors,
-  contractorMissions,
+  clients,
+  clientMissions,
 }: {
-  contractors: Catalog['contractors']
-  contractorMissions?: Record<string, number>
+  clients: Catalog['clients']
+  clientMissions?: Record<string, number>
 }) {
-  const advancedContractors = Object.values(contractors).filter(c => {
+  const advancedClients = Object.values(clients).filter(c => {
     const role = SLOT_ROLE_MAP.get(c.id)
     return role !== undefined && ADVANCED_ROLES.has(role)
   })
-  if (advancedContractors.length === 0) return null
+  if (advancedClients.length === 0) return null
 
   return (
     <MissionBoardSection title="Advanced Ops · Affinity Unlock">
-        {advancedContractors.map(contractor => {
-          const done = contractorMissions?.[contractor.id] ?? 0
-          const unlocked = done >= CONTRACTOR_AFFINITY_MISSION_THRESHOLD
-          const contractorRole = SLOT_ROLE_MAP.get(contractor.id) ?? ''
+        {advancedClients.map(client => {
+          const done = clientMissions?.[client.id] ?? 0
+          const unlocked = done >= CLIENT_AFFINITY_MISSION_THRESHOLD
+          const clientRole = SLOT_ROLE_MAP.get(client.id) ?? ''
           const advancedTags = MISSION_TEMPLATES
-            .filter(t => t.contractorRole === contractorRole && (t.tag === 'CONSTRUCT' || t.tag === 'SCAN'))
+            .filter(t => t.clientRole === clientRole && (t.tag === 'CONSTRUCT' || t.tag === 'SCAN'))
             .map(t => t.tag)
           const uniqueTags = [...new Set(advancedTags)]
 
           return (
-            <Panel key={contractor.id} accent={unlocked ? 'var(--ln-ok)' : contractor.color} style={{ padding: 12 }}>
+            <Panel key={client.id} accent={unlocked ? 'var(--ln-ok)' : client.color} style={{ padding: 12 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                <div style={{ width: 36, height: 36, borderRadius: 999, background: `${contractor.color}22`, border: `1.5px solid ${contractor.color}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'var(--ln-font-display)', fontWeight: 800, fontSize: 12, color: contractor.color, flexShrink: 0 }}>
-                  {contractor.initial}
+                <div style={{ width: 36, height: 36, borderRadius: 999, background: `${client.color}22`, border: `1.5px solid ${client.color}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'var(--ln-font-display)', fontWeight: 800, fontSize: 12, color: client.color, flexShrink: 0 }}>
+                  {client.initial}
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                    <span style={{ fontFamily: 'var(--ln-font-display)', fontSize: 10, fontWeight: 700, color: contractor.color, textTransform: 'uppercase', letterSpacing: '0.15em' }}>{contractor.name}</span>
+                    <span style={{ fontFamily: 'var(--ln-font-display)', fontSize: 10, fontWeight: 700, color: client.color, textTransform: 'uppercase', letterSpacing: '0.15em' }}>{client.name}</span>
                     <span style={{ flex: 1 }} />
-                    <StatusPill kind={unlocked ? 'ok' : 'mute'}>{unlocked ? 'UNLOCKED' : `${done}/${CONTRACTOR_AFFINITY_MISSION_THRESHOLD}`}</StatusPill>
+                    <StatusPill kind={unlocked ? 'ok' : 'mute'}>{unlocked ? 'UNLOCKED' : `${done}/${CLIENT_AFFINITY_MISSION_THRESHOLD}`}</StatusPill>
                   </div>
                   <div style={{ fontFamily: 'var(--ln-font-mono)', fontSize: 9, color: 'var(--ln-text-muted)', letterSpacing: '0.1em', textTransform: 'uppercase', marginTop: 2 }}>
-                    {uniqueTags.join(' · ')} MISSIONS AVAILABLE AT {CONTRACTOR_AFFINITY_MISSION_THRESHOLD} OPS
+                    {uniqueTags.join(' · ')} MISSIONS AVAILABLE AT {CLIENT_AFFINITY_MISSION_THRESHOLD} OPS
                   </div>
                 </div>
               </div>
               {!unlocked && (
                 <div style={{ marginTop: 8 }}>
-                  <SegmentedBar segments={CONTRACTOR_AFFINITY_MISSION_THRESHOLD} filled={done} tone="amber" height={5} />
+                  <SegmentedBar segments={CLIENT_AFFINITY_MISSION_THRESHOLD} filled={done} tone="amber" height={5} />
                   <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 9, color: 'var(--ln-text-muted)', marginTop: 4, letterSpacing: '0.12em' }}>
-                    {CONTRACTOR_AFFINITY_MISSION_THRESHOLD - done} more operation{CONTRACTOR_AFFINITY_MISSION_THRESHOLD - done !== 1 ? 's' : ''} to unlock advanced contracts
+                    {CLIENT_AFFINITY_MISSION_THRESHOLD - done} more operation{CLIENT_AFFINITY_MISSION_THRESHOLD - done !== 1 ? 's' : ''} to unlock advanced contracts
                   </div>
                 </div>
               )}

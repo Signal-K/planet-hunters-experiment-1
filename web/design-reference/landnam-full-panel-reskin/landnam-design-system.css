@@ -298,8 +298,8 @@ body {
 .seg-bar-amber .seg.on { background: var(--ln-amber); }
 .seg-bar-danger .seg.on { background: var(--ln-crimson); }
 
-/* ---- Contractor mark (circular badge) ---- */
-.contractor-mark {
+/* ---- Client mark (circular badge) ---- */
+.client-mark {
   width: 40px; height: 40px;
   border-radius: 50%;
   display: grid; place-items: center;

@@ -184,7 +184,7 @@ function GameChrome({ children }: { children: ReactNode }) {
         {game.pendingTerritoryClaimFor && (
           <TerritoryClaimPopup
             targetId={game.pendingTerritoryClaimFor.targetId}
-            contractorId={game.pendingTerritoryClaimFor.contractorId}
+            clientId={game.pendingTerritoryClaimFor.clientId}
             onDismiss={game.clearTerritoryClaimPopup}
           />
         )}

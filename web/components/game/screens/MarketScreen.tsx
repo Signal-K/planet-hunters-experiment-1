@@ -7,7 +7,7 @@ import { PrimaryBtn } from '@/components/ui/Button'
 import StatusPill from '@/components/ui/StatusPill'
 import ConfirmActionSheet from '@/components/game/ConfirmActionSheet'
 import MineralChip from '@/components/game/MineralChip'
-import { MINERAL_META, CONTRACTOR_SLOTS } from '@/lib/data'
+import { MINERAL_META, CLIENT_SLOTS } from '@/lib/data'
 import { openMarketSellPrice, decayedUnitsSold } from '@/lib/systems/EconomySystem'
 import { formatFrancs } from '@/lib/format'
 
@@ -19,16 +19,16 @@ interface MarketScreenProps {
   onSell: (mineralId: string, amount: number) => void
   onBack: () => void
   onOpenMissions: () => void
-  contractorId?: string
+  clientId?: string
 }
 
-export default function MarketScreen({ stash, marketSupply, marketSupplyUpdatedAt, francs, onSell, onBack, onOpenMissions, contractorId }: MarketScreenProps) {
+export default function MarketScreen({ stash, marketSupply, marketSupplyUpdatedAt, francs, onSell, onBack, onOpenMissions, clientId }: MarketScreenProps) {
   const [confirming, setConfirming] = useState<string | null>(null)
   const [sellAllConfirm, setSellAllConfirm] = useState(false)
 
   const entries = Object.entries(stash).filter(([, v]) => v > 0)
 
-  const contractor = contractorId ? CONTRACTOR_SLOTS.find(c => c.id === contractorId) ?? null : null
+  const client = clientId ? CLIENT_SLOTS.find(c => c.id === clientId) ?? null : null
 
   function marketPrice(mineralId: string, basePrice: number): number {
     const unitsSold = decayedUnitsSold(marketSupply?.[mineralId] ?? 0, marketSupplyUpdatedAt?.[mineralId])
@@ -42,10 +42,10 @@ export default function MarketScreen({ stash, marketSupply, marketSupplyUpdatedA
     }, 0)
   }
 
-  function contractorPrice(basePrice: number, mineralId: string): number {
-    if (!contractor) return basePrice
-    const pref = contractor.mineralPreferences.includes(mineralId)
-    return pref ? Math.round(basePrice * (1 + contractor.payoutPremium)) : basePrice
+  function clientPrice(basePrice: number, mineralId: string): number {
+    if (!client) return basePrice
+    const pref = client.mineralPreferences.includes(mineralId)
+    return pref ? Math.round(basePrice * (1 + client.payoutPremium)) : basePrice
   }
 
   function handleSell(mineralId: string) {
@@ -70,13 +70,13 @@ export default function MarketScreen({ stash, marketSupply, marketSupplyUpdatedA
           </div>
         </Panel>
 
-        {contractor && (
+        {client && (
           <Panel accent="var(--ln-amber)">
-            <div style={{ fontFamily: 'var(--ln-font-display)', fontWeight: 800, fontSize: 13, color: contractor.color }}>
-              {contractor.name} Premium
+            <div style={{ fontFamily: 'var(--ln-font-display)', fontWeight: 800, fontSize: 13, color: client.color }}>
+              {client.name} Premium
             </div>
             <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 11, color: '#a9b8ce', marginTop: 2 }}>
-              Preferred minerals sell at {Math.round((1 + contractor.payoutPremium) * 100)}% market rate
+              Preferred minerals sell at {Math.round((1 + client.payoutPremium) * 100)}% market rate
             </div>
           </Panel>
         )}
@@ -111,9 +111,9 @@ export default function MarketScreen({ stash, marketSupply, marketSupplyUpdatedA
           if (!meta) return null
           const mp = marketPrice(id, meta.price)
           const marketValue = mp * qty
-          const cp = contractorPrice(meta.price, id)
-          const contractorValue = cp * qty
-          const showContractor = contractor && cp !== meta.price
+          const cp = clientPrice(meta.price, id)
+          const clientValue = cp * qty
+          const showClient = client && cp !== meta.price
           return (
             <Panel key={id}>
               <div className="flex items-center justify-between">
@@ -123,8 +123,8 @@ export default function MarketScreen({ stash, marketSupply, marketSupplyUpdatedA
                     <div style={{ fontFamily: 'var(--ln-font-display)', fontWeight: 800, fontSize: 14, color: '#e6efff' }}>{meta.name}</div>
                     <div style={{ fontFamily: 'var(--ln-font-mono)', fontSize: 10, color: '#7a8294' }}>
                       {qty} units · ₣{mp}/u
-                      {showContractor && (
-                        <span style={{ color: contractor.color, marginLeft: 8 }}>
+                      {showClient && (
+                        <span style={{ color: client.color, marginLeft: 8 }}>
                           · Contract ₣{cp}/u
                         </span>
                       )}
@@ -133,7 +133,7 @@ export default function MarketScreen({ stash, marketSupply, marketSupplyUpdatedA
                 </div>
                 <div className="flex items-center gap-2">
                   <div style={{ fontFamily: 'var(--ln-font-display)', fontWeight: 800, fontSize: 16, color: '#f5a623' }}>
-                    ₣{formatFrancs(showContractor ? contractorValue : marketValue)}
+                    ₣{formatFrancs(showClient ? clientValue : marketValue)}
                   </div>
                   <PrimaryBtn kind="amber" onClick={() => setConfirming(id)}>Sell All</PrimaryBtn>
                 </div>
@@ -147,7 +147,7 @@ export default function MarketScreen({ stash, marketSupply, marketSupplyUpdatedA
         <ConfirmActionSheet
           eyebrow="Commodity Exchange"
           title={`Sell All ${MINERAL_META[confirming].name}`}
-          description={`Sell ${stash[confirming] ?? 0} units for ₣${formatFrancs((contractor ? contractorPrice(MINERAL_META[confirming].price, confirming) : marketPrice(confirming, MINERAL_META[confirming].price)) * (stash[confirming] ?? 0))}? This can't be undone.`}
+          description={`Sell ${stash[confirming] ?? 0} units for ₣${formatFrancs((client ? clientPrice(MINERAL_META[confirming].price, confirming) : marketPrice(confirming, MINERAL_META[confirming].price)) * (stash[confirming] ?? 0))}? This can't be undone.`}
           confirmLabel="Confirm Sell"
           onConfirm={() => handleSell(confirming)}
           onDismiss={() => setConfirming(null)}

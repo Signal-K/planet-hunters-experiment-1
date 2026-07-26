@@ -13,7 +13,7 @@ import {
   STRUCTURES,
   TARGETS,
   PARTS,
-  CONTRACTOR_SLOTS,
+  CLIENT_SLOTS,
   BASE_LASER_CHARGES,
   canAffordStructure,
   canConfirmCustomizerBuild,
@@ -300,7 +300,7 @@ describe('compatibleTargetsFor', () => {
   it('allows planets for M3+ missions that require their minerals', () => {
     // Synthesise a sequence-3 mission without a fixed targetId that requires ice
     const m3: import('./data/types').Mission = {
-      id: 'test-m3', title: 'Test', brief: '', contractor: 'kepler-materials',
+      id: 'test-m3', title: 'Test', brief: '', client: 'kepler-materials',
       tag: 'BULK', difficulty: 'L2', locked: false, sequence: 3,
       requires: { minerals: { ice: 2 }, cargo_min: 2, drill_tier: 1, max_orbit: 8 },
       payout: { francs: 0, affinity: 0 },
@@ -327,7 +327,7 @@ describe('compatibleTargetsFor', () => {
     expect(discovered.archetype).toBe('M')
 
     const metalProspect: import('./data/types').Mission = {
-      id: 'test-metal-prospect', title: 'Test', brief: '', contractor: 'kepler-materials',
+      id: 'test-metal-prospect', title: 'Test', brief: '', client: 'kepler-materials',
       tag: 'PROSPECT', difficulty: 'L2', locked: false, sequence: 5,
       requires: { minerals: { iridium: 2 }, cargo_min: 2, drill_tier: 2, max_orbit: 5 },
       payout: { francs: 0, affinity: 0 },
@@ -393,22 +393,22 @@ describe('calibrateOnboardingPayout', () => {
 })
 
 describe('seed bible v0 catalog', () => {
-  it('defines twelve mechanical contractor slots at the spec unlock tiers', () => {
-    expect(CONTRACTOR_SLOTS).toHaveLength(12)
-    expect(CONTRACTOR_SLOTS.map(c => c.unlockTier)).toEqual([1, 1, 1, 2, 2, 2, 3, 3, 4, 4, 4, 5])
-    expect(CONTRACTOR_SLOTS.every(c => !c.name.startsWith('Contractor Slot'))).toBe(true)
-    expect(CONTRACTOR_SLOTS.every(c => c.mineralPreferences.length > 0)).toBe(true)
-    expect(CONTRACTOR_SLOTS.every(c => c.payoutPremium >= 0.18)).toBe(true)
+  it('defines twelve mechanical client slots at the spec unlock tiers', () => {
+    expect(CLIENT_SLOTS).toHaveLength(12)
+    expect(CLIENT_SLOTS.map(c => c.unlockTier)).toEqual([1, 1, 1, 2, 2, 2, 3, 3, 4, 4, 4, 5])
+    expect(CLIENT_SLOTS.every(c => !c.name.startsWith('Contractor Slot'))).toBe(true)
+    expect(CLIENT_SLOTS.every(c => c.mineralPreferences.length > 0)).toBe(true)
+    expect(CLIENT_SLOTS.every(c => c.payoutPremium >= 0.18)).toBe(true)
   })
 
-  it('seeds the three Sprint 5 Free Ops contractors at L1', () => {
-    const l1Contractors = CONTRACTOR_SLOTS.filter(c => c.unlockTier === 1)
-    expect(l1Contractors.map(c => c.name)).toEqual([
+  it('seeds the three Sprint 5 Free Ops clients at L1', () => {
+    const l1Clients = CLIENT_SLOTS.filter(c => c.unlockTier === 1)
+    expect(l1Clients.map(c => c.name)).toEqual([
       'Helios Propulsion Depot',
       'Arcturus Battery Systems',
       'Ferrum Orbital Construction',
     ])
-    expect(l1Contractors.map(c => c.mineralPreferences)).toEqual([
+    expect(l1Clients.map(c => c.mineralPreferences)).toEqual([
       ['platinum', 'palladium'],
       ['palladium', 'iridium'],
       ['platinum', 'iridium'],
@@ -474,8 +474,8 @@ describe('seed bible v0 catalog', () => {
     expect(generated.filter(m => m.sequence === 1).length).toBeGreaterThan(1)
     expect(generated.filter(m => m.sequence === 2).length).toBeGreaterThan(1)
     expect(generated.every(m => {
-      const contractor = CONTRACTOR_SLOTS.find(c => c.id === m.contractor)
-      return contractor && contractor.unlockTier <= m.sequence
+      const client = CLIENT_SLOTS.find(c => c.id === m.client)
+      return client && client.unlockTier <= m.sequence
     })).toBe(true)
   })
 
@@ -500,12 +500,12 @@ describe('seed bible v0 catalog', () => {
     })
   })
 
-  it('generates 0-2 Free Ops missions per starting contractor after M3', () => {
+  it('generates 0-2 Free Ops missions per starting client after M3', () => {
     const missions = generateFreeOpsMissions()
-    const startingContractorIds = CONTRACTOR_SLOTS.filter(c => c.unlockTier === 1).map(c => c.id)
-    expect(new Set(missions.map(m => m.contractor))).toEqual(new Set(startingContractorIds))
-    for (const contractorId of startingContractorIds) {
-      const offers = missions.filter(m => m.contractor === contractorId)
+    const startingClientIds = CLIENT_SLOTS.filter(c => c.unlockTier === 1).map(c => c.id)
+    expect(new Set(missions.map(m => m.client))).toEqual(new Set(startingClientIds))
+    for (const clientId of startingClientIds) {
+      const offers = missions.filter(m => m.client === clientId)
       expect(offers.length).toBeGreaterThanOrEqual(0)
       expect(offers.length).toBeLessThanOrEqual(2)
     }
@@ -513,43 +513,43 @@ describe('seed bible v0 catalog', () => {
     expect(missions.every(m => compatibleTargetsFor(m, TARGETS).length > 0)).toBe(true)
   })
 
-  it('authored M3 is a two-contractor transport-job choice, not self-directed mining', () => {
+  it('authored M3 is a two-client transport-job choice, not self-directed mining', () => {
     const authored = MISSIONS.filter(m => !m.id.startsWith('generated-'))
     expect(authored.length).toBeGreaterThan(0)
     expect(authored.every(m => m.id && m.title)).toBe(true)
     const m3Missions = authored.filter(m => m.sequence === 3)
     expect(m3Missions.length).toBe(2)
     for (const m3 of m3Missions) {
-      expect(m3.contractor).toBeDefined()
+      expect(m3.client).toBeDefined()
       expect(m3.targetId).toBeDefined()
       expect(m3.deliveryTargetId).toBeDefined()
       expect(TARGETS.some(t => t.id === m3.targetId)).toBe(true)
       expect(TARGETS.some(t => t.id === m3.deliveryTargetId)).toBe(true)
-      expect(CONTRACTOR_SLOTS.some(c => c.id === m3.contractor)).toBe(true)
+      expect(CLIENT_SLOTS.some(c => c.id === m3.client)).toBe(true)
     }
     // No generic generated missions leak into the curated M3 slot.
     expect(MISSIONS.some(m => m.id.startsWith('generated-') && m.sequence === 3)).toBe(false)
   })
 
-  it('Free Ops self-directed mining mission has no contractor and reachable requirements', () => {
+  it('Free Ops self-directed mining mission has no client and reachable requirements', () => {
     const selfDirected = MISSIONS.find(m => m.id === SELF_DIRECTED_MINING_MISSION_ID)
     expect(selfDirected).toBeDefined()
-    expect(selfDirected?.contractor).toBeUndefined()
+    expect(selfDirected?.client).toBeUndefined()
     expect(selfDirected?.targetId).toBeUndefined()
     expect(selfDirected?.sequence).toBe(FREE_OPS_START_MISSIONS_DONE + 1)
     const compatible = compatibleTargetsFor(selfDirected!, TARGETS)
     expect(compatible.length).toBeGreaterThan(0)
   })
 
-  it('authored relay mission is a two-leg mine-then-deliver job with a real contractor', () => {
+  it('authored relay mission is a two-leg mine-then-deliver job with a real client', () => {
     const relay = MISSIONS.find(m => m.id === 'lnm_relay_psyche_ceres')
     expect(relay).toBeDefined()
-    expect(relay?.contractor).toBe('kepler-materials')
+    expect(relay?.client).toBe('kepler-materials')
     expect(relay?.targetId).toBe('psyche')
     expect(relay?.deliveryTargetId).toBe('ceres')
     expect(TARGETS.some(t => t.id === relay?.targetId)).toBe(true)
     expect(TARGETS.some(t => t.id === relay?.deliveryTargetId)).toBe(true)
-    expect(CONTRACTOR_SLOTS.some(c => c.id === relay?.contractor)).toBe(true)
+    expect(CLIENT_SLOTS.some(c => c.id === relay?.client)).toBe(true)
   })
 })
 
@@ -571,8 +571,8 @@ describe('Construction mission templates and target structure blueprints', () =>
     expect(fuelDepot?.construction?.requiredMaterials).toMatchObject({ hydrogen: 8, aluminium: 6 })
   })
 
-  it('TARGET_STRUCTURES covers all three contractor archetypes', () => {
-    const roles = TARGET_STRUCTURES.map(s => s.contractorRole)
+  it('TARGET_STRUCTURES covers all three client archetypes', () => {
+    const roles = TARGET_STRUCTURES.map(s => s.clientRole)
     expect(roles).toEqual(expect.arrayContaining(['prospect', 'command', 'bulk']))
   })
 

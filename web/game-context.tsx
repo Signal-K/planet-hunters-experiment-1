@@ -122,7 +122,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
   // ── Derived values ─────────────────────────────────────────────────────────
   const mission = state.missionId
     ? (runtimeCatalog.missions.find(m => m.id === state.missionId)
-       ?? state.player.dailyContractorPool?.missions.find(m => m.id === state.missionId)
+       ?? state.player.dailyClientPool?.missions.find(m => m.id === state.missionId)
        ?? null)
     : null
   const target = state.targetId ? runtimeCatalog.targets.find(t => t.id === state.targetId) ?? null : null

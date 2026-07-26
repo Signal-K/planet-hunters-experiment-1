@@ -1,4 +1,4 @@
-// E2E tests for M3 transport-contractor pick and post-onboarding Free Ops.
+// E2E tests for M3 transport-client pick and post-onboarding Free Ops.
 
 import type { GameState } from '@/game-context'
 
@@ -17,8 +17,8 @@ function visitWithState(state: Partial<GameState>) {
       controlBuilt: false,
       missionsDone: 2,
       freeOperations: false,
-      contractorMissions: {},
-      contractorCooldowns: {},
+      clientMissions: {},
+      clientCooldowns: {},
       researchAnnotations: 0,
       refineryBuilt: false,
       refineryQueue: [],
@@ -27,7 +27,7 @@ function visitWithState(state: Partial<GameState>) {
       loanDebt: 0,
       loanOffered: false,
       roverDeployments: [],
-      contractorTerritories: {},
+      clientTerritories: {},
     },
     missionId: null,
     targetId: null,
@@ -46,15 +46,15 @@ function visitWithState(state: Partial<GameState>) {
   })
 }
 
-describe('M3 — Transport contractor pick and Free Ops unlock', () => {
+describe('M3 — Transport client pick and Free Ops unlock', () => {
   describe('Mission board — M3 availability', () => {
-    it('shows both M3 transport-contractor mission cards when missionsDone === 2', () => {
+    it('shows both M3 transport-client mission cards when missionsDone === 2', () => {
       visitWithState({ screen: 'missions' })
       cy.contains('Belt Courier Run').scrollIntoView().should('be.visible')
       cy.contains('Nickel Line Handoff').scrollIntoView().should('be.visible')
       cy.get('[data-testid="mission-card-lnm_m3_relay_bennu_vesta"]').scrollIntoView().should('be.visible')
       cy.get('[data-testid="mission-card-lnm_m3_relay_itokawa_eros"]').scrollIntoView().should('be.visible')
-      cy.contains('Contractor Request').should('not.exist')
+      cy.contains('Client Request').should('not.exist')
     })
 
     it('shows post-onboarding holding screen when missionsDone >= 1 and no missions available', () => {
@@ -70,8 +70,8 @@ describe('M3 — Transport contractor pick and Free Ops unlock', () => {
           controlBuilt: false,
           missionsDone: 1,
           freeOperations: false,
-          contractorMissions: {},
-          contractorCooldowns: {},
+          clientMissions: {},
+          clientCooldowns: {},
           researchAnnotations: 0,
           refineryBuilt: false,
           refineryQueue: [],
@@ -80,7 +80,7 @@ describe('M3 — Transport contractor pick and Free Ops unlock', () => {
           loanDebt: 0,
           loanOffered: false,
           roverDeployments: [],
-          contractorTerritories: {},
+          clientTerritories: {},
         },
       })
       // missionsDone=1 → sequence=2 missions shown. If none exist, holding screen shows.
@@ -161,8 +161,8 @@ describe('M3 — Transport contractor pick and Free Ops unlock', () => {
           controlBuilt: false,
           missionsDone: 4,
           freeOperations: false,
-          contractorMissions: {},
-          contractorCooldowns: {},
+          clientMissions: {},
+          clientCooldowns: {},
           researchAnnotations: 0,
           refineryBuilt: false,
           refineryQueue: [],
@@ -171,7 +171,7 @@ describe('M3 — Transport contractor pick and Free Ops unlock', () => {
           loanDebt: 0,
           loanOffered: false,
           roverDeployments: [],
-          contractorTerritories: {},
+          clientTerritories: {},
         },
       })
       cy.contains('Training Arc Complete').should('be.visible')

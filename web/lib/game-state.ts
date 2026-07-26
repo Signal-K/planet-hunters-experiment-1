@@ -27,9 +27,9 @@ export const DEFAULT_STATE: GameState = {
     skillPoints: 0,
     unlockedSkillNodes: [],
     freeOperations: false,
-    contractorMissions: {},
-    contractorStreaks: {},
-    contractorCooldowns: {},
+    clientMissions: {},
+    clientStreaks: {},
+    clientCooldowns: {},
     researchAnnotations: 0,
     refineryBuilt: false,
     refineryUnlocked: false,
@@ -41,7 +41,7 @@ export const DEFAULT_STATE: GameState = {
     loanOffered: false,
     seen_planets: [],
     roverDeployments: [],
-    contractorTerritories: {},
+    clientTerritories: {},
     tessClassifications: {},
     discoveredExoplanetTargets: {},
     satelliteMonitoringBuilt: false,
@@ -62,11 +62,42 @@ export const DEFAULT_STATE: GameState = {
   menuOpen: false,
 }
 
+// Renamed from "contractor" to "client" terminology (STS-535). Old saves in
+// localStorage and PocketBase's game_states.state JSON still carry the old
+// field names, so remap them onto the new ones here — the single choke point
+// both loadState() and the PocketBase remote-sync path run saves through.
+function migrateLegacyContractorFields(player: Partial<Player>): Partial<Player> {
+  const legacy = player as Record<string, unknown>
+  const migrated: Partial<Player> = { ...player }
+  if (migrated.clientMissions === undefined && legacy.contractorMissions) migrated.clientMissions = legacy.contractorMissions as Player['clientMissions']
+  if (migrated.clientStreaks === undefined && legacy.contractorStreaks) migrated.clientStreaks = legacy.contractorStreaks as Player['clientStreaks']
+  if (migrated.clientCooldowns === undefined && legacy.contractorCooldowns) migrated.clientCooldowns = legacy.contractorCooldowns as Player['clientCooldowns']
+  if (migrated.lastClient === undefined && legacy.lastContractor) migrated.lastClient = legacy.lastContractor as Player['lastClient']
+  if (migrated.clientTerritories === undefined && legacy.contractorTerritories) migrated.clientTerritories = legacy.contractorTerritories as Player['clientTerritories']
+  if (migrated.dailyClientPool === undefined && legacy.dailyContractorPool) migrated.dailyClientPool = legacy.dailyContractorPool as Player['dailyClientPool']
+  if (migrated.clientStructures === undefined && legacy.contractorStructures) migrated.clientStructures = legacy.contractorStructures as Player['clientStructures']
+  if (Array.isArray(migrated.clientStructures)) {
+    migrated.clientStructures = migrated.clientStructures.map(s => {
+      const legacyStructure = s as unknown as Record<string, unknown>
+      if (s.clientId !== undefined || !legacyStructure.contractorId) return s
+      return { ...s, clientId: legacyStructure.contractorId as string }
+    })
+  }
+  if (Array.isArray(migrated.roverDeployments)) {
+    migrated.roverDeployments = migrated.roverDeployments.map(d => {
+      const legacyDeployment = d as unknown as Record<string, unknown>
+      if (d.clientId !== undefined || !legacyDeployment.contractorId) return d
+      return { ...d, clientId: legacyDeployment.contractorId as string }
+    })
+  }
+  return migrated
+}
+
 export function normalizeState(input: PartialSave): GameState {
   const screen = input.screen && VALID_SCREENS.includes(input.screen) ? input.screen : DEFAULT_STATE.screen
   const missionId = typeof input.missionId === 'string' ? input.missionId : null
   const targetId = missionId && typeof input.targetId === 'string' ? input.targetId : null
-  const player: Partial<Player> = input.player ?? {}
+  const player: Partial<Player> = migrateLegacyContractorFields(input.player ?? {})
   const licenseGrade = player.licenseGrade && VALID_LICENSE_GRADES.includes(player.licenseGrade)
     ? player.licenseGrade
     : DEFAULT_STATE.player.licenseGrade
@@ -88,6 +119,10 @@ export function normalizeState(input: PartialSave): GameState {
   const transitSatelliteLevel = Number.isFinite(player.transitSatelliteLevel)
     ? Math.max(1, Math.floor(player.transitSatelliteLevel ?? 1))
     : DEFAULT_STATE.player.transitSatelliteLevel
+  const legacyClaim = input.pendingTerritoryClaimFor as unknown as { targetId: string; clientId?: string; contractorId?: string } | undefined
+  const pendingTerritoryClaimFor = legacyClaim
+    ? { targetId: legacyClaim.targetId, clientId: legacyClaim.clientId ?? legacyClaim.contractorId ?? '' }
+    : undefined
   return {
     ...DEFAULT_STATE,
     ...input,
@@ -97,13 +132,14 @@ export function normalizeState(input: PartialSave): GameState {
     rocket: { ...DEFAULT_STATE.rocket, ...input.rocket },
     player: { ...DEFAULT_STATE.player, ...player, licenseGrade, researchXP, unlockedBlueprints, tessClassifications, discoveredExoplanetTargets, satelliteMonitoringLevel, transitSatelliteLevel },
     doneSteps: { ...DEFAULT_STATE.doneSteps, ...input.doneSteps },
+    ...(pendingTerritoryClaimFor ? { pendingTerritoryClaimFor } : {}),
   }
 }
 
 export function repairStateRoute(input: GameState): GameState {
   const mission = input.missionId
     ? (MISSIONS.find(m => m.id === input.missionId)
-       ?? input.player.dailyContractorPool?.missions.find(m => m.id === input.missionId)
+       ?? input.player.dailyClientPool?.missions.find(m => m.id === input.missionId)
        ?? null)
     : null
   const hasRuntimeMission = !!input.missionId && RUNTIME_MISSION_IDS.has(input.missionId)

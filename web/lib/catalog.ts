@@ -1,13 +1,13 @@
 import { pbLandnam } from './pb-landnam'
-import type { Target, Mission, Part, MineralMeta, Contractor, StructureBlueprint } from './data'
-import { TARGETS, MISSIONS, AUTHORED_MISSIONS, M3_SEQUENCE, PARTS, MINERAL_META, CONTRACTORS, CONTRACTOR_SLOTS, STRUCTURES, toContractor as slotToContractor, generateFreeOpsMissions, generateMissions } from './data'
+import type { Target, Mission, Part, MineralMeta, Client, StructureBlueprint } from './data'
+import { TARGETS, MISSIONS, AUTHORED_MISSIONS, M3_SEQUENCE, PARTS, MINERAL_META, CLIENTS, CLIENT_SLOTS, STRUCTURES, toClient as slotToClient, generateFreeOpsMissions, generateMissions } from './data'
 
 export interface Catalog {
   targets: Target[]
   missions: Mission[]
   parts: { chassis: Part[]; propulsion: Part[]; drill: Part[] }
   minerals: Record<string, MineralMeta>
-  contractors: Record<string, Contractor>
+  clients: Record<string, Client>
   structures: StructureBlueprint[]
 }
 
@@ -16,7 +16,7 @@ export const STATIC_CATALOG: Catalog = {
   missions: MISSIONS,
   parts: PARTS,
   minerals: MINERAL_META,
-  contractors: CONTRACTORS,
+  clients: CLIENTS,
   structures: STRUCTURES,
 }
 
@@ -42,16 +42,16 @@ export function toMission(r: any): Mission {
   const minerals = typeof r.requires_minerals === 'object' && !Array.isArray(r.requires_minerals)
     ? r.requires_minerals
     : JSON.parse(r.requires_minerals || '{}')
-  const fallbackContractor = r.contractor_slug ? CONTRACTORS[r.contractor_slug] : undefined
+  const fallbackClient = r.contractor_slug ? CLIENTS[r.contractor_slug] : undefined
   const rawBrief = r.brief ?? ''
-  const brief = fallbackContractor && /^Contractor Slot\s+/i.test(rawBrief)
-    ? rawBrief.replace(/Contractor Slot\s+\d+[A-Z]?/i, fallbackContractor.name)
+  const brief = fallbackClient && /^Contractor Slot\s+/i.test(rawBrief)
+    ? rawBrief.replace(/Contractor Slot\s+\d+[A-Z]?/i, fallbackClient.name)
     : rawBrief
   return {
     id: r.slug,
     title: r.title,
     brief,
-    contractor: r.contractor_slug,
+    client: r.contractor_slug,
     tag: r.tag ?? '',
     difficulty: r.difficulty ?? 'L1',
     locked: r.locked ?? false,
@@ -93,15 +93,15 @@ function withCorrectedM3(missions: Mission[]): Mission[] {
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function toContractor(r: any): Contractor {
-  const fallback = CONTRACTOR_SLOTS.find(c => c.id === r.slug)
+export function toClient(r: any): Client {
+  const fallback = CLIENT_SLOTS.find(c => c.id === r.slug)
   const rawName = typeof r.name === 'string' ? r.name.trim() : ''
   const hasPlaceholderName = /^Contractor Slot\s+\d+[A-Z]?$/i.test(rawName)
   const mineralPreferences = Array.isArray(r.mineral_preferences)
     ? r.mineral_preferences
     : (r.mineral_preferences ? JSON.parse(r.mineral_preferences) : fallback?.mineralPreferences ?? [])
   return {
-    ...(fallback ? slotToContractor(fallback) : {
+    ...(fallback ? slotToClient(fallback) : {
       id: r.slug,
       name: r.name,
       color: r.color ?? '#87CFFA',
@@ -169,7 +169,7 @@ export async function fetchCatalog(): Promise<Catalog> {
   const isSolarTarget = (r: any) =>
     !String(r.slug ?? '').startsWith('tess-') && !String(r.slug ?? '').startsWith('koi-') && !String(r.slug ?? '').startsWith('hd-')
 
-  const [locations, minerals, contractors, parts, missions, structures] = await Promise.all([
+  const [locations, minerals, clients, parts, missions, structures] = await Promise.all([
     pbLandnam.collection('locations').getFullList({ sort: 'orbit,name' }),
     pbLandnam.collection('minerals').getFullList(),
     pbLandnam.collection('contractors').getFullList({ sort: 'unlock_tier' }),
@@ -180,8 +180,8 @@ export async function fetchCatalog(): Promise<Catalog> {
 
   const generatedFallbackMissions = MISSIONS
   const catalogMissions = missions.length > 0 ? withCorrectedM3(missions.map(toMission)) : []
-  const catalogContractors = Object.fromEntries(
-    contractors.map(r => [r.slug, toContractor(r)])
+  const catalogClients = Object.fromEntries(
+    clients.map(r => [r.slug, toClient(r)])
   )
   // Always include generated onboarding + freeops missions — PocketBase only seeds authored missions.
   const baseMissions = catalogMissions.length > 0 ? catalogMissions : generatedFallbackMissions
@@ -212,9 +212,9 @@ export async function fetchCatalog(): Promise<Catalog> {
         minerals.map(r => [r.slug, { name: r.name, sym: r.sym, color: r.color, price: r.base_price, rarity: r.rarity ?? 'common', constructionUse: r.construction_use ?? '', laserAccess: r.laser_access ?? 1 }])
       ),
     },
-    // Merge static CONTRACTORS first so contractors not yet seeded in PocketBase
-    // (e.g. newly added M3 authored-mission contractors) still resolve.
-    contractors: { ...CONTRACTORS, ...catalogContractors },
+    // Merge static CLIENTS first so clients not yet seeded in PocketBase
+    // (e.g. newly added M3 authored-mission clients) still resolve.
+    clients: { ...CLIENTS, ...catalogClients },
     structures: structures.length > 0 ? structures.map(toStructure) : STRUCTURES,
   }
 }

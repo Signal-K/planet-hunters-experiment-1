@@ -48,9 +48,10 @@ export default function MissionSetupRoutes({
           freeOperations={game.player.freeOperations}
           hasCoach={hasCoach}
           catalog={game.catalog}
-          contractorMissions={game.player.contractorMissions}
-          contractorCooldowns={game.player.contractorCooldowns}
-          dailyContractorPool={game.player.dailyContractorPool}
+          clientMissions={game.player.clientMissions}
+          clientCooldowns={game.player.clientCooldowns}
+          dailyClientPool={game.player.dailyClientPool}
+          francs={game.player.francs}
         />
       )
 

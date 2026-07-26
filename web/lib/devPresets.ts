@@ -5,7 +5,7 @@ const FIRST_MISSION = MISSIONS.find(m => m.sequence === 1) ?? MISSIONS[0]
 const SECOND_MISSION = MISSIONS.find(m => m.sequence === 2) ?? MISSIONS[1] ?? FIRST_MISSION
 const FIRST_MINERAL = Object.keys(FIRST_MISSION.requires.minerals)[0] ?? 'iron'
 const SECOND_MINERAL = Object.keys(SECOND_MISSION.requires.minerals)[0] ?? 'silicon'
-// M3 is the two-leg "mine then deliver" contractor choice — Belt Courier Run
+// M3 is the two-leg "mine then deliver" client choice — Belt Courier Run
 // (Bennu -> Vesta) is the authored pick used for these dev shots.
 const THIRD_MISSION = MISSIONS.find(m => m.id === 'lnm_m3_relay_bennu_vesta') ?? MISSIONS.find(m => m.sequence === 3) ?? SECOND_MISSION
 const ROVER_MISSION = MISSIONS.find(m => m.survey?.onWorldVehicle === 'starter-rover') ?? THIRD_MISSION
@@ -20,9 +20,9 @@ const BASE_PLAYER: Player = {
   controlBuilt: false,
   missionsDone: 0,
   freeOperations: false,
-  contractorMissions: {},
-  contractorStreaks: {},
-  contractorCooldowns: {},
+  clientMissions: {},
+  clientStreaks: {},
+  clientCooldowns: {},
   researchAnnotations: 0,
   refineryBuilt: false,
   refineryUnlocked: false,
@@ -94,7 +94,7 @@ export const DEV_GROUPS: DevGroup[] = [
     label: 'Mission 3',
     color: '#c084fc',
     shots: [
-      { key: 'm3-hub',     label: 'Hub',     hint: 'M1+M2 done, M3 coach active — replay the two-leg contractor pick' },
+      { key: 'm3-hub',     label: 'Hub',     hint: 'M1+M2 done, M3 coach active — replay the two-leg client pick' },
       { key: 'm3-fab',     label: 'Fab',     hint: 'Belt Courier Run accepted (Bennu -> Vesta), at fab' },
       { key: 'm3-mining',  label: 'Mining',  hint: 'In mining at Bennu, delivery leg to Vesta pending' },
       { key: 'm3-debrief', label: 'Debrief', hint: 'Two-leg run complete, delivered at Vesta then returned' },
@@ -231,14 +231,14 @@ export function resolvePreset(name: string): Partial<GameState> | null {
     case 'm2-post-debrief':
       return {
         screen: 'hub',
-        player: { ...BASE_PLAYER, missionsDone: 1, stash: { [SECOND_MINERAL]: SECOND_MISSION.requires.minerals[SECOND_MINERAL] ?? 1 }, lastContractor: SECOND_MISSION.contractor },
+        player: { ...BASE_PLAYER, missionsDone: 1, stash: { [SECOND_MINERAL]: SECOND_MISSION.requires.minerals[SECOND_MINERAL] ?? 1 }, lastClient: SECOND_MISSION.client },
         tutorial: false, doneSteps: M1_DONE,
         missionId: null, targetId: null,
         rocket: { chassis: 'hull-mk2', propulsion: 'fusion-b2', drill: 'laser-t2' },
         lastCargo: SECOND_MISSION.requires.minerals, popup: null,
       }
 
-    // ── Mission 3 (two-leg "mine then deliver" contractor pick) ──
+    // ── Mission 3 (two-leg "mine then deliver" client pick) ──
     case 'm3-hub':
       return {
         screen: 'hub',
@@ -346,8 +346,8 @@ export function resolvePreset(name: string): Partial<GameState> | null {
           ...BASE_PLAYER,
           missionsDone: 2,
           freeOperations: true,
-          contractorMissions: { 'helios-propulsion-depot': 2, 'lumen-research': 1 },
-          lastContractor: 'helios-propulsion-depot',
+          clientMissions: { 'helios-propulsion-depot': 2, 'lumen-research': 1 },
+          lastClient: 'helios-propulsion-depot',
         },
         tutorial: false,
         doneSteps: M1_AND_M2_DONE,

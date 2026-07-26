@@ -16,7 +16,7 @@ vs. Free Ops:
 
 ## The two mission types
 
-### Contractor missions ("client requests")
+### Client missions ("client requests")
 Issued by a named client (Helios Propulsion Depot, Atlas Aggregate, Kepler
 Materials, etc.). Each has:
 - **Required cargo** — which mineral(s) and how much.
@@ -40,11 +40,11 @@ list — launched directly rather than picked from a list.
 
 ## The pick-through flow
 
-1. **Mission Board** — pick a contract card (contractor mission) or the
+1. **Mission Board** — pick a contract card (client mission) or the
    "Launch Self-Directed Run" panel (freeform). Locked / cooldown /
    completed-today jobs are shown disabled, not hidden.
 2. **Target** — if the mission already has a fixed target (most two-leg
-   contractor jobs), this step is skipped entirely and the player goes
+   client jobs), this step is skipped entirely and the player goes
    straight to Rocket. Otherwise the player picks from reachable targets,
    filtered by the mission's cargo/orbit/drill requirements — this is where
    freeform mining's target choice happens.
@@ -59,12 +59,12 @@ list — launched directly rather than picked from a list.
 
 ## Rules that must not be misrepresented
 
-- A contractor's payout premium changes credits only — it never increases
+- A client's payout premium changes credits only — it never increases
   how much of a mineral gets mined. Kept as an explicit on-card mechanics
   line in Mission Board; don't obscure it.
-- "Client," never "contractor," in any player-facing copy.
+- "Client," never "client," in any player-facing copy.
 - Freeform/self-directed mining has no premium and no affinity — don't give
-  it a payout-bonus readout, that's contractor-only.
+  it a payout-bonus readout, that's client-only.
 - Two-leg jobs must be shown before the player commits (Target and Rocket
   steps), not discovered mid-mission.
 

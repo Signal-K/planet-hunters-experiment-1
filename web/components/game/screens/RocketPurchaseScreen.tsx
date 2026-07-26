@@ -196,7 +196,7 @@ export default function RocketPurchaseScreen({ missionsDone, francs, mission, de
               )}
               {!canAfford && (
                 <div style={{ padding: '8px 14px 10px', fontFamily: 'var(--ln-font-display)', fontSize: 11, color: 'var(--ln-crimson)', letterSpacing: '0.06em', borderTop: '1px solid rgba(220,50,50,0.2)' }}>
-                  Insufficient Francs — sell minerals or complete contractor missions to raise funds.
+                  Insufficient Francs — sell minerals or complete client missions to raise funds.
                 </div>
               )}
             </div>

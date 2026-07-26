@@ -222,7 +222,7 @@ export function ScreenContent({
           onSell={game.sellMinerals}
           onBack={() => game.go('hub')}
           onOpenMissions={() => game.go('missions')}
-          contractorId={game.player.lastContractor}
+          clientId={game.player.lastClient}
         />
       )
 
