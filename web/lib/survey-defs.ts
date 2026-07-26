@@ -34,7 +34,7 @@ export const SURVEY_DEFS: Record<string, Survey> = {
       { id: '2b7a97f3-dabb-4ead-9a2b-8ebfb47365d2', type: 'multiple_choice', question: 'What felt off about mining?', choices: ['Too slow', 'Unclear what to collect', 'Hard to control', 'Nothing - felt good'] },
     ],
   },
-  lnm_contractor_pick: {
+  lnm_client_pick: {
     id: '019ccaf8-4299-0000-b3ad-92a57ab75b95',
     name: '[Landnam / Clients] Client First Impression',
     posthogUrl: 'https://us.posthog.com/project/199773/surveys/019ccaf8-4299-0000-b3ad-92a57ab75b95',
@@ -107,7 +107,7 @@ export const SURVEY_DEFS: Record<string, Survey> = {
     posthogUrl: 'https://us.posthog.com/project/199773/surveys/019f36f7-9396-0000-9271-74f9bba0546a',
     questions: [
       { id: 'm3-transport-clarity', type: 'multiple_choice', question: 'How clear was it that this was a two-stop delivery job — mine, then drop cargo at a second target?', choices: ['Crystal clear', 'Mostly clear', 'A bit confusing', 'I did not realize there were two stops'] },
-      { id: 'm3-contractor-choice', type: 'multiple_choice', question: 'How did picking between the two clients feel?', choices: ['Meaningful', 'Fine but simple', 'Confusing', 'I did not notice I had a choice'] },
+      { id: 'm3-client-choice', type: 'multiple_choice', question: 'How did picking between the two clients feel?', choices: ['Meaningful', 'Fine but simple', 'Confusing', 'I did not notice I had a choice'] },
       { id: 'm3-rating', type: 'rating', question: 'How are you feeling about the game after three missions?', scale: 5 },
       { id: 'm3-freetext', type: 'open', question: 'Anything we should know before you play more?' },
     ],

@@ -20,7 +20,7 @@ export const STRUCTURES: StructureBlueprint[] = [
     cost: 800_000_000,
     costMaterials: { aluminium: 20, copper: 10 },
     unlocksAt: 'First client mission requiring refined minerals',
-    unlockTrigger: 'contractor-mission-trigger',
+    unlockTrigger: 'client-mission-trigger',
     description: 'Refines raw minerals into higher-value client-grade materials.',
   },
   {

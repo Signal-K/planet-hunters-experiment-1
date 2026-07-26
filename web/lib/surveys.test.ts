@@ -24,7 +24,7 @@ describe('buildPostHogSurveyPayload', () => {
     const survey = SURVEY_DEFS.lnm_m3_complete
     const payload = buildPostHogSurveyPayload(survey, {
       'm3-transport-clarity': 'Mostly clear',
-      'm3-contractor-choice': 'Meaningful',
+      'm3-client-choice': 'Meaningful',
       'm3-rating': 5,
     })
 
@@ -36,13 +36,13 @@ describe('buildPostHogSurveyPayload', () => {
       $survey_response_1: 'Meaningful',
       $survey_response_2: 5,
       '$survey_response_m3-transport-clarity': 'Mostly clear',
-      '$survey_response_m3-contractor-choice': 'Meaningful',
+      '$survey_response_m3-client-choice': 'Meaningful',
       '$survey_response_m3-rating': 5,
     })
     expect(payload.$survey_submission_id).toEqual(expect.any(String))
     expect(payload.$survey_questions).toEqual([
       { id: 'm3-transport-clarity', question: survey.questions[0].question, response: 'Mostly clear' },
-      { id: 'm3-contractor-choice', question: survey.questions[1].question, response: 'Meaningful' },
+      { id: 'm3-client-choice', question: survey.questions[1].question, response: 'Meaningful' },
       { id: 'm3-rating', question: survey.questions[2].question, response: 5 },
       { id: 'm3-freetext', question: survey.questions[3].question, response: undefined },
     ])
@@ -50,9 +50,9 @@ describe('buildPostHogSurveyPayload', () => {
 
   // Review coverage for "Update PostHog surveys for new M1-M3 mission
   // structure" (update-posthog-surveys-m1-m3-mission-structure): M3 became
-  // a contractor transport mission, so the old self-directed-mining survey
+  // a client transport mission, so the old self-directed-mining survey
   // copy must never reappear, and M1-M3 must each ask about the new
-  // contractor/mission choice step.
+  // client/mission choice step.
   it('never asks the stale self-directed-mining M3 questions ("first custom mining run" / "choosing your own target")', () => {
     const allQuestionText = Object.values(SURVEY_DEFS)
       .flatMap(survey => survey.questions.map(q => q.question))
@@ -61,10 +61,10 @@ describe('buildPostHogSurveyPayload', () => {
     expect(allQuestionText).not.toMatch(/choosing your own target/i)
   })
 
-  it('M1, M2, and M3 each ask about the new contractor/mission choice step', () => {
+  it('M1, M2, and M3 each ask about the new client/mission choice step', () => {
     for (const key of ['lnm_m1_complete', 'lnm_m2_complete', 'lnm_m3_complete'] as const) {
       const questionIds = SURVEY_DEFS[key].questions.map(q => q.id)
-      expect(questionIds.some(id => id.includes('mission-choice') || id.includes('contractor-choice'))).toBe(true)
+      expect(questionIds.some(id => id.includes('mission-choice') || id.includes('client-choice'))).toBe(true)
     }
   })
 })

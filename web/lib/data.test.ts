@@ -444,7 +444,7 @@ describe('seed bible v0 catalog', () => {
       kind: 'refinery',
       cost: 800_000_000,
       costMaterials: { aluminium: 20, copper: 10 },
-      unlockTrigger: 'contractor-mission-trigger',
+      unlockTrigger: 'client-mission-trigger',
     })
     expect(refinery && structureUnlocked(refinery, { refineryUnlocked: false })).toBe(false)
     expect(refinery && structureUnlocked(refinery, { refineryUnlocked: true })).toBe(true)

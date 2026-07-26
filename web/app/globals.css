@@ -684,7 +684,10 @@ button { cursor: pointer; }
 .progress-track span { display: block; height: 100%; background: linear-gradient(90deg, var(--ln-amber), var(--ln-cyan)); box-shadow: var(--ln-glow-cyan); transition: width 100ms linear; }
 
 .mining-screen { position: absolute; inset: 0; overflow: hidden; background: var(--ln-void); display: flex; flex-direction: column; }
-.mining-viewport { position: relative; flex: 1; overflow: hidden; min-height: 0; }
+.mining-viewport {
+  position: relative; flex: 1; overflow: hidden; min-height: 0;
+  background: radial-gradient(ellipse at 70% 10%, #12203d, transparent 50%), linear-gradient(180deg, #090e1a 0%, var(--ln-void) 60%, #000000 100%);
+}
 .mining-canvas { position: absolute; inset: 0; z-index: 1; }
 .game-canvas-loading {
   position: absolute; inset: 0; display: grid; place-items: center;
@@ -718,6 +721,10 @@ button { cursor: pointer; }
   min-width: 0;
   gap: var(--ln-s-2);
   background: linear-gradient(0deg, rgba(3,6,12,0.98) 0%, rgba(3,6,12,0.88) 100%);
+  /* Glass HUD (Open Design "Full Panel Re-skin", 2026-07-25): blur layered on
+     top of the existing opaque gradient, matching .mission-setup-frame/-card. */
+  backdrop-filter: var(--ln-glass-blur);
+  -webkit-backdrop-filter: var(--ln-glass-blur);
 }
 .mining-stats-row { display: flex; gap: var(--ln-s-3); align-items: center; flex-wrap: wrap; }
 .mineral-stat { display: flex; align-items: center; gap: 4px; color: var(--ln-text-dim); font: 700 11px var(--ln-font-mono); }

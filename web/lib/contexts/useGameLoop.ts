@@ -64,7 +64,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
         ?? null
       if (!mission) return s
       const isStoryMission = mission.client === STORY_MISSION_CLIENT_ID || (mission.tag === 'STORY' && !mission.deliveryTargetId)
-      if (s.player.missionsDone >= 1 && !isStoryMission) enqueueSurvey('lnm_contractor_pick')
+      if (s.player.missionsDone >= 1 && !isStoryMission) enqueueSurvey('lnm_client_pick')
       const dailyClientPool = (s.player.dailyClientPool && id.startsWith('dcp-'))
         ? { ...s.player.dailyClientPool, acceptedId: id }
         : s.player.dailyClientPool

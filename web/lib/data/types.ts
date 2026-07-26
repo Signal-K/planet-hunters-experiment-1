@@ -190,7 +190,7 @@ export interface StructureBlueprint {
   cost: number
   costMaterials?: Record<string, number>
   unlocksAt: string
-  unlockTrigger?: 'always' | 'contractor-mission-trigger' | 'manual'
+  unlockTrigger?: 'always' | 'client-mission-trigger' | 'manual'
   description: string
 }
 

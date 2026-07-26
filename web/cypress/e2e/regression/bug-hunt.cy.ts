@@ -10,7 +10,7 @@ const GUEST_KEY = 'landnam-guest-credentials'
 const SURVEY_KEY = 'landnam-surveys-shown'
 
 const ALL_SURVEYS = [
-  'lnm_first_launch', 'lnm_mining_feel', 'lnm_contractor_pick',
+  'lnm_first_launch', 'lnm_mining_feel', 'lnm_client_pick',
   'lnm_mission_friction', 'lnm_progression_feel', 'lnm_end_of_content',
   'lnm_return_visit', 'lnm_m1_complete', 'lnm_m2_complete', 'lnm_m3_complete',
 ]
