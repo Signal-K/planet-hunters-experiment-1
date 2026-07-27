@@ -14,11 +14,32 @@ interface HubPixiCanvasProps {
   buildings: HubBuildingDef[]
 }
 
+/**
+ * Signature of everything the scene actually draws. Used to rebuild when the
+ * building list changes — the PixiJS app itself still initialises only once.
+ */
+function signature(buildings: HubBuildingDef[]): string {
+  return buildings.map(b => `${b.kind}:${b.plotX}:${b.w}:${b.hot ? 1 : 0}:${b.status ?? ''}`).join('|')
+}
+
 export default function HubPixiCanvas({ buildings }: HubPixiCanvasProps) {
   const divRef = useRef<HTMLDivElement>(null)
   // Keep a stable ref to buildings so the effect can see latest values
   const buildingsRef = useRef(buildings)
   buildingsRef.current = buildings
+  // Exposed by the init effect so prop changes can trigger a redraw without
+  // tearing down and re-initialising the PixiJS Application.
+  const rebuildRef = useRef<(() => void) | null>(null)
+
+  // Game state hydrates from localStorage/PocketBase *after* this component
+  // mounts, so `buildings` is routinely empty on the first render and only
+  // fills in a tick later. Without this the scene stayed permanently empty
+  // (buildingsRef updated, but nothing ever asked the canvas to redraw) and
+  // structures were invisible until an unrelated resize happened to fire.
+  const sig = signature(buildings)
+  useEffect(() => {
+    rebuildRef.current?.()
+  }, [sig])
 
   useEffect(() => {
     const div = divRef.current
@@ -77,6 +98,7 @@ export default function HubPixiCanvas({ buildings }: HubPixiCanvasProps) {
       }
 
       rebuild()
+      rebuildRef.current = rebuild
 
       ro = new ResizeObserver(() => rebuild())
       ro.observe(div)
@@ -90,6 +112,7 @@ export default function HubPixiCanvas({ buildings }: HubPixiCanvasProps) {
 
     return () => {
       destroyed = true
+      rebuildRef.current = null
       ro?.disconnect()
       scene?.destroy()
       // Only destroy if the renderer was fully initialised — avoids PixiJS v8

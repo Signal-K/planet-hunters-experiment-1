@@ -124,6 +124,7 @@
   --ln-s-8: 64px;
 
   --ln-nav-h: 64px;
+  --ln-rail-w: 84px;
 
   --ln-font-display: "Oxanium", "Turret Road", system-ui, sans-serif;
   --ln-font-body:    "Oxanium", system-ui, sans-serif;
@@ -209,12 +210,19 @@
   .mission-board-layout {
     display: grid;
     grid-template-columns: minmax(0, 1fr) 320px;
-    align-items: start;
+    /* stretch, not start: the Target Picker's galaxy map fills its column via
+       `height:100%` over an absolutely-positioned SVG, so a content-sized
+       (start-aligned) column resolved to 0 and the whole solar-system map
+       rendered invisible — measured at 2px tall with a 0px svg. The detail
+       panel opts back out with align-self:start below so it can still stick. */
+    align-items: stretch;
     gap: 14px;
   }
   .mission-board-detail {
     position: sticky;
     top: 12px;
+    /* position:sticky does nothing on a stretched grid item. */
+    align-self: start;
   }
 }
 
@@ -293,19 +301,44 @@ button { cursor: pointer; }
   --tutorial-manual-content-top: 248px;
 }
 
+/* Page backdrop — ported from the Open Design shells (landnam-mission-board.html
+   et al, 2026-07-27). The app is a floating card on a lit blue-violet field, NOT
+   a full-bleed near-black slab: that flat `--ln-void` wash is the "dark blue
+   background behind everything" that kept reappearing.
+
+   Source: body { background: radial-gradient(ellipse at 30% -15%, #2a4170 0%,
+   var(--space-bg) 45%, var(--space-bg-far) 80%) } with --space-bg #24366a and
+   --space-bg-far #0e1526, plus a fixed starfield overlay. */
 .game-stage {
+  position: relative;
+  /* Explicit: width:100% + padding must not exceed the viewport, or the
+     centered card is pushed past the right edge and its detail panel clips. */
+  box-sizing: border-box;
   width: 100%;
   min-height: 100dvh;
   display: grid;
   place-items: center;
-  padding: var(--ln-s-2);
-  background:
-    radial-gradient(circle at 50% 12%, rgba(63, 169, 255, 0.12), transparent 36%),
-    var(--ln-void);
+  padding: var(--ln-s-4);
+  background: radial-gradient(ellipse at 30% -15%, #2a4170 0%, #24366a 45%, #0e1526 80%);
+}
+.game-stage::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background-image:
+    radial-gradient(1px 1px at 6% 22%, rgba(255, 255, 255, 0.5), transparent),
+    radial-gradient(1.5px 1.5px at 28% 55%, rgba(108, 212, 255, 0.4), transparent),
+    radial-gradient(1px 1px at 45% 15%, rgba(255, 255, 255, 0.4), transparent),
+    radial-gradient(1px 1px at 68% 78%, rgba(108, 212, 255, 0.35), transparent),
+    radial-gradient(1.5px 1.5px at 82% 30%, rgba(255, 255, 255, 0.3), transparent);
+  background-size: 180px 180px;
 }
 
 .portrait-canvas {
   position: relative;
+  z-index: 1; /* above .game-stage::before starfield */
   display: flex;
   flex-direction: column;
   width: min(402px, calc(100vw - var(--ln-s-4)));
@@ -777,31 +810,50 @@ button { cursor: pointer; }
 }
 
 /* Desktop: use the full viewport; navigation remains in the bottom command rail. */
+/* Desktop: the app is a centered card on the lit backdrop — the `.stage`/`.app`
+   pair from the Open Design shells (width: min(1320px, 100%); 2px cyan-tinted
+   border; heavy drop shadow).
+
+   This block previously did the opposite — width:100vw, height:100dvh,
+   border-radius:0, border:none, box-shadow:none — which stripped the card back
+   to a full-bleed slab on every desktop viewport and was the single biggest
+   reason the shipped UI never matched the mockups. Do not reintroduce it. */
 @media (min-width: 1024px) {
-  .game-stage {
-    padding: 0;
-  }
   .portrait-canvas {
-    width: 100vw;
-    height: 100dvh;
+    width: 100%;
+    max-width: 1320px;
+    height: min(900px, calc(100dvh - var(--ln-s-6)));
     max-height: none;
-    border-radius: 0;
-    border: none;
-    box-shadow: none;
+    border-radius: var(--ln-r-xl);
+    border: 2px solid rgba(108, 212, 255, 0.08);
+    box-shadow: 0 30px 80px rgba(0, 0, 0, 0.4);
   }
   .sticky-actions { padding-bottom: var(--ln-s-5); }
 }
 
-/* The legacy desktop sidebar is intentionally disabled in favour of the
-   full-width command rail used by the rest of the game UI. */
+/* Desktop has NO persistent global navigation — no side rail, no bottom bar.
+   Neither appears in any Open Design shell, and both ate a permanent strip of
+   the playfield. Navigation on desktop is diegetic: structures on the Earth
+   Base are the menu, the topbar carries Back, and the mission flow is driven
+   by the step footer and progression cards. `.hub-desktop-nav` adds the few
+   destinations that have no building (Market, Atlas, Skills) to the base's own
+   action rail at desktop widths.
+
+   The bottom tab bar survives only under 1024px, where there is no room for
+   the base action rail to carry navigation as well. */
 .desktop-sidebar {
   display: none;
 }
 
-/* Keep the same command rail on desktop so navigation does not consume a
-   permanent strip of the playfield. */
+.hub-desktop-nav {
+  display: none;
+}
+
 @media (min-width: 1024px) {
   .bottom-tab-bar {
+    display: none;
+  }
+  .hub-desktop-nav {
     display: flex;
   }
 }
@@ -870,7 +922,43 @@ html[data-coach-target="build-structure-strip"] [data-coach-id="build-structure-
   border-radius: 8px;
 }
 @keyframes pad-pulse { 0%,100% { transform: scale(1); opacity: 0.85; } 50% { transform: scale(1.05); opacity: 1; } }
-@keyframes cloud-drift { from { transform: translateX(0); } to { transform: translateX(460px); } }
+
+/* ── Earth Base scene (Open Design "landnam-earth-base-v2") ──────────────
+   Ported 2026-07-26 from open-design/.od/projects/a531c672-.../
+   landnam-earth-base-v2.html. Replaces the old procedural sine-ridge +
+   amber-horizon world with the flat-shaded deep-blue scene: layered ridge
+   parallax, octagonal plateau, dirt-mound structure collars, drifting
+   motes, and white-outline black chrome. No amber anywhere on this screen —
+   accents are cyan (--ln-cyan) and mint (--hub-mint) only. */
+:root {
+  /* Scene-local accents. Mint is the mockup's --ln-ok (#2fbf6a); kept as a
+     hub-scoped token rather than overriding the global --ln-ok, which other
+     screens already tune against. */
+  --hub-mint:       #2fbf6a;
+  --hub-cyan:       #6cd4ff;
+  --hub-outline:    rgba(255, 255, 255, 0.55);
+  --hub-panel:      #080d18;
+  --hub-panel-deep: #0a0f1a;
+  /* Ground contact line — 22% from the bottom. MUST stay in agreement with
+     hubScene.ts (groundY = containerH * 0.78) and the DOM plot positions in
+     HubScreen/BuildPlaceScreen, which all derive from the same 22%. */
+  --hub-ground: 22%;
+}
+@keyframes hub-twinkle   { from { opacity: 0.55; } to { opacity: 1; } }
+@keyframes hub-drift-slow { from { transform: translateX(0); } to { transform: translateX(-2.5%); } }
+@keyframes hub-ore-pulse { 0%,100% { opacity: 0.5; } 50% { opacity: 0.85; } }
+@keyframes hub-pad-pulse { 0%,100% { opacity: 0.7; } 50% { opacity: 1; } }
+@keyframes hub-light-blink { 0%,100% { opacity: 0.5; } 50% { opacity: 1; } }
+@keyframes hub-notify-pulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.12); } }
+@keyframes hub-float-up {
+  0%   { transform: translateY(0) translateX(0); opacity: 0; }
+  8%   { opacity: 0.8; }
+  90%  { opacity: 0.45; }
+  100% { transform: translateY(-58%) translateX(var(--drift, 20px)); opacity: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hub-stars, .hub-ridge, .hub-mote, .hub-ore, .hub-notify, .hub-light-dot { animation: none !important; }
+}
 @keyframes unlock-in { from { transform: scale(0.85); opacity: 0; } to { transform: scale(1); opacity: 1; } }
 @keyframes unlock-spin { to { transform: translate(-50%,-50%) rotate(360deg); } }
 @keyframes gate-up { from { transform: translateY(40px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }

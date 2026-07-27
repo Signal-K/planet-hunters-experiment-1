@@ -1,0 +1,147 @@
+export {}
+
+/**
+ * Screenshot pass for the Earth Base scene redesign (Open Design
+ * `landnam-earth-base-v2.html`). Not an assertion suite — it seeds a base at
+ * a few build states and captures the hub at portrait and desktop widths so
+ * the ported scene can be eyeballed.
+ *
+ * Run: CYPRESS_PROFILE=earth-base npx cypress run --browser chrome
+ */
+
+const STORAGE_KEY = 'landnam-game-state-v1'
+const SURVEY_KEY = 'landnam-surveys-shown'
+const SNOOZE_KEY = 'landnam-upgrade-prompt-snooze-until'
+
+const ALL_SURVEYS = [
+  'lnm_first_launch', 'lnm_mining_feel', 'lnm_client_pick',
+  'lnm_mission_friction', 'lnm_progression_feel', 'lnm_end_of_content',
+  'lnm_return_visit', 'lnm_m1_complete', 'lnm_m2_complete', 'lnm_m3_complete',
+]
+
+const BASE_PLAYER = {
+  francs: 15_000_000_000,
+  activeMission: null,
+  missionCount: 1,
+  pendingLaunch: false,
+  placed: ['launchpad'],
+  placementPlots: { launchpad: 0 },
+  controlBuilt: false,
+  missionsDone: 0,
+  freeOperations: false,
+  clientMissions: {},
+  clientStreaks: {},
+  clientCooldowns: {},
+  researchAnnotations: 0,
+  refineryBuilt: false,
+  refineryUnlocked: false,
+  refineryUnlockNotified: false,
+  refineryQueue: [],
+  refinedGoods: {},
+  launchpadUpgraded: false,
+  loanDebt: 0,
+  loanOffered: false,
+}
+
+function seed(win: Window, player: object) {
+  win.localStorage.removeItem('pocketbase_auth')
+  win.localStorage.setItem(SURVEY_KEY, JSON.stringify(ALL_SURVEYS))
+  win.localStorage.setItem(SNOOZE_KEY, String(Date.now() + 365 * 24 * 60 * 60 * 1000))
+  win.localStorage.setItem('landnam-guest-credentials', JSON.stringify({
+    email: 'ci_seed_guest@landnam.guest',
+    password: 'GuestPassword123!',
+  }))
+  // Suppress the onboarding-complete sheet, which otherwise covers the scene
+  // on any preset with missionsDone past the Free Ops threshold.
+  win.localStorage.setItem('ln_tutorial_complete_ack', '1')
+  win.localStorage.setItem(STORAGE_KEY, JSON.stringify({
+    screen: 'hub',
+    player: { ...BASE_PLAYER, ...player },
+    tutorial: false,
+    doneSteps: { 0: true, 1: true, 2: true, 3: true, 4: true, 5: true, 6: true, 7: true, 9: true },
+    missionId: null,
+    targetId: null,
+    rocket: { chassis: 'hull-mk1', propulsion: 'ion-a1', drill: 'hand-drill' },
+    lastCargo: null,
+    popup: null,
+  }))
+}
+
+function openHub(player: object) {
+  cy.visit('/game/hub', { onBeforeLoad: win => seed(win, player) })
+  cy.get('[data-testid="building-launchpad"]', { timeout: 20000 }).should('exist')
+  // Let the ridge parallax, mote field and Pixi ticker settle, and give the
+  // launchpad callout its 900ms auto-open delay.
+  cy.wait(2500)
+}
+
+describe('Earth Base — redesigned scene', () => {
+  Cypress.on('uncaught:exception', err => {
+    if (err.message.includes('_cancelResize')) return false
+    return undefined
+  })
+
+  it('portrait — launchpad only, Ops 0', () => {
+    cy.viewport(390, 844)
+    openHub({})
+    cy.screenshot('earth-base-01-portrait-launchpad', { capture: 'viewport' })
+  })
+
+  it('portrait — full base, Free Ops', () => {
+    cy.viewport(390, 844)
+    openHub({
+      missionsDone: 4,
+      missionCount: 4,
+      freeOperations: true,
+      refineryBuilt: true,
+      refineryUnlocked: true,
+      scannerBuilt: true,
+      satelliteMonitoringBuilt: true,
+      placed: ['launchpad', 'refinery', 'scan-station', 'satellite-monitoring-station'],
+      placementPlots: { launchpad: 0, refinery: 1, 'scan-station': 2, 'satellite-monitoring-station': 3 },
+      stash: { iron: 12, silicon: 5, gold: 2 },
+    })
+    cy.screenshot('earth-base-02-portrait-full', { capture: 'viewport' })
+  })
+
+  it('desktop — full base', () => {
+    cy.viewport(1440, 900)
+    openHub({
+      missionsDone: 4,
+      missionCount: 4,
+      freeOperations: true,
+      refineryBuilt: true,
+      refineryUnlocked: true,
+      scannerBuilt: true,
+      satelliteMonitoringBuilt: true,
+      placed: ['launchpad', 'refinery', 'scan-station', 'satellite-monitoring-station'],
+      placementPlots: { launchpad: 0, refinery: 1, 'scan-station': 2, 'satellite-monitoring-station': 3 },
+      stash: { iron: 12, silicon: 5 },
+    })
+    cy.screenshot('earth-base-03-desktop-full', { capture: 'viewport' })
+  })
+
+  it('portrait — edit mode toolbar', () => {
+    cy.viewport(390, 844)
+    openHub({ missionsDone: 4, missionCount: 4, freeOperations: true })
+    // scrollBehavior:false — the hub's sliding world is a 200%-tall child of an
+    // overflow:hidden box, which is still programmatically scrollable, so
+    // Cypress's default scrollIntoView drags the scene to the subsurface half
+    // before clicking and the screenshot captures that instead of the surface.
+    cy.contains('button', 'Edit · Build').click({ scrollBehavior: false })
+    cy.wait(600)
+    cy.screenshot('earth-base-04-portrait-edit', { capture: 'viewport' })
+  })
+
+  it('portrait — build/place screen', () => {
+    cy.viewport(390, 844)
+    openHub({ missionsDone: 4, missionCount: 4, freeOperations: true })
+    // Reach BuildPlaceScreen the way a player does — a bare visit to
+    // /game/build bounces back to the hub.
+    cy.contains('button', 'Edit · Build').click({ scrollBehavior: false })
+    cy.contains('button', 'New Structure').click({ scrollBehavior: false })
+    cy.get('[data-testid="build-plot-1"]', { timeout: 20000 }).should('exist').click({ scrollBehavior: false })
+    cy.wait(1200)
+    cy.screenshot('earth-base-05-portrait-build', { capture: 'viewport' })
+  })
+})

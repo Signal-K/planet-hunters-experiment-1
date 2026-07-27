@@ -7,14 +7,11 @@ import IconBadge from '@/components/ui/IconBadge'
 
 type CardIconBadgeTone = 'cyan' | 'amber' | 'ok' | 'crit' | 'mute'
 
-// Maps each card's arbitrary hex/CSS-var accent onto the fixed Ref-B
-// IconBadge tone set, so the side-panel glyph tile still reads as
-// "this card's color" without IconBadge needing an open-ended palette.
+// The Earth Base palette is cyan + mint only (no amber on this screen), so
+// the tile maps onto just two IconBadge tones. Exact color/border come from
+// the inline style below — this only picks a sane base tone.
 function toneForAccent(accent: string): CardIconBadgeTone {
-  if (accent.includes('cyan')) return 'cyan'
-  if (accent === '#f5a623') return 'amber'
-  if (accent === '#39d36a') return 'ok'
-  return 'cyan'
+  return accent.includes('mint') ? 'ok' : 'cyan'
 }
 
 // Small line-icon glyphs, one per progression-card eyebrow, in the same
@@ -60,31 +57,30 @@ function CardButton({ accent, icon, eyebrow, title, cta, onClick, testId }: {
       onClick={onClick}
       style={{
         width: '100%', textAlign: 'left', cursor: 'pointer',
-        background: 'linear-gradient(180deg, rgba(10,18,29,0.86), rgba(6,12,22,0.9))',
-        border: `1px solid ${accent}66`,
+        background: 'var(--hub-panel, #080d18)',
+        border: '1.5px solid var(--hub-outline, rgba(255,255,255,0.55))',
         borderRadius: 12, padding: 10,
-        backdropFilter: 'blur(8px)',
-        boxShadow: `0 6px 18px rgba(0,0,0,0.4), 0 0 16px ${accent}22`,
+        boxShadow: '0 20px 44px rgba(0,0,0,0.5)',
         display: 'flex', alignItems: 'center', gap: 10,
       }}
     >
-      {/* Ref-B bordered-icon-badge tile — replaces the old flat color bar so
-          this side panel reads in the same chrome language as the HUD strip. */}
+      {/* Bordered icon tile — the `.bp-panel` / `.picker-icon` chrome from the
+          Earth Base mockup: black tile, accent-colored 1.5px outline. */}
       <IconBadge
         icon={icon}
         size={34}
         tone={toneForAccent(accent)}
         active
-        style={{ color: accent, borderColor: `${accent}aa`, boxShadow: `0 0 0 1px ${accent}40, 0 0 14px ${accent}30` }}
+        style={{ color: accent, borderColor: accent, borderWidth: 1.5, background: 'rgba(0,10,24,0.6)', boxShadow: 'none' }}
       />
       <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 8, fontWeight: 800, letterSpacing: '0.2em', color: accent, textTransform: 'uppercase' }}>{eyebrow}</div>
-        <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 13, fontWeight: 800, color: '#e6efff', lineHeight: 1.3 }}>{title}</div>
+        <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 9, fontWeight: 700, letterSpacing: '0.14em', color: accent, textTransform: 'uppercase' }}>{eyebrow}</div>
+        <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 13, fontWeight: 800, color: '#fff', lineHeight: 1.3 }}>{title}</div>
       </div>
       <span style={{
         flexShrink: 0,
-        padding: '5px 10px', borderRadius: 8,
-        background: `${accent}22`, border: `1px solid ${accent}88`,
+        padding: '5px 10px', borderRadius: 999,
+        background: 'transparent', border: `1.5px solid ${accent}`,
         color: accent,
         fontFamily: 'var(--ln-font-display)', fontSize: 9, fontWeight: 800,
         letterSpacing: '0.12em', textTransform: 'uppercase',
@@ -104,7 +100,7 @@ export default function ProgressionCard({ player, onGoBuilding, onNav, top = 132
       <CardButton
         key="active"
         testId="progression-card-active"
-        accent="#7ec8ff"
+        accent="var(--hub-cyan)"
         icon={<ResumeGlyph />}
         eyebrow="Mission In Progress"
         title={player.activeMission.label}
@@ -117,7 +113,7 @@ export default function ProgressionCard({ player, onGoBuilding, onNav, top = 132
       <CardButton
         key="pending"
         testId="progression-card-pending"
-        accent="#f5a623"
+        accent="var(--hub-mint)"
         icon={<LaunchpadGlyph />}
         eyebrow="Launch Ready on Pad"
         title="Vessel fuelled & assigned"
@@ -135,7 +131,7 @@ export default function ProgressionCard({ player, onGoBuilding, onNav, top = 132
         <CardButton
           key="skills"
           testId="progression-card-skills"
-          accent="var(--ln-cyan)"
+          accent="var(--hub-cyan)"
           icon={<SkillGlyph />}
           eyebrow="Skill Points"
           title={`${player.skillPoints ?? 0} SP available`}
@@ -149,7 +145,7 @@ export default function ProgressionCard({ player, onGoBuilding, onNav, top = 132
         <CardButton
           key="sms"
           testId="progression-card-sms"
-          accent="#7ec8ff"
+          accent="var(--hub-cyan)"
           icon={<SmsGlyph />}
           eyebrow="New Facility"
           title="Build a Satellite Monitoring Station"
@@ -162,7 +158,7 @@ export default function ProgressionCard({ player, onGoBuilding, onNav, top = 132
         <CardButton
           key="telescope"
           testId="progression-card-transit-satellite"
-          accent="#7ec8ff"
+          accent="var(--hub-cyan)"
           icon={<TelescopeGlyph />}
           eyebrow="Science Mission"
           title="Launch a transit telescope"
@@ -175,7 +171,7 @@ export default function ProgressionCard({ player, onGoBuilding, onNav, top = 132
         <CardButton
           key="daily-candidates"
           testId="progression-card-tess-candidates"
-          accent="#7ec8ff"
+          accent="var(--hub-cyan)"
           icon={<TelescopeGlyph />}
           eyebrow="Daily Downlink"
           title="Classify today's transit candidates"
@@ -189,7 +185,7 @@ export default function ProgressionCard({ player, onGoBuilding, onNav, top = 132
       <CardButton
         key="next-mission"
         testId="progression-card-next-mission"
-        accent="#39d36a"
+        accent="var(--hub-mint)"
         icon={<ContractGlyph />}
         eyebrow={justFinishedOnboarding ? 'Onboarding Complete' : 'Next Mission'}
         title={justFinishedOnboarding ? 'Choose your first free contract' : 'New contract available'}

@@ -1,10 +1,20 @@
 /**
  * Hub screen building scene — pure PixiJS scene logic, no React lifecycle.
- * Builds procedural Graphics for each structure type; sprite textures slot in
- * when available (all texture fields are nullable for graceful fallback).
  *
- * Coordinate convention: (0, 0) = center of building base (ground contact point).
- * Buildings extend upward (negative y). Caller positions the container.
+ * Art reworked 2026-07-26 against the Open Design mockup
+ * `landnam-earth-base-v2.html`. Rendering rules from that spec:
+ *   - flat color fills, volume via 2–3 discrete facets, never gradient-as-texture
+ *   - bold silhouettes with hard-edged 1–1.4px outline strokes
+ *   - no amber anywhere on this screen; accents are cyan + mint only
+ *   - glows are the only permitted softness
+ *
+ * Each structure also gets a dirt mound collar and pad glow drawn beneath it,
+ * so the feet break the ground plane instead of sitting on top of it. Those
+ * live here rather than in the DOM layer because the DOM sits *above* this
+ * canvas — a CSS mound would occlude the building it's supposed to sit behind.
+ *
+ * Coordinate convention: (0, 0) = center of building base (ground contact
+ * point). Buildings extend upward (negative y). Caller positions the container.
  */
 import { Application, Container, Graphics, Sprite, Texture } from 'pixi.js'
 
@@ -12,22 +22,33 @@ import { Application, Container, Graphics, Sprite, Texture } from 'pixi.js'
 export const HUB_W = 402
 export const HUB_H = 874
 
-// Ground y in PixiJS canvas coordinates (22% from bottom)
+// Ground y in PixiJS canvas coordinates (22% from bottom). Must stay in
+// agreement with HubWorldBackground's layout and the DOM plot positions.
 export const GROUND_Y = HUB_H * (1 - 0.22)
 
-// ─── Palette ──────────────────────────────────────────────────────────────────
+// ─── Palette — mockup's flat-shaded structure colors ─────────────────────────
 const C = {
-  hull:    0x1e2d3d,
-  panel:   0x2c4a6b,
-  panelLt: 0x3a5e82,
-  cyan:    0x00e5ff,
-  cyanDim: 0x4ab8c1,
-  amber:   0xf5a623,
-  green:   0x39d36a,
-  concrete:0x2a3a4a,
-  dark:    0x0e1c2e,
-  stripe:  0xd68a0d,
+  hull:     0x324a6c,  // lit face
+  hullDark: 0x2a3e5c,  // shaded face
+  base:     0x22334e,  // pad / foundation
+  foot:     0x3a4a66,  // outrigger feet, lightest facet
+  outline:  0x1c2c44,  // hard-edge stroke
+  cyan:     0x6cd4ff,  // window strips, trim
+  mint:     0x2fbf6a,  // status lights
+  moundLit: 0x33501f,  // dirt collar, lit crown
+  moundDim: 0x1c2f14,  // dirt collar, sunken edge
+  grassRim: 0x8cc85a,  // lit grass lip on the mound
 } as const
+
+// Natural art width in scene units, per kind — the container is scaled so the
+// silhouette fills the caller's requested `w`.
+const ART_W: Record<string, number> = {
+  launchpad: 60,
+  refinery: 62,
+  'scan-station': 58,
+  'satellite-monitoring-station': 60,
+  command: 60,
+}
 
 // ─── Texture bag ──────────────────────────────────────────────────────────────
 export interface HubTextures {
@@ -53,7 +74,7 @@ export function nullTextures(): HubTextures {
   }
 }
 
-// ─── Building renderers ───────────────────────────────────────────────────────
+// ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function makeSprite(tex: Texture | null, w: number, h: number, anchorX = 0.5, anchorY = 1.0): Sprite | null {
   if (!tex) return null
@@ -63,257 +84,231 @@ function makeSprite(tex: Texture | null, w: number, h: number, anchorX = 0.5, an
   return s
 }
 
+/** Hard-edged panel: flat fill + 1.4px outline, the mockup's core shape unit. */
+function panel(g: Graphics, x: number, y: number, w: number, h: number, fill: number, strokeW = 1.4): Graphics {
+  g.rect(x, y, w, h).fill(fill).stroke({ width: strokeW, color: C.outline, alignment: 0.5 })
+  return g
+}
+
+/**
+ * Dirt collar + pad glow the structure is embedded into. Drawn first so it
+ * renders behind the building. Mirrors `.structure-mound` / `.pad-glow`.
+ */
+function buildMound(width: number): { root: Container; animatables: AnimState[] } {
+  const root = new Container()
+  const anims: AnimState[] = []
+  const rx = width * 0.60
+  const ry = Math.max(7, width * 0.155)
+
+  const mound = new Graphics()
+  mound.ellipse(0, -ry * 0.35, rx, ry).fill(C.moundDim)
+  mound.ellipse(0, -ry * 0.55, rx * 0.82, ry * 0.72).fill(C.moundLit)
+  root.addChild(mound)
+
+  // Lit grass lip across the crown of the mound
+  const rim = new Graphics()
+  rim.ellipse(0, -ry * 0.95, rx * 0.68, Math.max(1.5, ry * 0.13)).fill({ color: C.grassRim, alpha: 0.55 })
+  root.addChild(rim)
+
+  // Soft cyan pad glow — the only permitted softness in the structure stack
+  const glow = new Graphics()
+  glow.ellipse(0, -ry * 0.6, rx * 0.78, ry * 0.62).fill({ color: C.cyan, alpha: 0.30 })
+  root.addChild(glow)
+  anims.push({ kind: 'pulse', obj: glow, speed: 1.4, phase: 0, min: 0.35, max: 0.75 })
+
+  return { root, animatables: anims }
+}
+
+// ─── Building renderers ───────────────────────────────────────────────────────
+
+/**
+ * Launchpad — direct port of the mockup's inline SVG (viewBox 0 0 100 130,
+ * feet at y=114). Converted to the (0,0)-at-ground-center convention by
+ * x' = x - 50, y' = y - 114.
+ */
 function buildLaunchpad(hot: boolean, tex: HubTextures): { root: Container; animatables: AnimState[] } {
   const root = new Container()
   const anims: AnimState[] = []
 
-  // ── Base platform (128×20) ─────────────────────────────────────────────────
-  const base = makeSprite(tex.pad_base, 128, 20)
-  if (base) {
-    root.addChild(base)
+  const base = makeSprite(tex.pad_base, 48, 12)
+  const tower = makeSprite(tex.pad_tower, 8, 80, 0.5, 1.0)
+  const gantry = makeSprite(tex.pad_gantry, 40, 6, 0.5, 0.5)
+
+  if (base && tower && gantry) {
+    tower.y = -16; root.addChild(base, tower, gantry)
   } else {
     const g = new Graphics()
-    g.rect(-64, -20, 128, 12).fill(C.concrete)
-    g.rect(-60, -8,  120, 8).fill(C.panel)
-    // flame trench slot
-    g.rect(-16, -20, 32, 12).fill(C.dark)
-    // corner hazard stripes
-    g.rect(-64, -8, 12, 8).fill(C.stripe)
-    g.rect(52, -8, 12, 8).fill(C.stripe)
+    // Mast + crown
+    panel(g, -3, -101, 6, 8, C.hullDark, 1)      // antenna housing
+    panel(g, -20, -93, 40, 6, C.hullDark, 1)     // gantry crossarm
+    panel(g, -4, -93, 8, 80, C.hull, 1.4)        // support tower
+    // Launch pad + outrigger feet
+    panel(g, -24, -16, 48, 12, C.base, 1.4)
+    g.rect(-30, -6, 14, 6).fill(C.foot)
+    g.rect(16, -6, 14, 6).fill(C.foot)
     root.addChild(g)
+
+    // Cyan window strips up the tower, alternating brightness
+    const strips = new Graphics()
+    const ys = [-86, -75, -64, -53, -42, -31]
+    ys.forEach((y, i) => {
+      strips.rect(-1.5, y, 3, 6).fill({ color: C.cyan, alpha: i % 2 === 0 ? 0.8 : 0.6 })
+    })
+    root.addChild(strips)
   }
 
-  // ── Support tower (16×140 centered at x=-30) ───────────────────────────────
-  const tower = makeSprite(tex.pad_tower, 20, 140, 0.5, 1.0)
-  if (tower) {
-    tower.x = -30; root.addChild(tower)
-  } else {
-    const g = new Graphics()
-    g.rect(-40, -140, 20, 140).fill(C.hull)
-    g.rect(-38, -138, 6, 130).fill(C.panelLt)
-    // ladder rungs
-    for (let y = -130; y < -20; y += 16) {
-      g.rect(-34, y, 14, 2).fill(C.cyanDim)
-    }
-    // crossbrace
-    g.rect(-40, -100, 20, 4).fill(C.panel)
-    g.rect(-40, -60, 20, 4).fill(C.panel)
-    root.addChild(g)
-  }
-
-  // ── Gantry arm (horizontal, x=-30 to x=+30, at y=-130) ───────────────────
-  const gantry = makeSprite(tex.pad_gantry, 70, 14, 0, 0.5)
-  if (gantry) {
-    gantry.x = -40; gantry.y = -136; root.addChild(gantry)
-  } else {
-    const g = new Graphics()
-    g.rect(-40, -140, 70, 10).fill(C.panel)
-    g.rect(28, -145, 4, 20).fill(C.hull)    // gantry tip
-    g.rect(-42, -136, 6, 8).fill(C.panelLt) // connector
-    root.addChild(g)
-  }
-
-  // ── Status beacon ──────────────────────────────────────────────────────────
+  // Status beacon — mint idle, brighter + haloed when a launch is pending
   const beacon = new Graphics()
-  beacon.circle(-30, -148, 4).fill(hot ? C.amber : C.green)
-  beacon.x = 0; beacon.y = 0
+  beacon.circle(0, -104, 3).fill(C.mint)
   root.addChild(beacon)
+  anims.push({ kind: 'blink', obj: beacon, speed: hot ? 3.2 : 1.3, phase: 0 })
 
   if (hot) {
-    const glow = new Graphics()
-    glow.circle(-30, -148, 14).fill({ color: C.amber, alpha: 0.2 })
-    root.addChild(glow)
-    anims.push({ kind: 'pulse', obj: glow, speed: 2.2, phase: 0 })
+    const halo = new Graphics()
+    halo.circle(0, -104, 9).fill({ color: C.mint, alpha: 0.28 })
+    root.addChild(halo)
+    anims.push({ kind: 'pulse', obj: halo, speed: 2.2, phase: 0, min: 0.2, max: 0.7 })
   }
-
-  // ── Cyan trim strips ───────────────────────────────────────────────────────
-  const trim = new Graphics()
-  trim.rect(-40, -22, 20, 2).fill({ color: C.cyan, alpha: 0.7 })
-  trim.rect(-40, -80, 2, 60).fill({ color: C.cyan, alpha: 0.5 })
-  root.addChild(trim)
 
   return { root, animatables: anims }
 }
 
-function buildCommandCenter(tex: HubTextures): { root: Container; animatables: AnimState[] } {
-  const root = new Container()
-  const anims: AnimState[] = []
-
-  // ── Foundation ─────────────────────────────────────────────────────────────
-  const fnd = makeSprite(tex.cmd_foundation, 96, 14)
-  if (fnd) {
-    root.addChild(fnd)
-  } else {
-    const g = new Graphics()
-    g.rect(-48, -14, 96, 14).fill(C.concrete)
-    g.rect(-44, -8, 88, 8).fill(C.hull)
-    root.addChild(g)
-  }
-
-  // ── Main building ──────────────────────────────────────────────────────────
-  const bld = makeSprite(tex.cmd_building, 88, 90, 0.5, 1.0)
-  if (bld) {
-    bld.y = -14; root.addChild(bld)
-  } else {
-    const g = new Graphics()
-    // main block
-    g.rect(-44, -104, 88, 90).fill(C.hull)
-    // panel lines
-    g.rect(-42, -102, 84, 2).fill(C.panelLt)
-    g.rect(-42, -70, 84, 2).fill(C.panelLt)
-    // windows (2 rows)
-    for (let i = 0; i < 3; i++) {
-      g.rect(-30 + i * 20, -92, 12, 16).fill(C.cyanDim)
-      g.rect(-30 + i * 20, -62, 12, 12).fill({ color: C.cyanDim, alpha: 0.6 })
-    }
-    // door
-    g.rect(-10, -34, 20, 34).fill(C.dark)
-    g.rect(-8, -32, 16, 32).fill(C.panel)
-    root.addChild(g)
-  }
-
-  // ── Antenna array ──────────────────────────────────────────────────────────
-  const ant = makeSprite(tex.cmd_antenna, 60, 40, 0.5, 1.0)
-  if (ant) {
-    ant.y = -104; root.addChild(ant)
-  } else {
-    const g = new Graphics()
-    // dish
-    g.ellipse(20, -120, 18, 10).fill({ color: C.cyanDim, alpha: 0.8 })
-    g.rect(16, -130, 8, 12).fill(C.hull)
-    // mast
-    g.rect(-2, -140, 4, 36).fill(C.panelLt)
-    // cross piece
-    g.rect(-14, -128, 28, 3).fill(C.hull)
-    root.addChild(g)
-  }
-
-  // ── Status blink light ─────────────────────────────────────────────────────
-  const light = new Graphics()
-  light.circle(-2, -142, 3).fill(C.amber)
-  root.addChild(light)
-  anims.push({ kind: 'blink', obj: light, speed: 1.4, phase: 0 })
-
-  // ── Cyan trim ──────────────────────────────────────────────────────────────
-  const trim = new Graphics()
-  trim.rect(-44, -104, 88, 3).fill({ color: C.cyan, alpha: 0.6 })
-  trim.rect(-44, -14, 88, 3).fill({ color: C.cyan, alpha: 0.4 })
-  root.addChild(trim)
-
-  return { root, animatables: anims }
-}
-
+/** Refinery — stacked flat facets, twin stacks, mint vent lights (no amber). */
 function buildRefinery(tex: HubTextures): { root: Container; animatables: AnimState[] } {
   const root = new Container()
   const anims: AnimState[] = []
 
-  // ── Foundation ─────────────────────────────────────────────────────────────
-  const fnd = makeSprite(tex.depot_base, 88, 12)
-  if (fnd) {
-    root.addChild(fnd)
-  } else {
-    const g = new Graphics()
-    g.rect(-44, -12, 88, 12).fill(C.concrete)
-    root.addChild(g)
-  }
-
-  // ── Main body ──────────────────────────────────────────────────────────────
-  const body = makeSprite(tex.depot_tank, 88, 60, 0.5, 1.0)
+  const body = makeSprite(tex.depot_tank, 56, 44, 0.5, 1.0)
   if (body) {
-    body.y = -12; root.addChild(body)
+    root.addChild(body)
   } else {
     const g = new Graphics()
-    g.rect(-44, -72, 88, 60).fill(C.hull)
-    g.rect(-42, -70, 84, 2).fill(C.panelLt)
-    g.rect(-42, -40, 84, 2).fill(C.panelLt)
-    // pipes
-    g.rect(-44, -55, 88, 6).fill(C.panel)
+    panel(g, -31, -10, 62, 10, C.base, 1.4)      // foundation
+    panel(g, -26, -54, 52, 44, C.hullDark, 1.4)  // main block, shaded face
+    panel(g, -26, -54, 22, 44, C.hull, 1.4)      // lit left facet
+    panel(g, -26, -34, 52, 7, C.base, 1)         // pipe run
+    // Twin stacks, unequal height
+    panel(g, -19, -96, 11, 42, C.hull, 1.4)
+    panel(g, 8, -84, 11, 30, C.hull, 1.4)
+    panel(g, -22, -100, 17, 5, C.hullDark, 1)    // caps
+    panel(g, 5, -88, 17, 5, C.hullDark, 1)
     root.addChild(g)
+
+    const trim = new Graphics()
+    trim.rect(-24, -50, 48, 2).fill({ color: C.cyan, alpha: 0.55 })
+    root.addChild(trim)
   }
 
-  // ── Left chimney ───────────────────────────────────────────────────────────
-  const pipes = makeSprite(tex.depot_pipes, 60, 70, 0.5, 1.0)
-  if (pipes) {
-    pipes.y = -72; root.addChild(pipes)
-  } else {
-    const g = new Graphics()
-    g.rect(-30, -140, 14, 70).fill(C.panelLt)
-    g.rect(16, -120, 14, 50).fill(C.panelLt)
-    // caps
-    g.rect(-34, -140, 22, 6).fill(C.hull)
-    g.rect(12, -120, 22, 6).fill(C.hull)
-    // connector pipe
-    g.rect(-30, -100, 60, 8).fill(C.panel)
-    root.addChild(g)
-  }
-
-  // ── Amber vent lights ──────────────────────────────────────────────────────
   const v1 = new Graphics()
-  v1.circle(-23, -142, 4).fill(C.amber)
+  v1.circle(-13.5, -103, 2.6).fill(C.mint)
   root.addChild(v1)
-  anims.push({ kind: 'pulse', obj: v1, speed: 3.1, phase: 0 })
+  anims.push({ kind: 'pulse', obj: v1, speed: 2.6, phase: 0, min: 0.35, max: 1 })
 
   const v2 = new Graphics()
-  v2.circle(23, -122, 4).fill(C.amber)
+  v2.circle(13.5, -91, 2.6).fill(C.mint)
   root.addChild(v2)
-  anims.push({ kind: 'pulse', obj: v2, speed: 3.1, phase: Math.PI })
-
-  // ── Cyan trim ──────────────────────────────────────────────────────────────
-  const trim = new Graphics()
-  trim.rect(-44, -72, 88, 3).fill({ color: C.cyan, alpha: 0.5 })
-  root.addChild(trim)
+  anims.push({ kind: 'pulse', obj: v2, speed: 2.6, phase: Math.PI, min: 0.35, max: 1 })
 
   return { root, animatables: anims }
 }
 
+/** Scanning Station — tripod mast + tilted dish, cyan ribs. */
 function buildScanStation(hot: boolean, tex: HubTextures): { root: Container; animatables: AnimState[] } {
   const root = new Container()
   const anims: AnimState[] = []
 
-  // ── Tripod base ────────────────────────────────────────────────────────────
-  const tripod = makeSprite(tex.scan_tripod, 80, 60, 0.5, 1.0)
-  if (tripod) {
-    root.addChild(tripod)
-  } else {
-    const g = new Graphics()
-    // leg spread
-    g.poly([-40, 0, 0, -60, 40, 0]).fill(C.hull)
-    g.poly([-40, 0, -2, -58, -38, 0]).fill(C.panel)
-    // legs
-    g.rect(-2, -60, 4, 60).fill(C.panelLt)
-    g.rect(-40, -4, 6, 4).fill(C.panelLt)
-    g.rect(34, -4, 6, 4).fill(C.panelLt)
-    root.addChild(g)
-  }
-
-  // ── Dish ───────────────────────────────────────────────────────────────────
-  const dish = makeSprite(tex.scan_dish, 70, 50, 0.5, 1.0)
+  const dish = makeSprite(tex.scan_dish, 46, 30, 0.5, 1.0)
   if (dish) {
-    dish.y = -60; dish.rotation = -0.3; root.addChild(dish)
+    dish.y = -52; root.addChild(dish)
   } else {
     const g = new Graphics()
-    // dish bowl (ellipse tilted)
-    g.ellipse(6, -90, 36, 22).fill({ color: C.cyanDim, alpha: 0.85 })
-    g.ellipse(6, -90, 34, 20).fill({ color: C.dark, alpha: 0.6 })
-    // ribs
-    for (let i = -3; i <= 3; i++) {
-      g.rect(6 + i * 10 - 1, -108, 2, 36).fill({ color: C.cyan, alpha: 0.3 })
-    }
-    // arm/mount
-    g.rect(-2, -82, 4, 22).fill(C.panelLt)
+    // Tripod — two discrete facets so the legs read as a solid volume
+    g.poly([-29, 0, 0, -52, 29, 0]).fill(C.hullDark).stroke({ width: 1.4, color: C.outline })
+    g.poly([-29, 0, -1.5, -50, -14, 0]).fill(C.hull)
+    panel(g, -1.5, -54, 3, 54, C.hull, 1)        // mast
+    g.rect(-29, -5, 9, 5).fill(C.foot)           // feet
+    g.rect(20, -5, 9, 5).fill(C.foot)
+    // Dish bowl
+    g.ellipse(3, -74, 26, 16).fill(C.hull).stroke({ width: 1.4, color: C.outline })
+    g.ellipse(3, -74, 22, 12.5).fill(C.hullDark)
     root.addChild(g)
+
+    const ribs = new Graphics()
+    for (let i = -2; i <= 2; i++) ribs.rect(3 + i * 8 - 0.75, -86, 1.5, 24).fill({ color: C.cyan, alpha: 0.34 })
+    root.addChild(ribs)
   }
 
-  // ── Status light ───────────────────────────────────────────────────────────
   const beacon = new Graphics()
-  beacon.circle(0, -60, 3).fill(hot ? C.amber : C.green)
+  beacon.circle(0, -56, 2.6).fill(C.mint)
   root.addChild(beacon)
   anims.push({ kind: 'blink', obj: beacon, speed: hot ? 4.0 : 1.0, phase: 0 })
 
-  // ── Cyan trim ──────────────────────────────────────────────────────────────
-  const trim = new Graphics()
-  trim.rect(-42, -4, 84, 2).fill({ color: C.cyan, alpha: 0.4 })
-  root.addChild(trim)
+  return { root, animatables: anims }
+}
+
+/** Satellite Monitoring Station — parabolic uplink dish on a squat block. */
+function buildSatelliteStation(tex: HubTextures): { root: Container; animatables: AnimState[] } {
+  const root = new Container()
+  const anims: AnimState[] = []
+
+  const bld = makeSprite(tex.cmd_building, 52, 36, 0.5, 1.0)
+  if (bld) {
+    root.addChild(bld)
+  } else {
+    const g = new Graphics()
+    panel(g, -30, -10, 60, 10, C.base, 1.4)      // foundation
+    panel(g, -24, -44, 48, 34, C.hullDark, 1.4)  // block, shaded
+    panel(g, -24, -44, 19, 34, C.hull, 1.4)      // lit facet
+    panel(g, -6, -24, 12, 24, C.base, 1)         // door
+    panel(g, -2.5, -92, 5, 48, C.hull, 1.2)      // mast
+    // Uplink dish — open parabola, cyan-lined interior
+    g.poly([-22, -92, 22, -92, 12, -112, -12, -112]).fill(C.hullDark).stroke({ width: 1.4, color: C.outline })
+    g.poly([-17, -94, 17, -94, 9, -108, -9, -108]).fill({ color: C.cyan, alpha: 0.30 })
+    root.addChild(g)
+
+    const win = new Graphics()
+    for (let i = 0; i < 3; i++) win.rect(-17 + i * 12, -38, 8, 8).fill({ color: C.cyan, alpha: i === 1 ? 0.75 : 0.5 })
+    root.addChild(win)
+  }
+
+  const light = new Graphics()
+  light.circle(0, -115, 2.6).fill(C.mint)
+  root.addChild(light)
+  anims.push({ kind: 'blink', obj: light, speed: 1.4, phase: 0 })
+
+  return { root, animatables: anims }
+}
+
+/** Command Center — also the fallback art for any unrecognised structure kind. */
+function buildCommandCenter(tex: HubTextures): { root: Container; animatables: AnimState[] } {
+  const root = new Container()
+  const anims: AnimState[] = []
+
+  const bld = makeSprite(tex.cmd_building, 56, 56, 0.5, 1.0)
+  if (bld) {
+    bld.y = -10; root.addChild(bld)
+  } else {
+    const g = new Graphics()
+    panel(g, -30, -10, 60, 10, C.base, 1.4)
+    panel(g, -26, -66, 52, 56, C.hullDark, 1.4)
+    panel(g, -26, -66, 20, 56, C.hull, 1.4)
+    panel(g, -7, -26, 14, 26, C.base, 1)         // door
+    panel(g, -2, -96, 4, 30, C.hull, 1.2)        // mast
+    g.ellipse(13, -82, 12, 7).fill(C.hull).stroke({ width: 1.2, color: C.outline })
+    root.addChild(g)
+
+    const win = new Graphics()
+    for (let i = 0; i < 3; i++) {
+      win.rect(-19 + i * 13, -58, 9, 11).fill({ color: C.cyan, alpha: 0.7 })
+      win.rect(-19 + i * 13, -42, 9, 8).fill({ color: C.cyan, alpha: 0.45 })
+    }
+    root.addChild(win)
+  }
+
+  const light = new Graphics()
+  light.circle(0, -99, 2.6).fill(C.mint)
+  root.addChild(light)
+  anims.push({ kind: 'blink', obj: light, speed: 1.4, phase: 0 })
 
   return { root, animatables: anims }
 }
@@ -324,6 +319,9 @@ interface AnimState {
   obj: Graphics | Sprite
   speed: number
   phase: number
+  /** `pulse` alpha floor / ceiling. Defaults preserve the previous 0.3–1.0 swing. */
+  min?: number
+  max?: number
 }
 
 // ─── Public building definition ───────────────────────────────────────────────
@@ -361,19 +359,30 @@ export function buildHubScene(
     let result: { root: Container; animatables: AnimState[] }
 
     switch (def.kind) {
-      case 'launchpad':    result = buildLaunchpad(hot, tex); break
-      case 'command':      result = buildCommandCenter(tex); break
-      case 'refinery':     result = buildRefinery(tex); break
-      case 'scan-station': result = buildScanStation(hot, tex); break
-      default:             result = buildCommandCenter(tex); break
+      case 'launchpad':                     result = buildLaunchpad(hot, tex); break
+      case 'refinery':                      result = buildRefinery(tex); break
+      case 'scan-station':                  result = buildScanStation(hot, tex); break
+      case 'satellite-monitoring-station':  result = buildSatelliteStation(tex); break
+      case 'command':                       result = buildCommandCenter(tex); break
+      default:                              result = buildCommandCenter(tex); break
     }
 
-    // Position: scene plot coordinates are building centers.
-    result.root.x = def.plotX * scaleX
-    result.root.y = groundY
-    root.addChild(result.root)
-    buildingContainers.push(result.root)
-    allAnims.push(...result.animatables)
+    // Scale the art so its natural silhouette fills the requested width.
+    const artW = ART_W[def.kind] ?? 60
+    const scale = def.w / artW
+
+    const holder = new Container()
+    holder.x = def.plotX * scaleX
+    holder.y = groundY
+    holder.scale.set(scale)
+
+    // Mound first so the collar renders behind the structure it embeds.
+    const mound = buildMound(artW)
+    holder.addChild(mound.root, result.root)
+
+    root.addChild(holder)
+    buildingContainers.push(holder)
+    allAnims.push(...mound.animatables, ...result.animatables)
   }
 
   function update(_elapsed: number, dt: number) {
@@ -381,9 +390,11 @@ export function buildHubScene(
       anim.phase += dt * anim.speed
 
       if (anim.kind === 'pulse') {
-        anim.obj.alpha = 0.3 + 0.7 * (0.5 + 0.5 * Math.sin(anim.phase))
+        const min = anim.min ?? 0.3
+        const max = anim.max ?? 1
+        anim.obj.alpha = min + (max - min) * (0.5 + 0.5 * Math.sin(anim.phase))
       } else if (anim.kind === 'blink') {
-        anim.obj.alpha = Math.sin(anim.phase) > 0 ? 1 : 0.1
+        anim.obj.alpha = Math.sin(anim.phase) > 0 ? 1 : 0.45
       } else if (anim.kind === 'rotate') {
         anim.obj.rotation += dt * anim.speed * 0.05
       }

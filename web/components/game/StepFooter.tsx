@@ -38,17 +38,17 @@ interface StepFooterProps {
 // done = green text, future = dim with border.
 function StepPills({ idx }: { idx: number }) {
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 4, flexWrap: 'wrap' }} aria-hidden="true">
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, flexWrap: 'wrap' }} aria-hidden="true">
       {STEP_SEQUENCE.map((s, i) => (
         <React.Fragment key={s}>
           {i > 0 && (
-            <span style={{ fontSize: 10, color: 'var(--ln-text-muted)', opacity: 0.6 }}>→</span>
+            <span style={{ fontSize: 13, color: 'var(--ln-text-muted)', opacity: 0.6 }}>→</span>
           )}
           <span
             style={{
-              fontFamily: 'var(--ln-font-display)', fontWeight: 800, fontSize: 10,
-              letterSpacing: '0.06em', textTransform: 'uppercase',
-              padding: '4px 9px', borderRadius: 999, whiteSpace: 'nowrap',
+              fontFamily: 'var(--ln-font-display)', fontWeight: 800, fontSize: 12,
+              letterSpacing: '0.04em',
+              padding: '7px 16px', borderRadius: 999, whiteSpace: 'nowrap',
               ...(i === idx
                 ? { background: 'var(--ln-cyan)', color: 'var(--ln-text-on-cyan)', border: '1px solid transparent' }
                 : i < idx
@@ -78,29 +78,31 @@ export default function StepFooter({ step, description, inline = false }: StepFo
         background: 'var(--ln-shell, var(--ln-surface))',
         border: '1px solid var(--ln-hairline-strong)',
       } : {
+        // Centered strip, matching the Open Design shells (landnam-mission-board.html):
+        // "STEP 1 OF 4" caption centered above a centered row of step pills.
+        // It used to be a left-aligned two-line block crammed into the corner.
         position: 'absolute', left: 0, right: 0, bottom: 0, zIndex: 15,
-        display: 'flex', flexDirection: 'column', gap: 8,
-        padding: '10px 14px 14px',
+        display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6,
+        padding: 'var(--ln-s-3) var(--ln-s-5) var(--ln-s-4)',
         background: 'var(--ln-shell, var(--ln-surface))',
         borderTop: '1px solid var(--ln-hairline-strong)',
+        textAlign: 'center',
       }}
     >
+      <div style={{
+        fontFamily: 'var(--ln-font-display)', fontSize: 9, fontWeight: 800,
+        letterSpacing: '0.18em', color: 'var(--ln-text-muted)', textTransform: 'uppercase',
+      }}>
+        Step {idx + 1} of {STEP_SEQUENCE.length}
+      </div>
       <StepPills idx={idx} />
-      <div style={{ minWidth: 0, flex: 1 }}>
-        <div style={{
-          fontFamily: 'var(--ln-font-display)', fontSize: 9, fontWeight: 800,
-          letterSpacing: '0.18em', color: 'var(--ln-cyan)', textTransform: 'uppercase',
-        }}>
-          Step {idx + 1} of {STEP_SEQUENCE.length} · {step}
-        </div>
-        <div style={{
-          fontFamily: 'var(--ln-font-body)', fontSize: 11, color: 'var(--ln-text-dim)',
-          opacity: 0.8, lineHeight: 1.35,
-          display: '-webkit-box', WebkitBoxOrient: 'vertical', WebkitLineClamp: 2,
-          overflow: 'hidden',
-        }}>
-          {description}
-        </div>
+      <div style={{
+        fontFamily: 'var(--ln-font-body)', fontSize: 11, color: 'var(--ln-text-dim)',
+        opacity: 0.8, lineHeight: 1.35, maxWidth: 560,
+        display: '-webkit-box', WebkitBoxOrient: 'vertical', WebkitLineClamp: 2,
+        overflow: 'hidden',
+      }}>
+        {description}
       </div>
     </aside>
   )

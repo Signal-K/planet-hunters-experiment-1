@@ -331,7 +331,10 @@ export default function BuildPlaceScreen({ onPlaced, onBack, hasCoach, player }:
         data-coach-id={cell != null ? 'build-confirm' : undefined}
         style={{ zIndex: 15 }}
       >
-        <PrimaryBtn kind="amber" disabled={cell == null} onClick={() => cell != null && onPlaced(picked, cell)}>
+        {/* Mint/green, not amber: the Earth Base flow carries no amber (see
+            landnam-earth-base-v2.html, whose confirm sheet is --ln-ok), and
+            amber is reserved for payout emphasis, never a primary button. */}
+        <PrimaryBtn kind="green" disabled={cell == null} onClick={() => cell != null && onPlaced(picked, cell)}>
           Confirm · Build Here →
         </PrimaryBtn>
       </div>
