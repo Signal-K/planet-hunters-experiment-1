@@ -1,3 +1,9 @@
+// @vitest-environment jsdom
+//
+// vitest.config.ts sets `environment: 'node'` globally, but importing pixi.js
+// touches `navigator` at module scope (isSafari -> BrowserAdapter). Node 21+
+// happens to expose a global navigator, so this passed locally and failed on
+// CI's older runtime. Pin the environment rather than depend on Node version.
 import { describe, it, expect } from 'vitest'
 import { Application, Container } from 'pixi.js'
 import { buildHubScene, nullTextures, type HubBuildingDef } from './hubScene'
