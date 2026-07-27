@@ -40,6 +40,196 @@ const C = {
   grassRim: 0x8cc85a,  // lit grass lip on the mound
 } as const
 
+// ─── Terrain palette ─────────────────────────────────────────────────────────
+// Each band carries a lit tone and a shade tone. The shade is painted onto the
+// lee (descending) flank of every crest as a hard-edged facet — that is what
+// gives the ranges volume without gradients, grain or noise, per the design
+// language's chunky cel-shaded direction.
+const T = {
+  ridge: [
+    { lit: 0x7d99b2, shade: 0x66839d },
+    { lit: 0x638098, shade: 0x506d85 },
+    { lit: 0x4c6a76, shade: 0x3c5a67 },
+    { lit: 0x3f6050, shade: 0x315043 },
+    { lit: 0x2f4a38, shade: 0x243c2d },
+  ],
+  tree: [0x294a2a, 0x1d3a22, 0x142b19],
+  groundLit: 0x23421f,
+  groundMid: 0x1a3620,
+  groundDark: 0x0d2015,
+  soilLit: 0x4a3318,
+  soilMid: 0x3a2810,
+  soilDeep: 0x241606,
+  stone: 0x1b1008,
+} as const
+
+type Sine = readonly [number, number, number]
+
+/** Summed-sine height field in 0..1. Low freqs = massing, high freqs = crags. */
+function heightField(steps: number, sines: readonly Sine[], floor = 0): number[] {
+  const total = sines.reduce((sum, [amp]) => sum + amp, 0)
+  const out: number[] = []
+  for (let i = 0; i <= steps; i++) {
+    const t = i / steps
+    let h = 0
+    for (const [amp, freq, phase] of sines) h += amp * Math.sin(t * Math.PI * 2 * freq + phase)
+    out.push(Math.max(floor, Math.min(1, (h / total + 1) / 2)))
+  }
+  return out
+}
+
+/**
+ * One mountain range: flat silhouette, then a hard shade facet on every
+ * descending span. No stroke — the tonal step between neighbouring bands is
+ * what separates them, the same way the mockup's flat shapes read.
+ */
+function drawRidge(g: Graphics, w: number, baseY: number, height: number, sines: readonly Sine[], band: { lit: number; shade: number }) {
+  const STEPS = 168
+  const h = heightField(STEPS, sines)
+  const yAt = (i: number) => baseY - h[i] * height
+
+  g.moveTo(0, baseY)
+  for (let i = 0; i <= STEPS; i++) g.lineTo((i / STEPS) * w, yAt(i))
+  g.lineTo(w, baseY)
+  g.closePath()
+  g.fill(band.lit)
+
+  for (let i = 0; i < STEPS; i++) {
+    if (h[i + 1] >= h[i]) continue
+    const x0 = (i / STEPS) * w
+    const x1 = ((i + 1) / STEPS) * w
+    g.moveTo(x0, yAt(i))
+    g.lineTo(x1, yAt(i + 1))
+    g.lineTo(x1, baseY)
+    g.lineTo(x0, baseY)
+    g.closePath()
+  }
+  g.fill({ color: band.shade, alpha: 0.5 })
+}
+
+/** A conifer row — same generator weighted to high frequencies for a spiky edge. */
+function drawTreeRow(g: Graphics, w: number, baseY: number, height: number, seed: number, color: number) {
+  const STEPS = 300
+  const h = heightField(STEPS, [
+    [0.42, 5.5, seed + 0.30], [0.24, 12.5, seed + 1.10], [0.16, 24, seed + 0.75],
+    [0.10, 40, seed + 1.90], [0.05, 65, seed + 0.50], [0.03, 100, seed + 2.30],
+  ], 0.10)
+
+  g.moveTo(0, baseY)
+  for (let i = 0; i <= STEPS; i++) g.lineTo((i / STEPS) * w, baseY - h[i] * height)
+  g.lineTo(w, baseY)
+  g.closePath()
+  g.fill(color)
+}
+
+/**
+ * Terrain layer: ranges, treeline, faceted ground plane and the soil strata
+ * beneath it. Drawn in renderer pixels (not the 402-wide authoring space), so
+ * it fills desktop widths instead of being squeezed into the left edge.
+ *
+ * Lives in PixiJS rather than the DOM background so the ground and the
+ * structures standing on it are shaded by one system — the DOM layer keeps
+ * only what Pixi is bad at: the sky gradient, starfield and horizon haze.
+ */
+function buildTerrain(w: number, h: number, groundY: number): Container {
+  const root = new Container()
+
+  const far = new Graphics()
+  drawRidge(far, w, groundY - h * 0.055, h * 0.20, [[0.30, 1.1, 0.20], [0.28, 2.3, 0.80], [0.22, 3.8, 1.50], [0.12, 5.9, 0.40], [0.08, 8.2, 1.20]], T.ridge[0])
+  drawRidge(far, w, groundY - h * 0.045, h * 0.17, [[0.35, 1.6, 0.60], [0.28, 3.2, 1.30], [0.20, 5.5, 0.20], [0.12, 8.0, 1.90], [0.05, 12.0, 0.80]], T.ridge[1])
+  drawRidge(far, w, groundY - h * 0.035, h * 0.14, [[0.40, 2.2, 1.10], [0.27, 4.1, 0.50], [0.18, 7.0, 1.70], [0.10, 10.5, 0.30], [0.05, 15.0, 2.10]], T.ridge[2])
+  root.addChild(far)
+
+  const near = new Graphics()
+  drawRidge(near, w, groundY - h * 0.020, h * 0.115, [[0.44, 2.8, 0.40], [0.28, 5.2, 1.80], [0.16, 8.6, 0.60], [0.08, 13.0, 2.40], [0.04, 19.0, 0.90]], T.ridge[3])
+  drawRidge(near, w, groundY - h * 0.008, h * 0.085, [[0.46, 3.5, 1.60], [0.26, 6.8, 0.20], [0.16, 11.0, 1.40], [0.08, 16.5, 0.80], [0.04, 24.0, 1.10]], T.ridge[4])
+  root.addChild(near)
+
+  const trees = new Graphics()
+  drawTreeRow(trees, w, groundY + 1, h * 0.055, 0.0, T.tree[0])
+  drawTreeRow(trees, w, groundY + 1, h * 0.040, 1.3, T.tree[1])
+  drawTreeRow(trees, w, groundY + 1, h * 0.027, 2.7, T.tree[2])
+  root.addChild(trees)
+
+  // ── Ground plane — chunky facets rather than a flat fill ────────────────
+  const ground = new Graphics()
+  const FACETS = 9
+  const crest = heightField(FACETS, [[1, 1.4, 0.6], [0.5, 3.1, 1.9]])
+  const topAt = (i: number) => groundY - crest[i] * h * 0.045
+
+  ground.moveTo(0, topAt(0))
+  for (let i = 1; i <= FACETS; i++) ground.lineTo((i / FACETS) * w, topAt(i))
+  ground.lineTo(w, h)
+  ground.lineTo(0, h)
+  ground.closePath()
+  ground.fill(T.groundLit)
+
+  // Alternate facet tone panel-by-panel so the plane reads as folded ground.
+  for (let i = 0; i < FACETS; i += 2) {
+    ground.moveTo((i / FACETS) * w, topAt(i))
+    ground.lineTo(((i + 1) / FACETS) * w, topAt(i + 1))
+    ground.lineTo(((i + 1) / FACETS) * w, h)
+    ground.lineTo((i / FACETS) * w, h)
+    ground.closePath()
+  }
+  ground.fill({ color: T.groundMid, alpha: 0.75 })
+  root.addChild(ground)
+
+  // ── Soil strata under the turf — banded, with embedded stone facets ─────
+  const soilTop = groundY + h * 0.075
+  const soil = new Graphics()
+  soil.rect(0, soilTop, w, h - soilTop).fill(T.soilMid)
+  soil.rect(0, soilTop, w, h * 0.018).fill(T.soilLit)
+  soil.rect(0, soilTop + h * 0.075, w, h - soilTop - h * 0.075).fill(T.soilDeep)
+
+  // Angular stones — deterministic placement, faceted triangles not blobs.
+  const stones = heightField(22, [[1, 2.7, 0.4], [0.6, 6.3, 1.7]])
+  for (let i = 0; i < stones.length; i++) {
+    const sx = ((i + 0.5) / stones.length) * w
+    const sy = soilTop + h * 0.012 + stones[i] * h * 0.085
+    const sw = 5 + stones[i] * 11
+    soil.moveTo(sx - sw, sy)
+    soil.lineTo(sx, sy - sw * 0.62)
+    soil.lineTo(sx + sw, sy)
+    soil.closePath()
+  }
+  soil.fill({ color: T.stone, alpha: 0.55 })
+  root.addChild(soil)
+
+  // ── Plateau — the octagonal build platform structures stand on ──────────
+  // Moved out of the DOM background: with terrain now drawn in Pixi, a DOM
+  // plateau sitting behind the canvas would be painted over by the ground.
+  // Geometry mirrors the v2 mockup's clip-path exactly.
+  const padH = h * 0.22
+  const padBottom = h - h * 0.034
+  const padTop = padBottom - padH
+  const padW = Math.min(w * 0.74, 900)
+  const padX = (w - padW) / 2
+  const oct: [number, number][] = [
+    [0.04, 0.22], [0.22, 0.04], [0.78, 0.04], [0.96, 0.22],
+    [0.96, 0.78], [0.78, 0.96], [0.22, 0.96], [0.04, 0.78],
+  ]
+  const pad = new Graphics()
+  pad.moveTo(padX + oct[0][0] * padW, padTop + oct[0][1] * padH)
+  for (let i = 1; i < oct.length; i++) pad.lineTo(padX + oct[i][0] * padW, padTop + oct[i][1] * padH)
+  pad.closePath()
+  pad.fill(0x2c4d28)
+  pad.stroke({ color: 0x6cd4ff, width: 2, alpha: 0.26 })
+
+  // Lower half in shade — same two-tone facet treatment as the ranges.
+  pad.moveTo(padX + 0.96 * padW, padTop + 0.5 * padH)
+  pad.lineTo(padX + 0.96 * padW, padTop + 0.78 * padH)
+  pad.lineTo(padX + 0.78 * padW, padTop + 0.96 * padH)
+  pad.lineTo(padX + 0.22 * padW, padTop + 0.96 * padH)
+  pad.lineTo(padX + 0.04 * padW, padTop + 0.78 * padH)
+  pad.lineTo(padX + 0.04 * padW, padTop + 0.5 * padH)
+  pad.closePath()
+  pad.fill({ color: 0x1c331c, alpha: 0.9 })
+  root.addChild(pad)
+
+  return root
+}
+
 // Natural art width in scene units, per kind — the container is scaled so the
 // silhouette fills the caller's requested `w`.
 const ART_W: Record<string, number> = {
@@ -351,6 +541,13 @@ export function buildHubScene(
   const root = new Container()
   app.stage.addChild(root)
 
+  // Terrain first so every structure stands in front of the ground it sits on.
+  // Uses renderer pixels directly — unlike buildings, terrain is not authored
+  // in the fixed HUB_W space and must not be scaled by scaleX.
+  const terrain = buildTerrain(app.renderer.width, app.renderer.height, groundY)
+  terrain.label = 'terrain'
+  root.addChild(terrain)
+
   const allAnims: AnimState[] = []
   const buildingContainers: Container[] = []
 
@@ -372,6 +569,7 @@ export function buildHubScene(
     const scale = def.w / artW
 
     const holder = new Container()
+    holder.label = 'building'
     holder.x = def.plotX * scaleX
     holder.y = groundY
     holder.scale.set(scale)

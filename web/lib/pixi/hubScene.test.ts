@@ -6,7 +6,18 @@ import { buildHubScene, nullTextures, type HubBuildingDef } from './hubScene'
 // real (WebGL-backed) Application here — this exercises the scene graph and
 // its geometry without needing a GPU context in jsdom.
 function stubApp(): Application {
-  return { stage: new Container() } as unknown as Application
+  // buildHubScene reads renderer.width/height to size the terrain layer in
+  // real pixels, so the stub carries those alongside the stage.
+  return {
+    stage: new Container(),
+    renderer: { width: 402, height: 874 },
+  } as unknown as Application
+}
+
+// root's first child is the terrain layer; the rest are per-building holders.
+function buildingHolders(app: Application): Container[] {
+  const root = app.stage.children[0] as Container
+  return (root.children as Container[]).filter(c => c.label === 'building')
 }
 
 const GROUND_Y = 600
@@ -25,7 +36,8 @@ describe('buildHubScene', () => {
     const app = stubApp()
     const scene = buildHubScene(app, defs(), nullTextures(), { groundY: GROUND_Y, scaleX: 1 })
     expect(app.stage.children).toHaveLength(1)
-    expect(app.stage.children[0].children).toHaveLength(4)
+    // root holds the terrain layer plus one holder per building
+    expect(buildingHolders(app)).toHaveLength(4)
     scene.destroy()
     expect(app.stage.children).toHaveLength(0)
   })
@@ -33,9 +45,7 @@ describe('buildHubScene', () => {
   it('draws each structure standing on the ground line, extending upward', () => {
     const app = stubApp()
     buildHubScene(app, defs(), nullTextures(), { groundY: GROUND_Y, scaleX: 1 })
-    const root = app.stage.children[0] as Container
-
-    for (const holder of root.children as Container[]) {
+    for (const holder of buildingHolders(app)) {
       const b = holder.getBounds()
       // Feet land on (or just below, for the mound collar) the ground line.
       expect(b.maxY).toBeGreaterThan(GROUND_Y - 4)
@@ -49,7 +59,7 @@ describe('buildHubScene', () => {
   it('scales art to the requested width and honours scaleX for plot position', () => {
     const app = stubApp()
     buildHubScene(app, [{ kind: 'launchpad', plotX: 100, w: 98 }], nullTextures(), { groundY: GROUND_Y, scaleX: 2 })
-    const holder = (app.stage.children[0] as Container).children[0] as Container
+    const holder = buildingHolders(app)[0]
     expect(holder.x).toBe(200)
     // Silhouette width tracks the requested `w` (mound collar runs slightly wider).
     const b = holder.getBounds()
@@ -61,8 +71,7 @@ describe('buildHubScene', () => {
     const app = stubApp()
     const scene = buildHubScene(app, defs(), nullTextures(), { groundY: GROUND_Y, scaleX: 1 })
     for (let i = 0; i < 60; i++) scene.update(i / 60, 1 / 60)
-    const root = app.stage.children[0] as Container
-    for (const holder of root.children as Container[]) {
+    for (const holder of buildingHolders(app)) {
       for (const child of holder.children) {
         expect(child.alpha).toBeGreaterThanOrEqual(0)
         expect(child.alpha).toBeLessThanOrEqual(1)
