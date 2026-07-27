@@ -68,6 +68,12 @@ func ensureCollections(app core.App) {
 		gameStates.Fields.Add(&core.TextField{Name: "user", Required: true, Max: 64})
 		gameStates.Fields.Add(&core.JSONField{Name: "state", Required: true, MaxSize: 200000})
 		gameStates.Fields.Add(&core.NumberField{Name: "missions_done", Required: false})
+		// Without these, a save that gets silently overwritten (e.g. STS-576,
+		// where a failed reset let the persist effect re-write default state
+		// over a live record) leaves no evidence of when it happened — the
+		// record just looks like it was always empty.
+		gameStates.Fields.Add(&core.AutodateField{Name: "created", OnCreate: true})
+		gameStates.Fields.Add(&core.AutodateField{Name: "updated", OnCreate: true, OnUpdate: true})
 		gameStates.Indexes = []string{
 			"CREATE UNIQUE INDEX idx_game_states_user ON game_states (user)",
 		}
@@ -535,6 +541,19 @@ func migrateGameStates(app core.App) {
 	// Add missions_done column if missing (for analytics queries without JSON parsing).
 	if col.Fields.GetByName("missions_done") == nil {
 		col.Fields.Add(&core.NumberField{Name: "missions_done", Required: false})
+		changed = true
+	}
+
+	// This collection shipped without created/updated, so a clobbered save had
+	// no timestamp at all — diagnosing STS-576 meant inferring the timeline
+	// from guest-account creation dates instead of reading it off the record.
+	// Backfills as empty for existing rows; populated from the next write on.
+	if col.Fields.GetByName("created") == nil {
+		col.Fields.Add(&core.AutodateField{Name: "created", OnCreate: true})
+		changed = true
+	}
+	if col.Fields.GetByName("updated") == nil {
+		col.Fields.Add(&core.AutodateField{Name: "updated", OnCreate: true, OnUpdate: true})
 		changed = true
 	}
 

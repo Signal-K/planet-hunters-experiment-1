@@ -178,6 +178,55 @@ export function normalizeAndRepair(partial: PartialSave): GameState {
   return repairStateRoute(normalizeState(partial))
 }
 
+/**
+ * Merge a remote game_states record onto the in-memory state.
+ *
+ * Extracted from useAuthSync's applyRecord so the precedence rules are
+ * testable without standing up PocketBase, React and a Fly cold-start ladder.
+ *
+ * Two independent guards, both defending against a *stale remote* clobbering
+ * newer local play (the remote load can resolve many seconds after mount):
+ *
+ *  1. Navigation (screen/missionId/targetId) — local wins once the player has
+ *     moved off the default screen or picked a mission/target locally.
+ *  2. Onboarding position (player/tutorial/doneSteps) — local wins unless
+ *     remote is strictly further ahead by missionsDone.
+ *
+ * Guard 2's three fields describe ONE position and must always resolve from
+ * the same side. They previously did not: player and tutorial came from the
+ * monotonic guard while doneSteps fell out of the object spread, so a reset
+ * player (missionsDone 0, placed []) could keep a remote half-finished
+ * doneSteps map. Since the tutorial coach renders the first step for the
+ * current screen that is NOT in doneSteps, {0,1,2} marked done disabled the
+ * coach on build, hub and missions simultaneously — a fresh save with no
+ * visible tutorial and no launchpad. See STS-576.
+ */
+export function mergeRemoteState(current: GameState, remoteState: PartialSave): GameState {
+  const merged: GameState = { ...current, ...remoteState } as GameState
+
+  const localHasProgressed = current.screen !== DEFAULT_STATE.screen
+    || current.missionId !== null
+    || current.targetId !== null
+  if (localHasProgressed) {
+    merged.screen = current.screen
+    merged.missionId = current.missionId
+    merged.targetId = current.targetId
+  }
+
+  const remoteMissionsDone = remoteState.player?.missionsDone ?? -1
+  if (current.player.missionsDone >= remoteMissionsDone) {
+    merged.player = current.player
+    merged.tutorial = current.tutorial
+    merged.doneSteps = current.doneSteps
+  } else {
+    merged.player = { ...current.player, ...remoteState.player }
+    merged.tutorial = remoteState.tutorial ?? current.tutorial
+    merged.doneSteps = remoteState.doneSteps ?? {}
+  }
+
+  return normalizeAndRepair(merged)
+}
+
 export function loadState(storageKey: string): GameState {
   if (typeof window === 'undefined') return DEFAULT_STATE
   try {

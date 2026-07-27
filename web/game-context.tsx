@@ -156,7 +156,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       signInFromGate: auth.signInFromGate,
       createAccountFromGate: auth.createAccountFromGate,
       skipAuthGate: auth.skipAuthGate,
-      resetGame: useCallback(() => auth.resetGame(DEFAULT_STATE), [auth.resetGame]), // eslint-disable-line react-hooks/rules-of-hooks
+      resetGame: useCallback(() => { void auth.resetGame(DEFAULT_STATE) }, [auth.resetGame]), // eslint-disable-line react-hooks/rules-of-hooks
       signOut: auth.signOut,
       // Game loop
       setPlayer: loop.setPlayer,
