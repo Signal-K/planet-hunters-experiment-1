@@ -14,6 +14,7 @@ interface Props {
   target: Target
   rocketImageSrc?: string
   arrivalAt?: number | null
+  transitStartedAt?: number | null
   returning?: boolean
   onArrive: () => void
   onBack: () => void
@@ -32,7 +33,7 @@ const FAKE_PROGRESS_DURATION_MS = 4400 // (100 - 12) / 2 * 100ms steps, matches 
 // real leg of the mission.
 const DELIVERY_FAKE_PROGRESS_DURATION_MS = 7000
 
-export default function TransitScreen({ target, rocketImageSrc, arrivalAt, returning = false, onArrive, onBack, onAbandon, isDelivery = false, cargo, minerals }: Props) {
+export default function TransitScreen({ target, rocketImageSrc, arrivalAt, transitStartedAt, returning = false, onArrive, onBack, onAbandon, isDelivery = false, cargo, minerals }: Props) {
   const isTimed = typeof arrivalAt === 'number'
   const fakeDurationMs = isDelivery ? DELIVERY_FAKE_PROGRESS_DURATION_MS : FAKE_PROGRESS_DURATION_MS
   const [now, setNow] = useState(() => Date.now())
@@ -94,9 +95,12 @@ export default function TransitScreen({ target, rocketImageSrc, arrivalAt, retur
   // Keep progressRef current so the PixiJS scene always gets live progress
   const [mountedAt] = useState(() => Date.now())
   const [confirmingAbandon, setConfirmingAbandon] = useState(false)
-  const totalMs = isTimed && arrivalAt ? Math.max(1, arrivalAt - mountedAt) : 1
+  const stableTransitStartedAt = isTimed
+    ? (transitStartedAt ?? (arrivalAt ? arrivalAt - 1 : mountedAt))
+    : fakeStartedAt
+  const totalMs = isTimed && arrivalAt ? Math.max(1, arrivalAt - stableTransitStartedAt) : 1
   const progress = isTimed
-    ? Math.min(100, Math.max(0, Math.round(((now - mountedAt) / totalMs) * 100)))
+    ? Math.min(100, Math.max(0, Math.round(((now - stableTransitStartedAt) / totalMs) * 100)))
     : fakeProgress
   useEffect(() => { progressRef.current = progress }, [progress])
 
@@ -107,7 +111,6 @@ export default function TransitScreen({ target, rocketImageSrc, arrivalAt, retur
 
     let app: import('pixi.js').Application | null = null
     let rafId = 0
-    let lastT = 0
     let elapsed = 0
     let destroyed = false
 
@@ -144,13 +147,17 @@ export default function TransitScreen({ target, rocketImageSrc, arrivalAt, retur
       sceneRef.current = scene
 
       function loop(t: number) {
-        const dt = Math.min((t - lastT) / 1000, 0.1)
-        lastT = t
-        elapsed += dt
+        // requestAnimationFrame is throttled or suspended in background tabs.
+        // Derive the scene clock from the persisted wall-clock transit epoch so
+        // the rocket and parallax catch up immediately after visibility returns
+        // and do not restart when the transit screen remounts.
+        const wallElapsed = Math.max(0, (Date.now() - stableTransitStartedAt) / 1000)
+        const dt = Math.min(Math.max(wallElapsed - elapsed, 0), 0.1)
+        elapsed = wallElapsed
         scene.update(elapsed, dt)
         rafId = requestAnimationFrame(loop)
       }
-      lastT = performance.now()
+      elapsed = Math.max(0, (Date.now() - stableTransitStartedAt) / 1000)
       rafId = requestAnimationFrame(loop)
     }
 
@@ -165,7 +172,7 @@ export default function TransitScreen({ target, rocketImageSrc, arrivalAt, retur
       sceneRef.current = null
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+  }, [stableTransitStartedAt])
 
   const etaMs = isTimed ? Math.max(0, arrivalAt! - now) : 0
   const arrived = isTimed ? now >= arrivalAt! : fakeProgress >= 100
@@ -192,7 +199,7 @@ export default function TransitScreen({ target, rocketImageSrc, arrivalAt, retur
         />
       </div>
 
-      <div className="transit-readout">
+      <div className="transit-readout" data-transit-progress={progress}>
         {isTimed ? (
           <>
             <div><span>ETA</span><strong>{arrived ? 'ARRIVED' : formatCountdown(etaMs)}</strong></div>

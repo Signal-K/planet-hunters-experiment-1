@@ -10,6 +10,7 @@ beforeEach(() => {
     'lnm_first_launch', 'lnm_mining_feel', 'lnm_client_pick',
     'lnm_mission_friction', 'lnm_progression_feel', 'lnm_end_of_content',
     'lnm_return_visit', 'lnm_m1_complete', 'lnm_m2_complete', 'lnm_m3_complete',
+    'lnm_satellite_clarity', 'lnm_resume_mission', 'lnm_base_building', 'lnm_rover_clarity',
   ]
   cy.on('window:before:load', win => {
     if (!Cypress.env('allowSurveys')) {
@@ -48,7 +49,7 @@ beforeEach(() => {
   // Fail catalog calls fast so the game falls back to static data immediately
   cy.intercept('GET', '**/api/collections/locations/records*', { statusCode: 503, body: {} }).as('pbLocations')
   cy.intercept('GET', '**/api/collections/minerals/records*', { statusCode: 503, body: {} }).as('pbMinerals')
-  cy.intercept('GET', '**/api/collections/contractors/records*', { statusCode: 503, body: {} }).as('pbContractors')
+  cy.intercept('GET', '**/api/collections/clients/records*', { statusCode: 503, body: {} }).as('pbClients')
   cy.intercept('GET', '**/api/collections/rocket_parts/records*', { statusCode: 503, body: {} }).as('pbParts')
   cy.intercept('GET', '**/api/collections/missions_catalog/records*', { statusCode: 503, body: {} }).as('pbMissions')
   cy.intercept('GET', '**/api/collections/structure_blueprints/records*', { statusCode: 503, body: {} }).as('pbStructures')

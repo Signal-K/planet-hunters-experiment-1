@@ -1,4 +1,4 @@
-import { useCallback } from 'react'
+import { useCallback, useRef } from 'react'
 import {
   MISSIONS, TARGETS, STARTER_ROCKETS, FREE_OPS_START_MISSIONS_DONE,
   getLaserChargeCap, travelDurationMs, suggestBuild,
@@ -29,6 +29,7 @@ interface GameLoopOpts {
 }
 
 export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopOpts) {
+  const missionRunIdRef = useRef<string | null>(null)
   const setPlayer: React.Dispatch<React.SetStateAction<import('@/lib/game-types').Player>> = useCallback(
     (update) => setState(s => ({
       ...s,
@@ -144,8 +145,9 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
       const target = s.targetId ? catalog.targets.find(t => t.id === s.targetId) : null
       if (!mission || !target) return s
       const timedTransit = s.player.missionsDone >= FREE_OPS_START_MISSIONS_DONE
+      const transitStartedAt = Date.now()
       const arrivalAt = (timedTransit && target)
-        ? Date.now() + travelDurationMs(target, s.player.unlockedSkillNodes ?? [], ORBIT_MS_PER_UNIT)
+        ? transitStartedAt + travelDurationMs(target, s.player.unlockedSkillNodes ?? [], ORBIT_MS_PER_UNIT)
         : null
       return {
         ...s,
@@ -153,6 +155,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
           ...s.player,
           pendingLaunch: false,
           arrivalAt,
+          transitStartedAt: timedTransit ? transitStartedAt : null,
           missionPhase: 'transit',
           activeMission: mission && target
             ? { id: mission.id, label: mission.title + ' → ' + target.name }
@@ -162,11 +165,29 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
         doneSteps: { ...s.doneSteps, 5: true },
       }
     })
+    const userId = pbLandnam.authStore.record?.id
+    if (userId) {
+      pbLandnam.collection('mission_runs').create({
+        user: userId,
+        mission_id: currentMission.id,
+        target_id: current.targetId,
+        status: 'in_progress',
+        phase: 'transit',
+        cargo: {},
+        launched_at: new Date().toISOString(),
+      }).then(record => {
+        missionRunIdRef.current = record.id
+        setState(s => s.player.activeMission?.id === currentMission.id
+          ? { ...s, player: { ...s.player, missionRunId: record.id } }
+          : s)
+      }).catch(error => console.warn('[GameLoop] mission run create failed', error))
+    }
     if (isFirstEver) enqueueSurvey('lnm_first_launch', 4000)
   }, [catalog.missions, catalog.targets, setState, stateRef])
 
   const onMiningDone = useCallback((cargo: Record<string, number>) => {
     let hasDelivery = false
+    const transitStartedAt = Date.now()
     setState(s => {
       hasDelivery = !!s.deliveryTargetId
       const nextLegTarget = hasDelivery
@@ -174,22 +195,29 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
         : (s.targetId ? catalog.targets.find(t => t.id === s.targetId) : null)
       const timedTransit = s.player.missionsDone >= FREE_OPS_START_MISSIONS_DONE
       const arrivalAt = (timedTransit && nextLegTarget)
-        ? Date.now() + travelDurationMs(nextLegTarget, s.player.unlockedSkillNodes ?? [], ORBIT_MS_PER_UNIT)
+        ? transitStartedAt + travelDurationMs(nextLegTarget, s.player.unlockedSkillNodes ?? [], ORBIT_MS_PER_UNIT)
         : null
-      return applyMiningDone(s, cargo, arrivalAt)
+      return applyMiningDone(s, cargo, arrivalAt, timedTransit ? transitStartedAt : null)
     })
+    const runId = stateRef.current.player.missionRunId ?? missionRunIdRef.current
+    if (runId) {
+      pbLandnam.collection('mission_runs').update(runId, {
+        status: 'in_progress', phase: hasDelivery ? 'transit' : 'debrief', cargo,
+      }).catch(error => console.warn('[GameLoop] mission run update failed', error))
+    }
     addToast(hasDelivery ? 'Cargo secured — course set for delivery' : 'Order filled — return to Earth for recovery', 'ok')
     enqueueSurvey('lnm_mining_feel', 2000)
-  }, [addToast, catalog.targets, setState])
+  }, [addToast, catalog.targets, setState, stateRef])
 
   const onDeliveryArrived = useCallback(() => {
+    const transitStartedAt = Date.now()
     setState(s => {
       const deliveryTarget = s.deliveryTargetId ? catalog.targets.find(t => t.id === s.deliveryTargetId) : null
       const timedTransit = s.player.missionsDone >= FREE_OPS_START_MISSIONS_DONE
       const arrivalAt = (timedTransit && deliveryTarget)
-        ? Date.now() + travelDurationMs(deliveryTarget, s.player.unlockedSkillNodes ?? [], ORBIT_MS_PER_UNIT)
+        ? transitStartedAt + travelDurationMs(deliveryTarget, s.player.unlockedSkillNodes ?? [], ORBIT_MS_PER_UNIT)
         : null
-      return applyDeliveryArrived(s, arrivalAt)
+      return applyDeliveryArrived(s, arrivalAt, timedTransit ? transitStartedAt : null)
     })
     addToast('Delivered — course set for Earth', 'ok')
   }, [addToast, catalog.targets, setState])
@@ -201,6 +229,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
 
   const onRoverMiningDone = useCallback((cargo: Record<string, number>) => {
     let hasDelivery = false
+    const transitStartedAt = Date.now()
     setState(s => {
       hasDelivery = !!s.deliveryTargetId
       const nextLegTarget = hasDelivery
@@ -208,11 +237,12 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
         : (s.targetId ? catalog.targets.find(t => t.id === s.targetId) : null)
       const timedTransit = s.player.missionsDone >= FREE_OPS_START_MISSIONS_DONE
       const arrivalAt = (timedTransit && nextLegTarget)
-        ? Date.now() + travelDurationMs(nextLegTarget, s.player.unlockedSkillNodes ?? [], ORBIT_MS_PER_UNIT)
+        ? transitStartedAt + travelDurationMs(nextLegTarget, s.player.unlockedSkillNodes ?? [], ORBIT_MS_PER_UNIT)
         : null
-      return applyRoverMiningDone(s, cargo, arrivalAt)
+      return applyRoverMiningDone(s, cargo, arrivalAt, timedTransit ? transitStartedAt : null)
     })
     addToast(hasDelivery ? 'Cargo secured — course set for delivery' : 'Rover cargo secured — return to Earth for recovery', 'ok')
+    enqueueSurvey('lnm_rover_clarity', 1200)
   }, [addToast, catalog.targets, setState])
 
   const gainResearchXP = useCallback((amount: number) => {
@@ -305,6 +335,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
       ...s,
       player: { ...s.player, satelliteTargetId: subjectId, pendingRepick: false },
     }))
+    enqueueSurvey('lnm_satellite_clarity', 1200)
   }, [setState])
 
   const onDebriefDone = useCallback((rawTotal: number, _affinity = 0, consumed: Record<string, number> = {}) => {
@@ -393,6 +424,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
           ...s.player,
           francs,
           activeMission: null,
+          missionRunId: undefined,
           missionPhase: undefined,
           debriefPending: false,
           returningToEarth: false,
@@ -441,6 +473,14 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
         missions_done_after: newMissionsDone,
       }).catch(() => {})
     }
+    const runId = current.player.missionRunId ?? missionRunIdRef.current
+    if (runId) {
+      pbLandnam.collection('mission_runs').update(runId, {
+        status: 'completed', phase: 'debrief', cargo: current.lastCargo,
+        payout_francs: total, completed_at: new Date().toISOString(),
+      }).catch(error => console.warn('[GameLoop] mission run completion update failed', error))
+    }
+    missionRunIdRef.current = null
     enqueueSurvey('lnm_mission_friction', 2000)
     if (newMissionsDone === 1) {
       enqueueSurvey('lnm_m1_complete', 3000)

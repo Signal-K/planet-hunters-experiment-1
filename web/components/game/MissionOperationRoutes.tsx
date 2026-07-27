@@ -41,6 +41,7 @@ export default function MissionOperationRoutes({
           target={transitTarget}
           rocketImageSrc={rocketDisplay.img}
           arrivalAt={game.player.arrivalAt}
+          transitStartedAt={game.player.transitStartedAt}
           returning={!!game.player.returningToEarth}
           isDelivery={!!game.player.headingToDelivery}
           cargo={game.lastCargo}

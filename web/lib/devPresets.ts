@@ -301,13 +301,16 @@ export function resolvePreset(name: string): Partial<GameState> | null {
       }
 
     case 'telescope-transit':
+      {
+        const transitStartedAt = Date.now() - 30_000
       return {
         screen: 'transit',
-        player: { ...POST_ONBOARDING_PLAYER, activeMission: { id: TRANSIT_TELESCOPE_MISSION_ID, label: 'Launch Transit Telescope → Earth Orbit' }, arrivalAt: Date.now() + 60_000 },
+        player: { ...POST_ONBOARDING_PLAYER, activeMission: { id: TRANSIT_TELESCOPE_MISSION_ID, label: 'Launch Transit Telescope → Earth Orbit' }, transitStartedAt, arrivalAt: transitStartedAt + 90_000 },
         tutorial: false, doneSteps: M1_M2_M3_DONE,
         missionId: TRANSIT_TELESCOPE_MISSION_ID, targetId: TRANSIT_TELESCOPE_TARGET_ID,
         rocket: { chassis: 'hull-mk2', propulsion: 'fusion-b2', drill: 'laser-t2' },
         lastCargo: null, popup: null,
+      }
       }
 
     case 'telescope-debrief':

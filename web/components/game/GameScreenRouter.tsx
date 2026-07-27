@@ -15,6 +15,7 @@ import HangarScreen from '@/components/game/screens/HangarScreen'
 import SkillTreeScreen from '@/components/game/screens/SkillTreeScreen'
 import ScanStationScreen from '@/components/game/screens/ScanStationScreen'
 import TessDiscoveryScreen from '@/components/game/screens/TessDiscoveryScreen'
+import { enqueueSurvey } from '@/lib/surveys'
 
 export const VALID_SCREENS = new Set<Screen>([
   'intro', 'build', 'hub', 'missions', 'galaxy', 'targets', 'fab',
@@ -64,7 +65,12 @@ export function ScreenContent({
     game.player.missionsDone === 0 ? M1_STEPS :
     game.player.missionsDone === 1 ? M2_STEPS :
     game.player.missionsDone === 2 ? M3_STEPS : []
-  const coach = coachSteps.find(s => s.screen === screen && !game.doneSteps[s.id]) ?? null
+  // An active run always outranks onboarding copy. A player returning to an
+  // in-flight mission must see the resume affordance, not a fresh-contract
+  // coach card that routes them back to mission creation.
+  const coach = game.player.activeMission
+    ? null
+    : coachSteps.find(s => s.screen === screen && !game.doneSteps[s.id]) ?? null
 
   // Market is a Free Ops feature — a player without freeOperations landing
   // here directly (bookmarked URL, back/forward) shouldn't see a locked
@@ -119,6 +125,7 @@ export function ScreenContent({
               satelliteMonitoringLevel: kind === 'satellite-monitoring-station' ? Math.max(1, player.satelliteMonitoringLevel ?? 1) : player.satelliteMonitoringLevel,
             }))
             game.completeStep(0)
+            enqueueSurvey('lnm_base_building', 1200)
             game.go('hub')
           }}
         />
@@ -130,7 +137,7 @@ export function ScreenContent({
           player={game.player}
           hasCoach={hasCoach}
           onNav={s => {
-            if (s === 'missions') { game.completeStep(1); game.go('missions'); return }
+            if (s === 'missions') { game.goToMissions(); return }
             game.go(s)
           }}
           onGoBuilding={building => {
@@ -141,8 +148,12 @@ export function ScreenContent({
             if (building === 'scan-station') return game.go('scan-station')
             if (building === 'satellite-monitoring-station') return game.go('galaxy')
             if (building === 'launchpad' || building === 'missions') {
-              game.completeStep(1)
-              game.go('missions')
+              if (game.player.activeMission) {
+                enqueueSurvey('lnm_resume_mission', 1200)
+                return game.go(game.player.missionPhase ?? 'transit')
+              }
+              if (game.player.pendingLaunch) return game.go('fab')
+              game.goToMissions()
             }
           }}
           onUpgradeLaunchpad={() => game.upgradeLaunchpad()}

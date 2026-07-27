@@ -34,6 +34,9 @@ export type LicenseGrade = 'Grade I' | 'Grade II' | 'Grade III'
 export interface Player {
   francs: number
   activeMission: { id: string; label: string } | null
+  // PocketBase mission_runs record for the current run. Kept in the save so a
+  // refresh/resume continues updating the same server-side lifecycle record.
+  missionRunId?: string
   missionPhase?: 'transit' | 'mining' | 'debrief'
   // Ore collected so far during an in-progress mining run, preserved across a
   // "Back to hub" pause so resuming the mission doesn't silently discard
@@ -83,6 +86,10 @@ export interface Player {
   loanDebt: number
   loanOffered: boolean
   arrivalAt?: number | null
+  // Wall-clock departure for the current transit leg. Keeping this alongside
+  // arrivalAt lets the transit animation resume at the correct visual time
+  // after a tab switch or screen remount.
+  transitStartedAt?: number | null
   seen_planets?: string[]
   roverDeployments?: Array<{
     roverId: string
@@ -159,6 +166,7 @@ export interface GameActions {
   createAccountFromGate: (email: string, password: string) => Promise<void>
   skipAuthGate: () => void
   go: (screen: Screen) => void
+  goToMissions: () => void
   setScreenFromUrl: (screen: Screen) => void
   setPlayer: React.Dispatch<React.SetStateAction<Player>>
   setMissionId: (id: string | null) => void
