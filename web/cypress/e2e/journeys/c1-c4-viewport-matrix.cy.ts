@@ -149,6 +149,22 @@ describe('C1–C4 screen contracts across viewport classes', () => {
         }))
         cy.contains('Satellite Monitoring Station', { timeout: 10000 }).should('be.visible')
       })
+
+      it('keeps the Scene 4 setup borders above the fixed wayfinding footer', () => {
+        visit('/game/fab', stateWith('fab', {
+          missionId: 'generated-s1-starter-bulk-1',
+          targetId: 'eros',
+          player: basePlayer({ missionsDone: 0, freeOperations: false }),
+        }))
+        cy.contains('Confirm Rocket', { timeout: 10000 }).should('be.visible')
+        cy.get('[data-testid="step-footer"]').then($footer => {
+          const footerTop = $footer[0].getBoundingClientRect().top
+          cy.get('.assembly-frame, .assembly-card').each($container => {
+            expect($container[0].getBoundingClientRect().bottom, 'setup border ends above footer')
+              .to.be.at.most(footerTop + 1)
+          })
+        })
+      })
     })
   }
 })

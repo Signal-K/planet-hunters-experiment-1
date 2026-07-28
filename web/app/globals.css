@@ -577,6 +577,21 @@ button { cursor: pointer; }
     linear-gradient(180deg, #07101c 0%, #03060c 100%);
 }
 
+/* TargetPicker's wayfinding footer contains both the step rail and a large
+   primary CTA. Reserve their full footprint so the galaxy frame never sits
+   underneath the sticky actions on wide or narrow screens. */
+.mission-setup-screen--target .mission-setup-content {
+  padding-bottom: 190px;
+}
+
+/* The assembly shell has the same two-part wayfinding footer as TargetPicker,
+   but its CTA is taller because it contains the full launch authorization
+   action. Reserve the footer's complete footprint so the two bordered setup
+   containers end above it instead of continuing behind it. */
+.mission-setup-screen--assembly .mission-setup-content {
+  padding-bottom: 190px;
+}
+
 .mission-setup-content {
   position: absolute;
   inset: 0;
@@ -638,29 +653,34 @@ button { cursor: pointer; }
     align-items: stretch;
   }
 
+  /* TargetPicker owns its desktop two-column layout via .mission-board-layout
+     (map + detail). The shell has only one child here; splitting the shell
+     again left an empty second grid column and stranded the picker on the
+     left half of wide screens. */
   .mission-setup-screen--target .mission-setup-content {
-    grid-template-columns: minmax(0, 1fr) minmax(300px, 0.45fr);
-    grid-template-rows: minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr);
     align-items: stretch;
-  }
-
-  .mission-setup-screen--target .mission-setup-content > :first-child {
-    grid-column: 1;
-    grid-row: 1 / span 2;
-  }
-
-  .mission-setup-screen--target .mission-setup-content > .mission-setup-card {
-    grid-column: 2;
   }
 }
 
 .mission-setup-screen--assembly .assembly-frame {
   display: flex;
   min-height: 0;
+  align-self: stretch;
+  height: auto;
 }
 
 .mission-setup-screen--assembly .assembly-card .mission-setup-card-scroll {
   padding: 12px;
+}
+
+/* Assembly uses the same full-height two-column shell as the other mission
+   steps. Keep both shared containers in the shell's grid row so their borders
+   and the fixed step footer line up consistently. */
+.mission-setup-screen--assembly .assembly-card {
+  align-self: stretch;
+  height: auto;
 }
 
 @media (max-width: 899px) {
