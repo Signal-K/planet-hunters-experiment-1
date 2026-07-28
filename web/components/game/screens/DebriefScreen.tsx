@@ -215,11 +215,23 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
           </>
         )}
         {resolved && !delivered && (
-          <Panel accent="var(--ln-crimson)" surface="glass">
+          <>
+            <Panel accent="var(--ln-crimson)" surface="glass" style={{ animation: 'unlock-in 0.35s ease-out' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+                <span style={{ fontFamily: 'var(--ln-font-display)', fontSize: 10, fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--ln-text-dim)' }}>
+                  Francs Earned
+                </span>
+                <span style={{ fontFamily: 'var(--ln-font-display)', fontSize: 28, fontWeight: 800, color: 'var(--ln-text-muted)', lineHeight: 1 }}>
+                  ▲ {formatFrancs(total)}
+                </span>
+              </div>
+            </Panel>
+            <Panel accent="var(--ln-crimson)" surface="glass">
             <p style={{ margin: 0, fontFamily: 'var(--ln-font-body)', fontSize: 13, color: 'var(--ln-text-dim)', lineHeight: 1.5 }}>
               <strong style={{ color: 'var(--ln-text)' }}>Contract bonus forfeited</strong> — order was not fully delivered. Return to the belt and mine the remaining ore to receive payment.
             </p>
-          </Panel>
+            </Panel>
+          </>
         )}
         {!delivered && !resolved && (
           <Panel accent="var(--ln-crimson)" surface="glass">
