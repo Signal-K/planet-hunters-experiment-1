@@ -95,11 +95,13 @@ describe('C1–C4 screen contracts across viewport classes', () => {
       it('renders the Free Ops hub and mission board without losing the primary actions', () => {
         visit('/game', stateWith('hub'))
         cy.contains('Earth Base', { timeout: 10000 }).should('be.visible')
-        cy.get('[data-testid="progression-card-next-mission"]', { timeout: 10000 }).should('be.visible')
+        cy.get('[data-testid="progression-card-next-mission"]', { timeout: 10000 })
+          .scrollIntoView().should('be.visible')
 
         visit('/game/missions', stateWith('missions'))
         cy.contains('Mission Board', { timeout: 10000 }).should('be.visible')
-        cy.get('[data-testid="self-directed-mining-btn"]', { timeout: 10000 }).should('be.visible')
+        cy.get('[data-testid="self-directed-mining-btn"]', { timeout: 10000 })
+          .scrollIntoView().should('be.visible')
       })
 
       it('renders the core C4 economy and progression screens', () => {
@@ -122,7 +124,11 @@ describe('C1–C4 screen contracts across viewport classes', () => {
         visit('/game/rover-mining', stateWith('rover-mining', {
           missionId: 'freeops-rover-landing',
           targetId: 'eros',
-          player: basePlayer({ roverMiningStartedAt: Date.now() - 30_000 }),
+          player: basePlayer({
+            activeMission: { id: 'freeops-rover-landing', label: 'Rover landing -> Eros' },
+            missionPhase: 'mining',
+            roverMiningStartedAt: Date.now() - 30_000,
+          }),
         }))
         cy.contains('Rover Mining', { timeout: 10000 }).should('be.visible')
       })
@@ -150,8 +156,8 @@ describe('C1–C4 screen contracts across viewport classes', () => {
 describe('C1–C3 persisted mission edge states', () => {
   beforeEach(() => cy.viewport(390, 844))
 
-  it('resumes an active mission instead of opening a fresh mission creator', () => {
-    visit('/game', stateWith('hub', {
+  it('preserves an active mission when the player opens the mission board', () => {
+    visit('/game/missions', stateWith('missions', {
       missionId: 'generated-s1-starter-bulk-1',
       targetId: 'eros',
       player: basePlayer({
@@ -163,8 +169,14 @@ describe('C1–C3 persisted mission edge states', () => {
         miningCargoInProgress: { platinum: 2 },
       }),
     }))
-    cy.contains('Earth Base', { timeout: 10000 }).should('be.visible')
-    cy.get('[data-testid="mission-ticker"]', { timeout: 10000 }).should('be.visible')
+    cy.contains('Mission Board', { timeout: 10000 }).should('be.visible')
+    cy.get('[data-testid="self-directed-mining-btn"]')
+      .scrollIntoView().click({ force: true })
+    cy.window().then(win => {
+      const saved = JSON.parse(win.localStorage.getItem(STORAGE_KEY) || '{}') as GameState
+      expect(saved.player.activeMission?.id).to.eq('generated-s1-starter-bulk-1')
+      expect(saved.missionId).to.eq(null)
+    })
   })
 
   it('keeps a two-leg mission in delivery mode after pickup cargo is secured', () => {
