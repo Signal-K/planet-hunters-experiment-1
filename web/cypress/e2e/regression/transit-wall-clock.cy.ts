@@ -81,6 +81,8 @@ describe('Transit wall-clock continuity', () => {
     cy.get('.transit-readout').should('have.attr', 'data-transit-progress', '38')
 
     cy.reload()
+    cy.clock(EPOCH + 45_000)
+    cy.document().then(document => document.dispatchEvent(new Event('visibilitychange')))
     cy.contains('MISSION TRANSIT', { timeout: 15000 }).should('be.visible')
     cy.get('.transit-readout').should('have.attr', 'data-transit-progress', '38')
     cy.get('.transit-readout').should('contain', '01:15')
