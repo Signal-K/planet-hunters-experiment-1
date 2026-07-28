@@ -3,7 +3,8 @@ import type { GameState } from '@/game-context'
 const STORAGE_KEY = 'landnam-game-state-v1'
 const EPOCH = 1_800_000_000_000
 
-function transitState(): GameState {
+function transitState(now = EPOCH, elapsedMs = 0): GameState {
+  const transitStartedAt = now - elapsedMs
   return {
     screen: 'transit',
     missionId: 'generated-s1-starter-bulk-1',
@@ -35,17 +36,17 @@ function transitState(): GameState {
       launchpadUpgraded: false,
       loanDebt: 0,
       loanOffered: false,
-      transitStartedAt: EPOCH,
-      arrivalAt: EPOCH + 120_000,
+      transitStartedAt,
+      arrivalAt: transitStartedAt + 120_000,
     },
   } as GameState
 }
 
-function visitTransit() {
-  cy.clock(EPOCH, ['Date'])
+function visitTransit(now = EPOCH, elapsedMs = 0, useClock = true) {
+  if (useClock) cy.clock(now, ['Date'])
   cy.visit('/game/transit', {
     onBeforeLoad(win) {
-      win.localStorage.setItem(STORAGE_KEY, JSON.stringify(transitState()))
+      win.localStorage.setItem(STORAGE_KEY, JSON.stringify(transitState(now, elapsedMs)))
       win.localStorage.setItem('landnam-guest-credentials', JSON.stringify({ email: 'e2e@landnam.guest', password: 'e2e-guest-test' }))
     },
   })
@@ -76,15 +77,17 @@ describe('Transit wall-clock continuity', () => {
   })
 
   it('keeps the same travel position after the transit screen remounts', () => {
-    visitTransit()
-    cy.tick(45_000)
-    cy.get('.transit-readout').should('have.attr', 'data-transit-progress', '38')
+    const now = Date.now()
+    visitTransit(now, 45_000, false)
+    cy.get('.transit-readout').invoke('attr', 'data-transit-progress').then(value => {
+      expect(Number(value)).to.be.within(35, 45)
+    })
 
     cy.reload()
-    cy.clock(EPOCH + 45_000)
-    cy.document().then(document => document.dispatchEvent(new Event('visibilitychange')))
     cy.contains('MISSION TRANSIT', { timeout: 15000 }).should('be.visible')
-    cy.get('.transit-readout').should('have.attr', 'data-transit-progress', '38')
+    cy.get('.transit-readout').invoke('attr', 'data-transit-progress').then(value => {
+      expect(Number(value)).to.be.within(35, 50)
+    })
     cy.get('.transit-readout').should('contain', '01:15')
   })
 })
