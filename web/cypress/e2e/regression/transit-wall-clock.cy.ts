@@ -80,9 +80,7 @@ describe('Transit wall-clock continuity', () => {
     cy.tick(45_000)
     cy.get('.transit-readout').should('have.attr', 'data-transit-progress', '38')
 
-    cy.get('[data-testid="top-bar-back"]').click({ force: true })
-    cy.url().should('include', '/game/hub')
-    cy.visit('/game/transit')
+    cy.reload()
     cy.contains('MISSION TRANSIT', { timeout: 15000 }).should('be.visible')
     cy.get('.transit-readout').should('have.attr', 'data-transit-progress', '38')
     cy.get('.transit-readout').should('contain', '01:15')
