@@ -297,7 +297,9 @@ function playM3ToLaunch() {
 // ─── Viewport configurations ──────────────────────────────────────────────────
 
 const VIEWPORTS = [
-  { label: 'mobile', w: 390, h: 844 },
+  { label: 'mobile portrait', w: 390, h: 844 },
+  { label: 'mobile landscape', w: 844, h: 390 },
+  { label: 'tablet portrait', w: 768, h: 1024 },
   { label: 'desktop', w: 1280, h: 800 },
 ] as const
 
