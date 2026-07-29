@@ -8,43 +8,24 @@ import {
   HUB_W,
   HUB_H,
   type HubBuildingDef,
-  type HubTextures,
 } from '@/lib/pixi/hubScene'
-import { AssetManager } from '@/lib/engine/AssetManager'
 
 /**
- * Blender-rendered structure props, keyed by their manifest name. The scene
- * falls back to its inline `Graphics` version for any slot left null, so a
- * failed load degrades to the old look rather than to nothing — which is also
- * why these are fetched after first paint instead of blocking it.
+ * The Blender hub sprites are rendered, manifested and tested, but NOT wired
+ * into the scene yet — hubScene's textured branch is not equivalent to its
+ * Graphics branch, so feeding it textures renders partial structures.
  *
- * Regenerate with `blender --background --factory-startup --python
- * tools/blender/render_all.py`; see tools/blender/README.md.
+ * `buildScanStation` is the clearest case: the Graphics path draws tripod,
+ * mast, feet *and* dish; the textured path draws only `scan_dish` at y=-52 and
+ * nothing below it, leaving the dish floating 52px above the ground.
+ * `HubTextures` also declares `scan_tripod`, `cmd_foundation`, `cmd_antenna`,
+ * `depot_base` and `depot_pipes`, which no builder consumes. That gap was
+ * invisible for as long as every slot was null.
+ *
+ * Re-enable by making each builder consume a complete set of slots whose
+ * decomposition matches the Graphics layout, then loading them here. See
+ * STS-611.
  */
-const HUB_SPRITE_NAMES: Partial<Record<keyof HubTextures, string>> = {
-  pad_base: 'hub_pad_base',
-  pad_tower: 'hub_pad_tower',
-  pad_gantry: 'hub_pad_gantry',
-  depot_tank: 'hub_depot_tank',
-  scan_dish: 'hub_scan_dish',
-  cmd_building: 'hub_cmd_building',
-  sat_station: 'hub_sat_station',
-}
-
-async function loadHubTextures(): Promise<HubTextures> {
-  const textures = nullTextures()
-  const assets = new AssetManager()
-  await assets.loadManifest('/game/assets/manifest.json')
-  await Promise.all(
-    Object.entries(HUB_SPRITE_NAMES).map(async ([slot, name]) => {
-      const { texture, isPlaceholder } = await assets.loadTexture(name)
-      // A placeholder is the magenta square. Better to fall through to the
-      // Graphics version than to draw a magenta building.
-      if (!isPlaceholder) textures[slot as keyof HubTextures] = texture
-    }),
-  )
-  return textures
-}
 
 interface HubPixiCanvasProps {
   buildings: HubBuildingDef[]
@@ -66,9 +47,6 @@ export default function HubPixiCanvas({ buildings }: HubPixiCanvasProps) {
   // Exposed by the init effect so prop changes can trigger a redraw without
   // tearing down and re-initialising the PixiJS Application.
   const rebuildRef = useRef<(() => void) | null>(null)
-  // Starts all-null so the first paint uses the Graphics fallback; swapped for
-  // the Blender sprites once they resolve, then the scene is rebuilt once.
-  const texturesRef = useRef<HubTextures>(nullTextures())
 
   // Game state hydrates from localStorage/PocketBase *after* this component
   // mounts, so `buildings` is routinely empty on the first render and only
@@ -111,7 +89,7 @@ export default function HubPixiCanvas({ buildings }: HubPixiCanvasProps) {
 
       scene?.destroy()
       const groundY = containerH * (1 - 0.22)
-      scene = buildHubScene(app, buildingsRef.current, texturesRef.current, { groundY, scaleX })
+      scene = buildHubScene(app, buildingsRef.current, nullTextures(), { groundY, scaleX })
     }
 
     ;(async () => {
@@ -138,12 +116,6 @@ export default function HubPixiCanvas({ buildings }: HubPixiCanvasProps) {
 
       rebuild()
       rebuildRef.current = rebuild
-
-      void loadHubTextures().then(textures => {
-        if (destroyed) return
-        texturesRef.current = textures
-        rebuild()
-      })
 
       ro = new ResizeObserver(() => rebuild())
       ro.observe(div)

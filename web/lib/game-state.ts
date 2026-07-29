@@ -126,6 +126,19 @@ export function normalizeState(input: PartialSave): GameState {
   // crew at all. Fold them in here — the one choke point every load path runs
   // through — rather than leaving the roster and roverDeployments to drift.
   const crew = migrateCrewRoster(player, Date.now())
+
+  // `placed` is the record of what the player actually built; the per-structure
+  // booleans are conveniences derived from it. They can disagree: a save made
+  // before `applyPlaceStructure` started setting a flag has the structure in
+  // `placed` and the flag false, which is why the hub kept telling players to
+  // "Build a Satellite Monitoring Station" they had already built. Derive the
+  // flags from `placed` so the two can never drift again — and OR rather than
+  // overwrite, so a flag set by any other route still counts.
+  const placedList = Array.isArray(player.placed) ? player.placed : DEFAULT_STATE.player.placed
+  const builtFrom = (kind: string, flag: boolean | undefined) => !!flag || placedList.includes(kind)
+  const satelliteMonitoringBuilt = builtFrom('satellite-monitoring-station', player.satelliteMonitoringBuilt)
+  const refineryBuilt = builtFrom('refinery', player.refineryBuilt)
+  const scannerBuilt = builtFrom('scan-station', player.scannerBuilt)
   const legacyClaim = input.pendingTerritoryClaimFor as unknown as { targetId: string; clientId?: string; contractorId?: string } | undefined
   const pendingTerritoryClaimFor = legacyClaim
     ? { targetId: legacyClaim.targetId, clientId: legacyClaim.clientId ?? legacyClaim.contractorId ?? '' }
@@ -137,7 +150,8 @@ export function normalizeState(input: PartialSave): GameState {
     missionId,
     targetId,
     rocket: { ...DEFAULT_STATE.rocket, ...input.rocket },
-    player: { ...DEFAULT_STATE.player, ...player, licenseGrade, researchXP, unlockedBlueprints, tessClassifications, discoveredExoplanetTargets, satelliteMonitoringLevel, transitSatelliteLevel, crew },
+    player: { ...DEFAULT_STATE.player, ...player, licenseGrade, researchXP, unlockedBlueprints, tessClassifications, discoveredExoplanetTargets, satelliteMonitoringLevel, transitSatelliteLevel, crew,
+      satelliteMonitoringBuilt, refineryBuilt, scannerBuilt },
     doneSteps: { ...DEFAULT_STATE.doneSteps, ...input.doneSteps },
     ...(pendingTerritoryClaimFor ? { pendingTerritoryClaimFor } : {}),
   }

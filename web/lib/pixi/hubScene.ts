@@ -196,36 +196,61 @@ function buildTerrain(w: number, h: number, groundY: number): Container {
   soil.fill({ color: T.stone, alpha: 0.55 })
   root.addChild(soil)
 
-  // ── Plateau — the octagonal build platform structures stand on ──────────
-  // Moved out of the DOM background: with terrain now drawn in Pixi, a DOM
-  // plateau sitting behind the canvas would be painted over by the ground.
-  // Geometry mirrors the v2 mockup's clip-path exactly.
-  const padH = h * 0.22
-  const padBottom = h - h * 0.034
-  const padTop = padBottom - padH
+  // ── Plateau — the raised pad the structures stand on ────────────────────
+  // Drawn as a side-on plinth, NOT a top-down octagon.
+  //
+  // Everything else in this scene is an elevation: the ranges recede up the
+  // screen, the trees stand on a ground line, the soil is a cut section. The
+  // plateau used to be a full-height octagon — a plan view — pasted into that
+  // elevation, so the base read as a floor plan lying on its back in front of
+  // mountains, and it painted over the soil strata it was supposed to sit on.
+  //
+  // The fix keeps the octagon's chamfered silhouette but squashes it to a
+  // shallow deck: a thin top face seen at a glancing angle, a lit front wall
+  // below it, and chamfered ends. Same footprint, one projection.
   const padW = Math.min(w * 0.74, 900)
   const padX = (w - padW) / 2
-  const oct: [number, number][] = [
-    [0.04, 0.22], [0.22, 0.04], [0.78, 0.04], [0.96, 0.22],
-    [0.96, 0.78], [0.78, 0.96], [0.22, 0.96], [0.04, 0.78],
-  ]
-  const pad = new Graphics()
-  pad.moveTo(padX + oct[0][0] * padW, padTop + oct[0][1] * padH)
-  for (let i = 1; i < oct.length; i++) pad.lineTo(padX + oct[i][0] * padW, padTop + oct[i][1] * padH)
-  pad.closePath()
-  pad.fill(0x2c4d28)
-  pad.stroke({ color: 0x6cd4ff, width: 2, alpha: 0.26 })
+  // The deck sits just below the turf line so structures stand *on* it rather
+  // than floating above the ground plane.
+  const deckY = groundY + h * 0.030
+  const deckFaceH = h * 0.055          // visible height of the front wall
+  const deckTopH = h * 0.016           // foreshortened top surface
+  const chamfer = padW * 0.06
 
-  // Lower half in shade — same two-tone facet treatment as the ranges.
-  pad.moveTo(padX + 0.96 * padW, padTop + 0.5 * padH)
-  pad.lineTo(padX + 0.96 * padW, padTop + 0.78 * padH)
-  pad.lineTo(padX + 0.78 * padW, padTop + 0.96 * padH)
-  pad.lineTo(padX + 0.22 * padW, padTop + 0.96 * padH)
-  pad.lineTo(padX + 0.04 * padW, padTop + 0.78 * padH)
-  pad.lineTo(padX + 0.04 * padW, padTop + 0.5 * padH)
+  const pad = new Graphics()
+
+  // Top surface — a shallow hexagon, the octagon seen almost edge-on.
+  pad.moveTo(padX + chamfer, deckY - deckTopH)
+  pad.lineTo(padX + padW - chamfer, deckY - deckTopH)
+  pad.lineTo(padX + padW, deckY)
+  pad.lineTo(padX + padW - chamfer * 0.6, deckY + deckTopH * 0.5)
+  pad.lineTo(padX + chamfer * 0.6, deckY + deckTopH * 0.5)
+  pad.lineTo(padX, deckY)
   pad.closePath()
-  pad.fill({ color: 0x1c331c, alpha: 0.9 })
+  pad.fill(T.groundLit)
+
+  // Front wall — the retaining face, in shade, so the deck has thickness.
+  const faceTop = deckY + deckTopH * 0.5
+  pad.moveTo(padX, deckY)
+  pad.lineTo(padX + chamfer * 0.6, faceTop)
+  pad.lineTo(padX + padW - chamfer * 0.6, faceTop)
+  pad.lineTo(padX + padW, deckY)
+  pad.lineTo(padX + padW - chamfer * 0.35, deckY + deckFaceH)
+  pad.lineTo(padX + chamfer * 0.35, deckY + deckFaceH)
+  pad.closePath()
+  pad.fill(0x1c331c)
+
+  // A single lit lip along the deck edge reads as a kerb and separates the
+  // top surface from the wall without an outline.
+  pad.rect(padX + chamfer * 0.6, faceTop - 2, padW - chamfer * 1.2, 2.5)
+  pad.fill({ color: 0x6b9b63, alpha: 0.45 })
   root.addChild(pad)
+
+  // Kept for the site-infrastructure block below, which positions the apron,
+  // road and lights relative to the pad.
+  const padH = deckFaceH + deckTopH
+  const padTop = deckY - deckTopH
+  const padBottom = deckY + deckFaceH
 
   // ── Site infrastructure — connect the buildings into one working base ──
   // The platform is intentionally not a showroom plinth. A narrow service

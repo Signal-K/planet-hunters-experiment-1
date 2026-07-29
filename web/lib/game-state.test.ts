@@ -340,3 +340,30 @@ describe('mergeRemoteState — remote game_states record onto local state', () =
     expect(merged.doneSteps).toEqual({})
   })
 })
+
+describe('structure flags are derived from `placed`', () => {
+  // A save made before applyPlaceStructure started setting a flag has the
+  // structure in `placed` and the flag false. The hub then kept prompting
+  // "Build a Satellite Monitoring Station" for one already standing.
+  it('repairs satelliteMonitoringBuilt from placed', () => {
+    const s = normalizeState({ player: { placed: ['launchpad', 'satellite-monitoring-station'] } })
+    expect(s.player.satelliteMonitoringBuilt).toBe(true)
+  })
+
+  it('repairs refineryBuilt and scannerBuilt the same way', () => {
+    const s = normalizeState({ player: { placed: ['refinery', 'scan-station'] } })
+    expect(s.player.refineryBuilt).toBe(true)
+    expect(s.player.scannerBuilt).toBe(true)
+  })
+
+  it('leaves the flags false when the structure is not placed', () => {
+    const s = normalizeState({ player: { placed: ['launchpad'] } })
+    expect(s.player.satelliteMonitoringBuilt).toBe(false)
+    expect(s.player.refineryBuilt).toBe(false)
+  })
+
+  it('keeps a flag that is set even if placed somehow lost the entry', () => {
+    const s = normalizeState({ player: { placed: [], satelliteMonitoringBuilt: true } })
+    expect(s.player.satelliteMonitoringBuilt).toBe(true)
+  })
+})
