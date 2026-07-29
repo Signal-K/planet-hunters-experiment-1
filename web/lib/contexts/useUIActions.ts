@@ -16,6 +16,17 @@ export function useUIActions(
     setState(s => ({ ...s, screen }))
   }, [setState])
 
+  // Mission entry is also the first onboarding checkpoint. Keep the route
+  // change and checkpoint update in one functional state transition so the
+  // callout, launchpad and mission tab cannot race each other or the URL sync.
+  const goToMissions = useCallback(() => {
+    setState(s => ({
+      ...s,
+      screen: 'missions',
+      doneSteps: { ...s.doneSteps, 1: true },
+    }))
+  }, [setState])
+
   // Called by the [screen] page component when the URL changes (browser back/forward).
   // Updates state.screen WITHOUT triggering the URL-sync effect so we don't create
   // a push that fights the navigation.
@@ -44,5 +55,5 @@ export function useUIActions(
     setState(s => ({ ...s, pendingTerritoryClaimFor: undefined, screen: s.tutorial ? 'hub' : 'market' }))
   }, [setState])
 
-  return { go, setScreenFromUrl, skipNextUrlSync, setPopup, setMenuOpen, addToast, dismissToast, clearTerritoryClaimPopup, toasts }
+  return { go, goToMissions, setScreenFromUrl, skipNextUrlSync, setPopup, setMenuOpen, addToast, dismissToast, clearTerritoryClaimPopup, toasts }
 }
