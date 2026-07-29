@@ -235,7 +235,7 @@ export interface Star {
   dist: string
 }
 
-export interface StarterRocket {
+export interface RocketModel {
   id: string
   name: string
   tier: number

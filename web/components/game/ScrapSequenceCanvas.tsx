@@ -10,8 +10,8 @@ interface Props {
 }
 
 /**
- * Debrief-only scrap/dismantle sequence for single-use starter rockets
- * (SR1-SR5 during M1-M3 onboarding — see rocket-and-room-system decision).
+ * Debrief-only scrap/dismantle sequence for single-use rocket models
+ * (every model is single-use during M1-M3 onboarding — see rocket-and-room-system decision).
  * Once reusable rockets ship, callers should skip mounting this entirely
  * for a reusable hull rather than branching inside it.
  */

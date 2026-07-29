@@ -1,6 +1,6 @@
 import { useCallback, useRef } from 'react'
 import {
-  MISSIONS, TARGETS, STARTER_ROCKETS, FREE_OPS_START_MISSIONS_DONE,
+  MISSIONS, TARGETS, ROCKET_MODELS, FREE_OPS_START_MISSIONS_DONE,
   getLaserChargeCap, travelDurationMs, suggestBuild,
   CLIENT_COOLDOWN_MS, CLIENT_STREAK_LIMIT, loanInstalmentFor, BANKRUPTCY_THRESHOLD,
 } from '@/lib/data'
@@ -114,7 +114,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
   const onPurchaseRocket = useCallback((rocketId: string) => {
     setState(s => {
       if (s.screen !== 'rocket-buy' || !s.missionId || !s.targetId) return s
-      const rocket = STARTER_ROCKETS.find(r => r.id === rocketId)
+      const rocket = ROCKET_MODELS.find(r => r.id === rocketId)
       if (!rocket) return s
       return applyPurchaseRocket(s, rocket)
     })

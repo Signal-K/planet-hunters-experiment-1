@@ -2,7 +2,7 @@
 // Covers: sell minerals, refinery queue, launchpad upgrade.
 
 import type { GameState } from '@/lib/game-types'
-import type { RefineryRecipe, ShipRoomKind, StructureBlueprint, StarterRocket } from '@/lib/data'
+import type { RefineryRecipe, ShipRoomKind, StructureBlueprint, RocketModel } from '@/lib/data'
 import { MINERAL_META, CLIENT_SLOTS, LAUNCHPAD_UPGRADE_COST, OPEN_MARKET_SELL_RATE, customizerPartById } from '@/lib/data'
 
 // Sell to open market (raw): ~80% of book value — see [[Economy and Minerals]].
@@ -133,7 +133,7 @@ export function applyCollectRefined(s: GameState, recipe: RefineryRecipe): GameS
 
 /** Buy the rocket a mission will fly. Francs used to be deducted inline in
  *  `useGameLoop`; every purchase in the game now goes through this file. */
-export function applyPurchaseRocket(s: GameState, rocket: StarterRocket): GameState {
+export function applyPurchaseRocket(s: GameState, rocket: RocketModel): GameState {
   if (s.player.francs < rocket.costFrancs) return s
   return {
     ...s,

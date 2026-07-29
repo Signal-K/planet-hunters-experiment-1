@@ -252,7 +252,7 @@ export default function MissionFlowPreview() {
               <section data-step="rocket" data-od-id="step-rocket">
                 <article className={styles.screenCard}>
                   <h2>Select rocket</h2>
-                  <p>Explorer SR1 has enough range and hold space for this client job.</p>
+                  <p>The Explorer has enough range and hold space for this client job.</p>
                   <div className={styles.rules}>
                     <div className={cx(styles.rule, styles.ruleWarn)}><span>Hold</span><strong>{job.hold}</strong></div>
                     <div className={styles.rule}><span>Range</span><strong>Clears the selected body.</strong></div>

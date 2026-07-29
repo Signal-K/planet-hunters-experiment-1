@@ -3,8 +3,8 @@
 import Image from 'next/image'
 import { useState } from 'react'
 import TopBar from '@/components/ui/TopBar'
-import { STARTER_ROCKETS, hasShipCustomizer, calculateShipSuccessChance, selectedCustomizerPartIds, getBuildSequence } from '@/lib/data'
-import type { StarterRocket, InstalledCustomizerPartsByKind } from '@/lib/data'
+import { ROCKET_MODELS, hasShipCustomizer, calculateShipSuccessChance, selectedCustomizerPartIds, getBuildSequence } from '@/lib/data'
+import type { RocketModel, InstalledCustomizerPartsByKind } from '@/lib/data'
 import { UI_ZONES } from '@/lib/ui-zones'
 import ShipInteriorPreview from '@/components/game/ShipInteriorPreview'
 import { formatCurrency } from '@/lib/format'
@@ -34,7 +34,7 @@ function StatBar({ label, value, max }: { label: string; value: number; max: num
   )
 }
 
-function RocketCard({ rocket, missionsDone, onSelect }: { rocket: StarterRocket; missionsDone: number; onSelect?: (id: string) => void }) {
+function RocketCard({ rocket, missionsDone, onSelect }: { rocket: RocketModel; missionsDone: number; onSelect?: (id: string) => void }) {
   const missionUnlocked = missionsDone >= rocket.missionsRequired
   const isAvailable = !rocket.locked && missionUnlocked
   const isLocked = rocket.locked || !missionUnlocked
@@ -210,7 +210,7 @@ export default function HangarScreen({ francs, missionsDone, unlockedSkillNodes,
           </button>
         )}
 
-        {STARTER_ROCKETS.map(rocket => (
+        {ROCKET_MODELS.map(rocket => (
           <RocketCard key={rocket.id} rocket={rocket} missionsDone={missionsDone} onSelect={onSelect} />
         ))}
       </div>

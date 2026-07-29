@@ -57,7 +57,7 @@ export const AUTHORED_MISSIONS: Mission[] = [
       max_orbit: 4,
     },
     payout: {
-      // M3 still forces a fresh SR2 purchase (rockets are single-use), so
+      // M3 still forces a fresh Prospector purchase (rockets are single-use), so
       // this rides the shared sequence-3 contract fee, which clears that cost
       // the same way M1/M2's do without ballooning into a jackpot.
       francs: missionPayoutFloor(3),
@@ -83,7 +83,7 @@ export const AUTHORED_MISSIONS: Mission[] = [
       max_orbit: 4,
     },
     payout: {
-      // M3 still forces a fresh SR2 purchase (rockets are single-use), so
+      // M3 still forces a fresh Prospector purchase (rockets are single-use), so
       // this rides the shared sequence-3 contract fee, which clears that cost
       // the same way M1/M2's do without ballooning into a jackpot.
       francs: missionPayoutFloor(3),

@@ -1,5 +1,5 @@
 // Mission payouts are contract fees, not the resale value of the ore alone.
-// The old formula produced millions while starter rocket manufacture costs
+// The old formula produced millions while rocket manufacture costs
 // billions, forcing onboarding calibration to display a misleading jackpot.
 //
 // All payout-floor policy lives here. It used to be spread across three
@@ -7,7 +7,7 @@
 // missions.ts, and hardcoded figures on the authored missions — which made it
 // impossible to answer "what does mission N pay?" from any single file.
 
-import { STARTER_ROCKETS } from './rockets'
+import { ROCKET_MODELS } from './rockets'
 import { CARGO_BONUS_CAP, CONTRACT_FEES, CONTRACT_FEE_STEP } from './economy'
 
 export const MISSION_PAYOUT_FLOORS = CONTRACT_FEES
@@ -34,20 +34,20 @@ export function normalizeMissionPayout(raw: number, sequence: number): number {
   return Math.round(fee + Math.min(raw, fee * CARGO_BONUS_CAP))
 }
 
-// Cost of the Prospector (SR2) — the rocket M2 forces every onboarding player
+// Cost of the Prospector — the rocket M2 forces every onboarding player
 // to buy (see DEFAULT_COMPLEXITY_BANDS comment in mission-generator.ts). Used
-// as the reference point for onboarding payout floors. The SR2 purchase gate
+// as the reference point for onboarding payout floors. The purchase gate
 // sits between M1 and M2 — you must already own it to fly M2 — so M1's floor
 // alone (not "M1+M2 combined") has to cover the purchase; M2's payout arrives
 // too late to help fund it.
-export const STARTER_ROCKET_COST = STARTER_ROCKETS.find(r => r.id === 'sr2')?.costFrancs ?? 1_300_000_000
+export const ONBOARDING_ROCKET_COST = ROCKET_MODELS.find(r => r.id === 'sr2')?.costFrancs ?? 1_300_000_000
 
 /** Onboarding floor: 1.05× the Prospector's cost for the first two missions. */
-const ONBOARDING_PAYOUT_FLOOR = Math.round(STARTER_ROCKET_COST * 1.05)
+const ONBOARDING_PAYOUT_FLOOR = Math.round(ONBOARDING_ROCKET_COST * 1.05)
 
 /**
  * Ensures each of the first two missions pays enough on its own to afford the
- * mandatory SR2 purchase gating M2, since that purchase happens before M2's
+ * mandatory Prospector purchase gating M2, since that purchase happens before M2's
  * payout is ever collected.
  *
  * Idempotent (it is a floor, not a bonus), which is what kept the old

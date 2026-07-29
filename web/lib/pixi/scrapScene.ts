@@ -1,6 +1,6 @@
 /**
  * Pure scene logic for the Debrief scrap/dismantle sequence — plays when a
- * single-use starter rocket (SR1-SR5, see rocket-and-room-system decision)
+ * single-use rocket model (see rocket-and-room-system decision)
  * is recovered for parts instead of returning intact. Mirrors launchScene.ts's
  * shape: no React, no PixiJS Application lifecycle, just scene graph
  * construction and a per-frame update function returned to the caller.

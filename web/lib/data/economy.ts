@@ -30,7 +30,7 @@
  * |---|---:|---:|
  * | M1 contract fee | ₣15M | 83% |
  * | M2 contract fee | ₣18M | 100% |
- * | Prospector (SR2) | ₣13M | 72% |
+ * | Prospector | ₣13M | 72% |
  * | Starting balance | ₣9M | 50% |
  * | Refinery | ₣8M | 44% |
  * | Full hold of exotic ore | ₣11M | 61% |

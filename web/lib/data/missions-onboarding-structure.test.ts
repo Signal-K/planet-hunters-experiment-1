@@ -4,7 +4,7 @@
  * (segment-m1-m3-onboarding-mission-types).
  *
  * Exercises the ticket's own acceptance criteria directly against the real
- * production data (MISSIONS, STARTER_ROCKETS) rather than a mirrored
+ * production data (MISSIONS, ROCKET_MODELS) rather than a mirrored
  * fixture, so a future change to mission-generator.ts or missions.ts that
  * silently regresses one of these guarantees fails a test instead of
  * shipping quietly.
@@ -12,10 +12,10 @@
 
 import { describe, it, expect } from 'vitest'
 import { MISSIONS } from '@/lib/data/missions'
-import { STARTER_ROCKETS } from '@/lib/data/rockets'
+import { ROCKET_MODELS } from '@/lib/data/rockets'
 
-const SR1_CARGO = STARTER_ROCKETS.find(r => r.id === 'sr1')!.stats.cargo
-const SR2_CARGO = STARTER_ROCKETS.find(r => r.id === 'sr2')!.stats.cargo
+const SR1_CARGO = ROCKET_MODELS.find(r => r.id === 'sr1')!.stats.cargo
+const SR2_CARGO = ROCKET_MODELS.find(r => r.id === 'sr2')!.stats.cargo
 
 describe('Onboarding mission structure (M1-M3)', () => {
   it('removes the cut self-directed "Independent Prospect" mission from the onboarding ladder entirely', () => {

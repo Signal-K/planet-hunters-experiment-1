@@ -11,7 +11,7 @@ import MissionSetupShell, {
   MissionSetupFrame,
 } from '@/components/game/screens/MissionSetupShell'
 import { formatCurrency } from '@/lib/format'
-import { getRequiredStarterRocket } from '@/lib/rockets'
+import { getRequiredRocketModel } from '@/lib/rockets'
 import { calibrateOnboardingPayout } from '@/lib/data'
 import RocketCutaway, { type RocketRoomKey } from '@/components/game/RocketCutaway'
 
@@ -61,7 +61,7 @@ interface RocketPurchaseScreenProps {
 
 export default function RocketPurchaseScreen({ missionsDone, francs, mission, deliveryTargetName, onPurchase, onBack, hasCoach }: RocketPurchaseScreenProps) {
   const [activeRoom, setActiveRoom] = useState<RocketRoomKey | null>(null)
-  const rocket = getRequiredStarterRocket(missionsDone)
+  const rocket = getRequiredRocketModel(missionsDone)
   const isFree = rocket.costFrancs === 0
   const canAfford = francs >= rocket.costFrancs
   const missionPayout = mission ? calibrateOnboardingPayout(mission.payout.francs, missionsDone) : undefined

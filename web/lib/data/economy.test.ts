@@ -6,7 +6,7 @@ import {
   ROCKET_PRICES, STRUCTURE_PRICES, CONTRACT_FEES,
 } from './economy'
 import { MINERAL_META } from './minerals'
-import { STARTER_ROCKETS } from './rockets'
+import { ROCKET_MODELS } from './rockets'
 import { missionPayoutFloor } from './payouts'
 
 describe('economy scale', () => {
@@ -21,7 +21,7 @@ describe('economy scale', () => {
   it('makes a full cargo hold worth a visible share of a contract', () => {
     // The whole point of the overhaul: a Prospector hold of the best ore in
     // the game used to sell for 0.002% of a contract fee.
-    const hold = STARTER_ROCKETS.find(r => r.id === 'sr2')!.stats.cargo
+    const hold = ROCKET_MODELS.find(r => r.id === 'sr2')!.stats.cargo
     const fee = CONTRACT_FEES[2]
     const commonShare = (hold * MINERAL_VALUE.common) / fee
     const exoticShare = (hold * MINERAL_VALUE.exotic) / fee

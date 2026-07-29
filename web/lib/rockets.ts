@@ -1,12 +1,12 @@
-import { STARTER_ROCKETS, type StarterRocket } from '@/lib/data'
+import { ROCKET_MODELS, type RocketModel } from '@/lib/data'
 
-export function getRequiredStarterRocket(missionsDone: number): StarterRocket {
-  const eligible = STARTER_ROCKETS.filter(
+export function getRequiredRocketModel(missionsDone: number): RocketModel {
+  const eligible = ROCKET_MODELS.filter(
     rocket => !rocket.locked && rocket.missionsRequired <= missionsDone,
   )
 
-  return eligible.reduce<StarterRocket | undefined>(
+  return eligible.reduce<RocketModel | undefined>(
     (best, rocket) => !best || rocket.tier > best.tier ? rocket : best,
     undefined,
-  ) ?? STARTER_ROCKETS[0]
+  ) ?? ROCKET_MODELS[0]
 }

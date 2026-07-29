@@ -2,7 +2,7 @@
 
 import { Boxes, Check, Gauge, Orbit, Pickaxe, Route, X } from 'lucide-react'
 import type { Mission, RocketConfig, Target } from '@/lib/data'
-import { STARTER_ROCKETS, validateBuild } from '@/lib/data'
+import { ROCKET_MODELS, validateBuild } from '@/lib/data'
 import type { Catalog } from '@/lib/catalog'
 import Panel from '@/components/ui/Panel'
 import { PrimaryBtn } from '@/components/ui/Button'
@@ -13,7 +13,7 @@ import MissionSetupShell, {
   MissionSetupCard,
   MissionSetupFrame,
 } from '@/components/game/screens/MissionSetupShell'
-import { getRequiredStarterRocket } from '@/lib/rockets'
+import { getRequiredRocketModel } from '@/lib/rockets'
 
 interface AssemblyScreenProps {
   mission: Mission
@@ -31,7 +31,7 @@ interface AssemblyScreenProps {
 
 // Each ship "compartment" the mockup shows as a clickable cutaway room maps
 // 1:1 onto a real, already-computed starter-rocket stat — there is no
-// editable-parts system yet (starter rockets are unibody during onboarding),
+// editable-parts system yet (rockets are unibody during onboarding),
 // so clicking a compartment just cross-highlights the matching stat card
 // below rather than mutating any build state.
 type RoomKey = 'payload' | 'fuel' | 'engine' | 'structure'
@@ -39,16 +39,16 @@ type RoomKey = 'payload' | 'fuel' | 'engine' | 'structure'
 // Real-data ceilings (drawn from the actual starter-rocket catalog, not
 // invented numbers) so the segmented meters reflect true headroom rather
 // than a decorative fill.
-const MAX_CARGO = Math.max(...STARTER_ROCKETS.map(r => r.stats.cargo))
-const MAX_ORBIT = Math.max(...STARTER_ROCKETS.map(r => r.stats.maxOrbit))
-const MAX_DRILL_TIER = Math.max(...STARTER_ROCKETS.map(r => r.stats.drillTier))
+const MAX_CARGO = Math.max(...ROCKET_MODELS.map(r => r.stats.cargo))
+const MAX_ORBIT = Math.max(...ROCKET_MODELS.map(r => r.stats.maxOrbit))
+const MAX_DRILL_TIER = Math.max(...ROCKET_MODELS.map(r => r.stats.drillTier))
 const METER_SEGMENTS = 8
 
 export default function AssemblyScreen(props: AssemblyScreenProps) {
   const highlightContent = props.hasCoach && props.coachManual
   const highlightLaunch = props.hasCoach && !props.coachManual
   const check = validateBuild({ mission: props.mission, target: props.target, rocket: props.rocket, parts: props.parts, unlockedSkillNodes: props.unlockedSkillNodes })
-  const starterRocket = getRequiredStarterRocket(props.missionsDone)
+  const starterRocket = getRequiredRocketModel(props.missionsDone)
 
   return (
     <MissionSetupShell
@@ -131,7 +131,7 @@ function LaunchClearance({
   mission: Mission
   target: Target
   deliveryTargetName?: string
-  rocket: ReturnType<typeof getRequiredStarterRocket>
+  rocket: ReturnType<typeof getRequiredRocketModel>
   ready: boolean
 }) {
   const stops = deliveryTargetName
@@ -207,7 +207,7 @@ function RocketCutaway({
 }: {
   activeRoom: RoomKey | null
   onToggle: (room: RoomKey) => void
-  rocket: ReturnType<typeof getRequiredStarterRocket>
+  rocket: ReturnType<typeof getRequiredRocketModel>
 }) {
   const roomStyle = (room: RoomKey, extra: React.CSSProperties = {}): React.CSSProperties => ({
     position: 'absolute',

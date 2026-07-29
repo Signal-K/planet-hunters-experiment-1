@@ -1,12 +1,12 @@
 'use client'
 
 import { Boxes, Gauge, Orbit, Pickaxe } from 'lucide-react'
-import type { StarterRocket } from '@/lib/data'
+import type { RocketModel } from '@/lib/data'
 
 export type RocketRoomKey = 'payload' | 'fuel' | 'engine' | 'structure'
 
 interface RocketCutawayProps {
-  rocket: StarterRocket
+  rocket: RocketModel
   activeRoom: RocketRoomKey | null
   onToggle: (room: RocketRoomKey) => void
 }

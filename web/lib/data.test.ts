@@ -8,7 +8,7 @@ import {
   compatibleTargetsFor,
   rateMission,
   calibrateOnboardingPayout,
-  STARTER_ROCKET_COST,
+  ONBOARDING_ROCKET_COST,
   MINERAL_META,
   MISSIONS,
   MISSION_TEMPLATES,
@@ -366,13 +366,13 @@ describe('rateMission', () => {
 })
 
 describe('calibrateOnboardingPayout', () => {
-  const floor1 = Math.round(STARTER_ROCKET_COST * 1.05)
-  const floor2 = Math.round(STARTER_ROCKET_COST * 1.05)
+  const floor1 = Math.round(ONBOARDING_ROCKET_COST * 1.05)
+  const floor2 = Math.round(ONBOARDING_ROCKET_COST * 1.05)
 
   it('enforces a floor of 1.05× the Prospector cost on the first mission, so it alone covers the mandatory purchase gating M2', () => {
     expect(calibrateOnboardingPayout(0, 0)).toBe(floor1)
     expect(calibrateOnboardingPayout(floor1 - 1, 0)).toBe(floor1)
-    expect(floor1).toBeGreaterThan(STARTER_ROCKET_COST)
+    expect(floor1).toBeGreaterThan(ONBOARDING_ROCKET_COST)
   })
 
   it('does not reduce a first-mission payout already above the floor', () => {

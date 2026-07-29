@@ -2,7 +2,7 @@
 
 import { useRef, useState } from 'react'
 import type { Mission, Target, MineralMeta, Client, RocketConfig } from '@/lib/data'
-import { calibrateOnboardingPayout, clientAffinityBonus, rocketDisplayForConfig, starterRocketForConfig, MAX_AFFINITY_BONUS, loanInstalmentFor } from '@/lib/data'
+import { calibrateOnboardingPayout, clientAffinityBonus, rocketDisplayForConfig, rocketModelForConfig, MAX_AFFINITY_BONUS, loanInstalmentFor } from '@/lib/data'
 import TopBar from '@/components/ui/TopBar'
 import { PrimaryBtn } from '@/components/ui/Button'
 import Panel from '@/components/ui/Panel'
@@ -37,13 +37,13 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
   const [resolved, setResolved] = useState(false)
   const [collecting, setCollecting] = useState(false)
   const collectingRef = useRef(false)
-  // Single-use hull recovery (SR1-SR5 during M1-M3 onboarding) plays a scrap
+  // Single-use hull recovery (every model, during M1-M3 onboarding) plays a scrap
   // animation right after cargo is resolved. Once reusable rockets ship
   // post-onboarding, gate this on that system's own flag instead of
   // `shipDestroyed` — a reusable hull shouldn't play this at all.
   const [scrapping, setScrapping] = useState(false)
   const rocketDisplay = rocketDisplayForConfig(rocket)
-  const starterRocket = starterRocketForConfig(rocket)
+  const starterRocket = rocketModelForConfig(rocket)
 
   const delivered = Object.entries(mission.requires.minerals).every(([id, amount]) => (cargo[id] ?? 0) >= amount)
   const client = mission.client ? clients[mission.client] : undefined
