@@ -103,6 +103,32 @@ def cmd_building():
     return dict(layout=(56, 56), ortho=3.4, mode="flat", target=(0, 0, 1.3))
 
 
+def sat_station():
+    """52x36 — Satellite Monitoring Station: an uplink dish on a squat block.
+
+    Deliberately not the same sprite as `cmd_building`. That slot is drawn at
+    56x56 and this one at 52x36, so sharing one texture squashed it, and the
+    two structures are different things besides.
+    """
+    block = kit.box("block", (1.7, 1.2, 0.7), bevel=0.05)
+    kit.solid("block", block, T["hull"], "hull")
+    trim = kit.box("trim", (1.8, 1.3, 0.12), location=(0, 0, 0.7))
+    kit.solid("trim", trim, T["hull_dark"], "hulldark")
+    for i in range(2):
+        win = kit.box("win", (0.3, 0.06, 0.22), location=(-0.35 + i * 0.7, -0.61, 0.3))
+        kit.solid("win", win, T["cyan"], "cyan", outline=0)
+
+    mount = kit.box("mount", (0.16, 0.16, 0.34), location=(0.15, 0.1, 0.82))
+    kit.solid("mount", mount, T["steel"], "steel", outline=0.008)
+    rim = kit.cylinder("rim", 0.66, 0.08, location=(0.15, 0.1, 1.1), verts=10)
+    rim.rotation_euler = (-0.75, 0, 0)
+    kit.solid("rim", rim, T["hull_dark"], "hulldark", outline=0.01)
+    face = kit.cone("face", 0.6, 0.24, location=(0.15, 0.1, 1.12), verts=10)
+    face.rotation_euler = (-0.75 + 3.14159, 0, 0)
+    kit.solid("face", face, T["cyan_bright"], "cyanbright", outline=0)
+    return dict(layout=(52, 36), ortho=2.6, mode="flat", target=(0, 0, 0.75))
+
+
 BUILDS = {
     "hub/pad_base": pad_base,
     "hub/pad_tower": pad_tower,
@@ -110,4 +136,5 @@ BUILDS = {
     "hub/depot_tank": depot_tank,
     "hub/scan_dish": scan_dish,
     "hub/cmd_building": cmd_building,
+    "hub/sat_station": sat_station,
 }

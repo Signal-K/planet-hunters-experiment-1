@@ -376,6 +376,10 @@ export interface HubTextures {
   depot_pipes:    Texture | null
   scan_tripod:    Texture | null
   scan_dish:      Texture | null
+  /** Satellite Monitoring Station. Distinct from cmd_building: it is drawn at
+   *  52x36 rather than 56x56, and is a dish on a squat block rather than a
+   *  second command centre. Sharing one texture between them squashed it. */
+  sat_station:    Texture | null
 }
 
 export function nullTextures(): HubTextures {
@@ -383,7 +387,7 @@ export function nullTextures(): HubTextures {
     pad_base: null, pad_tower: null, pad_gantry: null,
     cmd_foundation: null, cmd_building: null, cmd_antenna: null,
     depot_base: null, depot_tank: null, depot_pipes: null,
-    scan_tripod: null, scan_dish: null,
+    scan_tripod: null, scan_dish: null, sat_station: null,
   }
 }
 
@@ -564,7 +568,7 @@ function buildSatelliteStation(tex: HubTextures): { root: Container; animatables
   const root = new Container()
   const anims: AnimState[] = []
 
-  const bld = makeSprite(tex.cmd_building, 52, 36, 0.5, 1.0)
+  const bld = makeSprite(tex.sat_station, 52, 36, 0.5, 1.0)
   if (bld) {
     root.addChild(bld)
   } else {

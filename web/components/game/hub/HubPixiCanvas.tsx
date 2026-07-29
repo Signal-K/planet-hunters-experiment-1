@@ -28,6 +28,7 @@ const HUB_SPRITE_NAMES: Partial<Record<keyof HubTextures, string>> = {
   depot_tank: 'hub_depot_tank',
   scan_dish: 'hub_scan_dish',
   cmd_building: 'hub_cmd_building',
+  sat_station: 'hub_sat_station',
 }
 
 async function loadHubTextures(): Promise<HubTextures> {
