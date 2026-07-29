@@ -41,9 +41,9 @@ export interface ActorArchetype {
    * escalating hire cost plus the cap on crew you did not train yourself,
    * not a flat limit.
    *
-   * NOTE: Q21 established that the classes are capped *separately* but set no
-   * numbers. The 4s below are a placeholder chosen here, not Liam's call — see
-   * the crew-model decision note before treating them as settled.
+   * Q21 established that the classes are capped separately but set no numbers;
+   * Liam delegated them ("I don't care", 2026-07-29). Four each is a starting
+   * position — retune freely on feedback, no decision needed.
    */
   rosterCap: number | null
   /** Cuts structure build time and cost. Drones do this; astronauts explicitly do not (Q19). */
