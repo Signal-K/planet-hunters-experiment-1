@@ -1,3 +1,8 @@
+// @vitest-environment jsdom
+// pixi.js reads `navigator` at import time. Node 21+ has a global navigator so
+// this passes on a modern local Node, but CI runs Node 20 where it does not
+// exist — the file then dies with "navigator is not defined" before a single
+// test runs. jsdom supplies it either way.
 // Structural tests over the entity taxonomy. These are the guards that stop the
 // registry, the prefabs, the scene catalog and the actor catalog drifting apart
 // again — each one failed as a real defect before these files existed.

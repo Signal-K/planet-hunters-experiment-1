@@ -103,38 +103,24 @@ jobs:
       url: https://landnam-test.vercel.app
 
     env:
-      # Identifiers, not credentials — useless without VERCEL_TOKEN. Kept inline
-      # so the only thing to configure is the one secret. `.vercel/project.json`
-      # is gitignored, so CI cannot read them from the repo.
-      VERCEL_ORG_ID: team_7LAhnYkfIhymCJGX9MnvvcZ4
-      VERCEL_PROJECT_ID: prj_YECUOspGC2zJt9ruPnyl2mqSnBuv
+      # These already exist as repository secrets — use them rather than
+      # hardcoding the ids. VERCEL_TEAM_ID is Vercel's name for the org id.
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_TEAM_ID }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
       # The staging alias. Every branch CI runs on points it here, so staging
       # always reflects the most recent green push regardless of branch.
       STAGING_ALIAS: landnam-test.vercel.app
 
     steps:
-      - name: Check deploy credentials
-        id: creds
-        run: |
-          if [ -z "${{ secrets.VERCEL_TOKEN }}" ]; then
-            echo "VERCEL_TOKEN is not set — skipping deploy." >> "$GITHUB_STEP_SUMMARY"
-            echo "ready=false" >> "$GITHUB_OUTPUT"
-          else
-            echo "ready=true" >> "$GITHUB_OUTPUT"
-          fi
-
       - uses: actions/checkout@v4
-        if: steps.creds.outputs.ready == 'true'
 
       - uses: actions/setup-node@v4
-        if: steps.creds.outputs.ready == 'true'
         with:
           node-version: "20"
           cache: npm
           cache-dependency-path: web/package-lock.json
 
       - name: Install Vercel CLI
-        if: steps.creds.outputs.ready == 'true'
         run: npm install --global vercel@latest
 
       # Deploys run from the repo root, matching scripts/deploy-test.mjs — the
@@ -145,18 +131,15 @@ jobs:
       # the project's production domain instead, which nothing in this repo
       # asks for.
       - name: Pull Vercel environment
-        if: steps.creds.outputs.ready == 'true'
         run: vercel pull --yes --environment=preview --token=${{ secrets.VERCEL_TOKEN }}
 
       - name: Build
-        if: steps.creds.outputs.ready == 'true'
         run: vercel build --token=${{ secrets.VERCEL_TOKEN }}
         env:
           NEXT_TELEMETRY_DISABLED: 1
 
       - name: Deploy
         id: deploy
-        if: steps.creds.outputs.ready == 'true'
         run: |
           URL=$(vercel deploy --prebuilt --token=${{ secrets.VERCEL_TOKEN }})
           echo "url=$URL" >> "$GITHUB_OUTPUT"
@@ -168,8 +151,7 @@ jobs:
       # together can still race for the alias; last writer wins, which is the
       # accepted trade for having every branch land on one URL.
       - name: Point staging alias at this deploy
-        if: steps.creds.outputs.ready == 'true'
         run: |
           vercel alias set "${{ steps.deploy.outputs.url }}" "$STAGING_ALIAS" \
-            --scope signal-k --token=${{ secrets.VERCEL_TOKEN }}
+            --scope "$VERCEL_ORG_ID" --token=${{ secrets.VERCEL_TOKEN }}
           echo "Staging: https://$STAGING_ALIAS" >> "$GITHUB_STEP_SUMMARY"
