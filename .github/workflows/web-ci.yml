@@ -2,7 +2,10 @@ name: Web CI
 
 on:
   push:
-    branches: [master, main, "sprint/**", "claude/**"]
+    # Every branch, not a glob list. Staging deploys on any green push, so a
+    # branch whose name happens not to match a pattern must not silently skip
+    # CI and the deploy with it.
+    branches: ["**"]
     paths:
       - "web/**"
       - "pocketbase/pb_migrations/**"
@@ -96,8 +99,8 @@ jobs:
     if: github.event_name == 'push'
     runs-on: ubuntu-latest
     environment:
-      name: ${{ github.ref == 'refs/heads/main' && 'staging' || 'preview' }}
-      url: ${{ steps.deploy.outputs.url }}
+      name: staging
+      url: https://landnam-test.vercel.app
 
     env:
       # Identifiers, not credentials — useless without VERCEL_TOKEN. Kept inline
@@ -105,8 +108,8 @@ jobs:
       # is gitignored, so CI cannot read them from the repo.
       VERCEL_ORG_ID: team_7LAhnYkfIhymCJGX9MnvvcZ4
       VERCEL_PROJECT_ID: prj_YECUOspGC2zJt9ruPnyl2mqSnBuv
-      # The staging alias. Pushes to main land here; sprint branches get a
-      # plain preview URL and do not touch it.
+      # The staging alias. Every branch CI runs on points it here, so staging
+      # always reflects the most recent green push regardless of branch.
       STAGING_ALIAS: landnam-test.vercel.app
 
     steps:
@@ -159,10 +162,13 @@ jobs:
           echo "url=$URL" >> "$GITHUB_OUTPUT"
           echo "Deployed: $URL" >> "$GITHUB_STEP_SUMMARY"
 
-      # Only main moves the staging alias. A sprint branch deploying over
-      # landnam-test would make staging mean nothing.
+      # Every branch CI runs on moves the alias — main, sprint/** and claude/**
+      # alike. Staging therefore means "the last green push", not "the last push
+      # to main". concurrency is scoped per ref, so two branches pushed close
+      # together can still race for the alias; last writer wins, which is the
+      # accepted trade for having every branch land on one URL.
       - name: Point staging alias at this deploy
-        if: steps.creds.outputs.ready == 'true' && github.ref == 'refs/heads/main'
+        if: steps.creds.outputs.ready == 'true'
         run: |
           vercel alias set "${{ steps.deploy.outputs.url }}" "$STAGING_ALIAS" \
             --scope signal-k --token=${{ secrets.VERCEL_TOKEN }}
