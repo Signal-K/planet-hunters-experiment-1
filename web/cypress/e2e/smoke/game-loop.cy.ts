@@ -162,7 +162,7 @@ describe('Full Game Loop — Landnam', () => {
         doneSteps: { 1: true, 2: true, 3: true, 4: true, 5: false },
       }))
       cy.contains('Explorer').should('be.visible')
-      cy.contains('INCLUDED').should('be.visible')
+      cy.contains('single-use vehicle').should('be.visible')
       cy.get('[data-testid="launch-btn"]').should('be.visible')
     })
 
@@ -484,7 +484,8 @@ describe('Full Game Loop — Landnam', () => {
         tutorial: false,
       }))
       cy.contains('PROSPECTOR').should('be.visible')
-      cy.contains('₣13M').should('be.visible')
+      cy.contains('Vehicle Available').should('be.visible')
+      cy.contains('Select Prospector').should('be.visible')
     })
 
     it('M2 coach step 20 shows on hub after M1 — no controlBuilt needed', () => {
@@ -614,7 +615,7 @@ describe('Full Game Loop — Landnam', () => {
         tutorial: false,
       }))
       cy.contains('Prospector').should('be.visible')
-      cy.contains('INCLUDED').should('be.visible')
+      cy.contains('single-use vehicle').should('be.visible')
       cy.get('[data-testid="launch-btn"]').should('be.visible')
     })
   })
