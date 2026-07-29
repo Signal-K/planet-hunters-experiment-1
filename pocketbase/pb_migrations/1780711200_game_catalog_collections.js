@@ -46,13 +46,13 @@ migrate((app) => {
     }))
   }
 
-  // contractors
+  // clients
   try {
-    app.findCollectionByNameOrId('contractors')
+    app.findCollectionByNameOrId('clients')
   } catch {
     app.save(new Collection({
       type: 'base',
-      name: 'contractors',
+      name: 'clients',
       listRule: '',
       viewRule: '',
       fields: [
@@ -67,7 +67,7 @@ migrate((app) => {
         { type: 'text',   name: 'affinity_notes', max: 200 },
         { type: 'text',   name: 'ui_role', max: 40 },
       ],
-      indexes: ['CREATE UNIQUE INDEX idx_contractors_slug ON contractors (slug)'],
+      indexes: ['CREATE UNIQUE INDEX idx_clients_slug ON clients (slug)'],
     }))
   }
 
@@ -110,7 +110,7 @@ migrate((app) => {
         { type: 'text',   name: 'slug',                  required: true, max: 40 },
         { type: 'text',   name: 'title',                 required: true, max: 200 },
         { type: 'text',   name: 'brief',                 max: 500 },
-        { type: 'text',   name: 'contractor_slug',       required: true, max: 40 },
+        { type: 'text',   name: 'client_slug',       required: true, max: 40 },
         { type: 'text',   name: 'tag',                   max: 40 },
         { type: 'text',   name: 'difficulty',            max: 10 },
         { type: 'bool',   name: 'locked' },
@@ -147,7 +147,7 @@ migrate((app) => {
         { type: 'number', name: 'drill_tier_min' },
         { type: 'number', name: 'orbit_max' },
         { type: 'number', name: 'payout_multiplier' },
-        { type: 'text',   name: 'contractor_role',   max: 40 },
+        { type: 'text',   name: 'client_role',   max: 40 },
         { type: 'text',   name: 'payout_formula',    max: 300 },
         { type: 'bool',   name: 'scan_required' },
         { type: 'number', name: 'scan_count' },
@@ -167,7 +167,7 @@ migrate((app) => {
     }))
   }
 }, (app) => {
-  for (const name of ['mission_templates', 'missions_catalog', 'rocket_parts', 'contractors', 'minerals', 'locations']) {
+  for (const name of ['mission_templates', 'missions_catalog', 'rocket_parts', 'clients', 'minerals', 'locations']) {
     try { app.delete(app.findCollectionByNameOrId(name)) } catch {}
   }
 })

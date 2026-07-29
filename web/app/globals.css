@@ -584,19 +584,18 @@ button { cursor: pointer; }
   padding-bottom: 190px;
 }
 
-/* The assembly shell has the same two-part wayfinding footer as TargetPicker,
-   but its CTA is taller because it contains the full launch authorization
-   action. Reserve the footer's complete footprint so the two bordered setup
-   containers end above it instead of continuing behind it. */
+/* Scene 4 has one real action (Confirm Launch). Its compact content owns the
+   vertical space; the CTA is no longer accompanied by a duplicate Launch rail. */
 .mission-setup-screen--assembly .mission-setup-content {
-  padding-bottom: 190px;
+  padding-bottom: 104px;
+  overflow-y: auto;
 }
 
 .mission-setup-content {
   position: absolute;
   inset: 0;
   display: grid;
-  grid-template-rows: minmax(280px, 48%) minmax(0, 1fr);
+  grid-template-rows: auto auto;
   gap: 14px;
   width: min(100%, 1120px);
   margin: 0 auto;
@@ -649,8 +648,8 @@ button { cursor: pointer; }
   .mission-setup-screen--assembly .mission-setup-content,
   .mission-setup-screen--rocket .mission-setup-content {
     grid-template-columns: minmax(0, 1.22fr) minmax(300px, 0.78fr);
-    grid-template-rows: minmax(0, 1fr);
-    align-items: stretch;
+    grid-template-rows: auto;
+    align-items: start;
   }
 
   /* TargetPicker owns its desktop two-column layout via .mission-board-layout
@@ -667,8 +666,8 @@ button { cursor: pointer; }
 .mission-setup-screen--assembly .assembly-frame {
   display: flex;
   min-height: 0;
-  align-self: stretch;
-  height: auto;
+  align-self: start;
+  height: fit-content;
 }
 
 .mission-setup-screen--assembly .assembly-card .mission-setup-card-scroll {
@@ -679,14 +678,18 @@ button { cursor: pointer; }
    steps. Keep both shared containers in the shell's grid row so their borders
    and the fixed step footer line up consistently. */
 .mission-setup-screen--assembly .assembly-card {
-  align-self: stretch;
+  align-self: start;
+  height: fit-content;
+}
+
+.mission-setup-screen--assembly .assembly-card .mission-setup-card-scroll {
   height: auto;
 }
 
 @media (max-width: 899px) {
   .mission-setup-screen--assembly .mission-setup-content,
   .mission-setup-screen--rocket .mission-setup-content {
-    grid-template-rows: minmax(220px, 42%) minmax(0, 1fr);
+    grid-template-rows: auto auto;
     gap: 10px;
   }
 
@@ -759,6 +762,21 @@ button { cursor: pointer; }
 .laser-core { position: absolute; width: 6px; height: 6px; top: -3px; left: -3px; border-radius: 50%; background: var(--ln-cyan-bright); box-shadow: 0 0 8px var(--ln-cyan), 0 0 20px rgba(63,169,255,.4); }
 .laser-flash { position: absolute; left: 50px; width: 20px; height: 30px; background: radial-gradient(ellipse, rgba(108,194,255,.6), transparent); pointer-events: none; animation: flash-fade .15s ease-out forwards; z-index: 9; }
 @keyframes flash-fade { from { opacity: 1; transform: scaleX(1); } to { opacity: 0; transform: scaleX(3); } }
+/* Visible only to assistive tech. For readouts assembled from an icon plus
+   fragmentary text (e.g. an ore glyph, "PLATINUM", "2/5") where the visual
+   grouping carries meaning the DOM order alone doesn't. */
+.ln-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
 .mining-controls {
   z-index: 10;
   padding: var(--ln-s-2) var(--ln-s-3) var(--ln-s-5);
@@ -910,9 +928,29 @@ button { cursor: pointer; }
   0%,100% { border-color: rgba(63,169,255,0.4); box-shadow: 0 0 8px rgba(63,169,255,0.15); }
   50% { border-color: rgba(63,169,255,0.9); box-shadow: 0 0 20px rgba(63,169,255,0.45); }
 }
-@keyframes coach-glow {
-  0%,100% { box-shadow: 0 0 8px 2px rgba(245,166,35,0.2); border-color: rgba(245,166,35,0.7); }
-  50% { box-shadow: 0 0 20px 5px rgba(245,166,35,0.45); border-color: rgba(245,166,35,1); }
+/* The coach glow used to animate box-shadow + border-color directly, which
+   repaints the animated element (and re-composites the backdrop-filter panels
+   it sits over — .mission-setup-frame/.mission-setup-card on Select Rocket)
+   on every single frame, for as long as a coach step is on screen. That is
+   what made the setup screens feel laggy while the tutorial was active.
+   The glow is now a separate overlay ring whose *opacity* animates: opacity
+   is compositor-driven, so the pulse costs no repaints at all. */
+@keyframes coach-glow-fade {
+  0%,100% { opacity: 0.35; }
+  50% { opacity: 1; }
+}
+
+/* Amber pulse ring. Sits over its positioned parent (or fills a highlight
+   overlay); never paints text, so animating the whole layer's opacity is safe. */
+.coach-glow-ring {
+  position: absolute;
+  inset: 0;
+  border: 2px solid rgba(245,166,35,1);
+  border-radius: inherit;
+  box-shadow: 0 0 20px 5px rgba(245,166,35,0.45);
+  pointer-events: none;
+  will-change: opacity;
+  animation: coach-glow-fade 1.6s ease-in-out infinite;
 }
 @keyframes coach-point { 0%,100% { transform: translateY(0); } 50% { transform: translateY(6px); } }
 @keyframes coach-arrow-bounce {

@@ -132,6 +132,11 @@ export interface Player {
   // part id installed per room slot. Confirmed builds deduct real francs and
   // survive across sessions instead of resetting to a fresh 3B mock budget.
   shipCustomizerParts?: Partial<Record<import('@/lib/data').ShipRoomKind, string>>
+  // Astronaut Academy roster (STS-591). Crew are persisted individuals —
+  // astronauts, rovers and drones — not a headcount. Rovers here are the same
+  // rovers as roverDeployments above, surfaced as roster entries by
+  // migrateCrewRoster; they are not a second, parallel rover system.
+  crew?: import('@/lib/data').CrewMember[]
 }
 
 export interface GameState {
@@ -191,6 +196,7 @@ export interface GameActions {
   resetGame: () => void
   signOut: () => void
   upgradeLaunchpad: () => void
+  placeStructure: (structure: import('@/lib/data').StructureBlueprint | undefined, kind: string, plot: number) => void
   sellMinerals: (mineralId: string, amount: number) => void
   onStartRefine: (recipeId: string) => void
   onCollectRefined: (recipeId: string) => void

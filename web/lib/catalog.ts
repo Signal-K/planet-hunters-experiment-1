@@ -1,6 +1,7 @@
 import { pbLandnam } from './pb-landnam'
 import type { Target, Mission, Part, MineralMeta, Client, StructureBlueprint } from './data'
 import { TARGETS, MISSIONS, AUTHORED_MISSIONS, M3_SEQUENCE, PARTS, MINERAL_META, CLIENTS, CLIENT_SLOTS, STRUCTURES, toClient as slotToClient, generateFreeOpsMissions, generateMissions } from './data'
+import { normalizeMissionPayout } from './data/payouts'
 
 export interface Catalog {
   targets: Target[]
@@ -42,16 +43,16 @@ export function toMission(r: any): Mission {
   const minerals = typeof r.requires_minerals === 'object' && !Array.isArray(r.requires_minerals)
     ? r.requires_minerals
     : JSON.parse(r.requires_minerals || '{}')
-  const fallbackClient = r.contractor_slug ? CLIENTS[r.contractor_slug] : undefined
+  const fallbackClient = r.client_slug ? CLIENTS[r.client_slug] : undefined
   const rawBrief = r.brief ?? ''
-  const brief = fallbackClient && /^Contractor Slot\s+/i.test(rawBrief)
-    ? rawBrief.replace(/Contractor Slot\s+\d+[A-Z]?/i, fallbackClient.name)
+  const brief = fallbackClient && /^(?:Client|Contractor) Slot\s+/i.test(rawBrief)
+    ? rawBrief.replace(/(?:Client|Contractor) Slot\s+\d+[A-Z]?/i, fallbackClient.name)
     : rawBrief
   return {
     id: r.slug,
     title: r.title,
     brief,
-    client: r.contractor_slug,
+    client: r.client_slug,
     tag: r.tag ?? '',
     difficulty: r.difficulty ?? 'L1',
     locked: r.locked ?? false,
@@ -72,7 +73,9 @@ export function toMission(r: any): Mission {
       max_orbit: r.requires_max_orbit ?? 5,
     },
     payout: {
-      francs: r.payout_francs ?? 0,
+      francs: typeof r.sequence === 'number' && !!r.client_slug
+        ? normalizeMissionPayout(r.payout_francs ?? 0, r.sequence)
+        : (r.payout_francs ?? 0),
       affinity: r.payout_affinity ?? 0,
     },
   }
@@ -96,7 +99,7 @@ function withCorrectedM3(missions: Mission[]): Mission[] {
 export function toClient(r: any): Client {
   const fallback = CLIENT_SLOTS.find(c => c.id === r.slug)
   const rawName = typeof r.name === 'string' ? r.name.trim() : ''
-  const hasPlaceholderName = /^Contractor Slot\s+\d+[A-Z]?$/i.test(rawName)
+  const hasPlaceholderName = /^(?:Client|Contractor) Slot\s+\d+[A-Z]?$/i.test(rawName)
   const mineralPreferences = Array.isArray(r.mineral_preferences)
     ? r.mineral_preferences
     : (r.mineral_preferences ? JSON.parse(r.mineral_preferences) : fallback?.mineralPreferences ?? [])
@@ -172,7 +175,7 @@ export async function fetchCatalog(): Promise<Catalog> {
   const [locations, minerals, clients, parts, missions, structures] = await Promise.all([
     pbLandnam.collection('locations').getFullList({ sort: 'orbit,name' }),
     pbLandnam.collection('minerals').getFullList(),
-    pbLandnam.collection('contractors').getFullList({ sort: 'unlock_tier' }),
+    pbLandnam.collection('clients').getFullList({ sort: 'unlock_tier' }),
     pbLandnam.collection('rocket_parts').getFullList({ sort: 'part_type,tier' }),
     pbLandnam.collection('missions_catalog').getFullList({ sort: 'sequence' }),
     pbLandnam.collection('structure_blueprints').getFullList({ sort: 'slug' }),

@@ -227,6 +227,129 @@ function buildTerrain(w: number, h: number, groundY: number): Container {
   pad.fill({ color: 0x1c331c, alpha: 0.9 })
   root.addChild(pad)
 
+  // ── Site infrastructure — connect the buildings into one working base ──
+  // The platform is intentionally not a showroom plinth. A narrow service
+  // apron, access road and landing lights give the structures a shared scale
+  // and make the hub read as an occupied field site.
+  const site = new Graphics()
+  const padMidY = padTop + padH * 0.54
+  const roadTop = padBottom - padH * 0.11
+  // Stop the central service road at the lower edge of the build platform.
+  // Extending it to the renderer bottom makes the road paint over the soil
+  // cross-section as a large green wedge, especially on the wide staging view.
+  const roadBottom = padBottom - 3
+  const roadHalfTop = padW * 0.14
+  const roadHalfBottom = Math.min(w * 0.22, 250)
+
+  site.moveTo(w / 2 - roadHalfTop, roadTop)
+  site.lineTo(w / 2 + roadHalfTop, roadTop)
+  site.lineTo(w / 2 + roadHalfBottom, roadBottom)
+  site.lineTo(w / 2 - roadHalfBottom, roadBottom)
+  site.closePath()
+  site.fill({ color: 0x13261b, alpha: 0.94 })
+  site.stroke({ color: 0x6b9b63, width: 2, alpha: 0.28 })
+
+  // A darker loop lane sits across the platform behind the buildings.
+  site.moveTo(padX + padW * 0.08, padMidY - 10)
+  site.lineTo(padX + padW * 0.92, padMidY - 10)
+  site.lineTo(padX + padW * 0.92, padMidY + 12)
+  site.lineTo(padX + padW * 0.08, padMidY + 12)
+  site.closePath()
+  site.fill({ color: 0x102018, alpha: 0.88 })
+  site.stroke({ color: 0x6b9b63, width: 1.5, alpha: 0.24 })
+
+  // Break the lane into practical hard-surface plates.
+  for (let i = 1; i < 8; i++) {
+    const x = padX + padW * (0.08 + i * 0.12)
+    site.moveTo(x, padMidY - 10)
+    site.lineTo(x, padMidY + 12)
+  }
+  site.stroke({ color: 0x6b9b63, width: 1, alpha: 0.14 })
+
+  // Low perimeter lamps: small, evenly-spaced points of life at this scale.
+  for (let i = 0; i < 9; i++) {
+    const x = padX + padW * (0.10 + i * 0.10)
+    site.rect(x - 1.5, padTop + padH * 0.08, 3, 8).fill(0x203a2a)
+    site.circle(x, padTop + padH * 0.065, 2.2).fill({ color: 0x9becff, alpha: 0.75 })
+    site.rect(x - 1.5, padBottom - padH * 0.08, 3, 8).fill(0x203a2a)
+    site.circle(x, padBottom - padH * 0.065, 2.2).fill({ color: 0x2fbf6a, alpha: 0.6 })
+  }
+
+  // Utility trench and tank bank on the right edge of the compound. These
+  // are deliberately quieter than the named buildings, but give the base a
+  // believable service backline and a stronger silhouette at desktop width.
+  const utilityX = padX + padW * 0.88
+  site.rect(utilityX - 28, padTop + padH * 0.18, 48, 5).fill(0x13261b)
+  site.rect(utilityX - 18, padTop + padH * 0.12, 10, 34).fill(0x203a2a).stroke({ color: 0x1c2c44, width: 1 })
+  site.rect(utilityX + 2, padTop + padH * 0.09, 10, 40).fill(0x294a2a).stroke({ color: 0x1c2c44, width: 1 })
+  site.circle(utilityX - 13, padTop + padH * 0.14, 2).fill(0x2fbf6a)
+  site.circle(utilityX + 7, padTop + padH * 0.11, 2).fill(0x6cd4ff)
+
+  // Building aprons: each room gets a short hard-surface spur into the loop
+  // lane. These are intentionally offset from the central road so the site
+  // reads as a place vehicles can actually service, not four icons arranged on
+  // a decorative platform.
+  const apronXs = [0.15, 0.383, 0.617, 0.85]
+  for (const fraction of apronXs) {
+    const x = padX + padW * fraction
+    site.moveTo(x - 11, padMidY - 12)
+    site.lineTo(x + 11, padMidY - 12)
+    site.lineTo(x + 15, padTop + padH * 0.25)
+    site.lineTo(x - 15, padTop + padH * 0.25)
+    site.closePath()
+    site.fill({ color: 0x1a2f20, alpha: 0.86 })
+    site.stroke({ color: 0x6b9b63, width: 1, alpha: 0.2 })
+    site.moveTo(x - 8, padTop + padH * 0.27)
+    site.lineTo(x + 8, padTop + padH * 0.27)
+  }
+  site.stroke({ color: 0x9ebf78, width: 1, alpha: 0.18 })
+
+  // Solar field at the quiet left edge. The repeated cells and support legs
+  // give the compound a believable utility footprint at desktop widths.
+  const solarX = padX + padW * 0.10
+  const solarY = padTop + padH * 0.28
+  for (let i = 0; i < 3; i++) {
+    const x = solarX + i * 18
+    site.poly([x - 7, solarY + 11, x + 7, solarY + 7, x + 7, solarY + 15, x - 7, solarY + 19])
+      .fill(0x214566)
+      .stroke({ color: 0x6cd4ff, width: 1, alpha: 0.5 })
+    site.moveTo(x, solarY + 15).lineTo(x, solarY + 25).stroke({ color: 0x6b9b63, width: 1, alpha: 0.6 })
+  }
+  site.moveTo(solarX - 10, solarY + 25).lineTo(solarX + 42, solarY + 25)
+    .stroke({ color: 0x6b9b63, width: 1, alpha: 0.45 })
+
+  // A small parked service rover and cargo pallet make the scale legible.
+  // They are drawn behind the labels/buildings but in front of the road, like
+  // scene dressing in a miniature working field station.
+  const roverX = padX + padW * 0.72
+  const roverY = padBottom - padH * 0.055
+  site.roundRect(roverX - 13, roverY - 12, 26, 9, 2).fill(0x304a5d).stroke({ color: 0x1c2c44, width: 1 })
+  site.rect(roverX - 8, roverY - 17, 16, 6).fill(0x3c6074).stroke({ color: 0x1c2c44, width: 1 })
+  site.circle(roverX - 9, roverY - 2, 4).fill(0x101b25).stroke({ color: 0x6b9b63, width: 1 })
+  site.circle(roverX + 9, roverY - 2, 4).fill(0x101b25).stroke({ color: 0x6b9b63, width: 1 })
+  site.rect(roverX - 4, roverY - 15, 8, 2).fill({ color: 0x9becff, alpha: 0.8 })
+
+  const palletX = padX + padW * 0.78
+  const palletY = padBottom - padH * 0.055
+  site.rect(palletX, palletY - 12, 16, 9).fill(0x6b4a2c).stroke({ color: 0x241a10, width: 1 })
+  site.rect(palletX + 3, palletY - 16, 10, 4).fill(0x8d693e).stroke({ color: 0x241a10, width: 1 })
+  site.moveTo(palletX + 2, palletY - 3).lineTo(palletX + 14, palletY - 3).stroke({ color: 0xc99852, width: 1, alpha: 0.6 })
+
+  // Foreground geology: a sparse scatter of angular rocks ties the platform
+  // back into the soil strata and avoids the clean “floating diorama” edge.
+  const rocks: [number, number, number][] = [
+    [0.07, 0.87, 10], [0.19, 0.94, 6], [0.31, 0.90, 8],
+    [0.68, 0.94, 7], [0.87, 0.88, 11], [0.95, 0.96, 6],
+  ]
+  for (const [xFraction, yFraction, size] of rocks) {
+    const x = w * xFraction
+    const y = groundY + (h - groundY) * yFraction
+    site.poly([x - size, y, x - size * 0.25, y - size * 0.7, x + size, y - size * 0.25, x + size * 0.6, y + size * 0.35])
+      .fill(0x271a0b)
+      .stroke({ color: 0x5b3d1c, width: 1, alpha: 0.55 })
+  }
+  root.addChild(site)
+
   return root
 }
 
@@ -539,6 +662,10 @@ export function buildHubScene(
   // stretch correctly, so the two visibly disagree on wide screens.
   const scaleX = opts.scaleX ?? 1
   const root = new Container()
+  // Make the intended world layering explicit. This protects the structure
+  // silhouettes from later terrain/prop additions and from Pixi's child-order
+  // changes during rebuilds.
+  root.sortableChildren = true
   app.stage.addChild(root)
 
   // Terrain first so every structure stands in front of the ground it sits on.
@@ -546,6 +673,7 @@ export function buildHubScene(
   // in the fixed HUB_W space and must not be scaled by scaleX.
   const terrain = buildTerrain(app.renderer.width, app.renderer.height, groundY)
   terrain.label = 'terrain'
+  terrain.zIndex = 0
   root.addChild(terrain)
 
   const allAnims: AnimState[] = []
@@ -570,6 +698,7 @@ export function buildHubScene(
 
     const holder = new Container()
     holder.label = 'building'
+    holder.zIndex = 10
     holder.x = def.plotX * scaleX
     holder.y = groundY
     holder.scale.set(scale)

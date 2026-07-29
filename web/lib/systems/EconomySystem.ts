@@ -2,11 +2,11 @@
 // Covers: sell minerals, refinery queue, launchpad upgrade.
 
 import type { GameState } from '@/lib/game-types'
-import type { RefineryRecipe, ShipRoomKind } from '@/lib/data'
-import { MINERAL_META, customizerPartById } from '@/lib/data'
+import type { RefineryRecipe, ShipRoomKind, StructureBlueprint, StarterRocket } from '@/lib/data'
+import { MINERAL_META, CLIENT_SLOTS, LAUNCHPAD_UPGRADE_COST, OPEN_MARKET_SELL_RATE, customizerPartById } from '@/lib/data'
 
-// Sell to open market (raw): ~80% of market price — see [[Economy and Minerals]].
-export const OPEN_MARKET_SELL_RATE = 0.8
+// Sell to open market (raw): ~80% of book value — see [[Economy and Minerals]].
+export { OPEN_MARKET_SELL_RATE } from '@/lib/data'
 // Market price fluctuates based on supply — selling excess repeatedly causes
 // a price dip, capped so a mineral never sells for less than 40% of its
 // (already 80%-discounted) reference price.
@@ -40,17 +40,57 @@ export function openMarketSellPrice(basePrice: number, unitsSold: number): numbe
   return Math.round(basePrice * OPEN_MARKET_SELL_RATE * supplyDipMultiplier(unitsSold))
 }
 
+/** What one unit of a mineral fetches right now, and why — the single source
+ *  of truth for both the Commodity Exchange's quoted price and the francs
+ *  `applySellMinerals` actually credits.
+ *
+ *  The two used to disagree: the screen quoted the client's premium applied to
+ *  the *undiscounted* base price while the sale paid the open-market rate, so
+ *  a player with an active client was shown a price they could never receive.
+ *  The premium is real (it is what the client's contract advertises), so it is
+ *  honoured here rather than dropped from the display. */
+export function sellUnitPrice(
+  mineralId: string,
+  player: Pick<GameState['player'], 'marketSupply' | 'marketSupplyUpdatedAt'>,
+  clientId?: string,
+  now: number = Date.now(),
+): { price: number; base: number; premiumApplied: boolean } {
+  const meta = MINERAL_META[mineralId]
+  if (!meta) return { price: 0, base: 0, premiumApplied: false }
+  const unitsSold = decayedUnitsSold(player.marketSupply?.[mineralId] ?? 0, player.marketSupplyUpdatedAt?.[mineralId], now)
+  const base = openMarketSellPrice(meta.price, unitsSold)
+  const client = clientId ? CLIENT_SLOTS.find(c => c.id === clientId) : undefined
+  const premiumApplied = !!client && client.mineralPreferences.includes(mineralId) && client.payoutPremium > 0
+  return {
+    price: premiumApplied ? Math.round(base * (1 + client!.payoutPremium)) : base,
+    base,
+    premiumApplied,
+  }
+}
+
+/** Total francs a stash (or a subset of it) would fetch at current prices. */
+export function sellQuote(
+  stash: Record<string, number>,
+  player: Pick<GameState['player'], 'marketSupply' | 'marketSupplyUpdatedAt'>,
+  clientId?: string,
+  now: number = Date.now(),
+): number {
+  return Object.entries(stash).reduce(
+    (sum, [id, qty]) => sum + (qty > 0 ? sellUnitPrice(id, player, clientId, now).price * qty : 0),
+    0,
+  )
+}
+
 export function applySellMinerals(s: GameState, mineralId: string, amount: number, now: number = Date.now()): GameState {
   const stash = { ...(s.player.stash ?? {}) }
   const held = stash[mineralId] ?? 0
   const sellAmount = Math.min(amount, held)
   if (sellAmount <= 0) return s
-  const meta = MINERAL_META[mineralId]
-  if (!meta) return s
+  if (!MINERAL_META[mineralId]) return s
   const marketSupply = { ...(s.player.marketSupply ?? {}) }
   const marketSupplyUpdatedAt = { ...(s.player.marketSupplyUpdatedAt ?? {}) }
   const unitsSold = decayedUnitsSold(marketSupply[mineralId] ?? 0, marketSupplyUpdatedAt[mineralId], now)
-  const revenue = openMarketSellPrice(meta.price, unitsSold) * sellAmount
+  const revenue = sellUnitPrice(mineralId, s.player, s.player.lastClient, now).price * sellAmount
   marketSupply[mineralId] = unitsSold + sellAmount
   marketSupplyUpdatedAt[mineralId] = now
   stash[mineralId] = held - sellAmount
@@ -91,9 +131,46 @@ export function applyCollectRefined(s: GameState, recipe: RefineryRecipe): GameS
   }
 }
 
+/** Buy the rocket a mission will fly. Francs used to be deducted inline in
+ *  `useGameLoop`; every purchase in the game now goes through this file. */
+export function applyPurchaseRocket(s: GameState, rocket: StarterRocket): GameState {
+  if (s.player.francs < rocket.costFrancs) return s
+  return {
+    ...s,
+    screen: 'fab',
+    player: { ...s.player, francs: s.player.francs - rocket.costFrancs },
+  }
+}
+
+/** Pay for a structure and record where it was placed. This was previously
+ *  hand-rolled inside `GameScreenRouter`'s JSX — the one place in the app that
+ *  debited francs from a React component rather than a system function. */
+export function applyPlaceStructure(s: GameState, structure: StructureBlueprint | undefined, kind: string, plot: number): GameState {
+  const stash = { ...(s.player.stash ?? {}) }
+  for (const [mineral, amount] of Object.entries(structure?.costMaterials ?? {})) {
+    stash[mineral] = Math.max(0, (stash[mineral] ?? 0) - amount)
+  }
+  return {
+    ...s,
+    player: {
+      ...s.player,
+      francs: s.player.francs - (structure?.cost ?? 0),
+      stash,
+      placed: Array.from(new Set([...s.player.placed, kind])),
+      placementPlots: { ...s.player.placementPlots, [kind]: plot },
+      refineryBuilt: kind === 'refinery' ? true : s.player.refineryBuilt,
+      scannerBuilt: kind === 'scan-station' ? true : s.player.scannerBuilt,
+      satelliteMonitoringBuilt: kind === 'satellite-monitoring-station' ? true : s.player.satelliteMonitoringBuilt,
+      satelliteMonitoringLevel: kind === 'satellite-monitoring-station'
+        ? Math.max(1, s.player.satelliteMonitoringLevel ?? 1)
+        : s.player.satelliteMonitoringLevel,
+    },
+  }
+}
+
 export function applyUpgradeLaunchpad(s: GameState): GameState {
-  if (s.player.launchpadUpgraded || s.player.francs < 1_000_000_000) return s
-  return { ...s, player: { ...s.player, francs: s.player.francs - 1_000_000_000, launchpadUpgraded: true } }
+  if (s.player.launchpadUpgraded || s.player.francs < LAUNCHPAD_UPGRADE_COST) return s
+  return { ...s, player: { ...s.player, francs: s.player.francs - LAUNCHPAD_UPGRADE_COST, launchpadUpgraded: true } }
 }
 
 // Ship customiser: swaps/upgrades individual room parts on the player's owned

@@ -1,4 +1,4 @@
-import { Container, Graphics, Sprite, type Texture } from 'pixi.js'
+import { Container, Graphics, Sprite, Text, type Texture } from 'pixi.js'
 import { ScriptBehaviour } from '../components/ScriptBehaviour'
 import { ShapeRenderer } from '../components/ShapeRenderer'
 import type { ShapeKind } from '../components/ShapeRenderer'
@@ -18,6 +18,12 @@ const HIT_TOLERANCE = 48
 const LASER_SIZE = { width: 4, height: 16 }
 const LASER_COLOR = '#9becff'
 const ORE_STROKE = '#0a0a12'
+// Ore sym label — the only disambiguation signal that reaches all 16 minerals:
+// half of them render as PNG textures and never touch mineralShapes, and the
+// pale platinum-group colors are near-identical. White-on-dark-halo so it stays
+// legible over both the pale and the dark ore fills.
+const ORE_LABEL_FILL = 0xffffff
+const ORE_LABEL_HALO = 0x0a0a12
 const MAX_ORES = 60
 const FLASH_DURATION = 0.14
 // Laser stops this far below the surface — deep enough to reach all ore tiers (max depth 96) + buffer
@@ -54,6 +60,9 @@ export interface MiningControllerOptions {
   /** Overrides SHIP_Y when the world is sized dynamically from the viewport. */
   shipY?: number
   minerals: string[]
+  /** Required order minerals are seeded at the front of the run so the
+   * objective is always discoverable before the normal deposit rotation. */
+  requiredMinerals?: string[]
   mineralColors: Record<string, string>
   /** laserAccess tier per mineral (1=common, 2=uncommon, 3=exotic). Drives size/depth/hp. */
   mineralLaserAccess?: Record<string, number>
@@ -62,6 +71,9 @@ export interface MiningControllerOptions {
   /** Shape per mineral key — defaults to 'circle' if not provided. */
   mineralShapes?: Record<string, ShapeKind>
   mineralTextures?: Record<string, Texture>
+  /** Element-symbol per mineral key (e.g. `Pt`, `H2O`). Rendered as a label on
+   * every ore node — omit to leave ore unlabelled. */
+  mineralSyms?: Record<string, string>
   onCollect: (mineral: string) => void
   /** Called when a laser exits the world without hitting any ore (miss). */
   onMiss?: () => void
@@ -82,6 +94,7 @@ interface OreEntity {
   go: GameObject
   renderer: ShapeRenderer | null
   sprite: Sprite | null
+  label: Text | null
   mineral: string
   hp: number
   maxHp: number
@@ -114,6 +127,7 @@ export class MiningController extends ScriptBehaviour {
   private lasers: LaserEntity[] = []
   private particles: Particle[] = []
   private oreCounter = 0
+  private requiredMineralQueue: string[] = []
   private laserCounter = 0
   private totalScrollX = 0
   private scrollSpeed = SCROLL_SPEED
@@ -130,6 +144,7 @@ export class MiningController extends ScriptBehaviour {
   }
 
   start(): void {
+    this.requiredMineralQueue = [...(this.opts.requiredMinerals ?? [])]
     let x = 160
     let count = 0
     while (count < 20) {
@@ -158,6 +173,7 @@ export class MiningController extends ScriptBehaviour {
     for (const ore of this.ores) {
       ore.go.transform.position.x -= dx
       if (ore.sprite) ore.sprite.x = ore.go.transform.position.x
+      if (ore.label) ore.label.x = ore.go.transform.position.x
 
       if (ore.flashTimer > 0) {
         ore.flashTimer = Math.max(0, ore.flashTimer - dt)
@@ -215,7 +231,9 @@ export class MiningController extends ScriptBehaviour {
   }
 
   private spawnOre(x: number): void {
-    const mineral = this.opts.minerals[this.oreCounter % this.opts.minerals.length]
+    const mineral = this.requiredMineralQueue.length > 0
+      ? this.requiredMineralQueue.shift()!
+      : this.opts.minerals[this.oreCounter % this.opts.minerals.length]
     const tier = this.opts.mineralLaserAccess?.[mineral] ?? 1
     const cfg = ORE_TIER[tier] ?? ORE_TIER[1]
     const radius = cfg.radius
@@ -259,8 +277,33 @@ export class MiningController extends ScriptBehaviour {
       renderer.setTint(mineralColor)
     }
 
+    const label = this.createLabel(mineral, x, y, radius)
+
     this.gameObject.addChild(go)
-    this.ores.push({ go, renderer, sprite, mineral, hp: maxHp, maxHp, radius, flashTimer: 0, mineralColor })
+    this.ores.push({ go, renderer, sprite, label, mineral, hp: maxHp, maxHp, radius, flashTimer: 0, mineralColor })
+  }
+
+  /** Ore sym label, sized to fit inside the node — longer syms (`H2O`) shrink. */
+  private createLabel(mineral: string, x: number, y: number, radius: number): Text | null {
+    const sym = this.opts.mineralSyms?.[mineral]
+    if (!sym) return null
+
+    const fontSize = Math.max(7, Math.round(radius * (sym.length >= 3 ? 0.66 : 0.95)))
+    const label = new Text({
+      text: sym,
+      style: {
+        fontFamily: 'monospace',
+        fontSize,
+        fontWeight: 'bold',
+        fill: ORE_LABEL_FILL,
+        stroke: { color: ORE_LABEL_HALO, width: 2, join: 'round' },
+      },
+    })
+    label.anchor.set(0.5)
+    label.x = x
+    label.y = y
+    this.opts.container.addChild(label)
+    return label
   }
 
   private resolveCollisions(): void {
@@ -284,6 +327,7 @@ export class MiningController extends ScriptBehaviour {
         if (ore.hp <= 0) {
           ore.go.active = false
           if (ore.sprite) ore.sprite.visible = false
+          if (ore.label) ore.label.visible = false
           this.spawnParticleBurst(ore.go.transform.position.x, ore.go.transform.position.y, ore.mineralColor, ore.radius)
           this.opts.onCollect(ore.mineral)
         } else {
@@ -311,6 +355,10 @@ export class MiningController extends ScriptBehaviour {
       if (ore.sprite) {
         this.opts.container.removeChild(ore.sprite)
         ore.sprite.destroy()
+      }
+      if (ore.label) {
+        this.opts.container.removeChild(ore.label)
+        ore.label.destroy()
       }
       return false
     })

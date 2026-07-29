@@ -110,20 +110,7 @@ export function ScreenContent({
           }}
           onPlaced={(kind, plot) => {
             const structure = game.catalog.structures.find(s => s.id === kind)
-            game.setPlayer(player => ({
-              ...player,
-              francs: player.francs - (structure?.cost ?? 0),
-              stash: Object.entries(structure?.costMaterials ?? {}).reduce((stash, [mineral, amount]) => ({
-                ...stash,
-                [mineral]: Math.max(0, (stash[mineral] ?? 0) - amount),
-              }), { ...(player.stash ?? {}) }),
-              placed: Array.from(new Set([...player.placed, kind])),
-              placementPlots: { ...player.placementPlots, [kind]: plot },
-              refineryBuilt: kind === 'refinery' ? true : player.refineryBuilt,
-              scannerBuilt: kind === 'scan-station' ? true : player.scannerBuilt,
-              satelliteMonitoringBuilt: kind === 'satellite-monitoring-station' ? true : player.satelliteMonitoringBuilt,
-              satelliteMonitoringLevel: kind === 'satellite-monitoring-station' ? Math.max(1, player.satelliteMonitoringLevel ?? 1) : player.satelliteMonitoringLevel,
-            }))
+            game.placeStructure(structure, kind, plot)
             game.completeStep(0)
             enqueueSurvey('lnm_base_building', 1200)
             game.go('hub')

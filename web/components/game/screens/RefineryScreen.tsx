@@ -8,7 +8,7 @@ import { PrimaryBtn, GhostBtn } from '@/components/ui/Button'
 import MineralChip from '@/components/game/MineralChip'
 import { type RefineryRecipe, REFINERY_RECIPES } from '@/lib/data'
 import { UI_ZONES } from '@/lib/ui-zones'
-import { formatFrancs } from '@/lib/format'
+import { formatCurrency } from '@/lib/format'
 
 interface RefineryScreenProps {
   player: { francs: number; stash?: Record<string, number>; refineryQueue: { recipeId: string; startedAt: number }[]; refinedGoods: Record<string, number> }
@@ -74,7 +74,7 @@ export default function RefineryScreen({ player, onBack, onStartRefine, onCollec
               return (
                 <div className="order-row" key={id}>
                   <span><span style={{ color: recipe.output.color }}>■</span> {recipe.output.name} ×{amount}</span>
-                  <strong>▲ {formatFrancs(recipe.output.price * amount)}</strong>
+                  <strong>{formatCurrency(recipe.output.price * amount)}</strong>
                 </div>
               )
             })}
@@ -105,7 +105,7 @@ export default function RefineryScreen({ player, onBack, onStartRefine, onCollec
                     </div>
                   </div>
                   <div style={{ marginTop: 8, display: 'flex', gap: 6 }}>
-                    <StatusPill kind="info" dim>₣ {formatFrancs(recipe.cost)}</StatusPill>
+                    <StatusPill kind="info" dim>{formatCurrency(recipe.cost)}</StatusPill>
                     <StatusPill kind="amber" dim>{recipe.time}s</StatusPill>
                     <span style={{ flex: 1 }} />
                     <StatusPill kind={hasInput ? 'ok' : 'crit'} dim>{hasInput ? `✓` : 'Missing Input'}</StatusPill>

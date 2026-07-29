@@ -2,6 +2,7 @@
 
 import React from 'react'
 import type { Mission, Client, MineralMeta } from '@/lib/data'
+import { isOwnProgramMission, missionDifficultyLabel, missionPayoutTier } from '@/lib/data'
 import MineralChip from '@/components/game/MineralChip'
 import { missionCardTags } from '@/components/game/MissionCard'
 import styles from '@/components/game/screens/MissionBoard.module.css'
@@ -26,7 +27,7 @@ interface MissionDetailPanelProps {
 
 export default function MissionDetailPanel({
   mission,
-  client,
+  client: clientProp,
   mineralMeta,
   targetCount,
   displayPayout,
@@ -53,8 +54,13 @@ export default function MissionDetailPanel({
     )
   }
 
+  // Own-program runs (your telescope/satellite launches, your own
+  // infrastructure, self-directed mining) never carry client chrome — no
+  // client name, no pay premium, no affinity, no payout disclaimer.
+  const ownOperation = isOwnProgramMission(mission)
+  const client = ownOperation ? null : clientProp
   const accent = client?.color ?? '#6cd4ff'
-  const cargoUnits = Object.values(mission.requires.minerals).reduce((sum, n) => sum + n, 0)
+  const cargoUnits =Object.values(mission.requires.minerals).reduce((sum, n) => sum + n, 0)
   const tags = missionCardTags({ mission, client, isStoryMission, cardState, lockedDetail, cooldownLabel, routeLabel })
   const isAvailable = cardState === 'available'
   const ctaLabel = cardState === 'cooldown' ? (cooldownLabel ? `Cooldown · ${cooldownLabel}` : 'On cooldown')
@@ -70,12 +76,14 @@ export default function MissionDetailPanel({
         </div>
         <div style={{ minWidth: 0 }}>
           <div className={styles.detailHeading}>{mission.title}</div>
-          <div className={styles.detailClient}>{client?.name ?? 'Free Ops'}</div>
+          <div className={styles.detailClient}>{client?.name ?? (ownOperation ? 'Your program' : 'Free Ops')}</div>
         </div>
       </div>
 
       <div className={styles.detailWants}>
-        {isStoryMission
+        {ownOperation
+          ? 'Your own operation · no client, no order to fill'
+          : isStoryMission
           ? 'Story mission · not a client request'
           : client
             ? <>Wants <b>{client.mineralPreferences.map(id => mineralMeta[id]?.name ?? id).join(' / ')}</b> · +{Math.round(client.payoutPremium * 100)}% pay</>
@@ -86,6 +94,15 @@ export default function MissionDetailPanel({
 
       <div className={styles.detailRow}>
         <span className={styles.detailChip}><b>{cargoUnits}U</b>&nbsp;Cargo</span>
+        {/* Difficulty grade + qualitative payout tier (STS-543) — the two reads
+            the board previously kept internal, so the progression curve was
+            invisible to the player. */}
+        <span className={styles.detailChip} data-testid={`mission-detail-difficulty-${mission.id}`}>
+          <b>{mission.difficulty}</b>&nbsp;{missionDifficultyLabel(mission.difficulty)}
+        </span>
+        <span className={styles.detailChip} data-testid={`mission-detail-payout-tier-${mission.id}`}>
+          {missionPayoutTier(mission)}&nbsp;payout
+        </span>
         {client && <span className={`${styles.detailChip} ${styles.detailChipPay}`}><b>+{Math.round(client.payoutPremium * 100)}%</b>&nbsp;Pay bonus</span>}
         {!isStoryMission && client && <span className={`${styles.detailChip} ${styles.detailChipAff}`}><b>+{affinityReward}</b>&nbsp;Affinity</span>}
       </div>

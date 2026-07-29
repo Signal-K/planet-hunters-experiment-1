@@ -1,3 +1,4 @@
+import { ROCKET_PRICES, STARTING_FRANCS } from '@/lib/data/economy'
 import type { GameState, Player } from '@/game-context'
 import { MISSIONS } from '@/lib/data'
 
@@ -11,7 +12,7 @@ const THIRD_MISSION = MISSIONS.find(m => m.id === 'lnm_m3_relay_bennu_vesta') ??
 const ROVER_MISSION = MISSIONS.find(m => m.survey?.onWorldVehicle === 'starter-rover') ?? THIRD_MISSION
 
 const BASE_PLAYER: Player = {
-  francs: 15_000_000_000,
+  francs: 150_000_000,
   activeMission: null,
   missionCount: 1,
   pendingLaunch: false,
@@ -140,7 +141,7 @@ export function resolvePreset(name: string): Partial<GameState> | null {
     case 'm1-intro':
       return {
         screen: 'intro',
-        player: { ...BASE_PLAYER, placed: [], placementPlots: {}, francs: 10_000_000_000 },
+        player: { ...BASE_PLAYER, placed: [], placementPlots: {}, francs: STARTING_FRANCS },
         tutorial: true, doneSteps: {},
         missionId: null, targetId: null,
         rocket: { chassis: 'hull-mk1', propulsion: 'ion-a1', drill: 'hand-drill' },
@@ -211,7 +212,7 @@ export function resolvePreset(name: string): Partial<GameState> | null {
     case 'm2-fab':
       return {
         screen: 'fab',
-        player: { ...BASE_PLAYER, missionsDone: 1, francs: BASE_PLAYER.francs - 1_300_000_000 },
+        player: { ...BASE_PLAYER, missionsDone: 1, francs: BASE_PLAYER.francs - ROCKET_PRICES.sr2 },
         tutorial: true, doneSteps: { ...M1_DONE, 20: true, 21: true },
         missionId: SECOND_MISSION.id, targetId: 'eros',
         rocket: { chassis: 'hull-mk2', propulsion: 'fusion-b2', drill: 'laser-t2' },
@@ -252,7 +253,7 @@ export function resolvePreset(name: string): Partial<GameState> | null {
     case 'm3-fab':
       return {
         screen: 'fab',
-        player: { ...BASE_PLAYER, missionsDone: 2, francs: BASE_PLAYER.francs - 1_300_000_000 },
+        player: { ...BASE_PLAYER, missionsDone: 2, francs: BASE_PLAYER.francs - ROCKET_PRICES.sr2 },
         tutorial: true, doneSteps: { ...M1_AND_M2_DONE, 30: true, 31: true },
         missionId: THIRD_MISSION.id, targetId: THIRD_MISSION.targetId ?? 'bennu', deliveryTargetId: THIRD_MISSION.deliveryTargetId ?? 'vesta',
         rocket: { chassis: 'hull-mk2', propulsion: 'fusion-b2', drill: 'laser-t2' },

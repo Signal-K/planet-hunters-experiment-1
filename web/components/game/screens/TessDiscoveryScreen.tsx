@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState, type ReactNode } from 'react'
 import { Radio, Satellite } from 'lucide-react'
 import TopBar from '@/components/ui/TopBar'
+import StatCard from '@/components/ui/StatCard'
 import Panel from '@/components/ui/Panel'
 import StatusPill from '@/components/ui/StatusPill'
 import { GhostBtn, PrimaryBtn } from '@/components/ui/Button'
@@ -444,12 +445,7 @@ export default function TessDiscoveryScreen({ player, onBack, onBuildStation, on
 }
 
 function PayoffStat({ label, value }: { label: string; value: string }) {
-  return (
-    <div style={{ minWidth: 0, padding: '7px 6px', borderRadius: 7, background: 'rgba(8,16,28,0.72)', border: '1px solid rgba(57,211,106,0.22)' }}>
-      <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 8, fontWeight: 800, letterSpacing: '0.12em', color: 'var(--ln-text-muted)', textTransform: 'uppercase' }}>{label}</div>
-      <div style={{ fontFamily: 'var(--ln-font-mono)', fontSize: 10, fontWeight: 800, color: '#e8f0fe', marginTop: 2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', textTransform: 'uppercase' }}>{value}</div>
-    </div>
-  )
+  return <StatCard variant="readout" tone="ok" label={label} value={value} />
 }
 
 // Standard gate/status screen — Panel-wrapped icon + text, same shape as

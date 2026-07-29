@@ -70,6 +70,7 @@ Design rules (never violate):
 - No fictional wrapper on mainline citizen-science content: a player should never need lore or backstory to understand a mission — just "here's a project, here's a dataset." Real science, real terminology.
 - Slight fictional framing (e.g. "potentially alien artifacts," mirroring real SETI false-positive workflows) is permitted only in the most speculative, latest-unlocked tier of content — never in early/mid-game missions.
 - Decided 2026-07-08; see [[decide-scifi-narrative-vs-citizen-science-boundary]] in workspace for full context.
+- **Crew have no citizen-science role — revisit only when user-supplied-data citizen science exists.** Standing reminder for every agent (Claude, Codex, OpenCode), decided 2026-07-28: astronauts and other crew must not be wired into classification, discovery, or any other citizen-science yield. Reopen the question only once citizen-science mechanics where *the player supplies their own data* are real. Crew visiting a target that was discovered through a citizen-science mission is ordinary mission work and is explicitly NOT an exception to this. See ZenNotes `projects/landnam/decisions/Astronaut academy — crew model.md`.
 
 ## Standing product rules
 

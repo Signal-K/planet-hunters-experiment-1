@@ -1,18 +1,24 @@
 import type { ReactNode } from 'react'
 import SegmentedBar from '@/components/ui/SegmentedBar'
 
-interface RocketStatBaseProps {
+interface StatCardBaseProps {
   label: string
   value: string
 }
 
-interface RocketStatMeter {
+interface StatCardMeter {
   segments: number
   filled: number
   tone?: 'cyan' | 'amber' | 'ok' | 'crit'
 }
 
-type RocketStatCardProps = RocketStatBaseProps & (
+/**
+ * Shared instrument readout (STS-516). Started life as RocketStatCard for the
+ * preflight screens; the same icon + uppercase label + mono value block was
+ * hand-rolled on the Hangar, Rocket Purchase, Assembly and TESS screens, so it
+ * lives in ui/ now and carries the variants those call sites need.
+ */
+type StatCardProps = StatCardBaseProps & (
   | {
       variant: 'compact'
       icon: ReactNode
@@ -21,7 +27,7 @@ type RocketStatCardProps = RocketStatBaseProps & (
        * clicked ship compartment) elsewhere on screen. Purely visual. */
       active?: boolean
       /** Optional real-data segmented meter rendered under the value. */
-      meter?: RocketStatMeter
+      meter?: StatCardMeter
       onClick?: () => void
     }
   | {
@@ -31,10 +37,34 @@ type RocketStatCardProps = RocketStatBaseProps & (
       active?: never
       meter?: never
       onClick?: never
+      tone?: never
+    }
+  | {
+      /** Bare label + mono value, no icon and no detail line — the compact
+       *  payoff/summary readout (TessDiscoveryScreen's discovery stats). */
+      variant: 'readout'
+      tone?: 'cyan' | 'ok'
+      detail?: never
+      icon?: never
+      active?: never
+      meter?: never
+      onClick?: never
     }
 )
 
-export default function RocketStatCard(props: RocketStatCardProps) {
+export default function StatCard(props: StatCardProps) {
+  if (props.variant === 'readout') {
+    const border = props.tone === 'ok' ? 'rgba(57,211,106,0.22)' : 'rgba(126,200,255,0.18)'
+    return (
+      <div style={{ minWidth: 0, padding: '7px 6px', borderRadius: 7, background: 'rgba(8,16,28,0.72)', border: `1px solid ${border}` }}>
+        <StatLabel>{props.label}</StatLabel>
+        <div style={{ fontFamily: 'var(--ln-font-mono)', fontSize: 10, fontWeight: 800, color: '#e8f0fe', marginTop: 2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', textTransform: 'uppercase' }}>
+          {props.value}
+        </div>
+      </div>
+    )
+  }
+
   if (props.variant === 'compact') {
     const active = props.active ?? false
     const Wrapper = props.onClick ? 'button' : 'div'

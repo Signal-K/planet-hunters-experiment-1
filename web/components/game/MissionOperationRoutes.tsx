@@ -46,6 +46,8 @@ export default function MissionOperationRoutes({
           isDelivery={!!game.player.headingToDelivery}
           cargo={game.lastCargo}
           minerals={game.catalog.minerals}
+          mission={game.mission}
+          client={game.mission?.client ? game.catalog.clients[game.mission.client] ?? null : null}
           onBack={() => game.go('hub')}
           onArrive={() => {
             if (game.player.returningToEarth) {
@@ -148,6 +150,7 @@ export default function MissionOperationRoutes({
           shipDestroyed={!!game.player.shipDestroyed}
           rocket={game.rocket}
           deliveryTargetName={deliveryTargetName}
+          loanDebt={game.player.loanDebt}
         />
       )
   }

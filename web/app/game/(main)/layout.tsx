@@ -114,7 +114,7 @@ function GameChrome({ children }: { children: ReactNode }) {
     && !game.authGateOpen
 
   function goFromNav(id: string) {
-    if (id === 'missions') { game.completeStep(1); game.go('missions'); return }
+    if (id === 'missions') { game.goToMissions(); return }
     if (id === 'fab') { game.go(game.mission && game.target ? 'fab' : 'missions'); return }
     if (id === 'market') { game.go('market'); return }
     if (id === 'skills') { game.go('skills'); return }

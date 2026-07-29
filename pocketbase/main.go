@@ -2,6 +2,7 @@ package main
 
 import (
 	"log"
+	"math"
 	"os"
 	"strings"
 
@@ -109,9 +110,9 @@ func ensureCollections(app core.App) {
 		}
 	}
 
-	// contractors
-	if _, err := app.FindCollectionByNameOrId("contractors"); err != nil {
-		col := core.NewBaseCollection("contractors")
+	// clients
+	if _, err := app.FindCollectionByNameOrId("clients"); err != nil {
+		col := core.NewBaseCollection("clients")
 		col.ListRule = emptyStr
 		col.ViewRule = emptyStr
 		col.Fields.Add(&core.TextField{Name: "slug", Required: true, Max: 40})
@@ -124,9 +125,9 @@ func ensureCollections(app core.App) {
 		col.Fields.Add(&core.TextField{Name: "payout_notes", Max: 200})
 		col.Fields.Add(&core.TextField{Name: "affinity_notes", Max: 200})
 		col.Fields.Add(&core.TextField{Name: "ui_role", Max: 40})
-		col.Indexes = []string{"CREATE UNIQUE INDEX idx_contractors_slug ON contractors (slug)"}
+		col.Indexes = []string{"CREATE UNIQUE INDEX idx_clients_slug ON clients (slug)"}
 		if err := app.Save(col); err != nil {
-			log.Printf("failed to save contractors: %v", err)
+			log.Printf("failed to save clients: %v", err)
 		}
 	}
 
@@ -185,7 +186,7 @@ func ensureCollections(app core.App) {
 		col.Fields.Add(&core.TextField{Name: "slug", Required: true, Max: 40})
 		col.Fields.Add(&core.TextField{Name: "title", Required: true, Max: 200})
 		col.Fields.Add(&core.TextField{Name: "brief", Max: 500})
-		col.Fields.Add(&core.TextField{Name: "contractor_slug", Required: true, Max: 40})
+		col.Fields.Add(&core.TextField{Name: "client_slug", Required: true, Max: 40})
 		col.Fields.Add(&core.TextField{Name: "tag", Max: 40})
 		col.Fields.Add(&core.TextField{Name: "difficulty", Max: 10})
 		col.Fields.Add(&core.BoolField{Name: "locked"})
@@ -229,7 +230,7 @@ func ensureCollections(app core.App) {
 		col.Fields.Add(&core.NumberField{Name: "drill_tier_min"})
 		col.Fields.Add(&core.NumberField{Name: "orbit_max"})
 		col.Fields.Add(&core.NumberField{Name: "payout_multiplier"})
-		col.Fields.Add(&core.TextField{Name: "contractor_role", Max: 40})
+		col.Fields.Add(&core.TextField{Name: "client_role", Max: 40})
 		col.Fields.Add(&core.TextField{Name: "payout_formula", Max: 300})
 		col.Fields.Add(&core.BoolField{Name: "scan_required"})
 		col.Fields.Add(&core.NumberField{Name: "scan_count"})
@@ -279,7 +280,7 @@ func ensureCollections(app core.App) {
 		col.Fields.Add(&core.JSONField{Name: "cost_materials", MaxSize: 1000})
 		col.Fields.Add(&core.SelectField{
 			Name: "unlock_trigger_type", MaxSelect: 1,
-			Values: []string{"always", "contractor-mission-trigger", "manual"},
+			Values: []string{"always", "client-mission-trigger", "manual"},
 		})
 		col.Fields.Add(&core.TextField{Name: "unlocks_at", Max: 200})
 		col.Fields.Add(&core.TextField{Name: "description", Max: 400})
@@ -358,6 +359,34 @@ func ensureCollections(app core.App) {
 		}
 	} else {
 		migrateMissionLog(app)
+	}
+
+	// mission_runs — mutable lifecycle record for the current mission. The
+	// completed mission_log remains the append-only analytics/history stream;
+	// this record is what lets the client resume an in-flight run after a
+	// refresh or return to Earth Base.
+	if _, err := app.FindCollectionByNameOrId("mission_runs"); err != nil {
+		runs := core.NewBaseCollection("mission_runs")
+		runs.ListRule = types.Pointer("user = @request.auth.id")
+		runs.ViewRule = types.Pointer("user = @request.auth.id")
+		runs.CreateRule = types.Pointer("@request.auth.id != \"\" && user = @request.auth.id")
+		runs.UpdateRule = types.Pointer("user = @request.auth.id")
+		runs.DeleteRule = types.Pointer("user = @request.auth.id")
+		runs.Fields.Add(&core.TextField{Name: "user", Required: true, Max: 64})
+		runs.Fields.Add(&core.TextField{Name: "mission_id", Required: true, Max: 100})
+		runs.Fields.Add(&core.TextField{Name: "target_id", Required: true, Max: 100})
+		runs.Fields.Add(&core.TextField{Name: "status", Required: true, Max: 30})
+		runs.Fields.Add(&core.TextField{Name: "phase", Required: true, Max: 30})
+		runs.Fields.Add(&core.JSONField{Name: "cargo", MaxSize: 4096})
+		runs.Fields.Add(&core.NumberField{Name: "payout_francs"})
+		runs.Fields.Add(&core.DateField{Name: "launched_at"})
+		runs.Fields.Add(&core.DateField{Name: "completed_at"})
+		runs.Fields.Add(&core.AutodateField{Name: "created", OnCreate: true})
+		runs.Fields.Add(&core.AutodateField{Name: "updated", OnCreate: true, OnUpdate: true})
+		runs.Indexes = []string{"CREATE INDEX idx_mission_runs_user_status ON mission_runs (user, status)"}
+		if err := app.Save(runs); err != nil {
+			log.Printf("failed to save mission_runs: %v", err)
+		}
 	}
 
 	// voxel_worlds — one row per (user, target): the bulk takeon MissionState
@@ -640,15 +669,15 @@ func ensureCatalogFields(app core.App) {
 		}
 	}
 
-	contractors, err := app.FindCollectionByNameOrId("contractors")
+	clients, err := app.FindCollectionByNameOrId("clients")
 	if err == nil {
-		addTextIfMissing(contractors, "project_type", false)
-		addJSONIfMissing(contractors, "mineral_preferences", false)
-		addTextIfMissing(contractors, "payout_notes", false)
-		addTextIfMissing(contractors, "affinity_notes", false)
-		addTextIfMissing(contractors, "ui_role", false)
-		if err := app.Save(contractors); err != nil {
-			log.Printf("failed to update contractors schema: %v", err)
+		addTextIfMissing(clients, "project_type", false)
+		addJSONIfMissing(clients, "mineral_preferences", false)
+		addTextIfMissing(clients, "payout_notes", false)
+		addTextIfMissing(clients, "affinity_notes", false)
+		addTextIfMissing(clients, "ui_role", false)
+		if err := app.Save(clients); err != nil {
+			log.Printf("failed to update clients schema: %v", err)
 		}
 	}
 
@@ -729,6 +758,36 @@ func seedRecord(app core.App, collection string, slug string, fields map[string]
 	}
 }
 
+// Landnam economy scale. These MUST stay in step with web/lib/data/economy.ts —
+// seedRecord upserts on every start, so whatever is here overwrites the catalog
+// the game reads. See that file's header for why the scale is what it is.
+const (
+	mineralValueCommon   = 250_000
+	mineralValueUncommon = 420_000
+	mineralValueRare     = 700_000
+	mineralValueExotic   = 1_100_000
+
+	structurePriceRefinery = 8_000_000
+
+	cargoBonusRate = 0.4
+	cargoBonusCap  = 0.18
+)
+
+// contractFee is the base service fee for a mission at the given sequence,
+// mirroring CONTRACT_FEES / missionPayoutFloor in economy.ts + payouts.ts.
+func contractFee(sequence float64) float64 {
+	switch {
+	case sequence <= 1:
+		return 15_000_000
+	case sequence == 2:
+		return 18_000_000
+	case sequence == 3:
+		return 22_000_000
+	default:
+		return 24_000_000 + (sequence-4)*2_500_000
+	}
+}
+
 func seedCatalog(app core.App) {
 	// Minerals
 	type mineral struct {
@@ -739,18 +798,27 @@ func seedCatalog(app core.App) {
 		slug string
 		mineral
 	}{
-		{"iron", mineral{"Iron", "Fe", "#d97150", "common", "starter bulk", "Structural frames, smelting feedstock", 120, 1}},
-		{"silicon", mineral{"Silicon", "Si", "#b9d8ff", "common", "electronics bulk", "Electronics, solar panels", 180, 1}},
-		{"carbon", mineral{"Carbon", "C", "#6a7280", "common", "construction blend", "Composites, fuel", 60, 1}},
-		{"ice", mineral{"Ice", "H2O", "#9becff", "uncommon", "volatile supply", "Propellant, life support", 90, 1}},
-		{"nickel", mineral{"Nickel", "Ni", "#b0b8c4", "uncommon", "alloy demand", "Alloys, battery production", 150, 1}},
-		{"cobalt", mineral{"Cobalt", "Co", "#4f9cf7", "uncommon", "battery demand", "Battery cathodes, superalloys", 450, 2}},
-		{"copper", mineral{"Copper", "Cu", "#c9824b", "common", "conductive supply", "Conductors, heat exchangers, wiring", 260, 1}},
-		{"aluminium", mineral{"Aluminium", "Al", "#c7d0dc", "common", "light structural supply", "Lightweight frames, tanks, trusses", 210, 1}},
-		{"hydrogen", mineral{"Hydrogen", "H", "#9becff", "uncommon", "propellant logistics", "Propellant, reactor feedstock", 140, 1}},
-		{"uranium", mineral{"Uranium", "U", "#8fd16a", "rare", "compact power supply", "Compact power systems, shielding", 1200, 2}},
-		{"gold", mineral{"Gold", "Au", "#ffd166", "rare", "premium assay", "Circuitry, radiation shielding", 800, 2}},
-		{"rare", mineral{"Xenon", "Xe", "#c084ff", "exotic", "advanced propellant", "Quantum sensors, ion propellant", 2000, 3}},
+		{"iron", mineral{"Iron", "Fe", "#d97150", "common", "starter bulk", "Structural frames, smelting feedstock", mineralValueCommon, 1}},
+		{"silicon", mineral{"Silicon", "Si", "#b9d8ff", "common", "electronics bulk", "Electronics, solar panels", mineralValueCommon, 1}},
+		{"carbon", mineral{"Carbon", "C", "#6a7280", "common", "construction blend", "Composites, fuel", mineralValueCommon, 1}},
+		{"ice", mineral{"Ice", "H2O", "#9becff", "uncommon", "volatile supply", "Propellant, life support", mineralValueUncommon, 1}},
+		{"nickel", mineral{"Nickel", "Ni", "#b0b8c4", "uncommon", "alloy demand", "Alloys, battery production", mineralValueUncommon, 1}},
+		{"cobalt", mineral{"Cobalt", "Co", "#4f9cf7", "uncommon", "battery demand", "Battery cathodes, superalloys", mineralValueUncommon, 2}},
+		{"copper", mineral{"Copper", "Cu", "#c9824b", "common", "conductive supply", "Conductors, heat exchangers, wiring", mineralValueCommon, 1}},
+		{"aluminium", mineral{"Aluminium", "Al", "#c7d0dc", "common", "light structural supply", "Lightweight frames, tanks, trusses", mineralValueCommon, 1}},
+		{"hydrogen", mineral{"Hydrogen", "H", "#9becff", "uncommon", "propellant logistics", "Propellant, reactor feedstock", mineralValueUncommon, 1}},
+		{"uranium", mineral{"Uranium", "U", "#8fd16a", "rare", "compact power supply", "Compact power systems, shielding", mineralValueRare, 2}},
+		{"gold", mineral{"Gold", "Au", "#ffd166", "rare", "premium assay", "Circuitry, radiation shielding", mineralValueRare, 2}},
+		{"rare", mineral{"Xenon", "Xe", "#c084ff", "exotic", "advanced propellant", "Quantum sensors, ion propellant", mineralValueExotic, 3}},
+		// Platinum-group ores. The early-game mission templates in
+		// web/lib/data/mission-generator.ts have referenced these by key since
+		// the M1-M3 rework, but they were never added here — so a catalog
+		// served from PocketBase dropped them and those contracts had no ore
+		// to price against.
+		{"platinum", mineral{"Platinum", "Pt", "#e8e4d8", "rare", "catalytic supply", "Catalytic nozzle coatings, fuel cells", mineralValueRare, 1}},
+		{"palladium", mineral{"Palladium", "Pd", "#d4cce8", "rare", "fuel cell demand", "Hydrogen fuel cells, electronics", mineralValueRare, 1}},
+		{"iridium", mineral{"Iridium", "Ir", "#b8b4cc", "rare", "high-temp alloy demand", "High-temp alloys, ignition components", mineralValueRare, 2}},
+		{"rhodium", mineral{"Rhodium", "Rh", "#f0e8d4", "exotic", "thruster lining supply", "Thruster lining, radiation-hard optics", mineralValueExotic, 2}},
 	}
 	for _, m := range minerals {
 		seedRecord(app, "minerals", m.slug, map[string]any{
@@ -760,29 +828,29 @@ func seedCatalog(app core.App) {
 		})
 	}
 
-	// Contractors
-	type contractor struct {
+	// Clients
+	type client struct {
 		name, color, initial, projectType, payoutNotes, affinityNotes, uiRole string
 		tier                                                                  float64
 		preferences                                                           []string
 	}
-	contractors := []struct {
+	clients := []struct {
 		slug string
-		contractor
+		client
 	}{
-		{"helios-propulsion-depot", contractor{"Helios Propulsion Depot", "#f5a623", "HP", "fuel logistics and orbital propellant reserves", "20% premium on hydrogen and propellant runs", "+2.5% payout per completed Helios job", "starter", 1, []string{"hydrogen"}}},
-		{"arcturus-battery-systems", contractor{"Arcturus Battery Systems", "#4f9cf7", "AB", "energy storage manufacturing and cathode supply", "22% premium on cobalt and copper battery inputs", "+2.5% payout per completed Arcturus job", "prospect", 1, []string{"cobalt", "copper"}}},
-		{"ferrum-orbital-construction", contractor{"Ferrum Orbital Construction", "#c7d0dc", "FO", "in-space manufacturing and structural assembly", "18% premium on aluminium and copper construction cargo", "+2% payout per completed Ferrum job", "bulk", 1, []string{"aluminium", "copper"}}},
-		{"contractor-04b", contractor{"Contractor Slot 04B", "#a8d8ea", "4B", "construction aggregates", "Low rate, large orders", "+6 per delivery", "bulk", 4, []string{"iron", "carbon"}}},
-		{"contractor-06a", contractor{"Contractor Slot 06A", "#70e070", "6A", "deep-core sampling", "Mixed-bag premium", "+12 per delivery", "prospect", 6, []string{"nickel", "cobalt"}}},
-		{"contractor-06b", contractor{"Contractor Slot 06B", "#c084ff", "6B", "rare-gas refining", "High tier, small batches", "+20 per delivery", "command", 6, []string{"rare", "gold"}}},
-		{"contractor-08a", contractor{"Contractor Slot 08A", "#ff8c42", "8A", "solar-grade silicon", "Premium purity contracts", "+10 per delivery", "command", 8, []string{"silicon", "ice"}}},
-		{"contractor-08b", contractor{"Contractor Slot 08B", "#5fcde6", "8B", "outer-belt volatiles", "Medium rate, special cargo", "+8 per delivery", "bulk", 8, []string{"ice", "carbon"}}},
-		{"contractor-10a", contractor{"Contractor Slot 10A", "#f5a623", "10A", "strategic minerals", "High payout, rare minerals", "+25 per delivery", "science", 10, []string{"gold", "rare", "cobalt"}}},
-		{"contractor-10b", contractor{"Contractor Slot 10B", "#39d36a", "10B", "base expansion reserves", "Balanced late-game contracts", "+12 per delivery", "starter", 10, []string{"iron", "silicon", "nickel"}}},
+		{"helios-propulsion-depot", client{"Helios Propulsion Depot", "#f5a623", "HP", "fuel logistics and orbital propellant reserves", "20% premium on hydrogen and propellant runs", "+2.5% payout per completed Helios job", "starter", 1, []string{"hydrogen"}}},
+		{"arcturus-battery-systems", client{"Arcturus Battery Systems", "#4f9cf7", "AB", "energy storage manufacturing and cathode supply", "22% premium on cobalt and copper battery inputs", "+2.5% payout per completed Arcturus job", "prospect", 1, []string{"cobalt", "copper"}}},
+		{"ferrum-orbital-construction", client{"Ferrum Orbital Construction", "#c7d0dc", "FO", "in-space manufacturing and structural assembly", "18% premium on aluminium and copper construction cargo", "+2% payout per completed Ferrum job", "bulk", 1, []string{"aluminium", "copper"}}},
+		{"contractor-04b", client{"Client Slot 04B", "#a8d8ea", "4B", "construction aggregates", "Low rate, large orders", "+6 per delivery", "bulk", 4, []string{"iron", "carbon"}}},
+		{"contractor-06a", client{"Client Slot 06A", "#70e070", "6A", "deep-core sampling", "Mixed-bag premium", "+12 per delivery", "prospect", 6, []string{"nickel", "cobalt"}}},
+		{"contractor-06b", client{"Client Slot 06B", "#c084ff", "6B", "rare-gas refining", "High tier, small batches", "+20 per delivery", "command", 6, []string{"rare", "gold"}}},
+		{"contractor-08a", client{"Client Slot 08A", "#ff8c42", "8A", "solar-grade silicon", "Premium purity contracts", "+10 per delivery", "command", 8, []string{"silicon", "ice"}}},
+		{"contractor-08b", client{"Client Slot 08B", "#5fcde6", "8B", "outer-belt volatiles", "Medium rate, special cargo", "+8 per delivery", "bulk", 8, []string{"ice", "carbon"}}},
+		{"contractor-10a", client{"Client Slot 10A", "#f5a623", "10A", "strategic minerals", "High payout, rare minerals", "+25 per delivery", "science", 10, []string{"gold", "rare", "cobalt"}}},
+		{"contractor-10b", client{"Client Slot 10B", "#39d36a", "10B", "base expansion reserves", "Balanced late-game contracts", "+12 per delivery", "starter", 10, []string{"iron", "silicon", "nickel"}}},
 	}
-	for _, c := range contractors {
-		seedRecord(app, "contractors", c.slug, map[string]any{
+	for _, c := range clients {
+		seedRecord(app, "clients", c.slug, map[string]any{
 			"name": c.name, "color": c.color, "initial": c.initial, "unlock_tier": c.tier,
 			"project_type": c.projectType, "mineral_preferences": c.preferences,
 			"payout_notes": c.payoutNotes, "affinity_notes": c.affinityNotes,
@@ -876,29 +944,29 @@ func seedCatalog(app core.App) {
 
 	// Mission templates
 	type missionTemplate struct {
-		tag, difficulty, contractorRole, payoutFormula string
-		mineralKeys                                    []string
-		cargoMin, cargoMax, drillTier, orbitMax        float64
-		payoutMultiplier                               float64
-		scanRequired, revealsMinerals                  bool
-		scanCount, depositsToMap                       float64
-		scanSource, onWorldVehicle                     string
-		revealsLandmarks                               []string
-		unlocksLanding, onWorldAnyTarget               bool
+		tag, difficulty, clientRole, payoutFormula string
+		mineralKeys                                []string
+		cargoMin, cargoMax, drillTier, orbitMax    float64
+		payoutMultiplier                           float64
+		scanRequired, revealsMinerals              bool
+		scanCount, depositsToMap                   float64
+		scanSource, onWorldVehicle                 string
+		revealsLandmarks                           []string
+		unlocksLanding, onWorldAnyTarget           bool
 	}
 	templates := []struct {
 		slug string
 		missionTemplate
 	}{
-		{"starter-bulk", missionTemplate{tag: "STARTER", difficulty: "L1", contractorRole: "starter", payoutFormula: "mineral_base_price * amount * 1600 * multiplier", mineralKeys: []string{"iron", "silicon", "carbon"}, cargoMin: 4, cargoMax: 8, drillTier: 1, orbitMax: 4, payoutMultiplier: 1.0}},
-		{"volatile-bulk", missionTemplate{tag: "BULK", difficulty: "L2", contractorRole: "bulk", payoutFormula: "mineral_base_price * amount * 1450 * multiplier", mineralKeys: []string{"ice", "carbon", "silicon"}, cargoMin: 8, cargoMax: 14, drillTier: 1, orbitMax: 5, payoutMultiplier: 1.35}},
-		{"metal-prospect", missionTemplate{tag: "PROSPECT", difficulty: "L2", contractorRole: "prospect", payoutFormula: "mineral_base_price * amount * 1350 * multiplier", mineralKeys: []string{"nickel", "cobalt", "gold"}, cargoMin: 3, cargoMax: 8, drillTier: 2, orbitMax: 5, payoutMultiplier: 2.25}},
-		{"command-reserve", missionTemplate{tag: "COMMAND", difficulty: "L3", contractorRole: "command", payoutFormula: "mineral_base_price * amount * 1300 * multiplier", mineralKeys: []string{"gold", "rare", "cobalt"}, cargoMin: 3, cargoMax: 6, drillTier: 2, orbitMax: 6, payoutMultiplier: 3.5}},
-		{"freeops-delivery", missionTemplate{tag: "DELIVERY", difficulty: "L1", contractorRole: "starter", payoutFormula: "mineral_base_price * amount * 1500 * multiplier", mineralKeys: []string{"hydrogen", "cobalt", "copper", "aluminium"}, cargoMin: 4, cargoMax: 10, drillTier: 1, orbitMax: 5, payoutMultiplier: 1.25}},
-		{"freeops-mining-survey", missionTemplate{tag: "SURVEY", difficulty: "L1", contractorRole: "prospect", payoutFormula: "mineral_base_price * amount * 1500 * multiplier", mineralKeys: []string{"cobalt", "copper", "aluminium", "gold"}, cargoMin: 3, cargoMax: 7, drillTier: 1, orbitMax: 5, payoutMultiplier: 1.55}},
-		{"freeops-bulk-run", missionTemplate{tag: "BULK", difficulty: "L1", contractorRole: "bulk", payoutFormula: "mineral_base_price * amount * 1500 * multiplier", mineralKeys: []string{"hydrogen", "aluminium", "copper"}, cargoMin: 8, cargoMax: 16, drillTier: 1, orbitMax: 5, payoutMultiplier: 1.15}},
-		{"freeops-station-scan", missionTemplate{tag: "SCAN", difficulty: "L1", contractorRole: "prospect", payoutFormula: "scan fee + mapped deposit bonus", mineralKeys: []string{"cobalt", "copper", "aluminium", "gold"}, cargoMin: 0, cargoMax: 0, drillTier: 1, orbitMax: 5, payoutMultiplier: 0.85, scanRequired: true, scanCount: 3, scanSource: "station", depositsToMap: 2, revealsMinerals: true, revealsLandmarks: []string{"crater field", "high-albedo ridge"}, unlocksLanding: true}},
-		{"freeops-rover-landing", missionTemplate{tag: "ROVER", difficulty: "L1", contractorRole: "starter", payoutFormula: "mineral_base_price * amount * 1500 * multiplier + landing bonus", mineralKeys: []string{"cobalt", "copper", "aluminium", "hydrogen"}, cargoMin: 2, cargoMax: 5, drillTier: 1, orbitMax: 5, payoutMultiplier: 1.7, scanRequired: true, scanCount: 1, scanSource: "rover", depositsToMap: 1, revealsMinerals: true, revealsLandmarks: []string{"surface deposit"}, unlocksLanding: true, onWorldVehicle: "starter-rover", onWorldAnyTarget: true}},
+		{"starter-bulk", missionTemplate{tag: "STARTER", difficulty: "L1", clientRole: "starter", payoutFormula: "contract fee + cargo value bonus", mineralKeys: []string{"iron", "silicon", "carbon"}, cargoMin: 4, cargoMax: 8, drillTier: 1, orbitMax: 4, payoutMultiplier: 1.0}},
+		{"volatile-bulk", missionTemplate{tag: "BULK", difficulty: "L2", clientRole: "bulk", payoutFormula: "contract fee + cargo value bonus", mineralKeys: []string{"ice", "carbon", "silicon"}, cargoMin: 8, cargoMax: 14, drillTier: 1, orbitMax: 5, payoutMultiplier: 1.35}},
+		{"metal-prospect", missionTemplate{tag: "PROSPECT", difficulty: "L2", clientRole: "prospect", payoutFormula: "contract fee + cargo value bonus", mineralKeys: []string{"nickel", "cobalt", "gold"}, cargoMin: 3, cargoMax: 8, drillTier: 2, orbitMax: 5, payoutMultiplier: 2.25}},
+		{"command-reserve", missionTemplate{tag: "COMMAND", difficulty: "L3", clientRole: "command", payoutFormula: "contract fee + cargo value bonus", mineralKeys: []string{"gold", "rare", "cobalt"}, cargoMin: 3, cargoMax: 6, drillTier: 2, orbitMax: 6, payoutMultiplier: 3.5}},
+		{"freeops-delivery", missionTemplate{tag: "DELIVERY", difficulty: "L1", clientRole: "starter", payoutFormula: "contract fee + cargo value bonus", mineralKeys: []string{"hydrogen", "cobalt", "copper", "aluminium"}, cargoMin: 4, cargoMax: 10, drillTier: 1, orbitMax: 5, payoutMultiplier: 1.25}},
+		{"freeops-mining-survey", missionTemplate{tag: "SURVEY", difficulty: "L1", clientRole: "prospect", payoutFormula: "contract fee + cargo value bonus", mineralKeys: []string{"cobalt", "copper", "aluminium", "gold"}, cargoMin: 3, cargoMax: 7, drillTier: 1, orbitMax: 5, payoutMultiplier: 1.55}},
+		{"freeops-bulk-run", missionTemplate{tag: "BULK", difficulty: "L1", clientRole: "bulk", payoutFormula: "contract fee + cargo value bonus", mineralKeys: []string{"hydrogen", "aluminium", "copper"}, cargoMin: 8, cargoMax: 16, drillTier: 1, orbitMax: 5, payoutMultiplier: 1.15}},
+		{"freeops-station-scan", missionTemplate{tag: "SCAN", difficulty: "L1", clientRole: "prospect", payoutFormula: "scan fee + mapped deposit bonus", mineralKeys: []string{"cobalt", "copper", "aluminium", "gold"}, cargoMin: 0, cargoMax: 0, drillTier: 1, orbitMax: 5, payoutMultiplier: 0.85, scanRequired: true, scanCount: 3, scanSource: "station", depositsToMap: 2, revealsMinerals: true, revealsLandmarks: []string{"crater field", "high-albedo ridge"}, unlocksLanding: true}},
+		{"freeops-rover-landing", missionTemplate{tag: "ROVER", difficulty: "L1", clientRole: "starter", payoutFormula: "mineral_base_price * amount * 1500 * multiplier + landing bonus", mineralKeys: []string{"cobalt", "copper", "aluminium", "hydrogen"}, cargoMin: 2, cargoMax: 5, drillTier: 1, orbitMax: 5, payoutMultiplier: 1.7, scanRequired: true, scanCount: 1, scanSource: "rover", depositsToMap: 1, revealsMinerals: true, revealsLandmarks: []string{"surface deposit"}, unlocksLanding: true, onWorldVehicle: "starter-rover", onWorldAnyTarget: true}},
 	}
 	for _, t := range templates {
 		fields := map[string]any{
@@ -907,7 +975,7 @@ func seedCatalog(app core.App) {
 			"cargo_min":    t.cargoMin, "cargo_max": t.cargoMax,
 			"drill_tier_min": t.drillTier, "orbit_max": t.orbitMax,
 			"payout_multiplier":   t.payoutMultiplier,
-			"contractor_role":     t.contractorRole,
+			"client_role":         t.clientRole,
 			"payout_formula":      t.payoutFormula,
 			"scan_required":       t.scanRequired,
 			"scan_count":          t.scanCount,
@@ -967,7 +1035,7 @@ func seedCatalog(app core.App) {
 		structureBlueprint
 	}{
 		{"launchpad", structureBlueprint{"Launchpad", "launchpad", "always", "always", "Rocket assembly and launch operations.", "launch-pad", 0, map[string]float64{}}},
-		{"refinery", structureBlueprint{"Refinery", "refinery", "contractor-mission-trigger", "First contractor mission requiring refined minerals", "Refines raw minerals into higher-value contractor-grade materials.", "refinery", 800000000, map[string]float64{"aluminium": 20, "copper": 10}}},
+		{"refinery", structureBlueprint{"Refinery", "refinery", "client-mission-trigger", "First client mission requiring refined minerals", "Refines raw minerals into higher-value client-grade materials.", "refinery", structurePriceRefinery, map[string]float64{"aluminium": 20, "copper": 10}}},
 		{"solar-array", structureBlueprint{"Solar Array", "solar-array", "manual", "", "Fixed panel farm. Recharges a rover quickly within range (daylight only).", "solar-array", 0, map[string]float64{}}},
 		{"beacon", structureBlueprint{"Nav Beacon", "beacon", "manual", "", "Marks a site on the map and lights the area at night.", "beacon", 0, map[string]float64{}}},
 		{"drill-rig", structureBlueprint{"Auto-Drill Rig", "drill-rig", "manual", "", "Slowly mines the column beneath it; buffers ore for pickup.", "drill-rig", 0, map[string]float64{}}},
@@ -994,14 +1062,14 @@ func seedCatalog(app core.App) {
 	}
 
 	type missionSeed struct {
-		slug, title, brief, contractorSlug, templateSlug, unlockAt string
-		sequence, amount, affinity                                 float64
-		locked                                                     bool
-		minerals                                                   map[string]float64
+		slug, title, brief, clientSlug, templateSlug, unlockAt string
+		sequence, amount, affinity                             float64
+		locked                                                 bool
+		minerals                                               map[string]float64
 	}
 	missionSeeds := []missionSeed{
-		{"m1-iron", "Iron Reserve Order", "Contractor Slot 03A needs a starter iron shipment from a reachable asteroid.", "contractor-03a", "starter-bulk", "", 1, 6, 10, false, map[string]float64{"iron": 6}},
-		{"m2-silicon", "Silicon Bulk Order", "Contractor Slot 03B needs raw silicon for electronics-grade supply contracts.", "contractor-03b", "volatile-bulk", "Complete M1", 2, 8, 8, false, map[string]float64{"silicon": 8}},
+		{"m1-iron", "Iron Reserve Order", "Client Slot 03A needs a starter iron shipment from a reachable asteroid.", "contractor-03a", "starter-bulk", "", 1, 6, 10, false, map[string]float64{"iron": 6}},
+		{"m2-silicon", "Silicon Bulk Order", "Client Slot 03B needs raw silicon for electronics-grade supply contracts.", "contractor-03b", "volatile-bulk", "Complete M1", 2, 8, 8, false, map[string]float64{"silicon": 8}},
 	}
 	templateBySlug := map[string]missionTemplate{}
 	for _, t := range templates {
@@ -1009,13 +1077,19 @@ func seedCatalog(app core.App) {
 	}
 	for _, m := range missionSeeds {
 		t := templateBySlug[m.templateSlug]
-		payout := 0.0
+		// Fee plus a capped bonus for the cargo asked for — mirrors
+		// normalizeMissionPayout in web/lib/data/payouts.ts. This previously
+		// used a bare `* 1500` with no fee at all, which produced payouts
+		// three orders of magnitude below what the game actually paid.
+		fee := contractFee(m.sequence)
+		bonus := 0.0
 		for mineral, amount := range m.minerals {
-			payout += mineralPrices[mineral] * amount * 1500 * t.payoutMultiplier
+			bonus += mineralPrices[mineral] * amount * cargoBonusRate * t.payoutMultiplier
 		}
+		payout := fee + math.Min(bonus, fee*cargoBonusCap)
 		seedRecord(app, "missions_catalog", m.slug, map[string]any{
 			"title": m.title, "brief": m.brief,
-			"contractor_slug": m.contractorSlug, "tag": t.tag,
+			"client_slug": m.clientSlug, "tag": t.tag,
 			"difficulty": t.difficulty, "locked": m.locked,
 			"sequence":           m.sequence,
 			"unlock_at":          m.unlockAt,

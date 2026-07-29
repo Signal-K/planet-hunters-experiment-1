@@ -39,7 +39,7 @@ describe('Landnam Catalog Mapping', () => {
     const mission = toMission({
       slug: 'lnm_m3_ore_delivery',
       title: 'Legacy Delivery',
-      contractor_slug: 'kepler-materials',
+      client_slug: 'kepler-materials',
       requires_minerals: '{"nickel":2}',
       target_id: 'lutetia',
       payload_type: 'rover',
@@ -66,10 +66,10 @@ describe('Landnam Catalog Mapping', () => {
     expect(client.payoutPremium).toBe(0.2)
   })
 
-  it('replaces legacy contractor slot placeholders with the named client', () => {
+  it('replaces client slot placeholders with the named client', () => {
     const client = toClient({
       slug: 'helios-propulsion-depot',
-      name: 'Contractor Slot 03A',
+      name: 'Client Slot 03A',
       mineral_preferences: '["platinum"]',
     })
     expect(client.name).toBe('Helios Propulsion Depot')
@@ -79,8 +79,8 @@ describe('Landnam Catalog Mapping', () => {
     const mission = toMission({
       slug: 'm1-iron',
       title: 'Iron Reserve Order',
-      contractor_slug: 'helios-propulsion-depot',
-      brief: 'Contractor Slot 03A needs a starter iron shipment.',
+      client_slug: 'helios-propulsion-depot',
+      brief: 'Client Slot 03A needs a starter iron shipment.',
       requires_minerals: '{}',
     })
     expect(mission.brief).toContain('Helios Propulsion Depot needs')
@@ -117,11 +117,11 @@ describe('Landnam Catalog Mapping', () => {
       kind: 'refinery',
       cost_francs: 800_000_000,
       cost_materials: '{"aluminium":20,"copper":10}',
-      unlocks_at: 'First contractor mission requiring refined minerals',
-      unlock_trigger_type: 'contractor-mission-trigger',
+      unlocks_at: 'First client mission requiring refined minerals',
+      unlock_trigger_type: 'client-mission-trigger',
       description: 'Refines raw ore.',
     })
     expect(structure.costMaterials).toEqual({ aluminium: 20, copper: 10 })
-    expect(structure.unlockTrigger).toBe('contractor-mission-trigger')
+    expect(structure.unlockTrigger).toBe('client-mission-trigger')
   })
 })

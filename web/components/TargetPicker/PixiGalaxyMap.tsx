@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Application, Container, Graphics, Text } from 'pixi.js'
 import type { Mission, Target, TargetArchetype } from '@/lib/data'
+import { RARE_TIER_MIN_ORBIT, EXOTIC_TIER_MIN_ORBIT } from '@/lib/data'
 import { Scene } from '@/lib/engine/Scene'
 import type { EntityData } from '@/lib/engine/types'
 
@@ -64,11 +65,14 @@ const ASTEROID_SILHOUETTES: [number, number][][] = [
   [[-0.80, -0.30], [0.40, -0.90], [1.00, 0.00], [0.30, 0.82], [-0.90, 0.50]],
 ]
 
+// Ring colour bands mirror the real mineral-rarity gates in target-archetypes
+// (rare at orbit >= 2, exotic at orbit >= 4). They previously broke at <=2/<=5,
+// which taught players a distance-to-reward mapping the game does not use.
 function orbitRingColor(orbit: number, reachable: boolean): { color: number; alpha: number } {
   if (!reachable) return { color: 0xff5a6a, alpha: 0.22 }
-  if (orbit <= 2) return { color: 0xc8a060, alpha: 0.18 }
-  if (orbit <= 5) return { color: LN_CYAN, alpha: 0.14 }
-  return               { color: 0x4060c0, alpha: 0.16 }
+  if (orbit < RARE_TIER_MIN_ORBIT) return { color: 0xc8a060, alpha: 0.18 }
+  if (orbit < EXOTIC_TIER_MIN_ORBIT) return { color: LN_CYAN, alpha: 0.14 }
+  return { color: 0x4060c0, alpha: 0.16 }
 }
 
 function hashId(id: string): number {

@@ -110,6 +110,7 @@ function buildShip(shipY: number): Graphics {
 
 interface MiningCanvasProps {
   minerals: string[]
+  requiredMinerals?: string[]
   mineralMeta: Record<string, MineralMeta>
   /** Equipped drill/laser part tier (1-3). Gates how deep the laser can reach. */
   laserTier?: number
@@ -121,7 +122,7 @@ interface MiningCanvasProps {
   neededMineralsRef?: React.MutableRefObject<Set<string> | null>
 }
 
-export default function MiningCanvas({ minerals, mineralMeta, laserTier, onCollect, fireRef, scrollRef, oreNearRef, neededMineralsRef }: MiningCanvasProps) {
+export default function MiningCanvas({ minerals, requiredMinerals, mineralMeta, laserTier, onCollect, fireRef, scrollRef, oreNearRef, neededMineralsRef }: MiningCanvasProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const onCollectRef = useRef(onCollect)
   onCollectRef.current = onCollect
@@ -222,11 +223,15 @@ export default function MiningCanvas({ minerals, mineralMeta, laserTier, onColle
           surfaceY,
           shipY,
           minerals,
+          requiredMinerals,
           mineralColors: Object.fromEntries(Object.entries(mineralMeta).map(([id, m]) => [id, m.color])),
           mineralLaserAccess,
           maxLaserTier: laserTier,
           mineralShapes: Object.fromEntries(Object.entries(mineralMeta).map(([id, m]) => [id, m.shape ?? 'circle'])),
           mineralTextures: oreTextures,
+          // Sym label rides on top of every ore node — the PNG-textured minerals
+          // never get a distinguishing shape, so this is what tells them apart.
+          mineralSyms: Object.fromEntries(Object.entries(mineralMeta).map(([id, m]) => [id, m.sym])),
           onCollect: mineral => onCollectRef.current(mineral),
           onMiss: () => {
             shakeState.timer = 0.28

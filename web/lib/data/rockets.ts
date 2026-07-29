@@ -2,6 +2,7 @@
 // Players purchase a rocket per mission. Explorer (SR1) is always free. Prospector (SR2)+ require Francs + mission history.
 
 import type { RocketConfig, StarterRocket } from './types'
+import { ROCKET_PRICES } from './economy'
 
 export const STARTER_ROCKETS: StarterRocket[] = [
   {
@@ -19,7 +20,7 @@ export const STARTER_ROCKETS: StarterRocket[] = [
     id: 'sr2',
     name: 'Prospector',
     tier: 2,
-    costFrancs: 1_300_000_000,
+    costFrancs: ROCKET_PRICES.sr2,
     missionsRequired: 1,
     locked: false,
     stats: { cargo: 10, maxOrbit: 7, drillTier: 2 },
@@ -28,17 +29,17 @@ export const STARTER_ROCKETS: StarterRocket[] = [
   },
   {
     // Coming-soon tease, not yet purchasable — decided cost/unlock condition
-    // (rocket-and-room-system.md, 2026-06-18) is 4.0B F at L3/M3, but stats
+    // (rocket-and-room-system.md, 2026-06-18) is ROCKET_PRICES.sr3 at L3/M3, but stats
     // aren't finalized so this stays locked like sr4/sr5 until they are.
     id: 'sr3',
     name: 'Starter Rocket 3',
     tier: 3,
-    costFrancs: 4_000_000_000,
+    costFrancs: ROCKET_PRICES.sr3,
     missionsRequired: 999,
     locked: true,
     stats: { cargo: 0, maxOrbit: 0, drillTier: 0 },
     img: '/parts/basic_hull_t1.png',
-    unlockHint: 'Unlocks at L3/M3 · 4.0B F',
+    unlockHint: 'Unlocks at L3/M3',
   },
   {
     id: 'sr4',

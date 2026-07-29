@@ -3,7 +3,7 @@
 import React from 'react'
 import { IconBtn } from './Button'
 import { UI_ZONES } from '@/lib/ui-zones'
-import { formatFrancs } from '@/lib/format'
+import { formatCurrency } from '@/lib/format'
 
 interface TopBarProps {
   eyebrow?: string
@@ -25,7 +25,7 @@ interface TopBarProps {
   // Credit balance chip shown at the far right, before any custom `right`
   // content. Omit to leave the balance off (most screens don't need it in
   // the header — they show francs elsewhere).
-  credits?: number
+  francs?: number
 }
 
 function BackIcon() {
@@ -64,7 +64,7 @@ function CoinIcon() {
   )
 }
 
-export default function TopBar({ eyebrow, title, onBack, right, dense, solid, levelBadge, credits }: TopBarProps) {
+export default function TopBar({ eyebrow, title, onBack, right, dense, solid, levelBadge, francs }: TopBarProps) {
   return (
     <div data-ui-zone={UI_ZONES.topChrome} style={{
       position: 'absolute',
@@ -133,7 +133,7 @@ export default function TopBar({ eyebrow, title, onBack, right, dense, solid, le
         )}
       </div>
       <div style={{ pointerEvents: 'auto', display: 'flex', alignItems: 'center', gap: 6 }}>
-        {credits !== undefined && (
+        {francs !== undefined && (
           <span style={{
             display: 'flex', alignItems: 'center', gap: 4,
             padding: '4px 9px', borderRadius: 999,
@@ -143,7 +143,7 @@ export default function TopBar({ eyebrow, title, onBack, right, dense, solid, le
             fontFamily: 'var(--ln-font-mono)', fontWeight: 800, fontSize: 11,
             whiteSpace: 'nowrap',
           }}>
-            <CoinIcon /> {formatFrancs(credits)}
+            <CoinIcon /> {formatCurrency(francs, { compact: true })}
           </span>
         )}
         {right}

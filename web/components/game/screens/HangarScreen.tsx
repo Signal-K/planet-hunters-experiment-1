@@ -7,7 +7,8 @@ import { STARTER_ROCKETS, hasShipCustomizer, calculateShipSuccessChance, selecte
 import type { StarterRocket, InstalledCustomizerPartsByKind } from '@/lib/data'
 import { UI_ZONES } from '@/lib/ui-zones'
 import ShipInteriorPreview from '@/components/game/ShipInteriorPreview'
-import { formatFrancs } from '@/lib/format'
+import { formatCurrency } from '@/lib/format'
+import ProgressBar from '@/components/ui/ProgressBar'
 
 interface HangarScreenProps {
   francs: number
@@ -22,16 +23,13 @@ interface HangarScreenProps {
 const STAT_MAX: Record<string, number> = { cargo: 20, maxOrbit: 10, drillTier: 5 }
 
 function StatBar({ label, value, max }: { label: string; value: number; max: number }) {
-  const pct = Math.min(100, (value / max) * 100)
   return (
     <div style={{ display: 'grid', gap: 2 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
         <span style={{ fontFamily: 'var(--ln-font-mono)', fontSize: 7, color: 'var(--ln-text-muted)', letterSpacing: '0.12em', textTransform: 'uppercase' }}>{label}</span>
         <span style={{ fontFamily: 'var(--ln-font-display)', fontSize: 9, fontWeight: 800, color: 'var(--ln-text)' }}>{value}</span>
       </div>
-      <div style={{ height: 3, borderRadius: 2, background: 'rgba(63,169,255,0.12)', overflow: 'hidden' }}>
-        <div style={{ height: '100%', width: `${pct}%`, borderRadius: 2, background: 'linear-gradient(90deg, var(--ln-cyan-press), var(--ln-cyan-bright))', boxShadow: '0 0 6px rgba(63,169,255,0.5)' }} />
-      </div>
+      <ProgressBar value={value} max={max} label={label} />
     </div>
   )
 }
@@ -135,7 +133,7 @@ function RocketCard({ rocket, missionsDone, onSelect }: { rocket: StarterRocket;
                 boxShadow: '0 0 14px rgba(200,41,62,0.35)',
               }}
             >
-              {formatFrancs(rocket.costFrancs, { compact: true })} ▲
+              {formatCurrency(rocket.costFrancs, { compact: true })}
             </button>
           )}
           {isAvailable && !hasCost && (

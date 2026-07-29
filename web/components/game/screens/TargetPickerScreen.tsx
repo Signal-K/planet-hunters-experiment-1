@@ -3,7 +3,7 @@
 import React, { useState } from 'react'
 import StatusPill from '@/components/ui/StatusPill'
 import { PrimaryBtn } from '@/components/ui/Button'
-import { compatibleTargetsFor, type Mission, type Target } from '@/lib/data'
+import { compatibleTargetsFor, orbitBandLabel, type Mission, type Target } from '@/lib/data'
 import type { Catalog } from '@/lib/catalog'
 import TutorialHighlight from '@/components/game/TutorialHighlight'
 import GalaxyMap from '@/components/TargetPicker/GalaxyMap'
@@ -147,6 +147,13 @@ export default function TargetPickerScreen({ mission, onBack, onPick, hasCoach, 
             <span style={{ flex: 1 }} />
             <StatusPill kind="amber" dim>Rocket range · Orbit ≤ {mission.requires.max_orbit}</StatusPill>
           </div>
+          {/* Orbit was shown as a bare number everywhere, with no statement of
+              what it buys the player — while the rarity gates it drives are
+              real game logic (target-archetypes.ts). One line, once, where
+              orbit is first read (STS-544). */}
+          <div style={{ padding: '0 0 8px', fontFamily: 'var(--ln-font-body)', fontSize: 11, color: 'var(--ln-text-muted)', lineHeight: 1.4 }}>
+            <b style={{ color: 'var(--ln-text-dim)', fontWeight: 700 }}>Orbit</b> is the distance band from Earth — farther orbits reach rarer minerals, and need more rocket range.
+          </div>
           <MissionSetupFrame style={{ position: 'relative', height: '100%' }}>
             <GalaxyMap
               mission={mission}
@@ -197,6 +204,9 @@ export default function TargetPickerScreen({ mission, onBack, onPick, hasCoach, 
                   <div style={{ fontFamily: 'var(--ln-font-display)', fontWeight: 800, fontSize: 20, color: 'var(--ln-text)', letterSpacing: '0.02em' }}>{pickedTarget.name}</div>
                   {pickedTarget.recommended && <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 9, color: 'var(--ln-ok)', letterSpacing: '0.14em', textTransform: 'uppercase' }}>Recommended</div>}
                   <div style={{ fontFamily: 'var(--ln-font-mono)', fontSize: 10, letterSpacing: '0.16em', color: 'var(--ln-text-muted)', textTransform: 'uppercase' }}>Orbit {pickedTarget.orbit} · {pickedTarget.difficulty}</div>
+                  <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 9, fontWeight: 700, letterSpacing: '0.12em', color: 'var(--ln-cyan)', textTransform: 'uppercase', marginTop: 2 }}>
+                    {orbitBandLabel(pickedTarget.orbit)}
+                  </div>
                 </div>
               </div>
               {!hasCoach && (

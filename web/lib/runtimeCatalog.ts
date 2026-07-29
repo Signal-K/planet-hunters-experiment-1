@@ -1,5 +1,6 @@
 import type { Catalog } from './catalog'
 import type { Client, Mission, Target } from './data'
+import { missionPayoutFloor } from './data'
 
 export const STORY_MISSION_CLIENT_ID = 'mission-control'
 export const TRANSIT_TELESCOPE_TARGET_ID = 'earth-orbit-transit-telescope'
@@ -86,7 +87,11 @@ export function buildRuntimeCatalog({
           max_orbit: 1,
         },
         payout: {
-          francs: 150_000,
+          // Free Ops missions are ordinary contracts and must sit on the same
+          // scale as every other one. These two used to pay 150k and 500k
+          // against a 1.5B+ floor everywhere else — four orders of magnitude
+          // out, and not enough to cover the rocket the mission needs.
+          francs: missionPayoutFloor(missionsDone + 1),
           affinity: 0,
         },
       }]
@@ -110,7 +115,7 @@ export function buildRuntimeCatalog({
         max_orbit: target.orbit,
       },
       payout: {
-        francs: 500_000 + index * 75_000,
+        francs: missionPayoutFloor(missionsDone + 1) + index * 100_000_000,
         affinity: 6,
       },
     }))

@@ -3,7 +3,7 @@
 import React from 'react'
 import type { Player } from '@/game-context'
 import { MINERAL_META } from '@/lib/data'
-import { formatFrancs } from '@/lib/format'
+import { formatCurrency } from '@/lib/format'
 
 interface HUDStripProps {
   player: Player
@@ -65,7 +65,7 @@ export default function HUDStrip({ player, showStash = false }: HUDStripProps) {
     <div style={{ display: 'flex', flexDirection: 'column', gap: 6, alignItems: 'flex-end' }}>
       <Chip glyph={<FrancGlyph />}>
         <span style={{ fontFamily: 'var(--ln-font-mono)', fontWeight: 700, fontSize: 12, color: '#fff' }}>
-          {formatFrancs(player.francs)}
+          {formatCurrency(player.francs, { compact: true })}
         </span>
       </Chip>
       <Chip glyph={<JobsGlyph />}>

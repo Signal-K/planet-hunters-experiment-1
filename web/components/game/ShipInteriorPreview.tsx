@@ -19,7 +19,7 @@ import {
   selectedCustomizerPartIds,
 } from '@/lib/data'
 import type { CustomizerPart, InstalledCustomizerPartsByKind, ShipRoomKind } from '@/lib/data'
-import { formatFrancs } from '@/lib/format'
+import { formatCurrency } from '@/lib/format'
 
 interface ShipInteriorPreviewProps {
   rocketId: string
@@ -49,7 +49,7 @@ const STEP_DETAILS: Record<ShipRoomKind, Omit<BuildStep, 'kind'>> = {
 
 export default function ShipInteriorPreview({
   rocketId,
-  startingFrancs = 3_000_000_000,
+  startingFrancs = 30_000_000,
   missionsDone = 0,
   installedParts,
   onConfirm,
@@ -124,7 +124,7 @@ export default function ShipInteriorPreview({
           </div>
           <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginTop: 1 }}>
             <span style={{ fontFamily: 'var(--ln-font-display)', fontSize: 18, fontWeight: 800, color: 'var(--ln-text)' }} data-testid="ship-budget">
-              {formatFrancs(buildState.balance, { compact: true })} ▲
+              {formatCurrency(buildState.balance, { compact: true })}
             </span>
             <span style={{ fontFamily: 'var(--ln-font-display)', fontSize: 10, color: 'var(--ln-text-muted)' }}>remaining</span>
           </div>
@@ -264,7 +264,7 @@ export default function ShipInteriorPreview({
                 </div>
                 <div style={{ flex: 'none', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 4 }}>
                   <span style={{ fontFamily: 'var(--ln-font-mono)', fontSize: 9, color: 'var(--ln-amber)' }}>
-                    {formatFrancs(part.price, { compact: true })} ▲
+                    {formatCurrency(part.price, { compact: true })}
                   </span>
                   <span style={{ fontFamily: 'var(--ln-font-display)', fontSize: 9, fontWeight: 900, color: selected ? 'var(--ln-ok)' : 'var(--ln-cyan)', letterSpacing: '0.07em', textTransform: 'uppercase' }}>
                     {selected ? 'Installed' : `+${part.successBonus}%`}

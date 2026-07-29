@@ -2,9 +2,10 @@ import { useCallback, useRef } from 'react'
 import {
   MISSIONS, TARGETS, STARTER_ROCKETS, FREE_OPS_START_MISSIONS_DONE,
   getLaserChargeCap, travelDurationMs, suggestBuild,
-  CLIENT_COOLDOWN_MS, CLIENT_STREAK_LIMIT, calibrateOnboardingPayout,
+  CLIENT_COOLDOWN_MS, CLIENT_STREAK_LIMIT, loanInstalmentFor, BANKRUPTCY_THRESHOLD,
 } from '@/lib/data'
 import { applyDeliveryArrived, applyMiningDone, applyReturnArrived, applyRoverMiningDone } from '@/lib/systems/MiningSystem'
+import { applyPurchaseRocket } from '@/lib/systems/EconomySystem'
 import { enqueueSurvey } from '@/lib/surveys'
 import type { Catalog } from '@/lib/catalog'
 import type { GameState, LicenseGrade } from '@/lib/game-types'
@@ -17,9 +18,7 @@ import { pbLandnam } from '@/lib/pb-landnam'
 const ORBIT_MS_PER_UNIT = 2 * 60 * 1000
 const STORY_MISSION_CLIENT_ID = 'mission-control'
 
-const LOAN_AMOUNT = 5_000_000_000
-const LOAN_REPAYMENT = Math.ceil(LOAN_AMOUNT * 1.08 / 2)
-const BANKRUPTCY_THRESHOLD = 500_000_000
+
 
 interface GameLoopOpts {
   stateRef: React.RefObject<GameState>
@@ -65,7 +64,6 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
         ?? null
       if (!mission) return s
       const isStoryMission = mission.client === STORY_MISSION_CLIENT_ID || (mission.tag === 'STORY' && !mission.deliveryTargetId)
-      if (s.player.missionsDone >= 1 && !isStoryMission) enqueueSurvey('lnm_client_pick')
       const dailyClientPool = (s.player.dailyClientPool && id.startsWith('dcp-'))
         ? { ...s.player.dailyClientPool, acceptedId: id }
         : s.player.dailyClientPool
@@ -118,12 +116,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
       if (s.screen !== 'rocket-buy' || !s.missionId || !s.targetId) return s
       const rocket = STARTER_ROCKETS.find(r => r.id === rocketId)
       if (!rocket) return s
-      if (s.player.francs < rocket.costFrancs) return s
-      return {
-        ...s,
-        player: { ...s.player, francs: s.player.francs - rocket.costFrancs },
-        screen: 'fab',
-      }
+      return applyPurchaseRocket(s, rocket)
     })
   }, [setState])
 
@@ -206,7 +199,6 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
       }).catch(error => console.warn('[GameLoop] mission run update failed', error))
     }
     addToast(hasDelivery ? 'Cargo secured — course set for delivery' : 'Order filled — return to Earth for recovery', 'ok')
-    enqueueSurvey('lnm_mining_feel', 2000)
   }, [addToast, catalog.targets, setState, stateRef])
 
   const onDeliveryArrived = useCallback(() => {
@@ -242,7 +234,6 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
       return applyRoverMiningDone(s, cargo, arrivalAt, timedTransit ? transitStartedAt : null)
     })
     addToast(hasDelivery ? 'Cargo secured — course set for delivery' : 'Rover cargo secured — return to Earth for recovery', 'ok')
-    enqueueSurvey('lnm_rover_clarity', 1200)
   }, [addToast, catalog.targets, setState])
 
   const gainResearchXP = useCallback((amount: number) => {
@@ -342,9 +333,15 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
     const current = stateRef.current
     if (current.screen !== 'debrief' || !current.missionId || !current.targetId || !current.lastCargo) return
     const newMissionsDone = current.player.missionsDone + 1
-    // Onboarding payout floor — see calibrateOnboardingPayout's doc for why
-    // (M1/M2 must earn enough to cover the Prospector purchase M2 forces).
-    const total = calibrateOnboardingPayout(rawTotal, current.player.missionsDone)
+    const completedMission = catalog.missions.find(m => m.id === current.missionId)
+      ?? current.player.dailyClientPool?.missions.find(m => m.id === current.missionId)
+    const completedIsStoryMission = completedMission?.client === STORY_MISSION_CLIENT_ID
+      || (completedMission?.tag === 'STORY' && !completedMission.deliveryTargetId)
+    // Already through the onboarding payout floor — DebriefScreen calibrates
+    // the figure it shows and hands that exact number to `onDone`, so
+    // re-applying `calibrateOnboardingPayout` here only risked the screen and
+    // the ledger drifting apart. Credit what the player was shown.
+    const total = rawTotal
     setState(s => {
       if (s.screen !== 'debrief' || !s.missionId || !s.targetId || !s.lastCargo) return s
       const missionsDone = s.player.missionsDone + 1
@@ -375,7 +372,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
       let loanDebt = s.player.loanDebt
       let francs = s.player.francs + total
       if (loanDebt > 0) {
-        const payment = Math.min(LOAN_REPAYMENT, loanDebt)
+        const payment = loanInstalmentFor(loanDebt)
         francs = Math.max(0, francs - payment)
         loanDebt = Math.max(0, loanDebt - payment)
       }
@@ -481,7 +478,15 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
       }).catch(error => console.warn('[GameLoop] mission run completion update failed', error))
     }
     missionRunIdRef.current = null
-    enqueueSurvey('lnm_mission_friction', 2000)
+    // Mission feedback belongs to the post-mission checkpoint. Queue it only
+    // after debrief collection so it cannot surface over the next mission
+    // board while the player is choosing a new contract.
+    enqueueSurvey('lnm_mission_friction', 0)
+    enqueueSurvey('lnm_mining_feel', 60_000)
+    if (completedMission?.payload?.type === 'rover') enqueueSurvey('lnm_rover_clarity', 60_000)
+    if (current.player.missionsDone >= 1 && !completedIsStoryMission) {
+      enqueueSurvey('lnm_client_pick', 60_000)
+    }
     if (newMissionsDone === 1) {
       enqueueSurvey('lnm_m1_complete', 3000)
       enqueueSurvey('lnm_progression_feel', 8000)

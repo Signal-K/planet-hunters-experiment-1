@@ -53,6 +53,7 @@ interface MissionSetupShellBaseProps {
   coachManual?: boolean
   children: React.ReactNode
   actions?: React.ReactNode
+  hideStepFooter?: boolean
 }
 
 // Wayfinding footer (Craft doc Core Principle #1) — "what to do next"
@@ -73,6 +74,7 @@ export default function MissionSetupShell({
   coachManual,
   children,
   actions,
+  hideStepFooter = false,
   step,
   stepDescription,
 }: MissionSetupShellProps) {
@@ -90,7 +92,7 @@ export default function MissionSetupShell({
       </div>
       {(step || actions) && (
         <div className="sticky-actions mission-setup-actions" data-ui-zone={UI_ZONES.bottomActions}>
-          {step && (
+          {step && !hideStepFooter && (
             <div style={{ marginBottom: 10 }}>
               <StepFooter step={step} description={stepDescription} inline />
             </div>

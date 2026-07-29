@@ -1,4 +1,5 @@
 import type { DailyQuestTemplate } from './types'
+import { DAILY_QUEST_REWARDS } from './economy'
 
 export const DAILY_QUEST_TEMPLATES: DailyQuestTemplate[] = [
   {
@@ -8,7 +9,7 @@ export const DAILY_QUEST_TEMPLATES: DailyQuestTemplate[] = [
     brief: 'Run the station scanner on five different asteroid targets before the day resets.',
     targetScope: 'any-asteroid',
     count: 5,
-    payout: { francs: 450_000, affinity: 12 },
+    payout: { francs: DAILY_QUEST_REWARDS.medium, affinity: 12 },
     requiresScannerBuilt: true,
   },
   {
@@ -18,7 +19,7 @@ export const DAILY_QUEST_TEMPLATES: DailyQuestTemplate[] = [
     brief: 'Deploy a rover at any survey-cleared target to collect surface samples.',
     targetScope: 'any',
     count: 1,
-    payout: { francs: 600_000, affinity: 15 },
+    payout: { francs: DAILY_QUEST_REWARDS.large, affinity: 15 },
     requiresSurveyClear: true,
   },
   {
@@ -28,7 +29,7 @@ export const DAILY_QUEST_TEMPLATES: DailyQuestTemplate[] = [
     brief: 'Accumulate the required scans to fully map one asteroid target today.',
     targetScope: 'any-asteroid',
     count: 1,
-    payout: { francs: 380_000, affinity: 10 },
+    payout: { francs: DAILY_QUEST_REWARDS.small, affinity: 10 },
     requiresScannerBuilt: true,
   },
 ]

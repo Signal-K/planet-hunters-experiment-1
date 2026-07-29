@@ -457,6 +457,7 @@ export default function MiningScreen({ mission, target, onComplete, onBack, onAb
         <MiningCanvas
           key={runKey}
           minerals={depositMinerals}
+          requiredMinerals={Object.keys(mission.requires.minerals)}
           mineralMeta={minerals}
           laserTier={laserTier}
           onCollect={collectMineral}
@@ -488,24 +489,34 @@ export default function MiningScreen({ mission, target, onComplete, onBack, onAb
               const badgeColor = done ? 'var(--ln-text-muted)' : color
               return (
                 <div key={id} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                  <IconBadge
-                    size={20}
-                    icon={<OreShapeIcon id={id} color={badgeColor} size={11} minerals={minerals} />}
-                    active={!done}
-                    style={{ borderColor: badgeColor, boxShadow: 'none' }}
-                  />
-                  <span style={{
-                    fontFamily: 'var(--ln-font-display)', fontSize: 10, fontWeight: 700,
-                    letterSpacing: '0.06em', textTransform: 'uppercase',
-                    color: badgeColor,
-                  }}>
-                    {minerals[id]?.name ?? id}
+                  {/* The shape glyph is aria-hidden and the name/fraction are
+                      separate spans, so AT would otherwise announce a bare
+                      "PLATINUM 2 / 5". One sentence carries the whole readout;
+                      the visual fragments are hidden from AT to avoid a double
+                      announcement. */}
+                  <span className="ln-sr-only">
+                    {`${minerals[id]?.name ?? id}: ${collected} of ${amount} collected`}
                   </span>
-                  <span style={{
-                    fontFamily: 'var(--ln-font-mono)', fontSize: 10,
-                    color: done ? 'var(--ln-text-muted)' : 'var(--ln-text)',
-                  }}>
-                    {collected}/{amount}
+                  <span aria-hidden="true" style={{ display: 'contents' }}>
+                    <IconBadge
+                      size={20}
+                      icon={<OreShapeIcon id={id} color={badgeColor} size={11} minerals={minerals} />}
+                      active={!done}
+                      style={{ borderColor: badgeColor, boxShadow: 'none' }}
+                    />
+                    <span style={{
+                      fontFamily: 'var(--ln-font-display)', fontSize: 10, fontWeight: 700,
+                      letterSpacing: '0.06em', textTransform: 'uppercase',
+                      color: badgeColor,
+                    }}>
+                      {minerals[id]?.name ?? id}
+                    </span>
+                    <span style={{
+                      fontFamily: 'var(--ln-font-mono)', fontSize: 10,
+                      color: done ? 'var(--ln-text-muted)' : 'var(--ln-text)',
+                    }}>
+                      {collected}/{amount}
+                    </span>
                   </span>
                 </div>
               )

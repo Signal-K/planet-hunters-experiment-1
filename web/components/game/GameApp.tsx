@@ -109,8 +109,7 @@ function GameCanvas() {
 
   function goFromNav(id: string) {
     if (id === 'missions') {
-      game.completeStep(1)
-      game.go('missions')
+      game.goToMissions()
       return
     }
     if (id === 'fab') {

@@ -223,7 +223,9 @@ describe('mergeRemoteState — remote game_states record onto local state', () =
     })
 
     expect(merged.player.missionsDone).toBe(0)
-    expect(merged.player.placed).toEqual([])
+    // Construction is monotonic even when the local onboarding checkpoint wins
+    // the merge, so a saved launchpad cannot disappear after refresh/login.
+    expect(merged.player.placed).toEqual(['launchpad'])
     // The whole point: doneSteps must travel with the player it describes.
     expect(merged.doneSteps).toEqual({})
   })
@@ -294,6 +296,28 @@ describe('mergeRemoteState — remote game_states record onto local state', () =
 
     expect(merged.screen).toBe('hub')
     expect(merged.missionId).toBe('remote-mission')
+  })
+
+  it('restores a remote in-progress mission over a stale local hub save', () => {
+    const mission = MISSIONS[0]
+    const target = TARGETS[0]
+    const merged = mergeRemoteState(local({ screen: 'hub' }), {
+      screen: 'mining',
+      missionId: mission.id,
+      targetId: target.id,
+      player: {
+        activeMission: { id: mission.id, label: `${mission.title} → ${target.name}` },
+        missionRunId: 'run-123',
+        missionPhase: 'mining',
+      },
+    })
+
+    expect(merged.screen).toBe('mining')
+    expect(merged.missionId).toBe(mission.id)
+    expect(merged.targetId).toBe(target.id)
+    expect(merged.player.activeMission?.id).toBe(mission.id)
+    expect(merged.player.missionRunId).toBe('run-123')
+    expect(merged.player.missionPhase).toBe('mining')
   })
 
   it('preserves player fields the remote record omits', () => {

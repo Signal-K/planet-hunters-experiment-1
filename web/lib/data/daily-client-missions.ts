@@ -3,6 +3,7 @@
 import type { ClientSlot, MineralMeta, Mission } from './types'
 import { DEFAULT_MISSION_TEMPLATES, FREE_OPS_START_MISSIONS_DONE, requiredDrillTier } from './mission-generator'
 import { CLIENT_AFFINITY_MISSION_THRESHOLD } from './clients'
+import { normalizeMissionPayout } from './payouts'
 
 // Base daily slots per client, before affinity bonus slots.
 export const BASE_DAILY_SLOTS_PER_CLIENT = 3
@@ -102,7 +103,7 @@ export function generateDailyClientPool(
           max_orbit: template.orbitMax,
         },
         payout: {
-          francs,
+          francs: normalizeMissionPayout(francs, FREE_OPS_START_MISSIONS_DONE + 1),
           affinity: Math.max(5, Math.round(8 + amount / 2)),
         },
       })

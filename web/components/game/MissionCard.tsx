@@ -2,8 +2,10 @@
 
 import React from 'react'
 import type { Mission, Client, MineralMeta } from '@/lib/data'
+import { isOwnProgramMission, missionDifficultyLabel, missionPayoutTier } from '@/lib/data'
 import TutorialHighlight from '@/components/game/TutorialHighlight'
 import styles from '@/components/game/screens/MissionBoard.module.css'
+import { formatCurrency, FRANC } from '@/lib/format'
 
 type CardState = 'available' | 'locked' | 'cooldown' | 'completed'
 
@@ -45,7 +47,11 @@ export function missionCardTags({
   if (cardState === 'completed') return [{ tone: 'job', label: 'Completed today' }]
   const tags: { tone: 'burn' | 'job' | 'twostop'; label: string }[] = [{ tone: 'burn', label: fuelTimerLabel }]
   if (routeLabel) tags.push({ tone: 'twostop', label: 'Two-stop job' })
-  if (isStoryMission) tags.push({ tone: 'job', label: 'Story mission' })
+  // Own-program runs are the player's own operations — they get an ownership
+  // tag, never a client-flavoured one, even when they are filed under the
+  // Mission Control pseudo-client (see isOwnProgramMission).
+  if (isOwnProgramMission(mission)) tags.push({ tone: 'job', label: 'Your operation' })
+  else if (isStoryMission) tags.push({ tone: 'job', label: 'Story mission' })
   else if (client) tags.push({ tone: 'job', label: client.uiRole === 'bulk' ? 'Bulk freight' : 'Starter operations' })
   else tags.push({ tone: 'job', label: 'Self-directed' })
   return tags
@@ -55,7 +61,7 @@ const TAG_CLASS = { burn: styles.tagBurn, job: styles.tagJob, twostop: styles.ta
 
 export default function MissionCard({
   mission,
-  client,
+  client: clientProp,
   mineralMeta,
   targetCount,
   displayPayout,
@@ -70,6 +76,9 @@ export default function MissionCard({
   onPick,
   onPreview,
 }: MissionCardProps) {
+  // An own-program run has no client, whatever the catalog filed it under.
+  const ownOperation = isOwnProgramMission(mission)
+  const client = ownOperation ? null : clientProp
   const accent = client?.color ?? '#6cd4ff'
   const isAvailable = cardState === 'available'
   const tags = missionCardTags({ mission, client, isStoryMission, cardState, lockedDetail, cooldownLabel, routeLabel })
@@ -101,9 +110,11 @@ export default function MissionCard({
       <div className={styles.mark} style={{ background: accent }}>{client?.initial ?? 'OP'}</div>
       <div className={styles.cardMain}>
         <div className={styles.cardTitle}>{mission.title}</div>
-        <div className={styles.cardClient}>{client?.name ?? (isStoryMission ? 'Story mission' : 'Free Ops')}</div>
+        <div className={styles.cardClient}>{client?.name ?? (ownOperation ? 'Your program' : 'Free Ops')}</div>
         <div className={styles.cardWants}>
-          {isStoryMission
+          {ownOperation
+            ? 'Your own operation · no client, no order to fill'
+            : isStoryMission
             ? 'Story mission · not a client request'
             : client
               ? <>Wants <b>{client.mineralPreferences.map(id => mineralMeta[id]?.name ?? id).join(' / ')}</b> · +{Math.round(client.payoutPremium * 100)}% pay</>
@@ -111,14 +122,24 @@ export default function MissionCard({
         </div>
         {routeLabel && <div className={styles.cardRoute}>{routeLabel}</div>}
         <div className={styles.cardTags}>
+          {/* Difficulty was already computed per mission but never shown, so the
+              progression curve was invisible on the board (STS-543). */}
+          <span className={`${styles.tag} ${styles.tagLevel}`} data-testid={`mission-card-${mission.id}-difficulty`}>
+            {mission.difficulty} · {missionDifficultyLabel(mission.difficulty)}
+          </span>
           {tags.map((t, i) => <span key={i} className={`${styles.tag} ${TAG_CLASS[t.tone]}`}>{t.label}</span>)}
         </div>
       </div>
       <div className={styles.cardSide}>
         <div className={styles.cardPay}>
-          <span className={styles.cardPayIcon}>▲</span>
-          {cardState === 'completed' ? '—' : displayPayout.toLocaleString()}
+          <span className={styles.cardPayIcon}>{FRANC}</span>
+          {cardState === 'completed' ? '—' : formatCurrency(displayPayout, { compact: true }).slice(FRANC.length)}
         </div>
+        {cardState !== 'completed' && (
+          <div className={styles.cardPayTier} data-testid={`mission-card-${mission.id}-payout-tier`}>
+            {missionPayoutTier(mission)} payout
+          </div>
+        )}
         {isAvailable ? (
           <span
             role="button"

@@ -1,5 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import {
+  REFINING_VALUE_MULTIPLIER,
+  STRUCTURE_PRICES,
   sellCargo,
   suggestBuild,
   validateBuild,
@@ -396,7 +398,7 @@ describe('seed bible v0 catalog', () => {
   it('defines twelve mechanical client slots at the spec unlock tiers', () => {
     expect(CLIENT_SLOTS).toHaveLength(12)
     expect(CLIENT_SLOTS.map(c => c.unlockTier)).toEqual([1, 1, 1, 2, 2, 2, 3, 3, 4, 4, 4, 5])
-    expect(CLIENT_SLOTS.every(c => !c.name.startsWith('Contractor Slot'))).toBe(true)
+    expect(CLIENT_SLOTS.every(c => !c.name.startsWith('Client Slot'))).toBe(true)
     expect(CLIENT_SLOTS.every(c => c.mineralPreferences.length > 0)).toBe(true)
     expect(CLIENT_SLOTS.every(c => c.payoutPremium >= 0.18)).toBe(true)
   })
@@ -422,19 +424,17 @@ describe('seed bible v0 catalog', () => {
     ]))
   })
 
-  it('defines six refined mineral recipes at the locked multipliers', () => {
-    const byInput = Object.fromEntries(REFINERY_RECIPES.map(recipe => [recipe.input.mineral, recipe]))
-    const expected = {
-      gold: 2.2,
-      uranium: 2.5,
-      cobalt: 1.9,
-      copper: 1.7,
-      aluminium: 1.6,
-      hydrogen: 2.0,
-    }
-    for (const [mineral, multiplier] of Object.entries(expected)) {
-      expect(byInput[mineral]?.output.name).toBe(`Refined ${MINERAL_META[mineral].name}`)
-      expect(byInput[mineral]?.output.price).toBeCloseTo(MINERAL_META[mineral].price * multiplier)
+  it('defines six refined mineral recipes that are worth running', () => {
+    // Every recipe used to destroy value: 3 gold (₣2,400 of ore) refined into
+    // one output worth ₣1,760, on top of a ₣100,000 cycle fee. Refining now
+    // returns REFINING_VALUE_MULTIPLIER on the ore it consumes, so the output
+    // clears both the input and the fee.
+    expect(REFINERY_RECIPES).toHaveLength(6)
+    for (const recipe of REFINERY_RECIPES) {
+      const inputValue = MINERAL_META[recipe.input.mineral].price * recipe.input.amount
+      expect(recipe.output.name).toBe(`Refined ${MINERAL_META[recipe.input.mineral].name}`)
+      expect(recipe.output.price).toBeCloseTo(inputValue * REFINING_VALUE_MULTIPLIER, -1)
+      expect(recipe.output.price - inputValue - recipe.cost).toBeGreaterThan(0)
     }
   })
 
@@ -442,14 +442,14 @@ describe('seed bible v0 catalog', () => {
     const refinery = STRUCTURES.find(structure => structure.id === 'refinery')
     expect(refinery).toMatchObject({
       kind: 'refinery',
-      cost: 800_000_000,
+      cost: STRUCTURE_PRICES.refinery,
       costMaterials: { aluminium: 20, copper: 10 },
       unlockTrigger: 'client-mission-trigger',
     })
     expect(refinery && structureUnlocked(refinery, { refineryUnlocked: false })).toBe(false)
     expect(refinery && structureUnlocked(refinery, { refineryUnlocked: true })).toBe(true)
     expect(refinery && canAffordStructure(refinery, {
-      francs: 800_000_000,
+      francs: STRUCTURE_PRICES.refinery,
       stash: { aluminium: 20, copper: 10 },
     })).toBe(true)
   })

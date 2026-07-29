@@ -2,12 +2,12 @@ import React from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { Boxes } from 'lucide-react'
 import { describe, expect, it } from 'vitest'
-import RocketStatCard from './RocketStatCard'
+import StatCard from './StatCard'
 
-describe('RocketStatCard', () => {
+describe('StatCard', () => {
   it('renders compact icon telemetry for preflight', () => {
     const markup = renderToStaticMarkup(
-      <RocketStatCard variant="compact" icon={<Boxes size={15} />} label="Cargo Bay" value="6 units" />,
+      <StatCard variant="compact" icon={<Boxes size={15} />} label="Cargo Bay" value="6 units" />,
     )
 
     expect(markup).toContain('Cargo Bay')
@@ -17,7 +17,7 @@ describe('RocketStatCard', () => {
 
   it('renders detailed telemetry for rocket selection', () => {
     const markup = renderToStaticMarkup(
-      <RocketStatCard label="Max Orbit" value="ORB 3" detail="Near-Earth" />,
+      <StatCard label="Max Orbit" value="ORB 3" detail="Near-Earth" />,
     )
 
     expect(markup).toContain('Max Orbit')

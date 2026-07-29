@@ -1,6 +1,8 @@
+import { STARTING_FRANCS } from '@/lib/data/economy'
 import type { GameState, LicenseGrade, Player, Screen } from '@/lib/game-types'
 import { MISSIONS, TARGETS } from '@/lib/data'
 import { FREE_OPS_START_MISSIONS_DONE } from '@/lib/data/mission-generator'
+import { migrateCrewRoster } from '@/lib/systems/CrewSystem'
 
 // Represents untrusted/partial saved state (e.g. from localStorage or remote sync)
 // where player fields are optional since older saves may be missing new fields.
@@ -16,7 +18,7 @@ const RUNTIME_TARGET_IDS = new Set(['earth-orbit-transit-telescope'])
 export const DEFAULT_STATE: GameState = {
   screen: 'intro',
   player: {
-    francs: 10_000_000_000,
+    francs: STARTING_FRANCS,
     activeMission: null,
     missionCount: 1,
     pendingLaunch: false,
@@ -51,6 +53,7 @@ export const DEFAULT_STATE: GameState = {
     licenseGrade: 'Grade I',
     researchXP: 0,
     unlockedBlueprints: [],
+    crew: [],
   },
   missionId: null,
   targetId: null,
@@ -119,6 +122,10 @@ export function normalizeState(input: PartialSave): GameState {
   const transitSatelliteLevel = Number.isFinite(player.transitSatelliteLevel)
     ? Math.max(1, Math.floor(player.transitSatelliteLevel ?? 1))
     : DEFAULT_STATE.player.transitSatelliteLevel
+  // Rovers predate the roster, so a save can carry roverDeployments and no
+  // crew at all. Fold them in here — the one choke point every load path runs
+  // through — rather than leaving the roster and roverDeployments to drift.
+  const crew = migrateCrewRoster(player, Date.now())
   const legacyClaim = input.pendingTerritoryClaimFor as unknown as { targetId: string; clientId?: string; contractorId?: string } | undefined
   const pendingTerritoryClaimFor = legacyClaim
     ? { targetId: legacyClaim.targetId, clientId: legacyClaim.clientId ?? legacyClaim.contractorId ?? '' }
@@ -130,7 +137,7 @@ export function normalizeState(input: PartialSave): GameState {
     missionId,
     targetId,
     rocket: { ...DEFAULT_STATE.rocket, ...input.rocket },
-    player: { ...DEFAULT_STATE.player, ...player, licenseGrade, researchXP, unlockedBlueprints, tessClassifications, discoveredExoplanetTargets, satelliteMonitoringLevel, transitSatelliteLevel },
+    player: { ...DEFAULT_STATE.player, ...player, licenseGrade, researchXP, unlockedBlueprints, tessClassifications, discoveredExoplanetTargets, satelliteMonitoringLevel, transitSatelliteLevel, crew },
     doneSteps: { ...DEFAULT_STATE.doneSteps, ...input.doneSteps },
     ...(pendingTerritoryClaimFor ? { pendingTerritoryClaimFor } : {}),
   }
@@ -215,13 +222,40 @@ export function mergeRemoteState(current: GameState, remoteState: PartialSave): 
 
   const remoteMissionsDone = remoteState.player?.missionsDone ?? -1
   if (current.player.missionsDone >= remoteMissionsDone) {
-    merged.player = current.player
+    // Construction is monotonic within an onboarding stage. A browser can
+    // have an older local save at Ops 0 while PocketBase already contains the
+    // launchpad the player placed; replacing the remote player wholesale here
+    // made that building disappear on refresh/login. Keep local values as the
+    // authority for the rest of the equal-stage player state, but retain every
+    // structure and its saved plot from either side.
+    const remotePlaced = Array.isArray(remoteState.player?.placed) ? remoteState.player.placed : []
+    const remotePlots = remoteState.player?.placementPlots ?? {}
+    merged.player = {
+      ...current.player,
+      placed: Array.from(new Set([...current.player.placed, ...remotePlaced])),
+      placementPlots: { ...remotePlots, ...current.player.placementPlots },
+    }
     merged.tutorial = current.tutorial
     merged.doneSteps = current.doneSteps
   } else {
     merged.player = { ...current.player, ...remoteState.player }
     merged.tutorial = remoteState.tutorial ?? current.tutorial
     merged.doneSteps = remoteState.doneSteps ?? {}
+  }
+
+  // A run is resumable state, not onboarding progress. If the current device
+  // has no active run but PocketBase does, keep the remote run and its route
+  // context even when both saves are at the same mission count. This prevents
+  // a stale local hub save from erasing the player's in-flight mission on
+  // reload/login.
+  const remoteActiveMission = remoteState.player?.activeMission
+  if (!current.player.activeMission && remoteActiveMission) {
+    merged.player.activeMission = remoteActiveMission
+    merged.player.missionRunId = remoteState.player?.missionRunId
+    merged.player.missionPhase = remoteState.player?.missionPhase
+    if (remoteState.missionId) merged.missionId = remoteState.missionId
+    if (remoteState.targetId) merged.targetId = remoteState.targetId
+    if (remoteState.screen && MISSION_CONTEXT_SCREENS.has(remoteState.screen)) merged.screen = remoteState.screen
   }
 
   return normalizeAndRepair(merged)

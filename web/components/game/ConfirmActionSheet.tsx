@@ -15,7 +15,7 @@ interface ConfirmActionSheetProps {
 // Bottom-sheet confirm/cancel gate for costly, irreversible actions —
 // same slide-up shape as SaveProgressPrompt, but for a plain confirm
 // rather than a form. First use: Upgrade Launchpad fired immediately on
-// click for a flat ₣1B with no confirmation step.
+// click for a flat launchpad-upgrade fee with no confirmation step.
 export default function ConfirmActionSheet({ eyebrow, title, description, confirmLabel, onConfirm, onDismiss }: ConfirmActionSheetProps) {
   return (
     <Sheet

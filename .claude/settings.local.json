@@ -106,7 +106,11 @@
       "WebFetch(domain:play.google.com)",
       "Skill(artifact-capabilities)",
       "WebFetch(domain:claude.ai)",
-      "mcp__zennotes__list_folders"
+      "mcp__zennotes__list_folders",
+      "mcp__plugin_cloudflare_cloudflare-docs__search_cloudflare_documentation",
+      "mcp__zennotes__move_to_trash",
+      "mcp__zennotes__rename_note",
+      "mcp__desk__list_agent_requests"
     ]
   },
   "enabledMcpjsonServers": [

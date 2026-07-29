@@ -1,7 +1,8 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import type { Target, MineralMeta } from '@/lib/data'
+import type { Target, MineralMeta, Mission, Client } from '@/lib/data'
+import { isOwnProgramMission, missionTypePrimer } from '@/lib/data'
 import { Scene } from '@/lib/engine'
 import TopBar from '@/components/ui/TopBar'
 import { GhostBtn, PrimaryBtn } from '@/components/ui/Button'
@@ -24,6 +25,10 @@ interface Props {
   /** Cargo being carried on this leg — shown as a manifest during delivery so it reads as "you're delivering what you just mined," not a generic hop. */
   cargo?: Record<string, number> | null
   minerals?: Record<string, MineralMeta>
+  /** Mission this flight belongs to — the wait reads as progress toward something specific rather than an empty bar (STS-546). */
+  mission?: Mission | null
+  /** Client that issued the mission, if any. Own-program runs pass none. */
+  client?: Client | null
 }
 
 const FAKE_PROGRESS_START = 12
@@ -33,7 +38,7 @@ const FAKE_PROGRESS_DURATION_MS = 4400 // (100 - 12) / 2 * 100ms steps, matches 
 // real leg of the mission.
 const DELIVERY_FAKE_PROGRESS_DURATION_MS = 7000
 
-export default function TransitScreen({ target, rocketImageSrc, arrivalAt, transitStartedAt, returning = false, onArrive, onBack, onAbandon, isDelivery = false, cargo, minerals }: Props) {
+export default function TransitScreen({ target, rocketImageSrc, arrivalAt, transitStartedAt, returning = false, onArrive, onBack, onAbandon, isDelivery = false, cargo, minerals, mission, client }: Props) {
   const isTimed = typeof arrivalAt === 'number'
   const fakeDurationMs = isDelivery ? DELIVERY_FAKE_PROGRESS_DURATION_MS : FAKE_PROGRESS_DURATION_MS
   const [now, setNow] = useState(() => Date.now())
@@ -178,7 +183,22 @@ export default function TransitScreen({ target, rocketImageSrc, arrivalAt, trans
   const arrived = isTimed ? now >= arrivalAt! : fakeProgress >= 100
   const destinationName = returning ? 'Earth' : target.name
   const legLabel = returning ? 'Inbound' : isDelivery ? 'Delivery' : 'Outbound'
-  const cargoEntries = isDelivery && cargo ? Object.entries(cargo).filter(([, amount]) => amount > 0) : []
+  // Manifest is no longer delivery-only: the Earth-return leg is carrying the
+  // haul too, and hiding it there was part of why transit read as an empty bar.
+  const cargoEntries = cargo && (isDelivery || returning)
+    ? Object.entries(cargo).filter(([, amount]) => amount > 0)
+    : []
+  const cargoHeading = isDelivery ? `Delivering to ${target.name}` : 'Hauling home to Earth'
+  const ownProgram = mission ? isOwnProgramMission(mission) : false
+  const issuedBy = ownProgram ? 'Your program' : client?.name ?? null
+  // What this specific leg is for, so the countdown has an object.
+  const legPurpose = mission
+    ? returning
+      ? 'Returning to Earth for debrief and payout'
+      : isDelivery
+        ? `Dropping the cargo at ${target.name}`
+        : missionTypePrimer(mission).summary
+    : null
 
   return (
     <div className="game-screen transit-screen">
@@ -211,6 +231,34 @@ export default function TransitScreen({ target, rocketImageSrc, arrivalAt, trans
         <div className="progress-track"><span style={{ width: `${progress}%` }} /></div>
       </div>
 
+      {mission && (
+        <div
+          data-testid="transit-mission-context"
+          style={{
+            margin: '0 16px 10px', padding: '10px 14px',
+            background: 'rgba(8,14,26,0.7)', backdropFilter: 'var(--ln-glass-blur)', WebkitBackdropFilter: 'var(--ln-glass-blur)',
+            border: '1px solid var(--ln-hairline)', borderLeft: '3px solid var(--ln-cyan)', borderRadius: 12,
+          }}
+        >
+          <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 9, fontWeight: 800, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'var(--ln-text-muted)' }}>
+            {legLabel} leg
+          </div>
+          <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 14, fontWeight: 800, color: 'var(--ln-text)', marginTop: 3 }}>
+            {mission.title}
+          </div>
+          {issuedBy && (
+            <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: ownProgram ? 'var(--ln-ok)' : 'var(--ln-cyan)', marginTop: 3 }}>
+              {ownProgram ? issuedBy : `For ${issuedBy}`}
+            </div>
+          )}
+          {legPurpose && (
+            <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 12, lineHeight: 1.45, color: 'var(--ln-text-dim)', marginTop: 6 }}>
+              {legPurpose}
+            </div>
+          )}
+        </div>
+      )}
+
       {cargoEntries.length > 0 && (
         <div style={{
           margin: '0 16px 12px', padding: '10px 14px',
@@ -218,7 +266,7 @@ export default function TransitScreen({ target, rocketImageSrc, arrivalAt, trans
           borderLeft: '3px solid var(--ln-amber)', borderRadius: 12,
         }}>
           <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 9, fontWeight: 800, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'var(--ln-text-dim)', marginBottom: 6 }}>
-            Delivering to {target.name}
+            {cargoHeading}
           </div>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
             {cargoEntries.map(([id, amount]) => (

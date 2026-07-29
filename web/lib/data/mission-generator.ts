@@ -1,4 +1,6 @@
+import { CARGO_BONUS_RATE, SCAN_CONTRACT_FEE } from './economy'
 import type { ClientSlot, MineralMeta, Mission, MissionTemplate, MissionConstructionPlan } from './types'
+import { normalizeMissionPayout } from './payouts'
 
 export const FREE_OPS_START_MISSIONS_DONE = 3
 export const ONBOARDING_SEQUENCE_COUNT = 2
@@ -29,7 +31,7 @@ export interface PocketBaseMissionTemplateSeed {
   drill_tier_min: number
   orbit_max: number
   payout_multiplier: number
-  contractor_role: string
+  client_role: string
   payout_formula: string
   scan_required?: boolean
   scan_count?: number
@@ -50,7 +52,7 @@ export interface PocketBaseMissionSeed {
   slug: string
   title: string
   brief: string
-  contractor_slug: string
+  client_slug: string
   tag: string
   difficulty: string
   locked: boolean
@@ -108,15 +110,15 @@ const FABRICATION_PAD_CONSTRUCTION: MissionConstructionPlan = {
 } satisfies MissionConstructionPlan
 
 export const DEFAULT_MISSION_TEMPLATES: MissionTemplate[] = [
-  { id: 'starter-bulk', tag: 'STARTER', difficulty: 'L1', mineralKeys: ['platinum', 'palladium'], cargoRange: [4, 8], drillTierMin: 1, orbitMax: 4, payoutMultiplier: 1.0, clientRole: 'starter', payoutFormula: 'mineral price * amount * 1500 * multiplier' },
-  { id: 'volatile-bulk', tag: 'BULK',    difficulty: 'L2', mineralKeys: ['palladium', 'platinum', 'iridium'], cargoRange: [4, 8], drillTierMin: 1, orbitMax: 5, payoutMultiplier: 1.35, clientRole: 'bulk', payoutFormula: 'mineral price * amount * 1500 * multiplier' },
-  { id: 'metal-prospect', tag: 'PROSPECT', difficulty: 'L2', mineralKeys: ['iridium', 'rhodium', 'gold'], cargoRange: [3, 6], drillTierMin: 2, orbitMax: 5, payoutMultiplier: 2.25, clientRole: 'prospect', payoutFormula: 'mineral price * amount * 1500 * multiplier' },
-  { id: 'command-reserve', tag: 'COMMAND', difficulty: 'L3', mineralKeys: ['rhodium', 'rare', 'iridium'], cargoRange: [2, 4], drillTierMin: 2, orbitMax: 6, payoutMultiplier: 3.5, clientRole: 'command', payoutFormula: 'mineral price * amount * 1500 * multiplier' },
-  { id: 'freeops-delivery', tag: 'DELIVERY', difficulty: 'L1', mineralKeys: ['hydrogen', 'cobalt', 'copper', 'aluminium'], cargoRange: [4, 10], drillTierMin: 1, orbitMax: 5, payoutMultiplier: 1.25, clientRole: 'starter', payoutFormula: 'mineral price * amount * 1500 * multiplier' },
-  { id: 'freeops-mining-survey', tag: 'SURVEY', difficulty: 'L1', mineralKeys: ['cobalt', 'copper', 'aluminium', 'gold'], cargoRange: [3, 7], drillTierMin: 1, orbitMax: 5, payoutMultiplier: 1.55, clientRole: 'prospect', payoutFormula: 'mineral price * amount * 1500 * multiplier' },
-  { id: 'freeops-bulk-run', tag: 'BULK', difficulty: 'L1', mineralKeys: ['hydrogen', 'aluminium', 'copper'], cargoRange: [8, 16], drillTierMin: 1, orbitMax: 5, payoutMultiplier: 1.15, clientRole: 'bulk', payoutFormula: 'mineral price * amount * 1500 * multiplier' },
+  { id: 'starter-bulk', tag: 'STARTER', difficulty: 'L1', mineralKeys: ['platinum', 'palladium'], cargoRange: [4, 8], drillTierMin: 1, orbitMax: 4, payoutMultiplier: 1.0, clientRole: 'starter', payoutFormula: 'contract fee + cargo value bonus' },
+  { id: 'volatile-bulk', tag: 'BULK',    difficulty: 'L2', mineralKeys: ['palladium', 'platinum', 'iridium'], cargoRange: [4, 8], drillTierMin: 1, orbitMax: 5, payoutMultiplier: 1.35, clientRole: 'bulk', payoutFormula: 'contract fee + cargo value bonus' },
+  { id: 'metal-prospect', tag: 'PROSPECT', difficulty: 'L2', mineralKeys: ['iridium', 'rhodium', 'gold'], cargoRange: [3, 6], drillTierMin: 2, orbitMax: 5, payoutMultiplier: 2.25, clientRole: 'prospect', payoutFormula: 'contract fee + cargo value bonus' },
+  { id: 'command-reserve', tag: 'COMMAND', difficulty: 'L3', mineralKeys: ['rhodium', 'rare', 'iridium'], cargoRange: [2, 4], drillTierMin: 2, orbitMax: 6, payoutMultiplier: 3.5, clientRole: 'command', payoutFormula: 'contract fee + cargo value bonus' },
+  { id: 'freeops-delivery', tag: 'DELIVERY', difficulty: 'L1', mineralKeys: ['hydrogen', 'cobalt', 'copper', 'aluminium'], cargoRange: [4, 10], drillTierMin: 1, orbitMax: 5, payoutMultiplier: 1.25, clientRole: 'starter', payoutFormula: 'contract fee + cargo value bonus' },
+  { id: 'freeops-mining-survey', tag: 'SURVEY', difficulty: 'L1', mineralKeys: ['cobalt', 'copper', 'aluminium', 'gold'], cargoRange: [3, 7], drillTierMin: 1, orbitMax: 5, payoutMultiplier: 1.55, clientRole: 'prospect', payoutFormula: 'contract fee + cargo value bonus' },
+  { id: 'freeops-bulk-run', tag: 'BULK', difficulty: 'L1', mineralKeys: ['hydrogen', 'aluminium', 'copper'], cargoRange: [8, 16], drillTierMin: 1, orbitMax: 5, payoutMultiplier: 1.15, clientRole: 'bulk', payoutFormula: 'contract fee + cargo value bonus' },
   { id: 'freeops-station-scan', tag: 'SCAN', difficulty: 'L1', mineralKeys: ['cobalt', 'copper', 'aluminium', 'gold'], cargoRange: [0, 0], drillTierMin: 1, orbitMax: 5, payoutMultiplier: 0.85, clientRole: 'prospect', payoutFormula: 'scan fee + mapped deposit bonus', survey: SCANNING_STATION_SURVEY },
-  { id: 'freeops-rover-landing', tag: 'ROVER', difficulty: 'L1', mineralKeys: ['cobalt', 'copper', 'aluminium', 'hydrogen'], cargoRange: [2, 5], drillTierMin: 1, orbitMax: 5, payoutMultiplier: 1.7, clientRole: 'starter', payoutFormula: 'mineral price * amount * 1500 * multiplier + landing bonus', survey: STARTER_ROVER_SURVEY },
+  { id: 'freeops-rover-landing', tag: 'ROVER', difficulty: 'L1', mineralKeys: ['cobalt', 'copper', 'aluminium', 'hydrogen'], cargoRange: [2, 5], drillTierMin: 1, orbitMax: 5, payoutMultiplier: 1.7, clientRole: 'starter', payoutFormula: 'contract fee + cargo value bonus + landing bonus', survey: STARTER_ROVER_SURVEY },
   { id: 'construct-fuel-depot', tag: 'CONSTRUCT', difficulty: 'L2', mineralKeys: ['hydrogen', 'aluminium', 'copper'], cargoRange: [8, 14], drillTierMin: 1, orbitMax: 5, payoutMultiplier: 2.8, clientRole: 'prospect', payoutFormula: 'structure value * 2 + delivery bonus', construction: FUEL_DEPOT_CONSTRUCTION },
   { id: 'construct-battery-station', tag: 'CONSTRUCT', difficulty: 'L2', mineralKeys: ['cobalt', 'nickel', 'copper', 'gold'], cargoRange: [8, 14], drillTierMin: 2, orbitMax: 6, payoutMultiplier: 3.2, clientRole: 'command', payoutFormula: 'structure value * 2 + delivery bonus', construction: BATTERY_STATION_CONSTRUCTION },
   { id: 'construct-fabrication-pad', tag: 'CONSTRUCT', difficulty: 'L3', mineralKeys: ['iron', 'silicon', 'aluminium', 'carbon'], cargoRange: [10, 18], drillTierMin: 2, orbitMax: 6, payoutMultiplier: 3.6, clientRole: 'bulk', payoutFormula: 'structure value * 2 + delivery bonus', construction: FABRICATION_PAD_CONSTRUCTION },
@@ -223,7 +225,7 @@ export function generateMissionsFromRules(input: MissionGeneratorInput, count = 
     const mineralNames = Object.keys(minerals).map(mineral => MINERAL_LABELS[mineral] ?? input.minerals[mineral]?.name ?? mineral)
     const primary = mineralNames.join(' + ')
     const francs = Object.entries(minerals).reduce(
-      (sum, [mineral, amount]) => sum + (input.minerals[mineral]?.price ?? 0) * amount * 1500 * template.payoutMultiplier * payoutMultiplier(client),
+      (sum, [mineral, amount]) => sum + (input.minerals[mineral]?.price ?? 0) * amount * CARGO_BONUS_RATE * template.payoutMultiplier * payoutMultiplier(client),
       0
     )
 
@@ -244,7 +246,7 @@ export function generateMissionsFromRules(input: MissionGeneratorInput, count = 
         max_orbit: template.orbitMax,
       },
       payout: {
-        francs: Math.round(francs),
+        francs: normalizeMissionPayout(francs, band.sequence),
         affinity: Math.max(4, Math.round(6 + band.sequence * 2 + cargoMin / 3)),
       },
       survey: template.survey,
@@ -270,8 +272,8 @@ export function generateFreeOpsMissionsFromRules(input: MissionGeneratorInput): 
       const amount = scanOnly ? 0 : template.cargoRange[0] + clientIndex + templateIndex
       const mineralName = input.minerals[mineral]?.name ?? mineral
       const francs = scanOnly
-        ? 250_000 * template.payoutMultiplier * payoutMultiplier(client)
-        : (input.minerals[mineral]?.price ?? 0) * amount * 1500 * template.payoutMultiplier * payoutMultiplier(client)
+        ? SCAN_CONTRACT_FEE * template.payoutMultiplier * payoutMultiplier(client)
+        : (input.minerals[mineral]?.price ?? 0) * amount * CARGO_BONUS_RATE * template.payoutMultiplier * payoutMultiplier(client)
       return {
         id: `freeops-${client.id}-${template.id}-${templateIndex + 1}`,
         title: scanOnly
@@ -293,7 +295,7 @@ export function generateFreeOpsMissionsFromRules(input: MissionGeneratorInput): 
           max_orbit: template.orbitMax,
         },
         payout: {
-          francs: Math.round(francs),
+          francs: normalizeMissionPayout(francs, FREE_OPS_START_MISSIONS_DONE + 1),
           affinity: Math.max(5, Math.round(8 + amount / 2)),
         },
         survey: template.survey,
@@ -313,7 +315,7 @@ export function missionTemplatesToPocketBaseRows(templates = DEFAULT_MISSION_TEM
     drill_tier_min: template.drillTierMin,
     orbit_max: template.orbitMax,
     payout_multiplier: template.payoutMultiplier,
-    contractor_role: template.clientRole,
+    client_role: template.clientRole,
     payout_formula: template.payoutFormula,
     scan_required: template.survey?.scanRequired,
     scan_count: template.survey?.scanCount,
@@ -338,7 +340,7 @@ export function missionsToPocketBaseRows(missions: Mission[]): PocketBaseMission
     slug: mission.id,
     title: mission.title,
     brief: mission.brief,
-    contractor_slug: mission.client,
+    client_slug: mission.client,
     tag: mission.tag,
     difficulty: mission.difficulty,
     locked: mission.locked,

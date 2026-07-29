@@ -2,7 +2,7 @@
 
 import { useRef, useState } from 'react'
 import type { Mission, Target, MineralMeta, Client, RocketConfig } from '@/lib/data'
-import { calibrateOnboardingPayout, clientAffinityBonus, rocketDisplayForConfig, starterRocketForConfig, MAX_AFFINITY_BONUS } from '@/lib/data'
+import { calibrateOnboardingPayout, clientAffinityBonus, rocketDisplayForConfig, starterRocketForConfig, MAX_AFFINITY_BONUS, loanInstalmentFor } from '@/lib/data'
 import TopBar from '@/components/ui/TopBar'
 import { PrimaryBtn } from '@/components/ui/Button'
 import Panel from '@/components/ui/Panel'
@@ -12,9 +12,11 @@ import CostSummaryRow from '@/components/game/CostSummaryRow'
 import { UI_ZONES } from '@/lib/ui-zones'
 import TutorialHighlight from '@/components/game/TutorialHighlight'
 import { ScrapSequenceCanvas } from '@/components/game/ScrapSequenceCanvas'
-import { formatFrancs } from '@/lib/format'
+import { formatCurrency } from '@/lib/format'
+import ProgressBar from '@/components/ui/ProgressBar'
+import StatRow from '@/components/ui/StatRow'
 
-export default function DebriefScreen({ mission, target, cargo, onDone, minerals, clients, clientMissions, freeOperations, annotations, missionsDone, hasCoach, shipDestroyed, rocket, deliveryTargetName }: {
+export default function DebriefScreen({ mission, target, cargo, onDone, minerals, clients, clientMissions, freeOperations, annotations, missionsDone, hasCoach, shipDestroyed, rocket, deliveryTargetName, loanDebt }: {
   mission: Mission
   target: Target
   cargo: Record<string, number>
@@ -29,6 +31,8 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
   shipDestroyed?: boolean
   rocket?: Pick<RocketConfig, 'chassis'>
   deliveryTargetName?: string
+  /** Outstanding emergency-loan debt. Collecting this payout repays an instalment, so it is itemized rather than silently deducted (STS-542). */
+  loanDebt?: number
 }) {
   const [resolved, setResolved] = useState(false)
   const [collecting, setCollecting] = useState(false)
@@ -56,7 +60,10 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
   const isTwoLegJob = !!mission.deliveryTargetId
   const miningFee = isTwoLegJob ? Math.round(mission.payout.francs * 0.5) : 0
   const transportFee = isTwoLegJob ? mission.payout.francs - miningFee : 0
-  const netTotal = total - starterRocket.costFrancs
+  // Repaid out of this payout the moment it is collected (see onDebriefDone),
+  // so it belongs in the expense panel and in Net — not silently off the balance.
+  const loanRepayment = loanInstalmentFor(loanDebt)
+  const netTotal = total - starterRocket.costFrancs - loanRepayment
 
   return (
     <div className="game-screen debrief-screen">
@@ -106,14 +113,14 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
                         Cap +{Math.round(MAX_AFFINITY_BONUS * 100)}%
                       </span>
                     </div>
-                    <div style={{ height: 4, borderRadius: 2, background: 'rgba(255,255,255,0.08)', overflow: 'hidden' }}>
-                      <div style={{
-                        height: '100%', borderRadius: 2,
-                        width: `${Math.min(100, (affinityMultiplier / MAX_AFFINITY_BONUS) * 100)}%`,
-                        background: 'linear-gradient(90deg, var(--ln-amber), #f5d56a)',
-                        transition: 'width .6s ease-out',
-                      }} />
-                    </div>
+                    <ProgressBar
+                      value={affinityMultiplier}
+                      max={MAX_AFFINITY_BONUS}
+                      tone="amber"
+                      height={4}
+                      flat
+                      label="Client affinity"
+                    />
                   </div>
                 )}
               </div>
@@ -178,7 +185,7 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
                   Total
                 </span>
                 <span style={{ fontFamily: 'var(--ln-font-display)', fontSize: 28, fontWeight: 800, color: 'var(--ln-amber)', lineHeight: 1 }}>
-                  ▲ {formatFrancs(total)}
+                  {formatCurrency(total)}
                 </span>
               </div>
             </Panel>
@@ -190,10 +197,18 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
               <div style={{ display: 'flex', flexDirection: 'column' }}>
                 <CostSummaryRow
                   label={`${starterRocket.name} · Vehicle Cost`}
-                  value={`▼ ${formatFrancs(starterRocket.costFrancs)}`}
+                  value={formatCurrency(-starterRocket.costFrancs, { signed: true })}
                   color="var(--ln-crimson)"
-                  last
+                  last={loanRepayment === 0}
                 />
+                {loanRepayment > 0 && (
+                  <CostSummaryRow
+                    label={loanRepayment >= (loanDebt ?? 0) ? 'Loan repayment · debt cleared' : 'Loan repayment · instalment'}
+                    value={formatCurrency(-loanRepayment, { signed: true })}
+                    color="var(--ln-crimson)"
+                    last
+                  />
+                )}
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 0 4px', marginTop: 4, borderTop: '1px solid rgba(255,255,255,0.06)' }}>
                 <span style={{ width: 8, height: 8, borderRadius: '50%', flexShrink: 0, background: shipDestroyed ? 'var(--ln-crimson)' : 'var(--ln-ok)' }} />
@@ -208,7 +223,7 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
                   Net
                 </span>
                 <span style={{ fontFamily: 'var(--ln-font-display)', fontSize: 24, fontWeight: 800, lineHeight: 1, color: netTotal >= 0 ? 'var(--ln-amber)' : 'var(--ln-crimson)' }}>
-                  {netTotal >= 0 ? '▲' : '▼'} {formatFrancs(Math.abs(netTotal))}
+                  {formatCurrency(netTotal, { signed: true })}
                 </span>
               </div>
             </Panel>
@@ -222,7 +237,7 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
                   Francs Earned
                 </span>
                 <span style={{ fontFamily: 'var(--ln-font-display)', fontSize: 28, fontWeight: 800, color: 'var(--ln-text-muted)', lineHeight: 1 }}>
-                  ▲ {formatFrancs(total)}
+                  {formatCurrency(total)}
                 </span>
               </div>
             </Panel>
@@ -268,7 +283,7 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
               onDone(total, delivered ? mission.payout.affinity : 0, delivered ? mission.requires.minerals : {})
             }}
           >
-            {delivered ? `Collect ▲ ${formatFrancs(total)}` : 'Return to Base'}
+            {delivered ? `Collect ${formatCurrency(total)}` : 'Return to Base'}
           </PrimaryBtn>
         )}
       </div>
@@ -284,12 +299,9 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
 }
 
 function PayRow({ label, value }: { label: string; value: number }) {
-  return (
-    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '4px 0', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
-      <span style={{ fontFamily: 'var(--ln-font-body)', fontSize: 12, color: 'var(--ln-text-dim)' }}>{label}</span>
-      <span style={{ fontFamily: 'var(--ln-font-mono)', fontSize: 12, color: 'var(--ln-amber)' }}>▲ {formatFrancs(value)}</span>
-    </div>
-  )
+  // Payout lines stay on full precision — this is the itemization the player
+  // checks the collected total against (STS-539 policy).
+  return <StatRow label={label} value={formatCurrency(value)} />
 }
 
 function ClientStat({ label, value, highlight }: { label: string; value: string; highlight?: boolean }) {

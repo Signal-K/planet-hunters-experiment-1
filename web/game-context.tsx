@@ -190,6 +190,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       sellMinerals: economy.sellMinerals,
       onStartRefine: economy.onStartRefine,
       onCollectRefined: economy.onCollectRefined,
+      placeStructure: economy.placeStructure,
       upgradeLaunchpad: economy.upgradeLaunchpad,
       buildScanner: economy.buildScanner,
       startScan: economy.startScan,

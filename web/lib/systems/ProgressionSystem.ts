@@ -2,9 +2,8 @@
 
 import type { GameState, LicenseGrade } from '@/lib/game-types'
 import type { Mission } from '@/lib/data'
-import { canUnlockSkillNode, getSkillNode } from '@/lib/data'
+import { canUnlockSkillNode, getSkillNode, LOAN_PRINCIPAL, LOAN_DEBT_ON_ACCEPT } from '@/lib/data'
 
-const LOAN_AMOUNT = 500_000_000
 // Retuned 2026-07-21 (STS-492): originals (0/100/300) were set with no real
 // per-mission income data — no player had ever reached Grade III since
 // nothing in the UI called upgradeLicenseGrade. Retuned against actual XP
@@ -99,8 +98,8 @@ export function applyAcceptLoan(s: GameState): GameState {
     popup: null,
     player: {
       ...s.player,
-      francs: s.player.francs + LOAN_AMOUNT,
-      loanDebt: s.player.loanDebt + LOAN_AMOUNT * 1.08,
+      francs: s.player.francs + LOAN_PRINCIPAL,
+      loanDebt: s.player.loanDebt + LOAN_DEBT_ON_ACCEPT,
       loanOffered: true,
     },
   }

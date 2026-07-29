@@ -4,13 +4,13 @@ import { useState } from 'react'
 import { PrimaryBtn, GhostBtn } from '@/components/ui/Button'
 import type { Mission } from '@/lib/data'
 import TutorialHighlight from '@/components/game/TutorialHighlight'
-import RocketStatCard from '@/components/game/RocketStatCard'
+import StatCard from '@/components/ui/StatCard'
 import CostSummaryRow from '@/components/game/CostSummaryRow'
 import MissionSetupShell, {
   MissionSetupCard,
   MissionSetupFrame,
 } from '@/components/game/screens/MissionSetupShell'
-import { formatFrancs } from '@/lib/format'
+import { formatCurrency } from '@/lib/format'
 import { getRequiredStarterRocket } from '@/lib/rockets'
 import { calibrateOnboardingPayout } from '@/lib/data'
 import RocketCutaway, { type RocketRoomKey } from '@/components/game/RocketCutaway'
@@ -21,7 +21,6 @@ function orbitLabel(maxOrbit: number): string {
   if (maxOrbit <= 7) return 'Mid Belt'
   return 'Outer Belt'
 }
-
 function drillLabel(tier: number): string {
   if (tier === 0) return 'No drill'
   if (tier === 1) return 'Fe · Si · Basalt'
@@ -99,7 +98,7 @@ export default function RocketPurchaseScreen({ missionsDone, francs, mission, de
         <>
           <div style={{ marginBottom: 8 }}><GhostBtn full onClick={onBack}>Back</GhostBtn></div>
           <PrimaryBtn kind="cyan" disabled={!canAfford} onClick={() => onPurchase(rocket.id)}>
-            Purchase · {formatFrancs(rocket.costFrancs, { compact: true })} ▲
+            Purchase · {formatCurrency(rocket.costFrancs, { compact: true })}
           </PrimaryBtn>
         </>
       )}
@@ -136,7 +135,7 @@ export default function RocketPurchaseScreen({ missionsDone, francs, mission, de
             letterSpacing: '0.2em', textTransform: 'uppercase',
             color: isFree ? '#39d36a' : '#f5a623',
           }}>
-            SR{rocket.tier} · {isFree ? 'INCLUDED' : `${formatFrancs(rocket.costFrancs, { compact: true })} ▲`}
+            SR{rocket.tier} · {isFree ? 'INCLUDED' : formatCurrency(rocket.costFrancs, { compact: true })}
           </span>
         </div>
       </MissionSetupFrame>
@@ -153,17 +152,17 @@ export default function RocketPurchaseScreen({ missionsDone, francs, mission, de
           </div>
 
           <div style={{ display: 'flex', gap: 8 }}>
-            <RocketStatCard
+            <StatCard
               label="Cargo"
               value={`${rocket.stats.cargo}U`}
               detail={cargoLabel(rocket.stats.cargo)}
             />
-            <RocketStatCard
+            <StatCard
               label="Max Orbit"
               value={`ORB ${rocket.stats.maxOrbit}`}
               detail={orbitLabel(rocket.stats.maxOrbit)}
             />
-            <RocketStatCard
+            <StatCard
               label="Drill"
               value={`T${rocket.stats.drillTier}`}
               detail={drillLabel(rocket.stats.drillTier)}
@@ -182,13 +181,13 @@ export default function RocketPurchaseScreen({ missionsDone, francs, mission, de
           {!isFree && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 0, background: 'rgba(6,12,22,0.5)', borderRadius: 10, border: '1px solid rgba(135,207,250,0.12)', overflow: 'hidden' }}>
               {missionPayout !== undefined && (
-                <CostSummaryRow label="Mission Payout (base)" value={`${formatFrancs(missionPayout, { compact: true })} ▲`} color="var(--ln-cyan)" />
+                <CostSummaryRow label="Mission Payout (base)" value={formatCurrency(missionPayout, { compact: true })} color="var(--ln-cyan)" />
               )}
-              <CostSummaryRow label="Vehicle Cost" value={`${formatFrancs(rocket.costFrancs, { compact: true })} ▲`} color="var(--ln-amber)" />
+              <CostSummaryRow label="Vehicle Cost" value={formatCurrency(rocket.costFrancs, { compact: true })} color="var(--ln-amber)" />
               {estProfit !== undefined && (
-                <CostSummaryRow label="Est. Profit" value={`${estProfit >= 0 ? '+' : '−'}${formatFrancs(Math.abs(estProfit), { compact: true })} ▲`} color={estProfit >= 0 ? 'var(--ln-ok)' : 'var(--ln-crimson)'} />
+                <CostSummaryRow label="Est. Profit" value={formatCurrency(estProfit, { compact: true, signed: true })} color={estProfit >= 0 ? 'var(--ln-ok)' : 'var(--ln-crimson)'} />
               )}
-              <CostSummaryRow label="Your Balance" value={`${formatFrancs(francs, { compact: true })} ▲`} color={canAfford ? 'var(--ln-text)' : 'var(--ln-crimson)'} last />
+              <CostSummaryRow label="Your Balance" value={formatCurrency(francs, { compact: true })} color={canAfford ? 'var(--ln-text)' : 'var(--ln-crimson)'} last />
               {missionPayout !== undefined && (
                 <div style={{ padding: '6px 14px 10px', fontFamily: 'var(--ln-font-body)', fontSize: 10, color: '#6a7e94', borderTop: '1px solid rgba(135,207,250,0.08)' }}>
                   The rocket is a one-time purchase; the mission payout is what you collect at debrief. Client premiums and affinity bonuses can raise the payout above the base figure shown.

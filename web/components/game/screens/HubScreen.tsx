@@ -8,6 +8,8 @@ import ConfirmActionSheet from '@/components/game/ConfirmActionSheet'
 import { TutorialCompleteSheet, useTutorialCompleteAck } from '@/components/game/TutorialCompleteSheet'
 import { Scene } from '@/lib/engine/Scene'
 import type { EntityData } from '@/lib/engine/types'
+import { buildPlotEntities } from '@/lib/engine/prefabs'
+import { readComponentNumber } from '@/lib/engine/registry'
 import { AmbientMotes } from '@/components/game/hub/AmbientMotes'
 import { HubWorldBackground } from '@/components/game/hub/HubWorldBackground'
 import { SoilCrossSection } from '@/components/game/hub/SoilCrossSection'
@@ -18,6 +20,8 @@ import HubPixiCanvas from '@/components/game/hub/HubPixiCanvas'
 import ErrorBoundary from '@/components/ui/ErrorBoundary'
 import { TUTORIAL_CONTENT_TOP } from '@/lib/tutorial-layout'
 import { FREE_OPS_START_MISSIONS_DONE } from '@/lib/data/mission-generator'
+import { LAUNCHPAD_UPGRADE_COST } from '@/lib/data'
+import { formatCurrency } from '@/lib/format'
 import type { HubBuildingDef } from '@/lib/pixi/hubScene'
 import { fetchReviewableTessCandidates } from '@/lib/tess-subjects'
 import HUDStrip from '@/components/ui/HUDStrip'
@@ -109,12 +113,11 @@ function SceneBtn({ icon, label, onClick, active, accent, muted, pulse }: {
   )
 }
 
-const DEFAULT_PLOTS: EntityData[] = [
-  { id: 'plot-0', name: 'Plot 0', transform: { position: { x: 60, y: 570 }, rotation: 0, scale: { x: 1, y: 1 } }, components: [{ type: 'BuildPlot', index: 0 }] },
-  { id: 'plot-1', name: 'Plot 1', transform: { position: { x: 154, y: 570 }, rotation: 0, scale: { x: 1, y: 1 } }, components: [{ type: 'BuildPlot', index: 1 }] },
-  { id: 'plot-2', name: 'Plot 2', transform: { position: { x: 248, y: 570 }, rotation: 0, scale: { x: 1, y: 1 } }, components: [{ type: 'BuildPlot', index: 2 }] },
-  { id: 'plot-3', name: 'Plot 3', transform: { position: { x: 342, y: 570 }, rotation: 0, scale: { x: 1, y: 1 } }, components: [{ type: 'BuildPlot', index: 3 }] },
-]
+// Instantiated from the build-plot prefab rather than written out by hand.
+// This same list previously existed in four places (both hub scene files and
+// both screens); the prefab is the one definition and a test asserts it still
+// reproduces hub.scene.json exactly.
+const DEFAULT_PLOTS: EntityData[] = buildPlotEntities()
 
 interface HubScreenProps {
   player: Player
@@ -171,8 +174,8 @@ export default function HubScreen({ player, hasCoach, onGoBuilding, onNav, onUpg
   }, [player.freeOperations, player.satelliteMonitoringBuilt, player.transitSatelliteLaunchedAt, player.tessClassifications])
 
   const sortedEntities = plotEntities.slice().sort((a, b) => {
-    const ai = (a.components.find(c => c.type === 'BuildPlot')?.index as number) ?? 0
-    const bi = (b.components.find(c => c.type === 'BuildPlot')?.index as number) ?? 0
+    const ai = readComponentNumber(a, 'BuildPlot', 'index', 0)
+    const bi = readComponentNumber(b, 'BuildPlot', 'index', 0)
     return ai - bi
   })
 
@@ -369,7 +372,7 @@ export default function HubScreen({ player, hasCoach, onGoBuilding, onNav, onUpg
       </div>
 
       {/* Progression card — hidden when tutorial coach is active */}
-      {!hasCoach && !subsurface && (
+      {(!hasCoach || !!player.activeMission || !!player.pendingLaunch) && !subsurface && (
         <>
           <ProgressionCard player={player} onGoBuilding={onGoBuilding} onNav={onNav} top={TUTORIAL_CONTENT_TOP} />
           {comingSoon && (
@@ -385,8 +388,8 @@ export default function HubScreen({ player, hasCoach, onGoBuilding, onNav, onUpg
         <ConfirmActionSheet
           eyebrow="Upgrade"
           title="Upgrade Launchpad"
-          description="Spend ₣1,000,000,000 to permanently upgrade the launchpad. This can't be undone."
-          confirmLabel="Confirm Upgrade (₣1B)"
+          description={`Spend ${formatCurrency(LAUNCHPAD_UPGRADE_COST)} to permanently upgrade the launchpad. This can't be undone.`}
+          confirmLabel={`Confirm Upgrade (${formatCurrency(LAUNCHPAD_UPGRADE_COST, { compact: true })})`}
           onConfirm={() => { onUpgradeLaunchpad(); setConfirmingLaunchpadUpgrade(false) }}
           onDismiss={() => setConfirmingLaunchpadUpgrade(false)}
         />
@@ -410,7 +413,7 @@ export default function HubScreen({ player, hasCoach, onGoBuilding, onNav, onUpg
                     <SceneBtn icon={<HangarGlyph />} label="Hangar" onClick={() => onGoBuilding('hangar')} />
                   )}
                   {player.placed.includes('launchpad') && !player.launchpadUpgraded && onUpgradeLaunchpad && (
-                    <SceneBtn icon={<UpgradeGlyph />} label="Upgrade Launchpad (₣1B)" accent onClick={() => setConfirmingLaunchpadUpgrade(true)} />
+                    <SceneBtn icon={<UpgradeGlyph />} label={`Upgrade Launchpad (${formatCurrency(LAUNCHPAD_UPGRADE_COST, { compact: true })})`} accent onClick={() => setConfirmingLaunchpadUpgrade(true)} />
                   )}
                 </>
               )}

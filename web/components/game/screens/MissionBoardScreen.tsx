@@ -6,7 +6,7 @@ import TopBar from '@/components/ui/TopBar'
 import Panel from '@/components/ui/Panel'
 import StatusPill from '@/components/ui/StatusPill'
 import { IconBtn } from '@/components/ui/Button'
-import { compatibleTargetsFor, clientAffinityBonus, clientUnlocked, FREE_OPS_START_MISSIONS_DONE, CLIENT_AFFINITY_MISSION_THRESHOLD, MISSION_TEMPLATES, CLIENT_SLOTS, SELF_DIRECTED_MINING_MISSION_ID } from '@/lib/data'
+import { compatibleTargetsFor, clientAffinityBonus, clientUnlocked, FREE_OPS_START_MISSIONS_DONE, CLIENT_AFFINITY_MISSION_THRESHOLD, MISSION_TEMPLATES, CLIENT_SLOTS, SELF_DIRECTED_MINING_MISSION_ID, missionTypePrimer, isOwnProgramMission } from '@/lib/data'
 import type { DailyClientPool, Mission } from '@/lib/data'
 import type { Catalog } from '@/lib/catalog'
 import { TUTORIAL_CONTENT_TOP } from '@/lib/tutorial-layout'
@@ -19,7 +19,7 @@ import MissionBoardSection from '@/components/game/MissionBoardSection'
 import MissionBoardCompleteState from '@/components/game/MissionBoardCompleteState'
 import IconBadge from '@/components/ui/IconBadge'
 import SegmentedBar from '@/components/ui/SegmentedBar'
-import { formatFrancs } from '@/lib/format'
+import { formatCurrency } from '@/lib/format'
 import styles from './MissionBoard.module.css'
 
 function CornerBracket({ position }: { position: 'tl' | 'tr' | 'bl' | 'br' }) {
@@ -228,7 +228,9 @@ export default function MissionBoardScreen({ onBack, onPick, missionsDone, freeO
     const cr = freeOperations || m.sequence === sequence || (!!ctr && clientUnlocked(ctr, sequence))
     return cr && (freeOperations || available.some(item => item.id === m.id))
   })
-  const hasClientMission = missionList.some(m => !!m.client)
+  // Own-program runs are filed under a pseudo-client, so the payout-premium
+  // disclaimer must key off real client work, not just a populated field.
+  const hasClientMission = missionList.some(m => !!m.client && !isOwnProgramMission(m))
   const cardModels = missionList
     .map((m, idx) => {
       const completedToday_ = isCompletedToday(m.id)
@@ -262,6 +264,7 @@ export default function MissionBoardScreen({ onBack, onPick, missionsDone, freeO
 
   const effectivePreviewId = previewId ?? cardModels.find(c => c.unlocked)?.mission.id ?? cardModels[0]?.mission.id ?? null
   const previewModel = cardModels.find(c => c.mission.id === effectivePreviewId) ?? null
+  const primer = previewModel ? missionTypePrimer(previewModel.mission) : null
 
   return (
     <div style={{ width: '100%', height: '100%', position: 'relative', background: 'var(--ln-shell)' }}>
@@ -275,7 +278,7 @@ export default function MissionBoardScreen({ onBack, onPick, missionsDone, freeO
           onBack={onBack}
           solid
           levelBadge={`LV. ${missionsDone + 1}`}
-          credits={francs}
+          francs={francs}
           right={
             <IconBtn
               ariaLabel="Client bonus guide"
@@ -336,6 +339,31 @@ export default function MissionBoardScreen({ onBack, onPick, missionsDone, freeO
             {hasClientMission && (
               <div className={styles.disclaimer}>
                 Changes this job&apos;s payout only — does not increase minerals mined.
+              </div>
+            )}
+
+            {/* The Contract Detail panel carries this job's specifics; this
+                fills the board's empty lower half with the abridged "what kind
+                of run is this" read instead — every mission type, onboarding
+                and Free Ops alike. */}
+            {primer && (
+              <div className={styles.primer} data-testid="mission-type-primer">
+                <div className={styles.primerEyebrow}>Mission Type</div>
+                <div className={styles.primerTitleRow}>
+                  <span className={styles.primerTitle}>{primer.label}</span>
+                  {primer.owner === 'self' && (
+                    <span className={styles.primerOwnTag} data-testid="mission-type-primer-own">Your operation</span>
+                  )}
+                </div>
+                <div className={styles.primerBody}>{primer.summary}</div>
+                <div className={styles.primerSteps}>
+                  {primer.steps.map((stepLabel, i) => (
+                    <React.Fragment key={stepLabel}>
+                      {i > 0 && <span className={styles.primerArrow} aria-hidden="true">→</span>}
+                      <span className={styles.primerStep}>{stepLabel}</span>
+                    </React.Fragment>
+                  ))}
+                </div>
               </div>
             )}
           </div>
@@ -446,7 +474,7 @@ export default function MissionBoardScreen({ onBack, onPick, missionsDone, freeO
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
                 {hotMinerals.map(mineral => (
                   <span key={mineral.name} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '4px 8px', borderRadius: 6, border: `1px solid ${mineral.color}66`, background: 'rgba(8,16,28,0.72)', fontFamily: 'var(--ln-font-mono)', fontSize: 10, color: mineral.color }}>
-                  <strong>{mineral.name}</strong> <span style={{ opacity: 0.65 }}>({mineral.sym})</span> ▲{formatFrancs(mineral.price)}
+                  <strong>{mineral.name}</strong> <span style={{ opacity: 0.65 }}>({mineral.sym})</span> {formatCurrency(mineral.price)}
                   </span>
                 ))}
               </div>

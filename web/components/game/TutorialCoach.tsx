@@ -143,6 +143,7 @@ export default function TutorialCoach({ stepIndex, steps, step, total, onManualN
         }}
       >
         <div style={{
+          position: 'relative',
           display: 'flex',
           alignItems: 'center',
           gap: 12,
@@ -151,8 +152,11 @@ export default function TutorialCoach({ stepIndex, steps, step, total, onManualN
           borderRadius: 16,
           padding: '12px 16px 12px 12px',
           boxShadow: '0 8px 32px rgba(0,0,0,0.6), 0 0 24px rgba(245,166,35,0.12)',
-          animation: 'coach-glow 2s ease-in-out infinite',
         }}>
+          {/* Pulsing glow is its own opacity-animated overlay rather than an
+              animated box-shadow on this card — see .coach-glow-ring. */}
+          <div className="coach-glow-ring" style={{ borderRadius: 16 }} />
+
           {/* Avatar */}
           <div style={{ flexShrink: 0 }}>
             <CoachAvatar size={44} talking />

@@ -97,7 +97,7 @@ function summarize(outputs: MissionGeneratorOutputs): string {
   if (outputs.freeops) {
     lines.push(`- free ops offers: ${outputs.freeops.length}`)
     const byClient = outputs.freeops.reduce<Record<string, number>>((acc, mission) => {
-      acc[mission.contractor_slug] = (acc[mission.contractor_slug] ?? 0) + 1
+      acc[mission.client_slug] = (acc[mission.client_slug] ?? 0) + 1
       return acc
     }, {})
     for (const [client, count] of Object.entries(byClient)) {
