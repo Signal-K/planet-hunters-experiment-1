@@ -104,7 +104,9 @@ export function Building({ kind, label, sub, status, w, style, onClick, badge, c
       // Desktop tutorial spotlight target. With the sidebar gone, "open a
       // mission" is coached on the launchpad itself rather than a nav rail.
       data-coach-id={`building-${kind}`}
-      style={{ position: 'absolute', display: 'flex', flexDirection: 'column', alignItems: 'center', ...style }}
+      // 'auto' because the hub's buildings layer is pointerEvents:'none' — it
+      // must not be a full-screen click catcher over the progression cards.
+      style={{ position: 'absolute', display: 'flex', flexDirection: 'column', alignItems: 'center', pointerEvents: 'auto', ...style }}
     >
       <button
         data-testid={`building-${kind}-hit`}
@@ -257,6 +259,7 @@ export function EmptyPlot({ w = 90, style, onClick, plot }: { w?: number; style?
       onClick={onClick}
       style={{
         position: 'absolute', background: 'transparent', border: 'none', padding: 0, cursor: 'pointer',
+        pointerEvents: 'auto',
         display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, ...style,
       }}
     >

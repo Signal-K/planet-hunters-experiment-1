@@ -318,7 +318,15 @@ export default function HubScreen({ player, hasCoach, onGoBuilding, onNav, onUpg
               z-index here this layer sits at stacking level 0 and the sky
               paints straight over the pills and callouts. */}
           <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 10 }}>
-            <div style={{ position: 'absolute', inset: 0, pointerEvents: 'auto' }}>
+            {/* pointerEvents stays 'none' here. This wrapper is inset:0, so
+                giving it 'auto' turned it into a transparent full-screen click
+                catcher at zIndex 10 — which sits above ProgressionCard (zIndex
+                8) and swallowed every tap on the Skill Tree / Build / Browse
+                Contracts buttons. It only showed up after the tutorial, because
+                that card stack is hidden while the coach is active. The
+                buildings below are absolutely positioned and re-enable pointer
+                events on their own roots. */}
+            <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}>
               {plotStyles.map((style, plot) => {
                 const kind = structureForPlot(plot)
                 if (!kind) {
