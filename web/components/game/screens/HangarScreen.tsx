@@ -82,7 +82,7 @@ function RocketCard({ rocket, missionsDone, onSelect }: { rocket: RocketModel; m
           />
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
-            <span style={{ fontFamily: 'var(--ln-font-mono)', fontSize: 22, color: 'rgba(63,169,255,0.18)', letterSpacing: '0.12em' }}>SR{rocket.tier}</span>
+            <span style={{ fontFamily: 'var(--ln-font-mono)', fontSize: 22, color: 'rgba(63,169,255,0.18)', letterSpacing: '0.12em' }}>TIER {rocket.tier}</span>
             <span style={{ fontFamily: 'var(--ln-font-display)', fontSize: 7, color: 'rgba(63,169,255,0.3)', letterSpacing: '0.2em', textTransform: 'uppercase' }}>Classified</span>
           </div>
         )}
@@ -93,7 +93,7 @@ function RocketCard({ rocket, missionsDone, onSelect }: { rocket: RocketModel; m
           color: isAvailable ? 'var(--ln-cyan)' : 'rgba(63,169,255,0.35)',
           textTransform: 'uppercase',
         }}>
-          SR{rocket.tier}
+          TIER {rocket.tier}
         </div>
         {isLocked && (
           <div style={{

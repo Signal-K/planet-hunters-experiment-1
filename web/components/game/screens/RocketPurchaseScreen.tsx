@@ -135,7 +135,7 @@ export default function RocketPurchaseScreen({ missionsDone, francs, mission, de
             letterSpacing: '0.2em', textTransform: 'uppercase',
             color: isFree ? '#39d36a' : '#f5a623',
           }}>
-            SR{rocket.tier} · {isFree ? 'INCLUDED' : formatCurrency(rocket.costFrancs, { compact: true })}
+            TIER {rocket.tier} · {isFree ? 'INCLUDED' : formatCurrency(rocket.costFrancs, { compact: true })}
           </span>
         </div>
       </MissionSetupFrame>

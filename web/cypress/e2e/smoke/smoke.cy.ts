@@ -98,12 +98,16 @@ describe('Smoke — Landnam', () => {
       tutorial: false,
     })
 
+    // The Skill Tree was a "Coming Soon" placeholder when this test was
+    // written; STS-394/STS-492 replaced it with real nodes and the License
+    // Grade ladder, so assert on what actually ships.
     cy.contains('Skill Tree').should('be.visible')
-    cy.contains('Coming Soon').should('be.visible')
-    cy.contains('You have 1 skill point banked').should('be.visible')
+    cy.contains('License Grade').should('be.visible')
+    cy.contains('Skill Nodes').should('be.visible')
+    cy.contains('Laser Charge I').should('be.visible')
     cy.reload()
     cy.contains('Skill Tree').should('be.visible')
-    cy.contains('Coming Soon').should('be.visible')
+    cy.contains('Skill Nodes').should('be.visible')
   })
 
   it('shows Free Ops client missions after M3', () => {
@@ -152,7 +156,7 @@ describe('Smoke — Landnam', () => {
     })
 
     cy.contains('Refinery').should('be.visible')
-    cy.contains('800,000,000').should('be.visible')
+    cy.contains('8,000,000').should('be.visible')
     cy.contains('20 aluminium').should('be.visible')
     cy.contains('10 copper').should('be.visible')
   })
