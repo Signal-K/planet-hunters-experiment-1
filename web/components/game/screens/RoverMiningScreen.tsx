@@ -8,6 +8,7 @@ import { PrimaryBtn } from '@/components/ui/Button'
 import type { Mission, Target } from '@/lib/data'
 import { MINERAL_META } from '@/lib/data'
 import { UI_ZONES } from '@/lib/ui-zones'
+import { formatCountdown } from '@/lib/format'
 import RoverMiningCanvas from './RoverMiningCanvas'
 
 const ROVER_MINING_DURATION_MS = 2 * 60 * 1000
@@ -31,10 +32,12 @@ interface RoverMiningScreenProps {
   target: Target
   onComplete: (cargo: Record<string, number>) => void
   onBack: () => void
+  /** Wall-clock start of this run, restored across a Back-to-hub pause so the extraction timer doesn't restart. */
+  startedAt?: number
 }
 
-export default function RoverMiningScreen({ mission, target, onComplete, onBack }: RoverMiningScreenProps) {
-  const [startedAt] = useState(() => Date.now())
+export default function RoverMiningScreen({ mission, target, onComplete, onBack, startedAt: startedAtProp }: RoverMiningScreenProps) {
+  const [startedAt] = useState(() => startedAtProp ?? Date.now())
   const [now, setNow] = useState(() => Date.now())
 
   const elapsed = now - startedAt
@@ -43,10 +46,7 @@ export default function RoverMiningScreen({ mission, target, onComplete, onBack 
   const remaining = Math.max(0, ROVER_MINING_DURATION_MS - elapsed)
   const cargo = generateRoverCargo(mission, target)
 
-  const totalSec = Math.ceil(remaining / 1000)
-  const min = Math.floor(totalSec / 60)
-  const sec = totalSec % 60
-  const countdown = `${String(min).padStart(2, '0')}:${String(sec).padStart(2, '0')}`
+  const countdown = formatCountdown(remaining)
 
   useEffect(() => {
     if (done) return

@@ -1,10 +1,11 @@
-import { useCallback } from 'react'
+import { useCallback, useRef } from 'react'
 import {
-  MISSIONS, TARGETS, STARTER_ROCKETS, FREE_OPS_START_MISSIONS_DONE,
+  MISSIONS, TARGETS, ROCKET_MODELS, FREE_OPS_START_MISSIONS_DONE,
   getLaserChargeCap, travelDurationMs, suggestBuild,
-  CONTRACTOR_COOLDOWN_MS, CONTRACTOR_STREAK_LIMIT, calibrateOnboardingPayout,
+  CLIENT_COOLDOWN_MS, CLIENT_STREAK_LIMIT, loanInstalmentFor, BANKRUPTCY_THRESHOLD,
 } from '@/lib/data'
 import { applyDeliveryArrived, applyMiningDone, applyReturnArrived, applyRoverMiningDone } from '@/lib/systems/MiningSystem'
+import { applyPurchaseRocket } from '@/lib/systems/EconomySystem'
 import { enqueueSurvey } from '@/lib/surveys'
 import type { Catalog } from '@/lib/catalog'
 import type { GameState, LicenseGrade } from '@/lib/game-types'
@@ -15,11 +16,9 @@ import { pbShared } from '@/lib/pb'
 import { pbLandnam } from '@/lib/pb-landnam'
 
 const ORBIT_MS_PER_UNIT = 2 * 60 * 1000
-const STORY_MISSION_CONTRACTOR_ID = 'mission-control'
+const STORY_MISSION_CLIENT_ID = 'mission-control'
 
-const LOAN_AMOUNT = 5_000_000_000
-const LOAN_REPAYMENT = Math.ceil(LOAN_AMOUNT * 1.08 / 2)
-const BANKRUPTCY_THRESHOLD = 500_000_000
+
 
 interface GameLoopOpts {
   stateRef: React.RefObject<GameState>
@@ -29,6 +28,7 @@ interface GameLoopOpts {
 }
 
 export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopOpts) {
+  const missionRunIdRef = useRef<string | null>(null)
   const setPlayer: React.Dispatch<React.SetStateAction<import('@/lib/game-types').Player>> = useCallback(
     (update) => setState(s => ({
       ...s,
@@ -58,17 +58,16 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
 
   const onPickMission = useCallback((id: string) => {
     setState(s => {
-      if (s.screen !== 'missions') return s
+      if (s.screen !== 'missions' || s.player.activeMission) return s
       const mission = catalog.missions.find(m => m.id === id)
-        ?? s.player.dailyContractorPool?.missions.find(m => m.id === id)
+        ?? s.player.dailyClientPool?.missions.find(m => m.id === id)
         ?? null
       if (!mission) return s
-      const isStoryMission = mission.contractor === STORY_MISSION_CONTRACTOR_ID || (mission.tag === 'STORY' && !mission.deliveryTargetId)
-      if (s.player.missionsDone >= 1 && !isStoryMission) enqueueSurvey('lnm_contractor_pick')
-      const dailyContractorPool = (s.player.dailyContractorPool && id.startsWith('dcp-'))
-        ? { ...s.player.dailyContractorPool, acceptedId: id }
-        : s.player.dailyContractorPool
-      const base = { ...s, player: { ...s.player, dailyContractorPool } }
+      const isStoryMission = mission.client === STORY_MISSION_CLIENT_ID || (mission.tag === 'STORY' && !mission.deliveryTargetId)
+      const dailyClientPool = (s.player.dailyClientPool && id.startsWith('dcp-'))
+        ? { ...s.player.dailyClientPool, acceptedId: id }
+        : s.player.dailyClientPool
+      const base = { ...s, player: { ...s.player, dailyClientPool } }
       if (mission?.targetId) {
         const target = catalog.targets.find(t => t.id === mission.targetId) ?? null
         const deliveryTarget = mission.deliveryTargetId ? catalog.targets.find(t => t.id === mission.deliveryTargetId) ?? null : null
@@ -115,37 +114,33 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
   const onPurchaseRocket = useCallback((rocketId: string) => {
     setState(s => {
       if (s.screen !== 'rocket-buy' || !s.missionId || !s.targetId) return s
-      const rocket = STARTER_ROCKETS.find(r => r.id === rocketId)
+      const rocket = ROCKET_MODELS.find(r => r.id === rocketId)
       if (!rocket) return s
-      if (s.player.francs < rocket.costFrancs) return s
-      return {
-        ...s,
-        player: { ...s.player, francs: s.player.francs - rocket.costFrancs },
-        screen: 'fab',
-      }
+      return applyPurchaseRocket(s, rocket)
     })
   }, [setState])
 
   const onLaunch = useCallback(() => {
     const current = stateRef.current
-    if (current.screen !== 'fab' || !current.missionId || !current.targetId) return
+    if (current.screen !== 'fab' || !current.missionId || !current.targetId || current.player.activeMission) return
     const currentMission = catalog.missions.find(m => m.id === current.missionId)
-      ?? current.player.dailyContractorPool?.missions.find(m => m.id === current.missionId)
+      ?? current.player.dailyClientPool?.missions.find(m => m.id === current.missionId)
       ?? null
     if (!currentMission) return
     const isFirstEver = current.player.missionsDone === 0
     setState(s => {
-      if (s.screen !== 'fab' || !s.missionId || !s.targetId) return s
+      if (s.screen !== 'fab' || !s.missionId || !s.targetId || s.player.activeMission) return s
       const mission = s.missionId
         ? (catalog.missions.find(m => m.id === s.missionId)
-           ?? s.player.dailyContractorPool?.missions.find(m => m.id === s.missionId)
+           ?? s.player.dailyClientPool?.missions.find(m => m.id === s.missionId)
            ?? null)
         : null
       const target = s.targetId ? catalog.targets.find(t => t.id === s.targetId) : null
       if (!mission || !target) return s
       const timedTransit = s.player.missionsDone >= FREE_OPS_START_MISSIONS_DONE
+      const transitStartedAt = Date.now()
       const arrivalAt = (timedTransit && target)
-        ? Date.now() + travelDurationMs(target, s.player.unlockedSkillNodes ?? [], ORBIT_MS_PER_UNIT)
+        ? transitStartedAt + travelDurationMs(target, s.player.unlockedSkillNodes ?? [], ORBIT_MS_PER_UNIT)
         : null
       return {
         ...s,
@@ -153,6 +148,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
           ...s.player,
           pendingLaunch: false,
           arrivalAt,
+          transitStartedAt: timedTransit ? transitStartedAt : null,
           missionPhase: 'transit',
           activeMission: mission && target
             ? { id: mission.id, label: mission.title + ' → ' + target.name }
@@ -162,11 +158,29 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
         doneSteps: { ...s.doneSteps, 5: true },
       }
     })
+    const userId = pbLandnam.authStore.record?.id
+    if (userId) {
+      pbLandnam.collection('mission_runs').create({
+        user: userId,
+        mission_id: currentMission.id,
+        target_id: current.targetId,
+        status: 'in_progress',
+        phase: 'transit',
+        cargo: {},
+        launched_at: new Date().toISOString(),
+      }).then(record => {
+        missionRunIdRef.current = record.id
+        setState(s => s.player.activeMission?.id === currentMission.id
+          ? { ...s, player: { ...s.player, missionRunId: record.id } }
+          : s)
+      }).catch(error => console.warn('[GameLoop] mission run create failed', error))
+    }
     if (isFirstEver) enqueueSurvey('lnm_first_launch', 4000)
   }, [catalog.missions, catalog.targets, setState, stateRef])
 
   const onMiningDone = useCallback((cargo: Record<string, number>) => {
     let hasDelivery = false
+    const transitStartedAt = Date.now()
     setState(s => {
       hasDelivery = !!s.deliveryTargetId
       const nextLegTarget = hasDelivery
@@ -174,22 +188,28 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
         : (s.targetId ? catalog.targets.find(t => t.id === s.targetId) : null)
       const timedTransit = s.player.missionsDone >= FREE_OPS_START_MISSIONS_DONE
       const arrivalAt = (timedTransit && nextLegTarget)
-        ? Date.now() + travelDurationMs(nextLegTarget, s.player.unlockedSkillNodes ?? [], ORBIT_MS_PER_UNIT)
+        ? transitStartedAt + travelDurationMs(nextLegTarget, s.player.unlockedSkillNodes ?? [], ORBIT_MS_PER_UNIT)
         : null
-      return applyMiningDone(s, cargo, arrivalAt)
+      return applyMiningDone(s, cargo, arrivalAt, timedTransit ? transitStartedAt : null)
     })
+    const runId = stateRef.current.player.missionRunId ?? missionRunIdRef.current
+    if (runId) {
+      pbLandnam.collection('mission_runs').update(runId, {
+        status: 'in_progress', phase: hasDelivery ? 'transit' : 'debrief', cargo,
+      }).catch(error => console.warn('[GameLoop] mission run update failed', error))
+    }
     addToast(hasDelivery ? 'Cargo secured — course set for delivery' : 'Order filled — return to Earth for recovery', 'ok')
-    enqueueSurvey('lnm_mining_feel', 2000)
-  }, [addToast, catalog.targets, setState])
+  }, [addToast, catalog.targets, setState, stateRef])
 
   const onDeliveryArrived = useCallback(() => {
+    const transitStartedAt = Date.now()
     setState(s => {
       const deliveryTarget = s.deliveryTargetId ? catalog.targets.find(t => t.id === s.deliveryTargetId) : null
       const timedTransit = s.player.missionsDone >= FREE_OPS_START_MISSIONS_DONE
       const arrivalAt = (timedTransit && deliveryTarget)
-        ? Date.now() + travelDurationMs(deliveryTarget, s.player.unlockedSkillNodes ?? [], ORBIT_MS_PER_UNIT)
+        ? transitStartedAt + travelDurationMs(deliveryTarget, s.player.unlockedSkillNodes ?? [], ORBIT_MS_PER_UNIT)
         : null
-      return applyDeliveryArrived(s, arrivalAt)
+      return applyDeliveryArrived(s, arrivalAt, timedTransit ? transitStartedAt : null)
     })
     addToast('Delivered — course set for Earth', 'ok')
   }, [addToast, catalog.targets, setState])
@@ -201,6 +221,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
 
   const onRoverMiningDone = useCallback((cargo: Record<string, number>) => {
     let hasDelivery = false
+    const transitStartedAt = Date.now()
     setState(s => {
       hasDelivery = !!s.deliveryTargetId
       const nextLegTarget = hasDelivery
@@ -208,9 +229,9 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
         : (s.targetId ? catalog.targets.find(t => t.id === s.targetId) : null)
       const timedTransit = s.player.missionsDone >= FREE_OPS_START_MISSIONS_DONE
       const arrivalAt = (timedTransit && nextLegTarget)
-        ? Date.now() + travelDurationMs(nextLegTarget, s.player.unlockedSkillNodes ?? [], ORBIT_MS_PER_UNIT)
+        ? transitStartedAt + travelDurationMs(nextLegTarget, s.player.unlockedSkillNodes ?? [], ORBIT_MS_PER_UNIT)
         : null
-      return applyRoverMiningDone(s, cargo, arrivalAt)
+      return applyRoverMiningDone(s, cargo, arrivalAt, timedTransit ? transitStartedAt : null)
     })
     addToast(hasDelivery ? 'Cargo secured — course set for delivery' : 'Rover cargo secured — return to Earth for recovery', 'ok')
   }, [addToast, catalog.targets, setState])
@@ -305,36 +326,43 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
       ...s,
       player: { ...s.player, satelliteTargetId: subjectId, pendingRepick: false },
     }))
+    enqueueSurvey('lnm_satellite_clarity', 1200)
   }, [setState])
 
   const onDebriefDone = useCallback((rawTotal: number, _affinity = 0, consumed: Record<string, number> = {}) => {
     const current = stateRef.current
     if (current.screen !== 'debrief' || !current.missionId || !current.targetId || !current.lastCargo) return
     const newMissionsDone = current.player.missionsDone + 1
-    // Onboarding payout floor — see calibrateOnboardingPayout's doc for why
-    // (M1/M2 must earn enough to cover the Prospector purchase M2 forces).
-    const total = calibrateOnboardingPayout(rawTotal, current.player.missionsDone)
+    const completedMission = catalog.missions.find(m => m.id === current.missionId)
+      ?? current.player.dailyClientPool?.missions.find(m => m.id === current.missionId)
+    const completedIsStoryMission = completedMission?.client === STORY_MISSION_CLIENT_ID
+      || (completedMission?.tag === 'STORY' && !completedMission.deliveryTargetId)
+    // Already through the onboarding payout floor — DebriefScreen calibrates
+    // the figure it shows and hands that exact number to `onDone`, so
+    // re-applying `calibrateOnboardingPayout` here only risked the screen and
+    // the ledger drifting apart. Credit what the player was shown.
+    const total = rawTotal
     setState(s => {
       if (s.screen !== 'debrief' || !s.missionId || !s.targetId || !s.lastCargo) return s
       const missionsDone = s.player.missionsDone + 1
       const mission = s.missionId
         ? (catalog.missions.find(m => m.id === s.missionId)
-           ?? s.player.dailyContractorPool?.missions.find(m => m.id === s.missionId)
+           ?? s.player.dailyClientPool?.missions.find(m => m.id === s.missionId)
            ?? null)
         : null
-      const contractor = mission?.contractor
-      const isStoryMission = mission?.contractor === STORY_MISSION_CONTRACTOR_ID || (mission?.tag === 'STORY' && !mission?.deliveryTargetId)
-      const contractorMissions = { ...s.player.contractorMissions }
-      const contractorStreaks = { ...(s.player.contractorStreaks ?? {}) }
-      const contractorCooldowns = { ...s.player.contractorCooldowns }
-      if (contractor && !isStoryMission) {
-        contractorMissions[contractor] = (contractorMissions[contractor] ?? 0) + 1
-        const streak = (contractorStreaks[contractor] ?? 0) + 1
-        if (streak >= CONTRACTOR_STREAK_LIMIT) {
-          contractorStreaks[contractor] = 0
-          contractorCooldowns[contractor] = Date.now() + CONTRACTOR_COOLDOWN_MS
+      const client = mission?.client
+      const isStoryMission = mission?.client === STORY_MISSION_CLIENT_ID || (mission?.tag === 'STORY' && !mission?.deliveryTargetId)
+      const clientMissions = { ...s.player.clientMissions }
+      const clientStreaks = { ...(s.player.clientStreaks ?? {}) }
+      const clientCooldowns = { ...s.player.clientCooldowns }
+      if (client && !isStoryMission) {
+        clientMissions[client] = (clientMissions[client] ?? 0) + 1
+        const streak = (clientStreaks[client] ?? 0) + 1
+        if (streak >= CLIENT_STREAK_LIMIT) {
+          clientStreaks[client] = 0
+          clientCooldowns[client] = Date.now() + CLIENT_COOLDOWN_MS
         } else {
-          contractorStreaks[contractor] = streak
+          clientStreaks[client] = streak
         }
       }
       const stash = { ...(s.player.stash ?? {}) }
@@ -344,7 +372,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
       let loanDebt = s.player.loanDebt
       let francs = s.player.francs + total
       if (loanDebt > 0) {
-        const payment = Math.min(LOAN_REPAYMENT, loanDebt)
+        const payment = loanInstalmentFor(loanDebt)
         francs = Math.max(0, francs - payment)
         loanDebt = Math.max(0, loanDebt - payment)
       }
@@ -354,28 +382,28 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
       if (s.targetId && !seen_planets.includes(s.targetId)) seen_planets.push(s.targetId)
       const effectiveTargetId = mission?.targetId ?? s.targetId ?? ''
       let roverDeployments = [...(s.player.roverDeployments ?? [])]
-      let contractorTerritories = { ...(s.player.contractorTerritories ?? {}) }
-      let pendingTerritoryClaimFor: { targetId: string; contractorId: string } | undefined
-      if (mission?.payload?.type === 'rover' && contractor && effectiveTargetId) {
+      let clientTerritories = { ...(s.player.clientTerritories ?? {}) }
+      let pendingTerritoryClaimFor: { targetId: string; clientId: string } | undefined
+      if (mission?.payload?.type === 'rover' && client && effectiveTargetId) {
         roverDeployments = [...roverDeployments, {
           roverId: `${mission.id}-rover-${Date.now()}`,
           targetId: effectiveTargetId,
-          contractorId: contractor,
+          clientId: client,
           timestamp: Date.now(),
         }]
-        const prev = contractorTerritories[contractor] ?? []
+        const prev = clientTerritories[client] ?? []
         if (!prev.includes(effectiveTargetId)) {
-          contractorTerritories = { ...contractorTerritories, [contractor]: [...prev, effectiveTargetId] }
+          clientTerritories = { ...clientTerritories, [client]: [...prev, effectiveTargetId] }
         }
-        pendingTerritoryClaimFor = { targetId: effectiveTargetId, contractorId: contractor }
+        pendingTerritoryClaimFor = { targetId: effectiveTargetId, clientId: client }
       }
-      const completedDailyPool = (s.missionId?.startsWith('dcp-') && s.player.dailyContractorPool)
+      const completedDailyPool = (s.missionId?.startsWith('dcp-') && s.player.dailyClientPool)
         ? {
-          ...s.player.dailyContractorPool,
+          ...s.player.dailyClientPool,
           acceptedId: null,
-          completedIds: [...s.player.dailyContractorPool.completedIds, s.missionId],
+          completedIds: [...s.player.dailyClientPool.completedIds, s.missionId],
         }
-        : s.player.dailyContractorPool
+        : s.player.dailyClientPool
       const stillInTutorial = missionsDone < FREE_OPS_START_MISSIONS_DONE && catalog.missions.some(m => m.sequence === missionsDone + 1)
       // Skip the Prospector upsell popup during guided onboarding — the tutorial
       // coach already delivers the same "Prospector available" message inline
@@ -393,6 +421,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
           ...s.player,
           francs,
           activeMission: null,
+          missionRunId: undefined,
           missionPhase: undefined,
           debriefPending: false,
           returningToEarth: false,
@@ -401,22 +430,22 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
           skillPoints: (s.player.skillPoints ?? 0) + 1,
           missionCount: catalog.missions.filter(m => m.sequence === missionsDone + 1).length,
           freeOperations: missionsDone >= FREE_OPS_START_MISSIONS_DONE,
-          contractorMissions,
-          contractorStreaks,
-          contractorCooldowns,
+          clientMissions,
+          clientStreaks,
+          clientCooldowns,
           stash,
-          lastContractor: isStoryMission ? s.player.lastContractor : contractor,
+          lastClient: isStoryMission ? s.player.lastClient : client,
           loanDebt,
           loanOffered: loanOffered || showLoanOffer,
           seen_planets,
           roverDeployments,
-          contractorTerritories,
-          dailyContractorPool: completedDailyPool,
+          clientTerritories,
+          dailyClientPool: completedDailyPool,
           transitSatelliteLaunchedAt: mission?.payload?.type === 'satellite'
             ? (s.player.transitSatelliteLaunchedAt ?? Date.now())
             : s.player.transitSatelliteLaunchedAt,
           transitSatelliteLevel: mission?.payload?.type === 'satellite'
-            ? Math.max(1, s.player.transitSatelliteLevel ?? 1)
+            ? Math.max(1, s.player.transitSatelliteLevel ?? 1) + 1
             : s.player.transitSatelliteLevel,
         },
         lastCargo: null,
@@ -441,7 +470,23 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
         missions_done_after: newMissionsDone,
       }).catch(() => {})
     }
-    enqueueSurvey('lnm_mission_friction', 2000)
+    const runId = current.player.missionRunId ?? missionRunIdRef.current
+    if (runId) {
+      pbLandnam.collection('mission_runs').update(runId, {
+        status: 'completed', phase: 'debrief', cargo: current.lastCargo,
+        payout_francs: total, completed_at: new Date().toISOString(),
+      }).catch(error => console.warn('[GameLoop] mission run completion update failed', error))
+    }
+    missionRunIdRef.current = null
+    // Mission feedback belongs to the post-mission checkpoint. Queue it only
+    // after debrief collection so it cannot surface over the next mission
+    // board while the player is choosing a new contract.
+    enqueueSurvey('lnm_mission_friction', 0)
+    enqueueSurvey('lnm_mining_feel', 60_000)
+    if (completedMission?.payload?.type === 'rover') enqueueSurvey('lnm_rover_clarity', 60_000)
+    if (current.player.missionsDone >= 1 && !completedIsStoryMission) {
+      enqueueSurvey('lnm_client_pick', 60_000)
+    }
     if (newMissionsDone === 1) {
       enqueueSurvey('lnm_m1_complete', 3000)
       enqueueSurvey('lnm_progression_feel', 8000)

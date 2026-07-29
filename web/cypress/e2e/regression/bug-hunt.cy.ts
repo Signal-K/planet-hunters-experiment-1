@@ -10,7 +10,7 @@ const GUEST_KEY = 'landnam-guest-credentials'
 const SURVEY_KEY = 'landnam-surveys-shown'
 
 const ALL_SURVEYS = [
-  'lnm_first_launch', 'lnm_mining_feel', 'lnm_contractor_pick',
+  'lnm_first_launch', 'lnm_mining_feel', 'lnm_client_pick',
   'lnm_mission_friction', 'lnm_progression_feel', 'lnm_end_of_content',
   'lnm_return_visit', 'lnm_m1_complete', 'lnm_m2_complete', 'lnm_m3_complete',
 ]
@@ -56,9 +56,9 @@ function stateWith(overrides: GameStateOverride): string {
       skillPoints: 0,
       unlockedSkillNodes: [],
       freeOperations: false,
-      contractorMissions: {},
-      contractorStreaks: {},
-      contractorCooldowns: {},
+      clientMissions: {},
+      clientStreaks: {},
+      clientCooldowns: {},
       researchAnnotations: 0,
       refineryBuilt: false,
       refineryUnlocked: false,
@@ -70,7 +70,7 @@ function stateWith(overrides: GameStateOverride): string {
       loanOffered: false,
       seen_planets: [],
       roverDeployments: [],
-      contractorTerritories: {},
+      clientTerritories: {},
     },
   }
   return JSON.stringify({ ...base, ...overrides, player: { ...(base.player as object), ...((overrides.player ?? {}) as object) } })
@@ -174,8 +174,8 @@ describe('Bug hunt — edge cases', () => {
     cy.contains('Mission Board', { timeout: 8000 }).should('be.visible')
   })
 
-  // ─── 6. Contractor streak: 2 missions → cooldown appears, 3rd contractor available ──
-  it('contractor cooldown shows after 2 missions and other contractors remain available', () => {
+  // ─── 6. Client streak: 2 missions → cooldown appears, 3rd client available ──
+  it('client cooldown shows after 2 missions and other clients remain available', () => {
     const thirtyMinutesFromNow = Date.now() + 30 * 60 * 1000
     cy.visit('/game', {
       onBeforeLoad: baseLoad({ [STORAGE_KEY]: stateWith({
@@ -184,9 +184,9 @@ describe('Bug hunt — edge cases', () => {
         player: {
           missionsDone: 3,
           freeOperations: true,
-          contractorMissions: { 'helios-propulsion-depot': 4 },
-          contractorStreaks: { 'helios-propulsion-depot': 0 },
-          contractorCooldowns: { 'helios-propulsion-depot': thirtyMinutesFromNow },
+          clientMissions: { 'helios-propulsion-depot': 4 },
+          clientStreaks: { 'helios-propulsion-depot': 0 },
+          clientCooldowns: { 'helios-propulsion-depot': thirtyMinutesFromNow },
           placed: ['launchpad'],
           placementPlots: { launchpad: 0 },
           francs: 10_000_000_000,
@@ -196,7 +196,7 @@ describe('Bug hunt — edge cases', () => {
     cy.contains('EARTH BASE · FREE OPS', { timeout: 8000 }).should('be.visible')
     // Helios on cooldown: no Helios mission cards shown in legacy freeops mode (filtered out)
     cy.get('[data-testid^="mission-card-freeops-helios-propulsion-depot"]').should('not.exist')
-    // Other contractors' missions still show
+    // Other clients' missions still show
     cy.contains('Atlas Aggregate', { timeout: 10000 }).scrollIntoView().should('be.visible')
   })
 
@@ -219,7 +219,7 @@ describe('Bug hunt — edge cases', () => {
     cy.contains('MISSION TRANSIT', { timeout: 8000 }).should('be.visible')
     cy.get('[data-testid="top-bar-back"]').click()
     // Back from transit goes to hub (player can re-enter missions from there — no softlock)
-    cy.get('[data-testid="radial-nav-toggle"]', { timeout: 8000 }).should('be.visible')
+    cy.get('[data-testid="bottom-tab-missions"]', { timeout: 8000 }).should('be.visible')
   })
 
   // ─── 8. Duplicate mission pick (tap twice quickly) ───────────────────────────

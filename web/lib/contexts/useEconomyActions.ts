@@ -1,11 +1,11 @@
 import { useCallback } from 'react'
 import { REFINERY_RECIPES } from '@/lib/data'
-import { applySellMinerals, applyStartRefine, applyCollectRefined, applyUpgradeLaunchpad, applyConfirmShipCustomizerBuild } from '@/lib/systems/EconomySystem'
+import { applySellMinerals, applyStartRefine, applyCollectRefined, applyUpgradeLaunchpad, applyConfirmShipCustomizerBuild, applyPlaceStructure } from '@/lib/systems/EconomySystem'
 import { applyBuildScanner, applyStartScan, applyCollectScan } from '@/lib/systems/ScanSystem'
 import { applyUnlockSkillNode, applyAcceptLoan, applyAbandonMission } from '@/lib/systems/ProgressionSystem'
 import type { Catalog } from '@/lib/catalog'
 import type { GameState } from '@/lib/game-types'
-import type { Mission, ShipRoomKind } from '@/lib/data'
+import type { Mission, ShipRoomKind, StructureBlueprint } from '@/lib/data'
 
 export function useEconomyActions(
   setState: React.Dispatch<React.SetStateAction<GameState>>,
@@ -25,6 +25,10 @@ export function useEconomyActions(
     const recipe = REFINERY_RECIPES.find(r => r.id === recipeId)
     if (!recipe) return
     setState(s => applyCollectRefined(s, recipe))
+  }, [setState])
+
+  const placeStructure = useCallback((structure: StructureBlueprint | undefined, kind: string, plot: number) => {
+    setState(s => applyPlaceStructure(s, structure, kind, plot))
   }, [setState])
 
   const upgradeLaunchpad = useCallback(() => {
@@ -70,7 +74,7 @@ export function useEconomyActions(
   }, [setState])
 
   return {
-    sellMinerals, onStartRefine, onCollectRefined, upgradeLaunchpad,
+    sellMinerals, onStartRefine, onCollectRefined, placeStructure, upgradeLaunchpad,
     buildScanner, startScan, collectScan, unlockSkillNode, acceptLoan, abandonMission,
     confirmShipCustomizerBuild,
   }

@@ -5,7 +5,7 @@ const SURVEY_KEY = 'landnam-surveys-shown'
 const SNOOZE_KEY = 'landnam-upgrade-prompt-snooze-until'
 
 const ALL_SURVEY_KEYS = [
-  'lnm_first_launch', 'lnm_mining_feel', 'lnm_contractor_pick',
+  'lnm_first_launch', 'lnm_mining_feel', 'lnm_client_pick',
   'lnm_mission_friction', 'lnm_progression_feel', 'lnm_end_of_content',
   'lnm_return_visit', 'lnm_m1_complete', 'lnm_m2_complete', 'lnm_m3_complete',
 ]
@@ -38,11 +38,10 @@ function navToMissions() {
   cy.window().then(win => {
     const isDesktop = win.innerWidth >= 1024
     if (isDesktop) {
-      cy.get('[data-testid="radial-nav-toggle"]').should('not.be.visible')
+      cy.get('[data-testid="bottom-tab-missions"]').should('not.be.visible')
       cy.get('[data-testid="sidebar-nav-missions"]').should('be.visible').click()
     } else {
-      cy.get('[data-testid="radial-nav-toggle"]').should('be.visible').click()
-      cy.get('[data-testid="radial-nav-missions"]').should('be.visible').click()
+      cy.get('[data-testid="bottom-tab-missions"]').should('be.visible').click()
     }
   })
 }

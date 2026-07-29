@@ -1,7 +1,7 @@
 'use client'
 
 import React from 'react'
-import { UI_ZONES } from '@/lib/ui-zones'
+import Sheet from '@/components/ui/Sheet'
 
 interface ConfirmActionSheetProps {
   eyebrow: string
@@ -15,23 +15,20 @@ interface ConfirmActionSheetProps {
 // Bottom-sheet confirm/cancel gate for costly, irreversible actions —
 // same slide-up shape as SaveProgressPrompt, but for a plain confirm
 // rather than a form. First use: Upgrade Launchpad fired immediately on
-// click for a flat ₣1B with no confirmation step.
+// click for a flat launchpad-upgrade fee with no confirmation step.
 export default function ConfirmActionSheet({ eyebrow, title, description, confirmLabel, onConfirm, onDismiss }: ConfirmActionSheetProps) {
   return (
-    <div data-ui-zone={UI_ZONES.modalOverlay} style={{ position: 'absolute', inset: 0, zIndex: 89, display: 'flex', alignItems: 'flex-end' }}>
-      <div onClick={onDismiss} style={{ position: 'absolute', inset: 0, background: 'rgba(3,6,12,0.7)' }} />
-      <div style={{
-        position: 'relative', width: '100%',
+    <Sheet
+      onDismiss={onDismiss}
+      panelStyle={{
         background: 'linear-gradient(180deg, #0d1c30, #060d18)',
-        borderTopLeftRadius: 20, borderTopRightRadius: 20,
         border: '1px solid rgba(245,166,35,0.5)',
         padding: '18px 16px 26px',
         boxShadow: '0 -12px 40px rgba(0,0,0,0.6)',
-        animation: 'gate-up 360ms cubic-bezier(.16,1,.3,1)',
-      }}>
-        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 10 }}>
-          <div style={{ width: 40, height: 4, borderRadius: 2, background: 'rgba(255,255,255,0.25)' }} />
-        </div>
+      }}
+      handleContainerStyle={{ marginBottom: 10 }}
+      handleStyle={{ background: 'rgba(255,255,255,0.25)' }}
+    >
 
         <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 9, fontWeight: 800, letterSpacing: '0.22em', color: 'var(--ln-amber)', textTransform: 'uppercase' }}>{eyebrow}</div>
         <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 18, fontWeight: 800, color: '#e6efff', marginTop: 2 }}>{title}</div>
@@ -68,7 +65,6 @@ export default function ConfirmActionSheet({ eyebrow, title, description, confir
             Cancel
           </button>
         </div>
-      </div>
-    </div>
+    </Sheet>
   )
 }

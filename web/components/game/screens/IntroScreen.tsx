@@ -1,6 +1,7 @@
 'use client'
 
 import Image from 'next/image'
+import { formatCurrency } from '@/lib/format'
 
 interface IntroScreenProps {
   onBegin: () => void
@@ -48,7 +49,7 @@ export default function IntroScreen({
           <p className="intro-welcome">{returning ? 'Welcome back, Commander.' : 'Welcome, Commander.'}</p>
           <p className="intro-subtitle">
             {returning
-              ? `Missions completed: ${missionsDone} · Total earned: ₣${totalEarned.toLocaleString()}`
+              ? `Missions completed: ${missionsDone} · Total earned: ${formatCurrency(totalEarned, { compact: true })}`
               : 'Build your base. Mine the asteroids. Fulfill the contract. The belt is waiting.'}
           </p>
           <button className="intro-begin-btn" onClick={onBegin} data-testid="intro-begin-btn">

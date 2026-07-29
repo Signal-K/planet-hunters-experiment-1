@@ -91,6 +91,18 @@ export default function TutorialCoach({ stepIndex, steps, step, total, onManualN
               {progress}
               <span style={{ flex: 1 }} />
               <button
+                data-testid="coach-skip-btn"
+                onClick={onSkip}
+                style={{
+                  padding: '8px 12px', borderRadius: 10, cursor: 'pointer', border: '1px solid rgba(154,176,200,0.3)',
+                  background: 'transparent',
+                  color: '#9ab0c8', fontFamily: 'var(--ln-font-display)', fontSize: 11, fontWeight: 700,
+                  letterSpacing: '0.1em', textTransform: 'uppercase',
+                }}
+              >
+                Skip
+              </button>
+              <button
                 data-testid="coach-got-it-btn"
                 onClick={onManualNext}
                 style={{
@@ -131,6 +143,7 @@ export default function TutorialCoach({ stepIndex, steps, step, total, onManualN
         }}
       >
         <div style={{
+          position: 'relative',
           display: 'flex',
           alignItems: 'center',
           gap: 12,
@@ -139,8 +152,11 @@ export default function TutorialCoach({ stepIndex, steps, step, total, onManualN
           borderRadius: 16,
           padding: '12px 16px 12px 12px',
           boxShadow: '0 8px 32px rgba(0,0,0,0.6), 0 0 24px rgba(245,166,35,0.12)',
-          animation: 'coach-glow 2s ease-in-out infinite',
         }}>
+          {/* Pulsing glow is its own opacity-animated overlay rather than an
+              animated box-shadow on this card — see .coach-glow-ring. */}
+          <div className="coach-glow-ring" style={{ borderRadius: 16 }} />
+
           {/* Avatar */}
           <div style={{ flexShrink: 0 }}>
             <CoachAvatar size={44} talking />
@@ -161,9 +177,21 @@ export default function TutorialCoach({ stepIndex, steps, step, total, onManualN
             </div>
           </div>
 
-          {/* Progress */}
-          <div style={{ flexShrink: 0 }}>
+          {/* Progress + skip */}
+          <div style={{ flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 6 }}>
             {progress}
+            <button
+              data-testid="coach-skip-btn"
+              onClick={onSkip}
+              style={{
+                padding: '4px 8px', borderRadius: 8, cursor: 'pointer', border: '1px solid rgba(154,176,200,0.3)',
+                background: 'transparent',
+                color: '#9ab0c8', fontFamily: 'var(--ln-font-display)', fontSize: 9, fontWeight: 700,
+                letterSpacing: '0.1em', textTransform: 'uppercase', whiteSpace: 'nowrap',
+              }}
+            >
+              Skip
+            </button>
           </div>
         </div>
 

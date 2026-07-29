@@ -1,6 +1,6 @@
 migrate((app) => {
   const stale = {
-    contractors: ['foundry3', 'cryos', 'beltgold', 'lunarore', 'deepcore', 'vestarock', 'helio', 'triton', 'axiom', 'origin'],
+    clients: ['foundry3', 'cryos', 'beltgold', 'lunarore', 'deepcore', 'vestarock', 'helio', 'triton', 'axiom', 'origin'],
     locations: ['tess-451b', 'koi-7923-belt'],
     missions_catalog: ['m3-gold', 'm4-rare'],
   }

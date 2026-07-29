@@ -13,7 +13,7 @@ migrate((app) => {
         { type: 'text',   name: 'kind',                required: true, max: 40 },
         { type: 'number', name: 'cost_francs' },
         { type: 'json',   name: 'cost_materials',      maxSize: 1000 },
-        { type: 'select', name: 'unlock_trigger_type', maxSelect: 1, values: ['always', 'contractor-mission-trigger', 'manual'] },
+        { type: 'select', name: 'unlock_trigger_type', maxSelect: 1, values: ['always', 'client-mission-trigger', 'manual'] },
         { type: 'text',   name: 'unlocks_at',          max: 200 },
         { type: 'text',   name: 'description',         max: 400 },
       ],
@@ -24,7 +24,7 @@ migrate((app) => {
   const col = app.findCollectionByNameOrId('structure_blueprints')
   for (const row of [
     { slug: 'launchpad', name: 'Launchpad', kind: 'launchpad', cost_francs: 0, cost_materials: JSON.stringify({}), unlock_trigger_type: 'always', unlocks_at: 'always', description: 'Rocket assembly and launch operations.' },
-    { slug: 'refinery', name: 'Refinery', kind: 'refinery', cost_francs: 800000000, cost_materials: JSON.stringify({ aluminium: 20, copper: 10 }), unlock_trigger_type: 'contractor-mission-trigger', unlocks_at: 'First contractor mission requiring refined minerals', description: 'Refines raw minerals into higher-value contractor-grade materials.' },
+    { slug: 'refinery', name: 'Refinery', kind: 'refinery', cost_francs: 800000000, cost_materials: JSON.stringify({ aluminium: 20, copper: 10 }), unlock_trigger_type: 'client-mission-trigger', unlocks_at: 'First client mission requiring refined minerals', description: 'Refines raw minerals into higher-value client-grade materials.' },
   ]) {
     let record
     try {

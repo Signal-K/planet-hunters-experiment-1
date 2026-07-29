@@ -1,5 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { DEFAULT_STATE, loadState, normalizeAndRepair, normalizeState, type PartialSave } from './game-state'
+import { DEFAULT_STATE, loadState, mergeRemoteState, normalizeAndRepair, normalizeState, type PartialSave } from './game-state'
+import type { GameState } from './game-types'
+import { MISSIONS, TARGETS } from './data'
 
 describe('game state hydration normalization', () => {
   let storage: Map<string, string>
@@ -31,8 +33,8 @@ describe('game state hydration normalization', () => {
         controlBuilt: false,
         missionsDone: 0,
         freeOperations: false,
-        contractorMissions: {},
-        contractorCooldowns: {},
+        clientMissions: {},
+        clientCooldowns: {},
         researchAnnotations: 0,
         refineryBuilt: false,
         refineryQueue: [],
@@ -166,5 +168,175 @@ describe('game state hydration normalization', () => {
     globalThis.localStorage.setItem(storageKey, '{broken')
     expect(loadState(storageKey)).toBe(DEFAULT_STATE)
     globalThis.localStorage.removeItem(storageKey)
+  })
+
+  it('migrates pre-STS-535 saves that still use "contractor"-named fields', () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const legacySave: any = {
+      screen: 'hub',
+      player: {
+        contractorMissions: { 'helios-propulsion-depot': 3 },
+        contractorStreaks: { 'helios-propulsion-depot': 1 },
+        contractorCooldowns: { 'atlas-aggregate': 1234567890 },
+        lastContractor: 'helios-propulsion-depot',
+        contractorTerritories: { 'eros': ['helios-propulsion-depot'] },
+        dailyContractorPool: { date: '2026-07-25', missions: [], acceptedId: null, completedIds: [] },
+        contractorStructures: [{ targetId: 'eros', structureKind: 'depot', contractorId: 'helios-propulsion-depot', state: 'operational' }],
+        roverDeployments: [{ roverId: 'r1', targetId: 'eros', contractorId: 'helios-propulsion-depot', timestamp: 1 }],
+      },
+      pendingTerritoryClaimFor: { targetId: 'eros', contractorId: 'helios-propulsion-depot' },
+    }
+
+    const normalized = normalizeState(legacySave)
+
+    expect(normalized.player.clientMissions).toEqual({ 'helios-propulsion-depot': 3 })
+    expect(normalized.player.clientStreaks).toEqual({ 'helios-propulsion-depot': 1 })
+    expect(normalized.player.clientCooldowns).toEqual({ 'atlas-aggregate': 1234567890 })
+    expect(normalized.player.lastClient).toBe('helios-propulsion-depot')
+    expect(normalized.player.clientTerritories).toEqual({ eros: ['helios-propulsion-depot'] })
+    expect(normalized.player.dailyClientPool?.date).toBe('2026-07-25')
+    expect(normalized.player.clientStructures?.[0]?.clientId).toBe('helios-propulsion-depot')
+    expect(normalized.player.roverDeployments?.[0]?.clientId).toBe('helios-propulsion-depot')
+    expect(normalized.pendingTerritoryClaimFor?.clientId).toBe('helios-propulsion-depot')
+  })
+})
+
+describe('mergeRemoteState — remote game_states record onto local state', () => {
+  const M1_BUILD_HUB_MISSIONS_DONE = { 0: true, 1: true, 2: true }
+
+  function local(overrides: PartialSave = {}): GameState {
+    return normalizeAndRepair({ ...DEFAULT_STATE, ...overrides })
+  }
+
+  // The STS-576 regression. A player pressed "Reset game": local went back to
+  // DEFAULT_STATE, but the remote row survived (the delete raced the persist
+  // effect and lost). On the next load the monotonic guard kept the local
+  // zeroed player while doneSteps fell out of the object spread from remote,
+  // producing a fresh save carrying a half-finished tutorial. The coach renders
+  // the first step for the current screen NOT in doneSteps, so steps 0/1/2
+  // being "done" killed the coach on build, hub and missions at once.
+  it('does not keep remote doneSteps when the local player wins the merge', () => {
+    const merged = mergeRemoteState(local(), {
+      player: { missionsDone: 0, placed: ['launchpad'], francs: 42 },
+      tutorial: true,
+      doneSteps: M1_BUILD_HUB_MISSIONS_DONE,
+    })
+
+    expect(merged.player.missionsDone).toBe(0)
+    // Construction is monotonic even when the local onboarding checkpoint wins
+    // the merge, so a saved launchpad cannot disappear after refresh/login.
+    expect(merged.player.placed).toEqual(['launchpad'])
+    // The whole point: doneSteps must travel with the player it describes.
+    expect(merged.doneSteps).toEqual({})
+  })
+
+  it('takes remote doneSteps when the remote player wins the merge', () => {
+    // missionsDone must clear FREE_OPS_START_MISSIONS_DONE (3), otherwise
+    // normalizeState force-repairs tutorial back to true — during onboarding
+    // the coach is always armed and hides itself by matching no step.
+    const merged = mergeRemoteState(local(), {
+      player: { missionsDone: 4, placed: ['launchpad', 'refinery'] },
+      tutorial: false,
+      doneSteps: M1_BUILD_HUB_MISSIONS_DONE,
+    })
+
+    expect(merged.player.missionsDone).toBe(4)
+    expect(merged.player.placed).toEqual(['launchpad', 'refinery'])
+    expect(merged.doneSteps).toEqual(M1_BUILD_HUB_MISSIONS_DONE)
+    expect(merged.tutorial).toBe(false)
+  })
+
+  it('re-arms the tutorial flag if a remote record disables it mid-onboarding', () => {
+    const merged = mergeRemoteState(local(), {
+      player: { missionsDone: 1 },
+      tutorial: false,
+      doneSteps: {},
+    })
+
+    expect(merged.player.missionsDone).toBe(1)
+    expect(merged.tutorial).toBe(true)
+  })
+
+  it('never regresses onboarding stage from a stale remote record', () => {
+    const merged = mergeRemoteState(
+      local({ player: { ...DEFAULT_STATE.player, missionsDone: 3 }, tutorial: false }),
+      { player: { missionsDone: 1 }, tutorial: true, doneSteps: M1_BUILD_HUB_MISSIONS_DONE },
+    )
+
+    expect(merged.player.missionsDone).toBe(3)
+    expect(merged.tutorial).toBe(false)
+  })
+
+  it('keeps local navigation when the player has already moved off the default screen', () => {
+    // Real catalog ids: repairStateRoute bounces a mission/target-context
+    // screen back to 'missions' when the ids don't resolve, which would mask
+    // what this test is actually asserting.
+    const localMission = MISSIONS[0].id
+    const localTarget = TARGETS[0].id
+
+    const merged = mergeRemoteState(
+      local({ screen: 'mining', missionId: localMission, targetId: localTarget }),
+      { screen: 'hub', missionId: MISSIONS[1].id, targetId: TARGETS[1].id, player: { missionsDone: 9 } },
+    )
+
+    expect(merged.screen).toBe('mining')
+    expect(merged.missionId).toBe(localMission)
+    expect(merged.targetId).toBe(localTarget)
+    // Navigation is guarded independently of onboarding position — a further
+    // ahead remote still supplies the player.
+    expect(merged.player.missionsDone).toBe(9)
+  })
+
+  it('accepts remote navigation when local is still on the default screen', () => {
+    const merged = mergeRemoteState(local(), {
+      screen: 'hub',
+      missionId: 'remote-mission',
+      player: { missionsDone: 4 },
+    })
+
+    expect(merged.screen).toBe('hub')
+    expect(merged.missionId).toBe('remote-mission')
+  })
+
+  it('restores a remote in-progress mission over a stale local hub save', () => {
+    const mission = MISSIONS[0]
+    const target = TARGETS[0]
+    const merged = mergeRemoteState(local({ screen: 'hub' }), {
+      screen: 'mining',
+      missionId: mission.id,
+      targetId: target.id,
+      player: {
+        activeMission: { id: mission.id, label: `${mission.title} → ${target.name}` },
+        missionRunId: 'run-123',
+        missionPhase: 'mining',
+      },
+    })
+
+    expect(merged.screen).toBe('mining')
+    expect(merged.missionId).toBe(mission.id)
+    expect(merged.targetId).toBe(target.id)
+    expect(merged.player.activeMission?.id).toBe(mission.id)
+    expect(merged.player.missionRunId).toBe('run-123')
+    expect(merged.player.missionPhase).toBe('mining')
+  })
+
+  it('preserves player fields the remote record omits', () => {
+    const merged = mergeRemoteState(local(), {
+      player: { missionsDone: 5 },
+    })
+
+    expect(merged.player.missionsDone).toBe(5)
+    // Fields absent from an older remote save must not come back undefined.
+    expect(merged.player.licenseGrade).toBe(DEFAULT_STATE.player.licenseGrade)
+    expect(merged.player.clientMissions).toEqual({})
+  })
+
+  it('tolerates a remote record with no player at all', () => {
+    const merged = mergeRemoteState(local({ player: { ...DEFAULT_STATE.player, missionsDone: 2 } }), {
+      screen: 'hub',
+    })
+
+    expect(merged.player.missionsDone).toBe(2)
+    expect(merged.doneSteps).toEqual({})
   })
 })

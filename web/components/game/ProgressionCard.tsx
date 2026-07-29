@@ -3,17 +3,48 @@
 import React from 'react'
 import type { Player, Screen } from '@/game-context'
 import { FREE_OPS_START_MISSIONS_DONE } from '@/lib/data/mission-generator'
+import IconBadge from '@/components/ui/IconBadge'
+
+type CardIconBadgeTone = 'cyan' | 'amber' | 'ok' | 'crit' | 'mute'
+
+// The Earth Base palette is cyan + mint only (no amber on this screen), so
+// the tile maps onto just two IconBadge tones. Exact color/border come from
+// the inline style below — this only picks a sane base tone.
+function toneForAccent(accent: string): CardIconBadgeTone {
+  return accent.includes('mint') ? 'ok' : 'cyan'
+}
+
+// Small line-icon glyphs, one per progression-card eyebrow, in the same
+// bordered white-line style as the mockup's side-panel + tab-row icons.
+function ResumeGlyph() {
+  return <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M12 2L8 6H4l2 4-2 4h4l4 6 4-6h4l-2-4 2-4h-4L12 2z" /></svg>
+}
+function LaunchpadGlyph() {
+  return <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M4 21h16M6 21V9l6-5 6 5v12M10 21v-6h4v6" /></svg>
+}
+function SkillGlyph() {
+  return <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M12 2l2.5 7.5H22l-6 4.6 2.3 7.4L12 17l-6.3 4.5 2.3-7.4-6-4.6h7.5z" /></svg>
+}
+function SmsGlyph() {
+  return <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M4 15l8-8 8 8M8 11v9M16 11v9" /></svg>
+}
+function TelescopeGlyph() {
+  return <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" /></svg>
+}
+function ContractGlyph() {
+  return <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><rect x="3" y="3" width="18" height="18" rx="2" /><line x1="8" y1="9" x2="16" y2="9" /><line x1="8" y1="13" x2="16" y2="13" /><line x1="8" y1="17" x2="12" y2="17" /></svg>
+}
 
 interface ProgressionCardProps {
   player: Player
   onGoBuilding: (b: string) => void
   onNav: (s: Screen) => void
   top?: number
-  onComingSoon?: (feature: string, description: string, target?: Date) => void
 }
 
-function CardButton({ accent, eyebrow, title, cta, onClick, testId }: {
+function CardButton({ accent, icon, eyebrow, title, cta, onClick, testId }: {
   accent: string
+  icon: React.ReactNode
   eyebrow: string
   title: string
   cta: string
@@ -26,26 +57,30 @@ function CardButton({ accent, eyebrow, title, cta, onClick, testId }: {
       onClick={onClick}
       style={{
         width: '100%', textAlign: 'left', cursor: 'pointer',
-        background: 'linear-gradient(180deg, rgba(10,18,29,0.86), rgba(6,12,22,0.9))',
-        border: `1px solid ${accent}66`,
+        background: 'var(--hub-panel, #080d18)',
+        border: '1.5px solid var(--hub-outline, rgba(255,255,255,0.55))',
         borderRadius: 12, padding: 10,
-        backdropFilter: 'blur(8px)',
-        boxShadow: `0 6px 18px rgba(0,0,0,0.4), 0 0 16px ${accent}22`,
+        boxShadow: '0 20px 44px rgba(0,0,0,0.5)',
         display: 'flex', alignItems: 'center', gap: 10,
       }}
     >
-      <span style={{
-        width: 6, height: 36, borderRadius: 3, flexShrink: 0,
-        background: accent, boxShadow: `0 0 10px ${accent}`,
-      }} />
+      {/* Bordered icon tile — the `.bp-panel` / `.picker-icon` chrome from the
+          Earth Base mockup: black tile, accent-colored 1.5px outline. */}
+      <IconBadge
+        icon={icon}
+        size={34}
+        tone={toneForAccent(accent)}
+        active
+        style={{ color: accent, borderColor: accent, borderWidth: 1.5, background: 'rgba(0,10,24,0.6)', boxShadow: 'none' }}
+      />
       <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 8, fontWeight: 800, letterSpacing: '0.2em', color: accent, textTransform: 'uppercase' }}>{eyebrow}</div>
-        <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 13, fontWeight: 800, color: '#e6efff', lineHeight: 1.3 }}>{title}</div>
+        <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 9, fontWeight: 700, letterSpacing: '0.14em', color: accent, textTransform: 'uppercase' }}>{eyebrow}</div>
+        <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 13, fontWeight: 800, color: '#fff', lineHeight: 1.3 }}>{title}</div>
       </div>
       <span style={{
         flexShrink: 0,
-        padding: '5px 10px', borderRadius: 8,
-        background: `${accent}22`, border: `1px solid ${accent}88`,
+        padding: '5px 10px', borderRadius: 999,
+        background: 'transparent', border: `1.5px solid ${accent}`,
         color: accent,
         fontFamily: 'var(--ln-font-display)', fontSize: 9, fontWeight: 800,
         letterSpacing: '0.12em', textTransform: 'uppercase',
@@ -57,7 +92,7 @@ function CardButton({ accent, eyebrow, title, cta, onClick, testId }: {
   )
 }
 
-export default function ProgressionCard({ player, onGoBuilding, onNav, top = 132, onComingSoon }: ProgressionCardProps) {
+export default function ProgressionCard({ player, onGoBuilding, onNav, top = 132 }: ProgressionCardProps) {
   const cards: React.ReactElement[] = []
 
   if (player.activeMission) {
@@ -65,7 +100,8 @@ export default function ProgressionCard({ player, onGoBuilding, onNav, top = 132
       <CardButton
         key="active"
         testId="progression-card-active"
-        accent="#7ec8ff"
+        accent="var(--hub-cyan)"
+        icon={<ResumeGlyph />}
         eyebrow="Mission In Progress"
         title={player.activeMission.label}
         cta="Resume Mission"
@@ -77,7 +113,8 @@ export default function ProgressionCard({ player, onGoBuilding, onNav, top = 132
       <CardButton
         key="pending"
         testId="progression-card-pending"
-        accent="#f5a623"
+        accent="var(--hub-mint)"
+        icon={<LaunchpadGlyph />}
         eyebrow="Launch Ready on Pad"
         title="Vessel fuelled & assigned"
         cta="Open Launchpad"
@@ -94,11 +131,12 @@ export default function ProgressionCard({ player, onGoBuilding, onNav, top = 132
         <CardButton
           key="skills"
           testId="progression-card-skills"
-          accent="var(--ln-cyan)"
+          accent="var(--hub-cyan)"
+          icon={<SkillGlyph />}
           eyebrow="Skill Points"
           title={`${player.skillPoints ?? 0} SP available`}
-          cta="Coming Soon"
-          onClick={() => onComingSoon?.('Skill Tree', 'Train your crew and unlock upgraded drilling, cargo, and orbital capabilities.')}
+          cta="Open Skill Tree"
+          onClick={() => onNav('skills')}
         />
       )
     }
@@ -107,7 +145,8 @@ export default function ProgressionCard({ player, onGoBuilding, onNav, top = 132
         <CardButton
           key="sms"
           testId="progression-card-sms"
-          accent="#7ec8ff"
+          accent="var(--hub-cyan)"
+          icon={<SmsGlyph />}
           eyebrow="New Facility"
           title="Build a Satellite Monitoring Station"
           cta="Build"
@@ -119,7 +158,8 @@ export default function ProgressionCard({ player, onGoBuilding, onNav, top = 132
         <CardButton
           key="telescope"
           testId="progression-card-transit-satellite"
-          accent="#7ec8ff"
+          accent="var(--hub-cyan)"
+          icon={<TelescopeGlyph />}
           eyebrow="Science Mission"
           title="Launch a transit telescope"
           cta="Open Mission"
@@ -131,7 +171,8 @@ export default function ProgressionCard({ player, onGoBuilding, onNav, top = 132
         <CardButton
           key="daily-candidates"
           testId="progression-card-tess-candidates"
-          accent="#7ec8ff"
+          accent="var(--hub-cyan)"
+          icon={<TelescopeGlyph />}
           eyebrow="Daily Downlink"
           title="Classify today's transit candidates"
           cta="Review"
@@ -144,7 +185,8 @@ export default function ProgressionCard({ player, onGoBuilding, onNav, top = 132
       <CardButton
         key="next-mission"
         testId="progression-card-next-mission"
-        accent="#39d36a"
+        accent="var(--hub-mint)"
+        icon={<ContractGlyph />}
         eyebrow={justFinishedOnboarding ? 'Onboarding Complete' : 'Next Mission'}
         title={justFinishedOnboarding ? 'Choose your first free contract' : 'New contract available'}
         cta="Browse Contracts"

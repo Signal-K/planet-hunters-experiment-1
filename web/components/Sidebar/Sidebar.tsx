@@ -64,8 +64,8 @@ const NAV_ITEMS: NavItem[] = [
   { id: 'hub',      label: 'Base',     color: '#39d36a', glyph: <HubGlyph /> },
   { id: 'missions', label: 'Missions', color: '#f5a623', glyph: <MissionsGlyph /> },
   { id: 'galaxy',   label: 'Atlas',    color: '#7ec8ff', glyph: <AtlasGlyph /> },
-  { id: 'fab',      label: 'Build',    color: '#c084ff', glyph: <RocketGlyph /> },
-  { id: 'market',   label: 'Market',   color: '#ffb347', glyph: <MarketGlyph /> },
+  { id: 'fab',      label: 'Build',    color: '#c084ff', glyph: <RocketGlyph />, locked: true },
+  { id: 'market',   label: 'Market',   color: '#ffb347', glyph: <MarketGlyph />, locked: true },
 ]
 
 function GearGlyph() {

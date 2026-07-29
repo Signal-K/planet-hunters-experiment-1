@@ -1,9 +1,19 @@
-// Landnam game data — prebuilt starter rockets
-// Players purchase a rocket per mission. Explorer (SR1) is always free. Prospector (SR2)+ require Francs + mission history.
+// Landnam game data — the rocket models a player can buy.
+//
+// Players purchase a rocket per mission. Explorer is always free; Prospector
+// and above cost Francs and require mission history.
+//
+// Naming: "starter rocket" and the SR1/SR2/SR3 scheme are retired vocabulary
+// (renamed 2026-07-08, vocabulary retired outright 2026-07-29). The `sr*` ids
+// below survive only because they are persisted in saves — `rocket.chassis`,
+// `shipCustomizerParts` keys and `SHIP_INTERIOR_LAYOUTS` all key off them, so
+// changing them needs a save migration. They are storage keys, not names, and
+// must never reach the player.
 
-import type { RocketConfig, StarterRocket } from './types'
+import type { RocketConfig, RocketModel } from './types'
+import { ROCKET_PRICES } from './economy'
 
-export const STARTER_ROCKETS: StarterRocket[] = [
+export const ROCKET_MODELS: RocketModel[] = [
   {
     id: 'sr1',
     name: 'Explorer',
@@ -19,7 +29,7 @@ export const STARTER_ROCKETS: StarterRocket[] = [
     id: 'sr2',
     name: 'Prospector',
     tier: 2,
-    costFrancs: 1_300_000_000,
+    costFrancs: ROCKET_PRICES.sr2,
     missionsRequired: 1,
     locked: false,
     stats: { cargo: 10, maxOrbit: 7, drillTier: 2 },
@@ -28,21 +38,26 @@ export const STARTER_ROCKETS: StarterRocket[] = [
   },
   {
     // Coming-soon tease, not yet purchasable — decided cost/unlock condition
-    // (rocket-and-room-system.md, 2026-06-18) is 4.0B F at L3/M3, but stats
-    // aren't finalized so this stays locked like sr4/sr5 until they are.
+    // (rocket-and-room-system.md, 2026-06-18) is ROCKET_PRICES.sr3 at L3/M3, but stats
+    // aren't finalized so this stays locked like the two below until they are.
+    //
+    // "Unannounced" is a status, not a model name. Explorer and Prospector were
+    // named 2026-07-08; tiers 3-5 never were, and they render in the Hangar, so
+    // a placeholder that reads as a name would leak retired vocabulary to the
+    // player. Replace with real names when they're chosen.
     id: 'sr3',
-    name: 'Starter Rocket 3',
+    name: 'Unannounced',
     tier: 3,
-    costFrancs: 4_000_000_000,
+    costFrancs: ROCKET_PRICES.sr3,
     missionsRequired: 999,
     locked: true,
     stats: { cargo: 0, maxOrbit: 0, drillTier: 0 },
     img: '/parts/basic_hull_t1.png',
-    unlockHint: 'Unlocks at L3/M3 · 4.0B F',
+    unlockHint: 'Unlocks at L3/M3',
   },
   {
     id: 'sr4',
-    name: 'Starter Rocket 4',
+    name: 'Unannounced',
     tier: 4,
     costFrancs: 0,
     missionsRequired: 999,
@@ -53,7 +68,7 @@ export const STARTER_ROCKETS: StarterRocket[] = [
   },
   {
     id: 'sr5',
-    name: 'Starter Rocket 5',
+    name: 'Unannounced',
     tier: 5,
     costFrancs: 0,
     missionsRequired: 999,
@@ -64,21 +79,21 @@ export const STARTER_ROCKETS: StarterRocket[] = [
   },
 ]
 
-const STARTER_ROCKET_BY_CHASSIS: Record<string, string> = {
+const ROCKET_MODEL_BY_CHASSIS: Record<string, string> = {
   'hull-mk1': 'sr1',
   'hull-mk2': 'sr2',
   'hull-mk3': 'sr2',
 }
 
-export function starterRocketForConfig(rocket: Pick<RocketConfig, 'chassis'> | null | undefined): StarterRocket {
-  const id = rocket ? STARTER_ROCKET_BY_CHASSIS[rocket.chassis] : undefined
-  return STARTER_ROCKETS.find(starter => starter.id === id) ?? STARTER_ROCKETS[0]
+export function rocketModelForConfig(rocket: Pick<RocketConfig, 'chassis'> | null | undefined): RocketModel {
+  const id = rocket ? ROCKET_MODEL_BY_CHASSIS[rocket.chassis] : undefined
+  return ROCKET_MODELS.find(starter => starter.id === id) ?? ROCKET_MODELS[0]
 }
 
 export function rocketDisplayForConfig(rocket: Pick<RocketConfig, 'chassis'> | null | undefined): {
   name: string
   img: string
 } {
-  const starter = starterRocketForConfig(rocket)
+  const starter = rocketModelForConfig(rocket)
   return { name: starter.name, img: starter.img }
 }

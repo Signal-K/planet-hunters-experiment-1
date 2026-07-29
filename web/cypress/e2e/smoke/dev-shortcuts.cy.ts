@@ -123,7 +123,7 @@ describe('DEV panel UI', () => {
     cy.contains('LAUNCH').should('be.visible')
   })
 
-  it('clicking M3 Hub lands back on the two-leg contractor pick, replaying mission 3', () => {
+  it('clicking M3 Hub lands back on the two-leg client pick, replaying mission 3', () => {
     cy.get('[data-testid="dev-shortcuts-toggle"]').click()
     cy.get('[data-testid="dev-shot-m3-hub"]').click()
     cy.contains('Guided Ops · Mission 3').should('be.visible')

@@ -8,24 +8,116 @@ import ConfirmActionSheet from '@/components/game/ConfirmActionSheet'
 import { TutorialCompleteSheet, useTutorialCompleteAck } from '@/components/game/TutorialCompleteSheet'
 import { Scene } from '@/lib/engine/Scene'
 import type { EntityData } from '@/lib/engine/types'
-import { Cloud } from '@/components/game/hub/Cloud'
+import { buildPlotEntities } from '@/lib/engine/prefabs'
+import { readComponentNumber } from '@/lib/engine/registry'
+import { AmbientMotes } from '@/components/game/hub/AmbientMotes'
 import { HubWorldBackground } from '@/components/game/hub/HubWorldBackground'
 import { SoilCrossSection } from '@/components/game/hub/SoilCrossSection'
 import { HubSubsurfaceView } from '@/components/game/hub/HubSubsurfaceView'
 import { Building, EmptyPlot } from '@/components/game/hub/Building'
+import type { BuildingCallout } from '@/components/game/hub/Building'
 import HubPixiCanvas from '@/components/game/hub/HubPixiCanvas'
 import ErrorBoundary from '@/components/ui/ErrorBoundary'
 import { TUTORIAL_CONTENT_TOP } from '@/lib/tutorial-layout'
 import { FREE_OPS_START_MISSIONS_DONE } from '@/lib/data/mission-generator'
+import { LAUNCHPAD_UPGRADE_COST } from '@/lib/data'
+import { formatCurrency } from '@/lib/format'
 import type { HubBuildingDef } from '@/lib/pixi/hubScene'
 import { fetchReviewableTessCandidates } from '@/lib/tess-subjects'
+import HUDStrip from '@/components/ui/HUDStrip'
 
-const DEFAULT_PLOTS: EntityData[] = [
-  { id: 'plot-0', name: 'Plot 0', transform: { position: { x: 60, y: 570 }, rotation: 0, scale: { x: 1, y: 1 } }, components: [{ type: 'BuildPlot', index: 0 }] },
-  { id: 'plot-1', name: 'Plot 1', transform: { position: { x: 154, y: 570 }, rotation: 0, scale: { x: 1, y: 1 } }, components: [{ type: 'BuildPlot', index: 1 }] },
-  { id: 'plot-2', name: 'Plot 2', transform: { position: { x: 248, y: 570 }, rotation: 0, scale: { x: 1, y: 1 } }, components: [{ type: 'BuildPlot', index: 2 }] },
-  { id: 'plot-3', name: 'Plot 3', transform: { position: { x: 342, y: 570 }, rotation: 0, scale: { x: 1, y: 1 } }, components: [{ type: 'BuildPlot', index: 3 }] },
-]
+// ── Ref-B bordered-icon-badge glyphs for Hub chrome (bottom tabs) ──
+// Simple white-line icons, no fill — matches the mockup's `i-*` <symbol> set.
+// (Francs/jobs/mineral-stash glyphs live in HUDStrip, which owns that readout.)
+function BuildGlyph() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M3 21h18M6 21V9l6-5 6 5v12M10 21v-6h4v6" /></svg>
+  )
+}
+function PlusGlyph() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 5v14M5 12h14" /></svg>
+  )
+}
+function HangarGlyph() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><rect x="4" y="7" width="16" height="13" rx="1.5" /><path d="M4 7l2-4h12l2 4" /></svg>
+  )
+}
+function UpgradeGlyph() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M13 2L4 14h6l-1 8 9-12h-6z" /></svg>
+  )
+}
+function SurfaceGlyph() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M12 19V5M5 12l7-7 7 7" /></svg>
+  )
+}
+function SubsurfaceGlyph() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M12 5v14M5 12l7 7 7-7" /></svg>
+  )
+}
+function MarketGlyph() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M4 10h16l-2-6H6l-2 6zM5 10v10h14V10M9 20v-6h6v6" /></svg>
+  )
+}
+function AtlasGlyph() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><circle cx="12" cy="12" r="9" /><path d="M3 12h18M12 3a14 14 0 013.5 9 14 14 0 01-3.5 9 14 14 0 01-3.5-9A14 14 0 0112 3z" /></svg>
+  )
+}
+function SkillsGlyph() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M12 2l2.5 7.5H22l-6 4.6 2.3 7.4L12 17l-6.3 4.5 2.3-7.4-6-4.6h7.5z" /></svg>
+  )
+}
+
+/**
+ * Bottom-toolbar pill — the `.scene-btn` recipe from
+ * `landnam-earth-base-v2.html`: black tile, 1.5px white outline, cyan glyph,
+ * 9px/0.18em uppercase label. `active` (Edit mode on) fills mint; `accent`
+ * outlines mint; `muted` dims the label for secondary actions.
+ */
+function SceneBtn({ icon, label, onClick, active, accent, muted, pulse }: {
+  icon: React.ReactNode
+  label: string
+  onClick: () => void
+  active?: boolean
+  accent?: boolean
+  muted?: boolean
+  pulse?: boolean
+}) {
+  const mint = 'var(--hub-mint)'
+  const glyphColor = active || accent ? mint : 'var(--hub-cyan)'
+  const textColor = active || accent ? mint : muted ? 'rgba(255,255,255,0.7)' : '#fff'
+  return (
+    <button
+      onClick={onClick}
+      style={{
+        display: 'flex', alignItems: 'center', gap: 6,
+        background: active ? 'rgba(47,191,106,0.2)' : 'var(--hub-panel)',
+        border: `1.5px solid ${active || accent ? mint : 'rgba(255,255,255,0.5)'}`,
+        borderRadius: 999, padding: '8px 14px 8px 8px', minHeight: 40,
+        fontFamily: 'var(--ln-font-display)', fontWeight: 700, fontSize: 9,
+        letterSpacing: '0.18em', textTransform: 'uppercase', color: textColor,
+        cursor: 'pointer', transition: 'background 120ms, border-color 120ms',
+        animation: pulse ? 'hub-pad-pulse 2s ease-in-out infinite' : 'none',
+      }}
+    >
+      <span style={{ display: 'grid', placeItems: 'center', color: glyphColor }}>{icon}</span>
+      {label}
+    </button>
+  )
+}
+
+// Instantiated from the build-plot prefab rather than written out by hand.
+// This same list previously existed in four places (both hub scene files and
+// both screens); the prefab is the one definition and a test asserts it still
+// reproduces hub.scene.json exactly.
+const DEFAULT_PLOTS: EntityData[] = buildPlotEntities()
 
 interface HubScreenProps {
   player: Player
@@ -82,8 +174,8 @@ export default function HubScreen({ player, hasCoach, onGoBuilding, onNav, onUpg
   }, [player.freeOperations, player.satelliteMonitoringBuilt, player.transitSatelliteLaunchedAt, player.tessClassifications])
 
   const sortedEntities = plotEntities.slice().sort((a, b) => {
-    const ai = (a.components.find(c => c.type === 'BuildPlot')?.index as number) ?? 0
-    const bi = (b.components.find(c => c.type === 'BuildPlot')?.index as number) ?? 0
+    const ai = readComponentNumber(a, 'BuildPlot', 'index', 0)
+    const bi = readComponentNumber(b, 'BuildPlot', 'index', 0)
     return ai - bi
   })
 
@@ -91,7 +183,14 @@ export default function HubScreen({ player, hasCoach, onGoBuilding, onNav, onUpg
     // SVG grass is at 78% from top = 22% from bottom. calc(22% - 42px) puts the label
     // bottom 42px underground so the visible building base sits at the grass line.
     // left uses scene-proportional % so it matches the CSS-stretched PixiJS canvas (HUB_W=402).
-    .map(e => ({ left: `calc(${(e.transform.position.x / 402) * 100}%)`, bottom: 'calc(22% - 42px)' } as React.CSSProperties))
+    // translateX(-50%) centers the label stack on the plot the way the PixiJS
+    // art does — scene plotX is a building *center*, so left-aligning here put
+    // every pill half a building to the right of the structure it names.
+    .map(e => ({
+      left: `calc(${(e.transform.position.x / 402) * 100}%)`,
+      bottom: 'calc(22% - 42px)',
+      transform: 'translateX(-50%)',
+    } as React.CSSProperties))
 
   const structureForPlot = (plot: number) => {
     const kind = Object.entries(effectivePlots).find(([, p]) => p === plot)?.[0] ?? null
@@ -110,6 +209,28 @@ export default function HubScreen({ player, hasCoach, onGoBuilding, onNav, onUpg
       status: 'ok' as const,
     }]
   })
+  // Launchpad speech bubble — the base "speaking up" when it has a prompt and
+  // nothing else on screen is already making it.
+  //
+  // It is deliberately mutually exclusive with ProgressionCard: that stack
+  // renders whenever there's an active mission, a pending launch, or any
+  // completed mission, and it phrases the very same prompts ("Browse
+  // Contracts", "Open Launchpad"). Showing both put two copies of one call to
+  // action on screen at once, physically overlapping at portrait width. So the
+  // callout is scoped to the one state the card stack stays empty for — a
+  // launchpad standing on an Ops 0 base with nothing in flight, which is
+  // exactly the state the Open Design mockup depicts.
+  const hasProgressionCards = !!player.activeMission || !!player.pendingLaunch || player.missionsDone > 0
+  const launchpadCallout: BuildingCallout | undefined =
+    hasCoach || hasProgressionCards
+      ? undefined
+      : {
+        title: 'Choose your first contract',
+        body: 'A client job is open at the Mission Board. Your launchpad is ready to fly it.',
+        cta: 'View Missions',
+        onCta: () => onNav('missions'),
+      }
+
   const structureProps = (kind: string) => {
     if (kind === 'launchpad') {
       return {
@@ -118,6 +239,7 @@ export default function HubScreen({ player, hasCoach, onGoBuilding, onNav, onUpg
         status: (player.activeMission ? 'warn' : 'ok') as 'ok' | 'warn',
         hot: !!player.pendingLaunch,
         w: 98,
+        callout: launchpadCallout,
         onClick: () => onGoBuilding('launchpad'),
       }
     }
@@ -177,23 +299,25 @@ export default function HubScreen({ player, hasCoach, onGoBuilding, onNav, onUpg
 
         {/* ─── ABOVE GROUND ─── top half of slider */}
         <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '50%', overflow: 'hidden' }}>
-          {/* World background: CSS sky + SVG terrain */}
+          {/* World background: sky, starfield, ridge parallax, ground, plateau */}
           <HubWorldBackground />
 
-          {/* CSS clouds */}
-          <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '42%', overflow: 'hidden', pointerEvents: 'none', zIndex: 4 }}>
-            <Cloud style={{ left: '-30%', top: 40, opacity: 0.55, transform: 'scale(0.8)' }} dur="62s" delay="0s" />
-            <Cloud style={{ left: '-30%', top: 96, opacity: 0.38, transform: 'scale(0.55)' }} dur="80s" delay="-30s" />
-            <Cloud style={{ left: '-30%', top: 160, opacity: 0.28, transform: 'scale(0.42)' }} dur="100s" delay="-55s" />
-          </div>
+          {/* Drifting ambient motes — replaces the old daylight cloud layer,
+              which read as overcast weather against the new deep-blue sky. */}
+          <AmbientMotes />
 
           {/* PixiJS building sprites */}
           <ErrorBoundary fallback={null}>
             <HubPixiCanvas buildings={hubBuildings} />
           </ErrorBoundary>
 
-          {/* Surface buildings — hit areas + labels */}
-          <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}>
+          {/* Surface buildings — hit areas + labels.
+              zIndex 10 is load-bearing: every scene layer below is an
+              absolutely-positioned sibling with an explicit z-index (sky 1,
+              motes 2, Pixi 3, soil 4), and the sky is fully opaque. Without a
+              z-index here this layer sits at stacking level 0 and the sky
+              paints straight over the pills and callouts. */}
+          <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 10 }}>
             <div style={{ position: 'absolute', inset: 0, pointerEvents: 'auto' }}>
               {plotStyles.map((style, plot) => {
                 const kind = structureForPlot(plot)
@@ -202,7 +326,11 @@ export default function HubScreen({ player, hasCoach, onGoBuilding, onNav, onUpg
                   return <EmptyPlot key={plot} plot={plot} w={78} style={style} onClick={() => onGoBuilding('build')} />
                 }
                 const building = structureProps(kind)
-                return <Building key={kind} {...building} style={style} />
+                // Outer plots open their callout inward so a 208px bubble
+                // can't run off the edge of the scene.
+                const xFrac = (sortedEntities[plot]?.transform.position.x ?? 201) / 402
+                const calloutAlign = xFrac < 0.32 ? 'start' : xFrac > 0.68 ? 'end' : 'center'
+                return <Building key={kind} {...building} style={style} calloutAlign={calloutAlign} />
               })}
             </div>
           </div>
@@ -225,40 +353,28 @@ export default function HubScreen({ player, hasCoach, onGoBuilding, onNav, onUpg
         padding: '16px 14px 22px',
         background: subsurface
           ? 'linear-gradient(180deg, rgba(6,3,0,0.9) 0%, rgba(6,3,0,0.5) 60%, transparent 100%)'
-          : 'linear-gradient(180deg, rgba(6,9,15,0.85) 0%, rgba(6,9,15,0.35) 60%, transparent 100%)',
+          : 'linear-gradient(180deg, rgba(5,10,22,0.82) 0%, rgba(5,10,22,0.4) 65%, transparent 100%)',
         display: 'flex', alignItems: 'flex-start', gap: 10, pointerEvents: 'none',
         transition: 'background 0.55s',
       }}>
         <div style={{ pointerEvents: 'auto' }}>
-          <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 9, fontWeight: 700, letterSpacing: '0.22em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.6)' }}>
+          <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 9.5, fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.55)' }}>
             {subsurface ? 'EARTH BASE · SUBSURFACE' : `EARTH BASE · OPS ${player.missionsDone}`}
           </div>
-          <h1 style={{ margin: '2px 0 0', fontFamily: 'var(--ln-font-display)', fontSize: 24, fontWeight: 800, letterSpacing: '-0.01em', color: '#fff', lineHeight: 1, textShadow: '0 2px 10px rgba(0,0,0,0.7)' }}>
+          <h1 style={{ margin: '2px 0 0', fontFamily: 'var(--ln-font-display)', fontSize: 23, fontWeight: 800, letterSpacing: '-0.01em', color: '#fff', lineHeight: 1, textShadow: '0 2px 10px rgba(0,0,0,0.6)' }}>
             {subsurface ? 'Subsurface' : 'Earth Base'}
           </h1>
         </div>
         <span style={{ flex: 1 }} />
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 6, alignItems: 'flex-end', pointerEvents: 'auto' }}>
-          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '5px 11px', background: 'rgba(8,12,22,0.7)', backdropFilter: 'blur(6px)', border: '1px solid rgba(245,166,35,0.5)', borderRadius: 999, fontFamily: 'var(--ln-font-display)', fontSize: 12, fontWeight: 800, letterSpacing: '0.04em', color: '#f5a623' }}>
-            ▲ {player.francs.toLocaleString()}
-          </span>
-          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '4px 10px', background: 'rgba(8,12,22,0.7)', backdropFilter: 'blur(6px)', border: '1px solid rgba(255,179,71,0.4)', borderRadius: 999, fontFamily: 'var(--ln-font-display)', fontSize: 9, fontWeight: 800, letterSpacing: '0.16em', color: '#ffb347', textTransform: 'uppercase' }}>
-            <span style={{ width: 4, height: 4, borderRadius: 999, background: '#ffb347', boxShadow: '0 0 6px #ffb347' }} />
-            {player.missionCount} Jobs
-          </span>
-          {player.stash && Object.keys(player.stash).length > 0 && (
-            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '4px 10px', background: 'rgba(8,12,22,0.7)', backdropFilter: 'blur(6px)', border: '1px solid rgba(57,211,106,0.4)', borderRadius: 999, fontFamily: 'var(--ln-font-display)', fontSize: 9, fontWeight: 800, letterSpacing: '0.16em', color: '#39d36a', textTransform: 'uppercase' }}>
-              {Object.keys(player.stash).length} Minerals
-            </span>
-          )}
+        <div style={{ pointerEvents: 'auto' }}>
+          <HUDStrip player={player} showStash />
         </div>
       </div>
 
       {/* Progression card — hidden when tutorial coach is active */}
-      {!hasCoach && !subsurface && (
+      {(!hasCoach || !!player.activeMission || !!player.pendingLaunch) && !subsurface && (
         <>
-          <ProgressionCard player={player} onGoBuilding={onGoBuilding} onNav={onNav} top={TUTORIAL_CONTENT_TOP}
-            onComingSoon={(feature, description, target) => setComingSoon({ feature, description, target })} />
+          <ProgressionCard player={player} onGoBuilding={onGoBuilding} onNav={onNav} top={TUTORIAL_CONTENT_TOP} />
           {comingSoon && (
             <ComingSoonSheet feature={comingSoon.feature} description={comingSoon.description} target={comingSoon.target} onClose={() => setComingSoon(null)} />
           )}
@@ -272,8 +388,8 @@ export default function HubScreen({ player, hasCoach, onGoBuilding, onNav, onUpg
         <ConfirmActionSheet
           eyebrow="Upgrade"
           title="Upgrade Launchpad"
-          description="Spend ₣1,000,000,000 to permanently upgrade the launchpad. This can't be undone."
-          confirmLabel="Confirm Upgrade (₣1B)"
+          description={`Spend ${formatCurrency(LAUNCHPAD_UPGRADE_COST)} to permanently upgrade the launchpad. This can't be undone.`}
+          confirmLabel={`Confirm Upgrade (${formatCurrency(LAUNCHPAD_UPGRADE_COST, { compact: true })})`}
           onConfirm={() => { onUpgradeLaunchpad(); setConfirmingLaunchpadUpgrade(false) }}
           onDismiss={() => setConfirmingLaunchpadUpgrade(false)}
         />
@@ -281,42 +397,57 @@ export default function HubScreen({ player, hasCoach, onGoBuilding, onNav, onUpg
 
       {/* Bottom toolbar — hidden during tutorial */}
       {!hasCoach && (
-        <div style={{ position: 'absolute', left: 0, right: 0, bottom: 110, zIndex: 20, display: 'flex', justifyContent: 'center', gap: 8 }}>
+        <div style={{
+          position: 'absolute', left: 0, right: 0, bottom: 110, zIndex: 20,
+          display: 'flex', justifyContent: 'center', gap: 8, flexWrap: 'wrap',
+          padding: '0 12px',
+        }}>
           {subsurface ? (
-            <button
-              onClick={() => setSubsurface(false)}
-              style={{ padding: '5px 14px', background: 'rgba(8,16,28,0.75)', backdropFilter: 'blur(6px)', border: '1px solid rgba(122,80,40,0.55)', borderRadius: 999, fontFamily: 'var(--ln-font-display)', fontSize: 9, fontWeight: 700, letterSpacing: '0.22em', color: '#9c8d70', textTransform: 'uppercase', cursor: 'pointer' }}
-            >
-              ↑ Surface
-            </button>
+            <SceneBtn icon={<SurfaceGlyph />} label="Surface" muted onClick={() => setSubsurface(false)} />
           ) : (
             <>
               {editMode && (
                 <>
-                  <button onClick={() => onGoBuilding('build')} style={{ padding: '5px 14px', background: 'rgba(57,211,106,0.15)', backdropFilter: 'blur(6px)', border: '1px solid rgba(57,211,106,0.5)', borderRadius: 999, fontFamily: 'var(--ln-font-display)', fontSize: 9, fontWeight: 700, letterSpacing: '0.14em', color: '#39d36a', textTransform: 'uppercase', cursor: 'pointer' }}>
-                    + New Structure
-                  </button>
+                  <SceneBtn icon={<PlusGlyph />} label="New Structure" onClick={() => onGoBuilding('build')} />
                   {player.placed.includes('launchpad') && (
-                    <button onClick={() => onGoBuilding('hangar')} style={{ padding: '5px 14px', background: 'rgba(135,207,250,0.12)', backdropFilter: 'blur(6px)', border: '1px solid rgba(135,207,250,0.4)', borderRadius: 999, fontFamily: 'var(--ln-font-display)', fontSize: 9, fontWeight: 700, letterSpacing: '0.14em', color: '#9EDCFF', textTransform: 'uppercase', cursor: 'pointer' }}>
-                      Hangar
-                    </button>
+                    <SceneBtn icon={<HangarGlyph />} label="Hangar" onClick={() => onGoBuilding('hangar')} />
                   )}
                   {player.placed.includes('launchpad') && !player.launchpadUpgraded && onUpgradeLaunchpad && (
-                    <button onClick={() => setConfirmingLaunchpadUpgrade(true)} style={{ padding: '5px 14px', background: 'rgba(245,166,35,0.15)', backdropFilter: 'blur(6px)', border: '1px solid rgba(245,166,35,0.5)', borderRadius: 999, fontFamily: 'var(--ln-font-display)', fontSize: 9, fontWeight: 700, letterSpacing: '0.14em', color: '#f5a623', textTransform: 'uppercase', cursor: 'pointer' }}>
-                      Upgrade Launchpad (₣1B)
-                    </button>
+                    <SceneBtn icon={<UpgradeGlyph />} label={`Upgrade Launchpad (${formatCurrency(LAUNCHPAD_UPGRADE_COST, { compact: true })})`} accent onClick={() => setConfirmingLaunchpadUpgrade(true)} />
                   )}
                 </>
               )}
-              <button onClick={() => setEditMode(v => !v)} style={{ padding: '5px 14px', background: editMode ? 'rgba(245,166,35,0.25)' : 'rgba(8,16,28,0.75)', backdropFilter: 'blur(6px)', border: editMode ? '1px solid rgba(245,166,35,0.6)' : '1px solid rgba(135,207,250,0.4)', borderRadius: 999, fontFamily: 'var(--ln-font-display)', fontSize: 9, fontWeight: 700, letterSpacing: '0.22em', color: editMode ? '#f5a623' : '#9EDCFF', textTransform: 'uppercase', cursor: 'pointer', animation: !editMode && player.placed.length < 4 ? 'pad-pulse 2s ease-in-out infinite' : 'none' }}>
-                {editMode ? 'Done' : 'Edit · Build'}
-              </button>
-              <button
+              <SceneBtn
+                icon={<BuildGlyph />}
+                label={editMode ? 'Done' : 'Edit · Build'}
+                active={editMode}
+                pulse={!editMode && player.placed.length < 4}
+                onClick={() => setEditMode(v => !v)}
+              />
+              <SceneBtn
+                icon={<SubsurfaceGlyph />}
+                label="Subsurface"
+                muted
                 onClick={() => setComingSoon({ feature: 'Subsurface Operations', description: 'Drill deep into your base planet to mine rare subterranean minerals and build underground structures.', target: SPRINT_AFTER_NEXT_UTC })}
-                style={{ padding: '5px 14px', background: 'rgba(8,12,22,0.75)', backdropFilter: 'blur(6px)', border: '1px solid rgba(122,80,40,0.55)', borderRadius: 999, fontFamily: 'var(--ln-font-display)', fontSize: 9, fontWeight: 700, letterSpacing: '0.22em', color: '#9c8d70', textTransform: 'uppercase', cursor: 'pointer' }}
-              >
-                Subsurface ↓
-              </button>
+              />
+
+              {/* Desktop has no nav rail and no bottom bar, so the destinations
+                  without a building of their own hang off the base's action
+                  rail instead. Mobile reaches these via the bottom tab bar, so
+                  `.hub-desktop-nav` keeps them out of the way there. */}
+              {player.freeOperations && (
+                <>
+                  <span className="hub-desktop-nav">
+                    <SceneBtn icon={<MarketGlyph />} label="Market" onClick={() => onNav('market')} />
+                  </span>
+                  <span className="hub-desktop-nav">
+                    <SceneBtn icon={<AtlasGlyph />} label="Atlas" onClick={() => onNav('galaxy')} />
+                  </span>
+                  <span className="hub-desktop-nav">
+                    <SceneBtn icon={<SkillsGlyph />} label="Skills" onClick={() => onNav('skills')} />
+                  </span>
+                </>
+              )}
             </>
           )}
         </div>

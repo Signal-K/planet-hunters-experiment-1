@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState, type ReactNode } from 'react'
 import { Radio, Satellite } from 'lucide-react'
 import TopBar from '@/components/ui/TopBar'
+import StatCard from '@/components/ui/StatCard'
 import Panel from '@/components/ui/Panel'
 import StatusPill from '@/components/ui/StatusPill'
 import { GhostBtn, PrimaryBtn } from '@/components/ui/Button'
@@ -40,9 +41,9 @@ const VERDICT_ACTIONS: Array<{ id: TessVerdict; label: string; requiresMark: boo
 
 export default function TessDiscoveryScreen({ player, onBack, onBuildStation, onOpenMissions, onSubmit, onChooseTarget }: TessDiscoveryScreenProps) {
   const classifications = player.tessClassifications ?? {}
-  // dailyTessCandidates resolves to today's single candidate — either the
+  // dailyTessCandidates resolves to today's level-scaled downlink — either the
   // player's satellite-pointing pick (player.satelliteTargetId, chosen via
-  // PixiGalaxyStarMap after a prior classification) or a deterministic daily
+  // PixiGalaxyStarMap after a prior classification) plus a deterministic daily
   // hash fallback. `pool` keeps the full reviewable list around so the
   // pointing map has something to plot.
   const [candidate, setCandidate] = useState<TessCandidate | null>(null)
@@ -54,6 +55,12 @@ export default function TessDiscoveryScreen({ player, onBack, onBuildStation, on
   const [forceMapView, setForceMapView] = useState(false)
   const [loading, setLoading] = useState(true)
   const [loadFailed, setLoadFailed] = useState(false)
+  // Dev/staging-only: the daily candidate pool is keyed by real calendar date
+  // (dailyTessCandidates below), so there's no in-scene timer to fast-forward
+  // the way TransitScreen's ETA has — testing "the next day's downlink"
+  // otherwise means literally waiting a day. This offset fakes `today` by N
+  // days; it's a no-op (stays 0) outside development builds.
+  const [devDayOffset, setDevDayOffset] = useState(0)
 
   useEffect(() => {
     if (!player.freeOperations || !player.satelliteMonitoringBuilt || !player.transitSatelliteLaunchedAt) {
@@ -67,11 +74,14 @@ export default function TessDiscoveryScreen({ player, onBack, onBuildStation, on
     fetchReviewableTessCandidates()
       .then(liveCandidates => {
         if (cancelled) return
-        const today = new Date().toISOString().slice(0, 10)
+        const todayDate = new Date()
+        if (devDayOffset) todayDate.setDate(todayDate.getDate() + devDayOffset)
+        const today = todayDate.toISOString().slice(0, 10)
         const stationLevel = Math.max(player.satelliteMonitoringLevel ?? 1, player.transitSatelliteLevel ?? 1)
-        const [daily] = dailyTessCandidates(liveCandidates, today, stationLevel, player.satelliteTargetId)
+        const dailyCandidates = dailyTessCandidates(liveCandidates, today, stationLevel, player.satelliteTargetId)
+        const nextDaily = dailyCandidates.find(dailyCandidate => !classifications[dailyCandidate.id])
         setPool(liveCandidates)
-        setCandidate(daily ?? null)
+        setCandidate(nextDaily ?? null)
         setRanges([])
         setSectorIndex(0)
         setViewingSol(false)
@@ -88,7 +98,7 @@ export default function TessDiscoveryScreen({ player, onBack, onBuildStation, on
       })
 
     return () => { cancelled = true }
-  }, [classifications, player.freeOperations, player.satelliteMonitoringBuilt, player.satelliteMonitoringLevel, player.transitSatelliteLaunchedAt, player.transitSatelliteLevel, player.satelliteTargetId])
+  }, [classifications, player.freeOperations, player.satelliteMonitoringBuilt, player.satelliteMonitoringLevel, player.transitSatelliteLaunchedAt, player.transitSatelliteLevel, player.satelliteTargetId, devDayOffset])
 
   const classification: TessClassification | undefined = candidate ? classifications[candidate.id] : undefined
   const discoveredTarget = candidate && classification?.verdict === 'planet'
@@ -176,6 +186,9 @@ export default function TessDiscoveryScreen({ player, onBack, onBuildStation, on
           ? 'The shared TESS subject feed could not be reached. Check back later.'
           : 'Every live TESS transit subject is currently confirmed, rejected, or already resolved by consensus.'}
         onBack={onBack}
+        devBar={process.env.NODE_ENV === 'development' ? (
+          <DevDaySkipBar offset={devDayOffset} onAdvance={() => setDevDayOffset(o => o + 1)} onReset={() => setDevDayOffset(0)} />
+        ) : undefined}
       />
     )
   }
@@ -376,8 +389,8 @@ export default function TessDiscoveryScreen({ player, onBack, onBuildStation, on
       </div>
       <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 13, color: '#dbe8f8', lineHeight: 1.45 }}>
         {classification.verdict === 'planet' && discoveredTarget
-          ? `${candidate.host} is now a candidate world in your operations map. Point tomorrow's satellite at the next unresolved star to keep the discovery pipeline moving.`
-          : 'Your annotation was saved to the review queue. Noise marks matter: they keep the shared feed clean for the next real transit.'}
+          ? `${candidate.host} is now a candidate world in your operations map. A survey flight is available from the Mission Board, and this first submission awarded research XP.`
+          : 'Your annotation was saved to the review queue. Noise marks matter: they keep the shared feed clean for the next real transit, and first submissions award research XP.'}
       </div>
       {classification.verdict === 'planet' && discoveredTarget && (
         <div data-testid="tess-discovery-payoff" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 8, marginTop: 10 }}>
@@ -392,6 +405,11 @@ export default function TessDiscoveryScreen({ player, onBack, onBuildStation, on
   return (
     <div className="game-screen" data-testid="tess-discovery-screen">
       <TopBar eyebrow="TESS ANOMALY" title={candidate.toi} onBack={onBack} />
+      {process.env.NODE_ENV === 'development' && (
+        <div style={{ position: 'absolute', top: 72, left: 'var(--ln-s-4)', right: 'var(--ln-s-4)', zIndex: 5 }}>
+          <DevDaySkipBar offset={devDayOffset} onAdvance={() => setDevDayOffset(o => o + 1)} onReset={() => setDevDayOffset(0)} />
+        </div>
+      )}
       {isDesktop ? (
         <div data-testid="tess-discovery-desktop-grid" style={{ position: 'absolute', inset: 0, top: 72, display: 'grid', gridTemplateColumns: '55% 45%', gap: 16, padding: '0 var(--ln-s-4) var(--ln-s-4)' }}>
           <div style={{ overflowY: 'auto' }} data-ui-zone={UI_ZONES.screenContent}>
@@ -427,17 +445,12 @@ export default function TessDiscoveryScreen({ player, onBack, onBuildStation, on
 }
 
 function PayoffStat({ label, value }: { label: string; value: string }) {
-  return (
-    <div style={{ minWidth: 0, padding: '7px 6px', borderRadius: 7, background: 'rgba(8,16,28,0.72)', border: '1px solid rgba(57,211,106,0.22)' }}>
-      <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 8, fontWeight: 800, letterSpacing: '0.12em', color: 'var(--ln-text-muted)', textTransform: 'uppercase' }}>{label}</div>
-      <div style={{ fontFamily: 'var(--ln-font-mono)', fontSize: 10, fontWeight: 800, color: '#e8f0fe', marginTop: 2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', textTransform: 'uppercase' }}>{value}</div>
-    </div>
-  )
+  return <StatCard variant="readout" tone="ok" label={label} value={value} />
 }
 
 // Standard gate/status screen — Panel-wrapped icon + text, same shape as
 // every other screen in the game (TopBar + screen-scroll + Panel).
-function GateScreen({ eyebrow, icon, tone, title, body, onBack, action }: {
+function GateScreen({ eyebrow, icon, tone, title, body, onBack, action, devBar }: {
   eyebrow: string
   icon: ReactNode
   tone: 'amber' | 'cyan'
@@ -445,6 +458,7 @@ function GateScreen({ eyebrow, icon, tone, title, body, onBack, action }: {
   body: string
   onBack: () => void
   action?: ReactNode
+  devBar?: ReactNode
 }) {
   const accent = tone === 'amber' ? 'var(--ln-amber)' : 'var(--ln-cyan)'
   const bg = tone === 'amber' ? 'rgba(245,166,35,0.12)' : 'rgba(57,211,239,0.12)'
@@ -454,6 +468,7 @@ function GateScreen({ eyebrow, icon, tone, title, body, onBack, action }: {
       <NebulaBackdrop />
       <TopBar eyebrow={eyebrow} title="Satellite Monitoring Station" onBack={onBack} />
       <div className="screen-scroll" data-ui-zone={UI_ZONES.screenContent}>
+        {devBar}
         <Panel accent={accent} style={{ padding: 14 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <div style={{ width: 38, height: 38, borderRadius: 8, display: 'grid', placeItems: 'center', background: bg, border: `1px solid ${border}`, color: accent }}>
@@ -467,6 +482,38 @@ function GateScreen({ eyebrow, icon, tone, title, body, onBack, action }: {
           {action && <div style={{ marginTop: 12 }}>{action}</div>}
         </Panel>
       </div>
+    </div>
+  )
+}
+
+// Dev/staging-only day-skip control — see devDayOffset comment above. Never
+// rendered in production (guarded at each call site).
+function DevDaySkipBar({ offset, onAdvance, onReset }: { offset: number; onAdvance: () => void; onReset: () => void }) {
+  const simulated = new Date()
+  simulated.setDate(simulated.getDate() + offset)
+  return (
+    <div style={{
+      display: 'flex', alignItems: 'center', gap: 8, padding: '6px 10px', marginBottom: 10,
+      borderRadius: 7, border: '1px dashed var(--ln-hairline-strong)', background: 'rgba(8,16,28,0.6)',
+    }}>
+      <span style={{ fontFamily: 'var(--ln-font-mono)', fontSize: 9, color: 'var(--ln-text-muted)', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+        DEV · Simulated day {simulated.toISOString().slice(0, 10)} ({offset >= 0 ? '+' : ''}{offset}d)
+      </span>
+      <span style={{ flex: 1 }} />
+      <button data-testid="tess-dev-skip-day" onClick={onAdvance} style={{
+        padding: '3px 8px', borderRadius: 5, border: '1px solid var(--ln-cyan-border)', background: 'var(--ln-cyan-soft)',
+        color: 'var(--ln-cyan)', fontFamily: 'var(--ln-font-mono)', fontSize: 9, fontWeight: 800, letterSpacing: '0.06em', cursor: 'pointer',
+      }}>
+        +1 DAY
+      </button>
+      {offset !== 0 && (
+        <button data-testid="tess-dev-reset-day" onClick={onReset} style={{
+          padding: '3px 8px', borderRadius: 5, border: '1px solid var(--ln-hairline-strong)', background: 'transparent',
+          color: 'var(--ln-text-muted)', fontFamily: 'var(--ln-font-mono)', fontSize: 9, fontWeight: 700, letterSpacing: '0.06em', cursor: 'pointer',
+        }}>
+          RESET
+        </button>
+      )}
     </div>
   )
 }

@@ -1,0 +1,405 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Landnam — Earth Base</title>
+<link rel="stylesheet" href="landnam-design-system.css" />
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Oxanium:wght@400;700;800&family=Turret+Road:wght@400;700;800&display=swap');
+
+  html, body {
+    min-height: 100%;
+    background: var(--space-bg-far);
+    color: var(--ln-text);
+    font-family: var(--font-body);
+  }
+  body {
+    background:
+      radial-gradient(ellipse at 50% 0%, #1c2a45 0%, var(--space-bg) 40%, var(--space-bg-far) 85%);
+    background-attachment: fixed;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    position: relative;
+  }
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background-image:
+      radial-gradient(1px 1px at 12% 20%, rgba(255,255,255,0.5), transparent),
+      radial-gradient(1.5px 1.5px at 38% 55%, rgba(108,212,255,0.35), transparent),
+      radial-gradient(1px 1px at 58% 15%, rgba(255,255,255,0.4), transparent),
+      radial-gradient(1px 1px at 82% 68%, rgba(255,255,255,0.3), transparent);
+    background-size: 140px 140px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .stage {
+    position: relative; z-index: 1;
+    width: min(1320px, 100%);
+  }
+
+  .app {
+    background: var(--ln-panel);
+    border: 1px solid var(--ln-panel-border);
+    border-radius: var(--radius-md);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    overflow: hidden;
+    box-shadow: 0 30px 80px rgba(0,0,0,0.4);
+    position: relative;
+    display: flex;
+    flex-direction: column;
+  }
+  .app::before {
+    content: '';
+    position: absolute; inset: -1px;
+    pointer-events: none;
+    border-radius: var(--radius-md);
+    background:
+      linear-gradient(to right, var(--ln-cyan) 2px, transparent 2px) 0 0 / 24px 2px,
+      linear-gradient(to bottom, var(--ln-cyan) 2px, transparent 2px) 0 0 / 2px 24px,
+      linear-gradient(to left, var(--ln-cyan) 2px, transparent 2px) 100% 100% / 24px 2px,
+      linear-gradient(to top, var(--ln-cyan) 2px, transparent 2px) 100% 100% / 2px 24px;
+    background-repeat: no-repeat;
+    z-index: 10;
+  }
+
+  /* HUD strip */
+  .hud-strip {
+    display: flex; align-items: center; gap: 10px;
+    padding: var(--space-4) var(--space-5);
+    background: rgba(14,21,38,0.5);
+    border-bottom: 1px solid var(--ln-panel-border);
+  }
+  .res-chip { display: flex; align-items: center; gap: 8px; }
+  .res-body { display: flex; flex-direction: column; line-height: 1.2; }
+  .res-amt { font-family: var(--font-numeric); font-weight: 700; font-size: 13px; color: var(--ln-text); }
+  .res-rate { font-size: 10px; color: var(--ln-ok); }
+  .hud-spacer { flex: 1; }
+  .cycle-chip {
+    display: flex; align-items: center; gap: 8px;
+    font-family: var(--font-numeric); font-weight: 700;
+    font-size: 13px; color: var(--ln-cyan);
+    background: rgba(108,212,255,0.08); border: 1px solid rgba(108,212,255,0.2);
+    border-radius: var(--radius-sm); padding: 7px 12px;
+  }
+  .cycle-chip svg { width: 14px; height: 14px; }
+  .cycle-sub { font-family: var(--font-body); font-size: 10px; color: var(--ln-text-muted); }
+
+  .base-body { display: grid; grid-template-columns: 1fr 300px; flex: 1; min-height: 0; }
+  .hud-strip, .earth-nav, .tab-row, .step-footer-wrap { flex-shrink: 0; }
+
+  /* Diorama */
+  .diorama {
+    position: relative;
+    background:
+      radial-gradient(ellipse at 50% 0%, #142818 0%, #0a1a12 55%, #050d08 100%);
+    overflow: hidden;
+    min-height: 0;
+  }
+  .diorama::before {
+    content: '';
+    position: absolute; inset: 0;
+    background-image:
+      radial-gradient(1px 1px at 8% 24%, rgba(108,212,255,0.3), transparent),
+      radial-gradient(1px 1px at 42% 68%, rgba(255,255,255,0.2), transparent);
+    background-size: 100px 100px;
+    pointer-events: none;
+  }
+  .diorama-note {
+    position: absolute; top: 14px; left: 14px; z-index: 5;
+    font-family: var(--font-display); font-weight: 800;
+    font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase;
+    background: rgba(14,21,38,0.7); border: 1px dashed var(--ln-amber);
+    color: var(--ln-amber);
+    padding: 5px 9px; border-radius: var(--radius-sm);
+  }
+  .iso-grid { position: absolute; inset: 0; display: grid; place-items: center; overflow: hidden; }
+  .iso-plot { width: 560px; height: 400px; position: relative; }
+  .plot-floor {
+    position: absolute; inset: 40px 0 0;
+    background: linear-gradient(135deg, #1f3828 25%, #1a3023 25%, #1a3023 50%, #1f3828 50%, #1f3828 75%, #1a3023 75%);
+    background-size: 40px 40px;
+    clip-path: polygon(50% 0%, 100% 28%, 100% 72%, 50% 100%, 0% 72%, 0% 28%);
+    opacity: 0.85;
+  }
+  .iso-building { position: absolute; filter: drop-shadow(0 10px 14px rgba(0,0,0,0.4)); }
+  .b1 { top: 60px; left: 190px; width: 100px; height: 100px; }
+  .b2 { top: 130px; left: 330px; width: 80px; height: 80px; }
+  .b3 { top: 180px; left: 90px; width: 70px; height: 70px; }
+  .b4 { top: 220px; left: 250px; width: 60px; height: 60px; }
+  .iso-building.selected { outline: 2px solid var(--ln-cyan); outline-offset: 3px; border-radius: var(--radius-sm); cursor: pointer; }
+  .iso-building svg { width: 100%; height: 100%; }
+  .diorama-caption {
+    position: absolute; bottom: 14px; left: 14px; right: 14px; z-index: 5;
+    font-size: 10px; color: rgba(255,255,255,0.5); text-align: center;
+  }
+
+  /* Side panel */
+  .side-panel {
+    padding: var(--space-5) var(--space-4);
+    border-left: 1px solid var(--ln-panel-border);
+    display: flex; flex-direction: column;
+    min-height: 0;
+    overflow-y: auto;
+  }
+  .bp-name { font-family: var(--font-display); font-weight: 800; font-size: 16px; color: var(--ln-text); }
+  .bp-level { font-family: var(--font-numeric); font-size: 11px; color: var(--ln-cyan); margin-top: 2px; }
+  .bp-thumb {
+    margin-top: 12px; height: 110px; border-radius: var(--radius-md);
+    background: rgba(14,21,38,0.5);
+    border: 1px solid var(--ln-panel-border);
+    display: grid; place-items: center;
+    position: relative;
+  }
+  .bp-thumb .flag-corner {
+    position: absolute; top: 6px; right: 6px;
+    font-family: var(--font-display); font-weight: 700;
+    font-size: 8px; letter-spacing: 0.08em;
+    color: var(--ln-amber); text-transform: uppercase;
+    background: rgba(14,21,38,0.7); border: 1px dashed rgba(224,165,39,0.4);
+    padding: 2px 5px; border-radius: 3px;
+  }
+  .bp-desc { font-size: 12px; line-height: 1.5; color: var(--ln-text-dim); margin-top: 12px; }
+
+  .bp-cost { margin-top: var(--space-4); }
+  .bp-cost-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--space-2); }
+  .bp-cost-left { display: flex; align-items: center; gap: 8px; }
+  .bp-cost-left span { font-size: 12px; }
+  .bp-cost-owned { font-family: var(--font-numeric); font-size: 12px; color: var(--ln-text); }
+  .bp-cost-owned .req { color: var(--ln-text-muted); }
+  .bp-cost-owned.short { color: var(--ln-crimson); }
+
+  .bp-timer {
+    display: flex; align-items: center; gap: 7px; margin-top: 6px;
+    font-family: var(--font-numeric); font-size: 12px; color: var(--ln-text-dim);
+  }
+  .bp-timer svg { width: 13px; height: 13px; }
+  .bp-spacer { flex: 1; }
+  .details-toggle {
+    display: none; width: 100%; margin-top: 10px;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid var(--ln-panel-border); border-radius: var(--radius-md);
+    color: var(--ln-cyan);
+    font-family: var(--font-display); font-weight: 700;
+    font-size: 12px; letter-spacing: 0.08em;
+    text-transform: uppercase; cursor: pointer;
+    padding: 12px; min-height: 44px;
+    transition: background .12s;
+  }
+  .details-toggle:hover { background: rgba(108,212,255,0.08); }
+
+  .tab-row {
+    display: flex;
+    border-top: 1px solid var(--ln-panel-border);
+    background: rgba(14,21,38,0.3);
+  }
+  .tab-btn {
+    flex: 1; padding: 12px 8px; text-align: center;
+    font-family: var(--font-display); font-weight: 700;
+    font-size: 10.5px; letter-spacing: 0.06em; text-transform: uppercase;
+    color: var(--ln-text-dim); cursor: pointer; border-top: 2px solid transparent;
+  }
+  .tab-btn.active { color: var(--ln-cyan); border-top-color: var(--ln-cyan); background: rgba(108,212,255,0.06); }
+
+  .earth-nav{display:flex;align-items:center;justify-content:center;gap:1px;padding:3px 14px;background:rgba(14,21,38,0.35);border-bottom:1px solid rgba(255,255,255,.03)}
+  .en{font-family:var(--font-display);font-weight:700;font-size:6.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--ln-text-muted);text-decoration:none;padding:2px 8px;border-radius:3px;transition:background .1s,color .1s;white-space:nowrap}
+  .en:hover{color:var(--ln-text);background:rgba(255,255,255,.05)}
+  .step-pill{cursor:pointer;transition:background .1s}
+  .step-pill:hover{background:rgba(255,255,255,.07)}
+  .step-pill.current{cursor:default}
+  .en.cur{color:var(--ln-cyan);background:rgba(108,212,255,.08)}
+
+  @media (min-width: 861px) {
+    .app { height: min(860px, calc(100vh - 32px)); }
+    .diorama { overflow-y: auto; }
+  }
+  @media (max-width: 860px) {
+    .base-body { grid-template-columns: 1fr; }
+    .side-panel { border-left: none; border-top: 1px solid var(--ln-panel-border); }
+  }
+  @media (max-width: 560px) {
+    body { padding: 0; align-items: stretch; }
+    .stage { width: 100%; }
+    .app { border-radius: 0; border-left: none; border-right: none; min-height: 100vh; display: flex; flex-direction: column; }
+    .hud-strip { flex-wrap: wrap; gap: 8px 12px; padding: 10px 12px; }
+    .cycle-chip { order: -1; width: 100%; justify-content: space-between; }
+    .hud-spacer { display: none; }
+    .base-body { grid-template-columns: 1fr; min-height: auto; }
+    .diorama { min-height: 220px; }
+    .iso-grid { position: relative; inset: auto; }
+    .iso-plot { width: 100%; height: 200px; transform: scale(0.6); transform-origin: center top; }
+    .side-panel { padding: 12px 14px 14px; border-left: none; border-top: 1px solid var(--ln-panel-border); }
+    .bp-thumb { height: 80px; margin-top: 8px; }
+    .details-toggle { display: block; }
+    .bp-details { display: none; }
+    .bp-details.open { display: block; }
+    .tab-btn { font-size: 9px; padding: 10px 4px; }
+    .tab-btn svg { display: none; }
+    .btn-primary { width: 100%; justify-content: center; min-height: 48px; font-size: 14px; padding: 14px 28px; }
+    .step-footer { flex-wrap: wrap; justify-content: center; gap: 6px; }
+  }
+</style>
+</head>
+<body>
+<svg style="display:none" aria-hidden="true">
+  <symbol id="i-steel" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 14l3-8h10l3 8-8 5z"/><path d="M7 6l5 13 5-13"/></symbol>
+  <symbol id="i-silicon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 2l4 4-4 4-4-4z"/><path d="M12 10l4 4-4 4-4-4z"/></symbol>
+  <symbol id="i-platinum" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="3"/><ellipse cx="12" cy="12" rx="9" ry="3.4"/></symbol>
+  <symbol id="i-rare" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 2l2.5 7.5H22l-6 4.6 2.3 7.4L12 17l-6.3 4.5 2.3-7.4-6-4.6h7.5z"/></symbol>
+  <symbol id="i-franc" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="9"/><path d="M9 8h5M9 12h4M10 8v9"/></symbol>
+  <symbol id="i-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="4"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.6 4.6l2 2M17.4 17.4l2 2M19.4 4.6l-2 2M6.6 17.4l-2 2"/></symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></symbol>
+  <symbol id="i-build" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 21h18M6 21V9l6-5 6 5v12M10 21v-6h4v6"/></symbol>
+  <symbol id="i-struct" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="4" y="4" width="16" height="16" rx="1.5"/><path d="M4 10h16M10 4v16"/></symbol>
+  <symbol id="i-decor" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3c3 4 5 7 5 10a5 5 0 0 1-10 0c0-3 2-6 5-10z"/></symbol>
+  <symbol id="i-storage" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="4" y="7" width="16" height="13" rx="1.5"/><path d="M4 7l2-4h12l2 4"/></symbol>
+  <symbol id="i-power" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M13 2L4 14h6l-1 8 9-12h-6z"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M4 12l5 5L20 6"/></symbol>
+</svg>
+
+<div class="stage">
+  <div class="app">
+    <div class="hud-strip">
+      <div class="res-chip"><div class="icon-badge"><svg><use href="#i-steel"/></svg></div><div class="res-body"><span class="res-amt">2,450</span><span class="res-rate">+12/h</span></div></div>
+      <div class="res-chip"><div class="icon-badge"><svg><use href="#i-silicon"/></svg></div><div class="res-body"><span class="res-amt">1,830</span><span class="res-rate">+9/h</span></div></div>
+      <div class="res-chip"><div class="icon-badge"><svg><use href="#i-platinum"/></svg></div><div class="res-body"><span class="res-amt">920</span><span class="res-rate">+4/h</span></div></div>
+      <div class="res-chip"><div class="icon-badge"><svg><use href="#i-rare"/></svg></div><div class="res-body"><span class="res-amt">410</span><span class="res-rate">+2/h</span></div></div>
+      <div class="res-chip"><div class="icon-badge"><svg><use href="#i-franc"/></svg></div><div class="res-body"><span class="res-amt">120</span><span class="res-rate">Francs</span></div></div>
+      <div class="hud-spacer"></div>
+      <div class="cycle-chip"><svg><use href="#i-sun"/></svg>23:00 <span class="cycle-sub">&middot; Cycle 34</span></div>
+    </div>
+
+    <div class="earth-nav">
+      <a href="landnam-earth-base.html" class="en cur">Base</a>
+      <a href="landnam-mission-board.html" class="en">Mission</a>
+      <a href="landnam-target.html" class="en">Target</a>
+      <a href="landnam-rocket-construction.html" class="en">Rocket</a>
+      <a href="landnam-launch.html" class="en">Launch</a>
+      <a href="landnam-mining-run.html" class="en">Mining</a>
+    </div>
+
+    <div class="base-body">
+      <div class="diorama">
+        <div class="diorama-note">Placeholder diorama</div>
+        <div class="iso-grid">
+          <div class="iso-plot">
+            <div class="plot-floor"></div>
+            <div class="iso-building b1 selected" id="research-lab" title="Research Lab">
+              <svg viewBox="0 0 100 100">
+                <polygon points="50,10 90,32 90,68 50,90 10,68 10,32" fill="#1f3828" stroke="#6cd4ff" stroke-width="1.5"/>
+                <polygon points="50,10 90,32 50,54 10,32" fill="#2a4e35"/>
+                <circle cx="50" cy="42" r="14" fill="#0a1820" stroke="#6cd4ff" stroke-width="1.5"/>
+              </svg>
+            </div>
+            <div class="iso-building b2" title="Solar Array">
+              <svg viewBox="0 0 100 100">
+                <polygon points="50,15 88,34 88,66 50,85 12,66 12,34" fill="#1a3023" stroke="#1f3828" stroke-width="1.2"/>
+                <rect x="28" y="40" width="44" height="26" fill="#0a1820" stroke="#4e85a8" stroke-width="1.2"/>
+              </svg>
+            </div>
+            <div class="iso-building b3" title="Storage Silo">
+              <svg viewBox="0 0 100 100">
+                <polygon points="50,18 82,35 82,65 50,82 18,65 18,35" fill="#1a3023" stroke="#1f3828" stroke-width="1.2"/>
+                <ellipse cx="50" cy="42" rx="18" ry="9" fill="#24402f"/>
+              </svg>
+            </div>
+            <div class="iso-building b4" title="Habitat Dome">
+              <svg viewBox="0 0 100 100">
+                <polygon points="50,20 80,36 80,64 50,80 20,64 20,36" fill="#1a3023" stroke="#1f3828" stroke-width="1.2"/>
+                <circle cx="50" cy="42" r="12" fill="#0a1820" stroke="#6cd4ff" stroke-width="1.2"/>
+              </svg>
+            </div>
+          </div>
+        </div>
+        <div class="diorama-caption">Tap a building to inspect &mdash; Research Lab selected</div>
+      </div>
+
+      <div class="side-panel">
+        <div class="bp-name">Research Lab</div>
+        <div class="bp-level">Level 2</div>
+
+        <div class="bp-thumb">
+          <span class="flag-corner">Placeholder art</span>
+          <svg width="72" height="72" viewBox="0 0 100 100">
+            <polygon points="50,10 90,32 90,68 50,90 10,68 10,32" fill="#1f3828" stroke="#6cd4ff" stroke-width="1.5"/>
+            <circle cx="50" cy="45" r="16" fill="#0a1820" stroke="#6cd4ff" stroke-width="1.5"/>
+          </svg>
+        </div>
+
+        <button class="details-toggle" id="detailsToggle">Details <span id="detailsChevron">&#9662;</span></button>
+
+        <div class="bp-details" id="bpDetails">
+          <div class="bp-desc">Increases classification rewards and reduces anomaly cooldowns.</div>
+
+          <div class="bp-cost">
+            <div class="bp-cost-row">
+              <div class="bp-cost-left"><div class="icon-badge"><svg><use href="#i-steel"/></svg></div><span>Steel</span></div>
+              <span class="bp-cost-owned">2,000 <span class="req">/ 2,450</span></span>
+            </div>
+            <div class="bp-cost-row">
+              <div class="bp-cost-left"><div class="icon-badge"><svg><use href="#i-silicon"/></svg></div><span>Silicon</span></div>
+              <span class="bp-cost-owned">1,200 <span class="req">/ 1,830</span></span>
+            </div>
+            <div class="bp-cost-row">
+              <div class="bp-cost-left"><div class="icon-badge"><svg><use href="#i-platinum"/></svg></div><span>Platinum</span></div>
+              <span class="bp-cost-owned short">600 <span class="req">/ 920 needed</span></span>
+            </div>
+            <div class="bp-timer"><svg><use href="#i-clock"/></svg>2h 30m build time</div>
+          </div>
+        </div>
+
+        <div class="bp-spacer"></div>
+        <button class="btn-primary btn-lime" style="margin-top:16px;">Upgrade</button>
+      </div>
+    </div>
+
+    <div class="tab-row">
+      <div class="tab-btn active"><svg style="width:14px;height:14px;vertical-align:-2px;margin-right:4px;"><use href="#i-build"/></svg>Build</div>
+      <div class="tab-btn"><svg style="width:14px;height:14px;vertical-align:-2px;margin-right:4px;"><use href="#i-struct"/></svg>Structures</div>
+      <div class="tab-btn"><svg style="width:14px;height:14px;vertical-align:-2px;margin-right:4px;"><use href="#i-decor"/></svg>Decor</div>
+      <div class="tab-btn"><svg style="width:14px;height:14px;vertical-align:-2px;margin-right:4px;"><use href="#i-storage"/></svg>Storage</div>
+      <div class="tab-btn"><svg style="width:14px;height:14px;vertical-align:-2px;margin-right:4px;"><use href="#i-power"/></svg>Power</div>
+    </div>
+
+    <div class="step-footer-wrap">
+      <div class="step-caption">Command Center</div>
+      <div class="step-footer">
+        <span class="step-pill" data-href="landnam-mission-board.html">Start a New Mission &rarr;</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  var buildingNames = {
+    'research-lab': { name: 'Research Lab', level: 'Level 2', desc: 'Increases classification rewards and reduces anomaly cooldowns.' }
+  };
+  document.querySelectorAll('.iso-building').forEach(function (b) {
+    b.addEventListener('click', function () {
+      document.querySelectorAll('.iso-building').forEach(function (x) { x.classList.remove('selected'); });
+      b.classList.add('selected');
+    });
+  });
+  document.querySelectorAll('.tab-btn').forEach(function (t) {
+    t.addEventListener('click', function () {
+      document.querySelectorAll('.tab-btn').forEach(function (x) { x.classList.remove('active'); });
+      t.classList.add('active');
+    });
+  });
+  document.getElementById('detailsToggle').addEventListener('click', function () {
+    var open = document.getElementById('bpDetails').classList.toggle('open');
+    document.getElementById('detailsChevron').textContent = open ? '\u25B4' : '\u25BE';
+  });
+  document.querySelectorAll('.step-pill[data-href]').forEach(function(sp){
+    sp.addEventListener('click',function(){window.location.href=sp.dataset.href});
+    sp.style.cursor='pointer';
+  });
+</script>
+</body>
+</html>

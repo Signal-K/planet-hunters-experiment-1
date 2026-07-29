@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 import { writeFileSync } from 'node:fs'
-import { CONTRACTOR_SLOTS } from '../lib/data/contractors.ts'
+import { CLIENT_SLOTS } from '../lib/data/clients.ts'
 import { MINERAL_META } from '../lib/data/minerals.ts'
 import {
   DEFAULT_MISSION_TEMPLATES,
@@ -79,8 +79,8 @@ Examples:
 }
 
 function buildOutputs(kind: OutputKind): MissionGeneratorOutputs {
-  const generated = generateMissionsFromRules({ contractors: CONTRACTOR_SLOTS, minerals: MINERAL_META })
-  const freeops = generateFreeOpsMissionsFromRules({ contractors: CONTRACTOR_SLOTS, minerals: MINERAL_META })
+  const generated = generateMissionsFromRules({ clients: CLIENT_SLOTS, minerals: MINERAL_META })
+  const freeops = generateFreeOpsMissionsFromRules({ clients: CLIENT_SLOTS, minerals: MINERAL_META })
   const outputs = {
     templates: missionTemplatesToPocketBaseRows(DEFAULT_MISSION_TEMPLATES),
     generated: missionsToPocketBaseRows(generated),
@@ -96,12 +96,12 @@ function summarize(outputs: MissionGeneratorOutputs): string {
   if (outputs.generated) lines.push(`- generated fallback missions: ${outputs.generated.length}`)
   if (outputs.freeops) {
     lines.push(`- free ops offers: ${outputs.freeops.length}`)
-    const byContractor = outputs.freeops.reduce<Record<string, number>>((acc, mission) => {
-      acc[mission.contractor_slug] = (acc[mission.contractor_slug] ?? 0) + 1
+    const byClient = outputs.freeops.reduce<Record<string, number>>((acc, mission) => {
+      acc[mission.client_slug] = (acc[mission.client_slug] ?? 0) + 1
       return acc
     }, {})
-    for (const [contractor, count] of Object.entries(byContractor)) {
-      lines.push(`  - ${contractor}: ${count}`)
+    for (const [client, count] of Object.entries(byClient)) {
+      lines.push(`  - ${client}: ${count}`)
     }
   }
   return `${lines.join('\n')}\n`

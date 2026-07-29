@@ -2,20 +2,20 @@
 
 import type { GameState } from '@/lib/game-types'
 
-export function applyMiningDone(s: GameState, cargo: Record<string, number>, arrivalAt: number | null): GameState {
+export function applyMiningDone(s: GameState, cargo: Record<string, number>, arrivalAt: number | null, transitStartedAt?: number | null): GameState {
   if (s.screen !== 'mining' || !s.missionId || !s.targetId) return s
-  return startReturnLeg(s, cargo, arrivalAt)
+  return startReturnLeg(s, cargo, arrivalAt, transitStartedAt)
 }
 
-export function applyRoverMiningDone(s: GameState, cargo: Record<string, number>, arrivalAt: number | null): GameState {
+export function applyRoverMiningDone(s: GameState, cargo: Record<string, number>, arrivalAt: number | null, transitStartedAt?: number | null): GameState {
   if (s.screen !== 'rover-mining' || !s.missionId || !s.targetId) return s
-  return startReturnLeg(s, cargo, arrivalAt)
+  return startReturnLeg(s, cargo, arrivalAt, transitStartedAt)
 }
 
 // Shared by laser and rover mining completion: heads for the mission's
 // deliveryTargetId (two-leg "mine then deliver" jobs) if one is set,
 // otherwise starts the Earth-return leg directly.
-function startReturnLeg(s: GameState, cargo: Record<string, number>, arrivalAt: number | null): GameState {
+function startReturnLeg(s: GameState, cargo: Record<string, number>, arrivalAt: number | null, transitStartedAt?: number | null): GameState {
   const hasDelivery = !!s.deliveryTargetId
   return {
     ...s,
@@ -23,7 +23,10 @@ function startReturnLeg(s: GameState, cargo: Record<string, number>, arrivalAt: 
     player: {
       ...s.player,
       arrivalAt,
+      transitStartedAt: transitStartedAt ?? (arrivalAt ? Date.now() : null),
       missionPhase: 'transit',
+      miningCargoInProgress: undefined,
+      roverMiningStartedAt: undefined,
       headingToDelivery: hasDelivery,
       debriefPending: !hasDelivery,
       returningToEarth: !hasDelivery,
@@ -33,13 +36,14 @@ function startReturnLeg(s: GameState, cargo: Record<string, number>, arrivalAt: 
   }
 }
 
-export function applyDeliveryArrived(s: GameState, arrivalAt: number | null): GameState {
+export function applyDeliveryArrived(s: GameState, arrivalAt: number | null, transitStartedAt?: number | null): GameState {
   if (!s.player.headingToDelivery || !s.deliveryTargetId) return s
   return {
     ...s,
     player: {
       ...s.player,
       arrivalAt,
+      transitStartedAt: transitStartedAt ?? (arrivalAt ? Date.now() : null),
       headingToDelivery: false,
       debriefPending: true,
       returningToEarth: true,
@@ -61,6 +65,7 @@ export function applyReturnArrived(s: GameState): GameState {
       ...s.player,
       stash,
       arrivalAt: null,
+      transitStartedAt: null,
       missionPhase: 'debrief',
       debriefPending: false,
       returningToEarth: false,

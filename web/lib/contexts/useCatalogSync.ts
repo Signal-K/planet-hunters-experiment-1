@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
-import { CONTRACTOR_SLOTS, MINERAL_META, generateDailyContractorPool, refreshPoolIfStale, todayDateKey } from '@/lib/data'
+import { CLIENT_SLOTS, MINERAL_META, generateDailyClientPool, refreshPoolIfStale, todayDateKey } from '@/lib/data'
 import { STATIC_CATALOG, fetchCatalog } from '@/lib/catalog'
 import type { Catalog } from '@/lib/catalog'
 import type { GameState } from '@/lib/game-types'
@@ -18,26 +18,26 @@ export function useCatalogSync(
     fetchCatalog().then(setCatalog).catch(() => {})
   }, [])
 
-  // Initialise / refresh the daily contractor pool when freeOperations unlocks or the calendar day changes.
+  // Initialise / refresh the daily client pool when freeOperations unlocks or the calendar day changes.
   useEffect(() => {
     if (!hydrated || isPreview || !state.player.freeOperations) return
     const today = todayDateKey()
-    if (state.player.dailyContractorPool?.date === today) return
+    if (state.player.dailyClientPool?.date === today) return
     setState(s => ({
       ...s,
       player: {
         ...s.player,
-        dailyContractorPool: refreshPoolIfStale(
-          s.player.dailyContractorPool,
+        dailyClientPool: refreshPoolIfStale(
+          s.player.dailyClientPool,
           s.player.missionsDone,
-          CONTRACTOR_SLOTS,
+          CLIENT_SLOTS,
           MINERAL_META,
-          s.player.contractorMissions,
+          s.player.clientMissions,
         ),
       },
     }))
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [hydrated, isPreview, state.player.freeOperations, state.player.dailyContractorPool?.date])
+  }, [hydrated, isPreview, state.player.freeOperations, state.player.dailyClientPool?.date])
 
   // Poll every minute to catch the midnight rollover while the app is open.
   useEffect(() => {
@@ -45,14 +45,14 @@ export function useCatalogSync(
     const id = setInterval(() => {
       const today = todayDateKey()
       setState(s => {
-        if (!s.player.freeOperations || s.player.dailyContractorPool?.date === today) return s
+        if (!s.player.freeOperations || s.player.dailyClientPool?.date === today) return s
         return {
           ...s,
           player: {
             ...s.player,
-            dailyContractorPool: {
+            dailyClientPool: {
               date: today,
-              missions: generateDailyContractorPool(today, s.player.missionsDone, CONTRACTOR_SLOTS, MINERAL_META, s.player.contractorMissions),
+              missions: generateDailyClientPool(today, s.player.missionsDone, CLIENT_SLOTS, MINERAL_META, s.player.clientMissions),
               acceptedId: null,
               completedIds: [],
             },
@@ -66,8 +66,8 @@ export function useCatalogSync(
   // Notify player when refinery contracts become available.
   useEffect(() => {
     if (!hydrated || isPreview || !state.player.freeOperations || state.player.refineryUnlockNotified) return
-    const hasContractorBoard = catalog.missions.some(m => m.id.startsWith('freeops-'))
-    if (!hasContractorBoard) return
+    const hasClientBoard = catalog.missions.some(m => m.id.startsWith('freeops-'))
+    if (!hasClientBoard) return
     if (state.screen !== 'missions') return
     setState(s => ({
       ...s,

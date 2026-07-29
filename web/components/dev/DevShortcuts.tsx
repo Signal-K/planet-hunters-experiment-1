@@ -2,9 +2,11 @@
 
 import { useState } from 'react'
 import { DEV_GROUPS, resolvePreset } from '@/lib/devPresets'
+import { isDevLauncherEnabled } from '@/lib/devAccess'
 
 export default function DevShortcuts() {
   const [open, setOpen] = useState(false)
+  if (!isDevLauncherEnabled()) return null
 
   function jump(key: string) {
     const preset = resolvePreset(key)
@@ -32,7 +34,7 @@ export default function DevShortcuts() {
           opacity: 0.8,
         }}
       >
-        {open ? '✕ DEV' : '⚡ DEV'}
+        {open ? 'DEV CLOSE' : 'DEV'}
       </button>
 
       {open && (
@@ -50,7 +52,27 @@ export default function DevShortcuts() {
           boxShadow: '0 8px 32px rgba(0,0,0,0.8)',
         }}>
           <div data-testid="dev-shortcuts-panel" style={{ padding: '0 12px 6px', fontFamily: 'var(--ln-font-mono)', fontSize: 9, letterSpacing: '0.2em', color: '#2a5a2a', textTransform: 'uppercase' }}>
-            Scene One-Shots
+            Mission and UI States
+          </div>
+          <div style={{ padding: '0 10px 8px' }}>
+            <a
+              href="/game/launcher"
+              style={{
+                display: 'block',
+                padding: '6px 10px',
+                border: '1px solid #2a5a2a88',
+                borderRadius: 6,
+                color: '#5aff5a',
+                fontFamily: 'var(--ln-font-display)',
+                fontSize: 10,
+                fontWeight: 800,
+                letterSpacing: '0.08em',
+                textDecoration: 'none',
+                textAlign: 'center',
+              }}
+            >
+              OPEN LAUNCHER
+            </a>
           </div>
 
           {DEV_GROUPS.map((group, gi) => (

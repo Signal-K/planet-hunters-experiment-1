@@ -1,14 +1,14 @@
 describe('Smoke — Landnam', () => {
   const dailyPoolMission = (
-    contractor: string,
+    client: string,
     mineral: string,
     amount: number,
     title: string,
   ) => ({
-    id: `dcp-e2e-${contractor}`,
+    id: `dcp-e2e-${client}`,
     title,
     brief: `${title} fixture for the Free Ops mission board smoke test.`,
-    contractor,
+    client,
     tag: 'STARTER',
     difficulty: 'L1',
     locked: false,
@@ -106,7 +106,7 @@ describe('Smoke — Landnam', () => {
     cy.contains('Coming Soon').should('be.visible')
   })
 
-  it('shows Free Ops contractor missions after M3', () => {
+  it('shows Free Ops client missions after M3', () => {
     const date = new Date()
     const dateKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
     visitWithState({
@@ -115,9 +115,9 @@ describe('Smoke — Landnam', () => {
       player: {
         missionsDone: 3,
         freeOperations: true,
-        contractorMissions: {},
-        contractorCooldowns: {},
-        dailyContractorPool: {
+        clientMissions: {},
+        clientCooldowns: {},
+        dailyClientPool: {
           date: dateKey,
           acceptedId: null,
           completedIds: [],

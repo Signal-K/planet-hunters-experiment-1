@@ -22,7 +22,13 @@ async function tryAuth(stored: GuestCredentials | null): Promise<GuestCredential
       await pbShared.collection('users').authWithPassword(stored.email, stored.password)
       return null // used stored creds; caller has nothing new to persist
     } catch {
-      localStorage.removeItem(GUEST_CREDENTIALS_KEY)
+      // Fall through to create a fresh guest account below. Do NOT clear
+      // GUEST_CREDENTIALS_KEY here — the retry loop below already tracks
+      // "stored creds known bad" via the local `stored` variable, not via
+      // localStorage. Removing the key here opened a window where
+      // hasStoredCredentials() returns false before a replacement account
+      // exists, which could make a re-mounted "brand-new user" check
+      // incorrectly pop the full-screen sign-in gate over live gameplay.
     }
   }
 

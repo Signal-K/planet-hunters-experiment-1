@@ -15,8 +15,9 @@ export const TUTORIAL_RAIL = {
   RESERVED_HEIGHT: 84,
   // Compact pill height including shadow bleed (px).
   PILL_HEIGHT: 64,
-  // Legacy bottom clearance for screens with sticky actions/radial nav.
-  BOTTOM_PILL_Y: 92,
+  // Bottom clearance for screens with sticky actions above the reserved
+  // .bottom-tab-bar (64px, see globals.css --ln-nav-h) plus a small margin.
+  BOTTOM_PILL_Y: 80,
   // Minimum margin between the tutorial rail and interactive content (px).
   CONTENT_MARGIN: 12,
 } as const

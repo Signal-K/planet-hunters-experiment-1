@@ -4,7 +4,7 @@ import { pbShared } from '@/lib/pb'
 import { pbLandnam, exchangeLandnamAuth } from '@/lib/pb-landnam'
 import { ensureGuestAuth, hasStoredCredentials, isGuestAccount, upgradeGuestAccount } from '@/lib/guestAuth'
 import { identifyUser } from '@/lib/posthog'
-import { DEFAULT_STATE } from '@/lib/game-state'
+import { DEFAULT_STATE, mergeRemoteState, type PartialSave } from '@/lib/game-state'
 import type { GameState } from '@/lib/game-types'
 import type { Toast } from '@/components/ui/ToastLayer'
 
@@ -334,37 +334,9 @@ export function useAuthSync({
     function applyRecord(record: any) {
       backendRecordId.current = record.id
       backendLoadedFor.current = authUserId!
-      setState(current => {
-        const remoteState = record.state as Partial<GameState>
-        const merged = { ...current, ...remoteState }
-        // This load can resolve many seconds after mount (Fly cold-start retry
-        // ladder above). If the player has already advanced past the default
-        // screen/mission/target locally in that window, an older remote record
-        // must not clobber their in-flight progress — only bring in remote
-        // fields that aren't part of the active navigation flow.
-        const localHasProgressed = current.screen !== DEFAULT_STATE.screen
-          || current.missionId !== null
-          || current.targetId !== null
-        if (localHasProgressed) {
-          merged.screen = current.screen
-          merged.missionId = current.missionId
-          merged.targetId = current.targetId
-          merged.doneSteps = current.doneSteps
-        }
-        // Onboarding/mission-count progression must be monotonic. A remote
-        // record can legitimately lag local by up to one debounced save cycle
-        // (see the persist effect below) — most commonly right at an M1/M2/M3
-        // debrief, where missionsDone and tutorial flip together. If the tab
-        // refreshes inside that window, a stale remote record must never
-        // regress progress back onto an earlier onboarding stage; only apply
-        // remote's player/tutorial when it's actually further ahead.
-        const remoteMissionsDone = remoteState.player?.missionsDone ?? -1
-        if (current.player.missionsDone >= remoteMissionsDone) {
-          merged.player = current.player
-          merged.tutorial = current.tutorial
-        }
-        return normalizeAndRepair(merged)
-      })
+      // Precedence rules (and why they exist) live in mergeRemoteState so they
+      // can be unit-tested without PocketBase/React — see game-state.test.ts.
+      setState(current => mergeRemoteState(current, record.state as PartialSave))
       setBackendReady(true)
     }
 
@@ -524,14 +496,37 @@ export function useAuthSync({
     })
   }, [addToast])
 
-  const resetGame = useCallback((defaultState: GameState) => {
+  const resetGame = useCallback(async (defaultState: GameState) => {
     setState(defaultState)
     localStorage.removeItem(storageKey)
-    if (authUserId && backendRecordId.current) {
-      pbLandnam.collection('game_states').delete(backendRecordId.current).catch(() => {})
-      backendRecordId.current = null
+
+    // Stand the remote-sync machinery back down before touching the record.
+    // backendReady / backendLoadedFor used to survive a reset, so the persist
+    // effect below still considered itself live and re-wrote DEFAULT_STATE to
+    // the backend on its next 400ms tick — racing, and usually beating, the
+    // delete we're about to issue. The net effect was a "reset" that left a
+    // full remote row behind carrying default state, which then re-hydrated
+    // the next session instead of the account starting genuinely clean.
+    setBackendReady(false)
+    backendLoadedFor.current = null
+    lastPersistedMissionsDone.current = null
+    lastPersistedTutorial.current = null
+
+    const recordId = backendRecordId.current
+    backendRecordId.current = null
+    if (!authUserId || !recordId) return
+
+    try {
+      await pbLandnam.collection('game_states').delete(recordId)
+    } catch (err) {
+      // Previously `.catch(() => {})`. A silently-swallowed failure here is
+      // exactly how a reset appears to work while the server copy survives —
+      // the player is told nothing and cannot tell local from remote state.
+      if (responseStatus(err) !== 404) {
+        addToast('Reset cleared this device, but your saved data on the server could not be deleted', 'warn')
+      }
     }
-  }, [authUserId, setState, storageKey])
+  }, [addToast, authUserId, setState, storageKey])
 
   const signOut = useCallback(async () => {
     const signedOutUserId = authUserId

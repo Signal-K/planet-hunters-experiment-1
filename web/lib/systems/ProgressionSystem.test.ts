@@ -1,7 +1,10 @@
 import { describe, expect, it } from 'vitest'
 import type { GameState } from '@/lib/game-types'
+import { MISSIONS } from '@/lib/data'
 import {
   applyGainResearchXP,
+  applyAbandonMission,
+  LICENSE_GRADE_XP_GATES,
   applyUnlockBlueprint,
   applyUpgradeLicenseGrade,
 } from './ProgressionSystem'
@@ -26,9 +29,9 @@ function makeState(overrides: GameStateOverrides = {}): GameState {
       skillPoints: 0,
       unlockedSkillNodes: [],
       freeOperations: false,
-      contractorMissions: {},
-      contractorStreaks: {},
-      contractorCooldowns: {},
+      clientMissions: {},
+      clientStreaks: {},
+      clientCooldowns: {},
       researchAnnotations: 0,
       refineryBuilt: false,
       refineryUnlocked: false,
@@ -40,7 +43,7 @@ function makeState(overrides: GameStateOverrides = {}): GameState {
       loanOffered: false,
       seen_planets: [],
       roverDeployments: [],
-      contractorTerritories: {},
+      clientTerritories: {},
       licenseGrade: 'Grade I',
       researchXP: 0,
       unlockedBlueprints: [],
@@ -75,15 +78,29 @@ describe('research progression', () => {
   })
 
   it('gates license grade upgrades by Research XP and prevents downgrades', () => {
-    const blocked = applyUpgradeLicenseGrade(makeState({ player: { researchXP: 99 } }), 'Grade II')
+    const blocked = applyUpgradeLicenseGrade(makeState({ player: { researchXP: 149 } }), 'Grade II')
     expect(blocked.player.licenseGrade).toBe('Grade I')
 
-    const gradeTwo = applyUpgradeLicenseGrade(makeState({ player: { researchXP: 100 } }), 'Grade II')
+    const gradeTwo = applyUpgradeLicenseGrade(makeState({ player: { researchXP: 150 } }), 'Grade II')
     expect(gradeTwo.player.licenseGrade).toBe('Grade II')
 
-    const alreadyGradeTwo = { ...gradeTwo, player: { ...gradeTwo.player, researchXP: 300 } }
+    const alreadyGradeTwo = { ...gradeTwo, player: { ...gradeTwo.player, researchXP: 500 } }
     const noDowngrade = applyUpgradeLicenseGrade(alreadyGradeTwo, 'Grade II')
     expect(noDowngrade).toBe(alreadyGradeTwo)
+  })
+
+  it('uses the retuned STS-492 License Grade gates through Grade III', () => {
+    expect(LICENSE_GRADE_XP_GATES).toMatchObject({
+      'Grade I': 0,
+      'Grade II': 150,
+      'Grade III': 500,
+    })
+
+    const blocked = applyUpgradeLicenseGrade(makeState({ player: { researchXP: 499, licenseGrade: 'Grade II' } }), 'Grade III')
+    expect(blocked.player.licenseGrade).toBe('Grade II')
+
+    const upgraded = applyUpgradeLicenseGrade(makeState({ player: { researchXP: 500, licenseGrade: 'Grade II' } }), 'Grade III')
+    expect(upgraded.player.licenseGrade).toBe('Grade III')
   })
 
   it('unlocks a blueprint by spending Francs, Research XP, and materials once', () => {
@@ -126,5 +143,33 @@ describe('research progression', () => {
     expect(next.player.activeScan).toBeNull()
     expect(next.player.targetScanCounts?.mars).toBe(1)
     expect(next.player.researchXP).toBe(15)
+  })
+
+  it('clears paused mining and rover state when abandoning an active mission', () => {
+    const state = makeState({
+      screen: 'mining',
+      missionId: 'generated-s1-starter-bulk-1',
+      targetId: 'eros',
+      player: {
+        activeMission: { id: 'generated-s1-starter-bulk-1', label: 'Iron starter order -> Eros' },
+        miningCargoInProgress: { iron: 2 },
+        roverMiningStartedAt: 123456,
+        arrivalAt: Date.now() + 60_000,
+        headingToDelivery: true,
+        debriefPending: true,
+        returningToEarth: true,
+      },
+    })
+
+    const next = applyAbandonMission(state, MISSIONS)
+
+    expect(next.screen).toBe('hub')
+    expect(next.player.activeMission).toBeNull()
+    expect(next.player.miningCargoInProgress).toBeUndefined()
+    expect(next.player.roverMiningStartedAt).toBeUndefined()
+    expect(next.player.arrivalAt).toBeNull()
+    expect(next.player.headingToDelivery).toBe(false)
+    expect(next.player.debriefPending).toBe(false)
+    expect(next.player.returningToEarth).toBe(false)
   })
 })

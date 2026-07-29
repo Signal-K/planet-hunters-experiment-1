@@ -4,8 +4,8 @@ export {}
 // These tests play the game as a real user would — they navigate using whatever
 // nav element is VISIBLE on screen, not by force-clicking hidden elements.
 //
-// Desktop (≥1024px): radial nav is display:none; use sidebar-nav-* instead.
-// Mobile (<1024px):  sidebar is display:none; use radial-nav-toggle then item.
+// Desktop (≥1024px): bottom tab bar is display:none; use sidebar-nav-* instead.
+// Mobile (<1024px):  sidebar is display:none; use bottom-tab-* directly.
 //
 // Failure modes caught:
 //   - Tutorial coach pointing to a nav element that doesn't exist on this layout
@@ -28,7 +28,7 @@ Cypress.on('uncaught:exception', (err) => {
 })
 
 const ALL_SURVEY_KEYS = [
-  'lnm_first_launch', 'lnm_mining_feel', 'lnm_contractor_pick',
+  'lnm_first_launch', 'lnm_mining_feel', 'lnm_client_pick',
   'lnm_mission_friction', 'lnm_progression_feel', 'lnm_end_of_content',
   'lnm_return_visit', 'lnm_m1_complete', 'lnm_m2_complete', 'lnm_m3_complete',
 ]
@@ -48,9 +48,9 @@ function basePlayer(overrides: Record<string, unknown> = {}) {
     skillPoints: 0,
     unlockedSkillNodes: [],
     freeOperations: false,
-    contractorMissions: {},
-    contractorStreaks: {},
-    contractorCooldowns: {},
+    clientMissions: {},
+    clientStreaks: {},
+    clientCooldowns: {},
     researchAnnotations: 0,
     refineryBuilt: false,
     refineryUnlocked: false,
@@ -62,7 +62,7 @@ function basePlayer(overrides: Record<string, unknown> = {}) {
     loanOffered: false,
     seen_planets: [],
     roverDeployments: [],
-    contractorTerritories: {},
+    clientTerritories: {},
     ...overrides,
   }
 }
@@ -96,20 +96,19 @@ function visitHub(overrides: Record<string, unknown> = {}) {
 
 // ─── Layout-aware nav helper ──────────────────────────────────────────────────
 //
-// This is the crux of the desktop bug: on mobile the radial toggle opens a
-// menu; on desktop the sidebar is always visible and the radial toggle is
-// hidden. Tests MUST use the element the user can actually see.
+// This is the crux of the desktop bug: on mobile the bottom tab bar is
+// visible and the sidebar is hidden, and vice versa on desktop. Tests MUST
+// use the element the user can actually see.
 
 function navToMissions() {
   cy.window().then(win => {
     const isDesktop = win.innerWidth >= 1024
     if (isDesktop) {
-      // Sidebar is always visible on desktop — no toggle needed.
-      cy.get('[data-testid="radial-nav-toggle"]').should('not.be.visible')
+      // Sidebar is always visible on desktop; bottom tab bar is display:none.
+      cy.get('[data-testid="bottom-tab-missions"]').should('not.be.visible')
       cy.get('[data-testid="sidebar-nav-missions"]').should('be.visible').click()
     } else {
-      cy.get('[data-testid="radial-nav-toggle"]').should('be.visible').click()
-      cy.get('[data-testid="radial-nav-missions"]').should('be.visible').click()
+      cy.get('[data-testid="bottom-tab-missions"]').should('be.visible').click()
     }
   })
   cy.contains('Mission Board', { timeout: 8000 }).should('be.visible')
@@ -244,7 +243,7 @@ function playM2() {
 
 // ─── Full M3 play-through ─────────────────────────────────────────────────────
 //
-// M3 is now a two-leg contractor transport job (mine at a pickup target, then
+// M3 is now a two-leg client transport job (mine at a pickup target, then
 // deliver to a second target before flying home) — see [[Decide: M3 becomes
 // a transport mission]]. Both M3 missions have preset targetId/deliveryTargetId,
 // so picking one skips the target picker and goes straight to rocket-buy, same
@@ -263,7 +262,7 @@ function playM3ToLaunch() {
   // Navigate to missions
   navToMissions()
 
-  // Pick one of the two M3 transport-contractor missions.
+  // Pick one of the two M3 transport-client missions.
   cy.get('[data-testid="mission-card-lnm_m3_relay_bennu_vesta"]')
     .scrollIntoView().should('be.visible').click()
 
@@ -298,54 +297,55 @@ function playM3ToLaunch() {
 // ─── Viewport configurations ──────────────────────────────────────────────────
 
 const VIEWPORTS = [
-  { label: 'mobile', w: 390, h: 844 },
+  { label: 'mobile portrait', w: 390, h: 844 },
+  { label: 'mobile landscape', w: 844, h: 390 },
+  { label: 'tablet portrait', w: 768, h: 1024 },
   { label: 'desktop', w: 1280, h: 800 },
 ] as const
 
 // ─── Desktop nav guard ────────────────────────────────────────────────────────
 //
-// Explicitly asserts that on desktop the radial nav is hidden and the sidebar
-// is shown — catching any regression where the CSS breakpoint breaks.
+// Explicitly asserts that on desktop the bottom tab bar is hidden and the
+// sidebar is shown — catching any regression where the CSS breakpoint breaks.
 
-describe('Desktop layout: radial nav hidden, sidebar visible', () => {
+describe('Desktop layout: bottom tab bar hidden, sidebar visible', () => {
   beforeEach(() => cy.viewport(1280, 800))
 
-  it('radial-nav-toggle is not visible and sidebar-nav-missions is visible on desktop hub', () => {
+  it('bottom-tab-missions is not visible and sidebar-nav-missions is visible on desktop hub', () => {
     visitHub({ doneSteps: { 0: true } })
     cy.contains('Earth Base', { timeout: 10000 }).should('be.visible')
-    cy.get('[data-testid="radial-nav-toggle"]').should('not.be.visible')
+    cy.get('[data-testid="bottom-tab-missions"]').should('not.be.visible')
     cy.get('[data-testid="sidebar-nav-missions"]').should('be.visible')
   })
 
-  it('tutorial coach on step 1 does NOT show a spot over the hidden radial button', () => {
+  it('tutorial coach on step 1 does NOT show a spot over the hidden bottom tab bar', () => {
     visitHub({ doneSteps: { 0: true } })
     cy.contains('Earth Base', { timeout: 10000 }).should('be.visible')
     cy.get('[data-testid="tutorial-coach-block"]').should('contain', 'Open a Mission')
     // On desktop, desktopSpot is null so the pulsing spot element must not exist
     cy.get('[data-testid="tutorial-coach-spot"]').should('not.exist')
-    // And the instruction must not say "radial menu" or "Tap menu"
-    cy.get('[data-testid="tutorial-coach-block"]').should('not.contain', 'radial')
+    // And the instruction must not say "Tap menu" (the old two-stage copy)
     cy.get('[data-testid="tutorial-coach-block"]').should('not.contain', 'Tap menu')
   })
 })
 
 // ─── Mobile layout guard ──────────────────────────────────────────────────────
 
-describe('Mobile layout: radial nav visible, sidebar hidden', () => {
+describe('Mobile layout: bottom tab bar visible, sidebar hidden', () => {
   beforeEach(() => cy.viewport(390, 844))
 
-  it('radial-nav-toggle is visible and sidebar is not visible on mobile hub', () => {
+  it('bottom-tab-missions is visible and sidebar is not visible on mobile hub', () => {
     visitHub({ doneSteps: { 0: true } })
     cy.contains('Earth Base', { timeout: 10000 }).should('be.visible')
-    cy.get('[data-testid="radial-nav-toggle"]').should('be.visible')
+    cy.get('[data-testid="bottom-tab-missions"]').should('be.visible')
     cy.get('[data-testid="sidebar-nav-missions"]').should('not.be.visible')
   })
 
-  it('tutorial coach ring on step 1 overlaps the radial toggle on mobile', () => {
+  it('tutorial coach ring on step 1 overlaps the Missions tab on mobile', () => {
     // The old 'spot' rectangle concept (tutorial-coach-spot) was replaced by
     // CoachPointer's measured ring (tutorial-coach-ring), which highlights
-    // whichever element matches step.coachId ('radial-missions|radial-toggle'
-    // for step 1) — see lib/data/tutorial.ts and components/game/CoachPointer.tsx.
+    // the element matching step.coachId ('bottom-tab-missions' for step 1)
+    // — see lib/data/tutorial.ts and components/game/CoachPointer.tsx.
     visitHub({ doneSteps: { 0: true } })
     cy.contains('Earth Base', { timeout: 10000 }).should('be.visible')
     cy.get('[data-testid="tutorial-coach-block"]').should('contain', 'Open a Mission')
@@ -355,7 +355,7 @@ describe('Mobile layout: radial nav visible, sidebar hidden', () => {
     // Assert existence + the bounding-rect overlap instead of visibility.
     cy.get('[data-testid="tutorial-coach-ring"]').should('exist').then($ring => {
       const s = $ring[0].getBoundingClientRect()
-      cy.get('[data-testid="radial-nav-toggle"]').then($btn => {
+      cy.get('[data-testid="bottom-tab-missions"]').then($btn => {
         const b = $btn[0].getBoundingClientRect()
         expect(s.left, 'ring left < btn right').to.be.lessThan(b.right)
         expect(s.right, 'ring right > btn left').to.be.greaterThan(b.left)

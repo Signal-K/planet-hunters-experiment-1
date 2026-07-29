@@ -2,15 +2,20 @@
 
 import type { GameState, LicenseGrade } from '@/lib/game-types'
 import type { Mission } from '@/lib/data'
-import { canUnlockSkillNode, getSkillNode } from '@/lib/data'
+import { canUnlockSkillNode, getSkillNode, LOAN_PRINCIPAL, LOAN_DEBT_ON_ACCEPT } from '@/lib/data'
 
-const LOAN_AMOUNT = 500_000_000
-const LICENSE_GRADE_XP_GATES: Record<LicenseGrade, number> = {
+// Retuned 2026-07-21 (STS-492): originals (0/100/300) were set with no real
+// per-mission income data — no player had ever reached Grade III since
+// nothing in the UI called upgradeLicenseGrade. Retuned against actual XP
+// income (+15/first-time TESS classification, +10/scan-station scan, max
+// 5 scans/day per SCANS_PER_DAY) so Grade II lands after roughly a week of
+// casual daily play and Grade III after roughly a month.
+export const LICENSE_GRADE_XP_GATES: Record<LicenseGrade, number> = {
   'Grade I': 0,
-  'Grade II': 100,
-  'Grade III': 300,
+  'Grade II': 150,
+  'Grade III': 500,
 }
-const LICENSE_GRADE_ORDER: LicenseGrade[] = ['Grade I', 'Grade II', 'Grade III']
+export const LICENSE_GRADE_ORDER: LicenseGrade[] = ['Grade I', 'Grade II', 'Grade III']
 
 export function applyUnlockSkillNode(s: GameState, id: string): GameState {
   const node = getSkillNode(id)
@@ -93,8 +98,8 @@ export function applyAcceptLoan(s: GameState): GameState {
     popup: null,
     player: {
       ...s.player,
-      francs: s.player.francs + LOAN_AMOUNT,
-      loanDebt: s.player.loanDebt + LOAN_AMOUNT * 1.08,
+      francs: s.player.francs + LOAN_PRINCIPAL,
+      loanDebt: s.player.loanDebt + LOAN_DEBT_ON_ACCEPT,
       loanOffered: true,
     },
   }
@@ -103,13 +108,13 @@ export function applyAcceptLoan(s: GameState): GameState {
 export function applyAbandonMission(s: GameState, missions: Mission[]): GameState {
   const mission = s.missionId
     ? (missions.find(m => m.id === s.missionId)
-       ?? s.player.dailyContractorPool?.missions.find(m => m.id === s.missionId)
+       ?? s.player.dailyClientPool?.missions.find(m => m.id === s.missionId)
        ?? null)
     : null
   const penalty = mission ? Math.round(mission.payout.francs * 0.1) : 0
-  const dailyContractorPool = (s.missionId?.startsWith('dcp-') && s.player.dailyContractorPool)
-    ? { ...s.player.dailyContractorPool, acceptedId: null }
-    : s.player.dailyContractorPool
+  const dailyClientPool = (s.missionId?.startsWith('dcp-') && s.player.dailyClientPool)
+    ? { ...s.player.dailyClientPool, acceptedId: null }
+    : s.player.dailyClientPool
   return {
     ...s,
     player: {
@@ -117,8 +122,11 @@ export function applyAbandonMission(s: GameState, missions: Mission[]): GameStat
       francs: Math.max(0, s.player.francs - penalty),
       activeMission: null,
       missionPhase: undefined,
+      miningCargoInProgress: undefined,
+      roverMiningStartedAt: undefined,
       arrivalAt: null,
-      dailyContractorPool,
+      transitStartedAt: null,
+      dailyClientPool,
       headingToDelivery: false,
       debriefPending: false,
       returningToEarth: false,

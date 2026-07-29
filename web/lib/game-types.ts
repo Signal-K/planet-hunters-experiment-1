@@ -3,7 +3,7 @@
 
 import type { RocketConfig, Mission, Target, TessClassification, TessVerdict, TransitRange } from '@/lib/data'
 
-export interface DailyContractorPool {
+export interface DailyClientPool {
   date: string        // 'YYYY-MM-DD'
   missions: Mission[]
   acceptedId: string | null
@@ -34,7 +34,21 @@ export type LicenseGrade = 'Grade I' | 'Grade II' | 'Grade III'
 export interface Player {
   francs: number
   activeMission: { id: string; label: string } | null
+  // PocketBase mission_runs record for the current run. Kept in the save so a
+  // refresh/resume continues updating the same server-side lifecycle record.
+  missionRunId?: string
   missionPhase?: 'transit' | 'mining' | 'debrief'
+  // Ore collected so far during an in-progress mining run, preserved across a
+  // "Back to hub" pause so resuming the mission doesn't silently discard
+  // already-collected cargo (that cargo only lived in MiningScreen's local
+  // state before this, and was lost on remount). Cleared once the mission
+  // completes or is abandoned.
+  miningCargoInProgress?: Record<string, number>
+  // Wall-clock start of an in-progress rover mining run, persisted so a
+  // Back-to-hub pause and resume doesn't restart the extraction timer from
+  // zero (RoverMiningScreen would otherwise re-init its own Date.now() on
+  // remount). Cleared once the run completes or is abandoned.
+  roverMiningStartedAt?: number
   missionCount: number
   pendingLaunch: boolean
   placed: string[]
@@ -58,9 +72,9 @@ export interface Player {
   // capping out permanently once enough of a mineral has ever been sold.
   marketSupply?: Record<string, number>
   marketSupplyUpdatedAt?: Record<string, number>
-  contractorMissions: Record<string, number>
-  contractorStreaks?: Record<string, number>
-  contractorCooldowns: Record<string, number>
+  clientMissions: Record<string, number>
+  clientStreaks?: Record<string, number>
+  clientCooldowns: Record<string, number>
   researchAnnotations: number
   refineryBuilt: boolean
   refineryUnlocked?: boolean
@@ -68,19 +82,23 @@ export interface Player {
   refineryQueue: { recipeId: string; startedAt: number }[]
   refinedGoods: Record<string, number>
   launchpadUpgraded: boolean
-  lastContractor?: string
+  lastClient?: string
   loanDebt: number
   loanOffered: boolean
   arrivalAt?: number | null
+  // Wall-clock departure for the current transit leg. Keeping this alongside
+  // arrivalAt lets the transit animation resume at the correct visual time
+  // after a tab switch or screen remount.
+  transitStartedAt?: number | null
   seen_planets?: string[]
   roverDeployments?: Array<{
     roverId: string
     targetId: string
-    contractorId: string
+    clientId: string
     timestamp: number
   }>
-  contractorTerritories?: Record<string, string[]>
-  dailyContractorPool?: DailyContractorPool
+  clientTerritories?: Record<string, string[]>
+  dailyClientPool?: DailyClientPool
   scannerBuilt?: boolean
   satelliteMonitoringBuilt?: boolean
   satelliteMonitoringLevel?: number
@@ -105,7 +123,7 @@ export interface Player {
   // the same event every check.
   lastSeenConfirmedAt?: string | null
   discoveredExoplanetTargets?: Record<string, Target>
-  contractorStructures?: import('@/lib/data').ContractorStructureRecord[]
+  clientStructures?: import('@/lib/data').ClientStructureRecord[]
   dailyQuestProgress?: import('@/lib/data').DailyQuestProgress[]
   licenseGrade?: LicenseGrade
   researchXP?: number
@@ -114,6 +132,11 @@ export interface Player {
   // part id installed per room slot. Confirmed builds deduct real francs and
   // survive across sessions instead of resetting to a fresh 3B mock budget.
   shipCustomizerParts?: Partial<Record<import('@/lib/data').ShipRoomKind, string>>
+  // Astronaut Academy roster (STS-591). Crew are persisted individuals —
+  // astronauts, rovers and drones — not a headcount. Rovers here are the same
+  // rovers as roverDeployments above, surfaced as roster entries by
+  // migrateCrewRoster; they are not a second, parallel rover system.
+  crew?: import('@/lib/data').CrewMember[]
 }
 
 export interface GameState {
@@ -130,7 +153,7 @@ export interface GameState {
   doneSteps: Record<number, boolean>
   popup: string | null
   menuOpen: boolean
-  pendingTerritoryClaimFor?: { targetId: string; contractorId: string }
+  pendingTerritoryClaimFor?: { targetId: string; clientId: string }
 }
 
 import type React from 'react'
@@ -148,6 +171,7 @@ export interface GameActions {
   createAccountFromGate: (email: string, password: string) => Promise<void>
   skipAuthGate: () => void
   go: (screen: Screen) => void
+  goToMissions: () => void
   setScreenFromUrl: (screen: Screen) => void
   setPlayer: React.Dispatch<React.SetStateAction<Player>>
   setMissionId: (id: string | null) => void
@@ -172,6 +196,7 @@ export interface GameActions {
   resetGame: () => void
   signOut: () => void
   upgradeLaunchpad: () => void
+  placeStructure: (structure: import('@/lib/data').StructureBlueprint | undefined, kind: string, plot: number) => void
   sellMinerals: (mineralId: string, amount: number) => void
   onStartRefine: (recipeId: string) => void
   onCollectRefined: (recipeId: string) => void

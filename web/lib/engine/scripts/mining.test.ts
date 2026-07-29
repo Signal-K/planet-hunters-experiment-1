@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { describe, it, expect, vi } from 'vitest'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
 
 vi.mock('pixi.js', () => ({
   Graphics: vi.fn().mockImplementation(function (this: Record<string, unknown>) {
@@ -19,9 +19,18 @@ vi.mock('pixi.js', () => ({
     this.addChild = vi.fn()
     this.removeChild = vi.fn()
   }),
+  Text: vi.fn().mockImplementation(function (this: Record<string, unknown>, opts: { text: string; style: unknown }) {
+    this.text = opts.text
+    this.style = opts.style
+    this.anchor = { set: vi.fn() }
+    this.destroy = vi.fn()
+    this.x = 0
+    this.y = 0
+    this.visible = true
+  }),
 }))
 
-import { Container } from 'pixi.js'
+import { Container, Text } from 'pixi.js'
 import { ShapeRenderer } from '../components/ShapeRenderer'
 import { MiningController } from './MiningController'
 import type { MiningControllerOptions } from './MiningController'
@@ -163,5 +172,79 @@ describe('MiningController', () => {
 
     expect(onCollect).toHaveBeenCalled()
     expect(onCollect.mock.calls[0][0]).toBe('iron')
+  })
+})
+
+interface MockLabel { text: string; x: number; visible: boolean; destroy: () => void; style: { fontSize: number } }
+
+function labels(): MockLabel[] {
+  return vi.mocked(Text).mock.instances as unknown as MockLabel[]
+}
+
+const SYMS: Record<string, string> = { iron: 'Fe', gold: 'Au' }
+
+describe('MiningController ore sym labels', () => {
+  beforeEach(() => { vi.mocked(Text).mockClear() })
+
+  it('labels every ore node with its mineral sym', () => {
+    const { controller } = makeController(vi.fn(), { mineralSyms: SYMS })
+    controller.start()
+    expect(labels()).toHaveLength(20)
+    expect(new Set(labels().map(l => l.text))).toEqual(new Set(['Fe', 'Au']))
+  })
+
+  it('renders no labels when mineralSyms is omitted', () => {
+    const { controller } = makeController()
+    controller.start()
+    expect(labels()).toHaveLength(0)
+  })
+
+  it('shrinks the font for multi-character syms so they fit the node', () => {
+    const { controller } = makeController(vi.fn(), {
+      minerals: ['ice'], mineralColors: { ice: '#9becff' }, mineralSyms: { ice: 'H2O' },
+    })
+    controller.start()
+    const wide = labels()[0].style.fontSize
+    vi.mocked(Text).mockClear()
+
+    const short = makeController(vi.fn(), {
+      minerals: ['iron'], mineralColors: { iron: '#d97150' }, mineralSyms: { iron: 'Fe' },
+    })
+    short.controller.start()
+    expect(wide).toBeLessThan(labels()[0].style.fontSize)
+  })
+
+  it('keeps the label on the ore as the terrain scrolls', () => {
+    const { controller, host } = makeController(vi.fn(), { mineralSyms: SYMS })
+    controller.start()
+    controller.update(1)
+    const ore = host.children.find(c => c.id === 'ore-0')!
+    expect(labels()[0].x).toBe(ore.transform.position.x)
+  })
+
+  it('hides the label when its ore is collected', () => {
+    const { controller, host } = makeController(vi.fn(), { mineralSyms: SYMS })
+    controller.start()
+    const ore = host.children.find(c => c.id === 'ore-0')!
+    ore.transform.position.x = 80
+    ore.transform.position.y = 190
+    for (let i = 0; i < 4; i++) {
+      controller.fireLaser()
+      const laser = host.children.find(c => c.id.startsWith('laser-') && c.active)!
+      laser.transform.position.x = 80
+      laser.transform.position.y = 190
+      controller.update(0)
+    }
+    expect(labels()[0].visible).toBe(false)
+  })
+
+  it('destroys the label when its ore scrolls offscreen', () => {
+    const { controller, host, container } = makeController(vi.fn(), { mineralSyms: SYMS })
+    controller.start()
+    const ore = host.children.find(c => c.id === 'ore-0')!
+    ore.transform.position.x = -500
+    controller.update(0)
+    expect(labels()[0].destroy).toHaveBeenCalled()
+    expect(container.removeChild).toHaveBeenCalled()
   })
 })

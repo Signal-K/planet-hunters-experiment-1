@@ -81,8 +81,17 @@ const ARCHETYPE_POOLS: Record<TargetArchetype, ArchetypeMineralPool> = {
 // difficulty scaling rather than literal composition (a rare mineral doesn't
 // stop existing at orbit 1, it's just not what an early, close-in claim
 // happens to expose).
-const RARE_TIER_MIN_ORBIT = 2
-const EXOTIC_TIER_MIN_ORBIT = 4
+// Exported so the UI can describe and colour orbit bands off the real gates
+// rather than a second, drifting set of breakpoints (STS-544).
+export const RARE_TIER_MIN_ORBIT = 2
+export const EXOTIC_TIER_MIN_ORBIT = 4
+
+/** One-line, player-facing read on what a given orbit band reaches. */
+export function orbitBandLabel(orbit: number): string {
+  if (orbit >= EXOTIC_TIER_MIN_ORBIT) return 'Deep belt · exotic minerals'
+  if (orbit >= RARE_TIER_MIN_ORBIT) return 'Mid belt · rare minerals'
+  return 'Near-Earth · common minerals'
+}
 
 export function mineralsForArchetype(archetype: TargetArchetype, orbit: number): string[] {
   const pool = ARCHETYPE_POOLS[archetype]

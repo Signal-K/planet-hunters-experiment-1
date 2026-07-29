@@ -3,8 +3,9 @@
 import React, { createContext, useContext, useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import type { Screen, GameState, GameActions } from '@/lib/game-types'
-import { MISSIONS, TARGETS, getLaserChargeCap, type Contractor, type Mission, type Target } from '@/lib/data'
+import { MISSIONS, TARGETS, getLaserChargeCap } from '@/lib/data'
 import { DEFAULT_STATE, loadState, normalizeAndRepair } from '@/lib/game-state'
+import { buildRuntimeCatalog } from '@/lib/runtimeCatalog'
 import { resolvePreset } from '@/lib/devPresets'
 import { pbShared } from '@/lib/pb'
 import { identifyUser } from '@/lib/posthog'
@@ -22,33 +23,6 @@ export type { Screen, Player, GameState } from '@/lib/game-types'
 // ── State shape helpers ────────────────────────────────────────────────────────
 
 const STORAGE_KEY = 'landnam-game-state-v1'
-const STORY_MISSION_CONTRACTOR_ID = 'mission-control'
-const TRANSIT_TELESCOPE_TARGET_ID = 'earth-orbit-transit-telescope'
-const TRANSIT_TELESCOPE_MISSION_ID = 'story-transit-telescope-launch'
-
-const MISSION_CONTROL_CONTRACTOR: Contractor = {
-  id: STORY_MISSION_CONTRACTOR_ID,
-  name: 'Mission Control',
-  color: '#7ec8ff',
-  initial: 'MC',
-  unlockTier: 0,
-  projectType: 'Story mission',
-  mineralPreferences: [],
-  payoutPremium: 0,
-  affinityBonusPerMission: 0,
-  uiRole: 'command',
-}
-
-const TRANSIT_TELESCOPE_TARGET: Target = {
-  id: TRANSIT_TELESCOPE_TARGET_ID,
-  name: 'Earth Orbit',
-  type: 'planet',
-  orbit: 1,
-  difficulty: 'L1',
-  brief: 'Low Earth orbit deployment lane for a transit telescope monitored from the Earth-base SMS.',
-  minerals: [],
-}
-
 // ── Context ────────────────────────────────────────────────────────────────────
 
 const GameContext = createContext<(GameState & GameActions) | null>(null)
@@ -115,84 +89,16 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
   const auth    = useAuthSync({ state, setState, stateRef, hydrated, isPreview: isPreview.current, addToast: ui.addToast, normalizeAndRepair, storageKey: STORAGE_KEY })
   useConfirmedDiscoveryPoll({ stateRef, setState, hydrated, addToast: ui.addToast })
   const { catalog } = useCatalogSync(state, setState, hydrated, isPreview.current, ui.addToast)
-  const runtimeCatalog = useMemo(() => {
-    const discoveredTargets = Object.values(state.player.discoveredExoplanetTargets ?? {})
-    const shouldOfferTransitTelescopeMission = state.player.freeOperations && state.player.satelliteMonitoringBuilt && !state.player.transitSatelliteLaunchedAt
-    const hasActiveTransitTelescopeMission = state.missionId === TRANSIT_TELESCOPE_MISSION_ID || state.targetId === TRANSIT_TELESCOPE_TARGET_ID
-    const shouldIncludeTransitTelescopeMission = shouldOfferTransitTelescopeMission || hasActiveTransitTelescopeMission
-    if (discoveredTargets.length === 0 && !shouldIncludeTransitTelescopeMission) return catalog
-
-    const existingTargetIds = new Set(catalog.targets.map(target => target.id))
-    const mergedTargets = [
-      ...catalog.targets,
-      ...(shouldIncludeTransitTelescopeMission && !existingTargetIds.has(TRANSIT_TELESCOPE_TARGET.id) ? [TRANSIT_TELESCOPE_TARGET] : []),
-      ...discoveredTargets.filter(target => !existingTargetIds.has(target.id)),
-    ]
-    const existingMissionIds = new Set(catalog.missions.map(mission => mission.id))
-    const transitTelescopeMission: Mission[] = shouldIncludeTransitTelescopeMission && !existingMissionIds.has(TRANSIT_TELESCOPE_MISSION_ID)
-      ? [{
-          id: TRANSIT_TELESCOPE_MISSION_ID,
-          title: 'Launch Transit Telescope',
-          brief: 'Mission Control authorizes a story operation to place a TESS-class telescope in Earth orbit. This is not a client request.',
-          contractor: STORY_MISSION_CONTRACTOR_ID,
-          tag: 'STORY',
-          difficulty: 'L1',
-          locked: false,
-          sequence: state.player.missionsDone + 1,
-          unlockAt: 'Build Satellite Monitoring Station',
-          targetId: TRANSIT_TELESCOPE_TARGET_ID,
-          payload: {
-            type: 'satellite',
-            name: 'Transit Telescope',
-            cargoCost: 0,
-          },
-          requires: {
-            minerals: {},
-            cargo_min: 0,
-            drill_tier: 1,
-            max_orbit: 1,
-          },
-          payout: {
-            francs: 150_000,
-            affinity: 0,
-          },
-        }]
-      : []
-    const surveyMissions: Mission[] = discoveredTargets
-      .map((target, index) => ({
-        id: `exo-survey-${target.id}`,
-        title: `${target.name} survey flight`,
-        brief: `Follow up the satellite discovery with a crewed survey mission to ${target.name}. This target is plotted in the star map.`,
-        contractor: 'lumen-research',
-        tag: 'SCIENCE',
-        difficulty: target.difficulty,
-        locked: false,
-        sequence: state.player.missionsDone + 1,
-        unlockAt: 'Classify a satellite candidate',
-        targetId: target.id,
-        requires: {
-          minerals: {},
-          cargo_min: 0,
-          drill_tier: 1,
-          max_orbit: target.orbit,
-        },
-        payout: {
-          francs: 500_000 + index * 75_000,
-          affinity: 6,
-        },
-      }))
-      .filter(mission => !existingMissionIds.has(mission.id))
-
-    return {
-      ...catalog,
-      contractors: {
-        ...catalog.contractors,
-        ...(shouldIncludeTransitTelescopeMission ? { [STORY_MISSION_CONTRACTOR_ID]: MISSION_CONTROL_CONTRACTOR } : {}),
-      },
-      targets: mergedTargets,
-      missions: [...catalog.missions, ...transitTelescopeMission, ...surveyMissions],
-    }
-  }, [catalog, state.missionId, state.player.discoveredExoplanetTargets, state.player.freeOperations, state.player.missionsDone, state.player.satelliteMonitoringBuilt, state.player.transitSatelliteLaunchedAt, state.targetId])
+  const runtimeCatalog = useMemo(() => buildRuntimeCatalog({
+    catalog,
+    discoveredTargets: state.player.discoveredExoplanetTargets,
+    freeOperations: state.player.freeOperations,
+    satelliteMonitoringBuilt: state.player.satelliteMonitoringBuilt,
+    transitSatelliteLaunchedAt: state.player.transitSatelliteLaunchedAt,
+    missionId: state.missionId,
+    targetId: state.targetId,
+    missionsDone: state.player.missionsDone,
+  }), [catalog, state.missionId, state.player.discoveredExoplanetTargets, state.player.freeOperations, state.player.missionsDone, state.player.satelliteMonitoringBuilt, state.player.transitSatelliteLaunchedAt, state.targetId])
   const loop    = useGameLoop({ stateRef, setState, catalog: runtimeCatalog, addToast: ui.addToast })
   const tutorial = useTutorialActions(setState)
   const economy = useEconomyActions(setState, useCallback(() => runtimeCatalog.missions, [runtimeCatalog.missions]))
@@ -216,7 +122,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
   // ── Derived values ─────────────────────────────────────────────────────────
   const mission = state.missionId
     ? (runtimeCatalog.missions.find(m => m.id === state.missionId)
-       ?? state.player.dailyContractorPool?.missions.find(m => m.id === state.missionId)
+       ?? state.player.dailyClientPool?.missions.find(m => m.id === state.missionId)
        ?? null)
     : null
   const target = state.targetId ? runtimeCatalog.targets.find(t => t.id === state.targetId) ?? null : null
@@ -235,6 +141,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       laserChargeCap: getLaserChargeCap(state.player.unlockedSkillNodes ?? []),
       // UI
       go: ui.go,
+      goToMissions: ui.goToMissions,
       setScreenFromUrl: ui.setScreenFromUrl,
       setPopup: ui.setPopup,
       setMenuOpen: ui.setMenuOpen,
@@ -250,7 +157,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       signInFromGate: auth.signInFromGate,
       createAccountFromGate: auth.createAccountFromGate,
       skipAuthGate: auth.skipAuthGate,
-      resetGame: useCallback(() => auth.resetGame(DEFAULT_STATE), [auth.resetGame]), // eslint-disable-line react-hooks/rules-of-hooks
+      resetGame: useCallback(() => { void auth.resetGame(DEFAULT_STATE) }, [auth.resetGame]), // eslint-disable-line react-hooks/rules-of-hooks
       signOut: auth.signOut,
       // Game loop
       setPlayer: loop.setPlayer,
@@ -283,6 +190,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       sellMinerals: economy.sellMinerals,
       onStartRefine: economy.onStartRefine,
       onCollectRefined: economy.onCollectRefined,
+      placeStructure: economy.placeStructure,
       upgradeLaunchpad: economy.upgradeLaunchpad,
       buildScanner: economy.buildScanner,
       startScan: economy.startScan,

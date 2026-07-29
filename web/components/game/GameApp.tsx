@@ -10,8 +10,7 @@ import TutorialCoach from '@/components/game/TutorialCoach'
 import MissionTicker from '@/components/game/MissionTicker'
 import SaveProgressPrompt from '@/components/game/SaveProgressPrompt'
 import UnlockPopup from '@/components/game/UnlockPopup'
-import RadialNav from '@/components/layout/RadialNav'
-import Sidebar from '@/components/Sidebar/Sidebar'
+import BottomTabBar from '@/components/layout/BottomTabBar'
 import BackendStatus from '@/components/game/BackendStatus'
 import LandnamSyncStatus from '@/components/game/LandnamSyncStatus'
 import { PushOptIn } from '@/components/game/PushOptIn'
@@ -102,31 +101,27 @@ function GameCanvas() {
   }, [game.player.missionsDone, game.tutorial])
 
   const coach = useMemo(() => {
-    const s = coachSteps.find(step => step.screen === game.screen && !game.doneSteps[step.id]) ?? null
-    if (s && s.id === 1 && game.menuOpen) {
-      return {
-        ...s,
-        action: 'Tap MISSIONS',
-        anchor: 'bottom' as const,
-        // MISSIONS button is always 104px from canvas bottom (bottom:28 + |dy|:-76.2 ≈ 104px)
-        // x is center-relative: button center = 50% + dx (-57.8px), spot left = center - w/2 = 50% - 95.8px
-        spot: { x: -96, y: 104, w: 76, h: 58, fromBottom: true, fromCenter: true },
-      }
-    }
-    return s
-  }, [coachSteps, game.doneSteps, game.screen, game.menuOpen])
+    return coachSteps.find(step => step.screen === game.screen && !game.doneSteps[step.id]) ?? null
+  }, [coachSteps, game.doneSteps, game.screen])
 
   const coachIndex = coach ? coachSteps.findIndex(step => step.id === coach.id) : -1
   const hasCoach = !!coach
 
   function goFromNav(id: string) {
     if (id === 'missions') {
-      game.completeStep(1)
-      game.go('missions')
+      game.goToMissions()
       return
     }
     if (id === 'fab') {
-      game.go(game.mission && game.target ? 'fab' : 'missions')
+      if (!game.player.freeOperations) {
+        game.go('hub')
+        return
+      }
+      // The Build tab is an entry point, not a resume button. Clear any
+      // completed/stale mission context so it opens the Free Ops chooser.
+      game.setMissionId(null)
+      game.setTargetId(null)
+      game.go('fab')
       return
     }
     if (id === 'market') {
@@ -172,13 +167,38 @@ function GameCanvas() {
             <PushOptIn userId={game.authUserId ?? undefined} />
           </div>
         )}
-        {process.env.NODE_ENV === 'development' && <DevShortcuts />}
-        <ScreenContent screen={game.screen} game={game} hasCoach={hasCoach} onBackFromHangar={() => {
-          game.go('hub')
-          if (window.location.pathname.includes('/game/ship-customizer')) {
-            router.replace('/game')
-          }
-        }} />
+        {/* Settings — previously only reachable from the desktop sidebar's
+            gear. Small corner affordance so removing that rail doesn't strand
+            it. Hub only, so it never sits over gameplay chrome. */}
+        {game.screen === 'hub' && (
+          <button
+            data-testid="settings-button"
+            aria-label="Settings"
+            onClick={() => setSettingsOpen(true)}
+            style={{
+              position: 'absolute', left: 12, bottom: 56, zIndex: 22,
+              width: 34, height: 34, borderRadius: 999, cursor: 'pointer',
+              display: 'grid', placeItems: 'center', padding: 0,
+              background: 'var(--hub-panel, #080d18)',
+              border: '1.5px solid var(--hub-outline, rgba(255,255,255,0.55))',
+              color: 'var(--hub-cyan, #6cd4ff)',
+            }}
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="12" r="3" />
+              <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 01-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z" />
+            </svg>
+          </button>
+        )}
+        <DevShortcuts />
+        <div className="game-screen-area">
+          <ScreenContent screen={game.screen} game={game} hasCoach={hasCoach} onBackFromHangar={() => {
+            game.go('hub')
+            if (window.location.pathname.includes('/game/ship-customizer')) {
+              router.replace('/game')
+            }
+          }} />
+        </div>
 
         <ToastLayer toasts={game.toasts} onDismiss={game.dismissToast} />
         {!coach && !game.popup && !game.upgradePromptOpen && !game.authGateOpen && (
@@ -186,7 +206,7 @@ function GameCanvas() {
         )}
         {showFeedback && <FeedbackButton />}
         <SurveySheet blockWhile={surveyBlocked} />
-        {showNav && <div className="mobile-radial-nav"><RadialNav current={currentNav} onNav={goFromNav} /></div>}
+        {showNav && <BottomTabBar current={currentNav} onNav={goFromNav} />}
 
         {coach && (
           <TutorialCoach
@@ -233,20 +253,16 @@ function GameCanvas() {
         {game.pendingTerritoryClaimFor && (
           <TerritoryClaimPopup
             targetId={game.pendingTerritoryClaimFor.targetId}
-            contractorId={game.pendingTerritoryClaimFor.contractorId}
+            clientId={game.pendingTerritoryClaimFor.clientId}
             onDismiss={game.clearTerritoryClaimPopup}
           />
         )}
       </div>
 
-      {/* Sidebar (position:fixed, desktop only) lives outside .portrait-canvas
-          on purpose: that box has `isolation: isolate` + `overflow: hidden`
-          for the mobile-canvas illusion, which scopes/clips a nested fixed
-          descendant's effective stacking in ways that made the sidebar
-          unreliable to click on desktop (Liam, 2026-07-04: "buttons in the
-          sidebar on desktop do not work"). Keeping it a sibling of
-          .portrait-canvas inside .game-stage removes that ambiguity. */}
-      <Sidebar current={currentNav} onNav={goFromNav} onSettings={() => setSettingsOpen(true)} />
+      {/* No desktop sidebar. The redesign's goal was for desktop not to need
+          one — the Earth Base's structures and action rail are the menu, so a
+          permanent nav rail is redundant chrome. Settings moved to the small
+          corner button above; everything else routes through the base. */}
       {settingsOpen && <SettingsSheet onClose={() => setSettingsOpen(false)} />}
     </main>
   )

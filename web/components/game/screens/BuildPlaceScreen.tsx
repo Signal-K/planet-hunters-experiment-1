@@ -7,19 +7,21 @@ import { canAffordStructure, STRUCTURES, structureUnlocked } from '@/lib/data'
 import type { StructureBlueprint } from '@/lib/data'
 import { Scene } from '@/lib/engine/Scene'
 import type { EntityData } from '@/lib/engine/types'
+import { buildPlotEntities } from '@/lib/engine/prefabs'
+import { readComponentNumber } from '@/lib/engine/registry'
 import { UI_ZONES } from '@/lib/ui-zones'
 import { HubWorldBackground } from '@/components/game/hub/HubWorldBackground'
 import { SoilCrossSection } from '@/components/game/hub/SoilCrossSection'
 import HubPixiCanvas from '@/components/game/hub/HubPixiCanvas'
 import ErrorBoundary from '@/components/ui/ErrorBoundary'
 import type { HubBuildingDef } from '@/lib/pixi/hubScene'
+import { formatCurrency } from '@/lib/format'
 
-const DEFAULT_PLOTS: EntityData[] = [
-  { id: 'plot-0', name: 'Plot 0', transform: { position: { x: 60, y: 570 }, rotation: 0, scale: { x: 1, y: 1 } }, components: [{ type: 'BuildPlot', index: 0 }] },
-  { id: 'plot-1', name: 'Plot 1', transform: { position: { x: 154, y: 570 }, rotation: 0, scale: { x: 1, y: 1 } }, components: [{ type: 'BuildPlot', index: 1 }] },
-  { id: 'plot-2', name: 'Plot 2', transform: { position: { x: 248, y: 570 }, rotation: 0, scale: { x: 1, y: 1 } }, components: [{ type: 'BuildPlot', index: 2 }] },
-  { id: 'plot-3', name: 'Plot 3', transform: { position: { x: 342, y: 570 }, rotation: 0, scale: { x: 1, y: 1 } }, components: [{ type: 'BuildPlot', index: 3 }] },
-]
+// Instantiated from the build-plot prefab rather than written out by hand.
+// This same list previously existed in four places (both hub scene files and
+// both screens); the prefab is the one definition and a test asserts it still
+// reproduces hub.scene.json exactly.
+const DEFAULT_PLOTS: EntityData[] = buildPlotEntities()
 
 const STRUCTURE_COLORS: Record<string, string> = {
   launchpad: '#3fa9ff',
@@ -53,7 +55,7 @@ function formatStructureCost(structure: StructureBlueprint): string {
   const mineralCost = Object.entries(structure.costMaterials ?? {})
     .map(([mineral, amount]) => `${amount} ${mineral}`)
     .join(' · ')
-  const francs = structure.cost === 0 ? 'Free' : `₣${structure.cost.toLocaleString()}`
+  const francs = structure.cost === 0 ? 'Free' : formatCurrency(structure.cost)
   return mineralCost ? `${francs} · ${mineralCost}` : francs
 }
 
@@ -72,8 +74,8 @@ export default function BuildPlaceScreen({ onPlaced, onBack, hasCoach, player }:
   const catalog = STRUCTURES.filter(s => s.id !== 'garage')
   const sel = catalog.find(c => c.id === picked) ?? catalog[0]
   const sortedEntities = plotEntities.slice().sort((a, b) => {
-    const ai = (a.components.find(c => c.type === 'BuildPlot')?.index as number) ?? 0
-    const bi = (b.components.find(c => c.type === 'BuildPlot')?.index as number) ?? 0
+    const ai = readComponentNumber(a, 'BuildPlot', 'index', 0)
+    const bi = readComponentNumber(b, 'BuildPlot', 'index', 0)
     return ai - bi
   })
 
@@ -87,7 +89,7 @@ export default function BuildPlaceScreen({ onPlaced, onBack, hasCoach, player }:
   const previewBuildings: HubBuildingDef[] = cell == null
     ? []
     : sortedEntities.flatMap(entity => {
-      const idx = (entity.components.find(c => c.type === 'BuildPlot')?.index as number) ?? 0
+      const idx = readComponentNumber(entity, 'BuildPlot', 'index', 0)
       if (idx !== cell) return []
       return [{
         kind: picked,
@@ -135,7 +137,7 @@ export default function BuildPlaceScreen({ onPlaced, onBack, hasCoach, player }:
       <div style={{ position: 'absolute', inset: 0, zIndex: 10, pointerEvents: 'none' }}>
         {sortedEntities
           .map(entity => {
-            const idx = (entity.components.find(c => c.type === 'BuildPlot')?.index as number) ?? 0
+            const idx = readComponentNumber(entity, 'BuildPlot', 'index', 0)
             const on = cell === idx
             const taken = occupiedPlots.has(idx)
             const color = STRUCTURE_COLORS[picked] ?? '#3fa9ff'
@@ -278,7 +280,7 @@ export default function BuildPlaceScreen({ onPlaced, onBack, hasCoach, player }:
                         fontWeight: 700,
                         letterSpacing: '0.04em',
                       }}>
-                        {alreadyBuilt ? 'BUILT' : unlocked ? (c.cost === 0 ? 'FREE' : `₣${(c.cost / 1_000_000).toFixed(0)}M`) : c.unlocksAt}
+                        {alreadyBuilt ? 'BUILT' : unlocked ? (c.cost === 0 ? 'FREE' : formatCurrency(c.cost, { compact: true })) : c.unlocksAt}
                       </div>
                     </div>
                   </div>
@@ -330,7 +332,10 @@ export default function BuildPlaceScreen({ onPlaced, onBack, hasCoach, player }:
         data-coach-id={cell != null ? 'build-confirm' : undefined}
         style={{ zIndex: 15 }}
       >
-        <PrimaryBtn kind="amber" disabled={cell == null} onClick={() => cell != null && onPlaced(picked, cell)}>
+        {/* Mint/green, not amber: the Earth Base flow carries no amber (see
+            landnam-earth-base-v2.html, whose confirm sheet is --ln-ok), and
+            amber is reserved for payout emphasis, never a primary button. */}
+        <PrimaryBtn kind="green" disabled={cell == null} onClick={() => cell != null && onPlaced(picked, cell)}>
           Confirm · Build Here →
         </PrimaryBtn>
       </div>

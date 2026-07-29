@@ -4,25 +4,18 @@ import { useEffect, useState, useCallback } from 'react'
 import { useGame } from '@/game-context'
 import { M1_STEPS, M2_STEPS, M3_STEPS, rocketDisplayForConfig } from '@/lib/data'
 import type { Screen } from '@/lib/game-types'
-import ErrorBoundary from '@/components/ui/ErrorBoundary'
-import { LaunchSequenceCanvas } from '@/components/game/LaunchSequenceCanvas'
+import MissionSetupRoutes from '@/components/game/MissionSetupRoutes'
+import MissionOperationRoutes from '@/components/game/MissionOperationRoutes'
 import IntroScreen from '@/components/game/screens/IntroScreen'
 import BuildPlaceScreen from '@/components/game/screens/BuildPlaceScreen'
 import HubScreen from '@/components/game/screens/HubScreen'
-import MissionBoardScreen from '@/components/game/screens/MissionBoardScreen'
-import TargetPickerScreen from '@/components/game/screens/TargetPickerScreen'
-import AssemblyScreen from '@/components/game/screens/AssemblyScreen'
-import TransitScreen from '@/components/game/screens/TransitScreen'
-import MiningScreen from '@/components/game/screens/MiningScreen'
-import RoverMiningScreen from '@/components/game/screens/RoverMiningScreen'
-import DebriefScreen from '@/components/game/screens/DebriefScreen'
 import RefineryScreen from '@/components/game/screens/RefineryScreen'
 import MarketScreen from '@/components/game/screens/MarketScreen'
 import HangarScreen from '@/components/game/screens/HangarScreen'
-import RocketPurchaseScreen from '@/components/game/screens/RocketPurchaseScreen'
 import SkillTreeScreen from '@/components/game/screens/SkillTreeScreen'
 import ScanStationScreen from '@/components/game/screens/ScanStationScreen'
 import TessDiscoveryScreen from '@/components/game/screens/TessDiscoveryScreen'
+import { enqueueSurvey } from '@/lib/surveys'
 
 export const VALID_SCREENS = new Set<Screen>([
   'intro', 'build', 'hub', 'missions', 'galaxy', 'targets', 'fab',
@@ -72,14 +65,23 @@ export function ScreenContent({
     game.player.missionsDone === 0 ? M1_STEPS :
     game.player.missionsDone === 1 ? M2_STEPS :
     game.player.missionsDone === 2 ? M3_STEPS : []
-  const coach = coachSteps.find(s => s.screen === screen && !game.doneSteps[s.id]) ?? null
+  // An active run always outranks onboarding copy. A player returning to an
+  // in-flight mission must see the resume affordance, not a fresh-contract
+  // coach card that routes them back to mission creation.
+  const coach = game.player.activeMission
+    ? null
+    : coachSteps.find(s => s.screen === screen && !game.doneSteps[s.id]) ?? null
 
   // Market is a Free Ops feature — a player without freeOperations landing
   // here directly (bookmarked URL, back/forward) shouldn't see a locked
   // screen render at all.
   useEffect(() => {
     if (screen === 'market' && !game.player.freeOperations) game.go('hub')
-  }, [screen, game.player.freeOperations, game.go])
+    // The Build tab is a Free Ops entry point. Keep the onboarding assembly
+    // flow reachable only when it has a real mission context; a bare/deep
+    // linked fab route must never show a prefilled rocket.
+    if (screen === 'fab' && !game.player.freeOperations && (!game.mission || !game.target)) game.go('hub')
+  }, [screen, game.player.freeOperations, game.mission, game.target, game.go])
 
   switch (screen) {
     case 'intro':
@@ -108,21 +110,9 @@ export function ScreenContent({
           }}
           onPlaced={(kind, plot) => {
             const structure = game.catalog.structures.find(s => s.id === kind)
-            game.setPlayer(player => ({
-              ...player,
-              francs: player.francs - (structure?.cost ?? 0),
-              stash: Object.entries(structure?.costMaterials ?? {}).reduce((stash, [mineral, amount]) => ({
-                ...stash,
-                [mineral]: Math.max(0, (stash[mineral] ?? 0) - amount),
-              }), { ...(player.stash ?? {}) }),
-              placed: Array.from(new Set([...player.placed, kind])),
-              placementPlots: { ...player.placementPlots, [kind]: plot },
-              refineryBuilt: kind === 'refinery' ? true : player.refineryBuilt,
-              scannerBuilt: kind === 'scan-station' ? true : player.scannerBuilt,
-              satelliteMonitoringBuilt: kind === 'satellite-monitoring-station' ? true : player.satelliteMonitoringBuilt,
-              satelliteMonitoringLevel: kind === 'satellite-monitoring-station' ? Math.max(1, player.satelliteMonitoringLevel ?? 1) : player.satelliteMonitoringLevel,
-            }))
+            game.placeStructure(structure, kind, plot)
             game.completeStep(0)
+            enqueueSurvey('lnm_base_building', 1200)
             game.go('hub')
           }}
         />
@@ -134,7 +124,7 @@ export function ScreenContent({
           player={game.player}
           hasCoach={hasCoach}
           onNav={s => {
-            if (s === 'missions') { game.completeStep(1); game.go('missions'); return }
+            if (s === 'missions') { game.goToMissions(); return }
             game.go(s)
           }}
           onGoBuilding={building => {
@@ -145,26 +135,15 @@ export function ScreenContent({
             if (building === 'scan-station') return game.go('scan-station')
             if (building === 'satellite-monitoring-station') return game.go('galaxy')
             if (building === 'launchpad' || building === 'missions') {
-              game.completeStep(1)
-              game.go('missions')
+              if (game.player.activeMission) {
+                enqueueSurvey('lnm_resume_mission', 1200)
+                return game.go(game.player.missionPhase ?? 'transit')
+              }
+              if (game.player.pendingLaunch) return game.go('fab')
+              game.goToMissions()
             }
           }}
           onUpgradeLaunchpad={() => game.upgradeLaunchpad()}
-        />
-      )
-
-    case 'missions':
-      return (
-        <MissionBoardScreen
-          onBack={() => game.go('hub')}
-          onPick={game.onPickMission}
-          missionsDone={game.player.missionsDone}
-          freeOperations={game.player.freeOperations}
-          hasCoach={hasCoach}
-          catalog={game.catalog}
-          contractorMissions={game.player.contractorMissions}
-          contractorCooldowns={game.player.contractorCooldowns}
-          dailyContractorPool={game.player.dailyContractorPool}
         />
       )
 
@@ -180,158 +159,39 @@ export function ScreenContent({
         />
       )
 
+    case 'missions':
     case 'targets':
-      if (!game.mission) return null
-      return (
-        <TargetPickerScreen
-          mission={game.mission}
-          onBack={() => game.go('missions')}
-          onPick={game.onPickTarget}
-          hasCoach={hasCoach}
-          catalog={game.catalog}
-        />
-      )
-
     case 'rocket-buy':
-      if (!game.mission || !game.target) return null
-      return (
-        <RocketPurchaseScreen
-          missionsDone={game.player.missionsDone}
-          francs={game.player.francs}
-          onPurchase={game.onPurchaseRocket}
-          onBack={() => game.go(game.mission?.targetId ? 'missions' : 'targets')}
-          hasCoach={hasCoach}
-        />
-      )
-
     case 'fab':
-      if (!game.mission || !game.target) return null
       return (
-        <>
-          <AssemblyScreen
-            mission={game.mission}
-            target={game.target}
-            rocket={game.rocket}
-            parts={game.catalog.parts}
-            missionsDone={game.player.missionsDone}
-            unlockedSkillNodes={game.player.unlockedSkillNodes ?? []}
-            onLaunch={handleLaunch}
-            onBack={() => game.go('rocket-buy')}
-            hasCoach={hasCoach}
-            coachManual={coach?.manual ?? false}
-          />
-          {launchPending && (
-            <ErrorBoundary fallback={null} onError={handleLaunchComplete}>
-              <LaunchSequenceCanvas
-                rocketName={rocketDisplay.name}
-                rocketImageSrc={rocketDisplay.img}
-                targetName={game.target.name}
-                onComplete={handleLaunchComplete}
-              />
-            </ErrorBoundary>
-          )}
-        </>
+        <MissionSetupRoutes
+          screen={screen}
+          game={game}
+          hasCoach={hasCoach}
+          coachManual={coach?.manual ?? false}
+          deliveryTargetName={deliveryTargetName}
+          rocketDisplay={rocketDisplay}
+          launchPending={launchPending}
+          onLaunch={handleLaunch}
+          onLaunchComplete={handleLaunchComplete}
+        />
       )
 
     case 'transit':
-      if (!transitTarget) return null
-      return (
-        <TransitScreen
-          target={transitTarget}
-          rocketImageSrc={rocketDisplay.img}
-          arrivalAt={game.player.arrivalAt}
-          returning={!!game.player.returningToEarth}
-          isDelivery={!!game.player.headingToDelivery}
-          cargo={game.lastCargo}
-          minerals={game.catalog.minerals}
-          onBack={() => game.go('hub')}
-          onArrive={() => {
-            if (game.player.returningToEarth) {
-              game.onReturnArrived()
-              return
-            }
-            if (game.player.headingToDelivery) {
-              game.onDeliveryArrived()
-              return
-            }
-            const isRoverMission = game.mission?.survey?.onWorldVehicle === 'starter-rover'
-            if (game.mission?.payload?.type === 'satellite' || game.target?.type === 'exoplanet') {
-              game.setPlayer(player => ({
-                ...player,
-                missionPhase: 'debrief',
-                transitSatelliteLaunchedAt: game.mission?.payload?.type === 'satellite'
-                  ? (player.transitSatelliteLaunchedAt ?? Date.now())
-                  : player.transitSatelliteLaunchedAt,
-                transitSatelliteLevel: game.mission?.payload?.type === 'satellite'
-                  ? Math.max(1, player.transitSatelliteLevel ?? 1)
-                  : player.transitSatelliteLevel,
-              }))
-              game.setLastCargo({})
-              game.go('debrief')
-              return
-            }
-            game.setPlayer(player => ({ ...player, missionPhase: 'mining' }))
-            game.go(isRoverMission ? 'rover-mining' : 'mining')
-          }}
-          onAbandon={game.abandonMission}
-        />
-      )
-
     case 'mining':
-      if (!game.mission || !game.target) return null
+    case 'rover-mining':
+    case 'debrief':
+      if (!transitTarget || !debriefOriginTarget) return null
       return (
-        <MiningScreen
-          mission={game.mission}
-          target={game.target}
-          onBack={() => {
-            game.setPlayer(player => ({ ...player, missionPhase: 'mining' }))
-            game.go('hub')
-          }}
-          onComplete={(cargo) => { game.completeStep(6); game.completeStep(7); game.onMiningDone(cargo) }}
-          minerals={game.catalog.minerals}
-          laserChargeCap={game.laserChargeCap}
-          laserTier={game.catalog.parts.drill.find(p => p.id === game.rocket.drill)?.tier ?? 1}
+        <MissionOperationRoutes
+          screen={screen}
+          game={game}
           hasCoach={hasCoach}
           coachManual={coach?.manual ?? false}
-          onCoachDone={() => game.completeStep(6)}
+          transitTarget={transitTarget}
+          debriefOriginTarget={debriefOriginTarget}
           deliveryTargetName={deliveryTargetName}
-          onAbandon={game.abandonMission}
-          addToast={game.addToast}
-          hasPriorFreeOpsExperience={
-            Object.keys(game.player.contractorMissions ?? {}).length > 0
-            || (game.player.dailyContractorPool?.completedIds.length ?? 0) > 0
-          }
-        />
-      )
-
-    case 'rover-mining':
-      if (!game.mission || !game.target) return null
-      return (
-        <RoverMiningScreen
-          mission={game.mission}
-          target={game.target}
-          onComplete={game.onRoverMiningDone}
-          onBack={() => game.go('hub')}
-        />
-      )
-
-    case 'debrief':
-      if (!game.mission || !game.target) return null
-      return (
-        <DebriefScreen
-          mission={game.mission}
-          target={debriefOriginTarget ?? game.target}
-          cargo={game.lastCargo ?? {}}
-          onDone={game.onDebriefDone}
-          minerals={game.catalog.minerals}
-          contractors={game.catalog.contractors}
-          contractorMissions={game.player.contractorMissions}
-          freeOperations={game.player.freeOperations}
-          annotations={game.player.researchAnnotations}
-          missionsDone={game.player.missionsDone}
-          hasCoach={hasCoach}
-          shipDestroyed={!!game.player.shipDestroyed}
-          rocket={game.rocket}
+          rocketDisplay={rocketDisplay}
         />
       )
 
@@ -359,7 +219,8 @@ export function ScreenContent({
           francs={game.player.francs}
           onSell={game.sellMinerals}
           onBack={() => game.go('hub')}
-          contractorId={game.player.lastContractor}
+          onOpenMissions={() => game.go('missions')}
+          clientId={game.player.lastClient}
         />
       )
 
@@ -382,6 +243,17 @@ export function ScreenContent({
           unlockedSkillNodes={game.player.unlockedSkillNodes ?? []}
           onUnlock={game.unlockSkillNode}
           onBack={() => game.go('hub')}
+          researchXP={game.player.researchXP ?? 0}
+          licenseGrade={game.player.licenseGrade ?? 'Grade I'}
+          onUpgradeLicenseGrade={game.upgradeLicenseGrade}
+          firsts={{
+            firstMissionDone: game.player.missionsDone > 0,
+            firstSatelliteLaunched: !!game.player.transitSatelliteLaunchedAt,
+            firstTessClassification: Object.keys(game.player.tessClassifications ?? {}).length > 0,
+            firstBlueprintUnlocked: (game.player.unlockedBlueprints ?? []).length > 0,
+            refineryBuilt: game.player.refineryBuilt,
+            launchpadUpgraded: game.player.launchpadUpgraded,
+          }}
         />
       )
 

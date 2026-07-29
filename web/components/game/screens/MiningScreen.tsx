@@ -7,12 +7,31 @@ import TopBar from '@/components/ui/TopBar'
 import { PrimaryBtn } from '@/components/ui/Button'
 import Panel from '@/components/ui/Panel'
 import StatusPill from '@/components/ui/StatusPill'
+import IconBadge from '@/components/ui/IconBadge'
+import SegmentedBar from '@/components/ui/SegmentedBar'
+import ConfirmActionSheet from '@/components/game/ConfirmActionSheet'
 import MiningCanvas from './MiningCanvas'
+
+// Out There: Omega Edition bolt glyph — used inside the charge-meter IconBadge.
+// Kept local since it's a one-off HUD glyph, not a shared icon set yet.
+function LaserBoltIcon({ size = 14 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+      <path d="M12 3l1.6 5.4L19 10l-5.4 1.6L12 17l-1.6-5.4L5 10l5.4-1.6z" />
+    </svg>
+  )
+}
+
+// Fixed pip counts for the HUD segmented bars — decoupled from MAX_CHARGES /
+// totalNeeded so the bar reads as a clean meter instead of one pip per unit
+// (which would sprawl to 30+ pips on post-onboarding runs).
+const CHARGE_SEGMENTS = 10
+const ORDER_SEGMENTS = 12
 
 // First-time-entering-Free-Ops-mining explainer — dismiss-once, same
 // localStorage-ack pattern as MissionBoardScreen's EXPLAINER_ACK_KEY, but
 // scoped to the mining screen itself. The board explainer covers the board's
-// contractor/infrastructure/custom split; this covers what changes once
+// client/infrastructure/custom split; this covers what changes once
 // you're actually mining with no client attached (sell the haul yourself,
 // no daily limit) — the two are different moments and were previously
 // conflated, leaving the mining screen with zero "no client" first-entry cue.
@@ -136,11 +155,12 @@ function miningGuide(deliveryTargetName?: string) {
   ]
 }
 
-export default function MiningScreen({ mission, target, onComplete, onBack, onAbandon, minerals, laserChargeCap, laserTier, hasCoach, coachManual, onCoachDone, addToast, deliveryTargetName, hasPriorFreeOpsExperience }: {
+export default function MiningScreen({ mission, target, onComplete, onBack, onAbandon, minerals, laserChargeCap, laserTier, hasCoach, coachManual, onCoachDone, addToast, deliveryTargetName, hasPriorFreeOpsExperience, initialCargo }: {
   mission: Mission
   target: Target
   onComplete: (cargo: Record<string, number>) => void
-  onBack: () => void
+  /** Called with whatever's been collected so far (may be empty) — the caller is responsible for persisting it so a later resume doesn't lose progress. */
+  onBack: (cargo: Record<string, number>) => void
   onAbandon?: () => void
   minerals: Record<string, MineralMeta>
   laserChargeCap?: number
@@ -153,8 +173,10 @@ export default function MiningScreen({ mission, target, onComplete, onBack, onAb
   addToast?: (message: string, kind?: 'info' | 'ok' | 'warn') => void
   /** Set for two-leg "mine then deliver" missions (mission.deliveryTargetId) — swaps the return button's copy from "Return to Earth" to "Deliver to {name}" since the ship isn't heading home yet. */
   deliveryTargetName?: string
-  /** True once the player has completed any contractor mission — suppresses the Free Ops first-entry explainer for players who reached self-directed mining before this ack tracking existed. */
+  /** True once the player has completed any client mission — suppresses the Free Ops first-entry explainer for players who reached self-directed mining before this ack tracking existed. */
   hasPriorFreeOpsExperience?: boolean
+  /** Cargo already collected before a prior "Back to hub" pause on this same mission, restored so the player doesn't lose it on resume. */
+  initialCargo?: Record<string, number>
 }) {
   // Charge count is mission-aware, not coach-aware.
   // During onboarding (sequence <= FREE_OPS_START_MISSIONS_DONE): always 6× the ore required,
@@ -172,8 +194,8 @@ export default function MiningScreen({ mission, target, onComplete, onBack, onAb
     ? Math.max(30, totalOreNeeded * 6)
     : Math.max(laserChargeCap ?? 5, totalOreNeeded * 4)
   const LOW_CHARGE_THRESHOLD = Math.max(2, Math.ceil(MAX_CHARGES * 0.2))
-  const cargoRef = useRef<Record<string, number>>({})
-  const [cargo, setCargo] = useState<Record<string, number>>({})
+  const cargoRef = useRef<Record<string, number>>(initialCargo ?? {})
+  const [cargo, setCargo] = useState<Record<string, number>>(initialCargo ?? {})
   const fireRef = useRef<(() => void) | null>(null)
   const scrollRef = useRef<((dx: number) => void) | null>(null)
   const [laserCharges, setLaserCharges] = useState(MAX_CHARGES)
@@ -291,8 +313,9 @@ export default function MiningScreen({ mission, target, onComplete, onBack, onAb
     (sum, [id, amount]) => sum + Math.min(cargo[id] ?? 0, amount), 0
   )
   const [guideOpen, setGuideOpen] = useState(false)
+  const [confirmingAbandon, setConfirmingAbandon] = useState(false)
 
-  const isFreeOps = !mission.contractor
+  const isFreeOps = !mission.client
   const { show: showFreeOpsMiningExplainer, dismiss: dismissFreeOpsMiningExplainer } = useFreeOpsMiningAck(!isFreeOps || !!hasPriorFreeOpsExperience)
   const { dismissed: freeOpsFirstSuccessDismissed, dismiss: dismissFreeOpsFirstSuccess } = useFreeOpsFirstSuccessAck()
   const showFreeOpsSuccessPopup = isFreeOps && orderFilled && !freeOpsFirstSuccessDismissed
@@ -302,14 +325,14 @@ export default function MiningScreen({ mission, target, onComplete, onBack, onAb
       <TopBar
         eyebrow={`${target.name.toUpperCase()} · SURFACE`}
         title="Mining Run"
-        onBack={onBack}
+        onBack={() => onBack(cargoRef.current)}
         right={isFreeOps ? <StatusPill kind="amber">Free Ops · No Client</StatusPill> : undefined}
       />
 
       {/* First-time-in-Free-Ops-mining explainer — dismiss-once, mirrors the mission-board explainer's ack pattern but covers what changes about the mining run itself (sell the haul yourself, no daily limit). */}
       {isFreeOps && showFreeOpsMiningExplainer && (
         <div style={{ position: 'absolute', top: 64, left: 14, right: 14, zIndex: 60 }}>
-          <Panel accent="var(--ln-amber)" style={{ padding: 12, position: 'relative' }}>
+          <Panel accent="var(--ln-amber)" surface="glass" style={{ padding: 12, position: 'relative' }}>
             <button
               data-testid="dismiss-freeops-mining-explainer"
               onClick={dismissFreeOpsMiningExplainer}
@@ -326,7 +349,7 @@ export default function MiningScreen({ mission, target, onComplete, onBack, onAb
               No Client On This Run
             </div>
             <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 12, color: '#a9b8ce', lineHeight: 1.45, paddingRight: 20 }}>
-              You picked the target and the order. No daily limit — mine what looks valuable, then sell the haul yourself at market price instead of a fixed contractor payout.
+              You picked the target and the order. No daily limit — mine what looks valuable, then sell the haul yourself at market price instead of a fixed client payout.
             </div>
           </Panel>
         </div>
@@ -372,7 +395,7 @@ export default function MiningScreen({ mission, target, onComplete, onBack, onAb
 
       {showFreeOpsSuccessPopup && (
         <div data-testid="freeops-first-success-popup" style={{ position: 'absolute', inset: 0, zIndex: 75, background: 'rgba(3,6,12,0.76)', display: 'flex', alignItems: 'flex-end', padding: 16 }}>
-          <Panel accent="var(--ln-ok)" style={{ padding: 14, width: '100%', boxShadow: '0 18px 48px rgba(0,0,0,0.55)' }}>
+          <Panel accent="var(--ln-ok)" surface="glass" style={{ padding: 14, width: '100%', boxShadow: '0 18px 48px rgba(0,0,0,0.55)' }}>
             <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 10, fontWeight: 800, letterSpacing: '0.22em', color: 'var(--ln-ok)', textTransform: 'uppercase', marginBottom: 6 }}>
               First Free Ops Haul Secured
             </div>
@@ -412,7 +435,7 @@ export default function MiningScreen({ mission, target, onComplete, onBack, onAb
               Try Again
             </button>
             {onAbandon && (
-              <button onClick={onAbandon} style={{ padding: '12px 0', background: 'transparent', border: '1px solid rgba(255,80,80,0.35)', borderRadius: 10, fontFamily: 'var(--ln-font-display)', fontSize: 11, fontWeight: 800, letterSpacing: '0.14em', color: '#ff6060', cursor: 'pointer', textTransform: 'uppercase' }}>
+              <button onClick={() => setConfirmingAbandon(true)} style={{ padding: '12px 0', background: 'transparent', border: '1px solid rgba(255,80,80,0.35)', borderRadius: 10, fontFamily: 'var(--ln-font-display)', fontSize: 11, fontWeight: 800, letterSpacing: '0.14em', color: '#ff6060', cursor: 'pointer', textTransform: 'uppercase' }}>
                 Scrub Mission
               </button>
             )}
@@ -434,6 +457,7 @@ export default function MiningScreen({ mission, target, onComplete, onBack, onAb
         <MiningCanvas
           key={runKey}
           minerals={depositMinerals}
+          requiredMinerals={Object.keys(mission.requires.minerals)}
           mineralMeta={minerals}
           laserTier={laserTier}
           onCollect={collectMineral}
@@ -455,28 +479,44 @@ export default function MiningScreen({ mission, target, onComplete, onBack, onAb
         </div>
 
         {/* ── Stats + charge strip ──────────────────────────────────────────── */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, minHeight: 28 }}>
-          {/* Mineral counts */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, minHeight: 28, flexWrap: 'wrap' }}>
+          {/* Mineral counts — bordered icon-badge tile per Out There: Omega icon language */}
           <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap', flex: 1 }}>
             {Object.entries(mission.requires.minerals).map(([id, amount]) => {
               const collected = Math.min(cargo[id] ?? 0, amount)
               const done = collected >= amount
               const color = minerals[id]?.color ?? '#fff'
+              const badgeColor = done ? 'var(--ln-text-muted)' : color
               return (
-                <div key={id} style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                  <OreShapeIcon id={id} color={done ? 'var(--ln-text-muted)' : color} size={11} minerals={minerals} />
-                  <span style={{
-                    fontFamily: 'var(--ln-font-display)', fontSize: 10, fontWeight: 700,
-                    letterSpacing: '0.06em', textTransform: 'uppercase',
-                    color: done ? 'var(--ln-text-muted)' : color,
-                  }}>
-                    {minerals[id]?.name ?? id}
+                <div key={id} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  {/* The shape glyph is aria-hidden and the name/fraction are
+                      separate spans, so AT would otherwise announce a bare
+                      "PLATINUM 2 / 5". One sentence carries the whole readout;
+                      the visual fragments are hidden from AT to avoid a double
+                      announcement. */}
+                  <span className="ln-sr-only">
+                    {`${minerals[id]?.name ?? id}: ${collected} of ${amount} collected`}
                   </span>
-                  <span style={{
-                    fontFamily: 'var(--ln-font-mono)', fontSize: 10,
-                    color: done ? 'var(--ln-text-muted)' : 'var(--ln-text)',
-                  }}>
-                    {collected}/{amount}
+                  <span aria-hidden="true" style={{ display: 'contents' }}>
+                    <IconBadge
+                      size={20}
+                      icon={<OreShapeIcon id={id} color={badgeColor} size={11} minerals={minerals} />}
+                      active={!done}
+                      style={{ borderColor: badgeColor, boxShadow: 'none' }}
+                    />
+                    <span style={{
+                      fontFamily: 'var(--ln-font-display)', fontSize: 10, fontWeight: 700,
+                      letterSpacing: '0.06em', textTransform: 'uppercase',
+                      color: badgeColor,
+                    }}>
+                      {minerals[id]?.name ?? id}
+                    </span>
+                    <span style={{
+                      fontFamily: 'var(--ln-font-mono)', fontSize: 10,
+                      color: done ? 'var(--ln-text-muted)' : 'var(--ln-text)',
+                    }}>
+                      {collected}/{amount}
+                    </span>
                   </span>
                 </div>
               )
@@ -486,16 +526,19 @@ export default function MiningScreen({ mission, target, onComplete, onBack, onAb
           <span style={{ fontFamily: 'var(--ln-font-mono)', fontSize: 10, color: 'var(--ln-cyan-bright)', flexShrink: 0 }}>
             {totalCollected}/{totalNeeded}
           </span>
-          {/* Charge dots */}
-          <div style={{ display: 'flex', gap: 3, alignItems: 'center', flexShrink: 0 }}>
-            {Array.from({ length: MAX_CHARGES }, (_, i) => (
-              <span key={i} style={{
-                display: 'inline-block', width: 7, height: 7, borderRadius: '50%',
-                background: i < laserCharges ? 'var(--ln-cyan)' : 'rgba(255,255,255,0.1)',
-                boxShadow: i < laserCharges ? '0 0 4px var(--ln-cyan)' : 'none',
-                transition: 'background 200ms, box-shadow 200ms',
-              }} />
-            ))}
+          {/* Charge meter — bordered laser badge + segmented bar, Out There: Omega chrome */}
+          <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexShrink: 0 }}>
+            <IconBadge size={20} icon={<LaserBoltIcon size={11} />} tone="cyan" active={laserCharges > 0} />
+            <SegmentedBar
+              segments={CHARGE_SEGMENTS}
+              filled={(laserCharges / MAX_CHARGES) * CHARGE_SEGMENTS}
+              tone={laserCharges > 0 ? 'cyan' : 'crit'}
+              height={7}
+              style={{ width: 60 }}
+            />
+            <span style={{ fontFamily: 'var(--ln-font-mono)', fontSize: 9.5, color: 'var(--ln-text-dim)' }}>
+              {laserCharges}/{MAX_CHARGES}
+            </span>
           </div>
           {/* Guide */}
           <button
@@ -507,13 +550,14 @@ export default function MiningScreen({ mission, target, onComplete, onBack, onAb
           </button>
         </div>
 
-        {/* Progress bar */}
-        <div className="mining-progress-track">
-          <div
-            className="mining-progress-fill"
-            style={{ width: `${Math.min(100, (totalCollected / totalNeeded) * 100)}%` }}
-          />
-        </div>
+        {/* Order progress — segmented bar, Out There: Omega chrome */}
+        <SegmentedBar
+          segments={ORDER_SEGMENTS}
+          filled={(totalCollected / totalNeeded) * ORDER_SEGMENTS}
+          tone="cyan"
+          height={6}
+          style={{ marginTop: 6, marginBottom: 6 }}
+        />
 
         {/* ── Action row: Fire · Fill/Return · Scroll ───────────────────────── */}
         {/* minWidth: 0 on every grid item overrides <button>'s default
@@ -561,6 +605,17 @@ export default function MiningScreen({ mission, target, onComplete, onBack, onAb
           </div>
         </div>
       </div>
+
+      {confirmingAbandon && onAbandon && (
+        <ConfirmActionSheet
+          eyebrow="Mining Run"
+          title="Scrub Mission"
+          description={`Abandon this run? ${totalCollected} of ${totalNeeded} units collected will be lost.`}
+          confirmLabel="Confirm Scrub"
+          onConfirm={() => { setConfirmingAbandon(false); onAbandon() }}
+          onDismiss={() => setConfirmingAbandon(false)}
+        />
+      )}
     </div>
   )
 }

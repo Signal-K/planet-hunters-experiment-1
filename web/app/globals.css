@@ -21,20 +21,32 @@
 @font-face { font-family: "Turret Road"; src: url("/fonts/TurretRoad-ExtraBold.ttf")  format("truetype"); font-weight: 800; font-style: normal; font-display: swap; }
 
 /* ─── Root tokens (deep-space default) ──────────────────── */
+/* Revised 2026-07-23 — superseded the mid-tone "steel/light-panel-2" Mission
+   Board direction (see removed .theme-steel below) after side-by-side review
+   against real Open Design output and reference material: a hand-built
+   8-color palette plus multiple Out There: Omega screenshots (white/pale-blue
+   line-art icon badges on a navy-to-black space background, segmented green
+   status bars, cyan accents). That reference is concrete and consistently
+   legible where the light-card gimmick was not, so this is now the single
+   dark palette for every screen — Mission Board included — rather than a
+   separate theme diverging from the rest of the app. Palette source hexes:
+   #000000 / #000D1F (void), #002351 (panel), #647788 (muted/border),
+   #91ADC2 (dim text), #B1C6E5 (primary text), #5AD07E (ok/positive),
+   #70D9EA (cyan/info). */
 :root, .theme-deep {
-  --ln-void:        #06090f;
-  --ln-bg:          #0a121d;
-  --ln-bg-grid:     #0e1828;
-  --ln-surface:     #122236;
-  --ln-surface-2:   #18304b;
-  --ln-surface-3:   #1f3d5e;
-  --ln-overlay:     rgba(6, 9, 15, 0.72);
+  --ln-void:        #000d1f;
+  --ln-bg:          #041a33;
+  --ln-bg-grid:     #0a2540;
+  --ln-surface:     #002351;
+  --ln-surface-2:   #0d3468;
+  --ln-surface-3:   #16468a;
+  --ln-overlay:     rgba(0, 13, 31, 0.75);
 
-  --ln-cyan:        #3fa9ff;
-  --ln-cyan-bright: #6cc2ff;
-  --ln-cyan-press:  #1c87dc;
-  --ln-cyan-soft:   rgba(63, 169, 255, 0.16);
-  --ln-cyan-border: rgba(63, 169, 255, 0.35);
+  --ln-cyan:        #70d9ea;
+  --ln-cyan-bright: #a3ecf5;
+  --ln-cyan-press:  #3fb8cc;
+  --ln-cyan-soft:   rgba(112, 217, 234, 0.16);
+  --ln-cyan-border: rgba(112, 217, 234, 0.4);
 
   --ln-amber:        #f5a623;
   --ln-amber-bright: #ffc25c;
@@ -49,13 +61,13 @@
   --ln-crimson-border: rgba(200, 41, 62, 0.52);
   --ln-glow-crimson:   0 0 0 1px rgba(200,41,62,0.7), 0 0 18px rgba(200,41,62,0.4);
 
-  --ln-ok:        #39d36a;
-  --ln-ok-soft:   rgba(57, 211, 106, 0.18);
+  --ln-ok:        #5ad07e;
+  --ln-ok-soft:   rgba(90, 208, 126, 0.18);
   --ln-warn:      #ffb347;
   --ln-warn-soft: rgba(255, 179, 71, 0.18);
   --ln-crit:      #ff5a6a;
   --ln-crit-soft: rgba(255, 90, 106, 0.18);
-  --ln-info:      #7ec8ff;
+  --ln-info:      #70d9ea;
 
   --ln-mineral-silicon: #b9d8ff;
   --ln-mineral-iron:    #d97150;
@@ -64,22 +76,35 @@
   --ln-mineral-gold:    #ffd166;
   --ln-mineral-rare:    #c084ff;
 
-  --ln-text:       #e6efff;
-  --ln-text-dim:   #a9b8ce;
-  --ln-text-muted: #5d7390;
-  --ln-text-ghost: rgba(230, 239, 255, 0.35);
-  --ln-text-on-cyan:  #061226;
+  --ln-text:       #b1c6e5;
+  --ln-text-dim:   #91adc2;
+  --ln-text-muted: #647788;
+  --ln-text-ghost: rgba(177, 198, 229, 0.35);
+  --ln-text-on-cyan:  #00131f;
   --ln-text-on-amber: #1a1304;
+  --ln-text-inverse:  #00131f;
 
-  --ln-hairline:        rgba(63, 169, 255, 0.18);
-  --ln-hairline-strong: rgba(63, 169, 255, 0.45);
-  --ln-divider:         rgba(169, 184, 206, 0.12);
+  --ln-hairline:        rgba(177, 198, 229, 0.18);
+  --ln-hairline-strong: rgba(177, 198, 229, 0.4);
+  --ln-divider:         rgba(145, 173, 194, 0.14);
 
-  --ln-shadow-card:   0 2px 0 rgba(255,255,255,0.04) inset, 0 8px 24px rgba(0,0,0,0.45);
+  /* Shell/panel/border tokens — one dark-navy family, no separate light
+     surface. --ln-panel-2 previously meant "genuinely light card"; it's now
+     just the next navy step up from --ln-panel, kept as its own token
+     because components (Panel.tsx, TopBar) already reference it by name. */
+  --ln-shell:        #000d1f;
+  --ln-panel:        #002351;
+  --ln-panel-2:      #0d3468;
+  --ln-border:       rgba(145, 173, 194, 0.35);
+  --ln-payout:       #d8ff55;
+  --ln-play:         #fa49ca;
+  --ln-purple-depth: #25123d;
+
+  --ln-shadow-card:   0 2px 0 rgba(255,255,255,0.04) inset, 0 0 0 1px rgba(112,217,234,0.1), 0 8px 24px rgba(0,0,0,0.5);
   --ln-shadow-modal:  0 24px 64px rgba(0,0,0,0.7);
-  --ln-glow-cyan:     0 0 0 1px rgba(63,169,255,0.6), 0 0 18px rgba(63,169,255,0.35);
+  --ln-glow-cyan:     0 0 0 1px rgba(112,217,234,0.6), 0 0 18px rgba(112,217,234,0.35);
   --ln-glow-amber:    0 0 0 1px rgba(245,166,35,0.7), 0 0 18px rgba(245,166,35,0.4);
-  --ln-glow-ok:       0 0 12px rgba(57,211,106,0.7);
+  --ln-glow-ok:       0 0 12px rgba(90,208,126,0.7);
 
   --ln-r-xs: 2px;
   --ln-r-sm: 4px;
@@ -97,6 +122,9 @@
   --ln-s-6: 32px;
   --ln-s-7: 48px;
   --ln-s-8: 64px;
+
+  --ln-nav-h: 64px;
+  --ln-rail-w: 84px;
 
   --ln-font-display: "Oxanium", "Turret Road", system-ui, sans-serif;
   --ln-font-body:    "Oxanium", system-ui, sans-serif;
@@ -124,32 +152,140 @@
   --ln-d-slow:      420ms;
 }
 
-.theme-atlas {
-  --ln-bg:          #050608;
-  --ln-bg-grid:     #0a0c10;
-  --ln-surface:     #0c0e12;
-  --ln-surface-2:   #11141a;
-  --ln-surface-3:   #181c25;
-
-  --ln-text:        #efe7d3;
-  --ln-text-dim:    #b5ad99;
-  --ln-text-muted:  #6b6552;
-  --ln-text-ghost:  rgba(239, 231, 211, 0.32);
-
-  --ln-cyan:        #efe7d3;
-  --ln-amber:       #f5a623;
-  --ln-amber-bright:#ffc25c;
-
-  --ln-hairline:        rgba(239, 231, 211, 0.10);
-  --ln-hairline-strong: rgba(239, 231, 211, 0.32);
-  --ln-divider:         rgba(239, 231, 211, 0.10);
-
-  --ln-font-display: "Turret Road", "Oxanium", system-ui, sans-serif;
+/* ─── Glass HUD surface layer — additive to .theme-deep, not a replacement.
+   Scoped to the mission-creation flow (Mission Board / Target / Rocket /
+   Launch / Mining / Debrief) per the Open Design "Full Panel Re-skin"
+   reference (brand-spec.md, 2026-07-24). Uses dark-tinted translucency
+   (navy, not white) so it composes with the existing light --ln-text
+   tokens — the brand-spec's literal rgba(255,255,255,0.20) white glass
+   was avoided on purpose: that read is what got reverted 2026-07-23 for
+   washing out text contrast. Corner brackets already exist in Panel.tsx's
+   <Corners>; this only adds the frosted-glass surface + starfield backdrop. */
+:root {
+  /* Literal values from the OD reference's landnam-design-system.css
+   * (--ln-panel / --ln-panel-2 / --ln-panel-border). Earlier passes
+   * substituted a dark-navy tint here out of caution about repeating a
+   * past legibility regression — verified in the OD project's own
+   * rendered screenshots (2026-07-25) that literal white glass over a
+   * dark backdrop stays legible; the earlier substitution was itself the
+   * reason the UI kept reading as "unchanged navy", not a fix for anything. */
+  --ln-glass-panel:    rgba(255, 255, 255, 0.20);
+  --ln-glass-panel-2:  rgba(255, 255, 255, 0.28);
+  --ln-glass-border:   rgba(255, 255, 255, 0.45);
+  --ln-glass-blur:     blur(8px);
 }
+
+.ln-starfield {
+  position: relative;
+  background-color: var(--ln-shell);
+  background-image:
+    radial-gradient(1px 1px at 6% 22%, rgba(255,255,255,0.5), transparent),
+    radial-gradient(1.5px 1.5px at 28% 55%, rgba(112,217,234,0.4), transparent),
+    radial-gradient(1px 1px at 45% 15%, rgba(255,255,255,0.4), transparent),
+    radial-gradient(1px 1px at 68% 78%, rgba(112,217,234,0.35), transparent),
+    radial-gradient(1.5px 1.5px at 82% 30%, rgba(255,255,255,0.3), transparent),
+    radial-gradient(ellipse at 28% 45%, rgba(112,217,234,0.05) 0%, transparent 50%),
+    radial-gradient(ellipse at 72% 35%, rgba(90,208,126,0.03) 0%, transparent 45%),
+    radial-gradient(ellipse at 50% 70%, rgba(245,166,35,0.02) 0%, transparent 40%);
+  background-repeat: repeat, repeat, repeat, repeat, repeat, no-repeat, no-repeat, no-repeat;
+}
+
+.ln-glass-panel {
+  background: var(--ln-glass-panel);
+  border: 1px solid var(--ln-glass-border);
+  backdrop-filter: var(--ln-glass-blur);
+  -webkit-backdrop-filter: var(--ln-glass-blur);
+}
+
+/* Mission Board two-column "canvas + Contract Detail" layout — ported from
+   the OD "Full Panel Re-skin" mission-board mockup's `.body-layout` (stacked
+   below 821px, side-by-side with a fixed-width sticky detail panel above
+   it — same breakpoint the mission-setup-* classes already use). */
+.mission-board-layout {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+@media (min-width: 821px) {
+  .mission-board-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 320px;
+    /* stretch, not start: the Target Picker's galaxy map fills its column via
+       `height:100%` over an absolutely-positioned SVG, so a content-sized
+       (start-aligned) column resolved to 0 and the whole solar-system map
+       rendered invisible — measured at 2px tall with a 0px svg. The detail
+       panel opts back out with align-self:start below so it can still stick. */
+    align-items: stretch;
+    gap: 14px;
+  }
+  .mission-board-detail {
+    position: sticky;
+    top: 12px;
+    /* position:sticky does nothing on a stretched grid item. */
+    align-self: start;
+  }
+}
+
+/* ─── Light editorial theme — reference/guide/market/menu surfaces only.
+   Operations screens (Launchpad, Mining HUD, Transit, Debrief, live Mission
+   Board) stay on .theme-deep. See workspace/decisions/
+   landnam-light-theme-for-reference-and-menu-surfaces.md. ─── */
+.theme-light {
+  --ln-void:        #f4f1ea;
+  --ln-bg:          #faf8f3;
+  --ln-bg-grid:     #f0ecE2;
+  --ln-surface:     #ffffff;
+  --ln-surface-2:   #f2eee4;
+  --ln-surface-3:   #e8e2d3;
+  --ln-overlay:     rgba(244, 241, 234, 0.82);
+
+  --ln-cyan:        #1c7fbf;
+  --ln-cyan-bright: #2a94d8;
+  --ln-cyan-press:  #145f8f;
+  --ln-cyan-soft:   rgba(28, 127, 191, 0.10);
+  --ln-cyan-border: rgba(28, 127, 191, 0.32);
+
+  --ln-amber:        #b5730a;
+  --ln-amber-bright: #d68a0d;
+  --ln-amber-press:  #8f5a08;
+  --ln-amber-soft:   rgba(181, 115, 10, 0.12);
+  --ln-amber-border: rgba(181, 115, 10, 0.4);
+
+  --ln-text:        #1c1a14;
+  --ln-text-dim:    #4a4536;
+  --ln-text-muted:  #7a7460;
+  --ln-text-ghost:  rgba(28, 26, 20, 0.35);
+  --ln-text-on-cyan:  #f4f1ea;
+  --ln-text-on-amber: #f4f1ea;
+
+  --ln-hairline:        rgba(28, 26, 20, 0.12);
+  --ln-hairline-strong: rgba(28, 26, 20, 0.28);
+  --ln-divider:         rgba(28, 26, 20, 0.10);
+
+  --ln-shadow-card:  0 1px 0 rgba(255,255,255,0.6) inset, 0 4px 16px rgba(28,26,20,0.10);
+  --ln-shadow-modal: 0 24px 64px rgba(28,26,20,0.22);
+
+  --ln-shell:        #faf8f3;
+  --ln-panel:        #ffffff;
+  --ln-panel-2:      #f2eee4;
+  --ln-border:       rgba(28, 26, 20, 0.28);
+  --ln-payout:       #6a8a1a;
+  --ln-play:         #a0288f;
+  --ln-purple-depth: #d9d0f0;
+  --ln-text-inverse: #f4f1ea;
+}
+
+/* .theme-steel (mid-tone shell + genuinely light content cards) removed
+   2026-07-23 — superseded by the revised :root/.theme-deep palette above.
+   It shipped only to Mission Board/MissionCard, diverged from every other
+   screen's dark theme, and rendered badly in real Open Design output
+   (washed-out, low-contrast). Do not resurrect this pattern without new
+   visual evidence — see the revised-palette comment above :root for what
+   replaced it and why. */
 
 /* base resets */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-html, body { height: 100%; background: #06090f; }
+html, body { height: 100%; background: #000d1f; }
 body {
   font-family: var(--ln-font-body);
   color: var(--ln-text);
@@ -165,19 +301,46 @@ button { cursor: pointer; }
   --tutorial-manual-content-top: 248px;
 }
 
+/* Page backdrop — ported from the Open Design shells (landnam-mission-board.html
+   et al, 2026-07-27). The app is a floating card on a lit blue-violet field, NOT
+   a full-bleed near-black slab: that flat `--ln-void` wash is the "dark blue
+   background behind everything" that kept reappearing.
+
+   Source: body { background: radial-gradient(ellipse at 30% -15%, #2a4170 0%,
+   var(--space-bg) 45%, var(--space-bg-far) 80%) } with --space-bg #24366a and
+   --space-bg-far #0e1526, plus a fixed starfield overlay. */
 .game-stage {
+  position: relative;
+  /* Explicit: width:100% + padding must not exceed the viewport, or the
+     centered card is pushed past the right edge and its detail panel clips. */
+  box-sizing: border-box;
   width: 100%;
   min-height: 100dvh;
   display: grid;
   place-items: center;
-  padding: var(--ln-s-2);
-  background:
-    radial-gradient(circle at 50% 12%, rgba(63, 169, 255, 0.12), transparent 36%),
-    var(--ln-void);
+  padding: var(--ln-s-4);
+  background: radial-gradient(ellipse at 30% -15%, #2a4170 0%, #24366a 45%, #0e1526 80%);
+}
+.game-stage::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background-image:
+    radial-gradient(1px 1px at 6% 22%, rgba(255, 255, 255, 0.5), transparent),
+    radial-gradient(1.5px 1.5px at 28% 55%, rgba(108, 212, 255, 0.4), transparent),
+    radial-gradient(1px 1px at 45% 15%, rgba(255, 255, 255, 0.4), transparent),
+    radial-gradient(1px 1px at 68% 78%, rgba(108, 212, 255, 0.35), transparent),
+    radial-gradient(1.5px 1.5px at 82% 30%, rgba(255, 255, 255, 0.3), transparent);
+  background-size: 180px 180px;
 }
 
 .portrait-canvas {
   position: relative;
+  z-index: 1; /* above .game-stage::before starfield */
+  display: flex;
+  flex-direction: column;
   width: min(402px, calc(100vw - var(--ln-s-4)));
   height: min(874px, calc(100dvh - var(--ln-s-4)));
   max-height: 874px;
@@ -187,6 +350,25 @@ button { cursor: pointer; }
   border-radius: 28px;
   box-shadow: var(--ln-shadow-modal), var(--ln-glow-cyan);
   isolation: isolate;
+}
+
+/* Flex row above .bottom-tab-bar — screen content's own overflow-y:auto
+   box naturally ends above the bar instead of guessing its height via
+   per-screen paddingBottom hacks. */
+.game-screen-area { flex: 1; min-height: 0; position: relative; overflow: hidden; }
+
+.bottom-tab-bar {
+  flex: none;
+  height: var(--ln-nav-h);
+  display: flex;
+  /* Glass HUD register, not a flat solid bar — matches the translucent
+     dark-panel chrome (.bp-panel/.hud-chip/.scene-btn) in the Open Design
+     reference (open-design/.od/projects/
+     a531c672-4e0b-4c34-bd0f-19a33add20c6/landnam-earth-base-v2.html). */
+  background: rgba(6, 11, 22, 0.82);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border-top: 1px solid rgba(255, 255, 255, 0.14);
 }
 
 .game-screen { position: absolute; inset: 0; overflow: hidden; background: var(--ln-bg); }
@@ -223,6 +405,69 @@ button { cursor: pointer; }
   pointer-events: none;
 }
 .sync-status span { width: 5px; height: 5px; border-radius: var(--ln-r-pill); background: currentColor; }
+
+/* When .bottom-tab-bar is present it permanently occupies the bottom
+   var(--ln-nav-h), unlike the old floating radial nav — lift these corner
+   indicators above it so they don't sit on top of the tab labels. Scoped to
+   the same breakpoint the mobile bar uses; desktop status indicators keep
+   their normal position above the full-width command rail. */
+@media (max-width: 1023px) {
+  .portrait-canvas:has(.bottom-tab-bar) .backend-status,
+  .portrait-canvas:has(.bottom-tab-bar) .sync-status {
+    bottom: calc(var(--ln-nav-h) + var(--ln-s-2));
+  }
+}
+
+.ln-sheet {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  justify-content: center;
+  isolation: isolate;
+}
+
+.ln-sheet--bottom { align-items: flex-end; }
+.ln-sheet--centered { align-items: center; padding: var(--ln-s-5); }
+
+.ln-sheet__scrim {
+  position: absolute;
+  inset: 0;
+  background: var(--ln-overlay);
+}
+
+.ln-sheet__panel {
+  position: relative;
+  background: linear-gradient(180deg, #0d1c30, #060d18);
+  border: 1px solid var(--ln-hairline);
+  box-shadow: var(--ln-shadow-modal);
+}
+
+.ln-sheet__panel--bottom {
+  width: 100%;
+  border-bottom: 0;
+  border-radius: 20px 20px 0 0;
+}
+
+.ln-sheet__panel--centered {
+  width: min(360px, 100%);
+  border-radius: var(--ln-r-xl);
+}
+
+.ln-sheet__panel--sheet-in { animation: sheet-up var(--ln-d-slow) var(--ln-ease-out); }
+.ln-sheet__panel--popup-in { animation: unlock-in var(--ln-d-slow) var(--ln-ease-out); }
+
+.ln-sheet__handle-wrap {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 14px;
+}
+
+.ln-sheet__handle {
+  width: 40px;
+  height: 4px;
+  border-radius: 2px;
+  background: rgba(255,255,255,0.22);
+}
 
 .auth-gate {
   position: absolute;
@@ -278,18 +523,24 @@ button { cursor: pointer; }
   .auth-gate__handle {
     display: none;
   }
+
+  .auth-gate .ln-sheet__handle-wrap {
+    display: none;
+  }
 }
 
-.screen-scroll { position: absolute; inset: 0; overflow-y: auto; padding: 76px var(--ln-s-3) 118px; }
+.screen-scroll { position: absolute; inset: 0; overflow-y: auto; padding: 76px var(--ln-s-3) var(--ln-s-5); }
 .screen-scroll--coach { padding-top: var(--tutorial-content-top); }
 .screen-scroll--coach-manual { padding-top: var(--tutorial-manual-content-top); }
-/* 118px only fits the base 3-button verdict row. TessDiscoveryScreen/
-   transit-demo add a "CLEAR MARKS" ghost button below it once a region is
-   marked, which grows .sticky-actions by ~50px past that reservation and
-   overlaps the readout cards above it (Liam, 2026-07-03: overlap screenshot
-   showing EQ. TEMP behind CONFIRM TRANSIT). Apply this whenever that extra
-   row is visible. */
-.screen-scroll--tall-actions { padding-bottom: 172px; }
+/* .screen-scroll lives inside .game-screen-area, which already stops above
+   .bottom-tab-bar — this padding-bottom only needs to fit the base 3-button
+   verdict row now, not nav clearance too. TessDiscoveryScreen/transit-demo
+   add a "CLEAR MARKS" ghost button below it once a region is marked, which
+   grows .sticky-actions by ~50px past that reservation and overlaps the
+   readout cards above it (Liam, 2026-07-03: overlap screenshot showing
+   EQ. TEMP behind CONFIRM TRANSIT). Apply this whenever that extra row is
+   visible. */
+.screen-scroll--tall-actions { padding-bottom: 78px; }
 .blueprint-screen {
   background:
     repeating-linear-gradient(0deg, transparent 0 19px, rgba(63,169,255,0.06) 19px 20px),
@@ -326,11 +577,25 @@ button { cursor: pointer; }
     linear-gradient(180deg, #07101c 0%, #03060c 100%);
 }
 
+/* TargetPicker's wayfinding footer contains both the step rail and a large
+   primary CTA. Reserve their full footprint so the galaxy frame never sits
+   underneath the sticky actions on wide or narrow screens. */
+.mission-setup-screen--target .mission-setup-content {
+  padding-bottom: 190px;
+}
+
+/* Scene 4 has one real action (Confirm Launch). Its compact content owns the
+   vertical space; the CTA is no longer accompanied by a duplicate Launch rail. */
+.mission-setup-screen--assembly .mission-setup-content {
+  padding-bottom: 104px;
+  overflow-y: auto;
+}
+
 .mission-setup-content {
   position: absolute;
   inset: 0;
   display: grid;
-  grid-template-rows: minmax(280px, 48%) minmax(0, 1fr);
+  grid-template-rows: auto auto;
   gap: 14px;
   width: min(100%, 1120px);
   margin: 0 auto;
@@ -345,6 +610,12 @@ button { cursor: pointer; }
   border: 1px solid rgba(135,207,250,0.22);
   border-radius: 14px;
   background: linear-gradient(180deg, rgba(9,18,31,0.78), rgba(5,10,18,0.88));
+  /* Glass HUD (Open Design "Full Panel Re-skin", 2026-07-25): dark-tinted
+     translucency + blur, layered on top of this class's pre-existing
+     gradient rather than replacing it, since it's already structurally a
+     translucent panel. */
+  backdrop-filter: var(--ln-glass-blur);
+  -webkit-backdrop-filter: var(--ln-glass-blur);
   /* Forces its own compositing layer on mount. Without this, content painted
      inside this nested position:absolute + overflow:hidden frame (e.g. the
      rocket stat values / rocket image on Select Rocket and Confirm Rocket)
@@ -359,6 +630,8 @@ button { cursor: pointer; }
   border: 1px solid rgba(245,166,35,0.32);
   border-radius: 14px;
   background: linear-gradient(180deg, rgba(18,34,54,0.78) 0%, rgba(10,18,29,0.86) 100%);
+  backdrop-filter: var(--ln-glass-blur);
+  -webkit-backdrop-filter: var(--ln-glass-blur);
   transform: translateZ(0);
 }
 
@@ -366,6 +639,72 @@ button { cursor: pointer; }
   height: 100%;
   overflow-y: auto;
   padding: 18px;
+}
+
+/* Confirm Rocket and Select Rocket each have one visual frame and one
+   summary card. Keep them beside each other on roomy screens so the player
+   can complete the setup without a scrollable page. */
+@media (min-width: 900px) {
+  .mission-setup-screen--assembly .mission-setup-content,
+  .mission-setup-screen--rocket .mission-setup-content {
+    grid-template-columns: minmax(0, 1.22fr) minmax(300px, 0.78fr);
+    grid-template-rows: auto;
+    align-items: start;
+  }
+
+  /* TargetPicker owns its desktop two-column layout via .mission-board-layout
+     (map + detail). The shell has only one child here; splitting the shell
+     again left an empty second grid column and stranded the picker on the
+     left half of wide screens. */
+  .mission-setup-screen--target .mission-setup-content {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr);
+    align-items: stretch;
+  }
+}
+
+.mission-setup-screen--assembly .assembly-frame {
+  display: flex;
+  min-height: 0;
+  align-self: start;
+  height: fit-content;
+}
+
+.mission-setup-screen--assembly .assembly-card .mission-setup-card-scroll {
+  padding: 12px;
+}
+
+/* Assembly uses the same full-height two-column shell as the other mission
+   steps. Keep both shared containers in the shell's grid row so their borders
+   and the fixed step footer line up consistently. */
+.mission-setup-screen--assembly .assembly-card {
+  align-self: start;
+  height: fit-content;
+}
+
+.mission-setup-screen--assembly .assembly-card .mission-setup-card-scroll {
+  height: auto;
+}
+
+@media (max-width: 899px) {
+  .mission-setup-screen--assembly .mission-setup-content,
+  .mission-setup-screen--rocket .mission-setup-content {
+    grid-template-rows: auto auto;
+    gap: 10px;
+  }
+
+  .mission-setup-screen--target .mission-setup-content {
+    grid-template-rows: minmax(220px, 54%) minmax(0, 1fr) minmax(0, 1fr);
+    gap: 8px;
+  }
+
+  .mission-setup-screen--target .mission-setup-content > :first-child {
+    min-height: 0;
+  }
+
+  .mission-setup-screen--assembly .assembly-card .mission-setup-card-scroll {
+    padding: 10px;
+  }
 }
 
 .mission-setup-actions {
@@ -401,7 +740,10 @@ button { cursor: pointer; }
 .progress-track span { display: block; height: 100%; background: linear-gradient(90deg, var(--ln-amber), var(--ln-cyan)); box-shadow: var(--ln-glow-cyan); transition: width 100ms linear; }
 
 .mining-screen { position: absolute; inset: 0; overflow: hidden; background: var(--ln-void); display: flex; flex-direction: column; }
-.mining-viewport { position: relative; flex: 1; overflow: hidden; min-height: 0; }
+.mining-viewport {
+  position: relative; flex: 1; overflow: hidden; min-height: 0;
+  background: radial-gradient(ellipse at 70% 10%, #12203d, transparent 50%), linear-gradient(180deg, #090e1a 0%, var(--ln-void) 60%, #000000 100%);
+}
 .mining-canvas { position: absolute; inset: 0; z-index: 1; }
 .game-canvas-loading {
   position: absolute; inset: 0; display: grid; place-items: center;
@@ -420,6 +762,21 @@ button { cursor: pointer; }
 .laser-core { position: absolute; width: 6px; height: 6px; top: -3px; left: -3px; border-radius: 50%; background: var(--ln-cyan-bright); box-shadow: 0 0 8px var(--ln-cyan), 0 0 20px rgba(63,169,255,.4); }
 .laser-flash { position: absolute; left: 50px; width: 20px; height: 30px; background: radial-gradient(ellipse, rgba(108,194,255,.6), transparent); pointer-events: none; animation: flash-fade .15s ease-out forwards; z-index: 9; }
 @keyframes flash-fade { from { opacity: 1; transform: scaleX(1); } to { opacity: 0; transform: scaleX(3); } }
+/* Visible only to assistive tech. For readouts assembled from an icon plus
+   fragmentary text (e.g. an ore glyph, "PLATINUM", "2/5") where the visual
+   grouping carries meaning the DOM order alone doesn't. */
+.ln-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
 .mining-controls {
   z-index: 10;
   padding: var(--ln-s-2) var(--ln-s-3) var(--ln-s-5);
@@ -435,6 +792,10 @@ button { cursor: pointer; }
   min-width: 0;
   gap: var(--ln-s-2);
   background: linear-gradient(0deg, rgba(3,6,12,0.98) 0%, rgba(3,6,12,0.88) 100%);
+  /* Glass HUD (Open Design "Full Panel Re-skin", 2026-07-25): blur layered on
+     top of the existing opaque gradient, matching .mission-setup-frame/-card. */
+  backdrop-filter: var(--ln-glass-blur);
+  -webkit-backdrop-filter: var(--ln-glass-blur);
 }
 .mining-stats-row { display: flex; gap: var(--ln-s-3); align-items: center; flex-wrap: wrap; }
 .mineral-stat { display: flex; align-items: center; gap: 4px; color: var(--ln-text-dim); font: 700 11px var(--ln-font-mono); }
@@ -486,54 +847,53 @@ button { cursor: pointer; }
   .screen-scroll--coach-manual { padding-top: var(--tutorial-manual-content-top); }
 }
 
-/* Desktop: fill the full viewport, offset by sidebar width (72px) */
+/* Desktop: use the full viewport; navigation remains in the bottom command rail. */
+/* Desktop: the app is a centered card on the lit backdrop — the `.stage`/`.app`
+   pair from the Open Design shells (width: min(1320px, 100%); 2px cyan-tinted
+   border; heavy drop shadow).
+
+   This block previously did the opposite — width:100vw, height:100dvh,
+   border-radius:0, border:none, box-shadow:none — which stripped the card back
+   to a full-bleed slab on every desktop viewport and was the single biggest
+   reason the shipped UI never matched the mockups. Do not reintroduce it. */
 @media (min-width: 1024px) {
-  .game-stage {
-    padding: 0 0 0 72px;
-  }
   .portrait-canvas {
-    width: calc(100vw - 72px);
-    height: 100dvh;
+    width: 100%;
+    max-width: 1320px;
+    height: min(900px, calc(100dvh - var(--ln-s-6)));
     max-height: none;
-    border-radius: 0;
-    border: none;
-    box-shadow: none;
+    border-radius: var(--ln-r-xl);
+    border: 2px solid rgba(108, 212, 255, 0.08);
+    box-shadow: 0 30px 80px rgba(0, 0, 0, 0.4);
   }
   .sticky-actions { padding-bottom: var(--ln-s-5); }
 }
 
-/* Desktop sidebar — hidden on mobile, fixed panel at lg+ */
+/* Desktop has NO persistent global navigation — no side rail, no bottom bar.
+   Neither appears in any Open Design shell, and both ate a permanent strip of
+   the playfield. Navigation on desktop is diegetic: structures on the Earth
+   Base are the menu, the topbar carries Back, and the mission flow is driven
+   by the step footer and progression cards. `.hub-desktop-nav` adds the few
+   destinations that have no building (Market, Atlas, Skills) to the base's own
+   action rail at desktop widths.
+
+   The bottom tab bar survives only under 1024px, where there is no room for
+   the base action rail to carry navigation as well. */
 .desktop-sidebar {
   display: none;
 }
 
-/* Radial nav — hidden on desktop (sidebar replaces it) */
-.mobile-radial-nav {
-  display: contents;
+.hub-desktop-nav {
+  display: none;
 }
 
 @media (min-width: 1024px) {
-  .mobile-radial-nav {
+  .bottom-tab-bar {
     display: none;
   }
-}
-
-@media (min-width: 1024px) {
-  .desktop-sidebar {
+  .hub-desktop-nav {
     display: flex;
-    flex-direction: column;
-    position: fixed;
-    left: 0;
-    top: 0;
-    bottom: 0;
-    width: 72px;
-    z-index: 50;
-    background: rgba(6, 9, 15, 0.88);
-    border-right: 1px solid var(--ln-hairline);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
   }
-
 }
 
 /* Mobile landscape: fill landscape viewport with adjusted chrome */
@@ -549,7 +909,7 @@ button { cursor: pointer; }
   }
   .screen-scroll {
     padding-top: 52px;
-    padding-bottom: 88px;
+    padding-bottom: var(--ln-s-4);
   }
   .screen-scroll--coach {
     padding-top: var(--tutorial-content-top);
@@ -568,9 +928,29 @@ button { cursor: pointer; }
   0%,100% { border-color: rgba(63,169,255,0.4); box-shadow: 0 0 8px rgba(63,169,255,0.15); }
   50% { border-color: rgba(63,169,255,0.9); box-shadow: 0 0 20px rgba(63,169,255,0.45); }
 }
-@keyframes coach-glow {
-  0%,100% { box-shadow: 0 0 8px 2px rgba(245,166,35,0.2); border-color: rgba(245,166,35,0.7); }
-  50% { box-shadow: 0 0 20px 5px rgba(245,166,35,0.45); border-color: rgba(245,166,35,1); }
+/* The coach glow used to animate box-shadow + border-color directly, which
+   repaints the animated element (and re-composites the backdrop-filter panels
+   it sits over — .mission-setup-frame/.mission-setup-card on Select Rocket)
+   on every single frame, for as long as a coach step is on screen. That is
+   what made the setup screens feel laggy while the tutorial was active.
+   The glow is now a separate overlay ring whose *opacity* animates: opacity
+   is compositor-driven, so the pulse costs no repaints at all. */
+@keyframes coach-glow-fade {
+  0%,100% { opacity: 0.35; }
+  50% { opacity: 1; }
+}
+
+/* Amber pulse ring. Sits over its positioned parent (or fills a highlight
+   overlay); never paints text, so animating the whole layer's opacity is safe. */
+.coach-glow-ring {
+  position: absolute;
+  inset: 0;
+  border: 2px solid rgba(245,166,35,1);
+  border-radius: inherit;
+  box-shadow: 0 0 20px 5px rgba(245,166,35,0.45);
+  pointer-events: none;
+  will-change: opacity;
+  animation: coach-glow-fade 1.6s ease-in-out infinite;
 }
 @keyframes coach-point { 0%,100% { transform: translateY(0); } 50% { transform: translateY(6px); } }
 @keyframes coach-arrow-bounce {
@@ -592,17 +972,51 @@ button { cursor: pointer; }
   50%      { box-shadow: 0 0 0 3px rgba(245,166,35,1),    0 0 28px rgba(245,166,35,0.45); }
 }
 html[data-coach-target="sidebar-missions"] [data-coach-id="sidebar-missions"],
-html[data-coach-target="radial-toggle"]   [data-coach-id="radial-toggle"],
-html[data-coach-target="radial-missions"] [data-coach-id="radial-missions"] {
+html[data-coach-target="bottom-tab-missions"] [data-coach-id="bottom-tab-missions"] {
   animation: coach-target-pulse 1.4s ease-in-out infinite;
 }
 html[data-coach-target="build-structure-strip"] [data-coach-id="build-structure-strip"] {
   animation: coach-target-pulse 1.4s ease-in-out infinite;
   border-radius: 8px;
 }
-@keyframes radial-pulse { 0% { transform: scale(1); opacity: 0.7; } 100% { transform: scale(1.5); opacity: 0; } }
 @keyframes pad-pulse { 0%,100% { transform: scale(1); opacity: 0.85; } 50% { transform: scale(1.05); opacity: 1; } }
-@keyframes cloud-drift { from { transform: translateX(0); } to { transform: translateX(460px); } }
+
+/* ── Earth Base scene (Open Design "landnam-earth-base-v2") ──────────────
+   Ported 2026-07-26 from open-design/.od/projects/a531c672-.../
+   landnam-earth-base-v2.html. Replaces the old procedural sine-ridge +
+   amber-horizon world with the flat-shaded deep-blue scene: layered ridge
+   parallax, octagonal plateau, dirt-mound structure collars, drifting
+   motes, and white-outline black chrome. No amber anywhere on this screen —
+   accents are cyan (--ln-cyan) and mint (--hub-mint) only. */
+:root {
+  /* Scene-local accents. Mint is the mockup's --ln-ok (#2fbf6a); kept as a
+     hub-scoped token rather than overriding the global --ln-ok, which other
+     screens already tune against. */
+  --hub-mint:       #2fbf6a;
+  --hub-cyan:       #6cd4ff;
+  --hub-outline:    rgba(255, 255, 255, 0.55);
+  --hub-panel:      #080d18;
+  --hub-panel-deep: #0a0f1a;
+  /* Ground contact line — 22% from the bottom. MUST stay in agreement with
+     hubScene.ts (groundY = containerH * 0.78) and the DOM plot positions in
+     HubScreen/BuildPlaceScreen, which all derive from the same 22%. */
+  --hub-ground: 22%;
+}
+@keyframes hub-twinkle   { from { opacity: 0.55; } to { opacity: 1; } }
+@keyframes hub-drift-slow { from { transform: translateX(0); } to { transform: translateX(-2.5%); } }
+@keyframes hub-ore-pulse { 0%,100% { opacity: 0.5; } 50% { opacity: 0.85; } }
+@keyframes hub-pad-pulse { 0%,100% { opacity: 0.7; } 50% { opacity: 1; } }
+@keyframes hub-light-blink { 0%,100% { opacity: 0.5; } 50% { opacity: 1; } }
+@keyframes hub-notify-pulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.12); } }
+@keyframes hub-float-up {
+  0%   { transform: translateY(0) translateX(0); opacity: 0; }
+  8%   { opacity: 0.8; }
+  90%  { opacity: 0.45; }
+  100% { transform: translateY(-58%) translateX(var(--drift, 20px)); opacity: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hub-stars, .hub-ridge, .hub-mote, .hub-ore, .hub-notify, .hub-light-dot { animation: none !important; }
+}
 @keyframes unlock-in { from { transform: scale(0.85); opacity: 0; } to { transform: scale(1); opacity: 1; } }
 @keyframes unlock-spin { to { transform: translate(-50%,-50%) rotate(360deg); } }
 @keyframes gate-up { from { transform: translateY(40px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }

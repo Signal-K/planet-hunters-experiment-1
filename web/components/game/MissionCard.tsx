@@ -1,266 +1,161 @@
 'use client'
 
-import React, { useState } from 'react'
-import type { Mission, Contractor, MineralMeta } from '@/lib/data'
+import React from 'react'
+import type { Mission, Client, MineralMeta } from '@/lib/data'
+import { isOwnProgramMission, missionDifficultyLabel, missionPayoutTier } from '@/lib/data'
 import TutorialHighlight from '@/components/game/TutorialHighlight'
-import ContractorMark from '@/components/ui/ContractorMark'
+import styles from '@/components/game/screens/MissionBoard.module.css'
+import { formatCurrency, FRANC } from '@/lib/format'
 
 type CardState = 'available' | 'locked' | 'cooldown' | 'completed'
 
 interface MissionCardProps {
   mission: Mission
-  contractor?: Contractor | null
+  client?: Client | null
   mineralMeta: Record<string, MineralMeta>
   targetCount: number
   displayPayout: number
-  affinityMultiplier: number
-  affinityReward: number
   unlocked: boolean
   isStoryMission: boolean
   cardState: CardState
   lockedDetail?: string
   cooldownLabel?: string
   highlighted?: boolean
-  // Set for two-leg "mine then deliver" missions, e.g. "Vesta → Ceres".
+  previewed?: boolean
   routeLabel?: string
+  // Commits immediately (navigates to Target) — matches the established
+  // click-to-commit interaction asserted directly in
+  // cypress/e2e/journeys/actual-play.cy.ts:63 and clean-start-loop.cy.ts:99.
   onPick: () => void
+  // Hover/focus preview for the Contract Detail side panel — does not commit.
+  onPreview?: () => void
 }
 
-const STATE_TONE: Record<Exclude<CardState, 'available'>, { label: string; color: string }> = {
-  locked: { label: 'LOCKED', color: 'var(--ln-text-muted)' },
-  cooldown: { label: 'COOLDOWN', color: 'var(--ln-amber)' },
-  completed: { label: 'COMPLETED TODAY', color: 'var(--ln-ok)' },
+export function missionCardTags({
+  mission,
+  client,
+  isStoryMission,
+  cardState,
+  lockedDetail,
+  cooldownLabel,
+  routeLabel,
+}: Pick<MissionCardProps, 'mission' | 'client' | 'isStoryMission' | 'cardState' | 'lockedDetail' | 'cooldownLabel' | 'routeLabel'>): { tone: 'burn' | 'job' | 'twostop'; label: string }[] {
+  const difficultyTier = mission.difficulty.startsWith('L') ? parseInt(mission.difficulty.slice(1), 10) : NaN
+  const fuelTimerLabel = routeLabel ? 'Two-leg burn' : mission.deliveryTargetId ? 'Delivery burn' : difficultyTier >= 3 ? 'Long burn' : 'Standard burn'
+  if (cardState === 'cooldown' && cooldownLabel) return [{ tone: 'burn', label: `Cooldown · ${cooldownLabel}` }]
+  if (cardState === 'locked') return [{ tone: 'job', label: lockedDetail ? `Locked · ${lockedDetail}` : 'Locked' }]
+  if (cardState === 'completed') return [{ tone: 'job', label: 'Completed today' }]
+  const tags: { tone: 'burn' | 'job' | 'twostop'; label: string }[] = [{ tone: 'burn', label: fuelTimerLabel }]
+  if (routeLabel) tags.push({ tone: 'twostop', label: 'Two-stop job' })
+  // Own-program runs are the player's own operations — they get an ownership
+  // tag, never a client-flavoured one, even when they are filed under the
+  // Mission Control pseudo-client (see isOwnProgramMission).
+  if (isOwnProgramMission(mission)) tags.push({ tone: 'job', label: 'Your operation' })
+  else if (isStoryMission) tags.push({ tone: 'job', label: 'Story mission' })
+  else if (client) tags.push({ tone: 'job', label: client.uiRole === 'bulk' ? 'Bulk freight' : 'Starter operations' })
+  else tags.push({ tone: 'job', label: 'Self-directed' })
+  return tags
 }
 
-const ROLE_LABELS: Record<Contractor['uiRole'], string> = {
-  starter: 'Starter operations',
-  bulk: 'Bulk freight',
-  prospect: 'Prospecting',
-  command: 'Strategic command',
-  science: 'Research',
-}
+const TAG_CLASS = { burn: styles.tagBurn, job: styles.tagJob, twostop: styles.tagTwostop }
 
 export default function MissionCard({
   mission,
-  contractor,
+  client: clientProp,
   mineralMeta,
   targetCount,
   displayPayout,
-  affinityMultiplier,
-  affinityReward,
   unlocked,
   isStoryMission,
   cardState,
   lockedDetail,
   cooldownLabel,
   highlighted,
+  previewed,
   routeLabel,
   onPick,
+  onPreview,
 }: MissionCardProps) {
-  const [expanded, setExpanded] = useState(false)
-  const accent = contractor?.color ?? 'var(--ln-amber)'
-  const difficultyTier = mission.difficulty.startsWith('L') ? parseInt(mission.difficulty.slice(1), 10) : NaN
-  const difficultyColor = difficultyTier <= 1 ? 'var(--ln-ok)' : difficultyTier === 2 ? 'var(--ln-amber)' : 'var(--ln-crimson)'
+  // An own-program run has no client, whatever the catalog filed it under.
+  const ownOperation = isOwnProgramMission(mission)
+  const client = ownOperation ? null : clientProp
+  const accent = client?.color ?? '#6cd4ff'
   const isAvailable = cardState === 'available'
-  const stateTone = !isAvailable ? STATE_TONE[cardState] : null
-  const statusCta = cardState === 'cooldown' ? (cooldownLabel ?? 'On cooldown')
+  const tags = missionCardTags({ mission, client, isStoryMission, cardState, lockedDetail, cooldownLabel, routeLabel })
+  const statusCta = cardState === 'cooldown' ? 'Cooldown'
     : cardState === 'completed' ? 'Claimed'
     : cardState === 'locked' ? (lockedDetail ?? 'Locked')
     : ''
-  const fuelTimerLabel = routeLabel ? 'Two-leg burn' : mission.deliveryTargetId ? 'Delivery burn' : difficultyTier >= 3 ? 'Long burn' : 'Standard burn'
+  const cardClass = [
+    styles.card,
+    previewed && styles.cardSelected,
+    cardState === 'locked' && styles.cardLocked,
+    cardState === 'cooldown' && styles.cardCooldown,
+    cardState === 'completed' && styles.cardDone,
+  ].filter(Boolean).join(' ')
 
   return (
-    <div
-      role="button"
-      tabIndex={unlocked ? 0 : -1}
-      aria-disabled={!unlocked}
+    <button
+      type="button"
+      disabled={!unlocked}
       data-mission-id={mission.id}
       data-testid={`mission-card-${mission.id}`}
       onClick={() => unlocked && onPick()}
-      onKeyDown={e => {
-        if (!unlocked) return
-        if (e.key === 'Enter' || e.key === ' ') {
-          e.preventDefault()
-          onPick()
-        }
-      }}
-      className="mission-card-btn"
-      style={{
-        background: 'transparent', border: 'none', padding: 0, textAlign: 'left', width: '100%',
-        cursor: unlocked ? 'pointer' : 'not-allowed',
-        opacity: cardState === 'completed' ? 0.45 : unlocked ? 1 : 0.5,
-        outline: '2px solid transparent', outlineOffset: 2, position: 'relative',
-      }}
+      onMouseEnter={onPreview}
+      onFocus={onPreview}
+      className={cardClass}
+      style={{ position: 'relative' }}
     >
       {highlighted && <TutorialHighlight />}
-      <div style={{
-        background: 'var(--ln-void)', border: `1px solid ${accent}45`, display: 'flex',
-        boxShadow: '0 12px 32px -16px rgba(0,0,0,0.55)', fontFamily: 'var(--ln-font-display)',
-      }}>
-        {/* LEFT RAIL: contractor identity + status/difficulty */}
-        <div style={{
-          width: 76, flex: 'none', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8,
-          padding: '14px 8px', borderRight: `1px solid ${accent}30`, background: 'var(--ln-surface)',
-        }}>
-          <ContractorMark
-            initial={contractor?.initial ?? 'OP'}
-            color={accent}
-            uiRole={contractor?.uiRole ?? 'starter'}
-          />
-          <div style={{ textAlign: 'center', font: '700 10px var(--ln-font-display)', color: 'var(--ln-text)', textTransform: 'uppercase', letterSpacing: '0.02em', lineHeight: 1.15 }}>
-            {contractor?.name ?? 'Free Ops'}
-          </div>
-          <div style={{ font: '600 8px var(--ln-font-mono)', color: 'var(--ln-text-muted)', letterSpacing: '0.09em', textTransform: 'uppercase' }}>
-            {mission.tag}
-          </div>
-
-          <div style={{ marginTop: 'auto', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
-            <div style={{ font: '700 8px var(--ln-font-mono)', color: difficultyColor, letterSpacing: '0.08em', border: `1px solid ${difficultyColor}`, padding: '3px 6px', borderRadius: 2 }}>
-              {mission.difficulty}
-            </div>
-            {isAvailable && (
-              <div style={{ width: 6, height: 6, borderRadius: 999, background: 'var(--ln-ok)', boxShadow: '0 0 6px var(--ln-ok)' }} className="mission-card-pulse" />
-            )}
-          </div>
+      <div className={styles.mark} style={{ background: accent }}>{client?.initial ?? 'OP'}</div>
+      <div className={styles.cardMain}>
+        <div className={styles.cardTitle}>{mission.title}</div>
+        <div className={styles.cardClient}>{client?.name ?? (ownOperation ? 'Your program' : 'Free Ops')}</div>
+        <div className={styles.cardWants}>
+          {ownOperation
+            ? 'Your own operation · no client, no order to fill'
+            : isStoryMission
+            ? 'Story mission · not a client request'
+            : client
+              ? <>Wants <b>{client.mineralPreferences.map(id => mineralMeta[id]?.name ?? id).join(' / ')}</b> · +{Math.round(client.payoutPremium * 100)}% pay</>
+              : 'Choose target · keep the haul · market-led mining'}
         </div>
-
-        {/* MAIN COLUMN */}
-        <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
-          {stateTone && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 14px 0' }}>
-              <span style={{ font: '700 9px var(--ln-font-mono)', letterSpacing: '0.1em', color: stateTone.color, textTransform: 'uppercase' }}>
-                {cardState === 'cooldown' && cooldownLabel ? `COOLDOWN · ${cooldownLabel}` : stateTone.label}
-              </span>
-            </div>
-          )}
-
-          <div style={{ padding: '10px 14px 0', font: '600 9px var(--ln-font-mono)', color: 'var(--ln-text-muted)', letterSpacing: '0.07em', textTransform: 'uppercase', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-            {isStoryMission
-              ? 'Story mission · Not a client request'
-              : contractor
-                ? `Wants ${contractor.mineralPreferences.join(' / ')} · +${Math.round(contractor.payoutPremium * 100)}%`
-                : 'Choose target · keep the haul · market-led mining'}
-          </div>
-
-          <div style={{ padding: '4px 14px 0', font: '700 12px var(--ln-font-display)', color: 'var(--ln-text)', textTransform: 'uppercase', letterSpacing: '0.01em' }}>
-            {mission.title}
-          </div>
-
-          {routeLabel && (
-            <div style={{ padding: '2px 14px 0', font: '700 9px var(--ln-font-mono)', color: 'var(--ln-cyan)', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
-              {routeLabel}
-            </div>
-          )}
-
-          <div style={{ display: 'flex', gap: 6, padding: '8px 14px 0', flexWrap: 'wrap' }}>
-            <span style={{ font: '700 8px var(--ln-font-mono)', color: 'var(--ln-amber)', letterSpacing: '0.08em', textTransform: 'uppercase', border: '1px solid rgba(245,166,35,0.35)', background: 'rgba(245,166,35,0.08)', padding: '3px 6px', borderRadius: 3 }}>
-              Fuel timer · {fuelTimerLabel}
-            </span>
-            {contractor && (
-              <span style={{ font: '700 8px var(--ln-font-mono)', color: accent, letterSpacing: '0.08em', textTransform: 'uppercase', border: `1px solid ${accent}55`, background: `${accent}12`, padding: '3px 6px', borderRadius: 3 }}>
-                {ROLE_LABELS[contractor.uiRole]}
-              </span>
-            )}
-          </div>
-
-          <div style={{ margin: '10px 14px 8px', padding: 12, background: 'var(--ln-surface)', borderLeft: '2px solid var(--ln-cyan)' }}>
-            <div style={{ font: '400 15px/1.5 var(--ln-font-display)', color: 'var(--ln-text)' }}>{mission.brief}</div>
-          </div>
-
-          <div
-            role="button"
-            tabIndex={0}
-            onClick={e => { e.stopPropagation(); setExpanded(v => !v) }}
-            onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.stopPropagation(); setExpanded(v => !v) } }}
-            style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '2px 14px 10px', cursor: 'pointer', font: '700 9px var(--ln-font-mono)', color: 'var(--ln-cyan)', letterSpacing: '0.09em', textTransform: 'uppercase' }}
-          >
-            <span>{expanded ? 'HIDE CLIENT INFO' : 'CLIENT INFO'}</span>
-            <span style={{ transform: expanded ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 120ms ease-out', display: 'inline-block' }}>▾</span>
-          </div>
-
-          {expanded && (
-            <div style={{ margin: '0 14px 12px', padding: 12, border: `1px solid ${accent}30`, background: 'var(--ln-void)', display: 'flex', flexDirection: 'column', gap: 10 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                <ContractorMark
-                  initial={contractor?.initial ?? 'OP'}
-                  color={accent}
-                  uiRole={contractor?.uiRole ?? 'starter'}
-                  size={44}
-                />
-                <div style={{ minWidth: 0 }}>
-                  <div style={{ font: '700 9px var(--ln-font-mono)', color: accent, letterSpacing: '0.12em', textTransform: 'uppercase' }}>
-                    {contractor ? ROLE_LABELS[contractor.uiRole] : 'Independent operator'}
-                  </div>
-                  <div style={{ font: '700 13px var(--ln-font-display)', color: 'var(--ln-text)', marginTop: 2 }}>
-                    {contractor?.name ?? 'Free Ops'}
-                  </div>
-                </div>
-              </div>
-              <div style={{ font: '400 11px/1.5 var(--ln-font-display)', color: 'var(--ln-text-dim)' }}>{contractor?.projectType ?? 'Custom mining run · market value only'}</div>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 6 }}>
-                <DossierStat label="Premium" value={contractor ? `+${Math.round(contractor.payoutPremium * 100)}%` : 'Market'} color={accent} />
-                <DossierStat label="Affinity" value={contractor ? `+${Math.round(contractor.affinityBonusPerMission * 1000) / 10}%` : 'None'} color={accent} />
-                <DossierStat label="Timer" value={fuelTimerLabel} color="var(--ln-amber)" />
-              </div>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-                {Object.entries(mission.requires.minerals).map(([k, v]) => {
-                  const meta = mineralMeta[k]
-                  if (!meta) return null
-                  return (
-                    <span key={k} style={{ font: '600 9px var(--ln-font-mono)', color: meta.color, letterSpacing: '0.06em', background: `${meta.color}1a`, border: `1px solid ${meta.color}`, padding: '2px 6px', borderRadius: 2 }}>
-                      {meta.sym} ×{v}
-                    </span>
-                  )
-                })}
-              </div>
-              {contractor && (
-                <div style={{ font: '600 9px var(--ln-font-mono)', color: 'var(--ln-text-muted)', letterSpacing: '0.06em', textTransform: 'uppercase' }}>
-                  +{Math.round(contractor.affinityBonusPerMission * 100)}% affinity per completed job
-                </div>
-              )}
-            </div>
-          )}
-
-          <div style={{ marginTop: 'auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, padding: '10px 14px', borderTop: `1px solid ${accent}30`, background: 'var(--ln-surface-2)' }}>
-            <div>
-              <div style={{ font: '700 18px var(--ln-font-mono)', color: isAvailable ? 'var(--ln-amber)' : 'var(--ln-text-muted)' }}>
-                ▲ {displayPayout.toLocaleString()}
-                {affinityMultiplier > 0 && (
-                  <span style={{ fontSize: 10, letterSpacing: '0.12em', color: 'var(--ln-ok)', marginLeft: 6 }}>+{Math.round(affinityMultiplier * 100)}%</span>
-                )}
-              </div>
-              {!isStoryMission && (
-                <div style={{ font: '600 9px var(--ln-font-mono)', color: 'var(--ln-cyan)', letterSpacing: '0.1em', textTransform: 'uppercase', marginTop: 2 }}>
-                  +{affinityReward} Affinity
-                </div>
-              )}
-            </div>
-            {isAvailable ? (
-              <button
-                type="button"
-                data-testid={`mission-card-${mission.id}-cta`}
-                onClick={e => { e.stopPropagation(); unlocked && onPick() }}
-                style={{ border: 'none', cursor: 'pointer', font: '700 11px var(--ln-font-display)', letterSpacing: '0.14em', color: 'var(--ln-text-on-cyan)', background: 'var(--ln-cyan)', padding: '6px 12px', textTransform: 'uppercase' }}
-              >
-                {targetCount} target{targetCount !== 1 ? 's' : ''} ›
-              </button>
-            ) : (
-              <span style={{ font: '700 10px var(--ln-font-mono)', letterSpacing: '0.08em', color: stateTone?.color, border: `1px solid ${stateTone?.color}`, padding: '5px 10px', textTransform: 'uppercase' }}>
-                {statusCta}
-              </span>
-            )}
-          </div>
+        {routeLabel && <div className={styles.cardRoute}>{routeLabel}</div>}
+        <div className={styles.cardTags}>
+          {/* Difficulty was already computed per mission but never shown, so the
+              progression curve was invisible on the board (STS-543). */}
+          <span className={`${styles.tag} ${styles.tagLevel}`} data-testid={`mission-card-${mission.id}-difficulty`}>
+            {mission.difficulty} · {missionDifficultyLabel(mission.difficulty)}
+          </span>
+          {tags.map((t, i) => <span key={i} className={`${styles.tag} ${TAG_CLASS[t.tone]}`}>{t.label}</span>)}
         </div>
       </div>
-    </div>
-  )
-}
-
-function DossierStat({ label, value, color }: { label: string; value: string; color: string }) {
-  return (
-    <div style={{ minWidth: 0, padding: '6px 5px', borderRadius: 4, background: 'rgba(8,16,28,0.72)', border: `1px solid ${color}44` }}>
-      <div style={{ font: '700 7px var(--ln-font-mono)', color: 'var(--ln-text-muted)', letterSpacing: '0.1em', textTransform: 'uppercase' }}>{label}</div>
-      <div style={{ font: '800 10px var(--ln-font-display)', color, marginTop: 2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', textTransform: 'uppercase' }}>{value}</div>
-    </div>
+      <div className={styles.cardSide}>
+        <div className={styles.cardPay}>
+          <span className={styles.cardPayIcon}>{FRANC}</span>
+          {cardState === 'completed' ? '—' : formatCurrency(displayPayout, { compact: true }).slice(FRANC.length)}
+        </div>
+        {cardState !== 'completed' && (
+          <div className={styles.cardPayTier} data-testid={`mission-card-${mission.id}-payout-tier`}>
+            {missionPayoutTier(mission)} payout
+          </div>
+        )}
+        {isAvailable ? (
+          <span
+            role="button"
+            tabIndex={-1}
+            data-testid={`mission-card-${mission.id}-cta`}
+            onClick={e => { e.stopPropagation(); unlocked && onPick() }}
+            className={styles.cardBtn}
+          >
+            {targetCount} target{targetCount !== 1 ? 's' : ''} ›
+          </span>
+        ) : (
+          <span data-testid={`mission-card-${mission.id}-cta`} className={`${styles.cardBtn} ${styles.cardBtnDisabled}`}>
+            {statusCta}
+          </span>
+        )}
+      </div>
+    </button>
   )
 }

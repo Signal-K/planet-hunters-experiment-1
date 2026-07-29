@@ -1,0 +1,120 @@
+import { describe, it, expect } from 'vitest'
+import { missionTypePrimer, isOwnProgramMission, OWN_PROGRAM_CLIENT_ID } from './mission-primers'
+import { MISSIONS, SELF_DIRECTED_MINING_MISSION_ID } from './missions'
+import type { Mission } from './types'
+
+const base: Mission = {
+  id: 'test', title: 'Test', brief: '', client: 'atlas-aggregate', tag: 'STARTER', difficulty: 'L1',
+  locked: false, sequence: 1, targetId: 'bennu',
+  requires: { minerals: {}, cargo_min: 0, drill_tier: 1, max_orbit: 3 },
+  payout: { francs: 1, affinity: 0 },
+}
+
+describe('missionTypePrimer', () => {
+  it('reads a plain client order as a mine-and-return run', () => {
+    const primer = missionTypePrimer(base)
+    expect(primer.label).toBe('Mining run')
+    expect(primer.steps).toEqual(['Launch', 'Mine', 'Return'])
+    expect(primer.owner).toBe('client')
+  })
+
+  it('reads a delivery leg as a two-stop job', () => {
+    const primer = missionTypePrimer({ ...base, deliveryTargetId: 'vesta' })
+    expect(primer.label).toBe('Two-stop delivery')
+    expect(primer.steps).toEqual(['Mine', 'Deliver', 'Return'])
+  })
+
+  it('reads a construction plan as a build job', () => {
+    const primer = missionTypePrimer({
+      ...base,
+      construction: { structureKind: 'fuel-depot', requiredMaterials: { hydrogen: 8 }, placementMode: 'confirm', buildTimeMs: 1 },
+    })
+    expect(primer.label).toBe('Client build job')
+    expect(primer.steps).toContain('Build')
+  })
+
+  it('separates a station mapping scan from a rover landing', () => {
+    const scan = missionTypePrimer({
+      ...base,
+      survey: { scanRequired: true, scanCount: 3, scanSource: 'station', depositsToMap: 2, revealsMinerals: true, revealsLandmarks: [], unlocksLanding: true },
+    })
+    expect(scan.label).toBe('Mapping scan')
+
+    const rover = missionTypePrimer({
+      ...base,
+      survey: { scanRequired: true, scanCount: 1, scanSource: 'rover', depositsToMap: 1, revealsMinerals: true, revealsLandmarks: [], unlocksLanding: true, onWorldVehicle: 'starter-rover' },
+    })
+    expect(rover.label).toBe('Rover landing')
+  })
+
+  it('prefers the payload type over the delivery leg', () => {
+    const primer = missionTypePrimer({
+      ...base,
+      deliveryTargetId: 'vesta',
+      payload: { type: 'rover', name: 'Scout', cargoCost: 4 },
+    })
+    expect(primer.label).toBe('Rover drop')
+  })
+})
+
+// Own-program copy may say "no client"; what it must never do is attribute the
+// work *to* a client.
+const CLIENT_ATTRIBUTION = /(the|a|their|its) client|client'?s\b/i
+
+describe('own-program missions', () => {
+  // A telescope/satellite the player launches is their own entity. It is filed
+  // under the Mission Control pseudo-client at runtime (lib/runtimeCatalog.ts),
+  // which must never make it read — or pay — as client work.
+  const telescope: Mission = {
+    ...base,
+    id: 'story-transit-telescope-launch',
+    title: 'Launch Transit Telescope',
+    client: OWN_PROGRAM_CLIENT_ID,
+    tag: 'STORY',
+    payload: { type: 'satellite', name: 'Transit Telescope', cargoCost: 0 },
+  }
+
+  it('treats a satellite launch as the player\'s own operation', () => {
+    expect(isOwnProgramMission(telescope)).toBe(true)
+    const primer = missionTypePrimer(telescope)
+    expect(primer.label).toBe('Satellite launch')
+    expect(primer.owner).toBe('self')
+    expect(primer.summary).not.toMatch(CLIENT_ATTRIBUTION)
+  })
+
+  it('treats a clientless Free Ops run as the player\'s own operation', () => {
+    const selfDirected = MISSIONS.find(m => m.id === SELF_DIRECTED_MINING_MISSION_ID)!
+    expect(isOwnProgramMission(selfDirected)).toBe(true)
+    expect(missionTypePrimer(selfDirected).label).toBe('Self-directed run')
+  })
+
+  it('leaves real client contracts alone', () => {
+    expect(isOwnProgramMission(base)).toBe(false)
+  })
+
+  it('never mentions a client in own-program copy', () => {
+    const ownBuild = missionTypePrimer({
+      ...base,
+      client: undefined,
+      construction: { structureKind: 'fuel-depot', requiredMaterials: {}, placementMode: 'confirm', buildTimeMs: 1 },
+    })
+    expect(ownBuild.owner).toBe('self')
+    expect(ownBuild.label).toBe('Own infrastructure build')
+    expect(ownBuild.summary).not.toMatch(CLIENT_ATTRIBUTION)
+  })
+})
+
+describe('primer coverage', () => {
+  // The primer is what replaces reading the long brief, so every mission the
+  // board can actually show must resolve to one — a type with no primer would
+  // leave the board's lower half empty again.
+  it('gives every catalog mission a short, legible primer', () => {
+    for (const mission of MISSIONS) {
+      const primer = missionTypePrimer(mission)
+      expect(primer.summary.length).toBeGreaterThan(0)
+      expect(primer.summary.split(' ').length).toBeLessThanOrEqual(25)
+      expect(primer.steps.length).toBeGreaterThanOrEqual(3)
+      if (primer.owner === 'self') expect(primer.summary).not.toMatch(CLIENT_ATTRIBUTION)
+    }
+  })
+})

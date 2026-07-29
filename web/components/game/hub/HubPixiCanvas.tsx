@@ -8,10 +8,54 @@ import {
   HUB_W,
   HUB_H,
   type HubBuildingDef,
+  type HubTextures,
 } from '@/lib/pixi/hubScene'
+import { AssetManager } from '@/lib/engine/AssetManager'
+
+/**
+ * Blender-rendered structure props, keyed by their manifest name. The scene
+ * falls back to its inline `Graphics` version for any slot left null, so a
+ * failed load degrades to the old look rather than to nothing — which is also
+ * why these are fetched after first paint instead of blocking it.
+ *
+ * Regenerate with `blender --background --factory-startup --python
+ * tools/blender/render_all.py`; see tools/blender/README.md.
+ */
+const HUB_SPRITE_NAMES: Partial<Record<keyof HubTextures, string>> = {
+  pad_base: 'hub_pad_base',
+  pad_tower: 'hub_pad_tower',
+  pad_gantry: 'hub_pad_gantry',
+  depot_tank: 'hub_depot_tank',
+  scan_dish: 'hub_scan_dish',
+  cmd_building: 'hub_cmd_building',
+  sat_station: 'hub_sat_station',
+}
+
+async function loadHubTextures(): Promise<HubTextures> {
+  const textures = nullTextures()
+  const assets = new AssetManager()
+  await assets.loadManifest('/game/assets/manifest.json')
+  await Promise.all(
+    Object.entries(HUB_SPRITE_NAMES).map(async ([slot, name]) => {
+      const { texture, isPlaceholder } = await assets.loadTexture(name)
+      // A placeholder is the magenta square. Better to fall through to the
+      // Graphics version than to draw a magenta building.
+      if (!isPlaceholder) textures[slot as keyof HubTextures] = texture
+    }),
+  )
+  return textures
+}
 
 interface HubPixiCanvasProps {
   buildings: HubBuildingDef[]
+}
+
+/**
+ * Signature of everything the scene actually draws. Used to rebuild when the
+ * building list changes — the PixiJS app itself still initialises only once.
+ */
+function signature(buildings: HubBuildingDef[]): string {
+  return buildings.map(b => `${b.kind}:${b.plotX}:${b.w}:${b.hot ? 1 : 0}:${b.status ?? ''}`).join('|')
 }
 
 export default function HubPixiCanvas({ buildings }: HubPixiCanvasProps) {
@@ -19,6 +63,22 @@ export default function HubPixiCanvas({ buildings }: HubPixiCanvasProps) {
   // Keep a stable ref to buildings so the effect can see latest values
   const buildingsRef = useRef(buildings)
   buildingsRef.current = buildings
+  // Exposed by the init effect so prop changes can trigger a redraw without
+  // tearing down and re-initialising the PixiJS Application.
+  const rebuildRef = useRef<(() => void) | null>(null)
+  // Starts all-null so the first paint uses the Graphics fallback; swapped for
+  // the Blender sprites once they resolve, then the scene is rebuilt once.
+  const texturesRef = useRef<HubTextures>(nullTextures())
+
+  // Game state hydrates from localStorage/PocketBase *after* this component
+  // mounts, so `buildings` is routinely empty on the first render and only
+  // fills in a tick later. Without this the scene stayed permanently empty
+  // (buildingsRef updated, but nothing ever asked the canvas to redraw) and
+  // structures were invisible until an unrelated resize happened to fire.
+  const sig = signature(buildings)
+  useEffect(() => {
+    rebuildRef.current?.()
+  }, [sig])
 
   useEffect(() => {
     const div = divRef.current
@@ -51,7 +111,7 @@ export default function HubPixiCanvas({ buildings }: HubPixiCanvasProps) {
 
       scene?.destroy()
       const groundY = containerH * (1 - 0.22)
-      scene = buildHubScene(app, buildingsRef.current, nullTextures(), { groundY, scaleX })
+      scene = buildHubScene(app, buildingsRef.current, texturesRef.current, { groundY, scaleX })
     }
 
     ;(async () => {
@@ -77,6 +137,13 @@ export default function HubPixiCanvas({ buildings }: HubPixiCanvasProps) {
       }
 
       rebuild()
+      rebuildRef.current = rebuild
+
+      void loadHubTextures().then(textures => {
+        if (destroyed) return
+        texturesRef.current = textures
+        rebuild()
+      })
 
       ro = new ResizeObserver(() => rebuild())
       ro.observe(div)
@@ -90,6 +157,7 @@ export default function HubPixiCanvas({ buildings }: HubPixiCanvasProps) {
 
     return () => {
       destroyed = true
+      rebuildRef.current = null
       ro?.disconnect()
       scene?.destroy()
       // Only destroy if the renderer was fully initialised — avoids PixiJS v8

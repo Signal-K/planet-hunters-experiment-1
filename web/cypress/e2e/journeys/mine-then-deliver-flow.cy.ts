@@ -38,8 +38,8 @@ function basePlayer(overrides: Partial<GameState['player']> = {}): GameState['pl
     controlBuilt: false,
     missionsDone: 4,
     freeOperations: true,
-    contractorMissions: {},
-    contractorCooldowns: {},
+    clientMissions: {},
+    clientCooldowns: {},
     researchAnnotations: 0,
     refineryBuilt: false,
     refineryQueue: [],
@@ -85,13 +85,13 @@ describe('Mine-Then-Deliver: two-leg logistics mission (Free Ops mission board)'
     cy.contains('16 Psyche → 1 Ceres').scrollIntoView().should('be.visible')
   })
 
-  it('does not offer the logistics job while its contractor is on cooldown', () => {
+  it('does not offer the logistics job while its client is on cooldown', () => {
     visitWithState('/game/missions', {
       screen: 'missions',
       player: basePlayer({
         freeOperations: true,
         missionsDone: 4,
-        contractorCooldowns: { 'kepler-materials': Date.now() + 60 * 60 * 1000 },
+        clientCooldowns: { 'kepler-materials': Date.now() + 60 * 60 * 1000 },
       }),
     })
     cy.contains('Free Ops', { timeout: 10000 })

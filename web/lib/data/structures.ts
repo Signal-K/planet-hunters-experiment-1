@@ -1,14 +1,33 @@
 // Landnam game data — structures, refinery recipes, market templates
 
 import type { StructureBlueprint, RefineryRecipe, MarketTemplate } from './types'
+import { MINERAL_VALUE, REFINING_COST_RATE, REFINING_VALUE_MULTIPLIER, STRUCTURE_PRICES } from './economy'
+import { MINERAL_RARITY } from './minerals'
+
+// Refining takes raw ore and returns it worth REFINING_VALUE_MULTIPLIER more,
+// for a cycle fee proportional to the input's value. Previously each recipe
+// carried three hand-set numbers (input cost, cycle cost, output price) whose
+// relationship to each other had drifted: the Refinery cost 800M to build and
+// produced goods worth ~1,760, so it would have taken ~450,000 cycles to pay
+// for itself.
+function refined(id: string, name: string, mineral: string, amount: number, sym: string, color: string, time: number): RefineryRecipe {
+  const inputValue = MINERAL_VALUE[MINERAL_RARITY[mineral]] * amount
+  return {
+    id, name,
+    input: { mineral, amount },
+    output: { name, sym, color, price: Math.round(inputValue * REFINING_VALUE_MULTIPLIER) },
+    time,
+    cost: Math.round(inputValue * REFINING_COST_RATE),
+  }
+}
 
 export const REFINERY_RECIPES: RefineryRecipe[] = [
-  { id: 'refined-gold', name: 'Refined Gold', input: { mineral: 'gold', amount: 3 }, output: { name: 'Refined Gold', sym: 'Au+', color: '#ffd166', price: 1760 }, time: 3600, cost: 100000 },
-  { id: 'refined-uranium', name: 'Refined Uranium', input: { mineral: 'uranium', amount: 3 }, output: { name: 'Refined Uranium', sym: 'U+', color: '#8fd16a', price: 3000 }, time: 3600, cost: 150000 },
-  { id: 'refined-cobalt', name: 'Refined Cobalt', input: { mineral: 'cobalt', amount: 3 }, output: { name: 'Refined Cobalt', sym: 'Co+', color: '#4f9cf7', price: 855 }, time: 3000, cost: 80000 },
-  { id: 'refined-copper', name: 'Refined Copper', input: { mineral: 'copper', amount: 4 }, output: { name: 'Refined Copper', sym: 'Cu+', color: '#c9824b', price: 442 }, time: 2400, cost: 60000 },
-  { id: 'refined-aluminium', name: 'Refined Aluminium', input: { mineral: 'aluminium', amount: 4 }, output: { name: 'Refined Aluminium', sym: 'Al+', color: '#c7d0dc', price: 336 }, time: 2400, cost: 60000 },
-  { id: 'refined-hydrogen', name: 'Refined Hydrogen', input: { mineral: 'hydrogen', amount: 4 }, output: { name: 'Refined Hydrogen', sym: 'H+', color: '#9becff', price: 280 }, time: 1800, cost: 50000 },
+  refined('refined-gold', 'Refined Gold', 'gold', 3, 'Au+', '#ffd166', 3600),
+  refined('refined-uranium', 'Refined Uranium', 'uranium', 3, 'U+', '#8fd16a', 3600),
+  refined('refined-cobalt', 'Refined Cobalt', 'cobalt', 3, 'Co+', '#4f9cf7', 3000),
+  refined('refined-copper', 'Refined Copper', 'copper', 4, 'Cu+', '#c9824b', 2400),
+  refined('refined-aluminium', 'Refined Aluminium', 'aluminium', 4, 'Al+', '#c7d0dc', 2400),
+  refined('refined-hydrogen', 'Refined Hydrogen', 'hydrogen', 4, 'H+', '#9becff', 1800),
 ]
 
 export const STRUCTURES: StructureBlueprint[] = [
@@ -17,10 +36,10 @@ export const STRUCTURES: StructureBlueprint[] = [
     id: 'refinery',
     name: 'Refinery',
     kind: 'refinery',
-    cost: 800_000_000,
+    cost: STRUCTURE_PRICES.refinery,
     costMaterials: { aluminium: 20, copper: 10 },
     unlocksAt: 'First client mission requiring refined minerals',
-    unlockTrigger: 'contractor-mission-trigger',
+    unlockTrigger: 'client-mission-trigger',
     description: 'Refines raw minerals into higher-value client-grade materials.',
   },
   {
@@ -41,8 +60,13 @@ export const STRUCTURES: StructureBlueprint[] = [
     unlockTrigger: 'always',
     description: 'Monitors player-launched transit telescopes and downlinks daily TESS-style candidates for classification.',
   },
-  { id: 'garage', name: 'Vehicle Garage', kind: 'garage', cost: 600_000_000, unlocksAt: 'Future sprint', unlockTrigger: 'manual', description: 'Surface rover maintenance and upgrades.' },
+  { id: 'garage', name: 'Vehicle Garage', kind: 'garage', cost: STRUCTURE_PRICES.garage, unlocksAt: 'Future sprint', unlockTrigger: 'manual', description: 'Surface rover maintenance and upgrades.' },
 ]
+
+/** One-off cost to permanently upgrade the launchpad. Previously duplicated as
+ *  a magic number in EconomySystem and as three hardcoded "₣1B" strings in
+ *  HubScreen's copy, which could drift apart silently. */
+export const LAUNCHPAD_UPGRADE_COST = STRUCTURE_PRICES.launchpadUpgrade
 
 export const SCANS_PER_DAY = 5
 export const SCAN_DURATION_MS = 10 * 60 * 1000

@@ -34,7 +34,7 @@ export const SURVEY_DEFS: Record<string, Survey> = {
       { id: '2b7a97f3-dabb-4ead-9a2b-8ebfb47365d2', type: 'multiple_choice', question: 'What felt off about mining?', choices: ['Too slow', 'Unclear what to collect', 'Hard to control', 'Nothing - felt good'] },
     ],
   },
-  lnm_contractor_pick: {
+  lnm_client_pick: {
     id: '019ccaf8-4299-0000-b3ad-92a57ab75b95',
     name: '[Landnam / Clients] Client First Impression',
     posthogUrl: 'https://us.posthog.com/project/199773/surveys/019ccaf8-4299-0000-b3ad-92a57ab75b95',
@@ -107,9 +107,41 @@ export const SURVEY_DEFS: Record<string, Survey> = {
     posthogUrl: 'https://us.posthog.com/project/199773/surveys/019f36f7-9396-0000-9271-74f9bba0546a',
     questions: [
       { id: 'm3-transport-clarity', type: 'multiple_choice', question: 'How clear was it that this was a two-stop delivery job — mine, then drop cargo at a second target?', choices: ['Crystal clear', 'Mostly clear', 'A bit confusing', 'I did not realize there were two stops'] },
-      { id: 'm3-contractor-choice', type: 'multiple_choice', question: 'How did picking between the two clients feel?', choices: ['Meaningful', 'Fine but simple', 'Confusing', 'I did not notice I had a choice'] },
+      { id: 'm3-client-choice', type: 'multiple_choice', question: 'How did picking between the two clients feel?', choices: ['Meaningful', 'Fine but simple', 'Confusing', 'I did not notice I had a choice'] },
       { id: 'm3-rating', type: 'rating', question: 'How are you feeling about the game after three missions?', scale: 5 },
       { id: 'm3-freetext', type: 'open', question: 'Anything we should know before you play more?' },
+    ],
+  },
+  lnm_satellite_clarity: {
+    id: '019fa559-287d-0000-b28f-4160c0f22955',
+    name: '[Landnam / Satellite] Satellite Mission Clarity',
+    posthogUrl: 'https://us.posthog.com/project/199773/surveys/019fa559-287d-0000-b28f-4160c0f22955',
+    questions: [
+      { id: '28bf15cb-fcaf-4913-b992-61207b6bff77', type: 'multiple_choice', question: 'How clear was the satellite mission loop from building the station to reviewing the downlink?', choices: ['Very clear', 'Mostly clear', 'A bit confusing', 'I did not understand what to do next'] },
+    ],
+  },
+  lnm_resume_mission: {
+    id: '019fa559-30bb-0000-1996-5ebd41f7bea6',
+    name: '[Landnam / Missions] Resume In-Progress Mission',
+    posthogUrl: 'https://us.posthog.com/project/199773/surveys/019fa559-30bb-0000-1996-5ebd41f7bea6',
+    questions: [
+      { id: '65bf16e2-f677-4f0e-a412-7e12da180762', type: 'multiple_choice', question: 'How easy was it to resume your in-progress mission after leaving Earth Base?', choices: ['Very easy', 'Mostly easy', 'A bit confusing', 'I could not find my mission'] },
+    ],
+  },
+  lnm_base_building: {
+    id: '019fa559-3772-0000-3d55-36b4b76d3334',
+    name: '[Landnam / Earth Base] Base Building Feel',
+    posthogUrl: 'https://us.posthog.com/project/199773/surveys/019fa559-3772-0000-3d55-36b4b76d3334',
+    questions: [
+      { id: 'f2421ef5-31d3-4adf-934b-d0aff3f7d774', type: 'rating', question: 'How satisfying was placing or upgrading a structure in Earth Base?', scale: 5 },
+    ],
+  },
+  lnm_rover_clarity: {
+    id: '019fa559-3f8e-0000-f464-9a988e88cd4e',
+    name: '[Landnam / Rover] Rover Mining Clarity',
+    posthogUrl: 'https://us.posthog.com/project/199773/surveys/019fa559-3f8e-0000-f464-9a988e88cd4e',
+    questions: [
+      { id: 'd41b40f8-072d-47e2-9dc3-f63c65f7863b', type: 'multiple_choice', question: 'How clear was what your rover was doing while it mined?', choices: ['Very clear', 'Mostly clear', 'A bit confusing', 'I could not tell what was happening'] },
     ],
   },
 }

@@ -34,8 +34,8 @@ function isVisible(el: HTMLElement): boolean {
 }
 
 // coachId may be a '|'-delimited priority list — first visible element wins.
-// e.g. 'radial-missions|radial-toggle': points to MISSIONS when menu is open,
-// falls back to the toggle button when the menu is closed.
+// e.g. 'build-confirm|build-plot-0': points to the confirm button once a
+// plot is picked, falls back to the first plot before one is picked.
 export default function CoachPointer({ coachId, dir }: { coachId: string; dir?: string }) {
   const [ring, setRing] = useState<RingState | null>(null)
   const ids = coachId.split('|')

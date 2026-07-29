@@ -2,40 +2,32 @@
 
 import React from 'react'
 import { PrimaryBtn } from '@/components/ui/Button'
-import { CONTRACTORS } from '@/lib/data/contractors'
+import { CLIENTS } from '@/lib/data/clients'
 import { TARGETS } from '@/lib/data/targets'
+import Sheet from '@/components/ui/Sheet'
 
 interface TerritoryClaimPopupProps {
   targetId: string
-  contractorId: string
+  clientId: string
   onDismiss: () => void
 }
 
-export default function TerritoryClaimPopup({ targetId, contractorId, onDismiss }: TerritoryClaimPopupProps) {
-  const contractor = CONTRACTORS[contractorId]
+export default function TerritoryClaimPopup({ targetId, clientId, onDismiss }: TerritoryClaimPopupProps) {
+  const client = CLIENTS[clientId]
   const target = TARGETS.find(t => t.id === targetId)
 
-  const contractorName = contractor?.name ?? contractorId
+  const clientName = client?.name ?? clientId
   const targetName = target?.name ?? targetId
 
   return (
-    <div
-      role="dialog"
-      aria-modal="true"
-      aria-label="Territory established"
-      style={{
-        position: 'absolute',
-        inset: 0,
-        zIndex: 200,
-        background: 'rgba(6, 9, 15, 0.88)',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '0 24px',
-      }}
-    >
-      <div style={{
+    <Sheet
+      variant="centered"
+      onDismiss={onDismiss}
+      dismissOnBackdrop={false}
+      zIndex={200}
+      ariaLabel="Territory established"
+      scrimStyle={{ background: 'rgba(6, 9, 15, 0.88)' }}
+      panelStyle={{
         background: 'var(--ln-panel)',
         border: '1px solid var(--ln-hairline)',
         borderRadius: 16,
@@ -45,7 +37,8 @@ export default function TerritoryClaimPopup({ targetId, contractorId, onDismiss 
         display: 'flex',
         flexDirection: 'column',
         gap: 16,
-      }}>
+      }}
+    >
         <div style={{
           fontFamily: 'var(--ln-font-display)',
           fontSize: 10,
@@ -74,7 +67,7 @@ export default function TerritoryClaimPopup({ targetId, contractorId, onDismiss 
           color: 'var(--ln-amber)',
           letterSpacing: '0.02em',
         }}>
-          {contractorName} now operates from {targetName}
+          {clientName} now operates from {targetName}
         </div>
         <div style={{
           fontFamily: 'var(--ln-font-body)',
@@ -82,10 +75,9 @@ export default function TerritoryClaimPopup({ targetId, contractorId, onDismiss 
           color: 'var(--ln-text-dim)',
           lineHeight: 1.5,
         }}>
-          Your rover has been deployed and will transmit data back to base. The contractor holds operational claim — no restrictions apply to you or other pilots.
+          Your rover has been deployed and will transmit data back to base. The client holds operational claim — no restrictions apply to you or other pilots.
         </div>
         <PrimaryBtn onClick={onDismiss}>UNDERSTOOD</PrimaryBtn>
-      </div>
-    </div>
+    </Sheet>
   )
 }

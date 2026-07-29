@@ -3,10 +3,12 @@
 import Image from 'next/image'
 import { useState } from 'react'
 import TopBar from '@/components/ui/TopBar'
-import { STARTER_ROCKETS, hasShipCustomizer, calculateShipSuccessChance, selectedCustomizerPartIds, getBuildSequence } from '@/lib/data'
-import type { StarterRocket, InstalledCustomizerPartsByKind } from '@/lib/data'
+import { ROCKET_MODELS, hasShipCustomizer, calculateShipSuccessChance, selectedCustomizerPartIds, getBuildSequence } from '@/lib/data'
+import type { RocketModel, InstalledCustomizerPartsByKind } from '@/lib/data'
 import { UI_ZONES } from '@/lib/ui-zones'
 import ShipInteriorPreview from '@/components/game/ShipInteriorPreview'
+import { formatCurrency } from '@/lib/format'
+import ProgressBar from '@/components/ui/ProgressBar'
 
 interface HangarScreenProps {
   francs: number
@@ -18,30 +20,21 @@ interface HangarScreenProps {
   onSelect?: (rocketId: string) => void
 }
 
-function formatFrancs(n: number): string {
-  if (n >= 1_000_000_000) return `${(n / 1_000_000_000).toFixed(1)}B ▲`
-  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(0)}M ▲`
-  return `${n.toLocaleString()} ▲`
-}
-
 const STAT_MAX: Record<string, number> = { cargo: 20, maxOrbit: 10, drillTier: 5 }
 
 function StatBar({ label, value, max }: { label: string; value: number; max: number }) {
-  const pct = Math.min(100, (value / max) * 100)
   return (
     <div style={{ display: 'grid', gap: 2 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
         <span style={{ fontFamily: 'var(--ln-font-mono)', fontSize: 7, color: 'var(--ln-text-muted)', letterSpacing: '0.12em', textTransform: 'uppercase' }}>{label}</span>
         <span style={{ fontFamily: 'var(--ln-font-display)', fontSize: 9, fontWeight: 800, color: 'var(--ln-text)' }}>{value}</span>
       </div>
-      <div style={{ height: 3, borderRadius: 2, background: 'rgba(63,169,255,0.12)', overflow: 'hidden' }}>
-        <div style={{ height: '100%', width: `${pct}%`, borderRadius: 2, background: 'linear-gradient(90deg, var(--ln-cyan-press), var(--ln-cyan-bright))', boxShadow: '0 0 6px rgba(63,169,255,0.5)' }} />
-      </div>
+      <ProgressBar value={value} max={max} label={label} />
     </div>
   )
 }
 
-function RocketCard({ rocket, missionsDone, onSelect }: { rocket: StarterRocket; missionsDone: number; onSelect?: (id: string) => void }) {
+function RocketCard({ rocket, missionsDone, onSelect }: { rocket: RocketModel; missionsDone: number; onSelect?: (id: string) => void }) {
   const missionUnlocked = missionsDone >= rocket.missionsRequired
   const isAvailable = !rocket.locked && missionUnlocked
   const isLocked = rocket.locked || !missionUnlocked
@@ -140,7 +133,7 @@ function RocketCard({ rocket, missionsDone, onSelect }: { rocket: StarterRocket;
                 boxShadow: '0 0 14px rgba(200,41,62,0.35)',
               }}
             >
-              {formatFrancs(rocket.costFrancs)}
+              {formatCurrency(rocket.costFrancs, { compact: true })}
             </button>
           )}
           {isAvailable && !hasCost && (
@@ -217,7 +210,7 @@ export default function HangarScreen({ francs, missionsDone, unlockedSkillNodes,
           </button>
         )}
 
-        {STARTER_ROCKETS.map(rocket => (
+        {ROCKET_MODELS.map(rocket => (
           <RocketCard key={rocket.id} rocket={rocket} missionsDone={missionsDone} onSelect={onSelect} />
         ))}
       </div>

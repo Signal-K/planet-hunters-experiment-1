@@ -1,7 +1,8 @@
 'use client'
 
 import React from 'react'
-import { UI_ZONES } from '@/lib/ui-zones'
+import Image from 'next/image'
+import Sheet from '@/components/ui/Sheet'
 
 type UnlockKind = 'sr2' | 'loan' | 'ship-customizer'
 
@@ -25,6 +26,9 @@ const UNLOCKS: Record<string, {
   title: string
   body: string
   art: 'rocket' | 'coin' | 'rooms'
+  /** Real generated hull art (STS-157) to show instead of the generic
+   * RocketArt placeholder — set only where that art actually exists. */
+  imgSrc?: string
   stats: [string, string][]
   cta: string
 }> = {
@@ -34,6 +38,7 @@ const UNLOCKS: Record<string, {
     title: 'PROSPECTOR',
     body: 'Mission 2 needs 8 silicon — more than Explorer can carry. Prospector is the first heavier workhorse: larger cargo bay, stronger drill, and enough range for deeper starter targets.',
     art: 'rocket',
+    imgSrc: '/game/assets/ships/ship_sr2.png',
     stats: [['CARGO', '10 UNITS'], ['DRILL', 'TIER 2'], ['ROLE', 'BULK RUNS']],
     cta: 'Select Prospector',
   },
@@ -111,16 +116,20 @@ export default function UnlockPopup({ kind, onClose, onDismiss }: UnlockPopupPro
   const u = UNLOCKS[kind] ?? UNLOCKS.sr2
 
   return (
-    <div data-ui-zone={UI_ZONES.modalOverlay} style={{ position: 'absolute', inset: 0, zIndex: 90, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-      <div data-testid="unlock-popup-scrim" onClick={onDismiss ?? onClose} style={{ position: 'absolute', inset: 0, background: 'rgba(3,6,12,0.8)', backdropFilter: 'blur(3px)' }} />
-      <div style={{
-        position: 'relative', width: 320, maxWidth: '90%',
+    <Sheet
+      variant="centered"
+      onDismiss={onDismiss ?? onClose}
+      zIndex={90}
+      backdropTestId="unlock-popup-scrim"
+      scrimStyle={{ background: 'rgba(3,6,12,0.8)', backdropFilter: 'blur(3px)' }}
+      panelStyle={{
+        width: 320, maxWidth: '90%',
         background: 'linear-gradient(180deg, #0d1c30 0%, #060d18 100%)',
         border: `1px solid ${u.accent}88`,
         borderRadius: 20, padding: 22, textAlign: 'center',
         boxShadow: `0 20px 60px rgba(0,0,0,0.7), 0 0 40px ${u.accent}33`,
-        animation: 'unlock-in 420ms cubic-bezier(.16,1,.3,1)',
-      }}>
+      }}
+    >
         <div style={{ position: 'absolute', inset: 0, borderRadius: 20, overflow: 'hidden', pointerEvents: 'none' }}>
           <div style={{
             position: 'absolute', left: '50%', top: 70, width: 300, height: 300,
@@ -135,9 +144,15 @@ export default function UnlockPopup({ kind, onClose, onDismiss }: UnlockPopupPro
 
           <div style={{ margin: '14px auto', width: 96, height: 96, position: 'relative' }}>
             <div style={{ position: 'absolute', inset: -8, borderRadius: 999, background: `radial-gradient(circle, ${u.accent}44, transparent 70%)` }} />
-            {u.art === 'rocket' && <RocketArt accent={u.accent} />}
-            {u.art === 'coin' && <CoinArt />}
-            {u.art === 'rooms' && <RoomsArt accent={u.accent} />}
+            {u.imgSrc ? (
+              <Image src={u.imgSrc} alt="" width={96} height={96} style={{ objectFit: 'contain', position: 'relative' }} />
+            ) : (
+              <>
+                {u.art === 'rocket' && <RocketArt accent={u.accent} />}
+                {u.art === 'coin' && <CoinArt />}
+                {u.art === 'rooms' && <RoomsArt accent={u.accent} />}
+              </>
+            )}
           </div>
 
           <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 24, fontWeight: 800, letterSpacing: '0.04em', color: '#fff', textShadow: `0 0 18px ${u.accent}88` }}>{u.title}</div>
@@ -168,7 +183,6 @@ export default function UnlockPopup({ kind, onClose, onDismiss }: UnlockPopupPro
             }}>Decline</button>
           )}
         </div>
-      </div>
-    </div>
+    </Sheet>
   )
 }

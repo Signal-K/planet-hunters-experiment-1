@@ -63,6 +63,17 @@ npm test
 npx cypress run
 ```
 
+### Staging / test deployment
+
+Deploy test builds to the stable test origin (separate from production):
+
+```bash
+cd web
+npm run deploy:test
+```
+
+Test URL: https://landnam-test.vercel.app
+
 ## 🤝 Contributing
 
 1. Read relevant specification documents in `.knowns/docs/specs/`

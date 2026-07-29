@@ -1,37 +1,44 @@
 'use client'
 
+/**
+ * Soil strata line + subsurface ore glow, sitting on the plateau's lower edge.
+ * Ported from `landnam-earth-base-v2.html` (2026-07-26): a single dashed
+ * hairline standing in for the cut-away ground plane, plus three pulsing
+ * deposit blooms hinting at what's underneath.
+ *
+ * The deposit colors are the locked semantic mineral palette (iron rust,
+ * silicon pale-blue, gold warm-white) — NOT the screen's UI accent, which is
+ * cyan/mint only.
+ */
 export function SoilCrossSection() {
   return (
-    <div style={{ position: 'absolute', left: 0, right: 0, bottom: 0, top: '78%', zIndex: 4, pointerEvents: 'none', overflow: 'hidden' }}>
-      <div style={{ position: 'absolute', left: 0, right: 0, top: 0, height: 0, borderTop: '1.5px dashed rgba(255,225,160,0.5)' }} />
-      <div style={{ position: 'absolute', left: 0, right: 0, top: 0, height: 18, background: 'linear-gradient(180deg, rgba(60,40,20,0.5), transparent)' }} />
-      <svg width="100%" height="100%" viewBox="0 0 402 168" preserveAspectRatio="none" style={{ position: 'absolute', inset: 0 }}>
-        <defs>
-          <linearGradient id="strata1" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#2a1a0e" stopOpacity="0.0"/>
-            <stop offset="100%" stopColor="#1a0f06" stopOpacity="0.35"/>
-          </linearGradient>
-        </defs>
-        <rect x="0" y="0" width="402" height="168" fill="url(#strata1)"/>
-        <path d="M0 44 Q 100 40, 200 46 T 402 42" stroke="rgba(255,220,160,0.18)" strokeWidth="1" fill="none"/>
-        <path d="M0 96 Q 120 102, 220 94 T 402 100" stroke="rgba(255,220,160,0.14)" strokeWidth="1" fill="none"/>
-        <circle cx="74" cy="66" r="3" fill="#d97150" opacity="0.9"/>
-        <circle cx="80" cy="72" r="1.8" fill="#ff9a78" opacity="0.8"/>
-        <circle cx="86" cy="66" r="2.2" fill="#d97150" opacity="0.85"/>
-        <circle cx="316" cy="90" r="2.6" fill="#b9d8ff" opacity="0.9"/>
-        <circle cx="322" cy="96" r="1.6" fill="#e0f0ff" opacity="0.8"/>
-        <circle cx="328" cy="90" r="2" fill="#b9d8ff" opacity="0.85"/>
-        <circle cx="250" cy="132" r="2.8" fill="#ffd166" opacity="0.9"/>
-        <circle cx="256" cy="138" r="1.6" fill="#fff0b0" opacity="0.8"/>
-        <circle cx="80" cy="68" r="14" fill="#d97150" opacity="0.12"/>
-        <circle cx="322" cy="92" r="14" fill="#b9d8ff" opacity="0.12"/>
-        <circle cx="252" cy="134" r="12" fill="#ffd166" opacity="0.12"/>
-        <g stroke="#2a1a0e" strokeWidth="1.4" fill="none" opacity="0.55" strokeLinecap="round">
-          <path d="M40 0 q -4 24, 4 50"/>
-          <path d="M150 0 q 6 30, -6 56"/>
-          <path d="M360 0 q 8 20, -4 48"/>
-        </g>
-      </svg>
+    <div style={{ position: 'absolute', inset: 0, zIndex: 4, pointerEvents: 'none', overflow: 'hidden' }}>
+      {/* Strata hairline — level with the plateau's bottom edge */}
+      <div style={{
+        position: 'absolute', left: 0, right: 0, bottom: '3.4%', height: 0,
+        borderTop: '1.5px dashed rgba(200,220,255,0.35)',
+      }} />
+
+      {/* Ore deposits — offset pulse cycles so they never breathe in unison */}
+      <Ore left="20%" w={60} h={22} color="rgba(217,113,80,0.32)" delay="0s" />
+      <Ore left="74%" w={54} h={20} color="rgba(185,216,255,0.3)" delay="1.6s" />
+      <Ore left="48%" w={42} h={16} color="rgba(200,200,200,0.24)" delay="3s" />
     </div>
+  )
+}
+
+function Ore({ left, w, h, color, delay }: { left: string; w: number; h: number; color: string; delay: string }) {
+  return (
+    <div
+      className="hub-ore"
+      style={{
+        position: 'absolute', left, bottom: '1.3%',
+        width: w, height: h, borderRadius: '50%',
+        background: `radial-gradient(ellipse, ${color}, transparent 72%)`,
+        filter: 'blur(1px)',
+        animation: 'hub-ore-pulse 5s ease-in-out infinite',
+        animationDelay: delay,
+      }}
+    />
   )
 }
