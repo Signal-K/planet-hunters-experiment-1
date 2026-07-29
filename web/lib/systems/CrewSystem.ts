@@ -167,6 +167,25 @@ export function roverCrewId(roverId: string): string {
   return `${ROVER_CREW_ID_PREFIX}${roverId}`
 }
 
+/**
+ * The crew every player begins with: one astronaut, one building drone, one
+ * rover (Q02/Q05/Q24 of the academy question set). Fixed ids, because the grant
+ * has to be idempotent — it runs on every load, for existing saves as well as
+ * new ones, and must not mint a second starting astronaut each time.
+ *
+ * Existing saves are retro-granted these (Q24, answered "Yes"): a player who
+ * started before the roster existed gets the same opening crew rather than
+ * having to hire their way to parity.
+ */
+export const STARTING_CREW: readonly { id: string; crewClass: CrewClass }[] = [
+  { id: 'crew-starting-astronaut', crewClass: 'astronaut' },
+  { id: 'crew-starting-drone', crewClass: 'drone' },
+  // Deliberately the *same* id the rover migration derives for `starter-rover`.
+  // A player who already deployed their starter rover has that rover on the
+  // roster; granting a second one would hand them equipment they never got.
+  { id: roverCrewId('starter-rover'), crewClass: 'rover' },
+]
+
 function isCrewMember(value: unknown): value is CrewMember {
   if (typeof value !== 'object' || value === null) return false
   const c = value as Record<string, unknown>
@@ -216,6 +235,23 @@ export function migrateCrewRoster(player: Partial<Player>, now: number): CrewMem
       selfTrained: true,
       level: TRAINED_CREW_LEVEL,
       now: Number.isFinite(deployment.timestamp) ? deployment.timestamp : now,
+      taken: [...byId.values()],
+    }))
+  }
+
+  // The starting crew, granted last so a save that already names one of these
+  // ids keeps its own version — including any XP it has earned. Retro-granted
+  // to pre-roster saves by the same pass, which is what Q24 asked for.
+  for (const { id, crewClass } of STARTING_CREW) {
+    if (byId.has(id)) continue
+    byId.set(id, createCrewMember({
+      id,
+      crewClass,
+      // Starting crew were never hired, so they carry no hire cost and must not
+      // count against the cap on crew you did not train yourself.
+      selfTrained: true,
+      level: TRAINED_CREW_LEVEL,
+      now,
       taken: [...byId.values()],
     }))
   }

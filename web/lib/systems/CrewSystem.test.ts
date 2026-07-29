@@ -9,6 +9,7 @@ import {
   pickCrewName,
   roverCrewId,
   settleCrewConditions,
+  STARTING_CREW,
   xpForCrewLevel,
 } from './CrewSystem'
 import { DEFAULT_STATE, normalizeState } from '@/lib/game-state'
@@ -123,21 +124,50 @@ describe('condition', () => {
 })
 
 describe('migrateCrewRoster', () => {
-  it('gives a crew-less save an empty roster', () => {
-    expect(migrateCrewRoster({}, NOW)).toEqual([])
+  it('grants the starting crew to a crew-less save', () => {
+    // One astronaut, one drone, one rover — Q02/Q05/Q24 of the academy question set.
+    const crew = migrateCrewRoster({}, NOW)
+    expect(crew.map(c => c.crewClass).sort()).toEqual(['astronaut', 'drone', 'rover'])
+    expect(crew.every(c => c.selfTrained)).toBe(true)
+  })
+
+  it('retro-grants the starting crew to a save that predates the roster', () => {
+    const player: Partial<Player> = { missionsDone: 7, francs: 12_000_000 }
+    expect(migrateCrewRoster(player, NOW)).toHaveLength(STARTING_CREW.length)
+  })
+
+  it('does not re-grant the starting crew on a second load', () => {
+    const once = migrateCrewRoster({}, NOW)
+    expect(migrateCrewRoster({ crew: once }, NOW)).toHaveLength(STARTING_CREW.length)
+  })
+
+  it('keeps earned XP on a starting crew member rather than resetting them', () => {
+    const once = migrateCrewRoster({}, NOW)
+    const veteran = { ...once[0], xp: 900 }
+    const reloaded = migrateCrewRoster({ crew: [veteran, ...once.slice(1)] }, NOW)
+    expect(reloaded.find(c => c.id === veteran.id)?.xp).toBe(900)
+  })
+
+  it('treats an already-deployed starter rover as the starting rover, not a second one', () => {
+    const player: Partial<Player> = {
+      roverDeployments: [{ roverId: 'starter-rover', targetId: 'luna', clientId: 'helios', timestamp: NOW - 1000 }],
+    }
+    const crew = migrateCrewRoster(player, NOW)
+    expect(crew.filter(c => c.crewClass === 'rover')).toHaveLength(1)
+    expect(crew).toHaveLength(STARTING_CREW.length)
   })
 
   it('surfaces an existing save\'s rover as a roster entry', () => {
     const player: Partial<Player> = {
       roverDeployments: [{ roverId: 'starter-rover', targetId: 'luna', clientId: 'helios', timestamp: NOW - 1000 }],
     }
-    const crew = migrateCrewRoster(player, NOW)
-    expect(crew).toHaveLength(1)
-    expect(crew[0]).toMatchObject({
+    const rovers = migrateCrewRoster(player, NOW).filter(c => c.crewClass === 'rover')
+    expect(rovers).toHaveLength(1)
+    expect(rovers[0]).toMatchObject({
       id: roverCrewId('starter-rover'), crewClass: 'rover', selfTrained: true, joinedAt: NOW - 1000,
     })
     // A rover the player already owned was never hired.
-    expect('hireCost' in crew[0]).toBe(false)
+    expect('hireCost' in rovers[0]).toBe(false)
   })
 
   it('surfaces a rover exactly once across several deployments', () => {
@@ -147,7 +177,7 @@ describe('migrateCrewRoster', () => {
         { roverId: 'starter-rover', targetId: 'ceres', clientId: 'helios', timestamp: NOW - 1000 },
       ],
     }
-    expect(migrateCrewRoster(player, NOW)).toHaveLength(1)
+    expect(migrateCrewRoster(player, NOW).filter(c => c.crewClass === 'rover')).toHaveLength(1)
   })
 
   it('is idempotent — a second load does not duplicate the migrated rover', () => {
@@ -155,19 +185,20 @@ describe('migrateCrewRoster', () => {
       roverDeployments: [{ roverId: 'starter-rover', targetId: 'luna', clientId: 'helios', timestamp: NOW - 1000 }],
     }
     const once = migrateCrewRoster(player, NOW)
-    expect(migrateCrewRoster({ ...player, crew: once }, NOW)).toHaveLength(1)
+    expect(migrateCrewRoster({ ...player, crew: once }, NOW)).toHaveLength(once.length)
   })
 
   it('drops malformed roster entries from an untrusted save', () => {
     const player = { crew: [{ id: '', name: 'x', crewClass: 'astronaut' }, { nonsense: true }] } as unknown as Partial<Player>
-    expect(migrateCrewRoster(player, NOW)).toEqual([])
+    // Malformed entries are dropped; the starting crew is still granted.
+    expect(migrateCrewRoster(player, NOW)).toHaveLength(STARTING_CREW.length)
   })
 
   it('repairs out-of-range level and xp rather than trusting the save', () => {
     const player = {
       crew: [{ id: 'c', name: 'Someone', crewClass: 'astronaut', level: -4, xp: -10, condition: 'melted' }],
     } as unknown as Partial<Player>
-    const repaired = migrateCrewRoster(player, NOW)[0]
+    const repaired = migrateCrewRoster(player, NOW).find(c => c.id === 'c')!
     expect(repaired).toMatchObject({ xp: 0, condition: 'fit' })
     expect(crewLevel(repaired)).toBe(1)
   })
@@ -177,18 +208,17 @@ describe('persistence through normalizeState', () => {
   it('round-trips a roster through a save', () => {
     const c = createCrewMember({ id: 'crew-1', crewClass: 'astronaut', selfTrained: true, now: NOW })
     const saved = JSON.parse(JSON.stringify(stateWithCrew([c])))
-    expect(normalizeState(saved).player.crew).toEqual([c])
+    expect(normalizeState(saved).player.crew).toContainEqual(c)
   })
 
-  it('migrates a crew-less save with a rover into a one-entry roster', () => {
+  it('folds an existing save\'s rover into the roster exactly once', () => {
     const loaded = normalizeState({
       player: { roverDeployments: [{ roverId: 'starter-rover', targetId: 'luna', clientId: 'helios', timestamp: NOW }] },
     })
-    expect(loaded.player.crew).toHaveLength(1)
-    expect(loaded.player.crew?.[0].crewClass).toBe('rover')
+    expect(loaded.player.crew?.filter(c => c.crewClass === 'rover')).toHaveLength(1)
   })
 
-  it('leaves a fresh save with an empty roster', () => {
-    expect(normalizeState({}).player.crew).toEqual([])
+  it('gives a fresh save the starting crew, not an empty roster', () => {
+    expect(normalizeState({}).player.crew).toHaveLength(STARTING_CREW.length)
   })
 })

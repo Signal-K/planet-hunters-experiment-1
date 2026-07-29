@@ -14,7 +14,7 @@ import {
 } from './registry'
 import { PREFABS, buildPlotEntities, getPrefab, instantiate, prefabsWithUnregisteredComponents } from './prefabs'
 import { SCENES, KNOWN_SCENE_FILES, orphanedSceneFiles, getScene } from '@/lib/data/scenes'
-import { ACTOR_ARCHETYPES, actorCanOccupy, archetypeHasCondition, archetypesAtLocation, getActorArchetype } from '@/lib/data/actors'
+import { ACTOR_ARCHETYPES, actorCanOccupy, archetypeHasCondition, archetypesAtLocation, getActorArchetype, rosterHasRoomFor } from '@/lib/data/actors'
 import type { EntityData, SceneData } from './types'
 
 function loadSceneFile(publicPath: string): SceneData {
@@ -145,5 +145,29 @@ describe('actor archetypes', () => {
 
   it('only charges upkeep for people', () => {
     for (const a of ACTOR_ARCHETYPES) expect({ id: a.id, upkeep: a.hasUpkeep }).toEqual({ id: a.id, upkeep: a.isPerson })
+  })
+})
+
+describe('roster caps (Q21 — classes capped separately)', () => {
+  it('gives astronauts no hard ceiling, since escalating hire cost is their brake', () => {
+    expect(getActorArchetype('astronaut')!.rosterCap).toBeNull()
+    expect(rosterHasRoomFor('astronaut', 999)).toBe(true)
+  })
+
+  it('caps equipment classes', () => {
+    expect(rosterHasRoomFor('rover', 3)).toBe(true)
+    expect(rosterHasRoomFor('rover', 4)).toBe(false)
+  })
+
+  it('lets drones aid construction and astronauts not', () => {
+    // Q19: "Drones will help with construction speed and costs, astronauts won't."
+    expect(getActorArchetype('drone')!.aidsConstruction).toBe(true)
+    expect(getActorArchetype('astronaut')!.aidsConstruction).toBe(false)
+  })
+
+  it('gives anomaly perception to people only', () => {
+    for (const a of ACTOR_ARCHETYPES) {
+      expect({ id: a.id, sees: a.perceivesAnomalies }).toEqual({ id: a.id, sees: a.isPerson })
+    }
   })
 })

@@ -35,6 +35,25 @@ export interface ActorArchetype {
   specialisations: readonly SkillBranch[]
   /** Whether the archetype consumes daily upkeep while on the roster. */
   hasUpkeep: boolean
+  /**
+   * Astronauts, drones and rovers share one roster but are capped separately
+   * (Q21). `null` means no hard ceiling — for astronauts the brake is
+   * escalating hire cost plus the cap on crew you did not train yourself,
+   * not a flat limit.
+   *
+   * NOTE: Q21 established that the classes are capped *separately* but set no
+   * numbers. The 4s below are a placeholder chosen here, not Liam's call — see
+   * the crew-model decision note before treating them as settled.
+   */
+  rosterCap: number | null
+  /** Cuts structure build time and cost. Drones do this; astronauts explicitly do not (Q19). */
+  aidsConstruction: boolean
+  /**
+   * Can perceive things equipment cannot — anomalies, alien tech — on the
+   * strength of human pattern recognition (Q19). Late-game; declared now so
+   * the roster does not need reshaping when it lands.
+   */
+  perceivesAnomalies: boolean
   description: string
 }
 
@@ -50,6 +69,9 @@ export const ACTOR_ARCHETYPES: readonly ActorArchetype[] = [
     canOccupy: ['earth-base', 'transit', 'orbit', 'target-surface'],
     specialisations: ['mining', 'cargo', 'range', 'engineering'],
     hasUpkeep: true,
+    rosterCap: null,
+    aidsConstruction: false,
+    perceivesAnomalies: true,
     description: 'A named person on the roster. Hired at level 3 or trained from level 1. Can be fatigued or injured, never lost.',
   },
   {
@@ -62,6 +84,9 @@ export const ACTOR_ARCHETYPES: readonly ActorArchetype[] = [
     canOccupy: ['target-surface'],
     specialisations: ['mining', 'engineering'],
     hasUpkeep: false,
+    rosterCap: 4,
+    aidsConstruction: false,
+    perceivesAnomalies: false,
     description: 'Landed surface equipment. Deployed once and stays, working after the ship comes home. Carries a designation, not a name.',
   },
   {
@@ -72,6 +97,9 @@ export const ACTOR_ARCHETYPES: readonly ActorArchetype[] = [
     canOccupy: ['earth-base', 'orbit', 'target-surface'],
     specialisations: ['cargo', 'range'],
     hasUpkeep: false,
+    rosterCap: 4,
+    aidsConstruction: true,
+    perceivesAnomalies: false,
     description: 'Dispatched and recovered. Not yet acquirable — declared so the roster does not need reshaping when it lands.',
   },
 ]
@@ -100,4 +128,14 @@ export function archetypeSupportsSpecialisation(id: ActorArchetypeId, branch: Sk
 /** Only people accrue fatigue and injury — equipment has no condition track. */
 export function archetypeHasCondition(id: ActorArchetypeId): boolean {
   return BY_ID.get(id)?.isPerson ?? false
+}
+
+/**
+ * Is there room on the roster for another of this archetype? Each class is
+ * capped separately (Q21). Astronauts have no hard ceiling — escalating hire
+ * cost is their brake — so this is always true for them.
+ */
+export function rosterHasRoomFor(id: ActorArchetypeId, currentCount: number): boolean {
+  const cap = BY_ID.get(id)?.rosterCap
+  return cap === undefined ? false : cap === null || currentCount < cap
 }
