@@ -354,8 +354,8 @@ describe('mergeRemoteState — remote game_states record onto local state', () =
         player: {
           missionsDone: 2,
           activeMission: null,
-          missionRunId: null,
-          missionPhase: null,
+          missionRunId: undefined,
+          missionPhase: undefined,
           transitStartedAt: null,
         },
       },
