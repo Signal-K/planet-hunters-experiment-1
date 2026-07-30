@@ -130,7 +130,12 @@ export default function TargetPickerScreen({ mission, onBack, onPick, hasCoach, 
       )}
     >
       <div className="mission-board-layout" style={{ minHeight: 0, flex: 1 }}>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 8, minHeight: 0 }}>
+        {/* Below 821px .mission-board-layout is a plain flex column, so this
+            map column must claim the free space itself — without flex:1 it is
+            content-sized and the map's 1fr row has nothing to resolve against.
+            Above 821px the layout is a grid and flex is inert; the column
+            stretches there instead. */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8, minHeight: 0, flex: 1 }}>
         {deliveryTarget && (
           <div style={{
             padding: '8px 12px', borderRadius: 6,
@@ -141,7 +146,12 @@ export default function TargetPickerScreen({ mission, onBack, onPick, hasCoach, 
             Two-stop job · Mine here, then deliver cargo to {deliveryTarget.name} before returning to Earth
           </div>
         )}
-        <div style={{ display: 'grid', gridTemplateRows: 'auto minmax(0, 1fr)', minHeight: 0, flex: 1 }}>
+        {/* Three rows, not two: the compatible-count header, the STS-544 orbit
+            explainer, then the map. The explainer was added after this grid was
+            written and fell into an implicit auto row, which left the map sized
+            to its own content — a 24px sliver under a band of dead black space
+            (the h20xtc regression, re-broken). Only the last row may flex. */}
+        <div style={{ display: 'grid', gridTemplateRows: 'auto auto minmax(0, 1fr)', minHeight: 0, flex: 1 }}>
           <div style={{ padding: '0 0 8px', display: 'flex', alignItems: 'center', gap: 8 }}>
             <span style={{ fontFamily: 'var(--ln-font-display)', fontSize: 10, fontWeight: 700, letterSpacing: '0.22em', color: 'var(--ln-text-muted)', textTransform: 'uppercase' }}>Compatible · {compat.length}</span>
             <span style={{ flex: 1 }} />

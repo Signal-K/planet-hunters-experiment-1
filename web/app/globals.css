@@ -582,6 +582,15 @@ button { cursor: pointer; }
    underneath the sticky actions on wide or narrow screens. */
 .mission-setup-screen--target .mission-setup-content {
   padding-bottom: 190px;
+  /* The shell's default `auto auto` is for screens that pass two children.
+     TargetPicker passes exactly one (.mission-board-layout owns the map/detail
+     split itself), so the leftover explicit track stayed empty — and because
+     align-content stretches auto tracks, the free space was split between the
+     one real row and the empty one instead of going to the map. That was the
+     band of dead black space below the picker on narrow screens, with the map
+     squeezed to a 24px sliver. The >=821px rule below already did this; narrow
+     screens need it too. */
+  grid-template-rows: minmax(0, 1fr);
 }
 
 /* Scene 4 has one real action (Confirm Launch). Its compact content owns the
@@ -693,8 +702,13 @@ button { cursor: pointer; }
     gap: 10px;
   }
 
+  /* One child (.mission-board-layout), so one track. The old three-track
+     value dated from when the picker passed map/detail/legend as separate
+     shell children: the two now-empty 1fr tracks still claimed ~99px each,
+     capping the map's row at 54% and then squeezing it to a 24px sliver once
+     the detail card shared that row. */
   .mission-setup-screen--target .mission-setup-content {
-    grid-template-rows: minmax(220px, 54%) minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr);
     gap: 8px;
   }
 
