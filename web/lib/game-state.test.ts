@@ -337,6 +337,32 @@ describe('mergeRemoteState — remote game_states record onto local state', () =
     expect(merged.player.missionPhase).toBe('mining')
   })
 
+  it('restores a remote delivery unload with its wall-clock epoch and cargo', () => {
+    const mission = MISSIONS.find(candidate => candidate.deliveryTargetId)!
+    const startedAt = 1_700_000_123_000
+    const merged = mergeRemoteState(local({ screen: 'hub' }), {
+      screen: 'delivery',
+      missionId: mission.id,
+      targetId: mission.targetId,
+      deliveryTargetId: mission.deliveryTargetId,
+      lastCargo: { iron: 3 },
+      player: {
+        activeMission: { id: mission.id, label: mission.title },
+        missionRunId: 'run-delivery',
+        missionPhase: 'delivery',
+        headingToDelivery: true,
+        deliveryUnloadStartedAt: startedAt,
+      },
+    })
+
+    expect(merged.screen).toBe('delivery')
+    expect(merged.deliveryTargetId).toBe(mission.deliveryTargetId)
+    expect(merged.lastCargo).toEqual({ iron: 3 })
+    expect(merged.player.missionPhase).toBe('delivery')
+    expect(merged.player.deliveryUnloadStartedAt).toBe(startedAt)
+    expect(merged.player.headingToDelivery).toBe(true)
+  })
+
   // The STS-601 cause-2 regression. useAuthSync refetches game_states on
   // `visibilitychange`, so every tab switch runs a merge against whatever the
   // remote row happens to hold. With both saves at the same missionsDone the

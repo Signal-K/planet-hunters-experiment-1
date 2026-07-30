@@ -64,6 +64,20 @@ export const PREFABS: readonly Prefab[] = [
     description: 'Headless entity hosting ConstructionController. One per on-target construction scene.',
     components: [{ type: 'ConstructionController' }],
   },
+  {
+    id: 'delivery-controller',
+    name: 'Delivery Controller',
+    category: 'controller',
+    description: 'Headless entity hosting DeliveryController. One per delivery scene.',
+    components: [{ type: 'DeliveryController', durationMs: 8000 }],
+  },
+  {
+    id: 'unload-pad',
+    name: 'Unload Pad',
+    category: 'site',
+    description: 'A sealed receiving berth where contract cargo visibly leaves the player ship.',
+    components: [{ type: 'UnloadPad', role: 'contract-depot' }],
+  },
 ]
 
 const BY_ID = new Map(PREFABS.map(p => [p.id, p]))

@@ -9,9 +9,9 @@ import { normalizeSurfaceOps } from '@/lib/systems/SurfaceOpsSystem'
 // where player fields are optional since older saves may be missing new fields.
 export type PartialSave = Omit<Partial<GameState>, 'player'> & { player?: Partial<Player> }
 
-const VALID_SCREENS: Screen[] = ['intro', 'build', 'hub', 'missions', 'galaxy', 'targets', 'fab', 'transit', 'mining', 'debrief', 'refinery', 'market', 'hangar', 'rocket-buy', 'skills', 'scan-station', 'rover-mining', 'launchpad', 'surface-ops']
-const MISSION_CONTEXT_SCREENS = new Set<Screen>(['targets', 'rocket-buy', 'fab', 'transit', 'mining', 'rover-mining', 'debrief'])
-const TARGET_CONTEXT_SCREENS = new Set<Screen>(['rocket-buy', 'fab', 'transit', 'mining', 'rover-mining', 'debrief'])
+const VALID_SCREENS: Screen[] = ['intro', 'build', 'hub', 'missions', 'galaxy', 'targets', 'fab', 'transit', 'mining', 'delivery', 'debrief', 'refinery', 'market', 'hangar', 'rocket-buy', 'skills', 'scan-station', 'rover-mining', 'launchpad', 'surface-ops']
+const MISSION_CONTEXT_SCREENS = new Set<Screen>(['targets', 'rocket-buy', 'fab', 'transit', 'mining', 'rover-mining', 'delivery', 'debrief'])
+const TARGET_CONTEXT_SCREENS = new Set<Screen>(['rocket-buy', 'fab', 'transit', 'mining', 'rover-mining', 'delivery', 'debrief'])
 const VALID_LICENSE_GRADES: LicenseGrade[] = ['Grade I', 'Grade II', 'Grade III']
 const RUNTIME_MISSION_IDS = new Set(['story-transit-telescope-launch'])
 const RUNTIME_TARGET_IDS = new Set(['earth-orbit-transit-telescope'])
@@ -62,6 +62,7 @@ export const DEFAULT_STATE: GameState = {
   targetId: null,
   rocket: { chassis: 'hull-mk1', propulsion: 'ion-a1', drill: 'hand-drill' },
   lastCargo: null,
+  deliveredCargo: null,
   tutorial: true,
   doneSteps: {},
   popup: null,
@@ -287,8 +288,17 @@ export function mergeRemoteState(current: GameState, remoteState: PartialSave): 
     merged.player.activeMission = remoteActiveMission
     merged.player.missionRunId = remoteState.player?.missionRunId
     merged.player.missionPhase = remoteState.player?.missionPhase
+    merged.player.arrivalAt = remoteState.player?.arrivalAt
+    merged.player.transitStartedAt = remoteState.player?.transitStartedAt
+    merged.player.deliveryUnloadStartedAt = remoteState.player?.deliveryUnloadStartedAt
+    merged.player.headingToDelivery = remoteState.player?.headingToDelivery
+    merged.player.returningToEarth = remoteState.player?.returningToEarth
+    merged.player.debriefPending = remoteState.player?.debriefPending
     if (remoteState.missionId) merged.missionId = remoteState.missionId
     if (remoteState.targetId) merged.targetId = remoteState.targetId
+    merged.deliveryTargetId = remoteState.deliveryTargetId
+    merged.lastCargo = remoteState.lastCargo ?? null
+    merged.deliveredCargo = remoteState.deliveredCargo ?? null
     if (remoteState.screen && MISSION_CONTEXT_SCREENS.has(remoteState.screen)) merged.screen = remoteState.screen
   }
 

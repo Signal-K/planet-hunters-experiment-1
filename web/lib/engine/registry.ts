@@ -66,6 +66,18 @@ export const COMPONENT_REGISTRY: readonly ComponentDescriptor[] = [
     fields: ['pads'],
   },
   {
+    type: 'DeliveryController',
+    category: 'controller',
+    description: 'Drives the delivery-target cargo transfer scene from persisted wall-clock progress.',
+    fields: ['durationMs'],
+  },
+  {
+    type: 'UnloadPad',
+    category: 'marker',
+    description: 'The receiving depot berth for a two-leg mission cargo hand-off.',
+    fields: ['role'],
+  },
+  {
     type: 'BuildPlot',
     category: 'marker',
     description: 'A placement slot at Earth Base. The host screen reads the index to map a plot to a placed structure.',

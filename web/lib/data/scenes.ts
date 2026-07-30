@@ -106,6 +106,16 @@ export const SCENES: readonly SceneDefinition[] = [
     description: 'Building a structure on a target body rather than at Earth Base.',
   },
   {
+    id: 'delivery',
+    name: 'Cargo Delivery',
+    surface: 'canvas',
+    location: 'target-surface',
+    screen: 'delivery',
+    sceneFile: '/game/scenes/delivery.scene.json',
+    entityTypes: ['DeliveryController', 'UnloadPad'],
+    description: 'A physical unloading berth for two-leg contracts. Cargo leaves the ship before its empty Earth-return leg.',
+  },
+  {
     id: 'target-picker',
     name: 'Solar System Map',
     surface: 'canvas',
@@ -148,6 +158,7 @@ export const KNOWN_SCENE_FILES: readonly string[] = [
   '/game/scenes/mining.scene.json',
   '/game/scenes/mining-test.scene.json',
   '/game/scenes/construction-target.scene.json',
+  '/game/scenes/delivery.scene.json',
   '/game/scenes/target-picker.scene.json',
 ]
 

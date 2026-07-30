@@ -145,7 +145,7 @@ describe('research progression', () => {
     expect(next.player.researchXP).toBe(15)
   })
 
-  it('clears paused mining and rover state when abandoning an active mission', () => {
+  it('clears paused mining, rover, and delivery state when abandoning an active mission', () => {
     const state = makeState({
       screen: 'mining',
       missionId: 'generated-s1-starter-bulk-1',
@@ -154,11 +154,13 @@ describe('research progression', () => {
         activeMission: { id: 'generated-s1-starter-bulk-1', label: 'Iron starter order -> Eros' },
         miningCargoInProgress: { iron: 2 },
         roverMiningStartedAt: 123456,
+        deliveryUnloadStartedAt: 234567,
         arrivalAt: Date.now() + 60_000,
         headingToDelivery: true,
         debriefPending: true,
         returningToEarth: true,
       },
+      deliveredCargo: { iron: 2 },
     })
 
     const next = applyAbandonMission(state, MISSIONS)
@@ -167,9 +169,11 @@ describe('research progression', () => {
     expect(next.player.activeMission).toBeNull()
     expect(next.player.miningCargoInProgress).toBeUndefined()
     expect(next.player.roverMiningStartedAt).toBeUndefined()
+    expect(next.player.deliveryUnloadStartedAt).toBeUndefined()
     expect(next.player.arrivalAt).toBeNull()
     expect(next.player.headingToDelivery).toBe(false)
     expect(next.player.debriefPending).toBe(false)
     expect(next.player.returningToEarth).toBe(false)
+    expect(next.deliveredCargo).toBeNull()
   })
 })

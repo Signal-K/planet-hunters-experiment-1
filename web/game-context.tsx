@@ -180,6 +180,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       onLaunch: loop.onLaunch,
       onMiningDone: loop.onMiningDone,
       onDeliveryArrived: loop.onDeliveryArrived,
+      onDeliveryUnloadComplete: loop.onDeliveryUnloadComplete,
       onReturnArrived: loop.onReturnArrived,
       onRoverMiningDone: loop.onRoverMiningDone,
       onDebriefDone: loop.onDebriefDone,

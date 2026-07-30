@@ -15,6 +15,7 @@ const VALID_SCREENS = new Set([
   'fab',
   'transit',
   'mining',
+  'delivery',
   'debrief',
   'refinery',
   'market',

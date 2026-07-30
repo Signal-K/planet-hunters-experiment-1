@@ -7,11 +7,12 @@ import { rocketDisplayForConfig } from '@/lib/data'
 import TransitScreen from '@/components/game/screens/TransitScreen'
 import MiningScreen from '@/components/game/screens/MiningScreen'
 import RoverMiningScreen from '@/components/game/screens/RoverMiningScreen'
+import DeliveryScreen from '@/components/game/screens/DeliveryScreen'
 import DebriefScreen from '@/components/game/screens/DebriefScreen'
 
 type Game = ReturnType<typeof useGame>
 type RocketDisplay = ReturnType<typeof rocketDisplayForConfig>
-export type MissionOperationRoute = Extract<Screen, 'transit' | 'mining' | 'rover-mining' | 'debrief'>
+export type MissionOperationRoute = Extract<Screen, 'transit' | 'mining' | 'rover-mining' | 'delivery' | 'debrief'>
 
 interface MissionOperationRoutesProps {
   screen: MissionOperationRoute
@@ -132,13 +133,27 @@ export default function MissionOperationRoutes({
         />
       )
 
+    case 'delivery':
+      if (!game.mission || !game.deliveryTargetId) return null
+      return (
+        <DeliveryScreen
+          target={transitTarget}
+          mission={game.mission}
+          cargo={game.lastCargo ?? {}}
+          minerals={game.catalog.minerals}
+          startedAt={game.player.deliveryUnloadStartedAt}
+          onBack={() => game.go('hub')}
+          onComplete={game.onDeliveryUnloadComplete}
+        />
+      )
+
     case 'debrief':
       if (!game.mission || !game.target) return null
       return (
         <DebriefScreen
           mission={game.mission}
           target={debriefOriginTarget}
-          cargo={game.lastCargo ?? {}}
+          cargo={game.deliveredCargo ?? game.lastCargo ?? {}}
           onDone={game.onDebriefDone}
           minerals={game.catalog.minerals}
           clients={game.catalog.clients}

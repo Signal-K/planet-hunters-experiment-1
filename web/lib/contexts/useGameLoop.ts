@@ -5,7 +5,8 @@ import {
   CLIENT_COOLDOWN_MS, CLIENT_STREAK_LIMIT, loanInstalmentFor, BANKRUPTCY_THRESHOLD,
   isOwnProgramMission,
 } from '@/lib/data'
-import { applyDeliveryArrived, applyMiningDone, applyReturnArrived, applyRoverMiningDone } from '@/lib/systems/MiningSystem'
+import { applyMiningDone, applyReturnArrived, applyRoverMiningDone } from '@/lib/systems/MiningSystem'
+import { applyDeliveryArrived, applyDeliveryUnloadComplete } from '@/lib/systems/DeliverySystem'
 import { applyPurchaseRocket } from '@/lib/systems/EconomySystem'
 import { enqueueSurvey } from '@/lib/surveys'
 import type { Catalog } from '@/lib/catalog'
@@ -201,6 +202,18 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
   }, [addToast, catalog.targets, setState, stateRef])
 
   const onDeliveryArrived = useCallback(() => {
+    const startedAt = Date.now()
+    setState(s => applyDeliveryArrived(s, startedAt))
+    const runId = stateRef.current.player.missionRunId ?? missionRunIdRef.current
+    if (runId) {
+      pbLandnam.collection('mission_runs').update(runId, {
+        status: 'in_progress', phase: 'delivery',
+      }).catch(error => console.warn('[GameLoop] mission run delivery update failed', error))
+    }
+    addToast('Delivery berth acquired — unload in progress', 'ok')
+  }, [addToast, setState, stateRef])
+
+  const onDeliveryUnloadComplete = useCallback(() => {
     const transitStartedAt = Date.now()
     setState(s => {
       const deliveryTarget = s.deliveryTargetId ? catalog.targets.find(t => t.id === s.deliveryTargetId) : null
@@ -208,10 +221,16 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
       const arrivalAt = (timedTransit && deliveryTarget)
         ? transitStartedAt + travelDurationMs(deliveryTarget, s.player.unlockedSkillNodes ?? [], ORBIT_MS_PER_UNIT)
         : null
-      return applyDeliveryArrived(s, arrivalAt, timedTransit ? transitStartedAt : null)
+      return applyDeliveryUnloadComplete(s, arrivalAt, transitStartedAt)
     })
-    addToast('Delivered — course set for Earth', 'ok')
-  }, [addToast, catalog.targets, setState])
+    const runId = stateRef.current.player.missionRunId ?? missionRunIdRef.current
+    if (runId) {
+      pbLandnam.collection('mission_runs').update(runId, {
+        status: 'in_progress', phase: 'transit', cargo: {},
+      }).catch(error => console.warn('[GameLoop] mission run Earth-return update failed', error))
+    }
+    addToast('Cargo unloaded — course set for Earth', 'ok')
+  }, [addToast, catalog.targets, setState, stateRef])
 
   const onReturnArrived = useCallback(() => {
     setState(s => applyReturnArrived(s))
@@ -366,8 +385,12 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
         }
       }
       const stash = { ...(s.player.stash ?? {}) }
-      for (const [id, amount] of Object.entries(consumed)) {
-        stash[id] = Math.max(0, (stash[id] ?? 0) - amount)
+      // A delivery-target contract already moved the minerals out of the ship
+      // at the unload berth, so they never entered Earth Base storage.
+      if (!mission?.deliveryTargetId) {
+        for (const [id, amount] of Object.entries(consumed)) {
+          stash[id] = Math.max(0, (stash[id] ?? 0) - amount)
+        }
       }
       let loanDebt = s.player.loanDebt
       let francs = s.player.francs + total
@@ -428,6 +451,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
           missionPhase: undefined,
           debriefPending: false,
           returningToEarth: false,
+          deliveryUnloadStartedAt: undefined,
           shipDestroyed: false,
           missionsDone,
           skillPoints: (s.player.skillPoints ?? 0) + 1,
@@ -453,8 +477,10 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
             : s.player.transitSatelliteLevel,
         },
         lastCargo: null,
+        deliveredCargo: null,
         missionId: null,
         targetId: null,
+        deliveryTargetId: null,
         tutorial: stillInTutorial,
         popup,
         doneSteps: { ...s.doneSteps, 9: true },
@@ -489,7 +515,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
     const runId = current.player.missionRunId ?? missionRunIdRef.current
     if (runId) {
       pbLandnam.collection('mission_runs').update(runId, {
-        status: 'completed', phase: 'debrief', cargo: current.lastCargo,
+        status: 'completed', phase: 'debrief', cargo: current.deliveredCargo ?? current.lastCargo,
         payout_francs: total, completed_at: new Date().toISOString(),
       }).catch(error => console.warn('[GameLoop] mission run completion update failed', error))
     }
@@ -515,7 +541,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
   return {
     setPlayer, setMissionId, setTargetId, setRocket, setLastCargo,
     onPickMission, onPickTarget, onPurchaseRocket, onLaunch,
-    onMiningDone, onDeliveryArrived, onReturnArrived, onRoverMiningDone, onDebriefDone,
+    onMiningDone, onDeliveryArrived, onDeliveryUnloadComplete, onReturnArrived, onRoverMiningDone, onDebriefDone,
     gainResearchXP, upgradeLicenseGrade, unlockBlueprint, launchTransitSatellite, submitTessClassification, chooseSatelliteTarget,
   }
 }

@@ -20,6 +20,7 @@ export type Screen =
   | 'fab'
   | 'transit'
   | 'mining'
+  | 'delivery'
   | 'debrief'
   | 'refinery'
   | 'market'
@@ -70,7 +71,7 @@ export interface Player {
   // PocketBase mission_runs record for the current run. Kept in the save so a
   // refresh/resume continues updating the same server-side lifecycle record.
   missionRunId?: string
-  missionPhase?: 'transit' | 'mining' | 'debrief'
+  missionPhase?: 'transit' | 'mining' | 'delivery' | 'debrief'
   // Ore collected so far during an in-progress mining run, preserved across a
   // "Back to hub" pause so resuming the mission doesn't silently discard
   // already-collected cargo (that cargo only lived in MiningScreen's local
@@ -82,6 +83,10 @@ export interface Player {
   // zero (RoverMiningScreen would otherwise re-init its own Date.now() on
   // remount). Cleared once the run completes or is abandoned.
   roverMiningStartedAt?: number
+  // Wall-clock start of the cargo-transfer operation at a two-leg mission's
+  // delivery target. The unload scene derives progress from this epoch so
+  // remounts, hidden tabs, and Back-to-hub pauses cannot restart it.
+  deliveryUnloadStartedAt?: number
   missionCount: number
   pendingLaunch: boolean
   placed: string[]
@@ -191,6 +196,10 @@ export interface GameState {
   deliveryTargetId?: string | null
   rocket: RocketConfig
   lastCargo: Record<string, number> | null
+  // Receipt retained after a two-leg mission unloads the ship. `lastCargo`
+  // becomes an empty hold before the Earth-return leg, while Debrief still
+  // needs the delivered manifest to settle the contract.
+  deliveredCargo?: Record<string, number> | null
   tutorial: boolean
   doneSteps: Record<number, boolean>
   popup: string | null
@@ -231,6 +240,7 @@ export interface GameActions {
   onLaunch: () => void
   onMiningDone: (cargo: Record<string, number>) => void
   onDeliveryArrived: () => void
+  onDeliveryUnloadComplete: () => void
   onReturnArrived: () => void
   onDebriefDone: (total: number, affinity: number, consumed?: Record<string, number>) => void
   coachManualNext: () => void

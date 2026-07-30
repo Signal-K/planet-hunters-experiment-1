@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import type { GameState } from '@/lib/game-types'
-import { applyDeliveryArrived, applyMiningDone, applyReturnArrived, applyRoverMiningDone } from './MiningSystem'
+import { applyMiningDone, applyReturnArrived, applyRoverMiningDone } from './MiningSystem'
+import { applyDeliveryArrived, applyDeliveryUnloadComplete } from './DeliverySystem'
 
 type GameStateOverrides = Omit<Partial<GameState>, 'player'> & {
   player?: Partial<GameState['player']>
@@ -110,36 +111,29 @@ describe('applyRoverMiningDone', () => {
   })
 })
 
-describe('applyDeliveryArrived', () => {
-  it('starts the Earth-return leg once the delivery target is reached', () => {
-    const afterMining = applyMiningDone(makeState({ screen: 'mining', deliveryTargetId: 'ceres' }), { nickel: 2 }, 1_000)
-    const next = applyDeliveryArrived(afterMining, 2_000)
-
-    expect(next.screen).toBe('transit')
-    expect(next.player.headingToDelivery).toBe(false)
-    expect(next.player.returningToEarth).toBe(true)
-    expect(next.player.debriefPending).toBe(true)
-    expect(next.player.arrivalAt).toBe(2_000)
-  })
-
-  it('is a no-op if the player is not heading to a delivery target', () => {
-    const s = makeState({ player: { headingToDelivery: false } })
-    expect(applyDeliveryArrived(s, 1_000)).toBe(s)
-  })
-})
-
 describe('applyReturnArrived', () => {
-  it('merges cargo into stash, destroys the ship, and clears deliveryTargetId', () => {
+  it('keeps delivered cargo out of the Earth stash and retains its receipt for debrief', () => {
     const afterMining = applyMiningDone(makeState({ screen: 'mining', deliveryTargetId: 'ceres' }), { nickel: 2 }, 1_000)
-    const afterDelivery = applyDeliveryArrived(afterMining, 2_000)
+    const unloading = applyDeliveryArrived(afterMining, 2_000)
+    const afterDelivery = applyDeliveryUnloadComplete(unloading, 3_000, 2_500)
     const next = applyReturnArrived(afterDelivery)
 
     expect(next.screen).toBe('debrief')
     expect(next.deliveryTargetId).toBeNull()
-    expect(next.player.stash).toEqual({ nickel: 2 })
+    expect(next.player.stash).toEqual({})
+    expect(next.lastCargo).toEqual({})
+    expect(next.deliveredCargo).toEqual({ nickel: 2 })
     expect(next.player.shipDestroyed).toBe(true)
     expect(next.player.debriefPending).toBe(false)
     expect(next.player.returningToEarth).toBe(false)
+  })
+
+  it('merges cargo into stash for a single-leg Earth return', () => {
+    const afterMining = applyMiningDone(makeState({ screen: 'mining' }), { nickel: 2 }, 1_000)
+    const next = applyReturnArrived(afterMining)
+
+    expect(next.player.stash).toEqual({ nickel: 2 })
+    expect(next.deliveredCargo).toBeNull()
   })
 
   it('is a no-op without pending debrief cargo', () => {

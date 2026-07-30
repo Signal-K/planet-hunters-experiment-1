@@ -6,7 +6,7 @@ import type { Player, Screen } from '@/lib/game-types'
 // would be redundant (or would float over live mining/transit UI) if shown
 // on any of these, so it only surfaces once the player has actually
 // navigated away to Base/Missions/Atlas/Build/Market.
-const MISSION_FLOW_SCREENS: Screen[] = ['transit', 'mining', 'rover-mining', 'debrief']
+const MISSION_FLOW_SCREENS: Screen[] = ['transit', 'mining', 'rover-mining', 'delivery', 'debrief']
 
 interface MissionTickerProps {
   player: Player

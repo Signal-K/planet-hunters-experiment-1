@@ -21,7 +21,7 @@ import { enqueueSurvey } from '@/lib/surveys'
 
 export const VALID_SCREENS = new Set<Screen>([
   'intro', 'build', 'hub', 'missions', 'galaxy', 'targets', 'fab',
-  'transit', 'mining', 'rover-mining', 'debrief', 'refinery',
+  'transit', 'mining', 'rover-mining', 'delivery', 'debrief', 'refinery',
   'market', 'hangar', 'rocket-buy', 'skills', 'scan-station',
   'launchpad',
   'surface-ops',
@@ -192,6 +192,7 @@ export function ScreenContent({
     case 'transit':
     case 'mining':
     case 'rover-mining':
+    case 'delivery':
     case 'debrief':
       if (!transitTarget || !debriefOriginTarget) return null
       return (

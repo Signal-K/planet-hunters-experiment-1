@@ -20,6 +20,7 @@ function startReturnLeg(s: GameState, cargo: Record<string, number>, arrivalAt: 
   return {
     ...s,
     lastCargo: cargo,
+    deliveredCargo: null,
     player: {
       ...s.player,
       arrivalAt,
@@ -31,22 +32,6 @@ function startReturnLeg(s: GameState, cargo: Record<string, number>, arrivalAt: 
       debriefPending: !hasDelivery,
       returningToEarth: !hasDelivery,
       shipDestroyed: false,
-    },
-    screen: 'transit',
-  }
-}
-
-export function applyDeliveryArrived(s: GameState, arrivalAt: number | null, transitStartedAt?: number | null): GameState {
-  if (!s.player.headingToDelivery || !s.deliveryTargetId) return s
-  return {
-    ...s,
-    player: {
-      ...s.player,
-      arrivalAt,
-      transitStartedAt: transitStartedAt ?? (arrivalAt ? Date.now() : null),
-      headingToDelivery: false,
-      debriefPending: true,
-      returningToEarth: true,
     },
     screen: 'transit',
   }

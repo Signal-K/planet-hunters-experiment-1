@@ -124,6 +124,7 @@ export function applyAbandonMission(s: GameState, missions: Mission[]): GameStat
       missionPhase: undefined,
       miningCargoInProgress: undefined,
       roverMiningStartedAt: undefined,
+      deliveryUnloadStartedAt: undefined,
       arrivalAt: null,
       transitStartedAt: null,
       dailyClientPool,
@@ -136,6 +137,7 @@ export function applyAbandonMission(s: GameState, missions: Mission[]): GameStat
     targetId: null,
     deliveryTargetId: null,
     lastCargo: null,
+    deliveredCargo: null,
     screen: 'hub',
   }
 }

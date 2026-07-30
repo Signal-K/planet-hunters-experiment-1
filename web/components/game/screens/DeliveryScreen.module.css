@@ -1,0 +1,180 @@
+.screen {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 72% 35%, rgba(63, 169, 255, .09), transparent 34%),
+    #050a12;
+}
+
+.stage {
+  position: relative;
+  flex: 1;
+  min-height: 250px;
+  margin-top: 72px;
+  overflow: hidden;
+}
+
+.targetLabel {
+  position: absolute;
+  top: 18px;
+  right: 14px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+  padding: 7px 10px;
+  border: 1px solid rgba(63, 169, 255, .26);
+  border-radius: 6px;
+  background: rgba(5, 10, 18, .78);
+  backdrop-filter: blur(6px);
+}
+
+.targetLabel span,
+.kicker,
+.progressMeta,
+.fee span,
+.holdState span {
+  color: var(--ln-text-muted);
+  font: 700 9px var(--ln-font-display);
+  letter-spacing: .18em;
+}
+
+.targetLabel strong {
+  color: var(--ln-cyan);
+  font: 800 12px var(--ln-font-display);
+  letter-spacing: .1em;
+  text-transform: uppercase;
+}
+
+.hud {
+  position: relative;
+  z-index: 3;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  padding: 16px;
+  border-top: 1px solid rgba(63, 169, 255, .18);
+  background: linear-gradient(180deg, rgba(5, 10, 18, .94), #050a12 24%);
+}
+
+.statusRow,
+.progressMeta,
+.cargoRow,
+.holdState,
+.fee {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.kicker {
+  color: var(--ln-amber);
+}
+
+.contract {
+  margin-top: 3px;
+  color: var(--ln-text);
+  font: 700 13px var(--ln-font-display);
+}
+
+.timer {
+  color: var(--ln-amber);
+  font: 700 15px var(--ln-font-mono);
+}
+
+.progressMeta strong {
+  color: var(--ln-amber);
+  font: 700 12px var(--ln-font-mono);
+}
+
+.track {
+  height: 5px;
+  overflow: hidden;
+  border-radius: 99px;
+  background: rgba(245, 166, 35, .12);
+}
+
+.fill {
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #b96e0b, var(--ln-amber));
+  box-shadow: 0 0 12px rgba(245, 166, 35, .45);
+  transition: width .1s linear;
+}
+
+.manifest {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 5px;
+}
+
+.cargoRow,
+.holdState {
+  min-width: 0;
+  padding: 7px 9px;
+  border: 1px solid rgba(169, 184, 206, .12);
+  border-radius: 6px;
+  background: rgba(16, 27, 43, .72);
+  color: var(--ln-text-dim);
+  font: 600 10px var(--ln-font-display);
+}
+
+.cargoRow strong,
+.holdState strong {
+  margin-left: auto;
+  color: var(--ln-text);
+  font: 700 11px var(--ln-font-mono);
+}
+
+.swatch {
+  width: 7px;
+  height: 7px;
+  flex: 0 0 auto;
+  border-radius: 2px;
+  box-shadow: 0 0 8px currentColor;
+}
+
+.holdState {
+  grid-column: 1 / -1;
+  border-color: rgba(245, 166, 35, .22);
+}
+
+.holdState strong {
+  color: var(--ln-amber);
+}
+
+.fee {
+  padding: 9px 10px;
+  border-left: 2px solid var(--ln-amber);
+  background: rgba(245, 166, 35, .07);
+}
+
+.fee div {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.fee small {
+  color: var(--ln-text-muted);
+  font: 10px var(--ln-font-body);
+}
+
+.fee strong {
+  color: var(--ln-amber);
+  font: 800 14px var(--ln-font-mono);
+}
+
+@media (max-height: 720px) {
+  .stage {
+    min-height: 190px;
+  }
+
+  .hud {
+    gap: 7px;
+    padding: 12px 14px;
+  }
+}
