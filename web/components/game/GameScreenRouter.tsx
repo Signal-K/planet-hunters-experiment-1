@@ -14,6 +14,7 @@ import MarketScreen from '@/components/game/screens/MarketScreen'
 import HangarScreen from '@/components/game/screens/HangarScreen'
 import SkillTreeScreen from '@/components/game/screens/SkillTreeScreen'
 import ScanStationScreen from '@/components/game/screens/ScanStationScreen'
+import LaunchpadScreen from '@/components/game/screens/LaunchpadScreen'
 import TessDiscoveryScreen from '@/components/game/screens/TessDiscoveryScreen'
 import { enqueueSurvey } from '@/lib/surveys'
 
@@ -21,6 +22,7 @@ export const VALID_SCREENS = new Set<Screen>([
   'intro', 'build', 'hub', 'missions', 'galaxy', 'targets', 'fab',
   'transit', 'mining', 'rover-mining', 'debrief', 'refinery',
   'market', 'hangar', 'rocket-buy', 'skills', 'scan-station',
+  'launchpad',
 ])
 
 // Shared per-screen render map — the single source of truth for "which
@@ -135,11 +137,18 @@ export function ScreenContent({
             if (building === 'scan-station') return game.go('scan-station')
             if (building === 'satellite-monitoring-station') return game.go('galaxy')
             if (building === 'launchpad' || building === 'missions') {
+              // A run in flight always wins — the pad is how you get back to it.
               if (game.player.activeMission) {
                 enqueueSurvey('lnm_resume_mission', 1200)
                 return game.go(game.player.missionPhase ?? 'transit')
               }
               if (game.player.pendingLaunch) return game.go('fab')
+              // Tapping the launchpad opens the player's own program first;
+              // client contracts are one press further in. During onboarding it
+              // still goes straight to the board: M1/M2 are a coached sequence
+              // that names the Mission Board as the next step, and the player
+              // owns nothing of their own to launch yet.
+              if (building === 'launchpad' && game.player.freeOperations) return game.go('launchpad')
               game.goToMissions()
             }
           }}
@@ -265,6 +274,19 @@ export function ScreenContent({
           onBack={() => game.go('hub')}
           onStartScan={game.startScan}
           onCollectScan={game.collectScan}
+        />
+      )
+
+    case 'launchpad':
+      return (
+        <LaunchpadScreen
+          onBack={() => game.go('hub')}
+          onPick={game.onPickMission}
+          onViewContracts={() => game.goToMissions()}
+          missionsDone={game.player.missionsDone}
+          freeOperations={game.player.freeOperations}
+          catalog={game.catalog}
+          francs={game.player.francs}
         />
       )
 

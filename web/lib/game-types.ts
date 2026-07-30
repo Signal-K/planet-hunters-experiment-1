@@ -28,6 +28,7 @@ export type Screen =
   | 'skills'
   | 'scan-station'
   | 'rover-mining'
+  | 'launchpad'
 
 export type LicenseGrade = 'Grade I' | 'Grade II' | 'Grade III'
 

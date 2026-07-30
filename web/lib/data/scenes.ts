@@ -94,6 +94,7 @@ export const SCENES: readonly SceneDefinition[] = [
   { id: 'hangar', name: 'Hangar', surface: 'dom', location: 'earth-base', screen: 'hangar', entityTypes: [], description: 'Owned ships and the ship customiser interior view.' },
   { id: 'skills', name: 'Skill Tree', surface: 'dom', location: 'menu', screen: 'skills', entityTypes: [], description: 'Four branches — mining, cargo, range, engineering.' },
   { id: 'scan-station', name: 'Scan Station', surface: 'dom', location: 'earth-base', screen: 'scan-station', entityTypes: [], description: 'Daily target scans; grants research XP.' },
+  { id: 'launchpad', name: 'Launchpad', surface: 'dom', location: 'earth-base', screen: 'launchpad', entityTypes: [], description: 'The player\'s own program — satellites and self-directed runs they launch on their own initiative. Client contracts live one press away on the Mission Board.' },
   { id: 'galaxy', name: 'Galaxy Map', surface: 'dom', location: 'orbit', screen: 'galaxy', entityTypes: [], description: 'Star map beyond the solar system. Free Ops only.' },
 ]
 
