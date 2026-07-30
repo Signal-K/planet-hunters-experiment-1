@@ -6,7 +6,7 @@ import TopBar from '@/components/ui/TopBar'
 import Panel from '@/components/ui/Panel'
 import StatusPill from '@/components/ui/StatusPill'
 import { IconBtn } from '@/components/ui/Button'
-import { compatibleTargetsFor, clientAffinityBonus, clientUnlocked, FREE_OPS_START_MISSIONS_DONE, CLIENT_AFFINITY_MISSION_THRESHOLD, MISSION_TEMPLATES, CLIENT_SLOTS, SELF_DIRECTED_MINING_MISSION_ID, missionTypePrimer, isOwnProgramMission } from '@/lib/data'
+import { compatibleTargetsFor, clientAffinityBonus, clientUnlocked, FREE_OPS_START_MISSIONS_DONE, CLIENT_AFFINITY_MISSION_THRESHOLD, MISSION_TEMPLATES, CLIENT_SLOTS, SELF_DIRECTED_MINING_MISSION_ID, missionTypePrimer, isOwnProgramMission, partitionByOwner } from '@/lib/data'
 import type { DailyClientPool, Mission } from '@/lib/data'
 import type { Catalog } from '@/lib/catalog'
 import { TUTORIAL_CONTENT_TOP } from '@/lib/tutorial-layout'
@@ -262,6 +262,29 @@ export default function MissionBoardScreen({ onBack, onPick, missionsDone, freeO
     })
     .filter((c): c is NonNullable<typeof c> => c !== null)
 
+  // Two kinds of work were reading as one undifferentiated list: jobs a client
+  // issued (someone else's order, someone else's structure, pays a fee) and the
+  // player's own program (refineries and scanners they own, satellites they
+  // launch, self-directed runs they sell themselves). `isOwnProgramMission` is
+  // already the authority on that distinction — the board now groups by it
+  // instead of leaving the player to infer ownership from a payout figure.
+  // Client work leads: it's the paid, expiring, cooldown-bound side.
+  const { client: clientCards, own: ownProgramCards } = partitionByOwner(cardModels, c => c.mission)
+  const sections = [
+    {
+      key: 'client' as const,
+      title: freeOperations ? 'Client Requests' : 'Active Contracts',
+      sub: 'Issued by a client · paid on delivery',
+      cards: clientCards,
+    },
+    {
+      key: 'own-program' as const,
+      title: 'Your Program',
+      sub: 'Your own infrastructure & runs · no client',
+      cards: ownProgramCards,
+    },
+  ].filter(s => s.cards.length > 0)
+
   const effectivePreviewId = previewId ?? cardModels.find(c => c.unlocked)?.mission.id ?? cardModels[0]?.mission.id ?? null
   const previewModel = cardModels.find(c => c.mission.id === effectivePreviewId) ?? null
   const primer = previewModel ? missionTypePrimer(previewModel.mission) : null
@@ -302,39 +325,49 @@ export default function MissionBoardScreen({ onBack, onPick, missionsDone, freeO
           <div className={styles.canvas}>
             <CornerBracket position="tl" /><CornerBracket position="tr" />
             <CornerBracket position="bl" /><CornerBracket position="br" />
-            <div className={styles.boardHeader}>
-              <div>
-                <div className={styles.boardHeaderTitle}>{freeOperations ? 'Client Requests' : 'Active Contracts'}</div>
-                <div className={styles.boardHeaderSub}>Client jobs &amp; market runs</div>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <span className={styles.boardHeaderCount}>{available.length} open</span>
-                <span className={styles.sortSelect}>Payout</span>
-              </div>
-            </div>
+            {sections.map((section, sectionIdx) => (
+              <div
+                key={section.key}
+                data-testid={`mission-board-section-${section.key}`}
+                className={sectionIdx > 0 ? styles.boardSectionFollowing : undefined}
+              >
+                <div className={styles.boardHeader}>
+                  <div>
+                    <div className={styles.boardHeaderTitle}>{section.title}</div>
+                    <div className={styles.boardHeaderSub}>{section.sub}</div>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <span className={styles.boardHeaderCount}>
+                      {section.cards.filter(c => c.unlocked).length} open
+                    </span>
+                    {sectionIdx === 0 && <span className={styles.sortSelect}>Payout</span>}
+                  </div>
+                </div>
 
-            <div className={styles.cardList}>
-              {cardModels.map(c => (
-                <MissionCard
-                  key={c.mission.id}
-                  mission={c.mission}
-                  client={c.client}
-                  mineralMeta={MINERAL_META}
-                  targetCount={c.targetCount}
-                  displayPayout={c.displayPayout}
-                  unlocked={c.unlocked}
-                  isStoryMission={c.isStoryMission}
-                  cardState={c.cardState}
-                  lockedDetail={c.lockedDetail}
-                  cooldownLabel={c.cooldownLabel}
-                  highlighted={c.isHighlighted}
-                  previewed={c.mission.id === effectivePreviewId}
-                  routeLabel={c.routeLabel}
-                  onPick={() => onPick(c.mission.id)}
-                  onPreview={() => setPreviewId(c.mission.id)}
-                />
-              ))}
-            </div>
+                <div className={styles.cardList}>
+                  {section.cards.map(c => (
+                    <MissionCard
+                      key={c.mission.id}
+                      mission={c.mission}
+                      client={c.client}
+                      mineralMeta={MINERAL_META}
+                      targetCount={c.targetCount}
+                      displayPayout={c.displayPayout}
+                      unlocked={c.unlocked}
+                      isStoryMission={c.isStoryMission}
+                      cardState={c.cardState}
+                      lockedDetail={c.lockedDetail}
+                      cooldownLabel={c.cooldownLabel}
+                      highlighted={c.isHighlighted}
+                      previewed={c.mission.id === effectivePreviewId}
+                      routeLabel={c.routeLabel}
+                      onPick={() => onPick(c.mission.id)}
+                      onPreview={() => setPreviewId(c.mission.id)}
+                    />
+                  ))}
+                </div>
+              </div>
+            ))}
 
             {hasClientMission && (
               <div className={styles.disclaimer}>

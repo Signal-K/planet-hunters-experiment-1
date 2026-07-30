@@ -45,6 +45,24 @@ export function isOwnProgramMission(mission: Mission): boolean {
     || mission.payload?.type === 'satellite'
 }
 
+/**
+ * Splits a board list into client work and the player's own program, preserving
+ * the incoming order within each group.
+ *
+ * The Mission Board groups by this rather than showing one flat list: a client
+ * request is somebody else's order against somebody else's structure and pays a
+ * fee, while own-program work builds and flies things the player keeps. Reading
+ * that difference off a payout figure is exactly what playtesters could not do.
+ */
+export function partitionByOwner<T>(items: T[], missionOf: (item: T) => Mission): { client: T[]; own: T[] } {
+  const client: T[] = []
+  const own: T[] = []
+  for (const item of items) {
+    (isOwnProgramMission(missionOf(item)) ? own : client).push(item)
+  }
+  return { client, own }
+}
+
 export function missionTypePrimer(mission: Mission): MissionTypePrimer {
   const owner: MissionTypePrimer['owner'] = isOwnProgramMission(mission) ? 'self' : 'client'
 

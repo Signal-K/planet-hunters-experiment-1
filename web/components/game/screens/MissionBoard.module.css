@@ -82,6 +82,15 @@
   z-index: 2;
 }
 
+/* Client work and the player's own program are separate groups on the board.
+   A hairline plus 8pt-rhythm spacing is the whole separator — shape, not a
+   second accent colour. */
+.boardSectionFollowing {
+  margin-top: 24px;
+  padding-top: 24px;
+  border-top: 1px solid var(--ln-hairline);
+}
+
 .card {
   display: grid;
   grid-template-columns: 44px 1fr auto;
