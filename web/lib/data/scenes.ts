@@ -16,7 +16,7 @@ import type { Screen } from '@/lib/game-types'
 export type SceneSurface = 'canvas' | 'dom'
 
 /** Where the place physically is. Drives which actors may be present. */
-export type SceneLocation = 'earth-base' | 'orbit' | 'transit' | 'target-surface' | 'menu'
+export type SceneLocation = 'earth-base' | 'earth-base-subsurface' | 'orbit' | 'transit' | 'target-surface' | 'menu'
 
 export interface SceneDefinition {
   id: string
@@ -52,6 +52,38 @@ export const SCENES: readonly SceneDefinition[] = [
     sceneFile: '/game/scenes/hub.scene.json',
     entityTypes: ['BuildPlot'],
     description: 'Structure placement over the same Earth Base plots. Note it loads the hub scene — `build-place.scene.json` is orphaned.',
+  },
+  {
+    id: 'subsurface',
+    name: 'Earth Base Subsurface',
+    surface: 'dom',
+    location: 'earth-base-subsurface',
+    entityTypes: [],
+    description: 'Embedded below-soil logistics deck reached from the Earth Base scene.',
+  },
+  {
+    id: 'subsurface-mineral-vault',
+    name: 'Mineral Vault',
+    surface: 'dom',
+    location: 'earth-base-subsurface',
+    entityTypes: [],
+    description: 'Live view of the player mineral stash for refining, construction and sale.',
+  },
+  {
+    id: 'subsurface-parts-locker',
+    name: 'Parts Stores',
+    surface: 'dom',
+    location: 'earth-base-subsurface',
+    entityTypes: [],
+    description: 'Catalog of the current registered Hangar hardware loadout.',
+  },
+  {
+    id: 'subsurface-habitat-training',
+    name: 'Habitat Training',
+    surface: 'dom',
+    location: 'earth-base-subsurface',
+    entityTypes: [],
+    description: 'Feature-gated below-soil astronaut habitat rehearsal scene. No training mechanics are active yet.',
   },
   {
     id: 'mining',

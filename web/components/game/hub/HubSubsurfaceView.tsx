@@ -1,201 +1,309 @@
 'use client'
 
-/**
- * Full-screen underground cross-section shown when subsurface mode is active.
- * Three strata (A=topsoil, B=subsoil, C=bedrock) fill the viewport top-to-bottom.
- */
-const W = 402
-const H = 874
+import { useState } from 'react'
+import {
+  ArrowLeft,
+  Boxes,
+  Dumbbell,
+  LockKeyhole,
+  PackageOpen,
+  Warehouse,
+} from 'lucide-react'
+import {
+  CUSTOMIZER_PARTS,
+  MINERAL_META,
+  SUBSURFACE_ROOMS,
+  type InstalledCustomizerPartsByKind,
+  type SubsurfaceRoomId,
+} from '@/lib/data'
+import styles from './HubSubsurfaceView.module.css'
 
-const A_H = H * 0.30   // topsoil   (top 30%)
-const B_H = H * 0.38   // subsoil   (next 38%)
-const B_TOP = A_H
-const C_TOP = A_H + B_H // bedrock   (bottom 32%)
+interface HubSubsurfaceViewProps {
+  stash?: Record<string, number>
+  installedParts?: InstalledCustomizerPartsByKind
+  trainingEnabled?: boolean
+}
 
-export function HubSubsurfaceView() {
+interface StoredMineral {
+  id: string
+  amount: number
+  name: string
+  symbol: string
+  color: string
+  rarity: string
+}
+
+interface RegisteredPart {
+  id: string
+  name: string
+  kind: string
+}
+
+export function storedMinerals(stash: Record<string, number> = {}): StoredMineral[] {
+  return Object.entries(stash)
+    .filter(([, amount]) => amount > 0)
+    .map(([id, amount]) => {
+      const meta = MINERAL_META[id]
+      return {
+        id,
+        amount,
+        name: meta?.name ?? id,
+        symbol: meta?.sym ?? id.slice(0, 2).toUpperCase(),
+        color: meta?.color ?? 'var(--ln-text-muted)',
+        rarity: meta?.rarity ?? 'unclassified',
+      }
+    })
+    .sort((a, b) => b.amount - a.amount || a.name.localeCompare(b.name))
+}
+
+export function registeredParts(
+  installedParts: InstalledCustomizerPartsByKind = {},
+): RegisteredPart[] {
+  return Object.entries(installedParts)
+    .flatMap(([kind, partId]) => {
+      if (!partId) return []
+      const part = CUSTOMIZER_PARTS.find(candidate => candidate.id === partId)
+      return [{
+        id: partId,
+        name: part?.name ?? partId,
+        kind: part?.kind ?? kind,
+      }]
+    })
+    .sort((a, b) => a.kind.localeCompare(b.kind))
+}
+
+function RoomScene({ id }: { id: SubsurfaceRoomId }) {
+  if (id === 'mineral-vault') {
+    return (
+      <div className={styles.roomScene} aria-hidden="true">
+        <div className={styles.oreBins}>
+          {Array.from({ length: 4 }, (_, index) => <span className={styles.oreBin} key={index} />)}
+        </div>
+      </div>
+    )
+  }
+  if (id === 'parts-locker') {
+    return (
+      <div className={styles.roomScene} aria-hidden="true">
+        <div className={styles.rack}>
+          {Array.from({ length: 8 }, (_, index) => <span className={styles.rackCell} key={index} />)}
+        </div>
+      </div>
+    )
+  }
   return (
-    <div style={{ position: 'absolute', inset: 0, background: '#1a0e06' }}>
-      <svg
-        width="100%" height="100%"
-        viewBox={`0 0 ${W} ${H}`}
-        preserveAspectRatio="xMidYMid slice"
-        style={{ position: 'absolute', inset: 0, display: 'block' }}
-      >
-        <defs>
-          {/* Topsoil */}
-          <linearGradient id="sub-soil-a" x1="0" y1="0" x2="0" y2={A_H} gradientUnits="userSpaceOnUse">
-            <stop offset="0%" stopColor="#3b1f0e"/>
-            <stop offset="100%" stopColor="#2a1408"/>
-          </linearGradient>
-          {/* Subsoil */}
-          <linearGradient id="sub-soil-b" x1="0" y1={B_TOP} x2="0" y2={C_TOP} gradientUnits="userSpaceOnUse">
-            <stop offset="0%" stopColor="#2a1408"/>
-            <stop offset="100%" stopColor="#1e0c06"/>
-          </linearGradient>
-          {/* Bedrock */}
-          <linearGradient id="sub-soil-c" x1="0" y1={C_TOP} x2="0" y2={H} gradientUnits="userSpaceOnUse">
-            <stop offset="0%" stopColor="#1e1008"/>
-            <stop offset="100%" stopColor="#0c0806"/>
-          </linearGradient>
-        </defs>
+    <div className={styles.roomScene} aria-hidden="true">
+      <div className={styles.habitat} />
+    </div>
+  )
+}
+function RoomIcon({ id, size = 18 }: { id: SubsurfaceRoomId; size?: number }) {
+  if (id === 'mineral-vault') return <Warehouse size={size} strokeWidth={2} />
+  if (id === 'parts-locker') return <Boxes size={size} strokeWidth={2} />
+  return <Dumbbell size={size} strokeWidth={2} />
+}
 
-        {/* ── A Horizon — topsoil ─────────────────────────────────────── */}
-        <rect x="0" y="0" width={W} height={A_H} fill="url(#sub-soil-a)"/>
-
-        {/* Root network */}
-        {([
-          [40, 4, 80, 2],   [160, 8, 60, 1.5], [270, 2, 90, 2],  [350, 12, 45, 1.5],
-          [100, 50, 55, 1], [220, 40, 70, 1.5], [310, 60, 38, 1], [60, 80, 45, 1],
-          [180, 90, 65, 1], [290, 70, 50, 1.5], [380, 55, 20, 1], [25, 100, 40, 1.5],
-          [140, 120, 55, 1],[240, 110, 70, 1],  [370, 90, 30, 1.5],
-        ] as [number,number,number,number][]).map(([x,y,w,h], i) => (
-          <rect key={`ra${i}`} x={x} y={y} width={w} height={h} fill="#160b04" fillOpacity="0.5"/>
-        ))}
-
-        {/* Embedded stones */}
-        {([
-          [55, 28, 14, 7], [130, 52, 10, 5], [210, 18, 16, 8], [300, 64, 12, 6],
-          [370, 38, 11, 5], [82, 90, 9, 4],  [185, 108, 13, 6],[275, 95, 10, 5],
-          [45, 140, 8, 4],  [168, 82, 11, 5],[340, 118, 9, 4], [22, 60, 7, 3],
-        ] as [number,number,number,number][]).map(([cx,cy,rx,ry], i) => (
-          <ellipse key={`sa${i}`} cx={cx} cy={cy} rx={rx} ry={ry} fill="#1e1008" fillOpacity="0.65"/>
-        ))}
-
-        {/* Platinum (Pt) ore deposits — silver-white, near topsoil */}
-        {([
-          [78, 68, 9], [162, 88, 7], [298, 44, 8], [358, 110, 7], [120, 140, 6],
-        ] as [number,number,number][]).map(([cx,cy,r], i) => (
-          <g key={`pta${i}`}>
-            <circle cx={cx} cy={cy} r={r*1.8} fill="#e8e4d8" fillOpacity="0.12"/>
-            <circle cx={cx} cy={cy} r={r} fill="#e8e4d8" fillOpacity="0.9"/>
-            <circle cx={cx-r*0.3} cy={cy-r*0.3} r={r*0.35} fill="#ffffff" fillOpacity="0.7"/>
-          </g>
-        ))}
-
-        {/* Strata boundary A→B */}
-        <rect x="0" y={A_H - 2} width={W} height="4" fill="#120804" fillOpacity="0.8"/>
-        <path d={`M0,${A_H} Q100,${A_H - 5} 200,${A_H + 3} T${W},${A_H}`} stroke="#ff9a7822" strokeWidth="1" fill="none"/>
-
-        {/* Stratum label A */}
-        <text x="14" y="22" fontFamily="monospace" fontSize="9" letterSpacing="2" fill="#9c8d70" fillOpacity="0.7" textAnchor="start" style={{ textTransform: 'uppercase' }}>A · TOPSOIL · Pt</text>
-
-        {/* ── B Horizon — subsoil / iron-clay ────────────────────────── */}
-        <rect x="0" y={B_TOP} width={W} height={B_H} fill="url(#sub-soil-b)"/>
-
-        {/* Fe-oxide nodules */}
-        {([
-          [48, 18, 10, 5], [140, 28, 8, 4],  [222, 14, 11, 5], [308, 32, 9, 4],
-          [375, 20, 8, 4],  [86, 52, 9, 4],  [185, 44, 12, 5], [270, 58, 8, 4],
-          [55, 82, 11, 5],  [168, 72, 9, 4], [340, 68, 10, 4], [400, 48, 7, 3],
-          [22, 38, 8, 3],   [248, 82, 8, 4], [128, 96, 10, 4], [310, 100, 9, 4],
-        ] as [number,number,number,number][]).map(([cx,cy,rx,ry], i) => (
-          <ellipse key={`nb${i}`} cx={cx} cy={B_TOP + cy} rx={rx} ry={ry} fill="#4a0e04" fillOpacity="0.55"/>
-        ))}
-
-        {/* Angular rock shards */}
-        {([
-          [55, 22, 22, 11, 14], [175, 36, 18, 9, 12], [288, 18, 24, 12, 16],
-          [128, 58, 16, 8, 10], [238, 66, 18, 9, 12], [360, 44, 16, 8, 10],
-          [72, 94, 14, 7, 9],   [200, 88, 20, 10, 13],[330, 80, 16, 8, 11],
-          [42, 128, 18, 9, 12], [162, 120, 14, 7, 9], [280, 112, 20, 10, 13],
-        ] as [number,number,number,number,number][]).map(([rx,ry,bw,bh,tip], i) => (
-          <polygon key={`shb${i}`}
-            points={`${rx},${B_TOP+ry} ${rx+bw},${B_TOP+ry} ${rx+bw/2},${B_TOP+ry-tip}`}
-            fill="#1e0c04" fillOpacity="0.5"
-          />
-        ))}
-
-        {/* Palladium (Pd) deposits — lavender-silver, in subsoil */}
-        {([
-          [92, 38, 8], [230, 56, 7], [340, 30, 8], [170, 100, 7], [58, 120, 6],
-          [300, 116, 7],
-        ] as [number,number,number][]).map(([cx,cy,r], i) => (
-          <g key={`pdb${i}`}>
-            <circle cx={cx} cy={B_TOP+cy} r={r*1.8} fill="#d4cce8" fillOpacity="0.10"/>
-            <circle cx={cx} cy={B_TOP+cy} r={r}     fill="#d4cce8" fillOpacity="0.88"/>
-            <circle cx={cx-r*0.3} cy={B_TOP+cy-r*0.3} r={r*0.35} fill="#ede8f8" fillOpacity="0.7"/>
-          </g>
-        ))}
-
-        {/* Iridium (Ir) deposits — steel gray, subsoil deep */}
-        {([
-          [145, 128, 7], [275, 140, 8], [390, 120, 6],
-        ] as [number,number,number][]).map(([cx,cy,r], i) => (
-          <g key={`irb${i}`}>
-            <circle cx={cx} cy={B_TOP+cy} r={r*1.8} fill="#b8b4cc" fillOpacity="0.10"/>
-            <circle cx={cx} cy={B_TOP+cy} r={r}     fill="#b8b4cc" fillOpacity="0.85"/>
-            <circle cx={cx-r*0.3} cy={B_TOP+cy-r*0.3} r={r*0.35} fill="#d8d4e8" fillOpacity="0.7"/>
-          </g>
-        ))}
-
-        {/* Strata boundary B→C */}
-        <rect x="0" y={C_TOP - 2} width={W} height="4" fill="#080604" fillOpacity="0.9"/>
-        <polygon points={`0,${C_TOP-18} 36,${C_TOP} 0,${C_TOP}`} fill="#1e1208"/>
-        <polygon points={`${W},${C_TOP-14} ${W-28},${C_TOP} ${W},${C_TOP}`} fill="#1e1208"/>
-
-        {/* Stratum label B */}
-        <text x="14" y={B_TOP + 18} fontFamily="monospace" fontSize="9" letterSpacing="2" fill="#9c8d70" fillOpacity="0.7" textAnchor="start">B · SUBSOIL · Pd / Ir</text>
-
-        {/* ── C Horizon — bedrock ─────────────────────────────────────── */}
-        <rect x="0" y={C_TOP} width={W} height={H - C_TOP} fill="url(#sub-soil-c)"/>
-
-        {/* Fracture lines */}
-        {([
-          [28, 6, 24, 32, -8], [110, 10, 18, 26, 5],  [200, 4, 28, 36, -10],
-          [275, 12, 22, 28, 6],[360, 8, 18, 24, -6],  [75, 22, 16, 22, 4],
-          [175, 28, 22, 30, -5],[320, 18, 18, 24, 7],  [48, 50, 14, 20, -4],
-          [140, 58, 20, 28, 5],[250, 52, 16, 22, -6], [380, 44, 12, 18, 4],
-          [92, 90, 18, 24, -7],[220, 88, 22, 30, 5],  [345, 80, 16, 22, -5],
-        ] as [number,number,number,number,number][]).map(([rx,ry,rw,rh,tilt], i) => (
-          <polygon key={`fc${i}`}
-            points={`${rx},${C_TOP+ry} ${rx+rw},${C_TOP+ry+tilt} ${rx+rw},${C_TOP+ry+rh+tilt} ${rx},${C_TOP+ry+rh}`}
-            fill="#040302" fillOpacity="0.35"
-          />
-        ))}
-
-        {/* Rhodium (Rh) deposits — warm silver, deep in bedrock */}
-        {([
-          [68, 40, 6], [195, 60, 7], [322, 45, 6], [138, 110, 5], [280, 100, 7],
-        ] as [number,number,number][]).map(([cx,cy,r], i) => (
-          <g key={`rhc${i}`}>
-            <circle cx={cx} cy={C_TOP+cy} r={r*2}   fill="#f0e8d4" fillOpacity="0.09"/>
-            <circle cx={cx} cy={C_TOP+cy} r={r}     fill="#f0e8d4" fillOpacity="0.85"/>
-            <circle cx={cx-r*0.3} cy={C_TOP+cy-r*0.3} r={r*0.4} fill="#fffaf0" fillOpacity="0.8"/>
-          </g>
-        ))}
-
-        {/* Gold (Au) deposits — amber, bedrock (transition/late mineral) */}
-        {([
-          [152, 80, 7], [300, 70, 6], [45, 130, 5], [240, 130, 7],
-        ] as [number,number,number][]).map(([cx,cy,r], i) => (
-          <g key={`auc${i}`}>
-            <circle cx={cx} cy={C_TOP+cy} r={r*1.8} fill="#ffd166" fillOpacity="0.10"/>
-            <circle cx={cx} cy={C_TOP+cy} r={r}     fill="#ffd166" fillOpacity="0.85"/>
-            <circle cx={cx-r*0.3} cy={C_TOP+cy-r*0.3} r={r*0.35} fill="#fff0b0" fillOpacity="0.7"/>
-          </g>
-        ))}
-
-        {/* Stratum label C */}
-        <text x="14" y={C_TOP + 18} fontFamily="monospace" fontSize="9" letterSpacing="2" fill="#9c8d70" fillOpacity="0.7" textAnchor="start">C · BEDROCK · Rh / Au</text>
-      </svg>
-
-      {/* Depth ruler on right edge */}
-      <div style={{
-        position: 'absolute', right: 0, top: 0, bottom: 0,
-        width: 28, display: 'flex', flexDirection: 'column',
-        borderLeft: '1px solid rgba(122,80,40,0.25)',
-      }}>
-        {[0, 25, 50, 75, 100].map(pct => (
-          <div key={pct} style={{
-            position: 'absolute',
-            top: `${pct}%`,
-            right: 4,
-            fontFamily: 'monospace', fontSize: 8,
-            letterSpacing: '0.1em', color: '#9c8d70',
-            opacity: 0.6,
-          }}>{pct === 0 ? '0m' : `${pct * 4}m`}</div>
-        ))}
+function MineralVault({ minerals }: { minerals: StoredMineral[] }) {
+  const totalUnits = minerals.reduce((sum, mineral) => sum + mineral.amount, 0)
+  return (
+    <div className={styles.detailPanel} data-testid="subsurface-mineral-vault">
+      <div className={styles.detailSummary}>
+        <div>
+          <div className={styles.metricValue}>{totalUnits}</div>
+          <div className={styles.metricLabel}>Units in secure storage</div>
+          <p className={styles.summaryCopy}>
+            Recovered ore remains in the Earth Base stash until it is refined,
+            committed to construction, or sold at the Commodity Exchange.
+          </p>
+        </div>
+        <span className={styles.status}>{minerals.length} species catalogued</span>
+      </div>
+      <div className={styles.inventoryList}>
+        {minerals.length > 0 ? minerals.map(mineral => (
+          <div className={styles.inventoryRow} key={mineral.id}>
+            <span
+              className={styles.mineralMark}
+              style={{ '--mineral-color': mineral.color } as React.CSSProperties}
+            >
+              {mineral.symbol}
+            </span>
+            <div>
+              <div className={styles.inventoryName}>{mineral.name}</div>
+              <div className={styles.inventoryMeta}>{mineral.rarity} · Vaulted ore</div>
+            </div>
+            <span className={styles.inventoryAmount}>{mineral.amount} U</span>
+          </div>
+        )) : (
+          <div className={styles.emptyState}>
+            <div>
+              <Warehouse size={32} strokeWidth={1.8} />
+              <div className={styles.emptyLabel}>No minerals stored</div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
+  )
+}
+
+function PartsLocker({ parts }: { parts: RegisteredPart[] }) {
+  return (
+    <div className={styles.detailPanel} data-testid="subsurface-parts-locker">
+      <div className={styles.detailSummary}>
+        <div>
+          <div className={styles.metricValue}>{parts.length}</div>
+          <div className={styles.metricLabel}>Components in registry</div>
+          <p className={styles.summaryCopy}>
+            The underground stores mirror the active Hangar loadout. Hardware
+            stays identified by room type so later storage and swap operations
+            can extend this registry without changing the scene.
+          </p>
+        </div>
+        <span className={styles.status}>{parts.length > 0 ? 'Registry online' : 'Racks available'}</span>
+      </div>
+      <div className={styles.partsList}>
+        {parts.length > 0 ? parts.map(part => (
+          <div className={styles.partRow} key={`${part.kind}-${part.id}`}>
+            <span className={styles.partKind}><PackageOpen size={17} strokeWidth={2} /></span>
+            <div>
+              <div className={styles.partName}>{part.name}</div>
+              <div className={styles.partMeta}>{part.kind.replaceAll('-', ' ')} module</div>
+            </div>
+            <span className={styles.partStatus}>In service</span>
+          </div>
+        )) : (
+          <div className={styles.emptyState}>
+            <div>
+              <Boxes size={32} strokeWidth={1.8} />
+              <div className={styles.emptyLabel}>No hardware registered</div>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
+function HabitatTraining({ enabled }: { enabled: boolean }) {
+  return (
+    <div className={styles.trainingPanel} data-testid="subsurface-habitat-training">
+      <div>
+        <span className={styles.trainingLock}>
+          {enabled
+            ? <Dumbbell size={28} strokeWidth={1.8} />
+            : <LockKeyhole size={28} strokeWidth={1.8} />}
+        </span>
+        <h2 className={styles.trainingTitle}>Habitat Training</h2>
+        <p className={styles.trainingCopy}>
+          {enabled
+            ? 'Feature flag enabled. The below-soil habitat scene is ready for the astronaut-training workflow to be connected.'
+            : 'Specialised astronaut rehearsals for enclosed habitats are planned here. Training mechanics remain offline while storage operations ship first.'}
+        </p>
+        <div className={styles.trainingStatus}>
+          {enabled ? 'Feature flag enabled' : 'Coming soon · Feature gated'}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+export function HubSubsurfaceView({
+  stash,
+  installedParts,
+  trainingEnabled = false,
+}: HubSubsurfaceViewProps) {
+  const [activeRoom, setActiveRoom] = useState<SubsurfaceRoomId | null>(null)
+  const minerals = storedMinerals(stash)
+  const parts = registeredParts(installedParts)
+  const totalMineralUnits = minerals.reduce((sum, mineral) => sum + mineral.amount, 0)
+  const activeDefinition = SUBSURFACE_ROOMS.find(room => room.id === activeRoom)
+
+  const roomMetric = (roomId: SubsurfaceRoomId) => {
+    if (roomId === 'mineral-vault') return `${totalMineralUnits} U`
+    if (roomId === 'parts-locker') return `${parts.length} PARTS`
+    return trainingEnabled ? 'FLAG ON' : 'LOCKED'
+  }
+
+  return (
+    <section className={styles.root} data-testid="hub-subsurface-view" aria-label="Earth Base subsurface">
+      <div className={styles.geology} aria-hidden="true">
+        <span className={`${styles.stratum} ${styles.stratumOne}`} />
+        <span className={`${styles.stratum} ${styles.stratumTwo}`} />
+        <span className={styles.serviceShaft} />
+        <div className={styles.depthRail}>
+          {[0, 25, 50, 75, 100].map(depth => (
+            <span key={depth}>
+              <i className={styles.depthTick} style={{ top: `${depth}%` }} />
+              <b className={styles.depthLabel} style={{ top: `${depth}%` }}>{depth * 4}M</b>
+            </span>
+          ))}
+        </div>
+      </div>
+
+      <div className={styles.content}>
+        {activeRoom && activeDefinition ? (
+          <div className={styles.detailView}>
+            <div className={styles.detailHeader}>
+              <button
+                className={styles.backButton}
+                data-testid="subsurface-room-back"
+                onClick={() => setActiveRoom(null)}
+              >
+                <span className={styles.backIcon}><ArrowLeft size={16} strokeWidth={2} /></span>
+                Deck
+              </button>
+              <div className={styles.detailCopy}>
+                <div className={styles.eyebrow}>{activeDefinition.eyebrow}</div>
+                <h2 className={styles.detailTitle}>{activeDefinition.name}</h2>
+              </div>
+            </div>
+            {activeRoom === 'mineral-vault' && <MineralVault minerals={minerals} />}
+            {activeRoom === 'parts-locker' && <PartsLocker parts={parts} />}
+            {activeRoom === 'habitat-training' && <HabitatTraining enabled={trainingEnabled} />}
+          </div>
+        ) : (
+          <>
+            <div className={styles.deckHeader}>
+              <div>
+                <div className={styles.eyebrow}>LEVEL 01 · LOGISTICS DECK</div>
+                <h2 className={styles.deckTitle}>Below-soil operations</h2>
+              </div>
+              <div className={styles.deckSummary}>
+                {totalMineralUnits} mineral units · {parts.length} registered parts
+              </div>
+            </div>
+            <div className={styles.roomGrid}>
+              {SUBSURFACE_ROOMS.map(room => {
+                const locked = room.id === 'habitat-training' && !trainingEnabled
+                return (
+                  <button
+                    className={`${styles.roomCard} ${locked ? styles.roomCardLocked : ''}`}
+                    data-testid={`subsurface-room-${room.id}`}
+                    key={room.id}
+                    onClick={() => setActiveRoom(room.id)}
+                  >
+                    <div className={styles.roomCardTop}>
+                      <span className={styles.roomIcon}><RoomIcon id={room.id} /></span>
+                      <div>
+                        <div className={styles.roomEyebrow}>{room.eyebrow}</div>
+                        <div className={styles.roomName}>{room.name}</div>
+                      </div>
+                    </div>
+                    <RoomScene id={room.id} />
+                    <p className={styles.roomDescription}>{room.description}</p>
+                    <div className={styles.roomCardFooter}>
+                      <span className={`${styles.status} ${locked ? styles.statusLocked : ''}`}>
+                        {locked ? 'Coming soon' : 'Online'}
+                      </span>
+                      <span className={styles.roomMetric}>{roomMetric(room.id)}</span>
+                    </div>
+                  </button>
+                )
+              })}
+            </div>
+          </>
+        )}
+      </div>
+    </section>
   )
 }

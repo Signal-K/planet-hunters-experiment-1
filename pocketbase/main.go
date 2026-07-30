@@ -406,19 +406,28 @@ func ensureCollections(app core.App) {
 		col.Fields.Add(&core.NumberField{Name: "seed"})
 		col.Fields.Add(&core.NumberField{Name: "schema_version"})
 		col.Fields.Add(&core.TextField{Name: "status", Max: 20})
+		col.Fields.Add(&core.TextField{Name: "body_id", Max: 80})
+		col.Fields.Add(&core.TextField{Name: "rover_name", Max: 80})
+		col.Fields.Add(&core.NumberField{Name: "time"})
 		// Sparse voxel edit deltas ("x,y,z" -> material), takeon's own delta
 		// save model — not a per-chunk table. Chunking is a client-side
 		// render cache (takeon's chunk-cached isometric renderer), not a
 		// storage concern, so there's no separate chunks collection.
 		col.Fields.Add(&core.JSONField{Name: "edits", MaxSize: 2000000})
 		col.Fields.Add(&core.JSONField{Name: "rover", MaxSize: 20000})
+		col.Fields.Add(&core.JSONField{Name: "anomalies", MaxSize: 200000})
 		col.Fields.Add(&core.JSONField{Name: "photos", MaxSize: 200000})
+		col.Fields.Add(&core.JSONField{Name: "weather", MaxSize: 20000})
+		col.Fields.Add(&core.AutodateField{Name: "created", OnCreate: true})
+		col.Fields.Add(&core.AutodateField{Name: "updated", OnCreate: true, OnUpdate: true})
 		col.Indexes = []string{
 			"CREATE UNIQUE INDEX idx_voxel_worlds_user_target ON voxel_worlds (user, target_id)",
 		}
 		if err := app.Save(col); err != nil {
 			log.Printf("failed to save voxel_worlds: %v", err)
 		}
+	} else {
+		migrateVoxelWorlds(app)
 	}
 
 	// structures — one row per placed structure instance, split out from
@@ -654,6 +663,59 @@ func migrateStructureBlueprints(app core.App) {
 		log.Printf("migrateStructureBlueprints: failed to save: %v", err)
 	} else {
 		log.Printf("migrateStructureBlueprints: added takeon_type field")
+	}
+}
+
+// migrateVoxelWorlds adds the remaining MissionState fields required by the
+// LandnamSync adapter. Older rows keep loading because Takeon tolerates
+// absent optional state and the adapter supplies safe defaults.
+func migrateVoxelWorlds(app core.App) {
+	col, err := app.FindCollectionByNameOrId("voxel_worlds")
+	if err != nil {
+		return
+	}
+
+	changed := false
+	addText := func(name string, max int) {
+		if col.Fields.GetByName(name) == nil {
+			col.Fields.Add(&core.TextField{Name: name, Max: max})
+			changed = true
+		}
+	}
+	addNumber := func(name string) {
+		if col.Fields.GetByName(name) == nil {
+			col.Fields.Add(&core.NumberField{Name: name})
+			changed = true
+		}
+	}
+	addJSON := func(name string, maxSize int64) {
+		if col.Fields.GetByName(name) == nil {
+			col.Fields.Add(&core.JSONField{Name: name, MaxSize: maxSize})
+			changed = true
+		}
+	}
+
+	addText("body_id", 80)
+	addText("rover_name", 80)
+	addNumber("time")
+	addJSON("anomalies", 200000)
+	addJSON("weather", 20000)
+	if col.Fields.GetByName("created") == nil {
+		col.Fields.Add(&core.AutodateField{Name: "created", OnCreate: true})
+		changed = true
+	}
+	if col.Fields.GetByName("updated") == nil {
+		col.Fields.Add(&core.AutodateField{Name: "updated", OnCreate: true, OnUpdate: true})
+		changed = true
+	}
+
+	if !changed {
+		return
+	}
+	if err := app.Save(col); err != nil {
+		log.Printf("migrateVoxelWorlds: failed to save: %v", err)
+	} else {
+		log.Printf("migrateVoxelWorlds: updated voxel_worlds schema")
 	}
 }
 

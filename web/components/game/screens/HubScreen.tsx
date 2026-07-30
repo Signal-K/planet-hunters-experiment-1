@@ -3,7 +3,6 @@
 import React, { useEffect, useState } from 'react'
 import type { Player, Screen } from '@/game-context'
 import ProgressionCard from '@/components/game/ProgressionCard'
-import { ComingSoonSheet, SPRINT_AFTER_NEXT_UTC } from '@/components/game/ComingSoonSheet'
 import ConfirmActionSheet from '@/components/game/ConfirmActionSheet'
 import { TutorialCompleteSheet, useTutorialCompleteAck } from '@/components/game/TutorialCompleteSheet'
 import { Scene } from '@/lib/engine/Scene'
@@ -22,6 +21,7 @@ import { TUTORIAL_CONTENT_TOP } from '@/lib/tutorial-layout'
 import { FREE_OPS_START_MISSIONS_DONE } from '@/lib/data/mission-generator'
 import { LAUNCHPAD_UPGRADE_COST } from '@/lib/data'
 import { formatCurrency } from '@/lib/format'
+import { FEATURE_FLAGS } from '@/lib/featureFlags'
 import type { HubBuildingDef } from '@/lib/pixi/hubScene'
 import { fetchReviewableTessCandidates } from '@/lib/tess-subjects'
 import HUDStrip from '@/components/ui/HUDStrip'
@@ -131,7 +131,6 @@ export default function HubScreen({ player, hasCoach, onGoBuilding, onNav, onUpg
   const [editMode, setEditMode] = useState(false)
   const [plotEntities, setPlotEntities] = useState<EntityData[]>(DEFAULT_PLOTS)
   const [subsurface, setSubsurface] = useState(false)
-  const [comingSoon, setComingSoon] = useState<{ feature: string; description: string; target?: Date } | null>(null)
   const [confirmingLaunchpadUpgrade, setConfirmingLaunchpadUpgrade] = useState(false)
   const [tessQueueCount, setTessQueueCount] = useState(0)
   const { show: showTutorialComplete, dismiss: dismissTutorialComplete } = useTutorialCompleteAck(player.missionsDone, FREE_OPS_START_MISSIONS_DONE)
@@ -349,7 +348,11 @@ export default function HubScreen({ player, hasCoach, onGoBuilding, onNav, onUpg
 
         {/* ─── BELOW GROUND ─── bottom half of slider */}
         <div style={{ position: 'absolute', top: '50%', left: 0, right: 0, height: '50%', overflow: 'hidden' }}>
-          <HubSubsurfaceView />
+          <HubSubsurfaceView
+            stash={player.stash}
+            installedParts={player.shipCustomizerParts}
+            trainingEnabled={FEATURE_FLAGS.subsurfaceHabitatTraining}
+          />
         </div>
 
       </div>
@@ -383,10 +386,7 @@ export default function HubScreen({ player, hasCoach, onGoBuilding, onNav, onUpg
       {(!hasCoach || !!player.activeMission || !!player.pendingLaunch) && !subsurface && (
         <>
           <ProgressionCard player={player} onGoBuilding={onGoBuilding} onNav={onNav} top={TUTORIAL_CONTENT_TOP} />
-          {comingSoon && (
-            <ComingSoonSheet feature={comingSoon.feature} description={comingSoon.description} target={comingSoon.target} onClose={() => setComingSoon(null)} />
-          )}
-          {showTutorialComplete && !comingSoon && (
+          {showTutorialComplete && (
             <TutorialCompleteSheet onDone={dismissTutorialComplete} />
           )}
         </>
@@ -436,7 +436,7 @@ export default function HubScreen({ player, hasCoach, onGoBuilding, onNav, onUpg
                 icon={<SubsurfaceGlyph />}
                 label="Subsurface"
                 muted
-                onClick={() => setComingSoon({ feature: 'Subsurface Operations', description: 'Drill deep into your base planet to mine rare subterranean minerals and build underground structures.', target: SPRINT_AFTER_NEXT_UTC })}
+                onClick={() => setSubsurface(true)}
               />
 
               {/* Desktop has no nav rail and no bottom bar, so the destinations
