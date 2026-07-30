@@ -165,7 +165,7 @@ export function ScreenContent({
           player={game.player}
           onBack={() => game.go('hub')}
           onBuildStation={() => game.go('build')}
-          onOpenMissions={() => game.go('missions')}
+          onOpenProgram={() => game.go('launchpad')}
           onSubmit={game.submitTessClassification}
           onChooseTarget={game.chooseSatelliteTarget}
         />

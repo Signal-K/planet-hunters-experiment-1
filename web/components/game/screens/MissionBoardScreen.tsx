@@ -6,7 +6,7 @@ import TopBar from '@/components/ui/TopBar'
 import Panel from '@/components/ui/Panel'
 import StatusPill from '@/components/ui/StatusPill'
 import { IconBtn } from '@/components/ui/Button'
-import { compatibleTargetsFor, clientAffinityBonus, clientUnlocked, FREE_OPS_START_MISSIONS_DONE, CLIENT_AFFINITY_MISSION_THRESHOLD, MISSION_TEMPLATES, CLIENT_SLOTS, SELF_DIRECTED_MINING_MISSION_ID, missionTypePrimer, isOwnProgramMission, partitionByOwner } from '@/lib/data'
+import { compatibleTargetsFor, clientAffinityBonus, clientUnlocked, FREE_OPS_START_MISSIONS_DONE, CLIENT_AFFINITY_MISSION_THRESHOLD, MISSION_TEMPLATES, CLIENT_SLOTS, missionTypePrimer, isMissionBoardMission } from '@/lib/data'
 import type { DailyClientPool, Mission } from '@/lib/data'
 import type { Catalog } from '@/lib/catalog'
 import { TUTORIAL_CONTENT_TOP } from '@/lib/tutorial-layout'
@@ -173,26 +173,17 @@ export default function MissionBoardScreen({ onBack, onPick, missionsDone, freeO
 
   // In daily pool mode, the display list is the pool itself (available + completed).
   // In legacy freeops mode, fall back to the catalog freeops- missions with cooldowns.
-  const storyMissionPool = freeOperations ? MISSIONS.filter(m => m.tag === 'STORY') : []
-  const freeOpsMissionPool = MISSIONS.filter(m => m.id.startsWith('freeops-') || m.id.startsWith('exo-survey-') || m.tag === 'STORY')
-  const exoplanetSurveyPool = freeOperations ? MISSIONS.filter(m => m.id.startsWith('exo-survey-')) : []
   // Hand-authored "mine then deliver" logistics jobs are always offered in Free Ops,
   // independent of the daily-rotating client pool.
   const logisticsMissionPool = freeOperations ? MISSIONS.filter(m => !!m.deliveryTargetId && !isOnCooldown(m.client)) : []
-  // Self-directed mining has no client, no daily limit, and no cooldown —
-  // always launchable from its own dedicated Free Ops panel below (not a card
-  // in the regular list, since it isn't tied to a client or a pool slot).
-  const clientPoolExhausted = useDailyPool
-    && dailyClientPool!.missions.length > 0
-    && dailyClientPool!.missions.every(m => isCompletedToday(m.id))
   const available = useDailyPool
-    ? [...storyMissionPool, ...logisticsMissionPool, ...dailyClientPool!.missions.filter(m => !isCompletedToday(m.id)), ...exoplanetSurveyPool]
+    ? [...logisticsMissionPool, ...dailyClientPool!.missions.filter(m => !isCompletedToday(m.id))]
     : MISSIONS.filter(m => {
-        if (m.id === SELF_DIRECTED_MINING_MISSION_ID) return false
+        if (!isMissionBoardMission(m, freeOperations)) return false
         const customMission = !m.client
         if (m.client && !CLIENTS[m.client]) return false
         if (freeOperations) {
-          return customMission || !!m.deliveryTargetId || (freeOpsMissionPool.some(item => item.id === m.id) && !isOnCooldown(m.client))
+          return customMission || !!m.deliveryTargetId || !isOnCooldown(m.client)
         }
         // Onboarding: sequence is the only gate — client unlock tiers don't apply
         return m.sequence === sequence
@@ -211,7 +202,8 @@ export default function MissionBoardScreen({ onBack, onPick, missionsDone, freeO
   // During onboarding show only the sequence-matched missions (available).
   // During free-ops show available missions (+ completed-today for daily pool).
   // Never show locked/future missions during onboarding.
-  const rawList = useDailyPool ? [...available, ...completedToday] : available
+  const rawList = (useDailyPool ? [...available, ...completedToday] : available)
+    .filter(mission => isMissionBoardMission(mission, freeOperations))
   // In free-ops daily-pool mode, available missions first, completed at the bottom
   const isListedAvailable = (m: typeof rawList[0]) =>
     !isCompletedToday(m.id) &&
@@ -228,9 +220,7 @@ export default function MissionBoardScreen({ onBack, onPick, missionsDone, freeO
     const cr = freeOperations || m.sequence === sequence || (!!ctr && clientUnlocked(ctr, sequence))
     return cr && (freeOperations || available.some(item => item.id === m.id))
   })
-  // Own-program runs are filed under a pseudo-client, so the payout-premium
-  // disclaimer must key off real client work, not just a populated field.
-  const hasClientMission = missionList.some(m => !!m.client && !isOwnProgramMission(m))
+  const hasClientMission = missionList.some(m => !!m.client)
   const cardModels = missionList
     .map((m, idx) => {
       const completedToday_ = isCompletedToday(m.id)
@@ -262,26 +252,14 @@ export default function MissionBoardScreen({ onBack, onPick, missionsDone, freeO
     })
     .filter((c): c is NonNullable<typeof c> => c !== null)
 
-  // Two kinds of work were reading as one undifferentiated list: jobs a client
-  // issued (someone else's order, someone else's structure, pays a fee) and the
-  // player's own program (refineries and scanners they own, satellites they
-  // launch, self-directed runs they sell themselves). `isOwnProgramMission` is
-  // already the authority on that distinction — the board now groups by it
-  // instead of leaving the player to infer ownership from a payout figure.
-  // Client work leads: it's the paid, expiring, cooldown-bound side.
-  const { client: clientCards, own: ownProgramCards } = partitionByOwner(cardModels, c => c.mission)
+  // STS-582 makes this a client-only surface in Free Ops. Owned flights are
+  // filtered above and live under Launchpad → Your Program instead.
   const sections = [
     {
       key: 'client' as const,
       title: freeOperations ? 'Client Requests' : 'Active Contracts',
       sub: 'Issued by a client · paid on delivery',
-      cards: clientCards,
-    },
-    {
-      key: 'own-program' as const,
-      title: 'Your Program',
-      sub: 'Your own infrastructure & runs · no client',
-      cards: ownProgramCards,
+      cards: cardModels,
     },
   ].filter(s => s.cards.length > 0)
 
@@ -437,39 +415,6 @@ export default function MissionBoardScreen({ onBack, onPick, missionsDone, freeO
           </div>
         </div>
 
-        {/* Free Ops-only surfaces below the main board — not in the OD
-            mockup at all (it has no Free Ops variant), kept below the
-            primary contract-board view rather than stacked above it so the
-            view that matches the reference is what's on screen first. */}
-        {freeOperations && (
-          <div style={{ padding: '0 14px 10px 14px' }}>
-            <Panel accent={clientPoolExhausted ? 'var(--ln-ok)' : 'var(--ln-cyan)'} style={{ padding: 12 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
-                <IconBadge icon={<MarketIcon />} tone={clientPoolExhausted ? 'ok' : 'cyan'} active size={26} />
-                <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 10, fontWeight: 800, letterSpacing: '0.22em', color: clientPoolExhausted ? 'var(--ln-ok)' : 'var(--ln-cyan)', textTransform: 'uppercase' }}>
-                  Free Ops · Self-Directed Mining
-                </div>
-              </div>
-              <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 12, color: 'var(--ln-text-dim)', lineHeight: 1.45, marginBottom: 10 }}>
-                {clientPoolExhausted
-                  ? "Today's client requests are done. Launch a self-directed run — pick any reachable target and sell the haul yourself at market price."
-                  : 'No client, no daily limit. Pick any reachable target, mine what looks valuable, and sell the haul yourself at market price.'}
-              </div>
-              <button
-                data-testid="self-directed-mining-btn"
-                onClick={() => onPick(SELF_DIRECTED_MINING_MISSION_ID)}
-                style={{
-                  width: '100%', padding: '10px 16px', borderRadius: 8, border: 'none', cursor: 'pointer',
-                  background: clientPoolExhausted ? 'var(--ln-ok)' : 'var(--ln-cyan)',
-                  color: 'var(--ln-text-on-cyan)', fontFamily: 'var(--ln-font-display)', fontWeight: 800, fontSize: 11,
-                  letterSpacing: '0.14em', textTransform: 'uppercase',
-                }}
-              >
-                Launch Self-Directed Run
-              </button>
-            </Panel>
-          </div>
-        )}
         {freeOperations && (
           <div style={{ padding: '0 14px 10px 14px', display: 'flex', flexDirection: 'column', gap: 10 }}>
             {showFreeOpsExplainer && (

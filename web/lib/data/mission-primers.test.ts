@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { missionTypePrimer, isOwnProgramMission, partitionByOwner, OWN_PROGRAM_CLIENT_ID } from './mission-primers'
+import { missionTypePrimer, isMissionBoardMission, isOwnProgramMission, partitionByOwner, OWN_PROGRAM_CLIENT_ID } from './mission-primers'
 import { MISSIONS, SELF_DIRECTED_MINING_MISSION_ID } from './missions'
 import type { Mission } from './types'
 
@@ -62,9 +62,8 @@ describe('missionTypePrimer', () => {
 const CLIENT_ATTRIBUTION = /(the|a|their|its) client|client'?s\b/i
 
 describe('own-program missions', () => {
-  // A telescope/satellite the player launches is their own entity. It is filed
-  // under the Mission Control pseudo-client at runtime (lib/runtimeCatalog.ts),
-  // which must never make it read — or pay — as client work.
+  // The legacy pseudo-client remains recognized for active saves created
+  // before STS-582 removed that catalog residue.
   const telescope: Mission = {
     ...base,
     id: 'story-transit-telescope-launch',
@@ -90,6 +89,13 @@ describe('own-program missions', () => {
 
   it('leaves real client contracts alone', () => {
     expect(isOwnProgramMission(base)).toBe(false)
+  })
+
+  it('keeps owned operations off the Free Ops Mission Board', () => {
+    expect(isMissionBoardMission(telescope, true)).toBe(false)
+    expect(isMissionBoardMission({ ...telescope, client: undefined }, true)).toBe(false)
+    expect(isMissionBoardMission(base, true)).toBe(true)
+    expect(isMissionBoardMission(telescope, false)).toBe(true)
   })
 
   it('never mentions a client in own-program copy', () => {

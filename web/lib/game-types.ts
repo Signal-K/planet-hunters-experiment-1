@@ -155,6 +155,11 @@ export interface Player {
   // player has already been notified about, so the poller doesn't re-fire
   // the same event every check.
   lastSeenConfirmedAt?: string | null
+  /**
+   * Last UTC digest date notified per owned instrument. Persisting this keeps
+   * the daily downlink from re-notifying after reloads or React remounts.
+   */
+  instrumentDigestNotifiedOn?: Record<string, string>
   discoveredExoplanetTargets?: Record<string, Target>
   clientStructures?: import('@/lib/data').ClientStructureRecord[]
   dailyQuestProgress?: import('@/lib/data').DailyQuestProgress[]

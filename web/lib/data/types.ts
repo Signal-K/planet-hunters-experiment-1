@@ -70,6 +70,13 @@ export interface DailyQuestProgress {
   date: string
 }
 
+export interface ProgramReward {
+  /** Research progression granted when the owned operation is completed. */
+  researchXP: number
+  /** Player-facing description of what the operation adds to their program. */
+  outcome: string
+}
+
 export interface Mission {
   id: string
   title: string
@@ -87,6 +94,11 @@ export interface Mission {
   payload?: MissionPayload
   survey?: MissionSurveyPlan
   construction?: MissionConstructionPlan
+  /**
+   * Outcome for a player-owned operation. These runs use the flight engine,
+   * but are not client contracts and do not pay francs or affinity.
+   */
+  programReward?: ProgramReward
   requires: {
     minerals: Record<string, number>
     cargo_min: number

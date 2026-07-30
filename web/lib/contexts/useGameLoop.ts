@@ -3,6 +3,7 @@ import {
   MISSIONS, TARGETS, ROCKET_MODELS, FREE_OPS_START_MISSIONS_DONE,
   getLaserChargeCap, travelDurationMs, suggestBuild,
   CLIENT_COOLDOWN_MS, CLIENT_STREAK_LIMIT, loanInstalmentFor, BANKRUPTCY_THRESHOLD,
+  isOwnProgramMission,
 } from '@/lib/data'
 import { applyDeliveryArrived, applyMiningDone, applyReturnArrived, applyRoverMiningDone } from '@/lib/systems/MiningSystem'
 import { applyPurchaseRocket } from '@/lib/systems/EconomySystem'
@@ -16,10 +17,6 @@ import { pbShared } from '@/lib/pb'
 import { pbLandnam } from '@/lib/pb-landnam'
 
 const ORBIT_MS_PER_UNIT = 2 * 60 * 1000
-const STORY_MISSION_CLIENT_ID = 'mission-control'
-
-
-
 interface GameLoopOpts {
   stateRef: React.RefObject<GameState>
   setState: React.Dispatch<React.SetStateAction<GameState>>
@@ -58,12 +55,14 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
 
   const onPickMission = useCallback((id: string) => {
     setState(s => {
-      if (s.screen !== 'missions' || s.player.activeMission) return s
+      if ((s.screen !== 'missions' && s.screen !== 'launchpad') || s.player.activeMission) return s
       const mission = catalog.missions.find(m => m.id === id)
         ?? s.player.dailyClientPool?.missions.find(m => m.id === id)
         ?? null
       if (!mission) return s
-      const isStoryMission = mission.client === STORY_MISSION_CLIENT_ID || (mission.tag === 'STORY' && !mission.deliveryTargetId)
+      const ownOperation = isOwnProgramMission(mission)
+      if (s.screen === 'launchpad' && !ownOperation) return s
+      if (s.screen === 'missions' && s.player.freeOperations && ownOperation) return s
       const dailyClientPool = (s.player.dailyClientPool && id.startsWith('dcp-'))
         ? { ...s.player.dailyClientPool, acceptedId: id }
         : s.player.dailyClientPool
@@ -335,8 +334,8 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
     const newMissionsDone = current.player.missionsDone + 1
     const completedMission = catalog.missions.find(m => m.id === current.missionId)
       ?? current.player.dailyClientPool?.missions.find(m => m.id === current.missionId)
-    const completedIsStoryMission = completedMission?.client === STORY_MISSION_CLIENT_ID
-      || (completedMission?.tag === 'STORY' && !completedMission.deliveryTargetId)
+    const completedIsStoryMission = completedMission?.tag === 'STORY' && !completedMission.deliveryTargetId
+    const completedIsProgramOperation = !!completedMission && isOwnProgramMission(completedMission)
     // Already through the onboarding payout floor — DebriefScreen calibrates
     // the figure it shows and hands that exact number to `onDone`, so
     // re-applying `calibrateOnboardingPayout` here only risked the screen and
@@ -351,7 +350,8 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
            ?? null)
         : null
       const client = mission?.client
-      const isStoryMission = mission?.client === STORY_MISSION_CLIENT_ID || (mission?.tag === 'STORY' && !mission?.deliveryTargetId)
+      const isStoryMission = mission?.tag === 'STORY' && !mission?.deliveryTargetId
+      const isProgramOperation = !!mission && isOwnProgramMission(mission)
       const clientMissions = { ...s.player.clientMissions }
       const clientStreaks = { ...(s.player.clientStreaks ?? {}) }
       const clientCooldowns = { ...s.player.clientCooldowns }
@@ -371,13 +371,16 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
       }
       let loanDebt = s.player.loanDebt
       let francs = s.player.francs + total
-      if (loanDebt > 0) {
+      if (!isProgramOperation && loanDebt > 0) {
         const payment = loanInstalmentFor(loanDebt)
         francs = Math.max(0, francs - payment)
         loanDebt = Math.max(0, loanDebt - payment)
       }
       const loanOffered = s.player.loanOffered
-      const showLoanOffer = !loanOffered && francs < BANKRUPTCY_THRESHOLD && loanDebt === 0
+      const showLoanOffer = !isProgramOperation
+        && !loanOffered
+        && francs < BANKRUPTCY_THRESHOLD
+        && loanDebt === 0
       const seen_planets = [...(s.player.seen_planets ?? [])]
       if (s.targetId && !seen_planets.includes(s.targetId)) seen_planets.push(s.targetId)
       const effectiveTargetId = mission?.targetId ?? s.targetId ?? ''
@@ -428,13 +431,14 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
           shipDestroyed: false,
           missionsDone,
           skillPoints: (s.player.skillPoints ?? 0) + 1,
+          researchXP: (s.player.researchXP ?? 0) + (mission?.programReward?.researchXP ?? 0),
           missionCount: catalog.missions.filter(m => m.sequence === missionsDone + 1).length,
           freeOperations: missionsDone >= FREE_OPS_START_MISSIONS_DONE,
           clientMissions,
           clientStreaks,
           clientCooldowns,
           stash,
-          lastClient: isStoryMission ? s.player.lastClient : client,
+          lastClient: (isStoryMission || isProgramOperation) ? s.player.lastClient : client,
           loanDebt,
           loanOffered: loanOffered || showLoanOffer,
           seen_planets,
@@ -454,11 +458,23 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
         tutorial: stillInTutorial,
         popup,
         doneSteps: { ...s.doneSteps, 9: true },
-        screen: pendingTerritoryClaimFor ? s.screen : ((stillInTutorial || justFinishedOnboarding) ? 'hub' : 'market'),
+        screen: pendingTerritoryClaimFor
+          ? s.screen
+          : mission?.payload?.type === 'satellite'
+            ? 'galaxy'
+            : isProgramOperation
+              ? 'launchpad'
+              : (stillInTutorial || justFinishedOnboarding)
+                ? 'hub'
+                : 'market',
         pendingTerritoryClaimFor,
       }
     })
-    addToast(`Mission payout received: +${(total / 1_000_000).toFixed(0)}M F`, 'ok')
+    if (completedIsProgramOperation) {
+      addToast(completedMission?.programReward?.outcome ?? 'Program operation complete.', 'ok')
+    } else {
+      addToast(`Mission payout received: +${(total / 1_000_000).toFixed(0)}M F`, 'ok')
+    }
     const userId = pbShared.authStore.record?.id
     if (userId) {
       pbLandnam.collection('mission_log').create({
@@ -484,7 +500,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
     enqueueSurvey('lnm_mission_friction', 0)
     enqueueSurvey('lnm_mining_feel', 60_000)
     if (completedMission?.payload?.type === 'rover') enqueueSurvey('lnm_rover_clarity', 60_000)
-    if (current.player.missionsDone >= 1 && !completedIsStoryMission) {
+    if (current.player.missionsDone >= 1 && !completedIsStoryMission && !completedIsProgramOperation) {
       enqueueSurvey('lnm_client_pick', 60_000)
     }
     if (newMissionsDone === 1) {

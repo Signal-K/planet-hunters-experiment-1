@@ -24,6 +24,7 @@ import { formatCurrency } from '@/lib/format'
 import { FEATURE_FLAGS } from '@/lib/featureFlags'
 import type { HubBuildingDef } from '@/lib/pixi/hubScene'
 import { fetchReviewableTessCandidates } from '@/lib/tess-subjects'
+import { instrumentDigestDateKey, unresolvedTransitInstrumentDigest } from '@/lib/systems/InstrumentFeedSystem'
 import HUDStrip from '@/components/ui/HUDStrip'
 
 // ── Ref-B bordered-icon-badge glyphs for Hub chrome (bottom tabs) ──
@@ -153,10 +154,9 @@ export default function HubScreen({ player, hasCoach, onGoBuilding, onNav, onUpg
       .catch(() => {})
   }, [])
 
-  // SMS daily-candidate-queue badge (LN-014): count of live TESS subjects
-  // still awaiting this player's review, i.e. not yet in tessClassifications.
-  // Mirrors TessDiscoveryScreen's own gating (SMS built + telescope launched)
-  // so the badge never promises a queue the classify flow can't show yet.
+  // SMS badge: unresolved items in today's level-scaled instrument digest.
+  // This shares InstrumentFeedSystem with TessDiscoveryScreen so the badge
+  // never promises more work than the feed can actually show.
   useEffect(() => {
     if (!player.freeOperations || !player.satelliteMonitoringBuilt || !player.transitSatelliteLaunchedAt) {
       setTessQueueCount(0)
@@ -166,8 +166,11 @@ export default function HubScreen({ player, hasCoach, onGoBuilding, onNav, onUpg
     fetchReviewableTessCandidates()
       .then(candidates => {
         if (cancelled) return
-        const classifications = player.tessClassifications ?? {}
-        const unresolved = candidates.filter(c => !classifications[c.id])
+        const unresolved = unresolvedTransitInstrumentDigest(
+          candidates,
+          player,
+          instrumentDigestDateKey()
+        )
         setTessQueueCount(unresolved.length)
       })
       .catch(() => { if (!cancelled) setTessQueueCount(0) })

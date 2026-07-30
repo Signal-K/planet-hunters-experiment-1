@@ -59,6 +59,7 @@ describe('game state hydration normalization', () => {
     expect(normalized.player.researchXP).toBe(0)
     expect(normalized.player.unlockedBlueprints).toEqual([])
     expect(normalized.player.tessClassifications).toEqual({})
+    expect(normalized.player.instrumentDigestNotifiedOn).toEqual({})
     expect(normalized.player.satelliteMonitoringLevel).toBe(1)
     expect(normalized.player.transitSatelliteLevel).toBe(1)
     expect(normalized.player.francs).toBe(9_500_000_000)
@@ -108,6 +109,22 @@ describe('game state hydration normalization', () => {
 
     expect(normalized.player.tessClassifications?.['tess-toi-451-b']?.verdict).toBe('planet')
     expect(normalized.player.tessClassifications?.['tess-toi-451-b']?.ranges).toEqual([{ x1: 0.68, x2: 0.76 }, { x1: 2.54, x2: 2.62 }])
+  })
+
+  it('persists valid instrument digest markers and drops malformed values', () => {
+    const normalized = normalizeState({
+      player: {
+        instrumentDigestNotifiedOn: {
+          'transit-telescope': '2026-07-30',
+          blank: '',
+          malformed: 42,
+        },
+      } as never,
+    })
+
+    expect(normalized.player.instrumentDigestNotifiedOn).toEqual({
+      'transit-telescope': '2026-07-30',
+    })
   })
 
   it('normalizes satellite discovery levels to at least one', () => {

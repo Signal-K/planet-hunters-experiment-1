@@ -18,6 +18,7 @@ import { useGameLoop } from '@/lib/contexts/useGameLoop'
 import { useTutorialActions } from '@/lib/contexts/useTutorialActions'
 import { useEconomyActions } from '@/lib/contexts/useEconomyActions'
 import { useSurfaceOpsActions } from '@/lib/contexts/useSurfaceOpsActions'
+import { useInstrumentFeedNotifications } from '@/lib/contexts/useInstrumentFeedNotifications'
 
 export type { Screen, Player, GameState } from '@/lib/game-types'
 
@@ -104,6 +105,12 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
   const tutorial = useTutorialActions(setState)
   const economy = useEconomyActions(setState, useCallback(() => runtimeCatalog.missions, [runtimeCatalog.missions]))
   const surfaceOps = useSurfaceOpsActions(setState, ui.addToast)
+  useInstrumentFeedNotifications({
+    enabled: hydrated && !isPreview.current,
+    player: state.player,
+    setState,
+    addToast: ui.addToast,
+  })
 
   // Sync game.screen → URL on every screen change.
   // skipNextUrlSync prevents a loop when the change was triggered BY a URL change.

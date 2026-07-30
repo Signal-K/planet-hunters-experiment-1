@@ -200,7 +200,7 @@ describe('Visual QA — discovery -> economy pipeline', () => {
     })
   })
 
-  it('a discovered target is reachable through the ordinary mission board and target picker, not just its survey flight', () => {
+  it('a discovered target is reachable through Your Program and the target picker', () => {
     cy.viewport(1280, 800)
 
     // Build the discovered target through the real production function
@@ -211,7 +211,7 @@ describe('Visual QA — discovery -> economy pipeline', () => {
     expect(discovered.archetype).to.eq('M')
     expect(discovered.minerals.length).to.be.greaterThan(0)
 
-    visitWithState('/game', 'missions', {
+    visitWithState('/game/launchpad', 'launchpad', {
       discoveredExoplanetTargets: { [discovered.id]: discovered },
       freeOperations: true,
     })
@@ -220,12 +220,14 @@ describe('Visual QA — discovery -> economy pipeline', () => {
     // ensureGuestAuth() race instead of guessing at a fixed delay.
     cy.contains('Welcome Back', { timeout: 15000 }).should('not.exist')
 
-    cy.contains('Mission Board', { timeout: 15000 }).should('be.visible')
+    cy.contains('Your Program', { timeout: 15000 }).should('be.visible')
     cy.get(`[data-testid="mission-card-exo-survey-${discovered.id}"]`, { timeout: 10000 })
       .should('exist')
       .scrollIntoView()
       .should('be.visible')
-    cy.screenshot('discovery-04-mission-board-survey-flight')
+    cy.get(`[data-testid="mission-card-exo-survey-${discovered.id}-program-reward"]`)
+      .should('contain.text', '+25 XP')
+    cy.screenshot('discovery-04-own-program-survey-flight')
 
     // The exo-survey mission card above is fixed to this one target
     // (game-context.tsx sets targetId directly when generating it), so
@@ -236,7 +238,7 @@ describe('Visual QA — discovery -> economy pipeline', () => {
     // path this test is actually meant to exercise; it requires nickel +
     // cobalt and orbit <= 8, which every 'M'-archetype discovery satisfies
     // (see mineralsForArchetype / tessCandidateToExoplanetTarget).
-    cy.get('[data-testid="self-directed-mining-btn"]').scrollIntoView().click({ force: true })
+    cy.get('[data-testid="mission-card-freeops-self-directed-mining"]').scrollIntoView().click({ force: true })
     cy.contains('Pick Target', { timeout: 10000 }).should('be.visible')
 
     cy.get(`[data-testid="target-${discovered.id}"]`).click({ force: true })

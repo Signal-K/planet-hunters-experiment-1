@@ -46,6 +46,7 @@ export const DEFAULT_STATE: GameState = {
     roverDeployments: [],
     clientTerritories: {},
     tessClassifications: {},
+    instrumentDigestNotifiedOn: {},
     discoveredExoplanetTargets: {},
     satelliteMonitoringBuilt: false,
     satelliteMonitoringLevel: 1,
@@ -118,6 +119,19 @@ export function normalizeState(input: PartialSave): GameState {
   const discoveredExoplanetTargets = player.discoveredExoplanetTargets && typeof player.discoveredExoplanetTargets === 'object'
     ? player.discoveredExoplanetTargets
     : DEFAULT_STATE.player.discoveredExoplanetTargets
+  const instrumentDigestNotifiedOn = player.instrumentDigestNotifiedOn
+    && typeof player.instrumentDigestNotifiedOn === 'object'
+    && !Array.isArray(player.instrumentDigestNotifiedOn)
+    ? Object.fromEntries(
+      Object.entries(player.instrumentDigestNotifiedOn)
+        .filter((entry): entry is [string, string] =>
+          typeof entry[0] === 'string'
+          && entry[0].length > 0
+          && typeof entry[1] === 'string'
+          && /^\d{4}-\d{2}-\d{2}$/.test(entry[1])
+        )
+    )
+    : DEFAULT_STATE.player.instrumentDigestNotifiedOn
   const satelliteMonitoringLevel = Number.isFinite(player.satelliteMonitoringLevel)
     ? Math.max(1, Math.floor(player.satelliteMonitoringLevel ?? 1))
     : DEFAULT_STATE.player.satelliteMonitoringLevel
@@ -153,7 +167,7 @@ export function normalizeState(input: PartialSave): GameState {
     missionId,
     targetId,
     rocket: { ...DEFAULT_STATE.rocket, ...input.rocket },
-    player: { ...DEFAULT_STATE.player, ...player, licenseGrade, researchXP, unlockedBlueprints, tessClassifications, discoveredExoplanetTargets, satelliteMonitoringLevel, transitSatelliteLevel, crew, surfaceOps,
+    player: { ...DEFAULT_STATE.player, ...player, licenseGrade, researchXP, unlockedBlueprints, tessClassifications, discoveredExoplanetTargets, instrumentDigestNotifiedOn, satelliteMonitoringLevel, transitSatelliteLevel, crew, surfaceOps,
       satelliteMonitoringBuilt, refineryBuilt, scannerBuilt },
     doneSteps: { ...DEFAULT_STATE.doneSteps, ...input.doneSteps },
     ...(pendingTerritoryClaimFor ? { pendingTerritoryClaimFor } : {}),

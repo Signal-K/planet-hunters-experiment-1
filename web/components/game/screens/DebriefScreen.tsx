@@ -2,7 +2,7 @@
 
 import { useRef, useState } from 'react'
 import type { Mission, Target, MineralMeta, Client, RocketConfig } from '@/lib/data'
-import { calibrateOnboardingPayout, clientAffinityBonus, rocketDisplayForConfig, rocketModelForConfig, MAX_AFFINITY_BONUS, loanInstalmentFor } from '@/lib/data'
+import { calibrateOnboardingPayout, clientAffinityBonus, isOwnProgramMission, rocketDisplayForConfig, rocketModelForConfig, MAX_AFFINITY_BONUS, loanInstalmentFor } from '@/lib/data'
 import TopBar from '@/components/ui/TopBar'
 import { PrimaryBtn } from '@/components/ui/Button'
 import Panel from '@/components/ui/Panel'
@@ -48,6 +48,7 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
   const delivered = Object.entries(mission.requires.minerals).every(([id, amount]) => (cargo[id] ?? 0) >= amount)
   const client = mission.client ? clients[mission.client] : undefined
   const isStoryMission = !mission.deliveryTargetId && (mission.tag === 'STORY' || mission.payload?.type === 'satellite')
+  const isProgramOperation = isOwnProgramMission(mission)
   const completedJobs = client ? (clientMissions?.[client.id] ?? 0) : 0
   const affinityMultiplier = client && !isStoryMission ? clientAffinityBonus(client, completedJobs) : 0
   const affinityBonus = delivered ? Math.round(mission.payout.francs * affinityMultiplier) : 0
@@ -62,7 +63,7 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
   const transportFee = isTwoLegJob ? mission.payout.francs - miningFee : 0
   // Repaid out of this payout the moment it is collected (see onDebriefDone),
   // so it belongs in the expense panel and in Net — not silently off the balance.
-  const loanRepayment = loanInstalmentFor(loanDebt)
+  const loanRepayment = isProgramOperation ? 0 : loanInstalmentFor(loanDebt)
   const netTotal = total - starterRocket.costFrancs - loanRepayment
 
   return (
@@ -166,29 +167,48 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
         {/* ── Contract payment + expenses/net ─────────────────────────────── */}
         {resolved && delivered && (
           <>
-            <Panel accent="var(--ln-amber)" surface="glass" style={{ animation: 'unlock-in 0.35s ease-out' }}>
-              <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 9, fontWeight: 800, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'var(--ln-text-dim)', marginBottom: 10 }}>
-                Payout
-              </div>
-              {isTwoLegJob ? (
-                <>
-                  <PayRow label={`Mining fee · ${client?.name ?? 'Client'}`} value={miningFee} />
-                  <PayRow label="Transport fee · relay delivery" value={transportFee} />
-                </>
-              ) : (
-                <PayRow label={isStoryMission ? 'Mission funding' : `Order fulfillment · ${client?.name ?? 'Client'}`} value={mission.payout.francs} />
-              )}
-              {!isStoryMission && affinityBonus > 0 && <PayRow label="Affinity bonus" value={affinityBonus} />}
-              {total > rawTotal && <PayRow label="Onboarding bonus" value={total - rawTotal} />}
-              <div style={{ marginTop: 10, paddingTop: 10, borderTop: '1px solid rgba(224,165,39,0.25)', display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
-                <span style={{ fontFamily: 'var(--ln-font-display)', fontSize: 10, fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--ln-text-dim)' }}>
-                  Total
-                </span>
-                <span style={{ fontFamily: 'var(--ln-font-display)', fontSize: 28, fontWeight: 800, color: 'var(--ln-amber)', lineHeight: 1 }}>
-                  {formatCurrency(total)}
-                </span>
-              </div>
-            </Panel>
+            {isProgramOperation && mission.programReward ? (
+              <Panel accent="var(--ln-cyan)" surface="glass" style={{ animation: 'unlock-in 0.35s ease-out' }}>
+                <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 9, fontWeight: 800, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'var(--ln-text-dim)', marginBottom: 10 }}>
+                  Program Outcome
+                </div>
+                <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 13, lineHeight: 1.5, color: 'var(--ln-text)' }}>
+                  {mission.programReward.outcome}
+                </div>
+                <div style={{ marginTop: 10, paddingTop: 10, borderTop: '1px solid var(--ln-cyan-border)', display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+                  <span style={{ fontFamily: 'var(--ln-font-display)', fontSize: 10, fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--ln-text-dim)' }}>
+                    Research
+                  </span>
+                  <span style={{ fontFamily: 'var(--ln-font-display)', fontSize: 24, fontWeight: 800, color: 'var(--ln-cyan)', lineHeight: 1 }}>
+                    +{mission.programReward.researchXP} XP
+                  </span>
+                </div>
+              </Panel>
+            ) : (
+              <Panel accent="var(--ln-amber)" surface="glass" style={{ animation: 'unlock-in 0.35s ease-out' }}>
+                <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 9, fontWeight: 800, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'var(--ln-text-dim)', marginBottom: 10 }}>
+                  Payout
+                </div>
+                {isTwoLegJob ? (
+                  <>
+                    <PayRow label={`Mining fee · ${client?.name ?? 'Client'}`} value={miningFee} />
+                    <PayRow label="Transport fee · relay delivery" value={transportFee} />
+                  </>
+                ) : (
+                  <PayRow label={isStoryMission ? 'Mission funding' : `Order fulfillment · ${client?.name ?? 'Client'}`} value={mission.payout.francs} />
+                )}
+                {!isStoryMission && affinityBonus > 0 && <PayRow label="Affinity bonus" value={affinityBonus} />}
+                {total > rawTotal && <PayRow label="Onboarding bonus" value={total - rawTotal} />}
+                <div style={{ marginTop: 10, paddingTop: 10, borderTop: '1px solid rgba(224,165,39,0.25)', display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+                  <span style={{ fontFamily: 'var(--ln-font-display)', fontSize: 10, fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--ln-text-dim)' }}>
+                    Total
+                  </span>
+                  <span style={{ fontFamily: 'var(--ln-font-display)', fontSize: 28, fontWeight: 800, color: 'var(--ln-amber)', lineHeight: 1 }}>
+                    {formatCurrency(total)}
+                  </span>
+                </div>
+              </Panel>
+            )}
 
             <Panel accent="var(--ln-crimson)" surface="glass" style={{ animation: 'unlock-in 0.35s ease-out 0.1s both' }}>
               <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 9, fontWeight: 800, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'var(--ln-text-dim)', marginBottom: 10 }}>
@@ -283,7 +303,11 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
               onDone(total, delivered ? mission.payout.affinity : 0, delivered ? mission.requires.minerals : {})
             }}
           >
-            {delivered ? `Collect ${formatCurrency(total)}` : 'Return to Base'}
+            {delivered
+              ? isProgramOperation
+                ? 'Log Program Outcome'
+                : `Collect ${formatCurrency(total)}`
+              : 'Return to Base'}
           </PrimaryBtn>
         )}
       </div>

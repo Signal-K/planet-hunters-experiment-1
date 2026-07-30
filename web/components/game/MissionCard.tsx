@@ -112,7 +112,9 @@ export default function MissionCard({
         <div className={styles.cardTitle}>{mission.title}</div>
         <div className={styles.cardClient}>{client?.name ?? (ownOperation ? 'Your program' : 'Free Ops')}</div>
         <div className={styles.cardWants}>
-          {ownOperation
+          {mission.programReward
+            ? `Program outcome · ${mission.programReward.outcome}`
+            : ownOperation
             ? 'Your own operation · no client, no order to fill'
             : isStoryMission
             ? 'Story mission · not a client request'
@@ -132,10 +134,20 @@ export default function MissionCard({
       </div>
       <div className={styles.cardSide}>
         <div className={styles.cardPay}>
-          <span className={styles.cardPayIcon}>{FRANC}</span>
-          {cardState === 'completed' ? '—' : formatCurrency(displayPayout, { compact: true }).slice(FRANC.length)}
+          {mission.programReward ? (
+            <span data-testid={`mission-card-${mission.id}-program-reward`}>
+              {mission.programReward.researchXP > 0
+                ? `+${mission.programReward.researchXP} XP`
+                : 'FEED'}
+            </span>
+          ) : (
+            <>
+              <span className={styles.cardPayIcon}>{FRANC}</span>
+              {cardState === 'completed' ? '—' : formatCurrency(displayPayout, { compact: true }).slice(FRANC.length)}
+            </>
+          )}
         </div>
-        {cardState !== 'completed' && (
+        {cardState !== 'completed' && !mission.programReward && (
           <div className={styles.cardPayTier} data-testid={`mission-card-${mission.id}-payout-tier`}>
             {missionPayoutTier(mission)} payout
           </div>

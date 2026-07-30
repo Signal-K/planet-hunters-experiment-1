@@ -71,11 +71,16 @@ describe('TransitScreen mission context (STS-546)', () => {
         ...mission,
         id: 'story-transit-telescope-launch',
         title: 'Launch Transit Telescope',
-        client: 'mission-control',
+        client: undefined,
         deliveryTargetId: undefined,
         payload: { type: 'satellite', name: 'Transit Telescope', cargoCost: 0 },
+        payout: { francs: 0, affinity: 0 },
+        programReward: {
+          researchXP: 0,
+          outcome: 'Transit telescope online · daily instrument feed unlocked',
+        },
       },
-      client: { ...client, id: 'mission-control', name: 'Mission Control' },
+      client: null,
     })
     expect(markup).toContain('Your program')
     expect(markup).not.toContain('Mission Control')

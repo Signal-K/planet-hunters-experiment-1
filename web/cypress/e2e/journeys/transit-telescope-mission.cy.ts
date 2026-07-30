@@ -1,9 +1,7 @@
-// E2E coverage for STS-138: the telescope construction/launch mission that
-// kicks off the transit-classification (TESS) citizen-science loop.
-// The mission itself (story-transit-telescope-launch) and the unlock gate
-// on TessDiscoveryScreen were already implemented in game-context.tsx /
-// useGameLoop.ts / ProgressionCard.tsx — this file closes the missing E2E
-// coverage gap by driving real in-app navigation from the Hub screen.
+// E2E coverage for the telescope construction/launch operation that kicks off
+// the transit-classification instrument feed. STS-582 keeps the physical
+// launch in the flight engine while making it player-owned Launchpad work,
+// never a client contract on the Mission Board.
 
 import type { GameState } from '@/game-context'
 
@@ -72,12 +70,33 @@ describe('Telescope construction/launch mission (STS-138)', () => {
     cy.get('[data-testid="progression-card-transit-satellite"]').should('not.exist')
   })
 
-  it('offers the telescope launch mission once the station is built, and it appears on the mission board', () => {
+  it('offers telescope deployment under Your Program and never on the Mission Board', () => {
     visitHubWithState({ satelliteMonitoringBuilt: true, transitSatelliteLaunchedAt: undefined })
     cy.get('[data-testid="progression-card-transit-satellite"]', { timeout: 10000 }).should('be.visible')
     cy.contains('Launch a transit telescope').should('be.visible')
     cy.get('[data-testid="progression-card-transit-satellite"]').click({ force: true })
+    cy.contains('Your Program', { timeout: 10000 }).should('be.visible')
     cy.contains('Launch Transit Telescope', { timeout: 10000 }).should('be.visible')
+    cy.get('[data-testid="mission-card-story-transit-telescope-launch-program-reward"]')
+      .should('contain.text', 'FEED')
+
+    visitWithState('/game/missions', 'missions', {
+      satelliteMonitoringBuilt: true,
+      transitSatelliteLaunchedAt: undefined,
+    })
+    cy.contains('Mission Board', { timeout: 10000 }).should('be.visible')
+    cy.get('[data-testid="mission-card-story-transit-telescope-launch"]').should('not.exist')
+  })
+
+  it('can start the telescope deployment from the Launchpad', () => {
+    visitWithState('/game/launchpad', 'launchpad', {
+      satelliteMonitoringBuilt: true,
+      transitSatelliteLaunchedAt: undefined,
+    })
+    cy.get('[data-testid="mission-card-story-transit-telescope-launch"]', { timeout: 10000 })
+      .scrollIntoView()
+      .click({ force: true })
+    cy.contains('Build Your Rocket', { timeout: 10000 }).should('be.visible')
   })
 
   it('gates the TESS discovery screen behind the Satellite Monitoring Station', () => {
@@ -88,7 +107,9 @@ describe('Telescope construction/launch mission (STS-138)', () => {
   it('gates the TESS discovery screen behind launching the telescope even once the station is built', () => {
     visitWithState('/game/galaxy', 'galaxy', { satelliteMonitoringBuilt: true, transitSatelliteLaunchedAt: undefined })
     cy.contains('Launch Transit Telescope', { timeout: 10000 }).should('be.visible')
-    cy.contains('A story mission is available from Mission Control').should('be.visible')
+    cy.contains('Deploy your own telescope from the Launchpad').should('be.visible')
+    cy.get('[data-testid="open-transit-telescope-program-btn"]').click({ force: true })
+    cy.contains('Your Program', { timeout: 10000 }).should('be.visible')
   })
 
   it('unlocks the TESS discovery loop once the telescope has launched', () => {

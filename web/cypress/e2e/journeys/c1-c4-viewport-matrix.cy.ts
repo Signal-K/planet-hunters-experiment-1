@@ -92,7 +92,7 @@ describe('C1–C4 screen contracts across viewport classes', () => {
     describe(viewport.label, () => {
       beforeEach(() => cy.viewport(viewport.width, viewport.height))
 
-      it('renders the Free Ops hub and mission board without losing the primary actions', () => {
+      it('renders the Free Ops hub, client board, and own-program launchpad without losing primary actions', () => {
         visit('/game', stateWith('hub'))
         cy.contains('Earth Base', { timeout: 10000 }).should('be.visible')
         cy.get('[data-testid="progression-card-next-mission"]', { timeout: 10000 })
@@ -100,7 +100,13 @@ describe('C1–C4 screen contracts across viewport classes', () => {
 
         visit('/game/missions', stateWith('missions'))
         cy.contains('Mission Board', { timeout: 10000 }).should('be.visible')
-        cy.get('[data-testid="self-directed-mining-btn"]', { timeout: 10000 })
+        cy.get('button[data-testid^="mission-card-"]', { timeout: 10000 })
+          .first()
+          .scrollIntoView().should('be.visible')
+
+        visit('/game/launchpad', stateWith('launchpad'))
+        cy.contains('Your Program', { timeout: 10000 }).should('be.visible')
+        cy.get('[data-testid="mission-card-freeops-self-directed-mining"]', { timeout: 10000 })
           .scrollIntoView().should('be.visible')
       })
 
@@ -186,7 +192,8 @@ describe('C1–C3 persisted mission edge states', () => {
       }),
     }))
     cy.contains('Mission Board', { timeout: 10000 }).should('be.visible')
-    cy.get('[data-testid="self-directed-mining-btn"]')
+    cy.get('button[data-testid^="mission-card-"]')
+      .first()
       .scrollIntoView().click({ force: true })
     cy.window().then(win => {
       const saved = JSON.parse(win.localStorage.getItem(STORAGE_KEY) || '{}') as GameState

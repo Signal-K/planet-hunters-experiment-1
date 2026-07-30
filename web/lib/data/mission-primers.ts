@@ -25,10 +25,9 @@ export interface MissionTypePrimer {
 }
 
 /**
- * The synthetic client the player's own story/program operations are filed
- * under at runtime (see STORY_MISSION_CLIENT_ID in lib/runtimeCatalog.ts —
- * duplicated as a literal here to keep lib/data free of a cycle back through
- * lib/catalog). It is the player's own mission control, not a customer.
+ * Legacy synthetic owner id used by saves/catalog snapshots created before
+ * STS-582 removed the Mission Control pseudo-client. Keep recognizing it so
+ * an active telescope flight never regains client chrome after an upgrade.
  */
 export const OWN_PROGRAM_CLIENT_ID = 'mission-control'
 
@@ -43,6 +42,15 @@ export function isOwnProgramMission(mission: Mission): boolean {
   return !mission.client
     || mission.client === OWN_PROGRAM_CLIENT_ID
     || mission.payload?.type === 'satellite'
+}
+
+/**
+ * During guided onboarding, the board remains the sequence entry point. Once
+ * Free Ops begins, the Mission Board is strictly client work; owned flights
+ * live under Launchpad → Your Program.
+ */
+export function isMissionBoardMission(mission: Mission, freeOperations: boolean): boolean {
+  return !freeOperations || !isOwnProgramMission(mission)
 }
 
 /**

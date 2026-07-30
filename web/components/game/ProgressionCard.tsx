@@ -160,10 +160,10 @@ export default function ProgressionCard({ player, onGoBuilding, onNav, top = 132
           testId="progression-card-transit-satellite"
           accent="var(--hub-cyan)"
           icon={<TelescopeGlyph />}
-          eyebrow="Science Mission"
+          eyebrow="Your Program"
           title="Launch a transit telescope"
-          cta="Open Mission"
-          onClick={() => onNav('missions')}
+          cta="Open Launchpad"
+          onClick={() => onNav('launchpad')}
         />
       )
     } else if (!inOnboarding && player.transitSatelliteLaunchedAt) {
