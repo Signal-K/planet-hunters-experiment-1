@@ -14,9 +14,9 @@
   background:
     linear-gradient(
       180deg,
-      color-mix(in srgb, var(--ln-bg-grid) 88%, var(--ln-purple-depth)) 0 22%,
-      color-mix(in srgb, var(--ln-bg) 76%, var(--ln-purple-depth)) 22% 58%,
-      color-mix(in srgb, var(--ln-void) 88%, var(--ln-purple-depth)) 58% 100%
+      color-mix(in srgb, var(--ln-bg-grid) 88%, #493824) 0 18%,
+      color-mix(in srgb, var(--ln-bg) 82%, #2c241c) 18% 56%,
+      color-mix(in srgb, var(--ln-void) 92%, #191713) 56% 100%
     );
 }
 
@@ -24,11 +24,24 @@
   position: absolute;
   inset: 0;
   content: '';
-  opacity: 0.32;
+  opacity: 0.22;
   background-image:
     linear-gradient(var(--ln-hairline) 1px, transparent 1px),
     linear-gradient(90deg, var(--ln-hairline) 1px, transparent 1px);
   background-size: 48px 48px;
+}
+
+.geology::after {
+  position: absolute;
+  inset: 0;
+  content: '';
+  opacity: 0.24;
+  background-image:
+    radial-gradient(circle at 8% 18%, #92785d 0 2px, transparent 3px),
+    radial-gradient(circle at 17% 65%, #6c5a47 0 3px, transparent 4px),
+    radial-gradient(circle at 76% 32%, #8b7258 0 2px, transparent 3px),
+    radial-gradient(circle at 91% 77%, #665646 0 4px, transparent 5px);
+  background-size: 150px 120px, 210px 170px, 180px 140px, 250px 190px;
 }
 
 .stratum {
@@ -42,14 +55,14 @@
 }
 
 .stratumOne {
-  top: 22%;
-  background: color-mix(in srgb, var(--ln-surface) 24%, transparent);
+  top: 18%;
+  background: color-mix(in srgb, #6a5137 18%, transparent);
 }
 
 .stratumTwo {
-  top: 56%;
+  top: 68%;
   transform: skewY(1.5deg);
-  background: color-mix(in srgb, var(--ln-purple-depth) 32%, transparent);
+  background: color-mix(in srgb, #2d2924 44%, transparent);
 }
 
 .serviceShaft {
@@ -130,6 +143,116 @@
   gap: 16px;
 }
 
+.facilityShell {
+  position: relative;
+  display: flex;
+  min-height: 0;
+  flex: 1;
+  overflow: hidden;
+  flex-direction: column;
+  border: 1px solid var(--ln-cyan-border);
+  border-radius: var(--ln-r-md);
+  background: color-mix(in srgb, var(--ln-void) 92%, transparent);
+  box-shadow:
+    0 0 0 8px color-mix(in srgb, var(--ln-void) 55%, transparent),
+    0 18px 54px rgba(0, 0, 0, 0.38);
+}
+
+.utilityTrunk,
+.accessCorridor {
+  position: relative;
+  display: flex;
+  height: 28px;
+  flex: 0 0 28px;
+  align-items: center;
+  overflow: hidden;
+  padding: 0 12px;
+  border-bottom: 1px solid var(--ln-hairline-strong);
+  background: color-mix(in srgb, var(--ln-surface) 88%, var(--ln-void));
+}
+
+.utilityTrunk span {
+  width: 28%;
+  height: 4px;
+  margin-right: 8px;
+  border: 1px solid var(--ln-cyan-border);
+  border-radius: var(--ln-r-pill);
+  background: var(--ln-cyan-soft);
+}
+
+.utilityTrunk span:nth-child(2) {
+  border-color: color-mix(in srgb, var(--ln-ok) 44%, transparent);
+  background: color-mix(in srgb, var(--ln-ok) 16%, transparent);
+}
+
+.utilityTrunk span:nth-child(3) {
+  border-color: color-mix(in srgb, var(--ln-warn) 44%, transparent);
+  background: color-mix(in srgb, var(--ln-warn) 14%, transparent);
+}
+
+.utilityTrunk b,
+.accessCorridor b {
+  position: absolute;
+  right: 12px;
+  padding-left: 12px;
+  color: var(--ln-text-muted);
+  background: color-mix(in srgb, var(--ln-surface) 94%, transparent);
+  font: 700 7px var(--ln-font-mono);
+  letter-spacing: 0.12em;
+}
+
+.accessCorridor {
+  height: 34px;
+  flex-basis: 34px;
+  border-top: 1px solid var(--ln-hairline-strong);
+  border-bottom: 0;
+  background:
+    repeating-linear-gradient(
+      135deg,
+      transparent 0 10px,
+      color-mix(in srgb, var(--ln-cyan) 7%, transparent) 10px 12px
+    ),
+    color-mix(in srgb, var(--ln-surface) 82%, var(--ln-void));
+}
+
+.corridorLine {
+  position: absolute;
+  right: 0;
+  bottom: 6px;
+  left: 0;
+  height: 1px;
+  background: var(--ln-cyan-border);
+}
+
+.corridorCart {
+  position: absolute;
+  bottom: 7px;
+  left: 28%;
+  width: 28px;
+  height: 10px;
+  border: 1px solid var(--ln-hairline-strong);
+  background: var(--ln-panel-2);
+}
+
+.corridorCart::before,
+.corridorCart::after {
+  position: absolute;
+  bottom: -5px;
+  width: 5px;
+  height: 5px;
+  content: '';
+  border-radius: 50%;
+  background: var(--ln-text-muted);
+}
+
+.corridorCart::before {
+  left: 3px;
+}
+
+.corridorCart::after {
+  right: 3px;
+}
+
 .eyebrow,
 .roomEyebrow,
 .metricLabel,
@@ -171,7 +294,8 @@
   min-height: 0;
   flex: 1;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 16px;
+  gap: 1px;
+  background: var(--ln-hairline-strong);
 }
 
 .roomCard {
@@ -179,20 +303,18 @@
   display: flex;
   min-height: 0;
   overflow: hidden;
-  padding: 16px;
+  padding: 12px;
   flex-direction: column;
-  border: 1px solid var(--ln-cyan-border);
-  border-radius: var(--ln-r-lg);
+  border: 0;
+  border-radius: 0;
   color: var(--ln-text);
-  background: color-mix(in srgb, var(--ln-panel) 92%, transparent);
-  box-shadow: var(--ln-shadow-card);
+  background: color-mix(in srgb, var(--ln-panel) 94%, transparent);
   cursor: pointer;
   text-align: left;
   transition: border-color 120ms ease, background 120ms ease;
 }
 
 .roomCard:hover {
-  border-color: var(--ln-cyan);
   background: color-mix(in srgb, var(--ln-panel-2) 94%, transparent);
 }
 
@@ -203,7 +325,7 @@
 }
 
 .roomCardLocked {
-  border-style: dashed;
+  background: color-mix(in srgb, var(--ln-void) 76%, var(--ln-panel));
 }
 
 .roomCardLocked::after {
@@ -211,7 +333,13 @@
   inset: 0;
   content: '';
   pointer-events: none;
-  background: color-mix(in srgb, var(--ln-void) 34%, transparent);
+  border: 1px dashed var(--ln-hairline-strong);
+  background:
+    repeating-linear-gradient(
+      135deg,
+      transparent 0 18px,
+      color-mix(in srgb, var(--ln-warn) 4%, transparent) 18px 20px
+    );
 }
 
 .roomCardTop,
@@ -250,59 +378,150 @@
   font-weight: 800;
 }
 
+.bayNumber {
+  margin-left: auto;
+  color: color-mix(in srgb, var(--ln-cyan) 36%, transparent);
+  font: 800 24px var(--ln-font-mono);
+  letter-spacing: -0.08em;
+}
+
 .roomScene {
   position: relative;
-  min-height: 96px;
-  margin: 16px 0;
+  min-height: 128px;
+  margin: 12px -12px;
   flex: 1;
   overflow: hidden;
-  border: 1px solid var(--ln-hairline);
-  border-radius: var(--ln-r-md);
-  background: color-mix(in srgb, var(--ln-void) 82%, var(--ln-surface));
+  border-top: 1px solid var(--ln-hairline);
+  border-bottom: 1px solid var(--ln-hairline);
+  border-radius: 0;
+  background:
+    linear-gradient(90deg, transparent 49%, color-mix(in srgb, var(--ln-cyan) 5%, transparent) 50%, transparent 51%),
+    linear-gradient(color-mix(in srgb, var(--ln-cyan) 5%, transparent) 1px, transparent 1px),
+    color-mix(in srgb, var(--ln-void) 88%, var(--ln-surface));
+  background-size: 48px 100%, 100% 32px, auto;
 }
 
 .roomScene::before {
   position: absolute;
   right: 0;
-  bottom: 25%;
+  bottom: 18px;
   left: 0;
   height: 1px;
   content: '';
   background: var(--ln-hairline-strong);
 }
 
+.roomCeiling {
+  position: absolute;
+  top: 0;
+  right: 8px;
+  left: 8px;
+  display: flex;
+  height: 12px;
+  align-items: center;
+  gap: 5px;
+  border-bottom: 1px solid var(--ln-hairline-strong);
+}
+
+.roomCeiling span {
+  height: 3px;
+  flex: 1;
+  border-radius: var(--ln-r-pill);
+  background: color-mix(in srgb, var(--ln-cyan) 22%, transparent);
+}
+
+.roomCeiling span:nth-child(2) {
+  flex: 0 0 8px;
+  height: 8px;
+  background: var(--ln-ok);
+  box-shadow: 0 0 8px color-mix(in srgb, var(--ln-ok) 44%, transparent);
+}
+
+.sceneFloorRail {
+  position: absolute;
+  right: 0;
+  bottom: 9px;
+  left: 0;
+  height: 3px;
+  border-top: 1px solid var(--ln-hairline-strong);
+  border-bottom: 1px solid var(--ln-hairline);
+}
+
+.vaultCrane {
+  position: absolute;
+  top: 22px;
+  right: 10%;
+  left: 10%;
+  height: 8px;
+  border: 1px solid var(--ln-cyan-border);
+  background: var(--ln-surface);
+}
+
+.vaultCrane i {
+  position: absolute;
+  top: 7px;
+  left: 58%;
+  width: 1px;
+  height: 24px;
+  background: var(--ln-hairline-strong);
+}
+
+.vaultCrane i::after {
+  position: absolute;
+  bottom: -4px;
+  left: -4px;
+  width: 8px;
+  height: 8px;
+  content: '';
+  transform: rotate(45deg);
+  border-right: 1px solid var(--ln-cyan);
+  border-bottom: 1px solid var(--ln-cyan);
+}
+
 .rack {
   position: absolute;
-  top: 16px;
-  right: 16px;
-  bottom: 24px;
-  left: 16px;
+  top: 22px;
+  right: 10px;
+  bottom: 20px;
+  left: 10px;
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 8px;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 5px;
 }
 
 .rackCell {
   position: relative;
   border: 1px solid var(--ln-hairline);
-  background: var(--ln-cyan-soft);
+  background: color-mix(in srgb, var(--ln-surface) 82%, transparent);
 }
 
-.rackCell::after {
+.partCrate {
   position: absolute;
-  right: 20%;
-  bottom: 8px;
-  left: 20%;
-  height: 6px;
-  content: '';
+  right: 18%;
+  bottom: 14px;
+  left: 18%;
+  height: 16px;
   border: 1px solid var(--ln-cyan-border);
   border-radius: var(--ln-r-xs);
+  background:
+    linear-gradient(135deg, transparent 44%, var(--ln-hairline-strong) 45% 52%, transparent 53%);
+}
+
+.rackCell b {
+  position: absolute;
+  right: 0;
+  bottom: 2px;
+  left: 0;
+  color: var(--ln-text-muted);
+  font: 700 6px var(--ln-font-mono);
+  letter-spacing: 0.1em;
+  text-align: center;
 }
 
 .oreBins {
   position: absolute;
   right: 16px;
-  bottom: 24px;
+  bottom: 20px;
   left: 16px;
   display: grid;
   height: 64px;
@@ -318,53 +537,162 @@
   background: var(--ln-surface);
 }
 
-.oreBin::before,
-.oreBin::after {
-  position: absolute;
-  border-radius: 50%;
-  content: '';
-  background: var(--ln-cyan);
-}
-
 .oreBin::before {
-  right: 12%;
-  bottom: 8px;
-  left: 12%;
-  height: 20px;
+  position: absolute;
+  right: 8%;
+  bottom: 0;
+  left: 8%;
+  height: 48%;
+  content: '';
   border-radius: 50% 50% 0 0;
-  opacity: 0.22;
+  opacity: 0.66;
+  background: var(--stored-mineral, var(--ln-cyan));
 }
 
-.oreBin::after {
-  right: 24%;
-  bottom: 16px;
-  left: 24%;
-  height: 12px;
-  opacity: 0.5;
+.oreBin b,
+.oreBin i {
+  position: absolute;
+  z-index: 1;
+  right: 0;
+  left: 0;
+  color: var(--ln-text);
+  font: 800 8px var(--ln-font-mono);
+  text-align: center;
+}
+
+.oreBin b {
+  top: 6px;
+}
+
+.oreBin i {
+  bottom: 5px;
+  color: var(--ln-text-dim);
+  font-size: 6px;
+  font-style: normal;
+}
+
+.trainingScene::after {
+  position: absolute;
+  inset: 0;
+  content: '';
+  opacity: 0.24;
+  background: repeating-linear-gradient(
+    135deg,
+    transparent 0 16px,
+    color-mix(in srgb, var(--ln-warn) 16%, transparent) 16px 18px
+  );
 }
 
 .habitat {
   position: absolute;
-  top: 20%;
-  left: 50%;
-  width: 72%;
-  height: 56%;
-  transform: translateX(-50%);
+  top: 24px;
+  right: 10%;
+  bottom: 20px;
+  left: 10%;
   border: 1px solid var(--ln-hairline-strong);
-  border-radius: 48px 48px 8px 8px;
-  background: var(--ln-surface);
+  border-radius: 44px 44px 4px 4px;
+  background: color-mix(in srgb, var(--ln-surface) 88%, var(--ln-void));
+}
+
+.habitat::before,
+.habitat::after {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 9px;
+  content: '';
+  border-right: 1px solid var(--ln-hairline);
+  border-left: 1px solid var(--ln-hairline);
 }
 
 .habitat::before {
+  left: 16%;
+}
+
+.habitat::after {
+  right: 16%;
+}
+
+.habitatWindow {
+  position: absolute;
+  top: 30%;
+  left: 14%;
+  display: flex;
+  width: 38%;
+  height: 40%;
+  justify-content: center;
+  gap: 8px;
+  border: 1px solid var(--ln-cyan-border);
+  border-radius: var(--ln-r-pill);
+  background: color-mix(in srgb, var(--ln-cyan) 7%, transparent);
+}
+
+.habitatWindow i {
+  position: relative;
+  width: 8px;
+}
+
+.habitatWindow i::before {
+  position: absolute;
+  top: 8px;
+  left: 1px;
+  width: 6px;
+  height: 6px;
+  content: '';
+  border-radius: 50%;
+  background: var(--ln-text-muted);
+}
+
+.habitatWindow i::after {
+  position: absolute;
+  top: 15px;
+  left: 0;
+  width: 8px;
+  height: 14px;
+  content: '';
+  border-radius: 4px 4px 2px 2px;
+  background: var(--ln-text-muted);
+}
+
+.airlockWheel {
+  position: absolute;
+  top: 50%;
+  right: 14%;
+  width: 28px;
+  height: 28px;
+  transform: translateY(-50%);
+  border: 3px double var(--ln-cyan-border);
+  border-radius: 50%;
+}
+
+.airlockWheel::before,
+.airlockWheel::after {
   position: absolute;
   top: 50%;
   left: 50%;
-  width: 48px;
-  height: 48px;
+  width: 18px;
+  height: 1px;
   content: '';
   transform: translate(-50%, -50%);
-  border: 4px solid var(--ln-cyan-border);
-  border-radius: 50%;
+  background: var(--ln-cyan-border);
+}
+
+.airlockWheel::after {
+  transform: translate(-50%, -50%) rotate(90deg);
+}
+
+.trainingSeal {
+  position: absolute;
+  z-index: 2;
+  right: 8px;
+  bottom: 6px;
+  left: 8px;
+  padding: 3px 4px;
+  color: var(--ln-warn);
+  background: color-mix(in srgb, var(--ln-void) 92%, transparent);
+  font: 800 6px var(--ln-font-mono);
+  letter-spacing: 0.1em;
+  text-align: center;
 }
 
 .roomDescription {

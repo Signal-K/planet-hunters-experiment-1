@@ -24,6 +24,9 @@ describe('HubSubsurfaceView', () => {
     )
 
     expect(markup).toContain('data-testid="hub-subsurface-view"')
+    expect(markup).toContain('data-testid="subsurface-facility-cutaway"')
+    expect(markup).toContain('Storage &amp; habitat deck')
+    expect(markup).toContain('24 M BELOW GRADE')
     expect(markup).toContain('17 mineral units')
     expect(markup).toContain('2 registered parts')
     expect(markup).toContain('data-testid="subsurface-room-mineral-vault"')
@@ -31,6 +34,7 @@ describe('HubSubsurfaceView', () => {
     expect(markup).toContain('data-testid="subsurface-room-habitat-training"')
     expect(markup).toContain('Coming soon')
     expect(markup).toContain('LOCKED')
+    expect(markup).not.toContain('Commodity Exchange')
   })
 
   it('sorts positive mineral inventory by stored amount', () => {

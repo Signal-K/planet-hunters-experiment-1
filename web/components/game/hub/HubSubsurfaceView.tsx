@@ -72,28 +72,90 @@ export function registeredParts(
     .sort((a, b) => a.kind.localeCompare(b.kind))
 }
 
-function RoomScene({ id }: { id: SubsurfaceRoomId }) {
+function RoomScene({
+  id,
+  minerals,
+  parts,
+  trainingEnabled,
+}: {
+  id: SubsurfaceRoomId
+  minerals: StoredMineral[]
+  parts: RegisteredPart[]
+  trainingEnabled: boolean
+}) {
   if (id === 'mineral-vault') {
+    const displayedMinerals = minerals.slice(0, 4)
     return (
       <div className={styles.roomScene} aria-hidden="true">
-        <div className={styles.oreBins}>
-          {Array.from({ length: 4 }, (_, index) => <span className={styles.oreBin} key={index} />)}
+        <div className={styles.roomCeiling}>
+          <span />
+          <span />
+          <span />
         </div>
+        <div className={styles.vaultCrane}><i /></div>
+        <div className={styles.oreBins}>
+          {Array.from({ length: 4 }, (_, index) => {
+            const mineral = displayedMinerals[index]
+            return (
+              <span
+                className={styles.oreBin}
+                key={mineral?.id ?? index}
+                style={mineral
+                  ? { '--stored-mineral': mineral.color } as React.CSSProperties
+                  : undefined}
+              >
+                <b>{mineral?.symbol ?? '—'}</b>
+                <i>{mineral ? `${mineral.amount} U` : 'EMPTY'}</i>
+              </span>
+            )
+          })}
+        </div>
+        <div className={styles.sceneFloorRail} />
       </div>
     )
   }
   if (id === 'parts-locker') {
+    const displayedParts = parts.slice(0, 6)
     return (
       <div className={styles.roomScene} aria-hidden="true">
-        <div className={styles.rack}>
-          {Array.from({ length: 8 }, (_, index) => <span className={styles.rackCell} key={index} />)}
+        <div className={styles.roomCeiling}>
+          <span />
+          <span />
+          <span />
         </div>
+        <div className={styles.rack}>
+          {Array.from({ length: 6 }, (_, index) => {
+            const part = displayedParts[index]
+            return (
+              <span className={styles.rackCell} key={part?.id ?? index}>
+                <i className={styles.partCrate} />
+                <b>{part ? part.kind.slice(0, 3).toUpperCase() : 'OPEN'}</b>
+              </span>
+            )
+          })}
+        </div>
+        <div className={styles.sceneFloorRail} />
       </div>
     )
   }
   return (
-    <div className={styles.roomScene} aria-hidden="true">
-      <div className={styles.habitat} />
+    <div className={`${styles.roomScene} ${styles.trainingScene}`} aria-hidden="true">
+      <div className={styles.roomCeiling}>
+        <span />
+        <span />
+        <span />
+      </div>
+      <div className={styles.habitat}>
+        <span className={styles.habitatWindow}>
+          <i />
+          <i />
+        </span>
+        <span className={styles.airlockWheel} />
+      </div>
+      <div className={styles.trainingSeal}>
+        {trainingEnabled ? 'TRAINING DECK ONLINE' : 'BAY SEALED · COMING SOON'}
+      </div>
+      <div className={styles.sceneFloorRail} />
     </div>
   )
 }
@@ -265,41 +327,60 @@ export function HubSubsurfaceView({
           <>
             <div className={styles.deckHeader}>
               <div>
-                <div className={styles.eyebrow}>LEVEL 01 · LOGISTICS DECK</div>
-                <h2 className={styles.deckTitle}>Below-soil operations</h2>
+                <div className={styles.eyebrow}>SUBSURFACE LEVEL 01 · 24 M BELOW GRADE</div>
+                <h2 className={styles.deckTitle}>Storage &amp; habitat deck</h2>
               </div>
               <div className={styles.deckSummary}>
                 {totalMineralUnits} mineral units · {parts.length} registered parts
               </div>
             </div>
-            <div className={styles.roomGrid}>
-              {SUBSURFACE_ROOMS.map(room => {
-                const locked = room.id === 'habitat-training' && !trainingEnabled
-                return (
-                  <button
-                    className={`${styles.roomCard} ${locked ? styles.roomCardLocked : ''}`}
-                    data-testid={`subsurface-room-${room.id}`}
-                    key={room.id}
-                    onClick={() => setActiveRoom(room.id)}
-                  >
-                    <div className={styles.roomCardTop}>
-                      <span className={styles.roomIcon}><RoomIcon id={room.id} /></span>
-                      <div>
-                        <div className={styles.roomEyebrow}>{room.eyebrow}</div>
-                        <div className={styles.roomName}>{room.name}</div>
+            <div className={styles.facilityShell} data-testid="subsurface-facility-cutaway">
+              <div className={styles.utilityTrunk} aria-hidden="true">
+                <span />
+                <span />
+                <span />
+                <b>EARTH BASE · BELOW-SOIL SERVICE TRUNK</b>
+              </div>
+              <div className={styles.roomGrid}>
+                {SUBSURFACE_ROOMS.map((room, index) => {
+                  const locked = room.id === 'habitat-training' && !trainingEnabled
+                  return (
+                    <button
+                      className={`${styles.roomCard} ${locked ? styles.roomCardLocked : ''}`}
+                      data-testid={`subsurface-room-${room.id}`}
+                      key={room.id}
+                      onClick={() => setActiveRoom(room.id)}
+                    >
+                      <div className={styles.roomCardTop}>
+                        <span className={styles.roomIcon}><RoomIcon id={room.id} /></span>
+                        <div>
+                          <div className={styles.roomEyebrow}>{room.eyebrow}</div>
+                          <div className={styles.roomName}>{room.name}</div>
+                        </div>
+                        <span className={styles.bayNumber}>0{index + 1}</span>
                       </div>
-                    </div>
-                    <RoomScene id={room.id} />
-                    <p className={styles.roomDescription}>{room.description}</p>
-                    <div className={styles.roomCardFooter}>
-                      <span className={`${styles.status} ${locked ? styles.statusLocked : ''}`}>
-                        {locked ? 'Coming soon' : 'Online'}
-                      </span>
-                      <span className={styles.roomMetric}>{roomMetric(room.id)}</span>
-                    </div>
-                  </button>
-                )
-              })}
+                      <RoomScene
+                        id={room.id}
+                        minerals={minerals}
+                        parts={parts}
+                        trainingEnabled={trainingEnabled}
+                      />
+                      <p className={styles.roomDescription}>{room.description}</p>
+                      <div className={styles.roomCardFooter}>
+                        <span className={`${styles.status} ${locked ? styles.statusLocked : ''}`}>
+                          {locked ? 'Coming soon' : 'Online'}
+                        </span>
+                        <span className={styles.roomMetric}>{roomMetric(room.id)}</span>
+                      </div>
+                    </button>
+                  )
+                })}
+              </div>
+              <div className={styles.accessCorridor} aria-hidden="true">
+                <span className={styles.corridorLine} />
+                <span className={styles.corridorCart} />
+                <b>ACCESS CORRIDOR · PRESSURE NOMINAL</b>
+              </div>
             </div>
           </>
         )}
