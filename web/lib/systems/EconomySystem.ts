@@ -4,6 +4,7 @@
 import type { GameState } from '@/lib/game-types'
 import type { RefineryRecipe, ShipRoomKind, StructureBlueprint, RocketModel } from '@/lib/data'
 import { MINERAL_META, CLIENT_SLOTS, LAUNCHPAD_UPGRADE_COST, OPEN_MARKET_SELL_RATE, customizerPartById } from '@/lib/data'
+import { structureIsStaffed } from './AcademySystem'
 
 // Sell to open market (raw): ~80% of book value — see [[Economy and Minerals]].
 export { OPEN_MARKET_SELL_RATE } from '@/lib/data'
@@ -109,7 +110,11 @@ export function applyStartRefine(s: GameState, recipe: RefineryRecipe): GameStat
       ...s.player,
       francs: s.player.francs - recipe.cost,
       stash,
-      refineryQueue: [...s.player.refineryQueue, { recipeId: recipe.id, startedAt: Date.now() }],
+      refineryQueue: [...s.player.refineryQueue, {
+        recipeId: recipe.id,
+        startedAt: Date.now(),
+        durationMs: recipe.time * 1000 * (structureIsStaffed(s.player, 'refinery') ? 0.75 : 1),
+      }],
     },
   }
 }
@@ -119,7 +124,7 @@ export function applyCollectRefined(s: GameState, recipe: RefineryRecipe): GameS
   const idx = queue.findIndex(q => q.recipeId === recipe.id)
   if (idx < 0) return s
   const started = queue[idx].startedAt
-  if ((Date.now() - started) / 1000 < recipe.time) return s
+  if (Date.now() - started < (queue[idx].durationMs ?? recipe.time * 1000)) return s
   queue.splice(idx, 1)
   return {
     ...s,
@@ -146,15 +151,20 @@ export function applyPurchaseRocket(s: GameState, rocket: RocketModel): GameStat
  *  hand-rolled inside `GameScreenRouter`'s JSX — the one place in the app that
  *  debited francs from a React component rather than a system function. */
 export function applyPlaceStructure(s: GameState, structure: StructureBlueprint | undefined, kind: string, plot: number): GameState {
+  if (!structure || structure.kind !== kind) return s
+  if (s.player.placed.includes(kind)) return s
+  if (kind === 'astronaut-academy' && !s.player.academyResearched) return s
+  if (s.player.francs < structure.cost) return s
+  if (!Object.entries(structure.costMaterials ?? {}).every(([mineral, amount]) => (s.player.stash?.[mineral] ?? 0) >= amount)) return s
   const stash = { ...(s.player.stash ?? {}) }
-  for (const [mineral, amount] of Object.entries(structure?.costMaterials ?? {})) {
+  for (const [mineral, amount] of Object.entries(structure.costMaterials ?? {})) {
     stash[mineral] = Math.max(0, (stash[mineral] ?? 0) - amount)
   }
   return {
     ...s,
     player: {
       ...s.player,
-      francs: s.player.francs - (structure?.cost ?? 0),
+      francs: s.player.francs - structure.cost,
       stash,
       placed: Array.from(new Set([...s.player.placed, kind])),
       placementPlots: { ...s.player.placementPlots, [kind]: plot },
@@ -164,6 +174,10 @@ export function applyPlaceStructure(s: GameState, structure: StructureBlueprint 
       satelliteMonitoringLevel: kind === 'satellite-monitoring-station'
         ? Math.max(1, s.player.satelliteMonitoringLevel ?? 1)
         : s.player.satelliteMonitoringLevel,
+      academyFunded: kind === 'astronaut-academy' ? true : s.player.academyFunded,
+      crewUpkeepSettledDate: kind === 'astronaut-academy'
+        ? new Date().toISOString().slice(0, 10)
+        : s.player.crewUpkeepSettledDate,
     },
   }
 }

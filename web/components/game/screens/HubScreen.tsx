@@ -201,7 +201,7 @@ export default function HubScreen({ player, hasCoach, onGoBuilding, onNav, onUpg
     return kind
   }
 
-  const BUILDING_W: Record<string, number> = { launchpad: 98, refinery: 84, 'scan-station': 80, 'satellite-monitoring-station': 86, command: 84 }
+  const BUILDING_W: Record<string, number> = { launchpad: 98, refinery: 84, 'scan-station': 80, 'satellite-monitoring-station': 86, 'astronaut-academy': 88, command: 84 }
   const hubBuildings: HubBuildingDef[] = sortedEntities.flatMap((e, plot) => {
     const kind = structureForPlot(plot)
     if (!kind) return []
@@ -278,6 +278,16 @@ export default function HubScreen({ player, hasCoach, onGoBuilding, onNav, onUpg
         w: 86,
         badge: tessQueueCount,
         onClick: () => onGoBuilding('satellite-monitoring-station'),
+      }
+    }
+    if (kind === 'astronaut-academy') {
+      const activeTraining = player.crewTraining?.length ?? 0
+      return {
+        kind, label: 'Academy',
+        sub: activeTraining > 0 ? `${activeTraining} TRAINING` : player.academyFunded ? 'FUNDED' : 'PAUSED',
+        status: (activeTraining > 0 ? 'warn' : player.academyFunded ? 'ok' : 'info') as 'ok' | 'warn' | 'info',
+        w: 88,
+        onClick: () => onGoBuilding('academy'),
       }
     }
     return {

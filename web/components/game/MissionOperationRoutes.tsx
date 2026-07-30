@@ -166,6 +166,11 @@ export default function MissionOperationRoutes({
           rocket={game.rocket}
           deliveryTargetName={deliveryTargetName}
           loanDebt={game.player.loanDebt}
+          firstCrewArrival={
+            (game.player.missionCrewIds?.length ?? 0) > 0
+            && !!game.target
+            && !(game.player.crewVisitedTargets ?? []).includes(game.target.id)
+          }
         />
       )
   }

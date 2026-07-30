@@ -385,6 +385,7 @@ const ART_W: Record<string, number> = {
   refinery: 62,
   'scan-station': 58,
   'satellite-monitoring-station': 60,
+  'astronaut-academy': 60,
   command: 60,
 }
 

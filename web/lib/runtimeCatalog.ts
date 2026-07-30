@@ -1,5 +1,7 @@
 import type { Catalog } from './catalog'
 import type { Mission, Target } from './data'
+import type { Player } from './game-types'
+import { diplomacyPayoutMultiplier, jointMissionUnlocked } from './systems/AcademySystem'
 
 export const TRANSIT_TELESCOPE_TARGET_ID = 'earth-orbit-transit-telescope'
 export const TRANSIT_TELESCOPE_MISSION_ID = 'story-transit-telescope-launch'
@@ -23,6 +25,7 @@ interface RuntimeCatalogOpts {
   missionId?: string | null
   targetId?: string | null
   missionsDone: number
+  player?: Player
 }
 
 export function buildRuntimeCatalog({
@@ -34,20 +37,33 @@ export function buildRuntimeCatalog({
   missionId,
   targetId,
   missionsDone,
+  player,
 }: RuntimeCatalogOpts): Catalog {
   const discoveredTargetList = Object.values(discoveredTargets)
   const shouldOfferTransitTelescopeMission = freeOperations && !!satelliteMonitoringBuilt && !transitSatelliteLaunchedAt
   const hasActiveTransitTelescopeMission = missionId === TRANSIT_TELESCOPE_MISSION_ID || targetId === TRANSIT_TELESCOPE_TARGET_ID
   const shouldIncludeTransitTelescopeMission = shouldOfferTransitTelescopeMission || hasActiveTransitTelescopeMission
-  if (discoveredTargetList.length === 0 && !shouldIncludeTransitTelescopeMission) return catalog
-
   const existingTargetIds = new Set(catalog.targets.map(target => target.id))
   const mergedTargets = [
     ...catalog.targets,
     ...(shouldIncludeTransitTelescopeMission && !existingTargetIds.has(TRANSIT_TELESCOPE_TARGET.id) ? [TRANSIT_TELESCOPE_TARGET] : []),
     ...discoveredTargetList.filter(target => !existingTargetIds.has(target.id)),
   ]
-  const existingMissionIds = new Set(catalog.missions.map(mission => mission.id))
+  const relationshipMissions = player
+    ? catalog.missions.map(mission => {
+        if (!mission.client || mission.programReward) return mission
+        const multiplier = diplomacyPayoutMultiplier(player, mission.client)
+        if (multiplier === 1) return mission
+        return {
+          ...mission,
+          payout: {
+            ...mission.payout,
+            francs: Math.round(mission.payout.francs * multiplier),
+          },
+        }
+      })
+    : catalog.missions
+  const existingMissionIds = new Set(relationshipMissions.map(mission => mission.id))
   const transitTelescopeMission: Mission[] = shouldIncludeTransitTelescopeMission && !existingMissionIds.has(TRANSIT_TELESCOPE_MISSION_ID)
     ? [{
         id: TRANSIT_TELESCOPE_MISSION_ID,
@@ -102,9 +118,38 @@ export function buildRuntimeCatalog({
     }))
     .filter(mission => !existingMissionIds.has(mission.id))
 
+  const jointMissions: Mission[] = player
+    ? Object.keys(catalog.clients).flatMap(clientId => {
+        if (!jointMissionUnlocked(player, clientId)) return []
+        const base = relationshipMissions.find(mission =>
+          mission.client === clientId
+          && !!mission.targetId
+          && !mission.programReward
+          && !mission.jointProject,
+        )
+        if (!base) return []
+        const basePayout = base.payout.francs
+        const payoutBonus = Math.round(basePayout * 0.2)
+        return [{
+          ...base,
+          id: `joint-${clientId}-${base.id}`,
+          title: `Joint Venture · ${base.title}`,
+          brief: `${catalog.clients[clientId].name} will co-fund this flight and contribute local infrastructure. Your Academy diplomacy desk negotiated shared risk, a range allowance, and a completion premium.`,
+          tag: 'JOINT',
+          jointProject: {
+            playerCost: Math.round(basePayout * 0.08),
+            clientCostShare: Math.round(basePayout * 0.08),
+            payoutBonus,
+            infrastructureOrbitBonus: 1,
+          },
+          payout: { ...base.payout, francs: basePayout + payoutBonus },
+        }]
+      })
+    : []
+
   return {
     ...catalog,
     targets: mergedTargets,
-    missions: [...catalog.missions, ...transitTelescopeMission, ...surveyMissions],
+    missions: [...relationshipMissions, ...transitTelescopeMission, ...surveyMissions, ...jointMissions],
   }
 }

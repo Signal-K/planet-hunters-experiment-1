@@ -2,7 +2,7 @@
 
 import { useRef, useState } from 'react'
 import type { Mission, Target, MineralMeta, Client, RocketConfig } from '@/lib/data'
-import { calibrateOnboardingPayout, clientAffinityBonus, isOwnProgramMission, rocketDisplayForConfig, rocketModelForConfig, MAX_AFFINITY_BONUS, loanInstalmentFor } from '@/lib/data'
+import { calibrateOnboardingPayout, clientAffinityBonus, FIRST_CREW_ARRIVAL_BONUS, isOwnProgramMission, rocketDisplayForConfig, rocketModelForConfig, MAX_AFFINITY_BONUS, loanInstalmentFor } from '@/lib/data'
 import TopBar from '@/components/ui/TopBar'
 import { PrimaryBtn } from '@/components/ui/Button'
 import Panel from '@/components/ui/Panel'
@@ -16,7 +16,7 @@ import { formatCurrency } from '@/lib/format'
 import ProgressBar from '@/components/ui/ProgressBar'
 import StatRow from '@/components/ui/StatRow'
 
-export default function DebriefScreen({ mission, target, cargo, onDone, minerals, clients, clientMissions, freeOperations, annotations, missionsDone, hasCoach, shipDestroyed, rocket, deliveryTargetName, loanDebt }: {
+export default function DebriefScreen({ mission, target, cargo, onDone, minerals, clients, clientMissions, freeOperations, annotations, missionsDone, hasCoach, shipDestroyed, rocket, deliveryTargetName, loanDebt, firstCrewArrival }: {
   mission: Mission
   target: Target
   cargo: Record<string, number>
@@ -33,6 +33,8 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
   deliveryTargetName?: string
   /** Outstanding emergency-loan debt. Collecting this payout repays an instalment, so it is itemized rather than silently deducted (STS-542). */
   loanDebt?: number
+  /** First time any astronaut in this save reaches this mission target. */
+  firstCrewArrival?: boolean
 }) {
   const [resolved, setResolved] = useState(false)
   const [collecting, setCollecting] = useState(false)
@@ -54,7 +56,9 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
   const affinityBonus = delivered ? Math.round(mission.payout.francs * affinityMultiplier) : 0
   const contractPayout = delivered ? mission.payout.francs + affinityBonus : 0
   const rawTotal = contractPayout
-  const total = calibrateOnboardingPayout(rawTotal, missionsDone ?? 0)
+  const calibratedTotal = calibrateOnboardingPayout(rawTotal, missionsDone ?? 0)
+  const crewArrivalBonus = delivered && firstCrewArrival ? FIRST_CREW_ARRIVAL_BONUS : 0
+  const total = calibratedTotal + crewArrivalBonus
   // Two-leg jobs (mine at targetId, drop at deliveryTargetId) are paid for both
   // services — split the flat contract payout into mining/transport lines so
   // that's visible, rather than implying it's a single flat fee.
@@ -198,7 +202,8 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
                   <PayRow label={isStoryMission ? 'Mission funding' : `Order fulfillment · ${client?.name ?? 'Client'}`} value={mission.payout.francs} />
                 )}
                 {!isStoryMission && affinityBonus > 0 && <PayRow label="Affinity bonus" value={affinityBonus} />}
-                {total > rawTotal && <PayRow label="Onboarding bonus" value={total - rawTotal} />}
+                {calibratedTotal > rawTotal && <PayRow label="Onboarding bonus" value={calibratedTotal - rawTotal} />}
+                {crewArrivalBonus > 0 && <PayRow label={`First astronaut at ${target.name}`} value={crewArrivalBonus} />}
                 <div style={{ marginTop: 10, paddingTop: 10, borderTop: '1px solid rgba(224,165,39,0.25)', display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
                   <span style={{ fontFamily: 'var(--ln-font-display)', fontSize: 10, fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--ln-text-dim)' }}>
                     Total

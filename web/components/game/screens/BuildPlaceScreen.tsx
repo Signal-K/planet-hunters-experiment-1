@@ -28,6 +28,7 @@ const STRUCTURE_COLORS: Record<string, string> = {
   refinery: '#f5a623',
   'scan-station': '#39d36a',
   'satellite-monitoring-station': '#7ec8ff',
+  'astronaut-academy': '#6cc2ff',
 }
 
 interface BuildPlaceScreenProps {
@@ -40,6 +41,7 @@ interface BuildPlaceScreenProps {
     placed: string[]
     freeOperations: boolean
     refineryUnlocked?: boolean
+    academyResearched?: boolean
     placementPlots?: Record<string, number>
   }
 }
@@ -102,7 +104,7 @@ export default function BuildPlaceScreen({ onPlaced, onBack, hasCoach, player }:
   const canSelectStructure = (structure: StructureBlueprint) => {
     const alreadyBuilt = player.placed.includes(structure.id)
     return !alreadyBuilt
-      && structureUnlocked(structure, { refineryUnlocked: player.refineryUnlocked, placed: player.placed, freeOperations: player.freeOperations })
+      && structureUnlocked(structure, { refineryUnlocked: player.refineryUnlocked, academyResearched: player.academyResearched, placed: player.placed, freeOperations: player.freeOperations })
       && canAffordStructure(structure, { francs: player.francs, stash: player.stash })
   }
 
@@ -112,7 +114,7 @@ export default function BuildPlaceScreen({ onPlaced, onBack, hasCoach, player }:
       const first = catalog.find(canSelectStructure)
       if (first) setPicked(first.id)
     }
-  }, [catalog, picked, player.francs, player.freeOperations, player.placed, player.refineryUnlocked, player.stash])
+  }, [catalog, picked, player.academyResearched, player.francs, player.freeOperations, player.placed, player.refineryUnlocked, player.stash])
 
   function handlePick(id: string) {
     setPicked(id)
@@ -230,7 +232,7 @@ export default function BuildPlaceScreen({ onPlaced, onBack, hasCoach, player }:
             {catalog.map(c => {
               const on = c.id === picked
               const alreadyBuilt = player.placed.includes(c.id)
-              const unlocked = structureUnlocked(c, { refineryUnlocked: player.refineryUnlocked, placed: player.placed, freeOperations: player.freeOperations }) && !alreadyBuilt
+              const unlocked = structureUnlocked(c, { refineryUnlocked: player.refineryUnlocked, academyResearched: player.academyResearched, placed: player.placed, freeOperations: player.freeOperations }) && !alreadyBuilt
               const affordable = canAffordStructure(c, { francs: player.francs, stash: player.stash })
               const canSelect = unlocked && affordable
               const color = STRUCTURE_COLORS[c.id] ?? '#3fa9ff'

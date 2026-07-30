@@ -27,6 +27,7 @@ function makeClient(id: string, unlockTier: number): Client {
     payoutPremium: 0.2,
     affinityBonusPerMission: 0.025,
     uiRole: 'starter',
+    suppliesCrew: false,
   }
 }
 

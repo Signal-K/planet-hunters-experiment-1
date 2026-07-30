@@ -116,6 +116,16 @@ export const SCENES: readonly SceneDefinition[] = [
     description: 'A physical unloading berth for two-leg contracts. Cargo leaves the ship before its empty Earth-return leg.',
   },
   {
+    id: 'academy',
+    name: 'Astronaut Academy',
+    surface: 'canvas',
+    location: 'earth-base',
+    screen: 'academy',
+    sceneFile: '/game/scenes/academy.scene.json',
+    entityTypes: ['AcademyController', 'TrainingFacility'],
+    description: 'Earth-side crew training scene with a light editorial roster and observable Academy activity.',
+  },
+  {
     id: 'target-picker',
     name: 'Solar System Map',
     surface: 'canvas',
@@ -159,6 +169,7 @@ export const KNOWN_SCENE_FILES: readonly string[] = [
   '/game/scenes/mining-test.scene.json',
   '/game/scenes/construction-target.scene.json',
   '/game/scenes/delivery.scene.json',
+  '/game/scenes/academy.scene.json',
   '/game/scenes/target-picker.scene.json',
 ]
 

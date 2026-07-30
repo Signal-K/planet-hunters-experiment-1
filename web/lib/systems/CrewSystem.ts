@@ -206,6 +206,7 @@ function normalizeCrewMember(c: CrewMember, now: number): CrewMember {
     joinedAt: Number.isFinite(c.joinedAt) ? c.joinedAt : now,
     selfTrained: c.selfTrained === true,
     ...(Number.isFinite(c.hireCost) ? { hireCost: c.hireCost } : {}),
+    ...(typeof c.sourceId === 'string' ? { sourceId: c.sourceId } : {}),
     ...(condition !== 'fit' && Number.isFinite(c.recoveredAt) ? { recoveredAt: c.recoveredAt } : {}),
   }
   return normalized

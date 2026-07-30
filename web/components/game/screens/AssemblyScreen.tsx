@@ -1,7 +1,7 @@
 'use client'
 
 import { Boxes, Check, Gauge, Orbit, Pickaxe, Route, X } from 'lucide-react'
-import type { Mission, RocketConfig, Target } from '@/lib/data'
+import type { CrewMember, Mission, RocketConfig, Target } from '@/lib/data'
 import { ROCKET_MODELS, validateBuild } from '@/lib/data'
 import type { Catalog } from '@/lib/catalog'
 import Panel from '@/components/ui/Panel'
@@ -14,6 +14,7 @@ import MissionSetupShell, {
   MissionSetupFrame,
 } from '@/components/game/screens/MissionSetupShell'
 import { getRequiredRocketModel } from '@/lib/rockets'
+import { crewRequirementStatus } from '@/lib/systems/AcademySystem'
 
 interface AssemblyScreenProps {
   mission: Mission
@@ -27,6 +28,8 @@ interface AssemblyScreenProps {
   hasCoach?: boolean
   coachManual?: boolean
   deliveryTargetName?: string
+  crew?: CrewMember[]
+  crewModuleFitted?: boolean
 }
 
 // Each ship "compartment" the mockup shows as a clickable cutaway room maps
@@ -48,6 +51,9 @@ export default function AssemblyScreen(props: AssemblyScreenProps) {
   const highlightContent = props.hasCoach && props.coachManual
   const highlightLaunch = props.hasCoach && !props.coachManual
   const check = validateBuild({ mission: props.mission, target: props.target, rocket: props.rocket, parts: props.parts, unlockedSkillNodes: props.unlockedSkillNodes })
+  const crewCheck = crewRequirementStatus(props.mission.requires.crew, props.crew ?? [])
+  const crewReady = !props.mission.requires.crew || (!!props.crewModuleFitted && crewCheck.met)
+  const launchReady = check.ok && crewReady
   const starterRocket = getRequiredRocketModel(props.missionsDone)
 
   return (
@@ -62,7 +68,7 @@ export default function AssemblyScreen(props: AssemblyScreenProps) {
       actions={
         <div style={{ position: 'relative' }}>
           {highlightLaunch && <TutorialHighlight borderRadius={8} />}
-          <PrimaryBtn kind="amber" disabled={!check.ok} testId="launch-btn" onClick={props.onLaunch}>Confirm Launch</PrimaryBtn>
+          <PrimaryBtn kind="amber" disabled={!launchReady} testId="launch-btn" onClick={props.onLaunch}>Confirm Launch</PrimaryBtn>
         </div>
       }
     >
@@ -85,7 +91,7 @@ export default function AssemblyScreen(props: AssemblyScreenProps) {
           target={props.target}
           deliveryTargetName={props.deliveryTargetName}
           rocket={starterRocket}
-          ready={check.ok}
+          ready={launchReady}
         />
 
       </MissionSetupFrame>
@@ -113,6 +119,12 @@ export default function AssemblyScreen(props: AssemblyScreenProps) {
               <ChecklistRow ok label={`Contract confirmed — ${props.mission.title}`} />
               <ChecklistRow ok label={`Target locked — ${props.target.name}`} />
               <ChecklistRow ok label={`${starterRocket.name} fuelled and ready`} />
+              {props.mission.requires.crew && (
+                <>
+                  <ChecklistRow ok={!!props.crewModuleFitted} label={props.crewModuleFitted ? 'Crew Quarters fitted · 2 seats' : 'Crew Quarters required · research and fit in Hangar'} />
+                  <ChecklistRow ok={crewCheck.met} label={crewCheck.reason} />
+                </>
+              )}
             </div>
           </Panel>
         </section>

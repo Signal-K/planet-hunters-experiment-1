@@ -23,6 +23,8 @@ interface MissionCardProps {
   highlighted?: boolean
   previewed?: boolean
   routeLabel?: string
+  crewStatus?: string
+  crewReady?: boolean
   // Commits immediately (navigates to Target) — matches the established
   // click-to-commit interaction asserted directly in
   // cypress/e2e/journeys/actual-play.cy.ts:63 and clean-start-loop.cy.ts:99.
@@ -39,7 +41,9 @@ export function missionCardTags({
   lockedDetail,
   cooldownLabel,
   routeLabel,
-}: Pick<MissionCardProps, 'mission' | 'client' | 'isStoryMission' | 'cardState' | 'lockedDetail' | 'cooldownLabel' | 'routeLabel'>): { tone: 'burn' | 'job' | 'twostop'; label: string }[] {
+  crewStatus,
+  crewReady,
+}: Pick<MissionCardProps, 'mission' | 'client' | 'isStoryMission' | 'cardState' | 'lockedDetail' | 'cooldownLabel' | 'routeLabel' | 'crewStatus' | 'crewReady'>): { tone: 'burn' | 'job' | 'twostop'; label: string }[] {
   const difficultyTier = mission.difficulty.startsWith('L') ? parseInt(mission.difficulty.slice(1), 10) : NaN
   const fuelTimerLabel = routeLabel ? 'Two-leg burn' : mission.deliveryTargetId ? 'Delivery burn' : difficultyTier >= 3 ? 'Long burn' : 'Standard burn'
   if (cardState === 'cooldown' && cooldownLabel) return [{ tone: 'burn', label: `Cooldown · ${cooldownLabel}` }]
@@ -73,6 +77,8 @@ export default function MissionCard({
   highlighted,
   previewed,
   routeLabel,
+  crewStatus,
+  crewReady,
   onPick,
   onPreview,
 }: MissionCardProps) {
@@ -81,7 +87,7 @@ export default function MissionCard({
   const client = ownOperation ? null : clientProp
   const accent = client?.color ?? '#6cd4ff'
   const isAvailable = cardState === 'available'
-  const tags = missionCardTags({ mission, client, isStoryMission, cardState, lockedDetail, cooldownLabel, routeLabel })
+  const tags = missionCardTags({ mission, client, isStoryMission, cardState, lockedDetail, cooldownLabel, routeLabel, crewStatus, crewReady })
   const statusCta = cardState === 'cooldown' ? 'Cooldown'
     : cardState === 'completed' ? 'Claimed'
     : cardState === 'locked' ? (lockedDetail ?? 'Locked')
@@ -123,6 +129,15 @@ export default function MissionCard({
               : 'Choose target · keep the haul · market-led mining'}
         </div>
         {routeLabel && <div className={styles.cardRoute}>{routeLabel}</div>}
+        {crewStatus && (
+          <div
+            data-testid={`mission-card-${mission.id}-crew`}
+            className={styles.cardRoute}
+            style={{ color: crewReady ? 'var(--ln-ok)' : 'var(--ln-crimson)' }}
+          >
+            CREW · {crewStatus}
+          </div>
+        )}
         <div className={styles.cardTags}>
           {/* Difficulty was already computed per mission but never shown, so the
               progression curve was invisible on the board (STS-543). */}
@@ -138,7 +153,9 @@ export default function MissionCard({
             <span data-testid={`mission-card-${mission.id}-program-reward`}>
               {mission.programReward.researchXP > 0
                 ? `+${mission.programReward.researchXP} XP`
-                : 'FEED'}
+                : mission.targetId
+                  ? 'FEED'
+                  : 'TASK'}
             </span>
           ) : (
             <>
@@ -160,7 +177,9 @@ export default function MissionCard({
             onClick={e => { e.stopPropagation(); unlocked && onPick() }}
             className={styles.cardBtn}
           >
-            {targetCount} target{targetCount !== 1 ? 's' : ''} ›
+            {targetCount === 0 && mission.programReward
+              ? 'Open task ›'
+              : `${targetCount} target${targetCount !== 1 ? 's' : ''} ›`}
           </span>
         ) : (
           <span data-testid={`mission-card-${mission.id}-cta`} className={`${styles.cardBtn} ${styles.cardBtnDisabled}`}>

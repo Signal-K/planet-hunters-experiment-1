@@ -1,4 +1,5 @@
 import type { ShipRoomKind } from './shipRooms'
+import { CREW_MODULE_PRICE } from './economy'
 
 export const CUSTOMIZER_BUILD_SEQUENCE: ShipRoomKind[] = ['engine', 'booster', 'cockpit', 'payload']
 
@@ -9,9 +10,9 @@ export const BUILD_SEQUENCES: Record<number, ShipRoomKind[]> = {
   4: ['fuel-stage', 'engine', 'booster', 'cockpit', 'fairing', 'payload', 'docking-port', 'heat-shield'],
 }
 
-export function getBuildSequence(missionsDone: number): ShipRoomKind[] {
-  if (missionsDone >= 6) return BUILD_SEQUENCES[4]
-  if (missionsDone >= 4) return BUILD_SEQUENCES[3]
+export function getBuildSequence(missionsDone: number, crewModuleResearched = false): ShipRoomKind[] {
+  if (missionsDone >= 6) return crewModuleResearched ? [...BUILD_SEQUENCES[4], 'crew-module'] : BUILD_SEQUENCES[4]
+  if (missionsDone >= 4) return crewModuleResearched ? [...BUILD_SEQUENCES[3], 'crew-module'] : BUILD_SEQUENCES[3]
   if (missionsDone >= 2) return BUILD_SEQUENCES[2]
   return BUILD_SEQUENCES[1]
 }
@@ -231,6 +232,17 @@ export const CUSTOMIZER_PARTS: CustomizerPart[] = [
     power: 0,
     description: 'Refractory ceramic tiles. Handles steeper re-entry angles and heavier return cargo.',
     unlockedAtMissions: 6,
+  },
+  {
+    id: 'crew-quarters-t1',
+    name: 'Crew Quarters T1',
+    kind: 'crew-module',
+    price: CREW_MODULE_PRICE,
+    successBonus: 8,
+    mass: 3,
+    power: -3,
+    description: 'Pressurised two-seat quarters for trained astronauts. Requires a larger post-onboarding hull.',
+    unlockedAtMissions: 4,
   },
 ]
 

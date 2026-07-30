@@ -21,6 +21,10 @@ import IconBadge from '@/components/ui/IconBadge'
 import SegmentedBar from '@/components/ui/SegmentedBar'
 import { formatCurrency } from '@/lib/format'
 import styles from './MissionBoard.module.css'
+import { crewRequirementStatus } from '@/lib/systems/AcademySystem'
+import type { CrewMember } from '@/lib/data'
+import type { Player } from '@/lib/game-types'
+import { diplomacyPayoutMultiplier } from '@/lib/systems/AcademySystem'
 
 function CornerBracket({ position }: { position: 'tl' | 'tr' | 'bl' | 'br' }) {
   const cls = { tl: styles.cornerBracketTl, tr: styles.cornerBracketTr, bl: styles.cornerBracketBl, br: styles.cornerBracketBr }[position]
@@ -105,6 +109,8 @@ interface MissionBoardScreenProps {
   clientCooldowns?: Record<string, number>
   dailyClientPool?: DailyClientPool
   francs?: number
+  crew?: CrewMember[]
+  player?: Player
 }
 
 // "Custom Missions Unlocked" / "Infrastructure" are one-time explainer copy,
@@ -141,7 +147,7 @@ function formatCooldown(remaining: number): string {
   return `${mins}m ${secs}s`
 }
 
-export default function MissionBoardScreen({ onBack, onPick, missionsDone, freeOperations, hasCoach, catalog, clientMissions, clientCooldowns, dailyClientPool, francs }: MissionBoardScreenProps) {
+export default function MissionBoardScreen({ onBack, onPick, missionsDone, freeOperations, hasCoach, catalog, clientMissions, clientCooldowns, dailyClientPool, francs, crew = [], player }: MissionBoardScreenProps) {
   const { missions: MISSIONS, clients: CLIENTS, minerals: MINERAL_META, targets } = catalog
   const [tick, setTick] = useState(Date.now())
   useEffect(() => {
@@ -176,8 +182,9 @@ export default function MissionBoardScreen({ onBack, onPick, missionsDone, freeO
   // Hand-authored "mine then deliver" logistics jobs are always offered in Free Ops,
   // independent of the daily-rotating client pool.
   const logisticsMissionPool = freeOperations ? MISSIONS.filter(m => !!m.deliveryTargetId && !isOnCooldown(m.client)) : []
+  const jointMissionPool = freeOperations ? MISSIONS.filter(m => !!m.jointProject && !isOnCooldown(m.client)) : []
   const available = useDailyPool
-    ? [...logisticsMissionPool, ...dailyClientPool!.missions.filter(m => !isCompletedToday(m.id))]
+    ? [...logisticsMissionPool, ...jointMissionPool, ...dailyClientPool!.missions.filter(m => !isCompletedToday(m.id))]
     : MISSIONS.filter(m => {
         if (!isMissionBoardMission(m, freeOperations)) return false
         const customMission = !m.client
@@ -215,6 +222,7 @@ export default function MissionBoardScreen({ onBack, onPick, missionsDone, freeO
   const firstValidIdx = missionList.findIndex(m => {
     if (isCompletedToday(m.id)) return false
     if (!useDailyPool && isOnCooldown(m.client)) return false
+    if (m.jointProject && (francs ?? 0) < m.jointProject.playerCost) return false
     const ctr = m.client ? CLIENTS[m.client] : null
     if (m.client && !ctr) return false
     const cr = freeOperations || m.sequence === sequence || (!!ctr && clientUnlocked(ctr, sequence))
@@ -229,25 +237,42 @@ export default function MissionBoardScreen({ onBack, onPick, missionsDone, freeO
       if (m.client && !client) return null
       const isStoryMission = m.tag === 'STORY' && !m.deliveryTargetId
       const clientReady = freeOperations || m.sequence === sequence || (!!client && clientUnlocked(client, sequence))
-      const unlocked = !completedToday_ && !cooldown && clientReady && (freeOperations || available.some(item => item.id === m.id))
+      const jointFundingReady = !m.jointProject || (francs ?? 0) >= m.jointProject.playerCost
+      const unlocked = !completedToday_ && !cooldown && clientReady && jointFundingReady && (freeOperations || available.some(item => item.id === m.id))
       const mTargets = compatibleTargetsFor(m, targets)
       const affinityMultiplier = isStoryMission || !client ? 0 : clientAffinityBonus(client, clientMissions?.[client.id] ?? 0)
       const affinityBonus = Math.round(m.payout.francs * affinityMultiplier)
-      const displayPayout = m.payout.francs + affinityBonus
+      const liveDiplomacyMultiplier = m.id.startsWith('dcp-') && m.client && player
+        ? diplomacyPayoutMultiplier(player, m.client)
+        : 1
+      const displayPayout = Math.round(m.payout.francs * liveDiplomacyMultiplier) + affinityBonus
       const isHighlighted = hasCoach && idx === firstValidIdx
       const cardState = completedToday_ ? 'completed' as const
         : cooldown ? 'cooldown' as const
         : !unlocked ? 'locked' as const
         : 'available' as const
-      const lockedDetail = !clientReady ? (client ? `L${client.unlockTier}` : 'Locked') : m.sequence <= missionsDone ? 'Completed' : m.unlockAt
+      const lockedDetail = !jointFundingReady
+        ? `Needs ${formatCurrency(m.jointProject!.playerCost)} co-funding`
+        : !clientReady
+          ? (client ? `L${client.unlockTier}` : 'Locked')
+          : m.sequence <= missionsDone
+            ? 'Completed'
+            : m.unlockAt
       const cooldownLabel = cooldown && m.client ? formatCooldown(clientCooldowns![m.client] - now) : undefined
       const routeLabel = m.deliveryTargetId
         ? `${targets.find(t => t.id === m.targetId)?.name ?? m.targetId} → ${targets.find(t => t.id === m.deliveryTargetId)?.name ?? m.deliveryTargetId}`
         : undefined
+      const crewStatus = crewRequirementStatus(m.requires.crew, crew)
       return {
         mission: m, client, targetCount: mTargets.length, displayPayout, affinityMultiplier,
         affinityReward: m.payout.affinity, unlocked, isStoryMission, cardState, lockedDetail,
         cooldownLabel, isHighlighted, routeLabel,
+        crewStatus: m.requires.crew
+          ? player?.shipCustomizerParts?.['crew-module'] === 'crew-quarters-t1'
+            ? crewStatus.reason
+            : 'Crew Quarters required · research and fit in Hangar'
+          : undefined,
+        crewReady: crewStatus.met && player?.shipCustomizerParts?.['crew-module'] === 'crew-quarters-t1',
       }
     })
     .filter((c): c is NonNullable<typeof c> => c !== null)
@@ -339,6 +364,8 @@ export default function MissionBoardScreen({ onBack, onPick, missionsDone, freeO
                       highlighted={c.isHighlighted}
                       previewed={c.mission.id === effectivePreviewId}
                       routeLabel={c.routeLabel}
+                      crewStatus={c.crewStatus}
+                      crewReady={c.crewReady}
                       onPick={() => onPick(c.mission.id)}
                       onPreview={() => setPreviewId(c.mission.id)}
                     />

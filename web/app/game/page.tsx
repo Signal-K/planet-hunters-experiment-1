@@ -26,6 +26,7 @@ const VALID_SCREENS = new Set([
   'rover-mining',
   'launchpad',
   'surface-ops',
+  'academy',
 ])
 
 function savedScreen(): string {

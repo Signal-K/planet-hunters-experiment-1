@@ -102,8 +102,26 @@ export const ROCKET_PRICES = {
 export const STRUCTURE_PRICES = {
   refinery: 8_000_000,
   garage: 6_000_000,
+  academy: 12_000_000,
   launchpadUpgrade: 10_000_000,
 } as const
+
+// Astronaut Academy / crew economy (STS-587, STS-593, STS-597).
+export const CREW_FIRST_HIRE_COST = 1_500_000
+export const CREW_HIRE_ESCALATION = 1.6
+export const CREW_WEEKLY_HIRE_CAP = 2
+export const CREW_TOTAL_HIRED_CAP = 6
+export const CREW_DAILY_UPKEEP = 60_000
+export const ACADEMY_DAILY_UPKEEP = 200_000
+export const CREW_QUIT_REFUND_RATE = 0.5
+export const TRAINING_SESSIONS_PER_DAY = 2
+export const CREW_TRAINING_DURATION_MS = 24 * 60 * 60 * 1000
+export const ACADEMY_RESEARCH_XP_COST = 150
+export const CREW_MODULE_RESEARCH_XP_COST = 100
+export const CREW_MODULE_PRICE = 5_500_000
+export const CREW_MISSION_XP = 100
+export const CREW_TRAINING_XP = 100
+export const FIRST_CREW_ARRIVAL_BONUS = 1_000_000
 
 /** Starting francs. Below the Prospector's price on purpose — see the header. */
 export const STARTING_FRANCS = 9_000_000

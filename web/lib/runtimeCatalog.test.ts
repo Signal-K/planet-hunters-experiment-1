@@ -2,6 +2,8 @@ import { describe, expect, it } from 'vitest'
 import { STATIC_CATALOG } from './catalog'
 import { buildRuntimeCatalog, TRANSIT_TELESCOPE_MISSION_ID, TRANSIT_TELESCOPE_TARGET_ID } from './runtimeCatalog'
 import { tessCandidateToExoplanetTarget, toTessCandidate } from './data'
+import { DEFAULT_STATE } from './game-state'
+import { createCrewMember } from './systems/CrewSystem'
 
 describe('buildRuntimeCatalog', () => {
   it('adds the transit telescope launch mission while the player has SMS but no launched satellite', () => {
@@ -73,5 +75,49 @@ describe('buildRuntimeCatalog', () => {
       programReward: { researchXP: 25, outcome: expect.stringContaining('target intelligence') },
       requires: expect.objectContaining({ max_orbit: discovered.orbit }),
     })
+  })
+
+  it('adds diplomacy premiums and a co-funded joint mission after chart sharing', () => {
+    const clientMission = STATIC_CATALOG.missions.find(mission =>
+      !!mission.client
+      && !!mission.targetId
+      && STATIC_CATALOG.clients[mission.client]?.suppliesCrew,
+    )!
+    const clientId = clientMission.client!
+    const diplomat = createCrewMember({
+      id: 'crew-diplomat',
+      crewClass: 'astronaut',
+      selfTrained: true,
+      now: Date.now(),
+    })
+    const player = {
+      ...DEFAULT_STATE.player,
+      freeOperations: true,
+      crew: [diplomat],
+      structureCrewAssignments: { diplomacy: diplomat.id },
+      clientMissions: { [clientId]: 5 },
+      sharedChartsByClient: { [clientId]: 1 },
+    }
+    const catalog = buildRuntimeCatalog({
+      catalog: STATIC_CATALOG,
+      freeOperations: true,
+      missionsDone: 4,
+      player,
+    })
+
+    const improved = catalog.missions.find(mission => mission.id === clientMission.id)!
+    expect(improved.payout.francs).toBeGreaterThan(clientMission.payout.francs)
+    const joint = catalog.missions.find(mission => mission.id === `joint-${clientId}-${clientMission.id}`)
+    expect(joint).toMatchObject({
+      client: clientId,
+      tag: 'JOINT',
+      jointProject: {
+        infrastructureOrbitBonus: 1,
+        playerCost: expect.any(Number),
+        clientCostShare: expect.any(Number),
+        payoutBonus: expect.any(Number),
+      },
+    })
+    expect(joint!.payout.francs).toBeGreaterThan(improved.payout.francs)
   })
 })

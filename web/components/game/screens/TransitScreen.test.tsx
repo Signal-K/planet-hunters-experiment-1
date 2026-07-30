@@ -35,7 +35,7 @@ const mission: Mission = {
 const client: Client = {
   id: 'atlas-aggregate', name: 'Atlas Aggregate', color: '#87CFFA', initial: 'AA',
   unlockTier: 1, projectType: 'Off-world construction', mineralPreferences: ['iron'],
-  payoutPremium: 0.18, affinityBonusPerMission: 0.02, uiRole: 'bulk',
+  payoutPremium: 0.18, affinityBonusPerMission: 0.02, uiRole: 'bulk', suppliesCrew: false,
 }
 
 const iron = { name: 'Iron', sym: 'Fe', price: 10, color: '#c9c9c9', laserAccess: 1 } as unknown as MineralMeta

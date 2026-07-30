@@ -125,6 +125,7 @@ func ensureCollections(app core.App) {
 		col.Fields.Add(&core.TextField{Name: "payout_notes", Max: 200})
 		col.Fields.Add(&core.TextField{Name: "affinity_notes", Max: 200})
 		col.Fields.Add(&core.TextField{Name: "ui_role", Max: 40})
+		col.Fields.Add(&core.BoolField{Name: "supplies_crew"})
 		col.Indexes = []string{"CREATE UNIQUE INDEX idx_clients_slug ON clients (slug)"}
 		if err := app.Save(col); err != nil {
 			log.Printf("failed to save clients: %v", err)
@@ -738,6 +739,7 @@ func ensureCatalogFields(app core.App) {
 		addTextIfMissing(clients, "payout_notes", false)
 		addTextIfMissing(clients, "affinity_notes", false)
 		addTextIfMissing(clients, "ui_role", false)
+		addBoolIfMissing(clients, "supplies_crew", false)
 		if err := app.Save(clients); err != nil {
 			log.Printf("failed to update clients schema: %v", err)
 		}
@@ -895,28 +897,30 @@ func seedCatalog(app core.App) {
 		name, color, initial, projectType, payoutNotes, affinityNotes, uiRole string
 		tier                                                                  float64
 		preferences                                                           []string
+		suppliesCrew                                                          bool
 	}
 	clients := []struct {
 		slug string
 		client
 	}{
-		{"helios-propulsion-depot", client{"Helios Propulsion Depot", "#f5a623", "HP", "fuel logistics and orbital propellant reserves", "20% premium on hydrogen and propellant runs", "+2.5% payout per completed Helios job", "starter", 1, []string{"hydrogen"}}},
-		{"arcturus-battery-systems", client{"Arcturus Battery Systems", "#4f9cf7", "AB", "energy storage manufacturing and cathode supply", "22% premium on cobalt and copper battery inputs", "+2.5% payout per completed Arcturus job", "prospect", 1, []string{"cobalt", "copper"}}},
-		{"ferrum-orbital-construction", client{"Ferrum Orbital Construction", "#c7d0dc", "FO", "in-space manufacturing and structural assembly", "18% premium on aluminium and copper construction cargo", "+2% payout per completed Ferrum job", "bulk", 1, []string{"aluminium", "copper"}}},
-		{"contractor-04b", client{"Client Slot 04B", "#a8d8ea", "4B", "construction aggregates", "Low rate, large orders", "+6 per delivery", "bulk", 4, []string{"iron", "carbon"}}},
-		{"contractor-06a", client{"Client Slot 06A", "#70e070", "6A", "deep-core sampling", "Mixed-bag premium", "+12 per delivery", "prospect", 6, []string{"nickel", "cobalt"}}},
-		{"contractor-06b", client{"Client Slot 06B", "#c084ff", "6B", "rare-gas refining", "High tier, small batches", "+20 per delivery", "command", 6, []string{"rare", "gold"}}},
-		{"contractor-08a", client{"Client Slot 08A", "#ff8c42", "8A", "solar-grade silicon", "Premium purity contracts", "+10 per delivery", "command", 8, []string{"silicon", "ice"}}},
-		{"contractor-08b", client{"Client Slot 08B", "#5fcde6", "8B", "outer-belt volatiles", "Medium rate, special cargo", "+8 per delivery", "bulk", 8, []string{"ice", "carbon"}}},
-		{"contractor-10a", client{"Client Slot 10A", "#f5a623", "10A", "strategic minerals", "High payout, rare minerals", "+25 per delivery", "science", 10, []string{"gold", "rare", "cobalt"}}},
-		{"contractor-10b", client{"Client Slot 10B", "#39d36a", "10B", "base expansion reserves", "Balanced late-game contracts", "+12 per delivery", "starter", 10, []string{"iron", "silicon", "nickel"}}},
+		{"helios-propulsion-depot", client{"Helios Propulsion Depot", "#f5a623", "HP", "fuel logistics and orbital propellant reserves", "20% premium on hydrogen and propellant runs", "+2.5% payout per completed Helios job", "starter", 1, []string{"hydrogen"}, false}},
+		{"arcturus-battery-systems", client{"Arcturus Battery Systems", "#4f9cf7", "AB", "energy storage manufacturing and cathode supply", "22% premium on cobalt and copper battery inputs", "+2.5% payout per completed Arcturus job", "prospect", 1, []string{"cobalt", "copper"}, false}},
+		{"ferrum-orbital-construction", client{"Ferrum Orbital Construction", "#c7d0dc", "FO", "in-space manufacturing and structural assembly", "18% premium on aluminium and copper construction cargo", "+2% payout per completed Ferrum job", "bulk", 1, []string{"aluminium", "copper"}, true}},
+		{"contractor-04b", client{"Client Slot 04B", "#a8d8ea", "4B", "construction aggregates", "Low rate, large orders", "+6 per delivery", "bulk", 4, []string{"iron", "carbon"}, false}},
+		{"contractor-06a", client{"Client Slot 06A", "#70e070", "6A", "deep-core sampling", "Mixed-bag premium", "+12 per delivery", "prospect", 6, []string{"nickel", "cobalt"}, false}},
+		{"contractor-06b", client{"Client Slot 06B", "#c084ff", "6B", "rare-gas refining", "High tier, small batches", "+20 per delivery", "command", 6, []string{"rare", "gold"}, true}},
+		{"contractor-08a", client{"Client Slot 08A", "#ff8c42", "8A", "solar-grade silicon", "Premium purity contracts", "+10 per delivery", "command", 8, []string{"silicon", "ice"}, true}},
+		{"contractor-08b", client{"Client Slot 08B", "#5fcde6", "8B", "outer-belt volatiles", "Medium rate, special cargo", "+8 per delivery", "bulk", 8, []string{"ice", "carbon"}, false}},
+		{"contractor-10a", client{"Client Slot 10A", "#f5a623", "10A", "strategic minerals", "High payout, rare minerals", "+25 per delivery", "science", 10, []string{"gold", "rare", "cobalt"}, true}},
+		{"contractor-10b", client{"Client Slot 10B", "#39d36a", "10B", "base expansion reserves", "Balanced late-game contracts", "+12 per delivery", "starter", 10, []string{"iron", "silicon", "nickel"}, true}},
 	}
 	for _, c := range clients {
 		seedRecord(app, "clients", c.slug, map[string]any{
 			"name": c.name, "color": c.color, "initial": c.initial, "unlock_tier": c.tier,
 			"project_type": c.projectType, "mineral_preferences": c.preferences,
 			"payout_notes": c.payoutNotes, "affinity_notes": c.affinityNotes,
-			"ui_role": c.uiRole,
+			"ui_role":       c.uiRole,
+			"supplies_crew": c.suppliesCrew,
 		})
 	}
 
@@ -1098,6 +1102,7 @@ func seedCatalog(app core.App) {
 	}{
 		{"launchpad", structureBlueprint{"Launchpad", "launchpad", "always", "always", "Rocket assembly and launch operations.", "launch-pad", 0, map[string]float64{}}},
 		{"refinery", structureBlueprint{"Refinery", "refinery", "client-mission-trigger", "First client mission requiring refined minerals", "Refines raw minerals into higher-value client-grade materials.", "refinery", structurePriceRefinery, map[string]float64{"aluminium": 20, "copper": 10}}},
+		{"astronaut-academy", structureBlueprint{"Astronaut Academy", "astronaut-academy", "academy-research", "Affinity level 2 with two clients, then research", "Trains named astronauts and coordinates Earth Base staffing.", "astronaut-academy", 12000000, map[string]float64{"aluminium": 24, "silicon": 12, "copper": 8}}},
 		{"solar-array", structureBlueprint{"Solar Array", "solar-array", "manual", "", "Fixed panel farm. Recharges a rover quickly within range (daylight only).", "solar-array", 0, map[string]float64{}}},
 		{"beacon", structureBlueprint{"Nav Beacon", "beacon", "manual", "", "Marks a site on the map and lights the area at night.", "beacon", 0, map[string]float64{}}},
 		{"drill-rig", structureBlueprint{"Auto-Drill Rig", "drill-rig", "manual", "", "Slowly mines the column beneath it; buffers ore for pickup.", "drill-rig", 0, map[string]float64{}}},

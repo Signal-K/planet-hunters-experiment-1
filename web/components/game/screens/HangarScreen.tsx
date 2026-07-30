@@ -15,6 +15,7 @@ interface HangarScreenProps {
   missionsDone: number
   unlockedSkillNodes?: string[]
   shipCustomizerParts?: InstalledCustomizerPartsByKind
+  crewModuleResearched?: boolean
   onConfirmShipCustomizerBuild?: (installed: InstalledCustomizerPartsByKind, prevInstalled: InstalledCustomizerPartsByKind) => boolean
   onBack: () => void
   onSelect?: (rocketId: string) => void
@@ -155,11 +156,14 @@ function RocketCard({ rocket, missionsDone, onSelect }: { rocket: RocketModel; m
   )
 }
 
-export default function HangarScreen({ francs, missionsDone, unlockedSkillNodes, shipCustomizerParts, onConfirmShipCustomizerBuild, onBack, onSelect }: HangarScreenProps) {
-  const customizerUnlocked = hasShipCustomizer(unlockedSkillNodes)
+export default function HangarScreen({ francs, missionsDone, unlockedSkillNodes, shipCustomizerParts, crewModuleResearched, onConfirmShipCustomizerBuild, onBack, onSelect }: HangarScreenProps) {
+  // Academy research is a second, explicit unlock path: a player who has
+  // researched Crew Quarters must be able to enter the fitter even if they
+  // have not purchased the general-purpose customiser skill node.
+  const customizerUnlocked = hasShipCustomizer(unlockedSkillNodes) || !!crewModuleResearched
   const [customizerOpen, setCustomizerOpen] = useState(false)
   const installed = shipCustomizerParts ?? {}
-  const sequence = getBuildSequence(missionsDone)
+  const sequence = getBuildSequence(missionsDone, crewModuleResearched)
   const installedIds = selectedCustomizerPartIds(installed, sequence)
   const hasLoadout = installedIds.length > 0
   const successChance = hasLoadout ? calculateShipSuccessChance(installedIds, sequence) : null
@@ -222,6 +226,7 @@ export default function HangarScreen({ francs, missionsDone, unlockedSkillNodes,
             startingFrancs={francs}
             missionsDone={missionsDone}
             installedParts={installed}
+            crewModuleResearched={crewModuleResearched}
             onConfirm={onConfirmShipCustomizerBuild}
             onClose={() => setCustomizerOpen(false)}
           />

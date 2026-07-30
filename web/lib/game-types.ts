@@ -31,6 +31,7 @@ export type Screen =
   | 'rover-mining'
   | 'launchpad'
   | 'surface-ops'
+  | 'academy'
 
 export type LicenseGrade = 'Grade I' | 'Grade II' | 'Grade III'
 
@@ -117,7 +118,7 @@ export interface Player {
   refineryBuilt: boolean
   refineryUnlocked?: boolean
   refineryUnlockNotified?: boolean
-  refineryQueue: { recipeId: string; startedAt: number }[]
+  refineryQueue: { recipeId: string; startedAt: number; durationMs?: number }[]
   refinedGoods: Record<string, number>
   launchpadUpgraded: boolean
   lastClient?: string
@@ -180,6 +181,23 @@ export interface Player {
   // rovers as roverDeployments above, surfaced as roster entries by
   // migrateCrewRoster; they are not a second, parallel rover system.
   crew?: import('@/lib/data').CrewMember[]
+  formerCrew?: import('@/lib/data').CrewRehireOffer[]
+  crewHiresLifetime?: number
+  crewHiresThisWeek?: number
+  crewHireWeek?: string
+  crewUpkeepSettledDate?: string
+  crewTraining?: import('@/lib/data').CrewTrainingSession[]
+  trainingSessionsUsedToday?: number
+  trainingDate?: string
+  missionCrewIds?: string[]
+  crewMissionAwards?: string[]
+  crewVisitedTargets?: string[]
+  structureCrewAssignments?: Record<string, string>
+  sharedChartsByClient?: Record<string, number>
+  academyResearched?: boolean
+  academyFunded?: boolean
+  academyXP?: number
+  crewModuleResearched?: boolean
   // Solo Surface Ops state. Rights are a build-cost gate, not a shared-world
   // claim. Ferry records retain a stable cargo-batch id and reconciliation
   // timestamp so retries and reloads cannot credit one manifest twice.
@@ -273,6 +291,16 @@ export interface GameActions {
   gainResearchXP: (amount: number) => void
   upgradeLicenseGrade: (grade: Exclude<LicenseGrade, 'Grade I'>) => void
   unlockBlueprint: (blueprintId: string, costFrancs?: number, costXP?: number, costMaterials?: Record<string, number>) => void
+  researchAcademy: () => void
+  setAcademyFunding: (funded: boolean) => void
+  hireCrew: (sourceId: string) => void
+  rehireCrew: (crewId: string) => void
+  startCrewTraining: (crewId: string, branch: import('@/lib/data').SkillBranch) => void
+  startCandidateTraining: (branch: import('@/lib/data').SkillBranch) => void
+  collectCrewTraining: (sessionId: string) => void
+  researchCrewModule: () => void
+  assignCrewToStructure: (structureId: string, crewId: string | null) => void
+  shareChartsWithClient: (clientId: string) => void
   toasts: Toast[]
   addToast: (message: string, kind?: Toast['kind']) => void
   dismissToast: (id: string) => void

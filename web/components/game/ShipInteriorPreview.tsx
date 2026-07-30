@@ -28,6 +28,7 @@ interface ShipInteriorPreviewProps {
   installedParts?: InstalledCustomizerPartsByKind
   onConfirm?: (installed: InstalledCustomizerPartsByKind, prevInstalled: InstalledCustomizerPartsByKind) => boolean
   onClose?: () => void
+  crewModuleResearched?: boolean
 }
 
 interface BuildStep {
@@ -45,6 +46,7 @@ const STEP_DETAILS: Record<ShipRoomKind, Omit<BuildStep, 'kind'>> = {
   fairing:       { title: 'Payload Fairing',      body: 'Nose cone protects cargo during ascent. Jettisoned at separation altitude.' },
   'docking-port':{ title: 'Docking Port',         body: 'Enables cargo transfer at orbital stations or relay depots.' },
   'heat-shield': { title: 'Re-entry Shield',      body: 'Protects the return vehicle and payload during atmospheric deceleration.' },
+  'crew-module': { title: 'Crew Quarters',         body: 'Adds two pressurised seats for qualified astronauts on larger hulls.' },
 }
 
 export default function ShipInteriorPreview({
@@ -54,6 +56,7 @@ export default function ShipInteriorPreview({
   installedParts,
   onConfirm,
   onClose,
+  crewModuleResearched = false,
 }: ShipInteriorPreviewProps) {
   const layout = getShipInteriorLayout(rocketId)
   const [buildState, setBuildState] = useState(() => ({
@@ -63,7 +66,7 @@ export default function ShipInteriorPreview({
   const [stepIndex, setStepIndex] = useState(0)
   if (!layout) return null
 
-  const sequence = getBuildSequence(missionsDone)
+  const sequence = getBuildSequence(missionsDone, crewModuleResearched)
   const buildSteps: BuildStep[] = sequence.map(kind => ({ kind, ...STEP_DETAILS[kind] }))
   const step = buildSteps[stepIndex]
   const installedIds = selectedCustomizerPartIds(buildState.installed, sequence)

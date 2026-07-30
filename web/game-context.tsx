@@ -19,6 +19,7 @@ import { useTutorialActions } from '@/lib/contexts/useTutorialActions'
 import { useEconomyActions } from '@/lib/contexts/useEconomyActions'
 import { useSurfaceOpsActions } from '@/lib/contexts/useSurfaceOpsActions'
 import { useInstrumentFeedNotifications } from '@/lib/contexts/useInstrumentFeedNotifications'
+import { useAcademyActions } from '@/lib/contexts/useAcademyActions'
 
 export type { Screen, Player, GameState } from '@/lib/game-types'
 
@@ -100,11 +101,13 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     missionId: state.missionId,
     targetId: state.targetId,
     missionsDone: state.player.missionsDone,
-  }), [catalog, state.missionId, state.player.discoveredExoplanetTargets, state.player.freeOperations, state.player.missionsDone, state.player.satelliteMonitoringBuilt, state.player.transitSatelliteLaunchedAt, state.targetId])
+    player: state.player,
+  }), [catalog, state.missionId, state.player, state.targetId])
   const loop    = useGameLoop({ stateRef, setState, catalog: runtimeCatalog, addToast: ui.addToast })
   const tutorial = useTutorialActions(setState)
   const economy = useEconomyActions(setState, useCallback(() => runtimeCatalog.missions, [runtimeCatalog.missions]))
   const surfaceOps = useSurfaceOpsActions(setState, ui.addToast)
+  const academy = useAcademyActions(stateRef, setState, useCallback(() => runtimeCatalog, [runtimeCatalog]), ui.addToast)
   useInstrumentFeedNotifications({
     enabled: hydrated && !isPreview.current,
     player: state.player,
@@ -187,6 +190,16 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       gainResearchXP: loop.gainResearchXP,
       upgradeLicenseGrade: loop.upgradeLicenseGrade,
       unlockBlueprint: loop.unlockBlueprint,
+      researchAcademy: academy.researchAcademy,
+      setAcademyFunding: academy.setAcademyFunding,
+      hireCrew: academy.hireCrew,
+      rehireCrew: academy.rehireCrew,
+      startCrewTraining: academy.startCrewTraining,
+      startCandidateTraining: academy.startCandidateTraining,
+      collectCrewTraining: academy.collectCrewTraining,
+      researchCrewModule: academy.researchCrewModule,
+      assignCrewToStructure: academy.assignCrewToStructure,
+      shareChartsWithClient: academy.shareChartsWithClient,
       launchTransitSatellite: loop.launchTransitSatellite,
       submitTessClassification: loop.submitTessClassification,
       chooseSatelliteTarget: loop.chooseSatelliteTarget,

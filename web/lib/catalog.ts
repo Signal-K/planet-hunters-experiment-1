@@ -115,6 +115,7 @@ export function toClient(r: any): Client {
       payoutPremium: 0.2,
       affinityBonusPerMission: 0.025,
       uiRole: 'starter',
+      suppliesCrew: false,
     }),
     id: r.slug,
     name: (!hasPlaceholderName && rawName) ? rawName : (fallback?.name ?? rawName) || r.slug,
@@ -126,6 +127,7 @@ export function toClient(r: any): Client {
     payoutPremium: r.payout_premium ?? fallback?.payoutPremium ?? 0.2,
     affinityBonusPerMission: r.affinity_bonus_per_mission ?? fallback?.affinityBonusPerMission ?? 0.025,
     uiRole: fallback?.uiRole ?? 'starter',
+    suppliesCrew: r.supplies_crew ?? fallback?.suppliesCrew ?? false,
   }
 }
 

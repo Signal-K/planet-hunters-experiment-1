@@ -4,8 +4,10 @@ import React from 'react'
 import TopBar from '@/components/ui/TopBar'
 import { PrimaryBtn, GhostBtn } from '@/components/ui/Button'
 import MissionCard from '@/components/game/MissionCard'
-import { compatibleTargetsFor, missionTypePrimer, partitionByOwner } from '@/lib/data'
+import { ACADEMY_INTRO_MISSION_ID, compatibleTargetsFor, missionTypePrimer, partitionByOwner } from '@/lib/data'
 import type { Catalog } from '@/lib/catalog'
+import type { Player } from '@/lib/game-types'
+import { academyAffinityUnlocked } from '@/lib/systems/AcademySystem'
 import { UI_ZONES } from '@/lib/ui-zones'
 
 interface LaunchpadScreenProps {
@@ -16,6 +18,7 @@ interface LaunchpadScreenProps {
   missionsDone: number
   freeOperations: boolean
   catalog: Catalog
+  player: Player
   francs?: number
 }
 
@@ -34,7 +37,7 @@ interface LaunchpadScreenProps {
  * never disagree about whose job something is.
  */
 export default function LaunchpadScreen({
-  onBack, onPick, onViewContracts, missionsDone, freeOperations, catalog, francs,
+  onBack, onPick, onViewContracts, missionsDone, freeOperations, catalog, player, francs,
 }: LaunchpadScreenProps) {
   const { missions: MISSIONS, clients: CLIENTS, minerals: MINERAL_META, targets } = catalog
   const sequence = missionsDone + 1
@@ -82,20 +85,35 @@ export default function LaunchpadScreen({
               data-testid="launchpad-own-program-list"
               style={{ display: 'flex', flexDirection: 'column', gap: 14 }}
             >
-              {cards.map(c => (
-                <MissionCard
-                  key={c.mission.id}
-                  mission={c.mission}
-                  client={c.client}
-                  mineralMeta={MINERAL_META}
-                  targetCount={c.targetCount}
-                  displayPayout={c.mission.payout.francs}
-                  unlocked
-                  isStoryMission={c.mission.tag === 'STORY' && !c.mission.deliveryTargetId}
-                  cardState="available"
-                  onPick={() => onPick(c.mission.id)}
-                />
-              ))}
+              {cards.map(c => {
+                const isAcademyTask = c.mission.id === ACADEMY_INTRO_MISSION_ID
+                const academyUnlocked = academyAffinityUnlocked(player)
+                  || !!player.academyResearched
+                  || player.placed.includes('astronaut-academy')
+                const academyCompleted = isAcademyTask
+                  && player.placed.includes('astronaut-academy')
+                  && (player.crew ?? []).some(member =>
+                    member.crewClass === 'astronaut'
+                    && member.selfTrained
+                    && member.specialisations.length > 0,
+                  )
+                const unlocked = !isAcademyTask || (academyUnlocked && !academyCompleted)
+                return (
+                  <MissionCard
+                    key={c.mission.id}
+                    mission={c.mission}
+                    client={c.client}
+                    mineralMeta={MINERAL_META}
+                    targetCount={c.targetCount}
+                    displayPayout={c.mission.payout.francs}
+                    unlocked={unlocked}
+                    isStoryMission={c.mission.tag === 'STORY' && !c.mission.deliveryTargetId}
+                    cardState={academyCompleted ? 'completed' : unlocked ? 'available' : 'locked'}
+                    lockedDetail={isAcademyTask && !academyCompleted ? 'Reach L2 affinity with two clients' : undefined}
+                    onPick={() => onPick(c.mission.id)}
+                  />
+                )
+              })}
             </div>
           ) : (
             <div

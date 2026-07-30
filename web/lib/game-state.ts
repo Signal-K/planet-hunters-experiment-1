@@ -4,12 +4,13 @@ import { MISSIONS, TARGETS } from '@/lib/data'
 import { FREE_OPS_START_MISSIONS_DONE } from '@/lib/data/mission-generator'
 import { migrateCrewRoster } from '@/lib/systems/CrewSystem'
 import { normalizeSurfaceOps } from '@/lib/systems/SurfaceOpsSystem'
+import { settleCrewEconomy } from '@/lib/systems/AcademySystem'
 
 // Represents untrusted/partial saved state (e.g. from localStorage or remote sync)
 // where player fields are optional since older saves may be missing new fields.
 export type PartialSave = Omit<Partial<GameState>, 'player'> & { player?: Partial<Player> }
 
-const VALID_SCREENS: Screen[] = ['intro', 'build', 'hub', 'missions', 'galaxy', 'targets', 'fab', 'transit', 'mining', 'delivery', 'debrief', 'refinery', 'market', 'hangar', 'rocket-buy', 'skills', 'scan-station', 'rover-mining', 'launchpad', 'surface-ops']
+const VALID_SCREENS: Screen[] = ['intro', 'build', 'hub', 'missions', 'galaxy', 'targets', 'fab', 'transit', 'mining', 'delivery', 'debrief', 'refinery', 'market', 'hangar', 'rocket-buy', 'skills', 'scan-station', 'rover-mining', 'launchpad', 'surface-ops', 'academy']
 const MISSION_CONTEXT_SCREENS = new Set<Screen>(['targets', 'rocket-buy', 'fab', 'transit', 'mining', 'rover-mining', 'delivery', 'debrief'])
 const TARGET_CONTEXT_SCREENS = new Set<Screen>(['rocket-buy', 'fab', 'transit', 'mining', 'rover-mining', 'delivery', 'debrief'])
 const VALID_LICENSE_GRADES: LicenseGrade[] = ['Grade I', 'Grade II', 'Grade III']
@@ -56,6 +57,20 @@ export const DEFAULT_STATE: GameState = {
     researchXP: 0,
     unlockedBlueprints: [],
     crew: [],
+    formerCrew: [],
+    crewHiresLifetime: 0,
+    crewHiresThisWeek: 0,
+    crewTraining: [],
+    trainingSessionsUsedToday: 0,
+    missionCrewIds: [],
+    crewMissionAwards: [],
+    crewVisitedTargets: [],
+    structureCrewAssignments: {},
+    sharedChartsByClient: {},
+    academyResearched: false,
+    academyFunded: false,
+    academyXP: 0,
+    crewModuleResearched: false,
     surfaceOps: { sites: {} },
   },
   missionId: null,
@@ -217,7 +232,7 @@ export function repairStateRoute(input: GameState): GameState {
 }
 
 export function normalizeAndRepair(partial: PartialSave): GameState {
-  return repairStateRoute(normalizeState(partial))
+  return repairStateRoute(settleCrewEconomy(normalizeState(partial)))
 }
 
 /**
@@ -309,7 +324,9 @@ export function loadState(storageKey: string): GameState {
   if (typeof window === 'undefined') return DEFAULT_STATE
   try {
     const raw = localStorage.getItem(storageKey)
-    if (!raw) return DEFAULT_STATE
+    // A brand-new player still goes through migrations so the starting
+    // astronaut, drone, and rover exist before the first playable screen.
+    if (!raw) return normalizeAndRepair(DEFAULT_STATE)
     return normalizeAndRepair(JSON.parse(raw) as PartialSave)
   } catch {
     return DEFAULT_STATE

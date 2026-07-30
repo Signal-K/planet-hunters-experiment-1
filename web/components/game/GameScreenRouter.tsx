@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react'
 import { useGame } from '@/game-context'
-import { M1_STEPS, M2_STEPS, M3_STEPS, rocketDisplayForConfig } from '@/lib/data'
+import { ACADEMY_INTRO_MISSION_ID, M1_STEPS, M2_STEPS, M3_STEPS, rocketDisplayForConfig } from '@/lib/data'
 import type { Screen } from '@/lib/game-types'
 import MissionSetupRoutes from '@/components/game/MissionSetupRoutes'
 import MissionOperationRoutes from '@/components/game/MissionOperationRoutes'
@@ -17,6 +17,7 @@ import ScanStationScreen from '@/components/game/screens/ScanStationScreen'
 import LaunchpadScreen from '@/components/game/screens/LaunchpadScreen'
 import TessDiscoveryScreen from '@/components/game/screens/TessDiscoveryScreen'
 import SurfaceOpsScreen from '@/components/game/screens/SurfaceOpsScreen'
+import AcademyScreen from '@/components/game/screens/AcademyScreen'
 import { enqueueSurvey } from '@/lib/surveys'
 
 export const VALID_SCREENS = new Set<Screen>([
@@ -25,6 +26,7 @@ export const VALID_SCREENS = new Set<Screen>([
   'market', 'hangar', 'rocket-buy', 'skills', 'scan-station',
   'launchpad',
   'surface-ops',
+  'academy',
 ])
 
 // Shared per-screen render map — the single source of truth for "which
@@ -111,6 +113,7 @@ export function ScreenContent({
             placed: game.player.placed,
             freeOperations: game.player.freeOperations,
             refineryUnlocked: !!game.player.refineryUnlocked,
+            academyResearched: !!game.player.academyResearched,
             placementPlots: game.player.placementPlots,
           }}
           onPlaced={(kind, plot) => {
@@ -118,6 +121,7 @@ export function ScreenContent({
             game.placeStructure(structure, kind, plot)
             game.completeStep(0)
             enqueueSurvey('lnm_base_building', 1200)
+            if (kind === 'astronaut-academy') enqueueSurvey('lnm_crew_academy_built', 1200)
             game.go('hub')
           }}
         />
@@ -139,6 +143,7 @@ export function ScreenContent({
             if (building === 'skills') return game.go('skills')
             if (building === 'scan-station') return game.go('scan-station')
             if (building === 'satellite-monitoring-station') return game.go('galaxy')
+            if (building === 'academy' || building === 'astronaut-academy') return game.go('academy')
             if (building === 'launchpad' || building === 'missions') {
               // A run in flight always wins — the pad is how you get back to it.
               if (game.player.activeMission) {
@@ -216,6 +221,7 @@ export function ScreenContent({
             stash: game.player.stash,
             refineryQueue: game.player.refineryQueue,
             refinedGoods: game.player.refinedGoods,
+            staffed: !!game.player.structureCrewAssignments?.refinery,
           }}
           onBack={() => game.go('hub')}
           onStartRefine={game.onStartRefine}
@@ -244,6 +250,7 @@ export function ScreenContent({
           missionsDone={game.player.missionsDone}
           unlockedSkillNodes={game.player.unlockedSkillNodes ?? []}
           shipCustomizerParts={game.player.shipCustomizerParts}
+          crewModuleResearched={game.player.crewModuleResearched}
           onConfirmShipCustomizerBuild={game.confirmShipCustomizerBuild}
           onBack={onBackFromHangar ?? (() => game.go('hub'))}
         />
@@ -285,12 +292,37 @@ export function ScreenContent({
       return (
         <LaunchpadScreen
           onBack={() => game.go('hub')}
-          onPick={game.onPickMission}
+          onPick={id => {
+            if (id === ACADEMY_INTRO_MISSION_ID) return game.go('academy')
+            game.onPickMission(id)
+          }}
           onViewContracts={() => game.goToMissions()}
           missionsDone={game.player.missionsDone}
           freeOperations={game.player.freeOperations}
           catalog={game.catalog}
+          player={game.player}
           francs={game.player.francs}
+        />
+      )
+
+    case 'academy':
+      return (
+        <AcademyScreen
+          player={game.player}
+          catalog={game.catalog}
+          onBack={() => game.go('hub')}
+          onBuild={() => game.go('build')}
+          onOpenHangar={() => game.go('hangar')}
+          onResearch={game.researchAcademy}
+          onFunding={game.setAcademyFunding}
+          onHire={game.hireCrew}
+          onRehire={game.rehireCrew}
+          onTrain={game.startCrewTraining}
+          onTrainCandidate={game.startCandidateTraining}
+          onCollectTraining={game.collectCrewTraining}
+          onResearchCrewModule={game.researchCrewModule}
+          onAssign={game.assignCrewToStructure}
+          onShareCharts={game.shareChartsWithClient}
         />
       )
 

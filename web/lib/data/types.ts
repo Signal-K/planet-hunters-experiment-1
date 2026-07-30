@@ -104,6 +104,13 @@ export interface Mission {
     cargo_min: number
     drill_tier: number
     max_orbit: number
+    crew?: import('./crew').CrewRequirement
+  }
+  jointProject?: {
+    playerCost: number
+    clientCostShare: number
+    payoutBonus: number
+    infrastructureOrbitBonus: number
   }
   payout: {
     francs: number
@@ -178,6 +185,7 @@ export interface Client {
   uiRole: ClientSlot['uiRole']
   payoutNotes?: string
   affinityNotes?: string
+  suppliesCrew: boolean
 }
 
 export interface ClientSlot {
@@ -193,6 +201,7 @@ export interface ClientSlot {
   payoutNotes: string
   affinityNotes: string
   uiRole: 'starter' | 'bulk' | 'prospect' | 'command' | 'science'
+  suppliesCrew: boolean
 }
 
 export interface StructureBlueprint {
@@ -202,7 +211,7 @@ export interface StructureBlueprint {
   cost: number
   costMaterials?: Record<string, number>
   unlocksAt: string
-  unlockTrigger?: 'always' | 'client-mission-trigger' | 'manual'
+  unlockTrigger?: 'always' | 'client-mission-trigger' | 'academy-research' | 'manual'
   description: string
 }
 

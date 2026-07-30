@@ -16,6 +16,38 @@ export interface Survey {
 }
 
 export const SURVEY_DEFS: Record<string, Survey> = {
+  lnm_crew_first_hire: {
+    id: '019fb363-6f36-0000-4c22-6cc4bd1a8bd8',
+    name: '[Landnam / Crew] First Astronaut Hire',
+    posthogUrl: 'https://us.posthog.com/project/199773/surveys/019fb363-6f36-0000-4c22-6cc4bd1a8bd8',
+    questions: [
+      { id: '65b144b3-0e1d-4efc-94fa-d24e10b4a14d', type: 'rating', question: 'How did hiring your first astronaut feel?', scale: 5 },
+    ],
+  },
+  lnm_crew_academy_built: {
+    id: '019fb363-86ff-0000-72cc-cb1cd87b8605',
+    name: '[Landnam / Crew] Academy Built',
+    posthogUrl: 'https://us.posthog.com/project/199773/surveys/019fb363-86ff-0000-72cc-cb1cd87b8605',
+    questions: [
+      { id: '2f802651-df3b-4e9e-823c-254755fec962', type: 'multiple_choice', question: 'How clear was the path from client trust to a working Astronaut Academy?', choices: ['Very clear', 'Mostly clear', 'A bit confusing', 'I did not understand the unlock'] },
+    ],
+  },
+  lnm_crew_first_launch: {
+    id: '019fb363-9f5a-0000-0fbc-480cf17b986d',
+    name: '[Landnam / Crew] First Crewed Launch',
+    posthogUrl: 'https://us.posthog.com/project/199773/surveys/019fb363-9f5a-0000-0fbc-480cf17b986d',
+    questions: [
+      { id: '195f9e66-a7ac-456e-b2e1-e78c6cd9c4a6', type: 'rating', question: 'How meaningful did having a named astronaut aboard make that launch feel?', scale: 5 },
+    ],
+  },
+  lnm_crew_first_specialisation: {
+    id: '019fb363-be0f-0000-6539-571f1abf18c8',
+    name: '[Landnam / Crew] First Specialisation',
+    posthogUrl: 'https://us.posthog.com/project/199773/surveys/019fb363-be0f-0000-6539-571f1abf18c8',
+    questions: [
+      { id: '0d38ec45-e0a3-465d-b394-516856bacbdd', type: 'multiple_choice', question: 'How clear was the effect of your astronaut’s new specialisation?', choices: ['Very clear', 'Mostly clear', 'A bit confusing', 'I do not know what it changes'] },
+    ],
+  },
   lnm_first_launch: {
     id: '019e5a4e-46ab-0000-df9e-81f0e919a252',
     name: '[Landnam / Launch] First Launch Feel',

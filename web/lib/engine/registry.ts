@@ -78,6 +78,18 @@ export const COMPONENT_REGISTRY: readonly ComponentDescriptor[] = [
     fields: ['role'],
   },
   {
+    type: 'AcademyController',
+    category: 'controller',
+    description: 'Animates the Astronaut Academy yard, centrifuge, pool, and active trainees.',
+    fields: [],
+  },
+  {
+    type: 'TrainingFacility',
+    category: 'marker',
+    description: 'Identifies the Earth-side Academy scene and its activity zones.',
+    fields: ['facility'],
+  },
+  {
     type: 'BuildPlot',
     category: 'marker',
     description: 'A placement slot at Earth Base. The host screen reads the index to map a plot to a placed structure.',

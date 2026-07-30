@@ -60,6 +60,16 @@ export const STRUCTURES: StructureBlueprint[] = [
     unlockTrigger: 'always',
     description: 'Monitors player-launched transit telescopes and downlinks daily TESS-style candidates for classification.',
   },
+  {
+    id: 'astronaut-academy',
+    name: 'Astronaut Academy',
+    kind: 'astronaut-academy',
+    cost: STRUCTURE_PRICES.academy,
+    costMaterials: { aluminium: 24, silicon: 12, copper: 8 },
+    unlocksAt: 'Research after reaching affinity level 2 with two clients',
+    unlockTrigger: 'academy-research',
+    description: 'Trains named astronauts, manages the roster, and coordinates Earth Base staffing.',
+  },
   { id: 'garage', name: 'Vehicle Garage', kind: 'garage', cost: STRUCTURE_PRICES.garage, unlocksAt: 'Future sprint', unlockTrigger: 'manual', description: 'Surface rover maintenance and upgrades.' },
 ]
 
@@ -72,9 +82,10 @@ export const SCANS_PER_DAY = 5
 export const SCAN_DURATION_MS = 10 * 60 * 1000
 export const SCANS_REQUIRED_TO_MAP = 3
 
-export function structureUnlocked(structure: StructureBlueprint, opts: { refineryUnlocked?: boolean; placed?: string[]; freeOperations?: boolean } = {}): boolean {
+export function structureUnlocked(structure: StructureBlueprint, opts: { refineryUnlocked?: boolean; academyResearched?: boolean; placed?: string[]; freeOperations?: boolean } = {}): boolean {
   if (structure.id === 'scan-station') return !!opts.freeOperations
   if (structure.id === 'satellite-monitoring-station') return !!opts.freeOperations
+  if (structure.id === 'astronaut-academy') return !!opts.academyResearched || !!opts.placed?.includes('astronaut-academy')
   if (structure.unlockTrigger === 'always') return true
   if (structure.id === 'refinery') return !!opts.refineryUnlocked || !!opts.placed?.includes('refinery')
   return false
