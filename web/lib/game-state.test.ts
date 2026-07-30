@@ -320,6 +320,57 @@ describe('mergeRemoteState — remote game_states record onto local state', () =
     expect(merged.player.missionPhase).toBe('mining')
   })
 
+  // The STS-601 cause-2 regression. useAuthSync refetches game_states on
+  // `visibilitychange`, so every tab switch runs a merge against whatever the
+  // remote row happens to hold. With both saves at the same missionsDone the
+  // equal-stage branch is what decides the run's fate — if it took the remote
+  // player, coming back to the tab erased an in-flight launch/transit.
+  it('keeps a local in-flight run when an equal-stage remote record has none', () => {
+    const mission = MISSIONS[0]
+    const target = TARGETS[0]
+    const startedAt = 1_700_000_000_000
+
+    const merged = mergeRemoteState(
+      local({
+        screen: 'transit',
+        missionId: mission.id,
+        targetId: target.id,
+        player: {
+          ...DEFAULT_STATE.player,
+          missionsDone: 2,
+          activeMission: { id: mission.id, label: `${mission.title} → ${target.name}` },
+          missionRunId: 'run-local-601',
+          missionPhase: 'transit',
+          transitStartedAt: startedAt,
+        },
+      }),
+      // A remote row written before the run began: same stage, run fields
+      // explicitly cleared — the shape that clobbers a local run if the
+      // equal-stage branch ever spreads the remote player over it.
+      {
+        screen: 'hub',
+        missionId: null,
+        targetId: null,
+        player: {
+          missionsDone: 2,
+          activeMission: null,
+          missionRunId: null,
+          missionPhase: null,
+          transitStartedAt: null,
+        },
+      },
+    )
+
+    expect(merged.screen).toBe('transit')
+    expect(merged.missionId).toBe(mission.id)
+    expect(merged.targetId).toBe(target.id)
+    expect(merged.player.activeMission?.id).toBe(mission.id)
+    expect(merged.player.missionRunId).toBe('run-local-601')
+    expect(merged.player.missionPhase).toBe('transit')
+    // The wall-clock epoch is what stops the transit animation restarting.
+    expect(merged.player.transitStartedAt).toBe(startedAt)
+  })
+
   it('preserves player fields the remote record omits', () => {
     const merged = mergeRemoteState(local(), {
       player: { missionsDone: 5 },
