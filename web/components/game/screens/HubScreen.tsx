@@ -81,7 +81,7 @@ function SkillsGlyph() {
  * 9px/0.18em uppercase label. `active` (Edit mode on) fills mint; `accent`
  * outlines mint; `muted` dims the label for secondary actions.
  */
-function SceneBtn({ icon, label, onClick, active, accent, muted, pulse }: {
+function SceneBtn({ icon, label, onClick, active, accent, muted, pulse, testId }: {
   icon: React.ReactNode
   label: string
   onClick: () => void
@@ -89,6 +89,7 @@ function SceneBtn({ icon, label, onClick, active, accent, muted, pulse }: {
   accent?: boolean
   muted?: boolean
   pulse?: boolean
+  testId?: string
 }) {
   const mint = 'var(--hub-mint)'
   const glyphColor = active || accent ? mint : 'var(--hub-cyan)'
@@ -96,6 +97,7 @@ function SceneBtn({ icon, label, onClick, active, accent, muted, pulse }: {
   return (
     <button
       onClick={onClick}
+      data-testid={testId}
       style={{
         display: 'flex', alignItems: 'center', gap: 6,
         background: active ? 'rgba(47,191,106,0.2)' : 'var(--hub-panel)',
@@ -445,6 +447,13 @@ export default function HubScreen({ player, hasCoach, onGoBuilding, onNav, onUpg
                   `.hub-desktop-nav` keeps them out of the way there. */}
               {player.freeOperations && (
                 <>
+                  <SceneBtn
+                    icon={<SurfaceGlyph />}
+                    label="Surface Ops"
+                    accent
+                    testId="hub-surface-ops"
+                    onClick={() => onNav('surface-ops')}
+                  />
                   <span className="hub-desktop-nav">
                     <SceneBtn icon={<MarketGlyph />} label="Market" onClick={() => onNav('market')} />
                   </span>

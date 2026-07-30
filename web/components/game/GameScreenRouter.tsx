@@ -16,6 +16,7 @@ import SkillTreeScreen from '@/components/game/screens/SkillTreeScreen'
 import ScanStationScreen from '@/components/game/screens/ScanStationScreen'
 import LaunchpadScreen from '@/components/game/screens/LaunchpadScreen'
 import TessDiscoveryScreen from '@/components/game/screens/TessDiscoveryScreen'
+import SurfaceOpsScreen from '@/components/game/screens/SurfaceOpsScreen'
 import { enqueueSurvey } from '@/lib/surveys'
 
 export const VALID_SCREENS = new Set<Screen>([
@@ -23,6 +24,7 @@ export const VALID_SCREENS = new Set<Screen>([
   'transit', 'mining', 'rover-mining', 'debrief', 'refinery',
   'market', 'hangar', 'rocket-buy', 'skills', 'scan-station',
   'launchpad',
+  'surface-ops',
 ])
 
 // Shared per-screen render map — the single source of truth for "which
@@ -79,6 +81,7 @@ export function ScreenContent({
   // screen render at all.
   useEffect(() => {
     if (screen === 'market' && !game.player.freeOperations) game.go('hub')
+    if (screen === 'surface-ops' && !game.player.freeOperations) game.go('hub')
     // The Build tab is a Free Ops entry point. Keep the onboarding assembly
     // flow reachable only when it has a real mission context; a bare/deep
     // linked fab route must never show a prefilled rocket.
@@ -287,6 +290,21 @@ export function ScreenContent({
           freeOperations={game.player.freeOperations}
           catalog={game.catalog}
           francs={game.player.francs}
+        />
+      )
+
+    case 'surface-ops':
+      return (
+        <SurfaceOpsScreen
+          player={game.player}
+          onBack={() => game.go('hub')}
+          onPurchaseRights={game.purchaseTerrainRights}
+          onBuildLaunchpad={game.buildSettlementLaunchpad}
+          onMined={game.recordSurfaceMined}
+          onDispatch={game.dispatchSurfaceFerry}
+          onRetry={game.retrySurfaceFerry}
+          onReconcile={game.reconcileSurfaceFerry}
+          onAcknowledge={game.acknowledgeSurfaceFerry}
         />
       )
 

@@ -100,6 +100,7 @@ export const SCENES: readonly SceneDefinition[] = [
     name: 'On-Target Construction',
     surface: 'canvas',
     location: 'target-surface',
+    screen: 'surface-ops',
     sceneFile: '/game/scenes/construction-target.scene.json',
     entityTypes: ['ConstructionController'],
     description: 'Building a structure on a target body rather than at Earth Base.',

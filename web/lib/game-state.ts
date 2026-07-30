@@ -3,12 +3,13 @@ import type { GameState, LicenseGrade, Player, Screen } from '@/lib/game-types'
 import { MISSIONS, TARGETS } from '@/lib/data'
 import { FREE_OPS_START_MISSIONS_DONE } from '@/lib/data/mission-generator'
 import { migrateCrewRoster } from '@/lib/systems/CrewSystem'
+import { normalizeSurfaceOps } from '@/lib/systems/SurfaceOpsSystem'
 
 // Represents untrusted/partial saved state (e.g. from localStorage or remote sync)
 // where player fields are optional since older saves may be missing new fields.
 export type PartialSave = Omit<Partial<GameState>, 'player'> & { player?: Partial<Player> }
 
-const VALID_SCREENS: Screen[] = ['intro', 'build', 'hub', 'missions', 'galaxy', 'targets', 'fab', 'transit', 'mining', 'debrief', 'refinery', 'market', 'hangar', 'rocket-buy', 'skills', 'scan-station', 'rover-mining', 'launchpad']
+const VALID_SCREENS: Screen[] = ['intro', 'build', 'hub', 'missions', 'galaxy', 'targets', 'fab', 'transit', 'mining', 'debrief', 'refinery', 'market', 'hangar', 'rocket-buy', 'skills', 'scan-station', 'rover-mining', 'launchpad', 'surface-ops']
 const MISSION_CONTEXT_SCREENS = new Set<Screen>(['targets', 'rocket-buy', 'fab', 'transit', 'mining', 'rover-mining', 'debrief'])
 const TARGET_CONTEXT_SCREENS = new Set<Screen>(['rocket-buy', 'fab', 'transit', 'mining', 'rover-mining', 'debrief'])
 const VALID_LICENSE_GRADES: LicenseGrade[] = ['Grade I', 'Grade II', 'Grade III']
@@ -54,6 +55,7 @@ export const DEFAULT_STATE: GameState = {
     researchXP: 0,
     unlockedBlueprints: [],
     crew: [],
+    surfaceOps: { sites: {} },
   },
   missionId: null,
   targetId: null,
@@ -126,6 +128,7 @@ export function normalizeState(input: PartialSave): GameState {
   // crew at all. Fold them in here — the one choke point every load path runs
   // through — rather than leaving the roster and roverDeployments to drift.
   const crew = migrateCrewRoster(player, Date.now())
+  const surfaceOps = normalizeSurfaceOps(player.surfaceOps)
 
   // `placed` is the record of what the player actually built; the per-structure
   // booleans are conveniences derived from it. They can disagree: a save made
@@ -150,7 +153,7 @@ export function normalizeState(input: PartialSave): GameState {
     missionId,
     targetId,
     rocket: { ...DEFAULT_STATE.rocket, ...input.rocket },
-    player: { ...DEFAULT_STATE.player, ...player, licenseGrade, researchXP, unlockedBlueprints, tessClassifications, discoveredExoplanetTargets, satelliteMonitoringLevel, transitSatelliteLevel, crew,
+    player: { ...DEFAULT_STATE.player, ...player, licenseGrade, researchXP, unlockedBlueprints, tessClassifications, discoveredExoplanetTargets, satelliteMonitoringLevel, transitSatelliteLevel, crew, surfaceOps,
       satelliteMonitoringBuilt, refineryBuilt, scannerBuilt },
     doneSteps: { ...DEFAULT_STATE.doneSteps, ...input.doneSteps },
     ...(pendingTerritoryClaimFor ? { pendingTerritoryClaimFor } : {}),
@@ -183,6 +186,9 @@ export function repairStateRoute(input: GameState): GameState {
   }
   if (input.screen === 'galaxy' && !input.player.freeOperations) {
     return { ...input, screen: 'missions' }
+  }
+  if (input.screen === 'surface-ops' && !input.player.freeOperations) {
+    return { ...input, screen: 'hub' }
   }
   // Repair the tutorial flag: during onboarding (missionsDone < FREE_OPS_START_MISSIONS_DONE),
   // tutorial must always be active. It can become false if the catalog had no next-sequence

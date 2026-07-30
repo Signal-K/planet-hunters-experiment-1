@@ -29,8 +29,40 @@ export type Screen =
   | 'scan-station'
   | 'rover-mining'
   | 'launchpad'
+  | 'surface-ops'
 
 export type LicenseGrade = 'Grade I' | 'Grade II' | 'Grade III'
+
+export type SettlementFerryStatus = 'in-flight' | 'delivered' | 'failed'
+
+export interface SettlementLaunchpadRecord {
+  pad: 0 | 1 | 2
+  startedAt: number
+  completesAt: number
+}
+
+export interface SettlementFerryRecord {
+  id: string
+  status: SettlementFerryStatus
+  manifest: Record<string, number>
+  dispatchedAt: number
+  arrivesAt: number
+  attempts: number
+  deliveredAt?: number
+  reconciledAt?: number
+  failureReason?: string
+}
+
+export interface SurfaceSiteProgress {
+  rightsPurchasedAt?: number
+  launchpad?: SettlementLaunchpadRecord
+  storage: Record<string, number>
+  ferry?: SettlementFerryRecord
+}
+
+export interface SurfaceOpsState {
+  sites: Record<string, SurfaceSiteProgress>
+}
 
 export interface Player {
   francs: number
@@ -138,6 +170,10 @@ export interface Player {
   // rovers as roverDeployments above, surfaced as roster entries by
   // migrateCrewRoster; they are not a second, parallel rover system.
   crew?: import('@/lib/data').CrewMember[]
+  // Solo Surface Ops state. Rights are a build-cost gate, not a shared-world
+  // claim. Ferry records retain a stable cargo-batch id and reconciliation
+  // timestamp so retries and reloads cannot credit one manifest twice.
+  surfaceOps?: SurfaceOpsState
 }
 
 export interface GameState {
@@ -212,6 +248,13 @@ export interface GameActions {
   chooseSatelliteTarget: (subjectId: string) => void
   onRoverMiningDone: (cargo: Record<string, number>) => void
   confirmShipCustomizerBuild: (installed: Partial<Record<import('@/lib/data').ShipRoomKind, string>>, prevInstalled: Partial<Record<import('@/lib/data').ShipRoomKind, string>>) => boolean
+  purchaseTerrainRights: (siteId: string) => void
+  buildSettlementLaunchpad: (siteId: string, pad: 0 | 1 | 2) => void
+  recordSurfaceMined: (siteId: string, mineralId: string, amount: number) => void
+  dispatchSurfaceFerry: (siteId: string) => void
+  retrySurfaceFerry: (siteId: string) => void
+  reconcileSurfaceFerry: (siteId: string) => void
+  acknowledgeSurfaceFerry: (siteId: string) => void
   gainResearchXP: (amount: number) => void
   upgradeLicenseGrade: (grade: Exclude<LicenseGrade, 'Grade I'>) => void
   unlockBlueprint: (blueprintId: string, costFrancs?: number, costXP?: number, costMaterials?: Record<string, number>) => void

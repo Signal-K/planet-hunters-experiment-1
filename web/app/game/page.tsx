@@ -23,6 +23,8 @@ const VALID_SCREENS = new Set([
   'skills',
   'scan-station',
   'rover-mining',
+  'launchpad',
+  'surface-ops',
 ])
 
 function savedScreen(): string {

@@ -17,6 +17,7 @@ import { useCatalogSync } from '@/lib/contexts/useCatalogSync'
 import { useGameLoop } from '@/lib/contexts/useGameLoop'
 import { useTutorialActions } from '@/lib/contexts/useTutorialActions'
 import { useEconomyActions } from '@/lib/contexts/useEconomyActions'
+import { useSurfaceOpsActions } from '@/lib/contexts/useSurfaceOpsActions'
 
 export type { Screen, Player, GameState } from '@/lib/game-types'
 
@@ -102,6 +103,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
   const loop    = useGameLoop({ stateRef, setState, catalog: runtimeCatalog, addToast: ui.addToast })
   const tutorial = useTutorialActions(setState)
   const economy = useEconomyActions(setState, useCallback(() => runtimeCatalog.missions, [runtimeCatalog.missions]))
+  const surfaceOps = useSurfaceOpsActions(setState, ui.addToast)
 
   // Sync game.screen → URL on every screen change.
   // skipNextUrlSync prevents a loop when the change was triggered BY a URL change.
@@ -199,6 +201,13 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       acceptLoan: economy.acceptLoan,
       abandonMission: economy.abandonMission,
       confirmShipCustomizerBuild: economy.confirmShipCustomizerBuild,
+      purchaseTerrainRights: surfaceOps.purchaseTerrainRights,
+      buildSettlementLaunchpad: surfaceOps.buildSettlementLaunchpad,
+      recordSurfaceMined: surfaceOps.recordSurfaceMined,
+      dispatchSurfaceFerry: surfaceOps.dispatchSurfaceFerry,
+      retrySurfaceFerry: surfaceOps.retrySurfaceFerry,
+      reconcileSurfaceFerry: surfaceOps.reconcileSurfaceFerry,
+      acknowledgeSurfaceFerry: surfaceOps.acknowledgeSurfaceFerry,
     }}>
       {children}
     </GameContext.Provider>
