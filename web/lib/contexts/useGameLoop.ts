@@ -6,7 +6,7 @@ import {
 } from '@/lib/data'
 import { applyDeliveryArrived, applyMiningDone, applyReturnArrived, applyRoverMiningDone } from '@/lib/systems/MiningSystem'
 import { applyPurchaseRocket } from '@/lib/systems/EconomySystem'
-import { enqueueSurvey } from '@/lib/surveys'
+import { enqueueSurvey, isRepeatSurveyEligible, getMilestoneSurveyVariant } from '@/lib/surveys'
 import type { Catalog } from '@/lib/catalog'
 import type { GameState, LicenseGrade } from '@/lib/game-types'
 import type { Target, TessVerdict, TransitRange } from '@/lib/data'
@@ -481,18 +481,30 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
     // Mission feedback belongs to the post-mission checkpoint. Queue it only
     // after debrief collection so it cannot surface over the next mission
     // board while the player is choosing a new contract.
-    enqueueSurvey('lnm_mission_friction', 0)
-    enqueueSurvey('lnm_mining_feel', 60_000)
-    if (completedMission?.payload?.type === 'rover') enqueueSurvey('lnm_rover_clarity', 60_000)
-    if (current.player.missionsDone >= 1 && !completedIsStoryMission) {
-      enqueueSurvey('lnm_client_pick', 60_000)
+    //
+    // A player's first-ever mission always gets the full post-mission
+    // survey set — it's their first encounter with the mechanic. Every
+    // mission after that only surveys the PostHog-gated repeat cohort, so
+    // most players aren't stopped by a popup after every single mission.
+    const isFirstMissionEver = newMissionsDone === 1
+    if (isFirstMissionEver || isRepeatSurveyEligible()) {
+      enqueueSurvey('lnm_mission_friction', 0)
+      enqueueSurvey('lnm_mining_feel', 60_000)
+      if (completedMission?.payload?.type === 'rover') enqueueSurvey('lnm_rover_clarity', 60_000)
+      if (current.player.missionsDone >= 1 && !completedIsStoryMission) {
+        enqueueSurvey('lnm_client_pick', 60_000)
+      }
     }
-    if (newMissionsDone === 1) {
+    if (isFirstMissionEver) {
       enqueueSurvey('lnm_m1_complete', 3000)
       enqueueSurvey('lnm_progression_feel', 8000)
     }
-    if (newMissionsDone === 2) enqueueSurvey('lnm_m2_complete', 3000)
-    if (newMissionsDone === 3) enqueueSurvey('lnm_m3_complete', 5000)
+    // M2 vs M3 completion feedback is split between players rather than
+    // both landing on everyone — which survey a player sees is decided by
+    // the `landnam-milestone-survey-variant` PostHog flag.
+    const milestoneVariant = getMilestoneSurveyVariant()
+    if (newMissionsDone === 2 && milestoneVariant === 'm2') enqueueSurvey('lnm_m2_complete', 3000)
+    if (newMissionsDone === 3 && milestoneVariant === 'm3') enqueueSurvey('lnm_m3_complete', 5000)
     if (!catalog.missions.some(m => m.sequence === newMissionsDone + 1)) enqueueSurvey('lnm_end_of_content', 5000)
   }, [addToast, catalog.missions, setState, stateRef])
 

@@ -161,3 +161,28 @@ export function trackSurveyShown(surveyKey: string) {
   initPostHog()
   posthog.capture('survey shown', { $survey_id: def.id, $survey_name: def.name })
 }
+
+const REPEAT_SURVEY_FLAG = 'landnam-repeat-mission-surveys'
+const MILESTONE_SURVEY_FLAG = 'landnam-milestone-survey-variant'
+
+// Post-mission surveys (friction, mining feel, client pick, rover clarity)
+// only reach this cohort once a player is past their first-ever mission —
+// that first mission always gets the full set (it's everyone's first
+// encounter with the mechanic), but showing the same survey family after
+// every later mission stalls progress, so later missions are gated to a
+// PostHog-controlled slice of players.
+export function isRepeatSurveyEligible(): boolean {
+  if (typeof window === 'undefined') return false
+  initPostHog()
+  return posthog.isFeatureEnabled(REPEAT_SURVEY_FLAG) === true
+}
+
+// M2 and M3 completion feedback is split between players instead of
+// showing both to everyone — the 'm2' cohort only ever sees the M2
+// survey, the 'm3' cohort only ever sees the M3 survey. Defaults to 'm2'
+// if the flag hasn't loaded yet.
+export function getMilestoneSurveyVariant(): 'm2' | 'm3' {
+  if (typeof window === 'undefined') return 'm2'
+  initPostHog()
+  return posthog.getFeatureFlag(MILESTONE_SURVEY_FLAG) === 'm3' ? 'm3' : 'm2'
+}
