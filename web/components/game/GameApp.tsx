@@ -17,7 +17,7 @@ import { PushOptIn } from '@/components/game/PushOptIn'
 import FeedbackButton from '@/components/ui/FeedbackButton'
 import SurveySheet from '@/components/ui/SurveySheet'
 import ToastLayer from '@/components/ui/ToastLayer'
-import { initPostHog } from '@/lib/posthog'
+import { initPostHog, captureScreenView } from '@/lib/posthog'
 import DevShortcuts from '@/components/dev/DevShortcuts'
 import AuthGateSheet from '@/components/game/AuthGateSheet'
 import SettingsSheet from '@/components/game/SettingsSheet'
@@ -32,6 +32,13 @@ function GameCanvas() {
   const arrivalScheduledFor = useRef<number | null>(null)
   const returnScheduledKey = useRef<string | null>(null)
   const [settingsOpen, setSettingsOpen] = useState(false)
+
+  // The game is a single-page SPA — `screen` changes without a real
+  // navigation, so PostHog needs a manual pageview per screen to power
+  // Paths/Funnels/Trends the same way a multi-page site gets for free.
+  useEffect(() => {
+    captureScreenView(game.screen)
+  }, [game.screen])
 
   // When a timed transit starts, schedule a push notification.
   useEffect(() => {
