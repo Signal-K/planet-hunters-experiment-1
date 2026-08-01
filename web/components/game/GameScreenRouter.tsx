@@ -16,6 +16,7 @@ import SkillTreeScreen from '@/components/game/screens/SkillTreeScreen'
 import ScanStationScreen from '@/components/game/screens/ScanStationScreen'
 import TessDiscoveryScreen from '@/components/game/screens/TessDiscoveryScreen'
 import { enqueueSurvey } from '@/lib/surveys'
+import { captureGameEvent } from '@/lib/posthog'
 
 export const VALID_SCREENS = new Set<Screen>([
   'intro', 'build', 'hub', 'missions', 'galaxy', 'targets', 'fab',
@@ -112,6 +113,7 @@ export function ScreenContent({
             const structure = game.catalog.structures.find(s => s.id === kind)
             game.placeStructure(structure, kind, plot)
             game.completeStep(0)
+            captureGameEvent('structure_placed', { structure_kind: kind })
             enqueueSurvey('lnm_base_building', 1200)
             game.go('hub')
           }}
@@ -136,6 +138,7 @@ export function ScreenContent({
             if (building === 'satellite-monitoring-station') return game.go('galaxy')
             if (building === 'launchpad' || building === 'missions') {
               if (game.player.activeMission) {
+                captureGameEvent('mission_resumed', { mission_phase: game.player.missionPhase ?? 'transit' })
                 enqueueSurvey('lnm_resume_mission', 1200)
                 return game.go(game.player.missionPhase ?? 'transit')
               }

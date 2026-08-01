@@ -6,7 +6,8 @@ import {
 } from '@/lib/data'
 import { applyDeliveryArrived, applyMiningDone, applyReturnArrived, applyRoverMiningDone } from '@/lib/systems/MiningSystem'
 import { applyPurchaseRocket } from '@/lib/systems/EconomySystem'
-import { enqueueSurvey } from '@/lib/surveys'
+import { enqueueSurvey, isRepeatSurveyEligible, getMilestoneSurveyVariant } from '@/lib/surveys'
+import { captureGameEvent } from '@/lib/posthog'
 import type { Catalog } from '@/lib/catalog'
 import type { GameState, LicenseGrade } from '@/lib/game-types'
 import type { Target, TessVerdict, TransitRange } from '@/lib/data'
@@ -175,6 +176,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
           : s)
       }).catch(error => console.warn('[GameLoop] mission run create failed', error))
     }
+    captureGameEvent('rocket_launched', { mission_id: currentMission.id, target_id: current.targetId, is_first_ever: isFirstEver })
     if (isFirstEver) enqueueSurvey('lnm_first_launch', 4000)
   }, [catalog.missions, catalog.targets, setState, stateRef])
 
@@ -316,6 +318,14 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
         console.warn('[TESS] classification submit failed', error)
       })
     }
+    // The TESS classification step (TessDiscoveryScreen / 'galaxy' route)
+    // had no analytics coverage at all — the satellite-target-picking step
+    // right before it fires lnm_satellite_clarity, but the actual
+    // classification submission was invisible. No live PostHog survey
+    // exists yet for this step (see micro_survey_science.json, which was
+    // drafted but never created against a real project), so this is an
+    // event only for now — wire a survey key here once that's created.
+    captureGameEvent('tess_classification_submitted', { subject_id: subjectId, verdict })
   }, [setState])
 
   // Player picks where the satellite points for the *next* daily downlink
@@ -326,6 +336,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
       ...s,
       player: { ...s.player, satelliteTargetId: subjectId, pendingRepick: false },
     }))
+    captureGameEvent('satellite_target_chosen', { subject_id: subjectId })
     enqueueSurvey('lnm_satellite_clarity', 1200)
   }, [setState])
 
@@ -478,21 +489,49 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
       }).catch(error => console.warn('[GameLoop] mission run completion update failed', error))
     }
     missionRunIdRef.current = null
+    // Unconditional analytics event — separate from the (now sampled)
+    // survey queue below, so mission-completion volume and drop-off stay
+    // fully visible in PostHog Trends/Funnels for every player, not just
+    // the ones who also get a survey this time.
+    captureGameEvent('mission_completed', {
+      mission_id: current.missionId,
+      missions_done: newMissionsDone,
+      mission_type: completedMission?.payload?.type ?? null,
+      is_story_mission: completedIsStoryMission,
+      payout_francs: total,
+    })
     // Mission feedback belongs to the post-mission checkpoint. Queue it only
     // after debrief collection so it cannot surface over the next mission
     // board while the player is choosing a new contract.
-    enqueueSurvey('lnm_mission_friction', 0)
-    enqueueSurvey('lnm_mining_feel', 60_000)
-    if (completedMission?.payload?.type === 'rover') enqueueSurvey('lnm_rover_clarity', 60_000)
-    if (current.player.missionsDone >= 1 && !completedIsStoryMission) {
-      enqueueSurvey('lnm_client_pick', 60_000)
+    //
+    // A player's first-ever mission always gets the full post-mission
+    // survey set — it's their first encounter with the mechanic. Every
+    // mission after that only surveys the PostHog-gated repeat cohort, so
+    // most players aren't stopped by a popup after every single mission.
+    const isFirstMissionEver = newMissionsDone === 1
+    if (isFirstMissionEver || isRepeatSurveyEligible()) {
+      enqueueSurvey('lnm_mission_friction', 0)
+      enqueueSurvey('lnm_mining_feel', 60_000)
+      if (completedMission?.payload?.type === 'rover') enqueueSurvey('lnm_rover_clarity', 60_000)
+      if (current.player.missionsDone >= 1 && !completedIsStoryMission) {
+        enqueueSurvey('lnm_client_pick', 60_000)
+      }
     }
-    if (newMissionsDone === 1) {
+    if (isFirstMissionEver) {
       enqueueSurvey('lnm_m1_complete', 3000)
       enqueueSurvey('lnm_progression_feel', 8000)
     }
-    if (newMissionsDone === 2) enqueueSurvey('lnm_m2_complete', 3000)
-    if (newMissionsDone === 3) enqueueSurvey('lnm_m3_complete', 5000)
+    // M2 vs M3 completion feedback is split between players rather than
+    // both landing on everyone — which survey a player sees is decided by
+    // the `landnam-milestone-survey-variant` PostHog flag. `milestone_reached`
+    // fires for both milestones regardless of variant, so reaching M2/M3
+    // stays visible for players who didn't get that milestone's survey.
+    if (newMissionsDone === 2 || newMissionsDone === 3) {
+      captureGameEvent('milestone_reached', { milestone: `m${newMissionsDone}` })
+    }
+    const milestoneVariant = getMilestoneSurveyVariant()
+    if (newMissionsDone === 2 && milestoneVariant === 'm2') enqueueSurvey('lnm_m2_complete', 3000)
+    if (newMissionsDone === 3 && milestoneVariant === 'm3') enqueueSurvey('lnm_m3_complete', 5000)
     if (!catalog.missions.some(m => m.sequence === newMissionsDone + 1)) enqueueSurvey('lnm_end_of_content', 5000)
   }, [addToast, catalog.missions, setState, stateRef])
 
