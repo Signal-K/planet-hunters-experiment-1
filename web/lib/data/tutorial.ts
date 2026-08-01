@@ -105,6 +105,10 @@ export const M3_STEPS: TutorialStep[] = [
     body: 'Confirm your loadout and launch. You will get a new heading once the pickup cargo is secured.',
     manual: true,
     anchor: 'top', spot: null, cta: 'Got it' },
+  { id: 33, screen: 'delivery', title: 'Unload At The Depot',
+    body: 'Drive the rover to the depot marker, then tap DUMP CARGO to unload manually.',
+    manual: true,
+    anchor: 'top', spot: null, cta: 'Got it' },
 ]
 
 export const PROGRESSION_STEPS: TutorialStep[] = [

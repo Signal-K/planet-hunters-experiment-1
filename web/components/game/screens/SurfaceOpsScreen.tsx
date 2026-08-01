@@ -28,6 +28,7 @@ import {
   surfaceStorageTotal,
 } from '@/lib/systems/SurfaceOpsSystem'
 import type { TakeonHostEvent } from '@/lib/takeon/events'
+import { TAKEON_TO_LANDNAM_MINERAL } from '@/lib/takeon/minerals'
 import { formatCountdown, formatCurrency } from '@/lib/format'
 import TopBar from '@/components/ui/TopBar'
 import { GhostBtn, PrimaryBtn } from '@/components/ui/Button'
@@ -36,14 +37,6 @@ import TakeOnMount from '@/components/takeon/TakeOnMount'
 import styles from './SurfaceOpsScreen.module.css'
 
 type SurfaceView = 'logistics' | 'field'
-
-const TAKEON_TO_LANDNAM_MINERAL: Record<string, string> = {
-  iron: 'iron',
-  silica: 'silicon',
-  copper: 'copper',
-  ice: 'ice',
-  crystal: 'rare',
-}
 
 interface SurfaceOpsScreenProps {
   player: Player

@@ -144,6 +144,7 @@ export default function MissionOperationRoutes({
           startedAt={game.player.deliveryUnloadStartedAt}
           onBack={() => game.go('hub')}
           onComplete={game.onDeliveryUnloadComplete}
+          useTakeonDropoff={game.player.missionsDone === 2}
         />
       )
 

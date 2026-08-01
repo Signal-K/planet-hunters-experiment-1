@@ -1,8 +1,17 @@
 'use client'
 
-import { useEffect, useMemo, useRef, useState } from 'react'
+import {
+  forwardRef,
+  useEffect,
+  useImperativeHandle,
+  useMemo,
+  useRef,
+  useState,
+} from 'react'
 import type {
   MissionState,
+  ResourceKey,
+  RoverGame,
   RoverSpec,
   SyncAdapter,
 } from '@takeon/engine'
@@ -15,6 +24,11 @@ import {
 import { scheduleLandnamPush } from '@/lib/takeon/push'
 import styles from './TakeOnMount.module.css'
 
+export interface TakeOnMountHandle {
+  /** Deposit all rover cargo into an adjacent cache. Returns units moved. */
+  deposit: () => number
+}
+
 export interface TakeOnMountProps {
   missionId: string
   bodyId: string
@@ -23,12 +37,24 @@ export interface TakeOnMountProps {
   seed?: number
   adapter?: SyncAdapter
   className?: string
+  /**
+   * Cargo to place directly in the rover's hold once the mission mounts, for
+   * scenes that visualise cargo the host already tracks (e.g. a tutorial
+   * dropoff) rather than cargo mined live in Takeon. Applied once, on mount.
+   */
+  seedCargo?: Partial<Record<ResourceKey, number>>
+  /**
+   * Place one `cache` structure adjacent to the rover's spawn tile once the
+   * mission mounts, so a seeded-cargo scene always has somewhere to deposit.
+   * Ignored on a resumed mission (structures already exist).
+   */
+  seedCache?: boolean
   onEvent?: (event: TakeonHostEvent) => void
   onReady?: (mission: MissionState) => void
   onError?: (error: Error) => void
 }
 
-export default function TakeOnMount({
+const TakeOnMount = forwardRef<TakeOnMountHandle, TakeOnMountProps>(function TakeOnMount({
   missionId,
   bodyId,
   rover,
@@ -36,16 +62,31 @@ export default function TakeOnMount({
   seed,
   adapter: suppliedAdapter,
   className,
+  seedCargo,
+  seedCache,
   onEvent,
   onReady,
   onError,
-}: TakeOnMountProps) {
+}, ref) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
+  const gameRef = useRef<RoverGame | null>(null)
   const adapter = useMemo(
     () => suppliedAdapter ?? new LandnamSync(),
     [suppliedAdapter]
   )
   const [error, setError] = useState<string | null>(null)
+
+  // Seeding is applied once, on mount — read via refs so changing identity
+  // on every render (an unmemoized object/array from the caller) can never
+  // retrigger the expensive mount effect below.
+  const seedCargoRef = useRef(seedCargo)
+  seedCargoRef.current = seedCargo
+  const seedCacheRef = useRef(seedCache)
+  seedCacheRef.current = seedCache
+
+  useImperativeHandle(ref, () => ({
+    deposit: () => gameRef.current?.deposit() ?? 0,
+  }), [])
 
   useEffect(() => {
     if (!canvasRef.current) return
@@ -89,7 +130,12 @@ export default function TakeOnMount({
         const body = getBody(bodyId)
         if (!body) throw new Error(`Unknown Takeon body: ${bodyId}`)
 
-        const resume = await adapter.loadMission(missionId)
+        // Seeded scenes (a tutorial dropoff, etc.) are ephemeral flavor —
+        // Landnam owns the persisted delivery state, not Takeon — so they
+        // always start fresh rather than resuming a prior save under the
+        // same missionId.
+        const isSeeded = !!(seedCargoRef.current || seedCacheRef.current)
+        const resume = isSeeded ? null : await adapter.loadMission(missionId)
         if (disposed) return
 
         app = new PIXI.Application()
@@ -147,6 +193,32 @@ export default function TakeOnMount({
         resizeObserver.observe(canvasElement)
 
         mounted.game.start()
+        gameRef.current = mounted.game
+
+        const initialSeedCargo = seedCargoRef.current
+        const initialSeedCache = seedCacheRef.current
+        if (isSeeded) {
+          const sim = mounted.game.sim
+          if (initialSeedCache) {
+            const { x, y } = sim.rover.pos
+            sim.structures.push({
+              id: `seed-cache-${missionId}`,
+              type: 'cache',
+              pos: { x: x + 1, y },
+              buffer: {},
+            })
+          }
+          if (initialSeedCargo) {
+            let cargoUsed = 0
+            for (const [resource, amount] of Object.entries(initialSeedCargo)) {
+              if (!amount) continue
+              sim.rover.cargo[resource as ResourceKey] = amount
+              cargoUsed += amount
+            }
+            sim.rover.cargoUsed = cargoUsed
+          }
+        }
+
         const initialState = snapshot()
         if (initialState) onReady?.(initialState)
       } catch (reason) {
@@ -170,9 +242,12 @@ export default function TakeOnMount({
       unbindDiscovery?.()
       mounted?.destroy()
       mounted = null
+      gameRef.current = null
       if (app?.renderer) app.destroy()
       app = null
     }
+    // seedCargo/seedCache intentionally excluded — see seedCargoRef/seedCacheRef above.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     adapter,
     bodyId,
@@ -199,4 +274,6 @@ export default function TakeOnMount({
       )}
     </div>
   )
-}
+})
+
+export default TakeOnMount
