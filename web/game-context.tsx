@@ -37,9 +37,17 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
 
   const [hydrated, setHydrated] = useState(false)
   const isPreview = useRef(false)
+  // React StrictMode double-invokes effects in dev. This effect strips the
+  // `?preset=`/`?preview=` query via history.replaceState as one of its own
+  // side effects, so a second invocation reads an already-stripped URL and
+  // silently falls through to the loadState() branch, discarding the preset
+  // it just applied. Guard so only the first invocation's result sticks.
+  const hydrationRanOnce = useRef(false)
 
   // ── Hydration ──────────────────────────────────────────────────────────────
   useEffect(() => {
+    if (hydrationRanOnce.current) return
+    hydrationRanOnce.current = true
     const params = new URLSearchParams(window.location.search)
     const previewScreen = params.get('preview')
     const routePreset = window.location.pathname.endsWith('/game/ship-customizer') ? 'ship-customizer' : null

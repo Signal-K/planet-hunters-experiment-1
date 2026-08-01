@@ -41,7 +41,11 @@ const VERDICT_ACTIONS: Array<{ id: TessVerdict; label: string; requiresMark: boo
 ]
 
 export default function TessDiscoveryScreen({ player, onBack, onBuildStation, onOpenProgram, onSubmit, onChooseTarget }: TessDiscoveryScreenProps) {
-  const classifications = player.tessClassifications ?? {}
+  // Stabilize the fallback — see the identical comment on
+  // AsteroidDiscoveryScreen's classifications memo (STS-622 review found
+  // this pattern first here; a fresh `{}` every render when the field is
+  // unset re-fires the fetch effect indefinitely).
+  const classifications = useMemo(() => player.tessClassifications ?? {}, [player.tessClassifications])
   // InstrumentFeedSystem resolves today's level-scaled downlink — either the
   // player's satellite-pointing pick (player.satelliteTargetId, chosen via
   // PixiGalaxyStarMap after a prior classification) plus a deterministic daily

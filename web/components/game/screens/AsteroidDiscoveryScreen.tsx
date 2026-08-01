@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, type ReactNode } from 'react'
+import { useEffect, useMemo, useState, type ReactNode } from 'react'
 import { Radio, Telescope } from 'lucide-react'
 import TopBar from '@/components/ui/TopBar'
 import StatCard from '@/components/ui/StatCard'
@@ -35,7 +35,13 @@ const VERDICT_ACTIONS: Array<{ id: AsteroidVerdict; label: string; kind: 'amber'
 ]
 
 export default function AsteroidDiscoveryScreen({ player, onBack, onBuildTelescope, onSubmit }: AsteroidDiscoveryScreenProps) {
-  const classifications = player.asteroidClassifications ?? {}
+  // Stabilize the fallback so the fetch effect below (keyed on `classifications`)
+  // doesn't get a new object identity every render when the field is unset —
+  // e.g. preset-loaded dev state, which bypasses normalizeAndRepair()'s
+  // default backfill. A fresh `{}` each render re-fires the effect
+  // indefinitely, and each new fetch cancels the previous one before it can
+  // resolve, so the screen never leaves its loading state.
+  const classifications = useMemo(() => player.asteroidClassifications ?? {}, [player.asteroidClassifications])
   const [candidate, setCandidate] = useState<AsteroidCandidate | null>(null)
   const [loading, setLoading] = useState(true)
   const [loadFailed, setLoadFailed] = useState(false)

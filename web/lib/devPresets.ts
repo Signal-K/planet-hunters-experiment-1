@@ -56,6 +56,19 @@ const POST_ONBOARDING_PLAYER: Player = {
   transitSatelliteLaunchedAt: null,
 }
 
+// Deep Space Telescope built alongside the transit satellite (STS-622) —
+// asteroid-discovery presets need both instruments' unlock gates cleared,
+// since deepSpaceTelescopeUnlocked() also checks satelliteMonitoringLevel.
+const ASTEROID_DISCOVERY_PLAYER: Player = {
+  ...POST_ONBOARDING_PLAYER,
+  placed: [...POST_ONBOARDING_PLAYER.placed, 'deep-space-telescope'],
+  placementPlots: { ...POST_ONBOARDING_PLAYER.placementPlots, 'deep-space-telescope': 2 },
+  satelliteMonitoringLevel: 2,
+  deepSpaceTelescopeBuilt: true,
+  deepSpaceTelescopeLevel: 1,
+  clientMissions: { 'helios-propulsion-depot': 2 },
+}
+
 export interface DevShot {
   key: string
   label: string
@@ -139,6 +152,7 @@ export const DEV_GROUPS: DevGroup[] = [
       { key: 'ui-tess-discovery', label: 'TESS Console', hint: 'Satellite monitoring and classification screen — post-onboarding, Free Ops unlocked', stage: 'free-ops' },
       { key: 'ui-rover-mining', label: 'Rover Mining', hint: 'Starter-rover on-world mining timer state — missionsDone: 2, Free Ops NOT unlocked', stage: 'tutorial' },
       { key: 'ship-customizer', label: 'Ship Customiser', hint: 'Unlocked hangar interior view with Explorer room slots — missionsDone: 1, Free Ops NOT unlocked', stage: 'tutorial' },
+      { key: 'ui-asteroid-discovery', label: 'Asteroid Discovery', hint: 'Deep Space Telescope built (STS-622) — live NEOCP candidate review, requires seeded asteroid_candidates on the shared backend. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
     ],
   },
 ]
@@ -440,6 +454,19 @@ export function resolvePreset(name: string): Partial<GameState> | null {
         missionId: ROVER_MISSION.id,
         targetId: ROVER_MISSION.targetId ?? THIRD_MISSION.targetId ?? 'bennu',
         deliveryTargetId: ROVER_MISSION.deliveryTargetId ?? null,
+        rocket: { chassis: 'hull-mk2', propulsion: 'fusion-b2', drill: 'laser-t2' },
+        lastCargo: null,
+        popup: null,
+      }
+
+    case 'ui-asteroid-discovery':
+      return {
+        screen: 'asteroid-discovery',
+        player: ASTEROID_DISCOVERY_PLAYER,
+        tutorial: false,
+        doneSteps: M1_M2_M3_DONE,
+        missionId: null,
+        targetId: null,
         rocket: { chassis: 'hull-mk2', propulsion: 'fusion-b2', drill: 'laser-t2' },
         lastCargo: null,
         popup: null,
