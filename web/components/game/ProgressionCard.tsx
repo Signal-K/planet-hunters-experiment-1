@@ -3,6 +3,7 @@
 import React from 'react'
 import type { Player, Screen } from '@/game-context'
 import { FREE_OPS_START_MISSIONS_DONE } from '@/lib/data/mission-generator'
+import { TUTORIAL_RAIL } from '@/lib/tutorial-layout'
 import IconBadge from '@/components/ui/IconBadge'
 
 type CardIconBadgeTone = 'cyan' | 'amber' | 'ok' | 'crit' | 'mute'
@@ -71,7 +72,7 @@ function CardButton({ accent, icon, eyebrow, title, cta, onClick, testId }: {
         size={34}
         tone={toneForAccent(accent)}
         active
-        style={{ color: accent, borderColor: accent, borderWidth: 1.5, background: 'rgba(0,10,24,0.6)', boxShadow: 'none' }}
+        style={{ color: accent, borderColor: accent, borderWidth: 1.5, background: 'rgba(10,10,12,0.6)', boxShadow: 'none' }}
       />
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 9, fontWeight: 700, letterSpacing: '0.14em', color: accent, textTransform: 'uppercase' }}>{eyebrow}</div>
@@ -198,7 +199,18 @@ export default function ProgressionCard({ player, onGoBuilding, onNav, top = 132
   if (cards.length === 0) return null
 
   return (
-    <div style={{ position: 'absolute', right: 14, top, zIndex: 8, width: 'calc(100% - 28px)', maxWidth: 280, pointerEvents: 'auto', display: 'flex', flexDirection: 'column', gap: 6 }}>
+    // `bottom` (not a fixed height) plus `overflowY: auto` — on short
+    // viewports (e.g. mobile landscape, ~390px tall) up to three stacked
+    // cards can exceed the space between `top` and the bottom tab bar. The
+    // Hub root is `overflow: hidden`, so without an internal scroll
+    // affordance here, cards below the fold were silently unreachable
+    // rather than just visually tight (STS-612).
+    <div style={{
+      position: 'absolute', right: 14, top, bottom: TUTORIAL_RAIL.BOTTOM_PILL_Y, zIndex: 8,
+      width: 'calc(100% - 28px)', maxWidth: 280, pointerEvents: 'auto',
+      display: 'flex', flexDirection: 'column', gap: 6,
+      overflowY: 'auto',
+    }}>
       {cards}
     </div>
   )

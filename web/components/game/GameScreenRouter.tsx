@@ -16,6 +16,7 @@ import SkillTreeScreen from '@/components/game/screens/SkillTreeScreen'
 import ScanStationScreen from '@/components/game/screens/ScanStationScreen'
 import LaunchpadScreen from '@/components/game/screens/LaunchpadScreen'
 import TessDiscoveryScreen from '@/components/game/screens/TessDiscoveryScreen'
+import AsteroidDiscoveryScreen from '@/components/game/screens/AsteroidDiscoveryScreen'
 import SurfaceOpsScreen from '@/components/game/screens/SurfaceOpsScreen'
 import AcademyScreen from '@/components/game/screens/AcademyScreen'
 import { enqueueSurvey } from '@/lib/surveys'
@@ -27,6 +28,7 @@ export const VALID_SCREENS = new Set<Screen>([
   'launchpad',
   'surface-ops',
   'academy',
+  'asteroid-discovery',
 ])
 
 // Shared per-screen render map — the single source of truth for "which
@@ -115,6 +117,8 @@ export function ScreenContent({
             refineryUnlocked: !!game.player.refineryUnlocked,
             academyResearched: !!game.player.academyResearched,
             placementPlots: game.player.placementPlots,
+            satelliteMonitoringLevel: game.player.satelliteMonitoringLevel,
+            clientMissions: game.player.clientMissions,
           }}
           onPlaced={(kind, plot) => {
             const structure = game.catalog.structures.find(s => s.id === kind)
@@ -143,6 +147,7 @@ export function ScreenContent({
             if (building === 'skills') return game.go('skills')
             if (building === 'scan-station') return game.go('scan-station')
             if (building === 'satellite-monitoring-station') return game.go('galaxy')
+            if (building === 'deep-space-telescope') return game.go('asteroid-discovery')
             if (building === 'academy' || building === 'astronaut-academy') return game.go('academy')
             if (building === 'launchpad' || building === 'missions') {
               // A run in flight always wins — the pad is how you get back to it.
@@ -151,16 +156,19 @@ export function ScreenContent({
                 return game.go(game.player.missionPhase ?? 'transit')
               }
               if (game.player.pendingLaunch) return game.go('fab')
-              // Tapping the launchpad opens the player's own program first;
-              // client contracts are one press further in. During onboarding it
-              // still goes straight to the board: M1/M2 are a coached sequence
-              // that names the Mission Board as the next step, and the player
-              // owns nothing of their own to launch yet.
-              if (building === 'launchpad' && game.player.freeOperations) return game.go('launchpad')
+              // Tapping the launchpad always opens its own detail screen first
+              // (status, parts, anything in progress); client contracts are one
+              // press further in from there. The M1/M2 tutorial coach still
+              // names the Mission Board directly via its own CTA (HubScreen's
+              // launchpadCallout calls onNav('missions') and never reaches this
+              // handler), so onboarding isn't blocked from its first contract.
+              if (building === 'launchpad') return game.go('launchpad')
               game.goToMissions()
             }
           }}
           onUpgradeLaunchpad={() => game.upgradeLaunchpad()}
+          onExcavateSubsurface={() => game.excavateSubsurface()}
+          onBuildSubsurfaceRoom={roomId => game.buildSubsurfaceRoom(roomId)}
         />
       )
 
@@ -173,6 +181,16 @@ export function ScreenContent({
           onOpenProgram={() => game.go('launchpad')}
           onSubmit={game.submitTessClassification}
           onChooseTarget={game.chooseSatelliteTarget}
+        />
+      )
+
+    case 'asteroid-discovery':
+      return (
+        <AsteroidDiscoveryScreen
+          player={game.player}
+          onBack={() => game.go('hub')}
+          onBuildTelescope={() => game.go('build')}
+          onSubmit={game.submitAsteroidClassification}
         />
       )
 
@@ -297,6 +315,7 @@ export function ScreenContent({
             game.onPickMission(id)
           }}
           onViewContracts={() => game.goToMissions()}
+          onOpenHangar={() => game.go('hangar')}
           missionsDone={game.player.missionsDone}
           freeOperations={game.player.freeOperations}
           catalog={game.catalog}

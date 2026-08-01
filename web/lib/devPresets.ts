@@ -60,6 +60,14 @@ export interface DevShot {
   key: string
   label: string
   hint: string
+  // Whether this preset's player.freeOperations is true (Free Ops / fully
+  // post-tutorial) or false (still mid-onboarding, tutorial coach active) —
+  // set explicitly per-shot from the actual resolvePreset() player state so
+  // the DEV panel can't be misread as "tutorial fully finished" when a
+  // preset is really mid-mission (see STS-635). Source of truth is each
+  // preset's player.freeOperations below, not the group it lives in — some
+  // groups (Recent UI) mix both stages.
+  stage: 'tutorial' | 'free-ops'
 }
 
 export interface DevGroup {
@@ -73,32 +81,32 @@ export const DEV_GROUPS: DevGroup[] = [
     label: 'Mission 1',
     color: '#d97150',
     shots: [
-      { key: 'm1-intro',  label: 'Intro',   hint: 'Fresh start, no progress' },
-      { key: 'm1-hub',    label: 'Hub',     hint: 'Launchpad built, M1 coach active' },
-      { key: 'm1-fab',    label: 'Fab',     hint: 'First generated mission + Eros picked, at fab' },
-      { key: 'm1-mining', label: 'Mining',  hint: 'In mining with iron target' },
-      { key: 'm1-debrief',label: 'Debrief', hint: 'Post-mine debrief, 6 iron' },
+      { key: 'm1-intro',  label: 'Intro',   hint: 'Fresh start, no progress', stage: 'tutorial' },
+      { key: 'm1-hub',    label: 'Hub',     hint: 'Launchpad built, M1 coach active', stage: 'tutorial' },
+      { key: 'm1-fab',    label: 'Fab',     hint: 'First generated mission + Eros picked, at fab', stage: 'tutorial' },
+      { key: 'm1-mining', label: 'Mining',  hint: 'In mining with iron target', stage: 'tutorial' },
+      { key: 'm1-debrief',label: 'Debrief', hint: 'Post-mine debrief, 6 iron', stage: 'tutorial' },
     ],
   },
   {
     label: 'Mission 2',
     color: '#3fa9ff',
     shots: [
-      { key: 'm2-hub',    label: 'Hub',     hint: 'Prospector unlocked, M2 coach active' },
-      { key: 'm2-rocket-buy', label: 'Rocket', hint: 'Second generated mission + Eros, Prospector purchase step' },
-      { key: 'm2-fab',    label: 'Fab',     hint: 'Second generated mission + Eros after Prospector purchase' },
-      { key: 'm2-mining', label: 'Mining',  hint: 'In mining with second generated target' },
-      { key: 'm2-post-debrief', label: 'Done',  hint: 'Second mission complete, returned to hub with stash retained' },
+      { key: 'm2-hub',    label: 'Hub',     hint: 'Prospector unlocked, M2 coach active', stage: 'tutorial' },
+      { key: 'm2-rocket-buy', label: 'Rocket', hint: 'Second generated mission + Eros, Prospector purchase step', stage: 'tutorial' },
+      { key: 'm2-fab',    label: 'Fab',     hint: 'Second generated mission + Eros after Prospector purchase', stage: 'tutorial' },
+      { key: 'm2-mining', label: 'Mining',  hint: 'In mining with second generated target', stage: 'tutorial' },
+      { key: 'm2-post-debrief', label: 'Done',  hint: 'Second mission complete, returned to hub with stash retained — M3 not yet started, Free Ops still locked', stage: 'tutorial' },
     ],
   },
   {
     label: 'Mission 3',
     color: '#c084fc',
     shots: [
-      { key: 'm3-hub',     label: 'Hub',     hint: 'M1+M2 done, M3 coach active — replay the two-leg client pick' },
-      { key: 'm3-fab',     label: 'Fab',     hint: 'Belt Courier Run accepted (Bennu -> Vesta), at fab' },
-      { key: 'm3-mining',  label: 'Mining',  hint: 'In mining at Bennu, delivery leg to Vesta pending' },
-      { key: 'm3-debrief', label: 'Debrief', hint: 'Two-leg run complete, delivered at Vesta then returned' },
+      { key: 'm3-hub',     label: 'Hub',     hint: 'MID mission 3 (missionsDone: 2), M3 coach still active, Free Ops NOT unlocked yet — replay the two-leg client pick', stage: 'tutorial' },
+      { key: 'm3-fab',     label: 'Fab',     hint: 'Belt Courier Run accepted (Bennu -> Vesta), at fab — still mid-tutorial', stage: 'tutorial' },
+      { key: 'm3-mining',  label: 'Mining',  hint: 'In mining at Bennu, delivery leg to Vesta pending — still mid-tutorial', stage: 'tutorial' },
+      { key: 'm3-debrief', label: 'Debrief', hint: 'Two-leg run complete, delivered at Vesta then returned — still mid-tutorial', stage: 'tutorial' },
     ],
   },
   {
@@ -114,23 +122,23 @@ export const DEV_GROUPS: DevGroup[] = [
     // "transit-photometry" naming note in TransitScreen.tsx and the ZenNotes
     // decision doc for why these are two unrelated screens sharing a word.
     shots: [
-      { key: 'telescope-hub',      label: 'Hub',      hint: 'Post-onboarding, free ops + monitoring station built, story mission on the board' },
-      { key: 'telescope-fab',      label: 'Fab',      hint: 'Transit telescope mission accepted, at fab' },
-      { key: 'telescope-transit',  label: 'Transit',  hint: 'Rocket physically en route to Earth orbit to deploy the telescope — dev "Skip ▸" button fast-forwards this' },
-      { key: 'telescope-debrief',  label: 'Debrief',  hint: 'Telescope deployed, satellite launched' },
-      { key: 'ui-tess-discovery',  label: 'Console',  hint: 'Satellite already in orbit — point it (star map) and review the daily transit-photometry candidate. Stationary, no travel. Use the on-screen dev "+1 DAY" control to preview future days without waiting.' },
+      { key: 'telescope-hub',      label: 'Hub',      hint: 'Post-onboarding, Free Ops unlocked, monitoring station built, story mission on the board', stage: 'free-ops' },
+      { key: 'telescope-fab',      label: 'Fab',      hint: 'Transit telescope mission accepted, at fab — post-onboarding, Free Ops unlocked', stage: 'free-ops' },
+      { key: 'telescope-transit',  label: 'Transit',  hint: 'Rocket physically en route to Earth orbit to deploy the telescope — dev "Skip ▸" button fast-forwards this. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
+      { key: 'telescope-debrief',  label: 'Debrief',  hint: 'Telescope deployed, satellite launched — post-onboarding, Free Ops unlocked', stage: 'free-ops' },
+      { key: 'ui-tess-discovery',  label: 'Console',  hint: 'Satellite already in orbit — point it (star map) and review the daily transit-photometry candidate. Stationary, no travel. Use the on-screen dev "+1 DAY" control to preview future days without waiting. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
     ],
   },
   {
     label: 'Recent UI',
     color: '#39d36a',
     shots: [
-      { key: 'ui-mission-board', label: 'Mission Board', hint: 'Recent OD layout restyle with client cards' },
-      { key: 'ui-skill-tree', label: 'Skill Tree', hint: 'License Grade and research XP progress screen' },
-      { key: 'ui-target-picker', label: 'Target Picker', hint: 'Solar map target selection with a mission loaded' },
-      { key: 'ui-tess-discovery', label: 'TESS Console', hint: 'Satellite monitoring and classification screen' },
-      { key: 'ui-rover-mining', label: 'Rover Mining', hint: 'Starter-rover on-world mining timer state' },
-      { key: 'ship-customizer', label: 'Ship Customiser', hint: 'Unlocked hangar interior view with Explorer room slots' },
+      { key: 'ui-mission-board', label: 'Mission Board', hint: 'Recent OD layout restyle with client cards — Free Ops unlocked, tutorial off', stage: 'free-ops' },
+      { key: 'ui-skill-tree', label: 'Skill Tree', hint: 'License Grade and research XP progress screen — post-onboarding, Free Ops unlocked', stage: 'free-ops' },
+      { key: 'ui-target-picker', label: 'Target Picker', hint: 'Solar map target selection with a mission loaded — missionsDone: 2, Free Ops NOT unlocked', stage: 'tutorial' },
+      { key: 'ui-tess-discovery', label: 'TESS Console', hint: 'Satellite monitoring and classification screen — post-onboarding, Free Ops unlocked', stage: 'free-ops' },
+      { key: 'ui-rover-mining', label: 'Rover Mining', hint: 'Starter-rover on-world mining timer state — missionsDone: 2, Free Ops NOT unlocked', stage: 'tutorial' },
+      { key: 'ship-customizer', label: 'Ship Customiser', hint: 'Unlocked hangar interior view with Explorer room slots — missionsDone: 1, Free Ops NOT unlocked', stage: 'tutorial' },
     ],
   },
 ]

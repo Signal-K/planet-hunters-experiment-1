@@ -13,8 +13,8 @@ function CountdownUnit({ value, label }: { value: number; label: string }) {
   return (
     <div style={{
       textAlign: 'center', minWidth: 56,
-      background: 'rgba(63,169,255,0.06)',
-      border: '1px solid rgba(63,169,255,0.18)',
+      background: 'rgba(112,217,234,0.06)',
+      border: '1px solid rgba(112,217,234,0.18)',
       borderRadius: 10, padding: '10px 8px',
     }}>
       <div style={{
@@ -78,11 +78,11 @@ export function ComingSoonSheet({ feature, description, onClose, target = NEXT_S
       scrimStyle={{ background: 'rgba(1,5,14,0.82)', backdropFilter: 'blur(6px)' }}
       panelStyle={{
           background: '#06121f',
-          border: '1px solid rgba(63,169,255,0.18)',
+          border: '1px solid rgba(112,217,234,0.18)',
           padding: '28px 20px 44px',
       }}
       handleContainerStyle={{ marginBottom: 24 }}
-      handleStyle={{ width: 36, height: 3, background: 'rgba(63,169,255,0.25)' }}
+      handleStyle={{ width: 36, height: 3, background: 'rgba(112,217,234,0.25)' }}
     >
 
         <div style={{ textAlign: 'center' }}>
@@ -121,8 +121,8 @@ export function ComingSoonSheet({ feature, description, onClose, target = NEXT_S
           onClick={onClose}
           style={{
             width: '100%', padding: '14px',
-            background: 'rgba(63,169,255,0.1)',
-            border: '1px solid rgba(63,169,255,0.28)',
+            background: 'rgba(112,217,234,0.1)',
+            border: '1px solid rgba(112,217,234,0.28)',
             borderRadius: 12,
             color: '#9becff',
             fontFamily: 'var(--ln-font-display)', fontSize: 12, fontWeight: 800,

@@ -10,7 +10,7 @@ import { settleCrewEconomy } from '@/lib/systems/AcademySystem'
 // where player fields are optional since older saves may be missing new fields.
 export type PartialSave = Omit<Partial<GameState>, 'player'> & { player?: Partial<Player> }
 
-const VALID_SCREENS: Screen[] = ['intro', 'build', 'hub', 'missions', 'galaxy', 'targets', 'fab', 'transit', 'mining', 'delivery', 'debrief', 'refinery', 'market', 'hangar', 'rocket-buy', 'skills', 'scan-station', 'rover-mining', 'launchpad', 'surface-ops', 'academy']
+const VALID_SCREENS: Screen[] = ['intro', 'build', 'hub', 'missions', 'galaxy', 'targets', 'fab', 'transit', 'mining', 'delivery', 'debrief', 'refinery', 'market', 'hangar', 'rocket-buy', 'skills', 'scan-station', 'rover-mining', 'launchpad', 'surface-ops', 'academy', 'asteroid-discovery']
 const MISSION_CONTEXT_SCREENS = new Set<Screen>(['targets', 'rocket-buy', 'fab', 'transit', 'mining', 'rover-mining', 'delivery', 'debrief'])
 const TARGET_CONTEXT_SCREENS = new Set<Screen>(['rocket-buy', 'fab', 'transit', 'mining', 'rover-mining', 'delivery', 'debrief'])
 const VALID_LICENSE_GRADES: LicenseGrade[] = ['Grade I', 'Grade II', 'Grade III']
@@ -47,12 +47,18 @@ export const DEFAULT_STATE: GameState = {
     roverDeployments: [],
     clientTerritories: {},
     tessClassifications: {},
+    asteroidClassifications: {},
     instrumentDigestNotifiedOn: {},
     discoveredExoplanetTargets: {},
+    subsurfaceExcavated: false,
+    subsurfaceBuilt: [],
     satelliteMonitoringBuilt: false,
     satelliteMonitoringLevel: 1,
     transitSatelliteLevel: 1,
     transitSatelliteLaunchedAt: null,
+    deepSpaceTelescopeBuilt: false,
+    deepSpaceTelescopeLevel: 1,
+    deepSpaceTelescopeLaunchedAt: null,
     licenseGrade: 'Grade I',
     researchXP: 0,
     unlockedBlueprints: [],
@@ -132,6 +138,9 @@ export function normalizeState(input: PartialSave): GameState {
   const tessClassifications = player.tessClassifications && typeof player.tessClassifications === 'object'
     ? player.tessClassifications
     : DEFAULT_STATE.player.tessClassifications
+  const asteroidClassifications = player.asteroidClassifications && typeof player.asteroidClassifications === 'object'
+    ? player.asteroidClassifications
+    : DEFAULT_STATE.player.asteroidClassifications
   const discoveredExoplanetTargets = player.discoveredExoplanetTargets && typeof player.discoveredExoplanetTargets === 'object'
     ? player.discoveredExoplanetTargets
     : DEFAULT_STATE.player.discoveredExoplanetTargets
@@ -154,6 +163,9 @@ export function normalizeState(input: PartialSave): GameState {
   const transitSatelliteLevel = Number.isFinite(player.transitSatelliteLevel)
     ? Math.max(1, Math.floor(player.transitSatelliteLevel ?? 1))
     : DEFAULT_STATE.player.transitSatelliteLevel
+  const deepSpaceTelescopeLevel = Number.isFinite(player.deepSpaceTelescopeLevel)
+    ? Math.max(1, Math.floor(player.deepSpaceTelescopeLevel ?? 1))
+    : DEFAULT_STATE.player.deepSpaceTelescopeLevel
   // Rovers predate the roster, so a save can carry roverDeployments and no
   // crew at all. Fold them in here — the one choke point every load path runs
   // through — rather than leaving the roster and roverDeployments to drift.
@@ -170,6 +182,7 @@ export function normalizeState(input: PartialSave): GameState {
   const placedList = Array.isArray(player.placed) ? player.placed : DEFAULT_STATE.player.placed
   const builtFrom = (kind: string, flag: boolean | undefined) => !!flag || placedList.includes(kind)
   const satelliteMonitoringBuilt = builtFrom('satellite-monitoring-station', player.satelliteMonitoringBuilt)
+  const deepSpaceTelescopeBuilt = builtFrom('deep-space-telescope', player.deepSpaceTelescopeBuilt)
   const refineryBuilt = builtFrom('refinery', player.refineryBuilt)
   const scannerBuilt = builtFrom('scan-station', player.scannerBuilt)
   const legacyClaim = input.pendingTerritoryClaimFor as unknown as { targetId: string; clientId?: string; contractorId?: string } | undefined
@@ -183,8 +196,8 @@ export function normalizeState(input: PartialSave): GameState {
     missionId,
     targetId,
     rocket: { ...DEFAULT_STATE.rocket, ...input.rocket },
-    player: { ...DEFAULT_STATE.player, ...player, licenseGrade, researchXP, unlockedBlueprints, tessClassifications, discoveredExoplanetTargets, instrumentDigestNotifiedOn, satelliteMonitoringLevel, transitSatelliteLevel, crew, surfaceOps,
-      satelliteMonitoringBuilt, refineryBuilt, scannerBuilt },
+    player: { ...DEFAULT_STATE.player, ...player, licenseGrade, researchXP, unlockedBlueprints, tessClassifications, asteroidClassifications, discoveredExoplanetTargets, instrumentDigestNotifiedOn, satelliteMonitoringLevel, transitSatelliteLevel, deepSpaceTelescopeLevel, crew, surfaceOps,
+      satelliteMonitoringBuilt, deepSpaceTelescopeBuilt, refineryBuilt, scannerBuilt },
     doneSteps: { ...DEFAULT_STATE.doneSteps, ...input.doneSteps },
     ...(pendingTerritoryClaimFor ? { pendingTerritoryClaimFor } : {}),
   }
@@ -258,6 +271,28 @@ export function normalizeAndRepair(partial: PartialSave): GameState {
  * coach on build, hub and missions simultaneously — a fresh save with no
  * visible tutorial and no launchpad. See STS-576.
  */
+// Per-key max of two Record<string, number> maps (union of keys, higher value
+// wins per key). Used for resource-like accumulators on a missionsDone tie —
+// see mergeRemoteState's RESOURCE_* lists below.
+function maxMergeRecord(a: Record<string, number> | undefined, b: Record<string, number> | undefined): Record<string, number> {
+  const result: Record<string, number> = { ...(a ?? {}) }
+  for (const [key, value] of Object.entries(b ?? {})) {
+    result[key] = Math.max(result[key] ?? 0, value)
+  }
+  return result
+}
+
+// Resource-like scalar fields where losing progress to a blanket "local wins"
+// on a tie is a real regression (STS-635) — verified never decremented except
+// by an intentional spend/consume the player themselves triggered, so taking
+// the higher of local/remote is safe: neither side can be "more wrong" than
+// the other, only further along, per its own explicit instruction (francs,
+// stash, refinedGoods, researchXP, skillPoints, researchAnnotations) plus
+// verified monotonic-only-increment accumulators of the same shape
+// (clientMissions, academyXP, crewHiresLifetime, sharedChartsByClient).
+const RESOURCE_NUMBER_FIELDS = ['francs', 'researchXP', 'skillPoints', 'researchAnnotations', 'academyXP', 'crewHiresLifetime'] as const
+const RESOURCE_RECORD_FIELDS = ['stash', 'refinedGoods', 'clientMissions', 'sharedChartsByClient'] as const
+
 export function mergeRemoteState(current: GameState, remoteState: PartialSave): GameState {
   const merged: GameState = { ...current, ...remoteState } as GameState
 
@@ -271,13 +306,11 @@ export function mergeRemoteState(current: GameState, remoteState: PartialSave): 
   }
 
   const remoteMissionsDone = remoteState.player?.missionsDone ?? -1
-  if (current.player.missionsDone >= remoteMissionsDone) {
-    // Construction is monotonic within an onboarding stage. A browser can
-    // have an older local save at Ops 0 while PocketBase already contains the
-    // launchpad the player placed; replacing the remote player wholesale here
-    // made that building disappear on refresh/login. Keep local values as the
-    // authority for the rest of the equal-stage player state, but retain every
-    // structure and its saved plot from either side.
+  const isTie = current.player.missionsDone === remoteMissionsDone
+  if (current.player.missionsDone > remoteMissionsDone) {
+    // Local strictly ahead — unchanged from prior behavior: local player
+    // wholesale, only placed/placementPlots unioned (construction is
+    // monotonic within an onboarding stage; see the comment below).
     const remotePlaced = Array.isArray(remoteState.player?.placed) ? remoteState.player.placed : []
     const remotePlots = remoteState.player?.placementPlots ?? {}
     merged.player = {
@@ -285,6 +318,50 @@ export function mergeRemoteState(current: GameState, remoteState: PartialSave): 
       placed: Array.from(new Set([...current.player.placed, ...remotePlaced])),
       placementPlots: { ...remotePlots, ...current.player.placementPlots },
     }
+    merged.tutorial = current.tutorial
+    merged.doneSteps = current.doneSteps
+  } else if (isTie) {
+    // A genuine tie (same missionsDone on both sides, e.g. an offline session
+    // on one device while another device also played at the same mission
+    // count) previously discarded every remote field but placed/placementPlots
+    // wholesale. That silently dropped real remote progress on francs, stash,
+    // refinedGoods, research, etc. (STS-635).
+    //
+    // Resolution, in order:
+    //  1. Start from local (safe default for anything not explicitly handled
+    //     below) unless remote's updatedAt is strictly newer than local's, in
+    //     which case start from remote for the fields not covered by 2/3 —
+    //     this is the "fields that aren't naturally can-only-grow" fallback
+    //     (e.g. a boolean flag or anything else not in the resource lists).
+    //  2. Resource-like scalars/records (RESOURCE_NUMBER_FIELDS /
+    //     RESOURCE_RECORD_FIELDS) always take the max per field/key,
+    //     regardless of which side "wins" the timestamp comparison above.
+    //  3. placed/placementPlots keep their existing union logic unchanged.
+    const remoteIsNewer = typeof remoteState.updatedAt === 'number'
+      && typeof current.updatedAt === 'number'
+      && remoteState.updatedAt > current.updatedAt
+    const base = remoteIsNewer ? { ...current.player, ...remoteState.player } : { ...current.player }
+
+    const remotePlaced = Array.isArray(remoteState.player?.placed) ? remoteState.player.placed : []
+    const remotePlots = remoteState.player?.placementPlots ?? {}
+
+    merged.player = {
+      ...base,
+      placed: Array.from(new Set([...current.player.placed, ...remotePlaced])),
+      placementPlots: { ...remotePlots, ...current.player.placementPlots },
+    }
+    for (const field of RESOURCE_NUMBER_FIELDS) {
+      const localValue = current.player[field] ?? 0
+      const remoteValue = remoteState.player?.[field] ?? 0
+      merged.player[field] = Math.max(localValue, remoteValue)
+    }
+    for (const field of RESOURCE_RECORD_FIELDS) {
+      merged.player[field] = maxMergeRecord(current.player[field], remoteState.player?.[field])
+    }
+    // Onboarding-position fields deliberately keep pre-existing tie behavior
+    // (local wins) — out of scope per STS-635, see the run-resumability
+    // comment further down for why doneSteps/tutorial are handled separately
+    // from ordinary player state.
     merged.tutorial = current.tutorial
     merged.doneSteps = current.doneSteps
   } else {

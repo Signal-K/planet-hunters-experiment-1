@@ -10,6 +10,7 @@ import {
   OFFLINE_MISSION_COUNT,
   generateFreeOpsMissionsFromRules,
   generateMissionsFromRules,
+  generateSelfDirectedMiningPoolFromRules,
 } from './mission-generator'
 
 export { FREE_OPS_START_MISSIONS_DONE, OFFLINE_MISSION_COUNT }
@@ -25,6 +26,15 @@ export function generateMissions(count = OFFLINE_MISSION_COUNT): Mission[] {
 
 export function generateFreeOpsMissions(): Mission[] {
   return generateFreeOpsMissionsFromRules({ clients: CLIENT_SLOTS, minerals: MINERAL_META })
+}
+
+// Renewable self-directed mining pool — reuses Free Ops' template pool,
+// rotation cadence, and mineral-eligibility filtering (see
+// generateSelfDirectedMiningPoolFromRules), but never assigns a client. This
+// is the pool form of the mechanic; SELF_DIRECTED_MINING_MISSION_ID above
+// remains as the fixed M3-adjacent tutorial intro to it.
+export function generateSelfDirectedMiningPool(): Mission[] {
+  return generateSelfDirectedMiningPoolFromRules({ clients: CLIENT_SLOTS, minerals: MINERAL_META })
 }
 
 // M3 onboarding: the player picks between two clients offering a
@@ -181,4 +191,4 @@ export const AUTHORED_MISSIONS: Mission[] = [
   },
 ]
 
-export const MISSIONS: Mission[] = [...generateMissions(), ...AUTHORED_MISSIONS, ...generateFreeOpsMissions()]
+export const MISSIONS: Mission[] = [...generateMissions(), ...AUTHORED_MISSIONS, ...generateFreeOpsMissions(), ...generateSelfDirectedMiningPool()]

@@ -12,13 +12,17 @@ import { applyPurchaseRocket } from '@/lib/systems/EconomySystem'
 import { enqueueSurvey } from '@/lib/surveys'
 import type { Catalog } from '@/lib/catalog'
 import type { GameState, LicenseGrade } from '@/lib/game-types'
-import type { Target, TessVerdict, TransitRange } from '@/lib/data'
+import type { Target, TessVerdict, TransitRange, AsteroidVerdict } from '@/lib/data'
 import type { Toast } from '@/components/ui/ToastLayer'
 import { applyGainResearchXP, applyUpgradeLicenseGrade, applyUnlockBlueprint } from '@/lib/systems/ProgressionSystem'
 import { pbShared } from '@/lib/pb'
 import { pbLandnam } from '@/lib/pb-landnam'
 
 const ORBIT_MS_PER_UNIT = 2 * 60 * 1000
+// First-time-only reward for classifying a TESS candidate — repeat looks at an
+// already-classified subject earn nothing (see submitTessClassification).
+const RESEARCH_XP_PER_FIRST_TESS_CLASSIFICATION = 15
+const RESEARCH_XP_PER_FIRST_ASTEROID_CLASSIFICATION = 15
 interface GameLoopOpts {
   stateRef: React.RefObject<GameState>
   setState: React.Dispatch<React.SetStateAction<GameState>>
@@ -324,12 +328,11 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
 
     setState(s => {
       const existing = s.player.tessClassifications?.[subjectId]
-      return {
+      const next: GameState = {
         ...s,
         player: {
           ...s.player,
           researchAnnotations: existing ? s.player.researchAnnotations : s.player.researchAnnotations + 1,
-          researchXP: (s.player.researchXP ?? 0) + (existing ? 0 : 15),
           tessClassifications: {
             ...(s.player.tessClassifications ?? {}),
             [subjectId]: { subjectId, verdict, ranges: roundedRanges, submittedAt },
@@ -346,6 +349,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
           satelliteTargetId: s.player.satelliteTargetId === subjectId ? null : s.player.satelliteTargetId,
         },
       }
+      return existing ? next : applyGainResearchXP(next, RESEARCH_XP_PER_FIRST_TESS_CLASSIFICATION)
     })
 
     const userId = pbShared.authStore.record?.id
@@ -363,6 +367,41 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
         dip_markers: dipMarkers,
       }).catch(error => {
         console.warn('[TESS] classification submit failed', error)
+      })
+    }
+  }, [setState])
+
+  // Deep Space Telescope's asteroid-discovery classification (STS-622) — a
+  // passive digest, so unlike submitTessClassification there's no
+  // ranges/discoveredTarget/satelliteTargetId to thread through, just the
+  // verdict record itself.
+  const submitAsteroidClassification = useCallback((candidateId: string, verdict: AsteroidVerdict) => {
+    const submittedAt = Date.now()
+
+    setState(s => {
+      const existing = s.player.asteroidClassifications?.[candidateId]
+      const next: GameState = {
+        ...s,
+        player: {
+          ...s.player,
+          researchAnnotations: existing ? s.player.researchAnnotations : s.player.researchAnnotations + 1,
+          asteroidClassifications: {
+            ...(s.player.asteroidClassifications ?? {}),
+            [candidateId]: { candidateId, verdict, submittedAt },
+          },
+        },
+      }
+      return existing ? next : applyGainResearchXP(next, RESEARCH_XP_PER_FIRST_ASTEROID_CLASSIFICATION)
+    })
+
+    const userId = pbShared.authStore.record?.id
+    if (userId) {
+      pbShared.collection('asteroid_classifications').create({
+        user: userId,
+        candidate: candidateId,
+        verdict,
+      }).catch(error => {
+        console.warn('[NEOCP] classification submit failed', error)
       })
     }
   }, [setState])
@@ -480,7 +519,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
       // boundary mission; auto-market-open only kicks in for Free Ops missions
       // completed after onboarding has actually ended.
       const justFinishedOnboarding = missionsDone === FREE_OPS_START_MISSIONS_DONE
-      return {
+      const next: GameState = {
         ...s,
         player: {
           ...s.player,
@@ -495,7 +534,6 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
           shipDestroyed: false,
           missionsDone,
           skillPoints: (s.player.skillPoints ?? 0) + 1,
-          researchXP: (s.player.researchXP ?? 0) + (mission?.programReward?.researchXP ?? 0),
           missionCount: catalog.missions.filter(m => m.sequence === missionsDone + 1).length,
           freeOperations: missionsDone >= FREE_OPS_START_MISSIONS_DONE,
           clientMissions,
@@ -536,6 +574,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
                 : 'market',
         pendingTerritoryClaimFor,
       }
+      return applyGainResearchXP(next, mission?.programReward?.researchXP ?? 0)
     })
     if (completedIsProgramOperation) {
       addToast(completedMission?.programReward?.outcome ?? 'Program operation complete.', 'ok')
@@ -551,6 +590,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
         payout_francs: total,
         minerals_delivered: consumed,
         missions_done_after: newMissionsDone,
+        completed_at: new Date().toISOString(),
       }).catch(() => {})
     }
     const runId = current.player.missionRunId ?? missionRunIdRef.current
@@ -584,5 +624,6 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
     onPickMission, onPickTarget, onPurchaseRocket, onLaunch,
     onMiningDone, onDeliveryArrived, onDeliveryUnloadComplete, onReturnArrived, onRoverMiningDone, onDebriefDone,
     gainResearchXP, upgradeLicenseGrade, unlockBlueprint, launchTransitSatellite, submitTessClassification, chooseSatelliteTarget,
+    submitAsteroidClassification,
   }
 }

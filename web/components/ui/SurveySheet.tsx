@@ -60,10 +60,10 @@ function MultipleChoiceQuestion({ question, value, onChange }: { question: Surve
             onClick={() => onChange(choice)}
             style={{
               padding: '10px 14px', borderRadius: 10, border: 'none', textAlign: 'left',
-              background: value === choice ? 'rgba(63,169,255,0.18)' : 'rgba(20,40,65,0.5)',
+              background: value === choice ? 'rgba(112,217,234,0.18)' : 'rgba(20,40,65,0.5)',
               color: value === choice ? '#87cffa' : 'rgba(169,184,206,0.8)',
               fontFamily: 'var(--ln-font-body)', fontSize: 13, cursor: 'pointer',
-              outline: value === choice ? '1px solid rgba(63,169,255,0.4)' : '1px solid rgba(63,169,255,0.1)',
+              outline: value === choice ? '1px solid rgba(112,217,234,0.4)' : '1px solid rgba(112,217,234,0.1)',
               transition: 'background 100ms, color 100ms',
             }}
           >
@@ -89,7 +89,7 @@ function OpenQuestion({ question, value, onChange }: { question: SurveyQuestion;
         placeholder="Optional — type here..."
         style={{
           width: '100%', padding: '10px 12px', boxSizing: 'border-box',
-          background: 'rgba(8,16,28,0.8)', border: '1px solid rgba(63,169,255,0.2)',
+          background: 'rgba(20,20,23,0.8)', border: '1px solid rgba(112,217,234,0.2)',
           borderRadius: 10, resize: 'none', outline: 'none',
           fontFamily: 'var(--ln-font-body)', fontSize: 13, color: '#e6efff', lineHeight: 1.5,
         }}
@@ -190,12 +190,12 @@ export default function SurveySheet({ blockWhile }: { blockWhile?: boolean }) {
 
   return (
     <div data-testid="survey-sheet" style={{ position: 'absolute', inset: 0, zIndex: 94, display: 'flex', alignItems: 'flex-end', pointerEvents: 'none' }}>
-      <div style={{ position: 'absolute', inset: 0, background: 'rgba(3,6,12,0.55)', pointerEvents: 'auto' }} onClick={handleSkip} />
+      <div style={{ position: 'absolute', inset: 0, background: 'rgba(8,8,9,0.55)', pointerEvents: 'auto' }} onClick={handleSkip} />
       <div style={{
         position: 'relative', width: '100%', pointerEvents: 'auto',
         background: 'linear-gradient(180deg,#0d1c30,#060d18)',
         borderTopLeftRadius: 20, borderTopRightRadius: 20,
-        border: '1px solid rgba(63,169,255,0.2)',
+        border: '1px solid rgba(112,217,234,0.2)',
         padding: '16px 16px 32px',
         boxShadow: '0 -12px 48px rgba(0,0,0,0.65)',
       }}>

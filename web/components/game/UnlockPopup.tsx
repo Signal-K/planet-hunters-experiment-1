@@ -121,7 +121,7 @@ export default function UnlockPopup({ kind, onClose, onDismiss }: UnlockPopupPro
       onDismiss={onDismiss ?? onClose}
       zIndex={90}
       backdropTestId="unlock-popup-scrim"
-      scrimStyle={{ background: 'rgba(3,6,12,0.8)', backdropFilter: 'blur(3px)' }}
+      scrimStyle={{ background: 'rgba(8,8,9,0.8)', backdropFilter: 'blur(3px)' }}
       panelStyle={{
         width: 320, maxWidth: '90%',
         background: 'linear-gradient(180deg, #0d1c30 0%, #060d18 100%)',
@@ -160,7 +160,7 @@ export default function UnlockPopup({ kind, onClose, onDismiss }: UnlockPopupPro
 
           <div style={{ display: 'flex', gap: 8, justifyContent: 'center', marginTop: 16 }}>
             {u.stats.map(([k, v]) => (
-              <div key={k} style={{ flex: 1, padding: '8px 4px', background: 'rgba(8,16,28,0.7)', border: `1px solid ${u.accent}44`, borderRadius: 10 }}>
+              <div key={k} style={{ flex: 1, padding: '8px 4px', background: 'rgba(20,20,23,0.7)', border: `1px solid ${u.accent}44`, borderRadius: 10 }}>
                 <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 8, fontWeight: 700, letterSpacing: '0.16em', color: '#7a8294', textTransform: 'uppercase' }}>{k}</div>
                 <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 15, fontWeight: 800, color: u.accent, marginTop: 2 }}>{v}</div>
               </div>

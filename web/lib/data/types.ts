@@ -211,7 +211,7 @@ export interface StructureBlueprint {
   cost: number
   costMaterials?: Record<string, number>
   unlocksAt: string
-  unlockTrigger?: 'always' | 'client-mission-trigger' | 'academy-research' | 'manual'
+  unlockTrigger?: 'always' | 'client-mission-trigger' | 'academy-research' | 'deep-space-telescope-unlock' | 'manual'
   description: string
 }
 

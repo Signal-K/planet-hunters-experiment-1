@@ -414,6 +414,116 @@ describe('mergeRemoteState — remote game_states record onto local state', () =
     expect(merged.player.transitStartedAt).toBe(startedAt)
   })
 
+  // STS-635: a genuine tie (equal missionsDone on both sides) must not
+  // discard remote resource progress wholesale — resource-like fields take
+  // the max per field/key instead of blanket local-wins.
+  describe('resource max-merge on a missionsDone tie', () => {
+    it('takes the higher francs value between local and remote', () => {
+      const merged = mergeRemoteState(
+        local({ player: { ...DEFAULT_STATE.player, missionsDone: 2, francs: 100 } }),
+        { player: { missionsDone: 2, francs: 500 } },
+      )
+      expect(merged.player.missionsDone).toBe(2)
+      expect(merged.player.francs).toBe(500)
+    })
+
+    it('keeps the local francs value when it is higher than remote', () => {
+      const merged = mergeRemoteState(
+        local({ player: { ...DEFAULT_STATE.player, missionsDone: 2, francs: 900 } }),
+        { player: { missionsDone: 2, francs: 500 } },
+      )
+      expect(merged.player.francs).toBe(900)
+    })
+
+    it('merges stash and refinedGoods per-key by taking the max', () => {
+      const merged = mergeRemoteState(
+        local({
+          player: {
+            ...DEFAULT_STATE.player,
+            missionsDone: 2,
+            stash: { iron: 10, silicon: 2 },
+            refinedGoods: { alloy: 1 },
+          },
+        }),
+        {
+          player: {
+            missionsDone: 2,
+            stash: { iron: 4, silicon: 8, platinum: 3 },
+            refinedGoods: { alloy: 5, composite: 2 },
+          },
+        },
+      )
+      expect(merged.player.stash).toEqual({ iron: 10, silicon: 8, platinum: 3 })
+      expect(merged.player.refinedGoods).toEqual({ alloy: 5, composite: 2 })
+    })
+
+    it('takes the max of researchXP, skillPoints and researchAnnotations', () => {
+      const merged = mergeRemoteState(
+        local({
+          player: {
+            ...DEFAULT_STATE.player,
+            missionsDone: 2,
+            researchXP: 50,
+            skillPoints: 1,
+            researchAnnotations: 3,
+          },
+        }),
+        {
+          player: {
+            missionsDone: 2,
+            researchXP: 200,
+            skillPoints: 0,
+            researchAnnotations: 1,
+          },
+        },
+      )
+      expect(merged.player.researchXP).toBe(200)
+      expect(merged.player.skillPoints).toBe(1)
+      expect(merged.player.researchAnnotations).toBe(3)
+    })
+
+    it('still unions placed/placementPlots on a tie, same as before', () => {
+      const merged = mergeRemoteState(
+        local({ player: { ...DEFAULT_STATE.player, missionsDone: 2, placed: ['launchpad'] } }),
+        { player: { missionsDone: 2, placed: ['refinery'], placementPlots: { refinery: 2 } } },
+      )
+      expect(merged.player.placed.sort()).toEqual(['launchpad', 'refinery'])
+      expect(merged.player.placementPlots).toEqual({ refinery: 2 })
+    })
+
+    it('falls back to local-wins on a tie for non-resource fields when neither side has updatedAt', () => {
+      const merged = mergeRemoteState(
+        local({ player: { ...DEFAULT_STATE.player, missionsDone: 2, refineryBuilt: false } }),
+        { player: { missionsDone: 2, refineryBuilt: true } },
+      )
+      expect(merged.player.refineryBuilt).toBe(false)
+    })
+
+    it('prefers the newer side (by updatedAt) for non-resource fields on a tie', () => {
+      const merged = mergeRemoteState(
+        local({
+          player: { ...DEFAULT_STATE.player, missionsDone: 2, refineryBuilt: false },
+          updatedAt: 1000,
+        }),
+        { player: { missionsDone: 2, refineryBuilt: true }, updatedAt: 5000 },
+      )
+      expect(merged.player.refineryBuilt).toBe(true)
+    })
+
+    it('still takes the resource max even when the remote side wins the updatedAt tie-break', () => {
+      const merged = mergeRemoteState(
+        local({
+          player: { ...DEFAULT_STATE.player, missionsDone: 2, francs: 900 },
+          updatedAt: 1000,
+        }),
+        { player: { missionsDone: 2, francs: 500 }, updatedAt: 5000 },
+      )
+      // Remote wins the timestamp tie-break for ordinary fields, but francs
+      // is a resource field and must still resolve to the max of both sides.
+      expect(merged.player.francs).toBe(900)
+    })
+  })
+
   it('preserves player fields the remote record omits', () => {
     const merged = mergeRemoteState(local(), {
       player: { missionsDone: 5 },

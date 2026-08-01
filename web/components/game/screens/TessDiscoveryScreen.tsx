@@ -251,8 +251,8 @@ export default function TessDiscoveryScreen({ player, onBack, onBuildStation, on
                   onClick={() => setSectorIndex(index)}
                   style={{
                     padding: '4px 10px', borderRadius: 999, cursor: 'pointer',
-                    border: `1px solid ${index === sectorIndex ? 'rgba(245,166,35,0.6)' : 'rgba(126,200,255,0.2)'}`,
-                    background: index === sectorIndex ? 'rgba(245,166,35,0.14)' : 'rgba(8,16,28,0.5)',
+                    border: `1px solid ${index === sectorIndex ? 'rgba(245,166,35,0.6)' : 'rgba(112,217,234,0.2)'}`,
+                    background: index === sectorIndex ? 'rgba(245,166,35,0.14)' : 'rgba(20,20,23,0.5)',
                     color: index === sectorIndex ? 'var(--ln-amber)' : 'var(--ln-text-muted)',
                     fontFamily: 'var(--ln-font-display)', fontSize: 9, fontWeight: 800, letterSpacing: '0.1em',
                   }}
@@ -493,7 +493,7 @@ function DevDaySkipBar({ offset, onAdvance, onReset }: { offset: number; onAdvan
   return (
     <div style={{
       display: 'flex', alignItems: 'center', gap: 8, padding: '6px 10px', marginBottom: 10,
-      borderRadius: 7, border: '1px dashed var(--ln-hairline-strong)', background: 'rgba(8,16,28,0.6)',
+      borderRadius: 7, border: '1px dashed var(--ln-hairline-strong)', background: 'rgba(20,20,23,0.6)',
     }}>
       <span style={{ fontFamily: 'var(--ln-font-mono)', fontSize: 9, color: 'var(--ln-text-muted)', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
         DEV · Simulated day {simulated.toISOString().slice(0, 10)} ({offset >= 0 ? '+' : ''}{offset}d)
@@ -531,8 +531,8 @@ function LiveDot({ active }: { active: boolean }) {
 function VerdictButton({ action, disabled, onClick }: { action: { id: TessVerdict; label: string; kind: 'amber' | 'cyan' | 'ghost' }; disabled: boolean; onClick: () => void }) {
   const palette: Record<typeof action.kind, { border: string; bg: string; color: string; glow: string }> = {
     amber: { border: 'rgba(245,166,35,0.7)', bg: 'linear-gradient(180deg, rgba(245,166,35,0.28), rgba(232,112,64,0.18))', color: 'var(--ln-amber-bright)', glow: 'rgba(245,166,35,0.4)' },
-    cyan:  { border: 'rgba(63,169,255,0.6)', bg: 'rgba(63,169,255,0.12)', color: 'var(--ln-cyan-bright)', glow: 'rgba(63,169,255,0.35)' },
-    ghost: { border: 'rgba(169,184,206,0.25)', bg: 'rgba(8,16,28,0.5)', color: 'var(--ln-text-muted)', glow: 'transparent' },
+    cyan:  { border: 'rgba(112,217,234,0.6)', bg: 'rgba(112,217,234,0.12)', color: 'var(--ln-cyan-bright)', glow: 'rgba(112,217,234,0.35)' },
+    ghost: { border: 'rgba(169,184,206,0.25)', bg: 'rgba(20,20,23,0.5)', color: 'var(--ln-text-muted)', glow: 'transparent' },
   }
   const p = palette[action.kind]
   return (

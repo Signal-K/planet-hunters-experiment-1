@@ -5,6 +5,9 @@ import TopBar from '@/components/ui/TopBar'
 import { PrimaryBtn, GhostBtn } from '@/components/ui/Button'
 import MissionCard from '@/components/game/MissionCard'
 import { ACADEMY_INTRO_MISSION_ID, compatibleTargetsFor, missionTypePrimer, partitionByOwner } from '@/lib/data'
+import { ROCKET_MODELS } from '@/lib/data/rockets'
+import { SATELLITE_MODELS } from '@/lib/data/satellites'
+import { formatCurrency } from '@/lib/format'
 import type { Catalog } from '@/lib/catalog'
 import type { Player } from '@/lib/game-types'
 import { academyAffinityUnlocked } from '@/lib/systems/AcademySystem'
@@ -15,11 +18,24 @@ interface LaunchpadScreenProps {
   /** Commits to a mission — same click-to-commit contract as the Mission Board. */
   onPick: (id: string) => void
   onViewContracts: () => void
+  onOpenHangar: () => void
   missionsDone: number
   freeOperations: boolean
   catalog: Catalog
   player: Player
   francs?: number
+}
+
+const infoCardStyle: React.CSSProperties = {
+  padding: 16, borderRadius: 12,
+  border: '1px solid var(--ln-hairline)',
+  background: 'var(--ln-panel)',
+  display: 'flex', flexDirection: 'column', gap: 10,
+}
+
+const sectionLabelStyle: React.CSSProperties = {
+  fontFamily: 'var(--ln-font-display)', fontSize: 11, letterSpacing: '0.08em',
+  textTransform: 'uppercase', color: 'var(--ln-text-muted)',
 }
 
 /**
@@ -37,10 +53,37 @@ interface LaunchpadScreenProps {
  * never disagree about whose job something is.
  */
 export default function LaunchpadScreen({
-  onBack, onPick, onViewContracts, missionsDone, freeOperations, catalog, player, francs,
+  onBack, onPick, onViewContracts, onOpenHangar, missionsDone, freeOperations, catalog, player, francs,
 }: LaunchpadScreenProps) {
   const { missions: MISSIONS, clients: CLIENTS, minerals: MINERAL_META, targets } = catalog
   const sequence = missionsDone + 1
+
+  // Defensive, not the normal path: GameScreenRouter already resolves an
+  // active/pending build to the transit/fab screen before the player ever
+  // lands here. Kept so a rocket mid-build is never silently hidden if this
+  // screen is ever reached another way.
+  const rocketInProgress = player.activeMission
+    ? { label: player.activeMission.label, status: 'In flight' }
+    : player.pendingLaunch
+      ? { label: 'Rocket', status: 'Fabrication in progress' }
+      : null
+
+  const fleet = ROCKET_MODELS.map(m => ({
+    model: m,
+    unlocked: missionsDone >= m.missionsRequired && !m.locked,
+  }))
+
+  // Satellites unlock off the Satellite Monitoring Station structure and are
+  // launched once — not the rocket fleet's missionsRequired axis.
+  const satellites = SATELLITE_MODELS.map(m => {
+    const launched = !!player.transitSatelliteLaunchedAt
+    const available = !!player.satelliteMonitoringBuilt && !launched
+    return {
+      model: m,
+      launched,
+      available,
+    }
+  })
 
   // Own-program work carries no client, so none of the board's client gating
   // applies: no daily pool slot, no cooldown, no affinity tier. During
@@ -57,7 +100,10 @@ export default function LaunchpadScreen({
   }))
 
   return (
-    <div style={{ width: '100%', height: '100%', position: 'relative', background: 'var(--ln-shell)' }}>
+    <div
+      className="ln-scene-launchpad"
+      style={{ width: '100%', height: '100%', position: 'relative' }}
+    >
       <TopBar
         eyebrow="EARTH BASE · LAUNCHPAD"
         title="Your Program"
@@ -71,6 +117,81 @@ export default function LaunchpadScreen({
         style={{ position: 'absolute', inset: 0, paddingTop: 72, paddingBottom: 96, overflowY: 'auto' }}
       >
         <div style={{ padding: 16, display: 'flex', flexDirection: 'column', gap: 16 }}>
+          {rocketInProgress && (
+            <div style={{ ...infoCardStyle, borderColor: 'var(--ln-cyan)' }} data-testid="launchpad-rocket-in-progress">
+              <div style={sectionLabelStyle}>Rocket In Progress</div>
+              <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 16, color: 'var(--ln-text)' }}>
+                {rocketInProgress.label}
+              </div>
+              <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 12, color: 'var(--ln-cyan)' }}>
+                {rocketInProgress.status}
+              </div>
+            </div>
+          )}
+
+          <div className="ln-instrument-card" data-testid="launchpad-status-card">
+            <div className="ln-instrument-label">Launchpad Status</div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+              <div className="ln-instrument-value">
+                {player.launchpadUpgraded ? 'Upgraded Pad' : 'Standard Pad'}
+              </div>
+              {!player.launchpadUpgraded && (
+                <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 11, color: 'var(--scene-card-muted)' }}>
+                  Upgrade from Edit · Build on the Hub
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div className="ln-instrument-card" data-testid="launchpad-fleet-card">
+            <div className="ln-instrument-label">Fleet</div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {fleet.map(({ model, unlocked }) => (
+                <div
+                  key={model.id}
+                  style={{
+                    display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                    opacity: unlocked ? 1 : 0.45,
+                  }}
+                >
+                  <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 13, color: 'var(--scene-card-text)' }}>
+                    {model.name}
+                  </div>
+                  <div style={{ fontFamily: 'var(--ln-font-mono)', fontSize: 11, color: 'var(--scene-card-muted)' }}>
+                    {unlocked
+                      ? model.costFrancs > 0 ? formatCurrency(model.costFrancs, { compact: true }) : 'Free'
+                      : model.unlockHint}
+                  </div>
+                </div>
+              ))}
+            </div>
+            <GhostBtn testId="launchpad-open-hangar-btn" onClick={onOpenHangar}>
+              Open Hangar →
+            </GhostBtn>
+          </div>
+
+          <div className="ln-instrument-card" data-testid="launchpad-satellites-card">
+            <div className="ln-instrument-label">Satellites</div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {satellites.map(({ model, launched, available }) => (
+                <div
+                  key={model.id}
+                  style={{
+                    display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                    opacity: available || launched ? 1 : 0.45,
+                  }}
+                >
+                  <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 13, color: 'var(--scene-card-text)' }}>
+                    {model.name}
+                  </div>
+                  <div style={{ fontFamily: 'var(--ln-font-mono)', fontSize: 11, color: 'var(--scene-card-muted)' }}>
+                    {launched ? 'DEPLOYED' : available ? 'READY TO LAUNCH' : model.unlockHint.toUpperCase()}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
           <div style={{
             fontFamily: 'var(--ln-font-body)', fontSize: 12, lineHeight: 1.5,
             color: 'var(--ln-text-muted)',
@@ -136,6 +257,7 @@ export default function LaunchpadScreen({
       <div
         className="sticky-actions"
         data-ui-zone={UI_ZONES.bottomActions}
+        data-coach-id="launchpad-view-contracts"
         style={{ position: 'absolute', left: 0, right: 0, bottom: 0, padding: 16 }}
       >
         {cards.length > 0 ? (

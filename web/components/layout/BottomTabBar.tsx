@@ -75,12 +75,17 @@ function LockGlyph() {
   )
 }
 
+// Missions/Market previously used #f5a623 (exactly --ln-amber) and #ffb347
+// (--ln-warn, an amber-family orange) — plain nav chrome, not the genuine
+// payout/reward emphasis the design rule restricts amber to. Moved both onto
+// the cyan family instead, matching the amber->cyan default-accent swap
+// already done in MissionBoardScreen/MissionCard/RocketPurchaseScreen.
 const MENU: NavItem[] = [
   { id: 'hub',      label: 'Base',     color: '#39d36a', glyph: <HubGlyph /> },
-  { id: 'missions', label: 'Missions', color: '#f5a623', glyph: <MissionsGlyph /> },
+  { id: 'missions', label: 'Missions', color: 'var(--ln-cyan)', glyph: <MissionsGlyph /> },
   { id: 'galaxy',   label: 'Atlas',    color: '#7ec8ff', glyph: <AtlasGlyph /> },
   { id: 'fab',      label: 'Build',    color: '#c084ff', glyph: <RocketGlyph />, locked: true },
-  { id: 'market',   label: 'Market',   color: '#ffb347', glyph: <MarketGlyph /> },
+  { id: 'market',   label: 'Market',   color: 'var(--ln-cyan-bright)', glyph: <MarketGlyph /> },
 ]
 
 export default function BottomTabBar({ current, onNav }: BottomTabBarProps) {

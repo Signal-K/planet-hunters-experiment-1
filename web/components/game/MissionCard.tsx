@@ -4,6 +4,7 @@ import React from 'react'
 import type { Mission, Client, MineralMeta } from '@/lib/data'
 import { isOwnProgramMission, missionDifficultyLabel, missionPayoutTier } from '@/lib/data'
 import TutorialHighlight from '@/components/game/TutorialHighlight'
+import ClientMark from '@/components/ui/ClientMark'
 import styles from '@/components/game/screens/MissionBoard.module.css'
 import { formatCurrency, FRANC } from '@/lib/format'
 
@@ -31,6 +32,9 @@ interface MissionCardProps {
   onPick: () => void
   // Hover/focus preview for the Contract Detail side panel — does not commit.
   onPreview?: () => void
+  // Opens the client dossier sheet (STS-235) — only offered for real client
+  // requests, not own-program/story runs, which have no client to inspect.
+  onOpenClientDossier?: (client: Client) => void
 }
 
 export function missionCardTags({
@@ -81,6 +85,7 @@ export default function MissionCard({
   crewReady,
   onPick,
   onPreview,
+  onOpenClientDossier,
 }: MissionCardProps) {
   // An own-program run has no client, whatever the catalog filed it under.
   const ownOperation = isOwnProgramMission(mission)
@@ -113,7 +118,23 @@ export default function MissionCard({
       style={{ position: 'relative' }}
     >
       {highlighted && <TutorialHighlight />}
-      <div className={styles.mark} style={{ background: accent }}>{client?.initial ?? 'OP'}</div>
+      {client && onOpenClientDossier ? (
+        // A real <button> can't nest inside the card's own <button> (invalid
+        // HTML, causes a hydration error) — same span+role pattern the CTA
+        // below already uses for the same reason.
+        <span
+          role="button"
+          tabIndex={-1}
+          data-testid={`mission-card-${mission.id}-client-mark`}
+          aria-label={`${client.name} dossier`}
+          onClick={e => { e.stopPropagation(); onOpenClientDossier(client) }}
+          style={{ cursor: 'pointer', flexShrink: 0 }}
+        >
+          <ClientMark initial={client.initial} color={accent} uiRole={client.uiRole} clientId={client.id} size={44} />
+        </span>
+      ) : (
+        <ClientMark initial={client?.initial ?? 'OP'} color={accent} uiRole={client?.uiRole ?? 'starter'} clientId={client?.id} size={44} />
+      )}
       <div className={styles.cardMain}>
         <div className={styles.cardTitle}>{mission.title}</div>
         <div className={styles.cardClient}>{client?.name ?? (ownOperation ? 'Your program' : 'Free Ops')}</div>

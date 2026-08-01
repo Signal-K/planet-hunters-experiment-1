@@ -35,6 +35,10 @@ def _lattice_column(x, y, height, width, depth, bays, key_hex, brace_hex):
 
     Modelled rather than faked with a texture because the silhouette is the
     whole point of a gantry — a solid box at this size reads as a chimney.
+
+    Was a single diagonal per bay (reads as a zigzag, not a truss). Now a full
+    X per bay plus a small gusset plate at each crossing — the gusset is what
+    actually sells "riveted steel lattice" over "some sticks".
     """
     leg = width / 2
     dep = depth / 2
@@ -49,12 +53,16 @@ def _lattice_column(x, y, height, width, depth, bays, key_hex, brace_hex):
         # Horizontal ring at the top of each bay.
         ring_f = kit.box("ring", (width, 0.06, 0.06), location=(x, y - dep, z + bay_h))
         kit.solid("ring", ring_f, brace_hex, "hulldark")
-        # Single diagonal per bay, alternating direction — reads as bracing
-        # without doubling the geometry of a full X.
-        diag = kit.box("diag", (0.05, 0.05, bay_h * 1.28),
-                       location=(x, y - dep, z),
-                       rotation=(0, 0.62 if b % 2 == 0 else -0.62, 0))
-        kit.solid("diag", diag, brace_hex, "hulldark")
+        # Full X-bracing per bay — both diagonals, not alternating single ones.
+        for sign in (1, -1):
+            diag = kit.box("diag", (0.05, 0.05, bay_h * 1.3),
+                           location=(x, y - dep, z),
+                           rotation=(0, sign * 0.62, 0))
+            kit.solid("diag", diag, brace_hex, "hulldark")
+        # Gusset plate at the crossing — a small flat square where the two
+        # diagonals meet, mid-bay.
+        gusset = kit.box("gusset", (0.16, 0.03, 0.16), location=(x, y - dep, z + bay_h * 0.5))
+        kit.solid("gusset", gusset, key_hex, "hull", outline=0.006)
 
 
 def pad_deck():
@@ -62,6 +70,12 @@ def pad_deck():
 
     The thing every other module stands on, and the only part that is useful
     on its own: a built-but-idle launchpad is a bare deck.
+
+    Added panel seams across the two flame-trench flanks (the deck surface
+    was a single flat fill either side of the trench — seams break it into
+    plates, which is what a walked-on deck actually looks like), plus a
+    corner floodlight on each step so the deck reads as serviced/lit rather
+    than derelict.
     """
     apron = kit.box("apron", (3.9, 2.1, 0.16), bevel=0.03)
     kit.solid("apron", apron, T["hull_dark"], "hulldark")
@@ -71,9 +85,15 @@ def pad_deck():
     # "launchpad" rather than "platform".
     trench = kit.box("trench", (0.9, 1.5, 0.1), location=(0, 0, 0.44))
     kit.solid("trench", trench, T["void"], "void", outline=0)
+    # Deck-plate seams either side of the trench.
+    for sx in (-0.62, -0.32, 0.32, 0.62):
+        seam = kit.box("seam", (0.02, 1.7, 0.02), location=(sx, 0, 0.5))
+        kit.solid("seam", seam, T["hull_dark"], "hulldark", outline=0)
     for sx in (-1.35, 1.35):
         step = kit.box("step", (0.5, 1.4, 0.18), location=(sx, 0, 0.52))
         kit.solid("step", step, T["hull_dark"], "hulldark")
+        lamp = kit.box("lamp", (0.1, 0.1, 0.1), location=(sx, -0.55, 0.68))
+        kit.solid("lamp", lamp, T["cyan"], "cyan", outline=0)
     # Hazard chevrons at the lip. Signage, not chrome — the one amber here.
     for i in range(5):
         chev = kit.box("chev", (0.22, 0.1, 0.05), location=(-1.0 + i * 0.5, -0.92, 0.52))
@@ -109,11 +129,18 @@ def pad_swing_arm():
     **The movable one.** Rendered with the hinge at the LEFT edge and vertically
     centred, so the scene sets `anchor(0, 0.5)` and rotates about the tower.
     Authored stowed-open (straight out); the scene swings it clear at launch.
+
+    Added hinge bolt rim (the boss alone read as a plain stub), a hanging
+    umbilical cable loop under the truss, and a second, brighter tip light so
+    the "this connects to the vehicle" end reads at a glance even at 34px wide.
     """
     # Hinge boss at the origin end, so the pivot has visible mass.
     boss = kit.cylinder("boss", 0.26, 0.5, location=(-1.55, 0, -0.25),
                         rotation=(0, 0, 0), verts=8)
     kit.solid("boss", boss, T["hull_dark"], "hulldark")
+    bolt_rim = kit.cylinder("bolt_rim", 0.3, 0.08, location=(-1.55, 0, -0.5),
+                            rotation=(0, 0, 0), verts=8)
+    kit.solid("bolt_rim", bolt_rim, T["steel"], "steel", outline=0.008)
     truss = kit.box("truss", (3.1, 0.26, 0.2), location=(0, 0, 0), bevel=0.02)
     kit.solid("truss", truss, T["steel"], "steel")
     # Diagonals along the arm — same bracing language as the gantry frames.
@@ -121,11 +148,19 @@ def pad_swing_arm():
         d = kit.box("d", (0.05, 0.05, 0.42), location=(-1.2 + i * 0.6, -0.14, 0),
                     rotation=(0, 0.72 if i % 2 == 0 else -0.72, 0))
         kit.solid("d", d, T["hull_dark"], "hulldark", outline=0)
+    # Umbilical cable — a shallow sag under the truss, the "still hooked up"
+    # cue a bare beam can't give.
+    for i, dz in enumerate((-0.06, -0.1, -0.06)):
+        link = kit.box("link", (0.4, 0.04, 0.04), location=(-0.6 + i * 0.6, 0.16, -0.2 + dz),
+                       rotation=(0, 0.18 if i == 1 else 0, 0))
+        kit.solid("link", link, T["hull_dark"], "hulldark", outline=0)
     # Umbilical head at the far end — the bit that actually touches the rocket.
     head = kit.box("head", (0.34, 0.34, 0.42), location=(1.42, 0, -0.21))
     kit.solid("head", head, T["hull"], "hull")
     tip = kit.box("tip", (0.12, 0.2, 0.16), location=(1.66, 0, -0.08))
     kit.solid("tip", tip, T["cyan"], "cyan", outline=0)
+    tip_light = kit.box("tip_light", (0.08, 0.08, 0.08), location=(1.42, 0.18, -0.02))
+    kit.solid("tip_light", tip_light, T["cyan_bright"], "cyanbright", outline=0)
     return dict(layout=(34, 10), ortho=3.9, mode="flat", target=(0, 0, 0))
 
 
@@ -134,13 +169,23 @@ def pad_clamp():
 
     Placed in pairs at the deck centre. Separate from the deck so they can
     release outward on launch.
+
+    Smallest part in the set (12x16 layout, 36x48 rendered) so there's little
+    room to add — a bolt-head base plate and a hydraulic piston alongside the
+    post are the two additions that survive downsampling at this size without
+    turning into noise.
     """
-    foot = kit.box("foot", (0.44, 0.44, 0.16), bevel=0.02)
-    kit.solid("foot", foot, T["hull_dark"], "hulldark")
-    post = kit.box("post", (0.26, 0.26, 0.68), location=(0, 0, 0.16))
+    foot = kit.box("foot", (0.5, 0.5, 0.06), bevel=0.01)
+    kit.solid("foot", foot, T["steel"], "steel", outline=0.008)
+    base = kit.box("base", (0.44, 0.44, 0.16), location=(0, 0, 0.06), bevel=0.02)
+    kit.solid("base", base, T["hull_dark"], "hulldark")
+    post = kit.box("post", (0.26, 0.26, 0.68), location=(0, 0, 0.22))
     kit.solid("post", post, T["hull"], "hull")
+    piston = kit.cylinder("piston", 0.06, 0.6, location=(-0.2, 0, 0.2),
+                          rotation=(0, 0, 0), verts=6)
+    kit.solid("piston", piston, T["hull_dark"], "hulldark", outline=0.006)
     # Angled jaw, leaning in toward where the vehicle would stand.
-    jaw = kit.box("jaw", (0.5, 0.22, 0.16), location=(0.16, 0, 0.8),
+    jaw = kit.box("jaw", (0.5, 0.22, 0.16), location=(0.16, 0, 0.86),
                   rotation=(0, -0.45, 0))
     kit.solid("jaw", jaw, T["steel"], "steel")
     return dict(layout=(12, 16), ortho=1.3, mode="flat", target=(0, 0, 0.5))
@@ -151,24 +196,43 @@ def pad_mast():
 
     Both references have these flanking the pad, well outside the gantries.
     One sprite; the scene places two.
+
+    Only 6 units wide, so there is no room for anything that adds silhouette
+    width — additions here are a wider base flare (grounding, the actual
+    functional cue for a lightning mast) and a taut down-wire, both of which
+    read within the pole's existing 1px-ish render width.
     """
-    pole = kit.box("pole", (0.11, 0.11, 3.4), bevel=0.02)
+    base_flare = kit.box("base_flare", (0.26, 0.26, 0.12), bevel=0.01)
+    kit.solid("base_flare", base_flare, T["hull_dark"], "hulldark", outline=0.008)
+    pole = kit.box("pole", (0.11, 0.11, 3.4), location=(0, 0, 0.12), bevel=0.02)
     kit.solid("pole", pole, T["hull_dark"], "hulldark", outline=0.01)
     for z in (0.9, 1.9, 2.9):
         collar = kit.box("collar", (0.2, 0.2, 0.08), location=(0, 0, z))
         kit.solid("collar", collar, T["steel"], "steel", outline=0)
-    spike = kit.cone("spike", 0.09, 0.5, location=(0, 0, 3.4), verts=6)
+    # Grounding down-wire — a thin diagonal from the top collar to the base,
+    # the part of a lightning mast that actually does something.
+    wire = kit.box("wire", (0.02, 0.02, 2.1), location=(0.14, 0, 1.9),
+                   rotation=(0, 0.1, 0))
+    kit.solid("wire", wire, T["steel"], "steel", outline=0)
+    spike = kit.cone("spike", 0.09, 0.5, location=(0, 0, 3.52), verts=6)
     kit.solid("spike", spike, T["cyan"], "cyan", outline=0.008)
     return dict(layout=(6, 72), ortho=4.1, mode="flat", target=(0, 0, 1.9))
 
 
 def pad_tank():
-    """20x24 — propellant tank. Anchor bottom-centre. Sits beside the deck."""
+    """20x24 — propellant tank. Anchor bottom-centre. Sits beside the deck.
+
+    Added a low hazard band (matches the depot_tank/hub_structures language,
+    keeping the whole scene's tanks visually related), a valve wheel where the
+    feed pipe meets the body, and a small pressure gauge on the front face.
+    """
     for sx in (-0.42, 0.42):
         leg = kit.box("leg", (0.13, 0.13, 0.36), location=(sx, 0, 0))
         kit.solid("leg", leg, T["hull_dark"], "hulldark")
     body = kit.cylinder("body", 0.62, 0.95, location=(0, 0, 0.36), verts=10)
     kit.solid("body", body, T["steel"], "steel")
+    hazard = kit.cylinder("hazard", 0.64, 0.08, location=(0, 0, 0.44), verts=10)
+    kit.solid("hazard", hazard, T["amber"], "amber", outline=0)
     band = kit.cylinder("band", 0.66, 0.1, location=(0, 0, 0.8), verts=10)
     kit.solid("band", band, T["hull_dark"], "hulldark", outline=0)
     dome = kit.cone("dome", 0.62, 0.34, location=(0, 0, 1.31), verts=10)
@@ -176,6 +240,12 @@ def pad_tank():
     feed = kit.cylinder("feed", 0.1, 0.8, location=(0.62, 0, 0.6),
                         rotation=(0, 1.5708, 0), verts=6)
     kit.solid("feed", feed, T["cyan"], "cyan", outline=0.008)
+    valve = kit.cylinder("valve", 0.15, 0.08, location=(0.94, 0, 0.6),
+                         rotation=(0, 1.5708, 0), verts=8)
+    kit.solid("valve", valve, T["hull_dark"], "hulldark", outline=0.006)
+    gauge = kit.cylinder("gauge", 0.09, 0.05, location=(0, -0.63, 0.65),
+                         rotation=(1.5708, 0, 0), verts=8)
+    kit.solid("gauge", gauge, T["cyan_bright"], "cyanbright", outline=0.006)
     return dict(layout=(20, 24), ortho=1.9, mode="flat", target=(0, 0, 0.85))
 
 

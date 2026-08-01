@@ -198,12 +198,15 @@ function GameCanvas() {
         )}
         <DevShortcuts />
         <div className="game-screen-area">
-          <ScreenContent screen={game.screen} game={game} hasCoach={hasCoach} onBackFromHangar={() => {
-            game.go('hub')
-            if (window.location.pathname.includes('/game/ship-customizer')) {
-              router.replace('/game')
-            }
-          }} />
+          {/* Gated the same way as [screen]/page.tsx — see STS-624. */}
+          {!game.authGateOpen && (
+            <ScreenContent screen={game.screen} game={game} hasCoach={hasCoach} onBackFromHangar={() => {
+              game.go('hub')
+              if (window.location.pathname.includes('/game/ship-customizer')) {
+                router.replace('/game')
+              }
+            }} />
+          )}
         </div>
 
         <ToastLayer toasts={game.toasts} onDismiss={game.dismissToast} />

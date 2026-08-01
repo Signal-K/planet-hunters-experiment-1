@@ -11,9 +11,9 @@ export type ProgressBarTone = 'cyan' | 'amber' | 'ok' | 'crit'
 
 const TONE: Record<ProgressBarTone, { track: string; fill: string; glow: string }> = {
   cyan: {
-    track: 'rgba(63,169,255,0.12)',
+    track: 'rgba(112,217,234,0.12)',
     fill: 'linear-gradient(90deg, var(--ln-cyan-press), var(--ln-cyan-bright))',
-    glow: '0 0 6px rgba(63,169,255,0.5)',
+    glow: '0 0 6px rgba(112,217,234,0.5)',
   },
   amber: {
     track: 'rgba(245,166,35,0.14)',

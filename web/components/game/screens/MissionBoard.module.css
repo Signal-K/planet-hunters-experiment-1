@@ -7,10 +7,13 @@
 .canvas {
   position: relative;
   padding: 22px 24px 10px;
+  /* Neutral charcoal, not navy (2026-07-31) — was #101f40/#08101e/#040810,
+     one of the specific "everything is heavy blue" surfaces. See
+     ZenNotes landnam-dark-palette-charcoal-glass-2026-07-31. */
   background:
     repeating-linear-gradient(0deg, rgba(112,217,234,0.06) 0px, rgba(112,217,234,0.06) 1px, transparent 1px, transparent 26px),
     repeating-linear-gradient(90deg, rgba(112,217,234,0.06) 0px, rgba(112,217,234,0.06) 1px, transparent 1px, transparent 26px),
-    radial-gradient(ellipse at 50% 30%, #101f40 0%, #08101e 65%, #040810 100%);
+    radial-gradient(ellipse at 50% 30%, #1c1c22 0%, #121215 65%, #08080a 100%);
   border-radius: 8px;
 }
 

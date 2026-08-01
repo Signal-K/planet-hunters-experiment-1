@@ -104,6 +104,21 @@ export const STRUCTURE_PRICES = {
   garage: 6_000_000,
   academy: 12_000_000,
   launchpadUpgrade: 10_000_000,
+  deepSpaceTelescope: 15_000_000,
+} as const
+
+// Subsurface excavation + room construction (STS-633). Earth Base's surface
+// footprint is fixed — the below-soil deck is the player's only way to add
+// more structure once the surface plots are full — so excavation is priced
+// well under a Refinery: it is the entry cost to a new build area, not a
+// structure in itself. Individual room builds sit near Refinery scale since
+// each one is a working facility.
+export const SUBSURFACE_EXCAVATION_COST = 2_000_000
+export const SUBSURFACE_EXCAVATION_MATERIALS = { aluminium: 10 } as const
+export const SUBSURFACE_ROOM_PRICES = {
+  'mineral-vault': 3_000_000,
+  'parts-locker': 3_000_000,
+  'habitat-training': 6_000_000,
 } as const
 
 // Astronaut Academy / crew economy (STS-587, STS-593, STS-597).

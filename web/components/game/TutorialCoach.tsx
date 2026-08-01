@@ -42,7 +42,7 @@ export default function TutorialCoach({ stepIndex, steps, step, total, onManualN
           width: i === stepIndex ? 18 : 6,
           height: 6,
           borderRadius: 999,
-          background: i < stepIndex ? '#39d36a' : i === stepIndex ? '#f5a623' : 'rgba(135,207,250,0.2)',
+          background: i < stepIndex ? '#39d36a' : i === stepIndex ? '#f5a623' : 'rgba(112,217,234,0.2)',
           transition: 'all 250ms',
           flexShrink: 0,
         }} />
@@ -61,11 +61,11 @@ export default function TutorialCoach({ stepIndex, steps, step, total, onManualN
           style={{ position: 'absolute', left: 14, right: 14, top: coachRail.top, maxHeight: 160, zIndex: 98, pointerEvents: 'auto', overflowY: 'auto' }}
         >
           <div style={{
-            background: 'linear-gradient(160deg, rgba(10,22,42,0.98) 0%, rgba(6,13,26,0.98) 100%)',
-            border: '1px solid rgba(135,207,250,0.4)',
+            background: 'linear-gradient(160deg, rgba(16,16,18,0.98) 0%, rgba(11,11,13,0.98) 100%)',
+            border: '1px solid rgba(112,217,234,0.4)',
             borderRadius: 14,
             padding: '10px 12px 10px',
-            boxShadow: '0 16px 48px rgba(0,0,0,0.7), 0 0 0 1px rgba(63,169,255,0.08)',
+            boxShadow: '0 16px 48px rgba(0,0,0,0.7), 0 0 0 1px rgba(112,217,234,0.08)',
           }}>
             <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
               <CoachAvatar size={36} talking />
@@ -110,7 +110,7 @@ export default function TutorialCoach({ stepIndex, steps, step, total, onManualN
                   background: 'linear-gradient(180deg, #6cc2ff 0%, #2d8de0 100%)',
                   color: '#06121f', fontFamily: 'var(--ln-font-display)', fontSize: 12, fontWeight: 800,
                   letterSpacing: '0.1em', textTransform: 'uppercase',
-                  boxShadow: '0 3px 0 rgba(0,0,0,0.35), 0 0 16px rgba(63,169,255,0.3)',
+                  boxShadow: '0 3px 0 rgba(0,0,0,0.35), 0 0 16px rgba(112,217,234,0.3)',
                   display: 'inline-flex', alignItems: 'center', gap: 6,
                 }}
               >
@@ -147,7 +147,7 @@ export default function TutorialCoach({ stepIndex, steps, step, total, onManualN
           display: 'flex',
           alignItems: 'center',
           gap: 12,
-          background: 'linear-gradient(160deg, rgba(10,22,42,0.98), rgba(6,13,26,0.98))',
+          background: 'linear-gradient(160deg, rgba(16,16,18,0.98), rgba(11,11,13,0.98))',
           border: '1.5px solid rgba(245,166,35,0.7)',
           borderRadius: 16,
           padding: '12px 16px 12px 12px',

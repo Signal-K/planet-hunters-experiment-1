@@ -7,13 +7,14 @@ import Panel from '@/components/ui/Panel'
 import StatusPill from '@/components/ui/StatusPill'
 import { IconBtn } from '@/components/ui/Button'
 import { compatibleTargetsFor, clientAffinityBonus, clientUnlocked, FREE_OPS_START_MISSIONS_DONE, CLIENT_AFFINITY_MISSION_THRESHOLD, MISSION_TEMPLATES, CLIENT_SLOTS, missionTypePrimer, isMissionBoardMission } from '@/lib/data'
-import type { DailyClientPool, Mission } from '@/lib/data'
+import type { Client, DailyClientPool, Mission } from '@/lib/data'
 import type { Catalog } from '@/lib/catalog'
 import { TUTORIAL_CONTENT_TOP } from '@/lib/tutorial-layout'
 import { UI_ZONES } from '@/lib/ui-zones'
 import MissionCard from '@/components/game/MissionCard'
 import MissionDetailPanel from '@/components/game/MissionDetailPanel'
 import ClientBonusGuideSheet from '@/components/game/ClientBonusGuideSheet'
+import ClientDossierSheet from '@/components/game/ClientDossierSheet'
 import StepFooter from '@/components/game/StepFooter'
 import MissionBoardSection from '@/components/game/MissionBoardSection'
 import MissionBoardCompleteState from '@/components/game/MissionBoardCompleteState'
@@ -155,6 +156,7 @@ export default function MissionBoardScreen({ onBack, onPick, missionsDone, freeO
     return () => clearInterval(id)
   }, [])
   const [showClientBonusGuide, setShowClientBonusGuide] = useState(false)
+  const [dossierClient, setDossierClient] = useState<Client | null>(null)
   const [previewId, setPreviewId] = useState<string | null>(null)
   const hasPriorFreeOpsExperience = Object.keys(clientMissions ?? {}).length > 0
     || (dailyClientPool?.completedIds.length ?? 0) > 0
@@ -368,6 +370,7 @@ export default function MissionBoardScreen({ onBack, onPick, missionsDone, freeO
                       crewReady={c.crewReady}
                       onPick={() => onPick(c.mission.id)}
                       onPreview={() => setPreviewId(c.mission.id)}
+                      onOpenClientDossier={setDossierClient}
                     />
                   ))}
                 </div>
@@ -452,7 +455,7 @@ export default function MissionBoardScreen({ onBack, onPick, missionsDone, freeO
                   aria-label="Dismiss"
                   style={{
                     position: 'absolute', top: 8, right: 8, width: 20, height: 20, borderRadius: 6,
-                    border: '1px solid rgba(112,217,234,0.4)', background: 'rgba(8,16,28,0.6)',
+                    border: '1px solid rgba(112,217,234,0.4)', background: 'rgba(20,20,23,0.6)',
                     color: 'var(--ln-cyan)', fontSize: 12, lineHeight: 1, cursor: 'pointer',
                   }}
                 >
@@ -478,7 +481,7 @@ export default function MissionBoardScreen({ onBack, onPick, missionsDone, freeO
               </div>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
                 {hotMinerals.map(mineral => (
-                  <span key={mineral.name} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '4px 8px', borderRadius: 6, border: `1px solid ${mineral.color}66`, background: 'rgba(8,16,28,0.72)', fontFamily: 'var(--ln-font-mono)', fontSize: 10, color: mineral.color }}>
+                  <span key={mineral.name} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '4px 8px', borderRadius: 6, border: `1px solid ${mineral.color}66`, background: 'rgba(20,20,23,0.72)', fontFamily: 'var(--ln-font-mono)', fontSize: 10, color: mineral.color }}>
                   <strong>{mineral.name}</strong> <span style={{ opacity: 0.65 }}>({mineral.sym})</span> {formatCurrency(mineral.price)}
                   </span>
                 ))}
@@ -507,6 +510,14 @@ export default function MissionBoardScreen({ onBack, onPick, missionsDone, freeO
           onClose={() => setShowClientBonusGuide(false)}
           clientMissions={clientMissions}
           sequence={sequence}
+        />
+      )}
+
+      {dossierClient && (
+        <ClientDossierSheet
+          client={dossierClient}
+          mineralMeta={MINERAL_META}
+          onDismiss={() => setDossierClient(null)}
         />
       )}
     </div>

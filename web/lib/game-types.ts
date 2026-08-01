@@ -1,7 +1,7 @@
 // Landnam game — shared type definitions
 // Extracted from game-context.tsx so they can be imported without pulling in React context.
 
-import type { RocketConfig, Mission, Target, TessClassification, TessVerdict, TransitRange } from '@/lib/data'
+import type { RocketConfig, Mission, Target, TessClassification, TessVerdict, TransitRange, AsteroidClassification, AsteroidVerdict } from '@/lib/data'
 
 export interface DailyClientPool {
   date: string        // 'YYYY-MM-DD'
@@ -32,6 +32,7 @@ export type Screen =
   | 'launchpad'
   | 'surface-ops'
   | 'academy'
+  | 'asteroid-discovery'
 
 export type LicenseGrade = 'Grade I' | 'Grade II' | 'Grade III'
 
@@ -140,14 +141,37 @@ export interface Player {
   dailyClientPool?: DailyClientPool
   scannerBuilt?: boolean
   satelliteMonitoringBuilt?: boolean
+  // Subsurface deck (STS-633): the below-soil area starts unexcavated, and
+  // each room must be built into it individually before it holds live
+  // inventory — mirrors the surface Build·Place cost shape.
+  subsurfaceExcavated?: boolean
+  subsurfaceBuilt?: string[]
+  // Purchased/earned integer levels, not XP tracks (STS-606 decision): each
+  // is set/incremented directly by a build or mission event (EconomySystem,
+  // useGameLoop), never accumulated as XP against a curve. Do not route these
+  // through XPSystem or describe them as "progression" in UI copy — if they
+  // ever need fractional progress or a real curve, that's a new decision, not
+  // an assumed migration.
   satelliteMonitoringLevel?: number
   transitSatelliteLevel?: number
   transitSatelliteLaunchedAt?: number | null
+  // Deep Space Telescope (STS-622): a separate, one-time-build structure that
+  // gates the asteroid-discovery (NEOCP) instrument feed, the same way
+  // satelliteMonitoringBuilt gates the transit feed above. Not a tier on the
+  // transit satellite — its own build/unlock cost and level track.
+  deepSpaceTelescopeBuilt?: boolean
+  deepSpaceTelescopeLevel?: number
+  deepSpaceTelescopeLaunchedAt?: number | null
   scansUsedToday?: number
   scanDate?: string
   activeScan?: { targetId: string; completesAt: number } | null
   targetScanCounts?: Record<string, number>
   tessClassifications?: Record<string, TessClassification>
+  // Deep Space Telescope's asteroid-discovery (NEOCP) classifications
+  // (STS-622) — same shape/role as tessClassifications above, keyed by
+  // asteroid_candidates record id, but a separate map since it's a
+  // genuinely second instrument, not a variant of the transit feed.
+  asteroidClassifications?: Record<string, AsteroidClassification>
   // Player's satellite-pointing choice for the *next* daily downlink,
   // picked from the PixiGalaxyStarMap after classifying today's candidate.
   // Consumed (cleared) once that candidate becomes today's daily pick.
@@ -223,6 +247,15 @@ export interface GameState {
   popup: string | null
   menuOpen: boolean
   pendingTerritoryClaimFor?: { targetId: string; clientId: string }
+  // Epoch ms this save was last written to localStorage on THIS device
+  // (STS-635). Stamped by the localStorage persist effect in game-context.tsx.
+  // Used only as a tie-breaker in mergeRemoteState when missionsDone is equal
+  // on both sides — the remote side's equivalent signal is PocketBase's own
+  // `updated` autodate field on the game_states record (not this field; the
+  // remote record's JSON blob does not need its own copy since the load path
+  // reads the record's system timestamp directly). missionsDone remains the
+  // primary onboarding-stage signal; this only disambiguates true ties.
+  updatedAt?: number
 }
 
 import type React from 'react'
@@ -267,6 +300,8 @@ export interface GameActions {
   signOut: () => void
   upgradeLaunchpad: () => void
   placeStructure: (structure: import('@/lib/data').StructureBlueprint | undefined, kind: string, plot: number) => void
+  excavateSubsurface: () => void
+  buildSubsurfaceRoom: (roomId: import('@/lib/data').SubsurfaceRoomId) => void
   sellMinerals: (mineralId: string, amount: number) => void
   onStartRefine: (recipeId: string) => void
   onCollectRefined: (recipeId: string) => void
@@ -279,6 +314,7 @@ export interface GameActions {
   launchTransitSatellite: () => void
   submitTessClassification: (subjectId: string, verdict: TessVerdict, ranges: TransitRange[], discoveredTarget?: Target) => void
   chooseSatelliteTarget: (subjectId: string) => void
+  submitAsteroidClassification: (candidateId: string, verdict: AsteroidVerdict) => void
   onRoverMiningDone: (cargo: Record<string, number>) => void
   confirmShipCustomizerBuild: (installed: Partial<Record<import('@/lib/data').ShipRoomKind, string>>, prevInstalled: Partial<Record<import('@/lib/data').ShipRoomKind, string>>) => boolean
   purchaseTerrainRights: (siteId: string) => void

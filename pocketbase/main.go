@@ -352,6 +352,14 @@ func ensureCollections(app core.App) {
 		missionLog.Fields.Add(&core.NumberField{Name: "payout_francs", Required: false})
 		missionLog.Fields.Add(&core.JSONField{Name: "minerals_delivered", Required: false, MaxSize: 4096})
 		missionLog.Fields.Add(&core.NumberField{Name: "missions_done_after", Required: false})
+		// Plain (non-autodate) field, client-settable — mirrors mission_runs'
+		// completed_at. Distinct from the record's own `created` autodate:
+		// `created` is always "when this row was written", which is fine for
+		// real play (missions are logged as they finish) but can't be
+		// backdated for seeded/dev data. completed_at can be, so seed tooling
+		// (scripts/seed-dev-presets.ts) can give synthetic mission history
+		// plausible historical dates instead of a burst of same-instant rows.
+		missionLog.Fields.Add(&core.DateField{Name: "completed_at", Required: false})
 		missionLog.Indexes = []string{
 			"CREATE INDEX idx_mission_log_user ON mission_log (user)",
 		}
@@ -639,6 +647,10 @@ func migrateMissionLog(app core.App) {
 		col.DeleteRule = nil
 		changed = true
 	}
+	if col.Fields.GetByName("completed_at") == nil {
+		col.Fields.Add(&core.DateField{Name: "completed_at", Required: false})
+		changed = true
+	}
 
 	if changed {
 		if err := app.Save(col); err != nil {
@@ -751,8 +763,30 @@ func ensureCatalogFields(app core.App) {
 		addSelectIfMissing(missionsCatalog, "payload_type", []string{"rover"}, false)
 		addTextIfMissing(missionsCatalog, "payload_name", false)
 		addNumberIfMissing(missionsCatalog, "payload_cargo_cost", false)
+		hadLegacyContractorSlug := missionsCatalog.Fields.GetByName("contractor_slug") != nil
+		addTextIfMissing(missionsCatalog, "client_slug", false)
 		if err := app.Save(missionsCatalog); err != nil {
 			log.Printf("failed to update missions_catalog schema: %v", err)
+		}
+		// Pre-STS-632 collections were created under the retired "contractor"
+		// naming (see "Terminology: clients, not contractors" in CLAUDE.md).
+		// client_slug landed as a new empty field on those, so every mission
+		// record silently lost its client, which made toMission() read
+		// mission.client as undefined and isOwnProgramMission() misclassify
+		// ordinary client contracts as the player's own program. Backfill
+		// client_slug from the legacy column once; never overwrite existing
+		// client_slug data.
+		if hadLegacyContractorSlug {
+			records, err := app.FindRecordsByFilter("missions_catalog", "client_slug = '' && contractor_slug != ''", "", 0, 0)
+			if err != nil {
+				log.Printf("failed to query legacy contractor_slug records: %v", err)
+			}
+			for _, rec := range records {
+				rec.Set("client_slug", rec.GetString("contractor_slug"))
+				if err := app.Save(rec); err != nil {
+					log.Printf("failed to backfill client_slug for %s: %v", rec.GetString("slug"), err)
+				}
+			}
 		}
 	}
 

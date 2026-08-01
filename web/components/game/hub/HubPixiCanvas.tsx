@@ -8,24 +8,38 @@ import {
   HUB_W,
   HUB_H,
   type HubBuildingDef,
+  type HubTextures,
 } from '@/lib/pixi/hubScene'
+import { AssetManager } from '@/lib/engine/AssetManager'
 
 /**
- * The Blender hub sprites are rendered, manifested and tested, but NOT wired
- * into the scene yet — hubScene's textured branch is not equivalent to its
- * Graphics branch, so feeding it textures renders partial structures.
- *
- * `buildScanStation` is the clearest case: the Graphics path draws tripod,
- * mast, feet *and* dish; the textured path draws only `scan_dish` at y=-52 and
- * nothing below it, leaving the dish floating 52px above the ground.
- * `HubTextures` also declares `scan_tripod`, `cmd_foundation`, `cmd_antenna`,
- * `depot_base` and `depot_pipes`, which no builder consumes. That gap was
- * invisible for as long as every slot was null.
- *
- * Re-enable by making each builder consume a complete set of slots whose
- * decomposition matches the Graphics layout, then loading them here. See
- * STS-611.
+ * Only the launchpad's six modular sprites are loaded and passed through
+ * (STS-611) — `buildLaunchpad` is the one builder whose textured branch draws
+ * a complete structure matching its Graphics fallback. The other builders
+ * (`buildScanStation`, `buildRefinery`, `buildSatelliteStation`,
+ * `buildCommandCenter`) still only consume a partial slot set — e.g.
+ * `buildScanStation`'s textured path draws only `scan_dish` at y=-52 with no
+ * tripod/mast/feet beneath it — so their texture fields are deliberately left
+ * null here until each of those is brought up to the same completeness.
  */
+const LAUNCHPAD_SPRITES = [
+  'hub_pad_deck', 'hub_pad_gantry_frame', 'hub_pad_swing_arm',
+  'hub_pad_clamp', 'hub_pad_mast', 'hub_pad_tank',
+] as const
+
+async function loadLaunchpadTextures(): Promise<HubTextures> {
+  const tex = nullTextures()
+  const assets = new AssetManager()
+  await assets.loadManifest('/game/assets/manifest.json')
+  const loaded = await Promise.all(LAUNCHPAD_SPRITES.map(name => assets.loadTexture(name)))
+  tex.pad_deck = loaded[0].isPlaceholder ? null : loaded[0].texture
+  tex.pad_gantry_frame = loaded[1].isPlaceholder ? null : loaded[1].texture
+  tex.pad_swing_arm = loaded[2].isPlaceholder ? null : loaded[2].texture
+  tex.pad_clamp = loaded[3].isPlaceholder ? null : loaded[3].texture
+  tex.pad_mast = loaded[4].isPlaceholder ? null : loaded[4].texture
+  tex.pad_tank = loaded[5].isPlaceholder ? null : loaded[5].texture
+  return tex
+}
 
 interface HubPixiCanvasProps {
   buildings: HubBuildingDef[]
@@ -70,6 +84,7 @@ export default function HubPixiCanvas({ buildings }: HubPixiCanvasProps) {
     let scene: ReturnType<typeof buildHubScene> | null = null
     let destroyed = false
     let ro: ResizeObserver | null = null
+    let tex: HubTextures = nullTextures()
 
     // Rebuilds the scene at the div's current size. Needed on desktop, where
     // the container can be far wider than HUB_W=402 (the coordinate space
@@ -89,22 +104,26 @@ export default function HubPixiCanvas({ buildings }: HubPixiCanvasProps) {
 
       scene?.destroy()
       const groundY = containerH * (1 - 0.22)
-      scene = buildHubScene(app, buildingsRef.current, nullTextures(), { groundY, scaleX })
+      scene = buildHubScene(app, buildingsRef.current, tex, { groundY, scaleX })
     }
 
     ;(async () => {
       const containerW = div.clientWidth || HUB_W
       const containerH = div.clientHeight || HUB_H
 
-      await app.init({
-        canvas,
-        width: containerW,
-        height: containerH,
-        backgroundAlpha: 0,
-        antialias: false,
-        resolution: Math.min(window.devicePixelRatio || 1, 2),
-        autoDensity: true,
-      })
+      const [, loadedTex] = await Promise.all([
+        app.init({
+          canvas,
+          width: containerW,
+          height: containerH,
+          backgroundAlpha: 0,
+          antialias: false,
+          resolution: Math.min(window.devicePixelRatio || 1, 2),
+          autoDensity: true,
+        }),
+        loadLaunchpadTextures(),
+      ])
+      tex = loadedTex
 
       // Check destroyed AFTER init — if unmount raced the async init, clean up
       // now and bail. Guard with try/catch: PixiJS v8 _cancelResize can throw

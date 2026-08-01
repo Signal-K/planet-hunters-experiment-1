@@ -82,7 +82,10 @@ describe('TessDiscoveryScreen — desktop two-column layout', () => {
   it('renders a single-column stack on mobile (unchanged)', () => {
     cy.viewport(390, 844)
     visitGalaxyScreen()
-    cy.contains('TESS ANOMALY', { timeout: 10000 }).should('be.visible')
+    // STS-582 renamed this screen's header copy from "TESS Anomaly" to the
+    // instrument-feed framing (TopBar eyebrow + the candidate's own TOI id).
+    cy.contains('INSTRUMENT DATA FEED', { timeout: 10000 }).should('be.visible')
+    cy.contains('TOI 1000.01').should('be.visible')
     cy.get('[data-testid="tess-discovery-desktop-grid"]').should('not.exist')
     cy.get('[data-testid="tess-verdict-planet"]').should('exist')
   })
@@ -90,7 +93,10 @@ describe('TessDiscoveryScreen — desktop two-column layout', () => {
   it('renders a two-column grid on desktop (>=1024px)', () => {
     cy.viewport(1280, 800)
     visitGalaxyScreen()
-    cy.contains('TESS ANOMALY', { timeout: 10000 }).should('be.visible')
+    // STS-582 renamed this screen's header copy from "TESS Anomaly" to the
+    // instrument-feed framing (TopBar eyebrow + the candidate's own TOI id).
+    cy.contains('INSTRUMENT DATA FEED', { timeout: 10000 }).should('be.visible')
+    cy.contains('TOI 1000.01').should('be.visible')
     cy.get('[data-testid="tess-discovery-desktop-grid"]').should('be.visible').then($grid => {
       expect($grid.css('display')).to.eq('grid')
     })

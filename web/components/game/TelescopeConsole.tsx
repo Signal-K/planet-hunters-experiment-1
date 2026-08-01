@@ -32,7 +32,7 @@ export default function TelescopeConsole({
       position: 'relative',
       borderRadius: 16,
       padding: 8,
-      background: 'linear-gradient(160deg, rgba(24,48,75,0.9), rgba(10,18,29,0.95))',
+      background: 'linear-gradient(160deg, rgba(24,48,75,0.9), rgba(24,24,28,0.95))',
       border: '1px solid var(--ln-hairline-strong)',
       boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.05), 0 8px 24px rgba(0,0,0,0.45)',
     }}>
@@ -55,7 +55,7 @@ export default function TelescopeConsole({
       </div>
 
       {/* Viewport — the instrument surface itself */}
-      <div style={{ borderRadius: 10, overflow: 'hidden', border: '2px solid rgba(63,169,255,0.28)' }}>
+      <div style={{ borderRadius: 10, overflow: 'hidden', border: '2px solid rgba(112,217,234,0.28)' }}>
         {children}
       </div>
 
@@ -92,7 +92,7 @@ function Rivet({ corner }: { corner: 'tl' | 'tr' | 'bl' | 'br' }) {
     <span style={{
       position: 'absolute', ...pos[corner],
       width: 5, height: 5, borderRadius: '50%',
-      background: 'rgba(126,200,255,0.4)',
+      background: 'rgba(112,217,234,0.4)',
       boxShadow: 'inset 0 1px 1px rgba(0,0,0,0.5)',
     }} />
   )
@@ -110,7 +110,7 @@ function PulseDot({ color, pulse = true }: { color: string; pulse?: boolean }) {
 
 function GaugeBox({ icon, label, level, color }: { icon: ReactNode; label: string; level: number; color: string }) {
   return (
-    <div style={{ borderRadius: 7, border: '1px solid rgba(126,200,255,0.14)', background: 'rgba(8,16,28,0.58)', padding: '6px 6px 5px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3 }}>
+    <div style={{ borderRadius: 7, border: '1px solid rgba(112,217,234,0.14)', background: 'rgba(20,20,23,0.58)', padding: '6px 6px 5px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3 }}>
       <span style={{ color }}>{icon}</span>
       <span style={{ fontFamily: 'var(--ln-font-display)', fontSize: 7, fontWeight: 800, letterSpacing: '0.12em', color: 'var(--ln-text-muted)' }}>{label}</span>
       <div style={{ width: '100%', height: 3, borderRadius: 2, background: 'rgba(255,255,255,0.06)', overflow: 'hidden' }}>

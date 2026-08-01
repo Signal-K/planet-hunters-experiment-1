@@ -150,7 +150,7 @@ export default function ShipInteriorPreview({
       {/* ── SHIP DIAGRAM (PixiJS, glass-framed with corner brackets) ── */}
       <div style={{ flex: 'none', maxHeight: '28%', padding: 6 }}>
         <Panel surface="glass" style={{ padding: 0, overflow: 'hidden' }}>
-          <ErrorBoundary fallback={<div style={{ height: 80, background: 'rgba(8,12,22,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'var(--ln-font-mono)', fontSize: 10, color: 'var(--ln-text-muted)', letterSpacing: '0.1em' }}>DIAGRAM UNAVAILABLE</div>}>
+          <ErrorBoundary fallback={<div style={{ height: 80, background: 'rgba(12,12,13,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'var(--ln-font-mono)', fontSize: 10, color: 'var(--ln-text-muted)', letterSpacing: '0.1em' }}>DIAGRAM UNAVAILABLE</div>}>
             <ShipCustomizerCanvas
               layout={layout}
               activeKind={step.kind}

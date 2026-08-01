@@ -336,7 +336,14 @@ export function useAuthSync({
       backendLoadedFor.current = authUserId!
       // Precedence rules (and why they exist) live in mergeRemoteState so they
       // can be unit-tested without PocketBase/React — see game-state.test.ts.
-      setState(current => mergeRemoteState(current, record.state as PartialSave))
+      // updatedAt (STS-635) reuses PocketBase's own `updated` autodate field
+      // (set automatically on every write to this record) as the remote-side
+      // tie-breaker signal, rather than adding a duplicate custom field —
+      // record.updated is a string like "2026-07-31 12:00:00.000Z".
+      const parsedUpdatedAt = typeof record.updated === 'string' ? new Date(record.updated).getTime() : NaN
+      const remoteUpdatedAt = Number.isFinite(parsedUpdatedAt) ? parsedUpdatedAt : undefined
+      const remoteState: PartialSave = { ...(record.state as PartialSave), updatedAt: remoteUpdatedAt }
+      setState(current => mergeRemoteState(current, remoteState))
       setBackendReady(true)
     }
 

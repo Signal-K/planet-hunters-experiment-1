@@ -5,23 +5,35 @@ import {
   ArrowLeft,
   Boxes,
   Dumbbell,
+  Hammer,
   LockKeyhole,
   PackageOpen,
+  Shovel,
   Warehouse,
 } from 'lucide-react'
 import {
   CUSTOMIZER_PARTS,
   MINERAL_META,
+  SUBSURFACE_EXCAVATE_COST,
   SUBSURFACE_ROOMS,
+  canAffordSubsurface,
   type InstalledCustomizerPartsByKind,
+  type SubsurfaceRoomDefinition,
   type SubsurfaceRoomId,
 } from '@/lib/data'
+import { formatCurrency } from '@/lib/format'
+import { PrimaryBtn } from '@/components/ui/Button'
 import styles from './HubSubsurfaceView.module.css'
 
 interface HubSubsurfaceViewProps {
   stash?: Record<string, number>
   installedParts?: InstalledCustomizerPartsByKind
   trainingEnabled?: boolean
+  francs?: number
+  subsurfaceExcavated?: boolean
+  subsurfaceBuilt?: string[]
+  onExcavate?: () => void
+  onBuildRoom?: (roomId: SubsurfaceRoomId) => void
 }
 
 interface StoredMineral {
@@ -70,6 +82,14 @@ export function registeredParts(
       }]
     })
     .sort((a, b) => a.kind.localeCompare(b.kind))
+}
+
+function formatRoomCost(room: SubsurfaceRoomDefinition | { cost: number; costMaterials: Record<string, number> }): string {
+  const mineralCost = Object.entries(room.costMaterials)
+    .map(([mineral, amount]) => `${amount} ${mineral}`)
+    .join(' · ')
+  const francs = formatCurrency(room.cost)
+  return mineralCost ? `${francs} · ${mineralCost}` : francs
 }
 
 function RoomScene({
@@ -159,6 +179,26 @@ function RoomScene({
     </div>
   )
 }
+
+function UnbuiltRoomScene({ room }: { room: SubsurfaceRoomDefinition }) {
+  return (
+    <div className={styles.roomScene} aria-hidden="true">
+      <div className={styles.roomCeiling}>
+        <span />
+        <span />
+        <span />
+      </div>
+      <div className={styles.emptyState} style={{ minHeight: 0, border: 'none', padding: 0 }}>
+        <div>
+          <Hammer size={26} strokeWidth={1.8} />
+          <div className={styles.emptyLabel}>UNBUILT · {formatRoomCost(room)}</div>
+        </div>
+      </div>
+      <div className={styles.sceneFloorRail} />
+    </div>
+  )
+}
+
 function RoomIcon({ id, size = 18 }: { id: SubsurfaceRoomId; size?: number }) {
   if (id === 'mineral-vault') return <Warehouse size={size} strokeWidth={2} />
   if (id === 'parts-locker') return <Boxes size={size} strokeWidth={2} />
@@ -269,20 +309,105 @@ function HabitatTraining({ enabled }: { enabled: boolean }) {
   )
 }
 
+function RoomBuildPrompt({
+  room,
+  francs,
+  stash,
+  onBuild,
+}: {
+  room: SubsurfaceRoomDefinition
+  francs: number
+  stash?: Record<string, number>
+  onBuild?: (roomId: SubsurfaceRoomId) => void
+}) {
+  const affordable = canAffordSubsurface(room, { francs, stash })
+  return (
+    <div className={styles.trainingPanel} data-testid={`subsurface-room-build-${room.id}`}>
+      <div>
+        <span className={styles.trainingLock}>
+          <Hammer size={28} strokeWidth={1.8} />
+        </span>
+        <h2 className={styles.trainingTitle}>{room.name} unbuilt</h2>
+        <p className={styles.trainingCopy}>{room.description}</p>
+        <p className={styles.trainingCopy}>
+          Construction cost: <strong>{formatRoomCost(room)}</strong>
+        </p>
+        <div style={{ marginTop: 24, maxWidth: 320, marginInline: 'auto' }}>
+          <PrimaryBtn
+            testId={`subsurface-build-${room.id}`}
+            onClick={() => onBuild?.(room.id)}
+            disabled={!affordable}
+          >
+            Build {room.name}
+          </PrimaryBtn>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function ExcavatePrompt({
+  francs,
+  stash,
+  onExcavate,
+}: {
+  francs: number
+  stash?: Record<string, number>
+  onExcavate?: () => void
+}) {
+  const affordable = canAffordSubsurface(SUBSURFACE_EXCAVATE_COST, { francs, stash })
+  return (
+    <div className={styles.trainingPanel} data-testid="subsurface-excavate-prompt">
+      <div>
+        <span className={styles.trainingLock}>
+          <Shovel size={28} strokeWidth={1.8} />
+        </span>
+        <h2 className={styles.trainingTitle}>Below-grade area unexcavated</h2>
+        <p className={styles.trainingCopy}>
+          Earth Base only holds so much surface plot — the agency&apos;s
+          buildable footprint above ground is fixed. Excavating this deck
+          opens space below the soil for storage and habitat facilities
+          without needing more land on the surface.
+        </p>
+        <p className={styles.trainingCopy}>
+          Excavation cost: <strong>{formatRoomCost(SUBSURFACE_EXCAVATE_COST)}</strong>
+        </p>
+        <div style={{ marginTop: 24, maxWidth: 320, marginInline: 'auto' }}>
+          <PrimaryBtn
+            testId="subsurface-excavate-cta"
+            onClick={onExcavate}
+            disabled={!affordable}
+          >
+            Excavate deck
+          </PrimaryBtn>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export function HubSubsurfaceView({
   stash,
   installedParts,
   trainingEnabled = false,
+  francs = 0,
+  subsurfaceExcavated = false,
+  subsurfaceBuilt = [],
+  onExcavate,
+  onBuildRoom,
 }: HubSubsurfaceViewProps) {
   const [activeRoom, setActiveRoom] = useState<SubsurfaceRoomId | null>(null)
   const minerals = storedMinerals(stash)
   const parts = registeredParts(installedParts)
   const totalMineralUnits = minerals.reduce((sum, mineral) => sum + mineral.amount, 0)
   const activeDefinition = SUBSURFACE_ROOMS.find(room => room.id === activeRoom)
+  const builtSet = new Set(subsurfaceBuilt)
 
-  const roomMetric = (roomId: SubsurfaceRoomId) => {
-    if (roomId === 'mineral-vault') return `${totalMineralUnits} U`
-    if (roomId === 'parts-locker') return `${parts.length} PARTS`
+  const roomMetric = (room: SubsurfaceRoomDefinition, locked: boolean, built: boolean) => {
+    if (locked) return trainingEnabled ? 'FLAG ON' : 'LOCKED'
+    if (!built) return formatRoomCost(room)
+    if (room.id === 'mineral-vault') return `${totalMineralUnits} U`
+    if (room.id === 'parts-locker') return `${parts.length} PARTS`
     return trainingEnabled ? 'FLAG ON' : 'LOCKED'
   }
 
@@ -303,7 +428,17 @@ export function HubSubsurfaceView({
       </div>
 
       <div className={styles.content}>
-        {activeRoom && activeDefinition ? (
+        {!subsurfaceExcavated ? (
+          <div className={styles.detailView}>
+            <div className={styles.deckHeader}>
+              <div>
+                <div className={styles.eyebrow}>SUBSURFACE LEVEL 01 · 24 M BELOW GRADE</div>
+                <h2 className={styles.deckTitle}>Unexcavated</h2>
+              </div>
+            </div>
+            <ExcavatePrompt francs={francs} stash={stash} onExcavate={onExcavate} />
+          </div>
+        ) : activeRoom && activeDefinition ? (
           <div className={styles.detailView}>
             <div className={styles.detailHeader}>
               <button
@@ -319,9 +454,15 @@ export function HubSubsurfaceView({
                 <h2 className={styles.detailTitle}>{activeDefinition.name}</h2>
               </div>
             </div>
-            {activeRoom === 'mineral-vault' && <MineralVault minerals={minerals} />}
-            {activeRoom === 'parts-locker' && <PartsLocker parts={parts} />}
-            {activeRoom === 'habitat-training' && <HabitatTraining enabled={trainingEnabled} />}
+            {activeRoom === 'habitat-training' ? (
+              <HabitatTraining enabled={trainingEnabled} />
+            ) : !builtSet.has(activeRoom) ? (
+              <RoomBuildPrompt room={activeDefinition} francs={francs} stash={stash} onBuild={onBuildRoom} />
+            ) : activeRoom === 'mineral-vault' ? (
+              <MineralVault minerals={minerals} />
+            ) : (
+              <PartsLocker parts={parts} />
+            )}
           </div>
         ) : (
           <>
@@ -344,6 +485,7 @@ export function HubSubsurfaceView({
               <div className={styles.roomGrid}>
                 {SUBSURFACE_ROOMS.map((room, index) => {
                   const locked = room.id === 'habitat-training' && !trainingEnabled
+                  const built = builtSet.has(room.id)
                   return (
                     <button
                       className={`${styles.roomCard} ${locked ? styles.roomCardLocked : ''}`}
@@ -359,18 +501,29 @@ export function HubSubsurfaceView({
                         </div>
                         <span className={styles.bayNumber}>0{index + 1}</span>
                       </div>
-                      <RoomScene
-                        id={room.id}
-                        minerals={minerals}
-                        parts={parts}
-                        trainingEnabled={trainingEnabled}
-                      />
+                      {!locked && built ? (
+                        <RoomScene
+                          id={room.id}
+                          minerals={minerals}
+                          parts={parts}
+                          trainingEnabled={trainingEnabled}
+                        />
+                      ) : !locked ? (
+                        <UnbuiltRoomScene room={room} />
+                      ) : (
+                        <RoomScene
+                          id={room.id}
+                          minerals={minerals}
+                          parts={parts}
+                          trainingEnabled={trainingEnabled}
+                        />
+                      )}
                       <p className={styles.roomDescription}>{room.description}</p>
                       <div className={styles.roomCardFooter}>
-                        <span className={`${styles.status} ${locked ? styles.statusLocked : ''}`}>
-                          {locked ? 'Coming soon' : 'Online'}
+                        <span className={`${styles.status} ${locked || !built ? styles.statusLocked : ''}`}>
+                          {locked ? 'Coming soon' : built ? 'Online' : 'Unbuilt'}
                         </span>
-                        <span className={styles.roomMetric}>{roomMetric(room.id)}</span>
+                        <span className={styles.roomMetric}>{roomMetric(room, locked, built)}</span>
                       </div>
                     </button>
                   )

@@ -132,6 +132,8 @@ describe('Earth Base — redesigned scene', () => {
         engine: 'ion-thruster-t1',
         payload: 'cargo-payload-t1',
       },
+      subsurfaceExcavated: true,
+      subsurfaceBuilt: ['mineral-vault', 'parts-locker'],
     })
     cy.contains('button', 'Subsurface').click({ scrollBehavior: false })
     cy.get('[data-testid="subsurface-facility-cutaway"]', { timeout: 10000 })
@@ -155,6 +157,8 @@ describe('Earth Base — redesigned scene', () => {
         engine: 'ion-thruster-t1',
         payload: 'cargo-payload-t1',
       },
+      subsurfaceExcavated: true,
+      subsurfaceBuilt: ['mineral-vault', 'parts-locker'],
     })
     cy.contains('button', 'Subsurface').click({ scrollBehavior: false })
     cy.get('[data-testid="subsurface-facility-cutaway"]', { timeout: 10000 })

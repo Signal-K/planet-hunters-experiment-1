@@ -34,7 +34,7 @@ export default function FeedbackButton() {
           position: 'absolute', bottom: 12, right: 12, zIndex: 80,
           padding: '6px 12px',
           background: 'rgba(8,20,36,0.85)',
-          border: '1px solid rgba(100,180,255,0.18)',
+          border: '1px solid rgba(112,217,234,0.18)',
           borderRadius: 8,
           color: 'rgba(169,184,206,0.7)',
           fontFamily: 'var(--ln-font-display)', fontSize: 10, fontWeight: 700,
@@ -48,14 +48,14 @@ export default function FeedbackButton() {
       {open && (
         <div data-ui-zone={UI_ZONES.modalOverlay} style={{ position: 'absolute', inset: 0, zIndex: 96, display: 'flex', alignItems: 'flex-end' }}>
           <div
-            style={{ position: 'absolute', inset: 0, background: 'rgba(3,6,12,0.7)' }}
+            style={{ position: 'absolute', inset: 0, background: 'rgba(8,8,9,0.7)' }}
             onClick={() => setOpen(false)}
           />
           <div style={{
             position: 'relative', width: '100%',
             background: 'linear-gradient(180deg, #0d1c30, #060d18)',
             borderTopLeftRadius: 20, borderTopRightRadius: 20,
-            border: '1px solid rgba(63,169,255,0.25)',
+            border: '1px solid rgba(112,217,234,0.25)',
             padding: '14px 16px 28px',
             boxShadow: '0 -12px 40px rgba(0,0,0,0.6)',
           }}>
@@ -87,8 +87,8 @@ export default function FeedbackButton() {
                   autoFocus
                   style={{
                     width: '100%', padding: '10px 12px',
-                    background: 'rgba(8,16,28,0.8)',
-                    border: '1px solid rgba(63,169,255,0.25)',
+                    background: 'rgba(20,20,23,0.8)',
+                    border: '1px solid rgba(112,217,234,0.25)',
                     borderRadius: 10, resize: 'none', outline: 'none',
                     fontFamily: 'var(--ln-font-body)', fontSize: 13, color: '#e6efff',
                     lineHeight: 1.5, boxSizing: 'border-box',

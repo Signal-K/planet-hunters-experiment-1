@@ -389,28 +389,47 @@ const ART_W: Record<string, number> = {
   command: 60,
 }
 
+// The modular launchpad's sprites (STS-611) are authored at a much larger
+// natural footprint (mast-to-mast ~206 units — see buildLaunchpad) than the
+// 60-wide envelope every other building silhouette, and this building's own
+// Graphics fallback, assume. Rather than change ART_W (which would also
+// rescale the unrelated Graphics fallback against existing expectations),
+// the textured sprite group is pre-shrunk by this factor so it occupies the
+// same ~60-wide footprint as everything else once the holder applies its own
+// `def.w / ART_W.launchpad` scale.
+const LAUNCHPAD_SPRITE_SCALE = 60 / 206
+
 // ─── Texture bag ──────────────────────────────────────────────────────────────
 export interface HubTextures {
-  pad_base:       Texture | null
-  pad_tower:      Texture | null
-  pad_gantry:     Texture | null
-  cmd_foundation: Texture | null
-  cmd_building:   Texture | null
-  cmd_antenna:    Texture | null
-  depot_base:     Texture | null
-  depot_tank:     Texture | null
-  depot_pipes:    Texture | null
-  scan_tripod:    Texture | null
-  scan_dish:      Texture | null
+  /** Modular launchpad — six independent sprites (STS-611), not one baked pad.
+   *  Deck stands alone as an idle-but-built pad; the rest lets the scene
+   *  position/animate gantries, arm, clamps, masts and tank independently. */
+  pad_deck:         Texture | null
+  pad_gantry_frame: Texture | null
+  /** Hinge at the sprite's LEFT edge, vertically centred — rendered that way
+   *  so anchor(0, 0.5) rotates it about the tower without the pivot drifting. */
+  pad_swing_arm:    Texture | null
+  pad_clamp:        Texture | null
+  pad_mast:         Texture | null
+  pad_tank:         Texture | null
+  cmd_foundation:   Texture | null
+  cmd_building:     Texture | null
+  cmd_antenna:      Texture | null
+  depot_base:       Texture | null
+  depot_tank:       Texture | null
+  depot_pipes:      Texture | null
+  scan_tripod:      Texture | null
+  scan_dish:        Texture | null
   /** Satellite Monitoring Station. Distinct from cmd_building: it is drawn at
    *  52x36 rather than 56x56, and is a dish on a squat block rather than a
    *  second command centre. Sharing one texture between them squashed it. */
-  sat_station:    Texture | null
+  sat_station:      Texture | null
 }
 
 export function nullTextures(): HubTextures {
   return {
-    pad_base: null, pad_tower: null, pad_gantry: null,
+    pad_deck: null, pad_gantry_frame: null, pad_swing_arm: null,
+    pad_clamp: null, pad_mast: null, pad_tank: null,
     cmd_foundation: null, cmd_building: null, cmd_antenna: null,
     depot_base: null, depot_tank: null, depot_pipes: null,
     scan_tripod: null, scan_dish: null, sat_station: null,
@@ -465,20 +484,56 @@ function buildMound(width: number): { root: Container; animatables: AnimState[] 
 // ─── Building renderers ───────────────────────────────────────────────────────
 
 /**
- * Launchpad — direct port of the mockup's inline SVG (viewBox 0 0 100 130,
- * feet at y=114). Converted to the (0,0)-at-ground-center convention by
- * x' = x - 50, y' = y - 114.
+ * Launchpad — modular (STS-611): deck, twin gantry frames, swing arm, clamps,
+ * masts and tank as six independent sprites instead of one baked pad, so the
+ * arm can retract and the pad can stand built-but-empty. Positions are the
+ * Blender models' own authored dimensions (tools/blender/models/launchpad.py
+ * `layout` tuples: deck 72x18, frame 28x96, arm 34x10, clamp 12x16, mast 6x72,
+ * tank 20x24) at the exact relative offsets from
+ * tools/blender/make_preview.py's reviewed composite, divided by that script's
+ * 3x render scale. `pad_gantry_frame` is not mirrored — the model's bracing
+ * is already left-right symmetric (only front/back shading differs), which
+ * is also why make_preview.py places two identical copies rather than a
+ * flipped pair. Falls back to the original single-silhouette Graphics port of
+ * the mockup's inline SVG (viewBox 0 0 100 130, feet at y=114, converted by
+ * x' = x - 50, y' = y - 114) when any modular texture is missing.
  */
 function buildLaunchpad(hot: boolean, tex: HubTextures): { root: Container; animatables: AnimState[] } {
   const root = new Container()
   const anims: AnimState[] = []
 
-  const base = makeSprite(tex.pad_base, 48, 12)
-  const tower = makeSprite(tex.pad_tower, 8, 80, 0.5, 1.0)
-  const gantry = makeSprite(tex.pad_gantry, 40, 6, 0.5, 0.5)
+  const deck = makeSprite(tex.pad_deck, 72, 18)
+  const frameL = makeSprite(tex.pad_gantry_frame, 28, 96)
+  const frameR = makeSprite(tex.pad_gantry_frame, 28, 96)
+  const arm = makeSprite(tex.pad_swing_arm, 34, 10, 0, 0.5)
+  const clampL = makeSprite(tex.pad_clamp, 12, 16)
+  const clampR = makeSprite(tex.pad_clamp, 12, 16)
+  const mastL = makeSprite(tex.pad_mast, 6, 72)
+  const mastR = makeSprite(tex.pad_mast, 6, 72)
+  const tankL = makeSprite(tex.pad_tank, 20, 24)
+  const tankR = makeSprite(tex.pad_tank, 20, 24)
 
-  if (base && tower && gantry) {
-    tower.y = -16; root.addChild(base, tower, gantry)
+  let beaconY = -104
+
+  if (deck && frameL && frameR && arm && clampL && clampR && mastL && mastR && tankL && tankR) {
+    const DECK_TOP = -13.33  // frames/clamps stand on the deck, not the ground
+    mastL.x = -100; mastR.x = 100
+    tankL.x = -63.33; tankR.x = 63.33
+    frameL.x = -26; frameL.y = DECK_TOP
+    frameR.x = 26; frameR.y = DECK_TOP
+    clampL.x = -8.67; clampL.y = DECK_TOP
+    clampR.x = 8.67; clampR.y = DECK_TOP
+    // Hinge sits inboard of the left frame, stowed-open reaching toward where
+    // a vehicle would stand at deck centre. Swung clear when `hot`.
+    arm.x = -17.33; arm.y = -80
+    arm.rotation = hot ? -1.1 : 0
+
+    // Pre-shrunk to the shared ~60-wide envelope — see LAUNCHPAD_SPRITE_SCALE.
+    const padGroup = new Container()
+    padGroup.scale.set(LAUNCHPAD_SPRITE_SCALE)
+    padGroup.addChild(mastL, mastR, tankL, tankR, frameL, frameR, deck, clampL, clampR, arm)
+    root.addChild(padGroup)
+    beaconY = (-13.33 - 96) * LAUNCHPAD_SPRITE_SCALE - 2  // just above the frame tops
   } else {
     const g = new Graphics()
     // Mast + crown
@@ -502,13 +557,13 @@ function buildLaunchpad(hot: boolean, tex: HubTextures): { root: Container; anim
 
   // Status beacon — mint idle, brighter + haloed when a launch is pending
   const beacon = new Graphics()
-  beacon.circle(0, -104, 3).fill(C.mint)
+  beacon.circle(0, beaconY, 3).fill(C.mint)
   root.addChild(beacon)
   anims.push({ kind: 'blink', obj: beacon, speed: hot ? 3.2 : 1.3, phase: 0 })
 
   if (hot) {
     const halo = new Graphics()
-    halo.circle(0, -104, 9).fill({ color: C.mint, alpha: 0.28 })
+    halo.circle(0, beaconY, 9).fill({ color: C.mint, alpha: 0.28 })
     root.addChild(halo)
     anims.push({ kind: 'pulse', obj: halo, speed: 2.2, phase: 0, min: 0.2, max: 0.7 })
   }
@@ -674,6 +729,16 @@ export interface HubBuildingDef {
   w: number
   hot?: boolean
   status?: 'ok' | 'warn' | 'info'
+  /**
+   * Post-tutorial Hub prominence pass (STS-631): the Launchpad is the only
+   * `unlocksAt: 'always'` structure and should always read as the base's
+   * primary structure. Telescope/satellite buildings that are unlocked but
+   * still in their early "not yet actively producing" state (Satellite
+   * Monitoring Station before the transit satellite launches, Deep Space
+   * Telescope before it's built) are marked `dimmed` so they recede behind
+   * the Launchpad rather than compete with it for attention.
+   */
+  dimmed?: boolean
 }
 
 // ─── Main scene builder ───────────────────────────────────────────────────────
@@ -728,7 +793,11 @@ export function buildHubScene(
 
     const holder = new Container()
     holder.label = 'building'
-    holder.zIndex = 10
+    // Launchpad renders above every other structure (STS-631 Hub prominence
+    // pass) so it never reads as visually subordinate to a telescope/
+    // satellite building sharing the same ground line.
+    holder.zIndex = def.kind === 'launchpad' ? 20 : 10
+    holder.alpha = def.dimmed ? 0.55 : 1
     holder.x = def.plotX * scaleX
     holder.y = groundY
     holder.scale.set(scale)

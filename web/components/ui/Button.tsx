@@ -17,7 +17,7 @@ interface ButtonProps {
 }
 
 const GRADS: Record<ButtonKind, [string, string, string, string]> = {
-  cyan:  ['#6cc2ff', '#2d8de0', '#06121f', 'rgba(63,169,255,0.4)'],
+  cyan:  ['#6cc2ff', '#2d8de0', '#06121f', 'rgba(112,217,234,0.4)'],
   amber: ['#ffc25c', '#d68a0d', '#1d0c00', 'rgba(245,166,35,0.4)'],
   green: ['#6cf09a', '#1ea54a', '#02180c', 'rgba(57,211,106,0.4)'],
 }
@@ -64,7 +64,7 @@ export function GhostBtn({ children, onClick, full = true, testId }: ButtonProps
       style={{
         width: full ? '100%' : 'auto',
         padding: '12px 18px',
-        background: 'rgba(8,16,28,0.6)',
+        background: 'rgba(20,20,23,0.6)',
         color: '#a9b8ce',
         fontFamily: 'var(--ln-font-display)',
         fontWeight: 700,
@@ -106,9 +106,9 @@ export function IconBtn({
         height: size,
         flexShrink: 0,
         borderRadius: 999,
-        background: 'rgba(8,16,28,0.7)',
+        background: 'rgba(20,20,23,0.7)',
         backdropFilter: 'blur(6px)',
-        border: '1px solid rgba(63,169,255,0.35)',
+        border: '1px solid rgba(112,217,234,0.35)',
         color,
         display: 'inline-flex',
         alignItems: 'center',

@@ -44,9 +44,9 @@ function RocketCard({ rocket, missionsDone, onSelect }: { rocket: RocketModel; m
   return (
     <div style={{
       borderRadius: 12,
-      border: `1px solid ${isAvailable ? 'rgba(63,169,255,0.35)' : 'rgba(63,169,255,0.1)'}`,
+      border: `1px solid ${isAvailable ? 'rgba(112,217,234,0.35)' : 'rgba(112,217,234,0.1)'}`,
       background: isAvailable
-        ? 'linear-gradient(160deg, rgba(12,22,38,0.97) 0%, rgba(6,12,22,0.99) 100%)'
+        ? 'linear-gradient(160deg, rgba(12,22,38,0.97) 0%, rgba(11,11,13,0.99) 100%)'
         : 'rgba(6,10,18,0.6)',
       overflow: 'hidden',
       opacity: isLocked ? 0.5 : 1,
@@ -57,19 +57,19 @@ function RocketCard({ rocket, missionsDone, onSelect }: { rocket: RocketModel; m
         width: '100%',
         height: isAvailable ? 110 : 64,
         background: isAvailable
-          ? 'radial-gradient(ellipse at 55% 50%, rgba(63,169,255,0.12) 0%, rgba(0,0,0,0.0) 65%), linear-gradient(180deg, rgba(8,18,32,0.0), rgba(6,12,22,0.95))'
+          ? 'radial-gradient(ellipse at 55% 50%, rgba(112,217,234,0.12) 0%, rgba(0,0,0,0.0) 65%), linear-gradient(180deg, rgba(8,18,32,0.0), rgba(11,11,13,0.95))'
           : 'rgba(4,8,14,0.8)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
         overflow: 'hidden',
-        borderBottom: `1px solid ${isAvailable ? 'rgba(63,169,255,0.15)' : 'rgba(63,169,255,0.06)'}`,
+        borderBottom: `1px solid ${isAvailable ? 'rgba(112,217,234,0.15)' : 'rgba(112,217,234,0.06)'}`,
       }}>
         {/* Grid lines for tech feel */}
         {isAvailable && (
           <div style={{
             position: 'absolute', inset: 0, opacity: 0.08,
-            backgroundImage: 'linear-gradient(rgba(63,169,255,1) 1px, transparent 1px), linear-gradient(90deg, rgba(63,169,255,1) 1px, transparent 1px)',
+            backgroundImage: 'linear-gradient(rgba(112,217,234,1) 1px, transparent 1px), linear-gradient(90deg, rgba(112,217,234,1) 1px, transparent 1px)',
             backgroundSize: '24px 24px',
           }} />
         )}
@@ -79,19 +79,19 @@ function RocketCard({ rocket, missionsDone, onSelect }: { rocket: RocketModel; m
             alt={rocket.name}
             width={240}
             height={90}
-            style={{ objectFit: 'contain', filter: 'drop-shadow(0 0 18px rgba(63,169,255,0.35))' }}
+            style={{ objectFit: 'contain', filter: 'drop-shadow(0 0 18px rgba(112,217,234,0.35))' }}
           />
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
-            <span style={{ fontFamily: 'var(--ln-font-mono)', fontSize: 22, color: 'rgba(63,169,255,0.18)', letterSpacing: '0.12em' }}>TIER {rocket.tier}</span>
-            <span style={{ fontFamily: 'var(--ln-font-display)', fontSize: 7, color: 'rgba(63,169,255,0.3)', letterSpacing: '0.2em', textTransform: 'uppercase' }}>Classified</span>
+            <span style={{ fontFamily: 'var(--ln-font-mono)', fontSize: 22, color: 'rgba(112,217,234,0.18)', letterSpacing: '0.12em' }}>TIER {rocket.tier}</span>
+            <span style={{ fontFamily: 'var(--ln-font-display)', fontSize: 7, color: 'rgba(112,217,234,0.3)', letterSpacing: '0.2em', textTransform: 'uppercase' }}>Classified</span>
           </div>
         )}
         {/* Tier badge */}
         <div style={{
           position: 'absolute', top: 8, left: 8,
           fontFamily: 'var(--ln-font-mono)', fontSize: 7, fontWeight: 700, letterSpacing: '0.18em',
-          color: isAvailable ? 'var(--ln-cyan)' : 'rgba(63,169,255,0.35)',
+          color: isAvailable ? 'var(--ln-cyan)' : 'rgba(112,217,234,0.35)',
           textTransform: 'uppercase',
         }}>
           TIER {rocket.tier}
@@ -100,9 +100,9 @@ function RocketCard({ rocket, missionsDone, onSelect }: { rocket: RocketModel; m
           <div style={{
             position: 'absolute', top: 6, right: 8,
             padding: '2px 6px', borderRadius: 4,
-            border: '1px solid rgba(63,169,255,0.22)',
+            border: '1px solid rgba(112,217,234,0.22)',
             fontFamily: 'var(--ln-font-display)', fontSize: 7, fontWeight: 700,
-            letterSpacing: '0.14em', color: 'rgba(63,169,255,0.45)',
+            letterSpacing: '0.14em', color: 'rgba(112,217,234,0.45)',
             textTransform: 'uppercase',
           }}>
             Locked
@@ -184,7 +184,7 @@ export default function HangarScreen({ francs, missionsDone, unlockedSkillNodes,
               padding: '10px 14px',
               borderRadius: 12,
               border: '1px solid rgba(200,41,62,0.45)',
-              background: 'linear-gradient(135deg, rgba(200,41,62,0.08) 0%, rgba(10,18,29,0.95) 60%)',
+              background: 'linear-gradient(135deg, rgba(200,41,62,0.08) 0%, rgba(24,24,28,0.95) 60%)',
               textAlign: 'left',
               cursor: 'pointer',
               boxShadow: '0 0 24px rgba(200,41,62,0.12)',

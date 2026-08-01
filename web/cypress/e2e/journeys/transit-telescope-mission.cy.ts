@@ -96,7 +96,11 @@ describe('Telescope construction/launch mission (STS-138)', () => {
     cy.get('[data-testid="mission-card-story-transit-telescope-launch"]', { timeout: 10000 })
       .scrollIntoView()
       .click({ force: true })
-    cy.contains('Build Your Rocket', { timeout: 10000 }).should('be.visible')
+    // Picking the mission card lands on rocket-buy's "Select Rocket" step
+    // (step 3 of 4: Mission -> Target -> Rocket -> Launch), not a
+    // "Build Your Rocket" screen — that heading doesn't exist anywhere in
+    // the current flow.
+    cy.contains('Select Rocket', { timeout: 10000 }).should('be.visible')
   })
 
   it('gates the TESS discovery screen behind the Satellite Monitoring Station', () => {
@@ -138,6 +142,9 @@ describe('Telescope construction/launch mission (STS-138)', () => {
     }).as('subjects')
     visitWithState('/game/galaxy', 'galaxy', { satelliteMonitoringBuilt: true, transitSatelliteLaunchedAt: Date.now() - 1000 })
     cy.wait('@subjects')
-    cy.contains('TESS ANOMALY', { timeout: 15000 }).should('be.visible')
+    // STS-582's instrument-feed rename replaced the old "TESS ANOMALY"
+    // heading with the TopBar eyebrow below plus the candidate's own TOI id
+    // as the title (see tess-discovery-desktop-layout.cy.ts's identical fix).
+    cy.contains('INSTRUMENT DATA FEED', { timeout: 15000 }).should('be.visible')
   })
 })

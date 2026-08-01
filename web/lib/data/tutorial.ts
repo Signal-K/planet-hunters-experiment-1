@@ -17,6 +17,18 @@ export const M1_STEPS: TutorialStep[] = [
     desktopBody: 'Mining contracts are on the mission board.',
     desktopAction: 'Click the Launchpad',
     desktopCoachId: 'building-launchpad', desktopDir: 'up' },
+  // Sibling of step 1, same id — tapping the launchpad now opens its own
+  // program screen first (STS-625) instead of going straight to Missions, so
+  // a player who reaches it while still chasing this "find a client mission"
+  // step needs a further nudge toward the contracts button there. Same id as
+  // step 1 so `doneSteps`/skip share one entry; screen match picks whichever
+  // of the two applies to where the player currently is.
+  { id: 1, screen: 'launchpad', title: 'Open a Mission',
+    body: 'Your own program is here — client contracts are one press further in.',
+    action: 'Tap View All Contracts',
+    anchor: 'bottom', spot: null, coachId: 'launchpad-view-contracts', dir: 'down', cta: 'View All Contracts',
+    desktopAction: 'Click View All Contracts',
+    desktopCoachId: 'launchpad-view-contracts', desktopDir: 'down' },
   { id: 2, screen: 'missions', title: 'Lock a Contract',
     body: 'Pick a client — they specify what to mine and pay a bonus on delivery.',
     action: 'Tap a contract card',
@@ -57,6 +69,13 @@ export const M2_STEPS: TutorialStep[] = [
     desktopBody: 'Prospector is now available — bigger cargo bay and stronger drill. You\'re still in guided operations. Click MISSIONS to continue.',
     desktopAction: 'Click the Launchpad',
     desktopCoachId: 'building-launchpad', desktopDir: 'up' },
+  // Sibling of step 20 — see the id:1 launchpad sibling above for why this exists.
+  { id: 20, screen: 'launchpad', title: 'Guided Ops · Mission 2',
+    body: 'Your own program is here — client contracts are one press further in.',
+    action: 'Tap View All Contracts',
+    anchor: 'bottom', spot: null, cta: 'View All Contracts', coachId: 'launchpad-view-contracts', dir: 'down',
+    desktopAction: 'Click View All Contracts',
+    desktopCoachId: 'launchpad-view-contracts', desktopDir: 'down' },
   { id: 21, screen: 'rocket-buy', title: 'Prospector — Select Your Rocket',
     body: 'Prospector has been assigned to this mission. It carries more ore than Explorer and reaches deeper mineral tiers.',
     manual: true,
@@ -71,6 +90,13 @@ export const M3_STEPS: TutorialStep[] = [
     desktopBody: 'New job type: mine at the pickup site, then haul the cargo to a second target before heading home. You\'re paid for both legs — mining the ore and running the delivery. Click MISSIONS to continue.',
     desktopAction: 'Click the Launchpad',
     desktopCoachId: 'building-launchpad', desktopDir: 'up' },
+  // Sibling of step 30 — see the id:1 launchpad sibling above for why this exists.
+  { id: 30, screen: 'launchpad', title: 'Guided Ops · Mission 3',
+    body: 'Your own program is here — client contracts are one press further in.',
+    action: 'Tap View All Contracts',
+    anchor: 'bottom', spot: null, cta: 'View All Contracts', coachId: 'launchpad-view-contracts', dir: 'down',
+    desktopAction: 'Click View All Contracts',
+    desktopCoachId: 'launchpad-view-contracts', desktopDir: 'down' },
   { id: 31, screen: 'rocket-buy', title: 'Two-Stop Route',
     body: 'This contract has two legs — pickup, then delivery. Buy a rocket with enough range to reach both before launching. Your payout at debrief will break out as a mining fee and a transport fee.',
     manual: true,

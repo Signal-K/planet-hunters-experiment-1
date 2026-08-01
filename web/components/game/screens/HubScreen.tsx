@@ -19,12 +19,13 @@ import HubPixiCanvas from '@/components/game/hub/HubPixiCanvas'
 import ErrorBoundary from '@/components/ui/ErrorBoundary'
 import { TUTORIAL_CONTENT_TOP } from '@/lib/tutorial-layout'
 import { FREE_OPS_START_MISSIONS_DONE } from '@/lib/data/mission-generator'
-import { LAUNCHPAD_UPGRADE_COST } from '@/lib/data'
+import { LAUNCHPAD_UPGRADE_COST, type SubsurfaceRoomId } from '@/lib/data'
 import { formatCurrency } from '@/lib/format'
 import { FEATURE_FLAGS } from '@/lib/featureFlags'
 import type { HubBuildingDef } from '@/lib/pixi/hubScene'
 import { fetchReviewableTessCandidates } from '@/lib/tess-subjects'
-import { instrumentDigestDateKey, unresolvedTransitInstrumentDigest } from '@/lib/systems/InstrumentFeedSystem'
+import { fetchReviewableAsteroidCandidates } from '@/lib/asteroid-subjects'
+import { instrumentDigestDateKey, unresolvedTransitInstrumentDigest, unresolvedDeepSpaceInstrumentDigest } from '@/lib/systems/InstrumentFeedSystem'
 import HUDStrip from '@/components/ui/HUDStrip'
 
 // ── Ref-B bordered-icon-badge glyphs for Hub chrome (bottom tabs) ──
@@ -128,14 +129,17 @@ interface HubScreenProps {
   onGoBuilding: (b: string) => void
   onNav: (s: Screen) => void
   onUpgradeLaunchpad?: () => void
+  onExcavateSubsurface?: () => void
+  onBuildSubsurfaceRoom?: (roomId: SubsurfaceRoomId) => void
 }
 
-export default function HubScreen({ player, hasCoach, onGoBuilding, onNav, onUpgradeLaunchpad }: HubScreenProps) {
+export default function HubScreen({ player, hasCoach, onGoBuilding, onNav, onUpgradeLaunchpad, onExcavateSubsurface, onBuildSubsurfaceRoom }: HubScreenProps) {
   const [editMode, setEditMode] = useState(false)
   const [plotEntities, setPlotEntities] = useState<EntityData[]>(DEFAULT_PLOTS)
   const [subsurface, setSubsurface] = useState(false)
   const [confirmingLaunchpadUpgrade, setConfirmingLaunchpadUpgrade] = useState(false)
   const [tessQueueCount, setTessQueueCount] = useState(0)
+  const [asteroidQueueCount, setAsteroidQueueCount] = useState(0)
   const { show: showTutorialComplete, dismiss: dismissTutorialComplete } = useTutorialCompleteAck(player.missionsDone, FREE_OPS_START_MISSIONS_DONE)
   const placed = player.placed ?? []
   const placementPlots = player.placementPlots ?? {}
@@ -177,6 +181,28 @@ export default function HubScreen({ player, hasCoach, onGoBuilding, onNav, onUpg
     return () => { cancelled = true }
   }, [player.freeOperations, player.satelliteMonitoringBuilt, player.transitSatelliteLaunchedAt, player.tessClassifications])
 
+  // Deep Space Telescope badge: same InstrumentFeedSystem-shared pattern as
+  // the SMS badge above, for the second (asteroid/NEOCP) instrument (STS-622).
+  useEffect(() => {
+    if (!player.freeOperations || !player.deepSpaceTelescopeBuilt) {
+      setAsteroidQueueCount(0)
+      return
+    }
+    let cancelled = false
+    fetchReviewableAsteroidCandidates()
+      .then(candidates => {
+        if (cancelled) return
+        const unresolved = unresolvedDeepSpaceInstrumentDigest(
+          candidates,
+          player,
+          instrumentDigestDateKey()
+        )
+        setAsteroidQueueCount(unresolved.length)
+      })
+      .catch(() => { if (!cancelled) setAsteroidQueueCount(0) })
+    return () => { cancelled = true }
+  }, [player.freeOperations, player.deepSpaceTelescopeBuilt, player.asteroidClassifications])
+
   const sortedEntities = plotEntities.slice().sort((a, b) => {
     const ai = readComponentNumber(a, 'BuildPlot', 'index', 0)
     const bi = readComponentNumber(b, 'BuildPlot', 'index', 0)
@@ -201,7 +227,17 @@ export default function HubScreen({ player, hasCoach, onGoBuilding, onNav, onUpg
     return kind
   }
 
-  const BUILDING_W: Record<string, number> = { launchpad: 98, refinery: 84, 'scan-station': 80, 'satellite-monitoring-station': 86, 'astronaut-academy': 88, command: 84 }
+  const BUILDING_W: Record<string, number> = { launchpad: 98, refinery: 84, 'scan-station': 80, 'satellite-monitoring-station': 86, 'deep-space-telescope': 86, 'astronaut-academy': 88, command: 84 }
+  // Post-tutorial Hub prominence pass (STS-631): telescope/satellite
+  // buildings recede visually while they're unlocked but still in their
+  // early, not-yet-actively-producing state — Satellite Monitoring Station
+  // before the transit satellite launches, Deep Space Telescope before it's
+  // built — so the Launchpad keeps reading as the base's primary structure.
+  const isDimmedBuildingKind = (kind: string): boolean => {
+    if (kind === 'satellite-monitoring-station') return !player.transitSatelliteLaunchedAt
+    if (kind === 'deep-space-telescope') return !player.deepSpaceTelescopeBuilt
+    return false
+  }
   const hubBuildings: HubBuildingDef[] = sortedEntities.flatMap((e, plot) => {
     const kind = structureForPlot(plot)
     if (!kind) return []
@@ -211,6 +247,7 @@ export default function HubScreen({ player, hasCoach, onGoBuilding, onNav, onUpg
       w: BUILDING_W[kind] ?? 78,
       hot: kind === 'launchpad' ? !!player.pendingLaunch : kind === 'scan-station' ? (!!player.activeScan && Date.now() >= player.activeScan.completesAt) : false,
       status: 'ok' as const,
+      dimmed: isDimmedBuildingKind(kind),
     }]
   })
   // Launchpad speech bubble — the base "speaking up" when it has a prompt and
@@ -277,7 +314,19 @@ export default function HubScreen({ player, hasCoach, onGoBuilding, onNav, onUpg
         status: (player.transitSatelliteLaunchedAt ? 'ok' : 'info') as 'ok' | 'info',
         w: 86,
         badge: tessQueueCount,
+        dimmed: isDimmedBuildingKind(kind),
         onClick: () => onGoBuilding('satellite-monitoring-station'),
+      }
+    }
+    if (kind === 'deep-space-telescope') {
+      return {
+        kind, label: 'D.S.T.',
+        sub: player.deepSpaceTelescopeBuilt ? 'TELESCOPE LIVE' : 'READY',
+        status: (player.deepSpaceTelescopeBuilt ? 'ok' : 'info') as 'ok' | 'info',
+        w: 86,
+        badge: asteroidQueueCount,
+        dimmed: isDimmedBuildingKind(kind),
+        onClick: () => onGoBuilding('deep-space-telescope'),
       }
     }
     if (kind === 'astronaut-academy') {
@@ -367,6 +416,11 @@ export default function HubScreen({ player, hasCoach, onGoBuilding, onNav, onUpg
             stash={player.stash}
             installedParts={player.shipCustomizerParts}
             trainingEnabled={FEATURE_FLAGS.subsurfaceHabitatTraining}
+            francs={player.francs}
+            subsurfaceExcavated={player.subsurfaceExcavated}
+            subsurfaceBuilt={player.subsurfaceBuilt}
+            onExcavate={onExcavateSubsurface}
+            onBuildRoom={onBuildSubsurfaceRoom}
           />
         </div>
 
@@ -379,7 +433,7 @@ export default function HubScreen({ player, hasCoach, onGoBuilding, onNav, onUpg
         padding: '16px 14px 22px',
         background: subsurface
           ? 'linear-gradient(180deg, rgba(6,3,0,0.9) 0%, rgba(6,3,0,0.5) 60%, transparent 100%)'
-          : 'linear-gradient(180deg, rgba(5,10,22,0.82) 0%, rgba(5,10,22,0.4) 65%, transparent 100%)',
+          : 'linear-gradient(180deg, rgba(10,10,12,0.82) 0%, rgba(10,10,12,0.4) 65%, transparent 100%)',
         display: 'flex', alignItems: 'flex-start', gap: 10, pointerEvents: 'none',
         transition: 'background 0.55s',
       }}>
@@ -393,7 +447,7 @@ export default function HubScreen({ player, hasCoach, onGoBuilding, onNav, onUpg
         </div>
         <span style={{ flex: 1 }} />
         <div style={{ pointerEvents: 'auto' }}>
-          <HUDStrip player={player} showStash />
+          <HUDStrip player={player} showStash onJobsClick={() => onNav('missions')} />
         </div>
       </div>
 
@@ -418,8 +472,14 @@ export default function HubScreen({ player, hasCoach, onGoBuilding, onNav, onUpg
         />
       )}
 
-      {/* Bottom toolbar — hidden during tutorial */}
-      {!hasCoach && (
+      {/* Bottom toolbar — hidden only during the strict M1 first-run
+          tutorial (missionsDone === 0). M2/M3 "guided ops" still set
+          hasCoach true on this screen (every tier has a hub coach step
+          nudging toward Missions), but that's a lighter nudge, not a
+          full-screen takeover — hiding Edit/Build, Subsurface, and Surface
+          Ops for the whole guided-ops window meant those buttons stayed
+          unreachable well past the tutorial (bug reported 2026-07-31). */}
+      {(!hasCoach || player.missionsDone > 0) && (
         <div style={{
           position: 'absolute', left: 0, right: 0, bottom: 110, zIndex: 20,
           display: 'flex', justifyContent: 'center', gap: 8, flexWrap: 'wrap',

@@ -26,7 +26,7 @@ export default function TerritoryClaimPopup({ targetId, clientId, onDismiss }: T
       dismissOnBackdrop={false}
       zIndex={200}
       ariaLabel="Territory established"
-      scrimStyle={{ background: 'rgba(6, 9, 15, 0.88)' }}
+      scrimStyle={{ background: 'rgba(10,10,11, 0.88)' }}
       panelStyle={{
         background: 'var(--ln-panel)',
         border: '1px solid var(--ln-hairline)',

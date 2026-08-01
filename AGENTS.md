@@ -1,6 +1,10 @@
 <!-- LANDNAM PROJECT REQUIREMENTS START -->
 # Landnam — Agent Instructions
 
+## Desk-first agent workflow
+
+Desk is the sole project-management system for Landnam. Before changing code, resolve the relevant Desk ticket or create one with `create_ticket`. During work, update it when scope, status, blockers, or decisions change. Before finishing, add implementation evidence and tests with `add_comment`, move it to the correct Desk status, attach useful file references with `attach_file_ref`, and include the Desk key in the commit subject or body. Never use Knowns, `.knowns`, Plate, or workspace ticket Markdown as a replacement for Desk ticket state. If no Desk key exists, stop before committing and create or resolve the ticket.
+
 > **Canonical guidance**: Read `KNOWNS.md` in the repository root for full workflow rules. This file covers Landnam-specific repo layout and conventions only.
 
 ## Knowns Project Root
@@ -31,10 +35,10 @@ For CLI workflows, run `knowns ...` commands from `/Users/scroobz/Navigation` or
 ## What this project is
 
 Landnam is a mining and resource-management game in the Star Sailors ecosystem.
-Players manage a space program: build rockets, accept contractor jobs, fly to
+Players manage a space program: build rockets, accept client jobs, fly to
 targets, mine minerals, sell cargo, and reinvest. The active onboarding scope is
-M1 and M2. M2 uses the newer SR2 purchase flow. M3 is not yet fully described;
-do not revive earlier onboarding or post-onboarding plans.
+M1 and M2. M2 uses the newer Prospector purchase flow. M3 is not yet fully
+described; do not revive earlier onboarding or post-onboarding plans.
 
 ## Tech stack
 
@@ -116,8 +120,8 @@ PocketBase superuser (both): `liam@skinetics.tech` / `ThisIsATestPassword`
 
 - Parts unlock via `missionsRequired` field (not level/XP — those are removed)
 - `suggestBuild()` in `data.ts` takes `missionsDone` (not `level`)
-- M1 complete → SR2 is available as a purchasable prebuilt starter rocket
-- Starter rockets are single-use/unibody during onboarding
+- M1 complete → Prospector is available as a purchasable prebuilt rocket model
+- Prebuilt rocket models are single-use/unibody during onboarding (STS-604 retired "starter rocket" — see `web/lib/data/rockets.ts`)
 - Post-onboarding custom shipbuilding is not active until a new design is written
 
 ## Testing

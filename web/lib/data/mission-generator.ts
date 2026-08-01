@@ -172,7 +172,7 @@ function payoutMultiplier(client: ClientSlot): number {
 // (no deliveryTargetId), so it makes no sense to request minerals Earth
 // already has in abundance — filter those out, falling back to the full
 // list only if that would leave nothing to mine.
-function deliveryEligibleMineralKeys(template: MissionTemplate, minerals: Record<string, MineralMeta>): string[] {
+export function deliveryEligibleMineralKeys(template: MissionTemplate, minerals: Record<string, MineralMeta>): string[] {
   if (template.tag === 'CONSTRUCT') return template.mineralKeys
   const filtered = template.mineralKeys.filter(key => !minerals[key]?.earthAbundant)
   return filtered.length > 0 ? filtered : template.mineralKeys
@@ -301,6 +301,48 @@ export function generateFreeOpsMissionsFromRules(input: MissionGeneratorInput): 
         survey: template.survey,
       } satisfies Mission
     })
+  })
+}
+
+// Renewable self-directed mining pool: same freeops template pool, rotation
+// cadence, and mineral-eligibility filtering as generateFreeOpsMissionsFromRules
+// above, but with no client assigned at all (not even a starter-role client) —
+// these are the player's own program, sold to market at plain price, so they
+// must never carry a client premium or earn client affinity (see
+// isOwnProgramMission in mission-primers.ts). Excludes scan-only templates
+// (cargoRange [0, 0]) since a self-directed *mining* run always has cargo to sell.
+export function generateSelfDirectedMiningPoolFromRules(input: MissionGeneratorInput): Mission[] {
+  const templates = input.templates ?? DEFAULT_MISSION_TEMPLATES
+  const freeOpsTemplates = templates.filter(t => t.id.startsWith('freeops-') && t.cargoRange[0] + t.cargoRange[1] > 0)
+
+  return freeOpsTemplates.map((template, index) => {
+    const eligibleMineralKeys = deliveryEligibleMineralKeys(template, input.minerals)
+    const mineral = eligibleMineralKeys[index % eligibleMineralKeys.length]
+    const amount = template.cargoRange[0] + index
+    const mineralName = MINERAL_LABELS[mineral] ?? input.minerals[mineral]?.name ?? mineral
+    const francs = (input.minerals[mineral]?.price ?? 0) * amount * CARGO_BONUS_RATE * template.payoutMultiplier
+
+    return {
+      id: `self-directed-${template.id}-${index + 1}`,
+      title: `${mineralName} self-directed run`,
+      brief: `No client, no daily limit. Mine ${amount} units of ${mineralName.toLowerCase()} and sell the haul yourself at market price.`,
+      tag: 'FREE OPS',
+      difficulty: template.difficulty,
+      locked: false,
+      sequence: FREE_OPS_START_MISSIONS_DONE + 1,
+      unlockAt: 'Complete M3',
+      requires: {
+        minerals: { [mineral]: amount },
+        cargo_min: amount,
+        drill_tier: requiredDrillTier([mineral], template.drillTierMin, input.minerals),
+        max_orbit: template.orbitMax,
+      },
+      payout: {
+        francs: normalizeMissionPayout(francs, FREE_OPS_START_MISSIONS_DONE + 1),
+        affinity: 0,
+      },
+      survey: template.survey,
+    } satisfies Mission
   })
 }
 

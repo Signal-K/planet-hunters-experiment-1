@@ -82,7 +82,11 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
   // Persist state to localStorage
   useEffect(() => {
     if (!hydrated || isPreview.current) return
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(state))
+    // updatedAt (STS-635) is stamped only in the serialized write, not fed back
+    // into React state, so this effect can't retrigger itself. It's read back
+    // on next load via loadState()/normalizeState() and used as a tie-breaker
+    // in mergeRemoteState when local and remote missionsDone are equal.
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ ...state, updatedAt: Date.now() }))
   }, [state, hydrated])
 
   const router = useRouter()
@@ -203,6 +207,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       launchTransitSatellite: loop.launchTransitSatellite,
       submitTessClassification: loop.submitTessClassification,
       chooseSatelliteTarget: loop.chooseSatelliteTarget,
+      submitAsteroidClassification: loop.submitAsteroidClassification,
       // Tutorial
       setTutorial: tutorial.setTutorial,
       skipTutorial: tutorial.skipTutorial,
@@ -215,6 +220,8 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       onCollectRefined: economy.onCollectRefined,
       placeStructure: economy.placeStructure,
       upgradeLaunchpad: economy.upgradeLaunchpad,
+      excavateSubsurface: economy.excavateSubsurface,
+      buildSubsurfaceRoom: economy.buildSubsurfaceRoom,
       buildScanner: economy.buildScanner,
       startScan: economy.startScan,
       collectScan: economy.collectScan,

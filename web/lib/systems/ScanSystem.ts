@@ -5,6 +5,7 @@ import type { GameState } from '@/lib/game-types'
 import { SCANS_PER_DAY, SCAN_DURATION_MS } from '@/lib/data'
 import { todayDateKey } from '@/lib/data'
 import { structureIsStaffed } from './AcademySystem'
+import { applyGainResearchXP } from './ProgressionSystem'
 
 const RESEARCH_XP_PER_COMPLETED_SCAN = 10
 
@@ -39,13 +40,13 @@ export function applyCollectScan(s: GameState): GameState {
   const scan = s.player.activeScan
   if (!scan || Date.now() < scan.completesAt) return s
   const prev = s.player.targetScanCounts ?? {}
-  return {
+  const next: GameState = {
     ...s,
     player: {
       ...s.player,
       activeScan: null,
-      researchXP: (s.player.researchXP ?? 0) + RESEARCH_XP_PER_COMPLETED_SCAN,
       targetScanCounts: { ...prev, [scan.targetId]: (prev[scan.targetId] ?? 0) + 1 },
     },
   }
+  return applyGainResearchXP(next, RESEARCH_XP_PER_COMPLETED_SCAN)
 }

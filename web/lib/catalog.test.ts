@@ -1,5 +1,7 @@
 import { describe, it, expect } from 'vitest'
-import { toTarget, toMission, toPart, toClient, toStructure } from './catalog'
+import { toTarget, toMission, toPart, toClient, toStructure, withAuthoredExtras } from './catalog'
+import { AUTHORED_MISSIONS } from './data'
+import type { Mission } from './data'
 
 describe('Landnam Catalog Mapping', () => {
   it('maps a raw database record to a Target object', () => {
@@ -47,6 +49,35 @@ describe('Landnam Catalog Mapping', () => {
     expect(mission.sequence).toBe(3)
     expect(mission.deliveryTargetId).toBeDefined()
     expect(mission.client).toBeDefined()
+  })
+
+  it('unions every clientless authored mission back in even when PocketBase returns a non-empty mission list (regression: STS-632)', () => {
+    // Mirrors what seedCatalog() (pocketbase/main.go) actually seeds: only the
+    // two client-bearing onboarding rows. A real PocketBase environment never
+    // returns an empty `missions_catalog` list, so this is the case that
+    // silently dropped the academy intro and self-directed mining missions.
+    const pbMissions: Mission[] = [
+      {
+        id: 'm1-iron',
+        title: 'Iron Reserve Order',
+        brief: '',
+        client: 'hearth-smelters',
+        tag: 'STARTER',
+        difficulty: 'L1',
+        locked: false,
+        sequence: 1,
+        requires: { minerals: { iron: 3 }, cargo_min: 3, drill_tier: 1, max_orbit: 3 },
+        payout: { francs: 1000, affinity: 1 },
+      },
+    ]
+    const merged = withAuthoredExtras(pbMissions)
+    const clientlessIds = AUTHORED_MISSIONS.filter(m => !m.client).map(m => m.id)
+    expect(clientlessIds.length).toBeGreaterThan(0)
+    for (const id of clientlessIds) {
+      expect(merged.some(m => m.id === id)).toBe(true)
+    }
+    // PB's row is preserved too — this is a union, not a replacement.
+    expect(merged.some(m => m.id === 'm1-iron')).toBe(true)
   })
 
   it('maps a raw client record with economy fields', () => {

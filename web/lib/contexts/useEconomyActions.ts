@@ -1,11 +1,11 @@
 import { useCallback } from 'react'
 import { REFINERY_RECIPES } from '@/lib/data'
-import { applySellMinerals, applyStartRefine, applyCollectRefined, applyUpgradeLaunchpad, applyConfirmShipCustomizerBuild, applyPlaceStructure } from '@/lib/systems/EconomySystem'
+import { applySellMinerals, applyStartRefine, applyCollectRefined, applyUpgradeLaunchpad, applyConfirmShipCustomizerBuild, applyPlaceStructure, applyExcavateSubsurface, applyBuildSubsurfaceRoom } from '@/lib/systems/EconomySystem'
 import { applyBuildScanner, applyStartScan, applyCollectScan } from '@/lib/systems/ScanSystem'
 import { applyUnlockSkillNode, applyAcceptLoan, applyAbandonMission } from '@/lib/systems/ProgressionSystem'
 import type { Catalog } from '@/lib/catalog'
 import type { GameState } from '@/lib/game-types'
-import type { Mission, ShipRoomKind, StructureBlueprint } from '@/lib/data'
+import type { Mission, ShipRoomKind, StructureBlueprint, SubsurfaceRoomId } from '@/lib/data'
 
 export function useEconomyActions(
   setState: React.Dispatch<React.SetStateAction<GameState>>,
@@ -33,6 +33,14 @@ export function useEconomyActions(
 
   const upgradeLaunchpad = useCallback(() => {
     setState(s => applyUpgradeLaunchpad(s))
+  }, [setState])
+
+  const excavateSubsurface = useCallback(() => {
+    setState(s => applyExcavateSubsurface(s))
+  }, [setState])
+
+  const buildSubsurfaceRoom = useCallback((roomId: SubsurfaceRoomId) => {
+    setState(s => applyBuildSubsurfaceRoom(s, roomId))
   }, [setState])
 
   const buildScanner = useCallback(() => {
@@ -75,6 +83,7 @@ export function useEconomyActions(
 
   return {
     sellMinerals, onStartRefine, onCollectRefined, placeStructure, upgradeLaunchpad,
+    excavateSubsurface, buildSubsurfaceRoom,
     buildScanner, startScan, collectScan, unlockSkillNode, acceptLoan, abandonMission,
     confirmShipCustomizerBuild,
   }

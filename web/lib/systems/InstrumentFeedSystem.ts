@@ -1,7 +1,8 @@
-import { dailyTessCandidates, type TessCandidate } from '@/lib/data'
+import { dailyTessCandidates, dailyAsteroidCandidates, type TessCandidate, type AsteroidCandidate } from '@/lib/data'
 import type { Player } from '@/lib/game-types'
 
 export const TRANSIT_TELESCOPE_INSTRUMENT_ID = 'transit-telescope'
+export const DEEP_SPACE_TELESCOPE_INSTRUMENT_ID = 'deep-space-telescope'
 
 type InstrumentFeedPlayer = Pick<
   Player,
@@ -9,6 +10,13 @@ type InstrumentFeedPlayer = Pick<
   | 'transitSatelliteLevel'
   | 'satelliteTargetId'
   | 'tessClassifications'
+  | 'instrumentDigestNotifiedOn'
+>
+
+type DeepSpaceInstrumentFeedPlayer = Pick<
+  Player,
+  | 'deepSpaceTelescopeLevel'
+  | 'asteroidClassifications'
   | 'instrumentDigestNotifiedOn'
 >
 
@@ -49,6 +57,34 @@ export function unresolvedTransitInstrumentDigest(
 ): TessCandidate[] {
   const classifications = player.tessClassifications ?? {}
   return transitInstrumentDigest(candidates, player, dateKey)
+    .filter(candidate => !classifications[candidate.id])
+}
+
+export function deepSpaceInstrumentLevel(player: DeepSpaceInstrumentFeedPlayer): number {
+  return Math.max(1, Math.floor(player.deepSpaceTelescopeLevel ?? 1))
+}
+
+/**
+ * The Deep Space Telescope's daily asteroid-discovery (NEOCP) digest
+ * (STS-622) — a second, independent instrument feed alongside the transit
+ * telescope above. No pointing-target concept: unlike the transit satellite,
+ * the telescope digest is a passive downlink, not player-aimed.
+ */
+export function deepSpaceInstrumentDigest(
+  candidates: AsteroidCandidate[],
+  player: DeepSpaceInstrumentFeedPlayer,
+  dateKey: string
+): AsteroidCandidate[] {
+  return dailyAsteroidCandidates(candidates, dateKey, deepSpaceInstrumentLevel(player))
+}
+
+export function unresolvedDeepSpaceInstrumentDigest(
+  candidates: AsteroidCandidate[],
+  player: DeepSpaceInstrumentFeedPlayer,
+  dateKey: string
+): AsteroidCandidate[] {
+  const classifications = player.asteroidClassifications ?? {}
+  return deepSpaceInstrumentDigest(candidates, player, dateKey)
     .filter(candidate => !classifications[candidate.id])
 }
 

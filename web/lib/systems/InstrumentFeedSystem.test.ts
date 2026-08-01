@@ -1,11 +1,13 @@
 import { describe, expect, it } from 'vitest'
 import type { Player } from '@/lib/game-types'
-import type { TessCandidate } from '@/lib/data'
+import type { AsteroidCandidate, TessCandidate } from '@/lib/data'
 import {
+  deepSpaceInstrumentDigest,
   instrumentDigestDateKey,
   instrumentDigestWasNotified,
   markInstrumentDigestNotified,
   transitInstrumentDigest,
+  unresolvedDeepSpaceInstrumentDigest,
   unresolvedTransitInstrumentDigest,
 } from './InstrumentFeedSystem'
 
@@ -23,6 +25,23 @@ function candidate(id: string): TessCandidate {
     distanceLy: 100,
     signalToNoise: 10,
     planetRadiusEarth: 1,
+  }
+}
+
+function asteroidCandidate(id: string): AsteroidCandidate {
+  return {
+    id,
+    tempDesig: id,
+    score: 80,
+    discoveryDate: '2026-07-28',
+    ra: 12.5,
+    decl: -4.2,
+    vMag: 20.1,
+    hMag: 24.3,
+    nObs: 6,
+    arcDays: 0.4,
+    lastSeenDays: 0.2,
+    resolved: false,
   }
 }
 
@@ -92,5 +111,38 @@ describe('InstrumentFeedSystem', () => {
     expect(instrumentDigestWasNotified(marked, 'transit-telescope', '2026-07-30')).toBe(true)
     expect(duplicate).toBe(marked)
     expect(nextDay.instrumentDigestNotifiedOn?.['transit-telescope']).toBe('2026-07-31')
+  })
+
+  describe('deep space (NEOCP asteroid) digest', () => {
+    const asteroids = ['a', 'b', 'c', 'd'].map(asteroidCandidate)
+
+    it('scales the daily digest from the deep space telescope level, defaulting to 1', () => {
+      expect(deepSpaceInstrumentDigest(asteroids, player(), '2026-07-30')).toHaveLength(1)
+      expect(deepSpaceInstrumentDigest(asteroids, player({ deepSpaceTelescopeLevel: 3 }), '2026-07-30')).toHaveLength(3)
+    })
+
+    it('counts only unresolved candidates in today’s deterministic digest', () => {
+      const digest = deepSpaceInstrumentDigest(asteroids, player({ deepSpaceTelescopeLevel: 2 }), '2026-07-30')
+      const unresolved = unresolvedDeepSpaceInstrumentDigest(asteroids, player({
+        deepSpaceTelescopeLevel: 2,
+        asteroidClassifications: {
+          [digest[0].id]: {
+            candidateId: digest[0].id,
+            verdict: 'unsure',
+            submittedAt: 1,
+          },
+        },
+      }), '2026-07-30')
+
+      expect(unresolved.map(item => item.id)).toEqual([digest[1].id])
+    })
+
+    it('is an independent instrument from the transit telescope digest', () => {
+      const tessCandidates = ['a', 'b', 'c', 'd'].map(candidate)
+      const mixedPlayer = player({ transitSatelliteLevel: 2, deepSpaceTelescopeLevel: 1 })
+
+      expect(transitInstrumentDigest(tessCandidates, mixedPlayer, '2026-07-30')).toHaveLength(2)
+      expect(deepSpaceInstrumentDigest(asteroids, mixedPlayer, '2026-07-30')).toHaveLength(1)
+    })
   })
 })

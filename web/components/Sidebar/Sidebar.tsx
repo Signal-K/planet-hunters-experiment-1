@@ -137,7 +137,7 @@ export default function Sidebar({ current, onNav, onSettings }: SidebarProps) {
                 borderRadius: 8,
                 background: active
                   ? `radial-gradient(circle at 35% 30%, ${item.color}, ${item.color}cc 70%, ${item.color}88)`
-                  : 'rgba(10,18,29,0.72)',
+                  : 'rgba(24,24,28,0.72)',
                 border: `1.5px solid ${active ? '#ffffff33' : itemColor + '44'}`,
                 boxShadow: active
                   ? `0 0 12px ${item.color}66`
@@ -181,7 +181,7 @@ export default function Sidebar({ current, onNav, onSettings }: SidebarProps) {
           <span style={{
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             width: 36, height: 36, borderRadius: 8,
-            background: 'rgba(10,18,29,0.72)', border: '1.5px solid rgba(255,255,255,0.08)',
+            background: 'rgba(24,24,28,0.72)', border: '1.5px solid rgba(255,255,255,0.08)',
             color: 'inherit', flexShrink: 0,
           }}>
             <GearGlyph />

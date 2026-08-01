@@ -2,8 +2,8 @@
 // Covers: sell minerals, refinery queue, launchpad upgrade.
 
 import type { GameState } from '@/lib/game-types'
-import type { RefineryRecipe, ShipRoomKind, StructureBlueprint, RocketModel } from '@/lib/data'
-import { MINERAL_META, CLIENT_SLOTS, LAUNCHPAD_UPGRADE_COST, OPEN_MARKET_SELL_RATE, customizerPartById } from '@/lib/data'
+import type { RefineryRecipe, ShipRoomKind, StructureBlueprint, RocketModel, SubsurfaceRoomId } from '@/lib/data'
+import { MINERAL_META, CLIENT_SLOTS, LAUNCHPAD_UPGRADE_COST, OPEN_MARKET_SELL_RATE, customizerPartById, deepSpaceTelescopeUnlocked, SUBSURFACE_EXCAVATE_COST, SUBSURFACE_ROOMS, canAffordSubsurface } from '@/lib/data'
 import { structureIsStaffed } from './AcademySystem'
 
 // Sell to open market (raw): ~80% of book value — see [[Economy and Minerals]].
@@ -154,6 +154,7 @@ export function applyPlaceStructure(s: GameState, structure: StructureBlueprint 
   if (!structure || structure.kind !== kind) return s
   if (s.player.placed.includes(kind)) return s
   if (kind === 'astronaut-academy' && !s.player.academyResearched) return s
+  if (kind === 'deep-space-telescope' && !deepSpaceTelescopeUnlocked({ satelliteMonitoringLevel: s.player.satelliteMonitoringLevel, clientMissions: s.player.clientMissions })) return s
   if (s.player.francs < structure.cost) return s
   if (!Object.entries(structure.costMaterials ?? {}).every(([mineral, amount]) => (s.player.stash?.[mineral] ?? 0) >= amount)) return s
   const stash = { ...(s.player.stash ?? {}) }
@@ -174,10 +175,54 @@ export function applyPlaceStructure(s: GameState, structure: StructureBlueprint 
       satelliteMonitoringLevel: kind === 'satellite-monitoring-station'
         ? Math.max(1, s.player.satelliteMonitoringLevel ?? 1)
         : s.player.satelliteMonitoringLevel,
+      deepSpaceTelescopeBuilt: kind === 'deep-space-telescope' ? true : s.player.deepSpaceTelescopeBuilt,
+      deepSpaceTelescopeLevel: kind === 'deep-space-telescope'
+        ? Math.max(1, s.player.deepSpaceTelescopeLevel ?? 1)
+        : s.player.deepSpaceTelescopeLevel,
+      deepSpaceTelescopeLaunchedAt: kind === 'deep-space-telescope' ? Date.now() : s.player.deepSpaceTelescopeLaunchedAt,
       academyFunded: kind === 'astronaut-academy' ? true : s.player.academyFunded,
       crewUpkeepSettledDate: kind === 'astronaut-academy'
         ? new Date().toISOString().slice(0, 10)
         : s.player.crewUpkeepSettledDate,
+    },
+  }
+}
+
+export function applyExcavateSubsurface(s: GameState): GameState {
+  if (s.player.subsurfaceExcavated) return s
+  if (!canAffordSubsurface(SUBSURFACE_EXCAVATE_COST, { francs: s.player.francs, stash: s.player.stash })) return s
+  const stash = { ...(s.player.stash ?? {}) }
+  for (const [mineral, amount] of Object.entries(SUBSURFACE_EXCAVATE_COST.costMaterials)) {
+    stash[mineral] = Math.max(0, (stash[mineral] ?? 0) - amount)
+  }
+  return {
+    ...s,
+    player: {
+      ...s.player,
+      francs: s.player.francs - SUBSURFACE_EXCAVATE_COST.cost,
+      stash,
+      subsurfaceExcavated: true,
+    },
+  }
+}
+
+export function applyBuildSubsurfaceRoom(s: GameState, roomId: SubsurfaceRoomId): GameState {
+  if (!s.player.subsurfaceExcavated) return s
+  if (s.player.subsurfaceBuilt?.includes(roomId)) return s
+  const room = SUBSURFACE_ROOMS.find(candidate => candidate.id === roomId)
+  if (!room) return s
+  if (!canAffordSubsurface(room, { francs: s.player.francs, stash: s.player.stash })) return s
+  const stash = { ...(s.player.stash ?? {}) }
+  for (const [mineral, amount] of Object.entries(room.costMaterials)) {
+    stash[mineral] = Math.max(0, (stash[mineral] ?? 0) - amount)
+  }
+  return {
+    ...s,
+    player: {
+      ...s.player,
+      francs: s.player.francs - room.cost,
+      stash,
+      subsurfaceBuilt: Array.from(new Set([...(s.player.subsurfaceBuilt ?? []), roomId])),
     },
   }
 }

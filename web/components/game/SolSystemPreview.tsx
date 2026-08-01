@@ -48,8 +48,8 @@ export default function SolSystemPreview({ onBack }: { onBack: () => void }) {
           position: 'absolute', top: 8, left: 8, zIndex: 10,
           display: 'flex', alignItems: 'center', gap: 5,
           padding: '5px 11px 5px 8px',
-          background: 'rgba(8,16,28,0.88)',
-          border: '1px solid rgba(135,207,250,0.3)',
+          background: 'rgba(20,20,23,0.88)',
+          border: '1px solid rgba(112,217,234,0.3)',
           borderRadius: 8,
           cursor: 'pointer',
           fontFamily: 'var(--ln-font-mono), ui-monospace, monospace',
@@ -64,7 +64,7 @@ export default function SolSystemPreview({ onBack }: { onBack: () => void }) {
       </button>
       <div style={{
         position: 'absolute', bottom: 8, left: 8, right: 8, zIndex: 10,
-        background: 'rgba(8,12,20,0.92)',
+        background: 'rgba(12,12,13,0.92)',
         border: '1px solid rgba(245,166,35,0.3)',
         borderRadius: 10,
         padding: '8px 12px',

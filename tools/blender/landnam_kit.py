@@ -227,19 +227,22 @@ def cylinder(name, radius, depth, location=(0, 0, 0), rotation=(0, 0, 0), verts=
     return obj
 
 
-def cone(name, radius, depth, location=(0, 0, 0), verts=8):
+def cone(name, radius, depth, location=(0, 0, 0), rotation=(0, 0, 0), verts=8, radius2=0.0):
+    """Cone (radius2=0, the default) or frustum (radius2>0) — a tapered tail
+    or nozzle flare needs the taper to stop short of a point."""
     mesh = bpy.data.meshes.new(name)
     obj = bpy.data.objects.new(name, mesh)
     bpy.context.collection.objects.link(obj)
     bm = bmesh.new()
     bmesh.ops.create_cone(
         bm, cap_ends=True, cap_tris=False, segments=verts,
-        radius1=radius, radius2=0.0, depth=depth,
+        radius1=radius, radius2=radius2, depth=depth,
     )
     bmesh.ops.translate(bm, vec=Vector((0, 0, depth / 2)), verts=bm.verts)
     bm.to_mesh(mesh)
     bm.free()
     obj.location = location
+    obj.rotation_euler = rotation
     return obj
 
 

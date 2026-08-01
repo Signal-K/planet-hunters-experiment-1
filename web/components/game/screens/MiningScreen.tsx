@@ -109,7 +109,7 @@ function ScrollTrack({ scrollRef }: { scrollRef: React.MutableRefObject<((dx: nu
         style={{
           position: 'relative', flex: 1, height: 36, borderRadius: 8,
           background: 'rgba(255,255,255,0.05)',
-          border: `1px solid ${active ? 'rgba(100,180,255,0.4)' : 'rgba(100,180,255,0.15)'}`,
+          border: `1px solid ${active ? 'rgba(112,217,234,0.4)' : 'rgba(112,217,234,0.15)'}`,
           cursor: 'pointer', touchAction: 'none',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           transition: 'border-color 120ms',
@@ -124,8 +124,8 @@ function ScrollTrack({ scrollRef }: { scrollRef: React.MutableRefObject<((dx: nu
         onPointerCancel={release}
       >
         {/* End labels */}
-        <span style={{ position: 'absolute', left: 6, fontSize: 9, color: 'rgba(135,207,250,0.35)', lineHeight: 1 }}>◀</span>
-        <span style={{ position: 'absolute', right: 6, fontSize: 9, color: 'rgba(135,207,250,0.35)', lineHeight: 1 }}>▶</span>
+        <span style={{ position: 'absolute', left: 6, fontSize: 9, color: 'rgba(112,217,234,0.35)', lineHeight: 1 }}>◀</span>
+        <span style={{ position: 'absolute', right: 6, fontSize: 9, color: 'rgba(112,217,234,0.35)', lineHeight: 1 }}>▶</span>
         {/* Center tick */}
         <div style={{ position: 'absolute', top: '30%', bottom: '30%', left: '50%', width: 1, background: 'rgba(255,255,255,0.1)' }} />
         {/* Thumb */}
@@ -133,9 +133,9 @@ function ScrollTrack({ scrollRef }: { scrollRef: React.MutableRefObject<((dx: nu
           position: 'absolute',
           left: `calc(${pos * 100}% - 10px)`,
           width: 20, height: 20, borderRadius: '50%',
-          background: active ? 'rgba(63,169,255,0.85)' : 'rgba(135,207,250,0.25)',
-          border: `1.5px solid ${active ? 'rgba(135,207,250,0.8)' : 'rgba(135,207,250,0.4)'}`,
-          boxShadow: active ? '0 0 10px rgba(63,169,255,0.5)' : 'none',
+          background: active ? 'rgba(112,217,234,0.85)' : 'rgba(112,217,234,0.25)',
+          border: `1.5px solid ${active ? 'rgba(112,217,234,0.8)' : 'rgba(112,217,234,0.4)'}`,
+          boxShadow: active ? '0 0 10px rgba(112,217,234,0.5)' : 'none',
           transition: active ? 'background 80ms, border-color 80ms, box-shadow 80ms' : 'left 180ms ease-out, background 120ms, border-color 120ms, box-shadow 120ms',
         }} />
       </div>
@@ -339,7 +339,7 @@ export default function MiningScreen({ mission, target, onComplete, onBack, onAb
               aria-label="Dismiss"
               style={{
                 position: 'absolute', top: 8, right: 8, width: 20, height: 20, borderRadius: 6,
-                border: '1px solid rgba(245,166,35,0.4)', background: 'rgba(8,16,28,0.6)',
+                border: '1px solid rgba(245,166,35,0.4)', background: 'rgba(20,20,23,0.6)',
                 color: 'var(--ln-amber)', fontSize: 12, lineHeight: 1, cursor: 'pointer',
               }}
             >
@@ -379,8 +379,8 @@ export default function MiningScreen({ mission, target, onComplete, onBack, onAb
       )}
 
       {guideOpen && (
-        <div style={{ position: 'absolute', inset: 0, zIndex: 70, background: 'rgba(3,6,12,0.82)', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', padding: 16, gap: 8 }} onClick={() => setGuideOpen(false)}>
-          <div style={{ background: 'rgba(8,16,30,0.97)', border: '1px solid rgba(100,180,255,0.3)', borderRadius: 14, padding: 14 }} onClick={e => e.stopPropagation()}>
+        <div style={{ position: 'absolute', inset: 0, zIndex: 70, background: 'rgba(8,8,9,0.82)', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', padding: 16, gap: 8 }} onClick={() => setGuideOpen(false)}>
+          <div style={{ background: 'rgba(8,16,30,0.97)', border: '1px solid rgba(112,217,234,0.3)', borderRadius: 14, padding: 14 }} onClick={e => e.stopPropagation()}>
             <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 9, fontWeight: 800, letterSpacing: '0.2em', color: '#87CFFA', textTransform: 'uppercase', marginBottom: 10 }}>Mining Controls</div>
             {miningGuide(deliveryTargetName).map(item => (
               <div key={item.label} style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
@@ -388,13 +388,13 @@ export default function MiningScreen({ mission, target, onComplete, onBack, onAb
                 <span style={{ fontFamily: 'var(--ln-font-body)', fontSize: 12, color: '#a9b8ce', lineHeight: 1.4 }}>{item.desc}</span>
               </div>
             ))}
-            <button onClick={() => setGuideOpen(false)} style={{ marginTop: 4, width: '100%', padding: '8px 0', background: 'rgba(100,180,255,0.1)', border: '1px solid rgba(100,180,255,0.3)', borderRadius: 8, fontFamily: 'var(--ln-font-display)', fontSize: 11, fontWeight: 800, letterSpacing: '0.14em', color: '#87CFFA', cursor: 'pointer', textTransform: 'uppercase' }}>Close</button>
+            <button onClick={() => setGuideOpen(false)} style={{ marginTop: 4, width: '100%', padding: '8px 0', background: 'rgba(112,217,234,0.1)', border: '1px solid rgba(112,217,234,0.3)', borderRadius: 8, fontFamily: 'var(--ln-font-display)', fontSize: 11, fontWeight: 800, letterSpacing: '0.14em', color: '#87CFFA', cursor: 'pointer', textTransform: 'uppercase' }}>Close</button>
           </div>
         </div>
       )}
 
       {showFreeOpsSuccessPopup && (
-        <div data-testid="freeops-first-success-popup" style={{ position: 'absolute', inset: 0, zIndex: 75, background: 'rgba(3,6,12,0.76)', display: 'flex', alignItems: 'flex-end', padding: 16 }}>
+        <div data-testid="freeops-first-success-popup" style={{ position: 'absolute', inset: 0, zIndex: 75, background: 'rgba(8,8,9,0.76)', display: 'flex', alignItems: 'flex-end', padding: 16 }}>
           <Panel accent="var(--ln-ok)" surface="glass" style={{ padding: 14, width: '100%', boxShadow: '0 18px 48px rgba(0,0,0,0.55)' }}>
             <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 10, fontWeight: 800, letterSpacing: '0.22em', color: 'var(--ln-ok)', textTransform: 'uppercase', marginBottom: 6 }}>
               First Free Ops Haul Secured
@@ -424,7 +424,7 @@ export default function MiningScreen({ mission, target, onComplete, onBack, onAb
 
       {/* Laser depleted without filling order — always shown, not gated on hasCoach */}
       {runFailed && (
-        <div style={{ position: 'absolute', inset: 0, zIndex: 80, background: 'rgba(3,6,12,0.92)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 16, padding: 32 }}>
+        <div style={{ position: 'absolute', inset: 0, zIndex: 80, background: 'rgba(8,8,9,0.92)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 16, padding: 32 }}>
           <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 11, fontWeight: 800, letterSpacing: '0.22em', color: 'var(--ln-crit)', textTransform: 'uppercase' }}>Laser Depleted</div>
           <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 22, fontWeight: 800, color: '#e6efff', textAlign: 'center', lineHeight: 1.2 }}>Order Not Filled</div>
           <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 13, color: '#a9b8ce', textAlign: 'center', lineHeight: 1.5 }}>
@@ -544,7 +544,7 @@ export default function MiningScreen({ mission, target, onComplete, onBack, onAb
           <button
             data-testid="mining-guide-btn"
             onClick={() => setGuideOpen(o => !o)}
-            style={{ padding: '2px 7px', borderRadius: 5, background: 'rgba(8,12,22,0.7)', border: '1px solid rgba(100,180,255,0.28)', fontFamily: 'var(--ln-font-display)', fontSize: 9, fontWeight: 800, letterSpacing: '0.12em', color: '#87CFFA', cursor: 'pointer', textTransform: 'uppercase', flexShrink: 0 }}
+            style={{ padding: '2px 7px', borderRadius: 5, background: 'rgba(12,12,13,0.7)', border: '1px solid rgba(112,217,234,0.28)', fontFamily: 'var(--ln-font-display)', fontSize: 9, fontWeight: 800, letterSpacing: '0.12em', color: '#87CFFA', cursor: 'pointer', textTransform: 'uppercase', flexShrink: 0 }}
           >
             ?
           </button>
@@ -573,7 +573,7 @@ export default function MiningScreen({ mission, target, onComplete, onBack, onAb
               minWidth: 0,
               borderRadius: 10,
               boxShadow: hasCoach && oreNear
-                ? '0 0 0 2px rgba(63,169,255,0.7), 0 0 18px rgba(63,169,255,0.35)'
+                ? '0 0 0 2px rgba(112,217,234,0.7), 0 0 18px rgba(112,217,234,0.35)'
                 : 'none',
               animation: hasCoach && oreNear ? 'ln-pulse 0.75s ease-in-out infinite' : 'none',
               transition: 'box-shadow 150ms',

@@ -43,6 +43,13 @@ export interface BuildingProps {
    * the tail over the building either way.
    */
   calloutAlign?: 'start' | 'center' | 'end'
+  /**
+   * Post-tutorial Hub prominence pass (STS-631): recedes the status pill for
+   * telescope/satellite buildings that are unlocked but still in their early,
+   * not-yet-actively-producing state, so the Launchpad reads as the base's
+   * primary structure. Never applied to the Launchpad itself.
+   */
+  dimmed?: boolean
 }
 
 const CALLOUT_W = 208
@@ -73,7 +80,7 @@ function ArrowGlyph() {
   )
 }
 
-export function Building({ kind, label, sub, status, w, style, onClick, badge, callout, calloutAlign = 'center' }: BuildingProps) {
+export function Building({ kind, label, sub, status, w, style, onClick, badge, callout, calloutAlign = 'center', dimmed }: BuildingProps) {
   const color = STATUS_COLOR[status]
   const [calloutOpen, setCalloutOpen] = useState(false)
   const [seen, setSeen] = useState(false)
@@ -106,7 +113,7 @@ export function Building({ kind, label, sub, status, w, style, onClick, badge, c
       data-coach-id={`building-${kind}`}
       // 'auto' because the hub's buildings layer is pointerEvents:'none' — it
       // must not be a full-screen click catcher over the progression cards.
-      style={{ position: 'absolute', display: 'flex', flexDirection: 'column', alignItems: 'center', pointerEvents: 'auto', ...style }}
+      style={{ position: 'absolute', display: 'flex', flexDirection: 'column', alignItems: 'center', pointerEvents: 'auto', opacity: dimmed ? 0.62 : 1, transition: 'opacity 200ms', ...style }}
     >
       <button
         data-testid={`building-${kind}-hit`}
@@ -266,12 +273,12 @@ export function EmptyPlot({ w = 90, style, onClick, plot }: { w?: number; style?
       <div style={{ width: w, height: w * 0.5, position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         <div style={{
           width: '88%', height: 26, borderRadius: '50% / 60%',
-          background: 'radial-gradient(ellipse at 50% 35%, rgba(135,207,250,0.18), rgba(135,207,250,0.04) 70%)',
-          border: '2px dashed rgba(135,207,250,0.5)',
+          background: 'radial-gradient(ellipse at 50% 35%, rgba(112,217,234,0.18), rgba(112,217,234,0.04) 70%)',
+          border: '2px dashed rgba(112,217,234,0.5)',
           display: 'grid', placeItems: 'center',
           animation: 'hub-pad-pulse 2s ease-in-out infinite',
         }}>
-          <span style={{ fontFamily: 'var(--ln-font-mono)', fontSize: 15, fontWeight: 800, color: 'rgba(135,207,250,0.85)' }}>+</span>
+          <span style={{ fontFamily: 'var(--ln-font-mono)', fontSize: 15, fontWeight: 800, color: 'rgba(112,217,234,0.85)' }}>+</span>
         </div>
       </div>
       <div style={{

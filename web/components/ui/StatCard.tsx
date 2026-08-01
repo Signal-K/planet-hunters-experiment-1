@@ -54,9 +54,9 @@ type StatCardProps = StatCardBaseProps & (
 
 export default function StatCard(props: StatCardProps) {
   if (props.variant === 'readout') {
-    const border = props.tone === 'ok' ? 'rgba(57,211,106,0.22)' : 'rgba(126,200,255,0.18)'
+    const border = props.tone === 'ok' ? 'rgba(57,211,106,0.22)' : 'rgba(112,217,234,0.18)'
     return (
-      <div style={{ minWidth: 0, padding: '7px 6px', borderRadius: 7, background: 'rgba(8,16,28,0.72)', border: `1px solid ${border}` }}>
+      <div style={{ minWidth: 0, padding: '7px 6px', borderRadius: 7, background: 'rgba(20,20,23,0.72)', border: `1px solid ${border}` }}>
         <StatLabel>{props.label}</StatLabel>
         <div style={{ fontFamily: 'var(--ln-font-mono)', fontSize: 10, fontWeight: 800, color: '#e8f0fe', marginTop: 2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', textTransform: 'uppercase' }}>
           {props.value}
@@ -75,8 +75,8 @@ export default function StatCard(props: StatCardProps) {
         style={{
           display: 'flex', alignItems: 'center', gap: 7, padding: '7px 8px',
           borderRadius: 7,
-          background: active ? 'rgba(112,217,234,0.14)' : 'rgba(8,16,28,0.72)',
-          border: `1px solid ${active ? 'var(--ln-cyan)' : 'rgba(126,200,255,0.18)'}`,
+          background: active ? 'rgba(112,217,234,0.14)' : 'rgba(20,20,23,0.72)',
+          border: `1px solid ${active ? 'var(--ln-cyan)' : 'rgba(112,217,234,0.18)'}`,
           boxShadow: active ? '0 0 0 1px rgba(112,217,234,0.35), 0 0 14px rgba(112,217,234,0.3)' : 'none',
           minWidth: 0,
           width: '100%',
@@ -111,9 +111,9 @@ export default function StatCard(props: StatCardProps) {
   return (
     <div style={{
       flex: 1, padding: '10px 10px 8px',
-      background: 'rgba(6,12,22,0.6)',
+      background: 'rgba(11,11,13,0.6)',
       borderRadius: 8,
-      border: '1px solid rgba(135,207,250,0.14)',
+      border: '1px solid rgba(112,217,234,0.14)',
     }}>
       <StatLabel>{props.label}</StatLabel>
       <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 18, fontWeight: 800, color: 'var(--ln-cyan)', marginTop: 4, letterSpacing: '-0.01em' }}>

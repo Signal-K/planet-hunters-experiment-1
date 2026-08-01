@@ -290,7 +290,7 @@ export function ShipCustomizerCanvas({ layout, activeKind, installedParts, onSlo
         aspectRatio: '12 / 5',
         overflow: 'hidden',
         borderBottom: '1px solid var(--ln-hairline)',
-        background: 'radial-gradient(ellipse at 50% 50%, rgba(63,169,255,0.05) 0%, rgba(0,0,0,0) 70%)',
+        background: 'radial-gradient(ellipse at 50% 50%, rgba(112,217,234,0.05) 0%, rgba(0,0,0,0) 70%)',
       }}
     />
   )

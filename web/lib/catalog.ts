@@ -1,6 +1,6 @@
 import { pbLandnam } from './pb-landnam'
 import type { Target, Mission, Part, MineralMeta, Client, StructureBlueprint } from './data'
-import { TARGETS, MISSIONS, AUTHORED_MISSIONS, M3_SEQUENCE, PARTS, MINERAL_META, CLIENTS, CLIENT_SLOTS, STRUCTURES, toClient as slotToClient, generateFreeOpsMissions, generateMissions } from './data'
+import { TARGETS, MISSIONS, AUTHORED_MISSIONS, M3_SEQUENCE, PARTS, MINERAL_META, CLIENTS, CLIENT_SLOTS, STRUCTURES, toClient as slotToClient, generateFreeOpsMissions, generateMissions, generateSelfDirectedMiningPool } from './data'
 import { normalizeMissionPayout } from './data/payouts'
 
 export interface Catalog {
@@ -81,7 +81,19 @@ export function toMission(r: any): Mission {
   }
 }
 
-function withCorrectedM3(missions: Mission[]): Mission[] {
+// Applies the M3-sequence correction (PocketBase's seeded legacy M3 rows are
+// always replaced by the curated transport-client AUTHORED_MISSIONS pair),
+// then generalizes that same "authored content PocketBase doesn't seed must
+// still reach the runtime catalog" pattern to every clientless authored
+// mission. seedCatalog() (pocketbase/main.go) only ever seeds the two
+// client-bearing onboarding rows (m1-iron, m2-silicon), so any AUTHORED_MISSIONS
+// entry with no client — the academy intro, the self-directed mining intro,
+// crewed prospecting, ... — is never present in PocketBase's response and
+// would otherwise silently vanish whenever `missions` (the raw PB rows) is
+// non-empty, which is always true in any real/dev environment. Union those
+// back in here, deduped by id, so a real PB row (should one ever share an id)
+// still wins.
+export function withAuthoredExtras(missions: Mission[]): Mission[] {
   const correctedM3 = AUTHORED_MISSIONS.filter(m => m.sequence === M3_SEQUENCE)
   const correctedM3Ids = new Set(correctedM3.map(m => m.id))
   const withoutLegacyM3 = missions.filter(m =>
@@ -92,7 +104,12 @@ function withCorrectedM3(missions: Mission[]): Mission[] {
     m.sequence !== M3_SEQUENCE &&
     !correctedM3Ids.has(m.id)
   )
-  return [...withoutLegacyM3, ...correctedM3].sort((a, b) => a.sequence - b.sequence)
+  const merged = [...withoutLegacyM3, ...correctedM3]
+
+  const mergedIds = new Set(merged.map(m => m.id))
+  const clientlessExtras = AUTHORED_MISSIONS.filter(m => !m.client && !mergedIds.has(m.id))
+
+  return [...merged, ...clientlessExtras].sort((a, b) => a.sequence - b.sequence)
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -184,7 +201,7 @@ export async function fetchCatalog(): Promise<Catalog> {
   ])
 
   const generatedFallbackMissions = MISSIONS
-  const catalogMissions = missions.length > 0 ? withCorrectedM3(missions.map(toMission)) : []
+  const catalogMissions = missions.length > 0 ? withAuthoredExtras(missions.map(toMission)) : []
   const catalogClients = Object.fromEntries(
     clients.map(r => [r.slug, toClient(r)])
   )
@@ -192,13 +209,16 @@ export async function fetchCatalog(): Promise<Catalog> {
   const baseMissions = catalogMissions.length > 0 ? catalogMissions : generatedFallbackMissions
   const generatedMissions = generateMissions()
   const freeOpsMissions = generateFreeOpsMissions()
+  const selfDirectedPoolMissions = generateSelfDirectedMiningPool()
   const pbIds = new Set(baseMissions.map(m => m.id))
   const generatedToMerge = generatedMissions.filter(m => !pbIds.has(m.id))
   const freeOpsIds = new Set(freeOpsMissions.map(m => m.id))
+  const selfDirectedIds = new Set(selfDirectedPoolMissions.map(m => m.id))
   const allMissions = [
-    ...baseMissions.filter(m => !freeOpsIds.has(m.id)),
-    ...generatedToMerge.filter(m => !freeOpsIds.has(m.id)),
+    ...baseMissions.filter(m => !freeOpsIds.has(m.id) && !selfDirectedIds.has(m.id)),
+    ...generatedToMerge.filter(m => !freeOpsIds.has(m.id) && !selfDirectedIds.has(m.id)),
     ...freeOpsMissions,
+    ...selfDirectedPoolMissions,
   ]
 
   return {

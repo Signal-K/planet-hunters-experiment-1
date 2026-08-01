@@ -3,9 +3,27 @@
 import { useState } from 'react'
 import { DEV_GROUPS, resolvePreset } from '@/lib/devPresets'
 import { isDevLauncherEnabled } from '@/lib/devAccess'
+import { pbShared } from '@/lib/pb'
+
+// Duplicated rather than imported from game-context.tsx — same convention as
+// app/game/page.tsx's own STORAGE_KEY constant.
+const STORAGE_KEY = 'landnam-game-state-v1'
+// Must match scripts/seed-dev-presets.ts exactly (email scheme + password).
+const PRESET_PASSWORD = 'DevPreset123!'
+const presetEmail = (key: string) => `dev-preset-${key}@landnam.guest`
 
 export default function DevShortcuts() {
   const [open, setOpen] = useState(false)
+  // In-memory mode is the original behavior (?preset=, no backend I/O) — kept
+  // as the default so nothing about existing screenshot/QA workflows changes.
+  // Backend mode (STS-627) signs into a real seeded PocketBase account instead
+  // and exercises the exact same production sync path (useAuthSync.ts) that
+  // every real signed-in/guest player already uses. IMPORTANT: normal
+  // gameplay ALWAYS persists to PocketBase regardless of this toggle — this
+  // switch only picks which DEV preview path a dev shot uses, not whether
+  // real play is saved.
+  const [backendMode, setBackendMode] = useState(false)
+  const [status, setStatus] = useState<string | null>(null)
   if (!isDevLauncherEnabled()) return null
 
   function jump(key: string) {
@@ -13,6 +31,22 @@ export default function DevShortcuts() {
     const url = new URL(`/game/${preset?.screen ?? 'intro'}`, window.location.origin)
     url.searchParams.set('preset', key)
     window.location.href = url.toString()
+  }
+
+  async function jumpBackend(key: string) {
+    setStatus(`Signing in as ${key}…`)
+    try {
+      // Drop any stale local save first — mergeRemoteState prefers local
+      // progress once the screen/mission has moved off the defaults, which
+      // would otherwise fight the seeded account's state on load.
+      localStorage.removeItem(STORAGE_KEY)
+      await pbShared.collection('users').authWithPassword(presetEmail(key), PRESET_PASSWORD)
+      // Full reload (not client-side nav) so every in-memory ref/effect in
+      // useAuthSync starts clean against the newly signed-in account.
+      window.location.href = '/game'
+    } catch {
+      setStatus(`No seeded account for "${key}" yet — run: npx tsx scripts/seed-dev-presets.ts ${key}`)
+    }
   }
 
   return (
@@ -54,6 +88,38 @@ export default function DevShortcuts() {
           <div data-testid="dev-shortcuts-panel" style={{ padding: '0 12px 6px', fontFamily: 'var(--ln-font-mono)', fontSize: 9, letterSpacing: '0.2em', color: '#2a5a2a', textTransform: 'uppercase' }}>
             Mission and UI States
           </div>
+
+          <div style={{ padding: '0 10px 8px' }}>
+            <button
+              data-testid="dev-shortcuts-mode-toggle"
+              onClick={() => { setBackendMode(v => !v); setStatus(null) }}
+              title={backendMode
+                ? 'Backend (seeded account): signs into a real seeded PocketBase account (npx tsx scripts/seed-dev-presets.ts) and exercises the actual production sync path. Survives reload, same as real play.'
+                : 'In-memory preset: instant UI preview only, zero persistence, resets on reload. Not representative of real save behavior — normal signed-in/guest play always persists to PocketBase regardless of this toggle.'}
+              style={{
+                width: '100%',
+                padding: '5px 10px',
+                background: backendMode ? '#1a2a3a' : '#0a1624',
+                border: `1px solid ${backendMode ? '#3fa9ff88' : '#2a5a2a44'}`,
+                borderRadius: 6,
+                color: backendMode ? '#3fa9ff' : '#5a8a5a',
+                fontFamily: 'var(--ln-font-mono)',
+                fontSize: 9,
+                fontWeight: 700,
+                letterSpacing: '0.1em',
+                cursor: 'pointer',
+                textTransform: 'uppercase',
+              }}
+            >
+              {backendMode ? '● Backend (seeded account)' : '○ In-memory preset (no save)'}
+            </button>
+            {status && (
+              <div style={{ padding: '4px 2px 0', fontFamily: 'var(--ln-font-mono)', fontSize: 9, color: '#ffb84d', lineHeight: 1.4 }}>
+                {status}
+              </div>
+            )}
+          </div>
+
           <div style={{ padding: '0 10px 8px' }}>
             <a
               href="/game/launcher"
@@ -91,8 +157,8 @@ export default function DevShortcuts() {
                   <button
                     key={shot.key}
                     data-testid={`dev-shot-${shot.key}`}
-                    onClick={() => jump(shot.key)}
-                    title={shot.hint}
+                    onClick={() => { backendMode ? jumpBackend(shot.key) : jump(shot.key) }}
+                    title={backendMode ? `${shot.hint} (signs into a seeded backend account — real persistence)` : `${shot.hint} (in-memory preview only — no persistence)`}
                     style={{
                       padding: '4px 10px',
                       background: '#0a1624',
@@ -105,11 +171,31 @@ export default function DevShortcuts() {
                       letterSpacing: '0.08em',
                       cursor: 'pointer',
                       whiteSpace: 'nowrap',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: 4,
                     }}
                     onMouseEnter={e => { e.currentTarget.style.background = `${group.color}18`; e.currentTarget.style.borderColor = `${group.color}88` }}
                     onMouseLeave={e => { e.currentTarget.style.background = '#0a1624'; e.currentTarget.style.borderColor = `${group.color}44` }}
                   >
                     {shot.label}
+                    {/* STS-635: stage badge — distinguishes still-mid-tutorial presets
+                        (Free Ops not unlocked) from post-tutorial/Free-Ops presets,
+                        since the preset key/group alone doesn't signal this reliably. */}
+                    <span
+                      style={{
+                        fontSize: 8,
+                        fontWeight: 800,
+                        letterSpacing: '0.04em',
+                        padding: '1px 4px',
+                        borderRadius: 4,
+                        color: shot.stage === 'free-ops' ? '#39d36a' : '#ffb84d',
+                        border: `1px solid ${shot.stage === 'free-ops' ? '#39d36a88' : '#ffb84d88'}`,
+                        opacity: 0.9,
+                      }}
+                    >
+                      {shot.stage === 'free-ops' ? 'FREE OPS' : 'TUTORIAL'}
+                    </span>
                   </button>
                 ))}
               </div>
