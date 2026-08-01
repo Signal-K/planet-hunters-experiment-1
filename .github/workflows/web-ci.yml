@@ -120,8 +120,19 @@ jobs:
           cache: npm
           cache-dependency-path: web/package-lock.json
 
+      # Pinned, not @latest (STS-639): vercel@58.4.4 has a regression in
+      # `deploy --prebuilt`'s remote file-dedup logic that under-uploads
+      # deployment files referenced via each function's .vc-config.json
+      # filePathMap (e.g. web/node_modules/client-only/index.js, pulled in by
+      # styled-jsx), causing every deploy to fail with an ENOENT on Vercel's
+      # build machine. Reproduced locally: identical `vercel build` output,
+      # 53.1.1 uploads ~919 files and deploys cleanly, 58.4.4 uploads ~802
+      # files and fails; reverting to 53.1.1 immediately succeeds again
+      # against the same remote project/cache state. Bump this deliberately
+      # once a newer release is confirmed not to regress, not by switching
+      # back to @latest.
       - name: Install Vercel CLI
-        run: npm install --global vercel@latest
+        run: npm install --global vercel@53.1.1
 
       # Deploys run from the repo root, matching scripts/deploy-test.mjs — the
       # Vercel project's own Root Directory setting points at web/.
