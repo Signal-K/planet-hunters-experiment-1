@@ -19,6 +19,7 @@ interface LaunchpadScreenProps {
   onPick: (id: string) => void
   onViewContracts: () => void
   onOpenHangar: () => void
+  onBuildMonitoring: () => void
   missionsDone: number
   freeOperations: boolean
   catalog: Catalog
@@ -53,7 +54,7 @@ const sectionLabelStyle: React.CSSProperties = {
  * never disagree about whose job something is.
  */
 export default function LaunchpadScreen({
-  onBack, onPick, onViewContracts, onOpenHangar, missionsDone, freeOperations, catalog, player, francs,
+  onBack, onPick, onViewContracts, onOpenHangar, onBuildMonitoring, missionsDone, freeOperations, catalog, player, francs,
 }: LaunchpadScreenProps) {
   const { missions: MISSIONS, clients: CLIENTS, minerals: MINERAL_META, targets } = catalog
   const sequence = missionsDone + 1
@@ -114,9 +115,10 @@ export default function LaunchpadScreen({
 
       <div
         data-ui-zone={UI_ZONES.screenContent}
+        className="launchpad-scroll"
         style={{ position: 'absolute', inset: 0, paddingTop: 72, paddingBottom: 96, overflowY: 'auto' }}
       >
-        <div style={{ padding: 16, display: 'flex', flexDirection: 'column', gap: 16 }}>
+        <div className="launchpad-content">
           {rocketInProgress && (
             <div style={{ ...infoCardStyle, borderColor: 'var(--ln-cyan)' }} data-testid="launchpad-rocket-in-progress">
               <div style={sectionLabelStyle}>Rocket In Progress</div>
@@ -129,73 +131,89 @@ export default function LaunchpadScreen({
             </div>
           )}
 
-          <div className="ln-instrument-card" data-testid="launchpad-status-card">
-            <div className="ln-instrument-label">Launchpad Status</div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
-              <div className="ln-instrument-value">
-                {player.launchpadUpgraded ? 'Upgraded Pad' : 'Standard Pad'}
+          <section className="launchpad-infrastructure" data-testid="launchpad-infrastructure">
+            <div className="launchpad-section-heading">
+              <div>
+                <div className="ln-instrument-label">Owned Infrastructure</div>
+                <h2>Flight &amp; telemetry assets</h2>
               </div>
-              {!player.launchpadUpgraded && (
-                <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 11, color: 'var(--scene-card-muted)' }}>
-                  Upgrade from Edit · Build on the Hub
+              <p>Your program's operational hardware, independent of client contracts.</p>
+            </div>
+            <div className="launchpad-infrastructure-grid">
+              <div className="ln-instrument-card launchpad-asset-card" data-testid="launchpad-monitoring-card">
+                <div className="launchpad-asset-title-row">
+                  <div>
+                    <div className="ln-instrument-label">Ground Systems</div>
+                    <div className="ln-instrument-value">Satellite Monitoring Station</div>
+                  </div>
+                  <span className={`launchpad-status ${player.satelliteMonitoringBuilt ? 'is-online' : 'is-required'}`}>
+                    <span />
+                    {player.satelliteMonitoringBuilt ? 'BUILT' : 'REQUIRED'}
+                  </span>
                 </div>
-              )}
+                <p>
+                  {player.satelliteMonitoringBuilt
+                    ? 'Telemetry and daily instrument downlinks are online.'
+                    : 'Build the ground station to launch and operate your first transit telescope.'}
+                </p>
+                {!player.satelliteMonitoringBuilt && (
+                  <PrimaryBtn testId="launchpad-build-monitoring-btn" onClick={onBuildMonitoring}>
+                    Build Monitoring Station →
+                  </PrimaryBtn>
+                )}
+              </div>
+
+              <div className="ln-instrument-card launchpad-asset-card" data-testid="launchpad-satellites-card">
+                <div className="ln-instrument-label">Satellite Fleet</div>
+                <div className="launchpad-row-list">
+                  {satellites.map(({ model, launched, available }) => (
+                    <div key={model.id} className="launchpad-data-row" data-enabled={available || launched}>
+                      <div>
+                        <strong>{model.name}</strong>
+                        <span>EARTH ORBIT · SCIENCE INSTRUMENT</span>
+                      </div>
+                      <code>{launched ? 'DEPLOYED' : available ? 'READY TO LAUNCH' : 'STATION REQUIRED'}</code>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <div className="launchpad-secondary-grid">
+            <div className="ln-instrument-card" data-testid="launchpad-status-card">
+              <div className="ln-instrument-label">Launchpad Status</div>
+              <div className="launchpad-asset-title-row">
+                <div className="ln-instrument-value">
+                  {player.launchpadUpgraded ? 'Upgraded Pad' : 'Standard Pad'}
+                </div>
+                <code className="launchpad-inline-status">
+                  {player.launchpadUpgraded ? 'ONLINE' : 'UPGRADE AVAILABLE ON HUB'}
+                </code>
+              </div>
+            </div>
+
+            <div className="ln-instrument-card" data-testid="launchpad-fleet-card">
+              <div className="ln-instrument-label">Rocket Fleet</div>
+              <div className="launchpad-row-list">
+                {fleet.map(({ model, unlocked }) => (
+                  <div key={model.id} className="launchpad-data-row" data-enabled={unlocked}>
+                    <strong>{model.name}</strong>
+                    <code>
+                      {unlocked
+                        ? model.costFrancs > 0 ? formatCurrency(model.costFrancs, { compact: true }) : 'FREE'
+                        : model.unlockHint.toUpperCase()}
+                    </code>
+                  </div>
+                ))}
+              </div>
+              <GhostBtn testId="launchpad-open-hangar-btn" onClick={onOpenHangar}>
+                Open Hangar →
+              </GhostBtn>
             </div>
           </div>
 
-          <div className="ln-instrument-card" data-testid="launchpad-fleet-card">
-            <div className="ln-instrument-label">Fleet</div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              {fleet.map(({ model, unlocked }) => (
-                <div
-                  key={model.id}
-                  style={{
-                    display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                    opacity: unlocked ? 1 : 0.45,
-                  }}
-                >
-                  <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 13, color: 'var(--scene-card-text)' }}>
-                    {model.name}
-                  </div>
-                  <div style={{ fontFamily: 'var(--ln-font-mono)', fontSize: 11, color: 'var(--scene-card-muted)' }}>
-                    {unlocked
-                      ? model.costFrancs > 0 ? formatCurrency(model.costFrancs, { compact: true }) : 'Free'
-                      : model.unlockHint}
-                  </div>
-                </div>
-              ))}
-            </div>
-            <GhostBtn testId="launchpad-open-hangar-btn" onClick={onOpenHangar}>
-              Open Hangar →
-            </GhostBtn>
-          </div>
-
-          <div className="ln-instrument-card" data-testid="launchpad-satellites-card">
-            <div className="ln-instrument-label">Satellites</div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              {satellites.map(({ model, launched, available }) => (
-                <div
-                  key={model.id}
-                  style={{
-                    display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                    opacity: available || launched ? 1 : 0.45,
-                  }}
-                >
-                  <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 13, color: 'var(--scene-card-text)' }}>
-                    {model.name}
-                  </div>
-                  <div style={{ fontFamily: 'var(--ln-font-mono)', fontSize: 11, color: 'var(--scene-card-muted)' }}>
-                    {launched ? 'DEPLOYED' : available ? 'READY TO LAUNCH' : model.unlockHint.toUpperCase()}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div style={{
-            fontFamily: 'var(--ln-font-body)', fontSize: 12, lineHeight: 1.5,
-            color: 'var(--ln-text-muted)',
-          }}>
+          <div className="launchpad-program-copy">
             Work you launch on your own initiative — your satellites, your
             infrastructure, your own mining runs. Nobody ordered these and
             nobody else owns what they leave behind.

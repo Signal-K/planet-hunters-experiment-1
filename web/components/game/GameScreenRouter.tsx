@@ -320,6 +320,7 @@ export function ScreenContent({
           }}
           onViewContracts={() => game.goToMissions()}
           onOpenHangar={() => game.go('hangar')}
+          onBuildMonitoring={() => game.go('build')}
           missionsDone={game.player.missionsDone}
           freeOperations={game.player.freeOperations}
           catalog={game.catalog}

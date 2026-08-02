@@ -554,10 +554,12 @@ describe('structure flags are derived from `placed`', () => {
     expect(s.player.satelliteMonitoringBuilt).toBe(true)
   })
 
-  it('repairs refineryBuilt and scannerBuilt the same way', () => {
+  it('repairs refineryBuilt while stripping the deferred scanner from old saves', () => {
     const s = normalizeState({ player: { placed: ['refinery', 'scan-station'] } })
     expect(s.player.refineryBuilt).toBe(true)
-    expect(s.player.scannerBuilt).toBe(true)
+    expect(s.player.scannerBuilt).toBe(false)
+    expect(s.player.placed).toEqual(['refinery'])
+    expect(s.player.placementPlots).not.toHaveProperty('scan-station')
   })
 
   it('leaves the flags false when the structure is not placed', () => {

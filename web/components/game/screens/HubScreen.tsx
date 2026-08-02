@@ -17,7 +17,7 @@ import { Building, EmptyPlot } from '@/components/game/hub/Building'
 import type { BuildingCallout } from '@/components/game/hub/Building'
 import HubPixiCanvas from '@/components/game/hub/HubPixiCanvas'
 import ErrorBoundary from '@/components/ui/ErrorBoundary'
-import { TUTORIAL_CONTENT_TOP } from '@/lib/tutorial-layout'
+import { TUTORIAL_CONTENT_TOP, TUTORIAL_RAIL } from '@/lib/tutorial-layout'
 import { FREE_OPS_START_MISSIONS_DONE } from '@/lib/data/mission-generator'
 import { LAUNCHPAD_UPGRADE_COST, type SubsurfaceRoomId } from '@/lib/data'
 import { formatCurrency } from '@/lib/format'
@@ -151,6 +151,7 @@ export default function HubScreen({ player, hasCoach, onGoBuilding, onNav, onUpg
     ...placementPlots,
     ...(legacyPlaced('launchpad') ? { launchpad: 0 } : {}),
   }
+  if (!FEATURE_FLAGS.scanStation) delete effectivePlots['scan-station']
 
   useEffect(() => {
     Scene.load('/game/scenes/hub.scene.json')
@@ -454,7 +455,12 @@ export default function HubScreen({ player, hasCoach, onGoBuilding, onNav, onUpg
       {/* Progression card — hidden when tutorial coach is active */}
       {(!hasCoach || !!player.activeMission || !!player.pendingLaunch) && !subsurface && (
         <>
-          <ProgressionCard player={player} onGoBuilding={onGoBuilding} onNav={onNav} top={TUTORIAL_CONTENT_TOP} />
+          <ProgressionCard
+            player={player}
+            onGoBuilding={onGoBuilding}
+            onNav={onNav}
+            top={hasCoach ? TUTORIAL_CONTENT_TOP : TUTORIAL_RAIL.TOP_CHROME_HEIGHT + 8}
+          />
           {showTutorialComplete && (
             <TutorialCompleteSheet onDone={dismissTutorialComplete} />
           )}
@@ -480,8 +486,8 @@ export default function HubScreen({ player, hasCoach, onGoBuilding, onNav, onUpg
           Ops for the whole guided-ops window meant those buttons stayed
           unreachable well past the tutorial (bug reported 2026-07-31). */}
       {(!hasCoach || player.missionsDone > 0) && (
-        <div style={{
-          position: 'absolute', left: 0, right: 0, bottom: 110, zIndex: 20,
+        <div className="hub-action-rail" style={{
+          position: 'absolute', left: 0, right: 0, zIndex: 20,
           display: 'flex', justifyContent: 'center', gap: 8, flexWrap: 'wrap',
           padding: '0 12px',
         }}>

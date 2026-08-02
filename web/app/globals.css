@@ -1080,41 +1080,31 @@ html[data-coach-target="build-structure-strip"] [data-coach-id="build-structure-
   100% { opacity: 0; transform: translate(calc(-50% + var(--sx, 0px)), calc(-50% + var(--sy, 0px))); }
 }
 
-/* ============================================================
-   SCENE-PANEL SPIKE (STS-630) — Launchpad only
-   ============================================================
-   CSS approximation of the scene-panel model (see ZenNotes
-   landnam-scene-panel-background-direction-2026-07-31): the panel
-   background is a lit surface, not a flat color fill, and instrument
-   chrome uses thick opaque outlines instead of thin glass hairlines.
-   This is a stand-in for a future PixiJS-rendered control-room
-   background — not the final rendering technique. Scoped under
-   .ln-scene-launchpad so it cannot leak into any other screen. */
+/* Launchpad is an active operations surface. STS-641 removes the temporary
+   bright scene-panel spike and gives owned infrastructure the first visual
+   read, using the same neutral command-deck tokens as the rest of gameplay. */
 .ln-scene-launchpad {
-  --scene-sky-top:    #bfe8f5;
-  --scene-sky-mid:    #eaf8ea;
-  --scene-ground:     #6fae63;
-  --scene-sun:        rgba(255, 235, 150, 0.9);
-  --scene-ink:        #14171c;
-  --scene-card-bg:    #ffffff;
-  --scene-card-text:  #14171c;
-  --scene-card-muted: #3f4854;
+  background: var(--ln-bg);
+}
 
-  background:
-    radial-gradient(140px 90px at 82% 12%, var(--scene-sun), transparent 70%),
-    linear-gradient(0deg, var(--scene-ground) 0%, var(--scene-ground) 20%, transparent 20%),
-    linear-gradient(180deg, var(--scene-sky-top) 0%, var(--scene-sky-mid) 55%, var(--scene-ground) 100%);
+.launchpad-content {
+  width: min(1180px, 100%);
+  margin: 0 auto;
+  padding: var(--ln-s-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--ln-s-4);
 }
 
 .ln-instrument-card {
-  background: var(--scene-card-bg);
-  border: 3px solid var(--scene-ink);
-  border-radius: 10px;
-  box-shadow: 0 4px 0 var(--scene-ink);
-  padding: 16px;
+  background: var(--ln-panel);
+  border: 1px solid var(--ln-hairline);
+  border-radius: var(--ln-r-lg);
+  box-shadow: var(--ln-shadow-card);
+  padding: var(--ln-s-4);
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: var(--ln-s-3);
 }
 
 .ln-instrument-label {
@@ -1122,13 +1112,117 @@ html[data-coach-target="build-structure-strip"] [data-coach-id="build-structure-
   font-size: 11px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--scene-card-muted);
+  color: var(--ln-text-muted);
   font-weight: 700;
 }
 
 .ln-instrument-value {
   font-family: var(--ln-font-display);
   font-size: 16px;
-  color: var(--scene-card-text);
+  color: var(--ln-text);
   font-weight: 700;
+}
+
+.launchpad-infrastructure {
+  padding: var(--ln-s-5);
+  border: 1px solid var(--ln-cyan-border);
+  border-radius: var(--ln-r-xl);
+  background: var(--ln-cyan-soft);
+}
+
+.launchpad-section-heading,
+.launchpad-asset-title-row,
+.launchpad-data-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--ln-s-3);
+}
+
+.launchpad-section-heading { align-items: flex-end; margin-bottom: var(--ln-s-4); }
+.launchpad-section-heading h2 {
+  margin: var(--ln-s-1) 0 0;
+  color: var(--ln-text);
+  font-family: var(--ln-font-display);
+  font-size: 22px;
+  line-height: 1.1;
+}
+.launchpad-section-heading p,
+.launchpad-asset-card p,
+.launchpad-program-copy {
+  margin: 0;
+  color: var(--ln-text-dim);
+  font-family: var(--ln-font-body);
+  font-size: 12px;
+  line-height: 1.5;
+}
+.launchpad-section-heading p { max-width: 360px; text-align: right; }
+
+.launchpad-infrastructure-grid,
+.launchpad-secondary-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--ln-s-4);
+}
+.launchpad-secondary-grid { grid-template-columns: minmax(0, .8fr) minmax(0, 1.2fr); }
+.launchpad-asset-card { min-height: 176px; }
+.launchpad-row-list { display: flex; flex-direction: column; gap: var(--ln-s-2); }
+.launchpad-data-row {
+  min-height: 40px;
+  padding: var(--ln-s-2) 0;
+  border-bottom: 1px solid var(--ln-divider);
+  opacity: .48;
+}
+.launchpad-data-row:last-child { border-bottom: 0; }
+.launchpad-data-row[data-enabled="true"] { opacity: 1; }
+.launchpad-data-row > div { display: flex; flex-direction: column; gap: var(--ln-s-1); }
+.launchpad-data-row strong {
+  color: var(--ln-text);
+  font-family: var(--ln-font-display);
+  font-size: 13px;
+}
+.launchpad-data-row span,
+.launchpad-data-row code,
+.launchpad-inline-status {
+  color: var(--ln-text-muted);
+  font-family: var(--ln-font-mono);
+  font-size: 10px;
+  letter-spacing: .08em;
+}
+
+.launchpad-status {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ln-s-2);
+  color: var(--ln-cyan);
+  font-family: var(--ln-font-display);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .12em;
+}
+.launchpad-status > span { width: 7px; height: 7px; border-radius: var(--ln-r-pill); background: currentColor; }
+.launchpad-status.is-online { color: var(--ln-ok); }
+.launchpad-status.is-required { color: var(--ln-cyan); }
+
+.launchpad-program-copy { padding: 0 var(--ln-s-1); }
+
+/* Keep the Earth Base scene chrome in separate reserved bands. The previous
+   110px action-rail offset landed directly on the building status pills at
+   short landscape heights. */
+.hub-action-rail { bottom: 110px; }
+
+@media (min-width: 1024px) {
+  .hub-action-rail { bottom: var(--ln-s-5); }
+}
+
+@media (max-width: 759px) {
+  .launchpad-infrastructure { padding: var(--ln-s-4); }
+  .launchpad-infrastructure-grid,
+  .launchpad-secondary-grid { grid-template-columns: 1fr; }
+  .launchpad-section-heading { align-items: flex-start; flex-direction: column; }
+  .launchpad-section-heading p { text-align: left; }
+}
+
+@media (orientation: landscape) and (max-height: 600px) {
+  .hub-progression-stack { bottom: 76px !important; }
 }
