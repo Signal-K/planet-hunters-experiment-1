@@ -8,6 +8,7 @@ export type ShipRoomKind =
   | 'docking-port'
   | 'heat-shield'
   | 'crew-module'
+  | 'lander'
 
 export interface ShipRoomSlot {
   id: string
@@ -39,6 +40,7 @@ export const SHIP_ROOM_ASSETS: Record<ShipRoomKind, string> = {
   'docking-port': '/game/assets/rooms/cargo_bay_t1.png',
   'heat-shield': '/game/assets/rooms/mining_room_t1.png',
   'crew-module': '/game/assets/rooms/cockpit_t1.png',
+  lander: '/game/assets/rooms/mining_room_t1.png',
 }
 
 export const SHIP_INTERIOR_LAYOUTS: Record<string, ShipInteriorLayout> = {
@@ -57,6 +59,9 @@ export const SHIP_INTERIOR_LAYOUTS: Record<string, ShipInteriorLayout> = {
       // It stays visually separate from the payload bay so fitting quarters
       // never replaces or obscures cargo capacity.
       { id: 'sr1-crew', kind: 'crew-module', label: 'Crew Module', x: 80.5, y: 20.0, w: 12.5, h: 57.0 },
+      // A second post-onboarding bolt-on, below the crew module rather than
+      // beside it — the hull has no more horizontal room past the crew bay.
+      { id: 'sr1-lander', kind: 'lander', label: 'Lander Module', x: 80.5, y: 78.0, w: 12.5, h: 20.0 },
     ],
   },
 }

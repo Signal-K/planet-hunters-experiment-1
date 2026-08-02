@@ -19,6 +19,7 @@ export type Screen =
   | 'targets'
   | 'fab'
   | 'transit'
+  | 'landing'
   | 'mining'
   | 'delivery'
   | 'debrief'
@@ -73,7 +74,7 @@ export interface Player {
   // PocketBase mission_runs record for the current run. Kept in the save so a
   // refresh/resume continues updating the same server-side lifecycle record.
   missionRunId?: string
-  missionPhase?: 'transit' | 'mining' | 'delivery' | 'debrief'
+  missionPhase?: 'transit' | 'landing' | 'mining' | 'delivery' | 'debrief'
   // Ore collected so far during an in-progress mining run, preserved across a
   // "Back to hub" pause so resuming the mission doesn't silently discard
   // already-collected cargo (that cargo only lived in MiningScreen's local
@@ -89,6 +90,15 @@ export interface Player {
   // delivery target. The unload scene derives progress from this epoch so
   // remounts, hidden tabs, and Back-to-hub pauses cannot restart it.
   deliveryUnloadStartedAt?: number
+  // Wall-clock start of the lander detach/descend sequence on arrival, and of
+  // the ascend/redock sequence after mining completes. Same "derive progress
+  // from a persisted epoch" pattern as roverMiningStartedAt/deliveryUnloadStartedAt.
+  landingStartedAt?: number
+  landingReturnStartedAt?: number
+  // True once the player has completed at least one lander redock. Gates
+  // Surface Ops alongside freeOperations — see "Surface Ops gated on landing
+  // research and lander module" (STS-640).
+  hasLanded?: boolean
   missionCount: number
   pendingLaunch: boolean
   placed: string[]
@@ -222,6 +232,9 @@ export interface Player {
   academyFunded?: boolean
   academyXP?: number
   crewModuleResearched?: boolean
+  // Landing research: unlocks the Lander Module ship room. Not a crew/academy
+  // mechanic — kept separate from academyResearched's prerequisite chain.
+  landingResearched?: boolean
   // Solo Surface Ops state. Rights are a build-cost gate, not a shared-world
   // claim. Ferry records retain a stable cargo-batch id and reconciliation
   // timestamp so retries and reloads cannot credit one manifest twice.
@@ -316,6 +329,8 @@ export interface GameActions {
   chooseSatelliteTarget: (subjectId: string) => void
   submitAsteroidClassification: (candidateId: string, verdict: AsteroidVerdict) => void
   onRoverMiningDone: (cargo: Record<string, number>) => void
+  onLandingTouchdown: () => void
+  onRedockComplete: (cargo: Record<string, number>) => void
   confirmShipCustomizerBuild: (installed: Partial<Record<import('@/lib/data').ShipRoomKind, string>>, prevInstalled: Partial<Record<import('@/lib/data').ShipRoomKind, string>>) => boolean
   purchaseTerrainRights: (siteId: string) => void
   buildSettlementLaunchpad: (siteId: string, pad: 0 | 1 | 2) => void
@@ -328,6 +343,7 @@ export interface GameActions {
   upgradeLicenseGrade: (grade: Exclude<LicenseGrade, 'Grade I'>) => void
   unlockBlueprint: (blueprintId: string, costFrancs?: number, costXP?: number, costMaterials?: Record<string, number>) => void
   researchAcademy: () => void
+  researchLanding: () => void
   setAcademyFunding: (funded: boolean) => void
   hireCrew: (sourceId: string) => void
   rehireCrew: (crewId: string) => void

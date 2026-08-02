@@ -520,13 +520,15 @@ export default function HubScreen({ player, hasCoach, onGoBuilding, onNav, onUpg
                   `.hub-desktop-nav` keeps them out of the way there. */}
               {player.freeOperations && (
                 <>
-                  <SceneBtn
-                    icon={<SurfaceGlyph />}
-                    label="Surface Ops"
-                    accent
-                    testId="hub-surface-ops"
-                    onClick={() => onNav('surface-ops')}
-                  />
+                  {player.hasLanded && (
+                    <SceneBtn
+                      icon={<SurfaceGlyph />}
+                      label="Surface Ops"
+                      accent
+                      testId="hub-surface-ops"
+                      onClick={() => onNav('surface-ops')}
+                    />
+                  )}
                   <span className="hub-desktop-nav">
                     <SceneBtn icon={<MarketGlyph />} label="Market" onClick={() => onNav('market')} />
                   </span>

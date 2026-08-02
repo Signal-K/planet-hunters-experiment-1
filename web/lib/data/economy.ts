@@ -137,6 +137,8 @@ export const CREW_MODULE_PRICE = 5_500_000
 export const CREW_MISSION_XP = 100
 export const CREW_TRAINING_XP = 100
 export const FIRST_CREW_ARRIVAL_BONUS = 1_000_000
+export const LANDING_RESEARCH_XP_COST = 100
+export const LANDER_MODULE_PRICE = 5_500_000
 
 /** Starting francs. Below the Prospector's price on purpose — see the header. */
 export const STARTING_FRANCS = 9_000_000

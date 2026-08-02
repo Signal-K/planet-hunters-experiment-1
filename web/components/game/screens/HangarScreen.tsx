@@ -16,6 +16,7 @@ interface HangarScreenProps {
   unlockedSkillNodes?: string[]
   shipCustomizerParts?: InstalledCustomizerPartsByKind
   crewModuleResearched?: boolean
+  landingResearched?: boolean
   onConfirmShipCustomizerBuild?: (installed: InstalledCustomizerPartsByKind, prevInstalled: InstalledCustomizerPartsByKind) => boolean
   onBack: () => void
   onSelect?: (rocketId: string) => void
@@ -156,14 +157,14 @@ function RocketCard({ rocket, missionsDone, onSelect }: { rocket: RocketModel; m
   )
 }
 
-export default function HangarScreen({ francs, missionsDone, unlockedSkillNodes, shipCustomizerParts, crewModuleResearched, onConfirmShipCustomizerBuild, onBack, onSelect }: HangarScreenProps) {
+export default function HangarScreen({ francs, missionsDone, unlockedSkillNodes, shipCustomizerParts, crewModuleResearched, landingResearched, onConfirmShipCustomizerBuild, onBack, onSelect }: HangarScreenProps) {
   // Academy research is a second, explicit unlock path: a player who has
   // researched Crew Quarters must be able to enter the fitter even if they
   // have not purchased the general-purpose customiser skill node.
-  const customizerUnlocked = hasShipCustomizer(unlockedSkillNodes) || !!crewModuleResearched
+  const customizerUnlocked = hasShipCustomizer(unlockedSkillNodes) || !!crewModuleResearched || !!landingResearched
   const [customizerOpen, setCustomizerOpen] = useState(false)
   const installed = shipCustomizerParts ?? {}
-  const sequence = getBuildSequence(missionsDone, crewModuleResearched)
+  const sequence = getBuildSequence(missionsDone, crewModuleResearched, landingResearched)
   const installedIds = selectedCustomizerPartIds(installed, sequence)
   const hasLoadout = installedIds.length > 0
   const successChance = hasLoadout ? calculateShipSuccessChance(installedIds, sequence) : null
@@ -227,6 +228,7 @@ export default function HangarScreen({ francs, missionsDone, unlockedSkillNodes,
             missionsDone={missionsDone}
             installedParts={installed}
             crewModuleResearched={crewModuleResearched}
+            landingResearched={landingResearched}
             onConfirm={onConfirmShipCustomizerBuild}
             onClose={() => setCustomizerOpen(false)}
           />

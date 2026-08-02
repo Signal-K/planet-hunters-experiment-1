@@ -14,6 +14,7 @@ import {
   applyStartCandidateTraining,
   applyStartCrewTraining,
 } from '@/lib/systems/AcademySystem'
+import { applyResearchLanding } from '@/lib/systems/LandingSystem'
 import { enqueueSurvey } from '@/lib/surveys'
 import type { Toast } from '@/components/ui/ToastLayer'
 
@@ -25,6 +26,12 @@ export function useAcademyActions(
 ) {
   const researchAcademy = useCallback(() => {
     setState(state => applyResearchAcademy(state))
+  }, [setState])
+
+  // Not a crew/academy mechanic, but shares this hook's research-spending
+  // wiring — see lib/systems/LandingSystem.ts.
+  const researchLanding = useCallback(() => {
+    setState(state => applyResearchLanding(state))
   }, [setState])
 
   const setAcademyFunding = useCallback((funded: boolean) => {
@@ -78,6 +85,7 @@ export function useAcademyActions(
 
   return {
     researchAcademy,
+    researchLanding,
     setAcademyFunding,
     hireCrew,
     rehireCrew,

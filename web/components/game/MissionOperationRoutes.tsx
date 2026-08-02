@@ -5,6 +5,7 @@ import type { Screen } from '@/lib/game-types'
 import type { Target } from '@/lib/data'
 import { rocketDisplayForConfig } from '@/lib/data'
 import TransitScreen from '@/components/game/screens/TransitScreen'
+import LandingScreen from '@/components/game/screens/LandingScreen'
 import MiningScreen from '@/components/game/screens/MiningScreen'
 import RoverMiningScreen from '@/components/game/screens/RoverMiningScreen'
 import DeliveryScreen from '@/components/game/screens/DeliveryScreen'
@@ -12,7 +13,7 @@ import DebriefScreen from '@/components/game/screens/DebriefScreen'
 
 type Game = ReturnType<typeof useGame>
 type RocketDisplay = ReturnType<typeof rocketDisplayForConfig>
-export type MissionOperationRoute = Extract<Screen, 'transit' | 'mining' | 'rover-mining' | 'delivery' | 'debrief'>
+export type MissionOperationRoute = Extract<Screen, 'transit' | 'landing' | 'mining' | 'rover-mining' | 'delivery' | 'debrief'>
 
 interface MissionOperationRoutesProps {
   screen: MissionOperationRoute
@@ -60,6 +61,7 @@ export default function MissionOperationRoutes({
               return
             }
             const isRoverMission = game.mission?.survey?.onWorldVehicle === 'starter-rover'
+            const hasLander = !isRoverMission && !!game.player.shipCustomizerParts?.lander
             if (game.mission?.payload?.type === 'satellite' || game.target?.type === 'exoplanet') {
               game.setPlayer(player => ({
                 ...player,
@@ -75,6 +77,15 @@ export default function MissionOperationRoutes({
               game.go('debrief')
               return
             }
+            if (hasLander) {
+              game.setPlayer(player => ({
+                ...player,
+                missionPhase: 'landing',
+                landingStartedAt: Date.now(),
+              }))
+              game.go('landing')
+              return
+            }
             game.setPlayer(player => ({
               ...player,
               missionPhase: 'mining',
@@ -85,6 +96,26 @@ export default function MissionOperationRoutes({
           onAbandon={game.abandonMission}
         />
       )
+
+    case 'landing': {
+      if (!game.mission || !game.target) return null
+      const mode = game.player.landingReturnStartedAt ? 'ascend' : 'descend'
+      return (
+        <LandingScreen
+          target={game.target}
+          mode={mode}
+          startedAt={mode === 'ascend' ? game.player.landingReturnStartedAt : game.player.landingStartedAt}
+          onBack={() => game.go('hub')}
+          onContinue={() => {
+            if (mode === 'descend') {
+              game.onLandingTouchdown()
+              return
+            }
+            game.onRedockComplete(game.player.miningCargoInProgress ?? {})
+          }}
+        />
+      )
+    }
 
     case 'mining':
       if (!game.mission || !game.target) return null
@@ -101,7 +132,21 @@ export default function MissionOperationRoutes({
             }))
             game.go('hub')
           }}
-          onComplete={(cargo) => { game.completeStep(6); game.completeStep(7); game.onMiningDone(cargo) }}
+          onComplete={(cargo) => {
+            game.completeStep(6)
+            game.completeStep(7)
+            if (game.player.shipCustomizerParts?.lander) {
+              game.setPlayer(player => ({
+                ...player,
+                missionPhase: 'landing',
+                landingReturnStartedAt: Date.now(),
+                miningCargoInProgress: cargo,
+              }))
+              game.go('landing')
+              return
+            }
+            game.onMiningDone(cargo)
+          }}
           minerals={game.catalog.minerals}
           laserChargeCap={game.laserChargeCap}
           laserTier={game.catalog.parts.drill.find(p => p.id === game.rocket.drill)?.tier ?? 1}

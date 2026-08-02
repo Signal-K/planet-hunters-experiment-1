@@ -23,7 +23,7 @@ import { enqueueSurvey } from '@/lib/surveys'
 
 export const VALID_SCREENS = new Set<Screen>([
   'intro', 'build', 'hub', 'missions', 'galaxy', 'targets', 'fab',
-  'transit', 'mining', 'rover-mining', 'delivery', 'debrief', 'refinery',
+  'transit', 'landing', 'mining', 'rover-mining', 'delivery', 'debrief', 'refinery',
   'market', 'hangar', 'rocket-buy', 'skills', 'scan-station',
   'launchpad',
   'surface-ops',
@@ -85,12 +85,14 @@ export function ScreenContent({
   // screen render at all.
   useEffect(() => {
     if (screen === 'market' && !game.player.freeOperations) game.go('hub')
-    if (screen === 'surface-ops' && !game.player.freeOperations) game.go('hub')
+    // Surface Ops additionally requires having actually landed on a target —
+    // see "Surface Ops gated on landing research and lander module" (STS-640).
+    if (screen === 'surface-ops' && (!game.player.freeOperations || !game.player.hasLanded)) game.go('hub')
     // The Build tab is a Free Ops entry point. Keep the onboarding assembly
     // flow reachable only when it has a real mission context; a bare/deep
     // linked fab route must never show a prefilled rocket.
     if (screen === 'fab' && !game.player.freeOperations && (!game.mission || !game.target)) game.go('hub')
-  }, [screen, game.player.freeOperations, game.mission, game.target, game.go])
+  }, [screen, game.player.freeOperations, game.player.hasLanded, game.mission, game.target, game.go])
 
   switch (screen) {
     case 'intro':
@@ -213,6 +215,7 @@ export function ScreenContent({
       )
 
     case 'transit':
+    case 'landing':
     case 'mining':
     case 'rover-mining':
     case 'delivery':
@@ -269,6 +272,7 @@ export function ScreenContent({
           unlockedSkillNodes={game.player.unlockedSkillNodes ?? []}
           shipCustomizerParts={game.player.shipCustomizerParts}
           crewModuleResearched={game.player.crewModuleResearched}
+          landingResearched={game.player.landingResearched}
           onConfirmShipCustomizerBuild={game.confirmShipCustomizerBuild}
           onBack={onBackFromHangar ?? (() => game.go('hub'))}
         />

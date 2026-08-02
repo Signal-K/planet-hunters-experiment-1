@@ -10,7 +10,7 @@ import { settleCrewEconomy } from '@/lib/systems/AcademySystem'
 // where player fields are optional since older saves may be missing new fields.
 export type PartialSave = Omit<Partial<GameState>, 'player'> & { player?: Partial<Player> }
 
-const VALID_SCREENS: Screen[] = ['intro', 'build', 'hub', 'missions', 'galaxy', 'targets', 'fab', 'transit', 'mining', 'delivery', 'debrief', 'refinery', 'market', 'hangar', 'rocket-buy', 'skills', 'scan-station', 'rover-mining', 'launchpad', 'surface-ops', 'academy', 'asteroid-discovery']
+const VALID_SCREENS: Screen[] = ['intro', 'build', 'hub', 'missions', 'galaxy', 'targets', 'fab', 'transit', 'landing', 'mining', 'delivery', 'debrief', 'refinery', 'market', 'hangar', 'rocket-buy', 'skills', 'scan-station', 'rover-mining', 'launchpad', 'surface-ops', 'academy', 'asteroid-discovery']
 const MISSION_CONTEXT_SCREENS = new Set<Screen>(['targets', 'rocket-buy', 'fab', 'transit', 'mining', 'rover-mining', 'delivery', 'debrief'])
 const TARGET_CONTEXT_SCREENS = new Set<Screen>(['rocket-buy', 'fab', 'transit', 'mining', 'rover-mining', 'delivery', 'debrief'])
 const VALID_LICENSE_GRADES: LicenseGrade[] = ['Grade I', 'Grade II', 'Grade III']
@@ -230,7 +230,7 @@ export function repairStateRoute(input: GameState): GameState {
   if (input.screen === 'galaxy' && !input.player.freeOperations) {
     return { ...input, screen: 'missions' }
   }
-  if (input.screen === 'surface-ops' && !input.player.freeOperations) {
+  if (input.screen === 'surface-ops' && (!input.player.freeOperations || !input.player.hasLanded)) {
     return { ...input, screen: 'hub' }
   }
   // Repair the tutorial flag: during onboarding (missionsDone < FREE_OPS_START_MISSIONS_DONE),

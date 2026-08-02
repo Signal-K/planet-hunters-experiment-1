@@ -7,6 +7,7 @@ import {
 } from '@/lib/data'
 import { applyMiningDone, applyReturnArrived, applyRoverMiningDone } from '@/lib/systems/MiningSystem'
 import { applyDeliveryArrived, applyDeliveryUnloadComplete } from '@/lib/systems/DeliverySystem'
+import { applyLandingTouchdown, applyRedockComplete } from '@/lib/systems/LandingSystem'
 import { applyAwardMissionCrewXP, crewRequirementStatus, diplomacyPayoutMultiplier, missionCrewForLaunch } from '@/lib/systems/AcademySystem'
 import { applyPurchaseRocket } from '@/lib/systems/EconomySystem'
 import { enqueueSurvey } from '@/lib/surveys'
@@ -287,6 +288,28 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
       return applyRoverMiningDone(s, cargo, arrivalAt, timedTransit ? transitStartedAt : null)
     })
     addToast(hasDelivery ? 'Cargo secured — course set for delivery' : 'Rover cargo secured — return to Earth for recovery', 'ok')
+  }, [addToast, catalog.targets, setState])
+
+  const onLandingTouchdown = useCallback(() => {
+    setState(s => applyLandingTouchdown(s))
+    addToast('Touchdown confirmed — surface operations underway', 'ok')
+  }, [addToast, setState])
+
+  const onRedockComplete = useCallback((cargo: Record<string, number>) => {
+    let hasDelivery = false
+    const transitStartedAt = Date.now()
+    setState(s => {
+      hasDelivery = !!s.deliveryTargetId
+      const nextLegTarget = hasDelivery
+        ? catalog.targets.find(t => t.id === s.deliveryTargetId)
+        : (s.targetId ? catalog.targets.find(t => t.id === s.targetId) : null)
+      const timedTransit = s.player.missionsDone >= FREE_OPS_START_MISSIONS_DONE
+      const arrivalAt = (timedTransit && nextLegTarget)
+        ? transitStartedAt + travelDurationMs(nextLegTarget, s.player.unlockedSkillNodes ?? [], ORBIT_MS_PER_UNIT)
+        : null
+      return applyRedockComplete(s, cargo, arrivalAt, timedTransit ? transitStartedAt : null)
+    })
+    addToast(hasDelivery ? 'Redock complete — course set for delivery' : 'Redock complete — return to Earth for recovery', 'ok')
   }, [addToast, catalog.targets, setState])
 
   const gainResearchXP = useCallback((amount: number) => {
@@ -623,6 +646,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
     setPlayer, setMissionId, setTargetId, setRocket, setLastCargo,
     onPickMission, onPickTarget, onPurchaseRocket, onLaunch,
     onMiningDone, onDeliveryArrived, onDeliveryUnloadComplete, onReturnArrived, onRoverMiningDone, onDebriefDone,
+    onLandingTouchdown, onRedockComplete,
     gainResearchXP, upgradeLicenseGrade, unlockBlueprint, launchTransitSatellite, submitTessClassification, chooseSatelliteTarget,
     submitAsteroidClassification,
   }
