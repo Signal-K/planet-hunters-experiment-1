@@ -12,6 +12,8 @@ import MissionSetupShell, {
   MissionSetupCard,
   MissionSetupFrame,
 } from '@/components/game/screens/MissionSetupShell'
+import { useIsNarrowViewport } from '@/lib/hooks/useIsNarrowViewport'
+import { ChevronDown, ChevronUp } from 'lucide-react'
 
 const RARITY_RANK: Record<string, number> = { exotic: 3, rare: 2, uncommon: 1, common: 0 }
 const DEPOSIT_MIX_CAP = 6
@@ -91,6 +93,16 @@ export default function TargetPickerScreen({ mission, onBack, onPick, hasCoach, 
   const [picked, setPicked] = useState<string>(
     compat.find(t => t.recommended)?.id ?? compat[0]?.id ?? ''
   )
+  // Below 821px (.mission-board-layout's own stacking breakpoint), the
+  // orbital map and the picked-target detail card share one non-scrolling
+  // flex column (`.mission-setup-content` has no overflow-y for this
+  // screen) — the detail card's natural height is reserved first, so its
+  // full brief/deposit-mix content left the map a 24-155px sliver on phone
+  // viewports (target-picker-map.cy.ts's h20xtc regression guard). Map-first
+  // on narrow screens: default to a compact single-line summary, full detail
+  // behind an explicit expand toggle, so the map claims the room instead.
+  const isNarrow = useIsNarrowViewport()
+  const [detailExpanded, setDetailExpanded] = useState(false)
 
   const pickedTarget = TARGETS.find(x => x.id === picked)
   const deliveryTarget = mission.deliveryTargetId ? TARGETS.find(t => t.id === mission.deliveryTargetId) : undefined
@@ -130,18 +142,31 @@ export default function TargetPickerScreen({ mission, onBack, onPick, hasCoach, 
       )}
     >
       <div className="mission-board-layout" style={{ minHeight: 0, flex: 1 }}>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 8, minHeight: 0 }}>
+        {/* Below 821px .mission-board-layout is a plain flex column, so this
+            map column must claim the free space itself — without flex:1 it is
+            content-sized and the map's 1fr row has nothing to resolve against.
+            Above 821px the layout is a grid and flex is inert; the column
+            stretches there instead. */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8, minHeight: 0, flex: 1 }}>
         {deliveryTarget && (
           <div style={{
             padding: '8px 12px', borderRadius: 6,
-            background: 'rgba(63,169,255,0.08)', border: '1px solid rgba(63,169,255,0.3)',
+            background: 'rgba(112,217,234,0.08)', border: '1px solid rgba(112,217,234,0.3)',
             fontFamily: 'var(--ln-font-display)', fontSize: 10, fontWeight: 700,
             letterSpacing: '0.08em', color: 'var(--ln-cyan)', textTransform: 'uppercase',
           }}>
             Two-stop job · Mine here, then deliver cargo to {deliveryTarget.name} before returning to Earth
           </div>
         )}
-        <div style={{ display: 'grid', gridTemplateRows: 'auto minmax(0, 1fr)', minHeight: 0, flex: 1 }}>
+        {/* Three rows on roomy screens (compatible-count header, the STS-544
+            orbit explainer, then the map) — two below 821px, where every
+            explanatory line competes directly with the map for the same
+            fixed, non-scrolling budget (h20xtc). The explainer is real,
+            useful copy, but it's still available on desktop/tablet and via
+            the detail card's expand toggle on narrow screens — the grid
+            track count must match the actual row count or an empty auto
+            track eats the map's space again (the original h20xtc bug). */}
+        <div style={{ display: 'grid', gridTemplateRows: isNarrow ? 'auto minmax(0, 1fr)' : 'auto auto minmax(0, 1fr)', minHeight: 0, flex: 1 }}>
           <div style={{ padding: '0 0 8px', display: 'flex', alignItems: 'center', gap: 8 }}>
             <span style={{ fontFamily: 'var(--ln-font-display)', fontSize: 10, fontWeight: 700, letterSpacing: '0.22em', color: 'var(--ln-text-muted)', textTransform: 'uppercase' }}>Compatible · {compat.length}</span>
             <span style={{ flex: 1 }} />
@@ -151,9 +176,11 @@ export default function TargetPickerScreen({ mission, onBack, onPick, hasCoach, 
               what it buys the player — while the rarity gates it drives are
               real game logic (target-archetypes.ts). One line, once, where
               orbit is first read (STS-544). */}
-          <div style={{ padding: '0 0 8px', fontFamily: 'var(--ln-font-body)', fontSize: 11, color: 'var(--ln-text-muted)', lineHeight: 1.4 }}>
-            <b style={{ color: 'var(--ln-text-dim)', fontWeight: 700 }}>Orbit</b> is the distance band from Earth — farther orbits reach rarer minerals, and need more rocket range.
-          </div>
+          {!isNarrow && (
+            <div style={{ padding: '0 0 8px', fontFamily: 'var(--ln-font-body)', fontSize: 11, color: 'var(--ln-text-muted)', lineHeight: 1.4 }}>
+              <b style={{ color: 'var(--ln-text-dim)', fontWeight: 700 }}>Orbit</b> is the distance band from Earth — farther orbits reach rarer minerals, and need more rocket range.
+            </div>
+          )}
           <MissionSetupFrame style={{ position: 'relative', height: '100%' }}>
             <GalaxyMap
               mission={mission}
@@ -179,7 +206,41 @@ export default function TargetPickerScreen({ mission, onBack, onPick, hasCoach, 
       </div>
 
       {pickedTarget ? (
-        <MissionSetupCard>
+        <MissionSetupCard scrollStyle={isNarrow && !detailExpanded ? { padding: 10 } : undefined}>
+              {isNarrow && !detailExpanded ? (
+                <button
+                  data-testid="target-detail-expand"
+                  onClick={() => setDetailExpanded(true)}
+                  style={{
+                    width: '100%', display: 'flex', alignItems: 'center', gap: 10,
+                    background: 'none', border: 'none', padding: 0, cursor: 'pointer', textAlign: 'left',
+                  }}
+                >
+                  <PlanetSVG id={pickedTarget.id} size={32} />
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontFamily: 'var(--ln-font-display)', fontWeight: 800, fontSize: 15, color: 'var(--ln-text)', letterSpacing: '0.02em' }}>{pickedTarget.name}</div>
+                    <div style={{ fontFamily: 'var(--ln-font-mono)', fontSize: 9, letterSpacing: '0.14em', color: pickedIsCompatible ? 'var(--ln-ok)' : 'var(--ln-crit)', textTransform: 'uppercase' }}>
+                      {pickedIsCompatible ? 'Reachable' : 'Not compatible'} · Orbit {pickedTarget.orbit}
+                    </div>
+                  </div>
+                  <ChevronDown size={16} color="var(--ln-text-muted)" />
+                </button>
+              ) : (
+                <>
+              {isNarrow && (
+                <button
+                  data-testid="target-detail-collapse"
+                  onClick={() => setDetailExpanded(false)}
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: 4, marginBottom: 10,
+                    background: 'none', border: 'none', padding: 0, cursor: 'pointer',
+                    fontFamily: 'var(--ln-font-display)', fontSize: 9, fontWeight: 700,
+                    letterSpacing: '0.14em', color: 'var(--ln-text-muted)', textTransform: 'uppercase',
+                  }}
+                >
+                  <ChevronUp size={14} /> Collapse
+                </button>
+              )}
               {missionMineralKeys.length > 0 && (
                 <div style={{
                   display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12,
@@ -209,6 +270,11 @@ export default function TargetPickerScreen({ mission, onBack, onPick, hasCoach, 
                   </div>
                 </div>
               </div>
+              {isNarrow && (
+                <div style={{ marginTop: 10, fontFamily: 'var(--ln-font-body)', fontSize: 11, color: 'var(--ln-text-muted)', lineHeight: 1.4 }}>
+                  <b style={{ color: 'var(--ln-text-dim)', fontWeight: 700 }}>Orbit</b> is the distance band from Earth — farther orbits reach rarer minerals, and need more rocket range.
+                </div>
+              )}
               {!hasCoach && (
                 <div style={{ marginTop: 10, fontFamily: 'var(--ln-font-body)', fontSize: 12, color: 'var(--ln-text-dim)', lineHeight: 1.4 }}>{pickedTarget.brief}</div>
               )}
@@ -226,6 +292,8 @@ export default function TargetPickerScreen({ mission, onBack, onPick, hasCoach, 
                   )}
                 </div>
               </div>
+                </>
+              )}
         </MissionSetupCard>
       ) : compat.length === 0 ? (
         <MissionSetupCard>

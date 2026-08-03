@@ -78,7 +78,7 @@ export function LaunchSequenceCanvas({ rocketName, rocketImageSrc, targetName, o
           style={{
             position: 'absolute', bottom: 24, right: 24, zIndex: 101,
             padding: '8px 16px', borderRadius: 8, cursor: 'pointer',
-            background: 'rgba(8,16,28,0.72)', border: '1px solid rgba(126,200,255,0.4)',
+            background: 'rgba(20,20,23,0.72)', border: '1px solid rgba(112,217,234,0.4)',
             color: '#7ec8ff', fontFamily: 'var(--ln-font-display)', fontWeight: 800, fontSize: 11,
             letterSpacing: '0.12em', textTransform: 'uppercase',
           }}

@@ -14,7 +14,12 @@ describe('Ship Customiser staged build', () => {
           screen: 'hangar',
           player: {
             missionsDone: 1,
-            francs: 15_000_000_000,
+            // Kept low enough that a single part's cost (~2-8M) actually moves the
+            // compact-formatted `ship-budget` text — at the previous 15B starting
+            // balance every part cost rounded away in the "F15.0B" display (billion
+            // scale rounds to the nearest 100M), so the budget-changed assertions
+            // below always failed regardless of whether the deduction happened.
+            francs: 100_000_000,
             placed: ['launchpad'],
             placementPlots: { launchpad: 0 },
             unlockedSkillNodes: ['ship-customizer-1'],

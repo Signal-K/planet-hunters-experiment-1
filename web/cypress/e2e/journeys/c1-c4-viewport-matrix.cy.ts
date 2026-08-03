@@ -82,6 +82,12 @@ function visit(path: string, state: GameState) {
       win.localStorage.setItem('ln_missionboard_freeops_explainer_ack', '1')
       win.localStorage.setItem('ln_mining_freeops_first_entry_ack', '1')
       win.localStorage.setItem('ln_mining_freeops_first_success_ack', '1')
+      // Fixtures below start post-onboarding (missionsDone >= FREE_OPS_START_MISSIONS_DONE),
+      // which is exactly the condition that pops TutorialCompleteSheet (HubScreen.tsx) the
+      // first time it's unacknowledged. Unset, it full-screens over the hub on short
+      // viewports (mobile landscape) and silently fits beside content on tall ones — pre-ack
+      // it so these are steady-state screen-contract checks, not incidental first-run coverage.
+      win.localStorage.setItem('ln_tutorial_complete_ack', '1')
       win.localStorage.setItem('landnam-guest-credentials', JSON.stringify({ email: 'e2e@landnam.guest', password: 'e2e-guest-test' }))
     },
   })
@@ -92,7 +98,7 @@ describe('C1–C4 screen contracts across viewport classes', () => {
     describe(viewport.label, () => {
       beforeEach(() => cy.viewport(viewport.width, viewport.height))
 
-      it('renders the Free Ops hub and mission board without losing the primary actions', () => {
+      it('renders the Free Ops hub, client board, and own-program launchpad without losing primary actions', () => {
         visit('/game', stateWith('hub'))
         cy.contains('Earth Base', { timeout: 10000 }).should('be.visible')
         cy.get('[data-testid="progression-card-next-mission"]', { timeout: 10000 })
@@ -100,7 +106,13 @@ describe('C1–C4 screen contracts across viewport classes', () => {
 
         visit('/game/missions', stateWith('missions'))
         cy.contains('Mission Board', { timeout: 10000 }).should('be.visible')
-        cy.get('[data-testid="self-directed-mining-btn"]', { timeout: 10000 })
+        cy.get('button[data-testid^="mission-card-"]', { timeout: 10000 })
+          .first()
+          .scrollIntoView().should('be.visible')
+
+        visit('/game/launchpad', stateWith('launchpad'))
+        cy.contains('Your Program', { timeout: 10000 }).should('be.visible')
+        cy.get('[data-testid="mission-card-freeops-self-directed-mining"]', { timeout: 10000 })
           .scrollIntoView().should('be.visible')
       })
 
@@ -121,11 +133,17 @@ describe('C1–C4 screen contracts across viewport classes', () => {
         }))
         cy.contains('Scanning Station', { timeout: 10000 }).should('be.visible')
 
+        // 'freeops-rover-landing' is a mission-generator *template* id
+        // (mission-generator.ts), never a real instantiated mission id — real
+        // freeops missions are stamped `freeops-<client>-<template>-<n>` at
+        // generation time. Use the always-present static M1 mission instead,
+        // the same substitution regression/review-tickets.cy.ts's rover-pause
+        // test already relies on to exercise this route.
         visit('/game/rover-mining', stateWith('rover-mining', {
-          missionId: 'freeops-rover-landing',
+          missionId: 'generated-s1-starter-bulk-1',
           targetId: 'eros',
           player: basePlayer({
-            activeMission: { id: 'freeops-rover-landing', label: 'Rover landing -> Eros' },
+            activeMission: { id: 'generated-s1-starter-bulk-1', label: 'Rover landing -> Eros' },
             missionPhase: 'mining',
             roverMiningStartedAt: Date.now() - 30_000,
           }),
@@ -150,14 +168,18 @@ describe('C1–C4 screen contracts across viewport classes', () => {
         cy.contains('Satellite Monitoring Station', { timeout: 10000 }).should('be.visible')
       })
 
-      it('keeps the Scene 4 setup borders above the fixed wayfinding footer', () => {
+      it('keeps the Scene 4 setup borders above the fixed action bar', () => {
         visit('/game/fab', stateWith('fab', {
           missionId: 'generated-s1-starter-bulk-1',
           targetId: 'eros',
           player: basePlayer({ missionsDone: 0, freeOperations: false }),
         }))
         cy.contains('Confirm Rocket', { timeout: 10000 }).should('be.visible')
-        cy.get('[data-testid="step-footer"]').then($footer => {
+        // AssemblyScreen never passes a `step` prop to MissionSetupShell (it's
+        // the last step in the flow — "Confirm Launch" is the CTA, not a "next"
+        // step), so `[data-testid="step-footer"]` never renders here; the real
+        // fixed bottom element on this screen is the sticky actions bar.
+        cy.get('[data-ui-zone="bottom-actions"]').then($footer => {
           const footerTop = $footer[0].getBoundingClientRect().top
           cy.get('.assembly-frame, .assembly-card').each($container => {
             expect($container[0].getBoundingClientRect().bottom, 'setup border ends above footer')
@@ -173,9 +195,13 @@ describe('C1–C3 persisted mission edge states', () => {
   beforeEach(() => cy.viewport(390, 844))
 
   it('preserves an active mission when the player opens the mission board', () => {
+    // missionId/targetId are the board's *new-selection* workflow state, separate
+    // from player.activeMission (the in-flight run) — start with no selection so
+    // the assertion below actually exercises onPickMission's active-mission guard
+    // (lib/contexts/useGameLoop.ts) instead of trivially matching a pre-set value.
     visit('/game/missions', stateWith('missions', {
-      missionId: 'generated-s1-starter-bulk-1',
-      targetId: 'eros',
+      missionId: null,
+      targetId: null,
       player: basePlayer({
         missionsDone: 0,
         freeOperations: false,
@@ -186,7 +212,8 @@ describe('C1–C3 persisted mission edge states', () => {
       }),
     }))
     cy.contains('Mission Board', { timeout: 10000 }).should('be.visible')
-    cy.get('[data-testid="self-directed-mining-btn"]')
+    cy.get('button[data-testid^="mission-card-"]')
+      .first()
       .scrollIntoView().click({ force: true })
     cy.window().then(win => {
       const saved = JSON.parse(win.localStorage.getItem(STORAGE_KEY) || '{}') as GameState

@@ -21,6 +21,7 @@ export const CLIENT_SLOTS: ClientSlot[] = [
     payoutNotes: '20% premium on platinum-group thruster feedstock',
     affinityNotes: '+2.5% payout per completed Helios job, capped at +15%',
     uiRole: 'starter',
+    suppliesCrew: false, // Propulsion depot: industrial supply, not a flight operator.
   },
   {
     id: 'arcturus-battery-systems',
@@ -35,6 +36,7 @@ export const CLIENT_SLOTS: ClientSlot[] = [
     payoutNotes: '22% premium on palladium and iridium fuel-cell inputs',
     affinityNotes: '+2.5% payout per completed Arcturus job, capped at +15%',
     uiRole: 'prospect',
+    suppliesCrew: false, // Battery manufacturer; missions are robotic material procurement.
   },
   {
     id: 'ferrum-orbital-construction',
@@ -49,6 +51,7 @@ export const CLIENT_SLOTS: ClientSlot[] = [
     payoutNotes: '18% premium on platinum-group structural feedstock',
     affinityNotes: '+2% payout per completed Ferrum job, capped at +15%',
     uiRole: 'bulk',
+    suppliesCrew: true, // Orbital construction crews plausibly transfer into the player program.
   },
   {
     id: 'atlas-aggregate',
@@ -66,6 +69,7 @@ export const CLIENT_SLOTS: ClientSlot[] = [
     payoutNotes: '18% premium on high-volume construction cargo',
     affinityNotes: '+2% payout per completed Atlas job, capped at +15%',
     uiRole: 'bulk',
+    suppliesCrew: false, // Bulk aggregate and ballast logistics are equipment-led.
   },
   {
     id: 'ceres-volatiles-collective',
@@ -83,6 +87,7 @@ export const CLIENT_SLOTS: ClientSlot[] = [
     payoutNotes: '20% premium on carbonaceous and volatile feedstock',
     affinityNotes: '+2.5% payout per completed Ceres job, capped at +15%',
     uiRole: 'prospect',
+    suppliesCrew: false, // Remote volatile extraction collective; no crewed-flight remit.
   },
   {
     id: 'helioforge-metals',
@@ -97,6 +102,7 @@ export const CLIENT_SLOTS: ClientSlot[] = [
     payoutNotes: '24% premium on metal assay orders',
     affinityNotes: '+3% payout per completed Helioforge job, capped at +15%',
     uiRole: 'prospect',
+    suppliesCrew: false, // Assay supplier, not a crewed exploration operator.
   },
   {
     id: 'kepler-materials',
@@ -111,6 +117,7 @@ export const CLIENT_SLOTS: ClientSlot[] = [
     payoutNotes: '22% premium on deep-core metals',
     affinityNotes: '+3% payout per completed Kepler job, capped at +15%',
     uiRole: 'prospect',
+    suppliesCrew: false, // Deep-core sampling is represented by robotic prospecting.
   },
   {
     id: 'nightjar-systems',
@@ -128,6 +135,7 @@ export const CLIENT_SLOTS: ClientSlot[] = [
     payoutNotes: '28% premium on rare strategic cargo',
     affinityNotes: '+3.5% payout per completed Nightjar job, capped at +15%',
     uiRole: 'command',
+    suppliesCrew: true, // Drive-systems operator maintains qualified flight specialists.
   },
   {
     id: 'vulcan-core-metallurgy',
@@ -145,6 +153,7 @@ export const CLIENT_SLOTS: ClientSlot[] = [
     payoutNotes: '26% premium on refined platinum-group core assay',
     affinityNotes: '+3% payout per completed Vulcan job, capped at +15%',
     uiRole: 'prospect',
+    suppliesCrew: false, // Metallurgy and refinement do not operate crewed missions.
   },
   {
     id: 'solgrid-dynamics',
@@ -159,6 +168,7 @@ export const CLIENT_SLOTS: ClientSlot[] = [
     payoutNotes: '24% premium on solar-grid inputs',
     affinityNotes: '+2.5% payout per completed Solgrid job, capped at +15%',
     uiRole: 'command',
+    suppliesCrew: true, // Solar-grid expansion includes orbital installation crews.
   },
   {
     id: 'lumen-research',
@@ -173,6 +183,7 @@ export const CLIENT_SLOTS: ClientSlot[] = [
     payoutNotes: '30% premium on research-critical minerals',
     affinityNotes: '+3.5% payout per completed Lumen job, capped at +15%',
     uiRole: 'science',
+    suppliesCrew: true, // Research operator plausibly seconds trained mission specialists.
   },
   {
     id: 'pioneer-works',
@@ -187,6 +198,7 @@ export const CLIENT_SLOTS: ClientSlot[] = [
     payoutNotes: '20% premium on balanced expansion cargo',
     affinityNotes: '+2.5% payout per completed Pioneer job, capped at +15%',
     uiRole: 'starter',
+    suppliesCrew: true, // Frontier base expansion is explicitly crewed work.
   },
 ]
 
@@ -208,6 +220,7 @@ export function toClient(slot: ClientSlot): Client {
     uiRole: slot.uiRole,
     payoutNotes: slot.payoutNotes,
     affinityNotes: slot.affinityNotes,
+    suppliesCrew: slot.suppliesCrew,
   }
 }
 

@@ -23,8 +23,8 @@ function Stat({ label, value, color }: { label: string; value: string | null; co
   return (
     <div style={{
       borderRadius: 8,
-      border: `1px solid ${live ? `${color}55` : 'rgba(126,200,255,0.14)'}`,
-      background: live ? `${color}14` : 'rgba(8,16,28,0.58)',
+      border: `1px solid ${live ? `${color}55` : 'rgba(112,217,234,0.14)'}`,
+      background: live ? `${color}14` : 'rgba(20,20,23,0.58)',
       padding: '9px 8px',
       textAlign: 'center',
       transition: 'background 300ms, border-color 300ms',

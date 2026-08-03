@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { missionTypePrimer, isOwnProgramMission, OWN_PROGRAM_CLIENT_ID } from './mission-primers'
+import { missionTypePrimer, isMissionBoardMission, isOwnProgramMission, partitionByOwner, OWN_PROGRAM_CLIENT_ID } from './mission-primers'
 import { MISSIONS, SELF_DIRECTED_MINING_MISSION_ID } from './missions'
 import type { Mission } from './types'
 
@@ -62,9 +62,8 @@ describe('missionTypePrimer', () => {
 const CLIENT_ATTRIBUTION = /(the|a|their|its) client|client'?s\b/i
 
 describe('own-program missions', () => {
-  // A telescope/satellite the player launches is their own entity. It is filed
-  // under the Mission Control pseudo-client at runtime (lib/runtimeCatalog.ts),
-  // which must never make it read — or pay — as client work.
+  // The legacy pseudo-client remains recognized for active saves created
+  // before STS-582 removed that catalog residue.
   const telescope: Mission = {
     ...base,
     id: 'story-transit-telescope-launch',
@@ -92,6 +91,13 @@ describe('own-program missions', () => {
     expect(isOwnProgramMission(base)).toBe(false)
   })
 
+  it('keeps owned operations off the Free Ops Mission Board', () => {
+    expect(isMissionBoardMission(telescope, true)).toBe(false)
+    expect(isMissionBoardMission({ ...telescope, client: undefined }, true)).toBe(false)
+    expect(isMissionBoardMission(base, true)).toBe(true)
+    expect(isMissionBoardMission(telescope, false)).toBe(true)
+  })
+
   it('never mentions a client in own-program copy', () => {
     const ownBuild = missionTypePrimer({
       ...base,
@@ -116,5 +122,52 @@ describe('primer coverage', () => {
       expect(primer.steps.length).toBeGreaterThanOrEqual(3)
       if (primer.owner === 'self') expect(primer.summary).not.toMatch(CLIENT_ATTRIBUTION)
     }
+  })
+})
+
+describe('partitionByOwner', () => {
+  const clientOrder: Mission = { ...base, id: 'client-order' }
+  const selfDirected: Mission = { ...base, id: 'self', client: undefined }
+  const ownBuild: Mission = {
+    ...base, id: 'own-refinery', client: OWN_PROGRAM_CLIENT_ID,
+    construction: {
+      structureKind: 'refinery', requiredMaterials: { iron: 10 },
+      placementMode: 'confirm', buildTimeMs: 1000,
+    },
+  }
+  const satellite: Mission = {
+    ...base, id: 'sat',
+    payload: { type: 'satellite', name: 'Transit Telescope', cargoCost: 1 },
+  }
+
+  it('splits client work from the player’s own program', () => {
+    const { client, own } = partitionByOwner(
+      [clientOrder, selfDirected, ownBuild, satellite],
+      m => m,
+    )
+
+    expect(client.map(m => m.id)).toEqual(['client-order'])
+    // A satellite launch is own-program even though it carries a client id —
+    // it deploys the player's asset, so it must never sit under client work.
+    expect(own.map(m => m.id)).toEqual(['self', 'own-refinery', 'sat'])
+  })
+
+  it('preserves the incoming order within each group', () => {
+    const a: Mission = { ...base, id: 'a' }
+    const b: Mission = { ...base, id: 'b' }
+    const { client } = partitionByOwner([b, selfDirected, a], m => m)
+    expect(client.map(m => m.id)).toEqual(['b', 'a'])
+  })
+
+  it('returns empty groups rather than undefined when one side has nothing', () => {
+    expect(partitionByOwner([clientOrder], m => m).own).toEqual([])
+    expect(partitionByOwner([], (m: Mission) => m).client).toEqual([])
+  })
+
+  it('works over board card models, not just bare missions', () => {
+    const cards = [{ mission: clientOrder, payout: 10 }, { mission: ownBuild, payout: 0 }]
+    const { client, own } = partitionByOwner(cards, c => c.mission)
+    expect(client).toHaveLength(1)
+    expect(own[0].mission.id).toBe('own-refinery')
   })
 })

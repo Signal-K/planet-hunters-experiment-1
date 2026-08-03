@@ -1,0 +1,40 @@
+.screen { display: flex; flex-direction: column; background: #eef1f4; color: #18212c; overflow: hidden; }
+.scene { position: relative; height: 30%; min-height: 190px; margin-top: 72px; border-bottom: 1px solid #b8c0c9; }
+.sceneHud { position: absolute; right: 14px; bottom: 12px; display: flex; flex-direction: column; align-items: flex-end; padding: 7px 10px; border: 1px solid #9aa6b4; background: rgba(248,250,252,.9); }
+.sceneHud strong,.eyebrow { font: 800 9px var(--ln-font-display); letter-spacing: .17em; color: #257bad; }
+.sceneHud span { margin-top: 2px; font: 700 10px var(--ln-font-mono); color: #4c5a69; }
+.management { min-height: 0; flex: 1; display: flex; flex-direction: column; }
+.summary { display: flex; gap: 12px; align-items: center; padding: 8px 14px; border-bottom: 1px solid #c9cfd6; font: 700 10px var(--ln-font-mono); color: #55616e; }
+.summary button { margin-left: auto; padding: 5px 8px; border: 1px solid #83909d; background: #fff; color: #263341; font: 700 9px var(--ln-font-display); text-transform: uppercase; cursor: pointer; }
+.tabs { display: grid; grid-template-columns: repeat(5, 1fr); border-bottom: 1px solid #b8c0c9; background: #e3e7eb; }
+.tabs button,.branchPicker button { padding: 9px 3px; border: 0; border-right: 1px solid #c4cbd2; background: transparent; color: #63707d; font: 800 8px var(--ln-font-display); letter-spacing: .08em; text-transform: uppercase; cursor: pointer; }
+.tabs .activeTab { background: #fff; color: #196f9f; box-shadow: inset 0 -2px #2687b3; }
+.content { min-height: 0; flex: 1; overflow: auto; padding: 12px 14px 22px; }
+.roster,.stack { display: flex; flex-direction: column; gap: 9px; }
+.sectionHead { display: flex; justify-content: space-between; padding: 4px 1px; border-bottom: 1px solid #c6cdd4; color: #5b6876; font: 800 9px var(--ln-font-display); letter-spacing: .14em; text-transform: uppercase; }
+.crewCard,.actionCard,.moduleCard { display: flex; align-items: center; gap: 10px; padding: 10px; border: 1px solid #c4cbd3; background: #fff; box-shadow: 0 2px 8px rgba(40,55,70,.05); }
+.classMark { width: 12px; height: 12px; flex: none; border: 2px solid #2687b3; border-radius: 50%; }
+.classMark.rover { border-radius: 2px; transform: rotate(45deg); border-color: #627386; }
+.classMark.drone { border-radius: 0; clip-path: polygon(50% 0,100% 100%,0 100%); background: #3f9dcc; border: 0; }
+.crewMain { min-width: 0; flex: 1; display: grid; gap: 5px; }
+.crewMain>div:first-child,.actionCard>div,.moduleCard>div { display: flex; flex-direction: column; gap: 2px; }
+.crewMain strong,.actionCard strong,.moduleCard strong { font: 800 12px var(--ln-font-display); color: #17212c; }
+.crewMain span,.actionCard span,.moduleCard span { font: 9px var(--ln-font-mono); color: #6a7682; }
+.specs { font: 700 9px var(--ln-font-mono); color: #257bad; text-transform: uppercase; }
+.condition { padding: 4px 6px; border: 1px solid #8493a2; font: 800 8px var(--ln-font-display); text-transform: uppercase; }
+.condition.fit { color: #167345; border-color: #4caa7a; }.condition.fatigued { color: #9a6700; border-color: #c49734; }.condition.injured { color: #a32e3d; border-color: #c95f6b; }
+.notice { padding: 9px 10px; border-left: 3px solid #2687b3; background: #dfeaf0; color: #40505f; font: 10px/1.4 var(--ln-font-body); }
+.actionCard>div,.moduleCard>div { flex: 1; min-width: 0; }
+.actionCard select { max-width: 145px; padding: 7px; border: 1px solid #aeb8c1; background: #f8fafb; font: 10px var(--ln-font-body); color: #25313d; }
+.branchPicker { display: grid; grid-template-columns: repeat(4,1fr); border: 1px solid #b8c1ca; }
+.branchPicker button { border-right: 1px solid #c5ccd3; }.branchPicker .branchActive { background: #2687b3; color: #fff; }
+.inlineAction { padding: 9px 10px; border: 1px solid #9ba9b6; background: #fff; color: #263442; font: 700 10px var(--ln-font-display); text-align: left; cursor: pointer; }
+.moduleCard { flex-direction: column; align-items: stretch; border-left: 3px solid #2687b3; }
+.locked { position: absolute; inset: 72px 0 0; overflow: auto; padding-bottom: 24px; }
+.scenePreview { position: relative; height: 260px; filter: grayscale(.8); }
+.lockVeil { position: absolute; inset: 0; display: grid; place-items: center; background: rgba(238,241,244,.58); color: #44515e; font: 900 11px var(--ln-font-display); letter-spacing: .2em; }
+.missionCard { margin: -16px 14px 0; position: relative; padding: 16px; border: 1px solid #b8c1ca; background: #fff; box-shadow: 0 10px 30px rgba(37,49,61,.12); }
+.missionCard h2 { margin: 5px 0 14px; font: 800 24px var(--ln-font-display); color: #17212c; }
+.step { display: flex; gap: 10px; margin: 9px 0; }.step>span { width: 17px; height: 17px; border: 1px solid #9ba7b2; flex: none; display: grid; place-items: center; font-size: 10px; }.step .stepDone { background: #2687b3; border-color: #2687b3; color: #fff; }
+.step strong { font: 800 11px var(--ln-font-display); }.step p { margin: 2px 0 0; color: #63707c; font: 10px var(--ln-font-body); }
+@media (min-width: 760px) { .scene { height: 38%; }.content { padding-inline: 24px; }.roster { display: grid; grid-template-columns: repeat(3,1fr); align-items: start; }.locked { display: grid; grid-template-columns: 1.25fr .75fr; align-items: center; padding: 28px; }.scenePreview { height: 520px; }.missionCard { margin: 0 0 0 -40px; } }

@@ -32,7 +32,7 @@ function Row({ children }: { children: React.ReactNode }) {
     <div style={{
       display: 'flex', alignItems: 'center', justifyContent: 'space-between',
       padding: '10px 0',
-      borderBottom: '1px solid rgba(63,169,255,0.08)',
+      borderBottom: '1px solid rgba(112,217,234,0.08)',
     }}>
       {children}
     </div>
@@ -43,8 +43,8 @@ function Btn({
   label, onClick, variant = 'ghost', disabled,
 }: { label: string; onClick: () => void; variant?: 'ghost' | 'danger' | 'primary'; disabled?: boolean }) {
   const colors = {
-    ghost:   { bg: 'rgba(63,169,255,0.08)',  border: 'rgba(63,169,255,0.25)',  color: '#87cffa' },
-    primary: { bg: 'rgba(63,169,255,0.15)',  border: 'rgba(63,169,255,0.45)',  color: '#3fa9ff' },
+    ghost:   { bg: 'rgba(112,217,234,0.08)',  border: 'rgba(112,217,234,0.25)',  color: '#87cffa' },
+    primary: { bg: 'rgba(112,217,234,0.15)',  border: 'rgba(112,217,234,0.45)',  color: '#3fa9ff' },
     danger:  { bg: 'rgba(255,59,48,0.10)',   border: 'rgba(255,59,48,0.35)',   color: '#ff6b5b' },
   }
   const c = colors[variant]
@@ -94,7 +94,7 @@ export default function SettingsSheet({ onClose }: SettingsSheetProps) {
       showHandle={false}
       panelStyle={{
         background: 'linear-gradient(180deg, #0d1c30, #060d18)',
-        border: '1px solid rgba(63,169,255,0.2)',
+        border: '1px solid rgba(112,217,234,0.2)',
         padding: '18px 20px 32px',
         boxShadow: '0 -12px 40px rgba(0,0,0,0.6)',
         maxHeight: '80dvh', overflowY: 'auto',

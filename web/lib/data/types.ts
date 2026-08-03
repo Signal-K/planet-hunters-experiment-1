@@ -70,6 +70,13 @@ export interface DailyQuestProgress {
   date: string
 }
 
+export interface ProgramReward {
+  /** Research progression granted when the owned operation is completed. */
+  researchXP: number
+  /** Player-facing description of what the operation adds to their program. */
+  outcome: string
+}
+
 export interface Mission {
   id: string
   title: string
@@ -87,11 +94,23 @@ export interface Mission {
   payload?: MissionPayload
   survey?: MissionSurveyPlan
   construction?: MissionConstructionPlan
+  /**
+   * Outcome for a player-owned operation. These runs use the flight engine,
+   * but are not client contracts and do not pay francs or affinity.
+   */
+  programReward?: ProgramReward
   requires: {
     minerals: Record<string, number>
     cargo_min: number
     drill_tier: number
     max_orbit: number
+    crew?: import('./crew').CrewRequirement
+  }
+  jointProject?: {
+    playerCost: number
+    clientCostShare: number
+    payoutBonus: number
+    infrastructureOrbitBonus: number
   }
   payout: {
     francs: number
@@ -166,6 +185,7 @@ export interface Client {
   uiRole: ClientSlot['uiRole']
   payoutNotes?: string
   affinityNotes?: string
+  suppliesCrew: boolean
 }
 
 export interface ClientSlot {
@@ -181,6 +201,7 @@ export interface ClientSlot {
   payoutNotes: string
   affinityNotes: string
   uiRole: 'starter' | 'bulk' | 'prospect' | 'command' | 'science'
+  suppliesCrew: boolean
 }
 
 export interface StructureBlueprint {
@@ -190,7 +211,7 @@ export interface StructureBlueprint {
   cost: number
   costMaterials?: Record<string, number>
   unlocksAt: string
-  unlockTrigger?: 'always' | 'client-mission-trigger' | 'manual'
+  unlockTrigger?: 'always' | 'client-mission-trigger' | 'academy-research' | 'deep-space-telescope-unlock' | 'manual'
   description: string
 }
 

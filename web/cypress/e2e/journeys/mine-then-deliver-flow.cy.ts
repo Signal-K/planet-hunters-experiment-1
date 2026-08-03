@@ -7,8 +7,8 @@
 // - route label on the mission board for the authored two-leg mission
 // - TransitScreen shows the delivery target (not the mining site) during
 //   the delivery leg
-// - "Delivered — course set for Earth" toast + Earth-bound transit after
-//   the delivery leg is completed
+// - arrival opens a real unload scene; its persisted epoch survives reload
+// - cargo leaves the hold before the empty Earth-bound transit leg
 //
 // mission-delivery-debrief.cy.ts already covers a separate, previously-fixed
 // bug in the Debrief screen's origin attribution — this file does not
@@ -146,13 +146,16 @@ describe('Mine-Then-Deliver: mid-flight leg resolution', () => {
     cy.contains('16 Psyche').should('not.exist')
   })
 
-  it('transitions to the Earth-bound leg after the delivery leg completes', () => {
+  it('enters the unload scene after the delivery transit leg completes', () => {
     visitWithState('/game/transit', {
       screen: 'transit',
       missionId: 'lnm_relay_psyche_ceres',
       targetId: 'psyche',
       deliveryTargetId: 'ceres',
+      lastCargo: { nickel: 3, cobalt: 2 },
       player: basePlayer({
+        activeMission: { id: 'lnm_relay_psyche_ceres', label: 'Deep-Core Relay' },
+        missionPhase: 'transit',
         headingToDelivery: true,
         returningToEarth: false,
         arrivalAt: Date.now() + 5 * 60 * 1000,
@@ -160,8 +163,49 @@ describe('Mine-Then-Deliver: mid-flight leg resolution', () => {
     })
     cy.contains('1 Ceres', { timeout: 10000 }).should('be.visible')
     cy.get('[data-testid="transit-skip-btn"]').click({ force: true })
-    cy.contains('Delivered — course set for Earth', { timeout: 10000 }).should('be.visible')
-    cy.contains('Earth', { timeout: 10000 }).should('be.visible')
+    cy.get('[data-testid="delivery-screen"]', { timeout: 10000 }).should('be.visible')
+    cy.contains('Cargo Transfer').should('be.visible')
+    cy.get('[data-testid="delivery-cargo-hold"]').should('contain.text', 'Nickel').and('contain.text', 'Cobalt')
+    cy.get('[data-testid="delivery-service-fee"]').should('contain.text', 'TRANSPORT SERVICE FEE')
+  })
+
+  it('resumes wall-clock unload progress after a reload and returns with an empty hold', () => {
+    const startedAt = Date.now() - 4_000
+    visitWithState('/game/delivery', {
+      screen: 'delivery',
+      missionId: 'lnm_relay_psyche_ceres',
+      targetId: 'psyche',
+      deliveryTargetId: 'ceres',
+      lastCargo: { nickel: 3, cobalt: 2 },
+      player: basePlayer({
+        activeMission: { id: 'lnm_relay_psyche_ceres', label: 'Deep-Core Relay' },
+        missionPhase: 'delivery',
+        headingToDelivery: true,
+        returningToEarth: false,
+        deliveryUnloadStartedAt: startedAt,
+      }),
+    })
+
+    cy.get('[data-testid="delivery-progress"]', { timeout: 10000 })
+      .invoke('text')
+      .then(text => {
+        expect(Number.parseInt(text, 10)).to.be.greaterThan(35)
+      })
+    cy.reload()
+    cy.get('[data-testid="delivery-progress"]', { timeout: 10000 })
+      .invoke('text')
+      .then(text => {
+        expect(Number.parseInt(text, 10)).to.be.greaterThan(35)
+      })
+
+    cy.contains('Cargo unloaded — course set for Earth', { timeout: 10000 }).should('be.visible')
+    cy.contains('Inbound · Earth', { timeout: 10000 }).should('be.visible')
+    cy.window().then(win => {
+      const persisted = JSON.parse(win.localStorage.getItem(STORAGE_KEY) ?? '{}') as GameState
+      expect(persisted.lastCargo).to.deep.equal({})
+      expect(persisted.deliveredCargo).to.deep.equal({ nickel: 3, cobalt: 2 })
+      expect(persisted.player.deliveryUnloadStartedAt).to.equal(undefined)
+    })
   })
 })
 

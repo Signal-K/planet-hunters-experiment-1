@@ -3,6 +3,7 @@
 import type { GameState, LicenseGrade } from '@/lib/game-types'
 import type { Mission } from '@/lib/data'
 import { canUnlockSkillNode, getSkillNode, LOAN_PRINCIPAL, LOAN_DEBT_ON_ACCEPT } from '@/lib/data'
+import { grantXP } from './XPSystem'
 
 // Retuned 2026-07-21 (STS-492): originals (0/100/300) were set with no real
 // per-mission income data — no player had ever reached Grade III since
@@ -37,11 +38,12 @@ export function applyUnlockSkillNode(s: GameState, id: string): GameState {
 
 export function applyGainResearchXP(s: GameState, amount: number): GameState {
   if (!Number.isFinite(amount) || amount <= 0) return s
+  const { xp } = grantXP({ xp: s.player.researchXP ?? 0 }, amount)
   return {
     ...s,
     player: {
       ...s.player,
-      researchXP: (s.player.researchXP ?? 0) + Math.floor(amount),
+      researchXP: xp,
     },
   }
 }
@@ -124,6 +126,8 @@ export function applyAbandonMission(s: GameState, missions: Mission[]): GameStat
       missionPhase: undefined,
       miningCargoInProgress: undefined,
       roverMiningStartedAt: undefined,
+      deliveryUnloadStartedAt: undefined,
+      missionCrewIds: [],
       arrivalAt: null,
       transitStartedAt: null,
       dailyClientPool,
@@ -136,6 +140,7 @@ export function applyAbandonMission(s: GameState, missions: Mission[]): GameStat
     targetId: null,
     deliveryTargetId: null,
     lastCargo: null,
+    deliveredCargo: null,
     screen: 'hub',
   }
 }

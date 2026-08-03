@@ -21,26 +21,26 @@
 @font-face { font-family: "Turret Road"; src: url("/fonts/TurretRoad-ExtraBold.ttf")  format("truetype"); font-weight: 800; font-style: normal; font-display: swap; }
 
 /* ─── Root tokens (deep-space default) ──────────────────── */
-/* Revised 2026-07-23 — superseded the mid-tone "steel/light-panel-2" Mission
-   Board direction (see removed .theme-steel below) after side-by-side review
-   against real Open Design output and reference material: a hand-built
-   8-color palette plus multiple Out There: Omega screenshots (white/pale-blue
-   line-art icon badges on a navy-to-black space background, segmented green
-   status bars, cyan accents). That reference is concrete and consistently
-   legible where the light-card gimmick was not, so this is now the single
-   dark palette for every screen — Mission Board included — rather than a
-   separate theme diverging from the rest of the app. Palette source hexes:
-   #000000 / #000D1F (void), #002351 (panel), #647788 (muted/border),
-   #91ADC2 (dim text), #B1C6E5 (primary text), #5AD07E (ok/positive),
-   #70D9EA (cyan/info). */
+/* Superseded 2026-07-31 — the 2026-07-23 navy palette below read as a heavy
+   saturated dark-blue wash that stayed legible only in dim rooms and
+   actively hurt contrast/eye comfort in bright ones (Liam feedback,
+   2026-07-31: "heavy blue dark sci-fi colour scheme... in bright
+   environments it looks like shit"). This is now the standing decision —
+   see ZenNotes `landnam-dark-palette-charcoal-glass-2026-07-31` — and
+   supersedes every prior "do not reintroduce a lighter treatment" note in
+   this file. The shell moves to a neutral dark charcoal (no blue tint in
+   void/bg/surface/text), panels lean on translucent white glass
+   (--ln-glass-*, already defined below) rather than opaque navy fills, and
+   cyan/amber stay accent-only per the existing amber-restriction rule. This
+   is still dark mode — just neutral-dark instead of blue-dark. */
 :root, .theme-deep {
-  --ln-void:        #000d1f;
-  --ln-bg:          #041a33;
-  --ln-bg-grid:     #0a2540;
-  --ln-surface:     #002351;
-  --ln-surface-2:   #0d3468;
-  --ln-surface-3:   #16468a;
-  --ln-overlay:     rgba(0, 13, 31, 0.75);
+  --ln-void:        #0a0a0c;
+  --ln-bg:          #131316;
+  --ln-bg-grid:     #1a1a1e;
+  --ln-surface:     #1c1c20;
+  --ln-surface-2:   #25252a;
+  --ln-surface-3:   #303036;
+  --ln-overlay:     rgba(10, 10, 12, 0.75);
 
   --ln-cyan:        #70d9ea;
   --ln-cyan-bright: #a3ecf5;
@@ -76,31 +76,30 @@
   --ln-mineral-gold:    #ffd166;
   --ln-mineral-rare:    #c084ff;
 
-  --ln-text:       #b1c6e5;
-  --ln-text-dim:   #91adc2;
-  --ln-text-muted: #647788;
-  --ln-text-ghost: rgba(177, 198, 229, 0.35);
-  --ln-text-on-cyan:  #00131f;
+  --ln-text:       #e9e9ec;
+  --ln-text-dim:   #b4b4bc;
+  --ln-text-muted: #7c7c86;
+  --ln-text-ghost: rgba(233, 233, 236, 0.35);
+  --ln-text-on-cyan:  #0a1418;
   --ln-text-on-amber: #1a1304;
-  --ln-text-inverse:  #00131f;
+  --ln-text-inverse:  #0a0a0c;
 
-  --ln-hairline:        rgba(177, 198, 229, 0.18);
-  --ln-hairline-strong: rgba(177, 198, 229, 0.4);
-  --ln-divider:         rgba(145, 173, 194, 0.14);
+  --ln-hairline:        rgba(255, 255, 255, 0.14);
+  --ln-hairline-strong: rgba(255, 255, 255, 0.30);
+  --ln-divider:         rgba(255, 255, 255, 0.10);
 
-  /* Shell/panel/border tokens — one dark-navy family, no separate light
-     surface. --ln-panel-2 previously meant "genuinely light card"; it's now
-     just the next navy step up from --ln-panel, kept as its own token
-     because components (Panel.tsx, TopBar) already reference it by name. */
-  --ln-shell:        #000d1f;
-  --ln-panel:        #002351;
-  --ln-panel-2:      #0d3468;
-  --ln-border:       rgba(145, 173, 194, 0.35);
+  /* Shell/panel/border tokens — neutral charcoal family, translucent-white
+     glass for elevated surfaces rather than an opaque navy fill.
+     --ln-panel-2 is the next charcoal step up from --ln-panel. */
+  --ln-shell:        #0a0a0c;
+  --ln-panel:        #1c1c20;
+  --ln-panel-2:      #26262b;
+  --ln-border:       rgba(255, 255, 255, 0.22);
   --ln-payout:       #d8ff55;
   --ln-play:         #fa49ca;
   --ln-purple-depth: #25123d;
 
-  --ln-shadow-card:   0 2px 0 rgba(255,255,255,0.04) inset, 0 0 0 1px rgba(112,217,234,0.1), 0 8px 24px rgba(0,0,0,0.5);
+  --ln-shadow-card:   0 2px 0 rgba(255,255,255,0.06) inset, 0 0 0 1px rgba(255,255,255,0.10), 0 8px 24px rgba(0,0,0,0.5);
   --ln-shadow-modal:  0 24px 64px rgba(0,0,0,0.7);
   --ln-glow-cyan:     0 0 0 1px rgba(112,217,234,0.6), 0 0 18px rgba(112,217,234,0.35);
   --ln-glow-amber:    0 0 0 1px rgba(245,166,35,0.7), 0 0 18px rgba(245,166,35,0.4);
@@ -155,20 +154,15 @@
 /* ─── Glass HUD surface layer — additive to .theme-deep, not a replacement.
    Scoped to the mission-creation flow (Mission Board / Target / Rocket /
    Launch / Mining / Debrief) per the Open Design "Full Panel Re-skin"
-   reference (brand-spec.md, 2026-07-24). Uses dark-tinted translucency
-   (navy, not white) so it composes with the existing light --ln-text
-   tokens — the brand-spec's literal rgba(255,255,255,0.20) white glass
-   was avoided on purpose: that read is what got reverted 2026-07-23 for
-   washing out text contrast. Corner brackets already exist in Panel.tsx's
-   <Corners>; this only adds the frosted-glass surface + starfield backdrop. */
+   reference (brand-spec.md, 2026-07-24), and now (2026-07-31) the intended
+   direction for panels everywhere, not just this flow — see the
+   superseded-palette comment above :root/.theme-deep. Literal white glass
+   over the new neutral-charcoal shell reads bright and legible; it was
+   only avoided in earlier passes because the shell underneath it was still
+   heavy navy, which is what actually caused the legibility complaints.
+   Corner brackets already exist in Panel.tsx's <Corners>; this only adds
+   the frosted-glass surface + starfield backdrop. */
 :root {
-  /* Literal values from the OD reference's landnam-design-system.css
-   * (--ln-panel / --ln-panel-2 / --ln-panel-border). Earlier passes
-   * substituted a dark-navy tint here out of caution about repeating a
-   * past legibility regression — verified in the OD project's own
-   * rendered screenshots (2026-07-25) that literal white glass over a
-   * dark backdrop stays legible; the earlier substitution was itself the
-   * reason the UI kept reading as "unchanged navy", not a fix for anything. */
   --ln-glass-panel:    rgba(255, 255, 255, 0.20);
   --ln-glass-panel-2:  rgba(255, 255, 255, 0.28);
   --ln-glass-border:   rgba(255, 255, 255, 0.45);
@@ -285,7 +279,7 @@
 
 /* base resets */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-html, body { height: 100%; background: #000d1f; }
+html, body { height: 100%; background: #0a0a0c; }
 body {
   font-family: var(--ln-font-body);
   color: var(--ln-text);
@@ -301,14 +295,13 @@ button { cursor: pointer; }
   --tutorial-manual-content-top: 248px;
 }
 
-/* Page backdrop — ported from the Open Design shells (landnam-mission-board.html
-   et al, 2026-07-27). The app is a floating card on a lit blue-violet field, NOT
-   a full-bleed near-black slab: that flat `--ln-void` wash is the "dark blue
-   background behind everything" that kept reappearing.
-
-   Source: body { background: radial-gradient(ellipse at 30% -15%, #2a4170 0%,
-   var(--space-bg) 45%, var(--space-bg-far) 80%) } with --space-bg #24366a and
-   --space-bg-far #0e1526, plus a fixed starfield overlay. */
+/* Page backdrop. Superseded 2026-07-31 — the previous blue-violet radial
+   (#2a4170/#24366a/#0e1526) was itself a replacement for a flat navy
+   `--ln-void` wash, but it was just as saturated-blue as the thing it
+   replaced and is the specific background the "heavy blue, looks bad in
+   bright rooms" feedback was about. Now a neutral dark-charcoal radial —
+   still a lit floating card, not a flat black slab, just without the blue
+   cast. See ZenNotes landnam-dark-palette-charcoal-glass-2026-07-31. */
 .game-stage {
   position: relative;
   /* Explicit: width:100% + padding must not exceed the viewport, or the
@@ -319,7 +312,7 @@ button { cursor: pointer; }
   display: grid;
   place-items: center;
   padding: var(--ln-s-4);
-  background: radial-gradient(ellipse at 30% -15%, #2a4170 0%, #24366a 45%, #0e1526 80%);
+  background: radial-gradient(ellipse at 30% -15%, #2c2c30 0%, #1c1c1f 45%, #08080a 80%);
 }
 .game-stage::before {
   content: '';
@@ -329,9 +322,9 @@ button { cursor: pointer; }
   z-index: 0;
   background-image:
     radial-gradient(1px 1px at 6% 22%, rgba(255, 255, 255, 0.5), transparent),
-    radial-gradient(1.5px 1.5px at 28% 55%, rgba(108, 212, 255, 0.4), transparent),
+    radial-gradient(1.5px 1.5px at 28% 55%, rgba(255, 255, 255, 0.4), transparent),
     radial-gradient(1px 1px at 45% 15%, rgba(255, 255, 255, 0.4), transparent),
-    radial-gradient(1px 1px at 68% 78%, rgba(108, 212, 255, 0.35), transparent),
+    radial-gradient(1px 1px at 68% 78%, rgba(255, 255, 255, 0.35), transparent),
     radial-gradient(1.5px 1.5px at 82% 30%, rgba(255, 255, 255, 0.3), transparent);
   background-size: 180px 180px;
 }
@@ -437,7 +430,7 @@ button { cursor: pointer; }
 
 .ln-sheet__panel {
   position: relative;
-  background: linear-gradient(180deg, #0d1c30, #060d18);
+  background: linear-gradient(180deg, #232327, #0f0f11);
   border: 1px solid var(--ln-hairline);
   box-shadow: var(--ln-shadow-modal);
 }
@@ -482,7 +475,7 @@ button { cursor: pointer; }
 .auth-gate__scrim {
   position: absolute;
   inset: 0;
-  background: rgba(3, 6, 12, 0.72);
+  background: rgba(8, 8, 10, 0.72);
 }
 
 .auth-gate__panel {
@@ -491,8 +484,8 @@ button { cursor: pointer; }
   max-height: calc(100dvh - 32px);
   overflow-y: auto;
   padding: 18px 16px 28px;
-  background: linear-gradient(180deg, #0d1c30, #060d18);
-  border: 1px solid rgba(63,169,255,0.4);
+  background: linear-gradient(180deg, #232327, #0f0f11);
+  border: 1px solid rgba(255,255,255,0.28);
   border-bottom: 0;
   border-top-left-radius: 20px;
   border-top-right-radius: 20px;
@@ -515,7 +508,7 @@ button { cursor: pointer; }
   .auth-gate__panel {
     width: min(392px, calc(100vw - 48px));
     padding: 24px;
-    border: 1px solid rgba(63,169,255,0.42);
+    border: 1px solid rgba(255,255,255,0.3);
     border-radius: var(--ln-r-xl);
     box-shadow: var(--ln-shadow-modal), var(--ln-glow-cyan);
   }
@@ -543,8 +536,8 @@ button { cursor: pointer; }
 .screen-scroll--tall-actions { padding-bottom: 78px; }
 .blueprint-screen {
   background:
-    repeating-linear-gradient(0deg, transparent 0 19px, rgba(63,169,255,0.06) 19px 20px),
-    repeating-linear-gradient(90deg, transparent 0 19px, rgba(63,169,255,0.06) 19px 20px),
+    repeating-linear-gradient(0deg, transparent 0 19px, rgba(255,255,255,0.05) 19px 20px),
+    repeating-linear-gradient(90deg, transparent 0 19px, rgba(255,255,255,0.05) 19px 20px),
     linear-gradient(180deg, var(--ln-bg-grid), var(--ln-void));
 }
 .assembly-scroll { display: flex; flex-direction: column; gap: var(--ln-s-3); }
@@ -569,12 +562,12 @@ button { cursor: pointer; }
 .compatibility span { display: inline-block; width: 6px; height: 6px; margin-right: var(--ln-s-2); border-radius: var(--ln-r-pill); background: currentColor; box-shadow: 0 0 8px currentColor; }
 .compatibility--ok { color: var(--ln-ok); border: 1px solid var(--ln-ok); background: var(--ln-ok-soft); }
 .compatibility--bad { color: var(--ln-crit); border: 1px solid var(--ln-crit); background: var(--ln-crit-soft); }
-.sticky-actions { position: absolute; z-index: 30; left: 0; right: 0; bottom: 0; padding: var(--ln-s-2) var(--ln-s-3) var(--ln-s-5); background: linear-gradient(180deg, transparent, rgba(6,9,15,.94) 34%, var(--ln-void)); }
+.sticky-actions { position: absolute; z-index: 30; left: 0; right: 0; bottom: 0; padding: var(--ln-s-2) var(--ln-s-3) var(--ln-s-5); background: linear-gradient(180deg, transparent, rgba(10,10,11,.94) 34%, var(--ln-void)); }
 
 .mission-setup-screen {
   background:
-    radial-gradient(ellipse at 50% 12%, rgba(63,169,255,0.09), transparent 32%),
-    linear-gradient(180deg, #07101c 0%, #03060c 100%);
+    radial-gradient(ellipse at 50% 12%, rgba(112,217,234,0.09), transparent 32%),
+    linear-gradient(180deg, #141417 0%, #08080a 100%);
 }
 
 /* TargetPicker's wayfinding footer contains both the step rail and a large
@@ -582,6 +575,15 @@ button { cursor: pointer; }
    underneath the sticky actions on wide or narrow screens. */
 .mission-setup-screen--target .mission-setup-content {
   padding-bottom: 190px;
+  /* The shell's default `auto auto` is for screens that pass two children.
+     TargetPicker passes exactly one (.mission-board-layout owns the map/detail
+     split itself), so the leftover explicit track stayed empty — and because
+     align-content stretches auto tracks, the free space was split between the
+     one real row and the empty one instead of going to the map. That was the
+     band of dead black space below the picker on narrow screens, with the map
+     squeezed to a 24px sliver. The >=821px rule below already did this; narrow
+     screens need it too. */
+  grid-template-rows: minmax(0, 1fr);
 }
 
 /* Scene 4 has one real action (Confirm Launch). Its compact content owns the
@@ -589,6 +591,41 @@ button { cursor: pointer; }
 .mission-setup-screen--assembly .mission-setup-content {
   padding-bottom: 104px;
   overflow-y: auto;
+}
+
+/* Landscape phones (e.g. 844x390) — the 82px top offset (cleared for TopBar,
+   see MissionSetupShell's `contentTop`) plus the launch-clearance card's full
+   layout together overflowed past the Confirm Launch bar (STS-612). The card
+   itself compacts via AssemblyScreen's `useIsShortViewport`; this reclaims
+   the rest of the room TopBar doesn't actually need at this height. */
+@media (max-height: 460px) {
+  .mission-setup-screen--assembly .mission-setup-content {
+    padding-top: 64px !important;
+    /* AssemblyScreen's `compact` prop (useIsShortViewport) shrinks the
+       frame and card content itself; these two just reclaim the fixed
+       inter-block gap and bottom reservation that the JS changes can't
+       reach, since they're plain CSS on the shared grid container. */
+    padding-bottom: 88px !important;
+    gap: 8px !important;
+  }
+
+  /* `height: fit-content` (below, wide-screen rule) lets .assembly-card grow
+     past its own grid row instead of respecting it — on a roomy screen that's
+     fine (the row just grows to match), but on a viewport this short the row
+     itself is capped by padding-bottom above, so a fit-content card ends up
+     rendering *underneath* the sticky Confirm Launch bar rather than being
+     clipped by it. Restore the card's normal grid-row-bound height and let
+     its own `.mission-setup-card-scroll` scroll internally instead — the
+     manifest checklist becoming scrollable is an acceptable trade for the
+     Confirm Launch button never sitting on top of card content (STS-612). */
+  .mission-setup-screen--assembly .assembly-card {
+    height: auto !important;
+    align-self: stretch !important;
+  }
+  .mission-setup-screen--assembly .assembly-card .mission-setup-card-scroll {
+    height: 100% !important;
+    overflow-y: auto !important;
+  }
 }
 
 .mission-setup-content {
@@ -607,13 +644,13 @@ button { cursor: pointer; }
   position: relative;
   min-height: 0;
   overflow: hidden;
-  border: 1px solid rgba(135,207,250,0.22);
+  border: 1px solid var(--ln-glass-border);
   border-radius: 14px;
-  background: linear-gradient(180deg, rgba(9,18,31,0.78), rgba(5,10,18,0.88));
-  /* Glass HUD (Open Design "Full Panel Re-skin", 2026-07-25): dark-tinted
-     translucency + blur, layered on top of this class's pre-existing
-     gradient rather than replacing it, since it's already structurally a
-     translucent panel. */
+  /* Neutral charcoal glass (2026-07-31) — was a dark-navy-tinted gradient,
+     one of the specific "everything is heavy blue" surfaces across the
+     entire Mission Board/Rocket/Launch/Mining flow. See the superseded-
+     palette comment above :root/.theme-deep. */
+  background: linear-gradient(180deg, rgba(255,255,255,0.10), rgba(255,255,255,0.04));
   backdrop-filter: var(--ln-glass-blur);
   -webkit-backdrop-filter: var(--ln-glass-blur);
   /* Forces its own compositing layer on mount. Without this, content painted
@@ -627,9 +664,11 @@ button { cursor: pointer; }
   position: relative;
   min-height: 0;
   overflow: hidden;
-  border: 1px solid rgba(245,166,35,0.32);
+  /* Cyan, not amber — this is generic panel chrome, and amber is restricted
+     to genuine payout/reward emphasis (see design rules in CLAUDE.md). */
+  border: 1px solid var(--ln-cyan-border);
   border-radius: 14px;
-  background: linear-gradient(180deg, rgba(18,34,54,0.78) 0%, rgba(10,18,29,0.86) 100%);
+  background: linear-gradient(180deg, rgba(255,255,255,0.09) 0%, rgba(255,255,255,0.03) 100%);
   backdrop-filter: var(--ln-glass-blur);
   -webkit-backdrop-filter: var(--ln-glass-blur);
   transform: translateZ(0);
@@ -693,8 +732,13 @@ button { cursor: pointer; }
     gap: 10px;
   }
 
+  /* One child (.mission-board-layout), so one track. The old three-track
+     value dated from when the picker passed map/detail/legend as separate
+     shell children: the two now-empty 1fr tracks still claimed ~99px each,
+     capping the map's row at 54% and then squeezing it to a 24px sliver once
+     the detail card shared that row. */
   .mission-setup-screen--target .mission-setup-content {
-    grid-template-rows: minmax(220px, 54%) minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr);
     gap: 8px;
   }
 
@@ -726,13 +770,13 @@ button { cursor: pointer; }
   }
 }
 
-.transit-screen { background: radial-gradient(circle at 80% 18%, rgba(63,169,255,.14), transparent 24%), var(--ln-bg-stars), var(--ln-void); }
+.transit-screen { background: radial-gradient(circle at 80% 18%, rgba(112,217,234,.14), transparent 24%), var(--ln-bg-stars), var(--ln-void); }
 .transit-stage { position: absolute; inset: 80px 0 190px; overflow: hidden; }
 .target-orb { position: absolute; right: 26px; top: 24px; width: 76px; height: 76px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, var(--ln-amber-bright), var(--ln-amber-press) 55%, var(--ln-void)); box-shadow: 0 0 40px var(--ln-amber-soft); }
 .target-orb span { position: absolute; top: calc(100% + 8px); left: 50%; transform: translateX(-50%); color: var(--ln-amber); font: 700 10px var(--ln-font-mono); letter-spacing: var(--ln-tr-label); text-transform: uppercase; white-space: nowrap; }
-.rocket-mark { position: absolute; transform: translate3d(-50%, -50%, 0) rotate(56deg); transform-origin: center; transition: left 100ms linear, top 100ms linear; filter: drop-shadow(0 0 12px rgba(63,169,255,.7)); animation: rocket-thrust 0.3s ease-in-out infinite alternate; backface-visibility: hidden; will-change: transform, filter; }
+.rocket-mark { position: absolute; transform: translate3d(-50%, -50%, 0) rotate(56deg); transform-origin: center; transition: left 100ms linear, top 100ms linear; filter: drop-shadow(0 0 12px rgba(112,217,234,.7)); animation: rocket-thrust 0.3s ease-in-out infinite alternate; backface-visibility: hidden; will-change: transform, filter; }
 .rocket-mark svg { display: block; overflow: visible; }
-@keyframes rocket-thrust { from { filter: drop-shadow(0 0 8px rgba(63,169,255,.5)); } to { filter: drop-shadow(0 0 16px rgba(63,169,255,.9)); } }
+@keyframes rocket-thrust { from { filter: drop-shadow(0 0 8px rgba(112,217,234,.5)); } to { filter: drop-shadow(0 0 16px rgba(112,217,234,.9)); } }
 .transit-readout { position: absolute; left: var(--ln-s-3); right: var(--ln-s-3); bottom: var(--ln-s-5); display: grid; gap: var(--ln-s-3); }
 .transit-readout > div:first-child { display: flex; justify-content: space-between; color: var(--ln-text-muted); font: 700 11px var(--ln-font-display); letter-spacing: var(--ln-tr-loose); text-transform: uppercase; }
 .transit-readout strong { color: var(--ln-cyan-bright); }
@@ -759,7 +803,7 @@ button { cursor: pointer; }
 .ore-hp-fill { height: 100%; background: var(--ore); border-radius: 2px; transition: width 80ms linear; }
 .mining-laser { position: absolute; z-index: 8; transform: translateY(-50%); pointer-events: none; }
 .laser-beam { width: 0; height: 0; border-left: 4px solid transparent; border-right: 4px solid transparent; border-bottom: 16px solid rgba(108,194,255,.5); position: absolute; top: -8px; left: -4px; filter: blur(1px); }
-.laser-core { position: absolute; width: 6px; height: 6px; top: -3px; left: -3px; border-radius: 50%; background: var(--ln-cyan-bright); box-shadow: 0 0 8px var(--ln-cyan), 0 0 20px rgba(63,169,255,.4); }
+.laser-core { position: absolute; width: 6px; height: 6px; top: -3px; left: -3px; border-radius: 50%; background: var(--ln-cyan-bright); box-shadow: 0 0 8px var(--ln-cyan), 0 0 20px rgba(112,217,234,.4); }
 .laser-flash { position: absolute; left: 50px; width: 20px; height: 30px; background: radial-gradient(ellipse, rgba(108,194,255,.6), transparent); pointer-events: none; animation: flash-fade .15s ease-out forwards; z-index: 9; }
 @keyframes flash-fade { from { opacity: 1; transform: scaleX(1); } to { opacity: 0; transform: scaleX(3); } }
 /* Visible only to assistive tech. For readouts assembled from an icon plus
@@ -791,7 +835,7 @@ button { cursor: pointer; }
   grid-template-columns: minmax(0, 1fr);
   min-width: 0;
   gap: var(--ln-s-2);
-  background: linear-gradient(0deg, rgba(3,6,12,0.98) 0%, rgba(3,6,12,0.88) 100%);
+  background: linear-gradient(0deg, rgba(8,8,10,0.98) 0%, rgba(8,8,10,0.88) 100%);
   /* Glass HUD (Open Design "Full Panel Re-skin", 2026-07-25): blur layered on
      top of the existing opaque gradient, matching .mission-setup-frame/-card. */
   backdrop-filter: var(--ln-glass-blur);
@@ -811,14 +855,14 @@ button { cursor: pointer; }
 
 .intro-screen { position: relative; width: 100%; height: 100%; overflow: hidden; }
 .intro-earth { position: absolute; inset: 0; }
-.intro-overlay { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(6,9,15,0.3) 0%, rgba(6,9,15,0.7) 50%, rgba(6,9,15,0.92) 100%); }
+.intro-overlay { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(10,10,11,0.3) 0%, rgba(10,10,11,0.7) 50%, rgba(10,10,11,0.92) 100%); }
 .intro-content { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px 32px; text-align: center; z-index: 1; }
 .intro-badge { color: var(--ln-cyan); font: 700 11px var(--ln-font-mono); letter-spacing: 0.22em; text-transform: uppercase; margin-bottom: 12px; }
-.intro-logo-mark { width: 104px; height: 104px; margin: 0 0 8px; filter: drop-shadow(0 0 18px rgba(63,169,255,0.28)); }
-.intro-title { color: #fff; font: 800 52px var(--ln-font-display); letter-spacing: 0.08em; text-transform: uppercase; text-shadow: 0 0 40px rgba(63,169,255,0.3); margin: 0 0 10px; }
+.intro-logo-mark { width: 104px; height: 104px; margin: 0 0 8px; filter: drop-shadow(0 0 18px rgba(112,217,234,0.28)); }
+.intro-title { color: #fff; font: 800 52px var(--ln-font-display); letter-spacing: 0.08em; text-transform: uppercase; text-shadow: 0 0 40px rgba(112,217,234,0.3); margin: 0 0 10px; }
 .intro-welcome { color: var(--ln-amber); font: 700 16px var(--ln-font-display); letter-spacing: 0.08em; margin: 0 0 8px; }
 .intro-subtitle { color: var(--ln-text-dim); font: 400 14px/1.5 var(--ln-font-body); max-width: 280px; margin: 0 0 36px; }
-.intro-begin-btn { padding: 18px 40px; background: linear-gradient(180deg, var(--ln-cyan-bright) 0%, var(--ln-cyan-press) 100%); color: #06121f; font-family: var(--ln-font-display); font-weight: 800; font-size: 16px; letter-spacing: 0.14em; text-transform: uppercase; border: none; border-radius: 12px; box-shadow: inset 0 1px 0 rgba(255,255,255,0.4), 0 4px 0 rgba(0,0,0,0.3), 0 0 22px rgba(63,169,255,0.4); cursor: pointer; transition: transform 100ms; }
+.intro-begin-btn { padding: 18px 40px; background: linear-gradient(180deg, var(--ln-cyan-bright) 0%, var(--ln-cyan-press) 100%); color: #06121f; font-family: var(--ln-font-display); font-weight: 800; font-size: 16px; letter-spacing: 0.14em; text-transform: uppercase; border: none; border-radius: 12px; box-shadow: inset 0 1px 0 rgba(255,255,255,0.4), 0 4px 0 rgba(0,0,0,0.3), 0 0 22px rgba(255,255,255,0.28); cursor: pointer; transition: transform 100ms; }
 .intro-begin-btn:active { transform: translateY(2px); }
 .intro-reconnecting-indicator { display: flex; gap: 8px; align-items: center; justify-content: center; margin-top: 4px; }
 .intro-reconnecting-indicator span { width: 6px; height: 6px; border-radius: 50%; background: var(--ln-cyan); opacity: 0.3; animation: ln-pulse 1.2s ease-in-out infinite; }
@@ -828,7 +872,7 @@ button { cursor: pointer; }
 
 .mission-card-btn:focus-visible { outline-color: var(--ln-cyan) !important; outline-offset: 2px !important; }
 .mission-card-pulse { animation: ln-pulse 2s ease-in-out infinite; }
-.mission-card-btn:hover { outline-color: rgba(63,169,255,0.35) !important; outline-offset: 2px !important; }
+.mission-card-btn:hover { outline-color: rgba(112,217,234,0.35) !important; outline-offset: 2px !important; }
 .debrief-scroll p { color: var(--ln-text-dim); }
 .reward-label { color: var(--ln-text-dim); }
 
@@ -921,12 +965,12 @@ button { cursor: pointer; }
 
 @keyframes coach-bob { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-2px); } }
 @keyframes coach-spot {
-  0%,100% { box-shadow: 0 0 0 9999px rgba(3,6,12,0.5), 0 0 0 0 rgba(245,166,35,0); }
-  50% { box-shadow: 0 0 0 9999px rgba(3,6,12,0.5), 0 0 18px 3px rgba(245,166,35,0.6); }
+  0%,100% { box-shadow: 0 0 0 9999px rgba(8,8,10,0.5), 0 0 0 0 rgba(245,166,35,0); }
+  50% { box-shadow: 0 0 0 9999px rgba(8,8,10,0.5), 0 0 18px 3px rgba(245,166,35,0.6); }
 }
 @keyframes coach-spot-pulse {
-  0%,100% { border-color: rgba(63,169,255,0.4); box-shadow: 0 0 8px rgba(63,169,255,0.15); }
-  50% { border-color: rgba(63,169,255,0.9); box-shadow: 0 0 20px rgba(63,169,255,0.45); }
+  0%,100% { border-color: rgba(255,255,255,0.28); box-shadow: 0 0 8px rgba(112,217,234,0.15); }
+  50% { border-color: rgba(112,217,234,0.9); box-shadow: 0 0 20px rgba(112,217,234,0.45); }
 }
 /* The coach glow used to animate box-shadow + border-color directly, which
    repaints the animated element (and re-composites the backdrop-filter panels
@@ -961,8 +1005,8 @@ button { cursor: pointer; }
 
 /* Coach element highlight ring animation */
 @keyframes coach-ring-pulse {
-  0%, 100% { opacity: 0.65; box-shadow: 0 0 0 3px rgba(63,169,255,0.12), 0 0 14px rgba(63,169,255,0.3); }
-  50% { opacity: 1; box-shadow: 0 0 0 5px rgba(63,169,255,0.22), 0 0 26px rgba(63,169,255,0.55); }
+  0%, 100% { opacity: 0.65; box-shadow: 0 0 0 3px rgba(112,217,234,0.12), 0 0 14px rgba(112,217,234,0.3); }
+  50% { opacity: 1; box-shadow: 0 0 0 5px rgba(112,217,234,0.22), 0 0 26px rgba(112,217,234,0.55); }
 }
 
 /* CSS-driven element highlighting: set data-coach-target on <html> to pulse the target.
@@ -1034,4 +1078,57 @@ html[data-coach-target="build-structure-strip"] [data-coach-id="build-structure-
 @keyframes spark-fly {
   0%   { opacity: 1; transform: translate(-50%, -50%); }
   100% { opacity: 0; transform: translate(calc(-50% + var(--sx, 0px)), calc(-50% + var(--sy, 0px))); }
+}
+
+/* ============================================================
+   SCENE-PANEL SPIKE (STS-630) — Launchpad only
+   ============================================================
+   CSS approximation of the scene-panel model (see ZenNotes
+   landnam-scene-panel-background-direction-2026-07-31): the panel
+   background is a lit surface, not a flat color fill, and instrument
+   chrome uses thick opaque outlines instead of thin glass hairlines.
+   This is a stand-in for a future PixiJS-rendered control-room
+   background — not the final rendering technique. Scoped under
+   .ln-scene-launchpad so it cannot leak into any other screen. */
+.ln-scene-launchpad {
+  --scene-sky-top:    #bfe8f5;
+  --scene-sky-mid:    #eaf8ea;
+  --scene-ground:     #6fae63;
+  --scene-sun:        rgba(255, 235, 150, 0.9);
+  --scene-ink:        #14171c;
+  --scene-card-bg:    #ffffff;
+  --scene-card-text:  #14171c;
+  --scene-card-muted: #3f4854;
+
+  background:
+    radial-gradient(140px 90px at 82% 12%, var(--scene-sun), transparent 70%),
+    linear-gradient(0deg, var(--scene-ground) 0%, var(--scene-ground) 20%, transparent 20%),
+    linear-gradient(180deg, var(--scene-sky-top) 0%, var(--scene-sky-mid) 55%, var(--scene-ground) 100%);
+}
+
+.ln-instrument-card {
+  background: var(--scene-card-bg);
+  border: 3px solid var(--scene-ink);
+  border-radius: 10px;
+  box-shadow: 0 4px 0 var(--scene-ink);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.ln-instrument-label {
+  font-family: var(--ln-font-display);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--scene-card-muted);
+  font-weight: 700;
+}
+
+.ln-instrument-value {
+  font-family: var(--ln-font-display);
+  font-size: 16px;
+  color: var(--scene-card-text);
+  font-weight: 700;
 }

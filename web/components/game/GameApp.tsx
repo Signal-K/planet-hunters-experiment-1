@@ -162,8 +162,14 @@ function GameCanvas() {
       <div className="portrait-canvas">
         <BackendStatus />
         <LandnamSyncStatus />
+        {/* zIndex 6 keeps PushOptIn below ProgressionCard (8). At 12 it sat
+            above the progression cards and, once its label wrapped, covered the
+            first one — the Skill Tree button stopped responding to taps. It is
+            already *behind* the top HUD (18), which is why only the first few
+            characters ever show; that placement collision is tracked separately
+            and is a design call, not fixed here. */}
         {game.player.freeOperations && game.screen === 'hub' && (
-          <div data-ui-zone={UI_ZONES.ambientPrompt} style={{ position: 'absolute', top: 12, right: 12, zIndex: 12 }}>
+          <div data-ui-zone={UI_ZONES.ambientPrompt} style={{ position: 'absolute', top: 12, right: 12, zIndex: 6 }}>
             <PushOptIn userId={game.authUserId ?? undefined} />
           </div>
         )}
@@ -192,12 +198,15 @@ function GameCanvas() {
         )}
         <DevShortcuts />
         <div className="game-screen-area">
-          <ScreenContent screen={game.screen} game={game} hasCoach={hasCoach} onBackFromHangar={() => {
-            game.go('hub')
-            if (window.location.pathname.includes('/game/ship-customizer')) {
-              router.replace('/game')
-            }
-          }} />
+          {/* Gated the same way as [screen]/page.tsx — see STS-624. */}
+          {!game.authGateOpen && (
+            <ScreenContent screen={game.screen} game={game} hasCoach={hasCoach} onBackFromHangar={() => {
+              game.go('hub')
+              if (window.location.pathname.includes('/game/ship-customizer')) {
+                router.replace('/game')
+              }
+            }} />
+          )}
         </div>
 
         <ToastLayer toasts={game.toasts} onDismiss={game.dismissToast} />

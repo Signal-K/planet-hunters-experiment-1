@@ -114,7 +114,7 @@ function DemoSidebar() {
             >
               <span style={{
                 display: 'flex', alignItems: 'center', justifyContent: 'center', width: 36, height: 36, borderRadius: 8,
-                background: active ? `radial-gradient(circle at 35% 30%, ${item.color}, ${item.color}cc 70%, ${item.color}88)` : 'rgba(10,18,29,0.72)',
+                background: active ? `radial-gradient(circle at 35% 30%, ${item.color}, ${item.color}cc 70%, ${item.color}88)` : 'rgba(24,24,28,0.72)',
                 border: `1.5px solid ${active ? '#ffffff33' : item.color + '44'}`,
                 boxShadow: active ? `0 0 12px ${item.color}66` : `0 0 8px ${item.color}22`,
                 color: active ? '#06121f' : item.color,
@@ -215,8 +215,8 @@ function TransitDemo() {
                       onClick={() => setSectorIndex(index)}
                       style={{
                         padding: '4px 10px', borderRadius: 999, cursor: 'pointer',
-                        border: `1px solid ${index === sectorIndex ? 'rgba(245,166,35,0.6)' : 'rgba(126,200,255,0.2)'}`,
-                        background: index === sectorIndex ? 'rgba(245,166,35,0.14)' : 'rgba(8,16,28,0.5)',
+                        border: `1px solid ${index === sectorIndex ? 'rgba(245,166,35,0.6)' : 'rgba(112,217,234,0.2)'}`,
+                        background: index === sectorIndex ? 'rgba(245,166,35,0.14)' : 'rgba(20,20,23,0.5)',
                         color: index === sectorIndex ? 'var(--ln-amber)' : 'var(--ln-text-muted)',
                         fontFamily: 'var(--ln-font-display)', fontSize: 9, fontWeight: 800, letterSpacing: '0.1em',
                       }}
@@ -335,8 +335,8 @@ function LiveDot({ active }: { active: boolean }) {
 function VerdictButton({ action, disabled, onClick }: { action: { id: TessVerdict; label: string; kind: 'amber' | 'cyan' | 'ghost' }; disabled: boolean; onClick: () => void }) {
   const palette: Record<typeof action.kind, { border: string; bg: string; color: string; glow: string }> = {
     amber: { border: 'rgba(245,166,35,0.7)', bg: 'linear-gradient(180deg, rgba(245,166,35,0.28), rgba(232,112,64,0.18))', color: 'var(--ln-amber-bright)', glow: 'rgba(245,166,35,0.4)' },
-    cyan:  { border: 'rgba(63,169,255,0.6)', bg: 'rgba(63,169,255,0.12)', color: 'var(--ln-cyan-bright)', glow: 'rgba(63,169,255,0.35)' },
-    ghost: { border: 'rgba(169,184,206,0.25)', bg: 'rgba(8,16,28,0.5)', color: 'var(--ln-text-muted)', glow: 'transparent' },
+    cyan:  { border: 'rgba(112,217,234,0.6)', bg: 'rgba(112,217,234,0.12)', color: 'var(--ln-cyan-bright)', glow: 'rgba(112,217,234,0.35)' },
+    ghost: { border: 'rgba(169,184,206,0.25)', bg: 'rgba(20,20,23,0.5)', color: 'var(--ln-text-muted)', glow: 'transparent' },
   }
   const p = palette[action.kind]
   return (

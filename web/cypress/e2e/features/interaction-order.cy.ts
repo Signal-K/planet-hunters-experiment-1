@@ -83,7 +83,10 @@ describe('Interaction order hardening', () => {
   it('repairs fixed-target mission target picker resumes to rocket purchase', () => {
     visitWithState({
       screen: 'targets',
-      missionId: 'lnm_m3_ore_delivery',
+      // lnm_m3_ore_delivery is a retired M3 slug — withCorrectedM3 (lib/catalog.ts)
+      // now maps it away entirely, so it never resolves to a mission. Use a current
+      // fixed-target M3 mission (lib/data/missions.ts) instead.
+      missionId: 'lnm_m3_relay_bennu_vesta',
       targetId: null,
       player: { missionsDone: 2, missionCount: 3 },
     })
@@ -95,8 +98,8 @@ describe('Interaction order hardening', () => {
   it('backs out of fixed-target rocket purchase to missions instead of empty target picker', () => {
     visitWithState({
       screen: 'rocket-buy',
-      missionId: 'lnm_m3_ore_delivery',
-      targetId: 'lutetia',
+      missionId: 'lnm_m3_relay_bennu_vesta',
+      targetId: 'bennu',
       player: { missionsDone: 2, missionCount: 3 },
     })
 
@@ -140,7 +143,9 @@ describe('Interaction order hardening', () => {
 
     cy.get('[data-testid="unlock-popup-primary"]').click()
     readSavedState().then(state => {
-      expect(state.player.francs).to.eq(5_100_000_000)
+      // LOAN_PRINCIPAL is 5M (lib/data/economy.ts), not the pre-rescale 5B this
+      // assertion was written against.
+      expect(state.player.francs).to.eq(105_000_000)
       expect(state.player.loanDebt).to.be.greaterThan(0)
       expect(state.popup).to.eq(null)
     })
@@ -162,7 +167,11 @@ describe('Interaction order hardening', () => {
 
     cy.get('[data-testid="resolve-cargo-btn"]').click()
     cy.get('[data-testid="collect-reward-btn"]').dblclick()
-    cy.contains('Commodity Exchange').should('be.visible')
+    // Still onboarding (missionsDone 0 -> 1, well under FREE_OPS_START_MISSIONS_DONE):
+    // debrief settlement routes to the hub tutorial rail, not the market — see the
+    // identical assertion in smoke/game-loop.cy.ts "M1 completion returns to hub".
+    cy.contains('Commodity Exchange').should('not.exist')
+    cy.contains('Guided Ops · Mission 2').should('be.visible')
     readSavedState().then(state => {
       expect(state.player.missionsDone).to.eq(1)
       expect(state.missionId).to.eq(null)

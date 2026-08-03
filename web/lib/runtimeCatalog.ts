@@ -1,23 +1,10 @@
 import type { Catalog } from './catalog'
-import type { Client, Mission, Target } from './data'
-import { missionPayoutFloor } from './data'
+import type { Mission, Target } from './data'
+import type { Player } from './game-types'
+import { diplomacyPayoutMultiplier, jointMissionUnlocked } from './systems/AcademySystem'
 
-export const STORY_MISSION_CLIENT_ID = 'mission-control'
 export const TRANSIT_TELESCOPE_TARGET_ID = 'earth-orbit-transit-telescope'
 export const TRANSIT_TELESCOPE_MISSION_ID = 'story-transit-telescope-launch'
-
-export const MISSION_CONTROL_CLIENT: Client = {
-  id: STORY_MISSION_CLIENT_ID,
-  name: 'Mission Control',
-  color: '#7ec8ff',
-  initial: 'MC',
-  unlockTier: 0,
-  projectType: 'Story mission',
-  mineralPreferences: [],
-  payoutPremium: 0,
-  affinityBonusPerMission: 0,
-  uiRole: 'command',
-}
 
 export const TRANSIT_TELESCOPE_TARGET: Target = {
   id: TRANSIT_TELESCOPE_TARGET_ID,
@@ -38,6 +25,7 @@ interface RuntimeCatalogOpts {
   missionId?: string | null
   targetId?: string | null
   missionsDone: number
+  player?: Player
 }
 
 export function buildRuntimeCatalog({
@@ -49,26 +37,38 @@ export function buildRuntimeCatalog({
   missionId,
   targetId,
   missionsDone,
+  player,
 }: RuntimeCatalogOpts): Catalog {
   const discoveredTargetList = Object.values(discoveredTargets)
   const shouldOfferTransitTelescopeMission = freeOperations && !!satelliteMonitoringBuilt && !transitSatelliteLaunchedAt
   const hasActiveTransitTelescopeMission = missionId === TRANSIT_TELESCOPE_MISSION_ID || targetId === TRANSIT_TELESCOPE_TARGET_ID
   const shouldIncludeTransitTelescopeMission = shouldOfferTransitTelescopeMission || hasActiveTransitTelescopeMission
-  if (discoveredTargetList.length === 0 && !shouldIncludeTransitTelescopeMission) return catalog
-
   const existingTargetIds = new Set(catalog.targets.map(target => target.id))
   const mergedTargets = [
     ...catalog.targets,
     ...(shouldIncludeTransitTelescopeMission && !existingTargetIds.has(TRANSIT_TELESCOPE_TARGET.id) ? [TRANSIT_TELESCOPE_TARGET] : []),
     ...discoveredTargetList.filter(target => !existingTargetIds.has(target.id)),
   ]
-  const existingMissionIds = new Set(catalog.missions.map(mission => mission.id))
+  const relationshipMissions = player
+    ? catalog.missions.map(mission => {
+        if (!mission.client || mission.programReward) return mission
+        const multiplier = diplomacyPayoutMultiplier(player, mission.client)
+        if (multiplier === 1) return mission
+        return {
+          ...mission,
+          payout: {
+            ...mission.payout,
+            francs: Math.round(mission.payout.francs * multiplier),
+          },
+        }
+      })
+    : catalog.missions
+  const existingMissionIds = new Set(relationshipMissions.map(mission => mission.id))
   const transitTelescopeMission: Mission[] = shouldIncludeTransitTelescopeMission && !existingMissionIds.has(TRANSIT_TELESCOPE_MISSION_ID)
     ? [{
         id: TRANSIT_TELESCOPE_MISSION_ID,
         title: 'Launch Transit Telescope',
-        brief: 'Mission Control authorizes a story operation to place a TESS-class telescope in Earth orbit. This is not a client request.',
-        client: STORY_MISSION_CLIENT_ID,
+        brief: 'Deploy your own TESS-class telescope into Earth orbit. Its daily instrument feed will downlink to the Satellite Monitoring Station.',
         tag: 'STORY',
         difficulty: 'L1',
         locked: false,
@@ -86,22 +86,18 @@ export function buildRuntimeCatalog({
           drill_tier: 1,
           max_orbit: 1,
         },
-        payout: {
-          // Free Ops missions are ordinary contracts and must sit on the same
-          // scale as every other one. These two used to pay 150k and 500k
-          // against a 1.5B+ floor everywhere else — four orders of magnitude
-          // out, and not enough to cover the rocket the mission needs.
-          francs: missionPayoutFloor(missionsDone + 1),
-          affinity: 0,
+        programReward: {
+          researchXP: 0,
+          outcome: 'Transit telescope online · daily instrument feed unlocked',
         },
+        payout: { francs: 0, affinity: 0 },
       }]
     : []
   const surveyMissions: Mission[] = discoveredTargetList
-    .map((target, index) => ({
+    .map(target => ({
       id: `exo-survey-${target.id}`,
       title: `${target.name} survey flight`,
-      brief: `Follow up the satellite discovery with a crewed survey mission to ${target.name}. This target is plotted in the star map.`,
-      client: 'lumen-research',
+      brief: `Follow up your satellite discovery with an owned survey flight to ${target.name}. The readings expand your target intelligence.`,
       tag: 'SCIENCE',
       difficulty: target.difficulty,
       locked: false,
@@ -114,20 +110,46 @@ export function buildRuntimeCatalog({
         drill_tier: 1,
         max_orbit: target.orbit,
       },
-      payout: {
-        francs: missionPayoutFloor(missionsDone + 1) + index * 100_000_000,
-        affinity: 6,
+      programReward: {
+        researchXP: 25,
+        outcome: `${target.name} target intelligence expanded`,
       },
+      payout: { francs: 0, affinity: 0 },
     }))
     .filter(mission => !existingMissionIds.has(mission.id))
 
+  const jointMissions: Mission[] = player
+    ? Object.keys(catalog.clients).flatMap(clientId => {
+        if (!jointMissionUnlocked(player, clientId)) return []
+        const base = relationshipMissions.find(mission =>
+          mission.client === clientId
+          && !!mission.targetId
+          && !mission.programReward
+          && !mission.jointProject,
+        )
+        if (!base) return []
+        const basePayout = base.payout.francs
+        const payoutBonus = Math.round(basePayout * 0.2)
+        return [{
+          ...base,
+          id: `joint-${clientId}-${base.id}`,
+          title: `Joint Venture · ${base.title}`,
+          brief: `${catalog.clients[clientId].name} will co-fund this flight and contribute local infrastructure. Your Academy diplomacy desk negotiated shared risk, a range allowance, and a completion premium.`,
+          tag: 'JOINT',
+          jointProject: {
+            playerCost: Math.round(basePayout * 0.08),
+            clientCostShare: Math.round(basePayout * 0.08),
+            payoutBonus,
+            infrastructureOrbitBonus: 1,
+          },
+          payout: { ...base.payout, francs: basePayout + payoutBonus },
+        }]
+      })
+    : []
+
   return {
     ...catalog,
-    clients: {
-      ...catalog.clients,
-      ...(shouldIncludeTransitTelescopeMission ? { [STORY_MISSION_CLIENT_ID]: MISSION_CONTROL_CLIENT } : {}),
-    },
     targets: mergedTargets,
-    missions: [...catalog.missions, ...transitTelescopeMission, ...surveyMissions],
+    missions: [...relationshipMissions, ...transitTelescopeMission, ...surveyMissions, ...jointMissions],
   }
 }

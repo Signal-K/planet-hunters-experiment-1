@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react'
 import { useGame } from '@/game-context'
-import { M1_STEPS, M2_STEPS, M3_STEPS, rocketDisplayForConfig } from '@/lib/data'
+import { ACADEMY_INTRO_MISSION_ID, M1_STEPS, M2_STEPS, M3_STEPS, rocketDisplayForConfig } from '@/lib/data'
 import type { Screen } from '@/lib/game-types'
 import MissionSetupRoutes from '@/components/game/MissionSetupRoutes'
 import MissionOperationRoutes from '@/components/game/MissionOperationRoutes'
@@ -14,13 +14,21 @@ import MarketScreen from '@/components/game/screens/MarketScreen'
 import HangarScreen from '@/components/game/screens/HangarScreen'
 import SkillTreeScreen from '@/components/game/screens/SkillTreeScreen'
 import ScanStationScreen from '@/components/game/screens/ScanStationScreen'
+import LaunchpadScreen from '@/components/game/screens/LaunchpadScreen'
 import TessDiscoveryScreen from '@/components/game/screens/TessDiscoveryScreen'
+import AsteroidDiscoveryScreen from '@/components/game/screens/AsteroidDiscoveryScreen'
+import SurfaceOpsScreen from '@/components/game/screens/SurfaceOpsScreen'
+import AcademyScreen from '@/components/game/screens/AcademyScreen'
 import { enqueueSurvey } from '@/lib/surveys'
 
 export const VALID_SCREENS = new Set<Screen>([
   'intro', 'build', 'hub', 'missions', 'galaxy', 'targets', 'fab',
-  'transit', 'mining', 'rover-mining', 'debrief', 'refinery',
+  'transit', 'landing', 'mining', 'rover-mining', 'delivery', 'debrief', 'refinery',
   'market', 'hangar', 'rocket-buy', 'skills', 'scan-station',
+  'launchpad',
+  'surface-ops',
+  'academy',
+  'asteroid-discovery',
 ])
 
 // Shared per-screen render map — the single source of truth for "which
@@ -77,11 +85,14 @@ export function ScreenContent({
   // screen render at all.
   useEffect(() => {
     if (screen === 'market' && !game.player.freeOperations) game.go('hub')
+    // Surface Ops additionally requires having actually landed on a target —
+    // see "Surface Ops gated on landing research and lander module" (STS-640).
+    if (screen === 'surface-ops' && (!game.player.freeOperations || !game.player.hasLanded)) game.go('hub')
     // The Build tab is a Free Ops entry point. Keep the onboarding assembly
     // flow reachable only when it has a real mission context; a bare/deep
     // linked fab route must never show a prefilled rocket.
     if (screen === 'fab' && !game.player.freeOperations && (!game.mission || !game.target)) game.go('hub')
-  }, [screen, game.player.freeOperations, game.mission, game.target, game.go])
+  }, [screen, game.player.freeOperations, game.player.hasLanded, game.mission, game.target, game.go])
 
   switch (screen) {
     case 'intro':
@@ -106,13 +117,17 @@ export function ScreenContent({
             placed: game.player.placed,
             freeOperations: game.player.freeOperations,
             refineryUnlocked: !!game.player.refineryUnlocked,
+            academyResearched: !!game.player.academyResearched,
             placementPlots: game.player.placementPlots,
+            satelliteMonitoringLevel: game.player.satelliteMonitoringLevel,
+            clientMissions: game.player.clientMissions,
           }}
           onPlaced={(kind, plot) => {
             const structure = game.catalog.structures.find(s => s.id === kind)
             game.placeStructure(structure, kind, plot)
             game.completeStep(0)
             enqueueSurvey('lnm_base_building', 1200)
+            if (kind === 'astronaut-academy') enqueueSurvey('lnm_crew_academy_built', 1200)
             game.go('hub')
           }}
         />
@@ -134,16 +149,28 @@ export function ScreenContent({
             if (building === 'skills') return game.go('skills')
             if (building === 'scan-station') return game.go('scan-station')
             if (building === 'satellite-monitoring-station') return game.go('galaxy')
+            if (building === 'deep-space-telescope') return game.go('asteroid-discovery')
+            if (building === 'academy' || building === 'astronaut-academy') return game.go('academy')
             if (building === 'launchpad' || building === 'missions') {
+              // A run in flight always wins — the pad is how you get back to it.
               if (game.player.activeMission) {
                 enqueueSurvey('lnm_resume_mission', 1200)
                 return game.go(game.player.missionPhase ?? 'transit')
               }
               if (game.player.pendingLaunch) return game.go('fab')
+              // Tapping the launchpad always opens its own detail screen first
+              // (status, parts, anything in progress); client contracts are one
+              // press further in from there. The M1/M2 tutorial coach still
+              // names the Mission Board directly via its own CTA (HubScreen's
+              // launchpadCallout calls onNav('missions') and never reaches this
+              // handler), so onboarding isn't blocked from its first contract.
+              if (building === 'launchpad') return game.go('launchpad')
               game.goToMissions()
             }
           }}
           onUpgradeLaunchpad={() => game.upgradeLaunchpad()}
+          onExcavateSubsurface={() => game.excavateSubsurface()}
+          onBuildSubsurfaceRoom={roomId => game.buildSubsurfaceRoom(roomId)}
         />
       )
 
@@ -153,9 +180,19 @@ export function ScreenContent({
           player={game.player}
           onBack={() => game.go('hub')}
           onBuildStation={() => game.go('build')}
-          onOpenMissions={() => game.go('missions')}
+          onOpenProgram={() => game.go('launchpad')}
           onSubmit={game.submitTessClassification}
           onChooseTarget={game.chooseSatelliteTarget}
+        />
+      )
+
+    case 'asteroid-discovery':
+      return (
+        <AsteroidDiscoveryScreen
+          player={game.player}
+          onBack={() => game.go('hub')}
+          onBuildTelescope={() => game.go('build')}
+          onSubmit={game.submitAsteroidClassification}
         />
       )
 
@@ -178,8 +215,10 @@ export function ScreenContent({
       )
 
     case 'transit':
+    case 'landing':
     case 'mining':
     case 'rover-mining':
+    case 'delivery':
     case 'debrief':
       if (!transitTarget || !debriefOriginTarget) return null
       return (
@@ -203,6 +242,7 @@ export function ScreenContent({
             stash: game.player.stash,
             refineryQueue: game.player.refineryQueue,
             refinedGoods: game.player.refinedGoods,
+            staffed: !!game.player.structureCrewAssignments?.refinery,
           }}
           onBack={() => game.go('hub')}
           onStartRefine={game.onStartRefine}
@@ -231,6 +271,8 @@ export function ScreenContent({
           missionsDone={game.player.missionsDone}
           unlockedSkillNodes={game.player.unlockedSkillNodes ?? []}
           shipCustomizerParts={game.player.shipCustomizerParts}
+          crewModuleResearched={game.player.crewModuleResearched}
+          landingResearched={game.player.landingResearched}
           onConfirmShipCustomizerBuild={game.confirmShipCustomizerBuild}
           onBack={onBackFromHangar ?? (() => game.go('hub'))}
         />
@@ -265,6 +307,60 @@ export function ScreenContent({
           onBack={() => game.go('hub')}
           onStartScan={game.startScan}
           onCollectScan={game.collectScan}
+        />
+      )
+
+    case 'launchpad':
+      return (
+        <LaunchpadScreen
+          onBack={() => game.go('hub')}
+          onPick={id => {
+            if (id === ACADEMY_INTRO_MISSION_ID) return game.go('academy')
+            game.onPickMission(id)
+          }}
+          onViewContracts={() => game.goToMissions()}
+          onOpenHangar={() => game.go('hangar')}
+          missionsDone={game.player.missionsDone}
+          freeOperations={game.player.freeOperations}
+          catalog={game.catalog}
+          player={game.player}
+          francs={game.player.francs}
+        />
+      )
+
+    case 'academy':
+      return (
+        <AcademyScreen
+          player={game.player}
+          catalog={game.catalog}
+          onBack={() => game.go('hub')}
+          onBuild={() => game.go('build')}
+          onOpenHangar={() => game.go('hangar')}
+          onResearch={game.researchAcademy}
+          onFunding={game.setAcademyFunding}
+          onHire={game.hireCrew}
+          onRehire={game.rehireCrew}
+          onTrain={game.startCrewTraining}
+          onTrainCandidate={game.startCandidateTraining}
+          onCollectTraining={game.collectCrewTraining}
+          onResearchCrewModule={game.researchCrewModule}
+          onAssign={game.assignCrewToStructure}
+          onShareCharts={game.shareChartsWithClient}
+        />
+      )
+
+    case 'surface-ops':
+      return (
+        <SurfaceOpsScreen
+          player={game.player}
+          onBack={() => game.go('hub')}
+          onPurchaseRights={game.purchaseTerrainRights}
+          onBuildLaunchpad={game.buildSettlementLaunchpad}
+          onMined={game.recordSurfaceMined}
+          onDispatch={game.dispatchSurfaceFerry}
+          onRetry={game.retrySurfaceFerry}
+          onReconcile={game.reconcileSurfaceFerry}
+          onAcknowledge={game.acknowledgeSurfaceFerry}
         />
       )
 

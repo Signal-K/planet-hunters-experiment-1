@@ -3,7 +3,6 @@
 import React, { useEffect, useState } from 'react'
 import type { Player, Screen } from '@/game-context'
 import ProgressionCard from '@/components/game/ProgressionCard'
-import { ComingSoonSheet, SPRINT_AFTER_NEXT_UTC } from '@/components/game/ComingSoonSheet'
 import ConfirmActionSheet from '@/components/game/ConfirmActionSheet'
 import { TutorialCompleteSheet, useTutorialCompleteAck } from '@/components/game/TutorialCompleteSheet'
 import { Scene } from '@/lib/engine/Scene'
@@ -20,10 +19,13 @@ import HubPixiCanvas from '@/components/game/hub/HubPixiCanvas'
 import ErrorBoundary from '@/components/ui/ErrorBoundary'
 import { TUTORIAL_CONTENT_TOP } from '@/lib/tutorial-layout'
 import { FREE_OPS_START_MISSIONS_DONE } from '@/lib/data/mission-generator'
-import { LAUNCHPAD_UPGRADE_COST } from '@/lib/data'
+import { LAUNCHPAD_UPGRADE_COST, type SubsurfaceRoomId } from '@/lib/data'
 import { formatCurrency } from '@/lib/format'
+import { FEATURE_FLAGS } from '@/lib/featureFlags'
 import type { HubBuildingDef } from '@/lib/pixi/hubScene'
 import { fetchReviewableTessCandidates } from '@/lib/tess-subjects'
+import { fetchReviewableAsteroidCandidates } from '@/lib/asteroid-subjects'
+import { instrumentDigestDateKey, unresolvedTransitInstrumentDigest, unresolvedDeepSpaceInstrumentDigest } from '@/lib/systems/InstrumentFeedSystem'
 import HUDStrip from '@/components/ui/HUDStrip'
 
 // ── Ref-B bordered-icon-badge glyphs for Hub chrome (bottom tabs) ──
@@ -81,7 +83,7 @@ function SkillsGlyph() {
  * 9px/0.18em uppercase label. `active` (Edit mode on) fills mint; `accent`
  * outlines mint; `muted` dims the label for secondary actions.
  */
-function SceneBtn({ icon, label, onClick, active, accent, muted, pulse }: {
+function SceneBtn({ icon, label, onClick, active, accent, muted, pulse, testId }: {
   icon: React.ReactNode
   label: string
   onClick: () => void
@@ -89,6 +91,7 @@ function SceneBtn({ icon, label, onClick, active, accent, muted, pulse }: {
   accent?: boolean
   muted?: boolean
   pulse?: boolean
+  testId?: string
 }) {
   const mint = 'var(--hub-mint)'
   const glyphColor = active || accent ? mint : 'var(--hub-cyan)'
@@ -96,6 +99,7 @@ function SceneBtn({ icon, label, onClick, active, accent, muted, pulse }: {
   return (
     <button
       onClick={onClick}
+      data-testid={testId}
       style={{
         display: 'flex', alignItems: 'center', gap: 6,
         background: active ? 'rgba(47,191,106,0.2)' : 'var(--hub-panel)',
@@ -125,15 +129,17 @@ interface HubScreenProps {
   onGoBuilding: (b: string) => void
   onNav: (s: Screen) => void
   onUpgradeLaunchpad?: () => void
+  onExcavateSubsurface?: () => void
+  onBuildSubsurfaceRoom?: (roomId: SubsurfaceRoomId) => void
 }
 
-export default function HubScreen({ player, hasCoach, onGoBuilding, onNav, onUpgradeLaunchpad }: HubScreenProps) {
+export default function HubScreen({ player, hasCoach, onGoBuilding, onNav, onUpgradeLaunchpad, onExcavateSubsurface, onBuildSubsurfaceRoom }: HubScreenProps) {
   const [editMode, setEditMode] = useState(false)
   const [plotEntities, setPlotEntities] = useState<EntityData[]>(DEFAULT_PLOTS)
   const [subsurface, setSubsurface] = useState(false)
-  const [comingSoon, setComingSoon] = useState<{ feature: string; description: string; target?: Date } | null>(null)
   const [confirmingLaunchpadUpgrade, setConfirmingLaunchpadUpgrade] = useState(false)
   const [tessQueueCount, setTessQueueCount] = useState(0)
+  const [asteroidQueueCount, setAsteroidQueueCount] = useState(0)
   const { show: showTutorialComplete, dismiss: dismissTutorialComplete } = useTutorialCompleteAck(player.missionsDone, FREE_OPS_START_MISSIONS_DONE)
   const placed = player.placed ?? []
   const placementPlots = player.placementPlots ?? {}
@@ -152,10 +158,9 @@ export default function HubScreen({ player, hasCoach, onGoBuilding, onNav, onUpg
       .catch(() => {})
   }, [])
 
-  // SMS daily-candidate-queue badge (LN-014): count of live TESS subjects
-  // still awaiting this player's review, i.e. not yet in tessClassifications.
-  // Mirrors TessDiscoveryScreen's own gating (SMS built + telescope launched)
-  // so the badge never promises a queue the classify flow can't show yet.
+  // SMS badge: unresolved items in today's level-scaled instrument digest.
+  // This shares InstrumentFeedSystem with TessDiscoveryScreen so the badge
+  // never promises more work than the feed can actually show.
   useEffect(() => {
     if (!player.freeOperations || !player.satelliteMonitoringBuilt || !player.transitSatelliteLaunchedAt) {
       setTessQueueCount(0)
@@ -165,13 +170,38 @@ export default function HubScreen({ player, hasCoach, onGoBuilding, onNav, onUpg
     fetchReviewableTessCandidates()
       .then(candidates => {
         if (cancelled) return
-        const classifications = player.tessClassifications ?? {}
-        const unresolved = candidates.filter(c => !classifications[c.id])
+        const unresolved = unresolvedTransitInstrumentDigest(
+          candidates,
+          player,
+          instrumentDigestDateKey()
+        )
         setTessQueueCount(unresolved.length)
       })
       .catch(() => { if (!cancelled) setTessQueueCount(0) })
     return () => { cancelled = true }
   }, [player.freeOperations, player.satelliteMonitoringBuilt, player.transitSatelliteLaunchedAt, player.tessClassifications])
+
+  // Deep Space Telescope badge: same InstrumentFeedSystem-shared pattern as
+  // the SMS badge above, for the second (asteroid/NEOCP) instrument (STS-622).
+  useEffect(() => {
+    if (!player.freeOperations || !player.deepSpaceTelescopeBuilt) {
+      setAsteroidQueueCount(0)
+      return
+    }
+    let cancelled = false
+    fetchReviewableAsteroidCandidates()
+      .then(candidates => {
+        if (cancelled) return
+        const unresolved = unresolvedDeepSpaceInstrumentDigest(
+          candidates,
+          player,
+          instrumentDigestDateKey()
+        )
+        setAsteroidQueueCount(unresolved.length)
+      })
+      .catch(() => { if (!cancelled) setAsteroidQueueCount(0) })
+    return () => { cancelled = true }
+  }, [player.freeOperations, player.deepSpaceTelescopeBuilt, player.asteroidClassifications])
 
   const sortedEntities = plotEntities.slice().sort((a, b) => {
     const ai = readComponentNumber(a, 'BuildPlot', 'index', 0)
@@ -197,7 +227,17 @@ export default function HubScreen({ player, hasCoach, onGoBuilding, onNav, onUpg
     return kind
   }
 
-  const BUILDING_W: Record<string, number> = { launchpad: 98, refinery: 84, 'scan-station': 80, 'satellite-monitoring-station': 86, command: 84 }
+  const BUILDING_W: Record<string, number> = { launchpad: 98, refinery: 84, 'scan-station': 80, 'satellite-monitoring-station': 86, 'deep-space-telescope': 86, 'astronaut-academy': 88, command: 84 }
+  // Post-tutorial Hub prominence pass (STS-631): telescope/satellite
+  // buildings recede visually while they're unlocked but still in their
+  // early, not-yet-actively-producing state — Satellite Monitoring Station
+  // before the transit satellite launches, Deep Space Telescope before it's
+  // built — so the Launchpad keeps reading as the base's primary structure.
+  const isDimmedBuildingKind = (kind: string): boolean => {
+    if (kind === 'satellite-monitoring-station') return !player.transitSatelliteLaunchedAt
+    if (kind === 'deep-space-telescope') return !player.deepSpaceTelescopeBuilt
+    return false
+  }
   const hubBuildings: HubBuildingDef[] = sortedEntities.flatMap((e, plot) => {
     const kind = structureForPlot(plot)
     if (!kind) return []
@@ -207,6 +247,7 @@ export default function HubScreen({ player, hasCoach, onGoBuilding, onNav, onUpg
       w: BUILDING_W[kind] ?? 78,
       hot: kind === 'launchpad' ? !!player.pendingLaunch : kind === 'scan-station' ? (!!player.activeScan && Date.now() >= player.activeScan.completesAt) : false,
       status: 'ok' as const,
+      dimmed: isDimmedBuildingKind(kind),
     }]
   })
   // Launchpad speech bubble — the base "speaking up" when it has a prompt and
@@ -273,7 +314,29 @@ export default function HubScreen({ player, hasCoach, onGoBuilding, onNav, onUpg
         status: (player.transitSatelliteLaunchedAt ? 'ok' : 'info') as 'ok' | 'info',
         w: 86,
         badge: tessQueueCount,
+        dimmed: isDimmedBuildingKind(kind),
         onClick: () => onGoBuilding('satellite-monitoring-station'),
+      }
+    }
+    if (kind === 'deep-space-telescope') {
+      return {
+        kind, label: 'D.S.T.',
+        sub: player.deepSpaceTelescopeBuilt ? 'TELESCOPE LIVE' : 'READY',
+        status: (player.deepSpaceTelescopeBuilt ? 'ok' : 'info') as 'ok' | 'info',
+        w: 86,
+        badge: asteroidQueueCount,
+        dimmed: isDimmedBuildingKind(kind),
+        onClick: () => onGoBuilding('deep-space-telescope'),
+      }
+    }
+    if (kind === 'astronaut-academy') {
+      const activeTraining = player.crewTraining?.length ?? 0
+      return {
+        kind, label: 'Academy',
+        sub: activeTraining > 0 ? `${activeTraining} TRAINING` : player.academyFunded ? 'FUNDED' : 'PAUSED',
+        status: (activeTraining > 0 ? 'warn' : player.academyFunded ? 'ok' : 'info') as 'ok' | 'warn' | 'info',
+        w: 88,
+        onClick: () => onGoBuilding('academy'),
       }
     }
     return {
@@ -318,7 +381,15 @@ export default function HubScreen({ player, hasCoach, onGoBuilding, onNav, onUpg
               z-index here this layer sits at stacking level 0 and the sky
               paints straight over the pills and callouts. */}
           <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 10 }}>
-            <div style={{ position: 'absolute', inset: 0, pointerEvents: 'auto' }}>
+            {/* pointerEvents stays 'none' here. This wrapper is inset:0, so
+                giving it 'auto' turned it into a transparent full-screen click
+                catcher at zIndex 10 — which sits above ProgressionCard (zIndex
+                8) and swallowed every tap on the Skill Tree / Build / Browse
+                Contracts buttons. It only showed up after the tutorial, because
+                that card stack is hidden while the coach is active. The
+                buildings below are absolutely positioned and re-enable pointer
+                events on their own roots. */}
+            <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}>
               {plotStyles.map((style, plot) => {
                 const kind = structureForPlot(plot)
                 if (!kind) {
@@ -341,7 +412,16 @@ export default function HubScreen({ player, hasCoach, onGoBuilding, onNav, onUpg
 
         {/* ─── BELOW GROUND ─── bottom half of slider */}
         <div style={{ position: 'absolute', top: '50%', left: 0, right: 0, height: '50%', overflow: 'hidden' }}>
-          <HubSubsurfaceView />
+          <HubSubsurfaceView
+            stash={player.stash}
+            installedParts={player.shipCustomizerParts}
+            trainingEnabled={FEATURE_FLAGS.subsurfaceHabitatTraining}
+            francs={player.francs}
+            subsurfaceExcavated={player.subsurfaceExcavated}
+            subsurfaceBuilt={player.subsurfaceBuilt}
+            onExcavate={onExcavateSubsurface}
+            onBuildRoom={onBuildSubsurfaceRoom}
+          />
         </div>
 
       </div>
@@ -353,7 +433,7 @@ export default function HubScreen({ player, hasCoach, onGoBuilding, onNav, onUpg
         padding: '16px 14px 22px',
         background: subsurface
           ? 'linear-gradient(180deg, rgba(6,3,0,0.9) 0%, rgba(6,3,0,0.5) 60%, transparent 100%)'
-          : 'linear-gradient(180deg, rgba(5,10,22,0.82) 0%, rgba(5,10,22,0.4) 65%, transparent 100%)',
+          : 'linear-gradient(180deg, rgba(10,10,12,0.82) 0%, rgba(10,10,12,0.4) 65%, transparent 100%)',
         display: 'flex', alignItems: 'flex-start', gap: 10, pointerEvents: 'none',
         transition: 'background 0.55s',
       }}>
@@ -367,7 +447,7 @@ export default function HubScreen({ player, hasCoach, onGoBuilding, onNav, onUpg
         </div>
         <span style={{ flex: 1 }} />
         <div style={{ pointerEvents: 'auto' }}>
-          <HUDStrip player={player} showStash />
+          <HUDStrip player={player} showStash onJobsClick={() => onNav('missions')} />
         </div>
       </div>
 
@@ -375,10 +455,7 @@ export default function HubScreen({ player, hasCoach, onGoBuilding, onNav, onUpg
       {(!hasCoach || !!player.activeMission || !!player.pendingLaunch) && !subsurface && (
         <>
           <ProgressionCard player={player} onGoBuilding={onGoBuilding} onNav={onNav} top={TUTORIAL_CONTENT_TOP} />
-          {comingSoon && (
-            <ComingSoonSheet feature={comingSoon.feature} description={comingSoon.description} target={comingSoon.target} onClose={() => setComingSoon(null)} />
-          )}
-          {showTutorialComplete && !comingSoon && (
+          {showTutorialComplete && (
             <TutorialCompleteSheet onDone={dismissTutorialComplete} />
           )}
         </>
@@ -395,8 +472,14 @@ export default function HubScreen({ player, hasCoach, onGoBuilding, onNav, onUpg
         />
       )}
 
-      {/* Bottom toolbar — hidden during tutorial */}
-      {!hasCoach && (
+      {/* Bottom toolbar — hidden only during the strict M1 first-run
+          tutorial (missionsDone === 0). M2/M3 "guided ops" still set
+          hasCoach true on this screen (every tier has a hub coach step
+          nudging toward Missions), but that's a lighter nudge, not a
+          full-screen takeover — hiding Edit/Build, Subsurface, and Surface
+          Ops for the whole guided-ops window meant those buttons stayed
+          unreachable well past the tutorial (bug reported 2026-07-31). */}
+      {(!hasCoach || player.missionsDone > 0) && (
         <div style={{
           position: 'absolute', left: 0, right: 0, bottom: 110, zIndex: 20,
           display: 'flex', justifyContent: 'center', gap: 8, flexWrap: 'wrap',
@@ -428,7 +511,7 @@ export default function HubScreen({ player, hasCoach, onGoBuilding, onNav, onUpg
                 icon={<SubsurfaceGlyph />}
                 label="Subsurface"
                 muted
-                onClick={() => setComingSoon({ feature: 'Subsurface Operations', description: 'Drill deep into your base planet to mine rare subterranean minerals and build underground structures.', target: SPRINT_AFTER_NEXT_UTC })}
+                onClick={() => setSubsurface(true)}
               />
 
               {/* Desktop has no nav rail and no bottom bar, so the destinations
@@ -437,6 +520,15 @@ export default function HubScreen({ player, hasCoach, onGoBuilding, onNav, onUpg
                   `.hub-desktop-nav` keeps them out of the way there. */}
               {player.freeOperations && (
                 <>
+                  {player.hasLanded && (
+                    <SceneBtn
+                      icon={<SurfaceGlyph />}
+                      label="Surface Ops"
+                      accent
+                      testId="hub-surface-ops"
+                      onClick={() => onNav('surface-ops')}
+                    />
+                  )}
                   <span className="hub-desktop-nav">
                     <SceneBtn icon={<MarketGlyph />} label="Market" onClick={() => onNav('market')} />
                   </span>

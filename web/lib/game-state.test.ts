@@ -59,6 +59,7 @@ describe('game state hydration normalization', () => {
     expect(normalized.player.researchXP).toBe(0)
     expect(normalized.player.unlockedBlueprints).toEqual([])
     expect(normalized.player.tessClassifications).toEqual({})
+    expect(normalized.player.instrumentDigestNotifiedOn).toEqual({})
     expect(normalized.player.satelliteMonitoringLevel).toBe(1)
     expect(normalized.player.transitSatelliteLevel).toBe(1)
     expect(normalized.player.francs).toBe(9_500_000_000)
@@ -108,6 +109,22 @@ describe('game state hydration normalization', () => {
 
     expect(normalized.player.tessClassifications?.['tess-toi-451-b']?.verdict).toBe('planet')
     expect(normalized.player.tessClassifications?.['tess-toi-451-b']?.ranges).toEqual([{ x1: 0.68, x2: 0.76 }, { x1: 2.54, x2: 2.62 }])
+  })
+
+  it('persists valid instrument digest markers and drops malformed values', () => {
+    const normalized = normalizeState({
+      player: {
+        instrumentDigestNotifiedOn: {
+          'transit-telescope': '2026-07-30',
+          blank: '',
+          malformed: 42,
+        },
+      } as never,
+    })
+
+    expect(normalized.player.instrumentDigestNotifiedOn).toEqual({
+      'transit-telescope': '2026-07-30',
+    })
   })
 
   it('normalizes satellite discovery levels to at least one', () => {
@@ -320,6 +337,193 @@ describe('mergeRemoteState — remote game_states record onto local state', () =
     expect(merged.player.missionPhase).toBe('mining')
   })
 
+  it('restores a remote delivery unload with its wall-clock epoch and cargo', () => {
+    const mission = MISSIONS.find(candidate => candidate.deliveryTargetId)!
+    const startedAt = 1_700_000_123_000
+    const merged = mergeRemoteState(local({ screen: 'hub' }), {
+      screen: 'delivery',
+      missionId: mission.id,
+      targetId: mission.targetId,
+      deliveryTargetId: mission.deliveryTargetId,
+      lastCargo: { iron: 3 },
+      player: {
+        activeMission: { id: mission.id, label: mission.title },
+        missionRunId: 'run-delivery',
+        missionPhase: 'delivery',
+        headingToDelivery: true,
+        deliveryUnloadStartedAt: startedAt,
+      },
+    })
+
+    expect(merged.screen).toBe('delivery')
+    expect(merged.deliveryTargetId).toBe(mission.deliveryTargetId)
+    expect(merged.lastCargo).toEqual({ iron: 3 })
+    expect(merged.player.missionPhase).toBe('delivery')
+    expect(merged.player.deliveryUnloadStartedAt).toBe(startedAt)
+    expect(merged.player.headingToDelivery).toBe(true)
+  })
+
+  // The STS-601 cause-2 regression. useAuthSync refetches game_states on
+  // `visibilitychange`, so every tab switch runs a merge against whatever the
+  // remote row happens to hold. With both saves at the same missionsDone the
+  // equal-stage branch is what decides the run's fate — if it took the remote
+  // player, coming back to the tab erased an in-flight launch/transit.
+  it('keeps a local in-flight run when an equal-stage remote record has none', () => {
+    const mission = MISSIONS[0]
+    const target = TARGETS[0]
+    const startedAt = 1_700_000_000_000
+
+    const merged = mergeRemoteState(
+      local({
+        screen: 'transit',
+        missionId: mission.id,
+        targetId: target.id,
+        player: {
+          ...DEFAULT_STATE.player,
+          missionsDone: 2,
+          activeMission: { id: mission.id, label: `${mission.title} → ${target.name}` },
+          missionRunId: 'run-local-601',
+          missionPhase: 'transit',
+          transitStartedAt: startedAt,
+        },
+      }),
+      // A remote row written before the run began: same stage, run fields
+      // explicitly cleared — the shape that clobbers a local run if the
+      // equal-stage branch ever spreads the remote player over it.
+      {
+        screen: 'hub',
+        missionId: null,
+        targetId: null,
+        player: {
+          missionsDone: 2,
+          activeMission: null,
+          missionRunId: undefined,
+          missionPhase: undefined,
+          transitStartedAt: null,
+        },
+      },
+    )
+
+    expect(merged.screen).toBe('transit')
+    expect(merged.missionId).toBe(mission.id)
+    expect(merged.targetId).toBe(target.id)
+    expect(merged.player.activeMission?.id).toBe(mission.id)
+    expect(merged.player.missionRunId).toBe('run-local-601')
+    expect(merged.player.missionPhase).toBe('transit')
+    // The wall-clock epoch is what stops the transit animation restarting.
+    expect(merged.player.transitStartedAt).toBe(startedAt)
+  })
+
+  // STS-635: a genuine tie (equal missionsDone on both sides) must not
+  // discard remote resource progress wholesale — resource-like fields take
+  // the max per field/key instead of blanket local-wins.
+  describe('resource max-merge on a missionsDone tie', () => {
+    it('takes the higher francs value between local and remote', () => {
+      const merged = mergeRemoteState(
+        local({ player: { ...DEFAULT_STATE.player, missionsDone: 2, francs: 100 } }),
+        { player: { missionsDone: 2, francs: 500 } },
+      )
+      expect(merged.player.missionsDone).toBe(2)
+      expect(merged.player.francs).toBe(500)
+    })
+
+    it('keeps the local francs value when it is higher than remote', () => {
+      const merged = mergeRemoteState(
+        local({ player: { ...DEFAULT_STATE.player, missionsDone: 2, francs: 900 } }),
+        { player: { missionsDone: 2, francs: 500 } },
+      )
+      expect(merged.player.francs).toBe(900)
+    })
+
+    it('merges stash and refinedGoods per-key by taking the max', () => {
+      const merged = mergeRemoteState(
+        local({
+          player: {
+            ...DEFAULT_STATE.player,
+            missionsDone: 2,
+            stash: { iron: 10, silicon: 2 },
+            refinedGoods: { alloy: 1 },
+          },
+        }),
+        {
+          player: {
+            missionsDone: 2,
+            stash: { iron: 4, silicon: 8, platinum: 3 },
+            refinedGoods: { alloy: 5, composite: 2 },
+          },
+        },
+      )
+      expect(merged.player.stash).toEqual({ iron: 10, silicon: 8, platinum: 3 })
+      expect(merged.player.refinedGoods).toEqual({ alloy: 5, composite: 2 })
+    })
+
+    it('takes the max of researchXP, skillPoints and researchAnnotations', () => {
+      const merged = mergeRemoteState(
+        local({
+          player: {
+            ...DEFAULT_STATE.player,
+            missionsDone: 2,
+            researchXP: 50,
+            skillPoints: 1,
+            researchAnnotations: 3,
+          },
+        }),
+        {
+          player: {
+            missionsDone: 2,
+            researchXP: 200,
+            skillPoints: 0,
+            researchAnnotations: 1,
+          },
+        },
+      )
+      expect(merged.player.researchXP).toBe(200)
+      expect(merged.player.skillPoints).toBe(1)
+      expect(merged.player.researchAnnotations).toBe(3)
+    })
+
+    it('still unions placed/placementPlots on a tie, same as before', () => {
+      const merged = mergeRemoteState(
+        local({ player: { ...DEFAULT_STATE.player, missionsDone: 2, placed: ['launchpad'] } }),
+        { player: { missionsDone: 2, placed: ['refinery'], placementPlots: { refinery: 2 } } },
+      )
+      expect(merged.player.placed.sort()).toEqual(['launchpad', 'refinery'])
+      expect(merged.player.placementPlots).toEqual({ refinery: 2 })
+    })
+
+    it('falls back to local-wins on a tie for non-resource fields when neither side has updatedAt', () => {
+      const merged = mergeRemoteState(
+        local({ player: { ...DEFAULT_STATE.player, missionsDone: 2, refineryBuilt: false } }),
+        { player: { missionsDone: 2, refineryBuilt: true } },
+      )
+      expect(merged.player.refineryBuilt).toBe(false)
+    })
+
+    it('prefers the newer side (by updatedAt) for non-resource fields on a tie', () => {
+      const merged = mergeRemoteState(
+        local({
+          player: { ...DEFAULT_STATE.player, missionsDone: 2, refineryBuilt: false },
+          updatedAt: 1000,
+        }),
+        { player: { missionsDone: 2, refineryBuilt: true }, updatedAt: 5000 },
+      )
+      expect(merged.player.refineryBuilt).toBe(true)
+    })
+
+    it('still takes the resource max even when the remote side wins the updatedAt tie-break', () => {
+      const merged = mergeRemoteState(
+        local({
+          player: { ...DEFAULT_STATE.player, missionsDone: 2, francs: 900 },
+          updatedAt: 1000,
+        }),
+        { player: { missionsDone: 2, francs: 500 }, updatedAt: 5000 },
+      )
+      // Remote wins the timestamp tie-break for ordinary fields, but francs
+      // is a resource field and must still resolve to the max of both sides.
+      expect(merged.player.francs).toBe(900)
+    })
+  })
+
   it('preserves player fields the remote record omits', () => {
     const merged = mergeRemoteState(local(), {
       player: { missionsDone: 5 },
@@ -338,5 +542,32 @@ describe('mergeRemoteState — remote game_states record onto local state', () =
 
     expect(merged.player.missionsDone).toBe(2)
     expect(merged.doneSteps).toEqual({})
+  })
+})
+
+describe('structure flags are derived from `placed`', () => {
+  // A save made before applyPlaceStructure started setting a flag has the
+  // structure in `placed` and the flag false. The hub then kept prompting
+  // "Build a Satellite Monitoring Station" for one already standing.
+  it('repairs satelliteMonitoringBuilt from placed', () => {
+    const s = normalizeState({ player: { placed: ['launchpad', 'satellite-monitoring-station'] } })
+    expect(s.player.satelliteMonitoringBuilt).toBe(true)
+  })
+
+  it('repairs refineryBuilt and scannerBuilt the same way', () => {
+    const s = normalizeState({ player: { placed: ['refinery', 'scan-station'] } })
+    expect(s.player.refineryBuilt).toBe(true)
+    expect(s.player.scannerBuilt).toBe(true)
+  })
+
+  it('leaves the flags false when the structure is not placed', () => {
+    const s = normalizeState({ player: { placed: ['launchpad'] } })
+    expect(s.player.satelliteMonitoringBuilt).toBe(false)
+    expect(s.player.refineryBuilt).toBe(false)
+  })
+
+  it('keeps a flag that is set even if placed somehow lost the entry', () => {
+    const s = normalizeState({ player: { placed: [], satelliteMonitoringBuilt: true } })
+    expect(s.player.satelliteMonitoringBuilt).toBe(true)
   })
 })

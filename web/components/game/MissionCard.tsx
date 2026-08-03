@@ -4,6 +4,7 @@ import React from 'react'
 import type { Mission, Client, MineralMeta } from '@/lib/data'
 import { isOwnProgramMission, missionDifficultyLabel, missionPayoutTier } from '@/lib/data'
 import TutorialHighlight from '@/components/game/TutorialHighlight'
+import ClientMark from '@/components/ui/ClientMark'
 import styles from '@/components/game/screens/MissionBoard.module.css'
 import { formatCurrency, FRANC } from '@/lib/format'
 
@@ -23,12 +24,17 @@ interface MissionCardProps {
   highlighted?: boolean
   previewed?: boolean
   routeLabel?: string
+  crewStatus?: string
+  crewReady?: boolean
   // Commits immediately (navigates to Target) — matches the established
   // click-to-commit interaction asserted directly in
   // cypress/e2e/journeys/actual-play.cy.ts:63 and clean-start-loop.cy.ts:99.
   onPick: () => void
   // Hover/focus preview for the Contract Detail side panel — does not commit.
   onPreview?: () => void
+  // Opens the client dossier sheet (STS-235) — only offered for real client
+  // requests, not own-program/story runs, which have no client to inspect.
+  onOpenClientDossier?: (client: Client) => void
 }
 
 export function missionCardTags({
@@ -39,7 +45,9 @@ export function missionCardTags({
   lockedDetail,
   cooldownLabel,
   routeLabel,
-}: Pick<MissionCardProps, 'mission' | 'client' | 'isStoryMission' | 'cardState' | 'lockedDetail' | 'cooldownLabel' | 'routeLabel'>): { tone: 'burn' | 'job' | 'twostop'; label: string }[] {
+  crewStatus,
+  crewReady,
+}: Pick<MissionCardProps, 'mission' | 'client' | 'isStoryMission' | 'cardState' | 'lockedDetail' | 'cooldownLabel' | 'routeLabel' | 'crewStatus' | 'crewReady'>): { tone: 'burn' | 'job' | 'twostop'; label: string }[] {
   const difficultyTier = mission.difficulty.startsWith('L') ? parseInt(mission.difficulty.slice(1), 10) : NaN
   const fuelTimerLabel = routeLabel ? 'Two-leg burn' : mission.deliveryTargetId ? 'Delivery burn' : difficultyTier >= 3 ? 'Long burn' : 'Standard burn'
   if (cardState === 'cooldown' && cooldownLabel) return [{ tone: 'burn', label: `Cooldown · ${cooldownLabel}` }]
@@ -73,15 +81,18 @@ export default function MissionCard({
   highlighted,
   previewed,
   routeLabel,
+  crewStatus,
+  crewReady,
   onPick,
   onPreview,
+  onOpenClientDossier,
 }: MissionCardProps) {
   // An own-program run has no client, whatever the catalog filed it under.
   const ownOperation = isOwnProgramMission(mission)
   const client = ownOperation ? null : clientProp
   const accent = client?.color ?? '#6cd4ff'
   const isAvailable = cardState === 'available'
-  const tags = missionCardTags({ mission, client, isStoryMission, cardState, lockedDetail, cooldownLabel, routeLabel })
+  const tags = missionCardTags({ mission, client, isStoryMission, cardState, lockedDetail, cooldownLabel, routeLabel, crewStatus, crewReady })
   const statusCta = cardState === 'cooldown' ? 'Cooldown'
     : cardState === 'completed' ? 'Claimed'
     : cardState === 'locked' ? (lockedDetail ?? 'Locked')
@@ -107,12 +118,30 @@ export default function MissionCard({
       style={{ position: 'relative' }}
     >
       {highlighted && <TutorialHighlight />}
-      <div className={styles.mark} style={{ background: accent }}>{client?.initial ?? 'OP'}</div>
+      {client && onOpenClientDossier ? (
+        // A real <button> can't nest inside the card's own <button> (invalid
+        // HTML, causes a hydration error) — same span+role pattern the CTA
+        // below already uses for the same reason.
+        <span
+          role="button"
+          tabIndex={-1}
+          data-testid={`mission-card-${mission.id}-client-mark`}
+          aria-label={`${client.name} dossier`}
+          onClick={e => { e.stopPropagation(); onOpenClientDossier(client) }}
+          style={{ cursor: 'pointer', flexShrink: 0 }}
+        >
+          <ClientMark initial={client.initial} color={accent} uiRole={client.uiRole} clientId={client.id} size={44} />
+        </span>
+      ) : (
+        <ClientMark initial={client?.initial ?? 'OP'} color={accent} uiRole={client?.uiRole ?? 'starter'} clientId={client?.id} size={44} />
+      )}
       <div className={styles.cardMain}>
         <div className={styles.cardTitle}>{mission.title}</div>
         <div className={styles.cardClient}>{client?.name ?? (ownOperation ? 'Your program' : 'Free Ops')}</div>
         <div className={styles.cardWants}>
-          {ownOperation
+          {mission.programReward
+            ? `Program outcome · ${mission.programReward.outcome}`
+            : ownOperation
             ? 'Your own operation · no client, no order to fill'
             : isStoryMission
             ? 'Story mission · not a client request'
@@ -121,6 +150,15 @@ export default function MissionCard({
               : 'Choose target · keep the haul · market-led mining'}
         </div>
         {routeLabel && <div className={styles.cardRoute}>{routeLabel}</div>}
+        {crewStatus && (
+          <div
+            data-testid={`mission-card-${mission.id}-crew`}
+            className={styles.cardRoute}
+            style={{ color: crewReady ? 'var(--ln-ok)' : 'var(--ln-crimson)' }}
+          >
+            CREW · {crewStatus}
+          </div>
+        )}
         <div className={styles.cardTags}>
           {/* Difficulty was already computed per mission but never shown, so the
               progression curve was invisible on the board (STS-543). */}
@@ -132,10 +170,22 @@ export default function MissionCard({
       </div>
       <div className={styles.cardSide}>
         <div className={styles.cardPay}>
-          <span className={styles.cardPayIcon}>{FRANC}</span>
-          {cardState === 'completed' ? '—' : formatCurrency(displayPayout, { compact: true }).slice(FRANC.length)}
+          {mission.programReward ? (
+            <span data-testid={`mission-card-${mission.id}-program-reward`}>
+              {mission.programReward.researchXP > 0
+                ? `+${mission.programReward.researchXP} XP`
+                : mission.targetId
+                  ? 'FEED'
+                  : 'TASK'}
+            </span>
+          ) : (
+            <>
+              <span className={styles.cardPayIcon}>{FRANC}</span>
+              {cardState === 'completed' ? '—' : formatCurrency(displayPayout, { compact: true }).slice(FRANC.length)}
+            </>
+          )}
         </div>
-        {cardState !== 'completed' && (
+        {cardState !== 'completed' && !mission.programReward && (
           <div className={styles.cardPayTier} data-testid={`mission-card-${mission.id}-payout-tier`}>
             {missionPayoutTier(mission)} payout
           </div>
@@ -148,7 +198,9 @@ export default function MissionCard({
             onClick={e => { e.stopPropagation(); unlocked && onPick() }}
             className={styles.cardBtn}
           >
-            {targetCount} target{targetCount !== 1 ? 's' : ''} ›
+            {targetCount === 0 && mission.programReward
+              ? 'Open task ›'
+              : `${targetCount} target${targetCount !== 1 ? 's' : ''} ›`}
           </span>
         ) : (
           <span data-testid={`mission-card-${mission.id}-cta`} className={`${styles.cardBtn} ${styles.cardBtnDisabled}`}>

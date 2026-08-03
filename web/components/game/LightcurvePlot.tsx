@@ -62,7 +62,7 @@ export default function LightcurvePlot({ points, markers, onMarker, height = 190
           onClick={handleClick}
           style={{ cursor: 'crosshair' }}
         >
-          <CartesianGrid stroke="rgba(63,169,255,0.08)" strokeDasharray="3 3" />
+          <CartesianGrid stroke="rgba(112,217,234,0.08)" strokeDasharray="3 3" />
           <XAxis
             dataKey="x"
             type="number"
@@ -77,7 +77,7 @@ export default function LightcurvePlot({ points, markers, onMarker, height = 190
             tickFormatter={v => fmt(v)}
           />
           <Tooltip
-            contentStyle={{ background: '#0a121d', border: '1px solid rgba(63,169,255,0.3)', borderRadius: 6, fontFamily: 'var(--ln-font-mono)', fontSize: 9 }}
+            contentStyle={{ background: '#0a121d', border: '1px solid rgba(112,217,234,0.3)', borderRadius: 6, fontFamily: 'var(--ln-font-mono)', fontSize: 9 }}
             labelStyle={{ color: '#7ec8ff' }}
             itemStyle={{ color: '#f5a623' }}
             labelFormatter={v => `t = ${Number(v).toFixed(2)} d`}

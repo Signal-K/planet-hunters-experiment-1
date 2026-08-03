@@ -110,7 +110,12 @@
       "mcp__plugin_cloudflare_cloudflare-docs__search_cloudflare_documentation",
       "mcp__zennotes__move_to_trash",
       "mcp__zennotes__rename_note",
-      "mcp__desk__list_agent_requests"
+      "mcp__desk__list_agent_requests",
+      "mcp__desk__merge_tickets",
+      "mcp__desk__attach_file_ref",
+      "mcp__desk__reconcile_status",
+      "WebFetch(domain:www.minorplanetcenter.net)",
+      "WebFetch(domain:docs.minorplanetcenter.net)"
     ]
   },
   "enabledMcpjsonServers": [

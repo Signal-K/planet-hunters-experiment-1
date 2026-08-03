@@ -236,7 +236,7 @@ export default function TransitScreen({ target, rocketImageSrc, arrivalAt, trans
           data-testid="transit-mission-context"
           style={{
             margin: '0 16px 10px', padding: '10px 14px',
-            background: 'rgba(8,14,26,0.7)', backdropFilter: 'var(--ln-glass-blur)', WebkitBackdropFilter: 'var(--ln-glass-blur)',
+            background: 'rgba(13,13,14,0.7)', backdropFilter: 'var(--ln-glass-blur)', WebkitBackdropFilter: 'var(--ln-glass-blur)',
             border: '1px solid var(--ln-hairline)', borderLeft: '3px solid var(--ln-cyan)', borderRadius: 12,
           }}
         >
@@ -262,7 +262,7 @@ export default function TransitScreen({ target, rocketImageSrc, arrivalAt, trans
       {cargoEntries.length > 0 && (
         <div style={{
           margin: '0 16px 12px', padding: '10px 14px',
-          background: 'rgba(8,14,26,0.7)', backdropFilter: 'var(--ln-glass-blur)', WebkitBackdropFilter: 'var(--ln-glass-blur)', border: '1px solid var(--ln-hairline)',
+          background: 'rgba(13,13,14,0.7)', backdropFilter: 'var(--ln-glass-blur)', WebkitBackdropFilter: 'var(--ln-glass-blur)', border: '1px solid var(--ln-hairline)',
           borderLeft: '3px solid var(--ln-amber)', borderRadius: 12,
         }}>
           <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 9, fontWeight: 800, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'var(--ln-text-dim)', marginBottom: 6 }}>

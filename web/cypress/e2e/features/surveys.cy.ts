@@ -1,4 +1,8 @@
-import { SURVEY_DEFS } from '@/lib/survey-defs'
+// Relative, not the `@/` alias. Cypress's bundler does not read tsconfig
+// `paths`, and every other spec gets away with `@/` only because they import
+// *types* — which TypeScript erases before webpack ever tries to resolve them.
+// This is the one spec importing a runtime value, so it is the one that broke.
+import { SURVEY_DEFS } from '../../../lib/survey-defs'
 
 const STORAGE_KEY = 'landnam-game-state-v1'
 const SURVEY_STORAGE_KEY = 'landnam-surveys-shown'

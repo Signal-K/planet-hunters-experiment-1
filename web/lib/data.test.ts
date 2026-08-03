@@ -36,6 +36,7 @@ import {
   TARGET_STRUCTURES,
   findTargetStructure,
   generateFreeOpsMissions,
+  getBuildSequence,
   getShipInteriorLayout,
   hasShipCustomizer,
   SKILL_NODES,
@@ -202,7 +203,7 @@ describe('ship room layouts', () => {
   it('slots SR1 rooms into the cutaway container bounds', () => {
     const layout = getShipInteriorLayout('sr1')
     expect(layout?.containerSrc).toBe('/game/assets/ships/containers/sr1_cutaway.png')
-    expect(layout?.slots.map(slot => slot.kind).sort()).toEqual(['booster', 'cockpit', 'engine', 'payload'])
+    expect(layout?.slots.map(slot => slot.kind).sort()).toEqual(['booster', 'cockpit', 'crew-module', 'engine', 'lander', 'payload'])
     for (const slot of layout?.slots ?? []) {
       expect(slot.x).toBeGreaterThanOrEqual(0)
       expect(slot.y).toBeGreaterThanOrEqual(0)
@@ -216,6 +217,19 @@ describe('ship customizer parts', () => {
   it('walks the builder from engine through payload', () => {
     expect(CUSTOMIZER_BUILD_SEQUENCE).toEqual(['engine', 'booster', 'cockpit', 'payload'])
     expect(CUSTOMIZER_BUILD_SEQUENCE.map(kind => CUSTOMIZER_PARTS.filter(part => part.kind === kind).length)).toEqual([2, 2, 2, 2])
+  })
+
+  it('adds Crew Quarters only to researched post-onboarding hulls', () => {
+    expect(getBuildSequence(3, true)).not.toContain('crew-module')
+    expect(getBuildSequence(4, false)).not.toContain('crew-module')
+    expect(getBuildSequence(4, true)).toContain('crew-module')
+  })
+
+  it('adds the Lander Module only to researched post-onboarding hulls', () => {
+    expect(getBuildSequence(3, false, true)).not.toContain('lander')
+    expect(getBuildSequence(4, false, false)).not.toContain('lander')
+    expect(getBuildSequence(4, false, true)).toContain('lander')
+    expect(getBuildSequence(4, true, true)).toEqual(expect.arrayContaining(['crew-module', 'lander']))
   })
 
   it('calculates a higher success chance as required rooms are installed', () => {

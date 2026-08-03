@@ -2,8 +2,7 @@
 //
 // Crew are persisted *individuals* with a name, not a headcount. That single
 // decision is what the rest of the epic hangs off: per-crew training state,
-// per-crew XP, and a roster UI rather than a set of counters. See ZenNotes
-// `projects/landnam/decisions/Astronaut academy — crew model.md`.
+// per-crew XP, and a roster UI rather than a set of counters (STS-591).
 //
 // Deliberately absent, and not to be added speculatively:
 //   - Non-astronaut human roles (geologist, flight controller, drone operator).
@@ -11,7 +10,7 @@
 //   - Any permanent-death / crew-lost state. A destroyed ship does not kill its
 //     crew; quitting over unpaid upkeep is the only way anyone leaves, and they
 //     stay re-hirable.
-//   - Any citizen-science field. Standing rule in `Landnam/CLAUDE.md`.
+//   - Any citizen-science field. Crew are progression actors, not science data.
 
 import type { SkillBranch } from './skills'
 
@@ -69,6 +68,40 @@ export interface CrewMember {
    * Absent for self-trained crew, who cost nothing to acquire.
    */
   hireCost?: number
+  /** Agency id or `client:<id>` for hired crew; absent for self-trained crew. */
+  sourceId?: string
+}
+
+export interface CrewTrainingSession {
+  id: string
+  /** Existing crew improve; candidate sessions create a new self-trained astronaut on collection. */
+  crewId?: string
+  candidateId?: string
+  candidateName?: string
+  branch: SkillBranch
+  startedAt: number
+  completesAt: number
+}
+
+export interface CrewRehireOffer {
+  member: CrewMember
+  rehireCost: number
+  leftAt: number
+}
+
+export interface CrewRequirement {
+  branch: SkillBranch
+  minTier: number
+  minLevel: number
+  count?: number
+}
+
+export interface CrewSource {
+  id: string
+  name: string
+  kind: 'agency' | 'client'
+  description: string
+  clientId?: string
 }
 
 /** Hired crew arrive already trained and instantly, at this level on CREW_XP_CURVE. */

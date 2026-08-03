@@ -98,7 +98,13 @@ describe('DEV panel UI', () => {
     cy.get('[data-testid="dev-shot-telescope-fab"]').should('exist')
     cy.get('[data-testid="dev-shot-telescope-transit"]').should('exist')
     cy.get('[data-testid="dev-shot-telescope-debrief"]').should('exist')
-    cy.get('[data-testid^="dev-shot-"]').should('have.length', 19)
+    // Recent UI shots
+    cy.get('[data-testid="dev-shot-ui-mission-board"]').should('exist')
+    cy.get('[data-testid="dev-shot-ui-skill-tree"]').should('exist')
+    cy.get('[data-testid="dev-shot-ui-target-picker"]').should('exist')
+    cy.get('[data-testid="dev-shot-ui-rover-mining"]').should('exist')
+    cy.get('[data-testid="dev-shot-ship-customizer"]').should('exist')
+    cy.get('[data-testid^="dev-shot-"]').should('have.length', 25)
   })
 
   it('clicking M2 Hub navigates to hub with M2 coach, no Save Progress prompt', () => {

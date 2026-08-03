@@ -15,17 +15,18 @@ import ObservatoryCoach, { useObservatoryCoach } from '@/components/game/Observa
 import PixiGalaxyStarMap from '@/components/game/PixiGalaxyStarMap'
 import SolSystemPreview from '@/components/game/SolSystemPreview'
 import NebulaBackdrop from '@/components/game/NebulaBackdrop'
-import { dailyTessCandidates, deriveObservatoryStats, periodFromRanges, sectorWindows, tessCandidateToExoplanetTarget, tessLightcurvePoints, type Target, type TessCandidate, type TessClassification, type TessVerdict, type TransitRange } from '@/lib/data'
+import { deriveObservatoryStats, periodFromRanges, sectorWindows, tessCandidateToExoplanetTarget, tessLightcurvePoints, type Target, type TessCandidate, type TessClassification, type TessVerdict, type TransitRange } from '@/lib/data'
 import type { Player } from '@/lib/game-types'
 import { UI_ZONES } from '@/lib/ui-zones'
 import { fetchReviewableTessCandidates } from '@/lib/tess-subjects'
 import { useIsDesktop } from '@/lib/hooks/useIsDesktop'
+import { instrumentDigestDateKey, unresolvedTransitInstrumentDigest } from '@/lib/systems/InstrumentFeedSystem'
 
 interface TessDiscoveryScreenProps {
   player: Player
   onBack: () => void
   onBuildStation: () => void
-  onOpenMissions: () => void
+  onOpenProgram: () => void
   onSubmit: (subjectId: string, verdict: TessVerdict, ranges: TransitRange[], discoveredTarget?: Target) => void
   onChooseTarget: (subjectId: string) => void
 }
@@ -39,9 +40,13 @@ const VERDICT_ACTIONS: Array<{ id: TessVerdict; label: string; requiresMark: boo
   { id: 'unsure', label: 'Skip', requiresMark: false, kind: 'ghost' },
 ]
 
-export default function TessDiscoveryScreen({ player, onBack, onBuildStation, onOpenMissions, onSubmit, onChooseTarget }: TessDiscoveryScreenProps) {
-  const classifications = player.tessClassifications ?? {}
-  // dailyTessCandidates resolves to today's level-scaled downlink — either the
+export default function TessDiscoveryScreen({ player, onBack, onBuildStation, onOpenProgram, onSubmit, onChooseTarget }: TessDiscoveryScreenProps) {
+  // Stabilize the fallback — see the identical comment on
+  // AsteroidDiscoveryScreen's classifications memo (STS-622 review found
+  // this pattern first here; a fresh `{}` every render when the field is
+  // unset re-fires the fetch effect indefinitely).
+  const classifications = useMemo(() => player.tessClassifications ?? {}, [player.tessClassifications])
+  // InstrumentFeedSystem resolves today's level-scaled downlink — either the
   // player's satellite-pointing pick (player.satelliteTargetId, chosen via
   // PixiGalaxyStarMap after a prior classification) plus a deterministic daily
   // hash fallback. `pool` keeps the full reviewable list around so the
@@ -56,7 +61,7 @@ export default function TessDiscoveryScreen({ player, onBack, onBuildStation, on
   const [loading, setLoading] = useState(true)
   const [loadFailed, setLoadFailed] = useState(false)
   // Dev/staging-only: the daily candidate pool is keyed by real calendar date
-  // (dailyTessCandidates below), so there's no in-scene timer to fast-forward
+  // (InstrumentFeedSystem below), so there's no in-scene timer to fast-forward
   // the way TransitScreen's ETA has — testing "the next day's downlink"
   // otherwise means literally waiting a day. This offset fakes `today` by N
   // days; it's a no-op (stays 0) outside development builds.
@@ -76,10 +81,8 @@ export default function TessDiscoveryScreen({ player, onBack, onBuildStation, on
         if (cancelled) return
         const todayDate = new Date()
         if (devDayOffset) todayDate.setDate(todayDate.getDate() + devDayOffset)
-        const today = todayDate.toISOString().slice(0, 10)
-        const stationLevel = Math.max(player.satelliteMonitoringLevel ?? 1, player.transitSatelliteLevel ?? 1)
-        const dailyCandidates = dailyTessCandidates(liveCandidates, today, stationLevel, player.satelliteTargetId)
-        const nextDaily = dailyCandidates.find(dailyCandidate => !classifications[dailyCandidate.id])
+        const today = instrumentDigestDateKey(todayDate)
+        const nextDaily = unresolvedTransitInstrumentDigest(liveCandidates, player, today)[0]
         setPool(liveCandidates)
         setCandidate(nextDaily ?? null)
         setRanges([])
@@ -155,9 +158,9 @@ export default function TessDiscoveryScreen({ player, onBack, onBuildStation, on
         icon={<Radio size={22} />}
         tone="amber"
         title="Launch Transit Telescope"
-        body="A story mission is available from Mission Control. It is not attached to a client."
+        body="Deploy your own telescope from the Launchpad. Its daily data will downlink here after the flight."
         onBack={onBack}
-        action={<PrimaryBtn testId="open-transit-telescope-mission-btn" kind="amber" onClick={onOpenMissions}>Open Mission Board</PrimaryBtn>}
+        action={<PrimaryBtn testId="open-transit-telescope-program-btn" kind="amber" onClick={onOpenProgram}>Open Your Program</PrimaryBtn>}
       />
     )
   }
@@ -252,8 +255,8 @@ export default function TessDiscoveryScreen({ player, onBack, onBuildStation, on
                   onClick={() => setSectorIndex(index)}
                   style={{
                     padding: '4px 10px', borderRadius: 999, cursor: 'pointer',
-                    border: `1px solid ${index === sectorIndex ? 'rgba(245,166,35,0.6)' : 'rgba(126,200,255,0.2)'}`,
-                    background: index === sectorIndex ? 'rgba(245,166,35,0.14)' : 'rgba(8,16,28,0.5)',
+                    border: `1px solid ${index === sectorIndex ? 'rgba(245,166,35,0.6)' : 'rgba(112,217,234,0.2)'}`,
+                    background: index === sectorIndex ? 'rgba(245,166,35,0.14)' : 'rgba(20,20,23,0.5)',
                     color: index === sectorIndex ? 'var(--ln-amber)' : 'var(--ln-text-muted)',
                     fontFamily: 'var(--ln-font-display)', fontSize: 9, fontWeight: 800, letterSpacing: '0.1em',
                   }}
@@ -404,7 +407,7 @@ export default function TessDiscoveryScreen({ player, onBack, onBuildStation, on
 
   return (
     <div className="game-screen" data-testid="tess-discovery-screen">
-      <TopBar eyebrow="TESS ANOMALY" title={candidate.toi} onBack={onBack} />
+      <TopBar eyebrow="INSTRUMENT DATA FEED · DAILY DOWNLINK" title={candidate.toi} onBack={onBack} />
       {process.env.NODE_ENV === 'development' && (
         <div style={{ position: 'absolute', top: 72, left: 'var(--ln-s-4)', right: 'var(--ln-s-4)', zIndex: 5 }}>
           <DevDaySkipBar offset={devDayOffset} onAdvance={() => setDevDayOffset(o => o + 1)} onReset={() => setDevDayOffset(0)} />
@@ -494,7 +497,7 @@ function DevDaySkipBar({ offset, onAdvance, onReset }: { offset: number; onAdvan
   return (
     <div style={{
       display: 'flex', alignItems: 'center', gap: 8, padding: '6px 10px', marginBottom: 10,
-      borderRadius: 7, border: '1px dashed var(--ln-hairline-strong)', background: 'rgba(8,16,28,0.6)',
+      borderRadius: 7, border: '1px dashed var(--ln-hairline-strong)', background: 'rgba(20,20,23,0.6)',
     }}>
       <span style={{ fontFamily: 'var(--ln-font-mono)', fontSize: 9, color: 'var(--ln-text-muted)', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
         DEV · Simulated day {simulated.toISOString().slice(0, 10)} ({offset >= 0 ? '+' : ''}{offset}d)
@@ -532,8 +535,8 @@ function LiveDot({ active }: { active: boolean }) {
 function VerdictButton({ action, disabled, onClick }: { action: { id: TessVerdict; label: string; kind: 'amber' | 'cyan' | 'ghost' }; disabled: boolean; onClick: () => void }) {
   const palette: Record<typeof action.kind, { border: string; bg: string; color: string; glow: string }> = {
     amber: { border: 'rgba(245,166,35,0.7)', bg: 'linear-gradient(180deg, rgba(245,166,35,0.28), rgba(232,112,64,0.18))', color: 'var(--ln-amber-bright)', glow: 'rgba(245,166,35,0.4)' },
-    cyan:  { border: 'rgba(63,169,255,0.6)', bg: 'rgba(63,169,255,0.12)', color: 'var(--ln-cyan-bright)', glow: 'rgba(63,169,255,0.35)' },
-    ghost: { border: 'rgba(169,184,206,0.25)', bg: 'rgba(8,16,28,0.5)', color: 'var(--ln-text-muted)', glow: 'transparent' },
+    cyan:  { border: 'rgba(112,217,234,0.6)', bg: 'rgba(112,217,234,0.12)', color: 'var(--ln-cyan-bright)', glow: 'rgba(112,217,234,0.35)' },
+    ghost: { border: 'rgba(169,184,206,0.25)', bg: 'rgba(20,20,23,0.5)', color: 'var(--ln-text-muted)', glow: 'transparent' },
   }
   const p = palette[action.kind]
   return (

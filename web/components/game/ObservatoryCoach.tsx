@@ -69,7 +69,7 @@ export default function ObservatoryCoach({ onDismiss }: { onDismiss: () => void 
       style={{
         position: 'absolute',
         top: 70, left: 10, right: 10, zIndex: 60,
-        background: 'linear-gradient(160deg, rgba(10,22,42,0.98), rgba(6,13,26,0.98))',
+        background: 'linear-gradient(160deg, rgba(16,16,18,0.98), rgba(11,11,13,0.98))',
         border: '1.5px solid rgba(245,166,35,0.7)',
         borderRadius: 12,
         padding: '9px 11px',
@@ -79,7 +79,7 @@ export default function ObservatoryCoach({ onDismiss }: { onDismiss: () => void 
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 5 }}>
         <div style={{
           width: 22, height: 22, flexShrink: 0, borderRadius: '50%',
-          border: '1.5px solid var(--ln-cyan)', background: 'rgba(63,169,255,0.08)',
+          border: '1.5px solid var(--ln-cyan)', background: 'rgba(112,217,234,0.08)',
           display: 'grid', placeItems: 'center',
         }}>
           <div style={{ width: 8, height: 8, borderRadius: '50%', border: '1.5px solid var(--ln-cyan-bright)' }} />
@@ -107,8 +107,8 @@ export default function ObservatoryCoach({ onDismiss }: { onDismiss: () => void 
           {STEPS.map((_, i) => (
             <span key={i} style={{
               width: 6, height: 6, borderRadius: '50%',
-              background: i < step ? 'var(--ln-ok)' : i === step ? 'var(--ln-cyan)' : 'rgba(63,169,255,0.2)',
-              boxShadow: i === step ? '0 0 6px rgba(63,169,255,0.6)' : 'none',
+              background: i < step ? 'var(--ln-ok)' : i === step ? 'var(--ln-cyan)' : 'rgba(112,217,234,0.2)',
+              boxShadow: i === step ? '0 0 6px rgba(112,217,234,0.6)' : 'none',
             }} />
           ))}
         </div>

@@ -16,7 +16,7 @@ export default function CoachAvatar({ size = 44, talking }: CoachAvatarProps) {
       flexShrink: 0,
       background: 'radial-gradient(circle at 32% 28%, #6cc2ff, #2d8de0 60%, #1c4f86)',
       border: '2px solid #aef',
-      boxShadow: '0 0 14px rgba(63,169,255,0.7), inset 0 2px 0 rgba(255,255,255,0.4)',
+      boxShadow: '0 0 14px rgba(112,217,234,0.7), inset 0 2px 0 rgba(255,255,255,0.4)',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',

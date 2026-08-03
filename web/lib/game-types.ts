@@ -1,7 +1,7 @@
 // Landnam game — shared type definitions
 // Extracted from game-context.tsx so they can be imported without pulling in React context.
 
-import type { RocketConfig, Mission, Target, TessClassification, TessVerdict, TransitRange } from '@/lib/data'
+import type { RocketConfig, Mission, Target, TessClassification, TessVerdict, TransitRange, AsteroidClassification, AsteroidVerdict } from '@/lib/data'
 
 export interface DailyClientPool {
   date: string        // 'YYYY-MM-DD'
@@ -19,7 +19,9 @@ export type Screen =
   | 'targets'
   | 'fab'
   | 'transit'
+  | 'landing'
   | 'mining'
+  | 'delivery'
   | 'debrief'
   | 'refinery'
   | 'market'
@@ -28,8 +30,43 @@ export type Screen =
   | 'skills'
   | 'scan-station'
   | 'rover-mining'
+  | 'launchpad'
+  | 'surface-ops'
+  | 'academy'
+  | 'asteroid-discovery'
 
 export type LicenseGrade = 'Grade I' | 'Grade II' | 'Grade III'
+
+export type SettlementFerryStatus = 'in-flight' | 'delivered' | 'failed'
+
+export interface SettlementLaunchpadRecord {
+  pad: 0 | 1 | 2
+  startedAt: number
+  completesAt: number
+}
+
+export interface SettlementFerryRecord {
+  id: string
+  status: SettlementFerryStatus
+  manifest: Record<string, number>
+  dispatchedAt: number
+  arrivesAt: number
+  attempts: number
+  deliveredAt?: number
+  reconciledAt?: number
+  failureReason?: string
+}
+
+export interface SurfaceSiteProgress {
+  rightsPurchasedAt?: number
+  launchpad?: SettlementLaunchpadRecord
+  storage: Record<string, number>
+  ferry?: SettlementFerryRecord
+}
+
+export interface SurfaceOpsState {
+  sites: Record<string, SurfaceSiteProgress>
+}
 
 export interface Player {
   francs: number
@@ -37,7 +74,7 @@ export interface Player {
   // PocketBase mission_runs record for the current run. Kept in the save so a
   // refresh/resume continues updating the same server-side lifecycle record.
   missionRunId?: string
-  missionPhase?: 'transit' | 'mining' | 'debrief'
+  missionPhase?: 'transit' | 'landing' | 'mining' | 'delivery' | 'debrief'
   // Ore collected so far during an in-progress mining run, preserved across a
   // "Back to hub" pause so resuming the mission doesn't silently discard
   // already-collected cargo (that cargo only lived in MiningScreen's local
@@ -49,6 +86,19 @@ export interface Player {
   // zero (RoverMiningScreen would otherwise re-init its own Date.now() on
   // remount). Cleared once the run completes or is abandoned.
   roverMiningStartedAt?: number
+  // Wall-clock start of the cargo-transfer operation at a two-leg mission's
+  // delivery target. The unload scene derives progress from this epoch so
+  // remounts, hidden tabs, and Back-to-hub pauses cannot restart it.
+  deliveryUnloadStartedAt?: number
+  // Wall-clock start of the lander detach/descend sequence on arrival, and of
+  // the ascend/redock sequence after mining completes. Same "derive progress
+  // from a persisted epoch" pattern as roverMiningStartedAt/deliveryUnloadStartedAt.
+  landingStartedAt?: number
+  landingReturnStartedAt?: number
+  // True once the player has completed at least one lander redock. Gates
+  // Surface Ops alongside freeOperations — see "Surface Ops gated on landing
+  // research and lander module" (STS-640).
+  hasLanded?: boolean
   missionCount: number
   pendingLaunch: boolean
   placed: string[]
@@ -79,7 +129,7 @@ export interface Player {
   refineryBuilt: boolean
   refineryUnlocked?: boolean
   refineryUnlockNotified?: boolean
-  refineryQueue: { recipeId: string; startedAt: number }[]
+  refineryQueue: { recipeId: string; startedAt: number; durationMs?: number }[]
   refinedGoods: Record<string, number>
   launchpadUpgraded: boolean
   lastClient?: string
@@ -101,14 +151,37 @@ export interface Player {
   dailyClientPool?: DailyClientPool
   scannerBuilt?: boolean
   satelliteMonitoringBuilt?: boolean
+  // Subsurface deck (STS-633): the below-soil area starts unexcavated, and
+  // each room must be built into it individually before it holds live
+  // inventory — mirrors the surface Build·Place cost shape.
+  subsurfaceExcavated?: boolean
+  subsurfaceBuilt?: string[]
+  // Purchased/earned integer levels, not XP tracks (STS-606 decision): each
+  // is set/incremented directly by a build or mission event (EconomySystem,
+  // useGameLoop), never accumulated as XP against a curve. Do not route these
+  // through XPSystem or describe them as "progression" in UI copy — if they
+  // ever need fractional progress or a real curve, that's a new decision, not
+  // an assumed migration.
   satelliteMonitoringLevel?: number
   transitSatelliteLevel?: number
   transitSatelliteLaunchedAt?: number | null
+  // Deep Space Telescope (STS-622): a separate, one-time-build structure that
+  // gates the asteroid-discovery (NEOCP) instrument feed, the same way
+  // satelliteMonitoringBuilt gates the transit feed above. Not a tier on the
+  // transit satellite — its own build/unlock cost and level track.
+  deepSpaceTelescopeBuilt?: boolean
+  deepSpaceTelescopeLevel?: number
+  deepSpaceTelescopeLaunchedAt?: number | null
   scansUsedToday?: number
   scanDate?: string
   activeScan?: { targetId: string; completesAt: number } | null
   targetScanCounts?: Record<string, number>
   tessClassifications?: Record<string, TessClassification>
+  // Deep Space Telescope's asteroid-discovery (NEOCP) classifications
+  // (STS-622) — same shape/role as tessClassifications above, keyed by
+  // asteroid_candidates record id, but a separate map since it's a
+  // genuinely second instrument, not a variant of the transit feed.
+  asteroidClassifications?: Record<string, AsteroidClassification>
   // Player's satellite-pointing choice for the *next* daily downlink,
   // picked from the PixiGalaxyStarMap after classifying today's candidate.
   // Consumed (cleared) once that candidate becomes today's daily pick.
@@ -122,6 +195,11 @@ export interface Player {
   // player has already been notified about, so the poller doesn't re-fire
   // the same event every check.
   lastSeenConfirmedAt?: string | null
+  /**
+   * Last UTC digest date notified per owned instrument. Persisting this keeps
+   * the daily downlink from re-notifying after reloads or React remounts.
+   */
+  instrumentDigestNotifiedOn?: Record<string, string>
   discoveredExoplanetTargets?: Record<string, Target>
   clientStructures?: import('@/lib/data').ClientStructureRecord[]
   dailyQuestProgress?: import('@/lib/data').DailyQuestProgress[]
@@ -137,6 +215,30 @@ export interface Player {
   // rovers as roverDeployments above, surfaced as roster entries by
   // migrateCrewRoster; they are not a second, parallel rover system.
   crew?: import('@/lib/data').CrewMember[]
+  formerCrew?: import('@/lib/data').CrewRehireOffer[]
+  crewHiresLifetime?: number
+  crewHiresThisWeek?: number
+  crewHireWeek?: string
+  crewUpkeepSettledDate?: string
+  crewTraining?: import('@/lib/data').CrewTrainingSession[]
+  trainingSessionsUsedToday?: number
+  trainingDate?: string
+  missionCrewIds?: string[]
+  crewMissionAwards?: string[]
+  crewVisitedTargets?: string[]
+  structureCrewAssignments?: Record<string, string>
+  sharedChartsByClient?: Record<string, number>
+  academyResearched?: boolean
+  academyFunded?: boolean
+  academyXP?: number
+  crewModuleResearched?: boolean
+  // Landing research: unlocks the Lander Module ship room. Not a crew/academy
+  // mechanic — kept separate from academyResearched's prerequisite chain.
+  landingResearched?: boolean
+  // Solo Surface Ops state. Rights are a build-cost gate, not a shared-world
+  // claim. Ferry records retain a stable cargo-batch id and reconciliation
+  // timestamp so retries and reloads cannot credit one manifest twice.
+  surfaceOps?: SurfaceOpsState
 }
 
 export interface GameState {
@@ -149,11 +251,24 @@ export interface GameState {
   deliveryTargetId?: string | null
   rocket: RocketConfig
   lastCargo: Record<string, number> | null
+  // Receipt retained after a two-leg mission unloads the ship. `lastCargo`
+  // becomes an empty hold before the Earth-return leg, while Debrief still
+  // needs the delivered manifest to settle the contract.
+  deliveredCargo?: Record<string, number> | null
   tutorial: boolean
   doneSteps: Record<number, boolean>
   popup: string | null
   menuOpen: boolean
   pendingTerritoryClaimFor?: { targetId: string; clientId: string }
+  // Epoch ms this save was last written to localStorage on THIS device
+  // (STS-635). Stamped by the localStorage persist effect in game-context.tsx.
+  // Used only as a tie-breaker in mergeRemoteState when missionsDone is equal
+  // on both sides — the remote side's equivalent signal is PocketBase's own
+  // `updated` autodate field on the game_states record (not this field; the
+  // remote record's JSON blob does not need its own copy since the load path
+  // reads the record's system timestamp directly). missionsDone remains the
+  // primary onboarding-stage signal; this only disambiguates true ties.
+  updatedAt?: number
 }
 
 import type React from 'react'
@@ -189,6 +304,7 @@ export interface GameActions {
   onLaunch: () => void
   onMiningDone: (cargo: Record<string, number>) => void
   onDeliveryArrived: () => void
+  onDeliveryUnloadComplete: () => void
   onReturnArrived: () => void
   onDebriefDone: (total: number, affinity: number, consumed?: Record<string, number>) => void
   coachManualNext: () => void
@@ -197,6 +313,8 @@ export interface GameActions {
   signOut: () => void
   upgradeLaunchpad: () => void
   placeStructure: (structure: import('@/lib/data').StructureBlueprint | undefined, kind: string, plot: number) => void
+  excavateSubsurface: () => void
+  buildSubsurfaceRoom: (roomId: import('@/lib/data').SubsurfaceRoomId) => void
   sellMinerals: (mineralId: string, amount: number) => void
   onStartRefine: (recipeId: string) => void
   onCollectRefined: (recipeId: string) => void
@@ -209,11 +327,32 @@ export interface GameActions {
   launchTransitSatellite: () => void
   submitTessClassification: (subjectId: string, verdict: TessVerdict, ranges: TransitRange[], discoveredTarget?: Target) => void
   chooseSatelliteTarget: (subjectId: string) => void
+  submitAsteroidClassification: (candidateId: string, verdict: AsteroidVerdict) => void
   onRoverMiningDone: (cargo: Record<string, number>) => void
+  onLandingTouchdown: () => void
+  onRedockComplete: (cargo: Record<string, number>) => void
   confirmShipCustomizerBuild: (installed: Partial<Record<import('@/lib/data').ShipRoomKind, string>>, prevInstalled: Partial<Record<import('@/lib/data').ShipRoomKind, string>>) => boolean
+  purchaseTerrainRights: (siteId: string) => void
+  buildSettlementLaunchpad: (siteId: string, pad: 0 | 1 | 2) => void
+  recordSurfaceMined: (siteId: string, mineralId: string, amount: number) => void
+  dispatchSurfaceFerry: (siteId: string) => void
+  retrySurfaceFerry: (siteId: string) => void
+  reconcileSurfaceFerry: (siteId: string) => void
+  acknowledgeSurfaceFerry: (siteId: string) => void
   gainResearchXP: (amount: number) => void
   upgradeLicenseGrade: (grade: Exclude<LicenseGrade, 'Grade I'>) => void
   unlockBlueprint: (blueprintId: string, costFrancs?: number, costXP?: number, costMaterials?: Record<string, number>) => void
+  researchAcademy: () => void
+  researchLanding: () => void
+  setAcademyFunding: (funded: boolean) => void
+  hireCrew: (sourceId: string) => void
+  rehireCrew: (crewId: string) => void
+  startCrewTraining: (crewId: string, branch: import('@/lib/data').SkillBranch) => void
+  startCandidateTraining: (branch: import('@/lib/data').SkillBranch) => void
+  collectCrewTraining: (sessionId: string) => void
+  researchCrewModule: () => void
+  assignCrewToStructure: (structureId: string, crewId: string | null) => void
+  shareChartsWithClient: (clientId: string) => void
   toasts: Toast[]
   addToast: (message: string, kind?: Toast['kind']) => void
   dismissToast: (id: string) => void

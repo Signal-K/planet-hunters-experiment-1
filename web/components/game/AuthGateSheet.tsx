@@ -18,8 +18,8 @@ export default function AuthGateSheet({ error, onSignIn, onCreateAccount, onSkip
 
   const inputStyle: React.CSSProperties = {
     width: '100%', padding: '12px 14px',
-    background: 'rgba(8,16,28,0.8)',
-    border: '1px solid rgba(63,169,255,0.3)',
+    background: 'rgba(20,20,23,0.8)',
+    border: '1px solid rgba(112,217,234,0.3)',
     borderRadius: 10, outline: 'none',
     fontFamily: 'var(--ln-font-body)', fontSize: 14, color: '#e6efff',
     boxSizing: 'border-box',
@@ -61,8 +61,8 @@ export default function AuthGateSheet({ error, onSignIn, onCreateAccount, onSkip
           {(['signin', 'signup'] as const).map(m => (
             <button key={m} onClick={() => setMode(m)} style={{
               flex: 1, padding: '8px 0',
-              background: mode === m ? 'rgba(63,169,255,0.15)' : 'transparent',
-              border: `1px solid ${mode === m ? 'rgba(63,169,255,0.5)' : 'rgba(63,169,255,0.15)'}`,
+              background: mode === m ? 'rgba(112,217,234,0.15)' : 'transparent',
+              border: `1px solid ${mode === m ? 'rgba(112,217,234,0.5)' : 'rgba(112,217,234,0.15)'}`,
               borderRadius: 10, cursor: 'pointer',
               fontFamily: 'var(--ln-font-display)', fontSize: 11, fontWeight: 800,
               letterSpacing: '0.14em', textTransform: 'uppercase',

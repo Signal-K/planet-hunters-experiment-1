@@ -6,7 +6,7 @@ import type { Player, Screen } from '@/lib/game-types'
 // would be redundant (or would float over live mining/transit UI) if shown
 // on any of these, so it only surfaces once the player has actually
 // navigated away to Base/Missions/Atlas/Build/Market.
-const MISSION_FLOW_SCREENS: Screen[] = ['transit', 'mining', 'rover-mining', 'debrief']
+const MISSION_FLOW_SCREENS: Screen[] = ['transit', 'mining', 'rover-mining', 'delivery', 'debrief']
 
 interface MissionTickerProps {
   player: Player
@@ -38,9 +38,9 @@ export default function MissionTicker({ player, screen, onResume }: MissionTicke
         gap: 10,
         padding: '10px 14px',
         borderRadius: 10,
-        background: 'linear-gradient(180deg, rgba(10,18,29,0.92), rgba(6,12,22,0.94))',
-        border: '1px solid rgba(63,169,255,0.4)',
-        boxShadow: '0 6px 18px rgba(0,0,0,0.45), 0 0 16px rgba(63,169,255,0.15)',
+        background: 'linear-gradient(180deg, rgba(24,24,28,0.92), rgba(11,11,13,0.94))',
+        border: '1px solid rgba(112,217,234,0.4)',
+        boxShadow: '0 6px 18px rgba(0,0,0,0.45), 0 0 16px rgba(112,217,234,0.15)',
         backdropFilter: 'blur(8px)',
         cursor: 'pointer',
         textAlign: 'left',
@@ -68,7 +68,7 @@ export default function MissionTicker({ player, screen, onResume }: MissionTicke
       <span style={{
         flexShrink: 0,
         padding: '5px 10px', borderRadius: 8,
-        background: 'rgba(63,169,255,0.15)', border: '1px solid rgba(63,169,255,0.5)',
+        background: 'rgba(112,217,234,0.15)', border: '1px solid rgba(112,217,234,0.5)',
         color: 'var(--ln-cyan)',
         fontFamily: 'var(--ln-font-display)', fontSize: 9, fontWeight: 800,
         letterSpacing: '0.12em', textTransform: 'uppercase',

@@ -81,7 +81,9 @@ export default function MissionDetailPanel({
       </div>
 
       <div className={styles.detailWants}>
-        {ownOperation
+        {mission.programReward
+          ? `Program outcome · ${mission.programReward.outcome}`
+          : ownOperation
           ? 'Your own operation · no client, no order to fill'
           : isStoryMission
           ? 'Story mission · not a client request'
@@ -100,9 +102,15 @@ export default function MissionDetailPanel({
         <span className={styles.detailChip} data-testid={`mission-detail-difficulty-${mission.id}`}>
           <b>{mission.difficulty}</b>&nbsp;{missionDifficultyLabel(mission.difficulty)}
         </span>
-        <span className={styles.detailChip} data-testid={`mission-detail-payout-tier-${mission.id}`}>
-          {missionPayoutTier(mission)}&nbsp;payout
-        </span>
+        {mission.programReward ? (
+          <span className={styles.detailChip} data-testid={`mission-detail-program-reward-${mission.id}`}>
+            <b>+{mission.programReward.researchXP}</b>&nbsp;Research XP
+          </span>
+        ) : (
+          <span className={styles.detailChip} data-testid={`mission-detail-payout-tier-${mission.id}`}>
+            {missionPayoutTier(mission)}&nbsp;payout
+          </span>
+        )}
         {client && <span className={`${styles.detailChip} ${styles.detailChipPay}`}><b>+{Math.round(client.payoutPremium * 100)}%</b>&nbsp;Pay bonus</span>}
         {!isStoryMission && client && <span className={`${styles.detailChip} ${styles.detailChipAff}`}><b>+{affinityReward}</b>&nbsp;Affinity</span>}
       </div>

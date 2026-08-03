@@ -52,18 +52,15 @@ describe('asset manifest', () => {
     expect(dupes).toEqual([])
   })
 
-  // Pre-existing hand-made sprites that blow the budget. Pinned rather than
-  // waved through: together they are ~3.7 MB, against 39 KB for all eight
-  // Blender-rendered sprites combined — roughly 100x per asset. They are
-  // photographic-looking PNGs in a game whose art direction is flat faceted
-  // colour, so re-rendering them through the Blender pipeline should shrink
-  // them by two orders of magnitude *and* put them on-style.
+  // Pre-existing hand-made sprites that used to blow the budget — all seven
+  // (ship_sr1/sr2/cutaway, four room interiors) were re-rendered through the
+  // Blender pipeline (STS-611) and now fit well under SIZE_BUDGET_BYTES like
+  // everything else, so the list is empty rather than removed outright: it's
+  // the record of what "photographic PNG in a flat-faceted game" looked like,
+  // and the guard that catches anything sliding back into that shape.
   //
   // This list may shrink. It must never grow.
-  const LEGACY_OVERSIZED = new Set([
-    'ship_sr1', 'ship_sr2', 'ship_sr1_cutaway',
-    'room_cockpit_t1', 'room_engine_t1', 'room_cargo_bay_t1', 'room_mining_t1',
-  ])
+  const LEGACY_OVERSIZED = new Set<string>([])
   const SIZE_BUDGET_BYTES = 250_000
 
   it('keeps every new sprite small enough to be worth shipping', () => {
@@ -103,9 +100,10 @@ describe('Blender-rendered sprites', () => {
     expect(unregistered).toEqual([])
   })
 
-  it('renders the six Earth Base structure slots hubScene declares', () => {
+  it('renders the Earth Base structure slots hubScene declares', () => {
     for (const name of [
-      'hub_pad_base', 'hub_pad_tower', 'hub_pad_gantry',
+      'hub_pad_deck', 'hub_pad_gantry_frame', 'hub_pad_swing_arm',
+      'hub_pad_clamp', 'hub_pad_mast', 'hub_pad_tank',
       'hub_depot_tank', 'hub_scan_dish', 'hub_cmd_building',
     ]) {
       expect({ name, present: name in manifest }).toEqual({ name, present: true })

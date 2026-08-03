@@ -1,6 +1,10 @@
 <!-- LANDNAM PROJECT REQUIREMENTS START -->
 # Landnam — Agent Instructions
 
+## Desk-first agent workflow
+
+Desk is the sole project-management system for Landnam. Before changing code, resolve the relevant Desk ticket or create one with `create_ticket`. During work, update it when scope, status, blockers, or decisions change. Before finishing, add implementation evidence and tests with `add_comment`, move it to the correct Desk status, attach useful file references with `attach_file_ref`, and include the Desk key in the commit subject or body. Never use Knowns, `.knowns`, Plate, or workspace ticket Markdown as a replacement for Desk ticket state. If no Desk key exists, stop before committing and create or resolve the ticket.
+
 > **Canonical guidance**: Read `KNOWNS.md` in the repository root for full workflow rules. This file covers Landnam-specific repo layout and conventions only.
 
 ## Knowns Project Root
@@ -31,10 +35,10 @@ For CLI workflows, run `knowns ...` commands from `/Users/scroobz/Navigation` or
 ## What this project is
 
 Landnam is a mining and resource-management game in the Star Sailors ecosystem.
-Players manage a space program: build rockets, accept contractor jobs, fly to
+Players manage a space program: build rockets, accept client jobs, fly to
 targets, mine minerals, sell cargo, and reinvest. The active onboarding scope is
-M1 and M2. M2 uses the newer SR2 purchase flow. M3 is not yet fully described;
-do not revive earlier onboarding or post-onboarding plans.
+M1 and M2. M2 uses the newer Prospector purchase flow. M3 is not yet fully
+described; do not revive earlier onboarding or post-onboarding plans.
 
 ## Tech stack
 
@@ -59,7 +63,7 @@ Design rules (never violate):
 - No emoji. Status = shape + color + label
 - UPPERCASE + letter-spacing for all instrument labels and CTAs
 - Hairlines: ghosted cyan at 18% alpha (`--ln-hairline`)
-- **Theme is split by surface type, not global.** Operations screens (Launchpad, Mining HUD, Transit, Debrief, live Mission Board contract list) use the dark command-deck theme (`.theme-deep`, the default). Reference/guide/market/menu-style surfaces (e.g. `ClientBonusGuideSheet`) use the light editorial theme (`.theme-light`) — background/surface/text go light, `--ln-cyan`/`--ln-amber` stay as accents. This is not a user-facing toggle. See `workspace/decisions/landnam-light-theme-for-reference-and-menu-surfaces.md` for full rationale.
+- **Theme is split by surface type, not global.** Operations screens (Mining HUD, Transit, Debrief, live Mission Board contract list) use the dark command-deck theme (`.theme-deep`, the default). Reference/guide/market/menu-style surfaces (e.g. `ClientBonusGuideSheet`) use the light editorial theme (`.theme-light`) — background/surface/text go light, `--ln-cyan`/`--ln-amber` stay as accents. This is not a user-facing toggle. See `workspace/decisions/landnam-light-theme-for-reference-and-menu-surfaces.md` for full rationale. **Launchpad is a documented exception, not a violation**: STS-630 (decided 2026-07-31, ZenNotes `projects/landnam/decisions/landnam-scene-panel-background-direction-2026-07-31.md`) gave the Launchpad screen specifically a lit "scene panel" sky/ground background with white instrument cards (`.ln-scene-launchpad` in `globals.css`), superseding the flat dark-fill rule for that one screen only — do not "fix" it back to dark theme.
 - **Full design language reference**: `workspace/projects/landnam/decisions/landnam-ui-design-language-style-prompt.md` (ZenNotes) is the canonical doc — complete `--ln-*` color token table, texture/rendering preferences (chunky cel-shaded faceted flat color, no grain/noise/scanline), game-style references (Crashlands, Tiny Space Program, Out There: Omega), and the component vocabulary. Read it before any visual/UI design work — this direction changed twice in three days (2026-07-22 → 2026-07-23), so don't trust a cached summary of it, including this one; check the doc and `web/app/globals.css`'s `:root` comment directly.
 - **One dark-navy palette everywhere** (Mining, Transit, launch sequence, Mission Board, Target Picker, Rocket Purchase, Debrief all use `.theme-deep`) — an earlier mid-tone "steel/light-card" direction for Mission Board/Target Picker/Rocket Purchase (STS-494, decided 2026-07-22) was tried in code and **explicitly reverted 2026-07-23** for looking washed-out/illegible; don't reintroduce it. `.theme-light` (STS-413) remains separate, for reference/guide/market surfaces only.
 - **Amber (`--ln-amber`) is restricted to genuine payout/reward emphasis in small elements only** — never a panel accent, headline, primary button, or generic UI chrome (sort controls, info panels, dismiss buttons). This rule survived both 2026-07-22 and 2026-07-23 revisions unchanged and was found actively violated in shipped Mission Board/Rocket Purchase code as of 2026-07-24 (fixed same day in `MissionBoardScreen.tsx`, `MissionCard.tsx`, `RocketPurchaseScreen.tsx` — default fallback accents and UI chrome switched from amber to cyan). A contractor's own data-defined brand color (e.g. Helios Propulsion `#f5a623`) is a separate, legitimate per-client-identity concern and is not covered by this rule.
@@ -116,8 +120,8 @@ PocketBase superuser (both): `liam@skinetics.tech` / `ThisIsATestPassword`
 
 - Parts unlock via `missionsRequired` field (not level/XP — those are removed)
 - `suggestBuild()` in `data.ts` takes `missionsDone` (not `level`)
-- M1 complete → SR2 is available as a purchasable prebuilt starter rocket
-- Starter rockets are single-use/unibody during onboarding
+- M1 complete → Prospector is available as a purchasable prebuilt rocket model
+- Prebuilt rocket models are single-use/unibody during onboarding (STS-604 retired "starter rocket" — see `web/lib/data/rockets.ts`)
 - Post-onboarding custom shipbuilding is not active until a new design is written
 
 ## Testing

@@ -10,6 +10,7 @@ import {
   OFFLINE_MISSION_COUNT,
   generateFreeOpsMissionsFromRules,
   generateMissionsFromRules,
+  generateSelfDirectedMiningPoolFromRules,
 } from './mission-generator'
 
 export { FREE_OPS_START_MISSIONS_DONE, OFFLINE_MISSION_COUNT }
@@ -27,6 +28,15 @@ export function generateFreeOpsMissions(): Mission[] {
   return generateFreeOpsMissionsFromRules({ clients: CLIENT_SLOTS, minerals: MINERAL_META })
 }
 
+// Renewable self-directed mining pool — reuses Free Ops' template pool,
+// rotation cadence, and mineral-eligibility filtering (see
+// generateSelfDirectedMiningPoolFromRules), but never assigns a client. This
+// is the pool form of the mechanic; SELF_DIRECTED_MINING_MISSION_ID above
+// remains as the fixed M3-adjacent tutorial intro to it.
+export function generateSelfDirectedMiningPool(): Mission[] {
+  return generateSelfDirectedMiningPoolFromRules({ clients: CLIENT_SLOTS, minerals: MINERAL_META })
+}
+
 // M3 onboarding: the player picks between two clients offering a
 // two-leg transport job (mine at the pickup target, deliver to a second
 // target, then fly home) — the self-directed "Independent Prospect" custom
@@ -36,8 +46,25 @@ export const M3_SEQUENCE = 3
 
 // Free Ops self-directed mining — no client, no daily limit, no cooldown.
 export const SELF_DIRECTED_MINING_MISSION_ID = 'freeops-self-directed-mining'
+export const ACADEMY_INTRO_MISSION_ID = 'story-astronaut-academy'
 
 export const AUTHORED_MISSIONS: Mission[] = [
+  {
+    id: ACADEMY_INTRO_MISSION_ID,
+    title: 'Train the First Astronaut',
+    brief: 'Establish the Astronaut Academy at Earth Base, fund its first day-long session, and graduate a named astronaut into your roster.',
+    tag: 'STORY',
+    difficulty: 'L1',
+    locked: true,
+    sequence: FREE_OPS_START_MISSIONS_DONE + 1,
+    unlockAt: 'Reach affinity level 2 with two clients',
+    requires: { minerals: {}, cargo_min: 0, drill_tier: 1, max_orbit: 0 },
+    programReward: {
+      researchXP: 0,
+      outcome: 'Astronaut Academy online · crew training unlocked',
+    },
+    payout: { francs: 0, affinity: 0 },
+  },
   {
     id: 'lnm_m3_relay_bennu_vesta',
     title: 'Belt Courier Run',
@@ -142,6 +169,26 @@ export const AUTHORED_MISSIONS: Mission[] = [
       affinity: 0,
     },
   },
+  {
+    id: 'freeops-crewed-prospecting',
+    title: 'Crewed Prospecting Flight',
+    brief: 'Ferrum wants a trained mining specialist aboard to assess a surface before automated construction begins. The first qualified astronaut to reach Eros earns a frontier bonus.',
+    client: 'ferrum-orbital-construction',
+    tag: 'CREW',
+    difficulty: 'L2',
+    locked: false,
+    sequence: FREE_OPS_START_MISSIONS_DONE + 1,
+    unlockAt: 'Build the Astronaut Academy and fit Crew Quarters',
+    targetId: 'eros',
+    requires: {
+      minerals: { nickel: 2 },
+      cargo_min: 2,
+      drill_tier: 1,
+      max_orbit: 2,
+      crew: { branch: 'mining', minTier: 1, minLevel: 1 },
+    },
+    payout: { francs: missionPayoutFloor(4), affinity: 4 },
+  },
 ]
 
-export const MISSIONS: Mission[] = [...generateMissions(), ...AUTHORED_MISSIONS, ...generateFreeOpsMissions()]
+export const MISSIONS: Mission[] = [...generateMissions(), ...AUTHORED_MISSIONS, ...generateFreeOpsMissions(), ...generateSelfDirectedMiningPool()]

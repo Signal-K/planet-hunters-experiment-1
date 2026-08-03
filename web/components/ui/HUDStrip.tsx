@@ -9,6 +9,8 @@ interface HUDStripProps {
   player: Player
   /** Shows the mineral-stash chip row below the francs/jobs chips when the player has cargo. Off by default since not every HUD placement wants it. */
   showStash?: boolean
+  /** Second direct entry to the Mission Board, alongside the launchpad. Omit to keep the Jobs chip a plain readout. */
+  onJobsClick?: () => void
 }
 
 function FrancGlyph() {
@@ -41,26 +43,32 @@ function MineralGlyph({ shape, color }: { shape?: string; color: string }) {
  * for genuine payout emphasis, and the Earth Base mockup carries no amber at
  * all — the chrome reads cyan/mint against the blue sky instead.
  */
-function Chip({ glyph, children, accent = 'var(--hub-cyan)' }: { glyph: React.ReactNode; children: React.ReactNode; accent?: string }) {
+function Chip({ glyph, children, accent = 'var(--hub-cyan)', onClick, testId }: { glyph: React.ReactNode; children: React.ReactNode; accent?: string; onClick?: () => void; testId?: string }) {
+  const Tag = onClick ? 'button' : 'div'
   return (
-    <div style={{
-      display: 'flex', alignItems: 'center', gap: 7,
-      background: 'rgba(0,10,24,0.72)',
-      border: '1.5px solid var(--hub-outline)',
-      borderRadius: 7, padding: '6px 10px 6px 6px',
-    }}>
+    <Tag
+      data-testid={testId}
+      onClick={onClick}
+      style={{
+        display: 'flex', alignItems: 'center', gap: 7,
+        background: 'rgba(10,10,12,0.72)',
+        border: '1.5px solid var(--hub-outline)',
+        borderRadius: 7, padding: '6px 10px 6px 6px',
+        cursor: onClick ? 'pointer' : undefined,
+      }}
+    >
       <span style={{
         width: 20, height: 20, borderRadius: 5, display: 'grid', placeItems: 'center',
-        background: 'rgba(0,10,24,0.6)', border: `1.5px solid ${accent}`, color: accent,
+        background: 'rgba(10,10,12,0.6)', border: `1.5px solid ${accent}`, color: accent,
       }}>
         {glyph}
       </span>
       {children}
-    </div>
+    </Tag>
   )
 }
 
-export default function HUDStrip({ player, showStash = false }: HUDStripProps) {
+export default function HUDStrip({ player, showStash = false, onJobsClick }: HUDStripProps) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 6, alignItems: 'flex-end' }}>
       <Chip glyph={<FrancGlyph />}>
@@ -68,7 +76,7 @@ export default function HUDStrip({ player, showStash = false }: HUDStripProps) {
           {formatCurrency(player.francs, { compact: true })}
         </span>
       </Chip>
-      <Chip glyph={<JobsGlyph />}>
+      <Chip glyph={<JobsGlyph />} onClick={onJobsClick} testId="hud-jobs-chip">
         <span style={{ fontFamily: 'var(--ln-font-display)', fontWeight: 800, fontSize: 9, letterSpacing: '0.14em', color: '#fff', textTransform: 'uppercase' }}>
           {player.missionCount} Jobs
         </span>
@@ -82,13 +90,13 @@ export default function HUDStrip({ player, showStash = false }: HUDStripProps) {
               <div key={kind} style={{
                 display: 'flex', alignItems: 'center', gap: 5,
                 padding: '3px 8px 3px 4px',
-                background: 'rgba(0,10,24,0.72)',
+                background: 'rgba(10,10,12,0.72)',
                 border: '1.5px solid rgba(255,255,255,0.35)',
                 borderRadius: 7,
               }}>
                 <span style={{
                   width: 16, height: 16, borderRadius: 4, display: 'grid', placeItems: 'center',
-                  background: 'rgba(0,10,24,0.6)', border: `1.5px solid ${meta.color}`, color: meta.color,
+                  background: 'rgba(10,10,12,0.6)', border: `1.5px solid ${meta.color}`, color: meta.color,
                 }}>
                   <MineralGlyph shape={meta.shape} color={meta.color} />
                 </span>

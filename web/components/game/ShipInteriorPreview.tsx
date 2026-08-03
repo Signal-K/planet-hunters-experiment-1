@@ -28,6 +28,8 @@ interface ShipInteriorPreviewProps {
   installedParts?: InstalledCustomizerPartsByKind
   onConfirm?: (installed: InstalledCustomizerPartsByKind, prevInstalled: InstalledCustomizerPartsByKind) => boolean
   onClose?: () => void
+  crewModuleResearched?: boolean
+  landingResearched?: boolean
 }
 
 interface BuildStep {
@@ -45,6 +47,8 @@ const STEP_DETAILS: Record<ShipRoomKind, Omit<BuildStep, 'kind'>> = {
   fairing:       { title: 'Payload Fairing',      body: 'Nose cone protects cargo during ascent. Jettisoned at separation altitude.' },
   'docking-port':{ title: 'Docking Port',         body: 'Enables cargo transfer at orbital stations or relay depots.' },
   'heat-shield': { title: 'Re-entry Shield',      body: 'Protects the return vehicle and payload during atmospheric deceleration.' },
+  'crew-module': { title: 'Crew Quarters',         body: 'Adds two pressurised seats for qualified astronauts on larger hulls.' },
+  lander:        { title: 'Lander Module',         body: 'Detaches to descend and land on a target, then re-docks with the ship in orbit.' },
 }
 
 export default function ShipInteriorPreview({
@@ -54,6 +58,8 @@ export default function ShipInteriorPreview({
   installedParts,
   onConfirm,
   onClose,
+  crewModuleResearched = false,
+  landingResearched = false,
 }: ShipInteriorPreviewProps) {
   const layout = getShipInteriorLayout(rocketId)
   const [buildState, setBuildState] = useState(() => ({
@@ -63,7 +69,7 @@ export default function ShipInteriorPreview({
   const [stepIndex, setStepIndex] = useState(0)
   if (!layout) return null
 
-  const sequence = getBuildSequence(missionsDone)
+  const sequence = getBuildSequence(missionsDone, crewModuleResearched, landingResearched)
   const buildSteps: BuildStep[] = sequence.map(kind => ({ kind, ...STEP_DETAILS[kind] }))
   const step = buildSteps[stepIndex]
   const installedIds = selectedCustomizerPartIds(buildState.installed, sequence)
@@ -147,7 +153,7 @@ export default function ShipInteriorPreview({
       {/* ── SHIP DIAGRAM (PixiJS, glass-framed with corner brackets) ── */}
       <div style={{ flex: 'none', maxHeight: '28%', padding: 6 }}>
         <Panel surface="glass" style={{ padding: 0, overflow: 'hidden' }}>
-          <ErrorBoundary fallback={<div style={{ height: 80, background: 'rgba(8,12,22,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'var(--ln-font-mono)', fontSize: 10, color: 'var(--ln-text-muted)', letterSpacing: '0.1em' }}>DIAGRAM UNAVAILABLE</div>}>
+          <ErrorBoundary fallback={<div style={{ height: 80, background: 'rgba(12,12,13,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'var(--ln-font-mono)', fontSize: 10, color: 'var(--ln-text-muted)', letterSpacing: '0.1em' }}>DIAGRAM UNAVAILABLE</div>}>
             <ShipCustomizerCanvas
               layout={layout}
               activeKind={step.kind}

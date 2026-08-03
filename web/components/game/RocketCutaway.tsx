@@ -30,7 +30,7 @@ export default function RocketCutaway({ rocket, activeRoom, onToggle }: RocketCu
           and all) on every hover/press of a room, which showed up as input lag
           on the Select Rocket step. */}
       <div data-testid="rocket-cutaway" style={{ position: 'relative', width: '100%', maxWidth: 600, aspectRatio: '600 / 260' }}>
-        <svg viewBox="0 0 600 260" fill="none" aria-hidden="true" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', filter: 'drop-shadow(0 0 26px rgba(63,169,255,0.22))' }}>
+        <svg viewBox="0 0 600 260" fill="none" aria-hidden="true" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', filter: 'drop-shadow(0 0 26px rgba(112,217,234,0.22))' }}>
           <path d="M18 130 L70 70 L520 70 Q580 130 520 190 L70 190 Z" fill="#0a2a56" stroke="#70d9ea" strokeWidth="2" />
           <path d="M70 70v120M520 70v120M70 130h450" stroke="#70d9ea" strokeOpacity=".22" strokeDasharray="5 8" />
           <ellipse cx="588" cy="130" rx="20" ry="16" fill="#70d9ea" opacity=".55" /><ellipse cx="596" cy="130" rx="32" ry="11" fill="#70d9ea" opacity=".22" />

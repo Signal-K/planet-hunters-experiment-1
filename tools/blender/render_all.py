@@ -28,7 +28,7 @@ for p in (HERE, os.path.join(HERE, "models")):
 
 import landnam_kit as kit  # noqa: E402
 
-MODULES = ["hub_structures", "actors"]
+MODULES = ["hub_structures", "launchpad", "actors", "ships", "rooms"]
 
 
 def parse_args():

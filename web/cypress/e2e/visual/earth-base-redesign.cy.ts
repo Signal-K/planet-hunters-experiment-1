@@ -121,6 +121,51 @@ describe('Earth Base — redesigned scene', () => {
     cy.screenshot('earth-base-03-desktop-full', { capture: 'viewport' })
   })
 
+  it('portrait — below-soil storage and habitat cutaway', () => {
+    cy.viewport(390, 844)
+    openHub({
+      missionsDone: 4,
+      missionCount: 4,
+      freeOperations: true,
+      stash: { iron: 12, silicon: 5, gold: 2 },
+      shipCustomizerParts: {
+        engine: 'ion-thruster-t1',
+        payload: 'cargo-payload-t1',
+      },
+      subsurfaceExcavated: true,
+      subsurfaceBuilt: ['mineral-vault', 'parts-locker'],
+    })
+    cy.contains('button', 'Subsurface').click({ scrollBehavior: false })
+    cy.get('[data-testid="subsurface-facility-cutaway"]', { timeout: 10000 })
+      .should('be.visible')
+    cy.contains('Storage & habitat deck').should('be.visible')
+    cy.contains('Mineral Vault').should('be.visible')
+    cy.contains('Parts Stores').should('be.visible')
+    cy.contains('Habitat Training').should('be.visible')
+    cy.contains('Commodity Exchange').should('not.exist')
+    cy.screenshot('earth-base-04-portrait-subsurface', { capture: 'viewport' })
+  })
+
+  it('desktop — below-soil storage and habitat cutaway', () => {
+    cy.viewport(1440, 900)
+    openHub({
+      missionsDone: 4,
+      missionCount: 4,
+      freeOperations: true,
+      stash: { iron: 12, silicon: 5, gold: 2 },
+      shipCustomizerParts: {
+        engine: 'ion-thruster-t1',
+        payload: 'cargo-payload-t1',
+      },
+      subsurfaceExcavated: true,
+      subsurfaceBuilt: ['mineral-vault', 'parts-locker'],
+    })
+    cy.contains('button', 'Subsurface').click({ scrollBehavior: false })
+    cy.get('[data-testid="subsurface-facility-cutaway"]', { timeout: 10000 })
+      .should('be.visible')
+    cy.screenshot('earth-base-05-desktop-subsurface', { capture: 'viewport' })
+  })
+
   it('portrait — edit mode toolbar', () => {
     cy.viewport(390, 844)
     openHub({ missionsDone: 4, missionCount: 4, freeOperations: true })
@@ -130,7 +175,7 @@ describe('Earth Base — redesigned scene', () => {
     // before clicking and the screenshot captures that instead of the surface.
     cy.contains('button', 'Edit · Build').click({ scrollBehavior: false })
     cy.wait(600)
-    cy.screenshot('earth-base-04-portrait-edit', { capture: 'viewport' })
+    cy.screenshot('earth-base-06-portrait-edit', { capture: 'viewport' })
   })
 
   it('portrait — build/place screen', () => {
@@ -142,6 +187,6 @@ describe('Earth Base — redesigned scene', () => {
     cy.contains('button', 'New Structure').click({ scrollBehavior: false })
     cy.get('[data-testid="build-plot-1"]', { timeout: 20000 }).should('exist').click({ scrollBehavior: false })
     cy.wait(1200)
-    cy.screenshot('earth-base-05-portrait-build', { capture: 'viewport' })
+    cy.screenshot('earth-base-07-portrait-build', { capture: 'viewport' })
   })
 })

@@ -56,7 +56,7 @@ export default function SkillTreeScreen({
           </div>
           <div style={{ display: 'flex', gap: 4, marginBottom: 8 }}>
             {LICENSE_GRADE_ORDER.map((grade, i) => (
-              <div key={grade} style={{ flex: 1, height: 6, borderRadius: 2, background: i <= gradeIndex ? 'var(--ln-cyan)' : 'rgba(63,169,255,0.15)', border: '1px solid rgba(63,169,255,0.3)' }} />
+              <div key={grade} style={{ flex: 1, height: 6, borderRadius: 2, background: i <= gradeIndex ? 'var(--ln-cyan)' : 'rgba(112,217,234,0.15)', border: '1px solid rgba(112,217,234,0.3)' }} />
             ))}
           </div>
           <div style={{ fontFamily: 'var(--ln-font-mono)', fontSize: 11, color: '#a9b8ce', marginBottom: nextGrade ? 12 : 0 }}>

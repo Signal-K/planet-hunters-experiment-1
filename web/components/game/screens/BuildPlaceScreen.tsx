@@ -28,6 +28,8 @@ const STRUCTURE_COLORS: Record<string, string> = {
   refinery: '#f5a623',
   'scan-station': '#39d36a',
   'satellite-monitoring-station': '#7ec8ff',
+  'deep-space-telescope': '#9d7cff',
+  'astronaut-academy': '#6cc2ff',
 }
 
 interface BuildPlaceScreenProps {
@@ -40,7 +42,10 @@ interface BuildPlaceScreenProps {
     placed: string[]
     freeOperations: boolean
     refineryUnlocked?: boolean
+    academyResearched?: boolean
     placementPlots?: Record<string, number>
+    satelliteMonitoringLevel?: number
+    clientMissions?: Record<string, number>
   }
 }
 
@@ -102,7 +107,7 @@ export default function BuildPlaceScreen({ onPlaced, onBack, hasCoach, player }:
   const canSelectStructure = (structure: StructureBlueprint) => {
     const alreadyBuilt = player.placed.includes(structure.id)
     return !alreadyBuilt
-      && structureUnlocked(structure, { refineryUnlocked: player.refineryUnlocked, placed: player.placed, freeOperations: player.freeOperations })
+      && structureUnlocked(structure, { refineryUnlocked: player.refineryUnlocked, academyResearched: player.academyResearched, placed: player.placed, freeOperations: player.freeOperations, satelliteMonitoringLevel: player.satelliteMonitoringLevel, clientMissions: player.clientMissions })
       && canAffordStructure(structure, { francs: player.francs, stash: player.stash })
   }
 
@@ -112,7 +117,7 @@ export default function BuildPlaceScreen({ onPlaced, onBack, hasCoach, player }:
       const first = catalog.find(canSelectStructure)
       if (first) setPicked(first.id)
     }
-  }, [catalog, picked, player.francs, player.freeOperations, player.placed, player.refineryUnlocked, player.stash])
+  }, [catalog, picked, player.academyResearched, player.francs, player.freeOperations, player.placed, player.refineryUnlocked, player.stash])
 
   function handlePick(id: string) {
     setPicked(id)
@@ -128,7 +133,7 @@ export default function BuildPlaceScreen({ onPlaced, onBack, hasCoach, player }:
           <HubPixiCanvas buildings={previewBuildings} />
         </ErrorBoundary>
         <SoilCrossSection />
-        <div style={{ position: 'absolute', inset: 0, zIndex: 5, background: 'linear-gradient(180deg, rgba(6,9,15,0.62) 0%, rgba(6,9,15,0.18) 24%, transparent 62%, rgba(6,9,15,0.25) 100%)' }} />
+        <div style={{ position: 'absolute', inset: 0, zIndex: 5, background: 'linear-gradient(180deg, rgba(10,10,11,0.62) 0%, rgba(10,10,11,0.18) 24%, transparent 62%, rgba(10,10,11,0.25) 100%)' }} />
       </div>
 
       <TopBar eyebrow="EARTH BASE · SETUP" title="Build" onBack={onBack} />
@@ -186,8 +191,8 @@ export default function BuildPlaceScreen({ onPlaced, onBack, hasCoach, player }:
                   borderRadius: '50% / 60%',
                   background: on
                     ? `radial-gradient(ellipse at 50% 35%, ${color}88, ${color}15 70%)`
-                    : 'radial-gradient(ellipse at 50% 35%, rgba(135,207,250,0.22), rgba(135,207,250,0.04) 70%)',
-                  border: `2px ${on ? 'solid' : 'dashed'} ${on ? color : 'rgba(135,207,250,0.4)'}`,
+                    : 'radial-gradient(ellipse at 50% 35%, rgba(112,217,234,0.22), rgba(112,217,234,0.04) 70%)',
+                  border: `2px ${on ? 'solid' : 'dashed'} ${on ? color : 'rgba(112,217,234,0.4)'}`,
                   boxShadow: on ? `0 0 24px ${color}66` : '0 2px 6px rgba(0,0,0,0.4)',
                   display: 'flex',
                   alignItems: 'center',
@@ -196,7 +201,7 @@ export default function BuildPlaceScreen({ onPlaced, onBack, hasCoach, player }:
                 }}>
                   {on
                     ? <span style={{ fontFamily: 'var(--ln-font-mono)', fontSize: 16, fontWeight: 800, color, marginTop: -1 }}>⌄</span>
-                    : <span style={{ fontFamily: 'var(--ln-font-mono)', fontSize: 20, fontWeight: 800, color: 'rgba(135,207,250,0.7)', marginTop: -2 }}>+</span>}
+                    : <span style={{ fontFamily: 'var(--ln-font-mono)', fontSize: 20, fontWeight: 800, color: 'rgba(112,217,234,0.7)', marginTop: -2 }}>+</span>}
                 </div>
               </button>
             )
@@ -212,7 +217,7 @@ export default function BuildPlaceScreen({ onPlaced, onBack, hasCoach, player }:
         pointerEvents: 'none',
       }}>
         <div style={{
-          background: 'linear-gradient(180deg, transparent 0%, rgba(6,9,15,0.60) 20%, rgba(6,9,15,0.85) 100%)',
+          background: 'linear-gradient(180deg, transparent 0%, rgba(10,10,11,0.60) 20%, rgba(10,10,11,0.85) 100%)',
           backdropFilter: 'blur(4px)',
           WebkitBackdropFilter: 'blur(4px)',
           padding: '10px 12px 0',
@@ -230,7 +235,7 @@ export default function BuildPlaceScreen({ onPlaced, onBack, hasCoach, player }:
             {catalog.map(c => {
               const on = c.id === picked
               const alreadyBuilt = player.placed.includes(c.id)
-              const unlocked = structureUnlocked(c, { refineryUnlocked: player.refineryUnlocked, placed: player.placed, freeOperations: player.freeOperations }) && !alreadyBuilt
+              const unlocked = structureUnlocked(c, { refineryUnlocked: player.refineryUnlocked, academyResearched: player.academyResearched, placed: player.placed, freeOperations: player.freeOperations, satelliteMonitoringLevel: player.satelliteMonitoringLevel, clientMissions: player.clientMissions }) && !alreadyBuilt
               const affordable = canAffordStructure(c, { francs: player.francs, stash: player.stash })
               const canSelect = unlocked && affordable
               const color = STRUCTURE_COLORS[c.id] ?? '#3fa9ff'
@@ -244,8 +249,8 @@ export default function BuildPlaceScreen({ onPlaced, onBack, hasCoach, player }:
                     scrollSnapAlign: 'start',
                     background: on
                       ? `linear-gradient(180deg, ${color}22, ${color}08)`
-                      : 'rgba(10,18,29,0.70)',
-                    border: `1px solid ${on ? color : 'rgba(135,207,250,0.12)'}`,
+                      : 'rgba(24,24,28,0.70)',
+                    border: `1px solid ${on ? color : 'rgba(112,217,234,0.12)'}`,
                     borderRadius: 10,
                     padding: '6px 10px',
                     cursor: canSelect ? 'pointer' : 'default',

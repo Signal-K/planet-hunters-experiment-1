@@ -1,0 +1,1050 @@
+.root {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  color: var(--ln-text);
+  background: var(--ln-void);
+}
+
+.geology {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--ln-bg-grid) 88%, #493824) 0 18%,
+      color-mix(in srgb, var(--ln-bg) 82%, #2c241c) 18% 56%,
+      color-mix(in srgb, var(--ln-void) 92%, #191713) 56% 100%
+    );
+}
+
+.geology::before {
+  position: absolute;
+  inset: 0;
+  content: '';
+  opacity: 0.22;
+  background-image:
+    linear-gradient(var(--ln-hairline) 1px, transparent 1px),
+    linear-gradient(90deg, var(--ln-hairline) 1px, transparent 1px);
+  background-size: 48px 48px;
+}
+
+.geology::after {
+  position: absolute;
+  inset: 0;
+  content: '';
+  opacity: 0.24;
+  background-image:
+    radial-gradient(circle at 8% 18%, #92785d 0 2px, transparent 3px),
+    radial-gradient(circle at 17% 65%, #6c5a47 0 3px, transparent 4px),
+    radial-gradient(circle at 76% 32%, #8b7258 0 2px, transparent 3px),
+    radial-gradient(circle at 91% 77%, #665646 0 4px, transparent 5px);
+  background-size: 150px 120px, 210px 170px, 180px 140px, 250px 190px;
+}
+
+.stratum {
+  position: absolute;
+  left: -4%;
+  width: 108%;
+  height: 10%;
+  border-top: 1px solid var(--ln-hairline);
+  border-bottom: 1px solid var(--ln-divider);
+  transform: skewY(-2deg);
+}
+
+.stratumOne {
+  top: 18%;
+  background: color-mix(in srgb, #6a5137 18%, transparent);
+}
+
+.stratumTwo {
+  top: 68%;
+  transform: skewY(1.5deg);
+  background: color-mix(in srgb, #2d2924 44%, transparent);
+}
+
+.serviceShaft {
+  position: absolute;
+  top: 8%;
+  bottom: 0;
+  left: 50%;
+  width: 48px;
+  transform: translateX(-50%);
+  border-right: 1px solid var(--ln-cyan-border);
+  border-left: 1px solid var(--ln-cyan-border);
+  background: color-mix(in srgb, var(--ln-void) 88%, transparent);
+  box-shadow: 0 0 24px color-mix(in srgb, var(--ln-cyan) 12%, transparent);
+}
+
+.serviceShaft::before,
+.serviceShaft::after {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  content: '';
+  background: var(--ln-hairline);
+}
+
+.serviceShaft::before {
+  left: 16px;
+}
+
+.serviceShaft::after {
+  right: 16px;
+}
+
+.depthRail {
+  position: absolute;
+  top: 80px;
+  right: 8px;
+  bottom: 160px;
+  width: 32px;
+  border-left: 1px solid var(--ln-hairline);
+}
+
+.depthTick {
+  position: absolute;
+  left: 0;
+  width: 8px;
+  height: 1px;
+  background: var(--ln-hairline-strong);
+}
+
+.depthLabel {
+  position: absolute;
+  left: 8px;
+  transform: translateY(-50%);
+  color: var(--ln-text-muted);
+  font: 700 8px var(--ln-font-mono);
+  letter-spacing: 0.08em;
+}
+
+.content {
+  position: absolute;
+  top: 72px;
+  right: 48px;
+  bottom: 168px;
+  left: 16px;
+  z-index: 2;
+  display: flex;
+  width: min(1184px, calc(100% - 64px));
+  margin: 0 auto;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.deckHeader,
+.detailHeader {
+  display: flex;
+  align-items: flex-end;
+  gap: 16px;
+}
+
+.facilityShell {
+  position: relative;
+  display: flex;
+  min-height: 0;
+  flex: 1;
+  overflow: hidden;
+  flex-direction: column;
+  border: 1px solid var(--ln-cyan-border);
+  border-radius: var(--ln-r-md);
+  background: color-mix(in srgb, var(--ln-void) 92%, transparent);
+  box-shadow:
+    0 0 0 8px color-mix(in srgb, var(--ln-void) 55%, transparent),
+    0 18px 54px rgba(0, 0, 0, 0.38);
+}
+
+.utilityTrunk,
+.accessCorridor {
+  position: relative;
+  display: flex;
+  height: 28px;
+  flex: 0 0 28px;
+  align-items: center;
+  overflow: hidden;
+  padding: 0 12px;
+  border-bottom: 1px solid var(--ln-hairline-strong);
+  background: color-mix(in srgb, var(--ln-surface) 88%, var(--ln-void));
+}
+
+.utilityTrunk span {
+  width: 28%;
+  height: 4px;
+  margin-right: 8px;
+  border: 1px solid var(--ln-cyan-border);
+  border-radius: var(--ln-r-pill);
+  background: var(--ln-cyan-soft);
+}
+
+.utilityTrunk span:nth-child(2) {
+  border-color: color-mix(in srgb, var(--ln-ok) 44%, transparent);
+  background: color-mix(in srgb, var(--ln-ok) 16%, transparent);
+}
+
+.utilityTrunk span:nth-child(3) {
+  border-color: color-mix(in srgb, var(--ln-warn) 44%, transparent);
+  background: color-mix(in srgb, var(--ln-warn) 14%, transparent);
+}
+
+.utilityTrunk b,
+.accessCorridor b {
+  position: absolute;
+  right: 12px;
+  padding-left: 12px;
+  color: var(--ln-text-muted);
+  background: color-mix(in srgb, var(--ln-surface) 94%, transparent);
+  font: 700 7px var(--ln-font-mono);
+  letter-spacing: 0.12em;
+}
+
+.accessCorridor {
+  height: 34px;
+  flex-basis: 34px;
+  border-top: 1px solid var(--ln-hairline-strong);
+  border-bottom: 0;
+  background:
+    repeating-linear-gradient(
+      135deg,
+      transparent 0 10px,
+      color-mix(in srgb, var(--ln-cyan) 7%, transparent) 10px 12px
+    ),
+    color-mix(in srgb, var(--ln-surface) 82%, var(--ln-void));
+}
+
+.corridorLine {
+  position: absolute;
+  right: 0;
+  bottom: 6px;
+  left: 0;
+  height: 1px;
+  background: var(--ln-cyan-border);
+}
+
+.corridorCart {
+  position: absolute;
+  bottom: 7px;
+  left: 28%;
+  width: 28px;
+  height: 10px;
+  border: 1px solid var(--ln-hairline-strong);
+  background: var(--ln-panel-2);
+}
+
+.corridorCart::before,
+.corridorCart::after {
+  position: absolute;
+  bottom: -5px;
+  width: 5px;
+  height: 5px;
+  content: '';
+  border-radius: 50%;
+  background: var(--ln-text-muted);
+}
+
+.corridorCart::before {
+  left: 3px;
+}
+
+.corridorCart::after {
+  right: 3px;
+}
+
+.eyebrow,
+.roomEyebrow,
+.metricLabel,
+.status,
+.backButton,
+.emptyLabel {
+  font-family: var(--ln-font-display);
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.eyebrow {
+  color: var(--ln-cyan);
+  font-size: 9px;
+}
+
+.deckTitle,
+.detailTitle {
+  margin: 4px 0 0;
+  color: var(--ln-text);
+  font-family: var(--ln-font-display);
+  font-size: clamp(18px, 2.4vw, 30px);
+  font-weight: 800;
+  line-height: 1;
+}
+
+.deckSummary {
+  margin-left: auto;
+  color: var(--ln-text-dim);
+  font: 700 10px var(--ln-font-mono);
+  letter-spacing: 0.08em;
+  text-align: right;
+  text-transform: uppercase;
+}
+
+.roomGrid {
+  display: grid;
+  min-height: 0;
+  flex: 1;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1px;
+  background: var(--ln-hairline-strong);
+}
+
+.roomCard {
+  position: relative;
+  display: flex;
+  min-height: 0;
+  overflow: hidden;
+  padding: 12px;
+  flex-direction: column;
+  border: 0;
+  border-radius: 0;
+  color: var(--ln-text);
+  background: color-mix(in srgb, var(--ln-panel) 94%, transparent);
+  cursor: pointer;
+  text-align: left;
+  transition: border-color 120ms ease, background 120ms ease;
+}
+
+.roomCard:hover {
+  background: color-mix(in srgb, var(--ln-panel-2) 94%, transparent);
+}
+
+.roomCard:focus-visible,
+.backButton:focus-visible {
+  outline: 2px solid var(--ln-cyan);
+  outline-offset: 2px;
+}
+
+.roomCardLocked {
+  background: color-mix(in srgb, var(--ln-void) 76%, var(--ln-panel));
+}
+
+.roomCardLocked::after {
+  position: absolute;
+  inset: 0;
+  content: '';
+  pointer-events: none;
+  border: 1px dashed var(--ln-hairline-strong);
+  background:
+    repeating-linear-gradient(
+      135deg,
+      transparent 0 18px,
+      color-mix(in srgb, var(--ln-warn) 4%, transparent) 18px 20px
+    );
+}
+
+.roomCardTop,
+.roomCardFooter,
+.inventoryRow,
+.partRow,
+.trainingStatus {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.roomIcon,
+.backIcon {
+  display: grid;
+  width: 32px;
+  height: 32px;
+  flex: 0 0 32px;
+  place-items: center;
+  border: 1px solid var(--ln-cyan-border);
+  border-radius: var(--ln-r-md);
+  color: var(--ln-cyan);
+  background: var(--ln-cyan-soft);
+}
+
+.roomEyebrow {
+  color: var(--ln-text-muted);
+  font-size: 8px;
+}
+
+.roomName {
+  margin: 4px 0 0;
+  color: var(--ln-text);
+  font-family: var(--ln-font-display);
+  font-size: 16px;
+  font-weight: 800;
+}
+
+.bayNumber {
+  margin-left: auto;
+  color: color-mix(in srgb, var(--ln-cyan) 36%, transparent);
+  font: 800 24px var(--ln-font-mono);
+  letter-spacing: -0.08em;
+}
+
+.roomScene {
+  position: relative;
+  min-height: 128px;
+  margin: 12px -12px;
+  flex: 1;
+  overflow: hidden;
+  border-top: 1px solid var(--ln-hairline);
+  border-bottom: 1px solid var(--ln-hairline);
+  border-radius: 0;
+  background:
+    linear-gradient(90deg, transparent 49%, color-mix(in srgb, var(--ln-cyan) 5%, transparent) 50%, transparent 51%),
+    linear-gradient(color-mix(in srgb, var(--ln-cyan) 5%, transparent) 1px, transparent 1px),
+    color-mix(in srgb, var(--ln-void) 88%, var(--ln-surface));
+  background-size: 48px 100%, 100% 32px, auto;
+}
+
+.roomScene::before {
+  position: absolute;
+  right: 0;
+  bottom: 18px;
+  left: 0;
+  height: 1px;
+  content: '';
+  background: var(--ln-hairline-strong);
+}
+
+.roomCeiling {
+  position: absolute;
+  top: 0;
+  right: 8px;
+  left: 8px;
+  display: flex;
+  height: 12px;
+  align-items: center;
+  gap: 5px;
+  border-bottom: 1px solid var(--ln-hairline-strong);
+}
+
+.roomCeiling span {
+  height: 3px;
+  flex: 1;
+  border-radius: var(--ln-r-pill);
+  background: color-mix(in srgb, var(--ln-cyan) 22%, transparent);
+}
+
+.roomCeiling span:nth-child(2) {
+  flex: 0 0 8px;
+  height: 8px;
+  background: var(--ln-ok);
+  box-shadow: 0 0 8px color-mix(in srgb, var(--ln-ok) 44%, transparent);
+}
+
+.sceneFloorRail {
+  position: absolute;
+  right: 0;
+  bottom: 9px;
+  left: 0;
+  height: 3px;
+  border-top: 1px solid var(--ln-hairline-strong);
+  border-bottom: 1px solid var(--ln-hairline);
+}
+
+.vaultCrane {
+  position: absolute;
+  top: 22px;
+  right: 10%;
+  left: 10%;
+  height: 8px;
+  border: 1px solid var(--ln-cyan-border);
+  background: var(--ln-surface);
+}
+
+.vaultCrane i {
+  position: absolute;
+  top: 7px;
+  left: 58%;
+  width: 1px;
+  height: 24px;
+  background: var(--ln-hairline-strong);
+}
+
+.vaultCrane i::after {
+  position: absolute;
+  bottom: -4px;
+  left: -4px;
+  width: 8px;
+  height: 8px;
+  content: '';
+  transform: rotate(45deg);
+  border-right: 1px solid var(--ln-cyan);
+  border-bottom: 1px solid var(--ln-cyan);
+}
+
+.rack {
+  position: absolute;
+  top: 22px;
+  right: 10px;
+  bottom: 20px;
+  left: 10px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 5px;
+}
+
+.rackCell {
+  position: relative;
+  border: 1px solid var(--ln-hairline);
+  background: color-mix(in srgb, var(--ln-surface) 82%, transparent);
+}
+
+.partCrate {
+  position: absolute;
+  right: 18%;
+  bottom: 14px;
+  left: 18%;
+  height: 16px;
+  border: 1px solid var(--ln-cyan-border);
+  border-radius: var(--ln-r-xs);
+  background:
+    linear-gradient(135deg, transparent 44%, var(--ln-hairline-strong) 45% 52%, transparent 53%);
+}
+
+.rackCell b {
+  position: absolute;
+  right: 0;
+  bottom: 2px;
+  left: 0;
+  color: var(--ln-text-muted);
+  font: 700 6px var(--ln-font-mono);
+  letter-spacing: 0.1em;
+  text-align: center;
+}
+
+.oreBins {
+  position: absolute;
+  right: 16px;
+  bottom: 20px;
+  left: 16px;
+  display: grid;
+  height: 64px;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+
+.oreBin {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid var(--ln-hairline-strong);
+  border-radius: var(--ln-r-sm) var(--ln-r-sm) 0 0;
+  background: var(--ln-surface);
+}
+
+.oreBin::before {
+  position: absolute;
+  right: 8%;
+  bottom: 0;
+  left: 8%;
+  height: 48%;
+  content: '';
+  border-radius: 50% 50% 0 0;
+  opacity: 0.66;
+  background: var(--stored-mineral, var(--ln-cyan));
+}
+
+.oreBin b,
+.oreBin i {
+  position: absolute;
+  z-index: 1;
+  right: 0;
+  left: 0;
+  color: var(--ln-text);
+  font: 800 8px var(--ln-font-mono);
+  text-align: center;
+}
+
+.oreBin b {
+  top: 6px;
+}
+
+.oreBin i {
+  bottom: 5px;
+  color: var(--ln-text-dim);
+  font-size: 6px;
+  font-style: normal;
+}
+
+.trainingScene::after {
+  position: absolute;
+  inset: 0;
+  content: '';
+  opacity: 0.24;
+  background: repeating-linear-gradient(
+    135deg,
+    transparent 0 16px,
+    color-mix(in srgb, var(--ln-warn) 16%, transparent) 16px 18px
+  );
+}
+
+.habitat {
+  position: absolute;
+  top: 24px;
+  right: 10%;
+  bottom: 20px;
+  left: 10%;
+  border: 1px solid var(--ln-hairline-strong);
+  border-radius: 44px 44px 4px 4px;
+  background: color-mix(in srgb, var(--ln-surface) 88%, var(--ln-void));
+}
+
+.habitat::before,
+.habitat::after {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 9px;
+  content: '';
+  border-right: 1px solid var(--ln-hairline);
+  border-left: 1px solid var(--ln-hairline);
+}
+
+.habitat::before {
+  left: 16%;
+}
+
+.habitat::after {
+  right: 16%;
+}
+
+.habitatWindow {
+  position: absolute;
+  top: 30%;
+  left: 14%;
+  display: flex;
+  width: 38%;
+  height: 40%;
+  justify-content: center;
+  gap: 8px;
+  border: 1px solid var(--ln-cyan-border);
+  border-radius: var(--ln-r-pill);
+  background: color-mix(in srgb, var(--ln-cyan) 7%, transparent);
+}
+
+.habitatWindow i {
+  position: relative;
+  width: 8px;
+}
+
+.habitatWindow i::before {
+  position: absolute;
+  top: 8px;
+  left: 1px;
+  width: 6px;
+  height: 6px;
+  content: '';
+  border-radius: 50%;
+  background: var(--ln-text-muted);
+}
+
+.habitatWindow i::after {
+  position: absolute;
+  top: 15px;
+  left: 0;
+  width: 8px;
+  height: 14px;
+  content: '';
+  border-radius: 4px 4px 2px 2px;
+  background: var(--ln-text-muted);
+}
+
+.airlockWheel {
+  position: absolute;
+  top: 50%;
+  right: 14%;
+  width: 28px;
+  height: 28px;
+  transform: translateY(-50%);
+  border: 3px double var(--ln-cyan-border);
+  border-radius: 50%;
+}
+
+.airlockWheel::before,
+.airlockWheel::after {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 18px;
+  height: 1px;
+  content: '';
+  transform: translate(-50%, -50%);
+  background: var(--ln-cyan-border);
+}
+
+.airlockWheel::after {
+  transform: translate(-50%, -50%) rotate(90deg);
+}
+
+.trainingSeal {
+  position: absolute;
+  z-index: 2;
+  right: 8px;
+  bottom: 6px;
+  left: 8px;
+  padding: 3px 4px;
+  color: var(--ln-warn);
+  background: color-mix(in srgb, var(--ln-void) 92%, transparent);
+  font: 800 6px var(--ln-font-mono);
+  letter-spacing: 0.1em;
+  text-align: center;
+}
+
+.roomDescription {
+  margin: 0;
+  color: var(--ln-text-dim);
+  font-family: var(--ln-font-body);
+  font-size: 11px;
+  line-height: 1.45;
+}
+
+.roomCardFooter {
+  margin-top: 12px;
+  justify-content: space-between;
+}
+
+.status {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--ln-ok);
+  font-size: 8px;
+}
+
+.status::before {
+  width: 6px;
+  height: 6px;
+  content: '';
+  transform: rotate(45deg);
+  background: currentColor;
+}
+
+.statusLocked {
+  color: var(--ln-text-muted);
+}
+
+.roomMetric {
+  color: var(--ln-cyan);
+  font: 800 11px var(--ln-font-mono);
+}
+
+.detailView {
+  display: flex;
+  min-height: 0;
+  flex: 1;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.detailHeader {
+  align-items: center;
+}
+
+.backButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border: 1px solid var(--ln-cyan-border);
+  border-radius: var(--ln-r-md);
+  color: var(--ln-cyan);
+  background: var(--ln-cyan-soft);
+  cursor: pointer;
+  font-size: 9px;
+}
+
+.backIcon {
+  width: 24px;
+  height: 24px;
+  flex-basis: 24px;
+  border: 0;
+  background: transparent;
+}
+
+.detailCopy {
+  min-width: 0;
+}
+
+.detailPanel {
+  display: grid;
+  min-height: 0;
+  padding: 16px;
+  flex: 1;
+  overflow: auto;
+  border: 1px solid var(--ln-cyan-border);
+  border-radius: var(--ln-r-lg);
+  background: color-mix(in srgb, var(--ln-panel) 94%, transparent);
+  box-shadow: var(--ln-shadow-card);
+  grid-template-columns: minmax(192px, 0.7fr) minmax(0, 1.3fr);
+  gap: 16px;
+}
+
+.detailSummary {
+  display: flex;
+  padding: 16px;
+  flex-direction: column;
+  justify-content: space-between;
+  border: 1px solid var(--ln-hairline);
+  border-radius: var(--ln-r-md);
+  background: color-mix(in srgb, var(--ln-void) 76%, transparent);
+}
+
+.metricValue {
+  color: var(--ln-cyan-bright);
+  font: 800 clamp(28px, 5vw, 56px) var(--ln-font-display);
+  line-height: 1;
+}
+
+.metricLabel {
+  margin-top: 8px;
+  color: var(--ln-text-muted);
+  font-size: 8px;
+}
+
+.summaryCopy {
+  margin: 16px 0 0;
+  color: var(--ln-text-dim);
+  font-family: var(--ln-font-body);
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.inventoryList,
+.partsList {
+  display: flex;
+  min-height: 0;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.inventoryRow,
+.partRow {
+  min-height: 56px;
+  padding: 8px 12px;
+  border: 1px solid var(--ln-hairline);
+  border-radius: var(--ln-r-md);
+  background: color-mix(in srgb, var(--ln-surface) 70%, transparent);
+}
+
+.mineralMark {
+  display: grid;
+  width: 32px;
+  height: 32px;
+  flex: 0 0 32px;
+  place-items: center;
+  border: 1px solid color-mix(in srgb, var(--mineral-color) 68%, transparent);
+  border-radius: 50%;
+  color: var(--mineral-color);
+  background: color-mix(in srgb, var(--mineral-color) 16%, transparent);
+  font: 800 10px var(--ln-font-mono);
+}
+
+.inventoryName,
+.partName {
+  color: var(--ln-text);
+  font-family: var(--ln-font-display);
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.inventoryMeta,
+.partMeta {
+  margin-top: 4px;
+  color: var(--ln-text-muted);
+  font: 700 8px var(--ln-font-mono);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.inventoryAmount,
+.partStatus {
+  margin-left: auto;
+  color: var(--ln-cyan-bright);
+  font: 800 13px var(--ln-font-mono);
+}
+
+.partKind {
+  display: grid;
+  width: 32px;
+  height: 32px;
+  flex: 0 0 32px;
+  place-items: center;
+  border: 1px solid var(--ln-cyan-border);
+  border-radius: var(--ln-r-md);
+  color: var(--ln-cyan);
+  background: var(--ln-cyan-soft);
+}
+
+.partStatus {
+  color: var(--ln-ok);
+  font-size: 8px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.emptyState {
+  display: grid;
+  min-height: 144px;
+  padding: 24px;
+  place-items: center;
+  border: 1px dashed var(--ln-hairline-strong);
+  border-radius: var(--ln-r-md);
+  color: var(--ln-text-muted);
+  text-align: center;
+}
+
+.emptyLabel {
+  margin-top: 12px;
+  font-size: 9px;
+}
+
+.trainingPanel {
+  display: grid;
+  min-height: 0;
+  padding: 24px;
+  flex: 1;
+  place-items: center;
+  overflow: auto;
+  border: 1px dashed var(--ln-cyan-border);
+  border-radius: var(--ln-r-lg);
+  background: color-mix(in srgb, var(--ln-panel) 88%, transparent);
+  text-align: center;
+}
+
+.trainingLock {
+  display: grid;
+  width: 64px;
+  height: 64px;
+  margin: 0 auto 16px;
+  place-items: center;
+  border: 1px solid var(--ln-cyan-border);
+  border-radius: 50%;
+  color: var(--ln-cyan);
+  background: var(--ln-cyan-soft);
+  box-shadow: var(--ln-glow-cyan);
+}
+
+.trainingTitle {
+  margin: 0;
+  color: var(--ln-text);
+  font-family: var(--ln-font-display);
+  font-size: clamp(20px, 4vw, 40px);
+  font-weight: 800;
+}
+
+.trainingCopy {
+  max-width: 560px;
+  margin: 12px auto 0;
+  color: var(--ln-text-dim);
+  font-family: var(--ln-font-body);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.trainingStatus {
+  margin-top: 16px;
+  justify-content: center;
+  color: var(--ln-cyan);
+  font: 800 9px var(--ln-font-display);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.trainingStatus::before {
+  width: 6px;
+  height: 6px;
+  content: '';
+  transform: rotate(45deg);
+  background: currentColor;
+}
+
+@media (max-width: 720px) {
+  .content {
+    top: 72px;
+    right: 40px;
+    bottom: 168px;
+    left: 12px;
+    width: auto;
+  }
+
+  .deckSummary {
+    display: none;
+  }
+
+  .roomGrid {
+    overflow: auto;
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .roomCard {
+    min-height: 144px;
+    padding: 12px;
+  }
+
+  .roomScene {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    bottom: 12px;
+    width: 38%;
+    min-height: 0;
+    margin: 0;
+    opacity: 0.72;
+  }
+
+  .roomCardTop,
+  .roomDescription,
+  .roomCardFooter {
+    width: 58%;
+  }
+
+  .roomDescription {
+    margin-top: 12px;
+  }
+
+  .roomCardFooter {
+    margin-top: auto;
+  }
+
+  .detailHeader {
+    align-items: flex-start;
+  }
+
+  .detailPanel {
+    display: flex;
+    flex-direction: column;
+    grid-template-columns: none;
+  }
+
+  .detailSummary {
+    min-height: 120px;
+  }
+}
+
+@media (max-height: 700px) and (min-width: 721px) {
+  .content {
+    top: 64px;
+    bottom: 152px;
+  }
+
+  .roomScene {
+    min-height: 72px;
+    margin: 8px 0;
+  }
+
+  .roomDescription {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .roomCard {
+    transition: none;
+  }
+}

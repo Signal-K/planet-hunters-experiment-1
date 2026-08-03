@@ -39,8 +39,8 @@ function ModuleChip({ label }: { label: string }) {
     <div style={{
       display: 'inline-flex', alignItems: 'center',
       padding: '5px 10px', borderRadius: 6,
-      background: 'rgba(63,169,255,0.08)',
-      border: '1px solid rgba(63,169,255,0.22)',
+      background: 'rgba(112,217,234,0.08)',
+      border: '1px solid rgba(112,217,234,0.22)',
       fontFamily: 'var(--ln-font-display)', fontSize: 10, fontWeight: 700,
       letterSpacing: '0.1em', color: 'var(--ln-cyan)', textTransform: 'uppercase',
     }}>
@@ -107,14 +107,14 @@ export default function RocketPurchaseScreen({ missionsDone, francs, mission, de
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        background: 'radial-gradient(ellipse at 50% 54%, rgba(63,169,255,0.16) 0%, rgba(63,169,255,0.05) 36%, transparent 72%)',
+        background: 'radial-gradient(ellipse at 50% 54%, rgba(112,217,234,0.16) 0%, rgba(112,217,234,0.05) 36%, transparent 72%)',
       }}>
         {hasCoach && <TutorialHighlight borderRadius={14} />}
         {deliveryTargetName && (
           <div style={{
             position: 'absolute', top: 12, left: 12, right: 12,
             padding: '8px 12px', borderRadius: 6,
-            background: 'rgba(6,12,22,0.78)', border: '1px solid rgba(63,169,255,0.35)',
+            background: 'rgba(11,11,13,0.78)', border: '1px solid rgba(112,217,234,0.35)',
             fontFamily: 'var(--ln-font-display)', fontSize: 10, fontWeight: 700,
             letterSpacing: '0.08em', color: 'var(--ln-cyan)', textTransform: 'uppercase', textAlign: 'center',
           }}>
@@ -135,7 +135,7 @@ export default function RocketPurchaseScreen({ missionsDone, francs, mission, de
             letterSpacing: '0.2em', textTransform: 'uppercase',
             color: isFree ? '#39d36a' : '#f5a623',
           }}>
-            SR{rocket.tier} · {isFree ? 'INCLUDED' : formatCurrency(rocket.costFrancs, { compact: true })}
+            TIER {rocket.tier} · {isFree ? 'INCLUDED' : formatCurrency(rocket.costFrancs, { compact: true })}
           </span>
         </div>
       </MissionSetupFrame>
@@ -179,7 +179,7 @@ export default function RocketPurchaseScreen({ missionsDone, francs, mission, de
           </div>
 
           {!isFree && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 0, background: 'rgba(6,12,22,0.5)', borderRadius: 10, border: '1px solid rgba(135,207,250,0.12)', overflow: 'hidden' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 0, background: 'rgba(11,11,13,0.5)', borderRadius: 10, border: '1px solid rgba(112,217,234,0.12)', overflow: 'hidden' }}>
               {missionPayout !== undefined && (
                 <CostSummaryRow label="Mission Payout (base)" value={formatCurrency(missionPayout, { compact: true })} color="var(--ln-cyan)" />
               )}
@@ -189,7 +189,7 @@ export default function RocketPurchaseScreen({ missionsDone, francs, mission, de
               )}
               <CostSummaryRow label="Your Balance" value={formatCurrency(francs, { compact: true })} color={canAfford ? 'var(--ln-text)' : 'var(--ln-crimson)'} last />
               {missionPayout !== undefined && (
-                <div style={{ padding: '6px 14px 10px', fontFamily: 'var(--ln-font-body)', fontSize: 10, color: '#6a7e94', borderTop: '1px solid rgba(135,207,250,0.08)' }}>
+                <div style={{ padding: '6px 14px 10px', fontFamily: 'var(--ln-font-body)', fontSize: 10, color: '#6a7e94', borderTop: '1px solid rgba(112,217,234,0.08)' }}>
                   The rocket is a one-time purchase; the mission payout is what you collect at debrief. Client premiums and affinity bonuses can raise the payout above the base figure shown.
                 </div>
               )}

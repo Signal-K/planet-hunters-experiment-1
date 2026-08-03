@@ -36,7 +36,11 @@ export function suggestBuild(opts: {
   deliveryTarget?: Target | null
 }): RocketConfig {
   const { mission, target, parts = PARTS } = opts
-  const orbit = Math.max(target?.orbit ?? 4, opts.deliveryTarget?.orbit ?? 0)
+  const infrastructureOrbitBonus = mission?.jointProject?.infrastructureOrbitBonus ?? 0
+  const orbit = Math.max(
+    0,
+    Math.max(target?.orbit ?? 4, opts.deliveryTarget?.orbit ?? 0) - infrastructureOrbitBonus,
+  )
   const drillTier = mission?.requires.drill_tier ?? 1
   const cargoMin = mission?.requires.cargo_min ?? 6
   const effectiveMissionsDone = opts.launchpadUpgraded ? Math.max(opts.missionsDone, 1) : opts.missionsDone
@@ -71,8 +75,10 @@ export function validateBuild(opts: {
 
   const problems: string[] = []
   const maxOrbit = effectiveMaxOrbit(propulsion, opts.unlockedSkillNodes)
-  if (maxOrbit < target.orbit) {
-    problems.push(`Propulsion can only reach Orbit ${maxOrbit}, target is Orbit ${target.orbit}`)
+  const infrastructureOrbitBonus = mission.jointProject?.infrastructureOrbitBonus ?? 0
+  const requiredOrbit = Math.max(0, target.orbit - infrastructureOrbitBonus)
+  if (maxOrbit < requiredOrbit) {
+    problems.push(`Propulsion can only reach Orbit ${maxOrbit}, mission needs Orbit ${requiredOrbit}`)
   }
   const cargoCapacity = effectiveCargoCapacity(chassis, opts.unlockedSkillNodes)
   if (cargoCapacity < mission.requires.cargo_min) {

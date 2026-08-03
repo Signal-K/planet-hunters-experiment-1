@@ -1,7 +1,7 @@
 // Daily client mission pool — deterministic per calendar day, resets at midnight.
 
 import type { ClientSlot, MineralMeta, Mission } from './types'
-import { DEFAULT_MISSION_TEMPLATES, FREE_OPS_START_MISSIONS_DONE, requiredDrillTier } from './mission-generator'
+import { DEFAULT_MISSION_TEMPLATES, FREE_OPS_START_MISSIONS_DONE, requiredDrillTier, deliveryEligibleMineralKeys } from './mission-generator'
 import { CLIENT_AFFINITY_MISSION_THRESHOLD } from './clients'
 import { normalizeMissionPayout } from './payouts'
 
@@ -56,7 +56,20 @@ export function generateDailyClientPool(
 ): Mission[] {
   const maxTier = maxTierForProgress(missionsDone)
   const eligible = clients.filter(c => c.unlockTier <= maxTier)
-  const baseTemplates = DEFAULT_MISSION_TEMPLATES.filter(t => !t.id.startsWith('freeops-'))
+  // CONSTRUCT-tagged templates (fuel-depot/battery-station/fabrication-pad)
+  // build structures on-site — cargo never routes back to Earth, so their
+  // mineralKeys are deliberately Earth-abundant (see deliveryEligibleMineralKeys
+  // in mission-generator.ts). The daily client pool only ever produces ordinary
+  // "mine it, fly it home, sell it" contracts, so mixing a CONSTRUCT template
+  // in here (as `command-reserve`/`volatile-bulk`'s clientRole siblings did)
+  // let a 'bulk'-role client roll e.g. construct-fabrication-pad, whose
+  // candidates (iron/silicon/aluminium/carbon) are ALL Earth-abundant — asking
+  // the player to haul Earth-abundant ore back to Earth for a fee, which is
+  // exactly the situation deliveryEligibleMineralKeys exists to prevent
+  // elsewhere. Iron being first/most recognizable in that fallback list is
+  // why "always an iron contract" kept showing up for early Free Ops clients
+  // (e.g. ferrum-orbital-construction, unlockTier 1, uiRole 'bulk').
+  const baseTemplates = DEFAULT_MISSION_TEMPLATES.filter(t => !t.id.startsWith('freeops-') && t.tag !== 'CONSTRUCT')
   const missions: Mission[] = []
 
   for (const client of eligible) {
@@ -71,12 +84,16 @@ export function generateDailyClientPool(
 
       const template = templatePool[tSeed % templatePool.length]
 
-      const preferred = template.mineralKeys.filter(k => client.mineralPreferences.includes(k))
-      const fallback = template.mineralKeys.filter(k => !client.mineralPreferences.includes(k))
+      // Same Earth-abundant exclusion the offline/free-ops generators apply
+      // (deliveryEligibleMineralKeys) — belt-and-suspenders in case a future
+      // non-CONSTRUCT template ever mixes in an Earth-abundant mineral.
+      const eligibleMineralKeys = deliveryEligibleMineralKeys(template, minerals)
+      const preferred = eligibleMineralKeys.filter(k => client.mineralPreferences.includes(k))
+      const fallback = eligibleMineralKeys.filter(k => !client.mineralPreferences.includes(k))
       const candidates = preferred.length > 0 ? [...preferred, ...fallback] : fallback
-      // Defensive: a template with no mineralKeys, or an inverted cargoRange,
-      // would otherwise produce a NaN/undefined mineral or amount below —
-      // skip this slot rather than push a broken mission into the pool.
+      // Defensive: a template with no eligible mineralKeys, or an inverted
+      // cargoRange, would otherwise produce a NaN/undefined mineral or amount
+      // below — skip this slot rather than push a broken mission into the pool.
       if (candidates.length === 0 || template.cargoRange[1] < template.cargoRange[0]) continue
       const mineralKey = candidates[mSeed % candidates.length]
 

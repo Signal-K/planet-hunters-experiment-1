@@ -125,7 +125,7 @@ describe('Desk Review tickets — active mission guard (STS-487)', () => {
     })
 
     cy.contains('Mission Board', { timeout: 10000 }).should('be.visible')
-    cy.get('[data-testid="self-directed-mining-btn"]').click({ force: true })
+    cy.get('button[data-testid^="mission-card-"]').first().click({ force: true })
 
     savedState().then(state => {
       expect(state.screen).to.eq('missions')

@@ -1,3 +1,8 @@
+// @vitest-environment jsdom
+// pixi.js reads `navigator` at import time. Node 21+ has a global navigator so
+// this passes on a modern local Node, but CI runs Node 20 where it does not
+// exist — the file then dies with "navigator is not defined" before a single
+// test runs. jsdom supplies it either way.
 import React from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, expect, it } from 'vitest'
@@ -30,7 +35,7 @@ const mission: Mission = {
 const client: Client = {
   id: 'atlas-aggregate', name: 'Atlas Aggregate', color: '#87CFFA', initial: 'AA',
   unlockTier: 1, projectType: 'Off-world construction', mineralPreferences: ['iron'],
-  payoutPremium: 0.18, affinityBonusPerMission: 0.02, uiRole: 'bulk',
+  payoutPremium: 0.18, affinityBonusPerMission: 0.02, uiRole: 'bulk', suppliesCrew: false,
 }
 
 const iron = { name: 'Iron', sym: 'Fe', price: 10, color: '#c9c9c9', laserAccess: 1 } as unknown as MineralMeta
@@ -66,11 +71,16 @@ describe('TransitScreen mission context (STS-546)', () => {
         ...mission,
         id: 'story-transit-telescope-launch',
         title: 'Launch Transit Telescope',
-        client: 'mission-control',
+        client: undefined,
         deliveryTargetId: undefined,
         payload: { type: 'satellite', name: 'Transit Telescope', cargoCost: 0 },
+        payout: { francs: 0, affinity: 0 },
+        programReward: {
+          researchXP: 0,
+          outcome: 'Transit telescope online · daily instrument feed unlocked',
+        },
       },
-      client: { ...client, id: 'mission-control', name: 'Mission Control' },
+      client: null,
     })
     expect(markup).toContain('Your program')
     expect(markup).not.toContain('Mission Control')

@@ -20,6 +20,21 @@ describe('buildPostHogSurveyPayload', () => {
     expect(Object.values(SURVEY_DEFS).map(survey => survey.id)).not.toContain('019e5a4e-7003-0000-0003-000000000003')
   })
 
+  it('uses four real, single-question PostHog records for STS-599 crew checkpoints', () => {
+    const keys = [
+      'lnm_crew_first_hire',
+      'lnm_crew_academy_built',
+      'lnm_crew_first_launch',
+      'lnm_crew_first_specialisation',
+    ]
+    for (const key of keys) {
+      const survey = SURVEY_DEFS[key]
+      expect(survey.id).toMatch(/^019/)
+      expect(survey.posthogUrl).toBe(`https://us.posthog.com/project/199773/surveys/${survey.id}`)
+      expect(survey.questions).toHaveLength(1)
+    }
+  })
+
   it('emits PostHog survey responses in current and legacy formats', () => {
     const survey = SURVEY_DEFS.lnm_m3_complete
     const payload = buildPostHogSurveyPayload(survey, {

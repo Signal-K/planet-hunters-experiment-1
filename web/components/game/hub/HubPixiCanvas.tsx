@@ -13,37 +13,32 @@ import {
 import { AssetManager } from '@/lib/engine/AssetManager'
 
 /**
- * Blender-rendered structure props, keyed by their manifest name. The scene
- * falls back to its inline `Graphics` version for any slot left null, so a
- * failed load degrades to the old look rather than to nothing — which is also
- * why these are fetched after first paint instead of blocking it.
- *
- * Regenerate with `blender --background --factory-startup --python
- * tools/blender/render_all.py`; see tools/blender/README.md.
+ * Only the launchpad's six modular sprites are loaded and passed through
+ * (STS-611) — `buildLaunchpad` is the one builder whose textured branch draws
+ * a complete structure matching its Graphics fallback. The other builders
+ * (`buildScanStation`, `buildRefinery`, `buildSatelliteStation`,
+ * `buildCommandCenter`) still only consume a partial slot set — e.g.
+ * `buildScanStation`'s textured path draws only `scan_dish` at y=-52 with no
+ * tripod/mast/feet beneath it — so their texture fields are deliberately left
+ * null here until each of those is brought up to the same completeness.
  */
-const HUB_SPRITE_NAMES: Partial<Record<keyof HubTextures, string>> = {
-  pad_base: 'hub_pad_base',
-  pad_tower: 'hub_pad_tower',
-  pad_gantry: 'hub_pad_gantry',
-  depot_tank: 'hub_depot_tank',
-  scan_dish: 'hub_scan_dish',
-  cmd_building: 'hub_cmd_building',
-  sat_station: 'hub_sat_station',
-}
+const LAUNCHPAD_SPRITES = [
+  'hub_pad_deck', 'hub_pad_gantry_frame', 'hub_pad_swing_arm',
+  'hub_pad_clamp', 'hub_pad_mast', 'hub_pad_tank',
+] as const
 
-async function loadHubTextures(): Promise<HubTextures> {
-  const textures = nullTextures()
+async function loadLaunchpadTextures(): Promise<HubTextures> {
+  const tex = nullTextures()
   const assets = new AssetManager()
   await assets.loadManifest('/game/assets/manifest.json')
-  await Promise.all(
-    Object.entries(HUB_SPRITE_NAMES).map(async ([slot, name]) => {
-      const { texture, isPlaceholder } = await assets.loadTexture(name)
-      // A placeholder is the magenta square. Better to fall through to the
-      // Graphics version than to draw a magenta building.
-      if (!isPlaceholder) textures[slot as keyof HubTextures] = texture
-    }),
-  )
-  return textures
+  const loaded = await Promise.all(LAUNCHPAD_SPRITES.map(name => assets.loadTexture(name)))
+  tex.pad_deck = loaded[0].isPlaceholder ? null : loaded[0].texture
+  tex.pad_gantry_frame = loaded[1].isPlaceholder ? null : loaded[1].texture
+  tex.pad_swing_arm = loaded[2].isPlaceholder ? null : loaded[2].texture
+  tex.pad_clamp = loaded[3].isPlaceholder ? null : loaded[3].texture
+  tex.pad_mast = loaded[4].isPlaceholder ? null : loaded[4].texture
+  tex.pad_tank = loaded[5].isPlaceholder ? null : loaded[5].texture
+  return tex
 }
 
 interface HubPixiCanvasProps {
@@ -66,9 +61,6 @@ export default function HubPixiCanvas({ buildings }: HubPixiCanvasProps) {
   // Exposed by the init effect so prop changes can trigger a redraw without
   // tearing down and re-initialising the PixiJS Application.
   const rebuildRef = useRef<(() => void) | null>(null)
-  // Starts all-null so the first paint uses the Graphics fallback; swapped for
-  // the Blender sprites once they resolve, then the scene is rebuilt once.
-  const texturesRef = useRef<HubTextures>(nullTextures())
 
   // Game state hydrates from localStorage/PocketBase *after* this component
   // mounts, so `buildings` is routinely empty on the first render and only
@@ -92,6 +84,7 @@ export default function HubPixiCanvas({ buildings }: HubPixiCanvasProps) {
     let scene: ReturnType<typeof buildHubScene> | null = null
     let destroyed = false
     let ro: ResizeObserver | null = null
+    let tex: HubTextures = nullTextures()
 
     // Rebuilds the scene at the div's current size. Needed on desktop, where
     // the container can be far wider than HUB_W=402 (the coordinate space
@@ -111,22 +104,26 @@ export default function HubPixiCanvas({ buildings }: HubPixiCanvasProps) {
 
       scene?.destroy()
       const groundY = containerH * (1 - 0.22)
-      scene = buildHubScene(app, buildingsRef.current, texturesRef.current, { groundY, scaleX })
+      scene = buildHubScene(app, buildingsRef.current, tex, { groundY, scaleX })
     }
 
     ;(async () => {
       const containerW = div.clientWidth || HUB_W
       const containerH = div.clientHeight || HUB_H
 
-      await app.init({
-        canvas,
-        width: containerW,
-        height: containerH,
-        backgroundAlpha: 0,
-        antialias: false,
-        resolution: Math.min(window.devicePixelRatio || 1, 2),
-        autoDensity: true,
-      })
+      const [, loadedTex] = await Promise.all([
+        app.init({
+          canvas,
+          width: containerW,
+          height: containerH,
+          backgroundAlpha: 0,
+          antialias: false,
+          resolution: Math.min(window.devicePixelRatio || 1, 2),
+          autoDensity: true,
+        }),
+        loadLaunchpadTextures(),
+      ])
+      tex = loadedTex
 
       // Check destroyed AFTER init — if unmount raced the async init, clean up
       // now and bail. Guard with try/catch: PixiJS v8 _cancelResize can throw
@@ -138,12 +135,6 @@ export default function HubPixiCanvas({ buildings }: HubPixiCanvasProps) {
 
       rebuild()
       rebuildRef.current = rebuild
-
-      void loadHubTextures().then(textures => {
-        if (destroyed) return
-        texturesRef.current = textures
-        rebuild()
-      })
 
       ro = new ResizeObserver(() => rebuild())
       ro.observe(div)

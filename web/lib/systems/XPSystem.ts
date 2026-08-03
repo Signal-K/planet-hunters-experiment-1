@@ -7,6 +7,9 @@
 // incremented with raw `(s.player.researchXP ?? 0) + n` arithmetic in four
 // different files including a React hook, and one grant was a bare `+ 15`
 // literal inline. Crew XP and academy levels would have made that six tracks.
+// `skillPoints` is a currency (spent, not accumulated) and `satelliteMonitoringLevel`
+// / `transitSatelliteLevel` are purchased/earned integer levels with no XP
+// behind them (STS-606 decision) — neither belongs here or in XP_CURVES.
 //
 // A track is (xp, curve). Level is *derived*, never stored as an independent
 // number that can drift out of step with the XP that earned it.

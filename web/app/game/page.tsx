@@ -3,6 +3,8 @@
 import { Suspense, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { resolvePreset } from '@/lib/devPresets'
+import { pbShared } from '@/lib/pb'
+import { hasStoredCredentials } from '@/lib/guestAuth'
 
 const STORAGE_KEY = 'landnam-game-state-v1'
 const VALID_SCREENS = new Set([
@@ -15,6 +17,7 @@ const VALID_SCREENS = new Set([
   'fab',
   'transit',
   'mining',
+  'delivery',
   'debrief',
   'refinery',
   'market',
@@ -23,6 +26,9 @@ const VALID_SCREENS = new Set([
   'skills',
   'scan-station',
   'rover-mining',
+  'launchpad',
+  'surface-ops',
+  'academy',
 ])
 
 function savedScreen(): string {
@@ -45,7 +51,12 @@ function GameRouteBridge() {
   useEffect(() => {
     const presetName = searchParams.get('preset')
     const preset = presetName ? resolvePreset(presetName) : null
-    const screen = preset?.screen ?? savedScreen()
+    // A saved deep screen (e.g. 'missions') only means something once this
+    // device has actually authenticated (signed in, signed up, or completed
+    // guest auth) — otherwise the auth gate is about to open, and resuming
+    // straight into gameplay would sit the URL behind it. See STS-624.
+    const canResume = pbShared.authStore.isValid || hasStoredCredentials()
+    const screen = preset?.screen ?? (canResume ? savedScreen() : 'intro')
     const query = presetName ? `?preset=${encodeURIComponent(presetName)}` : ''
     router.replace(`/game/${screen}${query}`)
   }, [router, searchParams])

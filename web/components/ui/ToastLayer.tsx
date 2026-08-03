@@ -34,7 +34,7 @@ function ToastItem({ toast, onDismiss }: { toast: Toast; onDismiss: (id: string)
     return () => { clearTimeout(show); clearTimeout(hide); clearTimeout(remove) }
   }, [toast.id, onDismiss])
 
-  const accent = toast.kind === 'ok' ? '#39d36a' : toast.kind === 'warn' ? '#f5a623' : 'rgba(100,180,255,0.8)'
+  const accent = toast.kind === 'ok' ? '#39d36a' : toast.kind === 'warn' ? '#f5a623' : 'rgba(112,217,234,0.8)'
 
   return (
     <div style={{

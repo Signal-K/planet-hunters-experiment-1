@@ -14,7 +14,7 @@ const TONES: Record<PillKind, { bg: string; fg: string }> = {
   ok:    { bg: 'rgba(57,211,106,0.18)',  fg: '#39d36a' },
   warn:  { bg: 'rgba(255,179,71,0.18)',  fg: '#ffb347' },
   crit:  { bg: 'rgba(255,90,106,0.18)',  fg: '#ff5a6a' },
-  info:  { bg: 'rgba(126,200,255,0.18)', fg: '#7ec8ff' },
+  info:  { bg: 'rgba(112,217,234,0.18)', fg: '#7ec8ff' },
   amber: { bg: 'rgba(245,166,35,0.18)',  fg: '#f5a623' },
   mute:  { bg: 'rgba(169,184,206,0.10)', fg: '#7a8294' },
 }

@@ -52,6 +52,8 @@ export default function MissionSetupRoutes({
           clientCooldowns={game.player.clientCooldowns}
           dailyClientPool={game.player.dailyClientPool}
           francs={game.player.francs}
+          crew={game.player.crew}
+          player={game.player}
         />
       )
 
@@ -105,6 +107,8 @@ export default function MissionSetupRoutes({
             hasCoach={hasCoach}
             coachManual={coachManual}
             deliveryTargetName={deliveryTargetName}
+            crew={game.player.crew}
+            crewModuleFitted={game.player.shipCustomizerParts?.['crew-module'] === 'crew-quarters-t1'}
           />
           {launchPending && (
             <ErrorBoundary fallback={null} onError={onLaunchComplete}>

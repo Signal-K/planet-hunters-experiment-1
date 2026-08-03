@@ -125,6 +125,7 @@ func ensureCollections(app core.App) {
 		col.Fields.Add(&core.TextField{Name: "payout_notes", Max: 200})
 		col.Fields.Add(&core.TextField{Name: "affinity_notes", Max: 200})
 		col.Fields.Add(&core.TextField{Name: "ui_role", Max: 40})
+		col.Fields.Add(&core.BoolField{Name: "supplies_crew"})
 		col.Indexes = []string{"CREATE UNIQUE INDEX idx_clients_slug ON clients (slug)"}
 		if err := app.Save(col); err != nil {
 			log.Printf("failed to save clients: %v", err)
@@ -351,6 +352,14 @@ func ensureCollections(app core.App) {
 		missionLog.Fields.Add(&core.NumberField{Name: "payout_francs", Required: false})
 		missionLog.Fields.Add(&core.JSONField{Name: "minerals_delivered", Required: false, MaxSize: 4096})
 		missionLog.Fields.Add(&core.NumberField{Name: "missions_done_after", Required: false})
+		// Plain (non-autodate) field, client-settable — mirrors mission_runs'
+		// completed_at. Distinct from the record's own `created` autodate:
+		// `created` is always "when this row was written", which is fine for
+		// real play (missions are logged as they finish) but can't be
+		// backdated for seeded/dev data. completed_at can be, so seed tooling
+		// (scripts/seed-dev-presets.ts) can give synthetic mission history
+		// plausible historical dates instead of a burst of same-instant rows.
+		missionLog.Fields.Add(&core.DateField{Name: "completed_at", Required: false})
 		missionLog.Indexes = []string{
 			"CREATE INDEX idx_mission_log_user ON mission_log (user)",
 		}
@@ -406,19 +415,28 @@ func ensureCollections(app core.App) {
 		col.Fields.Add(&core.NumberField{Name: "seed"})
 		col.Fields.Add(&core.NumberField{Name: "schema_version"})
 		col.Fields.Add(&core.TextField{Name: "status", Max: 20})
+		col.Fields.Add(&core.TextField{Name: "body_id", Max: 80})
+		col.Fields.Add(&core.TextField{Name: "rover_name", Max: 80})
+		col.Fields.Add(&core.NumberField{Name: "time"})
 		// Sparse voxel edit deltas ("x,y,z" -> material), takeon's own delta
 		// save model — not a per-chunk table. Chunking is a client-side
 		// render cache (takeon's chunk-cached isometric renderer), not a
 		// storage concern, so there's no separate chunks collection.
 		col.Fields.Add(&core.JSONField{Name: "edits", MaxSize: 2000000})
 		col.Fields.Add(&core.JSONField{Name: "rover", MaxSize: 20000})
+		col.Fields.Add(&core.JSONField{Name: "anomalies", MaxSize: 200000})
 		col.Fields.Add(&core.JSONField{Name: "photos", MaxSize: 200000})
+		col.Fields.Add(&core.JSONField{Name: "weather", MaxSize: 20000})
+		col.Fields.Add(&core.AutodateField{Name: "created", OnCreate: true})
+		col.Fields.Add(&core.AutodateField{Name: "updated", OnCreate: true, OnUpdate: true})
 		col.Indexes = []string{
 			"CREATE UNIQUE INDEX idx_voxel_worlds_user_target ON voxel_worlds (user, target_id)",
 		}
 		if err := app.Save(col); err != nil {
 			log.Printf("failed to save voxel_worlds: %v", err)
 		}
+	} else {
+		migrateVoxelWorlds(app)
 	}
 
 	// structures — one row per placed structure instance, split out from
@@ -629,6 +647,10 @@ func migrateMissionLog(app core.App) {
 		col.DeleteRule = nil
 		changed = true
 	}
+	if col.Fields.GetByName("completed_at") == nil {
+		col.Fields.Add(&core.DateField{Name: "completed_at", Required: false})
+		changed = true
+	}
 
 	if changed {
 		if err := app.Save(col); err != nil {
@@ -657,6 +679,59 @@ func migrateStructureBlueprints(app core.App) {
 	}
 }
 
+// migrateVoxelWorlds adds the remaining MissionState fields required by the
+// LandnamSync adapter. Older rows keep loading because Takeon tolerates
+// absent optional state and the adapter supplies safe defaults.
+func migrateVoxelWorlds(app core.App) {
+	col, err := app.FindCollectionByNameOrId("voxel_worlds")
+	if err != nil {
+		return
+	}
+
+	changed := false
+	addText := func(name string, max int) {
+		if col.Fields.GetByName(name) == nil {
+			col.Fields.Add(&core.TextField{Name: name, Max: max})
+			changed = true
+		}
+	}
+	addNumber := func(name string) {
+		if col.Fields.GetByName(name) == nil {
+			col.Fields.Add(&core.NumberField{Name: name})
+			changed = true
+		}
+	}
+	addJSON := func(name string, maxSize int64) {
+		if col.Fields.GetByName(name) == nil {
+			col.Fields.Add(&core.JSONField{Name: name, MaxSize: maxSize})
+			changed = true
+		}
+	}
+
+	addText("body_id", 80)
+	addText("rover_name", 80)
+	addNumber("time")
+	addJSON("anomalies", 200000)
+	addJSON("weather", 20000)
+	if col.Fields.GetByName("created") == nil {
+		col.Fields.Add(&core.AutodateField{Name: "created", OnCreate: true})
+		changed = true
+	}
+	if col.Fields.GetByName("updated") == nil {
+		col.Fields.Add(&core.AutodateField{Name: "updated", OnCreate: true, OnUpdate: true})
+		changed = true
+	}
+
+	if !changed {
+		return
+	}
+	if err := app.Save(col); err != nil {
+		log.Printf("migrateVoxelWorlds: failed to save: %v", err)
+	} else {
+		log.Printf("migrateVoxelWorlds: updated voxel_worlds schema")
+	}
+}
+
 func ensureCatalogFields(app core.App) {
 	minerals, err := app.FindCollectionByNameOrId("minerals")
 	if err == nil {
@@ -676,6 +751,7 @@ func ensureCatalogFields(app core.App) {
 		addTextIfMissing(clients, "payout_notes", false)
 		addTextIfMissing(clients, "affinity_notes", false)
 		addTextIfMissing(clients, "ui_role", false)
+		addBoolIfMissing(clients, "supplies_crew", false)
 		if err := app.Save(clients); err != nil {
 			log.Printf("failed to update clients schema: %v", err)
 		}
@@ -687,8 +763,30 @@ func ensureCatalogFields(app core.App) {
 		addSelectIfMissing(missionsCatalog, "payload_type", []string{"rover"}, false)
 		addTextIfMissing(missionsCatalog, "payload_name", false)
 		addNumberIfMissing(missionsCatalog, "payload_cargo_cost", false)
+		hadLegacyContractorSlug := missionsCatalog.Fields.GetByName("contractor_slug") != nil
+		addTextIfMissing(missionsCatalog, "client_slug", false)
 		if err := app.Save(missionsCatalog); err != nil {
 			log.Printf("failed to update missions_catalog schema: %v", err)
+		}
+		// Pre-STS-632 collections were created under the retired "contractor"
+		// naming (see "Terminology: clients, not contractors" in CLAUDE.md).
+		// client_slug landed as a new empty field on those, so every mission
+		// record silently lost its client, which made toMission() read
+		// mission.client as undefined and isOwnProgramMission() misclassify
+		// ordinary client contracts as the player's own program. Backfill
+		// client_slug from the legacy column once; never overwrite existing
+		// client_slug data.
+		if hadLegacyContractorSlug {
+			records, err := app.FindRecordsByFilter("missions_catalog", "client_slug = '' && contractor_slug != ''", "", 0, 0)
+			if err != nil {
+				log.Printf("failed to query legacy contractor_slug records: %v", err)
+			}
+			for _, rec := range records {
+				rec.Set("client_slug", rec.GetString("contractor_slug"))
+				if err := app.Save(rec); err != nil {
+					log.Printf("failed to backfill client_slug for %s: %v", rec.GetString("slug"), err)
+				}
+			}
 		}
 	}
 
@@ -833,28 +931,30 @@ func seedCatalog(app core.App) {
 		name, color, initial, projectType, payoutNotes, affinityNotes, uiRole string
 		tier                                                                  float64
 		preferences                                                           []string
+		suppliesCrew                                                          bool
 	}
 	clients := []struct {
 		slug string
 		client
 	}{
-		{"helios-propulsion-depot", client{"Helios Propulsion Depot", "#f5a623", "HP", "fuel logistics and orbital propellant reserves", "20% premium on hydrogen and propellant runs", "+2.5% payout per completed Helios job", "starter", 1, []string{"hydrogen"}}},
-		{"arcturus-battery-systems", client{"Arcturus Battery Systems", "#4f9cf7", "AB", "energy storage manufacturing and cathode supply", "22% premium on cobalt and copper battery inputs", "+2.5% payout per completed Arcturus job", "prospect", 1, []string{"cobalt", "copper"}}},
-		{"ferrum-orbital-construction", client{"Ferrum Orbital Construction", "#c7d0dc", "FO", "in-space manufacturing and structural assembly", "18% premium on aluminium and copper construction cargo", "+2% payout per completed Ferrum job", "bulk", 1, []string{"aluminium", "copper"}}},
-		{"contractor-04b", client{"Client Slot 04B", "#a8d8ea", "4B", "construction aggregates", "Low rate, large orders", "+6 per delivery", "bulk", 4, []string{"iron", "carbon"}}},
-		{"contractor-06a", client{"Client Slot 06A", "#70e070", "6A", "deep-core sampling", "Mixed-bag premium", "+12 per delivery", "prospect", 6, []string{"nickel", "cobalt"}}},
-		{"contractor-06b", client{"Client Slot 06B", "#c084ff", "6B", "rare-gas refining", "High tier, small batches", "+20 per delivery", "command", 6, []string{"rare", "gold"}}},
-		{"contractor-08a", client{"Client Slot 08A", "#ff8c42", "8A", "solar-grade silicon", "Premium purity contracts", "+10 per delivery", "command", 8, []string{"silicon", "ice"}}},
-		{"contractor-08b", client{"Client Slot 08B", "#5fcde6", "8B", "outer-belt volatiles", "Medium rate, special cargo", "+8 per delivery", "bulk", 8, []string{"ice", "carbon"}}},
-		{"contractor-10a", client{"Client Slot 10A", "#f5a623", "10A", "strategic minerals", "High payout, rare minerals", "+25 per delivery", "science", 10, []string{"gold", "rare", "cobalt"}}},
-		{"contractor-10b", client{"Client Slot 10B", "#39d36a", "10B", "base expansion reserves", "Balanced late-game contracts", "+12 per delivery", "starter", 10, []string{"iron", "silicon", "nickel"}}},
+		{"helios-propulsion-depot", client{"Helios Propulsion Depot", "#f5a623", "HP", "fuel logistics and orbital propellant reserves", "20% premium on hydrogen and propellant runs", "+2.5% payout per completed Helios job", "starter", 1, []string{"hydrogen"}, false}},
+		{"arcturus-battery-systems", client{"Arcturus Battery Systems", "#4f9cf7", "AB", "energy storage manufacturing and cathode supply", "22% premium on cobalt and copper battery inputs", "+2.5% payout per completed Arcturus job", "prospect", 1, []string{"cobalt", "copper"}, false}},
+		{"ferrum-orbital-construction", client{"Ferrum Orbital Construction", "#c7d0dc", "FO", "in-space manufacturing and structural assembly", "18% premium on aluminium and copper construction cargo", "+2% payout per completed Ferrum job", "bulk", 1, []string{"aluminium", "copper"}, true}},
+		{"contractor-04b", client{"Client Slot 04B", "#a8d8ea", "4B", "construction aggregates", "Low rate, large orders", "+6 per delivery", "bulk", 4, []string{"iron", "carbon"}, false}},
+		{"contractor-06a", client{"Client Slot 06A", "#70e070", "6A", "deep-core sampling", "Mixed-bag premium", "+12 per delivery", "prospect", 6, []string{"nickel", "cobalt"}, false}},
+		{"contractor-06b", client{"Client Slot 06B", "#c084ff", "6B", "rare-gas refining", "High tier, small batches", "+20 per delivery", "command", 6, []string{"rare", "gold"}, true}},
+		{"contractor-08a", client{"Client Slot 08A", "#ff8c42", "8A", "solar-grade silicon", "Premium purity contracts", "+10 per delivery", "command", 8, []string{"silicon", "ice"}, true}},
+		{"contractor-08b", client{"Client Slot 08B", "#5fcde6", "8B", "outer-belt volatiles", "Medium rate, special cargo", "+8 per delivery", "bulk", 8, []string{"ice", "carbon"}, false}},
+		{"contractor-10a", client{"Client Slot 10A", "#f5a623", "10A", "strategic minerals", "High payout, rare minerals", "+25 per delivery", "science", 10, []string{"gold", "rare", "cobalt"}, true}},
+		{"contractor-10b", client{"Client Slot 10B", "#39d36a", "10B", "base expansion reserves", "Balanced late-game contracts", "+12 per delivery", "starter", 10, []string{"iron", "silicon", "nickel"}, true}},
 	}
 	for _, c := range clients {
 		seedRecord(app, "clients", c.slug, map[string]any{
 			"name": c.name, "color": c.color, "initial": c.initial, "unlock_tier": c.tier,
 			"project_type": c.projectType, "mineral_preferences": c.preferences,
 			"payout_notes": c.payoutNotes, "affinity_notes": c.affinityNotes,
-			"ui_role": c.uiRole,
+			"ui_role":       c.uiRole,
+			"supplies_crew": c.suppliesCrew,
 		})
 	}
 
@@ -1036,6 +1136,7 @@ func seedCatalog(app core.App) {
 	}{
 		{"launchpad", structureBlueprint{"Launchpad", "launchpad", "always", "always", "Rocket assembly and launch operations.", "launch-pad", 0, map[string]float64{}}},
 		{"refinery", structureBlueprint{"Refinery", "refinery", "client-mission-trigger", "First client mission requiring refined minerals", "Refines raw minerals into higher-value client-grade materials.", "refinery", structurePriceRefinery, map[string]float64{"aluminium": 20, "copper": 10}}},
+		{"astronaut-academy", structureBlueprint{"Astronaut Academy", "astronaut-academy", "academy-research", "Affinity level 2 with two clients, then research", "Trains named astronauts and coordinates Earth Base staffing.", "astronaut-academy", 12000000, map[string]float64{"aluminium": 24, "silicon": 12, "copper": 8}}},
 		{"solar-array", structureBlueprint{"Solar Array", "solar-array", "manual", "", "Fixed panel farm. Recharges a rover quickly within range (daylight only).", "solar-array", 0, map[string]float64{}}},
 		{"beacon", structureBlueprint{"Nav Beacon", "beacon", "manual", "", "Marks a site on the map and lights the area at night.", "beacon", 0, map[string]float64{}}},
 		{"drill-rig", structureBlueprint{"Auto-Drill Rig", "drill-rig", "manual", "", "Slowly mines the column beneath it; buffers ore for pickup.", "drill-rig", 0, map[string]float64{}}},

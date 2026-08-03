@@ -34,7 +34,7 @@ export default function IconBadge({ icon, size = 34, tone = 'cyan', active = fal
         display: 'grid',
         placeItems: 'center',
         borderRadius: 6,
-        background: 'rgba(0,10,24,0.6)',
+        background: 'rgba(10,10,12,0.6)',
         border: `1.5px solid ${active ? color : 'var(--ln-hairline-strong)'}`,
         color: active ? color : 'var(--ln-text-dim)',
         boxShadow: active ? `0 0 0 1px ${color}40, 0 0 14px ${color}30` : 'none',

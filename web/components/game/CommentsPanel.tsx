@@ -84,7 +84,7 @@ export default function CommentsPanel({ recordType, recordId }: CommentsPanelPro
               style={{
                 padding: '8px 10px',
                 borderRadius: 8,
-                background: 'rgba(8,16,28,0.5)',
+                background: 'rgba(20,20,23,0.5)',
                 border: '1px solid var(--ln-hairline)',
               }}
             >
@@ -122,7 +122,7 @@ export default function CommentsPanel({ recordType, recordId }: CommentsPanelPro
                 padding: '8px 10px',
                 borderRadius: 8,
                 border: '1px solid var(--ln-hairline-strong)',
-                background: 'rgba(8,16,28,0.6)',
+                background: 'rgba(20,20,23,0.6)',
                 color: '#e8f0fe',
                 fontFamily: 'var(--ln-font-body)',
                 fontSize: 12,
@@ -139,8 +139,8 @@ export default function CommentsPanel({ recordType, recordId }: CommentsPanelPro
                 style={{
                   padding: '6px 14px',
                   borderRadius: 8,
-                  border: '1px solid rgba(63,169,255,0.6)',
-                  background: !draft.trim() || submitting ? 'rgba(8,16,28,0.5)' : 'rgba(63,169,255,0.18)',
+                  border: '1px solid rgba(112,217,234,0.6)',
+                  background: !draft.trim() || submitting ? 'rgba(20,20,23,0.5)' : 'rgba(112,217,234,0.18)',
                   color: 'var(--ln-cyan-bright)',
                   fontFamily: 'var(--ln-font-display)',
                   fontWeight: 800,

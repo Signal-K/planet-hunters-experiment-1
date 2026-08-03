@@ -17,6 +17,9 @@ import { useCatalogSync } from '@/lib/contexts/useCatalogSync'
 import { useGameLoop } from '@/lib/contexts/useGameLoop'
 import { useTutorialActions } from '@/lib/contexts/useTutorialActions'
 import { useEconomyActions } from '@/lib/contexts/useEconomyActions'
+import { useSurfaceOpsActions } from '@/lib/contexts/useSurfaceOpsActions'
+import { useInstrumentFeedNotifications } from '@/lib/contexts/useInstrumentFeedNotifications'
+import { useAcademyActions } from '@/lib/contexts/useAcademyActions'
 
 export type { Screen, Player, GameState } from '@/lib/game-types'
 
@@ -34,9 +37,17 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
 
   const [hydrated, setHydrated] = useState(false)
   const isPreview = useRef(false)
+  // React StrictMode double-invokes effects in dev. This effect strips the
+  // `?preset=`/`?preview=` query via history.replaceState as one of its own
+  // side effects, so a second invocation reads an already-stripped URL and
+  // silently falls through to the loadState() branch, discarding the preset
+  // it just applied. Guard so only the first invocation's result sticks.
+  const hydrationRanOnce = useRef(false)
 
   // ── Hydration ──────────────────────────────────────────────────────────────
   useEffect(() => {
+    if (hydrationRanOnce.current) return
+    hydrationRanOnce.current = true
     const params = new URLSearchParams(window.location.search)
     const previewScreen = params.get('preview')
     const routePreset = window.location.pathname.endsWith('/game/ship-customizer') ? 'ship-customizer' : null
@@ -79,7 +90,11 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
   // Persist state to localStorage
   useEffect(() => {
     if (!hydrated || isPreview.current) return
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(state))
+    // updatedAt (STS-635) is stamped only in the serialized write, not fed back
+    // into React state, so this effect can't retrigger itself. It's read back
+    // on next load via loadState()/normalizeState() and used as a tie-breaker
+    // in mergeRemoteState when local and remote missionsDone are equal.
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ ...state, updatedAt: Date.now() }))
   }, [state, hydrated])
 
   const router = useRouter()
@@ -98,10 +113,19 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     missionId: state.missionId,
     targetId: state.targetId,
     missionsDone: state.player.missionsDone,
-  }), [catalog, state.missionId, state.player.discoveredExoplanetTargets, state.player.freeOperations, state.player.missionsDone, state.player.satelliteMonitoringBuilt, state.player.transitSatelliteLaunchedAt, state.targetId])
+    player: state.player,
+  }), [catalog, state.missionId, state.player, state.targetId])
   const loop    = useGameLoop({ stateRef, setState, catalog: runtimeCatalog, addToast: ui.addToast })
   const tutorial = useTutorialActions(setState)
   const economy = useEconomyActions(setState, useCallback(() => runtimeCatalog.missions, [runtimeCatalog.missions]))
+  const surfaceOps = useSurfaceOpsActions(setState, ui.addToast)
+  const academy = useAcademyActions(stateRef, setState, useCallback(() => runtimeCatalog, [runtimeCatalog]), ui.addToast)
+  useInstrumentFeedNotifications({
+    enabled: hydrated && !isPreview.current,
+    player: state.player,
+    setState,
+    addToast: ui.addToast,
+  })
 
   // Sync game.screen → URL on every screen change.
   // skipNextUrlSync prevents a loop when the change was triggered BY a URL change.
@@ -171,15 +195,30 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       onLaunch: loop.onLaunch,
       onMiningDone: loop.onMiningDone,
       onDeliveryArrived: loop.onDeliveryArrived,
+      onDeliveryUnloadComplete: loop.onDeliveryUnloadComplete,
       onReturnArrived: loop.onReturnArrived,
       onRoverMiningDone: loop.onRoverMiningDone,
+      onLandingTouchdown: loop.onLandingTouchdown,
+      onRedockComplete: loop.onRedockComplete,
       onDebriefDone: loop.onDebriefDone,
       gainResearchXP: loop.gainResearchXP,
       upgradeLicenseGrade: loop.upgradeLicenseGrade,
       unlockBlueprint: loop.unlockBlueprint,
+      researchAcademy: academy.researchAcademy,
+      researchLanding: academy.researchLanding,
+      setAcademyFunding: academy.setAcademyFunding,
+      hireCrew: academy.hireCrew,
+      rehireCrew: academy.rehireCrew,
+      startCrewTraining: academy.startCrewTraining,
+      startCandidateTraining: academy.startCandidateTraining,
+      collectCrewTraining: academy.collectCrewTraining,
+      researchCrewModule: academy.researchCrewModule,
+      assignCrewToStructure: academy.assignCrewToStructure,
+      shareChartsWithClient: academy.shareChartsWithClient,
       launchTransitSatellite: loop.launchTransitSatellite,
       submitTessClassification: loop.submitTessClassification,
       chooseSatelliteTarget: loop.chooseSatelliteTarget,
+      submitAsteroidClassification: loop.submitAsteroidClassification,
       // Tutorial
       setTutorial: tutorial.setTutorial,
       skipTutorial: tutorial.skipTutorial,
@@ -192,6 +231,8 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       onCollectRefined: economy.onCollectRefined,
       placeStructure: economy.placeStructure,
       upgradeLaunchpad: economy.upgradeLaunchpad,
+      excavateSubsurface: economy.excavateSubsurface,
+      buildSubsurfaceRoom: economy.buildSubsurfaceRoom,
       buildScanner: economy.buildScanner,
       startScan: economy.startScan,
       collectScan: economy.collectScan,
@@ -199,6 +240,13 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       acceptLoan: economy.acceptLoan,
       abandonMission: economy.abandonMission,
       confirmShipCustomizerBuild: economy.confirmShipCustomizerBuild,
+      purchaseTerrainRights: surfaceOps.purchaseTerrainRights,
+      buildSettlementLaunchpad: surfaceOps.buildSettlementLaunchpad,
+      recordSurfaceMined: surfaceOps.recordSurfaceMined,
+      dispatchSurfaceFerry: surfaceOps.dispatchSurfaceFerry,
+      retrySurfaceFerry: surfaceOps.retrySurfaceFerry,
+      reconcileSurfaceFerry: surfaceOps.reconcileSurfaceFerry,
+      acknowledgeSurfaceFerry: surfaceOps.acknowledgeSurfaceFerry,
     }}>
       {children}
     </GameContext.Provider>

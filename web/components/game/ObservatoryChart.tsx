@@ -346,10 +346,10 @@ export default function ObservatoryChart({ points, ranges, onRange, onRemoveRang
           *after* this JSX renders, so without an explicit stacking order
           it would paint over (hide) this reticle. */}
       <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', pointerEvents: 'none', opacity: 0.35, zIndex: 1 }}>
-        <div style={{ position: 'relative', width: 40, height: 40, border: '1px solid rgba(126,200,255,0.4)', borderRadius: '50%' }}>
-          <span style={{ position: 'absolute', top: '50%', left: 0, width: '100%', height: 1, background: 'rgba(126,200,255,0.4)', transform: 'translateY(-50%)' }} />
-          <span style={{ position: 'absolute', left: '50%', top: 0, height: '100%', width: 1, background: 'rgba(126,200,255,0.4)', transform: 'translateX(-50%)' }} />
-          <span style={{ position: 'absolute', top: '50%', left: '50%', width: 3, height: 3, borderRadius: '50%', background: 'rgba(126,200,255,0.6)', transform: 'translate(-50%, -50%)' }} />
+        <div style={{ position: 'relative', width: 40, height: 40, border: '1px solid rgba(112,217,234,0.4)', borderRadius: '50%' }}>
+          <span style={{ position: 'absolute', top: '50%', left: 0, width: '100%', height: 1, background: 'rgba(112,217,234,0.4)', transform: 'translateY(-50%)' }} />
+          <span style={{ position: 'absolute', left: '50%', top: 0, height: '100%', width: 1, background: 'rgba(112,217,234,0.4)', transform: 'translateX(-50%)' }} />
+          <span style={{ position: 'absolute', top: '50%', left: '50%', width: 3, height: 3, borderRadius: '50%', background: 'rgba(112,217,234,0.6)', transform: 'translate(-50%, -50%)' }} />
         </div>
       </div>
     </div>

@@ -16,7 +16,7 @@ import type { Screen } from '@/lib/game-types'
 export type SceneSurface = 'canvas' | 'dom'
 
 /** Where the place physically is. Drives which actors may be present. */
-export type SceneLocation = 'earth-base' | 'orbit' | 'transit' | 'target-surface' | 'menu'
+export type SceneLocation = 'earth-base' | 'earth-base-subsurface' | 'orbit' | 'transit' | 'target-surface' | 'menu'
 
 export interface SceneDefinition {
   id: string
@@ -54,6 +54,38 @@ export const SCENES: readonly SceneDefinition[] = [
     description: 'Structure placement over the same Earth Base plots. Note it loads the hub scene — `build-place.scene.json` is orphaned.',
   },
   {
+    id: 'subsurface',
+    name: 'Earth Base Subsurface',
+    surface: 'dom',
+    location: 'earth-base-subsurface',
+    entityTypes: [],
+    description: 'Embedded below-soil logistics deck reached from the Earth Base scene.',
+  },
+  {
+    id: 'subsurface-mineral-vault',
+    name: 'Mineral Vault',
+    surface: 'dom',
+    location: 'earth-base-subsurface',
+    entityTypes: [],
+    description: 'Live view of the player mineral stash for refining, construction and sale.',
+  },
+  {
+    id: 'subsurface-parts-locker',
+    name: 'Parts Stores',
+    surface: 'dom',
+    location: 'earth-base-subsurface',
+    entityTypes: [],
+    description: 'Catalog of the current registered Hangar hardware loadout.',
+  },
+  {
+    id: 'subsurface-habitat-training',
+    name: 'Habitat Training',
+    surface: 'dom',
+    location: 'earth-base-subsurface',
+    entityTypes: [],
+    description: 'Feature-gated below-soil astronaut habitat rehearsal scene. No training mechanics are active yet.',
+  },
+  {
     id: 'mining',
     name: 'Mining Run',
     surface: 'canvas',
@@ -68,9 +100,30 @@ export const SCENES: readonly SceneDefinition[] = [
     name: 'On-Target Construction',
     surface: 'canvas',
     location: 'target-surface',
+    screen: 'surface-ops',
     sceneFile: '/game/scenes/construction-target.scene.json',
     entityTypes: ['ConstructionController'],
     description: 'Building a structure on a target body rather than at Earth Base.',
+  },
+  {
+    id: 'delivery',
+    name: 'Cargo Delivery',
+    surface: 'canvas',
+    location: 'target-surface',
+    screen: 'delivery',
+    sceneFile: '/game/scenes/delivery.scene.json',
+    entityTypes: ['DeliveryController', 'UnloadPad'],
+    description: 'A physical unloading berth for two-leg contracts. Cargo leaves the ship before its empty Earth-return leg.',
+  },
+  {
+    id: 'academy',
+    name: 'Astronaut Academy',
+    surface: 'canvas',
+    location: 'earth-base',
+    screen: 'academy',
+    sceneFile: '/game/scenes/academy.scene.json',
+    entityTypes: ['AcademyController', 'TrainingFacility'],
+    description: 'Earth-side crew training scene with a light editorial roster and observable Academy activity.',
   },
   {
     id: 'target-picker',
@@ -94,6 +147,7 @@ export const SCENES: readonly SceneDefinition[] = [
   { id: 'hangar', name: 'Hangar', surface: 'dom', location: 'earth-base', screen: 'hangar', entityTypes: [], description: 'Owned ships and the ship customiser interior view.' },
   { id: 'skills', name: 'Skill Tree', surface: 'dom', location: 'menu', screen: 'skills', entityTypes: [], description: 'Four branches — mining, cargo, range, engineering.' },
   { id: 'scan-station', name: 'Scan Station', surface: 'dom', location: 'earth-base', screen: 'scan-station', entityTypes: [], description: 'Daily target scans; grants research XP.' },
+  { id: 'launchpad', name: 'Launchpad', surface: 'dom', location: 'earth-base', screen: 'launchpad', entityTypes: [], description: 'The player\'s own program — satellites and self-directed runs they launch on their own initiative. Client contracts live one press away on the Mission Board.' },
   { id: 'galaxy', name: 'Galaxy Map', surface: 'dom', location: 'orbit', screen: 'galaxy', entityTypes: [], description: 'Star map beyond the solar system. Free Ops only.' },
 ]
 
@@ -114,6 +168,8 @@ export const KNOWN_SCENE_FILES: readonly string[] = [
   '/game/scenes/mining.scene.json',
   '/game/scenes/mining-test.scene.json',
   '/game/scenes/construction-target.scene.json',
+  '/game/scenes/delivery.scene.json',
+  '/game/scenes/academy.scene.json',
   '/game/scenes/target-picker.scene.json',
 ]
 

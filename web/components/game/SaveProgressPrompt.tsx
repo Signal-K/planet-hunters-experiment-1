@@ -32,7 +32,7 @@ export default function SaveProgressPrompt({ onUpgrade, onDismiss }: SaveProgres
       onDismiss={onDismiss}
       panelStyle={{
         background: 'linear-gradient(180deg, #0d1c30, #060d18)',
-        border: '1px solid rgba(63,169,255,0.5)',
+        border: '1px solid rgba(112,217,234,0.5)',
         padding: '18px 16px 26px',
         boxShadow: '0 -12px 40px rgba(0,0,0,0.6)',
       }}
@@ -57,8 +57,8 @@ export default function SaveProgressPrompt({ onUpgrade, onDismiss }: SaveProgres
             data-testid="upgrade-email"
             style={{
               width: '100%', padding: '12px 14px',
-              background: 'rgba(8,16,28,0.8)',
-              border: '1px solid rgba(63,169,255,0.3)',
+              background: 'rgba(20,20,23,0.8)',
+              border: '1px solid rgba(112,217,234,0.3)',
               borderRadius: 10, outline: 'none',
               fontFamily: 'var(--ln-font-body)', fontSize: 14, color: '#e6efff',
               boxSizing: 'border-box',
@@ -74,8 +74,8 @@ export default function SaveProgressPrompt({ onUpgrade, onDismiss }: SaveProgres
             data-testid="upgrade-password"
             style={{
               width: '100%', padding: '12px 14px',
-              background: 'rgba(8,16,28,0.8)',
-              border: '1px solid rgba(63,169,255,0.3)',
+              background: 'rgba(20,20,23,0.8)',
+              border: '1px solid rgba(112,217,234,0.3)',
               borderRadius: 10, outline: 'none',
               fontFamily: 'var(--ln-font-body)', fontSize: 14, color: '#e6efff',
               boxSizing: 'border-box',

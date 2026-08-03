@@ -3,6 +3,7 @@
 import type { StructureBlueprint, RefineryRecipe, MarketTemplate } from './types'
 import { MINERAL_VALUE, REFINING_COST_RATE, REFINING_VALUE_MULTIPLIER, STRUCTURE_PRICES } from './economy'
 import { MINERAL_RARITY } from './minerals'
+import { CLIENT_AFFINITY_MISSION_THRESHOLD } from './clients'
 
 // Refining takes raw ore and returns it worth REFINING_VALUE_MULTIPLIER more,
 // for a cycle fee proportional to the input's value. Previously each recipe
@@ -60,6 +61,26 @@ export const STRUCTURES: StructureBlueprint[] = [
     unlockTrigger: 'always',
     description: 'Monitors player-launched transit telescopes and downlinks daily TESS-style candidates for classification.',
   },
+  {
+    id: 'deep-space-telescope',
+    name: 'Deep Space Telescope',
+    kind: 'deep-space-telescope',
+    cost: STRUCTURE_PRICES.deepSpaceTelescope,
+    costMaterials: { aluminium: 30, copper: 16, silicon: 10 },
+    unlocksAt: 'Satellite Monitoring Station level 2 and affinity level 2 with a client',
+    unlockTrigger: 'deep-space-telescope-unlock',
+    description: 'Independent long-baseline instrument (STS-622) that downlinks unconfirmed NEO candidates from the Minor Planet Center for asteroid-discovery classification, separate from the transit satellite.',
+  },
+  {
+    id: 'astronaut-academy',
+    name: 'Astronaut Academy',
+    kind: 'astronaut-academy',
+    cost: STRUCTURE_PRICES.academy,
+    costMaterials: { aluminium: 24, silicon: 12, copper: 8 },
+    unlocksAt: 'Research after reaching affinity level 2 with two clients',
+    unlockTrigger: 'academy-research',
+    description: 'Trains named astronauts, manages the roster, and coordinates Earth Base staffing.',
+  },
   { id: 'garage', name: 'Vehicle Garage', kind: 'garage', cost: STRUCTURE_PRICES.garage, unlocksAt: 'Future sprint', unlockTrigger: 'manual', description: 'Surface rover maintenance and upgrades.' },
 ]
 
@@ -72,9 +93,24 @@ export const SCANS_PER_DAY = 5
 export const SCAN_DURATION_MS = 10 * 60 * 1000
 export const SCANS_REQUIRED_TO_MAP = 3
 
-export function structureUnlocked(structure: StructureBlueprint, opts: { refineryUnlocked?: boolean; placed?: string[]; freeOperations?: boolean } = {}): boolean {
+// Deep Space Telescope unlock (STS-622): requires the transit satellite to
+// have reached level 2 and at least one client relationship to have reached
+// affinity level 2 — a lighter bar than the Academy's two-client requirement,
+// since this gates a second instrument rather than a new profession. Exact
+// numbers are a build-time call per the ticket ("decide during build rather
+// than re-asked as a blocking question"), not a re-litigated design decision.
+export function deepSpaceTelescopeUnlocked(opts: { satelliteMonitoringLevel?: number; clientMissions?: Record<string, number> } = {}): boolean {
+  if ((opts.satelliteMonitoringLevel ?? 1) < 2) return false
+  return Object.values(opts.clientMissions ?? {}).some(
+    jobs => 1 + Math.floor(Math.max(0, jobs) / CLIENT_AFFINITY_MISSION_THRESHOLD) >= 2
+  )
+}
+
+export function structureUnlocked(structure: StructureBlueprint, opts: { refineryUnlocked?: boolean; academyResearched?: boolean; placed?: string[]; freeOperations?: boolean; satelliteMonitoringLevel?: number; clientMissions?: Record<string, number> } = {}): boolean {
   if (structure.id === 'scan-station') return !!opts.freeOperations
   if (structure.id === 'satellite-monitoring-station') return !!opts.freeOperations
+  if (structure.id === 'astronaut-academy') return !!opts.academyResearched || !!opts.placed?.includes('astronaut-academy')
+  if (structure.id === 'deep-space-telescope') return deepSpaceTelescopeUnlocked(opts) || !!opts.placed?.includes('deep-space-telescope')
   if (structure.unlockTrigger === 'always') return true
   if (structure.id === 'refinery') return !!opts.refineryUnlocked || !!opts.placed?.includes('refinery')
   return false

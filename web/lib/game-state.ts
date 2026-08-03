@@ -3,14 +3,16 @@ import type { GameState, LicenseGrade, Player, Screen } from '@/lib/game-types'
 import { MISSIONS, TARGETS } from '@/lib/data'
 import { FREE_OPS_START_MISSIONS_DONE } from '@/lib/data/mission-generator'
 import { migrateCrewRoster } from '@/lib/systems/CrewSystem'
+import { normalizeSurfaceOps } from '@/lib/systems/SurfaceOpsSystem'
+import { settleCrewEconomy } from '@/lib/systems/AcademySystem'
 
 // Represents untrusted/partial saved state (e.g. from localStorage or remote sync)
 // where player fields are optional since older saves may be missing new fields.
 export type PartialSave = Omit<Partial<GameState>, 'player'> & { player?: Partial<Player> }
 
-const VALID_SCREENS: Screen[] = ['intro', 'build', 'hub', 'missions', 'galaxy', 'targets', 'fab', 'transit', 'mining', 'debrief', 'refinery', 'market', 'hangar', 'rocket-buy', 'skills', 'scan-station', 'rover-mining']
-const MISSION_CONTEXT_SCREENS = new Set<Screen>(['targets', 'rocket-buy', 'fab', 'transit', 'mining', 'rover-mining', 'debrief'])
-const TARGET_CONTEXT_SCREENS = new Set<Screen>(['rocket-buy', 'fab', 'transit', 'mining', 'rover-mining', 'debrief'])
+const VALID_SCREENS: Screen[] = ['intro', 'build', 'hub', 'missions', 'galaxy', 'targets', 'fab', 'transit', 'landing', 'mining', 'delivery', 'debrief', 'refinery', 'market', 'hangar', 'rocket-buy', 'skills', 'scan-station', 'rover-mining', 'launchpad', 'surface-ops', 'academy', 'asteroid-discovery']
+const MISSION_CONTEXT_SCREENS = new Set<Screen>(['targets', 'rocket-buy', 'fab', 'transit', 'mining', 'rover-mining', 'delivery', 'debrief'])
+const TARGET_CONTEXT_SCREENS = new Set<Screen>(['rocket-buy', 'fab', 'transit', 'mining', 'rover-mining', 'delivery', 'debrief'])
 const VALID_LICENSE_GRADES: LicenseGrade[] = ['Grade I', 'Grade II', 'Grade III']
 const RUNTIME_MISSION_IDS = new Set(['story-transit-telescope-launch'])
 const RUNTIME_TARGET_IDS = new Set(['earth-orbit-transit-telescope'])
@@ -45,20 +47,43 @@ export const DEFAULT_STATE: GameState = {
     roverDeployments: [],
     clientTerritories: {},
     tessClassifications: {},
+    asteroidClassifications: {},
+    instrumentDigestNotifiedOn: {},
     discoveredExoplanetTargets: {},
+    subsurfaceExcavated: false,
+    subsurfaceBuilt: [],
     satelliteMonitoringBuilt: false,
     satelliteMonitoringLevel: 1,
     transitSatelliteLevel: 1,
     transitSatelliteLaunchedAt: null,
+    deepSpaceTelescopeBuilt: false,
+    deepSpaceTelescopeLevel: 1,
+    deepSpaceTelescopeLaunchedAt: null,
     licenseGrade: 'Grade I',
     researchXP: 0,
     unlockedBlueprints: [],
     crew: [],
+    formerCrew: [],
+    crewHiresLifetime: 0,
+    crewHiresThisWeek: 0,
+    crewTraining: [],
+    trainingSessionsUsedToday: 0,
+    missionCrewIds: [],
+    crewMissionAwards: [],
+    crewVisitedTargets: [],
+    structureCrewAssignments: {},
+    sharedChartsByClient: {},
+    academyResearched: false,
+    academyFunded: false,
+    academyXP: 0,
+    crewModuleResearched: false,
+    surfaceOps: { sites: {} },
   },
   missionId: null,
   targetId: null,
   rocket: { chassis: 'hull-mk1', propulsion: 'ion-a1', drill: 'hand-drill' },
   lastCargo: null,
+  deliveredCargo: null,
   tutorial: true,
   doneSteps: {},
   popup: null,
@@ -113,19 +138,53 @@ export function normalizeState(input: PartialSave): GameState {
   const tessClassifications = player.tessClassifications && typeof player.tessClassifications === 'object'
     ? player.tessClassifications
     : DEFAULT_STATE.player.tessClassifications
+  const asteroidClassifications = player.asteroidClassifications && typeof player.asteroidClassifications === 'object'
+    ? player.asteroidClassifications
+    : DEFAULT_STATE.player.asteroidClassifications
   const discoveredExoplanetTargets = player.discoveredExoplanetTargets && typeof player.discoveredExoplanetTargets === 'object'
     ? player.discoveredExoplanetTargets
     : DEFAULT_STATE.player.discoveredExoplanetTargets
+  const instrumentDigestNotifiedOn = player.instrumentDigestNotifiedOn
+    && typeof player.instrumentDigestNotifiedOn === 'object'
+    && !Array.isArray(player.instrumentDigestNotifiedOn)
+    ? Object.fromEntries(
+      Object.entries(player.instrumentDigestNotifiedOn)
+        .filter((entry): entry is [string, string] =>
+          typeof entry[0] === 'string'
+          && entry[0].length > 0
+          && typeof entry[1] === 'string'
+          && /^\d{4}-\d{2}-\d{2}$/.test(entry[1])
+        )
+    )
+    : DEFAULT_STATE.player.instrumentDigestNotifiedOn
   const satelliteMonitoringLevel = Number.isFinite(player.satelliteMonitoringLevel)
     ? Math.max(1, Math.floor(player.satelliteMonitoringLevel ?? 1))
     : DEFAULT_STATE.player.satelliteMonitoringLevel
   const transitSatelliteLevel = Number.isFinite(player.transitSatelliteLevel)
     ? Math.max(1, Math.floor(player.transitSatelliteLevel ?? 1))
     : DEFAULT_STATE.player.transitSatelliteLevel
+  const deepSpaceTelescopeLevel = Number.isFinite(player.deepSpaceTelescopeLevel)
+    ? Math.max(1, Math.floor(player.deepSpaceTelescopeLevel ?? 1))
+    : DEFAULT_STATE.player.deepSpaceTelescopeLevel
   // Rovers predate the roster, so a save can carry roverDeployments and no
   // crew at all. Fold them in here — the one choke point every load path runs
   // through — rather than leaving the roster and roverDeployments to drift.
   const crew = migrateCrewRoster(player, Date.now())
+  const surfaceOps = normalizeSurfaceOps(player.surfaceOps)
+
+  // `placed` is the record of what the player actually built; the per-structure
+  // booleans are conveniences derived from it. They can disagree: a save made
+  // before `applyPlaceStructure` started setting a flag has the structure in
+  // `placed` and the flag false, which is why the hub kept telling players to
+  // "Build a Satellite Monitoring Station" they had already built. Derive the
+  // flags from `placed` so the two can never drift again — and OR rather than
+  // overwrite, so a flag set by any other route still counts.
+  const placedList = Array.isArray(player.placed) ? player.placed : DEFAULT_STATE.player.placed
+  const builtFrom = (kind: string, flag: boolean | undefined) => !!flag || placedList.includes(kind)
+  const satelliteMonitoringBuilt = builtFrom('satellite-monitoring-station', player.satelliteMonitoringBuilt)
+  const deepSpaceTelescopeBuilt = builtFrom('deep-space-telescope', player.deepSpaceTelescopeBuilt)
+  const refineryBuilt = builtFrom('refinery', player.refineryBuilt)
+  const scannerBuilt = builtFrom('scan-station', player.scannerBuilt)
   const legacyClaim = input.pendingTerritoryClaimFor as unknown as { targetId: string; clientId?: string; contractorId?: string } | undefined
   const pendingTerritoryClaimFor = legacyClaim
     ? { targetId: legacyClaim.targetId, clientId: legacyClaim.clientId ?? legacyClaim.contractorId ?? '' }
@@ -137,7 +196,8 @@ export function normalizeState(input: PartialSave): GameState {
     missionId,
     targetId,
     rocket: { ...DEFAULT_STATE.rocket, ...input.rocket },
-    player: { ...DEFAULT_STATE.player, ...player, licenseGrade, researchXP, unlockedBlueprints, tessClassifications, discoveredExoplanetTargets, satelliteMonitoringLevel, transitSatelliteLevel, crew },
+    player: { ...DEFAULT_STATE.player, ...player, licenseGrade, researchXP, unlockedBlueprints, tessClassifications, asteroidClassifications, discoveredExoplanetTargets, instrumentDigestNotifiedOn, satelliteMonitoringLevel, transitSatelliteLevel, deepSpaceTelescopeLevel, crew, surfaceOps,
+      satelliteMonitoringBuilt, deepSpaceTelescopeBuilt, refineryBuilt, scannerBuilt },
     doneSteps: { ...DEFAULT_STATE.doneSteps, ...input.doneSteps },
     ...(pendingTerritoryClaimFor ? { pendingTerritoryClaimFor } : {}),
   }
@@ -170,6 +230,9 @@ export function repairStateRoute(input: GameState): GameState {
   if (input.screen === 'galaxy' && !input.player.freeOperations) {
     return { ...input, screen: 'missions' }
   }
+  if (input.screen === 'surface-ops' && (!input.player.freeOperations || !input.player.hasLanded)) {
+    return { ...input, screen: 'hub' }
+  }
   // Repair the tutorial flag: during onboarding (missionsDone < FREE_OPS_START_MISSIONS_DONE),
   // tutorial must always be active. It can become false if the catalog had no next-sequence
   // mission at the moment onDebriefDone ran, leaving M2/M3 coach permanently dark.
@@ -182,7 +245,7 @@ export function repairStateRoute(input: GameState): GameState {
 }
 
 export function normalizeAndRepair(partial: PartialSave): GameState {
-  return repairStateRoute(normalizeState(partial))
+  return repairStateRoute(settleCrewEconomy(normalizeState(partial)))
 }
 
 /**
@@ -208,6 +271,28 @@ export function normalizeAndRepair(partial: PartialSave): GameState {
  * coach on build, hub and missions simultaneously — a fresh save with no
  * visible tutorial and no launchpad. See STS-576.
  */
+// Per-key max of two Record<string, number> maps (union of keys, higher value
+// wins per key). Used for resource-like accumulators on a missionsDone tie —
+// see mergeRemoteState's RESOURCE_* lists below.
+function maxMergeRecord(a: Record<string, number> | undefined, b: Record<string, number> | undefined): Record<string, number> {
+  const result: Record<string, number> = { ...(a ?? {}) }
+  for (const [key, value] of Object.entries(b ?? {})) {
+    result[key] = Math.max(result[key] ?? 0, value)
+  }
+  return result
+}
+
+// Resource-like scalar fields where losing progress to a blanket "local wins"
+// on a tie is a real regression (STS-635) — verified never decremented except
+// by an intentional spend/consume the player themselves triggered, so taking
+// the higher of local/remote is safe: neither side can be "more wrong" than
+// the other, only further along, per its own explicit instruction (francs,
+// stash, refinedGoods, researchXP, skillPoints, researchAnnotations) plus
+// verified monotonic-only-increment accumulators of the same shape
+// (clientMissions, academyXP, crewHiresLifetime, sharedChartsByClient).
+const RESOURCE_NUMBER_FIELDS = ['francs', 'researchXP', 'skillPoints', 'researchAnnotations', 'academyXP', 'crewHiresLifetime'] as const
+const RESOURCE_RECORD_FIELDS = ['stash', 'refinedGoods', 'clientMissions', 'sharedChartsByClient'] as const
+
 export function mergeRemoteState(current: GameState, remoteState: PartialSave): GameState {
   const merged: GameState = { ...current, ...remoteState } as GameState
 
@@ -221,13 +306,11 @@ export function mergeRemoteState(current: GameState, remoteState: PartialSave): 
   }
 
   const remoteMissionsDone = remoteState.player?.missionsDone ?? -1
-  if (current.player.missionsDone >= remoteMissionsDone) {
-    // Construction is monotonic within an onboarding stage. A browser can
-    // have an older local save at Ops 0 while PocketBase already contains the
-    // launchpad the player placed; replacing the remote player wholesale here
-    // made that building disappear on refresh/login. Keep local values as the
-    // authority for the rest of the equal-stage player state, but retain every
-    // structure and its saved plot from either side.
+  const isTie = current.player.missionsDone === remoteMissionsDone
+  if (current.player.missionsDone > remoteMissionsDone) {
+    // Local strictly ahead — unchanged from prior behavior: local player
+    // wholesale, only placed/placementPlots unioned (construction is
+    // monotonic within an onboarding stage; see the comment below).
     const remotePlaced = Array.isArray(remoteState.player?.placed) ? remoteState.player.placed : []
     const remotePlots = remoteState.player?.placementPlots ?? {}
     merged.player = {
@@ -235,6 +318,50 @@ export function mergeRemoteState(current: GameState, remoteState: PartialSave): 
       placed: Array.from(new Set([...current.player.placed, ...remotePlaced])),
       placementPlots: { ...remotePlots, ...current.player.placementPlots },
     }
+    merged.tutorial = current.tutorial
+    merged.doneSteps = current.doneSteps
+  } else if (isTie) {
+    // A genuine tie (same missionsDone on both sides, e.g. an offline session
+    // on one device while another device also played at the same mission
+    // count) previously discarded every remote field but placed/placementPlots
+    // wholesale. That silently dropped real remote progress on francs, stash,
+    // refinedGoods, research, etc. (STS-635).
+    //
+    // Resolution, in order:
+    //  1. Start from local (safe default for anything not explicitly handled
+    //     below) unless remote's updatedAt is strictly newer than local's, in
+    //     which case start from remote for the fields not covered by 2/3 —
+    //     this is the "fields that aren't naturally can-only-grow" fallback
+    //     (e.g. a boolean flag or anything else not in the resource lists).
+    //  2. Resource-like scalars/records (RESOURCE_NUMBER_FIELDS /
+    //     RESOURCE_RECORD_FIELDS) always take the max per field/key,
+    //     regardless of which side "wins" the timestamp comparison above.
+    //  3. placed/placementPlots keep their existing union logic unchanged.
+    const remoteIsNewer = typeof remoteState.updatedAt === 'number'
+      && typeof current.updatedAt === 'number'
+      && remoteState.updatedAt > current.updatedAt
+    const base = remoteIsNewer ? { ...current.player, ...remoteState.player } : { ...current.player }
+
+    const remotePlaced = Array.isArray(remoteState.player?.placed) ? remoteState.player.placed : []
+    const remotePlots = remoteState.player?.placementPlots ?? {}
+
+    merged.player = {
+      ...base,
+      placed: Array.from(new Set([...current.player.placed, ...remotePlaced])),
+      placementPlots: { ...remotePlots, ...current.player.placementPlots },
+    }
+    for (const field of RESOURCE_NUMBER_FIELDS) {
+      const localValue = current.player[field] ?? 0
+      const remoteValue = remoteState.player?.[field] ?? 0
+      merged.player[field] = Math.max(localValue, remoteValue)
+    }
+    for (const field of RESOURCE_RECORD_FIELDS) {
+      merged.player[field] = maxMergeRecord(current.player[field], remoteState.player?.[field])
+    }
+    // Onboarding-position fields deliberately keep pre-existing tie behavior
+    // (local wins) — out of scope per STS-635, see the run-resumability
+    // comment further down for why doneSteps/tutorial are handled separately
+    // from ordinary player state.
     merged.tutorial = current.tutorial
     merged.doneSteps = current.doneSteps
   } else {
@@ -253,8 +380,17 @@ export function mergeRemoteState(current: GameState, remoteState: PartialSave): 
     merged.player.activeMission = remoteActiveMission
     merged.player.missionRunId = remoteState.player?.missionRunId
     merged.player.missionPhase = remoteState.player?.missionPhase
+    merged.player.arrivalAt = remoteState.player?.arrivalAt
+    merged.player.transitStartedAt = remoteState.player?.transitStartedAt
+    merged.player.deliveryUnloadStartedAt = remoteState.player?.deliveryUnloadStartedAt
+    merged.player.headingToDelivery = remoteState.player?.headingToDelivery
+    merged.player.returningToEarth = remoteState.player?.returningToEarth
+    merged.player.debriefPending = remoteState.player?.debriefPending
     if (remoteState.missionId) merged.missionId = remoteState.missionId
     if (remoteState.targetId) merged.targetId = remoteState.targetId
+    merged.deliveryTargetId = remoteState.deliveryTargetId
+    merged.lastCargo = remoteState.lastCargo ?? null
+    merged.deliveredCargo = remoteState.deliveredCargo ?? null
     if (remoteState.screen && MISSION_CONTEXT_SCREENS.has(remoteState.screen)) merged.screen = remoteState.screen
   }
 
@@ -265,7 +401,9 @@ export function loadState(storageKey: string): GameState {
   if (typeof window === 'undefined') return DEFAULT_STATE
   try {
     const raw = localStorage.getItem(storageKey)
-    if (!raw) return DEFAULT_STATE
+    // A brand-new player still goes through migrations so the starting
+    // astronaut, drone, and rover exist before the first playable screen.
+    if (!raw) return normalizeAndRepair(DEFAULT_STATE)
     return normalizeAndRepair(JSON.parse(raw) as PartialSave)
   } catch {
     return DEFAULT_STATE

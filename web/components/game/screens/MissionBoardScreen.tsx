@@ -6,14 +6,15 @@ import TopBar from '@/components/ui/TopBar'
 import Panel from '@/components/ui/Panel'
 import StatusPill from '@/components/ui/StatusPill'
 import { IconBtn } from '@/components/ui/Button'
-import { compatibleTargetsFor, clientAffinityBonus, clientUnlocked, FREE_OPS_START_MISSIONS_DONE, CLIENT_AFFINITY_MISSION_THRESHOLD, MISSION_TEMPLATES, CLIENT_SLOTS, SELF_DIRECTED_MINING_MISSION_ID, missionTypePrimer, isOwnProgramMission } from '@/lib/data'
-import type { DailyClientPool, Mission } from '@/lib/data'
+import { compatibleTargetsFor, clientAffinityBonus, clientUnlocked, FREE_OPS_START_MISSIONS_DONE, CLIENT_AFFINITY_MISSION_THRESHOLD, MISSION_TEMPLATES, CLIENT_SLOTS, missionTypePrimer, isMissionBoardMission } from '@/lib/data'
+import type { Client, DailyClientPool, Mission } from '@/lib/data'
 import type { Catalog } from '@/lib/catalog'
 import { TUTORIAL_CONTENT_TOP } from '@/lib/tutorial-layout'
 import { UI_ZONES } from '@/lib/ui-zones'
 import MissionCard from '@/components/game/MissionCard'
 import MissionDetailPanel from '@/components/game/MissionDetailPanel'
 import ClientBonusGuideSheet from '@/components/game/ClientBonusGuideSheet'
+import ClientDossierSheet from '@/components/game/ClientDossierSheet'
 import StepFooter from '@/components/game/StepFooter'
 import MissionBoardSection from '@/components/game/MissionBoardSection'
 import MissionBoardCompleteState from '@/components/game/MissionBoardCompleteState'
@@ -21,6 +22,10 @@ import IconBadge from '@/components/ui/IconBadge'
 import SegmentedBar from '@/components/ui/SegmentedBar'
 import { formatCurrency } from '@/lib/format'
 import styles from './MissionBoard.module.css'
+import { crewRequirementStatus } from '@/lib/systems/AcademySystem'
+import type { CrewMember } from '@/lib/data'
+import type { Player } from '@/lib/game-types'
+import { diplomacyPayoutMultiplier } from '@/lib/systems/AcademySystem'
 
 function CornerBracket({ position }: { position: 'tl' | 'tr' | 'bl' | 'br' }) {
   const cls = { tl: styles.cornerBracketTl, tr: styles.cornerBracketTr, bl: styles.cornerBracketBl, br: styles.cornerBracketBr }[position]
@@ -105,6 +110,8 @@ interface MissionBoardScreenProps {
   clientCooldowns?: Record<string, number>
   dailyClientPool?: DailyClientPool
   francs?: number
+  crew?: CrewMember[]
+  player?: Player
 }
 
 // "Custom Missions Unlocked" / "Infrastructure" are one-time explainer copy,
@@ -141,7 +148,7 @@ function formatCooldown(remaining: number): string {
   return `${mins}m ${secs}s`
 }
 
-export default function MissionBoardScreen({ onBack, onPick, missionsDone, freeOperations, hasCoach, catalog, clientMissions, clientCooldowns, dailyClientPool, francs }: MissionBoardScreenProps) {
+export default function MissionBoardScreen({ onBack, onPick, missionsDone, freeOperations, hasCoach, catalog, clientMissions, clientCooldowns, dailyClientPool, francs, crew = [], player }: MissionBoardScreenProps) {
   const { missions: MISSIONS, clients: CLIENTS, minerals: MINERAL_META, targets } = catalog
   const [tick, setTick] = useState(Date.now())
   useEffect(() => {
@@ -149,6 +156,7 @@ export default function MissionBoardScreen({ onBack, onPick, missionsDone, freeO
     return () => clearInterval(id)
   }, [])
   const [showClientBonusGuide, setShowClientBonusGuide] = useState(false)
+  const [dossierClient, setDossierClient] = useState<Client | null>(null)
   const [previewId, setPreviewId] = useState<string | null>(null)
   const hasPriorFreeOpsExperience = Object.keys(clientMissions ?? {}).length > 0
     || (dailyClientPool?.completedIds.length ?? 0) > 0
@@ -173,26 +181,18 @@ export default function MissionBoardScreen({ onBack, onPick, missionsDone, freeO
 
   // In daily pool mode, the display list is the pool itself (available + completed).
   // In legacy freeops mode, fall back to the catalog freeops- missions with cooldowns.
-  const storyMissionPool = freeOperations ? MISSIONS.filter(m => m.tag === 'STORY') : []
-  const freeOpsMissionPool = MISSIONS.filter(m => m.id.startsWith('freeops-') || m.id.startsWith('exo-survey-') || m.tag === 'STORY')
-  const exoplanetSurveyPool = freeOperations ? MISSIONS.filter(m => m.id.startsWith('exo-survey-')) : []
   // Hand-authored "mine then deliver" logistics jobs are always offered in Free Ops,
   // independent of the daily-rotating client pool.
   const logisticsMissionPool = freeOperations ? MISSIONS.filter(m => !!m.deliveryTargetId && !isOnCooldown(m.client)) : []
-  // Self-directed mining has no client, no daily limit, and no cooldown —
-  // always launchable from its own dedicated Free Ops panel below (not a card
-  // in the regular list, since it isn't tied to a client or a pool slot).
-  const clientPoolExhausted = useDailyPool
-    && dailyClientPool!.missions.length > 0
-    && dailyClientPool!.missions.every(m => isCompletedToday(m.id))
+  const jointMissionPool = freeOperations ? MISSIONS.filter(m => !!m.jointProject && !isOnCooldown(m.client)) : []
   const available = useDailyPool
-    ? [...storyMissionPool, ...logisticsMissionPool, ...dailyClientPool!.missions.filter(m => !isCompletedToday(m.id)), ...exoplanetSurveyPool]
+    ? [...logisticsMissionPool, ...jointMissionPool, ...dailyClientPool!.missions.filter(m => !isCompletedToday(m.id))]
     : MISSIONS.filter(m => {
-        if (m.id === SELF_DIRECTED_MINING_MISSION_ID) return false
+        if (!isMissionBoardMission(m, freeOperations)) return false
         const customMission = !m.client
         if (m.client && !CLIENTS[m.client]) return false
         if (freeOperations) {
-          return customMission || !!m.deliveryTargetId || (freeOpsMissionPool.some(item => item.id === m.id) && !isOnCooldown(m.client))
+          return customMission || !!m.deliveryTargetId || !isOnCooldown(m.client)
         }
         // Onboarding: sequence is the only gate — client unlock tiers don't apply
         return m.sequence === sequence
@@ -211,7 +211,8 @@ export default function MissionBoardScreen({ onBack, onPick, missionsDone, freeO
   // During onboarding show only the sequence-matched missions (available).
   // During free-ops show available missions (+ completed-today for daily pool).
   // Never show locked/future missions during onboarding.
-  const rawList = useDailyPool ? [...available, ...completedToday] : available
+  const rawList = (useDailyPool ? [...available, ...completedToday] : available)
+    .filter(mission => isMissionBoardMission(mission, freeOperations))
   // In free-ops daily-pool mode, available missions first, completed at the bottom
   const isListedAvailable = (m: typeof rawList[0]) =>
     !isCompletedToday(m.id) &&
@@ -223,14 +224,13 @@ export default function MissionBoardScreen({ onBack, onPick, missionsDone, freeO
   const firstValidIdx = missionList.findIndex(m => {
     if (isCompletedToday(m.id)) return false
     if (!useDailyPool && isOnCooldown(m.client)) return false
+    if (m.jointProject && (francs ?? 0) < m.jointProject.playerCost) return false
     const ctr = m.client ? CLIENTS[m.client] : null
     if (m.client && !ctr) return false
     const cr = freeOperations || m.sequence === sequence || (!!ctr && clientUnlocked(ctr, sequence))
     return cr && (freeOperations || available.some(item => item.id === m.id))
   })
-  // Own-program runs are filed under a pseudo-client, so the payout-premium
-  // disclaimer must key off real client work, not just a populated field.
-  const hasClientMission = missionList.some(m => !!m.client && !isOwnProgramMission(m))
+  const hasClientMission = missionList.some(m => !!m.client)
   const cardModels = missionList
     .map((m, idx) => {
       const completedToday_ = isCompletedToday(m.id)
@@ -239,28 +239,56 @@ export default function MissionBoardScreen({ onBack, onPick, missionsDone, freeO
       if (m.client && !client) return null
       const isStoryMission = m.tag === 'STORY' && !m.deliveryTargetId
       const clientReady = freeOperations || m.sequence === sequence || (!!client && clientUnlocked(client, sequence))
-      const unlocked = !completedToday_ && !cooldown && clientReady && (freeOperations || available.some(item => item.id === m.id))
+      const jointFundingReady = !m.jointProject || (francs ?? 0) >= m.jointProject.playerCost
+      const unlocked = !completedToday_ && !cooldown && clientReady && jointFundingReady && (freeOperations || available.some(item => item.id === m.id))
       const mTargets = compatibleTargetsFor(m, targets)
       const affinityMultiplier = isStoryMission || !client ? 0 : clientAffinityBonus(client, clientMissions?.[client.id] ?? 0)
       const affinityBonus = Math.round(m.payout.francs * affinityMultiplier)
-      const displayPayout = m.payout.francs + affinityBonus
+      const liveDiplomacyMultiplier = m.id.startsWith('dcp-') && m.client && player
+        ? diplomacyPayoutMultiplier(player, m.client)
+        : 1
+      const displayPayout = Math.round(m.payout.francs * liveDiplomacyMultiplier) + affinityBonus
       const isHighlighted = hasCoach && idx === firstValidIdx
       const cardState = completedToday_ ? 'completed' as const
         : cooldown ? 'cooldown' as const
         : !unlocked ? 'locked' as const
         : 'available' as const
-      const lockedDetail = !clientReady ? (client ? `L${client.unlockTier}` : 'Locked') : m.sequence <= missionsDone ? 'Completed' : m.unlockAt
+      const lockedDetail = !jointFundingReady
+        ? `Needs ${formatCurrency(m.jointProject!.playerCost)} co-funding`
+        : !clientReady
+          ? (client ? `L${client.unlockTier}` : 'Locked')
+          : m.sequence <= missionsDone
+            ? 'Completed'
+            : m.unlockAt
       const cooldownLabel = cooldown && m.client ? formatCooldown(clientCooldowns![m.client] - now) : undefined
       const routeLabel = m.deliveryTargetId
         ? `${targets.find(t => t.id === m.targetId)?.name ?? m.targetId} → ${targets.find(t => t.id === m.deliveryTargetId)?.name ?? m.deliveryTargetId}`
         : undefined
+      const crewStatus = crewRequirementStatus(m.requires.crew, crew)
       return {
         mission: m, client, targetCount: mTargets.length, displayPayout, affinityMultiplier,
         affinityReward: m.payout.affinity, unlocked, isStoryMission, cardState, lockedDetail,
         cooldownLabel, isHighlighted, routeLabel,
+        crewStatus: m.requires.crew
+          ? player?.shipCustomizerParts?.['crew-module'] === 'crew-quarters-t1'
+            ? crewStatus.reason
+            : 'Crew Quarters required · research and fit in Hangar'
+          : undefined,
+        crewReady: crewStatus.met && player?.shipCustomizerParts?.['crew-module'] === 'crew-quarters-t1',
       }
     })
     .filter((c): c is NonNullable<typeof c> => c !== null)
+
+  // STS-582 makes this a client-only surface in Free Ops. Owned flights are
+  // filtered above and live under Launchpad → Your Program instead.
+  const sections = [
+    {
+      key: 'client' as const,
+      title: freeOperations ? 'Client Requests' : 'Active Contracts',
+      sub: 'Issued by a client · paid on delivery',
+      cards: cardModels,
+    },
+  ].filter(s => s.cards.length > 0)
 
   const effectivePreviewId = previewId ?? cardModels.find(c => c.unlocked)?.mission.id ?? cardModels[0]?.mission.id ?? null
   const previewModel = cardModels.find(c => c.mission.id === effectivePreviewId) ?? null
@@ -302,39 +330,52 @@ export default function MissionBoardScreen({ onBack, onPick, missionsDone, freeO
           <div className={styles.canvas}>
             <CornerBracket position="tl" /><CornerBracket position="tr" />
             <CornerBracket position="bl" /><CornerBracket position="br" />
-            <div className={styles.boardHeader}>
-              <div>
-                <div className={styles.boardHeaderTitle}>{freeOperations ? 'Client Requests' : 'Active Contracts'}</div>
-                <div className={styles.boardHeaderSub}>Client jobs &amp; market runs</div>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <span className={styles.boardHeaderCount}>{available.length} open</span>
-                <span className={styles.sortSelect}>Payout</span>
-              </div>
-            </div>
+            {sections.map((section, sectionIdx) => (
+              <div
+                key={section.key}
+                data-testid={`mission-board-section-${section.key}`}
+                className={sectionIdx > 0 ? styles.boardSectionFollowing : undefined}
+              >
+                <div className={styles.boardHeader}>
+                  <div>
+                    <div className={styles.boardHeaderTitle}>{section.title}</div>
+                    <div className={styles.boardHeaderSub}>{section.sub}</div>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <span className={styles.boardHeaderCount}>
+                      {section.cards.filter(c => c.unlocked).length} open
+                    </span>
+                    {sectionIdx === 0 && <span className={styles.sortSelect}>Payout</span>}
+                  </div>
+                </div>
 
-            <div className={styles.cardList}>
-              {cardModels.map(c => (
-                <MissionCard
-                  key={c.mission.id}
-                  mission={c.mission}
-                  client={c.client}
-                  mineralMeta={MINERAL_META}
-                  targetCount={c.targetCount}
-                  displayPayout={c.displayPayout}
-                  unlocked={c.unlocked}
-                  isStoryMission={c.isStoryMission}
-                  cardState={c.cardState}
-                  lockedDetail={c.lockedDetail}
-                  cooldownLabel={c.cooldownLabel}
-                  highlighted={c.isHighlighted}
-                  previewed={c.mission.id === effectivePreviewId}
-                  routeLabel={c.routeLabel}
-                  onPick={() => onPick(c.mission.id)}
-                  onPreview={() => setPreviewId(c.mission.id)}
-                />
-              ))}
-            </div>
+                <div className={styles.cardList}>
+                  {section.cards.map(c => (
+                    <MissionCard
+                      key={c.mission.id}
+                      mission={c.mission}
+                      client={c.client}
+                      mineralMeta={MINERAL_META}
+                      targetCount={c.targetCount}
+                      displayPayout={c.displayPayout}
+                      unlocked={c.unlocked}
+                      isStoryMission={c.isStoryMission}
+                      cardState={c.cardState}
+                      lockedDetail={c.lockedDetail}
+                      cooldownLabel={c.cooldownLabel}
+                      highlighted={c.isHighlighted}
+                      previewed={c.mission.id === effectivePreviewId}
+                      routeLabel={c.routeLabel}
+                      crewStatus={c.crewStatus}
+                      crewReady={c.crewReady}
+                      onPick={() => onPick(c.mission.id)}
+                      onPreview={() => setPreviewId(c.mission.id)}
+                      onOpenClientDossier={setDossierClient}
+                    />
+                  ))}
+                </div>
+              </div>
+            ))}
 
             {hasClientMission && (
               <div className={styles.disclaimer}>
@@ -404,39 +445,6 @@ export default function MissionBoardScreen({ onBack, onPick, missionsDone, freeO
           </div>
         </div>
 
-        {/* Free Ops-only surfaces below the main board — not in the OD
-            mockup at all (it has no Free Ops variant), kept below the
-            primary contract-board view rather than stacked above it so the
-            view that matches the reference is what's on screen first. */}
-        {freeOperations && (
-          <div style={{ padding: '0 14px 10px 14px' }}>
-            <Panel accent={clientPoolExhausted ? 'var(--ln-ok)' : 'var(--ln-cyan)'} style={{ padding: 12 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
-                <IconBadge icon={<MarketIcon />} tone={clientPoolExhausted ? 'ok' : 'cyan'} active size={26} />
-                <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 10, fontWeight: 800, letterSpacing: '0.22em', color: clientPoolExhausted ? 'var(--ln-ok)' : 'var(--ln-cyan)', textTransform: 'uppercase' }}>
-                  Free Ops · Self-Directed Mining
-                </div>
-              </div>
-              <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 12, color: 'var(--ln-text-dim)', lineHeight: 1.45, marginBottom: 10 }}>
-                {clientPoolExhausted
-                  ? "Today's client requests are done. Launch a self-directed run — pick any reachable target and sell the haul yourself at market price."
-                  : 'No client, no daily limit. Pick any reachable target, mine what looks valuable, and sell the haul yourself at market price.'}
-              </div>
-              <button
-                data-testid="self-directed-mining-btn"
-                onClick={() => onPick(SELF_DIRECTED_MINING_MISSION_ID)}
-                style={{
-                  width: '100%', padding: '10px 16px', borderRadius: 8, border: 'none', cursor: 'pointer',
-                  background: clientPoolExhausted ? 'var(--ln-ok)' : 'var(--ln-cyan)',
-                  color: 'var(--ln-text-on-cyan)', fontFamily: 'var(--ln-font-display)', fontWeight: 800, fontSize: 11,
-                  letterSpacing: '0.14em', textTransform: 'uppercase',
-                }}
-              >
-                Launch Self-Directed Run
-              </button>
-            </Panel>
-          </div>
-        )}
         {freeOperations && (
           <div style={{ padding: '0 14px 10px 14px', display: 'flex', flexDirection: 'column', gap: 10 }}>
             {showFreeOpsExplainer && (
@@ -447,7 +455,7 @@ export default function MissionBoardScreen({ onBack, onPick, missionsDone, freeO
                   aria-label="Dismiss"
                   style={{
                     position: 'absolute', top: 8, right: 8, width: 20, height: 20, borderRadius: 6,
-                    border: '1px solid rgba(112,217,234,0.4)', background: 'rgba(8,16,28,0.6)',
+                    border: '1px solid rgba(112,217,234,0.4)', background: 'rgba(20,20,23,0.6)',
                     color: 'var(--ln-cyan)', fontSize: 12, lineHeight: 1, cursor: 'pointer',
                   }}
                 >
@@ -473,7 +481,7 @@ export default function MissionBoardScreen({ onBack, onPick, missionsDone, freeO
               </div>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
                 {hotMinerals.map(mineral => (
-                  <span key={mineral.name} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '4px 8px', borderRadius: 6, border: `1px solid ${mineral.color}66`, background: 'rgba(8,16,28,0.72)', fontFamily: 'var(--ln-font-mono)', fontSize: 10, color: mineral.color }}>
+                  <span key={mineral.name} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '4px 8px', borderRadius: 6, border: `1px solid ${mineral.color}66`, background: 'rgba(20,20,23,0.72)', fontFamily: 'var(--ln-font-mono)', fontSize: 10, color: mineral.color }}>
                   <strong>{mineral.name}</strong> <span style={{ opacity: 0.65 }}>({mineral.sym})</span> {formatCurrency(mineral.price)}
                   </span>
                 ))}
@@ -502,6 +510,14 @@ export default function MissionBoardScreen({ onBack, onPick, missionsDone, freeO
           onClose={() => setShowClientBonusGuide(false)}
           clientMissions={clientMissions}
           sequence={sequence}
+        />
+      )}
+
+      {dossierClient && (
+        <ClientDossierSheet
+          client={dossierClient}
+          mineralMeta={MINERAL_META}
+          onDismiss={() => setDossierClient(null)}
         />
       )}
     </div>

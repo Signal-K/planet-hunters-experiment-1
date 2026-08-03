@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import type { GameState } from '@/lib/game-types'
-import { MINERAL_META, CLIENT_SLOTS, customizerPartById } from '@/lib/data'
-import { applySellMinerals, applyConfirmShipCustomizerBuild, decayedUnitsSold, openMarketSellPrice, sellQuote, sellUnitPrice, supplyDipMultiplier } from './EconomySystem'
+import { MINERAL_META, CLIENT_SLOTS, STRUCTURES, customizerPartById } from '@/lib/data'
+import { applySellMinerals, applyConfirmShipCustomizerBuild, applyPlaceStructure, applyStartRefine, decayedUnitsSold, openMarketSellPrice, sellQuote, sellUnitPrice, supplyDipMultiplier } from './EconomySystem'
 
 function makeState(overrides: Partial<GameState['player']> = {}): GameState {
   return {
@@ -131,6 +131,45 @@ describe('applyConfirmShipCustomizerBuild', () => {
     expect(ok).toBe(false)
     expect(state).toBe(s)
     expect(state.player.francs).toBe(100)
+  })
+})
+
+describe('Academy and staffing economy', () => {
+  it('charges the Academy build cost and materials only after research', () => {
+    const academy = STRUCTURES.find(structure => structure.id === 'astronaut-academy')!
+    const stash = { aluminium: 24, silicon: 12, copper: 8 }
+    const locked = makeState({ francs: academy.cost, stash, academyResearched: false })
+    expect(applyPlaceStructure(locked, academy, academy.kind, 2)).toBe(locked)
+
+    const built = applyPlaceStructure(
+      makeState({ francs: academy.cost, stash, academyResearched: true }),
+      academy,
+      academy.kind,
+      2,
+    )
+    expect(built.player.francs).toBe(0)
+    expect(built.player.placed).toContain('astronaut-academy')
+    expect(built.player.stash).toMatchObject({ aluminium: 0, silicon: 0, copper: 0 })
+    expect(built.player.academyFunded).toBe(true)
+    expect(built.player.crewUpkeepSettledDate).toMatch(/^\d{4}-\d{2}-\d{2}$/)
+  })
+
+  it('cuts refinery duration by 25% while the refinery is staffed', () => {
+    const recipe = {
+      id: 'staff-test',
+      name: 'Staff test',
+      input: { mineral: 'iron', amount: 1 },
+      output: { name: 'Ingot', sym: 'Fe+', color: '#999', price: 1 },
+      time: 100,
+      cost: 0,
+    }
+    const unstaffed = applyStartRefine(makeState({ stash: { iron: 1 } }), recipe)
+    const staffed = applyStartRefine(makeState({
+      stash: { iron: 1 },
+      structureCrewAssignments: { refinery: 'crew-1' },
+    }), recipe)
+    expect(unstaffed.player.refineryQueue[0].durationMs).toBe(100_000)
+    expect(staffed.player.refineryQueue[0].durationMs).toBe(75_000)
   })
 })
 

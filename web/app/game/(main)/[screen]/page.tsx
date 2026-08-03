@@ -36,5 +36,11 @@ export default function ScreenPage({ params }: { params: Promise<{ screen: strin
 
   if (!VALID_SCREENS.has(screen as Screen)) return notFound()
 
+  // Auth gate (sign in / sign up / continue as guest) must be resolved
+  // before any gameplay screen mounts — otherwise it's a purely cosmetic
+  // overlay and the screen underneath (e.g. a saved 'missions' route) is
+  // already live and interactive. See STS-624.
+  if (game.authGateOpen) return null
+
   return <ScreenContent screen={screen as Screen} game={game} hasCoach={hasCoach} />
 }
