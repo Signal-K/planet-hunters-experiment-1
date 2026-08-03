@@ -205,7 +205,7 @@ export default function ProgressionCard({ player, onGoBuilding, onNav, top = 132
     // Hub root is `overflow: hidden`, so without an internal scroll
     // affordance here, cards below the fold were silently unreachable
     // rather than just visually tight (STS-612).
-    <div style={{
+    <div className="hub-progression-stack" style={{
       position: 'absolute', right: 14, top, bottom: TUTORIAL_RAIL.BOTTOM_PILL_Y, zIndex: 8,
       width: 'calc(100% - 28px)', maxWidth: 280, pointerEvents: 'auto',
       display: 'flex', flexDirection: 'column', gap: 6,
