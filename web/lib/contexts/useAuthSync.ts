@@ -80,6 +80,11 @@ export function useAuthSync({
   const [awaitingRemoteState, setAwaitingRemoteState] = useState(false)
   const [authGateOpen, setAuthGateOpen] = useState(false)
   const [authGateError, setAuthGateError] = useState<string | null>(null)
+  // The gate must not decide that a returning user is anonymous until the
+  // persisted PocketBase auth store has had a chance to restore. Keeping this
+  // as an explicit phase prevents the sign-in sheet flashing/reopening during
+  // a refresh even when a valid full-account session is already on disk.
+  const [sharedAuthRestoreSettled, setSharedAuthRestoreSettled] = useState(false)
   // Whether we've finished attempting (successfully or not) to exchange the
   // shared-backend session for a native Landnam auth token. game_states/
   // mission_log calls are gated on this so they don't race an unauthenticated
@@ -104,7 +109,10 @@ export function useAuthSync({
   const lastPersistedTutorial = useRef<boolean | null>(null)
 
   useEffect(() => {
-    if (!hydrated || isPreview) return
+    if (!hydrated || isPreview) {
+      if (isPreview) setSharedAuthRestoreSettled(true)
+      return
+    }
     const stored = storedSharedAuth()
     if (!pbShared.authStore.record && stored?.token && stored.record) {
       pbShared.authStore.save(stored.token, stored.record)
@@ -116,6 +124,7 @@ export function useAuthSync({
     if (record?.id && record.id !== authUserId) {
       setAuthUserId(record.id)
     }
+    setSharedAuthRestoreSettled(true)
   }, [authUserId, hydrated, isPreview])
 
   const saveRemoteState = useCallback(async (userId: string, nextState: GameState) => {
@@ -291,11 +300,11 @@ export function useAuthSync({
 
   // Show auth gate for brand-new users (no stored credentials, no active session)
   useEffect(() => {
-    if (!hydrated || isPreview) return
+    if (!hydrated || isPreview || !sharedAuthRestoreSettled) return
     if (authGateDismissed.current) return
     if (pbShared.authStore.isValid || hasStoredCredentials()) return
     setAuthGateOpen(true)
-  }, [hydrated, isPreview])
+  }, [hydrated, isPreview, sharedAuthRestoreSettled])
 
   // If background guest/session restoration succeeds after the gate was
   // opened, close it. This can happen on route bridges and fast local loads

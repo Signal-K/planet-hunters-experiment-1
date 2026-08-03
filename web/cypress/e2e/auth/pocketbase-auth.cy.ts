@@ -132,6 +132,30 @@ describe('PocketBase Guest Auth Pattern', () => {
     win.localStorage.setItem(LANDNAM_AUTH_KEY, JSON.stringify({ token: landnamToken, record: landnamRecord }))
   }
 
+  it('keeps a full-account session signed in after refresh', () => {
+    cy.visit('/game', {
+      onBeforeLoad(win) {
+        win.localStorage.clear()
+      },
+    })
+
+    cy.contains('Welcome Back', { timeout: 15000 }).should('be.visible')
+    cy.get('[data-testid="auth-gate-email"]').type(`${guestId}@landnam.test`)
+    cy.get('[data-testid="auth-gate-password"]').type(guestPassword)
+    cy.get('[data-testid="auth-gate-submit"]').click()
+    cy.get('[data-testid="auth-gate-submit"]', { timeout: 15000 }).should('not.exist')
+
+    cy.window().should(win => {
+      expect(win.localStorage.getItem(PB_AUTH_KEY), 'persisted shared auth').to.contain(record.id as string)
+    })
+
+    cy.reload()
+    cy.get('[data-testid="auth-gate-submit"]', { timeout: 15000 }).should('not.exist')
+    cy.window().should(win => {
+      expect(win.localStorage.getItem(PB_AUTH_KEY), 'shared auth survives reload').to.contain(record.id as string)
+    })
+  })
+
   it('should persist game state to PB and restore it after localStorage is cleared', () => {
     cy.visit('/game/hub', {
       onBeforeLoad(win) {

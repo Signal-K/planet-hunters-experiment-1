@@ -4,13 +4,17 @@
 #
 # Used by .github/workflows/sandbox.yml and docker-compose.ci.yml.
 
-# Stage 1: build Next.js
-FROM node:20-bookworm AS builder
+# Install once, then share the exact dependency tree between build and runner.
+# Node 24 matches start-server-and-test's supported engine and GitHub runners.
+FROM node:24-bookworm AS dependencies
 WORKDIR /build
 COPY web/package.json web/package-lock.json ./
-ENV CYPRESS_INSTALL_BINARY=0
+COPY web/vendor/takeon ./vendor/takeon
 ENV NEXT_TELEMETRY_DISABLED=1
-RUN npm ci
+RUN --mount=type=cache,target=/root/.npm npm ci --prefer-offline --no-audit
+
+# Stage 1: build Next.js
+FROM dependencies AS builder
 COPY web/ .
 ARG NEXT_PUBLIC_SHARED_PB_URL=http://localhost:8090
 ARG NEXT_PUBLIC_LANDNAM_PB_URL=http://localhost:8091
@@ -20,8 +24,9 @@ RUN npm run build && \
     cp -r public .next/standalone/public && \
     cp -r .next/static .next/standalone/.next/static
 
-# Stage 2: test runner — node:20 + Cypress Linux deps + Cypress binary
-FROM node:20-bookworm
+# Stage 2: test runner — Node + Cypress Linux deps + the cached binary from
+# the single dependency install above.
+FROM node:24-bookworm
 RUN apt-get update && apt-get install -y --no-install-recommends \
     libgtk2.0-0 libgtk-3-0 libgbm1 libnotify4 \
     libnss3 libxss1 libasound2 libxtst6 xauth xvfb \
@@ -29,12 +34,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libxkbcommon0 libxcomposite1 libxdamage1 libxfixes3 libxrandr2 \
   && rm -rf /var/lib/apt/lists/*
 
-WORKDIR /sandbox
-
-# Install Cypress (and only Cypress — skip Next.js heavy deps)
-COPY web/package.json web/package-lock.json ./
 ENV NEXT_TELEMETRY_DISABLED=1
-RUN npm ci
+WORKDIR /sandbox
+COPY --from=dependencies /build/node_modules ./node_modules
+COPY --from=dependencies /root/.cache/Cypress /root/.cache/Cypress
+COPY web/package.json web/package-lock.json ./
 
 # Copy built standalone app and Cypress test files
 COPY --from=builder /build/.next/standalone ./.next/standalone

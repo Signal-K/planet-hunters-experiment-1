@@ -16,7 +16,7 @@ services:
 
   # Mirrors: Web CI / Typecheck & Unit Tests
   web-unit:
-    image: node:20
+    image: node:24
     working_dir: /repo/web
     volumes:
       - ./web:/repo/web
@@ -36,7 +36,7 @@ services:
 
   # Mirrors: Web CI / Next.js Build Check
   web-build:
-    image: node:20
+    image: node:24
     working_dir: /repo/web
     volumes:
       - ./web:/repo/web

@@ -7,6 +7,13 @@ import { wireShapeRenderers } from '@/lib/engine/components/ShapeRenderer'
 import { MiningController, SHIP_X, SCROLL_SPEED, SCROLL_SPEED_MIN, SCROLL_SPEED_MAX } from '@/lib/engine/scripts/MiningController'
 import type { MineralMeta } from '@/lib/data'
 
+// Public ore art is intentionally incomplete; minerals without a texture use
+// MiningController's shape+colour fallback. Only request files that actually
+// ship so a normal run never fills the network log with expected 404s.
+const TEXTURED_ORE_IDS = new Set([
+  'carbon', 'cobalt', 'gold', 'ice', 'iron', 'nickel', 'rare', 'silicon',
+])
+
 // Tile width must be a multiple of 16 (ridgeH period) for seamless wrapping
 const SURFACE_TILE_W = 320
 
@@ -174,7 +181,7 @@ export default function MiningCanvas({ minerals, requiredMinerals, mineralMeta, 
         // Preload ore sprites — one PNG per mineral key
         const oreTextures: Record<string, Texture> = {}
         await Promise.allSettled(
-          minerals.map(id =>
+          minerals.filter(id => TEXTURED_ORE_IDS.has(id)).map(id =>
             Assets.load(`/game/assets/ores/ore_${id}.png`)
               .then((t: Texture) => { oreTextures[id] = t })
               .catch(() => {})

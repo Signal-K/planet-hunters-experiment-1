@@ -279,8 +279,18 @@
 
 /* base resets */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-html, body { height: 100%; background: #0a0a0c; }
+html {
+  height: 100%;
+  background-color: var(--ln-void);
+  overflow: hidden;
+}
 body {
+  min-height: 100%;
+  margin: 0;
+  background-color: var(--ln-void);
+  display: flex;
+  align-items: center;
+  justify-content: center;
   font-family: var(--ln-font-body);
   color: var(--ln-text);
   font-size: 14px;

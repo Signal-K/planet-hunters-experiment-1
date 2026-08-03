@@ -101,7 +101,12 @@ export default function TessDiscoveryScreen({ player, onBack, onBuildStation, on
       })
 
     return () => { cancelled = true }
-  }, [classifications, player.freeOperations, player.satelliteMonitoringBuilt, player.satelliteMonitoringLevel, player.transitSatelliteLaunchedAt, player.transitSatelliteLevel, player.satelliteTargetId, devDayOffset])
+    // Do not refetch merely because this screen submitted a classification.
+    // The current candidate must remain mounted long enough to show the
+    // post-confirmation target-selection map. Re-entering the screen remounts
+    // it and naturally resolves the next still-unclassified daily candidate.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [player.freeOperations, player.satelliteMonitoringBuilt, player.satelliteMonitoringLevel, player.transitSatelliteLaunchedAt, player.transitSatelliteLevel, player.satelliteTargetId, devDayOffset])
 
   const classification: TessClassification | undefined = candidate ? classifications[candidate.id] : undefined
   const discoveredTarget = candidate && classification?.verdict === 'planet'

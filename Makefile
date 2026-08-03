@@ -1,4 +1,4 @@
-.PHONY: help up up-ecosystem pb-up pb-stop down build web-deps logs e2e e2e-open web-dev web-build web-check pb-reset docker-prune migrate seed
+.PHONY: help up up-ecosystem pb-up pb-stop down build web-deps logs e2e e2e-open web-dev web-build web-check pb-reset docker-disk docker-prune migrate seed
 
 FRONTEND_COMPOSE := docker compose -f docker-compose.frontend.yml
 PARENT_COMPOSE   := docker compose -p navigation -f ../docker-compose.yml
@@ -39,7 +39,8 @@ help:
 	@echo "    web-check      Typecheck + production build"
 	@echo "    pb-stop        Stop PocketBase services only (keeps volumes)"
 	@echo "    pb-reset       Remove local PocketBase data volume"
-	@echo "    docker-prune   Remove all unused Docker data"
+	@echo "    docker-disk    Report Docker disk usage and the largest objects"
+	@echo "    docker-prune   Remove stale rebuildable Docker data (never volumes)"
 
 up: pb-up
 	$(FRONTEND_COMPOSE) up -d --remove-orphans web
@@ -80,10 +81,11 @@ logs:
 	$(FRONTEND_COMPOSE) logs -f web
 
 test-e2e:
-	@status=0; \
-	$(E2E_FULL_COMPOSE) down --remove-orphans; \
+	@cleanup() { $(E2E_FULL_COMPOSE) down --remove-orphans --volumes --rmi local; }; \
+	trap cleanup EXIT INT TERM; \
+	status=0; \
+	cleanup; \
 	$(E2E_FULL_COMPOSE) up --build --remove-orphans --abort-on-container-exit --exit-code-from cypress shared-pb landnam-pb next-app cypress || status=$$?; \
-	$(E2E_FULL_COMPOSE) down --remove-orphans; \
 	exit $$status
 
 e2e:
@@ -110,10 +112,11 @@ web-check:
 pb-reset:
 	$(FRONTEND_COMPOSE) down -v --remove-orphans
 
+docker-disk:
+	./scripts/docker-maintenance.sh
+
 docker-prune:
-	docker system prune -a --volumes -f
-	docker volume prune -a -f
-	docker builder prune -a -f
+	./scripts/docker-maintenance.sh --prune
 
 migrate:
 	$(PARENT_COMPOSE) up -d backend landnam-backend

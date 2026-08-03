@@ -19,6 +19,7 @@ const ALL_SURVEYS = [
   'lnm_first_launch', 'lnm_mining_feel', 'lnm_client_pick',
   'lnm_mission_friction', 'lnm_progression_feel', 'lnm_end_of_content',
   'lnm_return_visit', 'lnm_m1_complete', 'lnm_m2_complete', 'lnm_m3_complete',
+  'lnm_satellite_clarity', 'lnm_resume_mission', 'lnm_base_building', 'lnm_rover_clarity',
 ]
 
 function suppressSurveysAndUpgrade(win: Window) {
@@ -157,7 +158,7 @@ describe('Visual QA — game screens and mining canvas', () => {
     cy.contains('button', 'Confirm · Build Here').click()
 
     // Hub with launchpad
-    cy.contains('Earth Base', { timeout: 10000 }).should('be.visible')
+    cy.get('h1', { timeout: 10000 }).contains('Earth Base').should('be.visible')
     cy.get('[data-testid="building-launchpad"]').should('be.visible')
     cy.screenshot('04-hub-launchpad-placed')
 
@@ -182,6 +183,7 @@ describe('Visual QA — game screens and mining canvas', () => {
 
     // Launch confirmation
     cy.get('[data-testid="launch-btn"]', { timeout: 10000 }).should('be.visible')
+    cy.get('[data-testid="survey-sheet"]').should('not.exist')
     cy.screenshot('08-launch-confirmation')
     cy.get('[data-testid="launch-btn"]').click()
 
@@ -335,7 +337,7 @@ describe('Visual QA — game screens and mining canvas', () => {
     })
 
     skipAuthGateIfShown()
-    cy.contains('Earth Base', { timeout: 12000 }).should('be.visible')
+    cy.get('h1', { timeout: 12000 }).contains('Earth Base').should('be.visible')
     cy.get('[data-testid="building-launchpad"]').should('be.visible')
     cy.screenshot('hub-launchpad-visible')
 

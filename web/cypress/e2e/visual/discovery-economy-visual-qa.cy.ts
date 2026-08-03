@@ -114,10 +114,14 @@ describe('Visual QA — discovery -> economy pipeline', () => {
 
     cy.intercept('GET', '**/api/collections/subjects/records*', {
       statusCode: 200,
+      headers: {
+        'content-type': 'application/json',
+        'access-control-allow-origin': '*',
+      },
       body: { page: 1, perPage: 500, totalItems: 1, totalPages: 1, items: [HOT_CLOSE_SUBJECT] },
     }).as('subjects')
 
-    visitWithState('/game', 'galaxy', {})
+    visitWithState('/game/galaxy', 'galaxy', {})
     cy.wait('@subjects')
 
     // The injected fake guest credentials only satisfy hasStoredCredentials()
@@ -129,7 +133,7 @@ describe('Visual QA — discovery -> economy pipeline', () => {
     // Cypress's built-in retry) actually waits for it.
     cy.contains('Welcome Back', { timeout: 15000 }).should('not.exist')
 
-    cy.contains('TESS ANOMALY', { timeout: 15000 }).should('be.visible')
+    cy.contains('INSTRUMENT DATA FEED', { timeout: 15000 }).should('be.visible')
     cy.get('[data-testid="observatory-chart-canvas"]', { timeout: 15000 }).first().should('be.visible')
     // PixiJS resizes/paints the canvas a tick after it mounts — the chart's
     // internal hit-test bounds aren't ready the instant the element appears
@@ -245,9 +249,16 @@ describe('Visual QA — discovery -> economy pipeline', () => {
     cy.contains(discovered.name).should('be.visible')
     cy.screenshot('discovery-05-target-picker-real-minerals')
 
-    // "Available here" must list real minerals, not an empty deposit.
-    for (const mineral of discovered.minerals.slice(0, 3)) {
-      cy.contains(new RegExp(mineral, 'i')).should('exist')
-    }
+    // The card intentionally caps and rarity-sorts its chips, so assert that
+    // the visible mix is non-empty and drawn from the target's real deposit
+    // rather than assuming the first three source minerals survive the cap.
+    cy.get('[data-testid="target-deposit-mix"]').should('be.visible').children().should('have.length.greaterThan', 0)
+    cy.get('[data-testid^="target-deposit-"]').then($chips => {
+      const visibleMinerals = [...$chips]
+        .map(chip => chip.getAttribute('data-testid')?.replace('target-deposit-', ''))
+        .filter((mineral): mineral is string => Boolean(mineral && mineral !== 'mix'))
+      expect(visibleMinerals, 'visible deposit chips').to.have.length.greaterThan(0)
+      expect(visibleMinerals.every(mineral => discovered.minerals.includes(mineral))).to.eq(true)
+    })
   })
 })

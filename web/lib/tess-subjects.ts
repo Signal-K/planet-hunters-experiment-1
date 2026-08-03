@@ -11,6 +11,11 @@ export async function fetchReviewableTessCandidates(): Promise<TessCandidate[]> 
   const records = await pbShared.collection('subjects').getFullList({
     filter: REVIEWABLE_TESS_SUBJECT_FILTER,
     sort: '-created',
+    // The observatory screen and the instrument-feed notification poll can
+    // legitimately request this same list at the same time. PocketBase's
+    // default request-key auto-cancellation makes one consumer abort the
+    // other, which the screen then misreports as "Live Feed Unavailable".
+    requestKey: null,
   })
 
   return records
