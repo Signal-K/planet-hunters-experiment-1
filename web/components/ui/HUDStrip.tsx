@@ -70,7 +70,7 @@ function Chip({ glyph, children, accent = 'var(--hub-cyan)', onClick, testId }: 
 
 export default function HUDStrip({ player, showStash = false, onJobsClick }: HUDStripProps) {
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 6, alignItems: 'flex-end' }}>
+    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, alignItems: 'center', justifyContent: 'flex-end' }}>
       <Chip glyph={<FrancGlyph />}>
         <span style={{ fontFamily: 'var(--ln-font-mono)', fontWeight: 700, fontSize: 12, color: '#fff' }}>
           {formatCurrency(player.francs, { compact: true })}

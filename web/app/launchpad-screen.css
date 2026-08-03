@@ -1,0 +1,216 @@
+/* STS-641 visual reset: Launchpad is a place, not a dashboard. */
+.ln-scene-launchpad { background: #07101c; }
+.launchpad-visual-scene {
+  position: absolute;
+  inset: 72px 0 62px;
+  overflow: hidden;
+  background: linear-gradient(180deg, #07101f 0%, #0d2745 47%, #214f68 70%, #162e26 70%, #0b1713 100%);
+}
+.launchpad-visual-scene::before,
+.launchpad-visual-scene::after { content: ''; position: absolute; left: -5%; right: -5%; pointer-events: none; }
+.launchpad-visual-scene::before {
+  bottom: 26%; height: 34%; background: #183c3a; opacity: .78;
+  clip-path: polygon(0 80%, 8% 55%, 17% 74%, 27% 35%, 38% 72%, 48% 47%, 58% 76%, 69% 28%, 79% 68%, 89% 41%, 100% 74%, 100% 100%, 0 100%);
+}
+.launchpad-visual-scene::after {
+  bottom: 0; height: 28%; border-top: 1px solid rgba(112,217,234,.18);
+  background: linear-gradient(180deg, #10271e 0 36%, #301f0c 36% 100%);
+}
+.launchpad-stars {
+  position: absolute; inset: 0 0 28%; z-index: 1; opacity: .55;
+  background-image:
+    radial-gradient(circle at 9% 16%, #d9f5ff 0 1px, transparent 1.4px),
+    radial-gradient(circle at 29% 31%, #d9f5ff 0 1px, transparent 1.4px),
+    radial-gradient(circle at 47% 12%, #d9f5ff 0 1px, transparent 1.4px),
+    radial-gradient(circle at 69% 28%, #d9f5ff 0 1px, transparent 1.4px),
+    radial-gradient(circle at 88% 10%, #d9f5ff 0 1px, transparent 1.4px);
+}
+.launchpad-orbit-line {
+  position: absolute; z-index: 2; top: 4%; left: 13%; width: 74%; height: 40%;
+  border: 1px solid rgba(112,217,234,.2); border-bottom-color: transparent; border-radius: 50% 50% 0 0;
+}
+.launchpad-satellite {
+  position: absolute; z-index: 3; top: 7%; left: 63%; color: #8de8f4;
+  display: flex; align-items: center; gap: 10px; transform: rotate(-4deg);
+}
+.launchpad-satellite svg { width: 92px; filter: drop-shadow(0 0 10px rgba(112,217,234,.32)); }
+.launchpad-satellite div { display: flex; flex-direction: column; }
+.launchpad-satellite strong { color: #f3fbff; font: 800 18px var(--ln-font-mono); }
+.launchpad-satellite span { color: #8de8f4; font: 700 9px var(--ln-font-display); letter-spacing: .2em; }
+.launchpad-scene-object {
+  position: absolute; z-index: 6; padding: 0; border: 0; background: transparent; color: #fff;
+  display: flex; flex-direction: column; align-items: center; cursor: default;
+}
+button.launchpad-scene-object { cursor: pointer; }
+.launchpad-object-label {
+  position: relative; z-index: 3; min-width: 142px; margin-top: 8px; padding: 7px 12px;
+  border: 1px solid rgba(255,255,255,.45); border-radius: 999px; background: rgba(6,11,20,.9);
+  box-shadow: 0 8px 20px rgba(0,0,0,.35); display: flex; flex-direction: column; align-items: center; gap: 1px; white-space: nowrap;
+}
+.launchpad-object-label small { color: #9fb0c5; font: 700 8px var(--ln-font-display); letter-spacing: .16em; }
+.launchpad-object-label strong { color: #f5f8ff; font: 800 10px var(--ln-font-display); letter-spacing: .08em; }
+.launchpad-object-label--center strong { color: #65e38f; }
+.launchpad-station { left: 8%; bottom: 13%; width: 25%; }
+.launchpad-object-art { position: relative; width: min(210px, 76%); aspect-ratio: 1.45; display: grid; place-items: end center; }
+.launchpad-object-art img { width: 100%; image-rendering: pixelated; filter: drop-shadow(0 16px 18px rgba(0,0,0,.5)); }
+.launchpad-station.is-blueprint .launchpad-object-art {
+  border: 2px dashed rgba(112,217,234,.62); border-radius: 50% 50% 12px 12px; background: rgba(112,217,234,.06);
+  box-shadow: inset 0 0 28px rgba(112,217,234,.08), 0 0 24px rgba(112,217,234,.08);
+}
+.launchpad-station.is-blueprint .launchpad-object-art img { opacity: .22; filter: grayscale(1) sepia(.2) hue-rotate(135deg) saturate(5) drop-shadow(0 0 8px rgba(112,217,234,.8)); }
+.launchpad-station.is-blueprint .launchpad-object-label { border-color: rgba(112,217,234,.8); }
+.launchpad-station.is-blueprint .launchpad-object-label strong { color: #86e7f4; }
+.launchpad-build-plus {
+  position: absolute; inset: 50% auto auto 50%; width: 40px; height: 40px; transform: translate(-50%,-50%);
+  border: 1px solid #86e7f4; border-radius: 50%; background: rgba(6,16,26,.92); color: #86e7f4;
+  font: 300 28px/36px var(--ln-font-display); font-style: normal; box-shadow: 0 0 18px rgba(112,217,234,.4);
+}
+.launchpad-tower { left: 50%; bottom: 12%; width: 28%; transform: translateX(-50%); }
+.launchpad-tower-art { position: relative; width: min(250px, 88%); height: 260px; }
+.launchpad-tower-gantry { position: absolute; left: 18%; bottom: 18px; width: 78px; height: 226px; image-rendering: pixelated; }
+.launchpad-tower-rocket { position: absolute; left: 50%; bottom: 31px; width: 205px; transform: translateX(-50%) rotate(-90deg); filter: drop-shadow(0 8px 14px rgba(0,0,0,.55)); }
+.launchpad-tower-deck { position: absolute; left: 50%; bottom: 0; width: 230px; transform: translateX(-50%); image-rendering: pixelated; }
+.launchpad-rocket { right: 5%; bottom: 16%; width: 31%; }
+.launchpad-rocket-art { position: relative; width: min(360px, 95%); height: 150px; display: grid; place-items: center; }
+.launchpad-rocket-art img { position: relative; z-index: 2; width: 100%; filter: drop-shadow(0 18px 18px rgba(0,0,0,.6)); }
+.launchpad-rocket-glow { position: absolute; left: 5%; right: 5%; bottom: 18%; height: 14px; border-radius: 50%; background: rgba(112,217,234,.2); filter: blur(12px); }
+.launchpad-rocket:hover img,
+.launchpad-station:hover .launchpad-object-art { filter: brightness(1.12) drop-shadow(0 0 18px rgba(112,217,234,.22)); }
+.launchpad-scene-object.is-guided { z-index: 11; }
+.launchpad-scene-object.is-guided .launchpad-object-art,
+.launchpad-scene-object.is-guided .launchpad-tower-art,
+.launchpad-scene-object.is-guided .launchpad-rocket-art {
+  border-radius: 18px;
+  filter: brightness(1.08) drop-shadow(0 0 22px rgba(112,217,234,.75));
+}
+.launchpad-scene-object.is-guided .launchpad-object-label {
+  border-color: #86e7f4;
+  box-shadow: 0 0 0 3px rgba(112,217,234,.14), 0 10px 24px rgba(0,0,0,.5);
+}
+.launchpad-satellite.is-guided {
+  z-index: 11;
+  padding: 8px 12px;
+  border: 1px solid #86e7f4;
+  border-radius: 12px;
+  background: rgba(5,14,25,.82);
+  box-shadow: 0 0 0 3px rgba(112,217,234,.12), 0 0 28px rgba(112,217,234,.3);
+}
+.launchpad-guide {
+  position: absolute;
+  z-index: 14;
+  top: 18px;
+  left: 18px;
+  width: min(340px, calc(100% - 36px));
+  padding: 16px;
+  border: 1px solid rgba(134,231,244,.78);
+  border-radius: 12px;
+  background: rgba(5,11,20,.96);
+  box-shadow: 0 18px 44px rgba(0,0,0,.48), 0 0 24px rgba(112,217,234,.1);
+  color: #f4f8ff;
+}
+.launchpad-guide-close {
+  position: absolute;
+  top: 7px;
+  right: 8px;
+  width: 30px;
+  height: 30px;
+  border: 0;
+  background: transparent;
+  color: #9fb0c5;
+  font: 400 22px/1 var(--ln-font-display);
+}
+.launchpad-guide-close:hover { color: #f4f8ff; }
+.launchpad-guide-kicker {
+  display: block;
+  padding-right: 32px;
+  color: #86e7f4;
+  font: 800 9px var(--ln-font-display);
+  letter-spacing: .18em;
+}
+.launchpad-guide h2 {
+  margin: 7px 32px 5px 0;
+  color: #f4f8ff;
+  font: 800 19px/1.15 var(--ln-font-display);
+}
+.launchpad-guide-copy {
+  display: block;
+  max-width: 295px;
+  color: #b9c7d9;
+  font: 500 12px/1.45 var(--ln-font-body);
+}
+.launchpad-guide-footer {
+  margin-top: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.launchpad-guide-progress { display: flex; gap: 5px; }
+.launchpad-guide-progress i {
+  display: block;
+  width: 16px;
+  height: 3px;
+  border-radius: 3px;
+  background: rgba(169,184,206,.3);
+}
+.launchpad-guide-progress i.is-current { background: #86e7f4; box-shadow: 0 0 8px rgba(112,217,234,.5); }
+.launchpad-guide-actions { display: flex; align-items: center; gap: 6px; }
+.launchpad-guide-actions button {
+  min-width: 62px;
+  height: 32px;
+  padding: 0 10px;
+  border: 1px solid rgba(169,184,206,.35);
+  border-radius: 6px;
+  background: rgba(255,255,255,.04);
+  color: #cbd6e6;
+  font: 800 9px var(--ln-font-display);
+  letter-spacing: .12em;
+}
+.launchpad-guide-actions button.is-primary { border-color: #86e7f4; background: #86e7f4; color: #07101c; }
+.launchpad-ground-line { position: absolute; z-index: 5; left: 4%; right: 4%; bottom: 20%; height: 2px; background: rgba(112,217,234,.22); box-shadow: 0 0 16px rgba(112,217,234,.18); }
+.launchpad-scene-rail {
+  position: absolute; z-index: 22; left: 0; right: 0; bottom: 0; height: 62px; padding: 9px 16px;
+  border-top: 1px solid rgba(112,217,234,.22); background: rgba(6,9,15,.97);
+  display: flex; align-items: center; justify-content: space-between; gap: 16px;
+}
+.launchpad-rail-status,
+.launchpad-rail-actions { display: flex; align-items: center; gap: 8px; }
+.launchpad-rail-status span { color: #91a1b6; font: 700 9px var(--ln-font-display); letter-spacing: .14em; white-space: nowrap; }
+.launchpad-rail-status i { display: inline-block; width: 6px; height: 6px; margin-right: 5px; border-radius: 50%; background: #5ad07e; box-shadow: 0 0 8px #5ad07e; }
+.launchpad-rail-actions button {
+  height: 40px; padding: 0 14px; border: 1px solid rgba(169,184,206,.28); border-radius: 8px;
+  background: rgba(255,255,255,.035); color: #cbd6e6; font: 800 10px var(--ln-font-display); letter-spacing: .12em;
+  display: inline-flex; align-items: center; gap: 7px;
+}
+.launchpad-rail-actions button svg { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 1.8; }
+.launchpad-rail-actions button.is-primary { border-color: #70d9ea; background: #70d9ea; color: #07101c; box-shadow: 0 0 18px rgba(112,217,234,.24); }
+@media (max-width: 860px) {
+  .launchpad-guide { top: 10px; left: 10px; width: min(310px, calc(100% - 20px)); padding: 12px; }
+  .launchpad-guide h2 { font-size: 16px; }
+  .launchpad-guide-copy { font-size: 10px; }
+  .launchpad-object-label { min-width: 0; padding: 6px 8px; }
+  .launchpad-object-label small { display: none; }
+  .launchpad-object-label strong { font-size: 8px; }
+  .launchpad-tower-art { height: 200px; }
+  .launchpad-tower-gantry { width: 58px; height: 174px; }
+  .launchpad-tower-rocket { width: 158px; }
+  .launchpad-tower-deck { width: 180px; }
+  .launchpad-satellite svg { width: 70px; }
+  .launchpad-rail-status span:not(:first-child) { display: none; }
+  .launchpad-rail-actions button { padding: 0 9px; font-size: 8px; }
+}
+@media (orientation: landscape) and (max-height: 600px) {
+  .launchpad-visual-scene { inset: 64px 0 54px; }
+  .launchpad-scene-rail { height: 54px; padding: 7px 10px; }
+  .launchpad-guide { top: 8px; left: 8px; width: 300px; padding: 10px 12px; }
+  .launchpad-guide h2 { margin-top: 4px; font-size: 15px; }
+  .launchpad-guide-copy { font-size: 9px; line-height: 1.35; }
+  .launchpad-guide-footer { margin-top: 8px; }
+  .launchpad-guide-actions button { height: 28px; }
+  .launchpad-tower-art { height: 180px; }
+  .launchpad-tower-gantry { width: 52px; height: 158px; }
+  .launchpad-tower-rocket { width: 146px; }
+  .launchpad-tower-deck { width: 165px; }
+  .launchpad-rocket-art { height: 105px; }
+  .launchpad-satellite { top: 2%; }
+}

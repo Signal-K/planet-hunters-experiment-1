@@ -23,16 +23,22 @@ function renderLaunchpad(satelliteMonitoringBuilt: boolean): string {
 }
 
 describe('LaunchpadScreen infrastructure hierarchy', () => {
-  it('puts owned infrastructure first and offers an actionable monitoring build', () => {
+  it('renders owned infrastructure as a visual scene with an actionable monitoring build', () => {
     const markup = renderLaunchpad(false)
-    expect(markup.indexOf('Owned Infrastructure')).toBeLessThan(markup.indexOf('Launchpad Status'))
+    expect(markup).toContain('data-testid="launchpad-monitoring-structure"')
+    expect(markup).toContain('data-testid="launchpad-satellite-orbit"')
+    expect(markup).toContain('data-testid="launchpad-rocket-fleet"')
     expect(markup).toContain('data-testid="launchpad-build-monitoring-btn"')
-    expect(markup).toContain('STATION REQUIRED')
+    expect(markup).toContain('data-testid="launchpad-guide-open"')
+    expect(markup).toContain('BUILD MONITORING STATION')
+    expect(markup).toContain('class="game-screen theme-deep ln-scene-launchpad"')
+    expect(markup).not.toContain('launchpad-command-grid')
+    expect(markup).not.toMatch(/<p(?:\s|>)/)
   })
 
   it('shows the built state without a duplicate build CTA', () => {
     const markup = renderLaunchpad(true)
-    expect(markup).toContain('Telemetry and daily instrument downlinks are online.')
+    expect(markup).toContain('S.M.S. · ONLINE')
     expect(markup).not.toContain('data-testid="launchpad-build-monitoring-btn"')
   })
 })
