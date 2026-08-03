@@ -612,12 +612,12 @@ describe('Scanning station constants and structure seed', () => {
     expect(SCANS_REQUIRED_TO_MAP).toBe(3)
   })
 
-  it('defines a scan-station structure with free cost and freeOperations unlock', () => {
+  it('keeps the Sprint 12 scan-station structure dark in the Sprint 11 build', () => {
     const scanner = STRUCTURES.find(s => s.id === 'scan-station')
     expect(scanner).toBeDefined()
     expect(scanner?.cost).toBe(0)
     expect(scanner && structureUnlocked(scanner, { freeOperations: false })).toBe(false)
-    expect(scanner && structureUnlocked(scanner, { freeOperations: true })).toBe(true)
+    expect(scanner && structureUnlocked(scanner, { freeOperations: true })).toBe(false)
   })
 
   it('scan-station is not unlocked for launchpad-only context', () => {

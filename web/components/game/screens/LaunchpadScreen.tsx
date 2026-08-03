@@ -1,13 +1,10 @@
 'use client'
 
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import TopBar from '@/components/ui/TopBar'
-import { PrimaryBtn, GhostBtn } from '@/components/ui/Button'
-import MissionCard from '@/components/game/MissionCard'
-import { ACADEMY_INTRO_MISSION_ID, compatibleTargetsFor, missionTypePrimer, partitionByOwner } from '@/lib/data'
+import { ACADEMY_INTRO_MISSION_ID, partitionByOwner } from '@/lib/data'
 import { ROCKET_MODELS } from '@/lib/data/rockets'
 import { SATELLITE_MODELS } from '@/lib/data/satellites'
-import { formatCurrency } from '@/lib/format'
 import type { Catalog } from '@/lib/catalog'
 import type { Player } from '@/lib/game-types'
 import { academyAffinityUnlocked } from '@/lib/systems/AcademySystem'
@@ -15,10 +12,10 @@ import { UI_ZONES } from '@/lib/ui-zones'
 
 interface LaunchpadScreenProps {
   onBack: () => void
-  /** Commits to a mission — same click-to-commit contract as the Mission Board. */
   onPick: (id: string) => void
   onViewContracts: () => void
   onOpenHangar: () => void
+  onBuildMonitoring: () => void
   missionsDone: number
   freeOperations: boolean
   catalog: Catalog
@@ -26,250 +23,182 @@ interface LaunchpadScreenProps {
   francs?: number
 }
 
-const infoCardStyle: React.CSSProperties = {
-  padding: 16, borderRadius: 12,
-  border: '1px solid var(--ln-hairline)',
-  background: 'var(--ln-panel)',
-  display: 'flex', flexDirection: 'column', gap: 10,
+const LAUNCHPAD_GUIDE_KEY = 'landnam-launchpad-guide-v1'
+
+function SatelliteGlyph() {
+  return (
+    <svg viewBox="0 0 150 74" aria-hidden="true">
+      <g fill="none" stroke="currentColor" strokeWidth="3">
+        <rect x="57" y="20" width="36" height="34" rx="4" />
+        <path d="M63 20l8-11h8l8 11M75 54v12M66 66h18" />
+        <path d="M57 27H9v22h48M93 27h48v22H93M19 27v22M31 27v22M43 27v22M107 27v22M119 27v22M131 27v22" />
+      </g>
+    </svg>
+  )
 }
 
-const sectionLabelStyle: React.CSSProperties = {
-  fontFamily: 'var(--ln-font-display)', fontSize: 11, letterSpacing: '0.08em',
-  textTransform: 'uppercase', color: 'var(--ln-text-muted)',
+function HangarGlyph() {
+  return <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 21V8l3-4h10l3 4v13M4 9h16M8 21v-7h8v7" /></svg>
 }
 
-/**
- * The launchpad's own screen, and the first thing a player sees when they tap
- * the launchpad — their own program before anybody else's order.
- *
- * Tapping the launchpad used to drop straight onto the Mission Board, which is
- * a wall of client requests: the player's read was "this pad exists to serve
- * other people". Own-initiative work (launching your own satellite, a
- * self-directed run, raising your own infrastructure) had no home of its own.
- * This screen is that home; the Mission Board is one press away and unchanged.
- *
- * The own/client split is `isOwnProgramMission` via `partitionByOwner` — the
- * same authority the Mission Board's grouping uses, so the two surfaces can
- * never disagree about whose job something is.
- */
+function MissionGlyph() {
+  return <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="3" width="16" height="18" rx="2" /><path d="M8 8h8M8 12h8M8 16h5" /></svg>
+}
+
+function GuideGlyph() {
+  return <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" /><path d="M9.8 9a2.3 2.3 0 1 1 3.1 2.2c-.9.4-.9 1.1-.9 1.8M12 17h.01" /></svg>
+}
+
 export default function LaunchpadScreen({
-  onBack, onPick, onViewContracts, onOpenHangar, missionsDone, freeOperations, catalog, player, francs,
+  onBack, onPick, onViewContracts, onOpenHangar, onBuildMonitoring, missionsDone, freeOperations, catalog, player, francs,
 }: LaunchpadScreenProps) {
-  const { missions: MISSIONS, clients: CLIENTS, minerals: MINERAL_META, targets } = catalog
+  const [guideStep, setGuideStep] = useState<number | null>(null)
+  const fleet = ROCKET_MODELS.map(model => ({ model, unlocked: missionsDone >= model.missionsRequired && !model.locked }))
+  const unlockedFleet = fleet.filter(item => item.unlocked)
+  const launchedSatellites = player.transitSatelliteLaunchedAt ? SATELLITE_MODELS.length : 0
+  const { own } = partitionByOwner(catalog.missions, mission => mission)
   const sequence = missionsDone + 1
-
-  // Defensive, not the normal path: GameScreenRouter already resolves an
-  // active/pending build to the transit/fab screen before the player ever
-  // lands here. Kept so a rocket mid-build is never silently hidden if this
-  // screen is ever reached another way.
-  const rocketInProgress = player.activeMission
-    ? { label: player.activeMission.label, status: 'In flight' }
-    : player.pendingLaunch
-      ? { label: 'Rocket', status: 'Fabrication in progress' }
-      : null
-
-  const fleet = ROCKET_MODELS.map(m => ({
-    model: m,
-    unlocked: missionsDone >= m.missionsRequired && !m.locked,
-  }))
-
-  // Satellites unlock off the Satellite Monitoring Station structure and are
-  // launched once — not the rocket fleet's missionsRequired axis.
-  const satellites = SATELLITE_MODELS.map(m => {
-    const launched = !!player.transitSatelliteLaunchedAt
-    const available = !!player.satelliteMonitoringBuilt && !launched
-    return {
-      model: m,
-      launched,
-      available,
-    }
+  const operations = own.filter(mission => freeOperations || mission.sequence === sequence)
+  const nextOperation = operations.find(mission => {
+    if (mission.id !== ACADEMY_INTRO_MISSION_ID) return true
+    const academyUnlocked = academyAffinityUnlocked(player) || !!player.academyResearched || player.placed.includes('astronaut-academy')
+    const academyCompleted = player.placed.includes('astronaut-academy') && (player.crew ?? []).some(member =>
+      member.crewClass === 'astronaut' && member.selfTrained && member.specialisations.length > 0,
+    )
+    return academyUnlocked && !academyCompleted
   })
+  const guideSteps = [
+    {
+      label: '01 · GROUND SYSTEM',
+      title: player.satelliteMonitoringBuilt ? 'Monitoring online' : 'Build the monitoring station',
+      body: player.satelliteMonitoringBuilt
+        ? 'This station receives telescope downlinks and turns them into science work.'
+        : 'You need this before your first transit telescope can operate.',
+      target: 'station',
+    },
+    {
+      label: '02 · LAUNCHPAD',
+      title: 'Launch from here',
+      body: 'Assigned vehicles move from the hangar to this pad before flight.',
+      target: 'tower',
+    },
+    {
+      label: '03 · ROCKET FLEET',
+      title: 'Prepare your vehicles',
+      body: 'Open the hangar to inspect unlocked rockets and fit upgrades.',
+      target: 'rocket',
+    },
+    {
+      label: '04 · YOUR PROGRAM',
+      title: 'Choose what flies next',
+      body: 'Operations use your own assets. Contracts fund their expansion.',
+      target: 'satellite',
+    },
+  ] as const
+  const guide = guideStep === null ? null : guideSteps[guideStep]
 
-  // Own-program work carries no client, so none of the board's client gating
-  // applies: no daily pool slot, no cooldown, no affinity tier. During
-  // onboarding the sequence gate still holds; in Free Ops everything the
-  // player owns is theirs to fly whenever they like.
-  const { own } = partitionByOwner(MISSIONS, m => m)
-  const launchables = own.filter(m => freeOperations || m.sequence === sequence)
+  useEffect(() => {
+    if (!window.localStorage.getItem(LAUNCHPAD_GUIDE_KEY)) setGuideStep(0)
+  }, [])
 
-  const cards = launchables.map(m => ({
-    mission: m,
-    client: m.client ? CLIENTS[m.client] ?? null : null,
-    targetCount: compatibleTargetsFor(m, targets).length,
-    primer: missionTypePrimer(m),
-  }))
+  const closeGuide = () => {
+    window.localStorage.setItem(LAUNCHPAD_GUIDE_KEY, 'complete')
+    setGuideStep(null)
+  }
+
+  const isGuided = (target: (typeof guideSteps)[number]['target']) => guide?.target === target
 
   return (
-    <div
-      className="ln-scene-launchpad"
-      style={{ width: '100%', height: '100%', position: 'relative' }}
-    >
-      <TopBar
-        eyebrow="EARTH BASE · LAUNCHPAD"
-        title="Your Program"
-        onBack={onBack}
-        solid
-        francs={francs}
-      />
+    <div className="game-screen theme-deep ln-scene-launchpad">
+      <TopBar eyebrow="EARTH BASE · LAUNCHPAD" title="Your Program" onBack={onBack} solid francs={francs} />
 
-      <div
-        data-ui-zone={UI_ZONES.screenContent}
-        style={{ position: 'absolute', inset: 0, paddingTop: 72, paddingBottom: 96, overflowY: 'auto' }}
-      >
-        <div style={{ padding: 16, display: 'flex', flexDirection: 'column', gap: 16 }}>
-          {rocketInProgress && (
-            <div style={{ ...infoCardStyle, borderColor: 'var(--ln-cyan)' }} data-testid="launchpad-rocket-in-progress">
-              <div style={sectionLabelStyle}>Rocket In Progress</div>
-              <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 16, color: 'var(--ln-text)' }}>
-                {rocketInProgress.label}
-              </div>
-              <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 12, color: 'var(--ln-cyan)' }}>
-                {rocketInProgress.status}
-              </div>
-            </div>
-          )}
+      <main data-ui-zone={UI_ZONES.screenContent} className="launchpad-visual-scene">
+        <div className="launchpad-stars" />
+        <div className="launchpad-orbit-line" />
 
-          <div className="ln-instrument-card" data-testid="launchpad-status-card">
-            <div className="ln-instrument-label">Launchpad Status</div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
-              <div className="ln-instrument-value">
-                {player.launchpadUpgraded ? 'Upgraded Pad' : 'Standard Pad'}
-              </div>
-              {!player.launchpadUpgraded && (
-                <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 11, color: 'var(--scene-card-muted)' }}>
-                  Upgrade from Edit · Build on the Hub
-                </div>
-              )}
-            </div>
-          </div>
-
-          <div className="ln-instrument-card" data-testid="launchpad-fleet-card">
-            <div className="ln-instrument-label">Fleet</div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              {fleet.map(({ model, unlocked }) => (
-                <div
-                  key={model.id}
-                  style={{
-                    display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                    opacity: unlocked ? 1 : 0.45,
-                  }}
-                >
-                  <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 13, color: 'var(--scene-card-text)' }}>
-                    {model.name}
-                  </div>
-                  <div style={{ fontFamily: 'var(--ln-font-mono)', fontSize: 11, color: 'var(--scene-card-muted)' }}>
-                    {unlocked
-                      ? model.costFrancs > 0 ? formatCurrency(model.costFrancs, { compact: true }) : 'Free'
-                      : model.unlockHint}
-                  </div>
-                </div>
-              ))}
-            </div>
-            <GhostBtn testId="launchpad-open-hangar-btn" onClick={onOpenHangar}>
-              Open Hangar →
-            </GhostBtn>
-          </div>
-
-          <div className="ln-instrument-card" data-testid="launchpad-satellites-card">
-            <div className="ln-instrument-label">Satellites</div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              {satellites.map(({ model, launched, available }) => (
-                <div
-                  key={model.id}
-                  style={{
-                    display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                    opacity: available || launched ? 1 : 0.45,
-                  }}
-                >
-                  <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 13, color: 'var(--scene-card-text)' }}>
-                    {model.name}
-                  </div>
-                  <div style={{ fontFamily: 'var(--ln-font-mono)', fontSize: 11, color: 'var(--scene-card-muted)' }}>
-                    {launched ? 'DEPLOYED' : available ? 'READY TO LAUNCH' : model.unlockHint.toUpperCase()}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div style={{
-            fontFamily: 'var(--ln-font-body)', fontSize: 12, lineHeight: 1.5,
-            color: 'var(--ln-text-muted)',
-          }}>
-            Work you launch on your own initiative — your satellites, your
-            infrastructure, your own mining runs. Nobody ordered these and
-            nobody else owns what they leave behind.
-          </div>
-
-          {cards.length > 0 ? (
-            <div
-              data-testid="launchpad-own-program-list"
-              style={{ display: 'flex', flexDirection: 'column', gap: 14 }}
-            >
-              {cards.map(c => {
-                const isAcademyTask = c.mission.id === ACADEMY_INTRO_MISSION_ID
-                const academyUnlocked = academyAffinityUnlocked(player)
-                  || !!player.academyResearched
-                  || player.placed.includes('astronaut-academy')
-                const academyCompleted = isAcademyTask
-                  && player.placed.includes('astronaut-academy')
-                  && (player.crew ?? []).some(member =>
-                    member.crewClass === 'astronaut'
-                    && member.selfTrained
-                    && member.specialisations.length > 0,
-                  )
-                const unlocked = !isAcademyTask || (academyUnlocked && !academyCompleted)
-                return (
-                  <MissionCard
-                    key={c.mission.id}
-                    mission={c.mission}
-                    client={c.client}
-                    mineralMeta={MINERAL_META}
-                    targetCount={c.targetCount}
-                    displayPayout={c.mission.payout.francs}
-                    unlocked={unlocked}
-                    isStoryMission={c.mission.tag === 'STORY' && !c.mission.deliveryTargetId}
-                    cardState={academyCompleted ? 'completed' : unlocked ? 'available' : 'locked'}
-                    lockedDetail={isAcademyTask && !academyCompleted ? 'Reach L2 affinity with two clients' : undefined}
-                    onPick={() => onPick(c.mission.id)}
-                  />
-                )
-              })}
-            </div>
-          ) : (
-            <div
-              data-testid="launchpad-own-program-empty"
-              style={{
-                padding: 24, borderRadius: 12,
-                border: '1px solid var(--ln-hairline)',
-                background: 'var(--ln-panel)',
-                fontFamily: 'var(--ln-font-body)', fontSize: 12, lineHeight: 1.5,
-                color: 'var(--ln-text-muted)',
-              }}
-            >
-              Nothing of your own is ready to fly yet. Client contracts are what
-              pay for the program that gets you there.
-            </div>
-          )}
+        <div className={`launchpad-satellite ${isGuided('satellite') ? 'is-guided' : ''}`} data-testid="launchpad-satellite-orbit">
+          <SatelliteGlyph />
+          <div><strong>{launchedSatellites}/{SATELLITE_MODELS.length}</strong><span>ORBIT</span></div>
         </div>
-      </div>
 
-      <div
-        className="sticky-actions"
-        data-ui-zone={UI_ZONES.bottomActions}
-        data-coach-id="launchpad-view-contracts"
-        style={{ position: 'absolute', left: 0, right: 0, bottom: 0, padding: 16 }}
-      >
-        {cards.length > 0 ? (
-          <GhostBtn testId="launchpad-view-contracts-btn" onClick={onViewContracts}>
-            View All Contracts →
-          </GhostBtn>
-        ) : (
-          <PrimaryBtn testId="launchpad-view-contracts-btn" onClick={onViewContracts}>
-            View All Contracts →
-          </PrimaryBtn>
+        <button
+          type="button"
+          className={`launchpad-scene-object launchpad-station ${player.satelliteMonitoringBuilt ? 'is-built' : 'is-blueprint'} ${isGuided('station') ? 'is-guided' : ''}`}
+          data-testid="launchpad-monitoring-structure"
+          onClick={player.satelliteMonitoringBuilt ? undefined : onBuildMonitoring}
+        >
+          <span className="launchpad-object-art">
+            <img src="/game/assets/hub/sat_station.png" alt="" />
+            {!player.satelliteMonitoringBuilt && <i className="launchpad-build-plus">+</i>}
+          </span>
+          <span className="launchpad-object-label">
+            <small>GROUND SYSTEM</small>
+            <strong>{player.satelliteMonitoringBuilt ? 'S.M.S. · ONLINE' : 'BUILD MONITORING STATION'}</strong>
+          </span>
+        </button>
+
+        <div className={`launchpad-scene-object launchpad-tower ${isGuided('tower') ? 'is-guided' : ''}`} data-testid="launchpad-status-card">
+          <span className="launchpad-tower-art">
+            <img className="launchpad-tower-gantry" src="/game/assets/hub/pad_gantry_frame.png" alt="" />
+            <img className="launchpad-tower-rocket" src="/game/assets/ships/ship_sr1.png" alt="" />
+            <img className="launchpad-tower-deck" src="/game/assets/hub/pad_deck.png" alt="" />
+          </span>
+          <span className="launchpad-object-label launchpad-object-label--center">
+            <small>LAUNCHPAD</small>
+            <strong>{player.activeMission ? 'IN FLIGHT' : player.pendingLaunch ? 'ON PAD' : 'READY'}</strong>
+          </span>
+        </div>
+
+        <button type="button" className={`launchpad-scene-object launchpad-rocket ${isGuided('rocket') ? 'is-guided' : ''}`} data-testid="launchpad-rocket-fleet" onClick={onOpenHangar}>
+          <span className="launchpad-rocket-art">
+            <img src="/game/assets/ships/ship_sr1.png" alt="" />
+            <i className="launchpad-rocket-glow" />
+          </span>
+          <span className="launchpad-object-label">
+            <small>ROCKET FLEET · {unlockedFleet.length}</small>
+            <strong>{unlockedFleet[0]?.model.name ?? 'NO VEHICLE'} · HANGAR</strong>
+          </span>
+        </button>
+
+        {guide && guideStep !== null && (
+          <aside className="launchpad-guide" data-testid="launchpad-guide" aria-live="polite" aria-labelledby="launchpad-guide-title">
+            <button className="launchpad-guide-close" data-testid="launchpad-guide-close" onClick={closeGuide} aria-label="Close Launchpad guide">×</button>
+            <span className="launchpad-guide-kicker">{guide.label}</span>
+            <h2 id="launchpad-guide-title">{guide.title}</h2>
+            <span className="launchpad-guide-copy">{guide.body}</span>
+            <div className="launchpad-guide-footer">
+              <div className="launchpad-guide-progress" aria-label={`Guide step ${guideStep + 1} of ${guideSteps.length}`}>
+                {guideSteps.map((step, index) => <i key={step.target} className={index === guideStep ? 'is-current' : ''} />)}
+              </div>
+              <div className="launchpad-guide-actions">
+                {guideStep > 0 && <button data-testid="launchpad-guide-back" onClick={() => setGuideStep(guideStep - 1)}>BACK</button>}
+                <button className="is-primary" data-testid="launchpad-guide-next" onClick={() => guideStep === guideSteps.length - 1 ? closeGuide() : setGuideStep(guideStep + 1)}>
+                  {guideStep === guideSteps.length - 1 ? 'DONE' : 'NEXT'}
+                </button>
+              </div>
+            </div>
+          </aside>
         )}
-      </div>
+
+        <div className="launchpad-ground-line" />
+      </main>
+
+      <footer className="launchpad-scene-rail" data-ui-zone={UI_ZONES.bottomActions}>
+        <div className="launchpad-rail-status">
+          <span><i /> PAD {player.activeMission ? 'ACTIVE' : 'READY'}</span>
+          <span>{unlockedFleet.length} ROCKETS</span>
+          <span>{launchedSatellites}/{SATELLITE_MODELS.length} SAT</span>
+        </div>
+        <div className="launchpad-rail-actions">
+          <button data-testid="launchpad-guide-open" onClick={() => setGuideStep(0)}><GuideGlyph /> GUIDE</button>
+          {!player.satelliteMonitoringBuilt && (
+            <button className="is-primary" data-testid="launchpad-build-monitoring-btn" onClick={onBuildMonitoring}>BUILD STATION</button>
+          )}
+          <button data-testid="launchpad-open-hangar-btn" onClick={onOpenHangar}><HangarGlyph /> HANGAR</button>
+          {nextOperation && <button data-testid="launchpad-program-operation-btn" onClick={() => onPick(nextOperation.id)}><MissionGlyph /> OPS {operations.length}</button>}
+          <button data-testid="launchpad-view-contracts-btn" onClick={onViewContracts}><MissionGlyph /> CONTRACTS</button>
+        </div>
+      </footer>
     </div>
   )
 }

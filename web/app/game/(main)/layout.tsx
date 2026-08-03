@@ -8,10 +8,10 @@ import TutorialCoach from '@/components/game/TutorialCoach'
 import SaveProgressPrompt from '@/components/game/SaveProgressPrompt'
 import UnlockPopup from '@/components/game/UnlockPopup'
 import BottomTabBar from '@/components/layout/BottomTabBar'
-import Sidebar from '@/components/Sidebar/Sidebar'
 import BackendStatus from '@/components/game/BackendStatus'
 import LandnamSyncStatus from '@/components/game/LandnamSyncStatus'
 import { PushOptIn } from '@/components/game/PushOptIn'
+import ContentUpdateNotice from '@/components/game/ContentUpdateNotice'
 import FeedbackButton from '@/components/ui/FeedbackButton'
 import SurveySheet from '@/components/ui/SurveySheet'
 import ToastLayer from '@/components/ui/ToastLayer'
@@ -19,6 +19,7 @@ import { initPostHog } from '@/lib/posthog'
 import DevShortcuts from '@/components/dev/DevShortcuts'
 import AuthGateSheet from '@/components/game/AuthGateSheet'
 import SettingsSheet from '@/components/game/SettingsSheet'
+import SettingsButton from '@/components/game/SettingsButton'
 import TerritoryClaimPopup from '@/components/game/TerritoryClaimPopup'
 import { UI_ZONES } from '@/lib/ui-zones'
 
@@ -130,16 +131,16 @@ function GameChrome({ children }: { children: ReactNode }) {
       <div className="portrait-canvas">
         <BackendStatus />
         <LandnamSyncStatus />
-        {/* zIndex 6 keeps PushOptIn below ProgressionCard (8). At 12 it sat
-            above the progression cards and, once its label wrapped, covered the
-            first one — the Skill Tree button stopped responding to taps. It is
-            already *behind* the top HUD (18), which is why only the first few
-            characters ever show; that placement collision is tracked separately
-            and is a design call, not fixed here. */}
+        {/* Mission alerts have a reserved desktop slot to the left of the
+            horizontal resource HUD. They are hidden at compact widths rather
+            than wrapping over progression controls. */}
         {game.player.freeOperations && currentScreen === 'hub' && (
-          <div data-ui-zone={UI_ZONES.ambientPrompt} style={{ position: 'absolute', top: 12, right: 12, zIndex: 6 }}>
+          <div data-ui-zone={UI_ZONES.ambientPrompt} className="hub-push-opt-in">
             <PushOptIn userId={game.authUserId ?? undefined} />
           </div>
+        )}
+        {currentScreen === 'hub' && (
+          <SettingsButton onClick={() => setSettingsOpen(true)} />
         )}
         <DevShortcuts />
 
@@ -148,6 +149,13 @@ function GameChrome({ children }: { children: ReactNode }) {
 
         <ToastLayer toasts={game.toasts} onDismiss={game.dismissToast} />
         {showFeedback && <FeedbackButton />}
+        {['hub', 'missions', 'launchpad'].includes(currentScreen) && (
+          <ContentUpdateNotice
+            player={game.player}
+            blocked={!!game.popup || !!coach || game.upgradePromptOpen || game.authGateOpen || !!game.pendingTerritoryClaimFor}
+            onNavigate={screen => game.go(screen)}
+          />
+        )}
         <SurveySheet blockWhile={!!game.popup || !!coach || !!game.pendingTerritoryClaimFor} />
         {showNav && <BottomTabBar current={currentNav} onNav={goFromNav} />}
 
@@ -196,14 +204,8 @@ function GameChrome({ children }: { children: ReactNode }) {
         )}
       </div>
 
-      {/* Sidebar (position:fixed, desktop only) lives outside .portrait-canvas
-          on purpose: that box has `isolation: isolate` + `overflow: hidden`
-          for the mobile-canvas illusion, which scopes/clips a nested fixed
-          descendant's effective stacking in ways that made the sidebar
-          unreliable to click on desktop (Liam, 2026-07-04: "buttons in the
-          sidebar on desktop do not work"). Keeping it a sibling of
-          .portrait-canvas inside .game-stage removes that ambiguity. */}
-      <Sidebar current={currentNav} onNav={goFromNav} onSettings={() => setSettingsOpen(true)} />
+      {/* Navigation is scene-owned on desktop; settings remains available as
+          a small hub affordance instead of reviving the overlapping rail. */}
       {settingsOpen && <SettingsSheet onClose={() => setSettingsOpen(false)} />}
     </main>
   )

@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@import "./launchpad-screen.css";
 
 /* ============================================================
    LANDNAM — Colors & Type
@@ -1090,55 +1091,29 @@ html[data-coach-target="build-structure-strip"] [data-coach-id="build-structure-
   100% { opacity: 0; transform: translate(calc(-50% + var(--sx, 0px)), calc(-50% + var(--sy, 0px))); }
 }
 
-/* ============================================================
-   SCENE-PANEL SPIKE (STS-630) — Launchpad only
-   ============================================================
-   CSS approximation of the scene-panel model (see ZenNotes
-   landnam-scene-panel-background-direction-2026-07-31): the panel
-   background is a lit surface, not a flat color fill, and instrument
-   chrome uses thick opaque outlines instead of thin glass hairlines.
-   This is a stand-in for a future PixiJS-rendered control-room
-   background — not the final rendering technique. Scoped under
-   .ln-scene-launchpad so it cannot leak into any other screen. */
-.ln-scene-launchpad {
-  --scene-sky-top:    #bfe8f5;
-  --scene-sky-mid:    #eaf8ea;
-  --scene-ground:     #6fae63;
-  --scene-sun:        rgba(255, 235, 150, 0.9);
-  --scene-ink:        #14171c;
-  --scene-card-bg:    #ffffff;
-  --scene-card-text:  #14171c;
-  --scene-card-muted: #3f4854;
+/* Keep the Earth Base scene chrome in separate reserved bands. The previous
+   110px action-rail offset landed directly on the building status pills at
+   short landscape heights. */
+.hub-action-rail { bottom: 110px; }
 
-  background:
-    radial-gradient(140px 90px at 82% 12%, var(--scene-sun), transparent 70%),
-    linear-gradient(0deg, var(--scene-ground) 0%, var(--scene-ground) 20%, transparent 20%),
-    linear-gradient(180deg, var(--scene-sky-top) 0%, var(--scene-sky-mid) 55%, var(--scene-ground) 100%);
+.hub-push-opt-in {
+  position: absolute;
+  top: 16px;
+  right: 196px;
+  z-index: 19;
+  max-width: 210px;
+}
+.hub-push-opt-in button,
+.hub-push-opt-in div { white-space: nowrap; }
+
+@media (min-width: 1024px) {
+  .hub-action-rail { bottom: var(--ln-s-5); }
 }
 
-.ln-instrument-card {
-  background: var(--scene-card-bg);
-  border: 3px solid var(--scene-ink);
-  border-radius: 10px;
-  box-shadow: 0 4px 0 var(--scene-ink);
-  padding: 16px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
+@media (max-width: 1023px) {
+  .hub-push-opt-in { display: none; }
 }
 
-.ln-instrument-label {
-  font-family: var(--ln-font-display);
-  font-size: 11px;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--scene-card-muted);
-  font-weight: 700;
-}
-
-.ln-instrument-value {
-  font-family: var(--ln-font-display);
-  font-size: 16px;
-  color: var(--scene-card-text);
-  font-weight: 700;
+@media (orientation: landscape) and (max-height: 600px) {
+  .hub-progression-stack { bottom: 76px !important; }
 }

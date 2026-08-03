@@ -16,6 +16,7 @@ import HubPixiCanvas from '@/components/game/hub/HubPixiCanvas'
 import ErrorBoundary from '@/components/ui/ErrorBoundary'
 import type { HubBuildingDef } from '@/lib/pixi/hubScene'
 import { formatCurrency } from '@/lib/format'
+import { FEATURE_FLAGS } from '@/lib/featureFlags'
 
 // Instantiated from the build-plot prefab rather than written out by hand.
 // This same list previously existed in four places (both hub scene files and
@@ -76,7 +77,9 @@ export default function BuildPlaceScreen({ onPlaced, onBack, hasCoach, player }:
       .catch(() => {})
   }, [])
 
-  const catalog = STRUCTURES.filter(s => s.id !== 'garage')
+  const catalog = STRUCTURES.filter(s =>
+    s.id !== 'garage' && (FEATURE_FLAGS.scanStation || s.id !== 'scan-station')
+  )
   const sel = catalog.find(c => c.id === picked) ?? catalog[0]
   const sortedEntities = plotEntities.slice().sort((a, b) => {
     const ai = readComponentNumber(a, 'BuildPlot', 'index', 0)
