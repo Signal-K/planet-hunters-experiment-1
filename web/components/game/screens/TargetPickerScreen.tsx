@@ -281,9 +281,11 @@ export default function TargetPickerScreen({ mission, onBack, onPick, hasCoach, 
               {/* Deposit mix — required minerals first, then rarest first, capped */}
               <div style={{ marginTop: hasCoach ? 6 : 10 }}>
                 <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 8, fontWeight: 700, letterSpacing: '0.22em', color: 'var(--ln-text-muted)', textTransform: 'uppercase', marginBottom: 5 }}>Deposit mix</div>
-                <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                <div data-testid="target-deposit-mix" style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
                   {depositMixShown.map(min => (
-                    <MineralChip key={min} meta={MINERAL_META[min] ? { name: MINERAL_META[min].name, sym: MINERAL_META[min].sym, color: MINERAL_META[min].color } : { name: min, sym: min, color: '#ffffff' }} />
+                    <span key={min} data-testid={`target-deposit-${min}`}>
+                      <MineralChip meta={MINERAL_META[min] ? { name: MINERAL_META[min].name, sym: MINERAL_META[min].sym, color: MINERAL_META[min].color } : { name: min, sym: min, color: '#ffffff' }} />
+                    </span>
                   ))}
                   {depositMixOverflow > 0 && (
                     <span style={{ display: 'inline-flex', alignItems: 'center', padding: '3px 8px', fontFamily: 'var(--ln-font-mono)', fontSize: 10, color: 'var(--ln-text-muted)' }}>

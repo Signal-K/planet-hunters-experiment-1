@@ -3,7 +3,7 @@
 // delays itself rather than serving stale API responses.
 // Also handles Web Push notifications (opt-in).
 
-const CACHE = 'landnam-shell-v4'
+const CACHE = 'landnam-shell-v5'
 
 const SHELL = [
   '/',

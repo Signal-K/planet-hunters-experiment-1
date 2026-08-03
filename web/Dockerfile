@@ -1,21 +1,21 @@
-FROM node:20-alpine AS dev
+FROM node:24-alpine AS dev
 WORKDIR /app
 COPY package.json package-lock.json ./
 COPY vendor/takeon ./vendor/takeon
 ENV CYPRESS_INSTALL_BINARY=0
-RUN npm ci
+RUN --mount=type=cache,target=/root/.npm npm ci --prefer-offline --no-audit
 ENV NEXT_TELEMETRY_DISABLED=1
 EXPOSE 3001
 CMD ["npm", "run", "dev"]
 
-FROM node:20-alpine AS dependencies
+FROM node:24-alpine AS dependencies
 WORKDIR /app
 COPY package.json package-lock.json ./
 COPY vendor/takeon ./vendor/takeon
 ENV CYPRESS_INSTALL_BINARY=0
-RUN npm ci
+RUN --mount=type=cache,target=/root/.npm npm ci --prefer-offline --no-audit
 
-FROM node:20-alpine AS builder
+FROM node:24-alpine AS builder
 WORKDIR /app
 ARG NEXT_PUBLIC_SHARED_PB_URL=http://localhost:8090
 ENV NEXT_PUBLIC_SHARED_PB_URL=$NEXT_PUBLIC_SHARED_PB_URL
@@ -23,7 +23,7 @@ COPY --from=dependencies /app/node_modules ./node_modules
 COPY . .
 RUN npm run build
 
-FROM node:20-alpine AS runner
+FROM node:24-alpine AS runner
 WORKDIR /app
 ENV NODE_ENV=production
 ENV PORT=3001

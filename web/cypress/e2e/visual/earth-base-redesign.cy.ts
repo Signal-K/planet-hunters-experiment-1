@@ -185,7 +185,9 @@ describe('Earth Base — redesigned scene', () => {
     // /game/build bounces back to the hub.
     cy.contains('button', 'Edit · Build').click({ scrollBehavior: false })
     cy.contains('button', 'New Structure').click({ scrollBehavior: false })
-    cy.get('[data-testid="build-plot-1"]', { timeout: 20000 }).should('exist').click({ scrollBehavior: false })
+    cy.get('[data-testid="build-plot-1"]', { timeout: 20000 }).should('exist')
+    cy.get('[data-testid="build-plot-1"]').click({ force: true, scrollBehavior: false })
+    cy.contains('button', 'Confirm · Build Here', { timeout: 10000 }).should('be.visible')
     cy.wait(1200)
     cy.screenshot('earth-base-07-portrait-build', { capture: 'viewport' })
   })
