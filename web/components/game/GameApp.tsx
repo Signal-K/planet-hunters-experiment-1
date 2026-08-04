@@ -246,14 +246,14 @@ function GameCanvas() {
           />
         )}
         {game.upgradePromptOpen && !game.popup && (
-          <SaveProgressPrompt onUpgrade={game.upgradeAccount} onDismiss={game.dismissUpgradePrompt} />
+          <SaveProgressPrompt onUpgrade={game.upgradeAccount} />
         )}
         {game.authGateOpen && (
           <AuthGateSheet
             error={game.authGateError}
             onSignIn={game.signInFromGate}
             onCreateAccount={game.createAccountFromGate}
-            onSkip={game.skipAuthGate}
+            onContinue={game.continueWithEmail}
           />
         )}
         {game.pendingTerritoryClaimFor && (

@@ -7,14 +7,16 @@ interface AuthGateSheetProps {
   error: string | null
   onSignIn: (email: string, password: string) => Promise<void>
   onCreateAccount: (email: string, password: string) => Promise<void>
-  onSkip: () => void
+  onContinue: (email: string) => Promise<void>
 }
 
-export default function AuthGateSheet({ error, onSignIn, onCreateAccount, onSkip }: AuthGateSheetProps) {
+export default function AuthGateSheet({ error, onSignIn, onCreateAccount, onContinue }: AuthGateSheetProps) {
   const [mode, setMode] = useState<'signin' | 'signup'>('signin')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [submitting, setSubmitting] = useState(false)
+  const [quickEmail, setQuickEmail] = useState('')
+  const [quickSubmitting, setQuickSubmitting] = useState(false)
 
   const inputStyle: React.CSSProperties = {
     width: '100%', padding: '12px 14px',
@@ -38,6 +40,18 @@ export default function AuthGateSheet({ error, onSignIn, onCreateAccount, onSkip
       // error shown via props
     } finally {
       setSubmitting(false)
+    }
+  }
+
+  async function handleQuickContinue(e: React.FormEvent) {
+    e.preventDefault()
+    setQuickSubmitting(true)
+    try {
+      await onContinue(quickEmail)
+    } catch {
+      // error shown via props
+    } finally {
+      setQuickSubmitting(false)
     }
   }
 
@@ -130,19 +144,38 @@ export default function AuthGateSheet({ error, onSignIn, onCreateAccount, onSkip
           </button>
         </form>
 
-        <button
-          type="button"
-          onClick={onSkip}
-          data-testid="auth-gate-skip"
-          style={{
-            display: 'block', width: '100%', marginTop: 14,
-            background: 'transparent', border: 'none', cursor: 'pointer',
-            fontFamily: 'var(--ln-font-body)', fontSize: 12, color: '#5d7390',
-            textAlign: 'center',
-          }}
-        >
-          Continue without account
-        </button>
+        <div style={{ marginTop: 16, paddingTop: 14, borderTop: '1px solid rgba(112,217,234,0.15)' }}>
+          <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 11, color: '#5d7390', marginBottom: 8, textAlign: 'center' }}>
+            Or just leave an email — no password needed
+          </div>
+          <form onSubmit={handleQuickContinue} style={{ display: 'flex', gap: 8 }}>
+            <input
+              type="email"
+              value={quickEmail}
+              onChange={e => setQuickEmail(e.target.value)}
+              required
+              autoComplete="email"
+              placeholder="you@example.com"
+              data-testid="auth-gate-quick-email"
+              style={{ ...inputStyle, flex: 1 }}
+            />
+            <button
+              type="submit"
+              disabled={quickSubmitting}
+              data-testid="auth-gate-quick-submit"
+              style={{
+                padding: '0 18px', borderRadius: 10, border: '1px solid rgba(112,217,234,0.35)',
+                cursor: quickSubmitting ? 'not-allowed' : 'pointer',
+                background: 'transparent', color: '#87CFFA',
+                fontFamily: 'var(--ln-font-display)', fontSize: 12, fontWeight: 800,
+                letterSpacing: '0.1em', textTransform: 'uppercase',
+                opacity: quickSubmitting ? 0.6 : 1,
+              }}
+            >
+              {quickSubmitting ? '…' : 'Continue'}
+            </button>
+          </form>
+        </div>
     </Sheet>
   )
 }

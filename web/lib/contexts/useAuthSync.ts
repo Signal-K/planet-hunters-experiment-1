@@ -2,14 +2,11 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import type { RecordModel } from 'pocketbase'
 import { pbShared } from '@/lib/pb'
 import { pbLandnam, exchangeLandnamAuth } from '@/lib/pb-landnam'
-import { ensureGuestAuth, hasStoredCredentials, isGuestAccount, upgradeGuestAccount } from '@/lib/guestAuth'
+import { ensureGuestAuth, hasStoredCredentials, isGuestAccount, upgradeGuestAccount, createAccountWithEmail } from '@/lib/guestAuth'
 import { identifyUser } from '@/lib/posthog'
 import { DEFAULT_STATE, mergeRemoteState, type PartialSave } from '@/lib/game-state'
 import type { GameState } from '@/lib/game-types'
 import type { Toast } from '@/components/ui/ToastLayer'
-
-const UPGRADE_SNOOZE_KEY = 'landnam-upgrade-prompt-snooze-until'
-const UPGRADE_SNOOZE_MS = 24 * 60 * 60 * 1000
 
 function responseStatus(err: unknown): number | null {
   if (typeof err === 'object' && err && 'status' in err && typeof err.status === 'number') return err.status
@@ -315,15 +312,16 @@ export function useAuthSync({
     })
   }, [addToast, isPreview])
 
-  // Show upgrade prompt after first mission done
+  // Mandatory email prompt for legacy anonymous guest accounts (created
+  // before KES-97 retired guest signup). Unlike the old post-first-mission,
+  // snoozable nudge, this is not dismissible and re-opens every session
+  // until the account has a real email — Liam has no way to reach a player
+  // stuck on an @landnam.guest address otherwise.
   useEffect(() => {
-    if (!hydrated || isPreview) return
-    if (state.player.missionsDone < 1) return
+    if (!hydrated || isPreview || !authUserId) return
     if (!isGuestAccount()) return
-    const snoozeUntil = Number(localStorage.getItem(UPGRADE_SNOOZE_KEY) ?? 0)
-    if (Date.now() < snoozeUntil) return
     setUpgradePromptOpen(true)
-  }, [hydrated, isPreview, state.player.missionsDone, authUserId])
+  }, [hydrated, isPreview, authUserId])
 
   // Load remote game state on auth
   useEffect(() => {
@@ -434,14 +432,8 @@ export function useAuthSync({
     return () => window.clearTimeout(timer)
   }, [authUserId, hydrated, isPreview, backendReady, state, saveRemoteState])
 
-  const dismissUpgradePrompt = useCallback(() => {
-    localStorage.setItem(UPGRADE_SNOOZE_KEY, String(Date.now() + UPGRADE_SNOOZE_MS))
-    setUpgradePromptOpen(false)
-  }, [])
-
   const upgradeAccount = useCallback(async (email: string, password: string) => {
     const { emailChangeRequested } = await upgradeGuestAccount(email, password)
-    localStorage.removeItem(UPGRADE_SNOOZE_KEY)
     setUpgradePromptOpen(false)
     addToast(
       emailChangeRequested
@@ -494,14 +486,21 @@ export function useAuthSync({
     }
   }, [saveRemoteState, setState, storageKey])
 
-  const skipAuthGate = useCallback(() => {
-    authGateDismissed.current = true
-    setAuthGateOpen(false)
-    ensureGuestAuth().catch(() => {
-      addToast('Offline mode — progress saved on this device only', 'warn')
-      setAwaitingRemoteState(false)
-    })
-  }, [addToast])
+  // Replaces the old anonymous "continue as guest" skip (KES-97): the gate
+  // now always requires at least an email before play continues, even on the
+  // lightweight path — no account with no way to contact the player.
+  const continueWithEmail = useCallback(async (email: string) => {
+    setAuthGateError(null)
+    try {
+      await createAccountWithEmail(email)
+      authGateDismissed.current = true
+      setAuthGateOpen(false)
+    } catch (e) {
+      const msg = authErrorMessage(e, 'Could not continue — check your email and try again')
+      setAuthGateError(msg)
+      throw new Error(msg)
+    }
+  }, [])
 
   const resetGame = useCallback(async (defaultState: GameState) => {
     setState(defaultState)
@@ -564,9 +563,9 @@ export function useAuthSync({
   return {
     authUserId, backendReady,
     landnamSynced,
-    upgradePromptOpen, dismissUpgradePrompt, upgradeAccount,
+    upgradePromptOpen, upgradeAccount,
     awaitingRemoteState,
-    authGateOpen, authGateError, signInFromGate, createAccountFromGate, skipAuthGate,
+    authGateOpen, authGateError, signInFromGate, createAccountFromGate, continueWithEmail,
     resetGame, signOut,
   }
 }

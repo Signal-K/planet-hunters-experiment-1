@@ -5,7 +5,8 @@ import Sheet from '@/components/ui/Sheet'
 
 interface SaveProgressPromptProps {
   onUpgrade: (email: string, password: string) => Promise<void>
-  onDismiss: () => void
+  /** Omit to make the prompt mandatory (no backdrop dismiss, no "Not now") — used for the KES-97 blocking email requirement on legacy guest accounts. */
+  onDismiss?: () => void
 }
 
 export default function SaveProgressPrompt({ onUpgrade, onDismiss }: SaveProgressPromptProps) {
@@ -112,18 +113,20 @@ export default function SaveProgressPrompt({ onUpgrade, onDismiss }: SaveProgres
           >
             {submitting ? 'Saving…' : 'Save Account'}
           </button>
-          <button
-            type="button"
-            onClick={onDismiss}
-            data-testid="upgrade-dismiss"
-            style={{
-              background: 'transparent', border: 'none', cursor: 'pointer',
-              fontFamily: 'var(--ln-font-body)', fontSize: 12, color: '#5d7390',
-              textDecoration: 'underline', padding: 4,
-            }}
-          >
-            Not now
-          </button>
+          {onDismiss && (
+            <button
+              type="button"
+              onClick={onDismiss}
+              data-testid="upgrade-dismiss"
+              style={{
+                background: 'transparent', border: 'none', cursor: 'pointer',
+                fontFamily: 'var(--ln-font-body)', fontSize: 12, color: '#5d7390',
+                textDecoration: 'underline', padding: 4,
+              }}
+            >
+              Not now
+            </button>
+          )}
         </form>
     </Sheet>
   )

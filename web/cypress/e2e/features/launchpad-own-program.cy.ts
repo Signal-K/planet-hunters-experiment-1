@@ -56,11 +56,13 @@ describe('Launchpad · your own program', () => {
     visitLaunchpad(freeOpsSave())
 
     cy.get('[data-testid="launchpad-own-program-list"]', { timeout: 15000 }).should('exist')
-    // The guest auth gate overlays the whole screen on a fresh visit and covers
-    // the sticky actions; dismiss it before asserting on navigation.
+    // The auth gate overlays the whole screen on a fresh visit and covers
+    // the sticky actions; get past it (email required, KES-97) before
+    // asserting on navigation.
     cy.get('body').then($b => {
-      if ($b.find('[data-testid="auth-gate-skip"]').length) {
-        cy.get('[data-testid="auth-gate-skip"]').click()
+      if ($b.find('[data-testid="auth-gate-quick-email"]').length) {
+        cy.get('[data-testid="auth-gate-quick-email"]').type(`cy-launchpad-${Date.now()}@example.com`)
+        cy.get('[data-testid="auth-gate-quick-submit"]').click()
       }
     })
     cy.get('[data-testid="launchpad-view-contracts-btn"]').click()
