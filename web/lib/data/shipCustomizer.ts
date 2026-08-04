@@ -1,4 +1,5 @@
 import type { ShipRoomKind } from './shipRooms'
+import { SHIP_ROOM_ASSETS, SHIP_ROOM_DETAIL_ASSETS } from './shipRooms'
 import { CREW_MODULE_PRICE, LANDER_MODULE_PRICE } from './economy'
 
 export const CUSTOMIZER_BUILD_SEQUENCE: ShipRoomKind[] = ['engine', 'booster', 'cockpit', 'payload']
@@ -35,6 +36,18 @@ export interface CustomizerPart {
   power: number
   description: string
   unlockedAtMissions?: number
+  // Tiered room art (mining laser/booster, storage silos/payload, engine,
+  // crew-module — see tools/blender/models/rooms.py's 2026-08-04 pass).
+  // `tier` is cosmetic/display only, same role as `Part.tier` in parts.ts —
+  // `unlockedAtMissions` is what actually gates availability. `img`/
+  // `detailImg` override the kind-level SHIP_ROOM_ASSETS/DETAIL_ASSETS
+  // default (see getRoomArt in shipRooms.ts) for parts whose kind has real
+  // tiered art; kinds that don't (cockpit, fuel-stage, fairing,
+  // docking-port, heat-shield, lander) omit these and fall back to the
+  // single shared asset.
+  tier?: number
+  img?: string
+  detailImg?: string
 }
 
 export interface OwnedCustomizerPart {
@@ -68,6 +81,9 @@ export const CUSTOMIZER_PARTS: CustomizerPart[] = [
     mass: 2,
     power: 5,
     description: 'Reliable starter engine. Improves launch stability and near-orbit reach.',
+    tier: 1,
+    img: '/game/assets/rooms/engine_room_t1_icon.png',
+    detailImg: '/game/assets/rooms/engine_room_t1.png',
   },
   {
     id: 'pulse-thruster-t1',
@@ -78,9 +94,68 @@ export const CUSTOMIZER_PARTS: CustomizerPart[] = [
     mass: 2,
     power: 6,
     description: 'Higher thrust margin. Better chance on heavier payload builds.',
+    tier: 1,
+    img: '/game/assets/rooms/engine_room_t1_icon.png',
+    detailImg: '/game/assets/rooms/engine_room_t1.png',
+  },
+  {
+    id: 'fusion-thruster-t2',
+    name: 'Fusion Thruster T2',
+    kind: 'engine',
+    price: 10_500_000,
+    successBonus: 26,
+    mass: 3,
+    power: 8,
+    description: 'Twin-fed fusion burn. Noticeably steadier ascent on heavier hulls.',
+    unlockedAtMissions: 2,
+    tier: 2,
+    img: '/game/assets/rooms/engine_room_t2_icon.png',
+    detailImg: '/game/assets/rooms/engine_room_t2.png',
+  },
+  {
+    id: 'plasma-thruster-t3',
+    name: 'Plasma Thruster T3',
+    kind: 'engine',
+    price: 14_500_000,
+    successBonus: 32,
+    mass: 3,
+    power: 10,
+    description: 'Dual-turbine plasma bank with a shared containment ring.',
+    unlockedAtMissions: 4,
+    tier: 3,
+    img: '/game/assets/rooms/engine_room_t3_icon.png',
+    detailImg: '/game/assets/rooms/engine_room_t3.png',
+  },
+  {
+    id: 'array-thruster-t4',
+    name: 'Array Thruster T4',
+    kind: 'engine',
+    price: 19_500_000,
+    successBonus: 38,
+    mass: 4,
+    power: 13,
+    description: 'Redundant twin-turbine array with secondary venting for long burns.',
+    unlockedAtMissions: 6,
+    tier: 4,
+    img: '/game/assets/rooms/engine_room_t4_icon.png',
+    detailImg: '/game/assets/rooms/engine_room_t4.png',
+  },
+  {
+    id: 'antimatter-thruster-t5',
+    name: 'Antimatter Thruster T5',
+    kind: 'engine',
+    price: 26_000_000,
+    successBonus: 45,
+    mass: 4,
+    power: 17,
+    description: 'Triple-turbine bank with a stabilised containment core. Top-line reach and reliability.',
+    unlockedAtMissions: 8,
+    tier: 5,
+    img: '/game/assets/rooms/engine_room_t5_icon.png',
+    detailImg: '/game/assets/rooms/engine_room_t5.png',
   },
 
-  // ── Booster ─────────────────────────────────────────────────────────
+  // ── Booster / Mining Laser ──────────────────────────────────────────
   {
     id: 'strap-booster-t1',
     name: 'Strap Booster Pair',
@@ -90,6 +165,9 @@ export const CUSTOMIZER_PARTS: CustomizerPart[] = [
     mass: 1,
     power: 3,
     description: 'Cheap ascent help. Offsets starter hull mass during launch.',
+    tier: 1,
+    img: '/game/assets/rooms/mining_room_t1_icon.png',
+    detailImg: '/game/assets/rooms/mining_room_t1.png',
   },
   {
     id: 'vulcan-booster-t1',
@@ -100,6 +178,65 @@ export const CUSTOMIZER_PARTS: CustomizerPart[] = [
     mass: 2,
     power: 4,
     description: 'Stronger booster pack. More reliable with industrial payloads.',
+    tier: 1,
+    img: '/game/assets/rooms/mining_room_t1_icon.png',
+    detailImg: '/game/assets/rooms/mining_room_t1.png',
+  },
+  {
+    id: 'focused-laser-t2',
+    name: 'Focused Mining Laser T2',
+    kind: 'booster',
+    price: 7_500_000,
+    successBonus: 22,
+    mass: 2,
+    power: 6,
+    description: 'Wider barrel and brighter lens. Faster extraction on harder ore.',
+    unlockedAtMissions: 2,
+    tier: 2,
+    img: '/game/assets/rooms/mining_room_t2_icon.png',
+    detailImg: '/game/assets/rooms/mining_room_t2.png',
+  },
+  {
+    id: 'ringed-laser-t3',
+    name: 'Ringed Mining Laser T3',
+    kind: 'booster',
+    price: 10_500_000,
+    successBonus: 28,
+    mass: 3,
+    power: 8,
+    description: 'Adds a focusing ring around the emitter for a tighter, hotter beam.',
+    unlockedAtMissions: 4,
+    tier: 3,
+    img: '/game/assets/rooms/mining_room_t3_icon.png',
+    detailImg: '/game/assets/rooms/mining_room_t3.png',
+  },
+  {
+    id: 'twin-emitter-laser-t4',
+    name: 'Twin-Emitter Mining Laser T4',
+    kind: 'booster',
+    price: 14_000_000,
+    successBonus: 34,
+    mass: 3,
+    power: 10,
+    description: 'A second emitter barrel doubles extraction throughput.',
+    unlockedAtMissions: 6,
+    tier: 4,
+    img: '/game/assets/rooms/mining_room_t4_icon.png',
+    detailImg: '/game/assets/rooms/mining_room_t4.png',
+  },
+  {
+    id: 'resonant-laser-t5',
+    name: 'Resonant Mining Laser T5',
+    kind: 'booster',
+    price: 19_000_000,
+    successBonus: 42,
+    mass: 4,
+    power: 13,
+    description: 'Twin emitters with a resonant cyan-core beam. Top-tier extraction rate.',
+    unlockedAtMissions: 8,
+    tier: 5,
+    img: '/game/assets/rooms/mining_room_t5_icon.png',
+    detailImg: '/game/assets/rooms/mining_room_t5.png',
   },
 
   // ── Cockpit ─────────────────────────────────────────────────────────
@@ -124,7 +261,7 @@ export const CUSTOMIZER_PARTS: CustomizerPart[] = [
     description: 'Better flight computer. Improves mission review confidence.',
   },
 
-  // ── Payload ─────────────────────────────────────────────────────────
+  // ── Payload / Storage Silos ─────────────────────────────────────────
   {
     id: 'cargo-payload-t1',
     name: 'Cargo Bay T1',
@@ -134,6 +271,9 @@ export const CUSTOMIZER_PARTS: CustomizerPart[] = [
     mass: 2,
     power: -1,
     description: 'Secured mineral racks. Best for client delivery runs.',
+    tier: 1,
+    img: '/game/assets/rooms/cargo_bay_t1_icon.png',
+    detailImg: '/game/assets/rooms/cargo_bay_t1.png',
   },
   {
     id: 'mining-payload-t1',
@@ -144,6 +284,65 @@ export const CUSTOMIZER_PARTS: CustomizerPart[] = [
     mass: 2,
     power: -2,
     description: 'Drill control and sample hopper. Best for extraction missions.',
+    tier: 1,
+    img: '/game/assets/rooms/cargo_bay_t1_icon.png',
+    detailImg: '/game/assets/rooms/cargo_bay_t1.png',
+  },
+  {
+    id: 'storage-silo-t2',
+    name: 'Storage Silo Bank T2',
+    kind: 'payload',
+    price: 8_000_000,
+    successBonus: 20,
+    mass: 3,
+    power: -1,
+    description: 'Three upright silos in place of loose racks. More capacity per run.',
+    unlockedAtMissions: 2,
+    tier: 2,
+    img: '/game/assets/rooms/cargo_bay_t2_icon.png',
+    detailImg: '/game/assets/rooms/cargo_bay_t2.png',
+  },
+  {
+    id: 'storage-silo-t3',
+    name: 'Storage Silo Bank T3',
+    kind: 'payload',
+    price: 11_000_000,
+    successBonus: 26,
+    mass: 3,
+    power: -1,
+    description: 'Four silos on a shared gantry rail. Higher capacity, faster loading.',
+    unlockedAtMissions: 4,
+    tier: 3,
+    img: '/game/assets/rooms/cargo_bay_t3_icon.png',
+    detailImg: '/game/assets/rooms/cargo_bay_t3.png',
+  },
+  {
+    id: 'storage-silo-t4',
+    name: 'Storage Silo Bank T4',
+    kind: 'payload',
+    price: 15_000_000,
+    successBonus: 32,
+    mass: 4,
+    power: -1,
+    description: 'Five taller silos. Built for sustained bulk-hauling runs.',
+    unlockedAtMissions: 6,
+    tier: 4,
+    img: '/game/assets/rooms/cargo_bay_t4_icon.png',
+    detailImg: '/game/assets/rooms/cargo_bay_t4.png',
+  },
+  {
+    id: 'storage-silo-t5',
+    name: 'Storage Silo Bank T5',
+    kind: 'payload',
+    price: 20_000_000,
+    successBonus: 40,
+    mass: 4,
+    power: -1,
+    description: 'Six tall silos on a full gantry rail. Top-tier bulk capacity.',
+    unlockedAtMissions: 8,
+    tier: 5,
+    img: '/game/assets/rooms/cargo_bay_t5_icon.png',
+    detailImg: '/game/assets/rooms/cargo_bay_t5.png',
   },
 
   // ── Fuel Stage ──────────────────────────────────────────────────────
@@ -251,6 +450,65 @@ export const CUSTOMIZER_PARTS: CustomizerPart[] = [
     power: -3,
     description: 'Pressurised two-seat quarters for trained astronauts. Requires a larger post-onboarding hull.',
     unlockedAtMissions: 4,
+    tier: 1,
+    img: '/game/assets/rooms/crew_module_t1_icon.png',
+    detailImg: '/game/assets/rooms/crew_module_t1.png',
+  },
+  {
+    id: 'crew-transport-t2',
+    name: 'Crew Transport T2',
+    kind: 'crew-module',
+    price: Math.round(CREW_MODULE_PRICE * 1.4),
+    successBonus: 13,
+    mass: 4,
+    power: -3,
+    description: 'Stacked double bunk. Same footprint, higher crew capacity.',
+    unlockedAtMissions: 5,
+    tier: 2,
+    img: '/game/assets/rooms/crew_module_t2_icon.png',
+    detailImg: '/game/assets/rooms/crew_module_t2.png',
+  },
+  {
+    id: 'crew-transport-t3',
+    name: 'Crew Transport T3',
+    kind: 'crew-module',
+    price: Math.round(CREW_MODULE_PRICE * 1.8),
+    successBonus: 18,
+    mass: 4,
+    power: -3,
+    description: 'Two stacked bunk levels — the room reads as a real crew berth, not one bed.',
+    unlockedAtMissions: 6,
+    tier: 3,
+    img: '/game/assets/rooms/crew_module_t3_icon.png',
+    detailImg: '/game/assets/rooms/crew_module_t3.png',
+  },
+  {
+    id: 'crew-transport-t4',
+    name: 'Crew Transport T4',
+    kind: 'crew-module',
+    price: Math.round(CREW_MODULE_PRICE * 2.3),
+    successBonus: 24,
+    mass: 5,
+    power: -4,
+    description: 'A second berth against the far wall doubles pressurised sleeping capacity.',
+    unlockedAtMissions: 7,
+    tier: 4,
+    img: '/game/assets/rooms/crew_module_t4_icon.png',
+    detailImg: '/game/assets/rooms/crew_module_t4.png',
+  },
+  {
+    id: 'crew-transport-t5',
+    name: 'Crew Transport T5',
+    kind: 'crew-module',
+    price: Math.round(CREW_MODULE_PRICE * 2.9),
+    successBonus: 30,
+    mass: 5,
+    power: -4,
+    description: 'Two full double-bunk berths. Top-tier crew transport capacity.',
+    unlockedAtMissions: 8,
+    tier: 5,
+    img: '/game/assets/rooms/crew_module_t5_icon.png',
+    detailImg: '/game/assets/rooms/crew_module_t5.png',
   },
   {
     id: 'lander-module-t1',
@@ -273,6 +531,22 @@ export function partsForKind(kind: ShipRoomKind, missionsDone = 0): CustomizerPa
   return CUSTOMIZER_PARTS.filter(
     part => part.kind === kind && (part.unlockedAtMissions ?? 0) <= missionsDone
   )
+}
+
+/** Grid-cell icon art for an installed room: the chosen part's tiered `img`
+ * if it has one, else the kind's single default (SHIP_ROOM_ASSETS) — so
+ * kinds without tiered art (cockpit, fuel-stage, fairing, docking-port,
+ * heat-shield, lander) keep working unchanged. */
+export function getRoomIconArt(kind: ShipRoomKind, installedPartId: string | undefined): string {
+  const part = installedPartId ? customizerPartById(installedPartId) : undefined
+  return part?.img ?? SHIP_ROOM_ASSETS[kind]
+}
+
+/** Big detail-diorama art for an installed room — same fallback rule as
+ * `getRoomIconArt`, against SHIP_ROOM_DETAIL_ASSETS instead. */
+export function getRoomDetailArt(kind: ShipRoomKind, installedPartId: string | undefined): string {
+  const part = installedPartId ? customizerPartById(installedPartId) : undefined
+  return part?.detailImg ?? SHIP_ROOM_DETAIL_ASSETS[kind]
 }
 
 export function installedPartIds(owned: OwnedCustomizerPart[], installed: InstalledCustomizerParts): string[] {

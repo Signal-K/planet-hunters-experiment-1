@@ -179,11 +179,20 @@ export default function MiningScreen({ mission, target, onComplete, onBack, onAb
   initialCargo?: Record<string, number>
 }) {
   // Charge count is mission-aware, not coach-aware.
-  // During onboarding (sequence <= FREE_OPS_START_MISSIONS_DONE): always 6× the ore required,
-  // minimum 30, so the player can never be softlocked by low charges regardless of coach state.
+  // During onboarding (sequence <= FREE_OPS_START_MISSIONS_DONE): always 16× the ore required,
+  // minimum 80, so the player can never be softlocked by low charges regardless of coach state.
   // Ore only sits in the firing zone briefly as it scrolls through (organic gaps average
   // ~1 ore every few seconds), so most shots miss even with good aim — a tight multiplier
-  // here (previously 3x/20) could exhaust charges before the order fills on a real playthrough.
+  // here (previously 3x/20, then 6x/30) could exhaust charges before the order fills on a real
+  // playthrough. The 6x/30 budget was still not enough: `depositMinerals` below weights the
+  // required mineral(s) at only 2 of N pool entries (~33% for a single-mineral order against a
+  // 6-mineral pool like Eros's), so of 30 charges — after accounting for shots that miss the
+  // firing window entirely — the *expected* on-target hit count for a 5-unit single-mineral
+  // order fell meaningfully short of 5 on a below-average run, and every failed attempt wipes
+  // cargo via handleTryAgain (no partial credit), so a player could cycle failed attempts
+  // indefinitely without ever clearing the order. Confirmed live: a 5-platinum starter-bulk
+  // order on Eros stayed at 0/5 after 9000+ simulated shots (~6 real minutes) at the old budget.
+  // 16x/80 gives ~2.7x the prior margin; still finite, not a difficulty-removing bump.
   // Post-onboarding: respect laserChargeCap from skill nodes, but never let it drop below
   // 4× the ore required — laserChargeCap is a flat 5-7 from skill nodes regardless of mission
   // size, so a harder Free Ops order (e.g. 8 units of one mineral) could demand more hits than
@@ -191,7 +200,7 @@ export default function MiningScreen({ mission, target, onComplete, onBack, onAb
   const totalOreNeeded = Object.values(mission.requires.minerals).reduce((sum, v) => sum + v, 0)
   const isOnboarding = typeof mission.sequence === 'number' && mission.sequence <= FREE_OPS_START_MISSIONS_DONE
   const MAX_CHARGES = isOnboarding
-    ? Math.max(30, totalOreNeeded * 6)
+    ? Math.max(80, totalOreNeeded * 16)
     : Math.max(laserChargeCap ?? 5, totalOreNeeded * 4)
   const LOW_CHARGE_THRESHOLD = Math.max(2, Math.ceil(MAX_CHARGES * 0.2))
   const cargoRef = useRef<Record<string, number>>(initialCargo ?? {})

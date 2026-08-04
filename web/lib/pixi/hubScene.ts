@@ -424,6 +424,12 @@ export interface HubTextures {
    *  52x36 rather than 56x56, and is a dish on a squat block rather than a
    *  second command centre. Sharing one texture between them squashed it. */
   sat_station:      Texture | null
+  /** The player's rocket, shown standing on the pad when a launch is pending
+   *  (KES-88). Authored horizontally (Hangar/Purchase screens lay ships on
+   *  their side) — `buildLaunchpad` rotates it 90°, the same trick
+   *  `launchScene.ts`'s `rocketSprite` already uses for the same art. */
+  ship_sr1:         Texture | null
+  ship_sr2:         Texture | null
 }
 
 export function nullTextures(): HubTextures {
@@ -433,6 +439,7 @@ export function nullTextures(): HubTextures {
     cmd_foundation: null, cmd_building: null, cmd_antenna: null,
     depot_base: null, depot_tank: null, depot_pipes: null,
     scan_tripod: null, scan_dish: null, sat_station: null,
+    ship_sr1: null, ship_sr2: null,
   }
 }
 
@@ -498,7 +505,11 @@ function buildMound(width: number): { root: Container; animatables: AnimState[] 
  * the mockup's inline SVG (viewBox 0 0 100 130, feet at y=114, converted by
  * x' = x - 50, y' = y - 114) when any modular texture is missing.
  */
-function buildLaunchpad(hot: boolean, tex: HubTextures): { root: Container; animatables: AnimState[] } {
+function buildLaunchpad(
+  hot: boolean,
+  tex: HubTextures,
+  rocketVariant: 'sr1' | 'sr2' = 'sr1',
+): { root: Container; animatables: AnimState[] } {
   const root = new Container()
   const anims: AnimState[] = []
 
@@ -528,10 +539,52 @@ function buildLaunchpad(hot: boolean, tex: HubTextures): { root: Container; anim
     arm.x = -17.33; arm.y = -80
     arm.rotation = hot ? -1.1 : 0
 
+    const padGroupChildren: (Sprite | Graphics)[] = []
+
+    // The rocket, standing between the clamps, only while a launch is
+    // pending. `ship_sr1`/`ship_sr2` are authored horizontally (Hangar/
+    // Purchase screens lay ships on their side) — rotated 90° here, the same
+    // trick `launchScene.ts`'s `rocketSprite` already uses for the same art.
+    // Known gap: `rocketVariant` isn't wired to the player's actual rocket
+    // config yet (Player has no rocket-config field reachable from HubScreen
+    // without new plumbing) — defaults to Explorer (sr1) whenever a launch
+    // is pending. Follow-up, not silently "done".
+    const shipTex = rocketVariant === 'sr2' ? tex.ship_sr2 : tex.ship_sr1
+    if (hot && shipTex) {
+      const ship = new Sprite(shipTex)
+      ship.anchor.set(0.5, 0.5)
+      // 80 (2026-08-03) rendered at ~23px on screen once `LAUNCHPAD_SPRITE_SCALE`
+      // (0.291) is applied — too small for the hull's own detail (wings,
+      // canopy, nozzle) to read at all, which is what actually made the
+      // ship look like a bare tube in-game, not a hull-geometry problem.
+      // Bumped 40%; ship is the last child added (see below), so it draws
+      // in front of the gantry frames/clamps and can safely be wider than
+      // the gap between them without a literal clipping bug.
+      const SHIP_DISPLAY_W = 112
+      ship.width = SHIP_DISPLAY_W; ship.height = SHIP_DISPLAY_W / (160 / 60)
+      ship.rotation = Math.PI / 2  // nose (authored pointing left) turns to point up
+      ship.x = 0
+      ship.y = DECK_TOP - SHIP_DISPLAY_W / 2  // half the rotated sprite's height, base flush with the deck
+      padGroupChildren.push(ship)
+
+      // Flame at the base — nested glow, cyan/mint rather than amber (amber
+      // is reserved for payout emphasis, not effects; the engine nozzle
+      // elsewhere in this pipeline uses the same cyan-glow language).
+      const flameGlow = new Graphics()
+      flameGlow.ellipse(0, DECK_TOP + 2, 14, 22).fill({ color: C.mint, alpha: 0.35 })
+      padGroupChildren.push(flameGlow)
+      anims.push({ kind: 'pulse', obj: flameGlow, speed: 5.5, phase: 0, min: 0.25, max: 0.6 })
+
+      const flameCore = new Graphics()
+      flameCore.ellipse(0, DECK_TOP + 4, 6, 11).fill({ color: C.cyan, alpha: 0.9 })
+      padGroupChildren.push(flameCore)
+      anims.push({ kind: 'pulse', obj: flameCore, speed: 8, phase: 1.4, min: 0.6, max: 1 })
+    }
+
     // Pre-shrunk to the shared ~60-wide envelope — see LAUNCHPAD_SPRITE_SCALE.
     const padGroup = new Container()
     padGroup.scale.set(LAUNCHPAD_SPRITE_SCALE)
-    padGroup.addChild(mastL, mastR, tankL, tankR, frameL, frameR, deck, clampL, clampR, arm)
+    padGroup.addChild(mastL, mastR, tankL, tankR, frameL, frameR, deck, clampL, clampR, arm, ...padGroupChildren)
     root.addChild(padGroup)
     beaconY = (-13.33 - 96) * LAUNCHPAD_SPRITE_SCALE - 2  // just above the frame tops
   } else {
@@ -739,6 +792,10 @@ export interface HubBuildingDef {
    * the Launchpad rather than compete with it for attention.
    */
   dimmed?: boolean
+  /** Which ship stands on the pad while `hot` (launch pending). Defaults to
+   *  Explorer (sr1) — see buildLaunchpad's comment on why this isn't wired
+   *  to the player's actual rocket config yet. */
+  rocketVariant?: 'sr1' | 'sr2'
 }
 
 // ─── Main scene builder ───────────────────────────────────────────────────────
@@ -779,7 +836,7 @@ export function buildHubScene(
     let result: { root: Container; animatables: AnimState[] }
 
     switch (def.kind) {
-      case 'launchpad':                     result = buildLaunchpad(hot, tex); break
+      case 'launchpad':                     result = buildLaunchpad(hot, tex, def.rocketVariant); break
       case 'refinery':                      result = buildRefinery(tex); break
       case 'scan-station':                  result = buildScanStation(hot, tex); break
       case 'satellite-monitoring-station':  result = buildSatelliteStation(tex); break

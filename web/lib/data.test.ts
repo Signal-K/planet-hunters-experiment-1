@@ -216,7 +216,10 @@ describe('ship room layouts', () => {
 describe('ship customizer parts', () => {
   it('walks the builder from engine through payload', () => {
     expect(CUSTOMIZER_BUILD_SEQUENCE).toEqual(['engine', 'booster', 'cockpit', 'payload'])
-    expect(CUSTOMIZER_BUILD_SEQUENCE.map(kind => CUSTOMIZER_PARTS.filter(part => part.kind === kind).length)).toEqual([2, 2, 2, 2])
+    // engine/booster/payload each got 4 higher tiers (T2-T5, 2026-08-04
+    // tiered-art pass) on top of the original 2 T1 options; cockpit is
+    // still single-tier, unaffected.
+    expect(CUSTOMIZER_BUILD_SEQUENCE.map(kind => CUSTOMIZER_PARTS.filter(part => part.kind === kind).length)).toEqual([6, 6, 2, 6])
   })
 
   it('adds Crew Quarters only to researched post-onboarding hulls', () => {
