@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import type { RecordModel } from 'pocketbase'
 import { pbShared } from '@/lib/pb'
 import { pbLandnam, exchangeLandnamAuth } from '@/lib/pb-landnam'
-import { ensureGuestAuth, hasStoredCredentials, isGuestAccount, upgradeGuestAccount } from '@/lib/guestAuth'
+import { ensureGuestAuth, hasStoredCredentials, isGuestAccount, upgradeGuestAccount, createAccountWithEmail } from '@/lib/guestAuth'
 import { identifyUser } from '@/lib/posthog'
 import { DEFAULT_STATE, mergeRemoteState, type PartialSave } from '@/lib/game-state'
 import type { GameState } from '@/lib/game-types'
@@ -503,18 +503,25 @@ export function useAuthSync({
   // now always requires at least an email before play continues, even on the
   // lightweight path — no account with no way to contact the player.
   //
-  // KES-107: this is now a two-step OTP flow (requestOTP then authWithOTP)
-  // instead of always creating a brand-new account, so the same "just an
-  // email" input works for both first-time signup and returning login on a
-  // new device. The shared backend's OnRecordRequestOTPRequest("users") hook
-  // (main.go) auto-creates the record server-side when the email doesn't
-  // match an existing account yet, so requestOTP() below succeeds either way
-  // — the client never needs to know in advance which case it is.
+  // KES-107 attempted a two-step OTP flow here (requestOTP then authWithOTP)
+  // so the same "just an email" input would work for both first-time signup
+  // and returning login on a new device. Reverted 2026-08-05: the shared
+  // backend has no SMTP configured, so requestOTP() "succeeds" (the backend
+  // fires the send in the background and can't report delivery failure back
+  // to this call) but no email — and therefore no code — ever arrives,
+  // stranding the player on a code-entry screen with no way through. Back to
+  // always creating a new account instantly, which has no email-delivery
+  // dependency at all. Returning users on a new device still have a fully
+  // working path: Sign In with the password they set. The OTP backend hook
+  // and requestOTP/verifyOtp plumbing are left in place (dormant — nothing
+  // calls them) so cross-device login-by-email can be turned back on here
+  // with just this function once SMTP is actually configured and verified.
   const continueWithEmail = useCallback(async (email: string) => {
     setAuthGateError(null)
     try {
-      const { otpId } = await pbShared.collection('users').requestOTP(email)
-      setAuthGateOtpId(otpId)
+      await createAccountWithEmail(email)
+      authGateDismissed.current = true
+      setAuthGateOpen(false)
     } catch (e) {
       const msg = authErrorMessage(e, 'Could not continue — check your email and try again')
       setAuthGateError(msg)
@@ -522,6 +529,8 @@ export function useAuthSync({
     }
   }, [])
 
+  // Dormant since the continueWithEmail revert above — kept so OTP login can
+  // be re-wired in one place once SMTP is confirmed working.
   const verifyOtp = useCallback(async (code: string) => {
     if (!authGateOtpId) {
       const msg = 'Request a new code and try again'
