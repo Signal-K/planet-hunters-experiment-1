@@ -285,6 +285,8 @@ export interface GameActions {
   signInFromGate: (email: string, password: string) => Promise<void>
   createAccountFromGate: (email: string, password: string) => Promise<void>
   continueWithEmail: (email: string) => Promise<void>
+  authGateOtpId: string | null
+  verifyOtp: (code: string) => Promise<void>
   go: (screen: Screen) => void
   goToMissions: () => void
   setScreenFromUrl: (screen: Screen) => void

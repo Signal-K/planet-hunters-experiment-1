@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import type { RecordModel } from 'pocketbase'
 import { pbShared } from '@/lib/pb'
 import { pbLandnam, exchangeLandnamAuth } from '@/lib/pb-landnam'
-import { ensureGuestAuth, hasStoredCredentials, isGuestAccount, upgradeGuestAccount, createAccountWithEmail } from '@/lib/guestAuth'
+import { ensureGuestAuth, hasStoredCredentials, isGuestAccount, upgradeGuestAccount } from '@/lib/guestAuth'
 import { identifyUser } from '@/lib/posthog'
 import { DEFAULT_STATE, mergeRemoteState, type PartialSave } from '@/lib/game-state'
 import type { GameState } from '@/lib/game-types'
@@ -77,6 +77,10 @@ export function useAuthSync({
   const [awaitingRemoteState, setAwaitingRemoteState] = useState(false)
   const [authGateOpen, setAuthGateOpen] = useState(false)
   const [authGateError, setAuthGateError] = useState<string | null>(null)
+  // Set once requestOTP() succeeds; its presence is what switches the gate's
+  // quick-continue step from "enter email" to "enter code". Cleared on gate
+  // close/reopen so a stale otpId from a previous email can't be submitted.
+  const [authGateOtpId, setAuthGateOtpId] = useState<string | null>(null)
   // The gate must not decide that a returning user is anonymous until the
   // persisted PocketBase auth store has had a chance to restore. Keeping this
   // as an explicit phase prevents the sign-in sheet flashing/reopening during
@@ -498,18 +502,44 @@ export function useAuthSync({
   // Replaces the old anonymous "continue as guest" skip (KES-97): the gate
   // now always requires at least an email before play continues, even on the
   // lightweight path — no account with no way to contact the player.
+  //
+  // KES-107: this is now a two-step OTP flow (requestOTP then authWithOTP)
+  // instead of always creating a brand-new account, so the same "just an
+  // email" input works for both first-time signup and returning login on a
+  // new device. The shared backend's OnRecordRequestOTPRequest("users") hook
+  // (main.go) auto-creates the record server-side when the email doesn't
+  // match an existing account yet, so requestOTP() below succeeds either way
+  // — the client never needs to know in advance which case it is.
   const continueWithEmail = useCallback(async (email: string) => {
     setAuthGateError(null)
     try {
-      await createAccountWithEmail(email)
-      authGateDismissed.current = true
-      setAuthGateOpen(false)
+      const { otpId } = await pbShared.collection('users').requestOTP(email)
+      setAuthGateOtpId(otpId)
     } catch (e) {
       const msg = authErrorMessage(e, 'Could not continue — check your email and try again')
       setAuthGateError(msg)
       throw new Error(msg)
     }
   }, [])
+
+  const verifyOtp = useCallback(async (code: string) => {
+    if (!authGateOtpId) {
+      const msg = 'Request a new code and try again'
+      setAuthGateError(msg)
+      throw new Error(msg)
+    }
+    setAuthGateError(null)
+    try {
+      await pbShared.collection('users').authWithOTP(authGateOtpId, code)
+      setAuthGateOtpId(null)
+      authGateDismissed.current = true
+      setAuthGateOpen(false)
+    } catch (e) {
+      const msg = authErrorMessage(e, 'Incorrect or expired code — try again')
+      setAuthGateError(msg)
+      throw new Error(msg)
+    }
+  }, [authGateOtpId])
 
   const resetGame = useCallback(async (defaultState: GameState) => {
     setState(defaultState)
@@ -565,6 +595,7 @@ export function useAuthSync({
     setAwaitingRemoteState(false)
     setUpgradePromptOpen(false)
     setAuthGateError(null)
+    setAuthGateOtpId(null)
     authGateDismissed.current = false
     if (!isPreview) setAuthGateOpen(true)
   }, [addToast, authUserId, backendReady, isPreview, saveRemoteState, setState, stateRef, storageKey])
@@ -575,6 +606,7 @@ export function useAuthSync({
     upgradePromptOpen, upgradeAccount,
     awaitingRemoteState,
     authGateOpen, authGateError, signInFromGate, createAccountFromGate, continueWithEmail,
+    authGateOtpId, verifyOtp,
     resetGame, signOut,
   }
 }
