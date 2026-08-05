@@ -216,7 +216,23 @@ describe('ship room layouts', () => {
 describe('ship customizer parts', () => {
   it('walks the builder from engine through payload', () => {
     expect(CUSTOMIZER_BUILD_SEQUENCE).toEqual(['engine', 'booster', 'cockpit', 'payload'])
-    expect(CUSTOMIZER_BUILD_SEQUENCE.map(kind => CUSTOMIZER_PARTS.filter(part => part.kind === kind).length)).toEqual([2, 2, 2, 2])
+    // engine/booster/payload each got 4 higher tiers (T2-T5, 2026-08-04
+    // tiered-art pass) on top of the original 2 T1 options; cockpit is
+    // still single-tier, unaffected.
+    expect(CUSTOMIZER_BUILD_SEQUENCE.map(kind => CUSTOMIZER_PARTS.filter(part => part.kind === kind).length)).toEqual([6, 6, 2, 6])
+  })
+
+  it('adds Crew Quarters only to researched post-onboarding hulls', () => {
+    expect(getBuildSequence(3, true)).not.toContain('crew-module')
+    expect(getBuildSequence(4, false)).not.toContain('crew-module')
+    expect(getBuildSequence(4, true)).toContain('crew-module')
+  })
+
+  it('adds the Lander Module only to researched post-onboarding hulls', () => {
+    expect(getBuildSequence(3, false, true)).not.toContain('lander')
+    expect(getBuildSequence(4, false, false)).not.toContain('lander')
+    expect(getBuildSequence(4, false, true)).toContain('lander')
+    expect(getBuildSequence(4, true, true)).toEqual(expect.arrayContaining(['crew-module', 'lander']))
   })
 
   it('adds Crew Quarters only to researched post-onboarding hulls', () => {
@@ -612,12 +628,12 @@ describe('Scanning station constants and structure seed', () => {
     expect(SCANS_REQUIRED_TO_MAP).toBe(3)
   })
 
-  it('defines a scan-station structure with free cost and freeOperations unlock', () => {
+  it('keeps the Sprint 12 scan-station structure dark in the Sprint 11 build', () => {
     const scanner = STRUCTURES.find(s => s.id === 'scan-station')
     expect(scanner).toBeDefined()
     expect(scanner?.cost).toBe(0)
     expect(scanner && structureUnlocked(scanner, { freeOperations: false })).toBe(false)
-    expect(scanner && structureUnlocked(scanner, { freeOperations: true })).toBe(true)
+    expect(scanner && structureUnlocked(scanner, { freeOperations: true })).toBe(false)
   })
 
   it('scan-station is not unlocked for launchpad-only context', () => {

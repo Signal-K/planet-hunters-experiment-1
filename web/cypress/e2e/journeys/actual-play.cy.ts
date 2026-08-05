@@ -2,7 +2,6 @@ import type { GameState } from '@/game-context'
 
 const STORAGE_KEY = 'landnam-game-state-v1'
 const SURVEY_KEY = 'landnam-surveys-shown'
-const SNOOZE_KEY = 'landnam-upgrade-prompt-snooze-until'
 
 const ALL_SURVEY_KEYS = [
   'lnm_first_launch', 'lnm_mining_feel', 'lnm_client_pick',
@@ -15,7 +14,6 @@ function startFresh() {
     onBeforeLoad(win) {
       win.localStorage.clear()
       win.localStorage.setItem(SURVEY_KEY, JSON.stringify(ALL_SURVEY_KEYS))
-      win.localStorage.setItem(SNOOZE_KEY, String(Date.now() + 365 * 24 * 60 * 60 * 1000))
     },
   })
 }
@@ -24,12 +22,15 @@ function savedState() {
   return cy.window().then(win => JSON.parse(win.localStorage.getItem(STORAGE_KEY) || '{}') as GameState)
 }
 
+// No anonymous skip anymore (KES-97) — the auth gate always requires at
+// least an email before play continues.
 function continueWithoutAccountIfShown() {
-  cy.get('[data-testid="auth-gate-skip"], [data-testid="intro-begin-btn"]', { timeout: 10000 }).then($el => {
-    const skip = $el.filter('[data-testid="auth-gate-skip"]')
-    if (skip.length > 0) {
-      cy.wrap(skip.first()).click()
-      cy.get('[data-testid="auth-gate-skip"]').should('not.exist')
+  cy.get('[data-testid="auth-gate-quick-email"], [data-testid="intro-begin-btn"]', { timeout: 10000 }).then($el => {
+    const quickEmail = $el.filter('[data-testid="auth-gate-quick-email"]')
+    if (quickEmail.length > 0) {
+      cy.wrap(quickEmail.first()).type(`cy-actual-play-${Date.now()}@example.com`)
+      cy.get('[data-testid="auth-gate-quick-submit"]').click()
+      cy.get('[data-testid="auth-gate-quick-email"]').should('not.exist')
     }
   })
 }

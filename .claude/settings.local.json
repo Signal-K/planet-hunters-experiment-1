@@ -115,7 +115,13 @@
       "mcp__desk__attach_file_ref",
       "mcp__desk__reconcile_status",
       "WebFetch(domain:www.minorplanetcenter.net)",
-      "WebFetch(domain:docs.minorplanetcenter.net)"
+      "WebFetch(domain:docs.minorplanetcenter.net)",
+      "mcp__linear__list_issues",
+      "mcp__linear__list_milestones",
+      "mcp__linear__get_issue",
+      "mcp__linear__save_issue",
+      "mcp__linear__save_comment",
+      "mcp__linear__list_comments"
     ]
   },
   "enabledMcpjsonServers": [

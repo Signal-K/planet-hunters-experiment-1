@@ -88,10 +88,11 @@ const MINING_STATE = {
 // ── helpers ──────────────────────────────────────────────────────────────────
 
 function skipAuthGateIfShown() {
-  // Auth gate or intro may appear; skip it
+  // Auth gate or intro may appear; continue past it with a throwaway email
   cy.get('body').then($body => {
-    if ($body.find('[data-testid="auth-gate-skip"]').length > 0) {
-      cy.get('[data-testid="auth-gate-skip"]').click()
+    if ($body.find('[data-testid="auth-gate-quick-email"]').length > 0) {
+      cy.get('[data-testid="auth-gate-quick-email"]').type(`visual-qa-${Date.now()}@example.com`)
+      cy.get('[data-testid="auth-gate-quick-submit"]').click()
     }
   })
 }

@@ -4,6 +4,7 @@ import type { StructureBlueprint, RefineryRecipe, MarketTemplate } from './types
 import { MINERAL_VALUE, REFINING_COST_RATE, REFINING_VALUE_MULTIPLIER, STRUCTURE_PRICES } from './economy'
 import { MINERAL_RARITY } from './minerals'
 import { CLIENT_AFFINITY_MISSION_THRESHOLD } from './clients'
+import { FEATURE_FLAGS } from '@/lib/featureFlags'
 
 // Refining takes raw ore and returns it worth REFINING_VALUE_MULTIPLIER more,
 // for a cycle fee proportional to the input's value. Previously each recipe
@@ -107,7 +108,7 @@ export function deepSpaceTelescopeUnlocked(opts: { satelliteMonitoringLevel?: nu
 }
 
 export function structureUnlocked(structure: StructureBlueprint, opts: { refineryUnlocked?: boolean; academyResearched?: boolean; placed?: string[]; freeOperations?: boolean; satelliteMonitoringLevel?: number; clientMissions?: Record<string, number> } = {}): boolean {
-  if (structure.id === 'scan-station') return !!opts.freeOperations
+  if (structure.id === 'scan-station') return FEATURE_FLAGS.scanStation && !!opts.freeOperations
   if (structure.id === 'satellite-monitoring-station') return !!opts.freeOperations
   if (structure.id === 'astronaut-academy') return !!opts.academyResearched || !!opts.placed?.includes('astronaut-academy')
   if (structure.id === 'deep-space-telescope') return deepSpaceTelescopeUnlocked(opts) || !!opts.placed?.includes('deep-space-telescope')

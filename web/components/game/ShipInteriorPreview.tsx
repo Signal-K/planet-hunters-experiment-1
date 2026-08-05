@@ -13,6 +13,7 @@ import {
   createCustomizerBuildState,
   customizerPartById,
   getBuildSequence,
+  getRoomDetailArt,
   getShipInteriorLayout,
   partsForKind,
   refundCustomizerPart,
@@ -219,17 +220,36 @@ export default function ShipInteriorPreview({
 
       {/* ── STEP CONTENT (fills remaining) ───────────────────────────── */}
       <div data-testid="ship-build-step" style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', padding: '8px 10px 6px' }}>
-        {/* Step title + desc */}
-        <div style={{ flex: 'none', marginBottom: 6 }}>
-          <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 8, fontWeight: 900, letterSpacing: '0.16em', color: 'var(--ln-cyan)', textTransform: 'uppercase' }}>
-            Step {stepIndex + 1} / {buildSteps.length}
+        {/* Step title + desc, with the room's full interior diorama as a
+            detail preview — the walls/floor/furniture art that's too
+            low-contrast to read at grid-cell scale gets real screen space
+            here instead (see SHIP_ROOM_DETAIL_ASSETS vs SHIP_ROOM_ASSETS). */}
+        <div style={{ flex: 'none', marginBottom: 6, display: 'flex', gap: 8, alignItems: 'flex-start' }}>
+          <img
+            src={getRoomDetailArt(step.kind, buildState.installed[step.kind])}
+            alt={`${step.title} interior preview`}
+            data-testid="ship-step-detail-image"
+            style={{
+              flex: 'none',
+              width: 56,
+              height: 56,
+              borderRadius: 8,
+              border: '1px solid var(--ln-glass-border)',
+              background: 'rgba(0,0,0,0.3)',
+              objectFit: 'cover',
+            }}
+          />
+          <div style={{ minWidth: 0 }}>
+            <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 8, fontWeight: 900, letterSpacing: '0.16em', color: 'var(--ln-cyan)', textTransform: 'uppercase' }}>
+              Step {stepIndex + 1} / {buildSteps.length}
+            </div>
+            <h3 style={{ margin: '1px 0 3px', fontFamily: 'var(--ln-font-display)', fontSize: 15, fontWeight: 800, color: 'var(--ln-text)', lineHeight: 1.1 }}>
+              {step.title}
+            </h3>
+            <p style={{ margin: 0, fontFamily: 'var(--ln-font-body)', fontSize: 10, color: 'var(--ln-text-muted)', lineHeight: 1.35 }}>
+              {step.body}
+            </p>
           </div>
-          <h3 style={{ margin: '1px 0 3px', fontFamily: 'var(--ln-font-display)', fontSize: 15, fontWeight: 800, color: 'var(--ln-text)', lineHeight: 1.1 }}>
-            {step.title}
-          </h3>
-          <p style={{ margin: 0, fontFamily: 'var(--ln-font-body)', fontSize: 10, color: 'var(--ln-text-muted)', lineHeight: 1.35 }}>
-            {step.body}
-          </p>
         </div>
 
         {/* Part cards — flex 1, fill space. Glass-HUD variant cards: cyan
