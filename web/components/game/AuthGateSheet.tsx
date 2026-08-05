@@ -8,15 +8,20 @@ interface AuthGateSheetProps {
   onSignIn: (email: string, password: string) => Promise<void>
   onCreateAccount: (email: string, password: string) => Promise<void>
   onContinue: (email: string) => Promise<void>
+  /** True once onContinue's requestOTP() succeeded — switches the quick path to code entry. */
+  otpPending: boolean
+  onVerifyOtp: (code: string) => Promise<void>
 }
 
-export default function AuthGateSheet({ error, onSignIn, onCreateAccount, onContinue }: AuthGateSheetProps) {
+export default function AuthGateSheet({ error, onSignIn, onCreateAccount, onContinue, otpPending, onVerifyOtp }: AuthGateSheetProps) {
   const [mode, setMode] = useState<'signin' | 'signup'>('signin')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [quickEmail, setQuickEmail] = useState('')
   const [quickSubmitting, setQuickSubmitting] = useState(false)
+  const [otpCode, setOtpCode] = useState('')
+  const [otpSubmitting, setOtpSubmitting] = useState(false)
 
   const inputStyle: React.CSSProperties = {
     width: '100%', padding: '12px 14px',
@@ -52,6 +57,18 @@ export default function AuthGateSheet({ error, onSignIn, onCreateAccount, onCont
       // error shown via props
     } finally {
       setQuickSubmitting(false)
+    }
+  }
+
+  async function handleVerifyOtp(e: React.FormEvent) {
+    e.preventDefault()
+    setOtpSubmitting(true)
+    try {
+      await onVerifyOtp(otpCode)
+    } catch {
+      // error shown via props
+    } finally {
+      setOtpSubmitting(false)
     }
   }
 
@@ -145,36 +162,74 @@ export default function AuthGateSheet({ error, onSignIn, onCreateAccount, onCont
         </form>
 
         <div style={{ marginTop: 16, paddingTop: 14, borderTop: '1px solid rgba(112,217,234,0.15)' }}>
-          <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 11, color: '#5d7390', marginBottom: 8, textAlign: 'center' }}>
-            Or just leave an email — no password needed
-          </div>
-          <form onSubmit={handleQuickContinue} style={{ display: 'flex', gap: 8 }}>
-            <input
-              type="email"
-              value={quickEmail}
-              onChange={e => setQuickEmail(e.target.value)}
-              required
-              autoComplete="email"
-              placeholder="you@example.com"
-              data-testid="auth-gate-quick-email"
-              style={{ ...inputStyle, flex: 1 }}
-            />
-            <button
-              type="submit"
-              disabled={quickSubmitting}
-              data-testid="auth-gate-quick-submit"
-              style={{
-                padding: '0 18px', borderRadius: 10, border: '1px solid rgba(112,217,234,0.35)',
-                cursor: quickSubmitting ? 'not-allowed' : 'pointer',
-                background: 'transparent', color: '#87CFFA',
-                fontFamily: 'var(--ln-font-display)', fontSize: 12, fontWeight: 800,
-                letterSpacing: '0.1em', textTransform: 'uppercase',
-                opacity: quickSubmitting ? 0.6 : 1,
-              }}
-            >
-              {quickSubmitting ? '…' : 'Continue'}
-            </button>
-          </form>
+          {otpPending ? (
+            <>
+              <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 11, color: '#5d7390', marginBottom: 8, textAlign: 'center' }}>
+                Enter the code we emailed to {quickEmail}
+              </div>
+              <form onSubmit={handleVerifyOtp} style={{ display: 'flex', gap: 8 }}>
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  value={otpCode}
+                  onChange={e => setOtpCode(e.target.value)}
+                  required
+                  autoComplete="one-time-code"
+                  placeholder="Code"
+                  data-testid="auth-gate-otp-code"
+                  style={{ ...inputStyle, flex: 1 }}
+                />
+                <button
+                  type="submit"
+                  disabled={otpSubmitting}
+                  data-testid="auth-gate-otp-submit"
+                  style={{
+                    padding: '0 18px', borderRadius: 10, border: '1px solid rgba(112,217,234,0.35)',
+                    cursor: otpSubmitting ? 'not-allowed' : 'pointer',
+                    background: 'transparent', color: '#87CFFA',
+                    fontFamily: 'var(--ln-font-display)', fontSize: 12, fontWeight: 800,
+                    letterSpacing: '0.1em', textTransform: 'uppercase',
+                    opacity: otpSubmitting ? 0.6 : 1,
+                  }}
+                >
+                  {otpSubmitting ? '…' : 'Verify'}
+                </button>
+              </form>
+            </>
+          ) : (
+            <>
+              <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 11, color: '#5d7390', marginBottom: 8, textAlign: 'center' }}>
+                Or just leave an email — no password needed
+              </div>
+              <form onSubmit={handleQuickContinue} style={{ display: 'flex', gap: 8 }}>
+                <input
+                  type="email"
+                  value={quickEmail}
+                  onChange={e => setQuickEmail(e.target.value)}
+                  required
+                  autoComplete="email"
+                  placeholder="you@example.com"
+                  data-testid="auth-gate-quick-email"
+                  style={{ ...inputStyle, flex: 1 }}
+                />
+                <button
+                  type="submit"
+                  disabled={quickSubmitting}
+                  data-testid="auth-gate-quick-submit"
+                  style={{
+                    padding: '0 18px', borderRadius: 10, border: '1px solid rgba(112,217,234,0.35)',
+                    cursor: quickSubmitting ? 'not-allowed' : 'pointer',
+                    background: 'transparent', color: '#87CFFA',
+                    fontFamily: 'var(--ln-font-display)', fontSize: 12, fontWeight: 800,
+                    letterSpacing: '0.1em', textTransform: 'uppercase',
+                    opacity: quickSubmitting ? 0.6 : 1,
+                  }}
+                >
+                  {quickSubmitting ? '…' : 'Continue'}
+                </button>
+              </form>
+            </>
+          )}
         </div>
     </Sheet>
   )
