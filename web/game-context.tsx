@@ -173,14 +173,13 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       clearTerritoryClaimPopup: ui.clearTerritoryClaimPopup,
       // Auth
       upgradePromptOpen: auth.upgradePromptOpen,
-      dismissUpgradePrompt: auth.dismissUpgradePrompt,
       upgradeAccount: auth.upgradeAccount,
       awaitingRemoteState: auth.awaitingRemoteState,
       authGateOpen: auth.authGateOpen,
       authGateError: auth.authGateError,
       signInFromGate: auth.signInFromGate,
       createAccountFromGate: auth.createAccountFromGate,
-      skipAuthGate: auth.skipAuthGate,
+      continueWithEmail: auth.continueWithEmail,
       resetGame: useCallback(() => { void auth.resetGame(DEFAULT_STATE) }, [auth.resetGame]), // eslint-disable-line react-hooks/rules-of-hooks
       signOut: auth.signOut,
       // Game loop

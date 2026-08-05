@@ -28,7 +28,7 @@ for p in (HERE, os.path.join(HERE, "models")):
 
 import landnam_kit as kit  # noqa: E402
 
-MODULES = ["hub_structures", "launchpad", "actors", "ships", "rooms"]
+MODULES = ["hub_structures", "launchpad", "actors", "ships", "rooms", "parts"]
 
 
 def parse_args():
@@ -59,7 +59,12 @@ def main():
 
             kit.reset_scene()
             spec = build()
-            path = os.path.join(args.out, key + ".png")
+            # Most keys are "hub/foo" and land under web/public/game/assets/.
+            # A few (the shop icons in parts.py) live at web/public/parts/
+            # instead — a sibling of game/assets, not a child of it — and use
+            # a "../parts/foo" key so normpath resolves out of OUT_ROOT rather
+            # than needing a second --out root threaded through every module.
+            path = os.path.normpath(os.path.join(args.out, key + ".png"))
             layout_w, layout_h = spec["layout"]
             kit.sprite_render(
                 path, layout_w, layout_h,

@@ -130,14 +130,11 @@ function GameChrome({ children }: { children: ReactNode }) {
       <div className="portrait-canvas">
         <BackendStatus />
         <LandnamSyncStatus />
-        {/* zIndex 6 keeps PushOptIn below ProgressionCard (8). At 12 it sat
-            above the progression cards and, once its label wrapped, covered the
-            first one — the Skill Tree button stopped responding to taps. It is
-            already *behind* the top HUD (18), which is why only the first few
-            characters ever show; that placement collision is tracked separately
-            and is a design call, not fixed here. */}
+        {/* Mission alerts have a reserved desktop slot to the left of the
+            horizontal resource HUD. They are hidden at compact widths rather
+            than wrapping over progression controls. */}
         {game.player.freeOperations && currentScreen === 'hub' && (
-          <div data-ui-zone={UI_ZONES.ambientPrompt} style={{ position: 'absolute', top: 12, right: 12, zIndex: 6 }}>
+          <div data-ui-zone={UI_ZONES.ambientPrompt} className="hub-push-opt-in">
             <PushOptIn userId={game.authUserId ?? undefined} />
           </div>
         )}
@@ -177,14 +174,14 @@ function GameChrome({ children }: { children: ReactNode }) {
           />
         )}
         {game.upgradePromptOpen && !game.popup && (
-          <SaveProgressPrompt onUpgrade={game.upgradeAccount} onDismiss={game.dismissUpgradePrompt} />
+          <SaveProgressPrompt onUpgrade={game.upgradeAccount} />
         )}
         {game.authGateOpen && (
           <AuthGateSheet
             error={game.authGateError}
             onSignIn={game.signInFromGate}
             onCreateAccount={game.createAccountFromGate}
-            onSkip={game.skipAuthGate}
+            onContinue={game.continueWithEmail}
           />
         )}
         {game.pendingTerritoryClaimFor && (
