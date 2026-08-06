@@ -8,7 +8,7 @@ const presetCases: Array<{ key: string; assertion: () => void }> = [
   },
   {
     key: 'm1-hub',
-    assertion: () => cy.contains('Earth Base').should('be.visible'),
+    assertion: () => cy.contains('h1', 'Earth Base').should('be.visible'),
   },
   {
     key: 'm1-fab',
@@ -17,7 +17,7 @@ const presetCases: Array<{ key: string; assertion: () => void }> = [
   {
     key: 'm2-hub',
     assertion: () => {
-      cy.contains('Earth Base').should('be.visible')
+      cy.contains('h1', 'Earth Base').should('be.visible')
     },
   },
   {
@@ -29,7 +29,7 @@ const presetCases: Array<{ key: string; assertion: () => void }> = [
   {
     key: 'm3-hub',
     assertion: () => {
-      cy.contains('Earth Base').should('be.visible')
+      cy.contains('h1', 'Earth Base').should('be.visible')
     },
   },
   {
@@ -50,7 +50,20 @@ describe('Dev preset URL param (?preset=)', () => {
   })
 
   it('unknown preset falls back to normal load (intro screen)', () => {
-    cy.visit('/game?preset=does-not-exist')
+    // resolvePreset() returns null for an unrecognized key, so this device
+    // takes the ordinary (non-preview) hydration path — which, same as any
+    // other fresh session with no stored credentials, opens the auth gate
+    // before gameplay (STS-624). Seed guest credentials first so the
+    // fallback path actually reaches the intro screen instead of stalling
+    // on sign-in.
+    cy.visit('/game?preset=does-not-exist', {
+      onBeforeLoad(win) {
+        win.localStorage.setItem(
+          'landnam-guest-credentials',
+          JSON.stringify({ email: 'e2e@landnam.guest', password: 'e2e-guest-test' }),
+        )
+      },
+    })
     cy.contains('BEGIN OPERATIONS').should('be.visible')
   })
 
@@ -98,13 +111,15 @@ describe('DEV panel UI', () => {
     cy.get('[data-testid="dev-shot-telescope-fab"]').should('exist')
     cy.get('[data-testid="dev-shot-telescope-transit"]').should('exist')
     cy.get('[data-testid="dev-shot-telescope-debrief"]').should('exist')
+    cy.get('[data-testid="dev-shot-ui-tess-discovery"]').should('exist')
     // Recent UI shots
     cy.get('[data-testid="dev-shot-ui-mission-board"]').should('exist')
     cy.get('[data-testid="dev-shot-ui-skill-tree"]').should('exist')
     cy.get('[data-testid="dev-shot-ui-target-picker"]').should('exist')
     cy.get('[data-testid="dev-shot-ui-rover-mining"]').should('exist')
     cy.get('[data-testid="dev-shot-ship-customizer"]').should('exist')
-    cy.get('[data-testid^="dev-shot-"]').should('have.length', 25)
+    cy.get('[data-testid="dev-shot-ui-asteroid-discovery"]').should('exist')
+    cy.get('[data-testid^="dev-shot-"]').should('have.length', 26)
   })
 
   it('clicking M2 Hub navigates to hub with M2 coach, no Save Progress prompt', () => {

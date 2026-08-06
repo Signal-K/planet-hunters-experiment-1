@@ -8,6 +8,8 @@ import { DEFAULT_STATE, mergeRemoteState, type PartialSave } from '@/lib/game-st
 import type { GameState } from '@/lib/game-types'
 import type { Toast } from '@/components/ui/ToastLayer'
 
+const UPGRADE_SNOOZE_KEY = 'landnam-upgrade-prompt-snooze-until'
+
 function responseStatus(err: unknown): number | null {
   if (typeof err === 'object' && err && 'status' in err && typeof err.status === 'number') return err.status
   return null
@@ -327,12 +329,19 @@ export function useAuthSync({
 
   // Mandatory email prompt for legacy anonymous guest accounts (created
   // before KES-97 retired guest signup). Unlike the old post-first-mission,
-  // snoozable nudge, this is not dismissible and re-opens every session
-  // until the account has a real email — Liam has no way to reach a player
-  // stuck on an @landnam.guest address otherwise.
+  // snoozable nudge, this is not dismissible in the UI (GameApp renders
+  // SaveProgressPrompt with no onDismiss) and re-opens every session until
+  // the account has a real email — Liam has no way to reach a player stuck
+  // on an @landnam.guest address otherwise. The snooze key below is not
+  // exposed through any in-app control; it only exists so e2e/dev-preset
+  // fixtures that authenticate with a stub @landnam.guest address (see
+  // cypress/support/e2e.ts) can suppress this modal without simulating a
+  // real player dismissing it.
   useEffect(() => {
     if (!hydrated || isPreview || !authUserId) return
     if (!isGuestAccount()) return
+    const snoozeUntil = Number(localStorage.getItem(UPGRADE_SNOOZE_KEY) ?? 0)
+    if (Date.now() < snoozeUntil) return
     setUpgradePromptOpen(true)
   }, [hydrated, isPreview, authUserId])
 
