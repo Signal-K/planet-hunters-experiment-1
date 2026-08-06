@@ -36,6 +36,7 @@ services:
     volumes:
       - ./web:/app
       - web_node_modules:/app/node_modules
+      - web_next_cache:/app/.next
     environment:
       POCKETBASE_INTERNAL_URL: http://shared-pb:8090
       NEXT_PUBLIC_SHARED_PB_URL: http://shared-pb:8090
@@ -71,3 +72,4 @@ services:
 volumes:
   pocketbase-e2e-data:
   web_node_modules:
+  web_next_cache:
