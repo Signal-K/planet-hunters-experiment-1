@@ -34,6 +34,9 @@
     "test:e2e:clean-start-loop": "CYPRESS_PROFILE=clean-start-loop start-server-and-test dev http://localhost:3001 cypress:run:clean-start-loop",
     "test:e2e:surveys": "CYPRESS_PROFILE=surveys start-server-and-test dev http://localhost:3001 cypress:run:surveys",
     "test:e2e:pb": "CYPRESS_PROFILE=with-pb start-server-and-test dev http://localhost:3001 cypress:run",
+    "test:e2e:full:desktop": "CYPRESS_PROFILE=full CYPRESS_VIEWPORT=desktop start-server-and-test dev http://localhost:3001 cypress:run:full",
+    "test:e2e:full:tablet": "CYPRESS_PROFILE=full CYPRESS_VIEWPORT=tablet start-server-and-test dev http://localhost:3001 cypress:run:full",
+    "test:e2e:full:landscape": "CYPRESS_PROFILE=full CYPRESS_VIEWPORT=landscape start-server-and-test dev http://localhost:3001 cypress:run:full",
     "cypress:open:visual": "env -u ELECTRON_RUN_AS_NODE CYPRESS_PROFILE=visual cypress open --browser chrome",
     "cypress:run:visual": "env -u ELECTRON_RUN_AS_NODE CYPRESS_PROFILE=visual cypress run --browser chrome --headed"
   },

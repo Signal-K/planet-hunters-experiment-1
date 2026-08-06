@@ -2,6 +2,24 @@ import { defineConfig } from 'cypress'
 
 const profile = process.env.CYPRESS_PROFILE || 'offline'
 
+// Device/viewport matrix (KES-112): every profile below still defaults to the
+// mobile-portrait dimensions it always ran at. Set CYPRESS_VIEWPORT to run the
+// same spec set against a different breakpoint without duplicating specs —
+// e.g. `CYPRESS_VIEWPORT=desktop npm run cypress:run:regression`.
+const VIEWPORTS: Record<string, { viewportWidth: number; viewportHeight: number }> = {
+  mobile: { viewportWidth: 390, viewportHeight: 844 },
+  tablet: { viewportWidth: 834, viewportHeight: 1194 },
+  desktop: { viewportWidth: 1440, viewportHeight: 900 },
+  landscape: { viewportWidth: 926, viewportHeight: 428 },
+}
+const viewportKey = process.env.CYPRESS_VIEWPORT || 'mobile'
+const viewportOverride = VIEWPORTS[viewportKey]
+if (!viewportOverride) {
+  throw new Error(
+    `Unknown CYPRESS_VIEWPORT "${viewportKey}" — expected one of: ${Object.keys(VIEWPORTS).join(', ')}`,
+  )
+}
+
 const profiles: Record<string, Cypress.EndToEndConfigOptions> = {
   offline: {
     baseUrl: 'http://localhost:3001',
@@ -105,8 +123,10 @@ export default defineConfig({
   e2e: {
     ...active,
     supportFile: 'cypress/support/e2e.ts',
-    viewportWidth: active.viewportWidth ?? 1280,
-    viewportHeight: active.viewportHeight ?? 720,
+    // CYPRESS_VIEWPORT always wins over the profile's own dimensions — every
+    // profile's viewportWidth/viewportHeight above is just its "mobile" default.
+    viewportWidth: viewportOverride.viewportWidth,
+    viewportHeight: viewportOverride.viewportHeight,
     // Always record video for visual profile; otherwise only in CI
     video: profile === 'visual' ? true : (process.env.CI ? true : false),
     screenshotOnRunFailure: true,
