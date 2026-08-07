@@ -121,6 +121,7 @@ export function ScreenContent({
             placementPlots: game.player.placementPlots,
             satelliteMonitoringLevel: game.player.satelliteMonitoringLevel,
             clientMissions: game.player.clientMissions,
+            deepSpaceTelescopeMissionCompletedAt: game.player.deepSpaceTelescopeMissionCompletedAt,
           }}
           onPlaced={(kind, plot) => {
             const structure = game.catalog.structures.find(s => s.id === kind)

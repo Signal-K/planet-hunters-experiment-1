@@ -62,7 +62,7 @@ export default function MissionOperationRoutes({
             }
             const isRoverMission = game.mission?.survey?.onWorldVehicle === 'starter-rover'
             const hasLander = !isRoverMission && !!game.player.shipCustomizerParts?.lander
-            if (game.mission?.payload?.type === 'satellite' || game.target?.type === 'exoplanet') {
+            if (game.mission?.payload?.type === 'satellite' || game.mission?.payload?.type === 'deep-space-survey' || game.target?.type === 'exoplanet') {
               game.setPlayer(player => ({
                 ...player,
                 missionPhase: 'debrief',
@@ -72,6 +72,9 @@ export default function MissionOperationRoutes({
                 transitSatelliteLevel: game.mission?.payload?.type === 'satellite'
                   ? Math.max(1, player.transitSatelliteLevel ?? 1)
                   : player.transitSatelliteLevel,
+                deepSpaceTelescopeMissionCompletedAt: game.mission?.payload?.type === 'deep-space-survey'
+                  ? (player.deepSpaceTelescopeMissionCompletedAt ?? Date.now())
+                  : player.deepSpaceTelescopeMissionCompletedAt,
               }))
               game.setLastCargo({})
               game.go('debrief')

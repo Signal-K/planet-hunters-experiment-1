@@ -1,7 +1,7 @@
 // Landnam game data — all shared types and interfaces
 
 export interface MissionPayload {
-  type: 'rover' | 'satellite'
+  type: 'rover' | 'satellite' | 'deep-space-survey'
   name: string
   cargoCost: number
 }

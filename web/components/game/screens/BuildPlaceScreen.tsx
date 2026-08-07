@@ -47,6 +47,7 @@ interface BuildPlaceScreenProps {
     placementPlots?: Record<string, number>
     satelliteMonitoringLevel?: number
     clientMissions?: Record<string, number>
+    deepSpaceTelescopeMissionCompletedAt?: number | null
   }
 }
 
@@ -110,7 +111,7 @@ export default function BuildPlaceScreen({ onPlaced, onBack, hasCoach, player }:
   const canSelectStructure = (structure: StructureBlueprint) => {
     const alreadyBuilt = player.placed.includes(structure.id)
     return !alreadyBuilt
-      && structureUnlocked(structure, { refineryUnlocked: player.refineryUnlocked, academyResearched: player.academyResearched, placed: player.placed, freeOperations: player.freeOperations, satelliteMonitoringLevel: player.satelliteMonitoringLevel, clientMissions: player.clientMissions })
+      && structureUnlocked(structure, { refineryUnlocked: player.refineryUnlocked, academyResearched: player.academyResearched, placed: player.placed, freeOperations: player.freeOperations, satelliteMonitoringLevel: player.satelliteMonitoringLevel, clientMissions: player.clientMissions, deepSpaceTelescopeMissionCompletedAt: player.deepSpaceTelescopeMissionCompletedAt })
       && canAffordStructure(structure, { francs: player.francs, stash: player.stash })
   }
 
@@ -238,7 +239,7 @@ export default function BuildPlaceScreen({ onPlaced, onBack, hasCoach, player }:
             {catalog.map(c => {
               const on = c.id === picked
               const alreadyBuilt = player.placed.includes(c.id)
-              const unlocked = structureUnlocked(c, { refineryUnlocked: player.refineryUnlocked, academyResearched: player.academyResearched, placed: player.placed, freeOperations: player.freeOperations, satelliteMonitoringLevel: player.satelliteMonitoringLevel, clientMissions: player.clientMissions }) && !alreadyBuilt
+              const unlocked = structureUnlocked(c, { refineryUnlocked: player.refineryUnlocked, academyResearched: player.academyResearched, placed: player.placed, freeOperations: player.freeOperations, satelliteMonitoringLevel: player.satelliteMonitoringLevel, clientMissions: player.clientMissions, deepSpaceTelescopeMissionCompletedAt: player.deepSpaceTelescopeMissionCompletedAt }) && !alreadyBuilt
               const affordable = canAffordStructure(c, { francs: player.francs, stash: player.stash })
               const canSelect = unlocked && affordable
               const color = STRUCTURE_COLORS[c.id] ?? '#3fa9ff'

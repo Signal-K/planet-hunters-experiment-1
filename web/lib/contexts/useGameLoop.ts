@@ -577,6 +577,9 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
           transitSatelliteLevel: mission?.payload?.type === 'satellite'
             ? Math.max(1, s.player.transitSatelliteLevel ?? 1) + 1
             : s.player.transitSatelliteLevel,
+          deepSpaceTelescopeMissionCompletedAt: mission?.payload?.type === 'deep-space-survey'
+            ? (s.player.deepSpaceTelescopeMissionCompletedAt ?? Date.now())
+            : s.player.deepSpaceTelescopeMissionCompletedAt,
         },
         lastCargo: null,
         deliveredCargo: null,

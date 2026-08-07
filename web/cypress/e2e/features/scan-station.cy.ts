@@ -62,7 +62,7 @@ function visitWithState(path: string, screen: GameState['screen'], playerOverrid
 
 describe('Scan Station', () => {
   it('is buildable from Earth Base once Free Operations is reached (feature flag on)', () => {
-    visitWithState('/game/build', 'build-place', { placed: ['launchpad'] })
+    visitWithState('/game/build', 'build', { placed: ['launchpad'] })
     cy.contains('Scanning Station', { timeout: 10000 }).should('be.visible')
   })
 

@@ -42,6 +42,7 @@ export function isOwnProgramMission(mission: Mission): boolean {
   return !mission.client
     || mission.client === OWN_PROGRAM_CLIENT_ID
     || mission.payload?.type === 'satellite'
+    || mission.payload?.type === 'deep-space-survey'
 }
 
 /**
@@ -81,6 +82,15 @@ export function missionTypePrimer(mission: Mission): MissionTypePrimer {
       label: 'Satellite launch',
       summary: 'Carry your own satellite up, release it into orbit, and bring the ship home. Nothing is mined and nothing is sold.',
       steps: ['Launch', 'Deploy', 'Return'],
+      owner,
+    }
+  }
+
+  if (mission.payload?.type === 'deep-space-survey') {
+    return {
+      label: 'Deep space survey',
+      summary: 'Fly out, calibrate the instrument baseline, and bring the ship home. Nothing is mined and nothing is sold.',
+      steps: ['Launch', 'Calibrate', 'Return'],
       owner,
     }
   }

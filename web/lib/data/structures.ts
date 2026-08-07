@@ -107,11 +107,18 @@ export function deepSpaceTelescopeUnlocked(opts: { satelliteMonitoringLevel?: nu
   )
 }
 
-export function structureUnlocked(structure: StructureBlueprint, opts: { refineryUnlocked?: boolean; academyResearched?: boolean; placed?: string[]; freeOperations?: boolean; satelliteMonitoringLevel?: number; clientMissions?: Record<string, number> } = {}): boolean {
+export function structureUnlocked(structure: StructureBlueprint, opts: { refineryUnlocked?: boolean; academyResearched?: boolean; placed?: string[]; freeOperations?: boolean; satelliteMonitoringLevel?: number; clientMissions?: Record<string, number>; deepSpaceTelescopeMissionCompletedAt?: number | null } = {}): boolean {
   if (structure.id === 'scan-station') return FEATURE_FLAGS.scanStation && !!opts.freeOperations
   if (structure.id === 'satellite-monitoring-station') return !!opts.freeOperations
   if (structure.id === 'astronaut-academy') return !!opts.academyResearched || !!opts.placed?.includes('astronaut-academy')
-  if (structure.id === 'deep-space-telescope') return deepSpaceTelescopeUnlocked(opts) || !!opts.placed?.includes('deep-space-telescope')
+  // KES-128: the numeric threshold (deepSpaceTelescopeUnlocked) now only
+  // decides when the story-deep-space-telescope-survey mission (see
+  // runtimeCatalog.ts) is offered as the on-ramp — completing that mission is
+  // what actually opens the build slot, so a player never sees a bare
+  // structure appear with no narrative reason it happened.
+  if (structure.id === 'deep-space-telescope') {
+    return (deepSpaceTelescopeUnlocked(opts) && !!opts.deepSpaceTelescopeMissionCompletedAt) || !!opts.placed?.includes('deep-space-telescope')
+  }
   if (structure.unlockTrigger === 'always') return true
   if (structure.id === 'refinery') return !!opts.refineryUnlocked || !!opts.placed?.includes('refinery')
   return false

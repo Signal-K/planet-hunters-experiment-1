@@ -172,6 +172,12 @@ export interface Player {
   deepSpaceTelescopeBuilt?: boolean
   deepSpaceTelescopeLevel?: number
   deepSpaceTelescopeLaunchedAt?: number | null
+  // KES-128: completing the story-deep-space-telescope-survey mission — the
+  // on-ramp mirroring story-transit-telescope-launch — rather than the raw
+  // deepSpaceTelescopeUnlocked() threshold. Distinct from
+  // deepSpaceTelescopeLaunchedAt above, which marks when the structure was
+  // physically placed, not when the player earned the right to build it.
+  deepSpaceTelescopeMissionCompletedAt?: number | null
   scansUsedToday?: number
   scanDate?: string
   activeScan?: { targetId: string; completesAt: number } | null

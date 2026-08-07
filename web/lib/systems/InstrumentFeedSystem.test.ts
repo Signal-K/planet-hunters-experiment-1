@@ -144,5 +144,25 @@ describe('InstrumentFeedSystem', () => {
       expect(transitInstrumentDigest(tessCandidates, mixedPlayer, '2026-07-30')).toHaveLength(2)
       expect(deepSpaceInstrumentDigest(asteroids, mixedPlayer, '2026-07-30')).toHaveLength(1)
     })
+
+    it('persists its own notification marker, independent of the transit telescope marker (KES-128)', () => {
+      const initial = player()
+      const marked = markInstrumentDigestNotified(initial, 'deep-space-telescope', '2026-07-30')
+      const duplicate = markInstrumentDigestNotified(marked, 'deep-space-telescope', '2026-07-30')
+      const nextDay = markInstrumentDigestNotified(marked, 'deep-space-telescope', '2026-07-31')
+
+      expect(instrumentDigestWasNotified(marked, 'deep-space-telescope', '2026-07-30')).toBe(true)
+      expect(duplicate).toBe(marked)
+      expect(nextDay.instrumentDigestNotifiedOn?.['deep-space-telescope']).toBe('2026-07-31')
+
+      // Marking the deep-space instrument must never flip the transit
+      // telescope's own marker (they're separate instrumentId keys in the
+      // same map) — this is the exact gap the ticket flagged.
+      expect(instrumentDigestWasNotified(marked, 'transit-telescope', '2026-07-30')).toBe(false)
+
+      const bothMarked = markInstrumentDigestNotified(marked, 'transit-telescope', '2026-07-30')
+      expect(instrumentDigestWasNotified(bothMarked, 'deep-space-telescope', '2026-07-30')).toBe(true)
+      expect(instrumentDigestWasNotified(bothMarked, 'transit-telescope', '2026-07-30')).toBe(true)
+    })
   })
 })

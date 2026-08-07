@@ -1,6 +1,12 @@
 import { describe, expect, it } from 'vitest'
 import { STATIC_CATALOG } from './catalog'
-import { buildRuntimeCatalog, TRANSIT_TELESCOPE_MISSION_ID, TRANSIT_TELESCOPE_TARGET_ID } from './runtimeCatalog'
+import {
+  buildRuntimeCatalog,
+  DEEP_SPACE_TELESCOPE_MISSION_ID,
+  DEEP_SPACE_TELESCOPE_TARGET_ID,
+  TRANSIT_TELESCOPE_MISSION_ID,
+  TRANSIT_TELESCOPE_TARGET_ID,
+} from './runtimeCatalog'
 import { tessCandidateToExoplanetTarget, toTessCandidate } from './data'
 import { DEFAULT_STATE } from './game-state'
 import { createCrewMember } from './systems/CrewSystem'
@@ -40,6 +46,66 @@ describe('buildRuntimeCatalog', () => {
     const activeTelescopeMission = catalog.missions.find(mission => mission.id === TRANSIT_TELESCOPE_MISSION_ID)
     expect(activeTelescopeMission).not.toHaveProperty('client')
     expect(activeTelescopeMission).toMatchObject({ programReward: expect.any(Object) })
+  })
+
+  it('adds the deep space telescope survey mission once the SMS/affinity threshold is met but the mission is unfinished (KES-128)', () => {
+    const player = {
+      ...DEFAULT_STATE.player,
+      freeOperations: true,
+      satelliteMonitoringLevel: 2,
+      clientMissions: { 'client-a': 10 },
+      deepSpaceTelescopeMissionCompletedAt: null,
+    }
+    const catalog = buildRuntimeCatalog({
+      catalog: STATIC_CATALOG,
+      freeOperations: true,
+      missionsDone: 4,
+      player,
+    })
+
+    expect(catalog.targets.some(target => target.id === DEEP_SPACE_TELESCOPE_TARGET_ID)).toBe(true)
+    const surveyMission = catalog.missions.find(mission => mission.id === DEEP_SPACE_TELESCOPE_MISSION_ID)
+    expect(surveyMission).not.toHaveProperty('client')
+    expect(surveyMission).toMatchObject({
+      tag: 'STORY',
+      payload: { type: 'deep-space-survey' },
+      payout: { francs: 0, affinity: 0 },
+      programReward: expect.objectContaining({ outcome: expect.stringContaining('surveyed') }),
+    })
+  })
+
+  it('does not offer the deep space telescope mission below the SMS/affinity threshold', () => {
+    const player = { ...DEFAULT_STATE.player, freeOperations: true, satelliteMonitoringLevel: 1, clientMissions: {} }
+    const catalog = buildRuntimeCatalog({
+      catalog: STATIC_CATALOG,
+      freeOperations: true,
+      missionsDone: 4,
+      player,
+    })
+
+    expect(catalog.missions.some(mission => mission.id === DEEP_SPACE_TELESCOPE_MISSION_ID)).toBe(false)
+  })
+
+  it('stops offering the deep space telescope mission once it has been completed or the telescope is already placed', () => {
+    const completedPlayer = {
+      ...DEFAULT_STATE.player,
+      freeOperations: true,
+      satelliteMonitoringLevel: 2,
+      clientMissions: { 'client-a': 10 },
+      deepSpaceTelescopeMissionCompletedAt: Date.now(),
+    }
+    const placedPlayer = {
+      ...DEFAULT_STATE.player,
+      freeOperations: true,
+      satelliteMonitoringLevel: 2,
+      clientMissions: { 'client-a': 10 },
+      placed: ['deep-space-telescope'],
+    }
+
+    for (const player of [completedPlayer, placedPlayer]) {
+      const catalog = buildRuntimeCatalog({ catalog: STATIC_CATALOG, freeOperations: true, missionsDone: 4, player })
+      expect(catalog.missions.some(mission => mission.id === DEEP_SPACE_TELESCOPE_MISSION_ID)).toBe(false)
+    }
   })
 
   it('turns discovered exoplanets into reachable survey missions and catalog targets', () => {

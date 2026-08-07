@@ -2,6 +2,7 @@ import type { Catalog } from './catalog'
 import type { Mission, Target } from './data'
 import type { Player } from './game-types'
 import { diplomacyPayoutMultiplier, jointMissionUnlocked } from './systems/AcademySystem'
+import { deepSpaceTelescopeUnlocked } from './data/structures'
 
 export const TRANSIT_TELESCOPE_TARGET_ID = 'earth-orbit-transit-telescope'
 export const TRANSIT_TELESCOPE_MISSION_ID = 'story-transit-telescope-launch'
@@ -13,6 +14,23 @@ export const TRANSIT_TELESCOPE_TARGET: Target = {
   orbit: 1,
   difficulty: 'L1',
   brief: 'Low Earth orbit deployment lane for a transit telescope monitored from the Earth-base SMS.',
+  minerals: [],
+}
+
+// KES-128: the Deep Space Telescope's on-ramp, matching the Transit
+// Telescope's story-mission pattern above rather than the bare numeric
+// deepSpaceTelescopeUnlocked() threshold (STS-622) silently opening a build
+// slot with no narrative reason it happened.
+export const DEEP_SPACE_TELESCOPE_TARGET_ID = 'earth-orbit-deep-space-telescope'
+export const DEEP_SPACE_TELESCOPE_MISSION_ID = 'story-deep-space-telescope-survey'
+
+export const DEEP_SPACE_TELESCOPE_TARGET: Target = {
+  id: DEEP_SPACE_TELESCOPE_TARGET_ID,
+  name: 'Earth Orbit',
+  type: 'planet',
+  orbit: 1,
+  difficulty: 'L1',
+  brief: 'High-orbit survey lane for calibrating a long-baseline instrument against the Minor Planet Center feed.',
   minerals: [],
 }
 
@@ -43,10 +61,17 @@ export function buildRuntimeCatalog({
   const shouldOfferTransitTelescopeMission = freeOperations && !!satelliteMonitoringBuilt && !transitSatelliteLaunchedAt
   const hasActiveTransitTelescopeMission = missionId === TRANSIT_TELESCOPE_MISSION_ID || targetId === TRANSIT_TELESCOPE_TARGET_ID
   const shouldIncludeTransitTelescopeMission = shouldOfferTransitTelescopeMission || hasActiveTransitTelescopeMission
+  const shouldOfferDeepSpaceTelescopeMission = freeOperations
+    && !player?.deepSpaceTelescopeMissionCompletedAt
+    && !player?.placed?.includes('deep-space-telescope')
+    && deepSpaceTelescopeUnlocked({ satelliteMonitoringLevel: player?.satelliteMonitoringLevel, clientMissions: player?.clientMissions })
+  const hasActiveDeepSpaceTelescopeMission = missionId === DEEP_SPACE_TELESCOPE_MISSION_ID || targetId === DEEP_SPACE_TELESCOPE_TARGET_ID
+  const shouldIncludeDeepSpaceTelescopeMission = shouldOfferDeepSpaceTelescopeMission || hasActiveDeepSpaceTelescopeMission
   const existingTargetIds = new Set(catalog.targets.map(target => target.id))
   const mergedTargets = [
     ...catalog.targets,
     ...(shouldIncludeTransitTelescopeMission && !existingTargetIds.has(TRANSIT_TELESCOPE_TARGET.id) ? [TRANSIT_TELESCOPE_TARGET] : []),
+    ...(shouldIncludeDeepSpaceTelescopeMission && !existingTargetIds.has(DEEP_SPACE_TELESCOPE_TARGET.id) ? [DEEP_SPACE_TELESCOPE_TARGET] : []),
     ...discoveredTargetList.filter(target => !existingTargetIds.has(target.id)),
   ]
   const relationshipMissions = player
@@ -89,6 +114,35 @@ export function buildRuntimeCatalog({
         programReward: {
           researchXP: 0,
           outcome: 'Transit telescope online · daily instrument feed unlocked',
+        },
+        payout: { francs: 0, affinity: 0 },
+      }]
+    : []
+  const deepSpaceTelescopeMission: Mission[] = shouldIncludeDeepSpaceTelescopeMission && !existingMissionIds.has(DEEP_SPACE_TELESCOPE_MISSION_ID)
+    ? [{
+        id: DEEP_SPACE_TELESCOPE_MISSION_ID,
+        title: 'Survey the Deep Space Telescope Site',
+        brief: 'Your Satellite Monitoring Station and client standing have earned you a second instrument. Fly a calibration survey to establish the Deep Space Telescope before you build it.',
+        tag: 'STORY',
+        difficulty: 'L1',
+        locked: false,
+        sequence: missionsDone + 1,
+        unlockAt: 'Satellite Monitoring Station level 2 and affinity level 2 with a client',
+        targetId: DEEP_SPACE_TELESCOPE_TARGET_ID,
+        payload: {
+          type: 'deep-space-survey',
+          name: 'Deep Space Telescope Array',
+          cargoCost: 0,
+        },
+        requires: {
+          minerals: {},
+          cargo_min: 0,
+          drill_tier: 1,
+          max_orbit: 1,
+        },
+        programReward: {
+          researchXP: 0,
+          outcome: 'Deep Space Telescope site surveyed · ready to build',
         },
         payout: { francs: 0, affinity: 0 },
       }]
@@ -150,6 +204,6 @@ export function buildRuntimeCatalog({
   return {
     ...catalog,
     targets: mergedTargets,
-    missions: [...relationshipMissions, ...transitTelescopeMission, ...surveyMissions, ...jointMissions],
+    missions: [...relationshipMissions, ...transitTelescopeMission, ...deepSpaceTelescopeMission, ...surveyMissions, ...jointMissions],
   }
 }

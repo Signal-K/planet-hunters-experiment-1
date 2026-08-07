@@ -15,6 +15,7 @@ import { UI_ZONES } from '@/lib/ui-zones'
 import { fetchReviewableAsteroidCandidates } from '@/lib/asteroid-subjects'
 import { useIsDesktop } from '@/lib/hooks/useIsDesktop'
 import { instrumentDigestDateKey, unresolvedDeepSpaceInstrumentDigest } from '@/lib/systems/InstrumentFeedSystem'
+import AsteroidDiscoveryCoach, { useAsteroidDiscoveryCoach } from '@/components/game/AsteroidDiscoveryCoach'
 
 interface AsteroidDiscoveryScreenProps {
   player: Player
@@ -81,6 +82,7 @@ export default function AsteroidDiscoveryScreen({ player, onBack, onBuildTelesco
   }, [classifications, player.freeOperations, player.deepSpaceTelescopeBuilt, player.deepSpaceTelescopeLevel, devDayOffset])
 
   const isDesktop = useIsDesktop()
+  const coach = useAsteroidDiscoveryCoach()
 
   if (!player.freeOperations) {
     return (
@@ -216,6 +218,7 @@ export default function AsteroidDiscoveryScreen({ player, onBack, onBuildTelesco
   return (
     <div className="game-screen" data-testid="asteroid-discovery-screen">
       <TopBar eyebrow="INSTRUMENT DATA FEED · DAILY DOWNLINK" title={candidate.tempDesig} onBack={onBack} />
+      {coach.visible && <AsteroidDiscoveryCoach onDismiss={coach.dismiss} />}
       {process.env.NODE_ENV === 'development' && (
         <div style={{ position: 'absolute', top: 72, left: 'var(--ln-s-4)', right: 'var(--ln-s-4)', zIndex: 5 }}>
           <DevDaySkipBar offset={devDayOffset} onAdvance={() => setDevDayOffset(o => o + 1)} onReset={() => setDevDayOffset(0)} />
