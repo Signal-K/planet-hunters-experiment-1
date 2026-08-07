@@ -61,6 +61,7 @@ export const DEFAULT_STATE: GameState = {
     deepSpaceTelescopeLevel: 1,
     deepSpaceTelescopeLaunchedAt: null,
     deepSpaceTelescopeMissionCompletedAt: null,
+    scanStationMissionCompletedAt: null,
     licenseGrade: 'Grade I',
     researchXP: 0,
     unlockedBlueprints: [],

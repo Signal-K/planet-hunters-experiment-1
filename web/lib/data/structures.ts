@@ -107,8 +107,14 @@ export function deepSpaceTelescopeUnlocked(opts: { satelliteMonitoringLevel?: nu
   )
 }
 
-export function structureUnlocked(structure: StructureBlueprint, opts: { refineryUnlocked?: boolean; academyResearched?: boolean; placed?: string[]; freeOperations?: boolean; satelliteMonitoringLevel?: number; clientMissions?: Record<string, number>; deepSpaceTelescopeMissionCompletedAt?: number | null } = {}): boolean {
-  if (structure.id === 'scan-station') return FEATURE_FLAGS.scanStation && !!opts.freeOperations
+export function structureUnlocked(structure: StructureBlueprint, opts: { refineryUnlocked?: boolean; academyResearched?: boolean; placed?: string[]; freeOperations?: boolean; satelliteMonitoringLevel?: number; clientMissions?: Record<string, number>; deepSpaceTelescopeMissionCompletedAt?: number | null; scanStationMissionCompletedAt?: number | null } = {}): boolean {
+  // KES-132: the feature flag now only decides when the
+  // story-scan-station-commission mission (see runtimeCatalog.ts) is
+  // offered as the on-ramp — completing that mission is what actually opens
+  // the build slot, matching the Deep Space Telescope pattern below.
+  if (structure.id === 'scan-station') {
+    return (FEATURE_FLAGS.scanStation && !!opts.freeOperations && !!opts.scanStationMissionCompletedAt) || !!opts.placed?.includes('scan-station')
+  }
   if (structure.id === 'satellite-monitoring-station') return !!opts.freeOperations
   if (structure.id === 'astronaut-academy') return !!opts.academyResearched || !!opts.placed?.includes('astronaut-academy')
   // KES-128: the numeric threshold (deepSpaceTelescopeUnlocked) now only

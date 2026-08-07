@@ -1,4 +1,4 @@
-.PHONY: help up up-ecosystem pb-up pb-stop down build web-deps logs e2e e2e-open web-dev web-build web-check pb-reset docker-disk docker-prune migrate seed
+.PHONY: help up up-ecosystem pb-up pb-stop down build web-deps logs e2e e2e-open web-dev pb-dev web-build web-check pb-reset docker-disk docker-prune migrate seed
 
 FRONTEND_COMPOSE := docker compose -f docker-compose.frontend.yml
 PARENT_COMPOSE   := docker compose -p navigation -f ../docker-compose.yml
@@ -35,6 +35,8 @@ help:
 	@echo "    test-e2e       Run Cypress against full E2E stack (shared-pb + landnam-pb + next-app)"
 	@echo "    e2e-open       Start stack + open Cypress UI"
 	@echo "    web-dev        Run Next.js dev server locally (no Docker)"
+	@echo "    pb-dev         Run Landnam PocketBase as a native binary on :8093 (no Docker) —"
+	@echo "                   web already defaults NEXT_PUBLIC_LANDNAM_PB_URL to this port"
 	@echo "    web-build      Production build locally"
 	@echo "    web-check      Typecheck + production build"
 	@echo "    pb-stop        Stop PocketBase services only (keeps volumes)"
@@ -101,6 +103,13 @@ e2e-open:
 
 web-dev:
 	cd web && npm run dev
+
+# PocketBase is a single static Go binary — Docker buys nothing for the local
+# inner dev loop and only costs build/image disk space. Data lands in
+# pocketbase/pb_data (gitignored), separate from the Docker-volume-backed
+# pb-up path so the two don't collide.
+pb-dev:
+	cd pocketbase && SHARED_PB_URL=$${SHARED_PB_URL:-http://localhost:8090} go run . serve --http=0.0.0.0:8093
 
 web-build:
 	cd web && npm run build

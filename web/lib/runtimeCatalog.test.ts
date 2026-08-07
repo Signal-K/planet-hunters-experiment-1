@@ -1,9 +1,11 @@
-import { describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { STATIC_CATALOG } from './catalog'
 import {
   buildRuntimeCatalog,
   DEEP_SPACE_TELESCOPE_MISSION_ID,
   DEEP_SPACE_TELESCOPE_TARGET_ID,
+  SCAN_STATION_MISSION_ID,
+  SCAN_STATION_TARGET_ID,
   TRANSIT_TELESCOPE_MISSION_ID,
   TRANSIT_TELESCOPE_TARGET_ID,
 } from './runtimeCatalog'
@@ -106,6 +108,57 @@ describe('buildRuntimeCatalog', () => {
       const catalog = buildRuntimeCatalog({ catalog: STATIC_CATALOG, freeOperations: true, missionsDone: 4, player })
       expect(catalog.missions.some(mission => mission.id === DEEP_SPACE_TELESCOPE_MISSION_ID)).toBe(false)
     }
+  })
+
+  describe('scan station commission mission (KES-132)', () => {
+    beforeEach(() => {
+      vi.stubEnv('NEXT_PUBLIC_FEATURE_SCAN_STATION', 'true')
+      vi.resetModules()
+    })
+
+    afterEach(() => {
+      vi.unstubAllEnvs()
+      vi.resetModules()
+    })
+
+    it('adds the scan station commission mission once Free Ops is reached and the flag is on', async () => {
+      const { buildRuntimeCatalog: freshBuild } = await import('./runtimeCatalog')
+      const { DEFAULT_STATE: freshDefault } = await import('./game-state')
+      const player = { ...freshDefault.player, freeOperations: true, scanStationMissionCompletedAt: null }
+      const catalog = freshBuild({ catalog: STATIC_CATALOG, freeOperations: true, missionsDone: 4, player })
+
+      expect(catalog.targets.some(target => target.id === SCAN_STATION_TARGET_ID)).toBe(true)
+      const commissionMission = catalog.missions.find(mission => mission.id === SCAN_STATION_MISSION_ID)
+      expect(commissionMission).not.toHaveProperty('client')
+      expect(commissionMission).toMatchObject({
+        tag: 'STORY',
+        payload: { type: 'scan-station-commission' },
+        payout: { francs: 0, affinity: 0 },
+        programReward: expect.objectContaining({ outcome: expect.stringContaining('commissioned') }),
+      })
+    })
+
+    it('does not offer the mission with the feature flag off, even in Free Ops', async () => {
+      vi.unstubAllEnvs()
+      vi.resetModules()
+      const { buildRuntimeCatalog: freshBuild } = await import('./runtimeCatalog')
+      const { DEFAULT_STATE: freshDefault } = await import('./game-state')
+      const player = { ...freshDefault.player, freeOperations: true }
+      const catalog = freshBuild({ catalog: STATIC_CATALOG, freeOperations: true, missionsDone: 4, player })
+      expect(catalog.missions.some(mission => mission.id === SCAN_STATION_MISSION_ID)).toBe(false)
+    })
+
+    it('stops offering the mission once it has been completed or the station is already placed', async () => {
+      const { buildRuntimeCatalog: freshBuild } = await import('./runtimeCatalog')
+      const { DEFAULT_STATE: freshDefault } = await import('./game-state')
+      const completedPlayer = { ...freshDefault.player, freeOperations: true, scanStationMissionCompletedAt: Date.now() }
+      const placedPlayer = { ...freshDefault.player, freeOperations: true, placed: ['scan-station'] }
+
+      for (const player of [completedPlayer, placedPlayer]) {
+        const catalog = freshBuild({ catalog: STATIC_CATALOG, freeOperations: true, missionsDone: 4, player })
+        expect(catalog.missions.some(mission => mission.id === SCAN_STATION_MISSION_ID)).toBe(false)
+      }
+    })
   })
 
   it('turns discovered exoplanets into reachable survey missions and catalog targets', () => {

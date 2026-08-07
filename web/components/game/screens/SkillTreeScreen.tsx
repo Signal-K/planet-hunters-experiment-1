@@ -8,6 +8,7 @@ import { UI_ZONES } from '@/lib/ui-zones'
 import { SKILL_NODES, canUnlockSkillNode, hasSkill } from '@/lib/data/skills'
 import { LICENSE_GRADE_ORDER, LICENSE_GRADE_XP_GATES } from '@/lib/systems/ProgressionSystem'
 import type { LicenseGrade } from '@/lib/game-types'
+import SkillTreeCoach, { useSkillTreeCoach } from '@/components/game/SkillTreeCoach'
 
 interface Firsts {
   firstMissionDone: boolean
@@ -43,14 +44,19 @@ export default function SkillTreeScreen({
   const nextGrade = LICENSE_GRADE_ORDER[gradeIndex + 1]
   const nextGateXP = nextGrade ? LICENSE_GRADE_XP_GATES[nextGrade] : null
   const canUpgrade = !!nextGrade && researchXP >= (nextGateXP ?? Infinity)
+  const coach = useSkillTreeCoach()
 
   return (
-    <div className="game-screen" style={{ position: 'relative', width: '100%', height: '100%', minHeight: '100%', display: 'flex', flexDirection: 'column' }}>
+    <div className="game-screen" data-testid="skill-tree-screen" style={{ position: 'relative', width: '100%', height: '100%', minHeight: '100%', display: 'flex', flexDirection: 'column' }}>
       <TopBar eyebrow="EARTH BASE · TRAINING" title="Skill Tree" onBack={onBack} solid />
+      {coach.visible && <SkillTreeCoach onDismiss={coach.dismiss} />}
 
       <div data-ui-zone={UI_ZONES.screenContent} style={{ flex: 1, overflowY: 'auto', padding: '16px', marginTop: 56, display: 'flex', flexDirection: 'column', gap: 16 }}>
         <Panel accent="var(--ln-cyan)">
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 8 }}>
+          <div
+            title="License Grade raises the ceiling on what you're allowed to build and fly. It's earned with Research XP and is separate from Skill Points below."
+            style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 8 }}
+          >
             <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 13, fontWeight: 800, color: '#e6efff' }}>License Grade</div>
             <StatusPill kind="info">{licenseGrade}</StatusPill>
           </div>
@@ -78,7 +84,12 @@ export default function SkillTreeScreen({
               const unlocked = hasSkill(unlockedSkillNodes, node.id)
               const affordable = canUnlockSkillNode({ id: node.id, skillPoints, unlockedSkillNodes })
               return (
-                <Panel key={node.id} accent={unlocked ? 'var(--ln-ok)' : 'var(--ln-cyan)'} style={{ opacity: unlocked ? 1 : (affordable ? 1 : 0.5) }}>
+                <Panel
+                  key={node.id}
+                  accent={unlocked ? 'var(--ln-ok)' : 'var(--ln-cyan)'}
+                  style={{ opacity: unlocked ? 1 : (affordable ? 1 : 0.5) }}
+                  title={`${node.name} (${node.branch}) — ${node.description}`}
+                >
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8, marginBottom: 6 }}>
                     <div>
                       <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 8, fontWeight: 700, letterSpacing: '0.18em', color: '#6b7fa3', textTransform: 'uppercase' }}>{node.branch}</div>

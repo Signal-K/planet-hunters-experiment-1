@@ -580,6 +580,9 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
           deepSpaceTelescopeMissionCompletedAt: mission?.payload?.type === 'deep-space-survey'
             ? (s.player.deepSpaceTelescopeMissionCompletedAt ?? Date.now())
             : s.player.deepSpaceTelescopeMissionCompletedAt,
+          scanStationMissionCompletedAt: mission?.payload?.type === 'scan-station-commission'
+            ? (s.player.scanStationMissionCompletedAt ?? Date.now())
+            : s.player.scanStationMissionCompletedAt,
         },
         lastCargo: null,
         deliveredCargo: null,

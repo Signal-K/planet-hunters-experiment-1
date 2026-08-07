@@ -2,33 +2,31 @@
 
 import { useEffect, useState } from 'react'
 
-// Self-contained "Mission Coach" walkthrough for the Scan Station, modeled
-// on ObservatoryCoach.tsx / AcademyCoach.tsx. Deliberately NOT wired into
-// the global M1-M3 onboarding stepper — this is a narrower, screen-local
-// beat shown once (persisted in localStorage) the first time a player
-// opens the Scan Station. KES-129: the screen shipped with real mechanics
-// but no rationale for why a player would bother scanning before landing.
-// KES-132: reaching this screen now requires completing the
-// story-scan-station-commission mission (see runtimeCatalog.ts) rather than
-// a bare feature flag, so the first step below leads with that.
+// Self-contained "Mission Coach" walkthrough for the Free Ops Build screen,
+// modeled on ScanStationCoach.tsx / AsteroidDiscoveryCoach.tsx. Deliberately
+// NOT wired into the global M1-M3 onboarding stepper — this is a narrower,
+// screen-local beat shown once (persisted in localStorage) the first time a
+// player opens Build with no mission/target selected. KES-133: this is the
+// main post-tutorial entry point into the Build flow but shipped with no
+// explanation of how the two paths (own-program vs. client work) differ.
 const STEPS = [
   {
-    title: 'SCOUT BEFORE YOU LAND',
-    body: 'A remote scan surveys a target from orbit — no rocket required. It reveals mineral deposits and terrain before you commit a launch to it.',
+    title: 'BUILD HAS TWO PATHS',
+    body: 'Every launch here starts from one of two places: your own operation, or a client request. Pick a path and Build shows the rocket that fits it.',
   },
   {
-    title: 'THREE SCANS TO MAP',
-    body: 'Each target needs 3 completed scans to fully map its deposits and grant landing clearance. Partial scans still reveal a fraction of what is down there.',
+    title: 'YOUR OWN OPERATION',
+    body: 'Launch infrastructure such as satellites, or run a self-directed mining mission and sell the haul yourself — no client, no fixed payout.',
   },
   {
-    title: 'A LIMITED DAILY RESOURCE',
-    body: 'You get 5 scans per day (6 once the Scan Station is staffed by Academy crew). Each scan takes 10 minutes and also earns Research XP on collection.',
+    title: 'CLIENT WORK',
+    body: 'Browse client missions first and accept one. Once accepted, Build shows the selected target, mission, and the rocket needed to launch it.',
   },
 ]
 
-const STORAGE_KEY = 'landnam_scan_station_coach_seen_v1'
+const STORAGE_KEY = 'landnam_free_ops_build_coach_seen_v1'
 
-export function useScanStationCoach() {
+export function useFreeOpsBuildCoach() {
   const [visible, setVisible] = useState(false)
 
   useEffect(() => {
@@ -47,13 +45,13 @@ export function useScanStationCoach() {
   return { visible, dismiss }
 }
 
-export default function ScanStationCoach({ onDismiss }: { onDismiss: () => void }) {
+export default function FreeOpsBuildCoach({ onDismiss }: { onDismiss: () => void }) {
   const [step, setStep] = useState(0)
   const current = STEPS[step]
 
   return (
     <div
-      data-testid="scan-station-coach"
+      data-testid="free-ops-build-coach"
       style={{
         position: 'absolute',
         top: 70, left: 10, right: 10, zIndex: 60,
@@ -81,7 +79,7 @@ export default function ScanStationCoach({ onDismiss }: { onDismiss: () => void 
           </div>
         </div>
         <button
-          data-testid="scan-station-coach-skip"
+          data-testid="free-ops-build-coach-skip"
           onClick={onDismiss}
           style={{ fontFamily: 'var(--ln-font-display)', fontSize: 8, letterSpacing: '0.08em', color: 'var(--ln-text-muted)', background: 'none', border: 'none', cursor: 'pointer', textTransform: 'uppercase', padding: 2 }}
         >
@@ -102,7 +100,7 @@ export default function ScanStationCoach({ onDismiss }: { onDismiss: () => void 
           ))}
         </div>
         <button
-          data-testid="scan-station-coach-next"
+          data-testid="free-ops-build-coach-next"
           onClick={() => (step < STEPS.length - 1 ? setStep(s => s + 1) : onDismiss())}
           style={{
             fontFamily: 'var(--ln-font-display)', fontSize: 10, fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase',

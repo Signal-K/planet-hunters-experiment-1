@@ -30,11 +30,15 @@ interface PanelProps {
   /** 'glass' = Open Design "Glass HUD" frosted surface (dark-tinted translucency,
    * not the literal white glass, to keep --ln-text legible — see globals.css). */
   surface?: 'solid' | 'glass'
+  /** Native hover tooltip on the panel root — used sparingly for a quick
+   * hover explanation (e.g. SkillTreeScreen's per-node tooltips) without a
+   * dedicated tooltip component. */
+  title?: string
 }
 
-export default function Panel({ children, style, accent = '#3fa9ff', variant = 'default', surface = 'solid' }: PanelProps) {
+export default function Panel({ children, style, accent = '#3fa9ff', variant = 'default', surface = 'solid', title }: PanelProps) {
   return (
-    <div className={surface === 'glass' ? 'ln-glass-panel' : undefined} style={{
+    <div title={title} className={surface === 'glass' ? 'ln-glass-panel' : undefined} style={{
       position: 'relative',
       background: surface === 'glass' ? undefined : 'var(--ln-panel-2)',
       border: surface === 'glass' ? undefined : `1px solid ${accent}40`,

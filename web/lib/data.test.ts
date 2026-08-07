@@ -641,13 +641,15 @@ describe('Scanning station constants and structure seed', () => {
     expect(scanner && structureUnlocked(scanner, { placed: ['launchpad'] })).toBe(false)
   })
 
-  it('unlocks in Free Operations once NEXT_PUBLIC_FEATURE_SCAN_STATION=true (KES-129: shipped this sprint)', async () => {
+  it('requires the story-scan-station-commission mission before unlocking, even with the flag and Free Ops on (KES-132)', async () => {
     vi.stubEnv('NEXT_PUBLIC_FEATURE_SCAN_STATION', 'true')
     vi.resetModules()
     const { STRUCTURES: freshStructures, structureUnlocked: freshUnlocked } = await import('./data')
     const scanner = freshStructures.find(s => s.id === 'scan-station')
     expect(scanner && freshUnlocked(scanner, { freeOperations: false })).toBe(false)
-    expect(scanner && freshUnlocked(scanner, { freeOperations: true })).toBe(true)
+    expect(scanner && freshUnlocked(scanner, { freeOperations: true })).toBe(false)
+    expect(scanner && freshUnlocked(scanner, { freeOperations: true, scanStationMissionCompletedAt: Date.now() })).toBe(true)
+    expect(scanner && freshUnlocked(scanner, { placed: ['scan-station'] })).toBe(true)
     vi.unstubAllEnvs()
     vi.resetModules()
   })

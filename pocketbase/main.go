@@ -4,6 +4,7 @@ import (
 	"log"
 	"math"
 	"os"
+	"slices"
 	"strings"
 
 	"github.com/pocketbase/pocketbase"
@@ -281,7 +282,7 @@ func ensureCollections(app core.App) {
 		col.Fields.Add(&core.JSONField{Name: "cost_materials", MaxSize: 1000})
 		col.Fields.Add(&core.SelectField{
 			Name: "unlock_trigger_type", MaxSelect: 1,
-			Values: []string{"always", "client-mission-trigger", "manual"},
+			Values: []string{"always", "client-mission-trigger", "academy-research", "deep-space-telescope-unlock", "manual"},
 		})
 		col.Fields.Add(&core.TextField{Name: "unlocks_at", Max: 200})
 		col.Fields.Add(&core.TextField{Name: "description", Max: 400})
@@ -668,14 +669,29 @@ func migrateStructureBlueprints(app core.App) {
 	if err != nil {
 		return
 	}
-	if col.Fields.GetByName("takeon_type") != nil {
+	changed := false
+	if col.Fields.GetByName("takeon_type") == nil {
+		col.Fields.Add(&core.TextField{Name: "takeon_type", Max: 40})
+		changed = true
+	}
+	// academy-research and deep-space-telescope-unlock were added after the
+	// initial three-value enum shipped; existing collections need this
+	// backfilled or seeding astronaut-academy/deep-space-telescope blueprints
+	// fails validation on every restart.
+	if triggerField, ok := col.Fields.GetByName("unlock_trigger_type").(*core.SelectField); ok {
+		want := []string{"always", "client-mission-trigger", "academy-research", "deep-space-telescope-unlock", "manual"}
+		if !slices.Equal(triggerField.Values, want) {
+			triggerField.Values = want
+			changed = true
+		}
+	}
+	if !changed {
 		return
 	}
-	col.Fields.Add(&core.TextField{Name: "takeon_type", Max: 40})
 	if err := app.Save(col); err != nil {
 		log.Printf("migrateStructureBlueprints: failed to save: %v", err)
 	} else {
-		log.Printf("migrateStructureBlueprints: added takeon_type field")
+		log.Printf("migrateStructureBlueprints: migrated fields")
 	}
 }
 

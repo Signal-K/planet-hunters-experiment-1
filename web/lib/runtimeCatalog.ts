@@ -3,6 +3,7 @@ import type { Mission, Target } from './data'
 import type { Player } from './game-types'
 import { diplomacyPayoutMultiplier, jointMissionUnlocked } from './systems/AcademySystem'
 import { deepSpaceTelescopeUnlocked } from './data/structures'
+import { FEATURE_FLAGS } from './featureFlags'
 
 export const TRANSIT_TELESCOPE_TARGET_ID = 'earth-orbit-transit-telescope'
 export const TRANSIT_TELESCOPE_MISSION_ID = 'story-transit-telescope-launch'
@@ -31,6 +32,24 @@ export const DEEP_SPACE_TELESCOPE_TARGET: Target = {
   orbit: 1,
   difficulty: 'L1',
   brief: 'High-orbit survey lane for calibrating a long-baseline instrument against the Minor Planet Center feed.',
+  minerals: [],
+}
+
+// KES-132: the Scan Station previously unlocked its build slot off a bare
+// feature flag (FEATURE_FLAGS.scanStation) plus reaching Free Operations,
+// with no narrative on-ramp — unlike the Transit/Deep Space Telescope
+// story-mission pattern above. This mission is the on-ramp; the flag now
+// only decides when it's offered, and completing it opens the build slot.
+export const SCAN_STATION_TARGET_ID = 'earth-orbit-scan-station-commission'
+export const SCAN_STATION_MISSION_ID = 'story-scan-station-commission'
+
+export const SCAN_STATION_TARGET: Target = {
+  id: SCAN_STATION_TARGET_ID,
+  name: 'Earth Orbit',
+  type: 'planet',
+  orbit: 1,
+  difficulty: 'L1',
+  brief: 'Low Earth orbit shakedown lane for commissioning the Scan Station before it comes online at Earth Base.',
   minerals: [],
 }
 
@@ -67,11 +86,18 @@ export function buildRuntimeCatalog({
     && deepSpaceTelescopeUnlocked({ satelliteMonitoringLevel: player?.satelliteMonitoringLevel, clientMissions: player?.clientMissions })
   const hasActiveDeepSpaceTelescopeMission = missionId === DEEP_SPACE_TELESCOPE_MISSION_ID || targetId === DEEP_SPACE_TELESCOPE_TARGET_ID
   const shouldIncludeDeepSpaceTelescopeMission = shouldOfferDeepSpaceTelescopeMission || hasActiveDeepSpaceTelescopeMission
+  const shouldOfferScanStationMission = FEATURE_FLAGS.scanStation
+    && freeOperations
+    && !player?.scanStationMissionCompletedAt
+    && !player?.placed?.includes('scan-station')
+  const hasActiveScanStationMission = missionId === SCAN_STATION_MISSION_ID || targetId === SCAN_STATION_TARGET_ID
+  const shouldIncludeScanStationMission = shouldOfferScanStationMission || hasActiveScanStationMission
   const existingTargetIds = new Set(catalog.targets.map(target => target.id))
   const mergedTargets = [
     ...catalog.targets,
     ...(shouldIncludeTransitTelescopeMission && !existingTargetIds.has(TRANSIT_TELESCOPE_TARGET.id) ? [TRANSIT_TELESCOPE_TARGET] : []),
     ...(shouldIncludeDeepSpaceTelescopeMission && !existingTargetIds.has(DEEP_SPACE_TELESCOPE_TARGET.id) ? [DEEP_SPACE_TELESCOPE_TARGET] : []),
+    ...(shouldIncludeScanStationMission && !existingTargetIds.has(SCAN_STATION_TARGET.id) ? [SCAN_STATION_TARGET] : []),
     ...discoveredTargetList.filter(target => !existingTargetIds.has(target.id)),
   ]
   const relationshipMissions = player
@@ -147,6 +173,35 @@ export function buildRuntimeCatalog({
         payout: { francs: 0, affinity: 0 },
       }]
     : []
+  const scanStationMission: Mission[] = shouldIncludeScanStationMission && !existingMissionIds.has(SCAN_STATION_MISSION_ID)
+    ? [{
+        id: SCAN_STATION_MISSION_ID,
+        title: 'Commission the Scan Station',
+        brief: 'Fly a shakedown pass in Earth orbit to calibrate the Scan Station before it comes online at Earth Base — the same commissioning pass every remote instrument gets before its build slot opens.',
+        tag: 'STORY',
+        difficulty: 'L1',
+        locked: false,
+        sequence: missionsDone + 1,
+        unlockAt: 'Reach Free Operations',
+        targetId: SCAN_STATION_TARGET_ID,
+        payload: {
+          type: 'scan-station-commission',
+          name: 'Scan Station Shakedown',
+          cargoCost: 0,
+        },
+        requires: {
+          minerals: {},
+          cargo_min: 0,
+          drill_tier: 1,
+          max_orbit: 1,
+        },
+        programReward: {
+          researchXP: 0,
+          outcome: 'Scan Station commissioned · remote scanning online',
+        },
+        payout: { francs: 0, affinity: 0 },
+      }]
+    : []
   const surveyMissions: Mission[] = discoveredTargetList
     .map(target => ({
       id: `exo-survey-${target.id}`,
@@ -204,6 +259,6 @@ export function buildRuntimeCatalog({
   return {
     ...catalog,
     targets: mergedTargets,
-    missions: [...relationshipMissions, ...transitTelescopeMission, ...deepSpaceTelescopeMission, ...surveyMissions, ...jointMissions],
+    missions: [...relationshipMissions, ...transitTelescopeMission, ...deepSpaceTelescopeMission, ...scanStationMission, ...surveyMissions, ...jointMissions],
   }
 }

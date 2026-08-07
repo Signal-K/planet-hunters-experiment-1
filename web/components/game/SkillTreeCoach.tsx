@@ -2,33 +2,32 @@
 
 import { useEffect, useState } from 'react'
 
-// Self-contained "Mission Coach" walkthrough for the Scan Station, modeled
-// on ObservatoryCoach.tsx / AcademyCoach.tsx. Deliberately NOT wired into
+// Self-contained "Mission Coach" walkthrough for the Skill Tree, modeled on
+// ScanStationCoach.tsx / FreeOpsBuildCoach.tsx. Deliberately NOT wired into
 // the global M1-M3 onboarding stepper — this is a narrower, screen-local
-// beat shown once (persisted in localStorage) the first time a player
-// opens the Scan Station. KES-129: the screen shipped with real mechanics
-// but no rationale for why a player would bother scanning before landing.
-// KES-132: reaching this screen now requires completing the
-// story-scan-station-commission mission (see runtimeCatalog.ts) rather than
-// a bare feature flag, so the first step below leads with that.
+// beat shown once (persisted in localStorage) the first time a player opens
+// the Skill Tree. KES-134: the screen shipped with per-node descriptions but
+// no explanation of where skill points come from or what License Grade is
+// for — Liam decided (2026-08-07) this stays plain DOM/CSS rather than a
+// PixiJS node-graph, so this coach is the full remediation for the gap.
 const STEPS = [
   {
-    title: 'SCOUT BEFORE YOU LAND',
-    body: 'A remote scan surveys a target from orbit — no rocket required. It reveals mineral deposits and terrain before you commit a launch to it.',
+    title: 'SKILL POINTS ARE EARNED, NOT BOUGHT',
+    body: 'Skill Points come from milestones — completed missions, first launches, research thresholds. Spend them here on permanent upgrades to mining, cargo, range, and engineering.',
   },
   {
-    title: 'THREE SCANS TO MAP',
-    body: 'Each target needs 3 completed scans to fully map its deposits and grant landing clearance. Partial scans still reveal a fraction of what is down there.',
+    title: 'LICENSE GRADE GATES YOUR CEILING',
+    body: 'Research XP raises your License Grade. A higher grade does not spend XP — it raises the ceiling on what you are allowed to build and fly, independent of what Skill Points you have unlocked.',
   },
   {
-    title: 'A LIMITED DAILY RESOURCE',
-    body: 'You get 5 scans per day (6 once the Scan Station is staffed by Academy crew). Each scan takes 10 minutes and also earns Research XP on collection.',
+    title: 'UNLOCKS ARE PERMANENT',
+    body: 'Every node you unlock here stays unlocked for the rest of the game — there is no respec. Spend on the branch that matches what you are doing next.',
   },
 ]
 
-const STORAGE_KEY = 'landnam_scan_station_coach_seen_v1'
+const STORAGE_KEY = 'landnam_skill_tree_coach_seen_v1'
 
-export function useScanStationCoach() {
+export function useSkillTreeCoach() {
   const [visible, setVisible] = useState(false)
 
   useEffect(() => {
@@ -47,13 +46,13 @@ export function useScanStationCoach() {
   return { visible, dismiss }
 }
 
-export default function ScanStationCoach({ onDismiss }: { onDismiss: () => void }) {
+export default function SkillTreeCoach({ onDismiss }: { onDismiss: () => void }) {
   const [step, setStep] = useState(0)
   const current = STEPS[step]
 
   return (
     <div
-      data-testid="scan-station-coach"
+      data-testid="skill-tree-coach"
       style={{
         position: 'absolute',
         top: 70, left: 10, right: 10, zIndex: 60,
@@ -81,7 +80,7 @@ export default function ScanStationCoach({ onDismiss }: { onDismiss: () => void 
           </div>
         </div>
         <button
-          data-testid="scan-station-coach-skip"
+          data-testid="skill-tree-coach-skip"
           onClick={onDismiss}
           style={{ fontFamily: 'var(--ln-font-display)', fontSize: 8, letterSpacing: '0.08em', color: 'var(--ln-text-muted)', background: 'none', border: 'none', cursor: 'pointer', textTransform: 'uppercase', padding: 2 }}
         >
@@ -102,7 +101,7 @@ export default function ScanStationCoach({ onDismiss }: { onDismiss: () => void 
           ))}
         </div>
         <button
-          data-testid="scan-station-coach-next"
+          data-testid="skill-tree-coach-next"
           onClick={() => (step < STEPS.length - 1 ? setStep(s => s + 1) : onDismiss())}
           style={{
             fontFamily: 'var(--ln-font-display)', fontSize: 10, fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase',

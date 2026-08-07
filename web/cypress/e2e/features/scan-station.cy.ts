@@ -61,9 +61,24 @@ function visitWithState(path: string, screen: GameState['screen'], playerOverrid
 }
 
 describe('Scan Station', () => {
-  it('is buildable from Earth Base once Free Operations is reached (feature flag on)', () => {
-    visitWithState('/game/build', 'build', { placed: ['launchpad'] })
-    cy.contains('Scanning Station', { timeout: 10000 }).should('be.visible')
+  it('is listed at Build/Place once Free Operations is reached, but locked until the commission mission is done (KES-132)', () => {
+    visitWithState('/game/build', 'build', { placed: ['launchpad'], scanStationMissionCompletedAt: null })
+    cy.contains('button', 'Scanning Station', { timeout: 10000 })
+      .scrollIntoView()
+      .should('be.visible')
+      .and('be.disabled')
+  })
+
+  it('unlocks Scan Station at Build/Place once the commission mission is completed (KES-132)', () => {
+    visitWithState('/game/build', 'build', { placed: ['launchpad'], scanStationMissionCompletedAt: Date.now() })
+    // Mirrors the hydration-race wait used for Deep Space Telescope in
+    // asteroid-discovery-mission.cy.ts — the catalog re-renders once the
+    // async fetch settles, which can detach and replace this button.
+    cy.wait(1500)
+    cy.contains('button', 'Scanning Station', { timeout: 10000 })
+      .scrollIntoView()
+      .should('be.visible')
+      .and('not.be.disabled')
   })
 
   it('shows the rationale copy, scan counter, and the ScanStationCoach on first visit', () => {

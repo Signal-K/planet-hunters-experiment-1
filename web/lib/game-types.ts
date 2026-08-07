@@ -178,6 +178,10 @@ export interface Player {
   // deepSpaceTelescopeLaunchedAt above, which marks when the structure was
   // physically placed, not when the player earned the right to build it.
   deepSpaceTelescopeMissionCompletedAt?: number | null
+  // KES-132: completing the story-scan-station-commission mission — same
+  // on-ramp pattern as deepSpaceTelescopeMissionCompletedAt above, gating
+  // the Scan Station's build slot instead of the raw feature flag.
+  scanStationMissionCompletedAt?: number | null
   scansUsedToday?: number
   scanDate?: string
   activeScan?: { targetId: string; completesAt: number } | null
