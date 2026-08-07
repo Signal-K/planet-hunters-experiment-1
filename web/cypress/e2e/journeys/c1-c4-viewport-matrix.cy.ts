@@ -100,7 +100,7 @@ describe('C1–C4 screen contracts across viewport classes', () => {
 
       it('renders the Free Ops hub, client board, and own-program launchpad without losing primary actions', () => {
         visit('/game', stateWith('hub'))
-        cy.contains('Earth Base', { timeout: 10000 }).should('be.visible')
+        cy.contains('h1', 'Earth Base', { timeout: 10000 }).should('be.visible')
         cy.get('[data-testid="progression-card-next-mission"]', { timeout: 10000 })
           .scrollIntoView().should('be.visible')
 
@@ -112,7 +112,7 @@ describe('C1–C4 screen contracts across viewport classes', () => {
 
         visit('/game/launchpad', stateWith('launchpad'))
         cy.contains('Your Program', { timeout: 10000 }).should('be.visible')
-        cy.get('[data-testid="mission-card-freeops-self-directed-mining"]', { timeout: 10000 })
+        cy.get('[data-testid="launchpad-program-operation-btn"]', { timeout: 10000 })
           .scrollIntoView().should('be.visible')
       })
 

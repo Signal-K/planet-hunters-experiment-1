@@ -104,9 +104,16 @@ function navToMissions() {
   cy.window().then(win => {
     const isDesktop = win.innerWidth >= 1024
     if (isDesktop) {
-      // Sidebar is always visible on desktop; bottom tab bar is display:none.
+      // The old always-on desktop sidebar nav (`.desktop-sidebar`,
+      // `sidebar-nav-missions`) was retired in favour of screen-embedded
+      // navigation — see globals.css's ".desktop-sidebar { display: none }"
+      // and the comment on `.hub-desktop-nav`. During an active tutorial
+      // coach (hasCoach true), the Launchpad's own "View Missions" callout
+      // is also suppressed (HubScreen.tsx), so the one nav element that's
+      // always present regardless of desktop/mobile or tutorial state is
+      // the HUD strip's jobs chip (`onJobsClick` -> `onNav('missions')`).
       cy.get('[data-testid="bottom-tab-missions"]').should('not.be.visible')
-      cy.get('[data-testid="sidebar-nav-missions"]').should('be.visible').click()
+      cy.get('[data-testid="hud-jobs-chip"]').should('be.visible').click()
     } else {
       cy.get('[data-testid="bottom-tab-missions"]').should('be.visible').click()
     }
@@ -381,14 +388,18 @@ const viewportsToRun = VIEWPORTS.filter(v => !VIEWPORT_FILTER || v.label === VIE
 // Explicitly asserts that on desktop the bottom tab bar is hidden and the
 // sidebar is shown — catching any regression where the CSS breakpoint breaks.
 
-if (!MISSION_FILTER) describe('Desktop layout: bottom tab bar hidden, sidebar visible', () => {
+if (!MISSION_FILTER) describe('Desktop layout: bottom tab bar hidden, sidebar retired', () => {
   beforeEach(() => cy.viewport(1280, 800))
 
-  it('bottom-tab-missions is not visible and sidebar-nav-missions is visible on desktop hub', () => {
+  it('bottom-tab-missions and the retired sidebar are both hidden on desktop hub; the jobs chip reaches missions', () => {
     visitHub({ doneSteps: { 0: true } })
     cy.get('h1', { timeout: 10000 }).contains('Earth Base').should('be.visible')
     cy.get('[data-testid="bottom-tab-missions"]').should('not.be.visible')
-    cy.get('[data-testid="sidebar-nav-missions"]').should('be.visible')
+    // The old always-on desktop sidebar (`.desktop-sidebar`) is retired —
+    // CSS-hidden unconditionally (globals.css). `hud-jobs-chip` is the
+    // current always-present path to Missions regardless of tutorial state.
+    cy.get('[data-testid="sidebar-nav-missions"]').should('not.be.visible')
+    cy.get('[data-testid="hud-jobs-chip"]').should('be.visible')
   })
 
   it('tutorial coach on step 1 does NOT show a spot over the hidden bottom tab bar', () => {

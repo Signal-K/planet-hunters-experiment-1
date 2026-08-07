@@ -215,15 +215,27 @@ describe('Desk Review tickets — satellite/TESS level plumbing (STS-493)', () =
     })
 
     cy.wait('@subjects')
-    cy.contains('TESS ANOMALY', { timeout: 15000 }).should('be.visible')
 
+    // The screen deliberately keeps a just-classified candidate mounted to
+    // show the post-confirmation target-selection map rather than refetching
+    // in place (see the comment on TessDiscoveryScreen's fetch effect) — the
+    // next still-unclassified daily candidate only resolves on remount, so
+    // each loop iteration revisits the route instead of reusing one mount.
     for (let index = 1; index <= 3; index += 1) {
+      if (index > 1) {
+        cy.visit('/game/galaxy')
+        cy.wait('@subjects')
+      }
+      cy.get('[data-testid="tess-discovery-screen"]', { timeout: 15000 }).should('be.visible')
+      cy.contains('REVIEW', { timeout: 15000 }).should('be.visible')
       cy.get('[data-testid="tess-verdict-unsure"]', { timeout: 10000 }).should('be.visible').click()
       savedState().then(state => {
         expect(Object.keys(state.player.tessClassifications ?? {})).to.have.length(index)
       })
     }
 
+    cy.visit('/game/galaxy')
+    cy.wait('@subjects')
     cy.contains('No Reviewable Anomaly', { timeout: 15000 }).should('be.visible')
   })
 

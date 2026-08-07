@@ -91,7 +91,7 @@ describe('Clean start full game loop', () => {
     cy.get('[data-testid="build-plot-0"]').click()
     cy.contains('button', 'Confirm · Build Here').click()
 
-    cy.contains('Earth Base', { timeout: 10_000 }).should('be.visible')
+    cy.contains('h1', 'Earth Base', { timeout: 10_000 }).should('be.visible')
     cy.get('[data-testid="building-launchpad"]').should('be.visible')
     cy.get('[data-testid="bottom-tab-missions"]').click()
 

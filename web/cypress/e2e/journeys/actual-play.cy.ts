@@ -56,7 +56,7 @@ function playM1FromIntro() {
   cy.get('[data-testid="build-plot-0"]').click()
   cy.contains('button', 'Confirm · Build Here').click()
 
-  cy.contains('Earth Base', { timeout: 10000 }).should('be.visible')
+  cy.contains('h1', 'Earth Base', { timeout: 10000 }).should('be.visible')
   cy.get('[data-testid="building-launchpad"]').should('be.visible')
   navToMissions()
 

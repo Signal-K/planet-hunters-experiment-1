@@ -76,9 +76,17 @@ describe('Telescope construction/launch mission (STS-138)', () => {
     cy.contains('Launch a transit telescope').should('be.visible')
     cy.get('[data-testid="progression-card-transit-satellite"]').click({ force: true })
     cy.contains('Your Program', { timeout: 10000 }).should('be.visible')
-    cy.contains('Launch Transit Telescope', { timeout: 10000 }).should('be.visible')
-    cy.get('[data-testid="mission-card-story-transit-telescope-launch-program-reward"]')
-      .should('contain.text', 'FEED')
+    // The Launchpad's own-program scene shows a single aggregate OPS button
+    // rather than per-mission cards (see git history) — the mission title
+    // and program-reward FEED badge that used to render inline here now
+    // only surface one screen deeper, once the operation is picked.
+    cy.get('[data-testid="launchpad-program-operation-btn"]', { timeout: 10000 })
+      .should('be.visible')
+      .click({ force: true })
+    // Lands on the target picker (step 2 of 4: Mission -> Target -> Rocket
+    // -> Launch) — the telescope mission still requires an explicit target
+    // pick even though Earth Orbit is the only compatible target.
+    cy.contains('Pick Target', { timeout: 10000 }).should('be.visible')
 
     visitWithState('/game/missions', 'missions', {
       satelliteMonitoringBuilt: true,
@@ -93,14 +101,17 @@ describe('Telescope construction/launch mission (STS-138)', () => {
       satelliteMonitoringBuilt: true,
       transitSatelliteLaunchedAt: undefined,
     })
-    cy.get('[data-testid="mission-card-story-transit-telescope-launch"]', { timeout: 10000 })
+    // The Launchpad no longer lists own-program missions as separate cards
+    // (see git history) — the single OPS button picks the next own
+    // operation directly, which resolves to the telescope launch mission
+    // in this state.
+    cy.get('[data-testid="launchpad-program-operation-btn"]', { timeout: 10000 })
       .scrollIntoView()
       .click({ force: true })
-    // Picking the mission card lands on rocket-buy's "Select Rocket" step
-    // (step 3 of 4: Mission -> Target -> Rocket -> Launch), not a
-    // "Build Your Rocket" screen — that heading doesn't exist anywhere in
-    // the current flow.
-    cy.contains('Select Rocket', { timeout: 10000 }).should('be.visible')
+    // Lands on the target picker (step 2 of 4: Mission -> Target -> Rocket
+    // -> Launch) — the telescope mission still requires an explicit target
+    // pick even though Earth Orbit is the only compatible target.
+    cy.contains('Pick Target', { timeout: 10000 }).should('be.visible')
   })
 
   it('gates the TESS discovery screen behind the Satellite Monitoring Station', () => {

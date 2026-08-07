@@ -202,7 +202,6 @@ describe('UI zone contract', () => {
         })
 
         cy.get('[data-ui-zone="tutorial-rail"]').should('be.visible')
-        cy.get('[data-ui-zone="ambient-prompt"]').should('be.visible')
         // Desktop (>=1024px) deliberately has no bottom tab bar — its destinations
         // hang off the hub's own action rail instead (see `.hub-desktop-nav` /
         // `.bottom-tab-bar { display: none }` in HubScreen.tsx / globals.css).
@@ -211,12 +210,17 @@ describe('UI zone contract', () => {
           // at >=1024px) rather than unmounted, so assertNoZone (DOM-absence)
           // doesn't fit here the way it does for genuinely-unrendered zones.
           cy.get('[data-ui-zone="bottom-nav"]').should('not.be.visible')
+          // The push-notification opt-in prompt is desktop-only — CSS-hidden
+          // below 1024px (`.hub-push-opt-in { display: none }`), same
+          // present-but-hidden pattern as bottom-nav above.
+          cy.get('[data-ui-zone="ambient-prompt"]').should('be.visible')
+          assertZoneAvoids('ambient-prompt', 'tutorial-rail')
         } else {
           cy.get('[data-ui-zone="bottom-nav"]').should('be.visible')
           assertZoneAvoids('bottom-nav', 'tutorial-rail')
+          cy.get('[data-ui-zone="ambient-prompt"]').should('not.be.visible')
         }
         assertKnownZonesOnly()
-        assertZoneAvoids('ambient-prompt', 'tutorial-rail')
         assertNoZone('feedback-launcher')
       })
 

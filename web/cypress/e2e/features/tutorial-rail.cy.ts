@@ -113,11 +113,18 @@ describe('Tutorial rail regression', () => {
 
         cy.get('[data-testid="tutorial-coach-block"]').should('contain', 'Open a Mission')
 
-        // On desktop the sidebar missions button is always visible;
-        // on mobile the bottom tab bar's Missions tab is always visible.
+        // On mobile the bottom tab bar's Missions tab is always visible. The
+        // old always-on desktop sidebar nav (`.desktop-sidebar`,
+        // `sidebar-nav-missions`) was retired in favour of screen-embedded
+        // navigation (`.hub-desktop-nav`, clicking the Launchpad itself,
+        // the progression card's "View Missions" CTA) — at this exact
+        // tutorial step ("Click the Launchpad") there is no persistent
+        // missions-nav element on desktop by design, so just confirm the
+        // retired sidebar and the mobile-only bottom tab bar both stay
+        // hidden rather than asserting a stand-in that doesn't exist here.
         cy.window().then(win => {
           if (win.innerWidth >= 1024) {
-            cy.get('[data-testid="sidebar-nav-missions"]').should('be.visible')
+            cy.get('[data-testid="sidebar-nav-missions"]').should('not.be.visible')
             cy.get('[data-testid="bottom-tab-missions"]').should('not.be.visible')
           } else {
             cy.get('[data-testid="bottom-tab-missions"]').should('be.visible')
@@ -183,7 +190,13 @@ describe('Tutorial rail regression', () => {
         cy.get('[data-testid="building-launchpad"]').should('be.visible')
         cy.window().then(win => {
           if (win.innerWidth >= 1024) {
-            cy.get('[data-testid="sidebar-nav-missions"]').click()
+            // No standing sidebar nav on desktop (see the retirement note
+            // above). At Ops 0 with nothing in flight, HubScreen shows the
+            // launchpad's "Choose your first contract" callout instead of
+            // ProgressionCard (the two are deliberately mutually exclusive
+            // — see HubScreen.tsx) — its "View Missions" CTA is the current
+            // path once a mission is actionable.
+            cy.contains('button', 'View Missions', { timeout: 10000 }).click()
           } else {
             cy.get('[data-testid="bottom-tab-missions"]').click()
           }

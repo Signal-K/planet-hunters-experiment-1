@@ -157,7 +157,7 @@ describe('Survey QA flow', () => {
     cy.intercept('POST', '/api/milestone-feedback', { statusCode: 200, body: { ok: true } }).as('milestoneFeedback')
 
     visitGame()
-    cy.contains('Earth Base', { timeout: 10000 }).should('be.visible')
+    cy.contains('h1', 'Earth Base', { timeout: 10000 }).should('be.visible')
     cy.window({ timeout: 10000 })
       .its('__landnamTriggerSurvey')
       .should('be.a', 'function')
