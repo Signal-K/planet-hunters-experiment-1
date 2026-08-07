@@ -15,7 +15,7 @@ export default function FreeOpsBuildScreen({ onBack, onMissions, onInfrastructur
   const coach = useFreeOpsBuildCoach()
 
   return (
-    <div className="game-screen" data-testid="free-ops-build-screen" style={{ display: 'flex', flexDirection: 'column', position: 'relative' }}>
+    <div className="game-screen" data-testid="free-ops-build-screen" style={{ display: 'flex', flexDirection: 'column' }}>
       <TopBar eyebrow="FREE OPS · LAUNCH SETUP" title="Build an Operation" onBack={onBack} />
       {coach.visible && <FreeOpsBuildCoach onDismiss={coach.dismiss} />}
       <div className="screen-scroll" style={{ display: 'flex', flexDirection: 'column', gap: 12, padding: 14 }}>

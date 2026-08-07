@@ -93,7 +93,7 @@ test-e2e:
 e2e:
 	@status=0; \
 	$(E2E_COMPOSE) down --remove-orphans; \
-	CYPRESS_PROFILE=with-pb $(E2E_COMPOSE) up --build --remove-orphans --abort-on-container-exit --exit-code-from cypress pocketbase web cypress || status=$$?; \
+	CYPRESS_PROFILE=with-pb $(E2E_COMPOSE) up --build --remove-orphans --abort-on-container-exit --exit-code-from cypress web cypress || status=$$?; \
 	$(E2E_COMPOSE) down --remove-orphans; \
 	exit $$status
 
