@@ -1,12 +1,11 @@
 'use client'
 
-import { Boxes, Check, Gauge, Orbit, Pickaxe, Route, X } from 'lucide-react'
+import { Boxes, Check, Orbit, Pickaxe, Route, X } from 'lucide-react'
 import type { CrewMember, Mission, RocketConfig, Target } from '@/lib/data'
 import { ROCKET_MODELS, validateBuild } from '@/lib/data'
 import type { Catalog } from '@/lib/catalog'
 import Panel from '@/components/ui/Panel'
 import { PrimaryBtn } from '@/components/ui/Button'
-import IconBadge from '@/components/ui/IconBadge'
 import TutorialHighlight from '@/components/game/TutorialHighlight'
 import StatCard from '@/components/ui/StatCard'
 import MissionSetupShell, {
@@ -32,13 +31,6 @@ interface AssemblyScreenProps {
   crew?: CrewMember[]
   crewModuleFitted?: boolean
 }
-
-// Each ship "compartment" the mockup shows as a clickable cutaway room maps
-// 1:1 onto a real, already-computed starter-rocket stat — there is no
-// editable-parts system yet (rockets are unibody during onboarding),
-// so clicking a compartment just cross-highlights the matching stat card
-// below rather than mutating any build state.
-type RoomKey = 'payload' | 'fuel' | 'engine' | 'structure'
 
 // Real-data ceilings (drawn from the actual starter-rocket catalog, not
 // invented numbers) so the segmented meters reflect true headroom rather
@@ -190,20 +182,28 @@ function LaunchClearance({
       )}
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: compact ? 6 : 8 }}>
-        <ClearanceMetric label="Payload" value={`${rocket.stats.cargo} units`} icon={<Boxes size={16} />} compact={compact} />
-        <ClearanceMetric label="Range" value={`Orbit ${rocket.stats.maxOrbit}`} icon={<Orbit size={16} />} compact={compact} />
-        <ClearanceMetric label="Drill" value={`Tier ${rocket.stats.drillTier}`} icon={<Pickaxe size={16} />} compact={compact} />
+        <StatCard
+          variant="compact"
+          label="Payload"
+          value={`${rocket.stats.cargo} units`}
+          icon={<Boxes size={15} />}
+          meter={{ segments: METER_SEGMENTS, filled: (rocket.stats.cargo / MAX_CARGO) * METER_SEGMENTS }}
+        />
+        <StatCard
+          variant="compact"
+          label="Range"
+          value={`Orbit ${rocket.stats.maxOrbit}`}
+          icon={<Orbit size={15} />}
+          meter={{ segments: METER_SEGMENTS, filled: (rocket.stats.maxOrbit / MAX_ORBIT) * METER_SEGMENTS }}
+        />
+        <StatCard
+          variant="compact"
+          label="Drill"
+          value={`Tier ${rocket.stats.drillTier}`}
+          icon={<Pickaxe size={15} />}
+          meter={{ segments: METER_SEGMENTS, filled: (rocket.stats.drillTier / MAX_DRILL_TIER) * METER_SEGMENTS }}
+        />
       </div>
-    </div>
-  )
-}
-
-function ClearanceMetric({ label, value, icon, compact = false }: { label: string; value: string; icon: React.ReactNode; compact?: boolean }) {
-  return (
-    <div style={{ padding: compact ? '6px 8px' : '10px 9px', borderRadius: 8, background: 'rgba(112,217,234,0.07)', border: '1px solid rgba(112,217,234,0.2)' }}>
-      {!compact && <div style={{ color: 'var(--ln-cyan)' }}>{icon}</div>}
-      <div className="ln-micro" style={{ marginTop: compact ? 0 : 7 }}>{label}</div>
-      <div style={{ marginTop: 3, font: '700 11px var(--ln-font-display)', color: 'var(--ln-text)' }}>{value}</div>
     </div>
   )
 }
@@ -224,70 +224,3 @@ function ChecklistRow({ ok, label }: { ok: boolean; label: string }) {
   )
 }
 
-function RocketCutaway({
-  activeRoom,
-  onToggle,
-  rocket,
-}: {
-  activeRoom: RoomKey | null
-  onToggle: (room: RoomKey) => void
-  rocket: ReturnType<typeof getRequiredRocketModel>
-}) {
-  const roomStyle = (room: RoomKey, extra: React.CSSProperties = {}): React.CSSProperties => ({
-    position: 'absolute',
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 2,
-    border: `1.5px solid ${activeRoom === room ? 'var(--ln-cyan)' : 'rgba(112,217,234,0.5)'}`,
-    borderRadius: 6,
-    background: activeRoom === room ? 'rgba(112,217,234,0.24)' : 'rgba(112,217,234,0.07)',
-    color: 'var(--ln-text)',
-    cursor: 'pointer',
-    boxShadow: activeRoom === room ? '0 0 0 2px rgba(112,217,234,0.35), 0 0 18px rgba(112,217,234,0.4)' : 'none',
-    transition: 'background .15s, border-color .15s, box-shadow .15s',
-    ...extra,
-  })
-
-  const labelStyle: React.CSSProperties = {
-    font: '700 9px var(--ln-font-display)',
-    letterSpacing: '0.03em',
-    textTransform: 'uppercase',
-  }
-  const unitsStyle: React.CSSProperties = { font: '600 8px var(--ln-font-mono)', color: 'var(--ln-text-muted)' }
-
-  return (
-    <div style={{ width: '100%', maxWidth: 560, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}>
-      <div
-        data-testid="assembly-rocket-cutaway"
-        style={{ position: 'relative', width: '100%', aspectRatio: '600 / 260', filter: 'drop-shadow(0 0 26px rgba(112,217,234,0.22))' }}
-      >
-        <svg viewBox="0 0 600 260" fill="none" aria-hidden="true" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }}>
-          <path d="M18 130 L70 70 L520 70 Q580 130 520 190 L70 190 Z" fill="#0a2a56" stroke="#70d9ea" strokeWidth="2" />
-          <path d="M70 70v120M520 70v120M70 130h450" stroke="#70d9ea" strokeOpacity=".22" strokeDasharray="5 8" />
-          <ellipse cx="588" cy="130" rx="20" ry="16" fill="#70d9ea" opacity=".55" />
-          <ellipse cx="596" cy="130" rx="32" ry="11" fill="#70d9ea" opacity=".22" />
-          <circle cx="46" cy="105" r="3" fill="#70d9ea" opacity=".4" />
-          <circle cx="46" cy="155" r="3" fill="#70d9ea" opacity=".4" />
-        </svg>
-
-        <button type="button" onClick={() => onToggle('payload')} aria-pressed={activeRoom === 'payload'} style={roomStyle('payload', { left: '13%', top: '22%', width: '27%', height: '60%' })}>
-          <Boxes size={18} color="var(--ln-cyan)" /><strong style={labelStyle}>Payload Bay</strong><small style={unitsStyle}>{rocket.stats.cargo} units</small>
-        </button>
-        <button type="button" onClick={() => onToggle('fuel')} aria-pressed={activeRoom === 'fuel'} style={roomStyle('fuel', { left: '43%', top: '30%', width: '15%', height: '44%' })}>
-          <Orbit size={18} color="var(--ln-cyan)" /><strong style={labelStyle}>Fuel</strong><small style={unitsStyle}>L{rocket.stats.maxOrbit}</small>
-        </button>
-        <button type="button" onClick={() => onToggle('engine')} aria-pressed={activeRoom === 'engine'} style={roomStyle('engine', { left: '61%', top: '18%', width: '21%', height: '68%' })}>
-          <Pickaxe size={18} color="var(--ln-cyan)" /><strong style={labelStyle}>Engine</strong><small style={unitsStyle}>T{rocket.stats.drillTier}</small>
-        </button>
-        <button type="button" onClick={() => onToggle('structure')} aria-pressed={activeRoom === 'structure'} style={roomStyle('structure', { left: '13%', top: '84%', width: '69%', height: '13%', flexDirection: 'row', gap: 6 })}>
-          <Gauge size={16} color="var(--ln-cyan)" /><strong style={labelStyle}>Structure Frame</strong><small style={unitsStyle}>Single-use hull</small>
-        </button>
-      </div>
-      <div style={{ font: '600 10px var(--ln-font-body)', color: 'var(--ln-text-muted)', textAlign: 'center' }}>
-        Select a room to inspect the systems it drives.
-      </div>
-    </div>
-  )
-}
