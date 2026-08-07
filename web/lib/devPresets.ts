@@ -69,6 +69,21 @@ const ASTEROID_DISCOVERY_PLAYER: Player = {
   clientMissions: { 'helios-propulsion-depot': 2 },
 }
 
+// Academy management view: built + funded + one trained astronaut on the
+// roster, so the "Recent UI" shot lands on the tabbed management screen
+// (not the pre-build mission card) and the AcademyCoach fires on first load.
+// clientMissions needs TWO clients at affinity level 2 (>=10 jobs each) —
+// academyAffinityUnlocked() requires two, unlike the telescope's one.
+const ACADEMY_PLAYER: Player = {
+  ...POST_ONBOARDING_PLAYER,
+  placed: [...POST_ONBOARDING_PLAYER.placed, 'astronaut-academy'],
+  placementPlots: { ...POST_ONBOARDING_PLAYER.placementPlots, 'astronaut-academy': 2 },
+  clientMissions: { 'helios-propulsion-depot': 10, 'arcturus-battery-systems': 10 },
+  academyResearched: true,
+  academyFunded: true,
+  crew: [],
+}
+
 export interface DevShot {
   key: string
   label: string
@@ -153,6 +168,7 @@ export const DEV_GROUPS: DevGroup[] = [
       { key: 'ui-rover-mining', label: 'Rover Mining', hint: 'Starter-rover on-world mining timer state — missionsDone: 2, Free Ops NOT unlocked', stage: 'tutorial' },
       { key: 'ship-customizer', label: 'Ship Customiser', hint: 'Unlocked hangar interior view with Explorer room slots — missionsDone: 1, Free Ops NOT unlocked', stage: 'tutorial' },
       { key: 'ui-asteroid-discovery', label: 'Asteroid Discovery', hint: 'Deep Space Telescope built (STS-622) — live NEOCP candidate review, requires seeded asteroid_candidates on the shared backend. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
+      { key: 'ui-academy', label: 'Academy', hint: 'Astronaut Academy built + funded, two clients at affinity L2 — management view, AcademyCoach fires on first load. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
     ],
   },
 ]
@@ -463,6 +479,19 @@ export function resolvePreset(name: string): Partial<GameState> | null {
       return {
         screen: 'asteroid-discovery',
         player: ASTEROID_DISCOVERY_PLAYER,
+        tutorial: false,
+        doneSteps: M1_M2_M3_DONE,
+        missionId: null,
+        targetId: null,
+        rocket: { chassis: 'hull-mk2', propulsion: 'fusion-b2', drill: 'laser-t2' },
+        lastCargo: null,
+        popup: null,
+      }
+
+    case 'ui-academy':
+      return {
+        screen: 'academy',
+        player: ACADEMY_PLAYER,
         tutorial: false,
         doneSteps: M1_M2_M3_DONE,
         missionId: null,

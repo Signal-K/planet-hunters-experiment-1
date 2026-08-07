@@ -29,6 +29,7 @@ import TopBar from '@/components/ui/TopBar'
 import { GhostBtn, PrimaryBtn } from '@/components/ui/Button'
 import ProgressBar from '@/components/ui/ProgressBar'
 import AcademyCanvas from './AcademyCanvas'
+import AcademyCoach, { useAcademyCoach } from '@/components/game/AcademyCoach'
 import styles from './AcademyScreen.module.css'
 
 type Tab = 'roster' | 'training' | 'hire' | 'staffing' | 'partners'
@@ -63,6 +64,8 @@ export default function AcademyScreen(props: AcademyScreenProps) {
   const sessions = props.player.crewTraining ?? []
   const sources = availableCrewSources(props.player, props.catalog.clients)
   const level = academyLevel(props.player)
+  const coach = useAcademyCoach()
+  const showCoach = coach.visible && built
 
   useEffect(() => {
     const id = window.setInterval(() => setNow(Date.now()), 1000)
@@ -239,6 +242,7 @@ export default function AcademyScreen(props: AcademyScreenProps) {
               )}
             </div>
           </div>
+          {showCoach && <AcademyCoach onDismiss={coach.dismiss} />}
         </>
       )}
     </div>
