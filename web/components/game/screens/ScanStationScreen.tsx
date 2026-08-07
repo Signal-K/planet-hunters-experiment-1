@@ -10,6 +10,7 @@ import type { Target } from '@/lib/data'
 import type { Player } from '@/lib/game-types'
 import { UI_ZONES } from '@/lib/ui-zones'
 import { formatCountdown } from '@/lib/format'
+import ScanStationCoach, { useScanStationCoach } from '@/components/game/ScanStationCoach'
 
 interface ScanStationScreenProps {
   player: Player
@@ -29,6 +30,7 @@ const SURVEY_LANDMARKS = ['crater field', 'high-albedo ridge']
 
 export default function ScanStationScreen({ player, targets, onBack, onStartScan, onCollectScan }: ScanStationScreenProps) {
   const [now, setNow] = useState(() => Date.now())
+  const coach = useScanStationCoach()
 
   const today = todayDateKey()
   const scanDate = player.scanDate ?? ''
@@ -52,8 +54,9 @@ export default function ScanStationScreen({ player, targets, onBack, onStartScan
   const activeTarget = activeScan ? targets.find(t => t.id === activeScan.targetId) ?? null : null
 
   return (
-    <div className="game-screen">
+    <div className="game-screen" data-testid="scan-station-screen">
       <TopBar eyebrow="EARTH BASE · SCANNING" title="Scanning Station" onBack={onBack} />
+      {coach.visible && <ScanStationCoach onDismiss={coach.dismiss} />}
       <div className="screen-scroll" data-ui-zone={UI_ZONES.screenContent}>
 
         <Panel accent="var(--ln-cyan)" style={{ padding: 12 }}>
@@ -67,6 +70,9 @@ export default function ScanStationScreen({ player, targets, onBack, onStartScan
                 Scan targets to map deposits and unlock landing clearance.
               </div>
             </div>
+          </div>
+          <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 11, color: '#6b7fa3', marginTop: 8, lineHeight: 1.4 }}>
+            Scouting from orbit before you launch: a fully mapped target reveals its mineral spread and grants landing clearance, so cargo runs don&apos;t go in blind.
           </div>
           <div style={{ marginTop: 10 }}>
             <StatusPill kind={scansRemaining > 0 ? 'ok' : 'warn'}>
@@ -104,7 +110,7 @@ export default function ScanStationScreen({ player, targets, onBack, onStartScan
               </div>
             )}
             {scanReady && (
-              <PrimaryBtn onClick={onCollectScan}>
+              <PrimaryBtn onClick={onCollectScan} testId="scan-station-collect-btn">
                 COLLECT SCAN DATA
               </PrimaryBtn>
             )}
@@ -192,7 +198,7 @@ export default function ScanStationScreen({ player, targets, onBack, onStartScan
                 ) : isBeingScanned ? (
                   <StatusPill kind="info">SCAN IN PROGRESS</StatusPill>
                 ) : canScan ? (
-                  <GhostBtn onClick={() => onStartScan(target.id)}>
+                  <GhostBtn onClick={() => onStartScan(target.id)} testId={`scan-station-start-scan-${target.id}`}>
                     START SCAN
                   </GhostBtn>
                 ) : !activeScan && scansRemaining <= 0 ? (

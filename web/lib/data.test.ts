@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
 import {
   REFINING_VALUE_MULTIPLIER,
   STRUCTURE_PRICES,
@@ -628,7 +628,7 @@ describe('Scanning station constants and structure seed', () => {
     expect(SCANS_REQUIRED_TO_MAP).toBe(3)
   })
 
-  it('keeps the Sprint 12 scan-station structure dark in the Sprint 11 build', () => {
+  it('stays dark regardless of Free Ops when NEXT_PUBLIC_FEATURE_SCAN_STATION is unset', () => {
     const scanner = STRUCTURES.find(s => s.id === 'scan-station')
     expect(scanner).toBeDefined()
     expect(scanner?.cost).toBe(0)
@@ -639,6 +639,17 @@ describe('Scanning station constants and structure seed', () => {
   it('scan-station is not unlocked for launchpad-only context', () => {
     const scanner = STRUCTURES.find(s => s.id === 'scan-station')
     expect(scanner && structureUnlocked(scanner, { placed: ['launchpad'] })).toBe(false)
+  })
+
+  it('unlocks in Free Operations once NEXT_PUBLIC_FEATURE_SCAN_STATION=true (KES-129: shipped this sprint)', async () => {
+    vi.stubEnv('NEXT_PUBLIC_FEATURE_SCAN_STATION', 'true')
+    vi.resetModules()
+    const { STRUCTURES: freshStructures, structureUnlocked: freshUnlocked } = await import('./data')
+    const scanner = freshStructures.find(s => s.id === 'scan-station')
+    expect(scanner && freshUnlocked(scanner, { freeOperations: false })).toBe(false)
+    expect(scanner && freshUnlocked(scanner, { freeOperations: true })).toBe(true)
+    vi.unstubAllEnvs()
+    vi.resetModules()
   })
 
   it('defines a satellite monitoring station unlocked in Free Operations', () => {
