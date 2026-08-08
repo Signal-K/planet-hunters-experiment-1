@@ -12,6 +12,12 @@ import (
 	"github.com/pocketbase/pocketbase/plugins/migratecmd"
 	"github.com/pocketbase/pocketbase/tools/types"
 
+	// Registers compiled app migrations (core.AppMigrations) via each file's
+	// own init(). KES-149: these only ever actually run via `migrate up`,
+	// which fly.toml's release_command now invokes on every deploy — they do
+	// NOT run automatically just because this package is imported, and they
+	// do NOT run on a plain `serve` boot.
+	_ "landnam-backend/migrations"
 	"landnam-backend/sharedauth"
 )
 

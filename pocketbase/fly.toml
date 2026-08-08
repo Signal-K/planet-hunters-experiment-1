@@ -8,6 +8,14 @@ primary_region = "lhr"
 
 [build]
 
+# KES-149: runs once before the new version starts serving, on a temporary
+# machine that gets this app's normal mounts. Without this, compiled .go
+# app-migrations (core.AppMigrations, registered under pocketbase/migrations/)
+# never execute — the container's serve command never calls `migrate up`
+# itself, so migrations silently never ran on any prior deploy.
+[deploy]
+  release_command = "/pb/pocketbase migrate up --dir=/pb/pb_data"
+
 [[mounts]]
   source      = "pb_data"
   destination = "/pb/pb_data"
