@@ -119,7 +119,8 @@ describe('DEV panel UI', () => {
     cy.get('[data-testid="dev-shot-ui-rover-mining"]').should('exist')
     cy.get('[data-testid="dev-shot-ship-customizer"]').should('exist')
     cy.get('[data-testid="dev-shot-ui-asteroid-discovery"]').should('exist')
-    cy.get('[data-testid^="dev-shot-"]').should('have.length', 26)
+    cy.get('[data-testid="dev-shot-ui-academy"]').should('exist')
+    cy.get('[data-testid^="dev-shot-"]').should('have.length', 27)
   })
 
   it('clicking M2 Hub navigates to hub with M2 coach, no Save Progress prompt', () => {

@@ -11,7 +11,14 @@
 //   CYPRESS_PROFILE=visual npx cypress open --browser chrome
 
 import type { GameState } from '@/game-context'
-import { tessCandidateToExoplanetTarget, toTessCandidate } from '../../../lib/data'
+// Relative path, not the `@/` alias: Cypress's bundled webpack preprocessor
+// has no tsconfig-paths plugin configured (unlike Next.js's own bundler), so
+// it can't resolve `@/...` imports. No other spec hits this because none of
+// them import real (non-type) values from app source — `@/` only appears in
+// `import type` here, which is erased before bundling and never resolved.
+// Imported from the submodule, not the `@/lib/data` barrel, to avoid pulling
+// in lib/data/structures.ts's own `@/lib/featureFlags` import transitively.
+import { tessCandidateToExoplanetTarget, toTessCandidate } from '../../../lib/data/tess-candidates'
 
 const STORAGE_KEY = 'landnam-game-state-v1'
 

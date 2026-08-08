@@ -80,12 +80,14 @@ function expectNoOverlap(a: DOMRect, b: DOMRect, label: string) {
 describe('Sprint 11 Launchpad and Earth Base hotfix — live browser QA', () => {
   beforeEach(() => {
     cy.viewport(1280, 800)
-    cy.request('/api/backend-health').its('body').should('deep.include', {
-      ok: true,
-      backends: {
-        shared: { ok: true, url: 'http://host.docker.internal:8090' },
-        landnam: { ok: true, url: 'http://host.docker.internal:8091' },
-      },
+    // The backend URLs vary by topology (Docker Compose reaches the host via
+    // host.docker.internal; CI and bare `npm run dev` use 127.0.0.1/localhost
+    // directly) — assert reachability, not a specific hostname, or this hook
+    // fails outside the one dev setup it was written against.
+    cy.request('/api/backend-health').then(res => {
+      expect(res.body.ok, 'overall health').to.eq(true)
+      expect(res.body.backends.shared.ok, 'shared backend reachable').to.eq(true)
+      expect(res.body.backends.landnam.ok, 'landnam backend reachable').to.eq(true)
     })
   })
 
