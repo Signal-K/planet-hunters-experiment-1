@@ -11,8 +11,13 @@ export const TUTORIAL_RAIL = {
   // Dedicated space for onboarding/tutorial blocks. Gameplay buttons must stay out of it.
   RESERVED_TOP: 76,
   // Measured action-card height (avatar row + padding, single-line action
-  // text) is ~71px in practice; a little headroom for longer per-step copy.
-  RESERVED_HEIGHT: 84,
+  // text) is ~71px in practice. KES-146: at the 390px mobile viewport, steps
+  // whose body copy wraps to two lines (e.g. "Lock a Contract") measured
+  // 134px tall — the old 84px estimate undershot that, leaving reserved
+  // content areas too shallow and letting scrollIntoView tuck list items
+  // under the coach card. Sized with headroom above the worst-case measured
+  // height rather than the single-line optimum.
+  RESERVED_HEIGHT: 150,
   // Compact pill height including shadow bleed (px).
   PILL_HEIGHT: 64,
   // Bottom clearance for screens with sticky actions above the reserved

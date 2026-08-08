@@ -1,14 +1,14 @@
 import type { GameState } from '@/game-context'
+import { SURVEY_DEFS } from '../../../lib/survey-defs'
 
 const STORAGE_KEY = 'landnam-game-state-v1'
 const SURVEY_KEY = 'landnam-surveys-shown'
 const SNOOZE_KEY = 'landnam-upgrade-prompt-snooze-until'
 
-const ALL_SURVEY_KEYS = [
-  'lnm_first_launch', 'lnm_mining_feel', 'lnm_client_pick',
-  'lnm_mission_friction', 'lnm_progression_feel', 'lnm_end_of_content',
-  'lnm_return_visit', 'lnm_m1_complete', 'lnm_m2_complete', 'lnm_m3_complete',
-]
+// Derived from the real survey registry so this list can't drift stale again
+// (KES-146 follow-up: a hardcoded copy here missed newer keys like
+// lnm_crew_first_launch, which then popped up over the mining laser button).
+const ALL_SURVEY_KEYS = Object.keys(SURVEY_DEFS)
 
 function readSavedState() {
   return cy.window().then(win => JSON.parse(win.localStorage.getItem(STORAGE_KEY) || '{}') as GameState)
@@ -108,17 +108,22 @@ describe('Clean start full game loop', () => {
     cy.get('[data-testid="launch-btn"]').click()
 
     cy.contains('MISSION TRANSIT').should('be.visible')
-    cy.contains('button', /^Arrive$/, { timeout: 12_000 }).click()
-
-    cy.contains('Mining Run', { timeout: 10_000 }).should('be.visible')
+    // TransitScreen auto-fires onArrive 350ms after arrival is reached
+    // regardless of the "Arrive" button — clicking it races that timer and
+    // can hit a detached-element error if the click lands as the app
+    // transitions away. Just wait for arrival instead of clicking.
+    cy.contains('Mining Run', { timeout: 15_000 }).should('be.visible')
     cy.get('[data-testid="mining-canvas"]').should('be.visible')
-    for (let i = 0; i < 5; i++) {
-      cy.get('[data-testid="fire-laser-btn"]').click()
-      cy.wait(150)
-    }
-    cy.get('[data-testid="return-home-btn"]').should('not.be.disabled').click()
+    // Mining requires the laser to catch ore drifting through a narrow hit
+    // window (see MiningScreen.tsx's MAX_CHARGES comment) — a handful of
+    // rapid-fire clicks with no wait for ore to drift in won't reliably fill
+    // even the smallest starter order. Use the dev-only skip button instead
+    // of simulating realistic mining timing here. It fast-forwards straight
+    // through return transit to Debrief, so there's no separate
+    // return-home/"Returned" step to wait on afterward.
+    cy.get('[data-testid="dev-skip-mining-btn"]').click()
 
-    cy.contains('Returned', { timeout: 10_000 }).should('be.visible')
+    cy.contains('Debrief', { timeout: 15_000 }).should('be.visible')
     cy.get('[data-testid="resolve-cargo-btn"]').click()
     cy.get('[data-testid="collect-reward-btn"]').click()
 

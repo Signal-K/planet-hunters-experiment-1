@@ -321,7 +321,14 @@ export default function MissionBoardScreen({ onBack, onPick, missionsDone, freeO
       {/* .bottom-tab-bar now reserves its own flex row above this screen, so
           paddingBottom only needs breathing room plus the coach panel's own
           footprint when it's showing — no more nav-clearance guesswork. */}
-      <div data-ui-zone={UI_ZONES.screenContent} style={{ position: 'absolute', inset: 0, paddingTop: hasCoach ? TUTORIAL_CONTENT_TOP : 72, paddingBottom: hasCoach ? 138 : 76, overflowY: 'auto' }}>
+      {/* scrollPaddingTop (KES-146): the coach card is a fixed sibling
+          overlay, not part of this scroll container, so paddingTop alone
+          only protects the at-rest layout. Without scroll-padding-top,
+          scrollIntoView (browser-native, and what Cypress/keyboard nav
+          trigger before any click) can scroll a list item flush with this
+          container's top edge, sliding it out from under the reserved gap
+          and underneath the coach overlay. */}
+      <div data-ui-zone={UI_ZONES.screenContent} style={{ position: 'absolute', inset: 0, paddingTop: hasCoach ? TUTORIAL_CONTENT_TOP : 72, paddingBottom: hasCoach ? 138 : 76, overflowY: 'auto', scrollPaddingTop: hasCoach ? TUTORIAL_CONTENT_TOP : undefined }}>
         {/* Direct transcription of the OD mockup's `.body-layout` — no
             summary banner above it (the mockup has none; the earlier
             PlayfieldBand strip was this screen's own invention, not in the
