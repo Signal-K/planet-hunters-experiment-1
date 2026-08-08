@@ -10,6 +10,17 @@ import type { Toast } from '@/components/ui/ToastLayer'
 
 const UPGRADE_SNOOZE_KEY = 'landnam-upgrade-prompt-snooze-until'
 
+// How often to proactively renew the shared-backend session while the tab is
+// open. authStore.isValid is a pure client-side JWT exp check with no server
+// round trip and nothing else in this file ever calls authRefresh(), so a
+// session that's actively being played can still silently expire mid-session
+// and bounce the player back to the sign-in gate even though their stored
+// token is "right there". Refreshing well inside the token's lifetime (not
+// only once it's already stale) keeps a genuinely active session alive
+// indefinitely; a token that fails to refresh has actually lapsed (device
+// offline for real, or truly abandoned) and the gate is the correct outcome.
+const SESSION_REFRESH_INTERVAL_MS = 4 * 60 * 1000
+
 function responseStatus(err: unknown): number | null {
   if (typeof err === 'object' && err && 'status' in err && typeof err.status === 'number') return err.status
   return null
@@ -104,6 +115,7 @@ export function useAuthSync({
 
   const backendRecordId = useRef<string | null>(null)
   const backendLoadedFor = useRef<string | null>(null)
+  const knownAuthRecordId = useRef<string | null>(pbShared.authStore.record?.id ?? null)
   const landnamAuthAttemptedFor = useRef<string | null>(null)
   const landnamRetryDelay = useRef(60_000)
   const landnamRetryInFlight = useRef(false)
@@ -116,6 +128,7 @@ export function useAuthSync({
       if (isPreview) setSharedAuthRestoreSettled(true)
       return
     }
+    let active = true
     const stored = storedSharedAuth()
     if (!pbShared.authStore.record && stored?.token && stored.record) {
       pbShared.authStore.save(stored.token, stored.record)
@@ -123,12 +136,57 @@ export function useAuthSync({
     const record = pbShared.authStore.record ?? stored?.record
     if (!record?.id) {
       pbLandnam.authStore.clear()
+      setSharedAuthRestoreSettled(true)
+      return
     }
-    if (record?.id && record.id !== authUserId) {
+    if (record.id !== authUserId) {
       setAuthUserId(record.id)
     }
-    setSharedAuthRestoreSettled(true)
+    // A token restored from storage may already be past its client-decoded
+    // exp (or close enough that it will lapse before the periodic refresh
+    // below gets a chance to run) — give it one immediate renewal attempt
+    // before letting the gate-open effect decide whether this is a returning,
+    // signed-in player. Only settle (and thus only risk opening the gate)
+    // once this has resolved either way.
+    pbShared.collection('users').authRefresh()
+      .catch(() => {})
+      .finally(() => { if (active) setSharedAuthRestoreSettled(true) })
+    return () => { active = false }
   }, [authUserId, hydrated, isPreview])
+
+  // Keep the shared-backend session alive for the whole time the player is
+  // actually here — without this, isValid's client-side exp check inevitably
+  // trips mid-session (see SESSION_REFRESH_INTERVAL_MS above) and the player
+  // gets bounced to "Welcome Back" despite a token sitting unused in
+  // localStorage the entire time. Runs on a timer plus immediately whenever
+  // the tab regains focus (the case most likely to find a token that expired
+  // while the tab was backgrounded/asleep).
+  useEffect(() => {
+    if (isPreview || !authUserId) return
+
+    let active = true
+    async function refresh() {
+      if (!active || !pbShared.authStore.token) return
+      try {
+        await pbShared.collection('users').authRefresh()
+      } catch {
+        // Token has genuinely lapsed (or we're offline) — the gate-open
+        // effect (driven by authStore.isValid) is the correct fallback here.
+      }
+    }
+
+    const timer = window.setInterval(refresh, SESSION_REFRESH_INTERVAL_MS)
+    function onVisibilityChange() {
+      if (document.visibilityState === 'visible') refresh()
+    }
+    document.addEventListener('visibilitychange', onVisibilityChange)
+
+    return () => {
+      active = false
+      window.clearInterval(timer)
+      document.removeEventListener('visibilitychange', onVisibilityChange)
+    }
+  }, [authUserId, isPreview])
 
   const saveRemoteState = useCallback(async (userId: string, nextState: GameState) => {
     const payload = { user: userId, state: nextState, missions_done: nextState.player.missionsDone }
@@ -160,8 +218,19 @@ export function useAuthSync({
     }
   }, [])
 
-  // Track auth identity changes
+  // Track auth identity changes. authRefresh() (called by the session-keepalive
+  // effect above) also routes through authStore.save() and therefore fires
+  // this same onChange on every renewal — for the same record id, that's not
+  // an identity change, just a new token, so it must not reset the backend/
+  // landnam-sync state machinery on every refresh tick (that would repeatedly
+  // re-trigger the game_states load and landnam-auth exchange effects, and
+  // flash "NOT SYNCED" every few minutes, for no actual change).
   useEffect(() => pbShared.authStore.onChange((_token, record) => {
+    if (record?.id && record.id === knownAuthRecordId.current) {
+      setAuthUserId(record.id)
+      return
+    }
+    knownAuthRecordId.current = record?.id ?? null
     backendRecordId.current = null
     backendLoadedFor.current = null
     landnamAuthAttemptedFor.current = null
@@ -301,11 +370,16 @@ export function useAuthSync({
     if (backendReady) setAwaitingRemoteState(false)
   }, [backendReady])
 
-  // Show auth gate for brand-new users (no stored credentials, no active session)
+  // Show auth gate for brand-new users (no stored credentials, no active session).
+  // Takes priority over the legacy-guest upgrade prompt below: the two are
+  // otherwise driven by independent effects with no shared exclusion, so a
+  // legacy guest account whose token has also lapsed could previously end up
+  // with both mandatory sheets mounted and stacked at once (KES-141).
   useEffect(() => {
     if (!hydrated || isPreview || !sharedAuthRestoreSettled) return
     if (authGateDismissed.current) return
     if (pbShared.authStore.isValid || hasStoredCredentials()) return
+    setUpgradePromptOpen(false)
     setAuthGateOpen(true)
   }, [hydrated, isPreview, sharedAuthRestoreSettled])
 
@@ -338,12 +412,12 @@ export function useAuthSync({
   // cypress/support/e2e.ts) can suppress this modal without simulating a
   // real player dismissing it.
   useEffect(() => {
-    if (!hydrated || isPreview || !authUserId) return
+    if (!hydrated || isPreview || !authUserId || authGateOpen) return
     if (!isGuestAccount()) return
     const snoozeUntil = Number(localStorage.getItem(UPGRADE_SNOOZE_KEY) ?? 0)
     if (Date.now() < snoozeUntil) return
     setUpgradePromptOpen(true)
-  }, [hydrated, isPreview, authUserId])
+  }, [hydrated, isPreview, authUserId, authGateOpen])
 
   // Load remote game state on auth
   useEffect(() => {
