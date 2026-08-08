@@ -11,10 +11,37 @@ interface Props {
   onComplete: () => void
 }
 
+// KES-148: on the deployed build (not local dev/Cypress), this scene was
+// observed replaying from the ground indefinitely, stranding the player on
+// the fab screen forever with no way to launch. Root cause wasn't fully
+// pinned down, but the scene's completion effect below only fires once per
+// mount and this component's own useEffect remounts (resetting elapsed to 0)
+// whenever rocketName/rocketImageSrc/targetName change value — plausible if
+// game.rocket transiently resolves to a different value across a slower
+// production catalog/state sync than local dev ever exercises. This watchdog
+// is a mount-once safety net, independent of those props, so no remount loop
+// can strand a player: worst case they wait a fixed ceiling, not forever.
+const LAUNCH_WATCHDOG_MS = 12_000
+
 export function LaunchSequenceCanvas({ rocketName, rocketImageSrc, targetName, onComplete }: Props) {
   const divRef = useRef<HTMLDivElement>(null)
   const completeRef = useRef(onComplete)
+  const firedRef = useRef(false)
   completeRef.current = onComplete
+
+  // Single guarded entry point — the watchdog, the scene's natural
+  // completion, and the dev skip button all route through this so a
+  // near-simultaneous fire from two of them can never call onComplete twice.
+  const fireComplete = useRef(() => {
+    if (firedRef.current) return
+    firedRef.current = true
+    completeRef.current()
+  }).current
+
+  useEffect(() => {
+    const timer = window.setTimeout(fireComplete, LAUNCH_WATCHDOG_MS)
+    return () => window.clearTimeout(timer)
+  }, [fireComplete])
 
   useEffect(() => {
     const div = divRef.current
@@ -48,7 +75,7 @@ export function LaunchSequenceCanvas({ rocketName, rocketImageSrc, targetName, o
         rocketName,
         rocketImageSrc,
         targetName,
-        onComplete: () => completeRef.current(),
+        onComplete: fireComplete,
       })
 
       app.ticker.add(t => {
@@ -74,7 +101,7 @@ export function LaunchSequenceCanvas({ rocketName, rocketImageSrc, targetName, o
       {process.env.NODE_ENV === 'development' && (
         <button
           data-testid="launch-sequence-skip-btn"
-          onClick={() => completeRef.current()}
+          onClick={fireComplete}
           style={{
             position: 'absolute', bottom: 24, right: 24, zIndex: 101,
             padding: '8px 16px', borderRadius: 8, cursor: 'pointer',
