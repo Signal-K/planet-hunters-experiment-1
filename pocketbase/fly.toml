@@ -13,8 +13,17 @@ primary_region = "lhr"
 # app-migrations (core.AppMigrations, registered under pocketbase/migrations/)
 # never execute — the container's serve command never calls `migrate up`
 # itself, so migrations silently never ran on any prior deploy.
+#
+# Args only, not the binary path: Fly appends this string's tokens after the
+# Dockerfile's ENTRYPOINT ["/pb/pocketbase"], so including the binary path
+# again here duplicates it and fails with "unknown command '/pb/pocketbase'
+# for 'pocketbase'" — confirmed the hard way on the first deploy of this
+# release_command, which reported "completed successfully" despite the
+# migration never actually running (cobra exits 0 on an unknown-subcommand
+# usage error in this version). Don't trust that exit code alone next time —
+# check `flyctl logs` for this migration's own log lines to confirm it ran.
 [deploy]
-  release_command = "/pb/pocketbase migrate up --dir=/pb/pb_data"
+  release_command = "migrate up --dir=/pb/pb_data"
 
 [[mounts]]
   source      = "pb_data"
