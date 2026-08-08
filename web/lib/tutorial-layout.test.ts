@@ -19,4 +19,14 @@ describe('tutorial layout rail', () => {
     )
     expect(rect.bottom).toBe(874 - TUTORIAL_RAIL.BOTTOM_PILL_Y)
   })
+
+  it('reserves enough height for a real two-line-wrapped coach card (KES-146)', () => {
+    // At the 390px mobile viewport, the "Lock a Contract" step's body copy
+    // wraps to two lines and measured 134px tall in practice — the old 84px
+    // estimate undershot that by 50px, which let scrollIntoView tuck list
+    // items under the coach overlay. Guard against silently shrinking this
+    // back below the worst measured height.
+    const MEASURED_TWO_LINE_CARD_HEIGHT = 134
+    expect(TUTORIAL_RAIL.RESERVED_HEIGHT).toBeGreaterThanOrEqual(MEASURED_TWO_LINE_CARD_HEIGHT)
+  })
 })

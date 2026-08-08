@@ -21,6 +21,7 @@ import AuthGateSheet from '@/components/game/AuthGateSheet'
 import SettingsSheet from '@/components/game/SettingsSheet'
 import TerritoryClaimPopup from '@/components/game/TerritoryClaimPopup'
 import { UI_ZONES } from '@/lib/ui-zones'
+import { isSurveySafeScreen } from '@/lib/survey-gating'
 
 if (typeof window !== 'undefined') initPostHog()
 
@@ -121,12 +122,6 @@ function GameChrome({ children }: { children: ReactNode }) {
     game.go(id as Parameters<typeof game.go>[0])
   }
 
-  // Allowlist, not a blocklist — surveys should only ever appear on a genuine
-  // "resting" screen, never mid-mission (KES-146 follow-up: lnm_crew_first_launch
-  // popped up over the mining laser button because this gate had no
-  // screen-allowlist at all, only popup/coach/territory-claim checks).
-  const SURVEY_SAFE_SCREENS = ['hub', 'missions', 'market', 'hangar', 'skills', 'galaxy', 'refinery']
-
   const currentNav = ['missions', 'targets'].includes(currentScreen)
     ? 'missions'
     : currentScreen === 'galaxy' ? 'galaxy' : currentScreen === 'fab' ? 'fab' : currentScreen === 'skills' ? 'skills' : 'hub'
@@ -151,7 +146,7 @@ function GameChrome({ children }: { children: ReactNode }) {
 
         <ToastLayer toasts={game.toasts} onDismiss={game.dismissToast} />
         {showFeedback && <FeedbackButton />}
-        <SurveySheet blockWhile={!!game.popup || !!coach || !!game.pendingTerritoryClaimFor || !SURVEY_SAFE_SCREENS.includes(currentScreen)} />
+        <SurveySheet blockWhile={!!game.popup || !!coach || !!game.pendingTerritoryClaimFor || !isSurveySafeScreen(currentScreen)} />
         {showNav && <BottomTabBar current={currentNav} onNav={goFromNav} />}
 
         {coach && !game.popup && (

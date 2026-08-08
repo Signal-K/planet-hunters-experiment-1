@@ -18,6 +18,7 @@ import FeedbackButton from '@/components/ui/FeedbackButton'
 import SurveySheet from '@/components/ui/SurveySheet'
 import ToastLayer from '@/components/ui/ToastLayer'
 import { initPostHog } from '@/lib/posthog'
+import { SURVEY_SAFE_SCREENS } from '@/lib/survey-gating'
 import DevShortcuts from '@/components/dev/DevShortcuts'
 import AuthGateSheet from '@/components/game/AuthGateSheet'
 import SettingsSheet from '@/components/game/SettingsSheet'
@@ -146,13 +147,6 @@ function GameCanvas() {
     && !game.upgradePromptOpen
     && !game.authGateOpen
 
-  // Allowlist, not a blocklist — surveys should only ever appear in a scene
-  // AFTER an action (a genuine "resting" screen), never while a player is
-  // mid-setup or mid-execution of a mission. A blocklist of "screens to
-  // avoid" rots exactly like the target/mineral bypass did earlier: miss one
-  // screen (targets, rocket-buy) and a survey slides up mid-setup again the
-  // moment the player leaves the one screen that WAS blocked (e.g. debrief).
-  const SURVEY_SAFE_SCREENS: Screen[] = ['hub', 'missions', 'market', 'hangar', 'skills', 'galaxy', 'refinery']
   const surveyBlocked = !!coach
     || !!game.popup
     || !SURVEY_SAFE_SCREENS.includes(game.screen)
