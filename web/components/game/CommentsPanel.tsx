@@ -23,9 +23,17 @@ export default function CommentsPanel({ recordType, recordId }: CommentsPanelPro
   const [draft, setDraft] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState<string | null>(null)
-  const [isAuthed, setIsAuthed] = useState(pbShared.authStore.isValid)
+  // KES-151: must not read authStore synchronously at initial render — the
+  // SDK already has localStorage-backed state by the time this module
+  // evaluates on the client, but the server always renders as signed-out,
+  // producing a hydration mismatch. Deferred to the effect below instead.
+  const [isAuthed, setIsAuthed] = useState(false)
 
   useEffect(() => {
+    // onChange only fires on future changes, not the store's current value —
+    // set it explicitly once on mount so an already-signed-in device doesn't
+    // stay stuck showing isAuthed=false until its next auth event.
+    setIsAuthed(pbShared.authStore.isValid)
     return pbShared.authStore.onChange(() => setIsAuthed(pbShared.authStore.isValid))
   }, [])
 

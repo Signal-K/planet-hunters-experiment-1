@@ -77,7 +77,16 @@ export function useAuthSync({
   state, setState, stateRef, hydrated, isPreview,
   addToast, normalizeAndRepair, storageKey,
 }: AuthSyncOpts) {
-  const [authUserId, setAuthUserId] = useState<string | null>(pbShared.authStore.record?.id ?? null)
+  // KES-151: must start `null` on both server and client, even though a
+  // signed-in device already has `pbShared.authStore.record` populated
+  // synchronously by the time this module evaluates on the client (the
+  // PocketBase SDK reads localStorage at construction, before React ever
+  // renders). Seeding this from the authStore directly made the very first
+  // client render diverge from the server-rendered (always-anonymous) HTML —
+  // a full-tree hydration mismatch (React error #418). The hydration effect
+  // below already re-derives the real value from `pbShared.authStore.record`
+  // once `hydrated` flips true, exactly like `state` defers to `loadState()`.
+  const [authUserId, setAuthUserId] = useState<string | null>(null)
 
   // Pre-emptive warmup ping — Fly machines stop when idle. Firing this early
   // means the machine is live by the time auth + state-load requests arrive.
@@ -115,7 +124,8 @@ export function useAuthSync({
 
   const backendRecordId = useRef<string | null>(null)
   const backendLoadedFor = useRef<string | null>(null)
-  const knownAuthRecordId = useRef<string | null>(pbShared.authStore.record?.id ?? null)
+  // Kept in sync with authUserId's deferred-to-mount initialization above.
+  const knownAuthRecordId = useRef<string | null>(null)
   const landnamAuthAttemptedFor = useRef<string | null>(null)
   const landnamRetryDelay = useRef(60_000)
   const landnamRetryInFlight = useRef(false)
