@@ -122,16 +122,15 @@ describe('Deep Space Telescope / asteroid-discovery mission type across viewport
         cy.contains('INSTRUMENT DATA FEED', { timeout: 15000 }).should('be.visible')
         cy.contains('P21ab3C').should('be.visible')
         cy.get('[data-testid="neocp-verdict-likely_real"]').should('be.visible').click({ force: true })
-        // KES-116: submitting immediately re-triggers the candidate-fetch
-        // effect (it's keyed on `player.asteroidClassifications`), which
-        // re-runs `unresolvedDeepSpaceInstrumentDigest` and — now that this
-        // candidate is classified — filters it straight back out. At
-        // telescope level 1 (one candidate/day, the default) that leaves no
-        // candidate to attach the "ANNOTATION SAVED" pill to, so the screen
-        // falls through to the empty state instead of confirming the
-        // submission. The classification itself does persist correctly
-        // (asserted below) — only the on-screen confirmation is unreachable.
-        cy.contains('No Reviewable Candidate', { timeout: 15000 }).should('be.visible')
+        // KES-116 (fixed): the candidate-fetch effect used to be keyed on
+        // `player.asteroidClassifications`, so submitting immediately
+        // re-triggered it, re-ran `unresolvedDeepSpaceInstrumentDigest`, and
+        // — now that this candidate was classified — filtered it straight
+        // back out, nulling `candidate` before "ANNOTATION SAVED" could ever
+        // render. Fixed by no longer refetching on classification changes;
+        // the confirmation pill (keyed on classifications[candidate.id],
+        // computed fresh every render) now renders correctly instead.
+        cy.contains('ANNOTATION SAVED', { timeout: 15000 }).should('be.visible')
         cy.window().then(win => {
           const saved = JSON.parse(win.localStorage.getItem(STORAGE_KEY) || '{}') as GameState
           expect(saved.player.asteroidClassifications?.[MOCK_CANDIDATE.id]?.verdict).to.eq('likely_real')

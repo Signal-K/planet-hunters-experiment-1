@@ -79,7 +79,22 @@ export default function AsteroidDiscoveryScreen({ player, onBack, onBuildTelesco
       })
 
     return () => { cancelled = true }
-  }, [classifications, player.freeOperations, player.deepSpaceTelescopeBuilt, player.deepSpaceTelescopeLevel, devDayOffset])
+    // KES-116: `classifications` is deliberately NOT a dependency here.
+    // submitAsteroidClassification() writes straight into
+    // player.asteroidClassifications, which used to re-trigger this effect
+    // immediately after every submission -- re-deriving "unresolved"
+    // candidates correctly filtered out the one just classified, nulling
+    // `candidate` before the "ANNOTATION SAVED" panel (keyed on
+    // classifications[candidate.id] via the `classification` const below)
+    // ever got a render frame. At the default one-candidate-per-day
+    // telescope level this made the confirmation unreachable for every
+    // player. `classification` is still derived fresh from `classifications`
+    // on every render, so the confirmation state itself is never stale --
+    // this just stops a fresh submission from clearing the candidate the
+    // player is still looking at. A new candidate is only fetched on mount
+    // or when the telescope/day actually changes.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [player.freeOperations, player.deepSpaceTelescopeBuilt, player.deepSpaceTelescopeLevel, devDayOffset])
 
   const isDesktop = useIsDesktop()
   const coach = useAsteroidDiscoveryCoach()
