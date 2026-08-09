@@ -30,6 +30,11 @@ function seedState(win: Window, player: Record<string, unknown>, screen = 'hub')
       loanDebt: 0,
       loanOffered: false,
       stash: { aluminium: 20, silicon: 20 },
+      // The "Surface Ops" hub button (hub-surface-ops) only renders once the
+      // player has landed on a body (HubScreen.tsx: `player.hasLanded &&`) --
+      // without this the button doesn't exist in the DOM at all, which reads
+      // like a stale/removed selector but is actually a gating precondition.
+      hasLanded: true,
       ...player,
     },
     missionId: null,
@@ -100,7 +105,11 @@ describe('Surface Ops settlement journey', () => {
       .contains('Automated cargo ferry dispatched.')
       .should('have.length', 1)
       .click()
-    cy.get('[data-testid="surface-ops-screen"] main').scrollTo('bottom')
+    // `main`'s two-column operationsGrid (siteVisualPanel canvas + shorter
+    // controlStack aside) means scrollTo('bottom') overshoots past the
+    // cargo/ferry panel once the taller canvas column keeps scrolling below
+    // it -- scroll the actual panel into view instead of the container edge.
+    cy.get('[data-testid="surface-cargo-panel"]').scrollIntoView()
     cy.contains('FERRY IN FLIGHT').should('be.visible')
     cy.screenshot('surface-ops-desktop-ferry')
   })
