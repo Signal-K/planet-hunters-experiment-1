@@ -175,7 +175,7 @@ describe('Earth Base — redesigned scene', () => {
     // overflow:hidden box, which is still programmatically scrollable, so
     // Cypress's default scrollIntoView drags the scene to the subsurface half
     // before clicking and the screenshot captures that instead of the surface.
-    cy.contains('button', 'Edit · Build').click({ scrollBehavior: false })
+    cy.get('[data-testid="hub-edit-build-btn"]').contains('Edit · Build').click({ scrollBehavior: false })
     cy.wait(600)
     cy.screenshot('earth-base-06-portrait-edit', { capture: 'viewport' })
   })
@@ -185,8 +185,12 @@ describe('Earth Base — redesigned scene', () => {
     openHub({ missionsDone: 4, missionCount: 4, freeOperations: true })
     // Reach BuildPlaceScreen the way a player does — a bare visit to
     // /game/build bounces back to the hub.
-    cy.contains('button', 'Edit · Build').click({ scrollBehavior: false })
-    cy.contains('button', 'New Structure', { timeout: 10000 })
+    cy.get('[data-testid="hub-edit-build-btn"]', { timeout: 10000 })
+      .contains('Edit · Build')
+      .click({ scrollBehavior: false })
+    cy.get('[data-testid="hub-edit-build-btn"]', { timeout: 10000 })
+      .should('contain.text', 'Done')
+    cy.get('[data-testid="hub-new-structure-btn"]', { timeout: 10000 })
       .should('be.visible')
       .click({ force: true, scrollBehavior: false })
     cy.get('[data-testid="build-plot-1"]', { timeout: 20000 }).should('exist').click({ scrollBehavior: false })

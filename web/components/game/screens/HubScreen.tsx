@@ -497,7 +497,7 @@ export default function HubScreen({ player, hasCoach, onGoBuilding, onNav, onUpg
             <>
               {editMode && (
                 <>
-                  <SceneBtn icon={<PlusGlyph />} label="New Structure" onClick={() => onGoBuilding('build')} />
+                  <SceneBtn testId="hub-new-structure-btn" icon={<PlusGlyph />} label="New Structure" onClick={() => onGoBuilding('build')} />
                   {player.placed.includes('launchpad') && (
                     <SceneBtn icon={<HangarGlyph />} label="Hangar" onClick={() => onGoBuilding('hangar')} />
                   )}
@@ -509,6 +509,7 @@ export default function HubScreen({ player, hasCoach, onGoBuilding, onNav, onUpg
               <SceneBtn
                 icon={<BuildGlyph />}
                 label={editMode ? 'Done' : 'Edit · Build'}
+                testId="hub-edit-build-btn"
                 active={editMode}
                 pulse={!editMode && player.placed.length < 4}
                 onClick={() => setEditMode(v => !v)}
