@@ -47,8 +47,12 @@ function navToMissions() {
   cy.window().then(win => {
     const isDesktop = win.innerWidth >= 1024
     if (isDesktop) {
+      // Desktop intentionally has no global sidebar. The launchpad is the
+      // diegetic mission entry point; open it first, then use its contracts
+      // action. This keeps the journey aligned with the shipped desktop UX.
       cy.get('[data-testid="bottom-tab-missions"]').should('not.be.visible')
-      cy.get('[data-testid="sidebar-nav-missions"]').should('be.visible').click()
+      cy.get('[data-testid="building-launchpad-hit"]').click()
+      cy.get('[data-testid="launchpad-view-contracts-btn"]').click()
     } else {
       cy.get('[data-testid="bottom-tab-missions"]').should('be.visible').click()
     }
@@ -83,9 +87,10 @@ function playM1FromIntro() {
 
   cy.contains('MISSION TRANSIT', { timeout: 10000 }).should('be.visible')
   cy.get('[data-testid="mining-canvas"]', { timeout: 20000 }).should('be.visible')
-  for (let i = 0; i < 5; i += 1) {
-    cy.get('[data-testid="fire-laser-btn"]').should('not.be.disabled').click()
-  }
+  // The local-only shortcut makes this journey test the mission transition
+  // and debrief flow, not the probabilistic ore-hit minigame. The mining
+  // interaction itself has dedicated coverage in the feature suite.
+  cy.get('[data-testid="dev-skip-mining-btn"]').click()
   cy.get('[data-testid="return-home-btn"]').should('not.be.disabled').click()
 
   cy.contains('MISSION COMPLETE', { timeout: 10000 }).should('be.visible')

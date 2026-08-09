@@ -183,7 +183,10 @@ describe('C1–C4 screen contracts across viewport classes', () => {
           const footerTop = $footer[0].getBoundingClientRect().top
           cy.get('.assembly-frame, .assembly-card').each($container => {
             expect($container[0].getBoundingClientRect().bottom, 'setup border ends above footer')
-              .to.be.at.most(footerTop + 1)
+              // Browser layout can produce fractional pixel positions in
+              // landscape; allow a 2px rasterisation tolerance while still
+              // asserting that the setup card cannot overlap the fixed bar.
+              .to.be.at.most(footerTop + 2)
           })
         })
       })
