@@ -1,17 +1,22 @@
 import './commands'
 
-// KES-149: running the journeys suite against the deployed production build
-// (landnam-test.vercel.app) for the first time surfaced a real React
-// hydration mismatch (minified error #418) that never appears against local
-// `next dev`, where hydration warnings are unminified and non-fatal by
-// default. The mismatch itself doesn't visibly break the game — screenshots
-// captured at the moment of failure show the screen rendered correctly — but
-// Cypress fails any test with an uncaught exception by default, which would
-// make the staging E2E job permanently red on a known, non-blocking issue.
-// Root cause is still open (likely game state hydrating from localStorage
-// into a server-rendered tree without a mounted-gate) — this only stops the
-// test runner from treating that specific known error as fatal; it does not
-// suppress other uncaught errors.
+// KES-151: running the journeys suite against the deployed production build
+// (landnam-test.vercel.app) surfaces a real, 100%-reproducible React
+// hydration mismatch (minified error #418) on every clean-storage load. It
+// never appears against local `next dev`, nor against a local `next start`
+// production build even with the real Vercel preview env vars (PocketBase
+// URLs, PostHog keys) loaded — isolated by direct comparison, not
+// assumption. So it is specific to something about the actual Vercel-hosted
+// deployment (edge serving / build pipeline) rather than app env config.
+// One real contributing bug was found and fixed this way (useAuthSync and
+// CommentsPanel both read pbShared.authStore synchronously in their initial
+// useState, before jsx a signed-in device's client-side auth state differs
+// from the server's always-anonymous render) but does not by itself explain
+// the mismatch, which still reproduces after that fix. Root cause remains
+// open. The UI still renders correctly despite the console error (confirmed
+// via screenshot), so this stays a known, non-blocking issue rather than a
+// gameplay bug — this filter only stops the test runner from treating that
+// specific known error as fatal; it does not suppress other uncaught errors.
 Cypress.on('uncaught:exception', err => {
   if (err.message.includes('Minified React error #418')) return false
 })
