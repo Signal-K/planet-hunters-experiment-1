@@ -2,6 +2,7 @@ import type { GameState } from '@/game-context'
 
 const STORAGE_KEY = 'landnam-game-state-v1'
 const SURVEY_KEY = 'landnam-surveys-shown'
+const SNOOZE_KEY = 'landnam-upgrade-prompt-snooze-until'
 
 const ALL_SURVEY_KEYS = [
   'lnm_first_launch', 'lnm_mining_feel', 'lnm_client_pick',
@@ -14,6 +15,13 @@ function startFresh() {
     onBeforeLoad(win) {
       win.localStorage.clear()
       win.localStorage.setItem(SURVEY_KEY, JSON.stringify(ALL_SURVEY_KEYS))
+      // The offline auth stub in cypress/support/e2e.ts always resolves to an
+      // @landnam.guest email regardless of what this spec's own
+      // continueWithoutAccountIfShown() submits, which otherwise trips the
+      // mandatory (non-dismissible) SaveProgressPrompt mid-playthrough and
+      // permanently covers the launchpad build UI. See tutorial-m1.cy.ts's
+      // suppressSurveys() for the same pattern.
+      win.localStorage.setItem(SNOOZE_KEY, String(Date.now() + 365 * 24 * 60 * 60 * 1000))
     },
   })
 }
