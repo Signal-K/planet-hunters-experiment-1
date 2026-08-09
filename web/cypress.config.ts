@@ -106,6 +106,34 @@ const profiles: Record<string, Cypress.EndToEndConfigOptions> = {
     specPattern: ['cypress/e2e/**/*.cy.{js,jsx,ts,tsx}'],
     env: { livePocketBase: true },
   },
+  // Runs against an already-deployed environment (e.g. the
+  // landnam-test.vercel.app staging alias) instead of a locally-started dev
+  // server. Scoped to c1-c4-viewport-matrix.cy.ts specifically: it's fast
+  // (~25s, no real backend calls beyond initial page load) and, unlike every
+  // other journeys spec, was actually confirmed passing against the real
+  // production build — a local full-journeys run against staging didn't
+  // finish in 10+ minutes (real backend registration/gameplay over the
+  // network is far slower and flakier than the mocked local-dev-server
+  // runs), so that heavier coverage is 'staging-full' below, not this one.
+  staging: {
+    baseUrl: process.env.CYPRESS_baseUrl || 'http://localhost:3001',
+    specPattern: ['cypress/e2e/journeys/c1-c4-viewport-matrix.cy.ts'],
+    viewportWidth: 390,
+    viewportHeight: 844,
+    env: { livePocketBase: true },
+  },
+  // Full journeys suite against a live deployment, including
+  // clean-start-loop.cy.ts's real registration/playthrough against the
+  // actual staging PocketBase backends. Slow and not yet proven reliable
+  // end-to-end (see 'staging' above) — run manually via workflow_dispatch,
+  // not on every push.
+  'staging-full': {
+    baseUrl: process.env.CYPRESS_baseUrl || 'http://localhost:3001',
+    specPattern: ['cypress/e2e/journeys/**/*.cy.{js,jsx,ts,tsx}'],
+    viewportWidth: 390,
+    viewportHeight: 844,
+    env: { livePocketBase: true },
+  },
   // Visual QA profile: headed Chrome, screenshots at every step, video always on.
   // Run with: CYPRESS_PROFILE=visual npx cypress run --browser chrome --headed
   // Or open interactively: CYPRESS_PROFILE=visual npx cypress open --browser chrome

@@ -102,6 +102,12 @@ jobs:
       name: staging
       url: https://landnam-test.vercel.app
 
+    outputs:
+      # The specific preview URL for this commit, not the shared alias — the
+      # alias can race with a concurrent push to another branch (see comment
+      # on the alias step below), but this deploy's own URL never moves.
+      url: ${{ steps.deploy.outputs.url }}
+
     env:
       # These already exist as repository secrets — use them rather than
       # hardcoding the ids. VERCEL_TEAM_ID is Vercel's name for the org id.
@@ -166,3 +172,154 @@ jobs:
           vercel alias set "${{ steps.deploy.outputs.url }}" "$STAGING_ALIAS" \
             --scope "$VERCEL_ORG_ID" --token=${{ secrets.VERCEL_TOKEN }}
           echo "Staging: https://$STAGING_ALIAS" >> "$GITHUB_STEP_SUMMARY"
+
+  e2e-staging:
+    name: E2E — against staging deployment
+    # Targets the landnam-test.vercel.app alias itself, not this job's own
+    # preview URL output: raw per-commit *.vercel.app preview URLs can sit
+    # behind Vercel's deployment-protection wall (401 to unauthenticated
+    # requests, including Cypress's), but the aliased custom domain is
+    # confirmed public. This does mean a concurrent push to another branch
+    # can move the alias mid-run — same accepted race as the alias step
+    # above.
+    #
+    # Scoped to the 'staging' Cypress profile (just c1-c4-viewport-matrix.cy.ts)
+    # on every push: fast and confirmed passing against the real production
+    # build. The full journeys suite against staging (real backend
+    # registration/gameplay, much slower and not yet proven reliable
+    # end-to-end) is the separate manually-triggered e2e-staging-full job
+    # below — don't fold it in here without re-verifying it actually
+    # completes reliably first.
+    needs: deploy
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: web
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Wait for staging to serve this deploy
+        run: |
+          for i in {1..30}; do
+            if curl -sf "https://landnam-test.vercel.app/api/backend-health" > /dev/null; then
+              echo "Staging is responding."
+              exit 0
+            fi
+            echo "Attempt $i/30 — staging not ready yet"
+            sleep 5
+          done
+          echo "Staging never became reachable" >&2
+          exit 1
+
+      - name: Run journeys against staging
+        id: cypress
+        uses: cypress-io/github-action@v6
+        with:
+          working-directory: web
+          browser: chrome
+          install: false
+        env:
+          CYPRESS_PROFILE: staging
+          CYPRESS_baseUrl: https://landnam-test.vercel.app
+          CI: true
+
+      - name: Upload screenshots
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: e2e-staging-screenshots-${{ github.sha }}
+          path: web/cypress/screenshots/
+          if-no-files-found: ignore
+          retention-days: 14
+
+      - name: Upload videos
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: e2e-staging-videos-${{ github.sha }}
+          path: web/cypress/videos/
+          if-no-files-found: ignore
+          retention-days: 7
+
+  e2e-staging-full:
+    name: E2E — full journeys against staging (manual)
+    # Manual only (workflow_dispatch), not on every push: this runs the
+    # entire journeys suite for real against the live staging deployment,
+    # including clean-start-loop.cy.ts's real account registration and
+    # playthrough over the network against the actual staging PocketBase
+    # backends. A local run of this same scope didn't finish in 10+ minutes,
+    # so it isn't a reliable per-push gate yet — trigger it by hand when you
+    # want that deeper real-backend coverage. Any @landnam.test account it
+    # creates is cleaned up by the existing KES-149 purge migrations on the
+    # next backend deploy.
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: web
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Wait for staging to serve this deploy
+        run: |
+          for i in {1..30}; do
+            if curl -sf "https://landnam-test.vercel.app/api/backend-health" > /dev/null; then
+              echo "Staging is responding."
+              exit 0
+            fi
+            echo "Attempt $i/30 — staging not ready yet"
+            sleep 5
+          done
+          echo "Staging never became reachable" >&2
+          exit 1
+
+      - name: Run full journeys suite against staging
+        id: cypress
+        uses: cypress-io/github-action@v6
+        with:
+          working-directory: web
+          browser: chrome
+          install: false
+        env:
+          CYPRESS_PROFILE: staging-full
+          CYPRESS_baseUrl: https://landnam-test.vercel.app
+          CI: true
+
+      - name: Upload screenshots
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: e2e-staging-full-screenshots-${{ github.sha }}
+          path: web/cypress/screenshots/
+          if-no-files-found: ignore
+          retention-days: 14
+
+      - name: Upload videos
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: e2e-staging-full-videos-${{ github.sha }}
+          path: web/cypress/videos/
+          if-no-files-found: ignore
+          retention-days: 7
