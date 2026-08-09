@@ -47,7 +47,8 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
   const rocketDisplay = rocketDisplayForConfig(rocket)
   const starterRocket = rocketModelForConfig(rocket)
 
-  const delivered = Object.entries(mission.requires.minerals).every(([id, amount]) => (cargo[id] ?? 0) >= amount)
+  const requiredMaterials = mission.construction?.requiredMaterials ?? mission.requires.minerals
+  const delivered = Object.entries(requiredMaterials).every(([id, amount]) => (cargo[id] ?? 0) >= amount)
   const client = mission.client ? clients[mission.client] : undefined
   const isStoryMission = !mission.deliveryTargetId && (mission.tag === 'STORY' || mission.payload?.type === 'satellite')
   const isProgramOperation = isOwnProgramMission(mission)
@@ -305,7 +306,7 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
               if (collectingRef.current) return
               collectingRef.current = true
               setCollecting(true)
-              onDone(total, delivered ? mission.payout.affinity : 0, delivered ? mission.requires.minerals : {})
+              onDone(total, delivered ? mission.payout.affinity : 0, delivered ? requiredMaterials : {})
             }}
           >
             {delivered

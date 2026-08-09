@@ -48,6 +48,11 @@ export function toMission(r: any): Mission {
   const brief = fallbackClient && /^(?:Client|Contractor) Slot\s+/i.test(rawBrief)
     ? rawBrief.replace(/(?:Client|Contractor) Slot\s+\d+[A-Z]?/i, fallbackClient.name)
     : rawBrief
+  const constructionMaterials = typeof r.construction_required_materials === 'object' && !Array.isArray(r.construction_required_materials)
+    ? r.construction_required_materials
+    : r.construction_required_materials
+      ? JSON.parse(r.construction_required_materials)
+      : undefined
   return {
     id: r.slug,
     title: r.title,
@@ -64,6 +69,14 @@ export function toMission(r: any): Mission {
           type: (r.getString?.('payload_type') ?? r.payload_type) as 'rover',
           name: r.getString?.('payload_name') ?? r.payload_name ?? '',
           cargoCost: r.getFloat?.('payload_cargo_cost') ?? r.payload_cargo_cost ?? 0,
+        }
+      : undefined,
+    construction: r.construction_structure_kind
+      ? {
+          structureKind: r.construction_structure_kind,
+          requiredMaterials: constructionMaterials ?? {},
+          placementMode: r.construction_placement_mode ?? 'confirm',
+          buildTimeMs: r.construction_build_time_ms ?? 0,
         }
       : undefined,
     requires: {

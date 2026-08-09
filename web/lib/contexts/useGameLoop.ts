@@ -10,6 +10,7 @@ import { applyDeliveryArrived, applyDeliveryUnloadComplete } from '@/lib/systems
 import { applyLandingTouchdown, applyRedockComplete } from '@/lib/systems/LandingSystem'
 import { applyAwardMissionCrewXP, crewRequirementStatus, diplomacyPayoutMultiplier, missionCrewForLaunch } from '@/lib/systems/AcademySystem'
 import { applyPurchaseRocket } from '@/lib/systems/EconomySystem'
+import { applyConstructionCompletion } from '@/lib/systems/ConstructionSystem'
 import { enqueueSurvey } from '@/lib/surveys'
 import type { Catalog } from '@/lib/catalog'
 import type { GameState, LicenseGrade } from '@/lib/game-types'
@@ -508,6 +509,9 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
         crewVisitedTargets.push(s.targetId)
       }
       const effectiveTargetId = mission?.targetId ?? s.targetId ?? ''
+      const constructionPlayer = mission && effectiveTargetId
+        ? applyConstructionCompletion(s.player, mission, effectiveTargetId)
+        : s.player
       let roverDeployments = [...(s.player.roverDeployments ?? [])]
       let clientTerritories = { ...(s.player.clientTerritories ?? {}) }
       let pendingTerritoryClaimFor: { targetId: string; clientId: string } | undefined
@@ -545,7 +549,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
       const next: GameState = {
         ...s,
         player: {
-          ...s.player,
+          ...constructionPlayer,
           francs,
           activeMission: null,
           missionRunId: undefined,

@@ -37,6 +37,18 @@ describe('Landnam Catalog Mapping', () => {
     expect(mission.requires.minerals).toEqual({ Water: 10 })
   })
 
+  it('maps construction fields from a PocketBase mission record', () => {
+    const mission = toMission({
+      slug: 'construct-fuel-depot', title: 'Fuel Depot', requires_minerals: '{}',
+      construction_structure_kind: 'fuel-depot',
+      construction_required_materials: '{"hydrogen":8,"aluminium":6}',
+      construction_placement_mode: 'confirm', construction_build_time_ms: 1200,
+    })
+    expect(mission.construction).toEqual({
+      structureKind: 'fuel-depot', requiredMaterials: { hydrogen: 8, aluminium: 6 }, placementMode: 'confirm', buildTimeMs: 1200,
+    })
+  })
+
   it('normalizes legacy M3 catalog records to one of the corrected transport-client missions', () => {
     const mission = toMission({
       slug: 'lnm_m3_ore_delivery',

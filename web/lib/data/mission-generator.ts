@@ -250,6 +250,7 @@ export function generateMissionsFromRules(input: MissionGeneratorInput, count = 
         affinity: Math.max(4, Math.round(6 + band.sequence * 2 + cargoMin / 3)),
       },
       survey: template.survey,
+      construction: template.construction,
     }
   })
 }

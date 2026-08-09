@@ -6,6 +6,8 @@ import { migrateCrewRoster } from '@/lib/systems/CrewSystem'
 import { normalizeSurfaceOps } from '@/lib/systems/SurfaceOpsSystem'
 import { settleCrewEconomy } from '@/lib/systems/AcademySystem'
 import { FEATURE_FLAGS } from '@/lib/featureFlags'
+import { findTargetStructure } from '@/lib/data/target-structures'
+import { resolveConstructionState } from '@/lib/systems/ConstructionSystem'
 
 // Represents untrusted/partial saved state (e.g. from localStorage or remote sync)
 // where player fields are optional since older saves may be missing new fields.
@@ -174,6 +176,12 @@ export function normalizeState(input: PartialSave): GameState {
   // through — rather than leaving the roster and roverDeployments to drift.
   const crew = migrateCrewRoster(player, Date.now())
   const surfaceOps = normalizeSurfaceOps(player.surfaceOps)
+  const clientStructures = Array.isArray(player.clientStructures)
+    ? player.clientStructures.map(record => {
+      const blueprint = findTargetStructure(record.structureKind)
+      return blueprint ? resolveConstructionState(record, blueprint.buildTimeMs) : record
+    })
+    : DEFAULT_STATE.player.clientStructures
 
   // `placed` is the record of what the player actually built; the per-structure
   // booleans are conveniences derived from it. They can disagree: a save made
@@ -205,7 +213,7 @@ export function normalizeState(input: PartialSave): GameState {
     missionId,
     targetId,
     rocket: { ...DEFAULT_STATE.rocket, ...input.rocket },
-    player: { ...DEFAULT_STATE.player, ...player, placed: placedList, placementPlots, licenseGrade, researchXP, unlockedBlueprints, tessClassifications, asteroidClassifications, discoveredExoplanetTargets, instrumentDigestNotifiedOn, satelliteMonitoringLevel, transitSatelliteLevel, deepSpaceTelescopeLevel, crew, surfaceOps,
+    player: { ...DEFAULT_STATE.player, ...player, clientStructures, placed: placedList, placementPlots, licenseGrade, researchXP, unlockedBlueprints, tessClassifications, asteroidClassifications, discoveredExoplanetTargets, instrumentDigestNotifiedOn, satelliteMonitoringLevel, transitSatelliteLevel, deepSpaceTelescopeLevel, crew, surfaceOps,
       satelliteMonitoringBuilt, deepSpaceTelescopeBuilt, refineryBuilt, scannerBuilt },
     doneSteps: { ...DEFAULT_STATE.doneSteps, ...input.doneSteps },
     ...(pendingTerritoryClaimFor ? { pendingTerritoryClaimFor } : {}),
