@@ -15,9 +15,13 @@ import (
 // unattended migration: this can only ever match synthetic test data, never
 // a real user, no matter how broadly the pattern is applied.
 //
-// game_states.user has cascadeDelete: true (see ensureCollections in
-// main.go), so deleting the matching users rows automatically removes their
-// game_states rows too — no separate query needed for that collection.
+// game_states.user is a plain text field in the live production schema, NOT
+// a relation field — confirmed by inspecting the deployed collection schema
+// directly (GET /api/collections/game_states returned type:"text" for the
+// user field), contradicting an earlier assumption based on a pb_migrations
+// *.js file's stated intent. There is no cascadeDelete here, so a purged
+// user's game_states row is never automatically removed; this migration
+// deletes it explicitly by matching on the same id.
 //
 // This is a compiled .go migration, not a pb_migrations/*.js file: this repo
 // never registers the jsvm plugin, so .js migration files are never actually
@@ -45,8 +49,18 @@ func init() {
 			return nil
 		}
 
+		gameStatesCollection, gsErr := txApp.FindCollectionByNameOrId("game_states")
+
 		log.Printf("purge_test_landnam_accounts: found %d test account(s) to purge", len(matched))
 		for _, record := range matched {
+			if gsErr == nil {
+				if state, err := txApp.FindRecordById(gameStatesCollection, record.Id); err == nil {
+					log.Printf("purge_test_landnam_accounts: deleting game_states %s", state.Id)
+					if err := txApp.Delete(state); err != nil {
+						log.Printf("purge_test_landnam_accounts: failed to delete game_states %s: %v", state.Id, err)
+					}
+				}
+			}
 			log.Printf("purge_test_landnam_accounts: deleting user %s (%s)", record.Id, record.GetString("email"))
 			if err := txApp.Delete(record); err != nil {
 				log.Printf("purge_test_landnam_accounts: failed to delete %s: %v", record.Id, err)
