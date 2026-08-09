@@ -17,6 +17,15 @@ on:
       - "pocketbase/pb_migrations/**"
       - ".github/workflows/web-ci.yml"
   workflow_dispatch:
+  schedule:
+    # KES-115: nightly deep coverage independent of push/PR activity, so a
+    # regression that lands between reviewed PRs (or drifts in from a live
+    # backend/content change with no code push at all) doesn't sit
+    # undetected until the next person happens to touch web/. Runs the full
+    # journeys suite (e2e-staging-full below) against whatever build is
+    # currently live on landnam-test.vercel.app -- not tied to a specific
+    # commit's deploy, since a schedule event has no push to deploy from.
+    - cron: "0 3 * * *"
 
 permissions:
   contents: read
@@ -253,17 +262,21 @@ jobs:
           retention-days: 7
 
   e2e-staging-full:
-    name: E2E — full journeys against staging (manual)
-    # Manual only (workflow_dispatch), not on every push: this runs the
-    # entire journeys suite for real against the live staging deployment,
-    # including clean-start-loop.cy.ts's real account registration and
-    # playthrough over the network against the actual staging PocketBase
-    # backends. A local run of this same scope didn't finish in 10+ minutes,
-    # so it isn't a reliable per-push gate yet — trigger it by hand when you
-    # want that deeper real-backend coverage. Any @landnam.test account it
-    # creates is cleaned up by the existing KES-149 purge migrations on the
-    # next backend deploy.
-    if: github.event_name == 'workflow_dispatch'
+    name: E2E — full journeys against staging (manual + nightly)
+    # Manual (workflow_dispatch) or nightly (schedule), not on every push:
+    # this runs the entire journeys suite for real against the live staging
+    # deployment, including clean-start-loop.cy.ts's real account
+    # registration and playthrough over the network against the actual
+    # staging PocketBase backends. A local run of this same scope didn't
+    # finish in 10+ minutes, so it isn't a reliable per-push gate yet —
+    # trigger it by hand, or let the nightly cron (KES-115) catch drift that
+    # happens between reviewed pushes. No `needs: deploy` deliberately: a
+    # schedule event has no push/deploy in the same run, so this always
+    # tests whatever build is currently live on landnam-test.vercel.app, not
+    # a specific commit's fresh deploy. Any @landnam.test account it creates
+    # is cleaned up by the existing KES-149 purge migrations on the next
+    # backend deploy.
+    if: github.event_name == 'workflow_dispatch' || github.event_name == 'schedule'
     runs-on: ubuntu-latest
     defaults:
       run:
