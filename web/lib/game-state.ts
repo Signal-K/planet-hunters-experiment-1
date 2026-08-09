@@ -310,6 +310,15 @@ function maxMergeRecord(a: Record<string, number> | undefined, b: Record<string,
 const RESOURCE_NUMBER_FIELDS = ['francs', 'researchXP', 'skillPoints', 'researchAnnotations', 'academyXP', 'crewHiresLifetime'] as const
 const RESOURCE_RECORD_FIELDS = ['stash', 'refinedGoods', 'clientMissions', 'sharedChartsByClient'] as const
 
+// Exoplanet discoveries are append-only: once a target has been confirmed it
+// must survive a stale remote save just like placed structures and plots.
+function mergeDiscoveredExoplanetTargets(
+  local: Player['discoveredExoplanetTargets'],
+  remote: Player['discoveredExoplanetTargets'],
+): NonNullable<Player['discoveredExoplanetTargets']> {
+  return { ...(remote ?? {}), ...(local ?? {}) }
+}
+
 export function mergeRemoteState(current: GameState, remoteState: PartialSave): GameState {
   const merged: GameState = { ...current, ...remoteState } as GameState
 
@@ -386,6 +395,14 @@ export function mergeRemoteState(current: GameState, remoteState: PartialSave): 
     merged.tutorial = remoteState.tutorial ?? current.tutorial
     merged.doneSteps = remoteState.doneSteps ?? {}
   }
+
+  // This map is monotonic and is written by the local classification flow.
+  // Apply the union after the missionsDone branch so a stale remote player
+  // cannot erase a target before runtimeCatalog builds its survey mission.
+  merged.player.discoveredExoplanetTargets = mergeDiscoveredExoplanetTargets(
+    current.player.discoveredExoplanetTargets,
+    remoteState.player?.discoveredExoplanetTargets,
+  )
 
   // A run is resumable state, not onboarding progress. If the current device
   // has no active run but PocketBase does, keep the remote run and its route

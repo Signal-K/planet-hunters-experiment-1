@@ -47,8 +47,10 @@ function seed(win: Window, player: object) {
   win.localStorage.removeItem('pocketbase_auth')
   win.localStorage.setItem(SURVEY_KEY, JSON.stringify(ALL_SURVEYS))
   win.localStorage.setItem(SNOOZE_KEY, String(Date.now() + 365 * 24 * 60 * 60 * 1000))
+  // Keep visual specs isolated from any remote game state left by another
+  // test in the same PocketBase-backed run.
   win.localStorage.setItem('landnam-guest-credentials', JSON.stringify({
-    email: 'ci_seed_guest@landnam.guest',
+    email: `ci-seed-${Date.now()}-${Math.random().toString(36).slice(2)}@landnam.guest`,
     password: 'GuestPassword123!',
   }))
   // Suppress the onboarding-complete sheet, which otherwise covers the scene
@@ -184,7 +186,9 @@ describe('Earth Base — redesigned scene', () => {
     // Reach BuildPlaceScreen the way a player does — a bare visit to
     // /game/build bounces back to the hub.
     cy.contains('button', 'Edit · Build').click({ scrollBehavior: false })
-    cy.contains('button', 'New Structure').click({ scrollBehavior: false })
+    cy.contains('button', 'New Structure', { timeout: 10000 })
+      .should('be.visible')
+      .click({ force: true, scrollBehavior: false })
     cy.get('[data-testid="build-plot-1"]', { timeout: 20000 }).should('exist').click({ scrollBehavior: false })
     cy.wait(1200)
     cy.screenshot('earth-base-07-portrait-build', { capture: 'viewport' })

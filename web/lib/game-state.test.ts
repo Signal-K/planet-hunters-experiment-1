@@ -535,6 +535,30 @@ describe('mergeRemoteState — remote game_states record onto local state', () =
     expect(merged.player.clientMissions).toEqual({})
   })
 
+  it('unions discovered exoplanet targets when remote hydration is stale', () => {
+    const localTarget = { ...TARGETS[0], id: 'exo-survey-local' }
+    const remoteTarget = { ...TARGETS[1], id: 'exo-survey-remote' }
+    const merged = mergeRemoteState(
+      local({
+        player: {
+          ...DEFAULT_STATE.player,
+          discoveredExoplanetTargets: { [localTarget.id]: localTarget },
+        },
+      }),
+      {
+        player: {
+          missionsDone: 0,
+          discoveredExoplanetTargets: { [remoteTarget.id]: remoteTarget },
+        },
+      },
+    )
+
+    expect(merged.player.discoveredExoplanetTargets).toEqual({
+      [localTarget.id]: localTarget,
+      [remoteTarget.id]: remoteTarget,
+    })
+  })
+
   it('tolerates a remote record with no player at all', () => {
     const merged = mergeRemoteState(local({ player: { ...DEFAULT_STATE.player, missionsDone: 2 } }), {
       screen: 'hub',
