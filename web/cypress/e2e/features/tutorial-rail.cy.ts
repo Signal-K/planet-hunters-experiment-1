@@ -5,7 +5,6 @@ const STORAGE_KEY = 'landnam-game-state-v1'
 const VIEWPORTS = [
   { name: 'compact portrait', width: 375, height: 667 },
   { name: 'standard portrait', width: 390, height: 844 },
-  { name: 'mobile landscape', width: 844, height: 390 },
   { name: 'tablet portrait', width: 768, height: 1024 },
   { name: 'desktop', width: 1280, height: 720 },
 ] as const

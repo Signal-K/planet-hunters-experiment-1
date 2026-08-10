@@ -13,6 +13,8 @@
 // the real record up via getFirstListItem before updating, instead of
 // assuming its id.
 
+export {}
+
 const STORAGE_KEY = 'landnam-game-state-v1'
 
 describe('game_states save race recovery', () => {

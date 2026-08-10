@@ -13,7 +13,6 @@ const STORAGE_KEY = 'landnam-game-state-v1'
 
 const VIEWPORTS = [
   { label: 'mobile portrait', width: 390, height: 844 },
-  { label: 'mobile landscape', width: 844, height: 390 },
   { label: 'tablet portrait', width: 768, height: 1024 },
   { label: 'desktop', width: 1280, height: 800 },
 ] as const

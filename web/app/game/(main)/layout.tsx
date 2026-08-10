@@ -128,6 +128,20 @@ function GameChrome({ children }: { children: ReactNode }) {
 
   return (
     <main className="game-stage" aria-label="Landnam game">
+      <div
+        className="portrait-required-overlay"
+        data-testid="portrait-required-overlay"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="portrait-required-title"
+      >
+        <div className="portrait-required-card">
+          <div className="portrait-required-icon" aria-hidden="true">↻</div>
+          <p className="eyebrow">LANDNAM OPERATIONS</p>
+          <h1 id="portrait-required-title">Rotate to portrait</h1>
+          <p>Landnam is currently designed for portrait play on mobile. Turn your device upright to continue.</p>
+        </div>
+      </div>
       <div className="portrait-canvas">
         <BackendStatus />
         <LandnamSyncStatus />

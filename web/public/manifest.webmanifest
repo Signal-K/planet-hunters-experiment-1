@@ -1,10 +1,10 @@
 {
   "name": "Landnam — Space Mining",
   "short_name": "Landnam",
-  "description": "Space mining browser game — portrait and desktop/landscape supported",
+  "description": "Space mining browser game — portrait mobile and desktop supported",
   "start_url": "/game",
   "display": "standalone",
-  "orientation": "any",
+  "orientation": "portrait",
   "background_color": "#030912",
   "theme_color": "#030912",
   "icons": [
