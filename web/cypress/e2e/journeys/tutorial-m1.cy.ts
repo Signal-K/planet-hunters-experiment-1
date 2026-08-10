@@ -155,7 +155,9 @@ function completeMining() {
 
   if (!MINE_REAL) {
     cy.get('[data-testid="dev-skip-mining-btn"]', { timeout: 8000 }).should('be.visible').click()
-    cy.get('[data-testid="return-home-btn"]', { timeout: 15000 }).should('not.be.disabled').click()
+    // The development shortcut fills the order and calls onComplete directly;
+    // it intentionally bypasses the real player's Return/Deliver button.
+    cy.contains('MISSION TRANSIT', { timeout: 15000 }).should('be.visible')
     return
   }
 
