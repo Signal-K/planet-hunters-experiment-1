@@ -110,6 +110,19 @@ export default function LaunchpadScreen({
 
   const isGuided = (target: (typeof guideSteps)[number]['target']) => guide?.target === target
 
+  const monitoringStructure = (
+    <>
+      <span className="launchpad-object-art">
+        <img src="/game/assets/hub/sat_station.png" alt="" />
+        {!player.satelliteMonitoringBuilt && <i className="launchpad-build-plus">+</i>}
+      </span>
+      <span className="launchpad-object-label">
+        <small>GROUND SYSTEM</small>
+        <strong>{player.satelliteMonitoringBuilt ? 'S.M.S. · ONLINE' : 'BUILD MONITORING STATION'}</strong>
+      </span>
+    </>
+  )
+
   return (
     <div className="game-screen theme-deep ln-scene-launchpad">
       <TopBar eyebrow="EARTH BASE · LAUNCHPAD" title="Your Program" onBack={onBack} solid francs={francs} />
@@ -123,21 +136,23 @@ export default function LaunchpadScreen({
           <div><strong>{launchedSatellites}/{SATELLITE_MODELS.length}</strong><span>ORBIT</span></div>
         </div>
 
-        <button
-          type="button"
-          className={`launchpad-scene-object launchpad-station ${player.satelliteMonitoringBuilt ? 'is-built' : 'is-blueprint'} ${isGuided('station') ? 'is-guided' : ''}`}
-          data-testid="launchpad-monitoring-structure"
-          onClick={player.satelliteMonitoringBuilt ? undefined : onBuildMonitoring}
-        >
-          <span className="launchpad-object-art">
-            <img src="/game/assets/hub/sat_station.png" alt="" />
-            {!player.satelliteMonitoringBuilt && <i className="launchpad-build-plus">+</i>}
-          </span>
-          <span className="launchpad-object-label">
-            <small>GROUND SYSTEM</small>
-            <strong>{player.satelliteMonitoringBuilt ? 'S.M.S. · ONLINE' : 'BUILD MONITORING STATION'}</strong>
-          </span>
-        </button>
+        {player.satelliteMonitoringBuilt ? (
+          <div
+            className={`launchpad-scene-object launchpad-station is-built ${isGuided('station') ? 'is-guided' : ''}`}
+            data-testid="launchpad-monitoring-structure"
+          >
+            {monitoringStructure}
+          </div>
+        ) : (
+          <button
+            type="button"
+            className={`launchpad-scene-object launchpad-station is-blueprint ${isGuided('station') ? 'is-guided' : ''}`}
+            data-testid="launchpad-monitoring-structure"
+            onClick={onBuildMonitoring}
+          >
+            {monitoringStructure}
+          </button>
+        )}
 
         <div className={`launchpad-scene-object launchpad-tower ${isGuided('tower') ? 'is-guided' : ''}`} data-testid="launchpad-status-card">
           <span className="launchpad-tower-art">

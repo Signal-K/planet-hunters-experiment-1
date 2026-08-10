@@ -40,6 +40,7 @@ describe('LaunchpadScreen infrastructure hierarchy', () => {
     const markup = renderLaunchpad(true)
     expect(markup).toContain('S.M.S. · ONLINE')
     expect(markup).not.toContain('data-testid="launchpad-build-monitoring-btn"')
+    expect(markup).not.toMatch(/<button[^>]*data-testid="launchpad-monitoring-structure"/)
   })
 
   it('uses the selected rocket art and name throughout the launchpad scene', () => {
