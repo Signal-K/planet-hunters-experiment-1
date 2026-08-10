@@ -1031,7 +1031,7 @@ func seedCatalog(app core.App) {
 		part
 	}{
 		{"hull-mk1", part{"Hull MK1", "chassis", "/parts/basic_hull_t1.png", 1, false, 2, 6, 0, 0, 0}},
-		{"hull-mk2", part{"SR2 Unibody Frame", "chassis", "/parts/reinforced_hull_t2.png", 2, false, 3, 10, 0, 0, 0}},
+		{"hull-mk2", part{"Prospector Unibody Frame", "chassis", "/parts/reinforced_hull_t2.png", 2, false, 3, 10, 0, 0, 0}},
 		{"hull-cargo", part{"Cargo Bay T1", "chassis", "/parts/cargo_bay_t1.png", 1, false, 2, 14, 0, 0, 0}},
 		{"ion-a1", part{"Ion Drive A1", "propulsion", "/parts/basic_thruster_t1.png", 1, false, 0, 0, 40, 5, 0}},
 		{"fusion-b2", part{"Fusion Drive B2", "propulsion", "/parts/fusion_drive_t2.png", 2, false, 0, 0, 80, 7, 0}},
@@ -1039,7 +1039,7 @@ func seedCatalog(app core.App) {
 		{"hand-drill", part{"Hand Drill", "drill", "/parts/mining_drill_t1.png", 1, false, 0, 0, 0, 0, 1}},
 		{"laser-t2", part{"Laser T2", "drill", "/parts/mining_drill_t1.png", 2, false, 0, 0, 0, 0, 2}},
 		{"plasma-t3", part{"Plasma T3", "drill", "/parts/mining_drill_t1.png", 3, true, 0, 0, 0, 0, 4}},
-		{"cargo-module-t1", part{"Cargo Module T1", "drill", "/parts/drill-hand.png", 1, false, 0, 0, 0, 0, 0}},
+		{"cargo-module-t1", part{"Cargo Module T1", "drill", "/parts/cargo_bay_t1.png", 1, false, 0, 0, 0, 0, 0}},
 	}
 	for _, p := range parts {
 		fields := map[string]any{
