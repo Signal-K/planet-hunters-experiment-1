@@ -13,37 +13,42 @@ import {
 import { AssetManager } from '@/lib/engine/AssetManager'
 
 /**
- * Only the launchpad's six modular sprites are loaded and passed through
- * (STS-611) — `buildLaunchpad` is the one builder whose textured branch draws
- * a complete structure matching its Graphics fallback. The other builders
- * (`buildScanStation`, `buildRefinery`, `buildSatelliteStation`,
- * `buildCommandCenter`) still only consume a partial slot set — e.g.
- * `buildScanStation`'s textured path draws only `scan_dish` at y=-52 with no
- * tripod/mast/feet beneath it — so their texture fields are deliberately left
- * null here until each of those is brought up to the same completeness.
+ * Load the authored hub sprites used by both the launchpad and the four
+ * primary structures. The scene builders retain procedural fallbacks when an
+ * asset is unavailable, but passing the real renders here is what makes the
+ * hub match the authored mobile art rather than the sparse fallback geometry.
  */
-const LAUNCHPAD_SPRITES = [
+const HUB_SPRITES = [
   'hub_pad_deck', 'hub_pad_gantry_frame', 'hub_pad_swing_arm',
   'hub_pad_clamp', 'hub_pad_mast', 'hub_pad_tank',
+  'hub_depot_tank', 'hub_scan_dish', 'hub_sat_station', 'hub_cmd_building',
   // Loaded alongside the pad, not just when hot — a launch can be triggered
   // between renders, and the alternative (loading these lazily on the first
   // `hot` frame) would show a bare pad for one frame every time.
   'ship_sr1', 'ship_sr2',
 ] as const
 
-async function loadLaunchpadTextures(): Promise<HubTextures> {
+async function loadHubTextures(): Promise<HubTextures> {
   const tex = nullTextures()
   const assets = new AssetManager()
   await assets.loadManifest('/game/assets/manifest.json')
-  const loaded = await Promise.all(LAUNCHPAD_SPRITES.map(name => assets.loadTexture(name)))
-  tex.pad_deck = loaded[0].isPlaceholder ? null : loaded[0].texture
-  tex.pad_gantry_frame = loaded[1].isPlaceholder ? null : loaded[1].texture
-  tex.pad_swing_arm = loaded[2].isPlaceholder ? null : loaded[2].texture
-  tex.pad_clamp = loaded[3].isPlaceholder ? null : loaded[3].texture
-  tex.pad_mast = loaded[4].isPlaceholder ? null : loaded[4].texture
-  tex.pad_tank = loaded[5].isPlaceholder ? null : loaded[5].texture
-  tex.ship_sr1 = loaded[6].isPlaceholder ? null : loaded[6].texture
-  tex.ship_sr2 = loaded[7].isPlaceholder ? null : loaded[7].texture
+  const loaded = await Promise.all(HUB_SPRITES.map(name => assets.loadTexture(name)))
+  const texture = (name: typeof HUB_SPRITES[number]) => {
+    const index = HUB_SPRITES.indexOf(name)
+    return loaded[index].isPlaceholder ? null : loaded[index].texture
+  }
+  tex.pad_deck = texture('hub_pad_deck')
+  tex.pad_gantry_frame = texture('hub_pad_gantry_frame')
+  tex.pad_swing_arm = texture('hub_pad_swing_arm')
+  tex.pad_clamp = texture('hub_pad_clamp')
+  tex.pad_mast = texture('hub_pad_mast')
+  tex.pad_tank = texture('hub_pad_tank')
+  tex.depot_tank = texture('hub_depot_tank')
+  tex.scan_dish = texture('hub_scan_dish')
+  tex.sat_station = texture('hub_sat_station')
+  tex.cmd_building = texture('hub_cmd_building')
+  tex.ship_sr1 = texture('ship_sr1')
+  tex.ship_sr2 = texture('ship_sr2')
   return tex
 }
 
@@ -134,7 +139,7 @@ export default function HubPixiCanvas({ buildings, rocketVariant = 'explorer' }:
           resolution: Math.min(window.devicePixelRatio || 1, 2),
           autoDensity: true,
         }),
-        loadLaunchpadTextures(),
+        loadHubTextures(),
       ])
       tex = loadedTex
 
