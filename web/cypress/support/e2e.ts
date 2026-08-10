@@ -54,6 +54,15 @@ beforeEach(() => {
     body: { token: 'e2e-token', record: { id: 'e2e-user', email: 'e2e@landnam.guest' } },
   }).as('pbAuth')
 
+  // The mandatory email gate creates the lightweight account before it
+  // authenticates it. Stubbing only auth-with-password leaves the gate
+  // permanently mounted in offline journeys (KES-135), so the test never
+  // reaches the gameplay flow it is meant to verify.
+  cy.intercept('POST', '**/api/collections/users/records', {
+    statusCode: 200,
+    body: { id: 'e2e-user', email: 'e2e@landnam.guest' },
+  }).as('pbUserCreate')
+
   cy.intercept('POST', '**/api/collections/users/auth-refresh', {
     statusCode: 200,
     body: { token: 'e2e-token', record: { id: 'e2e-user', email: 'e2e@landnam.guest' } },

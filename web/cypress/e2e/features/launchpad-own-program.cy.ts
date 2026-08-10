@@ -67,23 +67,14 @@ describe('Launchpad · your own program', () => {
     cy.get('[data-testid="launchpad-program-operation-btn"]', { timeout: 15000 }).should('exist')
     // The auth gate overlays the whole screen on a fresh visit and covers
     // the sticky actions; get past it (email required, KES-97) before
-    // asserting on navigation. The gate mounts asynchronously (its own auth
-    // check resolves independently of the launchpad scene above), so a bare
-    // synchronous `cy.get('body').then(...)` right here can run before it
-    // has appeared at all — wait for the DOM to settle into one of its two
-    // possible states first, or the check below silently skips the gate and
-    // the later click races its mount instead.
-    cy.get('[data-testid="auth-gate-quick-email"], [data-testid="launchpad-view-contracts-btn"]', { timeout: 15000 }).should('exist')
-    cy.get('body').then($b => {
-      if ($b.find('[data-testid="auth-gate-quick-email"]').length) {
-        cy.get('[data-testid="auth-gate-quick-email"]').type(`cy-launchpad-${Date.now()}@example.com`)
-        cy.get('[data-testid="auth-gate-quick-submit"]').click()
-        // The gate's own removal from the DOM is an async re-render that
-        // races a click issued right after .click() above — wait for it to
-        // fully settle before touching anything else on the scene.
-        cy.get('[data-testid="auth-gate-quick-email"]', { timeout: 15000 }).should('not.exist')
-      }
-    })
+    // This fixture deliberately has no stored credentials, so the mandatory
+    // email gate must be handled before the contracts CTA. Waiting directly
+    // for the gate avoids resolving the CTA first and then racing its async
+    // mount/removal (KES-135).
+    cy.get('[data-testid="auth-gate-quick-email"]', { timeout: 15000 }).should('be.visible')
+    cy.get('[data-testid="auth-gate-quick-email"]').type(`cy-launchpad-${Date.now()}@example.com`)
+    cy.get('[data-testid="auth-gate-quick-submit"]').click()
+    cy.get('[data-testid="auth-gate-quick-email"]', { timeout: 15000 }).should('not.exist')
     cy.get('[data-testid="launchpad-view-contracts-btn"]', { timeout: 15000 }).should('be.visible').click()
     cy.contains('Mission Board', { timeout: 15000 }).should('be.visible')
   })
