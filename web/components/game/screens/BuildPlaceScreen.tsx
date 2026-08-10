@@ -71,12 +71,14 @@ export default function BuildPlaceScreen({ onPlaced, onBack, hasCoach, player }:
   const [picked, setPicked] = useState('launchpad')
   const [cell, setCell] = useState<number | null>(null)
   const [plotEntities, setPlotEntities] = useState<EntityData[]>(DEFAULT_PLOTS)
+  const [sceneLoaded, setSceneLoaded] = useState(false)
   const containerRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     Scene.load('/game/scenes/hub.scene.json')
       .then(data => { if (data.entities?.length) setPlotEntities(data.entities) })
       .catch(() => {})
+      .finally(() => setSceneLoaded(true))
   }, [])
 
   const catalog = STRUCTURES.filter(s =>
@@ -130,7 +132,12 @@ export default function BuildPlaceScreen({ onPlaced, onBack, hasCoach, player }:
   }
 
   return (
-    <div ref={containerRef} style={{ width: '100%', height: '100%', position: 'relative', overflow: 'hidden' }}>
+    <div
+      ref={containerRef}
+      data-testid="build-place-screen"
+      data-scene-loaded={sceneLoaded ? 'true' : 'false'}
+      style={{ width: '100%', height: '100%', position: 'relative', overflow: 'hidden' }}
+    >
       {/* Earth background */}
       <div style={{ position: 'absolute', inset: 0 }}>
         <HubWorldBackground />
