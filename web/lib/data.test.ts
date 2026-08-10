@@ -210,8 +210,10 @@ describe('skill nodes', () => {
 })
 
 describe('ship room layouts', () => {
-  it('slots SR1 rooms into the cutaway container bounds', () => {
-    const layout = getShipInteriorLayout('sr1')
+  it('slots Explorer rooms into the cutaway container bounds', () => {
+    const layout = getShipInteriorLayout('explorer')
+    const legacyLayout = getShipInteriorLayout('sr1')
+    expect(legacyLayout).toBe(layout)
     expect(layout?.containerSrc).toBe('/game/assets/ships/containers/sr1_cutaway.png')
     expect(layout?.slots.map(slot => slot.kind).sort()).toEqual(['booster', 'cockpit', 'crew-module', 'engine', 'lander', 'payload'])
     for (const slot of layout?.slots ?? []) {

@@ -223,7 +223,7 @@ export default function HangarScreen({ francs, missionsDone, unlockedSkillNodes,
       {customizerOpen && (
         <div style={{ position: 'absolute', inset: 0, zIndex: 10 }}>
           <ShipInteriorPreview
-            rocketId="sr1"
+            rocketId="explorer"
             startingFrancs={francs}
             missionsDone={missionsDone}
             installedParts={installed}

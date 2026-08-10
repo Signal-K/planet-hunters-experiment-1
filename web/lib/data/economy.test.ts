@@ -14,14 +14,14 @@ describe('economy scale', () => {
     // The onboarding was always documented as "M1's fee buys your Prospector",
     // but the player used to start with 10B against a 1.3B rocket — enough for
     // seven of them before anything felt like a decision.
-    expect(STARTING_FRANCS).toBeLessThan(ROCKET_PRICES.sr2)
-    expect(missionPayoutFloor(1)).toBeGreaterThan(ROCKET_PRICES.sr2)
+    expect(STARTING_FRANCS).toBeLessThan(ROCKET_PRICES.prospector)
+    expect(missionPayoutFloor(1)).toBeGreaterThan(ROCKET_PRICES.prospector)
   })
 
   it('makes a full cargo hold worth a visible share of a contract', () => {
     // The whole point of the overhaul: a Prospector hold of the best ore in
     // the game used to sell for 0.002% of a contract fee.
-    const hold = ROCKET_MODELS.find(r => r.id === 'sr2')!.stats.cargo
+    const hold = ROCKET_MODELS.find(r => r.name === 'Prospector')!.stats.cargo
     const fee = CONTRACT_FEES[2]
     const commonShare = (hold * MINERAL_VALUE.common) / fee
     const exoticShare = (hold * MINERAL_VALUE.exotic) / fee
@@ -48,7 +48,7 @@ describe('economy scale', () => {
 
   it('keeps every franc figure inside one readable band', () => {
     const values = [
-      STARTING_FRANCS, ROCKET_PRICES.sr2, ROCKET_PRICES.sr3,
+      STARTING_FRANCS, ROCKET_PRICES.prospector, ROCKET_PRICES.unannounced3,
       ...Object.values(STRUCTURE_PRICES), ...Object.values(CONTRACT_FEES),
       ...Object.values(MINERAL_VALUE),
     ]

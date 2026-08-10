@@ -5,7 +5,7 @@
 Current onboarding covers M1 and M2 only.
 
 - M1 teaches launchpad placement, mission selection, target selection, preflight, mining, and debrief.
-- M2 teaches the SR2 purchase flow for a larger single-use starter rocket.
+- M2 teaches the Prospector purchase flow for a larger single-use vessel.
 - M3 is not yet fully described. Do not implement or document M3 from older plans.
 
 Earlier onboarding and post-onboarding plans are intentionally not part of this spec.
@@ -18,15 +18,15 @@ Earlier onboarding and post-onboarding plans are intentionally not part of this 
 2. Open Missions.
 3. Pick the M1 contract.
 4. Choose a compatible target.
-5. Review the prebuilt SR1.
+5. Review the prebuilt Explorer.
 6. Launch.
 7. Mine the required ore.
 8. Debrief and sell cargo.
 
 `M2_STEPS` covers the current M2 proposal:
 
-1. Explain that M2 needs SR2 because SR1 cannot carry the required silicon.
-2. Purchase SR2 in the rocket selection step before launch.
+1. Explain that M2 needs Prospector because Explorer cannot carry the required silicon.
+2. Purchase Prospector in the rocket selection step before launch.
 
 ## Presentation
 

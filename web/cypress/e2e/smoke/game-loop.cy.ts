@@ -152,8 +152,8 @@ describe('Full Game Loop — Landnam', () => {
   })
 
   describe('Phase 3: Rocket Assembly → Launch', () => {
-    it('assembly screen shows prebuilt starter rocket and launch button', () => {
-      // AssemblyScreen was refactored to show a prebuilt starter rocket (not individual parts)
+    it('assembly screen shows the prebuilt Explorer and launch button', () => {
+      // AssemblyScreen was refactored to show the prebuilt Explorer (not individual parts)
       visitWithState(fullState({
         screen: 'fab',
         missionId: 'generated-s1-starter-bulk-1',

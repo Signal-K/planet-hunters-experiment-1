@@ -2,7 +2,7 @@
 
 ## Overview
 
-This document defines the first authored seed set for Landnam: contractors, minerals, market prices, starter rockets, structures, target bands, and mission templates. Everything here matches the portrait-first operational UI style.
+This document defines the first authored seed set for Landnam: clients, minerals, market prices, Explorer and Prospector vessels, structures, target bands, and mission templates. Everything here matches the portrait-first operational UI style.
 
 ## Seed Catalog Summary
 

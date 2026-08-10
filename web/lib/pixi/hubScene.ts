@@ -508,7 +508,7 @@ function buildMound(width: number): { root: Container; animatables: AnimState[] 
 function buildLaunchpad(
   hot: boolean,
   tex: HubTextures,
-  rocketVariant: 'sr1' | 'sr2' = 'sr1',
+  rocketVariant: 'explorer' | 'prospector' = 'explorer',
 ): { root: Container; animatables: AnimState[] } {
   const root = new Container()
   const anims: AnimState[] = []
@@ -549,7 +549,7 @@ function buildLaunchpad(
     // config yet (Player has no rocket-config field reachable from HubScreen
     // without new plumbing) — defaults to Explorer (sr1) whenever a launch
     // is pending. Follow-up, not silently "done".
-    const shipTex = rocketVariant === 'sr2' ? tex.ship_sr2 : tex.ship_sr1
+    const shipTex = rocketVariant === 'prospector' ? tex.ship_sr2 : tex.ship_sr1
     if (hot && shipTex) {
       const ship = new Sprite(shipTex)
       ship.anchor.set(0.5, 0.5)
@@ -793,9 +793,9 @@ export interface HubBuildingDef {
    */
   dimmed?: boolean
   /** Which ship stands on the pad while `hot` (launch pending). Defaults to
-   *  Explorer (sr1) — see buildLaunchpad's comment on why this isn't wired
+   *  Explorer — see buildLaunchpad's comment on why this isn't wired
    *  to the player's actual rocket config yet. */
-  rocketVariant?: 'sr1' | 'sr2'
+  rocketVariant?: 'explorer' | 'prospector'
 }
 
 // ─── Main scene builder ───────────────────────────────────────────────────────

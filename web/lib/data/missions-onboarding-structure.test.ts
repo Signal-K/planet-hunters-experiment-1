@@ -14,8 +14,8 @@ import { describe, it, expect } from 'vitest'
 import { MISSIONS } from '@/lib/data/missions'
 import { ROCKET_MODELS } from '@/lib/data/rockets'
 
-const SR1_CARGO = ROCKET_MODELS.find(r => r.id === 'sr1')!.stats.cargo
-const SR2_CARGO = ROCKET_MODELS.find(r => r.id === 'sr2')!.stats.cargo
+const EXPLORER_CARGO = ROCKET_MODELS.find(r => r.name === 'Explorer')!.stats.cargo
+const PROSPECTOR_CARGO = ROCKET_MODELS.find(r => r.name === 'Prospector')!.stats.cargo
 
 describe('Onboarding mission structure (M1-M3)', () => {
   it('removes the cut self-directed "Independent Prospect" mission from the onboarding ladder entirely', () => {
@@ -34,12 +34,12 @@ describe('Onboarding mission structure (M1-M3)', () => {
     expect(m2.length).toBeGreaterThan(1)
   })
 
-  it('every M2 option requires more cargo than the Explorer (SR1) can carry, forcing a Prospector (SR2) purchase', () => {
-    expect(SR1_CARGO).toBeLessThan(SR2_CARGO)
+  it('every M2 option requires more cargo than Explorer can carry, forcing a Prospector purchase', () => {
+    expect(EXPLORER_CARGO).toBeLessThan(PROSPECTOR_CARGO)
     const m2 = MISSIONS.filter(m => m.sequence === 2)
     expect(m2.length).toBeGreaterThan(0)
     for (const mission of m2) {
-      expect(mission.requires.cargo_min).toBeGreaterThan(SR1_CARGO)
+      expect(mission.requires.cargo_min).toBeGreaterThan(EXPLORER_CARGO)
     }
   })
 

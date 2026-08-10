@@ -94,9 +94,9 @@ export const REFINING_COST_RATE = 0.07
 // ── Hardware and structures ────────────────────────────────────────────────
 
 export const ROCKET_PRICES = {
-  sr1: 0,
-  sr2: 13_000_000,
-  sr3: 40_000_000,
+  explorer: 0,
+  prospector: 13_000_000,
+  unannounced3: 40_000_000,
 } as const
 
 export const STRUCTURE_PRICES = {

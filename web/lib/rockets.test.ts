@@ -1,8 +1,16 @@
 import { describe, expect, it } from 'vitest'
-import { ROCKET_MODELS } from '@/lib/data'
+import { ROCKET_MODELS, ROCKET_IDS, canonicalRocketId } from '@/lib/data'
 import { getRequiredRocketModel } from './rockets'
 
 describe('getRequiredRocketModel', () => {
+  it('uses canonical runtime ids and resolves legacy ids only at the compatibility boundary', () => {
+    expect(ROCKET_MODELS.slice(0, 2).map(rocket => rocket.id)).toEqual([ROCKET_IDS.explorer, ROCKET_IDS.prospector])
+    expect(ROCKET_MODELS.some(rocket => /^sr\d$/.test(rocket.id))).toBe(false)
+    expect(canonicalRocketId('sr1')).toBe(ROCKET_IDS.explorer)
+    expect(canonicalRocketId('sr2')).toBe(ROCKET_IDS.prospector)
+    expect(canonicalRocketId(ROCKET_IDS.explorer)).toBe(ROCKET_IDS.explorer)
+  })
+
   it('returns the starter vehicle before later tiers unlock', () => {
     const rocket = getRequiredRocketModel(0)
 

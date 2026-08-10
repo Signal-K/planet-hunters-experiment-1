@@ -2,13 +2,13 @@
 
 ![Spec Coverage](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/YOUR_USERNAME/YOUR_GIST_ID/raw/spec-coverage.json)
 
-A resource management game where players build a launchpad, buy single-use starter rockets, accept contractor jobs, fly to nearby targets, mine minerals, sell cargo, and reinvest.
+A resource management game where players build a launchpad, select single-use Explorer and Prospector vessels, accept client jobs, fly to nearby targets, mine minerals, sell cargo, and reinvest.
 
 > **Migration complete:** Landnam is now 100% Next.js/React — no Godot dependencies. The legacy Godot project (`scene/`) is excluded from the repository and is not used in any build or development workflow.
 
 ## 🎮 Game Overview
 
-Landnám’s current release path is focused on the onboarding mining loop. M1 teaches launchpad, mission, target, preflight, mining, and debrief. M2 teaches the newer SR2 purchase flow with a larger single-use starter rocket. M3 is not yet fully described and should not be implemented or documented from older plans.
+Landnám’s current release path is focused on the onboarding mining loop. M1 teaches launchpad, mission, target, preflight, mining, and debrief. M2 teaches the Prospector purchase flow with a larger single-use vessel. M3 is not yet fully described and should not be implemented or documented from older plans.
 
 ## 📋 Spec-Driven Development
 

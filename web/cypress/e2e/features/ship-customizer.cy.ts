@@ -47,7 +47,7 @@ describe('Ship Customiser staged build', () => {
       }
     })
     cy.get('[data-testid="open-ship-customizer"]', { timeout: 8000 }).should('be.visible').click()
-    cy.get('[data-testid="ship-interior-sr1"]').should('be.visible')
+    cy.get('[data-testid="ship-interior-explorer"]').should('be.visible')
   }
 
   beforeEach(() => {
@@ -104,7 +104,7 @@ describe('Ship Customiser staged build', () => {
 
     cy.get('[data-testid="confirm-ship-config"]').should('not.be.disabled').click()
     // onClose() fires immediately after confirm, so the interior unmounts and the fleet page returns
-    cy.get('[data-testid="ship-interior-sr1"]').should('not.exist')
+    cy.get('[data-testid="ship-interior-explorer"]').should('not.exist')
     cy.contains('Rocket Fleet').should('be.visible')
 
     // Confirmed loadout is real game state, not a mock that resets on close —

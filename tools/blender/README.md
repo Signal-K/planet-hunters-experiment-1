@@ -46,7 +46,7 @@ render_all.py            driver — walks every model module, one PNG each
 models/hub_structures.py Earth Base props (4)
 models/launchpad.py      modular six-sprite launch pad (KES-41/STS-611)
 models/actors.py         rover and drone (2)
-models/ships.py          Explorer/Prospector hulls + SR1 cutaway (KES-41/STS-611)
+models/ships.py          Explorer/Prospector hulls + Explorer cutaway (KES-41/STS-611)
 models/rooms.py          ship interior room panels (KES-41/STS-611)
 models/parts.py          web/parts/ shop icons — writes outside game/assets/
                           via a "../../parts/foo" key (KES-88)

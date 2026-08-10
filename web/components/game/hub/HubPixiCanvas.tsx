@@ -49,18 +49,18 @@ async function loadLaunchpadTextures(): Promise<HubTextures> {
 
 interface HubPixiCanvasProps {
   buildings: HubBuildingDef[]
-  rocketVariant?: 'sr1' | 'sr2'
+  rocketVariant?: 'explorer' | 'prospector'
 }
 
 /**
  * Signature of everything the scene actually draws. Used to rebuild when the
  * building list changes — the PixiJS app itself still initialises only once.
  */
-function signature(buildings: HubBuildingDef[], rocketVariant?: 'sr1' | 'sr2'): string {
-  return `${rocketVariant ?? 'sr1'}|${buildings.map(b => `${b.kind}:${b.plotX}:${b.w}:${b.hot ? 1 : 0}:${b.status ?? ''}`).join('|')}`
+function signature(buildings: HubBuildingDef[], rocketVariant?: 'explorer' | 'prospector'): string {
+  return `${rocketVariant ?? 'explorer'}|${buildings.map(b => `${b.kind}:${b.plotX}:${b.w}:${b.hot ? 1 : 0}:${b.status ?? ''}`).join('|')}`
 }
 
-export default function HubPixiCanvas({ buildings, rocketVariant = 'sr1' }: HubPixiCanvasProps) {
+export default function HubPixiCanvas({ buildings, rocketVariant = 'explorer' }: HubPixiCanvasProps) {
   const divRef = useRef<HTMLDivElement>(null)
   // Keep a stable ref to buildings so the effect can see latest values
   const buildingsRef = useRef(buildings)

@@ -134,7 +134,7 @@ interface HubScreenProps {
   onBuildSubsurfaceRoom?: (roomId: SubsurfaceRoomId) => void
 }
 
-export default function HubScreen({ player, rocketVariant = 'sr1', hasCoach, onGoBuilding, onNav, onUpgradeLaunchpad, onExcavateSubsurface, onBuildSubsurfaceRoom }: HubScreenProps) {
+export default function HubScreen({ player, rocketVariant = 'explorer', hasCoach, onGoBuilding, onNav, onUpgradeLaunchpad, onExcavateSubsurface, onBuildSubsurfaceRoom }: HubScreenProps) {
   const [editMode, setEditMode] = useState(false)
   const [plotEntities, setPlotEntities] = useState<EntityData[]>(DEFAULT_PLOTS)
   const [subsurface, setSubsurface] = useState(false)

@@ -139,7 +139,7 @@ export function ScreenContent({
       return (
         <HubScreen
           player={game.player}
-          rocketVariant={rocketModelForConfig(game.rocket).id === 'sr2' ? 'sr2' : 'sr1'}
+          rocketVariant={rocketModelForConfig(game.rocket).tier >= 2 ? 'prospector' : 'explorer'}
           hasCoach={hasCoach}
           onNav={s => {
             if (s === 'missions') { game.goToMissions(); return }

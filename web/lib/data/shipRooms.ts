@@ -98,8 +98,8 @@ export const SHIP_ROOM_DETAIL_ASSETS: Record<ShipRoomKind, string> = {
 }
 
 export const SHIP_INTERIOR_LAYOUTS: Record<string, ShipInteriorLayout> = {
-  sr1: {
-    rocketId: 'sr1',
+  explorer: {
+    rocketId: 'explorer',
     exteriorSrc: '/game/assets/ships/ship_sr1.png',
     containerSrc: '/game/assets/ships/containers/sr1_cutaway.png',
     // 9x3 cell grid over the cutaway's opened bay (x 7–93%, y 13–84%) —
@@ -111,17 +111,17 @@ export const SHIP_INTERIOR_LAYOUTS: Record<string, ShipInteriorLayout> = {
       // kept only so existing bounds-checks/tests have a concrete rect;
       // gx/gy (grid cell units) are what ShipCustomizerCanvas actually uses
       // to place and drag rooms.
-      { id: 'sr1-cockpit', kind: 'cockpit',  label: 'Cockpit',     x:  7.0, y: 13.0, w: 19.1, h: 47.3, gx: 0, gy: 0 },
-      { id: 'sr1-payload', kind: 'payload',  label: 'Payload Bay', x: 26.1, y: 13.0, w: 19.1, h: 47.3, gx: 2, gy: 0 },
-      { id: 'sr1-booster', kind: 'booster',  label: 'Boosters',    x: 45.2, y: 13.0, w: 19.1, h: 23.7, gx: 4, gy: 0 },
-      { id: 'sr1-engine',  kind: 'engine',   label: 'Engine Room', x: 45.2, y: 36.7, w: 19.1, h: 23.7, gx: 4, gy: 1 },
+      { id: 'explorer-cockpit', kind: 'cockpit',  label: 'Cockpit',     x:  7.0, y: 13.0, w: 19.1, h: 47.3, gx: 0, gy: 0 },
+      { id: 'explorer-payload', kind: 'payload',  label: 'Payload Bay', x: 26.1, y: 13.0, w: 19.1, h: 47.3, gx: 2, gy: 0 },
+      { id: 'explorer-booster', kind: 'booster',  label: 'Boosters',    x: 45.2, y: 13.0, w: 19.1, h: 23.7, gx: 4, gy: 0 },
+      { id: 'explorer-engine',  kind: 'engine',   label: 'Engine Room', x: 45.2, y: 36.7, w: 19.1, h: 23.7, gx: 4, gy: 1 },
       // Post-onboarding bolt-ons — installed into the same grid, further aft.
-      { id: 'sr1-crew', kind: 'crew-module', label: 'Crew Module', x: 64.3, y: 13.0, w: 19.1, h: 23.7, gx: 6, gy: 0 },
-      { id: 'sr1-lander', kind: 'lander', label: 'Lander Module', x: 64.3, y: 36.7, w: 19.1, h: 23.7, gx: 6, gy: 1 },
+      { id: 'explorer-crew', kind: 'crew-module', label: 'Crew Module', x: 64.3, y: 13.0, w: 19.1, h: 23.7, gx: 6, gy: 0 },
+      { id: 'explorer-lander', kind: 'lander', label: 'Lander Module', x: 64.3, y: 36.7, w: 19.1, h: 23.7, gx: 6, gy: 1 },
     ],
   },
 }
 
 export function getShipInteriorLayout(rocketId: string): ShipInteriorLayout | undefined {
-  return SHIP_INTERIOR_LAYOUTS[rocketId]
+  return SHIP_INTERIOR_LAYOUTS[rocketId] ?? (rocketId === 'sr1' ? SHIP_INTERIOR_LAYOUTS.explorer : undefined)
 }

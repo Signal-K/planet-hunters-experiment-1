@@ -1,4 +1,4 @@
-"""Explorer (SR1) and Prospector (SR2) hulls, plus the SR1 cutaway background
+"""Explorer and Prospector hulls, plus the Explorer cutaway background
 the ship customiser draws room slots over.
 
 Re-renders the three legacy hand-drawn PNGs pinned in manifest.test.ts's
@@ -146,7 +146,7 @@ def ship_sr2():
 
 
 def sr1_cutaway():
-    """SR1 hull with the tube section opened up into the four onboarding
+    """Explorer hull with the tube section opened up into the four onboarding
     compartments (cockpit/payload/booster/engine) `ShipCustomizerCanvas`
     overlays slot borders onto. See module docstring for why the divider
     x-positions are computed, not chosen."""

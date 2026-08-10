@@ -2,7 +2,7 @@
   {
     "name": "ship_sr2_exterior",
     "profile": "ship_exterior",
-    "prompt": "Tier 2 Prospector mining rocket, upgraded successor to the compact SR1 starter rocket, same single bright cyan engine nozzle and blunt reinforced nose as the SR1 lineage, but a visibly wider mid-hull section housing a much larger cargo bay with reinforced cargo-door seams, and a bulky forward-mounted mining laser turret/mount bolted to the hull with a thicker barrel and amber power coils, two strap-on fuel pods, visible stage seams, practical garage-built space program feel scaled up, closed exterior hull only",
+    "prompt": "Tier 2 Prospector mining rocket, upgraded successor to the compact Explorer, with the same single bright cyan engine nozzle and blunt reinforced nose, but a visibly wider mid-hull section housing a much larger cargo bay with reinforced cargo-door seams, and a bulky forward-mounted mining laser turret/mount bolted to the hull with a thicker barrel and amber power coils, two strap-on fuel pods, visible stage seams, practical garage-built space program feel scaled up, closed exterior hull only",
     "aspect_ratio": "21:9"
   }
 ]

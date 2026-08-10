@@ -250,7 +250,7 @@ export function resolvePreset(name: string): Partial<GameState> | null {
     case 'm2-fab':
       return {
         screen: 'fab',
-        player: { ...BASE_PLAYER, missionsDone: 1, francs: BASE_PLAYER.francs - ROCKET_PRICES.sr2 },
+        player: { ...BASE_PLAYER, missionsDone: 1, francs: BASE_PLAYER.francs - ROCKET_PRICES.prospector },
         tutorial: true, doneSteps: { ...M1_DONE, 20: true, 21: true },
         missionId: SECOND_MISSION.id, targetId: 'eros',
         rocket: { chassis: 'hull-mk2', propulsion: 'fusion-b2', drill: 'laser-t2' },
@@ -291,7 +291,7 @@ export function resolvePreset(name: string): Partial<GameState> | null {
     case 'm3-fab':
       return {
         screen: 'fab',
-        player: { ...BASE_PLAYER, missionsDone: 2, francs: BASE_PLAYER.francs - ROCKET_PRICES.sr2 },
+        player: { ...BASE_PLAYER, missionsDone: 2, francs: BASE_PLAYER.francs - ROCKET_PRICES.prospector },
         tutorial: true, doneSteps: { ...M1_AND_M2_DONE, 30: true, 31: true },
         missionId: THIRD_MISSION.id, targetId: THIRD_MISSION.targetId ?? 'bennu', deliveryTargetId: THIRD_MISSION.deliveryTargetId ?? 'vesta',
         rocket: { chassis: 'hull-mk2', propulsion: 'fusion-b2', drill: 'laser-t2' },

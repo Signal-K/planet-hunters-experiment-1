@@ -64,7 +64,7 @@ describe('resolvePreset — Mission 1 arc', () => {
     expect(p.player!.missionsDone).toBe(0)
   })
 
-  it('m1-fab: fab screen, generated mission, eros target, SR1 config', () => {
+  it('m1-fab: fab screen, generated mission, eros target, Explorer config', () => {
     const p = resolvePreset('m1-fab')!
     expect(p.screen).toBe('fab')
     expect(p.missionId).toBe(FIRST_MISSION.id)
@@ -117,7 +117,7 @@ describe('resolvePreset — Mission 2 arc', () => {
     expect(p.doneSteps![21]).toBeUndefined()
   })
 
-  it('m2-fab: missionsDone=1, fab screen after SR2 purchase, M2 mission + eros', () => {
+  it('m2-fab: missionsDone=1, fab screen after Prospector purchase, M2 mission + eros', () => {
     const p = resolvePreset('m2-fab')!
     expect(p.screen).toBe('fab')
     expect(p.player!.missionsDone).toBe(1)
