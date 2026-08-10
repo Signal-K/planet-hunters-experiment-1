@@ -1,4 +1,6 @@
 import { describe, it, expect, vi } from 'vitest'
+import { existsSync } from 'node:fs'
+import { resolve } from 'node:path'
 import {
   REFINING_VALUE_MULTIPLIER,
   STRUCTURE_PRICES,
@@ -58,6 +60,14 @@ import {
   SUN_TEFF_K,
   SELF_DIRECTED_MINING_MISSION_ID,
 } from './data'
+
+describe('rocket-part assets', () => {
+  it('keeps every rocket-part image reference backed by a public asset', () => {
+    for (const part of Object.values(PARTS).flat()) {
+      expect(existsSync(resolve(process.cwd(), 'public', part.img.slice(1))), part.img).toBe(true)
+    }
+  })
+})
 
 describe('sellCargo', () => {
   it('sums cargo value using mineral prices', () => {

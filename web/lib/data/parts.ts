@@ -20,7 +20,10 @@ export const PARTS: { chassis: Part[]; propulsion: Part[]; drill: Part[] } = {
     { id: 'hand-drill', name: 'Hand Drill', tier: 1, locked: false, img: '/parts/mining_drill_t1.png', rate: 1 },
     { id: 'laser-t2', name: 'Laser T2', tier: 2, locked: false, img: '/parts/laser_drill_t2.png', rate: 2, missionsRequired: 1 },
     { id: 'plasma-t3', name: 'Plasma T3', tier: 3, locked: true, img: '/parts/broadcast_array_t2.png', rate: 4, missionsRequired: 2 },
-    { id: 'cargo-module-t1', name: 'Cargo Module T1', tier: 1, locked: false, img: '/parts/drill-hand.png', rate: 0, missionsRequired: 2 },
+    // Cargo missions occupy the drill slot, but use the cargo-bay art. The
+    // old drill-hand.png path never existed and silently rendered a broken
+    // image in the Hangar/customiser.
+    { id: 'cargo-module-t1', name: 'Cargo Module T1', tier: 1, locked: false, img: '/parts/cargo_bay_t1.png', rate: 0, missionsRequired: 2 },
   ],
 }
 
