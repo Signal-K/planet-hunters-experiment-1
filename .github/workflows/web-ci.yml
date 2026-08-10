@@ -100,6 +100,69 @@ jobs:
           NEXT_PUBLIC_SHARED_PB_URL: http://localhost:8090
           NEXT_PUBLIC_LANDNAM_PB_URL: http://localhost:8091
 
+  e2e-sprint12:
+    name: E2E — Sprint 12 acceptance journeys
+    needs: build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: web
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      # Keep this acceptance job bounded to the Sprint 12 journeys that were
+      # previously either untracked in CI or only covered by visual evidence:
+      # Scan Station, the mission-type viewport matrix, discovery -> economy,
+      # and the launchpad auth-gate handoff. Cypress runs headless here so CI
+      # never requires an interactive desktop session.
+      - name: Run Sprint 12 acceptance journeys
+        uses: cypress-io/github-action@v6
+        with:
+          working-directory: web
+          browser: chrome
+          install: false
+          start: npm run dev
+          wait-on: http://localhost:3001
+          wait-on-timeout: 90
+          spec: >-
+            cypress/e2e/features/scan-station.cy.ts,
+            cypress/e2e/journeys/mission-type-matrix.cy.ts,
+            cypress/e2e/visual/discovery-economy-visual-qa.cy.ts,
+            cypress/e2e/features/launchpad-own-program.cy.ts
+        env:
+          CYPRESS_PROFILE: full
+          CYPRESS_baseUrl: http://localhost:3001
+          NEXT_PUBLIC_FEATURE_SCAN_STATION: true
+          CI: true
+
+      - name: Upload Sprint 12 screenshots
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: sprint12-acceptance-screenshots-${{ github.sha }}
+          path: web/cypress/screenshots/
+          if-no-files-found: ignore
+          retention-days: 14
+
+      - name: Upload Sprint 12 videos
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: sprint12-acceptance-videos-${{ github.sha }}
+          path: web/cypress/videos/
+          if-no-files-found: ignore
+          retention-days: 14
+
   deploy:
     name: Deploy
     # Only after typecheck, unit tests and a real build have passed. There is no
