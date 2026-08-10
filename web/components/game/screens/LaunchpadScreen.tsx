@@ -20,6 +20,8 @@ interface LaunchpadScreenProps {
   freeOperations: boolean
   catalog: Catalog
   player: Player
+  rocketImageSrc?: string
+  selectedRocketName?: string
   francs?: number
 }
 
@@ -50,7 +52,7 @@ function GuideGlyph() {
 }
 
 export default function LaunchpadScreen({
-  onBack, onPick, onViewContracts, onOpenHangar, onBuildMonitoring, missionsDone, freeOperations, catalog, player, francs,
+  onBack, onPick, onViewContracts, onOpenHangar, onBuildMonitoring, missionsDone, freeOperations, catalog, player, rocketImageSrc = '/game/assets/ships/ship_sr1.png', selectedRocketName, francs,
 }: LaunchpadScreenProps) {
   const [guideStep, setGuideStep] = useState<number | null>(null)
   const fleet = ROCKET_MODELS.map(model => ({ model, unlocked: missionsDone >= model.missionsRequired && !model.locked }))
@@ -140,7 +142,7 @@ export default function LaunchpadScreen({
         <div className={`launchpad-scene-object launchpad-tower ${isGuided('tower') ? 'is-guided' : ''}`} data-testid="launchpad-status-card">
           <span className="launchpad-tower-art">
             <img className="launchpad-tower-gantry" src="/game/assets/hub/pad_gantry_frame.png" alt="" />
-            <img className="launchpad-tower-rocket" src="/game/assets/ships/ship_sr1.png" alt="" />
+            <img className="launchpad-tower-rocket" src={rocketImageSrc} alt="" />
             <img className="launchpad-tower-deck" src="/game/assets/hub/pad_deck.png" alt="" />
           </span>
           <span className="launchpad-object-label launchpad-object-label--center">
@@ -151,12 +153,12 @@ export default function LaunchpadScreen({
 
         <button type="button" className={`launchpad-scene-object launchpad-rocket ${isGuided('rocket') ? 'is-guided' : ''}`} data-testid="launchpad-rocket-fleet" onClick={onOpenHangar}>
           <span className="launchpad-rocket-art">
-            <img src="/game/assets/ships/ship_sr1.png" alt="" />
+            <img src={rocketImageSrc} alt="" />
             <i className="launchpad-rocket-glow" />
           </span>
           <span className="launchpad-object-label">
             <small>ROCKET FLEET · {unlockedFleet.length}</small>
-            <strong>{unlockedFleet[0]?.model.name ?? 'NO VEHICLE'} · HANGAR</strong>
+            <strong>{selectedRocketName ?? unlockedFleet[0]?.model.name ?? 'NO VEHICLE'} · HANGAR</strong>
           </span>
         </button>
 

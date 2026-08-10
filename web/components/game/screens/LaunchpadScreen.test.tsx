@@ -41,4 +41,25 @@ describe('LaunchpadScreen infrastructure hierarchy', () => {
     expect(markup).toContain('S.M.S. · ONLINE')
     expect(markup).not.toContain('data-testid="launchpad-build-monitoring-btn"')
   })
+
+  it('uses the selected rocket art and name throughout the launchpad scene', () => {
+    const markup = renderToStaticMarkup(
+      <LaunchpadScreen
+        onBack={() => undefined}
+        onPick={() => undefined}
+        onViewContracts={() => undefined}
+        onOpenHangar={() => undefined}
+        onBuildMonitoring={() => undefined}
+        missionsDone={4}
+        freeOperations
+        catalog={STATIC_CATALOG}
+        player={{ ...DEFAULT_STATE.player, missionsDone: 4, freeOperations: true, satelliteMonitoringBuilt: true }}
+        rocketImageSrc="/game/assets/ships/ship_sr2.png"
+        selectedRocketName="Prospector"
+      />,
+    )
+    expect(markup.match(/ship_sr2\.png/g)?.length).toBe(3)
+    expect(markup).toContain('Prospector · HANGAR')
+    expect(markup).not.toContain('ship_sr1.png')
+  })
 })

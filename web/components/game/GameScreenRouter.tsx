@@ -328,6 +328,8 @@ export function ScreenContent({
           freeOperations={game.player.freeOperations}
           catalog={game.catalog}
           player={game.player}
+          rocketImageSrc={rocketDisplay.img}
+          selectedRocketName={rocketDisplay.name}
           francs={game.player.francs}
         />
       )
