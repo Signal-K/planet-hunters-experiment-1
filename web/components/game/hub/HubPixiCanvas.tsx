@@ -49,21 +49,24 @@ async function loadLaunchpadTextures(): Promise<HubTextures> {
 
 interface HubPixiCanvasProps {
   buildings: HubBuildingDef[]
+  rocketVariant?: 'sr1' | 'sr2'
 }
 
 /**
  * Signature of everything the scene actually draws. Used to rebuild when the
  * building list changes — the PixiJS app itself still initialises only once.
  */
-function signature(buildings: HubBuildingDef[]): string {
-  return buildings.map(b => `${b.kind}:${b.plotX}:${b.w}:${b.hot ? 1 : 0}:${b.status ?? ''}`).join('|')
+function signature(buildings: HubBuildingDef[], rocketVariant?: 'sr1' | 'sr2'): string {
+  return `${rocketVariant ?? 'sr1'}|${buildings.map(b => `${b.kind}:${b.plotX}:${b.w}:${b.hot ? 1 : 0}:${b.status ?? ''}`).join('|')}`
 }
 
-export default function HubPixiCanvas({ buildings }: HubPixiCanvasProps) {
+export default function HubPixiCanvas({ buildings, rocketVariant = 'sr1' }: HubPixiCanvasProps) {
   const divRef = useRef<HTMLDivElement>(null)
   // Keep a stable ref to buildings so the effect can see latest values
   const buildingsRef = useRef(buildings)
   buildingsRef.current = buildings
+  const rocketVariantRef = useRef(rocketVariant)
+  rocketVariantRef.current = rocketVariant
   // Exposed by the init effect so prop changes can trigger a redraw without
   // tearing down and re-initialising the PixiJS Application.
   const rebuildRef = useRef<(() => void) | null>(null)
@@ -73,7 +76,7 @@ export default function HubPixiCanvas({ buildings }: HubPixiCanvasProps) {
   // fills in a tick later. Without this the scene stayed permanently empty
   // (buildingsRef updated, but nothing ever asked the canvas to redraw) and
   // structures were invisible until an unrelated resize happened to fire.
-  const sig = signature(buildings)
+  const sig = signature(buildings, rocketVariant)
   useEffect(() => {
     rebuildRef.current?.()
   }, [sig])
@@ -110,7 +113,11 @@ export default function HubPixiCanvas({ buildings }: HubPixiCanvasProps) {
 
       scene?.destroy()
       const groundY = containerH * (1 - 0.22)
-      scene = buildHubScene(app, buildingsRef.current, tex, { groundY, scaleX })
+      scene = buildHubScene(app, buildingsRef.current.map(building => (
+        building.kind === 'launchpad'
+          ? { ...building, rocketVariant: rocketVariantRef.current }
+          : building
+      )), tex, { groundY, scaleX })
     }
 
     ;(async () => {

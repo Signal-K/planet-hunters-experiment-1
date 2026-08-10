@@ -125,6 +125,7 @@ const DEFAULT_PLOTS: EntityData[] = buildPlotEntities()
 
 interface HubScreenProps {
   player: Player
+  rocketVariant?: HubBuildingDef['rocketVariant']
   hasCoach?: boolean
   onGoBuilding: (b: string) => void
   onNav: (s: Screen) => void
@@ -133,7 +134,7 @@ interface HubScreenProps {
   onBuildSubsurfaceRoom?: (roomId: SubsurfaceRoomId) => void
 }
 
-export default function HubScreen({ player, hasCoach, onGoBuilding, onNav, onUpgradeLaunchpad, onExcavateSubsurface, onBuildSubsurfaceRoom }: HubScreenProps) {
+export default function HubScreen({ player, rocketVariant = 'sr1', hasCoach, onGoBuilding, onNav, onUpgradeLaunchpad, onExcavateSubsurface, onBuildSubsurfaceRoom }: HubScreenProps) {
   const [editMode, setEditMode] = useState(false)
   const [plotEntities, setPlotEntities] = useState<EntityData[]>(DEFAULT_PLOTS)
   const [subsurface, setSubsurface] = useState(false)
@@ -372,7 +373,7 @@ export default function HubScreen({ player, hasCoach, onGoBuilding, onNav, onUpg
 
           {/* PixiJS building sprites */}
           <ErrorBoundary fallback={null}>
-            <HubPixiCanvas buildings={hubBuildings} />
+            <HubPixiCanvas buildings={hubBuildings} rocketVariant={rocketVariant} />
           </ErrorBoundary>
 
           {/* Surface buildings — hit areas + labels.

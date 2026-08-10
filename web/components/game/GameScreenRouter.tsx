@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react'
 import { useGame } from '@/game-context'
-import { ACADEMY_INTRO_MISSION_ID, M1_STEPS, M2_STEPS, M3_STEPS, rocketDisplayForConfig } from '@/lib/data'
+import { ACADEMY_INTRO_MISSION_ID, M1_STEPS, M2_STEPS, M3_STEPS, rocketDisplayForConfig, rocketModelForConfig } from '@/lib/data'
 import type { Screen } from '@/lib/game-types'
 import MissionSetupRoutes from '@/components/game/MissionSetupRoutes'
 import MissionOperationRoutes from '@/components/game/MissionOperationRoutes'
@@ -139,6 +139,7 @@ export function ScreenContent({
       return (
         <HubScreen
           player={game.player}
+          rocketVariant={rocketModelForConfig(game.rocket).id === 'sr2' ? 'sr2' : 'sr1'}
           hasCoach={hasCoach}
           onNav={s => {
             if (s === 'missions') { game.goToMissions(); return }
