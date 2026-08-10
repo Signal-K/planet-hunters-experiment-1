@@ -42,7 +42,7 @@ export default function TutorialCoach({ stepIndex, steps, step, total, onManualN
           width: i === stepIndex ? 18 : 6,
           height: 6,
           borderRadius: 999,
-          background: i < stepIndex ? '#39d36a' : i === stepIndex ? '#f5a623' : 'rgba(112,217,234,0.2)',
+          background: i < stepIndex ? '#39d36a' : i === stepIndex ? '#70d9ea' : 'rgba(112,217,234,0.2)',
           transition: 'all 250ms',
           flexShrink: 0,
         }} />
@@ -148,10 +148,10 @@ export default function TutorialCoach({ stepIndex, steps, step, total, onManualN
           alignItems: 'center',
           gap: 12,
           background: 'linear-gradient(160deg, rgba(16,16,18,0.98), rgba(11,11,13,0.98))',
-          border: '1.5px solid rgba(245,166,35,0.7)',
+          border: '1.5px solid rgba(112,217,234,0.7)',
           borderRadius: 16,
           padding: '12px 16px 12px 12px',
-          boxShadow: '0 8px 32px rgba(0,0,0,0.6), 0 0 24px rgba(245,166,35,0.12)',
+          boxShadow: '0 8px 32px rgba(0,0,0,0.6), 0 0 24px rgba(112,217,234,0.12)',
         }}>
           {/* Pulsing glow is its own opacity-animated overlay rather than an
               animated box-shadow on this card — see .coach-glow-ring. */}
@@ -164,7 +164,7 @@ export default function TutorialCoach({ stepIndex, steps, step, total, onManualN
 
           {/* Text */}
           <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 10, fontWeight: 800, letterSpacing: '0.2em', color: 'var(--ln-amber)', textTransform: 'uppercase', marginBottom: 4 }}>
+            <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 10, fontWeight: 800, letterSpacing: '0.2em', color: 'var(--ln-cyan)', textTransform: 'uppercase', marginBottom: 4 }}>
               {step.title}
             </div>
             {resolvedBody && (

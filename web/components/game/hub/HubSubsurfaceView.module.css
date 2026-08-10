@@ -125,15 +125,16 @@
 .content {
   position: absolute;
   top: 72px;
-  right: 48px;
   bottom: 168px;
-  left: 16px;
+  left: 50%;
   z-index: 2;
   display: flex;
   width: min(1184px, calc(100% - 64px));
   margin: 0 auto;
   flex-direction: column;
   gap: 16px;
+  box-sizing: border-box;
+  transform: translateX(-50%);
 }
 
 .deckHeader,
@@ -970,6 +971,7 @@
     bottom: 168px;
     left: 12px;
     width: auto;
+    transform: none;
   }
 
   .deckSummary {

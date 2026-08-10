@@ -288,7 +288,9 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
         {hasCoach && <TutorialHighlight borderRadius={8} />}
         {!resolved ? (
           <PrimaryBtn
-            kind={delivered ? 'amber' : 'cyan'}
+            // Amber is reserved for the payout amount itself. The action that
+            // resolves the mission remains the cyan primary CTA in both states.
+            kind="cyan"
             testId="resolve-cargo-btn"
             onClick={() => {
               setResolved(true)
@@ -299,7 +301,9 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
           </PrimaryBtn>
         ) : (
           <PrimaryBtn
-            kind={delivered ? 'amber' : 'cyan'}
+            // Collecting a reward is still a primary action; keep payout
+            // emphasis inside the payout panel rather than on the button.
+            kind="cyan"
             testId="collect-reward-btn"
             disabled={collecting}
             onClick={() => {

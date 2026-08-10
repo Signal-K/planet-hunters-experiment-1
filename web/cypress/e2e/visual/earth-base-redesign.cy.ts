@@ -77,6 +77,12 @@ function openHub(player: object) {
   cy.wait(2500)
 }
 
+function assertNoHorizontalOverflow() {
+  cy.window().then(win => {
+    expect(win.document.documentElement.scrollWidth, 'document width').to.be.at.most(win.innerWidth)
+  })
+}
+
 describe('Earth Base — redesigned scene', () => {
   Cypress.on('uncaught:exception', err => {
     if (err.message.includes('_cancelResize')) return false
@@ -120,6 +126,7 @@ describe('Earth Base — redesigned scene', () => {
       placementPlots: { launchpad: 0, refinery: 1, 'scan-station': 2, 'satellite-monitoring-station': 3 },
       stash: { iron: 12, silicon: 5 },
     })
+    assertNoHorizontalOverflow()
     cy.screenshot('earth-base-03-desktop-full', { capture: 'viewport' })
   })
 
@@ -165,6 +172,7 @@ describe('Earth Base — redesigned scene', () => {
     cy.contains('button', 'Subsurface').click({ scrollBehavior: false })
     cy.get('[data-testid="subsurface-facility-cutaway"]', { timeout: 10000 })
       .should('be.visible')
+    assertNoHorizontalOverflow()
     cy.screenshot('earth-base-05-desktop-subsurface', { capture: 'viewport' })
   })
 

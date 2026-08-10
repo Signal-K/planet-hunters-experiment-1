@@ -57,7 +57,7 @@ function CardButton({ accent, icon, eyebrow, title, cta, onClick, testId }: {
       data-testid={testId}
       onClick={onClick}
       style={{
-        width: '100%', textAlign: 'left', cursor: 'pointer',
+        width: '100%', minWidth: 0, boxSizing: 'border-box', textAlign: 'left', cursor: 'pointer',
         background: 'var(--hub-panel, #080d18)',
         border: '1.5px solid var(--hub-outline, rgba(255,255,255,0.55))',
         borderRadius: 12, padding: 10,
@@ -79,13 +79,13 @@ function CardButton({ accent, icon, eyebrow, title, cta, onClick, testId }: {
         <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 13, fontWeight: 800, color: '#fff', lineHeight: 1.3 }}>{title}</div>
       </div>
       <span style={{
-        flexShrink: 0,
-        padding: '5px 10px', borderRadius: 999,
+        minWidth: 0, flexShrink: 1,
+        padding: '5px 8px', borderRadius: 999,
         background: 'transparent', border: `1.5px solid ${accent}`,
         color: accent,
         fontFamily: 'var(--ln-font-display)', fontSize: 9, fontWeight: 800,
         letterSpacing: '0.12em', textTransform: 'uppercase',
-        display: 'inline-flex', alignItems: 'center', gap: 4,
+        display: 'inline-flex', alignItems: 'center', gap: 4, whiteSpace: 'nowrap',
       }}>
         {cta} ›
       </span>

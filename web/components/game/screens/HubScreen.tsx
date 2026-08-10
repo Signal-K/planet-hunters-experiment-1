@@ -447,7 +447,7 @@ export default function HubScreen({ player, hasCoach, onGoBuilding, onNav, onUpg
           </h1>
         </div>
         <span style={{ flex: 1 }} />
-        <div style={{ pointerEvents: 'auto' }}>
+        <div style={{ pointerEvents: 'auto', minWidth: 0, maxWidth: '100%' }}>
           <HUDStrip player={player} onJobsClick={() => onNav('missions')} />
         </div>
       </div>
