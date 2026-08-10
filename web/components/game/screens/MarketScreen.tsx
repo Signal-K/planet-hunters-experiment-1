@@ -45,7 +45,7 @@ export default function MarketScreen({ stash, marketSupply, marketSupplyUpdatedA
   }
 
   return (
-    <div className="flex flex-col min-h-screen" style={{ background: 'var(--ln-void)', color: 'var(--ln-text)' }}>
+    <div className="theme-light market-screen flex flex-col min-h-screen" style={{ background: 'var(--ln-void)', color: 'var(--ln-text)' }}>
       <TopBar title="Commodity Exchange" onBack={onBack} right={
         <StatusPill kind="info">{formatCurrency(francs, { compact: true })}</StatusPill>
       } />
