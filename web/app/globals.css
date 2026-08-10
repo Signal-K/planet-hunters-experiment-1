@@ -776,6 +776,20 @@ button { cursor: pointer; }
     grid-template-rows: minmax(320px, 45%) minmax(0, 1fr);
     gap: 12px;
   }
+  /* Target Picker has one shell child: the map/detail layout. The generic
+     compact setup rule above is for two-card screens and otherwise caps that
+     single child at 45%, leaving the orbital map below its tested usable
+     height on phones. */
+  .mission-setup-screen--target .mission-setup-content {
+    grid-template-rows: minmax(0, 1fr);
+  }
+  .mission-setup-screen--target .mission-setup-frame {
+    min-height: 380px;
+  }
+  .mission-setup-screen--target [data-testid="target-picker-orbital-map"] {
+    min-height: 380px !important;
+    height: 380px !important;
+  }
   .mission-setup-card-scroll {
     padding: 14px;
   }
@@ -949,6 +963,15 @@ button { cursor: pointer; }
   .hub-desktop-nav {
     display: flex;
   }
+
+  /* The tutorial rail spans the desktop content width. Keep the optional
+     ambient notification prompt in a separate lower-left slot while that
+     rail is present instead of claiming the rail's reserved rectangle. */
+  .portrait-canvas:has([data-ui-zone="tutorial-rail"]) .hub-push-opt-in {
+    top: auto;
+    bottom: 14px;
+    left: 14px;
+  }
 }
 
 /* Mobile landscape: fill landscape viewport with adjusted chrome */
@@ -971,6 +994,16 @@ button { cursor: pointer; }
   }
   .screen-scroll--coach-manual {
     padding-top: var(--tutorial-manual-content-top);
+  }
+
+  /* Landscape phones have only ~320px of game content after the bottom tab
+     bar. Keep the tutorial copy readable but compact enough that the first
+     mission card remains fully visible and actionable below it. */
+  [data-ui-zone="tutorial-rail"] {
+    max-height: 112px !important;
+  }
+  .mission-board-screen-content {
+    padding-top: 170px !important;
   }
 }
 
@@ -1151,8 +1184,12 @@ html[data-coach-target="build-structure-strip"] [data-coach-id="build-structure-
 
 .hub-push-opt-in {
   position: absolute;
-  top: 16px;
-  right: 196px;
+  /* Keep the ambient opt-in out of the progression-card action column. At
+     desktop widths the cards occupy the upper-right content rail; the old
+     `right: 196px` placement landed directly over their click targets. */
+  top: 74px;
+  left: 14px;
+  right: auto;
   z-index: 19;
   max-width: 210px;
 }
@@ -1169,4 +1206,17 @@ html[data-coach-target="build-structure-strip"] [data-coach-id="build-structure-
 
 @media (orientation: landscape) and (max-height: 600px) {
   .hub-progression-stack { bottom: 76px !important; }
+  /* The compact landscape canvas cannot fit the full-width action rail and
+     the right-hand progression cards in the same vertical band. Keep the
+     navigation controls in their own left-side slot so the card buttons stay
+     physically clickable. */
+  .hub-action-rail {
+    top: 60px !important;
+    bottom: auto !important;
+    left: 12px !important;
+    right: auto !important;
+    width: max-content !important;
+    max-width: calc(100% - 24px) !important;
+    justify-content: flex-start !important;
+  }
 }
