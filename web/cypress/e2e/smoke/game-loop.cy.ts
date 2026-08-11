@@ -82,7 +82,10 @@ describe('Full Game Loop — Landnam', () => {
   describe('Phase 1: Onboarding (Intro → Build → Hub)', () => {
     it('intro screen renders and begins onboarding', () => {
       visitWithState({ screen: 'intro' })
-      cy.contains('LANDNAM').should('be.visible')
+      // The mobile orientation guard also contains LANDNAM in its copy. Use
+      // the authored intro title so this assertion cannot pass/fail against
+      // the hidden guard when Cypress runs at a desktop viewport.
+      cy.get('.intro-title').should('be.visible').and('contain.text', 'LANDNAM')
       cy.contains('BEGIN OPERATIONS').should('be.visible')
       cy.get('[data-testid="intro-begin-btn"]').click()
       cy.contains('EARTH BASE · SETUP').should('be.visible')
