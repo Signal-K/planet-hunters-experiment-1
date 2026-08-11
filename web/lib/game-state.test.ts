@@ -159,6 +159,24 @@ describe('game state hydration normalization', () => {
     expect(normalized.screen).toBe('missions')
   })
 
+  it('returns an operational saved build screen to the Hub on hydration', () => {
+    const normalized = normalizeAndRepair({
+      screen: 'build',
+      player: { freeOperations: true, placed: ['launchpad'] },
+    })
+
+    expect(normalized.screen).toBe('hub')
+  })
+
+  it('keeps the initial build screen for a brand-new program', () => {
+    const normalized = normalizeAndRepair({
+      screen: 'build',
+      player: { freeOperations: false, placed: [] },
+    })
+
+    expect(normalized.screen).toBe('build')
+  })
+
   it('preserves active transit telescope mission context on hydration', () => {
     const normalized = normalizeAndRepair({
       screen: 'debrief',

@@ -4,7 +4,6 @@ import React, { useEffect, useState } from 'react'
 import type { Player, Screen } from '@/game-context'
 import ProgressionCard from '@/components/game/ProgressionCard'
 import ConfirmActionSheet from '@/components/game/ConfirmActionSheet'
-import { TutorialCompleteSheet, useTutorialCompleteAck } from '@/components/game/TutorialCompleteSheet'
 import { Scene } from '@/lib/engine/Scene'
 import type { EntityData } from '@/lib/engine/types'
 import { buildPlotEntities } from '@/lib/engine/prefabs'
@@ -16,7 +15,6 @@ import { HubSubsurfaceView } from '@/components/game/hub/HubSubsurfaceView'
 import { Building, EmptyPlot } from '@/components/game/hub/Building'
 import type { BuildingCallout } from '@/components/game/hub/Building'
 import { TUTORIAL_CONTENT_TOP, TUTORIAL_RAIL } from '@/lib/tutorial-layout'
-import { FREE_OPS_START_MISSIONS_DONE } from '@/lib/data/mission-generator'
 import { LAUNCHPAD_UPGRADE_COST, type SubsurfaceRoomId } from '@/lib/data'
 import { formatCurrency } from '@/lib/format'
 import { FEATURE_FLAGS } from '@/lib/featureFlags'
@@ -121,14 +119,14 @@ function SceneBtn({ icon, label, onClick, active, accent, muted, pulse, testId }
 // reproduces hub.scene.json exactly.
 const DEFAULT_PLOTS: EntityData[] = buildPlotEntities()
 
-const HUB_STRUCTURE_ART: Record<string, { src: string; width: number; lift: number }> = {
+export const HUB_STRUCTURE_ART: Record<string, { src: string; width: number; lift: number }> = {
   launchpad: { src: '/game/assets/hub/pad_gantry_frame.png', width: 88, lift: 82 },
   refinery: { src: '/game/assets/hub/depot_tank.png', width: 72, lift: 64 },
   'scan-station': { src: '/game/assets/hub/scan_dish.png', width: 66, lift: 58 },
   'satellite-monitoring-station': { src: '/game/assets/hub/sat_station.png', width: 72, lift: 60 },
   command: { src: '/game/assets/hub/cmd_building.png', width: 76, lift: 70 },
-  'deep-space-telescope': { src: '/game/assets/hub/cmd_building.png', width: 76, lift: 70 },
-  'astronaut-academy': { src: '/game/assets/hub/cmd_building.png', width: 76, lift: 70 },
+  'deep-space-telescope': { src: '/game/assets/hub/deep_space_telescope.png', width: 84, lift: 78 },
+  'astronaut-academy': { src: '/game/assets/hub/astronaut_academy.png', width: 80, lift: 74 },
 }
 
 /**
@@ -184,7 +182,6 @@ export default function HubScreen({ player, rocketVariant = 'explorer', hasCoach
   const [confirmingLaunchpadUpgrade, setConfirmingLaunchpadUpgrade] = useState(false)
   const [tessQueueCount, setTessQueueCount] = useState(0)
   const [asteroidQueueCount, setAsteroidQueueCount] = useState(0)
-  const { show: showTutorialComplete, dismiss: dismissTutorialComplete } = useTutorialCompleteAck(player.missionsDone, FREE_OPS_START_MISSIONS_DONE)
   const placed = player.placed ?? []
   const placementPlots = player.placementPlots ?? {}
   const legacyPlaced = (kind: string) => placed.includes(kind) && placementPlots[kind] == null
@@ -504,9 +501,6 @@ export default function HubScreen({ player, rocketVariant = 'explorer', hasCoach
             onNav={onNav}
             top={hasCoach ? TUTORIAL_CONTENT_TOP : TUTORIAL_RAIL.TOP_CHROME_HEIGHT + 8}
           />
-          {showTutorialComplete && (
-            <TutorialCompleteSheet onDone={dismissTutorialComplete} />
-          )}
         </>
       )}
 

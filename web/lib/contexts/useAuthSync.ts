@@ -159,7 +159,16 @@ export function useAuthSync({
     // signed-in player. Only settle (and thus only risk opening the gate)
     // once this has resolved either way.
     pbShared.collection('users').authRefresh()
-      .catch(() => {})
+      .catch((err: unknown) => {
+        // A revoked or otherwise server-invalid shared token cannot exchange
+        // into Landnam auth. Keeping the stale record around made the Hub look
+        // signed in while its background requests repeatedly emitted 401s.
+        if (responseStatus(err) === 401) {
+          pbShared.authStore.clear()
+          pbLandnam.authStore.clear()
+          setAuthUserId(null)
+        }
+      })
       .finally(() => { if (active) setSharedAuthRestoreSettled(true) })
     return () => { active = false }
   }, [authUserId, hydrated, isPreview])

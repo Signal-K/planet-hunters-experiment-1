@@ -241,6 +241,13 @@ export function repairStateRoute(input: GameState): GameState {
   if (input.screen === 'fab' && !input.player.freeOperations && (!mission || !target)) {
     return { ...input, screen: 'hub', missionId: null, targetId: null }
   }
+  // Build placement is an intentional, short-lived action from the Hub — it
+  // is not a useful resume destination. Persisting it left returning Free Ops
+  // players on a dimmed plot picker with no context, even when their base was
+  // already operational. New players (no structures yet) still begin here.
+  if (input.screen === 'build' && input.player.freeOperations && input.player.placed.length > 0) {
+    return { ...input, screen: 'hub' }
+  }
   if (input.screen === 'targets' && mission?.targetId) {
     return { ...input, screen: 'rocket-buy', targetId: mission.targetId }
   }

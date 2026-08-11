@@ -102,7 +102,13 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
   // ── Domain hooks ───────────────────────────────────────────────────────────
   const ui      = useUIActions(setState)
   const auth    = useAuthSync({ state, setState, stateRef, hydrated, isPreview: isPreview.current, addToast: ui.addToast, normalizeAndRepair, storageKey: STORAGE_KEY })
-  useConfirmedDiscoveryPoll({ stateRef, setState, hydrated, addToast: ui.addToast })
+  useConfirmedDiscoveryPoll({
+    stateRef,
+    setState,
+    hydrated,
+    enabled: !!auth.authUserId && pbShared.authStore.isValid,
+    addToast: ui.addToast,
+  })
   const { catalog } = useCatalogSync(state, setState, hydrated, isPreview.current, ui.addToast)
   const runtimeCatalog = useMemo(() => buildRuntimeCatalog({
     catalog,
