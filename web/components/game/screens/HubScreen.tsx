@@ -15,8 +15,6 @@ import { SoilCrossSection } from '@/components/game/hub/SoilCrossSection'
 import { HubSubsurfaceView } from '@/components/game/hub/HubSubsurfaceView'
 import { Building, EmptyPlot } from '@/components/game/hub/Building'
 import type { BuildingCallout } from '@/components/game/hub/Building'
-import HubPixiCanvas from '@/components/game/hub/HubPixiCanvas'
-import ErrorBoundary from '@/components/ui/ErrorBoundary'
 import { TUTORIAL_CONTENT_TOP, TUTORIAL_RAIL } from '@/lib/tutorial-layout'
 import { FREE_OPS_START_MISSIONS_DONE } from '@/lib/data/mission-generator'
 import { LAUNCHPAD_UPGRADE_COST, type SubsurfaceRoomId } from '@/lib/data'
@@ -122,6 +120,51 @@ function SceneBtn({ icon, label, onClick, active, accent, muted, pulse, testId }
 // both screens); the prefab is the one definition and a test asserts it still
 // reproduces hub.scene.json exactly.
 const DEFAULT_PLOTS: EntityData[] = buildPlotEntities()
+
+const HUB_STRUCTURE_ART: Record<string, { src: string; width: number; lift: number }> = {
+  launchpad: { src: '/game/assets/hub/pad_gantry_frame.png', width: 88, lift: 82 },
+  refinery: { src: '/game/assets/hub/depot_tank.png', width: 72, lift: 64 },
+  'scan-station': { src: '/game/assets/hub/scan_dish.png', width: 66, lift: 58 },
+  'satellite-monitoring-station': { src: '/game/assets/hub/sat_station.png', width: 72, lift: 60 },
+  command: { src: '/game/assets/hub/cmd_building.png', width: 76, lift: 70 },
+  'deep-space-telescope': { src: '/game/assets/hub/cmd_building.png', width: 76, lift: 70 },
+  'astronaut-academy': { src: '/game/assets/hub/cmd_building.png', width: 76, lift: 70 },
+}
+
+/**
+ * The Hub used Pixi for its structure layer, but its WebGL canvas could render
+ * completely empty in the same headless Docker/Electron environment that
+ * supplies our visual evidence. These authored PNGs are the canonical baked
+ * renders, so put them in the ordinary DOM scene layer: they remain visible
+ * and crisp in every renderer, while the existing Building components keep
+ * their clickable hit areas and explanatory labels above them.
+ */
+function HubStructureArt({ buildings }: { buildings: HubBuildingDef[] }) {
+  return (
+    <div aria-hidden="true" style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 4 }}>
+      {buildings.map(building => {
+        const art = HUB_STRUCTURE_ART[building.kind] ?? HUB_STRUCTURE_ART.command
+        return (
+          <img
+            key={`${building.kind}-${building.plotX}`}
+            src={art.src}
+            alt=""
+            style={{
+              position: 'absolute',
+              left: `${(building.plotX / 402) * 100}%`,
+              bottom: `calc(22% - ${art.lift}px)`,
+              width: art.width,
+              height: 'auto',
+              transform: 'translateX(-50%)',
+              opacity: building.dimmed ? 0.55 : 1,
+              filter: 'drop-shadow(0 5px 5px rgba(0, 0, 0, 0.3))',
+            }}
+          />
+        )
+      })}
+    </div>
+  )
+}
 
 interface HubScreenProps {
   player: Player
@@ -371,10 +414,9 @@ export default function HubScreen({ player, rocketVariant = 'explorer', hasCoach
               which read as overcast weather against the new deep-blue sky. */}
           <AmbientMotes />
 
-          {/* PixiJS building sprites */}
-          <ErrorBoundary fallback={null}>
-            <HubPixiCanvas buildings={hubBuildings} rocketVariant={rocketVariant} />
-          </ErrorBoundary>
+          {/* Authored structure sprites. DOM rendering keeps the Hub legible
+              in both hardware WebGL and Docker/Electron screenshot runners. */}
+          <HubStructureArt buildings={hubBuildings} />
 
           {/* Surface buildings — hit areas + labels.
               zIndex 10 is load-bearing: every scene layer below is an

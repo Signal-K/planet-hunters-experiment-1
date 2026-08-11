@@ -1224,5 +1224,9 @@ html[data-coach-target="build-structure-strip"] [data-coach-id="build-structure-
 }
 
 @media (max-width: 1023px) {
+  /* The Hub surface itself already ends above the persistent tab bar. Keep
+     its utility controls at the bottom of that reserved surface band, clear
+     of the structure labels at the turf line. */
+  .hub-action-rail { bottom: var(--ln-s-2) !important; }
   .hub-push-opt-in { display: none; }
 }
