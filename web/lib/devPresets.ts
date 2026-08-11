@@ -464,6 +464,7 @@ export function resolvePreset(name: string): Partial<GameState> | null {
           missionsDone: 2,
           activeMission: { id: ROVER_MISSION.id, label: `${ROVER_MISSION.title} → ${ROVER_MISSION.targetId ?? 'bennu'}` },
           roverMiningStartedAt: Date.now() - 45_000,
+          roverTerrainClassifications: { [ROVER_MISSION.targetId ?? THIRD_MISSION.targetId ?? 'bennu']: 'vein' },
         },
         tutorial: false,
         doneSteps: M1_AND_M2_DONE,

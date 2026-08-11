@@ -48,6 +48,7 @@ export const DEFAULT_STATE: GameState = {
     loanOffered: false,
     seen_planets: [],
     roverDeployments: [],
+    roverTerrainClassifications: {},
     clientTerritories: {},
     tessClassifications: {},
     asteroidClassifications: {},
@@ -146,6 +147,9 @@ export function normalizeState(input: PartialSave): GameState {
   const asteroidClassifications = player.asteroidClassifications && typeof player.asteroidClassifications === 'object'
     ? player.asteroidClassifications
     : DEFAULT_STATE.player.asteroidClassifications
+  const roverTerrainClassifications = player.roverTerrainClassifications && typeof player.roverTerrainClassifications === 'object'
+    ? player.roverTerrainClassifications
+    : DEFAULT_STATE.player.roverTerrainClassifications
   const discoveredExoplanetTargets = player.discoveredExoplanetTargets && typeof player.discoveredExoplanetTargets === 'object'
     ? player.discoveredExoplanetTargets
     : DEFAULT_STATE.player.discoveredExoplanetTargets
@@ -213,7 +217,7 @@ export function normalizeState(input: PartialSave): GameState {
     missionId,
     targetId,
     rocket: { ...DEFAULT_STATE.rocket, ...input.rocket },
-    player: { ...DEFAULT_STATE.player, ...player, clientStructures, placed: placedList, placementPlots, licenseGrade, researchXP, unlockedBlueprints, tessClassifications, asteroidClassifications, discoveredExoplanetTargets, instrumentDigestNotifiedOn, satelliteMonitoringLevel, transitSatelliteLevel, deepSpaceTelescopeLevel, crew, surfaceOps,
+    player: { ...DEFAULT_STATE.player, ...player, clientStructures, placed: placedList, placementPlots, licenseGrade, researchXP, unlockedBlueprints, tessClassifications, asteroidClassifications, roverTerrainClassifications, discoveredExoplanetTargets, instrumentDigestNotifiedOn, satelliteMonitoringLevel, transitSatelliteLevel, deepSpaceTelescopeLevel, crew, surfaceOps,
       satelliteMonitoringBuilt, deepSpaceTelescopeBuilt, refineryBuilt, scannerBuilt },
     doneSteps: { ...DEFAULT_STATE.doneSteps, ...input.doneSteps },
     ...(pendingTerritoryClaimFor ? { pendingTerritoryClaimFor } : {}),

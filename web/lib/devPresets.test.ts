@@ -237,6 +237,7 @@ describe('resolvePreset — recent UI surfaces', () => {
     expect(p.screen).toBe('rover-mining')
     expect(p.player!.activeMission).not.toBeNull()
     expect(p.player!.roverMiningStartedAt).toBeGreaterThan(0)
+    expect(p.player!.roverTerrainClassifications).toBeDefined()
   })
 })
 

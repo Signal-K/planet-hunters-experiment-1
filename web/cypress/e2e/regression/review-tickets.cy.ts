@@ -179,6 +179,7 @@ describe('Desk Review tickets — rover pause/resume (STS-490)', () => {
       player: {
         activeMission: { id: 'generated-s1-starter-bulk-1', label: 'Rover landing -> Eros' },
         roverMiningStartedAt: startedAt,
+        roverTerrainClassifications: { eros: 'vein' },
       },
     })
 
@@ -197,6 +198,31 @@ describe('Desk Review tickets — rover pause/resume (STS-490)', () => {
     cy.visit('/game/rover-mining')
     cy.contains('EXTRACTION COMPLETE', { timeout: 10000 }).should('be.visible')
     cy.contains('COLLECT CARGO').should('be.visible')
+  })
+})
+
+describe('Sprint 13 rover scouting (KES-110)', () => {
+  it('turns a terrain classification into persisted mineral intelligence before extraction', () => {
+    visitGame('/game/rover-mining', {
+      screen: 'rover-mining',
+      missionId: 'generated-s1-starter-bulk-1',
+      targetId: 'eros',
+      player: {
+        activeMission: { id: 'generated-s1-starter-bulk-1', label: 'Rover landing -> Eros' },
+        roverMiningStartedAt: undefined,
+        roverTerrainClassifications: {},
+      },
+    })
+
+    cy.get('[data-testid="rover-scouting-classification"]', { timeout: 10000 }).should('be.visible')
+    cy.get('[data-testid="rover-classify-vein"]').click()
+    cy.contains('MINERAL VEIN').should('be.visible')
+    cy.contains('SIGNATURE +3').should('be.visible')
+
+    savedState().then(state => {
+      expect(state.player.roverTerrainClassifications?.eros).to.eq('vein')
+      expect(state.player.roverMiningStartedAt).to.be.a('number')
+    })
   })
 })
 

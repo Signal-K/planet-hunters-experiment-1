@@ -2,6 +2,7 @@
 // Extracted from game-context.tsx so they can be imported without pulling in React context.
 
 import type { RocketConfig, Mission, Target, TessClassification, TessVerdict, TransitRange, AsteroidClassification, AsteroidVerdict } from '@/lib/data'
+import type { RoverTerrainClass } from '@/lib/data/rover-scouting'
 
 export interface DailyClientPool {
   date: string        // 'YYYY-MM-DD'
@@ -86,6 +87,9 @@ export interface Player {
   // zero (RoverMiningScreen would otherwise re-init its own Date.now() on
   // remount). Cleared once the run completes or is abandoned.
   roverMiningStartedAt?: number
+  // KES-110: a synthetic rover observation is a player decision that points
+  // the extraction run at an existing target mineral signature.
+  roverTerrainClassifications?: Record<string, RoverTerrainClass>
   // Wall-clock start of the cargo-transfer operation at a two-leg mission's
   // delivery target. The unload scene derives progress from this epoch so
   // remounts, hidden tabs, and Back-to-hub pauses cannot restart it.
