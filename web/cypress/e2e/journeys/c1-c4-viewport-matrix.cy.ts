@@ -118,6 +118,7 @@ describe('C1–C4 screen contracts across viewport classes', () => {
       it('renders the core C4 economy and progression screens', () => {
         visit('/game/market', stateWith('market'))
         cy.contains('Commodity Exchange', { timeout: 10000 }).should('be.visible')
+        cy.screenshot(`c4-market-${viewport.label.replaceAll(' ', '-')}`)
 
         visit('/game/refinery', stateWith('refinery'))
         cy.contains('Refinery', { timeout: 10000 }).should('be.visible')
