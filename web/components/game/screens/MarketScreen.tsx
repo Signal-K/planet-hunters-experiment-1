@@ -46,11 +46,11 @@ export default function MarketScreen({ stash, marketSupply, marketSupplyUpdatedA
 
   return (
     <div className="theme-light market-screen flex flex-col min-h-screen" style={{ background: 'var(--ln-void)', color: 'var(--ln-text)' }}>
-      <TopBar title="Commodity Exchange" onBack={onBack} right={
+      <TopBar title="Commodity Exchange" onBack={onBack} solid right={
         <StatusPill kind="info">{formatCurrency(francs, { compact: true })}</StatusPill>
       } />
 
-      <div className="flex-1 p-4 space-y-4 overflow-y-auto">
+      <div className="flex-1 p-4 space-y-4 overflow-y-auto" style={{ paddingTop: 88 }}>
         <Panel>
           <div style={{ fontFamily: 'var(--ln-font-display)', fontWeight: 800, fontSize: 15, color: 'var(--ln-cyan)' }}>Mineral Inventory</div>
           <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 12, color: 'var(--ln-text-dim)', marginTop: 4 }}>
