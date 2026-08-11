@@ -26,6 +26,8 @@
   "actor_rover": "/game/assets/actors/rover.png",
   "actor_drone": "/game/assets/actors/drone.png",
   "hub_sat_station": "/game/assets/hub/sat_station.png",
+  "hub_deep_space_telescope": "/game/assets/hub/deep_space_telescope.png",
+  "hub_astronaut_academy": "/game/assets/hub/astronaut_academy.png",
   "hub_pad_deck": "/game/assets/hub/pad_deck.png",
   "hub_pad_gantry_frame": "/game/assets/hub/pad_gantry_frame.png",
   "hub_pad_swing_arm": "/game/assets/hub/pad_swing_arm.png",

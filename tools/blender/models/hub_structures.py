@@ -241,9 +241,79 @@ def sat_station():
     return dict(layout=(52, 36), ortho=2.6, mode="flat", target=(0, 0, 0.75))
 
 
+def deep_space_telescope():
+    """68x62 — a visibly distinct large-aperture observatory.
+
+    The hub previously reused the command-building silhouette for this future
+    instrument. A long optical tube, faceted primary mirror and fork mount
+    make its purpose legible before the player reads the label.
+    """
+    base = kit.cylinder("base", 1.05, 0.34, verts=10)
+    kit.solid("base", base, T["hull_dark"], "hulldark")
+    plinth = kit.box("plinth", (1.35, 1.08, 0.32), location=(0, 0, 0.28), bevel=0.04)
+    kit.solid("plinth", plinth, T["hull"], "hull")
+    # Fork mount: the empty centre and two arms distinguish an instrument
+    # cradle from another rectangular service building.
+    for sx in (-0.58, 0.58):
+        arm = kit.box("fork", (0.16, 0.22, 1.35), location=(sx, 0, 0.62), bevel=0.03)
+        arm.rotation_euler = (0, -0.30, 0)
+        kit.solid("fork", arm, T["steel"], "steel", outline=0.008)
+    tube = kit.cylinder("tube", 0.46, 2.05, location=(0, 0, 1.42), rotation=(0, 1.5708, 0), verts=10)
+    tube.rotation_euler = (0, 1.5708 - 0.30, 0)
+    kit.solid("tube", tube, T["surface_3"], "surface3")
+    collar = kit.cylinder("collar", 0.53, 0.22, location=(-0.32, 0, 1.52), rotation=(0, 1.5708, 0), verts=10)
+    collar.rotation_euler = (0, 1.5708 - 0.30, 0)
+    kit.solid("collar", collar, T["hull_dark"], "hulldark", outline=0)
+    # Camera-facing blue primary mirror and a small cyan guide scope are the
+    # cues that this is a telescope, not a cannon or a generic antenna.
+    mirror = kit.cylinder("mirror", 0.48, 0.08, location=(1.02, 0, 1.12), rotation=(0, 1.5708, 0), verts=12)
+    mirror.rotation_euler = (0, 1.5708 - 0.30, 0)
+    kit.solid("mirror", mirror, T["cyan_bright"], "cyanbright", outline=0.01)
+    guide = kit.cylinder("guide", 0.13, 0.85, location=(0.0, -0.42, 1.8), rotation=(0, 1.5708, 0), verts=8)
+    guide.rotation_euler = (0, 1.5708 - 0.30, 0)
+    kit.solid("guide", guide, T["cyan"], "cyan", outline=0.006)
+    return dict(layout=(68, 62), ortho=3.9, mode="flat", target=(0, 0, 1.05))
+
+
+def astronaut_academy():
+    """64x58 — a compact training dome with a launch-simulator antenna.
+
+    No people sprite is implied: the academy reads as a facility through its
+    round training hall, entrance airlock and recognisable mission simulator.
+    """
+    foundation = kit.box("foundation", (2.15, 1.65, 0.28), bevel=0.05)
+    kit.solid("foundation", foundation, T["hull_dark"], "hulldark")
+    hall = kit.cylinder("hall", 0.92, 0.95, location=(-0.18, 0, 0.25), verts=12)
+    kit.solid("hall", hall, T["hull"], "hull")
+    dome = kit.cone("dome", 0.92, 0.72, location=(-0.18, 0, 1.18), verts=12)
+    kit.solid("dome", dome, T["surface_3"], "surface3")
+    # A bright segmented oculus gives the dome a controlled, institutional
+    # purpose; the lower airlock and steps make the scale readable.
+    oculus = kit.cylinder("oculus", 0.22, 0.06, location=(-0.18, -0.02, 1.88), verts=10)
+    kit.solid("oculus", oculus, T["cyan_bright"], "cyanbright", outline=0)
+    airlock = kit.box("airlock", (0.52, 0.38, 0.58), location=(0.6, -0.72, 0.28), bevel=0.04)
+    kit.solid("airlock", airlock, T["steel"], "steel")
+    door = kit.box("door", (0.24, 0.05, 0.34), location=(0.6, -0.93, 0.32))
+    kit.solid("door", door, T["hull_dark"], "hulldark", outline=0.008)
+    for i in range(3):
+        step = kit.box("step", (0.64 - i * 0.1, 0.32, 0.08), location=(0.6, -0.98 - i * 0.1, 0.05 + i * 0.07))
+        kit.solid("step", step, T["steel"], "steel", outline=0)
+    # Simulator mast: a restrained, practical training cue rather than a
+    # decorative spire. Amber remains a small state/wayfinding accent.
+    mast = kit.box("sim_mast", (0.12, 0.12, 0.95), location=(0.92, 0.22, 0.75))
+    kit.solid("sim_mast", mast, T["steel"], "steel", outline=0.008)
+    sim = kit.box("sim", (0.42, 0.34, 0.28), location=(0.92, 0.22, 1.52), bevel=0.03)
+    kit.solid("sim", sim, T["surface_3"], "surface3")
+    beacon = kit.box("beacon", (0.14, 0.14, 0.12), location=(0.92, 0.22, 1.74))
+    kit.solid("beacon", beacon, T["amber"], "amber", outline=0)
+    return dict(layout=(64, 58), ortho=3.7, mode="flat", target=(0, 0, 0.95))
+
+
 BUILDS = {
     "hub/depot_tank": depot_tank,
     "hub/scan_dish": scan_dish,
     "hub/cmd_building": cmd_building,
     "hub/sat_station": sat_station,
+    "hub/deep_space_telescope": deep_space_telescope,
+    "hub/astronaut_academy": astronaut_academy,
 }

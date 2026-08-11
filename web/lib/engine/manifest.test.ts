@@ -86,10 +86,10 @@ describe('asset manifest', () => {
   })
 })
 
-describe('Blender-rendered sprites', () => {
+describe('production hub and actor sprites', () => {
   const RENDERED = ['game/assets/hub', 'game/assets/actors']
 
-  it('has every rendered sprite registered in the manifest', () => {
+  it('has every shipped hub and actor sprite registered in the manifest', () => {
     // The reverse of the dangling check: a sprite rendered but never added to
     // the manifest is invisible to AssetManager and silently unused.
     const registered = new Set(Object.values(manifest))
@@ -105,6 +105,7 @@ describe('Blender-rendered sprites', () => {
       'hub_pad_deck', 'hub_pad_gantry_frame', 'hub_pad_swing_arm',
       'hub_pad_clamp', 'hub_pad_mast', 'hub_pad_tank',
       'hub_depot_tank', 'hub_scan_dish', 'hub_cmd_building',
+      'hub_deep_space_telescope', 'hub_astronaut_academy',
     ]) {
       expect({ name, present: name in manifest }).toEqual({ name, present: true })
     }

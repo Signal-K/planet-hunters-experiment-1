@@ -67,6 +67,13 @@ describe('rocket-part assets', () => {
       expect(existsSync(resolve(process.cwd(), 'public', part.img.slice(1))), part.img).toBe(true)
     }
   })
+
+  it('gives each named heavy part its own visible sprite', () => {
+    const byId = new Map(Object.values(PARTS).flat().map(part => [part.id, part.img]))
+    expect(byId.get('hull-mk3')).toBe('/parts/hull_mk3_heavy_t3.png')
+    expect(byId.get('hull-hauler')).toBe('/parts/bulk_hauler_t3.png')
+    expect(byId.get('plasma-t3')).toBe('/parts/plasma_drill_t3.png')
+  })
 })
 
 describe('sellCargo', () => {
