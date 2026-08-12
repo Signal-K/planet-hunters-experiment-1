@@ -131,6 +131,8 @@ export default function TargetPickerScreen({ mission, onBack, onPick, hasCoach, 
       title="Pick Target"
       onBack={onBack}
       hasCoach={hasCoach}
+      hideStepFooter={hasCoach}
+      contentBottom={hasCoach ? 104 : undefined}
       step="Target"
       stepDescription={
         deliveryTarget

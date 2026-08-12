@@ -5,7 +5,7 @@ import LaunchpadScreen from './LaunchpadScreen'
 import { STATIC_CATALOG } from '@/lib/catalog'
 import { DEFAULT_STATE } from '@/lib/game-state'
 
-function renderLaunchpad(satelliteMonitoringBuilt: boolean): string {
+function renderLaunchpad(satelliteMonitoringBuilt: boolean, freeOperations = true): string {
   return renderToStaticMarkup(
     <LaunchpadScreen
       onBack={() => undefined}
@@ -13,10 +13,10 @@ function renderLaunchpad(satelliteMonitoringBuilt: boolean): string {
       onViewContracts={() => undefined}
       onOpenHangar={() => undefined}
       onBuildMonitoring={() => undefined}
-      missionsDone={4}
-      freeOperations
+      missionsDone={freeOperations ? 4 : 0}
+      freeOperations={freeOperations}
       catalog={STATIC_CATALOG}
-      player={{ ...DEFAULT_STATE.player, missionsDone: 4, freeOperations: true, satelliteMonitoringBuilt }}
+      player={{ ...DEFAULT_STATE.player, missionsDone: freeOperations ? 4 : 0, freeOperations, satelliteMonitoringBuilt }}
       francs={DEFAULT_STATE.player.francs}
     />
   )
@@ -41,6 +41,16 @@ describe('LaunchpadScreen infrastructure hierarchy', () => {
     expect(markup).toContain('S.M.S. · ONLINE')
     expect(markup).not.toContain('data-testid="launchpad-build-monitoring-btn"')
     expect(markup).not.toMatch(/<button[^>]*data-testid="launchpad-monitoring-structure"/)
+  })
+
+  it('keeps M1 focused on contracts instead of locked monitoring infrastructure', () => {
+    const markup = renderLaunchpad(false, false)
+    expect(markup).not.toContain('data-testid="launchpad-monitoring-structure"')
+    expect(markup).not.toContain('data-testid="launchpad-build-monitoring-btn"')
+    expect(markup).not.toContain('data-testid="launchpad-guide-open"')
+    expect(markup).not.toContain('data-testid="launchpad-program-operation-btn"')
+    expect(markup).toContain('data-testid="launchpad-view-contracts-btn"')
+    expect(markup).toContain('class="is-primary" data-testid="launchpad-view-contracts-btn"')
   })
 
   it('uses the selected rocket art and name throughout the launchpad scene', () => {

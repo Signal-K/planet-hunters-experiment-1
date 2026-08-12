@@ -16,6 +16,19 @@ describe('Launchpad · your own program', () => {
     },
   })
 
+  const m1Save = () => ({
+    screen: 'launchpad',
+    tutorial: true,
+    player: {
+      missionsDone: 0,
+      freeOperations: false,
+      francs: 50_000_000,
+      placed: ['launchpad'],
+      placementPlots: { launchpad: 0 },
+      satelliteMonitoringBuilt: false,
+    },
+  })
+
   const visitLaunchpad = (save: object) => {
     cy.visit('/game/launchpad', {
       onBeforeLoad(win) {
@@ -44,6 +57,18 @@ describe('Launchpad · your own program', () => {
       .should('match', /OPS\s+[1-9]\d*/)
 
     cy.get('[data-testid="launchpad-view-contracts-btn"]').should('be.visible')
+  })
+
+  it('keeps M1 on client contracts and hides future monitoring infrastructure', () => {
+    cy.viewport(390, 844)
+    visitLaunchpad(m1Save())
+
+    cy.get('[data-testid="launchpad-view-contracts-btn"]', { timeout: 15000 })
+      .should('be.visible')
+      .and('have.class', 'is-primary')
+    cy.get('[data-testid="launchpad-monitoring-structure"]').should('not.exist')
+    cy.get('[data-testid="launchpad-build-monitoring-btn"]').should('not.exist')
+    cy.get('[data-testid="launchpad-program-operation-btn"]').should('not.exist')
   })
 
   it('every listed launch is the player’s own, never a client request', () => {

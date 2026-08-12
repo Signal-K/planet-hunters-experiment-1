@@ -10,6 +10,8 @@ import { buildPlotEntities } from '@/lib/engine/prefabs'
 import { readComponentNumber } from '@/lib/engine/registry'
 import { AmbientMotes } from '@/components/game/hub/AmbientMotes'
 import { HubWorldBackground } from '@/components/game/hub/HubWorldBackground'
+import { HubStructureArt } from '@/components/game/hub/HubStructureArt'
+export { HUB_STRUCTURE_ART } from '@/components/game/hub/HubStructureArt'
 import { SoilCrossSection } from '@/components/game/hub/SoilCrossSection'
 import { HubSubsurfaceView } from '@/components/game/hub/HubSubsurfaceView'
 import { Building, EmptyPlot } from '@/components/game/hub/Building'
@@ -118,51 +120,6 @@ function SceneBtn({ icon, label, onClick, active, accent, muted, pulse, testId }
 // both screens); the prefab is the one definition and a test asserts it still
 // reproduces hub.scene.json exactly.
 const DEFAULT_PLOTS: EntityData[] = buildPlotEntities()
-
-export const HUB_STRUCTURE_ART: Record<string, { src: string; width: number; lift: number }> = {
-  launchpad: { src: '/game/assets/hub/pad_gantry_frame.png', width: 88, lift: 82 },
-  refinery: { src: '/game/assets/hub/refinery_modular_v2.png', width: 92, lift: 68 },
-  'scan-station': { src: '/game/assets/hub/scan_station_modular_v2.png', width: 62, lift: 78 },
-  'satellite-monitoring-station': { src: '/game/assets/hub/sat_station.png', width: 72, lift: 60 },
-  command: { src: '/game/assets/hub/cmd_building.png', width: 76, lift: 70 },
-  'deep-space-telescope': { src: '/game/assets/hub/deep_space_telescope.png', width: 84, lift: 78 },
-  'astronaut-academy': { src: '/game/assets/hub/astronaut_academy.png', width: 80, lift: 74 },
-}
-
-/**
- * The Hub used Pixi for its structure layer, but its WebGL canvas could render
- * completely empty in the same headless Docker/Electron environment that
- * supplies our visual evidence. These authored PNGs are the canonical baked
- * renders, so put them in the ordinary DOM scene layer: they remain visible
- * and crisp in every renderer, while the existing Building components keep
- * their clickable hit areas and explanatory labels above them.
- */
-function HubStructureArt({ buildings }: { buildings: HubBuildingDef[] }) {
-  return (
-    <div aria-hidden="true" style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 4 }}>
-      {buildings.map(building => {
-        const art = HUB_STRUCTURE_ART[building.kind] ?? HUB_STRUCTURE_ART.command
-        return (
-          <img
-            key={`${building.kind}-${building.plotX}`}
-            src={art.src}
-            alt=""
-            style={{
-              position: 'absolute',
-              left: `${(building.plotX / 402) * 100}%`,
-              bottom: `calc(22% - ${art.lift}px)`,
-              width: art.width,
-              height: 'auto',
-              transform: 'translateX(-50%)',
-              opacity: building.dimmed ? 0.55 : 1,
-              filter: 'drop-shadow(0 5px 5px rgba(0, 0, 0, 0.3))',
-            }}
-          />
-        )
-      })}
-    </div>
-  )
-}
 
 interface HubScreenProps {
   player: Player

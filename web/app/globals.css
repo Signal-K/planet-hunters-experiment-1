@@ -1108,6 +1108,13 @@ html[data-coach-target="build-structure-strip"] [data-coach-id="build-structure-
   --hub-outline:    rgba(255, 255, 255, 0.55);
   --hub-panel:      #080d18;
   --hub-panel-deep: #0a0f1a;
+  /* Keep Earth Base visibly atmospheric at the top edge; the prior nearly
+     black band read as an unfinished empty canvas before terrain painted. */
+  --hub-sky-space:  #132847;
+  --hub-sky-upper:  #1d426d;
+  --hub-sky-mid:    #28628e;
+  --hub-sky-haze:   #4e91b8;
+  --hub-sky-horizon:#8ec5d7;
   /* Ground contact line — 22% from the bottom. MUST stay in agreement with
      hubScene.ts (groundY = containerH * 0.78) and the DOM plot positions in
      HubScreen/BuildPlaceScreen, which all derive from the same 22%. */

@@ -31,7 +31,7 @@ export function HubWorldBackground() {
       {/* ── Sky — deep space to atmosphere ─────────────────────────────── */}
       <div style={{
         position: 'absolute', inset: 0,
-        background: 'linear-gradient(180deg, #050a16 0%, #0a1530 22%, #123469 46%, #1c5490 68%, #3a80ae 86%, #5aa0c4 100%)',
+        background: 'linear-gradient(180deg, var(--hub-sky-space) 0%, var(--hub-sky-upper) 28%, var(--hub-sky-mid) 56%, var(--hub-sky-haze) 80%, var(--hub-sky-horizon) 100%)',
       }} />
 
       {/* ── Starfield — upper band only, slow twinkle ──────────────────── */}

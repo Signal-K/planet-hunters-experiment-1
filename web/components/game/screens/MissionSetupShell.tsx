@@ -54,6 +54,7 @@ interface MissionSetupShellBaseProps {
   children: React.ReactNode
   actions?: React.ReactNode
   hideStepFooter?: boolean
+  contentBottom?: number
 }
 
 // Wayfinding footer (Craft doc Core Principle #1) — "what to do next"
@@ -75,6 +76,7 @@ export default function MissionSetupShell({
   children,
   actions,
   hideStepFooter = false,
+  contentBottom,
   step,
   stepDescription,
 }: MissionSetupShellProps) {
@@ -86,7 +88,7 @@ export default function MissionSetupShell({
       <div
         className="mission-setup-content"
         data-ui-zone={UI_ZONES.screenContent}
-        style={{ paddingTop: contentTop }}
+        style={{ paddingTop: contentTop, ...(contentBottom ? { paddingBottom: contentBottom } : {}) }}
       >
         {children}
       </div>

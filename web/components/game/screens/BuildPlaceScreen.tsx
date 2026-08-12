@@ -11,6 +11,7 @@ import { buildPlotEntities } from '@/lib/engine/prefabs'
 import { readComponentNumber } from '@/lib/engine/registry'
 import { UI_ZONES } from '@/lib/ui-zones'
 import { HubWorldBackground } from '@/components/game/hub/HubWorldBackground'
+import { HubStructureArt } from '@/components/game/hub/HubStructureArt'
 import { SoilCrossSection } from '@/components/game/hub/SoilCrossSection'
 import HubPixiCanvas from '@/components/game/hub/HubPixiCanvas'
 import ErrorBoundary from '@/components/ui/ErrorBoundary'
@@ -84,7 +85,8 @@ export default function BuildPlaceScreen({ onPlaced, onBack, hasCoach, player }:
   const catalog = STRUCTURES.filter(s =>
     s.id !== 'garage'
     && (FEATURE_FLAGS.scanStation || s.id !== 'scan-station')
-    && (player.placed.includes(s.id) || structureUnlocked(s, { refineryUnlocked: player.refineryUnlocked, academyResearched: player.academyResearched, placed: player.placed, freeOperations: player.freeOperations, satelliteMonitoringLevel: player.satelliteMonitoringLevel, clientMissions: player.clientMissions, deepSpaceTelescopeMissionCompletedAt: player.deepSpaceTelescopeMissionCompletedAt, scanStationMissionCompletedAt: player.scanStationMissionCompletedAt }))
+    && !player.placed.includes(s.id)
+    && structureUnlocked(s, { refineryUnlocked: player.refineryUnlocked, academyResearched: player.academyResearched, placed: player.placed, freeOperations: player.freeOperations, satelliteMonitoringLevel: player.satelliteMonitoringLevel, clientMissions: player.clientMissions, deepSpaceTelescopeMissionCompletedAt: player.deepSpaceTelescopeMissionCompletedAt, scanStationMissionCompletedAt: player.scanStationMissionCompletedAt })
   )
   const sel = catalog.find(c => c.id === picked) ?? catalog[0]
   const sortedEntities = plotEntities.slice().sort((a, b) => {
@@ -96,19 +98,32 @@ export default function BuildPlaceScreen({ onPlaced, onBack, hasCoach, player }:
   const placementPlots = player.placementPlots ?? {}
   // Pre-placementPlots saves always put the launchpad in plot 0 (mirrors HubScreen's legacy handling).
   const legacyLaunchpadPlot0 = player.placed.includes('launchpad') && placementPlots.launchpad == null
-  const occupiedPlots = new Set<number>([
-    ...Object.values(placementPlots),
-    ...(legacyLaunchpadPlot0 ? [0] : []),
-  ])
-  const previewBuildings: HubBuildingDef[] = cell == null
+  const effectivePlots: Record<string, number> = {
+    ...placementPlots,
+    ...(legacyLaunchpadPlot0 ? { launchpad: 0 } : {}),
+  }
+  const occupiedPlots = new Set<number>(Object.values(effectivePlots))
+  const existingBuildings: HubBuildingDef[] = sortedEntities.flatMap(entity => {
+    const index = readComponentNumber(entity, 'BuildPlot', 'index', 0)
+    const kind = Object.entries(effectivePlots).find(([, plot]) => plot === index)?.[0]
+    if (!kind) return []
+    return [{
+      kind,
+      plotX: entity.transform.position.x,
+      w: kind === 'launchpad' ? 98 : kind === 'refinery' ? 84 : 80,
+      hot: false,
+      status: 'ok' as const,
+    }]
+  })
+  const previewBuildings: HubBuildingDef[] = cell == null || !sel
     ? []
     : sortedEntities.flatMap(entity => {
       const idx = readComponentNumber(entity, 'BuildPlot', 'index', 0)
       if (idx !== cell) return []
       return [{
-        kind: picked,
+        kind: sel.id,
         plotX: entity.transform.position.x,
-        w: picked === 'launchpad' ? 98 : picked === 'refinery' ? 84 : 80,
+        w: sel.id === 'launchpad' ? 98 : sel.id === 'refinery' ? 84 : 80,
         hot: false,
         status: 'ok' as const,
       }]
@@ -143,6 +158,7 @@ export default function BuildPlaceScreen({ onPlaced, onBack, hasCoach, player }:
       {/* Earth background */}
       <div style={{ position: 'absolute', inset: 0 }}>
         <HubWorldBackground />
+        <HubStructureArt buildings={existingBuildings} />
         <ErrorBoundary fallback={null}>
           <HubPixiCanvas buildings={previewBuildings} />
         </ErrorBoundary>
@@ -158,22 +174,23 @@ export default function BuildPlaceScreen({ onPlaced, onBack, hasCoach, player }:
             const idx = readComponentNumber(entity, 'BuildPlot', 'index', 0)
             const on = cell === idx
             const taken = occupiedPlots.has(idx)
-            const color = STRUCTURE_COLORS[picked] ?? '#3fa9ff'
+            const color = STRUCTURE_COLORS[sel?.id ?? 'launchpad'] ?? '#3fa9ff'
+            if (taken) return null
             return (
               <button
                 key={idx}
                 className="build-plot-button"
                 data-testid={`build-plot-${idx}`}
-                onClick={() => !taken && setCell(on ? null : idx)}
-                disabled={taken}
+                onClick={() => sel && setCell(on ? null : idx)}
+                disabled={!sel}
                 style={{
                   position: 'absolute',
                   left: `calc(${(entity.transform.position.x / 402) * 100}%)`,
                   bottom: 'calc(22% - 20px)',
                   width: 86,
                   transform: 'translateX(-50%)',
-                  cursor: taken ? 'not-allowed' : 'pointer',
-                  opacity: taken ? 0.35 : 1,
+                  cursor: sel ? 'pointer' : 'not-allowed',
+                  opacity: sel ? 1 : 0.35,
                   background: 'transparent',
                   border: 'none',
                   padding: 0,
@@ -195,7 +212,7 @@ export default function BuildPlaceScreen({ onPlaced, onBack, hasCoach, player }:
                   justifyContent: 'center',
                   filter: on ? 'drop-shadow(0 0 12px rgba(245,166,35,0.6))' : 'none',
                 }}>
-                  {on && <span style={{ color: 'var(--ln-amber)' }}><StructureIcon kind={picked} size={44} /></span>}
+                  {on && sel && <span style={{ color: 'var(--ln-amber)' }}><StructureIcon kind={sel.id} size={44} /></span>}
                 </div>
                 <div
                   data-coach-id={idx === 0 ? 'build-plot-0' : undefined}
@@ -247,9 +264,8 @@ export default function BuildPlaceScreen({ onPlaced, onBack, hasCoach, player }:
             scrollbarWidth: 'none',
           }}>
             {catalog.map(c => {
-              const on = c.id === picked
-              const alreadyBuilt = player.placed.includes(c.id)
-              const unlocked = structureUnlocked(c, { refineryUnlocked: player.refineryUnlocked, academyResearched: player.academyResearched, placed: player.placed, freeOperations: player.freeOperations, satelliteMonitoringLevel: player.satelliteMonitoringLevel, clientMissions: player.clientMissions, deepSpaceTelescopeMissionCompletedAt: player.deepSpaceTelescopeMissionCompletedAt, scanStationMissionCompletedAt: player.scanStationMissionCompletedAt }) && !alreadyBuilt
+              const on = c.id === sel?.id
+              const unlocked = structureUnlocked(c, { refineryUnlocked: player.refineryUnlocked, academyResearched: player.academyResearched, placed: player.placed, freeOperations: player.freeOperations, satelliteMonitoringLevel: player.satelliteMonitoringLevel, clientMissions: player.clientMissions, deepSpaceTelescopeMissionCompletedAt: player.deepSpaceTelescopeMissionCompletedAt, scanStationMissionCompletedAt: player.scanStationMissionCompletedAt })
               const affordable = canAffordStructure(c, { francs: player.francs, stash: player.stash })
               const canSelect = unlocked && affordable
               const color = STRUCTURE_COLORS[c.id] ?? '#3fa9ff'
@@ -268,7 +284,7 @@ export default function BuildPlaceScreen({ onPlaced, onBack, hasCoach, player }:
                     borderRadius: 10,
                     padding: '6px 10px',
                     cursor: canSelect ? 'pointer' : 'default',
-                    opacity: canSelect || alreadyBuilt ? 1 : 0.4,
+                    opacity: canSelect ? 1 : 0.4,
                     textAlign: 'left',
                     minWidth: 90,
                     maxWidth: 120,
@@ -299,7 +315,7 @@ export default function BuildPlaceScreen({ onPlaced, onBack, hasCoach, player }:
                         fontWeight: 700,
                         letterSpacing: '0.04em',
                       }}>
-                        {alreadyBuilt ? 'BUILT' : unlocked ? (c.cost === 0 ? 'FREE' : formatCurrency(c.cost, { compact: true })) : c.unlocksAt}
+                        {unlocked ? (c.cost === 0 ? 'FREE' : formatCurrency(c.cost, { compact: true })) : c.unlocksAt}
                       </div>
                     </div>
                   </div>
@@ -309,15 +325,15 @@ export default function BuildPlaceScreen({ onPlaced, onBack, hasCoach, player }:
           </div>
 
           {/* Status line */}
-          <div style={{
+          {sel ? <div style={{
             pointerEvents: 'none',
             padding: '6px 2px 10px',
             display: 'flex',
             alignItems: 'center',
             gap: 6,
           }}>
-            <span style={{ color: STRUCTURE_COLORS[picked] ?? '#3fa9ff', flexShrink: 0 }}>
-              <StructureIcon kind={picked} size={14} />
+            <span style={{ color: STRUCTURE_COLORS[sel.id] ?? '#3fa9ff', flexShrink: 0 }}>
+              <StructureIcon kind={sel.id} size={14} />
             </span>
             <span style={{
               fontFamily: 'var(--ln-font-body)',
@@ -331,7 +347,7 @@ export default function BuildPlaceScreen({ onPlaced, onBack, hasCoach, player }:
                 ? `Select a plot for the ${sel.name} · ${formatStructureCost(sel)}`
                 : `Place ${sel.name} here? · ${formatStructureCost(sel)}`}
             </span>
-          </div>
+          </div> : <div style={{ padding: '6px 2px 10px', fontFamily: 'var(--ln-font-body)', fontSize: 11, color: '#a9b8ce' }}>No structures are available yet. Complete your current mission to unlock the next build.</div>}
         </div>
       </div>
 
@@ -354,7 +370,7 @@ export default function BuildPlaceScreen({ onPlaced, onBack, hasCoach, player }:
         {/* Mint/green, not amber: the Earth Base flow carries no amber (see
             landnam-earth-base-v2.html, whose confirm sheet is --ln-ok), and
             amber is reserved for payout emphasis, never a primary button. */}
-        <PrimaryBtn kind="green" disabled={cell == null} onClick={() => cell != null && onPlaced(picked, cell)}>
+        <PrimaryBtn kind="green" disabled={cell == null || !sel} onClick={() => cell != null && sel && onPlaced(sel.id, cell)}>
           Confirm · Build Here →
         </PrimaryBtn>
       </div>
