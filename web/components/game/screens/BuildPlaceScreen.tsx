@@ -82,7 +82,9 @@ export default function BuildPlaceScreen({ onPlaced, onBack, hasCoach, player }:
   }, [])
 
   const catalog = STRUCTURES.filter(s =>
-    s.id !== 'garage' && (FEATURE_FLAGS.scanStation || s.id !== 'scan-station')
+    s.id !== 'garage'
+    && (FEATURE_FLAGS.scanStation || s.id !== 'scan-station')
+    && (player.placed.includes(s.id) || structureUnlocked(s, { refineryUnlocked: player.refineryUnlocked, academyResearched: player.academyResearched, placed: player.placed, freeOperations: player.freeOperations, satelliteMonitoringLevel: player.satelliteMonitoringLevel, clientMissions: player.clientMissions, deepSpaceTelescopeMissionCompletedAt: player.deepSpaceTelescopeMissionCompletedAt, scanStationMissionCompletedAt: player.scanStationMissionCompletedAt }))
   )
   const sel = catalog.find(c => c.id === picked) ?? catalog[0]
   const sortedEntities = plotEntities.slice().sort((a, b) => {
@@ -145,7 +147,6 @@ export default function BuildPlaceScreen({ onPlaced, onBack, hasCoach, player }:
           <HubPixiCanvas buildings={previewBuildings} />
         </ErrorBoundary>
         <SoilCrossSection />
-        <div style={{ position: 'absolute', inset: 0, zIndex: 5, background: 'linear-gradient(180deg, rgba(10,10,11,0.62) 0%, rgba(10,10,11,0.18) 24%, transparent 62%, rgba(10,10,11,0.25) 100%)' }} />
       </div>
 
       <TopBar eyebrow="EARTH BASE · SETUP" title="Build" onBack={onBack} />
@@ -163,7 +164,6 @@ export default function BuildPlaceScreen({ onPlaced, onBack, hasCoach, player }:
                 key={idx}
                 className="build-plot-button"
                 data-testid={`build-plot-${idx}`}
-                data-coach-id={idx === 0 ? 'build-plot-0' : undefined}
                 onClick={() => !taken && setCell(on ? null : idx)}
                 disabled={taken}
                 style={{
@@ -197,7 +197,9 @@ export default function BuildPlaceScreen({ onPlaced, onBack, hasCoach, player }:
                 }}>
                   {on && <span style={{ color: 'var(--ln-amber)' }}><StructureIcon kind={picked} size={44} /></span>}
                 </div>
-                <div style={{
+                <div
+                  data-coach-id={idx === 0 ? 'build-plot-0' : undefined}
+                  style={{
                   width: '100%',
                   height: 30,
                   borderRadius: '50% / 60%',
