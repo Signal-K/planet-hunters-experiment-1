@@ -25,14 +25,20 @@ import SettingsSheet from '@/components/game/SettingsSheet'
 import TerritoryClaimPopup from '@/components/game/TerritoryClaimPopup'
 import { UI_ZONES } from '@/lib/ui-zones'
 
-if (typeof window !== 'undefined') initPostHog()
-
 function GameCanvas() {
   const game = useGame()
   const router = useRouter()
   const arrivalScheduledFor = useRef<number | null>(null)
   const returnScheduledKey = useRef<string | null>(null)
   const [settingsOpen, setSettingsOpen] = useState(false)
+
+  // PostHog injects recorder/survey scripts. Initialising during module
+  // evaluation can let those scripts mutate the document while React is
+  // still hydrating, producing a real production hydration mismatch. Run it
+  // after the first client commit instead.
+  useEffect(() => {
+    initPostHog()
+  }, [])
 
   // When a timed transit starts, schedule a push notification.
   useEffect(() => {

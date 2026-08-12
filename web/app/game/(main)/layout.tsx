@@ -23,14 +23,18 @@ import TerritoryClaimPopup from '@/components/game/TerritoryClaimPopup'
 import { UI_ZONES } from '@/lib/ui-zones'
 import { isSurveySafeScreen } from '@/lib/survey-gating'
 
-if (typeof window !== 'undefined') initPostHog()
-
 function GameChrome({ children }: { children: ReactNode }) {
   const game = useGame()
   const pathname = usePathname()
   const arrivalScheduledFor = useRef<number | null>(null)
   const returnScheduledKey = useRef<string | null>(null)
   const [settingsOpen, setSettingsOpen] = useState(false)
+
+  // Keep third-party analytics script injection out of React hydration. See
+  // GameApp's equivalent effect for the legacy route shell.
+  useEffect(() => {
+    initPostHog()
+  }, [])
 
   // Schedule push notification when transit starts
   useEffect(() => {
