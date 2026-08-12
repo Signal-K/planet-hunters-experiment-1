@@ -22,6 +22,8 @@
   "ore_rare": "/game/assets/ores/ore_rare.png",
   "hub_depot_tank": "/game/assets/hub/depot_tank.png",
   "hub_scan_dish": "/game/assets/hub/scan_dish.png",
+  "hub_refinery_modular_v2": "/game/assets/hub/refinery_modular_v2.png",
+  "hub_scan_station_modular_v2": "/game/assets/hub/scan_station_modular_v2.png",
   "hub_cmd_building": "/game/assets/hub/cmd_building.png",
   "actor_rover": "/game/assets/actors/rover.png",
   "actor_drone": "/game/assets/actors/drone.png",

@@ -104,7 +104,8 @@ describe('production hub and actor sprites', () => {
     for (const name of [
       'hub_pad_deck', 'hub_pad_gantry_frame', 'hub_pad_swing_arm',
       'hub_pad_clamp', 'hub_pad_mast', 'hub_pad_tank',
-      'hub_depot_tank', 'hub_scan_dish', 'hub_cmd_building',
+      'hub_depot_tank', 'hub_scan_dish', 'hub_refinery_modular_v2', 'hub_scan_station_modular_v2',
+      'hub_cmd_building',
       'hub_deep_space_telescope', 'hub_astronaut_academy',
     ]) {
       expect({ name, present: name in manifest }).toEqual({ name, present: true })

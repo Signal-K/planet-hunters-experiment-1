@@ -418,8 +418,13 @@ export interface HubTextures {
   depot_base:       Texture | null
   depot_tank:       Texture | null
   depot_pipes:      Texture | null
+  /** Full refinery render, added for KES-145 art parity. Kept separate from
+   * the original tank so older manifests retain their procedural fallback. */
+  refinery_modular: Texture | null
   scan_tripod:      Texture | null
   scan_dish:        Texture | null
+  /** Full tripod + dish render, added for KES-145 art parity. */
+  scan_station_modular: Texture | null
   /** Satellite Monitoring Station. Distinct from cmd_building: it is drawn at
    *  52x36 rather than 56x56, and is a dish on a squat block rather than a
    *  second command centre. Sharing one texture between them squashed it. */
@@ -437,8 +442,8 @@ export function nullTextures(): HubTextures {
     pad_deck: null, pad_gantry_frame: null, pad_swing_arm: null,
     pad_clamp: null, pad_mast: null, pad_tank: null,
     cmd_foundation: null, cmd_building: null, cmd_antenna: null,
-    depot_base: null, depot_tank: null, depot_pipes: null,
-    scan_tripod: null, scan_dish: null, sat_station: null,
+    depot_base: null, depot_tank: null, depot_pipes: null, refinery_modular: null,
+    scan_tripod: null, scan_dish: null, scan_station_modular: null, sat_station: null,
     ship_sr1: null, ship_sr2: null,
   }
 }
@@ -629,7 +634,7 @@ function buildRefinery(tex: HubTextures): { root: Container; animatables: AnimSt
   const root = new Container()
   const anims: AnimState[] = []
 
-  const body = makeSprite(tex.depot_tank, 56, 44, 0.5, 1.0)
+  const body = makeSprite(tex.refinery_modular ?? tex.depot_tank, tex.refinery_modular ? 76 : 56, tex.refinery_modular ? 53 : 44, 0.5, 1.0)
   if (body) {
     root.addChild(body)
   } else {
@@ -668,9 +673,9 @@ function buildScanStation(hot: boolean, tex: HubTextures): { root: Container; an
   const root = new Container()
   const anims: AnimState[] = []
 
-  const dish = makeSprite(tex.scan_dish, 46, 30, 0.5, 1.0)
+  const dish = makeSprite(tex.scan_station_modular ?? tex.scan_dish, tex.scan_station_modular ? 48 : 46, tex.scan_station_modular ? 76 : 30, 0.5, 1.0)
   if (dish) {
-    dish.y = -52; root.addChild(dish)
+    dish.y = tex.scan_station_modular ? 0 : -52; root.addChild(dish)
   } else {
     const g = new Graphics()
     // Tripod — two discrete facets so the legs read as a solid volume
