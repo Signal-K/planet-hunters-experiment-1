@@ -60,6 +60,15 @@ const UNLOCKS: Record<string, {
     stats: [['VIEW', 'INTERIOR'], ['SLOTS', 'CUSTOM'], ['ACCESS', 'HANGAR']],
     cta: 'Open Hangar',
   },
+  'tutorial-complete': {
+    accent: '#39d9ff',
+    eyebrow: 'Program Online',
+    title: 'FREE OPERATIONS',
+    body: 'The guided missions are complete. Your base is now yours to run: build facilities, choose your own objectives, and take on client work when it suits your program.',
+    art: 'rooms',
+    stats: [['STATUS', 'ONLINE'], ['MODE', 'OPEN OPS'], ['NEXT', 'YOUR CALL']],
+    cta: 'Enter Free Operations',
+  },
 }
 
 function RocketArt({ accent }: { accent: string }) {

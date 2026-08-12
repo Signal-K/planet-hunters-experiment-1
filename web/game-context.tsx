@@ -127,7 +127,11 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
   const surfaceOps = useSurfaceOpsActions(setState, ui.addToast)
   const academy = useAcademyActions(stateRef, setState, useCallback(() => runtimeCatalog, [runtimeCatalog]), ui.addToast)
   useInstrumentFeedNotifications({
-    enabled: hydrated && !isPreview.current,
+    // Instrument feeds are shared-backend data. Do not start a background
+    // request while the auth restore is still pending (or after logout),
+    // otherwise a returning guest can generate a noisy 401 before the gate
+    // settles.
+    enabled: hydrated && !isPreview.current && !!auth.authUserId && pbShared.authStore.isValid,
     player: state.player,
     setState,
     addToast: ui.addToast,
