@@ -7,6 +7,7 @@ import { M1_STEPS, M2_STEPS, M3_STEPS } from '@/lib/data'
 import TutorialCoach from '@/components/game/TutorialCoach'
 import SaveProgressPrompt from '@/components/game/SaveProgressPrompt'
 import UnlockPopup from '@/components/game/UnlockPopup'
+import { TutorialCompleteSheet } from '@/components/game/TutorialCompleteSheet'
 import BottomTabBar from '@/components/layout/BottomTabBar'
 import Sidebar from '@/components/Sidebar/Sidebar'
 import BackendStatus from '@/components/game/BackendStatus'
@@ -179,7 +180,10 @@ function GameChrome({ children }: { children: ReactNode }) {
           />
         )}
 
-        {game.popup && currentScreen !== 'market' && (
+        {game.popup === 'tutorial-complete' && (
+          <TutorialCompleteSheet onDone={() => game.setPopup(null)} />
+        )}
+        {game.popup && game.popup !== 'tutorial-complete' && currentScreen !== 'market' && (
           <UnlockPopup
             kind={game.popup}
             onClose={() => {

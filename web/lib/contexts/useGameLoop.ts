@@ -536,16 +536,23 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
         }
         : s.player.dailyClientPool
       const stillInTutorial = missionsDone < FREE_OPS_START_MISSIONS_DONE && catalog.missions.some(m => m.sequence === missionsDone + 1)
-      // Skip the Prospector upsell popup during guided onboarding — the tutorial
-      // coach already delivers the same "Prospector available" message inline
-      // (lib/data/tutorial.ts step 20), and the popup pre-empts the coach.
-      const popup = showLoanOffer ? 'loan' : (missionsDone === 1 && !stillInTutorial) ? 'sr2' : s.popup
       // M3 (the last onboarding mission) also flips freeOperations true on this
       // same tick, which would otherwise auto-open the market straight out of
       // debrief with no player action requesting it. Land on hub for that one
       // boundary mission; auto-market-open only kicks in for Free Ops missions
       // completed after onboarding has actually ended.
       const justFinishedOnboarding = missionsDone === FREE_OPS_START_MISSIONS_DONE
+      // Skip the Prospector upsell popup during guided onboarding — the tutorial
+      // coach already delivers the same "Prospector available" message inline
+      // (lib/data/tutorial.ts step 20), and the popup pre-empts the coach.
+      //
+      // 'tutorial-complete' fires exactly once, on the single tick Free Ops
+      // actually starts — not derived from missionsDone on every render (that
+      // was TutorialCompleteSheet's old, never-wired localStorage-only
+      // approach). It rides in `popup`, which is part of the GameState blob
+      // already persisted to game_states, so the ack survives reload and
+      // syncs across devices with the rest of the save (KES-167).
+      const popup = showLoanOffer ? 'loan' : justFinishedOnboarding ? 'tutorial-complete' : (missionsDone === 1 && !stillInTutorial) ? 'sr2' : s.popup
       const next: GameState = {
         ...s,
         player: {
