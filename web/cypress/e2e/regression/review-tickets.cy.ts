@@ -111,7 +111,7 @@ function interceptTessSubjects(count = 4) {
   }).as('subjects')
 }
 
-describe('Desk Review tickets — active mission guard (STS-487)', () => {
+describe('Active mission guard (STS-487)', () => {
   it('does not let a stale mission-board tab pick a second mission while one is active', () => {
     visitGame('/game/missions', {
       screen: 'missions',
@@ -136,7 +136,7 @@ describe('Desk Review tickets — active mission guard (STS-487)', () => {
   })
 })
 
-describe('Desk Review tickets — mining pause/resume (STS-488)', () => {
+describe('Mining pause/resume (STS-488)', () => {
   it('persists in-progress laser cargo on Back and restores it on resume', () => {
     visitGame('/game/mining', {
       screen: 'mining',
@@ -168,7 +168,7 @@ describe('Desk Review tickets — mining pause/resume (STS-488)', () => {
   })
 })
 
-describe('Desk Review tickets — rover pause/resume (STS-490)', () => {
+describe('Rover pause/resume (STS-490)', () => {
   it('keeps the rover extraction clock close to completion after Back-to-hub resume', () => {
     const startedAt = Date.now() - 119_000
 
@@ -226,7 +226,7 @@ describe('Sprint 13 rover scouting (KES-110)', () => {
   })
 })
 
-describe('Desk Review tickets — satellite/TESS level plumbing (STS-493)', () => {
+describe('Satellite/TESS level plumbing (STS-493)', () => {
   it('lets a level-3 satellite review three daily TESS candidates before the downlink is exhausted', () => {
     interceptTessSubjects(4)
     visitGame('/game/galaxy', {

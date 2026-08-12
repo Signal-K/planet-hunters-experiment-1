@@ -5,9 +5,7 @@ import { Radio, Activity, Gauge, Cpu, HardDrive, Wifi, Zap } from 'lucide-react'
 
 /**
  * TelescopeConsole — hardware-bezel wrapper for an instrument viewport
- * (currently ObservatoryChart). Ported from a v0 mockup built for the Star
- * Sailors client project (see Knowns doc
- * specs/design-references/telescopeobservatory-console-ui-reference-v0-mockup):
+ * (currently ObservatoryChart). Ported from a v0 Star Sailors client mockup:
  * chunky bezel, corner rivets, top status lights, a compact gauge row, and
  * a bottom sector/status strip — translated to Landnam's own --ln-* tokens
  * and compressed for the 402px portrait canvas (the reference used two full
