@@ -125,7 +125,8 @@
       "Bash(fly status *)",
       "mcp__linear__save_milestone",
       "mcp__linear__get_project",
-      "Skill(claude-api)"
+      "Skill(claude-api)",
+      "WebFetch(domain:s.craft.me)"
     ]
   },
   "enabledMcpjsonServers": [
