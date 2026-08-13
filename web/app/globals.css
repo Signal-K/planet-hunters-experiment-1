@@ -576,7 +576,9 @@ button { cursor: pointer; }
 .sticky-actions { position: absolute; z-index: 30; left: 0; right: 0; bottom: 0; padding: var(--ln-s-2) var(--ln-s-3) var(--ln-s-5); background: linear-gradient(180deg, transparent, rgba(10,10,11,.94) 34%, var(--ln-void)); }
 
 .mission-setup-screen {
-  position: relative;
+  /* Keep the shared game-screen viewport contract; the scene layer itself
+     is positioned relative to this full-area screen. */
+  position: absolute;
   isolation: isolate;
   overflow: hidden;
   background:
