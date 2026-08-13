@@ -31,12 +31,14 @@ describe('TargetPicker orbital map', () => {
     cy.viewport(390, 844)
     visitTargetPicker()
     expectMapToFillAndRender()
+    cy.screenshot('sprint-13-target-picker-mobile')
   })
 
   it('renders a nonblank orbital map on desktop', () => {
     cy.viewport(1280, 900)
     visitTargetPicker()
     expectMapToFillAndRender()
+    cy.screenshot('sprint-13-target-picker-desktop')
   })
 
   // Regression guard for h20xtc: map must expand to fill available vertical

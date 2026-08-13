@@ -1,5 +1,17 @@
-import { describe, expect, it } from 'vitest'
-import { buildPostHogSurveyPayload, SURVEY_DEFS } from './surveys'
+import { describe, expect, it, vi } from 'vitest'
+import { buildPostHogSurveyPayload, isSurveyRuntimeEnabled, SURVEY_DEFS } from './surveys'
+
+describe('survey runtime gate', () => {
+  it('is disabled in a normal non-production browser context', () => {
+    expect(isSurveyRuntimeEnabled()).toBe(false)
+  })
+
+  it('requires the explicit Cypress survey opt-in outside production', () => {
+    vi.stubGlobal('window', { Cypress: { env: vi.fn().mockReturnValue(true) } })
+    expect(isSurveyRuntimeEnabled()).toBe(true)
+    vi.unstubAllGlobals()
+  })
+})
 
 describe('buildPostHogSurveyPayload', () => {
   it('uses real PostHog survey records for tutorial completion surveys', () => {
