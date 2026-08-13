@@ -105,6 +105,8 @@ export interface Player {
   hasLanded?: boolean
   missionCount: number
   pendingLaunch: boolean
+  /** Rocket already built and waiting on the launchpad; prevents re-purchase on resume. */
+  pendingRocketId?: string
   placed: string[]
   placementPlots: Record<string, number>
   controlBuilt: boolean

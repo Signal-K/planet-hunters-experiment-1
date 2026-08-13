@@ -174,7 +174,7 @@ export default function LaunchpadScreen({
           </span>
           <span className="launchpad-object-label">
             <small>ROCKET FLEET · {unlockedFleet.length}</small>
-            <strong>{selectedRocketName ?? unlockedFleet[0]?.model.name ?? 'NO VEHICLE'} · HANGAR</strong>
+            <strong>{player.pendingLaunch ? `${selectedRocketName ?? unlockedFleet[0]?.model.name ?? 'BUILT VEHICLE'} · INSPECT` : `${selectedRocketName ?? unlockedFleet[0]?.model.name ?? 'NO VEHICLE'} · HANGAR`}</strong>
           </span>
         </button>
 

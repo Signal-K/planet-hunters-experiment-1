@@ -143,7 +143,12 @@ export function applyPurchaseRocket(s: GameState, rocket: RocketModel): GameStat
   return {
     ...s,
     screen: 'fab',
-    player: { ...s.player, francs: s.player.francs - rocket.costFrancs },
+    player: {
+      ...s.player,
+      francs: s.player.francs - rocket.costFrancs,
+      pendingLaunch: true,
+      pendingRocketId: rocket.id,
+    },
   }
 }
 

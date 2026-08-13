@@ -332,7 +332,7 @@ export function ScreenContent({
             game.onPickMission(id)
           }}
           onViewContracts={() => game.goToMissions()}
-          onOpenHangar={() => game.go('hangar')}
+          onOpenHangar={() => game.go(game.player.pendingLaunch ? 'fab' : 'hangar')}
           onBuildMonitoring={() => game.go('build')}
           missionsDone={game.player.missionsDone}
           freeOperations={game.player.freeOperations}

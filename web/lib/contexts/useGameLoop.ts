@@ -107,8 +107,8 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
           missionId: id,
           targetId: mission.targetId,
           deliveryTargetId: mission.deliveryTargetId ?? null,
-          rocket: next,
-          screen: 'rocket-buy',
+          rocket: s.player.pendingLaunch ? s.rocket : next,
+          screen: s.player.pendingLaunch ? 'fab' : 'rocket-buy',
           doneSteps: { ...s.doneSteps, 2: true, 3: true },
         }
       }
@@ -133,8 +133,8 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
       return {
         ...s,
         targetId: id,
-        rocket: next,
-        screen: 'rocket-buy',
+        rocket: s.player.pendingLaunch ? s.rocket : next,
+        screen: s.player.pendingLaunch ? 'fab' : 'rocket-buy',
         doneSteps: { ...s.doneSteps, 3: true },
       }
     })
@@ -145,6 +145,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
       if (s.screen !== 'rocket-buy' || !s.missionId || !s.targetId) return s
       const rocket = ROCKET_MODELS.find(r => r.id === rocketId)
       if (!rocket) return s
+      if (s.player.pendingLaunch && s.player.pendingRocketId === rocket.id) return { ...s, screen: 'fab' }
       return applyPurchaseRocket(s, rocket)
     })
   }, [setState])
@@ -182,6 +183,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
         player: {
           ...s.player,
           pendingLaunch: false,
+          pendingRocketId: undefined,
           arrivalAt,
           transitStartedAt: timedTransit ? transitStartedAt : null,
           missionPhase: 'transit',

@@ -27,6 +27,7 @@ export const DEFAULT_STATE: GameState = {
     activeMission: null,
     missionCount: 1,
     pendingLaunch: false,
+    pendingRocketId: undefined,
     placed: [],
     placementPlots: {},
     controlBuilt: false,

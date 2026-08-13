@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import type { GameState } from '@/lib/game-types'
 import { MINERAL_META, CLIENT_SLOTS, STRUCTURES, customizerPartById } from '@/lib/data'
-import { applySellMinerals, applyConfirmShipCustomizerBuild, applyPlaceStructure, applyStartRefine, decayedUnitsSold, openMarketSellPrice, sellQuote, sellUnitPrice, supplyDipMultiplier } from './EconomySystem'
+import { applySellMinerals, applyConfirmShipCustomizerBuild, applyPlaceStructure, applyPurchaseRocket, applyStartRefine, decayedUnitsSold, openMarketSellPrice, sellQuote, sellUnitPrice, supplyDipMultiplier } from './EconomySystem'
+import { ROCKET_MODELS } from '@/lib/data/rockets'
 
 function makeState(overrides: Partial<GameState['player']> = {}): GameState {
   return {
@@ -51,6 +52,19 @@ describe('openMarketSellPrice', () => {
     expect(supplyDipMultiplier(10)).toBeCloseTo(0.9)
     expect(supplyDipMultiplier(1000)).toBe(0.4)
     expect(openMarketSellPrice(100, 1000)).toBe(Math.round(100 * 0.8 * 0.4))
+  })
+})
+
+describe('applyPurchaseRocket', () => {
+  it('persists a built vehicle so returning to the launchpad cannot charge twice', () => {
+    const rocket = ROCKET_MODELS.find(model => model.id === 'prospector')!
+    const s = makeState({ francs: rocket.costFrancs + 100 })
+    const next = applyPurchaseRocket(s, rocket)
+
+    expect(next.player.francs).toBe(100)
+    expect(next.player.pendingLaunch).toBe(true)
+    expect(next.player.pendingRocketId).toBe('prospector')
+    expect(applyPurchaseRocket(next, rocket).player.francs).toBe(100)
   })
 })
 
