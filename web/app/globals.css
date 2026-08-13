@@ -720,6 +720,30 @@ button { cursor: pointer; }
   height: fit-content;
 }
 
+/* KES-185: make preflight a purposeful command-deck scene, with the route
+   and readiness instrument carrying the visual centre of the final setup step. */
+.mission-setup-screen--assembly .assembly-preflight-scene {
+  min-height: 360px;
+  padding: 24px;
+  border-color: var(--ln-cyan-border);
+  background:
+    radial-gradient(ellipse at 50% 44%, var(--ln-cyan-soft), transparent 58%),
+    linear-gradient(145deg, var(--ln-void), var(--ln-surface));
+  box-shadow: var(--ln-shadow-card);
+}
+
+.mission-setup-screen--assembly .mission-setup-actions > div {
+  display: flex;
+  justify-content: center;
+}
+
+@media (max-width: 899px) {
+  .mission-setup-screen--assembly .assembly-preflight-scene {
+    min-height: 300px;
+    padding: 16px;
+  }
+}
+
 /* KES-184: the vehicle is the primary object on Select Rocket. Give its
    scene a real stage and keep the technical readout subordinate beside it. */
 .mission-setup-screen--rocket .rocket-vehicle-frame {
