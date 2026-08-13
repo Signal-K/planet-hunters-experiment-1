@@ -10,6 +10,15 @@ type SurveyResponses = Record<string, SurveyResponseValue>
 
 const SHOWN_STORAGE_KEY = 'landnam-surveys-shown'
 
+type CypressRuntime = { env: (key: string) => unknown }
+type SurveyWindow = Window & { Cypress?: CypressRuntime }
+
+export function isSurveyRuntimeEnabled(): boolean {
+  if (process.env.NODE_ENV === 'production') return true
+  if (typeof window === 'undefined') return false
+  return (window as SurveyWindow).Cypress?.env('allowSurveys') === true
+}
+
 function getShownSurveys(): Set<string> {
   if (typeof window === 'undefined') return new Set()
   try {
@@ -50,7 +59,7 @@ export function onSurveyDismissed() {
 }
 
 export function enqueueSurvey(surveyKey: string, delayMs = 1800) {
-  if (typeof window === 'undefined') return
+  if (!isSurveyRuntimeEnabled()) return
   const def = SURVEY_DEFS[surveyKey]
   if (!def) return
   if (getShownSurveys().has(surveyKey)) return
@@ -156,6 +165,7 @@ export function submitSurveyResponse(surveyKey: string, responses: SurveyRespons
 }
 
 export function trackSurveyShown(surveyKey: string) {
+  if (!isSurveyRuntimeEnabled()) return
   const def = SURVEY_DEFS[surveyKey]
   if (!def) return
   initPostHog()
