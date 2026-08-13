@@ -139,9 +139,11 @@ const profiles: Record<string, Cypress.EndToEndConfigOptions> = {
     viewportHeight: 844,
     env: { livePocketBase: true },
   },
-  // Visual QA profile: headed Chrome, screenshots at every step, video always on.
-  // Run with: CYPRESS_PROFILE=visual npx cypress run --browser chrome --headed
-  // Or open interactively: CYPRESS_PROFILE=visual npx cypress open --browser chrome
+  // Visual QA profile: headless Chrome, screenshots at every step, video always on.
+  // Keep this profile headless: headed launches can open a native crash dialog on
+  // macOS and interrupt the operator before Cypress starts.
+  // Run with: CYPRESS_PROFILE=visual npx cypress run --browser chrome
+  // Use `cypress open` only for deliberate interactive debugging.
   visual: {
     baseUrl: process.env.CYPRESS_baseUrl || 'http://localhost:3099',
     specPattern: ['cypress/e2e/visual/**/*.cy.{js,jsx,ts,tsx}'],

@@ -38,7 +38,7 @@
     "test:e2e:full:tablet": "CYPRESS_PROFILE=full CYPRESS_VIEWPORT=tablet start-server-and-test dev http://localhost:3001 cypress:run:full",
     "test:e2e:full:landscape": "CYPRESS_PROFILE=full CYPRESS_VIEWPORT=landscape start-server-and-test dev http://localhost:3001 cypress:run:full",
     "cypress:open:visual": "env -u ELECTRON_RUN_AS_NODE CYPRESS_PROFILE=visual cypress open --browser chrome",
-    "cypress:run:visual": "env -u ELECTRON_RUN_AS_NODE CYPRESS_PROFILE=visual cypress run --browser chrome --headed"
+    "cypress:run:visual": "node scripts/run-visual-cypress-safe.mjs"
   },
   "dependencies": {
     "@takeon/engine": "file:vendor/takeon/takeon-engine-0.2.0.tgz",
