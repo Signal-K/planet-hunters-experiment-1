@@ -86,7 +86,6 @@ export default function BuildPlaceScreen({ onPlaced, onBack, hasCoach, player }:
     s.id !== 'garage'
     && (FEATURE_FLAGS.scanStation || s.id !== 'scan-station')
     && !player.placed.includes(s.id)
-    && structureUnlocked(s, { refineryUnlocked: player.refineryUnlocked, academyResearched: player.academyResearched, placed: player.placed, freeOperations: player.freeOperations, satelliteMonitoringLevel: player.satelliteMonitoringLevel, clientMissions: player.clientMissions, deepSpaceTelescopeMissionCompletedAt: player.deepSpaceTelescopeMissionCompletedAt, scanStationMissionCompletedAt: player.scanStationMissionCompletedAt })
   )
   const sel = catalog.find(c => c.id === picked) ?? catalog[0]
   const sortedEntities = plotEntities.slice().sort((a, b) => {

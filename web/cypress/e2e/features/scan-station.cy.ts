@@ -60,9 +60,17 @@ function visitWithState(path: string, screen: GameState['screen'], playerOverrid
   })
 }
 
+function openBuildFromHub(playerOverrides: Partial<GameState['player']>) {
+  visitWithState('/game/build', 'build', {
+    placed: [],
+    placementPlots: {},
+    ...playerOverrides,
+  })
+}
+
 describe('Scan Station', () => {
   it('is listed at Build/Place once Free Operations is reached, but locked until the commission mission is done (KES-132)', () => {
-    visitWithState('/game/build', 'build', { placed: ['launchpad'], scanStationMissionCompletedAt: null })
+    openBuildFromHub({ scanStationMissionCompletedAt: null })
     cy.contains('button', 'Scanning Station', { timeout: 10000 })
       .scrollIntoView()
       .should('be.visible')
@@ -70,7 +78,7 @@ describe('Scan Station', () => {
   })
 
   it('unlocks Scan Station at Build/Place once the commission mission is completed (KES-132)', () => {
-    visitWithState('/game/build', 'build', { placed: ['launchpad'], scanStationMissionCompletedAt: Date.now() })
+    openBuildFromHub({ scanStationMissionCompletedAt: Date.now() })
     // Mirrors the hydration-race wait used for Deep Space Telescope in
     // asteroid-discovery-mission.cy.ts — the catalog re-renders once the
     // async fetch settles, which can detach and replace this button.

@@ -48,6 +48,11 @@ const profiles: Record<string, Cypress.EndToEndConfigOptions> = {
   features: {
     baseUrl: 'http://localhost:3001',
     specPattern: ['cypress/e2e/features/**/*.cy.{js,jsx,ts,tsx}'],
+    // Survey QA has its own profile, where the explicit runtime opt-in is
+    // enabled. Keeping it out of the general feature profile prevents a
+    // deliberately disabled survey runtime from being reported as a product
+    // failure.
+    excludeSpecPattern: ['cypress/e2e/features/surveys.cy.ts'],
     viewportWidth: 390,
     viewportHeight: 844,
   },

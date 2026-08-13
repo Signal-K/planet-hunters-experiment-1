@@ -67,6 +67,16 @@ function visitWithState(path: string, screen: GameState['screen'], playerOverrid
   })
 }
 
+function openBuildFromHub(playerOverrides: Partial<GameState['player']> = {}) {
+  // Build is guarded for an already-populated Free Ops base; this fixture is
+  // intentionally an empty build scene so the catalog can be inspected.
+  visitWithState('/game/build', 'build', {
+    placed: [],
+    placementPlots: {},
+    ...playerOverrides,
+  })
+}
+
 describe('Asteroid Discovery mission on-ramp (KES-128)', () => {
   it('offers the survey mission at Launchpad once the SMS/affinity threshold is met', () => {
     visitWithState('/game/launchpad', 'launchpad', {
@@ -81,11 +91,11 @@ describe('Asteroid Discovery mission on-ramp (KES-128)', () => {
       satelliteMonitoringLevel: 1,
       clientMissions: {},
     })
-    cy.get('[data-testid="launchpad-program-operation-btn"]', { timeout: 10000 }).should('not.exist')
+    cy.contains('Deep Space Telescope').should('not.exist')
   })
 
   it('keeps Deep Space Telescope locked at Build/Place until the survey mission is completed', () => {
-    visitWithState('/game/build', 'build', {
+    openBuildFromHub({
       satelliteMonitoringLevel: 2,
       clientMissions: { 'earthbound-minerals': 10 },
       deepSpaceTelescopeMissionCompletedAt: null,
@@ -98,7 +108,7 @@ describe('Asteroid Discovery mission on-ramp (KES-128)', () => {
   })
 
   it('unlocks Deep Space Telescope at Build/Place once the survey mission is completed', () => {
-    visitWithState('/game/build', 'build', {
+    openBuildFromHub({
       satelliteMonitoringLevel: 2,
       clientMissions: { 'earthbound-minerals': 10 },
       deepSpaceTelescopeMissionCompletedAt: Date.now(),

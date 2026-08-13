@@ -85,13 +85,16 @@ describe('Free Ops Build screen', () => {
     visitFab({}, false)
     cy.get('[data-testid="free-ops-build-screen"]', { timeout: 10000 }).should('be.visible')
 
-    cy.get('[data-testid="free-ops-build-coach"]').should('be.visible')
-    cy.contains('BUILD HAS TWO PATHS').should('be.visible')
-    cy.get('[data-testid="free-ops-build-coach-next"]').click()
-    cy.contains('YOUR OWN OPERATION').should('be.visible')
-    cy.get('[data-testid="free-ops-build-coach-next"]').click()
-    cy.contains('CLIENT WORK').should('be.visible')
-    cy.get('[data-testid="free-ops-build-coach-next"]').click()
+    cy.get('[data-testid="free-ops-build-coach"]')
+      .should('be.visible')
+      .within(() => {
+        cy.contains('BUILD HAS TWO PATHS').should('be.visible')
+        cy.get('[data-testid="free-ops-build-coach-next"]').click()
+        cy.contains('YOUR OWN OPERATION').should('be.visible')
+        cy.get('[data-testid="free-ops-build-coach-next"]').click()
+        cy.contains('CLIENT WORK').should('be.visible')
+        cy.get('[data-testid="free-ops-build-coach-next"]').click()
+      })
     cy.get('[data-testid="free-ops-build-coach"]').should('not.exist')
     cy.window().then(win => {
       expect(win.localStorage.getItem(COACH_KEY)).to.eq('1')
