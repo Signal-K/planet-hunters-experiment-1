@@ -139,6 +139,7 @@ export function applyCollectRefined(s: GameState, recipe: RefineryRecipe): GameS
 /** Buy the rocket a mission will fly. Francs used to be deducted inline in
  *  `useGameLoop`; every purchase in the game now goes through this file. */
 export function applyPurchaseRocket(s: GameState, rocket: RocketModel): GameState {
+  if (s.player.pendingLaunch && s.player.pendingRocketId === rocket.id) return s
   if (s.player.francs < rocket.costFrancs) return s
   return {
     ...s,
