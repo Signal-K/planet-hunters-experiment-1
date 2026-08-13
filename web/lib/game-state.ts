@@ -273,6 +273,11 @@ export function repairStateRoute(input: GameState): GameState {
   return input
 }
 
+/** True only when a mission-completion transition crosses into Free Ops. */
+export function justFinishedOnboarding(previousMissionsDone: number, nextMissionsDone: number): boolean {
+  return previousMissionsDone < FREE_OPS_START_MISSIONS_DONE && nextMissionsDone >= FREE_OPS_START_MISSIONS_DONE
+}
+
 export function normalizeAndRepair(partial: PartialSave): GameState {
   return repairStateRoute(settleCrewEconomy(normalizeState(partial)))
 }

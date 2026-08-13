@@ -576,9 +576,41 @@ button { cursor: pointer; }
 .sticky-actions { position: absolute; z-index: 30; left: 0; right: 0; bottom: 0; padding: var(--ln-s-2) var(--ln-s-3) var(--ln-s-5); background: linear-gradient(180deg, transparent, rgba(10,10,11,.94) 34%, var(--ln-void)); }
 
 .mission-setup-screen {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
   background:
-    radial-gradient(ellipse at 50% 12%, rgba(112,217,234,0.09), transparent 32%),
-    linear-gradient(180deg, #141417 0%, #08080a 100%);
+    radial-gradient(ellipse at 18% 18%, var(--ln-cyan-soft), transparent 34%),
+    radial-gradient(ellipse at 86% 72%, var(--ln-ok-soft), transparent 30%),
+    linear-gradient(145deg, var(--ln-panel-2), var(--ln-void) 68%);
+}
+
+/* KES-181: setup is a lit operational scene, not a neutral app shell. The
+   mesh is deliberately CSS-only until authored scene art is available, but
+   it establishes the correct ambient depth and keeps the instrument chrome
+   attached to one surface. */
+.mission-setup-screen::before,
+.ln-scene-mission-board::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(115deg, transparent 0 44%, var(--ln-cyan-soft) 44.2% 44.35%, transparent 44.5%),
+    linear-gradient(25deg, transparent 0 62%, var(--ln-ok-soft) 62.2% 62.35%, transparent 62.5%),
+    repeating-linear-gradient(90deg, transparent 0 47px, var(--ln-hairline) 48px, transparent 49px),
+    repeating-linear-gradient(0deg, transparent 0 47px, var(--ln-hairline) 48px, transparent 49px);
+  opacity: 0.42;
+  z-index: 0;
+}
+
+.ln-scene-mission-board {
+  isolation: isolate;
+  overflow: hidden;
+  background:
+    radial-gradient(ellipse at 16% 20%, var(--ln-cyan-soft), transparent 36%),
+    radial-gradient(ellipse at 84% 70%, var(--ln-ok-soft), transparent 30%),
+    var(--ln-void) !important;
 }
 
 /* TargetPicker's wayfinding footer contains both the step rail and a large
@@ -655,15 +687,11 @@ button { cursor: pointer; }
   position: relative;
   min-height: 0;
   overflow: hidden;
-  border: 1px solid var(--ln-glass-border);
-  border-radius: 14px;
-  /* Neutral charcoal glass (2026-07-31) — was a dark-navy-tinted gradient,
-     one of the specific "everything is heavy blue" surfaces across the
-     entire Mission Board/Rocket/Launch/Mining flow. See the superseded-
-     palette comment above :root/.theme-deep. */
-  background: linear-gradient(180deg, rgba(255,255,255,0.10), rgba(255,255,255,0.04));
-  backdrop-filter: var(--ln-glass-blur);
-  -webkit-backdrop-filter: var(--ln-glass-blur);
+  border: 2px solid var(--ln-cyan-border);
+  border-radius: var(--ln-r-lg);
+  background:
+    linear-gradient(145deg, var(--ln-panel-2), var(--ln-panel) 58%, var(--ln-void));
+  box-shadow: var(--ln-shadow-card);
   /* Forces its own compositing layer on mount. Without this, content painted
      inside this nested position:absolute + overflow:hidden frame (e.g. the
      rocket stat values / rocket image on Select Rocket and Confirm Rocket)
@@ -677,11 +705,10 @@ button { cursor: pointer; }
   overflow: hidden;
   /* Cyan, not amber — this is generic panel chrome, and amber is restricted
      to genuine payout/reward emphasis (see design rules in CLAUDE.md). */
-  border: 1px solid var(--ln-cyan-border);
-  border-radius: 14px;
-  background: linear-gradient(180deg, rgba(255,255,255,0.09) 0%, rgba(255,255,255,0.03) 100%);
-  backdrop-filter: var(--ln-glass-blur);
-  -webkit-backdrop-filter: var(--ln-glass-blur);
+  border: 2px solid var(--ln-cyan-border);
+  border-radius: var(--ln-r-lg);
+  background: var(--ln-panel);
+  box-shadow: var(--ln-shadow-card);
   transform: translateZ(0);
 }
 
@@ -728,7 +755,7 @@ button { cursor: pointer; }
   border-color: var(--ln-cyan-border);
   background:
     radial-gradient(ellipse at 50% 44%, var(--ln-cyan-soft), transparent 58%),
-    linear-gradient(145deg, var(--ln-void), var(--ln-surface));
+    linear-gradient(145deg, var(--ln-panel-2), var(--ln-void));
   box-shadow: var(--ln-shadow-card);
 }
 
@@ -750,7 +777,7 @@ button { cursor: pointer; }
   min-height: 320px;
   background:
     radial-gradient(ellipse at 50% 48%, var(--ln-cyan-soft), transparent 58%),
-    linear-gradient(135deg, var(--ln-void), var(--ln-surface));
+    linear-gradient(135deg, var(--ln-panel-2), var(--ln-void));
   border-color: var(--ln-cyan-border);
 }
 

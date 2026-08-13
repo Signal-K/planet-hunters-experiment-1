@@ -98,16 +98,15 @@ jobs:
           chrome-version: stable
 
       # ── Cypress visual run ────────────────────────────────────────────────────
-      # cypress-io/github-action@v6 automatically starts Xvfb on Linux,
-      # enabling --headed Chrome in a headless runner environment.
-      - name: Run visual QA — headed Chrome
+      # Keep visual QA headless. Xvfb/headed mode is unnecessary for screenshots
+      # and can open native browser crash surfaces on developer machines.
+      - name: Run visual QA — headless Chrome
         id: cypress
         uses: cypress-io/github-action@v6
         continue-on-error: true
         with:
           working-directory: web
           browser: chrome
-          headed: true
           install: false
           start: npm run dev
           wait-on: "http://localhost:3099"

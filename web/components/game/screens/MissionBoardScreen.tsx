@@ -295,7 +295,7 @@ export default function MissionBoardScreen({ onBack, onPick, missionsDone, freeO
   const primer = previewModel ? missionTypePrimer(previewModel.mission) : null
 
   return (
-    <div style={{ width: '100%', height: '100%', position: 'relative', background: 'var(--ln-shell)' }}>
+    <div className="ln-scene-mission-board" style={{ width: '100%', height: '100%', position: 'relative', background: 'var(--ln-shell)' }}>
       <div style={{ position: 'absolute', inset: 0 }}>
         <Image src="/earth-day.jpg" alt="" fill style={{ objectFit: 'cover', filter: 'brightness(0.3) saturate(0.7)' }} />
       </div>

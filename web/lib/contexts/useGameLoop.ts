@@ -19,6 +19,7 @@ import type { Toast } from '@/components/ui/ToastLayer'
 import { applyGainResearchXP, applyUpgradeLicenseGrade, applyUnlockBlueprint } from '@/lib/systems/ProgressionSystem'
 import { pbShared } from '@/lib/pb'
 import { pbLandnam } from '@/lib/pb-landnam'
+import { justFinishedOnboarding } from '@/lib/game-state'
 
 const ORBIT_MS_PER_UNIT = 2 * 60 * 1000
 // First-time-only reward for classifying a TESS candidate — repeat looks at an
@@ -543,7 +544,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
       // debrief with no player action requesting it. Land on hub for that one
       // boundary mission; auto-market-open only kicks in for Free Ops missions
       // completed after onboarding has actually ended.
-      const justFinishedOnboarding = missionsDone === FREE_OPS_START_MISSIONS_DONE
+      const justFinishedOnboardingNow = justFinishedOnboarding(s.player.missionsDone, missionsDone)
       // Skip the Prospector upsell popup during guided onboarding — the tutorial
       // coach already delivers the same "Prospector available" message inline
       // (lib/data/tutorial.ts step 20), and the popup pre-empts the coach.
@@ -554,7 +555,11 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
       // approach). It rides in `popup`, which is part of the GameState blob
       // already persisted to game_states, so the ack survives reload and
       // syncs across devices with the rest of the save (KES-167).
-      const popup = showLoanOffer ? 'loan' : justFinishedOnboarding ? 'tutorial-complete' : (missionsDone === 1 && !stillInTutorial) ? 'sr2' : s.popup
+      const popup = justFinishedOnboardingNow
+        ? 'tutorial-complete'
+        : showLoanOffer
+          ? 'loan'
+          : (missionsDone === 1 && !stillInTutorial) ? 'sr2' : s.popup
       const next: GameState = {
         ...s,
         player: {
@@ -605,13 +610,13 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
         tutorial: stillInTutorial,
         popup,
         doneSteps: { ...s.doneSteps, 9: true },
-        screen: pendingTerritoryClaimFor
+          screen: pendingTerritoryClaimFor
           ? s.screen
           : mission?.payload?.type === 'satellite'
             ? 'galaxy'
             : isProgramOperation
               ? 'launchpad'
-              : (stillInTutorial || justFinishedOnboarding)
+              : (stillInTutorial || justFinishedOnboardingNow)
                 ? 'hub'
                 : 'market',
         pendingTerritoryClaimFor,

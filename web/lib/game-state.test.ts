@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { DEFAULT_STATE, loadState, mergeRemoteState, normalizeAndRepair, normalizeState, type PartialSave } from './game-state'
+import { DEFAULT_STATE, justFinishedOnboarding, loadState, mergeRemoteState, normalizeAndRepair, normalizeState, type PartialSave } from './game-state'
 import type { GameState } from './game-types'
 import { MISSIONS, TARGETS } from './data'
 
@@ -233,6 +233,15 @@ describe('game state hydration normalization', () => {
     expect(normalized.player.clientStructures?.[0]?.clientId).toBe('helios-propulsion-depot')
     expect(normalized.player.roverDeployments?.[0]?.clientId).toBe('helios-propulsion-depot')
     expect(normalized.pendingTerritoryClaimFor?.clientId).toBe('helios-propulsion-depot')
+  })
+})
+
+describe('onboarding completion boundary', () => {
+  it('fires only when the saved mission count crosses into Free Ops', () => {
+    expect(justFinishedOnboarding(2, 3)).toBe(true)
+    expect(justFinishedOnboarding(0, 3)).toBe(true)
+    expect(justFinishedOnboarding(3, 3)).toBe(false)
+    expect(justFinishedOnboarding(4, 5)).toBe(false)
   })
 })
 

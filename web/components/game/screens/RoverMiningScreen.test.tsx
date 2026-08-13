@@ -26,4 +26,13 @@ describe('RoverMiningScreen scouting', () => {
     expect(markup).toContain('MINERAL VEIN')
     expect(markup).toContain('SIGNATURE +3')
   })
+
+  it('ships a non-blank scene fallback for renderer failure', () => {
+    const markup = renderToStaticMarkup(
+      <RoverMiningScreen mission={mission} target={target} onComplete={() => undefined} onBack={() => undefined} onClassifyTerrain={() => undefined} />,
+    )
+
+    expect(markup).toContain('data-testid="rover-scene-fallback"')
+    expect(markup).toContain('FALLBACK RENDERER')
+  })
 })
