@@ -110,7 +110,7 @@ export default function GalaxyMap({ mission, targets, compatibleIds, pickedId, o
             const size = isAsteroid ? 12 : 11
             const colors = bodyColors(t)
             const compatible = compatibleIds.has(t.id)
-            const contractMatch = t.minerals.some(m => missionMinerals.has(m))
+            const contractMatch = [...missionMinerals].every(mineral => t.minerals.includes(mineral))
             const selected = pickedId === t.id
             const sil = asteroidSilhouette(t.id)
             const polyPoints = sil.map(([mx, my]) => `${cx + mx * size},${cy + my * size}`).join(' ')
@@ -119,8 +119,9 @@ export default function GalaxyMap({ mission, targets, compatibleIds, pickedId, o
               <g
                 key={t.id}
                 opacity={compatible ? 1 : 0.32}
-                style={{ cursor: 'pointer' }}
-                onClick={() => onPick(t.id)}
+                style={{ cursor: compatible ? 'pointer' : 'default' }}
+                onClick={compatible ? () => onPick(t.id) : undefined}
+                aria-label={compatible ? `Select ${t.name}` : `${t.name}, unavailable`}
               >
                 {selected && (
                   <circle cx={cx} cy={cy} r={size + 8} fill="none" stroke="var(--ln-cyan)" strokeWidth={2} />
@@ -143,7 +144,7 @@ export default function GalaxyMap({ mission, targets, compatibleIds, pickedId, o
 
       <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', padding: '8px 16px 10px', borderTop: '1px solid var(--ln-hairline)', flexShrink: 0 }}>
         <span style={{ display: 'flex', alignItems: 'center', gap: 6, fontFamily: 'var(--ln-font-display)', fontSize: 9, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--ln-text-muted)' }}>
-          <span style={{ width: 7, height: 7, borderRadius: '50%', background: 'var(--ln-cyan)' }} />Reachable
+          <span style={{ width: 7, height: 7, borderRadius: '50%', background: 'var(--ln-cyan)' }} />Reachable and selectable
         </span>
         <span style={{ display: 'flex', alignItems: 'center', gap: 6, fontFamily: 'var(--ln-font-display)', fontSize: 9, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--ln-text-muted)' }}>
           <span style={{ width: 7, height: 7, borderRadius: '50%', background: 'var(--ln-crit)', opacity: 0.6 }} />Out of range

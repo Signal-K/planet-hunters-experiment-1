@@ -64,4 +64,13 @@ describe('TargetPicker orbital map', () => {
         expect(rect.height).to.be.greaterThan(320)
       })
   })
+
+  it('keeps an unavailable context body from changing the selected target', () => {
+    cy.viewport(1280, 900)
+    visitTargetPicker()
+    cy.get('[data-testid="target-picker-orbital-map"]', { timeout: 10000 }).should('be.visible')
+    cy.get('svg text').contains('Jupiter').click()
+    cy.contains('433 Eros').should('be.visible')
+    cy.get('[data-testid="continue-build-btn"]').should('not.be.disabled')
+  })
 })

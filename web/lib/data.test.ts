@@ -348,6 +348,12 @@ describe('compatibleTargetsFor', () => {
     expect(compatible.every(t => t.type === 'asteroid')).toBe(true)
   })
 
+  it('keeps Jupiter body copy specific and excludes planets from onboarding targets', () => {
+    const m1 = MISSIONS.find(m => m.sequence === 1)!
+    expect(compatibleTargetsFor(m1, TARGETS).some(t => t.id === 'jupiter')).toBe(false)
+    expect(TARGETS.find(t => t.id === 'jupiter')?.brief).not.toContain('moons')
+  })
+
   it('allows planets for M3+ missions that require their minerals', () => {
     // Synthesise a sequence-3 mission without a fixed targetId that requires ice
     const m3: import('./data/types').Mission = {
