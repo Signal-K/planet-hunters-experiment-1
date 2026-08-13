@@ -720,6 +720,25 @@ button { cursor: pointer; }
   height: fit-content;
 }
 
+/* KES-184: the vehicle is the primary object on Select Rocket. Give its
+   scene a real stage and keep the technical readout subordinate beside it. */
+.mission-setup-screen--rocket .rocket-vehicle-frame {
+  min-height: 320px;
+  background:
+    radial-gradient(ellipse at 50% 48%, var(--ln-cyan-soft), transparent 58%),
+    linear-gradient(135deg, var(--ln-void), var(--ln-surface));
+  border-color: var(--ln-cyan-border);
+}
+
+.mission-setup-screen--rocket .mission-setup-content {
+  overflow-y: auto;
+  padding-bottom: 280px;
+}
+
+@media (max-width: 899px) {
+  .mission-setup-screen--rocket .rocket-vehicle-frame { min-height: 220px; }
+}
+
 .mission-setup-screen--assembly .assembly-card .mission-setup-card-scroll {
   padding: 12px;
 }
