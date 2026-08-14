@@ -815,6 +815,14 @@ button { cursor: pointer; }
     gap: 10px;
   }
 
+  /* KES-186: the portrait Confirm Launch rail is taller than the shared
+     104px reservation once the compact manifest renders. Keep the second
+     setup card above the fixed rail instead of letting its border disappear
+     behind the CTA. */
+  .mission-setup-screen--assembly .mission-setup-content {
+    padding-bottom: 152px;
+  }
+
   /* One child (.mission-board-layout), so one track. The old three-track
      value dated from when the picker passed map/detail/legend as separate
      shell children: the two now-empty 1fr tracks still claimed ~99px each,
