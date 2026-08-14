@@ -259,6 +259,24 @@ describe('onboarding completion boundary', () => {
 
     expect(normalized.player.freeOperations).toBe(true)
   })
+
+  // freeOperations is derived purely from missionsDone (lib/game-state.ts
+  // deriveFreeOperations) — there is deliberately no requirement that any
+  // structure beyond the onboarding launchpad ever gets placed. A player who
+  // finishes M1-M3 and then just banks francs without building anything else
+  // is a legitimate, reachable state, not corruption — this was flagged as a
+  // suspected data-integrity bug (KES-193) before tracing freeOperations back
+  // to missionsDone alone with no `placed` gate. Locking this in so a future
+  // change doesn't quietly turn "no extra structures" into a repaired/error
+  // state without an explicit design decision.
+  it('does not require any structure beyond launchpad once Free Ops is reached', () => {
+    const normalized = normalizeAndRepair({
+      player: { missionsDone: 3, freeOperations: true, placed: ['launchpad'], francs: 11_579_460_000 },
+    })
+
+    expect(normalized.player.freeOperations).toBe(true)
+    expect(normalized.player.placed).toEqual(['launchpad'])
+  })
 })
 
 describe('mergeRemoteState — remote game_states record onto local state', () => {

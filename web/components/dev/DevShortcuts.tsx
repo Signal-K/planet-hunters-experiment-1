@@ -50,6 +50,13 @@ export default function DevShortcuts() {
   }
 
   return (
+    // KES-173: dropping this below the header (top:8 -> ~56) traded one
+    // overlap for a worse one — ToastLayer's global toast stack
+    // (components/ui/ToastLayer.tsx) starts at top:52 and this badge's
+    // zIndex 999 beats its 85, so a toast on any screen would render behind
+    // the DEV button. Left at its original anchor; the screens that were
+    // actually clipped (HubScreen's own inline header) now reserve
+    // horizontal clearance for it instead.
     <div style={{ position: 'absolute', top: 8, left: 8, zIndex: 999, userSelect: 'none' }}>
       <button
         data-testid="dev-shortcuts-toggle"

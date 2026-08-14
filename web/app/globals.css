@@ -450,6 +450,13 @@ button { cursor: pointer; }
   width: 100%;
   border-bottom: 0;
   border-radius: 20px 20px 0 0;
+  /* KES-170: no cap meant a tall bottom sheet (e.g. a multi-question
+     PostHog survey) could grow to cover the whole viewport, including the
+     TopBar underneath — "PostHog surveys must ... never block or cover
+     gameplay UI" is a standing rule, not survey-specific, so this caps
+     every bottom sheet and lets its own content scroll instead. */
+  max-height: min(78vh, calc(100vh - 64px));
+  overflow-y: auto;
 }
 
 .ln-sheet__panel--centered {
@@ -636,6 +643,7 @@ button { cursor: pointer; }
 .context-row div { display: flex; flex-direction: column; gap: var(--ln-s-1); }
 .context-row strong { font: 800 13px var(--ln-font-display); color: var(--ln-text); }
 .amber { color: var(--ln-amber) !important; }
+.cyan { color: var(--ln-cyan) !important; }
 .compatibility { padding: var(--ln-s-3); border-radius: var(--ln-r-lg); font: 700 11px var(--ln-font-display); letter-spacing: var(--ln-tr-label); text-transform: uppercase; }
 .compatibility span { display: inline-block; width: 6px; height: 6px; margin-right: var(--ln-s-2); border-radius: var(--ln-r-pill); background: currentColor; box-shadow: 0 0 8px currentColor; }
 .compatibility--ok { color: var(--ln-ok); border: 1px solid var(--ln-ok); background: var(--ln-ok-soft); }
@@ -1208,14 +1216,19 @@ button { cursor: pointer; }
   50% { opacity: 1; }
 }
 
-/* Amber pulse ring. Sits over its positioned parent (or fills a highlight
-   overlay); never paints text, so animating the whole layer's opacity is safe. */
+/* Cyan pulse ring. Sits over its positioned parent (or fills a highlight
+   overlay); never paints text, so animating the whole layer's opacity is safe.
+   Was amber (rgba(245,166,35,...)) until KES-192 — TutorialHighlight wraps
+   whole content panels (Target Picker, Rocket Buy, Launch Preflight, Debrief)
+   whenever hasCoach is true, so that amber was a panel accent on every
+   onboarding screen, not the small payout-emphasis use the standing amber
+   rule allows. Cyan matches TutorialCoach's own instruction-card border. */
 .coach-glow-ring {
   position: absolute;
   inset: 0;
-  border: 2px solid rgba(245,166,35,1);
+  border: 2px solid rgba(112,217,234,1);
   border-radius: inherit;
-  box-shadow: 0 0 20px 5px rgba(245,166,35,0.45);
+  box-shadow: 0 0 20px 5px rgba(112,217,234,0.45);
   pointer-events: none;
   will-change: opacity;
   animation: coach-glow-fade 1.6s ease-in-out infinite;
@@ -1393,4 +1406,10 @@ html[data-coach-target="build-structure-strip"] [data-coach-id="build-structure-
      of the structure labels at the turf line. */
   .hub-action-rail { bottom: var(--ln-s-2) !important; }
   .hub-push-opt-in { display: none; }
+  /* KES-176: edit mode can add New Structure / Hangar / Upgrade Launchpad
+     to this row alongside Edit·Done, which wraps to two lines at narrow
+     widths. Because the row is bottom-anchored, wrapping grows it upward —
+     without extra clearance the second line lands on the Launchpad
+     building's own status pill above it. */
+  .hub-action-rail--edit { bottom: calc(var(--ln-s-2) + 92px) !important; }
 }

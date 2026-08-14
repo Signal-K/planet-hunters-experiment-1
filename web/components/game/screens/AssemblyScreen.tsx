@@ -91,7 +91,8 @@ export default function AssemblyScreen(props: AssemblyScreenProps) {
         <Panel accent="var(--ln-cyan)" style={{ padding: compact ? 8 : 'var(--ln-s-3)', flex: '0 0 auto' }}>
           <div className="context-row">
             <div><span className="ln-micro">Mission</span><strong>{props.mission.title}</strong></div>
-            <div><span className="ln-micro">Target</span><strong className="amber">{props.target.name}</strong></div>
+            {/* KES-171: target name is informational text, not a payout/reward — was amber. */}
+            <div><span className="ln-micro">Target</span><strong className="cyan">{props.target.name}</strong></div>
           </div>
           {props.mission.deliveryTargetId && props.deliveryTargetName && (
             <div style={{ marginTop: 6, display: 'flex', alignItems: 'center', gap: 5, font: '700 9px var(--ln-font-mono)', color: 'var(--ln-cyan)', letterSpacing: '0.08em', textTransform: 'uppercase' }}>

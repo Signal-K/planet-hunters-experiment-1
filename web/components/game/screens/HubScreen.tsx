@@ -20,6 +20,7 @@ import { TUTORIAL_CONTENT_TOP, TUTORIAL_RAIL } from '@/lib/tutorial-layout'
 import { LAUNCHPAD_UPGRADE_COST, type SubsurfaceRoomId } from '@/lib/data'
 import { formatCurrency } from '@/lib/format'
 import { FEATURE_FLAGS } from '@/lib/featureFlags'
+import { isDevLauncherEnabled } from '@/lib/devAccess'
 import type { HubBuildingDef } from '@/lib/pixi/hubScene'
 import { fetchReviewableTessCandidates } from '@/lib/tess-subjects'
 import { fetchReviewableAsteroidCandidates } from '@/lib/asteroid-subjects'
@@ -436,7 +437,11 @@ export default function HubScreen({ player, rocketVariant = 'explorer', hasCoach
         transition: 'background 0.55s',
       }}>
         <div style={{ pointerEvents: 'auto' }}>
-          <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 9.5, fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.55)' }}>
+          {/* KES-173: DevShortcuts' fixed DEV toggle (top:8 left:8, dev-only,
+              ~120px wide) sits directly over this eyebrow, clipping the
+              opening characters ("EARTH BASE" -> "H BASE"). Only reserve
+              the clearance when that badge can actually render. */}
+          <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 9.5, fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.55)', marginLeft: isDevLauncherEnabled() ? 130 : 0 }}>
             {subsurface ? 'EARTH BASE · SUBSURFACE' : `EARTH BASE · OPS ${player.missionsDone}`}
           </div>
           <h1 style={{ margin: '2px 0 0', fontFamily: 'var(--ln-font-display)', fontSize: 23, fontWeight: 800, letterSpacing: '-0.01em', color: '#fff', lineHeight: 1, textShadow: '0 2px 10px rgba(0,0,0,0.6)' }}>
@@ -480,7 +485,7 @@ export default function HubScreen({ player, rocketVariant = 'explorer', hasCoach
           Ops for the whole guided-ops window meant those buttons stayed
           unreachable well past the tutorial (bug reported 2026-07-31). */}
       {(!hasCoach || player.missionsDone > 0) && (
-        <div className="hub-action-rail" style={{
+        <div className={`hub-action-rail${editMode ? ' hub-action-rail--edit' : ''}`} style={{
           position: 'absolute', left: 0, right: 0, zIndex: 20,
           display: 'flex', justifyContent: 'center', gap: 8, flexWrap: 'wrap',
           padding: '0 12px',

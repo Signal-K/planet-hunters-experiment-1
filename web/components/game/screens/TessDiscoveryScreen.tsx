@@ -34,8 +34,10 @@ interface TessDiscoveryScreenProps {
 // Direct-action verdict buttons (tap = submit immediately), matching the
 // citizen-science ticket wording (kkhyll: CONFIRM TRANSIT / MARK NOISE / SKIP)
 // rather than the old select-then-submit trio.
+// KES-171: "Confirm Transit" is a primary CTA, not a payout/reward moment —
+// was amber, which violates the amber-restricted-to-payout-emphasis rule.
 const VERDICT_ACTIONS: Array<{ id: TessVerdict; label: string; requiresMark: boolean; kind: 'amber' | 'cyan' | 'ghost' }> = [
-  { id: 'planet', label: 'Confirm Transit', requiresMark: true, kind: 'amber' },
+  { id: 'planet', label: 'Confirm Transit', requiresMark: true, kind: 'cyan' },
   { id: 'not_planet', label: 'Mark Noise', requiresMark: true, kind: 'cyan' },
   { id: 'unsure', label: 'Skip', requiresMark: false, kind: 'ghost' },
 ]

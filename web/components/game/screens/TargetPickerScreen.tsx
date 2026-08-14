@@ -178,7 +178,7 @@ export default function TargetPickerScreen({ mission, onBack, onPick, hasCoach, 
           <div style={{ padding: '0 0 8px', display: 'flex', alignItems: 'center', gap: 8 }}>
             <span style={{ fontFamily: 'var(--ln-font-display)', fontSize: 10, fontWeight: 700, letterSpacing: '0.22em', color: 'var(--ln-text-muted)', textTransform: 'uppercase' }}>Compatible · {compat.length}</span>
             <span style={{ flex: 1 }} />
-            <StatusPill kind="amber" dim>Rocket range · Orbit ≤ {mission.requires.max_orbit}</StatusPill>
+            <StatusPill kind="info" dim>Rocket range · Orbit ≤ {mission.requires.max_orbit}</StatusPill>
           </div>
           {/* Orbit was shown as a bare number everywhere, with no statement of
               what it buys the player — while the rarity gates it drives are
@@ -253,11 +253,11 @@ export default function TargetPickerScreen({ mission, onBack, onPick, hasCoach, 
                 <div style={{
                   display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12,
                   padding: '8px 10px', borderRadius: 6,
-                  border: '1px dashed var(--ln-amber-border)', background: 'var(--ln-amber-soft)',
+                  border: '1px dashed var(--ln-cyan-border)', background: 'var(--ln-cyan-soft)',
                 }}>
                   <span style={{ fontFamily: 'var(--ln-font-body)', fontSize: 11, color: 'var(--ln-text-dim)', lineHeight: 1.4 }}>
                     Contract wants{' '}
-                    <b style={{ color: 'var(--ln-amber)', fontWeight: 700 }}>
+                    <b style={{ color: 'var(--ln-cyan)', fontWeight: 700 }}>
                       {missionMineralKeys.map(m => MINERAL_META[m]?.name ?? m).join(', ')}
                     </b>
                   </span>

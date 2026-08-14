@@ -197,7 +197,14 @@ button.launchpad-scene-object { cursor: pointer; }
   .launchpad-tower-deck { width: 180px; }
   .launchpad-satellite svg { width: 70px; }
   .launchpad-rail-status span:not(:first-child) { display: none; }
-  .launchpad-rail-actions button { padding: 0 9px; font-size: 8px; }
+  .launchpad-rail-actions button { padding: 0 9px; font-size: 8px; flex: 0 0 auto; }
+  /* KES-176: up to 5 rail buttons (GUIDE, BUILD STATION, HANGAR, OPS N,
+     CONTRACTS) can outgrow the available width even at compact padding —
+     the row has no wrap, so the rightmost button (usually CONTRACTS) was
+     clipped by page overflow instead of reachable. Scroll rather than lose
+     the last action. */
+  .launchpad-rail-actions { overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+  .launchpad-rail-actions::-webkit-scrollbar { display: none; }
 }
 @media (orientation: landscape) and (max-height: 600px) {
   .launchpad-visual-scene { inset: 64px 0 54px; }
