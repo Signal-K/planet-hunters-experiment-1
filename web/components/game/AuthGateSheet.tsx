@@ -23,15 +23,6 @@ export default function AuthGateSheet({ error, onSignIn, onCreateAccount, onCont
   const [otpCode, setOtpCode] = useState('')
   const [otpSubmitting, setOtpSubmitting] = useState(false)
 
-  const inputStyle: React.CSSProperties = {
-    width: '100%', padding: '12px 14px',
-    background: 'rgba(20,20,23,0.8)',
-    border: '1px solid rgba(112,217,234,0.3)',
-    borderRadius: 10, outline: 'none',
-    fontFamily: 'var(--ln-font-body)', fontSize: 14, color: '#e6efff',
-    boxSizing: 'border-box',
-  }
-
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setSubmitting(true)
@@ -81,30 +72,36 @@ export default function AuthGateSheet({ error, onSignIn, onCreateAccount, onCont
       handleStyle={{ background: 'rgba(255,255,255,0.2)' }}
     >
 
-        <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 9, fontWeight: 800, letterSpacing: '0.22em', color: '#3fa9ff', textTransform: 'uppercase' }}>
-          Landnam · Space Mining
+      <div className="auth-gate__scene" aria-hidden="true">
+        <div className="auth-gate__scene-copy">
+          <span className="auth-gate__eyebrow">LANDNAM // EARTH BASE</span>
+          <span className="auth-gate__scene-title">MISSION CONTROL</span>
+          <span className="auth-gate__scene-status"><i /> FLIGHT SYSTEMS READY</span>
         </div>
-        <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 20, fontWeight: 800, color: '#e6efff', marginTop: 2 }}>
-          {mode === 'signin' ? 'Welcome Back' : 'Create Account'}
+        <div className="auth-gate__orbit auth-gate__orbit--outer" />
+        <div className="auth-gate__orbit auth-gate__orbit--inner" />
+        <div className="auth-gate__planet" />
+        <img className="auth-gate__ship" src="/game/assets/ships/ship_sr1.png" alt="" />
+        <div className="auth-gate__telemetry">
+          <span>ORBITAL NETWORK</span><strong>ONLINE</strong>
+          <span>LOCAL TIME</span><strong>03:17:42 UTC</strong>
         </div>
+      </div>
 
-        <div style={{ display: 'flex', gap: 8, marginTop: 14, marginBottom: 14 }}>
+      <div className="auth-gate__content">
+        <div className="auth-gate__eyebrow">LANDNAM · SPACE MINING</div>
+        <div className="auth-gate__heading">{mode === 'signin' ? 'Welcome Back' : 'Create Account'}</div>
+        <p className="auth-gate__intro">Resume the program and return to the Earth Base command deck.</p>
+
+        <div className="auth-gate__tabs" role="tablist" aria-label="Account access mode">
           {(['signin', 'signup'] as const).map(m => (
-            <button key={m} onClick={() => setMode(m)} style={{
-              flex: 1, padding: '8px 0',
-              background: mode === m ? 'rgba(112,217,234,0.15)' : 'transparent',
-              border: `1px solid ${mode === m ? 'rgba(112,217,234,0.5)' : 'rgba(112,217,234,0.15)'}`,
-              borderRadius: 10, cursor: 'pointer',
-              fontFamily: 'var(--ln-font-display)', fontSize: 11, fontWeight: 800,
-              letterSpacing: '0.14em', textTransform: 'uppercase',
-              color: mode === m ? '#87CFFA' : '#5d7390',
-            }}>
+            <button key={m} className={`auth-gate__tab${mode === m ? ' is-active' : ''}`} onClick={() => setMode(m)} role="tab" aria-selected={mode === m}>
               {m === 'signin' ? 'Sign In' : 'Sign Up'}
             </button>
           ))}
         </div>
 
-        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+        <form onSubmit={handleSubmit} className="auth-gate__form">
           <input
             type="email"
             value={email}
@@ -113,7 +110,7 @@ export default function AuthGateSheet({ error, onSignIn, onCreateAccount, onCont
             autoComplete="email"
             placeholder="Email"
             data-testid="auth-gate-email"
-            style={inputStyle}
+            className="auth-gate__input"
           />
           <input
             type="password"
@@ -123,18 +120,11 @@ export default function AuthGateSheet({ error, onSignIn, onCreateAccount, onCont
             autoComplete={mode === 'signin' ? 'current-password' : 'new-password'}
             placeholder="Password"
             data-testid="auth-gate-password"
-            style={inputStyle}
+            className="auth-gate__input"
           />
 
           {error && (
-            <div style={{
-              padding: '9px 12px',
-              background: 'rgba(255,59,48,0.12)',
-              border: '1px solid rgba(255,59,48,0.35)',
-              borderRadius: 8,
-              fontFamily: 'var(--ln-font-body)', fontSize: 12, color: '#ff6b5b',
-              lineHeight: 1.4,
-            }}>
+            <div className="auth-gate__error" role="alert">
               {error}
             </div>
           )}
@@ -143,31 +133,19 @@ export default function AuthGateSheet({ error, onSignIn, onCreateAccount, onCont
             type="submit"
             disabled={submitting}
             data-testid="auth-gate-submit"
-            style={{
-              width: '100%', padding: '15px', borderRadius: 12, border: 'none',
-              marginTop: 2,
-              cursor: submitting ? 'not-allowed' : 'pointer',
-              background: submitting
-                ? 'rgba(44,96,140,0.5)'
-                : 'linear-gradient(180deg, #6cc2ff 0%, #2d8de0 100%)',
-              color: '#06121f',
-              fontFamily: 'var(--ln-font-display)', fontSize: 14, fontWeight: 800,
-              letterSpacing: '0.12em', textTransform: 'uppercase',
-              boxShadow: submitting ? 'none' : 'inset 0 1px 0 rgba(255,255,255,0.4), 0 4px 0 rgba(0,0,0,0.3)',
-              opacity: submitting ? 0.6 : 1,
-            }}
+            className="auth-gate__primary"
           >
             {submitting ? (mode === 'signin' ? 'Signing in…' : 'Creating…') : (mode === 'signin' ? 'Sign In' : 'Create Account')}
           </button>
         </form>
 
-        <div style={{ marginTop: 16, paddingTop: 14, borderTop: '1px solid rgba(112,217,234,0.15)' }}>
+        <div className="auth-gate__quick">
           {otpPending ? (
             <>
-              <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 11, color: '#5d7390', marginBottom: 8, textAlign: 'center' }}>
+              <div className="auth-gate__quick-copy">
                 Enter the code we emailed to {quickEmail}
               </div>
-              <form onSubmit={handleVerifyOtp} style={{ display: 'flex', gap: 8 }}>
+              <form onSubmit={handleVerifyOtp} className="auth-gate__quick-form">
                 <input
                   type="text"
                   inputMode="numeric"
@@ -177,20 +155,13 @@ export default function AuthGateSheet({ error, onSignIn, onCreateAccount, onCont
                   autoComplete="one-time-code"
                   placeholder="Code"
                   data-testid="auth-gate-otp-code"
-                  style={{ ...inputStyle, flex: 1 }}
+                  className="auth-gate__input auth-gate__input--compact"
                 />
                 <button
                   type="submit"
                   disabled={otpSubmitting}
                   data-testid="auth-gate-otp-submit"
-                  style={{
-                    padding: '0 18px', borderRadius: 10, border: '1px solid rgba(112,217,234,0.35)',
-                    cursor: otpSubmitting ? 'not-allowed' : 'pointer',
-                    background: 'transparent', color: '#87CFFA',
-                    fontFamily: 'var(--ln-font-display)', fontSize: 12, fontWeight: 800,
-                    letterSpacing: '0.1em', textTransform: 'uppercase',
-                    opacity: otpSubmitting ? 0.6 : 1,
-                  }}
+                  className="auth-gate__secondary"
                 >
                   {otpSubmitting ? '…' : 'Verify'}
                 </button>
@@ -198,10 +169,10 @@ export default function AuthGateSheet({ error, onSignIn, onCreateAccount, onCont
             </>
           ) : (
             <>
-              <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 11, color: '#5d7390', marginBottom: 8, textAlign: 'center' }}>
-                Or just leave an email — no password needed
+              <div className="auth-gate__quick-copy">
+                <span>NO PASSWORD NEEDED</span> Continue with an email link.
               </div>
-              <form onSubmit={handleQuickContinue} style={{ display: 'flex', gap: 8 }}>
+              <form onSubmit={handleQuickContinue} className="auth-gate__quick-form">
                 <input
                   type="email"
                   value={quickEmail}
@@ -210,20 +181,13 @@ export default function AuthGateSheet({ error, onSignIn, onCreateAccount, onCont
                   autoComplete="email"
                   placeholder="you@example.com"
                   data-testid="auth-gate-quick-email"
-                  style={{ ...inputStyle, flex: 1 }}
+                  className="auth-gate__input auth-gate__input--compact"
                 />
                 <button
                   type="submit"
                   disabled={quickSubmitting}
                   data-testid="auth-gate-quick-submit"
-                  style={{
-                    padding: '0 18px', borderRadius: 10, border: '1px solid rgba(112,217,234,0.35)',
-                    cursor: quickSubmitting ? 'not-allowed' : 'pointer',
-                    background: 'transparent', color: '#87CFFA',
-                    fontFamily: 'var(--ln-font-display)', fontSize: 12, fontWeight: 800,
-                    letterSpacing: '0.1em', textTransform: 'uppercase',
-                    opacity: quickSubmitting ? 0.6 : 1,
-                  }}
+                  className="auth-gate__secondary"
                 >
                   {quickSubmitting ? '…' : 'Continue'}
                 </button>
@@ -231,6 +195,7 @@ export default function AuthGateSheet({ error, onSignIn, onCreateAccount, onCont
             </>
           )}
         </div>
+      </div>
     </Sheet>
   )
 }
