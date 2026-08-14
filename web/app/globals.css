@@ -820,7 +820,17 @@ button { cursor: pointer; }
      setup card above the fixed rail instead of letting its border disappear
      behind the CTA. */
   .mission-setup-screen--assembly .mission-setup-content {
+    grid-template-rows: minmax(0, 1fr) minmax(0, 1fr);
     padding-bottom: 152px;
+  }
+
+  .mission-setup-screen--assembly .assembly-card {
+    min-height: 0;
+  }
+
+  .mission-setup-screen--assembly .assembly-card .mission-setup-card-scroll {
+    height: 100%;
+    overflow-y: auto;
   }
 
   /* One child (.mission-board-layout), so one track. The old three-track
