@@ -53,6 +53,17 @@ function basePlayer(overrides: Partial<GameState['player']> = {}): GameState['pl
 }
 
 function visitWithState(path: string, screen: GameState['screen'], playerOverrides: Partial<GameState['player']>) {
+  const tokenPayload = btoa(JSON.stringify({ exp: Math.floor(Date.now() / 1000) + 3600 }))
+  const e2eToken = `e30.${tokenPayload}.test`
+  cy.intercept('POST', '**/api/collections/users/auth-refresh', {
+    statusCode: 200,
+    body: { token: e2eToken, record: { id: 'e2e-discovery-user', email: 'e2e@landnam.guest' } },
+  })
+  cy.intercept('POST', '**/api/landnam-auth/exchange', {
+    statusCode: 200,
+    body: { token: e2eToken, record: { id: 'e2e-discovery-user' } },
+  })
+
   const full: GameState = {
     screen,
     missionId: null,
@@ -68,22 +79,17 @@ function visitWithState(path: string, screen: GameState['screen'], playerOverrid
 
   cy.visit(path, {
     onBeforeLoad(win) {
-      // Remove any real PocketBase auth token left by an earlier test — if
-      // present, the SDK restores a valid session and the "brand-new user"
-      // auth-gate check never even runs (see useAuthSync.ts's authGateOpen
-      // effect), which would make this a false negative for other specs
-      // rather than a false positive for us. Matches visual-qa.cy.ts's
-      // loadPreset, which established this pattern first.
-      win.localStorage.removeItem('pocketbase_auth')
-      // Fake guest credentials make hasStoredCredentials() true, which is
-      // what actually suppresses the auth gate on mount (see useAuthSync.ts)
-      // — ensureGuestAuth() then fails to re-auth with these non-existent
-      // credentials and falls back to offline mode, same as
-      // visual-qa.cy.ts's suppressSurveysAndUpgrade.
+      // Seed a valid synthetic shared session so the real subject request is
+      // made. Without it, fetchReviewableTessCandidates() intentionally
+      // returns an empty feed before issuing network I/O.
+      win.localStorage.setItem('pocketbase_auth', JSON.stringify({
+        token: e2eToken,
+        record: { id: 'e2e-discovery-user', email: 'e2e@landnam.guest' },
+      }))
       // Each visual test gets its own guest account. Reusing one account lets
-      // the backend state from the preceding discovery test race the seeded
-      // local state here and remove the discovered target before Launchpad
-      // builds its runtime catalog.
+      // backend state from a preceding discovery test race the seeded local
+      // state here and remove the discovered target before Launchpad builds
+      // its runtime catalog.
       win.localStorage.setItem('landnam-guest-credentials', JSON.stringify({
         email: `e2e-${Date.now()}-${Math.random().toString(36).slice(2)}@landnam.guest`,
         password: 'e2e-guest-test',
