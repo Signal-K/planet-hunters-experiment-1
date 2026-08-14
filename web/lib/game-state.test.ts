@@ -162,7 +162,7 @@ describe('game state hydration normalization', () => {
   it('returns an operational saved build screen to the Hub on hydration', () => {
     const normalized = normalizeAndRepair({
       screen: 'build',
-      player: { freeOperations: true, placed: ['launchpad'] },
+      player: { freeOperations: true, missionsDone: 3, placed: ['launchpad'] },
     })
 
     expect(normalized.screen).toBe('hub')
@@ -242,6 +242,22 @@ describe('onboarding completion boundary', () => {
     expect(justFinishedOnboarding(0, 3)).toBe(true)
     expect(justFinishedOnboarding(3, 3)).toBe(false)
     expect(justFinishedOnboarding(4, 5)).toBe(false)
+  })
+
+  it('repairs a stale Free Ops flag before the three-mission boundary', () => {
+    const normalized = normalizeAndRepair({
+      player: { missionsDone: 1, freeOperations: true },
+    })
+
+    expect(normalized.player.freeOperations).toBe(false)
+  })
+
+  it('keeps Free Ops enabled at the post-onboarding boundary', () => {
+    const normalized = normalizeAndRepair({
+      player: { missionsDone: 3, freeOperations: false },
+    })
+
+    expect(normalized.player.freeOperations).toBe(true)
   })
 })
 

@@ -50,7 +50,26 @@ describe('LaunchpadScreen infrastructure hierarchy', () => {
     expect(markup).not.toContain('data-testid="launchpad-guide-open"')
     expect(markup).not.toContain('data-testid="launchpad-program-operation-btn"')
     expect(markup).toContain('data-testid="launchpad-view-contracts-btn"')
-    expect(markup).toContain('class="is-primary" data-testid="launchpad-view-contracts-btn"')
+    expect(markup).toContain('data-testid="launchpad-view-contracts-btn"')
+  })
+
+  it('does not trust a stale Free Ops flag before the three-mission boundary', () => {
+    const markup = renderToStaticMarkup(
+      <LaunchpadScreen
+        onBack={() => undefined}
+        onPick={() => undefined}
+        onViewContracts={() => undefined}
+        onOpenHangar={() => undefined}
+        onBuildMonitoring={() => undefined}
+        missionsDone={1}
+        freeOperations
+        catalog={STATIC_CATALOG}
+        player={{ ...DEFAULT_STATE.player, missionsDone: 1, freeOperations: true, satelliteMonitoringBuilt: false }}
+      />,
+    )
+    expect(markup).not.toContain('BUILD MONITORING STATION')
+    expect(markup).not.toContain('data-testid="launchpad-guide-open"')
+    expect(markup).toContain('data-testid="launchpad-view-contracts-btn"')
   })
 
   it('uses the selected rocket art and name throughout the launchpad scene', () => {

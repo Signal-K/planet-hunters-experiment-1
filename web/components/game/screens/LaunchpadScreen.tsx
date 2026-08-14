@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react'
 import TopBar from '@/components/ui/TopBar'
-import { ACADEMY_INTRO_MISSION_ID, partitionByOwner } from '@/lib/data'
+import { ACADEMY_INTRO_MISSION_ID, FREE_OPS_START_MISSIONS_DONE, partitionByOwner } from '@/lib/data'
 import { ROCKET_MODELS } from '@/lib/data/rockets'
 import { SATELLITE_MODELS } from '@/lib/data/satellites'
 import type { Catalog } from '@/lib/catalog'
@@ -69,7 +69,10 @@ export default function LaunchpadScreen({
     )
     return academyUnlocked && !academyCompleted
   })
-  const monitoringAvailable = freeOperations
+  // KES-177: a stale remote save can carry freeOperations=true while the
+  // onboarding mission count is still pre-Free Ops. The mission boundary is
+  // authoritative: M1-M3 stay focused on client mining contracts.
+  const monitoringAvailable = freeOperations && missionsDone >= FREE_OPS_START_MISSIONS_DONE
   const guideSteps = [
     ...(monitoringAvailable ? [{
       label: '01 · GROUND SYSTEM',

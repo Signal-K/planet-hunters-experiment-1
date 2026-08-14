@@ -207,6 +207,14 @@ export function normalizeState(input: PartialSave): GameState {
   const deepSpaceTelescopeBuilt = builtFrom('deep-space-telescope', player.deepSpaceTelescopeBuilt)
   const refineryBuilt = builtFrom('refinery', player.refineryBuilt)
   const scannerBuilt = FEATURE_FLAGS.scanStation && builtFrom('scan-station', player.scannerBuilt)
+  // KES-177: Free Operations is a progression boundary, not a freely
+  // persisted toggle. Older/incorrect remote saves can have the flag set
+  // before M3; derive it from missionsDone so the early game can never expose
+  // the post-onboarding monitoring station flow.
+  const missionsDone = Number.isFinite(player.missionsDone)
+    ? Math.max(0, Math.floor(player.missionsDone ?? 0))
+    : DEFAULT_STATE.player.missionsDone
+  const freeOperations = missionsDone >= FREE_OPS_START_MISSIONS_DONE
   const legacyClaim = input.pendingTerritoryClaimFor as unknown as { targetId: string; clientId?: string; contractorId?: string } | undefined
   const pendingTerritoryClaimFor = legacyClaim
     ? { targetId: legacyClaim.targetId, clientId: legacyClaim.clientId ?? legacyClaim.contractorId ?? '' }
@@ -218,7 +226,7 @@ export function normalizeState(input: PartialSave): GameState {
     missionId,
     targetId,
     rocket: { ...DEFAULT_STATE.rocket, ...input.rocket },
-    player: { ...DEFAULT_STATE.player, ...player, clientStructures, placed: placedList, placementPlots, licenseGrade, researchXP, unlockedBlueprints, tessClassifications, asteroidClassifications, roverTerrainClassifications, discoveredExoplanetTargets, instrumentDigestNotifiedOn, satelliteMonitoringLevel, transitSatelliteLevel, deepSpaceTelescopeLevel, crew, surfaceOps,
+    player: { ...DEFAULT_STATE.player, ...player, missionsDone, freeOperations, clientStructures, placed: placedList, placementPlots, licenseGrade, researchXP, unlockedBlueprints, tessClassifications, asteroidClassifications, roverTerrainClassifications, discoveredExoplanetTargets, instrumentDigestNotifiedOn, satelliteMonitoringLevel, transitSatelliteLevel, deepSpaceTelescopeLevel, crew, surfaceOps,
       satelliteMonitoringBuilt, deepSpaceTelescopeBuilt, refineryBuilt, scannerBuilt },
     doneSteps: { ...DEFAULT_STATE.doneSteps, ...input.doneSteps },
     ...(pendingTerritoryClaimFor ? { pendingTerritoryClaimFor } : {}),
