@@ -23,14 +23,13 @@ function renderLaunchpad(satelliteMonitoringBuilt: boolean, freeOperations = tru
 }
 
 describe('LaunchpadScreen infrastructure hierarchy', () => {
-  it('renders owned infrastructure as a visual scene with an actionable monitoring build', () => {
-    const markup = renderLaunchpad(false)
+  it('renders the built monitoring station as post-onboarding scene infrastructure', () => {
+    const markup = renderLaunchpad(true)
     expect(markup).toContain('data-testid="launchpad-monitoring-structure"')
     expect(markup).toContain('data-testid="launchpad-satellite-orbit"')
     expect(markup).toContain('data-testid="launchpad-rocket-fleet"')
-    expect(markup).toContain('data-testid="launchpad-build-monitoring-btn"')
     expect(markup).toContain('data-testid="launchpad-guide-open"')
-    expect(markup).toContain('BUILD MONITORING STATION')
+    expect(markup).toContain('S.M.S. · ONLINE')
     expect(markup).toContain('class="game-screen theme-deep ln-scene-launchpad"')
     expect(markup).not.toContain('launchpad-command-grid')
     expect(markup).not.toMatch(/<p(?:\s|>)/)
@@ -41,6 +40,14 @@ describe('LaunchpadScreen infrastructure hierarchy', () => {
     expect(markup).toContain('S.M.S. · ONLINE')
     expect(markup).not.toContain('data-testid="launchpad-build-monitoring-btn"')
     expect(markup).not.toMatch(/<button[^>]*data-testid="launchpad-monitoring-structure"/)
+  })
+
+  it('keeps an unbuilt post-onboarding station out of Launchpad', () => {
+    const markup = renderLaunchpad(false)
+    expect(markup).not.toContain('data-testid="launchpad-monitoring-structure"')
+    expect(markup).not.toContain('data-testid="launchpad-build-monitoring-btn"')
+    expect(markup).not.toContain('data-testid="launchpad-guide-open"')
+    expect(markup).toContain('data-testid="launchpad-view-contracts-btn"')
   })
 
   it('keeps M1 focused on contracts instead of locked monitoring infrastructure', () => {

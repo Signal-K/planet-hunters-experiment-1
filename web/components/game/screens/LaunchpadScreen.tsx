@@ -69,10 +69,13 @@ export default function LaunchpadScreen({
     )
     return academyUnlocked && !academyCompleted
   })
-  // KES-177: a stale remote save can carry freeOperations=true while the
-  // onboarding mission count is still pre-Free Ops. The mission boundary is
-  // authoritative: M1-M3 stay focused on client mining contracts.
-  const monitoringAvailable = freeOperations && missionsDone >= FREE_OPS_START_MISSIONS_DONE
+  // KES-177: Launchpad is for rockets and contracts. Station construction is
+  // owned by the Earth Base progression/build flow; only show the station
+  // here after it is already built. This prevents a post-login guide from
+  // turning an unbuilt future facility into the apparent next tutorial step.
+  const monitoringAvailable = freeOperations
+    && missionsDone >= FREE_OPS_START_MISSIONS_DONE
+    && player.satelliteMonitoringBuilt === true
   const guideSteps = [
     ...(monitoringAvailable ? [{
       label: '01 · GROUND SYSTEM',
