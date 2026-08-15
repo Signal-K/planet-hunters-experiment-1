@@ -112,7 +112,7 @@ const profiles: Record<string, Cypress.EndToEndConfigOptions> = {
     env: { livePocketBase: true },
   },
   // Runs against an already-deployed environment (e.g. the
-  // landnam-test.vercel.app staging alias) instead of a locally-started dev
+  // landnam-web.liam-55d.workers.dev staging Worker) instead of a locally-started dev
   // server. Scoped to c1-c4-viewport-matrix.cy.ts specifically: it's fast
   // (~25s, no real backend calls beyond initial page load) and, unlike every
   // other journeys spec, was actually confirmed passing against the real

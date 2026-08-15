@@ -1,13 +1,16 @@
 import './commands'
 
 // KES-151: running the journeys suite against the deployed production build
-// (landnam-test.vercel.app) surfaces a real, 100%-reproducible React
-// hydration mismatch (minified error #418) on every clean-storage load. It
-// never appears against local `next dev`, nor against a local `next start`
-// production build even with the real Vercel preview env vars (PocketBase
-// URLs, PostHog keys) loaded — isolated by direct comparison, not
-// assumption. So it is specific to something about the actual Vercel-hosted
-// deployment (edge serving / build pipeline) rather than app env config.
+// (originally landnam-test.vercel.app, now landnam-web.liam-55d.workers.dev
+// per KES-193) surfaces a real, 100%-reproducible React hydration mismatch
+// (minified error #418) on every clean-storage load. It never appears
+// against local `next dev`, nor against a local `next start` production
+// build even with the real preview env vars (PocketBase URLs, PostHog keys)
+// loaded — isolated by direct comparison, not assumption. So it was specific
+// to something about the actual Vercel-hosted deployment (edge serving /
+// build pipeline) rather than app env config. Not yet re-verified against
+// the Cloudflare/OpenNext deployment — leave this filter in place until
+// confirmed either way.
 // One real contributing bug was found and fixed this way (useAuthSync and
 // CommentsPanel both read pbShared.authStore synchronously in their initial
 // useState, before jsx a signed-in device's client-side auth state differs

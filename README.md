@@ -42,14 +42,14 @@ npm run test:e2e
 
 ### Staging / test deployment
 
-Deploy test builds to the stable test origin (separate from production):
+Every push to any branch deploys to the staging Worker via CI. To deploy a test build manually:
 
 ```bash
 cd web
-npm run deploy:test
+npm run deploy:cf
 ```
 
-Test URL: https://landnam-test.vercel.app
+Test URL: https://landnam-web.liam-55d.workers.dev
 
 ## 🤝 Contributing
 
