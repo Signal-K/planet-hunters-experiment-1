@@ -1285,6 +1285,11 @@ html[data-coach-target="build-structure-strip"] [data-coach-id="build-structure-
   --hub-sky-mid:    #28628e;
   --hub-sky-haze:   #4e91b8;
   --hub-sky-horizon:#8ec5d7;
+  --hub-fallback-ridge: #315043;
+  --hub-fallback-ground: #1a3620;
+  --hub-fallback-deck: #1c331c;
+  --hub-fallback-deck-shadow: #13261b;
+  --hub-fallback-deck-edge: rgba(140, 200, 90, 0.5);
   /* Ground contact line — 22% from the bottom. MUST stay in agreement with
      hubScene.ts (groundY = containerH * 0.78) and the DOM plot positions in
      HubScreen/BuildPlaceScreen, which all derive from the same 22%. */

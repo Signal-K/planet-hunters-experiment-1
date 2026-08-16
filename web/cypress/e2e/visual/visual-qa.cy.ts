@@ -220,6 +220,11 @@ describe('Visual QA — game screens and mining canvas', () => {
     // Guided M2 handoff
     cy.contains('Guided Ops · Mission 2', { timeout: 10000 }).should('be.visible')
     cy.contains('Prospector is now available').should('be.visible')
+    // Wait for the destination scene, not only the coach overlay. This keeps
+    // the visual checkpoint honest when the Hub route is still settling after
+    // the debrief transition (KES-167/KES-186).
+    cy.get('h1', { timeout: 10000 }).contains('Earth Base').should('be.visible')
+    cy.get('[data-testid="hub-terrain-fallback"]').should('exist')
     cy.screenshot('12-hub-post-mission')
 
     // Final state assertion

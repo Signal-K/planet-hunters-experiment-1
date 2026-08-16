@@ -73,20 +73,20 @@ export function HubWorldBackground() {
       >
         <div style={{
           position: 'absolute', left: 0, right: 0, bottom: '21%', height: '20%',
-          background: '#315043',
+          background: 'var(--hub-fallback-ridge)',
           clipPath: 'polygon(0 72%, 8% 48%, 17% 68%, 29% 30%, 39% 60%, 51% 36%, 62% 70%, 73% 28%, 85% 58%, 100% 38%, 100% 100%, 0 100%)',
         }} />
         <div style={{
           position: 'absolute', left: 0, right: 0, bottom: 0, height: '24%',
-          background: '#1a3620',
+          background: 'var(--hub-fallback-ground)',
           clipPath: 'polygon(0 18%, 12% 12%, 26% 18%, 39% 8%, 53% 16%, 66% 6%, 79% 15%, 91% 7%, 100% 13%, 100% 100%, 0 100%)',
         }} />
         <div style={{
           position: 'absolute', left: '13%', right: '13%', bottom: '14%', height: '9%',
-          background: '#1c331c',
-          borderTop: '2px solid rgba(140, 200, 90, 0.5)',
+          background: 'var(--hub-fallback-deck)',
+          borderTop: '2px solid var(--hub-fallback-deck-edge)',
           borderRadius: '8% 8% 2px 2px / 30% 30% 2px 2px',
-          boxShadow: 'inset 0 -14px 0 #13261b',
+          boxShadow: 'inset 0 -14px 0 var(--hub-fallback-deck-shadow)',
         }} />
       </div>
 
