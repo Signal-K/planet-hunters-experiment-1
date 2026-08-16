@@ -52,6 +52,7 @@ export const DEFAULT_STATE: GameState = {
     roverTerrainClassifications: {},
     clientTerritories: {},
     tessClassifications: {},
+    artifactNarrativeSeenAt: null,
     asteroidClassifications: {},
     instrumentDigestNotifiedOn: {},
     discoveredExoplanetTargets: {},

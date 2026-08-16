@@ -69,6 +69,15 @@ const UNLOCKS: Record<string, {
     stats: [['STATUS', 'ONLINE'], ['MODE', 'OPEN OPS'], ['NEXT', 'YOUR CALL']],
     cta: 'Enter Free Operations',
   },
+  'artifact-signal': {
+    accent: '#39d9ff',
+    eyebrow: 'Follow-up Record',
+    title: 'POSSIBLE SIGNAL',
+    body: 'This confirmed transit deserves another look. It is not evidence of life — preserve the raw observation, invite independent review, and let the data carry the claim.',
+    art: 'rooms',
+    stats: [['SOURCE', 'TESS'], ['STATUS', 'REVIEW'], ['TIER', 'LATE OPS']],
+    cta: 'Open Record',
+  },
 }
 
 function RocketArt({ accent }: { accent: string }) {

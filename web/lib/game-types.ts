@@ -193,6 +193,8 @@ export interface Player {
   activeScan?: { targetId: string; completesAt: number } | null
   targetScanCounts?: Record<string, number>
   tessClassifications?: Record<string, TessClassification>
+  // One-shot late-game narrative beat after a high-level TESS confirmation.
+  artifactNarrativeSeenAt?: number | null
   // Deep Space Telescope's asteroid-discovery (NEOCP) classifications
   // (STS-622) — same shape/role as tessClassifications above, keyed by
   // asteroid_candidates record id, but a separate map since it's a

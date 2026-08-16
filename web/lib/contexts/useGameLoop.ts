@@ -4,6 +4,7 @@ import {
   getLaserChargeCap, travelDurationMs, suggestBuild,
   CLIENT_COOLDOWN_MS, CLIENT_STREAK_LIMIT, loanInstalmentFor, BANKRUPTCY_THRESHOLD,
   isOwnProgramMission,
+  artifactNarrativeEligible,
 } from '@/lib/data'
 import { applyMiningDone, applyReturnArrived, applyRoverMiningDone } from '@/lib/systems/MiningSystem'
 import { applyDeliveryArrived, applyDeliveryUnloadComplete } from '@/lib/systems/DeliverySystem'
@@ -355,6 +356,12 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
 
     setState(s => {
       const existing = s.player.tessClassifications?.[subjectId]
+      const showArtifactNarrative = artifactNarrativeEligible({
+        satelliteMonitoringLevel: s.player.satelliteMonitoringLevel,
+        verdict,
+        hasExistingClassification: !!existing,
+        seenAt: s.player.artifactNarrativeSeenAt,
+      })
       const next: GameState = {
         ...s,
         player: {
@@ -364,6 +371,9 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
             ...(s.player.tessClassifications ?? {}),
             [subjectId]: { subjectId, verdict, ranges: roundedRanges, submittedAt },
           },
+          artifactNarrativeSeenAt: showArtifactNarrative
+            ? submittedAt
+            : s.player.artifactNarrativeSeenAt,
           discoveredExoplanetTargets: verdict === 'planet' && discoveredTarget
             ? {
                 ...(s.player.discoveredExoplanetTargets ?? {}),
@@ -375,6 +385,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
           // would keep re-selecting an already-classified candidate.
           satelliteTargetId: s.player.satelliteTargetId === subjectId ? null : s.player.satelliteTargetId,
         },
+        popup: showArtifactNarrative ? 'artifact-signal' : s.popup,
       }
       return existing ? next : applyGainResearchXP(next, RESEARCH_XP_PER_FIRST_TESS_CLASSIFICATION)
     })
