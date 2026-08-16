@@ -76,7 +76,7 @@ const UNLOCKS: Record<string, {
     body: 'This confirmed transit deserves another look. It is not evidence of life — preserve the raw observation, invite independent review, and let the data carry the claim.',
     art: 'rooms',
     stats: [['SOURCE', 'TESS'], ['STATUS', 'REVIEW'], ['TIER', 'LATE OPS']],
-    cta: 'Open Record',
+    cta: 'Acknowledge',
   },
 }
 
