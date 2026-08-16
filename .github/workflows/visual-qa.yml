@@ -2,13 +2,13 @@ name: Visual QA
 
 on:
   push:
-    branches: [main, "sprint/**", "claude/**"]
+    branches: [main, "sprint/**", "sprint-*", "claude/**"]
     paths:
       - "web/**"
       - "pocketbase/**"
       - ".github/workflows/visual-qa.yml"
   pull_request:
-    branches: [main, "sprint/**"]
+    branches: [main, "sprint/**", "sprint-*"]
     paths:
       - "web/**"
       - "pocketbase/**"
