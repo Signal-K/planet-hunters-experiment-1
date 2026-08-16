@@ -3,7 +3,7 @@ import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import {
   CARGO_BONUS_CAP, CARGO_BONUS_RATE, MINERAL_VALUE, STARTING_FRANCS,
-  ROCKET_PRICES, STRUCTURE_PRICES, CONTRACT_FEES,
+  ROCKET_PRICES, STRUCTURE_PRICES, CONTRACT_FEES, SURFACE_SITE_ACCESS_FEES,
 } from './economy'
 import { MINERAL_META } from './minerals'
 import { ROCKET_MODELS } from './rockets'
@@ -55,6 +55,11 @@ describe('economy scale', () => {
     // Two scales five orders of magnitude apart is what this replaced. Nothing
     // should sit more than ~200x from anything else.
     expect(Math.max(...values) / Math.min(...values)).toBeLessThan(200)
+  })
+
+  it('keeps every solo surface access fee below one M2 contract fee', () => {
+    expect(Math.max(...Object.values(SURFACE_SITE_ACCESS_FEES))).toBeLessThan(CONTRACT_FEES[2])
+    expect(Math.min(...Object.values(SURFACE_SITE_ACCESS_FEES))).toBeGreaterThan(0)
   })
 
   it('keeps the PocketBase seed in step with these constants', () => {

@@ -41,7 +41,7 @@ type SurfaceView = 'logistics' | 'field'
 interface SurfaceOpsScreenProps {
   player: Player
   onBack: () => void
-  onPurchaseRights: (siteId: string) => void
+  onPurchaseSiteAccess: (siteId: string) => void
   onBuildLaunchpad: (siteId: string, pad: 0 | 1 | 2) => void
   onMined: (siteId: string, mineralId: string, amount: number) => void
   onDispatch: (siteId: string) => void
@@ -52,10 +52,10 @@ interface SurfaceOpsScreenProps {
 
 function siteStatusLabel(
   definition: SurfaceSiteDefinition,
-  rightsOwned: boolean
+  accessPurchased: boolean
 ): string {
   if (definition.availability !== 'available') return 'EQUIPMENT LOCK'
-  return rightsOwned ? 'RIGHTS ACTIVE' : 'RIGHTS AVAILABLE'
+  return accessPurchased ? 'ACCESS ACTIVE' : 'ACCESS AVAILABLE'
 }
 
 function ManifestRows({ manifest }: { manifest: Record<string, number> }) {
@@ -84,7 +84,7 @@ function ManifestRows({ manifest }: { manifest: Record<string, number> }) {
 export default function SurfaceOpsScreen({
   player,
   onBack,
-  onPurchaseRights,
+  onPurchaseSiteAccess,
   onBuildLaunchpad,
   onMined,
   onDispatch,
@@ -101,7 +101,7 @@ export default function SurfaceOpsScreen({
   const definition = SURFACE_SITES.find(site => site.id === selectedSiteId)
     ?? SURFACE_SITES[0]
   const progress = surfaceSiteProgress(player, definition.id)
-  const rightsOwned = !!progress.rightsPurchasedAt
+  const accessPurchased = !!progress.siteAccessPurchasedAt
   const launchpadStatus = settlementLaunchpadStatus(player, definition.id, now)
   const constructionState =
     launchpadStatus === 'ready'
@@ -112,7 +112,7 @@ export default function SurfaceOpsScreen({
   const storageTotal = surfaceStorageTotal(progress)
   const cargoReady = surfaceCargoReady(progress)
   const ferry = progress.ferry
-  const canAffordRights = player.francs >= definition.rightsCost
+  const canAffordAccess = player.francs >= definition.accessFee
   const canAffordLaunchpad =
     player.francs >= SETTLEMENT_LAUNCHPAD.costFrancs
     && Object.entries(SETTLEMENT_LAUNCHPAD.costMaterials)
@@ -185,7 +185,7 @@ export default function SurfaceOpsScreen({
                 </span>
                 <span className={styles.siteStatus}>
                   {site.availability !== 'available' && <LockKeyhole size={12} />}
-                  {siteStatusLabel(site, !!siteProgress.rightsPurchasedAt)}
+                  {siteStatusLabel(site, !!siteProgress.siteAccessPurchasedAt)}
                 </span>
               </button>
             )
@@ -206,15 +206,15 @@ export default function SurfaceOpsScreen({
             type="button"
             role="tab"
             aria-selected={view === 'field'}
-            disabled={!rightsOwned}
+            disabled={!accessPurchased}
             className={view === 'field' ? styles.tabActive : styles.tab}
-            onClick={() => rightsOwned && setView('field')}
+            onClick={() => accessPurchased && setView('field')}
           >
             <Satellite size={16} /> FIELD
           </button>
         </div>
 
-        {view === 'field' && rightsOwned ? (
+        {view === 'field' && accessPurchased ? (
           <section className={styles.fieldPanel} data-testid="surface-field-view">
             <div className={styles.sectionHeading}>
               <div>
@@ -249,7 +249,7 @@ export default function SurfaceOpsScreen({
                     definition.availability !== 'available' ? styles.statusUnavailable : ''
                   }`}
                 >
-                  {siteStatusLabel(definition, rightsOwned)}
+                  {siteStatusLabel(definition, accessPurchased)}
                 </span>
               </div>
               <p className={styles.sectionCopy}>{definition.description}</p>
@@ -266,35 +266,35 @@ export default function SurfaceOpsScreen({
             </section>
 
             <aside className={styles.controlStack}>
-              <section className={styles.controlPanel} data-testid="terrain-rights-panel">
+              <section className={styles.controlPanel} data-testid="site-access-panel">
                 <div className={styles.panelTitle}>
                   <MapPin size={18} />
-                  <span>TERRAIN RIGHTS</span>
+                  <span>SITE ACCESS</span>
                 </div>
                 <div className={styles.readoutRow}>
-                  <span>RIGHTS QUOTE</span>
-                  <strong>{formatCurrency(definition.rightsCost, { compact: true })}</strong>
+                  <span>ACCESS FEE</span>
+                  <strong>{formatCurrency(definition.accessFee, { compact: true })}</strong>
                 </div>
                 <div className={styles.readoutRow}>
                   <span>MODEL</span>
                   <strong>SOLO · NON-TRANSFERABLE</strong>
                 </div>
-                {!rightsOwned ? (
+                {!accessPurchased ? (
                   <PrimaryBtn
                     disabled={
                       definition.availability !== 'available'
                       || !player.freeOperations
-                      || !canAffordRights
+                      || !canAffordAccess
                     }
-                    testId="surface-purchase-rights"
-                    onClick={() => onPurchaseRights(definition.id)}
+                    testId="surface-purchase-access"
+                    onClick={() => onPurchaseSiteAccess(definition.id)}
                   >
                     {definition.availability === 'available'
-                      ? `Purchase Rights · ${formatCurrency(definition.rightsCost, { compact: true })}`
+                      ? `Open Site · ${formatCurrency(definition.accessFee, { compact: true })}`
                       : definition.unlockHint}
                   </PrimaryBtn>
                 ) : (
-                  <span className={styles.confirmedLine}>RIGHTS RECORD ACTIVE</span>
+                  <span className={styles.confirmedLine}>ACCESS PERMIT ACTIVE</span>
                 )}
               </section>
 
@@ -304,8 +304,8 @@ export default function SurfaceOpsScreen({
                   <span>SETTLEMENT LAUNCHPAD</span>
                   <span className={styles.panelState}>{launchpadStatus.toUpperCase()}</span>
                 </div>
-                {!rightsOwned ? (
-                  <p className={styles.emptyCopy}>Purchase terrain rights before placing infrastructure.</p>
+                {!accessPurchased ? (
+                  <p className={styles.emptyCopy}>Open site access before placing infrastructure.</p>
                 ) : !progress.launchpad ? (
                   <>
                     <p className={styles.sectionCopy}>

@@ -7,11 +7,12 @@ import {
 } from '@/lib/data'
 import { DEFAULT_STATE, normalizeState } from '@/lib/game-state'
 import {
+  normalizeSurfaceOps,
   applyAcknowledgeSurfaceFerry,
   applyBuildSettlementLaunchpad,
   applyDispatchSurfaceFerry,
   applyFailSurfaceFerry,
-  applyPurchaseTerrainRights,
+  applyPurchaseSiteAccess,
   applyReconcileSurfaceFerry,
   applyRecordSurfaceMined,
   applyRetrySurfaceFerry,
@@ -41,45 +42,45 @@ function freeOpsState() {
 
 function readyLaunchpadState() {
   const buildStartedAt = NOW - SETTLEMENT_LAUNCHPAD.buildTimeMs
-  let state = applyPurchaseTerrainRights(freeOpsState(), SITE_ID, buildStartedAt)
+  let state = applyPurchaseSiteAccess(freeOpsState(), SITE_ID, buildStartedAt)
   state = applyBuildSettlementLaunchpad(state, SITE_ID, 1, buildStartedAt)
   return state
 }
 
-describe('Surface Ops terrain rights', () => {
-  it('prices rights on the current economy scale and only opens the Moon in v0', () => {
-    expect(SURFACE_SITES.map(site => site.rightsCost))
+describe('Surface Ops site access', () => {
+  it('prices solo site access on the current economy scale and only opens the Moon in v0', () => {
+    expect(SURFACE_SITES.map(site => site.accessFee))
       .toEqual([4_000_000, 5_500_000, 7_500_000])
     expect(SURFACE_SITES.filter(site => site.availability === 'available').map(site => site.bodyId))
       .toEqual(['moon'])
   })
 
-  it('purchases one solo rights gate exactly once', () => {
+  it('purchases one solo access permit exactly once', () => {
     const initial = freeOpsState()
-    const bought = applyPurchaseTerrainRights(initial, SITE_ID, NOW)
-    const boughtAgain = applyPurchaseTerrainRights(bought, SITE_ID, NOW + 1)
+    const bought = applyPurchaseSiteAccess(initial, SITE_ID, NOW)
+    const boughtAgain = applyPurchaseSiteAccess(bought, SITE_ID, NOW + 1)
 
     expect(bought.player.francs).toBe(initial.player.francs - 4_000_000)
-    expect(surfaceSiteProgress(bought.player, SITE_ID).rightsPurchasedAt).toBe(NOW)
+    expect(surfaceSiteProgress(bought.player, SITE_ID).siteAccessPurchasedAt).toBe(NOW)
     expect(boughtAgain).toBe(bought)
   })
 
   it('rejects locked targets and players outside Free Operations', () => {
     const state = freeOpsState()
-    expect(applyPurchaseTerrainRights(state, 'mars-arcadia', NOW)).toBe(state)
+    expect(applyPurchaseSiteAccess(state, 'mars-arcadia', NOW)).toBe(state)
     const locked = { ...state, player: { ...state.player, freeOperations: false } }
-    expect(applyPurchaseTerrainRights(locked, SITE_ID, NOW)).toBe(locked)
+    expect(applyPurchaseSiteAccess(locked, SITE_ID, NOW)).toBe(locked)
   })
 })
 
 describe('Settlement launchpad', () => {
   it('deducts the build cost and persists the selected target pad', () => {
-    const rights = applyPurchaseTerrainRights(freeOpsState(), SITE_ID, NOW)
-    const built = applyBuildSettlementLaunchpad(rights, SITE_ID, 2, NOW)
+    const access = applyPurchaseSiteAccess(freeOpsState(), SITE_ID, NOW)
+    const built = applyBuildSettlementLaunchpad(access, SITE_ID, 2, NOW)
     const launchpad = surfaceSiteProgress(built.player, SITE_ID).launchpad
 
     expect(built.player.francs)
-      .toBe(rights.player.francs - SETTLEMENT_LAUNCHPAD.costFrancs)
+      .toBe(access.player.francs - SETTLEMENT_LAUNCHPAD.costFrancs)
     expect(built.player.stash).toEqual({ aluminium: 16, silicon: 14 })
     expect(launchpad).toEqual({
       pad: 2,
@@ -98,6 +99,21 @@ describe('Settlement launchpad', () => {
     const state = readyLaunchpadState()
     const normalized = normalizeState(JSON.parse(JSON.stringify(state)))
     expect(normalized.player.surfaceOps).toEqual(state.player.surfaceOps)
+  })
+
+  it('migrates legacy terrain-rights saves to the solo site-access field', () => {
+    const legacy = normalizeSurfaceOps({
+      sites: {
+        [SITE_ID]: {
+          rightsPurchasedAt: NOW,
+          storage: { iron: 2 },
+        },
+      },
+    })
+    expect(legacy.sites[SITE_ID]).toEqual({
+      siteAccessPurchasedAt: NOW,
+      storage: { iron: 2 },
+    })
   })
 })
 
@@ -138,6 +154,7 @@ describe('Automated cargo ferry', () => {
     const reconciledAgain = applyReconcileSurfaceFerry(delivered, SITE_ID, arrival + 1)
 
     expect(delivered.player.stash?.iron).toBe(SURFACE_STORAGE_CAPACITY)
+    expect(delivered.player.francs).toBe(state.player.francs)
     expect(surfaceSiteProgress(delivered.player, SITE_ID).ferry).toMatchObject({
       status: 'delivered',
       reconciledAt: arrival,

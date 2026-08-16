@@ -8,7 +8,7 @@ import {
   applyAcknowledgeSurfaceFerry,
   applyBuildSettlementLaunchpad,
   applyDispatchSurfaceFerry,
-  applyPurchaseTerrainRights,
+  applyPurchaseSiteAccess,
   applyReconcileSurfaceFerry,
   applyRecordSurfaceMined,
   applyRetrySurfaceFerry,
@@ -24,8 +24,8 @@ export function useSurfaceOpsActions(
 ) {
   const notifiedOperations = useRef(new Set<symbol>())
 
-  const purchaseTerrainRights = useCallback((siteId: string) => {
-    setState(state => applyPurchaseTerrainRights(state, siteId))
+  const purchaseSiteAccess = useCallback((siteId: string) => {
+    setState(state => applyPurchaseSiteAccess(state, siteId))
   }, [setState])
 
   const buildSettlementLaunchpad = useCallback((siteId: string, pad: 0 | 1 | 2) => {
@@ -93,7 +93,7 @@ export function useSurfaceOpsActions(
   }, [setState])
 
   return {
-    purchaseTerrainRights,
+    purchaseSiteAccess,
     buildSettlementLaunchpad,
     recordSurfaceMined,
     dispatchSurfaceFerry,

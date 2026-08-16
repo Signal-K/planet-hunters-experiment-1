@@ -251,7 +251,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       acceptLoan: economy.acceptLoan,
       abandonMission: economy.abandonMission,
       confirmShipCustomizerBuild: economy.confirmShipCustomizerBuild,
-      purchaseTerrainRights: surfaceOps.purchaseTerrainRights,
+      purchaseSiteAccess: surfaceOps.purchaseSiteAccess,
       buildSettlementLaunchpad: surfaceOps.buildSettlementLaunchpad,
       recordSurfaceMined: surfaceOps.recordSurfaceMined,
       dispatchSurfaceFerry: surfaceOps.dispatchSurfaceFerry,

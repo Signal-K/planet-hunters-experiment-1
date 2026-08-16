@@ -59,7 +59,7 @@ export interface SettlementFerryRecord {
 }
 
 export interface SurfaceSiteProgress {
-  rightsPurchasedAt?: number
+  siteAccessPurchasedAt?: number
   launchpad?: SettlementLaunchpadRecord
   storage: Record<string, number>
   ferry?: SettlementFerryRecord
@@ -251,8 +251,8 @@ export interface Player {
   // Landing research: unlocks the Lander Module ship room. Not a crew/academy
   // mechanic — kept separate from academyResearched's prerequisite chain.
   landingResearched?: boolean
-  // Solo Surface Ops state. Rights are a build-cost gate, not a shared-world
-  // claim. Ferry records retain a stable cargo-batch id and reconciliation
+  // Solo Surface Ops state. Site access is a build-cost gate, not a
+  // shared-world claim. Ferry records retain a stable cargo-batch id and reconciliation
   // timestamp so retries and reloads cannot credit one manifest twice.
   surfaceOps?: SurfaceOpsState
 }
@@ -350,7 +350,7 @@ export interface GameActions {
   onLandingTouchdown: () => void
   onRedockComplete: (cargo: Record<string, number>) => void
   confirmShipCustomizerBuild: (installed: Partial<Record<import('@/lib/data').ShipRoomKind, string>>, prevInstalled: Partial<Record<import('@/lib/data').ShipRoomKind, string>>) => boolean
-  purchaseTerrainRights: (siteId: string) => void
+  purchaseSiteAccess: (siteId: string) => void
   buildSettlementLaunchpad: (siteId: string, pad: 0 | 1 | 2) => void
   recordSurfaceMined: (siteId: string, mineralId: string, amount: number) => void
   dispatchSurfaceFerry: (siteId: string) => void

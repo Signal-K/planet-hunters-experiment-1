@@ -107,6 +107,15 @@ export const STRUCTURE_PRICES = {
   deepSpaceTelescope: 15_000_000,
 } as const
 
+// Solo per-target site access fees. These are not land-rights prices: v0 has
+// no shared ownership, claims, transfer, or trading. Keep the fees in the
+// single economy module so the Surface Ops quote stays on the contract scale.
+export const SURFACE_SITE_ACCESS_FEES = {
+  'moon-south-pole': 4_000_000,
+  'mars-arcadia': 5_500_000,
+  'europa-chaos': 7_500_000,
+} as const
+
 // Subsurface excavation + room construction (STS-633). Earth Base's surface
 // footprint is fixed — the below-soil deck is the player's only way to add
 // more structure once the surface plots are full — so excavation is priced

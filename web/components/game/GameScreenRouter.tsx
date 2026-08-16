@@ -370,7 +370,7 @@ export function ScreenContent({
         <SurfaceOpsScreen
           player={game.player}
           onBack={() => game.go('hub')}
-          onPurchaseRights={game.purchaseTerrainRights}
+          onPurchaseSiteAccess={game.purchaseSiteAccess}
           onBuildLaunchpad={game.buildSettlementLaunchpad}
           onMined={game.recordSurfaceMined}
           onDispatch={game.dispatchSurfaceFerry}
