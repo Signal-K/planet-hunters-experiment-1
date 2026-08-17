@@ -158,6 +158,28 @@ describe('Tutorial rail regression', () => {
         assertGameplayButtonsAvoidCoachBlock()
       })
 
+      // KES-192: TutorialHighlight (.coach-glow-ring) wraps whole content
+      // panels — the map card here, the rocket-assembly card on 'fab', the
+      // launch-authorization card on 'fab' step 5, Debrief's summary card —
+      // whenever hasCoach is true. That makes its border color a panel
+      // accent on every onboarding screen, which the standing amber rule
+      // (CLAUDE.md / design-language doc) explicitly forbids ("never a panel
+      // accent... or generic UI chrome"). Was hardcoded amber
+      // (rgb(245, 166, 35)) until this ticket; must stay cyan.
+      it('highlights the target picker map with cyan, never amber (KES-192)', () => {
+        visitWithState(fullState({
+          screen: 'targets',
+          missionId: 'generated-s1-starter-bulk-1',
+          tutorial: true,
+          doneSteps: { 0: true, 1: true, 2: true },
+        }))
+
+        cy.get('[data-testid="tutorial-coach-highlight"]').should('be.visible').then($ring => {
+          const borderColor = getComputedStyle($ring[0]).borderTopColor
+          expect(borderColor).to.equal('rgb(112, 217, 234)')
+        })
+      })
+
       it('keeps manual rocket assembly onboarding out of launch controls', () => {
         visitWithState(fullState({
           screen: 'fab',

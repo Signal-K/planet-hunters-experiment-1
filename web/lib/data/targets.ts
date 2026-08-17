@@ -121,7 +121,7 @@ export const TARGETS: Target[] = [
     type: 'planet',
     orbit: 6,
     difficulty: 'L3',
-    brief: 'Gas giant moons, ice and silicate rich, high gravity penalty.',
+    brief: 'Gas giant with hydrogen, helium, and a high gravity penalty. Jupiter itself is not a conventional mining site.',
     archetype: 'gas-giant',
   }),
 ]

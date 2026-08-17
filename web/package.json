@@ -5,7 +5,9 @@
   "scripts": {
     "dev": "next dev -p ${PORT:-3001}",
     "build": "next build",
-    "deploy:test": "node scripts/deploy-test.mjs",
+    "build:cf": "opennextjs-cloudflare build",
+    "preview:cf": "opennextjs-cloudflare preview",
+    "deploy:cf": "opennextjs-cloudflare build && wrangler deploy",
     "start": "next start -p 3001",
     "typecheck": "tsc --noEmit",
     "test:unit": "vitest run",
@@ -38,14 +40,13 @@
     "test:e2e:full:tablet": "CYPRESS_PROFILE=full CYPRESS_VIEWPORT=tablet start-server-and-test dev http://localhost:3001 cypress:run:full",
     "test:e2e:full:landscape": "CYPRESS_PROFILE=full CYPRESS_VIEWPORT=landscape start-server-and-test dev http://localhost:3001 cypress:run:full",
     "cypress:open:visual": "env -u ELECTRON_RUN_AS_NODE CYPRESS_PROFILE=visual cypress open --browser chrome",
-    "cypress:run:visual": "env -u ELECTRON_RUN_AS_NODE CYPRESS_PROFILE=visual cypress run --browser chrome --headed"
+    "cypress:run:visual": "node scripts/run-visual-cypress-safe.mjs"
   },
   "dependencies": {
     "@takeon/engine": "file:vendor/takeon/takeon-engine-0.2.0.tgz",
     "@takeon/pixi": "file:vendor/takeon/takeon-pixi-0.2.0.tgz",
-    "@vercel/analytics": "^2.0.1",
     "lucide-react": "^1.17.0",
-    "next": "16.2.9",
+    "next": "16.2.12",
     "pixi.js": "^8.19.0",
     "pocketbase": "^0.27.0",
     "posthog-js": "^1.386.1",
@@ -56,6 +57,7 @@
     "web-push": "^3.6.7"
   },
   "devDependencies": {
+    "@opennextjs/cloudflare": "^1.20.2",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",
@@ -63,10 +65,21 @@
     "@types/web-push": "^3.6.4",
     "@vitejs/plugin-react": "^6.0.2",
     "cypress": "^15.16.0",
+    "esbuild": "^0.28.2",
     "jsdom": "^29.1.1",
     "start-server-and-test": "^3.0.10",
     "tailwindcss": "^4",
     "typescript": "^5",
-    "vitest": "^4.1.8"
+    "vitest": "^4.1.8",
+    "wrangler": "^4.123.0"
+  },
+  "allowScripts": {
+    "esbuild@0.25.4": true,
+    "esbuild@0.28.2": true,
+    "esbuild@0.28.1": true,
+    "core-js@3.49.0": true,
+    "cypress@15.16.0": true,
+    "fsevents@2.3.3": true,
+    "workerd@1.20260811.1": true
   }
 }

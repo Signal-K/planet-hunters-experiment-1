@@ -8,8 +8,8 @@ export const PARTS: { chassis: Part[]; propulsion: Part[]; drill: Part[] } = {
     { id: 'hull-mk1', name: 'Hull MK1', tier: 1, locked: false, img: '/parts/starter_rocket_t1.png', mass: 2, cargo: 6 },
     { id: 'hull-mk2', name: 'Prospector Unibody Frame', tier: 2, locked: false, img: '/parts/reinforced_hull_t2.png', mass: 3, cargo: 10, missionsRequired: 1 },
     { id: 'hull-cargo', name: 'Cargo Bay T1', tier: 1, locked: false, img: '/parts/cargo_bay_t1.png', mass: 2, cargo: 14, missionsRequired: 1 },
-    { id: 'hull-mk3', name: 'Hull MK3 – Heavy Frame', tier: 3, locked: true, img: '/parts/reinforced_hull_t2.png', mass: 4, cargo: 18, missionsRequired: 2 },
-    { id: 'hull-hauler', name: 'Bulk Hauler Chassis', tier: 3, locked: true, img: '/parts/cargo_bay_t1.png', mass: 3, cargo: 24, missionsRequired: 2 },
+    { id: 'hull-mk3', name: 'Hull MK3 – Heavy Frame', tier: 3, locked: true, img: '/parts/hull_mk3_heavy_t3.png', mass: 4, cargo: 18, missionsRequired: 2 },
+    { id: 'hull-hauler', name: 'Bulk Hauler Chassis', tier: 3, locked: true, img: '/parts/bulk_hauler_t3.png', mass: 3, cargo: 24, missionsRequired: 2 },
   ],
   propulsion: [
     { id: 'ion-a1', name: 'Ion Drive A1', tier: 1, locked: false, img: '/parts/basic_thruster_t1.png', power: 40, max_orbit: 5 },
@@ -19,7 +19,7 @@ export const PARTS: { chassis: Part[]; propulsion: Part[]; drill: Part[] } = {
   drill: [
     { id: 'hand-drill', name: 'Hand Drill', tier: 1, locked: false, img: '/parts/mining_drill_t1.png', rate: 1 },
     { id: 'laser-t2', name: 'Laser T2', tier: 2, locked: false, img: '/parts/laser_drill_t2.png', rate: 2, missionsRequired: 1 },
-    { id: 'plasma-t3', name: 'Plasma T3', tier: 3, locked: true, img: '/parts/broadcast_array_t2.png', rate: 4, missionsRequired: 2 },
+    { id: 'plasma-t3', name: 'Plasma T3', tier: 3, locked: true, img: '/parts/plasma_drill_t3.png', rate: 4, missionsRequired: 2 },
     // Cargo missions occupy the drill slot, but use the cargo-bay art. The
     // old drill-hand.png path never existed and silently rendered a broken
     // image in the Hangar/customiser.

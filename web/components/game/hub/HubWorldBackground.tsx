@@ -31,7 +31,7 @@ export function HubWorldBackground() {
       {/* ── Sky — deep space to atmosphere ─────────────────────────────── */}
       <div style={{
         position: 'absolute', inset: 0,
-        background: 'linear-gradient(180deg, #050a16 0%, #0a1530 22%, #123469 46%, #1c5490 68%, #3a80ae 86%, #5aa0c4 100%)',
+        background: 'linear-gradient(180deg, var(--hub-sky-space) 0%, var(--hub-sky-upper) 28%, var(--hub-sky-mid) 56%, var(--hub-sky-haze) 80%, var(--hub-sky-horizon) 100%)',
       }} />
 
       {/* ── Starfield — upper band only, slow twinkle ──────────────────── */}
@@ -60,6 +60,35 @@ export function HubWorldBackground() {
         pointerEvents: 'none',
         background: 'linear-gradient(180deg, transparent 0%, rgba(255,255,255,0.08) 60%, rgba(255,255,255,0.14) 100%)',
       }} />
+
+      {/* Renderer-independent base silhouette. Pixi paints richer terrain and
+          structures above this when available, but a failed WebGL context must
+          never reduce Earth Base to an empty sky. Keep this deliberately small:
+          one ridge band, turf, and a service deck are enough to establish a
+          readable playable place while the canvas is unavailable. */}
+      <div
+        data-testid="hub-terrain-fallback"
+        aria-hidden="true"
+        style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}
+      >
+        <div style={{
+          position: 'absolute', left: 0, right: 0, bottom: '21%', height: '20%',
+          background: 'var(--hub-fallback-ridge)',
+          clipPath: 'polygon(0 72%, 8% 48%, 17% 68%, 29% 30%, 39% 60%, 51% 36%, 62% 70%, 73% 28%, 85% 58%, 100% 38%, 100% 100%, 0 100%)',
+        }} />
+        <div style={{
+          position: 'absolute', left: 0, right: 0, bottom: 0, height: '24%',
+          background: 'var(--hub-fallback-ground)',
+          clipPath: 'polygon(0 18%, 12% 12%, 26% 18%, 39% 8%, 53% 16%, 66% 6%, 79% 15%, 91% 7%, 100% 13%, 100% 100%, 0 100%)',
+        }} />
+        <div style={{
+          position: 'absolute', left: '13%', right: '13%', bottom: '14%', height: '9%',
+          background: 'var(--hub-fallback-deck)',
+          borderTop: '2px solid var(--hub-fallback-deck-edge)',
+          borderRadius: '8% 8% 2px 2px / 30% 30% 2px 2px',
+          boxShadow: 'inset 0 -14px 0 var(--hub-fallback-deck-shadow)',
+        }} />
+      </div>
 
     </div>
   )

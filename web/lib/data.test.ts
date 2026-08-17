@@ -67,6 +67,13 @@ describe('rocket-part assets', () => {
       expect(existsSync(resolve(process.cwd(), 'public', part.img.slice(1))), part.img).toBe(true)
     }
   })
+
+  it('gives each named heavy part its own visible sprite', () => {
+    const byId = new Map(Object.values(PARTS).flat().map(part => [part.id, part.img]))
+    expect(byId.get('hull-mk3')).toBe('/parts/hull_mk3_heavy_t3.png')
+    expect(byId.get('hull-hauler')).toBe('/parts/bulk_hauler_t3.png')
+    expect(byId.get('plasma-t3')).toBe('/parts/plasma_drill_t3.png')
+  })
 })
 
 describe('sellCargo', () => {
@@ -339,6 +346,12 @@ describe('compatibleTargetsFor', () => {
     const m2 = MISSIONS.find(m => m.sequence === 2)!
     const compatible = compatibleTargetsFor(m2, TARGETS)
     expect(compatible.every(t => t.type === 'asteroid')).toBe(true)
+  })
+
+  it('keeps Jupiter body copy specific and excludes planets from onboarding targets', () => {
+    const m1 = MISSIONS.find(m => m.sequence === 1)!
+    expect(compatibleTargetsFor(m1, TARGETS).some(t => t.id === 'jupiter')).toBe(false)
+    expect(TARGETS.find(t => t.id === 'jupiter')?.brief).not.toContain('moons')
   })
 
   it('allows planets for M3+ missions that require their minerals', () => {

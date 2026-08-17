@@ -2,6 +2,7 @@
 // Extracted from game-context.tsx so they can be imported without pulling in React context.
 
 import type { RocketConfig, Mission, Target, TessClassification, TessVerdict, TransitRange, AsteroidClassification, AsteroidVerdict } from '@/lib/data'
+import type { RoverTerrainClass } from '@/lib/data/rover-scouting'
 
 export interface DailyClientPool {
   date: string        // 'YYYY-MM-DD'
@@ -58,7 +59,7 @@ export interface SettlementFerryRecord {
 }
 
 export interface SurfaceSiteProgress {
-  rightsPurchasedAt?: number
+  siteAccessPurchasedAt?: number
   launchpad?: SettlementLaunchpadRecord
   storage: Record<string, number>
   ferry?: SettlementFerryRecord
@@ -86,6 +87,9 @@ export interface Player {
   // zero (RoverMiningScreen would otherwise re-init its own Date.now() on
   // remount). Cleared once the run completes or is abandoned.
   roverMiningStartedAt?: number
+  // KES-110: a synthetic rover observation is a player decision that points
+  // the extraction run at an existing target mineral signature.
+  roverTerrainClassifications?: Record<string, RoverTerrainClass>
   // Wall-clock start of the cargo-transfer operation at a two-leg mission's
   // delivery target. The unload scene derives progress from this epoch so
   // remounts, hidden tabs, and Back-to-hub pauses cannot restart it.
@@ -101,6 +105,8 @@ export interface Player {
   hasLanded?: boolean
   missionCount: number
   pendingLaunch: boolean
+  /** Rocket already built and waiting on the launchpad; prevents re-purchase on resume. */
+  pendingRocketId?: string
   placed: string[]
   placementPlots: Record<string, number>
   controlBuilt: boolean
@@ -187,6 +193,8 @@ export interface Player {
   activeScan?: { targetId: string; completesAt: number } | null
   targetScanCounts?: Record<string, number>
   tessClassifications?: Record<string, TessClassification>
+  // One-shot late-game narrative beat after a high-level TESS confirmation.
+  artifactNarrativeSeenAt?: number | null
   // Deep Space Telescope's asteroid-discovery (NEOCP) classifications
   // (STS-622) — same shape/role as tessClassifications above, keyed by
   // asteroid_candidates record id, but a separate map since it's a
@@ -245,8 +253,8 @@ export interface Player {
   // Landing research: unlocks the Lander Module ship room. Not a crew/academy
   // mechanic — kept separate from academyResearched's prerequisite chain.
   landingResearched?: boolean
-  // Solo Surface Ops state. Rights are a build-cost gate, not a shared-world
-  // claim. Ferry records retain a stable cargo-batch id and reconciliation
+  // Solo Surface Ops state. Site access is a build-cost gate, not a
+  // shared-world claim. Ferry records retain a stable cargo-batch id and reconciliation
   // timestamp so retries and reloads cannot credit one manifest twice.
   surfaceOps?: SurfaceOpsState
 }
@@ -344,7 +352,7 @@ export interface GameActions {
   onLandingTouchdown: () => void
   onRedockComplete: (cargo: Record<string, number>) => void
   confirmShipCustomizerBuild: (installed: Partial<Record<import('@/lib/data').ShipRoomKind, string>>, prevInstalled: Partial<Record<import('@/lib/data').ShipRoomKind, string>>) => boolean
-  purchaseTerrainRights: (siteId: string) => void
+  purchaseSiteAccess: (siteId: string) => void
   buildSettlementLaunchpad: (siteId: string, pad: 0 | 1 | 2) => void
   recordSurfaceMined: (siteId: string, mineralId: string, amount: number) => void
   dispatchSurfaceFerry: (siteId: string) => void

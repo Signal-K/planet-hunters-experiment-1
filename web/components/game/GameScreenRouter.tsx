@@ -92,7 +92,17 @@ export function ScreenContent({
     // flow reachable only when it has a real mission context; a bare/deep
     // linked fab route must never show a prefilled rocket.
     if (screen === 'fab' && !game.player.freeOperations && (!game.mission || !game.target)) game.go('hub')
-  }, [screen, game.player.freeOperations, game.player.hasLanded, game.mission, game.target, game.go])
+    // Build placement is an intentional, short-lived action from the Hub, not
+    // a useful landing spot — mirrors repairStateRoute's load-time guard
+    // (lib/game-state.ts), but that guard only runs when hydrating/merging
+    // state. A direct/bookmarked/stale-tab visit to /game/build reaches this
+    // screen purely from the URL, bypassing it entirely: the [screen] route's
+    // URL→state sync (setScreenFromUrl) unconditionally trusts the URL, so it
+    // can clobber an already-repaired game.screen back to 'build'. A returning
+    // Free Ops player with a base already up was left on a dimmed plot picker
+    // with no obvious way out (KES-167).
+    if (screen === 'build' && game.player.freeOperations && game.player.placed.length > 0) game.go('hub')
+  }, [screen, game.player.freeOperations, game.player.hasLanded, game.player.placed.length, game.mission, game.target, game.go])
 
   switch (screen) {
     case 'intro':
@@ -322,7 +332,7 @@ export function ScreenContent({
             game.onPickMission(id)
           }}
           onViewContracts={() => game.goToMissions()}
-          onOpenHangar={() => game.go('hangar')}
+          onOpenHangar={() => game.go(game.player.pendingLaunch ? 'fab' : 'hangar')}
           onBuildMonitoring={() => game.go('build')}
           missionsDone={game.player.missionsDone}
           freeOperations={game.player.freeOperations}
@@ -360,7 +370,7 @@ export function ScreenContent({
         <SurfaceOpsScreen
           player={game.player}
           onBack={() => game.go('hub')}
-          onPurchaseRights={game.purchaseTerrainRights}
+          onPurchaseSiteAccess={game.purchaseSiteAccess}
           onBuildLaunchpad={game.buildSettlementLaunchpad}
           onMined={game.recordSurfaceMined}
           onDispatch={game.dispatchSurfaceFerry}

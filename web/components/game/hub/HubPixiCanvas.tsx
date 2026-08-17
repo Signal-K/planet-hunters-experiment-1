@@ -21,7 +21,8 @@ import { AssetManager } from '@/lib/engine/AssetManager'
 const HUB_SPRITES = [
   'hub_pad_deck', 'hub_pad_gantry_frame', 'hub_pad_swing_arm',
   'hub_pad_clamp', 'hub_pad_mast', 'hub_pad_tank',
-  'hub_depot_tank', 'hub_scan_dish', 'hub_sat_station', 'hub_cmd_building',
+  'hub_depot_tank', 'hub_scan_dish', 'hub_refinery_modular_v2', 'hub_scan_station_modular_v2',
+  'hub_sat_station', 'hub_cmd_building',
   // Loaded alongside the pad, not just when hot — a launch can be triggered
   // between renders, and the alternative (loading these lazily on the first
   // `hot` frame) would show a bare pad for one frame every time.
@@ -45,6 +46,8 @@ async function loadHubTextures(): Promise<HubTextures> {
   tex.pad_tank = texture('hub_pad_tank')
   tex.depot_tank = texture('hub_depot_tank')
   tex.scan_dish = texture('hub_scan_dish')
+  tex.refinery_modular = texture('hub_refinery_modular_v2')
+  tex.scan_station_modular = texture('hub_scan_station_modular_v2')
   tex.sat_station = texture('hub_sat_station')
   tex.cmd_building = texture('hub_cmd_building')
   tex.ship_sr1 = texture('ship_sr1')
@@ -129,18 +132,33 @@ export default function HubPixiCanvas({ buildings, rocketVariant = 'explorer' }:
       const containerW = div.clientWidth || HUB_W
       const containerH = div.clientHeight || HUB_H
 
-      const [, loadedTex] = await Promise.all([
-        app.init({
-          canvas,
-          width: containerW,
-          height: containerH,
-          backgroundAlpha: 0,
-          antialias: false,
-          resolution: Math.min(window.devicePixelRatio || 1, 2),
-          autoDensity: true,
-        }),
-        loadHubTextures(),
-      ])
+      // WebGL/WebGPU init (or the sprite manifest fetch) can fail or hang —
+      // e.g. no GPU context available, a blocked/slow asset request. Pixi is
+      // an enhancement over the always-rendered DOM sky/terrain/structure
+      // layers underneath (HubWorldBackground, HubStructureArt), never the
+      // thing gating Earth Base's legibility, so a rejection here must only
+      // leave this canvas blank — not throw unhandled and not block those
+      // DOM layers, which already render independently of this effect
+      // (KES-167).
+      let loadedTex: HubTextures
+      try {
+        const result = await Promise.all([
+          app.init({
+            canvas,
+            width: containerW,
+            height: containerH,
+            backgroundAlpha: 0,
+            antialias: false,
+            resolution: Math.min(window.devicePixelRatio || 1, 2),
+            autoDensity: true,
+          }),
+          loadHubTextures(),
+        ])
+        loadedTex = result[1]
+      } catch (err) {
+        console.warn('[HubPixiCanvas] Pixi init failed; falling back to DOM scene layers', err)
+        return
+      }
       tex = loadedTex
 
       // Check destroyed AFTER init — if unmount raced the async init, clean up

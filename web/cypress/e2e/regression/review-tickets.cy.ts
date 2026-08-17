@@ -111,7 +111,7 @@ function interceptTessSubjects(count = 4) {
   }).as('subjects')
 }
 
-describe('Desk Review tickets — active mission guard (STS-487)', () => {
+describe('Active mission guard (STS-487)', () => {
   it('does not let a stale mission-board tab pick a second mission while one is active', () => {
     visitGame('/game/missions', {
       screen: 'missions',
@@ -136,7 +136,7 @@ describe('Desk Review tickets — active mission guard (STS-487)', () => {
   })
 })
 
-describe('Desk Review tickets — mining pause/resume (STS-488)', () => {
+describe('Mining pause/resume (STS-488)', () => {
   it('persists in-progress laser cargo on Back and restores it on resume', () => {
     visitGame('/game/mining', {
       screen: 'mining',
@@ -168,7 +168,7 @@ describe('Desk Review tickets — mining pause/resume (STS-488)', () => {
   })
 })
 
-describe('Desk Review tickets — rover pause/resume (STS-490)', () => {
+describe('Rover pause/resume (STS-490)', () => {
   it('keeps the rover extraction clock close to completion after Back-to-hub resume', () => {
     const startedAt = Date.now() - 119_000
 
@@ -179,6 +179,7 @@ describe('Desk Review tickets — rover pause/resume (STS-490)', () => {
       player: {
         activeMission: { id: 'generated-s1-starter-bulk-1', label: 'Rover landing -> Eros' },
         roverMiningStartedAt: startedAt,
+        roverTerrainClassifications: { eros: 'vein' },
       },
     })
 
@@ -200,7 +201,32 @@ describe('Desk Review tickets — rover pause/resume (STS-490)', () => {
   })
 })
 
-describe('Desk Review tickets — satellite/TESS level plumbing (STS-493)', () => {
+describe('Sprint 13 rover scouting (KES-110)', () => {
+  it('turns a terrain classification into persisted mineral intelligence before extraction', () => {
+    visitGame('/game/rover-mining', {
+      screen: 'rover-mining',
+      missionId: 'generated-s1-starter-bulk-1',
+      targetId: 'eros',
+      player: {
+        activeMission: { id: 'generated-s1-starter-bulk-1', label: 'Rover landing -> Eros' },
+        roverMiningStartedAt: undefined,
+        roverTerrainClassifications: {},
+      },
+    })
+
+    cy.get('[data-testid="rover-scouting-classification"]', { timeout: 10000 }).should('be.visible')
+    cy.get('[data-testid="rover-classify-vein"]').click()
+    cy.contains('MINERAL VEIN').should('be.visible')
+    cy.contains('SIGNATURE +3').should('be.visible')
+
+    savedState().then(state => {
+      expect(state.player.roverTerrainClassifications?.eros).to.eq('vein')
+      expect(state.player.roverMiningStartedAt).to.be.a('number')
+    })
+  })
+})
+
+describe('Satellite/TESS level plumbing (STS-493)', () => {
   it('lets a level-3 satellite review three daily TESS candidates before the downlink is exhausted', () => {
     interceptTessSubjects(4)
     visitGame('/game/galaxy', {

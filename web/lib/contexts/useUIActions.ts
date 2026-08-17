@@ -31,8 +31,20 @@ export function useUIActions(
   // Updates state.screen WITHOUT triggering the URL-sync effect so we don't create
   // a push that fights the navigation.
   const setScreenFromUrl = useCallback((screen: Screen) => {
-    skipNextUrlSync.current = true
-    setState(s => ({ ...s, screen }))
+    setState(s => {
+      // A bookmarked /game/build must not resurrect the transient plot picker
+      // for an operational base after hydration has already repaired it to
+      // Hub. Keep the URL-driven route in the same safe landing state.
+      const safeScreen = screen === 'build' && s.player.freeOperations && s.player.placed.length > 0
+        ? 'hub'
+        : screen
+      // Valid URL changes are already represented by the browser history and
+      // should not be pushed back. A repaired route, however, must be written
+      // back to the canonical URL instead of leaving /game/build rendering a
+      // stale screen component forever.
+      skipNextUrlSync.current = safeScreen === screen
+      return { ...s, screen: safeScreen }
+    })
   }, [setState])
 
   const setPopup = useCallback((v: string | null) => {

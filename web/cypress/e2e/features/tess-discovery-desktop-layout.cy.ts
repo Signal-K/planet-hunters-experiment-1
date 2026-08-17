@@ -8,6 +8,16 @@ import type { GameState } from '@/game-context'
 const STORAGE_KEY = 'landnam-game-state-v1'
 
 function visitGalaxyScreen() {
+  const tokenPayload = btoa(JSON.stringify({ exp: Math.floor(Date.now() / 1000) + 3600 }))
+  const e2eToken = `e30.${tokenPayload}.test`
+  cy.intercept('POST', '**/api/collections/users/auth-refresh', {
+    statusCode: 200,
+    body: { token: e2eToken, record: { id: 'e2e-subject-user', email: 'e2e@landnam.guest' } },
+  })
+  cy.intercept('POST', '**/api/landnam-auth/exchange', {
+    statusCode: 200,
+    body: { token: e2eToken, record: { id: 'e2e-subject-user' } },
+  })
   cy.intercept('GET', '**/api/collections/subjects/records*', {
     statusCode: 200,
     body: {
@@ -73,6 +83,7 @@ function visitGalaxyScreen() {
     onBeforeLoad(win) {
       win.localStorage.setItem(STORAGE_KEY, JSON.stringify(base))
       win.localStorage.setItem('landnam-guest-credentials', JSON.stringify({ email: 'e2e@landnam.guest', password: 'e2e-guest-test' }))
+      win.localStorage.setItem('pocketbase_auth', JSON.stringify({ token: e2eToken, record: { id: 'e2e-subject-user', email: 'e2e@landnam.guest' } }))
     },
   })
   cy.wait('@subjects')
@@ -100,7 +111,6 @@ describe('TessDiscoveryScreen — desktop two-column layout', () => {
     cy.get('[data-testid="tess-discovery-desktop-grid"]').should('be.visible').then($grid => {
       expect($grid.css('display')).to.eq('grid')
     })
-    // Both the chart column and the metadata/actions column are visible side by side.
     cy.get('[data-testid="tess-verdict-planet"]').should('be.visible')
   })
 })

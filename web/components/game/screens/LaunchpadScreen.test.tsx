@@ -5,7 +5,7 @@ import LaunchpadScreen from './LaunchpadScreen'
 import { STATIC_CATALOG } from '@/lib/catalog'
 import { DEFAULT_STATE } from '@/lib/game-state'
 
-function renderLaunchpad(satelliteMonitoringBuilt: boolean): string {
+function renderLaunchpad(satelliteMonitoringBuilt: boolean, freeOperations = true): string {
   return renderToStaticMarkup(
     <LaunchpadScreen
       onBack={() => undefined}
@@ -13,24 +13,23 @@ function renderLaunchpad(satelliteMonitoringBuilt: boolean): string {
       onViewContracts={() => undefined}
       onOpenHangar={() => undefined}
       onBuildMonitoring={() => undefined}
-      missionsDone={4}
-      freeOperations
+      missionsDone={freeOperations ? 4 : 0}
+      freeOperations={freeOperations}
       catalog={STATIC_CATALOG}
-      player={{ ...DEFAULT_STATE.player, missionsDone: 4, freeOperations: true, satelliteMonitoringBuilt }}
+      player={{ ...DEFAULT_STATE.player, missionsDone: freeOperations ? 4 : 0, freeOperations, satelliteMonitoringBuilt }}
       francs={DEFAULT_STATE.player.francs}
     />
   )
 }
 
 describe('LaunchpadScreen infrastructure hierarchy', () => {
-  it('renders owned infrastructure as a visual scene with an actionable monitoring build', () => {
-    const markup = renderLaunchpad(false)
+  it('renders the built monitoring station as post-onboarding scene infrastructure', () => {
+    const markup = renderLaunchpad(true)
     expect(markup).toContain('data-testid="launchpad-monitoring-structure"')
     expect(markup).toContain('data-testid="launchpad-satellite-orbit"')
     expect(markup).toContain('data-testid="launchpad-rocket-fleet"')
-    expect(markup).toContain('data-testid="launchpad-build-monitoring-btn"')
     expect(markup).toContain('data-testid="launchpad-guide-open"')
-    expect(markup).toContain('BUILD MONITORING STATION')
+    expect(markup).toContain('S.M.S. · ONLINE')
     expect(markup).toContain('class="game-screen theme-deep ln-scene-launchpad"')
     expect(markup).not.toContain('launchpad-command-grid')
     expect(markup).not.toMatch(/<p(?:\s|>)/)
@@ -41,6 +40,43 @@ describe('LaunchpadScreen infrastructure hierarchy', () => {
     expect(markup).toContain('S.M.S. · ONLINE')
     expect(markup).not.toContain('data-testid="launchpad-build-monitoring-btn"')
     expect(markup).not.toMatch(/<button[^>]*data-testid="launchpad-monitoring-structure"/)
+  })
+
+  it('keeps an unbuilt post-onboarding station out of Launchpad', () => {
+    const markup = renderLaunchpad(false)
+    expect(markup).not.toContain('data-testid="launchpad-monitoring-structure"')
+    expect(markup).not.toContain('data-testid="launchpad-build-monitoring-btn"')
+    expect(markup).not.toContain('data-testid="launchpad-guide-open"')
+    expect(markup).toContain('data-testid="launchpad-view-contracts-btn"')
+  })
+
+  it('keeps M1 focused on contracts instead of locked monitoring infrastructure', () => {
+    const markup = renderLaunchpad(false, false)
+    expect(markup).not.toContain('data-testid="launchpad-monitoring-structure"')
+    expect(markup).not.toContain('data-testid="launchpad-build-monitoring-btn"')
+    expect(markup).not.toContain('data-testid="launchpad-guide-open"')
+    expect(markup).not.toContain('data-testid="launchpad-program-operation-btn"')
+    expect(markup).toContain('data-testid="launchpad-view-contracts-btn"')
+    expect(markup).toContain('data-testid="launchpad-view-contracts-btn"')
+  })
+
+  it('does not trust a stale Free Ops flag before the three-mission boundary', () => {
+    const markup = renderToStaticMarkup(
+      <LaunchpadScreen
+        onBack={() => undefined}
+        onPick={() => undefined}
+        onViewContracts={() => undefined}
+        onOpenHangar={() => undefined}
+        onBuildMonitoring={() => undefined}
+        missionsDone={1}
+        freeOperations
+        catalog={STATIC_CATALOG}
+        player={{ ...DEFAULT_STATE.player, missionsDone: 1, freeOperations: true, satelliteMonitoringBuilt: false }}
+      />,
+    )
+    expect(markup).not.toContain('BUILD MONITORING STATION')
+    expect(markup).not.toContain('data-testid="launchpad-guide-open"')
+    expect(markup).toContain('data-testid="launchpad-view-contracts-btn"')
   })
 
   it('uses the selected rocket art and name throughout the launchpad scene', () => {

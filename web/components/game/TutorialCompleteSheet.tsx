@@ -1,25 +1,13 @@
 'use client'
 
-import React from 'react'
 import { PrimaryBtn } from '@/components/ui/Button'
 import Sheet from '@/components/ui/Sheet'
 
-const ACK_KEY = 'ln_tutorial_complete_ack'
-
-export function useTutorialCompleteAck(missionsDone: number, threshold: number) {
-  const [show, setShow] = React.useState(() => {
-    if (typeof window === 'undefined') return false
-    return missionsDone >= threshold && !localStorage.getItem(ACK_KEY)
-  })
-
-  const dismiss = React.useCallback(() => {
-    localStorage.setItem(ACK_KEY, '1')
-    setShow(false)
-  }, [])
-
-  return { show, dismiss }
-}
-
+// Shown exactly once, at the tick Free Ops actually starts — see the
+// justFinishedOnboarding branch in lib/contexts/useGameLoop.ts, which sets
+// `popup: 'tutorial-complete'` as part of the persisted GameState rather
+// than gating this on a localStorage flag (KES-167: a local-only ack
+// repeated on a new browser/device or after storage was cleared).
 export function TutorialCompleteSheet({ onDone }: { onDone: () => void }) {
   return (
     <Sheet

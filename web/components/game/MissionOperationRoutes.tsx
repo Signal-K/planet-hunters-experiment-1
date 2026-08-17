@@ -8,6 +8,7 @@ import TransitScreen from '@/components/game/screens/TransitScreen'
 import LandingScreen from '@/components/game/screens/LandingScreen'
 import MiningScreen from '@/components/game/screens/MiningScreen'
 import RoverMiningScreen from '@/components/game/screens/RoverMiningScreen'
+import type { RoverTerrainClass } from '@/lib/data/rover-scouting'
 import DeliveryScreen from '@/components/game/screens/DeliveryScreen'
 import DebriefScreen from '@/components/game/screens/DebriefScreen'
 
@@ -95,7 +96,10 @@ export default function MissionOperationRoutes({
             game.setPlayer(player => ({
               ...player,
               missionPhase: 'mining',
-              roverMiningStartedAt: isRoverMission ? Date.now() : player.roverMiningStartedAt,
+              // A rover mission starts with a scouting observation. Its clock
+              // begins only after the player turns that observation into a
+              // deposit lead, so the result is gameplay rather than flavour.
+              roverMiningStartedAt: isRoverMission ? undefined : player.roverMiningStartedAt,
             }))
             game.go(isRoverMission ? 'rover-mining' : 'mining')
           }}
@@ -169,13 +173,22 @@ export default function MissionOperationRoutes({
         />
       )
 
-    case 'rover-mining':
+    case 'rover-mining': {
       if (!game.mission || !game.target) return null
+      const roverTarget = game.target
       return (
         <RoverMiningScreen
           mission={game.mission}
-          target={game.target}
+          target={roverTarget}
           startedAt={game.player.roverMiningStartedAt}
+          terrainClassification={game.player.roverTerrainClassifications?.[roverTarget.id]}
+          onClassifyTerrain={(terrain: RoverTerrainClass) => {
+            game.setPlayer(player => ({
+              ...player,
+              roverTerrainClassifications: { ...player.roverTerrainClassifications, [roverTarget.id]: terrain },
+              roverMiningStartedAt: Date.now(),
+            }))
+          }}
           onComplete={game.onRoverMiningDone}
           onBack={() => {
             game.setPlayer(player => ({ ...player, missionPhase: 'mining' }))
@@ -183,6 +196,7 @@ export default function MissionOperationRoutes({
           }}
         />
       )
+    }
 
     case 'delivery':
       if (!game.mission || !game.deliveryTargetId) return null

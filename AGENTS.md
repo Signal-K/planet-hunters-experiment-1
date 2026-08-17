@@ -3,23 +3,15 @@
 
 ## Linear-first agent workflow
 
-As of 2026-08-02, **Linear is the sole project-management system for Landnam**, superseding Desk for this project only (every other repo under `~/Navigation` still uses Desk — see the root `CLAUDE.md`). Landnam lives in Linear workspace team **Kestloome**, project **Landnam** (issues use the `KES-` prefix; Landnam does not have its own team/prefix yet — that's a known follow-up, not a bug). Before changing code, resolve the relevant Linear issue or create one with `save_issue`. During work, update it when scope, status, blockers, or decisions change — set `cycle`/`milestone` for sprint tracking (currently milestone-based: Sprint 9 and earlier, Sprint 10, Sprint 11, Sprint 12, Backlog/unscheduled). Before finishing, add implementation evidence via `save_comment`, move it to the correct status (Backlog/Todo/In Progress/In Review/Done), link related issues with `blockedBy`/`blocks`, and include the Linear issue ID (e.g. `KES-123`) in the commit subject or body. Never use Desk, Knowns, `.knowns`, Plate, or workspace ticket Markdown as a replacement for Linear issue state on this project. If no Linear ID exists, stop before committing and create or resolve the issue.
+**Linear is the sole project-management system for Landnam.** Use the Kestloome team and Landnam project (`KES-` issues). Before changing code, resolve the relevant issue or create one with `save_issue`. Update it when scope, status, blockers, or decisions change; before finishing, add implementation evidence with `save_comment`, move it to the appropriate status, and include the Linear ID in the commit subject or body. If no Linear ID exists, stop before committing and create or resolve the issue.
 
-Historical Landnam tickets predating 2026-08-02 live in Desk, migrated into Linear under the `landnam-migration` label; Desk tickets were labeled `migrated-to-linear` rather than deleted. ZenNotes remains the source of truth for durable decisions/specs — Linear issues should reference it rather than duplicating detail.
+ZenNotes in the parent Navigation workspace is the source of truth for durable decisions and specifications; Linear issues should link to it rather than duplicating it.
 
-> **Canonical guidance**: Read `KNOWNS.md` in the repository root for full workflow rules. This file covers Landnam-specific repo layout and conventions only.
+> **Canonical guidance**: Read this file plus the applicable ZenNotes decision in the parent Navigation workspace before changing product or game logic.
 
-## Knowns Project Root
+## Product context
 
-Landnam does not own a live `.knowns` store. The canonical Knowns project is the parent Star Sailors workspace at `~/Navigation` (`/Users/scroobz/Navigation`), with live data in `~/Navigation/.knowns`.
-
-If a Knowns MCP/tool call reports no project loaded, or setting the project to `~/Navigation/Landnam` fails because `Landnam/.knowns/config.json` does not exist, immediately connect to the parent project instead:
-
-```json
-mcp__knowns__project({ "action": "set", "projectRoot": "/Users/scroobz/Navigation" })
-```
-
-For CLI workflows, run `knowns ...` commands from `/Users/scroobz/Navigation` or otherwise target that parent repo. Do not create a separate live `.knowns` store inside `Landnam` unless explicitly instructed.
+Landnam has no local project-management or decision store. Read applicable ZenNotes decisions in the parent Navigation workspace before changing product or game logic; use Craft only for planning and feedback context associated with a Linear issue.
 
 ## Repo Layout
 
@@ -92,7 +84,7 @@ Durable rules pulled from sprint-planning discussion (Craft doc "Landnam sprint 
 
 ## Backend connections
 
-This project uses a hub-and-spoke PocketBase topology with three backends. For full detail, read @doc/backend-architecture in the parent Navigation Knowns.
+This project uses a hub-and-spoke PocketBase topology with three backends. For full detail, read the backend-architecture decision in the parent Navigation workspace.
 
 **Shared backend** (auth + shared data — port 8090, `NEXT_PUBLIC_SHARED_PB_URL`):
 - `lib/pb.ts` → `pbShared` connects here
@@ -141,35 +133,16 @@ npm run test:e2e           # start-server-and-test + cypress (offline profile)
 2. All colors from CSS variables — no hardcoded hex
 3. All spacing from 8pt rhythm
 4. No Godot, no Electron. `.scene.json` files under `web/public/game/scenes/` ARE used — they describe entity layout/placement (shared `SceneData`/`EntityData` model in `web/lib/engine/types.ts`) for both PixiJS canvas screens and DOM screens, and are edited via Forge. See @doc/specs/landnam-screen-entityscene-dx-standard
-5. Read KNOWNS docs for game design decisions before changing game logic
-6. Use `appendNotes` in tasks (never `notes` for progress updates)
-7. See "Standing product rules" above for terminology, Docker-offline, and PostHog-survey requirements — these bind every agent, not just Claude
+5. Read ZenNotes decisions for game design rules before changing game logic
+6. Record progress and implementation evidence on the Linear issue.
+7. See "Standing product rules" above for terminology, Docker-offline, and PostHog-survey requirements — these bind every agent.
 
 <!-- LANDNAM PROJECT REQUIREMENTS END -->
 
-## Tickets & Sprints
+## Documentation & decisions
 
-As of 2026-07-18, **Desk (MCP server `desk`, registered globally — available in every repo, not just this one) is the live system of record for tickets, sprints, and board state.** Use its MCP tools directly (`projectId: "project-landnam"`):
+- **Linear** — issues, milestones, status, dependencies, and implementation evidence.
+- **Craft** — planning, ideation, research, and feedback context. Link the relevant document from its Linear issue.
+- **ZenNotes** (`~/Navigation/workspace`) — canonical decisions, rules, and finalized specifications. Search this before Craft for authoritative guidance.
 
-- `list_tickets` / `get_ticket` / `list_story_boards` to read tickets, filtered by project/sprint/status.
-- `create_ticket` / `update_ticket` to create tickets and change status, priority, sprint, epic, or labels.
-- `add_comment` for implementation evidence — write it as a comment on the ticket instead of a markdown "Implementation Evidence" heading.
-- `link_tickets` to relate or block tickets.
-
-Status lifecycle: `Todo` → `In Progress` → `Done`. Desk trusts the status field directly rather than deriving it from anything else, so don't mark something `Done` with real work still outstanding — that's exactly the failure mode that made past sprints look complete when they weren't. **When Liam answers a question in chat, write it back to the relevant Desk ticket (as a comment or in the description) in the same turn** — an answer that only exists in conversation is not resolved.
-
-**Plate is archived.** Do not create or update tasks there, and do not treat its state as authoritative.
-
-**The old `workspace/projects/landnam/tickets/<sprint>/*.md` + `workspace_ticket.py` / `workspace_board.py` / `Current.md` system is retired.** Don't create new ticket files there, don't run those scripts to change ticket state, and don't treat `Current.md` as the operational board (it's archived). `workspace/projects/landnam/docs/` is unaffected — it remains the right place for long-form specs and decisions.
-
-**Compass** (`/Applications/Compass.app`) previously read `~/Navigation/.knowns/`; that board is superseded by Desk for ticket state of record.
-
-## Documentation & Decisions: Craft, Desk, ZenNotes
-
-As of 2026-07-21, this supersedes the "`workspace/projects/landnam/docs/`... remains the right place for long-form specs and decisions" line above:
-
-- **Craft** — long-form writing: planning docs, ideation, proposals, spec drafts, playtest/feedback triage write-ups, research notes. Every Craft doc tied to active Landnam work must be **tagged** and **attached to its Desk ticket(s)/story** (`attach_craft_doc`) — don't leave it floating with no ticket link.
-- **ZenNotes** (`~/Navigation/workspace`, ZenNotes MCP) — canonical home for **decisions and rules**: finalized specs, mission definitions and their limits (e.g. what Mission 3 is and its constraints), gameplay/design decisions. This is what to search first for authoritative rules — not Craft, not ad-hoc Knowns docs. The "Standing product rules" and "Narrative & content rules" sections above are the kind of content that belongs here going forward.
-- **Desk** — tickets/stories/epics only. A ticket references Craft (planning context) and ZenNotes (rules/decisions) rather than duplicating their content.
-
-Flow: research/ideation in Craft → tag + attach to the Desk ticket once it needs review or action → once a decision lands, write the durable rule/spec into ZenNotes, not just a Craft doc or ticket comment.
+Flow: research or feedback in Craft → action and tracking in Linear → durable decisions in ZenNotes.

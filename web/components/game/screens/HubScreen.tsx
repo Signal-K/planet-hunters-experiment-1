@@ -4,22 +4,23 @@ import React, { useEffect, useState } from 'react'
 import type { Player, Screen } from '@/game-context'
 import ProgressionCard from '@/components/game/ProgressionCard'
 import ConfirmActionSheet from '@/components/game/ConfirmActionSheet'
-import { TutorialCompleteSheet, useTutorialCompleteAck } from '@/components/game/TutorialCompleteSheet'
 import { Scene } from '@/lib/engine/Scene'
 import type { EntityData } from '@/lib/engine/types'
 import { buildPlotEntities } from '@/lib/engine/prefabs'
 import { readComponentNumber } from '@/lib/engine/registry'
 import { AmbientMotes } from '@/components/game/hub/AmbientMotes'
 import { HubWorldBackground } from '@/components/game/hub/HubWorldBackground'
+import { HubStructureArt } from '@/components/game/hub/HubStructureArt'
+export { HUB_STRUCTURE_ART } from '@/components/game/hub/HubStructureArt'
 import { SoilCrossSection } from '@/components/game/hub/SoilCrossSection'
 import { HubSubsurfaceView } from '@/components/game/hub/HubSubsurfaceView'
 import { Building, EmptyPlot } from '@/components/game/hub/Building'
 import type { BuildingCallout } from '@/components/game/hub/Building'
 import { TUTORIAL_CONTENT_TOP, TUTORIAL_RAIL } from '@/lib/tutorial-layout'
-import { FREE_OPS_START_MISSIONS_DONE } from '@/lib/data/mission-generator'
 import { LAUNCHPAD_UPGRADE_COST, type SubsurfaceRoomId } from '@/lib/data'
 import { formatCurrency } from '@/lib/format'
 import { FEATURE_FLAGS } from '@/lib/featureFlags'
+import { isDevLauncherEnabled } from '@/lib/devAccess'
 import type { HubBuildingDef } from '@/lib/pixi/hubScene'
 import { fetchReviewableTessCandidates } from '@/lib/tess-subjects'
 import { fetchReviewableAsteroidCandidates } from '@/lib/asteroid-subjects'
@@ -121,51 +122,6 @@ function SceneBtn({ icon, label, onClick, active, accent, muted, pulse, testId }
 // reproduces hub.scene.json exactly.
 const DEFAULT_PLOTS: EntityData[] = buildPlotEntities()
 
-const HUB_STRUCTURE_ART: Record<string, { src: string; width: number; lift: number }> = {
-  launchpad: { src: '/game/assets/hub/pad_gantry_frame.png', width: 88, lift: 82 },
-  refinery: { src: '/game/assets/hub/depot_tank.png', width: 72, lift: 64 },
-  'scan-station': { src: '/game/assets/hub/scan_dish.png', width: 66, lift: 58 },
-  'satellite-monitoring-station': { src: '/game/assets/hub/sat_station.png', width: 72, lift: 60 },
-  command: { src: '/game/assets/hub/cmd_building.png', width: 76, lift: 70 },
-  'deep-space-telescope': { src: '/game/assets/hub/cmd_building.png', width: 76, lift: 70 },
-  'astronaut-academy': { src: '/game/assets/hub/cmd_building.png', width: 76, lift: 70 },
-}
-
-/**
- * The Hub used Pixi for its structure layer, but its WebGL canvas could render
- * completely empty in the same headless Docker/Electron environment that
- * supplies our visual evidence. These authored PNGs are the canonical baked
- * renders, so put them in the ordinary DOM scene layer: they remain visible
- * and crisp in every renderer, while the existing Building components keep
- * their clickable hit areas and explanatory labels above them.
- */
-function HubStructureArt({ buildings }: { buildings: HubBuildingDef[] }) {
-  return (
-    <div aria-hidden="true" style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 4 }}>
-      {buildings.map(building => {
-        const art = HUB_STRUCTURE_ART[building.kind] ?? HUB_STRUCTURE_ART.command
-        return (
-          <img
-            key={`${building.kind}-${building.plotX}`}
-            src={art.src}
-            alt=""
-            style={{
-              position: 'absolute',
-              left: `${(building.plotX / 402) * 100}%`,
-              bottom: `calc(22% - ${art.lift}px)`,
-              width: art.width,
-              height: 'auto',
-              transform: 'translateX(-50%)',
-              opacity: building.dimmed ? 0.55 : 1,
-              filter: 'drop-shadow(0 5px 5px rgba(0, 0, 0, 0.3))',
-            }}
-          />
-        )
-      })}
-    </div>
-  )
-}
-
 interface HubScreenProps {
   player: Player
   rocketVariant?: HubBuildingDef['rocketVariant']
@@ -184,7 +140,6 @@ export default function HubScreen({ player, rocketVariant = 'explorer', hasCoach
   const [confirmingLaunchpadUpgrade, setConfirmingLaunchpadUpgrade] = useState(false)
   const [tessQueueCount, setTessQueueCount] = useState(0)
   const [asteroidQueueCount, setAsteroidQueueCount] = useState(0)
-  const { show: showTutorialComplete, dismiss: dismissTutorialComplete } = useTutorialCompleteAck(player.missionsDone, FREE_OPS_START_MISSIONS_DONE)
   const placed = player.placed ?? []
   const placementPlots = player.placementPlots ?? {}
   const legacyPlaced = (kind: string) => placed.includes(kind) && placementPlots[kind] == null
@@ -482,7 +437,11 @@ export default function HubScreen({ player, rocketVariant = 'explorer', hasCoach
         transition: 'background 0.55s',
       }}>
         <div style={{ pointerEvents: 'auto' }}>
-          <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 9.5, fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.55)' }}>
+          {/* KES-173: DevShortcuts' fixed DEV toggle (top:8 left:8, dev-only,
+              ~120px wide) sits directly over this eyebrow, clipping the
+              opening characters ("EARTH BASE" -> "H BASE"). Only reserve
+              the clearance when that badge can actually render. */}
+          <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 9.5, fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.55)', marginLeft: isDevLauncherEnabled() ? 130 : 0 }}>
             {subsurface ? 'EARTH BASE · SUBSURFACE' : `EARTH BASE · OPS ${player.missionsDone}`}
           </div>
           <h1 style={{ margin: '2px 0 0', fontFamily: 'var(--ln-font-display)', fontSize: 23, fontWeight: 800, letterSpacing: '-0.01em', color: '#fff', lineHeight: 1, textShadow: '0 2px 10px rgba(0,0,0,0.6)' }}>
@@ -504,9 +463,6 @@ export default function HubScreen({ player, rocketVariant = 'explorer', hasCoach
             onNav={onNav}
             top={hasCoach ? TUTORIAL_CONTENT_TOP : TUTORIAL_RAIL.TOP_CHROME_HEIGHT + 8}
           />
-          {showTutorialComplete && (
-            <TutorialCompleteSheet onDone={dismissTutorialComplete} />
-          )}
         </>
       )}
 
@@ -529,7 +485,7 @@ export default function HubScreen({ player, rocketVariant = 'explorer', hasCoach
           Ops for the whole guided-ops window meant those buttons stayed
           unreachable well past the tutorial (bug reported 2026-07-31). */}
       {(!hasCoach || player.missionsDone > 0) && (
-        <div className="hub-action-rail" style={{
+        <div className={`hub-action-rail${editMode ? ' hub-action-rail--edit' : ''}`} style={{
           position: 'absolute', left: 0, right: 0, zIndex: 20,
           display: 'flex', justifyContent: 'center', gap: 8, flexWrap: 'wrap',
           padding: '0 12px',

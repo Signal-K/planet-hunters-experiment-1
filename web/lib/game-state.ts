@@ -27,6 +27,7 @@ export const DEFAULT_STATE: GameState = {
     activeMission: null,
     missionCount: 1,
     pendingLaunch: false,
+    pendingRocketId: undefined,
     placed: [],
     placementPlots: {},
     controlBuilt: false,
@@ -48,8 +49,10 @@ export const DEFAULT_STATE: GameState = {
     loanOffered: false,
     seen_planets: [],
     roverDeployments: [],
+    roverTerrainClassifications: {},
     clientTerritories: {},
     tessClassifications: {},
+    artifactNarrativeSeenAt: null,
     asteroidClassifications: {},
     instrumentDigestNotifiedOn: {},
     discoveredExoplanetTargets: {},
@@ -146,6 +149,9 @@ export function normalizeState(input: PartialSave): GameState {
   const asteroidClassifications = player.asteroidClassifications && typeof player.asteroidClassifications === 'object'
     ? player.asteroidClassifications
     : DEFAULT_STATE.player.asteroidClassifications
+  const roverTerrainClassifications = player.roverTerrainClassifications && typeof player.roverTerrainClassifications === 'object'
+    ? player.roverTerrainClassifications
+    : DEFAULT_STATE.player.roverTerrainClassifications
   const discoveredExoplanetTargets = player.discoveredExoplanetTargets && typeof player.discoveredExoplanetTargets === 'object'
     ? player.discoveredExoplanetTargets
     : DEFAULT_STATE.player.discoveredExoplanetTargets
@@ -202,6 +208,14 @@ export function normalizeState(input: PartialSave): GameState {
   const deepSpaceTelescopeBuilt = builtFrom('deep-space-telescope', player.deepSpaceTelescopeBuilt)
   const refineryBuilt = builtFrom('refinery', player.refineryBuilt)
   const scannerBuilt = FEATURE_FLAGS.scanStation && builtFrom('scan-station', player.scannerBuilt)
+  // KES-177: Free Operations is a progression boundary, not a freely
+  // persisted toggle. Older/incorrect remote saves can have the flag set
+  // before M3; derive it from missionsDone so the early game can never expose
+  // the post-onboarding monitoring station flow.
+  const missionsDone = Number.isFinite(player.missionsDone)
+    ? Math.max(0, Math.floor(player.missionsDone ?? 0))
+    : DEFAULT_STATE.player.missionsDone
+  const freeOperations = missionsDone >= FREE_OPS_START_MISSIONS_DONE
   const legacyClaim = input.pendingTerritoryClaimFor as unknown as { targetId: string; clientId?: string; contractorId?: string } | undefined
   const pendingTerritoryClaimFor = legacyClaim
     ? { targetId: legacyClaim.targetId, clientId: legacyClaim.clientId ?? legacyClaim.contractorId ?? '' }
@@ -213,7 +227,7 @@ export function normalizeState(input: PartialSave): GameState {
     missionId,
     targetId,
     rocket: { ...DEFAULT_STATE.rocket, ...input.rocket },
-    player: { ...DEFAULT_STATE.player, ...player, clientStructures, placed: placedList, placementPlots, licenseGrade, researchXP, unlockedBlueprints, tessClassifications, asteroidClassifications, discoveredExoplanetTargets, instrumentDigestNotifiedOn, satelliteMonitoringLevel, transitSatelliteLevel, deepSpaceTelescopeLevel, crew, surfaceOps,
+    player: { ...DEFAULT_STATE.player, ...player, missionsDone, freeOperations, clientStructures, placed: placedList, placementPlots, licenseGrade, researchXP, unlockedBlueprints, tessClassifications, asteroidClassifications, roverTerrainClassifications, discoveredExoplanetTargets, instrumentDigestNotifiedOn, satelliteMonitoringLevel, transitSatelliteLevel, deepSpaceTelescopeLevel, crew, surfaceOps,
       satelliteMonitoringBuilt, deepSpaceTelescopeBuilt, refineryBuilt, scannerBuilt },
     doneSteps: { ...DEFAULT_STATE.doneSteps, ...input.doneSteps },
     ...(pendingTerritoryClaimFor ? { pendingTerritoryClaimFor } : {}),
@@ -241,6 +255,13 @@ export function repairStateRoute(input: GameState): GameState {
   if (input.screen === 'fab' && !input.player.freeOperations && (!mission || !target)) {
     return { ...input, screen: 'hub', missionId: null, targetId: null }
   }
+  // Build placement is an intentional, short-lived action from the Hub — it
+  // is not a useful resume destination. Persisting it left returning Free Ops
+  // players on a dimmed plot picker with no context, even when their base was
+  // already operational. New players (no structures yet) still begin here.
+  if (input.screen === 'build' && input.player.freeOperations && input.player.placed.length > 0) {
+    return { ...input, screen: 'hub' }
+  }
   if (input.screen === 'targets' && mission?.targetId) {
     return { ...input, screen: 'rocket-buy', targetId: mission.targetId }
   }
@@ -259,6 +280,11 @@ export function repairStateRoute(input: GameState): GameState {
     return { ...input, tutorial: true }
   }
   return input
+}
+
+/** True only when a mission-completion transition crosses into Free Ops. */
+export function justFinishedOnboarding(previousMissionsDone: number, nextMissionsDone: number): boolean {
+  return previousMissionsDone < FREE_OPS_START_MISSIONS_DONE && nextMissionsDone >= FREE_OPS_START_MISSIONS_DONE
 }
 
 export function normalizeAndRepair(partial: PartialSave): GameState {

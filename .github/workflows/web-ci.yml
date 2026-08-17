@@ -23,8 +23,9 @@ on:
     # backend/content change with no code push at all) doesn't sit
     # undetected until the next person happens to touch web/. Runs the full
     # journeys suite (e2e-staging-full below) against whatever build is
-    # currently live on landnam-test.vercel.app -- not tied to a specific
-    # commit's deploy, since a schedule event has no push to deploy from.
+    # currently live on landnam-web.liam-55d.workers.dev -- not tied to a
+    # specific commit's deploy, since a schedule event has no push to deploy
+    # from.
     - cron: "0 3 * * *"
 
 permissions:
@@ -166,28 +167,16 @@ jobs:
   deploy:
     name: Deploy
     # Only after typecheck, unit tests and a real build have passed. There is no
-    # point aliasing staging to a red commit.
+    # point deploying a red commit to staging.
     needs: build
     if: github.event_name == 'push'
     runs-on: ubuntu-latest
     environment:
       name: staging
-      url: https://landnam-test.vercel.app
-
-    outputs:
-      # The specific preview URL for this commit, not the shared alias — the
-      # alias can race with a concurrent push to another branch (see comment
-      # on the alias step below), but this deploy's own URL never moves.
-      url: ${{ steps.deploy.outputs.url }}
-
-    env:
-      # These already exist as repository secrets — use them rather than
-      # hardcoding the ids. VERCEL_TEAM_ID is Vercel's name for the org id.
-      VERCEL_ORG_ID: ${{ secrets.VERCEL_TEAM_ID }}
-      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
-      # The staging alias. Every branch CI runs on points it here, so staging
-      # always reflects the most recent green push regardless of branch.
-      STAGING_ALIAS: landnam-test.vercel.app
+      url: https://landnam-web.liam-55d.workers.dev
+    defaults:
+      run:
+        working-directory: web
 
     steps:
       - uses: actions/checkout@v4
@@ -198,62 +187,40 @@ jobs:
           cache: npm
           cache-dependency-path: web/package-lock.json
 
-      # Pinned, not @latest (STS-639): vercel@58.4.4 has a regression in
-      # `deploy --prebuilt`'s remote file-dedup logic that under-uploads
-      # deployment files referenced via each function's .vc-config.json
-      # filePathMap (e.g. web/node_modules/client-only/index.js, pulled in by
-      # styled-jsx), causing every deploy to fail with an ENOENT on Vercel's
-      # build machine. Reproduced locally: identical `vercel build` output,
-      # 53.1.1 uploads ~919 files and deploys cleanly, 58.4.4 uploads ~802
-      # files and fails; reverting to 53.1.1 immediately succeeds again
-      # against the same remote project/cache state. Bump this deliberately
-      # once a newer release is confirmed not to regress, not by switching
-      # back to @latest.
-      - name: Install Vercel CLI
-        run: npm install --global vercel@53.1.1
+      - name: Install dependencies
+        run: npm ci
 
-      # Deploys run from the repo root, matching scripts/deploy-test.mjs — the
-      # Vercel project's own Root Directory setting points at web/.
-      # Always a *preview* build, never --prod. landnam-test.vercel.app is
-      # staging, and it is reached by aliasing a preview deployment — exactly
-      # what scripts/deploy-test.mjs does. Using --prod here would publish to
-      # the project's production domain instead, which nothing in this repo
-      # asks for.
-      - name: Pull Vercel environment
-        run: vercel pull --yes --environment=preview --token=${{ secrets.VERCEL_TOKEN }}
-
-      - name: Build
-        run: vercel build --token=${{ secrets.VERCEL_TOKEN }}
+      # KES-193: every push deploys straight to the landnam-web Worker — no
+      # alias/aliasing step needed like Vercel's, since `wrangler deploy`
+      # publishes directly to the same Worker name every time. Staging is
+      # therefore always "the last green push", same semantics as before.
+      # NEXT_PUBLIC_* vars are inlined at build time (Next.js convention) —
+      # these mirror what Vercel's Preview environment had configured.
+      - name: Build (OpenNext/Cloudflare)
+        run: npm run build:cf
         env:
           NEXT_TELEMETRY_DISABLED: 1
+          NEXT_PUBLIC_SHARED_PB_URL: https://signal-k-starsailors.fly.dev
+          NEXT_PUBLIC_LANDNAM_PB_URL: https://signal-k-landnam.fly.dev
+          NEXT_PUBLIC_LANDNAM_ENV: staging
+          NEXT_PUBLIC_POSTHOG_HOST: https://us.i.posthog.com
+          NEXT_PUBLIC_POSTHOG_KEY: ${{ secrets.NEXT_PUBLIC_POSTHOG_KEY }}
+          NEXT_PUBLIC_VAPID_PUBLIC_KEY: ${{ secrets.NEXT_PUBLIC_VAPID_PUBLIC_KEY }}
+          NEXT_PUBLIC_FEATURE_SCAN_STATION: true
 
       - name: Deploy
-        id: deploy
-        run: |
-          URL=$(vercel deploy --prebuilt --token=${{ secrets.VERCEL_TOKEN }})
-          echo "url=$URL" >> "$GITHUB_OUTPUT"
-          echo "Deployed: $URL" >> "$GITHUB_STEP_SUMMARY"
-
-      # Every branch CI runs on moves the alias — main, sprint/** and claude/**
-      # alike. Staging therefore means "the last green push", not "the last push
-      # to main". concurrency is scoped per ref, so two branches pushed close
-      # together can still race for the alias; last writer wins, which is the
-      # accepted trade for having every branch land on one URL.
-      - name: Point staging alias at this deploy
-        run: |
-          vercel alias set "${{ steps.deploy.outputs.url }}" "$STAGING_ALIAS" \
-            --scope "$VERCEL_ORG_ID" --token=${{ secrets.VERCEL_TOKEN }}
-          echo "Staging: https://$STAGING_ALIAS" >> "$GITHUB_STEP_SUMMARY"
+        run: npx wrangler deploy
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
 
   e2e-staging:
     name: E2E — against staging deployment
-    # Targets the landnam-test.vercel.app alias itself, not this job's own
-    # preview URL output: raw per-commit *.vercel.app preview URLs can sit
-    # behind Vercel's deployment-protection wall (401 to unauthenticated
-    # requests, including Cypress's), but the aliased custom domain is
-    # confirmed public. This does mean a concurrent push to another branch
-    # can move the alias mid-run — same accepted race as the alias step
-    # above.
+    # KES-193: targets the landnam-web Worker's fixed workers.dev URL — every
+    # push deploys directly to this same Worker (no alias/race like Vercel's
+    # setup had), so a concurrent push to another branch overwriting this
+    # build mid-run is still possible, just via a straight redeploy rather
+    # than an alias flip.
     #
     # Scoped to the 'staging' Cypress profile (just c1-c4-viewport-matrix.cy.ts)
     # on every push: fast and confirmed passing against the real production
@@ -284,7 +251,7 @@ jobs:
       - name: Wait for staging to serve this deploy
         run: |
           for i in {1..30}; do
-            if curl -sf "https://landnam-test.vercel.app/api/backend-health" > /dev/null; then
+            if curl -sf "https://landnam-web.liam-55d.workers.dev/api/backend-health" > /dev/null; then
               echo "Staging is responding."
               exit 0
             fi
@@ -303,7 +270,7 @@ jobs:
           install: false
         env:
           CYPRESS_PROFILE: staging
-          CYPRESS_baseUrl: https://landnam-test.vercel.app
+          CYPRESS_baseUrl: https://landnam-web.liam-55d.workers.dev
           CI: true
 
       - name: Upload screenshots
@@ -335,8 +302,9 @@ jobs:
     # trigger it by hand, or let the nightly cron (KES-115) catch drift that
     # happens between reviewed pushes. No `needs: deploy` deliberately: a
     # schedule event has no push/deploy in the same run, so this always
-    # tests whatever build is currently live on landnam-test.vercel.app, not
-    # a specific commit's fresh deploy. Any @landnam.test account it creates
+    # tests whatever build is currently live on
+    # landnam-web.liam-55d.workers.dev, not a specific commit's fresh
+    # deploy. Any @landnam.test account it creates
     # is cleaned up by the existing KES-149 purge migrations on the next
     # backend deploy.
     if: github.event_name == 'workflow_dispatch' || github.event_name == 'schedule'
@@ -360,7 +328,7 @@ jobs:
       - name: Wait for staging to serve this deploy
         run: |
           for i in {1..30}; do
-            if curl -sf "https://landnam-test.vercel.app/api/backend-health" > /dev/null; then
+            if curl -sf "https://landnam-web.liam-55d.workers.dev/api/backend-health" > /dev/null; then
               echo "Staging is responding."
               exit 0
             fi
@@ -379,7 +347,7 @@ jobs:
           install: false
         env:
           CYPRESS_PROFILE: staging-full
-          CYPRESS_baseUrl: https://landnam-test.vercel.app
+          CYPRESS_baseUrl: https://landnam-web.liam-55d.workers.dev
           CI: true
 
       - name: Upload screenshots

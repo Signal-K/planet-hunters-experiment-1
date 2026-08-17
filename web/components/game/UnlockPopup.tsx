@@ -60,6 +60,24 @@ const UNLOCKS: Record<string, {
     stats: [['VIEW', 'INTERIOR'], ['SLOTS', 'CUSTOM'], ['ACCESS', 'HANGAR']],
     cta: 'Open Hangar',
   },
+  'tutorial-complete': {
+    accent: '#39d9ff',
+    eyebrow: 'Program Online',
+    title: 'FREE OPERATIONS',
+    body: 'The guided missions are complete. Your base is now yours to run: build facilities, choose your own objectives, and take on client work when it suits your program.',
+    art: 'rooms',
+    stats: [['STATUS', 'ONLINE'], ['MODE', 'OPEN OPS'], ['NEXT', 'YOUR CALL']],
+    cta: 'Enter Free Operations',
+  },
+  'artifact-signal': {
+    accent: '#39d9ff',
+    eyebrow: 'Follow-up Record',
+    title: 'POSSIBLE SIGNAL',
+    body: 'This confirmed transit deserves another look. It is not evidence of life — preserve the raw observation, invite independent review, and let the data carry the claim.',
+    art: 'rooms',
+    stats: [['SOURCE', 'TESS'], ['STATUS', 'REVIEW'], ['TIER', 'LATE OPS']],
+    cta: 'Acknowledge',
+  },
 }
 
 function RocketArt({ accent }: { accent: string }) {

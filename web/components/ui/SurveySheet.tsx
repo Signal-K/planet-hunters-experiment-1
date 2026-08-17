@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useEffect, useState } from 'react'
-import { SURVEY_DEFS, submitSurveyResponse, trackSurveyShown, onSurveyDismissed, type Survey, type SurveyQuestion } from '@/lib/surveys'
+import { SURVEY_DEFS, isSurveyRuntimeEnabled, submitSurveyResponse, trackSurveyShown, onSurveyDismissed, type Survey, type SurveyQuestion } from '@/lib/surveys'
 
 type Responses = Record<string, string | number>
 type SurveyTestWindow = Window & { __landnamTriggerSurvey?: (surveyKey: string) => void }
@@ -13,7 +13,7 @@ function RatingQuestion({ question, value, onChange }: { question: SurveyQuestio
     : {}
   return (
     <div>
-      <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 13, color: '#c8d8f0', marginBottom: 14, lineHeight: 1.4 }}>
+      <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 13, color: 'var(--ln-text)', marginBottom: 14, lineHeight: 1.4 }}>
         {question.question}
       </div>
       <div style={{ display: 'flex', gap: 8, justifyContent: 'center' }}>
@@ -25,8 +25,8 @@ function RatingQuestion({ question, value, onChange }: { question: SurveyQuestio
             onClick={() => onChange(n)}
             style={{
               width: 48, height: 48, borderRadius: 12, border: 'none',
-              background: value === n ? 'linear-gradient(180deg,#6cc2ff,#2d8de0)' : 'rgba(30,55,85,0.6)',
-              color: value === n ? '#06121f' : 'rgba(169,184,206,0.9)',
+              background: value === n ? 'var(--ln-cyan)' : 'var(--ln-surface-2)',
+              color: value === n ? 'var(--ln-text-on-cyan)' : 'var(--ln-text-dim)',
               fontFamily: 'var(--ln-font-display)', fontSize: 15, fontWeight: 800,
               cursor: 'pointer', transition: 'background 120ms, color 120ms',
               display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 2,
@@ -37,7 +37,7 @@ function RatingQuestion({ question, value, onChange }: { question: SurveyQuestio
         ))}
       </div>
       {value != null && labels[value] && (
-        <div style={{ textAlign: 'center', marginTop: 8, fontFamily: 'var(--ln-font-display)', fontSize: 10, letterSpacing: '0.14em', color: '#6cc2ff', textTransform: 'uppercase' }}>
+        <div style={{ textAlign: 'center', marginTop: 8, fontFamily: 'var(--ln-font-display)', fontSize: 10, letterSpacing: '0.14em', color: 'var(--ln-cyan)', textTransform: 'uppercase' }}>
           {labels[value]}
         </div>
       )}
@@ -48,7 +48,7 @@ function RatingQuestion({ question, value, onChange }: { question: SurveyQuestio
 function MultipleChoiceQuestion({ question, value, onChange }: { question: SurveyQuestion; value: string | undefined; onChange: (v: string) => void }) {
   return (
     <div>
-      <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 13, color: '#c8d8f0', marginBottom: 12, lineHeight: 1.4 }}>
+      <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 13, color: 'var(--ln-text)', marginBottom: 12, lineHeight: 1.4 }}>
         {question.question}
       </div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
@@ -60,10 +60,10 @@ function MultipleChoiceQuestion({ question, value, onChange }: { question: Surve
             onClick={() => onChange(choice)}
             style={{
               padding: '10px 14px', borderRadius: 10, border: 'none', textAlign: 'left',
-              background: value === choice ? 'rgba(112,217,234,0.18)' : 'rgba(20,40,65,0.5)',
-              color: value === choice ? '#87cffa' : 'rgba(169,184,206,0.8)',
+              background: value === choice ? 'var(--ln-cyan-soft)' : 'var(--ln-surface)',
+              color: value === choice ? 'var(--ln-cyan-bright)' : 'var(--ln-text-dim)',
               fontFamily: 'var(--ln-font-body)', fontSize: 13, cursor: 'pointer',
-              outline: value === choice ? '1px solid rgba(112,217,234,0.4)' : '1px solid rgba(112,217,234,0.1)',
+              outline: value === choice ? '1px solid var(--ln-cyan-border)' : '1px solid var(--ln-hairline)',
               transition: 'background 100ms, color 100ms',
             }}
           >
@@ -78,7 +78,7 @@ function MultipleChoiceQuestion({ question, value, onChange }: { question: Surve
 function OpenQuestion({ question, value, onChange }: { question: SurveyQuestion; value: string | undefined; onChange: (v: string) => void }) {
   return (
     <div>
-      <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 13, color: '#c8d8f0', marginBottom: 12, lineHeight: 1.4 }}>
+      <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 13, color: 'var(--ln-text)', marginBottom: 12, lineHeight: 1.4 }}>
         {question.question}
       </div>
       <textarea
@@ -89,9 +89,9 @@ function OpenQuestion({ question, value, onChange }: { question: SurveyQuestion;
         placeholder="Optional — type here..."
         style={{
           width: '100%', padding: '10px 12px', boxSizing: 'border-box',
-          background: 'rgba(20,20,23,0.8)', border: '1px solid rgba(112,217,234,0.2)',
+          background: 'var(--ln-void)', border: '1px solid var(--ln-hairline)',
           borderRadius: 10, resize: 'none', outline: 'none',
-          fontFamily: 'var(--ln-font-body)', fontSize: 13, color: '#e6efff', lineHeight: 1.5,
+          fontFamily: 'var(--ln-font-body)', fontSize: 13, color: 'var(--ln-text)', lineHeight: 1.5,
         }}
       />
     </div>
@@ -109,6 +109,7 @@ export default function SurveySheet({ blockWhile }: { blockWhile?: boolean }) {
   blockWhileRef.current = blockWhile
 
   const showSurvey = React.useCallback((key: string) => {
+    if (!isSurveyRuntimeEnabled()) return
     const def = SURVEY_DEFS[key]
     if (!def) return
     setSurveyKey(key)
@@ -136,7 +137,7 @@ export default function SurveySheet({ blockWhile }: { blockWhile?: boolean }) {
   }, [showSurvey])
 
   useEffect(() => {
-    if (process.env.NODE_ENV === 'production') return
+    if (!isSurveyRuntimeEnabled()) return
     const testWindow = window as SurveyTestWindow
     testWindow.__landnamTriggerSurvey = showSurvey
     return () => {
@@ -189,31 +190,30 @@ export default function SurveySheet({ blockWhile }: { blockWhile?: boolean }) {
   }
 
   return (
-    <div data-testid="survey-sheet" style={{ position: 'absolute', inset: 0, zIndex: 94, display: 'flex', alignItems: 'flex-end', pointerEvents: 'none' }}>
-      <div style={{ position: 'absolute', inset: 0, background: 'rgba(8,8,9,0.55)', pointerEvents: 'auto' }} onClick={handleSkip} />
+    <div data-testid="survey-sheet" style={{ position: 'absolute', inset: 0, zIndex: 94, display: 'flex', alignItems: 'flex-end', justifyContent: 'center', pointerEvents: 'none', padding: 16, boxSizing: 'border-box' }}>
+      <div style={{ position: 'absolute', inset: 0, background: 'var(--ln-overlay)', pointerEvents: 'auto' }} onClick={handleSkip} />
       <div style={{
-        position: 'relative', width: '100%', pointerEvents: 'auto',
-        background: 'linear-gradient(180deg,#0d1c30,#060d18)',
-        borderTopLeftRadius: 20, borderTopRightRadius: 20,
-        border: '1px solid rgba(112,217,234,0.2)',
-        padding: '16px 16px 32px',
-        boxShadow: '0 -12px 48px rgba(0,0,0,0.65)',
+        position: 'relative', width: 'min(100%, 680px)', pointerEvents: 'auto',
+        background: 'var(--ln-panel)', borderRadius: 12,
+        border: '2px solid var(--ln-cyan-border)',
+        padding: '16px 16px 24px',
+        boxShadow: 'var(--ln-shadow-modal)',
       }}>
         <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 14 }}>
-          <div style={{ width: 36, height: 4, borderRadius: 2, background: 'rgba(255,255,255,0.12)' }} />
+          <div style={{ width: 36, height: 4, borderRadius: 2, background: 'var(--ln-hairline-strong)' }} />
         </div>
 
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-          <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 10, fontWeight: 700, letterSpacing: '0.16em', color: '#6cc2ff', textTransform: 'uppercase' }}>
+          <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 10, fontWeight: 700, letterSpacing: '0.16em', color: 'var(--ln-cyan)', textTransform: 'uppercase' }}>
             Quick question {survey.questions.length > 1 ? `${qIndex + 1} / ${survey.questions.length}` : ''}
           </div>
-          <button type="button" onClick={handleSkip} style={{ background: 'none', border: 'none', color: 'rgba(169,184,206,0.4)', fontFamily: 'var(--ln-font-display)', fontSize: 10, letterSpacing: '0.12em', cursor: 'pointer', padding: 4 }}>
+          <button type="button" onClick={handleSkip} style={{ background: 'none', border: 'none', color: 'var(--ln-text-muted)', fontFamily: 'var(--ln-font-display)', fontSize: 10, letterSpacing: '0.12em', cursor: 'pointer', padding: 4 }}>
             SKIP
           </button>
         </div>
 
         {done ? (
-          <div style={{ textAlign: 'center', padding: '20px 0', fontFamily: 'var(--ln-font-display)', fontSize: 13, color: '#87cffa', letterSpacing: '0.08em' }}>
+          <div style={{ textAlign: 'center', padding: '20px 0', fontFamily: 'var(--ln-font-display)', fontSize: 13, color: 'var(--ln-cyan-bright)', letterSpacing: '0.08em' }}>
             Thanks — that helps a lot.
           </div>
         ) : question ? (
@@ -241,8 +241,8 @@ export default function SurveySheet({ blockWhile }: { blockWhile?: boolean }) {
               disabled={!canAdvance}
               style={{
                 marginTop: 16, width: '100%', padding: 13, borderRadius: 10, border: 'none',
-                background: canAdvance ? 'linear-gradient(180deg,#6cc2ff,#2d8de0)' : 'rgba(44,96,140,0.3)',
-                color: canAdvance ? '#06121f' : '#3d5670',
+                background: canAdvance ? 'var(--ln-cyan)' : 'var(--ln-surface-2)',
+                color: canAdvance ? 'var(--ln-text-on-cyan)' : 'var(--ln-text-muted)',
                 fontFamily: 'var(--ln-font-display)', fontSize: 12, fontWeight: 800,
                 letterSpacing: '0.14em', textTransform: 'uppercase',
                 cursor: canAdvance ? 'pointer' : 'not-allowed',

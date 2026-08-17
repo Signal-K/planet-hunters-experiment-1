@@ -71,7 +71,7 @@ export const SHIP_ROOM_FOOTPRINT: Record<ShipRoomKind, { w: number; h: number }>
 export const SHIP_ROOM_ASSETS: Record<ShipRoomKind, string> = {
   cockpit: '/game/assets/rooms/cockpit_t1_icon.png',
   engine: '/game/assets/rooms/engine_room_t1_icon.png',
-  booster: '/game/assets/rooms/mining_room_t1_icon.png',
+  booster: '/game/assets/rooms/booster_t1_icon.png',
   payload: '/game/assets/rooms/cargo_bay_t1_icon.png',
   'fuel-stage': '/game/assets/rooms/fuel_stage_t1_icon.png',
   fairing: '/game/assets/rooms/fairing_t1_icon.png',
@@ -87,7 +87,7 @@ export const SHIP_ROOM_ASSETS: Record<ShipRoomKind, string> = {
 export const SHIP_ROOM_DETAIL_ASSETS: Record<ShipRoomKind, string> = {
   cockpit: '/game/assets/rooms/cockpit_t1.png',
   engine: '/game/assets/rooms/engine_room_t1.png',
-  booster: '/game/assets/rooms/mining_room_t1.png',
+  booster: '/game/assets/rooms/booster_t1.png',
   payload: '/game/assets/rooms/cargo_bay_t1.png',
   'fuel-stage': '/game/assets/rooms/fuel_stage_t1.png',
   fairing: '/game/assets/rooms/fairing_t1.png',

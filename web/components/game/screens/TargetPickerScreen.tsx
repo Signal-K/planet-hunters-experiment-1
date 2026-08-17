@@ -131,6 +131,8 @@ export default function TargetPickerScreen({ mission, onBack, onPick, hasCoach, 
       title="Pick Target"
       onBack={onBack}
       hasCoach={hasCoach}
+      hideStepFooter={hasCoach}
+      contentBottom={hasCoach ? 104 : undefined}
       step="Target"
       stepDescription={
         deliveryTarget
@@ -138,7 +140,13 @@ export default function TargetPickerScreen({ mission, onBack, onPick, hasCoach, 
           : 'Choose a reachable mining site, then continue to build your rocket.'
       }
       actions={pickedTarget && (
-        <PrimaryBtn testId="continue-build-btn" onClick={() => onPick(pickedTarget.id)}>Continue · Build →</PrimaryBtn>
+        <PrimaryBtn
+          testId="continue-build-btn"
+          disabled={!pickedIsCompatible}
+          onClick={() => onPick(pickedTarget.id)}
+        >
+          {pickedIsCompatible ? 'Continue · Build →' : 'Target unavailable'}
+        </PrimaryBtn>
       )}
     >
       <div className="mission-board-layout" style={{ minHeight: 0, flex: 1 }}>
@@ -170,7 +178,7 @@ export default function TargetPickerScreen({ mission, onBack, onPick, hasCoach, 
           <div style={{ padding: '0 0 8px', display: 'flex', alignItems: 'center', gap: 8 }}>
             <span style={{ fontFamily: 'var(--ln-font-display)', fontSize: 10, fontWeight: 700, letterSpacing: '0.22em', color: 'var(--ln-text-muted)', textTransform: 'uppercase' }}>Compatible · {compat.length}</span>
             <span style={{ flex: 1 }} />
-            <StatusPill kind="amber" dim>Rocket range · Orbit ≤ {mission.requires.max_orbit}</StatusPill>
+            <StatusPill kind="info" dim>Rocket range · Orbit ≤ {mission.requires.max_orbit}</StatusPill>
           </div>
           {/* Orbit was shown as a bare number everywhere, with no statement of
               what it buys the player — while the rarity gates it drives are
@@ -220,7 +228,7 @@ export default function TargetPickerScreen({ mission, onBack, onPick, hasCoach, 
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontFamily: 'var(--ln-font-display)', fontWeight: 800, fontSize: 15, color: 'var(--ln-text)', letterSpacing: '0.02em' }}>{pickedTarget.name}</div>
                     <div style={{ fontFamily: 'var(--ln-font-mono)', fontSize: 9, letterSpacing: '0.14em', color: pickedIsCompatible ? 'var(--ln-ok)' : 'var(--ln-crit)', textTransform: 'uppercase' }}>
-                      {pickedIsCompatible ? 'Reachable' : 'Not compatible'} · Orbit {pickedTarget.orbit}
+                      {pickedIsCompatible ? 'Reachable · Mission fit' : 'Unavailable · Inspect only'} · Orbit {pickedTarget.orbit}
                     </div>
                   </div>
                   <ChevronDown size={16} color="var(--ln-text-muted)" />
@@ -245,11 +253,11 @@ export default function TargetPickerScreen({ mission, onBack, onPick, hasCoach, 
                 <div style={{
                   display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12,
                   padding: '8px 10px', borderRadius: 6,
-                  border: '1px dashed var(--ln-amber-border)', background: 'var(--ln-amber-soft)',
+                  border: '1px dashed var(--ln-cyan-border)', background: 'var(--ln-cyan-soft)',
                 }}>
                   <span style={{ fontFamily: 'var(--ln-font-body)', fontSize: 11, color: 'var(--ln-text-dim)', lineHeight: 1.4 }}>
                     Contract wants{' '}
-                    <b style={{ color: 'var(--ln-amber)', fontWeight: 700 }}>
+                    <b style={{ color: 'var(--ln-cyan)', fontWeight: 700 }}>
                       {missionMineralKeys.map(m => MINERAL_META[m]?.name ?? m).join(', ')}
                     </b>
                   </span>
@@ -260,11 +268,14 @@ export default function TargetPickerScreen({ mission, onBack, onPick, hasCoach, 
                 <PlanetSVG id={pickedTarget.id} size={48} />
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 9, fontWeight: 700, letterSpacing: '0.2em', color: pickedIsCompatible ? 'var(--ln-ok)' : 'var(--ln-crit)', textTransform: 'uppercase' }}>
-                    {pickedIsCompatible ? 'Reachable' : 'Not compatible'}
+                    {pickedIsCompatible ? 'Reachable · Mission fit' : 'Unavailable · Inspect only'}
                   </div>
                   <div style={{ fontFamily: 'var(--ln-font-display)', fontWeight: 800, fontSize: 20, color: 'var(--ln-text)', letterSpacing: '0.02em' }}>{pickedTarget.name}</div>
                   {pickedTarget.recommended && <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 9, color: 'var(--ln-ok)', letterSpacing: '0.14em', textTransform: 'uppercase' }}>Recommended</div>}
                   <div style={{ fontFamily: 'var(--ln-font-mono)', fontSize: 10, letterSpacing: '0.16em', color: 'var(--ln-text-muted)', textTransform: 'uppercase' }}>Orbit {pickedTarget.orbit} · {pickedTarget.difficulty}</div>
+                  <div style={{ fontFamily: 'var(--ln-font-mono)', fontSize: 10, letterSpacing: '0.12em', color: 'var(--ln-text-muted)', textTransform: 'uppercase', marginTop: 4 }}>
+                    {pickedTarget.minerals.some(mineral => missionMineralKeys.includes(mineral)) ? 'Contract mineral match' : 'No contract mineral match'}
+                  </div>
                   <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 9, fontWeight: 700, letterSpacing: '0.12em', color: 'var(--ln-cyan)', textTransform: 'uppercase', marginTop: 2 }}>
                     {orbitBandLabel(pickedTarget.orbit)}
                   </div>
@@ -277,6 +288,11 @@ export default function TargetPickerScreen({ mission, onBack, onPick, hasCoach, 
               )}
               {!hasCoach && (
                 <div style={{ marginTop: 10, fontFamily: 'var(--ln-font-body)', fontSize: 12, color: 'var(--ln-text-dim)', lineHeight: 1.4 }}>{pickedTarget.brief}</div>
+              )}
+              {!pickedIsCompatible && (
+                <div data-testid="target-unavailable-reason" style={{ marginTop: 10, fontFamily: 'var(--ln-font-body)', fontSize: 12, color: 'var(--ln-crit)', lineHeight: 1.4 }}>
+                  This body is shown for context but cannot be selected for the current mission. Choose a reachable body that matches the contract.
+                </div>
               )}
               {/* Deposit mix — required minerals first, then rarest first, capped */}
               <div style={{ marginTop: hasCoach ? 6 : 10 }}>

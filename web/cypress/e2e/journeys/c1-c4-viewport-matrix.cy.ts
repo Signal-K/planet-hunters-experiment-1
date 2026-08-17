@@ -146,6 +146,7 @@ describe('C1–C4 screen contracts across viewport classes', () => {
             activeMission: { id: 'generated-s1-starter-bulk-1', label: 'Rover landing -> Eros' },
             missionPhase: 'mining',
             roverMiningStartedAt: Date.now() - 30_000,
+            roverTerrainClassifications: { eros: 'vein' },
           }),
         }))
         cy.contains('Rover Mining', { timeout: 10000 }).should('be.visible')

@@ -61,7 +61,10 @@ function navToMissions() {
 
 function playM1FromIntro() {
   continueWithoutAccountIfShown()
-  cy.contains('LANDNAM', { timeout: 10000 }).should('be.visible')
+  // The portrait-only rotation overlay also includes "LANDNAM" in the DOM,
+  // even while CSS correctly hides it in portrait. Scope this assertion to
+  // IntroScreen's real title so Cypress does not select the hidden overlay.
+  cy.contains('h1.intro-title', 'LANDNAM', { timeout: 10000 }).should('be.visible')
   cy.get('[data-testid="intro-begin-btn"]').click({ force: true })
 
   cy.contains('EARTH BASE · SETUP', { timeout: 10000 }).should('be.visible')

@@ -91,11 +91,16 @@ export function normalizeSurfaceOps(value: unknown): SurfaceOpsState {
   const sites: Record<string, SurfaceSiteProgress> = {}
   for (const [siteId, raw] of Object.entries(source)) {
     if (!raw || typeof raw !== 'object' || Array.isArray(raw)) continue
-    const record = raw as Partial<SurfaceSiteProgress>
+    const record = raw as Partial<SurfaceSiteProgress> & { rightsPurchasedAt?: unknown }
+    const accessPurchasedAt = typeof record.siteAccessPurchasedAt === 'number'
+      ? record.siteAccessPurchasedAt
+      : typeof record.rightsPurchasedAt === 'number'
+        ? record.rightsPurchasedAt
+        : undefined
     sites[siteId] = {
       storage: cleanManifest(record.storage),
-      ...(Number.isFinite(record.rightsPurchasedAt)
-        ? { rightsPurchasedAt: Math.max(0, record.rightsPurchasedAt ?? 0) }
+      ...(Number.isFinite(accessPurchasedAt)
+        ? { siteAccessPurchasedAt: Math.max(0, accessPurchasedAt ?? 0) }
         : {}),
       ...(cleanLaunchpad(record.launchpad)
         ? { launchpad: cleanLaunchpad(record.launchpad) }
@@ -154,11 +159,11 @@ export function settlementLaunchpadStatus(
     return 'unavailable'
   }
   const site = surfaceSiteProgress(player, siteId)
-  if (!site.rightsPurchasedAt || !site.launchpad) return 'locked'
+  if (!site.siteAccessPurchasedAt || !site.launchpad) return 'locked'
   return now >= site.launchpad.completesAt ? 'ready' : 'building'
 }
 
-export function applyPurchaseTerrainRights(
+export function applyPurchaseSiteAccess(
   state: GameState,
   siteId: string,
   now: number = Date.now()
@@ -169,20 +174,20 @@ export function applyPurchaseTerrainRights(
     !definition
     || definition.availability !== 'available'
     || !state.player.freeOperations
-    || current.rightsPurchasedAt
-    || state.player.francs < definition.rightsCost
+    || current.siteAccessPurchasedAt
+    || state.player.francs < definition.accessFee
   ) {
     return state
   }
   const next = updateSite(state, siteId, site => ({
     ...site,
-    rightsPurchasedAt: now,
+    siteAccessPurchasedAt: now,
   }))
   return {
     ...next,
     player: {
       ...next.player,
-      francs: next.player.francs - definition.rightsCost,
+      francs: next.player.francs - definition.accessFee,
     },
   }
 }
@@ -197,7 +202,7 @@ export function canBuildSettlementLaunchpad(
   siteId: string
 ): boolean {
   const site = surfaceSiteProgress(state.player, siteId)
-  return !!site.rightsPurchasedAt
+  return !!site.siteAccessPurchasedAt
     && !site.launchpad
     && state.player.freeOperations
     && state.player.francs >= SETTLEMENT_LAUNCHPAD.costFrancs
@@ -241,7 +246,7 @@ export function applyRecordSurfaceMined(
   amount: number
 ): GameState {
   const site = surfaceSiteProgress(state.player, siteId)
-  if (!site.rightsPurchasedAt || amount <= 0 || !Number.isFinite(amount)) return state
+  if (!site.siteAccessPurchasedAt || amount <= 0 || !Number.isFinite(amount)) return state
   const room = Math.max(0, SURFACE_STORAGE_CAPACITY - surfaceStorageTotal(site))
   const accepted = Math.min(room, Math.floor(amount))
   if (accepted <= 0) return state

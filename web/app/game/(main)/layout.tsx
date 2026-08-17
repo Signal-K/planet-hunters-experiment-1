@@ -7,6 +7,7 @@ import { M1_STEPS, M2_STEPS, M3_STEPS } from '@/lib/data'
 import TutorialCoach from '@/components/game/TutorialCoach'
 import SaveProgressPrompt from '@/components/game/SaveProgressPrompt'
 import UnlockPopup from '@/components/game/UnlockPopup'
+import { TutorialCompleteSheet } from '@/components/game/TutorialCompleteSheet'
 import BottomTabBar from '@/components/layout/BottomTabBar'
 import Sidebar from '@/components/Sidebar/Sidebar'
 import BackendStatus from '@/components/game/BackendStatus'
@@ -23,14 +24,18 @@ import TerritoryClaimPopup from '@/components/game/TerritoryClaimPopup'
 import { UI_ZONES } from '@/lib/ui-zones'
 import { isSurveySafeScreen } from '@/lib/survey-gating'
 
-if (typeof window !== 'undefined') initPostHog()
-
 function GameChrome({ children }: { children: ReactNode }) {
   const game = useGame()
   const pathname = usePathname()
   const arrivalScheduledFor = useRef<number | null>(null)
   const returnScheduledKey = useRef<string | null>(null)
   const [settingsOpen, setSettingsOpen] = useState(false)
+
+  // Keep third-party analytics script injection out of React hydration. See
+  // GameApp's equivalent effect for the legacy route shell.
+  useEffect(() => {
+    initPostHog()
+  }, [])
 
   // Schedule push notification when transit starts
   useEffect(() => {
@@ -175,7 +180,10 @@ function GameChrome({ children }: { children: ReactNode }) {
           />
         )}
 
-        {game.popup && currentScreen !== 'market' && (
+        {game.popup === 'tutorial-complete' && (
+          <TutorialCompleteSheet onDone={() => game.setPopup(null)} />
+        )}
+        {game.popup && game.popup !== 'tutorial-complete' && currentScreen !== 'market' && (
           <UnlockPopup
             kind={game.popup}
             onClose={() => {

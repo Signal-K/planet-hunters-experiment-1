@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { DEFAULT_STATE, loadState, mergeRemoteState, normalizeAndRepair, normalizeState, type PartialSave } from './game-state'
+import { DEFAULT_STATE, justFinishedOnboarding, loadState, mergeRemoteState, normalizeAndRepair, normalizeState, type PartialSave } from './game-state'
 import type { GameState } from './game-types'
 import { MISSIONS, TARGETS } from './data'
 
@@ -159,6 +159,24 @@ describe('game state hydration normalization', () => {
     expect(normalized.screen).toBe('missions')
   })
 
+  it('returns an operational saved build screen to the Hub on hydration', () => {
+    const normalized = normalizeAndRepair({
+      screen: 'build',
+      player: { freeOperations: true, missionsDone: 3, placed: ['launchpad'] },
+    })
+
+    expect(normalized.screen).toBe('hub')
+  })
+
+  it('keeps the initial build screen for a brand-new program', () => {
+    const normalized = normalizeAndRepair({
+      screen: 'build',
+      player: { freeOperations: false, placed: [] },
+    })
+
+    expect(normalized.screen).toBe('build')
+  })
+
   it('preserves active transit telescope mission context on hydration', () => {
     const normalized = normalizeAndRepair({
       screen: 'debrief',
@@ -215,6 +233,49 @@ describe('game state hydration normalization', () => {
     expect(normalized.player.clientStructures?.[0]?.clientId).toBe('helios-propulsion-depot')
     expect(normalized.player.roverDeployments?.[0]?.clientId).toBe('helios-propulsion-depot')
     expect(normalized.pendingTerritoryClaimFor?.clientId).toBe('helios-propulsion-depot')
+  })
+})
+
+describe('onboarding completion boundary', () => {
+  it('fires only when the saved mission count crosses into Free Ops', () => {
+    expect(justFinishedOnboarding(2, 3)).toBe(true)
+    expect(justFinishedOnboarding(0, 3)).toBe(true)
+    expect(justFinishedOnboarding(3, 3)).toBe(false)
+    expect(justFinishedOnboarding(4, 5)).toBe(false)
+  })
+
+  it('repairs a stale Free Ops flag before the three-mission boundary', () => {
+    const normalized = normalizeAndRepair({
+      player: { missionsDone: 1, freeOperations: true },
+    })
+
+    expect(normalized.player.freeOperations).toBe(false)
+  })
+
+  it('keeps Free Ops enabled at the post-onboarding boundary', () => {
+    const normalized = normalizeAndRepair({
+      player: { missionsDone: 3, freeOperations: false },
+    })
+
+    expect(normalized.player.freeOperations).toBe(true)
+  })
+
+  // freeOperations is derived purely from missionsDone (lib/game-state.ts
+  // deriveFreeOperations) — there is deliberately no requirement that any
+  // structure beyond the onboarding launchpad ever gets placed. A player who
+  // finishes M1-M3 and then just banks francs without building anything else
+  // is a legitimate, reachable state, not corruption — this was flagged as a
+  // suspected data-integrity bug (KES-193) before tracing freeOperations back
+  // to missionsDone alone with no `placed` gate. Locking this in so a future
+  // change doesn't quietly turn "no extra structures" into a repaired/error
+  // state without an explicit design decision.
+  it('does not require any structure beyond launchpad once Free Ops is reached', () => {
+    const normalized = normalizeAndRepair({
+      player: { missionsDone: 3, freeOperations: true, placed: ['launchpad'], francs: 11_579_460_000 },
+    })
+
+    expect(normalized.player.freeOperations).toBe(true)
+    expect(normalized.player.placed).toEqual(['launchpad'])
   })
 })
 

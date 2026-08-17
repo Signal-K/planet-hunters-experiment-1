@@ -102,7 +102,13 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
   // ── Domain hooks ───────────────────────────────────────────────────────────
   const ui      = useUIActions(setState)
   const auth    = useAuthSync({ state, setState, stateRef, hydrated, isPreview: isPreview.current, addToast: ui.addToast, normalizeAndRepair, storageKey: STORAGE_KEY })
-  useConfirmedDiscoveryPoll({ stateRef, setState, hydrated, addToast: ui.addToast })
+  useConfirmedDiscoveryPoll({
+    stateRef,
+    setState,
+    hydrated,
+    enabled: !!auth.authUserId && pbShared.authStore.isValid,
+    addToast: ui.addToast,
+  })
   const { catalog } = useCatalogSync(state, setState, hydrated, isPreview.current, ui.addToast)
   const runtimeCatalog = useMemo(() => buildRuntimeCatalog({
     catalog,
@@ -121,7 +127,11 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
   const surfaceOps = useSurfaceOpsActions(setState, ui.addToast)
   const academy = useAcademyActions(stateRef, setState, useCallback(() => runtimeCatalog, [runtimeCatalog]), ui.addToast)
   useInstrumentFeedNotifications({
-    enabled: hydrated && !isPreview.current,
+    // Instrument feeds are shared-backend data. Do not start a background
+    // request while the auth restore is still pending (or after logout),
+    // otherwise a returning guest can generate a noisy 401 before the gate
+    // settles.
+    enabled: hydrated && !isPreview.current && !!auth.authUserId && pbShared.authStore.isValid,
     player: state.player,
     setState,
     addToast: ui.addToast,
@@ -241,7 +251,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       acceptLoan: economy.acceptLoan,
       abandonMission: economy.abandonMission,
       confirmShipCustomizerBuild: economy.confirmShipCustomizerBuild,
-      purchaseTerrainRights: surfaceOps.purchaseTerrainRights,
+      purchaseSiteAccess: surfaceOps.purchaseSiteAccess,
       buildSettlementLaunchpad: surfaceOps.buildSettlementLaunchpad,
       recordSurfaceMined: surfaceOps.recordSurfaceMined,
       dispatchSurfaceFerry: surfaceOps.dispatchSurfaceFerry,

@@ -103,7 +103,7 @@ export default function RocketPurchaseScreen({ missionsDone, francs, mission, de
         </>
       )}
     >
-      <MissionSetupFrame style={{
+      <MissionSetupFrame className="rocket-vehicle-frame" style={{
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -114,7 +114,7 @@ export default function RocketPurchaseScreen({ missionsDone, francs, mission, de
           <div style={{
             position: 'absolute', top: 12, left: 12, right: 12,
             padding: '8px 12px', borderRadius: 6,
-            background: 'rgba(11,11,13,0.78)', border: '1px solid rgba(112,217,234,0.35)',
+            background: 'var(--ln-overlay)', border: '1px solid var(--ln-cyan-border)',
             fontFamily: 'var(--ln-font-display)', fontSize: 10, fontWeight: 700,
             letterSpacing: '0.08em', color: 'var(--ln-cyan)', textTransform: 'uppercase', textAlign: 'center',
           }}>

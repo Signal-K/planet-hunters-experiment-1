@@ -5,6 +5,7 @@ import {
   MissionSetupCard,
   MissionSetupFrame,
 } from './MissionSetupShell'
+import MissionSetupShell from './MissionSetupShell'
 
 describe('mission setup layout components', () => {
   it('preserves the setup frame class and caller attributes', () => {
@@ -34,5 +35,24 @@ describe('mission setup layout components', () => {
     expect(markup).toContain('class="mission-setup-card-scroll summary-scroll"')
     expect(markup).toContain('style="gap:14px"')
     expect(markup).toContain('>Summary</div>')
+  })
+
+  it('allows coached target selection to reserve only the CTA footprint', () => {
+    const markup = renderToStaticMarkup(
+      <MissionSetupShell
+        eyebrow="MISSION"
+        title="Pick Target"
+        onBack={() => undefined}
+        hasCoach
+        hideStepFooter
+        contentBottom={104}
+        actions={<button>Continue</button>}
+      >
+        Map
+      </MissionSetupShell>,
+    )
+
+    expect(markup).toContain('padding-top:238px;padding-bottom:104px')
+    expect(markup).toContain('>Continue</button>')
   })
 })

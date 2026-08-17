@@ -70,7 +70,9 @@ describe('Clean start full game loop', () => {
     cy.get('[data-testid="auth-gate-password"]').type(password)
     cy.get('[data-testid="auth-gate-submit"]').click()
 
-    cy.contains('LANDNAM', { timeout: 10_000 }).should('be.visible')
+    // Do not match the hidden landscape-orientation overlay, which also
+    // contains LANDNAM. The intro title is the actual post-auth surface.
+    cy.contains('h1.intro-title', 'LANDNAM', { timeout: 10_000 }).should('be.visible')
     // The intro title paints before React's state-persistence effect commits
     // its first localStorage.setItem — retry until the write lands instead of
     // reading it as a one-shot right after the DOM assertion above.

@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react'
 import TopBar from '@/components/ui/TopBar'
-import { ACADEMY_INTRO_MISSION_ID, partitionByOwner } from '@/lib/data'
+import { ACADEMY_INTRO_MISSION_ID, FREE_OPS_START_MISSIONS_DONE, partitionByOwner } from '@/lib/data'
 import { ROCKET_MODELS } from '@/lib/data/rockets'
 import { SATELLITE_MODELS } from '@/lib/data/satellites'
 import type { Catalog } from '@/lib/catalog'
@@ -69,39 +69,46 @@ export default function LaunchpadScreen({
     )
     return academyUnlocked && !academyCompleted
   })
+  // KES-177: Launchpad is for rockets and contracts. Station construction is
+  // owned by the Earth Base progression/build flow; only show the station
+  // here after it is already built. This prevents a post-login guide from
+  // turning an unbuilt future facility into the apparent next tutorial step.
+  const monitoringAvailable = freeOperations
+    && missionsDone >= FREE_OPS_START_MISSIONS_DONE
+    && player.satelliteMonitoringBuilt === true
   const guideSteps = [
-    {
+    ...(monitoringAvailable ? [{
       label: '01 · GROUND SYSTEM',
       title: player.satelliteMonitoringBuilt ? 'Monitoring online' : 'Build the monitoring station',
       body: player.satelliteMonitoringBuilt
         ? 'This station receives telescope downlinks and turns them into science work.'
         : 'You need this before your first transit telescope can operate.',
-      target: 'station',
-    },
+      target: 'station' as const,
+    }] : []),
     {
-      label: '02 · LAUNCHPAD',
+      label: monitoringAvailable ? '02 · LAUNCHPAD' : '01 · LAUNCHPAD',
       title: 'Launch from here',
       body: 'Assigned vehicles move from the hangar to this pad before flight.',
-      target: 'tower',
+      target: 'tower' as const,
     },
     {
-      label: '03 · ROCKET FLEET',
+      label: monitoringAvailable ? '03 · ROCKET FLEET' : '02 · ROCKET FLEET',
       title: 'Prepare your vehicles',
       body: 'Open the hangar to inspect unlocked rockets and fit upgrades.',
-      target: 'rocket',
+      target: 'rocket' as const,
     },
     {
-      label: '04 · YOUR PROGRAM',
+      label: monitoringAvailable ? '04 · YOUR PROGRAM' : '03 · YOUR PROGRAM',
       title: 'Choose what flies next',
       body: 'Operations use your own assets. Contracts fund their expansion.',
-      target: 'satellite',
+      target: 'satellite' as const,
     },
   ] as const
   const guide = guideStep === null ? null : guideSteps[guideStep]
 
   useEffect(() => {
-    if (!window.localStorage.getItem(LAUNCHPAD_GUIDE_KEY)) setGuideStep(0)
-  }, [])
+    if (monitoringAvailable && !window.localStorage.getItem(LAUNCHPAD_GUIDE_KEY)) setGuideStep(0)
+  }, [monitoringAvailable])
 
   const closeGuide = () => {
     window.localStorage.setItem(LAUNCHPAD_GUIDE_KEY, 'complete')
@@ -136,7 +143,7 @@ export default function LaunchpadScreen({
           <div><strong>{launchedSatellites}/{SATELLITE_MODELS.length}</strong><span>ORBIT</span></div>
         </div>
 
-        {player.satelliteMonitoringBuilt ? (
+        {monitoringAvailable && (player.satelliteMonitoringBuilt ? (
           <div
             className={`launchpad-scene-object launchpad-station is-built ${isGuided('station') ? 'is-guided' : ''}`}
             data-testid="launchpad-monitoring-structure"
@@ -152,7 +159,7 @@ export default function LaunchpadScreen({
           >
             {monitoringStructure}
           </button>
-        )}
+        ))}
 
         <div className={`launchpad-scene-object launchpad-tower ${isGuided('tower') ? 'is-guided' : ''}`} data-testid="launchpad-status-card">
           <span className="launchpad-tower-art">
@@ -173,7 +180,7 @@ export default function LaunchpadScreen({
           </span>
           <span className="launchpad-object-label">
             <small>ROCKET FLEET · {unlockedFleet.length}</small>
-            <strong>{selectedRocketName ?? unlockedFleet[0]?.model.name ?? 'NO VEHICLE'} · HANGAR</strong>
+            <strong>{player.pendingLaunch ? `${selectedRocketName ?? unlockedFleet[0]?.model.name ?? 'BUILT VEHICLE'} · INSPECT` : `${selectedRocketName ?? unlockedFleet[0]?.model.name ?? 'NO VEHICLE'} · HANGAR`}</strong>
           </span>
         </button>
 
@@ -207,13 +214,13 @@ export default function LaunchpadScreen({
           <span>{launchedSatellites}/{SATELLITE_MODELS.length} SAT</span>
         </div>
         <div className="launchpad-rail-actions">
-          <button data-testid="launchpad-guide-open" onClick={() => setGuideStep(0)}><GuideGlyph /> GUIDE</button>
-          {!player.satelliteMonitoringBuilt && (
+          {monitoringAvailable && <button data-testid="launchpad-guide-open" onClick={() => setGuideStep(0)}><GuideGlyph /> GUIDE</button>}
+          {monitoringAvailable && !player.satelliteMonitoringBuilt && (
             <button className="is-primary" data-testid="launchpad-build-monitoring-btn" onClick={onBuildMonitoring}>BUILD STATION</button>
           )}
           <button data-testid="launchpad-open-hangar-btn" onClick={onOpenHangar}><HangarGlyph /> HANGAR</button>
-          {nextOperation && <button data-testid="launchpad-program-operation-btn" onClick={() => onPick(nextOperation.id)}><MissionGlyph /> OPS {operations.length}</button>}
-          <button data-testid="launchpad-view-contracts-btn" onClick={onViewContracts}><MissionGlyph /> CONTRACTS</button>
+          {freeOperations && nextOperation && <button data-testid="launchpad-program-operation-btn" onClick={() => onPick(nextOperation.id)}><MissionGlyph /> OPS {operations.length}</button>}
+          <button className={freeOperations ? undefined : 'is-primary'} data-testid="launchpad-view-contracts-btn" onClick={onViewContracts}><MissionGlyph /> CONTRACTS</button>
         </div>
       </footer>
     </div>

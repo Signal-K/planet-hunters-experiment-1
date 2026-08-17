@@ -62,22 +62,18 @@ export default function AssemblyScreen(props: AssemblyScreenProps) {
       actions={
         <div style={{ position: 'relative' }}>
           {highlightLaunch && <TutorialHighlight borderRadius={8} />}
-          <PrimaryBtn kind="amber" disabled={!launchReady} testId="launch-btn" onClick={props.onLaunch}>Confirm Launch</PrimaryBtn>
+          <PrimaryBtn kind="cyan" full={false} disabled={!launchReady} testId="launch-btn" onClick={props.onLaunch}>Confirm Launch</PrimaryBtn>
         </div>
       }
     >
-      <MissionSetupFrame className="assembly-frame" style={{
+      <MissionSetupFrame className="assembly-frame assembly-preflight-scene" style={{
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'flex-start',
         gap: 8,
         padding: 12,
-        background: [
-          'repeating-linear-gradient(0deg, rgba(112,217,234,0.05) 0px, rgba(112,217,234,0.05) 1px, transparent 1px, transparent 34px)',
-          'repeating-linear-gradient(90deg, rgba(112,217,234,0.05) 0px, rgba(112,217,234,0.05) 1px, transparent 1px, transparent 34px)',
-          'radial-gradient(ellipse at 50% 54%, rgba(245,166,35,0.10) 0%, rgba(112,217,234,0.05) 42%, transparent 78%)',
-        ].join(', '),
+          background: 'var(--ln-void)',
       }}>
         {highlightContent && <TutorialHighlight />}
         <LaunchClearance
@@ -92,10 +88,11 @@ export default function AssemblyScreen(props: AssemblyScreenProps) {
       </MissionSetupFrame>
 
       <MissionSetupCard className="assembly-card" scrollStyle={{ display: 'flex', flexDirection: 'column', gap: compact ? 6 : 10 }}>
-        <Panel accent="var(--ln-amber)" style={{ padding: compact ? 8 : 'var(--ln-s-3)', flex: '0 0 auto' }}>
+        <Panel accent="var(--ln-cyan)" style={{ padding: compact ? 8 : 'var(--ln-s-3)', flex: '0 0 auto' }}>
           <div className="context-row">
             <div><span className="ln-micro">Mission</span><strong>{props.mission.title}</strong></div>
-            <div><span className="ln-micro">Target</span><strong className="amber">{props.target.name}</strong></div>
+            {/* KES-171: target name is informational text, not a payout/reward — was amber. */}
+            <div><span className="ln-micro">Target</span><strong className="cyan">{props.target.name}</strong></div>
           </div>
           {props.mission.deliveryTargetId && props.deliveryTargetName && (
             <div style={{ marginTop: 6, display: 'flex', alignItems: 'center', gap: 5, font: '700 9px var(--ln-font-mono)', color: 'var(--ln-cyan)', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
@@ -155,7 +152,7 @@ function LaunchClearance({
     <div data-testid="assembly-rocket-cutaway" style={{ width: '100%', maxWidth: 620, display: 'flex', flexDirection: 'column', gap: compact ? 6 : 10 }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 14 }}>
         <div>
-          <div className="ln-micro" style={{ color: 'var(--ln-amber)' }}>Launch authorization</div>
+          <div className="ln-micro" style={{ color: 'var(--ln-cyan)' }}>Launch authorization</div>
           <div style={{ marginTop: 3, font: `800 ${compact ? 16 : 22}px var(--ln-font-display)`, color: 'var(--ln-text)', letterSpacing: '-0.02em' }}>Flight cleared</div>
           {!compact && <div style={{ marginTop: 3, font: '11px var(--ln-font-body)', color: 'var(--ln-text-dim)' }}>{mission.title} · {rocket.name} · single-use vehicle</div>}
         </div>
@@ -223,4 +220,3 @@ function ChecklistRow({ ok, label }: { ok: boolean; label: string }) {
     </div>
   )
 }
-

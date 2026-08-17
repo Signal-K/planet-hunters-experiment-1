@@ -9,6 +9,7 @@ import type { Mission, Target } from '@/lib/data'
 import { MINERAL_META } from '@/lib/data'
 import { UI_ZONES } from '@/lib/ui-zones'
 import { formatCountdown } from '@/lib/format'
+import { deriveRoverScoutingResult, ROVER_TERRAIN_CLASSES, type RoverTerrainClass } from '@/lib/data/rover-scouting'
 import RoverMiningCanvas from './RoverMiningCanvas'
 
 const ROVER_MINING_DURATION_MS = 2 * 60 * 1000
@@ -16,14 +17,17 @@ const ROVER_MINING_DURATION_MS = 2 * 60 * 1000
 // Rover cargo mirrors what the mission actually requires — same contract as
 // the laser MiningScreen's mission.requires.minerals — so a rover deployment
 // yields real, usable mission cargo instead of an arbitrary fixed haul.
-function generateRoverCargo(mission: Mission, target: Target): Record<string, number> {
+function generateRoverCargo(mission: Mission, target: Target, terrain: RoverTerrainClass): Record<string, number> {
   const required = mission.requires.minerals
-  if (Object.keys(required).length > 0) return { ...required }
-  const cargo: Record<string, number> = {}
-  const minerals = target.minerals.slice(0, 3)
-  minerals.forEach((mineral, i) => {
-    cargo[mineral] = 2 + i
-  })
+  const cargo: Record<string, number> = Object.keys(required).length > 0 ? { ...required } : {}
+  if (Object.keys(cargo).length === 0) {
+    const minerals = target.minerals.slice(0, 3)
+    minerals.forEach((mineral, i) => {
+      cargo[mineral] = 2 + i
+    })
+  }
+  const scouting = deriveRoverScoutingResult(target, terrain)
+  cargo[scouting.mineral] = (cargo[scouting.mineral] ?? 0) + scouting.cargoBonus
   return cargo
 }
 
@@ -32,19 +36,22 @@ interface RoverMiningScreenProps {
   target: Target
   onComplete: (cargo: Record<string, number>) => void
   onBack: () => void
+  terrainClassification?: RoverTerrainClass
+  onClassifyTerrain: (terrain: RoverTerrainClass) => void
   /** Wall-clock start of this run, restored across a Back-to-hub pause so the extraction timer doesn't restart. */
   startedAt?: number
 }
 
-export default function RoverMiningScreen({ mission, target, onComplete, onBack, startedAt: startedAtProp }: RoverMiningScreenProps) {
-  const [startedAt] = useState(() => startedAtProp ?? Date.now())
+export default function RoverMiningScreen({ mission, target, onComplete, onBack, startedAt: startedAtProp, terrainClassification, onClassifyTerrain }: RoverMiningScreenProps) {
   const [now, setNow] = useState(() => Date.now())
 
-  const elapsed = now - startedAt
+  const startedAt = startedAtProp ?? now
+  const elapsed = terrainClassification ? now - startedAt : 0
   const done = elapsed >= ROVER_MINING_DURATION_MS
   const progressPct = Math.min(100, (elapsed / ROVER_MINING_DURATION_MS) * 100)
   const remaining = Math.max(0, ROVER_MINING_DURATION_MS - elapsed)
-  const cargo = generateRoverCargo(mission, target)
+  const cargo = terrainClassification ? generateRoverCargo(mission, target, terrainClassification) : {}
+  const scouting = terrainClassification ? deriveRoverScoutingResult(target, terrainClassification) : null
 
   const countdown = formatCountdown(remaining)
 
@@ -52,7 +59,7 @@ export default function RoverMiningScreen({ mission, target, onComplete, onBack,
     if (done) return
     const id = window.setInterval(() => setNow(Date.now()), 1000)
     return () => window.clearInterval(id)
-  }, [done])
+  }, [done, terrainClassification])
 
   return (
     <div className="game-screen" style={{ display: 'flex', flexDirection: 'column' }}>
@@ -74,14 +81,27 @@ export default function RoverMiningScreen({ mission, target, onComplete, onBack,
             <RoverIcon done={done} />
             <div>
               <div style={{ fontFamily: 'var(--ln-font-display)', fontWeight: 800, fontSize: 14, color: done ? 'var(--ln-ok)' : 'var(--ln-amber)' }}>
-                {done ? 'EXTRACTION COMPLETE' : 'EXTRACTING DEPOSITS'}
+                {!terrainClassification ? 'SURVEY THE SITE' : done ? 'EXTRACTION COMPLETE' : 'EXTRACTING DEPOSITS'}
               </div>
               <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 11, color: '#a9b8ce', marginTop: 2 }}>
                 {mission.title}
               </div>
             </div>
           </div>
-          {!done && (
+          {!terrainClassification ? (
+            <div data-testid="rover-scouting-classification" style={{ marginTop: 10 }}>
+              <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 12, color: '#a9b8ce', lineHeight: 1.4, marginBottom: 8 }}>
+                Classify the rover&apos;s synthetic terrain observation to identify a deposit signature before extraction.
+              </div>
+              <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                {ROVER_TERRAIN_CLASSES.map(terrain => (
+                  <PrimaryBtn key={terrain} kind={terrain === 'vein' ? 'green' : undefined} onClick={() => onClassifyTerrain(terrain)} testId={`rover-classify-${terrain}`}>
+                    {terrain.toUpperCase().replace('-', ' ')}
+                  </PrimaryBtn>
+                ))}
+              </div>
+            </div>
+          ) : !done && (
             <>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 5 }}>
                 <span style={{ fontFamily: 'var(--ln-font-display)', fontSize: 9, fontWeight: 700, letterSpacing: '0.18em', color: '#6b7fa3' }}>OPERATION PROGRESS</span>
@@ -94,7 +114,13 @@ export default function RoverMiningScreen({ mission, target, onComplete, onBack,
           )}
         </Panel>
 
-        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 8 }}>
+        {scouting && (
+          <StatusPill kind={scouting.terrain === 'vein' ? 'ok' : 'info'}>
+            {scouting.depositLabel} · {MINERAL_META[scouting.mineral]?.sym ?? scouting.mineral.toUpperCase()} SIGNATURE +{scouting.cargoBonus}
+          </StatusPill>
+        )}
+
+        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', margin: '8px 0' }}>
           {Object.entries(cargo).map(([mineral, amount]) => {
             const meta = MINERAL_META[mineral]
             return (
@@ -108,7 +134,7 @@ export default function RoverMiningScreen({ mission, target, onComplete, onBack,
           })}
         </div>
 
-        {done ? (
+        {terrainClassification && done ? (
           <>
             <StatusPill kind="ok">ROVER RETURNED — MINERALS SECURED</StatusPill>
             <div style={{ marginTop: 8 }}>
@@ -117,11 +143,11 @@ export default function RoverMiningScreen({ mission, target, onComplete, onBack,
               </PrimaryBtn>
             </div>
           </>
-        ) : (
+        ) : terrainClassification ? (
           <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 9, letterSpacing: '0.15em', color: '#6b7fa3', textTransform: 'uppercase' }}>
             Use joystick to drive rover · Drill auto-activates when stationary
           </div>
-        )}
+        ) : null}
       </div>
     </div>
   )

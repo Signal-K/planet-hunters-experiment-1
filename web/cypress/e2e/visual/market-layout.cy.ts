@@ -21,6 +21,16 @@ describe('Commodity Exchange visual layout', () => {
           win.localStorage.setItem('landnam-game-state-v1', JSON.stringify(state))
           win.localStorage.setItem('landnam-surveys-shown', JSON.stringify(['lnm_first_launch']))
           win.localStorage.setItem('ln_tutorial_complete_ack', '1')
+          // KES-176: without an established session, the tablet iteration
+          // raced a "Welcome Back" auth sheet in over the Market header
+          // between the h1/Mineral Inventory assertions passing and the
+          // screenshot firing, so the captured artifact showed sign-in
+          // instead of the layout under test. Same guest-session seed used
+          // by tutorial-rail.cy.ts's visitWithState.
+          win.localStorage.setItem('landnam-guest-credentials', JSON.stringify({
+            email: 'e2e@landnam.guest',
+            password: 'e2e-guest-test',
+          }))
         },
       })
       cy.contains('h1', 'Commodity Exchange', { timeout: 15000 }).should('be.visible')

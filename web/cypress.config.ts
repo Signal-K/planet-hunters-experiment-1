@@ -48,6 +48,11 @@ const profiles: Record<string, Cypress.EndToEndConfigOptions> = {
   features: {
     baseUrl: 'http://localhost:3001',
     specPattern: ['cypress/e2e/features/**/*.cy.{js,jsx,ts,tsx}'],
+    // Survey QA has its own profile, where the explicit runtime opt-in is
+    // enabled. Keeping it out of the general feature profile prevents a
+    // deliberately disabled survey runtime from being reported as a product
+    // failure.
+    excludeSpecPattern: ['cypress/e2e/features/surveys.cy.ts'],
     viewportWidth: 390,
     viewportHeight: 844,
   },
@@ -107,7 +112,7 @@ const profiles: Record<string, Cypress.EndToEndConfigOptions> = {
     env: { livePocketBase: true },
   },
   // Runs against an already-deployed environment (e.g. the
-  // landnam-test.vercel.app staging alias) instead of a locally-started dev
+  // landnam-web.liam-55d.workers.dev staging Worker) instead of a locally-started dev
   // server. Scoped to c1-c4-viewport-matrix.cy.ts specifically: it's fast
   // (~25s, no real backend calls beyond initial page load) and, unlike every
   // other journeys spec, was actually confirmed passing against the real
@@ -134,9 +139,11 @@ const profiles: Record<string, Cypress.EndToEndConfigOptions> = {
     viewportHeight: 844,
     env: { livePocketBase: true },
   },
-  // Visual QA profile: headed Chrome, screenshots at every step, video always on.
-  // Run with: CYPRESS_PROFILE=visual npx cypress run --browser chrome --headed
-  // Or open interactively: CYPRESS_PROFILE=visual npx cypress open --browser chrome
+  // Visual QA profile: headless Chrome, screenshots at every step, video always on.
+  // Keep this profile headless: headed launches can open a native crash dialog on
+  // macOS and interrupt the operator before Cypress starts.
+  // Run with: CYPRESS_PROFILE=visual npx cypress run --browser chrome
+  // Use `cypress open` only for deliberate interactive debugging.
   visual: {
     baseUrl: process.env.CYPRESS_baseUrl || 'http://localhost:3099',
     specPattern: ['cypress/e2e/visual/**/*.cy.{js,jsx,ts,tsx}'],

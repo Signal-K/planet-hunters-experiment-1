@@ -71,6 +71,15 @@ pocketbase/landnam-backend
 .godot-bin/
 .claude/worktrees/
 
+# Landnam uses the parent Navigation workspace for durable context. Do not
+# recreate a child-repository Knowns snapshot, bridge, or proposal outbox.
+.knowns/
+.knowns-outbox/
+.knowns-bridge.json
+KNOWNS.snapshot.md
+.claude/
+.compass/
+
 # UX tour outputs (generated, not source)
 ux-screenshots/
 test-results/

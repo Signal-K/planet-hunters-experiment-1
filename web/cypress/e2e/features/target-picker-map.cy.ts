@@ -31,12 +31,14 @@ describe('TargetPicker orbital map', () => {
     cy.viewport(390, 844)
     visitTargetPicker()
     expectMapToFillAndRender()
+    cy.screenshot('sprint-13-target-picker-mobile')
   })
 
   it('renders a nonblank orbital map on desktop', () => {
     cy.viewport(1280, 900)
     visitTargetPicker()
     expectMapToFillAndRender()
+    cy.screenshot('sprint-13-target-picker-desktop')
   })
 
   // Regression guard for h20xtc: map must expand to fill available vertical
@@ -63,5 +65,14 @@ describe('TargetPicker orbital map', () => {
         const rect = $map[0].getBoundingClientRect()
         expect(rect.height).to.be.greaterThan(320)
       })
+  })
+
+  it('keeps an unavailable context body from changing the selected target', () => {
+    cy.viewport(1280, 900)
+    visitTargetPicker()
+    cy.get('[data-testid="target-picker-orbital-map"]', { timeout: 10000 }).should('be.visible')
+    cy.get('svg text').contains('Jupiter').click()
+    cy.contains('433 Eros').should('be.visible')
+    cy.get('[data-testid="continue-build-btn"]').should('not.be.disabled')
   })
 })

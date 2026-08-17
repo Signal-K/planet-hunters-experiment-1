@@ -409,7 +409,7 @@ func ensureCollections(app core.App) {
 	// for that target (sparse voxel edits, rover snapshot, photos). Mirrors
 	// game_states' per-user JSON-blob pattern, but keyed per target since a
 	// player has one voxel world per mining/exploration target, not one
-	// global world. See STS-403/404 (Desk) for the design decision.
+	// global world. See the parent-workspace voxel-world decision for rationale.
 	if _, err := app.FindCollectionByNameOrId("voxel_worlds"); err != nil {
 		col := core.NewBaseCollection("voxel_worlds")
 		col.ListRule = types.Pointer("user = @request.auth.id")

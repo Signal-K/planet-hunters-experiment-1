@@ -54,7 +54,7 @@ function dismissAuthGate() {
 }
 
 describe('Surface Ops settlement journey', () => {
-  it('navigates from Earth Base, purchases rights, and starts launchpad construction', () => {
+  it('navigates from Earth Base, opens site access, and starts launchpad construction', () => {
     cy.viewport(390, 844)
     cy.visit('/game/hub', {
       onBeforeLoad: win => seedState(win, {}),
@@ -68,8 +68,8 @@ describe('Surface Ops settlement journey', () => {
 
     cy.get('[data-testid="hub-surface-ops"]').click()
     cy.location('pathname').should('eq', '/game/surface-ops')
-    cy.get('[data-testid="surface-purchase-rights"]').click()
-    cy.contains('RIGHTS RECORD ACTIVE').should('be.visible')
+    cy.get('[data-testid="surface-purchase-access"]').click()
+    cy.contains('ACCESS PERMIT ACTIVE').should('be.visible')
     cy.get('[data-testid="surface-build-launchpad"]').click()
     cy.contains('CONSTRUCTION ACTIVE').should('be.visible')
     cy.screenshot('surface-ops-portrait-building')
@@ -83,7 +83,7 @@ describe('Surface Ops settlement journey', () => {
         surfaceOps: {
           sites: {
             'moon-south-pole': {
-              rightsPurchasedAt: now - 100_000,
+              siteAccessPurchasedAt: now - 100_000,
               launchpad: {
                 pad: 1,
                 startedAt: now - 2_000_000,

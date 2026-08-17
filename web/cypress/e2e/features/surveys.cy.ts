@@ -111,6 +111,7 @@ function answerSurvey(surveyKey: string) {
 
   dispatchSurvey()
   cy.get('[data-testid="survey-sheet"]').should('be.visible')
+  if (surveyKey === SURVEY_KEYS[0]) cy.screenshot('sprint-13-survey-sheet-mobile')
 
   def.questions.forEach((question, index) => {
     cy.get('[data-testid="survey-question"]')

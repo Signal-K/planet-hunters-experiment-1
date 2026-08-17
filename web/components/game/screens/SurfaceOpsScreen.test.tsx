@@ -13,7 +13,7 @@ function render(player: Player) {
     <SurfaceOpsScreen
       player={player}
       onBack={noop}
-      onPurchaseRights={noop}
+      onPurchaseSiteAccess={noop}
       onBuildLaunchpad={noop}
       onMined={noop}
       onDispatch={noop}
@@ -25,7 +25,7 @@ function render(player: Player) {
 }
 
 describe('SurfaceOpsScreen', () => {
-  it('shows the solo Moon rights gate and equipment-locks later sites', () => {
+  it('shows the solo Moon access gate and equipment-locks later sites', () => {
     const markup = render({
       ...DEFAULT_STATE.player,
       freeOperations: true,
@@ -34,7 +34,7 @@ describe('SurfaceOpsScreen', () => {
 
     expect(markup).toContain('data-testid="surface-ops-screen"')
     expect(markup).toContain('SOLO · NON-TRANSFERABLE')
-    expect(markup).toContain('Purchase Rights')
+    expect(markup).toContain('Open Site')
     expect(markup).toContain('Mars · Arcadia')
     expect(markup).toContain('EQUIPMENT LOCK')
   })
@@ -48,7 +48,7 @@ describe('SurfaceOpsScreen', () => {
       surfaceOps: {
         sites: {
           'moon-south-pole': {
-            rightsPurchasedAt: now - 100_000,
+            siteAccessPurchasedAt: now - 100_000,
             launchpad: {
               pad: 1,
               startedAt: now - 2_000_000,

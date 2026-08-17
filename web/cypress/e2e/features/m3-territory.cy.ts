@@ -139,6 +139,10 @@ describe('M3 — Transport client pick and Free Ops unlock', () => {
       cy.get('[data-testid="resolve-cargo-btn"]').click()
       cy.get('[data-testid="collect-reward-btn"]').click()
       cy.get('[role="dialog"][aria-label="Territory established"]').should('not.exist')
+      // Completing M3 raises the persisted TutorialCompleteSheet before the
+      // Hub's navigation is actionable. Dismiss the real product modal rather
+      // than forcing a covered bottom-tab click.
+      cy.contains('button', 'Start Playing', { timeout: 10000 }).click()
       // Debrief routes back to the Hub (not the Market screen) — navigate to
       // the mission board from there to see the Free Ops explanation.
       cy.contains('h1', 'Earth Base', { timeout: 10000 }).should('be.visible')
