@@ -5,9 +5,13 @@ module.exports = {
     baseUrl: process.env.CYPRESS_baseUrl || 'http://next-app:3001',
     specPattern: 'cypress/e2e/**/*.cy.{js,jsx,ts,tsx}',
     supportFile: 'cypress/support/e2e.ts',
-    video: false,
+    video: true,
     videosFolder: '/tmp/cypress/videos',
     screenshotsFolder: '/tmp/cypress/screenshots',
     screenshotOnRunFailure: true,
+    reporter: 'json',
+    reporterOptions: {
+      output: '/tmp/cypress/results/cypress.json',
+    },
   },
 }

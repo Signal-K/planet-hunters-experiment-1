@@ -64,6 +64,9 @@ services:
       - ./web/package.json:/e2e/package.json:ro
       - ./web/tsconfig.json:/e2e/tsconfig.json:ro
       - ./web/node_modules:/e2e/node_modules:ro
+      - ./web/cypress/screenshots:/tmp/cypress/screenshots
+      - ./web/cypress/videos:/tmp/cypress/videos
+      - ./web/cypress/results:/tmp/cypress/results
     depends_on:
       next-app:
         condition: service_started
