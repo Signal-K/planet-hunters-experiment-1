@@ -76,9 +76,10 @@ export default function GalaxyMap({ mission, targets, compatibleIds, pickedId, o
           backgroundColor: 'var(--ln-void)',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           padding: '12px',
+          touchAction: 'manipulation',
         }}
       >
-        <svg viewBox={`0 0 ${VIEW} ${VIEW}`} style={{ width: '100%', height: '100%', maxWidth: VIEW, maxHeight: VIEW }}>
+        <svg viewBox={`0 0 ${VIEW} ${VIEW}`} style={{ width: '100%', height: '100%', maxWidth: VIEW, maxHeight: VIEW, touchAction: 'manipulation' }}>
           {[1, 2, 3, 4, 5, 6].map(orbit => {
             const hasTarget = targets.some(t => t.orbit === orbit)
             if (!hasTarget) return null
@@ -119,10 +120,29 @@ export default function GalaxyMap({ mission, targets, compatibleIds, pickedId, o
               <g
                 key={t.id}
                 opacity={compatible ? 1 : 0.32}
-                style={{ cursor: compatible ? 'pointer' : 'default' }}
+                role={compatible ? 'button' : undefined}
+                tabIndex={compatible ? 0 : -1}
+                style={{ cursor: compatible ? 'pointer' : 'default', touchAction: 'manipulation' }}
                 onClick={compatible ? () => onPick(t.id) : undefined}
+                onKeyDown={compatible ? (event) => {
+                  if (event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault()
+                    onPick(t.id)
+                  }
+                } : undefined}
                 aria-label={compatible ? `Select ${t.name}` : `${t.name}, unavailable`}
               >
+                {/* Give each body a forgiving native SVG hit area. The visual
+                    marker is intentionally small, but a 44px touch target is
+                    required on phone Safari where fingertip precision is much
+                    lower than a desktop pointer. */}
+                <circle
+                  cx={cx}
+                  cy={cy}
+                  r={size + 18}
+                  fill="transparent"
+                  pointerEvents={compatible ? 'all' : 'none'}
+                />
                 {selected && (
                   <circle cx={cx} cy={cy} r={size + 8} fill="none" stroke="var(--ln-cyan)" strokeWidth={2} />
                 )}

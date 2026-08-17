@@ -170,7 +170,7 @@ export default function AuthGateSheet({ error, onSignIn, onCreateAccount, onCont
           ) : (
             <>
               <div className="auth-gate__quick-copy">
-                <span>NO PASSWORD NEEDED</span> Continue with an email link.
+                <span>NO PASSWORD NEEDED</span> We’ll email a one-time code.
               </div>
               <form onSubmit={handleQuickContinue} className="auth-gate__quick-form">
                 <input
@@ -189,7 +189,7 @@ export default function AuthGateSheet({ error, onSignIn, onCreateAccount, onCont
                   data-testid="auth-gate-quick-submit"
                   className="auth-gate__secondary"
                 >
-                  {quickSubmitting ? '…' : 'Continue'}
+                  {quickSubmitting ? '…' : 'Send Code'}
                 </button>
               </form>
             </>
