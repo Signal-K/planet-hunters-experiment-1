@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import type { RecordModel } from 'pocketbase'
 import { pbShared } from '@/lib/pb'
 import { pbLandnam, exchangeLandnamAuth } from '@/lib/pb-landnam'
-import { ensureGuestAuth, hasStoredCredentials, isGuestAccount, upgradeGuestAccount, createAccountWithEmail } from '@/lib/guestAuth'
+import { ensureGuestAuth, hasStoredCredentials, isGuestAccount, upgradeGuestAccount } from '@/lib/guestAuth'
 import { identifyUser } from '@/lib/posthog'
 import { DEFAULT_STATE, mergeRemoteState, type PartialSave } from '@/lib/game-state'
 import type { GameState } from '@/lib/game-types'
@@ -48,6 +48,10 @@ function authErrorMessage(err: unknown, fallback: string): string {
   if (err instanceof Error && err.message && !/^failed$/i.test(err.message)) return err.message
   const status = responseStatus(err)
   return status ? `${fallback} (${status})` : fallback
+}
+
+function isUniqueConstraintError(err: unknown): boolean {
+  return /\bunique\b/i.test(authErrorMessage(err, ''))
 }
 
 function storedSharedAuth(): { token?: string; record: RecordModel | null } | null {
@@ -564,7 +568,10 @@ export function useAuthSync({
       await pbShared.collection('users').authWithPassword(email, password)
       setAuthGateOpen(false)
     } catch (e) {
-      const msg = authErrorMessage(e, 'Sign in failed')
+      const raw = authErrorMessage(e, 'Sign in failed')
+      const msg = /^failed to authenticate\.?$/i.test(raw)
+        ? 'Sign in failed. Check your email and password, or use the one-time code below.'
+        : raw
       setAuthGateError(msg)
       throw new Error(msg)
     }
@@ -595,35 +602,25 @@ export function useAuthSync({
       setBackendReady(true)
       setAuthGateOpen(false)
     } catch (e) {
-      const msg = authErrorMessage(e, 'Account creation failed')
+      const msg = isUniqueConstraintError(e)
+        ? 'An account already exists for this email. Use Sign In, or send a one-time code below.'
+        : authErrorMessage(e, 'Account creation failed')
       setAuthGateError(msg)
       throw new Error(msg)
     }
   }, [saveRemoteState, setState, storageKey])
 
   // Replaces the old anonymous "continue as guest" skip (KES-97): the gate
-  // now always requires at least an email before play continues, even on the
-  // lightweight path — no account with no way to contact the player.
-  //
-  // KES-107 attempted a two-step OTP flow here (requestOTP then authWithOTP)
-  // so the same "just an email" input would work for both first-time signup
-  // and returning login on a new device. Reverted 2026-08-05: the shared
-  // backend has no SMTP configured, so requestOTP() "succeeds" (the backend
-  // fires the send in the background and can't report delivery failure back
-  // to this call) but no email — and therefore no code — ever arrives,
-  // stranding the player on a code-entry screen with no way through. Back to
-  // always creating a new account instantly, which has no email-delivery
-  // dependency at all. Returning users on a new device still have a fully
-  // working path: Sign In with the password they set. The OTP backend hook
-  // and requestOTP/verifyOtp plumbing are left in place (dormant — nothing
-  // calls them) so cross-device login-by-email can be turned back on here
-  // with just this function once SMTP is actually configured and verified.
+  // now always requires at least an email before play continues. KES-107's
+  // shared-backend OTP hook supports both new email-only accounts and
+  // returning users, so this path must request a code rather than trying to
+  // create a second account for an email that already exists. The latter was
+  // the source of the misleading "must be unique" error on a second device.
   const continueWithEmail = useCallback(async (email: string) => {
     setAuthGateError(null)
     try {
-      await createAccountWithEmail(email)
-      authGateDismissed.current = true
-      setAuthGateOpen(false)
+      const { otpId } = await pbShared.collection('users').requestOTP(email)
+      setAuthGateOtpId(otpId)
     } catch (e) {
       const msg = authErrorMessage(e, 'Could not continue — check your email and try again')
       setAuthGateError(msg)

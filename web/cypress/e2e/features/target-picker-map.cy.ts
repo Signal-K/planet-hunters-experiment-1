@@ -75,4 +75,19 @@ describe('TargetPicker orbital map', () => {
     cy.contains('433 Eros').should('be.visible')
     cy.get('[data-testid="continue-build-btn"]').should('not.be.disabled')
   })
+
+  it('selects a compatible body from its mobile touch target', () => {
+    cy.viewport(390, 844)
+    visitTargetPicker()
+    cy.get('[data-testid="target-picker-orbital-map"]', { timeout: 10000 }).should('be.visible')
+    cy.get('[data-testid="target-picker-orbital-map"] svg g[role="button"]')
+      .should('have.length.greaterThan', 0)
+      .first()
+      .invoke('attr', 'aria-label')
+      .then(label => {
+        const targetName = String(label).replace(/^Select\s+/, '')
+        cy.get('[data-testid="target-picker-orbital-map"] svg g[role="button"]').first().click()
+        cy.get('[data-testid="target-detail-expand"]').should('contain.text', targetName)
+      })
+  })
 })
