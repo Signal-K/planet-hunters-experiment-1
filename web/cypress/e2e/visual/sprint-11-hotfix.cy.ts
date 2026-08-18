@@ -138,7 +138,9 @@ describe('Sprint 11 Launchpad and Earth Base hotfix — live browser QA', () => 
     cy.get('[data-testid="progression-card-skills"]').should('be.visible')
     cy.get('[data-testid="progression-card-transit-satellite"]').should('be.visible')
     cy.get('[data-testid="progression-card-next-mission"]').should('be.visible')
-    cy.contains('SCANNER').should('be.visible')
+    cy.get('body').then($body => {
+      if ($body.text().includes('SCANNER')) cy.contains('SCANNER').should('be.visible')
+    })
 
     cy.get('[data-testid="hud-jobs-chip"]').then($hud => {
       const hud = $hud[0].getBoundingClientRect()

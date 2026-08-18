@@ -22,6 +22,9 @@ jobs:
   visual-qa:
     name: Headless Chrome — full game playthrough
     runs-on: ubuntu-latest
+    env:
+      NEXT_PUBLIC_FEATURE_SCAN_STATION: "true"
+      NEXT_PUBLIC_E2E_AUTH_AUTO_CONTINUE: "true"
 
     steps:
       - uses: actions/checkout@v4
@@ -116,8 +119,6 @@ jobs:
           CYPRESS_baseUrl: http://localhost:3099
           NEXT_PUBLIC_LANDNAM_PB_URL: http://127.0.0.1:8091
           NEXT_PUBLIC_SHARED_PB_URL: http://127.0.0.1:8090
-          NEXT_PUBLIC_FEATURE_SCAN_STATION: true
-          NEXT_PUBLIC_E2E_AUTH_AUTO_CONTINUE: true
           PORT: 3099
           CI: true
 
