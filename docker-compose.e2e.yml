@@ -1,6 +1,7 @@
 services:
   shared-pb:
     image: ghcr.io/muchobien/pocketbase:0.39.0
+    command: ["serve", "--http=0.0.0.0:8090", "--dir=/pb/pb_data", "--migrationsDir=/pb/pb_migrations"]
     ports:
       - "18090:8090"
     volumes:
@@ -44,6 +45,7 @@ services:
       NEXT_PUBLIC_SHARED_PB_URL: http://shared-pb:8090
       NEXT_PUBLIC_LANDNAM_PB_URL: http://landnam-pb:8090
       NEXT_PUBLIC_FEATURE_SCAN_STATION: "true"
+      NEXT_PUBLIC_E2E_AUTH_AUTO_CONTINUE: "true"
       NEXT_TELEMETRY_DISABLED: "1"
       PORT: "3001"
     ports:

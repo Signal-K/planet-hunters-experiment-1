@@ -8,6 +8,11 @@ describe('Landnam frontend stack', () => {
   })
 
   it('renders the design-system onboarding surface', () => {
+    cy.get('[data-testid="auth-gate-quick-email"]', { timeout: 10000 })
+      .should('be.visible')
+      .type(`frontend-stack-${Date.now()}@example.com`)
+    cy.get('[data-testid="auth-gate-quick-submit"]').click()
+    cy.get('[data-testid="auth-gate-quick-email"]', { timeout: 10000 }).should('not.exist')
     cy.get('[data-testid="intro-begin-btn"]').click()
     cy.contains('EARTH BASE · SETUP').should('be.visible')
     cy.contains('Build a Launchpad').should('be.visible')

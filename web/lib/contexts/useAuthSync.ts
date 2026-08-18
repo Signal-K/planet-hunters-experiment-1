@@ -619,6 +619,15 @@ export function useAuthSync({
   const continueWithEmail = useCallback(async (email: string) => {
     setAuthGateError(null)
     try {
+      // Release and visual runs use deterministic PocketBase stubs rather than
+      // an inbox. Keep the real OTP flow as the default, but let those runs
+      // create the same local test account that a verified code would unlock.
+      if (process.env.NEXT_PUBLIC_E2E_AUTH_AUTO_CONTINUE === 'true') {
+        const password = `E2eAuto-${Date.now()}-Aa1!`
+        await createAccountFromGate(email, password)
+        localStorage.setItem('landnam-guest-credentials', JSON.stringify({ email, password }))
+        return
+      }
       const { otpId } = await pbShared.collection('users').requestOTP(email)
       setAuthGateOtpId(otpId)
     } catch (e) {
@@ -647,7 +656,7 @@ export function useAuthSync({
       setAuthGateError(msg)
       throw new Error(msg)
     }
-  }, [authGateOtpId])
+  }, [authGateOtpId, createAccountFromGate])
 
   const resetGame = useCallback(async (defaultState: GameState) => {
     setState(defaultState)

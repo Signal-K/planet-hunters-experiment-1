@@ -544,7 +544,11 @@ button { cursor: pointer; }
 @media (max-width: 759px) {
   .auth-gate { align-items: flex-end; padding: 0; }
   .auth-gate__panel { display: block; width: 100%; max-height: calc(100dvh - 16px); overflow-y: auto; border-bottom: 0; border-radius: var(--ln-r-xl) var(--ln-r-xl) 0 0; }
-  .auth-gate__scene { min-height: 176px; border-right: 0; border-bottom: 1px solid var(--ln-hairline); }
+  /* The scene is useful on roomy screens, but it consumes the vertical budget
+     of the account sheet on phones and pushes the actual continuation input
+     below the clipped scroll viewport. Mobile auth is intentionally a compact
+     form so the first actionable control is always reachable. */
+  .auth-gate__scene { display: none; }
   .auth-gate__scene-copy { left: var(--ln-s-4); top: var(--ln-s-4); }
   .auth-gate__scene-title { font-size: 22px; }
   .auth-gate__orbit--outer { width: 250px; height: 112px; left: 34%; top: 32%; }
