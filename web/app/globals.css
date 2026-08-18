@@ -863,8 +863,59 @@ button { cursor: pointer; }
   padding-bottom: 280px;
 }
 
+.rocket-vehicle-stage {
+  min-width: 0;
+}
+
+.rocket-route-notice {
+  margin-bottom: 8px;
+  padding: 8px 12px;
+  border: 1px solid var(--ln-cyan-border);
+  border-radius: var(--ln-r-md);
+  background: var(--ln-overlay);
+  color: var(--ln-cyan);
+  font: 700 10px var(--ln-font-display);
+  letter-spacing: 0.08em;
+  line-height: 1.35;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.rocket-tier-badge {
+  position: absolute;
+  top: 14px;
+  right: 16px;
+}
+
+.rocket-modules summary {
+  margin-bottom: 8px;
+  color: var(--ln-text-muted);
+  cursor: pointer;
+  font: 700 9px var(--ln-font-display);
+  letter-spacing: 0.22em;
+  list-style-position: inside;
+  text-transform: uppercase;
+}
+
+.rocket-modules summary::marker {
+  color: var(--ln-cyan);
+}
+
 @media (max-width: 899px) {
-  .mission-setup-screen--rocket .rocket-vehicle-frame { min-height: 220px; }
+  .mission-setup-screen--rocket .rocket-vehicle-frame {
+    min-height: 188px;
+  }
+
+  .mission-setup-screen--rocket .rocket-tier-badge {
+    top: 8px;
+    right: 10px;
+  }
+
+  .mission-setup-screen--rocket .rocket-tier-badge span {
+    padding: 4px 8px;
+    font-size: 9px;
+    letter-spacing: 0.12em;
+  }
 }
 
 .mission-setup-screen--assembly .assembly-card .mission-setup-card-scroll {
@@ -957,6 +1008,67 @@ button { cursor: pointer; }
   }
   .mission-setup-card-scroll {
     padding: 14px;
+  }
+
+  .mission-setup-screen--rocket .mission-setup-content {
+    grid-template-rows: auto minmax(0, 1fr);
+    gap: 8px;
+    padding-top: 74px;
+    padding-bottom: 254px;
+  }
+
+  .mission-setup-screen--rocket .rocket-route-notice {
+    margin-bottom: 6px;
+    padding: 6px 8px;
+    font-size: 9px;
+    letter-spacing: 0.06em;
+  }
+
+  .mission-setup-screen--rocket .rocket-vehicle-frame {
+    min-height: 176px;
+  }
+
+  .mission-setup-screen--rocket .rocket-summary-scroll {
+    gap: 12px !important;
+    padding: 12px;
+  }
+
+  .mission-setup-screen--rocket .rocket-summary-card > .rocket-summary-scroll > div:first-child > div:last-child {
+    display: -webkit-box;
+    overflow: hidden;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+  }
+
+  .mission-setup-screen--rocket .rocket-stat-grid {
+    gap: 6px !important;
+  }
+
+  .mission-setup-screen--rocket .rocket-stat-grid > div {
+    padding: 8px 7px 7px !important;
+  }
+
+  .mission-setup-screen--rocket .rocket-stat-grid > div > div:nth-child(2) {
+    font-size: 16px !important;
+  }
+
+  .mission-setup-screen--rocket .rocket-stat-grid > div > div:last-child {
+    font-size: 9px !important;
+  }
+
+  .mission-setup-screen--rocket .rocket-modules {
+    padding: 8px 0;
+    border-top: 1px solid var(--ln-hairline);
+    border-bottom: 1px solid var(--ln-hairline);
+  }
+
+  .mission-setup-screen--rocket .rocket-modules summary {
+    margin: 0;
+    padding: 2px 0;
+  }
+
+  .mission-setup-screen--rocket .rocket-modules[open] summary {
+    margin-bottom: 8px;
   }
 }
 

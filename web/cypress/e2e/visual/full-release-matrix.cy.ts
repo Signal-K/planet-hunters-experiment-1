@@ -92,6 +92,17 @@ function pickVisibleTarget(name: string) {
   })
 }
 
+function assertRocketLayout(action: RegExp | string) {
+  cy.get('.rocket-vehicle-frame').should('be.visible')
+  cy.get('.rocket-tier-badge').should('be.visible')
+  cy.get('button', { timeout: 10000 }).contains(action).should('be.visible')
+  cy.get('.rocket-route-notice').then(notice => {
+    cy.get('.rocket-vehicle-frame').then(frame => {
+      expect(notice[0].getBoundingClientRect().bottom).to.be.at.most(frame[0].getBoundingClientRect().top + 1)
+    })
+  })
+}
+
 function playM1(viewport: string) {
   goToMissions()
   screenshot(viewport, 'm1-mission-board')
@@ -106,6 +117,7 @@ function playM1(viewport: string) {
   pickVisibleTarget('433 Eros')
   cy.get('[data-testid="continue-build-btn"]').should('be.visible').click()
   cy.contains('Select Rocket', { timeout: 10000 }).should('be.visible')
+  assertRocketLayout('Launch with Explorer')
   screenshot(viewport, 'm1-rocket-selection')
 
   cy.contains('button', 'Launch with Explorer').should('be.visible').click()
@@ -130,6 +142,7 @@ function playM2(viewport: string) {
   pickVisibleTarget('101955 Bennu')
   cy.get('[data-testid="continue-build-btn"]').should('be.visible').click()
   cy.contains('Select Rocket', { timeout: 10000 }).should('be.visible')
+  assertRocketLayout(/Purchase/)
   screenshot(viewport, 'm2-rocket-selection')
 
   cy.contains('button', /Purchase/).first().should('be.visible').click()
