@@ -102,7 +102,9 @@ function pickVisibleTarget(name: string) {
   cy.get('[data-testid="target-picker-orbital-map"]', { timeout: 10000 }).should('be.visible')
   cy.get(`[data-testid="target-picker-orbital-map"] svg g[role="button"][aria-label="Select ${name}"]`)
     .should('be.visible')
-    .then($el => { ($el[0] as HTMLElement).click() })
+    .then($el => {
+      $el[0].dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, view: window }))
+    })
   cy.window().then(win => {
     if (win.innerWidth < 821) {
       cy.get('[data-testid="target-detail-expand"]').should('contain.text', name)
