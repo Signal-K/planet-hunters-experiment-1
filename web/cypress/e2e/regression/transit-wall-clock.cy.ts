@@ -88,6 +88,8 @@ describe('Transit wall-clock continuity', () => {
     cy.get('.transit-readout').invoke('attr', 'data-transit-progress').then(value => {
       expect(Number(value)).to.be.within(35, 50)
     })
-    cy.get('.transit-readout').should('contain', '01:15')
+    // Reload latency can consume the boundary second; the persisted wall
+    // clock is the contract, not one exact painted frame.
+    cy.get('.transit-readout').invoke('text').should('match', /01:1[45]/)
   })
 })

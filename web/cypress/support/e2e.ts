@@ -76,6 +76,17 @@ beforeEach(() => {
     body: { token: 'e2e-token', record: { id: 'e2e-user', email: 'e2e@landnam.guest' } },
   }).as('pbAuthRefreshGet')
 
+  // Offline journeys still exercise the real Landnam auth hand-off. Keep the
+  // hand-off deterministic alongside the shared-auth stubs so a fake guest
+  // session cannot leave the auth gate mounted after the first page load.
+  cy.intercept('POST', '**/api/landnam-auth/exchange', {
+    statusCode: 200,
+    body: {
+      token: 'e2e-landnam-token',
+      record: { id: 'e2e-user', email: 'e2e@landnam.guest', lastExchangeAt: new Date().toISOString() },
+    },
+  }).as('pbLandnamExchange')
+
   // Return 404 for game_states so the real PB record for 'e2e-user' never overrides test localStorage state
   cy.intercept('GET', '**/api/collections/game_states/records*', { statusCode: 404, body: { code: 404, message: 'The requested resource wasn\'t found.' } }).as('pbGameState')
 

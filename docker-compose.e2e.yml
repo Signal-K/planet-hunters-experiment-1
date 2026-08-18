@@ -3,6 +3,8 @@ services:
     image: ghcr.io/muchobien/pocketbase:0.39.0
     ports:
       - "18090:8090"
+    volumes:
+      - ./e2e/shared-pb/pb_migrations:/pb/pb_migrations:ro
     healthcheck:
       test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8090/api/health"]
       interval: 5s
@@ -41,6 +43,7 @@ services:
       POCKETBASE_INTERNAL_URL: http://shared-pb:8090
       NEXT_PUBLIC_SHARED_PB_URL: http://shared-pb:8090
       NEXT_PUBLIC_LANDNAM_PB_URL: http://landnam-pb:8090
+      NEXT_PUBLIC_FEATURE_SCAN_STATION: "true"
       NEXT_TELEMETRY_DISABLED: "1"
       PORT: "3001"
     ports:
@@ -52,7 +55,7 @@ services:
   cypress:
     image: cypress/included:15.16.0
     entrypoint: ["/bin/sh", "-c"]
-    command: ["cypress run --reporter json > /tmp/cypress/results/cypress.json; status=$$?; exit $$status"]
+    command: ["status=0; cypress run --browser chrome --reporter json > /tmp/cypress/results/cypress.json || status=$$?; CYPRESS_allowSurveys=true cypress run --browser chrome --spec cypress/e2e/features/surveys.cy.ts --reporter json > /tmp/cypress/results/surveys.json || status=$$?; exit $$status"]
     working_dir: /e2e
     environment:
       CYPRESS_baseUrl: http://next-app:3001

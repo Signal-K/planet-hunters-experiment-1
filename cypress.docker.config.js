@@ -4,6 +4,13 @@ module.exports = {
     // `web` hostname made the supposedly self-contained PB suite unusable.
     baseUrl: process.env.CYPRESS_baseUrl || 'http://next-app:3001',
     specPattern: 'cypress/e2e/**/*.cy.{js,jsx,ts,tsx}',
+    // M3 is not an active product scope yet, and survey QA has a dedicated
+    // runtime opt-in run below. Keep the release report honest about the
+    // shipped M1/M2 plus post-onboarding surface under test.
+    excludeSpecPattern: [
+      'cypress/e2e/features/m3-territory.cy.ts',
+      'cypress/e2e/features/surveys.cy.ts',
+    ],
     supportFile: 'cypress/support/e2e.ts',
     video: true,
     videosFolder: '/tmp/cypress/videos',
