@@ -25,6 +25,22 @@ function screenshot(viewport: string, name: string) {
   cy.screenshot(`release-${viewport}-${name}`)
 }
 
+// The release matrix deliberately crosses several React screen transitions.
+// Cypress's actionability retry can retain a button from the previous render
+// while the next screen is already replacing it. Dispatch the click from the
+// element Cypress just resolved, then assert the destination separately.
+function clickDom(selector: string) {
+  cy.get(selector).should('be.visible').then($el => {
+    ($el[0] as HTMLElement).click()
+  })
+}
+
+function clickButton(text: string | RegExp) {
+  cy.contains('button', text).should('be.visible').then($el => {
+    ($el[0] as HTMLElement).click()
+  })
+}
+
 function suppressNonGameplaySurfaces(win: Window) {
   win.localStorage.setItem(SURVEY_KEY, JSON.stringify(SURVEYS))
   win.localStorage.setItem(SNOOZE_KEY, String(Date.now() + 365 * 24 * 60 * 60 * 1000))
@@ -51,9 +67,9 @@ function goToMissions() {
   cy.window().then(win => {
     if (win.innerWidth >= 1024) {
       cy.get('[data-testid="bottom-tab-missions"]').should('not.be.visible')
-      cy.get('[data-testid="hud-jobs-chip"]').should('be.visible').click()
+      clickDom('[data-testid="hud-jobs-chip"]')
     } else {
-      cy.get('[data-testid="bottom-tab-missions"]').should('be.visible').click()
+      clickDom('[data-testid="bottom-tab-missions"]')
     }
   })
   cy.contains('Mission Board', { timeout: 10000 }).should('be.visible')
@@ -67,18 +83,18 @@ function completeMiningDeterministically() {
   // still prove the mission/debrief transitions.
   cy.get('[data-testid="dev-skip-mining-btn"]')
     .should('be.visible')
-    .click()
+    .then($el => { ($el[0] as HTMLElement).click() })
   cy.get('[data-testid="return-home-btn"]', { timeout: 10000 })
     .should('be.visible')
     .and('not.be.disabled')
-    .click()
+    .then($el => { ($el[0] as HTMLElement).click() })
 }
 
 function completeDebrief() {
   cy.contains('MISSION COMPLETE', { timeout: 15000 }).should('be.visible')
-  cy.get('[data-testid="resolve-cargo-btn"]').should('be.visible').click()
+  clickDom('[data-testid="resolve-cargo-btn"]')
   cy.contains('Payout').should('be.visible')
-  cy.get('[data-testid="collect-reward-btn"]').should('be.visible').click()
+  clickDom('[data-testid="collect-reward-btn"]')
   cy.contains('h1', 'Earth Base', { timeout: 10000 }).should('be.visible')
 }
 
@@ -86,7 +102,7 @@ function pickVisibleTarget(name: string) {
   cy.get('[data-testid="target-picker-orbital-map"]', { timeout: 10000 }).should('be.visible')
   cy.get(`[data-testid="target-picker-orbital-map"] svg g[role="button"][aria-label="Select ${name}"]`)
     .should('be.visible')
-    .click()
+    .then($el => { ($el[0] as HTMLElement).click() })
   cy.window().then(win => {
     if (win.innerWidth < 821) {
       cy.get('[data-testid="target-detail-expand"]').should('contain.text', name)
@@ -116,18 +132,18 @@ function playM1(viewport: string) {
   cy.get('[data-testid="mission-card-generated-s1-starter-bulk-1"]')
     .scrollIntoView()
     .should('be.visible')
-    .click()
+    .then($el => { ($el[0] as HTMLElement).click() })
   cy.contains('Pick Target', { timeout: 10000 }).should('be.visible')
   screenshot(viewport, 'm1-target-picker')
 
   pickVisibleTarget('433 Eros')
-  cy.get('[data-testid="continue-build-btn"]').should('be.visible').click()
+  clickDom('[data-testid="continue-build-btn"]')
   cy.contains('Select Rocket', { timeout: 10000 }).should('be.visible')
   assertRocketLayout('Launch with Explorer')
   screenshot(viewport, 'm1-rocket-selection')
 
-  cy.contains('button', 'Launch with Explorer').should('be.visible').click()
-  cy.get('[data-testid="launch-btn"]', { timeout: 10000 }).should('be.visible').click()
+  clickButton('Launch with Explorer')
+  clickDom('[data-testid="launch-btn"]')
   completeMiningDeterministically()
   screenshot(viewport, 'm1-mining')
   completeDebrief()
@@ -141,18 +157,20 @@ function playM2(viewport: string) {
   cy.get('[data-testid="mission-card-generated-s2-starter-bulk-4"]')
     .scrollIntoView()
     .should('be.visible')
-    .click()
+    .then($el => { ($el[0] as HTMLElement).click() })
   cy.contains('Pick Target', { timeout: 10000 }).should('be.visible')
   screenshot(viewport, 'm2-target-picker')
 
   pickVisibleTarget('101955 Bennu')
-  cy.get('[data-testid="continue-build-btn"]').should('be.visible').click()
+  clickDom('[data-testid="continue-build-btn"]')
   cy.contains('Select Rocket', { timeout: 10000 }).should('be.visible')
   assertRocketLayout(/Purchase/)
   screenshot(viewport, 'm2-rocket-selection')
 
-  cy.contains('button', /Purchase/).first().should('be.visible').click()
-  cy.get('[data-testid="launch-btn"]', { timeout: 10000 }).should('be.visible').click()
+  cy.contains('button', /Purchase/).first().should('be.visible').then($el => {
+    ($el[0] as HTMLElement).click()
+  })
+  clickDom('[data-testid="launch-btn"]')
   completeMiningDeterministically()
   screenshot(viewport, 'm2-mining')
   completeDebrief()

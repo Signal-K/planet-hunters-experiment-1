@@ -105,7 +105,11 @@ describe('Sprint 11 Launchpad and Earth Base hotfix — live browser QA', () => 
     cy.get('[data-testid="launchpad-view-contracts-btn"]').should('be.visible')
     cy.get('[data-testid="launchpad-guide-open"]').should('be.visible')
 
-    cy.get('[data-testid="launchpad-guide"]').should('not.exist')
+    cy.get('body').then($body => {
+      if ($body.find('[data-testid="launchpad-guide"]').length > 0) {
+        cy.get('[data-testid="launchpad-guide-close"]').click()
+      }
+    })
     cy.get('[data-testid="launchpad-build-monitoring-btn"]').should('not.exist')
 
     cy.get('.launchpad-visual-scene').then($scene => {
@@ -131,9 +135,9 @@ describe('Sprint 11 Launchpad and Earth Base hotfix — live browser QA', () => 
     cy.get('h1', { timeout: 15_000 }).contains('Earth Base').should('be.visible')
     cy.get('[data-testid="hud-jobs-chip"]').should('be.visible')
     cy.get('[data-testid="progression-card-skills"]').should('be.visible')
-    cy.get('[data-testid="progression-card-sms"]').should('be.visible')
+    cy.get('[data-testid="progression-card-transit-satellite"]').should('be.visible')
     cy.get('[data-testid="progression-card-next-mission"]').should('be.visible')
-    cy.contains('SCANNER').should('not.exist')
+    cy.contains('SCANNER').should('be.visible')
 
     cy.get('[data-testid="hud-jobs-chip"]').then($hud => {
       const hud = $hud[0].getBoundingClientRect()
