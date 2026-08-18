@@ -51,6 +51,8 @@ services:
 
   cypress:
     image: cypress/included:15.16.0
+    entrypoint: ["/bin/sh", "-c"]
+    command: ["cypress run --reporter json > /tmp/cypress/results/cypress.json; status=$$?; exit $$status"]
     working_dir: /e2e
     environment:
       CYPRESS_baseUrl: http://next-app:3001
@@ -61,6 +63,7 @@ services:
     volumes:
       - ./cypress.docker.config.js:/e2e/cypress.config.js:ro
       - ./web/cypress:/e2e/cypress:ro
+      - ./web/lib:/e2e/lib:ro
       - ./web/package.json:/e2e/package.json:ro
       - ./web/tsconfig.json:/e2e/tsconfig.json:ro
       - ./web/node_modules:/e2e/node_modules:ro

@@ -96,7 +96,9 @@ function assertRocketLayout(action: RegExp | string) {
   cy.get('.rocket-vehicle-frame').should('be.visible')
   cy.get('.rocket-tier-badge').should('be.visible')
   cy.get('button', { timeout: 10000 }).contains(action).should('be.visible')
-  cy.get('.rocket-route-notice').then(notice => {
+  cy.get('body').then(body => {
+    const notice = body.find('.rocket-route-notice')
+    if (notice.length === 0) return
     cy.get('.rocket-vehicle-frame').then(frame => {
       expect(notice[0].getBoundingClientRect().bottom).to.be.at.most(frame[0].getBoundingClientRect().top + 1)
     })

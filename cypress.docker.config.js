@@ -9,9 +9,9 @@ module.exports = {
     videosFolder: '/tmp/cypress/videos',
     screenshotsFolder: '/tmp/cypress/screenshots',
     screenshotOnRunFailure: true,
+    // Mocha's built-in JSON reporter writes to stdout. The compose command
+    // captures that stream into the mounted results directory so a report is
+    // still available when Cypress exits non-zero.
     reporter: 'json',
-    reporterOptions: {
-      output: '/tmp/cypress/results/cypress.json',
-    },
   },
 }
