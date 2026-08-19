@@ -160,6 +160,7 @@ describe('Sprint 11 Launchpad and Earth Base hotfix — live browser QA', () => 
     cy.screenshot('sprint-11-hotfix-earth-base', { capture: 'viewport' })
     cy.get('[data-testid="building-launchpad-hit"]').click({ scrollBehavior: false })
     cy.location('pathname', { timeout: 10_000 }).should('eq', '/game/launchpad')
-    cy.get('[data-testid="launchpad-build-monitoring-btn"]').should('be.visible')
+    cy.get('[data-testid="launchpad-monitoring-structure"]').should('be.visible')
+    cy.get('[data-testid="launchpad-build-monitoring-btn"]').should('not.exist')
   })
 })

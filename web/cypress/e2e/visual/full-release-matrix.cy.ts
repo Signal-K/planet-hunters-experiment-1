@@ -80,14 +80,12 @@ function completeMiningDeterministically() {
   cy.get('[data-testid="dev-skip-mining-btn"]')
     .should('be.visible')
     .click({ force: true })
-  cy.get('[data-testid="return-home-btn"]', { timeout: 10000 })
-    .should('be.visible')
-    .and('not.be.disabled')
-    .click({ force: true })
+  // The development shortcut completes the mining run itself. Waiting for a
+  // second mining-screen action here races the committed debrief transition.
+  cy.contains('MISSION COMPLETE', { timeout: 15000 }).should('be.visible')
 }
 
 function completeDebrief() {
-  cy.contains('MISSION COMPLETE', { timeout: 15000 }).should('be.visible')
   clickDom('[data-testid="resolve-cargo-btn"]')
   cy.contains('Payout').should('be.visible')
   clickDom('[data-testid="collect-reward-btn"]')
