@@ -374,6 +374,7 @@ export function ScreenContent({
           player={game.player}
           onBack={() => game.go('hub')}
           onPurchaseSiteAccess={game.purchaseSiteAccess}
+          onStartFieldOperation={game.startFieldOperation}
           onBuildLaunchpad={game.buildSettlementLaunchpad}
           onMined={game.recordSurfaceMined}
           onDispatch={game.dispatchSurfaceFerry}

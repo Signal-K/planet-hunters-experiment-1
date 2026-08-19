@@ -3,6 +3,7 @@
 
 import type { RocketConfig, Mission, Target, TessClassification, TessVerdict, TransitRange, AsteroidClassification, AsteroidVerdict } from '@/lib/data'
 import type { RoverTerrainClass } from '@/lib/data/rover-scouting'
+import type { RoverSpec } from '@takeon/engine'
 
 export interface DailyClientPool {
   date: string        // 'YYYY-MM-DD'
@@ -63,6 +64,18 @@ export interface SurfaceSiteProgress {
   launchpad?: SettlementLaunchpadRecord
   storage: Record<string, number>
   ferry?: SettlementFerryRecord
+  /** The host-owned identity/configuration for one resumable TakeOn field session. */
+  fieldOperation?: FieldOperation
+}
+
+export interface FieldOperation {
+  id: string
+  siteId: string
+  bodyId: string
+  seed: number
+  rover: RoverSpec
+  label: string
+  startedAt: number
 }
 
 export interface SurfaceOpsState {
@@ -355,6 +368,7 @@ export interface GameActions {
   onRedockComplete: (cargo: Record<string, number>) => void
   confirmShipCustomizerBuild: (installed: Partial<Record<import('@/lib/data').ShipRoomKind, string>>, prevInstalled: Partial<Record<import('@/lib/data').ShipRoomKind, string>>) => boolean
   purchaseSiteAccess: (siteId: string) => void
+  startFieldOperation: (siteId: string) => void
   buildSettlementLaunchpad: (siteId: string, pad: 0 | 1 | 2) => void
   recordSurfaceMined: (siteId: string, mineralId: string, amount: number) => void
   dispatchSurfaceFerry: (siteId: string) => void

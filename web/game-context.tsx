@@ -252,6 +252,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       abandonMission: economy.abandonMission,
       confirmShipCustomizerBuild: economy.confirmShipCustomizerBuild,
       purchaseSiteAccess: surfaceOps.purchaseSiteAccess,
+      startFieldOperation: surfaceOps.startFieldOperation,
       buildSettlementLaunchpad: surfaceOps.buildSettlementLaunchpad,
       recordSurfaceMined: surfaceOps.recordSurfaceMined,
       dispatchSurfaceFerry: surfaceOps.dispatchSurfaceFerry,

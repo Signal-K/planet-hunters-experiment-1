@@ -7,6 +7,7 @@ import {
 import {
   applyAcknowledgeSurfaceFerry,
   applyBuildSettlementLaunchpad,
+  applyStartFieldOperation,
   applyDispatchSurfaceFerry,
   applyPurchaseSiteAccess,
   applyReconcileSurfaceFerry,
@@ -30,6 +31,10 @@ export function useSurfaceOpsActions(
 
   const buildSettlementLaunchpad = useCallback((siteId: string, pad: 0 | 1 | 2) => {
     setState(state => applyBuildSettlementLaunchpad(state, siteId, pad))
+  }, [setState])
+
+  const startFieldOperation = useCallback((siteId: string) => {
+    setState(state => applyStartFieldOperation(state, siteId))
   }, [setState])
 
   const recordSurfaceMined = useCallback((siteId: string, mineralId: string, amount: number) => {
@@ -94,6 +99,7 @@ export function useSurfaceOpsActions(
 
   return {
     purchaseSiteAccess,
+    startFieldOperation,
     buildSettlementLaunchpad,
     recordSurfaceMined,
     dispatchSurfaceFerry,

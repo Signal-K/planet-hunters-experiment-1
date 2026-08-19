@@ -14,6 +14,7 @@ function render(player: Player) {
       player={player}
       onBack={noop}
       onPurchaseSiteAccess={noop}
+      onStartFieldOperation={noop}
       onBuildLaunchpad={noop}
       onMined={noop}
       onDispatch={noop}
