@@ -102,8 +102,20 @@ describe('Takeon visual audit: actual rendered gameplay, not just presence', () 
 
     cy.get('[data-testid="surface-purchase-access"]', { timeout: 15000 }).should('not.exist')
     cy.contains('button[role="tab"]', 'FIELD', { timeout: 15000 }).should('not.be.disabled').click()
+    cy.contains('button', 'Deploy Prospector', { timeout: 15000 }).click()
     cy.get('[data-testid="surface-field-view"]', { timeout: 15000 }).should('be.visible')
-    cy.get('[data-testid="surface-field-view"] canvas[aria-label]', { timeout: 15000 }).should('be.visible')
+    cy.window().then(win => {
+      cy.get('[data-testid="surface-field-view"] canvas[aria-label]', { timeout: 15000 })
+        .should('be.visible')
+        .then($canvas => {
+          const rect = $canvas[0].getBoundingClientRect()
+          expect(rect.bottom, 'desktop canvas bottom').to.be.at.most(win.innerHeight - 8)
+        })
+    })
+    cy.get('[data-testid="surface-field-route-readout"]')
+      .should('contain.text', 'TAP TERRAIN TO PLAN')
+    cy.get('[data-testid="surface-field-view"] canvas[aria-label]').click('center', { force: true })
+    cy.wait(500)
     // Let PIXI actually paint a frame (ready/init is async) before capturing.
     cy.wait(1500)
     cy.screenshot('takeon-surface-ops-field-view')
@@ -130,17 +142,20 @@ describe('Takeon visual audit: actual rendered gameplay, not just presence', () 
 
     cy.get('[data-testid="surface-purchase-access"]', { timeout: 15000 }).should('not.exist')
     cy.contains('button[role="tab"]', 'FIELD', { timeout: 15000 }).should('not.be.disabled').click()
-    cy.get('[data-testid="surface-field-view"] canvas[aria-label]', { timeout: 15000 })
-      .should('be.visible')
-      .then($canvas => {
-        // The whole point of the FIELD tab is the canvas — a player
-        // shouldn't have to scroll a full screen to see any gameplay after
-        // tapping it. KES-202 found the heading + copy block above it
-        // pushing the canvas ~500px down on a narrow viewport; this asserts
-        // it stays inside the first 844px without scrolling.
-        const top = $canvas[0].getBoundingClientRect().top
-        expect(top, 'canvas top offset, no scroll').to.be.lessThan(844)
-      })
+    cy.contains('button', 'Deploy Prospector', { timeout: 15000 }).click()
+    cy.window().then(win => {
+      cy.get('[data-testid="surface-field-view"] canvas[aria-label]', { timeout: 15000 })
+        .should('be.visible')
+        .then($canvas => {
+          // The whole point of the FIELD tab is the canvas — a player
+          // shouldn't have to scroll a full screen to see any gameplay after
+          // tapping it. KES-202 found the heading + copy block above it
+          // pushing the canvas below the usable viewport; retain at least a
+          // 160px slice of actual TakeOn terrain in the first view.
+          const top = $canvas[0].getBoundingClientRect().top
+          expect(top, 'canvas top offset, no scroll').to.be.lessThan(win.innerHeight - 160)
+        })
+    })
     cy.wait(1500)
     cy.screenshot('takeon-surface-ops-field-view-mobile')
   })

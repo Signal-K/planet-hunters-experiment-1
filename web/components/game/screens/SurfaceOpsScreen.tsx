@@ -96,6 +96,7 @@ export default function SurfaceOpsScreen({
   const [selectedSiteId, setSelectedSiteId] = useState(SURFACE_SITES[0].id)
   const [selectedPad, setSelectedPad] = useState<0 | 1 | 2>(0)
   const [view, setView] = useState<SurfaceView>('logistics')
+  const [routeSteps, setRouteSteps] = useState(0)
   const [now, setNow] = useState(() => Date.now())
 
   const definition = SURFACE_SITES.find(site => site.id === selectedSiteId)
@@ -143,6 +144,10 @@ export default function SurfaceOpsScreen({
     if (mineralId) onMined(definition.id, mineralId, event.payload.amount)
   }, [definition.id, onMined])
 
+  const handleRouteChange = useCallback((steps: number) => {
+    setRouteSteps(steps)
+  }, [])
+
   const launchpadCost = `${formatCurrency(SETTLEMENT_LAUNCHPAD.costFrancs, { compact: true })} · ${
     Object.entries(SETTLEMENT_LAUNCHPAD.costMaterials)
       .map(([id, amount]) => `${amount} ${MINERAL_META[id]?.sym ?? id}`)
@@ -150,7 +155,7 @@ export default function SurfaceOpsScreen({
   }`
 
   return (
-    <div className={styles.screen} data-testid="surface-ops-screen">
+    <div className={styles.screen} data-testid="surface-ops-screen" data-view={view}>
       <TopBar
         eyebrow="SURFACE OPS · SOLO SITE CONTROL"
         title="Surface Operations"
@@ -159,7 +164,7 @@ export default function SurfaceOpsScreen({
         francs={player.francs}
       />
 
-      <main className={styles.content}>
+      <main className={styles.content} data-view={view}>
         <section className={styles.siteRail} aria-label="Surface sites">
           {SURFACE_SITES.map(site => {
             const siteProgress = surfaceSiteProgress(player, site.id)
@@ -224,6 +229,10 @@ export default function SurfaceOpsScreen({
               <span className={styles.statusPill}>SYNCED</span>
             </div>
             <p className={styles.sectionCopy}>The Prospector is a named Landnam operation. Field yield feeds the settlement buffer; return to Logistics when full.</p>
+            <div className={styles.routeReadout} data-testid="surface-field-route-readout">
+              <span>FIELD ROUTE</span>
+              <strong>{routeSteps > 0 ? `${routeSteps} SAFE STEPS` : 'TAP TERRAIN TO PLAN'}</strong>
+            </div>
             <TakeOnMount
               missionId={progress.fieldOperation.id}
               bodyId={progress.fieldOperation.bodyId}
@@ -231,6 +240,7 @@ export default function SurfaceOpsScreen({
               rover={progress.fieldOperation.rover}
               roverName={progress.fieldOperation.rover.name}
               onEvent={handleTakeonEvent}
+              onRouteChange={handleRouteChange}
               className={styles.takeonMount}
             />
           </section>

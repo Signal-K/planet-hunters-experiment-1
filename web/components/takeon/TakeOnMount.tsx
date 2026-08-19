@@ -50,6 +50,8 @@ export interface TakeOnMountProps {
    */
   seedCache?: boolean
   onEvent?: (event: TakeonHostEvent) => void
+  /** Host-facing route state for the safe tap-to-drive planner. */
+  onRouteChange?: (steps: number) => void
   onReady?: (mission: MissionState) => void
   onError?: (error: Error) => void
 }
@@ -65,6 +67,7 @@ const TakeOnMount = forwardRef<TakeOnMountHandle, TakeOnMountProps>(function Tak
   seedCargo,
   seedCache,
   onEvent,
+  onRouteChange,
   onReady,
   onError,
 }, ref) {
@@ -181,6 +184,7 @@ const TakeOnMount = forwardRef<TakeOnMountHandle, TakeOnMountProps>(function Tak
         }
         unbindHostEvents = bindTakeonHostEvents(mounted.game.events, handleHostEvent)
         unbindStateChanged = mounted.game.events.on('stateChanged', () => {
+          onRouteChange?.(mounted?.game.plannedRoute().length ?? 0)
           if (saveTimer) clearTimeout(saveTimer)
           saveTimer = setTimeout(() => void save().catch(reportError), 750)
         })
@@ -231,6 +235,7 @@ const TakeOnMount = forwardRef<TakeOnMountHandle, TakeOnMountProps>(function Tak
         }
 
         const initialState = snapshot()
+        onRouteChange?.(mounted.game.plannedRoute().length)
         if (initialState) onReady?.(initialState)
       } catch (reason) {
         reportError(reason)
@@ -266,6 +271,7 @@ const TakeOnMount = forwardRef<TakeOnMountHandle, TakeOnMountProps>(function Tak
     missionId,
     onError,
     onEvent,
+    onRouteChange,
     onReady,
     rover,
     roverName,

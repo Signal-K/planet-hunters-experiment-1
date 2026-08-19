@@ -45,6 +45,8 @@
     "cypress:run:release-matrix:mobile": "env -u ELECTRON_RUN_AS_NODE CYPRESS_PROFILE=visual CYPRESS_baseUrl=http://localhost:3001 CYPRESS_RELEASE_MATRIX_VIEWPORT=mobile-portrait cypress run --headless --browser chrome --spec cypress/e2e/visual/full-release-matrix.cy.ts",
     "test:e2e:release-matrix": "start-server-and-test dev http://localhost:3001 cypress:run:release-matrix",
     "test:e2e:release-matrix:mobile": "start-server-and-test dev http://localhost:3001 cypress:run:release-matrix:mobile",
+    "cypress:run:takeon-visual": "env -u ELECTRON_RUN_AS_NODE CYPRESS_PROFILE=journeys CYPRESS_baseUrl=http://localhost:3001 cypress run --headless --browser chrome --spec cypress/e2e/journeys/takeon-visual-audit.cy.ts",
+    "test:e2e:takeon-visual": "start-server-and-test dev http://localhost:3001 cypress:run:takeon-visual",
     "test:e2e:release-visual": "CYPRESS_PROFILE=visual CYPRESS_baseUrl=http://localhost:3001 start-server-and-test dev http://localhost:3001 \"cypress:run:visual -- --spec cypress/e2e/visual/full-release-matrix.cy.ts\"",
     "test:e2e:release-visual:mobile": "CYPRESS_PROFILE=visual CYPRESS_baseUrl=http://localhost:3001 CYPRESS_RELEASE_MATRIX_VIEWPORT=mobile-portrait start-server-and-test dev http://localhost:3001 \"cypress:run:visual -- --spec cypress/e2e/visual/full-release-matrix.cy.ts\""
   },

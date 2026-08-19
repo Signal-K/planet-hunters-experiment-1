@@ -1,7 +1,7 @@
 .mount {
   position: relative;
   width: 100%;
-  min-height: 22rem;
+  min-height: var(--takeon-min-height, 22rem);
   overflow: hidden;
   border: 1px solid var(--ln-border);
   border-radius: var(--ln-r-lg);

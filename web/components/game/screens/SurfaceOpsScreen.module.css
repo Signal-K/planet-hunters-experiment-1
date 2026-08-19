@@ -210,6 +210,29 @@
   color: var(--ln-text-muted);
 }
 
+.routeReadout {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--ln-s-2);
+  margin: 0 0 var(--ln-s-3);
+  padding: var(--ln-s-2) var(--ln-s-3);
+  border: 1px solid var(--ln-hairline);
+  border-radius: var(--ln-r-md);
+  background: var(--ln-panel-2);
+  color: var(--ln-text-muted);
+  font-family: var(--ln-font-mono);
+  font-size: var(--ln-fs-micro);
+  font-weight: 700;
+  letter-spacing: var(--ln-tr-label);
+}
+
+.routeReadout strong {
+  color: var(--ln-cyan);
+  font-family: var(--ln-font-display);
+  white-space: nowrap;
+}
+
 .canvasFrame {
   position: relative;
   min-height: 27rem;
@@ -363,6 +386,42 @@
   margin-top: var(--ln-s-4);
 }
 
+/* FIELD is a live operation, not a scrollable report. Let the TakeOn scene
+   take the remaining game viewport after its compact controls, so the rover
+   is visible without scrolling on every supported canvas. */
+.content[data-view='field'] {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.content[data-view='field'] .siteRail,
+.content[data-view='field'] .viewTabs {
+  flex: 0 0 auto;
+}
+
+.content[data-view='field'] .siteRail {
+  grid-auto-columns: minmax(0, 1fr);
+}
+
+.content[data-view='field'] .siteCard {
+  min-height: 6rem;
+}
+
+.content[data-view='field'] .fieldPanel {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-height: 0;
+  margin-bottom: 0;
+}
+
+.content[data-view='field'] .takeonMount {
+  --takeon-min-height: 0px;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
 @media (max-width: 880px) {
   .content {
     padding-inline: var(--ln-s-3);
@@ -383,6 +442,34 @@
 
   .takeonMount {
     min-height: 24rem;
+  }
+
+  /* The selected site is named in the live-field header. Keep the selector
+     in Logistics on a narrow canvas rather than spending the playfield on a
+     horizontally clipped carousel of other sites. */
+  .content[data-view='field'] .siteRail {
+    display: none;
+  }
+
+  .content[data-view='field'] .fieldPanel {
+    padding: var(--ln-s-3);
+  }
+
+  .content[data-view='field'] .sectionHeading h2 {
+    font-size: 20px;
+    line-height: 1.2;
+  }
+
+  .content[data-view='field'] .sectionCopy {
+    display: none;
+  }
+
+  .content[data-view='field'] .routeReadout {
+    margin-bottom: var(--ln-s-2);
+  }
+
+  .content[data-view='field'] .takeonMount {
+    margin-top: var(--ln-s-3);
   }
 }
 
