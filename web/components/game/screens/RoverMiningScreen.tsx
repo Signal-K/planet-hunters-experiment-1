@@ -62,7 +62,7 @@ export default function RoverMiningScreen({ mission, target, onComplete, onBack,
   }, [done, terrainClassification])
 
   return (
-    <div className="game-screen" style={{ display: 'flex', flexDirection: 'column' }}>
+    <div className="game-screen" data-testid="rover-mining-screen" style={{ display: 'flex', flexDirection: 'column' }}>
       <TopBar eyebrow={`SURFACE OPS · ${target.name.toUpperCase()}`} title="Rover Mining" onBack={onBack} />
 
       {/* PixiJS rover scene — grows to fill available space */}

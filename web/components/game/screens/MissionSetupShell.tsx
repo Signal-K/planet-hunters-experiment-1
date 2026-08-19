@@ -83,7 +83,13 @@ export default function MissionSetupShell({
   const contentTop = hasCoach ? (coachManual ? 248 : TUTORIAL_CONTENT_TOP) : 82
 
   return (
-    <div className={['game-screen', 'mission-setup-screen', className].filter(Boolean).join(' ')}>
+    <div className={[
+      'game-screen',
+      'mission-setup-screen',
+      hasCoach && 'mission-setup-screen--coached',
+      coachManual && 'mission-setup-screen--coach-manual',
+      className,
+    ].filter(Boolean).join(' ')}>
       <TopBar eyebrow={eyebrow} title={title} onBack={onBack} />
       <div
         className="mission-setup-content"

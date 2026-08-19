@@ -440,6 +440,7 @@ export function resolvePreset(name: string): Partial<GameState> | null {
     case 'ui-tess-discovery':
       return {
         screen: 'galaxy',
+        visualFixture: 'tess',
         player: {
           ...POST_ONBOARDING_PLAYER,
           transitSatelliteLaunchedAt: Date.now() - 86_400_000,
@@ -479,6 +480,7 @@ export function resolvePreset(name: string): Partial<GameState> | null {
     case 'ui-asteroid-discovery':
       return {
         screen: 'asteroid-discovery',
+        visualFixture: 'asteroid',
         player: ASTEROID_DISCOVERY_PLAYER,
         tutorial: false,
         doneSteps: M1_M2_M3_DONE,

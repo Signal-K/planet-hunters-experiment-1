@@ -76,7 +76,7 @@
 }
 
 .kicker {
-  color: var(--ln-amber);
+  color: var(--ln-cyan);
 }
 
 .contract {
@@ -86,12 +86,12 @@
 }
 
 .timer {
-  color: var(--ln-amber);
+  color: var(--ln-cyan);
   font: 700 15px var(--ln-font-mono);
 }
 
 .progressMeta strong {
-  color: var(--ln-amber);
+  color: var(--ln-cyan);
   font: 700 12px var(--ln-font-mono);
 }
 
@@ -99,14 +99,14 @@
   height: 5px;
   overflow: hidden;
   border-radius: 99px;
-  background: rgba(245, 166, 35, .12);
+  background: rgba(112, 217, 234, .12);
 }
 
 .fill {
   height: 100%;
   border-radius: inherit;
-  background: linear-gradient(90deg, #b96e0b, var(--ln-amber));
-  box-shadow: 0 0 12px rgba(245, 166, 35, .45);
+  background: linear-gradient(90deg, var(--ln-cyan-press), var(--ln-cyan));
+  box-shadow: 0 0 12px rgba(112, 217, 234, .45);
   transition: width .1s linear;
 }
 
@@ -144,11 +144,11 @@
 
 .holdState {
   grid-column: 1 / -1;
-  border-color: rgba(245, 166, 35, .22);
+  border-color: rgba(112, 217, 234, .22);
 }
 
 .holdState strong {
-  color: var(--ln-amber);
+  color: var(--ln-cyan);
 }
 
 .fee {

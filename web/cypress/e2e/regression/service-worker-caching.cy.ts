@@ -20,7 +20,7 @@ function registerServiceWorker(win: Cypress.AUTWindow) {
 describe('Service worker caching strategy', () => {
   let supported = false
 
-  before(() => {
+  beforeEach(() => {
     cy.visit('/game', { onBeforeLoad(win) { win.localStorage.clear() } })
     cy.window().then(win => registerServiceWorker(win).then(value => { supported = value !== false }))
   })
@@ -74,6 +74,35 @@ describe('Service worker caching strategy', () => {
       )
       const staticBody = await win.fetch(staticUrl).then(res => res.text())
       expect(staticBody, 'real static /game/ assets should still be cache-first').to.include('STALE_STATIC_MARKER')
+    })
+  })
+
+  it('accepts the installed PWA TakeOn warm-up assets without widening the cache to API responses', () => {
+    if (!supported) {
+      cy.log('Service workers are unavailable in this Cypress browser; covered by the Chrome CI run.')
+      return
+    }
+
+    cy.window().then(async win => {
+      const controller = win.navigator.serviceWorker.controller
+      expect(controller, 'active service worker controller').to.exist
+
+      const asset = `${win.location.origin}/_next/static/does-not-exist.js`
+      const channel = new win.MessageChannel()
+      const complete = new Promise<{ type: string; urls: string[] }>(resolve => {
+        channel.port1.onmessage = event => resolve(event.data)
+      })
+      controller!.postMessage({
+        type: 'CACHE_URLS',
+        urls: [asset, 'https://example.com/not-landnam.js', '/api/not-cacheable'],
+      }, [channel.port2])
+
+      const result = await complete
+      expect(result.type).to.equal('CACHE_URLS_COMPLETE')
+      // Only same-origin Next static assets are accepted. The deliberately
+      // missing asset exercises the non-fatal path without making a network
+      // fixture part of this regression suite.
+      expect(result.urls).to.deep.equal([asset])
     })
   })
 })

@@ -15,6 +15,7 @@ import MissionSetupShell, {
 import { getRequiredRocketModel } from '@/lib/rockets'
 import { crewRequirementStatus } from '@/lib/systems/AcademySystem'
 import { useIsShortViewport } from '@/lib/hooks/useIsShortViewport'
+import { useIsNarrowViewport } from '@/lib/hooks/useIsNarrowViewport'
 
 interface AssemblyScreenProps {
   mission: Mission
@@ -48,7 +49,10 @@ export default function AssemblyScreen(props: AssemblyScreenProps) {
   const crewReady = !props.mission.requires.crew || (!!props.crewModuleFitted && crewCheck.met)
   const launchReady = check.ok && crewReady
   const starterRocket = getRequiredRocketModel(props.missionsDone)
-  const compact = useIsShortViewport()
+  // Portrait preflight has two fixed regions plus the launch CTA. Treat a
+  // narrow phone as compact even when it is tall, otherwise the decorative
+  // flight-plan block forces the manifest underneath the launch region.
+  const compact = useIsShortViewport() || useIsNarrowViewport()
 
   return (
     <MissionSetupShell

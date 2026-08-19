@@ -102,6 +102,15 @@ const TakeOnMount = forwardRef<TakeOnMountHandle, TakeOnMountProps>(function Tak
     let unbindDiscovery: (() => void) | null = null
     let disposed = false
 
+    // The TakeOn adapter has its own fixed-step loop and a Pixi texture
+    // presentation callback. Keep both detached while the installed PWA is
+    // backgrounded; Landnam owns resuming the same mission when it returns.
+    const syncVisibility = () => {
+      if (!mounted) return
+      if (document.hidden) mounted.pause()
+      else mounted.resume()
+    }
+
     const snapshot = (): MissionState | null => {
       if (!mounted) return null
       return {
@@ -192,8 +201,10 @@ const TakeOnMount = forwardRef<TakeOnMountHandle, TakeOnMountProps>(function Tak
         })
         resizeObserver.observe(canvasElement)
 
-        mounted.game.start()
+        mounted.start()
         gameRef.current = mounted.game
+        document.addEventListener('visibilitychange', syncVisibility)
+        syncVisibility()
 
         const initialSeedCargo = seedCargoRef.current
         const initialSeedCache = seedCacheRef.current
@@ -236,6 +247,7 @@ const TakeOnMount = forwardRef<TakeOnMountHandle, TakeOnMountProps>(function Tak
         // offline fallback when the remote write cannot complete.
       })
       resizeObserver?.disconnect()
+      document.removeEventListener('visibilitychange', syncVisibility)
       unbindHostEvents?.()
       unbindStateChanged?.()
       unbindPhoto?.()

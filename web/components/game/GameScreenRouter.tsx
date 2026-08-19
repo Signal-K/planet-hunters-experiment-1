@@ -20,6 +20,7 @@ import AsteroidDiscoveryScreen from '@/components/game/screens/AsteroidDiscovery
 import SurfaceOpsScreen from '@/components/game/screens/SurfaceOpsScreen'
 import AcademyScreen from '@/components/game/screens/AcademyScreen'
 import { enqueueSurvey } from '@/lib/surveys'
+import { VISUAL_ASTEROID_CANDIDATE, VISUAL_TESS_CANDIDATE } from '@/lib/visual-fixtures'
 
 export const VALID_SCREENS = new Set<Screen>([
   'intro', 'build', 'hub', 'missions', 'galaxy', 'targets', 'fab',
@@ -191,6 +192,7 @@ export function ScreenContent({
       return (
         <TessDiscoveryScreen
           player={game.player}
+          visualCandidate={game.visualFixture === 'tess' ? VISUAL_TESS_CANDIDATE : undefined}
           onBack={() => game.go('hub')}
           onBuildStation={() => game.go('build')}
           onOpenProgram={() => game.go('launchpad')}
@@ -203,6 +205,7 @@ export function ScreenContent({
       return (
         <AsteroidDiscoveryScreen
           player={game.player}
+          visualCandidate={game.visualFixture === 'asteroid' ? VISUAL_ASTEROID_CANDIDATE : undefined}
           onBack={() => game.go('hub')}
           onBuildTelescope={() => game.go('build')}
           onSubmit={game.submitAsteroidClassification}

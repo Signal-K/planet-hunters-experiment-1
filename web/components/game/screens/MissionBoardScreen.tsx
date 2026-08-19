@@ -328,7 +328,7 @@ export default function MissionBoardScreen({ onBack, onPick, missionsDone, freeO
           trigger before any click) can scroll a list item flush with this
           container's top edge, sliding it out from under the reserved gap
           and underneath the coach overlay. */}
-      <div className="mission-board-screen-content" data-ui-zone={UI_ZONES.screenContent} style={{ position: 'absolute', inset: 0, paddingTop: hasCoach ? TUTORIAL_CONTENT_TOP : 72, paddingBottom: hasCoach ? 138 : 76, overflowY: 'auto', scrollPaddingTop: hasCoach ? TUTORIAL_CONTENT_TOP : undefined }}>
+      <div className={`mission-board-screen-content${hasCoach ? ` ${styles.coachCompact}` : ''}`} data-ui-zone={UI_ZONES.screenContent} style={{ position: 'absolute', inset: 0, paddingTop: hasCoach ? TUTORIAL_CONTENT_TOP : 8, paddingBottom: hasCoach ? 138 : 76, overflowY: 'auto', scrollPaddingTop: hasCoach ? TUTORIAL_CONTENT_TOP : undefined }}>
         {/* Direct transcription of the OD mockup's `.body-layout` — no
             summary banner above it (the mockup has none; the earlier
             PlayfieldBand strip was this screen's own invention, not in the

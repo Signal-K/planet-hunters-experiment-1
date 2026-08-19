@@ -40,11 +40,17 @@
     "test:e2e:full:tablet": "CYPRESS_PROFILE=full CYPRESS_VIEWPORT=tablet start-server-and-test dev http://localhost:3001 cypress:run:full",
     "test:e2e:full:landscape": "CYPRESS_PROFILE=full CYPRESS_VIEWPORT=landscape start-server-and-test dev http://localhost:3001 cypress:run:full",
     "cypress:open:visual": "env -u ELECTRON_RUN_AS_NODE CYPRESS_PROFILE=visual cypress open --browser chrome",
-    "cypress:run:visual": "node scripts/run-visual-cypress-safe.mjs"
+    "cypress:run:visual": "node scripts/run-visual-cypress-safe.mjs",
+    "cypress:run:release-matrix": "env -u ELECTRON_RUN_AS_NODE CYPRESS_PROFILE=visual CYPRESS_baseUrl=http://localhost:3001 cypress run --headless --browser chrome --spec cypress/e2e/visual/full-release-matrix.cy.ts",
+    "cypress:run:release-matrix:mobile": "env -u ELECTRON_RUN_AS_NODE CYPRESS_PROFILE=visual CYPRESS_baseUrl=http://localhost:3001 CYPRESS_RELEASE_MATRIX_VIEWPORT=mobile-portrait cypress run --headless --browser chrome --spec cypress/e2e/visual/full-release-matrix.cy.ts",
+    "test:e2e:release-matrix": "start-server-and-test dev http://localhost:3001 cypress:run:release-matrix",
+    "test:e2e:release-matrix:mobile": "start-server-and-test dev http://localhost:3001 cypress:run:release-matrix:mobile",
+    "test:e2e:release-visual": "CYPRESS_PROFILE=visual CYPRESS_baseUrl=http://localhost:3001 start-server-and-test dev http://localhost:3001 \"cypress:run:visual -- --spec cypress/e2e/visual/full-release-matrix.cy.ts\"",
+    "test:e2e:release-visual:mobile": "CYPRESS_PROFILE=visual CYPRESS_baseUrl=http://localhost:3001 CYPRESS_RELEASE_MATRIX_VIEWPORT=mobile-portrait start-server-and-test dev http://localhost:3001 \"cypress:run:visual -- --spec cypress/e2e/visual/full-release-matrix.cy.ts\""
   },
   "dependencies": {
     "@takeon/engine": "file:vendor/takeon/takeon-engine-0.2.0.tgz",
-    "@takeon/pixi": "file:vendor/takeon/takeon-pixi-0.2.0.tgz",
+    "@takeon/pixi": "file:vendor/takeon/takeon-pixi-0.2.2.tgz",
     "lucide-react": "^1.17.0",
     "next": "16.2.12",
     "pixi.js": "^8.19.0",

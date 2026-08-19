@@ -287,6 +287,8 @@ export interface GameState {
   // reads the record's system timestamp directly). missionsDone remains the
   // primary onboarding-stage signal; this only disambiguates true ties.
   updatedAt?: number
+  /** Dev-preset-only data switch. Never set by normal gameplay or persistence. */
+  visualFixture?: 'tess' | 'asteroid'
 }
 
 import type React from 'react'

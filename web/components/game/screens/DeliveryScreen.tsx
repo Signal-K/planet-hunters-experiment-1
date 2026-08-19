@@ -79,18 +79,23 @@ export default function DeliveryScreen({
     }
   }, [])
 
+  // The interactive tutorial dropoff does not use the elapsed unload timer.
+  // Keep this effect independent of `progress`: the clock refreshes every
+  // 100ms, and coupling it to the completion timeout continually cancelled the
+  // 350ms hand-off to Earth transit after a successful cargo dump.
   useEffect(() => {
-    if (useTakeonDropoff) {
-      if (!dumped || completedRef.current) return
-      completedRef.current = true
-      const id = window.setTimeout(onComplete, 350)
-      return () => window.clearTimeout(id)
-    }
-    if (progress < 1 || completedRef.current) return
+    if (!useTakeonDropoff || !dumped || completedRef.current) return
     completedRef.current = true
     const id = window.setTimeout(onComplete, 350)
     return () => window.clearTimeout(id)
-  }, [useTakeonDropoff, dumped, progress, onComplete])
+  }, [useTakeonDropoff, dumped, onComplete])
+
+  useEffect(() => {
+    if (useTakeonDropoff || progress < 1 || completedRef.current) return
+    completedRef.current = true
+    const id = window.setTimeout(onComplete, 350)
+    return () => window.clearTimeout(id)
+  }, [useTakeonDropoff, progress, onComplete])
 
   if (useTakeonDropoff) {
     return (

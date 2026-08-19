@@ -219,13 +219,12 @@ export default function SurfaceOpsScreen({
             <div className={styles.sectionHeading}>
               <div>
                 <span className={styles.eyebrow}>LIVE FIELD · {definition.region}</span>
-                <h2>Takeon Surface Mission</h2>
+                <h2>Surface Mission</h2>
               </div>
               <span className={styles.statusPill}>SYNCED</span>
             </div>
             <p className={styles.sectionCopy}>
-              Mined resources feed the settlement mining-station buffer. Return
-              to Logistics when capacity is reached.
+              Mined resources feed the settlement buffer — return to Logistics when full.
             </p>
             <TakeOnMount
               missionId={`settlement-${definition.id}`}

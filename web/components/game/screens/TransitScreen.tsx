@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import type { Target, MineralMeta, Mission, Client } from '@/lib/data'
 import { isOwnProgramMission, missionTypePrimer } from '@/lib/data'
 import { Scene } from '@/lib/engine'
@@ -47,6 +47,15 @@ export default function TransitScreen({ target, rocketImageSrc, arrivalAt, trans
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const sceneRef = useRef<TransitScene | null>(null)
   const progressRef = useRef(isTimed ? 0 : FAKE_PROGRESS_START)
+  // Arrival can be requested by the progress effect and a visible control in
+  // the same render window. The game transition is not re-entrant, so only
+  // forward the first request.
+  const arrivalHandledRef = useRef(false)
+  const arriveOnce = useCallback(() => {
+    if (arrivalHandledRef.current) return
+    arrivalHandledRef.current = true
+    onArrive()
+  }, [onArrive])
 
   useEffect(() => {
     void Scene.load('/game/scenes/mining.scene.json')
@@ -86,16 +95,16 @@ export default function TransitScreen({ target, rocketImageSrc, arrivalAt, trans
   useEffect(() => {
     if (isTimed) {
       if (now >= arrivalAt!) {
-        const timer = window.setTimeout(onArrive, 350)
+        const timer = window.setTimeout(arriveOnce, 350)
         return () => window.clearTimeout(timer)
       }
     } else {
       if (fakeProgress >= 100) {
-        const timer = window.setTimeout(onArrive, 350)
+        const timer = window.setTimeout(arriveOnce, 350)
         return () => window.clearTimeout(timer)
       }
     }
-  }, [isTimed, now, arrivalAt, fakeProgress, onArrive])
+  }, [isTimed, now, arrivalAt, fakeProgress, arriveOnce])
 
   // Keep progressRef current so the PixiJS scene always gets live progress
   const [mountedAt] = useState(() => Date.now())
@@ -285,11 +294,11 @@ export default function TransitScreen({ target, rocketImageSrc, arrivalAt, trans
           this codebase. The ETA/orbit readout above already covers
           "what's happening now" for this screen. */}
       <div className="sticky-actions" data-ui-zone={UI_ZONES.bottomActions}>
-        <PrimaryBtn onClick={onArrive} disabled={!arrived}>
+        <PrimaryBtn testId="transit-arrive-btn" onClick={arriveOnce} disabled={!arrived}>
           {arrived ? (returning ? 'Recover Ship' : 'Arrive') : isTimed ? `En Route · ${formatCountdown(etaMs)}` : `${returning ? 'Return' : 'Arrive'} · ${fakeProgress}%`}
         </PrimaryBtn>
         {process.env.NODE_ENV === 'development' && !arrived && (
-          <GhostBtn testId="transit-skip-btn" onClick={onArrive}>Skip ▸</GhostBtn>
+          <GhostBtn testId="transit-skip-btn" onClick={arriveOnce}>Skip ▸</GhostBtn>
         )}
         {onAbandon && <GhostBtn onClick={() => setConfirmingAbandon(true)}>Abort Mission</GhostBtn>}
       </div>

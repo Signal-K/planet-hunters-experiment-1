@@ -429,7 +429,7 @@ export default function MiningScreen({ mission, target, onComplete, onBack, onAb
         </div>
       )}
 
-      {hasCoach && <div style={{ height: coachManual ? 248 : 152, flexShrink: 0 }} />}
+      {hasCoach && <div style={{ height: coachManual ? 'var(--tutorial-manual-content-top)' : 'var(--tutorial-content-top)', flexShrink: 0 }} />}
 
       {/* Laser depleted without filling order — always shown, not gated on hasCoach */}
       {runFailed && (
@@ -454,7 +454,7 @@ export default function MiningScreen({ mission, target, onComplete, onBack, onAb
 
       {/* Low-charge warning banner — fades in when running short without filling the order */}
       {chargesLow && (
-        <div style={{ position: 'absolute', top: hasCoach ? (coachManual ? 248 : 152) : 56, left: 0, right: 0, zIndex: 40, display: 'flex', justifyContent: 'center', pointerEvents: 'none' }}>
+        <div style={{ position: 'absolute', top: hasCoach ? (coachManual ? 'var(--tutorial-manual-content-top)' : 'var(--tutorial-content-top)') : 56, left: 0, right: 0, zIndex: 40, display: 'flex', justifyContent: 'center', pointerEvents: 'none' }}>
           <div style={{ margin: '8px 16px', padding: '6px 14px', background: 'rgba(255,100,60,0.18)', border: '1px solid rgba(255,100,60,0.45)', borderRadius: 8, fontFamily: 'var(--ln-font-display)', fontSize: 10, fontWeight: 800, letterSpacing: '0.18em', color: '#ff7040', textTransform: 'uppercase' }}>
             {laserCharges} charge{laserCharges !== 1 ? 's' : ''} remaining — order not filled
           </div>

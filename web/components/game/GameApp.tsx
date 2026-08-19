@@ -23,6 +23,7 @@ import DevShortcuts from '@/components/dev/DevShortcuts'
 import AuthGateSheet from '@/components/game/AuthGateSheet'
 import SettingsSheet from '@/components/game/SettingsSheet'
 import TerritoryClaimPopup from '@/components/game/TerritoryClaimPopup'
+import TakeOnPwaPreload from '@/components/takeon/TakeOnPwaPreload'
 import { UI_ZONES } from '@/lib/ui-zones'
 
 function GameCanvas() {
@@ -30,6 +31,7 @@ function GameCanvas() {
   const router = useRouter()
   const arrivalScheduledFor = useRef<number | null>(null)
   const returnScheduledKey = useRef<string | null>(null)
+  const priorScreenRef = useRef<Screen | null>(null)
   const [settingsOpen, setSettingsOpen] = useState(false)
 
   // PostHog injects recorder/survey scripts. Initialising during module
@@ -114,6 +116,19 @@ function GameCanvas() {
   const coachIndex = coach ? coachSteps.findIndex(step => step.id === coach.id) : -1
   const hasCoach = !!coach
 
+  // A status toast belongs to the action that caused it. Keeping it mounted
+  // after a screen change made Earth-recovery and payout messages obscure the
+  // next mission setup, especially on portrait mobile.
+  useEffect(() => {
+    if (priorScreenRef.current === null) {
+      priorScreenRef.current = game.screen
+      return
+    }
+    if (priorScreenRef.current === game.screen) return
+    priorScreenRef.current = game.screen
+    game.toasts.forEach(toast => game.dismissToast(toast.id))
+  }, [game.dismissToast, game.screen, game.toasts])
+
   function goFromNav(id: string) {
     if (id === 'missions') {
       game.goToMissions()
@@ -159,6 +174,7 @@ function GameCanvas() {
 
   return (
     <main className="game-stage" aria-label="Landnam game">
+      <TakeOnPwaPreload />
       <div
         className="portrait-required-overlay"
         data-testid="portrait-required-overlay"

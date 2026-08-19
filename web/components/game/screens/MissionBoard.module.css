@@ -260,6 +260,43 @@
   }
 }
 
+/* The onboarding rail already tells the player what this card is for. On a
+   phone, repeating its explanatory metadata turns the board into three
+   competing instruction blocks and leaves too little visible card to tap. */
+@media (max-width: 820px) {
+  .coachCompact {
+    padding-top: 156px !important;
+    scroll-padding-top: 156px !important;
+  }
+  .coachCompact .boardHeader {
+    margin-bottom: 8px;
+  }
+  .coachCompact .boardHeaderSub,
+  .coachCompact .sortSelect,
+  .coachCompact .cardWants,
+  .coachCompact .cardTags,
+  .coachCompact .disclaimer,
+  .coachCompact .primer {
+    display: none;
+  }
+  .coachCompact .canvas {
+    padding: 12px;
+  }
+  .coachCompact .cardList {
+    gap: 8px;
+  }
+  .coachCompact .card {
+    padding: 12px;
+    gap: 10px;
+  }
+  .coachCompact .cardClient {
+    margin-top: 2px;
+  }
+  .coachCompact .cardSide {
+    gap: 4px;
+  }
+}
+
 .disclaimer {
   display: flex;
   align-items: center;

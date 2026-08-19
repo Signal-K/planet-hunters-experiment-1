@@ -239,8 +239,10 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
         status: 'in_progress', phase: hasDelivery ? 'transit' : 'debrief', cargo,
       }).catch(error => console.warn('[GameLoop] mission run update failed', error))
     }
-    addToast(hasDelivery ? 'Cargo secured — course set for delivery' : 'Order filled — return to Earth for recovery', 'ok')
-  }, [addToast, catalog.targets, setState, stateRef])
+    // The transit/debrief screen supplies this status in its own persistent
+    // readout. A global toast survives the route change and obscures the next
+    // operation on compact screens, so do not duplicate it here.
+  }, [catalog.targets, setState, stateRef])
 
   const onDeliveryArrived = useCallback(() => {
     const startedAt = Date.now()
@@ -251,8 +253,10 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
         status: 'in_progress', phase: 'delivery',
       }).catch(error => console.warn('[GameLoop] mission run delivery update failed', error))
     }
-    addToast('Delivery berth acquired — unload in progress', 'ok')
-  }, [addToast, setState, stateRef])
+    // The dedicated delivery view has the berth and transfer state in its
+    // persistent HUD. Keeping another global notification across this route
+    // change makes the compact layout look like a stack of modal surfaces.
+  }, [setState, stateRef])
 
   const onDeliveryUnloadComplete = useCallback(() => {
     const transitStartedAt = Date.now()
@@ -270,13 +274,15 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
         status: 'in_progress', phase: 'transit', cargo: {},
       }).catch(error => console.warn('[GameLoop] mission run Earth-return update failed', error))
     }
-    addToast('Cargo unloaded — course set for Earth', 'ok')
-  }, [addToast, catalog.targets, setState, stateRef])
+    // Transit owns the inbound status. Do not leave a transient toast over
+    // the next operation once the transfer screen disappears.
+  }, [catalog.targets, setState, stateRef])
 
   const onReturnArrived = useCallback(() => {
     setState(s => applyReturnArrived(s))
-    addToast('Earth recovery complete — ship destroyed and cargo secured', 'ok')
-  }, [addToast, setState])
+    // Debrief owns the recovery outcome and cargo receipt; a transient global
+    // notification would cover the next task if the player advances quickly.
+  }, [setState])
 
   const onRoverMiningDone = useCallback((cargo: Record<string, number>) => {
     let hasDelivery = false
@@ -634,11 +640,8 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
       }
       return applyGainResearchXP(next, mission?.programReward?.researchXP ?? 0)
     })
-    if (completedIsProgramOperation) {
-      addToast(completedMission?.programReward?.outcome ?? 'Program operation complete.', 'ok')
-    } else {
-      addToast(`Mission payout received: +${(total / 1_000_000).toFixed(0)}M F`, 'ok')
-    }
+    // The destination HUD/debrief presents the collected reward. Keeping a
+    // second global confirmation leaks it over the following mission setup.
     const userId = pbShared.authStore.record?.id
     if (userId) {
       pbLandnam.collection('mission_log').create({

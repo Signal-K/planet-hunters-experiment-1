@@ -24,6 +24,8 @@ import { instrumentDigestDateKey, unresolvedTransitInstrumentDigest } from '@/li
 
 interface TessDiscoveryScreenProps {
   player: Player
+  /** Fixed record supplied only by the named visual dev preset. */
+  visualCandidate?: TessCandidate
   onBack: () => void
   onBuildStation: () => void
   onOpenProgram: () => void
@@ -42,7 +44,7 @@ const VERDICT_ACTIONS: Array<{ id: TessVerdict; label: string; requiresMark: boo
   { id: 'unsure', label: 'Skip', requiresMark: false, kind: 'ghost' },
 ]
 
-export default function TessDiscoveryScreen({ player, onBack, onBuildStation, onOpenProgram, onSubmit, onChooseTarget }: TessDiscoveryScreenProps) {
+export default function TessDiscoveryScreen({ player, visualCandidate, onBack, onBuildStation, onOpenProgram, onSubmit, onChooseTarget }: TessDiscoveryScreenProps) {
   // Stabilize the fallback — see the identical comment on
   // AsteroidDiscoveryScreen's classifications memo (STS-622 review found
   // this pattern first here; a fresh `{}` every render when the field is
@@ -70,6 +72,16 @@ export default function TessDiscoveryScreen({ player, onBack, onBuildStation, on
   const [devDayOffset, setDevDayOffset] = useState(0)
 
   useEffect(() => {
+    if (visualCandidate) {
+      setCandidate(visualCandidate)
+      setPool([visualCandidate])
+      setRanges([])
+      setSectorIndex(0)
+      setViewingSol(false)
+      setLoadFailed(false)
+      setLoading(false)
+      return
+    }
     if (!player.freeOperations || !player.satelliteMonitoringBuilt || !player.transitSatelliteLaunchedAt) {
       setLoading(false)
       return
@@ -108,7 +120,7 @@ export default function TessDiscoveryScreen({ player, onBack, onBuildStation, on
     // post-confirmation target-selection map. Re-entering the screen remounts
     // it and naturally resolves the next still-unclassified daily candidate.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [player.freeOperations, player.satelliteMonitoringBuilt, player.satelliteMonitoringLevel, player.transitSatelliteLaunchedAt, player.transitSatelliteLevel, player.satelliteTargetId, devDayOffset])
+  }, [visualCandidate, player.freeOperations, player.satelliteMonitoringBuilt, player.satelliteMonitoringLevel, player.transitSatelliteLaunchedAt, player.transitSatelliteLevel, player.satelliteTargetId, devDayOffset])
 
   const classification: TessClassification | undefined = candidate ? classifications[candidate.id] : undefined
   const discoveredTarget = candidate && classification?.verdict === 'planet'

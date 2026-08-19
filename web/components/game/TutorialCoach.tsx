@@ -60,7 +60,7 @@ export default function TutorialCoach({ stepIndex, steps, step, total, onManualN
           data-testid="tutorial-coach-block"
           style={{ position: 'absolute', left: 14, right: 14, top: coachRail.top, maxHeight: 160, zIndex: 98, pointerEvents: 'auto', overflowY: 'auto' }}
         >
-          <div style={{
+          <div className="tutorial-coach-card tutorial-coach-card--manual" style={{
             background: 'linear-gradient(160deg, rgba(16,16,18,0.98) 0%, rgba(11,11,13,0.98) 100%)',
             border: '1px solid rgba(112,217,234,0.4)',
             borderRadius: 14,
@@ -68,8 +68,8 @@ export default function TutorialCoach({ stepIndex, steps, step, total, onManualN
             boxShadow: '0 16px 48px rgba(0,0,0,0.7), 0 0 0 1px rgba(112,217,234,0.08)',
           }}>
             <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
-              <CoachAvatar size={36} talking />
-              <div style={{ flex: 1, minWidth: 0 }}>
+              <div className="tutorial-coach-avatar"><CoachAvatar size={isDesktop ? 36 : 32} talking /></div>
+              <div className="tutorial-coach-copy" style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
                   <span style={{ fontFamily: 'var(--ln-font-display)', fontSize: 9, fontWeight: 800, letterSpacing: '0.22em', color: 'var(--ln-cyan)', textTransform: 'uppercase' }}>
                     Mission Coach
@@ -79,15 +79,15 @@ export default function TutorialCoach({ stepIndex, steps, step, total, onManualN
                     {stepIndex + 1} / {total}
                   </span>
                 </div>
-                <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 13, fontWeight: 800, color: '#e8f0ff', lineHeight: 1.2, marginBottom: 3 }}>
+                <div className="tutorial-coach-title" style={{ fontFamily: 'var(--ln-font-display)', fontSize: 13, fontWeight: 800, color: '#e8f0ff', lineHeight: 1.2, marginBottom: 3 }}>
                   {step.title}
                 </div>
-                <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 11.5, color: '#9ab0c8', lineHeight: 1.4, wordBreak: 'break-word' }}>
+                <div className="tutorial-coach-body" style={{ fontFamily: 'var(--ln-font-body)', fontSize: 11.5, color: '#9ab0c8', lineHeight: 1.4, wordBreak: 'break-word' }}>
                   {resolvedBody}
                 </div>
               </div>
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 8 }}>
+            <div className="tutorial-coach-controls" style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 8 }}>
               {progress}
               <span style={{ flex: 1 }} />
               <button
@@ -142,7 +142,7 @@ export default function TutorialCoach({ stepIndex, steps, step, total, onManualN
           pointerEvents: 'auto',
         }}
       >
-        <div style={{
+        <div className="tutorial-coach-card" style={{
           position: 'relative',
           display: 'flex',
           alignItems: 'center',
@@ -158,27 +158,27 @@ export default function TutorialCoach({ stepIndex, steps, step, total, onManualN
           <div className="coach-glow-ring" style={{ borderRadius: 16 }} />
 
           {/* Avatar */}
-          <div style={{ flexShrink: 0 }}>
-            <CoachAvatar size={44} talking />
+          <div className="tutorial-coach-avatar" style={{ flexShrink: 0 }}>
+            <CoachAvatar size={isDesktop ? 44 : 36} talking />
           </div>
 
           {/* Text */}
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 10, fontWeight: 800, letterSpacing: '0.2em', color: 'var(--ln-cyan)', textTransform: 'uppercase', marginBottom: 4 }}>
+          <div className="tutorial-coach-copy" style={{ flex: 1, minWidth: 0 }}>
+              <div className="tutorial-coach-title" style={{ fontFamily: 'var(--ln-font-display)', fontSize: 10, fontWeight: 800, letterSpacing: '0.2em', color: 'var(--ln-cyan)', textTransform: 'uppercase', marginBottom: 4 }}>
               {step.title}
             </div>
             {resolvedBody && (
-              <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 12.5, color: '#9ab0c8', lineHeight: 1.35, wordBreak: 'break-word', marginBottom: 4 }}>
+              <div className="tutorial-coach-body" style={{ fontFamily: 'var(--ln-font-body)', fontSize: 12.5, color: '#9ab0c8', lineHeight: 1.35, wordBreak: 'break-word', marginBottom: 4 }}>
                 {resolvedBody}
               </div>
             )}
-            <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 14, color: '#e8f4ff', lineHeight: 1.35, wordBreak: 'break-word' }}>
+            <div className="tutorial-coach-action" style={{ fontFamily: 'var(--ln-font-body)', fontSize: 14, color: '#e8f4ff', lineHeight: 1.35, wordBreak: 'break-word' }}>
               {resolvedAction ?? ((isDesktop ? 'Click ' : 'Tap ') + step.cta)}
             </div>
           </div>
 
           {/* Progress + skip */}
-          <div style={{ flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 6 }}>
+          <div className="tutorial-coach-side" style={{ flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 6 }}>
             {progress}
             <button
               data-testid="coach-skip-btn"

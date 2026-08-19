@@ -75,10 +75,10 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
     <div className="game-screen debrief-screen">
       <TopBar eyebrow="MISSION COMPLETE" title="Debrief" />
 
-      <div className={`screen-scroll${hasCoach ? ' screen-scroll--coach' : ''}`} style={{ display: 'flex', flexDirection: 'column', gap: 12 }} data-ui-zone={UI_ZONES.screenContent}>
+      <div className={`screen-scroll debrief-scroll${hasCoach ? ' screen-scroll--coach' : ''}`} style={{ display: 'flex', flexDirection: 'column', gap: 12 }} data-ui-zone={UI_ZONES.screenContent}>
 
         {/* ── Hero ─────────────────────────────────────────────────────────── */}
-        <div style={{ textAlign: 'center', paddingTop: 16, paddingBottom: 8 }}>
+        <div className="debrief-hero" style={{ textAlign: 'center', paddingTop: 16, paddingBottom: 8 }}>
           <div className="success-mark">✓</div>
           <h2 style={{ margin: '12px 0 4px', color: 'var(--ln-text)', font: '800 28px var(--ln-font-display)', letterSpacing: '0.12em', textTransform: 'uppercase' }}>
             {shipDestroyed ? 'Recovered' : 'Returned'}
@@ -89,8 +89,9 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
         </div>
 
         {/* ── Client ───────────────────────────────────────────────────────── */}
+        <div className="debrief-overview">
         {client && !isStoryMission && (
-          <Panel accent={client.color} surface="glass">
+          <Panel className="debrief-client-panel" accent={client.color} surface="glass">
             <div className="ln-section-label" style={{ marginBottom: 10 }}>Client</div>
             <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
               <div style={{
@@ -135,7 +136,7 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
         )}
 
         {/* ── Delivery receipt ─────────────────────────────────────────────── */}
-        <Panel accent={delivered ? 'var(--ln-ok)' : 'var(--ln-crimson)'} surface="glass">
+        <Panel className="debrief-delivery-panel" accent={delivered ? 'var(--ln-ok)' : 'var(--ln-crimson)'} surface="glass">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
             <span style={{ fontFamily: 'var(--ln-font-display)', fontSize: 9, fontWeight: 800, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'var(--ln-text-dim)' }}>
               {mission.title}
@@ -168,6 +169,7 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
             )
           })}
         </Panel>
+        </div>
 
         {/* ── Contract payment + expenses/net ─────────────────────────────── */}
         {resolved && delivered && (

@@ -94,7 +94,7 @@
      --ln-panel-2 is the next charcoal step up from --ln-panel. */
   --ln-shell:        #0a0a0c;
   --ln-panel:        #1c1c20;
-  --ln-panel-2:      #26262b;
+  --ln-panel-2:      #183149;
   --ln-border:       rgba(255, 255, 255, 0.22);
   --ln-payout:       #d8ff55;
   --ln-play:         #fa49ca;
@@ -164,9 +164,9 @@
    Corner brackets already exist in Panel.tsx's <Corners>; this only adds
    the frosted-glass surface + starfield backdrop. */
 :root {
-  --ln-glass-panel:    rgba(255, 255, 255, 0.20);
-  --ln-glass-panel-2:  rgba(255, 255, 255, 0.28);
-  --ln-glass-border:   rgba(255, 255, 255, 0.45);
+  --ln-glass-panel:    rgba(18, 46, 68, 0.92);
+  --ln-glass-panel-2:  rgba(24, 62, 88, 0.96);
+  --ln-glass-border:   rgba(112, 217, 234, 0.48);
   --ln-glass-blur:     blur(8px);
 }
 
@@ -302,8 +302,21 @@ body {
 button { cursor: pointer; }
 
 :root {
-  --tutorial-content-top: 152px;
+  --tutorial-content-top: 238px;
   --tutorial-manual-content-top: 248px;
+}
+
+@media (max-width: 520px) {
+  :root {
+    --tutorial-content-top: 156px;
+    --tutorial-manual-content-top: 164px;
+  }
+  .mission-setup-screen--coached .mission-setup-content {
+    padding-top: 156px !important;
+  }
+  .mission-setup-screen--coach-manual .mission-setup-content {
+    padding-top: 164px !important;
+  }
 }
 
 /* Page backdrop. Superseded 2026-07-31 — the previous blue-violet radial
@@ -345,7 +358,8 @@ button { cursor: pointer; }
   z-index: 1; /* above .game-stage::before starfield */
   display: flex;
   flex-direction: column;
-  width: min(402px, calc(100vw - var(--ln-s-4)));
+  width: min(402px, 100%);
+  max-width: 100%;
   height: min(874px, calc(100dvh - var(--ln-s-4)));
   max-height: 874px;
   overflow: hidden;
@@ -409,6 +423,108 @@ button { cursor: pointer; }
   pointer-events: none;
 }
 .sync-status span { width: 5px; height: 5px; border-radius: var(--ln-r-pill); background: currentColor; }
+
+.toast-stack {
+  position: absolute;
+  top: 8px;
+  right: 12px;
+  z-index: 85;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+  width: min(360px, calc(100% - 24px));
+  pointer-events: none;
+}
+.toast-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: fit-content;
+  max-width: 100%;
+}
+.toast-item > span { min-width: 0; }
+.toast-dismiss {
+  flex: none;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  color: var(--ln-text-dim);
+  background: transparent;
+  border: 1px solid var(--ln-hairline);
+  border-radius: var(--ln-r-pill);
+  font: 700 16px/1 var(--ln-font-body);
+}
+.toast-dismiss:hover { color: var(--ln-text); border-color: var(--ln-cyan-border); }
+.tutorial-coach-body,
+.tutorial-coach-action { min-width: 0; }
+
+/* Coach copy is guidance, not a second screen. Keep the rail compact enough
+   that the surface underneath remains legible and interactive. */
+.tutorial-coach-body,
+.tutorial-coach-action { max-width: 760px; }
+
+@media (min-width: 900px) {
+  [data-testid="tutorial-coach-block"] {
+    left: 50% !important;
+    right: auto !important;
+    width: min(920px, calc(100% - 48px));
+    transform: translateX(-50%);
+  }
+}
+
+@media (max-width: 899px) {
+  .tutorial-coach-card {
+    gap: 8px !important;
+    padding: 10px 10px 10px 8px !important;
+    border-radius: 12px !important;
+  }
+  .tutorial-coach-card .tutorial-coach-body {
+    display: -webkit-box;
+    overflow: hidden;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    font-size: 11px !important;
+    line-height: 1.3 !important;
+  }
+  .tutorial-coach-card .tutorial-coach-action {
+    display: -webkit-box;
+    overflow: hidden;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    font-size: 13px !important;
+    line-height: 1.25 !important;
+  }
+  .tutorial-coach-card--manual {
+    max-height: 132px !important;
+    overflow: hidden !important;
+  }
+  .tutorial-coach-controls { margin-top: 6px !important; }
+}
+
+@media (max-width: 520px) {
+  .tutorial-coach-card {
+    gap: 8px !important;
+    padding: 8px !important;
+  }
+  .tutorial-coach-card .tutorial-coach-body {
+    display: none;
+  }
+  .tutorial-coach-card .tutorial-coach-title {
+    font-size: 9px !important;
+    margin-bottom: 2px !important;
+  }
+  .tutorial-coach-card .tutorial-coach-action {
+    -webkit-line-clamp: 2;
+    font-size: 12px !important;
+  }
+  .tutorial-coach-card .tutorial-coach-side {
+    gap: 4px !important;
+  }
+  .tutorial-coach-card .tutorial-coach-side button {
+    padding: 3px 6px !important;
+  }
+}
 
 /* When .bottom-tab-bar is present it permanently occupies the bottom
    var(--ln-nav-h), unlike the old floating radial nav — lift these corner
@@ -864,7 +980,23 @@ button { cursor: pointer; }
 
 .mission-setup-screen--rocket .mission-setup-content {
   overflow-y: auto;
-  padding-bottom: 280px;
+  padding-bottom: 336px;
+}
+
+@media (min-width: 900px) {
+  /* The action rail is fixed. Keep both rocket columns inside the remaining
+     viewport and let each card own any extra detail through its scroll area;
+     otherwise their intrinsic height extends underneath the rail. */
+  .mission-setup-screen--rocket .mission-setup-content {
+    grid-template-rows: minmax(0, 1fr);
+    align-items: stretch;
+  }
+  .mission-setup-screen--rocket .rocket-vehicle-stage,
+  .mission-setup-screen--rocket .rocket-vehicle-frame,
+  .mission-setup-screen--rocket .rocket-summary-card {
+    min-height: 0;
+    height: 100%;
+  }
 }
 
 .rocket-vehicle-stage {
@@ -1009,6 +1141,14 @@ button { cursor: pointer; }
   .mission-setup-screen--target [data-testid="target-picker-orbital-map"] {
     min-height: 380px !important;
     height: 380px !important;
+  }
+
+  /* Portrait preflight is a two-region operation. The desktop scene's
+     300px minimum exceeds its assigned grid row and paints over the manifest
+     below; compact content has enough room without that artificial minimum. */
+  .mission-setup-screen--assembly .assembly-preflight-scene {
+    min-height: 0;
+    padding: 12px;
   }
   .mission-setup-card-scroll {
     padding: 14px;
@@ -1157,7 +1297,11 @@ button { cursor: pointer; }
 .mining-progress-fill { height: 100%; border-radius: 3px; background: linear-gradient(90deg, var(--ln-amber), var(--ln-cyan)); transition: width 120ms linear; }
 .mining-actions { display: grid; gap: var(--ln-s-2); }
 
-.debrief-screen { background: var(--ln-bg-stars), var(--ln-void); }
+.debrief-screen {
+  background:
+    radial-gradient(ellipse at 50% 18%, var(--ln-cyan-soft), transparent 42%),
+    linear-gradient(155deg, var(--ln-panel-2), var(--ln-void) 72%);
+}
 
 .intro-screen { position: relative; width: 100%; height: 100%; overflow: hidden; }
 .intro-earth { position: absolute; inset: 0; }
@@ -1183,6 +1327,34 @@ button { cursor: pointer; }
 .reward-label { color: var(--ln-text-dim); }
 
 .debrief-scroll { display: flex; flex-direction: column; gap: var(--ln-s-3); text-align: center; }
+.debrief-overview { display: grid; gap: var(--ln-s-3); text-align: left; }
+
+@media (min-width: 900px) {
+  .debrief-screen .screen-scroll {
+    padding: 68px var(--ln-s-5) 104px;
+  }
+  .debrief-hero {
+    padding-top: 8px !important;
+    padding-bottom: 0 !important;
+  }
+  .debrief-hero .success-mark {
+    width: 56px;
+    height: 56px;
+    font-size: 28px;
+  }
+  .debrief-hero h2 {
+    margin-top: 8px !important;
+    font-size: 22px !important;
+  }
+  .debrief-overview {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    align-items: start;
+  }
+  .debrief-client-panel,
+  .debrief-delivery-panel {
+    padding: 12px !important;
+  }
+}
 .debrief-scroll h2 { color: var(--ln-text); font: 800 28px var(--ln-font-display); letter-spacing: var(--ln-tr-label); text-transform: uppercase; }
 .debrief-scroll p { color: var(--ln-text-dim); font: 11px var(--ln-font-mono); letter-spacing: var(--ln-tr-label); text-transform: uppercase; }
 .success-mark { width: 88px; height: 88px; margin: 0 auto; display: grid; place-items: center; border-radius: 50%; color: var(--ln-text-on-cyan); background: radial-gradient(circle at 30% 30%, #a9ffc8, var(--ln-ok) 70%, #02180c); box-shadow: var(--ln-glow-ok); font: 800 44px var(--ln-font-display); animation: glow-anim 2s ease-in-out infinite; }

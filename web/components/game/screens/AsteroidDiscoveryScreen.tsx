@@ -19,6 +19,8 @@ import AsteroidDiscoveryCoach, { useAsteroidDiscoveryCoach } from '@/components/
 
 interface AsteroidDiscoveryScreenProps {
   player: Player
+  /** Fixed record supplied only by the named visual dev preset. */
+  visualCandidate?: AsteroidCandidate
   onBack: () => void
   onBuildTelescope: () => void
   onSubmit: (candidateId: string, verdict: AsteroidVerdict) => void
@@ -35,7 +37,7 @@ const VERDICT_ACTIONS: Array<{ id: AsteroidVerdict; label: string; kind: 'amber'
   { id: 'unsure', label: 'Skip', kind: 'ghost' },
 ]
 
-export default function AsteroidDiscoveryScreen({ player, onBack, onBuildTelescope, onSubmit }: AsteroidDiscoveryScreenProps) {
+export default function AsteroidDiscoveryScreen({ player, visualCandidate, onBack, onBuildTelescope, onSubmit }: AsteroidDiscoveryScreenProps) {
   // Stabilize the fallback so the fetch effect below (keyed on `classifications`)
   // doesn't get a new object identity every render when the field is unset —
   // e.g. preset-loaded dev state, which bypasses normalizeAndRepair()'s
@@ -51,6 +53,12 @@ export default function AsteroidDiscoveryScreen({ player, onBack, onBuildTelesco
   const [devDayOffset, setDevDayOffset] = useState(0)
 
   useEffect(() => {
+    if (visualCandidate) {
+      setCandidate(visualCandidate)
+      setLoadFailed(false)
+      setLoading(false)
+      return
+    }
     if (!player.freeOperations || !player.deepSpaceTelescopeBuilt) {
       setLoading(false)
       return
@@ -94,7 +102,7 @@ export default function AsteroidDiscoveryScreen({ player, onBack, onBuildTelesco
     // player is still looking at. A new candidate is only fetched on mount
     // or when the telescope/day actually changes.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [player.freeOperations, player.deepSpaceTelescopeBuilt, player.deepSpaceTelescopeLevel, devDayOffset])
+  }, [visualCandidate, player.freeOperations, player.deepSpaceTelescopeBuilt, player.deepSpaceTelescopeLevel, devDayOffset])
 
   const isDesktop = useIsDesktop()
   const coach = useAsteroidDiscoveryCoach()
