@@ -1189,12 +1189,10 @@ button { cursor: pointer; }
     font-size: 9px;
     letter-spacing: 0.12em;
   }
-  padding-bottom: 336px;
 }
 
 @media (max-width: 899px) {
   .mission-setup-screen--rocket .rocket-vehicle-frame { min-height: 220px; }
-}
 }
 
 .mission-setup-screen--assembly .assembly-card .mission-setup-card-scroll {
