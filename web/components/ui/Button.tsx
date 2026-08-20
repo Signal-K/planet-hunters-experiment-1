@@ -63,7 +63,11 @@ export function GhostBtn({ children, onClick, full = true, testId }: ButtonProps
       onClick={onClick}
       style={{
         width: full ? '100%' : 'auto',
+        minHeight: 44, // touch-target floor (Apple HIG / WCAG 2.5.5)
         padding: '12px 18px',
+        display: 'inline-flex',
+        alignItems: 'center',
+        justifyContent: 'center',
         background: 'rgba(20,20,23,0.6)',
         color: '#a9b8ce',
         fontFamily: 'var(--ln-font-display)',
@@ -87,7 +91,7 @@ export function IconBtn({
   ariaLabel,
   testId,
   color = '#cde4ff',
-  size = 38,
+  size = 44, // touch-target floor (Apple HIG / WCAG 2.5.5) — was 38
 }: {
   children: React.ReactNode
   onClick?: () => void
