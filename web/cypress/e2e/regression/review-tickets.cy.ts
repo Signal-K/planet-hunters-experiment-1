@@ -1,6 +1,7 @@
 import type { GameState } from '@/game-context'
 
 const STORAGE_KEY = 'landnam-game-state-v1'
+const E2E_TOKEN = `e30.${btoa(JSON.stringify({ exp: Math.floor(Date.now() / 1000) + 3600 }))}.test`
 
 type GameStateOverride = Omit<Partial<GameState>, 'player'> & {
   player?: Partial<GameState['player']>
@@ -70,10 +71,22 @@ function stateWith(overrides: GameStateOverride = {}): GameState {
 
 function visitGame(path: string, overrides: GameStateOverride = {}) {
   const state = stateWith(overrides)
+  cy.intercept('POST', '**/api/collections/users/auth-refresh', {
+    statusCode: 200,
+    body: { token: E2E_TOKEN, record: { id: 'e2e-user', email: 'e2e@landnam.guest' } },
+  }).as('pbAuthRefresh')
+  cy.intercept('POST', '**/api/landnam-auth/exchange', {
+    statusCode: 200,
+    body: { token: E2E_TOKEN, record: { id: 'e2e-user', email: 'e2e@landnam.guest' } },
+  }).as('pbLandnamExchange')
   cy.visit(path, {
     onBeforeLoad(win) {
       win.localStorage.setItem(STORAGE_KEY, JSON.stringify(state))
       win.localStorage.setItem('landnam-guest-credentials', JSON.stringify({ email: 'e2e@landnam.guest', password: 'e2e-guest-test' }))
+      win.localStorage.setItem('pocketbase_auth', JSON.stringify({
+        token: E2E_TOKEN,
+        record: { id: 'e2e-user', email: 'e2e@landnam.guest' },
+      }))
       win.localStorage.setItem('ln_missionboard_freeops_explainer_ack', '1')
       win.localStorage.setItem('ln_mining_freeops_first_entry_ack', '1')
       win.localStorage.setItem('ln_mining_freeops_first_success_ack', '1')
@@ -233,7 +246,7 @@ describe('Satellite/TESS level plumbing (STS-493)', () => {
       screen: 'galaxy',
       player: {
         satelliteMonitoringBuilt: true,
-        satelliteMonitoringLevel: 1,
+        satelliteMonitoringLevel: 3,
         transitSatelliteLaunchedAt: Date.now() - 60_000,
         transitSatelliteLevel: 3,
         tessClassifications: {},
