@@ -119,6 +119,7 @@ jobs:
           CYPRESS_baseUrl: http://localhost:3099
           NEXT_PUBLIC_LANDNAM_PB_URL: http://127.0.0.1:8091
           NEXT_PUBLIC_SHARED_PB_URL: http://127.0.0.1:8090
+          NEXT_PUBLIC_FEATURE_SCAN_STATION: true
           PORT: 3099
           CI: true
 

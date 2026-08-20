@@ -338,6 +338,14 @@ button { cursor: pointer; }
   padding: var(--ln-s-4);
   background: radial-gradient(ellipse at 30% -15%, #2c2c30 0%, #1c1c1f 45%, #08080a 80%);
 }
+/* Below the desktop breakpoint the device itself IS the phone — the padded,
+   bordered "phone card floating in a browser" treatment below was designed
+   for shrinking a desktop window, not for real mobile viewports, and on an
+   actual phone it just wastes screen as dead margin around a shrunk canvas.
+   Drop the stage padding here so .portrait-canvas can go full-bleed. */
+@media (max-width: 1023px) {
+  .game-stage { padding: 0; }
+}
 .game-stage::before {
   content: '';
   position: fixed;
@@ -368,6 +376,22 @@ button { cursor: pointer; }
   border-radius: 28px;
   box-shadow: var(--ln-shadow-modal), var(--ln-glow-cyan);
   isolation: isolate;
+}
+/* Real mobile viewports (and a resized-narrow desktop window, which shares
+   this breakpoint) get the full device screen, not a shrunk card with dead
+   margin around it — the 402x874 card above is a "phone mockup" treatment
+   that only makes sense once there's a larger frame around it to mock up
+   inside of. Safe-area padding for installed-PWA standalone mode is added
+   separately via body[data-pwa="standalone"] .portrait-canvas. */
+@media (max-width: 1023px) {
+  .portrait-canvas {
+    width: 100%;
+    height: 100dvh;
+    max-height: none;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+  }
 }
 
 /* Flex row above .bottom-tab-bar — screen content's own overflow-y:auto
@@ -770,6 +794,28 @@ button { cursor: pointer; }
 .compatibility--bad { color: var(--ln-crit); border: 1px solid var(--ln-crit); background: var(--ln-crit-soft); }
 .sticky-actions { position: absolute; z-index: 30; left: 0; right: 0; bottom: 0; padding: var(--ln-s-2) var(--ln-s-3) var(--ln-s-5); background: linear-gradient(180deg, transparent, rgba(10,10,11,.94) 34%, var(--ln-void)); }
 
+/* Step wayfinding footer (StepFooter.tsx) — desktop-sized defaults, matching
+   the values that used to be inline. Mobile gets a tighter pass below: this
+   strip sits directly above the primary CTA in .sticky-actions, so on a
+   narrow phone every px it takes is a px the thumb-reachable button loses. */
+.step-footer--inline { gap: 8px; padding: 8px 12px; }
+.step-footer-pills { display: flex; align-items: center; justify-content: center; gap: 8px; flex-wrap: wrap; }
+.step-footer-arrow { font-size: 13px; color: var(--ln-text-muted); opacity: .6; }
+.step-footer-pill { font: 800 12px var(--ln-font-display); letter-spacing: .04em; padding: 7px 16px; border-radius: 999px; white-space: nowrap; }
+.step-footer-caption { font: 800 9px var(--ln-font-display); letter-spacing: .18em; color: var(--ln-text-muted); text-transform: uppercase; }
+.step-footer-desc { font: 400 11px var(--ln-font-body); color: var(--ln-text-dim); opacity: .8; line-height: 1.35; max-width: 560px; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; }
+
+@media (max-width: 1023px) {
+  /* Fewer, smaller words in the wayfinding strip: current step's name is
+     still the one filled-in pill, but the row no longer competes with the
+     Purchase/Launch button beneath it for thumb space or attention. */
+  .step-footer--inline { gap: 6px; padding: 6px 10px; }
+  .step-footer-pills { gap: 4px; }
+  .step-footer-arrow { font-size: 10px; }
+  .step-footer-pill { font-size: 10px; padding: 5px 10px; }
+  .step-footer-desc { -webkit-line-clamp: 1; }
+}
+
 .mission-setup-screen {
   /* Keep the shared game-screen viewport contract; the scene layer itself
      is positioned relative to this full-area screen. */
@@ -1052,6 +1098,12 @@ button { cursor: pointer; }
     font-size: 9px;
     letter-spacing: 0.12em;
   }
+  padding-bottom: 336px;
+}
+
+@media (max-width: 899px) {
+  .mission-setup-screen--rocket .rocket-vehicle-frame { min-height: 220px; }
+}
 }
 
 .mission-setup-screen--assembly .assembly-card .mission-setup-card-scroll {
@@ -1363,7 +1415,6 @@ button { cursor: pointer; }
 .reward-xp { margin-top: var(--ln-s-2); color: var(--ln-info); font: 700 12px var(--ln-font-mono); letter-spacing: var(--ln-tr-label); }
 
 @media (max-height: 760px) and (max-width: 1023px) {
-  .portrait-canvas { border-radius: var(--ln-r-xl); }
   .screen-scroll { padding-top: 68px; }
   .screen-scroll--coach { padding-top: var(--tutorial-content-top); }
   .screen-scroll--coach-manual { padding-top: var(--tutorial-manual-content-top); }
