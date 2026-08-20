@@ -31,7 +31,7 @@ function CornerBracket({ position }: { position: 'tl' | 'tr' | 'bl' | 'br' }) {
   const cls = { tl: styles.cornerBracketTl, tr: styles.cornerBracketTr, bl: styles.cornerBracketBl, br: styles.cornerBracketBr }[position]
   return (
     <div className={`${styles.cornerBracket} ${cls}`}>
-      <svg viewBox="0 0 24 24" fill="none" stroke="rgba(112,217,234,0.35)" strokeWidth="1.8">
+      <svg viewBox="0 0 24 24" fill="none" stroke="var(--ln-hairline-strong)" strokeWidth="1.8">
         <path d="M2 22V2h20" />
       </svg>
     </div>
@@ -295,11 +295,11 @@ export default function MissionBoardScreen({ onBack, onPick, missionsDone, freeO
   const primer = previewModel ? missionTypePrimer(previewModel.mission) : null
 
   return (
-    <div className="ln-scene-mission-board" style={{ width: '100%', height: '100%', position: 'relative', background: 'var(--ln-shell)' }}>
-      <div style={{ position: 'absolute', inset: 0 }}>
+    <div className="ln-scene-mission-board theme-blueprint" style={{ width: '100%', height: '100%', position: 'relative', background: 'var(--ln-shell)' }}>
+      <div className={styles.spaceBackdrop} style={{ position: 'absolute', inset: 0 }}>
         <Image src="/earth-day.jpg" alt="" fill style={{ objectFit: 'cover', filter: 'brightness(0.3) saturate(0.7)' }} />
       </div>
-      <div className="ln-starfield" style={{ position: 'absolute', inset: 0, opacity: 0.6, pointerEvents: 'none' }} />
+      <div className={`ln-starfield ${styles.spaceBackdrop}`} style={{ position: 'absolute', inset: 0, opacity: 0.6, pointerEvents: 'none' }} />
         <TopBar
           eyebrow={freeOperations ? 'EARTH BASE · FREE OPS' : `EARTH BASE · L${missionsDone + 1}`}
           title="Mission Board"
@@ -462,7 +462,7 @@ export default function MissionBoardScreen({ onBack, onPick, missionsDone, freeO
                   aria-label="Dismiss"
                   style={{
                     position: 'absolute', top: 8, right: 8, width: 20, height: 20, borderRadius: 6,
-                    border: '1px solid rgba(112,217,234,0.4)', background: 'rgba(20,20,23,0.6)',
+                    border: '1px solid var(--ln-cyan-border)', background: 'var(--ln-surface-2)',
                     color: 'var(--ln-cyan)', fontSize: 12, lineHeight: 1, cursor: 'pointer',
                   }}
                 >
@@ -488,7 +488,7 @@ export default function MissionBoardScreen({ onBack, onPick, missionsDone, freeO
               </div>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
                 {hotMinerals.map(mineral => (
-                  <span key={mineral.name} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '4px 8px', borderRadius: 6, border: `1px solid ${mineral.color}66`, background: 'rgba(20,20,23,0.72)', fontFamily: 'var(--ln-font-mono)', fontSize: 10, color: mineral.color }}>
+                  <span key={mineral.name} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '4px 8px', borderRadius: 6, border: `1px solid ${mineral.color}66`, background: 'var(--ln-surface-2)', fontFamily: 'var(--ln-font-mono)', fontSize: 10, color: mineral.color }}>
                   <strong>{mineral.name}</strong> <span style={{ opacity: 0.65 }}>({mineral.sym})</span> {formatCurrency(mineral.price)}
                   </span>
                 ))}

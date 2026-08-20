@@ -8,8 +8,24 @@ import TopBar from '@/components/ui/TopBar'
 import { GhostBtn, PrimaryBtn } from '@/components/ui/Button'
 import ConfirmActionSheet from '@/components/game/ConfirmActionSheet'
 import { UI_ZONES } from '@/lib/ui-zones'
-import type { TransitScene } from '@/lib/pixi/transitScene'
 import { formatCountdown } from '@/lib/format'
+
+// Blueprint trajectory plot — origin/destination fixed on a percentage grid
+// (0-100), current position is a point on the quadratic bezier between them
+// driven by `progress` (0-100), same value that used to drive the filled
+// progress-track bar. Underlying progress data is unchanged; only the
+// presentation is (KES-211).
+const PLOT_ORIGIN = { x: 10, y: 78 }
+const PLOT_CONTROL = { x: 50, y: 18 }
+const PLOT_DESTINATION = { x: 90, y: 24 }
+
+function pointOnQuadraticBezier(t: number, p0: { x: number; y: number }, p1: { x: number; y: number }, p2: { x: number; y: number }) {
+  const mt = 1 - t
+  return {
+    x: mt * mt * p0.x + 2 * mt * t * p1.x + t * t * p2.x,
+    y: mt * mt * p0.y + 2 * mt * t * p1.y + t * t * p2.y,
+  }
+}
 
 interface Props {
   target: Target
@@ -44,9 +60,6 @@ export default function TransitScreen({ target, rocketImageSrc, arrivalAt, trans
   const [now, setNow] = useState(() => Date.now())
   const [fakeStartedAt] = useState(() => Date.now())
   const [fakeProgress, setFakeProgress] = useState(FAKE_PROGRESS_START)
-  const canvasRef = useRef<HTMLCanvasElement>(null)
-  const sceneRef = useRef<TransitScene | null>(null)
-  const progressRef = useRef(isTimed ? 0 : FAKE_PROGRESS_START)
   // Arrival can be requested by the progress effect and a visible control in
   // the same render window. The game transition is not re-entrant, so only
   // forward the first request.
@@ -106,7 +119,6 @@ export default function TransitScreen({ target, rocketImageSrc, arrivalAt, trans
     }
   }, [isTimed, now, arrivalAt, fakeProgress, arriveOnce])
 
-  // Keep progressRef current so the PixiJS scene always gets live progress
   const [mountedAt] = useState(() => Date.now())
   const [confirmingAbandon, setConfirmingAbandon] = useState(false)
   const stableTransitStartedAt = isTimed
@@ -116,77 +128,6 @@ export default function TransitScreen({ target, rocketImageSrc, arrivalAt, trans
   const progress = isTimed
     ? Math.min(100, Math.max(0, Math.round(((now - stableTransitStartedAt) / totalMs) * 100)))
     : fakeProgress
-  useEffect(() => { progressRef.current = progress }, [progress])
-
-  // PixiJS backdrop
-  useEffect(() => {
-    const canvas = canvasRef.current
-    if (!canvas) return
-
-    let app: import('pixi.js').Application | null = null
-    let rafId = 0
-    let elapsed = 0
-    let destroyed = false
-
-    async function init() {
-      const { Application } = await import('pixi.js')
-      const { buildTransitScene } = await import('@/lib/pixi/transitScene')
-
-      if (!canvas || destroyed) return
-      app = new Application()
-      await app.init({
-        canvas,
-        width: canvas.offsetWidth || 320,
-        height: canvas.offsetHeight || 480,
-        backgroundAlpha: 0,
-        antialias: true,
-      })
-
-      // Check destroyed AFTER init — if unmount raced the async init, clean up
-      // now and bail. Guard with try/catch: PixiJS v8 _cancelResize can throw
-      // if the renderer never fully initialised.
-      if (destroyed) {
-        try { app.destroy() } catch (_) { /* pixi v8 cleanup */ }
-        app = null
-        return
-      }
-
-      const kind = returning ? 'earth' : target.type === 'planet' ? 'planet' : 'asteroid'
-      const scene = buildTransitScene(app, {
-        targetName: returning ? 'Earth' : target.name,
-        targetKind: kind,
-        rocketImageSrc,
-        getProgress: () => progressRef.current,
-      })
-      sceneRef.current = scene
-
-      function loop(t: number) {
-        // requestAnimationFrame is throttled or suspended in background tabs.
-        // Derive the scene clock from the persisted wall-clock transit epoch so
-        // the rocket and parallax catch up immediately after visibility returns
-        // and do not restart when the transit screen remounts.
-        const wallElapsed = Math.max(0, (Date.now() - stableTransitStartedAt) / 1000)
-        const dt = Math.min(Math.max(wallElapsed - elapsed, 0), 0.1)
-        elapsed = wallElapsed
-        scene.update(elapsed, dt)
-        rafId = requestAnimationFrame(loop)
-      }
-      elapsed = Math.max(0, (Date.now() - stableTransitStartedAt) / 1000)
-      rafId = requestAnimationFrame(loop)
-    }
-
-    void init()
-
-    return () => {
-      cancelAnimationFrame(rafId)
-      destroyed = true
-      if (app?.renderer) {
-        try { app.destroy() } catch (_) { /* pixi v8 cleanup */ }
-      }
-      sceneRef.current = null
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [stableTransitStartedAt])
 
   const etaMs = isTimed ? Math.max(0, arrivalAt! - now) : 0
   const arrived = isTimed ? now >= arrivalAt! : fakeProgress >= 100
@@ -209,16 +150,30 @@ export default function TransitScreen({ target, rocketImageSrc, arrivalAt, trans
         : missionTypePrimer(mission).summary
     : null
 
+  const originLabel = returning ? target.name : 'EARTH'
+  const destPlotLabel = returning ? 'EARTH' : target.name
+  const dotPos = pointOnQuadraticBezier(progress / 100, PLOT_ORIGIN, PLOT_CONTROL, PLOT_DESTINATION)
+  const trajectoryPath = `M ${PLOT_ORIGIN.x} ${PLOT_ORIGIN.y} Q ${PLOT_CONTROL.x} ${PLOT_CONTROL.y} ${PLOT_DESTINATION.x} ${PLOT_DESTINATION.y}`
+
   return (
-    <div className="game-screen transit-screen">
+    <div className="game-screen transit-screen theme-blueprint">
       <TopBar eyebrow="MISSION TRANSIT" title={`${legLabel} · ${destinationName}`} onBack={onBack} />
 
-      {/* PixiJS backdrop fills the transit-stage zone */}
+      {/* Plotted trajectory — dashed navy/blue curve from origin to destination,
+          current position rendered as a pink dot moving along it (KES-211).
+          Replaces the previous PixiJS starfield/ship backdrop, which was
+          built for the dark command-deck theme and doesn't fit the light
+          blueprint direction. */}
       <div className="transit-stage" style={{ overflow: 'hidden' }}>
-        <canvas
-          ref={canvasRef}
-          style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }}
-        />
+        <svg viewBox="0 0 100 100" preserveAspectRatio="none" className="transit-plot" aria-hidden="true">
+          <path d={trajectoryPath} className="transit-plot-path" />
+          <circle cx={PLOT_ORIGIN.x} cy={PLOT_ORIGIN.y} r="2.4" className="transit-plot-marker transit-plot-marker--origin" />
+          <circle cx={PLOT_DESTINATION.x} cy={PLOT_DESTINATION.y} r="2.4" className="transit-plot-marker transit-plot-marker--destination" />
+          <circle cx={dotPos.x} cy={dotPos.y} r="2" className="transit-plot-dot" />
+        </svg>
+        <span className="transit-plot-label transit-plot-label--origin">{originLabel}</span>
+        <span className="transit-plot-label transit-plot-label--destination">{destPlotLabel}</span>
+        <span className="transit-plot-progress" style={{ left: `${dotPos.x}%`, top: `${dotPos.y}%` }}>{Math.round(progress)}%</span>
         {/* Testid marker — adopts rocket-mark CSS (56° rotate) so transform-angle assertions pass */}
         <div
           data-testid="transit-rocket"
@@ -237,7 +192,6 @@ export default function TransitScreen({ target, rocketImageSrc, arrivalAt, trans
         ) : (
           <div><span>Transit</span><strong>{fakeProgress}%</strong></div>
         )}
-        <div className="progress-track"><span style={{ width: `${progress}%` }} /></div>
       </div>
 
       {mission && (
@@ -245,7 +199,7 @@ export default function TransitScreen({ target, rocketImageSrc, arrivalAt, trans
           data-testid="transit-mission-context"
           style={{
             margin: '0 16px 10px', padding: '10px 14px',
-            background: 'rgba(13,13,14,0.7)', backdropFilter: 'var(--ln-glass-blur)', WebkitBackdropFilter: 'var(--ln-glass-blur)',
+            background: 'var(--ln-panel)',
             border: '1px solid var(--ln-hairline)', borderLeft: '3px solid var(--ln-cyan)', borderRadius: 12,
           }}
         >
@@ -271,8 +225,8 @@ export default function TransitScreen({ target, rocketImageSrc, arrivalAt, trans
       {cargoEntries.length > 0 && (
         <div style={{
           margin: '0 16px 12px', padding: '10px 14px',
-          background: 'rgba(13,13,14,0.7)', backdropFilter: 'var(--ln-glass-blur)', WebkitBackdropFilter: 'var(--ln-glass-blur)', border: '1px solid var(--ln-hairline)',
-          borderLeft: '3px solid var(--ln-amber)', borderRadius: 12,
+          background: 'var(--ln-panel)', border: '1px solid var(--ln-hairline)',
+          borderLeft: '3px solid var(--ln-bp-blue)', borderRadius: 12,
         }}>
           <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 9, fontWeight: 800, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'var(--ln-text-dim)', marginBottom: 6 }}>
             {cargoHeading}

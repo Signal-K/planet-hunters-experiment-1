@@ -126,7 +126,7 @@ export default function TargetPickerScreen({ mission, onBack, onPick, hasCoach, 
 
   return (
     <MissionSetupShell
-      className="mission-setup-screen--target"
+      className="theme-blueprint mission-setup-screen--target"
       eyebrow={mission.title.toUpperCase()}
       title="Pick Target"
       onBack={onBack}
@@ -159,7 +159,7 @@ export default function TargetPickerScreen({ mission, onBack, onPick, hasCoach, 
         {deliveryTarget && (
           <div style={{
             padding: '8px 12px', borderRadius: 6,
-            background: 'rgba(112,217,234,0.08)', border: '1px solid rgba(112,217,234,0.3)',
+            background: 'var(--ln-cyan-soft)', border: '1px solid var(--ln-cyan-border)',
             fontFamily: 'var(--ln-font-display)', fontSize: 10, fontWeight: 700,
             letterSpacing: '0.08em', color: 'var(--ln-cyan)', textTransform: 'uppercase',
           }}>

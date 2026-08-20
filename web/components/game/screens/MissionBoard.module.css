@@ -530,3 +530,150 @@
   }
   .panel { position: sticky; top: 12px; }
 }
+
+/* ── Blueprint retheme — Mission Board, KES-211 ──────────────────────────
+   Chose the "reskin the existing card list" fallback over a full node-field
+   layout: the card grid carries a lot of live state (locked/cooldown/
+   completed/highlighted/crew-ready) wired through data-testid hooks used by
+   Cypress journeys, and a structural rebuild risked breaking those without
+   buying much readability over a clean paper-card treatment. Card list stays
+   a stacked list; visuals become light paper cards with thin navy hairline
+   borders (no shadow-heavy elevation), pink border for the selected/
+   previewed card, green for the "ready"/available state accents, cyan kept
+   for the primary action buttons only. Root screen wrapper opts in via
+   className="theme-blueprint" (MissionBoardScreen.tsx). The full dark-space
+   backdrop image + starfield are hidden under blueprint (a chart-paper
+   surface, not a HUD-on-black one). */
+:global(.theme-blueprint) .spaceBackdrop {
+  display: none;
+}
+
+:global(.theme-blueprint) .canvas {
+  background:
+    repeating-linear-gradient(0deg, var(--ln-bp-line) 0px, var(--ln-bp-line) 1px, transparent 1px, transparent 26px),
+    repeating-linear-gradient(90deg, var(--ln-bp-line) 0px, var(--ln-bp-line) 1px, transparent 1px, transparent 26px),
+    var(--ln-bp-bg);
+}
+
+:global(.theme-blueprint) .sortSelect {
+  border-color: var(--ln-bp-line-strong);
+  background: var(--ln-bp-paper);
+  color: var(--ln-text-dim);
+}
+
+:global(.theme-blueprint) .card {
+  border-color: var(--ln-bp-line-strong);
+  background: var(--ln-bp-paper);
+  box-shadow: none;
+}
+:global(.theme-blueprint) .card:hover {
+  background: var(--ln-bp-paper-2);
+  border-color: var(--ln-bp-blue);
+}
+:global(.theme-blueprint) .cardSelected {
+  border-color: var(--ln-bp-pink);
+  background: var(--ln-bp-pink-soft);
+  box-shadow: 0 0 0 1px var(--ln-bp-pink-border);
+}
+:global(.theme-blueprint) .cardLocked,
+:global(.theme-blueprint) .cardCooldown {
+  background: var(--ln-bp-paper-2);
+}
+:global(.theme-blueprint) .cardLocked:hover,
+:global(.theme-blueprint) .cardCooldown:hover {
+  background: var(--ln-bp-paper-2);
+  border-color: var(--ln-bp-line-strong);
+}
+
+:global(.theme-blueprint) .tag {
+  border-color: var(--ln-bp-line-strong);
+  background: var(--ln-bp-paper-2);
+  color: var(--ln-text-dim);
+}
+:global(.theme-blueprint) .tagBurn {
+  color: var(--ln-bp-ink-dim);
+  border-color: var(--ln-bp-line-strong);
+  background: var(--ln-bp-paper-2);
+}
+:global(.theme-blueprint) .tagJob {
+  color: var(--ln-bp-blue);
+  border-color: rgba(31, 120, 193, 0.32);
+  background: var(--ln-bp-blue-soft);
+}
+:global(.theme-blueprint) .tagTwostop {
+  color: var(--ln-bp-green);
+  border-color: rgba(31, 143, 87, 0.32);
+  background: var(--ln-bp-green-soft);
+}
+
+:global(.theme-blueprint) .cardBtnDisabled {
+  background: var(--ln-bp-paper-2);
+  color: var(--ln-text-muted);
+}
+
+:global(.theme-blueprint) .disclaimer,
+:global(.theme-blueprint) .detailDisclaimer {
+  border-color: var(--ln-bp-line-strong);
+  color: var(--ln-text-muted);
+}
+
+:global(.theme-blueprint) .primer {
+  border-color: var(--ln-bp-line-strong);
+  background: var(--ln-bp-paper);
+}
+:global(.theme-blueprint) .primerTitle {
+  color: var(--ln-bp-blue);
+}
+:global(.theme-blueprint) .primerStep {
+  border-color: rgba(31, 120, 193, 0.32);
+  background: var(--ln-bp-blue-soft);
+  color: var(--ln-bp-blue);
+}
+:global(.theme-blueprint) .primerArrow {
+  color: var(--ln-bp-ink-mute);
+}
+
+:global(.theme-blueprint) .panel {
+  background: var(--ln-bp-paper);
+  border: 1px solid var(--ln-bp-line-strong);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+:global(.theme-blueprint) .panelHeader {
+  background: var(--ln-bp-blue-soft);
+  border-bottom: 2px solid var(--ln-bp-line);
+}
+:global(.theme-blueprint) .panelHeader h3 {
+  color: var(--ln-bp-blue);
+}
+
+:global(.theme-blueprint) .emptyIcon {
+  border-color: var(--ln-bp-line-strong);
+  color: var(--ln-bp-ink-mute);
+}
+:global(.theme-blueprint) .emptyLabel {
+  color: var(--ln-bp-ink-mute);
+}
+
+:global(.theme-blueprint) .detailWants {
+  border-top-color: var(--ln-bp-line);
+}
+:global(.theme-blueprint) .detailChip {
+  border-color: var(--ln-bp-line-strong);
+  background: var(--ln-bp-paper-2);
+  color: var(--ln-text-dim);
+}
+:global(.theme-blueprint) .detailChipPay {
+  color: var(--ln-amber);
+  border-color: var(--ln-amber-border);
+  background: var(--ln-amber-soft);
+}
+:global(.theme-blueprint) .detailChipAff {
+  color: var(--ln-bp-green);
+  border-color: rgba(31, 143, 87, 0.32);
+  background: var(--ln-bp-green-soft);
+}
+:global(.theme-blueprint) .detailCta:disabled {
+  background: var(--ln-bp-paper-2);
+  color: var(--ln-text-muted);
+}

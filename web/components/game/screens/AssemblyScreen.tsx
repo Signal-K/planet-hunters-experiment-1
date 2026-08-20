@@ -56,7 +56,7 @@ export default function AssemblyScreen(props: AssemblyScreenProps) {
 
   return (
     <MissionSetupShell
-      className="mission-setup-screen--assembly"
+      className="mission-setup-screen--assembly theme-blueprint"
       eyebrow="LAUNCHPAD · PREFLIGHT"
       title="Confirm Rocket"
       onBack={props.onBack}
@@ -154,28 +154,39 @@ function LaunchClearance({
     : ['Earth Base', target.name]
   return (
     <div data-testid="assembly-rocket-cutaway" style={{ width: '100%', maxWidth: 620, display: 'flex', flexDirection: 'column', gap: compact ? 6 : 10 }}>
+      {!compact && <PadElevation />}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 14 }}>
         <div>
           <div className="ln-micro" style={{ color: 'var(--ln-cyan)' }}>Launch authorization</div>
           <div style={{ marginTop: 3, font: `800 ${compact ? 16 : 22}px var(--ln-font-display)`, color: 'var(--ln-text)', letterSpacing: '-0.02em' }}>Flight cleared</div>
           {!compact && <div style={{ marginTop: 3, font: '11px var(--ln-font-body)', color: 'var(--ln-text-dim)' }}>{mission.title} · {rocket.name} · single-use vehicle</div>}
         </div>
-        <div style={{ width: compact ? 36 : 54, height: compact ? 36 : 54, borderRadius: 999, display: 'grid', placeItems: 'center', flexShrink: 0, border: `2px solid ${ready ? 'var(--ln-ok)' : 'var(--ln-crimson)'}`, color: ready ? 'var(--ln-ok)' : 'var(--ln-crimson)', background: ready ? 'rgba(90,208,126,0.1)' : 'rgba(200,41,62,0.1)', boxShadow: ready ? '0 0 20px rgba(90,208,126,0.22)' : 'none' }}>
+        <div style={{ width: compact ? 36 : 54, height: compact ? 36 : 54, borderRadius: 999, display: 'grid', placeItems: 'center', flexShrink: 0, border: `2px solid ${ready ? 'var(--ln-ok)' : 'var(--ln-crimson)'}`, color: ready ? 'var(--ln-ok)' : 'var(--ln-crimson)', background: ready ? 'var(--ln-ok-soft)' : 'var(--ln-crimson-soft)' }}>
           <Check size={compact ? 16 : 24} />
         </div>
       </div>
 
       {!compact && (
-        <div style={{ padding: '10px 12px', borderRadius: 10, background: 'rgba(3,10,20,0.62)', border: '1px solid rgba(245,166,35,0.35)' }}>
+        <div style={{ padding: '10px 12px', borderRadius: 10, background: 'var(--ln-panel-2)', border: '1px solid var(--ln-cyan-border)' }}>
           <div className="ln-micro">Flight plan</div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 8 }}>
             {stops.map((stop, index) => (
               <div key={`${stop}-${index}`} style={{ display: 'flex', alignItems: 'center', gap: 8, flex: index === stops.length - 1 ? 0 : 1 }}>
                 <div style={{ minWidth: 0, textAlign: 'center' }}>
-                  <div style={{ width: 12, height: 12, margin: '0 auto 7px', borderRadius: 999, background: index === stops.length - 1 ? 'var(--ln-amber)' : 'var(--ln-cyan)', boxShadow: `0 0 12px ${index === stops.length - 1 ? 'rgba(245,166,35,0.55)' : 'rgba(112,217,234,0.55)'}` }} />
+                  {index === stops.length - 1 ? (
+                    <svg width="14" height="14" viewBox="0 0 14 14" style={{ display: 'block', margin: '0 auto 7px' }} aria-hidden="true">
+                      <circle cx="7" cy="7" r="6" fill="none" stroke="var(--ln-bp-pink, var(--ln-cyan))" strokeWidth="1.5" />
+                      <line x1="7" y1="0" x2="7" y2="4" stroke="var(--ln-bp-pink, var(--ln-cyan))" strokeWidth="1.5" />
+                      <line x1="7" y1="10" x2="7" y2="14" stroke="var(--ln-bp-pink, var(--ln-cyan))" strokeWidth="1.5" />
+                      <line x1="0" y1="7" x2="4" y2="7" stroke="var(--ln-bp-pink, var(--ln-cyan))" strokeWidth="1.5" />
+                      <line x1="10" y1="7" x2="14" y2="7" stroke="var(--ln-bp-pink, var(--ln-cyan))" strokeWidth="1.5" />
+                    </svg>
+                  ) : (
+                    <div style={{ width: 10, height: 10, margin: '0 auto 7px', borderRadius: 999, border: '2px solid var(--ln-cyan)', background: 'var(--ln-panel)' }} />
+                  )}
                   <div style={{ font: '800 10px var(--ln-font-display)', color: 'var(--ln-text)', whiteSpace: 'nowrap' }}>{stop}</div>
                 </div>
-                {index < stops.length - 1 && <div style={{ flex: 1, height: 1, minWidth: 24, background: 'linear-gradient(90deg, var(--ln-cyan), var(--ln-amber))' }} />}
+                {index < stops.length - 1 && <div style={{ flex: 1, height: 1, minWidth: 24, borderTop: '1.5px dashed var(--ln-cyan)' }} />}
               </div>
             ))}
           </div>
@@ -209,13 +220,32 @@ function LaunchClearance({
   )
 }
 
+// Decorative drafted elevation: unfilled pad/gantry outline + vehicle
+// silhouette, matching the blueprint linework style used on Select Rocket.
+// Purely visual — no interactive state.
+function PadElevation() {
+  return (
+    <svg viewBox="0 0 620 120" fill="none" aria-hidden="true" style={{ width: '100%', height: 'auto', display: 'block' }}>
+      {/* Ground line + pad. */}
+      <line x1="16" y1="108" x2="604" y2="108" stroke="var(--ln-bp-ink-mute, var(--ln-text-muted))" strokeWidth="1" />
+      <path d="M180 108 V96 H420 V108" fill="none" stroke="var(--ln-bp-ink-dim, var(--ln-text-dim))" strokeWidth="1.5" />
+      {/* Gantry tower, unfilled. */}
+      <path d="M462 108 V28 H520 V108 M462 44 H520 M462 68 H520 M462 90 H520" stroke="var(--ln-bp-ink-mute, var(--ln-text-muted))" strokeWidth="1" />
+      {/* Vehicle silhouette, upright on the pad. */}
+      <path d="M300 96 V50 Q300 24 320 12 Q340 24 340 50 V96 Z" fill="none" stroke="var(--ln-bp-ink, var(--ln-text))" strokeWidth="1.5" />
+      <line x1="300" y1="70" x2="340" y2="70" stroke="var(--ln-bp-ink-mute, var(--ln-text-muted))" strokeWidth="1" strokeDasharray="4 5" />
+      <path d="M300 96 L286 108 M340 96 L354 108" stroke="var(--ln-bp-ink, var(--ln-text))" strokeWidth="1.5" />
+    </svg>
+  )
+}
+
 function ChecklistRow({ ok, label }: { ok: boolean; label: string }) {
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 8, font: '700 12px var(--ln-font-display)', color: ok ? 'var(--ln-text-dim)' : 'var(--ln-crimson)' }}>
       <span style={{
         width: 18, height: 18, borderRadius: 999, flexShrink: 0,
         display: 'grid', placeItems: 'center',
-        background: ok ? 'rgba(90,208,126,0.16)' : 'rgba(200,41,62,0.16)',
+        background: ok ? 'var(--ln-ok-soft)' : 'var(--ln-crimson-soft)',
         color: ok ? 'var(--ln-ok)' : 'var(--ln-crimson)',
       }}>
         {ok ? <Check size={11} /> : <X size={11} />}

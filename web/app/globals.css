@@ -270,6 +270,97 @@
   --ln-text-inverse: #f4f1ea;
 }
 
+/* ─── Blueprint theme — light "engineering blueprint" look for the
+   mission-setup + flight loop (KES-211). Liam repeatedly and emphatically
+   rejected dark-by-default for this flow specifically — not just
+   reference/menu surfaces, which already have .theme-light per STS-413 and
+   are unaffected by this. Pale blueprint-blue paper, deep navy ink
+   linework, no dark ground, no glow — informed by Out There: Ω Edition's
+   white/light-blue cel-shaded style and Departure Mono's tabular density.
+   Opt-in per screen (apply className="theme-blueprint" to a screen root) —
+   deliberately NOT wired as a new global default, so screens outside this
+   ticket's scope (Mining, SurfaceOps, etc.) are unaffected.
+
+   The --ln-bp-* tokens below are the new blueprint vocabulary for
+   screen-specific work (individual screens being built next). The aliases
+   further down re-point the EXISTING shared --ln-* tokens to blueprint
+   values, so already-token-driven shared shell chrome (MissionSetupShell,
+   StepFooter's inline styles, Panel.tsx, .mission-setup-frame/-card)
+   re-skins automatically wherever .theme-blueprint is applied, without
+   editing those component files — same mechanism .theme-light already
+   uses, just sourced from the bp-prefixed raw palette instead of redefining
+   the shared names directly. ─── */
+.theme-blueprint {
+  --ln-bp-bg:      #eef3f8;
+  --ln-bp-paper:   #ffffff;
+  --ln-bp-paper-2: #dfe9f3;
+
+  --ln-bp-ink:      #0f2436;
+  --ln-bp-ink-dim:  #48596a;
+  --ln-bp-ink-mute: #7c8ea0;
+
+  --ln-bp-line:        rgba(15, 36, 54, 0.14);
+  --ln-bp-line-strong: rgba(15, 36, 54, 0.30);
+
+  --ln-bp-blue:      #1f78c1;
+  --ln-bp-blue-soft: rgba(31, 120, 193, 0.08);
+
+  --ln-bp-pink:        #c94a86;
+  --ln-bp-pink-soft:   rgba(201, 74, 134, 0.10);
+  --ln-bp-pink-border: rgba(201, 74, 134, 0.4);
+
+  --ln-bp-green:      #1f8f57;
+  --ln-bp-green-soft: rgba(31, 143, 87, 0.10);
+
+  /* --ln-cyan* intentionally NOT redefined here — Landnam's existing cyan
+     (inherited from :root/.theme-deep) stays the ONE primary command
+     accent: primary CTA + confirmed/selected state only. Same restriction
+     that already applies to amber (payout/reward emphasis only, never
+     chrome) — amber itself is also left un-redefined here for the same
+     reason. */
+
+  /* Alias the shared token set so existing shell/chrome classes and
+     component inline styles (which read var(--ln-void), var(--ln-panel),
+     var(--ln-shell), var(--ln-hairline-strong), etc.) re-skin automatically
+     under this class. */
+  --ln-void:      var(--ln-bp-bg);
+  --ln-bg:        var(--ln-bp-bg);
+  --ln-bg-grid:   var(--ln-bp-paper-2);
+  --ln-surface:   var(--ln-bp-paper);
+  --ln-surface-2: var(--ln-bp-paper-2);
+  --ln-surface-3: var(--ln-bp-paper-2);
+  --ln-shell:     var(--ln-bp-bg);
+  --ln-panel:     var(--ln-bp-paper);
+  --ln-panel-2:   var(--ln-bp-paper-2);
+  --ln-overlay:   rgba(238, 243, 248, 0.86);
+
+  --ln-text:       var(--ln-bp-ink);
+  --ln-text-dim:   var(--ln-bp-ink-dim);
+  --ln-text-muted: var(--ln-bp-ink-mute);
+  --ln-text-ghost: rgba(15, 36, 54, 0.35);
+
+  --ln-hairline:        var(--ln-bp-line);
+  --ln-hairline-strong: var(--ln-bp-line-strong);
+  --ln-divider:         var(--ln-bp-line);
+
+  --ln-cyan-soft:   var(--ln-bp-blue-soft);
+  --ln-cyan-border: rgba(31, 120, 193, 0.32);
+
+  --ln-ok:      var(--ln-bp-green);
+  --ln-ok-soft: var(--ln-bp-green-soft);
+
+  --ln-shadow-card:  0 1px 0 rgba(255,255,255,0.6) inset, 0 4px 16px rgba(15,36,54,0.10);
+  --ln-shadow-modal: 0 24px 64px rgba(15,36,54,0.22);
+}
+
+/* .sticky-actions's command-dock gradient is hardcoded dark rgba, not
+   token-driven, so it doesn't pick up the alias above — override explicitly
+   for the mission-setup dock under .theme-blueprint so it fades to paper
+   instead of black. */
+.theme-blueprint .sticky-actions {
+  background: linear-gradient(180deg, transparent, rgba(238, 243, 248, 0.94) 34%, var(--ln-bp-bg));
+}
+
 /* .theme-steel (mid-tone shell + genuinely light content cards) removed
    2026-07-23 — superseded by the revised :root/.theme-deep palette above.
    It shipped only to Mission Board/MissionCard, diverged from every other
@@ -1756,4 +1847,96 @@ html[data-coach-target="build-structure-strip"] [data-coach-id="build-structure-
      without extra clearance the second line lands on the Launchpad
      building's own status pill above it. */
   .hub-action-rail--edit { bottom: calc(var(--ln-s-2) + 92px) !important; }
+}
+
+/* ─── KES-211 — Rocket Purchase + Assembly/Launch Preflight blueprint pass.
+   Both screens already opt into .theme-blueprint on their root and their
+   layout classes (.rocket-vehicle-frame, .assembly-preflight-scene, etc.)
+   already read --ln-* tokens that the .theme-blueprint block above remaps,
+   so most of the reskin is automatic. These two rules give the vehicle
+   stage and preflight scene a drafting-sheet border treatment (dashed
+   linework instead of a glow ring) to match the unfilled technical-drawing
+   direction used in RocketCutaway.tsx and AssemblyScreen's PadElevation. ─── */
+.theme-blueprint .rocket-vehicle-frame,
+.theme-blueprint .assembly-preflight-scene {
+  border-style: dashed;
+  border-color: var(--ln-bp-line-strong, var(--ln-cyan-border));
+}
+
+/* ─── KES-211 — TransitScreen blueprint pass. ────────────────────────────
+   Replaces the dark starfield/radial-glow backdrop and the filled
+   progress-track bar with a plotted trajectory: a dashed navy/blue curve
+   between origin and destination markers, current position rendered as a
+   small pink dot on the line, with the numeric progress % (unchanged data,
+   just re-presented) as a label beside the dot. Scoped to .transit-screen
+   under .theme-blueprint only — does not touch any other screen's transit
+   or progress-bar styling. ─── */
+.transit-screen.theme-blueprint {
+  background: var(--ln-bp-bg);
+}
+.theme-blueprint .transit-plot {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+.theme-blueprint .transit-plot-path {
+  fill: none;
+  stroke: var(--ln-bp-blue);
+  stroke-width: 0.6;
+  stroke-dasharray: 2.4 2;
+  stroke-linecap: round;
+  opacity: 0.75;
+}
+.theme-blueprint .transit-plot-marker {
+  fill: var(--ln-bp-paper);
+  stroke: var(--ln-bp-ink);
+  stroke-width: 0.6;
+}
+.theme-blueprint .transit-plot-dot {
+  fill: var(--ln-bp-pink);
+  stroke: var(--ln-bp-paper);
+  stroke-width: 0.5;
+}
+.theme-blueprint .transit-plot-label {
+  position: absolute;
+  font: 700 9px var(--ln-font-display);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ln-bp-ink-dim);
+}
+.theme-blueprint .transit-plot-label--origin {
+  left: calc(10% + 10px);
+  top: calc(78% - 6px);
+}
+.theme-blueprint .transit-plot-label--destination {
+  left: calc(90% - 66px);
+  top: calc(24% - 18px);
+}
+.theme-blueprint .transit-plot-progress {
+  position: absolute;
+  transform: translate(10px, -22px);
+  font: 700 10px var(--ln-font-mono);
+  color: var(--ln-bp-pink);
+  background: var(--ln-bp-paper);
+  padding: 2px 6px;
+  border-radius: 4px;
+  border: 1px solid var(--ln-bp-pink-border);
+  white-space: nowrap;
+}
+
+/* ─── KES-211 — DebriefScreen blueprint pass. ────────────────────────────
+   Reworks the reward/summary content from a celebratory dark-glow reward
+   card into a manifest-receipt: plain light paper background (no radial
+   glow), bordered rows with light hairline dividers. Payout stays the one
+   amber-colored figure per the standing amber-restricted-to-payout rule;
+   everything else renders in navy ink. Scoped to .debrief-screen under
+   .theme-blueprint only. ─── */
+.debrief-screen.theme-blueprint {
+  background: var(--ln-bp-bg);
+}
+.theme-blueprint .success-mark {
+  background: radial-gradient(circle at 30% 30%, #eaffef, var(--ln-bp-green) 70%, var(--ln-bp-green));
+  color: #ffffff;
+  box-shadow: 0 0 0 1px var(--ln-bp-green);
 }

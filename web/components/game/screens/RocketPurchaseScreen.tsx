@@ -40,8 +40,8 @@ function ModuleChip({ label }: { label: string }) {
     <div style={{
       display: 'inline-flex', alignItems: 'center',
       padding: '5px 10px', borderRadius: 6,
-      background: 'rgba(112,217,234,0.08)',
-      border: '1px solid rgba(112,217,234,0.22)',
+      background: 'var(--ln-bp-blue-soft, var(--ln-cyan-soft))',
+      border: '1px solid var(--ln-cyan-border)',
       fontFamily: 'var(--ln-font-display)', fontSize: 10, fontWeight: 700,
       letterSpacing: '0.1em', color: 'var(--ln-cyan)', textTransform: 'uppercase',
     }}>
@@ -79,7 +79,7 @@ export default function RocketPurchaseScreen({ missionsDone, francs, mission, de
 
   return (
     <MissionSetupShell
-      className="mission-setup-screen--rocket"
+      className="mission-setup-screen--rocket theme-blueprint"
       eyebrow="LAUNCHPAD · VEHICLE"
       title="Select Rocket"
       onBack={onBack}
@@ -116,7 +116,7 @@ export default function RocketPurchaseScreen({ missionsDone, francs, mission, de
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          background: 'radial-gradient(ellipse at 50% 54%, rgba(112,217,234,0.16) 0%, rgba(112,217,234,0.05) 36%, transparent 72%)',
+          background: 'radial-gradient(ellipse at 50% 54%, var(--ln-bp-blue-soft, var(--ln-cyan-soft)) 0%, transparent 70%)',
         }}>
           {hasCoach && <TutorialHighlight borderRadius={14} />}
           <div className="rocket-tier-badge" style={{
@@ -125,11 +125,11 @@ export default function RocketPurchaseScreen({ missionsDone, francs, mission, de
           }}>
             <span style={{
               padding: '4px 12px', borderRadius: 999,
-              background: isFree ? 'rgba(57,211,106,0.18)' : 'rgba(245,166,35,0.18)',
-              border: `1px solid ${isFree ? 'rgba(57,211,106,0.5)' : 'rgba(245,166,35,0.5)'}`,
+              background: isFree ? 'var(--ln-ok-soft, rgba(57,211,106,0.18))' : 'var(--ln-bp-pink-soft, rgba(245,166,35,0.18))',
+              border: `1px solid ${isFree ? 'var(--ln-ok)' : 'var(--ln-bp-pink-border, var(--ln-cyan-border))'}`,
               fontFamily: 'var(--ln-font-display)', fontSize: 10, fontWeight: 800,
               letterSpacing: '0.2em', textTransform: 'uppercase',
-              color: isFree ? '#39d36a' : '#f5a623',
+              color: isFree ? 'var(--ln-ok)' : 'var(--ln-bp-pink, var(--ln-cyan))',
             }}>
               TIER {rocket.tier} · {isFree ? 'INCLUDED' : formatCurrency(rocket.costFrancs, { compact: true })}
             </span>
@@ -143,7 +143,7 @@ export default function RocketPurchaseScreen({ missionsDone, francs, mission, de
             <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 22, fontWeight: 800, color: 'var(--ln-text)', letterSpacing: '-0.01em' }}>
               {rocket.name}
             </div>
-            <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 12.5, color: '#7a8fa5', marginTop: 5, lineHeight: 1.5 }}>
+            <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 12.5, color: 'var(--ln-text-muted)', marginTop: 5, lineHeight: 1.5 }}>
               Unibody prebuilt vehicle. Assigned to this mission — single-use,
               no modifications required. Fuelled and ready at the launchpad.
             </div>
@@ -175,7 +175,7 @@ export default function RocketPurchaseScreen({ missionsDone, francs, mission, de
           </details>
 
           {!isFree && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 0, background: 'rgba(11,11,13,0.5)', borderRadius: 10, border: '1px solid rgba(112,217,234,0.12)', overflow: 'hidden' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 0, background: 'var(--ln-panel-2)', borderRadius: 10, border: '1px solid var(--ln-cyan-border)', overflow: 'hidden' }}>
               {missionPayout !== undefined && (
                 <CostSummaryRow label="Mission Payout (base)" value={formatCurrency(missionPayout, { compact: true })} color="var(--ln-cyan)" />
               )}
@@ -185,7 +185,7 @@ export default function RocketPurchaseScreen({ missionsDone, francs, mission, de
               )}
               <CostSummaryRow label="Your Balance" value={formatCurrency(francs, { compact: true })} color={canAfford ? 'var(--ln-text)' : 'var(--ln-crimson)'} last />
               {missionPayout !== undefined && (
-                <div style={{ padding: '6px 14px 10px', fontFamily: 'var(--ln-font-body)', fontSize: 10, color: '#6a7e94', borderTop: '1px solid rgba(112,217,234,0.08)' }}>
+                <div style={{ padding: '6px 14px 10px', fontFamily: 'var(--ln-font-body)', fontSize: 10, color: 'var(--ln-text-muted)', borderTop: '1px solid var(--ln-hairline)' }}>
                   The rocket is a one-time purchase; the mission payout is what you collect at debrief. Client premiums and affinity bonuses can raise the payout above the base figure shown.
                 </div>
               )}
@@ -197,7 +197,7 @@ export default function RocketPurchaseScreen({ missionsDone, francs, mission, de
             </div>
           )}
 
-          <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 10, color: '#445566', letterSpacing: '0.08em', lineHeight: 1.6, paddingBottom: 8 }}>
+          <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 10, color: 'var(--ln-text-dim)', letterSpacing: '0.08em', lineHeight: 1.6, paddingBottom: 8 }}>
             Rockets are single-use. Each mission requires a fresh vehicle.
           </div>
       </MissionSetupCard>

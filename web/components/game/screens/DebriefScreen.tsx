@@ -72,7 +72,7 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
   const netTotal = total - starterRocket.costFrancs - loanRepayment
 
   return (
-    <div className="game-screen debrief-screen">
+    <div className="game-screen debrief-screen theme-blueprint">
       <TopBar eyebrow="MISSION COMPLETE" title="Debrief" />
 
       <div className={`screen-scroll debrief-scroll${hasCoach ? ' screen-scroll--coach' : ''}`} style={{ display: 'flex', flexDirection: 'column', gap: 12 }} data-ui-zone={UI_ZONES.screenContent}>
@@ -91,14 +91,14 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
         {/* ── Client ───────────────────────────────────────────────────────── */}
         <div className="debrief-overview">
         {client && !isStoryMission && (
-          <Panel className="debrief-client-panel" accent={client.color} surface="glass">
+          <Panel className="debrief-client-panel" accent={client.color} surface="solid">
             <div className="ln-section-label" style={{ marginBottom: 10 }}>Client</div>
             <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
               <div style={{
                 width: 40, height: 40, borderRadius: 8, flexShrink: 0,
                 display: 'grid', placeItems: 'center',
                 fontFamily: 'var(--ln-font-display)', fontWeight: 800, fontSize: 15,
-                border: `1.5px solid ${client.color}`, background: 'rgba(0,0,0,0.25)', color: client.color,
+                border: `1.5px solid ${client.color}`, background: 'var(--ln-surface-2)', color: client.color,
               }}>
                 {client.initial}
               </div>
@@ -136,7 +136,7 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
         )}
 
         {/* ── Delivery receipt ─────────────────────────────────────────────── */}
-        <Panel className="debrief-delivery-panel" accent={delivered ? 'var(--ln-ok)' : 'var(--ln-crimson)'} surface="glass">
+        <Panel className="debrief-delivery-panel" accent={delivered ? 'var(--ln-ok)' : 'var(--ln-crimson)'} surface="solid">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
             <span style={{ fontFamily: 'var(--ln-font-display)', fontSize: 9, fontWeight: 800, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'var(--ln-text-dim)' }}>
               {mission.title}
@@ -156,7 +156,7 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
             const collected = Math.min(cargo[id] ?? 0, required)
             const done = collected >= required
             return (
-              <div key={id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+              <div key={id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0', borderTop: '1px solid var(--ln-hairline)' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
                   <MineralChip mineral={id} variant="avatar" size={22} />
                   <span style={{ fontFamily: 'var(--ln-font-body)', fontSize: 13, fontWeight: 700, color: 'var(--ln-text)' }}>{m?.name ?? id}</span>
@@ -175,7 +175,7 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
         {resolved && delivered && (
           <>
             {isProgramOperation && mission.programReward ? (
-              <Panel accent="var(--ln-cyan)" surface="glass" style={{ animation: 'unlock-in 0.35s ease-out' }}>
+              <Panel accent="var(--ln-cyan)" surface="solid" style={{ animation: 'unlock-in 0.35s ease-out' }}>
                 <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 9, fontWeight: 800, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'var(--ln-text-dim)', marginBottom: 10 }}>
                   Program Outcome
                 </div>
@@ -192,7 +192,7 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
                 </div>
               </Panel>
             ) : (
-              <Panel accent="var(--ln-amber)" surface="glass" style={{ animation: 'unlock-in 0.35s ease-out' }}>
+              <Panel accent="var(--ln-bp-line-strong)" surface="solid" style={{ animation: 'unlock-in 0.35s ease-out' }}>
                 <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 9, fontWeight: 800, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'var(--ln-text-dim)', marginBottom: 10 }}>
                   Payout
                 </div>
@@ -207,7 +207,10 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
                 {!isStoryMission && affinityBonus > 0 && <PayRow label="Affinity bonus" value={affinityBonus} />}
                 {calibratedTotal > rawTotal && <PayRow label="Onboarding bonus" value={calibratedTotal - rawTotal} />}
                 {crewArrivalBonus > 0 && <PayRow label={`First astronaut at ${target.name}`} value={crewArrivalBonus} />}
-                <div style={{ marginTop: 10, paddingTop: 10, borderTop: '1px solid rgba(224,165,39,0.25)', display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+                {/* Payout stays the one amber-colored figure on this screen —
+                    everything else in the manifest is navy ink, per the
+                    standing amber-restricted-to-payout rule. */}
+                <div style={{ marginTop: 10, paddingTop: 10, borderTop: '1px solid var(--ln-hairline-strong)', display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
                   <span style={{ fontFamily: 'var(--ln-font-display)', fontSize: 10, fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--ln-text-dim)' }}>
                     Total
                   </span>
@@ -218,7 +221,7 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
               </Panel>
             )}
 
-            <Panel accent="var(--ln-crimson)" surface="glass" style={{ animation: 'unlock-in 0.35s ease-out 0.1s both' }}>
+            <Panel accent="var(--ln-bp-line-strong)" surface="solid" style={{ animation: 'unlock-in 0.35s ease-out 0.1s both' }}>
               <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 9, fontWeight: 800, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'var(--ln-text-dim)', marginBottom: 10 }}>
                 Rocket Cost &amp; Net
               </div>
@@ -238,7 +241,7 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
                   />
                 )}
               </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 0 4px', marginTop: 4, borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 0 4px', marginTop: 4, borderTop: '1px solid var(--ln-hairline)' }}>
                 <span style={{ width: 8, height: 8, borderRadius: '50%', flexShrink: 0, background: shipDestroyed ? 'var(--ln-crimson)' : 'var(--ln-ok)' }} />
                 <span style={{ fontFamily: 'var(--ln-font-body)', fontWeight: 500, fontSize: 11, color: 'var(--ln-text-dim)', lineHeight: 1.3 }}>
                   {shipDestroyed
@@ -246,7 +249,7 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
                     : <><strong style={{ color: 'var(--ln-text)' }}>Ship returned intact</strong> · ready for next mission</>}
                 </span>
               </div>
-              <div style={{ marginTop: 10, paddingTop: 10, borderTop: '1px solid rgba(255,68,56,0.25)', display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+              <div style={{ marginTop: 10, paddingTop: 10, borderTop: '1px solid var(--ln-hairline-strong)', display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
                 <span style={{ fontFamily: 'var(--ln-font-display)', fontSize: 10, fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--ln-text-muted)' }}>
                   Net
                 </span>
@@ -259,7 +262,7 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
         )}
         {resolved && !delivered && (
           <>
-            <Panel accent="var(--ln-crimson)" surface="glass" style={{ animation: 'unlock-in 0.35s ease-out' }}>
+            <Panel accent="var(--ln-crimson)" surface="solid" style={{ animation: 'unlock-in 0.35s ease-out' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
                 <span style={{ fontFamily: 'var(--ln-font-display)', fontSize: 10, fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--ln-text-dim)' }}>
                   Francs Earned
@@ -269,7 +272,7 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
                 </span>
               </div>
             </Panel>
-            <Panel accent="var(--ln-crimson)" surface="glass">
+            <Panel accent="var(--ln-crimson)" surface="solid">
             <p style={{ margin: 0, fontFamily: 'var(--ln-font-body)', fontSize: 13, color: 'var(--ln-text-dim)', lineHeight: 1.5 }}>
               <strong style={{ color: 'var(--ln-text)' }}>Contract bonus forfeited</strong> — order was not fully delivered. Return to the belt and mine the remaining ore to receive payment.
             </p>
@@ -277,7 +280,7 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
           </>
         )}
         {!delivered && !resolved && (
-          <Panel accent="var(--ln-crimson)" surface="glass">
+          <Panel accent="var(--ln-crimson)" surface="solid">
             <p style={{ margin: 0, fontFamily: 'var(--ln-font-body)', fontSize: 13, color: 'var(--ln-text-dim)', lineHeight: 1.5 }}>
               Contract bonus forfeited — order was not fully delivered. Return and mine more to receive payment.
             </p>
@@ -336,8 +339,18 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
 
 function PayRow({ label, value }: { label: string; value: number }) {
   // Payout lines stay on full precision — this is the itemization the player
-  // checks the collected total against (STS-539 policy).
-  return <StatRow label={label} value={formatCurrency(value)} />
+  // checks the collected total against (STS-539 policy). Rendered as a plain
+  // manifest row (navy ink, light hairline divider) rather than StatRow's
+  // amber-by-default styling — amber is reserved for the one Total figure
+  // per the standing amber-restricted-to-payout rule (KES-211).
+  return (
+    <StatRow
+      label={label}
+      value={formatCurrency(value)}
+      valueColor="var(--ln-text)"
+      style={{ borderTop: '1px solid var(--ln-hairline)' }}
+    />
+  )
 }
 
 function ClientStat({ label, value, highlight }: { label: string; value: string; highlight?: boolean }) {
@@ -346,8 +359,8 @@ function ClientStat({ label, value, highlight }: { label: string; value: string;
       display: 'flex', alignItems: 'center', gap: 5,
       fontFamily: 'var(--ln-font-display)', fontWeight: 700, fontSize: 9, letterSpacing: '0.06em', textTransform: 'uppercase',
       padding: '4px 8px', borderRadius: 5,
-      border: `1px solid ${highlight ? 'rgba(224,165,39,0.25)' : 'rgba(255,255,255,0.06)'}`,
-      background: highlight ? 'rgba(224,165,39,0.06)' : 'rgba(255,255,255,0.03)',
+      border: `1px solid ${highlight ? 'var(--ln-amber-border)' : 'var(--ln-hairline)'}`,
+      background: highlight ? 'var(--ln-amber-soft)' : 'var(--ln-surface-2)',
     }}>
       <span style={{ color: 'var(--ln-text)', fontSize: 10 }}>{value}</span>
       <span style={{ color: 'var(--ln-text-muted)' }}>{label}</span>
