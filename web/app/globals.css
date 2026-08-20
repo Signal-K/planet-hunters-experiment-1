@@ -325,6 +325,14 @@ button { cursor: pointer; }
   padding: var(--ln-s-4);
   background: radial-gradient(ellipse at 30% -15%, #2c2c30 0%, #1c1c1f 45%, #08080a 80%);
 }
+/* Below the desktop breakpoint the device itself IS the phone — the padded,
+   bordered "phone card floating in a browser" treatment below was designed
+   for shrinking a desktop window, not for real mobile viewports, and on an
+   actual phone it just wastes screen as dead margin around a shrunk canvas.
+   Drop the stage padding here so .portrait-canvas can go full-bleed. */
+@media (max-width: 1023px) {
+  .game-stage { padding: 0; }
+}
 .game-stage::before {
   content: '';
   position: fixed;
@@ -354,6 +362,22 @@ button { cursor: pointer; }
   border-radius: 28px;
   box-shadow: var(--ln-shadow-modal), var(--ln-glow-cyan);
   isolation: isolate;
+}
+/* Real mobile viewports (and a resized-narrow desktop window, which shares
+   this breakpoint) get the full device screen, not a shrunk card with dead
+   margin around it — the 402x874 card above is a "phone mockup" treatment
+   that only makes sense once there's a larger frame around it to mock up
+   inside of. Safe-area padding for installed-PWA standalone mode is added
+   separately via body[data-pwa="standalone"] .portrait-canvas. */
+@media (max-width: 1023px) {
+  .portrait-canvas {
+    width: 100%;
+    height: 100dvh;
+    max-height: none;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+  }
 }
 
 /* Flex row above .bottom-tab-bar — screen content's own overflow-y:auto
@@ -1075,7 +1099,6 @@ button { cursor: pointer; }
 .reward-xp { margin-top: var(--ln-s-2); color: var(--ln-info); font: 700 12px var(--ln-font-mono); letter-spacing: var(--ln-tr-label); }
 
 @media (max-height: 760px) and (max-width: 1023px) {
-  .portrait-canvas { border-radius: var(--ln-r-xl); }
   .screen-scroll { padding-top: 68px; }
   .screen-scroll--coach { padding-top: var(--tutorial-content-top); }
   .screen-scroll--coach-manual { padding-top: var(--tutorial-manual-content-top); }
