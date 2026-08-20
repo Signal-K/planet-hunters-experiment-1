@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
-import { buildPostHogSurveyPayload, isSurveyRuntimeEnabled, SURVEY_DEFS } from './surveys'
+import { buildPostHogSurveyPayload, getMilestoneSurveyVariant, isRepeatSurveyEligible, isSurveyRuntimeEnabled, SURVEY_DEFS } from './surveys'
 
 describe('survey runtime gate', () => {
   it('is disabled in a normal non-production browser context', () => {
@@ -93,5 +93,18 @@ describe('buildPostHogSurveyPayload', () => {
       const questionIds = SURVEY_DEFS[key].questions.map(q => q.id)
       expect(questionIds.some(id => id.includes('mission-choice') || id.includes('client-choice'))).toBe(true)
     }
+  })
+})
+
+describe('post-mission survey gating', () => {
+  // Server/test environment has no `window`, matching how these helpers
+  // behave for SSR — they default to the least-noisy behavior (repeat
+  // surveys off, milestone variant 'm2') rather than throwing.
+  it('defaults repeat-survey eligibility to false without a window', () => {
+    expect(isRepeatSurveyEligible()).toBe(false)
+  })
+
+  it('defaults the milestone survey variant to m2 without a window', () => {
+    expect(getMilestoneSurveyVariant()).toBe('m2')
   })
 })

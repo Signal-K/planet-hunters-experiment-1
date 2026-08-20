@@ -21,6 +21,7 @@ import SurfaceOpsScreen from '@/components/game/screens/SurfaceOpsScreen'
 import AcademyScreen from '@/components/game/screens/AcademyScreen'
 import { enqueueSurvey } from '@/lib/surveys'
 import { VISUAL_ASTEROID_CANDIDATE, VISUAL_TESS_CANDIDATE } from '@/lib/visual-fixtures'
+import { captureGameEvent } from '@/lib/posthog'
 
 export const VALID_SCREENS = new Set<Screen>([
   'intro', 'build', 'hub', 'missions', 'galaxy', 'targets', 'fab',
@@ -139,6 +140,7 @@ export function ScreenContent({
             const structure = game.catalog.structures.find(s => s.id === kind)
             game.placeStructure(structure, kind, plot)
             game.completeStep(0)
+            captureGameEvent('structure_placed', { structure_kind: kind })
             enqueueSurvey('lnm_base_building', 1200)
             if (kind === 'astronaut-academy') enqueueSurvey('lnm_crew_academy_built', 1200)
             game.go('hub')
@@ -168,6 +170,7 @@ export function ScreenContent({
             if (building === 'launchpad' || building === 'missions') {
               // A run in flight always wins — the pad is how you get back to it.
               if (game.player.activeMission) {
+                captureGameEvent('mission_resumed', { mission_phase: game.player.missionPhase ?? 'transit' })
                 enqueueSurvey('lnm_resume_mission', 1200)
                 return game.go(game.player.missionPhase ?? 'transit')
               }
