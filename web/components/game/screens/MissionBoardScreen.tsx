@@ -6,7 +6,7 @@ import TopBar from '@/components/ui/TopBar'
 import Panel from '@/components/ui/Panel'
 import StatusPill from '@/components/ui/StatusPill'
 import { IconBtn } from '@/components/ui/Button'
-import { compatibleTargetsFor, clientAffinityBonus, clientUnlocked, FREE_OPS_START_MISSIONS_DONE, CLIENT_AFFINITY_MISSION_THRESHOLD, MISSION_TEMPLATES, CLIENT_SLOTS, missionTypePrimer, isMissionBoardMission } from '@/lib/data'
+import { feasibleTargetsFor, clientAffinityBonus, clientUnlocked, FREE_OPS_START_MISSIONS_DONE, CLIENT_AFFINITY_MISSION_THRESHOLD, MISSION_TEMPLATES, CLIENT_SLOTS, missionTypePrimer, isMissionBoardMission } from '@/lib/data'
 import type { Client, DailyClientPool, Mission } from '@/lib/data'
 import type { Catalog } from '@/lib/catalog'
 import { TUTORIAL_CONTENT_TOP } from '@/lib/tutorial-layout'
@@ -149,7 +149,7 @@ function formatCooldown(remaining: number): string {
 }
 
 export default function MissionBoardScreen({ onBack, onPick, missionsDone, freeOperations, hasCoach, catalog, clientMissions, clientCooldowns, dailyClientPool, francs, crew = [], player }: MissionBoardScreenProps) {
-  const { missions: MISSIONS, clients: CLIENTS, minerals: MINERAL_META, targets } = catalog
+  const { missions: MISSIONS, clients: CLIENTS, minerals: MINERAL_META, targets, parts } = catalog
   const [tick, setTick] = useState(Date.now())
   useEffect(() => {
     const id = setInterval(() => setTick(Date.now()), 10000)
@@ -198,11 +198,24 @@ export default function MissionBoardScreen({ onBack, onPick, missionsDone, freeO
         return m.sequence === sequence
       })
 
+  // Never advertise a contract that the current catalog or unlocked rocket
+  // parts cannot complete. This is deliberately applied before the board
+  // renders, not only when the player reaches Target Picker: an impossible
+  // card is already a broken contract from the player's perspective.
+  const feasibleAvailable = available.filter(mission => feasibleTargetsFor(
+    mission,
+    targets,
+    parts,
+    missionsDone,
+    player?.launchpadUpgraded ?? false,
+    player?.unlockedSkillNodes ?? [],
+  ).length > 0)
+
   const completedToday = useDailyPool
     ? dailyClientPool!.missions.filter(m => isCompletedToday(m.id))
     : []
 
-  const onboardingComplete = !freeOperations && available.length === 0 && missionsDone >= FREE_OPS_START_MISSIONS_DONE
+  const onboardingComplete = !freeOperations && feasibleAvailable.length === 0 && missionsDone >= FREE_OPS_START_MISSIONS_DONE
 
   if (onboardingComplete) {
     return <MissionBoardCompleteState onBack={onBack} />
@@ -211,7 +224,7 @@ export default function MissionBoardScreen({ onBack, onPick, missionsDone, freeO
   // During onboarding show only the sequence-matched missions (available).
   // During free-ops show available missions (+ completed-today for daily pool).
   // Never show locked/future missions during onboarding.
-  const rawList = (useDailyPool ? [...available, ...completedToday] : available)
+  const rawList = (useDailyPool ? [...feasibleAvailable, ...completedToday] : feasibleAvailable)
     .filter(mission => isMissionBoardMission(mission, freeOperations))
   // In free-ops daily-pool mode, available missions first, completed at the bottom
   const isListedAvailable = (m: typeof rawList[0]) =>
@@ -241,7 +254,7 @@ export default function MissionBoardScreen({ onBack, onPick, missionsDone, freeO
       const clientReady = freeOperations || m.sequence === sequence || (!!client && clientUnlocked(client, sequence))
       const jointFundingReady = !m.jointProject || (francs ?? 0) >= m.jointProject.playerCost
       const unlocked = !completedToday_ && !cooldown && clientReady && jointFundingReady && (freeOperations || available.some(item => item.id === m.id))
-      const mTargets = compatibleTargetsFor(m, targets)
+      const mTargets = feasibleTargetsFor(m, targets, parts, missionsDone, player?.launchpadUpgraded ?? false, player?.unlockedSkillNodes ?? [])
       const affinityMultiplier = isStoryMission || !client ? 0 : clientAffinityBonus(client, clientMissions?.[client.id] ?? 0)
       const affinityBonus = Math.round(m.payout.francs * affinityMultiplier)
       const liveDiplomacyMultiplier = m.id.startsWith('dcp-') && m.client && player
@@ -328,7 +341,7 @@ export default function MissionBoardScreen({ onBack, onPick, missionsDone, freeO
           trigger before any click) can scroll a list item flush with this
           container's top edge, sliding it out from under the reserved gap
           and underneath the coach overlay. */}
-      <div className={`mission-board-screen-content${hasCoach ? ` ${styles.coachCompact}` : ''}`} data-ui-zone={UI_ZONES.screenContent} style={{ position: 'absolute', inset: 0, paddingTop: hasCoach ? TUTORIAL_CONTENT_TOP : 8, paddingBottom: hasCoach ? 138 : 76, overflowY: 'auto', scrollPaddingTop: hasCoach ? TUTORIAL_CONTENT_TOP : undefined }}>
+      <div className={`mission-board-screen-content${hasCoach ? ` ${styles.coachCompact}` : ''}`} data-ui-zone={UI_ZONES.screenContent} style={{ position: 'absolute', inset: 0, paddingTop: hasCoach ? TUTORIAL_CONTENT_TOP : 82, paddingBottom: hasCoach ? 138 : 76, overflowY: 'auto', scrollPaddingTop: hasCoach ? TUTORIAL_CONTENT_TOP : 82 }}>
         {/* Direct transcription of the OD mockup's `.body-layout` — no
             summary banner above it (the mockup has none; the earlier
             PlayfieldBand strip was this screen's own invention, not in the

@@ -31,7 +31,7 @@ describe('Smoke — Landnam', () => {
       onBeforeLoad(win) {
         win.localStorage.setItem('landnam-game-state-v1', JSON.stringify(state))
         // Suppress AuthGateSheet so it doesn't cover interactive elements
-        win.localStorage.setItem('landnam-guest-credentials', JSON.stringify({ email: 'e2e@landnam.guest', password: 'e2e-guest-test' }))
+        win.localStorage.setItem('landnam-account-credentials', JSON.stringify({ email: 'e2e@example.com', password: 'e2e-guest-test' }))
       },
     })
   }

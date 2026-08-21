@@ -63,6 +63,11 @@ export default function GalaxyMap({ mission, targets, compatibleIds, pickedId, o
         }}
       >
         <svg viewBox={`0 0 ${VIEW} ${VIEW}`} style={{ width: '100%', height: '100%', maxWidth: VIEW, maxHeight: VIEW, touchAction: 'manipulation' }}>
+          <defs>
+            <filter id="target-map-shadow" x="-30%" y="-30%" width="160%" height="160%">
+              <feGaussianBlur stdDeviation="2" />
+            </filter>
+          </defs>
           {[1, 2, 3, 4, 5, 6].map(orbit => {
             const hasTarget = targets.some(t => t.orbit === orbit)
             if (!hasTarget) return null
@@ -83,6 +88,7 @@ export default function GalaxyMap({ mission, targets, compatibleIds, pickedId, o
           {/* Sun — a neutral ink node, not amber: amber stays reserved for
               genuine payout/reward figures under the blueprint theme. */}
           <circle cx={CENTER} cy={CENTER} r={30} fill="var(--ln-bp-blue-soft, var(--ln-cyan-soft))" />
+          <circle cx={CENTER} cy={CENTER} r={22} fill="var(--ln-bp-blue, var(--ln-cyan))" opacity={0.12} filter="url(#target-map-shadow)" />
           <circle cx={CENTER} cy={CENTER} r={15} fill="var(--ln-bp-ink, var(--ln-text))" stroke="var(--ln-bp-blue, var(--ln-cyan))" strokeWidth={1.5} />
           <text x={CENTER} y={CENTER + 4} textAnchor="middle" fill="var(--ln-bp-bg, var(--ln-void))" fontFamily="var(--ln-font-display)" fontWeight={700} fontSize={10} letterSpacing={1.5}>SOL</text>
 
@@ -138,9 +144,22 @@ export default function GalaxyMap({ mission, targets, compatibleIds, pickedId, o
                   <circle cx={cx} cy={cy} r={size + 5} fill="none" stroke="var(--ln-bp-green, var(--ln-ok))" strokeWidth={1.5} strokeDasharray="2 3" opacity={0.85} />
                 )}
                 {isAsteroid ? (
-                  <polygon points={polyPoints} fill="var(--ln-bp-paper, var(--ln-panel))" stroke={lineColor} strokeWidth={1.5} />
+                  <>
+                    <polygon points={polyPoints} fill="var(--ln-bp-paper, var(--ln-panel))" stroke={lineColor} strokeWidth={1.5} />
+                    <polygon
+                      points={sil.slice(0, Math.max(3, sil.length - 2)).map(([mx, my]) => `${cx + mx * size * 0.68},${cy + my * size * 0.68}`).join(' ')}
+                      fill="var(--ln-bp-paper-2, var(--ln-panel-2))"
+                      opacity={compatible ? 0.9 : 0.55}
+                    />
+                    <circle cx={cx - size * 0.25} cy={cy - size * 0.1} r={Math.max(1.5, size * 0.12)} fill="var(--ln-bp-ink-mute, var(--ln-text-muted))" opacity={0.6} />
+                    <circle cx={cx + size * 0.28} cy={cy + size * 0.25} r={Math.max(1, size * 0.09)} fill="var(--ln-bp-ink-mute, var(--ln-text-muted))" opacity={0.5} />
+                  </>
                 ) : (
-                  <circle cx={cx} cy={cy} r={size} fill="var(--ln-bp-paper, var(--ln-panel))" stroke={lineColor} strokeWidth={1.5} />
+                  <>
+                    <circle cx={cx} cy={cy} r={size} fill="var(--ln-bp-paper, var(--ln-panel))" stroke={lineColor} strokeWidth={1.5} />
+                    <path d={`M ${cx - size * 0.76} ${cy - size * 0.2} Q ${cx} ${cy - size * 0.62} ${cx + size * 0.76} ${cy - size * 0.16}`} fill="none" stroke="var(--ln-bp-paper-2, var(--ln-panel-2))" strokeWidth={Math.max(1, size * 0.16)} opacity={0.9} />
+                    <circle cx={cx - size * 0.3} cy={cy + size * 0.25} r={Math.max(1, size * 0.1)} fill="var(--ln-bp-blue, var(--ln-cyan))" opacity={0.5} />
+                  </>
                 )}
                 {/* Selected target — cyan reticle plus a dimension line running
                     out to a label, the one saturated mark on the chart. */}

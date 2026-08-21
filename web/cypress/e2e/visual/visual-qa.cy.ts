@@ -26,11 +26,11 @@ function suppressSurveysAndUpgrade(win: Window) {
   win.localStorage.setItem(SURVEY_KEY, JSON.stringify(ALL_SURVEYS))
   win.localStorage.setItem(SNOOZE_KEY, String(Date.now() + 365 * 24 * 60 * 60 * 1000))
   // Set fake guest credentials so hasStoredCredentials() returns true and the
-  // auth gate never appears. ensureGuestAuth() will fail to re-auth with these
+  // auth gate never appears. ensureAccountAuth() will fail to re-auth with these
   // non-existent credentials and fall back to offline mode — the game is fully
   // functional from localStorage without a live PocketBase session.
-  win.localStorage.setItem('landnam-guest-credentials', JSON.stringify({
-    email: 'ci_seed_guest@landnam.guest',
+  win.localStorage.setItem('landnam-account-credentials', JSON.stringify({
+    email: 'ci_seed_guest@example.com',
     password: 'GuestPassword123!',
   }))
 }

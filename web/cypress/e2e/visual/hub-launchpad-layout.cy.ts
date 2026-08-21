@@ -67,8 +67,8 @@ function visit(path: string, screen: GameState['screen']) {
       // A stored returning-account credential keeps the auth gate from
       // covering those local-only visual contracts while the remote backend is
       // unavailable in this Docker visual runner.
-      win.localStorage.setItem('landnam-guest-credentials', JSON.stringify({
-        email: 'e2e@landnam.guest', password: 'e2e-guest-test',
+      win.localStorage.setItem('landnam-account-credentials', JSON.stringify({
+        email: 'e2e@example.com', password: 'e2e-guest-test',
       }))
     },
   })

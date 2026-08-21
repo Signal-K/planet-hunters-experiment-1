@@ -66,6 +66,9 @@ export default function MissionSetupRoutes({
           onPick={game.onPickTarget}
           hasCoach={hasCoach}
           catalog={game.catalog}
+          missionsDone={game.player.missionsDone}
+          launchpadUpgraded={game.player.launchpadUpgraded}
+          unlockedSkillNodes={game.player.unlockedSkillNodes ?? []}
         />
       )
 

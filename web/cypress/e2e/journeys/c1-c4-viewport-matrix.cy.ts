@@ -87,7 +87,7 @@ function visit(path: string, state: GameState) {
       // viewports (mobile landscape) and silently fits beside content on tall ones — pre-ack
       // it so these are steady-state screen-contract checks, not incidental first-run coverage.
       win.localStorage.setItem('ln_tutorial_complete_ack', '1')
-      win.localStorage.setItem('landnam-guest-credentials', JSON.stringify({ email: 'e2e@landnam.guest', password: 'e2e-guest-test' }))
+      win.localStorage.setItem('landnam-account-credentials', JSON.stringify({ email: 'e2e@example.com', password: 'e2e-guest-test' }))
     },
   })
 }

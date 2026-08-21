@@ -73,8 +73,8 @@ function suppressNonGameplaySurfaces(win: Window) {
   // hides the data evidence it is meant to audit.
   win.localStorage.setItem('landnam_observatory_coach_seen_v1', '1')
   win.localStorage.setItem('landnam_asteroid_discovery_coach_seen_v1', '1')
-  win.localStorage.setItem('landnam-guest-credentials', JSON.stringify({
-    email: 'release-matrix@landnam.guest',
+  win.localStorage.setItem('landnam-account-credentials', JSON.stringify({
+    email: 'release-matrix@example.com',
     password: 'ReleaseMatrix123!',
   }))
 }

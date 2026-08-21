@@ -27,8 +27,8 @@ describe('Commodity Exchange visual layout', () => {
           // screenshot firing, so the captured artifact showed sign-in
           // instead of the layout under test. Same guest-session seed used
           // by tutorial-rail.cy.ts's visitWithState.
-          win.localStorage.setItem('landnam-guest-credentials', JSON.stringify({
-            email: 'e2e@landnam.guest',
+          win.localStorage.setItem('landnam-account-credentials', JSON.stringify({
+            email: 'e2e@example.com',
             password: 'e2e-guest-test',
           }))
         },

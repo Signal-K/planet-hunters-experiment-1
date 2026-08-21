@@ -394,8 +394,6 @@ export interface GameActions {
   dismissToast: (id: string) => void
   mission: Mission | null
   target: Target | null
-  upgradePromptOpen: boolean
-  upgradeAccount: (email: string, password: string) => Promise<void>
   awaitingRemoteState: boolean
   clearTerritoryClaimPopup: () => void
   laserChargeCap: number

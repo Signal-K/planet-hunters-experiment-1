@@ -57,7 +57,7 @@ function visitWithState(path: string, screen: GameState['screen'], playerOverrid
   const e2eToken = `e30.${tokenPayload}.test`
   cy.intercept('POST', '**/api/collections/users/auth-refresh', {
     statusCode: 200,
-    body: { token: e2eToken, record: { id: 'e2e-discovery-user', email: 'e2e@landnam.guest' } },
+    body: { token: e2eToken, record: { id: 'e2e-discovery-user', email: 'e2e@example.com' } },
   })
   cy.intercept('POST', '**/api/landnam-auth/exchange', {
     statusCode: 200,
@@ -84,14 +84,14 @@ function visitWithState(path: string, screen: GameState['screen'], playerOverrid
       // returns an empty feed before issuing network I/O.
       win.localStorage.setItem('pocketbase_auth', JSON.stringify({
         token: e2eToken,
-        record: { id: 'e2e-discovery-user', email: 'e2e@landnam.guest' },
+        record: { id: 'e2e-discovery-user', email: 'e2e@example.com' },
       }))
       // Each visual test gets its own guest account. Reusing one account lets
       // backend state from a preceding discovery test race the seeded local
       // state here and remove the discovered target before Launchpad builds
       // its runtime catalog.
-      win.localStorage.setItem('landnam-guest-credentials', JSON.stringify({
-        email: `e2e-${Date.now()}-${Math.random().toString(36).slice(2)}@landnam.guest`,
+      win.localStorage.setItem('landnam-account-credentials', JSON.stringify({
+        email: `e2e-${Date.now()}-${Math.random().toString(36).slice(2)}@example.com`,
         password: 'e2e-guest-test',
       }))
       // ObservatoryCoach is a separate one-time beat from the main M1-M3
@@ -145,7 +145,7 @@ describe('Visual QA — discovery -> economy pipeline', () => {
     cy.wait('@subjects')
 
     // The injected fake guest credentials only satisfy hasStoredCredentials()
-    // — the app still fires ensureGuestAuth() in the background, which fails
+    // — the app still fires ensureAccountAuth() in the background, which fails
     // against the real local PocketBase (no such account), deletes the fake
     // credentials, and races to create a real one. Until that resolves, the
     // "Welcome Back" auth gate can render on top of everything below. A fixed
@@ -241,7 +241,7 @@ describe('Visual QA — discovery -> economy pipeline', () => {
     })
 
     // See the matching comment in the first test — waits out the
-    // ensureGuestAuth() race instead of guessing at a fixed delay.
+    // ensureAccountAuth() race instead of guessing at a fixed delay.
     cy.contains('Welcome Back', { timeout: 15000 }).should('not.exist')
 
     cy.contains('Your Program', { timeout: 15000 }).should('be.visible')

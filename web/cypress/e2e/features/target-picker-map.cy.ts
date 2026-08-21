@@ -7,8 +7,8 @@ describe('TargetPicker orbital map', () => {
           missionId: 'generated-s1-starter-bulk-1',
           tutorial: false,
         }))
-        win.localStorage.setItem('landnam-guest-credentials', JSON.stringify({
-          email: 'e2e@landnam.guest',
+        win.localStorage.setItem('landnam-account-credentials', JSON.stringify({
+          email: 'e2e@example.com',
           password: 'e2e-guest-test',
         }))
       },

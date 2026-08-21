@@ -51,7 +51,7 @@ function visitWithState(path: string, screen: GameState['screen'], playerOverrid
   cy.visit(path, {
     onBeforeLoad(win) {
       win.localStorage.setItem(STORAGE_KEY, JSON.stringify(full))
-      win.localStorage.setItem('landnam-guest-credentials', JSON.stringify({ email: 'e2e@landnam.guest', password: 'e2e-guest-test' }))
+      win.localStorage.setItem('landnam-account-credentials', JSON.stringify({ email: 'e2e@example.com', password: 'e2e-guest-test' }))
       // Player already crossed the M1-M3 -> Free Ops threshold in this
       // fixture — acknowledge the one-time "Program Online" interstitial
       // so it doesn't cover the screen under test (see TutorialCompleteSheet.tsx).
@@ -96,7 +96,7 @@ describe('Astronaut Academy', () => {
           player: basePlayer({ clientMissions: { 'helios-propulsion-depot': 10 } }),
         } as GameState
         win.localStorage.setItem(STORAGE_KEY, JSON.stringify(full))
-        win.localStorage.setItem('landnam-guest-credentials', JSON.stringify({ email: 'e2e@landnam.guest', password: 'e2e-guest-test' }))
+        win.localStorage.setItem('landnam-account-credentials', JSON.stringify({ email: 'e2e@example.com', password: 'e2e-guest-test' }))
       },
     })
     cy.get('[data-testid="academy-screen"]', { timeout: 10000 }).should('be.visible')
@@ -119,7 +119,7 @@ describe('Astronaut Academy', () => {
           }),
         } as GameState
         win.localStorage.setItem(STORAGE_KEY, JSON.stringify(full))
-        win.localStorage.setItem('landnam-guest-credentials', JSON.stringify({ email: 'e2e@landnam.guest', password: 'e2e-guest-test' }))
+        win.localStorage.setItem('landnam-account-credentials', JSON.stringify({ email: 'e2e@example.com', password: 'e2e-guest-test' }))
       },
     })
     cy.get('[data-testid="academy-screen"]', { timeout: 10000 }).should('be.visible')
@@ -147,7 +147,7 @@ describe('Astronaut Academy', () => {
           }),
         } as GameState
         win.localStorage.setItem(STORAGE_KEY, JSON.stringify(full))
-        win.localStorage.setItem('landnam-guest-credentials', JSON.stringify({ email: 'e2e@landnam.guest', password: 'e2e-guest-test' }))
+        win.localStorage.setItem('landnam-account-credentials', JSON.stringify({ email: 'e2e@example.com', password: 'e2e-guest-test' }))
         win.localStorage.removeItem(COACH_KEY)
       },
     })
@@ -199,7 +199,7 @@ describe('Astronaut Academy', () => {
           }),
         } as GameState
         win.localStorage.setItem(STORAGE_KEY, JSON.stringify(full))
-        win.localStorage.setItem('landnam-guest-credentials', JSON.stringify({ email: 'e2e@landnam.guest', password: 'e2e-guest-test' }))
+        win.localStorage.setItem('landnam-account-credentials', JSON.stringify({ email: 'e2e@example.com', password: 'e2e-guest-test' }))
         win.localStorage.setItem(COACH_KEY, '1')
       },
     })

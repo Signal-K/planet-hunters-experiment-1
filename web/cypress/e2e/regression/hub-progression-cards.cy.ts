@@ -19,7 +19,7 @@ import type { GameState } from '../../../game-context'
  */
 
 const STORAGE_KEY = 'landnam-game-state-v1'
-const GUEST_KEY = 'landnam-guest-credentials'
+const GUEST_KEY = 'landnam-account-credentials'
 const SURVEY_KEY = 'landnam-surveys-shown'
 const SNOOZE_KEY = 'landnam-upgrade-prompt-snooze-until'
 // The sheet shown once when onboarding completes. Pre-acknowledged here: it is
@@ -27,7 +27,7 @@ const SNOOZE_KEY = 'landnam-upgrade-prompt-snooze-until'
 // test. (That two sheets *can* stack — this one plus the auth gate — is a
 // separate problem, see STS-614.)
 const TUTORIAL_ACK_KEY = 'ln_tutorial_complete_ack'
-const GUEST = JSON.stringify({ email: 'e2e@landnam.guest', password: 'e2e-guest-test' })
+const GUEST = JSON.stringify({ email: 'e2e@example.com', password: 'e2e-guest-test' })
 const FAR_FUTURE = String(Date.now() + 365 * 24 * 60 * 60 * 1000)
 const ALL_SURVEYS = [
   'lnm_first_launch', 'lnm_mining_feel', 'lnm_client_pick',

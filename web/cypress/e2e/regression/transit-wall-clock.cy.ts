@@ -47,7 +47,7 @@ function visitTransit(now = EPOCH, elapsedMs = 0, useClock = true) {
   cy.visit('/game/transit', {
     onBeforeLoad(win) {
       win.localStorage.setItem(STORAGE_KEY, JSON.stringify(transitState(now, elapsedMs)))
-      win.localStorage.setItem('landnam-guest-credentials', JSON.stringify({ email: 'e2e@landnam.guest', password: 'e2e-guest-test' }))
+      win.localStorage.setItem('landnam-account-credentials', JSON.stringify({ email: 'e2e@example.com', password: 'e2e-guest-test' }))
     },
   })
   cy.contains('MISSION TRANSIT', { timeout: 15000 }).should('be.visible')

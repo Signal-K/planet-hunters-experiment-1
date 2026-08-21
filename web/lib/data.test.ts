@@ -8,6 +8,7 @@ import {
   suggestBuild,
   validateBuild,
   compatibleTargetsFor,
+  feasibleTargetsFor,
   rateMission,
   calibrateOnboardingPayout,
   ONBOARDING_ROCKET_COST,
@@ -391,6 +392,24 @@ describe('compatibleTargetsFor', () => {
     }
     const compatible = compatibleTargetsFor(metalProspect, [...TARGETS, discovered])
     expect(compatible.some(t => t.id === discovered.id)).toBe(true)
+  })
+})
+
+describe('feasibleTargetsFor', () => {
+  it('rejects a mineral match that the currently unlocked propulsion cannot reach', () => {
+    const mission: import('./data/types').Mission = {
+      id: 'unreachable-test', title: 'Unreachable', brief: '', client: 'kepler-materials', targetId: 'jupiter',
+      tag: 'BULK', difficulty: 'L3', locked: false, sequence: 3,
+      requires: { minerals: { hydrogen: 2 }, cargo_min: 2, drill_tier: 1, max_orbit: 6 },
+      payout: { francs: 0, affinity: 0 },
+    }
+    expect(compatibleTargetsFor(mission, TARGETS).some(target => target.id === 'jupiter')).toBe(true)
+    expect(feasibleTargetsFor(mission, TARGETS, PARTS, 0)).toHaveLength(0)
+  })
+
+  it('keeps a compatible target when the player has unlocked the matching drive', () => {
+    const mission = MISSIONS.find(item => item.sequence === 1)!
+    expect(feasibleTargetsFor(mission, TARGETS, PARTS, 1).length).toBeGreaterThan(0)
   })
 })
 

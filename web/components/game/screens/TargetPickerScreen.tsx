@@ -3,7 +3,7 @@
 import React, { useState } from 'react'
 import StatusPill from '@/components/ui/StatusPill'
 import { PrimaryBtn } from '@/components/ui/Button'
-import { compatibleTargetsFor, orbitBandLabel, type Mission, type Target } from '@/lib/data'
+import { feasibleTargetsFor, orbitBandLabel, type Mission, type Target } from '@/lib/data'
 import type { Catalog } from '@/lib/catalog'
 import TutorialHighlight from '@/components/game/TutorialHighlight'
 import GalaxyMap from '@/components/TargetPicker/GalaxyMap'
@@ -24,6 +24,9 @@ interface TargetPickerScreenProps {
   onPick: (id: string) => void
   hasCoach?: boolean
   catalog: Catalog
+  missionsDone: number
+  launchpadUpgraded?: boolean
+  unlockedSkillNodes?: string[]
 }
 
 function PlanetSVG({ id, size }: { id: string; size: number }) {
@@ -84,9 +87,9 @@ function PlanetSVG({ id, size }: { id: string; size: number }) {
   )
 }
 
-export default function TargetPickerScreen({ mission, onBack, onPick, hasCoach, catalog }: TargetPickerScreenProps) {
-  const { targets: TARGETS, minerals: MINERAL_META } = catalog
-  const compat = compatibleTargetsFor(mission, TARGETS)
+export default function TargetPickerScreen({ mission, onBack, onPick, hasCoach, catalog, missionsDone, launchpadUpgraded = false, unlockedSkillNodes = [] }: TargetPickerScreenProps) {
+  const { targets: TARGETS, minerals: MINERAL_META, parts } = catalog
+  const compat = feasibleTargetsFor(mission, TARGETS, parts, missionsDone, launchpadUpgraded, unlockedSkillNodes)
   const compatIds = new Set(compat.map(t => t.id))
   const quickPickForOnboarding = hasCoach && mission.sequence === 1
   // Default pick first compatible, prioritizing recommended if they are actually in compat

@@ -4,7 +4,7 @@ import { Suspense, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { resolvePreset } from '@/lib/devPresets'
 import { pbShared } from '@/lib/pb'
-import { hasStoredCredentials } from '@/lib/guestAuth'
+import { hasStoredCredentials } from '@/lib/accountAuth'
 
 const STORAGE_KEY = 'landnam-game-state-v1'
 const VALID_SCREENS = new Set([

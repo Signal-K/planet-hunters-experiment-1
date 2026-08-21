@@ -5,7 +5,6 @@ import { usePathname } from 'next/navigation'
 import { GameProvider, useGame } from '@/game-context'
 import { M1_STEPS, M2_STEPS, M3_STEPS } from '@/lib/data'
 import TutorialCoach from '@/components/game/TutorialCoach'
-import SaveProgressPrompt from '@/components/game/SaveProgressPrompt'
 import UnlockPopup from '@/components/game/UnlockPopup'
 import { TutorialCompleteSheet } from '@/components/game/TutorialCompleteSheet'
 import BottomTabBar from '@/components/layout/BottomTabBar'
@@ -116,7 +115,6 @@ function GameChrome({ children }: { children: ReactNode }) {
   const showFeedback = ['hub', 'missions', 'market', 'hangar', 'skills'].includes(currentScreen)
     && !showNav
     && !game.popup
-    && !game.upgradePromptOpen
     && !game.authGateOpen
 
   function goFromNav(id: string) {
@@ -195,9 +193,6 @@ function GameChrome({ children }: { children: ReactNode }) {
             }}
             onDismiss={game.popup === 'loan' ? () => game.setPopup(null) : undefined}
           />
-        )}
-        {game.upgradePromptOpen && !game.popup && (
-          <SaveProgressPrompt onUpgrade={game.upgradeAccount} />
         )}
         {game.authGateOpen && (
           <AuthGateSheet

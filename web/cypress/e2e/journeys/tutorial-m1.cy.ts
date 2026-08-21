@@ -70,7 +70,7 @@ function basePlayer(overrides: Record<string, unknown> = {}) {
 function suppressSurveys(win: Window) {
   win.localStorage.setItem(SURVEY_KEY, JSON.stringify(ALL_SURVEY_KEYS))
   win.localStorage.setItem(SNOOZE_KEY, String(Date.now() + 365 * 24 * 60 * 60 * 1000))
-  win.localStorage.setItem('landnam-guest-credentials', JSON.stringify({ email: 'e2e@landnam.guest', password: 'e2e-guest-test' }))
+  win.localStorage.setItem('landnam-account-credentials', JSON.stringify({ email: 'e2e@example.com', password: 'e2e-guest-test' }))
 }
 
 function visitHub(overrides: Record<string, unknown> = {}) {

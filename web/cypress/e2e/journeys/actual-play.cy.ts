@@ -16,9 +16,9 @@ function startFresh() {
       win.localStorage.clear()
       win.localStorage.setItem(SURVEY_KEY, JSON.stringify(ALL_SURVEY_KEYS))
       // The offline auth stub in cypress/support/e2e.ts always resolves to an
-      // @landnam.guest email regardless of what this spec's own
+      // @example.com email regardless of what this spec's own
       // continueWithoutAccountIfShown() submits, which otherwise trips the
-      // mandatory (non-dismissible) SaveProgressPrompt mid-playthrough and
+      // auth gate mid-playthrough and
       // permanently covers the launchpad build UI. See tutorial-m1.cy.ts's
       // suppressSurveys() for the same pattern.
       win.localStorage.setItem(SNOOZE_KEY, String(Date.now() + 365 * 24 * 60 * 60 * 1000))

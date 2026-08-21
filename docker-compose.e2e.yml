@@ -57,7 +57,7 @@ services:
   cypress:
     image: cypress/included:15.16.0
     entrypoint: ["/bin/sh", "-c"]
-    command: ["status=0; cypress run --browser chrome --reporter json > /tmp/cypress/results/cypress.json || status=$$?; CYPRESS_allowSurveys=true cypress run --browser chrome --spec cypress/e2e/features/surveys.cy.ts --reporter json > /tmp/cypress/results/surveys.json || status=$$?; exit $$status"]
+    command: ["status=0; cypress run --browser electron --reporter json > /tmp/cypress/results/cypress.json || status=$$?; CYPRESS_allowSurveys=true cypress run --browser electron --spec cypress/e2e/features/surveys.cy.ts --reporter json > /tmp/cypress/results/surveys.json || status=$$?; exit $$status"]
     working_dir: /e2e
     environment:
       CYPRESS_baseUrl: http://next-app:3001
@@ -65,6 +65,7 @@ services:
       CYPRESS_LANDNAM_PB_URL: http://landnam-pb:8090
       CYPRESS_POCKETBASE_URL: http://landnam-pb:8090
       CYPRESS_PROFILE: with-pb
+      CYPRESS_livePocketBase: "true"
     volumes:
       - ./cypress.docker.config.js:/e2e/cypress.config.js:ro
       - ./web/cypress:/e2e/cypress:ro

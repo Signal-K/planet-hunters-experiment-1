@@ -40,7 +40,7 @@ beforeEach(() => {
     if (!Cypress.env('allowSurveys')) {
       win.localStorage.setItem('landnam-surveys-shown', JSON.stringify(ALL_SURVEY_KEYS))
     }
-    // Snooze the upgrade prompt indefinitely so SaveProgressPrompt never opens during tests
+    // Keep legacy localStorage fixtures from affecting auth-gate coverage.
     win.localStorage.setItem('landnam-upgrade-prompt-snooze-until', String(Date.now() + 365 * 24 * 60 * 60 * 1000))
   })
 
@@ -54,7 +54,7 @@ beforeEach(() => {
 
   cy.intercept('POST', '**/api/collections/users/auth-with-password', {
     statusCode: 200,
-    body: { token: 'e2e-token', record: { id: 'e2e-user', email: 'e2e@landnam.guest' } },
+    body: { token: 'e2e-token', record: { id: 'e2e-user', email: 'e2e@example.com' } },
   }).as('pbAuth')
 
   // The mandatory email gate creates the lightweight account before it
@@ -63,17 +63,17 @@ beforeEach(() => {
   // reaches the gameplay flow it is meant to verify.
   cy.intercept('POST', '**/api/collections/users/records', {
     statusCode: 200,
-    body: { id: 'e2e-user', email: 'e2e@landnam.guest' },
+    body: { id: 'e2e-user', email: 'e2e@example.com' },
   }).as('pbUserCreate')
 
   cy.intercept('POST', '**/api/collections/users/auth-refresh', {
     statusCode: 200,
-    body: { token: 'e2e-token', record: { id: 'e2e-user', email: 'e2e@landnam.guest' } },
+    body: { token: 'e2e-token', record: { id: 'e2e-user', email: 'e2e@example.com' } },
   }).as('pbAuthRefresh')
 
   cy.intercept('GET', '**/api/collections/users/auth-refresh', {
     statusCode: 200,
-    body: { token: 'e2e-token', record: { id: 'e2e-user', email: 'e2e@landnam.guest' } },
+    body: { token: 'e2e-token', record: { id: 'e2e-user', email: 'e2e@example.com' } },
   }).as('pbAuthRefreshGet')
 
   // Offline journeys still exercise the real Landnam auth hand-off. Keep the
@@ -83,7 +83,7 @@ beforeEach(() => {
     statusCode: 200,
     body: {
       token: 'e2e-landnam-token',
-      record: { id: 'e2e-user', email: 'e2e@landnam.guest', lastExchangeAt: new Date().toISOString() },
+      record: { id: 'e2e-user', email: 'e2e@example.com', lastExchangeAt: new Date().toISOString() },
     },
   }).as('pbLandnamExchange')
 

@@ -59,8 +59,8 @@ describe('Dev preset URL param (?preset=)', () => {
     cy.visit('/game?preset=does-not-exist', {
       onBeforeLoad(win) {
         win.localStorage.setItem(
-          'landnam-guest-credentials',
-          JSON.stringify({ email: 'e2e@landnam.guest', password: 'e2e-guest-test' }),
+          'landnam-account-credentials',
+          JSON.stringify({ email: 'e2e@example.com', password: 'e2e-guest-test' }),
         )
       },
     })

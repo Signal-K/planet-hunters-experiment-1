@@ -12,7 +12,7 @@ function visitGalaxyScreen() {
   const e2eToken = `e30.${tokenPayload}.test`
   cy.intercept('POST', '**/api/collections/users/auth-refresh', {
     statusCode: 200,
-    body: { token: e2eToken, record: { id: 'e2e-subject-user', email: 'e2e@landnam.guest' } },
+    body: { token: e2eToken, record: { id: 'e2e-subject-user', email: 'e2e@example.com' } },
   })
   cy.intercept('POST', '**/api/landnam-auth/exchange', {
     statusCode: 200,
@@ -82,8 +82,8 @@ function visitGalaxyScreen() {
   cy.visit('/game', {
     onBeforeLoad(win) {
       win.localStorage.setItem(STORAGE_KEY, JSON.stringify(base))
-      win.localStorage.setItem('landnam-guest-credentials', JSON.stringify({ email: 'e2e@landnam.guest', password: 'e2e-guest-test' }))
-      win.localStorage.setItem('pocketbase_auth', JSON.stringify({ token: e2eToken, record: { id: 'e2e-subject-user', email: 'e2e@landnam.guest' } }))
+      win.localStorage.setItem('landnam-account-credentials', JSON.stringify({ email: 'e2e@example.com', password: 'e2e-guest-test' }))
+      win.localStorage.setItem('pocketbase_auth', JSON.stringify({ token: e2eToken, record: { id: 'e2e-subject-user', email: 'e2e@example.com' } }))
     },
   })
   cy.wait('@subjects')

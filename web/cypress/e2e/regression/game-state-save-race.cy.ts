@@ -26,7 +26,7 @@ describe('game_states save race recovery', () => {
     // retry timing.
     cy.intercept('POST', '**/api/landnam-auth/exchange', {
       statusCode: 200,
-      body: { token: 'e2e-landnam-token', record: { id: 'e2e-user', email: 'e2e@landnam.guest' } },
+      body: { token: 'e2e-landnam-token', record: { id: 'e2e-user', email: 'e2e@example.com' } },
     }).as('pbLandnamExchange')
 
     cy.intercept('POST', '**/api/collections/game_states/records', {
@@ -109,10 +109,10 @@ describe('game_states save race recovery', () => {
           popup: null,
           menuOpen: false,
         }))
-        win.localStorage.setItem('landnam-guest-credentials', JSON.stringify({ email: 'e2e@landnam.guest', password: 'e2e-guest-test' }))
+        win.localStorage.setItem('landnam-account-credentials', JSON.stringify({ email: 'e2e@example.com', password: 'e2e-guest-test' }))
         // Seed pbShared's authStore directly (PocketBase SDK default
         // 'pocketbase_auth' key) instead of relying on the async
-        // ensureGuestAuth() -> authWithPassword() round trip to populate it —
+        // ensureAccountAuth() -> authWithPassword() round trip to populate it —
         // useAuthSync's authUserId state only reads this once at mount, so
         // this needs to already be valid before the app's first render.
         const jwt = (payload: Record<string, unknown>) => {
@@ -121,7 +121,7 @@ describe('game_states save race recovery', () => {
         }
         win.localStorage.setItem('pocketbase_auth', JSON.stringify({
           token: jwt({ id: 'e2e-user', exp: Math.floor(Date.now() / 1000) + 3600 }),
-          record: { id: 'e2e-user', email: 'e2e@landnam.guest', collectionId: '_pb_users_auth_', collectionName: 'users' },
+          record: { id: 'e2e-user', email: 'e2e@example.com', collectionId: '_pb_users_auth_', collectionName: 'users' },
         }))
       },
     })

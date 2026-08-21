@@ -2,6 +2,7 @@ import { useCallback, useRef } from 'react'
 import {
   MISSIONS, TARGETS, ROCKET_MODELS, FREE_OPS_START_MISSIONS_DONE,
   getLaserChargeCap, travelDurationMs, suggestBuild,
+  feasibleTargetsFor,
   CLIENT_COOLDOWN_MS, CLIENT_STREAK_LIMIT, loanInstalmentFor, BANKRUPTCY_THRESHOLD,
   isOwnProgramMission,
   artifactNarrativeEligible,
@@ -132,6 +133,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
       const mission = s.missionId ? catalog.missions.find(m => m.id === s.missionId) ?? null : null
       const target = catalog.targets.find(t => t.id === id) ?? null
       if (!mission || !target) return s
+      if (!feasibleTargetsFor(mission, catalog.targets, catalog.parts, s.player.missionsDone, s.player.launchpadUpgraded, s.player.unlockedSkillNodes ?? []).some(item => item.id === id)) return s
       const next = suggestBuild({ mission, target, missionsDone: s.player.missionsDone, launchpadUpgraded: s.player.launchpadUpgraded, parts: catalog.parts, unlockedSkillNodes: s.player.unlockedSkillNodes ?? [] })
       return {
         ...s,

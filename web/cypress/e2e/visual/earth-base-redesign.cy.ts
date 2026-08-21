@@ -49,8 +49,8 @@ function seed(win: Window, player: object) {
   win.localStorage.setItem(SNOOZE_KEY, String(Date.now() + 365 * 24 * 60 * 60 * 1000))
   // Keep visual specs isolated from any remote game state left by another
   // test in the same PocketBase-backed run.
-  win.localStorage.setItem('landnam-guest-credentials', JSON.stringify({
-    email: `ci-seed-${Date.now()}-${Math.random().toString(36).slice(2)}@landnam.guest`,
+  win.localStorage.setItem('landnam-account-credentials', JSON.stringify({
+    email: `ci-seed-${Date.now()}-${Math.random().toString(36).slice(2)}@example.com`,
     password: 'GuestPassword123!',
   }))
   // Suppress the onboarding-complete sheet, which otherwise covers the scene

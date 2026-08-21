@@ -41,7 +41,7 @@ function visitWithState(state: Partial<GameState>) {
   cy.visit('/game', {
     onBeforeLoad(win) {
       win.localStorage.setItem(STORAGE_KEY, JSON.stringify({ ...base, ...state }))
-      win.localStorage.setItem('landnam-guest-credentials', JSON.stringify({ email: 'e2e@landnam.guest', password: 'e2e-guest-test' }))
+      win.localStorage.setItem('landnam-account-credentials', JSON.stringify({ email: 'e2e@example.com', password: 'e2e-guest-test' }))
       // Unset, TutorialCompleteSheet (components/game/TutorialCompleteSheet.tsx)
       // full-screens over the hub the first time missionsDone crosses the
       // onboarding threshold, which is exactly the transition the M3 reward

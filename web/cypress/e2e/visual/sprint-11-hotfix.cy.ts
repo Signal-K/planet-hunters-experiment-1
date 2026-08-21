@@ -57,8 +57,8 @@ function visitGame(path: string, screen: GameState['screen']) {
     onBeforeLoad(win) {
       win.localStorage.clear()
       win.localStorage.setItem(STORAGE_KEY, JSON.stringify(stateFor(screen)))
-      win.localStorage.setItem('landnam-guest-credentials', JSON.stringify({
-        email: 'sprint-11-hotfix-invalid@landnam.guest',
+      win.localStorage.setItem('landnam-account-credentials', JSON.stringify({
+        email: 'sprint-11-hotfix-invalid@example.com',
         password: 'GuestPassword123!',
       }))
       win.localStorage.setItem('landnam-upgrade-prompt-snooze-until', String(Date.now() + 365 * 24 * 60 * 60 * 1000))

@@ -37,6 +37,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
 
   const [hydrated, setHydrated] = useState(false)
   const isPreview = useRef(false)
+  const skipNextLocalPersist = useRef(false)
   // React StrictMode double-invokes effects in dev. This effect strips the
   // `?preset=`/`?preview=` query via history.replaceState as one of its own
   // side effects, so a second invocation reads an already-stripped URL and
@@ -90,6 +91,11 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
   // Persist state to localStorage
   useEffect(() => {
     if (!hydrated || isPreview.current) return
+    if (skipNextLocalPersist.current) {
+      skipNextLocalPersist.current = false
+      localStorage.removeItem(STORAGE_KEY)
+      return
+    }
     // updatedAt (STS-635) is stamped only in the serialized write, not fed back
     // into React state, so this effect can't retrigger itself. It's read back
     // on next load via loadState()/normalizeState() and used as a tie-breaker
@@ -101,7 +107,17 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
 
   // ── Domain hooks ───────────────────────────────────────────────────────────
   const ui      = useUIActions(setState)
-  const auth    = useAuthSync({ state, setState, stateRef, hydrated, isPreview: isPreview.current, addToast: ui.addToast, normalizeAndRepair, storageKey: STORAGE_KEY })
+  const auth    = useAuthSync({
+    state,
+    setState,
+    stateRef,
+    hydrated,
+    isPreview: isPreview.current,
+    addToast: ui.addToast,
+    normalizeAndRepair,
+    storageKey: STORAGE_KEY,
+    beforeReset: () => { skipNextLocalPersist.current = true },
+  })
   useConfirmedDiscoveryPoll({
     stateRef,
     setState,
@@ -182,8 +198,6 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       dismissToast: ui.dismissToast,
       clearTerritoryClaimPopup: ui.clearTerritoryClaimPopup,
       // Auth
-      upgradePromptOpen: auth.upgradePromptOpen,
-      upgradeAccount: auth.upgradeAccount,
       awaitingRemoteState: auth.awaitingRemoteState,
       authGateOpen: auth.authGateOpen,
       authGateError: auth.authGateError,

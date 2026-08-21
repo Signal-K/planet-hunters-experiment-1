@@ -10,7 +10,7 @@ import { pbShared } from '@/lib/pb'
 const STORAGE_KEY = 'landnam-game-state-v1'
 // Must match scripts/seed-dev-presets.ts exactly (email scheme + password).
 const PRESET_PASSWORD = 'DevPreset123!'
-const presetEmail = (key: string) => `dev-preset-${key}@landnam.guest`
+const presetEmail = (key: string) => `dev-preset-${key}@example.com`
 
 export default function DevShortcuts() {
   const [open, setOpen] = useState(false)

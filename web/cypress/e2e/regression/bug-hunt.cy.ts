@@ -6,7 +6,7 @@
 import type { GameState } from '@/game-context'
 
 const STORAGE_KEY = 'landnam-game-state-v1'
-const GUEST_KEY = 'landnam-guest-credentials'
+const GUEST_KEY = 'landnam-account-credentials'
 const SURVEY_KEY = 'landnam-surveys-shown'
 
 const ALL_SURVEYS = [
@@ -17,7 +17,7 @@ const ALL_SURVEYS = [
 
 const SNOOZE_KEY = 'landnam-upgrade-prompt-snooze-until'
 const FAR_FUTURE = String(Date.now() + 365 * 24 * 60 * 60 * 1000)
-const GUEST = JSON.stringify({ email: 'e2e@landnam.guest', password: 'e2e-guest-test' })
+const GUEST = JSON.stringify({ email: 'e2e@example.com', password: 'e2e-guest-test' })
 
 function baseLoad(extra: Record<string, string> = {}) {
   return (win: Window) => {

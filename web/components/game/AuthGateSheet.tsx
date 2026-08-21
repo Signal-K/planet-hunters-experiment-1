@@ -8,7 +8,7 @@ interface AuthGateSheetProps {
   onSignIn: (email: string, password: string) => Promise<void>
   onCreateAccount: (email: string, password: string) => Promise<void>
   onContinue: (email: string) => Promise<void>
-  /** True once onContinue's requestOTP() succeeded — switches the quick path to code entry. */
+  /** Retained for the explicit OTP recovery path. */
   otpPending: boolean
   onVerifyOtp: (code: string) => Promise<void>
 }
@@ -170,7 +170,7 @@ export default function AuthGateSheet({ error, onSignIn, onCreateAccount, onCont
           ) : (
             <>
               <div className="auth-gate__quick-copy">
-                <span>NO PASSWORD NEEDED</span> We’ll email a one-time code.
+                <span>NO PASSWORD NEEDED</span> Use your email to create an account and start playing.
               </div>
               <form onSubmit={handleQuickContinue} className="auth-gate__quick-form">
                 <input
@@ -189,7 +189,7 @@ export default function AuthGateSheet({ error, onSignIn, onCreateAccount, onCont
                   data-testid="auth-gate-quick-submit"
                   className="auth-gate__secondary"
                 >
-                  {quickSubmitting ? '…' : 'Send Code'}
+                  {quickSubmitting ? '…' : 'Continue with Email'}
                 </button>
               </form>
             </>

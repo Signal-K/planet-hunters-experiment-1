@@ -8,7 +8,6 @@ import type { Screen } from '@/lib/game-types'
 import { ScreenContent } from '@/components/game/GameScreenRouter'
 import TutorialCoach from '@/components/game/TutorialCoach'
 import MissionTicker from '@/components/game/MissionTicker'
-import SaveProgressPrompt from '@/components/game/SaveProgressPrompt'
 import UnlockPopup from '@/components/game/UnlockPopup'
 import BottomTabBar from '@/components/layout/BottomTabBar'
 import BackendStatus from '@/components/game/BackendStatus'
@@ -172,7 +171,6 @@ function GameCanvas() {
   const showFeedback = ['hub', 'missions', 'market', 'hangar', 'skills'].includes(game.screen)
     && !showNav
     && !game.popup
-    && !game.upgradePromptOpen
     && !game.authGateOpen
 
   const surveyBlocked = !!coach
@@ -244,7 +242,7 @@ function GameCanvas() {
         </div>
 
         <ToastLayer toasts={game.toasts} onDismiss={game.dismissToast} />
-        {!coach && !game.popup && !game.upgradePromptOpen && !game.authGateOpen && (
+        {!coach && !game.popup && !game.authGateOpen && (
           <MissionTicker player={game.player} screen={game.screen} onResume={game.go} />
         )}
         {showFeedback && <FeedbackButton />}
@@ -281,9 +279,6 @@ function GameCanvas() {
             }}
             onDismiss={game.popup === 'loan' ? () => game.setPopup(null) : undefined}
           />
-        )}
-        {game.upgradePromptOpen && !game.popup && (
-          <SaveProgressPrompt onUpgrade={game.upgradeAccount} />
         )}
         {game.authGateOpen && (
           <AuthGateSheet
