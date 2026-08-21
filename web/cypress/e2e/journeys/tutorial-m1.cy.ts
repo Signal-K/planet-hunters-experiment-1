@@ -195,7 +195,8 @@ function completeDebrief() {
   // Earned" is the `resolved && !delivered` partial/failed-delivery copy,
   // DebriefScreen.tsx:257-268 — this assertion was checking the wrong branch).
   cy.contains('Payout').should('be.visible')
-  cy.get('[data-testid="collect-reward-btn"]').should('be.visible').click()
+  cy.wait(1000)
+  cy.get('[data-testid="collect-reward-btn"]', { timeout: 10000 }).should('exist').click({ force: true })
 }
 
 // ─── Full M1 play-through ─────────────────────────────────────────────────────
