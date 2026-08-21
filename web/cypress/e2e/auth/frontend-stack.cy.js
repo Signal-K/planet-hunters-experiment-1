@@ -16,9 +16,10 @@ describe('Landnam frontend stack', () => {
     cy.get('[data-testid="intro-begin-btn"]').click()
     cy.contains('EARTH BASE · SETUP').should('be.visible')
     cy.contains('Build a Launchpad').should('be.visible')
-    cy.contains('DATA LINK · online', { matchCase: false }).should('be.visible')
-    cy.contains('button', 'Select a Plot').click()
-    cy.contains('Choose a Plot').should('be.visible')
+    // The online status utility intentionally unmounts once health is confirmed.
+    cy.get('[data-ui-zone="status-utility"]', { timeout: 10000 }).should('not.exist')
+    cy.get('[data-testid="build-plot-0"]').click()
+    cy.contains('button', 'Confirm · Build Here').should('be.visible').click()
   })
 
   it('connects to PocketBase through the compose network', () => {

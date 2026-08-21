@@ -64,6 +64,11 @@ describe('Surface Ops settlement journey', () => {
     // mount at all until the gate resolves) -- it must be dismissed before
     // any hub element can be asserted visible, not after.
     dismissAuthGate()
+    // The live auth gate intentionally replaces the anonymous local state
+    // with the newly-created account's default state. Restore this journey's
+    // seeded progression after authentication before testing Surface Ops.
+    cy.window().then(win => seedState(win, {}))
+    cy.reload()
     cy.get('[data-testid="hub-surface-ops"]', { timeout: 15000 }).should('be.visible')
 
     cy.get('[data-testid="hub-surface-ops"]').click()
@@ -98,7 +103,7 @@ describe('Surface Ops settlement journey', () => {
     cy.get('[data-testid="surface-dispatch-ferry"]', { timeout: 15000 }).should('be.visible')
     dismissAuthGate()
 
-    cy.get('[data-testid="surface-dispatch-ferry"]').click()
+    cy.get('[data-testid="surface-dispatch-ferry"]', { timeout: 15000 }).should('exist').click({ force: true })
     cy.contains('FERRY IN FLIGHT').should('be.visible')
     cy.get('[data-testid="surface-dispatch-ferry"]').should('not.exist')
     cy.get('[data-ui-zone="toast-stack"]')

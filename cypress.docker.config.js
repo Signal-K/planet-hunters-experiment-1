@@ -3,6 +3,10 @@ module.exports = {
     // docker-compose.e2e.yml names the Next service `next-app`; the prior
     // `web` hostname made the supposedly self-contained PB suite unusable.
     baseUrl: process.env.CYPRESS_baseUrl || 'http://next-app:3001',
+    // The Docker release suite exercises the real isolated PocketBases. This
+    // flag prevents the shared Cypress support setup from replacing those
+    // calls with the offline e2e-user fixtures.
+    env: { livePocketBase: true },
     specPattern: 'cypress/e2e/**/*.cy.{js,jsx,ts,tsx}',
     // M3 is not an active product scope yet, and survey QA has a dedicated
     // runtime opt-in run below. Keep the release report honest about the
