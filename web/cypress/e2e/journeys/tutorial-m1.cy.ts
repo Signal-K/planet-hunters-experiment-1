@@ -158,6 +158,8 @@ function completeMining() {
     // The development shortcut fills the order and calls onComplete directly;
     // it intentionally bypasses the real player's Return/Deliver button.
     cy.contains('MISSION TRANSIT', { timeout: 15000 }).should('be.visible')
+    cy.get('[data-testid="transit-skip-btn"]', { timeout: 10000 }).click()
+    cy.contains('MISSION COMPLETE', { timeout: 10000 }).should('be.visible')
     return
   }
 

@@ -94,7 +94,9 @@ function playM1FromIntro() {
   // and debrief flow, not the probabilistic ore-hit minigame. The mining
   // interaction itself has dedicated coverage in the feature suite.
   cy.get('[data-testid="dev-skip-mining-btn"]').click()
-  cy.get('[data-testid="return-home-btn"]').should('not.be.disabled').click()
+  // The dev shortcut completes mining and starts the fake Earth-return leg;
+  // arrive through Transit before asserting the debrief.
+  cy.get('[data-testid="transit-skip-btn"]', { timeout: 10000 }).click()
 
   cy.contains('MISSION COMPLETE', { timeout: 10000 }).should('be.visible')
   cy.get('[data-testid="resolve-cargo-btn"]').click()
