@@ -122,7 +122,11 @@ describe('Full Game Loop — Landnam', () => {
 
     it('M1 card exposes target picking CTA', () => {
       visitWithState(fullState({ screen: 'missions', missionId: null, doneSteps: { 1: true } }))
-      cy.get('[data-testid="mission-card-generated-s1-starter-bulk-1-cta"]').should('be.visible')
+      // The mission list is scrollable beneath the tutorial/action rails; assert
+      // the primary CTA in the same viewport state a player uses to reach it.
+      cy.get('[data-testid="mission-card-generated-s1-starter-bulk-1-cta"]')
+        .scrollIntoView()
+        .should('be.visible')
       // Target count is derived from mineral/archetype coverage, not a fixed
       // number — assert it's genuinely nonzero rather than pinning an exact
       // count that shifts whenever target data legitimately changes.
@@ -348,7 +352,7 @@ describe('Full Game Loop — Landnam', () => {
       cy.contains('MISSION COMPLETE').should('be.visible')
       cy.get('[data-testid="collect-reward-btn"]').should('not.exist')
       cy.get('[data-testid="resolve-cargo-btn"]').click()
-      cy.contains('Francs Earned').should('be.visible')
+      cy.contains('Francs Earned').scrollIntoView().should('be.visible')
       cy.get('[data-testid="collect-reward-btn"]').should('be.visible')
     })
 
