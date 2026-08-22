@@ -6,7 +6,7 @@ export const DEEP_SPACE_TELESCOPE_INSTRUMENT_ID = 'deep-space-telescope'
 
 type InstrumentFeedPlayer = Pick<
   Player,
-  | 'satelliteMonitoringLevel'
+  | 'transitSatelliteLevel'
   | 'transitSatelliteLevel'
   | 'satelliteTargetId'
   | 'tessClassifications'
@@ -27,7 +27,6 @@ export function instrumentDigestDateKey(now: Date = new Date()): string {
 export function transitInstrumentLevel(player: InstrumentFeedPlayer): number {
   return Math.max(
     1,
-    Math.floor(player.satelliteMonitoringLevel ?? 1),
     Math.floor(player.transitSatelliteLevel ?? 1)
   )
 }

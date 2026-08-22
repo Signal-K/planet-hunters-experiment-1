@@ -228,7 +228,7 @@ export default function HubScreen({ player, rocketVariant = 'explorer', hasCoach
       })
       .catch(() => { if (!cancelled) setTessQueueCount(0) })
     return () => { cancelled = true }
-  }, [player.freeOperations, player.satelliteMonitoringBuilt, player.transitSatelliteLaunchedAt, player.tessClassifications])
+  }, [player.freeOperations, player.transitSatelliteLaunchedAt, player.tessClassifications])
 
   // Deep Space Telescope badge: same InstrumentFeedSystem-shared pattern as
   // the SMS badge above, for the second (asteroid/NEOCP) instrument (STS-622).
@@ -276,14 +276,13 @@ export default function HubScreen({ player, rocketVariant = 'explorer', hasCoach
     return kind
   }
 
-  const BUILDING_W: Record<string, number> = { launchpad: 98, refinery: 84, 'scan-station': 80, 'satellite-monitoring-station': 86, 'deep-space-telescope': 86, 'astronaut-academy': 88, command: 84 }
+  const BUILDING_W: Record<string, number> = { launchpad: 98, refinery: 84, 'scan-station': 80, 'deep-space-telescope': 86, 'astronaut-academy': 88, command: 84 }
   // Post-tutorial Hub prominence pass (STS-631): telescope/satellite
   // buildings recede visually while they're unlocked but still in their
-  // early, not-yet-actively-producing state — Satellite Monitoring Station
+  // early, not-yet-actively-producing state — Transit Telescope
   // before the transit satellite launches, Deep Space Telescope before it's
   // built — so the Launchpad keeps reading as the base's primary structure.
   const isDimmedBuildingKind = (kind: string): boolean => {
-    if (kind === 'satellite-monitoring-station') return !player.transitSatelliteLaunchedAt
     if (kind === 'deep-space-telescope') return !player.deepSpaceTelescopeBuilt
     return false
   }
@@ -354,17 +353,6 @@ export default function HubScreen({ player, rocketVariant = 'explorer', hasCoach
         hot: hasScan,
         w: 80,
         onClick: () => onGoBuilding('scan-station'),
-      }
-    }
-    if (kind === 'satellite-monitoring-station') {
-      return {
-        kind, label: 'S.M.S.',
-        sub: player.transitSatelliteLaunchedAt ? 'TELESCOPE LIVE' : 'READY',
-        status: (player.transitSatelliteLaunchedAt ? 'ok' : 'info') as 'ok' | 'info',
-        w: 86,
-        badge: tessQueueCount,
-        dimmed: isDimmedBuildingKind(kind),
-        onClick: () => onGoBuilding('satellite-monitoring-station'),
       }
     }
     if (kind === 'deep-space-telescope') {

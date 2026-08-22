@@ -120,7 +120,7 @@ export default function TessDiscoveryScreen({ player, visualCandidate, onBack, o
     // post-confirmation target-selection map. Re-entering the screen remounts
     // it and naturally resolves the next still-unclassified daily candidate.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [visualCandidate, player.freeOperations, player.satelliteMonitoringBuilt, player.satelliteMonitoringLevel, player.transitSatelliteLaunchedAt, player.transitSatelliteLevel, player.satelliteTargetId, devDayOffset])
+  }, [visualCandidate, player.freeOperations, player.transitSatelliteLaunchedAt, player.transitSatelliteLevel, player.satelliteTargetId, devDayOffset])
 
   const classification: TessClassification | undefined = candidate ? classifications[candidate.id] : undefined
   const discoveredTarget = candidate && classification?.verdict === 'planet'
@@ -139,7 +139,6 @@ export default function TessDiscoveryScreen({ player, visualCandidate, onBack, o
   // Hooks must run unconditionally — the gate screens below return early,
   // so anything hook-based (not just plain derived values) has to sit
   // above them, or its call order breaks the moment a gate flag flips
-  // (e.g. satelliteMonitoringBuilt going false -> true mid-session).
   const coach = useObservatoryCoach()
   const isDesktop = useIsDesktop()
 
@@ -474,7 +473,7 @@ function GateScreen({ eyebrow, icon, tone, title, body, onBack, action, devBar }
   return (
     <div className="game-screen">
       <NebulaBackdrop />
-      <TopBar eyebrow={eyebrow} title="Satellite Monitoring Station" onBack={onBack} />
+      <TopBar eyebrow={eyebrow} title="Transit Telescope" onBack={onBack} />
       <div className="screen-scroll" data-ui-zone={UI_ZONES.screenContent}>
         {devBar}
         <Panel accent={accent} style={{ padding: 14 }}>

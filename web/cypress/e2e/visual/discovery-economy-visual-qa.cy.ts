@@ -44,7 +44,6 @@ function basePlayer(overrides: Partial<GameState['player']> = {}): GameState['pl
     loanOffered: false,
     roverDeployments: [],
     clientTerritories: {},
-    satelliteMonitoringBuilt: true,
     transitSatelliteLaunchedAt: Date.now() - 1000,
     tessClassifications: {},
     discoveredExoplanetTargets: {},

@@ -37,8 +37,6 @@ function basePlayer(overrides: Partial<GameState['player']> = {}): GameState['pl
     seen_planets: [],
     roverDeployments: [],
     clientTerritories: {},
-    satelliteMonitoringBuilt: true,
-    satelliteMonitoringLevel: 1,
     transitSatelliteLaunchedAt: Date.now() - 60_000,
     transitSatelliteLevel: 1,
     tessClassifications: {},
@@ -154,19 +152,19 @@ describe('C1–C4 screen contracts across viewport classes', () => {
 
       it('keeps the satellite narrative gates explicit at each C4 stage', () => {
         visit('/game/galaxy', stateWith('galaxy', {
-          player: basePlayer({ satelliteMonitoringBuilt: false, transitSatelliteLaunchedAt: null }),
+          player: basePlayer({ transitSatelliteLaunchedAt: null }),
         }))
         cy.contains('Place the Earth-base', { timeout: 10000 }).should('be.visible')
 
         visit('/game/galaxy', stateWith('galaxy', {
-          player: basePlayer({ satelliteMonitoringBuilt: true, transitSatelliteLaunchedAt: null }),
+          player: basePlayer({ transitSatelliteLaunchedAt: null }),
         }))
         cy.contains('Launch Transit Telescope', { timeout: 10000 }).should('be.visible')
 
         visit('/game/galaxy', stateWith('galaxy', {
-          player: basePlayer({ satelliteMonitoringBuilt: true, transitSatelliteLaunchedAt: Date.now() - 60_000 }),
+          player: basePlayer({ transitSatelliteLaunchedAt: Date.now() - 60_000 }),
         }))
-        cy.contains('Satellite Monitoring Station', { timeout: 10000 }).should('be.visible')
+        cy.contains('Transit Telescope', { timeout: 10000 }).should('be.visible')
       })
 
       it('keeps the Scene 4 setup borders above the fixed action bar', () => {

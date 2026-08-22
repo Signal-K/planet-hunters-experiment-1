@@ -160,7 +160,7 @@ export function applyPlaceStructure(s: GameState, structure: StructureBlueprint 
   if (!structure || structure.kind !== kind) return s
   if (s.player.placed.includes(kind)) return s
   if (kind === 'astronaut-academy' && !s.player.academyResearched) return s
-  if (kind === 'deep-space-telescope' && !deepSpaceTelescopeUnlocked({ satelliteMonitoringLevel: s.player.satelliteMonitoringLevel, clientMissions: s.player.clientMissions })) return s
+  if (kind === 'deep-space-telescope' && !deepSpaceTelescopeUnlocked({ transitSatelliteLevel: s.player.transitSatelliteLevel, clientMissions: s.player.clientMissions })) return s
   if (s.player.francs < structure.cost) return s
   if (!Object.entries(structure.costMaterials ?? {}).every(([mineral, amount]) => (s.player.stash?.[mineral] ?? 0) >= amount)) return s
   const stash = { ...(s.player.stash ?? {}) }
@@ -177,10 +177,6 @@ export function applyPlaceStructure(s: GameState, structure: StructureBlueprint 
       placementPlots: { ...s.player.placementPlots, [kind]: plot },
       refineryBuilt: kind === 'refinery' ? true : s.player.refineryBuilt,
       scannerBuilt: kind === 'scan-station' ? true : s.player.scannerBuilt,
-      satelliteMonitoringBuilt: kind === 'satellite-monitoring-station' ? true : s.player.satelliteMonitoringBuilt,
-      satelliteMonitoringLevel: kind === 'satellite-monitoring-station'
-        ? Math.max(1, s.player.satelliteMonitoringLevel ?? 1)
-        : s.player.satelliteMonitoringLevel,
       deepSpaceTelescopeBuilt: kind === 'deep-space-telescope' ? true : s.player.deepSpaceTelescopeBuilt,
       deepSpaceTelescopeLevel: kind === 'deep-space-telescope'
         ? Math.max(1, s.player.deepSpaceTelescopeLevel ?? 1)

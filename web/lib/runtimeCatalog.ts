@@ -57,7 +57,6 @@ interface RuntimeCatalogOpts {
   catalog: Catalog
   discoveredTargets?: Record<string, Target>
   freeOperations: boolean
-  satelliteMonitoringBuilt?: boolean
   transitSatelliteLaunchedAt?: number | null
   missionId?: string | null
   targetId?: string | null
@@ -69,7 +68,6 @@ export function buildRuntimeCatalog({
   catalog,
   discoveredTargets = {},
   freeOperations,
-  satelliteMonitoringBuilt,
   transitSatelliteLaunchedAt,
   missionId,
   targetId,
@@ -83,7 +81,7 @@ export function buildRuntimeCatalog({
   const shouldOfferDeepSpaceTelescopeMission = freeOperations
     && !player?.deepSpaceTelescopeMissionCompletedAt
     && !player?.placed?.includes('deep-space-telescope')
-    && deepSpaceTelescopeUnlocked({ satelliteMonitoringLevel: player?.satelliteMonitoringLevel, clientMissions: player?.clientMissions })
+    && deepSpaceTelescopeUnlocked({ transitSatelliteLevel: player?.transitSatelliteLevel, clientMissions: player?.clientMissions })
   const hasActiveDeepSpaceTelescopeMission = missionId === DEEP_SPACE_TELESCOPE_MISSION_ID || targetId === DEEP_SPACE_TELESCOPE_TARGET_ID
   const shouldIncludeDeepSpaceTelescopeMission = shouldOfferDeepSpaceTelescopeMission || hasActiveDeepSpaceTelescopeMission
   const shouldOfferScanStationMission = FEATURE_FLAGS.scanStation
@@ -119,12 +117,12 @@ export function buildRuntimeCatalog({
     ? [{
         id: TRANSIT_TELESCOPE_MISSION_ID,
         title: 'Launch Transit Telescope',
-        brief: 'Deploy your own TESS-class telescope into Earth orbit. Its daily instrument feed will downlink to the Satellite Monitoring Station.',
+        brief: 'Deploy your own TESS-class telescope into Earth orbit. Its daily instrument feed becomes available for classification.',
         tag: 'STORY',
         difficulty: 'L1',
         locked: false,
         sequence: missionsDone + 1,
-        unlockAt: 'Build Satellite Monitoring Station',
+        unlockAt: 'Reach Free Operations',
         targetId: TRANSIT_TELESCOPE_TARGET_ID,
         payload: {
           type: 'satellite',
@@ -148,12 +146,12 @@ export function buildRuntimeCatalog({
     ? [{
         id: DEEP_SPACE_TELESCOPE_MISSION_ID,
         title: 'Survey the Deep Space Telescope Site',
-        brief: 'Your Satellite Monitoring Station and client standing have earned you a second instrument. Fly a calibration survey to establish the Deep Space Telescope before you build it.',
+        brief: 'Your transit telescope and client standing have earned you a second instrument. Fly a calibration survey to establish the Deep Space Telescope before you build it.',
         tag: 'STORY',
         difficulty: 'L1',
         locked: false,
         sequence: missionsDone + 1,
-        unlockAt: 'Satellite Monitoring Station level 2 and affinity level 2 with a client',
+        unlockAt: 'Transit telescope level 2 and affinity level 2 with a client',
         targetId: DEEP_SPACE_TELESCOPE_TARGET_ID,
         payload: {
           type: 'deep-space-survey',

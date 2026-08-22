@@ -1,18 +1,21 @@
 /**
  * Hub screen building scene — pure PixiJS scene logic, no React lifecycle.
  *
- * Rebuilt 2026-08-21 (KES-226), scrapping the KES-220 mountain/treeline/
- * soil-strata terrain the same day — that composition didn't fit the new
- * orbit-ring backdrop (`HubWorldBackground.tsx`) and its own recolor read
- * as "the same screen with new colors." The ring is now the dominant
- * visual; this file draws only what buildings need to stand on: a small
- * dark ground plane and plateau nested at the ring's base, no mountains,
- * treeline, or site-dressing clutter.
+ * Terrain corrected 2026-08-22 (KES-228). The KES-226 version drew only a
+ * bare ground plane and plateau, deferring all visual weight to a giant
+ * orbit-ring backdrop (`HubWorldBackground.tsx`) — but that ring was itself
+ * a narrative mistake (Earth Base is a facility on Earth, not a space
+ * station; see HubWorldBackground's doc comment) and its removal left this
+ * screen with almost no landscape at all. This version draws actual
+ * foreground terrain — a jagged ridge crest right at the ground line,
+ * textured with hard-edged facets — that continues the CSS hill bands
+ * behind it (`HubWorldBackground.tsx`) into the near ground the buildings
+ * stand on, plus the raised plateau pad.
  *
  * Rendering rules unchanged: flat color fills, volume via 2–3 discrete
  * facets, hard-edged outline strokes, glows are the only permitted
  * softness — Out There: Ω Edition's dark palette, cyan primary accent,
- * pink for the ring/highlight.
+ * pink used sparingly as a warm highlight.
  *
  * Each structure also gets a dirt mound collar and pad glow drawn beneath it,
  * so the feet break the ground plane instead of sitting on top of it. Those
@@ -71,26 +74,57 @@ function heightField(steps: number, sines: readonly Sine[], floor = 0): number[]
 }
 
 /**
- * Ground layer: a small dark plane and plateau nested at the bottom of the
- * orbit ring (`HubWorldBackground.tsx`), for buildings to stand on. No
- * mountains, treeline, or soil strata — the ring is the scene's visual
- * weight now, not the terrain.
+ * Ground layer: a jagged foreground ridge crest at the ground line,
+ * continuing the CSS hill silhouettes behind it (`HubWorldBackground.tsx`)
+ * into real near-ground terrain, plus the raised plateau pad the
+ * structures stand on.
  */
 function buildTerrain(w: number, h: number, groundY: number): Container {
   const root = new Container()
 
-  // ── Ground plane — a simple dark fill, blends into the ring's hole ──────
+  // ── Ground plane — base fill behind the ridge crest ─────────────────────
   const ground = new Graphics()
   ground.rect(0, groundY, w, h - groundY).fill(T.groundLit)
-  // A single subtle facet band for a touch of volume, not a full ridge system.
-  const crest = heightField(9, [[1, 1.4, 0.6], [0.5, 3.1, 1.9]])
-  for (let i = 0; i < 9; i += 2) {
-    const x0 = (i / 9) * w
-    const x1 = ((i + 1) / 9) * w
-    const topOffset = crest[i] * h * 0.012
-    ground.rect(x0, groundY + topOffset, x1 - x0, h - groundY - topOffset).fill({ color: T.groundMid, alpha: 0.6 })
-  }
   root.addChild(ground)
+
+  // ── Foreground ridge crest — a jagged hard-edged silhouette breaking the
+  // ground line, textured with alternating lit/shaded facets so it reads as
+  // real terrain rather than a flat rectangle. Continues the CSS hill bands
+  // that sit above/behind this canvas layer. ────────────────────────────────
+  const steps = 16
+  const crest = heightField(steps, [[1, 1.6, 0.4], [0.55, 3.7, 2.1], [0.3, 6.5, 0.9]])
+  const ridge = new Graphics()
+  const crestH = h * 0.05
+  const points: number[] = []
+  for (let i = 0; i <= steps; i++) {
+    const x = (i / steps) * w
+    const y = groundY - crest[i] * crestH
+    points.push(x, y)
+  }
+  points.push(w, groundY + h * 0.02, 0, groundY + h * 0.02)
+  ridge.poly(points).fill(T.groundMid)
+  root.addChild(ridge)
+
+  // Facet bands across the ridge — alternating shade, hard vertical seams,
+  // the same "2-3 discrete facets" language the buildings use.
+  for (let i = 0; i < steps; i += 1) {
+    if (i % 2 !== 0) continue
+    const x0 = (i / steps) * w
+    const x1 = ((i + 1) / steps) * w
+    const topY = groundY - crest[i] * crestH
+    ridge.rect(x0, topY, x1 - x0, groundY + h * 0.02 - topY).fill({ color: T.groundLit, alpha: 0.5 })
+  }
+
+  // Thin cyan rim-light tracing the crest, echoing the CSS hill rim-light.
+  const rim = new Graphics()
+  for (let i = 0; i < steps; i++) {
+    const x = (i / steps) * w
+    const y = groundY - crest[i] * crestH
+    if (i === 0) rim.moveTo(x, y)
+    else rim.lineTo(x, y)
+  }
+  rim.stroke({ width: 1.5, color: C.cyan, alpha: 0.35 })
+  root.addChild(rim)
 
   // ── Plateau — the raised pad the structures stand on ────────────────────
   // A shallow chamfered deck, seen at a glancing angle: thin top face, lit
@@ -153,7 +187,6 @@ const ART_W: Record<string, number> = {
   launchpad: 60,
   refinery: 62,
   'scan-station': 58,
-  'satellite-monitoring-station': 60,
   'astronaut-academy': 60,
   command: 60,
 }
@@ -194,10 +227,6 @@ export interface HubTextures {
   scan_dish:        Texture | null
   /** Full tripod + dish render, added for KES-145 art parity. */
   scan_station_modular: Texture | null
-  /** Satellite Monitoring Station. Distinct from cmd_building: it is drawn at
-   *  52x36 rather than 56x56, and is a dish on a squat block rather than a
-   *  second command centre. Sharing one texture between them squashed it. */
-  sat_station:      Texture | null
   /** The player's rocket, shown standing on the pad when a launch is pending
    *  (KES-88). Authored horizontally (Hangar/Purchase screens lay ships on
    *  their side) — `buildLaunchpad` rotates it 90°, the same trick
@@ -212,7 +241,7 @@ export function nullTextures(): HubTextures {
     pad_clamp: null, pad_mast: null, pad_tank: null,
     cmd_foundation: null, cmd_building: null, cmd_antenna: null,
     depot_base: null, depot_tank: null, depot_pipes: null, refinery_modular: null,
-    scan_tripod: null, scan_dish: null, scan_station_modular: null, sat_station: null,
+    scan_tripod: null, scan_dish: null, scan_station_modular: null,
     ship_sr1: null, ship_sr2: null,
   }
 }
@@ -471,39 +500,6 @@ function buildScanStation(hot: boolean, tex: HubTextures): { root: Container; an
   return { root, animatables: anims }
 }
 
-/** Satellite Monitoring Station — parabolic uplink dish on a squat block. */
-function buildSatelliteStation(tex: HubTextures): { root: Container; animatables: AnimState[] } {
-  const root = new Container()
-  const anims: AnimState[] = []
-
-  const bld = makeSprite(tex.sat_station, 52, 36, 0.5, 1.0)
-  if (bld) {
-    root.addChild(bld)
-  } else {
-    const g = new Graphics()
-    panel(g, -30, -10, 60, 10, C.base, 1.4)      // foundation
-    panel(g, -24, -44, 48, 34, C.hullDark, 1.4)  // block, shaded
-    panel(g, -24, -44, 19, 34, C.hull, 1.4)      // lit facet
-    panel(g, -6, -24, 12, 24, C.base, 1)         // door
-    panel(g, -2.5, -92, 5, 48, C.hull, 1.2)      // mast
-    // Uplink dish — open parabola, cyan-lined interior
-    g.poly([-22, -92, 22, -92, 12, -112, -12, -112]).fill(C.hullDark).stroke({ width: 1.4, color: C.outline })
-    g.poly([-17, -94, 17, -94, 9, -108, -9, -108]).fill({ color: C.cyan, alpha: 0.30 })
-    root.addChild(g)
-
-    const win = new Graphics()
-    for (let i = 0; i < 3; i++) win.rect(-17 + i * 12, -38, 8, 8).fill({ color: C.cyan, alpha: i === 1 ? 0.75 : 0.5 })
-    root.addChild(win)
-  }
-
-  const light = new Graphics()
-  light.circle(0, -115, 2.6).fill(C.mint)
-  root.addChild(light)
-  anims.push({ kind: 'blink', obj: light, speed: 1.4, phase: 0 })
-
-  return { root, animatables: anims }
-}
-
 /** Command Center — also the fallback art for any unrecognised structure kind. */
 function buildCommandCenter(tex: HubTextures): { root: Container; animatables: AnimState[] } {
   const root = new Container()
@@ -559,10 +555,9 @@ export interface HubBuildingDef {
   /**
    * Post-tutorial Hub prominence pass (STS-631): the Launchpad is the only
    * `unlocksAt: 'always'` structure and should always read as the base's
-   * primary structure. Telescope/satellite buildings that are unlocked but
-   * still in their early "not yet actively producing" state (Satellite
-   * Monitoring Station before the transit satellite launches, Deep Space
-   * Telescope before it's built) are marked `dimmed` so they recede behind
+   * primary structure. Telescope buildings that are unlocked but still in
+   * their early "not yet actively producing" state (Deep Space Telescope
+   * before it's built) are marked `dimmed` so they recede behind
    * the Launchpad rather than compete with it for attention.
    */
   dimmed?: boolean
@@ -613,7 +608,6 @@ export function buildHubScene(
       case 'launchpad':                     result = buildLaunchpad(hot, tex, def.rocketVariant); break
       case 'refinery':                      result = buildRefinery(tex); break
       case 'scan-station':                  result = buildScanStation(hot, tex); break
-      case 'satellite-monitoring-station':  result = buildSatelliteStation(tex); break
       case 'command':                       result = buildCommandCenter(tex); break
       default:                              result = buildCommandCenter(tex); break
     }

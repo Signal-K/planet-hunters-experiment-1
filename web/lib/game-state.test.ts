@@ -60,7 +60,7 @@ describe('game state hydration normalization', () => {
     expect(normalized.player.unlockedBlueprints).toEqual([])
     expect(normalized.player.tessClassifications).toEqual({})
     expect(normalized.player.instrumentDigestNotifiedOn).toEqual({})
-    expect(normalized.player.satelliteMonitoringLevel).toBe(1)
+    expect(normalized.player.transitSatelliteLevel).toBe(1)
     expect(normalized.player.transitSatelliteLevel).toBe(1)
     expect(normalized.player.francs).toBe(9_500_000_000)
   })
@@ -130,13 +130,13 @@ describe('game state hydration normalization', () => {
   it('normalizes satellite discovery levels to at least one', () => {
     const normalized = normalizeState({
       player: {
-        satelliteMonitoringLevel: 0,
-        transitSatelliteLevel: 2.8,
+        transitSatelliteLevel: 0,
       },
     })
 
-    expect(normalized.player.satelliteMonitoringLevel).toBe(1)
-    expect(normalized.player.transitSatelliteLevel).toBe(2)
+    expect(normalized.player.transitSatelliteLevel).toBe(1)
+    const fractional = normalizeState({ player: { transitSatelliteLevel: 2.8 } })
+    expect(fractional.player.transitSatelliteLevel).toBe(2)
   })
 
   it('repairs mission route state when hydrated mission context is missing', () => {
@@ -631,14 +631,6 @@ describe('mergeRemoteState — remote game_states record onto local state', () =
 })
 
 describe('structure flags are derived from `placed`', () => {
-  // A save made before applyPlaceStructure started setting a flag has the
-  // structure in `placed` and the flag false. The hub then kept prompting
-  // "Build a Satellite Monitoring Station" for one already standing.
-  it('repairs satelliteMonitoringBuilt from placed', () => {
-    const s = normalizeState({ player: { placed: ['launchpad', 'satellite-monitoring-station'] } })
-    expect(s.player.satelliteMonitoringBuilt).toBe(true)
-  })
-
   it('repairs refineryBuilt while stripping the deferred scanner from old saves', () => {
     const s = normalizeState({ player: { placed: ['refinery', 'scan-station'] } })
     expect(s.player.refineryBuilt).toBe(true)
@@ -649,12 +641,8 @@ describe('structure flags are derived from `placed`', () => {
 
   it('leaves the flags false when the structure is not placed', () => {
     const s = normalizeState({ player: { placed: ['launchpad'] } })
-    expect(s.player.satelliteMonitoringBuilt).toBe(false)
+    expect(s.player.transitSatelliteLaunchedAt).toBeNull()
     expect(s.player.refineryBuilt).toBe(false)
   })
 
-  it('keeps a flag that is set even if placed somehow lost the entry', () => {
-    const s = normalizeState({ player: { placed: [], satelliteMonitoringBuilt: true } })
-    expect(s.player.satelliteMonitoringBuilt).toBe(true)
-  })
 })

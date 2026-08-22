@@ -33,7 +33,7 @@ function defs(): HubBuildingDef[] {
     { kind: 'launchpad', plotX: 60, w: 98, hot: false, status: 'ok' },
     { kind: 'refinery', plotX: 154, w: 84, status: 'ok' },
     { kind: 'scan-station', plotX: 248, w: 80, status: 'ok' },
-    { kind: 'satellite-monitoring-station', plotX: 342, w: 86, status: 'info' },
+    { kind: 'transit-telescope', plotX: 342, w: 86, status: 'info' },
   ]
 }
 

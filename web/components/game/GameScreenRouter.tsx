@@ -131,7 +131,7 @@ export function ScreenContent({
             refineryUnlocked: !!game.player.refineryUnlocked,
             academyResearched: !!game.player.academyResearched,
             placementPlots: game.player.placementPlots,
-            satelliteMonitoringLevel: game.player.satelliteMonitoringLevel,
+            transitSatelliteLevel: game.player.transitSatelliteLevel,
             clientMissions: game.player.clientMissions,
             deepSpaceTelescopeMissionCompletedAt: game.player.deepSpaceTelescopeMissionCompletedAt,
             scanStationMissionCompletedAt: game.player.scanStationMissionCompletedAt,
@@ -164,7 +164,6 @@ export function ScreenContent({
             if (building === 'hangar') return game.go('hangar')
             if (building === 'skills') return game.go('skills')
             if (building === 'scan-station') return game.go('scan-station')
-            if (building === 'satellite-monitoring-station') return game.go('galaxy')
             if (building === 'deep-space-telescope') return game.go('asteroid-discovery')
             if (building === 'academy' || building === 'astronaut-academy') return game.go('academy')
             if (building === 'launchpad' || building === 'missions') {
@@ -339,7 +338,6 @@ export function ScreenContent({
           }}
           onViewContracts={() => game.goToMissions()}
           onOpenHangar={() => game.go(game.player.pendingLaunch ? 'fab' : 'hangar')}
-          onBuildMonitoring={() => game.go('build')}
           missionsDone={game.player.missionsDone}
           freeOperations={game.player.freeOperations}
           catalog={game.catalog}

@@ -80,7 +80,6 @@ describe('InstrumentFeedSystem', () => {
   it('scales the daily digest from the highest owned instrument level', () => {
     expect(transitInstrumentDigest(candidates, player(), '2026-07-30')).toHaveLength(1)
     expect(transitInstrumentDigest(candidates, player({
-      satelliteMonitoringLevel: 2,
       transitSatelliteLevel: 3,
     }), '2026-07-30')).toHaveLength(3)
   })

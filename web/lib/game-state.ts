@@ -58,8 +58,6 @@ export const DEFAULT_STATE: GameState = {
     discoveredExoplanetTargets: {},
     subsurfaceExcavated: false,
     subsurfaceBuilt: [],
-    satelliteMonitoringBuilt: false,
-    satelliteMonitoringLevel: 1,
     transitSatelliteLevel: 1,
     transitSatelliteLaunchedAt: null,
     deepSpaceTelescopeBuilt: false,
@@ -168,9 +166,6 @@ export function normalizeState(input: PartialSave): GameState {
         )
     )
     : DEFAULT_STATE.player.instrumentDigestNotifiedOn
-  const satelliteMonitoringLevel = Number.isFinite(player.satelliteMonitoringLevel)
-    ? Math.max(1, Math.floor(player.satelliteMonitoringLevel ?? 1))
-    : DEFAULT_STATE.player.satelliteMonitoringLevel
   const transitSatelliteLevel = Number.isFinite(player.transitSatelliteLevel)
     ? Math.max(1, Math.floor(player.transitSatelliteLevel ?? 1))
     : DEFAULT_STATE.player.transitSatelliteLevel
@@ -193,7 +188,7 @@ export function normalizeState(input: PartialSave): GameState {
   // booleans are conveniences derived from it. They can disagree: a save made
   // before `applyPlaceStructure` started setting a flag has the structure in
   // `placed` and the flag false, which is why the hub kept telling players to
-  // "Build a Satellite Monitoring Station" they had already built. Derive the
+  // "Build a Transit Telescope" they had already built. Derive the
   // flags from `placed` so the two can never drift again — and OR rather than
   // overwrite, so a flag set by any other route still counts.
   const savedPlaced = Array.isArray(player.placed) ? player.placed : DEFAULT_STATE.player.placed
@@ -204,14 +199,13 @@ export function normalizeState(input: PartialSave): GameState {
     Object.entries(player.placementPlots ?? {}).filter(([kind]) => FEATURE_FLAGS.scanStation || kind !== 'scan-station')
   )
   const builtFrom = (kind: string, flag: boolean | undefined) => !!flag || placedList.includes(kind)
-  const satelliteMonitoringBuilt = builtFrom('satellite-monitoring-station', player.satelliteMonitoringBuilt)
   const deepSpaceTelescopeBuilt = builtFrom('deep-space-telescope', player.deepSpaceTelescopeBuilt)
   const refineryBuilt = builtFrom('refinery', player.refineryBuilt)
   const scannerBuilt = FEATURE_FLAGS.scanStation && builtFrom('scan-station', player.scannerBuilt)
   // KES-177: Free Operations is a progression boundary, not a freely
   // persisted toggle. Older/incorrect remote saves can have the flag set
   // before M3; derive it from missionsDone so the early game can never expose
-  // the post-onboarding monitoring station flow.
+  // the post-onboarding telescope flow.
   const missionsDone = Number.isFinite(player.missionsDone)
     ? Math.max(0, Math.floor(player.missionsDone ?? 0))
     : DEFAULT_STATE.player.missionsDone
@@ -227,8 +221,8 @@ export function normalizeState(input: PartialSave): GameState {
     missionId,
     targetId,
     rocket: { ...DEFAULT_STATE.rocket, ...input.rocket },
-    player: { ...DEFAULT_STATE.player, ...player, missionsDone, freeOperations, clientStructures, placed: placedList, placementPlots, licenseGrade, researchXP, unlockedBlueprints, tessClassifications, asteroidClassifications, roverTerrainClassifications, discoveredExoplanetTargets, instrumentDigestNotifiedOn, satelliteMonitoringLevel, transitSatelliteLevel, deepSpaceTelescopeLevel, crew, surfaceOps,
-      satelliteMonitoringBuilt, deepSpaceTelescopeBuilt, refineryBuilt, scannerBuilt },
+    player: { ...DEFAULT_STATE.player, ...player, missionsDone, freeOperations, clientStructures, placed: placedList, placementPlots, licenseGrade, researchXP, unlockedBlueprints, tessClassifications, asteroidClassifications, roverTerrainClassifications, discoveredExoplanetTargets, instrumentDigestNotifiedOn, transitSatelliteLevel, deepSpaceTelescopeLevel, crew, surfaceOps,
+      deepSpaceTelescopeBuilt, refineryBuilt, scannerBuilt },
     doneSteps: { ...DEFAULT_STATE.doneSteps, ...input.doneSteps },
     ...(pendingTerritoryClaimFor ? { pendingTerritoryClaimFor } : {}),
   }

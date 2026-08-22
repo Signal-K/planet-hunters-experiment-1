@@ -1636,21 +1636,22 @@ html[data-coach-target="build-structure-strip"] [data-coach-id="build-structure-
 
 /* ── Earth Base scene (Open Design "landnam-earth-base-v2") ──────────────
    Ported 2026-07-26. Rebuilt 2026-08-21 (KES-220) into a light daylight
-   scene, then SCRAPPED AND REBUILT AGAIN same day (KES-226) — the light
-   recolor read as "the same screen with new colors," not a redesign.
-   This version is a structural rebuild: a circular orbit-ring diorama
-   (dominant visual, replacing the horizon+mountains composition) framed
-   after tapnine.com's "Black Hole" (com.tapnine.blackhole) reference
-   screenshots — pink/cyan gradient ring, dark hole center, buildings
-   nested at the ring's base, docked bottom sheet instead of a floating
-   pill rail. Color returns to Out There: Ω Edition's actual dark palette
-   (near-black navy, pale blue-grey linework, cyan primary accent) plus
-   the reference's signature pink as a second accent for the ring glow
-   and interactive/singularity highlights — this is NOT the KES-211/220
-   light "blueprint" treatment; Hub is its own dark diorama, not a paper
-   surface. Terrain/structure colors live in lib/pixi/hubScene.ts (Pixi
-   Graphics can't read CSS custom properties) — these tokens cover what
-   stays DOM/CSS: the ring, skyline silhouette, and HUD/sheet chrome. */
+   scene, SCRAPPED AND REBUILT (KES-226) into a circular orbit-ring diorama
+   framed after tapnine.com's "Black Hole" reference — then corrected again
+   2026-08-22 (KES-228): the ring was a narrative error. Earth Base is a
+   space *agency facility on Earth*, not a station in orbit; a giant
+   space-hole diorama behind the launchpad implied the wrong setting. What
+   the Black Hole reference actually contributes to Landnam is layout
+   language (a persistent stacked HUD rail, a docked bottom sheet with a
+   title/CTA row + icon strip) — not its literal ring motif. That layout
+   language stays (HUDStrip, HubScreen's dock). The backdrop itself is now
+   a grounded Earth diorama: a dusk sky, three parallax hill-silhouette
+   bands, and a horizon glow, in Out There: Ω Edition's dark navy palette
+   with the reference's pink kept as a warm horizon/accent color, not a
+   dominant space object. Terrain/structure colors live in
+   lib/pixi/hubScene.ts (Pixi Graphics can't read CSS custom properties) —
+   these tokens cover what stays DOM/CSS: sky, hills, horizon glow, and
+   HUD/sheet chrome. */
 :root {
   /* Scene-local accents. Kept as hub-scoped tokens rather than overriding
      the global --ln-cyan/--ln-ok, which other screens already tune against. */
@@ -1661,17 +1662,18 @@ html[data-coach-target="build-structure-strip"] [data-coach-id="build-structure-
   --hub-outline:    rgba(177, 198, 229, 0.4);
   --hub-panel:      #04101f;
   --hub-panel-deep: #020a16;
-  /* Backdrop beyond the ring: near-black navy, not a sky gradient — the
-     ring itself is the light source now, not a horizon. */
+  /* Dusk sky — deep navy overhead, warming toward the horizon. */
   --hub-void:       #00040a;
   --hub-bg:         #000d1f;
+  --hub-sky-top:    #050d1f;
+  --hub-sky-mid:    #12213f;
+  --hub-horizon:    #d9527e;
+  --hub-horizon-glow: rgba(227, 95, 160, 0.22);
+  /* Parallax hill silhouettes, far to near. */
+  --hub-hill-far:   #16233f;
+  --hub-hill-mid:   #0f1b34;
+  --hub-hill-near:  #0a1428;
   --hub-skyline:    #0a1626;
-  /* Orbit ring — thick gradient stroke, pink at the top arc blending to
-     cyan/blue at the bottom, dark hole center. */
-  --hub-ring-hole:  #05070d;
-  --hub-ring-mid:   #142a52;
-  --hub-ring-cyan:  #70d9ea;
-  --hub-ring-pink:  #e35fa0;
   /* Ground contact line — 22% from the bottom. MUST stay in agreement with
      hubScene.ts (groundY = containerH * 0.78) and the DOM plot positions in
      HubScreen/BuildPlaceScreen, which all derive from the same 22%. */
@@ -1764,11 +1766,6 @@ html[data-coach-target="build-structure-strip"] [data-coach-id="build-structure-
   font-weight: 700;
 }
 
-/* Keep the Earth Base scene chrome in separate reserved bands. The previous
-   110px action-rail offset landed directly on the building status pills at
-   short landscape heights. */
-.hub-action-rail { bottom: 110px; }
-
 .hub-push-opt-in {
   position: absolute;
   /* Keep the ambient opt-in out of the progression-card action column. At
@@ -1783,22 +1780,8 @@ html[data-coach-target="build-structure-strip"] [data-coach-id="build-structure-
 .hub-push-opt-in button,
 .hub-push-opt-in div { white-space: nowrap; }
 
-@media (min-width: 1024px) {
-  .hub-action-rail { bottom: var(--ln-s-5); }
-}
-
 @media (max-width: 1023px) {
-  /* The Hub surface itself already ends above the persistent tab bar. Keep
-     its utility controls at the bottom of that reserved surface band, clear
-     of the structure labels at the turf line. */
-  .hub-action-rail { bottom: var(--ln-s-2) !important; }
   .hub-push-opt-in { display: none; }
-  /* KES-176: edit mode can add New Structure / Hangar / Upgrade Launchpad
-     to this row alongside Edit·Done, which wraps to two lines at narrow
-     widths. Because the row is bottom-anchored, wrapping grows it upward —
-     without extra clearance the second line lands on the Launchpad
-     building's own status pill above it. */
-  .hub-action-rail--edit { bottom: calc(var(--ln-s-2) + 92px) !important; }
 }
 
 /* ─── KES-211 — Rocket Purchase + Assembly/Launch Preflight blueprint pass.
@@ -1813,6 +1796,48 @@ html[data-coach-target="build-structure-strip"] [data-coach-id="build-structure-
 .theme-blueprint .assembly-preflight-scene {
   border-style: dashed;
   border-color: var(--ln-bp-line-strong, var(--ln-cyan-border));
+}
+
+/* Build placement is part of onboarding, so it uses the light blueprint
+   surface even while the rest of the game is being migrated. Keep the field
+   separate from the picker: plots occupy the upper scene and the picker is a
+   real bottom sheet with its own readable surface. */
+.build-place-screen {
+  background: var(--ln-bp-bg, #eef3f8) !important;
+  color: var(--ln-bp-ink, #0f2436);
+}
+.build-place-field {
+  z-index: 0;
+  background:
+    linear-gradient(rgba(31, 120, 193, 0.07) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(31, 120, 193, 0.07) 1px, transparent 1px),
+    linear-gradient(180deg, #f9fcff 0%, #e7f0f7 72%, #d5e3ee 100%);
+  background-size: 32px 32px, 32px 32px, 100% 100%;
+}
+.build-place-screen [data-coach-id="build-structure-strip"] > div {
+  background: linear-gradient(180deg, transparent, rgba(238, 243, 248, 0.92) 26%, #eef3f8 100%) !important;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  border-top: 1px solid rgba(15, 36, 54, 0.14);
+}
+.build-place-screen [data-coach-id="build-structure-strip"] button {
+  background: #ffffff !important;
+  border-color: var(--ln-bp-line-strong) !important;
+  box-shadow: 0 2px 0 rgba(15, 36, 54, 0.12);
+}
+.build-place-screen [data-coach-id="build-structure-strip"] button:disabled {
+  opacity: 0.52;
+}
+.build-place-screen [data-coach-id="build-structure-strip"] button div,
+.build-place-screen [data-coach-id="build-structure-strip"] button div div {
+  color: var(--ln-bp-ink) !important;
+}
+.build-place-screen [data-coach-id="build-structure-strip"] span:last-child {
+  color: var(--ln-bp-ink-dim) !important;
+}
+.build-place-screen .sticky-actions {
+  background: #ffffff;
+  border-top: 1px solid var(--ln-bp-line-strong);
 }
 
 /* ─── KES-211 — TransitScreen blueprint pass. ────────────────────────────

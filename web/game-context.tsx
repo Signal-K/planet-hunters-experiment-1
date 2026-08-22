@@ -138,7 +138,6 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     catalog,
     discoveredTargets: state.player.discoveredExoplanetTargets,
     freeOperations: state.player.freeOperations,
-    satelliteMonitoringBuilt: state.player.satelliteMonitoringBuilt,
     transitSatelliteLaunchedAt: state.player.transitSatelliteLaunchedAt,
     missionId: state.missionId,
     targetId: state.targetId,

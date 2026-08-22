@@ -29,7 +29,6 @@ function basePlayer(overrides: Partial<GameState['player']> = {}): GameState['pl
     loanOffered: false,
     roverDeployments: [],
     clientTerritories: {},
-    satelliteMonitoringBuilt: false,
     transitSatelliteLaunchedAt: undefined,
     tessClassifications: {},
     ...overrides,
@@ -65,14 +64,14 @@ function visitHubWithState(playerOverrides: Partial<GameState['player']>) {
 describe('Telescope construction/launch mission (STS-138)', () => {
   // 2026-08-21 (Liam, direct correction): launching a transit telescope is
   // what TESS citizen science is for, and must be reachable directly —
-  // the Satellite Monitoring Station is unrelated end-game fleet-management
+  // the Transit Telescope is unrelated end-game fleet-management
   // content, not a prerequisite for the first telescope. The three specs
   // below that asserted the old SMS-gates-everything behavior were replaced
   // with specs asserting the telescope mission/TESS screen are NOT gated on
-  // `satelliteMonitoringBuilt` at all (tested false in every case here).
+  // `transitSatelliteLaunchedAt` at all (tested false in every case here).
 
   it('offers telescope deployment under Your Program and never on the Mission Board, with no SMS prerequisite', () => {
-    visitHubWithState({ satelliteMonitoringBuilt: false, transitSatelliteLaunchedAt: undefined })
+    visitHubWithState({ transitSatelliteLaunchedAt: undefined })
     cy.get('[data-testid="progression-card-transit-satellite"]', { timeout: 10000 }).should('be.visible')
     cy.contains('Launch a transit telescope').should('be.visible')
     cy.get('[data-testid="progression-card-transit-satellite"]').click({ force: true })
@@ -90,7 +89,6 @@ describe('Telescope construction/launch mission (STS-138)', () => {
     cy.contains('Pick Target', { timeout: 10000 }).should('be.visible')
 
     visitWithState('/game/missions', 'missions', {
-      satelliteMonitoringBuilt: false,
       transitSatelliteLaunchedAt: undefined,
     })
     cy.contains('Mission Board', { timeout: 10000 }).should('be.visible')
@@ -99,7 +97,6 @@ describe('Telescope construction/launch mission (STS-138)', () => {
 
   it('can start the telescope deployment from the Launchpad with no SMS built', () => {
     visitWithState('/game/launchpad', 'launchpad', {
-      satelliteMonitoringBuilt: false,
       transitSatelliteLaunchedAt: undefined,
     })
     // The Launchpad no longer lists own-program missions as separate cards
@@ -116,7 +113,7 @@ describe('Telescope construction/launch mission (STS-138)', () => {
   })
 
   it('gates the TESS discovery screen behind launching the telescope, with no SMS prerequisite', () => {
-    visitWithState('/game/galaxy', 'galaxy', { satelliteMonitoringBuilt: false, transitSatelliteLaunchedAt: undefined })
+    visitWithState('/game/galaxy', 'galaxy', { transitSatelliteLaunchedAt: undefined })
     cy.contains('Launch Transit Telescope', { timeout: 10000 }).should('be.visible')
     cy.contains('Deploy your own telescope from the Launchpad').should('be.visible')
     cy.get('[data-testid="open-transit-telescope-program-btn"]').click({ force: true })
@@ -147,7 +144,7 @@ describe('Telescope construction/launch mission (STS-138)', () => {
         }],
       },
     }).as('subjects')
-    visitWithState('/game/galaxy', 'galaxy', { satelliteMonitoringBuilt: false, transitSatelliteLaunchedAt: Date.now() - 1000 })
+    visitWithState('/game/galaxy', 'galaxy', { transitSatelliteLaunchedAt: Date.now() - 1000 })
     cy.wait('@subjects')
     // STS-582's instrument-feed rename replaced the old "TESS ANOMALY"
     // heading with the TopBar eyebrow below plus the candidate's own TOI id

@@ -3,11 +3,11 @@
 // reimplementing "add a number, compare it to some thresholds".
 //
 // Before this existed there were four unrelated counters (researchXP,
-// skillPoints, satelliteMonitoringLevel, transitSatelliteLevel), researchXP was
+// skillPoints, transitSatelliteLevel, transitSatelliteLevel), researchXP was
 // incremented with raw `(s.player.researchXP ?? 0) + n` arithmetic in four
 // different files including a React hook, and one grant was a bare `+ 15`
 // literal inline. Crew XP and academy levels would have made that six tracks.
-// `skillPoints` is a currency (spent, not accumulated) and `satelliteMonitoringLevel`
+// `skillPoints` is a currency (spent, not accumulated) and `transitSatelliteLevel`
 // / `transitSatelliteLevel` are purchased/earned integer levels with no XP
 // behind them (STS-606 decision) — neither belongs here or in XP_CURVES.
 //

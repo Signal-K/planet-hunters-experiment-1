@@ -34,8 +34,6 @@ function basePlayer(overrides: Partial<GameState['player']> = {}): GameState['pl
     seen_planets: [],
     roverDeployments: [],
     clientTerritories: {},
-    satelliteMonitoringBuilt: true,
-    satelliteMonitoringLevel: 1,
     transitSatelliteLaunchedAt: Date.now() - 60_000,
     transitSatelliteLevel: 1,
     tessClassifications: {},
@@ -232,8 +230,6 @@ describe('Satellite/TESS level plumbing (STS-493)', () => {
     visitGame('/game/galaxy', {
       screen: 'galaxy',
       player: {
-        satelliteMonitoringBuilt: true,
-        satelliteMonitoringLevel: 1,
         transitSatelliteLaunchedAt: Date.now() - 60_000,
         transitSatelliteLevel: 3,
         tessClassifications: {},

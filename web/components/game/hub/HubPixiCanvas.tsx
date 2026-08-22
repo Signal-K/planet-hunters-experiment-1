@@ -22,7 +22,7 @@ const HUB_SPRITES = [
   'hub_pad_deck', 'hub_pad_gantry_frame', 'hub_pad_swing_arm',
   'hub_pad_clamp', 'hub_pad_mast', 'hub_pad_tank',
   'hub_depot_tank', 'hub_scan_dish', 'hub_refinery_modular_v2', 'hub_scan_station_modular_v2',
-  'hub_sat_station', 'hub_cmd_building',
+  'hub_cmd_building',
   // Loaded alongside the pad, not just when hot — a launch can be triggered
   // between renders, and the alternative (loading these lazily on the first
   // `hot` frame) would show a bare pad for one frame every time.
@@ -48,7 +48,6 @@ async function loadHubTextures(): Promise<HubTextures> {
   tex.scan_dish = texture('hub_scan_dish')
   tex.refinery_modular = texture('hub_refinery_modular_v2')
   tex.scan_station_modular = texture('hub_scan_station_modular_v2')
-  tex.sat_station = texture('hub_sat_station')
   tex.cmd_building = texture('hub_cmd_building')
   tex.ship_sr1 = texture('ship_sr1')
   tex.ship_sr2 = texture('ship_sr2')

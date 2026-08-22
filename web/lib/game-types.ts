@@ -169,7 +169,6 @@ export interface Player {
   clientTerritories?: Record<string, string[]>
   dailyClientPool?: DailyClientPool
   scannerBuilt?: boolean
-  satelliteMonitoringBuilt?: boolean
   // Subsurface deck (STS-633): the below-soil area starts unexcavated, and
   // each room must be built into it individually before it holds live
   // inventory — mirrors the surface Build·Place cost shape.
@@ -181,13 +180,10 @@ export interface Player {
   // through XPSystem or describe them as "progression" in UI copy — if they
   // ever need fractional progress or a real curve, that's a new decision, not
   // an assumed migration.
-  satelliteMonitoringLevel?: number
   transitSatelliteLevel?: number
   transitSatelliteLaunchedAt?: number | null
   // Deep Space Telescope (STS-622): a separate, one-time-build structure that
   // gates the asteroid-discovery (NEOCP) instrument feed, the same way
-  // satelliteMonitoringBuilt gates the transit feed above. Not a tier on the
-  // transit satellite — its own build/unlock cost and level track.
   deepSpaceTelescopeBuilt?: boolean
   deepSpaceTelescopeLevel?: number
   deepSpaceTelescopeLaunchedAt?: number | null

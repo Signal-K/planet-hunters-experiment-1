@@ -44,7 +44,6 @@ export function useInstrumentFeedNotifications({
     if (
       !enabled
       || !player.freeOperations
-      || !player.satelliteMonitoringBuilt
       || !player.transitSatelliteLaunchedAt
       || instrumentDigestWasNotified(
         player,
@@ -86,7 +85,7 @@ export function useInstrumentFeedNotifications({
               )
               void scheduleLandnamPush({
                 title: 'INSTRUMENT DATA READY',
-                body: `${pending.length} transit candidate${pending.length === 1 ? '' : 's'} arrived in today's S.M.S. downlink.`,
+                body: `${pending.length} transit candidate${pending.length === 1 ? '' : 's'} arrived in today's telescope downlink.`,
               }).catch(() => {})
             })
           }
@@ -110,8 +109,7 @@ export function useInstrumentFeedNotifications({
     enabled,
     player.freeOperations,
     player.instrumentDigestNotifiedOn,
-    player.satelliteMonitoringBuilt,
-    player.satelliteMonitoringLevel,
+    player.transitSatelliteLevel,
     player.satelliteTargetId,
     player.tessClassifications,
     player.transitSatelliteLaunchedAt,

@@ -35,16 +35,11 @@ function MineralGlyph({ shape, color }: { shape?: string; color: string }) {
 }
 
 /**
- * Resource readout — reworked 2026-08-21 (KES-220) from a single horizontal
- * chip row into a persistent left-edge stacked rail, matching the "Space
- * Clicker" reference's fixed vertical stat cards (KES-219). Each stat is its
- * own full-width card rather than a wrapping row of pills, so it reads as a
- * rail the player can glance down rather than a scattered corner HUD.
- *
- * Paper/ink card, pink accent border on the interactive (clickable) card —
- * the `--ln-bp-pink` "active state" language from the blueprint theme,
- * reused here even though Hub doesn't apply `.theme-blueprint` wholesale
- * (its own `--hub-*` tokens are the light palette directly).
+ * Resource readout — a persistent left-edge stacked rail (KES-219/220),
+ * recolored dark 2026-08-21 (KES-226) when the light "blueprint" attempt
+ * was scrapped. Each stat is its own compact card, pink-bordered on the
+ * interactive (clickable) card, matching the tapnine.com "Black Hole"
+ * reference's fixed vertical stat stack and its pink highlight language.
  */
 function RailCard({ glyph, children, accent = 'var(--hub-cyan)', onClick, testId }: { glyph: React.ReactNode; children: React.ReactNode; accent?: string; onClick?: () => void; testId?: string }) {
   const Tag = onClick ? 'button' : 'div'
@@ -55,16 +50,16 @@ function RailCard({ glyph, children, accent = 'var(--hub-cyan)', onClick, testId
       style={{
         display: 'flex', alignItems: 'center', gap: 8, width: '100%', boxSizing: 'border-box',
         background: 'var(--hub-panel)',
-        border: `1.5px solid ${onClick ? 'var(--ln-bp-pink, #c94a86)' : 'var(--hub-outline)'}`,
+        border: `1.5px solid ${onClick ? 'var(--hub-pink)' : 'var(--hub-outline)'}`,
         borderRadius: 9, padding: '7px 10px 7px 7px',
         cursor: onClick ? 'pointer' : undefined,
         textAlign: 'left',
-        boxShadow: '0 2px 8px rgba(15,36,54,0.10)',
+        boxShadow: '0 2px 8px rgba(0,0,0,0.35)',
       }}
     >
       <span style={{
         width: 22, height: 22, borderRadius: 6, display: 'grid', placeItems: 'center', flexShrink: 0,
-        background: 'rgba(15,36,54,0.06)', border: `1.5px solid ${accent}`, color: accent,
+        background: 'var(--hub-panel-deep)', border: `1.5px solid ${accent}`, color: accent,
       }}>
         {glyph}
       </span>
@@ -77,12 +72,12 @@ export default function HUDStrip({ player, showStash = false, onJobsClick }: HUD
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 6, alignItems: 'flex-start', width: 132 }}>
       <RailCard glyph={<FrancGlyph />}>
-        <span style={{ fontFamily: 'var(--ln-font-mono)', fontWeight: 700, fontSize: 12, color: 'rgba(15,36,54,0.92)' }}>
+        <span style={{ fontFamily: 'var(--ln-font-mono)', fontWeight: 700, fontSize: 12, color: '#eaf1f8' }}>
           {formatCurrency(player.francs, { compact: true })}
         </span>
       </RailCard>
       <RailCard glyph={<JobsGlyph />} onClick={onJobsClick} testId="hud-jobs-chip">
-        <span style={{ fontFamily: 'var(--ln-font-display)', fontWeight: 800, fontSize: 9, letterSpacing: '0.14em', color: 'rgba(15,36,54,0.92)', textTransform: 'uppercase' }}>
+        <span style={{ fontFamily: 'var(--ln-font-display)', fontWeight: 800, fontSize: 9, letterSpacing: '0.14em', color: '#eaf1f8', textTransform: 'uppercase' }}>
           {player.missionCount} Jobs
         </span>
       </RailCard>
@@ -101,11 +96,11 @@ export default function HUDStrip({ player, showStash = false, onJobsClick }: HUD
               }}>
                 <span style={{
                   width: 17, height: 17, borderRadius: 5, display: 'grid', placeItems: 'center', flexShrink: 0,
-                  background: 'rgba(15,36,54,0.06)', border: `1.5px solid ${meta.color}`, color: meta.color,
+                  background: 'var(--hub-panel-deep)', border: `1.5px solid ${meta.color}`, color: meta.color,
                 }}>
                   <MineralGlyph shape={meta.shape} color={meta.color} />
                 </span>
-                <span style={{ fontFamily: 'var(--ln-font-mono)', fontWeight: 700, fontSize: 10, color: 'rgba(15,36,54,0.92)' }}>
+                <span style={{ fontFamily: 'var(--ln-font-mono)', fontWeight: 700, fontSize: 10, color: '#eaf1f8' }}>
                   {qty}
                 </span>
               </div>

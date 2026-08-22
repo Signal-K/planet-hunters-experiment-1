@@ -33,8 +33,6 @@ function stateFor(screen: GameState['screen']): GameState {
       seen_planets: [],
       roverDeployments: [],
       clientTerritories: {},
-      satelliteMonitoringBuilt: true,
-      satelliteMonitoringLevel: 0,
       transitSatelliteLaunchedAt: null,
       transitSatelliteLevel: 0,
       tessClassifications: {},

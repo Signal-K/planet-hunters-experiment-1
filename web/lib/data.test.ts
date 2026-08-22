@@ -698,13 +698,6 @@ describe('Scanning station constants and structure seed', () => {
     vi.resetModules()
   })
 
-  it('defines a satellite monitoring station unlocked in Free Operations', () => {
-    const station = STRUCTURES.find(s => s.id === 'satellite-monitoring-station')
-    expect(station).toBeDefined()
-    expect(station?.cost).toBe(0)
-    expect(station && structureUnlocked(station, { freeOperations: false })).toBe(false)
-    expect(station && structureUnlocked(station, { freeOperations: true })).toBe(true)
-  })
 })
 
 describe('Daily quest framework', () => {

@@ -10,9 +10,7 @@ import type { EntityData } from '@/lib/engine/types'
 import { buildPlotEntities } from '@/lib/engine/prefabs'
 import { readComponentNumber } from '@/lib/engine/registry'
 import { UI_ZONES } from '@/lib/ui-zones'
-import { HubWorldBackground } from '@/components/game/hub/HubWorldBackground'
 import { HubStructureArt } from '@/components/game/hub/HubStructureArt'
-import { SoilCrossSection } from '@/components/game/hub/SoilCrossSection'
 import HubPixiCanvas from '@/components/game/hub/HubPixiCanvas'
 import ErrorBoundary from '@/components/ui/ErrorBoundary'
 import type { HubBuildingDef } from '@/lib/pixi/hubScene'
@@ -29,7 +27,6 @@ const STRUCTURE_COLORS: Record<string, string> = {
   launchpad: '#3fa9ff',
   refinery: '#f5a623',
   'scan-station': '#39d36a',
-  'satellite-monitoring-station': '#7ec8ff',
   'deep-space-telescope': '#9d7cff',
   'astronaut-academy': '#6cc2ff',
 }
@@ -46,7 +43,7 @@ interface BuildPlaceScreenProps {
     refineryUnlocked?: boolean
     academyResearched?: boolean
     placementPlots?: Record<string, number>
-    satelliteMonitoringLevel?: number
+    transitSatelliteLevel?: number
     clientMissions?: Record<string, number>
     deepSpaceTelescopeMissionCompletedAt?: number | null
     scanStationMissionCompletedAt?: number | null
@@ -130,7 +127,7 @@ export default function BuildPlaceScreen({ onPlaced, onBack, hasCoach, player }:
   const canSelectStructure = (structure: StructureBlueprint) => {
     const alreadyBuilt = player.placed.includes(structure.id)
     return !alreadyBuilt
-      && structureUnlocked(structure, { refineryUnlocked: player.refineryUnlocked, academyResearched: player.academyResearched, placed: player.placed, freeOperations: player.freeOperations, satelliteMonitoringLevel: player.satelliteMonitoringLevel, clientMissions: player.clientMissions, deepSpaceTelescopeMissionCompletedAt: player.deepSpaceTelescopeMissionCompletedAt, scanStationMissionCompletedAt: player.scanStationMissionCompletedAt })
+      && structureUnlocked(structure, { refineryUnlocked: player.refineryUnlocked, academyResearched: player.academyResearched, placed: player.placed, freeOperations: player.freeOperations, transitSatelliteLevel: player.transitSatelliteLevel, clientMissions: player.clientMissions, deepSpaceTelescopeMissionCompletedAt: player.deepSpaceTelescopeMissionCompletedAt, scanStationMissionCompletedAt: player.scanStationMissionCompletedAt })
       && canAffordStructure(structure, { francs: player.francs, stash: player.stash })
   }
 
@@ -152,16 +149,16 @@ export default function BuildPlaceScreen({ onPlaced, onBack, hasCoach, player }:
       ref={containerRef}
       data-testid="build-place-screen"
       data-scene-loaded={sceneLoaded ? 'true' : 'false'}
+      className="build-place-screen theme-blueprint"
       style={{ width: '100%', height: '100%', position: 'relative', overflow: 'hidden' }}
     >
-      {/* Earth background */}
-      <div style={{ position: 'absolute', inset: 0 }}>
-        <HubWorldBackground />
+      {/* Blueprint build field: the placement surface stays quiet so the
+          selected plot and the bottom action sheet remain the focal points. */}
+      <div className="build-place-field" style={{ position: 'absolute', inset: 0 }}>
         <HubStructureArt buildings={existingBuildings} />
         <ErrorBoundary fallback={null}>
           <HubPixiCanvas buildings={previewBuildings} />
         </ErrorBoundary>
-        <SoilCrossSection />
       </div>
 
       <TopBar eyebrow="EARTH BASE · SETUP" title="Build" onBack={onBack} />
@@ -185,7 +182,7 @@ export default function BuildPlaceScreen({ onPlaced, onBack, hasCoach, player }:
                 style={{
                   position: 'absolute',
                   left: `calc(${(entity.transform.position.x / 402) * 100}%)`,
-                  bottom: 'calc(22% - 20px)',
+                  bottom: 'calc(42% - 20px)',
                   width: 86,
                   transform: 'translateX(-50%)',
                   cursor: sel ? 'pointer' : 'not-allowed',
@@ -264,7 +261,7 @@ export default function BuildPlaceScreen({ onPlaced, onBack, hasCoach, player }:
           }}>
             {catalog.map(c => {
               const on = c.id === sel?.id
-              const unlocked = structureUnlocked(c, { refineryUnlocked: player.refineryUnlocked, academyResearched: player.academyResearched, placed: player.placed, freeOperations: player.freeOperations, satelliteMonitoringLevel: player.satelliteMonitoringLevel, clientMissions: player.clientMissions, deepSpaceTelescopeMissionCompletedAt: player.deepSpaceTelescopeMissionCompletedAt, scanStationMissionCompletedAt: player.scanStationMissionCompletedAt })
+              const unlocked = structureUnlocked(c, { refineryUnlocked: player.refineryUnlocked, academyResearched: player.academyResearched, placed: player.placed, freeOperations: player.freeOperations, transitSatelliteLevel: player.transitSatelliteLevel, clientMissions: player.clientMissions, deepSpaceTelescopeMissionCompletedAt: player.deepSpaceTelescopeMissionCompletedAt, scanStationMissionCompletedAt: player.scanStationMissionCompletedAt })
               const affordable = canAffordStructure(c, { francs: player.francs, stash: player.stash })
               const canSelect = unlocked && affordable
               const color = STRUCTURE_COLORS[c.id] ?? '#3fa9ff'

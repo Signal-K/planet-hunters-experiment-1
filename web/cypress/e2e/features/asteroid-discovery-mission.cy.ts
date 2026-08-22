@@ -17,8 +17,8 @@ function basePlayer(overrides: Partial<GameState['player']> = {}): GameState['pl
     activeMission: null,
     missionCount: 4,
     pendingLaunch: false,
-    placed: ['launchpad', 'satellite-monitoring-station'],
-    placementPlots: { launchpad: 0, 'satellite-monitoring-station': 1 },
+    placed: ['launchpad', 'transit-telescope'],
+    placementPlots: { launchpad: 0, 'transit-telescope': 1 },
     controlBuilt: false,
     missionsDone: 4,
     freeOperations: true,
@@ -33,8 +33,6 @@ function basePlayer(overrides: Partial<GameState['player']> = {}): GameState['pl
     loanOffered: false,
     roverDeployments: [],
     clientTerritories: {},
-    satelliteMonitoringBuilt: true,
-    satelliteMonitoringLevel: 2,
     transitSatelliteLaunchedAt: Date.now() - 60_000,
     tessClassifications: {},
     deepSpaceTelescopeBuilt: false,
@@ -80,7 +78,6 @@ function openBuildFromHub(playerOverrides: Partial<GameState['player']> = {}) {
 describe('Asteroid Discovery mission on-ramp (KES-128)', () => {
   it('offers the survey mission at Launchpad once the SMS/affinity threshold is met', () => {
     visitWithState('/game/launchpad', 'launchpad', {
-      satelliteMonitoringLevel: 2,
       clientMissions: { 'earthbound-minerals': 10 },
     })
     cy.get('[data-testid="launchpad-program-operation-btn"]', { timeout: 10000 }).should('be.visible')
@@ -88,7 +85,6 @@ describe('Asteroid Discovery mission on-ramp (KES-128)', () => {
 
   it('does not offer the survey mission below the SMS/affinity threshold', () => {
     visitWithState('/game/launchpad', 'launchpad', {
-      satelliteMonitoringLevel: 1,
       clientMissions: {},
     })
     cy.contains('Deep Space Telescope').should('not.exist')
@@ -96,7 +92,6 @@ describe('Asteroid Discovery mission on-ramp (KES-128)', () => {
 
   it('keeps Deep Space Telescope locked at Build/Place until the survey mission is completed', () => {
     openBuildFromHub({
-      satelliteMonitoringLevel: 2,
       clientMissions: { 'earthbound-minerals': 10 },
       deepSpaceTelescopeMissionCompletedAt: null,
     })
@@ -104,12 +99,11 @@ describe('Asteroid Discovery mission on-ramp (KES-128)', () => {
       .scrollIntoView()
       .should('be.visible')
       .and('be.disabled')
-      .and('contain.text', 'Satellite Monitoring Station level 2 and affinity level 2 with a client')
+      .and('contain.text', 'Transit Telescope level 2 and affinity level 2 with a client')
   })
 
   it('unlocks Deep Space Telescope at Build/Place once the survey mission is completed', () => {
     openBuildFromHub({
-      satelliteMonitoringLevel: 2,
       clientMissions: { 'earthbound-minerals': 10 },
       deepSpaceTelescopeMissionCompletedAt: Date.now(),
       stash: { aluminium: 100, copper: 100, silicon: 100 },

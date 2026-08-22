@@ -63,7 +63,6 @@ const POST_TUTORIAL: Partial<GameState> = {
     launchpadUpgraded: false,
     loanDebt: 0,
     loanOffered: false,
-    satelliteMonitoringBuilt: false,
   },
 } as Partial<GameState>
 

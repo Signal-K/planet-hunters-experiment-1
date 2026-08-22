@@ -18,7 +18,7 @@ describe('DEV_GROUPS', () => {
     // sprint, so it must be replayable via the DEV panel like M1/M2.
     expect(labels).toContain('Mission 3')
     // Post-onboarding story mission (telescope launch) — replayable once
-    // free ops + the satellite monitoring station are built.
+    // free ops + the transit telescope are built.
     expect(labels).toContain('First Satellite Launch')
     expect(labels).toContain('Recent UI')
     expect(labels).toHaveLength(5)
@@ -228,7 +228,6 @@ describe('resolvePreset — recent UI surfaces', () => {
   it('opens the TESS discovery console with the satellite built and launched', () => {
     const p = resolvePreset('ui-tess-discovery')!
     expect(p.screen).toBe('galaxy')
-    expect(p.player!.satelliteMonitoringBuilt).toBe(true)
     expect(p.player!.transitSatelliteLaunchedAt).not.toBeNull()
   })
 

@@ -75,7 +75,6 @@ describe('Astronaut Academy', () => {
   it('the Launchpad OPS button routes to the Train the First Astronaut mission once affinity level 2 is reached with two clients', () => {
     visitWithState('/game/launchpad', 'launchpad', {
       clientMissions: { 'helios-propulsion-depot': 10, 'arcturus-battery-systems': 10 },
-      satelliteMonitoringBuilt: true,
       transitSatelliteLaunchedAt: Date.now() - 1000,
     })
     cy.get('[data-testid="launchpad-guide-close"]', { timeout: 10000 }).click()

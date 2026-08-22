@@ -58,7 +58,7 @@ function CardButton({ accent, icon, eyebrow, title, cta, onClick, testId }: {
         background: 'var(--hub-panel, #080d18)',
         border: '1.5px solid var(--hub-outline, rgba(255,255,255,0.55))',
         borderRadius: 12, padding: 10,
-        boxShadow: '0 12px 28px rgba(15,36,54,0.16)',
+        boxShadow: '0 12px 28px rgba(0,0,0,0.4)',
         display: 'flex', alignItems: 'center', gap: 10,
       }}
     >
@@ -69,11 +69,11 @@ function CardButton({ accent, icon, eyebrow, title, cta, onClick, testId }: {
         size={34}
         tone={toneForAccent(accent)}
         active
-        style={{ color: accent, borderColor: accent, borderWidth: 1.5, background: 'rgba(15,36,54,0.06)', boxShadow: 'none' }}
+        style={{ color: accent, borderColor: accent, borderWidth: 1.5, background: 'rgba(234,241,248,0.06)', boxShadow: 'none' }}
       />
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 9, fontWeight: 700, letterSpacing: '0.14em', color: accent, textTransform: 'uppercase' }}>{eyebrow}</div>
-        <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 13, fontWeight: 800, color: 'rgba(15,36,54,0.92)', lineHeight: 1.3 }}>{title}</div>
+        <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 13, fontWeight: 800, color: 'rgba(234,241,248,0.94)', lineHeight: 1.3 }}>{title}</div>
       </div>
       <span style={{
         minWidth: 0, flexShrink: 1,

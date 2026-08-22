@@ -18,7 +18,6 @@ describe('buildRuntimeCatalog', () => {
     const catalog = buildRuntimeCatalog({
       catalog: STATIC_CATALOG,
       freeOperations: true,
-      satelliteMonitoringBuilt: true,
       transitSatelliteLaunchedAt: null,
       missionsDone: 3,
     })
@@ -37,7 +36,6 @@ describe('buildRuntimeCatalog', () => {
     const catalog = buildRuntimeCatalog({
       catalog: STATIC_CATALOG,
       freeOperations: true,
-      satelliteMonitoringBuilt: true,
       transitSatelliteLaunchedAt: Date.now(),
       missionId: TRANSIT_TELESCOPE_MISSION_ID,
       targetId: TRANSIT_TELESCOPE_TARGET_ID,
@@ -54,7 +52,7 @@ describe('buildRuntimeCatalog', () => {
     const player = {
       ...DEFAULT_STATE.player,
       freeOperations: true,
-      satelliteMonitoringLevel: 2,
+      transitSatelliteLevel: 2,
       clientMissions: { 'client-a': 10 },
       deepSpaceTelescopeMissionCompletedAt: null,
     }
@@ -77,7 +75,7 @@ describe('buildRuntimeCatalog', () => {
   })
 
   it('does not offer the deep space telescope mission below the SMS/affinity threshold', () => {
-    const player = { ...DEFAULT_STATE.player, freeOperations: true, satelliteMonitoringLevel: 1, clientMissions: {} }
+    const player = { ...DEFAULT_STATE.player, freeOperations: true, transitSatelliteLevel: 1, clientMissions: {} }
     const catalog = buildRuntimeCatalog({
       catalog: STATIC_CATALOG,
       freeOperations: true,
@@ -92,14 +90,14 @@ describe('buildRuntimeCatalog', () => {
     const completedPlayer = {
       ...DEFAULT_STATE.player,
       freeOperations: true,
-      satelliteMonitoringLevel: 2,
+      transitSatelliteLevel: 2,
       clientMissions: { 'client-a': 10 },
       deepSpaceTelescopeMissionCompletedAt: Date.now(),
     }
     const placedPlayer = {
       ...DEFAULT_STATE.player,
       freeOperations: true,
-      satelliteMonitoringLevel: 2,
+      transitSatelliteLevel: 2,
       clientMissions: { 'client-a': 10 },
       placed: ['deep-space-telescope'],
     }
@@ -176,7 +174,6 @@ describe('buildRuntimeCatalog', () => {
       catalog: STATIC_CATALOG,
       discoveredTargets: { [discovered.id]: discovered },
       freeOperations: true,
-      satelliteMonitoringBuilt: true,
       transitSatelliteLaunchedAt: Date.now(),
       missionsDone: 4,
     })

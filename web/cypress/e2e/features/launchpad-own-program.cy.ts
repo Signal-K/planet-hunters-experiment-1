@@ -10,8 +10,7 @@ describe('Launchpad · your own program', () => {
       missionsDone: 6,
       freeOperations: true,
       francs: 50_000_000,
-      placed: ['launchpad', 'satellite-monitoring-station'],
-      satelliteMonitoringBuilt: true,
+      placed: ['launchpad', 'transit-telescope'],
       ...extra,
     },
   })
@@ -25,7 +24,6 @@ describe('Launchpad · your own program', () => {
       francs: 50_000_000,
       placed: ['launchpad'],
       placementPlots: { launchpad: 0 },
-      satelliteMonitoringBuilt: false,
     },
   })
 

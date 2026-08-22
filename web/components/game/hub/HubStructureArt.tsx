@@ -7,7 +7,6 @@ export const HUB_STRUCTURE_ART: Record<string, { src: string; width: number; lif
   launchpad: { src: '/game/assets/hub/pad_gantry_frame.png', width: 88, lift: 82 },
   refinery: { src: '/game/assets/hub/refinery_modular_v2.png', width: 92, lift: 68 },
   'scan-station': { src: '/game/assets/hub/scan_station_modular_v2.png', width: 62, lift: 78 },
-  'satellite-monitoring-station': { src: '/game/assets/hub/sat_station.png', width: 72, lift: 60 },
   command: { src: '/game/assets/hub/cmd_building.png', width: 76, lift: 70 },
   'deep-space-telescope': { src: '/game/assets/hub/deep_space_telescope.png', width: 84, lift: 78 },
   'astronaut-academy': { src: '/game/assets/hub/astronaut_academy.png', width: 80, lift: 74 },

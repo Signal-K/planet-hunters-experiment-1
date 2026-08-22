@@ -367,7 +367,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
     setState(s => {
       const existing = s.player.tessClassifications?.[subjectId]
       const showArtifactNarrative = artifactNarrativeEligible({
-        satelliteMonitoringLevel: s.player.satelliteMonitoringLevel,
+        transitSatelliteLevel: s.player.transitSatelliteLevel,
         verdict,
         hasExistingClassification: !!existing,
         seenAt: s.player.artifactNarrativeSeenAt,
