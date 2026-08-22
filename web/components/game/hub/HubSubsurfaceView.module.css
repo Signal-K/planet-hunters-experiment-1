@@ -6,6 +6,11 @@
   background: var(--ln-void);
 }
 
+/* Recolored 2026-08-22 (KES-228): this deck sits directly beneath the Hub
+   surface scene in the same slide, and the old soil-brown strata (#493824 /
+   #2c241c / #191713, #92785d etc.) read as a different game's palette next
+   to the new dark-navy/cyan/pink diorama above it. Same geology-cutaway
+   shapes, recolored into that world instead of literal dirt tones. */
 .geology {
   position: absolute;
   inset: 0;
@@ -14,9 +19,9 @@
   background:
     linear-gradient(
       180deg,
-      color-mix(in srgb, var(--ln-bg-grid) 88%, #493824) 0 18%,
-      color-mix(in srgb, var(--ln-bg) 82%, #2c241c) 18% 56%,
-      color-mix(in srgb, var(--ln-void) 92%, #191713) 56% 100%
+      color-mix(in srgb, var(--hub-sky-mid) 78%, var(--ln-void)) 0 18%,
+      color-mix(in srgb, var(--hub-hill-mid) 82%, var(--ln-void)) 18% 56%,
+      color-mix(in srgb, var(--ln-void) 92%, var(--hub-hill-near)) 56% 100%
     );
 }
 
@@ -35,12 +40,12 @@
   position: absolute;
   inset: 0;
   content: '';
-  opacity: 0.24;
+  opacity: 0.2;
   background-image:
-    radial-gradient(circle at 8% 18%, #92785d 0 2px, transparent 3px),
-    radial-gradient(circle at 17% 65%, #6c5a47 0 3px, transparent 4px),
-    radial-gradient(circle at 76% 32%, #8b7258 0 2px, transparent 3px),
-    radial-gradient(circle at 91% 77%, #665646 0 4px, transparent 5px);
+    radial-gradient(circle at 8% 18%, var(--hub-cyan) 0 2px, transparent 3px),
+    radial-gradient(circle at 17% 65%, var(--hub-pink) 0 3px, transparent 4px),
+    radial-gradient(circle at 76% 32%, var(--hub-cyan) 0 2px, transparent 3px),
+    radial-gradient(circle at 91% 77%, var(--hub-pink) 0 4px, transparent 5px);
   background-size: 150px 120px, 210px 170px, 180px 140px, 250px 190px;
 }
 
@@ -49,20 +54,20 @@
   left: -4%;
   width: 108%;
   height: 10%;
-  border-top: 1px solid var(--ln-hairline);
+  border-top: 1px solid var(--hub-outline);
   border-bottom: 1px solid var(--ln-divider);
   transform: skewY(-2deg);
 }
 
 .stratumOne {
   top: 18%;
-  background: color-mix(in srgb, #6a5137 18%, transparent);
+  background: color-mix(in srgb, var(--hub-cyan) 10%, transparent);
 }
 
 .stratumTwo {
   top: 68%;
   transform: skewY(1.5deg);
-  background: color-mix(in srgb, #2d2924 44%, transparent);
+  background: color-mix(in srgb, var(--hub-pink) 8%, transparent);
 }
 
 .serviceShaft {
@@ -122,19 +127,30 @@
   letter-spacing: 0.08em;
 }
 
+/* KES-228, second correction: the previous fix reserved 72px on the right
+   for the depth rail and only 24px on the left, on the theory that the
+   card should be centered in the space "left over" once the rail's width
+   is excluded. That produced a card that's visibly NOT symmetric on the
+   actual screen — more empty space on one side than the other — which
+   reads as an off-centre bug regardless of the rationale. Fixed for real
+   this time: equal insets on both sides, full stop. `.content` (z-index 2)
+   now simply sits in front of `.depthRail` (no z-index, so it stacks below
+   by document order) and covers it wherever the card overlaps — a ruler
+   digit or two disappearing behind the card is far less visible than an
+   asymmetric layout, and this is the only way to guarantee true center. */
 .content {
   position: absolute;
   top: 72px;
+  right: 24px;
   bottom: 168px;
-  left: 50%;
+  left: 24px;
   z-index: 2;
   display: flex;
-  width: min(1184px, calc(100% - 64px));
+  max-width: 1184px;
   margin: 0 auto;
   flex-direction: column;
   gap: 16px;
   box-sizing: border-box;
-  transform: translateX(-50%);
 }
 
 .deckHeader,
@@ -965,14 +981,16 @@
 }
 
 @media (max-width: 720px) {
-  .content {
-    top: 72px;
-    right: 40px;
-    bottom: 168px;
-    left: 12px;
-    width: auto;
-    transform: none;
-  }
+  /* No `.content` override here anymore. This block used to redefine
+     top/right/bottom/left with its own hardcoded (and itself asymmetric:
+     left 12px, right 40px) values, silently overriding every attempt to
+     fix the base rule's centering above — since this is a mobile
+     breakpoint (max-width: 720px), it won on every phone-width screenshot
+     taken this whole round, which is why the card kept reading as
+     off-centre no matter what the base `.content` rule said. The base
+     rule's symmetric left/right insets already work fine at narrow
+     widths (max-width only clamps on wide screens), so this override is
+     simply removed rather than re-duplicated here. */
 
   .deckSummary {
     display: none;

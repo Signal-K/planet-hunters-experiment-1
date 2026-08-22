@@ -11,6 +11,7 @@ import { buildPlotEntities } from '@/lib/engine/prefabs'
 import { readComponentNumber } from '@/lib/engine/registry'
 import { UI_ZONES } from '@/lib/ui-zones'
 import { HubStructureArt } from '@/components/game/hub/HubStructureArt'
+import { HubWorldBackground } from '@/components/game/hub/HubWorldBackground'
 import HubPixiCanvas from '@/components/game/hub/HubPixiCanvas'
 import ErrorBoundary from '@/components/ui/ErrorBoundary'
 import type { HubBuildingDef } from '@/lib/pixi/hubScene'
@@ -149,12 +150,25 @@ export default function BuildPlaceScreen({ onPlaced, onBack, hasCoach, player }:
       ref={containerRef}
       data-testid="build-place-screen"
       data-scene-loaded={sceneLoaded ? 'true' : 'false'}
-      className="build-place-screen theme-blueprint"
+      className="build-place-screen"
       style={{ width: '100%', height: '100%', position: 'relative', overflow: 'hidden' }}
     >
-      {/* Blueprint build field: the placement surface stays quiet so the
-          selected plot and the bottom action sheet remain the focal points. */}
+      {/* Build field — corrected 2026-08-22 (KES-228): this was a flat CSS
+          grid over an empty void, no sky, no terrain, reported back as "all
+          you've got is this black grid... where's the landscape?" — the
+          same complaint the Hub scene got before it grew a real dusk-sky-
+          and-hills backdrop. Reuses that exact component here instead of a
+          second bespoke background, so Build reads as the same physical
+          place as Hub, just in placement mode. Build's plots sit at a
+          different ground line than Hub's (`bottom: calc(42% - 20px)` vs
+          Hub's 22%), so `--hub-ground` is scoped to 42% for this screen only
+          (see globals.css `.build-place-screen`) rather than changing the
+          shared token everyone else relies on. The planning grid stays as a
+          semi-transparent overlay on top of the terrain, not a replacement
+          for it. */}
       <div className="build-place-field" style={{ position: 'absolute', inset: 0 }}>
+        <HubWorldBackground />
+        <div className="build-place-grid-overlay" aria-hidden="true" />
         <HubStructureArt buildings={existingBuildings} />
         <ErrorBoundary fallback={null}>
           <HubPixiCanvas buildings={previewBuildings} />
@@ -282,8 +296,8 @@ export default function BuildPlaceScreen({ onPlaced, onBack, hasCoach, player }:
                     cursor: canSelect ? 'pointer' : 'default',
                     opacity: canSelect ? 1 : 0.4,
                     textAlign: 'left',
-                    minWidth: 90,
-                    maxWidth: 120,
+                    minWidth: 108,
+                    maxWidth: 152,
                     transition: 'all 150ms',
                     outline: 'none',
                   }}
@@ -293,15 +307,17 @@ export default function BuildPlaceScreen({ onPlaced, onBack, hasCoach, player }:
                       <StructureIcon kind={c.id} size={20} />
                     </span>
                     <div style={{ minWidth: 0 }}>
+                      {/* Names like "Deep Space Telescope" / "Astronaut Academy" got
+                          truncated to "Deep Space ..." under a fixed 120px max-width
+                          + nowrap ellipsis. Wrapping to 2 lines instead of eliding
+                          reads the full name at any card width, current or future. */}
                       <div style={{
                         fontFamily: 'var(--ln-font-display)',
                         fontWeight: 800,
                         fontSize: 10,
                         color: on ? color : '#c8d6ea',
                         letterSpacing: '0.01em',
-                        whiteSpace: 'nowrap',
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis',
+                        lineHeight: 1.25,
                       }}>{c.name}</div>
                       <div style={{
                         fontFamily: 'var(--ln-font-mono)',

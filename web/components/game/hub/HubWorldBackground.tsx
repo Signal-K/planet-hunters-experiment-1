@@ -3,21 +3,25 @@
 import React from 'react'
 
 /**
- * Earth Base backdrop — corrected 2026-08-22 (KES-228). The prior version
- * (KES-226, same-day rebuild) put a giant orbit-ring diorama behind the
- * launchpad, framed directly after tapnine.com's "Black Hole" reference.
- * That was a narrative mistake: Earth Base is a space *agency facility on
- * Earth*, not a station in orbit — a dominant space-hole motif told players
- * they were somewhere they aren't. The reference's layout ideas (persistent
- * stacked HUD rail, docked bottom sheet) are real and stay elsewhere
- * (HUDStrip, HubScreen's dock); its literal ring does not belong here.
+ * Earth Base backdrop — corrected 2026-08-22 (KES-228, second pass). The
+ * KES-226 version put a giant orbit-ring diorama behind the launchpad,
+ * framed directly after tapnine.com's "Black Hole" reference — a narrative
+ * mistake, since Earth Base is a facility *on Earth*, not a station in
+ * orbit. The first correction removed the ring but replaced it with only
+ * abstract hill silhouettes and a repeating zigzag skyline — reported back
+ * as "looks exactly like before, just with no colour... I want buildings,
+ * not abstract patterns."
  *
- * This version is a grounded Earth diorama: a dusk sky (deep navy
- * overhead, warming toward the horizon), three parallax hill-silhouette
- * bands, and a low horizon glow where the sun sits just under the ridge
- * line. Out There: Ω Edition's dark navy + cyan trim stays the base
- * palette; the reference's pink survives only as the horizon's warm
- * accent, not as a space object.
+ * Looking at the reference again: its skyline isn't abstract at all — it's
+ * a row of *specific, recognizable* structures (a domed command building, a
+ * radio mast, a dish tower) rendered as flat silhouettes with a thin
+ * pink/cyan rim-light. This version replaces the zigzag with exactly that:
+ * an SVG skyline built from the same building vocabulary Landnam's own
+ * Pixi scene already uses for its foreground structures (dome + antenna
+ * command building, lattice radio mast, tripod dish tower, tank silo,
+ * lit-window blocks) — a distant row of sister facilities, not a random
+ * pattern. Silhouette + a few lit windows/beacons, same restraint as the
+ * real buildings: flat fill, hard edges, glow is the only softness.
  *
  * Layout contract: the ground line sits 22% from the bottom, unchanged.
  * hubScene.ts draws building feet against `containerH * 0.78` and
@@ -28,6 +32,128 @@ import React from 'react'
 function hillPath(points: [number, number][]): string {
   const coords = points.map(([x, y]) => `${x}% ${y}%`).join(', ')
   return `polygon(${coords})`
+}
+
+// ─── Distant skyline — built from silhouette "glyphs" of Earth Base's own
+// building vocabulary, not an abstract repeating pattern. Coordinates are
+// local to each glyph's own x=0 anchor at the ground line (y=0), extending
+// upward (negative y), then translated into place by the caller. ─────────
+
+function DomeBuilding({ x, s = 1 }: { x: number; s?: number }) {
+  return (
+    <g transform={`translate(${x}, 0) scale(${s})`}>
+      <rect x={-16} y={-38} width={32} height={38} style={{ fill: 'var(--hub-skyline)' }} />
+      <path d="M -16 -38 A 16 16 0 0 1 16 -38 Z" style={{ fill: 'var(--hub-skyline)' }} />
+      <rect x={-1.4} y={-58} width={2.8} height={20} style={{ fill: 'var(--hub-skyline)' }} />
+      <circle cx={0} cy={-59} r={2.2} style={{ fill: 'var(--hub-pink)', opacity: 0.85 }} />
+      <rect x={-9} y={-22} width={6} height={8} style={{ fill: 'var(--hub-cyan)', opacity: 0.4 }} />
+      <rect x={3} y={-22} width={6} height={8} style={{ fill: 'var(--hub-cyan)', opacity: 0.28 }} />
+    </g>
+  )
+}
+
+function RadioTower({ x, s = 1 }: { x: number; s?: number }) {
+  return (
+    <g transform={`translate(${x}, 0) scale(${s})`}>
+      <path d="M -3 0 L -8 -60 L 8 -60 L 3 0 Z" style={{ fill: 'var(--hub-skyline)' }} />
+      <path d="M -6.5 -18 L 6.5 -18 M -7.4 -36 L 7.4 -36 M -8 -48 L 8 -48" stroke="var(--hub-skyline)" strokeWidth={2.4} />
+      <circle cx={0} cy={-63} r={1.8} style={{ fill: 'var(--hub-cyan)' }} />
+    </g>
+  )
+}
+
+function DishTower({ x, s = 1 }: { x: number; s?: number }) {
+  return (
+    <g transform={`translate(${x}, 0) scale(${s})`}>
+      <path d="M -12 0 L -2 -34 L 2 -34 L 12 0 Z" style={{ fill: 'var(--hub-skyline)' }} />
+      <ellipse cx={4} cy={-42} rx={11} ry={6} transform="rotate(-18 4 -42)" style={{ fill: 'var(--hub-skyline)' }} />
+      <circle cx={4} cy={-42} r={1.6} style={{ fill: 'var(--hub-pink)', opacity: 0.8 }} />
+    </g>
+  )
+}
+
+function TankSilo({ x, s = 1 }: { x: number; s?: number }) {
+  return (
+    <g transform={`translate(${x}, 0) scale(${s})`}>
+      <rect x={-11} y={-30} width={22} height={30} rx={3} style={{ fill: 'var(--hub-skyline)' }} />
+      <rect x={-11} y={-14} width={22} height={2} style={{ fill: 'var(--hub-cyan)', opacity: 0.3 }} />
+    </g>
+  )
+}
+
+function BoxBuilding({ x, h, s = 1 }: { x: number; h: number; s?: number }) {
+  const rows = Math.max(1, Math.floor((h - 8) / 11))
+  return (
+    <g transform={`translate(${x}, 0) scale(${s})`}>
+      <rect x={-14} y={-h} width={28} height={h} style={{ fill: 'var(--hub-skyline)' }} />
+      {Array.from({ length: rows }, (_, row) => (
+        <rect
+          key={row}
+          x={-8}
+          y={-h + 8 + row * 11}
+          width={16}
+          height={5}
+          style={{ fill: 'var(--hub-cyan)', opacity: (row % 2 === 0) ? 0.32 : 0.18 }}
+        />
+      ))}
+    </g>
+  )
+}
+
+interface SkylineGlyph { kind: 'dome' | 'radio' | 'dish' | 'tank' | 'box'; x: number; s?: number; h?: number }
+
+const SKYLINE_LAYOUT: SkylineGlyph[] = [
+  { kind: 'box', x: 40, h: 46 },
+  { kind: 'tank', x: 92, s: 0.9 },
+  { kind: 'radio', x: 140 },
+  { kind: 'box', x: 200, h: 60 },
+  { kind: 'dome', x: 268 },
+  { kind: 'box', x: 330, h: 38 },
+  { kind: 'dish', x: 386, s: 1.1 },
+  { kind: 'box', x: 448, h: 52 },
+  { kind: 'tank', x: 500, s: 1.05 },
+  { kind: 'radio', x: 556, s: 0.85 },
+  { kind: 'box', x: 610, h: 64 },
+  { kind: 'dome', x: 682, s: 1.15 },
+  { kind: 'box', x: 748, h: 42 },
+  { kind: 'dish', x: 800 },
+  { kind: 'tank', x: 856, s: 0.95 },
+  { kind: 'box', x: 908, h: 56 },
+  { kind: 'radio', x: 966 },
+  { kind: 'box', x: 1020, h: 40 },
+  { kind: 'dome', x: 1082, s: 0.9 },
+  { kind: 'box', x: 1148, h: 48 },
+]
+
+// KES-228, third correction: this band was anchored `bottom: 0` — flush
+// with the very bottom of the scene, which on mobile is exactly where
+// HubScreen's docked bottom sheet (title/CTA row + icon strip) overlays
+// the scene. The skyline was rendering correctly the whole time; it was
+// just entirely hidden behind the dock, which is why it kept reading as
+// "still just triangles" (the hill bands sit higher up and clear the dock;
+// this band didn't). Anchored to the ground line instead — buildings stand
+// on the ground like the real foreground structures, not partly buried
+// below the visible scene — so their upper two-thirds clear the dock.
+function HubSkyline() {
+  return (
+    <svg
+      data-testid="hub-skyline-fallback"
+      aria-hidden="true"
+      viewBox="0 0 1200 90"
+      preserveAspectRatio="xMidYMax slice"
+      style={{ position: 'absolute', left: 0, right: 0, bottom: 'var(--hub-ground)', width: '100%', height: '26%' }}
+    >
+      <g transform="translate(0, 90)">
+        {SKYLINE_LAYOUT.map((g, i) => {
+          if (g.kind === 'dome') return <DomeBuilding key={i} x={g.x} s={g.s} />
+          if (g.kind === 'radio') return <RadioTower key={i} x={g.x} s={g.s} />
+          if (g.kind === 'dish') return <DishTower key={i} x={g.x} s={g.s} />
+          if (g.kind === 'tank') return <TankSilo key={i} x={g.x} s={g.s} />
+          return <BoxBuilding key={i} x={g.x} h={g.h ?? 40} s={g.s} />
+        })}
+      </g>
+    </svg>
+  )
 }
 
 export function HubWorldBackground() {
@@ -117,18 +243,12 @@ export function HubWorldBackground() {
         }} />
       </div>
 
-      {/* ── Skyline silhouette — sits at the very base, either side of the
-          real (Pixi-rendered) buildings, dark navy against the nearest
-          hill band ───────────────────────────────────────────────────── */}
-      <div
-        data-testid="hub-skyline-fallback"
-        aria-hidden="true"
-        style={{
-          position: 'absolute', left: 0, right: 0, bottom: 0, height: '19%',
-          background: 'var(--hub-skyline)',
-          clipPath: 'polygon(0 55%, 6% 55%, 6% 30%, 13% 30%, 13% 45%, 20% 45%, 20% 15%, 27% 15%, 27% 40%, 35% 40%, 35% 20%, 42% 20%, 42% 50%, 58% 50%, 58% 22%, 65% 22%, 65% 42%, 73% 42%, 73% 18%, 80% 18%, 80% 48%, 87% 48%, 87% 28%, 94% 28%, 94% 52%, 100% 52%, 100% 100%, 0 100%)',
-        }}
-      />
+      {/* ── Skyline — a distant row of sister facilities built from the same
+          dome/mast/dish/tank vocabulary the foreground buildings use, not
+          an abstract repeating shape. Sits at the very base, either side of
+          the real (Pixi-rendered) buildings, dark navy against the nearest
+          hill band. ─────────────────────────────────────────────────────── */}
+      <HubSkyline />
 
     </div>
   )

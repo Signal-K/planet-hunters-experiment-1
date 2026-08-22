@@ -1798,46 +1798,69 @@ html[data-coach-target="build-structure-strip"] [data-coach-id="build-structure-
   border-color: var(--ln-bp-line-strong, var(--ln-cyan-border));
 }
 
-/* Build placement is part of onboarding, so it uses the light blueprint
-   surface even while the rest of the game is being migrated. Keep the field
-   separate from the picker: plots occupy the upper scene and the picker is a
-   real bottom sheet with its own readable surface. */
+/* Corrected 2026-08-22 (KES-228): this block hardcoded a light "blueprint"
+   surface directly on `.build-place-screen` — unconditionally, with
+   `!important`, completely outside the `.theme-blueprint` opt-in class this
+   file's other blueprint passes use. Removing `theme-blueprint` from the
+   component's root (it was never applied here to begin with) did nothing,
+   because these rules never checked for it. Build placement sits directly
+   between two dark operations screens (Hub before it, Fab/Mining after) —
+   a light onboarding surface mid-flow read as broken, not migrated. Now
+   dark, matching the rest of the operations flow: `--ln-void` field,
+   `--ln-surface`/`--ln-panel-2` cards, cyan hairline grid instead of navy-
+   on-white. */
 .build-place-screen {
-  background: var(--ln-bp-bg, #eef3f8) !important;
-  color: var(--ln-bp-ink, #0f2436);
+  background: var(--ln-void);
+  color: var(--ln-text);
+  /* HubWorldBackground (rendered inside .build-place-field) reads this to
+     place its horizon/hills/skyline. Hub's own ground line is 22% from the
+     bottom, but this screen's build plots sit at `calc(42% - 20px)` — a
+     different, pre-existing convention for this screen's plot layout, not
+     something to change here. Scoping the token locally lets the shared
+     background component line up with THIS screen's ground without moving
+     Hub's. */
+  --hub-ground: 42%;
 }
 .build-place-field {
   z-index: 0;
+}
+/* Planning grid overlay — a sibling div painted after HubWorldBackground
+   (see BuildPlaceScreen.tsx), not `.build-place-field`'s own `background`.
+   A container's `background` always paints behind its children, so putting
+   the grid there put it BEHIND HubWorldBackground's opaque sky, invisible.
+   This is its own transparent-between-lines layer stacked on top instead. */
+.build-place-grid-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
   background:
-    linear-gradient(rgba(31, 120, 193, 0.07) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(31, 120, 193, 0.07) 1px, transparent 1px),
-    linear-gradient(180deg, #f9fcff 0%, #e7f0f7 72%, #d5e3ee 100%);
-  background-size: 32px 32px, 32px 32px, 100% 100%;
+    linear-gradient(var(--ln-hairline) 1px, transparent 1px),
+    linear-gradient(90deg, var(--ln-hairline) 1px, transparent 1px);
+  background-size: 32px 32px;
 }
 .build-place-screen [data-coach-id="build-structure-strip"] > div {
-  background: linear-gradient(180deg, transparent, rgba(238, 243, 248, 0.92) 26%, #eef3f8 100%) !important;
-  backdrop-filter: none;
-  -webkit-backdrop-filter: none;
-  border-top: 1px solid rgba(15, 36, 54, 0.14);
+  background: linear-gradient(180deg, transparent, rgba(10, 10, 12, 0.75) 26%, var(--ln-void) 100%);
+  border-top: 1px solid var(--ln-hairline-strong);
 }
 .build-place-screen [data-coach-id="build-structure-strip"] button {
-  background: #ffffff !important;
-  border-color: var(--ln-bp-line-strong) !important;
-  box-shadow: 0 2px 0 rgba(15, 36, 54, 0.12);
+  background: var(--ln-surface);
+  border-color: var(--ln-cyan-border);
+  box-shadow: 0 2px 0 rgba(0, 0, 0, 0.3);
 }
 .build-place-screen [data-coach-id="build-structure-strip"] button:disabled {
   opacity: 0.52;
 }
 .build-place-screen [data-coach-id="build-structure-strip"] button div,
 .build-place-screen [data-coach-id="build-structure-strip"] button div div {
-  color: var(--ln-bp-ink) !important;
+  color: var(--ln-text);
 }
 .build-place-screen [data-coach-id="build-structure-strip"] span:last-child {
-  color: var(--ln-bp-ink-dim) !important;
+  color: var(--ln-text-dim);
 }
 .build-place-screen .sticky-actions {
-  background: #ffffff;
-  border-top: 1px solid var(--ln-bp-line-strong);
+  background: var(--ln-surface);
+  border-top: 1px solid var(--ln-cyan-border);
 }
 
 /* ─── KES-211 — TransitScreen blueprint pass. ────────────────────────────
