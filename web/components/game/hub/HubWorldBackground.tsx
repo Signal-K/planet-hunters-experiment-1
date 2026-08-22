@@ -38,13 +38,19 @@ export function HubWorldBackground() {
         background: 'radial-gradient(120% 90% at 50% 34%, var(--hub-bg) 0%, var(--hub-void) 70%)',
       }} />
 
-      {/* ── Orbit ring — the scene's dominant visual ───────────────────── */}
+      {/* ── Orbit ring — the scene's dominant visual ─────────────────────
+          Sized off container HEIGHT, not width — this scene renders inside
+          a fixed-max-width, height-capped desktop card (.portrait-canvas,
+          globals.css), so a width-driven ring would balloon far past the
+          visible height at wide/short desktop aspect ratios. Height-driven
+          sizing stays proportional across the mobile-portrait and capped
+          desktop card alike. */}
       <div
         data-testid="hub-orbit-ring"
         aria-hidden="true"
         style={{
           position: 'absolute', left: '50%', bottom: 'var(--hub-ground)',
-          width: '128%', aspectRatio: '1 / 1', transform: 'translate(-50%, 50%)',
+          height: '94%', aspectRatio: '1 / 1', transform: 'translate(-50%, 50%)',
           borderRadius: '50%',
           background: 'conic-gradient(from 200deg, var(--hub-ring-pink) 0deg, #cfe0f5 85deg, var(--hub-ring-cyan) 170deg, var(--hub-ring-mid) 255deg, var(--hub-ring-pink) 360deg)',
           boxShadow: '0 0 120px 40px rgba(227,95,160,0.14), 0 0 200px 80px rgba(112,217,234,0.08)',

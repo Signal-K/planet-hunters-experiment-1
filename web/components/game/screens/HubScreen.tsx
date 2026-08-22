@@ -77,42 +77,78 @@ function SkillsGlyph() {
 }
 
 /**
- * Bottom-toolbar pill — the `.scene-btn` recipe from
- * `landnam-earth-base-v2.html`: black tile, 1.5px white outline, cyan glyph,
- * 9px/0.18em uppercase label. `active` (Edit mode on) fills mint; `accent`
- * outlines mint; `muted` dims the label for secondary actions.
+ * Docked bottom sheet, rebuilt 2026-08-21 (KES-226) — replaces the
+ * floating `flexWrap` pill row (`.hub-action-rail`), which wrapped onto
+ * the ground-level building labels/Subsurface pill once Edit Mode expanded
+ * past ~3 buttons (KES-222, confirmed pre-existing, present on unmodified
+ * code, and the likely cause of live taps mis-firing into Subsurface). A
+ * fixed-height docked card with a defined row structure — title/CTA row,
+ * then a non-wrapping icon-tab strip — cannot overlap anything below it,
+ * by construction, at any button count or viewport width.
+ *
+ * Framed after tapnine.com's "Black Hole" (com.tapnine.blackhole)
+ * reference: a title+status+primary-CTA row, then a row of small square
+ * icon buttons — not tapnine's literal upgrade list, adapted to Landnam's
+ * actual Hub actions (Build, Hangar, Upgrade, Subsurface, and the desktop-
+ * only Market/Atlas/Skills destinations).
  */
-function SceneBtn({ icon, label, onClick, active, accent, muted, pulse, testId }: {
+function DockIconBtn({ icon, label, onClick, active, accent, pulse, testId }: {
   icon: React.ReactNode
   label: string
   onClick: () => void
   active?: boolean
   accent?: boolean
-  muted?: boolean
   pulse?: boolean
   testId?: string
 }) {
-  const mint = 'var(--hub-mint)'
-  const glyphColor = active || accent ? mint : 'var(--hub-cyan)'
-  const textColor = active || accent ? mint : muted ? 'rgba(15,36,54,0.6)' : 'rgba(15,36,54,0.92)'
+  const on = active || accent
+  return (
+    <button
+      onClick={onClick}
+      data-testid={testId}
+      title={label}
+      aria-label={label}
+      style={{
+        flex: '0 0 auto', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3,
+        background: 'transparent', border: 'none', padding: '4px 2px', cursor: 'pointer', width: 58,
+      }}
+    >
+      <span style={{
+        width: 38, height: 38, borderRadius: 10, display: 'grid', placeItems: 'center',
+        background: on ? 'var(--hub-pink-soft)' : 'var(--hub-panel-deep)',
+        border: `1.5px solid ${on ? 'var(--hub-pink)' : 'var(--hub-outline)'}`,
+        color: on ? 'var(--hub-pink)' : 'var(--hub-cyan)',
+        animation: pulse ? 'hub-pad-pulse 2s ease-in-out infinite' : 'none',
+      }}>
+        {icon}
+      </span>
+      <span style={{
+        fontFamily: 'var(--ln-font-display)', fontWeight: 700, fontSize: 7.5,
+        letterSpacing: '0.06em', textTransform: 'uppercase', textAlign: 'center', lineHeight: 1.1,
+        color: on ? 'var(--hub-pink)' : 'rgba(177,198,229,0.75)',
+        whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 58,
+      }}>
+        {label}
+      </span>
+    </button>
+  )
+}
+
+function DockPrimaryBtn({ children, onClick, testId, pulse }: { children: React.ReactNode; onClick: () => void; testId?: string; pulse?: boolean }) {
   return (
     <button
       onClick={onClick}
       data-testid={testId}
       style={{
-        display: 'flex', alignItems: 'center', gap: 6,
-        background: active ? 'rgba(31,143,87,0.14)' : 'var(--hub-panel)',
-        border: `1.5px solid ${active || accent ? mint : 'rgba(15,36,54,0.3)'}`,
-        borderRadius: 999, padding: '8px 14px 8px 8px', minHeight: 40,
-        fontFamily: 'var(--ln-font-display)', fontWeight: 700, fontSize: 9,
-        letterSpacing: '0.18em', textTransform: 'uppercase', color: textColor,
-        cursor: 'pointer', transition: 'background 120ms, border-color 120ms',
-        boxShadow: '0 2px 8px rgba(15,36,54,0.14)',
+        flexShrink: 0, background: 'linear-gradient(180deg, var(--hub-pink), #c4477f)',
+        border: 'none', borderRadius: 10, padding: '10px 16px',
+        fontFamily: 'var(--ln-font-display)', fontWeight: 800, fontSize: 10.5,
+        letterSpacing: '0.08em', textTransform: 'uppercase', color: '#160710',
+        cursor: 'pointer', boxShadow: '0 4px 14px rgba(227,95,160,0.35)',
         animation: pulse ? 'hub-pad-pulse 2s ease-in-out infinite' : 'none',
       }}
     >
-      <span style={{ display: 'grid', placeItems: 'center', color: glyphColor }}>{icon}</span>
-      {label}
+      {children}
     </button>
   )
 }
@@ -175,7 +211,7 @@ export default function HubScreen({ player, rocketVariant = 'explorer', hasCoach
   // This shares InstrumentFeedSystem with TessDiscoveryScreen so the badge
   // never promises more work than the feed can actually show.
   useEffect(() => {
-    if (!player.freeOperations || !player.satelliteMonitoringBuilt || !player.transitSatelliteLaunchedAt) {
+    if (!player.freeOperations || !player.transitSatelliteLaunchedAt) {
       setTessQueueCount(0)
       return
     }
@@ -439,33 +475,27 @@ export default function HubScreen({ player, rocketVariant = 'explorer', hasCoach
       </div>
       {/* ── End sliding world ── */}
 
-      {/* Top HUD — always fixed above the slide. Reworked 2026-08-21 (KES-220)
-          from a full-width dark scrim bar into a compact top-left cluster: a
-          light paper scrim (just enough to keep the title legible over a
-          bright sky) plus the persistent stacked HUD rail directly beneath
-          the title, per the Space Clicker layout reference (KES-219) — a
-          fixed left-edge rail rather than corner-scattered readouts.
-          Subsurface keeps its own dark scrim: HubSubsurfaceView underneath
-          it hasn't been converted to the light theme yet (out of scope for
-          this pass), so a light bar there would sit over dark UI. */}
+      {/* Top HUD — always fixed above the slide. Rebuilt 2026-08-21 (KES-226)
+          back to a dark scrim (the KES-220 light version was scrapped same
+          day) — the persistent stacked HUD rail sits directly beneath the
+          title, top-left, matching the reference's fixed left-edge rail
+          rather than corner-scattered readouts. Surface and subsurface now
+          share the same dark treatment; no more light/dark split. */}
       <div style={{
         position: 'absolute', top: 0, left: 0, right: 0, zIndex: 18,
         padding: '16px 14px 22px',
-        background: subsurface
-          ? 'linear-gradient(180deg, rgba(6,3,0,0.9) 0%, rgba(6,3,0,0.5) 60%, transparent 100%)'
-          : 'linear-gradient(180deg, rgba(255,255,255,0.85) 0%, rgba(255,255,255,0.35) 65%, transparent 100%)',
+        background: 'linear-gradient(180deg, rgba(0,4,10,0.85) 0%, rgba(0,4,10,0.45) 65%, transparent 100%)',
         display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 10, pointerEvents: 'none',
-        transition: 'background 0.55s',
       }}>
         <div style={{ pointerEvents: 'auto' }}>
           {/* KES-173: DevShortcuts' fixed DEV toggle (top:8 left:8, dev-only,
               ~120px wide) sits directly over this eyebrow, clipping the
               opening characters ("EARTH BASE" -> "H BASE"). Only reserve
               the clearance when that badge can actually render. */}
-          <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 9.5, fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase', color: subsurface ? 'rgba(255,255,255,0.55)' : 'rgba(15,36,54,0.55)', marginLeft: isDevLauncherEnabled() ? 130 : 0 }}>
+          <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 9.5, fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'rgba(177,198,229,0.7)', marginLeft: isDevLauncherEnabled() ? 130 : 0 }}>
             {subsurface ? 'EARTH BASE · SUBSURFACE' : `EARTH BASE · OPS ${player.missionsDone}`}
           </div>
-          <h1 style={{ margin: '2px 0 0', fontFamily: 'var(--ln-font-display)', fontSize: 23, fontWeight: 800, letterSpacing: '-0.01em', color: subsurface ? '#fff' : '#0f2436', lineHeight: 1, textShadow: subsurface ? '0 2px 10px rgba(0,0,0,0.6)' : 'none' }}>
+          <h1 style={{ margin: '2px 0 0', fontFamily: 'var(--ln-font-display)', fontSize: 23, fontWeight: 800, letterSpacing: '-0.01em', color: '#eaf1f8', lineHeight: 1, textShadow: '0 2px 10px rgba(0,0,0,0.6)' }}>
             {subsurface ? 'Subsurface' : 'Earth Base'}
           </h1>
         </div>
@@ -499,77 +529,93 @@ export default function HubScreen({ player, rocketVariant = 'explorer', hasCoach
         />
       )}
 
-      {/* Bottom toolbar — hidden only during the strict M1 first-run
-          tutorial (missionsDone === 0). M2/M3 "guided ops" still set
-          hasCoach true on this screen (every tier has a hub coach step
-          nudging toward Missions), but that's a lighter nudge, not a
-          full-screen takeover — hiding Edit/Build, Subsurface, and Surface
-          Ops for the whole guided-ops window meant those buttons stayed
-          unreachable well past the tutorial (bug reported 2026-07-31). */}
+      {/* Bottom dock — rebuilt 2026-08-21 (KES-226) as a docked sheet, not a
+          floating pill row (see DockIconBtn/DockPrimaryBtn doc comment for
+          why). Hidden only during the strict M1 first-run tutorial
+          (missionsDone === 0). M2/M3 "guided ops" still set hasCoach true on
+          this screen (every tier has a hub coach step nudging toward
+          Missions), but that's a lighter nudge, not a full-screen takeover —
+          hiding Edit/Build, Subsurface, and Surface Ops for the whole
+          guided-ops window meant those buttons stayed unreachable well past
+          the tutorial (bug reported 2026-07-31). */}
       {(!hasCoach || player.missionsDone > 0) && (
-        <div className={`hub-action-rail${editMode ? ' hub-action-rail--edit' : ''}`} style={{
-          position: 'absolute', left: 0, right: 0, zIndex: 20,
-          display: 'flex', justifyContent: 'center', gap: 8, flexWrap: 'wrap',
-          padding: '0 12px',
+        <div style={{
+          position: 'absolute', left: 0, right: 0, bottom: 'var(--ln-nav-h, 64px)', zIndex: 20,
+          display: 'flex', justifyContent: 'center', pointerEvents: 'none',
         }}>
-          {subsurface ? (
-            <SceneBtn icon={<SurfaceGlyph />} label="Surface" muted onClick={() => setSubsurface(false)} />
-          ) : (
-            <>
-              {editMode && (
-                <>
-                  <SceneBtn testId="hub-new-structure-btn" icon={<PlusGlyph />} label="New Structure" onClick={() => onGoBuilding('build')} />
-                  {player.placed.includes('launchpad') && (
-                    <SceneBtn icon={<HangarGlyph />} label="Hangar" onClick={() => onGoBuilding('hangar')} />
-                  )}
-                  {player.placed.includes('launchpad') && !player.launchpadUpgraded && onUpgradeLaunchpad && (
-                    <SceneBtn icon={<UpgradeGlyph />} label={`Upgrade Launchpad (${formatCurrency(LAUNCHPAD_UPGRADE_COST, { compact: true })})`} accent onClick={() => setConfirmingLaunchpadUpgrade(true)} />
-                  )}
-                </>
-              )}
-              <SceneBtn
-                icon={<BuildGlyph />}
-                label={editMode ? 'Done' : 'Edit · Build'}
-                testId="hub-edit-build-btn"
-                active={editMode}
-                pulse={!editMode && player.placed.length < 4}
-                onClick={() => setEditMode(v => !v)}
-              />
-              <SceneBtn
-                icon={<SubsurfaceGlyph />}
-                label="Subsurface"
-                muted
-                onClick={() => setSubsurface(true)}
-              />
+          <div style={{
+            pointerEvents: 'auto', width: '100%', maxWidth: 480,
+            background: 'var(--hub-panel)', borderTop: '1px solid var(--hub-outline)',
+            borderRadius: '16px 16px 0 0', boxShadow: '0 -10px 28px rgba(0,0,0,0.45)',
+            padding: '12px 14px 14px',
+          }}>
+            {subsurface ? (
+              <div style={{ display: 'flex', justifyContent: 'center' }}>
+                <DockPrimaryBtn onClick={() => setSubsurface(false)}>
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}><SurfaceGlyph />Surface</span>
+                </DockPrimaryBtn>
+              </div>
+            ) : (
+              <>
+                {/* Row 1 — status + primary CTA, the reference's
+                    "Facility Tier · status" + primary-action row. */}
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+                  <div style={{ minWidth: 0 }}>
+                    <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 9, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--hub-cyan)' }}>
+                      Launchpad
+                    </div>
+                    <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 14, fontWeight: 800, color: '#eaf1f8', marginTop: 1 }}>
+                      {player.activeMission ? 'In Flight' : 'Ready'}
+                    </div>
+                  </div>
+                  <DockPrimaryBtn testId="hub-edit-build-btn" pulse={!editMode && player.placed.length < 4} onClick={() => setEditMode(v => !v)}>
+                    {editMode ? 'Done' : 'Edit · Build'}
+                  </DockPrimaryBtn>
+                </div>
 
-              {/* Desktop has no nav rail and no bottom bar, so the destinations
-                  without a building of their own hang off the base's action
-                  rail instead. Mobile reaches these via the bottom tab bar, so
-                  `.hub-desktop-nav` keeps them out of the way there. */}
-              {player.freeOperations && (
-                <>
-                  {player.hasLanded && (
-                    <SceneBtn
-                      icon={<SurfaceGlyph />}
-                      label="Surface Ops"
-                      accent
-                      testId="hub-surface-ops"
-                      onClick={() => onNav('surface-ops')}
-                    />
+                {/* Row 2 — icon-tab strip. Non-wrapping by construction
+                    (fixed-width buttons, horizontal scroll as a safety net
+                    rather than flexWrap) so it can never overlap the scene
+                    below it, unlike the pill row it replaces. */}
+                <div style={{ display: 'flex', gap: 4, marginTop: 10, overflowX: 'auto', paddingBottom: 2 }}>
+                  {editMode && (
+                    <>
+                      <DockIconBtn testId="hub-new-structure-btn" icon={<PlusGlyph />} label="New" onClick={() => onGoBuilding('build')} />
+                      {player.placed.includes('launchpad') && (
+                        <DockIconBtn icon={<HangarGlyph />} label="Hangar" onClick={() => onGoBuilding('hangar')} />
+                      )}
+                      {player.placed.includes('launchpad') && !player.launchpadUpgraded && onUpgradeLaunchpad && (
+                        <DockIconBtn icon={<UpgradeGlyph />} label={`+${formatCurrency(LAUNCHPAD_UPGRADE_COST, { compact: true })}`} accent onClick={() => setConfirmingLaunchpadUpgrade(true)} />
+                      )}
+                    </>
                   )}
-                  <span className="hub-desktop-nav">
-                    <SceneBtn icon={<MarketGlyph />} label="Market" onClick={() => onNav('market')} />
-                  </span>
-                  <span className="hub-desktop-nav">
-                    <SceneBtn icon={<AtlasGlyph />} label="Atlas" onClick={() => onNav('galaxy')} />
-                  </span>
-                  <span className="hub-desktop-nav">
-                    <SceneBtn icon={<SkillsGlyph />} label="Skills" onClick={() => onNav('skills')} />
-                  </span>
-                </>
-              )}
-            </>
-          )}
+                  <DockIconBtn icon={<SubsurfaceGlyph />} label="Subsurface" onClick={() => setSubsurface(true)} />
+
+                  {/* Desktop has no nav rail and no bottom bar, so the
+                      destinations without a building of their own hang off
+                      the dock instead. Mobile reaches these via the bottom
+                      tab bar, so `.hub-desktop-nav` keeps them out of the
+                      way there. */}
+                  {player.freeOperations && (
+                    <>
+                      {player.hasLanded && (
+                        <DockIconBtn icon={<SurfaceGlyph />} label="Surface Ops" accent testId="hub-surface-ops" onClick={() => onNav('surface-ops')} />
+                      )}
+                      <span className="hub-desktop-nav">
+                        <DockIconBtn icon={<MarketGlyph />} label="Market" onClick={() => onNav('market')} />
+                      </span>
+                      <span className="hub-desktop-nav">
+                        <DockIconBtn icon={<AtlasGlyph />} label="Atlas" onClick={() => onNav('galaxy')} />
+                      </span>
+                      <span className="hub-desktop-nav">
+                        <DockIconBtn icon={<SkillsGlyph />} label="Skills" onClick={() => onNav('skills')} />
+                      </span>
+                    </>
+                  )}
+                </div>
+              </>
+            )}
+          </div>
         </div>
       )}
     </div>
