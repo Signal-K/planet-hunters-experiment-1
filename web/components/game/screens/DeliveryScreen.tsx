@@ -55,7 +55,17 @@ export default function DeliveryScreen({
     for (const [id, amount] of Object.entries(cargo)) {
       if (!amount) continue
       const resource = LANDNAM_TO_TAKEON_MINERAL[id]
-      if (!resource) continue
+      if (!resource) {
+        // Silently dropping an unmapped mineral empties the rover's seeded
+        // cargo instead of just under-counting it — if it's the player's
+        // only cargo, DUMP CARGO can never bank anything and the mission
+        // soft-locks (KES-231). Warn loudly so a future missing mapping is
+        // caught in dev rather than reported as a stuck tutorial step.
+        if (process.env.NODE_ENV !== 'production') {
+          console.warn(`[DeliveryScreen] No Takeon resource mapping for mineral "${id}" — dropped ${amount}U from the seeded rover cargo.`)
+        }
+        continue
+      }
       seeded[resource] = (seeded[resource] ?? 0) + amount
     }
     return seeded
@@ -68,7 +78,14 @@ export default function DeliveryScreen({
     if (moved > 0) setDumped(true)
   }, [])
 
+  // The interactive Takeon dropoff (useTakeonDropoff) doesn't use `now` at
+  // all — `progress`/`remainingMs` are dead in that branch — but this timer
+  // ran unconditionally, forcing a full DeliveryScreen re-render every
+  // 100ms on top of Takeon's own independent render loop. That's pure
+  // main-thread overhead layered onto an already jank-prone canvas scene
+  // (KES-231: reported stutter on the M3 cargo-transfer step).
   useEffect(() => {
+    if (useTakeonDropoff) return
     const tick = () => setNow(Date.now())
     const id = window.setInterval(tick, 100)
     const onVisible = () => { if (!document.hidden) tick() }
@@ -77,7 +94,7 @@ export default function DeliveryScreen({
       window.clearInterval(id)
       document.removeEventListener('visibilitychange', onVisible)
     }
-  }, [])
+  }, [useTakeonDropoff])
 
   // The interactive tutorial dropoff does not use the elapsed unload timer.
   // Keep this effect independent of `progress`: the clock refreshes every

@@ -23,21 +23,39 @@ export function HubStructureArt({ buildings }: { buildings: HubBuildingDef[] }) 
       {buildings.map(building => {
         const art = HUB_STRUCTURE_ART[building.kind] ?? HUB_STRUCTURE_ART.command
         return (
-          <img
-            key={`${building.kind}-${building.plotX}`}
-            src={art.src}
-            alt=""
-            style={{
-              position: 'absolute',
-              left: `${(building.plotX / 402) * 100}%`,
-              bottom: `calc(22% - ${art.lift}px)`,
-              width: art.width,
-              height: 'auto',
-              transform: 'translateX(-50%)',
-              opacity: building.dimmed ? 0.55 : 1,
-              filter: 'drop-shadow(0 5px 5px rgba(0, 0, 0, 0.3))',
-            }}
-          />
+          <React.Fragment key={`${building.kind}-${building.plotX}`}>
+            {/* Ground-glow halo (KES-231): marks this structure as a real,
+                clickable building — distinct from the flat, unlit decorative
+                skyline behind it (HubWorldBackground's HubSkyline). */}
+            {!building.dimmed && (
+              <div
+                aria-hidden="true"
+                style={{
+                  position: 'absolute',
+                  left: `${(building.plotX / 402) * 100}%`,
+                  bottom: `calc(22% - 14px)`,
+                  width: art.width * 1.6,
+                  height: art.width * 0.7,
+                  transform: 'translate(-50%, 30%)',
+                  background: 'radial-gradient(ellipse at 50% 50%, rgba(112,217,234,0.32) 0%, transparent 72%)',
+                }}
+              />
+            )}
+            <img
+              src={art.src}
+              alt=""
+              style={{
+                position: 'absolute',
+                left: `${(building.plotX / 402) * 100}%`,
+                bottom: `calc(22% - ${art.lift}px)`,
+                width: art.width,
+                height: 'auto',
+                transform: 'translateX(-50%)',
+                opacity: building.dimmed ? 0.55 : 1,
+                filter: 'drop-shadow(0 5px 5px rgba(0, 0, 0, 0.3))',
+              }}
+            />
+          </React.Fragment>
         )
       })}
     </div>

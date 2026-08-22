@@ -31,8 +31,11 @@
   padding: 7px 10px;
   border: 1px solid rgba(112,217,234, .26);
   border-radius: 6px;
-  background: rgba(18,18,20, .78);
-  backdrop-filter: blur(6px);
+  /* KES-231: backdrop-filter: blur() here recomposites every frame the
+     Takeon canvas beneath it updates — a real GPU cost stacked onto that
+     canvas's own render loop, worth cutting since the panel is already
+     opaque enough (.9) to read clearly without it. */
+  background: rgba(18,18,20, .9);
 }
 
 .targetLabel span,

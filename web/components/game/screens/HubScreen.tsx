@@ -10,6 +10,8 @@ import { buildPlotEntities } from '@/lib/engine/prefabs'
 import { readComponentNumber } from '@/lib/engine/registry'
 import { AmbientMotes } from '@/components/game/hub/AmbientMotes'
 import { HubWorldBackground } from '@/components/game/hub/HubWorldBackground'
+import { HubClockWidget } from '@/components/game/hub/HubClockWidget'
+import { useTimeOfDay } from '@/lib/hooks/useTimeOfDay'
 import { HubStructureArt } from '@/components/game/hub/HubStructureArt'
 export { HUB_STRUCTURE_ART } from '@/components/game/hub/HubStructureArt'
 import { SoilCrossSection } from '@/components/game/hub/SoilCrossSection'
@@ -189,6 +191,7 @@ interface HubScreenProps {
 }
 
 export default function HubScreen({ player, rocketVariant = 'explorer', hasCoach, onGoBuilding, onNav, onUpgradeLaunchpad, onExcavateSubsurface, onBuildSubsurfaceRoom }: HubScreenProps) {
+  const { phase: skyPhase } = useTimeOfDay()
   const [editMode, setEditMode] = useState(false)
   const [plotEntities, setPlotEntities] = useState<EntityData[]>(DEFAULT_PLOTS)
   const [subsurface, setSubsurface] = useState(false)
@@ -418,7 +421,7 @@ export default function HubScreen({ player, rocketVariant = 'explorer', hasCoach
         {/* ─── ABOVE GROUND ─── top half of slider */}
         <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '50%', overflow: 'hidden' }}>
           {/* World background: sky, starfield, ridge parallax, ground, plateau */}
-          <HubWorldBackground />
+          <HubWorldBackground phase={skyPhase} />
 
           {/* Drifting ambient motes — replaces the old daylight cloud layer,
               which read as overcast weather against the new deep-blue sky. */}
@@ -493,17 +496,20 @@ export default function HubScreen({ player, rocketVariant = 'explorer', hasCoach
         background: 'linear-gradient(180deg, rgba(0,4,10,0.85) 0%, rgba(0,4,10,0.45) 65%, transparent 100%)',
         display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 10, pointerEvents: 'none',
       }}>
-        <div style={{ pointerEvents: 'auto' }}>
-          {/* KES-173: DevShortcuts' fixed DEV toggle (top:8 left:8, dev-only,
-              ~120px wide) sits directly over this eyebrow, clipping the
-              opening characters ("EARTH BASE" -> "H BASE"). Only reserve
-              the clearance when that badge can actually render. */}
-          <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 9.5, fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'rgba(177,198,229,0.7)', marginLeft: isDevLauncherEnabled() ? 130 : 0 }}>
-            {subsurface ? 'EARTH BASE · SUBSURFACE' : `EARTH BASE · OPS ${player.missionsDone}`}
+        <div style={{ pointerEvents: 'auto', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', width: '100%', gap: 12 }}>
+          <div style={{ minWidth: 0 }}>
+            {/* KES-173: DevShortcuts' fixed DEV toggle (top:8 left:8, dev-only,
+                ~120px wide) sits directly over this eyebrow, clipping the
+                opening characters ("EARTH BASE" -> "H BASE"). Only reserve
+                the clearance when that badge can actually render. */}
+            <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 9.5, fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'rgba(177,198,229,0.7)', marginLeft: isDevLauncherEnabled() ? 130 : 0 }}>
+              {subsurface ? 'EARTH BASE · SUBSURFACE' : `EARTH BASE · OPS ${player.missionsDone}`}
+            </div>
+            <h1 style={{ margin: '2px 0 0', fontFamily: 'var(--ln-font-display)', fontSize: 23, fontWeight: 800, letterSpacing: '-0.01em', color: '#eaf1f8', lineHeight: 1, textShadow: '0 2px 10px rgba(0,0,0,0.6)' }}>
+              {subsurface ? 'Subsurface' : 'Earth Base'}
+            </h1>
           </div>
-          <h1 style={{ margin: '2px 0 0', fontFamily: 'var(--ln-font-display)', fontSize: 23, fontWeight: 800, letterSpacing: '-0.01em', color: '#eaf1f8', lineHeight: 1, textShadow: '0 2px 10px rgba(0,0,0,0.6)' }}>
-            {subsurface ? 'Subsurface' : 'Earth Base'}
-          </h1>
+          {!subsurface && <HubClockWidget />}
         </div>
         {!subsurface && (
           <div style={{ pointerEvents: 'auto' }}>

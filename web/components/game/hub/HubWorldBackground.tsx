@@ -1,6 +1,7 @@
 'use client'
 
 import React from 'react'
+import type { TimeOfDayPhase } from '@/lib/hooks/useTimeOfDay'
 
 /**
  * Earth Base backdrop — corrected 2026-08-22 (KES-228, second pass). The
@@ -45,9 +46,12 @@ function DomeBuilding({ x, s = 1 }: { x: number; s?: number }) {
       <rect x={-16} y={-38} width={32} height={38} style={{ fill: 'var(--hub-skyline)' }} />
       <path d="M -16 -38 A 16 16 0 0 1 16 -38 Z" style={{ fill: 'var(--hub-skyline)' }} />
       <rect x={-1.4} y={-58} width={2.8} height={20} style={{ fill: 'var(--hub-skyline)' }} />
-      <circle cx={0} cy={-59} r={2.2} style={{ fill: 'var(--hub-chalk)', opacity: 0.85 }} />
-      <rect x={-9} y={-22} width={6} height={8} style={{ fill: 'var(--hub-cyan)', opacity: 0.4 }} />
-      <rect x={3} y={-22} width={6} height={8} style={{ fill: 'var(--hub-cyan)', opacity: 0.28 }} />
+      <circle cx={0} cy={-59} r={2.2} style={{ fill: 'var(--hub-chalk)', opacity: 0.55 }} />
+      {/* Decorative-only skyline: window glow dialed back (KES-231) so this
+          non-interactive backdrop doesn't read as clickable next to the real,
+          brighter-lit foreground structures (HubStructureArt). */}
+      <rect x={-9} y={-22} width={6} height={8} style={{ fill: 'var(--hub-cyan)', opacity: 0.2 }} />
+      <rect x={3} y={-22} width={6} height={8} style={{ fill: 'var(--hub-cyan)', opacity: 0.14 }} />
     </g>
   )
 }
@@ -93,7 +97,7 @@ function BoxBuilding({ x, h, s = 1 }: { x: number; h: number; s?: number }) {
           y={-h + 8 + row * 11}
           width={16}
           height={5}
-          style={{ fill: 'var(--hub-cyan)', opacity: (row % 2 === 0) ? 0.32 : 0.18 }}
+          style={{ fill: 'var(--hub-cyan)', opacity: (row % 2 === 0) ? 0.16 : 0.09 }}
         />
       ))}
     </g>
@@ -156,14 +160,30 @@ function HubSkyline() {
   )
 }
 
-export function HubWorldBackground() {
+// Time-of-day sky palettes (KES-231) — the base sky stays the same deep-navy
+// command-deck tone at every phase (ops screens never go full daylight
+// blue), only the sky-top/mid warmth, horizon glow color, and star
+// visibility shift with the player's local clock. `night` matches the
+// original static values exactly, so the SSR-default phase renders
+// pixel-identical to the pre-KES-231 scene.
+const SKY_PALETTES: Record<TimeOfDayPhase, { skyTop: string; skyMid: string; horizonGlow: string; starOpacity: number }> = {
+  night: { skyTop: 'var(--hub-sky-top)', skyMid: 'var(--hub-sky-mid)', horizonGlow: 'var(--hub-horizon-glow)', starOpacity: 1 },
+  dawn: { skyTop: '#132242', skyMid: '#2c3d61', horizonGlow: 'rgba(255,164,110,0.34)', starOpacity: 0.35 },
+  day: { skyTop: '#1c3459', skyMid: '#40608c', horizonGlow: 'rgba(163,203,229,0.2)', starOpacity: 0 },
+  dusk: { skyTop: '#17204a', skyMid: '#3c2c52', horizonGlow: 'rgba(227,95,160,0.36)', starOpacity: 0.55 },
+}
+
+export function HubWorldBackground({ phase = 'night' }: { phase?: TimeOfDayPhase }) {
+  const sky = SKY_PALETTES[phase]
   return (
     <div style={{ position: 'absolute', inset: 0, zIndex: 1, overflow: 'hidden', background: 'var(--hub-void)' }}>
 
-      {/* ── Sky — deep navy overhead, warming toward the horizon ─────────── */}
+      {/* ── Sky — deep navy overhead, warming toward the horizon. Colors
+          shift with the local-clock phase (see SKY_PALETTES above). ─────── */}
       <div style={{
         position: 'absolute', inset: 0,
-        background: 'linear-gradient(180deg, var(--hub-sky-top) 0%, var(--hub-sky-mid) 62%, var(--hub-void) 100%)',
+        background: `linear-gradient(180deg, ${sky.skyTop} 0%, ${sky.skyMid} 62%, var(--hub-void) 100%)`,
+        transition: 'background 1.2s ease',
       }} />
 
       {/* ── Horizon glow — the sun sitting just under the ridge line ──────── */}
@@ -172,15 +192,17 @@ export function HubWorldBackground() {
         style={{
           position: 'absolute', left: '50%', bottom: 'calc(var(--hub-ground) - 4%)',
           width: '140%', height: '46%', transform: 'translateX(-50%)',
-          background: 'radial-gradient(50% 100% at 50% 100%, var(--hub-horizon-glow) 0%, transparent 70%)',
+          background: `radial-gradient(50% 100% at 50% 100%, ${sky.horizonGlow} 0%, transparent 70%)`,
+          transition: 'background 1.2s ease',
         }}
       />
 
-      {/* ── Sparse high stars — dusk, not full night; kept faint and few ──── */}
+      {/* ── Sparse high stars — fade out through dawn/day, back in at dusk/
+          night, tracking the same local-clock phase. ────────────────────── */}
       <div
         style={{
           position: 'absolute', left: 0, right: 0, top: 0, height: '38%',
-          pointerEvents: 'none',
+          pointerEvents: 'none', opacity: sky.starOpacity, transition: 'opacity 1.2s ease',
           backgroundImage: [
             'radial-gradient(1px 1px at 8% 18%, rgba(177,198,229,.5), transparent)',
             'radial-gradient(1px 1px at 28% 8%, rgba(177,198,229,.35), transparent)',

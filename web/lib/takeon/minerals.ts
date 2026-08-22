@@ -19,6 +19,17 @@ export const LANDNAM_TO_TAKEON_MINERAL: Record<string, ResourceKey> = {
   iridium: 'crystal',
   rhodium: 'crystal',
   gold: 'crystal',
+  // Added (KES-231): missing entries here silently dropped these minerals
+  // from a seeded Takeon scene's cargo — for the M3 delivery tutorial, a
+  // player carrying only one of these (e.g. a nickel-only "Nickel Line
+  // Handoff" leg) ended up with a completely empty rover hold, so
+  // DUMP CARGO could never bank anything and the mission soft-locked.
+  carbon: 'stone',
+  nickel: 'titanium',
+  cobalt: 'alloy',
+  aluminium: 'iron-plate',
+  hydrogen: 'water',
+  uranium: 'crystal',
 }
 
 /** Takeon ResourceKey -> Landnam mineral id, e.g. for interpreting `mined` events. */
@@ -28,4 +39,9 @@ export const TAKEON_TO_LANDNAM_MINERAL: Record<string, string> = {
   copper: 'copper',
   ice: 'ice',
   crystal: 'rare',
+  stone: 'carbon',
+  titanium: 'nickel',
+  alloy: 'cobalt',
+  'iron-plate': 'aluminium',
+  water: 'hydrogen',
 }
