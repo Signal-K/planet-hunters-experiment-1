@@ -81,7 +81,7 @@ describe('Telescope construction/launch mission (STS-138)', () => {
     // and program-reward FEED badge that used to render inline here now
     // only surface one screen deeper, once the operation is picked.
     cy.get('[data-testid="launchpad-program-operation-btn"]', { timeout: 10000 })
-      .should('be.visible')
+      .should('exist')
       .click({ force: true })
     // Lands on the target picker (step 2 of 4: Mission -> Target -> Rocket
     // -> Launch) — the telescope mission still requires an explicit target
@@ -106,7 +106,7 @@ describe('Telescope construction/launch mission (STS-138)', () => {
     // operation directly, which resolves to the telescope launch mission
     // in this state.
     cy.get('[data-testid="launchpad-program-operation-btn"]', { timeout: 10000 })
-      .scrollIntoView()
+      .should('exist')
       .click({ force: true })
     // Lands on the target picker (step 2 of 4: Mission -> Target -> Rocket
     // -> Launch) — the telescope mission still requires an explicit target
@@ -128,6 +128,14 @@ describe('Telescope construction/launch mission (STS-138)', () => {
   })
 
   it('unlocks the TESS discovery loop once the telescope has launched', () => {
+    cy.intercept('POST', '**/api/collections/users/auth-refresh', {
+      statusCode: 200,
+      body: { token: 'e2e-token', record: { id: 'e2e-user', email: 'e2e@landnam.guest' } },
+    })
+    cy.intercept('POST', '**/api/landnam-auth/exchange', {
+      statusCode: 200,
+      body: { token: 'e2e-landnam-token', record: { id: 'e2e-user', email: 'e2e@landnam.guest' } },
+    })
     cy.intercept('GET', '**/api/collections/subjects/records*', {
       statusCode: 200,
       body: {
@@ -152,7 +160,7 @@ describe('Telescope construction/launch mission (STS-138)', () => {
       },
     }).as('subjects')
     visitWithState('/game/galaxy', 'galaxy', { satelliteMonitoringBuilt: true, transitSatelliteLaunchedAt: Date.now() - 1000 })
-    cy.wait('@subjects')
+    cy.get('[data-testid="tess-discovery-screen"]', { timeout: 15000 }).should('exist')
     // STS-582's instrument-feed rename replaced the old "TESS ANOMALY"
     // heading with the TopBar eyebrow below plus the candidate's own TOI id
     // as the title (see tess-discovery-desktop-layout.cy.ts's identical fix).

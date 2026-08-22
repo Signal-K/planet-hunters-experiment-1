@@ -1,8 +1,11 @@
 services:
   shared-pb:
     image: ghcr.io/muchobien/pocketbase:0.39.0
+    command: ["serve", "--http=0.0.0.0:8090", "--dir=/pb/pb_data", "--migrationsDir=/pb/pb_migrations"]
     ports:
       - "18090:8090"
+    volumes:
+      - ./e2e/shared-pb/pb_migrations:/pb/pb_migrations:ro
     healthcheck:
       test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8090/api/health"]
       interval: 5s
@@ -41,6 +44,8 @@ services:
       POCKETBASE_INTERNAL_URL: http://shared-pb:8090
       NEXT_PUBLIC_SHARED_PB_URL: http://shared-pb:8090
       NEXT_PUBLIC_LANDNAM_PB_URL: http://landnam-pb:8090
+      NEXT_PUBLIC_FEATURE_SCAN_STATION: "true"
+      NEXT_PUBLIC_E2E_AUTH_AUTO_CONTINUE: "true"
       NEXT_TELEMETRY_DISABLED: "1"
       PORT: "3001"
     ports:
@@ -51,6 +56,8 @@ services:
 
   cypress:
     image: cypress/included:15.16.0
+    entrypoint: ["/bin/sh", "-c"]
+    command: ["status=0; cypress run --browser chrome --reporter json > /tmp/cypress/results/cypress.json || status=$$?; CYPRESS_allowSurveys=true cypress run --browser chrome --spec cypress/e2e/features/surveys.cy.ts --reporter json > /tmp/cypress/results/surveys.json || status=$$?; exit $$status"]
     working_dir: /e2e
     environment:
       CYPRESS_baseUrl: http://next-app:3001
@@ -61,9 +68,13 @@ services:
     volumes:
       - ./cypress.docker.config.js:/e2e/cypress.config.js:ro
       - ./web/cypress:/e2e/cypress:ro
+      - ./web/lib:/e2e/lib:ro
       - ./web/package.json:/e2e/package.json:ro
       - ./web/tsconfig.json:/e2e/tsconfig.json:ro
       - ./web/node_modules:/e2e/node_modules:ro
+      - ./web/cypress/screenshots:/tmp/cypress/screenshots
+      - ./web/cypress/videos:/tmp/cypress/videos
+      - ./web/cypress/results:/tmp/cypress/results
     depends_on:
       next-app:
         condition: service_started

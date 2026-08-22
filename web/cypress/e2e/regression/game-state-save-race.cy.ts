@@ -24,12 +24,16 @@ describe('game_states save race recovery', () => {
     // persist effect is allowed to proceed at all — stub it to succeed
     // immediately so this test is about game_states recovery, not exchange
     // retry timing.
-    cy.intercept('POST', '**/api/landnam-auth/exchange', {
+    cy.intercept('POST', '**/api/landnam-auth/exchange*', {
       statusCode: 200,
-      body: { token: 'e2e-landnam-token', record: { id: 'e2e-user', email: 'e2e@landnam.guest' } },
+      body: { token: 'e2e-landnam-token', record: { id: 'e2e-user', email: 'e2e@landnam.guest', collectionId: '_pb_users_auth_', collectionName: 'users' } },
     }).as('pbLandnamExchange')
+    cy.intercept('POST', '**/api/collections/users/auth-refresh', {
+      statusCode: 200,
+      body: { token: 'e2e-token', record: { id: 'e2e-user', email: 'e2e@landnam.guest' } },
+    }).as('pbAuthRefresh')
 
-    cy.intercept('POST', '**/api/collections/game_states/records', {
+    cy.intercept('POST', '**/api/collections/game_states/records*', {
       statusCode: 400,
       body: {
         data: { user: { code: 'validation_not_unique', message: 'Value must be unique.' } },

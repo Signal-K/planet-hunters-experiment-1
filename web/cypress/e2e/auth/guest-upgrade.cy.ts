@@ -6,6 +6,37 @@ describe('Guest-to-full account upgrade', () => {
   let createdUserId: string | undefined
   let createdToken: string | undefined
 
+  function visitAsGuest() {
+    const email = `guest_${Math.random().toString(36).slice(2, 10)}@landnam.guest`
+    const password = 'GuestPassword123!'
+
+    cy.request('POST', `${pbUrl}/api/collections/users/records`, {
+      email,
+      password,
+      passwordConfirm: password,
+      name: 'E2E Guest',
+    }).then(({ body: user }) => {
+      createdUserId = user.id
+      return cy.request('POST', `${pbUrl}/api/collections/users/auth-with-password`, {
+        identity: email,
+        password,
+      })
+    }).then(({ body: auth }) => {
+      createdToken = auth.token
+      cy.visit('/game', {
+        onBeforeLoad(win) {
+          win.localStorage.clear()
+          win.localStorage.setItem('landnam-guest-credentials', JSON.stringify({ email, password }))
+          win.localStorage.setItem(STORAGE_KEY, JSON.stringify({
+            screen: 'hub',
+            player: { francs: 10_000_000_000, missionsDone: 1, placed: ['launchpad'], placementPlots: { launchpad: 0 } },
+            tutorial: false,
+          }))
+        },
+      })
+    })
+  }
+
   afterEach(() => {
     if (createdUserId && createdToken) {
       cy.request({
@@ -20,17 +51,7 @@ describe('Guest-to-full account upgrade', () => {
   })
 
   it('shows the save-progress prompt after a mission and upgrades the account', () => {
-    cy.visit('/game', {
-      onBeforeLoad(win) {
-        win.localStorage.clear()
-        // Seed state as if the guest just finished their first mission.
-        win.localStorage.setItem(STORAGE_KEY, JSON.stringify({
-          screen: 'hub',
-          player: { francs: 10_000_000_000, missionsDone: 1, placed: ['launchpad'], placementPlots: { launchpad: 0 } },
-          tutorial: false,
-        }))
-      },
-    })
+    visitAsGuest()
 
     // Wait for guest auth to complete.
     cy.window({ timeout: 15000 }).should(win => {
@@ -78,17 +99,8 @@ describe('Guest-to-full account upgrade', () => {
     })
   })
 
-  it('lets a guest dismiss the prompt and continue playing', () => {
-    cy.visit('/game', {
-      onBeforeLoad(win) {
-        win.localStorage.clear()
-        win.localStorage.setItem(STORAGE_KEY, JSON.stringify({
-          screen: 'hub',
-          player: { francs: 10_000_000_000, missionsDone: 1, placed: ['launchpad'], placementPlots: { launchpad: 0 } },
-          tutorial: false,
-        }))
-      },
-    })
+  it('keeps the mandatory save-progress prompt visible for a legacy guest', () => {
+    visitAsGuest()
 
     cy.window({ timeout: 15000 }).should(win => {
       expect(win.localStorage.getItem(PB_AUTH_KEY)).to.not.be.null
@@ -100,12 +112,10 @@ describe('Guest-to-full account upgrade', () => {
       createdToken = auth.token
     })
 
-    cy.get('[data-testid="upgrade-dismiss"]', { timeout: 15000 }).should('be.visible').click()
-    cy.get('[data-testid="upgrade-email"]').should('not.exist')
-
-    // Snooze persisted, and the guest is still authenticated.
+    // KES-97 makes this prompt mandatory for legacy guest accounts: there is
+    // no dismiss action until the player supplies a real email.
+    cy.get('[data-testid="upgrade-email"]').should('be.visible')
     cy.window().then(win => {
-      expect(Number(win.localStorage.getItem('landnam-upgrade-prompt-snooze-until'))).to.be.greaterThan(Date.now())
       expect(JSON.parse(win.localStorage.getItem(PB_AUTH_KEY) || '{}').record.id).to.eq(createdUserId)
     })
   })

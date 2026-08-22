@@ -96,7 +96,7 @@
 
 .card {
   display: grid;
-  grid-template-columns: 44px 1fr auto;
+  grid-template-columns: 44px minmax(0, 1fr) auto;
   gap: 14px;
   align-items: center;
   padding: 16px 18px;
@@ -108,6 +108,7 @@
   position: relative;
   text-align: left;
   width: 100%;
+  overflow: visible;
 }
 .card:hover { background: rgba(112,217,234,.06); border-color: rgba(112,217,234,.28); }
 .cardSelected {
@@ -237,6 +238,26 @@
   background: rgba(112,217,234,0.1);
   color: var(--ln-text-muted);
   cursor: not-allowed;
+}
+
+/* Keep the action in the card's readable flow on narrow screens. The old
+   three-column row let the outer button's intrinsic width squeeze the CTA
+   outside the scroll viewport, making a visible mission appear unclickable. */
+@media (max-width: 520px) {
+  .card {
+    grid-template-columns: 44px minmax(0, 1fr);
+    align-items: start;
+  }
+
+  .cardSide {
+    grid-column: 2;
+    width: 100%;
+    min-width: 0;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+  }
 }
 
 .disclaimer {

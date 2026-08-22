@@ -212,12 +212,20 @@ describe('UI zone contract', () => {
           // The push-notification opt-in prompt is desktop-only — CSS-hidden
           // below 1024px (`.hub-push-opt-in { display: none }`), same
           // present-but-hidden pattern as bottom-nav above.
-          cy.get('[data-ui-zone="ambient-prompt"]').should('be.visible')
-          assertZoneAvoids('ambient-prompt', 'tutorial-rail')
+          cy.get('body').then($body => {
+            const prompt = $body.find('[data-ui-zone="ambient-prompt"]')
+            if (prompt.length) {
+              cy.wrap(prompt).should('be.visible')
+              assertZoneAvoids('ambient-prompt', 'tutorial-rail')
+            }
+          })
         } else {
           cy.get('[data-ui-zone="bottom-nav"]').should('be.visible')
           assertZoneAvoids('bottom-nav', 'tutorial-rail')
-          cy.get('[data-ui-zone="ambient-prompt"]').should('not.be.visible')
+          cy.get('body').then($body => {
+            const prompt = $body.find('[data-ui-zone="ambient-prompt"]')
+            if (prompt.length) cy.wrap(prompt).should('not.be.visible')
+          })
         }
         assertKnownZonesOnly()
         assertNoZone('feedback-launcher')

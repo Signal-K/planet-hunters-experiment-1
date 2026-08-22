@@ -14,6 +14,7 @@ import { formatCurrency } from '@/lib/format'
 import { getRequiredRocketModel } from '@/lib/rockets'
 import { calibrateOnboardingPayout } from '@/lib/data'
 import RocketCutaway, { type RocketRoomKey } from '@/components/game/RocketCutaway'
+import { useIsNarrowViewport } from '@/lib/hooks/useIsNarrowViewport'
 
 function orbitLabel(maxOrbit: number): string {
   if (maxOrbit <= 3) return 'Near-Earth'
@@ -61,6 +62,8 @@ interface RocketPurchaseScreenProps {
 
 export default function RocketPurchaseScreen({ missionsDone, francs, mission, deliveryTargetName, onPurchase, onBack, hasCoach }: RocketPurchaseScreenProps) {
   const [activeRoom, setActiveRoom] = useState<RocketRoomKey | null>(null)
+  const [modulesOpen, setModulesOpen] = useState(false)
+  const isNarrow = useIsNarrowViewport()
   const rocket = getRequiredRocketModel(missionsDone)
   const isFree = rocket.costFrancs === 0
   const canAfford = francs >= rocket.costFrancs
@@ -103,44 +106,39 @@ export default function RocketPurchaseScreen({ missionsDone, francs, mission, de
         </>
       )}
     >
-      <MissionSetupFrame className="rocket-vehicle-frame" style={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        background: 'radial-gradient(ellipse at 50% 54%, rgba(112,217,234,0.16) 0%, rgba(112,217,234,0.05) 36%, transparent 72%)',
-      }}>
-        {hasCoach && <TutorialHighlight borderRadius={14} />}
+      <div className="rocket-vehicle-stage">
         {deliveryTargetName && (
-          <div style={{
-            position: 'absolute', top: 12, left: 12, right: 12,
-            padding: '8px 12px', borderRadius: 6,
-            background: 'var(--ln-overlay)', border: '1px solid var(--ln-cyan-border)',
-            fontFamily: 'var(--ln-font-display)', fontSize: 10, fontWeight: 700,
-            letterSpacing: '0.08em', color: 'var(--ln-cyan)', textTransform: 'uppercase', textAlign: 'center',
-          }}>
+          <div className="rocket-route-notice">
             Two-stop job · Deliver to {deliveryTargetName} before returning to Earth
           </div>
         )}
-        <RocketCutaway rocket={rocket} activeRoom={activeRoom} onToggle={room => setActiveRoom(current => current === room ? null : room)} />
-        <div style={{
-          position: 'absolute', top: deliveryTargetName ? 54 : 14, right: 16,
-          display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 8,
-          zIndex: 2,
+        <MissionSetupFrame className="rocket-vehicle-frame" style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          background: 'radial-gradient(ellipse at 50% 54%, rgba(112,217,234,0.16) 0%, rgba(112,217,234,0.05) 36%, transparent 72%)',
         }}>
-          <span style={{
-            padding: '4px 12px', borderRadius: 999,
-            background: isFree ? 'rgba(57,211,106,0.18)' : 'rgba(245,166,35,0.18)',
-            border: `1px solid ${isFree ? 'rgba(57,211,106,0.5)' : 'rgba(245,166,35,0.5)'}`,
-            fontFamily: 'var(--ln-font-display)', fontSize: 10, fontWeight: 800,
-            letterSpacing: '0.2em', textTransform: 'uppercase',
-            color: isFree ? '#39d36a' : '#f5a623',
+          {hasCoach && <TutorialHighlight borderRadius={14} />}
+          <div className="rocket-tier-badge" style={{
+            display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 8,
+            zIndex: 2,
           }}>
-            TIER {rocket.tier} · {isFree ? 'INCLUDED' : formatCurrency(rocket.costFrancs, { compact: true })}
-          </span>
-        </div>
-      </MissionSetupFrame>
+            <span style={{
+              padding: '4px 12px', borderRadius: 999,
+              background: isFree ? 'rgba(57,211,106,0.18)' : 'rgba(245,166,35,0.18)',
+              border: `1px solid ${isFree ? 'rgba(57,211,106,0.5)' : 'rgba(245,166,35,0.5)'}`,
+              fontFamily: 'var(--ln-font-display)', fontSize: 10, fontWeight: 800,
+              letterSpacing: '0.2em', textTransform: 'uppercase',
+              color: isFree ? '#39d36a' : '#f5a623',
+            }}>
+              TIER {rocket.tier} · {isFree ? 'INCLUDED' : formatCurrency(rocket.costFrancs, { compact: true })}
+            </span>
+          </div>
+          <RocketCutaway rocket={rocket} activeRoom={activeRoom} onToggle={room => setActiveRoom(current => current === room ? null : room)} />
+        </MissionSetupFrame>
+      </div>
 
-      <MissionSetupCard scrollStyle={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
+      <MissionSetupCard className="rocket-summary-card" scrollClassName="rocket-summary-scroll" scrollStyle={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
           <div>
             <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 22, fontWeight: 800, color: 'var(--ln-text)', letterSpacing: '-0.01em' }}>
               {rocket.name}
@@ -151,7 +149,7 @@ export default function RocketPurchaseScreen({ missionsDone, francs, mission, de
             </div>
           </div>
 
-          <div style={{ display: 'flex', gap: 8 }}>
+          <div className="rocket-stat-grid" style={{ display: 'flex', gap: 8 }}>
             <StatCard
               label="Cargo"
               value={`${rocket.stats.cargo}U`}
@@ -169,14 +167,12 @@ export default function RocketPurchaseScreen({ missionsDone, francs, mission, de
             />
           </div>
 
-          <div>
-            <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 9, fontWeight: 700, letterSpacing: '0.22em', color: 'var(--ln-text-muted)', textTransform: 'uppercase', marginBottom: 8 }}>
-              Installed Modules
-            </div>
+          <details className="rocket-modules" open={!isNarrow || modulesOpen} onToggle={event => setModulesOpen(event.currentTarget.open)}>
+            <summary>Installed Modules</summary>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
               {modules.map(m => <ModuleChip key={m} label={m} />)}
             </div>
-          </div>
+          </details>
 
           {!isFree && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 0, background: 'rgba(11,11,13,0.5)', borderRadius: 10, border: '1px solid rgba(112,217,234,0.12)', overflow: 'hidden' }}>

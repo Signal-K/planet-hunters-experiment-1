@@ -84,7 +84,7 @@ describe('Smoke — Landnam', () => {
 
     cy.get('[data-testid="collect-reward-btn"]').should('not.exist')
     cy.get('[data-testid="resolve-cargo-btn"]').click()
-    cy.contains('Francs Earned').should('be.visible')
+    cy.contains('Francs Earned').scrollIntoView().should('be.visible')
     cy.get('[data-testid="collect-reward-btn"]').should('be.visible')
   })
 
