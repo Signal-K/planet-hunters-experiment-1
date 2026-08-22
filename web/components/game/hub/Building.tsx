@@ -26,6 +26,15 @@ export interface BuildingProps {
   status: 'ok' | 'warn' | 'info'
   hot?: boolean
   w: number
+  /**
+   * Height of the invisible click-target spacer above the status pill.
+   * Defaults to `w * 0.6` (the old flat guess) when omitted, but that guess
+   * badly undershoots tall art like the launchpad's gantry PNG, which
+   * renders far above the footprint this spacer used to reserve — see
+   * HubScreen.tsx's HIT_H map, which sizes this per building kind against
+   * each PNG's actual rendered height.
+   */
+  hitH?: number
   style?: React.CSSProperties
   onClick: () => void
   /** Small numeric badge — used for the SMS daily-candidate-queue count. */
@@ -80,7 +89,7 @@ function ArrowGlyph() {
   )
 }
 
-export function Building({ kind, label, sub, status, w, style, onClick, badge, callout, calloutAlign = 'center', dimmed }: BuildingProps) {
+export function Building({ kind, label, sub, status, w, hitH, style, onClick, badge, callout, calloutAlign = 'center', dimmed }: BuildingProps) {
   const color = STATUS_COLOR[status]
   const [calloutOpen, setCalloutOpen] = useState(false)
   const [seen, setSeen] = useState(false)
@@ -126,8 +135,8 @@ export function Building({ kind, label, sub, status, w, style, onClick, badge, c
         onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-3px)' }}
         onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)' }}
       >
-        {/* Spacer reserving the PixiJS building's footprint */}
-        <div style={{ width: w, height: w * 0.6, position: 'relative' }}>
+        {/* Spacer reserving the building art's clickable footprint */}
+        <div style={{ width: w, height: hitH ?? w * 0.6, position: 'relative' }}>
           {!!badge && badge > 0 && (
             <span
               data-testid={`building-${kind}-badge`}

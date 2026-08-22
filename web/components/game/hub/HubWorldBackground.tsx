@@ -15,7 +15,7 @@ import React from 'react'
  * Looking at the reference again: its skyline isn't abstract at all — it's
  * a row of *specific, recognizable* structures (a domed command building, a
  * radio mast, a dish tower) rendered as flat silhouettes with a thin
- * pink/cyan rim-light. This version replaces the zigzag with exactly that:
+ * chalky-green/cyan rim-light. This version replaces the zigzag with exactly that:
  * an SVG skyline built from the same building vocabulary Landnam's own
  * Pixi scene already uses for its foreground structures (dome + antenna
  * command building, lattice radio mast, tripod dish tower, tank silo,
@@ -45,7 +45,7 @@ function DomeBuilding({ x, s = 1 }: { x: number; s?: number }) {
       <rect x={-16} y={-38} width={32} height={38} style={{ fill: 'var(--hub-skyline)' }} />
       <path d="M -16 -38 A 16 16 0 0 1 16 -38 Z" style={{ fill: 'var(--hub-skyline)' }} />
       <rect x={-1.4} y={-58} width={2.8} height={20} style={{ fill: 'var(--hub-skyline)' }} />
-      <circle cx={0} cy={-59} r={2.2} style={{ fill: 'var(--hub-pink)', opacity: 0.85 }} />
+      <circle cx={0} cy={-59} r={2.2} style={{ fill: 'var(--hub-chalk)', opacity: 0.85 }} />
       <rect x={-9} y={-22} width={6} height={8} style={{ fill: 'var(--hub-cyan)', opacity: 0.4 }} />
       <rect x={3} y={-22} width={6} height={8} style={{ fill: 'var(--hub-cyan)', opacity: 0.28 }} />
     </g>
@@ -67,7 +67,7 @@ function DishTower({ x, s = 1 }: { x: number; s?: number }) {
     <g transform={`translate(${x}, 0) scale(${s})`}>
       <path d="M -12 0 L -2 -34 L 2 -34 L 12 0 Z" style={{ fill: 'var(--hub-skyline)' }} />
       <ellipse cx={4} cy={-42} rx={11} ry={6} transform="rotate(-18 4 -42)" style={{ fill: 'var(--hub-skyline)' }} />
-      <circle cx={4} cy={-42} r={1.6} style={{ fill: 'var(--hub-pink)', opacity: 0.8 }} />
+      <circle cx={4} cy={-42} r={1.6} style={{ fill: 'var(--hub-chalk)', opacity: 0.8 }} />
     </g>
   )
 }

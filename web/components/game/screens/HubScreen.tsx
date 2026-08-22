@@ -92,6 +92,10 @@ function SkillsGlyph() {
  * actual Hub actions (Build, Hangar, Upgrade, Subsurface, and the desktop-
  * only Market/Atlas/Skills destinations).
  */
+// Restyled 2026-08-23 from a vertical icon-over-label tile to a horizontal
+// icon-plate + label pill, taking layout cues from Out There: Ω Edition's
+// in-scene action buttons (a small dark icon plate beside an uppercase
+// label, inside a thin-outlined rounded rect) rather than a bare square tile.
 function DockIconBtn({ icon, label, onClick, active, accent, pulse, testId }: {
   icon: React.ReactNode
   label: string
@@ -109,24 +113,26 @@ function DockIconBtn({ icon, label, onClick, active, accent, pulse, testId }: {
       title={label}
       aria-label={label}
       style={{
-        flex: '0 0 auto', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3,
-        background: 'transparent', border: 'none', padding: '4px 2px', cursor: 'pointer', width: 58,
+        flex: '0 0 auto', display: 'flex', alignItems: 'center', gap: 6,
+        background: on ? 'var(--hub-chalk-soft)' : 'rgba(4,16,31,0.7)',
+        border: `1.5px solid ${on ? 'var(--hub-chalk)' : 'var(--hub-outline)'}`,
+        borderRadius: 14, padding: '5px 10px 5px 5px', cursor: 'pointer',
       }}
     >
       <span style={{
-        width: 38, height: 38, borderRadius: 10, display: 'grid', placeItems: 'center',
-        background: on ? 'var(--hub-pink-soft)' : 'var(--hub-panel-deep)',
-        border: `1.5px solid ${on ? 'var(--hub-pink)' : 'var(--hub-outline)'}`,
-        color: on ? 'var(--hub-pink)' : 'var(--hub-cyan)',
+        width: 28, height: 28, borderRadius: 8, display: 'grid', placeItems: 'center', flexShrink: 0,
+        background: 'var(--hub-panel-deep)',
+        border: `1.5px solid ${on ? 'var(--hub-chalk)' : 'var(--hub-outline)'}`,
+        color: on ? 'var(--hub-chalk)' : 'var(--hub-cyan)',
         animation: pulse ? 'hub-pad-pulse 2s ease-in-out infinite' : 'none',
       }}>
         {icon}
       </span>
       <span style={{
-        fontFamily: 'var(--ln-font-display)', fontWeight: 700, fontSize: 7.5,
-        letterSpacing: '0.06em', textTransform: 'uppercase', textAlign: 'center', lineHeight: 1.1,
-        color: on ? 'var(--hub-pink)' : 'rgba(177,198,229,0.75)',
-        whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 58,
+        fontFamily: 'var(--ln-font-display)', fontWeight: 700, fontSize: 8,
+        letterSpacing: '0.06em', textTransform: 'uppercase', lineHeight: 1.1,
+        color: on ? 'var(--hub-chalk)' : 'rgba(177,198,229,0.8)',
+        whiteSpace: 'nowrap',
       }}>
         {label}
       </span>
@@ -140,11 +146,11 @@ function DockPrimaryBtn({ children, onClick, testId, pulse }: { children: React.
       onClick={onClick}
       data-testid={testId}
       style={{
-        flexShrink: 0, background: 'linear-gradient(180deg, var(--hub-pink), #c4477f)',
-        border: 'none', borderRadius: 10, padding: '10px 16px',
+        flexShrink: 0, background: 'var(--hub-chalk-soft)',
+        border: '1.5px solid var(--hub-chalk)', borderRadius: 14, padding: '10px 16px',
         fontFamily: 'var(--ln-font-display)', fontWeight: 800, fontSize: 10.5,
-        letterSpacing: '0.08em', textTransform: 'uppercase', color: '#160710',
-        cursor: 'pointer', boxShadow: '0 4px 14px rgba(227,95,160,0.35)',
+        letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--hub-chalk)',
+        cursor: 'pointer', boxShadow: '0 4px 14px rgba(155,201,138,0.25)',
         animation: pulse ? 'hub-pad-pulse 2s ease-in-out infinite' : 'none',
       }}
     >
@@ -277,6 +283,18 @@ export default function HubScreen({ player, rocketVariant = 'explorer', hasCoach
   }
 
   const BUILDING_W: Record<string, number> = { launchpad: 98, refinery: 84, 'scan-station': 80, 'deep-space-telescope': 86, 'astronaut-academy': 88, command: 84 }
+  // Invisible click-target height for each building's spacer (Building.tsx),
+  // reported unclickable 2026-08-23. HubStructureArt renders each building's
+  // actual art at a per-kind `width`/`lift` (see HUB_STRUCTURE_ART) with its
+  // OWN aspect ratio — the launchpad's gantry PNG (84x288px) renders far
+  // taller than its footprint, reaching ~220px above the ground line, while
+  // the invisible hit spacer this map used to feed (a flat `w * 0.6`, ~59px)
+  // only covered the bottom sliver near the status pill. Clicking the tall
+  // gantry tower itself (the obvious thing to tap) missed the hit area
+  // entirely. Values below are sized to each building's actual rendered
+  // silhouette (width x pixelHeight/pixelWidth of its PNG) plus headroom;
+  // buildings whose art is short/squat keep the old w*0.6-ish default.
+  const HIT_H: Record<string, number> = { launchpad: 230, refinery: 60, 'scan-station': 60, 'deep-space-telescope': 60, 'astronaut-academy': 60, command: 60 }
   // Post-tutorial Hub prominence pass (STS-631): telescope/satellite
   // buildings recede visually while they're unlocked but still in their
   // early, not-yet-actively-producing state — Transit Telescope
@@ -437,7 +455,7 @@ export default function HubScreen({ player, rocketVariant = 'explorer', hasCoach
                 // can't run off the edge of the scene.
                 const xFrac = (sortedEntities[plot]?.transform.position.x ?? 201) / 402
                 const calloutAlign = xFrac < 0.32 ? 'start' : xFrac > 0.68 ? 'end' : 'center'
-                return <Building key={kind} {...building} style={style} calloutAlign={calloutAlign} />
+                return <Building key={kind} {...building} hitH={HIT_H[kind] ?? 60} style={style} calloutAlign={calloutAlign} />
               })}
             </div>
           </div>

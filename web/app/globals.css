@@ -1657,8 +1657,13 @@ html[data-coach-target="build-structure-strip"] [data-coach-id="build-structure-
      the global --ln-cyan/--ln-ok, which other screens already tune against. */
   --hub-mint:       #5ad07e;
   --hub-cyan:       #70d9ea;
-  --hub-pink:       #e35fa0;
-  --hub-pink-soft:  rgba(227, 95, 160, 0.16);
+  /* Chalky, slightly desaturated sage green — replaces the earlier hot-pink
+     interactive accent (2026-08-23) across the Hub's clickable chrome (Jobs
+     chip, Edit/Build CTA, active dock icons). The atmospheric dusk-horizon
+     pink below is a separate, still-standing decision (KES-228) and is left
+     alone — it's backdrop color, not interactive UI. */
+  --hub-chalk:       #9bc98a;
+  --hub-chalk-soft:  rgba(155, 201, 138, 0.16);
   --hub-outline:    rgba(177, 198, 229, 0.4);
   --hub-panel:      #04101f;
   --hub-panel-deep: #020a16;
@@ -1770,8 +1775,14 @@ html[data-coach-target="build-structure-strip"] [data-coach-id="build-structure-
   position: absolute;
   /* Keep the ambient opt-in out of the progression-card action column. At
      desktop widths the cards occupy the upper-right content rail; the old
-     `right: 196px` placement landed directly over their click targets. */
-  top: 74px;
+     `right: 196px` placement landed directly over their click targets.
+     `top` was 74px, tuned against the HUD's old single-row height — the
+     KES-220/226 stacked rail (eyebrow + title + two HUDStrip chips) now
+     reaches ~150px at the left edge, so 74px sat this prompt directly on
+     top of the Francs/Jobs chips (reported 2026-08-23: "Enable Mission
+     Alerts" overlapping "E11.6B"). Must clear the same rail height
+     HubScreen.tsx's HUB_HUD_RAIL_CLEARANCE is tuned against. */
+  top: 170px;
   left: 14px;
   right: auto;
   z-index: 19;

@@ -37,9 +37,10 @@ function MineralGlyph({ shape, color }: { shape?: string; color: string }) {
 /**
  * Resource readout — a persistent left-edge stacked rail (KES-219/220),
  * recolored dark 2026-08-21 (KES-226) when the light "blueprint" attempt
- * was scrapped. Each stat is its own compact card, pink-bordered on the
- * interactive (clickable) card, matching the tapnine.com "Black Hole"
- * reference's fixed vertical stat stack and its pink highlight language.
+ * was scrapped. Each stat is its own compact card, chalky-green-bordered on
+ * the interactive (clickable) card — the tapnine.com "Black Hole"
+ * reference's fixed vertical stat stack, its original hot-pink highlight
+ * swapped for a chalkier accent (2026-08-23).
  */
 function RailCard({ glyph, children, accent = 'var(--hub-cyan)', onClick, testId }: { glyph: React.ReactNode; children: React.ReactNode; accent?: string; onClick?: () => void; testId?: string }) {
   const Tag = onClick ? 'button' : 'div'
@@ -50,7 +51,7 @@ function RailCard({ glyph, children, accent = 'var(--hub-cyan)', onClick, testId
       style={{
         display: 'flex', alignItems: 'center', gap: 8, width: '100%', boxSizing: 'border-box',
         background: 'var(--hub-panel)',
-        border: `1.5px solid ${onClick ? 'var(--hub-pink)' : 'var(--hub-outline)'}`,
+        border: `1.5px solid ${onClick ? 'var(--hub-chalk)' : 'var(--hub-outline)'}`,
         borderRadius: 9, padding: '7px 10px 7px 7px',
         cursor: onClick ? 'pointer' : undefined,
         textAlign: 'left',
