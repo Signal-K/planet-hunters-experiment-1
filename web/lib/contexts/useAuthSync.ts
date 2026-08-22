@@ -5,6 +5,7 @@ import { pbLandnam, exchangeLandnamAuth } from '@/lib/pb-landnam'
 import { clearAccountCredentials, ensureAccountAuth, hasStoredCredentials, storeAccountCredentials } from '@/lib/accountAuth'
 import { identifyUser } from '@/lib/posthog'
 import { DEFAULT_STATE, mergeRemoteState, type PartialSave } from '@/lib/game-state'
+import { isResumableMissionScreen } from '@/lib/initial-route'
 import type { GameState } from '@/lib/game-types'
 import type { Toast } from '@/components/ui/ToastLayer'
 
@@ -532,11 +533,24 @@ export function useAuthSync({
     return () => window.clearTimeout(timer)
   }, [authUserId, hydrated, isPreview, resetting, backendReady, state, saveRemoteState])
 
+  // Signing in must always land the player on Earth Base, never wherever the
+  // auth gate happened to be sitting on top of (e.g. a deep-linked or
+  // bookmarked /game/missions). The one exception is a genuinely resumable
+  // in-flight mission, matching returningScreen's rule for the root /game
+  // bridge — see isResumableMissionScreen.
+  const landOnHubUnlessResumable = useCallback(() => {
+    const current = stateRef.current
+    if (isResumableMissionScreen(current.screen, current.missionId, current.targetId)) return
+    if (current.screen === 'hub') return
+    setState(s => ({ ...s, screen: 'hub' }))
+  }, [setState, stateRef])
+
   const signInFromGate = useCallback(async (email: string, password: string) => {
     setAuthGateError(null)
     try {
       await pbShared.collection('users').authWithPassword(email, password)
       setAuthGateOpen(false)
+      landOnHubUnlessResumable()
     } catch (e) {
       const raw = authErrorMessage(e, 'Sign in failed')
       const msg = /^failed to authenticate\.?$/i.test(raw)
@@ -545,7 +559,7 @@ export function useAuthSync({
       setAuthGateError(msg)
       throw new Error(msg)
     }
-  }, [])
+  }, [landOnHubUnlessResumable])
 
   const createAccountFromGate = useCallback(async (email: string, password: string) => {
     setAuthGateError(null)
@@ -617,12 +631,13 @@ export function useAuthSync({
       setAuthGateOtpId(null)
       authGateDismissed.current = true
       setAuthGateOpen(false)
+      landOnHubUnlessResumable()
     } catch (e) {
       const msg = authErrorMessage(e, 'Incorrect or expired code — try again')
       setAuthGateError(msg)
       throw new Error(msg)
     }
-  }, [authGateOtpId, createAccountFromGate])
+  }, [authGateOtpId, createAccountFromGate, landOnHubUnlessResumable])
 
   const resetGame = useCallback(async (defaultState: GameState) => {
     beforeReset()
