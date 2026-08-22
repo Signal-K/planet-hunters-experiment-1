@@ -1,12 +1,18 @@
 /**
  * Hub screen building scene — pure PixiJS scene logic, no React lifecycle.
  *
- * Art reworked 2026-07-26 against the Open Design mockup
- * `landnam-earth-base-v2.html`. Rendering rules from that spec:
- *   - flat color fills, volume via 2–3 discrete facets, never gradient-as-texture
- *   - bold silhouettes with hard-edged 1–1.4px outline strokes
- *   - no amber anywhere on this screen; accents are cyan + mint only
- *   - glows are the only permitted softness
+ * Rebuilt 2026-08-21 (KES-226), scrapping the KES-220 mountain/treeline/
+ * soil-strata terrain the same day — that composition didn't fit the new
+ * orbit-ring backdrop (`HubWorldBackground.tsx`) and its own recolor read
+ * as "the same screen with new colors." The ring is now the dominant
+ * visual; this file draws only what buildings need to stand on: a small
+ * dark ground plane and plateau nested at the ring's base, no mountains,
+ * treeline, or site-dressing clutter.
+ *
+ * Rendering rules unchanged: flat color fills, volume via 2–3 discrete
+ * facets, hard-edged outline strokes, glows are the only permitted
+ * softness — Out There: Ω Edition's dark palette, cyan primary accent,
+ * pink for the ring/highlight.
  *
  * Each structure also gets a dirt mound collar and pad glow drawn beneath it,
  * so the feet break the ground plane instead of sitting on top of it. Those
@@ -26,41 +32,27 @@ export const HUB_H = 874
 // agreement with HubWorldBackground's layout and the DOM plot positions.
 export const GROUND_Y = HUB_H * (1 - 0.22)
 
-// ─── Palette — mockup's flat-shaded structure colors ─────────────────────────
+// ─── Palette — flat-shaded structure colors, Out There: Ω Edition anchor ─────
 const C = {
-  hull:     0x324a6c,  // lit face
-  hullDark: 0x2a3e5c,  // shaded face
-  base:     0x22334e,  // pad / foundation
-  foot:     0x3a4a66,  // outrigger feet, lightest facet
-  outline:  0x1c2c44,  // hard-edge stroke
-  cyan:     0x6cd4ff,  // window strips, trim
-  mint:     0x2fbf6a,  // status lights
-  moundLit: 0x33501f,  // dirt collar, lit crown
-  moundDim: 0x1c2f14,  // dirt collar, sunken edge
-  grassRim: 0x8cc85a,  // lit grass lip on the mound
+  hull:     0xdce6f0,  // lit face — pale blue-white metal (Out There hull tone)
+  hullDark: 0xb7c8db,  // shaded face
+  base:     0x9fb3c9,  // pad / foundation
+  foot:     0xc7d5e3,  // outrigger feet, lightest facet
+  outline:  0x1c2438,  // hard-edge stroke — thick dark ink (Crashlands linework)
+  cyan:     0x70d9ea,  // window strips, trim, pad glow
+  mint:     0x5ad07e,  // status lights
+  pink:     0xe35fa0,  // ring-matched highlight, used sparingly
+  moundLit: 0x2a3550,  // dirt collar, lit crown — dark blue-grey, not soil
+  moundDim: 0x141c30,  // dirt collar, sunken edge
+  grassRim: 0x70d9ea,  // cyan rim-light on the mound (no grass in this scene)
 } as const
 
-// ─── Terrain palette ─────────────────────────────────────────────────────────
-// Each band carries a lit tone and a shade tone. The shade is painted onto the
-// lee (descending) flank of every crest as a hard-edged facet — that is what
-// gives the ranges volume without gradients, grain or noise, per the design
-// language's chunky cel-shaded direction.
+// ─── Ground palette — small, dark, sits inside the ring's hole ───────────────
 const T = {
-  ridge: [
-    { lit: 0x7d99b2, shade: 0x66839d },
-    { lit: 0x638098, shade: 0x506d85 },
-    { lit: 0x4c6a76, shade: 0x3c5a67 },
-    { lit: 0x3f6050, shade: 0x315043 },
-    { lit: 0x2f4a38, shade: 0x243c2d },
-  ],
-  tree: [0x294a2a, 0x1d3a22, 0x142b19],
-  groundLit: 0x23421f,
-  groundMid: 0x1a3620,
-  groundDark: 0x0d2015,
-  soilLit: 0x4a3318,
-  soilMid: 0x3a2810,
-  soilDeep: 0x241606,
-  stone: 0x1b1008,
+  groundLit: 0x0d1830,
+  groundMid: 0x081120,
+  deckLit:   0x121f3c,
+  deckWall:  0x070c18,
 } as const
 
 type Sine = readonly [number, number, number]
@@ -79,147 +71,40 @@ function heightField(steps: number, sines: readonly Sine[], floor = 0): number[]
 }
 
 /**
- * One mountain range: flat silhouette, then a hard shade facet on every
- * descending span. No stroke — the tonal step between neighbouring bands is
- * what separates them, the same way the mockup's flat shapes read.
- */
-function drawRidge(g: Graphics, w: number, baseY: number, height: number, sines: readonly Sine[], band: { lit: number; shade: number }) {
-  const STEPS = 168
-  const h = heightField(STEPS, sines)
-  const yAt = (i: number) => baseY - h[i] * height
-
-  g.moveTo(0, baseY)
-  for (let i = 0; i <= STEPS; i++) g.lineTo((i / STEPS) * w, yAt(i))
-  g.lineTo(w, baseY)
-  g.closePath()
-  g.fill(band.lit)
-
-  for (let i = 0; i < STEPS; i++) {
-    if (h[i + 1] >= h[i]) continue
-    const x0 = (i / STEPS) * w
-    const x1 = ((i + 1) / STEPS) * w
-    g.moveTo(x0, yAt(i))
-    g.lineTo(x1, yAt(i + 1))
-    g.lineTo(x1, baseY)
-    g.lineTo(x0, baseY)
-    g.closePath()
-  }
-  g.fill({ color: band.shade, alpha: 0.5 })
-}
-
-/** A conifer row — same generator weighted to high frequencies for a spiky edge. */
-function drawTreeRow(g: Graphics, w: number, baseY: number, height: number, seed: number, color: number) {
-  const STEPS = 300
-  const h = heightField(STEPS, [
-    [0.42, 5.5, seed + 0.30], [0.24, 12.5, seed + 1.10], [0.16, 24, seed + 0.75],
-    [0.10, 40, seed + 1.90], [0.05, 65, seed + 0.50], [0.03, 100, seed + 2.30],
-  ], 0.10)
-
-  g.moveTo(0, baseY)
-  for (let i = 0; i <= STEPS; i++) g.lineTo((i / STEPS) * w, baseY - h[i] * height)
-  g.lineTo(w, baseY)
-  g.closePath()
-  g.fill(color)
-}
-
-/**
- * Terrain layer: ranges, treeline, faceted ground plane and the soil strata
- * beneath it. Drawn in renderer pixels (not the 402-wide authoring space), so
- * it fills desktop widths instead of being squeezed into the left edge.
- *
- * Lives in PixiJS rather than the DOM background so the ground and the
- * structures standing on it are shaded by one system — the DOM layer keeps
- * only what Pixi is bad at: the sky gradient, starfield and horizon haze.
+ * Ground layer: a small dark plane and plateau nested at the bottom of the
+ * orbit ring (`HubWorldBackground.tsx`), for buildings to stand on. No
+ * mountains, treeline, or soil strata — the ring is the scene's visual
+ * weight now, not the terrain.
  */
 function buildTerrain(w: number, h: number, groundY: number): Container {
   const root = new Container()
 
-  const far = new Graphics()
-  drawRidge(far, w, groundY - h * 0.055, h * 0.20, [[0.30, 1.1, 0.20], [0.28, 2.3, 0.80], [0.22, 3.8, 1.50], [0.12, 5.9, 0.40], [0.08, 8.2, 1.20]], T.ridge[0])
-  drawRidge(far, w, groundY - h * 0.045, h * 0.17, [[0.35, 1.6, 0.60], [0.28, 3.2, 1.30], [0.20, 5.5, 0.20], [0.12, 8.0, 1.90], [0.05, 12.0, 0.80]], T.ridge[1])
-  drawRidge(far, w, groundY - h * 0.035, h * 0.14, [[0.40, 2.2, 1.10], [0.27, 4.1, 0.50], [0.18, 7.0, 1.70], [0.10, 10.5, 0.30], [0.05, 15.0, 2.10]], T.ridge[2])
-  root.addChild(far)
-
-  const near = new Graphics()
-  drawRidge(near, w, groundY - h * 0.020, h * 0.115, [[0.44, 2.8, 0.40], [0.28, 5.2, 1.80], [0.16, 8.6, 0.60], [0.08, 13.0, 2.40], [0.04, 19.0, 0.90]], T.ridge[3])
-  drawRidge(near, w, groundY - h * 0.008, h * 0.085, [[0.46, 3.5, 1.60], [0.26, 6.8, 0.20], [0.16, 11.0, 1.40], [0.08, 16.5, 0.80], [0.04, 24.0, 1.10]], T.ridge[4])
-  root.addChild(near)
-
-  const trees = new Graphics()
-  drawTreeRow(trees, w, groundY + 1, h * 0.055, 0.0, T.tree[0])
-  drawTreeRow(trees, w, groundY + 1, h * 0.040, 1.3, T.tree[1])
-  drawTreeRow(trees, w, groundY + 1, h * 0.027, 2.7, T.tree[2])
-  root.addChild(trees)
-
-  // ── Ground plane — chunky facets rather than a flat fill ────────────────
+  // ── Ground plane — a simple dark fill, blends into the ring's hole ──────
   const ground = new Graphics()
-  const FACETS = 9
-  const crest = heightField(FACETS, [[1, 1.4, 0.6], [0.5, 3.1, 1.9]])
-  const topAt = (i: number) => groundY - crest[i] * h * 0.045
-
-  ground.moveTo(0, topAt(0))
-  for (let i = 1; i <= FACETS; i++) ground.lineTo((i / FACETS) * w, topAt(i))
-  ground.lineTo(w, h)
-  ground.lineTo(0, h)
-  ground.closePath()
-  ground.fill(T.groundLit)
-
-  // Alternate facet tone panel-by-panel so the plane reads as folded ground.
-  for (let i = 0; i < FACETS; i += 2) {
-    ground.moveTo((i / FACETS) * w, topAt(i))
-    ground.lineTo(((i + 1) / FACETS) * w, topAt(i + 1))
-    ground.lineTo(((i + 1) / FACETS) * w, h)
-    ground.lineTo((i / FACETS) * w, h)
-    ground.closePath()
+  ground.rect(0, groundY, w, h - groundY).fill(T.groundLit)
+  // A single subtle facet band for a touch of volume, not a full ridge system.
+  const crest = heightField(9, [[1, 1.4, 0.6], [0.5, 3.1, 1.9]])
+  for (let i = 0; i < 9; i += 2) {
+    const x0 = (i / 9) * w
+    const x1 = ((i + 1) / 9) * w
+    const topOffset = crest[i] * h * 0.012
+    ground.rect(x0, groundY + topOffset, x1 - x0, h - groundY - topOffset).fill({ color: T.groundMid, alpha: 0.6 })
   }
-  ground.fill({ color: T.groundMid, alpha: 0.75 })
   root.addChild(ground)
 
-  // ── Soil strata under the turf — banded, with embedded stone facets ─────
-  const soilTop = groundY + h * 0.075
-  const soil = new Graphics()
-  soil.rect(0, soilTop, w, h - soilTop).fill(T.soilMid)
-  soil.rect(0, soilTop, w, h * 0.018).fill(T.soilLit)
-  soil.rect(0, soilTop + h * 0.075, w, h - soilTop - h * 0.075).fill(T.soilDeep)
-
-  // Angular stones — deterministic placement, faceted triangles not blobs.
-  const stones = heightField(22, [[1, 2.7, 0.4], [0.6, 6.3, 1.7]])
-  for (let i = 0; i < stones.length; i++) {
-    const sx = ((i + 0.5) / stones.length) * w
-    const sy = soilTop + h * 0.012 + stones[i] * h * 0.085
-    const sw = 5 + stones[i] * 11
-    soil.moveTo(sx - sw, sy)
-    soil.lineTo(sx, sy - sw * 0.62)
-    soil.lineTo(sx + sw, sy)
-    soil.closePath()
-  }
-  soil.fill({ color: T.stone, alpha: 0.55 })
-  root.addChild(soil)
-
   // ── Plateau — the raised pad the structures stand on ────────────────────
-  // Drawn as a side-on plinth, NOT a top-down octagon.
-  //
-  // Everything else in this scene is an elevation: the ranges recede up the
-  // screen, the trees stand on a ground line, the soil is a cut section. The
-  // plateau used to be a full-height octagon — a plan view — pasted into that
-  // elevation, so the base read as a floor plan lying on its back in front of
-  // mountains, and it painted over the soil strata it was supposed to sit on.
-  //
-  // The fix keeps the octagon's chamfered silhouette but squashes it to a
-  // shallow deck: a thin top face seen at a glancing angle, a lit front wall
-  // below it, and chamfered ends. Same footprint, one projection.
+  // A shallow chamfered deck, seen at a glancing angle: thin top face, lit
+  // front wall below it. Same geometry as before, recolored dark with a
+  // cyan kerb light instead of a grass lip.
   const padW = Math.min(w * 0.74, 900)
   const padX = (w - padW) / 2
-  // The deck sits just below the turf line so structures stand *on* it rather
-  // than floating above the ground plane.
   const deckY = groundY + h * 0.030
-  const deckFaceH = h * 0.055          // visible height of the front wall
-  const deckTopH = h * 0.016           // foreshortened top surface
+  const deckFaceH = h * 0.055
+  const deckTopH = h * 0.016
   const chamfer = padW * 0.06
 
   const pad = new Graphics()
 
-  // Top surface — a shallow hexagon, the octagon seen almost edge-on.
   pad.moveTo(padX + chamfer, deckY - deckTopH)
   pad.lineTo(padX + padW - chamfer, deckY - deckTopH)
   pad.lineTo(padX + padW, deckY)
@@ -227,9 +112,8 @@ function buildTerrain(w: number, h: number, groundY: number): Container {
   pad.lineTo(padX + chamfer * 0.6, deckY + deckTopH * 0.5)
   pad.lineTo(padX, deckY)
   pad.closePath()
-  pad.fill(T.groundLit)
+  pad.fill(T.deckLit)
 
-  // Front wall — the retaining face, in shade, so the deck has thickness.
   const faceTop = deckY + deckTopH * 0.5
   pad.moveTo(padX, deckY)
   pad.lineTo(padX + chamfer * 0.6, faceTop)
@@ -238,145 +122,30 @@ function buildTerrain(w: number, h: number, groundY: number): Container {
   pad.lineTo(padX + padW - chamfer * 0.35, deckY + deckFaceH)
   pad.lineTo(padX + chamfer * 0.35, deckY + deckFaceH)
   pad.closePath()
-  pad.fill(0x1c331c)
+  pad.fill(T.deckWall)
 
-  // A single lit lip along the deck edge reads as a kerb and separates the
-  // top surface from the wall without an outline.
+  // Cyan kerb light along the deck edge — the scene's one grounded accent,
+  // echoing the ring above rather than a grass lip.
   pad.rect(padX + chamfer * 0.6, faceTop - 2, padW - chamfer * 1.2, 2.5)
-  pad.fill({ color: 0x6b9b63, alpha: 0.45 })
+  pad.fill({ color: C.cyan, alpha: 0.4 })
   root.addChild(pad)
 
-  // Kept for the site-infrastructure block below, which positions the apron,
-  // road and lights relative to the pad.
-  const padH = deckFaceH + deckTopH
   const padTop = deckY - deckTopH
   const padBottom = deckY + deckFaceH
 
-  // ── Site infrastructure — connect the buildings into one working base ──
-  // The platform is intentionally not a showroom plinth. A narrow service
-  // apron, access road and landing lights give the structures a shared scale
-  // and make the hub read as an occupied field site.
-  const site = new Graphics()
-  const padMidY = padTop + padH * 0.54
-  const roadTop = padBottom - padH * 0.11
-  // Stop the central service road at the lower edge of the build platform.
-  // Extending it to the renderer bottom makes the road paint over the soil
-  // cross-section as a large green wedge, especially on the wide staging view.
-  const roadBottom = padBottom - 3
-  const roadHalfTop = padW * 0.14
-  const roadHalfBottom = Math.min(w * 0.22, 250)
-
-  site.moveTo(w / 2 - roadHalfTop, roadTop)
-  site.lineTo(w / 2 + roadHalfTop, roadTop)
-  site.lineTo(w / 2 + roadHalfBottom, roadBottom)
-  site.lineTo(w / 2 - roadHalfBottom, roadBottom)
-  site.closePath()
-  site.fill({ color: 0x13261b, alpha: 0.94 })
-  site.stroke({ color: 0x6b9b63, width: 2, alpha: 0.28 })
-
-  // A darker loop lane sits across the platform behind the buildings.
-  site.moveTo(padX + padW * 0.08, padMidY - 10)
-  site.lineTo(padX + padW * 0.92, padMidY - 10)
-  site.lineTo(padX + padW * 0.92, padMidY + 12)
-  site.lineTo(padX + padW * 0.08, padMidY + 12)
-  site.closePath()
-  site.fill({ color: 0x102018, alpha: 0.88 })
-  site.stroke({ color: 0x6b9b63, width: 1.5, alpha: 0.24 })
-
-  // Break the lane into practical hard-surface plates.
-  for (let i = 1; i < 8; i++) {
-    const x = padX + padW * (0.08 + i * 0.12)
-    site.moveTo(x, padMidY - 10)
-    site.lineTo(x, padMidY + 12)
+  // ── A handful of landing lights along the pad edge — sparse, not a full
+  // service-site diorama. Small points of life, nothing more. ─────────────
+  const lights = new Graphics()
+  for (let i = 0; i < 6; i++) {
+    const x = padX + padW * (0.08 + i * 0.168)
+    lights.circle(x, padTop + 3, 1.6).fill({ color: C.cyan, alpha: 0.7 })
+    lights.circle(x, padBottom - 3, 1.6).fill({ color: C.pink, alpha: 0.55 })
   }
-  site.stroke({ color: 0x6b9b63, width: 1, alpha: 0.14 })
-
-  // Low perimeter lamps: small, evenly-spaced points of life at this scale.
-  for (let i = 0; i < 9; i++) {
-    const x = padX + padW * (0.10 + i * 0.10)
-    site.rect(x - 1.5, padTop + padH * 0.08, 3, 8).fill(0x203a2a)
-    site.circle(x, padTop + padH * 0.065, 2.2).fill({ color: 0x9becff, alpha: 0.75 })
-    site.rect(x - 1.5, padBottom - padH * 0.08, 3, 8).fill(0x203a2a)
-    site.circle(x, padBottom - padH * 0.065, 2.2).fill({ color: 0x2fbf6a, alpha: 0.6 })
-  }
-
-  // Utility trench and tank bank on the right edge of the compound. These
-  // are deliberately quieter than the named buildings, but give the base a
-  // believable service backline and a stronger silhouette at desktop width.
-  const utilityX = padX + padW * 0.88
-  site.rect(utilityX - 28, padTop + padH * 0.18, 48, 5).fill(0x13261b)
-  site.rect(utilityX - 18, padTop + padH * 0.12, 10, 34).fill(0x203a2a).stroke({ color: 0x1c2c44, width: 1 })
-  site.rect(utilityX + 2, padTop + padH * 0.09, 10, 40).fill(0x294a2a).stroke({ color: 0x1c2c44, width: 1 })
-  site.circle(utilityX - 13, padTop + padH * 0.14, 2).fill(0x2fbf6a)
-  site.circle(utilityX + 7, padTop + padH * 0.11, 2).fill(0x6cd4ff)
-
-  // Building aprons: each room gets a short hard-surface spur into the loop
-  // lane. These are intentionally offset from the central road so the site
-  // reads as a place vehicles can actually service, not four icons arranged on
-  // a decorative platform.
-  const apronXs = [0.15, 0.383, 0.617, 0.85]
-  for (const fraction of apronXs) {
-    const x = padX + padW * fraction
-    site.moveTo(x - 11, padMidY - 12)
-    site.lineTo(x + 11, padMidY - 12)
-    site.lineTo(x + 15, padTop + padH * 0.25)
-    site.lineTo(x - 15, padTop + padH * 0.25)
-    site.closePath()
-    site.fill({ color: 0x1a2f20, alpha: 0.86 })
-    site.stroke({ color: 0x6b9b63, width: 1, alpha: 0.2 })
-    site.moveTo(x - 8, padTop + padH * 0.27)
-    site.lineTo(x + 8, padTop + padH * 0.27)
-  }
-  site.stroke({ color: 0x9ebf78, width: 1, alpha: 0.18 })
-
-  // Solar field at the quiet left edge. The repeated cells and support legs
-  // give the compound a believable utility footprint at desktop widths.
-  const solarX = padX + padW * 0.10
-  const solarY = padTop + padH * 0.28
-  for (let i = 0; i < 3; i++) {
-    const x = solarX + i * 18
-    site.poly([x - 7, solarY + 11, x + 7, solarY + 7, x + 7, solarY + 15, x - 7, solarY + 19])
-      .fill(0x214566)
-      .stroke({ color: 0x6cd4ff, width: 1, alpha: 0.5 })
-    site.moveTo(x, solarY + 15).lineTo(x, solarY + 25).stroke({ color: 0x6b9b63, width: 1, alpha: 0.6 })
-  }
-  site.moveTo(solarX - 10, solarY + 25).lineTo(solarX + 42, solarY + 25)
-    .stroke({ color: 0x6b9b63, width: 1, alpha: 0.45 })
-
-  // A small parked service rover and cargo pallet make the scale legible.
-  // They are drawn behind the labels/buildings but in front of the road, like
-  // scene dressing in a miniature working field station.
-  const roverX = padX + padW * 0.72
-  const roverY = padBottom - padH * 0.055
-  site.roundRect(roverX - 13, roverY - 12, 26, 9, 2).fill(0x304a5d).stroke({ color: 0x1c2c44, width: 1 })
-  site.rect(roverX - 8, roverY - 17, 16, 6).fill(0x3c6074).stroke({ color: 0x1c2c44, width: 1 })
-  site.circle(roverX - 9, roverY - 2, 4).fill(0x101b25).stroke({ color: 0x6b9b63, width: 1 })
-  site.circle(roverX + 9, roverY - 2, 4).fill(0x101b25).stroke({ color: 0x6b9b63, width: 1 })
-  site.rect(roverX - 4, roverY - 15, 8, 2).fill({ color: 0x9becff, alpha: 0.8 })
-
-  const palletX = padX + padW * 0.78
-  const palletY = padBottom - padH * 0.055
-  site.rect(palletX, palletY - 12, 16, 9).fill(0x6b4a2c).stroke({ color: 0x241a10, width: 1 })
-  site.rect(palletX + 3, palletY - 16, 10, 4).fill(0x8d693e).stroke({ color: 0x241a10, width: 1 })
-  site.moveTo(palletX + 2, palletY - 3).lineTo(palletX + 14, palletY - 3).stroke({ color: 0xc99852, width: 1, alpha: 0.6 })
-
-  // Foreground geology: a sparse scatter of angular rocks ties the platform
-  // back into the soil strata and avoids the clean “floating diorama” edge.
-  const rocks: [number, number, number][] = [
-    [0.07, 0.87, 10], [0.19, 0.94, 6], [0.31, 0.90, 8],
-    [0.68, 0.94, 7], [0.87, 0.88, 11], [0.95, 0.96, 6],
-  ]
-  for (const [xFraction, yFraction, size] of rocks) {
-    const x = w * xFraction
-    const y = groundY + (h - groundY) * yFraction
-    site.poly([x - size, y, x - size * 0.25, y - size * 0.7, x + size, y - size * 0.25, x + size * 0.6, y + size * 0.35])
-      .fill(0x271a0b)
-      .stroke({ color: 0x5b3d1c, width: 1, alpha: 0.55 })
-  }
-  root.addChild(site)
+  root.addChild(lights)
 
   return root
 }
+
 
 // Natural art width in scene units, per kind — the container is scaled so the
 // silhouette fills the caller's requested `w`.

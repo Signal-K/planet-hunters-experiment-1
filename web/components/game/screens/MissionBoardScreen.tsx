@@ -16,7 +16,6 @@ import MissionDetailPanel from '@/components/game/MissionDetailPanel'
 import ClientBonusGuideSheet from '@/components/game/ClientBonusGuideSheet'
 import ClientDossierSheet from '@/components/game/ClientDossierSheet'
 import StepFooter from '@/components/game/StepFooter'
-import MissionBoardSection from '@/components/game/MissionBoardSection'
 import MissionBoardCompleteState from '@/components/game/MissionBoardCompleteState'
 import IconBadge from '@/components/ui/IconBadge'
 import SegmentedBar from '@/components/ui/SegmentedBar'
@@ -552,13 +551,12 @@ const FUTURE_MISSION_TYPES = [
 
 function ComingSoonMissionsSection() {
   return (
-    <MissionBoardSection title="Future Operations">
+    <details className={styles.collapsibleSection} data-testid="future-operations-section">
+      <summary>Future Operations <StatusPill kind="mute">Coming Soon</StatusPill></summary>
+      <div className={styles.collapsibleBody}>
         {FUTURE_MISSION_TYPES.map(type => (
           <Panel key={type.id} accent="var(--ln-text-muted)" style={{ padding: 12, opacity: 0.6, cursor: 'not-allowed' }}>
-            <div
-              aria-disabled="true"
-              style={{ display: 'flex', alignItems: 'center', gap: 10 }}
-            >
+            <div aria-disabled="true" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
               <IconBadge icon={type.icon} tone="mute" size={30} />
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
@@ -573,7 +571,8 @@ function ComingSoonMissionsSection() {
             </div>
           </Panel>
         ))}
-    </MissionBoardSection>
+      </div>
+    </details>
   )
 }
 
@@ -599,7 +598,9 @@ function AffinityAdvancedSection({
   if (advancedClients.length === 0) return null
 
   return (
-    <MissionBoardSection title="Advanced Ops · Affinity Unlock">
+    <details className={styles.collapsibleSection} data-testid="advanced-affinity-section">
+      <summary>Advanced Ops · Affinity Unlock <StatusPill kind="mute">{advancedClients.length} clients</StatusPill></summary>
+      <div className={styles.collapsibleBody}>
         {advancedClients.map(client => {
           const done = clientMissions?.[client.id] ?? 0
           const unlocked = done >= CLIENT_AFFINITY_MISSION_THRESHOLD
@@ -637,6 +638,7 @@ function AffinityAdvancedSection({
             </Panel>
           )
         })}
-    </MissionBoardSection>
+      </div>
+    </details>
   )
 }

@@ -133,10 +133,10 @@ export function Building({ kind, label, sub, status, w, style, onClick, badge, c
               data-testid={`building-${kind}-badge`}
               style={{
                 position: 'absolute', top: -4, right: -4, minWidth: 16, height: 16, padding: '0 4px',
-                borderRadius: 999, background: 'var(--hub-mint)', border: '2px solid #060b16',
+                borderRadius: 999, background: 'var(--hub-mint)', border: '2px solid #1c2438',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontFamily: 'var(--ln-font-display)', fontWeight: 800, fontSize: 9, color: '#04140a',
-                boxShadow: '0 0 10px rgba(47,191,106,0.55)',
+                fontFamily: 'var(--ln-font-display)', fontWeight: 800, fontSize: 9, color: '#f4f9f4',
+                boxShadow: '0 0 10px rgba(31,143,87,0.45)',
               }}
             >
               {badge > 9 ? '9+' : badge}
@@ -151,7 +151,7 @@ export function Building({ kind, label, sub, status, w, style, onClick, badge, c
           border: '1.5px solid var(--hub-outline)',
           borderRadius: 999, padding: '4px 10px', whiteSpace: 'nowrap',
         }}>
-          <span style={{ fontFamily: 'var(--ln-font-display)', fontWeight: 800, fontSize: 9, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.92)' }}>
+          <span style={{ fontFamily: 'var(--ln-font-display)', fontWeight: 800, fontSize: 9, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'rgba(15,36,54,0.9)' }}>
             {label}
           </span>
           <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
@@ -175,11 +175,11 @@ export function Building({ kind, label, sub, status, w, style, onClick, badge, c
             style={{
               position: 'absolute', top: -4, right: 2, zIndex: 4,
               width: 22, height: 22, borderRadius: '50%',
-              background: seen ? 'rgba(255,255,255,0.25)' : 'var(--hub-mint)',
-              border: '2px solid #060b16',
+              background: seen ? 'rgba(15,36,54,0.14)' : 'var(--hub-mint)',
+              border: '2px solid #1c2438',
               display: 'grid', placeItems: 'center', cursor: 'pointer',
-              color: seen ? 'rgba(255,255,255,0.8)' : '#04140a',
-              boxShadow: seen ? 'none' : '0 0 12px rgba(47,191,106,0.55)',
+              color: seen ? 'rgba(15,36,54,0.7)' : '#f4f9f4',
+              boxShadow: seen ? 'none' : '0 0 12px rgba(31,143,87,0.45)',
               animation: seen ? 'none' : 'hub-notify-pulse 1.8s ease-in-out infinite',
               padding: 0,
             }}
@@ -198,7 +198,7 @@ export function Building({ kind, label, sub, status, w, style, onClick, badge, c
               transformOrigin: `bottom ${tailLeft}px`,
               width: CALLOUT_W, zIndex: 22,
               background: 'var(--hub-panel)',
-              border: '1.5px solid rgba(255,255,255,0.6)',
+              border: '1.5px solid rgba(15,36,54,0.28)',
               borderRadius: 12, padding: '10px 12px 12px',
               boxShadow: '0 20px 44px rgba(0,0,0,0.5)',
               opacity: calloutOpen ? 1 : 0,
@@ -208,7 +208,7 @@ export function Building({ kind, label, sub, status, w, style, onClick, badge, c
             }}
           >
             <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 6 }}>
-              <span style={{ fontFamily: 'var(--ln-font-display)', fontWeight: 800, fontSize: 11, letterSpacing: '0.06em', color: '#fff' }}>
+              <span style={{ fontFamily: 'var(--ln-font-display)', fontWeight: 800, fontSize: 11, letterSpacing: '0.06em', color: '#0f2436' }}>
                 {callout.title}
               </span>
               <button
@@ -217,14 +217,14 @@ export function Building({ kind, label, sub, status, w, style, onClick, badge, c
                 onClick={e => { e.stopPropagation(); setCalloutOpen(false) }}
                 style={{
                   flexShrink: 0, width: 16, height: 16, borderRadius: '50%', border: 'none', cursor: 'pointer',
-                  background: 'rgba(255,255,255,0.12)', color: 'rgba(255,255,255,0.7)',
+                  background: 'rgba(15,36,54,0.10)', color: 'rgba(15,36,54,0.7)',
                   fontSize: 10, lineHeight: 1, display: 'grid', placeItems: 'center', padding: 0,
                 }}
               >
                 ×
               </button>
             </div>
-            <div style={{ fontSize: 11, lineHeight: 1.45, color: 'rgba(255,255,255,0.68)', marginTop: 4 }}>
+            <div style={{ fontSize: 11, lineHeight: 1.45, color: 'rgba(15,36,54,0.68)', marginTop: 4 }}>
               {callout.body}
             </div>
             <button
@@ -244,7 +244,7 @@ export function Building({ kind, label, sub, status, w, style, onClick, badge, c
               position: 'absolute', left: tailLeft, top: '100%', transform: 'translateX(-50%)',
               width: 0, height: 0,
               borderLeft: '8px solid transparent', borderRight: '8px solid transparent',
-              borderTop: '9px solid rgba(255,255,255,0.6)',
+              borderTop: '9px solid rgba(15,36,54,0.28)',
             }} />
             <span style={{
               position: 'absolute', left: tailLeft, top: 'calc(100% - 1.5px)', transform: 'translateX(-50%)',
@@ -282,7 +282,7 @@ export function EmptyPlot({ w = 90, style, onClick, plot }: { w?: number; style?
         </div>
       </div>
       <div style={{
-        background: 'var(--hub-panel-deep)', border: '1px solid rgba(255,255,255,0.3)', borderRadius: 999,
+        background: 'var(--hub-panel-deep)', border: '1px solid rgba(15,36,54,0.3)', borderRadius: 999,
         padding: '3px 9px', fontFamily: 'var(--ln-font-display)', fontWeight: 800, fontSize: 8,
         letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--hub-cyan)', whiteSpace: 'nowrap',
       }}>

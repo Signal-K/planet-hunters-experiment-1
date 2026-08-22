@@ -346,7 +346,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
 
   const launchTransitSatellite = useCallback(() => {
     setState(s => {
-      if (!s.player.freeOperations || !s.player.satelliteMonitoringBuilt || s.player.transitSatelliteLaunchedAt) return s
+      if (!s.player.freeOperations || s.player.transitSatelliteLaunchedAt) return s
       return {
         ...s,
         player: {

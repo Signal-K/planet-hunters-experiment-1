@@ -76,7 +76,15 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
         return
       }
     }
-    setState(loadState(STORAGE_KEY))
+    const loadedState = loadState(STORAGE_KEY)
+    // `/game` resolves returning players to Earth Base before this provider
+    // hydrates. Keep that entry decision authoritative; otherwise hydration
+    // restores the previous Contracts screen and the URL-sync effect pushes
+    // the player straight back to `/game/missions` (KES-226).
+    const entryState = window.location.pathname === '/game/hub'
+      ? { ...loadedState, screen: 'hub' as Screen }
+      : loadedState
+    setState(entryState)
     setHydrated(true)
     const record = pbShared.authStore.record
     if (record?.id) identifyUser(record.id, record.email ? { email: record.email } : undefined)

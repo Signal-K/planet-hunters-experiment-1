@@ -1567,62 +1567,6 @@ button { cursor: pointer; }
   }
 }
 
-.portrait-required-overlay {
-  display: none;
-}
-
-/* Compact landscape is deliberately out of the supported play surface until
-   the full mission flow can fit without shrinking controls or hiding required
-   actions behind scroll containers. Desktop landscape remains supported. */
-@media (orientation: landscape) and (max-width: 1023px) and (max-height: 600px) {
-  .portrait-required-overlay {
-    position: fixed;
-    inset: 0;
-    z-index: 1000;
-    display: grid;
-    place-items: center;
-    padding: 24px;
-    background: #0a0a0c;
-    color: var(--ln-text);
-  }
-
-  .portrait-required-card {
-    width: min(440px, 100%);
-    padding: 28px 24px;
-    border: 1px solid var(--ln-cyan-border);
-    border-radius: var(--ln-r-xl);
-    background: linear-gradient(145deg, rgba(37,37,42,.98), rgba(10,10,12,.98));
-    box-shadow: 0 0 32px rgba(112,217,234,.16);
-    text-align: center;
-  }
-
-  .portrait-required-icon {
-    width: 56px;
-    height: 56px;
-    margin: 0 auto 16px;
-    display: grid;
-    place-items: center;
-    border: 1px solid var(--ln-amber-border);
-    border-radius: 50%;
-    color: var(--ln-amber-bright);
-    font: 700 32px/1 var(--ln-font-display);
-  }
-
-  .portrait-required-card h1 {
-    margin: 6px 0 10px;
-    font: 700 26px/1.1 var(--ln-font-display);
-    letter-spacing: .04em;
-    text-transform: uppercase;
-  }
-
-  .portrait-required-card p:last-child {
-    max-width: 34em;
-    margin: 0 auto;
-    color: var(--ln-text-muted);
-    font: 400 14px/1.5 var(--ln-font-body);
-  }
-}
-
 @keyframes coach-bob { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-2px); } }
 @keyframes coach-spot {
   0%,100% { box-shadow: 0 0 0 9999px rgba(8,8,10,0.5), 0 0 0 0 rgba(245,166,35,0); }
@@ -1691,33 +1635,43 @@ html[data-coach-target="build-structure-strip"] [data-coach-id="build-structure-
 @keyframes pad-pulse { 0%,100% { transform: scale(1); opacity: 0.85; } 50% { transform: scale(1.05); opacity: 1; } }
 
 /* ── Earth Base scene (Open Design "landnam-earth-base-v2") ──────────────
-   Ported 2026-07-26 from open-design/.od/projects/a531c672-.../
-   landnam-earth-base-v2.html. Replaces the old procedural sine-ridge +
-   amber-horizon world with the flat-shaded deep-blue scene: layered ridge
-   parallax, octagonal plateau, dirt-mound structure collars, drifting
-   motes, and white-outline black chrome. No amber anywhere on this screen —
-   accents are cyan (--ln-cyan) and mint (--hub-mint) only. */
+   Ported 2026-07-26. Rebuilt 2026-08-21 (KES-220) into a light daylight
+   scene, then SCRAPPED AND REBUILT AGAIN same day (KES-226) — the light
+   recolor read as "the same screen with new colors," not a redesign.
+   This version is a structural rebuild: a circular orbit-ring diorama
+   (dominant visual, replacing the horizon+mountains composition) framed
+   after tapnine.com's "Black Hole" (com.tapnine.blackhole) reference
+   screenshots — pink/cyan gradient ring, dark hole center, buildings
+   nested at the ring's base, docked bottom sheet instead of a floating
+   pill rail. Color returns to Out There: Ω Edition's actual dark palette
+   (near-black navy, pale blue-grey linework, cyan primary accent) plus
+   the reference's signature pink as a second accent for the ring glow
+   and interactive/singularity highlights — this is NOT the KES-211/220
+   light "blueprint" treatment; Hub is its own dark diorama, not a paper
+   surface. Terrain/structure colors live in lib/pixi/hubScene.ts (Pixi
+   Graphics can't read CSS custom properties) — these tokens cover what
+   stays DOM/CSS: the ring, skyline silhouette, and HUD/sheet chrome. */
 :root {
-  /* Scene-local accents. Mint is the mockup's --ln-ok (#2fbf6a); kept as a
-     hub-scoped token rather than overriding the global --ln-ok, which other
-     screens already tune against. */
-  --hub-mint:       #2fbf6a;
-  --hub-cyan:       #6cd4ff;
-  --hub-outline:    rgba(255, 255, 255, 0.55);
-  --hub-panel:      #080d18;
-  --hub-panel-deep: #0a0f1a;
-  /* Keep Earth Base visibly atmospheric at the top edge; the prior nearly
-     black band read as an unfinished empty canvas before terrain painted. */
-  --hub-sky-space:  #132847;
-  --hub-sky-upper:  #1d426d;
-  --hub-sky-mid:    #28628e;
-  --hub-sky-haze:   #4e91b8;
-  --hub-sky-horizon:#8ec5d7;
-  --hub-fallback-ridge: #315043;
-  --hub-fallback-ground: #1a3620;
-  --hub-fallback-deck: #1c331c;
-  --hub-fallback-deck-shadow: #13261b;
-  --hub-fallback-deck-edge: rgba(140, 200, 90, 0.5);
+  /* Scene-local accents. Kept as hub-scoped tokens rather than overriding
+     the global --ln-cyan/--ln-ok, which other screens already tune against. */
+  --hub-mint:       #5ad07e;
+  --hub-cyan:       #70d9ea;
+  --hub-pink:       #e35fa0;
+  --hub-pink-soft:  rgba(227, 95, 160, 0.16);
+  --hub-outline:    rgba(177, 198, 229, 0.4);
+  --hub-panel:      #04101f;
+  --hub-panel-deep: #020a16;
+  /* Backdrop beyond the ring: near-black navy, not a sky gradient — the
+     ring itself is the light source now, not a horizon. */
+  --hub-void:       #00040a;
+  --hub-bg:         #000d1f;
+  --hub-skyline:    #0a1626;
+  /* Orbit ring — thick gradient stroke, pink at the top arc blending to
+     cyan/blue at the bottom, dark hole center. */
+  --hub-ring-hole:  #05070d;
+  --hub-ring-mid:   #142a52;
+  --hub-ring-cyan:  #70d9ea;
+  --hub-ring-pink:  #e35fa0;
   /* Ground contact line — 22% from the bottom. MUST stay in agreement with
      hubScene.ts (groundY = containerH * 0.78) and the DOM plot positions in
      HubScreen/BuildPlaceScreen, which all derive from the same 22%. */

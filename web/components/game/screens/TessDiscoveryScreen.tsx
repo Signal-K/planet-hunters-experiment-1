@@ -82,7 +82,7 @@ export default function TessDiscoveryScreen({ player, visualCandidate, onBack, o
       setLoading(false)
       return
     }
-    if (!player.freeOperations || !player.satelliteMonitoringBuilt || !player.transitSatelliteLaunchedAt) {
+    if (!player.freeOperations || !player.transitSatelliteLaunchedAt) {
       setLoading(false)
       return
     }
@@ -152,20 +152,6 @@ export default function TessDiscoveryScreen({ player, visualCandidate, onBack, o
         title="Free Operations Required"
         body="TESS candidate downlinks unlock after the starter contract arc."
         onBack={onBack}
-      />
-    )
-  }
-
-  if (!player.satelliteMonitoringBuilt) {
-    return (
-      <GateScreen
-        eyebrow="EARTH BASE / SMS REQUIRED"
-        icon={<Satellite size={22} />}
-        tone="cyan"
-        title="Build Satellite Monitoring Station"
-        body="Place the Earth-base SMS before launching a transit telescope."
-        onBack={onBack}
-        action={<PrimaryBtn testId="build-sms-btn" onClick={onBuildStation}>Build SMS</PrimaryBtn>}
       />
     )
   }

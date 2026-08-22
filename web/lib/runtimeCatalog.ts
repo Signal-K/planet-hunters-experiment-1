@@ -77,7 +77,7 @@ export function buildRuntimeCatalog({
   player,
 }: RuntimeCatalogOpts): Catalog {
   const discoveredTargetList = Object.values(discoveredTargets)
-  const shouldOfferTransitTelescopeMission = freeOperations && !!satelliteMonitoringBuilt && !transitSatelliteLaunchedAt
+  const shouldOfferTransitTelescopeMission = freeOperations && !transitSatelliteLaunchedAt
   const hasActiveTransitTelescopeMission = missionId === TRANSIT_TELESCOPE_MISSION_ID || targetId === TRANSIT_TELESCOPE_TARGET_ID
   const shouldIncludeTransitTelescopeMission = shouldOfferTransitTelescopeMission || hasActiveTransitTelescopeMission
   const shouldOfferDeepSpaceTelescopeMission = freeOperations

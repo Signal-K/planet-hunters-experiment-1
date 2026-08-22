@@ -35,31 +35,36 @@ function MineralGlyph({ shape, color }: { shape?: string; color: string }) {
 }
 
 /**
- * Resource readout — reworked 2026-07-26 to the `landnam-earth-base-v2.html`
- * chip: black tile, 1.5px white outline, bordered icon tile in the accent,
- * white Turret Road numerals.
+ * Resource readout — reworked 2026-08-21 (KES-220) from a single horizontal
+ * chip row into a persistent left-edge stacked rail, matching the "Space
+ * Clicker" reference's fixed vertical stat cards (KES-219). Each stat is its
+ * own full-width card rather than a wrapping row of pills, so it reads as a
+ * rail the player can glance down rather than a scattered corner HUD.
  *
- * The old amber-on-amber francs pill is gone deliberately. Amber is reserved
- * for genuine payout emphasis, and the Earth Base mockup carries no amber at
- * all — the chrome reads cyan/mint against the blue sky instead.
+ * Paper/ink card, pink accent border on the interactive (clickable) card —
+ * the `--ln-bp-pink` "active state" language from the blueprint theme,
+ * reused here even though Hub doesn't apply `.theme-blueprint` wholesale
+ * (its own `--hub-*` tokens are the light palette directly).
  */
-function Chip({ glyph, children, accent = 'var(--hub-cyan)', onClick, testId }: { glyph: React.ReactNode; children: React.ReactNode; accent?: string; onClick?: () => void; testId?: string }) {
+function RailCard({ glyph, children, accent = 'var(--hub-cyan)', onClick, testId }: { glyph: React.ReactNode; children: React.ReactNode; accent?: string; onClick?: () => void; testId?: string }) {
   const Tag = onClick ? 'button' : 'div'
   return (
     <Tag
       data-testid={testId}
       onClick={onClick}
       style={{
-        display: 'flex', alignItems: 'center', gap: 7,
-        background: 'rgba(10,10,12,0.72)',
-        border: '1.5px solid var(--hub-outline)',
-        borderRadius: 7, padding: '6px 10px 6px 6px',
+        display: 'flex', alignItems: 'center', gap: 8, width: '100%', boxSizing: 'border-box',
+        background: 'var(--hub-panel)',
+        border: `1.5px solid ${onClick ? 'var(--ln-bp-pink, #c94a86)' : 'var(--hub-outline)'}`,
+        borderRadius: 9, padding: '7px 10px 7px 7px',
         cursor: onClick ? 'pointer' : undefined,
+        textAlign: 'left',
+        boxShadow: '0 2px 8px rgba(15,36,54,0.10)',
       }}
     >
       <span style={{
-        width: 20, height: 20, borderRadius: 5, display: 'grid', placeItems: 'center',
-        background: 'rgba(10,10,12,0.6)', border: `1.5px solid ${accent}`, color: accent,
+        width: 22, height: 22, borderRadius: 6, display: 'grid', placeItems: 'center', flexShrink: 0,
+        background: 'rgba(15,36,54,0.06)', border: `1.5px solid ${accent}`, color: accent,
       }}>
         {glyph}
       </span>
@@ -70,37 +75,37 @@ function Chip({ glyph, children, accent = 'var(--hub-cyan)', onClick, testId }: 
 
 export default function HUDStrip({ player, showStash = false, onJobsClick }: HUDStripProps) {
   return (
-    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, alignItems: 'center', justifyContent: 'flex-end' }}>
-      <Chip glyph={<FrancGlyph />}>
-        <span style={{ fontFamily: 'var(--ln-font-mono)', fontWeight: 700, fontSize: 12, color: '#fff' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 6, alignItems: 'flex-start', width: 132 }}>
+      <RailCard glyph={<FrancGlyph />}>
+        <span style={{ fontFamily: 'var(--ln-font-mono)', fontWeight: 700, fontSize: 12, color: 'rgba(15,36,54,0.92)' }}>
           {formatCurrency(player.francs, { compact: true })}
         </span>
-      </Chip>
-      <Chip glyph={<JobsGlyph />} onClick={onJobsClick} testId="hud-jobs-chip">
-        <span style={{ fontFamily: 'var(--ln-font-display)', fontWeight: 800, fontSize: 9, letterSpacing: '0.14em', color: '#fff', textTransform: 'uppercase' }}>
+      </RailCard>
+      <RailCard glyph={<JobsGlyph />} onClick={onJobsClick} testId="hud-jobs-chip">
+        <span style={{ fontFamily: 'var(--ln-font-display)', fontWeight: 800, fontSize: 9, letterSpacing: '0.14em', color: 'rgba(15,36,54,0.92)', textTransform: 'uppercase' }}>
           {player.missionCount} Jobs
         </span>
-      </Chip>
+      </RailCard>
       {showStash && player.stash && Object.keys(player.stash).length > 0 && (
-        <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'flex-end', gap: 5, maxWidth: 220 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 5, width: '100%' }}>
           {Object.entries(player.stash).map(([kind, qty]) => {
             const meta = MINERAL_META[kind]
             if (!meta || !qty) return null
             return (
               <div key={kind} style={{
-                display: 'flex', alignItems: 'center', gap: 5,
-                padding: '3px 8px 3px 4px',
-                background: 'rgba(10,10,12,0.72)',
-                border: '1.5px solid rgba(255,255,255,0.35)',
-                borderRadius: 7,
+                display: 'flex', alignItems: 'center', gap: 6, width: '100%', boxSizing: 'border-box',
+                padding: '4px 8px 4px 5px',
+                background: 'var(--hub-panel)',
+                border: '1.5px solid var(--hub-outline)',
+                borderRadius: 8,
               }}>
                 <span style={{
-                  width: 16, height: 16, borderRadius: 4, display: 'grid', placeItems: 'center',
-                  background: 'rgba(10,10,12,0.6)', border: `1.5px solid ${meta.color}`, color: meta.color,
+                  width: 17, height: 17, borderRadius: 5, display: 'grid', placeItems: 'center', flexShrink: 0,
+                  background: 'rgba(15,36,54,0.06)', border: `1.5px solid ${meta.color}`, color: meta.color,
                 }}>
                   <MineralGlyph shape={meta.shape} color={meta.color} />
                 </span>
-                <span style={{ fontFamily: 'var(--ln-font-mono)', fontWeight: 700, fontSize: 10, color: '#fff' }}>
+                <span style={{ fontFamily: 'var(--ln-font-mono)', fontWeight: 700, fontSize: 10, color: 'rgba(15,36,54,0.92)' }}>
                   {qty}
                 </span>
               </div>

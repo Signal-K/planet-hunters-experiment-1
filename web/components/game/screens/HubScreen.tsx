@@ -94,19 +94,20 @@ function SceneBtn({ icon, label, onClick, active, accent, muted, pulse, testId }
 }) {
   const mint = 'var(--hub-mint)'
   const glyphColor = active || accent ? mint : 'var(--hub-cyan)'
-  const textColor = active || accent ? mint : muted ? 'rgba(255,255,255,0.7)' : '#fff'
+  const textColor = active || accent ? mint : muted ? 'rgba(15,36,54,0.6)' : 'rgba(15,36,54,0.92)'
   return (
     <button
       onClick={onClick}
       data-testid={testId}
       style={{
         display: 'flex', alignItems: 'center', gap: 6,
-        background: active ? 'rgba(47,191,106,0.2)' : 'var(--hub-panel)',
-        border: `1.5px solid ${active || accent ? mint : 'rgba(255,255,255,0.5)'}`,
+        background: active ? 'rgba(31,143,87,0.14)' : 'var(--hub-panel)',
+        border: `1.5px solid ${active || accent ? mint : 'rgba(15,36,54,0.3)'}`,
         borderRadius: 999, padding: '8px 14px 8px 8px', minHeight: 40,
         fontFamily: 'var(--ln-font-display)', fontWeight: 700, fontSize: 9,
         letterSpacing: '0.18em', textTransform: 'uppercase', color: textColor,
         cursor: 'pointer', transition: 'background 120ms, border-color 120ms',
+        boxShadow: '0 2px 8px rgba(15,36,54,0.14)',
         animation: pulse ? 'hub-pad-pulse 2s ease-in-out infinite' : 'none',
       }}
     >
@@ -115,6 +116,18 @@ function SceneBtn({ icon, label, onClick, active, accent, muted, pulse, testId }
     </button>
   )
 }
+
+// KES-220: the top HUD grew from a single-row bar into a stacked left-edge
+// rail (eyebrow/title + two HUDStrip cards), which now reaches to ~148px
+// from the screen top at the mobile viewport — well past the old
+// TUTORIAL_RAIL.TOP_CHROME_HEIGHT (68px) this offset was tuned against.
+// Without this, ProgressionCard's `top` left it starting at y=76, directly
+// under the new rail (bug reported 2026-08-21: "Your Program" card text
+// clipped behind the Francs/Jobs stack). Measured live at 390px width:
+// rail bottom ~148px; this adds headroom on top of the shared constant
+// rather than changing TUTORIAL_RAIL itself, which other screens still
+// tune the old single-row height against.
+const HUB_HUD_RAIL_CLEARANCE = 84
 
 // Instantiated from the build-plot prefab rather than written out by hand.
 // This same list previously existed in four places (both hub scene files and
@@ -426,14 +439,22 @@ export default function HubScreen({ player, rocketVariant = 'explorer', hasCoach
       </div>
       {/* ── End sliding world ── */}
 
-      {/* Top HUD — always fixed above the slide */}
+      {/* Top HUD — always fixed above the slide. Reworked 2026-08-21 (KES-220)
+          from a full-width dark scrim bar into a compact top-left cluster: a
+          light paper scrim (just enough to keep the title legible over a
+          bright sky) plus the persistent stacked HUD rail directly beneath
+          the title, per the Space Clicker layout reference (KES-219) — a
+          fixed left-edge rail rather than corner-scattered readouts.
+          Subsurface keeps its own dark scrim: HubSubsurfaceView underneath
+          it hasn't been converted to the light theme yet (out of scope for
+          this pass), so a light bar there would sit over dark UI. */}
       <div style={{
         position: 'absolute', top: 0, left: 0, right: 0, zIndex: 18,
         padding: '16px 14px 22px',
         background: subsurface
           ? 'linear-gradient(180deg, rgba(6,3,0,0.9) 0%, rgba(6,3,0,0.5) 60%, transparent 100%)'
-          : 'linear-gradient(180deg, rgba(10,10,12,0.82) 0%, rgba(10,10,12,0.4) 65%, transparent 100%)',
-        display: 'flex', alignItems: 'flex-start', gap: 10, pointerEvents: 'none',
+          : 'linear-gradient(180deg, rgba(255,255,255,0.85) 0%, rgba(255,255,255,0.35) 65%, transparent 100%)',
+        display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 10, pointerEvents: 'none',
         transition: 'background 0.55s',
       }}>
         <div style={{ pointerEvents: 'auto' }}>
@@ -441,17 +462,18 @@ export default function HubScreen({ player, rocketVariant = 'explorer', hasCoach
               ~120px wide) sits directly over this eyebrow, clipping the
               opening characters ("EARTH BASE" -> "H BASE"). Only reserve
               the clearance when that badge can actually render. */}
-          <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 9.5, fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.55)', marginLeft: isDevLauncherEnabled() ? 130 : 0 }}>
+          <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 9.5, fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase', color: subsurface ? 'rgba(255,255,255,0.55)' : 'rgba(15,36,54,0.55)', marginLeft: isDevLauncherEnabled() ? 130 : 0 }}>
             {subsurface ? 'EARTH BASE · SUBSURFACE' : `EARTH BASE · OPS ${player.missionsDone}`}
           </div>
-          <h1 style={{ margin: '2px 0 0', fontFamily: 'var(--ln-font-display)', fontSize: 23, fontWeight: 800, letterSpacing: '-0.01em', color: '#fff', lineHeight: 1, textShadow: '0 2px 10px rgba(0,0,0,0.6)' }}>
+          <h1 style={{ margin: '2px 0 0', fontFamily: 'var(--ln-font-display)', fontSize: 23, fontWeight: 800, letterSpacing: '-0.01em', color: subsurface ? '#fff' : '#0f2436', lineHeight: 1, textShadow: subsurface ? '0 2px 10px rgba(0,0,0,0.6)' : 'none' }}>
             {subsurface ? 'Subsurface' : 'Earth Base'}
           </h1>
         </div>
-        <span style={{ flex: 1 }} />
-        <div style={{ pointerEvents: 'auto', minWidth: 0, maxWidth: '100%' }}>
-          <HUDStrip player={player} onJobsClick={() => onNav('missions')} />
-        </div>
+        {!subsurface && (
+          <div style={{ pointerEvents: 'auto' }}>
+            <HUDStrip player={player} onJobsClick={() => onNav('missions')} />
+          </div>
+        )}
       </div>
 
       {/* Progression card — hidden when tutorial coach is active */}
@@ -461,7 +483,7 @@ export default function HubScreen({ player, rocketVariant = 'explorer', hasCoach
             player={player}
             onGoBuilding={onGoBuilding}
             onNav={onNav}
-            top={hasCoach ? TUTORIAL_CONTENT_TOP : TUTORIAL_RAIL.TOP_CHROME_HEIGHT + 8}
+            top={hasCoach ? TUTORIAL_CONTENT_TOP : TUTORIAL_RAIL.TOP_CHROME_HEIGHT + 8 + HUB_HUD_RAIL_CLEARANCE}
           />
         </>
       )}

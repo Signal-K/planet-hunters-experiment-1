@@ -26,9 +26,6 @@ function LaunchpadGlyph() {
 function SkillGlyph() {
   return <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M12 2l2.5 7.5H22l-6 4.6 2.3 7.4L12 17l-6.3 4.5 2.3-7.4-6-4.6h7.5z" /></svg>
 }
-function SmsGlyph() {
-  return <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M4 15l8-8 8 8M8 11v9M16 11v9" /></svg>
-}
 function TelescopeGlyph() {
   return <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" /></svg>
 }
@@ -61,7 +58,7 @@ function CardButton({ accent, icon, eyebrow, title, cta, onClick, testId }: {
         background: 'var(--hub-panel, #080d18)',
         border: '1.5px solid var(--hub-outline, rgba(255,255,255,0.55))',
         borderRadius: 12, padding: 10,
-        boxShadow: '0 20px 44px rgba(0,0,0,0.5)',
+        boxShadow: '0 12px 28px rgba(15,36,54,0.16)',
         display: 'flex', alignItems: 'center', gap: 10,
       }}
     >
@@ -72,11 +69,11 @@ function CardButton({ accent, icon, eyebrow, title, cta, onClick, testId }: {
         size={34}
         tone={toneForAccent(accent)}
         active
-        style={{ color: accent, borderColor: accent, borderWidth: 1.5, background: 'rgba(10,10,12,0.6)', boxShadow: 'none' }}
+        style={{ color: accent, borderColor: accent, borderWidth: 1.5, background: 'rgba(15,36,54,0.06)', boxShadow: 'none' }}
       />
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 9, fontWeight: 700, letterSpacing: '0.14em', color: accent, textTransform: 'uppercase' }}>{eyebrow}</div>
-        <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 13, fontWeight: 800, color: '#fff', lineHeight: 1.3 }}>{title}</div>
+        <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 13, fontWeight: 800, color: 'rgba(15,36,54,0.92)', lineHeight: 1.3 }}>{title}</div>
       </div>
       <span style={{
         minWidth: 0, flexShrink: 1,
@@ -141,20 +138,7 @@ export default function ProgressionCard({ player, onGoBuilding, onNav, top = 132
         />
       )
     }
-    if (!inOnboarding && !player.satelliteMonitoringBuilt) {
-      cards.push(
-        <CardButton
-          key="sms"
-          testId="progression-card-sms"
-          accent="var(--hub-cyan)"
-          icon={<SmsGlyph />}
-          eyebrow="New Facility"
-          title="Build a Satellite Monitoring Station"
-          cta="Build"
-          onClick={() => onGoBuilding('build')}
-        />
-      )
-    } else if (!inOnboarding && player.satelliteMonitoringBuilt && !player.transitSatelliteLaunchedAt) {
+    if (!inOnboarding && !player.transitSatelliteLaunchedAt) {
       cards.push(
         <CardButton
           key="telescope"
@@ -181,19 +165,23 @@ export default function ProgressionCard({ player, onGoBuilding, onNav, top = 132
         />
       )
     }
-    const justFinishedOnboarding = player.missionsDone === FREE_OPS_START_MISSIONS_DONE
-    cards.push(
-      <CardButton
-        key="next-mission"
-        testId="progression-card-next-mission"
-        accent="var(--hub-mint)"
-        icon={<ContractGlyph />}
-        eyebrow={justFinishedOnboarding ? 'Onboarding Complete' : 'Next Mission'}
-        title={justFinishedOnboarding ? 'Choose your first free contract' : 'New contract available'}
-        cta="Browse Contracts"
-        onClick={() => onNav('missions')}
-      />
-    )
+    // Once free operations is unlocked, the persistent Jobs rail is the
+    // single mission-board entry point. Repeating Browse Contracts here made
+    // the Hub present the same action twice beside the clickable Launchpad.
+    if (player.missionsDone === 0) {
+      cards.push(
+        <CardButton
+          key="next-mission"
+          testId="progression-card-next-mission"
+          accent="var(--hub-mint)"
+          icon={<ContractGlyph />}
+          eyebrow="Next Mission"
+          title="Choose a client contract"
+          cta="Browse Contracts"
+          onClick={() => onNav('missions')}
+        />
+      )
+    }
   }
 
   if (cards.length === 0) return null

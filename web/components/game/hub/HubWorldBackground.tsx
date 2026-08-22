@@ -3,92 +3,89 @@
 import React from 'react'
 
 /**
- * Earth Base sky — the atmospheric backdrop only.
+ * Earth Base backdrop — rebuilt 2026-08-21 (KES-226), scrapping the
+ * KES-220 light-daylight version same day. That version only recolored the
+ * existing horizon+mountains composition and read as "the same screen with
+ * new colors," not a redesign.
  *
- * Earth seen from the surface: deep-space navy at the top fading through true
- * atmosphere blue to a pale horizon, with a starfield in the upper band and a
- * haze shelf where the ranges meet the sky.
+ * This version replaces the composition itself: a large orbit ring (two
+ * concentric circles — a conic-gradient outer ring, a near-black inner
+ * "hole") is now the dominant visual, framed directly after tapnine.com's
+ * "Black Hole" (com.tapnine.blackhole) reference screenshots. The ring's
+ * bottom edge sits exactly on the ground contact line so PixiJS-rendered
+ * buildings (`lib/pixi/hubScene.ts`) plant into its base, the way the
+ * reference's facility sits at the foot of its ring. A dark skyline
+ * silhouette fills the gap on either side of the buildings, low against
+ * the void.
  *
- * Terrain used to live here as SVG. It now renders in PixiJS
- * (`lib/pixi/hubScene.ts` → `buildTerrain`) so the ground, the plateau and the
- * structures standing on them are shaded by one system, and so the ground can
- * carry real cel-shaded facets rather than flat clip-path silhouettes. This
- * file keeps only what Pixi is poor at: large soft gradients.
+ * Color reverts to Out There: Ω Edition's actual dark palette (near-black
+ * navy, pale blue-grey linework, cyan accent) plus the reference's
+ * signature pink as a second accent for the ring itself — this is a dark
+ * diorama, not the KES-211/220 light "blueprint" paper treatment.
  *
- * Layout contract: the ground line sits 22% from the bottom. hubScene.ts draws
- * terrain and building feet against it (`containerH * 0.78`) and
- * HubScreen/BuildPlaceScreen position DOM plot labels against it — changing it
- * means changing it in all three.
+ * Layout contract: the ring's bottom (= ground line) sits 22% from the
+ * bottom, unchanged from before. hubScene.ts draws building feet against
+ * `containerH * 0.78` and HubScreen/BuildPlaceScreen position DOM plot
+ * labels against the same line — changing it means changing it in all three.
  */
-
-// Plateau top surface sits ~3.4% above the scene floor; structure feet land
-// at 22%, i.e. 3.4% inset inside the plateau's top edge, so buildings read as
-// planted into the platform rather than balanced on its rim.
 export function HubWorldBackground() {
   return (
-    <div style={{ position: 'absolute', inset: 0, zIndex: 1, overflow: 'hidden' }}>
+    <div style={{ position: 'absolute', inset: 0, zIndex: 1, overflow: 'hidden', background: 'var(--hub-void)' }}>
 
-      {/* ── Sky — deep space to atmosphere ─────────────────────────────── */}
+      {/* ── Void — near-black navy beyond the ring ─────────────────────── */}
       <div style={{
         position: 'absolute', inset: 0,
-        background: 'linear-gradient(180deg, var(--hub-sky-space) 0%, var(--hub-sky-upper) 28%, var(--hub-sky-mid) 56%, var(--hub-sky-haze) 80%, var(--hub-sky-horizon) 100%)',
+        background: 'radial-gradient(120% 90% at 50% 34%, var(--hub-bg) 0%, var(--hub-void) 70%)',
       }} />
 
-      {/* ── Starfield — upper band only, slow twinkle ──────────────────── */}
+      {/* ── Orbit ring — the scene's dominant visual ───────────────────── */}
       <div
-        className="hub-stars"
+        data-testid="hub-orbit-ring"
+        aria-hidden="true"
         style={{
-          position: 'absolute', left: 0, right: 0, top: '-10%', height: '58%',
+          position: 'absolute', left: '50%', bottom: 'var(--hub-ground)',
+          width: '128%', aspectRatio: '1 / 1', transform: 'translate(-50%, 50%)',
+          borderRadius: '50%',
+          background: 'conic-gradient(from 200deg, var(--hub-ring-pink) 0deg, #cfe0f5 85deg, var(--hub-ring-cyan) 170deg, var(--hub-ring-mid) 255deg, var(--hub-ring-pink) 360deg)',
+          boxShadow: '0 0 120px 40px rgba(227,95,160,0.14), 0 0 200px 80px rgba(112,217,234,0.08)',
+        }}
+      >
+        {/* Inner hole — sized to leave a thick visible ring stroke */}
+        <div style={{
+          position: 'absolute', inset: '9%',
+          borderRadius: '50%',
+          background: 'var(--hub-ring-hole)',
+        }} />
+      </div>
+
+      {/* ── Starfield scattered around the ring, upper band only ───────── */}
+      <div
+        style={{
+          position: 'absolute', left: 0, right: 0, top: 0, height: '55%',
           pointerEvents: 'none',
           backgroundImage: [
-            'radial-gradient(1px 1px at 10% 20%, rgba(255,255,255,.55), transparent)',
-            'radial-gradient(1px 1px at 30% 45%, rgba(255,255,255,.4), transparent)',
-            'radial-gradient(1.5px 1.5px at 55% 15%, rgba(255,255,255,.5), transparent)',
-            'radial-gradient(1px 1px at 75% 35%, rgba(255,255,255,.36), transparent)',
-            'radial-gradient(1px 1px at 90% 10%, rgba(255,255,255,.44), transparent)',
-            'radial-gradient(1px 1px at 22% 62%, rgba(255,255,255,.28), transparent)',
-            'radial-gradient(1px 1px at 68% 58%, rgba(255,255,255,.24), transparent)',
+            'radial-gradient(1px 1px at 8% 18%, rgba(177,198,229,.6), transparent)',
+            'radial-gradient(1px 1px at 28% 8%, rgba(177,198,229,.45), transparent)',
+            'radial-gradient(1.5px 1.5px at 88% 14%, rgba(177,198,229,.55), transparent)',
+            'radial-gradient(1px 1px at 95% 40%, rgba(177,198,229,.4), transparent)',
+            'radial-gradient(1px 1px at 5% 45%, rgba(177,198,229,.35), transparent)',
+            'radial-gradient(1px 1px at 70% 6%, rgba(177,198,229,.5), transparent)',
           ].join(','),
-          backgroundSize: '480px 320px',
-          animation: 'hub-twinkle 5s ease-in-out infinite alternate',
+          backgroundSize: '520px 340px',
         }}
       />
 
-      {/* ── Atmospheric haze sitting on the ridgeline ──────────────────── */}
-      <div style={{
-        position: 'absolute', left: 0, right: 0, bottom: '25%', height: '22%',
-        pointerEvents: 'none',
-        background: 'linear-gradient(180deg, transparent 0%, rgba(255,255,255,0.08) 60%, rgba(255,255,255,0.14) 100%)',
-      }} />
-
-      {/* Renderer-independent base silhouette. Pixi paints richer terrain and
-          structures above this when available, but a failed WebGL context must
-          never reduce Earth Base to an empty sky. Keep this deliberately small:
-          one ridge band, turf, and a service deck are enough to establish a
-          readable playable place while the canvas is unavailable. */}
+      {/* ── Skyline silhouette — sits below the ring, either side of the
+          real (Pixi-rendered) buildings, dark navy against the void ───── */}
       <div
-        data-testid="hub-terrain-fallback"
+        data-testid="hub-skyline-fallback"
         aria-hidden="true"
-        style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}
-      >
-        <div style={{
-          position: 'absolute', left: 0, right: 0, bottom: '21%', height: '20%',
-          background: 'var(--hub-fallback-ridge)',
-          clipPath: 'polygon(0 72%, 8% 48%, 17% 68%, 29% 30%, 39% 60%, 51% 36%, 62% 70%, 73% 28%, 85% 58%, 100% 38%, 100% 100%, 0 100%)',
-        }} />
-        <div style={{
-          position: 'absolute', left: 0, right: 0, bottom: 0, height: '24%',
-          background: 'var(--hub-fallback-ground)',
-          clipPath: 'polygon(0 18%, 12% 12%, 26% 18%, 39% 8%, 53% 16%, 66% 6%, 79% 15%, 91% 7%, 100% 13%, 100% 100%, 0 100%)',
-        }} />
-        <div style={{
-          position: 'absolute', left: '13%', right: '13%', bottom: '14%', height: '9%',
-          background: 'var(--hub-fallback-deck)',
-          borderTop: '2px solid var(--hub-fallback-deck-edge)',
-          borderRadius: '8% 8% 2px 2px / 30% 30% 2px 2px',
-          boxShadow: 'inset 0 -14px 0 var(--hub-fallback-deck-shadow)',
-        }} />
-      </div>
+        style={{
+          position: 'absolute', left: 0, right: 0, bottom: 0, height: '19%',
+          background: 'var(--hub-skyline)',
+          clipPath: 'polygon(0 55%, 6% 55%, 6% 30%, 13% 30%, 13% 45%, 20% 45%, 20% 15%, 27% 15%, 27% 40%, 35% 40%, 35% 20%, 42% 20%, 42% 50%, 58% 50%, 58% 22%, 65% 22%, 65% 42%, 73% 42%, 73% 18%, 80% 18%, 80% 48%, 87% 48%, 87% 28%, 94% 28%, 94% 52%, 100% 52%, 100% 100%, 0 100%)',
+        }}
+      />
 
     </div>
   )

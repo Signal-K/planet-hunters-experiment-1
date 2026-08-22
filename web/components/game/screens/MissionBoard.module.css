@@ -94,6 +94,42 @@
   border-top: 1px solid var(--ln-hairline);
 }
 
+.collapsibleSection {
+  margin: 10px 14px 0;
+  border: 1px solid var(--ln-bp-line-strong);
+  background: var(--ln-bp-paper);
+}
+.collapsibleSection summary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 0 12px;
+  cursor: pointer;
+  list-style: none;
+  font-family: var(--ln-font-display);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  color: var(--ln-bp-ink);
+}
+.collapsibleSection summary::-webkit-details-marker { display: none; }
+.collapsibleSection summary::before {
+  content: '+';
+  color: var(--ln-bp-blue);
+  font-size: 16px;
+  line-height: 1;
+}
+.collapsibleSection[open] summary::before { content: '−'; }
+.collapsibleSection summary > :last-child { margin-left: auto; }
+.collapsibleBody {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 0 12px 12px;
+}
+
 .card {
   display: grid;
   grid-template-columns: 44px minmax(0, 1fr) auto;
@@ -109,6 +145,13 @@
   text-align: left;
   width: 100%;
   overflow: visible;
+}
+.card > button {
+  border: 0;
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  font: inherit;
 }
 .card:hover { background: rgba(112,217,234,.06); border-color: rgba(112,217,234,.28); }
 .cardSelected {
@@ -279,6 +322,9 @@
   .coachCompact .primer {
     display: none;
   }
+  .primer {
+    display: none;
+  }
   .coachCompact .canvas {
     padding: 12px;
   }
@@ -294,6 +340,12 @@
   }
   .coachCompact .cardSide {
     gap: 4px;
+  }
+}
+
+@media (max-width: 820px) {
+  .mission-board-screen-content {
+    padding-bottom: 128px !important;
   }
 }
 
@@ -676,4 +728,45 @@
 :global(.theme-blueprint) .detailCta:disabled {
   background: var(--ln-bp-paper-2);
   color: var(--ln-text-muted);
+}
+
+/* Keep this compact-landscape override after the desktop blueprint rules so
+   the 821px two-column declaration cannot reintroduce the detail panel. */
+@media (orientation: landscape) and (max-width: 1023px) and (max-height: 600px) {
+  .mission-board-screen-content {
+    padding-top: 58px !important;
+    padding-bottom: 52px !important;
+    scroll-padding-top: 58px !important;
+  }
+  .layout { display: block; }
+  .panel { display: none; }
+  .canvas { padding: 10px 14px 8px; }
+  .boardHeader { margin-bottom: 8px; }
+  .boardHeaderSub,
+  .sortSelect,
+  .cardWants,
+  .cardRoute,
+  .cardTags,
+  .disclaimer,
+  .primer { display: none; }
+  .cardList { gap: 8px; }
+  .card {
+    grid-template-columns: 36px minmax(0, 1fr) auto;
+    gap: 10px;
+    padding: 9px 12px;
+  }
+  .mark { width: 36px; height: 36px; font-size: 11px; }
+  .cardClient { margin-top: 2px; }
+  .cardSide { gap: 4px; }
+  .cardPay { font-size: 13px; }
+  .cardBtn { padding: 6px 10px; font-size: 9px; }
+  .step-footer--strip {
+    gap: 3px !important;
+    padding: 4px 8px 6px !important;
+  }
+  :global(.step-footer--strip) :global(.step-footer-caption) { font-size: 8px; }
+  :global(.step-footer--strip) :global(.step-footer-pills) { gap: 3px; }
+  :global(.step-footer--strip) :global(.step-footer-arrow) { font-size: 9px; }
+  :global(.step-footer--strip) :global(.step-footer-pill) { padding: 3px 7px; font-size: 9px; }
+  :global(.step-footer--strip) :global(.step-footer-desc) { display: none; }
 }

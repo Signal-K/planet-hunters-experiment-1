@@ -21,18 +21,18 @@ export default function ConfirmActionSheet({ eyebrow, title, description, confir
     <Sheet
       onDismiss={onDismiss}
       panelStyle={{
-        background: 'linear-gradient(180deg, #0d1c30, #060d18)',
-        border: '1px solid rgba(245,166,35,0.5)',
+        background: 'linear-gradient(180deg, var(--ln-panel), var(--ln-void))',
+        border: '1px solid var(--ln-cyan-border)',
         padding: '18px 16px 26px',
-        boxShadow: '0 -12px 40px rgba(0,0,0,0.6)',
+        boxShadow: '0 -12px 40px rgba(0,0,0,0.35)',
       }}
       handleContainerStyle={{ marginBottom: 10 }}
-      handleStyle={{ background: 'rgba(255,255,255,0.25)' }}
+      handleStyle={{ background: 'var(--ln-hairline-strong)' }}
     >
 
-        <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 9, fontWeight: 800, letterSpacing: '0.22em', color: 'var(--ln-amber)', textTransform: 'uppercase' }}>{eyebrow}</div>
-        <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 18, fontWeight: 800, color: '#e6efff', marginTop: 2 }}>{title}</div>
-        <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 12, color: '#a9b8ce', marginTop: 4, lineHeight: 1.4 }}>
+        <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 9, fontWeight: 800, letterSpacing: '0.22em', color: 'var(--ln-cyan)', textTransform: 'uppercase' }}>{eyebrow}</div>
+        <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 18, fontWeight: 800, color: 'var(--ln-text)', marginTop: 2 }}>{title}</div>
+        <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 12, color: 'var(--ln-text-dim)', marginTop: 4, lineHeight: 1.4 }}>
           {description}
         </div>
 
@@ -43,11 +43,11 @@ export default function ConfirmActionSheet({ eyebrow, title, description, confir
             data-testid="confirm-action-confirm"
             style={{
               width: '100%', padding: '15px', borderRadius: 12, border: 'none', cursor: 'pointer',
-              background: 'linear-gradient(180deg, #ffcf7a 0%, #f5a623 100%)',
-              color: '#06121f',
+              background: 'linear-gradient(180deg, var(--ln-cyan-bright), var(--ln-cyan))',
+              color: 'var(--ln-text-on-cyan)',
               fontFamily: 'var(--ln-font-display)', fontSize: 14, fontWeight: 800,
               letterSpacing: '0.12em', textTransform: 'uppercase',
-              boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.4), 0 4px 0 rgba(0,0,0,0.3)',
+              boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.4), 0 4px 0 rgba(0,0,0,0.15)',
             }}
           >
             {confirmLabel}
@@ -58,7 +58,7 @@ export default function ConfirmActionSheet({ eyebrow, title, description, confir
             data-testid="confirm-action-dismiss"
             style={{
               background: 'transparent', border: 'none', cursor: 'pointer',
-              fontFamily: 'var(--ln-font-body)', fontSize: 12, color: '#5d7390',
+              fontFamily: 'var(--ln-font-body)', fontSize: 12, color: 'var(--ln-text-muted)',
               textDecoration: 'underline', padding: 4,
             }}
           >

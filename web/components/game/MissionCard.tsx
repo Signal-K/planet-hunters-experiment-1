@@ -106,12 +106,19 @@ export default function MissionCard({
   ].filter(Boolean).join(' ')
 
   return (
-    <button
-      type="button"
-      disabled={!unlocked}
+    <div
       data-mission-id={mission.id}
       data-testid={`mission-card-${mission.id}`}
+      role="button"
+      tabIndex={unlocked ? 0 : -1}
+      aria-disabled={!unlocked}
       onClick={() => unlocked && onPick()}
+      onKeyDown={e => {
+        if (unlocked && (e.key === 'Enter' || e.key === ' ')) {
+          e.preventDefault()
+          onPick()
+        }
+      }}
       onMouseEnter={onPreview}
       onFocus={onPreview}
       className={cardClass}
@@ -122,16 +129,15 @@ export default function MissionCard({
         // A real <button> can't nest inside the card's own <button> (invalid
         // HTML, causes a hydration error) — same span+role pattern the CTA
         // below already uses for the same reason.
-        <span
-          role="button"
-          tabIndex={-1}
+        <button
+          type="button"
           data-testid={`mission-card-${mission.id}-client-mark`}
           aria-label={`${client.name} dossier`}
           onClick={e => { e.stopPropagation(); onOpenClientDossier(client) }}
           style={{ cursor: 'pointer', flexShrink: 0 }}
         >
           <ClientMark initial={client.initial} color={accent} uiRole={client.uiRole} clientId={client.id} size={44} />
-        </span>
+        </button>
       ) : (
         <ClientMark initial={client?.initial ?? 'OP'} color={accent} uiRole={client?.uiRole ?? 'starter'} clientId={client?.id} size={44} />
       )}
@@ -191,9 +197,8 @@ export default function MissionCard({
           </div>
         )}
         {isAvailable ? (
-          <span
-            role="button"
-            tabIndex={-1}
+          <button
+            type="button"
             data-testid={`mission-card-${mission.id}-cta`}
             onClick={e => { e.stopPropagation(); unlocked && onPick() }}
             className={styles.cardBtn}
@@ -201,13 +206,13 @@ export default function MissionCard({
             {targetCount === 0 && mission.programReward
               ? 'Open task ›'
               : `${targetCount} target${targetCount !== 1 ? 's' : ''} ›`}
-          </span>
+          </button>
         ) : (
           <span data-testid={`mission-card-${mission.id}-cta`} className={`${styles.cardBtn} ${styles.cardBtnDisabled}`}>
             {statusCta}
           </span>
         )}
       </div>
-    </button>
+    </div>
   )
 }
