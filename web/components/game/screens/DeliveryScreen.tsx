@@ -75,6 +75,8 @@ export default function DeliveryScreen({
 
   const handleDump = useCallback(() => {
     const moved = takeonRef.current?.deposit() ?? 0
+    // eslint-disable-next-line no-console
+    console.log('[DeliveryScreen] DUMP CARGO clicked, units moved:', moved)
     if (moved > 0) setDumped(true)
   }, [])
 

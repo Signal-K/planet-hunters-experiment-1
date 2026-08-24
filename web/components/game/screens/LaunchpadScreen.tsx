@@ -9,6 +9,9 @@ import type { Catalog } from '@/lib/catalog'
 import type { Player } from '@/lib/game-types'
 import { academyAffinityUnlocked } from '@/lib/systems/AcademySystem'
 import { UI_ZONES } from '@/lib/ui-zones'
+import { HubWorldBackground } from '@/components/game/hub/HubWorldBackground'
+import { LaunchpadStructure } from '@/components/game/hub/HubLaunchpadArt'
+import { useTimeOfDay } from '@/lib/hooks/useTimeOfDay'
 
 interface LaunchpadScreenProps {
   onBack: () => void
@@ -26,18 +29,6 @@ interface LaunchpadScreenProps {
 
 const LAUNCHPAD_GUIDE_KEY = 'landnam-launchpad-guide-v1'
 
-function SatelliteGlyph() {
-  return (
-    <svg viewBox="0 0 150 74" aria-hidden="true">
-      <g fill="none" stroke="currentColor" strokeWidth="3">
-        <rect x="57" y="20" width="36" height="34" rx="4" />
-        <path d="M63 20l8-11h8l8 11M75 54v12M66 66h18" />
-        <path d="M57 27H9v22h48M93 27h48v22H93M19 27v22M31 27v22M43 27v22M107 27v22M119 27v22M131 27v22" />
-      </g>
-    </svg>
-  )
-}
-
 function HangarGlyph() {
   return <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 21V8l3-4h10l3 4v13M4 9h16M8 21v-7h8v7" /></svg>
 }
@@ -54,6 +45,7 @@ export default function LaunchpadScreen({
   onBack, onPick, onViewContracts, onOpenHangar, missionsDone, freeOperations, catalog, player, rocketImageSrc = '/game/assets/ships/ship_sr1.png', selectedRocketName, francs,
 }: LaunchpadScreenProps) {
   const [guideStep, setGuideStep] = useState<number | null>(null)
+  const { phase: skyPhase } = useTimeOfDay()
   const fleet = ROCKET_MODELS.map(model => ({ model, unlocked: missionsDone >= model.missionsRequired && !model.locked }))
   const unlockedFleet = fleet.filter(item => item.unlocked)
   const launchedSatellites = player.transitSatelliteLaunchedAt ? SATELLITE_MODELS.length : 0
@@ -81,12 +73,6 @@ export default function LaunchpadScreen({
       body: 'Open the hangar to inspect unlocked rockets and fit upgrades.',
       target: 'rocket' as const,
     },
-    {
-      label: '03 · YOUR PROGRAM',
-      title: 'Choose what flies next',
-      body: 'Operations use your own assets. Contracts fund their expansion.',
-      target: 'satellite' as const,
-    },
   ] as const
   const guide = guideStep === null ? null : guideSteps[guideStep]
 
@@ -106,19 +92,25 @@ export default function LaunchpadScreen({
       <TopBar eyebrow="EARTH BASE · LAUNCHPAD" title="Your Program" onBack={onBack} solid francs={francs} />
 
       <main data-ui-zone={UI_ZONES.screenContent} className="launchpad-visual-scene">
-        <div className="launchpad-stars" />
-        <div className="launchpad-orbit-line" />
-
-        <div className={`launchpad-satellite ${isGuided('satellite') ? 'is-guided' : ''}`} data-testid="launchpad-satellite-orbit">
-          <SatelliteGlyph />
-          <div><strong>{launchedSatellites}/{SATELLITE_MODELS.length}</strong><span>ORBIT</span></div>
+        {/* Same Earth Base backdrop the Hub screen uses (KES-233) — this
+            screen previously hand-rolled its own separate navy/stars/green-
+            mountain gradient (`.launchpad-visual-scene`'s own background +
+            ::before/::after in launchpad-screen.css), which read as a
+            completely different place once KES-226/228 reworked the Hub's
+            own background repeatedly this sprint and this screen was never
+            updated to match. `.launchpad-scene-zoom` scales the shared
+            background up from a bottom-center origin — ground line stays
+            pinned to this screen's own `--hub-ground` (see
+            launchpad-screen.css), everything above it (mountains, skyline)
+            reads larger/closer, like the camera walked up to the pad instead
+            of the Hub's wide establishing-shot framing. */}
+        <div className="launchpad-scene-zoom">
+          <HubWorldBackground phase={skyPhase} />
         </div>
-
         <div className={`launchpad-scene-object launchpad-tower ${isGuided('tower') ? 'is-guided' : ''}`} data-testid="launchpad-status-card">
           <span className="launchpad-tower-art">
-            <img className="launchpad-tower-gantry" src="/game/assets/hub/pad_gantry_frame.png" alt="" />
-            <img className="launchpad-tower-rocket" src={rocketImageSrc} alt="" />
-            <img className="launchpad-tower-deck" src="/game/assets/hub/pad_deck.png" alt="" />
+            <LaunchpadStructure w={720} targetTopPx={360} dimmed={false} hot={!!player.pendingLaunch} />
+            {player.pendingLaunch && <img className="launchpad-tower-rocket" src={rocketImageSrc} alt="Rocket on launchpad" />}
           </span>
           <span className="launchpad-object-label launchpad-object-label--center">
             <small>LAUNCHPAD</small>
@@ -127,6 +119,7 @@ export default function LaunchpadScreen({
         </div>
 
         <button type="button" className={`launchpad-scene-object launchpad-rocket ${isGuided('rocket') ? 'is-guided' : ''}`} data-testid="launchpad-rocket-fleet" onClick={onOpenHangar}>
+          <img className="launchpad-hangar-art" src="/game/assets/hub/pad_hangar.png" alt="" />
           <span className="launchpad-rocket-art">
             <img src={rocketImageSrc} alt="" />
             <i className="launchpad-rocket-glow" />

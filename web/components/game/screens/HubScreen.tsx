@@ -348,7 +348,14 @@ export default function HubScreen({ player, rocketVariant = 'explorer', hasCoach
         sub: player.activeMission ? 'IN FLIGHT' : 'READY',
         status: (player.activeMission ? 'warn' : 'ok') as 'ok' | 'warn',
         hot: !!player.pendingLaunch,
-        w: 98,
+        // Widened from 98 (KES-233) — the hit-box/highlight container was
+        // narrower than the modular composite it wraps (HubLaunchpadArt),
+        // so the structure's own masts crowded right up against the box
+        // edges. This is the click-target/tutorial-spotlight box, not the
+        // rendered art's own footprint (HUB_STRUCTURE_ART.launchpad.width,
+        // below) — it can be wider than the art without any visual overlap
+        // risk against neighbouring plots.
+        w: 376,
         callout: launchpadCallout,
         onClick: () => onGoBuilding('launchpad'),
       }

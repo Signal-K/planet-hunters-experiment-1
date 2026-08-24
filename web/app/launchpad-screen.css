@@ -4,26 +4,24 @@
   position: absolute;
   inset: 72px 0 62px;
   overflow: hidden;
-  background: linear-gradient(180deg, #07101f 0%, #0d2745 47%, #214f68 70%, #162e26 70%, #0b1713 100%);
+  /* Background is HubWorldBackground now (KES-233, `.launchpad-scene-zoom`
+     below) — this screen no longer paints its own gradient/mountain here. */
+  background: var(--hub-void, #07101c);
 }
-.launchpad-visual-scene::before,
-.launchpad-visual-scene::after { content: ''; position: absolute; left: -5%; right: -5%; pointer-events: none; }
-.launchpad-visual-scene::before {
-  bottom: 26%; height: 34%; background: #183c3a; opacity: .78;
-  clip-path: polygon(0 80%, 8% 55%, 17% 74%, 27% 35%, 38% 72%, 48% 47%, 58% 76%, 69% 28%, 79% 68%, 89% 41%, 100% 74%, 100% 100%, 0 100%);
-}
-.launchpad-visual-scene::after {
-  bottom: 0; height: 28%; border-top: 1px solid rgba(112,217,234,.18);
-  background: linear-gradient(180deg, #10271e 0 36%, #301f0c 36% 100%);
-}
-.launchpad-stars {
-  position: absolute; inset: 0 0 28%; z-index: 1; opacity: .55;
-  background-image:
-    radial-gradient(circle at 9% 16%, #d9f5ff 0 1px, transparent 1.4px),
-    radial-gradient(circle at 29% 31%, #d9f5ff 0 1px, transparent 1.4px),
-    radial-gradient(circle at 47% 12%, #d9f5ff 0 1px, transparent 1.4px),
-    radial-gradient(circle at 69% 28%, #d9f5ff 0 1px, transparent 1.4px),
-    radial-gradient(circle at 88% 10%, #d9f5ff 0 1px, transparent 1.4px);
+/* Shares the Hub's own backdrop instead of a separately hand-rolled one
+   (KES-233) — scaled up from the bottom-center so the ground line stays
+   anchored where this screen's foreground objects expect it (see
+   `--hub-ground` below) while the mountains/skyline loom larger, reading as
+   a close-up of the pad rather than the Hub screen's wide establishing shot.
+   `--hub-ground` is scoped here the same way `.build-place-field` scopes it
+   in globals.css — this screen's foreground (tower/rocket/ground-line) was
+   authored against a 20%-from-bottom ground line, a different, pre-existing
+   convention from Hub's 22%. */
+.launchpad-scene-zoom {
+  position: absolute; inset: 0;
+  transform: scale(1.7);
+  transform-origin: 50% 100%;
+  --hub-ground: 20%;
 }
 .launchpad-orbit-line {
   position: absolute; z-index: 2; top: 4%; left: 13%; width: 74%; height: 40%;

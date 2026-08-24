@@ -24,8 +24,18 @@ export function initPostHog() {
     // friction instead of only reading a rating. Mask all text inputs by
     // default since survey free-text and auth fields render as ordinary
     // inputs — nothing player-typed should end up in a recording.
+    //
+    // KES-233: rrweb's continuous mutation observation + periodic snapshot
+    // flush (every ~9s, confirmed via network trace against the live preview)
+    // was running on 100% of sessions with no sampling, and kept the main
+    // thread busy enough that requestIdleCallback never got a clean window
+    // after a click — the actual cause of "panels take a second to
+    // register a click" on every screen, not just canvas-heavy ones.
+    // Sampling keeps replay coverage for triage while cutting that
+    // always-on background cost for the other 4 in 5 sessions.
     session_recording: {
       maskAllInputs: true,
+      sampleRate: 0.2,
     },
   })
   initialised = true

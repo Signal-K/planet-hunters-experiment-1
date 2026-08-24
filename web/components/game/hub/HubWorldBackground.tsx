@@ -40,66 +40,68 @@ function hillPath(points: [number, number][]): string {
 // local to each glyph's own x=0 anchor at the ground line (y=0), extending
 // upward (negative y), then translated into place by the caller. ─────────
 
+// Decorative skyline reads as flat haze silhouette only — no window-glow
+// accents at all. Earlier versions gave these dome/mast/dish/tank glyphs the
+// same lit-window treatment as HubStructureArt's real, clickable buildings,
+// which made the whole backdrop misread as a row of ungraded structures
+// (reported directly: "why are the buildings still grey" pointed at this
+// skyline, not the one real Launchpad in front of it). Flat single-tone
+// silhouette, tinted with the hill-far color so it sits visually *behind*
+// the terrain instead of competing with it.
 function DomeBuilding({ x, s = 1 }: { x: number; s?: number }) {
   return (
-    <g transform={`translate(${x}, 0) scale(${s})`}>
-      <rect x={-16} y={-38} width={32} height={38} style={{ fill: 'var(--hub-skyline)' }} />
-      <path d="M -16 -38 A 16 16 0 0 1 16 -38 Z" style={{ fill: 'var(--hub-skyline)' }} />
-      <rect x={-1.4} y={-58} width={2.8} height={20} style={{ fill: 'var(--hub-skyline)' }} />
-      <circle cx={0} cy={-59} r={2.2} style={{ fill: 'var(--hub-chalk)', opacity: 0.55 }} />
-      {/* Decorative-only skyline: window glow dialed back (KES-231) so this
-          non-interactive backdrop doesn't read as clickable next to the real,
-          brighter-lit foreground structures (HubStructureArt). */}
-      <rect x={-9} y={-22} width={6} height={8} style={{ fill: 'var(--hub-cyan)', opacity: 0.2 }} />
-      <rect x={3} y={-22} width={6} height={8} style={{ fill: 'var(--hub-cyan)', opacity: 0.14 }} />
+    <g transform={`translate(${x}, 0) scale(${s})`} style={{ fill: 'var(--hub-skyline-fade)' }}>
+      <rect x={-16} y={-38} width={32} height={38} />
+      <path d="M -16 -38 A 16 16 0 0 1 16 -38 Z" />
+      <rect x={-1.4} y={-58} width={2.8} height={20} />
     </g>
   )
 }
 
 function RadioTower({ x, s = 1 }: { x: number; s?: number }) {
   return (
-    <g transform={`translate(${x}, 0) scale(${s})`}>
-      <path d="M -3 0 L -8 -60 L 8 -60 L 3 0 Z" style={{ fill: 'var(--hub-skyline)' }} />
-      <path d="M -6.5 -18 L 6.5 -18 M -7.4 -36 L 7.4 -36 M -8 -48 L 8 -48" stroke="var(--hub-skyline)" strokeWidth={2.4} />
-      <circle cx={0} cy={-63} r={1.8} style={{ fill: 'var(--hub-cyan)' }} />
+    <g transform={`translate(${x}, 0) scale(${s})`} style={{ fill: 'var(--hub-skyline-fade)' }}>
+      <path d="M -3 0 L -8 -60 L 8 -60 L 3 0 Z" />
+      <path d="M -6.5 -18 L 6.5 -18 M -7.4 -36 L 7.4 -36 M -8 -48 L 8 -48" stroke="var(--hub-skyline-fade)" strokeWidth={2.4} />
     </g>
   )
 }
 
 function DishTower({ x, s = 1 }: { x: number; s?: number }) {
   return (
-    <g transform={`translate(${x}, 0) scale(${s})`}>
-      <path d="M -12 0 L -2 -34 L 2 -34 L 12 0 Z" style={{ fill: 'var(--hub-skyline)' }} />
-      <ellipse cx={4} cy={-42} rx={11} ry={6} transform="rotate(-18 4 -42)" style={{ fill: 'var(--hub-skyline)' }} />
-      <circle cx={4} cy={-42} r={1.6} style={{ fill: 'var(--hub-chalk)', opacity: 0.8 }} />
+    <g transform={`translate(${x}, 0) scale(${s})`} style={{ fill: 'var(--hub-skyline-fade)' }}>
+      <path d="M -12 0 L -2 -34 L 2 -34 L 12 0 Z" />
+      <ellipse cx={4} cy={-42} rx={11} ry={6} transform="rotate(-18 4 -42)" />
     </g>
   )
 }
 
 function TankSilo({ x, s = 1 }: { x: number; s?: number }) {
   return (
-    <g transform={`translate(${x}, 0) scale(${s})`}>
-      <rect x={-11} y={-30} width={22} height={30} rx={3} style={{ fill: 'var(--hub-skyline)' }} />
-      <rect x={-11} y={-14} width={22} height={2} style={{ fill: 'var(--hub-cyan)', opacity: 0.3 }} />
+    <g transform={`translate(${x}, 0) scale(${s})`} style={{ fill: 'var(--hub-skyline-fade)' }}>
+      <rect x={-11} y={-30} width={22} height={30} rx={3} />
     </g>
   )
 }
 
 function BoxBuilding({ x, h, s = 1 }: { x: number; h: number; s?: number }) {
-  const rows = Math.max(1, Math.floor((h - 8) / 11))
   return (
-    <g transform={`translate(${x}, 0) scale(${s})`}>
-      <rect x={-14} y={-h} width={28} height={h} style={{ fill: 'var(--hub-skyline)' }} />
-      {Array.from({ length: rows }, (_, row) => (
-        <rect
-          key={row}
-          x={-8}
-          y={-h + 8 + row * 11}
-          width={16}
-          height={5}
-          style={{ fill: 'var(--hub-cyan)', opacity: (row % 2 === 0) ? 0.16 : 0.09 }}
-        />
-      ))}
+    <g transform={`translate(${x}, 0) scale(${s})`} style={{ fill: 'var(--hub-skyline-fade)' }}>
+      <rect x={-14} y={-h} width={28} height={h} />
+    </g>
+  )
+}
+
+// Tree cluster silhouette — three overlapping conifer triangles on a trunk
+// stub, flat-shaded to match the hill polygons rather than a painted asset.
+// Sits on the nearest hill band, addressing "where's the trees" directly.
+function TreeCluster({ x, s = 1 }: { x: number; s?: number }) {
+  return (
+    <g transform={`translate(${x}, 0) scale(${s})`} style={{ fill: 'var(--hub-tree)' }}>
+      <path d="M -13 0 L -4 -22 L 2 -22 L -6 0 Z" opacity={0.85} />
+      <path d="M 0 0 L 9 -30 L 16 -30 L 6 0 Z" />
+      <path d="M 12 0 L 19 -16 L 24 -16 L 16 0 Z" opacity={0.85} />
+      <rect x={7.5} y={-8} width={2} height={8} style={{ fill: 'var(--hub-tree-trunk)' }} />
     </g>
   )
 }
@@ -160,18 +162,49 @@ function HubSkyline() {
   )
 }
 
-// Time-of-day sky palettes (KES-231) — the base sky stays the same deep-navy
-// command-deck tone at every phase (ops screens never go full daylight
-// blue), only the sky-top/mid warmth, horizon glow color, and star
-// visibility shift with the player's local clock. `night` matches the
-// original static values exactly, so the SSR-default phase renders
-// pixel-identical to the pre-KES-231 scene.
-const SKY_PALETTES: Record<TimeOfDayPhase, { skyTop: string; skyMid: string; horizonGlow: string; starOpacity: number }> = {
-  night: { skyTop: 'var(--hub-sky-top)', skyMid: 'var(--hub-sky-mid)', horizonGlow: 'var(--hub-horizon-glow)', starOpacity: 1 },
-  dawn: { skyTop: '#132242', skyMid: '#2c3d61', horizonGlow: 'rgba(255,164,110,0.34)', starOpacity: 0.35 },
-  day: { skyTop: '#1c3459', skyMid: '#40608c', horizonGlow: 'rgba(163,203,229,0.2)', starOpacity: 0 },
-  dusk: { skyTop: '#17204a', skyMid: '#3c2c52', horizonGlow: 'rgba(227,95,160,0.36)', starOpacity: 0.55 },
+// Time-of-day palettes — genuine day/night brightness range, not a hue
+// shift within one dark band. The player's own local clock should be
+// legible at a glance: midday reads as a real bright sky, not a slightly
+// lighter navy. (The "one dark palette" rule elsewhere in this codebase
+// governs UI chrome — HUD panels, sheets, `.theme-deep` — not this outdoor
+// scene art; conflating the two here was the bug.) Hills/skyline shift with
+// the sky so the whole scene reads as one lit environment, not a static
+// foreground pasted over a changing backdrop.
+const SKY_PALETTES: Record<TimeOfDayPhase, {
+  skyTop: string; skyMid: string; horizonGlow: string; starOpacity: number
+  hillFar: string; hillMid: string; hillNear: string; skylineFade: string
+  tree: string; treeTrunk: string; snowCap: number
+}> = {
+  night: {
+    skyTop: '#050d1f', skyMid: '#12213f', horizonGlow: 'rgba(227,95,160,0.22)', starOpacity: 1,
+    hillFar: '#16233f', hillMid: '#0f1b34', hillNear: '#0a1428', skylineFade: '#0d1a30',
+    tree: '#0c1a16', treeTrunk: '#1a1410', snowCap: 0.5,
+  },
+  dawn: {
+    skyTop: '#2a2f52', skyMid: '#7a6a86', horizonGlow: 'rgba(255,164,110,0.42)', starOpacity: 0.25,
+    hillFar: '#3a3a5c', hillMid: '#2a2c48', hillNear: '#1c2038', skylineFade: '#2a2a44',
+    tree: '#1e3324', treeTrunk: '#2a1f16', snowCap: 0.75,
+  },
+  day: {
+    skyTop: '#4f95d6', skyMid: '#bfe3f5', horizonGlow: 'rgba(255,244,214,0.5)', starOpacity: 0,
+    hillFar: '#7f9fb0', hillMid: '#4f7d6a', hillNear: '#2f5c46', skylineFade: '#8fa6b6',
+    tree: '#2c5a3a', treeTrunk: '#4a3420', snowCap: 1,
+  },
+  dusk: {
+    skyTop: '#2c2454', skyMid: '#8a4a68', horizonGlow: 'rgba(255,138,90,0.5)', starOpacity: 0.45,
+    hillFar: '#3c2f52', hillMid: '#2a2040', hillNear: '#1a1630', skylineFade: '#2e2648',
+    tree: '#1c2e22', treeTrunk: '#2a1c14', snowCap: 0.85,
+  },
 }
+
+// Pixel-unit x positions on the same 0–1200 baseline as SKYLINE_LAYOUT
+// (not percentages) so trees can share HubSkyline's viewBox/aspect-ratio
+// handling instead of stretching under "none".
+const TREE_CLUSTERS: { x: number; s?: number }[] = [
+  { x: 20, s: 0.9 }, { x: 160, s: 1.15 }, { x: 300, s: 0.75 }, { x: 420, s: 1.0 },
+  { x: 580, s: 0.65 }, { x: 700, s: 1.1 }, { x: 780, s: 0.8 }, { x: 940, s: 0.7 },
+  { x: 1060, s: 1.05 }, { x: 1160, s: 0.85 },
+]
 
 export function HubWorldBackground({ phase = 'night' }: { phase?: TimeOfDayPhase }) {
   const sky = SKY_PALETTES[phase]
@@ -214,63 +247,98 @@ export function HubWorldBackground({ phase = 'night' }: { phase?: TimeOfDayPhase
         }}
       />
 
-      {/* ── Parallax hill silhouettes, far to near — real terrain, not a
-          space object. Jagged ridgelines via clip-path, flat-color facets
-          matching the Crashlands/Out There linework the rest of the scene
-          uses. Each band sits a little lower/darker than the last. ──────── */}
-      <div
+      {/* ── Parallax mountains, far to near — jagged sharp peaks (not soft
+          rolling hills), snow-capped tips that brighten with the sky so the
+          range reads as real terrain lit by the same light source. Colors
+          shift per phase so midday actually looks like midday. ─────────── */}
+      {(() => {
+        const farPath = hillPath([
+          [0, 100], [0, 55], [9, 38], [18, 48], [27, 22], [36, 40],
+          [46, 18], [55, 44], [64, 28], [73, 46], [82, 20], [91, 42],
+          [100, 30], [100, 100],
+        ])
+        const midPath = hillPath([
+          [0, 100], [0, 62], [12, 32], [23, 52], [33, 24], [44, 46],
+          [56, 18], [67, 44], [78, 26], [89, 48], [100, 34], [100, 100],
+        ])
+        const nearPath = hillPath([
+          [0, 100], [0, 68], [15, 40], [30, 60], [48, 30], [63, 58],
+          [80, 36], [100, 56], [100, 100],
+        ])
+        return (
+          <>
+            <div
+              aria-hidden="true"
+              style={{
+                position: 'absolute', left: 0, right: 0, bottom: 'calc(var(--hub-ground) + 6%)', height: '30%',
+                background: sky.hillFar, clipPath: farPath, transition: 'background 1.2s ease',
+              }}
+            >
+              <div style={{
+                position: 'absolute', inset: 0, clipPath: farPath,
+                background: 'linear-gradient(180deg, rgba(255,255,255,0.9) 0%, transparent 10%)',
+                opacity: sky.snowCap * 0.6, transition: 'opacity 1.2s ease',
+              }} />
+            </div>
+            <div
+              aria-hidden="true"
+              style={{
+                position: 'absolute', left: 0, right: 0, bottom: 'calc(var(--hub-ground) + 2%)', height: '24%',
+                background: sky.hillMid, clipPath: midPath, transition: 'background 1.2s ease',
+              }}
+            >
+              <div style={{
+                position: 'absolute', inset: 0, clipPath: midPath,
+                background: 'linear-gradient(180deg, rgba(255,255,255,0.85) 0%, transparent 8%)',
+                opacity: sky.snowCap * 0.4, transition: 'opacity 1.2s ease',
+              }} />
+            </div>
+            <div
+              aria-hidden="true"
+              style={{
+                position: 'absolute', left: 0, right: 0, bottom: 'var(--hub-ground)', height: '16%',
+                background: sky.hillNear, clipPath: nearPath, transition: 'background 1.2s ease',
+              }}
+            >
+              {/* Rim-light tracing the nearest ridge crest — cyan at night
+                  (facility trim), warm sun-catch by day. */}
+              <div style={{
+                position: 'absolute', inset: 0,
+                background: phase === 'day' || phase === 'dawn'
+                  ? 'linear-gradient(180deg, rgba(255,244,214,0.4) 0%, transparent 14%)'
+                  : 'linear-gradient(180deg, rgba(112,217,234,0.28) 0%, transparent 14%)',
+                clipPath: nearPath, transition: 'background 1.2s ease',
+              }} />
+            </div>
+          </>
+        )
+      })()}
+
+      {/* ── Tree line — conifer clusters standing on the nearest ridge,
+          the terrain detail the flat hill polygons alone don't read as. ── */}
+      <svg
         aria-hidden="true"
+        viewBox="0 0 1200 60"
+        preserveAspectRatio="xMidYMax slice"
         style={{
-          position: 'absolute', left: 0, right: 0, bottom: 'calc(var(--hub-ground) + 6%)', height: '30%',
-          background: 'var(--hub-hill-far)',
-          clipPath: hillPath([
-            [0, 100], [0, 55], [9, 38], [18, 48], [27, 22], [36, 40],
-            [46, 18], [55, 44], [64, 28], [73, 46], [82, 20], [91, 42],
-            [100, 30], [100, 100],
-          ]),
-        }}
-      />
-      <div
-        aria-hidden="true"
-        style={{
-          position: 'absolute', left: 0, right: 0, bottom: 'calc(var(--hub-ground) + 2%)', height: '24%',
-          background: 'var(--hub-hill-mid)',
-          clipPath: hillPath([
-            [0, 100], [0, 62], [12, 32], [23, 52], [33, 24], [44, 46],
-            [56, 18], [67, 44], [78, 26], [89, 48], [100, 34], [100, 100],
-          ]),
-        }}
-      />
-      <div
-        aria-hidden="true"
-        style={{
-          position: 'absolute', left: 0, right: 0, bottom: 'var(--hub-ground)', height: '16%',
-          background: 'var(--hub-hill-near)',
-          clipPath: hillPath([
-            [0, 100], [0, 68], [15, 40], [30, 60], [48, 30], [63, 58],
-            [80, 36], [100, 56], [100, 100],
-          ]),
+          position: 'absolute', left: 0, right: 0, bottom: 'var(--hub-ground)', width: '100%', height: '18%',
+          ['--hub-tree' as string]: sky.tree, ['--hub-tree-trunk' as string]: sky.treeTrunk,
         }}
       >
-        {/* Cyan rim-light tracing the nearest ridge crest — the scene's one
-            grounded accent above the ground line, echoing the facility's
-            own trim rather than a giant light source. */}
-        <div style={{
-          position: 'absolute', inset: 0,
-          background: 'linear-gradient(180deg, rgba(112,217,234,0.28) 0%, transparent 14%)',
-          clipPath: hillPath([
-            [0, 100], [0, 68], [15, 40], [30, 60], [48, 30], [63, 58],
-            [80, 36], [100, 56], [100, 100],
-          ]),
-        }} />
-      </div>
+        <g transform="translate(0, 60)">
+          {TREE_CLUSTERS.map((t, i) => <TreeCluster key={i} x={t.x} s={t.s} />)}
+        </g>
+      </svg>
 
       {/* ── Skyline — a distant row of sister facilities built from the same
           dome/mast/dish/tank vocabulary the foreground buildings use, not
-          an abstract repeating shape. Sits at the very base, either side of
-          the real (Pixi-rendered) buildings, dark navy against the nearest
-          hill band. ─────────────────────────────────────────────────────── */}
-      <HubSkyline />
+          an abstract repeating shape. Flat single-tone haze silhouette (no
+          window-glow accents — see the glyph components above) so it can't
+          be mistaken for the real, clickable structures HubStructureArt
+          renders in front of it. ────────────────────────────────────────── */}
+      <div style={{ ['--hub-skyline-fade' as string]: sky.skylineFade }}>
+        <HubSkyline />
+      </div>
 
     </div>
   )

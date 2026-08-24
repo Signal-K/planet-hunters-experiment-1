@@ -6,4 +6,8 @@ describe('Hub structure art', () => {
     expect(HUB_STRUCTURE_ART.refinery.src).toBe('/game/assets/hub/refinery_modular_v2.png')
     expect(HUB_STRUCTURE_ART['scan-station'].src).toBe('/game/assets/hub/scan_station_modular_v2.png')
   })
+
+  it('gives the modular launchpad enough horizontal footprint to read as a facility', () => {
+    expect(HUB_STRUCTURE_ART.launchpad.width).toBe(360)
+  })
 })

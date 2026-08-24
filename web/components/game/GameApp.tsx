@@ -235,7 +235,7 @@ function GameCanvas() {
         <SurveySheet blockWhile={surveyBlocked} />
         {showNav && <BottomTabBar current={currentNav} onNav={goFromNav} />}
 
-        {coach && (
+        {coach && !game.authGateOpen && (
           <TutorialCoach
             key={coach.id}
             stepIndex={coachIndex}
@@ -246,7 +246,7 @@ function GameCanvas() {
             onSkip={() => game.skipTutorial(coachSteps.map(s => s.id))}
           />
         )}
-        {game.popup && game.screen !== 'market' && (
+        {game.popup && game.screen !== 'market' && !game.authGateOpen && (
           <UnlockPopup
             kind={game.popup}
             onClose={() => {
@@ -276,7 +276,7 @@ function GameCanvas() {
             onVerifyOtp={game.verifyOtp}
           />
         )}
-        {game.pendingTerritoryClaimFor && (
+        {game.pendingTerritoryClaimFor && !game.authGateOpen && (
           <TerritoryClaimPopup
             targetId={game.pendingTerritoryClaimFor.targetId}
             clientId={game.pendingTerritoryClaimFor.clientId}

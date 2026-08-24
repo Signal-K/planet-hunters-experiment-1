@@ -2,9 +2,13 @@
 
 import React from 'react'
 import type { HubBuildingDef } from '@/lib/pixi/hubScene'
+import { LaunchpadStructure } from '@/components/game/hub/HubLaunchpadArt'
 
 export const HUB_STRUCTURE_ART: Record<string, { src: string; width: number; lift: number }> = {
-  launchpad: { src: '/game/assets/hub/pad_gantry_frame.png', width: 88, lift: 82 },
+  // launchpad has no single `src`/`lift` — LaunchpadStructure composites six
+  // sprites instead (KES-233). Keep the footprint broad enough for the twin
+  // gantries, masts, tanks and deck to read as one substantial facility.
+  launchpad: { src: '', width: 360, lift: 0 },
   refinery: { src: '/game/assets/hub/refinery_modular_v2.png', width: 92, lift: 68 },
   'scan-station': { src: '/game/assets/hub/scan_station_modular_v2.png', width: 62, lift: 78 },
   command: { src: '/game/assets/hub/cmd_building.png', width: 76, lift: 70 },
@@ -41,20 +45,35 @@ export function HubStructureArt({ buildings }: { buildings: HubBuildingDef[] }) 
                 }}
               />
             )}
-            <img
-              src={art.src}
-              alt=""
-              style={{
-                position: 'absolute',
-                left: `${(building.plotX / 402) * 100}%`,
-                bottom: `calc(22% - ${art.lift}px)`,
-                width: art.width,
-                height: 'auto',
-                transform: 'translateX(-50%)',
-                opacity: building.dimmed ? 0.55 : 1,
-                filter: 'drop-shadow(0 5px 5px rgba(0, 0, 0, 0.3))',
-              }}
-            />
+            {building.kind === 'launchpad' ? (
+              <div
+                style={{
+                  position: 'absolute',
+                  left: `${(building.plotX / 402) * 100}%`,
+                  bottom: '22%',
+                  width: 0,
+                  height: 0,
+                  filter: 'drop-shadow(0 5px 5px rgba(0, 0, 0, 0.3))',
+                }}
+              >
+                <LaunchpadStructure w={art.width} dimmed={building.dimmed} hot={building.hot} />
+              </div>
+            ) : (
+              <img
+                src={art.src}
+                alt=""
+                style={{
+                  position: 'absolute',
+                  left: `${(building.plotX / 402) * 100}%`,
+                  bottom: `calc(22% - ${art.lift}px)`,
+                  width: art.width,
+                  height: 'auto',
+                  transform: 'translateX(-50%)',
+                  opacity: building.dimmed ? 0.55 : 1,
+                  filter: 'drop-shadow(0 5px 5px rgba(0, 0, 0, 0.3))',
+                }}
+              />
+            )}
           </React.Fragment>
         )
       })}
