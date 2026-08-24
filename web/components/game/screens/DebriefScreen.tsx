@@ -123,7 +123,10 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
                     <ProgressBar
                       value={affinityMultiplier}
                       max={MAX_AFFINITY_BONUS}
-                      tone="amber"
+                      // Affinity is progression toward a client bonus, not the
+                      // payout itself. Keep the meter on the command accent;
+                      // amber remains reserved for the collected reward figure.
+                      tone="cyan"
                       height={4}
                       flat
                       label="Client affinity"

@@ -24,10 +24,11 @@ function renderLaunchpad(freeOperations = true): string {
 describe('LaunchpadScreen', () => {
   it('keeps the launchpad focused on vehicles and contracts', () => {
     const markup = renderLaunchpad()
-    expect(markup).toContain('data-testid="launchpad-satellite-orbit"')
     expect(markup).toContain('data-testid="launchpad-rocket-fleet"')
     expect(markup).toContain('data-testid="launchpad-guide-open"')
     expect(markup).toContain('data-testid="launchpad-view-contracts-btn"')
+    expect(markup).toContain('ROCKETS')
+    expect(markup).toContain('SAT')
     expect(markup).not.toContain('BUILD MONITORING')
   })
 

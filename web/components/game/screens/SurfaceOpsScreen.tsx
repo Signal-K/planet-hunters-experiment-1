@@ -97,7 +97,7 @@ export default function SurfaceOpsScreen({
   const [selectedPad, setSelectedPad] = useState<0 | 1 | 2>(0)
   const [view, setView] = useState<SurfaceView>('logistics')
   const [routeSteps, setRouteSteps] = useState(0)
-  const [now, setNow] = useState(() => Date.now())
+  const [now, setNow] = useState(0)
 
   const definition = SURFACE_SITES.find(site => site.id === selectedSiteId)
     ?? SURFACE_SITES[0]
@@ -128,6 +128,7 @@ export default function SurfaceOpsScreen({
   }, [progress.launchpad])
 
   useEffect(() => {
+    setNow(Date.now())
     const timer = window.setInterval(() => setNow(Date.now()), 1000)
     return () => window.clearInterval(timer)
   }, [])

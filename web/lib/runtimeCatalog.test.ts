@@ -14,7 +14,7 @@ import { DEFAULT_STATE } from './game-state'
 import { createCrewMember } from './systems/CrewSystem'
 
 describe('buildRuntimeCatalog', () => {
-  it('adds the transit telescope launch mission while the player has SMS but no launched satellite', () => {
+  it('adds the transit telescope launch mission before the satellite is launched', () => {
     const catalog = buildRuntimeCatalog({
       catalog: STATIC_CATALOG,
       freeOperations: true,
@@ -48,7 +48,7 @@ describe('buildRuntimeCatalog', () => {
     expect(activeTelescopeMission).toMatchObject({ programReward: expect.any(Object) })
   })
 
-  it('adds the deep space telescope survey mission once the SMS/affinity threshold is met but the mission is unfinished (KES-128)', () => {
+  it('adds the deep space telescope survey mission once the telescope/affinity threshold is met but the mission is unfinished (KES-128)', () => {
     const player = {
       ...DEFAULT_STATE.player,
       freeOperations: true,
@@ -74,7 +74,7 @@ describe('buildRuntimeCatalog', () => {
     })
   })
 
-  it('does not offer the deep space telescope mission below the SMS/affinity threshold', () => {
+  it('does not offer the deep space telescope mission below the telescope/affinity threshold', () => {
     const player = { ...DEFAULT_STATE.player, freeOperations: true, transitSatelliteLevel: 1, clientMissions: {} }
     const catalog = buildRuntimeCatalog({
       catalog: STATIC_CATALOG,

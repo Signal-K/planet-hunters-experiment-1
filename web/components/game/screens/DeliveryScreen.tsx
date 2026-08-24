@@ -41,7 +41,7 @@ export default function DeliveryScreen({
   clientName,
   useTakeonDropoff,
 }: DeliveryScreenProps) {
-  const [now, setNow] = useState(() => Date.now())
+  const [now, setNow] = useState(0)
   const completedRef = useRef(false)
   const progress = deliveryUnloadProgress(startedAt, now)
   const progressPct = Math.round(progress * 100)
@@ -49,6 +49,10 @@ export default function DeliveryScreen({
   const cargoEntries = Object.entries(cargo).filter(([, amount]) => amount > 0)
   const cargoUnits = cargoEntries.reduce((total, [, amount]) => total + amount, 0)
   const transportFee = mission.payout.francs - Math.round(mission.payout.francs * 0.5)
+
+  useEffect(() => {
+    setNow(Date.now())
+  }, [])
 
   const rover = useMemo(() => defaultSpec(), [])
   const takeonRef = useRef<TakeOnMountHandle>(null)

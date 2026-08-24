@@ -1463,6 +1463,10 @@ button { cursor: pointer; }
 .theme-blueprint.mining-screen .mining-controls .mineral-stat-count {
   color: var(--ln-bp-ink);
 }
+.theme-blueprint[data-testid="rover-mining-screen"] .rover-mining-hud {
+  background: linear-gradient(180deg, transparent, var(--ln-bp-bg) 18%);
+  border-top: 1px solid var(--ln-bp-line-strong);
+}
 
 .debrief-screen {
   background:

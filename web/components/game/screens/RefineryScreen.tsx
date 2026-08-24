@@ -18,7 +18,7 @@ interface RefineryScreenProps {
 }
 
 export default function RefineryScreen({ player, onBack, onStartRefine, onCollect }: RefineryScreenProps) {
-  const [now, setNow] = useState(() => Date.now())
+  const [now, setNow] = useState(0)
   const [selected, setSelected] = useState<string | null>(null)
   const stash = player.stash ?? {}
 
@@ -30,6 +30,7 @@ export default function RefineryScreen({ player, onBack, onStartRefine, onCollec
   const done = runningRecipe ? elapsed >= durationMs : false
 
   useEffect(() => {
+    setNow(Date.now())
     if (!runningRecipe || done) return
     const id = window.setInterval(() => setNow(Date.now()), 1000)
     return () => window.clearInterval(id)

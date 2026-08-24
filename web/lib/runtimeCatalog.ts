@@ -14,7 +14,7 @@ export const TRANSIT_TELESCOPE_TARGET: Target = {
   type: 'planet',
   orbit: 1,
   difficulty: 'L1',
-  brief: 'Low Earth orbit deployment lane for a transit telescope monitored from the Earth-base SMS.',
+  brief: 'Low Earth orbit deployment lane for a transit telescope monitored from Earth Base operations.',
   minerals: [],
 }
 

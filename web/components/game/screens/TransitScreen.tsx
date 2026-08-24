@@ -57,9 +57,15 @@ const DELIVERY_FAKE_PROGRESS_DURATION_MS = 7000
 export default function TransitScreen({ target, rocketImageSrc, arrivalAt, transitStartedAt, returning = false, onArrive, onBack, onAbandon, isDelivery = false, cargo, minerals, mission, client }: Props) {
   const isTimed = typeof arrivalAt === 'number'
   const fakeDurationMs = isDelivery ? DELIVERY_FAKE_PROGRESS_DURATION_MS : FAKE_PROGRESS_DURATION_MS
-  const [now, setNow] = useState(() => Date.now())
-  const [fakeStartedAt] = useState(() => Date.now())
+  const [now, setNow] = useState(0)
+  const [fakeStartedAt, setFakeStartedAt] = useState(0)
   const [fakeProgress, setFakeProgress] = useState(FAKE_PROGRESS_START)
+
+  useEffect(() => {
+    const startedAt = Date.now()
+    setNow(startedAt)
+    setFakeStartedAt(startedAt)
+  }, [])
   // Arrival can be requested by the progress effect and a visible control in
   // the same render window. The game transition is not re-entrant, so only
   // forward the first request.
@@ -119,10 +125,9 @@ export default function TransitScreen({ target, rocketImageSrc, arrivalAt, trans
     }
   }, [isTimed, now, arrivalAt, fakeProgress, arriveOnce])
 
-  const [mountedAt] = useState(() => Date.now())
   const [confirmingAbandon, setConfirmingAbandon] = useState(false)
   const stableTransitStartedAt = isTimed
-    ? (transitStartedAt ?? (arrivalAt ? arrivalAt - 1 : mountedAt))
+    ? (transitStartedAt ?? (arrivalAt ? arrivalAt - 1 : now))
     : fakeStartedAt
   const totalMs = isTimed && arrivalAt ? Math.max(1, arrivalAt - stableTransitStartedAt) : 1
   const progress = isTimed

@@ -347,6 +347,7 @@ describe('Visual QA — game screens and mining canvas', () => {
 
     skipAuthGateIfShown()
     cy.get('h1', { timeout: 12000 }).contains('Earth Base').should('be.visible')
+    cy.get('[data-testid="settings-button"]').should('be.visible').and('not.be.disabled')
     cy.get('[data-testid="building-launchpad"]').should('be.visible')
     cy.screenshot('hub-launchpad-visible')
 

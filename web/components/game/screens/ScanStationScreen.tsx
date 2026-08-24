@@ -29,7 +29,7 @@ function revealedMinerals(target: Target, scanCount: number): string[] {
 const SURVEY_LANDMARKS = ['crater field', 'high-albedo ridge']
 
 export default function ScanStationScreen({ player, targets, onBack, onStartScan, onCollectScan }: ScanStationScreenProps) {
-  const [now, setNow] = useState(() => Date.now())
+  const [now, setNow] = useState(0)
   const coach = useScanStationCoach()
 
   const today = todayDateKey()
@@ -46,6 +46,7 @@ export default function ScanStationScreen({ player, targets, onBack, onStartScan
     : 0
 
   useEffect(() => {
+    setNow(Date.now())
     if (!activeScan || scanReady) return
     const id = window.setInterval(() => setNow(Date.now()), 1000)
     return () => window.clearInterval(id)

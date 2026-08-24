@@ -39,11 +39,11 @@ const FREE_OPS_MINING_ACK_KEY = 'ln_mining_freeops_first_entry_ack'
 const FREE_OPS_FIRST_SUCCESS_ACK_KEY = 'ln_mining_freeops_first_success_ack'
 
 function useFreeOpsMiningAck(alreadyExperienced: boolean) {
-  const [show, setShow] = useState(() => {
-    if (alreadyExperienced) return false
-    if (typeof window === 'undefined') return true
-    return !localStorage.getItem(FREE_OPS_MINING_ACK_KEY)
-  })
+  const [show, setShow] = useState(false)
+  useEffect(() => {
+    if (alreadyExperienced) return
+    setShow(!localStorage.getItem(FREE_OPS_MINING_ACK_KEY))
+  }, [alreadyExperienced])
   const dismiss = () => {
     localStorage.setItem(FREE_OPS_MINING_ACK_KEY, '1')
     setShow(false)
@@ -52,10 +52,10 @@ function useFreeOpsMiningAck(alreadyExperienced: boolean) {
 }
 
 function useFreeOpsFirstSuccessAck() {
-  const [dismissed, setDismissed] = useState(() => {
-    if (typeof window === 'undefined') return false
-    return !!localStorage.getItem(FREE_OPS_FIRST_SUCCESS_ACK_KEY)
-  })
+  const [dismissed, setDismissed] = useState(false)
+  useEffect(() => {
+    setDismissed(!!localStorage.getItem(FREE_OPS_FIRST_SUCCESS_ACK_KEY))
+  }, [])
   const dismiss = () => {
     localStorage.setItem(FREE_OPS_FIRST_SUCCESS_ACK_KEY, '1')
     setDismissed(true)

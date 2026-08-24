@@ -139,7 +139,7 @@ export const DEV_GROUPS: DevGroup[] = [
   {
     label: 'First Satellite Launch',
     color: '#f5d947',
-    // Full walkable flow, in order: build SMS -> accept the fixed story
+    // Full walkable flow, in order: accept the fixed telescope story
     // mission -> fab -> physical transit to Earth orbit (dev "Skip ▸" button
     // on that screen fast-forwards the ETA) -> debrief/satellite deployed ->
     // TESS Console, where "pointing" (PixiGalaxyStarMap) and "waiting for

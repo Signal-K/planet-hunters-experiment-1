@@ -43,7 +43,7 @@ interface RoverMiningScreenProps {
 }
 
 export default function RoverMiningScreen({ mission, target, onComplete, onBack, startedAt: startedAtProp, terrainClassification, onClassifyTerrain }: RoverMiningScreenProps) {
-  const [now, setNow] = useState(() => Date.now())
+  const [now, setNow] = useState(0)
 
   const startedAt = startedAtProp ?? now
   const elapsed = terrainClassification ? now - startedAt : 0
@@ -56,13 +56,14 @@ export default function RoverMiningScreen({ mission, target, onComplete, onBack,
   const countdown = formatCountdown(remaining)
 
   useEffect(() => {
+    setNow(Date.now())
     if (done) return
     const id = window.setInterval(() => setNow(Date.now()), 1000)
     return () => window.clearInterval(id)
   }, [done, terrainClassification])
 
   return (
-    <div className="game-screen" data-testid="rover-mining-screen" style={{ display: 'flex', flexDirection: 'column' }}>
+    <div className="game-screen theme-blueprint" data-testid="rover-mining-screen" style={{ display: 'flex', flexDirection: 'column' }}>
       <TopBar eyebrow={`SURFACE OPS · ${target.name.toUpperCase()}`} title="Rover Mining" onBack={onBack} />
 
       {/* PixiJS rover scene — grows to fill available space */}
@@ -71,9 +72,8 @@ export default function RoverMiningScreen({ mission, target, onComplete, onBack,
       </div>
 
       {/* HUD strip — status + timer + cargo */}
-      <div data-ui-zone={UI_ZONES.screenContent} style={{
+      <div className="rover-mining-hud" data-ui-zone={UI_ZONES.screenContent} style={{
         padding: '10px 16px',
-        background: 'linear-gradient(180deg, transparent, var(--ln-void) 18%)',
         flexShrink: 0,
       }}>
         <Panel accent={done ? 'var(--ln-ok)' : 'var(--ln-amber)'} style={{ padding: 10, marginBottom: 8 }}>
@@ -83,14 +83,14 @@ export default function RoverMiningScreen({ mission, target, onComplete, onBack,
               <div style={{ fontFamily: 'var(--ln-font-display)', fontWeight: 800, fontSize: 14, color: done ? 'var(--ln-ok)' : 'var(--ln-amber)' }}>
                 {!terrainClassification ? 'ROCKET LANDED · SURVEY THE SITE' : done ? 'MINERALS LOADED INTO ROVER' : 'ROVER EXTRACTING DEPOSITS'}
               </div>
-              <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 11, color: '#a9b8ce', marginTop: 2 }}>
+              <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 11, color: 'var(--ln-text-dim)', marginTop: 2 }}>
                 {mission.title}
               </div>
             </div>
           </div>
           {!terrainClassification ? (
             <div data-testid="rover-scouting-classification" style={{ marginTop: 10 }}>
-              <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 12, color: '#a9b8ce', lineHeight: 1.4, marginBottom: 8 }}>
+              <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 12, color: 'var(--ln-text-dim)', lineHeight: 1.4, marginBottom: 8 }}>
                 The ship has landed. Deploy the rover, identify a deposit signature, and use the rover drill to load minerals for the client run.
               </div>
               <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
@@ -104,7 +104,7 @@ export default function RoverMiningScreen({ mission, target, onComplete, onBack,
           ) : !done && (
             <>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 5 }}>
-                <span style={{ fontFamily: 'var(--ln-font-display)', fontSize: 9, fontWeight: 700, letterSpacing: '0.18em', color: '#6b7fa3' }}>OPERATION PROGRESS</span>
+                <span style={{ fontFamily: 'var(--ln-font-display)', fontSize: 9, fontWeight: 700, letterSpacing: '0.18em', color: 'var(--ln-text-muted)' }}>OPERATION PROGRESS</span>
                 <span style={{ fontFamily: 'var(--ln-font-mono)', fontSize: 15, fontWeight: 700, color: 'var(--ln-amber)' }}>{countdown}</span>
               </div>
               <div style={{ height: 5, background: 'rgba(245,166,35,0.15)', borderRadius: 3, overflow: 'hidden' }}>
@@ -128,7 +128,7 @@ export default function RoverMiningScreen({ mission, target, onComplete, onBack,
                 <span style={{ fontFamily: 'var(--ln-font-mono)', fontSize: 10, fontWeight: 700, color: meta?.color ?? '#888' }}>
                   {meta?.sym ?? mineral.slice(0, 2).toUpperCase()}
                 </span>
-                <span style={{ fontFamily: 'var(--ln-font-display)', fontSize: 11, color: '#e8f0fe' }}>×{amount}</span>
+                <span style={{ fontFamily: 'var(--ln-font-display)', fontSize: 11, color: 'var(--ln-text)' }}>×{amount}</span>
               </div>
             )
           })}
@@ -144,7 +144,7 @@ export default function RoverMiningScreen({ mission, target, onComplete, onBack,
             </div>
           </>
         ) : terrainClassification ? (
-          <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 9, letterSpacing: '0.15em', color: '#6b7fa3', textTransform: 'uppercase' }}>
+          <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 9, letterSpacing: '0.15em', color: 'var(--ln-text-muted)', textTransform: 'uppercase' }}>
             Use joystick to drive rover · Drill auto-activates when stationary
           </div>
         ) : null}

@@ -232,7 +232,13 @@
   background: rgba(255,255,255,.04);
   color: var(--ln-text-muted);
 }
-.tagBurn { color: rgba(224,165,39,0.75); border-color: rgba(224,165,39,0.24); background: rgba(224,165,39,0.08); }
+.tagBurn {
+  /* Burn/cooldown is operational metadata, not a payout. Use neutral token
+     chrome so the amber restriction remains true outside reward readouts. */
+  color: var(--ln-text-dim);
+  border-color: var(--ln-hairline);
+  background: var(--ln-surface-2);
+}
 /* Difficulty grade — neutral instrument chrome, deliberately not amber: it is
    a hazard/effort read, not a payout one (STS-543). */
 .tagLevel { color: var(--ln-text-dim); border-color: rgba(255,255,255,0.14); background: rgba(255,255,255,0.05); }

@@ -127,11 +127,11 @@ const EXPLAINER_ACK_KEY = 'ln_missionboard_freeops_explainer_ack'
 // next Mission Board visit purely because the ack key was never set,
 // regardless of how many hours they've actually played.
 function useFreeOpsExplainerAck(alreadyExperienced: boolean) {
-  const [show, setShow] = useState(() => {
-    if (alreadyExperienced) return false
-    if (typeof window === 'undefined') return true
-    return !localStorage.getItem(EXPLAINER_ACK_KEY)
-  })
+  const [show, setShow] = useState(false)
+  useEffect(() => {
+    if (alreadyExperienced) return
+    setShow(!localStorage.getItem(EXPLAINER_ACK_KEY))
+  }, [alreadyExperienced])
   const dismiss = () => {
     localStorage.setItem(EXPLAINER_ACK_KEY, '1')
     setShow(false)
@@ -149,8 +149,9 @@ function formatCooldown(remaining: number): string {
 
 export default function MissionBoardScreen({ onBack, onPick, missionsDone, freeOperations, hasCoach, catalog, clientMissions, clientCooldowns, dailyClientPool, francs, crew = [], player }: MissionBoardScreenProps) {
   const { missions: MISSIONS, clients: CLIENTS, minerals: MINERAL_META, targets, parts } = catalog
-  const [tick, setTick] = useState(Date.now())
+  const [tick, setTick] = useState(0)
   useEffect(() => {
+    setTick(Date.now())
     const id = setInterval(() => setTick(Date.now()), 10000)
     return () => clearInterval(id)
   }, [])
@@ -629,7 +630,14 @@ function AffinityAdvancedSection({
               </div>
               {!unlocked && (
                 <div style={{ marginTop: 8 }}>
-                  <SegmentedBar segments={CLIENT_AFFINITY_MISSION_THRESHOLD} filled={done} tone="amber" height={5} />
+                  <SegmentedBar
+                    // Unlock progress is generic progression chrome, not a
+                    // payout. Keep amber confined to the payout readouts.
+                    segments={CLIENT_AFFINITY_MISSION_THRESHOLD}
+                    filled={done}
+                    tone="cyan"
+                    height={5}
+                  />
                   <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 9, color: 'var(--ln-text-muted)', marginTop: 4, letterSpacing: '0.12em' }}>
                     {CLIENT_AFFINITY_MISSION_THRESHOLD - done} more operation{CLIENT_AFFINITY_MISSION_THRESHOLD - done !== 1 ? 's' : ''} to unlock advanced contracts
                   </div>
