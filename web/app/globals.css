@@ -1438,6 +1438,32 @@ button { cursor: pointer; }
 .mining-progress-fill { height: 100%; border-radius: 3px; background: linear-gradient(90deg, var(--ln-amber), var(--ln-cyan)); transition: width 120ms linear; }
 .mining-actions { display: grid; gap: var(--ln-s-2); }
 
+/* KES-219 — keep the mining field atmospheric, but bring the persistent
+   operator surface into the light blueprint language used by Launchpad and
+   Contract List. The canvas is intentionally still dark: ore silhouettes,
+   laser beams, and hit feedback need a high-contrast scene behind them. */
+.theme-blueprint.mining-screen {
+  background: var(--ln-bp-bg);
+}
+.theme-blueprint.mining-screen .mining-controls {
+  color: var(--ln-bp-ink);
+  border-top: 1px solid var(--ln-bp-line-strong);
+  background: linear-gradient(0deg, rgba(238,243,248,.98), rgba(255,255,255,.94));
+  box-shadow: 0 -8px 20px rgba(15,36,54,.12);
+}
+.theme-blueprint.mining-screen .mining-controls .mining-progress-track,
+.theme-blueprint.mining-screen .mining-controls .mining-charge-track {
+  background: var(--ln-bp-paper-2);
+  border-color: var(--ln-bp-line-strong);
+}
+.theme-blueprint.mining-screen .mining-controls .mineral-stat,
+.theme-blueprint.mining-screen .mining-controls .ln-section-label {
+  color: var(--ln-bp-ink-dim);
+}
+.theme-blueprint.mining-screen .mining-controls .mineral-stat-count {
+  color: var(--ln-bp-ink);
+}
+
 .debrief-screen {
   background:
     radial-gradient(ellipse at 50% 18%, var(--ln-cyan-soft), transparent 42%),

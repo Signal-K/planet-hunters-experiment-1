@@ -330,7 +330,7 @@ export default function MiningScreen({ mission, target, onComplete, onBack, onAb
   const showFreeOpsSuccessPopup = isFreeOps && orderFilled && !freeOpsFirstSuccessDismissed
 
   return (
-    <div className="game-screen mining-screen">
+    <div className="game-screen mining-screen theme-blueprint">
       <TopBar
         eyebrow={`${target.name.toUpperCase()} · SURFACE`}
         title="Mining Run"
