@@ -176,6 +176,17 @@
   font: 800 14px var(--ln-font-mono);
 }
 
+.dumpError {
+  padding: 8px 10px;
+  border: 1px solid rgba(255, 179, 71, .36);
+  border-radius: 6px;
+  background: rgba(255, 179, 71, .08);
+  color: var(--ln-warn);
+  font: 700 10px var(--ln-font-display);
+  letter-spacing: .12em;
+  text-align: center;
+}
+
 @media (max-height: 720px) {
   .stage {
     min-height: 190px;

@@ -50,6 +50,8 @@ export default function DeliveryScreen({
 
   const rover = useMemo(() => defaultSpec(), [])
   const takeonRef = useRef<TakeOnMountHandle>(null)
+  const [takeonReady, setTakeonReady] = useState(!useTakeonDropoff)
+  const [dumpError, setDumpError] = useState<string | null>(null)
   const seedCargo = useMemo(() => {
     const seeded: Partial<Record<ResourceKey, number>> = {}
     for (const [id, amount] of Object.entries(cargo)) {
@@ -74,11 +76,17 @@ export default function DeliveryScreen({
   const [dumped, setDumped] = useState(false)
 
   const handleDump = useCallback(() => {
+    if (!takeonReady) return
     const moved = takeonRef.current?.deposit() ?? 0
     // eslint-disable-next-line no-console
     console.log('[DeliveryScreen] DUMP CARGO clicked, units moved:', moved)
-    if (moved > 0) setDumped(true)
-  }, [])
+    if (moved > 0) {
+      setDumpError(null)
+      setDumped(true)
+    } else {
+      setDumpError(cargoUnits > 0 ? 'PARK BESIDE THE DEPOT CACHE' : 'NO CARGO IN ROVER HOLD')
+    }
+  }, [cargoUnits, takeonReady])
 
   // The interactive Takeon dropoff (useTakeonDropoff) doesn't use `now` at
   // all — `progress`/`remainingMs` are dead in that branch — but this timer
@@ -134,6 +142,7 @@ export default function DeliveryScreen({
             roverName="Tutorial Rover"
             seedCargo={seedCargo}
             seedCache
+            onReady={() => setTakeonReady(true)}
             className={styles.takeonMount}
           />
           <div className={styles.targetLabel}>
@@ -172,8 +181,9 @@ export default function DeliveryScreen({
             <strong>{formatCurrency(transportFee)}</strong>
           </div>
 
-          <PrimaryBtn disabled={dumped} testId="delivery-dump-cargo" onClick={handleDump}>
-            Dump Cargo
+          {dumpError && <div className={styles.dumpError} role="status">{dumpError}</div>}
+          <PrimaryBtn disabled={dumped || !takeonReady} testId="delivery-dump-cargo" onClick={handleDump}>
+            {takeonReady ? 'Dump Cargo' : 'Preparing Rover'}
           </PrimaryBtn>
           <GhostBtn onClick={onBack}>PAUSE AT HUB</GhostBtn>
         </section>
