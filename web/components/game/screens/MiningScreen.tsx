@@ -598,7 +598,7 @@ export default function MiningScreen({ mission, target, onComplete, onBack, onAb
           </div>
           <div style={{ minWidth: 0 }}>
           <PrimaryBtn
-            kind="amber"
+            kind="cyan"
             disabled={!orderFilled && laserCharges > 0}
             testId="return-home-btn"
             onClick={handleReturn}

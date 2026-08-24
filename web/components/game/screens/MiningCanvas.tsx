@@ -310,7 +310,9 @@ export default function MiningCanvas({ minerals, requiredMinerals, mineralMeta, 
     <div ref={containerRef} className="mining-canvas" data-testid="mining-canvas">
       <div style={{
         position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 10,
-        background: 'rgba(255,34,0,0.22)',
+        // Keep miss feedback at the firing lane. A full-canvas red wash reads
+        // as a damaged scene rather than a localized impact response.
+        background: 'radial-gradient(circle at 50% 52%, rgba(255,90,106,0.48) 0%, rgba(255,90,106,0.18) 18%, transparent 42%)',
         opacity: missFlash ? 1 : 0,
         transition: missFlash ? 'none' : 'opacity 280ms ease-out',
       }} />
