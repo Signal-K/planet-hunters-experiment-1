@@ -1,29 +1,5 @@
 import './commands'
 
-// KES-151: running the journeys suite against the deployed production build
-// (originally landnam-test.vercel.app, now landnam-web.liam-55d.workers.dev
-// per KES-193) surfaces a real, 100%-reproducible React hydration mismatch
-// (minified error #418) on every clean-storage load. It never appears
-// against local `next dev`, nor against a local `next start` production
-// build even with the real preview env vars (PocketBase URLs, PostHog keys)
-// loaded — isolated by direct comparison, not assumption. So it was specific
-// to something about the actual Vercel-hosted deployment (edge serving /
-// build pipeline) rather than app env config. Not yet re-verified against
-// the Cloudflare/OpenNext deployment — leave this filter in place until
-// confirmed either way.
-// One real contributing bug was found and fixed this way (useAuthSync and
-// CommentsPanel both read pbShared.authStore synchronously in their initial
-// useState, before jsx a signed-in device's client-side auth state differs
-// from the server's always-anonymous render) but does not by itself explain
-// the mismatch, which still reproduces after that fix. Root cause remains
-// open. The UI still renders correctly despite the console error (confirmed
-// via screenshot), so this stays a known, non-blocking issue rather than a
-// gameplay bug — this filter only stops the test runner from treating that
-// specific known error as fatal; it does not suppress other uncaught errors.
-Cypress.on('uncaught:exception', err => {
-  if (err.message.includes('Minified React error #418')) return false
-})
-
 // Stub PocketBase auth so the AuthGateSheet never opens in offline E2E runs.
 // Also stub catalog calls so the game uses static fallback data without network errors.
 beforeEach(() => {

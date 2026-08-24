@@ -29,10 +29,13 @@ export function useInstrumentFeedNotifications({
   setState,
   addToast,
 }: InstrumentFeedNotificationOpts): void {
-  const [dateKey, setDateKey] = useState(() => instrumentDigestDateKey())
+  // Keep the first render identical on the server and client. The real UTC
+  // date is only needed by the post-commit notification effect.
+  const [dateKey, setDateKey] = useState('')
   const emitted = useRef(new Set<string>())
 
   useEffect(() => {
+    setDateKey(instrumentDigestDateKey())
     const timer = window.setInterval(() => {
       const next = instrumentDigestDateKey()
       setDateKey(current => current === next ? current : next)
@@ -43,6 +46,7 @@ export function useInstrumentFeedNotifications({
   useEffect(() => {
     if (
       !enabled
+      || !dateKey
       || !player.freeOperations
       || !player.transitSatelliteLaunchedAt
       || instrumentDigestWasNotified(

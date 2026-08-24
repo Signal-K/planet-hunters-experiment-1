@@ -191,6 +191,23 @@ interface HubScreenProps {
 }
 
 export default function HubScreen({ player, rocketVariant = 'explorer', hasCoach, onGoBuilding, onNav, onUpgradeLaunchpad, onExcavateSubsurface, onBuildSubsurfaceRoom }: HubScreenProps) {
+  // Wall-clock reads must wait until after the server/client first render.
+  // Otherwise a saved scan that completes between SSR and hydration can
+  // change the building badge and label, producing React error #418.
+  const [clientNow, setClientNow] = useState<number | null>(null)
+  const [clientDate, setClientDate] = useState<string | null>(null)
+
+  useEffect(() => {
+    const updateClock = () => {
+      const now = Date.now()
+      setClientNow(now)
+      setClientDate(new Date(now).toISOString().slice(0, 10))
+    }
+    updateClock()
+    const timer = window.setInterval(updateClock, 60_000)
+    return () => window.clearInterval(timer)
+  }, [])
+
   const { phase: skyPhase } = useTimeOfDay()
   const [editMode, setEditMode] = useState(false)
   const [plotEntities, setPlotEntities] = useState<EntityData[]>(DEFAULT_PLOTS)
@@ -314,7 +331,7 @@ export default function HubScreen({ player, rocketVariant = 'explorer', hasCoach
       kind,
       plotX: e.transform.position.x,
       w: BUILDING_W[kind] ?? 78,
-      hot: kind === 'launchpad' ? !!player.pendingLaunch : kind === 'scan-station' ? (!!player.activeScan && Date.now() >= player.activeScan.completesAt) : false,
+      hot: kind === 'launchpad' ? !!player.pendingLaunch : kind === 'scan-station' ? (!!player.activeScan && clientNow !== null && clientNow >= player.activeScan.completesAt) : false,
       status: 'ok' as const,
       dimmed: isDimmedBuildingKind(kind),
     }]
@@ -370,10 +387,10 @@ export default function HubScreen({ player, rocketVariant = 'explorer', hasCoach
       }
     }
     if (kind === 'scan-station') {
-      const today = new Date().toISOString().slice(0, 10)
+      const today = clientDate ?? ''
       const scanDate = player.scanDate ?? ''
-      const scansUsed = scanDate === today ? (player.scansUsedToday ?? 0) : 0
-      const hasScan = !!player.activeScan && Date.now() >= player.activeScan.completesAt
+      const scansUsed = clientDate !== null && scanDate === today ? (player.scansUsedToday ?? 0) : 0
+      const hasScan = !!player.activeScan && clientNow !== null && clientNow >= player.activeScan.completesAt
       return {
         kind, label: 'Scanner',
         sub: hasScan ? 'DATA READY' : `${5 - scansUsed}/5 SCANS`,
