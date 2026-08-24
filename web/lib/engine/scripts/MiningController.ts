@@ -256,6 +256,10 @@ export class MiningController extends ScriptBehaviour {
       sprite.width = size
       sprite.height = size
       sprite.anchor.set(0.5)
+      // Generic ore art is reused for minerals without bespoke PNGs; tint it
+      // from the catalog so the shared crystal still reads as the right
+      // mineral beside its chemistry symbol (KES-175).
+      sprite.tint = mineralColor
       sprite.x = x
       sprite.y = y
       this.opts.container.addChild(sprite)

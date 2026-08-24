@@ -51,8 +51,13 @@ export default function GalaxyMap({ mission, targets, compatibleIds, pickedId, o
       <div
         data-testid="target-picker-orbital-map"
         style={{
-          flex: 1,
-          minHeight: 0,
+          // Keep a real chart viewport even while the surrounding setup
+          // shell is resolving its flex height. The old minHeight: 0 let a
+          // transient zero-height parent squash the SVG to an apparently
+          // empty map (KES-172).
+          flex: '1 1 clamp(240px, 45vh, 520px)',
+          minHeight: 'clamp(240px, 45vh, 520px)',
+          minWidth: 0,
           position: 'relative',
           backgroundImage: 'radial-gradient(var(--ln-bg-grid) 1px, transparent 1px)',
           backgroundSize: '22px 22px',

@@ -7,12 +7,15 @@ import { wireShapeRenderers } from '@/lib/engine/components/ShapeRenderer'
 import { MiningController, SHIP_X, SCROLL_SPEED, SCROLL_SPEED_MIN, SCROLL_SPEED_MAX } from '@/lib/engine/scripts/MiningController'
 import type { MineralMeta } from '@/lib/data'
 
-// Public ore art is intentionally incomplete; minerals without a texture use
-// MiningController's shape+colour fallback. Only request files that actually
-// ship so a normal run never fills the network log with expected 404s.
+// Keep every mineral visibly grounded in the mining scene. The authored set
+// covers the most common late-game ores; the neutral iron crystal is a
+// deliberate generic fallback for early/free-ops minerals until bespoke art
+// exists. Tint + the in-node chemistry symbol preserve identification without
+// returning to the old invisible/shape-only deposits (KES-175).
 const TEXTURED_ORE_IDS = new Set([
   'carbon', 'cobalt', 'gold', 'ice', 'iron', 'nickel', 'rare', 'silicon',
 ])
+const GENERIC_ORE_TEXTURE_ID = 'iron'
 
 // Tile width must be a multiple of 16 (ridgeH period) for seamless wrapping
 const SURFACE_TILE_W = 320
@@ -178,14 +181,17 @@ export default function MiningCanvas({ minerals, requiredMinerals, mineralMeta, 
         const surfaceY = Math.round(Math.min(worldH * 0.62, shipY + 220))
         const tileH = worldH - surfaceY
 
-        // Preload ore sprites — one PNG per mineral key
+        // Preload ore sprites — one PNG per mineral key. Missing authored
+        // variants reuse the neutral crystal art rather than rendering an
+        // untextured placeholder.
         const oreTextures: Record<string, Texture> = {}
         await Promise.allSettled(
-          minerals.filter(id => TEXTURED_ORE_IDS.has(id)).map(id =>
-            Assets.load(`/game/assets/ores/ore_${id}.png`)
+          minerals.map(id => {
+            const textureId = TEXTURED_ORE_IDS.has(id) ? id : GENERIC_ORE_TEXTURE_ID
+            return Assets.load(`/game/assets/ores/ore_${textureId}.png`)
               .then((t: Texture) => { oreTextures[id] = t })
               .catch(() => {})
-          )
+          })
         )
 
         const [sceneData] = await Promise.all([

@@ -234,7 +234,10 @@ const TakeOnMount = forwardRef<TakeOnMountHandle, TakeOnMountProps>(function Tak
           }
           // Persist the authored unload point as part of the saved TakeOn
           // environment, rather than leaving it as a screen-only overlay.
-          await save()
+          // Readiness is local-first: a review harness and an offline player
+          // must be able to use the mounted scene without waiting for a
+          // PocketBase round trip (KES-235).
+          void save().catch(reportError)
         }
 
         const initialState = snapshot()
