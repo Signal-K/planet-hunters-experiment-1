@@ -41,7 +41,6 @@ describe('SurfaceOpsScreen', () => {
   })
 
   it('surfaces an operational settlement pad and cargo-ready dispatch', () => {
-    const now = Date.now()
     const markup = render({
       ...DEFAULT_STATE.player,
       freeOperations: true,
@@ -49,11 +48,11 @@ describe('SurfaceOpsScreen', () => {
       surfaceOps: {
         sites: {
           'moon-south-pole': {
-            siteAccessPurchasedAt: now - 100_000,
+            siteAccessPurchasedAt: -100_000,
             launchpad: {
               pad: 1,
-              startedAt: now - 2_000_000,
-              completesAt: now - 1_000,
+              startedAt: -2_000_000,
+              completesAt: -1_000,
             },
             storage: { iron: 20 },
           },

@@ -26,7 +26,7 @@ describe('LaunchpadStructure', () => {
       <LaunchpadStructure w={360} hot />,
     )
 
-    expect(markup).toContain('rotate(-63.0253574643905deg)')
+    expect(markup).toMatch(/transform:rotate\(-63\.0253574643905\d+deg\)/)
     expect(markup.match(/pad_/g)?.length).toBeGreaterThanOrEqual(9)
   })
 })

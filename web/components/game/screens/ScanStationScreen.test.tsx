@@ -40,7 +40,9 @@ describe('ScanStationScreen', () => {
   it('exposes a testid for collecting a completed scan', () => {
     const target = STATIC_CATALOG.targets[0]
     const markup = renderScanStation({
-      activeScan: { targetId: target.id, completesAt: Date.now() - 1000 },
+      // The screen intentionally starts at deterministic time 0 for the
+      // server/client first render; zero is the completed fixture boundary.
+      activeScan: { targetId: target.id, completesAt: 0 },
     })
     expect(markup).toContain('data-testid="scan-station-collect-btn"')
   })
