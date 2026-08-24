@@ -63,6 +63,7 @@ export default function MissionOperationRoutes({
             }
             const isRoverMission = game.mission?.survey?.onWorldVehicle === 'starter-rover'
             const hasLander = !isRoverMission && !!game.player.shipCustomizerParts?.lander
+            const isTutorialDelivery = game.player.missionsDone === 2 && isRoverMission
             if (game.mission?.payload?.type === 'satellite' || game.mission?.payload?.type === 'deep-space-survey' || game.mission?.payload?.type === 'scan-station-commission' || game.target?.type === 'exoplanet') {
               game.setPlayer(player => ({
                 ...player,
@@ -85,6 +86,15 @@ export default function MissionOperationRoutes({
               return
             }
             if (hasLander) {
+              game.setPlayer(player => ({
+                ...player,
+                missionPhase: 'landing',
+                landingStartedAt: Date.now(),
+              }))
+              game.go('landing')
+              return
+            }
+            if (isTutorialDelivery) {
               game.setPlayer(player => ({
                 ...player,
                 missionPhase: 'landing',
@@ -119,6 +129,9 @@ export default function MissionOperationRoutes({
           onContinue={() => {
             if (mode === 'descend') {
               game.onLandingTouchdown()
+              if (game.player.missionsDone === 2 && game.mission?.survey?.onWorldVehicle === 'starter-rover') {
+                game.go('rover-mining')
+              }
               return
             }
             game.onRedockComplete(game.player.miningCargoInProgress ?? {})
@@ -189,7 +202,19 @@ export default function MissionOperationRoutes({
               roverMiningStartedAt: Date.now(),
             }))
           }}
-          onComplete={game.onRoverMiningDone}
+          onComplete={(cargo) => {
+            if (game.player.missionsDone === 2 && game.mission?.deliveryTargetId) {
+              game.setPlayer(player => ({
+                ...player,
+                missionPhase: 'landing',
+                landingReturnStartedAt: Date.now(),
+                miningCargoInProgress: cargo,
+              }))
+              game.go('landing')
+              return
+            }
+            game.onRoverMiningDone(cargo)
+          }}
           onBack={() => {
             game.setPlayer(player => ({ ...player, missionPhase: 'mining' }))
             game.go('hub')
@@ -209,6 +234,7 @@ export default function MissionOperationRoutes({
           startedAt={game.player.deliveryUnloadStartedAt}
           onBack={() => game.go('hub')}
           onComplete={game.onDeliveryUnloadComplete}
+          clientName={game.mission.client ? game.catalog.clients[game.mission.client]?.name : undefined}
           useTakeonDropoff={game.player.missionsDone === 2}
         />
       )

@@ -187,6 +187,14 @@
   text-align: center;
 }
 
+.transferNote {
+  padding: 8px 10px;
+  border-left: 2px solid var(--ln-ok);
+  background: color-mix(in srgb, var(--ln-ok) 8%, transparent);
+  color: var(--ln-text-dim);
+  font: 600 10px/1.4 var(--ln-font-body);
+}
+
 @media (max-height: 720px) {
   .stage {
     min-height: 190px;

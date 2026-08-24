@@ -81,7 +81,7 @@ export default function RoverMiningScreen({ mission, target, onComplete, onBack,
             <RoverIcon done={done} />
             <div>
               <div style={{ fontFamily: 'var(--ln-font-display)', fontWeight: 800, fontSize: 14, color: done ? 'var(--ln-ok)' : 'var(--ln-amber)' }}>
-                {!terrainClassification ? 'SURVEY THE SITE' : done ? 'EXTRACTION COMPLETE' : 'EXTRACTING DEPOSITS'}
+                {!terrainClassification ? 'ROCKET LANDED · SURVEY THE SITE' : done ? 'MINERALS LOADED INTO ROVER' : 'ROVER EXTRACTING DEPOSITS'}
               </div>
               <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 11, color: '#a9b8ce', marginTop: 2 }}>
                 {mission.title}
@@ -91,7 +91,7 @@ export default function RoverMiningScreen({ mission, target, onComplete, onBack,
           {!terrainClassification ? (
             <div data-testid="rover-scouting-classification" style={{ marginTop: 10 }}>
               <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 12, color: '#a9b8ce', lineHeight: 1.4, marginBottom: 8 }}>
-                Classify the rover&apos;s synthetic terrain observation to identify a deposit signature before extraction.
+                The ship has landed. Deploy the rover, identify a deposit signature, and use the rover drill to load minerals for the client run.
               </div>
               <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
                 {ROVER_TERRAIN_CLASSES.map(terrain => (
@@ -136,10 +136,10 @@ export default function RoverMiningScreen({ mission, target, onComplete, onBack,
 
         {terrainClassification && done ? (
           <>
-            <StatusPill kind="ok">ROVER RETURNED — MINERALS SECURED</StatusPill>
+            <StatusPill kind="ok">ROVER LOADED — RETURN TO SHIP</StatusPill>
             <div style={{ marginTop: 8 }}>
               <PrimaryBtn kind="green" onClick={() => onComplete(cargo)}>
-                COLLECT CARGO
+                LOAD ROVER AND RETURN TO SHIP
               </PrimaryBtn>
             </div>
           </>

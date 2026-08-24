@@ -232,6 +232,9 @@ const TakeOnMount = forwardRef<TakeOnMountHandle, TakeOnMountProps>(function Tak
             }
             sim.rover.cargoUsed = cargoUsed
           }
+          // Persist the authored unload point as part of the saved TakeOn
+          // environment, rather than leaving it as a screen-only overlay.
+          await save()
         }
 
         const initialState = snapshot()

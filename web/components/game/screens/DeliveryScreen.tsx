@@ -24,6 +24,7 @@ interface DeliveryScreenProps {
   startedAt?: number
   onBack: () => void
   onComplete: () => void
+  clientName?: string
   /** Render an interactive Takeon dropoff scene instead of the animated
    * timer — used for the M3 tutorial delivery leg only. */
   useTakeonDropoff?: boolean
@@ -37,6 +38,7 @@ export default function DeliveryScreen({
   startedAt,
   onBack,
   onComplete,
+  clientName,
   useTakeonDropoff,
 }: DeliveryScreenProps) {
   const [now, setNow] = useState(() => Date.now())
@@ -74,6 +76,7 @@ export default function DeliveryScreen({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [JSON.stringify(cargo)])
   const [dumped, setDumped] = useState(false)
+  const [roverReturned, setRoverReturned] = useState(false)
 
   const handleDump = useCallback(() => {
     if (!takeonReady) return
@@ -111,11 +114,11 @@ export default function DeliveryScreen({
   // 100ms, and coupling it to the completion timeout continually cancelled the
   // 350ms hand-off to Earth transit after a successful cargo dump.
   useEffect(() => {
-    if (!useTakeonDropoff || !dumped || completedRef.current) return
+    if (!useTakeonDropoff || !roverReturned || completedRef.current) return
     completedRef.current = true
     const id = window.setTimeout(onComplete, 350)
     return () => window.clearTimeout(id)
-  }, [useTakeonDropoff, dumped, onComplete])
+  }, [useTakeonDropoff, roverReturned, onComplete])
 
   useEffect(() => {
     if (useTakeonDropoff || progress < 1 || completedRef.current) return
@@ -146,18 +149,18 @@ export default function DeliveryScreen({
             className={styles.takeonMount}
           />
           <div className={styles.targetLabel}>
-            <span>BERTH</span>
-            <strong>{target.name}</strong>
+            <span>CLIENT BUILDING SITE</span>
+            <strong>{clientName ?? 'CLIENT SITE'} · {target.name}</strong>
           </div>
         </div>
 
         <section className={styles.hud} aria-label="Cargo unload status">
           <div className={styles.statusRow}>
             <div>
-              <div className={styles.kicker}>{dumped ? 'TRANSFER VERIFIED' : 'DRIVE TO THE DEPOT'}</div>
+              <div className={styles.kicker}>{roverReturned ? 'ROVER REDOCKED' : dumped ? 'MINERALS UNLOADED' : 'DRIVE TO THE BUILDING SITE'}</div>
               <div className={styles.contract}>{mission.title}</div>
             </div>
-            <span className={styles.timer}>{dumped ? 'SECURED' : 'MANUAL'}</span>
+            <span className={styles.timer}>{roverReturned ? 'LAUNCH READY' : dumped ? 'UNLOADED' : 'MANUAL'}</span>
           </div>
 
           <div className={styles.manifest} data-testid="delivery-cargo-hold">
@@ -182,9 +185,25 @@ export default function DeliveryScreen({
           </div>
 
           {dumpError && <div className={styles.dumpError} role="status">{dumpError}</div>}
-          <PrimaryBtn disabled={dumped || !takeonReady} testId="delivery-dump-cargo" onClick={handleDump}>
-            {takeonReady ? 'Dump Cargo' : 'Preparing Rover'}
-          </PrimaryBtn>
+          {!dumped ? (
+            <PrimaryBtn disabled={!takeonReady} testId="delivery-dump-cargo" onClick={handleDump}>
+              {takeonReady ? 'Dump Cargo At Building Site' : 'Preparing Rover'}
+            </PrimaryBtn>
+          ) : (
+            <PrimaryBtn disabled={roverReturned} testId="delivery-return-rover" onClick={() => setRoverReturned(true)}>
+              {roverReturned ? 'Rover Redocked · Launch Ready' : 'Return Rover To Ship'}
+            </PrimaryBtn>
+          )}
+          {dumped && !roverReturned && (
+            <div className={styles.transferNote} role="status">
+              Minerals delivered to the client&apos;s building site. Return the empty rover to the ship before launch.
+            </div>
+          )}
+          {roverReturned && (
+            <div className={styles.transferNote} role="status">
+              Rover secured. The ship is ready to launch for Earth and settle the transport fee.
+            </div>
+          )}
           <GhostBtn onClick={onBack}>PAUSE AT HUB</GhostBtn>
         </section>
       </div>

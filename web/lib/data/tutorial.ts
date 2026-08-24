@@ -106,7 +106,7 @@ export const M3_STEPS: TutorialStep[] = [
     manual: true,
     anchor: 'top', spot: null, cta: 'Got it' },
   { id: 33, screen: 'delivery', title: 'Unload At The Depot',
-    body: 'Drive the rover to the depot marker, then tap DUMP CARGO to unload manually.',
+    body: 'The client owns this building site. Drive the loaded rover to its marked cache, dump the minerals, return the empty rover to the ship, then launch for Earth.',
     manual: true,
     anchor: 'top', spot: null, cta: 'Got it' },
 ]
