@@ -98,7 +98,7 @@ def pad_deck():
     for i in range(5):
         chev = kit.box("chev", (0.22, 0.1, 0.05), location=(-1.0 + i * 0.5, -0.92, 0.52))
         kit.solid("chev", chev, T["amber"], "amber", outline=0)
-    return dict(layout=(120, 22), ortho=5.8, mode="flat", target=(0, 0, 0.3))
+    return dict(layout=(240, 44), ortho=5.8, mode="flat", target=(0, 0, 0.3))
 
 
 def pad_gantry_frame():
@@ -120,7 +120,7 @@ def pad_gantry_frame():
             kit.solid("lamp", lamp, T["cyan"], "cyan", outline=0)
     cap = kit.box("cap", (1.04, 0.8, 0.14), location=(0, 0, 4.0))
     kit.solid("cap", cap, T["hull_dark"], "hulldark")
-    return dict(layout=(38, 78), ortho=5.0, mode="flat", target=(0, 0, 2.0))
+    return dict(layout=(76, 156), ortho=5.0, mode="flat", target=(0, 0, 2.0))
 
 
 def pad_swing_arm():
@@ -161,7 +161,7 @@ def pad_swing_arm():
     kit.solid("tip", tip, T["cyan"], "cyan", outline=0)
     tip_light = kit.box("tip_light", (0.08, 0.08, 0.08), location=(1.88, 0.18, -0.02))
     kit.solid("tip_light", tip_light, T["cyan_bright"], "cyanbright", outline=0)
-    return dict(layout=(42, 12), ortho=4.6, mode="flat", target=(0, 0, 0))
+    return dict(layout=(84, 24), ortho=4.6, mode="flat", target=(0, 0, 0))
 
 
 def pad_clamp():
@@ -188,7 +188,7 @@ def pad_clamp():
     jaw = kit.box("jaw", (0.5, 0.22, 0.16), location=(0.16, 0, 0.86),
                   rotation=(0, -0.45, 0))
     kit.solid("jaw", jaw, T["steel"], "steel")
-    return dict(layout=(16, 18), ortho=1.5, mode="flat", target=(0, 0, 0.5))
+    return dict(layout=(32, 36), ortho=1.5, mode="flat", target=(0, 0, 0.5))
 
 
 def pad_mast():
@@ -216,7 +216,7 @@ def pad_mast():
     kit.solid("wire", wire, T["steel"], "steel", outline=0)
     spike = kit.cone("spike", 0.12, 0.42, location=(0, 0, 2.98), verts=6)
     kit.solid("spike", spike, T["cyan"], "cyan", outline=0.008)
-    return dict(layout=(8, 60), ortho=3.6, mode="flat", target=(0, 0, 1.55))
+    return dict(layout=(16, 120), ortho=3.6, mode="flat", target=(0, 0, 1.55))
 
 
 def pad_tank():
@@ -246,7 +246,7 @@ def pad_tank():
     gauge = kit.cylinder("gauge", 0.09, 0.05, location=(0, -0.63, 0.65),
                          rotation=(1.5708, 0, 0), verts=8)
     kit.solid("gauge", gauge, T["cyan_bright"], "cyanbright", outline=0.006)
-    return dict(layout=(20, 24), ortho=1.9, mode="flat", target=(0, 0, 0.85))
+    return dict(layout=(40, 48), ortho=1.9, mode="flat", target=(0, 0, 0.85))
 
 
 def pad_hangar():
@@ -277,7 +277,7 @@ def pad_hangar():
     for sx in (-1.5, -0.5, 0.5, 1.5):
         lamp = kit.box("lamp", (0.16, 0.08, 0.08), location=(sx, -0.86, 2.2))
         kit.solid("lamp", lamp, T["cyan_bright"], "cyanbright", outline=0)
-    return dict(layout=(160, 76), ortho=6.3, mode="flat", target=(0, 0, 1.15))
+    return dict(layout=(320, 152), ortho=6.3, mode="flat", target=(0, 0, 1.15))
 
 
 BUILDS = {

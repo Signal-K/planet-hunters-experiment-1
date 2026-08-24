@@ -109,7 +109,7 @@ export default function LaunchpadScreen({
         </div>
         <div className={`launchpad-scene-object launchpad-tower ${isGuided('tower') ? 'is-guided' : ''}`} data-testid="launchpad-status-card">
           <span className="launchpad-tower-art">
-            <LaunchpadStructure w={720} targetTopPx={360} dimmed={false} hot={!!player.pendingLaunch} />
+            <LaunchpadStructure w={560} targetTopPx={290} dimmed={false} hot={!!player.pendingLaunch} />
             {player.pendingLaunch && <img className="launchpad-tower-rocket" src={rocketImageSrc} alt="Rocket on launchpad" />}
           </span>
           <span className="launchpad-object-label launchpad-object-label--center">

@@ -63,14 +63,13 @@ button.launchpad-scene-object { cursor: pointer; }
   border: 1px solid #86e7f4; border-radius: 50%; background: rgba(6,16,26,.92); color: #86e7f4;
   font: 300 28px/36px var(--ln-font-display); font-style: normal; box-shadow: 0 0 18px rgba(112,217,234,.4);
 }
-.launchpad-tower { left: 50%; bottom: 12%; width: 28%; transform: translateX(-50%); }
-.launchpad-tower-art { position: relative; width: min(250px, 88%); height: 260px; }
-.launchpad-tower-gantry { position: absolute; left: 18%; bottom: 18px; width: 78px; height: 226px; image-rendering: pixelated; }
-.launchpad-tower-rocket { position: absolute; left: 50%; bottom: 31px; width: 205px; transform: translateX(-50%) rotate(-90deg); filter: drop-shadow(0 8px 14px rgba(0,0,0,.55)); }
-.launchpad-tower-deck { position: absolute; left: 50%; bottom: 0; width: 230px; transform: translateX(-50%); image-rendering: pixelated; }
-.launchpad-rocket { right: 5%; bottom: 16%; width: 31%; }
+.launchpad-tower { left: 43%; bottom: 12%; width: 56%; transform: translateX(-50%); }
+.launchpad-tower-art { position: relative; width: min(560px, 54vw); height: 330px; }
+.launchpad-tower-rocket { position: absolute; z-index: 3; left: 50%; bottom: 40px; width: 230px; transform: translateX(-50%) rotate(-90deg); filter: drop-shadow(0 8px 14px rgba(0,0,0,.55)); }
+.launchpad-rocket { right: 7%; bottom: 14%; width: 34%; min-height: 270px; justify-content: flex-end; }
 .launchpad-rocket-art { position: relative; width: min(360px, 95%); height: 150px; display: grid; place-items: center; }
 .launchpad-rocket-art img { position: relative; z-index: 2; width: 100%; filter: drop-shadow(0 18px 18px rgba(0,0,0,.6)); }
+.launchpad-hangar-art { position: absolute; z-index: 0; left: 50%; bottom: 30px; width: min(420px, 120%); transform: translateX(-50%); image-rendering: pixelated; filter: drop-shadow(0 16px 18px rgba(0,0,0,.48)); }
 .launchpad-rocket-glow { position: absolute; left: 5%; right: 5%; bottom: 18%; height: 14px; border-radius: 50%; background: rgba(112,217,234,.2); filter: blur(12px); }
 .launchpad-rocket:hover img,
 .launchpad-station:hover .launchpad-object-art { filter: brightness(1.12) drop-shadow(0 0 18px rgba(112,217,234,.22)); }
@@ -182,6 +181,33 @@ button.launchpad-scene-object { cursor: pointer; }
 }
 .launchpad-rail-actions button svg { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 1.8; }
 .launchpad-rail-actions button.is-primary { border-color: #70d9ea; background: #70d9ea; color: #07101c; box-shadow: 0 0 18px rgba(112,217,234,.24); }
+
+/* The Hub dock is an action rail, not a floating modal. Keep its status and
+   actions on the ground line so the widened launchpad remains visible above
+   it and the last action cannot be hidden below a clipped sheet. */
+.hub-bottom-dock { bottom: var(--ln-nav-h, 64px) !important; }
+.hub-bottom-dock-inner {
+  max-width: none !important;
+  width: 100% !important;
+  border-radius: 0 !important;
+  padding: 10px 24px !important;
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+.hub-bottom-dock-main { flex: 0 0 220px; }
+.hub-bottom-dock-actions {
+  flex: 1 1 auto;
+  min-width: 0;
+  margin-top: 0 !important;
+  padding-bottom: 0 !important;
+  scrollbar-width: none;
+}
+.hub-bottom-dock-actions::-webkit-scrollbar { display: none; }
+@media (max-width: 860px) {
+  .hub-bottom-dock-inner { gap: 12px; padding: 8px 12px !important; }
+  .hub-bottom-dock-main { flex-basis: 150px; }
+}
 @media (max-width: 860px) {
   .launchpad-guide { top: 10px; left: 10px; width: min(310px, calc(100% - 20px)); padding: 12px; }
   .launchpad-guide h2 { font-size: 16px; }
@@ -189,10 +215,9 @@ button.launchpad-scene-object { cursor: pointer; }
   .launchpad-object-label { min-width: 0; padding: 6px 8px; }
   .launchpad-object-label small { display: none; }
   .launchpad-object-label strong { font-size: 8px; }
-  .launchpad-tower-art { height: 200px; }
-  .launchpad-tower-gantry { width: 58px; height: 174px; }
-  .launchpad-tower-rocket { width: 158px; }
-  .launchpad-tower-deck { width: 180px; }
+.launchpad-tower-art { height: 250px; }
+  .launchpad-tower-rocket { width: 170px; }
+  .launchpad-hangar-art { width: 300px; }
   .launchpad-satellite svg { width: 70px; }
   .launchpad-rail-status span:not(:first-child) { display: none; }
   .launchpad-rail-actions button { padding: 0 9px; font-size: 8px; flex: 0 0 auto; }
@@ -212,10 +237,9 @@ button.launchpad-scene-object { cursor: pointer; }
   .launchpad-guide-copy { font-size: 9px; line-height: 1.35; }
   .launchpad-guide-footer { margin-top: 8px; }
   .launchpad-guide-actions button { height: 28px; }
-  .launchpad-tower-art { height: 180px; }
-  .launchpad-tower-gantry { width: 52px; height: 158px; }
+  .launchpad-tower-art { height: 220px; }
   .launchpad-tower-rocket { width: 146px; }
-  .launchpad-tower-deck { width: 165px; }
+  .launchpad-hangar-art { width: 260px; }
   .launchpad-rocket-art { height: 105px; }
   .launchpad-satellite { top: 2%; }
 }

@@ -33,5 +33,6 @@
   "hub_pad_swing_arm": "/game/assets/hub/pad_swing_arm.png",
   "hub_pad_clamp": "/game/assets/hub/pad_clamp.png",
   "hub_pad_mast": "/game/assets/hub/pad_mast.png",
-  "hub_pad_tank": "/game/assets/hub/pad_tank.png"
+  "hub_pad_tank": "/game/assets/hub/pad_tank.png",
+  "hub_pad_hangar": "/game/assets/hub/pad_hangar.png"
 }

@@ -558,11 +558,11 @@ export default function HubScreen({ player, rocketVariant = 'explorer', hasCoach
           guided-ops window meant those buttons stayed unreachable well past
           the tutorial (bug reported 2026-07-31). */}
       {(!hasCoach || player.missionsDone > 0) && (
-        <div style={{
+        <div className="hub-bottom-dock" style={{
           position: 'absolute', left: 0, right: 0, bottom: 'var(--ln-nav-h, 64px)', zIndex: 20,
           display: 'flex', justifyContent: 'center', pointerEvents: 'none',
         }}>
-          <div style={{
+          <div className="hub-bottom-dock-inner" style={{
             pointerEvents: 'auto', width: '100%', maxWidth: 480,
             background: 'var(--hub-panel)', borderTop: '1px solid var(--hub-outline)',
             borderRadius: '16px 16px 0 0', boxShadow: '0 -10px 28px rgba(0,0,0,0.45)',
@@ -578,7 +578,7 @@ export default function HubScreen({ player, rocketVariant = 'explorer', hasCoach
               <>
                 {/* Row 1 — status + primary CTA, the reference's
                     "Facility Tier · status" + primary-action row. */}
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+                <div className="hub-bottom-dock-main" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
                   <div style={{ minWidth: 0 }}>
                     <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 9, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--hub-cyan)' }}>
                       Launchpad
@@ -596,7 +596,7 @@ export default function HubScreen({ player, rocketVariant = 'explorer', hasCoach
                     (fixed-width buttons, horizontal scroll as a safety net
                     rather than flexWrap) so it can never overlap the scene
                     below it, unlike the pill row it replaces. */}
-                <div style={{ display: 'flex', gap: 4, marginTop: 10, overflowX: 'auto', paddingBottom: 2 }}>
+                <div className="hub-bottom-dock-actions" style={{ display: 'flex', gap: 4, marginTop: 10, overflowX: 'auto', paddingBottom: 2 }}>
                   {editMode && (
                     <>
                       <DockIconBtn testId="hub-new-structure-btn" icon={<PlusGlyph />} label="New" onClick={() => onGoBuilding('build')} />
