@@ -47,7 +47,7 @@ export default function SkillTreeScreen({
   const coach = useSkillTreeCoach()
 
   return (
-    <div className="game-screen" data-testid="skill-tree-screen" style={{ position: 'relative', width: '100%', height: '100%', minHeight: '100%', display: 'flex', flexDirection: 'column' }}>
+    <div className="game-screen theme-blueprint" data-testid="skill-tree-screen" style={{ position: 'relative', width: '100%', height: '100%', minHeight: '100%', display: 'flex', flexDirection: 'column' }}>
       <TopBar eyebrow="EARTH BASE · TRAINING" title="Skill Tree" onBack={onBack} solid />
       {coach.visible && <SkillTreeCoach onDismiss={coach.dismiss} />}
 
@@ -57,7 +57,7 @@ export default function SkillTreeScreen({
             title="License Grade raises the ceiling on what you're allowed to build and fly. It's earned with Research XP and is separate from Skill Points below."
             style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 8 }}
           >
-            <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 13, fontWeight: 800, color: '#e6efff' }}>License Grade</div>
+            <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 13, fontWeight: 800, color: 'var(--ln-text)' }}>License Grade</div>
             <StatusPill kind="info">{licenseGrade}</StatusPill>
           </div>
           <div style={{ display: 'flex', gap: 4, marginBottom: 8 }}>
@@ -65,7 +65,7 @@ export default function SkillTreeScreen({
               <div key={grade} style={{ flex: 1, height: 6, borderRadius: 2, background: i <= gradeIndex ? 'var(--ln-cyan)' : 'rgba(112,217,234,0.15)', border: '1px solid rgba(112,217,234,0.3)' }} />
             ))}
           </div>
-          <div style={{ fontFamily: 'var(--ln-font-mono)', fontSize: 11, color: '#a9b8ce', marginBottom: nextGrade ? 12 : 0 }}>
+            <div style={{ fontFamily: 'var(--ln-font-mono)', fontSize: 11, color: 'var(--ln-text-dim)', marginBottom: nextGrade ? 12 : 0 }}>
             {researchXP} RESEARCH XP{nextGrade ? ` · ${nextGateXP} NEEDED FOR ${nextGrade.toUpperCase()}` : ' · MAX GRADE REACHED'}
           </div>
           {nextGrade && (
@@ -92,12 +92,12 @@ export default function SkillTreeScreen({
                 >
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8, marginBottom: 6 }}>
                     <div>
-                      <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 8, fontWeight: 700, letterSpacing: '0.18em', color: '#6b7fa3', textTransform: 'uppercase' }}>{node.branch}</div>
-                      <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 13, fontWeight: 800, color: '#e6efff' }}>{node.name}</div>
+                  <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 8, fontWeight: 700, letterSpacing: '0.18em', color: 'var(--ln-text-muted)', textTransform: 'uppercase' }}>{node.branch}</div>
+                  <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 13, fontWeight: 800, color: 'var(--ln-text)' }}>{node.name}</div>
                     </div>
                     <StatusPill kind={unlocked ? 'ok' : 'mute'}>{unlocked ? 'Unlocked' : `${node.cost} SP`}</StatusPill>
                   </div>
-                  <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 12, color: '#a9b8ce', marginBottom: unlocked ? 0 : 10 }}>{node.description}</div>
+                  <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 12, color: 'var(--ln-text-dim)', marginBottom: unlocked ? 0 : 10 }}>{node.description}</div>
                   {!unlocked && (
                     <PrimaryBtn kind="cyan" disabled={!affordable} onClick={() => onUnlock(node.id)}>
                       Unlock
@@ -132,7 +132,7 @@ export default function SkillTreeScreen({
 function FirstRow({ label, done }: { label: string; done: boolean }) {
   return (
     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-      <span style={{ fontFamily: 'var(--ln-font-body)', fontSize: 12, color: done ? '#e6efff' : '#6b7fa3' }}>{label}</span>
+      <span style={{ fontFamily: 'var(--ln-font-body)', fontSize: 12, color: done ? 'var(--ln-text)' : 'var(--ln-text-muted)' }}>{label}</span>
       <StatusPill kind={done ? 'ok' : 'mute'}>{done ? 'Done' : 'Not yet'}</StatusPill>
     </div>
   )

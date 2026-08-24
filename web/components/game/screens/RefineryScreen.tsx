@@ -36,12 +36,12 @@ export default function RefineryScreen({ player, onBack, onStartRefine, onCollec
   }, [done, runningRecipe])
 
   return (
-    <div className="game-screen">
+    <div className="game-screen theme-blueprint">
       <TopBar eyebrow="EARTH BASE · INDUSTRY" title="Refinery" onBack={onBack} />
       <div className="screen-scroll" data-ui-zone={UI_ZONES.screenContent}>
         <Panel accent="var(--ln-amber)" style={{ padding: 12 }}>
-          <div style={{ fontFamily: 'var(--ln-font-display)', fontWeight: 800, fontSize: 15, color: '#f5a623' }}>On-site Ore Processing</div>
-          <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 12, color: '#a9b8ce', marginTop: 4 }}>
+          <div style={{ fontFamily: 'var(--ln-font-display)', fontWeight: 800, fontSize: 15, color: 'var(--ln-text)' }}>On-site Ore Processing</div>
+          <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 12, color: 'var(--ln-text-dim)', marginTop: 4 }}>
             Refine raw minerals into higher-value refined goods. {player.staffed ? 'Crew staffed · cycles 25% faster.' : 'Assign crew at the Academy for faster cycles.'}
           </div>
         </Panel>
@@ -51,8 +51,8 @@ export default function RefineryScreen({ player, onBack, onStartRefine, onCollec
             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
               <MineralChip meta={runningRecipe.output} variant="avatar" size={40} />
               <div style={{ flex: 1 }}>
-                <div style={{ fontFamily: 'var(--ln-font-display)', fontWeight: 800, fontSize: 14, color: '#e6efff' }}>{runningRecipe.name} {done && '✓'}</div>
-                <div style={{ fontFamily: 'var(--ln-font-mono)', fontSize: 10, color: '#7a8294' }}>
+                <div style={{ fontFamily: 'var(--ln-font-display)', fontWeight: 800, fontSize: 14, color: 'var(--ln-text)' }}>{runningRecipe.name} {done && '✓'}</div>
+                <div style={{ fontFamily: 'var(--ln-font-mono)', fontSize: 10, color: 'var(--ln-text-muted)' }}>
                   {done ? 'Complete — tap to collect' : `${Math.max(0, Math.ceil((durationMs - elapsed) / 1000))}s remaining`}
                 </div>
                 {!done && (
@@ -101,8 +101,8 @@ export default function RefineryScreen({ player, onBack, onStartRefine, onCollec
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                     <MineralChip meta={recipe.output} variant="avatar" size={44} />
                     <div style={{ flex: 1 }}>
-                      <div style={{ fontFamily: 'var(--ln-font-display)', fontWeight: 800, fontSize: 14, color: '#e6efff' }}>{recipe.name}</div>
-                      <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 11, color: '#a9b8ce' }}>
+                      <div style={{ fontFamily: 'var(--ln-font-display)', fontWeight: 800, fontSize: 14, color: 'var(--ln-text)' }}>{recipe.name}</div>
+                      <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 11, color: 'var(--ln-text-dim)' }}>
                         {recipe.input.amount}× {recipe.input.mineral} → {recipe.output.name}
                       </div>
                     </div>
