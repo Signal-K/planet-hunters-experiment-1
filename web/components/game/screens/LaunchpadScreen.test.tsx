@@ -12,6 +12,7 @@ function renderLaunchpad(freeOperations = true): string {
       onPick={() => undefined}
       onViewContracts={() => undefined}
       onOpenHangar={() => undefined}
+      onOpenSubsurface={() => undefined}
       missionsDone={freeOperations ? 4 : 0}
       freeOperations={freeOperations}
       catalog={STATIC_CATALOG}
@@ -27,6 +28,7 @@ describe('LaunchpadScreen', () => {
     expect(markup).toContain('data-testid="launchpad-rocket-fleet"')
     expect(markup).toContain('data-testid="launchpad-guide-open"')
     expect(markup).toContain('data-testid="launchpad-view-contracts-btn"')
+    expect(markup).toContain('data-testid="launchpad-open-subsurface-btn"')
     expect(markup).toContain('ROCKETS')
     expect(markup).toContain('SAT')
     expect(markup).not.toContain('BUILD MONITORING')
@@ -36,5 +38,6 @@ describe('LaunchpadScreen', () => {
     const markup = renderLaunchpad(false)
     expect(markup).not.toContain('data-testid="launchpad-guide-open"')
     expect(markup).toContain('data-testid="launchpad-view-contracts-btn"')
+    expect(markup).toContain('data-testid="launchpad-open-subsurface-btn"')
   })
 })

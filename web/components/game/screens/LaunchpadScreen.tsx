@@ -43,6 +43,10 @@ function GuideGlyph() {
   return <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" /><path d="M9.8 9a2.3 2.3 0 1 1 3.1 2.2c-.9.4-.9 1.1-.9 1.8M12 17h.01" /></svg>
 }
 
+function SubsurfaceGlyph() {
+  return <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M6 11h12M8 15h8M10 19h4" /><path d="M12 3v16" /></svg>
+}
+
 export default function LaunchpadScreen({
   onBack, onPick, onViewContracts, onOpenHangar, onOpenSubsurface, missionsDone, freeOperations, catalog, player, rocketImageSrc = '/game/assets/ships/ship_sr1.png', selectedRocketName, francs,
 }: LaunchpadScreenProps) {
@@ -137,10 +141,6 @@ export default function LaunchpadScreen({
           <div className="launchpad-foundation-face" />
           <div className="launchpad-foundation-track launchpad-foundation-track--left" />
           <div className="launchpad-foundation-track launchpad-foundation-track--right" />
-          <button type="button" className="launchpad-subsurface-hatch" onClick={onOpenSubsurface} aria-label="Open subsurface excavation deck">
-            <span>SUBSURFACE ACCESS</span>
-            <strong>EXCAVATION DECK</strong>
-          </button>
         </div>
 
         {guide && guideStep !== null && (
@@ -174,6 +174,7 @@ export default function LaunchpadScreen({
         </div>
         <div className="launchpad-rail-actions">
           {freeOperations && <button data-testid="launchpad-guide-open" onClick={() => setGuideStep(0)}><GuideGlyph /> GUIDE</button>}
+          {onOpenSubsurface && <button data-testid="launchpad-open-subsurface-btn" onClick={onOpenSubsurface}><SubsurfaceGlyph /> SUBSURFACE</button>}
           <button data-testid="launchpad-open-hangar-btn" onClick={onOpenHangar}><HangarGlyph /> HANGAR</button>
           {freeOperations && nextOperation && <button data-testid="launchpad-program-operation-btn" onClick={() => onPick(nextOperation.id)}><MissionGlyph /> OPS {operations.length}</button>}
           <button className={freeOperations ? undefined : 'is-primary'} data-testid="launchpad-view-contracts-btn" onClick={onViewContracts}><MissionGlyph /> CONTRACTS</button>
