@@ -24,7 +24,7 @@ import { VISUAL_ASTEROID_CANDIDATE, VISUAL_TESS_CANDIDATE } from '@/lib/visual-f
 import { captureGameEvent } from '@/lib/posthog'
 
 export const VALID_SCREENS = new Set<Screen>([
-  'intro', 'build', 'hub', 'missions', 'galaxy', 'targets', 'fab',
+  'intro', 'build', 'hub', 'hub-subsurface', 'missions', 'galaxy', 'targets', 'fab',
   'transit', 'landing', 'mining', 'rover-mining', 'delivery', 'debrief', 'refinery',
   'market', 'hangar', 'rocket-buy', 'skills', 'scan-station',
   'launchpad',
