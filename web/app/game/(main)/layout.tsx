@@ -131,7 +131,7 @@ function GameChrome({ children }: { children: ReactNode }) {
 
   return (
     <main className="game-stage" aria-label="Landnam game">
-      <div className="portrait-canvas">
+      <div className={`portrait-canvas ${currentScreen === 'launchpad' ? 'portrait-canvas--full-page' : ''}`}>
         <BackendStatus />
         <LandnamSyncStatus />
         {/* Mission alerts have a reserved desktop slot to the left of the

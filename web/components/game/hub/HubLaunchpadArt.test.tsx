@@ -9,7 +9,7 @@ describe('LaunchpadStructure', () => {
       <LaunchpadStructure w={360} />,
     )
 
-    expect(markup).toContain('/game/assets/hub/pad_complex_v2.png')
+    expect(markup).toContain('/game/assets/hub/pad_complex_v3.png')
     expect(markup).not.toContain('pad_gantry_frame.png')
     expect(markup).toContain('data-launch-state="idle"')
   })

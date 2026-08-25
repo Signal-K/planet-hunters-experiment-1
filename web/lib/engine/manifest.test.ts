@@ -105,6 +105,7 @@ describe('production hub and actor sprites', () => {
       'hub_pad_deck', 'hub_pad_gantry_frame', 'hub_pad_swing_arm',
       'hub_pad_clamp', 'hub_pad_mast', 'hub_pad_tank',
       'hub_pad_complex', 'hub_pad_hangar', 'hub_pad_complex_v2', 'hub_pad_hangar_v2',
+      'hub_pad_complex_v3', 'hub_pad_hangar_v3',
       'hub_depot_tank', 'hub_scan_dish', 'hub_refinery_modular_v2', 'hub_scan_station_modular_v2',
       'hub_cmd_building',
       'hub_deep_space_telescope', 'hub_astronaut_academy',

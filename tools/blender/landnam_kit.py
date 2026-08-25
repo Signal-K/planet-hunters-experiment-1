@@ -100,7 +100,9 @@ def reset_scene():
     scene.render.film_transparent = True
     scene.render.image_settings.file_format = "PNG"
     scene.render.image_settings.color_mode = "RGBA"
-    scene.render.image_settings.compression = 90
+    # Lossless maximum PNG compression keeps the supersampled flat-color
+    # sprites under the manifest budget without quantizing their hard outlines.
+    scene.render.image_settings.compression = 100
     scene.render.filter_size = 0.0  # No reconstruction blur — we want hard edges.
     scene.view_settings.view_transform = "Standard"  # Not Filmic; emission must
     scene.view_settings.look = "None"                # come out as the exact hex.

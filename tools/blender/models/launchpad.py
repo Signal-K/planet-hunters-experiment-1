@@ -250,187 +250,214 @@ def pad_tank():
 
 
 def pad_hangar():
-    """A single unmistakable aerospace assembly hangar.
+    """Front-elevation aerospace maintenance bay for the outdoor side view.
 
-    The previous three equal black portals looked like a row of storage boxes.
-    This version has one vehicle-scale gabled shed, a deep open threshold,
-    raised segmented door, overhead crane and an attached service annex.  The
-    whole building sits on the same dark rail apron as the launch complex so
-    the two sprites join as one site rather than two separate dioramas.
+    The v2 asset used the room camera and a deep apron, so it read like an
+    isometric diorama pasted over a flat landscape. This version is a graphic
+    cutaway: one shared baseline, no visible side planes, one vehicle-scale
+    opening, and the busy gantry/crane/service vocabulary from the supplied
+    hangar reference. Material roles are deliberately separated too: pale
+    concrete shell, charcoal interior, yellow handling equipment, rust service
+    zones and tiny cyan work lights.
     """
-    # Shared site language: dark paved apron with cyan transport rails.  Keep
-    # the slab dark so transparent edges blend into the CSS foundation.
-    apron = kit.box("hangar_apron", (8.7, 4.2, 0.18), location=(0, -0.35, 0), bevel=0.06)
-    kit.solid("hangar_apron", apron, T["surface_2"], "surface2")
-    apron_edge = kit.box("hangar_apron_edge", (8.7, 0.24, 0.30), location=(0, -2.35, -0.02), bevel=0.03)
-    kit.solid("hangar_apron_edge", apron_edge, T["hull_dark"], "hulldark")
-    for sx in (-1.0, 1.0):
-        rail = kit.box("hangar_floor_rail", (0.09, 3.8, 0.06), location=(sx, -0.55, 0.20))
-        kit.solid("hangar_floor_rail", rail, T["cyan"], "cyan", outline=0)
+    concrete = kit.tint(T["steel"], 0.94)
+    concrete_dark = kit.tint(T["steel"], 0.72)
+    service_yellow = kit.tint(T["amber"], 1.10)
 
-    # The shed is deliberately tall and singular. The visible back wall and
-    # side returns make the doorway a cavity instead of a dark rectangle.
-    shed_width = 6.4
-    back = kit.box("hangar_back", (shed_width, 0.28, 3.55), location=(-0.45, 1.05, 0.20), bevel=0.05)
-    kit.solid("hangar_back", back, T["surface_3"], "surface3")
-    for sx in (-3.48, 2.58):
-        wall = kit.box("hangar_side", (0.42, 3.7, 3.65), location=(sx, -0.55, 0.20), bevel=0.05)
-        kit.solid("hangar_side", wall, T["hull"], "hull")
-        foot = kit.box("hangar_wall_foot", (0.72, 0.82, 0.42), location=(sx, -2.0, 0.18), bevel=0.03)
-        kit.solid("hangar_wall_foot", foot, T["hull_dark"], "hulldark")
+    # A thin side-view foundation shared with the launch complex. No receding
+    # slab is visible, so the sprite can sit directly on the CSS ground line.
+    base = kit.box("hangar_base", (9.6, 0.36, 0.34), location=(0, -1.0, 0), bevel=0.04)
+    kit.solid("hangar_base", base, concrete_dark, "hangarconcretedark")
+    floor = kit.box("hangar_floor", (8.9, 0.18, 0.13), location=(-0.25, -1.28, 0.34))
+    kit.solid("hangar_floor", floor, T["hull_dark"], "hulldark")
+    for sx in (-1.15, 1.15):
+        rail = kit.box("hangar_transport_rail", (0.11, 0.12, 0.08), location=(sx, -1.42, 0.48))
+        kit.solid("hangar_transport_rail", rail, service_yellow, "serviceyellow", outline=0)
 
-    # Two sloped roof plates form a strong gable silhouette. Cyan ridge and
-    # eave strips keep the roof readable against the mountain backdrop.
-    for sx, angle in ((-1.68, -0.24), (1.23, 0.24)):
-        roof = kit.box("hangar_roof", (3.5, 4.2, 0.34), location=(sx - 0.45, -0.48, 4.10), rotation=(0, angle, 0), bevel=0.06)
-        kit.solid("hangar_roof", roof, T["hull_dark"], "hulldark")
-    ridge = kit.box("hangar_roof_ridge", (0.20, 4.25, 0.22), location=(-0.45, -0.48, 4.52))
-    kit.solid("hangar_roof_ridge", ridge, T["cyan"], "cyan", outline=0)
-    for sx in (-3.45, 2.55):
-        eave = kit.box("hangar_eave", (0.20, 4.2, 0.18), location=(sx, -0.48, 3.70))
-        kit.solid("hangar_eave", eave, T["steel"], "steel", outline=0.006)
+    # The dark cutaway comes first; all frame/interior equipment sits in front.
+    opening = kit.box("hangar_opening", (6.7, 0.12, 3.55), location=(-0.65, -1.05, 0.46), bevel=0.02)
+    kit.solid("hangar_opening", opening, T["void"], "void", outline=0.014)
+    # Flat stepped gable cladding fills the roof silhouette without introducing
+    # a visible top plane. Dark alternating bands suggest insulated panels.
+    for index, width in enumerate((7.05, 5.90, 4.75, 3.60, 2.45, 1.30)):
+        gable = kit.box("hangar_gable_cladding", (width, 0.14, 0.24), location=(-0.65, -1.08, 4.06 + index * 0.22))
+        color = T["hull"] if index % 2 == 0 else T["hull_dark"]
+        kit.solid("hangar_gable_cladding", gable, color, "hull" if index % 2 == 0 else "hulldark", outline=0.003)
 
-    # One enormous framed opening is the primary read. A dark interior shell
-    # is recessed behind the front frame; the door is visibly rolled up.
-    opening = kit.box("hangar_opening", (5.30, 0.12, 3.32), location=(-0.45, -2.48, 0.38), bevel=0.04)
-    kit.solid("hangar_opening", opening, T["void"], "void", outline=0.012)
-    for sx in (-3.18, 2.28):
-        jamb = kit.box("hangar_jamb", (0.34, 0.42, 3.60), location=(sx, -2.34, 0.28), bevel=0.03)
-        kit.solid("hangar_jamb", jamb, T["steel"], "steel")
-    lintel = kit.box("hangar_lintel", (5.8, 0.44, 0.36), location=(-0.45, -2.34, 3.78), bevel=0.04)
-    kit.solid("hangar_lintel", lintel, T["hull"], "hull")
-    for z in (3.25, 3.48, 3.71):
-        door = kit.box("hangar_raised_door", (5.18, 0.14, 0.17), location=(-0.45, -2.57, z))
-        kit.solid("hangar_raised_door", door, T["surface_2"], "surface2", outline=0.004)
+    # Structural shell: front-on jambs and a gable assembled from thick roof
+    # beams. This retains the building silhouette without exposing roof planes.
+    for sx in (-4.18, 2.88):
+        jamb = kit.box("hangar_jamb", (0.48, 0.30, 4.05), location=(sx, -1.34, 0.34), bevel=0.03)
+        kit.solid("hangar_jamb", jamb, concrete, "hangarconcrete")
+        footing = kit.box("hangar_footing", (0.78, 0.34, 0.34), location=(sx, -1.36, 0.12), bevel=0.03)
+        kit.solid("hangar_footing", footing, T["hull_dark"], "hulldark")
+    lintel = kit.box("hangar_lintel", (7.45, 0.34, 0.38), location=(-0.65, -1.34, 4.08), bevel=0.03)
+    kit.solid("hangar_lintel", lintel, concrete_dark, "hangarconcretedark")
+    for sx, angle in ((-2.48, -0.29), (1.18, 0.29)):
+        roof = kit.box("hangar_roof_beam", (4.25, 0.38, 0.34), location=(sx, -1.32, 4.73), rotation=(0, angle, 0), bevel=0.04)
+        kit.solid("hangar_roof_beam", roof, T["hull_dark"], "hulldark")
+    ridge = kit.box("hangar_ridge", (0.34, 0.40, 0.46), location=(-0.65, -1.34, 5.30), bevel=0.03)
+    kit.solid("hangar_ridge", ridge, service_yellow, "serviceyellow", outline=0.006)
 
-    # Overhead crane and maintenance lighting inside the opening communicate
-    # vehicle assembly at a glance, even with a rocket staged at the threshold.
-    # These details sit immediately in front of the dark recess plane. They
-    # are a graphic cutaway of the interior, not geometry hidden behind an
-    # opaque black rectangle.
-    crane = kit.box("hangar_crane", (4.55, 0.18, 0.24), location=(-0.45, -2.64, 2.92))
-    kit.solid("hangar_crane", crane, T["cyan"], "cyan")
-    trolley = kit.box("hangar_crane_trolley", (0.52, 0.20, 0.34), location=(-0.15, -2.76, 2.66), bevel=0.03)
-    kit.solid("hangar_crane_trolley", trolley, T["steel"], "steel")
-    hook = kit.cylinder("hangar_crane_hook", 0.08, 0.62, location=(-0.15, -2.78, 2.02), verts=8)
-    kit.solid("hangar_crane_hook", hook, T["cyan_bright"], "cyanbright", outline=0.006)
-    for sx in (-2.55, 1.65):
-        interior_post = kit.box("hangar_interior_post", (0.18, 0.12, 2.45), location=(sx, -2.66, 0.45))
-        kit.solid("hangar_interior_post", interior_post, T["steel"], "steel", outline=0.006)
-        for z in (1.12, 1.88):
-            platform = kit.box("hangar_interior_platform", (0.72, 0.14, 0.12), location=(sx, -2.73, z))
-            kit.solid("hangar_interior_platform", platform, T["cyan"], "cyan", outline=0)
-    for sx in (-2.55, -1.15, 0.25, 1.65):
-        lamp = kit.box("hangar_ceiling_lamp", (0.42, 0.12, 0.10), location=(sx, -2.78, 2.54))
-        kit.solid("hangar_ceiling_lamp", lamp, T["cyan_bright"], "cyanbright", outline=0)
-    threshold = kit.box("hangar_threshold", (5.32, 0.24, 0.10), location=(-0.45, -2.55, 0.30))
-    kit.solid("hangar_threshold", threshold, T["cyan_bright"], "cyanbright", outline=0)
+    # Raised segmented blast door clearly explains why the bay is open.
+    for z in (3.42, 3.66, 3.90):
+        door = kit.box("hangar_raised_door", (6.48, 0.16, 0.17), location=(-0.65, -1.50, z))
+        kit.solid("hangar_raised_door", door, concrete_dark, "hangarconcretedark", outline=0.004)
+    for sx in (-3.83, 2.53):
+        door_track = kit.box("hangar_door_track", (0.13, 0.14, 3.05), location=(sx, -1.52, 0.55))
+        kit.solid("hangar_door_track", door_track, service_yellow, "serviceyellow", outline=0)
 
-    # A lower annex breaks the shed's symmetry and reads as offices/workshops,
-    # not another full-size vehicle bay.
-    annex = kit.box("hangar_annex", (2.0, 2.4, 1.75), location=(3.55, -0.55, 0.18), bevel=0.08)
-    kit.solid("hangar_annex", annex, T["hull"], "hull")
-    annex_roof = kit.box("hangar_annex_roof", (2.25, 2.65, 0.22), location=(3.55, -0.55, 1.95), bevel=0.05)
-    kit.solid("hangar_annex_roof", annex_roof, T["hull_dark"], "hulldark")
-    for z in (0.65, 1.18):
-        window = kit.box("hangar_annex_window", (1.35, 0.10, 0.28), location=(3.55, -1.80, z))
-        kit.solid("hangar_annex_window", window, T["cyan"], "cyan", outline=0)
+    # Overhead handling system. Yellow is physical machinery/hazard paint,
+    # not UI emphasis, and gives the otherwise neutral building a clear role.
+    crane = kit.box("hangar_crane", (5.75, 0.18, 0.28), location=(-0.65, -1.58, 3.00), bevel=0.02)
+    kit.solid("hangar_crane", crane, service_yellow, "serviceyellow")
+    trolley = kit.box("hangar_trolley", (0.58, 0.20, 0.38), location=(-0.05, -1.66, 2.69), bevel=0.03)
+    kit.solid("hangar_trolley", trolley, T["rust"], "rust")
+    cable = kit.box("hangar_crane_cable", (0.06, 0.08, 0.72), location=(-0.05, -1.68, 1.95))
+    kit.solid("hangar_crane_cable", cable, concrete, "hangarconcrete", outline=0)
+    hook = kit.box("hangar_hook", (0.28, 0.10, 0.22), location=(0.05, -1.70, 1.83), rotation=(0, -0.35, 0))
+    kit.solid("hangar_hook", hook, service_yellow, "serviceyellow", outline=0.006)
 
-    return dict(layout=(380, 228), ortho=9.8, mode="room", target=(0.20, -0.40, 2.15))
+    # Rear catwalk, tool cabinets and work benches add the maintenance-bay
+    # density of the reference while remaining broad enough to survive at the
+    # sprite's in-game scale.
+    catwalk = kit.box("hangar_rear_catwalk", (5.10, 0.12, 0.16), location=(-0.65, -1.48, 2.35))
+    kit.solid("hangar_rear_catwalk", catwalk, concrete_dark, "hangarconcretedark", outline=0.004)
+    catwalk_rail = kit.box("hangar_rear_catwalk_rail", (5.00, 0.08, 0.10), location=(-0.65, -1.53, 2.58))
+    kit.solid("hangar_rear_catwalk_rail", catwalk_rail, service_yellow, "serviceyellow", outline=0)
+    for sx in (-2.15, 0.90):
+        cabinet = kit.box("hangar_tool_cabinet", (0.62, 0.12, 0.82), location=(sx, -1.58, 0.58), bevel=0.02)
+        kit.solid("hangar_tool_cabinet", cabinet, T["rust"], "rust")
+        drawer = kit.box("hangar_tool_drawer", (0.42, 0.06, 0.12), location=(sx, -1.67, 0.88))
+        kit.solid("hangar_tool_drawer", drawer, concrete, "hangarconcrete", outline=0)
+    for sx in (-1.30, 1.70):
+        bench = kit.box("hangar_workbench", (0.92, 0.12, 0.20), location=(sx, -1.61, 0.76), bevel=0.02)
+        kit.solid("hangar_workbench", bench, service_yellow, "serviceyellow", outline=0.004)
+        for leg_x in (-0.34, 0.34):
+            leg = kit.box("hangar_bench_leg", (0.10, 0.08, 0.46), location=(sx + leg_x, -1.60, 0.30))
+            kit.solid("hangar_bench_leg", leg, concrete_dark, "hangarconcretedark", outline=0.003)
+
+    # Two attached maintenance towers and connecting catwalks make the bay feel
+    # occupied and functional instead of a black box around the rocket.
+    for sx in (-3.18, 1.88):
+        post = kit.box("hangar_service_post", (0.20, 0.14, 2.55), location=(sx, -1.60, 0.52))
+        kit.solid("hangar_service_post", post, concrete, "hangarconcrete", outline=0.006)
+        for z in (1.15, 1.92):
+            platform = kit.box("hangar_service_platform", (0.88, 0.16, 0.15), location=(sx, -1.65, z))
+            kit.solid("hangar_service_platform", platform, T["rust"], "rust", outline=0.006)
+            rail = kit.box("hangar_platform_rail", (0.80, 0.08, 0.10), location=(sx, -1.68, z + 0.20))
+            kit.solid("hangar_platform_rail", rail, service_yellow, "serviceyellow", outline=0)
+    for sx in (-3.1, -1.5, 0.1, 1.7):
+        lamp = kit.box("hangar_work_light", (0.42, 0.10, 0.12), location=(sx, -1.72, 2.54), bevel=0.02)
+        kit.solid("hangar_work_light", lamp, T["cyan_bright"], "cyanbright", outline=0)
+
+    # Integrated workshop bay on the right remains inside the same facade and
+    # roof line; it is not a second little shed floating beside the hangar.
+    workshop = kit.box("hangar_workshop", (1.48, 0.20, 3.54), location=(3.72, -1.15, 0.46), bevel=0.03)
+    kit.solid("hangar_workshop", workshop, concrete, "hangarconcrete")
+    for z in (1.05, 1.72, 2.39):
+        window = kit.box("hangar_workshop_window", (1.00, 0.12, 0.28), location=(3.72, -1.46, z))
+        kit.solid("hangar_workshop_window", window, T["rust"], "rust", outline=0.005)
+        light = kit.box("hangar_workshop_light", (0.72, 0.08, 0.08), location=(3.72, -1.54, z + 0.06))
+        kit.solid("hangar_workshop_light", light, T["cyan_bright"], "cyanbright", outline=0)
+
+    return dict(layout=(400, 231), ortho=7.8, mode="flat", target=(0, -1.3, 3.25))
 
 
 def pad_complex():
-    """240x160 — one grounded, production launch complex sprite.
+    """Straight-on launch complex sharing the hangar's scale and baseline.
 
-    The six modular pad sprites are useful for animation, but the shipped DOM
-    composition scaled and positioned each transparent image independently.
-    At scene scale that made the masts, tanks, arm and clamps look detached.
-    This model keeps the whole idle facility in one Blender camera and one
-    ground plane, so every component shares perspective, contact and outline.
+    Every visible part is structurally attached. Folded service bridges replace
+    the detached arm blocks from v2, tanks connect to the mount through a real
+    pipe rack, and the 3D apron is reduced to a thin side-view concrete deck.
     """
-    # Integrated civil works: apron, raised launch deck and a deep flame trench.
-    apron = kit.box("complex_apron", (8.4, 4.1, 0.18), location=(0, -0.2, 0), bevel=0.08)
-    kit.solid("complex_apron", apron, T["surface_2"], "surface2")
-    apron_edge = kit.box("complex_apron_edge", (8.4, 0.24, 0.30), location=(0, -2.18, -0.02), bevel=0.03)
-    kit.solid("complex_apron_edge", apron_edge, T["hull_dark"], "hulldark")
-    deck = kit.box("complex_deck", (6.8, 3.2, 0.55), location=(0, -0.15, 0.18), bevel=0.07)
-    kit.solid("complex_deck", deck, T["hull"], "hull")
-    trench = kit.box("complex_flame_trench", (1.25, 3.35, 0.18), location=(0.25, -0.15, 0.70), bevel=0.03)
-    kit.solid("complex_flame_trench", trench, T["void"], "void")
-    for sx in (-2.7, -2.0, 1.8, 2.5):
-        seam = kit.box("complex_deck_seam", (0.04, 3.0, 0.03), location=(sx, -0.15, 0.77))
-        kit.solid("complex_deck_seam", seam, T["hull_dark"], "hulldark", outline=0)
-    for sx in (-2.8, -2.2, 1.8, 2.4, 3.0):
-        marker = kit.box("complex_edge_marker", (0.34, 0.12, 0.08), location=(sx, -1.72, 0.76))
-        kit.solid("complex_edge_marker", marker, T["amber"], "amber", outline=0)
+    concrete = kit.tint(T["steel"], 0.92)
+    concrete_dark = kit.tint(T["steel"], 0.70)
+    service_yellow = kit.tint(T["amber"], 1.10)
 
-    # Main service tower: a solid core provides mass, while thick external
-    # bracing and inward platforms retain the gantry vocabulary.
-    tower_x = -2.05
-    core = kit.box("complex_tower_core", (1.25, 1.25, 5.65), location=(tower_x, 0.1, 0.75), bevel=0.04)
-    kit.solid("complex_tower_core", core, T["surface_2"], "surface2")
-    for sx in (-0.72, 0.72):
-        post = kit.box("complex_tower_post", (0.18, 1.55, 5.85), location=(tower_x + sx, 0.1, 0.75))
+    base = kit.box("complex_base", (9.6, 0.36, 0.34), location=(0, -1.0, 0), bevel=0.04)
+    kit.solid("complex_base", base, concrete_dark, "complexconcretedark")
+    deck = kit.box("complex_deck", (8.8, 0.24, 0.46), location=(-0.1, -1.24, 0.32), bevel=0.03)
+    kit.solid("complex_deck", deck, concrete, "complexconcrete")
+    trench = kit.box("complex_flame_trench", (1.25, 0.16, 0.28), location=(0.25, -1.42, 0.54))
+    kit.solid("complex_flame_trench", trench, T["void"], "void", outline=0.008)
+    for sx in (-3.7, -3.15, -2.6, 2.7, 3.25, 3.8):
+        marker = kit.box("complex_edge_marker", (0.34, 0.10, 0.09), location=(sx, -1.47, 0.78))
+        kit.solid("complex_edge_marker", marker, service_yellow, "serviceyellow", outline=0)
+
+    # Main fixed service tower: dark frame, pale floor plates, rust railings.
+    tower_x = -2.45
+    spine = kit.box("complex_tower_spine", (0.92, 0.22, 5.55), location=(tower_x, -1.08, 0.78), bevel=0.03)
+    kit.solid("complex_tower_spine", spine, T["hull_dark"], "hulldark")
+    for sx in (-3.24, -1.66):
+        post = kit.box("complex_tower_post", (0.18, 0.20, 5.75), location=(sx, -1.26, 0.74))
         kit.solid("complex_tower_post", post, T["hull_dark"], "hulldark")
-    for level, z in enumerate((1.55, 2.55, 3.55, 4.55, 5.55)):
-        platform = kit.box("complex_platform", (2.0, 1.65, 0.18), location=(tower_x + 0.22, 0.08, z))
-        kit.solid("complex_platform", platform, T["steel"], "steel")
-        rail = kit.box("complex_platform_rail", (1.75, 0.10, 0.22), location=(tower_x + 0.22, -0.78, z + 0.18))
-        kit.solid("complex_platform_rail", rail, T["cyan"], "cyan", outline=0)
-        window = kit.box("complex_tower_light", (0.26, 0.08, 0.20), location=(tower_x, -0.67, z + 0.38))
-        kit.solid("complex_tower_light", window, T["cyan_bright"], "cyanbright", outline=0)
-        if level in (1, 3):
-            arm = kit.box("complex_service_arm", (2.45, 0.32, 0.24), location=(-0.65, -0.35, z + 0.28), bevel=0.02)
-            kit.solid("complex_service_arm", arm, T["hull"], "hull")
-            head = kit.box("complex_arm_head", (0.34, 0.42, 0.48), location=(0.55, -0.35, z + 0.06))
-            kit.solid("complex_arm_head", head, T["cyan"], "cyan")
-    cap = kit.box("complex_tower_cap", (2.1, 1.7, 0.30), location=(tower_x, 0.1, 6.45), bevel=0.04)
-    kit.solid("complex_tower_cap", cap, T["hull_dark"], "hulldark")
+    for bay, z in enumerate((1.45, 2.40, 3.35, 4.30, 5.25)):
+        platform = kit.box("complex_platform", (2.05, 0.26, 0.18), location=(tower_x + 0.10, -1.38, z))
+        kit.solid("complex_platform", platform, concrete, "complexconcrete")
+        rail = kit.box("complex_platform_rail", (1.70, 0.10, 0.14), location=(tower_x + 0.10, -1.51, z + 0.24))
+        kit.solid("complex_platform_rail", rail, T["rust"], "rust", outline=0.004)
+        light = kit.box("complex_platform_light", (0.28, 0.08, 0.14), location=(tower_x, -1.58, z + 0.32))
+        kit.solid("complex_platform_light", light, T["cyan_bright"], "cyanbright", outline=0)
+        # X bracing is anchored between the fixed posts; it never extends into
+        # empty space and survives clearly at game scale.
+        if bay < 4:
+            for angle in (-0.63, 0.63):
+                brace = kit.box("complex_tower_brace", (0.10, 0.10, 1.45), location=(tower_x, -1.48, z + 0.48), rotation=(0, angle, 0))
+                kit.solid("complex_tower_brace", brace, T["hull_dark"], "hulldark", outline=0.004)
+    cap = kit.box("complex_tower_cap", (2.12, 0.28, 0.32), location=(tower_x, -1.31, 6.22), bevel=0.03)
+    kit.solid("complex_tower_cap", cap, service_yellow, "serviceyellow")
 
-    # Short strongback on the opposite side makes the central vehicle slot
-    # unmistakable without repeating another skeletal tower.
-    back_x = 1.45
-    strongback = kit.box("complex_strongback", (0.62, 1.0, 4.45), location=(back_x, 0.15, 0.75), rotation=(0, -0.08, 0), bevel=0.04)
+    # A shorter central strongback creates the empty vehicle slot. Two enclosed
+    # bridges connect directly between real supports rather than ending in air.
+    strong_x = 0.72
+    strongback = kit.box("complex_strongback", (0.72, 0.24, 4.55), location=(strong_x, -1.13, 0.76), bevel=0.03)
     kit.solid("complex_strongback", strongback, T["hull_dark"], "hulldark")
-    for z in (1.5, 2.4, 3.3, 4.2):
-        collar = kit.box("complex_strongback_collar", (1.1, 1.15, 0.16), location=(back_x, 0.15, z))
-        kit.solid("complex_strongback_collar", collar, T["steel"], "steel")
-    umbilical = kit.box("complex_umbilical", (1.45, 0.26, 0.22), location=(0.82, -0.2, 3.35))
-    kit.solid("complex_umbilical", umbilical, T["cyan"], "cyan")
+    for z in (1.55, 2.52, 3.49, 4.46):
+        collar = kit.box("complex_strongback_collar", (1.18, 0.28, 0.18), location=(strong_x, -1.38, z))
+        kit.solid("complex_strongback_collar", collar, concrete, "complexconcrete")
+    for z in (2.52, 4.46):
+        bridge = kit.box("complex_service_bridge", (2.48, 0.24, 0.28), location=(-0.55, -1.44, z + 0.18), bevel=0.02)
+        kit.solid("complex_service_bridge", bridge, T["rust"], "rust")
+        bridge_light = kit.box("complex_bridge_light", (0.24, 0.08, 0.18), location=(0.35, -1.58, z + 0.22))
+        kit.solid("complex_bridge_light", bridge_light, T["cyan_bright"], "cyanbright", outline=0)
 
-    # Propellant farm physically connected to the deck with visible feed pipes.
-    for i, sx in enumerate((2.45, 3.25)):
-        tank = kit.cylinder("complex_tank", 0.48, 1.35, location=(sx, 0.55, 0.76), verts=10)
-        kit.solid("complex_tank", tank, T["steel"], "steel")
-        dome = kit.cone("complex_tank_dome", 0.48, 0.28, location=(sx, 0.55, 2.11), verts=10)
-        kit.solid("complex_tank_dome", dome, T["hull"], "hull")
-        band = kit.cylinder("complex_tank_band", 0.51, 0.12, location=(sx, 0.55, 1.22), verts=10)
-        kit.solid("complex_tank_band", band, T["hull_dark"], "hulldark", outline=0)
-        gauge = kit.box("complex_tank_gauge", (0.16, 0.08, 0.16), location=(sx, 0.04, 1.54))
+    # Vehicle mount and exhaust handling are one grounded assembly.
+    mount = kit.box("complex_mount", (1.55, 0.28, 0.36), location=(-0.22, -1.39, 0.78), bevel=0.04)
+    kit.solid("complex_mount", mount, T["hull_dark"], "hulldark")
+    for sx, angle in ((-0.62, -0.22), (0.18, 0.22)):
+        clamp = kit.box("complex_hold_down", (0.30, 0.24, 0.74), location=(sx, -1.49, 1.03), rotation=(0, angle, 0))
+        kit.solid("complex_hold_down", clamp, T["rust"], "rust")
+
+    # White propellant tanks, rust bands and a visible yellow feed rack give a
+    # second material family and physically connect storage to the mount.
+    for i, sx in enumerate((2.18, 3.18)):
+        tank = kit.cylinder("complex_tank", 0.53, 1.45, location=(sx, -1.18, 0.78), verts=12)
+        kit.solid("complex_tank", tank, concrete, "complexconcrete")
+        dome = kit.cone("complex_tank_dome", 0.53, 0.32, location=(sx, -1.18, 2.23), verts=12, radius2=0.30)
+        kit.solid("complex_tank_dome", dome, concrete, "complexconcrete")
+        neck = kit.cylinder("complex_tank_neck", 0.11, 0.26, location=(sx, -1.18, 2.55), verts=10)
+        kit.solid("complex_tank_neck", neck, T["hull_dark"], "hulldark", outline=0.004)
+        band = kit.cylinder("complex_tank_band", 0.55, 0.16, location=(sx, -1.18, 1.35), verts=12)
+        kit.solid("complex_tank_band", band, T["rust"], "rust", outline=0)
+        gauge = kit.box("complex_tank_gauge", (0.18, 0.08, 0.18), location=(sx, -1.72, 1.70))
         kit.solid("complex_tank_gauge", gauge, T["cyan_bright"], "cyanbright", outline=0)
-        feed = kit.cylinder("complex_feed_pipe", 0.10, 1.2 + i * 0.8, location=(1.85, 0.5, 0.85 + i * 0.20), rotation=(0, 1.5708, 0), verts=6)
-        kit.solid("complex_feed_pipe", feed, T["cyan"], "cyan", outline=0.008)
+        feed = kit.box("complex_feed_pipe", (1.05 + i * 0.98, 0.12, 0.14), location=(1.46, -1.54, 1.02 + i * 0.22))
+        kit.solid("complex_feed_pipe", feed, service_yellow, "serviceyellow", outline=0.004)
 
-    # Hold-down clamps are attached to a shared base ring at the vehicle slot.
-    ring = kit.cylinder("complex_mount_ring", 0.72, 0.16, location=(0.35, -0.2, 0.76), verts=12)
-    kit.solid("complex_mount_ring", ring, T["surface_2"], "surface2")
-    for sx in (-0.14, 0.84):
-        clamp = kit.box("complex_hold_down", (0.30, 0.42, 0.72), location=(sx, -0.2, 0.90), rotation=(0, -0.18 if sx < 0 else 0.18, 0))
-        kit.solid("complex_hold_down", clamp, T["hull"], "hull")
+    # One braced lightning mast closes the silhouette and is visibly bolted to
+    # the same foundation, replacing v2's pair of isolated needle shapes.
+    mast_x = 4.18
+    mast_base = kit.box("complex_mast_base", (0.62, 0.28, 0.34), location=(mast_x, -1.30, 0.54), bevel=0.03)
+    kit.solid("complex_mast_base", mast_base, T["hull_dark"], "hulldark")
+    mast = kit.box("complex_mast", (0.16, 0.16, 4.75), location=(mast_x, -1.35, 0.78))
+    kit.solid("complex_mast", mast, T["hull_dark"], "hulldark")
+    brace = kit.box("complex_mast_brace", (0.12, 0.12, 1.75), location=(3.88, -1.40, 0.72), rotation=(0, -0.22, 0))
+    kit.solid("complex_mast_brace", brace, concrete_dark, "complexconcretedark", outline=0.006)
+    spike = kit.cone("complex_mast_spike", 0.17, 0.48, location=(mast_x, -1.35, 5.53), verts=8)
+    kit.solid("complex_mast_spike", spike, service_yellow, "serviceyellow")
 
-    # Lightning protection masts are braced back into the apron rather than
-    # floating as thin independent sprites.
-    for sx in (-3.75, 3.85):
-        base = kit.box("complex_mast_base", (0.58, 0.68, 0.24), location=(sx, 0.25, 0.18), bevel=0.03)
-        kit.solid("complex_mast_base", base, T["hull_dark"], "hulldark")
-        mast = kit.cylinder("complex_mast", 0.10, 4.65, location=(sx, 0.25, 0.42), verts=8)
-        kit.solid("complex_mast", mast, T["hull_dark"], "hulldark")
-        brace = kit.box("complex_mast_brace", (0.12, 0.12, 1.8), location=(sx + (-0.32 if sx > 0 else 0.32), 0.25, 0.55), rotation=(0, -0.20 if sx > 0 else 0.20, 0))
-        kit.solid("complex_mast_brace", brace, T["steel"], "steel", outline=0.008)
-        spike = kit.cone("complex_mast_spike", 0.18, 0.55, location=(sx, 0.25, 5.07), verts=8)
-        kit.solid("complex_mast_spike", spike, T["cyan_bright"], "cyanbright")
-
-    return dict(layout=(360, 240), ortho=9.5, mode="room", target=(0, -0.15, 3.0))
+    return dict(layout=(390, 260), ortho=7.8, mode="flat", target=(0, -1.3, 3.25))
 
 
 BUILDS = {
@@ -440,6 +467,6 @@ BUILDS = {
     "hub/pad_clamp": pad_clamp,
     "hub/pad_mast": pad_mast,
     "hub/pad_tank": pad_tank,
-    "hub/pad_hangar_v2": pad_hangar,
-    "hub/pad_complex_v2": pad_complex,
+    "hub/pad_hangar_v3": pad_hangar,
+    "hub/pad_complex_v3": pad_complex,
 }

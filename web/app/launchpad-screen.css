@@ -1,5 +1,12 @@
 /* STS-641 visual reset: Launchpad is a place, not a dashboard. */
-.ln-scene-launchpad { background: #07101c; }
+.ln-scene-launchpad { background: var(--hub-void, var(--ln-void)); }
+/* The launchpad is a destination, not a phone mockup floating on the desktop
+   backdrop. The route adds this class in GameChrome so only this operations
+   page escapes the generic 1320px rounded canvas. */
+.game-stage:has(.portrait-canvas--full-page) {
+  padding: 0;
+  background: var(--hub-void, var(--ln-void));
+}
 .launchpad-visual-scene {
   position: absolute;
   inset: 72px 0 62px;
@@ -19,11 +26,10 @@
    convention from Hub's 22%. */
 .launchpad-scene-zoom {
   position: absolute; inset: 0;
-  /* The previous 1.7x close-up reduced every authored ridge to one giant
-     triangular peak and blew the distant facility silhouettes up into grey
-     slabs. Keep a modest push-in, but preserve enough of the range for its
-     shoulders, gullies and facets to read as terrain. */
-  transform: scale(1.28);
+  /* The previous close-up reduced every authored ridge to one giant triangular
+     peak and blew the distant facilities up into grey slabs. Preserve the
+     Hub's authored scale so shoulders, gullies and facets remain terrain. */
+  transform: none;
   transform-origin: 50% 100%;
   --hub-ground: 20%;
 }
@@ -67,19 +73,32 @@ button.launchpad-scene-object { cursor: pointer; }
   border: 1px solid #86e7f4; border-radius: 50%; background: rgba(6,16,26,.92); color: #86e7f4;
   font: 300 28px/36px var(--ln-font-display); font-style: normal; box-shadow: 0 0 18px rgba(112,217,234,.4);
 }
-.launchpad-tower { left: 27%; bottom: 13%; width: 48%; transform: translateX(-50%); }
-.launchpad-tower-art { position: relative; width: min(480px, 46vw); height: 292px; }
-.launchpad-tower-rocket { position: absolute; z-index: 3; left: 50%; bottom: 34px; width: 190px; transform: translateX(-50%) rotate(-90deg); filter: drop-shadow(0 8px 14px rgba(0,0,0,.55)); }
-.launchpad-rocket { right: 2%; bottom: 13%; width: 52%; min-height: 300px; justify-content: flex-end; }
+.launchpad-tower {
+  left: 2%; bottom: 13%; width: 44%; height: 470px;
+}
+.launchpad-tower-art {
+  position: absolute; left: 50%; bottom: 50px;
+  width: min(620px, 44vw); height: 413px; transform: translateX(-50%);
+}
+.launchpad-tower-art .hub-launchpad-structure {
+  width: 100% !important;
+  height: 100% !important;
+}
+.launchpad-tower .launchpad-object-label,
+.launchpad-rocket .launchpad-object-label {
+  position: absolute; left: 50%; bottom: 0; transform: translateX(-50%);
+}
+.launchpad-tower-rocket { position: absolute; z-index: 3; left: 50%; bottom: 60px; width: 180px; transform: translateX(-50%) rotate(-90deg); filter: drop-shadow(0 8px 14px rgba(0,0,0,.55)); }
+.launchpad-rocket { right: 2%; bottom: 13%; width: 50%; height: 470px; justify-content: flex-end; }
 .launchpad-rocket-art {
-  position: absolute; z-index: 2; left: 43%; bottom: 58px;
-  width: min(250px, 42%); height: 78px; transform: translateX(-50%);
+  position: absolute; z-index: 2; left: 45%; bottom: 76px;
+  width: min(220px, 36%); height: 68px; transform: translateX(-50%);
   display: grid; place-items: end center;
 }
 .launchpad-rocket-art img { position: relative; z-index: 2; width: 100%; filter: drop-shadow(0 12px 12px rgba(0,0,0,.6)); }
 .launchpad-hangar-art {
-  position: absolute; z-index: 0; left: 50%; bottom: 34px;
-  width: min(650px, 118%); transform: translateX(-50%);
+  position: absolute; z-index: 0; left: 50%; bottom: 50px;
+  width: min(715px, 50vw); height: auto; transform: translateX(-50%);
   image-rendering: pixelated; filter: drop-shadow(0 16px 18px rgba(0,0,0,.48));
 }
 .launchpad-rocket-glow { position: absolute; left: 5%; right: 5%; bottom: 18%; height: 14px; border-radius: 50%; background: rgba(112,217,234,.2); filter: blur(12px); }
@@ -237,9 +256,11 @@ button.launchpad-scene-object { cursor: pointer; }
   .launchpad-object-label { min-width: 0; padding: 6px 8px; }
   .launchpad-object-label small { display: none; }
   .launchpad-object-label strong { font-size: 8px; }
-.launchpad-tower-art { height: 250px; }
-  .launchpad-tower-rocket { width: 170px; }
-  .launchpad-hangar-art { width: 330px; }
+  .launchpad-tower,
+  .launchpad-rocket { height: 300px; }
+  .launchpad-tower-art { width: min(390px, 44vw); height: auto; aspect-ratio: 390 / 260; }
+  .launchpad-tower-rocket { width: 120px; bottom: 58px; }
+  .launchpad-hangar-art { width: min(450px, 50vw); }
   .launchpad-satellite svg { width: 70px; }
   .launchpad-rail-status span:not(:first-child) { display: none; }
   .launchpad-rail-actions button { padding: 0 9px; font-size: 8px; flex: 0 0 auto; }
@@ -259,9 +280,20 @@ button.launchpad-scene-object { cursor: pointer; }
   .launchpad-guide-copy { font-size: 9px; line-height: 1.35; }
   .launchpad-guide-footer { margin-top: 8px; }
   .launchpad-guide-actions button { height: 28px; }
-  .launchpad-tower-art { height: 220px; }
-  .launchpad-tower-rocket { width: 146px; }
-  .launchpad-hangar-art { width: 280px; }
+  .launchpad-tower,
+  .launchpad-rocket { height: 250px; }
+  .launchpad-tower-art { width: min(330px, 42vw); height: auto; aspect-ratio: 390 / 260; }
+  .launchpad-tower-rocket { width: 110px; }
+  .launchpad-hangar-art { width: min(380px, 48vw); }
   .launchpad-rocket-art { height: 76px; }
   .launchpad-satellite { top: 2%; }
+}
+@media (orientation: portrait) and (max-width: 620px) {
+  .launchpad-tower { left: 1%; width: 47%; height: 230px; bottom: 17%; }
+  .launchpad-rocket { right: 1%; width: 51%; height: 230px; bottom: 17%; }
+  .launchpad-tower-art { bottom: 44px; width: 100%; height: auto; aspect-ratio: 390 / 260; }
+  .launchpad-hangar-art { bottom: 44px; width: 100%; }
+  .launchpad-tower-rocket { width: 70px; bottom: 52px; }
+  .launchpad-rocket-art { left: 43%; bottom: 54px; width: 34%; height: 44px; }
+  .launchpad-object-label { margin-top: 0; }
 }
