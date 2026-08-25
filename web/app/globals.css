@@ -653,62 +653,49 @@ button { cursor: pointer; }
   }
 }
 
-.ln-sheet {
+.ln-page-surface {
   position: absolute;
   inset: 0;
-  display: flex;
-  justify-content: center;
-  isolation: isolate;
+  overflow: auto;
+  background: var(--ln-void);
 }
 
-.ln-sheet--bottom { align-items: flex-end; }
-.ln-sheet--centered { align-items: center; padding: var(--ln-s-5); }
-
-.ln-sheet__scrim {
-  position: absolute;
-  inset: 0;
-  background: var(--ln-overlay);
-}
-
-.ln-sheet__panel {
+.ln-page-surface__content {
   position: relative;
-  background: linear-gradient(180deg, #232327, #0f0f11);
-  border: 1px solid var(--ln-hairline);
-  box-shadow: var(--ln-shadow-modal);
-}
-
-.ln-sheet__panel--bottom {
   width: 100%;
-  border-bottom: 0;
-  border-radius: 20px 20px 0 0;
-  /* KES-170: no cap meant a tall bottom sheet (e.g. a multi-question
-     PostHog survey) could grow to cover the whole viewport, including the
-     TopBar underneath — "PostHog surveys must ... never block or cover
-     gameplay UI" is a standing rule, not survey-specific, so this caps
-     every bottom sheet and lets its own content scroll instead. */
-  max-height: min(78vh, calc(100vh - 64px));
+  min-height: 100%;
+  border-radius: 0 !important;
+  max-height: none !important;
+  box-shadow: none !important;
   overflow-y: auto;
 }
 
-.ln-sheet__panel--centered {
-  width: min(360px, 100%);
-  border-radius: var(--ln-r-xl);
-}
-
-.ln-sheet__panel--sheet-in { animation: sheet-up var(--ln-d-slow) var(--ln-ease-out); }
-.ln-sheet__panel--popup-in { animation: unlock-in var(--ln-d-slow) var(--ln-ease-out); }
-
-.ln-sheet__handle-wrap {
+.ln-action-confirm {
+  position: absolute;
+  z-index: 88;
+  right: var(--ln-s-3);
+  bottom: calc(var(--ln-nav-h, 64px) + var(--ln-s-3));
+  left: var(--ln-s-3);
   display: flex;
-  justify-content: center;
-  margin-bottom: 14px;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--ln-s-3);
+  padding: var(--ln-s-3);
+  background: var(--ln-panel);
+  border: 1px solid var(--ln-cyan-border);
+  box-shadow: var(--ln-shadow-panel);
 }
-
-.ln-sheet__handle {
-  width: 40px;
-  height: 4px;
-  border-radius: 2px;
-  background: rgba(255,255,255,0.22);
+.ln-action-confirm__copy { min-width: 0; }
+.ln-action-confirm__copy > span { display: block; color: var(--ln-cyan); font: 800 9px var(--ln-font-display); letter-spacing: .22em; text-transform: uppercase; }
+.ln-action-confirm__copy > strong { display: block; margin-top: 2px; color: var(--ln-text); font: 800 16px var(--ln-font-display); text-transform: uppercase; }
+.ln-action-confirm__copy > p { margin: 4px 0 0; color: var(--ln-text-dim); font: 12px/1.4 var(--ln-font-body); }
+.ln-action-confirm__actions { display: flex; align-items: center; gap: var(--ln-s-2); flex: 0 0 auto; }
+.ln-action-confirm__actions button { min-height: 40px; padding: 0 var(--ln-s-3); border: 1px solid var(--ln-hairline); background: var(--ln-surface-2); color: var(--ln-text-dim); font: 800 10px var(--ln-font-display); letter-spacing: .12em; cursor: pointer; }
+.ln-action-confirm__actions button.is-primary { border-color: var(--ln-cyan); background: var(--ln-cyan); color: var(--ln-text-on-cyan); }
+@media (max-width: 640px) {
+  .ln-action-confirm { align-items: stretch; flex-direction: column; }
+  .ln-action-confirm__actions { width: 100%; }
+  .ln-action-confirm__actions button { flex: 1; }
 }
 
 .auth-gate {
@@ -720,12 +707,6 @@ button { cursor: pointer; }
   justify-content: center;
   padding: var(--ln-s-4);
   overflow: auto;
-}
-
-.auth-gate__scrim {
-  position: absolute;
-  inset: 0;
-  background: rgba(5, 10, 18, 0.66);
 }
 
 .auth-gate__panel {
@@ -768,10 +749,6 @@ button { cursor: pointer; }
   }
 }
 
-.auth-gate .ln-sheet__handle-wrap {
-  display: none;
-}
-
 @media (max-width: 759px) {
   .auth-gate { align-items: flex-end; padding: 0; }
   .auth-gate__panel { display: block; width: 100%; max-height: calc(100dvh - 16px); overflow-y: auto; border-bottom: 0; border-radius: var(--ln-r-xl) var(--ln-r-xl) 0 0; }
@@ -789,6 +766,22 @@ button { cursor: pointer; }
   .auth-gate__telemetry { left: var(--ln-s-4); bottom: var(--ln-s-3); font-size: 8px; }
   .auth-gate__content { padding: var(--ln-s-5) var(--ln-s-4) var(--ln-s-6); }
   .auth-gate__heading { font-size: 28px; }
+}
+
+/* Authentication is an app entry page, not a card over a dimmed game. */
+.auth-gate.ln-page-surface {
+  align-items: stretch;
+  padding: 0;
+  background: var(--ln-void);
+}
+.auth-gate .auth-gate__panel.ln-page-surface__content {
+  width: 100%;
+  max-width: none;
+  max-height: none;
+  min-height: 100%;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
 }
 
 .auth-gate__scene {
@@ -1475,7 +1468,6 @@ button { cursor: pointer; }
   border-color: var(--ln-bp-line-strong) !important;
   box-shadow: var(--ln-shadow-card);
 }
-.theme-blueprint.mining-screen .mining-guide-overlay,
 .theme-blueprint.mining-screen .mining-success-overlay,
 .theme-blueprint.mining-screen .mining-failure-overlay {
   background: var(--ln-mining-overlay);
@@ -1485,7 +1477,7 @@ button { cursor: pointer; }
   border: 1px solid var(--ln-bp-line-strong);
   border-radius: var(--ln-r-lg);
   background: var(--ln-mining-control-fill-strong);
-  box-shadow: var(--ln-shadow-modal);
+  box-shadow: var(--ln-shadow-panel);
 }
 .theme-blueprint.mining-screen .mining-guide-close,
 .theme-blueprint.mining-screen .mining-success-secondary,

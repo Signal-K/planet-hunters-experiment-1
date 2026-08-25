@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, type CSSProperties } from 'react'
-import ConfirmActionSheet from '@/components/game/ConfirmActionSheet'
+import ActionConfirmBar from '@/components/game/ActionConfirmBar'
 import MineralChip from '@/components/game/MineralChip'
 import { MINERAL_META, CLIENT_SLOTS } from '@/lib/data'
 import { sellUnitPrice, sellQuote } from '@/lib/systems/EconomySystem'
@@ -107,7 +107,7 @@ export default function MarketScreen({ stash, marketSupply, marketSupplyUpdatedA
           </div>
         )}
         {sellAllConfirm && (
-          <ConfirmActionSheet
+          <ActionConfirmBar
             eyebrow="Commodity Exchange"
             title="Sell Entire Inventory"
             description={`Sell all cargo for ${formatCurrency(totalValue())}? This can't be undone.`}
@@ -154,7 +154,7 @@ export default function MarketScreen({ stash, marketSupply, marketSupplyUpdatedA
       </main>
 
       {confirming && MINERAL_META[confirming] && (
-        <ConfirmActionSheet
+        <ActionConfirmBar
           eyebrow="Commodity Exchange"
           title={`Sell All ${MINERAL_META[confirming].name}`}
           description={`Sell ${stash[confirming] ?? 0} units for ${formatCurrency(unitPrice(confirming).price * (stash[confirming] ?? 0))}? This can't be undone.`}

@@ -736,6 +736,29 @@
   color: var(--ln-text-muted);
 }
 
+/* The selected contract is part of the board, not a floating inspector card.
+   List and detail share one continuous paper console and one outer frame. */
+:global(.theme-blueprint) .layout {
+  gap: 0;
+  border: 1px solid var(--ln-bp-line-strong);
+  background: var(--ln-bp-paper);
+}
+:global(.theme-blueprint) .canvas {
+  border-radius: 0;
+}
+:global(.theme-blueprint) .panel {
+  border: 0;
+  border-top: 1px solid var(--ln-bp-line-strong);
+  border-radius: 0;
+}
+@media (min-width: 821px) {
+  :global(.theme-blueprint) .panel {
+    min-height: 100%;
+    border-top: 0;
+    border-left: 1px solid var(--ln-bp-line-strong);
+  }
+}
+
 /* Keep this compact-landscape override after the desktop blueprint rules so
    the 821px two-column declaration cannot reintroduce the detail panel. */
 @media (orientation: landscape) and (max-width: 1023px) and (max-height: 600px) {

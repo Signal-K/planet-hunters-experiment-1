@@ -4,7 +4,7 @@ import React, { useState } from 'react'
 import { useGame } from '@/game-context'
 import { pbShared } from '@/lib/pb'
 import { DEV_GROUPS } from '@/lib/devPresets'
-import Sheet from '@/components/ui/Sheet'
+import PageSurface from '@/components/ui/PageSurface'
 
 interface SettingsSheetProps {
   onClose: () => void
@@ -88,15 +88,12 @@ export default function SettingsSheet({ onClose }: SettingsSheetProps) {
   }
 
   return (
-    <Sheet
-      onDismiss={onClose}
-      showHandle={false}
-      panelStyle={{
+    <PageSurface
+      contentStyle={{
         background: 'linear-gradient(180deg, #0d1c30, #060d18)',
         border: '1px solid rgba(112,217,234,0.2)',
         padding: '18px 20px 32px',
-        boxShadow: '0 -12px 40px rgba(0,0,0,0.6)',
-        maxHeight: '80dvh', overflowY: 'auto',
+        overflowY: 'auto',
       }}
     >
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 18 }}>
@@ -191,6 +188,6 @@ export default function SettingsSheet({ onClose }: SettingsSheetProps) {
             ))}
           </Section>
         )}
-    </Sheet>
+    </PageSurface>
   )
 }

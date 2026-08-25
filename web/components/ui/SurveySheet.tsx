@@ -190,19 +190,12 @@ export default function SurveySheet({ blockWhile }: { blockWhile?: boolean }) {
   }
 
   return (
-    <div data-testid="survey-sheet" style={{ position: 'absolute', inset: 0, zIndex: 94, display: 'flex', alignItems: 'flex-end', justifyContent: 'center', pointerEvents: 'none', padding: 16, boxSizing: 'border-box' }}>
-      <div style={{ position: 'absolute', inset: 0, background: 'var(--ln-overlay)', pointerEvents: 'auto' }} onClick={handleSkip} />
-      <div style={{
-        position: 'relative', width: 'min(100%, 680px)', pointerEvents: 'auto',
-        background: 'var(--ln-panel)', borderRadius: 12,
-        border: '2px solid var(--ln-cyan-border)',
-        padding: '16px 16px 24px',
-        boxShadow: 'var(--ln-shadow-modal)',
-      }}>
-        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 14 }}>
-          <div style={{ width: 36, height: 4, borderRadius: 2, background: 'var(--ln-hairline-strong)' }} />
-        </div>
-
+    <aside data-testid="survey-sheet" aria-label="Quick question" style={{
+      position: 'absolute', zIndex: 94, right: 16, bottom: 'calc(var(--ln-nav-h, 64px) + 16px)',
+      width: 'min(420px, calc(100% - 32px))', pointerEvents: 'auto',
+      background: 'var(--ln-panel)', border: '2px solid var(--ln-cyan-border)',
+      padding: '16px 16px 24px', boxShadow: 'var(--ln-shadow-panel)',
+    }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
           <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 10, fontWeight: 700, letterSpacing: '0.16em', color: 'var(--ln-cyan)', textTransform: 'uppercase' }}>
             Quick question {survey.questions.length > 1 ? `${qIndex + 1} / ${survey.questions.length}` : ''}
@@ -253,7 +246,6 @@ export default function SurveySheet({ blockWhile }: { blockWhile?: boolean }) {
             </button>
           </>
         ) : null}
-      </div>
-    </div>
+    </aside>
   )
 }

@@ -2,7 +2,7 @@
 
 import React from 'react'
 import Image from 'next/image'
-import Sheet from '@/components/ui/Sheet'
+import PageSurface from '@/components/ui/PageSurface'
 
 type UnlockKind = 'sr2' | 'loan' | 'ship-customizer'
 
@@ -134,18 +134,13 @@ export default function UnlockPopup({ kind, onClose, onDismiss }: UnlockPopupPro
   const u = UNLOCKS[kind] ?? UNLOCKS.sr2
 
   return (
-    <Sheet
-      variant="centered"
-      onDismiss={onDismiss ?? onClose}
+    <PageSurface
       zIndex={90}
-      backdropTestId="unlock-popup-scrim"
-      scrimStyle={{ background: 'rgba(8,8,9,0.8)', backdropFilter: 'blur(3px)' }}
-      panelStyle={{
-        width: 320, maxWidth: '90%',
+      testId="unlock-page"
+      contentStyle={{
         background: 'linear-gradient(180deg, #0d1c30 0%, #060d18 100%)',
         border: `1px solid ${u.accent}88`,
-        borderRadius: 20, padding: 22, textAlign: 'center',
-        boxShadow: `0 20px 60px rgba(0,0,0,0.7), 0 0 40px ${u.accent}33`,
+        padding: 22, textAlign: 'center',
       }}
     >
         <div style={{ position: 'absolute', inset: 0, borderRadius: 20, overflow: 'hidden', pointerEvents: 'none' }}>
@@ -201,6 +196,6 @@ export default function UnlockPopup({ kind, onClose, onDismiss }: UnlockPopupPro
             }}>Decline</button>
           )}
         </div>
-    </Sheet>
+    </PageSurface>
   )
 }

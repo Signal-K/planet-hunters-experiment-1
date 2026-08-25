@@ -12,7 +12,6 @@ const KNOWN_ZONES = [
   'feedback-launcher',
   'ambient-prompt',
   'status-utility',
-  'modal-overlay',
 ]
 
 const VIEWPORTS = [

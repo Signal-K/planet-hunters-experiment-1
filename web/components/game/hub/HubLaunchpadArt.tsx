@@ -8,13 +8,14 @@ import React from 'react'
  * The previous DOM version assembled nine transparent PNGs with independent
  * horizontal and vertical scales. Even when the coordinates were technically
  * correct, the masts, tanks, clamps and swing arm read as detached cut-outs.
- * `pad_complex_v3.png` is authored as a front elevation at the exact same
- * camera scale and baseline as the hangar. Every part shares one deck and no
- * perspective slab can fight the flat Earth Base landscape. The rocket remains
- * a separate overlay because that is real game state, not part of the building.
+ * `pad_complex_v4.png` and the hangar share one shallow side-on camera,
+ * horizon and ground baseline. The irregular silhouette and slight depth give
+ * the scene Out There / Crashlands character without turning either structure
+ * into an isometric diorama. The rocket remains a separate overlay because it
+ * is real game state, not part of the building.
  */
 
-const ART_ASPECT = 390 / 260
+const ART_ASPECT = 250 / 157
 const TARGET_TOP_PX = 178
 
 export function LaunchpadStructure({ w, targetTopPx = TARGET_TOP_PX, dimmed, hot }: { w: number; targetTopPx?: number; dimmed?: boolean; hot?: boolean }) {
@@ -22,7 +23,7 @@ export function LaunchpadStructure({ w, targetTopPx = TARGET_TOP_PX, dimmed, hot
   return (
     <img
       className="hub-launchpad-structure"
-      src="/game/assets/hub/pad_complex_v3.png"
+      src="/game/assets/hub/pad_complex_v4.png"
       alt=""
       data-launch-state={hot ? 'hot' : 'idle'}
       style={{

@@ -258,7 +258,7 @@ button.launchpad-scene-object { cursor: pointer; }
   .launchpad-object-label strong { font-size: 8px; }
   .launchpad-tower,
   .launchpad-rocket { height: 300px; }
-  .launchpad-tower-art { width: min(390px, 44vw); height: auto; aspect-ratio: 390 / 260; }
+  .launchpad-tower-art { width: min(390px, 44vw); height: auto; aspect-ratio: 250 / 157; }
   .launchpad-tower-rocket { width: 120px; bottom: 58px; }
   .launchpad-hangar-art { width: min(450px, 50vw); }
   .launchpad-satellite svg { width: 70px; }
@@ -282,7 +282,7 @@ button.launchpad-scene-object { cursor: pointer; }
   .launchpad-guide-actions button { height: 28px; }
   .launchpad-tower,
   .launchpad-rocket { height: 250px; }
-  .launchpad-tower-art { width: min(330px, 42vw); height: auto; aspect-ratio: 390 / 260; }
+  .launchpad-tower-art { width: min(330px, 42vw); height: auto; aspect-ratio: 250 / 157; }
   .launchpad-tower-rocket { width: 110px; }
   .launchpad-hangar-art { width: min(380px, 48vw); }
   .launchpad-rocket-art { height: 76px; }

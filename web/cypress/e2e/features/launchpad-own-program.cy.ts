@@ -83,22 +83,22 @@ describe('Launchpad · your own program', () => {
       })
   })
 
-  it('the contracts button reaches the Mission Board', () => {
+  it('clicking the launchpad starts a new mission on the Mission Board', () => {
     cy.viewport(390, 844)
     visitLaunchpad(freeOpsSave())
 
     cy.get('[data-testid="launchpad-program-operation-btn"]', { timeout: 15000 }).should('exist')
     // The auth gate overlays the whole screen on a fresh visit and covers
-    // the sticky actions; get past it (email required, KES-97) before
+    // the scene; get past it (email required, KES-97) before clicking the pad.
     // This fixture deliberately has no stored credentials, so the mandatory
-    // email gate must be handled before the contracts CTA. Waiting directly
+    // email gate must be handled before the launchpad action. Waiting directly
     // for the gate avoids resolving the CTA first and then racing its async
     // mount/removal (KES-135).
     cy.get('[data-testid="auth-gate-quick-email"]', { timeout: 15000 }).should('be.visible')
     cy.get('[data-testid="auth-gate-quick-email"]').type(`cy-launchpad-${Date.now()}@example.com`)
     cy.get('[data-testid="auth-gate-quick-submit"]').click()
     cy.get('[data-testid="auth-gate-quick-email"]', { timeout: 15000 }).should('not.exist')
-    cy.get('[data-testid="launchpad-view-contracts-btn"]', { timeout: 15000 }).should('be.visible').click()
+    cy.get('[data-testid="launchpad-status-card"]', { timeout: 15000 }).should('be.visible').click()
     cy.contains('Mission Board', { timeout: 15000 }).should('be.visible')
   })
 })

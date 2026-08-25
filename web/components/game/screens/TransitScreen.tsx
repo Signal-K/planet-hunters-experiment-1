@@ -6,7 +6,7 @@ import { isOwnProgramMission, missionTypePrimer } from '@/lib/data'
 import { Scene } from '@/lib/engine'
 import TopBar from '@/components/ui/TopBar'
 import { GhostBtn, PrimaryBtn } from '@/components/ui/Button'
-import ConfirmActionSheet from '@/components/game/ConfirmActionSheet'
+import ActionConfirmBar from '@/components/game/ActionConfirmBar'
 import { UI_ZONES } from '@/lib/ui-zones'
 import { formatCountdown } from '@/lib/format'
 
@@ -263,7 +263,7 @@ export default function TransitScreen({ target, rocketImageSrc, arrivalAt, trans
       </div>
 
       {confirmingAbandon && onAbandon && (
-        <ConfirmActionSheet
+        <ActionConfirmBar
           eyebrow="Mission Transit"
           title="Abort Mission"
           description="Abort this mission in transit? Cargo and mission progress will be lost."

@@ -339,6 +339,11 @@ export function ScreenContent({
             game.onPickMission(id)
           }}
           onViewContracts={() => game.goToMissions()}
+          onLaunchpadAction={() => {
+            if (game.player.activeMission) return game.go(game.player.missionPhase ?? 'transit')
+            if (game.player.pendingLaunch) return game.go('fab')
+            game.goToMissions()
+          }}
           onOpenHangar={() => game.go(game.player.pendingLaunch ? 'fab' : 'hangar')}
           onOpenSubsurface={() => game.go('hub-subsurface')}
           missionsDone={game.player.missionsDone}

@@ -305,7 +305,7 @@ def solid(name, obj, base_hex, key, outline=0.012, grain=False):
 
 # --- Camera ------------------------------------------------------------------
 #
-# Three projections, because the game has three kinds of sprite:
+# Four projections, because the game has four kinds of sprite:
 #
 #   ISO  — matches takeon's isometric terrain. Its tiles are 32x16, a 2:1
 #          ratio, so the camera pitch is atan(0.5) = 26.565 degrees, not the
@@ -322,11 +322,18 @@ def solid(name, obj, base_hex, key, outline=0.012, grain=False):
 #          There: Omega/Pixel Starships room interiors use, not a full
 #          isometric corner view (ISO_YAW=45 showed too much of both side
 #          walls and read as a diamond, not a room you're looking into).
+#   SIDE — an oblique side-on world-art view (2026-08-25, Earth Base
+#          correction). It reveals only a narrow top/side facet, preserving a
+#          shared horizontal ground line while avoiding both dead-flat front
+#          elevations and pasted-on isometric dioramas. This is the Out There
+#          + Crashlands + Pixel Starships exterior/cutaway projection.
 
 ISO_PITCH = math.degrees(math.atan(0.5))   # 26.565
 ISO_YAW = 45.0
 ROOM_PITCH = 22.0
 ROOM_YAW = 20.0
+SIDE_PITCH = 11.0
+SIDE_YAW = 8.0
 
 
 def setup_camera(mode, ortho_scale, target=(0, 0, 0), distance=20.0):
@@ -346,8 +353,11 @@ def setup_camera(mode, ortho_scale, target=(0, 0, 0), distance=20.0):
     elif mode == "room":
         pitch = math.radians(90.0 - ROOM_PITCH)
         yaw = math.radians(ROOM_YAW)
+    elif mode == "side":
+        pitch = math.radians(90.0 - SIDE_PITCH)
+        yaw = math.radians(SIDE_YAW)
     else:
-        raise ValueError("mode must be 'iso', 'flat', or 'room'")
+        raise ValueError("mode must be 'iso', 'flat', 'room', or 'side'")
 
     cam.rotation_euler = (pitch, 0.0, yaw)
     direction = Vector((

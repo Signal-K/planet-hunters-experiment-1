@@ -11,6 +11,7 @@ function renderLaunchpad(freeOperations = true): string {
       onBack={() => undefined}
       onPick={() => undefined}
       onViewContracts={() => undefined}
+      onLaunchpadAction={() => undefined}
       onOpenHangar={() => undefined}
       onOpenSubsurface={() => undefined}
       missionsDone={freeOperations ? 4 : 0}
@@ -29,8 +30,10 @@ describe('LaunchpadScreen', () => {
     expect(markup).toContain('data-testid="launchpad-guide-open"')
     expect(markup).toContain('data-testid="launchpad-view-contracts-btn"')
     expect(markup).toContain('data-testid="launchpad-open-subsurface-btn"')
-    expect(markup).toContain('/game/assets/hub/pad_complex_v3.png')
-    expect(markup).toContain('/game/assets/hub/pad_hangar_v3.png')
+    expect(markup).toContain('/game/assets/hub/pad_complex_v4.png')
+    expect(markup).toContain('/game/assets/hub/pad_hangar_v4.png')
+    expect(markup).toContain('<button type="button" class="launchpad-scene-object launchpad-tower')
+    expect(markup).toContain('START MISSION')
     expect(markup).not.toContain('/game/assets/hub/pad_hangar.png')
     expect(markup).toContain('ROCKETS')
     expect(markup).toContain('SAT')

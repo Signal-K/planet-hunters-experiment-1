@@ -460,6 +460,196 @@ def pad_complex():
     return dict(layout=(390, 260), ortho=7.8, mode="flat", target=(0, -1.3, 3.25))
 
 
+def _side_beam(name, x, y, z, length, angle, width, depth, color, key, grain=False):
+    """A beam in the X/Z plane, used for trusses, pipes and cable runs."""
+    beam = kit.box(name, (length, depth, width), location=(x, y, z), rotation=(0, angle, 0), bevel=width * 0.12)
+    return kit.solid(name, beam, color, key, outline=0.008, grain=grain)
+
+
+def pad_hangar_v4():
+    """Side-on 2.5D launch hangar with a readable cutaway and uneven silhouette.
+
+    This is deliberately not an architectural box. The shell steps around one
+    dominant open bay, a lower workshop wing and a tall service spine. Shallow
+    camera pitch/yaw exposes just enough roof and wall depth to match the Earth
+    Base ground plane without turning the building into an isometric diorama.
+    """
+    shell = kit.tint(T["steel"], 1.08)
+    shell_shadow = kit.tint(T["steel"], 0.72)
+    warm = kit.tint(T["amber"], 0.88)
+    ink = T["hull_dark"]
+
+    # One shared ground raft, broken by a recessed vehicle rail and a battered
+    # service lip. Large surfaces opt into restrained material grain so they no
+    # longer read as untouched wooden blocks.
+    raft = kit.box("hangar4_raft", (9.7, 1.15, 0.28), location=(0, 0, 0), bevel=0.08)
+    kit.solid("hangar4_raft", raft, ink, "hangar4raft", grain=True)
+    apron = kit.box("hangar4_apron", (7.3, 0.92, 0.16), location=(-0.55, -0.34, 0.28), bevel=0.04)
+    kit.solid("hangar4_apron", apron, shell_shadow, "hangar4apron", grain=True)
+    for sx in (-1.25, 0.15):
+        rail = kit.box("hangar4_floor_rail", (0.12, 0.92, 0.08), location=(sx, -0.47, 0.46))
+        kit.solid("hangar4_floor_rail", rail, T["rust"], "hangar4rail", outline=0.004)
+
+    # Bay void first; the frame and machinery are layered in front of it.
+    opening = kit.box("hangar4_opening", (6.55, 0.42, 3.75), location=(-0.72, 0.10, 0.47), bevel=0.10)
+    kit.solid("hangar4_opening", opening, T["void"], "hangar4void", outline=0.02)
+
+    # Asymmetric structural shell: a heavy left service spine, slim right jamb
+    # and broken saw-tooth roof. The small top facets are visible in SIDE mode.
+    left_spine = kit.box("hangar4_service_spine", (0.84, 0.92, 4.65), location=(-4.23, 0.05, 0.46), bevel=0.10)
+    kit.solid("hangar4_service_spine", left_spine, T["rust"], "hangar4spine", grain=True)
+    right_jamb = kit.box("hangar4_right_jamb", (0.50, 0.82, 4.10), location=(2.77, 0.06, 0.46), bevel=0.08)
+    kit.solid("hangar4_right_jamb", right_jamb, shell, "hangar4shell", grain=True)
+    _side_beam("hangar4_roof_left", -2.55, 0.08, 4.74, 4.15, -0.23, 0.48, 0.95, ink, "hangar4roof", True)
+    _side_beam("hangar4_roof_right", 1.02, 0.08, 4.70, 3.35, 0.18, 0.48, 0.95, ink, "hangar4roof", True)
+    ridge = kit.box("hangar4_ridge", (0.60, 1.02, 0.64), location=(-0.72, 0.08, 5.14), rotation=(0, -0.05, 0), bevel=0.08)
+    kit.solid("hangar4_ridge", ridge, T["rust"], "hangar4ridge", grain=True)
+    roof_fin = kit.box("hangar4_roof_fin", (1.62, 0.62, 0.22), location=(-2.70, 0.02, 5.16), rotation=(0, -0.23, 0), bevel=0.04)
+    kit.solid("hangar4_roof_fin", roof_fin, warm, "hangar4warm", outline=0.008)
+
+    # Raised segmented blast door: broad overlapping leaves with visible side
+    # guides. Different widths keep it from becoming a barcode.
+    for index, (z, width) in enumerate(((3.54, 6.42), (3.84, 6.10), (4.14, 5.72))):
+        door = kit.box("hangar4_door_leaf", (width, 0.20, 0.24), location=(-0.72 + index * 0.07, -0.48, z), bevel=0.04)
+        kit.solid("hangar4_door_leaf", door, shell_shadow if index != 1 else shell, f"hangar4door{index}", grain=True)
+    for sx in (-3.78, 2.36):
+        guide = kit.box("hangar4_door_guide", (0.15, 0.18, 3.30), location=(sx, -0.55, 0.58), bevel=0.02)
+        kit.solid("hangar4_door_guide", guide, warm, "hangar4warm", outline=0.004)
+
+    # Interior levels are functional rather than repetitive: one long rear
+    # catwalk, a short inspection balcony and a yellow travelling crane.
+    catwalk = kit.box("hangar4_catwalk", (5.45, 0.32, 0.16), location=(-0.80, -0.52, 2.42), bevel=0.03)
+    kit.solid("hangar4_catwalk", catwalk, T["rust"], "hangar4rust", grain=True)
+    _side_beam("hangar4_catwalk_rail", -0.80, -0.64, 2.73, 5.30, 0, 0.10, 0.08, warm, "hangar4warm")
+    balcony = kit.box("hangar4_balcony", (1.76, 0.44, 0.18), location=(-2.72, -0.57, 1.43), bevel=0.03)
+    kit.solid("hangar4_balcony", balcony, shell, "hangar4shell", grain=True)
+    crane = kit.box("hangar4_crane", (5.82, 0.34, 0.30), location=(-0.55, -0.66, 3.13), bevel=0.05)
+    kit.solid("hangar4_crane", crane, warm, "hangar4warm", grain=True)
+    trolley = kit.box("hangar4_trolley", (0.74, 0.46, 0.48), location=(0.40, -0.72, 2.74), bevel=0.08)
+    kit.solid("hangar4_trolley", trolley, T["rust"], "hangar4rust", grain=True)
+    _side_beam("hangar4_hook_cable", 0.40, -0.77, 2.13, 1.08, 1.5708, 0.06, 0.07, shell, "hangar4shell")
+    hook = kit.cone("hangar4_hook", 0.22, 0.42, location=(0.40, -0.77, 1.63), verts=5, radius2=0.08)
+    kit.solid("hangar4_hook", hook, warm, "hangar4warm", outline=0.008)
+
+    # Dense but legible workshop storytelling: pressure tanks, benches, tool
+    # lockers, a snaking coolant pipe and chunky cyan work lights.
+    for sx, height in ((-3.18, 0.78), (1.75, 1.04)):
+        tank = kit.cylinder("hangar4_pressure_tank", 0.30, height, location=(sx, -0.56, 0.52), verts=8)
+        kit.solid("hangar4_pressure_tank", tank, shell, "hangar4shell", grain=True)
+        band = kit.cylinder("hangar4_tank_band", 0.32, 0.12, location=(sx, -0.56, 0.82), verts=8)
+        kit.solid("hangar4_tank_band", band, T["rust"], "hangar4rust", outline=0)
+    for sx, width in ((-2.15, 1.12), (-0.40, 1.42), (1.13, 0.92)):
+        bench = kit.box("hangar4_bench", (width, 0.34, 0.22), location=(sx, -0.65, 0.66), bevel=0.04)
+        kit.solid("hangar4_bench", bench, T["rust"], "hangar4rust", grain=True)
+        locker = kit.box("hangar4_locker", (0.42, 0.28, 0.72), location=(sx - width * 0.25, -0.60, 0.88), bevel=0.03)
+        kit.solid("hangar4_locker", locker, shell_shadow, "hangar4shadow", grain=True)
+    for x, z, length, angle in ((-2.65, 1.02, 1.25, 0.0), (-1.72, 1.25, 0.82, 0.68), (-1.08, 1.56, 0.86, 0.18), (-0.38, 1.69, 0.76, -0.15)):
+        _side_beam("hangar4_coolant_pipe", x, -0.72, z, length, angle, 0.10, 0.10, T["cyan"], "hangar4cyan")
+    for sx, z in ((-3.05, 2.88), (-1.55, 2.82), (0.18, 2.84), (1.72, 2.78)):
+        lamp = kit.box("hangar4_work_light", (0.46, 0.14, 0.16), location=(sx, -0.78, z), bevel=0.04)
+        kit.solid("hangar4_work_light", lamp, T["cyan_bright"], "hangar4light", outline=0)
+
+    # Low workshop wing and roof services break the big-barn silhouette.
+    wing = kit.box("hangar4_workshop_wing", (2.08, 0.98, 2.52), location=(3.58, 0.04, 0.35), bevel=0.10)
+    kit.solid("hangar4_workshop_wing", wing, shell_shadow, "hangar4shadow", grain=True)
+    wing_roof = kit.box("hangar4_wing_roof", (2.34, 1.10, 0.34), location=(3.52, 0.03, 2.87), rotation=(0, 0.10, 0), bevel=0.08)
+    kit.solid("hangar4_wing_roof", wing_roof, ink, "hangar4roof", grain=True)
+    for z, width in ((0.90, 1.20), (1.48, 0.88), (2.04, 1.38)):
+        window = kit.box("hangar4_wing_window", (width, 0.12, 0.26), location=(3.48, -0.55, z), bevel=0.03)
+        kit.solid("hangar4_wing_window", window, T["rust"], "hangar4rust", grain=True)
+    vent = kit.cylinder("hangar4_roof_vent", 0.26, 0.56, location=(2.76, 0.04, 3.32), verts=6)
+    kit.solid("hangar4_roof_vent", vent, warm, "hangar4warm", grain=True)
+    antenna = kit.cone("hangar4_antenna", 0.12, 0.72, location=(-4.18, 0.02, 5.10), verts=5, radius2=0.03)
+    kit.solid("hangar4_antenna", antenna, T["cyan"], "hangar4cyan", outline=0.006)
+
+    return dict(layout=(250, 157), ortho=10.8, mode="side", target=(0, 0, 3.4))
+
+
+def pad_complex_v4():
+    """Side-on 2.5D launch complex with irregular industrial silhouette."""
+    shell = kit.tint(T["steel"], 1.02)
+    shell_shadow = kit.tint(T["steel"], 0.70)
+    warm = kit.tint(T["amber"], 0.86)
+    ink = T["hull_dark"]
+
+    raft = kit.box("complex4_raft", (9.6, 1.12, 0.26), location=(0, 0, 0), bevel=0.08)
+    kit.solid("complex4_raft", raft, ink, "complex4raft", grain=True)
+    deck = kit.box("complex4_deck", (7.85, 0.86, 0.34), location=(-0.52, -0.20, 0.26), bevel=0.06)
+    kit.solid("complex4_deck", deck, shell_shadow, "complex4deck", grain=True)
+    trench = kit.cylinder("complex4_flame_ring", 0.82, 0.24, location=(0.20, -0.34, 0.60), verts=10)
+    kit.solid("complex4_flame_ring", trench, T["rust"], "complex4rust", grain=True)
+    throat = kit.cylinder("complex4_flame_throat", 0.48, 0.30, location=(0.20, -0.35, 0.72), verts=10)
+    kit.solid("complex4_flame_throat", throat, T["void"], "complex4void", outline=0.010)
+
+    # Tall service tower uses an open tapered frame rather than a stack of
+    # identical floors. Platform widths and positions deliberately vary.
+    tower_x = -2.25
+    for sx, angle in ((-2.98, -0.055), (-1.52, 0.055)):
+        post = kit.box("complex4_tower_post", (0.18, 0.34, 5.72), location=(sx, 0.03, 0.62), rotation=(0, angle, 0), bevel=0.03)
+        kit.solid("complex4_tower_post", post, ink, "complex4ink", grain=True)
+    spine = kit.box("complex4_tower_spine", (0.58, 0.72, 5.15), location=(tower_x, 0.14, 0.66), bevel=0.08)
+    kit.solid("complex4_tower_spine", spine, T["rust"], "complex4rust", grain=True)
+    floors = ((1.30, 1.72, -0.10), (2.15, 2.25, 0.10), (3.16, 1.82, -0.12), (4.05, 2.36, 0.12), (5.10, 1.64, -0.08))
+    for index, (z, width, xoff) in enumerate(floors):
+        platform = kit.box("complex4_platform", (width, 0.74, 0.18), location=(tower_x + xoff, -0.16, z), bevel=0.04)
+        kit.solid("complex4_platform", platform, shell if index % 2 == 0 else shell_shadow, f"complex4platform{index}", grain=True)
+        _side_beam("complex4_platform_rail", tower_x + xoff, -0.59, z + 0.28, width * 0.84, 0, 0.09, 0.08, warm, "complex4warm")
+    for z, angle in ((1.66, 0.61), (2.67, -0.59), (3.62, 0.62), (4.58, -0.57)):
+        _side_beam("complex4_cross_brace", tower_x, -0.52, z, 1.86, angle, 0.10, 0.10, ink, "complex4ink", True)
+        _side_beam("complex4_cross_brace", tower_x, -0.50, z, 1.86, -angle, 0.10, 0.10, ink, "complex4ink", True)
+    cap = kit.box("complex4_tower_cap", (1.92, 0.86, 0.34), location=(tower_x - 0.08, 0.02, 5.93), rotation=(0, -0.05, 0), bevel=0.08)
+    kit.solid("complex4_tower_cap", cap, warm, "complex4warm", grain=True)
+
+    # Crooked strongback and two unequal umbilical arms enclose the vehicle
+    # slot. Braces and cable runs physically return every arm to a support.
+    strong_x = 0.93
+    lower = kit.box("complex4_strongback_lower", (0.56, 0.62, 2.28), location=(strong_x, 0.06, 0.66), rotation=(0, -0.08, 0), bevel=0.08)
+    kit.solid("complex4_strongback_lower", lower, ink, "complex4ink", grain=True)
+    upper = kit.box("complex4_strongback_upper", (0.46, 0.58, 2.08), location=(0.72, 0.07, 2.83), rotation=(0, -0.16, 0), bevel=0.07)
+    kit.solid("complex4_strongback_upper", upper, T["rust"], "complex4rust", grain=True)
+    for z, length, angle in ((2.44, 2.44, -0.04), (4.18, 2.78, 0.08)):
+        _side_beam("complex4_umbilical", -0.42, -0.48, z, length, angle, 0.26, 0.36, T["rust"], "complex4rust", True)
+        head = kit.box("complex4_umbilical_head", (0.42, 0.42, 0.52), location=(-1.60 if z < 3 else -1.76, -0.49, z - 0.10), rotation=(0, angle, 0), bevel=0.08)
+        kit.solid("complex4_umbilical_head", head, warm, "complex4warm", grain=True)
+    for x, z, length, angle in ((0.14, 2.12, 0.78, -0.20), (-0.45, 1.92, 0.62, 0.06), (-0.94, 1.88, 0.54, 0.18)):
+        _side_beam("complex4_hose", x, -0.70, z, length, angle, 0.07, 0.07, T["cyan"], "complex4cyan")
+
+    # Grounded hold-downs and service carts make the central pad operational.
+    for sx, lean in ((-0.28, -0.24), (0.67, 0.24)):
+        clamp = kit.box("complex4_hold_down", (0.34, 0.42, 0.70), location=(sx, -0.42, 0.72), rotation=(0, lean, 0), bevel=0.05)
+        kit.solid("complex4_hold_down", clamp, T["rust"], "complex4rust", grain=True)
+    for sx in (-0.95, 1.58):
+        cart = kit.box("complex4_service_cart", (0.62, 0.58, 0.38), location=(sx, -0.40, 0.56), bevel=0.08)
+        kit.solid("complex4_service_cart", cart, warm, "complex4warm", grain=True)
+        for wx in (-0.20, 0.20):
+            wheel = kit.cylinder("complex4_cart_wheel", 0.12, 0.10, location=(sx + wx, -0.66, 0.48), rotation=(1.5708, 0, 0), verts=8)
+            kit.solid("complex4_cart_wheel", wheel, T["void"], "complex4void", outline=0.004)
+
+    # Propellant farm is a connected family of different vessels instead of
+    # two identical cylinders. The pipe run visibly returns to the flame deck.
+    for sx, radius, height in ((2.42, 0.50, 1.52), (3.36, 0.64, 2.08)):
+        tank = kit.cylinder("complex4_tank", radius, height, location=(sx, 0.08, 0.52), verts=10)
+        kit.solid("complex4_tank", tank, shell, "complex4shell", grain=True)
+        dome = kit.cone("complex4_tank_dome", radius, 0.36, location=(sx, 0.08, 0.52 + height), verts=10, radius2=radius * 0.36)
+        kit.solid("complex4_tank_dome", dome, shell_shadow, "complex4shadow", grain=True)
+        band = kit.cylinder("complex4_tank_band", radius + 0.025, 0.14, location=(sx, 0.08, 0.98), verts=10)
+        kit.solid("complex4_tank_band", band, T["rust"], "complex4rust", outline=0)
+    for x, z, length, angle in ((2.90, 0.96, 1.86, 0), (2.05, 0.96, 0.78, 0), (1.46, 0.86, 0.68, -0.24), (0.96, 0.72, 0.52, -0.14)):
+        _side_beam("complex4_feed_pipe", x, -0.50, z, length, angle, 0.12, 0.13, warm, "complex4warm")
+    valve = kit.cylinder("complex4_valve", 0.24, 0.12, location=(1.82, -0.60, 0.98), rotation=(1.5708, 0, 0), verts=8)
+    kit.solid("complex4_valve", valve, T["cyan_bright"], "complex4light", outline=0.006)
+
+    # A single leaning lightning mast and cable finish the silhouette without
+    # the old pair of isolated vertical needles.
+    mast = kit.box("complex4_mast", (0.15, 0.18, 4.52), location=(4.36, 0.10, 0.50), rotation=(0, -0.055, 0), bevel=0.02)
+    kit.solid("complex4_mast", mast, ink, "complex4ink", grain=True)
+    _side_beam("complex4_mast_stay", 4.02, -0.26, 1.36, 2.20, -0.28, 0.08, 0.08, shell_shadow, "complex4shadow")
+    spike = kit.cone("complex4_mast_tip", 0.18, 0.56, location=(4.11, 0.10, 5.00), verts=6, radius2=0.02)
+    kit.solid("complex4_mast_tip", spike, warm, "complex4warm", outline=0.006)
+
+    return dict(layout=(250, 157), ortho=10.8, mode="side", target=(0, 0, 3.4))
+
+
 BUILDS = {
     "hub/pad_deck": pad_deck,
     "hub/pad_gantry_frame": pad_gantry_frame,
@@ -469,4 +659,6 @@ BUILDS = {
     "hub/pad_tank": pad_tank,
     "hub/pad_hangar_v3": pad_hangar,
     "hub/pad_complex_v3": pad_complex,
+    "hub/pad_hangar_v4": pad_hangar_v4,
+    "hub/pad_complex_v4": pad_complex_v4,
 }

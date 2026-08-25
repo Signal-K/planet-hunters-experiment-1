@@ -435,7 +435,7 @@ export default function MissionBoardScreen({ onBack, onPick, missionsDone, freeO
           </div>
 
           <div className={styles.panel}>
-            <div className={styles.panelHeader}><h3>Contract Detail</h3></div>
+            <div className={styles.panelHeader}><h3>Selected Contract</h3></div>
             <div className={styles.panelBody}>
               {previewModel ? (
                 <MissionDetailPanel

@@ -39,5 +39,7 @@
   "hub_pad_hangar_v2": "/game/assets/hub/pad_hangar_v2.png",
   "hub_pad_complex_v2": "/game/assets/hub/pad_complex_v2.png",
   "hub_pad_hangar_v3": "/game/assets/hub/pad_hangar_v3.png",
-  "hub_pad_complex_v3": "/game/assets/hub/pad_complex_v3.png"
+  "hub_pad_complex_v3": "/game/assets/hub/pad_complex_v3.png",
+  "hub_pad_hangar_v4": "/game/assets/hub/pad_hangar_v4.png",
+  "hub_pad_complex_v4": "/game/assets/hub/pad_complex_v4.png"
 }

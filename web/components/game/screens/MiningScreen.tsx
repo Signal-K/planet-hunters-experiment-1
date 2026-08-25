@@ -9,7 +9,7 @@ import Panel from '@/components/ui/Panel'
 import StatusPill from '@/components/ui/StatusPill'
 import IconBadge from '@/components/ui/IconBadge'
 import SegmentedBar from '@/components/ui/SegmentedBar'
-import ConfirmActionSheet from '@/components/game/ConfirmActionSheet'
+import ActionConfirmBar from '@/components/game/ActionConfirmBar'
 import MiningCanvas from './MiningCanvas'
 
 // Out There: Omega Edition bolt glyph — used inside the charge-meter IconBadge.
@@ -388,8 +388,8 @@ export default function MiningScreen({ mission, target, onComplete, onBack, onAb
       )}
 
       {guideOpen && (
-        <div className="mining-guide-overlay" style={{ position: 'absolute', inset: 0, zIndex: 70, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', padding: 16, gap: 8 }} onClick={() => setGuideOpen(false)}>
-          <div className="mining-guide-panel" onClick={e => e.stopPropagation()}>
+        <aside className="mining-guide-overlay" aria-label="Mining controls" style={{ position: 'absolute', right: 16, bottom: 'calc(var(--ln-nav-h, 64px) + 16px)', zIndex: 70, width: 'min(360px, calc(100% - 32px))' }}>
+          <div className="mining-guide-panel">
             <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 9, fontWeight: 800, letterSpacing: '0.2em', color: 'var(--ln-cyan)', textTransform: 'uppercase', marginBottom: 10 }}>Mining Controls</div>
             {miningGuide(deliveryTargetName).map(item => (
               <div key={item.label} style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
@@ -399,7 +399,7 @@ export default function MiningScreen({ mission, target, onComplete, onBack, onAb
             ))}
             <button className="mining-guide-close" onClick={() => setGuideOpen(false)}>Close</button>
           </div>
-        </div>
+        </aside>
       )}
 
       {showFreeOpsSuccessPopup && (
@@ -616,7 +616,7 @@ export default function MiningScreen({ mission, target, onComplete, onBack, onAb
       </div>
 
       {confirmingAbandon && onAbandon && (
-        <ConfirmActionSheet
+        <ActionConfirmBar
           eyebrow="Mining Run"
           title="Scrub Mission"
           description={`Abandon this run? ${totalCollected} of ${totalNeeded} units collected will be lost.`}

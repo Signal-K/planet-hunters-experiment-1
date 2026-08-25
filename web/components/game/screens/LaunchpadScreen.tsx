@@ -18,6 +18,7 @@ interface LaunchpadScreenProps {
   onBack: () => void
   onPick: (id: string) => void
   onViewContracts: () => void
+  onLaunchpadAction: () => void
   onOpenHangar: () => void
   onOpenSubsurface?: () => void
   missionsDone: number
@@ -48,7 +49,7 @@ function SubsurfaceGlyph() {
 }
 
 export default function LaunchpadScreen({
-  onBack, onPick, onViewContracts, onOpenHangar, onOpenSubsurface, missionsDone, freeOperations, catalog, player, rocketImageSrc = '/game/assets/ships/ship_sr1.png', selectedRocketName, francs,
+  onBack, onPick, onViewContracts, onLaunchpadAction, onOpenHangar, onOpenSubsurface, missionsDone, freeOperations, catalog, player, rocketImageSrc = '/game/assets/ships/ship_sr1.png', selectedRocketName, francs,
 }: LaunchpadScreenProps) {
   const [guideStep, setGuideStep] = useState<number | null>(null)
   const { phase: skyPhase } = useTimeOfDay()
@@ -113,19 +114,19 @@ export default function LaunchpadScreen({
         <div className="launchpad-scene-zoom">
           <HubWorldBackground phase={skyPhase} />
         </div>
-        <div className={`launchpad-scene-object launchpad-tower ${isGuided('tower') ? 'is-guided' : ''}`} data-testid="launchpad-status-card">
+        <button type="button" className={`launchpad-scene-object launchpad-tower ${isGuided('tower') ? 'is-guided' : ''}`} data-testid="launchpad-status-card" onClick={onLaunchpadAction} aria-label={player.activeMission ? 'Resume active mission' : player.pendingLaunch ? 'Inspect pending launch' : 'Start a new mission'}>
           <span className="launchpad-tower-art">
             <LaunchpadStructure w={620} targetTopPx={413} dimmed={false} hot={!!player.pendingLaunch} />
             {player.pendingLaunch && <img className="launchpad-tower-rocket" src={rocketImageSrc} alt="Rocket on launchpad" />}
           </span>
           <span className="launchpad-object-label launchpad-object-label--center">
             <small>LAUNCHPAD</small>
-            <strong>{player.activeMission ? 'IN FLIGHT' : player.pendingLaunch ? 'ON PAD' : 'READY'}</strong>
+            <strong>{player.activeMission ? 'RESUME MISSION' : player.pendingLaunch ? 'INSPECT LAUNCH' : 'START MISSION'}</strong>
           </span>
-        </div>
+        </button>
 
         <button type="button" className={`launchpad-scene-object launchpad-rocket ${isGuided('rocket') ? 'is-guided' : ''}`} data-testid="launchpad-rocket-fleet" onClick={onOpenHangar}>
-          <img className="launchpad-hangar-art" src="/game/assets/hub/pad_hangar_v3.png" alt="" />
+          <img className="launchpad-hangar-art" src="/game/assets/hub/pad_hangar_v4.png" alt="" />
           <span className="launchpad-rocket-art">
             <img src={rocketImageSrc} alt="" />
             <i className="launchpad-rocket-glow" />

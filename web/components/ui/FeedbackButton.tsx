@@ -46,27 +46,19 @@ export default function FeedbackButton() {
       </button>
 
       {open && (
-        <div data-ui-zone={UI_ZONES.modalOverlay} style={{ position: 'absolute', inset: 0, zIndex: 96, display: 'flex', alignItems: 'flex-end' }}>
-          <div
-            style={{ position: 'absolute', inset: 0, background: 'rgba(8,8,9,0.7)' }}
-            onClick={() => setOpen(false)}
-          />
-          <div style={{
-            position: 'relative', width: '100%',
+        <aside data-ui-zone={UI_ZONES.screenContent} aria-label="Send feedback" style={{
+            position: 'absolute', right: 12, bottom: 52, zIndex: 96,
+            width: 'min(420px, calc(100% - 24px))',
             background: 'linear-gradient(180deg, #0d1c30, #060d18)',
-            borderTopLeftRadius: 20, borderTopRightRadius: 20,
             border: '1px solid rgba(112,217,234,0.25)',
-            padding: '14px 16px 28px',
-            boxShadow: '0 -12px 40px rgba(0,0,0,0.6)',
+            padding: '14px 16px 16px',
+            boxShadow: 'var(--ln-shadow-panel)',
           }}>
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 12 }}>
-              <div style={{ width: 36, height: 4, borderRadius: 2, background: 'rgba(255,255,255,0.15)' }} />
-            </div>
-            <div style={{
-              fontFamily: 'var(--ln-font-display)', fontSize: 13, fontWeight: 800,
-              color: '#e6efff', marginBottom: 10, letterSpacing: '0.04em',
-            }}>
-              Send Feedback
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+              <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 13, fontWeight: 800, color: '#e6efff', letterSpacing: '0.04em' }}>
+                Send Feedback
+              </div>
+              <button type="button" onClick={() => setOpen(false)} aria-label="Close feedback" style={{ border: 0, background: 'transparent', color: 'var(--ln-text-muted)', cursor: 'pointer' }}>CLOSE</button>
             </div>
 
             {sent ? (
@@ -113,8 +105,7 @@ export default function FeedbackButton() {
                 </button>
               </form>
             )}
-          </div>
-        </div>
+        </aside>
       )}
     </>
   )

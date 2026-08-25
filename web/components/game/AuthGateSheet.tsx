@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState } from 'react'
-import Sheet from '@/components/ui/Sheet'
+import PageSurface from '@/components/ui/PageSurface'
 
 interface AuthGateSheetProps {
   error: string | null
@@ -64,12 +64,10 @@ export default function AuthGateSheet({ error, onSignIn, onCreateAccount, onCont
   }
 
   return (
-    <Sheet
+    <PageSurface
       className="auth-gate"
-      panelClassName="auth-gate__panel"
-      dismissOnBackdrop={false}
+      contentClassName="auth-gate__panel"
       zIndex={92}
-      handleStyle={{ background: 'rgba(255,255,255,0.2)' }}
     >
 
       <div className="auth-gate__scene" aria-hidden="true">
@@ -196,6 +194,6 @@ export default function AuthGateSheet({ error, onSignIn, onCreateAccount, onCont
           )}
         </div>
       </div>
-    </Sheet>
+    </PageSurface>
   )
 }

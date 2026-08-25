@@ -109,7 +109,7 @@ describe('Interaction order hardening', () => {
     cy.contains('Pick Target').should('not.exist')
   })
 
-  it('scrim dismisses emergency loan instead of accepting it', () => {
+  it('explicit decline dismisses emergency loan instead of accepting it', () => {
     visitWithState({
       screen: 'hub',
       popup: 'loan',
@@ -121,7 +121,7 @@ describe('Interaction order hardening', () => {
     })
 
     cy.contains('EMERGENCY LOAN').should('be.visible')
-    cy.get('[data-testid="unlock-popup-scrim"]').click('topLeft')
+    cy.get('[data-testid="unlock-popup-secondary"]').click()
     cy.contains('EMERGENCY LOAN').should('not.exist')
     readSavedState().then(state => {
       expect(state.player.francs).to.eq(100_000_000)

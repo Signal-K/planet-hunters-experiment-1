@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react'
 import type { Player, Screen } from '@/game-context'
 import ProgressionCard from '@/components/game/ProgressionCard'
-import ConfirmActionSheet from '@/components/game/ConfirmActionSheet'
+import ActionConfirmBar from '@/components/game/ActionConfirmBar'
 import { Scene } from '@/lib/engine/Scene'
 import type { EntityData } from '@/lib/engine/types'
 import { buildPlotEntities } from '@/lib/engine/prefabs'
@@ -557,7 +557,7 @@ export default function HubScreen({ player, rocketVariant = 'explorer', hasCoach
       )}
 
       {confirmingLaunchpadUpgrade && onUpgradeLaunchpad && (
-        <ConfirmActionSheet
+        <ActionConfirmBar
           eyebrow="Upgrade"
           title="Upgrade Launchpad"
           description={`Spend ${formatCurrency(LAUNCHPAD_UPGRADE_COST)} to permanently upgrade the launchpad. This can't be undone.`}
