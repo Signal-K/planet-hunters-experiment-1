@@ -20,6 +20,7 @@ import { useEconomyActions } from '@/lib/contexts/useEconomyActions'
 import { useSurfaceOpsActions } from '@/lib/contexts/useSurfaceOpsActions'
 import { useInstrumentFeedNotifications } from '@/lib/contexts/useInstrumentFeedNotifications'
 import { useAcademyActions } from '@/lib/contexts/useAcademyActions'
+import { deriveSceneScope, EARTH_BASE_SCOPE } from '@/lib/scene-scope'
 
 export type { Screen, Player, GameState } from '@/lib/game-types'
 
@@ -183,6 +184,9 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
        ?? null)
     : null
   const target = state.targetId ? runtimeCatalog.targets.find(t => t.id === state.targetId) ?? null : null
+  const sceneScope = state.screen === 'missions'
+    ? state.missionBoardScope ?? EARTH_BASE_SCOPE
+    : deriveSceneScope({ screen: state.screen, targetId: state.targetId, target })
 
   return (
     <GameContext.Provider value={{
@@ -193,6 +197,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       landnamSynced: auth.landnamSynced,
       mission,
       target,
+      sceneScope,
       toasts: ui.toasts,
       addToast: ui.addToast,
       laserChargeCap: getLaserChargeCap(state.player.unlockedSkillNodes ?? []),

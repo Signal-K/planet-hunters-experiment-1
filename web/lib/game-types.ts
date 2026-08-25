@@ -4,6 +4,7 @@
 import type { RocketConfig, Mission, Target, TessClassification, TessVerdict, TransitRange, AsteroidClassification, AsteroidVerdict } from '@/lib/data'
 import type { RoverTerrainClass } from '@/lib/data/rover-scouting'
 import type { RoverSpec } from '@takeon/engine'
+import type { SceneScope } from './scene-scope'
 
 export interface DailyClientPool {
   date: string        // 'YYYY-MM-DD'
@@ -273,6 +274,10 @@ export interface GameState {
   player: Player
   missionId: string | null
   targetId: string | null
+  /** Explicit body context for a mission-board view; Earth Base is the default. */
+  // Older saved states and test fixtures predate scene-scoped mission views;
+  // normalizeAndRepair() supplies Earth Base when this is absent.
+  missionBoardScope?: SceneScope
   // Set for two-leg "mine then deliver" missions — the second-leg
   // destination, distinct from targetId (the mining/pickup target).
   deliveryTargetId?: string | null
@@ -317,7 +322,7 @@ export interface GameActions {
   authGateOtpId: string | null
   verifyOtp: (code: string) => Promise<void>
   go: (screen: Screen) => void
-  goToMissions: () => void
+  goToMissions: (scope?: SceneScope) => void
   setScreenFromUrl: (screen: Screen) => void
   setPlayer: React.Dispatch<React.SetStateAction<Player>>
   setMissionId: (id: string | null) => void
@@ -390,6 +395,7 @@ export interface GameActions {
   dismissToast: (id: string) => void
   mission: Mission | null
   target: Target | null
+  sceneScope: SceneScope
   awaitingRemoteState: boolean
   clearTerritoryClaimPopup: () => void
   laserChargeCap: number

@@ -8,6 +8,7 @@ import { settleCrewEconomy } from '@/lib/systems/AcademySystem'
 import { FEATURE_FLAGS } from '@/lib/featureFlags'
 import { findTargetStructure } from '@/lib/data/target-structures'
 import { resolveConstructionState } from '@/lib/systems/ConstructionSystem'
+import { EARTH_BASE_SCOPE } from '@/lib/scene-scope'
 
 // Represents untrusted/partial saved state (e.g. from localStorage or remote sync)
 // where player fields are optional since older saves may be missing new fields.
@@ -87,6 +88,7 @@ export const DEFAULT_STATE: GameState = {
   },
   missionId: null,
   targetId: null,
+  missionBoardScope: EARTH_BASE_SCOPE,
   rocket: { chassis: 'hull-mk1', propulsion: 'ion-a1', drill: 'hand-drill' },
   lastCargo: null,
   deliveredCargo: null,
@@ -131,6 +133,10 @@ export function normalizeState(input: PartialSave): GameState {
   const screen = input.screen && VALID_SCREENS.includes(input.screen) ? input.screen : DEFAULT_STATE.screen
   const missionId = typeof input.missionId === 'string' ? input.missionId : null
   const targetId = missionId && typeof input.targetId === 'string' ? input.targetId : null
+  const savedScope = input.missionBoardScope
+  const missionBoardScope = savedScope?.kind === 'body' && typeof savedScope.id === 'string' && savedScope.id.length > 0
+    ? { kind: 'body' as const, id: savedScope.id, label: savedScope.label || savedScope.id }
+    : EARTH_BASE_SCOPE
   const player: Partial<Player> = migrateLegacyContractorFields(input.player ?? {})
   const licenseGrade = player.licenseGrade && VALID_LICENSE_GRADES.includes(player.licenseGrade)
     ? player.licenseGrade
@@ -220,6 +226,7 @@ export function normalizeState(input: PartialSave): GameState {
     screen,
     missionId,
     targetId,
+    missionBoardScope,
     rocket: { ...DEFAULT_STATE.rocket, ...input.rocket },
     player: { ...DEFAULT_STATE.player, ...player, missionsDone, freeOperations, clientStructures, placed: placedList, placementPlots, licenseGrade, researchXP, unlockedBlueprints, tessClassifications, asteroidClassifications, roverTerrainClassifications, discoveredExoplanetTargets, instrumentDigestNotifiedOn, transitSatelliteLevel, deepSpaceTelescopeLevel, crew, surfaceOps,
       deepSpaceTelescopeBuilt, refineryBuilt, scannerBuilt },

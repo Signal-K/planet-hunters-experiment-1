@@ -14,6 +14,7 @@ import {
   ONBOARDING_ROCKET_COST,
   MINERAL_META,
   MISSIONS,
+  OWN_PROGRAM_BUILD_MISSIONS,
   MISSION_TEMPLATES,
   STRUCTURES,
   TARGETS,
@@ -624,6 +625,34 @@ describe('seed bible v0 catalog', () => {
     expect(TARGETS.some(t => t.id === relay?.targetId)).toBe(true)
     expect(TARGETS.some(t => t.id === relay?.deliveryTargetId)).toBe(true)
     expect(CLIENT_SLOTS.some(c => c.id === relay?.client)).toBe(true)
+  })
+
+  it('defines refinery and scanning-station builds as own-program missions', () => {
+    expect(OWN_PROGRAM_BUILD_MISSIONS.map(mission => mission.id)).toEqual([
+      'program-build-refinery',
+      'program-build-scan-station',
+    ])
+
+    for (const mission of OWN_PROGRAM_BUILD_MISSIONS) {
+      expect(mission.client).toBeUndefined()
+      expect(mission.payout).toEqual({ francs: 0, affinity: 0 })
+      expect(mission.programReward?.researchXP).toBe(0)
+      expect(mission.construction?.structureKind).toBeTruthy()
+      expect(mission.construction?.requiredMaterials).toEqual(mission.requires.minerals)
+      expect(mission.requires.cargo_min).toBe(
+        Object.values(mission.requires.minerals).reduce((sum, amount) => sum + amount, 0),
+      )
+      expect(mission.requires.max_orbit).toBe(0)
+      expect(mission.sequence).toBe(FREE_OPS_START_MISSIONS_DONE + 1)
+      expect(MISSIONS).toContainEqual(mission)
+    }
+
+    expect(OWN_PROGRAM_BUILD_MISSIONS[0]).toMatchObject({
+      construction: { structureKind: 'refinery', requiredMaterials: { aluminium: 20, copper: 10 } },
+    })
+    expect(OWN_PROGRAM_BUILD_MISSIONS[1]).toMatchObject({
+      construction: { structureKind: 'scan-station', requiredMaterials: {} },
+    })
   })
 })
 

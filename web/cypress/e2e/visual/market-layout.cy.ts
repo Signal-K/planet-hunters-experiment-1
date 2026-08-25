@@ -13,6 +13,7 @@ describe('Commodity Exchange visual layout', () => {
     { name: 'mobile', width: 390, height: 844 },
     { name: 'tablet', width: 768, height: 1024 },
     { name: 'desktop', width: 1280, height: 800 },
+    { name: 'desktop-landscape', width: 1440, height: 900 },
   ]) {
     it(`keeps the header clear at ${viewport.name} size`, () => {
       cy.viewport(viewport.width, viewport.height)

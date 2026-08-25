@@ -54,6 +54,7 @@ export default function MissionSetupRoutes({
           francs={game.player.francs}
           crew={game.player.crew}
           player={game.player}
+          sceneScope={game.sceneScope}
         />
       )
 

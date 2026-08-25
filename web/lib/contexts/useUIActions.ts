@@ -1,6 +1,8 @@
 import { useRef, useState, useCallback } from 'react'
 import type { Toast } from '@/components/ui/ToastLayer'
 import type { Screen, GameState } from '@/lib/game-types'
+import { EARTH_BASE_SCOPE } from '@/lib/scene-scope'
+import type { SceneScope } from '@/lib/scene-scope'
 
 let toastSeq = 0
 function nextToastId() { return `t${++toastSeq}` }
@@ -19,10 +21,11 @@ export function useUIActions(
   // Mission entry is also the first onboarding checkpoint. Keep the route
   // change and checkpoint update in one functional state transition so the
   // callout, launchpad and mission tab cannot race each other or the URL sync.
-  const goToMissions = useCallback(() => {
+  const goToMissions = useCallback((scope: SceneScope = EARTH_BASE_SCOPE) => {
     setState(s => ({
       ...s,
       screen: 'missions',
+      missionBoardScope: scope,
       doneSteps: { ...s.doneSteps, 1: true },
     }))
   }, [setState])

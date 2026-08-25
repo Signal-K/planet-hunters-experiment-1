@@ -4,6 +4,7 @@ import { missionPayoutFloor } from './payouts'
 import type { Mission } from './types'
 import { CLIENT_SLOTS } from './clients'
 import { MINERAL_META } from './minerals'
+import { STRUCTURES } from './structures'
 import {
   DEFAULT_MISSION_TEMPLATES,
   FREE_OPS_START_MISSIONS_DONE,
@@ -47,8 +48,78 @@ export const M3_SEQUENCE = 3
 // Free Ops self-directed mining — no client, no daily limit, no cooldown.
 export const SELF_DIRECTED_MINING_MISSION_ID = 'freeops-self-directed-mining'
 export const ACADEMY_INTRO_MISSION_ID = 'story-astronaut-academy'
+export const REFINERY_BUILD_MISSION_ID = 'program-build-refinery'
+export const SCAN_STATION_BUILD_MISSION_ID = 'program-build-scan-station'
+
+const refineryBlueprint = STRUCTURES.find(structure => structure.id === 'refinery')!
+const scanStationBlueprint = STRUCTURES.find(structure => structure.id === 'scan-station')!
+
+function materialRequirement(materials: Record<string, number>): { minerals: Record<string, number>; cargo_min: number } {
+  return {
+    minerals: { ...materials },
+    cargo_min: Object.values(materials).reduce((total, amount) => total + amount, 0),
+  }
+}
+
+/** Earth Base construction is owned work, so it awards the structure rather
+ * than a client fee or affinity. Keep its costs aligned with the blueprints. */
+export const OWN_PROGRAM_BUILD_MISSIONS: Mission[] = [
+  {
+    id: REFINERY_BUILD_MISSION_ID,
+    title: 'Build the Refinery',
+    brief: 'Use your stored aluminium and copper to build the Earth Base refinery. It converts raw ore into higher-value materials for your program.',
+    tag: 'PROGRAM',
+    difficulty: 'L1',
+    locked: false,
+    sequence: FREE_OPS_START_MISSIONS_DONE + 1,
+    unlockAt: 'Reach Free Operations',
+    construction: {
+      structureKind: refineryBlueprint.kind,
+      requiredMaterials: { ...(refineryBlueprint.costMaterials ?? {}) },
+      placementMode: 'confirm',
+      buildTimeMs: 0,
+    },
+    programReward: {
+      researchXP: 0,
+      outcome: 'Refinery built · raw ore can now be processed at Earth Base',
+    },
+    requires: {
+      ...materialRequirement(refineryBlueprint.costMaterials ?? {}),
+      drill_tier: 1,
+      max_orbit: 0,
+    },
+    payout: { francs: 0, affinity: 0 },
+  },
+  {
+    id: SCAN_STATION_BUILD_MISSION_ID,
+    title: 'Build the Scanning Station',
+    brief: 'Commission the Scan Station at Earth Base. Its remote instruments map deposits, craters, and landmarks for your own program.',
+    tag: 'PROGRAM',
+    difficulty: 'L1',
+    locked: false,
+    sequence: FREE_OPS_START_MISSIONS_DONE + 1,
+    unlockAt: 'Reach Free Operations and complete the commissioning pass',
+    construction: {
+      structureKind: scanStationBlueprint.kind,
+      requiredMaterials: { ...(scanStationBlueprint.costMaterials ?? {}) },
+      placementMode: 'confirm',
+      buildTimeMs: 0,
+    },
+    programReward: {
+      researchXP: 0,
+      outcome: 'Scanning Station built · remote target mapping is now available',
+    },
+    requires: {
+      ...materialRequirement(scanStationBlueprint.costMaterials ?? {}),
+      drill_tier: 1,
+      max_orbit: 0,
+    },
+    payout: { francs: 0, affinity: 0 },
+  },
+]
 
 export const AUTHORED_MISSIONS: Mission[] = [
+  ...OWN_PROGRAM_BUILD_MISSIONS,
   {
     id: ACADEMY_INTRO_MISSION_ID,
     title: 'Train the First Astronaut',

@@ -25,6 +25,8 @@ import { crewRequirementStatus } from '@/lib/systems/AcademySystem'
 import type { CrewMember } from '@/lib/data'
 import type { Player } from '@/lib/game-types'
 import { diplomacyPayoutMultiplier } from '@/lib/systems/AcademySystem'
+import { filterMissionsForSceneScope } from '@/lib/scene-scope'
+import type { SceneScope } from '@/lib/scene-scope'
 
 function CornerBracket({ position }: { position: 'tl' | 'tr' | 'bl' | 'br' }) {
   const cls = { tl: styles.cornerBracketTl, tr: styles.cornerBracketTr, bl: styles.cornerBracketBl, br: styles.cornerBracketBr }[position]
@@ -111,6 +113,7 @@ interface MissionBoardScreenProps {
   francs?: number
   crew?: CrewMember[]
   player?: Player
+  sceneScope?: SceneScope
 }
 
 // "Custom Missions Unlocked" / "Infrastructure" are one-time explainer copy,
@@ -147,7 +150,7 @@ function formatCooldown(remaining: number): string {
   return `${mins}m ${secs}s`
 }
 
-export default function MissionBoardScreen({ onBack, onPick, missionsDone, freeOperations, hasCoach, catalog, clientMissions, clientCooldowns, dailyClientPool, francs, crew = [], player }: MissionBoardScreenProps) {
+export default function MissionBoardScreen({ onBack, onPick, missionsDone, freeOperations, hasCoach, catalog, clientMissions, clientCooldowns, dailyClientPool, francs, crew = [], player, sceneScope = { kind: 'earth-base', id: 'earth-base', label: 'Earth Base' } }: MissionBoardScreenProps) {
   const { missions: MISSIONS, clients: CLIENTS, minerals: MINERAL_META, targets, parts } = catalog
   const [tick, setTick] = useState(0)
   useEffect(() => {
@@ -185,7 +188,7 @@ export default function MissionBoardScreen({ onBack, onPick, missionsDone, freeO
   // independent of the daily-rotating client pool.
   const logisticsMissionPool = freeOperations ? MISSIONS.filter(m => !!m.deliveryTargetId && !isOnCooldown(m.client)) : []
   const jointMissionPool = freeOperations ? MISSIONS.filter(m => !!m.jointProject && !isOnCooldown(m.client)) : []
-  const available = useDailyPool
+  const rawAvailable = useDailyPool
     ? [...logisticsMissionPool, ...jointMissionPool, ...dailyClientPool!.missions.filter(m => !isCompletedToday(m.id))]
     : MISSIONS.filter(m => {
         if (!isMissionBoardMission(m, freeOperations)) return false
@@ -197,6 +200,8 @@ export default function MissionBoardScreen({ onBack, onPick, missionsDone, freeO
         // Onboarding: sequence is the only gate — client unlock tiers don't apply
         return m.sequence === sequence
       })
+
+  const available = filterMissionsForSceneScope(rawAvailable, sceneScope, targets, !freeOperations)
 
   // Never advertise a contract that the current catalog or unlocked rocket
   // parts cannot complete. This is deliberately applied before the board
@@ -212,7 +217,7 @@ export default function MissionBoardScreen({ onBack, onPick, missionsDone, freeO
   ).length > 0)
 
   const completedToday = useDailyPool
-    ? dailyClientPool!.missions.filter(m => isCompletedToday(m.id))
+    ? filterMissionsForSceneScope(dailyClientPool!.missions.filter(m => isCompletedToday(m.id)), sceneScope, targets, false)
     : []
 
   const onboardingComplete = !freeOperations && feasibleAvailable.length === 0 && missionsDone >= FREE_OPS_START_MISSIONS_DONE
@@ -314,7 +319,7 @@ export default function MissionBoardScreen({ onBack, onPick, missionsDone, freeO
       </div>
       <div className={`ln-starfield ${styles.spaceBackdrop}`} style={{ position: 'absolute', inset: 0, opacity: 0.6, pointerEvents: 'none' }} />
         <TopBar
-          eyebrow={freeOperations ? 'EARTH BASE · FREE OPS' : `EARTH BASE · L${missionsDone + 1}`}
+          eyebrow={freeOperations ? `${sceneScope.label.toUpperCase()} · FREE OPS` : `${sceneScope.label.toUpperCase()} · L${missionsDone + 1}`}
           title="Mission Board"
           onBack={onBack}
           solid
