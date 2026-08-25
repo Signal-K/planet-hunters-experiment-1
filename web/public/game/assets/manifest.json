@@ -35,5 +35,7 @@
   "hub_pad_mast": "/game/assets/hub/pad_mast.png",
   "hub_pad_tank": "/game/assets/hub/pad_tank.png",
   "hub_pad_hangar": "/game/assets/hub/pad_hangar.png",
-  "hub_pad_complex": "/game/assets/hub/pad_complex.png"
+  "hub_pad_complex": "/game/assets/hub/pad_complex.png",
+  "hub_pad_hangar_v2": "/game/assets/hub/pad_hangar_v2.png",
+  "hub_pad_complex_v2": "/game/assets/hub/pad_complex_v2.png"
 }

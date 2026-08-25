@@ -67,13 +67,21 @@ button.launchpad-scene-object { cursor: pointer; }
   border: 1px solid #86e7f4; border-radius: 50%; background: rgba(6,16,26,.92); color: #86e7f4;
   font: 300 28px/36px var(--ln-font-display); font-style: normal; box-shadow: 0 0 18px rgba(112,217,234,.4);
 }
-.launchpad-tower { left: 43%; bottom: 12%; width: 56%; transform: translateX(-50%); }
-.launchpad-tower-art { position: relative; width: min(560px, 54vw); height: 330px; }
-.launchpad-tower-rocket { position: absolute; z-index: 3; left: 50%; bottom: 40px; width: 230px; transform: translateX(-50%) rotate(-90deg); filter: drop-shadow(0 8px 14px rgba(0,0,0,.55)); }
-.launchpad-rocket { right: 7%; bottom: 14%; width: 34%; min-height: 270px; justify-content: flex-end; }
-.launchpad-rocket-art { position: relative; width: min(310px, 82%); height: 92px; display: grid; place-items: end center; }
-.launchpad-rocket-art img { position: relative; z-index: 2; width: 100%; filter: drop-shadow(0 18px 18px rgba(0,0,0,.6)); }
-.launchpad-hangar-art { position: absolute; z-index: 0; left: 50%; bottom: 42px; width: min(500px, 135%); transform: translateX(-50%); image-rendering: pixelated; filter: drop-shadow(0 16px 18px rgba(0,0,0,.48)); }
+.launchpad-tower { left: 27%; bottom: 13%; width: 48%; transform: translateX(-50%); }
+.launchpad-tower-art { position: relative; width: min(480px, 46vw); height: 292px; }
+.launchpad-tower-rocket { position: absolute; z-index: 3; left: 50%; bottom: 34px; width: 190px; transform: translateX(-50%) rotate(-90deg); filter: drop-shadow(0 8px 14px rgba(0,0,0,.55)); }
+.launchpad-rocket { right: 2%; bottom: 13%; width: 52%; min-height: 300px; justify-content: flex-end; }
+.launchpad-rocket-art {
+  position: absolute; z-index: 2; left: 43%; bottom: 58px;
+  width: min(250px, 42%); height: 78px; transform: translateX(-50%);
+  display: grid; place-items: end center;
+}
+.launchpad-rocket-art img { position: relative; z-index: 2; width: 100%; filter: drop-shadow(0 12px 12px rgba(0,0,0,.6)); }
+.launchpad-hangar-art {
+  position: absolute; z-index: 0; left: 50%; bottom: 34px;
+  width: min(650px, 118%); transform: translateX(-50%);
+  image-rendering: pixelated; filter: drop-shadow(0 16px 18px rgba(0,0,0,.48));
+}
 .launchpad-rocket-glow { position: absolute; left: 5%; right: 5%; bottom: 18%; height: 14px; border-radius: 50%; background: rgba(112,217,234,.2); filter: blur(12px); }
 .launchpad-rocket:hover img,
 .launchpad-station:hover .launchpad-object-art { filter: brightness(1.12) drop-shadow(0 0 18px rgba(112,217,234,.22)); }

@@ -8,7 +8,7 @@ import React from 'react'
  * The previous DOM version assembled nine transparent PNGs with independent
  * horizontal and vertical scales. Even when the coordinates were technically
  * correct, the masts, tanks, clamps and swing arm read as detached cut-outs.
- * `pad_complex.png` is authored and rendered as one shallow three-quarter
+ * `pad_complex_v2.png` is authored and rendered as one shallow three-quarter
  * Blender scene, so every part shares one deck, one perspective and one
  * ground contact. The rocket remains a separate overlay because that is real
  * game state, not part of the building.
@@ -21,7 +21,7 @@ export function LaunchpadStructure({ w, targetTopPx = TARGET_TOP_PX, dimmed, hot
   const renderedWidth = Math.min(w, targetTopPx * ART_ASPECT)
   return (
     <img
-      src="/game/assets/hub/pad_complex.png"
+      src="/game/assets/hub/pad_complex_v2.png"
       alt=""
       data-launch-state={hot ? 'hot' : 'idle'}
       style={{

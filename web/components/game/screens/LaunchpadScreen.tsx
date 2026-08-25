@@ -115,7 +115,7 @@ export default function LaunchpadScreen({
         </div>
         <div className={`launchpad-scene-object launchpad-tower ${isGuided('tower') ? 'is-guided' : ''}`} data-testid="launchpad-status-card">
           <span className="launchpad-tower-art">
-            <LaunchpadStructure w={560} targetTopPx={290} dimmed={false} hot={!!player.pendingLaunch} />
+            <LaunchpadStructure w={480} targetTopPx={255} dimmed={false} hot={!!player.pendingLaunch} />
             {player.pendingLaunch && <img className="launchpad-tower-rocket" src={rocketImageSrc} alt="Rocket on launchpad" />}
           </span>
           <span className="launchpad-object-label launchpad-object-label--center">
@@ -125,7 +125,7 @@ export default function LaunchpadScreen({
         </div>
 
         <button type="button" className={`launchpad-scene-object launchpad-rocket ${isGuided('rocket') ? 'is-guided' : ''}`} data-testid="launchpad-rocket-fleet" onClick={onOpenHangar}>
-          <img className="launchpad-hangar-art" src="/game/assets/hub/pad_hangar.png" alt="" />
+          <img className="launchpad-hangar-art" src="/game/assets/hub/pad_hangar_v2.png" alt="" />
           <span className="launchpad-rocket-art">
             <img src={rocketImageSrc} alt="" />
             <i className="launchpad-rocket-glow" />
