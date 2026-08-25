@@ -250,34 +250,160 @@ def pad_tank():
 
 
 def pad_hangar():
-    """160x76 — the service hangar behind the active pad.
+    """180x110 — a readable three-bay vehicle hangar.
 
-    This is deliberately a broad, low building rather than another tower. It
-    gives the dedicated Launchpad scene a physical home for the fleet, with
-    three lit bay doors and a roof service spine that remain legible behind a
-    rocket sprite.
+    The old front-elevation render collapsed the roof, walls and doors into a
+    stack of rectangles. This version is authored as a shallow dollhouse
+    exterior: a real apron leads into three recessed bays, the side wall and
+    roof depth are visible, and the open centre bay has interior rails and a
+    service gantry. It stays broad and low, but no longer reads as UI chrome.
     """
-    base = kit.box("base", (5.8, 1.5, 0.55), bevel=0.08)
-    kit.solid("base", base, T["surface_3"], "surface3")
-    roof = kit.box("roof", (5.2, 1.3, 0.38), location=(0, 0, 2.25), bevel=0.08)
-    kit.solid("roof", roof, T["hull_dark"], "hulldark")
-    for sx in (-2.35, 0, 2.35):
-        bay = kit.box("bay", (1.55, 0.08, 1.35), location=(sx, -0.78, 1.0), bevel=0.04)
-        kit.solid("bay", bay, T["void"], "void", outline=0.01)
-        lintel = kit.box("lintel", (1.7, 0.12, 0.14), location=(sx, -0.84, 1.78))
-        kit.solid("lintel", lintel, T["cyan"], "cyan", outline=0)
-        for dx in (-0.55, 0.55):
-            rail = kit.box("rail", (0.06, 0.08, 1.1), location=(sx + dx, -0.87, 1.0))
-            kit.solid("rail", rail, T["steel"], "steel", outline=0)
-    for sx in (-2.9, 2.9):
-        post = kit.box("post", (0.18, 1.4, 2.0), location=(sx, 0, 1.05), bevel=0.03)
-        kit.solid("post", post, T["hull"], "hull")
-    spine = kit.box("spine", (2.1, 0.22, 0.16), location=(0, -0.72, 2.52))
-    kit.solid("spine", spine, T["steel"], "steel", outline=0)
-    for sx in (-1.5, -0.5, 0.5, 1.5):
-        lamp = kit.box("lamp", (0.16, 0.08, 0.08), location=(sx, -0.86, 2.2))
-        kit.solid("lamp", lamp, T["cyan_bright"], "cyanbright", outline=0)
-    return dict(layout=(320, 152), ortho=6.3, mode="flat", target=(0, 0, 1.15))
+    # Concrete apron and rail bed ground the building in the scene.
+    apron = kit.box("hangar_apron", (7.2, 3.8, 0.16), location=(0, -0.45, 0), bevel=0.06)
+    kit.solid("hangar_apron", apron, T["steel"], "steel")
+    rail_bed = kit.box("hangar_rail_bed", (5.8, 2.7, 0.10), location=(0, -0.9, 0.16))
+    kit.solid("hangar_rail_bed", rail_bed, T["surface_2"], "surface2")
+    for sx in (-1.2, 0, 1.2):
+        rail = kit.box("hangar_floor_rail", (0.08, 3.0, 0.05), location=(sx, -1.0, 0.26))
+        kit.solid("hangar_floor_rail", rail, T["cyan"], "cyan", outline=0)
+
+    # Deep shell: back wall, side walls and a roof whose offset makes the
+    # building's volume obvious from the room camera.
+    back = kit.box("hangar_back", (6.6, 0.22, 2.75), location=(0, 0.75, 0.25), bevel=0.05)
+    kit.solid("hangar_back", back, T["surface_3"], "surface3")
+    for sx in (-3.25, 3.25):
+        wall = kit.box("hangar_side", (0.34, 3.0, 2.8), location=(sx, -0.55, 0.25), bevel=0.05)
+        kit.solid("hangar_side", wall, T["hull"], "hull")
+        buttress = kit.box("hangar_buttress", (0.55, 0.65, 2.25), location=(sx, -1.68, 0.18), bevel=0.03)
+        kit.solid("hangar_buttress", buttress, T["hull_dark"], "hulldark")
+
+    roof = kit.box("hangar_roof", (7.0, 3.2, 0.38), location=(0, -0.5, 3.02), bevel=0.08)
+    kit.solid("hangar_roof", roof, T["hull_dark"], "hulldark")
+    roof_cap = kit.box("hangar_roof_cap", (4.3, 1.2, 0.28), location=(-0.25, -0.1, 3.4), bevel=0.05)
+    kit.solid("hangar_roof_cap", roof_cap, T["hull"], "hull")
+    for sx in (-2.3, 0, 2.3):
+        vent = kit.box("hangar_roof_vent", (0.7, 0.55, 0.32), location=(sx, -0.35, 3.68), bevel=0.04)
+        kit.solid("hangar_roof_vent", vent, T["steel"], "steel")
+
+    # Three deep portals. Side bays are segmented roller doors; the centre is
+    # open so the dark interior and service equipment give a strong depth cue.
+    for i, sx in enumerate((-2.15, 0, 2.15)):
+        portal = kit.box("hangar_portal", (1.9, 0.34, 2.45), location=(sx, -2.0, 0.32), bevel=0.04)
+        kit.solid("hangar_portal", portal, T["hull_dark"], "hulldark")
+        opening = kit.box("hangar_opening", (1.55, 0.10, 2.05), location=(sx, -2.20, 0.42), bevel=0.03)
+        kit.solid("hangar_opening", opening, T["void"], "void", outline=0.01)
+        lintel = kit.box("hangar_lintel", (1.65, 0.16, 0.16), location=(sx, -2.27, 2.42))
+        kit.solid("hangar_lintel", lintel, T["cyan"], "cyan", outline=0)
+        lamp = kit.box("hangar_bay_lamp", (0.22, 0.12, 0.10), location=(sx, -2.35, 2.52))
+        kit.solid("hangar_bay_lamp", lamp, T["cyan_bright"], "cyanbright", outline=0)
+        if i != 1:
+            for z in (0.68, 1.02, 1.36, 1.70, 2.04):
+                slat = kit.box("hangar_door_slat", (1.42, 0.08, 0.26), location=(sx, -2.28, z))
+                kit.solid("hangar_door_slat", slat, T["surface_2"], "surface2", outline=0.006)
+
+    # Centre-bay interior: overhead gantry, maintenance platform and a bright
+    # threshold line survive even when the vehicle sprite overlaps the bay.
+    bridge = kit.box("hangar_bridge", (1.45, 0.24, 0.18), location=(0, -0.55, 2.16))
+    kit.solid("hangar_bridge", bridge, T["steel"], "steel")
+    for sx in (-0.62, 0.62):
+        support = kit.box("hangar_bridge_support", (0.12, 0.16, 1.55), location=(sx, -0.55, 0.45))
+        kit.solid("hangar_bridge_support", support, T["hull"], "hull")
+    threshold = kit.box("hangar_threshold", (1.55, 0.16, 0.07), location=(0, -2.25, 0.34))
+    kit.solid("hangar_threshold", threshold, T["cyan_bright"], "cyanbright", outline=0)
+
+    return dict(layout=(360, 220), ortho=8.3, mode="room", target=(0, -0.35, 1.75))
+
+
+def pad_complex():
+    """240x160 — one grounded, production launch complex sprite.
+
+    The six modular pad sprites are useful for animation, but the shipped DOM
+    composition scaled and positioned each transparent image independently.
+    At scene scale that made the masts, tanks, arm and clamps look detached.
+    This model keeps the whole idle facility in one Blender camera and one
+    ground plane, so every component shares perspective, contact and outline.
+    """
+    # Integrated civil works: apron, raised launch deck and a deep flame trench.
+    apron = kit.box("complex_apron", (8.4, 4.1, 0.18), location=(0, -0.2, 0), bevel=0.08)
+    kit.solid("complex_apron", apron, T["steel"], "steel")
+    deck = kit.box("complex_deck", (6.8, 3.2, 0.55), location=(0, -0.15, 0.18), bevel=0.07)
+    kit.solid("complex_deck", deck, T["hull"], "hull")
+    trench = kit.box("complex_flame_trench", (1.25, 3.35, 0.18), location=(0.25, -0.15, 0.70), bevel=0.03)
+    kit.solid("complex_flame_trench", trench, T["void"], "void")
+    for sx in (-2.7, -2.0, 1.8, 2.5):
+        seam = kit.box("complex_deck_seam", (0.04, 3.0, 0.03), location=(sx, -0.15, 0.77))
+        kit.solid("complex_deck_seam", seam, T["hull_dark"], "hulldark", outline=0)
+    for sx in (-2.8, -2.2, 1.8, 2.4, 3.0):
+        marker = kit.box("complex_edge_marker", (0.34, 0.12, 0.08), location=(sx, -1.72, 0.76))
+        kit.solid("complex_edge_marker", marker, T["amber"], "amber", outline=0)
+
+    # Main service tower: a solid core provides mass, while thick external
+    # bracing and inward platforms retain the gantry vocabulary.
+    tower_x = -2.05
+    core = kit.box("complex_tower_core", (1.25, 1.25, 5.65), location=(tower_x, 0.1, 0.75), bevel=0.04)
+    kit.solid("complex_tower_core", core, T["surface_2"], "surface2")
+    for sx in (-0.72, 0.72):
+        post = kit.box("complex_tower_post", (0.18, 1.55, 5.85), location=(tower_x + sx, 0.1, 0.75))
+        kit.solid("complex_tower_post", post, T["hull_dark"], "hulldark")
+    for level, z in enumerate((1.55, 2.55, 3.55, 4.55, 5.55)):
+        platform = kit.box("complex_platform", (2.0, 1.65, 0.18), location=(tower_x + 0.22, 0.08, z))
+        kit.solid("complex_platform", platform, T["steel"], "steel")
+        rail = kit.box("complex_platform_rail", (1.75, 0.10, 0.22), location=(tower_x + 0.22, -0.78, z + 0.18))
+        kit.solid("complex_platform_rail", rail, T["cyan"], "cyan", outline=0)
+        window = kit.box("complex_tower_light", (0.26, 0.08, 0.20), location=(tower_x, -0.67, z + 0.38))
+        kit.solid("complex_tower_light", window, T["cyan_bright"], "cyanbright", outline=0)
+        if level in (1, 3):
+            arm = kit.box("complex_service_arm", (2.45, 0.32, 0.24), location=(-0.65, -0.35, z + 0.28), bevel=0.02)
+            kit.solid("complex_service_arm", arm, T["hull"], "hull")
+            head = kit.box("complex_arm_head", (0.34, 0.42, 0.48), location=(0.55, -0.35, z + 0.06))
+            kit.solid("complex_arm_head", head, T["cyan"], "cyan")
+    cap = kit.box("complex_tower_cap", (2.1, 1.7, 0.30), location=(tower_x, 0.1, 6.45), bevel=0.04)
+    kit.solid("complex_tower_cap", cap, T["hull_dark"], "hulldark")
+
+    # Short strongback on the opposite side makes the central vehicle slot
+    # unmistakable without repeating another skeletal tower.
+    back_x = 1.45
+    strongback = kit.box("complex_strongback", (0.62, 1.0, 4.45), location=(back_x, 0.15, 0.75), rotation=(0, -0.08, 0), bevel=0.04)
+    kit.solid("complex_strongback", strongback, T["hull_dark"], "hulldark")
+    for z in (1.5, 2.4, 3.3, 4.2):
+        collar = kit.box("complex_strongback_collar", (1.1, 1.15, 0.16), location=(back_x, 0.15, z))
+        kit.solid("complex_strongback_collar", collar, T["steel"], "steel")
+    umbilical = kit.box("complex_umbilical", (1.45, 0.26, 0.22), location=(0.82, -0.2, 3.35))
+    kit.solid("complex_umbilical", umbilical, T["cyan"], "cyan")
+
+    # Propellant farm physically connected to the deck with visible feed pipes.
+    for i, sx in enumerate((2.45, 3.25)):
+        tank = kit.cylinder("complex_tank", 0.48, 1.35, location=(sx, 0.55, 0.76), verts=10)
+        kit.solid("complex_tank", tank, T["steel"], "steel")
+        dome = kit.cone("complex_tank_dome", 0.48, 0.28, location=(sx, 0.55, 2.11), verts=10)
+        kit.solid("complex_tank_dome", dome, T["hull"], "hull")
+        band = kit.cylinder("complex_tank_band", 0.51, 0.12, location=(sx, 0.55, 1.22), verts=10)
+        kit.solid("complex_tank_band", band, T["hull_dark"], "hulldark", outline=0)
+        gauge = kit.box("complex_tank_gauge", (0.16, 0.08, 0.16), location=(sx, 0.04, 1.54))
+        kit.solid("complex_tank_gauge", gauge, T["cyan_bright"], "cyanbright", outline=0)
+        feed = kit.cylinder("complex_feed_pipe", 0.10, 1.2 + i * 0.8, location=(1.85, 0.5, 0.85 + i * 0.20), rotation=(0, 1.5708, 0), verts=6)
+        kit.solid("complex_feed_pipe", feed, T["cyan"], "cyan", outline=0.008)
+
+    # Hold-down clamps are attached to a shared base ring at the vehicle slot.
+    ring = kit.cylinder("complex_mount_ring", 0.72, 0.16, location=(0.35, -0.2, 0.76), verts=12)
+    kit.solid("complex_mount_ring", ring, T["surface_2"], "surface2")
+    for sx in (-0.14, 0.84):
+        clamp = kit.box("complex_hold_down", (0.30, 0.42, 0.72), location=(sx, -0.2, 0.90), rotation=(0, -0.18 if sx < 0 else 0.18, 0))
+        kit.solid("complex_hold_down", clamp, T["hull"], "hull")
+
+    # Lightning protection masts are braced back into the apron rather than
+    # floating as thin independent sprites.
+    for sx in (-3.75, 3.85):
+        base = kit.box("complex_mast_base", (0.58, 0.68, 0.24), location=(sx, 0.25, 0.18), bevel=0.03)
+        kit.solid("complex_mast_base", base, T["hull_dark"], "hulldark")
+        mast = kit.cylinder("complex_mast", 0.10, 4.65, location=(sx, 0.25, 0.42), verts=8)
+        kit.solid("complex_mast", mast, T["hull_dark"], "hulldark")
+        brace = kit.box("complex_mast_brace", (0.12, 0.12, 1.8), location=(sx + (-0.32 if sx > 0 else 0.32), 0.25, 0.55), rotation=(0, -0.20 if sx > 0 else 0.20, 0))
+        kit.solid("complex_mast_brace", brace, T["steel"], "steel", outline=0.008)
+        spike = kit.cone("complex_mast_spike", 0.18, 0.55, location=(sx, 0.25, 5.07), verts=8)
+        kit.solid("complex_mast_spike", spike, T["cyan_bright"], "cyanbright")
+
+    return dict(layout=(360, 240), ortho=9.2, mode="room", target=(0, -0.15, 3.05))
 
 
 BUILDS = {
@@ -288,4 +414,5 @@ BUILDS = {
     "hub/pad_mast": pad_mast,
     "hub/pad_tank": pad_tank,
     "hub/pad_hangar": pad_hangar,
+    "hub/pad_complex": pad_complex,
 }

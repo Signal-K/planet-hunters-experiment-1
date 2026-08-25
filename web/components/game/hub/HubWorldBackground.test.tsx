@@ -8,6 +8,8 @@ describe('HubWorldBackground', () => {
     const markup = renderToStaticMarkup(<HubWorldBackground />)
 
     expect(markup).toContain('data-testid="hub-skyline-fallback"')
+    expect(markup).toContain('data-testid="hub-mountain-ranges"')
     expect(markup).not.toContain('data-testid="hub-orbit-ring"')
+    expect(markup).not.toContain('clip-path:polygon')
   })
 })

@@ -19,7 +19,11 @@
    convention from Hub's 22%. */
 .launchpad-scene-zoom {
   position: absolute; inset: 0;
-  transform: scale(1.7);
+  /* The previous 1.7x close-up reduced every authored ridge to one giant
+     triangular peak and blew the distant facility silhouettes up into grey
+     slabs. Keep a modest push-in, but preserve enough of the range for its
+     shoulders, gullies and facets to read as terrain. */
+  transform: scale(1.28);
   transform-origin: 50% 100%;
   --hub-ground: 20%;
 }
@@ -67,9 +71,9 @@ button.launchpad-scene-object { cursor: pointer; }
 .launchpad-tower-art { position: relative; width: min(560px, 54vw); height: 330px; }
 .launchpad-tower-rocket { position: absolute; z-index: 3; left: 50%; bottom: 40px; width: 230px; transform: translateX(-50%) rotate(-90deg); filter: drop-shadow(0 8px 14px rgba(0,0,0,.55)); }
 .launchpad-rocket { right: 7%; bottom: 14%; width: 34%; min-height: 270px; justify-content: flex-end; }
-.launchpad-rocket-art { position: relative; width: min(360px, 95%); height: 150px; display: grid; place-items: center; }
+.launchpad-rocket-art { position: relative; width: min(310px, 82%); height: 92px; display: grid; place-items: end center; }
 .launchpad-rocket-art img { position: relative; z-index: 2; width: 100%; filter: drop-shadow(0 18px 18px rgba(0,0,0,.6)); }
-.launchpad-hangar-art { position: absolute; z-index: 0; left: 50%; bottom: 30px; width: min(420px, 120%); transform: translateX(-50%); image-rendering: pixelated; filter: drop-shadow(0 16px 18px rgba(0,0,0,.48)); }
+.launchpad-hangar-art { position: absolute; z-index: 0; left: 50%; bottom: 42px; width: min(500px, 135%); transform: translateX(-50%); image-rendering: pixelated; filter: drop-shadow(0 16px 18px rgba(0,0,0,.48)); }
 .launchpad-rocket-glow { position: absolute; left: 5%; right: 5%; bottom: 18%; height: 14px; border-radius: 50%; background: rgba(112,217,234,.2); filter: blur(12px); }
 .launchpad-rocket:hover img,
 .launchpad-station:hover .launchpad-object-art { filter: brightness(1.12) drop-shadow(0 0 18px rgba(112,217,234,.22)); }
@@ -227,7 +231,7 @@ button.launchpad-scene-object { cursor: pointer; }
   .launchpad-object-label strong { font-size: 8px; }
 .launchpad-tower-art { height: 250px; }
   .launchpad-tower-rocket { width: 170px; }
-  .launchpad-hangar-art { width: 300px; }
+  .launchpad-hangar-art { width: 330px; }
   .launchpad-satellite svg { width: 70px; }
   .launchpad-rail-status span:not(:first-child) { display: none; }
   .launchpad-rail-actions button { padding: 0 9px; font-size: 8px; flex: 0 0 auto; }
@@ -249,7 +253,7 @@ button.launchpad-scene-object { cursor: pointer; }
   .launchpad-guide-actions button { height: 28px; }
   .launchpad-tower-art { height: 220px; }
   .launchpad-tower-rocket { width: 146px; }
-  .launchpad-hangar-art { width: 260px; }
-  .launchpad-rocket-art { height: 105px; }
+  .launchpad-hangar-art { width: 280px; }
+  .launchpad-rocket-art { height: 76px; }
   .launchpad-satellite { top: 2%; }
 }

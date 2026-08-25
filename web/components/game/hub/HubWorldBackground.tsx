@@ -30,11 +30,6 @@ import type { TimeOfDayPhase } from '@/lib/hooks/useTimeOfDay'
  * line — changing it means changing it in all three.
  */
 
-function hillPath(points: [number, number][]): string {
-  const coords = points.map(([x, y]) => `${x}% ${y}%`).join(', ')
-  return `polygon(${coords})`
-}
-
 // ─── Distant skyline — built from silhouette "glyphs" of Earth Base's own
 // building vocabulary, not an abstract repeating pattern. Coordinates are
 // local to each glyph's own x=0 anchor at the ground line (y=0), extending
@@ -206,6 +201,76 @@ const TREE_CLUSTERS: { x: number; s?: number }[] = [
   { x: 1060, s: 1.05 }, { x: 1160, s: 0.85 },
 ]
 
+/**
+ * Three authored mountain ranges with secondary ridges and shaded facets.
+ * The previous backdrop used four or five evenly spaced clip-path points per
+ * band; at launchpad zoom that became a row of literal triangles. These paths
+ * keep the chunky cel-shaded language but add shoulders, gullies, overlapping
+ * mass and asymmetric peaks so the landscape reads as terrain rather than a
+ * placeholder graph.
+ */
+function MountainRanges({
+  phase,
+  hillFar,
+  hillMid,
+  hillNear,
+  snowCap,
+}: {
+  phase: TimeOfDayPhase
+  hillFar: string
+  hillMid: string
+  hillNear: string
+  snowCap: number
+}) {
+  const ridgeLight = phase === 'day' || phase === 'dawn' ? 'rgba(255,244,214,0.38)' : 'rgba(112,217,234,0.22)'
+  return (
+    <svg
+      data-testid="hub-mountain-ranges"
+      aria-hidden="true"
+      viewBox="0 0 1200 420"
+      preserveAspectRatio="xMidYMax slice"
+      style={{
+        position: 'absolute',
+        left: 0,
+        right: 0,
+        bottom: 'var(--hub-ground)',
+        width: '100%',
+        height: '58%',
+        overflow: 'visible',
+      }}
+    >
+      {/* Far range — broad glaciated mass with multiple shoulders. */}
+      <path
+        d="M0 420V304 L54 286 L104 254 L146 236 L182 248 L222 216 L258 230 L292 210 L330 238 L374 266 L420 246 L458 218 L496 232 L532 198 L566 214 L606 166 L638 180 L670 150 L702 174 L734 214 L772 248 L816 232 L852 202 L886 214 L922 180 L954 196 L992 164 L1024 182 L1060 220 L1102 252 L1148 226 L1200 244 V420Z"
+        fill={hillFar}
+      />
+      <path d="M182 248 L222 216 L258 230 L244 224 L228 238Z" fill="rgba(255,255,255,.68)" opacity={snowCap * 0.66} />
+      <path d="M532 198 L566 214 L606 166 L638 180 L670 150 L702 174 L682 166 L660 186 L638 180 L618 196 L594 186 L574 220Z" fill="rgba(255,255,255,.78)" opacity={snowCap * 0.82} />
+      <path d="M922 180 L954 196 L992 164 L1024 182 L1008 176 L986 188 L968 181 L948 208Z" fill="rgba(255,255,255,.66)" opacity={snowCap * 0.64} />
+      <path d="M104 254 L146 236 L182 248 M420 246 L458 218 L496 232 M566 214 L606 166 L638 180 M852 202 L886 214 L922 180 M1102 252 L1148 226" fill="none" stroke="rgba(255,255,255,.12)" strokeWidth="3" strokeLinejoin="round" />
+
+      {/* Mid range — lower wooded shoulders, broken by gullies instead of a
+          repeated saw-tooth baseline. */}
+      <path
+        d="M0 420V334 L48 320 L92 294 L138 302 L184 278 L230 300 L278 326 L330 312 L376 284 L420 292 L464 264 L510 286 L558 318 L610 304 L656 276 L700 288 L744 266 L792 294 L838 330 L890 312 L934 286 L978 300 L1022 274 L1068 296 L1116 324 L1162 308 L1200 318 V420Z"
+        fill={hillMid}
+      />
+      <path d="M48 320 L92 294 L138 302 M330 312 L376 284 L420 292 M610 304 L656 276 L700 288 M890 312 L934 286 L978 300" fill="none" stroke="rgba(255,255,255,.08)" strokeWidth="3" strokeLinejoin="round" />
+
+      {/* Near range — a continuous irregular ridge with a lit crest and broad
+          facets that connect visually to the facility ground plane. */}
+      <path
+        d="M0 420V360 L58 348 L112 326 L166 334 L220 318 L274 340 L330 364 L388 350 L442 326 L496 338 L550 320 L606 344 L662 366 L720 350 L774 330 L828 342 L882 324 L938 346 L994 368 L1052 352 L1106 334 L1158 346 L1200 338 V420Z"
+        fill={hillNear}
+      />
+      <path d="M0 360 L58 348 L112 326 L166 334 L220 318 L274 340" fill="none" stroke={ridgeLight} strokeWidth="4" strokeLinejoin="round" />
+      <path d="M330 364 L388 350 L442 326 L496 338 L550 320 L606 344" fill="none" stroke={ridgeLight} strokeWidth="4" strokeLinejoin="round" />
+      <path d="M662 366 L720 350 L774 330 L828 342 L882 324 L938 346" fill="none" stroke={ridgeLight} strokeWidth="4" strokeLinejoin="round" />
+      <path d="M994 368 L1052 352 L1106 334 L1158 346 L1200 338" fill="none" stroke={ridgeLight} strokeWidth="4" strokeLinejoin="round" />
+    </svg>
+  )
+}
+
 export function HubWorldBackground({ phase = 'night' }: { phase?: TimeOfDayPhase }) {
   const sky = SKY_PALETTES[phase]
   return (
@@ -247,72 +312,13 @@ export function HubWorldBackground({ phase = 'night' }: { phase?: TimeOfDayPhase
         }}
       />
 
-      {/* ── Parallax mountains, far to near — jagged sharp peaks (not soft
-          rolling hills), snow-capped tips that brighten with the sky so the
-          range reads as real terrain lit by the same light source. Colors
-          shift per phase so midday actually looks like midday. ─────────── */}
-      {(() => {
-        const farPath = hillPath([
-          [0, 100], [0, 55], [9, 38], [18, 48], [27, 22], [36, 40],
-          [46, 18], [55, 44], [64, 28], [73, 46], [82, 20], [91, 42],
-          [100, 30], [100, 100],
-        ])
-        const midPath = hillPath([
-          [0, 100], [0, 62], [12, 32], [23, 52], [33, 24], [44, 46],
-          [56, 18], [67, 44], [78, 26], [89, 48], [100, 34], [100, 100],
-        ])
-        const nearPath = hillPath([
-          [0, 100], [0, 68], [15, 40], [30, 60], [48, 30], [63, 58],
-          [80, 36], [100, 56], [100, 100],
-        ])
-        return (
-          <>
-            <div
-              aria-hidden="true"
-              style={{
-                position: 'absolute', left: 0, right: 0, bottom: 'calc(var(--hub-ground) + 6%)', height: '30%',
-                background: sky.hillFar, clipPath: farPath, transition: 'background 1.2s ease',
-              }}
-            >
-              <div style={{
-                position: 'absolute', inset: 0, clipPath: farPath,
-                background: 'linear-gradient(180deg, rgba(255,255,255,0.9) 0%, transparent 10%)',
-                opacity: sky.snowCap * 0.6, transition: 'opacity 1.2s ease',
-              }} />
-            </div>
-            <div
-              aria-hidden="true"
-              style={{
-                position: 'absolute', left: 0, right: 0, bottom: 'calc(var(--hub-ground) + 2%)', height: '24%',
-                background: sky.hillMid, clipPath: midPath, transition: 'background 1.2s ease',
-              }}
-            >
-              <div style={{
-                position: 'absolute', inset: 0, clipPath: midPath,
-                background: 'linear-gradient(180deg, rgba(255,255,255,0.85) 0%, transparent 8%)',
-                opacity: sky.snowCap * 0.4, transition: 'opacity 1.2s ease',
-              }} />
-            </div>
-            <div
-              aria-hidden="true"
-              style={{
-                position: 'absolute', left: 0, right: 0, bottom: 'var(--hub-ground)', height: '16%',
-                background: sky.hillNear, clipPath: nearPath, transition: 'background 1.2s ease',
-              }}
-            >
-              {/* Rim-light tracing the nearest ridge crest — cyan at night
-                  (facility trim), warm sun-catch by day. */}
-              <div style={{
-                position: 'absolute', inset: 0,
-                background: phase === 'day' || phase === 'dawn'
-                  ? 'linear-gradient(180deg, rgba(255,244,214,0.4) 0%, transparent 14%)'
-                  : 'linear-gradient(180deg, rgba(112,217,234,0.28) 0%, transparent 14%)',
-                clipPath: nearPath, transition: 'background 1.2s ease',
-              }} />
-            </div>
-          </>
-        )
-      })()}
+      <MountainRanges
+        phase={phase}
+        hillFar={sky.hillFar}
+        hillMid={sky.hillMid}
+        hillNear={sky.hillNear}
+        snowCap={sky.snowCap}
+      />
 
       {/* ── Tree line — conifer clusters standing on the nearest ridge,
           the terrain detail the flat hill polygons alone don't read as. ── */}
