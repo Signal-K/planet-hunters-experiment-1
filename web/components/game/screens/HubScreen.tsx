@@ -189,9 +189,10 @@ interface HubScreenProps {
   onUpgradeLaunchpad?: () => void
   onExcavateSubsurface?: () => void
   onBuildSubsurfaceRoom?: (roomId: SubsurfaceRoomId) => void
+  initialSubsurface?: boolean
 }
 
-export default function HubScreen({ player, rocketVariant = 'explorer', hasCoach, onGoBuilding, onNav, onUpgradeLaunchpad, onExcavateSubsurface, onBuildSubsurfaceRoom }: HubScreenProps) {
+export default function HubScreen({ player, rocketVariant = 'explorer', hasCoach, onGoBuilding, onNav, onUpgradeLaunchpad, onExcavateSubsurface, onBuildSubsurfaceRoom, initialSubsurface = false }: HubScreenProps) {
   // Wall-clock reads must wait until after the server/client first render.
   // Otherwise a saved scan that completes between SSR and hydration can
   // change the building badge and label, producing React error #418.
@@ -212,7 +213,7 @@ export default function HubScreen({ player, rocketVariant = 'explorer', hasCoach
   const { phase: skyPhase } = useTimeOfDay()
   const [editMode, setEditMode] = useState(false)
   const [plotEntities, setPlotEntities] = useState<EntityData[]>(DEFAULT_PLOTS)
-  const [subsurface, setSubsurface] = useState(false)
+  const [subsurface, setSubsurface] = useState(initialSubsurface)
   const [confirmingLaunchpadUpgrade, setConfirmingLaunchpadUpgrade] = useState(false)
   const [tessQueueCount, setTessQueueCount] = useState(0)
   const [asteroidQueueCount, setAsteroidQueueCount] = useState(0)

@@ -12,12 +12,14 @@ import { UI_ZONES } from '@/lib/ui-zones'
 import { HubWorldBackground } from '@/components/game/hub/HubWorldBackground'
 import { LaunchpadStructure } from '@/components/game/hub/HubLaunchpadArt'
 import { useTimeOfDay } from '@/lib/hooks/useTimeOfDay'
+import { SoilCrossSection } from '@/components/game/hub/SoilCrossSection'
 
 interface LaunchpadScreenProps {
   onBack: () => void
   onPick: (id: string) => void
   onViewContracts: () => void
   onOpenHangar: () => void
+  onOpenSubsurface?: () => void
   missionsDone: number
   freeOperations: boolean
   catalog: Catalog
@@ -42,7 +44,7 @@ function GuideGlyph() {
 }
 
 export default function LaunchpadScreen({
-  onBack, onPick, onViewContracts, onOpenHangar, missionsDone, freeOperations, catalog, player, rocketImageSrc = '/game/assets/ships/ship_sr1.png', selectedRocketName, francs,
+  onBack, onPick, onViewContracts, onOpenHangar, onOpenSubsurface, missionsDone, freeOperations, catalog, player, rocketImageSrc = '/game/assets/ships/ship_sr1.png', selectedRocketName, francs,
 }: LaunchpadScreenProps) {
   const [guideStep, setGuideStep] = useState<number | null>(null)
   const { phase: skyPhase } = useTimeOfDay()
@@ -129,6 +131,17 @@ export default function LaunchpadScreen({
             <strong>{player.pendingLaunch ? `${selectedRocketName ?? unlockedFleet[0]?.model.name ?? 'BUILT VEHICLE'} · INSPECT` : `${selectedRocketName ?? unlockedFleet[0]?.model.name ?? 'NO VEHICLE'} · HANGAR`}</strong>
           </span>
         </button>
+
+        <SoilCrossSection />
+        <div className="launchpad-foundation">
+          <div className="launchpad-foundation-face" />
+          <div className="launchpad-foundation-track launchpad-foundation-track--left" />
+          <div className="launchpad-foundation-track launchpad-foundation-track--right" />
+          <button type="button" className="launchpad-subsurface-hatch" onClick={onOpenSubsurface} aria-label="Open subsurface excavation deck">
+            <span>SUBSURFACE ACCESS</span>
+            <strong>EXCAVATION DECK</strong>
+          </button>
+        </div>
 
         {guide && guideStep !== null && (
           <aside className="launchpad-guide" data-testid="launchpad-guide" aria-live="polite" aria-labelledby="launchpad-guide-title">

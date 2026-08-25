@@ -149,6 +149,7 @@ export function ScreenContent({
       )
 
     case 'hub':
+    case 'hub-subsurface':
       return (
         <HubScreen
           player={game.player}
@@ -187,6 +188,7 @@ export function ScreenContent({
           onUpgradeLaunchpad={() => game.upgradeLaunchpad()}
           onExcavateSubsurface={() => game.excavateSubsurface()}
           onBuildSubsurfaceRoom={roomId => game.buildSubsurfaceRoom(roomId)}
+          initialSubsurface={game.screen === 'hub-subsurface'}
         />
       )
 
@@ -338,6 +340,7 @@ export function ScreenContent({
           }}
           onViewContracts={() => game.goToMissions()}
           onOpenHangar={() => game.go(game.player.pendingLaunch ? 'fab' : 'hangar')}
+          onOpenSubsurface={() => game.go('hub-subsurface')}
           missionsDone={game.player.missionsDone}
           freeOperations={game.player.freeOperations}
           catalog={game.catalog}
