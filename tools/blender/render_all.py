@@ -50,6 +50,7 @@ def main():
     written, skipped = [], []
 
     for mod_name in MODULES:
+        kit.set_palette("hub_light" if mod_name in {"hub_structures", "launchpad"} else "default")
         mod = importlib.import_module(mod_name)
         importlib.reload(mod)
         for key, build in mod.BUILDS.items():

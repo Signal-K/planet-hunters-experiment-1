@@ -37,7 +37,7 @@ export function HubStructureArt({ buildings }: { buildings: HubBuildingDef[] }) 
                 style={{
                   position: 'absolute',
                   left: `${(building.plotX / 402) * 100}%`,
-                  bottom: `calc(22% - 14px)`,
+                  bottom: `calc(var(--hub-ground) - 14px)`,
                   width: art.width * 1.6,
                   height: art.width * 0.7,
                   transform: 'translate(-50%, 30%)',
@@ -50,7 +50,7 @@ export function HubStructureArt({ buildings }: { buildings: HubBuildingDef[] }) 
                 style={{
                   position: 'absolute',
                   left: `${(building.plotX / 402) * 100}%`,
-                  bottom: '22%',
+                  bottom: 'var(--hub-ground)',
                   width: 0,
                   height: 0,
                   filter: 'drop-shadow(0 5px 5px rgba(0, 0, 0, 0.3))',
@@ -65,7 +65,7 @@ export function HubStructureArt({ buildings }: { buildings: HubBuildingDef[] }) 
                 style={{
                   position: 'absolute',
                   left: `${(building.plotX / 402) * 100}%`,
-                  bottom: `calc(22% - ${art.lift}px)`,
+                  bottom: `calc(var(--hub-ground) - ${art.lift}px)`,
                   width: art.width,
                   height: 'auto',
                   transform: 'translateX(-50%)',

@@ -69,13 +69,35 @@ export interface SurfaceSiteProgress {
   fieldOperation?: FieldOperation
 }
 
+export type FieldOperationObjectiveKind = 'settlement' | 'prospecting' | 'logistics'
+
+export interface FieldOperationCargo {
+  requirements: Record<string, number>
+  capacity: number
+}
+
+export interface FieldOperationObjective {
+  kind: FieldOperationObjectiveKind
+  description: string
+}
+
+export interface FieldOperationReturnPolicy {
+  owner: 'landnam'
+  reconcileAt: 'field-return'
+}
+
 export interface FieldOperation {
   id: string
+  missionId: string
+  targetId: string
   siteId: string
   bodyId: string
   seed: number
   rover: RoverSpec
   label: string
+  cargo: FieldOperationCargo
+  objective: FieldOperationObjective
+  returnPolicy: FieldOperationReturnPolicy
   startedAt: number
 }
 

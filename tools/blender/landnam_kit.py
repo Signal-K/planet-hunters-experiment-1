@@ -47,6 +47,21 @@ TOKENS = {
     "outline": "#04101f",
 }
 
+HUB_LIGHT_TOKENS = {
+    "void": "#1d2933", "surface": "#4f7d96", "surface_2": "#6f9fb5",
+    "surface_3": "#8db8c8", "cyan": "#1c7fbf", "cyan_bright": "#62c7d4",
+    "amber": "#b5730a", "crimson": "#b53b4d", "hull": "#5f89a4",
+    "hull_dark": "#29465a", "steel": "#d6e2df", "rust": "#a85d3d",
+    "outline": "#14171c",
+}
+DEFAULT_TOKENS = dict(TOKENS)
+
+
+def set_palette(name="default"):
+    """Select a deterministic material palette for the next model render."""
+    TOKENS.clear()
+    TOKENS.update(HUB_LIGHT_TOKENS if name == "hub_light" else DEFAULT_TOKENS)
+
 
 def srgb_to_linear(c):
     return c / 12.92 if c <= 0.04045 else ((c + 0.055) / 1.055) ** 2.4

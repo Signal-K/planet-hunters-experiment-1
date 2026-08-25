@@ -1463,6 +1463,128 @@ button { cursor: pointer; }
 .theme-blueprint.mining-screen .mining-controls .mineral-stat-count {
   color: var(--ln-bp-ink);
 }
+.theme-blueprint.mining-screen {
+  --ln-mining-control-fill: rgba(255, 255, 255, 0.72);
+  --ln-mining-control-fill-strong: #ffffff;
+  --ln-mining-overlay: rgba(238, 243, 248, 0.88);
+  --ln-mining-action: var(--ln-bp-blue);
+  --ln-mining-action-press: #145f8f;
+}
+.theme-blueprint.mining-screen .mining-info-panel {
+  background: var(--ln-mining-control-fill-strong) !important;
+  border-color: var(--ln-bp-line-strong) !important;
+  box-shadow: var(--ln-shadow-card);
+}
+.theme-blueprint.mining-screen .mining-guide-overlay,
+.theme-blueprint.mining-screen .mining-success-overlay,
+.theme-blueprint.mining-screen .mining-failure-overlay {
+  background: var(--ln-mining-overlay);
+}
+.theme-blueprint.mining-screen .mining-guide-panel {
+  padding: var(--ln-s-4);
+  border: 1px solid var(--ln-bp-line-strong);
+  border-radius: var(--ln-r-lg);
+  background: var(--ln-mining-control-fill-strong);
+  box-shadow: var(--ln-shadow-modal);
+}
+.theme-blueprint.mining-screen .mining-guide-close,
+.theme-blueprint.mining-screen .mining-success-secondary,
+.theme-blueprint.mining-screen .mining-success-primary {
+  font: 800 10px var(--ln-font-display);
+  letter-spacing: var(--ln-tr-label);
+  text-transform: uppercase;
+  cursor: pointer;
+}
+.theme-blueprint.mining-screen .mining-guide-close {
+  width: 100%;
+  margin-top: var(--ln-s-1);
+  padding: var(--ln-s-2) 0;
+  border: 1px solid var(--ln-cyan-border);
+  border-radius: var(--ln-r-md);
+  background: var(--ln-cyan-soft);
+  color: var(--ln-cyan);
+}
+.theme-blueprint.mining-screen .mining-success-panel {
+  background: var(--ln-mining-control-fill-strong) !important;
+  border-color: var(--ln-bp-green) !important;
+  box-shadow: var(--ln-shadow-modal);
+}
+.theme-blueprint.mining-screen .mining-success-secondary,
+.theme-blueprint.mining-screen .mining-success-primary {
+  padding: 11px 10px;
+  border-radius: var(--ln-r-md);
+}
+.theme-blueprint.mining-screen .mining-success-secondary {
+  border: 1px solid var(--ln-bp-green);
+  background: var(--ln-bp-green-soft);
+  color: var(--ln-bp-green);
+}
+.theme-blueprint.mining-screen .mining-success-primary {
+  border: 0;
+  background: var(--ln-bp-green);
+  color: #ffffff;
+}
+.theme-blueprint.mining-screen .mining-failure-overlay {
+  background: rgba(238, 243, 248, 0.94);
+}
+.theme-blueprint.mining-screen .mining-failure-retry,
+.theme-blueprint.mining-screen .mining-failure-abandon {
+  width: 100%;
+  padding: var(--ln-s-3) 0;
+  border-radius: var(--ln-r-md);
+  font: 800 11px var(--ln-font-display);
+  letter-spacing: var(--ln-tr-label);
+  text-transform: uppercase;
+  cursor: pointer;
+}
+.theme-blueprint.mining-screen .mining-failure-retry {
+  border: 0;
+  background: var(--ln-cyan);
+  color: var(--ln-text-on-cyan);
+}
+.theme-blueprint.mining-screen .mining-failure-abandon {
+  border: 1px solid var(--ln-crimson-border);
+  background: transparent;
+  color: var(--ln-crimson);
+}
+.theme-blueprint.mining-screen .mining-charge-warning > div {
+  margin: var(--ln-s-2) var(--ln-s-4);
+  padding: 6px 14px;
+  border: 1px solid var(--ln-crimson-border);
+  border-radius: var(--ln-r-md);
+  background: var(--ln-crimson-soft);
+  color: var(--ln-crimson);
+  font: 800 10px var(--ln-font-display);
+  letter-spacing: var(--ln-tr-loose);
+  text-transform: uppercase;
+}
+.theme-blueprint.mining-screen .mining-guide-button {
+  padding: var(--ln-s-1) var(--ln-s-2);
+  border: 1px solid var(--ln-cyan-border);
+  border-radius: var(--ln-r-xs);
+  background: var(--ln-cyan-soft);
+  color: var(--ln-cyan);
+  font: 800 9px var(--ln-font-display);
+  letter-spacing: var(--ln-tr-label);
+  text-transform: uppercase;
+  cursor: pointer;
+}
+.theme-blueprint.mining-screen .mining-controls button {
+  border-radius: var(--ln-r-md);
+}
+.theme-blueprint.mining-screen .mining-controls > div:last-child button {
+  background: var(--ln-mining-action);
+  color: #ffffff;
+  box-shadow: 0 3px 0 rgba(15, 36, 54, 0.18);
+}
+.theme-blueprint.mining-screen .mining-controls > div:last-child button:active:not(:disabled) {
+  background: var(--ln-mining-action-press);
+}
+.theme-blueprint.mining-screen .mining-controls > div:last-child button:disabled {
+  background: var(--ln-bp-paper-2);
+  color: var(--ln-bp-ink-mute);
+  box-shadow: none;
+}
 .theme-blueprint[data-testid="rover-mining-screen"] .rover-mining-hud {
   background: linear-gradient(180deg, transparent, var(--ln-bp-bg) 18%);
   border-top: 1px solid var(--ln-bp-line-strong);

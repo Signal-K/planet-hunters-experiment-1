@@ -13,6 +13,7 @@ import type {
   SurfaceOpsState,
   SurfaceSiteProgress,
 } from '@/lib/game-types'
+import type { RoverSpec } from '@takeon/engine'
 
 export type SettlementLaunchpadStatus =
   | 'unavailable'
@@ -43,11 +44,22 @@ function cleanFieldOperation(value: unknown, siteId: string): FieldOperation | u
   ) return undefined
   return {
     id: operation.id,
+    missionId: typeof operation.missionId === 'string' ? operation.missionId : operation.id,
+    targetId: typeof operation.targetId === 'string' ? operation.targetId : siteId,
     siteId,
     bodyId: operation.bodyId,
     seed: operation.seed,
     rover: operation.rover,
     label: typeof operation.label === 'string' ? operation.label : 'Surface operation',
+    cargo: operation.cargo && typeof operation.cargo === 'object'
+      ? operation.cargo
+      : { requirements: {}, capacity: 0 },
+    objective: operation.objective && typeof operation.objective === 'object'
+      ? operation.objective
+      : { kind: 'prospecting', description: 'Operate the surface site.' },
+    returnPolicy: operation.returnPolicy && typeof operation.returnPolicy === 'object'
+      ? operation.returnPolicy
+      : { owner: 'landnam', reconcileAt: 'field-return' },
     startedAt: Math.max(0, operation.startedAt),
   }
 }
@@ -240,7 +252,7 @@ export function applyStartFieldOperation(
   const site = surfaceSiteProgress(state.player, siteId)
   if (!definition || !site.siteAccessPurchasedAt || site.fieldOperation) return state
   const seed = stableSeed(`${siteId}:${site.siteAccessPurchasedAt}`)
-  const rover = {
+  const rover: RoverSpec = {
     id: `prospector-${siteId}`,
     name: 'Prospector',
     chassis: 'chassis-lab',
@@ -254,11 +266,19 @@ export function applyStartFieldOperation(
     ...current,
     fieldOperation: {
       id: `surface-${siteId}-${site.siteAccessPurchasedAt}`,
+      missionId: `surface-site-${siteId}`,
+      targetId: siteId,
       siteId,
       bodyId: definition.bodyId,
       seed,
       rover,
       label: `${definition.name} · Prospector deployment`,
+      cargo: { requirements: {}, capacity: 0 },
+      objective: {
+        kind: 'settlement',
+        description: `Operate the ${definition.name} field site.`,
+      },
+      returnPolicy: { owner: 'landnam', reconcileAt: 'field-return' },
       startedAt: now,
     },
   }))

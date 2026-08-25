@@ -309,6 +309,56 @@ def astronaut_academy():
     return dict(layout=(64, 58), ortho=3.7, mode="flat", target=(0, 0, 0.95))
 
 
+def refinery_modular_v2():
+    """73x50 — refinery output used by the live Hub scene."""
+    base = kit.box("base", (2.9, 1.2, 0.42), bevel=0.04)
+    kit.solid("base", base, T["surface_3"], "surface3")
+    deck = kit.box("deck", (3.1, 1.35, 0.12), location=(0, 0, 0.42))
+    kit.solid("deck", deck, T["hull_dark"], "hulldark")
+    for x, height, radius in ((-1.05, 1.1, 0.42), (0.0, 1.55, 0.5), (1.05, 1.25, 0.42)):
+        vessel = kit.cylinder("vessel", radius, height, location=(x, 0, 0.54), verts=10)
+        kit.solid("vessel", vessel, T["steel"], "steel")
+        cap = kit.cone("cap", radius, 0.22, location=(x, 0, 0.54 + height), verts=10)
+        kit.solid("cap", cap, T["hull"], "hull")
+        band = kit.cylinder("band", radius + 0.04, 0.1, location=(x, -0.01, 0.9), verts=10)
+        kit.solid("band", band, T["hull_dark"], "hulldark", outline=0)
+    for x in (-0.78, -0.26, 0.26, 0.78):
+        pipe = kit.box("pipe", (0.08, 0.08, 1.55), location=(x, -0.62, 0.54))
+        kit.solid("pipe", pipe, T["rust"], "rust", outline=0.006)
+    for x in (-1.35, 1.35):
+        stack = kit.cylinder("stack", 0.12, 1.45, location=(x, 0.25, 0.54), verts=8)
+        kit.solid("stack", stack, T["hull_dark"], "hulldark")
+    return dict(layout=(73, 50), ortho=3.9, mode="flat", target=(0, 0, 1.0))
+
+
+def scan_station_modular_v2():
+    """46x73 — satellite monitoring station output used by the live Hub."""
+    base = kit.box("base", (1.75, 1.2, 0.42), bevel=0.04)
+    kit.solid("base", base, T["surface_3"], "surface3")
+    body = kit.box("body", (1.45, 1.0, 0.7), location=(0, 0, 0.42), bevel=0.03)
+    kit.solid("body", body, T["hull"], "hull")
+    for x in (-0.42, 0.42):
+        win = kit.box("win", (0.28, 0.05, 0.22), location=(x, -0.53, 0.76))
+        kit.solid("win", win, T["cyan"], "cyan", outline=0)
+    door = kit.box("door", (0.3, 0.05, 0.42), location=(0, -0.53, 0.43))
+    kit.solid("door", door, T["hull_dark"], "hulldark", outline=0.006)
+    mount = kit.box("mount", (0.18, 0.18, 0.3), location=(0, 0, 1.12))
+    kit.solid("mount", mount, T["steel"], "steel", outline=0.006)
+    rim = kit.cylinder("rim", 0.72, 0.1, location=(0, 0, 1.32), verts=12)
+    rim.rotation_euler = (-0.85, 0, 0)
+    kit.solid("rim", rim, T["hull_dark"], "hulldark", outline=0.01)
+    face = kit.cone("face", 0.6, 0.28, location=(0, 0, 1.34), verts=12)
+    face.rotation_euler = (-0.85 + 3.14159, 0, 0)
+    kit.solid("face", face, T["cyan_bright"], "cyanbright", outline=0)
+    inset = kit.cylinder("inset", 0.26, 0.05, location=(0, 0.18, 1.37), verts=10)
+    inset.rotation_euler = (-0.85, 0, 0)
+    kit.solid("inset", inset, T["surface_3"], "surface3", outline=0)
+    feed = kit.box("feed", (0.06, 0.06, 0.55), location=(0, -0.2, 1.48))
+    feed.rotation_euler = (-0.85, 0, 0)
+    kit.solid("feed", feed, T["steel"], "steel", outline=0.006)
+    return dict(layout=(46, 73), ortho=2.9, mode="flat", target=(0, 0, 0.78))
+
+
 BUILDS = {
     "hub/depot_tank": depot_tank,
     "hub/scan_dish": scan_dish,
@@ -316,4 +366,6 @@ BUILDS = {
     "hub/sat_station": sat_station,
     "hub/deep_space_telescope": deep_space_telescope,
     "hub/astronaut_academy": astronaut_academy,
+    "hub/refinery_modular_v2": refinery_modular_v2,
+    "hub/scan_station_modular_v2": scan_station_modular_v2,
 }

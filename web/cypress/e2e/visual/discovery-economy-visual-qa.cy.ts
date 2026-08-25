@@ -122,6 +122,23 @@ const HOT_CLOSE_SUBJECT = {
   st_teff: 9500,
 }
 
+function stubBackgroundSubjectReads() {
+  // The exo-survey mission is generated from the discovered target persisted
+  // in GameState (see buildRuntimeCatalog), not from the shared subjects feed.
+  // CI runs a vanilla shared PocketBase without the subjects collection or
+  // /api/ss/subjects/last-confirmed route, so leave these unrelated background
+  // reads deterministic instead of letting 401/400 responses obscure the
+  // local discovery -> mission path under test.
+  cy.intercept('GET', '**/api/ss/subjects/last-confirmed', {
+    statusCode: 200,
+    body: { lastConfirmedAt: null, subjectId: null },
+  }).as('lastConfirmedSubject')
+  cy.intercept('GET', '**/api/collections/subjects/records*', {
+    statusCode: 200,
+    body: { page: 1, perPage: 500, totalItems: 0, totalPages: 1, items: [] },
+  }).as('backgroundSubjects')
+}
+
 describe('Visual QA — discovery -> economy pipeline', () => {
   Cypress.on('uncaught:exception', (err) => {
     if (err.message.includes('_cancelResize')) return false
@@ -130,6 +147,8 @@ describe('Visual QA — discovery -> economy pipeline', () => {
 
   it('confirming a hot, close-in transit assigns a real archetype and non-empty minerals', () => {
     cy.viewport(1280, 800)
+
+    stubBackgroundSubjectReads()
 
     cy.intercept('GET', '**/api/collections/subjects/records*', {
       statusCode: 200,
@@ -225,6 +244,7 @@ describe('Visual QA — discovery -> economy pipeline', () => {
 
   it('a discovered target is reachable through Your Program and the target picker', () => {
     cy.viewport(1280, 800)
+    stubBackgroundSubjectReads()
 
     // Build the discovered target through the real production function
     // (not hand-authored) so the fixture can never drift from what the app

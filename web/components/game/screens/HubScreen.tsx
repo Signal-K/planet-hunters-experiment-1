@@ -28,6 +28,7 @@ import { fetchReviewableTessCandidates } from '@/lib/tess-subjects'
 import { fetchReviewableAsteroidCandidates } from '@/lib/asteroid-subjects'
 import { instrumentDigestDateKey, unresolvedTransitInstrumentDigest, unresolvedDeepSpaceInstrumentDigest } from '@/lib/systems/InstrumentFeedSystem'
 import HUDStrip from '@/components/ui/HUDStrip'
+import layoutStyles from '@/components/game/hub/HubLayout.module.css'
 
 // ── Ref-B bordered-icon-badge glyphs for Hub chrome (bottom tabs) ──
 // Simple white-line icons, no fill — matches the mockup's `i-*` <symbol> set.
@@ -293,7 +294,7 @@ export default function HubScreen({ player, rocketVariant = 'explorer', hasCoach
     // every pill half a building to the right of the structure it names.
     .map(e => ({
       left: `calc(${(e.transform.position.x / 402) * 100}%)`,
-      bottom: 'calc(22% - 42px)',
+      bottom: 'calc(var(--hub-ground) - 42px)',
       transform: 'translateX(-50%)',
     } as React.CSSProperties))
 
@@ -431,7 +432,7 @@ export default function HubScreen({ player, rocketVariant = 'explorer', hasCoach
   }
 
   return (
-    <div style={{ width: '100%', height: '100%', position: 'relative', overflow: 'hidden' }}>
+    <div className={layoutStyles.root} style={{ width: '100%', height: '100%', position: 'relative', overflow: 'hidden' }}>
 
       {/* ── Sliding world: surface (top 50%) + subsurface (bottom 50%) ── */}
       <div style={{
@@ -443,7 +444,7 @@ export default function HubScreen({ player, rocketVariant = 'explorer', hasCoach
       }}>
 
         {/* ─── ABOVE GROUND ─── top half of slider */}
-        <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '50%', overflow: 'hidden' }}>
+        <div className={layoutStyles.surface} style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '50%', overflow: 'hidden' }}>
           {/* World background: sky, starfield, ridge parallax, ground, plateau */}
           <HubWorldBackground phase={skyPhase} />
 

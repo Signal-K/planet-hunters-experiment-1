@@ -83,6 +83,14 @@ function assertNoHorizontalOverflow() {
   })
 }
 
+function assertInsideViewport(selector: string) {
+  cy.window().then(win => cy.get(selector).then($element => {
+    const rect = $element[0].getBoundingClientRect()
+    expect(rect.left, `${selector} left edge`).to.be.at.least(0)
+    expect(rect.right, `${selector} right edge`).to.be.at.most(win.innerWidth)
+  }))
+}
+
 describe('Earth Base — redesigned scene', () => {
   Cypress.on('uncaught:exception', err => {
     if (err.message.includes('_cancelResize')) return false
@@ -125,7 +133,25 @@ describe('Earth Base — redesigned scene', () => {
       stash: { iron: 12, silicon: 5 },
     })
     assertNoHorizontalOverflow()
+    assertInsideViewport('[data-testid="progression-card-transit-satellite"]')
     cy.screenshot('earth-base-03-desktop-full', { capture: 'viewport' })
+  })
+
+  it('narrow landscape — desktop composition stays inside the viewport', () => {
+    cy.viewport(1024, 600)
+    openHub({
+      missionsDone: 4,
+      missionCount: 4,
+      freeOperations: true,
+      refineryBuilt: true,
+      refineryUnlocked: true,
+      scannerBuilt: true,
+      placed: ['launchpad', 'refinery', 'scan-station', 'transit-telescope'],
+      placementPlots: { launchpad: 0, refinery: 1, 'scan-station': 2, 'transit-telescope': 3 },
+    })
+    assertNoHorizontalOverflow()
+    assertInsideViewport('[data-testid="progression-card-transit-satellite"]')
+    cy.screenshot('earth-base-08-narrow-landscape', { capture: 'viewport' })
   })
 
   it('portrait — below-soil storage and habitat cutaway', () => {
