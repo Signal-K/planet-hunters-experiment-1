@@ -96,7 +96,9 @@ export default function LaunchpadScreen({
 
   return (
     <div className="game-screen theme-blueprint ln-scene-launchpad">
-      <TopBar eyebrow="EARTH BASE · LAUNCHPAD" title="Your Program" onBack={onBack} glass francs={francs} />
+      {/* Scene chrome stays crisp over the terrain; the previous `glass` prop
+          created the large frosted rectangle visible across the upper UI. */}
+      <TopBar eyebrow="EARTH BASE · LAUNCHPAD" title="Your Program" onBack={onBack} francs={francs} />
 
       <main data-ui-zone={UI_ZONES.screenContent} className="launchpad-visual-scene earth-base-campus-transition">
         {/* Same Earth Base backdrop the Hub screen uses (KES-233) — this

@@ -21,13 +21,18 @@ import landnam_kit as kit
 
 T = kit.TOKENS
 INK = T["hull_dark"]
-STEEL = kit.tint(T["steel"], 0.92)
-STEEL_DARK = kit.tint(T["steel"], 0.62)
+# The hub_light palette's `steel` token is intentionally chalk-white for UI
+# accents. It is the wrong material for a building: using it made every deck
+# look like the old white launchpad sticker. Structural steel stays in the
+# terrain's blue-gray hull range; only tiny safety marks use the amber token.
+STEEL = kit.tint(T["hull"], 0.88)
+STEEL_DARK = kit.tint(T["hull_dark"], 0.92)
 RUST = T["rust"]
 SAFETY = kit.tint(T["amber"], 0.78)
 GLASS = T["cyan"]
 GLASS_LIT = T["cyan_bright"]
-ROCK = kit.tint(T["steel"], 0.44)
+ROCK = kit.tint(T["hull"], 0.68)
+ROCK_DARK = kit.tint(T["hull_dark"], 0.76)
 OUTLINE = 0.012
 FINE = 0.006
 
@@ -55,8 +60,11 @@ def cylinder(name, radius, height, location, color, key="site", outline=OUTLINE,
 
 
 def slab(name, w, x=0, z=0, depth=0.9, color=ROCK):
-    box(name, (w, depth, 0.22), (x, 0.04, z), color, "ground", bevel=0.08)
-    box(f"{name}_lip", (w * 0.90, depth * 0.72, 0.07), (x, -0.18, z + 0.22), INK, "ink", bevel=0.02, outline=FINE)
+    # The first pass used a pale concrete slab and read as a white sticker.
+    # Foundations are now dark basalt/steel so the terrain remains the visual
+    # parent and the structure grows out of it.
+    box(name, (w, depth, 0.20), (x, 0.04, z), INK, "ground", bevel=0.08)
+    box(f"{name}_lip", (w * 0.90, depth * 0.72, 0.06), (x, -0.18, z + 0.20), INK, "ink", bevel=0.02, outline=FINE)
 
 
 def pad_foundation():
@@ -76,25 +84,23 @@ def pad_foundation():
 
 
 def pad_tower():
-    """Tapered service tower with offset platforms and bold diagonal braces."""
-    w, h = 4.8, 8.4
-    for x, lean in ((-1.36, -0.05), (1.14, 0.05)):
-        box("tower_leg", (0.22, 0.28, 6.45), (x, 0.06, 0.24), INK, "ink", rotation=(0, lean, 0), bevel=0.04, outline=FINE)
-    for level, z in enumerate((1.1, 2.35, 3.7, 5.1, 6.38)):
-        width = 2.8 if level in (1, 3) else 2.35
-        box("tower_platform", (width, 0.72, 0.18), (-0.08 + (0.18 if level % 2 else -0.12), -0.06, z), STEEL_DARK, "steel", bevel=0.05)
-        beam("tower_guard", -0.08, z + 0.31, width * 0.78, 0, 0.08, SAFETY, "safety")
-    for level in range(5):
-        z = 0.75 + level * 1.25
-        beam("tower_cross", -0.12, z, 2.15, 0.57 if level % 2 else -0.57, 0.10, STEEL, "steel")
-        beam("tower_cross", -0.12, z, 2.15, -0.57 if level % 2 else 0.57, 0.10, STEEL, "steel")
-    box("tower_control", (1.1, 0.72, 1.10), (-0.18, 0.02, 6.48), RUST, "rust", bevel=0.08)
-    for x in (-0.55, -0.18, 0.20):
-        box("tower_window", (0.22, 0.06, 0.24), (x, -0.42, 6.93), GLASS_LIT, "glass", bevel=0.02, outline=FINE)
-    box("tower_crown", (2.25, 0.88, 0.30), (-0.16, 0.04, 7.58), SAFETY, "safety", rotation=(0, -0.03, 0), bevel=0.08)
-    for x in (-0.84, 0.56):
-        beam("tower_aerial", x, 7.95, 0.56, -0.18 if x < 0 else 0.18, 0.06, STEEL, "steel")
-    return spec(w, h, 3.75)
+    """Asymmetric launch gantry with a single service deck, not a stack of white shelves."""
+    w, h = 5.6, 7.5
+    for x, lean in ((-1.55, -0.08), (1.28, 0.06)):
+        box("gantry_leg", (0.30, 0.34, 6.05), (x, 0.06, 0.24), INK, "ink", rotation=(0, lean, 0), bevel=0.06, outline=FINE)
+    # One offset deck and a heavy upper service bridge establish the silhouette.
+    box("gantry_deck", (3.15, 0.70, 0.22), (-0.04, -0.06, 1.42), ROCK_DARK, "steel", bevel=0.06)
+    box("gantry_bridge", (2.65, 0.62, 0.24), (0.18, -0.03, 4.92), STEEL_DARK, "steel", bevel=0.06)
+    for x in (-1.1, -0.05, 1.02):
+        beam("gantry_guard", x, 1.78, 0.66, 0, 0.07, SAFETY, "safety")
+    for level, z in enumerate((0.72, 2.62, 3.78, 5.18)):
+        beam("gantry_cross", -0.12, z, 2.34 if level % 2 else 2.12, 0.60 if level % 2 else -0.60, 0.12, STEEL, "steel")
+    box("gantry_control", (1.02, 0.70, 0.88), (-0.20, 0.01, 5.72), RUST, "rust", bevel=0.10)
+    for x in (-0.55, -0.16, 0.23):
+        box("gantry_window", (0.20, 0.06, 0.22), (x, -0.42, 6.03), GLASS_LIT, "glass", bevel=0.02, outline=FINE)
+    box("gantry_crown", (1.85, 0.78, 0.26), (0.02, 0.04, 6.84), RUST, "rust", rotation=(0, -0.04, 0), bevel=0.08)
+    beam("gantry_aerial", 1.04, 7.18, 0.62, 0.18, 0.06, STEEL, "steel")
+    return spec(w, h, 3.35)
 
 
 def pad_cradle():
@@ -142,18 +148,18 @@ def hangar_foundation():
 
 
 def hangar_shell():
-    """A stepped, asymmetric hangar façade. The bay is built from pieces, not black paint."""
+    """A low, stepped hangar bunker with an open service mouth."""
     w, h = 10.2, 7.4
     box("hangar_spine", (0.86, 0.95, 5.4), (-4.25, 0.06, 0.24), RUST, "rust", bevel=0.08)
-    box("hangar_left_jamb", (0.55, 0.82, 4.55), (-3.22, 0.05, 0.24), STEEL_DARK, "steel", bevel=0.07)
-    box("hangar_right_jamb", (0.58, 0.84, 4.15), (2.62, 0.05, 0.24), STEEL_DARK, "steel", bevel=0.07)
-    box("hangar_right_annex", (2.10, 0.90, 2.65), (3.88, 0.06, 0.24), STEEL, "steel", bevel=0.08)
+    box("hangar_left_jamb", (0.55, 0.82, 4.55), (-3.22, 0.05, 0.24), INK, "ink", bevel=0.07)
+    box("hangar_right_jamb", (0.58, 0.84, 4.15), (2.62, 0.05, 0.24), INK, "ink", bevel=0.07)
+    box("hangar_right_annex", (2.10, 0.90, 2.65), (3.88, 0.06, 0.24), INK, "ink", bevel=0.08)
     box("hangar_annex_roof", (2.40, 1.02, 0.26), (3.80, 0.06, 2.96), INK, "ink", rotation=(0, 0.09, 0), bevel=0.05)
     for x in (3.18, 3.80, 4.42):
         box("hangar_annex_window", (0.27, 0.06, 0.30), (x, -0.46, 1.45), GLASS_LIT, "glass", bevel=0.02, outline=FINE)
     # Overhead segmented door stops short of the floor so the bay has a readable opening.
     for i, (z, width) in enumerate(((4.30, 5.85), (4.62, 5.55), (4.94, 5.16))):
-        box("hangar_door", (width, 0.20, 0.24), (-0.28 + i * 0.05, -0.42, z), STEEL_DARK if i != 1 else STEEL, "steel", bevel=0.04, outline=FINE)
+        box("hangar_door", (width, 0.20, 0.24), (-0.28 + i * 0.05, -0.42, z), INK if i != 1 else RUST, "rust" if i == 1 else "ink", bevel=0.04, outline=FINE)
     return spec(w, h, 3.05)
 
 
