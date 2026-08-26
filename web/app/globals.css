@@ -1815,10 +1815,9 @@ html[data-coach-target="build-structure-strip"] [data-coach-id="build-structure-
    a grounded Earth diorama: a dusk sky, three parallax hill-silhouette
    bands, and a horizon glow, in Out There: Ω Edition's dark navy palette
    with the reference's pink kept as a warm horizon/accent color, not a
-   dominant space object. Terrain/structure colors live in
-   lib/pixi/hubScene.ts (Pixi Graphics can't read CSS custom properties) —
-   these tokens cover what stays DOM/CSS: sky, hills, horizon glow, and
-   HUD/sheet chrome. */
+   dominant space object. Flat structure sprites are authored as transparent
+   DOM assets; these tokens cover the surrounding scene: sky, hills, horizon
+   glow, and HUD/sheet chrome. */
 :root {
   /* Scene-local accents. Kept as hub-scoped tokens rather than overriding
      the global --ln-cyan/--ln-ok, which other screens already tune against. */
@@ -1846,9 +1845,9 @@ html[data-coach-target="build-structure-strip"] [data-coach-id="build-structure-
   --hub-hill-mid:   #0f1b34;
   --hub-hill-near:  #0a1428;
   --hub-skyline:    #0a1626;
-  /* Ground contact line — 22% from the bottom. MUST stay in agreement with
-     hubScene.ts (groundY = containerH * 0.78) and the DOM plot positions in
-     HubScreen/BuildPlaceScreen, which all derive from the same 22%. */
+  /* Ground contact line — 22% from the bottom. Keep this aligned with the DOM
+     plot positions in HubScreen/BuildPlaceScreen, which derive from the same
+     scene-local baseline. */
   --hub-ground: 22%;
 }
 @keyframes hub-twinkle   { from { opacity: 0.55; } to { opacity: 1; } }
