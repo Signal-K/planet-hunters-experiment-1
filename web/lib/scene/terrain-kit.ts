@@ -14,7 +14,7 @@
  */
 
 export type TerrainBrickId =
-  | 'mtn_peak_tall' | 'mtn_peak_broad' | 'mtn_shoulder' | 'mesa'
+  | 'mtn_peak_tall' | 'mtn_peak_broad' | 'mtn_shoulder' | 'mtn_horn' | 'mtn_saw_ridge' | 'mesa'
   | 'hill_round' | 'hill_long' | 'bluff'
   | 'rock_boulder' | 'rock_cluster' | 'scree'
   | 'tree_pine_tall' | 'tree_pine_short' | 'tree_pine_cluster' | 'shrub'
@@ -33,6 +33,8 @@ export const TERRAIN_KIT: Record<TerrainBrickId, TerrainBrick> = {
   mtn_peak_tall:     { w: 188, h: 150 },
   mtn_peak_broad:    { w: 232, h: 132 },
   mtn_shoulder:      { w: 168, h: 92 },
+  mtn_horn:          { w: 152, h: 162 },
+  mtn_saw_ridge:     { w: 246, h: 104 },
   mesa:              { w: 140, h: 86 },
   hill_round:        { w: 150, h: 62 },
   hill_long:         { w: 206, h: 54 },

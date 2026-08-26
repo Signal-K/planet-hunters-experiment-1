@@ -53,5 +53,7 @@
   "terrain_far_dish": "/game/assets/terrain/far_dish.png",
   "terrain_far_block": "/game/assets/terrain/far_block.png",
   "terrain_cloud_bank_a": "/game/assets/terrain/cloud_bank_a.png",
-  "terrain_cloud_bank_b": "/game/assets/terrain/cloud_bank_b.png"
+  "terrain_cloud_bank_b": "/game/assets/terrain/cloud_bank_b.png",
+  "terrain_mtn_horn": "/game/assets/terrain/mtn_horn.png",
+  "terrain_mtn_saw_ridge": "/game/assets/terrain/mtn_saw_ridge.png"
 }

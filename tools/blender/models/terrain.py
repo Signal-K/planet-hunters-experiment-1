@@ -72,15 +72,33 @@ def _lcg(seed):
     return nxt
 
 
-def _mass(name, base_r, height, color, key, segs=7, seed=1, jitter=0.34,
-          lean=0.0, taper=0.0, outline=0.028, flat=False):
-    """One faceted landform: an irregular cone with a jittered base ring.
+# Silhouette profiles: (height fraction, radius fraction) control points from
+# base to summit. A cone is the degenerate case — base to apex in one straight
+# run — and it is why the first pass of this kit produced a horizon of near-
+# identical triangles no matter how hard the base ring was jittered. Jitter
+# varies a landform's *width*; only a profile with intermediate rings varies its
+# *slope*, which is what the eye actually reads as "mountain" rather than "cone".
+PROFILE_CONE = ((0.0, 1.0), (1.0, 0.0))
+# Concave: broad skirt, slope steepening toward a sharp summit. Alpine.
+PROFILE_ALPINE = ((0.0, 1.0), (0.30, 0.66), (0.58, 0.40), (0.82, 0.20), (1.0, 0.0))
+# A pronounced shoulder partway up, then a steeper upper pyramid.
+PROFILE_SHOULDER = ((0.0, 1.0), (0.22, 0.80), (0.40, 0.72), (0.68, 0.34), (1.0, 0.0))
+# Convex: steep lower walls easing to a rounded crown. Eroded/older rock.
+PROFILE_DOMED = ((0.0, 1.0), (0.34, 0.78), (0.64, 0.54), (0.86, 0.30), (1.0, 0.0))
+# Near-vertical walls with a sudden cap — a horn or tor.
+PROFILE_HORN = ((0.0, 1.0), (0.26, 0.58), (0.52, 0.44), (0.78, 0.30), (1.0, 0.0))
 
-    A clean `create_cone` reads as a party hat. Displacing each base vertex
-    radially (and each one's height slightly) is what turns it into a mountain —
-    the silhouette gains shoulders and gullies, and because `apply_facets`
-    assigns tones off the *world* normal, the uneven faces pick up different
-    facet tones automatically instead of being flat-shaded as one triangle.
+
+def _mass(name, base_r, height, color, key, segs=7, seed=1, jitter=0.34,
+          lean=0.0, taper=0.0, outline=0.028, flat=False, profile=None):
+    """One faceted landform: a jittered solid of revolution.
+
+    A clean `create_cone` reads as a party hat. Two things fix that, and both
+    are needed: displacing each ring vertex radially (silhouette gains gullies
+    and shoulders), and running the surface through a `profile` of intermediate
+    rings so the slope has breaks in it instead of being one straight line from
+    skirt to summit. Because `apply_facets` assigns tones off the *world*
+    normal, every profile break also picks up a different facet tone for free.
     """
     import bmesh
     import bpy
@@ -92,36 +110,53 @@ def _mass(name, base_r, height, color, key, segs=7, seed=1, jitter=0.34,
     bpy.context.collection.objects.link(obj)
 
     bm = bmesh.new()
-    ring = []
-    for i in range(segs):
-        ang = (i / segs) * math.tau
-        r = base_r * (1.0 - jitter * 0.5 + rnd(0.0, jitter))
-        # Y is squashed: these are seen side-on, so depth costs silhouette
-        # width for nothing. Keeping some depth is what lets the facets read.
-        ring.append(bm.verts.new((math.cos(ang) * r, math.sin(ang) * r * 0.55, 0.0)))
-    bm.faces.new(ring)
 
     if taper > 0:
-        # Flat-topped landform (mesa/butte): a second, smaller ring rather than
-        # a point, capped with its own face.
-        top = []
+        # Flat-topped landform (mesa/butte): base ring to a smaller top ring,
+        # capped with its own face rather than converging on a point.
+        levels = ((0.0, 1.0), (1.0, taper))
+    else:
+        levels = tuple(profile or PROFILE_CONE)
+
+    rings = []
+    for level_i, (hf, rf) in enumerate(levels):
+        if rf <= 0.0:
+            rings.append(None)  # apex, built below
+            continue
+        ring = []
         for i in range(segs):
             ang = (i / segs) * math.tau
-            r = base_r * taper * (1.0 - jitter * 0.3 + rnd(0.0, jitter * 0.6))
-            top.append(bm.verts.new((
-                math.cos(ang) * r + lean,
+            # Jitter tapers off with height so the base is the raggedest part
+            # and the summit stays a readable point rather than dissolving.
+            j = jitter * (1.0 - 0.45 * hf)
+            r = base_r * rf * (1.0 - j * 0.5 + rnd(0.0, j))
+            # Lean accumulates with height — the summit drifts off the base's
+            # centre, which is what makes a peak asymmetric rather than a
+            # perfectly balanced pyramid.
+            z = height * hf * (1.0 if level_i == 0 else (0.96 + rnd(0.0, 0.09)))
+            # Y is squashed: these are seen side-on, so depth costs silhouette
+            # width for nothing. Keeping some depth is what lets the facets read.
+            ring.append(bm.verts.new((
+                math.cos(ang) * r + lean * hf,
                 math.sin(ang) * r * 0.55,
-                height * (0.94 + rnd(0.0, 0.12)),
+                z,
             )))
-        for i in range(segs):
-            j = (i + 1) % segs
-            bm.faces.new((ring[i], ring[j], top[j], top[i]))
-        bm.faces.new(list(reversed(top)))
-    else:
-        apex = bm.verts.new((lean, 0.0, height))
-        for i in range(segs):
-            j = (i + 1) % segs
-            bm.faces.new((ring[i], ring[j], apex))
+        rings.append(ring)
+
+    bm.faces.new(rings[0])  # base cap
+
+    for a, b in zip(rings, rings[1:]):
+        if b is None:
+            apex = bm.verts.new((lean, 0.0, height))
+            for i in range(segs):
+                bm.faces.new((a[i], a[(i + 1) % segs], apex))
+        else:
+            for i in range(segs):
+                j = (i + 1) % segs
+                bm.faces.new((a[i], a[j], b[j], b[i]))
+
+    if rings[-1] is not None:
+        bm.faces.new(list(reversed(rings[-1])))  # top cap
 
     # Winding from `faces.new` is whatever vertex order happened to be passed.
     # The inverted-hull outline is a solidify modifier with flipped normals, so
@@ -147,16 +182,23 @@ def _mass(name, base_r, height, color, key, segs=7, seed=1, jitter=0.34,
     return kit.solid(name, obj, color, key, outline=outline)
 
 
-def _cap(name, base_r, z, height, color, key, segs=7, seed=9, jitter=0.3, lean=0.0):
+def _cap(name, base_r, z, height, color, key, segs=7, seed=9, jitter=0.3,
+         lean=0.0, profile=None, on_lean=0.0, on_height=1.0):
     """Snow cap / crown — the same irregular mass, parked on a peak's shoulder
     so its ragged base line reads as a snow line rather than a painted stripe.
+
+    `on_lean`/`on_height` are the *parent* peak's lean and height. A leaning
+    peak's axis drifts sideways as it rises, so a cap placed at x=0 lands beside
+    the summit rather than on it — which is exactly what happened the first time
+    profiles were added and the leans were increased. Passing the parent's
+    numbers puts the cap on the peak's own axis at the height it sits at.
 
     No outline: a black keyline between rock and snow on the same mountain reads
     as two stacked objects, not one peak with snow on it.
     """
     obj = _mass(name, base_r, height, color, key, segs=segs, seed=seed,
-                jitter=jitter, lean=lean, outline=0.0)
-    obj.location = (0.0, 0.0, z)
+                jitter=jitter, lean=lean, outline=0.0, profile=profile)
+    obj.location = (on_lean * (z / on_height) if on_height else 0.0, 0.0, z)
     return obj
 
 
@@ -164,34 +206,75 @@ def _cap(name, base_r, z, height, color, key, segs=7, seed=9, jitter=0.3, lean=0
 
 def mtn_peak_tall():
     """188x150 — sharp glaciated peak. The dominant far-range silhouette."""
-    _mass("peak", 3.0, 5.4, ROCK, "rock", segs=7, seed=17, jitter=0.42, lean=-0.35)
-    _cap("peak_snow", 1.28, 3.55, 1.95, SNOW, "snow", segs=7, seed=41, jitter=0.5, lean=-0.22)
-    # A secondary shoulder overlapping the main mass — one cone alone is a
-    # triangle no matter how well it is jittered; two overlapping masses is
-    # what reads as a mountain.
-    sh = _mass("peak_shoulder", 1.9, 3.1, ROCK_DARK, "rockdark", segs=6, seed=73, jitter=0.4)
+    _mass("peak", 3.0, 5.4, ROCK, "rock", segs=9, seed=17, jitter=0.44,
+          lean=-0.55, profile=PROFILE_ALPINE)
+    _cap("peak_snow", 1.46, 3.05, 2.55, SNOW, "snow", segs=8, seed=41, jitter=0.38,
+         lean=-0.26, profile=PROFILE_ALPINE, on_lean=-0.55, on_height=5.4)
+    # A secondary shoulder overlapping the main mass — even a well-profiled
+    # single cone stays symmetrical about its own axis; two overlapping masses
+    # of different heights is what reads as a range rather than a monument.
+    sh = _mass("peak_shoulder", 1.9, 3.1, ROCK_DARK, "rockdark", segs=7, seed=73,
+               jitter=0.42, lean=0.4, profile=PROFILE_SHOULDER)
     sh.location = (2.15, 0.35, 0.0)
     return dict(layout=(188, 150), ortho=7.4, mode="side", target=(0.2, 0, 2.6))
 
 
 def mtn_peak_broad():
     """232x132 — wide twin-summit massif for the back of a range."""
-    _mass("massif", 4.1, 4.2, ROCK, "rock", segs=8, seed=23, jitter=0.46, lean=0.5)
-    _cap("massif_snow", 1.5, 2.55, 1.6, SNOW, "snow", segs=7, seed=57, jitter=0.55, lean=0.3)
-    second = _mass("massif_second", 2.6, 3.35, ROCK_DARK, "rockdark", segs=7, seed=91, jitter=0.4, lean=-0.3)
+    _mass("massif", 4.1, 4.2, ROCK, "rock", segs=10, seed=23, jitter=0.26,
+          lean=0.75, profile=PROFILE_DOMED)
+    _cap("massif_snow", 1.82, 2.1, 2.25, SNOW, "snow", segs=8, seed=57, jitter=0.34,
+         lean=0.38, profile=PROFILE_ALPINE, on_lean=0.75, on_height=4.2)
+    second = _mass("massif_second", 2.6, 3.35, ROCK_DARK, "rockdark", segs=8, seed=91,
+                   jitter=0.3, lean=-0.5, profile=PROFILE_ALPINE)
     second.location = (-2.9, 0.4, 0.0)
-    cap2 = _mass("massif_snow2", 0.92, 1.05, SNOW, "snow", segs=6, seed=113, jitter=0.5, outline=0.0)
-    cap2.location = (-3.05, 0.4, 2.2)
+    cap2 = _mass("massif_snow2", 1.05, 1.25, SNOW, "snow", segs=7, seed=113,
+                 jitter=0.34, lean=-0.16, outline=0.0, profile=PROFILE_ALPINE)
+    # -2.9 is `second`'s own x; the second term walks up its lean to z=2.2.
+    cap2.location = (-2.9 + (-0.5 * (2.2 / 3.35)), 0.4, 2.2)
     return dict(layout=(232, 132), ortho=9.6, mode="side", target=(0, 0, 2.1))
 
 
 def mtn_shoulder():
     """168x92 — low eroded rock shoulder, no snow. Fills gaps in a range so it
     doesn't read as evenly-spaced identical triangles."""
-    _mass("shoulder", 3.4, 2.55, ROCK_DARK, "rockdark", segs=8, seed=131, jitter=0.5, lean=0.4)
-    bump = _mass("shoulder_bump", 1.7, 1.5, ROCK, "rock", segs=6, seed=149, jitter=0.45)
+    _mass("shoulder", 3.4, 2.55, ROCK_DARK, "rockdark", segs=10, seed=131,
+          jitter=0.5, lean=0.6, profile=PROFILE_DOMED)
+    bump = _mass("shoulder_bump", 1.7, 1.5, ROCK, "rock", segs=8, seed=149,
+                 jitter=0.45, lean=-0.25, profile=PROFILE_DOMED)
     bump.location = (-2.4, 0.3, 0.0)
     return dict(layout=(168, 92), ortho=8.0, mode="side", target=(0, 0, 1.2))
+
+
+def mtn_horn():
+    """152x162 — a steep asymmetric horn. Near-vertical lower walls and a
+    hooked summit, so a range containing one is not read as evenly-graded
+    pyramids. Deliberately the tallest-for-its-width brick in the kit."""
+    _mass("horn", 2.0, 5.8, ROCK, "rock", segs=8, seed=521, jitter=0.34,
+          lean=-0.95, profile=PROFILE_HORN)
+    _cap("horn_snow", 0.78, 4.35, 1.7, SNOW, "snow", segs=7, seed=541,
+         jitter=0.28, lean=-0.3, profile=PROFILE_HORN,
+         on_lean=-0.95, on_height=5.8)
+    buttress = _mass("horn_buttress", 1.55, 2.5, ROCK_DARK, "rockdark", segs=7,
+                     seed=563, jitter=0.4, lean=0.45, profile=PROFILE_SHOULDER)
+    buttress.location = (1.5, 0.3, 0.0)
+    return dict(layout=(152, 162), ortho=6.4, mode="side", target=(-0.15, 0, 2.9))
+
+
+def mtn_saw_ridge():
+    """246x104 — a low jagged ridge of four unequal summits sharing one skirt.
+    Fills the middle of a range with something that is neither a single peak nor
+    a smooth shoulder, which is what the horizon was missing."""
+    specs = ((-3.3, 1.6, 2.1, 601), (-1.15, 1.35, 2.9, 617), (0.9, 1.5, 2.35, 631), (2.95, 1.25, 3.15, 647))
+    for i, (x, r, h, seed) in enumerate(specs):
+        m = _mass(f"saw_{i}", r, h, ROCK if i % 2 else ROCK_DARK,
+                  "rock" if i % 2 else "rockdark", segs=7, seed=seed,
+                  jitter=0.4, lean=0.3 if i % 2 else -0.3, profile=PROFILE_ALPINE)
+        m.location = (x, 0.18 * (i % 3) - 0.18, 0.0)
+    skirt = _mass("saw_skirt", 4.6, 0.95, ROCK_DARK, "rockdark", segs=11,
+                  seed=659, jitter=0.3, profile=PROFILE_DOMED)
+    skirt.location = (-0.2, 0.4, 0.0)
+    return dict(layout=(246, 104), ortho=10.2, mode="side", target=(-0.2, 0, 1.5))
 
 
 def mesa():
@@ -492,6 +575,8 @@ BUILDS = {
     "terrain/mtn_peak_tall": mtn_peak_tall,
     "terrain/mtn_peak_broad": mtn_peak_broad,
     "terrain/mtn_shoulder": mtn_shoulder,
+    "terrain/mtn_horn": mtn_horn,
+    "terrain/mtn_saw_ridge": mtn_saw_ridge,
     "terrain/mesa": mesa,
     "terrain/hill_round": hill_round,
     "terrain/hill_long": hill_long,

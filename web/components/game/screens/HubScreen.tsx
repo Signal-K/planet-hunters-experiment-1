@@ -174,6 +174,14 @@ function DockPrimaryBtn({ children, onClick, testId, pulse }: { children: React.
 // tune the old single-row height against.
 const HUB_HUD_RAIL_CLEARANCE = 84
 
+/**
+ * How far a building's status pill hangs below the ground line. `Building`
+ * renders [invisible hit spacer, pill] as a bottom-anchored column, so this is
+ * the pill's own height plus its gap — set so the visible building base lands
+ * on the ground line. The dock-clearance measurement above depends on it.
+ */
+const PLOT_LABEL_DROP = 42
+
 // Instantiated from the build-plot prefab rather than written out by hand.
 // This same list previously existed in four places (both hub scene files and
 // both screens); the prefab is the one definition and a test asserts it still
@@ -212,6 +220,36 @@ export default function HubScreen({ player, rocketVariant = 'explorer', hasCoach
 
   const { phase: skyPhase } = useTimeOfDay()
   const [editMode, setEditMode] = useState(false)
+  // Lift the ground line clear of the docked bottom sheet (KES-260 follow-up).
+  //
+  // Building status pills hang `PLOT_LABEL_DROP` below the ground line, and the
+  // dock floats over the scene at `--ln-nav-h` from the *screen* bottom — which
+  // is not the same origin as the scene surface's own bottom edge. Deriving the
+  // lift arithmetically from the dock's height got this wrong by ~66px for
+  // exactly that reason, so measure the gap between the two elements directly
+  // instead. Also survives the dock growing with Edit Mode, the button count,
+  // and the <=860px padding breakpoint.
+  const dockRef = React.useRef<HTMLDivElement | null>(null)
+  const surfaceRef = React.useRef<HTMLDivElement | null>(null)
+  const [groundLift, setGroundLift] = useState(0)
+  useEffect(() => {
+    const measure = () => {
+      const dock = dockRef.current
+      const surface = surfaceRef.current
+      if (!dock || !surface) { setGroundLift(0); return }
+      // How far the dock's top edge sits above the surface's bottom edge.
+      const clearance = surface.getBoundingClientRect().bottom - dock.getBoundingClientRect().top
+      setGroundLift(Math.max(0, Math.round(clearance + PLOT_LABEL_DROP + 8)))
+    }
+    measure()
+    if (typeof ResizeObserver === 'undefined') return
+    // Only the two measured boxes are observed, and the value this sets changes
+    // neither of them — so this settles in one pass rather than looping.
+    const ro = new ResizeObserver(measure)
+    if (dockRef.current) ro.observe(dockRef.current)
+    if (surfaceRef.current) ro.observe(surfaceRef.current)
+    return () => ro.disconnect()
+  })
   const [plotEntities, setPlotEntities] = useState<EntityData[]>(DEFAULT_PLOTS)
   const [subsurface, setSubsurface] = useState(initialSubsurface)
   const [confirmingLaunchpadUpgrade, setConfirmingLaunchpadUpgrade] = useState(false)
@@ -295,7 +333,7 @@ export default function HubScreen({ player, rocketVariant = 'explorer', hasCoach
     // every pill half a building to the right of the structure it names.
     .map(e => ({
       left: `calc(${(e.transform.position.x / 402) * 100}%)`,
-      bottom: 'calc(var(--hub-ground) - 42px)',
+      bottom: `calc(var(--hub-ground) - ${PLOT_LABEL_DROP}px)`,
       transform: 'translateX(-50%)',
     } as React.CSSProperties))
 
@@ -445,7 +483,21 @@ export default function HubScreen({ player, rocketVariant = 'explorer', hasCoach
       }}>
 
         {/* ─── ABOVE GROUND ─── top half of slider */}
-        <div className={layoutStyles.surface} style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '50%', overflow: 'hidden' }}>
+        {/* The scene still runs full-bleed behind the translucent dock — that
+            is the point of the glass treatment — but the ground line and
+            everything standing on it clear the chrome, so the status pills are
+            readable. 22% is the floor, for viewports tall enough not to need
+            any lift at all. */}
+        <div
+          ref={surfaceRef}
+          className={layoutStyles.surface}
+          style={{
+            position: 'absolute', top: 0, left: 0, right: 0, height: '50%', overflow: 'hidden',
+            ...(groundLift > 0
+              ? { ['--hub-ground' as string]: `max(22%, ${groundLift}px)` }
+              : {}),
+          }}
+        >
           {/* World background: sky, starfield, ridge parallax, ground, plateau */}
           <HubWorldBackground phase={skyPhase} />
 
@@ -584,7 +636,7 @@ export default function HubScreen({ player, rocketVariant = 'explorer', hasCoach
           guided-ops window meant those buttons stayed unreachable well past
           the tutorial (bug reported 2026-07-31). */}
       {(!hasCoach || player.missionsDone > 0) && (
-        <div className="hub-bottom-dock" style={{
+        <div ref={dockRef} className="hub-bottom-dock" style={{
           position: 'absolute', left: 0, right: 0, bottom: 'var(--ln-nav-h, 64px)', zIndex: 20,
           display: 'flex', justifyContent: 'center', pointerEvents: 'none',
         }}>

@@ -27,3 +27,32 @@ describe('Hub structure art', () => {
     }
   })
 })
+
+/**
+ * Silhouette variety in the terrain kit. The first pass of KES-260 produced a
+ * horizon of near-identical triangles because every landform was a straight
+ * cone — jitter varies a mass's width, but only a profile with intermediate
+ * rings varies its slope, which is what actually reads as "mountain".
+ */
+describe('terrain kit silhouettes', () => {
+  it('offers more than one mountain shape language', async () => {
+    const { TERRAIN_KIT } = await import('@/lib/scene/terrain-kit')
+    const mountains = Object.keys(TERRAIN_KIT).filter(k => k.startsWith('mtn_'))
+    expect(mountains.length).toBeGreaterThanOrEqual(5)
+    // A horn is much taller than it is wide; a saw ridge much wider than tall.
+    // If either ratio drifts toward 1 the kit has collapsed back to one shape.
+    expect(TERRAIN_KIT.mtn_horn.h / TERRAIN_KIT.mtn_horn.w).toBeGreaterThan(1)
+    expect(TERRAIN_KIT.mtn_saw_ridge.w / TERRAIN_KIT.mtn_saw_ridge.h).toBeGreaterThan(2)
+  })
+
+  it('uses several distinct mountain bricks in each composition', async () => {
+    const { EARTH_BASE_WIDE, EARTH_BASE_PAD } = await import('@/lib/scene/compositions')
+    for (const comp of [EARTH_BASE_WIDE, EARTH_BASE_PAD]) {
+      const kinds = new Set(
+        comp.bands.flatMap(b => b.bricks.map(p => p.brick)).filter(b => b.startsWith('mtn_')),
+      )
+      expect({ id: comp.id, distinctMountains: kinds.size >= 4 })
+        .toEqual({ id: comp.id, distinctMountains: true })
+    }
+  })
+})
