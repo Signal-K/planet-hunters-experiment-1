@@ -9,7 +9,10 @@
 }
 .launchpad-visual-scene {
   position: absolute;
-  inset: 72px 0 62px;
+  /* Full-bleed. The scene used to be inset by the exact height of the top bar
+     and bottom rail, which is what made those two bars read as opaque frames
+     bounding a picture instead of a HUD floating over a place (KES-260). */
+  inset: 0;
   overflow: hidden;
   /* Background is HubWorldBackground now (KES-233, `.launchpad-scene-zoom`
      below) — this screen no longer paints its own gradient/mountain here. */
@@ -24,14 +27,13 @@
    in globals.css — this screen's foreground (tower/rocket/ground-line) was
    authored against a 20%-from-bottom ground line, a different, pre-existing
    convention from Hub's 22%. */
+/* No transform. The close-up is a *different composition* now
+   (`earth-base-pad`), not the wide shot scaled up — scaling was what produced
+   one giant triangular peak and grey slabs where the distant facilities were,
+   and it could never change what was actually on the horizon. */
 .launchpad-scene-zoom {
   position: absolute; inset: 0;
-  /* The previous close-up reduced every authored ridge to one giant triangular
-     peak and blew the distant facilities up into grey slabs. Preserve the
-     Hub's authored scale so shoulders, gullies and facets remain terrain. */
-  transform: none;
-  transform-origin: 50% 100%;
-  --hub-ground: 20%;
+  --hub-ground: 26%;
 }
 .launchpad-orbit-line {
   position: absolute; z-index: 2; top: 4%; left: 13%; width: 74%; height: 40%;
@@ -52,10 +54,12 @@
 button.launchpad-scene-object { cursor: pointer; }
 .launchpad-object-label {
   position: relative; z-index: 3; min-width: 142px; margin-top: 8px; padding: 7px 12px;
-  border: 1px solid rgba(255,255,255,.45); border-radius: 999px; background: rgba(6,11,20,.9);
-  box-shadow: 0 8px 20px rgba(0,0,0,.35); display: flex; flex-direction: column; align-items: center; gap: 1px; white-space: nowrap;
+  border: 1px solid rgba(212,229,247,.34); border-radius: 999px;
+  background: rgba(8,18,32,.46);
+  -webkit-backdrop-filter: blur(10px) saturate(1.15); backdrop-filter: blur(10px) saturate(1.15);
+  box-shadow: 0 6px 18px rgba(0,0,0,.28); display: flex; flex-direction: column; align-items: center; gap: 1px; white-space: nowrap;
 }
-.launchpad-object-label small { color: #9fb0c5; font: 700 8px var(--ln-font-display); letter-spacing: .16em; }
+.launchpad-object-label small { color: #c2d2e5; font: 700 8px var(--ln-font-display); letter-spacing: .16em; }
 .launchpad-object-label strong { color: #f5f8ff; font: 800 10px var(--ln-font-display); letter-spacing: .08em; }
 .launchpad-object-label--center strong { color: #65e38f; }
 .launchpad-station { left: 8%; bottom: 13%; width: 25%; }
@@ -74,32 +78,45 @@ button.launchpad-scene-object { cursor: pointer; }
   font: 300 28px/36px var(--ln-font-display); font-style: normal; box-shadow: 0 0 18px rgba(112,217,234,.4);
 }
 .launchpad-tower {
-  left: 12%; bottom: 20%; width: 29%; height: 330px;
+  left: 2%; bottom: var(--hub-ground); width: 46%; height: auto;
 }
+/* Aspect ratios come straight from the sprites' authored layout sizes in
+   `tools/blender/models/structures.py` (launchpad 244x172, hangar 208x140).
+   Both derive from one PX_PER_UNIT constant, so their relative sizes on screen
+   are the models' real relative sizes rather than two independently tuned
+   guesses. */
 .launchpad-tower-art {
-  position: absolute; left: 50%; bottom: 18px;
-  width: min(430px, 30vw); height: auto; aspect-ratio: 750 / 471; transform: translateX(-50%);
+  position: relative; left: auto; bottom: auto;
+  display: block; width: 100%; aspect-ratio: 244 / 172; transform: none;
 }
 .launchpad-tower-art .hub-launchpad-structure {
-  width: 100% !important;
-  height: 100% !important;
+  position: relative; z-index: 2;
+  display: block; width: 100%; height: 100%;
+}
+/* Flat, wide, anchored at the base — a shadow lying on the ground plane, not a
+   uniform blur offset down-right, which reads as a sticker floating above the
+   page and was half of why the structures looked pasted on (KES-260). */
+.launchpad-contact-shadow {
+  position: absolute; z-index: 1; left: 50%; bottom: -6px;
+  width: 96%; height: 26px; transform: translateX(-50%); pointer-events: none;
+  background: radial-gradient(ellipse at 50% 50%,
+    rgba(12,20,32,.42) 0%, rgba(12,20,32,.18) 46%, transparent 72%);
 }
 .launchpad-tower .launchpad-object-label,
 .launchpad-rocket .launchpad-object-label {
-  position: absolute; left: 50%; bottom: 0; transform: translateX(-50%);
+  position: absolute; left: 50%; bottom: -34px; transform: translateX(-50%);
 }
-.launchpad-tower-rocket { position: absolute; z-index: 3; left: 50%; bottom: 60px; width: 180px; transform: translateX(-50%) rotate(-90deg); filter: drop-shadow(0 8px 14px rgba(0,0,0,.55)); }
-.launchpad-rocket { right: 8%; bottom: 20%; width: 37%; height: 330px; justify-content: flex-end; }
+.launchpad-tower-rocket { position: absolute; z-index: 4; left: 50%; bottom: 16%; width: 42%; transform: translateX(-50%) rotate(-90deg); filter: drop-shadow(0 8px 14px rgba(0,0,0,.55)); }
+.launchpad-rocket { right: 2%; bottom: var(--hub-ground); width: 46%; height: auto; justify-content: flex-end; }
 .launchpad-rocket-art {
-  position: absolute; z-index: 2; left: 45%; bottom: 42px;
-  width: min(170px, 34%); height: 54px; transform: translateX(-50%);
+  position: absolute; z-index: 3; left: 45%; bottom: 12%;
+  width: 34%; height: auto; transform: translateX(-50%);
   display: grid; place-items: end center;
 }
 .launchpad-rocket-art img { position: relative; z-index: 2; width: 100%; filter: drop-shadow(0 12px 12px rgba(0,0,0,.6)); }
 .launchpad-hangar-art {
-  position: absolute; z-index: 0; left: 50%; bottom: 18px;
-  width: min(520px, 37vw); height: auto; transform: translateX(-50%);
-  image-rendering: pixelated; filter: drop-shadow(0 16px 18px rgba(0,0,0,.48));
+  position: relative; z-index: 2; display: block;
+  width: 100%; aspect-ratio: 208 / 140; height: auto;
 }
 .launchpad-rocket-glow { position: absolute; left: 5%; right: 5%; bottom: 18%; height: 14px; border-radius: 50%; background: rgba(112,217,234,.2); filter: blur(12px); }
 .launchpad-rocket:hover img,
@@ -195,31 +212,31 @@ button.launchpad-scene-object { cursor: pointer; }
   letter-spacing: .12em;
 }
 .launchpad-guide-actions button.is-primary { border-color: #86e7f4; background: #86e7f4; color: #07101c; }
-.launchpad-ground-line { position: absolute; z-index: 5; left: 4%; right: 4%; bottom: 20%; height: 4px; background: var(--hub-cyan); opacity: .42; box-shadow: 0 0 16px rgba(112,217,234,.18); }
-.launchpad-foundation {
-  position: absolute; z-index: 4; left: 6%; right: 6%; bottom: 0; height: 24%; pointer-events: none;
-  background: linear-gradient(180deg, rgba(18,33,47,.1), rgba(6,14,24,.88));
-  border-top: 6px solid rgba(18,35,50,.92);
-  box-shadow: inset 0 18px 0 rgba(113,151,167,.12), inset 0 -24px 0 rgba(0,0,0,.2);
-}
-.launchpad-foundation-face { position: absolute; inset: 18px 0 0; background: repeating-linear-gradient(90deg, transparent 0 46px, rgba(112,217,234,.12) 47px 48px); opacity: .7; }
-.launchpad-foundation-track { position: absolute; top: 18px; width: 32%; height: 12px; border: 2px solid rgba(112,217,234,.42); background: rgba(7,16,28,.76); box-shadow: 0 7px 0 rgba(4,10,18,.5); }
-.launchpad-foundation-track--left { left: 12%; transform: skewX(-18deg); }
-.launchpad-foundation-track--right { right: 12%; transform: skewX(18deg); }
+/* Glass rail, not a wall. `rgba(6,9,15,.97)` was effectively opaque: it cut a
+   solid 62px band off the bottom of the scene, so the ground the structures
+   stand on visibly stopped at a hard edge and the background read as
+   "continuing behind and underneath the UI" rather than as one place the HUD
+   floats over. A blurred, mostly-transparent rail keeps the terrain readable
+   through it while staying legible against any part of the scene. */
 .launchpad-scene-rail {
   position: absolute; z-index: 22; left: 0; right: 0; bottom: 0; height: 62px; padding: 9px 16px;
-  border-top: 4px solid rgba(112,217,234,.4); background: rgba(6,9,15,.97);
+  border-top: 1px solid rgba(177,198,229,.22);
+  background: linear-gradient(180deg, rgba(6,14,26,.30) 0%, rgba(6,14,26,.62) 100%);
+  -webkit-backdrop-filter: blur(14px) saturate(1.1);
+  backdrop-filter: blur(14px) saturate(1.1);
   display: flex; align-items: center; justify-content: space-between; gap: 16px;
 }
 .launchpad-rail-status,
 .launchpad-rail-actions { display: flex; align-items: center; gap: 8px; }
-.launchpad-rail-status span { color: #91a1b6; font: 700 9px var(--ln-font-display); letter-spacing: .14em; white-space: nowrap; }
+.launchpad-rail-status span { color: #cfdcec; text-shadow: 0 1px 3px rgba(0,0,0,.5); font: 700 9px var(--ln-font-display); letter-spacing: .14em; white-space: nowrap; }
 .launchpad-rail-status i { display: inline-block; width: 6px; height: 6px; margin-right: 5px; border-radius: 50%; background: #5ad07e; box-shadow: 0 0 8px #5ad07e; }
 .launchpad-rail-actions button {
-  height: 40px; padding: 0 14px; border: 1px solid rgba(169,184,206,.28); border-radius: 8px;
-  background: rgba(255,255,255,.035); color: #cbd6e6; font: 800 10px var(--ln-font-display); letter-spacing: .12em;
+  height: 40px; padding: 0 14px; border: 1px solid rgba(199,216,238,.34); border-radius: 10px;
+  background: rgba(233,243,255,.10); color: #eaf2fb; font: 800 10px var(--ln-font-display); letter-spacing: .12em;
+  -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
   display: inline-flex; align-items: center; gap: 7px;
 }
+.launchpad-rail-actions button:hover { background: rgba(233,243,255,.18); border-color: rgba(199,216,238,.55); }
 .launchpad-rail-actions button svg { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 1.8; }
 .launchpad-rail-actions button.is-primary { border-color: #70d9ea; background: #70d9ea; color: #07101c; box-shadow: 0 0 18px rgba(112,217,234,.24); }
 
@@ -256,11 +273,6 @@ button.launchpad-scene-object { cursor: pointer; }
   .launchpad-object-label { min-width: 0; padding: 6px 8px; }
   .launchpad-object-label small { display: none; }
   .launchpad-object-label strong { font-size: 8px; }
-  .launchpad-tower,
-  .launchpad-rocket { height: 300px; }
-  .launchpad-tower-art { width: min(390px, 44vw); height: auto; aspect-ratio: 250 / 157; }
-  .launchpad-tower-rocket { width: 120px; bottom: 58px; }
-  .launchpad-hangar-art { width: min(450px, 50vw); }
   .launchpad-satellite svg { width: 70px; }
   .launchpad-rail-status span:not(:first-child) { display: none; }
   .launchpad-rail-actions button { padding: 0 9px; font-size: 8px; flex: 0 0 auto; }
@@ -280,20 +292,8 @@ button.launchpad-scene-object { cursor: pointer; }
   .launchpad-guide-copy { font-size: 9px; line-height: 1.35; }
   .launchpad-guide-footer { margin-top: 8px; }
   .launchpad-guide-actions button { height: 28px; }
-  .launchpad-tower,
-  .launchpad-rocket { height: 250px; }
-  .launchpad-tower-art { width: min(330px, 42vw); height: auto; aspect-ratio: 250 / 157; }
-  .launchpad-tower-rocket { width: 110px; }
-  .launchpad-hangar-art { width: min(380px, 48vw); }
-  .launchpad-rocket-art { height: 76px; }
   .launchpad-satellite { top: 2%; }
 }
 @media (orientation: portrait) and (max-width: 620px) {
-  .launchpad-tower { left: 1%; width: 47%; height: 230px; bottom: 17%; }
-  .launchpad-rocket { right: 1%; width: 51%; height: 230px; bottom: 17%; }
-  .launchpad-tower-art { bottom: 44px; width: 100%; height: auto; aspect-ratio: 390 / 260; }
-  .launchpad-hangar-art { bottom: 44px; width: 100%; }
-  .launchpad-tower-rocket { width: 70px; bottom: 52px; }
-  .launchpad-rocket-art { left: 43%; bottom: 54px; width: 34%; height: 44px; }
   .launchpad-object-label { margin-top: 0; }
 }

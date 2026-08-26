@@ -18,6 +18,13 @@ interface TopBarProps {
   // sits in the low-opacity tail of the gradient and the scrolled-past card
   // text shows straight through it — solid avoids that.
   solid?: boolean
+  /** Scene screens (Earth Base, Launchpad) float their chrome over a rendered
+   *  world rather than over scrolling copy, so the bleed-through `solid`
+   *  exists to prevent is not a risk there — and an opaque bar cuts the scene
+   *  off at a hard horizontal edge, which is what "the background continues
+   *  behind and underneath the UI" was describing (KES-260). Frosted glass
+   *  instead: the terrain stays visible through it, the text stays legible. */
+  glass?: boolean
   // Player level pill ("LV. 3") shown left of the title, per the design
   // doc's Topbar spec (§2.1: "[LV badge + icon] [Screen Title] ...
   // [Credit Balance]", consistent across all screens).
@@ -64,7 +71,7 @@ function CoinIcon() {
   )
 }
 
-export default function TopBar({ eyebrow, title, onBack, right, dense, solid, levelBadge, francs }: TopBarProps) {
+export default function TopBar({ eyebrow, title, onBack, right, dense, solid, glass, levelBadge, francs }: TopBarProps) {
   return (
     <div data-ui-zone={UI_ZONES.topChrome} style={{
       position: 'absolute',
@@ -76,9 +83,13 @@ export default function TopBar({ eyebrow, title, onBack, right, dense, solid, le
       // Fully opaque (alpha 1, not e.g. 0.97) — verified against a live page
       // that even 3% transparency on a near-black background is visible as
       // faint bleed-through text behind bright card copy scrolling beneath it.
-      background: solid
-        ? 'var(--ln-shell)'
-        : 'linear-gradient(180deg, var(--ln-shell) 0%, color-mix(in srgb, var(--ln-shell) 50%, transparent) 70%, transparent 100%)',
+      background: glass
+        ? 'linear-gradient(180deg, rgba(6,14,26,0.58) 0%, rgba(6,14,26,0.28) 72%, transparent 100%)'
+        : solid
+          ? 'var(--ln-shell)'
+          : 'linear-gradient(180deg, var(--ln-shell) 0%, color-mix(in srgb, var(--ln-shell) 50%, transparent) 70%, transparent 100%)',
+      WebkitBackdropFilter: glass ? 'blur(12px) saturate(1.1)' : undefined,
+      backdropFilter: glass ? 'blur(12px) saturate(1.1)' : undefined,
       borderBottom: solid ? '1px solid var(--ln-hairline)' : 'none',
       display: 'flex',
       alignItems: 'center',

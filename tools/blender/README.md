@@ -43,8 +43,9 @@ only the far side shows. Deterministic headless, no render-engine config.
 ```
 landnam_kit.py           palette, materials, geometry helpers, camera, render
 render_all.py            driver — walks every model module, one PNG each
-models/hub_structures.py Earth Base props (4)
-models/launchpad.py      modular six-sprite launch pad (KES-41/STS-611)
+models/terrain.py        modular background kit — mountains, hills, trees,
+                          rocks, roads, distant facilities, clouds (KES-260)
+models/structures.py     every Earth Base building, one shared scale (KES-260)
 models/actors.py         rover and drone (2)
 models/ships.py          Explorer/Prospector hulls + Explorer cutaway (KES-41/STS-611)
 models/rooms.py          ship interior room panels (KES-41/STS-611)
@@ -92,6 +93,37 @@ will read at a subtly wrong angle against the terrain underneath it.
 For the hub props, layout sizes are fixed by the `makeSprite` calls in
 `lib/pixi/hubScene.ts`. Changing one without the other produces a squashed
 sprite, not an error.
+
+## One kit, one style (KES-260, 2026-08-26)
+
+`terrain.py` and `structures.py` replaced `hub_structures.py` and
+`launchpad.py`. The old pair had accumulated four generations of launch pad
+(`pad_complex`, `_v2`, `_v3`, `_v4`), four hangars and two `modular_v2`
+rewrites, each authored at its own camera mode, ortho scale and outline weight
+— and the *background* was a painted JPG plate with hand-written SVG skyline
+glyphs on top of it. Four art languages on one screen, which is why the
+buildings read as sprites pasted onto a photograph.
+
+Three rules now hold it together and apply to anything new:
+
+1. **One scale.** `structures.py`'s `_spec()` derives layout size from world
+   size via `PX_PER_UNIT`. Never hand-pick a `layout`/`ortho` pair for a
+   structure.
+2. **One camera.** `mode="side"` for terrain and structures alike. A brick at a
+   different pitch reads as another game the moment it sits next to a building.
+3. **One ground.** Every structure stands on a `_raft` apron. A wall that stops
+   at the sprite's bottom edge is a cut-out no shadow can rescue.
+
+Depth is applied at runtime, not in the render: the web app's `TerrainScene`
+washes each depth band toward the sky colour through a mask of the sprite's own
+silhouette. So terrain is authored *mid-tone and unhazed*, and one
+`mtn_peak_tall.png` serves as both a pale horizon ridge and a solid near mass.
+Pre-hazing a brick locks it to one distance and defeats the kit.
+
+Scene composition lives in `web/lib/scene/compositions.ts` — one line per placed
+brick. `earth-base-wide` (Hub) and `earth-base-pad` (Launchpad) are deliberately
+different placements of the same kit, which is what makes walking up to the pad
+change the horizon.
 
 ## Not done yet
 

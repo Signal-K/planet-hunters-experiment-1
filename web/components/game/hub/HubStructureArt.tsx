@@ -2,79 +2,105 @@
 
 import React from 'react'
 import type { HubBuildingDef } from '@/lib/pixi/hubScene'
-import { LaunchpadStructure } from '@/components/game/hub/HubLaunchpadArt'
 
-export const HUB_STRUCTURE_ART: Record<string, { src: string; width: number; lift: number }> = {
-  // launchpad has no single `src`/`lift` — LaunchpadStructure composites six
-  // sprites instead (KES-233). Keep the footprint broad enough for the twin
-  // gantries, masts, tanks and deck to read as one substantial facility.
-  launchpad: { src: '', width: 360, lift: 0 },
-  refinery: { src: '/game/assets/hub/refinery_modular_v2.png', width: 92, lift: 68 },
-  'scan-station': { src: '/game/assets/hub/scan_station_modular_v2.png', width: 62, lift: 78 },
-  command: { src: '/game/assets/hub/cmd_building.png', width: 76, lift: 70 },
-  'deep-space-telescope': { src: '/game/assets/hub/deep_space_telescope.png', width: 84, lift: 78 },
-  'astronaut-academy': { src: '/game/assets/hub/astronaut_academy.png', width: 80, lift: 74 },
+/**
+ * Earth Base structure sprites, rebuilt 2026-08-26 (KES-260).
+ *
+ * `width` is each structure's authored layout width from `structures.py`, which
+ * derives every size from one `PX_PER_UNIT` constant. Keeping these in the same
+ * ratio to each other as the Blender models is what makes the base read as a
+ * single site — the previous per-model eyeballed sizes had a scan dish rendering
+ * nearly as large as the entire launch complex.
+ *
+ * `lift` is gone. Every structure is now authored standing on its own concrete
+ * apron (`_raft` in `structures.py`) whose base is the sprite's bottom edge, so
+ * they all sit *on* the ground line rather than being nudged up or down by a
+ * hand-tuned offset per building.
+ */
+export const HUB_STRUCTURE_ART: Record<string, { src: string; width: number; height: number }> = {
+  launchpad:              { src: '/game/assets/hub/launchpad.png',             width: 244, height: 172 },
+  hangar:                 { src: '/game/assets/hub/hangar.png',                width: 208, height: 140 },
+  refinery:               { src: '/game/assets/hub/refinery.png',              width: 135, height: 104 },
+  'scan-station':         { src: '/game/assets/hub/scan_station.png',          width: 99,  height: 109 },
+  command:                { src: '/game/assets/hub/command.png',               width: 120, height: 114 },
+  'deep-space-telescope': { src: '/game/assets/hub/deep_space_telescope.png',  width: 114, height: 104 },
+  'astronaut-academy':    { src: '/game/assets/hub/astronaut_academy.png',     width: 130, height: 94 },
 }
 
 /**
- * Authored DOM art is the reliable common structure layer for the Hub and
- * Build screens. It stays visible when a WebGL renderer is unavailable while
- * the Pixi layer continues to provide interactive previews.
+ * Structures are sized as a share of the scene width, not in fixed pixels.
+ *
+ * The authored widths above are a *ratio set* — they all come from one
+ * `PX_PER_UNIT` in `structures.py`, so dividing them by a single constant keeps
+ * the models' real relative sizes while letting the whole base scale with the
+ * frame. At fixed pixel widths the 244px launch complex ran off the left edge
+ * of a portrait scene, because plot 0 sits at 15% of the scene width.
  */
+const SCENE_WIDTH_DIVISOR = 7.2
+
+/** Scene-space x of each plot, as authored in `hub.scene.json` (HUB_W = 402). */
+const HUB_SCENE_W = 402
+
+/**
+ * Contact shadow. This replaces the `drop-shadow(0 5px 5px …)` every structure
+ * used to carry, which was the other half of the "pasted on" problem: a uniform
+ * blur offset down-right is a *sticker* shadow — it implies the sprite floats a
+ * few pixels above the page. What grounds an object is a shadow that lies flat
+ * on the ground plane, wider than it is tall, anchored at the base and darkest
+ * directly under the footprint.
+ */
+function ContactShadow() {
+  return (
+    <span
+      aria-hidden="true"
+      style={{
+        position: 'absolute',
+        left: '50%',
+        bottom: '-5%',
+        width: '96%',
+        height: '15%',
+        transform: 'translateX(-50%)',
+        background: 'radial-gradient(ellipse at 50% 50%, rgba(12,20,32,0.42) 0%, rgba(12,20,32,0.18) 46%, transparent 72%)',
+        pointerEvents: 'none',
+      }}
+    />
+  )
+}
+
 export function HubStructureArt({ buildings }: { buildings: HubBuildingDef[] }) {
   return (
-    <div aria-hidden="true" style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 4 }}>
+    <div aria-hidden="true" style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 14 }}>
       {buildings.map(building => {
         const art = HUB_STRUCTURE_ART[building.kind] ?? HUB_STRUCTURE_ART.command
+        const widthPct = art.width / SCENE_WIDTH_DIVISOR
+        // Keep the footprint inside the frame. Plot 0 sits at 15% of scene
+        // width, which is less than half the launch complex's own width — so
+        // without this the base's primary structure hangs off the left edge.
+        const rawLeft = (building.plotX / HUB_SCENE_W) * 100
+        const left = Math.min(100 - widthPct / 2, Math.max(widthPct / 2, rawLeft))
         return (
-          <React.Fragment key={`${building.kind}-${building.plotX}`}>
-            {/* Ground-glow halo (KES-231): marks this structure as a real,
-                clickable building — distinct from the flat, unlit decorative
-                skyline behind it (HubWorldBackground's HubSkyline). */}
-            {!building.dimmed && (
-              <div
-                aria-hidden="true"
-                style={{
-                  position: 'absolute',
-                  left: `${(building.plotX / 402) * 100}%`,
-                  bottom: `calc(var(--hub-ground) - 14px)`,
-                  width: art.width * 1.6,
-                  height: art.width * 0.7,
-                  transform: 'translate(-50%, 30%)',
-                  background: 'radial-gradient(ellipse at 50% 50%, rgba(112,217,234,0.32) 0%, transparent 72%)',
-                }}
-              />
-            )}
-            {building.kind === 'launchpad' ? (
-              <div
-                style={{
-                  position: 'absolute',
-                  left: `${(building.plotX / 402) * 100}%`,
-                  bottom: 'var(--hub-ground)',
-                  width: 0,
-                  height: 0,
-                  filter: 'drop-shadow(0 5px 5px rgba(0, 0, 0, 0.3))',
-                }}
-              >
-                <LaunchpadStructure w={art.width} dimmed={building.dimmed} hot={building.hot} />
-              </div>
-            ) : (
-              <img
-                src={art.src}
-                alt=""
-                style={{
-                  position: 'absolute',
-                  left: `${(building.plotX / 402) * 100}%`,
-                  bottom: `calc(var(--hub-ground) - ${art.lift}px)`,
-                  width: art.width,
-                  height: 'auto',
-                  transform: 'translateX(-50%)',
-                  opacity: building.dimmed ? 0.55 : 1,
-                  filter: 'drop-shadow(0 5px 5px rgba(0, 0, 0, 0.3))',
-                }}
-              />
-            )}
-          </React.Fragment>
+          <span
+            key={`${building.kind}-${building.plotX}`}
+            style={{
+              position: 'absolute',
+              left: `${left}%`,
+              bottom: 'var(--hub-ground)',
+              width: `${widthPct}%`,
+              aspectRatio: `${art.width} / ${art.height}`,
+              transform: 'translateX(-50%)',
+              opacity: building.dimmed ? 0.6 : 1,
+            }}
+          >
+            <ContactShadow />
+            <img
+              src={art.src}
+              alt=""
+              draggable={false}
+              data-structure={building.kind}
+              data-state={building.hot ? 'hot' : 'idle'}
+              style={{ position: 'relative', display: 'block', width: '100%', height: '100%' }}
+            />
+          </span>
         )
       })}
     </div>

@@ -18,11 +18,14 @@ import { AssetManager } from '@/lib/engine/AssetManager'
  * asset is unavailable, but passing the real renders here is what makes the
  * hub match the authored mobile art rather than the sparse fallback geometry.
  */
+// KES-260 retired the six-part modular pad (`hub_pad_deck`/`_gantry_frame`/
+// `_swing_arm`/`_clamp`/`_mast`/`_tank`) along with `depot_tank` and
+// `scan_dish`, and folded each structure back into one sprite. The pad-part
+// slots stay `null` here, so `buildLaunchpad` takes its procedural fallback
+// path — this canvas only ever draws the *preview* building on the Build
+// screen, where a placement ghost is what's wanted rather than full art.
 const HUB_SPRITES = [
-  'hub_pad_deck', 'hub_pad_gantry_frame', 'hub_pad_swing_arm',
-  'hub_pad_clamp', 'hub_pad_mast', 'hub_pad_tank',
-  'hub_depot_tank', 'hub_scan_dish', 'hub_refinery_modular_v2', 'hub_scan_station_modular_v2',
-  'hub_cmd_building',
+  'hub_launchpad', 'hub_refinery', 'hub_scan_station', 'hub_command',
   // Loaded alongside the pad, not just when hot — a launch can be triggered
   // between renders, and the alternative (loading these lazily on the first
   // `hot` frame) would show a bare pad for one frame every time.
@@ -38,17 +41,10 @@ async function loadHubTextures(): Promise<HubTextures> {
     const index = HUB_SPRITES.indexOf(name)
     return loaded[index].isPlaceholder ? null : loaded[index].texture
   }
-  tex.pad_deck = texture('hub_pad_deck')
-  tex.pad_gantry_frame = texture('hub_pad_gantry_frame')
-  tex.pad_swing_arm = texture('hub_pad_swing_arm')
-  tex.pad_clamp = texture('hub_pad_clamp')
-  tex.pad_mast = texture('hub_pad_mast')
-  tex.pad_tank = texture('hub_pad_tank')
-  tex.depot_tank = texture('hub_depot_tank')
-  tex.scan_dish = texture('hub_scan_dish')
-  tex.refinery_modular = texture('hub_refinery_modular_v2')
-  tex.scan_station_modular = texture('hub_scan_station_modular_v2')
-  tex.cmd_building = texture('hub_cmd_building')
+  tex.pad_complex = texture('hub_launchpad')
+  tex.refinery_modular = texture('hub_refinery')
+  tex.scan_station_modular = texture('hub_scan_station')
+  tex.cmd_building = texture('hub_command')
   tex.ship_sr1 = texture('ship_sr1')
   tex.ship_sr2 = texture('ship_sr2')
   return tex

@@ -117,15 +117,15 @@ function DockIconBtn({ icon, label, onClick, active, accent, pulse, testId }: {
       aria-label={label}
       style={{
         flex: '0 0 auto', display: 'flex', alignItems: 'center', gap: 6,
-        background: on ? 'var(--hub-chalk-soft)' : 'rgba(4,16,31,0.7)',
-        border: `1.5px solid ${on ? 'var(--hub-chalk)' : 'var(--hub-outline)'}`,
+        background: on ? 'var(--hub-chalk-soft)' : 'rgba(233,243,255,0.10)',
+        border: `1.5px solid ${on ? 'var(--hub-chalk)' : 'rgba(199,216,238,0.32)'}`,
         borderRadius: 14, padding: '5px 10px 5px 5px', cursor: 'pointer',
       }}
     >
       <span style={{
         width: 28, height: 28, borderRadius: 8, display: 'grid', placeItems: 'center', flexShrink: 0,
-        background: 'var(--hub-panel-deep)',
-        border: `1.5px solid ${on ? 'var(--hub-chalk)' : 'var(--hub-outline)'}`,
+        background: 'rgba(4,12,24,0.55)',
+        border: `1.5px solid ${on ? 'var(--hub-chalk)' : 'rgba(199,216,238,0.28)'}`,
         color: on ? 'var(--hub-chalk)' : 'var(--hub-cyan)',
         animation: pulse ? 'hub-pad-pulse 2s ease-in-out infinite' : 'none',
       }}>
@@ -134,7 +134,7 @@ function DockIconBtn({ icon, label, onClick, active, accent, pulse, testId }: {
       <span style={{
         fontFamily: 'var(--ln-font-display)', fontWeight: 700, fontSize: 8,
         letterSpacing: '0.06em', textTransform: 'uppercase', lineHeight: 1.1,
-        color: on ? 'var(--hub-chalk)' : 'rgba(177,198,229,0.8)',
+        color: on ? 'var(--hub-chalk)' : 'rgba(214,229,246,0.92)',
         whiteSpace: 'nowrap',
       }}>
         {label}
@@ -519,7 +519,14 @@ export default function HubScreen({ player, rocketVariant = 'explorer', hasCoach
       <div style={{
         position: 'absolute', top: 0, left: 0, right: 0, zIndex: 18,
         padding: '16px 14px 22px',
-        background: 'linear-gradient(180deg, rgba(0,4,10,0.85) 0%, rgba(0,4,10,0.45) 65%, transparent 100%)',
+        // Glass, not a blackout (KES-260). At 0.85 alpha this scrim read as an
+        // opaque band across the top of the sky, which is a large part of why
+        // the scene looked like a picture behind a UI rather than a place the
+        // UI floats over. Light enough to see the sky through, blurred enough
+        // that the title and readouts stay legible against any part of it.
+        background: 'linear-gradient(180deg, rgba(4,12,24,0.52) 0%, rgba(4,12,24,0.22) 62%, transparent 100%)',
+        WebkitBackdropFilter: 'blur(10px) saturate(1.1)',
+        backdropFilter: 'blur(10px) saturate(1.1)',
         display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 10, pointerEvents: 'none',
       }}>
         <div style={{ pointerEvents: 'auto', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', width: '100%', gap: 12 }}>
@@ -583,8 +590,14 @@ export default function HubScreen({ player, rocketVariant = 'explorer', hasCoach
         }}>
           <div className="hub-bottom-dock-inner" style={{
             pointerEvents: 'auto', width: '100%', maxWidth: 480,
-            background: 'var(--hub-panel)', borderTop: '1px solid var(--hub-outline)',
-            borderRadius: '16px 16px 0 0', boxShadow: '0 -10px 28px rgba(0,0,0,0.45)',
+            // Frosted, not solid `--hub-panel` (KES-260) — the opaque sheet cut
+            // the bottom of the scene off at a hard edge and hid the ground the
+            // structures stand on.
+            background: 'linear-gradient(180deg, rgba(6,16,30,0.52) 0%, rgba(4,12,24,0.74) 100%)',
+            WebkitBackdropFilter: 'blur(16px) saturate(1.15)',
+            backdropFilter: 'blur(16px) saturate(1.15)',
+            borderTop: '1px solid rgba(177,198,229,0.24)',
+            borderRadius: '16px 16px 0 0', boxShadow: '0 -8px 24px rgba(0,0,0,0.28)',
             padding: '12px 14px 14px',
           }}>
             {subsurface ? (

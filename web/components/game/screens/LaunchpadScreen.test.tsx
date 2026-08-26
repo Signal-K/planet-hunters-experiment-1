@@ -30,14 +30,24 @@ describe('LaunchpadScreen', () => {
     expect(markup).toContain('data-testid="launchpad-guide-open"')
     expect(markup).toContain('data-testid="launchpad-view-contracts-btn"')
     expect(markup).toContain('data-testid="launchpad-open-subsurface-btn"')
-    expect(markup).toContain('/game/assets/hub/pad_complex_v4.png')
-    expect(markup).toContain('/game/assets/hub/pad_hangar_v4.png')
+    expect(markup).toContain('/game/assets/hub/launchpad.png')
+    expect(markup).toContain('/game/assets/hub/hangar.png')
     expect(markup).toContain('<button type="button" class="launchpad-scene-object launchpad-tower')
     expect(markup).toContain('START MISSION')
-    expect(markup).not.toContain('/game/assets/hub/pad_hangar.png')
+    expect(markup).not.toContain('pad_hangar')
+    expect(markup).not.toContain('pad_complex')
     expect(markup).toContain('ROCKETS')
     expect(markup).toContain('SAT')
     expect(markup).not.toContain('BUILD MONITORING')
+  })
+
+  // The reported bug: the close-up rendered the Hub's own establishing shot
+  // unchanged, so walking up to the pad left the horizon identical.
+  it('composes its own close-up scene rather than reusing the wide shot', () => {
+    const markup = renderLaunchpad()
+    expect(markup).toContain('data-composition="earth-base-pad"')
+    expect(markup).not.toContain('data-composition="earth-base-wide"')
+    expect(markup).not.toContain('earth_base_exterior')
   })
 
   it('keeps M1 focused on contracts', () => {

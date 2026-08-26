@@ -28,7 +28,7 @@ for p in (HERE, os.path.join(HERE, "models")):
 
 import landnam_kit as kit  # noqa: E402
 
-MODULES = ["hub_structures", "launchpad", "actors", "ships", "rooms", "parts"]
+MODULES = ["terrain", "structures", "actors", "ships", "rooms", "parts"]
 
 
 def parse_args():
@@ -50,7 +50,9 @@ def main():
     written, skipped = [], []
 
     for mod_name in MODULES:
-        kit.set_palette("hub_light" if mod_name in {"hub_structures", "launchpad"} else "default")
+        # Terrain carries its own explicit palette (see terrain.py) rather than
+        # a TOKENS swap — rock/grass/snow have no equivalent in the UI token set.
+        kit.set_palette("hub_light" if mod_name in {"structures", "terrain"} else "default")
         mod = importlib.import_module(mod_name)
         importlib.reload(mod)
         for key, build in mod.BUILDS.items():

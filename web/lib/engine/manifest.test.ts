@@ -86,10 +86,10 @@ describe('asset manifest', () => {
   })
 })
 
-describe('production hub and actor sprites', () => {
-  const RENDERED = ['game/assets/hub', 'game/assets/actors']
+describe('production hub, terrain and actor sprites', () => {
+  const RENDERED = ['game/assets/hub', 'game/assets/actors', 'game/assets/terrain']
 
-  it('has every shipped hub and actor sprite registered in the manifest', () => {
+  it('has every shipped hub, terrain and actor sprite registered in the manifest', () => {
     // The reverse of the dangling check: a sprite rendered but never added to
     // the manifest is invisible to AssetManager and silently unused.
     const registered = new Set(Object.values(manifest))
@@ -100,15 +100,27 @@ describe('production hub and actor sprites', () => {
     expect(unregistered).toEqual([])
   })
 
-  it('renders the Earth Base structure slots hubScene declares', () => {
+  // KES-260 collapsed four generations of pad art and two "modular_v2"
+  // rewrites into exactly one sprite per structure. The list below is now the
+  // complete set — if it grows a `_v2`, something has started versioning art
+  // by filename again instead of replacing it.
+  it('renders exactly one sprite per Earth Base structure', () => {
     for (const name of [
-      'hub_pad_deck', 'hub_pad_gantry_frame', 'hub_pad_swing_arm',
-      'hub_pad_clamp', 'hub_pad_mast', 'hub_pad_tank',
-      'hub_pad_complex', 'hub_pad_hangar', 'hub_pad_complex_v2', 'hub_pad_hangar_v2',
-      'hub_pad_complex_v3', 'hub_pad_hangar_v3', 'hub_pad_complex_v4', 'hub_pad_hangar_v4',
-      'hub_depot_tank', 'hub_scan_dish', 'hub_refinery_modular_v2', 'hub_scan_station_modular_v2',
-      'hub_cmd_building',
-      'hub_deep_space_telescope', 'hub_astronaut_academy',
+      'hub_launchpad', 'hub_hangar', 'hub_refinery', 'hub_scan_station',
+      'hub_command', 'hub_deep_space_telescope', 'hub_astronaut_academy',
+    ]) {
+      expect({ name, present: name in manifest }).toEqual({ name, present: true })
+    }
+    const versioned = Object.keys(manifest).filter(k => /^hub_.*_v\d+$/.test(k))
+    expect(versioned).toEqual([])
+  })
+
+  it('registers the modular terrain kit the scenes compose from', () => {
+    // A brick missing here resolves to the magenta placeholder at runtime,
+    // which in a background layer is easy to miss for months.
+    for (const name of [
+      'terrain_mtn_peak_tall', 'terrain_hill_round', 'terrain_tree_pine_cluster',
+      'terrain_road_segment', 'terrain_far_dome', 'terrain_cloud_bank_a',
     ]) {
       expect({ name, present: name in manifest }).toEqual({ name, present: true })
     }

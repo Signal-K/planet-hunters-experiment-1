@@ -203,6 +203,12 @@ const LAUNCHPAD_SPRITE_SCALE = 60 / 206
 
 // ─── Texture bag ──────────────────────────────────────────────────────────────
 export interface HubTextures {
+  /** Whole launch complex as one sprite (KES-260). When present it is drawn
+   *  instead of the six-part modular pad below — the modular parts existed so
+   *  the pad could animate (arm retracting, clamps releasing), which nothing
+   *  currently drives, and maintaining two generations of pad art was half of
+   *  why the Earth Base structures drifted out of one style. */
+  pad_complex:      Texture | null
   /** Modular launchpad — six independent sprites (STS-611), not one baked pad.
    *  Deck stands alone as an idle-but-built pad; the rest lets the scene
    *  position/animate gantries, arm, clamps, masts and tank independently. */
@@ -237,6 +243,7 @@ export interface HubTextures {
 
 export function nullTextures(): HubTextures {
   return {
+    pad_complex: null,
     pad_deck: null, pad_gantry_frame: null, pad_swing_arm: null,
     pad_clamp: null, pad_mast: null, pad_tank: null,
     cmd_foundation: null, cmd_building: null, cmd_antenna: null,
@@ -315,6 +322,25 @@ function buildLaunchpad(
 ): { root: Container; animatables: AnimState[] } {
   const root = new Container()
   const anims: AnimState[] = []
+
+  // Single-sprite complex (KES-260). Authored standing on its own concrete
+  // apron, so it needs no per-part positioning — anchor it at the ground line
+  // and it sits where every other structure sits.
+  if (tex.pad_complex) {
+    const complex = makeSprite(tex.pad_complex, 122, 86, 0.5, 1.0)
+    if (complex) root.addChild(complex)
+    if (hot) {
+      const rocketTex = rocketVariant === 'prospector' ? tex.ship_sr2 : tex.ship_sr1
+      const rocket = makeSprite(rocketTex, 46, 14, 0.5, 0.5)
+      if (rocket) {
+        rocket.rotation = -Math.PI / 2
+        rocket.x = 2
+        rocket.y = -46
+        root.addChild(rocket)
+      }
+    }
+    return { root, animatables: anims }
+  }
 
   const deck = makeSprite(tex.pad_deck, 72, 18)
   const frameL = makeSprite(tex.pad_gantry_frame, 28, 96)

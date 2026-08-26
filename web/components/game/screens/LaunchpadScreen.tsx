@@ -10,7 +10,7 @@ import type { Player } from '@/lib/game-types'
 import { academyAffinityUnlocked } from '@/lib/systems/AcademySystem'
 import { UI_ZONES } from '@/lib/ui-zones'
 import { HubWorldBackground } from '@/components/game/hub/HubWorldBackground'
-import { LaunchpadStructure } from '@/components/game/hub/HubLaunchpadArt'
+import { HUB_STRUCTURE_ART } from '@/components/game/hub/HubStructureArt'
 import { useTimeOfDay } from '@/lib/hooks/useTimeOfDay'
 import { SoilCrossSection } from '@/components/game/hub/SoilCrossSection'
 
@@ -96,7 +96,7 @@ export default function LaunchpadScreen({
 
   return (
     <div className="game-screen theme-blueprint ln-scene-launchpad">
-      <TopBar eyebrow="EARTH BASE · LAUNCHPAD" title="Your Program" onBack={onBack} solid francs={francs} />
+      <TopBar eyebrow="EARTH BASE · LAUNCHPAD" title="Your Program" onBack={onBack} glass francs={francs} />
 
       <main data-ui-zone={UI_ZONES.screenContent} className="launchpad-visual-scene">
         {/* Same Earth Base backdrop the Hub screen uses (KES-233) — this
@@ -111,12 +111,26 @@ export default function LaunchpadScreen({
             launchpad-screen.css), everything above it (mountains, skyline)
             reads larger/closer, like the camera walked up to the pad instead
             of the Hub's wide establishing-shot framing. */}
+        {/* Its own composition, not the Hub's (KES-260). The zoom used to
+            render the identical `HubWorldBackground` with `transform: none`,
+            so walking up to the pad left the horizon untouched — reported as
+            "the background remains the same. So obviously this is bad."
+            `earth-base-pad` drops the distant facility band entirely, keeps
+            only the summits that would still clear the frame at this range,
+            and adds near-field detail (fence line, boulders, scree) that
+            would be sub-pixel in the wide shot. */}
         <div className="launchpad-scene-zoom">
-          <HubWorldBackground phase={skyPhase} />
+          <HubWorldBackground phase={skyPhase} composition="earth-base-pad" />
         </div>
         <button type="button" className={`launchpad-scene-object launchpad-tower ${isGuided('tower') ? 'is-guided' : ''}`} data-testid="launchpad-status-card" onClick={onLaunchpadAction} aria-label={player.activeMission ? 'Resume active mission' : player.pendingLaunch ? 'Inspect pending launch' : 'Start a new mission'}>
           <span className="launchpad-tower-art">
-            <LaunchpadStructure w={620} targetTopPx={413} dimmed={false} hot={!!player.pendingLaunch} />
+            <i className="launchpad-contact-shadow" aria-hidden="true" />
+            <img
+              className="hub-launchpad-structure"
+              src={HUB_STRUCTURE_ART.launchpad.src}
+              alt=""
+              data-launch-state={player.pendingLaunch ? 'hot' : 'idle'}
+            />
             {player.pendingLaunch && <img className="launchpad-tower-rocket" src={rocketImageSrc} alt="Rocket on launchpad" />}
           </span>
           <span className="launchpad-object-label launchpad-object-label--center">
@@ -126,7 +140,8 @@ export default function LaunchpadScreen({
         </button>
 
         <button type="button" className={`launchpad-scene-object launchpad-rocket ${isGuided('rocket') ? 'is-guided' : ''}`} data-testid="launchpad-rocket-fleet" onClick={onOpenHangar}>
-          <img className="launchpad-hangar-art" src="/game/assets/hub/pad_hangar_v4.png" alt="" />
+          <i className="launchpad-contact-shadow" aria-hidden="true" />
+          <img className="launchpad-hangar-art" src={HUB_STRUCTURE_ART.hangar.src} alt="" />
           <span className="launchpad-rocket-art">
             <img src={rocketImageSrc} alt="" />
             <i className="launchpad-rocket-glow" />
@@ -138,11 +153,6 @@ export default function LaunchpadScreen({
         </button>
 
         <SoilCrossSection />
-        <div className="launchpad-foundation">
-          <div className="launchpad-foundation-face" />
-          <div className="launchpad-foundation-track launchpad-foundation-track--left" />
-          <div className="launchpad-foundation-track launchpad-foundation-track--right" />
-        </div>
 
         {guide && guideStep !== null && (
           <aside className="launchpad-guide" data-testid="launchpad-guide" aria-live="polite" aria-labelledby="launchpad-guide-title">
