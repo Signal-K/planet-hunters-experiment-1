@@ -81,6 +81,14 @@ describe('Hub and Launchpad visual layout', () => {
       cy.get('[data-testid="building-launchpad-hit"]').should('be.visible')
       cy.get('[data-testid="building-refinery-hit"]').should('be.visible')
       cy.get('[data-testid="building-scan-station-hit"]').should('be.visible')
+      cy.get('img[src="/game/assets/hub/earth_base_exterior_v1.jpg"]').should('be.visible')
+      if (viewport.name === 'desktop') {
+        cy.get('.portrait-canvas').then($canvas => {
+          const rect = $canvas[0].getBoundingClientRect()
+          expect(rect.width, 'Earth Base fills the desktop stage').to.eq(window.innerWidth)
+          expect(getComputedStyle($canvas[0]).borderRadius, 'Earth Base is not presented as a card').to.eq('0px')
+        })
+      }
       cy.screenshot(`hub-authored-structures-${viewport.name}`)
     })
 

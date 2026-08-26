@@ -273,8 +273,29 @@ function MountainRanges({
 
 export function HubWorldBackground({ phase = 'night' }: { phase?: TimeOfDayPhase }) {
   const sky = SKY_PALETTES[phase]
+  const phaseTreatment: Record<TimeOfDayPhase, string> = {
+    night: 'rgba(0, 13, 31, 0.64)',
+    dawn: 'rgba(47, 40, 71, 0.26)',
+    day: 'transparent',
+    dusk: 'rgba(51, 32, 70, 0.30)',
+  }
   return (
-    <div style={{ position: 'absolute', inset: 0, zIndex: 1, overflow: 'hidden', background: 'var(--hub-void)' }}>
+    <div data-testid="hub-terrain-fallback" style={{ position: 'absolute', inset: 0, zIndex: 1, overflow: 'hidden', background: 'var(--hub-void)' }}>
+
+      {/* One authored exterior plate establishes the same side-on camera,
+          palette and ground plane for Hub and Launchpad. The old procedural
+          ranges remain as the day/night fallback underneath, rather than
+          competing with this actual scene composition. */}
+      <img
+        src="/game/assets/hub/earth_base_exterior_v1.jpg"
+        alt=""
+        aria-hidden="true"
+        style={{ position: 'absolute', inset: 0, zIndex: 2, width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center bottom' }}
+      />
+      <div
+        aria-hidden="true"
+        style={{ position: 'absolute', inset: 0, zIndex: 3, pointerEvents: 'none', background: phaseTreatment[phase], transition: 'background 1.2s ease' }}
+      />
 
       {/* ── Sky — deep navy overhead, warming toward the horizon. Colors
           shift with the local-clock phase (see SKY_PALETTES above). ─────── */}

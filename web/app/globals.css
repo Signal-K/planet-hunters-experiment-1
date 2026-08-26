@@ -1672,9 +1672,10 @@ button { cursor: pointer; }
     border: 2px solid rgba(108, 212, 255, 0.08);
     box-shadow: 0 30px 80px rgba(0, 0, 0, 0.4);
   }
-  /* KES-233: Launchpad is a full operations page, not the generic device-card
-     presentation. This must live after the desktop canvas rule so the route
-     class wins even when imported screen CSS is separately bundled/cached. */
+  /* KES-233: Earth Base is the root game world and Launchpad is part of that
+     world, not a generic device-card preview. This must live after the
+     desktop canvas rule so the route class wins even when imported screen CSS
+     is separately bundled/cached. */
   .portrait-canvas.portrait-canvas--full-page {
     width: 100%;
     max-width: none;

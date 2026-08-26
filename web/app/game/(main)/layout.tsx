@@ -128,10 +128,14 @@ function GameChrome({ children }: { children: ReactNode }) {
   const currentNav = ['missions', 'targets'].includes(currentScreen)
     ? 'missions'
     : currentScreen === 'galaxy' ? 'galaxy' : currentScreen === 'fab' ? 'fab' : currentScreen === 'skills' ? 'skills' : 'hub'
+  // Earth Base is the application home, not a device preview inside the
+  // generic desktop card. Launchpad is the same physical campus at a closer
+  // operational scale, so both routes own the available viewport.
+  const isImmersiveEarthBaseRoute = currentScreen === 'hub' || currentScreen === 'launchpad'
 
   return (
     <main className="game-stage" aria-label="Landnam game">
-      <div className={`portrait-canvas ${currentScreen === 'launchpad' ? 'portrait-canvas--full-page' : ''}`}>
+      <div className={`portrait-canvas ${isImmersiveEarthBaseRoute ? 'portrait-canvas--full-page' : ''}`}>
         <BackendStatus />
         <LandnamSyncStatus />
         {/* Mission alerts have a reserved desktop slot to the left of the
