@@ -12,7 +12,7 @@ import { readComponentNumber } from '@/lib/engine/registry'
 import { UI_ZONES } from '@/lib/ui-zones'
 import { EarthBaseModules } from '@/components/game/hub/EarthBaseModules'
 import { HubWorldBackground } from '@/components/game/hub/HubWorldBackground'
-import type { HubBuildingDef } from '@/lib/pixi/hubScene'
+import type { HubBuildingDef } from '@/components/game/hub/EarthBaseModules'
 import { formatCurrency } from '@/lib/format'
 import { FEATURE_FLAGS } from '@/lib/featureFlags'
 

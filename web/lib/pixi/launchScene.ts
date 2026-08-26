@@ -5,7 +5,7 @@
  *
  * Uses the selected rocket art when available, with a procedural fallback.
  * Palette matches the design tokens in web/app/globals.css and the vector
- * style established by hubScene.ts.
+ * style established by the terrain/flat-facility scene.
  */
 import { Application, Assets, Container, Graphics, Sprite, Text, TextStyle, Texture } from 'pixi.js'
 

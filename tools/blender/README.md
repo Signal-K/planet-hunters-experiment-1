@@ -45,7 +45,6 @@ landnam_kit.py           palette, materials, geometry helpers, camera, render
 render_all.py            driver — walks every model module, one PNG each
 models/terrain.py        modular background kit — mountains, hills, trees,
                           rocks, roads, distant facilities, clouds (KES-260)
-models/world_modules.py  modular Earth Base foundations, towers and hangars (KES-260)
 models/actors.py         rover and drone (2)
 models/ships.py          Explorer/Prospector hulls + Explorer cutaway (KES-41/STS-611)
 models/rooms.py          ship interior room panels (KES-41/STS-611)
@@ -90,28 +89,15 @@ will read at a subtly wrong angle against the terrain underneath it.
 `layout` is the size in CSS pixels the sprite is drawn at in game; the render is
 `SUPERSAMPLE`× that (currently 3×) so it stays crisp at devicePixelRatio 2–3.
 
-For the hub props, layout sizes are fixed by the `makeSprite` calls in
-`lib/pixi/hubScene.ts`. Changing one without the other produces a squashed
-sprite, not an error.
+Earth Base Launchpad and Hangar layout sizes are owned by the flat-art DOM
+component in `web/components/game/hub/EarthBaseModules.tsx`.
 
-## One kit, one style (KES-260, 2026-08-26)
+## Earth Base facilities
 
-`terrain.py` and `world_modules.py` replaced the retired hand-authored hub
-structures. The old pair had accumulated four generations of launch pad
-(`pad_complex`, `_v2`, `_v3`, `_v4`), four hangars and two `modular_v2`
-rewrites, each authored at its own camera mode, ortho scale and outline weight
-— and the *background* was a painted JPG plate with hand-written SVG skyline
-glyphs on top of it. Four art languages on one screen, which is why the
-buildings read as sprites pasted onto a photograph.
-
-Three rules now hold it together and apply to anything new:
-
-1. **One scale.** `world_modules.py` derives layout size from world size via
-   `PX_PER_UNIT`. Never hand-pick a `layout`/`ortho` pair for a module.
-2. **One camera.** `mode="side"` for terrain and structures alike. A brick at a
-   different pitch reads as another game the moment it sits next to a building.
-3. **One ground.** Every structure stands on a `_raft` apron. A wall that stops
-   at the sprite's bottom edge is a cut-out no shadow can rescue.
+The generated 3D structure kit is retired. Launchpad and Hangar currently use
+flat illustrated 2D cutouts in `web/public/game/assets/base/`. Blender remains
+available for terrain and future art, but this scene no longer depends on a 3D
+structure pass.
 
 Depth is applied at runtime, not in the render: the web app's `TerrainScene`
 washes each depth band toward the sky colour through a mask of the sprite's own

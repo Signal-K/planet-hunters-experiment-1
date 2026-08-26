@@ -82,7 +82,7 @@ describe('Hub and Launchpad visual layout', () => {
       cy.get('[data-testid="building-refinery-hit"]').should('be.visible')
       cy.get('[data-testid="building-scan-station-hit"]').should('be.visible')
       cy.get('[data-testid="terrain-scene"]').should('exist')
-      cy.get('img[src="/game/assets/base/pad_tower.png"]').should('be.visible')
+      cy.get('img[src="/game/assets/base/launchpad_flat.png"]').should('be.visible')
       if (viewport.name === 'desktop') {
         cy.get('.portrait-canvas').then($canvas => {
           const rect = $canvas[0].getBoundingClientRect()

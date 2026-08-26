@@ -3,15 +3,11 @@ import { EARTH_BASE_STRUCTURE_SIZES } from './HubScreen'
 
 describe('Earth Base module composition', () => {
   it('keeps a site-scale footprint for the composited launchpad and hangar', () => {
-    expect(EARTH_BASE_STRUCTURE_SIZES.launchpad.width).toBe(360)
-    expect(EARTH_BASE_STRUCTURE_SIZES.hangar.width).toBe(360)
+    expect(EARTH_BASE_STRUCTURE_SIZES.launchpad.width).toBe(220)
+    expect(EARTH_BASE_STRUCTURE_SIZES.hangar.width).toBe(250)
   })
 
-  /**
-   * The close-up site is assembled from Blender modules, while support
-   * facilities use the smaller outpost family. This guards the intended
-   * massing without coupling DOM layout to one monolithic PNG.
-   */
+  /** Support facilities stay smaller than the two primary Earth Base sprites. */
   it('keeps structure sizes in the same ratio as the Blender models', () => {
     const { launchpad, hangar, refinery } = EARTH_BASE_STRUCTURE_SIZES
     expect(launchpad.width).toBeGreaterThan(refinery.width)

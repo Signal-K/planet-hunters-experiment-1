@@ -100,12 +100,8 @@ describe('production hub, terrain and actor sprites', () => {
     expect(unregistered).toEqual([])
   })
 
-  it('registers the composable Earth Base module kit', () => {
-    for (const name of [
-      'base_pad_foundation', 'base_pad_tower', 'base_pad_cradle', 'base_pad_service',
-      'base_hangar_foundation', 'base_hangar_shell', 'base_hangar_roof',
-      'base_hangar_workshop', 'base_outpost',
-    ]) {
+  it('registers the flat Earth Base facility sprites', () => {
+    for (const name of ['base_launchpad_flat', 'base_hangar_flat']) {
       expect({ name, present: name in manifest }).toEqual({ name, present: true })
     }
   })

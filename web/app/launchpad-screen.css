@@ -87,51 +87,35 @@ button.launchpad-scene-object { cursor: pointer; }
   display: block;
   transform: translateX(-50%);
 }
-.earth-base-module-stack {
+.earth-base-flat-sprite {
   position: absolute;
   inset: 0;
-  display: block;
-}
-.earth-base-module {
-  position: absolute;
-  display: block;
-  width: auto;
-  height: auto;
-  max-width: none;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center bottom;
   pointer-events: none;
 }
-/* One physical site composed from independently-rendered Blender bricks.
-   Foundation modules overlap the terrain at the baseline; the tower/cradle and
-   hangar shell sit on those foundations rather than on a white platform. */
-.earth-base-module--pad-foundation { left: 0; bottom: 0; width: 100%; z-index: 1; }
-.earth-base-module--pad-tower { left: 7%; bottom: 10%; width: 48%; z-index: 3; }
-.earth-base-module--pad-cradle { left: 29%; bottom: 9%; width: 48%; z-index: 4; }
-.earth-base-module--pad-service { right: -4%; bottom: 9%; width: 40%; z-index: 2; }
-.earth-base-module--hangar-foundation { left: 0; bottom: 0; width: 100%; z-index: 1; }
-.earth-base-module--hangar-shell { left: 4%; bottom: 9%; width: 92%; z-index: 3; }
-.earth-base-module--hangar-workshop { left: 20%; bottom: 14%; width: 60%; z-index: 4; }
-.earth-base-module--hangar-roof { left: 0; bottom: 44%; width: 100%; z-index: 5; }
-.earth-base-module--outpost { inset: 0; width: 100%; height: 100%; }
 .launchpad-tower {
-  left: 1%; bottom: var(--hub-ground); width: 52%; height: auto;
+  left: 7%; bottom: var(--hub-ground); width: 30%; height: auto;
 }
 .launchpad-tower-art {
   position: relative; left: auto; bottom: auto;
-  display: block; width: 100%; aspect-ratio: 360 / 264; transform: none;
+  display: block; width: 100%; aspect-ratio: 220 / 160; transform: none;
 }
 .launchpad-tower .launchpad-object-label,
 .launchpad-rocket .launchpad-object-label {
   position: absolute; left: 50%; bottom: -34px; transform: translateX(-50%);
 }
 .launchpad-tower-rocket { position: absolute; z-index: 4; left: 50%; bottom: 16%; width: 42%; transform: translateX(-50%) rotate(-90deg); filter: drop-shadow(0 8px 14px rgba(0,0,0,.55)); }
-.launchpad-rocket { right: 0; bottom: var(--hub-ground); width: 50%; height: auto; justify-content: flex-end; }
+.launchpad-rocket { right: 3%; bottom: var(--hub-ground); width: 37%; height: auto; justify-content: flex-end; }
 .launchpad-rocket-art {
   position: absolute; z-index: 3; left: 45%; bottom: 12%;
   width: 34%; height: auto; transform: translateX(-50%);
   display: grid; place-items: end center;
 }
 .launchpad-rocket-art img { position: relative; z-index: 2; width: 100%; filter: drop-shadow(0 12px 12px rgba(0,0,0,.6)); }
-.launchpad-hangar-art { position: relative; z-index: 2; display: block; width: 100%; aspect-ratio: 360 / 234; }
+.launchpad-hangar-art { position: relative; z-index: 2; display: block; width: 100%; aspect-ratio: 250 / 161; }
 .launchpad-rocket-glow { position: absolute; left: 5%; right: 5%; bottom: 18%; height: 14px; border-radius: 50%; background: rgba(112,217,234,.2); filter: blur(12px); }
 .launchpad-rocket:hover img,
 .launchpad-station:hover .launchpad-object-art { filter: brightness(1.12) drop-shadow(0 0 18px rgba(112,217,234,.22)); }

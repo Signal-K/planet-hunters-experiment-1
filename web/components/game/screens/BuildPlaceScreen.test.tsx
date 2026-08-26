@@ -18,7 +18,7 @@ describe('BuildPlaceScreen', () => {
       />,
     )
 
-    expect(markup).toContain('src="/game/assets/base/pad_tower.png"')
+    expect(markup).toContain('src="/game/assets/base/launchpad_flat.png"')
     expect(markup).not.toContain('data-testid="build-plot-0"')
   })
 
