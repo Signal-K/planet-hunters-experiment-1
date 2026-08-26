@@ -45,7 +45,7 @@ landnam_kit.py           palette, materials, geometry helpers, camera, render
 render_all.py            driver — walks every model module, one PNG each
 models/terrain.py        modular background kit — mountains, hills, trees,
                           rocks, roads, distant facilities, clouds (KES-260)
-models/structures.py     every Earth Base building, one shared scale (KES-260)
+models/world_modules.py  modular Earth Base foundations, towers and hangars (KES-260)
 models/actors.py         rover and drone (2)
 models/ships.py          Explorer/Prospector hulls + Explorer cutaway (KES-41/STS-611)
 models/rooms.py          ship interior room panels (KES-41/STS-611)
@@ -96,8 +96,8 @@ sprite, not an error.
 
 ## One kit, one style (KES-260, 2026-08-26)
 
-`terrain.py` and `structures.py` replaced `hub_structures.py` and
-`launchpad.py`. The old pair had accumulated four generations of launch pad
+`terrain.py` and `world_modules.py` replaced the retired hand-authored hub
+structures. The old pair had accumulated four generations of launch pad
 (`pad_complex`, `_v2`, `_v3`, `_v4`), four hangars and two `modular_v2`
 rewrites, each authored at its own camera mode, ortho scale and outline weight
 — and the *background* was a painted JPG plate with hand-written SVG skyline
@@ -106,9 +106,8 @@ buildings read as sprites pasted onto a photograph.
 
 Three rules now hold it together and apply to anything new:
 
-1. **One scale.** `structures.py`'s `_spec()` derives layout size from world
-   size via `PX_PER_UNIT`. Never hand-pick a `layout`/`ortho` pair for a
-   structure.
+1. **One scale.** `world_modules.py` derives layout size from world size via
+   `PX_PER_UNIT`. Never hand-pick a `layout`/`ortho` pair for a module.
 2. **One camera.** `mode="side"` for terrain and structures alike. A brick at a
    different pitch reads as another game the moment it sits next to a building.
 3. **One ground.** Every structure stands on a `_raft` apron. A wall that stops

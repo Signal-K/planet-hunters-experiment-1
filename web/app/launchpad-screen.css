@@ -55,8 +55,7 @@ button.launchpad-scene-object { cursor: pointer; }
 .launchpad-object-label {
   position: relative; z-index: 3; min-width: 142px; margin-top: 8px; padding: 7px 12px;
   border: 1px solid rgba(212,229,247,.34); border-radius: 999px;
-  background: rgba(8,18,32,.46);
-  -webkit-backdrop-filter: blur(10px) saturate(1.15); backdrop-filter: blur(10px) saturate(1.15);
+  background: rgba(8,18,32,.72);
   box-shadow: 0 6px 18px rgba(0,0,0,.28); display: flex; flex-direction: column; align-items: center; gap: 1px; white-space: nowrap;
 }
 .launchpad-object-label small { color: #c2d2e5; font: 700 8px var(--ln-font-display); letter-spacing: .16em; }
@@ -77,47 +76,62 @@ button.launchpad-scene-object { cursor: pointer; }
   border: 1px solid #86e7f4; border-radius: 50%; background: rgba(6,16,26,.92); color: #86e7f4;
   font: 300 28px/36px var(--ln-font-display); font-style: normal; box-shadow: 0 0 18px rgba(112,217,234,.4);
 }
-.launchpad-tower {
-  left: 2%; bottom: var(--hub-ground); width: 46%; height: auto;
+.earth-base-modules-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 14;
+  pointer-events: none;
 }
-/* Aspect ratios come straight from the sprites' authored layout sizes in
-   `tools/blender/models/structures.py` (launchpad 244x172, hangar 208x140).
-   Both derive from one PX_PER_UNIT constant, so their relative sizes on screen
-   are the models' real relative sizes rather than two independently tuned
-   guesses. */
+.earth-base-structure {
+  position: absolute;
+  display: block;
+  transform: translateX(-50%);
+}
+.earth-base-module-stack {
+  position: absolute;
+  inset: 0;
+  display: block;
+}
+.earth-base-module {
+  position: absolute;
+  display: block;
+  width: auto;
+  height: auto;
+  max-width: none;
+  pointer-events: none;
+}
+/* One physical site composed from independently-rendered Blender bricks.
+   Foundation modules overlap the terrain at the baseline; the tower/cradle and
+   hangar shell sit on those foundations rather than on a white platform. */
+.earth-base-module--pad-foundation { left: 0; bottom: 0; width: 100%; z-index: 1; }
+.earth-base-module--pad-tower { left: 7%; bottom: 10%; width: 48%; z-index: 3; }
+.earth-base-module--pad-cradle { left: 29%; bottom: 9%; width: 48%; z-index: 4; }
+.earth-base-module--pad-service { right: -4%; bottom: 9%; width: 40%; z-index: 2; }
+.earth-base-module--hangar-foundation { left: 0; bottom: 0; width: 100%; z-index: 1; }
+.earth-base-module--hangar-shell { left: 4%; bottom: 9%; width: 92%; z-index: 3; }
+.earth-base-module--hangar-workshop { left: 20%; bottom: 14%; width: 60%; z-index: 4; }
+.earth-base-module--hangar-roof { left: 0; bottom: 44%; width: 100%; z-index: 5; }
+.earth-base-module--outpost { inset: 0; width: 100%; height: 100%; }
+.launchpad-tower {
+  left: 1%; bottom: var(--hub-ground); width: 52%; height: auto;
+}
 .launchpad-tower-art {
   position: relative; left: auto; bottom: auto;
-  display: block; width: 100%; aspect-ratio: 244 / 172; transform: none;
-}
-.launchpad-tower-art .hub-launchpad-structure {
-  position: relative; z-index: 2;
-  display: block; width: 100%; height: 100%;
-}
-/* Flat, wide, anchored at the base — a shadow lying on the ground plane, not a
-   uniform blur offset down-right, which reads as a sticker floating above the
-   page and was half of why the structures looked pasted on (KES-260). */
-.launchpad-contact-shadow {
-  position: absolute; z-index: 1; left: 50%; bottom: -6px;
-  width: 96%; height: 26px; transform: translateX(-50%); pointer-events: none;
-  background: radial-gradient(ellipse at 50% 50%,
-    rgba(12,20,32,.42) 0%, rgba(12,20,32,.18) 46%, transparent 72%);
+  display: block; width: 100%; aspect-ratio: 360 / 264; transform: none;
 }
 .launchpad-tower .launchpad-object-label,
 .launchpad-rocket .launchpad-object-label {
   position: absolute; left: 50%; bottom: -34px; transform: translateX(-50%);
 }
 .launchpad-tower-rocket { position: absolute; z-index: 4; left: 50%; bottom: 16%; width: 42%; transform: translateX(-50%) rotate(-90deg); filter: drop-shadow(0 8px 14px rgba(0,0,0,.55)); }
-.launchpad-rocket { right: 2%; bottom: var(--hub-ground); width: 46%; height: auto; justify-content: flex-end; }
+.launchpad-rocket { right: 0; bottom: var(--hub-ground); width: 50%; height: auto; justify-content: flex-end; }
 .launchpad-rocket-art {
   position: absolute; z-index: 3; left: 45%; bottom: 12%;
   width: 34%; height: auto; transform: translateX(-50%);
   display: grid; place-items: end center;
 }
 .launchpad-rocket-art img { position: relative; z-index: 2; width: 100%; filter: drop-shadow(0 12px 12px rgba(0,0,0,.6)); }
-.launchpad-hangar-art {
-  position: relative; z-index: 2; display: block;
-  width: 100%; aspect-ratio: 208 / 140; height: auto;
-}
+.launchpad-hangar-art { position: relative; z-index: 2; display: block; width: 100%; aspect-ratio: 360 / 234; }
 .launchpad-rocket-glow { position: absolute; left: 5%; right: 5%; bottom: 18%; height: 14px; border-radius: 50%; background: rgba(112,217,234,.2); filter: blur(12px); }
 .launchpad-rocket:hover img,
 .launchpad-station:hover .launchpad-object-art { filter: brightness(1.12) drop-shadow(0 0 18px rgba(112,217,234,.22)); }
@@ -222,8 +236,6 @@ button.launchpad-scene-object { cursor: pointer; }
   position: absolute; z-index: 22; left: 0; right: 0; bottom: 0; height: 62px; padding: 9px 16px;
   border-top: 1px solid rgba(177,198,229,.22);
   background: linear-gradient(180deg, rgba(6,14,26,.30) 0%, rgba(6,14,26,.62) 100%);
-  -webkit-backdrop-filter: blur(14px) saturate(1.1);
-  backdrop-filter: blur(14px) saturate(1.1);
   display: flex; align-items: center; justify-content: space-between; gap: 16px;
 }
 .launchpad-rail-status,
@@ -233,7 +245,6 @@ button.launchpad-scene-object { cursor: pointer; }
 .launchpad-rail-actions button {
   height: 40px; padding: 0 14px; border: 1px solid rgba(199,216,238,.34); border-radius: 10px;
   background: rgba(233,243,255,.10); color: #eaf2fb; font: 800 10px var(--ln-font-display); letter-spacing: .12em;
-  -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
   display: inline-flex; align-items: center; gap: 7px;
 }
 .launchpad-rail-actions button:hover { background: rgba(233,243,255,.18); border-color: rgba(199,216,238,.55); }
@@ -243,7 +254,10 @@ button.launchpad-scene-object { cursor: pointer; }
 /* The Hub dock is an action rail, not a floating modal. Keep its status and
    actions on the ground line so the widened launchpad remains visible above
    it and the last action cannot be hidden below a clipped sheet. */
-.hub-bottom-dock { bottom: var(--ln-nav-h, 64px) !important; }
+/* Hub itself has no BottomTabBar. The prior nav-height offset lifted its dock
+   into the middle of the screen on desktop and portrait; anchor it to the
+   actual canvas edge. */
+.hub-bottom-dock { bottom: 0 !important; }
 .hub-bottom-dock-inner {
   max-width: none !important;
   width: 100% !important;

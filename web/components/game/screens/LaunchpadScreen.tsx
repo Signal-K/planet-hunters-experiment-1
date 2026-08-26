@@ -10,7 +10,7 @@ import type { Player } from '@/lib/game-types'
 import { academyAffinityUnlocked } from '@/lib/systems/AcademySystem'
 import { UI_ZONES } from '@/lib/ui-zones'
 import { HubWorldBackground } from '@/components/game/hub/HubWorldBackground'
-import { HUB_STRUCTURE_ART } from '@/components/game/hub/HubStructureArt'
+import { HangarModules, LaunchpadModules } from '@/components/game/hub/EarthBaseModules'
 import { useTimeOfDay } from '@/lib/hooks/useTimeOfDay'
 import { SoilCrossSection } from '@/components/game/hub/SoilCrossSection'
 
@@ -98,19 +98,18 @@ export default function LaunchpadScreen({
     <div className="game-screen theme-blueprint ln-scene-launchpad">
       <TopBar eyebrow="EARTH BASE · LAUNCHPAD" title="Your Program" onBack={onBack} glass francs={francs} />
 
-      <main data-ui-zone={UI_ZONES.screenContent} className="launchpad-visual-scene">
+      <main data-ui-zone={UI_ZONES.screenContent} className="launchpad-visual-scene earth-base-campus-transition">
         {/* Same Earth Base backdrop the Hub screen uses (KES-233) — this
             screen previously hand-rolled its own separate navy/stars/green-
             mountain gradient (`.launchpad-visual-scene`'s own background +
             ::before/::after in launchpad-screen.css), which read as a
             completely different place once KES-226/228 reworked the Hub's
             own background repeatedly this sprint and this screen was never
-            updated to match. `.launchpad-scene-zoom` scales the shared
-            background up from a bottom-center origin — ground line stays
-            pinned to this screen's own `--hub-ground` (see
-            launchpad-screen.css), everything above it (mountains, skyline)
-            reads larger/closer, like the camera walked up to the pad instead
-            of the Hub's wide establishing-shot framing. */}
+            updated to match. `.launchpad-scene-zoom` scopes the shared
+            background to the close composition — ground line stays pinned to
+            this screen's own `--hub-ground` (see launchpad-screen.css), while
+            the near-field terrain and modular structures change what is in
+            frame instead of pretending a single backdrop was stretched. */}
         {/* Its own composition, not the Hub's (KES-260). The zoom used to
             render the identical `HubWorldBackground` with `transform: none`,
             so walking up to the pad left the horizon untouched — reported as
@@ -123,14 +122,8 @@ export default function LaunchpadScreen({
           <HubWorldBackground phase={skyPhase} composition="earth-base-pad" />
         </div>
         <button type="button" className={`launchpad-scene-object launchpad-tower ${isGuided('tower') ? 'is-guided' : ''}`} data-testid="launchpad-status-card" onClick={onLaunchpadAction} aria-label={player.activeMission ? 'Resume active mission' : player.pendingLaunch ? 'Inspect pending launch' : 'Start a new mission'}>
-          <span className="launchpad-tower-art">
-            <i className="launchpad-contact-shadow" aria-hidden="true" />
-            <img
-              className="hub-launchpad-structure"
-              src={HUB_STRUCTURE_ART.launchpad.src}
-              alt=""
-              data-launch-state={player.pendingLaunch ? 'hot' : 'idle'}
-            />
+          <span className="launchpad-tower-art" data-launch-state={player.pendingLaunch ? 'hot' : 'idle'}>
+            <LaunchpadModules />
             {player.pendingLaunch && <img className="launchpad-tower-rocket" src={rocketImageSrc} alt="Rocket on launchpad" />}
           </span>
           <span className="launchpad-object-label launchpad-object-label--center">
@@ -140,8 +133,7 @@ export default function LaunchpadScreen({
         </button>
 
         <button type="button" className={`launchpad-scene-object launchpad-rocket ${isGuided('rocket') ? 'is-guided' : ''}`} data-testid="launchpad-rocket-fleet" onClick={onOpenHangar}>
-          <i className="launchpad-contact-shadow" aria-hidden="true" />
-          <img className="launchpad-hangar-art" src={HUB_STRUCTURE_ART.hangar.src} alt="" />
+          <HangarModules className="launchpad-hangar-art" />
           <span className="launchpad-rocket-art">
             <img src={rocketImageSrc} alt="" />
             <i className="launchpad-rocket-glow" />

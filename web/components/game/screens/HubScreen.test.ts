@@ -1,28 +1,26 @@
 import { describe, expect, it } from 'vitest'
-import { HUB_STRUCTURE_ART } from './HubScreen'
+import { EARTH_BASE_STRUCTURE_SIZES } from './HubScreen'
 
-describe('Hub structure art', () => {
-  it('points every structure at its single rebuilt sprite', () => {
-    expect(HUB_STRUCTURE_ART.refinery.src).toBe('/game/assets/hub/refinery.png')
-    expect(HUB_STRUCTURE_ART['scan-station'].src).toBe('/game/assets/hub/scan_station.png')
-    expect(HUB_STRUCTURE_ART.launchpad.src).toBe('/game/assets/hub/launchpad.png')
+describe('Earth Base module composition', () => {
+  it('keeps a site-scale footprint for the composited launchpad and hangar', () => {
+    expect(EARTH_BASE_STRUCTURE_SIZES.launchpad.width).toBe(360)
+    expect(EARTH_BASE_STRUCTURE_SIZES.hangar.width).toBe(360)
   })
 
   /**
-   * The sizes come from `structures.py`'s shared `PX_PER_UNIT`, so they encode
-   * the models' real relative footprints. Before KES-260 each model picked its
-   * own layout by eye and the scan station rendered nearly as wide as the
-   * entire launch complex — a big part of why the base didn't read as one site.
+   * The close-up site is assembled from Blender modules, while support
+   * facilities use the smaller outpost family. This guards the intended
+   * massing without coupling DOM layout to one monolithic PNG.
    */
   it('keeps structure sizes in the same ratio as the Blender models', () => {
-    const { launchpad, hangar, refinery } = HUB_STRUCTURE_ART
-    expect(launchpad.width).toBeGreaterThan(hangar.width)
+    const { launchpad, hangar, refinery } = EARTH_BASE_STRUCTURE_SIZES
+    expect(launchpad.width).toBeGreaterThan(refinery.width)
     expect(hangar.width).toBeGreaterThan(refinery.width)
-    expect(HUB_STRUCTURE_ART['scan-station'].width).toBeLessThan(refinery.width)
+    expect(EARTH_BASE_STRUCTURE_SIZES['scan-station'].width).toBeLessThan(refinery.width)
   })
 
   it('carries an explicit height so nothing depends on intrinsic image size', () => {
-    for (const [kind, art] of Object.entries(HUB_STRUCTURE_ART)) {
+    for (const [kind, art] of Object.entries(EARTH_BASE_STRUCTURE_SIZES)) {
       expect({ kind, ok: art.height > 0 }).toEqual({ kind, ok: true })
     }
   })

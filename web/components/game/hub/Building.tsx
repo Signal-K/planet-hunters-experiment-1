@@ -4,8 +4,8 @@ import React, { useEffect, useState } from 'react'
 
 /**
  * DOM half of a hub structure — hit area, status pill, and the notification
- * callout. The visual body is drawn by HubPixiCanvas underneath; the spacer
- * div here reserves that footprint so the pill lands under the building.
+ * callout. The visual body is rendered by EarthBaseModules underneath; the
+ * spacer div here reserves that footprint so the pill lands under the building.
  *
  * Restyled 2026-07-26 from `landnam-earth-base-v2.html`: black tile with a
  * 1.5px white outline (not a status-tinted border), mint status dot, and a

@@ -37,7 +37,7 @@ TAIL_END = 3.7
 NOZZLE_END = 4.0
 R = 0.75             # main tube radius — bumped from 0.5 (2026-08-03, third
                       # pass): the ship is shown as small as 80x30px in-game
-                      # (HubPixiCanvas's launchpad), and every fine surface
+                      # (EarthBaseModules' launchpad), and every fine surface
                       # detail (windows, seams, canards, the sensor spike) the
                       # second pass added was invisible at that size — those
                       # are described in code but never verified at the size
@@ -58,7 +58,7 @@ def _hull(trim_hex, band_x, dorsal=False):
     Third pass (2026-08-03): the second pass added surface detail (windows,
     seams, canards, a sensor spike) that only ever got checked against the
     480x180 supersampled render, never against the ~80x30px the game
-    actually displays this at (HubPixiCanvas's launchpad). All of it was
+    actually displays this at (EarthBaseModules' launchpad). All of it was
     below the pixel threshold to read at real size, so the ship still looked
     like a bare tube in-game. That detail is removed here rather than kept
     "for later" — dead weight in both the mesh and the code. Everything that

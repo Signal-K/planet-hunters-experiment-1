@@ -10,10 +10,8 @@ import type { EntityData } from '@/lib/engine/types'
 import { buildPlotEntities } from '@/lib/engine/prefabs'
 import { readComponentNumber } from '@/lib/engine/registry'
 import { UI_ZONES } from '@/lib/ui-zones'
-import { HubStructureArt } from '@/components/game/hub/HubStructureArt'
+import { EarthBaseModules } from '@/components/game/hub/EarthBaseModules'
 import { HubWorldBackground } from '@/components/game/hub/HubWorldBackground'
-import HubPixiCanvas from '@/components/game/hub/HubPixiCanvas'
-import ErrorBoundary from '@/components/ui/ErrorBoundary'
 import type { HubBuildingDef } from '@/lib/pixi/hubScene'
 import { formatCurrency } from '@/lib/format'
 import { FEATURE_FLAGS } from '@/lib/featureFlags'
@@ -169,10 +167,8 @@ export default function BuildPlaceScreen({ onPlaced, onBack, hasCoach, player }:
       <div className="build-place-field" style={{ position: 'absolute', inset: 0 }}>
         <HubWorldBackground />
         <div className="build-place-grid-overlay" aria-hidden="true" />
-        <HubStructureArt buildings={existingBuildings} />
-        <ErrorBoundary fallback={null}>
-          <HubPixiCanvas buildings={previewBuildings} />
-        </ErrorBoundary>
+        <EarthBaseModules buildings={existingBuildings} />
+        <EarthBaseModules buildings={previewBuildings} />
       </div>
 
       <TopBar eyebrow="EARTH BASE · SETUP" title="Build" onBack={onBack} />

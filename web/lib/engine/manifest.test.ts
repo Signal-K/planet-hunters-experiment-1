@@ -87,9 +87,9 @@ describe('asset manifest', () => {
 })
 
 describe('production hub, terrain and actor sprites', () => {
-  const RENDERED = ['game/assets/hub', 'game/assets/actors', 'game/assets/terrain']
+  const RENDERED = ['game/assets/base', 'game/assets/actors', 'game/assets/terrain']
 
-  it('has every shipped hub, terrain and actor sprite registered in the manifest', () => {
+  it('has every shipped Earth Base, terrain and actor sprite registered in the manifest', () => {
     // The reverse of the dangling check: a sprite rendered but never added to
     // the manifest is invisible to AssetManager and silently unused.
     const registered = new Set(Object.values(manifest))
@@ -100,19 +100,14 @@ describe('production hub, terrain and actor sprites', () => {
     expect(unregistered).toEqual([])
   })
 
-  // KES-260 collapsed four generations of pad art and two "modular_v2"
-  // rewrites into exactly one sprite per structure. The list below is now the
-  // complete set — if it grows a `_v2`, something has started versioning art
-  // by filename again instead of replacing it.
-  it('renders exactly one sprite per Earth Base structure', () => {
+  it('registers the composable Earth Base module kit', () => {
     for (const name of [
-      'hub_launchpad', 'hub_hangar', 'hub_refinery', 'hub_scan_station',
-      'hub_command', 'hub_deep_space_telescope', 'hub_astronaut_academy',
+      'base_pad_foundation', 'base_pad_tower', 'base_pad_cradle', 'base_pad_service',
+      'base_hangar_foundation', 'base_hangar_shell', 'base_hangar_roof',
+      'base_hangar_workshop', 'base_outpost',
     ]) {
       expect({ name, present: name in manifest }).toEqual({ name, present: true })
     }
-    const versioned = Object.keys(manifest).filter(k => /^hub_.*_v\d+$/.test(k))
-    expect(versioned).toEqual([])
   })
 
   it('registers the modular terrain kit the scenes compose from', () => {

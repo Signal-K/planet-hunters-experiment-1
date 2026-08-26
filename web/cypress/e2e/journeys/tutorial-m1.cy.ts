@@ -17,7 +17,7 @@ const SURVEY_KEY = 'landnam-surveys-shown'
 const SNOOZE_KEY = 'landnam-upgrade-prompt-snooze-until'
 
 // PixiJS v8 can throw _cancelResize during teardown when component cleanup
-// races an in-flight async app.init() (e.g. MiningCanvas/HubPixiCanvas torn
+// races an in-flight async app.init() (e.g. MiningCanvas or a Hub scene torn
 // down mid-transition) — an uncaught rejection Next's error boundary turns
 // into a full-screen "SIGNAL INTERRUPTED" crash. Same known issue and same
 // suppression already used in visual-qa.cy.ts; the visual content/game state

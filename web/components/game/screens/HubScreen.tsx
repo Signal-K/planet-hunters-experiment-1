@@ -12,8 +12,8 @@ import { AmbientMotes } from '@/components/game/hub/AmbientMotes'
 import { HubWorldBackground } from '@/components/game/hub/HubWorldBackground'
 import { HubClockWidget } from '@/components/game/hub/HubClockWidget'
 import { useTimeOfDay } from '@/lib/hooks/useTimeOfDay'
-import { HubStructureArt } from '@/components/game/hub/HubStructureArt'
-export { HUB_STRUCTURE_ART } from '@/components/game/hub/HubStructureArt'
+import { EarthBaseModules } from '@/components/game/hub/EarthBaseModules'
+export { EARTH_BASE_STRUCTURE_SIZES } from '@/components/game/hub/EarthBaseModules'
 import { SoilCrossSection } from '@/components/game/hub/SoilCrossSection'
 import { HubSubsurfaceView } from '@/components/game/hub/HubSubsurfaceView'
 import { Building, EmptyPlot } from '@/components/game/hub/Building'
@@ -344,8 +344,8 @@ export default function HubScreen({ player, rocketVariant = 'explorer', hasCoach
 
   const BUILDING_W: Record<string, number> = { launchpad: 98, refinery: 84, 'scan-station': 80, 'deep-space-telescope': 86, 'astronaut-academy': 88, command: 84 }
   // Invisible click-target height for each building's spacer (Building.tsx),
-  // reported unclickable 2026-08-23. HubStructureArt renders each building's
-  // actual art at a per-kind `width`/`lift` (see HUB_STRUCTURE_ART) with its
+  // reported unclickable 2026-08-23. EarthBaseModules renders each building's
+  // modular art at a per-kind width/footprint with its
   // OWN aspect ratio — the launchpad's gantry PNG (84x288px) renders far
   // taller than its footprint, reaching ~220px above the ground line, while
   // the invisible hit spacer this map used to feed (a flat `w * 0.6`, ~59px)
@@ -406,10 +406,10 @@ export default function HubScreen({ player, rocketVariant = 'explorer', hasCoach
         status: (player.activeMission ? 'warn' : 'ok') as 'ok' | 'warn',
         hot: !!player.pendingLaunch,
         // Widened from 98 (KES-233) — the hit-box/highlight container was
-        // narrower than the modular composite it wraps (HubLaunchpadArt),
+        // narrower than the modular composite it wraps (EarthBaseModules),
         // so the structure's own masts crowded right up against the box
         // edges. This is the click-target/tutorial-spotlight box, not the
-        // rendered art's own footprint (HUB_STRUCTURE_ART.launchpad.width,
+        // rendered art's own footprint (EARTH_BASE_STRUCTURE_SIZES.launchpad.width,
         // below) — it can be wider than the art without any visual overlap
         // risk against neighbouring plots.
         w: 376,
@@ -474,7 +474,7 @@ export default function HubScreen({ player, rocketVariant = 'explorer', hasCoach
     <div className={layoutStyles.root} style={{ width: '100%', height: '100%', position: 'relative', overflow: 'hidden' }}>
 
       {/* ── Sliding world: surface (top 50%) + subsurface (bottom 50%) ── */}
-      <div style={{
+      <div className="earth-base-campus-transition" style={{
         position: 'absolute', left: 0, right: 0,
         top: subsurface ? '-100%' : '0%',
         height: '200%',
@@ -507,7 +507,7 @@ export default function HubScreen({ player, rocketVariant = 'explorer', hasCoach
 
           {/* Authored structure sprites. DOM rendering keeps the Hub legible
               in both hardware WebGL and Docker/Electron screenshot runners. */}
-          <HubStructureArt buildings={hubBuildings} />
+          <EarthBaseModules buildings={hubBuildings} />
 
           {/* Surface buildings — hit areas + labels.
               zIndex 10 is load-bearing: every scene layer below is an
@@ -571,14 +571,9 @@ export default function HubScreen({ player, rocketVariant = 'explorer', hasCoach
       <div style={{
         position: 'absolute', top: 0, left: 0, right: 0, zIndex: 18,
         padding: '16px 14px 22px',
-        // Glass, not a blackout (KES-260). At 0.85 alpha this scrim read as an
-        // opaque band across the top of the sky, which is a large part of why
-        // the scene looked like a picture behind a UI rather than a place the
-        // UI floats over. Light enough to see the sky through, blurred enough
-        // that the title and readouts stay legible against any part of it.
-        background: 'linear-gradient(180deg, rgba(4,12,24,0.52) 0%, rgba(4,12,24,0.22) 62%, transparent 100%)',
-        WebkitBackdropFilter: 'blur(10px) saturate(1.1)',
-        backdropFilter: 'blur(10px) saturate(1.1)',
+        // Keep the sky crisp. The previous backdrop blur caused the broad
+        // frosted patch visible through the upper-middle of the world.
+        background: 'linear-gradient(180deg, rgba(10,10,12,0.68) 0%, rgba(10,10,12,0.22) 48%, transparent 100%)',
         display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 10, pointerEvents: 'none',
       }}>
         <div style={{ pointerEvents: 'auto', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', width: '100%', gap: 12 }}>
@@ -637,17 +632,15 @@ export default function HubScreen({ player, rocketVariant = 'explorer', hasCoach
           the tutorial (bug reported 2026-07-31). */}
       {(!hasCoach || player.missionsDone > 0) && (
         <div ref={dockRef} className="hub-bottom-dock" style={{
-          position: 'absolute', left: 0, right: 0, bottom: 'var(--ln-nav-h, 64px)', zIndex: 20,
+          position: 'absolute', left: 0, right: 0, bottom: 0, zIndex: 20,
           display: 'flex', justifyContent: 'center', pointerEvents: 'none',
         }}>
           <div className="hub-bottom-dock-inner" style={{
             pointerEvents: 'auto', width: '100%', maxWidth: 480,
-            // Frosted, not solid `--hub-panel` (KES-260) — the opaque sheet cut
-            // the bottom of the scene off at a hard edge and hid the ground the
-            // structures stand on.
-            background: 'linear-gradient(180deg, rgba(6,16,30,0.52) 0%, rgba(4,12,24,0.74) 100%)',
-            WebkitBackdropFilter: 'blur(16px) saturate(1.15)',
-            backdropFilter: 'blur(16px) saturate(1.15)',
+            // A translucent command rail, deliberately without backdrop blur:
+            // blurring the terrain under a fixed dock created the frosted band
+            // reported in visual review and broke the scene's ground plane.
+            background: 'linear-gradient(180deg, rgba(10,10,12,0.72) 0%, rgba(10,10,12,0.88) 100%)',
             borderTop: '1px solid rgba(177,198,229,0.24)',
             borderRadius: '16px 16px 0 0', boxShadow: '0 -8px 24px rgba(0,0,0,0.28)',
             padding: '12px 14px 14px',
