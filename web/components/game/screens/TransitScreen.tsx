@@ -27,6 +27,21 @@ function pointOnQuadraticBezier(t: number, p0: { x: number; y: number }, p1: { x
   }
 }
 
+// Flavor-scale distance model (KES-262) — not physically simulated, just
+// enough to make the readout feel like navigation rather than a bare percent.
+const DISTANCE_PER_ORBIT_UNIT_MM = 420
+
+const WAYPOINT_T_VALUES = [0.25, 0.5, 0.75]
+const WAYPOINT_LABEL_POOL = ['Debris field', 'Comm relay buoy', 'Survey marker', 'Asteroid cluster', 'Nav beacon', 'Old tether anchor']
+
+/** Deterministic per-leg waypoint labels — same leg always shows the same
+ * waypoints, different destinations vary, without needing a random seed. */
+function waypointLabelFor(targetId: string, index: number): string {
+  let hash = 0
+  for (let i = 0; i < targetId.length; i++) hash = (hash * 31 + targetId.charCodeAt(i)) >>> 0
+  return WAYPOINT_LABEL_POOL[(hash + index) % WAYPOINT_LABEL_POOL.length]
+}
+
 interface Props {
   target: Target
   rocketImageSrc?: string
@@ -160,6 +175,21 @@ export default function TransitScreen({ target, rocketImageSrc, arrivalAt, trans
   const dotPos = pointOnQuadraticBezier(progress / 100, PLOT_ORIGIN, PLOT_CONTROL, PLOT_DESTINATION)
   const trajectoryPath = `M ${PLOT_ORIGIN.x} ${PLOT_ORIGIN.y} Q ${PLOT_CONTROL.x} ${PLOT_CONTROL.y} ${PLOT_DESTINATION.x} ${PLOT_DESTINATION.y}`
 
+  // Navigation readout — distance remaining and a roughly-constant cruise
+  // speed (progress is linear, so this reads as "current speed" rather than
+  // a simulated one). Only meaningful in timed mode; fake-progress mode
+  // (tutorial/instant) has no real duration to derive speed from.
+  const totalDistanceMm = target.orbit * DISTANCE_PER_ORBIT_UNIT_MM
+  const remainingDistanceMm = Math.round(totalDistanceMm * (1 - progress / 100))
+  const speedMmPerHour = isTimed && totalMs > 0 ? Math.round(totalDistanceMm / (totalMs / 3_600_000)) : null
+
+  const waypoints = WAYPOINT_T_VALUES.map((t, i) => ({
+    t,
+    label: waypointLabelFor(target.id, i),
+    pos: pointOnQuadraticBezier(t, PLOT_ORIGIN, PLOT_CONTROL, PLOT_DESTINATION),
+    passed: progress / 100 >= t,
+  }))
+
   return (
     <div className="game-screen transit-screen theme-blueprint">
       <TopBar eyebrow="MISSION TRANSIT" title={`${legLabel} · ${destinationName}`} onBack={onBack} />
@@ -174,10 +204,28 @@ export default function TransitScreen({ target, rocketImageSrc, arrivalAt, trans
           <path d={trajectoryPath} className="transit-plot-path" />
           <circle cx={PLOT_ORIGIN.x} cy={PLOT_ORIGIN.y} r="2.4" className="transit-plot-marker transit-plot-marker--origin" />
           <circle cx={PLOT_DESTINATION.x} cy={PLOT_DESTINATION.y} r="2.4" className="transit-plot-marker transit-plot-marker--destination" />
+          {waypoints.map((wp) => (
+            <circle
+              key={wp.t}
+              cx={wp.pos.x}
+              cy={wp.pos.y}
+              r="1.3"
+              className={`transit-plot-waypoint${wp.passed ? ' transit-plot-waypoint--passed' : ''}`}
+            />
+          ))}
           <circle cx={dotPos.x} cy={dotPos.y} r="2" className="transit-plot-dot" />
         </svg>
         <span className="transit-plot-label transit-plot-label--origin">{originLabel}</span>
         <span className="transit-plot-label transit-plot-label--destination">{destPlotLabel}</span>
+        {waypoints.map((wp) => (
+          <span
+            key={wp.t}
+            className={`transit-waypoint-label${wp.passed ? ' transit-waypoint-label--passed' : ''}`}
+            style={{ left: `${wp.pos.x}%`, top: `${wp.pos.y}%` }}
+          >
+            {wp.passed ? '✓ ' : ''}{wp.label}
+          </span>
+        ))}
         <span className="transit-plot-progress" style={{ left: `${dotPos.x}%`, top: `${dotPos.y}%` }}>{Math.round(progress)}%</span>
         {/* Testid marker — adopts rocket-mark CSS (56° rotate) so transform-angle assertions pass */}
         <div
@@ -192,6 +240,10 @@ export default function TransitScreen({ target, rocketImageSrc, arrivalAt, trans
         {isTimed ? (
           <>
             <div><span>ETA</span><strong>{arrived ? 'ARRIVED' : formatCountdown(etaMs)}</strong></div>
+            <div><span>Distance</span><strong>{arrived ? '0 Mm' : `${remainingDistanceMm.toLocaleString()} Mm`}</strong></div>
+            {speedMmPerHour !== null && (
+              <div><span>Speed</span><strong>{arrived ? '0 Mm/h' : `${speedMmPerHour.toLocaleString()} Mm/h`}</strong></div>
+            )}
             <div><span>{returning ? 'Recovery' : 'Orbit'}</span><strong>{returning ? 'Earth' : target.orbit}</strong></div>
           </>
         ) : (

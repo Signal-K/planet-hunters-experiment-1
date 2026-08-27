@@ -229,9 +229,9 @@ export default function TessDiscoveryScreen({ player, visualCandidate, onBack, o
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                 <LiveDot active={!classification} />
-                <div style={{ fontFamily: 'var(--ln-font-display)', fontWeight: 800, fontSize: 18, color: '#e8f0fe' }}>{candidate.host}</div>
+                <div style={{ fontFamily: 'var(--ln-font-display)', fontWeight: 800, fontSize: 18, color: 'var(--ln-text)' }}>{candidate.host}</div>
               </div>
-              <div style={{ fontFamily: 'var(--ln-font-mono)', fontSize: 10, color: '#6b7fa3', marginTop: 2 }}>
+              <div style={{ fontFamily: 'var(--ln-font-mono)', fontSize: 10, color: 'var(--ln-text-muted)', marginTop: 2 }}>
                 {candidate.constellation.toUpperCase()} / {candidate.distanceLy} LY / S/N {candidate.signalToNoise.toFixed(1)} / {candidate.periodDays.toFixed(1)}D
               </div>
             </div>
@@ -243,7 +243,7 @@ export default function TessDiscoveryScreen({ player, visualCandidate, onBack, o
           <div
             data-testid="tess-data-provenance"
             style={{
-              fontFamily: 'var(--ln-font-mono)', fontSize: 8, letterSpacing: '0.06em', color: '#4a5a75',
+              fontFamily: 'var(--ln-font-mono)', fontSize: 8, letterSpacing: '0.06em', color: 'var(--ln-text-dim)',
               textTransform: 'uppercase', marginBottom: 8, marginTop: -4,
             }}
           >
@@ -331,7 +331,7 @@ export default function TessDiscoveryScreen({ player, visualCandidate, onBack, o
           </TelescopeConsole>
 
           {showMap ? (
-            <div style={{ marginTop: 8, textAlign: 'center', fontFamily: 'var(--ln-font-mono)', fontSize: 10, color: targetChosen ? 'var(--ln-amber)' : '#5d7390' }}>
+            <div style={{ marginTop: 8, textAlign: 'center', fontFamily: 'var(--ln-font-mono)', fontSize: 10, color: targetChosen ? 'var(--ln-amber)' : 'var(--ln-text-muted)' }}>
               {targetChosen
                 ? `Target locked — ${pool.find(c => c.id === targetChosen)?.toi ?? targetChosen}`
                 : 'Tap a star to point the satellite tomorrow · green = already searched'}
@@ -348,7 +348,7 @@ export default function TessDiscoveryScreen({ player, visualCandidate, onBack, o
               )}
             </div>
           ) : (
-            <div style={{ marginTop: 8, textAlign: 'center', fontFamily: 'var(--ln-font-mono)', fontSize: 10, color: markCount > 0 ? 'var(--ln-amber)' : '#5d7390' }}>
+            <div style={{ marginTop: 8, textAlign: 'center', fontFamily: 'var(--ln-font-mono)', fontSize: 10, color: markCount > 0 ? 'var(--ln-amber)' : 'var(--ln-text-muted)' }}>
               {markCount === 0
                 ? 'Drag over the lightcurve to mark a transit'
                 : `${markCount} region${markCount !== 1 ? 's' : ''} marked`}
@@ -394,7 +394,7 @@ export default function TessDiscoveryScreen({ player, visualCandidate, onBack, o
       <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 10, fontWeight: 800, letterSpacing: '0.22em', color: classification.verdict === 'planet' ? 'var(--ln-ok)' : 'var(--ln-cyan)', textTransform: 'uppercase', marginBottom: 6 }}>
         Discovery Logged
       </div>
-      <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 13, color: '#dbe8f8', lineHeight: 1.45 }}>
+      <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 13, color: 'var(--ln-text-dim)', lineHeight: 1.45 }}>
         {classification.verdict === 'planet' && discoveredTarget
           ? `${candidate.host} is now a candidate world in your operations map. A survey flight is available from the Mission Board, and this first submission awarded research XP.`
           : 'Your annotation was saved to the review queue. Noise marks matter: they keep the shared feed clean for the next real transit, and first submissions award research XP.'}
@@ -410,7 +410,7 @@ export default function TessDiscoveryScreen({ player, visualCandidate, onBack, o
   ) : null
 
   return (
-    <div className="game-screen" data-testid="tess-discovery-screen">
+    <div className="game-screen theme-blueprint ln-scene-tess-discovery" data-testid="tess-discovery-screen">
       <TopBar eyebrow="INSTRUMENT DATA FEED · DAILY DOWNLINK" title={candidate.toi} onBack={onBack} />
       {process.env.NODE_ENV === 'development' && (
         <div style={{ position: 'absolute', top: 72, left: 'var(--ln-s-4)', right: 'var(--ln-s-4)', zIndex: 5 }}>
@@ -471,7 +471,7 @@ function GateScreen({ eyebrow, icon, tone, title, body, onBack, action, devBar }
   const bg = tone === 'amber' ? 'rgba(245,166,35,0.12)' : 'rgba(57,211,239,0.12)'
   const border = tone === 'amber' ? 'rgba(245,166,35,0.42)' : 'rgba(57,211,239,0.42)'
   return (
-    <div className="game-screen">
+    <div className="game-screen theme-blueprint ln-scene-tess-discovery">
       <NebulaBackdrop />
       <TopBar eyebrow={eyebrow} title="Transit Telescope" onBack={onBack} />
       <div className="screen-scroll" data-ui-zone={UI_ZONES.screenContent}>
@@ -483,7 +483,7 @@ function GateScreen({ eyebrow, icon, tone, title, body, onBack, action, devBar }
             </div>
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ fontFamily: 'var(--ln-font-display)', fontWeight: 800, fontSize: 15, color: accent }}>{title}</div>
-              <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 12, color: '#a9b8ce', marginTop: 2 }}>{body}</div>
+              <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 12, color: 'var(--ln-text-muted)', marginTop: 2 }}>{body}</div>
             </div>
           </div>
           {action && <div style={{ marginTop: 12 }}>{action}</div>}

@@ -156,7 +156,7 @@ export default function SurfaceOpsScreen({
   }`
 
   return (
-    <div className={styles.screen} data-testid="surface-ops-screen" data-view={view}>
+    <div className={`theme-blueprint ln-scene-surface-ops ${styles.screen}`} data-testid="surface-ops-screen" data-view={view}>
       <TopBar
         eyebrow="SURFACE OPS · SOLO SITE CONTROL"
         title="Surface Operations"

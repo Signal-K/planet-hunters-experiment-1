@@ -70,8 +70,16 @@ export function enqueueSurvey(surveyKey: string, delayMs = 1800) {
 
 const ONBOARDING_MISSION_ID: Record<string, string> = {
   lnm_m1_complete: 'm1',
-  lnm_m2_complete: 'm2',
-  lnm_m3_complete: 'm3',
+  // Split 2026-08-27 (KES-262) — one 4-question m2/m3 survey each became 4
+  // single-question surveys; all still bucket under the same milestone id.
+  lnm_m2_mission_choice: 'm2',
+  lnm_m2_rocket_clarity: 'm2',
+  lnm_m2_rating: 'm2',
+  lnm_m2_freetext: 'm2',
+  lnm_m3_transport_clarity: 'm3',
+  lnm_m3_client_choice: 'm3',
+  lnm_m3_rating: 'm3',
+  lnm_m3_freetext: 'm3',
   lnm_end_of_content: 'end_of_content',
 }
 

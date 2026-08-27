@@ -950,6 +950,65 @@ button { cursor: pointer; }
     var(--ln-void) !important;
 }
 
+/* Cargo Transfer (KES-262) — was still hardcoded dark (theme-deep, near-black
+   hex) with no ambient backdrop, reading as a UI panel under a canvas rather
+   than a berth/depot scene. Same lit-mesh recipe as Mission Board, just a
+   warmer secondary tint (deep-space blue leads for a cargo depot). */
+.ln-scene-delivery::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(115deg, transparent 0 44%, var(--ln-cyan-soft) 44.2% 44.35%, transparent 44.5%),
+    linear-gradient(25deg, transparent 0 62%, var(--ln-ok-soft) 62.2% 62.35%, transparent 62.5%),
+    repeating-linear-gradient(90deg, transparent 0 47px, var(--ln-hairline) 48px, transparent 49px),
+    repeating-linear-gradient(0deg, transparent 0 47px, var(--ln-hairline) 48px, transparent 49px);
+  opacity: 0.42;
+  z-index: 0;
+}
+.ln-scene-delivery {
+  isolation: isolate;
+  overflow: hidden;
+  background:
+    radial-gradient(ellipse at 78% 30%, var(--ln-cyan-soft), transparent 34%),
+    radial-gradient(ellipse at 20% 78%, var(--ln-ok-soft), transparent 30%),
+    var(--ln-void) !important;
+}
+
+/* Landing, Intro, Asteroid Discovery, TESS Discovery, Surface Ops (KES-262) —
+   same lit-mesh recipe as Mission Board/Delivery, one block per screen so
+   each keeps its own ambient emphasis rather than sharing a generic look. */
+.ln-scene-landing::before,
+.ln-scene-intro::before,
+.ln-scene-asteroid-discovery::before,
+.ln-scene-tess-discovery::before,
+.ln-scene-surface-ops::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(115deg, transparent 0 44%, var(--ln-cyan-soft) 44.2% 44.35%, transparent 44.5%),
+    linear-gradient(25deg, transparent 0 62%, var(--ln-ok-soft) 62.2% 62.35%, transparent 62.5%),
+    repeating-linear-gradient(90deg, transparent 0 47px, var(--ln-hairline) 48px, transparent 49px),
+    repeating-linear-gradient(0deg, transparent 0 47px, var(--ln-hairline) 48px, transparent 49px);
+  opacity: 0.42;
+  z-index: 0;
+}
+.ln-scene-landing,
+.ln-scene-intro,
+.ln-scene-asteroid-discovery,
+.ln-scene-tess-discovery,
+.ln-scene-surface-ops {
+  isolation: isolate;
+  overflow: hidden;
+  background:
+    radial-gradient(ellipse at 16% 20%, var(--ln-cyan-soft), transparent 36%),
+    radial-gradient(ellipse at 84% 70%, var(--ln-ok-soft), transparent 30%),
+    var(--ln-void) !important;
+}
+
 /* TargetPicker's wayfinding footer contains both the step rail and a large
    primary CTA. Reserve their full footprint so the galaxy frame never sits
    underneath the sticky actions on wide or narrow screens. */
@@ -1368,7 +1427,7 @@ button { cursor: pointer; }
 .rocket-mark svg { display: block; overflow: visible; }
 @keyframes rocket-thrust { from { filter: drop-shadow(0 0 8px rgba(112,217,234,.5)); } to { filter: drop-shadow(0 0 16px rgba(112,217,234,.9)); } }
 .transit-readout { position: absolute; left: var(--ln-s-3); right: var(--ln-s-3); bottom: var(--ln-s-5); display: grid; gap: var(--ln-s-3); }
-.transit-readout > div:first-child { display: flex; justify-content: space-between; color: var(--ln-text-muted); font: 700 11px var(--ln-font-display); letter-spacing: var(--ln-tr-loose); text-transform: uppercase; }
+.transit-readout > div { display: flex; justify-content: space-between; color: var(--ln-text-muted); font: 700 11px var(--ln-font-display); letter-spacing: var(--ln-tr-loose); text-transform: uppercase; }
 .transit-readout strong { color: var(--ln-cyan-bright); }
 .progress-track { height: 12px; overflow: hidden; border: 1px solid var(--ln-cyan-border); border-radius: var(--ln-r-pill); background: var(--ln-void); }
 .progress-track span { display: block; height: 100%; background: linear-gradient(90deg, var(--ln-amber), var(--ln-cyan)); box-shadow: var(--ln-glow-cyan); transition: width 100ms linear; }
@@ -2100,6 +2159,34 @@ html[data-coach-target="build-structure-strip"] [data-coach-id="build-structure-
   border-radius: 4px;
   border: 1px solid var(--ln-bp-pink-border);
   white-space: nowrap;
+}
+/* Passing waypoints (KES-262) — small unfilled markers along the trajectory
+   that fill in as the leg passes them, giving the wait a sense of motion
+   past real points rather than a bare percentage climbing. */
+.theme-blueprint .transit-plot-waypoint {
+  fill: var(--ln-bp-paper);
+  stroke: var(--ln-bp-ink-dim);
+  stroke-width: 0.45;
+  opacity: 0.6;
+}
+.theme-blueprint .transit-plot-waypoint--passed {
+  fill: var(--ln-bp-blue);
+  stroke: var(--ln-bp-ink);
+  opacity: 1;
+}
+.theme-blueprint .transit-waypoint-label {
+  position: absolute;
+  transform: translate(-50%, calc(-100% - 6px));
+  font: 700 8px var(--ln-font-mono);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ln-bp-ink-dim);
+  white-space: nowrap;
+  opacity: 0.7;
+}
+.theme-blueprint .transit-waypoint-label--passed {
+  color: var(--ln-bp-blue);
+  opacity: 1;
 }
 
 /* ─── KES-211 — DebriefScreen blueprint pass. ────────────────────────────

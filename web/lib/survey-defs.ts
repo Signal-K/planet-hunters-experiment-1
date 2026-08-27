@@ -122,25 +122,72 @@ export const SURVEY_DEFS: Record<string, Survey> = {
       { id: 'm1-freetext', type: 'open', question: 'Anything confusing?' },
     ],
   },
-  lnm_m2_complete: {
-    id: '019f36f7-5cd2-0000-ab19-7335d90b1e4a',
-    name: '[Landnam / Onboarding] M2 Mission Feedback',
-    posthogUrl: 'https://us.posthog.com/project/199773/surveys/019f36f7-5cd2-0000-ab19-7335d90b1e4a',
+  // lnm_m2_complete / lnm_m3_complete (each 4 questions paged in one modal)
+  // retired 2026-08-27 (KES-262) — split into single-question surveys below,
+  // enqueued together through the existing 60s-gap FIFO dispatcher instead of
+  // one multi-question SurveySheet. Old PostHog survey definitions stopped,
+  // not deleted, for response-history continuity.
+  lnm_m2_mission_choice: {
+    id: '01a04132-ecf7-0000-6fd8-14eec14d4fa0',
+    name: '[Landnam / Onboarding] M2 Mission Choice',
+    posthogUrl: 'https://us.posthog.com/project/199773/surveys/01a04132-ecf7-0000-6fd8-14eec14d4fa0',
     questions: [
       { id: 'm2-mission-choice', type: 'multiple_choice', question: 'How did picking a contract from a few options feel?', choices: ['Meaningful', 'Fine but simple', 'Confusing', 'I did not notice I had a choice'] },
+    ],
+  },
+  lnm_m2_rocket_clarity: {
+    id: '01a04133-4313-0000-d7cc-81dbda5f592e',
+    name: '[Landnam / Onboarding] M2 Rocket Clarity',
+    posthogUrl: 'https://us.posthog.com/project/199773/surveys/01a04133-4313-0000-d7cc-81dbda5f592e',
+    questions: [
       { id: 'm2-rocket-clarity', type: 'multiple_choice', question: 'How clear was the Prospector purchase step?', choices: ['Totally clear', 'A bit confusing', 'I wasn\'t sure why I needed a new rocket', 'I missed it at first'] },
+    ],
+  },
+  lnm_m2_rating: {
+    id: '01a04133-80ef-0000-9eed-da1058cb050f',
+    name: '[Landnam / Onboarding] M2 Mission Rating',
+    posthogUrl: 'https://us.posthog.com/project/199773/surveys/01a04133-80ef-0000-9eed-da1058cb050f',
+    questions: [
       { id: 'm2-rating', type: 'rating', question: 'How satisfying was completing that mission?', scale: 5 },
+    ],
+  },
+  lnm_m2_freetext: {
+    id: '01a04133-8ba2-0000-3c16-b3024c93317d',
+    name: '[Landnam / Onboarding] M2 Friction Freetext',
+    posthogUrl: 'https://us.posthog.com/project/199773/surveys/01a04133-8ba2-0000-3c16-b3024c93317d',
+    questions: [
       { id: 'm2-freetext', type: 'open', question: 'Anything that slowed you down?' },
     ],
   },
-  lnm_m3_complete: {
-    id: '019f36f7-9396-0000-9271-74f9bba0546a',
-    name: '[Landnam / Onboarding] M3 Graduation',
-    posthogUrl: 'https://us.posthog.com/project/199773/surveys/019f36f7-9396-0000-9271-74f9bba0546a',
+  lnm_m3_transport_clarity: {
+    id: '01a04133-c454-0000-ab38-aabdb839e333',
+    name: '[Landnam / Onboarding] M3 Transport Clarity',
+    posthogUrl: 'https://us.posthog.com/project/199773/surveys/01a04133-c454-0000-ab38-aabdb839e333',
     questions: [
       { id: 'm3-transport-clarity', type: 'multiple_choice', question: 'How clear was it that this was a two-stop delivery job — mine, then drop cargo at a second target?', choices: ['Crystal clear', 'Mostly clear', 'A bit confusing', 'I did not realize there were two stops'] },
+    ],
+  },
+  lnm_m3_client_choice: {
+    id: '01a04133-d9ce-0000-4af3-8028e050f34b',
+    name: '[Landnam / Onboarding] M3 Client Choice',
+    posthogUrl: 'https://us.posthog.com/project/199773/surveys/01a04133-d9ce-0000-4af3-8028e050f34b',
+    questions: [
       { id: 'm3-client-choice', type: 'multiple_choice', question: 'How did picking between the two clients feel?', choices: ['Meaningful', 'Fine but simple', 'Confusing', 'I did not notice I had a choice'] },
+    ],
+  },
+  lnm_m3_rating: {
+    id: '01a04133-fe23-0000-a0a0-052be8975548',
+    name: '[Landnam / Onboarding] M3 Mission Rating',
+    posthogUrl: 'https://us.posthog.com/project/199773/surveys/01a04133-fe23-0000-a0a0-052be8975548',
+    questions: [
       { id: 'm3-rating', type: 'rating', question: 'How are you feeling about the game after three missions?', scale: 5 },
+    ],
+  },
+  lnm_m3_freetext: {
+    id: '01a04134-099a-0000-3172-0ebc71e4b1ab',
+    name: '[Landnam / Onboarding] M3 Freetext',
+    posthogUrl: 'https://us.posthog.com/project/199773/surveys/01a04134-099a-0000-3172-0ebc71e4b1ab',
+    questions: [
       { id: 'm3-freetext', type: 'open', question: 'Anything we should know before you play more?' },
     ],
   },

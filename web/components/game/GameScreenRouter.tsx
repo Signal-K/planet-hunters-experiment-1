@@ -177,7 +177,17 @@ export function ScreenContent({
             if (building === 'scan-station') return game.go('scan-station')
             if (building === 'deep-space-telescope') return game.go('asteroid-discovery')
             if (building === 'academy' || building === 'astronaut-academy') return game.go('academy')
-            if (building === 'launchpad' || building === 'missions') {
+            if (building === 'missions') {
+              // Unlike Launchpad below, a run in flight does NOT bounce the
+              // player away from the Mission Board — they may reasonably want
+              // to browse/plan the next contract while a leg is in flight.
+              // The Hub resume banner and MissionTicker already cover getting
+              // back into the active mission, so the Board doesn't need to
+              // also gate on it (KES-262).
+              if (game.player.pendingLaunch) return game.go('fab')
+              return game.goToMissions()
+            }
+            if (building === 'launchpad') {
               // A run in flight always wins — the pad is how you get back to it.
               if (game.player.activeMission) {
                 captureGameEvent('mission_resumed', { mission_phase: game.player.missionPhase ?? 'transit' })
@@ -191,8 +201,7 @@ export function ScreenContent({
               // names the Mission Board directly via its own CTA (HubScreen's
               // launchpadCallout calls onNav('missions') and never reaches this
               // handler), so onboarding isn't blocked from its first contract.
-              if (building === 'launchpad') return game.go('launchpad')
-              game.goToMissions()
+              return game.go('launchpad')
             }
           }}
           onUpgradeLaunchpad={() => game.upgradeLaunchpad()}

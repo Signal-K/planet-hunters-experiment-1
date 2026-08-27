@@ -9,7 +9,8 @@ beforeEach(() => {
   const ALL_SURVEY_KEYS = [
     'lnm_first_launch', 'lnm_mining_feel', 'lnm_client_pick',
     'lnm_mission_friction', 'lnm_progression_feel', 'lnm_end_of_content',
-    'lnm_return_visit', 'lnm_m1_complete', 'lnm_m2_complete', 'lnm_m3_complete',
+    'lnm_return_visit', 'lnm_m1_complete', 'lnm_m2_mission_choice', 'lnm_m2_rocket_clarity', 'lnm_m2_rating', 'lnm_m2_freetext',
+        'lnm_m3_transport_clarity', 'lnm_m3_client_choice', 'lnm_m3_rating', 'lnm_m3_freetext',
     'lnm_satellite_clarity', 'lnm_resume_mission', 'lnm_base_building', 'lnm_rover_clarity',
   ]
   cy.on('window:before:load', win => {

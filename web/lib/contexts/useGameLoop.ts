@@ -24,7 +24,10 @@ import { pbShared } from '@/lib/pb'
 import { pbLandnam } from '@/lib/pb-landnam'
 import { justFinishedOnboarding } from '@/lib/game-state'
 
-const ORBIT_MS_PER_UNIT = 2 * 60 * 1000
+// 42s/orbit-unit — a ~65% cut from the original 2min/unit pace (KES-262):
+// full round trips were running long enough that players felt locked out of
+// the game for the whole leg.
+const ORBIT_MS_PER_UNIT = 42 * 1000
 // First-time-only reward for classifying a TESS candidate — repeat looks at an
 // already-classified subject earn nothing (see submitTessClassification).
 const RESEARCH_XP_PER_FIRST_TESS_CLASSIFICATION = 15
@@ -716,8 +719,21 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
       captureGameEvent('milestone_reached', { milestone: `m${newMissionsDone}` })
     }
     const milestoneVariant = getMilestoneSurveyVariant()
-    if (newMissionsDone === 2 && milestoneVariant === 'm2') enqueueSurvey('lnm_m2_complete', 3000)
-    if (newMissionsDone === 3 && milestoneVariant === 'm3') enqueueSurvey('lnm_m3_complete', 5000)
+    // Split 2026-08-27 (KES-262) — was one 4-question survey paged in a
+    // single modal; now 4 single-question surveys enqueued together and let
+    // the existing 60s-gap FIFO dispatcher (lib/surveys.ts) space them out.
+    if (newMissionsDone === 2 && milestoneVariant === 'm2') {
+      enqueueSurvey('lnm_m2_mission_choice', 3000)
+      enqueueSurvey('lnm_m2_rocket_clarity', 3000)
+      enqueueSurvey('lnm_m2_rating', 3000)
+      enqueueSurvey('lnm_m2_freetext', 3000)
+    }
+    if (newMissionsDone === 3 && milestoneVariant === 'm3') {
+      enqueueSurvey('lnm_m3_transport_clarity', 5000)
+      enqueueSurvey('lnm_m3_client_choice', 5000)
+      enqueueSurvey('lnm_m3_rating', 5000)
+      enqueueSurvey('lnm_m3_freetext', 5000)
+    }
     if (!catalog.missions.some(m => m.sequence === newMissionsDone + 1)) enqueueSurvey('lnm_end_of_content', 5000)
   }, [addToast, catalog.missions, setState, stateRef])
 

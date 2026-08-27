@@ -178,9 +178,9 @@ export default function AsteroidDiscoveryScreen({ player, visualCandidate, onBac
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
             <LiveDot active={!classification} />
-            <div style={{ fontFamily: 'var(--ln-font-display)', fontWeight: 800, fontSize: 18, color: '#e8f0fe' }}>{candidate.tempDesig}</div>
+            <div style={{ fontFamily: 'var(--ln-font-display)', fontWeight: 800, fontSize: 18, color: 'var(--ln-text)' }}>{candidate.tempDesig}</div>
           </div>
-          <div style={{ fontFamily: 'var(--ln-font-mono)', fontSize: 10, color: '#6b7fa3', marginTop: 2 }}>
+          <div style={{ fontFamily: 'var(--ln-font-mono)', fontSize: 10, color: 'var(--ln-text-muted)', marginTop: 2 }}>
             SCORE {candidate.score} / V{candidate.vMag.toFixed(1)} / DISC. {candidate.discoveryDate || 'UNKNOWN'}
           </div>
         </div>
@@ -192,7 +192,7 @@ export default function AsteroidDiscoveryScreen({ player, visualCandidate, onBac
       <div
         data-testid="neocp-data-provenance"
         style={{
-          fontFamily: 'var(--ln-font-mono)', fontSize: 8, letterSpacing: '0.06em', color: '#4a5a75',
+          fontFamily: 'var(--ln-font-mono)', fontSize: 8, letterSpacing: '0.06em', color: 'var(--ln-text-dim)',
           textTransform: 'uppercase', marginBottom: 10, marginTop: -4,
         }}
       >
@@ -232,14 +232,14 @@ export default function AsteroidDiscoveryScreen({ player, visualCandidate, onBac
       <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 10, fontWeight: 800, letterSpacing: '0.22em', color: classification.verdict === 'likely_real' ? 'var(--ln-ok)' : 'var(--ln-cyan)', textTransform: 'uppercase', marginBottom: 6 }}>
         Annotation Logged
       </div>
-      <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 13, color: '#dbe8f8', lineHeight: 1.45 }}>
+      <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 13, color: 'var(--ln-text-dim)', lineHeight: 1.45 }}>
         Your call was saved to the review queue. First submissions award research XP — real NEO follow-up observers use this same score/arc/magnitude data to prioritise which candidates get chased before they drop off the confirmation page.
       </div>
     </Panel>
   ) : null
 
   return (
-    <div className="game-screen" data-testid="asteroid-discovery-screen">
+    <div className="game-screen theme-blueprint ln-scene-asteroid-discovery" data-testid="asteroid-discovery-screen">
       <TopBar eyebrow="INSTRUMENT DATA FEED · DAILY DOWNLINK" title={candidate.tempDesig} onBack={onBack} />
       {coach.visible && <AsteroidDiscoveryCoach onDismiss={coach.dismiss} />}
       {process.env.NODE_ENV === 'development' && (
@@ -293,7 +293,7 @@ function GateScreen({ eyebrow, icon, tone, title, body, onBack, action, devBar }
   const bg = tone === 'amber' ? 'rgba(245,166,35,0.12)' : 'rgba(57,211,239,0.12)'
   const border = tone === 'amber' ? 'rgba(245,166,35,0.42)' : 'rgba(57,211,239,0.42)'
   return (
-    <div className="game-screen">
+    <div className="game-screen theme-blueprint ln-scene-asteroid-discovery">
       <NebulaBackdrop />
       <TopBar eyebrow={eyebrow} title="Deep Space Telescope" onBack={onBack} />
       <div className="screen-scroll" data-ui-zone={UI_ZONES.screenContent}>
@@ -305,7 +305,7 @@ function GateScreen({ eyebrow, icon, tone, title, body, onBack, action, devBar }
             </div>
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ fontFamily: 'var(--ln-font-display)', fontWeight: 800, fontSize: 15, color: accent }}>{title}</div>
-              <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 12, color: '#a9b8ce', marginTop: 2 }}>{body}</div>
+              <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 12, color: 'var(--ln-text-muted)', marginTop: 2 }}>{body}</div>
             </div>
           </div>
           {action && <div style={{ marginTop: 12 }}>{action}</div>}

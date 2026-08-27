@@ -654,6 +654,40 @@ export default function HubScreen({ player, rocketVariant = 'explorer', hasCoach
               </div>
             ) : (
               <>
+                {/* Resume-mission banner — always visible on the persistent
+                    dock whenever a leg is in flight (KES-262). The existing
+                    Resume Mission CTA lives inside ProgressionCard, which
+                    shares a corner slot with other progression cards and is
+                    easy to miss; this is a dedicated, unmissable row instead. */}
+                {player.activeMission && (
+                  <button
+                    data-testid="hub-resume-mission-banner"
+                    onClick={() => onNav(player.missionPhase ?? 'transit')}
+                    style={{
+                      width: '100%', boxSizing: 'border-box', textAlign: 'left', cursor: 'pointer',
+                      display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12,
+                      background: 'var(--hub-cyan, #6fd3ea)',
+                      border: 'none', borderRadius: 12, padding: '10px 14px', marginBottom: 10,
+                    }}
+                  >
+                    <div style={{ minWidth: 0 }}>
+                      <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 9, fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'rgba(8,13,24,0.7)' }}>
+                        Mission in progress
+                      </div>
+                      <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 13, fontWeight: 800, color: '#080d18', marginTop: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                        {player.activeMission.label}
+                      </div>
+                    </div>
+                    <span style={{
+                      flexShrink: 0, padding: '6px 10px', borderRadius: 999,
+                      background: '#080d18', color: 'var(--hub-cyan, #6fd3ea)',
+                      fontFamily: 'var(--ln-font-display)', fontSize: 9, fontWeight: 800,
+                      letterSpacing: '0.12em', textTransform: 'uppercase', whiteSpace: 'nowrap',
+                    }}>
+                      Resume ›
+                    </span>
+                  </button>
+                )}
                 {/* Row 1 — status + primary CTA, the reference's
                     "Facility Tier · status" + primary-action row. */}
                 <div className="hub-bottom-dock-main" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
