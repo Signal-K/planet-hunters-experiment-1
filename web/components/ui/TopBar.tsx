@@ -43,16 +43,6 @@ function BackIcon() {
   )
 }
 
-function MenuIcon() {
-  return (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
-      <line x1="3" y1="8" x2="21" y2="8"/>
-      <line x1="3" y1="12" x2="21" y2="12"/>
-      <line x1="3" y1="16" x2="21" y2="16"/>
-    </svg>
-  )
-}
-
 function ClockIcon() {
   return (
     <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
@@ -97,10 +87,12 @@ export default function TopBar({ eyebrow, title, onBack, right, dense, solid, gl
       pointerEvents: 'none',
     }}>
       <div style={{ pointerEvents: 'auto', display: 'flex', alignItems: 'center', gap: 8 }}>
-        {onBack
-          ? <IconBtn onClick={onBack} ariaLabel="back" testId="top-bar-back"><BackIcon /></IconBtn>
-          : <IconBtn ariaLabel="menu"><MenuIcon /></IconBtn>
-        }
+        {/* No dead fallback button (KES-265) — a screen that has nothing for
+            this slot to do (e.g. Debrief) just doesn't render one. A working
+            settings/menu entry point already exists elsewhere in the game
+            chrome (GameChrome's own settings button, Sidebar), so this isn't
+            the only way in. */}
+        {onBack && <IconBtn onClick={onBack} ariaLabel="back" testId="top-bar-back"><BackIcon /></IconBtn>}
         {levelBadge && (
           <span style={{
             display: 'flex', alignItems: 'center', gap: 4,
