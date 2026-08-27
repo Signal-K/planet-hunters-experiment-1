@@ -1,14 +1,15 @@
 'use client'
 
+import { useState } from 'react'
 import TopBar from '@/components/ui/TopBar'
-import Panel from '@/components/ui/Panel'
-import StatusPill from '@/components/ui/StatusPill'
-import { PrimaryBtn } from '@/components/ui/Button'
 import { UI_ZONES } from '@/lib/ui-zones'
 import { SKILL_NODES, canUnlockSkillNode, hasSkill } from '@/lib/data/skills'
 import { LICENSE_GRADE_ORDER, LICENSE_GRADE_XP_GATES } from '@/lib/systems/ProgressionSystem'
 import type { LicenseGrade } from '@/lib/game-types'
+import type { SkillBranch, SkillNodeId } from '@/lib/data/skills'
+import { HubWorldBackground } from '@/components/game/hub/HubWorldBackground'
 import SkillTreeCoach, { useSkillTreeCoach } from '@/components/game/SkillTreeCoach'
+import styles from './SkillTreeScreen.module.css'
 
 interface Firsts {
   firstMissionDone: boolean
@@ -30,6 +31,13 @@ interface SkillTreeScreenProps {
   firsts: Firsts
 }
 
+const BRANCHES: Record<SkillBranch, { label: string; short: string; detail: string }> = {
+  mining: { label: 'Mining Systems', short: 'MIN', detail: 'Laser output and field yield' },
+  cargo: { label: 'Cargo Systems', short: 'CAR', detail: 'Hold capacity and handling' },
+  range: { label: 'Range Systems', short: 'RNG', detail: 'Travel time and target reach' },
+  engineering: { label: 'Engineering', short: 'ENG', detail: 'Ship configuration and rooms' },
+}
+
 export default function SkillTreeScreen({
   skillPoints,
   unlockedSkillNodes,
@@ -40,90 +48,200 @@ export default function SkillTreeScreen({
   onUpgradeLicenseGrade,
   firsts,
 }: SkillTreeScreenProps) {
+  const [selectedNodeId, setSelectedNodeId] = useState<SkillNodeId>(SKILL_NODES[0].id)
   const gradeIndex = LICENSE_GRADE_ORDER.indexOf(licenseGrade)
   const nextGrade = LICENSE_GRADE_ORDER[gradeIndex + 1]
   const nextGateXP = nextGrade ? LICENSE_GRADE_XP_GATES[nextGrade] : null
   const canUpgrade = !!nextGrade && researchXP >= (nextGateXP ?? Infinity)
+  const selectedNode = SKILL_NODES.find(node => node.id === selectedNodeId) ?? SKILL_NODES[0]
+  const selectedUnlocked = hasSkill(unlockedSkillNodes, selectedNode.id)
+  const selectedAffordable = canUnlockSkillNode({ id: selectedNode.id, skillPoints, unlockedSkillNodes })
   const coach = useSkillTreeCoach()
 
   return (
-    <div className="game-screen theme-blueprint" data-testid="skill-tree-screen" style={{ position: 'relative', width: '100%', height: '100%', minHeight: '100%', display: 'flex', flexDirection: 'column' }}>
-      <TopBar eyebrow="EARTH BASE · TRAINING" title="Skill Tree" onBack={onBack} solid />
+    <div className={styles.screen} data-testid="skill-tree-screen">
+      <HubWorldBackground phase="night" composition="earth-base-wide" />
+      <div className={styles.sceneWash} aria-hidden="true" />
+      <div className={styles.blueprintGrid} aria-hidden="true" />
+
+      <TopBar eyebrow="EARTH BASE · ACADEMY" title="Skill Tree" onBack={onBack} glass />
       {coach.visible && <SkillTreeCoach onDismiss={coach.dismiss} />}
 
-      <div data-ui-zone={UI_ZONES.screenContent} style={{ flex: 1, overflowY: 'auto', padding: '16px', marginTop: 56, display: 'flex', flexDirection: 'column', gap: 16 }}>
-        <Panel accent="var(--ln-cyan)">
-          <div
-            title="License Grade raises the ceiling on what you're allowed to build and fly. It's earned with Research XP and is separate from Skill Points below."
-            style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 8 }}
-          >
-            <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 13, fontWeight: 800, color: 'var(--ln-text)' }}>License Grade</div>
-            <StatusPill kind="info">{licenseGrade}</StatusPill>
+      <div data-ui-zone={UI_ZONES.screenContent} className={styles.content}>
+        <header className={styles.hero}>
+          <div>
+            <div className={styles.kicker}>PROGRAM DEVELOPMENT / RESEARCH CONSOLE</div>
+            <h2 className={styles.heading}>Build the next capability.</h2>
+            <p className={styles.subheading}>Permanent upgrades for the Earth Base flight program.</p>
           </div>
-          <div style={{ display: 'flex', gap: 4, marginBottom: 8 }}>
-            {LICENSE_GRADE_ORDER.map((grade, i) => (
-              <div key={grade} style={{ flex: 1, height: 6, borderRadius: 2, background: i <= gradeIndex ? 'var(--ln-cyan)' : 'rgba(112,217,234,0.15)', border: '1px solid rgba(112,217,234,0.3)' }} />
-            ))}
+          <div className={styles.heroReadout}>
+            <span className={styles.readoutLabel}>AVAILABLE</span>
+            <strong>{skillPoints.toString().padStart(2, '0')} SP</strong>
+            <span className={styles.readoutHint}>RESEARCH ALLOCATION</span>
           </div>
-            <div style={{ fontFamily: 'var(--ln-font-mono)', fontSize: 11, color: 'var(--ln-text-dim)', marginBottom: nextGrade ? 12 : 0 }}>
-            {researchXP} RESEARCH XP{nextGrade ? ` · ${nextGateXP} NEEDED FOR ${nextGrade.toUpperCase()}` : ' · MAX GRADE REACHED'}
-          </div>
-          {nextGrade && (
-            <PrimaryBtn kind="cyan" disabled={!canUpgrade} onClick={() => onUpgradeLicenseGrade(nextGrade as Exclude<LicenseGrade, 'Grade I'>)}>
-              Upgrade to {nextGrade}
-            </PrimaryBtn>
-          )}
-        </Panel>
+        </header>
 
-        <div>
-          <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 11, fontWeight: 800, letterSpacing: '0.15em', color: '#6b7fa3', textTransform: 'uppercase', marginBottom: 8 }}>
-            Skill Nodes · {skillPoints} SP available
-          </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-            {SKILL_NODES.map(node => {
-              const unlocked = hasSkill(unlockedSkillNodes, node.id)
-              const affordable = canUnlockSkillNode({ id: node.id, skillPoints, unlockedSkillNodes })
+        <div className={styles.layout}>
+          <aside className={styles.branchRail} aria-label="Skill branches">
+            <div className={styles.sectionLabel}>SYSTEM BRANCHES</div>
+            {(Object.keys(BRANCHES) as SkillBranch[]).map(branch => {
+              const branchNodes = SKILL_NODES.filter(node => node.branch === branch)
+              const branchUnlocked = branchNodes.filter(node => hasSkill(unlockedSkillNodes, node.id)).length
               return (
-                <Panel
-                  key={node.id}
-                  accent={unlocked ? 'var(--ln-ok)' : 'var(--ln-cyan)'}
-                  style={{ opacity: unlocked ? 1 : (affordable ? 1 : 0.5) }}
-                  title={`${node.name} (${node.branch}) — ${node.description}`}
-                >
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8, marginBottom: 6 }}>
-                    <div>
-                  <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 8, fontWeight: 700, letterSpacing: '0.18em', color: 'var(--ln-text-muted)', textTransform: 'uppercase' }}>{node.branch}</div>
-                  <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 13, fontWeight: 800, color: 'var(--ln-text)' }}>{node.name}</div>
-                    </div>
-                    <StatusPill kind={unlocked ? 'ok' : 'mute'}>{unlocked ? 'Unlocked' : `${node.cost} SP`}</StatusPill>
-                  </div>
-                  <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 12, color: 'var(--ln-text-dim)', marginBottom: unlocked ? 0 : 10 }}>{node.description}</div>
-                  {!unlocked && (
-                    <PrimaryBtn kind="cyan" disabled={!affordable} onClick={() => onUnlock(node.id)}>
-                      Unlock
-                    </PrimaryBtn>
-                  )}
-                </Panel>
+                <div className={styles.branchCard} key={branch}>
+                  <span className={styles.branchMark}>{BRANCHES[branch].short}</span>
+                  <span className={styles.branchCopy}>
+                    <strong>{BRANCHES[branch].label}</strong>
+                    <small>{BRANCHES[branch].detail}</small>
+                  </span>
+                  <span className={styles.branchCount}>{branchUnlocked}/{branchNodes.length}</span>
+                </div>
               )
             })}
-          </div>
+            <div className={styles.branchLegend}>
+              <span className={styles.legendDot} />
+              <span>Tap a node to inspect</span>
+            </div>
+          </aside>
+
+          <section className={`${styles.treePanel} ln-glass-panel`} aria-labelledby="skill-nodes-heading">
+            <div className={styles.panelHeader}>
+              <div>
+                <div className={styles.sectionLabel}>PROGRESSION MAP</div>
+                <h3 id="skill-nodes-heading">Skill Nodes</h3>
+              </div>
+              <div className={styles.panelTelemetry}>
+                <span>{unlockedSkillNodes.length.toString().padStart(2, '0')} INSTALLED</span>
+                <span>{SKILL_NODES.length.toString().padStart(2, '0')} TOTAL</span>
+              </div>
+            </div>
+
+            <div className={styles.treeCanvas}>
+              <svg className={styles.treeLines} viewBox="0 0 100 20" preserveAspectRatio="none" aria-hidden="true">
+                <line x1="12.5" y1="10" x2="87.5" y2="10" />
+                <line x1="12.5" y1="4" x2="12.5" y2="16" />
+                <line x1="37.5" y1="4" x2="37.5" y2="16" />
+                <line x1="62.5" y1="4" x2="62.5" y2="16" />
+                <line x1="87.5" y1="4" x2="87.5" y2="16" />
+              </svg>
+              <div className={styles.nodeGrid}>
+                {SKILL_NODES.map(node => {
+                  const unlocked = hasSkill(unlockedSkillNodes, node.id)
+                  const affordable = canUnlockSkillNode({ id: node.id, skillPoints, unlockedSkillNodes })
+                  const selected = selectedNode.id === node.id
+                  return (
+                    <article
+                      className={`${styles.nodeCard} ${selected ? styles.nodeCardSelected : ''} ${unlocked ? styles.nodeCardUnlocked : ''}`}
+                      key={node.id}
+                    >
+                      <button
+                        className={styles.nodeButton}
+                        onClick={() => setSelectedNodeId(node.id)}
+                        aria-label={`Inspect ${node.name}`}
+                        aria-pressed={selected}
+                      >
+                        <span className={styles.nodeCore} aria-hidden="true">
+                          <span>{BRANCHES[node.branch].short}</span>
+                        </span>
+                        <span className={styles.nodeTitle}>{node.name}</span>
+                        <span className={styles.nodeBranch}>{BRANCHES[node.branch].label}</span>
+                      </button>
+                      <p className={styles.nodeDescription}>{node.description}</p>
+                      <div className={styles.nodeFooter}>
+                        <span className={`${styles.nodeStatus} ${unlocked ? styles.nodeStatusUnlocked : ''}`}>
+                          <span className={styles.statusDot} />
+                          {unlocked ? 'Unlocked' : `${node.cost} SP`}
+                        </span>
+                        {!unlocked && (
+                          <button
+                            className={styles.nodeAction}
+                            disabled={!affordable}
+                            onClick={() => onUnlock(node.id)}
+                          >
+                            Unlock
+                          </button>
+                        )}
+                      </div>
+                    </article>
+                  )
+                })}
+              </div>
+            </div>
+          </section>
+
+          <aside className={styles.inspector} aria-label="Selected skill details">
+            <div className={styles.sectionLabel}>NODE INSPECTOR</div>
+            <div className={`${styles.inspectorPanel} ln-glass-panel`}>
+              <div className={styles.inspectorTopline}>
+                <span className={styles.inspectorCode}>{BRANCHES[selectedNode.branch].short} / NODE 01</span>
+                <span className={`${styles.inspectorStatus} ${selectedUnlocked ? styles.inspectorStatusUnlocked : ''}`}>
+                  {selectedUnlocked ? 'ONLINE' : 'LOCKED'}
+                </span>
+              </div>
+              <h3>{selectedNode.name}</h3>
+              <p>{selectedNode.description}</p>
+              <div className={styles.specRow}>
+                <span>BRANCH</span>
+                <strong>{BRANCHES[selectedNode.branch].label}</strong>
+              </div>
+              <div className={styles.specRow}>
+                <span>INSTALL COST</span>
+                <strong>{selectedUnlocked ? 'PAID' : `${selectedNode.cost} SP`}</strong>
+              </div>
+              {!selectedUnlocked && (
+                <button
+                  className={styles.installButton}
+                  disabled={!selectedAffordable}
+                  onClick={() => onUnlock(selectedNode.id)}
+                >
+                  {selectedAffordable ? 'Install Upgrade' : 'Insufficient SP'}
+                </button>
+              )}
+              {selectedUnlocked && <div className={styles.installedStamp}>SYSTEM UPGRADE INSTALLED</div>}
+            </div>
+
+            <div className={styles.licensePanel}>
+              <div className={styles.panelHeaderCompact}>
+                <span className={styles.sectionLabel}>FLIGHT AUTHORITY</span>
+                <span className={styles.gradePill}>{licenseGrade}</span>
+              </div>
+              <div className={styles.gradeTrack} aria-label={`License grade ${licenseGrade}`}>
+                {LICENSE_GRADE_ORDER.map((grade, index) => (
+                  <span className={index <= gradeIndex ? styles.gradeSegmentActive : styles.gradeSegment} key={grade} />
+                ))}
+              </div>
+              <div className={styles.xpReadout}>
+                <span>{researchXP} RESEARCH XP</span>
+                <span>{nextGrade ? `${nextGateXP} XP TO ${nextGrade.toUpperCase()}` : 'MAX GRADE REACHED'}</span>
+              </div>
+              {nextGrade && (
+                <button className={styles.gradeButton} disabled={!canUpgrade} onClick={() => onUpgradeLicenseGrade(nextGrade as Exclude<LicenseGrade, 'Grade I'>)}>
+                  Upgrade to {nextGrade}
+                </button>
+              )}
+            </div>
+          </aside>
         </div>
 
-        <div>
-          <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 11, fontWeight: 800, letterSpacing: '0.15em', color: '#6b7fa3', textTransform: 'uppercase', marginBottom: 8 }}>
-            Firsts
+        <section className={`${styles.firstsPanel} ln-glass-panel`} aria-labelledby="firsts-heading">
+          <div className={styles.firstsHeading}>
+            <div className={styles.sectionLabel}>PROGRAM MILESTONES</div>
+            <h3 id="firsts-heading">Firsts</h3>
           </div>
-          <Panel accent="#7ec8ff" variant="compact">
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              <FirstRow label="First mission complete" done={firsts.firstMissionDone} />
-              <FirstRow label="First satellite launch" done={firsts.firstSatelliteLaunched} />
-              <FirstRow label="First TESS classification" done={firsts.firstTessClassification} />
-              <FirstRow label="First blueprint unlocked" done={firsts.firstBlueprintUnlocked} />
-              <FirstRow label="Refinery built" done={firsts.refineryBuilt} />
-              <FirstRow label="Launchpad upgraded" done={firsts.launchpadUpgraded} />
-            </div>
-          </Panel>
-        </div>
+          <div className={styles.firstsGrid}>
+            <FirstRow label="First mission complete" done={firsts.firstMissionDone} />
+            <FirstRow label="First satellite launch" done={firsts.firstSatelliteLaunched} />
+            <FirstRow label="First TESS classification" done={firsts.firstTessClassification} />
+            <FirstRow label="First blueprint unlocked" done={firsts.firstBlueprintUnlocked} />
+            <FirstRow label="Refinery built" done={firsts.refineryBuilt} />
+            <FirstRow label="Launchpad upgraded" done={firsts.launchpadUpgraded} />
+          </div>
+        </section>
+      </div>
+
+      <div className={styles.bottomRail}>
+        <span><i className={styles.railDot} /> ACADEMY LINK ONLINE</span>
+        <span>EARTH BASE // RESEARCH CONSOLE</span>
       </div>
     </div>
   )
@@ -131,9 +249,10 @@ export default function SkillTreeScreen({
 
 function FirstRow({ label, done }: { label: string; done: boolean }) {
   return (
-    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-      <span style={{ fontFamily: 'var(--ln-font-body)', fontSize: 12, color: done ? 'var(--ln-text)' : 'var(--ln-text-muted)' }}>{label}</span>
-      <StatusPill kind={done ? 'ok' : 'mute'}>{done ? 'Done' : 'Not yet'}</StatusPill>
+    <div className={styles.firstRow}>
+      <span className={`${styles.firstMarker} ${done ? styles.firstMarkerDone : ''}`} aria-hidden="true" />
+      <span>{label}</span>
+      <strong className={done ? styles.firstDone : ''}>{done ? 'DONE' : 'PENDING'}</strong>
     </div>
   )
 }
