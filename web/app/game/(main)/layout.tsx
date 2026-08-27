@@ -22,6 +22,7 @@ import SettingsSheet from '@/components/game/SettingsSheet'
 import TerritoryClaimPopup from '@/components/game/TerritoryClaimPopup'
 import { UI_ZONES } from '@/lib/ui-zones'
 import { isSurveySafeScreen } from '@/lib/survey-gating'
+import { LOCATION_SCREENS, type Screen } from '@/lib/game-types'
 
 function GameChrome({ children }: { children: ReactNode }) {
   const game = useGame()
@@ -128,10 +129,13 @@ function GameChrome({ children }: { children: ReactNode }) {
   const currentNav = ['missions', 'targets'].includes(currentScreen)
     ? 'missions'
     : currentScreen === 'galaxy' ? 'galaxy' : currentScreen === 'fab' ? 'fab' : currentScreen === 'skills' ? 'skills' : 'hub'
-  // Earth Base is the application home, not a device preview inside the
-  // generic desktop card. Launchpad is the same physical campus at a closer
-  // operational scale, so both routes own the available viewport.
-  const isImmersiveEarthBaseRoute = currentScreen === 'hub' || currentScreen === 'launchpad'
+  // Location screens (physical places in the game world, and the mission-run
+  // sequence through them) own the full viewport instead of sitting inside
+  // the generic desktop device-card — that boxed treatment is for menus
+  // (Missions, Market, Skills, ...) and reads as a modal over the game
+  // itself when applied to a place the player is actually standing in.
+  // See LOCATION_SCREENS.
+  const isImmersiveEarthBaseRoute = LOCATION_SCREENS.has(currentScreen as Screen)
 
   return (
     <main className="game-stage" aria-label="Landnam game">
@@ -140,8 +144,11 @@ function GameChrome({ children }: { children: ReactNode }) {
         <LandnamSyncStatus />
         {/* Mission alerts have a reserved desktop slot to the left of the
             horizontal resource HUD. They are hidden at compact widths rather
-            than wrapping over progression controls. */}
-        {game.player.freeOperations && currentScreen === 'hub' && (
+            than wrapping over progression controls. Base-surface only — Hub
+            renders Subsurface as a slide within the same 'hub' route rather
+            than a real navigation (see game.subsurfaceView), so the screen
+            check alone can't tell the two apart. */}
+        {game.player.freeOperations && currentScreen === 'hub' && !game.subsurfaceView && (
           <div data-ui-zone={UI_ZONES.ambientPrompt} className="hub-push-opt-in">
             <PushOptIn userId={game.authUserId ?? undefined} />
           </div>

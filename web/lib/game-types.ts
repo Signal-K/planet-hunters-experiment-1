@@ -39,6 +39,32 @@ export type Screen =
   | 'academy'
   | 'asteroid-discovery'
 
+// Screens that render a physical place in the game world (or a step in a
+// mission run through one) get the full, edge-to-edge viewport on desktop —
+// they are locations, not menus, and boxing them in the device-card chrome
+// reads as a modal sitting over the game rather than the game itself.
+// Screens NOT in this set ('intro', 'build', 'missions', 'targets', 'fab',
+// 'market', 'skills', 'rocket-buy') are menus/UI concepts and keep the boxed
+// card treatment. See `.portrait-canvas--full-page` in globals.css.
+export const LOCATION_SCREENS: ReadonlySet<Screen> = new Set<Screen>([
+  'hub',
+  'hub-subsurface',
+  'launchpad',
+  'transit',
+  'landing',
+  'mining',
+  'rover-mining',
+  'delivery',
+  'debrief',
+  'refinery',
+  'scan-station',
+  'academy',
+  'hangar',
+  'surface-ops',
+  'galaxy',
+  'asteroid-discovery',
+])
+
 export type LicenseGrade = 'Grade I' | 'Grade II' | 'Grade III'
 
 export type SettlementFerryStatus = 'in-flight' | 'delivered' | 'failed'
@@ -357,6 +383,8 @@ export interface GameActions {
   skipTutorial: (stepIds: number[]) => void
   setPopup: (v: string | null) => void
   setMenuOpen: (v: boolean) => void
+  subsurfaceView: boolean
+  setSubsurfaceView: (v: boolean) => void
   onPickMission: (id: string) => void
   onPickTarget: (id: string) => void
   onPurchaseRocket: (rocketId: string) => void

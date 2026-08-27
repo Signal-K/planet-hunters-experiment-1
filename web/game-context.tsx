@@ -208,6 +208,8 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       setPopup: ui.setPopup,
       setMenuOpen: ui.setMenuOpen,
       dismissToast: ui.dismissToast,
+      subsurfaceView: ui.subsurfaceView,
+      setSubsurfaceView: ui.setSubsurfaceView,
       clearTerritoryClaimPopup: ui.clearTerritoryClaimPopup,
       // Auth
       awaitingRemoteState: auth.awaitingRemoteState,

@@ -186,7 +186,7 @@ function GameCanvas() {
         {/* Mission alerts have a reserved desktop slot to the left of the
             horizontal resource HUD. They are hidden at compact widths rather
             than wrapping over progression controls. */}
-        {game.player.freeOperations && game.screen === 'hub' && (
+        {game.player.freeOperations && game.screen === 'hub' && !game.subsurfaceView && (
           <div data-ui-zone={UI_ZONES.ambientPrompt} className="hub-push-opt-in">
             <PushOptIn userId={game.authUserId ?? undefined} />
           </div>

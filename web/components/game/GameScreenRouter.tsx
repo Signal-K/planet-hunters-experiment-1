@@ -106,6 +106,16 @@ export function ScreenContent({
     if (screen === 'build' && game.player.freeOperations && game.player.placed.length > 0) game.go('hub')
   }, [screen, game.player.freeOperations, game.player.hasLanded, game.player.placed.length, game.mission, game.target, game.go])
 
+  // HubScreen's surface/subsurface slide is driven by ephemeral UI state
+  // (game.subsurfaceView), not the route, so a real navigation into
+  // 'hub-subsurface' (e.g. Launchpad's "Open Subsurface") or plain 'hub'
+  // needs to seed/reset that state the same way the old per-mount
+  // `initialSubsurface` prop used to.
+  useEffect(() => {
+    if (screen === 'hub-subsurface') game.setSubsurfaceView(true)
+    else if (screen === 'hub') game.setSubsurfaceView(false)
+  }, [screen, game.setSubsurfaceView])
+
   switch (screen) {
     case 'intro':
       return (
@@ -188,7 +198,8 @@ export function ScreenContent({
           onUpgradeLaunchpad={() => game.upgradeLaunchpad()}
           onExcavateSubsurface={() => game.excavateSubsurface()}
           onBuildSubsurfaceRoom={roomId => game.buildSubsurfaceRoom(roomId)}
-          initialSubsurface={game.screen === 'hub-subsurface'}
+          subsurface={game.subsurfaceView}
+          onSubsurfaceChange={game.setSubsurfaceView}
         />
       )
 

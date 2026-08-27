@@ -13,6 +13,14 @@ export function useUIActions(
   const [toasts, setToasts] = useState<Toast[]>([])
   // Set by setScreenFromUrl to tell the URL-sync effect to skip one cycle
   const skipNextUrlSync = useRef(false)
+  // Whether Hub is showing its Subsurface half. HubScreen slides between
+  // surface/subsurface as one continuous scene without a route change (a
+  // real navigation would fight the slide animation and add spurious
+  // history entries), so this can't live on `state.screen` — but chrome
+  // above HubScreen (mission-alerts gating) still needs to know which half
+  // is showing. Ephemeral UI state, not persisted GameState, same as
+  // `toasts` above.
+  const [subsurfaceView, setSubsurfaceView] = useState(false)
 
   const go = useCallback((screen: Screen) => {
     setState(s => ({ ...s, screen }))
@@ -70,5 +78,5 @@ export function useUIActions(
     setState(s => ({ ...s, pendingTerritoryClaimFor: undefined, screen: s.tutorial ? 'hub' : 'market' }))
   }, [setState])
 
-  return { go, goToMissions, setScreenFromUrl, skipNextUrlSync, setPopup, setMenuOpen, addToast, dismissToast, clearTerritoryClaimPopup, toasts }
+  return { go, goToMissions, setScreenFromUrl, skipNextUrlSync, setPopup, setMenuOpen, addToast, dismissToast, clearTerritoryClaimPopup, toasts, subsurfaceView, setSubsurfaceView }
 }
