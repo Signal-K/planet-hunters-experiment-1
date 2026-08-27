@@ -93,6 +93,12 @@ export function Building({ kind, label, sub, status, w, hitH, style, onClick, ba
   const color = STATUS_COLOR[status]
   const [calloutOpen, setCalloutOpen] = useState(false)
   const [seen, setSeen] = useState(false)
+  // Hover (desktop) and press (mobile — there's no real :hover on touch) both
+  // drive the same lift + glow, via one piece of state instead of two
+  // separate code paths (KES-231/KES-263). The glow lands on the spacer,
+  // which sits exactly over the sprite art EarthBaseModules renders
+  // underneath, so it reads as the structure itself lighting up.
+  const [active, setActive] = useState(false)
 
   // Bubble box offset from the building center, and the tail's offset within
   // the bubble — the two always add back up to the building center.
@@ -130,13 +136,22 @@ export function Building({ kind, label, sub, status, w, hitH, style, onClick, ba
         style={{
           background: 'transparent', border: 'none', padding: 0, cursor: 'pointer',
           display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6,
+          transform: active ? 'translateY(-3px)' : 'translateY(0)',
           transition: 'transform 180ms',
         }}
-        onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-3px)' }}
-        onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)' }}
+        onMouseEnter={() => setActive(true)}
+        onMouseLeave={() => setActive(false)}
+        onTouchStart={() => setActive(true)}
+        onTouchEnd={() => setActive(false)}
+        onTouchCancel={() => setActive(false)}
       >
         {/* Spacer reserving the building art's clickable footprint */}
-        <div style={{ width: w, height: hitH ?? w * 0.6, position: 'relative' }}>
+        <div style={{
+          width: w, height: hitH ?? w * 0.6, position: 'relative',
+          borderRadius: 12,
+          boxShadow: active ? '0 0 0 2px var(--ln-cyan-border, rgba(112,217,234,0.5)), 0 0 24px var(--ln-cyan-soft, rgba(112,217,234,0.35))' : 'none',
+          transition: 'box-shadow 180ms',
+        }}>
           {!!badge && badge > 0 && (
             <span
               data-testid={`building-${kind}-badge`}

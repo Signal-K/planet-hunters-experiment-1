@@ -202,9 +202,13 @@ export function TerrainScene({
         position: 'absolute', left: 0, right: 0, bottom: 0, height: 'var(--hub-ground)',
         zIndex: 9, background: palette.ground, transition: 'background 1.2s ease',
       }}>
+        {/* Enlarged from 5px/.95 opacity (KES-263) so the ground/sky contact
+            point reads as a clear, deliberate line rather than a thin seam —
+            same groundLip token/palette, just more visible. */}
         <div style={{
-          position: 'absolute', left: 0, right: 0, top: 0, height: 5,
-          background: palette.groundLip, opacity: 0.95,
+          position: 'absolute', left: 0, right: 0, top: 0, height: 9,
+          background: palette.groundLip, opacity: 1,
+          boxShadow: `0 0 16px ${palette.groundLip}`,
         }} />
         {/* A second, nearer soil band. One flat fill over a fifth of the frame
             reads as dead space; a horizon-parallel break gives the ground a

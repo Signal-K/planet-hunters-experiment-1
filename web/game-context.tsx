@@ -10,6 +10,7 @@ import { resolvePreset } from '@/lib/devPresets'
 import { pbShared } from '@/lib/pb'
 import { identifyUser } from '@/lib/posthog'
 import { enqueueSurvey } from '@/lib/surveys'
+import { readPendingDemoBonus, clearPendingDemoBonus, DEMO_BONUS_FRANCS } from '@/lib/demo-bonus'
 import { useUIActions } from '@/lib/contexts/useUIActions'
 import { useAuthSync } from '@/lib/contexts/useAuthSync'
 import { useConfirmedDiscoveryPoll } from '@/lib/contexts/useConfirmedDiscoveryPoll'
@@ -116,6 +117,30 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
 
   // ── Domain hooks ───────────────────────────────────────────────────────────
   const ui      = useUIActions(setState)
+
+  // Apply a /demo sandbox completion bonus left for this session (KES-264).
+  // Runs once per boot, through the same setState path as any other player
+  // change, so it's persisted/synced identically — the demo route itself
+  // never writes to PocketBase or this context directly.
+  useEffect(() => {
+    if (!hydrated || isPreview.current) return
+    if (!pbShared.authStore.isValid) return
+    const pending = readPendingDemoBonus()
+    if (!pending) return
+    clearPendingDemoBonus()
+    if (state.player.demoBonusClaimed?.[pending.track]) return
+    setState(s => ({
+      ...s,
+      player: {
+        ...s.player,
+        francs: s.player.francs + DEMO_BONUS_FRANCS,
+        demoBonusClaimed: { ...s.player.demoBonusClaimed, [pending.track]: true },
+      },
+    }))
+    ui.addToast(`Quick mission bonus: +${DEMO_BONUS_FRANCS}₣`, 'ok')
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hydrated])
+
   const auth    = useAuthSync({
     state,
     setState,

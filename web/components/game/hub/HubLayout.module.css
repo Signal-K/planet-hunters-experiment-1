@@ -1,5 +1,8 @@
 .root {
-  --hub-ground: 22%;
+  /* Enlarged from 22% (KES-263) — the ground plane read as too thin a strip
+     under the sky; kept proportional across the breakpoints below so plot
+     positions (which read this same token) scale together. */
+  --hub-ground: 28%;
 }
 
 .surface {
@@ -27,11 +30,14 @@
   right: 4%;
   bottom: calc(var(--hub-ground) - 1px);
   left: 4%;
-  height: 1px;
+  /* Thickened from 1px and brightened from .42 opacity (KES-263) so the
+     ground/sky boundary reads as a deliberate horizon line rather than a
+     hairline that only shows up on close inspection. */
+  height: 2px;
   content: '';
   pointer-events: none;
   background: linear-gradient(90deg, transparent, var(--hub-cyan), transparent);
-  opacity: 0.42;
+  opacity: 0.6;
   z-index: 5;
 }
 
@@ -46,7 +52,7 @@
 
 @media (min-width: 1024px) {
   .root {
-    --hub-ground: 34%;
+    --hub-ground: 40%;
   }
 
   .progressionStack {
@@ -60,7 +66,7 @@
 
 @media (min-width: 721px) and (max-width: 1023px) and (max-height: 700px) {
   .root {
-    --hub-ground: 28%;
+    --hub-ground: 34%;
   }
 
   .progressionStack {
