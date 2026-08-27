@@ -40,7 +40,7 @@ export function ScrapSequenceCanvas({ rocketImageSrc, onComplete }: Props) {
         canvas,
         width: cw,
         height: ch,
-        background: 0x06090f,
+        background: 0xeef3f8, // --ln-bp-bg (KES-267) — see scrapScene.ts's C palette
         antialias: true,
         autoDensity: true,
         resolution: typeof window !== 'undefined' ? (window.devicePixelRatio ?? 1) : 1,
@@ -71,7 +71,7 @@ export function ScrapSequenceCanvas({ rocketImageSrc, onComplete }: Props) {
   return (
     <div
       ref={divRef}
-      style={{ position: 'absolute', inset: 0, background: '#06090f', overflow: 'hidden', zIndex: 100 }}
+      style={{ position: 'absolute', inset: 0, background: '#eef3f8', overflow: 'hidden', zIndex: 100 }}
     >
       {process.env.NODE_ENV === 'development' && (
         <button

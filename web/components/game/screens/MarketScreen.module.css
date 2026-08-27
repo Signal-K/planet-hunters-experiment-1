@@ -1,5 +1,13 @@
 .screen {
-  min-height: 100dvh;
+  /* Was `min-height: 100dvh`, built assuming normal page-level scroll — but
+     this screen actually mounts inside .game-screen-area, which is
+     `overflow: hidden` (KES-268). Content taller than the boxed card's
+     available height had nowhere to go and just got clipped. This screen
+     owns its own scroll now, same as every other screen's .screen-scroll
+     convention, so the sticky .header still sticks correctly within it. */
+  position: absolute;
+  inset: 0;
+  overflow-y: auto;
   color: var(--ln-text);
   background:
     linear-gradient(var(--ln-hairline) 1px, transparent 1px),
