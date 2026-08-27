@@ -3,6 +3,7 @@
      under the sky; kept proportional across the breakpoints below so plot
      positions (which read this same token) scale together. */
   --hub-ground: 28%;
+  --hub-structure-max: 9999px;
 }
 
 .surface {
@@ -53,6 +54,7 @@
 @media (min-width: 1024px) {
   .root {
     --hub-ground: 40%;
+    --hub-structure-max: min(460px, 42vh);
   }
 
   .progressionStack {
@@ -61,6 +63,16 @@
     width: min(340px, 30vw);
     max-width: 340px;
     gap: 8px;
+  }
+}
+
+@media (max-width: 720px) {
+  /* Keep the progression rail below the stacked HUD and above the dock's
+     reserved lower zone on narrow portrait screens. The internal scroll
+     remains available when several cards are present. */
+  .progressionStack {
+    top: max(168px, 22vh) !important;
+    bottom: 104px;
   }
 }
 

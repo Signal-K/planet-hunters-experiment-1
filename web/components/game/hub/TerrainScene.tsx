@@ -102,6 +102,13 @@ function Brick({ placement, band, haze, hazeAmount }: {
         width: w,
         height: h,
         transform: `translateX(-50%)${placement.flip ? ' scaleX(-1)' : ''}`,
+        // Near-field rocks, shrubs, and road pieces need a contact shadow to
+        // sit into the ground plane. Without it the foreground reads as a
+        // handful of floating cut-outs, especially on the taller desktop
+        // scene where the ground band has more vertical room.
+        filter: band.depth >= 0.88
+          ? 'drop-shadow(0 3px 3px color-mix(in srgb, var(--ln-void) 42%, transparent))'
+          : undefined,
       }}
     >
       <img

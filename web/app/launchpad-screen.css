@@ -96,6 +96,14 @@ button.launchpad-scene-object { cursor: pointer; }
   object-position: center bottom;
   pointer-events: none;
 }
+.earth-base-flat-sprite--highlight {
+  inset: -8px;
+  width: calc(100% + 16px);
+  height: calc(100% + 16px);
+  opacity: 0.72;
+  filter: brightness(1.2) saturate(0.72) drop-shadow(0 0 7px var(--hub-cyan)) drop-shadow(0 0 16px color-mix(in srgb, var(--hub-cyan) 55%, transparent));
+  mix-blend-mode: screen;
+}
 .launchpad-tower {
   left: 7%; bottom: var(--hub-ground); width: 30%; height: auto;
 }

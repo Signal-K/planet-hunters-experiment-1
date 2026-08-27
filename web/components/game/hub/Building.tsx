@@ -59,6 +59,10 @@ export interface BuildingProps {
    * primary structure. Never applied to the Launchpad itself.
    */
   dimmed?: boolean
+  /** Called while the pointer/finger is actively pressing this structure. */
+  onActiveChange?: (active: boolean) => void
+  /** Controlled visual state shared with the sprite layer. */
+  active?: boolean
 }
 
 const CALLOUT_W = 208
@@ -89,7 +93,7 @@ function ArrowGlyph() {
   )
 }
 
-export function Building({ kind, label, sub, status, w, hitH, style, onClick, badge, callout, calloutAlign = 'center', dimmed }: BuildingProps) {
+export function Building({ kind, label, sub, status, w, hitH, style, onClick, badge, callout, calloutAlign = 'center', dimmed, onActiveChange, active = false }: BuildingProps) {
   const color = STATUS_COLOR[status]
   const [calloutOpen, setCalloutOpen] = useState(false)
   const [seen, setSeen] = useState(false)
@@ -98,7 +102,12 @@ export function Building({ kind, label, sub, status, w, hitH, style, onClick, ba
   // separate code paths (KES-231/KES-263). The glow lands on the spacer,
   // which sits exactly over the sprite art EarthBaseModules renders
   // underneath, so it reads as the structure itself lighting up.
-  const [active, setActive] = useState(false)
+  const [localActive, setLocalActive] = useState(false)
+  const isActive = active || localActive
+  const setActive = (next: boolean) => {
+    setLocalActive(next)
+    onActiveChange?.(next)
+  }
 
   // Bubble box offset from the building center, and the tail's offset within
   // the bubble — the two always add back up to the building center.
@@ -136,7 +145,7 @@ export function Building({ kind, label, sub, status, w, hitH, style, onClick, ba
         style={{
           background: 'transparent', border: 'none', padding: 0, cursor: 'pointer',
           display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6,
-          transform: active ? 'translateY(-3px)' : 'translateY(0)',
+          transform: isActive ? 'translateY(-3px)' : 'translateY(0)',
           transition: 'transform 180ms',
         }}
         onMouseEnter={() => setActive(true)}
@@ -149,8 +158,9 @@ export function Building({ kind, label, sub, status, w, hitH, style, onClick, ba
         <div style={{
           width: w, height: hitH ?? w * 0.6, position: 'relative',
           borderRadius: 12,
-          boxShadow: active ? '0 0 0 2px var(--ln-cyan-border, rgba(112,217,234,0.5)), 0 0 24px var(--ln-cyan-soft, rgba(112,217,234,0.35))' : 'none',
-          transition: 'box-shadow 180ms',
+          // The sprite layer owns the silhouette highlight. Keep this spacer
+          // visually empty so a tall hit target cannot read as a rectangle.
+          boxShadow: 'none',
         }}>
           {!!badge && badge > 0 && (
             <span

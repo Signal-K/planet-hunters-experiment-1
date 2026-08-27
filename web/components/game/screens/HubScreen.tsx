@@ -221,6 +221,7 @@ export default function HubScreen({ player, rocketVariant = 'explorer', hasCoach
 
   const { phase: skyPhase } = useTimeOfDay()
   const [editMode, setEditMode] = useState(false)
+  const [activeBuilding, setActiveBuilding] = useState<string | null>(null)
   // Lift the ground line clear of the docked bottom sheet (KES-260 follow-up).
   //
   // Building status pills hang `PLOT_LABEL_DROP` below the ground line, and the
@@ -375,6 +376,7 @@ export default function HubScreen({ player, rocketVariant = 'explorer', hasCoach
       hot: kind === 'launchpad' ? !!player.pendingLaunch : kind === 'scan-station' ? (!!player.activeScan && clientNow !== null && clientNow >= player.activeScan.completesAt) : false,
       status: 'ok' as const,
       dimmed: isDimmedBuildingKind(kind),
+      active: activeBuilding === kind,
     }]
   })
   // Launchpad speech bubble — the base "speaking up" when it has a prompt and
@@ -537,7 +539,7 @@ export default function HubScreen({ player, rocketVariant = 'explorer', hasCoach
                 // can't run off the edge of the scene.
                 const xFrac = (sortedEntities[plot]?.transform.position.x ?? 201) / 402
                 const calloutAlign = xFrac < 0.32 ? 'start' : xFrac > 0.68 ? 'end' : 'center'
-                return <Building key={kind} {...building} hitH={HIT_H[kind] ?? 60} style={style} calloutAlign={calloutAlign} />
+                return <Building key={kind} {...building} hitH={HIT_H[kind] ?? 60} active={activeBuilding === kind} onActiveChange={active => setActiveBuilding(active ? kind : null)} style={style} calloutAlign={calloutAlign} />
               })}
             </div>
           </div>

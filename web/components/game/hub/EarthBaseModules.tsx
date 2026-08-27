@@ -9,6 +9,7 @@ export interface HubBuildingDef {
   status?: 'ok' | 'info' | 'warn' | 'locked'
   dimmed?: boolean
   rocketVariant?: 'explorer' | 'prospector'
+  active?: boolean
 }
 
 /** Temporary flat-art pass for Earth Base (KES-260). The Blender module kit is retired. */
@@ -42,10 +43,15 @@ export function HangarModules({ className = '' }: { className?: string }) {
   return <FlatSprite name="hangar" className={className} />
 }
 
-function StructureSprite({ kind }: { kind: string }) {
-  if (kind === 'launchpad') return <FlatSprite name="launchpad" />
-  if (kind === 'hangar') return <FlatSprite name="hangar" />
-  return null
+function StructureSprite({ kind, active }: { kind: string; active?: boolean }) {
+  const name: SpriteName | null = kind === 'launchpad' || kind === 'hangar' ? kind : null
+  if (!name) return null
+  return (
+    <>
+      <FlatSprite name={name} />
+      {active && <FlatSprite name={name} className="earth-base-flat-sprite--highlight" />}
+    </>
+  )
 }
 
 const SCENE_WIDTH_DIVISOR = 6.4
@@ -67,12 +73,16 @@ export function EarthBaseModules({ buildings }: { buildings: HubBuildingDef[] })
             style={{
               left: `${left}%`,
               bottom: 'var(--hub-ground)',
-              width: `${widthPct}%`,
+              // Mobile keeps the authored scene-proportional scale. Desktop
+              // receives a viewport-aware cap so structures retain the same
+              // relationship to the terrain instead of ballooning with a 2K
+              // canvas (the background bricks are authored in CSS pixels).
+              width: `min(${widthPct}%, var(--hub-structure-max, 9999px))`,
               aspectRatio: `${size.width} / ${size.height}`,
               opacity: building.dimmed ? 0.6 : 1,
             }}
           >
-            <StructureSprite kind={building.kind} />
+            <StructureSprite kind={building.kind} active={building.active} />
           </span>
         )
       })}
