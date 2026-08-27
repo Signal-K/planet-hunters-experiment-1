@@ -452,9 +452,26 @@ button { cursor: pointer; }
   background-size: 180px 180px;
 }
 
+/* World-behind-the-modal backdrop (KES-266) — dimmed/blurred so it reads as
+   "the game continuing behind this menu" rather than competing for
+   attention with the boxed card's own content. Only visible in the margin
+   .game-stage leaves around .portrait-canvas on desktop; fully covered by
+   .portrait-canvas--full-page on location screens and by the full-bleed
+   mobile canvas below 1024px. */
+.game-stage-backdrop {
+  filter: blur(3px) brightness(0.55) saturate(0.85);
+  transform: scale(1.02); /* hides the blur's soft edge at the viewport border */
+}
+.game-stage-backdrop::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(8, 8, 10, 0.35);
+}
+
 .portrait-canvas {
   position: relative;
-  z-index: 1; /* above .game-stage::before starfield */
+  z-index: 1; /* above .game-stage::before starfield and .game-stage-backdrop */
   display: flex;
   flex-direction: column;
   width: min(402px, 100%);
