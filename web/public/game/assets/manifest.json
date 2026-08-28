@@ -21,6 +21,7 @@
   "ore_gold": "/game/assets/ores/ore_gold.png",
   "ore_rare": "/game/assets/ores/ore_rare.png",
   "actor_rover": "/game/assets/actors/rover.png",
+  "actor_road_rover": "/game/assets/actors/road_rover.png",
   "actor_drone": "/game/assets/actors/drone.png",
   "base_launchpad_flat": "/game/assets/base/launchpad_flat.png",
   "base_hangar_flat": "/game/assets/base/hangar_flat.png",

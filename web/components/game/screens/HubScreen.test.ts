@@ -49,4 +49,16 @@ describe('terrain kit silhouettes', () => {
         .toEqual({ id: comp.id, distinctMountains: true })
     }
   })
+
+  it('keeps service-road paths below the facility contact line', async () => {
+    const { EARTH_BASE_WIDE, EARTH_BASE_PAD } = await import('@/lib/scene/compositions')
+    const wideRoad = EARTH_BASE_WIDE.roadPaths?.[0]
+    const padRoad = EARTH_BASE_PAD.roadPaths?.[0]
+    expect(wideRoad?.points.every(point => point.groundOffset < 0)).toBe(true)
+    expect(padRoad?.points.every(point => point.groundOffset < 0)).toBe(true)
+    expect(EARTH_BASE_WIDE.bands.find(band => band.id === 'ground-detail')?.baseline)
+      .toBe('calc(var(--hub-ground) - 4.5%)')
+    expect(EARTH_BASE_PAD.bands.find(band => band.id === 'ground-detail')?.baseline)
+      .toBe('calc(var(--hub-ground) - 7%)')
+  })
 })

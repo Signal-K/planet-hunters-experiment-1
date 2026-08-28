@@ -23,6 +23,20 @@ import type { SceneComposition } from './terrain-kit'
 
 export const EARTH_BASE_WIDE: SceneComposition = {
   id: 'earth-base-wide',
+  // The road is deliberately below the facility baseline. These normalized
+  // points are the source of truth for future road-aware actors, while the
+  // terrain band below supplies the authored road surface.
+  roadPaths: [{
+    id: 'site-service-road',
+    points: [
+      { x: 0, groundOffset: -4.5 },
+      { x: 18, groundOffset: -4.5 },
+      { x: 38, groundOffset: -4.5 },
+      { x: 62, groundOffset: -4.5 },
+      { x: 82, groundOffset: -4.5 },
+      { x: 100, groundOffset: -4.5 },
+    ],
+  }],
   bands: [
     {
       id: 'clouds',
@@ -146,11 +160,12 @@ export const EARTH_BASE_WIDE: SceneComposition = {
     },
     {
       // The service road running along the back of the site, just under the
-      // ground line. This is the band that ties the structures to the terrain
-      // instead of leaving them floating on a plate.
+      // ground line. It is intentionally lower than the facility baseline:
+      // the apron owns building contact, while this is a foreground service
+      // road with short ramps that can carry path-locked rovers.
       id: 'ground-detail',
       depth: 0.88,
-      baseline: 'calc(var(--hub-ground) - 1.5%)',
+      baseline: 'calc(var(--hub-ground) - 4.5%)',
       scale: 1,
       bricks: [
         { brick: 'road_ramp', x: 2, scale: 0.9, flip: true },
@@ -190,6 +205,17 @@ export const EARTH_BASE_WIDE: SceneComposition = {
 
 export const EARTH_BASE_PAD: SceneComposition = {
   id: 'earth-base-pad',
+  roadPaths: [{
+    id: 'site-service-road',
+    points: [
+      { x: 0, groundOffset: -7 },
+      { x: 18, groundOffset: -7 },
+      { x: 38, groundOffset: -7 },
+      { x: 62, groundOffset: -7 },
+      { x: 82, groundOffset: -7 },
+      { x: 100, groundOffset: -7 },
+    ],
+  }],
   bands: [
     {
       id: 'clouds',
@@ -265,7 +291,7 @@ export const EARTH_BASE_PAD: SceneComposition = {
       // they are what sells "you have walked up to the pad".
       id: 'ground-detail',
       depth: 0.88,
-      baseline: 'calc(var(--hub-ground) - 2%)',
+      baseline: 'calc(var(--hub-ground) - 7%)',
       scale: 1.45,
       bricks: [
         { brick: 'road_ramp', x: 1, scale: 1.0, flip: true },

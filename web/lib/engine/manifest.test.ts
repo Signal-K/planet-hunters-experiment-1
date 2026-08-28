@@ -120,6 +120,7 @@ describe('production hub, terrain and actor sprites', () => {
   it('renders the two non-human crew archetypes', () => {
     // Astronauts deliberately have no sprite — Q31, "just names".
     expect('actor_rover' in manifest).toBe(true)
+    expect('actor_road_rover' in manifest).toBe(true)
     expect('actor_drone' in manifest).toBe(true)
     expect('actor_astronaut' in manifest).toBe(false)
   })

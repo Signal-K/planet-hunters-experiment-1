@@ -15,6 +15,8 @@ import { useTimeOfDay } from '@/lib/hooks/useTimeOfDay'
 import { EarthBaseModules } from '@/components/game/hub/EarthBaseModules'
 export { EARTH_BASE_STRUCTURE_SIZES } from '@/components/game/hub/EarthBaseModules'
 import { SoilCrossSection } from '@/components/game/hub/SoilCrossSection'
+import { RoadRover } from '@/components/game/hub/RoadRover'
+import { EARTH_BASE_WIDE } from '@/lib/scene/compositions'
 import { HubSubsurfaceView } from '@/components/game/hub/HubSubsurfaceView'
 import { Building, EmptyPlot } from '@/components/game/hub/Building'
 import type { BuildingCallout } from '@/components/game/hub/Building'
@@ -503,6 +505,7 @@ export default function HubScreen({ player, rocketVariant = 'explorer', hasCoach
         >
           {/* World background: sky, starfield, ridge parallax, ground, plateau */}
           <HubWorldBackground phase={skyPhase} />
+          <RoadRover road={EARTH_BASE_WIDE.roadPaths?.[0]} />
 
           {/* Drifting ambient motes — replaces the old daylight cloud layer,
               which read as overcast weather against the new deep-blue sky. */}

@@ -96,9 +96,26 @@ export interface SceneBand {
   scale?: number
 }
 
+/** A responsive point in the scene's shared ground coordinate system. `x` is
+ * 0-100% of the scene width; `groundOffset` is relative to `--hub-ground`, so
+ * the same path can be reused by the wide Hub and the close Launchpad shot. */
+export interface SceneRoadPoint {
+  x: number
+  groundOffset: number
+}
+
+/** A traversable service-road path authored alongside the Blender terrain
+ * composition. Consumers can interpolate these points for ambient actors,
+ * routing, or future road-aware interaction without guessing from pixels. */
+export interface SceneRoadPath {
+  id: string
+  points: SceneRoadPoint[]
+}
+
 export interface SceneComposition {
   id: string
   /** Design width the `x` percentages were authored against; the band is laid
    *  out in percentages so it stretches, but this documents the intent. */
   bands: SceneBand[]
+  roadPaths?: SceneRoadPath[]
 }

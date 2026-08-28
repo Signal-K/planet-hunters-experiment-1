@@ -13,6 +13,8 @@ import { HubWorldBackground } from '@/components/game/hub/HubWorldBackground'
 import { HangarModules, LaunchpadModules } from '@/components/game/hub/EarthBaseModules'
 import { useTimeOfDay } from '@/lib/hooks/useTimeOfDay'
 import { SoilCrossSection } from '@/components/game/hub/SoilCrossSection'
+import { RoadRover } from '@/components/game/hub/RoadRover'
+import { EARTH_BASE_PAD } from '@/lib/scene/compositions'
 
 interface LaunchpadScreenProps {
   onBack: () => void
@@ -138,6 +140,7 @@ export default function LaunchpadScreen({
             would be sub-pixel in the wide shot. */}
         <div className="launchpad-scene-zoom">
           <HubWorldBackground phase={skyPhase} composition="earth-base-pad" />
+          <RoadRover road={EARTH_BASE_PAD.roadPaths?.[0]} />
         </div>
         <button type="button" className={`launchpad-scene-object launchpad-tower ${isGuided('tower') ? 'is-guided' : ''}`} data-testid="launchpad-status-card" onClick={startPadAction} aria-label={padActionLabel}>
           <span className="launchpad-tower-art" data-launch-state={player.pendingLaunch ? 'hot' : 'idle'}>

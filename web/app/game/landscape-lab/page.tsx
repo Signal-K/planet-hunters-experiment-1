@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from 'react'
 import { HangarModules, LaunchpadModules } from '@/components/game/hub/EarthBaseModules'
+import { RoadRover } from '@/components/game/hub/RoadRover'
 import { TerrainScene } from '@/components/game/hub/TerrainScene'
 import { EARTH_BASE_PAD } from '@/lib/scene/compositions'
 import type { SceneComposition } from '@/lib/scene/terrain-kit'
@@ -82,6 +83,7 @@ export default function LandscapeLabPage() {
       <div style={{ position: 'absolute', inset: 0 }}>
         <div style={{ position: 'absolute', inset: 0, ...sceneStyle }}>
           <TerrainScene composition={selected.composition} phase="day" />
+          <RoadRover road={selected.composition.roadPaths?.[0]} />
           <div
             style={{
               position: 'absolute',
@@ -193,6 +195,9 @@ export default function LandscapeLabPage() {
         </div>
         <p style={{ marginTop: 12, color: 'var(--ln-text-muted)', font: '500 11px var(--ln-font-mono)' }}>
           SELECTED · {selected.label.toUpperCase()}
+        </p>
+        <p style={{ marginTop: 8, color: 'var(--ln-cyan)', font: '500 10px var(--ln-font-mono)', letterSpacing: '.08em' }}>
+          ROAD PATH · RESPONSIVE X% + GROUND OFFSET · ROVER DEMO
         </p>
       </section>
     </main>
