@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import type { SceneRoadPath, SceneRoadPoint } from '@/lib/scene/terrain-kit'
 
+// KES-260: ambient Earth Base traffic stays on the composition's road path.
 const ROVER_SRC = '/game/assets/actors/road_rover.png'
 
 function pathLength(points: SceneRoadPoint[]): number {
@@ -90,4 +91,3 @@ export function RoadRover({ road, durationMs = 18000 }: { road?: SceneRoadPath; 
     </div>
   )
 }
-
