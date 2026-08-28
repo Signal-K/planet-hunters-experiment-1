@@ -94,6 +94,19 @@ describe('hub progression cards are clickable after the tutorial', () => {
     cy.location('pathname', { timeout: 10_000 }).should('not.eq', '/game/hub')
   })
 
+  it('Open Launchpad enters the full UI, not the close-up scene focus', () => {
+    cy.get('[data-testid="progression-card-transit-satellite"]').should('be.visible').click()
+    cy.get('[data-testid="launchpad-ui-screen"]', { timeout: 10_000 }).should('be.visible')
+    cy.get('[data-testid="launchpad-focus-screen"]').should('not.exist')
+    cy.get('[data-testid="launchpad-ui-focus-pad-btn"]').should('be.visible')
+  })
+
+  it('the physical Launchpad keeps its separate close-up focus entry', () => {
+    cy.get('[data-testid="building-launchpad-hit"]').click({ force: true })
+    cy.get('[data-testid="launchpad-focus-screen"]', { timeout: 10_000 }).should('be.visible')
+    cy.get('[data-testid="launchpad-ui-screen"]').should('not.exist')
+  })
+
   it('nothing transparent is covering the cards', () => {
     // The regression directly: whatever the browser hit-tests at the centre of
     // a card must be the card itself, not a full-bleed wrapper above it.

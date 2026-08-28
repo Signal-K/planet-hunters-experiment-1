@@ -36,8 +36,9 @@ function ContractGlyph() {
 
 interface ProgressionCardProps {
   player: Player
-  onGoBuilding: (b: string) => void
-  onNav: (s: Screen) => void
+  // Cards always open a routed scene. They must not call a Hub building
+  // focus handler, even when the destination is the Launchpad.
+  onOpenScene: (s: Screen) => void
   top?: number
 }
 
@@ -91,7 +92,7 @@ function CardButton({ accent, icon, eyebrow, title, cta, onClick, testId }: {
   )
 }
 
-export default function ProgressionCard({ player, onGoBuilding, onNav, top = 132 }: ProgressionCardProps) {
+export default function ProgressionCard({ player, onOpenScene, top = 132 }: ProgressionCardProps) {
   const cards: React.ReactElement[] = []
 
   if (player.activeMission) {
@@ -104,7 +105,7 @@ export default function ProgressionCard({ player, onGoBuilding, onNav, top = 132
         eyebrow="Mission In Progress"
         title={player.activeMission.label}
         cta="Resume Mission"
-        onClick={() => onNav(player.missionPhase ?? 'transit')}
+        onClick={() => onOpenScene(player.missionPhase ?? 'transit')}
       />
     )
   } else if (player.pendingLaunch) {
@@ -117,7 +118,7 @@ export default function ProgressionCard({ player, onGoBuilding, onNav, top = 132
         eyebrow="Launch Ready on Pad"
         title="Vessel fuelled & assigned"
         cta="Open Launchpad"
-        onClick={() => onGoBuilding('launchpad')}
+        onClick={() => onOpenScene('launchpad')}
       />
     )
   }
@@ -135,7 +136,7 @@ export default function ProgressionCard({ player, onGoBuilding, onNav, top = 132
           eyebrow="Skill Points"
           title={`${player.skillPoints ?? 0} SP available`}
           cta="Open Skill Tree"
-          onClick={() => onNav('skills')}
+          onClick={() => onOpenScene('skills')}
         />
       )
     }
@@ -149,7 +150,7 @@ export default function ProgressionCard({ player, onGoBuilding, onNav, top = 132
           eyebrow="Your Program"
           title="Launch a transit telescope"
           cta="Open Launchpad"
-          onClick={() => onNav('launchpad')}
+          onClick={() => onOpenScene('launchpad')}
         />
       )
     } else if (!inOnboarding && player.transitSatelliteLaunchedAt) {
@@ -162,7 +163,7 @@ export default function ProgressionCard({ player, onGoBuilding, onNav, top = 132
           eyebrow="Daily Downlink"
           title="Classify today's transit candidates"
           cta="Review"
-          onClick={() => onNav('galaxy')}
+          onClick={() => onOpenScene('galaxy')}
         />
       )
     }
@@ -179,7 +180,7 @@ export default function ProgressionCard({ player, onGoBuilding, onNav, top = 132
           eyebrow="Next Mission"
           title="Choose a client contract"
           cta="Browse Contracts"
-          onClick={() => onNav('missions')}
+          onClick={() => onOpenScene('missions')}
         />
       )
     }

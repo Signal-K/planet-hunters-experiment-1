@@ -15,6 +15,7 @@ import HangarScreen from '@/components/game/screens/HangarScreen'
 import SkillTreeScreen from '@/components/game/screens/SkillTreeScreen'
 import ScanStationScreen from '@/components/game/screens/ScanStationScreen'
 import LaunchpadScreen from '@/components/game/screens/LaunchpadScreen'
+import LaunchpadOverviewScreen from '@/components/game/screens/LaunchpadOverviewScreen'
 import TessDiscoveryScreen from '@/components/game/screens/TessDiscoveryScreen'
 import AsteroidDiscoveryScreen from '@/components/game/screens/AsteroidDiscoveryScreen'
 import SurfaceOpsScreen from '@/components/game/screens/SurfaceOpsScreen'
@@ -165,11 +166,12 @@ export function ScreenContent({
           player={game.player}
           rocketVariant={rocketModelForConfig(game.rocket).tier >= 2 ? 'prospector' : 'explorer'}
           hasCoach={hasCoach}
-          onNav={s => {
+          onOpenScene={s => {
             if (s === 'missions') { game.goToMissions(); return }
+            if (s === 'launchpad') { game.openLaunchpad(); return }
             game.go(s)
           }}
-          onGoBuilding={building => {
+          onFocusBuilding={building => {
             if (building === 'build') return game.go('build')
             if (building === 'refinery') return game.go('refinery')
             if (building === 'hangar') return game.go('hangar')
@@ -195,13 +197,10 @@ export function ScreenContent({
                 return game.go(game.player.missionPhase ?? 'transit')
               }
               if (game.player.pendingLaunch) return game.go('fab')
-              // Tapping the launchpad always opens its own detail screen first
-              // (status, parts, anything in progress); client contracts are one
-              // press further in from there. The M1/M2 tutorial coach still
-              // names the Mission Board directly via its own CTA (HubScreen's
-              // launchpadCallout calls onNav('missions') and never reaches this
-              // handler), so onboarding isn't blocked from its first contract.
-              return game.go('launchpad')
+              // A physical building tap is an in-world focus action. Keep it
+              // separate from progression-card scene navigation, which opens
+              // the full Launchpad control UI.
+              return game.focusLaunchpad()
             }
           }}
           onUpgradeLaunchpad={() => game.upgradeLaunchpad()}
@@ -219,7 +218,7 @@ export function ScreenContent({
           visualCandidate={game.visualFixture === 'tess' ? VISUAL_TESS_CANDIDATE : undefined}
           onBack={() => game.go('hub')}
           onBuildStation={() => game.go('build')}
-          onOpenProgram={() => game.go('launchpad')}
+          onOpenProgram={game.openLaunchpad}
           onSubmit={game.submitTessClassification}
           onChooseTarget={game.chooseSatelliteTarget}
         />
@@ -351,6 +350,27 @@ export function ScreenContent({
       )
 
     case 'launchpad':
+      if (game.launchpadView === 'overview') {
+        return (
+          <LaunchpadOverviewScreen
+            onBack={() => game.go('hub')}
+            onPick={id => {
+              if (id === ACADEMY_INTRO_MISSION_ID) return game.go('academy')
+              game.onPickMission(id)
+            }}
+            onViewContracts={() => game.goToMissions()}
+            onFocusPad={game.focusLaunchpad}
+            onOpenHangar={() => game.go(game.player.pendingLaunch ? 'fab' : 'hangar')}
+            onOpenSubsurface={() => game.go('hub-subsurface')}
+            missionsDone={game.player.missionsDone}
+            freeOperations={game.player.freeOperations}
+            catalog={game.catalog}
+            player={game.player}
+            selectedRocketName={rocketDisplay.name}
+            francs={game.player.francs}
+          />
+        )
+      }
       return (
         <LaunchpadScreen
           onBack={() => game.go('hub')}

@@ -228,6 +228,9 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       laserChargeCap: getLaserChargeCap(state.player.unlockedSkillNodes ?? []),
       // UI
       go: ui.go,
+      launchpadView: ui.launchpadView,
+      openLaunchpad: ui.openLaunchpad,
+      focusLaunchpad: ui.focusLaunchpad,
       goToMissions: ui.goToMissions,
       setScreenFromUrl: ui.setScreenFromUrl,
       setPopup: ui.setPopup,

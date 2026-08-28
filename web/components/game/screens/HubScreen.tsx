@@ -192,8 +192,8 @@ interface HubScreenProps {
   player: Player
   rocketVariant?: HubBuildingDef['rocketVariant']
   hasCoach?: boolean
-  onGoBuilding: (b: string) => void
-  onNav: (s: Screen) => void
+  onFocusBuilding: (b: string) => void
+  onOpenScene: (s: Screen) => void
   onUpgradeLaunchpad?: () => void
   onExcavateSubsurface?: () => void
   onBuildSubsurfaceRoom?: (roomId: SubsurfaceRoomId) => void
@@ -201,7 +201,7 @@ interface HubScreenProps {
   onSubsurfaceChange?: (v: boolean) => void
 }
 
-export default function HubScreen({ player, rocketVariant = 'explorer', hasCoach, onGoBuilding, onNav, onUpgradeLaunchpad, onExcavateSubsurface, onBuildSubsurfaceRoom, subsurface = false, onSubsurfaceChange }: HubScreenProps) {
+export default function HubScreen({ player, rocketVariant = 'explorer', hasCoach, onFocusBuilding, onOpenScene, onUpgradeLaunchpad, onExcavateSubsurface, onBuildSubsurfaceRoom, subsurface = false, onSubsurfaceChange }: HubScreenProps) {
   // Wall-clock reads must wait until after the server/client first render.
   // Otherwise a saved scan that completes between SSR and hydration can
   // change the building badge and label, producing React error #418.
@@ -398,7 +398,7 @@ export default function HubScreen({ player, rocketVariant = 'explorer', hasCoach
         title: 'Choose your first contract',
         body: 'A client job is open at the Mission Board. Your launchpad is ready to fly it.',
         cta: 'View Missions',
-        onCta: () => onNav('missions'),
+        onCta: () => onOpenScene('missions'),
       }
 
   const structureProps = (kind: string) => {
@@ -417,7 +417,7 @@ export default function HubScreen({ player, rocketVariant = 'explorer', hasCoach
         // risk against neighbouring plots.
         w: 376,
         callout: launchpadCallout,
-        onClick: () => onGoBuilding('launchpad'),
+        onClick: () => onFocusBuilding('launchpad'),
       }
     }
     if (kind === 'refinery') {
@@ -426,7 +426,7 @@ export default function HubScreen({ player, rocketVariant = 'explorer', hasCoach
         sub: 'ORE PROCESSING',
         status: 'ok' as const,
         w: 84,
-        onClick: () => onGoBuilding('refinery'),
+        onClick: () => onFocusBuilding('refinery'),
       }
     }
     if (kind === 'scan-station') {
@@ -440,7 +440,7 @@ export default function HubScreen({ player, rocketVariant = 'explorer', hasCoach
         status: (hasScan ? 'warn' : 'ok') as 'ok' | 'warn',
         hot: hasScan,
         w: 80,
-        onClick: () => onGoBuilding('scan-station'),
+        onClick: () => onFocusBuilding('scan-station'),
       }
     }
     if (kind === 'deep-space-telescope') {
@@ -451,7 +451,7 @@ export default function HubScreen({ player, rocketVariant = 'explorer', hasCoach
         w: 86,
         badge: asteroidQueueCount,
         dimmed: isDimmedBuildingKind(kind),
-        onClick: () => onGoBuilding('deep-space-telescope'),
+        onClick: () => onFocusBuilding('deep-space-telescope'),
       }
     }
     if (kind === 'astronaut-academy') {
@@ -461,7 +461,7 @@ export default function HubScreen({ player, rocketVariant = 'explorer', hasCoach
         sub: activeTraining > 0 ? `${activeTraining} TRAINING` : player.academyFunded ? 'FUNDED' : 'PAUSED',
         status: (activeTraining > 0 ? 'warn' : player.academyFunded ? 'ok' : 'info') as 'ok' | 'warn' | 'info',
         w: 88,
-        onClick: () => onGoBuilding('academy'),
+        onClick: () => onFocusBuilding('academy'),
       }
     }
     return {
@@ -469,7 +469,7 @@ export default function HubScreen({ player, rocketVariant = 'explorer', hasCoach
       sub: 'BUILT',
       status: 'info' as const,
       w: 78,
-      onClick: () => onGoBuilding(kind),
+      onClick: () => onFocusBuilding(kind),
     }
   }
 
@@ -532,7 +532,7 @@ export default function HubScreen({ player, rocketVariant = 'explorer', hasCoach
                 const kind = structureForPlot(plot)
                 if (!kind) {
                   if (!editMode) return null
-                  return <EmptyPlot key={plot} plot={plot} w={78} style={style} onClick={() => onGoBuilding('build')} />
+                  return <EmptyPlot key={plot} plot={plot} w={78} style={style} onClick={() => onFocusBuilding('build')} />
                 }
                 const building = structureProps(kind)
                 // Outer plots open their callout inward so a 208px bubble
@@ -596,7 +596,7 @@ export default function HubScreen({ player, rocketVariant = 'explorer', hasCoach
         </div>
         {!subsurface && (
           <div style={{ pointerEvents: 'auto' }}>
-            <HUDStrip player={player} onJobsClick={() => onNav('missions')} />
+            <HUDStrip player={player} onJobsClick={() => onOpenScene('missions')} />
           </div>
         )}
       </div>
@@ -606,8 +606,7 @@ export default function HubScreen({ player, rocketVariant = 'explorer', hasCoach
         <>
           <ProgressionCard
             player={player}
-            onGoBuilding={onGoBuilding}
-            onNav={onNav}
+            onOpenScene={onOpenScene}
             top={hasCoach ? TUTORIAL_CONTENT_TOP : TUTORIAL_RAIL.TOP_CHROME_HEIGHT + 8 + HUB_HUD_RAIL_CLEARANCE}
           />
         </>
@@ -664,7 +663,7 @@ export default function HubScreen({ player, rocketVariant = 'explorer', hasCoach
                 {player.activeMission && (
                   <button
                     data-testid="hub-resume-mission-banner"
-                    onClick={() => onNav(player.missionPhase ?? 'transit')}
+                    onClick={() => onOpenScene(player.missionPhase ?? 'transit')}
                     style={{
                       width: '100%', boxSizing: 'border-box', textAlign: 'left', cursor: 'pointer',
                       display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12,
@@ -713,9 +712,9 @@ export default function HubScreen({ player, rocketVariant = 'explorer', hasCoach
                 <div className="hub-bottom-dock-actions" style={{ display: 'flex', gap: 4, marginTop: 10, overflowX: 'auto', paddingBottom: 2 }}>
                   {editMode && (
                     <>
-                      <DockIconBtn testId="hub-new-structure-btn" icon={<PlusGlyph />} label="New" onClick={() => onGoBuilding('build')} />
+                      <DockIconBtn testId="hub-new-structure-btn" icon={<PlusGlyph />} label="New" onClick={() => onFocusBuilding('build')} />
                       {player.placed.includes('launchpad') && (
-                        <DockIconBtn icon={<HangarGlyph />} label="Hangar" onClick={() => onGoBuilding('hangar')} />
+                        <DockIconBtn icon={<HangarGlyph />} label="Hangar" onClick={() => onFocusBuilding('hangar')} />
                       )}
                       {player.placed.includes('launchpad') && !player.launchpadUpgraded && onUpgradeLaunchpad && (
                         <DockIconBtn icon={<UpgradeGlyph />} label={`+${formatCurrency(LAUNCHPAD_UPGRADE_COST, { compact: true })}`} accent onClick={() => setConfirmingLaunchpadUpgrade(true)} />
@@ -732,16 +731,16 @@ export default function HubScreen({ player, rocketVariant = 'explorer', hasCoach
                   {player.freeOperations && (
                     <>
                       {player.hasLanded && (
-                        <DockIconBtn icon={<SurfaceGlyph />} label="Surface Ops" accent testId="hub-surface-ops" onClick={() => onNav('surface-ops')} />
+                        <DockIconBtn icon={<SurfaceGlyph />} label="Surface Ops" accent testId="hub-surface-ops" onClick={() => onOpenScene('surface-ops')} />
                       )}
                       <span className="hub-desktop-nav">
-                        <DockIconBtn icon={<MarketGlyph />} label="Market" onClick={() => onNav('market')} />
+                        <DockIconBtn icon={<MarketGlyph />} label="Market" onClick={() => onOpenScene('market')} />
                       </span>
                       <span className="hub-desktop-nav">
-                        <DockIconBtn icon={<AtlasGlyph />} label="Atlas" onClick={() => onNav('galaxy')} />
+                        <DockIconBtn icon={<AtlasGlyph />} label="Atlas" onClick={() => onOpenScene('galaxy')} />
                       </span>
                       <span className="hub-desktop-nav">
-                        <DockIconBtn icon={<SkillsGlyph />} label="Skills" onClick={() => onNav('skills')} />
+                        <DockIconBtn icon={<SkillsGlyph />} label="Skills" onClick={() => onOpenScene('skills')} />
                       </span>
                     </>
                   )}

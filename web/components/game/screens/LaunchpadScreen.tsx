@@ -51,6 +51,8 @@ function SubsurfaceGlyph() {
 export default function LaunchpadScreen({
   onBack, onPick, onViewContracts, onLaunchpadAction, onOpenHangar, onOpenSubsurface, missionsDone, freeOperations, catalog, player, rocketImageSrc = '/game/assets/ships/ship_sr1.png', selectedRocketName, francs,
 }: LaunchpadScreenProps) {
+  // This is the in-world close composition. The routed Launchpad overview
+  // owns control/UI entry; the Hub reaches this view through focusLaunchpad.
   const [guideStep, setGuideStep] = useState<number | null>(null)
   const { phase: skyPhase } = useTimeOfDay()
   const fleet = ROCKET_MODELS.map(model => ({ model, unlocked: missionsDone >= model.missionsRequired && !model.locked }))
@@ -109,7 +111,7 @@ export default function LaunchpadScreen({
         : 'Start a new mission'
 
   return (
-    <div className="game-screen theme-blueprint ln-scene-launchpad">
+    <div className="game-screen theme-blueprint ln-scene-launchpad" data-testid="launchpad-focus-screen">
       {/* Scene chrome stays crisp over the terrain; the previous `glass` prop
           created the large frosted rectangle visible across the upper UI. */}
       <TopBar eyebrow="EARTH BASE · LAUNCHPAD" title="Your Program" onBack={onBack} francs={francs} />

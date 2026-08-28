@@ -1,6 +1,6 @@
 import { useRef, useState, useCallback } from 'react'
 import type { Toast } from '@/components/ui/ToastLayer'
-import type { Screen, GameState } from '@/lib/game-types'
+import type { Screen, GameState, LaunchpadView } from '@/lib/game-types'
 import { EARTH_BASE_SCOPE } from '@/lib/scene-scope'
 import type { SceneScope } from '@/lib/scene-scope'
 
@@ -21,9 +21,27 @@ export function useUIActions(
   // is showing. Ephemeral UI state, not persisted GameState, same as
   // `toasts` above.
   const [subsurfaceView, setSubsurfaceView] = useState(false)
+  // A Launchpad route has two deliberately different entry meanings:
+  // progression cards open the full UI overview, while the physical Hub
+  // structure opens the close/focus composition. Keep this as ephemeral UI
+  // state so the persisted game state and the public route stay unchanged.
+  const [launchpadView, setLaunchpadView] = useState<LaunchpadView>('overview')
 
   const go = useCallback((screen: Screen) => {
+    // Legacy/tutorial callers keep the close/focus composition. New UI entry
+    // points use openLaunchpad so the two meanings cannot drift together.
+    if (screen === 'launchpad') setLaunchpadView('focus')
     setState(s => ({ ...s, screen }))
+  }, [setState])
+
+  const openLaunchpad = useCallback(() => {
+    setLaunchpadView('overview')
+    setState(s => ({ ...s, screen: 'launchpad' }))
+  }, [setState])
+
+  const focusLaunchpad = useCallback(() => {
+    setLaunchpadView('focus')
+    setState(s => ({ ...s, screen: 'launchpad' }))
   }, [setState])
 
   // Mission entry is also the first onboarding checkpoint. Keep the route
@@ -42,6 +60,7 @@ export function useUIActions(
   // Updates state.screen WITHOUT triggering the URL-sync effect so we don't create
   // a push that fights the navigation.
   const setScreenFromUrl = useCallback((screen: Screen) => {
+    if (screen === 'launchpad') setLaunchpadView('overview')
     setState(s => {
       // A bookmarked /game/build must not resurrect the transient plot picker
       // for an operational base after hydration has already repaired it to
@@ -78,5 +97,5 @@ export function useUIActions(
     setState(s => ({ ...s, pendingTerritoryClaimFor: undefined, screen: s.tutorial ? 'hub' : 'market' }))
   }, [setState])
 
-  return { go, goToMissions, setScreenFromUrl, skipNextUrlSync, setPopup, setMenuOpen, addToast, dismissToast, clearTerritoryClaimPopup, toasts, subsurfaceView, setSubsurfaceView }
+  return { go, goToMissions, setScreenFromUrl, skipNextUrlSync, setPopup, setMenuOpen, addToast, dismissToast, clearTerritoryClaimPopup, toasts, subsurfaceView, setSubsurfaceView, launchpadView, openLaunchpad, focusLaunchpad }
 }
