@@ -61,11 +61,11 @@ function MarketGlyph() {
 }
 
 const NAV_ITEMS: NavItem[] = [
-  { id: 'hub',      label: 'Base',     color: '#39d36a', glyph: <HubGlyph /> },
-  { id: 'missions', label: 'Missions', color: '#f5a623', glyph: <MissionsGlyph /> },
-  { id: 'galaxy',   label: 'Atlas',    color: '#7ec8ff', glyph: <AtlasGlyph /> },
-  { id: 'fab',      label: 'Build',    color: '#c084ff', glyph: <RocketGlyph />, locked: true },
-  { id: 'market',   label: 'Market',   color: '#ffb347', glyph: <MarketGlyph />, locked: true },
+  { id: 'hub',      label: 'Base',     color: 'var(--ln-ok)', glyph: <HubGlyph /> },
+  { id: 'missions', label: 'Missions', color: 'var(--ln-amber)', glyph: <MissionsGlyph /> }, // amber allowed - nav identity
+  { id: 'galaxy',   label: 'Atlas',    color: 'var(--ln-cyan-bright)', glyph: <AtlasGlyph /> },
+  { id: 'fab',      label: 'Build',    color: 'var(--ln-crit)', glyph: <RocketGlyph />, locked: true },
+  { id: 'market',   label: 'Market',   color: 'var(--ln-warn)', glyph: <MarketGlyph />, locked: true },
 ]
 
 function GearGlyph() {

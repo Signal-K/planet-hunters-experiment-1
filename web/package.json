@@ -53,7 +53,9 @@
     "test:e2e:release-visual": "CYPRESS_PROFILE=visual CYPRESS_baseUrl=http://localhost:3001 start-server-and-test dev http://localhost:3001 \"cypress:run:visual -- --spec cypress/e2e/visual/full-release-matrix.cy.ts\"",
     "test:e2e:release-visual:mobile": "CYPRESS_PROFILE=visual CYPRESS_baseUrl=http://localhost:3001 CYPRESS_RELEASE_MATRIX_VIEWPORT=mobile-portrait start-server-and-test dev http://localhost:3001 \"cypress:run:visual -- --spec cypress/e2e/visual/full-release-matrix.cy.ts\"",
     "lint:design-tokens": "node scripts/lint-design-tokens.mjs",
-    "lint": "npm run lint:design-tokens && npm run typecheck"
+    "lint": "npm run lint:design-tokens && npm run typecheck",
+    "percy": "percy exec -- npm run test:e2e:responsive",
+    "percy:run": "percy exec -- npm run cypress:run:responsive"
   },
   "dependencies": {
     "@takeon/engine": "file:vendor/takeon/takeon-engine-0.2.0.tgz",
