@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
+import { useRouter } from 'next/navigation'
 import type { RecordModel } from 'pocketbase'
 import { pbShared } from '@/lib/pb'
 import { pbLandnam, exchangeLandnamAuth } from '@/lib/pb-landnam'
@@ -82,6 +83,7 @@ export function useAuthSync({
   addToast, normalizeAndRepair, storageKey,
   beforeReset,
 }: AuthSyncOpts) {
+  const router = useRouter()
   // KES-151: must start `null` on both server and client, even though a
   // signed-in device already has `pbShared.authStore.record` populated
   // synchronously by the time this module evaluates on the client (the
@@ -541,9 +543,13 @@ export function useAuthSync({
   const landOnHubUnlessResumable = useCallback(() => {
     const current = stateRef.current
     if (isResumableMissionScreen(current.screen, current.missionId, current.targetId)) return
-    if (current.screen === 'hub') return
-    setState(s => ({ ...s, screen: 'hub' }))
-  }, [setState, stateRef])
+    // Auth can complete while the route page is still rendering the old
+    // deep-linked screen. Replace the URL here as well as the game state so
+    // that the route's URL -> state effect cannot put the player straight
+    // back onto Contracts after the gate closes (especially on mobile).
+    if (current.screen !== 'hub') setState(s => ({ ...s, screen: 'hub' }))
+    router.replace('/game/hub')
+  }, [router, setState, stateRef])
 
   const signInFromGate = useCallback(async (email: string, password: string) => {
     setAuthGateError(null)

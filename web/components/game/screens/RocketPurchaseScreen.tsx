@@ -2,7 +2,8 @@
 
 import { useState } from 'react'
 import { PrimaryBtn, GhostBtn } from '@/components/ui/Button'
-import type { Mission } from '@/lib/data'
+import type { Mission, RocketModel } from '@/lib/data'
+import { ROCKET_MODELS } from '@/lib/data'
 import TutorialHighlight from '@/components/game/TutorialHighlight'
 import StatCard from '@/components/ui/StatCard'
 import CostSummaryRow from '@/components/game/CostSummaryRow'
@@ -14,7 +15,6 @@ import { formatCurrency } from '@/lib/format'
 import { getRequiredRocketModel } from '@/lib/rockets'
 import { calibrateOnboardingPayout } from '@/lib/data'
 import RocketCutaway, { type RocketRoomKey } from '@/components/game/RocketCutaway'
-import { useIsNarrowViewport } from '@/lib/hooks/useIsNarrowViewport'
 
 function orbitLabel(maxOrbit: number): string {
   if (maxOrbit <= 3) return 'Near-Earth'
@@ -33,6 +33,12 @@ function cargoLabel(cargo: number): string {
   if (cargo <= 6) return 'Small payload'
   if (cargo <= 10) return 'Medium payload'
   return 'Large payload'
+}
+
+function rocketRole(rocket: RocketModel): string {
+  if (rocket.id === 'explorer') return 'Entry vehicle · balanced starter range'
+  if (rocket.id === 'prospector') return 'Larger vehicle · more cargo and range'
+  return `Tier ${rocket.tier} vehicle · expanded mission capability`
 }
 
 function ModuleChip({ label }: { label: string }) {
@@ -62,9 +68,11 @@ interface RocketPurchaseScreenProps {
 
 export default function RocketPurchaseScreen({ missionsDone, francs, mission, deliveryTargetName, onPurchase, onBack, hasCoach }: RocketPurchaseScreenProps) {
   const [activeRoom, setActiveRoom] = useState<RocketRoomKey | null>(null)
-  const [modulesOpen, setModulesOpen] = useState(false)
-  const isNarrow = useIsNarrowViewport()
-  const rocket = getRequiredRocketModel(missionsDone)
+  const [modulesOpen, setModulesOpen] = useState(true)
+  const defaultRocket = getRequiredRocketModel(missionsDone)
+  const availableRockets = ROCKET_MODELS.filter(model => !model.locked && model.missionsRequired <= missionsDone)
+  const [selectedRocketId, setSelectedRocketId] = useState(defaultRocket.id)
+  const rocket = availableRockets.find(model => model.id === selectedRocketId) ?? defaultRocket
   const isFree = rocket.costFrancs === 0
   const canAfford = francs >= rocket.costFrancs
   const missionPayout = mission ? calibrateOnboardingPayout(mission.payout.francs, missionsDone) : undefined
@@ -79,31 +87,27 @@ export default function RocketPurchaseScreen({ missionsDone, francs, mission, de
 
   return (
     <MissionSetupShell
-      className="mission-setup-screen--rocket theme-blueprint"
+      className="mission-setup-screen--rocket theme-deep"
       eyebrow="LAUNCHPAD · VEHICLE"
       title="Select Rocket"
       onBack={onBack}
       hasCoach={hasCoach}
       coachManual={hasCoach}
       step="Rocket"
-      stepDescription={
-        isFree
-          ? `${rocket.name} is included — continue to the Relay preflight check.`
-          : canAfford
-            ? `Purchase ${rocket.name} to continue to the Relay preflight check.`
-            : `Purchase ${rocket.name} to continue — insufficient Francs right now.`
-      }
+      stepDescription={isFree ? 'Choose a vehicle, then continue to preflight.' : 'Choose a vehicle, then purchase it to continue to preflight.'}
       actions={isFree ? (
-        <PrimaryBtn kind="cyan" onClick={() => onPurchase(rocket.id)}>
+        <div className="rocket-actions">
+          <PrimaryBtn full={false} kind="cyan" onClick={() => onPurchase(rocket.id)}>
           Launch with {rocket.name}
-        </PrimaryBtn>
+          </PrimaryBtn>
+        </div>
       ) : (
-        <>
-          <div style={{ marginBottom: 8 }}><GhostBtn full onClick={onBack}>Back</GhostBtn></div>
-          <PrimaryBtn kind="cyan" disabled={!canAfford} onClick={() => onPurchase(rocket.id)}>
+        <div className="rocket-actions">
+          <GhostBtn full={false} onClick={onBack}>Back</GhostBtn>
+          <PrimaryBtn full={false} kind="cyan" disabled={!canAfford} onClick={() => onPurchase(rocket.id)}>
             Purchase · {formatCurrency(rocket.costFrancs, { compact: true })}
           </PrimaryBtn>
-        </>
+        </div>
       )}
     >
       <div className="rocket-vehicle-stage">
@@ -139,6 +143,40 @@ export default function RocketPurchaseScreen({ missionsDone, francs, mission, de
       </div>
 
       <MissionSetupCard className="rocket-summary-card" scrollClassName="rocket-summary-scroll" scrollStyle={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
+          <div className="rocket-selector" role="radiogroup" aria-label="Available rocket types">
+            <div className="rocket-selector-heading">
+              <span className="rocket-selector-label">Choose vehicle</span>
+              <span className="rocket-selector-hint">Each launch uses one vehicle</span>
+            </div>
+            <div className="rocket-choice-grid">
+              {availableRockets.map(option => {
+                const selected = option.id === rocket.id
+                return (
+                  <button
+                    key={option.id}
+                    type="button"
+                    role="radio"
+                    aria-checked={selected}
+                    data-testid={`rocket-choice-${option.id}`}
+                    className={`rocket-choice${selected ? ' is-selected' : ''}`}
+                    onClick={() => {
+                      setSelectedRocketId(option.id)
+                      setActiveRoom(null)
+                      setModulesOpen(false)
+                    }}
+                  >
+                    <span className="rocket-choice-topline">
+                      <span>TIER {option.tier}</span>
+                      <strong>{option.costFrancs === 0 ? 'INCLUDED' : formatCurrency(option.costFrancs, { compact: true })}</strong>
+                    </span>
+                    <span className="rocket-choice-name">{option.name}</span>
+                    <span className="rocket-choice-role">{rocketRole(option)}</span>
+                    <span className="rocket-choice-stats">{option.stats.cargo}U · ORB {option.stats.maxOrbit} · DRILL T{option.stats.drillTier}</span>
+                  </button>
+                )
+              })}
+            </div>
+          </div>
           <div>
             <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 22, fontWeight: 800, color: 'var(--ln-text)', letterSpacing: '-0.01em' }}>
               {rocket.name}
@@ -167,12 +205,14 @@ export default function RocketPurchaseScreen({ missionsDone, francs, mission, de
             />
           </div>
 
-          <details className="rocket-modules" open={!isNarrow || modulesOpen} onToggle={event => setModulesOpen(event.currentTarget.open)}>
-            <summary>Installed Modules</summary>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-              {modules.map(m => <ModuleChip key={m} label={m} />)}
-            </div>
-          </details>
+          {modules.length > 0 && (
+            <details className="rocket-modules" open={modulesOpen} onToggle={event => setModulesOpen(event.currentTarget.open)}>
+              <summary>Installed Modules</summary>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                {modules.map(m => <ModuleChip key={m} label={m} />)}
+              </div>
+            </details>
+          )}
 
           {!isFree && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 0, background: 'var(--ln-panel-2)', borderRadius: 10, border: '1px solid var(--ln-cyan-border)', overflow: 'hidden' }}>

@@ -33,7 +33,7 @@ describe('LaunchpadScreen', () => {
     expect(markup).toContain('/game/assets/base/launchpad_flat.png')
     expect(markup).toContain('/game/assets/base/hangar_flat.png')
     expect(markup).toContain('<button type="button" class="launchpad-scene-object launchpad-tower')
-    expect(markup).toContain('START MISSION')
+    expect(markup).toContain('START OWN OP')
     expect(markup).not.toContain('pad_hangar')
     expect(markup).not.toContain('pad_complex')
     expect(markup).toContain('ROCKETS')

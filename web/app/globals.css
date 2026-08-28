@@ -377,6 +377,7 @@ html {
   overflow: hidden;
 }
 body {
+  height: 100dvh;
   min-height: 100%;
   margin: 0;
   background-color: var(--ln-void);
@@ -435,7 +436,9 @@ button { cursor: pointer; }
    actual phone it just wastes screen as dead margin around a shrunk canvas.
    Drop the stage padding here so .portrait-canvas can go full-bleed. */
 @media (max-width: 1023px) {
-  .game-stage { padding: 0; }
+  html, body { height: 100dvh; min-height: 100dvh; }
+  body { display: block; }
+  .game-stage { width: 100%; height: 100dvh; min-height: 100dvh; padding: 0; }
 }
 .game-stage::before {
   content: '';
@@ -1219,6 +1222,70 @@ button { cursor: pointer; }
   min-width: 0;
 }
 
+.rocket-selector {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ln-s-2);
+}
+
+.rocket-selector-heading {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--ln-s-2);
+}
+
+.rocket-selector-label,
+.rocket-choice-name {
+  color: var(--ln-text);
+  font-family: var(--ln-font-display);
+  font-weight: 800;
+  letter-spacing: var(--ln-tr-label);
+  text-transform: uppercase;
+}
+
+.rocket-selector-label { font-size: 11px; }
+.rocket-selector-hint { color: var(--ln-text-muted); font: 500 10px var(--ln-font-body); }
+
+.rocket-choice-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--ln-s-2);
+}
+
+.rocket-choice {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: var(--ln-s-3);
+  border: 1px solid var(--ln-hairline-strong);
+  border-radius: var(--ln-r-lg);
+  background: var(--ln-surface);
+  color: var(--ln-text);
+  text-align: left;
+  cursor: pointer;
+  transition: border-color var(--ln-d-quick) var(--ln-ease-snap), background var(--ln-d-quick) var(--ln-ease-snap), box-shadow var(--ln-d-quick) var(--ln-ease-snap);
+}
+
+.rocket-choice:hover,
+.rocket-choice:focus-visible { border-color: var(--ln-cyan); background: var(--ln-surface-2); }
+.rocket-choice.is-selected { border-color: var(--ln-cyan); background: var(--ln-cyan-soft); box-shadow: var(--ln-glow-cyan); }
+.rocket-choice-topline { display: flex; justify-content: space-between; gap: 4px; color: var(--ln-text-muted); font: 700 9px var(--ln-font-mono); letter-spacing: .08em; }
+.rocket-choice-topline strong { color: var(--ln-amber); font-weight: 800; }
+.rocket-choice-name { font-size: 16px; letter-spacing: .04em; }
+.rocket-choice-role { min-height: 28px; color: var(--ln-text-dim); font: 500 10px/1.35 var(--ln-font-body); }
+.rocket-choice-stats { color: var(--ln-cyan); font: 700 9px var(--ln-font-mono); letter-spacing: .06em; white-space: nowrap; }
+
+.rocket-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--ln-s-2);
+}
+
+.rocket-actions > button { width: auto !important; }
+
 .rocket-route-notice {
   margin-bottom: 8px;
   padding: 8px 12px;
@@ -1375,10 +1442,11 @@ button { cursor: pointer; }
   }
 
   .mission-setup-screen--rocket .mission-setup-content {
-    grid-template-rows: auto minmax(0, 1fr);
+    display: flex;
+    flex-direction: column;
     gap: 8px;
-    padding-top: 74px;
-    padding-bottom: 254px;
+    padding: 72px 12px 132px;
+    overflow-y: auto;
   }
 
   .mission-setup-screen--rocket .rocket-route-notice {
@@ -1389,12 +1457,20 @@ button { cursor: pointer; }
   }
 
   .mission-setup-screen--rocket .rocket-vehicle-frame {
-    min-height: 176px;
+    min-height: 156px;
+  }
+
+  .mission-setup-screen--rocket .rocket-summary-card {
+    flex: none;
+    height: auto;
+    overflow: visible;
   }
 
   .mission-setup-screen--rocket .rocket-summary-scroll {
     gap: 12px !important;
     padding: 12px;
+    height: auto;
+    overflow: visible;
   }
 
   .mission-setup-screen--rocket .rocket-summary-card > .rocket-summary-scroll > div:first-child > div:last-child {
@@ -1434,6 +1510,23 @@ button { cursor: pointer; }
   .mission-setup-screen--rocket .rocket-modules[open] summary {
     margin-bottom: 8px;
   }
+
+  .rocket-actions {
+    gap: 8px;
+  }
+
+  .rocket-actions > button {
+    min-height: 44px;
+    padding: 12px 14px !important;
+    font-size: 12px !important;
+    letter-spacing: .1em !important;
+  }
+
+  .rocket-selector-heading { align-items: flex-start; flex-direction: column; gap: 2px; }
+  .rocket-choice { padding: 10px; }
+  .rocket-choice-name { font-size: 14px; }
+  .rocket-choice-role { min-height: 34px; font-size: 9px; }
+  .rocket-choice-stats { font-size: 8px; letter-spacing: .03em; }
 }
 
 .transit-screen { background: radial-gradient(circle at 80% 18%, rgba(112,217,234,.14), transparent 24%), var(--ln-bg-stars), var(--ln-void); }

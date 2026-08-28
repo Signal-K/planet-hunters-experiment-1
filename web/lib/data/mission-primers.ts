@@ -46,6 +46,22 @@ export function isOwnProgramMission(mission: Mission): boolean {
 }
 
 /**
+ * True when a completed run's cargo is a *free haul* the player owns outright:
+ * a self-directed mining run (own program, no client, no delivery drop, not a
+ * construction haul) that actually came home with ore. This is the only case
+ * that gets the Debrief store-vs-sell choice — client contracts and no-mineral
+ * runs (satellite, survey, rover deploy) are deliberately excluded, so for them
+ * "nothing changes". Satellite/survey/rover runs also carry no ore and so fail
+ * the units check regardless.
+ */
+export function isFreeHaulMission(mission: Mission, cargo: Record<string, number> | null | undefined): boolean {
+  return isOwnProgramMission(mission)
+    && !mission.deliveryTargetId
+    && !mission.construction
+    && Object.values(cargo ?? {}).some(units => units > 0)
+}
+
+/**
  * During guided onboarding, the board remains the sequence entry point. Once
  * Free Ops begins, the Mission Board is strictly client work; owned flights
  * live under Launchpad → Your Program.

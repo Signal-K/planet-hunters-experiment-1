@@ -169,6 +169,16 @@ export const DAILY_QUEST_REWARDS = {
   large: 2_000_000,
 } as const
 
+// ── Earth-side ore storage (silos) ───────────────────────────────────────────
+// A built Mineral Vault gives the player real Earth-side ore storage, drawn as
+// a filling silo. One silo holds this many ore units; additional silos (a
+// follow-up) add capacity in multiples of this. Sized against typical hauls
+// (single- to low-double-digit units per run) so one silo fills over several
+// self-directed runs and "keep vs sell" becomes a genuine decision rather than
+// a formality. This is a soft cap: it governs the free-mission "store" path and
+// the silo fill visual, and never retroactively force-sells ore already held.
+export const MINERAL_SILO_CAPACITY = 120
+
 // ── Market ─────────────────────────────────────────────────────────────────
 
 /** Selling raw ore on the open market returns this share of book value. */

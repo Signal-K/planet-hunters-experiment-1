@@ -93,6 +93,20 @@ export default function LaunchpadScreen({
   }
 
   const isGuided = (target: (typeof guideSteps)[number]['target']) => guide?.target === target
+  const startPadAction = () => {
+    if (player.activeMission || player.pendingLaunch || !freeOperations || !nextOperation) {
+      onLaunchpadAction()
+      return
+    }
+    onPick(nextOperation.id)
+  }
+  const padActionLabel = player.activeMission
+    ? 'Resume active mission'
+    : player.pendingLaunch
+      ? 'Inspect pending launch'
+      : freeOperations && nextOperation
+        ? 'Start own program operation'
+        : 'Start a new mission'
 
   return (
     <div className="game-screen theme-blueprint ln-scene-launchpad">
@@ -123,14 +137,14 @@ export default function LaunchpadScreen({
         <div className="launchpad-scene-zoom">
           <HubWorldBackground phase={skyPhase} composition="earth-base-pad" />
         </div>
-        <button type="button" className={`launchpad-scene-object launchpad-tower ${isGuided('tower') ? 'is-guided' : ''}`} data-testid="launchpad-status-card" onClick={onLaunchpadAction} aria-label={player.activeMission ? 'Resume active mission' : player.pendingLaunch ? 'Inspect pending launch' : 'Start a new mission'}>
+        <button type="button" className={`launchpad-scene-object launchpad-tower ${isGuided('tower') ? 'is-guided' : ''}`} data-testid="launchpad-status-card" onClick={startPadAction} aria-label={padActionLabel}>
           <span className="launchpad-tower-art" data-launch-state={player.pendingLaunch ? 'hot' : 'idle'}>
             <LaunchpadModules />
             {player.pendingLaunch && <img className="launchpad-tower-rocket" src={rocketImageSrc} alt="Rocket on launchpad" />}
           </span>
           <span className="launchpad-object-label launchpad-object-label--center">
             <small>LAUNCHPAD</small>
-            <strong>{player.activeMission ? 'RESUME MISSION' : player.pendingLaunch ? 'INSPECT LAUNCH' : 'START MISSION'}</strong>
+            <strong>{player.activeMission ? 'RESUME MISSION' : player.pendingLaunch ? 'INSPECT LAUNCH' : freeOperations && nextOperation ? 'START OWN OP' : 'START MISSION'}</strong>
           </span>
         </button>
 

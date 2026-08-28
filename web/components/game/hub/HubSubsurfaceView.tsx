@@ -14,6 +14,7 @@ import {
 import {
   CUSTOMIZER_PARTS,
   MINERAL_META,
+  MINERAL_SILO_CAPACITY,
   SUBSURFACE_EXCAVATE_COST,
   SUBSURFACE_ROOMS,
   canAffordSubsurface,
@@ -205,7 +206,46 @@ function RoomIcon({ id, size = 18 }: { id: SubsurfaceRoomId; size?: number }) {
   return <Dumbbell size={size} strokeWidth={2} />
 }
 
-function MineralVault({ minerals }: { minerals: StoredMineral[] }) {
+function StorageSilo({ minerals, capacity }: { minerals: StoredMineral[]; capacity: number }) {
+  const totalUnits = minerals.reduce((sum, mineral) => sum + mineral.amount, 0)
+  const filledPct = capacity > 0 ? Math.min(100, (totalUnits / capacity) * 100) : 0
+  const full = totalUnits >= capacity
+  return (
+    <div className={styles.siloRack} data-testid="subsurface-storage-silo">
+      <div className={styles.silo}>
+        <div className={styles.siloFill} style={{ height: `${filledPct}%` }}>
+          {minerals.map(mineral => (
+            <span
+              key={mineral.id}
+              className={styles.siloSeg}
+              title={`${mineral.name} · ${mineral.amount} U`}
+              style={{
+                flexGrow: mineral.amount,
+                '--seg-color': mineral.color,
+              } as React.CSSProperties}
+            />
+          ))}
+        </div>
+        {[25, 50, 75].map(tick => (
+          <i key={tick} className={styles.siloTick} style={{ bottom: `${tick}%` }} />
+        ))}
+      </div>
+      <div className={styles.siloReadout}>
+        <div className={styles.siloReadValue}>
+          {totalUnits}<span>/ {capacity} U</span>
+        </div>
+        <div className={`${styles.siloReadState} ${full ? styles.siloReadStateFull : ''}`}>
+          {full ? 'Silo full' : `${Math.round(filledPct)}% full · Silo 01`}
+        </div>
+        <p className={styles.siloReadCopy}>
+          One silo, filling by mineral. Overflow past capacity is sold on return.
+        </p>
+      </div>
+    </div>
+  )
+}
+
+function MineralVault({ minerals, capacity }: { minerals: StoredMineral[]; capacity: number }) {
   const totalUnits = minerals.reduce((sum, mineral) => sum + mineral.amount, 0)
   return (
     <div className={styles.detailPanel} data-testid="subsurface-mineral-vault">
@@ -214,12 +254,14 @@ function MineralVault({ minerals }: { minerals: StoredMineral[] }) {
           <div className={styles.metricValue}>{totalUnits}</div>
           <div className={styles.metricLabel}>Units in secure storage</div>
           <p className={styles.summaryCopy}>
-            Recovered ore remains in the Earth Base stash until it is refined,
-            committed to construction, or sold at the Commodity Exchange.
+            Ore you keep sits in the silo until you sell it at the Commodity
+            Exchange or spend it on your own builds. Selling later, when prices
+            are up, beats the fixed payout for auto-selling on return.
           </p>
         </div>
         <span className={styles.status}>{minerals.length} species catalogued</span>
       </div>
+      <StorageSilo minerals={minerals} capacity={capacity} />
       <div className={styles.inventoryList}>
         {minerals.length > 0 ? minerals.map(mineral => (
           <div className={styles.inventoryRow} key={mineral.id}>
@@ -414,6 +456,7 @@ export function HubSubsurfaceView({
   return (
     <section className={styles.root} data-testid="hub-subsurface-view" aria-label="Earth Base subsurface">
       <div className={styles.geology} aria-hidden="true">
+        <span className={styles.crust} />
         <span className={`${styles.stratum} ${styles.stratumOne}`} />
         <span className={`${styles.stratum} ${styles.stratumTwo}`} />
         <span className={styles.serviceShaft} />
@@ -459,7 +502,7 @@ export function HubSubsurfaceView({
             ) : !builtSet.has(activeRoom) ? (
               <RoomBuildPrompt room={activeDefinition} francs={francs} stash={stash} onBuild={onBuildRoom} />
             ) : activeRoom === 'mineral-vault' ? (
-              <MineralVault minerals={minerals} />
+              <MineralVault minerals={minerals} capacity={MINERAL_SILO_CAPACITY} />
             ) : (
               <PartsLocker parts={parts} />
             )}

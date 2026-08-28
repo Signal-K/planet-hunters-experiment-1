@@ -3,7 +3,8 @@
 
 import type { GameState } from '@/lib/game-types'
 import type { RefineryRecipe, ShipRoomKind, StructureBlueprint, RocketModel, SubsurfaceRoomId } from '@/lib/data'
-import { MINERAL_META, CLIENT_SLOTS, LAUNCHPAD_UPGRADE_COST, OPEN_MARKET_SELL_RATE, customizerPartById, deepSpaceTelescopeUnlocked, SUBSURFACE_EXCAVATE_COST, SUBSURFACE_ROOMS, canAffordSubsurface } from '@/lib/data'
+import { rocketConfigForModel } from '@/lib/data'
+import { MINERAL_META, CLIENT_SLOTS, LAUNCHPAD_UPGRADE_COST, OPEN_MARKET_SELL_RATE, MINERAL_SILO_CAPACITY, customizerPartById, deepSpaceTelescopeUnlocked, SUBSURFACE_EXCAVATE_COST, SUBSURFACE_ROOMS, canAffordSubsurface } from '@/lib/data'
 import { structureIsStaffed } from './AcademySystem'
 
 // Sell to open market (raw): ~80% of book value — see [[Economy and Minerals]].
@@ -99,6 +100,92 @@ export function applySellMinerals(s: GameState, mineralId: string, amount: numbe
   return { ...s, player: { ...s.player, francs: s.player.francs + revenue, stash, marketSupply, marketSupplyUpdatedAt } }
 }
 
+// ── Earth-side ore storage (silos) ───────────────────────────────────────────
+// A built Mineral Vault is what gives the player somewhere on Earth to KEEP a
+// self-directed haul rather than selling it on return. Storage capacity, the
+// silo fill visual, and the free-mission store/sell choice all read off these.
+
+type StoragePlayer = Pick<GameState['player'], 'subsurfaceExcavated' | 'subsurfaceBuilt' | 'stash'>
+
+/** True once the below-soil Mineral Vault is built — the prerequisite for
+ *  keeping ore on Earth. Excavation alone is not enough; the vault is the silo. */
+export function earthStorageBuilt(player: Pick<StoragePlayer, 'subsurfaceBuilt'>): boolean {
+  return (player.subsurfaceBuilt ?? []).includes('mineral-vault')
+}
+
+/** Number of ore silos the player has. One with the Mineral Vault built; more
+ *  silos are a follow-up, so this is 0 or 1 for now. */
+export function siloCount(player: Pick<StoragePlayer, 'subsurfaceBuilt'>): number {
+  return earthStorageBuilt(player) ? 1 : 0
+}
+
+/** Total ore units the player's silos can hold. 0 with no vault. */
+export function storageCapacity(player: Pick<StoragePlayer, 'subsurfaceBuilt'>): number {
+  return siloCount(player) * MINERAL_SILO_CAPACITY
+}
+
+/** Total ore units currently held in the stash. */
+export function storedUnits(stash: Record<string, number> | undefined): number {
+  return Object.values(stash ?? {}).reduce((sum, n) => sum + Math.max(0, n), 0)
+}
+
+/** Sell an explicit set of ore units out of the stash at current market prices,
+ *  crediting francs and applying supply pressure per mineral — the same path a
+ *  manual Commodity Exchange sale takes, run once per mineral in the set. Used
+ *  when a self-directed haul (or a silo overflow) is sold on return. */
+export function applySellHaul(s: GameState, haul: Record<string, number>, now: number = Date.now()): GameState {
+  let next = s
+  for (const [id, amount] of Object.entries(haul)) {
+    if (amount > 0) next = applySellMinerals(next, id, amount, now)
+  }
+  return next
+}
+
+/** Pick which of a haul's units spill when a silo is over capacity: cheapest ore
+ *  first, so the player keeps the valuable ore and only common ore is sold off.
+ *  Never returns more units than the haul contains. */
+export function pickOverflowFromHaul(haul: Record<string, number>, overflow: number): Record<string, number> {
+  if (overflow <= 0) return {}
+  const byCheapest = Object.entries(haul)
+    .filter(([, n]) => n > 0)
+    .sort((a, b) => (MINERAL_META[a[0]]?.price ?? 0) - (MINERAL_META[b[0]]?.price ?? 0))
+  const spill: Record<string, number> = {}
+  let remaining = overflow
+  for (const [id, n] of byCheapest) {
+    if (remaining <= 0) break
+    const take = Math.min(n, remaining)
+    spill[id] = take
+    remaining -= take
+  }
+  return spill
+}
+
+/**
+ * Resolve what happens to a self-directed ("free") mission's haul on return.
+ * The haul is already in the stash by this point (the return leg stashes it),
+ * so this only decides how much leaves again:
+ *
+ * - `sell` (or no vault built): sell the whole haul at market, crediting francs.
+ * - `store` with a vault: keep the haul up to silo capacity; any units over
+ *   capacity spill and are auto-sold (cheapest ore first). Ore already held
+ *   before this run is never force-sold.
+ */
+export function applyFreeHaulDisposition(
+  s: GameState,
+  haul: Record<string, number>,
+  disposition: 'store' | 'sell',
+  now: number = Date.now(),
+): GameState {
+  if (!Object.values(haul).some(n => n > 0)) return s
+  const effective = earthStorageBuilt(s.player) ? disposition : 'sell'
+  if (effective === 'sell') {
+    return applySellHaul(s, haul, now)
+  }
+  const overflow = Math.max(0, storedUnits(s.player.stash) - storageCapacity(s.player))
+  if (overflow <= 0) return s
+  return applySellHaul(s, pickOverflowFromHaul(haul, overflow), now)
+}
+
 export function applyStartRefine(s: GameState, recipe: RefineryRecipe): GameState {
   const stash = { ...(s.player.stash ?? {}) }
   const current = stash[recipe.input.mineral] ?? 0
@@ -144,6 +231,7 @@ export function applyPurchaseRocket(s: GameState, rocket: RocketModel): GameStat
   return {
     ...s,
     screen: 'fab',
+    rocket: rocketConfigForModel(rocket),
     player: {
       ...s.player,
       francs: s.player.francs - rocket.costFrancs,

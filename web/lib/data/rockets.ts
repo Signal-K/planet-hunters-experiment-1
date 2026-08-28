@@ -103,6 +103,22 @@ export function rocketModelForConfig(rocket: Pick<RocketConfig, 'chassis'> | nul
   return ROCKET_MODELS.find(model => model.id === id) ?? ROCKET_MODELS[0]
 }
 
+/**
+ * Return the canonical unibody loadout for a purchasable model. Keeping this
+ * mapping beside the model catalogue means choosing a vehicle updates both
+ * the purchase record and the assembly/debrief systems, rather than only
+ * changing the label shown in the selector.
+ */
+export function rocketConfigForModel(model: Pick<RocketModel, 'id'> | null | undefined): RocketConfig {
+  switch (model?.id) {
+    case ROCKET_IDS.prospector:
+      return { chassis: 'hull-mk2', propulsion: 'fusion-b2', drill: 'laser-t2' }
+    case ROCKET_IDS.explorer:
+    default:
+      return { chassis: 'hull-mk1', propulsion: 'ion-a1', drill: 'hand-drill' }
+  }
+}
+
 export function rocketDisplayForConfig(rocket: Pick<RocketConfig, 'chassis'> | null | undefined): {
   name: string
   img: string

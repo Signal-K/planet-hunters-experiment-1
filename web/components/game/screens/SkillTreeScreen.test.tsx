@@ -31,7 +31,7 @@ describe('SkillTreeScreen', () => {
       />,
     )
     expect(markup).toContain('data-testid="skill-tree-screen"')
-    expect(markup).toContain('License Grade')
+    expect(markup).toContain('FLIGHT AUTHORITY')
     for (const node of SKILL_NODES) {
       expect(markup).toContain(node.name)
       expect(markup).toContain(node.description)

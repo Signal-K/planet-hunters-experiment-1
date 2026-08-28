@@ -403,7 +403,7 @@ export interface GameActions {
   onDeliveryArrived: () => void
   onDeliveryUnloadComplete: () => void
   onReturnArrived: () => void
-  onDebriefDone: (total: number, affinity: number, consumed?: Record<string, number>) => void
+  onDebriefDone: (total: number, affinity: number, consumed?: Record<string, number>, disposition?: 'store' | 'sell') => void
   coachManualNext: () => void
   completeStep: (id: number) => void
   resetGame: () => void

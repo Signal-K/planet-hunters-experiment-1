@@ -83,7 +83,7 @@ describe('Launchpad · your own program', () => {
       })
   })
 
-  it('clicking the launchpad starts a new mission on the Mission Board', () => {
+  it('clicking the launchpad starts the next own-program operation', () => {
     cy.viewport(390, 844)
     visitLaunchpad(freeOpsSave())
 
@@ -99,6 +99,6 @@ describe('Launchpad · your own program', () => {
     cy.get('[data-testid="auth-gate-quick-submit"]').click()
     cy.get('[data-testid="auth-gate-quick-email"]', { timeout: 15000 }).should('not.exist')
     cy.get('[data-testid="launchpad-status-card"]', { timeout: 15000 }).should('be.visible').click()
-    cy.contains('Mission Board', { timeout: 15000 }).should('be.visible')
+    cy.contains('Pick Target', { timeout: 15000 }).should('be.visible')
   })
 })

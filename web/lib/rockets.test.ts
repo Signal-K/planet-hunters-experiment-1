@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { ROCKET_MODELS, ROCKET_IDS, canonicalRocketId } from '@/lib/data'
+import { ROCKET_MODELS, ROCKET_IDS, canonicalRocketId, rocketConfigForModel } from '@/lib/data'
 import { getRequiredRocketModel } from './rockets'
 
 describe('getRequiredRocketModel', () => {
@@ -27,5 +27,16 @@ describe('getRequiredRocketModel', () => {
     )
 
     expect(getRequiredRocketModel(missionsDone).tier).toBe(expectedTier)
+  })
+})
+
+describe('rocketConfigForModel', () => {
+  it('maps the selectable model names to their canonical unibody loadouts', () => {
+    expect(rocketConfigForModel(ROCKET_MODELS.find(rocket => rocket.id === ROCKET_IDS.explorer))).toEqual({
+      chassis: 'hull-mk1', propulsion: 'ion-a1', drill: 'hand-drill',
+    })
+    expect(rocketConfigForModel(ROCKET_MODELS.find(rocket => rocket.id === ROCKET_IDS.prospector))).toEqual({
+      chassis: 'hull-mk2', propulsion: 'fusion-b2', drill: 'laser-t2',
+    })
   })
 })

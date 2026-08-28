@@ -11,6 +11,7 @@ import RoverMiningScreen from '@/components/game/screens/RoverMiningScreen'
 import type { RoverTerrainClass } from '@/lib/data/rover-scouting'
 import DeliveryScreen from '@/components/game/screens/DeliveryScreen'
 import DebriefScreen from '@/components/game/screens/DebriefScreen'
+import { earthStorageBuilt, storageCapacity, storedUnits, sellQuote } from '@/lib/systems/EconomySystem'
 
 type Game = ReturnType<typeof useGame>
 type RocketDisplay = ReturnType<typeof rocketDisplayForConfig>
@@ -270,6 +271,10 @@ export default function MissionOperationRoutes({
             && !!game.target
             && !(game.player.crewVisitedTargets ?? []).includes(game.target.id)
           }
+          hasEarthStorage={earthStorageBuilt(game.player)}
+          storageCapacity={storageCapacity(game.player)}
+          storageUsed={storedUnits(game.player.stash)}
+          haulMarketValue={sellQuote(game.deliveredCargo ?? game.lastCargo ?? {}, game.player, game.player.lastClient)}
         />
       )
   }

@@ -20,10 +20,14 @@ export default function ScreenPage({ params }: { params: Promise<{ screen: strin
   // coach since it keys off game.screen, not the URL).
   useEffect(() => {
     if (!game.hydrated) return
+    // Until authentication is resolved, a deep URL is only the route that
+    // opened underneath the entry gate. Letting it write into GameState here
+    // races sign-in's canonical Earth Base redirect and can reopen Contracts.
+    if (game.authGateOpen || !game.authUserId) return
     if (VALID_SCREENS.has(screen as Screen) && game.screen !== screen) {
       game.setScreenFromUrl(screen as Screen)
     }
-  }, [screen, game.hydrated]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [screen, game.hydrated, game.authGateOpen, game.authUserId]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Coach: lightweight derivation without importing the full hook
   const coachSteps = !game.tutorial ? [] :

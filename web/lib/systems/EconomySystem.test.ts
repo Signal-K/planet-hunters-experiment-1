@@ -64,6 +64,7 @@ describe('applyPurchaseRocket', () => {
     expect(next.player.francs).toBe(100)
     expect(next.player.pendingLaunch).toBe(true)
     expect(next.player.pendingRocketId).toBe('prospector')
+    expect(next.rocket).toEqual({ chassis: 'hull-mk2', propulsion: 'fusion-b2', drill: 'laser-t2' })
     expect(applyPurchaseRocket(next, rocket).player.francs).toBe(100)
   })
 })

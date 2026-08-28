@@ -5,13 +5,14 @@ import {
   feasibleTargetsFor,
   CLIENT_COOLDOWN_MS, CLIENT_STREAK_LIMIT, loanInstalmentFor, BANKRUPTCY_THRESHOLD,
   isOwnProgramMission,
+  isFreeHaulMission,
   artifactNarrativeEligible,
 } from '@/lib/data'
 import { applyMiningDone, applyReturnArrived, applyRoverMiningDone } from '@/lib/systems/MiningSystem'
 import { applyDeliveryArrived, applyDeliveryUnloadComplete } from '@/lib/systems/DeliverySystem'
 import { applyLandingTouchdown, applyRedockComplete } from '@/lib/systems/LandingSystem'
 import { applyAwardMissionCrewXP, crewRequirementStatus, diplomacyPayoutMultiplier, missionCrewForLaunch } from '@/lib/systems/AcademySystem'
-import { applyPurchaseRocket } from '@/lib/systems/EconomySystem'
+import { applyPurchaseRocket, applyFreeHaulDisposition, earthStorageBuilt } from '@/lib/systems/EconomySystem'
 import { applyConstructionCompletion } from '@/lib/systems/ConstructionSystem'
 import { enqueueSurvey, isRepeatSurveyEligible, getMilestoneSurveyVariant } from '@/lib/surveys'
 import { captureGameEvent } from '@/lib/posthog'
@@ -477,9 +478,23 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
     enqueueSurvey('lnm_satellite_clarity', 1200)
   }, [setState])
 
-  const onDebriefDone = useCallback((rawTotal: number, _affinity = 0, consumed: Record<string, number> = {}) => {
+  const onDebriefDone = useCallback((rawTotal: number, _affinity = 0, consumed: Record<string, number> = {}, disposition?: 'store' | 'sell') => {
     const current = stateRef.current
     if (current.screen !== 'debrief' || !current.missionId || !current.targetId || !current.lastCargo) return
+    // A self-directed ("free") haul lands in the stash on return; here the
+    // player's Debrief choice decides whether it stays on Earth or is sold at
+    // market. Runs as its own state step before the payout/ledger update below
+    // so the sell revenue is on the balance the main update reads. Client
+    // contracts and no-mineral runs are untouched — nothing changes for them.
+    setState(s => {
+      if (s.screen !== 'debrief' || !s.missionId || !s.lastCargo) return s
+      const m = catalog.missions.find(item => item.id === s.missionId)
+        ?? s.player.dailyClientPool?.missions.find(item => item.id === s.missionId)
+        ?? null
+      if (!m || !isFreeHaulMission(m, s.lastCargo)) return s
+      const effective = disposition ?? (earthStorageBuilt(s.player) ? 'store' : 'sell')
+      return applyFreeHaulDisposition(s, s.lastCargo, effective, Date.now())
+    })
     const newMissionsDone = current.player.missionsDone + 1
     const completedMission = catalog.missions.find(m => m.id === current.missionId)
       ?? current.player.dailyClientPool?.missions.find(m => m.id === current.missionId)
@@ -489,7 +504,15 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
     // the figure it shows and hands that exact number to `onDone`, so
     // re-applying `calibrateOnboardingPayout` here only risked the screen and
     // the ledger drifting apart. Credit what the player was shown.
-    const total = rawTotal
+    //
+    // A free haul is the exception: its francs and ore are fully settled by the
+    // disposition step above (sold at real market price, or kept in the silo),
+    // so the main ledger update must neither credit a contract payout nor
+    // consume the ore again. The screen passes 0/{} for these, but neutralize
+    // here too so no code path can double-count the haul.
+    const completedIsFreeHaul = !!completedMission && isFreeHaulMission(completedMission, current.lastCargo)
+    const total = completedIsFreeHaul ? 0 : rawTotal
+    const effectiveConsumed = completedIsFreeHaul ? {} : consumed
     const crewAwardId = current.player.missionRunId ?? `${current.missionId}:${current.player.missionsDone}`
     const difficultCrewReturn = !!completedMission
       && Number.parseInt(completedMission.difficulty.replace(/\D/g, ''), 10) >= 3
@@ -522,7 +545,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
       // A delivery-target contract already moved the minerals out of the ship
       // at the unload berth, so they never entered Earth Base storage.
       if (!mission?.deliveryTargetId) {
-        for (const [id, amount] of Object.entries(consumed)) {
+        for (const [id, amount] of Object.entries(effectiveConsumed)) {
           stash[id] = Math.max(0, (stash[id] ?? 0) - amount)
         }
       }
@@ -665,7 +688,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
         mission_id: current.missionId,
         target_id: current.targetId,
         payout_francs: total,
-        minerals_delivered: consumed,
+        minerals_delivered: effectiveConsumed,
         missions_done_after: newMissionsDone,
         completed_at: new Date().toISOString(),
       }).catch(() => {})
