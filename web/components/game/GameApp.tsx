@@ -21,6 +21,8 @@ import { SURVEY_SAFE_SCREENS } from '@/lib/survey-gating'
 import DevShortcuts from '@/components/dev/DevShortcuts'
 import AuthGateSheet from '@/components/game/AuthGateSheet'
 import SettingsSheet from '@/components/game/SettingsSheet'
+import FriendsButton from '@/components/game/FriendsButton'
+import FriendsSheet from '@/components/game/FriendsSheet'
 import TerritoryClaimPopup from '@/components/game/TerritoryClaimPopup'
 import TakeOnPwaPreload from '@/components/takeon/TakeOnPwaPreload'
 import { UI_ZONES } from '@/lib/ui-zones'
@@ -32,6 +34,7 @@ function GameCanvas() {
   const returnScheduledKey = useRef<string | null>(null)
   const priorScreenRef = useRef<Screen | null>(null)
   const [settingsOpen, setSettingsOpen] = useState(false)
+  const [friendsOpen, setFriendsOpen] = useState(false)
 
   // PostHog injects recorder/survey scripts. Initialising during module
   // evaluation can let those scripts mutate the document while React is
@@ -214,6 +217,9 @@ function GameCanvas() {
             </svg>
           </button>
         )}
+        {game.screen === 'hub' && !game.authGateOpen && (
+          <FriendsButton onClick={() => setFriendsOpen(true)} />
+        )}
         <DevShortcuts />
         <div className="game-screen-area">
           {/* Gated the same way as [screen]/page.tsx — see STS-624. */}
@@ -290,6 +296,7 @@ function GameCanvas() {
           permanent nav rail is redundant chrome. Settings moved to the small
           corner button above; everything else routes through the base. */}
       {settingsOpen && <SettingsSheet onClose={() => setSettingsOpen(false)} />}
+      {friendsOpen && <FriendsSheet onClose={() => setFriendsOpen(false)} />}
     </main>
   )
 }

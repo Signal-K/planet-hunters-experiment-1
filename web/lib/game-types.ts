@@ -445,6 +445,7 @@ export interface GameActions {
   gainResearchXP: (amount: number) => void
   upgradeLicenseGrade: (grade: Exclude<LicenseGrade, 'Grade I'>) => void
   unlockBlueprint: (blueprintId: string, costFrancs?: number, costXP?: number, costMaterials?: Record<string, number>) => void
+  claimFriendGift: (giftId: string) => Promise<void>
   researchAcademy: () => void
   researchLanding: () => void
   setAcademyFunding: (funded: boolean) => void

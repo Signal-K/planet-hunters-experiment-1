@@ -22,6 +22,8 @@ import { useSurfaceOpsActions } from '@/lib/contexts/useSurfaceOpsActions'
 import { useInstrumentFeedNotifications } from '@/lib/contexts/useInstrumentFeedNotifications'
 import { useAcademyActions } from '@/lib/contexts/useAcademyActions'
 import { deriveSceneScope, EARTH_BASE_SCOPE } from '@/lib/scene-scope'
+import { claimFriendGift as claimFriendGiftRequest } from '@/lib/friends/client'
+import { applyFriendGiftToPlayer, friendGiftToastMessage } from '@/lib/friends/applyGift'
 
 export type { Screen, Player, GameState } from '@/lib/game-types'
 
@@ -174,6 +176,21 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
   const tutorial = useTutorialActions(setState)
   const economy = useEconomyActions(setState, useCallback(() => runtimeCatalog.missions, [runtimeCatalog.missions]))
   const surfaceOps = useSurfaceOpsActions(setState, ui.addToast)
+
+  // KES-83: applies a claimed friend gift to local player state through the
+  // same setState path (and, for blueprints, the same unlockBlueprint action
+  // used elsewhere) every other reward uses — the friends UI never touches
+  // player state directly.
+  const claimFriendGift = useCallback(async (giftId: string) => {
+    const { kind, payload } = await claimFriendGiftRequest(giftId)
+    if (kind === 'blueprint' && payload.slug) {
+      loop.unlockBlueprint(payload.slug, 0, 0, {})
+    } else {
+      setState(s => applyFriendGiftToPlayer(s, kind, payload))
+    }
+    ui.addToast(friendGiftToastMessage(kind, payload), 'ok')
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loop.unlockBlueprint])
   const academy = useAcademyActions(stateRef, setState, useCallback(() => runtimeCatalog, [runtimeCatalog]), ui.addToast)
   useInstrumentFeedNotifications({
     // Instrument feeds are shared-backend data. Do not start a background
@@ -271,6 +288,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       gainResearchXP: loop.gainResearchXP,
       upgradeLicenseGrade: loop.upgradeLicenseGrade,
       unlockBlueprint: loop.unlockBlueprint,
+      claimFriendGift,
       researchAcademy: academy.researchAcademy,
       researchLanding: academy.researchLanding,
       setAcademyFunding: academy.setAcademyFunding,
