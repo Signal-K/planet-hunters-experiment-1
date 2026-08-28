@@ -1,4 +1,7 @@
 import './commands'
+import './screenshot-diff'
+import './a11y-checks'
+import './responsive-helpers'
 
 // Stub PocketBase auth so the AuthGateSheet never opens in offline E2E runs.
 // Also stub catalog calls so the game uses static fallback data without network errors.

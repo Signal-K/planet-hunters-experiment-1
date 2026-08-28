@@ -150,6 +150,14 @@ const profiles: Record<string, Cypress.EndToEndConfigOptions> = {
     viewportWidth: 390,
     viewportHeight: 844,
   },
+  responsive: {
+    baseUrl: 'http://localhost:3001',
+    specPattern: ['cypress/e2e/responsive/**/*.cy.{js,jsx,ts,tsx}'],
+    // Responsive tests handle their own viewport changes
+    viewportWidth: 390,
+    viewportHeight: 844,
+    video: false,
+  },
 }
 
 const active = profiles[profile] ?? profiles.offline
