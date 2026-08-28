@@ -31,6 +31,7 @@
   "terrain_hill_round": "/game/assets/terrain/hill_round.png",
   "terrain_hill_long": "/game/assets/terrain/hill_long.png",
   "terrain_bluff": "/game/assets/terrain/bluff.png",
+  "terrain_ground_apron": "/game/assets/terrain/ground_apron.png",
   "terrain_rock_boulder": "/game/assets/terrain/rock_boulder.png",
   "terrain_rock_cluster": "/game/assets/terrain/rock_cluster.png",
   "terrain_scree": "/game/assets/terrain/scree.png",

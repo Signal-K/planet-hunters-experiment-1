@@ -33,7 +33,10 @@
    and it could never change what was actually on the horizon. */
 .launchpad-scene-zoom {
   position: absolute; inset: 0;
-  --hub-ground: 26%;
+  /* Keep the tall desktop view from turning the foreground into a blank slab.
+     The Blender ground apron now carries the facility contact transition, so
+     this plane can recede to the authored 20% baseline. */
+  --hub-ground: 20%;
 }
 .launchpad-orbit-line {
   position: absolute; z-index: 2; top: 4%; left: 13%; width: 74%; height: 40%;

@@ -322,6 +322,59 @@ def bluff():
     return dict(layout=(124, 70), ortho=5.4, mode="side", target=(0, 0, 0.95))
 
 
+# --- Facility ground --------------------------------------------------------
+
+def ground_apron():
+    """320x64 — a low sloped soil-and-grass shoulder for facility contact.
+
+    The flat CSS ground fill is intentionally kept as the distant plane, but a
+    facility needs a closer physical transition than a one-pixel horizon line.
+    This shallow berm is the shared contact brick for the Launchpad and Hangar:
+    a grass cap catches the rear edge, while the faceted soil face recedes into
+    the plane below the structures. It is deliberately broad and low so it
+    reads as terrain, not a platform or another building.
+    """
+    import bmesh
+    import bpy
+
+    mesh = bpy.data.meshes.new("ground_apron")
+    obj = bpy.data.objects.new("ground_apron", mesh)
+    bpy.context.collection.objects.link(obj)
+
+    bm = bmesh.new()
+    # Broad trapezoid: the narrow top makes the berm visibly slope away from
+    # the structures instead of ending in a machined vertical wall.
+    front = [
+        bm.verts.new((-5.0, -0.42, 0.0)),
+        bm.verts.new((5.0, -0.42, 0.0)),
+        bm.verts.new((4.22, -0.42, 0.52)),
+        bm.verts.new((-4.22, -0.42, 0.52)),
+    ]
+    back = [
+        bm.verts.new((-5.0, 0.42, 0.0)),
+        bm.verts.new((5.0, 0.42, 0.0)),
+        bm.verts.new((4.22, 0.42, 0.52)),
+        bm.verts.new((-4.22, 0.42, 0.52)),
+    ]
+    bm.faces.new(front)
+    bm.faces.new(list(reversed(back)))
+    bm.faces.new((front[0], back[0], back[1], front[1]))
+    bm.faces.new((front[1], back[1], back[2], front[2]))
+    bm.faces.new((front[2], back[2], back[3], front[3]))
+    bm.faces.new((front[3], back[3], back[0], front[0]))
+    bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
+    bm.to_mesh(mesh)
+    bm.free()
+    kit.solid("ground_apron", obj, SOIL, "soil", outline=0.014)
+
+    # A narrow grass lip sits on the upper shoulder and shares the same camera
+    # as the soil body. It is separate geometry so its silhouette stays crisp
+    # when the brick is reused at different scales in a composition.
+    cap = kit.box("ground_apron_cap", (8.44, 0.88, 0.12), location=(0, 0, 0.52), bevel=0.03)
+    kit.solid("ground_apron_cap", cap, GRASS, "grass", outline=0.010)
+    return dict(layout=(320, 64), ortho=10.8, mode="side", target=(0, 0, 0.32))
+
+
 # --- Ground detail -----------------------------------------------------------
 
 def rock_boulder():
@@ -581,6 +634,7 @@ BUILDS = {
     "terrain/hill_round": hill_round,
     "terrain/hill_long": hill_long,
     "terrain/bluff": bluff,
+    "terrain/ground_apron": ground_apron,
     "terrain/rock_boulder": rock_boulder,
     "terrain/rock_cluster": rock_cluster,
     "terrain/scree": scree,

@@ -132,6 +132,19 @@ export const EARTH_BASE_WIDE: SceneComposition = {
       ],
     },
     {
+      // Low Blender-authored soil/grass shoulder. It sits behind the service
+      // road and under the facility sprites, making the shared baseline read
+      // as a physical apron instead of a thin strip over open ground.
+      id: 'facility-apron',
+      depth: 0.84,
+      baseline: 'calc(var(--hub-ground) + 0.5%)',
+      scale: 1,
+      bricks: [
+        { brick: 'ground_apron', x: 18, scale: 1.45 },
+        { brick: 'ground_apron', x: 82, scale: 1.45, flip: true },
+      ],
+    },
+    {
       // The service road running along the back of the site, just under the
       // ground line. This is the band that ties the structures to the terrain
       // instead of leaving them floating on a plate.
@@ -232,6 +245,18 @@ export const EARTH_BASE_PAD: SceneComposition = {
         { brick: 'tree_pine_cluster', x: 72, scale: 0.85, flip: true },
         { brick: 'tree_pine_tall', x: 86, scale: 0.85 },
         { brick: 'tree_pine_cluster', x: 98, scale: 0.8 },
+      ],
+    },
+    {
+      // Same contact brick as the wide scene, but scaled for the closer
+      // facility framing so the pad and hangar share one grounded apron.
+      id: 'facility-apron',
+      depth: 0.84,
+      baseline: 'calc(var(--hub-ground) + 0.5%)',
+      scale: 1,
+      bricks: [
+        { brick: 'ground_apron', x: 18, scale: 1.65 },
+        { brick: 'ground_apron', x: 82, scale: 1.65, flip: true },
       ],
     },
     {
