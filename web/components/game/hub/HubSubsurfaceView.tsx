@@ -456,6 +456,7 @@ export function HubSubsurfaceView({
   return (
     <section className={styles.root} data-testid="hub-subsurface-view" aria-label="Earth Base subsurface">
       <div className={styles.geology} aria-hidden="true">
+        <span className={styles.surfaceCap} data-testid="subsurface-surface-continuation" />
         <span className={styles.crust} />
         <span className={`${styles.stratum} ${styles.stratumOne}`} />
         <span className={`${styles.stratum} ${styles.stratumTwo}`} />

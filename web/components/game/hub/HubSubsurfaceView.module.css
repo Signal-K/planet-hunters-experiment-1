@@ -26,21 +26,77 @@
   background:
     linear-gradient(
       180deg,
-      var(--hub-hill-near) 0 3%,
+      color-mix(in srgb, var(--hub-hill-far) 88%, var(--ln-panel-2)) 0 3%,
       color-mix(in srgb, var(--hub-hill-near) 90%, #000) 3% 26%,
       color-mix(in srgb, var(--hub-hill-near) 72%, #000) 26% 58%,
       color-mix(in srgb, var(--ln-void) 90%, var(--hub-hill-near)) 58% 100%
     );
 }
 
+/* The subsurface is the lower half of the same vertical world slide. This
+   shallow, faceted cap is the visual hand-off from the surface ground lip to
+   the darker excavation deck; it keeps the view from starting as an unrelated
+   navy panel when the player moves below grade. */
+.surfaceCap {
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 0;
+  z-index: 1;
+  height: 72px;
+  pointer-events: none;
+  background:
+    linear-gradient(
+      180deg,
+      var(--hub-hill-far) 0 8px,
+      color-mix(in srgb, var(--hub-hill-far) 82%, var(--ln-panel-2)) 8px 34px,
+      color-mix(in srgb, var(--hub-hill-near) 78%, var(--ln-void)) 34px 100%
+    );
+  border-bottom: 1px solid color-mix(in srgb, var(--hub-cyan) 30%, var(--hub-outline));
+  box-shadow: 0 8px 20px color-mix(in srgb, var(--ln-void) 46%, transparent);
+}
+
+.surfaceCap::before {
+  position: absolute;
+  right: 0;
+  bottom: 18px;
+  left: 0;
+  height: 18px;
+  content: '';
+  opacity: 0.65;
+  background:
+    linear-gradient(
+      135deg,
+      transparent 0 12%,
+      color-mix(in srgb, var(--hub-hill-far) 70%, var(--hub-cyan)) 12% 18%,
+      transparent 18% 36%,
+      color-mix(in srgb, var(--hub-hill-near) 72%, var(--ln-panel-2)) 36% 43%,
+      transparent 43% 62%,
+      color-mix(in srgb, var(--hub-hill-far) 70%, var(--hub-cyan)) 62% 69%,
+      transparent 69% 100%
+    );
+}
+
+.surfaceCap::after {
+  position: absolute;
+  top: 8px;
+  right: 4%;
+  left: 4%;
+  height: 2px;
+  content: '';
+  background: linear-gradient(90deg, transparent, var(--hub-cyan), transparent);
+  opacity: 0.55;
+}
+
 /* Soil crust lip: a lit topsoil edge right at the surface seam so the deck
    visually attaches to the ground plane of the Hub scene above it. */
 .crust {
   position: absolute;
-  top: 0;
+  top: 64px;
   left: 0;
   right: 0;
-  height: 14px;
+  z-index: 2;
+  height: 12px;
   pointer-events: none;
   background: linear-gradient(180deg, color-mix(in srgb, var(--hub-hill-far) 70%, transparent), transparent);
   border-top: 1.5px solid color-mix(in srgb, var(--hub-cyan) 26%, var(--hub-outline));
@@ -97,7 +153,7 @@
 
 .serviceShaft {
   position: absolute;
-  top: 8%;
+  top: 72px;
   bottom: 0;
   left: 50%;
   width: 48px;

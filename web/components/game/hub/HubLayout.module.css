@@ -1,8 +1,8 @@
 .root {
-  /* Enlarged from 22% (KES-263) — the ground plane read as too thin a strip
-     under the sky; kept proportional across the breakpoints below so plot
-     positions (which read this same token) scale together. */
-  --hub-ground: 28%;
+  /* One shared baseline for terrain, facilities, roads, labels, and rovers.
+     Keeping the ground to the lower fifth preserves the establishing-shot
+     sky while leaving a real apron for the structures to sit on. */
+  --hub-ground: 22%;
   --hub-structure-max: 9999px;
 }
 
@@ -53,12 +53,11 @@
 
 @media (min-width: 1024px) {
   .root {
-    --hub-ground: 40%;
+    --hub-ground: 22%;
     --hub-structure-max: min(460px, 42vh);
   }
 
   .progressionStack {
-    top: 112px !important;
     right: clamp(24px, 4vw, 56px);
     width: min(340px, 30vw);
     max-width: 340px;
@@ -78,7 +77,7 @@
 
 @media (min-width: 721px) and (max-width: 1023px) and (max-height: 700px) {
   .root {
-    --hub-ground: 34%;
+    --hub-ground: 24%;
   }
 
   .progressionStack {
