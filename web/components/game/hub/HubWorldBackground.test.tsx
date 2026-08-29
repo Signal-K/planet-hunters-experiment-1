@@ -39,5 +39,7 @@ describe('HubWorldBackground', () => {
     expect(pad).toContain('data-band="facility-apron"')
     expect(pad).toContain('/game/assets/terrain/ground_apron.png')
     expect(pad).toContain('/game/assets/terrain/fence_run.png')
+    expect(pad).toContain('data-road-bed="site-service-road"')
+    expect(pad).toContain('repeating-linear-gradient')
   })
 })

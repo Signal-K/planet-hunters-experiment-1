@@ -61,6 +61,15 @@ export const TERRAIN_KIT: Record<TerrainBrickId, TerrainBrick> = {
   cloud_bank_b:      { w: 82, h: 28 },
 }
 
+const SCENE_WIDTH = 402
+
+/** Converts an authored scene X coordinate into the percentage used by DOM layers.
+ * An optional half-width keeps edge-clamped art and its label on one center. */
+export function sceneXPercent(x: number, widthPct = 0): number {
+  const raw = (x / SCENE_WIDTH) * 100
+  return Math.min(100 - widthPct / 2, Math.max(widthPct / 2, raw))
+}
+
 export function brickSrc(id: TerrainBrickId): string {
   return `/game/assets/terrain/${id}.png`
 }
@@ -102,6 +111,13 @@ export interface SceneBand {
 export interface SceneRoadPoint {
   x: number
   groundOffset: number
+}
+
+/** Converts a road point's vertical offset into the shared scene CSS contract. */
+export function groundOffsetCss(offset: number): string {
+  if (offset === 0) return 'var(--hub-ground)'
+  const sign = offset > 0 ? '+' : '-'
+  return `calc(var(--hub-ground) ${sign} ${Math.abs(offset)}%)`
 }
 
 /** A traversable service-road path authored alongside the Blender terrain

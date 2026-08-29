@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
-import type { SceneRoadPath, SceneRoadPoint } from '@/lib/scene/terrain-kit'
+import { groundOffsetCss, type SceneRoadPath, type SceneRoadPoint } from '@/lib/scene/terrain-kit'
 
 // KES-260: ambient Earth Base traffic stays on the composition's road path.
 const ROVER_SRC = '/game/assets/actors/road_rover.png'
@@ -33,12 +33,6 @@ function pointAtProgress(points: SceneRoadPoint[], progress: number): SceneRoadP
     distance -= segment
   }
   return points[points.length - 1]
-}
-
-function groundPosition(offset: number): string {
-  if (offset === 0) return 'var(--hub-ground)'
-  const sign = offset > 0 ? '+' : '-'
-  return `calc(var(--hub-ground) ${sign} ${Math.abs(offset)}%)`
 }
 
 export function RoadRover({ road, durationMs = 18000 }: { road?: SceneRoadPath; durationMs?: number }) {
@@ -73,7 +67,7 @@ export function RoadRover({ road, durationMs = 18000 }: { road?: SceneRoadPath; 
       style={{
         position: 'absolute',
         left: `${point.x}%`,
-        bottom: groundPosition(point.groundOffset),
+        bottom: groundOffsetCss(point.groundOffset),
         width: 'clamp(36px, 5vw, 72px)',
         aspectRatio: '72 / 48',
         zIndex: 13,

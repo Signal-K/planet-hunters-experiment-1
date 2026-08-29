@@ -1,6 +1,7 @@
 'use client'
 
 import React from 'react'
+import { sceneXPercent } from '@/lib/scene/terrain-kit'
 export interface HubBuildingDef {
   kind: string
   plotX: number
@@ -55,7 +56,6 @@ function StructureSprite({ kind, active }: { kind: string; active?: boolean }) {
 }
 
 const SCENE_WIDTH_DIVISOR = 6.4
-const HUB_SCENE_W = 402
 
 export function EarthBaseModules({ buildings }: { buildings: HubBuildingDef[] }) {
   return (
@@ -63,8 +63,7 @@ export function EarthBaseModules({ buildings }: { buildings: HubBuildingDef[] })
       {buildings.map(building => {
         const size = EARTH_BASE_STRUCTURE_SIZES[building.kind] ?? EARTH_BASE_STRUCTURE_SIZES.command
         const widthPct = size.width / SCENE_WIDTH_DIVISOR
-        const rawLeft = (building.plotX / HUB_SCENE_W) * 100
-        const left = Math.min(100 - widthPct / 2, Math.max(widthPct / 2, rawLeft))
+        const left = sceneXPercent(building.plotX, widthPct)
         return (
           <span
             key={`${building.kind}-${building.plotX}`}

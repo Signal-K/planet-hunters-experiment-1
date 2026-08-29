@@ -151,7 +151,7 @@ export const EARTH_BASE_WIDE: SceneComposition = {
       // as a physical apron instead of a thin strip over open ground.
       id: 'facility-apron',
       depth: 0.84,
-      baseline: 'calc(var(--hub-ground) + 0.5%)',
+      baseline: 'calc(var(--hub-ground) - 0.5%)',
       scale: 1,
       bricks: [
         { brick: 'ground_apron', x: 18, scale: 1.45 },
@@ -278,7 +278,7 @@ export const EARTH_BASE_PAD: SceneComposition = {
       // facility framing so the pad and hangar share one grounded apron.
       id: 'facility-apron',
       depth: 0.84,
-      baseline: 'calc(var(--hub-ground) + 0.5%)',
+      baseline: 'calc(var(--hub-ground) - 0.5%)',
       scale: 1,
       bricks: [
         { brick: 'ground_apron', x: 18, scale: 1.65 },

@@ -12,7 +12,7 @@ import { AmbientMotes } from '@/components/game/hub/AmbientMotes'
 import { HubWorldBackground } from '@/components/game/hub/HubWorldBackground'
 import { HubClockWidget } from '@/components/game/hub/HubClockWidget'
 import { useTimeOfDay } from '@/lib/hooks/useTimeOfDay'
-import { EarthBaseModules } from '@/components/game/hub/EarthBaseModules'
+import { EarthBaseModules, EARTH_BASE_STRUCTURE_SIZES } from '@/components/game/hub/EarthBaseModules'
 export { EARTH_BASE_STRUCTURE_SIZES } from '@/components/game/hub/EarthBaseModules'
 import { SoilCrossSection } from '@/components/game/hub/SoilCrossSection'
 import { RoadRover } from '@/components/game/hub/RoadRover'
@@ -31,6 +31,7 @@ import { fetchReviewableAsteroidCandidates } from '@/lib/asteroid-subjects'
 import { instrumentDigestDateKey, unresolvedTransitInstrumentDigest, unresolvedDeepSpaceInstrumentDigest } from '@/lib/systems/InstrumentFeedSystem'
 import HUDStrip from '@/components/ui/HUDStrip'
 import layoutStyles from '@/components/game/hub/HubLayout.module.css'
+import { sceneXPercent } from '@/lib/scene/terrain-kit'
 
 // ── Ref-B bordered-icon-badge glyphs for Hub chrome (bottom tabs) ──
 // Simple white-line icons, no fill — matches the mockup's `i-*` <symbol> set.
@@ -335,11 +336,16 @@ export default function HubScreen({ player, rocketVariant = 'explorer', hasCoach
     // translateX(-50%) centers the label stack on the plot the way the PixiJS
     // art does — scene plotX is a building *center*, so left-aligning here put
     // every pill half a building to the right of the structure it names.
-    .map(e => ({
-      left: `calc(${(e.transform.position.x / 402) * 100}%)`,
-      bottom: `calc(var(--hub-ground) - ${PLOT_LABEL_DROP}px)`,
-      transform: 'translateX(-50%)',
-    } as React.CSSProperties))
+    .map(e => {
+      const plot = readComponentNumber(e, 'BuildPlot', 'index', 0)
+      const kind = Object.entries(effectivePlots).find(([, index]) => index === plot)?.[0]
+      const widthPct = kind ? (EARTH_BASE_STRUCTURE_SIZES[kind]?.width ?? 0) / 6.4 : 0
+      return ({
+        left: `${sceneXPercent(e.transform.position.x, widthPct)}%`,
+        bottom: `calc(var(--hub-ground) - ${PLOT_LABEL_DROP}px)`,
+        transform: 'translateX(-50%)',
+      } as React.CSSProperties)
+    })
 
   const structureForPlot = (plot: number) => {
     const kind = Object.entries(effectivePlots).find(([, p]) => p === plot)?.[0] ?? null

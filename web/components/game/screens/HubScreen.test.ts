@@ -1,7 +1,14 @@
 import { describe, expect, it } from 'vitest'
 import { EARTH_BASE_STRUCTURE_SIZES } from './HubScreen'
+import { sceneXPercent } from '@/lib/scene/terrain-kit'
 
 describe('Earth Base module composition', () => {
+  it('uses one authored X conversion for structure art and status labels', () => {
+    const launchpadWidthPct = EARTH_BASE_STRUCTURE_SIZES.launchpad.width / 6.4
+    const hangarWidthPct = EARTH_BASE_STRUCTURE_SIZES.hangar.width / 6.4
+    expect(sceneXPercent(60, launchpadWidthPct)).toBeCloseTo(launchpadWidthPct / 2)
+    expect(sceneXPercent(342, hangarWidthPct)).toBeCloseTo(100 - hangarWidthPct / 2)
+  })
   it('keeps a site-scale footprint for the composited launchpad and hangar', () => {
     expect(EARTH_BASE_STRUCTURE_SIZES.launchpad.width).toBe(220)
     expect(EARTH_BASE_STRUCTURE_SIZES.hangar.width).toBe(250)

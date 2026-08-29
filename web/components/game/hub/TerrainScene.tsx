@@ -2,7 +2,7 @@
 
 import React from 'react'
 import type { TimeOfDayPhase } from '@/lib/hooks/useTimeOfDay'
-import { TERRAIN_KIT, brickSrc, type BrickPlacement, type SceneBand, type SceneComposition } from '@/lib/scene/terrain-kit'
+import { groundOffsetCss, TERRAIN_KIT, brickSrc, type BrickPlacement, type SceneBand, type SceneComposition, type SceneRoadPath } from '@/lib/scene/terrain-kit'
 
 /**
  * Renders a `SceneComposition` from the modular Blender terrain kit (KES-260).
@@ -155,6 +155,44 @@ function Band({ band, palette }: { band: SceneBand; palette: Palette }) {
   )
 }
 
+function RoadBed({ road, palette }: { road: SceneRoadPath; palette: Palette }) {
+  const firstPoint = road.points[0]
+  if (!firstPoint) return null
+
+  return (
+    <div
+      data-road-bed={road.id}
+      aria-hidden="true"
+      style={{
+        position: 'absolute',
+        left: 0,
+        right: 0,
+        bottom: groundOffsetCss(firstPoint.groundOffset),
+        height: 22,
+        zIndex: 9,
+        pointerEvents: 'none',
+        background: `linear-gradient(180deg, color-mix(in srgb, var(--ln-void) 72%, ${palette.groundNear}) 0 68%, ${palette.groundLip} 68% 100%)`,
+        borderTop: `1px solid ${palette.groundLip}`,
+        borderBottom: `1px solid ${palette.groundNear}`,
+        boxShadow: `0 3px 0 ${palette.groundNear}`,
+      }}
+    >
+      <span
+        aria-hidden="true"
+        style={{
+          position: 'absolute',
+          left: 0,
+          right: 0,
+          top: 7,
+          height: 2,
+          opacity: 0.82,
+          background: `repeating-linear-gradient(90deg, transparent 0 24px, color-mix(in srgb, ${palette.groundLip} 78%, var(--hub-chalk)) 24px 40px)`,
+        }}
+      />
+    </div>
+  )
+}
+
 export function TerrainScene({
   composition,
   phase = 'day',
@@ -225,6 +263,11 @@ export function TerrainScene({
           background: palette.groundNear, transition: 'background 1.2s ease',
         }} />
       </div>
+
+      {/* Blender road tiles provide lane markings and edge detail, while this
+          continuous bed keeps the authored SceneRoadPath traversable between
+          tiles at wide desktop sizes. */}
+      {composition.roadPaths?.map(road => <RoadBed key={road.id} road={road} palette={palette} />)}
 
       {/* Night/dusk wash. One overlay over the whole scene rather than four
           separate palettes per brick — the bricks stay one set of files. */}
