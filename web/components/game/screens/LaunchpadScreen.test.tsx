@@ -29,6 +29,9 @@ describe('Launchpad own-program actions', () => {
         onLaunchpadAction={noop}
         onOpenHangar={noop}
         onOpenSubsurface={noop}
+        onOpenBuild={noop}
+        onOpenAcademy={noop}
+        onOpenSkills={noop}
         missionsDone={player.missionsDone}
         freeOperations={player.freeOperations}
         catalog={catalog}
@@ -40,5 +43,44 @@ describe('Launchpad own-program actions', () => {
     expect(markup).toContain('CREATE MISSION')
     expect(markup).toContain('data-testid="launchpad-launch-infrastructure-btn"')
     expect(markup).toContain('LAUNCH INFRASTRUCTURE')
+    expect(markup).toContain('data-testid="available-actions-panel"')
+    expect(markup).toContain('PERSONAL INFRASTRUCTURE')
+  })
+
+  it('surfaces an unlocked Academy as a build action', () => {
+    const player = {
+      ...DEFAULT_STATE.player,
+      freeOperations: true,
+      missionsDone: 3,
+      academyResearched: true,
+      placed: ['launchpad'],
+    }
+    const catalog = buildRuntimeCatalog({
+      catalog: STATIC_CATALOG,
+      freeOperations: true,
+      missionsDone: player.missionsDone,
+      player,
+    })
+    const noop = vi.fn()
+    const markup = renderToStaticMarkup(
+      <LaunchpadScreen
+        onBack={noop}
+        onPick={noop}
+        onViewContracts={noop}
+        onLaunchpadAction={noop}
+        onOpenHangar={noop}
+        onOpenSubsurface={noop}
+        onOpenBuild={noop}
+        onOpenAcademy={noop}
+        onOpenSkills={noop}
+        missionsDone={player.missionsDone}
+        freeOperations={player.freeOperations}
+        catalog={catalog}
+        player={player}
+      />,
+    )
+
+    expect(markup).toContain('NEW STRUCTURE')
+    expect(markup).toContain('Build Astronaut Academy')
   })
 })

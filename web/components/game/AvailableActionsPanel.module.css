@@ -1,0 +1,147 @@
+.panel {
+  box-sizing: border-box;
+  width: 100%;
+  padding: 16px;
+  border: 1px solid var(--ln-cyan);
+  border-radius: 12px;
+  background: linear-gradient(135deg, var(--ln-panel), color-mix(in srgb, var(--ln-cyan) 10%, var(--ln-panel)));
+  box-shadow: var(--ln-shadow-card), 0 0 24px color-mix(in srgb, var(--ln-cyan) 18%, transparent);
+}
+
+.header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 12px;
+}
+
+.kicker,
+.count,
+.eyebrow,
+.cta {
+  font-family: var(--ln-font-display);
+  font-weight: 800;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+}
+
+.kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--ln-cyan);
+  font-size: 10px;
+}
+
+.kicker i {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--ln-ok);
+  box-shadow: var(--ln-glow-ok);
+}
+
+.header h2 {
+  margin: 6px 0 0;
+  color: var(--ln-text);
+  font: 800 20px/1.1 var(--ln-font-display);
+}
+
+.count {
+  flex: 0 0 auto;
+  color: var(--ln-ok);
+  font-size: 9px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.action {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: 30px minmax(0, 1fr);
+  gap: 10px;
+  align-items: start;
+  padding: 12px;
+  border: 1px solid var(--ln-cyan-border);
+  border-radius: 8px;
+  color: var(--ln-text);
+  background: color-mix(in srgb, var(--ln-panel) 88%, var(--ln-cyan));
+  text-align: left;
+  cursor: pointer;
+}
+
+.action:hover,
+.action:focus-visible {
+  border-color: var(--ln-cyan-bright);
+  background: var(--ln-cyan-soft);
+}
+
+.action.primary {
+  border-color: var(--ln-cyan-bright);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--ln-cyan) 45%, transparent);
+}
+
+.icon {
+  display: grid;
+  width: 30px;
+  height: 30px;
+  place-items: center;
+  border: 1px solid var(--ln-cyan);
+  border-radius: 50%;
+  color: var(--ln-cyan);
+}
+
+.icon svg {
+  width: 16px;
+  height: 16px;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.8;
+}
+
+.copy {
+  min-width: 0;
+  display: grid;
+  gap: 4px;
+}
+
+.eyebrow {
+  color: var(--ln-cyan);
+  font-size: 8px;
+}
+
+.copy strong {
+  overflow: hidden;
+  color: var(--ln-text);
+  font: 800 13px/1.2 var(--ln-font-display);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.detail {
+  color: var(--ln-text-dim);
+  font: 12px/1.35 var(--ln-font-body);
+}
+
+.cta {
+  grid-column: 2;
+  color: var(--ln-ok);
+  font-size: 9px;
+}
+
+.cta b {
+  font-size: 14px;
+  line-height: 0;
+}
+
+@media (max-width: 560px) {
+  .grid { grid-template-columns: 1fr; }
+}

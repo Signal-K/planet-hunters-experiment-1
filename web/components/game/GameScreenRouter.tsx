@@ -95,17 +95,11 @@ export function ScreenContent({
     // flow reachable only when it has a real mission context; a bare/deep
     // linked fab route must never show a prefilled rocket.
     if (screen === 'fab' && !game.player.freeOperations && (!game.mission || !game.target)) game.go('hub')
-    // Build placement is an intentional, short-lived action from the Hub, not
-    // a useful landing spot — mirrors repairStateRoute's load-time guard
-    // (lib/game-state.ts), but that guard only runs when hydrating/merging
-    // state. A direct/bookmarked/stale-tab visit to /game/build reaches this
-    // screen purely from the URL, bypassing it entirely: the [screen] route's
-    // URL→state sync (setScreenFromUrl) unconditionally trusts the URL, so it
-    // can clobber an already-repaired game.screen back to 'build'. A returning
-    // Free Ops player with a base already up was left on a dimmed plot picker
-    // with no obvious way out (KES-167).
-    if (screen === 'build' && game.player.freeOperations && game.player.placed.length > 0) game.go('hub')
-  }, [screen, game.player.freeOperations, game.player.hasLanded, game.player.placed.length, game.mission, game.target, game.go])
+    // Build placement is a valid destination from Hub, Academy, instrument
+    // screens, and the Launchpad availability panel. It has its own back
+    // action, so a returning player must be allowed to open it and place a
+    // newly unlocked structure.
+  }, [screen, game.player.freeOperations, game.player.hasLanded, game.mission, game.target, game.go])
 
   // HubScreen's surface/subsurface slide is driven by ephemeral UI state
   // (game.subsurfaceView), not the route, so a real navigation into
@@ -362,6 +356,9 @@ export function ScreenContent({
             onFocusPad={game.focusLaunchpad}
             onOpenHangar={() => game.go(game.player.pendingLaunch ? 'fab' : 'hangar')}
             onOpenSubsurface={() => game.go('hub-subsurface')}
+            onOpenBuild={() => game.go('build')}
+            onOpenAcademy={() => game.go('academy')}
+            onOpenSkills={() => game.go('skills')}
             missionsDone={game.player.missionsDone}
             freeOperations={game.player.freeOperations}
             catalog={game.catalog}
@@ -386,6 +383,9 @@ export function ScreenContent({
           }}
           onOpenHangar={() => game.go(game.player.pendingLaunch ? 'fab' : 'hangar')}
           onOpenSubsurface={() => game.go('hub-subsurface')}
+          onOpenBuild={() => game.go('build')}
+          onOpenAcademy={() => game.go('academy')}
+          onOpenSkills={() => game.go('skills')}
           missionsDone={game.player.missionsDone}
           freeOperations={game.player.freeOperations}
           catalog={game.catalog}

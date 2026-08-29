@@ -17,6 +17,11 @@
   margin: 0 auto;
 }
 
+.availableActions {
+  width: min(1120px, 100%);
+  margin: 24px auto 0;
+}
+
 .header {
   display: flex;
   align-items: flex-end;

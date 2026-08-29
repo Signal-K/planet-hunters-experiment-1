@@ -152,7 +152,7 @@ button.launchpad-scene-object { cursor: pointer; }
 .launchpad-guide {
   position: absolute;
   z-index: 14;
-  top: 18px;
+  top: 76px;
   left: 18px;
   width: min(340px, calc(100% - 36px));
   padding: 16px;
@@ -221,6 +221,27 @@ button.launchpad-scene-object { cursor: pointer; }
   letter-spacing: .12em;
 }
 .launchpad-guide-actions button.is-primary { border-color: #86e7f4; background: #86e7f4; color: #07101c; }
+
+.launchpad-available-actions {
+  position: absolute;
+  z-index: 18;
+  top: 96px;
+  right: 16px;
+  width: min(460px, calc(100% - 32px));
+  max-height: calc(100% - 178px);
+  overflow-y: auto;
+}
+
+.hub-available-actions {
+  position: absolute;
+  z-index: 12;
+  top: 140px;
+  left: 16px;
+  width: min(460px, calc(100% - 32px));
+  max-height: calc(100% - 270px);
+  overflow-y: auto;
+}
+
 /* Glass rail, not a wall. `rgba(6,9,15,.97)` was effectively opaque: it cut a
    solid 62px band off the bottom of the scene, so the ground the structures
    stand on visibly stopped at a hard edge and the background read as
@@ -277,7 +298,7 @@ button.launchpad-scene-object { cursor: pointer; }
   .hub-bottom-dock-main { flex-basis: 150px; }
 }
 @media (max-width: 860px) {
-  .launchpad-guide { top: 10px; left: 10px; width: min(310px, calc(100% - 20px)); padding: 12px; }
+  .launchpad-guide { top: 72px; left: 10px; width: min(310px, calc(100% - 20px)); padding: 12px; }
   .launchpad-guide h2 { font-size: 16px; }
   .launchpad-guide-copy { font-size: 10px; }
   .launchpad-object-label { min-width: 0; padding: 6px 8px; }
@@ -293,11 +314,15 @@ button.launchpad-scene-object { cursor: pointer; }
      the last action. */
   .launchpad-rail-actions { overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
   .launchpad-rail-actions::-webkit-scrollbar { display: none; }
+  .launchpad-available-actions { top: 82px; right: 10px; width: min(390px, calc(100% - 20px)); }
+  .hub-available-actions { top: 132px; left: 10px; width: min(390px, calc(100% - 20px)); }
 }
 @media (orientation: landscape) and (max-height: 600px) {
   .launchpad-visual-scene { inset: 64px 0 54px; }
   .launchpad-scene-rail { height: 54px; padding: 7px 10px; }
-  .launchpad-guide { top: 8px; left: 8px; width: 300px; padding: 10px 12px; }
+  .launchpad-guide { top: 62px; left: 8px; width: 300px; padding: 10px 12px; }
+  .launchpad-available-actions { top: 62px; max-height: calc(100% - 126px); }
+  .hub-available-actions { top: 112px; max-height: calc(100% - 210px); }
   .launchpad-guide h2 { margin-top: 4px; font-size: 15px; }
   .launchpad-guide-copy { font-size: 9px; line-height: 1.35; }
   .launchpad-guide-footer { margin-top: 8px; }

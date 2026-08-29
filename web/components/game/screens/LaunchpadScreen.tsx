@@ -15,6 +15,8 @@ import { useTimeOfDay } from '@/lib/hooks/useTimeOfDay'
 import { SoilCrossSection } from '@/components/game/hub/SoilCrossSection'
 import { RoadRover } from '@/components/game/hub/RoadRover'
 import { EARTH_BASE_PAD } from '@/lib/scene/compositions'
+import AvailableActionsPanel, { type AvailableAction } from '@/components/game/AvailableActionsPanel'
+import { installableSkillNodes, unplacedUnlockedStructures } from '@/lib/available-actions'
 
 interface LaunchpadScreenProps {
   onBack: () => void
@@ -23,6 +25,9 @@ interface LaunchpadScreenProps {
   onLaunchpadAction: () => void
   onOpenHangar: () => void
   onOpenSubsurface?: () => void
+  onOpenBuild: () => void
+  onOpenAcademy: () => void
+  onOpenSkills: () => void
   missionsDone: number
   freeOperations: boolean
   catalog: Catalog
@@ -55,7 +60,7 @@ function SubsurfaceGlyph() {
 }
 
 export default function LaunchpadScreen({
-  onBack, onPick, onViewContracts, onLaunchpadAction, onOpenHangar, onOpenSubsurface, missionsDone, freeOperations, catalog, player, rocketImageSrc = '/game/assets/ships/ship_sr1.png', selectedRocketName, francs,
+  onBack, onPick, onViewContracts, onLaunchpadAction, onOpenHangar, onOpenSubsurface, onOpenBuild, onOpenAcademy, onOpenSkills, missionsDone, freeOperations, catalog, player, rocketImageSrc = '/game/assets/ships/ship_sr1.png', selectedRocketName, francs,
 }: LaunchpadScreenProps) {
   // This is the in-world close composition. The routed Launchpad overview
   // owns control/UI entry; the Hub reaches this view through focusLaunchpad.
@@ -89,7 +94,53 @@ export default function LaunchpadScreen({
       ?? own.find(mission => mission.construction?.structureKind
         ? !player.placed.includes(mission.construction.structureKind)
         : false)
-    : undefined
+      : undefined
+  const availableStructures = unplacedUnlockedStructures(player)
+  const installableSkills = installableSkillNodes(player)
+  const availableActions: AvailableAction[] = []
+  if (freeOperations && ownMiningOperation) {
+    availableActions.push({
+      id: 'create-mission', kind: 'mission', eyebrow: 'OWN PROGRAM', title: 'Create a mining mission',
+      detail: 'Choose a target and run the haul yourself.', cta: 'Create mission', onClick: () => onPick(ownMiningOperation.id),
+      primary: true, testId: 'launchpad-create-mission-panel-btn',
+    })
+  }
+  if (freeOperations && infrastructureOperation) {
+    availableActions.push({
+      id: 'launch-infrastructure', kind: 'infrastructure', eyebrow: 'PERSONAL INFRASTRUCTURE', title: 'Launch your next instrument',
+      detail: 'Put a satellite or remote facility into service.', cta: 'Launch', onClick: () => onPick(infrastructureOperation.id),
+      primary: true, testId: 'launchpad-launch-infrastructure-panel-btn',
+    })
+  }
+  const nextStructure = availableStructures[0]
+  if (nextStructure) {
+    availableActions.push({
+      id: `build-${nextStructure.id}`, kind: 'structure', eyebrow: 'NEW STRUCTURE', title: `Build ${nextStructure.name}`,
+      detail: 'A new structure is unlocked; review its cost and choose a plot.', cta: 'Open build', onClick: onOpenBuild,
+      testId: 'launchpad-build-structure-panel-btn',
+    })
+  }
+  if (freeOperations && !player.academyResearched && academyAffinityUnlocked(player)) {
+    availableActions.push({
+      id: 'research-academy', kind: 'research', eyebrow: 'ACADEMY UNLOCKED', title: 'Research Astronaut Academy',
+      detail: 'Two trusted clients have opened the training facility path.', cta: 'Research', onClick: onOpenAcademy,
+      testId: 'launchpad-research-academy-panel-btn',
+    })
+  }
+  if (player.placed.includes('astronaut-academy') && !player.crewModuleResearched) {
+    availableActions.push({
+      id: 'research-crew-module', kind: 'research', eyebrow: 'ACADEMY RESEARCH', title: 'Research crew quarters',
+      detail: 'Develop the module that lets larger hulls carry crew.', cta: 'Open academy', onClick: onOpenAcademy,
+      testId: 'launchpad-research-crew-panel-btn',
+    })
+  }
+  if (freeOperations && installableSkills.length > 0) {
+    availableActions.push({
+      id: 'research-skills', kind: 'research', eyebrow: 'RESEARCH AVAILABLE', title: `${installableSkills.length} skill upgrade${installableSkills.length === 1 ? '' : 's'}`,
+      detail: `${player.skillPoints ?? 0} SP can be allocated to the program.`, cta: 'Research', onClick: onOpenSkills,
+      testId: 'launchpad-research-skills-panel-btn',
+    })
+  }
   const guideSteps = [
     {
       label: '01 · LAUNCHPAD',
@@ -183,6 +234,12 @@ export default function LaunchpadScreen({
             <strong>{player.pendingLaunch ? `${selectedRocketName ?? unlockedFleet[0]?.model.name ?? 'BUILT VEHICLE'} · INSPECT` : `${selectedRocketName ?? unlockedFleet[0]?.model.name ?? 'NO VEHICLE'} · HANGAR`}</strong>
           </span>
         </button>
+
+        {availableActions.length > 0 && (
+          <div className="launchpad-available-actions">
+            <AvailableActionsPanel actions={availableActions} />
+          </div>
+        )}
 
         <SoilCrossSection />
 
