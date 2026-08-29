@@ -245,6 +245,7 @@ button.launchpad-scene-object { cursor: pointer; }
 .launchpad-rail-actions button:hover { background: rgba(233,243,255,.18); border-color: rgba(199,216,238,.55); }
 .launchpad-rail-actions button svg { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 1.8; }
 .launchpad-rail-actions button.is-primary { border-color: #70d9ea; background: #70d9ea; color: #07101c; box-shadow: 0 0 18px rgba(112,217,234,.24); }
+.launchpad-action-count { opacity: .68; font-size: 8px; }
 
 /* The Hub dock is an action rail, not a floating modal. Keep its status and
    actions on the ground line so the widened launchpad remains visible above

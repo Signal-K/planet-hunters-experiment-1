@@ -42,6 +42,10 @@ function MissionGlyph() {
   return <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="3" width="16" height="18" rx="2" /><path d="M8 8h8M8 12h8M8 16h5" /></svg>
 }
 
+function InfrastructureGlyph() {
+  return <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 18h14M7 18V9l5-4 5 4v9M9 18v-5h6v5" /><path d="M12 5V2M9 3h6" /></svg>
+}
+
 function GuideGlyph() {
   return <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" /><path d="M9.8 9a2.3 2.3 0 1 1 3.1 2.2c-.9.4-.9 1.1-.9 1.8M12 17h.01" /></svg>
 }
@@ -71,6 +75,21 @@ export default function LaunchpadScreen({
     )
     return academyUnlocked && !academyCompleted
   })
+  const ownMiningOperation = freeOperations
+    ? own.find(mission => mission.tag === 'FREE OPS' && !mission.client && !mission.payload && !mission.construction)
+    : undefined
+  // Launchable instruments are the first-class infrastructure path. Only
+  // fall back to a construction mission when no telescope/remote-instrument
+  // operation is currently offered, so the CTA never makes a newly available
+  // telescope look like a generic Earth Base build job.
+  const infrastructureOperation = freeOperations
+    ? own.find(mission => mission.payload?.type === 'satellite'
+      || mission.payload?.type === 'deep-space-survey'
+      || mission.payload?.type === 'scan-station-commission')
+      ?? own.find(mission => mission.construction?.structureKind
+        ? !player.placed.includes(mission.construction.structureKind)
+        : false)
+    : undefined
   const guideSteps = [
     {
       label: '01 · LAUNCHPAD',
@@ -201,6 +220,25 @@ export default function LaunchpadScreen({
           {onOpenSubsurface && <button data-testid="launchpad-open-subsurface-btn" onClick={onOpenSubsurface}><SubsurfaceGlyph /> SUBSURFACE</button>}
           <button data-testid="launchpad-open-hangar-btn" onClick={onOpenHangar}><HangarGlyph /> HANGAR</button>
           {freeOperations && nextOperation && <button data-testid="launchpad-program-operation-btn" onClick={() => onPick(nextOperation.id)}><MissionGlyph /> OPS {operations.length}</button>}
+          {freeOperations && ownMiningOperation && (
+            <button
+              className="is-primary"
+              data-testid="launchpad-create-mission-btn"
+              data-action="create-mission"
+              onClick={() => onPick(ownMiningOperation.id)}
+            >
+              <MissionGlyph /> CREATE MISSION
+            </button>
+          )}
+          {freeOperations && infrastructureOperation && (
+            <button
+              data-testid="launchpad-launch-infrastructure-btn"
+              data-action="launch-infrastructure"
+              onClick={() => onPick(infrastructureOperation.id)}
+            >
+              <InfrastructureGlyph /> LAUNCH INFRASTRUCTURE
+            </button>
+          )}
           <button className={freeOperations ? undefined : 'is-primary'} data-testid="launchpad-view-contracts-btn" onClick={onViewContracts}><MissionGlyph /> CONTRACTS</button>
         </div>
       </footer>
