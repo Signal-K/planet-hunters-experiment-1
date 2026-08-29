@@ -1,6 +1,6 @@
 import { pbLandnam } from './pb-landnam'
 import type { Target, Mission, Part, MineralMeta, Client, StructureBlueprint } from './data'
-import { TARGETS, MISSIONS, AUTHORED_MISSIONS, M3_SEQUENCE, PARTS, MINERAL_META, CLIENTS, CLIENT_SLOTS, STRUCTURES, toClient as slotToClient, generateFreeOpsMissions, generateMissions, generateSelfDirectedMiningPool } from './data'
+import { TARGETS, MISSIONS, AUTHORED_MISSIONS, M3_SEQUENCE, PARTS, MINERAL_META, CLIENTS, CLIENT_SLOTS, STRUCTURES, toClient as slotToClient, generateFreeOpsMissions, generateMissions, generateSelfDirectedMiningPool, isOwnProgramMission } from './data'
 import { normalizeMissionPayout } from './data/payouts'
 
 export interface Catalog {
@@ -227,9 +227,19 @@ export async function fetchCatalog(): Promise<Catalog> {
   const generatedToMerge = generatedMissions.filter(m => !pbIds.has(m.id))
   const freeOpsIds = new Set(freeOpsMissions.map(m => m.id))
   const selfDirectedIds = new Set(selfDirectedPoolMissions.map(m => m.id))
+  // PocketBase's missions_catalog schema requires a non-empty client_slug on
+  // every record (main.go), so it can only ever seed client-contracted
+  // missions — own-program missions (build refinery/scan-station, academy
+  // intro) only exist in the static fallback list. Once PocketBase seeds
+  // even one real mission, `baseMissions` above drops that whole static list,
+  // silently making every own-program operation unreachable in any real
+  // deployment. Always fold them back in, deduped against everything else.
+  const ownProgramMissions = generatedFallbackMissions.filter(isOwnProgramMission)
+  const ownProgramToMerge = ownProgramMissions.filter(m => !pbIds.has(m.id) && !freeOpsIds.has(m.id) && !selfDirectedIds.has(m.id))
   const allMissions = [
     ...baseMissions.filter(m => !freeOpsIds.has(m.id) && !selfDirectedIds.has(m.id)),
     ...generatedToMerge.filter(m => !freeOpsIds.has(m.id) && !selfDirectedIds.has(m.id)),
+    ...ownProgramToMerge,
     ...freeOpsMissions,
     ...selfDirectedPoolMissions,
   ]
