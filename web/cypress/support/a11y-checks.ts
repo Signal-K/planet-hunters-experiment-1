@@ -70,12 +70,9 @@ function checkHeadingHierarchy() {
 
   // Verify no skipped heading levels (e.g., h1 → h3)
   cy.get('h2, h3, h4, h5, h6').each(($heading, idx) => {
-    const level = parseInt($heading.prop('tagName')[1]);
     if (idx > 0) {
-      cy.get($heading)
-        .prevAll('h1, h2, h3, h4, h5, h6')
-        .first()
-        .should('exist');
+      const precedingHeading = $heading.prevAll('h1, h2, h3, h4, h5, h6').first();
+      expect(precedingHeading.length, 'a preceding heading exists').to.be.greaterThan(0);
     }
   });
 }

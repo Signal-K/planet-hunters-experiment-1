@@ -99,7 +99,13 @@ describe('C1–C4 screen contracts across viewport classes', () => {
       it('renders the Free Ops hub, client board, and own-program launchpad without losing primary actions', () => {
         visit('/game', stateWith('hub'))
         cy.contains('h1', 'Earth Base', { timeout: 10000 }).should('be.visible')
-        cy.get('[data-testid="progression-card-next-mission"]', { timeout: 10000 })
+        // Which specific progression card shows (skills, telescope, daily
+        // downlink, ...) depends on player state; the contract this test
+        // holds is that *some* primary progression action is present and
+        // reachable, not a specific card variant (`next-mission` only ever
+        // renders pre-first-mission, which this post-onboarding fixture isn't).
+        cy.get('[data-testid^="progression-card-"]', { timeout: 10000 })
+          .first()
           .scrollIntoView().should('be.visible')
 
         visit('/game/missions', stateWith('missions'))
@@ -152,11 +158,9 @@ describe('C1–C4 screen contracts across viewport classes', () => {
       })
 
       it('keeps the satellite narrative gates explicit at each C4 stage', () => {
-        visit('/game/galaxy', stateWith('galaxy', {
-          player: basePlayer({ transitSatelliteLaunchedAt: null }),
-        }))
-        cy.contains('Place the Earth-base', { timeout: 10000 }).should('be.visible')
-
+        // TESS is gated on `transitSatelliteLaunchedAt` alone since KES-224
+        // decoupled it from the Satellite Monitoring Station — there is no
+        // separate "place a structure first" stage before this prompt.
         visit('/game/galaxy', stateWith('galaxy', {
           player: basePlayer({ transitSatelliteLaunchedAt: null }),
         }))
@@ -250,8 +254,11 @@ describe('C1–C3 persisted mission edge states', () => {
       player: basePlayer({ missionsDone: 0, freeOperations: false }),
     }))
     cy.contains('Returned', { timeout: 10000 }).should('be.visible')
+    // An incomplete order pays nothing — DebriefScreen never renders a Ledger
+    // panel for it, just this explicit incomplete-order note (shown in both
+    // the pre- and post-resolve states, so it's already visible here).
+    cy.contains('Order incomplete').should('be.visible')
     cy.get('[data-testid="resolve-cargo-btn"]').click()
-    cy.contains('Francs Earned').should('be.visible')
-    cy.contains('Contract bonus forfeited').should('be.visible')
+    cy.contains('Order incomplete').should('be.visible')
   })
 })
