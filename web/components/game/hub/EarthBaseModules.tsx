@@ -47,7 +47,9 @@ export function HangarModules({ className = '' }: { className?: string }) {
 /**
  * One-piece Blender contact deck for the Launchpad. It sits above the scene's
  * ordinary ground fill and below the facility sprite, masking the near hill
- * and soil seam without introducing another grass/dirt layer.
+ * and soil seam without introducing another grass/dirt layer. The deck reaches
+ * down to the road's shared baseline so the facility has one legible contact
+ * surface instead of a stack of landscape blocks.
  */
 export function LaunchpadFoundation({ plotX }: { plotX: number }) {
   const structureWidthPct = EARTH_BASE_STRUCTURE_SIZES.launchpad.width / SCENE_WIDTH_DIVISOR
@@ -58,11 +60,14 @@ export function LaunchpadFoundation({ plotX }: { plotX: number }) {
       style={{
         position: 'absolute',
         left: `${sceneXPercent(plotX, structureWidthPct)}%`,
-        bottom: 'calc(var(--hub-ground) - 2px)',
-        width: 'min(44%, 520px)',
-        height: 'clamp(26px, 4vw, 40px)',
+        bottom: 'calc(var(--hub-ground) - 4.5%)',
+        width: 'min(48%, 600px)',
+        height: 'clamp(56px, 7.5vw, 88px)',
         transform: 'translateX(-50%)',
-        zIndex: 2,
+        // TerrainScene keeps the facility deck above the ordinary ground fill
+        // and below its road bed; the structure layer itself remains above the
+        // whole terrain scene.
+        zIndex: 10,
         pointerEvents: 'none',
       }}
     >

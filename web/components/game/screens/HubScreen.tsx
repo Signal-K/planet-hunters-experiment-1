@@ -527,8 +527,9 @@ export default function HubScreen({ player, rocketVariant = 'explorer', hasCoach
           }}
         >
           {/* World background: sky, starfield, ridge parallax, ground, plateau */}
-          <HubWorldBackground phase={skyPhase} />
-          {launchpadPlot && <LaunchpadFoundation plotX={launchpadPlot.plotX} />}
+          <HubWorldBackground phase={skyPhase}>
+            {launchpadPlot && <LaunchpadFoundation plotX={launchpadPlot.plotX} />}
+          </HubWorldBackground>
           <RoadRover road={EARTH_BASE_WIDE.roadPaths?.[0]} />
 
           {/* Drifting ambient motes — replaces the old daylight cloud layer,

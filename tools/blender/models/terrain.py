@@ -376,16 +376,18 @@ def ground_apron():
 
 
 def facility_deck():
-    """320x56 — a single engineered contact deck for the Launchpad.
+    """360x88 — a substantial engineered contact deck for the Launchpad.
 
     The old ground_apron is a grass-capped soil berm. That is useful as a
     landscape brick, but it reads as a second land block when the Launchpad is
-    placed across it. This deck is deliberately one material and one silhouette
-    so the facility sits on a clear, machined surface before the road begins.
+    placed across it. This deck is deliberately one material and one broad,
+    beveled silhouette so the facility sits on a clear, machined surface before
+    the road begins. Its deeper face is intentional: the former 56px strip was
+    too slight to separate the structure from the hills and soil behind it.
     """
-    deck = kit.box("facility_deck", (9.5, 1.55, 0.28), bevel=0.06)
+    deck = kit.box("facility_deck", (10.2, 2.2, 0.68), bevel=0.1)
     kit.solid("facility_deck", deck, ROCK, "facilitydeck", outline=0.014)
-    return dict(layout=(320, 56), ortho=10.2, mode="side", target=(0, 0, 0.16))
+    return dict(layout=(360, 88), ortho=11.4, mode="side", target=(0, 0, 0.34))
 
 
 # --- Ground detail -----------------------------------------------------------

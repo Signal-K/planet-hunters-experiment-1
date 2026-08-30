@@ -41,7 +41,7 @@ export const TERRAIN_KIT: Record<TerrainBrickId, TerrainBrick> = {
   hill_long:         { w: 206, h: 54 },
   bluff:             { w: 124, h: 70 },
   ground_apron:      { w: 320, h: 64 },
-  facility_deck:     { w: 320, h: 56 },
+  facility_deck:     { w: 360, h: 88 },
   rock_boulder:      { w: 44, h: 34 },
   rock_cluster:      { w: 72, h: 40 },
   scree:             { w: 88, h: 20 },

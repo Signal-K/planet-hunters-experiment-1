@@ -8,7 +8,7 @@ describe('LaunchpadFoundation', () => {
 
     expect(markup).toContain('data-testid="launchpad-foundation"')
     expect(markup).toContain('/game/assets/terrain/facility_deck.png')
-    expect(markup).toContain('bottom:calc(var(--hub-ground) - 2px)')
-    expect(markup).toContain('width:min(44%, 520px)')
+    expect(markup).toContain('bottom:calc(var(--hub-ground) - 4.5%)')
+    expect(markup).toContain('width:min(48%, 600px)')
   })
 })
