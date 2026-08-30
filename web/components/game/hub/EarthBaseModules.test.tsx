@@ -1,14 +1,12 @@
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, expect, it } from 'vitest'
-import { LaunchpadFoundation } from './EarthBaseModules'
+import { EarthBaseModules } from './EarthBaseModules'
 
-describe('LaunchpadFoundation', () => {
-  it('uses one Blender-rendered contact deck aligned to the authored plot', () => {
-    const markup = renderToStaticMarkup(<LaunchpadFoundation plotX={154} />)
+describe('EarthBaseModules', () => {
+  it('keeps the authored structure layer available without a foreground land overlay', () => {
+    const markup = renderToStaticMarkup(<EarthBaseModules buildings={[]} />)
 
-    expect(markup).toContain('data-testid="launchpad-foundation"')
-    expect(markup).toContain('/game/assets/terrain/facility_deck.png')
-    expect(markup).toContain('bottom:calc(var(--hub-ground) - 4.5%)')
-    expect(markup).toContain('width:min(48%, 600px)')
+    expect(markup).toContain('earth-base-modules-layer')
+    expect(markup).not.toContain('facility_deck.png')
   })
 })

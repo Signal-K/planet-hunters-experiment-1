@@ -169,7 +169,7 @@ function RoadBed({ road, palette }: { road: SceneRoadPath; palette: Palette }) {
         right: 0,
         bottom: groundOffsetCss(firstPoint.groundOffset),
         height: 22,
-        zIndex: 11,
+        zIndex: 9,
         pointerEvents: 'none',
         background: `color-mix(in srgb, var(--ln-void) 78%, ${palette.groundNear})`,
         borderTop: `2px solid ${palette.groundLip}`,
@@ -196,11 +196,9 @@ function RoadBed({ road, palette }: { road: SceneRoadPath; palette: Palette }) {
 export function TerrainScene({
   composition,
   phase = 'day',
-  children,
 }: {
   composition: SceneComposition
   phase?: TimeOfDayPhase
-  children?: React.ReactNode
 }) {
   const palette = PALETTES[phase]
   return (
@@ -241,9 +239,7 @@ export function TerrainScene({
           horizon out to the tree line (depth <= 0.74 -> zIndex <= 8) is clipped
           by it and reads as standing behind the ground, while the near
           ground-detail band (depth 0.92 -> zIndex 10) draws on top and reads as
-          lying on it. The facility deck uses zIndex 10 and the road uses 11,
-          so the deck can replace the ground beneath a structure while the
-          connected lane still paints over its lower edge. */}
+          lying on it. The road remains a single connected lane at zIndex 9. */}
       <div style={{
         position: 'absolute', left: 0, right: 0, bottom: 0, height: 'var(--hub-ground)',
         zIndex: 9, background: palette.ground, transition: 'background 1.2s ease',
@@ -264,12 +260,6 @@ export function TerrainScene({
           background: palette.groundNear, transition: 'background 1.2s ease',
         }} />
       </div>
-
-      {/* Scene-specific contact overlays render after the ground fill so they
-          can replace the ordinary soil beneath a facility. They remain inside
-          this terrain stacking context, which lets the road bed paint over the
-          deck and preserves the same road/ground contract at every viewport. */}
-      {children}
 
       {/* Blender road tiles provide lane markings and edge detail, while this
           continuous bed keeps the authored SceneRoadPath traversable between

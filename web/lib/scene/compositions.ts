@@ -112,23 +112,6 @@ export const EARTH_BASE_WIDE: SceneComposition = {
       ],
     },
     {
-      // Keep the green near hills as a softened horizon treatment rather than
-      // a second land shelf behind the facilities. The facility deck owns the
-      // immediate contact zone; these hills sit farther back in depth and
-      // dissolve toward the mountain haze.
-      id: 'hills-near',
-      depth: 0.56,
-      baseline: 'calc(var(--hub-ground) - 0.5%)',
-      scale: 0.92,
-      bricks: [
-        { brick: 'hill_long', x: 2, scale: 1.1 },
-        { brick: 'hill_round', x: 22, scale: 0.9, flip: true },
-        { brick: 'hill_long', x: 45, scale: 1.05, flip: true },
-        { brick: 'hill_round', x: 68, scale: 0.95 },
-        { brick: 'hill_long', x: 88, scale: 1.0 },
-      ],
-    },
-    {
       id: 'treeline',
       depth: 0.74,
       baseline: 'calc(var(--hub-ground) - 0.5%)',

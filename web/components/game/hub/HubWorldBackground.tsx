@@ -33,20 +33,16 @@ import { COMPOSITIONS, type CompositionId } from '@/lib/scene/compositions'
 export function HubWorldBackground({
   phase = 'day',
   composition = 'earth-base-wide',
-  children,
 }: {
   phase?: TimeOfDayPhase
   composition?: CompositionId
-  children?: React.ReactNode
 }) {
   return (
     <div
       data-testid="hub-terrain-fallback"
       style={{ position: 'absolute', inset: 0, zIndex: 1, overflow: 'hidden' }}
     >
-      <TerrainScene composition={COMPOSITIONS[composition]} phase={phase}>
-        {children}
-      </TerrainScene>
+      <TerrainScene composition={COMPOSITIONS[composition]} phase={phase} />
     </div>
   )
 }
