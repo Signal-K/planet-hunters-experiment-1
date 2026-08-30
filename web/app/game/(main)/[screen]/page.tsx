@@ -37,7 +37,7 @@ export default function ScreenPage({ params }: { params: Promise<{ screen: strin
     game.player.missionsDone === 2 ? M3_STEPS : []
   const hasCoach = coachSteps.some(
     step => step.screen === screen && !game.doneSteps[step.id]
-  )
+  ) && !(screen === 'hub' && game.subsurfaceView)
 
   if (!VALID_SCREENS.has(screen as Screen)) return notFound()
 

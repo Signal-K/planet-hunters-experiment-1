@@ -99,6 +99,16 @@ button.launchpad-scene-object { cursor: pointer; }
   object-position: center bottom;
   pointer-events: none;
 }
+/* The source illustration includes a transparent-ground vignette around the
+   pad. Keep the machine and its ramp, but let the shared scene own the actual
+   soil, verge, and foreground contact so the pad cannot bring a second patch
+   of terrain with it. */
+.earth-base-structure--launchpad .earth-base-flat-sprite {
+  clip-path: polygon(
+    0 0, 100% 0, 100% 84%, 82% 84%, 79% 90%, 79% 100%,
+    39% 100%, 39% 91%, 30% 91%, 26% 84%, 0 84%
+  );
+}
 .earth-base-flat-sprite--highlight {
   inset: -8px;
   width: calc(100% + 16px);

@@ -20,6 +20,8 @@ import { initPostHog } from '@/lib/posthog'
 import DevShortcuts from '@/components/dev/DevShortcuts'
 import AuthGateSheet from '@/components/game/AuthGateSheet'
 import SettingsSheet from '@/components/game/SettingsSheet'
+import FriendsButton from '@/components/game/FriendsButton'
+import FriendsSheet from '@/components/game/FriendsSheet'
 import TerritoryClaimPopup from '@/components/game/TerritoryClaimPopup'
 import { UI_ZONES } from '@/lib/ui-zones'
 import { isSurveySafeScreen } from '@/lib/survey-gating'
@@ -33,6 +35,7 @@ function GameChrome({ children }: { children: ReactNode }) {
   const arrivalScheduledFor = useRef<number | null>(null)
   const returnScheduledKey = useRef<string | null>(null)
   const [settingsOpen, setSettingsOpen] = useState(false)
+  const [friendsOpen, setFriendsOpen] = useState(false)
   const { phase: backdropSkyPhase } = useTimeOfDay()
 
   // Keep third-party analytics script injection out of React hydration. See
@@ -107,15 +110,18 @@ function GameChrome({ children }: { children: ReactNode }) {
     return []
   }, [game.player.missionsDone, game.tutorial])
 
+  // Derive current screen from URL (reliable even before state syncs)
+  const currentScreen = pathname.replace(/^\/game\//, '')
   const coach = useMemo(() => {
-    return coachSteps.find(step => step.screen === game.screen && !game.doneSteps[step.id]) ?? null
-  }, [coachSteps, game.doneSteps, game.screen])
+    const routeCoach = coachSteps.find(step => step.screen === currentScreen && !game.doneSteps[step.id]) ?? null
+    if (currentScreen === 'hub' && game.subsurfaceView) return null
+    if (settingsOpen || friendsOpen || game.popup || game.authGateOpen) return null
+    return routeCoach
+  }, [coachSteps, currentScreen, friendsOpen, game.authGateOpen, game.doneSteps, game.popup, game.subsurfaceView, settingsOpen])
 
   const coachIndex = coach ? coachSteps.findIndex(step => step.id === coach.id) : -1
   const hasCoach = !!coach
 
-  // Derive current screen from URL (reliable even before state syncs)
-  const currentScreen = pathname.replace(/^\/game\//, '')
   const showNav = ['hub', 'missions', 'skills', 'mission-history'].includes(currentScreen)
   const showFeedback = ['hub', 'missions', 'market', 'hangar', 'skills'].includes(currentScreen)
     && !showNav
@@ -185,7 +191,7 @@ function GameChrome({ children }: { children: ReactNode }) {
             already carries this exact corner-button fix; ported here so
             Settings isn't stranded on `/game/*`. Hub only, so it never sits
             over gameplay chrome. */}
-        {currentScreen === 'hub' && (
+        {currentScreen === 'hub' && !game.subsurfaceView && (
           <button
             data-testid="settings-button"
             aria-label="Settings"
@@ -204,6 +210,13 @@ function GameChrome({ children }: { children: ReactNode }) {
               <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 01-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z" />
             </svg>
           </button>
+        )}
+
+        {/* Friends — same porting fix as Settings above (KES-233): the
+            legacy GameApp.tsx shell isn't what serves /game/hub, so KES-83's
+            corner button needs its own copy here too. Hub only. */}
+        {currentScreen === 'hub' && !game.subsurfaceView && !game.authGateOpen && (
+          <FriendsButton onClick={() => setFriendsOpen(true)} />
         )}
 
         {/* Current screen (injected by [screen]/page.tsx) */}
@@ -270,6 +283,7 @@ function GameChrome({ children }: { children: ReactNode }) {
           .portrait-canvas inside .game-stage removes that ambiguity. */}
       <Sidebar current={currentNav} onNav={goFromNav} onSettings={() => setSettingsOpen(true)} />
       {settingsOpen && <SettingsSheet onClose={() => setSettingsOpen(false)} />}
+      {friendsOpen && <FriendsSheet onClose={() => setFriendsOpen(false)} />}
     </main>
   )
 }

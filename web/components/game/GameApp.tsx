@@ -120,8 +120,10 @@ function GameCanvas() {
   }, [game.player.missionsDone, game.tutorial])
 
   const coach = useMemo(() => {
-    return coachSteps.find(step => step.screen === game.screen && !game.doneSteps[step.id]) ?? null
-  }, [coachSteps, game.doneSteps, game.screen])
+    const activeCoach = coachSteps.find(step => step.screen === game.screen && !game.doneSteps[step.id]) ?? null
+    if (game.subsurfaceView || settingsOpen || friendsOpen || game.popup || game.authGateOpen) return null
+    return activeCoach
+  }, [coachSteps, friendsOpen, game.authGateOpen, game.doneSteps, game.popup, game.screen, game.subsurfaceView, settingsOpen])
 
   const coachIndex = coach ? coachSteps.findIndex(step => step.id === coach.id) : -1
   const hasCoach = !!coach
@@ -198,7 +200,7 @@ function GameCanvas() {
         {/* Settings — previously only reachable from the desktop sidebar's
             gear. Small corner affordance so removing that rail doesn't strand
             it. Hub only, so it never sits over gameplay chrome. */}
-        {game.screen === 'hub' && (
+        {game.screen === 'hub' && !game.subsurfaceView && (
           <button
             data-testid="settings-button"
             aria-label="Settings"
@@ -218,7 +220,7 @@ function GameCanvas() {
             </svg>
           </button>
         )}
-        {game.screen === 'hub' && !game.authGateOpen && (
+        {game.screen === 'hub' && !game.subsurfaceView && !game.authGateOpen && (
           <FriendsButton onClick={() => setFriendsOpen(true)} />
         )}
         <DevShortcuts />
