@@ -22,11 +22,21 @@ export default function TutorialCoach({ stepIndex, steps, step, total, onManualN
 
   if (!step) return null
   const manual = !!step.manual
-  const coachRail = reserved_rect(step.anchor === 'bottom' ? 'bottom' : 'top')
+  // Hub owns a stacked title/HUD rail at every viewport. The old shared tutorial
+  // rectangle started at 76px, which put the coach directly over the Jobs
+  // chip and made the rest of the navigation look missing. Leave a small
+  // gap below that chrome on the one screen with the extra HUD row.
+  const coachRail = step.screen === 'hub'
+    ? { top: 160, height: 150 }
+    : reserved_rect(step.anchor === 'bottom' ? 'bottom' : 'top')
 
   const resolvedBody   = (isDesktop && step.desktopBody   !== undefined) ? step.desktopBody   : step.body
   const resolvedAction = (isDesktop && step.desktopAction !== undefined) ? step.desktopAction : step.action
   const resolvedCoachId = (isDesktop && step.desktopCoachId !== undefined) ? step.desktopCoachId : step.coachId
+  // The desktop Hub instruction already names the Launchpad. A large ring
+  // around the building duplicates that instruction and reads like a second
+  // active state; mobile keeps its compact target ring for touch wayfinding.
+  const showPointer = !(isDesktop && step.screen === 'hub')
 
   // Set data-coach-target on <html> for CSS element highlighting (works across fixed/absolute boundaries)
   useEffect(() => {
@@ -54,7 +64,7 @@ export default function TutorialCoach({ stepIndex, steps, step, total, onManualN
   if (manual) {
     return (
       <div style={{ position: 'absolute', inset: 0, zIndex: 96, pointerEvents: 'none' }} data-testid="tutorial-coach-overlay">
-        {resolvedCoachId && <CoachPointer coachId={resolvedCoachId} />}
+        {resolvedCoachId && showPointer && <CoachPointer coachId={resolvedCoachId} />}
         <div
           data-ui-zone={UI_ZONES.tutorialRail}
           data-testid="tutorial-coach-block"
@@ -130,7 +140,7 @@ export default function TutorialCoach({ stepIndex, steps, step, total, onManualN
   // ── Active instruction card ─────────────────────────────────────────────────
   return (
     <div style={{ position: 'absolute', inset: 0, zIndex: 96, pointerEvents: 'none' }} data-testid="tutorial-coach-overlay">
-      {resolvedCoachId && <CoachPointer coachId={resolvedCoachId} dir={resolvedDir} />}
+      {resolvedCoachId && showPointer && <CoachPointer coachId={resolvedCoachId} dir={resolvedDir} />}
       <div
         data-ui-zone={UI_ZONES.tutorialRail}
         data-testid="tutorial-coach-block"

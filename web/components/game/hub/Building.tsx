@@ -179,7 +179,7 @@ export function Building({ kind, label, sub, status, w, hitH, style, onClick, ba
         </div>
 
         {/* Status pill — black tile, white outline */}
-        <div style={{
+        <div className="hub-building-status" style={{
           display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2,
           background: 'var(--hub-panel-deep)',
           border: '1.5px solid var(--hub-outline)',

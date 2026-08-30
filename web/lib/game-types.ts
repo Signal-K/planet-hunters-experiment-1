@@ -13,6 +13,16 @@ export interface DailyClientPool {
   completedIds: string[]
 }
 
+export interface CompletedMissionRecord {
+  id: string
+  title: string
+  clientName?: string
+  targetName?: string
+  completedAt: number
+  runId?: string
+  kind?: 'client' | 'program'
+}
+
 export type Screen =
   | 'intro'
   | 'build'
@@ -38,6 +48,7 @@ export type Screen =
   | 'surface-ops'
   | 'academy'
   | 'asteroid-discovery'
+  | 'mission-history'
 
 export type LaunchpadView = 'overview' | 'focus'
 
@@ -204,6 +215,7 @@ export interface Player {
   marketSupply?: Record<string, number>
   marketSupplyUpdatedAt?: Record<string, number>
   clientMissions: Record<string, number>
+  completedMissions?: CompletedMissionRecord[]
   clientStreaks?: Record<string, number>
   clientCooldowns: Record<string, number>
   researchAnnotations: number

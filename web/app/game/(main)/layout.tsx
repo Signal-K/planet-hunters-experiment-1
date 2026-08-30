@@ -4,6 +4,7 @@ import { type ReactNode, useMemo, useEffect, useRef, useState } from 'react'
 import { usePathname } from 'next/navigation'
 import { GameProvider, useGame } from '@/game-context'
 import { M1_STEPS, M2_STEPS, M3_STEPS } from '@/lib/data'
+import { FREE_OPS_START_MISSIONS_DONE } from '@/lib/data/mission-generator'
 import TutorialCoach from '@/components/game/TutorialCoach'
 import UnlockPopup from '@/components/game/UnlockPopup'
 import { TutorialCompleteSheet } from '@/components/game/TutorialCompleteSheet'
@@ -99,7 +100,7 @@ function GameChrome({ children }: { children: ReactNode }) {
   }, [game.screen, game.lastCargo, game.mission, game.target])
 
   const coachSteps = useMemo(() => {
-    if (!game.tutorial) return []
+    if (!game.tutorial || game.player.missionsDone >= FREE_OPS_START_MISSIONS_DONE) return []
     if (game.player.missionsDone === 0) return M1_STEPS
     if (game.player.missionsDone === 1) return M2_STEPS
     if (game.player.missionsDone === 2) return M3_STEPS
@@ -115,7 +116,7 @@ function GameChrome({ children }: { children: ReactNode }) {
 
   // Derive current screen from URL (reliable even before state syncs)
   const currentScreen = pathname.replace(/^\/game\//, '')
-  const showNav = ['hub', 'missions', 'skills'].includes(currentScreen)
+  const showNav = ['hub', 'missions', 'skills', 'mission-history'].includes(currentScreen)
   const showFeedback = ['hub', 'missions', 'market', 'hangar', 'skills'].includes(currentScreen)
     && !showNav
     && !game.popup
@@ -131,7 +132,7 @@ function GameChrome({ children }: { children: ReactNode }) {
 
   const currentNav = ['missions', 'targets'].includes(currentScreen)
     ? 'missions'
-    : currentScreen === 'galaxy' ? 'galaxy' : currentScreen === 'fab' ? 'fab' : currentScreen === 'skills' ? 'skills' : 'hub'
+    : currentScreen === 'mission-history' ? 'mission-history' : currentScreen === 'galaxy' ? 'galaxy' : currentScreen === 'fab' ? 'fab' : currentScreen === 'skills' ? 'skills' : 'hub'
   // Location screens (physical places in the game world, and the mission-run
   // sequence through them) own the full viewport instead of sitting inside
   // the generic desktop device-card — that boxed treatment is for menus
@@ -152,13 +153,15 @@ function GameChrome({ children }: { children: ReactNode }) {
           specific screen the player was on before navigating into a menu.
           Fully covered by `.portrait-canvas--full-page` on location screens,
           so no conditional render needed. */}
-      <div
-        className="game-stage-backdrop"
-        aria-hidden="true"
-        style={{ position: 'absolute', inset: 0, zIndex: 0, overflow: 'hidden' }}
-      >
-        <HubWorldBackground phase={backdropSkyPhase} />
-      </div>
+      {!isImmersiveEarthBaseRoute && (
+        <div
+          className="game-stage-backdrop"
+          aria-hidden="true"
+          style={{ position: 'absolute', inset: 0, zIndex: 0, overflow: 'hidden' }}
+        >
+          <HubWorldBackground phase={backdropSkyPhase} />
+        </div>
+      )}
       <div className={`portrait-canvas ${isImmersiveEarthBaseRoute ? 'portrait-canvas--full-page' : ''}`}>
         <BackendStatus />
         <LandnamSyncStatus />

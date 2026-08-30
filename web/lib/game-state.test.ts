@@ -335,6 +335,31 @@ describe('mergeRemoteState — remote game_states record onto local state', () =
     expect(merged.tutorial).toBe(true)
   })
 
+  it('cannot resurrect the tutorial after the Free Ops boundary', () => {
+    const normalized = normalizeState({
+      player: { missionsDone: 3 },
+      tutorial: true,
+    })
+
+    expect(normalized.player.freeOperations).toBe(true)
+    expect(normalized.tutorial).toBe(false)
+  })
+
+  it('preserves and bounds completed mission history for older saves', () => {
+    const normalized = normalizeState({
+      player: {
+        completedMissions: [
+          { id: 'm1', title: 'Survey', completedAt: 123, targetName: 'Mars' },
+          { id: 'invalid', title: 'Missing time', completedAt: Number.NaN },
+        ],
+      },
+    })
+
+    expect(normalized.player.completedMissions).toEqual([
+      { id: 'm1', title: 'Survey', completedAt: 123, targetName: 'Mars' },
+    ])
+  })
+
   it('never regresses onboarding stage from a stale remote record', () => {
     const merged = mergeRemoteState(
       local({ player: { ...DEFAULT_STATE.player, missionsDone: 3 }, tutorial: false }),

@@ -171,10 +171,9 @@ function RoadBed({ road, palette }: { road: SceneRoadPath; palette: Palette }) {
         height: 22,
         zIndex: 9,
         pointerEvents: 'none',
-        background: `linear-gradient(180deg, color-mix(in srgb, var(--ln-void) 72%, ${palette.groundNear}) 0 68%, ${palette.groundLip} 68% 100%)`,
-        borderTop: `1px solid ${palette.groundLip}`,
-        borderBottom: `1px solid ${palette.groundNear}`,
-        boxShadow: `0 3px 0 ${palette.groundNear}`,
+        background: `color-mix(in srgb, var(--ln-void) 78%, ${palette.groundNear})`,
+        borderTop: `2px solid ${palette.groundLip}`,
+        borderBottom: `2px solid ${palette.groundNear}`,
       }}
     >
       <span
@@ -183,8 +182,9 @@ function RoadBed({ road, palette }: { road: SceneRoadPath; palette: Palette }) {
           position: 'absolute',
           left: 0,
           right: 0,
-          top: 7,
+          top: '50%',
           height: 2,
+          transform: 'translateY(-50%)',
           opacity: 0.82,
           background: `repeating-linear-gradient(90deg, transparent 0 24px, color-mix(in srgb, ${palette.groundLip} 78%, var(--hub-chalk)) 24px 40px)`,
         }}

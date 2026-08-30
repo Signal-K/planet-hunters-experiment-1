@@ -2127,6 +2127,15 @@ html[data-coach-target="build-structure-strip"] [data-coach-id="build-structure-
 .hub-push-opt-in button,
 .hub-push-opt-in div { white-space: nowrap; }
 
+/* Structure labels share the same authored plot centres as the sprites. On a
+   narrow scene, long facility names must wrap inside their own pill instead of
+   colliding with the adjacent plot's label. */
+.hub-building-status { text-align: center; }
+@media (max-width: 520px) {
+  .hub-building-status { max-width: 86px; white-space: normal !important; padding-inline: 7px !important; }
+  .hub-building-status > span:first-child { display: block; width: 72px; line-height: 1.05; overflow-wrap: anywhere; white-space: normal; }
+}
+
 @media (max-width: 1023px) {
   .hub-push-opt-in { display: none; }
 }

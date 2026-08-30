@@ -1,5 +1,5 @@
 import { STARTING_FRANCS } from '@/lib/data/economy'
-import type { GameState, LicenseGrade, Player, Screen } from '@/lib/game-types'
+import type { CompletedMissionRecord, GameState, LicenseGrade, Player, Screen } from '@/lib/game-types'
 import { MISSIONS, TARGETS } from '@/lib/data'
 import { FREE_OPS_START_MISSIONS_DONE } from '@/lib/data/mission-generator'
 import { migrateCrewRoster } from '@/lib/systems/CrewSystem'
@@ -14,7 +14,7 @@ import { EARTH_BASE_SCOPE } from '@/lib/scene-scope'
 // where player fields are optional since older saves may be missing new fields.
 export type PartialSave = Omit<Partial<GameState>, 'player'> & { player?: Partial<Player> }
 
-const VALID_SCREENS: Screen[] = ['intro', 'build', 'hub', 'missions', 'galaxy', 'targets', 'fab', 'transit', 'landing', 'mining', 'delivery', 'debrief', 'refinery', 'market', 'hangar', 'rocket-buy', 'skills', 'scan-station', 'rover-mining', 'launchpad', 'surface-ops', 'academy', 'asteroid-discovery']
+const VALID_SCREENS: Screen[] = ['intro', 'build', 'hub', 'missions', 'galaxy', 'targets', 'fab', 'transit', 'landing', 'mining', 'delivery', 'debrief', 'refinery', 'market', 'hangar', 'rocket-buy', 'skills', 'scan-station', 'rover-mining', 'launchpad', 'surface-ops', 'academy', 'asteroid-discovery', 'mission-history']
 const MISSION_CONTEXT_SCREENS = new Set<Screen>(['targets', 'rocket-buy', 'fab', 'transit', 'mining', 'rover-mining', 'delivery', 'debrief'])
 const TARGET_CONTEXT_SCREENS = new Set<Screen>(['rocket-buy', 'fab', 'transit', 'mining', 'rover-mining', 'delivery', 'debrief'])
 const VALID_LICENSE_GRADES: LicenseGrade[] = ['Grade I', 'Grade II', 'Grade III']
@@ -37,6 +37,7 @@ export const DEFAULT_STATE: GameState = {
     unlockedSkillNodes: [],
     freeOperations: false,
     clientMissions: {},
+    completedMissions: [],
     clientStreaks: {},
     clientCooldowns: {},
     researchAnnotations: 0,
@@ -129,6 +130,22 @@ function migrateLegacyContractorFields(player: Partial<Player>): Partial<Player>
   return migrated
 }
 
+function normalizeCompletedMissions(value: unknown): CompletedMissionRecord[] {
+  if (!Array.isArray(value)) return DEFAULT_STATE.player.completedMissions ?? []
+  return value.filter((entry): entry is CompletedMissionRecord => {
+    if (!entry || typeof entry !== 'object') return false
+    const record = entry as Partial<CompletedMissionRecord>
+    return typeof record.id === 'string'
+      && typeof record.title === 'string'
+      && typeof record.completedAt === 'number'
+      && Number.isFinite(record.completedAt)
+      && (record.clientName === undefined || typeof record.clientName === 'string')
+      && (record.targetName === undefined || typeof record.targetName === 'string')
+      && (record.runId === undefined || typeof record.runId === 'string')
+      && (record.kind === undefined || record.kind === 'client' || record.kind === 'program')
+  }).slice(-100)
+}
+
 export function normalizeState(input: PartialSave): GameState {
   const screen = input.screen && VALID_SCREENS.includes(input.screen) ? input.screen : DEFAULT_STATE.screen
   const missionId = typeof input.missionId === 'string' ? input.missionId : null
@@ -138,6 +155,7 @@ export function normalizeState(input: PartialSave): GameState {
     ? { kind: 'body' as const, id: savedScope.id, label: savedScope.label || savedScope.id }
     : EARTH_BASE_SCOPE
   const player: Partial<Player> = migrateLegacyContractorFields(input.player ?? {})
+  const completedMissions = normalizeCompletedMissions(player.completedMissions)
   const licenseGrade = player.licenseGrade && VALID_LICENSE_GRADES.includes(player.licenseGrade)
     ? player.licenseGrade
     : DEFAULT_STATE.player.licenseGrade
@@ -228,9 +246,13 @@ export function normalizeState(input: PartialSave): GameState {
     targetId,
     missionBoardScope,
     rocket: { ...DEFAULT_STATE.rocket, ...input.rocket },
-    player: { ...DEFAULT_STATE.player, ...player, missionsDone, freeOperations, clientStructures, placed: placedList, placementPlots, licenseGrade, researchXP, unlockedBlueprints, tessClassifications, asteroidClassifications, roverTerrainClassifications, discoveredExoplanetTargets, instrumentDigestNotifiedOn, transitSatelliteLevel, deepSpaceTelescopeLevel, crew, surfaceOps,
+    player: { ...DEFAULT_STATE.player, ...player, missionsDone, freeOperations, completedMissions, clientStructures, placed: placedList, placementPlots, licenseGrade, researchXP, unlockedBlueprints, tessClassifications, asteroidClassifications, roverTerrainClassifications, discoveredExoplanetTargets, instrumentDigestNotifiedOn, transitSatelliteLevel, deepSpaceTelescopeLevel, crew, surfaceOps,
       deepSpaceTelescopeBuilt, refineryBuilt, scannerBuilt },
     doneSteps: { ...DEFAULT_STATE.doneSteps, ...input.doneSteps },
+    // Free Ops is the durable boundary. If an older save left `tutorial` true
+    // after the final onboarding debrief, do not let that stale flag resurrect
+    // the coach on the next load.
+    tutorial: missionsDone >= FREE_OPS_START_MISSIONS_DONE ? false : (input.tutorial ?? DEFAULT_STATE.tutorial),
     ...(pendingTerritoryClaimFor ? { pendingTerritoryClaimFor } : {}),
   }
 }

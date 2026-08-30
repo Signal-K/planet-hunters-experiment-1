@@ -36,10 +36,11 @@ describe('HubWorldBackground', () => {
     // near enough that those would be off-frame, and drops them entirely.
     expect(wide).toContain('data-band="facilities-far"')
     expect(pad).not.toContain('data-band="facilities-far"')
-    expect(pad).toContain('data-band="facility-apron"')
-    expect(pad).toContain('/game/assets/terrain/ground_apron.png')
+    expect(pad).not.toContain('data-band="facility-apron"')
+    expect(pad).not.toContain('/game/assets/terrain/ground_apron.png')
     expect(pad).toContain('/game/assets/terrain/fence_run.png')
     expect(pad).toContain('data-road-bed="site-service-road"')
     expect(pad).toContain('repeating-linear-gradient')
+    expect((pad.match(/data-road-bed="site-service-road"/g) ?? []).length).toBe(1)
   })
 })

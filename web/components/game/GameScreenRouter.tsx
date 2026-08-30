@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from 'react'
 import { useGame } from '@/game-context'
 import { ACADEMY_INTRO_MISSION_ID, M1_STEPS, M2_STEPS, M3_STEPS, rocketDisplayForConfig, rocketModelForConfig } from '@/lib/data'
+import { FREE_OPS_START_MISSIONS_DONE } from '@/lib/data/mission-generator'
 import type { Screen } from '@/lib/game-types'
 import MissionSetupRoutes from '@/components/game/MissionSetupRoutes'
 import MissionOperationRoutes from '@/components/game/MissionOperationRoutes'
@@ -20,6 +21,7 @@ import TessDiscoveryScreen from '@/components/game/screens/TessDiscoveryScreen'
 import AsteroidDiscoveryScreen from '@/components/game/screens/AsteroidDiscoveryScreen'
 import SurfaceOpsScreen from '@/components/game/screens/SurfaceOpsScreen'
 import AcademyScreen from '@/components/game/screens/AcademyScreen'
+import MissionHistoryScreen from '@/components/game/screens/MissionHistoryScreen'
 import { enqueueSurvey } from '@/lib/surveys'
 import { VISUAL_ASTEROID_CANDIDATE, VISUAL_TESS_CANDIDATE } from '@/lib/visual-fixtures'
 import { captureGameEvent } from '@/lib/posthog'
@@ -32,6 +34,7 @@ export const VALID_SCREENS = new Set<Screen>([
   'surface-ops',
   'academy',
   'asteroid-discovery',
+  'mission-history',
 ])
 
 // Shared per-screen render map — the single source of truth for "which
@@ -72,7 +75,7 @@ export function ScreenContent({
     : undefined
 
   // Derive the coach step for coachManual (needed by AssemblyScreen)
-  const coachSteps = !game.tutorial ? [] :
+  const coachSteps = !game.tutorial || game.player.missionsDone >= FREE_OPS_START_MISSIONS_DONE ? [] :
     game.player.missionsDone === 0 ? M1_STEPS :
     game.player.missionsDone === 1 ? M2_STEPS :
     game.player.missionsDone === 2 ? M3_STEPS : []
@@ -329,6 +332,14 @@ export function ScreenContent({
             refineryBuilt: game.player.refineryBuilt,
             launchpadUpgraded: game.player.launchpadUpgraded,
           }}
+        />
+      )
+
+    case 'mission-history':
+      return (
+        <MissionHistoryScreen
+          records={game.player.completedMissions ?? []}
+          onBack={() => game.go('hub')}
         />
       )
 

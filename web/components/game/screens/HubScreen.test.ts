@@ -67,5 +67,10 @@ describe('terrain kit silhouettes', () => {
       .toBe('calc(var(--hub-ground) - 4.5%)')
     expect(EARTH_BASE_PAD.bands.find(band => band.id === 'ground-detail')?.baseline)
       .toBe('calc(var(--hub-ground) - 7%)')
+    for (const composition of [EARTH_BASE_WIDE, EARTH_BASE_PAD]) {
+      const detail = composition.bands.find(band => band.id === 'ground-detail')
+      expect(detail?.bricks.some(({ brick }) => brick === 'road_segment' || brick === 'road_ramp')).toBe(false)
+      expect(composition.bands.some(band => band.bricks.some(({ brick }) => brick === 'ground_apron'))).toBe(false)
+    }
   })
 })

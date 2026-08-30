@@ -594,6 +594,22 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
           completedIds: [...s.player.dailyClientPool.completedIds, s.missionId],
         }
         : s.player.dailyClientPool
+      const historyRunId = s.player.missionRunId ?? `${s.missionId}:${s.player.missionsDone}`
+      const completedTarget = mission?.targetId
+        ? catalog.targets.find(target => target.id === mission.targetId)
+        : catalog.targets.find(target => target.id === s.targetId)
+      const completedMissions = [
+        ...(s.player.completedMissions ?? []).filter(record => record.runId !== historyRunId),
+        {
+          id: mission?.id ?? s.missionId,
+          title: mission?.title ?? s.player.activeMission?.label ?? s.missionId,
+          clientName: mission?.client,
+          targetName: completedTarget?.name,
+          completedAt: Date.now(),
+          runId: historyRunId,
+          kind: isProgramOperation ? 'program' as const : 'client' as const,
+        },
+      ].slice(-100)
       const stillInTutorial = missionsDone < FREE_OPS_START_MISSIONS_DONE && catalog.missions.some(m => m.sequence === missionsDone + 1)
       // M3 (the last onboarding mission) also flips freeOperations true on this
       // same tick, which would otherwise auto-open the market straight out of
@@ -636,6 +652,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
           clientMissions,
           clientStreaks,
           clientCooldowns,
+          completedMissions,
           stash,
           lastClient: (isStoryMission || isProgramOperation) ? s.player.lastClient : client,
           loanDebt,

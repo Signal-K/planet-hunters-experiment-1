@@ -84,6 +84,11 @@ function SkillsGlyph() {
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M12 2l2.5 7.5H22l-6 4.6 2.3 7.4L12 17l-6.3 4.5 2.3-7.4-6-4.6h7.5z" /></svg>
   )
 }
+function HistoryGlyph() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M4 5h16v14H4z" /><path d="M8 9h8M8 13h6M8 17h4" /></svg>
+  )
+}
 
 /**
  * Docked bottom sheet, rebuilt 2026-08-21 (KES-226) — replaces the
@@ -650,14 +655,12 @@ export default function HubScreen({ player, rocketVariant = 'explorer', hasCoach
 
       {/* Bottom dock — rebuilt 2026-08-21 (KES-226) as a docked sheet, not a
           floating pill row (see DockIconBtn/DockPrimaryBtn doc comment for
-          why). Hidden only during the strict M1 first-run tutorial
-          (missionsDone === 0). M2/M3 "guided ops" still set hasCoach true on
-          this screen (every tier has a hub coach step nudging toward
-          Missions), but that's a lighter nudge, not a full-screen takeover —
-          hiding Edit/Build, Subsurface, and Surface Ops for the whole
-          guided-ops window meant those buttons stayed unreachable well past
-          the tutorial (bug reported 2026-07-31). */}
-      {(!hasCoach || player.missionsDone > 0) && (
+          why). It remains available during onboarding so the tutorial can
+          point at Missions without taking away the rest of the base controls. */}
+      {/* Navigation is part of the base, not a tutorial reward. Keeping this
+          dock mounted during M1 means the coach can point at Missions without
+          removing the rest of the player's controls. */}
+      {(
         <div ref={dockRef} className="hub-bottom-dock" style={{
           position: 'absolute', left: 0, right: 0, bottom: 0, zIndex: 20,
           display: 'flex', justifyContent: 'center', pointerEvents: 'none',
@@ -746,6 +749,7 @@ export default function HubScreen({ player, rocketVariant = 'explorer', hasCoach
                       )}
                     </>
                   )}
+                  <DockIconBtn icon={<HistoryGlyph />} label="Mission Log" onClick={() => onOpenScene('mission-history')} />
                   <DockIconBtn icon={<SubsurfaceGlyph />} label="Subsurface" onClick={() => setSubsurface(true)} />
 
                   {/* Desktop has no nav rail and no bottom bar, so the

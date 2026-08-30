@@ -24,8 +24,8 @@ import type { SceneComposition } from './terrain-kit'
 export const EARTH_BASE_WIDE: SceneComposition = {
   id: 'earth-base-wide',
   // The road is deliberately below the facility baseline. These normalized
-  // points are the source of truth for future road-aware actors, while the
-  // terrain band below supplies the authored road surface.
+  // points are the source of truth for the continuous road bed and future
+  // road-aware actors.
   roadPaths: [{
     id: 'site-service-road',
     points: [
@@ -146,37 +146,17 @@ export const EARTH_BASE_WIDE: SceneComposition = {
       ],
     },
     {
-      // Low Blender-authored soil/grass shoulder. It sits behind the service
-      // road and under the facility sprites, making the shared baseline read
-      // as a physical apron instead of a thin strip over open ground.
-      id: 'facility-apron',
-      depth: 0.84,
-      baseline: 'calc(var(--hub-ground) - 0.5%)',
-      scale: 1,
-      bricks: [
-        { brick: 'ground_apron', x: 18, scale: 1.45 },
-        { brick: 'ground_apron', x: 82, scale: 1.45, flip: true },
-      ],
-    },
-    {
-      // The service road running along the back of the site, just under the
-      // ground line. It is intentionally lower than the facility baseline:
-      // the apron owns building contact, while this is a foreground service
-      // road with short ramps that can carry path-locked rovers.
+      // The continuous road bed is rendered from roadPaths below. Keep this
+      // band for non-road foreground detail only; individual road sprites
+      // here used to create a second, broken road over the path.
       id: 'ground-detail',
       depth: 0.88,
       baseline: 'calc(var(--hub-ground) - 4.5%)',
       scale: 1,
       bricks: [
-        { brick: 'road_ramp', x: 2, scale: 0.9, flip: true },
-        { brick: 'road_segment', x: 12, scale: 1.0 },
-        { brick: 'road_segment', x: 30, scale: 1.0 },
         { brick: 'scree', x: 44, scale: 0.9 },
-        { brick: 'road_segment', x: 58, scale: 1.0 },
         { brick: 'rock_cluster', x: 72, scale: 0.75 },
-        { brick: 'road_segment', x: 80, scale: 1.0 },
         { brick: 'shrub', x: 90, scale: 1.1 },
-        { brick: 'road_ramp', x: 97, scale: 0.9 },
       ],
     },
     {
@@ -274,35 +254,18 @@ export const EARTH_BASE_PAD: SceneComposition = {
       ],
     },
     {
-      // Same contact brick as the wide scene, but scaled for the closer
-      // facility framing so the pad and hangar share one grounded apron.
-      id: 'facility-apron',
-      depth: 0.84,
-      baseline: 'calc(var(--hub-ground) - 0.5%)',
-      scale: 1,
-      bricks: [
-        { brick: 'ground_apron', x: 18, scale: 1.65 },
-        { brick: 'ground_apron', x: 82, scale: 1.65, flip: true },
-      ],
-    },
-    {
-      // Near-field detail that only exists on this screen. At the wide shot's
-      // distance a fence line and individual boulders would be sub-pixel; here
-      // they are what sells "you have walked up to the pad".
+      // Near-field detail that only exists on this screen. The road itself is
+      // one continuous bed from roadPaths; fences and debris sit beside it.
       id: 'ground-detail',
       depth: 0.88,
       baseline: 'calc(var(--hub-ground) - 7%)',
       scale: 1.45,
       bricks: [
-        { brick: 'road_ramp', x: 1, scale: 1.0, flip: true },
-        { brick: 'road_segment', x: 14, scale: 1.1 },
         { brick: 'fence_run', x: 30, scale: 1.0 },
         { brick: 'rock_cluster', x: 43, scale: 0.9 },
-        { brick: 'road_segment', x: 56, scale: 1.1 },
         { brick: 'fence_run', x: 70, scale: 1.0 },
         { brick: 'scree', x: 84, scale: 1.0 },
         { brick: 'rock_boulder', x: 93, scale: 1.0 },
-        { brick: 'road_ramp', x: 99, scale: 1.0 },
       ],
     },
     {
