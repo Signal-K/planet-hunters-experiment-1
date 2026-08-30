@@ -12,6 +12,7 @@ export interface MissionComplexity {
   mineralCount: number
   amountBias: number
   clientOffset: number
+  mineralOffset?: number
 }
 
 export interface MissionGeneratorInput {
@@ -126,15 +127,14 @@ export const DEFAULT_MISSION_TEMPLATES: MissionTemplate[] = [
 
 export const DEFAULT_COMPLEXITY_BANDS: MissionComplexity[] = [
   { sequence: 1, templateId: 'starter-bulk', mineralCount: 1, amountBias: 0, clientOffset: 0 },
-  { sequence: 1, templateId: 'starter-bulk', mineralCount: 1, amountBias: 1, clientOffset: 1 },
-  { sequence: 1, templateId: 'volatile-bulk', mineralCount: 1, amountBias: 0, clientOffset: 2 },
+  // The tutorial is a decision between two clients, not a catalogue browse.
+  // Give the second card a different client role so the requests genuinely
+  // differ while the sequence payout floor keeps both offers close together.
+  { sequence: 1, templateId: 'volatile-bulk', mineralCount: 1, amountBias: 1, clientOffset: 0, mineralOffset: 0 },
   { sequence: 2, templateId: 'starter-bulk', mineralCount: 1, amountBias: 2, clientOffset: 3 },
-  { sequence: 2, templateId: 'volatile-bulk', mineralCount: 1, amountBias: 2, clientOffset: 4 },
-  // mineralCount: 2 (not 1) — a single-mineral metal-prospect order tops out at
-  // cargoRange max 6, which Explorer's stock hull (cargo 6) can still clear. M2 is
-  // meant to force a Prospector purchase across every onboarding option, so this band
-  // needs two minerals to push cargo_min past Explorer's ceiling.
-  { sequence: 2, templateId: 'metal-prospect', mineralCount: 2, amountBias: 0, clientOffset: 5 },
+  // Both M2 choices still need more cargo than Explorer can carry, forcing
+  // the Prospector purchase while keeping the choice client-led and legible.
+  { sequence: 2, templateId: 'volatile-bulk', mineralCount: 1, amountBias: 2, clientOffset: 0, mineralOffset: 0 },
   { sequence: 3, templateId: 'volatile-bulk', mineralCount: 2, amountBias: 1, clientOffset: 6 },
   { sequence: 3, templateId: 'metal-prospect', mineralCount: 2, amountBias: 1, clientOffset: 7 },
   { sequence: 3, templateId: 'command-reserve', mineralCount: 1, amountBias: 0, clientOffset: 8 },
@@ -142,6 +142,35 @@ export const DEFAULT_COMPLEXITY_BANDS: MissionComplexity[] = [
   { sequence: 4, templateId: 'command-reserve', mineralCount: 2, amountBias: 1, clientOffset: 0 },
   { sequence: 4, templateId: 'command-reserve', mineralCount: 3, amountBias: 2, clientOffset: 1 },
 ]
+
+/**
+ * Keep the authored onboarding decision small even when a live catalog still
+ * contains older/generated rows. Prefer two different clients, then choose
+ * the closest payout pair so the player compares the request and destination
+ * rather than hunting for the largest number.
+ */
+export function tutorialClientMissionOptions(missions: Mission[], sequence: number): Mission[] {
+  const candidates = missions.filter(mission => mission.sequence === sequence && !!mission.client)
+  if (candidates.length <= 2) return candidates
+
+  let bestPair: [Mission, Mission] | undefined
+  let bestScore = Number.POSITIVE_INFINITY
+  for (let firstIndex = 0; firstIndex < candidates.length - 1; firstIndex += 1) {
+    for (let secondIndex = firstIndex + 1; secondIndex < candidates.length; secondIndex += 1) {
+      const first = candidates[firstIndex]
+      const second = candidates[secondIndex]
+      if (first.client === second.client) continue
+      const scale = Math.max(first.payout.francs, second.payout.francs, 1)
+      const score = Math.abs(first.payout.francs - second.payout.francs) / scale
+      if (score < bestScore) {
+        bestScore = score
+        bestPair = [first, second]
+      }
+    }
+  }
+
+  return bestPair ?? candidates.slice(0, 2)
+}
 
 const MINERAL_LABELS: Record<string, string> = {
   platinum:  'Platinum',
@@ -216,7 +245,7 @@ export function generateMissionsFromRules(input: MissionGeneratorInput, count = 
     const client = fallbackPool[band.clientOffset % fallbackPool.length] ?? input.clients[0]
     const eligibleMineralKeys = deliveryEligibleMineralKeys(template, input.minerals)
     const minerals = Object.fromEntries(
-      selectMinerals(eligibleMineralKeys, client.mineralPreferences, index, band.mineralCount).map((mineral, mineralIndex) => [
+      selectMinerals(eligibleMineralKeys, client.mineralPreferences, band.mineralOffset ?? index, band.mineralCount).map((mineral, mineralIndex) => [
         mineral,
         amountFor(template, band.sequence, band.amountBias, mineralIndex),
       ])

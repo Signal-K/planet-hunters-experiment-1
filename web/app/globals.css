@@ -193,15 +193,14 @@
 }
 
 /* Mission Board two-column "canvas + Contract Detail" layout — ported from
-   the OD "Full Panel Re-skin" mission-board mockup's `.body-layout` (stacked
-   below 821px, side-by-side with a fixed-width sticky detail panel above
-   it — same breakpoint the mission-setup-* classes already use). */
+   the OD "Full Panel Re-skin" mission-board mockup's `.body-layout`. Keep the
+   inspector beside the choices on compact desktop/browser widths too. */
 .mission-board-layout {
   display: flex;
   flex-direction: column;
   gap: 12px;
 }
-@media (min-width: 821px) {
+@media (min-width: 720px) {
   .mission-board-layout {
     display: grid;
     grid-template-columns: minmax(0, 1fr) 320px;
@@ -1445,7 +1444,9 @@ button { cursor: pointer; }
     display: flex;
     flex-direction: column;
     gap: 8px;
-    padding: 72px 12px 132px;
+    /* Keep the mission-setup frame's content edge aligned with Mission Board,
+       Target, and the shared desktop shell. */
+    padding: 82px 14px 132px;
     overflow-y: auto;
   }
 

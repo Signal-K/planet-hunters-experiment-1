@@ -13,6 +13,7 @@
 import { describe, it, expect } from 'vitest'
 import { MISSIONS } from '@/lib/data/missions'
 import { ROCKET_MODELS } from '@/lib/data/rockets'
+import { tutorialClientMissionOptions } from '@/lib/data/mission-generator'
 
 const EXPLORER_CARGO = ROCKET_MODELS.find(r => r.name === 'Explorer')!.stats.cargo
 const PROSPECTOR_CARGO = ROCKET_MODELS.find(r => r.name === 'Prospector')!.stats.cargo
@@ -22,16 +23,19 @@ describe('Onboarding mission structure (M1-M3)', () => {
     expect(MISSIONS.find(m => m.id === 'lnm_m3_custom_mining')).toBeUndefined()
   })
 
-  it('M1 presents more than one client/mission choice, not a single railroaded mission', () => {
+  it('M1 presents exactly two competing client choices', () => {
     const m1 = MISSIONS.filter(m => m.sequence === 1)
-    expect(m1.length).toBeGreaterThan(1)
+    expect(m1).toHaveLength(2)
     const clients = new Set(m1.map(m => m.client))
-    expect(clients.size).toBeGreaterThan(1)
+    expect(clients.size).toBe(2)
+    expect(Math.max(...m1.map(m => m.payout.francs)) / Math.min(...m1.map(m => m.payout.francs))).toBeLessThanOrEqual(1.1)
   })
 
-  it('M2 presents more than one client/mission choice', () => {
+  it('M2 presents exactly two competing client choices', () => {
     const m2 = MISSIONS.filter(m => m.sequence === 2)
-    expect(m2.length).toBeGreaterThan(1)
+    expect(m2).toHaveLength(2)
+    expect(new Set(m2.map(m => m.client)).size).toBe(2)
+    expect(Math.max(...m2.map(m => m.payout.francs)) / Math.min(...m2.map(m => m.payout.francs))).toBeLessThanOrEqual(1.1)
   })
 
   it('every M2 option requires more cargo than Explorer can carry, forcing a Prospector purchase', () => {
@@ -66,5 +70,15 @@ describe('Onboarding mission structure (M1-M3)', () => {
     for (const mission of m3) {
       expect(mission.tag).toBe('TRANSPORT')
     }
+  })
+
+  it('runtime tutorial selection trims legacy extras to the closest distinct-client pair', () => {
+    const m1 = MISSIONS.filter(m => m.sequence === 1)
+    const legacyExtras = [m1[0], { ...m1[0], id: 'legacy-same-client' }, ...m1.slice(1)]
+    const options = tutorialClientMissionOptions(legacyExtras, 1)
+
+    expect(options).toHaveLength(2)
+    expect(new Set(options.map(m => m.client)).size).toBe(2)
+    expect(options.map(m => m.id)).toEqual(m1.map(m => m.id))
   })
 })

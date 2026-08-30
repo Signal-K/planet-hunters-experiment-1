@@ -6,7 +6,7 @@ import TopBar from '@/components/ui/TopBar'
 import Panel from '@/components/ui/Panel'
 import StatusPill from '@/components/ui/StatusPill'
 import { IconBtn } from '@/components/ui/Button'
-import { feasibleTargetsFor, clientAffinityBonus, clientUnlocked, FREE_OPS_START_MISSIONS_DONE, CLIENT_AFFINITY_MISSION_THRESHOLD, MISSION_TEMPLATES, CLIENT_SLOTS, missionTypePrimer, isMissionBoardMission } from '@/lib/data'
+import { feasibleTargetsFor, clientAffinityBonus, clientUnlocked, FREE_OPS_START_MISSIONS_DONE, CLIENT_AFFINITY_MISSION_THRESHOLD, MISSION_TEMPLATES, CLIENT_SLOTS, missionTypePrimer, isMissionBoardMission, tutorialClientMissionOptions } from '@/lib/data'
 import type { Client, DailyClientPool, Mission } from '@/lib/data'
 import type { Catalog } from '@/lib/catalog'
 import { TUTORIAL_CONTENT_TOP } from '@/lib/tutorial-layout'
@@ -197,7 +197,9 @@ export default function MissionBoardScreen({ onBack, onPick, missionsDone, freeO
         if (freeOperations) {
           return customMission || !!m.deliveryTargetId || !isOnCooldown(m.client)
         }
-        // Onboarding: sequence is the only gate — client unlock tiers don't apply
+        // Onboarding: sequence is the only gate — client unlock tiers don't apply.
+        // The two-card choice is applied after reachability is known below so a
+        // stale catalog row cannot consume one of the visible tutorial slots.
         return m.sequence === sequence
       })
 
@@ -207,7 +209,7 @@ export default function MissionBoardScreen({ onBack, onPick, missionsDone, freeO
   // parts cannot complete. This is deliberately applied before the board
   // renders, not only when the player reaches Target Picker: an impossible
   // card is already a broken contract from the player's perspective.
-  const feasibleAvailable = available.filter(mission => feasibleTargetsFor(
+  const feasibleCandidates = available.filter(mission => feasibleTargetsFor(
     mission,
     targets,
     parts,
@@ -215,6 +217,12 @@ export default function MissionBoardScreen({ onBack, onPick, missionsDone, freeO
     player?.launchpadUpgraded ?? false,
     player?.unlockedSkillNodes ?? [],
   ).length > 0)
+  const tutorialOptionIds = new Set(
+    freeOperations
+      ? feasibleCandidates.map(mission => mission.id)
+      : tutorialClientMissionOptions(feasibleCandidates, sequence).map(mission => mission.id)
+  )
+  const feasibleAvailable = feasibleCandidates.filter(mission => tutorialOptionIds.has(mission.id))
 
   const completedToday = useDailyPool
     ? filterMissionsForSceneScope(dailyClientPool!.missions.filter(m => isCompletedToday(m.id)), sceneScope, targets, false)
@@ -346,7 +354,7 @@ export default function MissionBoardScreen({ onBack, onPick, missionsDone, freeO
           trigger before any click) can scroll a list item flush with this
           container's top edge, sliding it out from under the reserved gap
           and underneath the coach overlay. */}
-      <div className={`mission-board-screen-content${hasCoach ? ` ${styles.coachCompact}` : ''}`} data-ui-zone={UI_ZONES.screenContent} style={{ position: 'absolute', inset: 0, paddingTop: hasCoach ? TUTORIAL_CONTENT_TOP : 82, paddingBottom: hasCoach ? 138 : 76, overflowY: 'auto', scrollPaddingTop: hasCoach ? TUTORIAL_CONTENT_TOP : 82 }}>
+      <div className={`mission-board-screen-content${hasCoach ? ` ${styles.coachCompact}` : ''}`} data-ui-zone={UI_ZONES.screenContent} style={{ position: 'absolute', top: 0, bottom: 0, left: '50%', right: 'auto', width: 'min(100%, 1120px)', transform: 'translateX(-50%)', paddingTop: hasCoach ? TUTORIAL_CONTENT_TOP : 82, paddingBottom: hasCoach ? 138 : 76, overflowY: 'auto', scrollPaddingTop: hasCoach ? TUTORIAL_CONTENT_TOP : 82 }}>
         {/* Direct transcription of the OD mockup's `.body-layout` — no
             summary banner above it (the mockup has none; the earlier
             PlayfieldBand strip was this screen's own invention, not in the

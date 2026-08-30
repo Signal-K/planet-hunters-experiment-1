@@ -15,6 +15,7 @@ import {
 } from './mission-generator'
 
 export { FREE_OPS_START_MISSIONS_DONE, OFFLINE_MISSION_COUNT }
+export { tutorialClientMissionOptions } from './mission-generator'
 export const MISSION_TEMPLATES = DEFAULT_MISSION_TEMPLATES
 
 export function generateMissions(count = OFFLINE_MISSION_COUNT): Mission[] {
