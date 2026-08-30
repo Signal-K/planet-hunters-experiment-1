@@ -44,6 +44,38 @@ export function HangarModules({ className = '' }: { className?: string }) {
   return <FlatSprite name="hangar" className={className} />
 }
 
+/**
+ * One-piece Blender contact deck for the Launchpad. It sits above the scene's
+ * ordinary ground fill and below the facility sprite, masking the near hill
+ * and soil seam without introducing another grass/dirt layer.
+ */
+export function LaunchpadFoundation({ plotX }: { plotX: number }) {
+  const structureWidthPct = EARTH_BASE_STRUCTURE_SIZES.launchpad.width / SCENE_WIDTH_DIVISOR
+  return (
+    <span
+      data-testid="launchpad-foundation"
+      aria-hidden="true"
+      style={{
+        position: 'absolute',
+        left: `${sceneXPercent(plotX, structureWidthPct)}%`,
+        bottom: 'calc(var(--hub-ground) - 2px)',
+        width: 'min(44%, 520px)',
+        height: 'clamp(26px, 4vw, 40px)',
+        transform: 'translateX(-50%)',
+        zIndex: 2,
+        pointerEvents: 'none',
+      }}
+    >
+      <img
+        src="/game/assets/terrain/facility_deck.png"
+        alt=""
+        draggable={false}
+        style={{ display: 'block', width: '100%', height: '100%', objectFit: 'contain', objectPosition: 'center bottom' }}
+      />
+    </span>
+  )
+}
+
 function StructureSprite({ kind, active }: { kind: string; active?: boolean }) {
   const name: SpriteName | null = kind === 'launchpad' || kind === 'hangar' ? kind : null
   if (!name) return null

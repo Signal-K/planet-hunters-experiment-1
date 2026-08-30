@@ -12,7 +12,7 @@ import { AmbientMotes } from '@/components/game/hub/AmbientMotes'
 import { HubWorldBackground } from '@/components/game/hub/HubWorldBackground'
 import { HubClockWidget } from '@/components/game/hub/HubClockWidget'
 import { useTimeOfDay } from '@/lib/hooks/useTimeOfDay'
-import { EarthBaseModules, EARTH_BASE_STRUCTURE_SIZES } from '@/components/game/hub/EarthBaseModules'
+import { EarthBaseModules, LaunchpadFoundation, EARTH_BASE_STRUCTURE_SIZES } from '@/components/game/hub/EarthBaseModules'
 export { EARTH_BASE_STRUCTURE_SIZES } from '@/components/game/hub/EarthBaseModules'
 import { SoilCrossSection } from '@/components/game/hub/SoilCrossSection'
 import { RoadRover } from '@/components/game/hub/RoadRover'
@@ -403,6 +403,7 @@ export default function HubScreen({ player, rocketVariant = 'explorer', hasCoach
       active: activeBuilding === kind,
     }]
   })
+  const launchpadPlot = hubBuildings.find(building => building.kind === 'launchpad')
   // Launchpad speech bubble — the base "speaking up" when it has a prompt and
   // nothing else on screen is already making it.
   //
@@ -527,6 +528,7 @@ export default function HubScreen({ player, rocketVariant = 'explorer', hasCoach
         >
           {/* World background: sky, starfield, ridge parallax, ground, plateau */}
           <HubWorldBackground phase={skyPhase} />
+          {launchpadPlot && <LaunchpadFoundation plotX={launchpadPlot.plotX} />}
           <RoadRover road={EARTH_BASE_WIDE.roadPaths?.[0]} />
 
           {/* Drifting ambient motes — replaces the old daylight cloud layer,
