@@ -97,8 +97,12 @@ export function useAuthSync({
 
   // Pre-emptive warmup ping — Fly machines stop when idle. Firing this early
   // means the machine is live by the time auth + state-load requests arrive.
+  // Both backends need this: identity/auth restore below hits pbShared
+  // first (KES-151), then the shared→Landnam token exchange hits pbLandnam
+  // — warming only one left the other's cold start unmasked.
   useEffect(() => {
     if (isPreview) return
+    pbShared.health.check().catch(() => {})
     pbLandnam.health.check().catch(() => {})
   }, [isPreview])
   const [backendReady, setBackendReady] = useState(false)
