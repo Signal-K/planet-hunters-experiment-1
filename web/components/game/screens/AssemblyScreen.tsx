@@ -12,7 +12,7 @@ import MissionSetupShell, {
   MissionSetupCard,
   MissionSetupFrame,
 } from '@/components/game/screens/MissionSetupShell'
-import { getRequiredRocketModel } from '@/lib/rockets'
+import { rocketModelForConfig } from '@/lib/data/rockets'
 import { crewRequirementStatus } from '@/lib/systems/AcademySystem'
 import { useIsShortViewport } from '@/lib/hooks/useIsShortViewport'
 import { useIsNarrowViewport } from '@/lib/hooks/useIsNarrowViewport'
@@ -48,7 +48,7 @@ export default function AssemblyScreen(props: AssemblyScreenProps) {
   const crewCheck = crewRequirementStatus(props.mission.requires.crew, props.crew ?? [])
   const crewReady = !props.mission.requires.crew || (!!props.crewModuleFitted && crewCheck.met)
   const launchReady = check.ok && crewReady
-  const starterRocket = getRequiredRocketModel(props.missionsDone)
+  const selectedRocket = rocketModelForConfig(props.rocket)
   // Portrait preflight has two fixed regions plus the launch CTA. Treat a
   // narrow phone as compact even when it is tall, otherwise the decorative
   // flight-plan block forces the manifest underneath the launch region.
@@ -84,7 +84,7 @@ export default function AssemblyScreen(props: AssemblyScreenProps) {
           mission={props.mission}
           target={props.target}
           deliveryTargetName={props.deliveryTargetName}
-          rocket={starterRocket}
+          rocket={selectedRocket}
           ready={launchReady}
           compact={compact}
         />
@@ -119,7 +119,7 @@ export default function AssemblyScreen(props: AssemblyScreenProps) {
             <div style={{ display: 'flex', flexDirection: 'column', gap: compact ? 4 : 8 }}>
               <ChecklistRow ok label={`Contract confirmed — ${props.mission.title}`} />
               <ChecklistRow ok label={`Target locked — ${props.target.name}`} />
-              <ChecklistRow ok label={`${starterRocket.name} fuelled and ready`} />
+              <ChecklistRow ok label={`${selectedRocket.name} fuelled and ready`} />
               {props.mission.requires.crew && (
                 <>
                   <ChecklistRow ok={!!props.crewModuleFitted} label={props.crewModuleFitted ? 'Crew Quarters fitted · 2 seats' : 'Crew Quarters required · research and fit in Hangar'} />
@@ -145,7 +145,7 @@ function LaunchClearance({
   mission: Mission
   target: Target
   deliveryTargetName?: string
-  rocket: ReturnType<typeof getRequiredRocketModel>
+  rocket: ReturnType<typeof rocketModelForConfig>
   ready: boolean
   compact?: boolean
 }) {
@@ -159,7 +159,11 @@ function LaunchClearance({
         <div>
           <div className="ln-micro" style={{ color: 'var(--ln-cyan)' }}>Launch authorization</div>
           <div style={{ marginTop: 3, font: `800 ${compact ? 16 : 22}px var(--ln-font-display)`, color: 'var(--ln-text)', letterSpacing: '-0.02em' }}>Flight cleared</div>
-          {!compact && <div style={{ marginTop: 3, font: '11px var(--ln-font-body)', color: 'var(--ln-text-dim)' }}>{mission.title} · {rocket.name} · single-use vehicle</div>}
+          <div data-testid="assembly-selected-rocket" style={{ marginTop: 6, display: 'inline-flex', alignItems: 'center', gap: 8, padding: '5px 8px', border: '1px solid var(--ln-cyan-border)', borderRadius: 4, color: 'var(--ln-cyan)', font: '800 10px var(--ln-font-display)', letterSpacing: '0.1em', textTransform: 'uppercase' }}>
+            <span style={{ color: 'var(--ln-text-muted)' }}>Vehicle</span>
+            {rocket.name}
+          </div>
+          {!compact && <div style={{ marginTop: 3, font: '11px var(--ln-font-body)', color: 'var(--ln-text-dim)' }}>{mission.title} · single-use vehicle</div>}
         </div>
         <div style={{ width: compact ? 36 : 54, height: compact ? 36 : 54, borderRadius: 999, display: 'grid', placeItems: 'center', flexShrink: 0, border: `2px solid ${ready ? 'var(--ln-ok)' : 'var(--ln-crimson)'}`, color: ready ? 'var(--ln-ok)' : 'var(--ln-crimson)', background: ready ? 'var(--ln-ok-soft)' : 'var(--ln-crimson-soft)' }}>
           <Check size={compact ? 16 : 24} />

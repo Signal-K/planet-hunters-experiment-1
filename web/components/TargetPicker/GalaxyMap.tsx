@@ -12,7 +12,11 @@ const ANGLES: Record<string, number> = {
   eros: 45, bennu: 170, itokawa: 10, ryugu: 230, vesta: 310, psyche: 85,
   ceres: 190, lutetia: 285,
 }
-const RADII: Record<number, number> = { 1: 50, 2: 85, 3: 120, 4: 155, 5: 190, 6: 225 }
+// The old radii left the outer half of the chart empty, so the picker looked
+// like a tiny diagram floating in a large card. These bands use the map
+// viewport deliberately: even orbit 4 fills the readable centre on tutorial
+// missions, while the outer bands still fit for later content.
+const RADII: Record<number, number> = { 1: 60, 2: 105, 3: 150, 4: 195, 5: 240, 6: 285 }
 
 const ASTEROID_SILHOUETTES: [number, number][][] = [
   [[-0.62, -0.88], [0.58, -0.74], [0.96, -0.14], [0.66, 0.78], [-0.14, 0.94], [-0.92, 0.42]],
@@ -20,6 +24,17 @@ const ASTEROID_SILHOUETTES: [number, number][][] = [
   [[-0.48, -0.96], [0.30, -0.82], [0.94, -0.50], [1.04, 0.16], [0.60, 0.88], [-0.10, 0.98], [-0.72, 0.52], [-0.90, -0.20]],
   [[-0.72, -0.56], [0.00, -0.94], [0.72, -0.64], [0.98, 0.08], [0.68, 0.72], [0.00, 0.98], [-0.64, 0.68], [-0.94, 0.04]],
   [[-0.80, -0.30], [0.40, -0.90], [1.00, 0.00], [0.30, 0.82], [-0.90, 0.50]],
+]
+
+const STAR_FIELD: Array<{ x: number; y: number; r: number; opacity: number }> = [
+  { x: 42, y: 94, r: 1.4, opacity: 0.72 }, { x: 86, y: 178, r: 1, opacity: 0.5 },
+  { x: 128, y: 62, r: 1.2, opacity: 0.8 }, { x: 176, y: 544, r: 1, opacity: 0.48 },
+  { x: 224, y: 116, r: 1.5, opacity: 0.65 }, { x: 276, y: 588, r: 1, opacity: 0.72 },
+  { x: 354, y: 48, r: 1, opacity: 0.5 }, { x: 404, y: 132, r: 1.3, opacity: 0.76 },
+  { x: 468, y: 584, r: 1.1, opacity: 0.56 }, { x: 514, y: 86, r: 1.4, opacity: 0.7 },
+  { x: 568, y: 224, r: 1, opacity: 0.6 }, { x: 602, y: 498, r: 1.4, opacity: 0.72 },
+  { x: 74, y: 430, r: 1, opacity: 0.58 }, { x: 142, y: 382, r: 1.2, opacity: 0.42 },
+  { x: 532, y: 370, r: 1, opacity: 0.46 }, { x: 590, y: 142, r: 1.2, opacity: 0.56 },
 ]
 
 function hashId(id: string): number {
@@ -45,11 +60,16 @@ interface GalaxyMapProps {
 
 export default function GalaxyMap({ mission, targets, compatibleIds, pickedId, onPick }: GalaxyMapProps) {
   const missionMinerals = new Set(Object.keys(mission.requires.minerals))
+  // Tutorial missions need a close read of the reachable band. Keep the
+  // outer context bodies in the chart, but use the viewport for the
+  // actionable orbit range instead of leaving a large empty margin around it.
+  const chartViewBox = mission.requires.max_orbit <= 5 ? '72 72 496 496' : `0 0 ${VIEW} ${VIEW}`
 
   return (
     <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column' }}>
       <div
         data-testid="target-picker-orbital-map"
+        aria-label="Solar system target range map"
         style={{
           // Keep a real chart viewport even while the surrounding setup
           // shell is resolving its flex height. The old minHeight: 0 let a
@@ -59,20 +79,27 @@ export default function GalaxyMap({ mission, targets, compatibleIds, pickedId, o
           minHeight: 'clamp(240px, 45vh, 520px)',
           minWidth: 0,
           position: 'relative',
-          backgroundImage: 'radial-gradient(var(--ln-bg-grid) 1px, transparent 1px)',
-          backgroundSize: '22px 22px',
-          backgroundColor: 'var(--ln-void)',
+          backgroundColor: 'var(--ln-bp-ink)',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           padding: '12px',
           touchAction: 'manipulation',
         }}
       >
-        <svg viewBox={`0 0 ${VIEW} ${VIEW}`} style={{ width: '100%', height: '100%', maxWidth: VIEW, maxHeight: VIEW, touchAction: 'manipulation' }}>
+        <div style={{ position: 'absolute', top: 12, left: 16, zIndex: 1, pointerEvents: 'none', font: '800 9px var(--ln-font-display)', letterSpacing: '0.2em', color: 'var(--ln-bp-paper)', textTransform: 'uppercase' }}>
+          Solar system · target range
+        </div>
+        <div style={{ position: 'absolute', top: 12, right: 16, zIndex: 1, pointerEvents: 'none', font: '700 9px var(--ln-font-mono)', letterSpacing: '0.12em', color: 'var(--ln-bp-blue)', textTransform: 'uppercase' }}>
+          Orbit bands
+        </div>
+        <svg viewBox={chartViewBox} style={{ width: '100%', height: '100%', maxWidth: VIEW, maxHeight: VIEW, touchAction: 'manipulation' }}>
           <defs>
             <filter id="target-map-shadow" x="-30%" y="-30%" width="160%" height="160%">
               <feGaussianBlur stdDeviation="2" />
             </filter>
           </defs>
+          {STAR_FIELD.map(star => (
+            <circle key={`${star.x}-${star.y}`} cx={star.x} cy={star.y} r={star.r} fill="var(--ln-map-star, var(--ln-bp-paper))" opacity={star.opacity} />
+          ))}
           {[1, 2, 3, 4, 5, 6].map(orbit => {
             const hasTarget = targets.some(t => t.orbit === orbit)
             if (!hasTarget) return null
@@ -83,19 +110,20 @@ export default function GalaxyMap({ mission, targets, compatibleIds, pickedId, o
                 cx={CENTER} cy={CENTER} r={RADII[orbit]}
                 fill="none"
                 stroke={reachable ? 'var(--ln-bp-blue, var(--ln-cyan))' : 'var(--ln-crit)'}
-                strokeWidth={1}
+                strokeWidth={1.25}
                 strokeDasharray="2 6"
-                opacity={reachable ? 0.4 : 0.22}
+                opacity={reachable ? 0.68 : 0.34}
               />
             )
           })}
 
-          {/* Sun — a neutral ink node, not amber: amber stays reserved for
-              genuine payout/reward figures under the blueprint theme. */}
-          <circle cx={CENTER} cy={CENTER} r={30} fill="var(--ln-bp-blue-soft, var(--ln-cyan-soft))" />
-          <circle cx={CENTER} cy={CENTER} r={22} fill="var(--ln-bp-blue, var(--ln-cyan))" opacity={0.12} filter="url(#target-map-shadow)" />
-          <circle cx={CENTER} cy={CENTER} r={15} fill="var(--ln-bp-ink, var(--ln-text))" stroke="var(--ln-bp-blue, var(--ln-cyan))" strokeWidth={1.5} />
-          <text x={CENTER} y={CENTER + 4} textAnchor="middle" fill="var(--ln-bp-bg, var(--ln-void))" fontFamily="var(--ln-font-display)" fontWeight={700} fontSize={10} letterSpacing={1.5}>SOL</text>
+          {/* The central body is the sun, not a black UI node. Keep it warm
+              and legible against the deep atlas field; reward amber rules do
+              not apply to a celestial body. */}
+          <circle cx={CENTER} cy={CENTER} r={42} fill="var(--ln-map-sun-soft, var(--ln-amber-soft))" />
+          <circle cx={CENTER} cy={CENTER} r={31} fill="var(--ln-map-sun, var(--ln-amber))" stroke="var(--ln-map-sun, var(--ln-amber))" strokeWidth={1.5} />
+          <circle cx={CENTER - 8} cy={CENTER - 8} r={7} fill="var(--ln-map-sun-soft, var(--ln-amber-soft))" />
+          <text x={CENTER} y={CENTER + 4} textAnchor="middle" fill="var(--ln-bp-ink)" fontFamily="var(--ln-font-display)" fontWeight={800} fontSize={9} letterSpacing={1.2}>SUN</text>
 
           {targets.map(t => {
             const angle = (ANGLES[t.id] ?? (hashId(t.id) % 360)) * Math.PI / 180
@@ -109,14 +137,30 @@ export default function GalaxyMap({ mission, targets, compatibleIds, pickedId, o
             const selected = pickedId === t.id
             const sil = asteroidSilhouette(t.id)
             const polyPoints = sil.map(([mx, my]) => `${cx + mx * size},${cy + my * size}`).join(' ')
-            // Chart-node read: a light paper-fill outline circle rather than a
-            // rendered planet body — reachable bodies in navy/blue linework,
-            // out-of-range ones muted ink.
+            const bodyFill = selected
+              ? 'var(--ln-cyan)'
+              : !compatible
+              ? 'var(--ln-map-muted, var(--ln-bp-ink-dim))'
+              : contractMatch
+                  ? 'var(--ln-map-match, var(--ln-bp-green))'
+                  : isAsteroid
+                    ? 'var(--ln-map-rock, var(--ln-bp-blue))'
+                    : 'var(--ln-map-planet, var(--ln-bp-pink))'
+            const bodyDetail = selected
+              ? 'var(--ln-bp-paper)'
+              : contractMatch
+                ? 'var(--ln-bp-green)'
+                : 'var(--ln-bp-blue)'
+            // Chart nodes use a distinct fill for compatible bodies and a
+            // saturated reticle for the current selection. The old paper-fill
+            // treatment made every body read as the same colour.
             const lineColor = !compatible
               ? 'var(--ln-bp-ink-mute, var(--ln-text-muted))'
               : selected
                 ? 'var(--ln-cyan)'
-                : 'var(--ln-bp-blue, var(--ln-cyan))'
+                : contractMatch
+                  ? 'var(--ln-bp-green)'
+                  : 'var(--ln-bp-blue, var(--ln-cyan))'
 
             return (
               <g
@@ -150,20 +194,20 @@ export default function GalaxyMap({ mission, targets, compatibleIds, pickedId, o
                 )}
                 {isAsteroid ? (
                   <>
-                    <polygon points={polyPoints} fill="var(--ln-bp-paper, var(--ln-panel))" stroke={lineColor} strokeWidth={1.5} />
+                    <polygon points={polyPoints} fill={bodyFill} stroke={lineColor} strokeWidth={1.5} />
                     <polygon
                       points={sil.slice(0, Math.max(3, sil.length - 2)).map(([mx, my]) => `${cx + mx * size * 0.68},${cy + my * size * 0.68}`).join(' ')}
-                      fill="var(--ln-bp-paper-2, var(--ln-panel-2))"
+                      fill={bodyDetail}
                       opacity={compatible ? 0.9 : 0.55}
                     />
-                    <circle cx={cx - size * 0.25} cy={cy - size * 0.1} r={Math.max(1.5, size * 0.12)} fill="var(--ln-bp-ink-mute, var(--ln-text-muted))" opacity={0.6} />
-                    <circle cx={cx + size * 0.28} cy={cy + size * 0.25} r={Math.max(1, size * 0.09)} fill="var(--ln-bp-ink-mute, var(--ln-text-muted))" opacity={0.5} />
+                    <circle cx={cx - size * 0.25} cy={cy - size * 0.1} r={Math.max(1.5, size * 0.12)} fill="var(--ln-bp-paper)" opacity={0.6} />
+                    <circle cx={cx + size * 0.28} cy={cy + size * 0.25} r={Math.max(1, size * 0.09)} fill="var(--ln-bp-paper)" opacity={0.5} />
                   </>
                 ) : (
                   <>
-                    <circle cx={cx} cy={cy} r={size} fill="var(--ln-bp-paper, var(--ln-panel))" stroke={lineColor} strokeWidth={1.5} />
-                    <path d={`M ${cx - size * 0.76} ${cy - size * 0.2} Q ${cx} ${cy - size * 0.62} ${cx + size * 0.76} ${cy - size * 0.16}`} fill="none" stroke="var(--ln-bp-paper-2, var(--ln-panel-2))" strokeWidth={Math.max(1, size * 0.16)} opacity={0.9} />
-                    <circle cx={cx - size * 0.3} cy={cy + size * 0.25} r={Math.max(1, size * 0.1)} fill="var(--ln-bp-blue, var(--ln-cyan))" opacity={0.5} />
+                    <circle cx={cx} cy={cy} r={size} fill={bodyFill} stroke={lineColor} strokeWidth={1.5} />
+                    <path d={`M ${cx - size * 0.76} ${cy - size * 0.2} Q ${cx} ${cy - size * 0.62} ${cx + size * 0.76} ${cy - size * 0.16}`} fill="none" stroke={bodyDetail} strokeWidth={Math.max(1, size * 0.16)} opacity={0.9} />
+                    <circle cx={cx - size * 0.3} cy={cy + size * 0.25} r={Math.max(1, size * 0.1)} fill="var(--ln-bp-paper)" opacity={0.5} />
                   </>
                 )}
                 {/* Selected target — cyan reticle plus a dimension line running
@@ -176,11 +220,11 @@ export default function GalaxyMap({ mission, targets, compatibleIds, pickedId, o
                     <line x1={cx} y1={cy} x2={cx + size + 26} y2={cy - size - 26} stroke="var(--ln-cyan)" strokeWidth={1} strokeDasharray="3 3" opacity={0.7} />
                   </>
                 )}
-                <rect x={cx - Math.max(30, t.name.length * 5.4 + 10) / 2} y={cy + size + 4} width={Math.max(30, t.name.length * 5.4 + 10)} height={15} fill="var(--ln-bp-paper, var(--ln-void))" opacity={0.9} />
-                <text x={cx} y={cy + size + 15} textAnchor="middle" fill={selected ? 'var(--ln-cyan)' : 'var(--ln-text-dim)'} fontFamily="var(--ln-font-mono)" fontWeight={700} fontSize={9.5} letterSpacing={0.4}>{t.name}</text>
+                <rect x={cx - Math.max(30, t.name.length * 5.4 + 10) / 2} y={cy + size + 4} width={Math.max(30, t.name.length * 5.4 + 10)} height={15} fill="var(--ln-bp-ink)" opacity={0.9} />
+                <text x={cx} y={cy + size + 15} textAnchor="middle" fill={selected ? 'var(--ln-cyan)' : compatible ? 'var(--ln-bp-paper)' : 'var(--ln-bp-ink-mute)'} fontFamily="var(--ln-font-mono)" fontWeight={700} fontSize={9.5} letterSpacing={0.4}>{t.name}</text>
                 {selected && (
                   <>
-                    <rect x={cx + size + 28} y={cy - size - 40} width={Math.max(58, t.name.length * 5.6 + 20)} height={17} fill="var(--ln-bp-paper, var(--ln-void))" stroke="var(--ln-cyan)" strokeWidth={1} rx={2} />
+                    <rect x={cx + size + 28} y={cy - size - 40} width={Math.max(58, t.name.length * 5.6 + 20)} height={17} fill="var(--ln-bp-ink)" stroke="var(--ln-cyan)" strokeWidth={1} rx={2} />
                     <text x={cx + size + 34} y={cy - size - 27} textAnchor="start" fill="var(--ln-cyan)" fontFamily="var(--ln-font-mono)" fontWeight={700} fontSize={9} letterSpacing={0.5}>
                       SELECTED · ORBIT {t.orbit}
                     </text>

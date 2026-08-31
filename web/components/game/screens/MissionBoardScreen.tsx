@@ -9,7 +9,7 @@ import { IconBtn } from '@/components/ui/Button'
 import { feasibleTargetsFor, clientAffinityBonus, clientUnlocked, FREE_OPS_START_MISSIONS_DONE, CLIENT_AFFINITY_MISSION_THRESHOLD, MISSION_TEMPLATES, CLIENT_SLOTS, missionTypePrimer, isMissionBoardMission, tutorialClientMissionOptions } from '@/lib/data'
 import type { Client, DailyClientPool, Mission } from '@/lib/data'
 import type { Catalog } from '@/lib/catalog'
-import { TUTORIAL_CONTENT_TOP } from '@/lib/tutorial-layout'
+import { TUTORIAL_MANUAL_CONTENT_TOP } from '@/lib/tutorial-layout'
 import { UI_ZONES } from '@/lib/ui-zones'
 import MissionCard from '@/components/game/MissionCard'
 import MissionDetailPanel from '@/components/game/MissionDetailPanel'
@@ -354,7 +354,7 @@ export default function MissionBoardScreen({ onBack, onPick, missionsDone, freeO
           trigger before any click) can scroll a list item flush with this
           container's top edge, sliding it out from under the reserved gap
           and underneath the coach overlay. */}
-      <div className={`mission-board-screen-content${hasCoach ? ` ${styles.coachCompact}` : ''}`} data-ui-zone={UI_ZONES.screenContent} style={{ position: 'absolute', top: 0, bottom: 0, left: '50%', right: 'auto', width: 'min(100%, 1120px)', transform: 'translateX(-50%)', paddingTop: hasCoach ? TUTORIAL_CONTENT_TOP : 82, paddingBottom: hasCoach ? 138 : 76, overflowY: 'auto', scrollPaddingTop: hasCoach ? TUTORIAL_CONTENT_TOP : 82 }}>
+      <div className={`mission-board-screen-content${hasCoach ? ` ${styles.coachCompact}` : ''}`} data-ui-zone={UI_ZONES.screenContent} style={{ position: 'absolute', top: 0, bottom: 0, left: '50%', right: 'auto', width: 'min(100%, 1120px)', transform: 'translateX(-50%)', paddingTop: hasCoach ? TUTORIAL_MANUAL_CONTENT_TOP : 82, paddingBottom: hasCoach ? 138 : 76, overflowY: 'auto', scrollPaddingTop: hasCoach ? TUTORIAL_MANUAL_CONTENT_TOP : 82 }}>
         {/* Direct transcription of the OD mockup's `.body-layout` — no
             summary banner above it (the mockup has none; the earlier
             PlayfieldBand strip was this screen's own invention, not in the
@@ -534,7 +534,7 @@ export default function MissionBoardScreen({ onBack, onPick, missionsDone, freeO
             ? 'No contracts on the board right now — check back after your cooldowns clear.'
             : freeOperations
               ? 'Pick a client request or launch a self-directed run, then choose a target.'
-              : `Pick a contract to unlock Target, Rocket, and Relay for L${missionsDone + 1}.`
+              : `Pick a contract to unlock Target, Rocket, and Launch for L${missionsDone + 1}.`
         }
       />
 

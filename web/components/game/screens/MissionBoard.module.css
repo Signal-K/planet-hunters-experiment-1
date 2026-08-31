@@ -314,8 +314,8 @@
    competing instruction blocks and leaves too little visible card to tap. */
 @media (max-width: 820px) {
   .coachCompact {
-    padding-top: 156px !important;
-    scroll-padding-top: 156px !important;
+    padding-top: 164px !important;
+    scroll-padding-top: 164px !important;
   }
   .boardHeader {
     margin-bottom: 8px;

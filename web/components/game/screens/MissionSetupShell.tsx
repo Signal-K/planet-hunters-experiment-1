@@ -4,7 +4,7 @@ import React from 'react'
 import TopBar from '@/components/ui/TopBar'
 import StepFooter, { type MissionFlowStep } from '@/components/game/StepFooter'
 import { UI_ZONES } from '@/lib/ui-zones'
-import { TUTORIAL_CONTENT_TOP } from '@/lib/tutorial-layout'
+import { TUTORIAL_MANUAL_CONTENT_TOP } from '@/lib/tutorial-layout'
 
 type DivProps = React.ComponentPropsWithoutRef<'div'>
 
@@ -80,7 +80,10 @@ export default function MissionSetupShell({
   step,
   stepDescription,
 }: MissionSetupShellProps) {
-  const contentTop = hasCoach ? (coachManual ? 248 : TUTORIAL_CONTENT_TOP) : 82
+  // Reserve one shared coach rail height for every mission-setup step. The
+  // old action/manual split made the main frame move by 10px when the player
+  // advanced through the flow, even though the content contract was the same.
+  const contentTop = hasCoach ? TUTORIAL_MANUAL_CONTENT_TOP : 82
 
   return (
     <div className={[

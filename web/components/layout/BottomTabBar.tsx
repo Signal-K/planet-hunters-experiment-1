@@ -66,15 +66,6 @@ function MarketGlyph() {
   )
 }
 
-function HistoryGlyph() {
-  return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M4 5h16v14H4z" />
-      <path d="M8 9h8M8 13h6M8 17h4" />
-    </svg>
-  )
-}
-
 function LockGlyph() {
   return (
     <svg width="7" height="7" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
@@ -104,7 +95,6 @@ const MENU: NavItem[] = [
   { id: 'galaxy',   label: 'Atlas',    color: 'var(--ln-cyan)', glyph: <AtlasGlyph /> },
   { id: 'fab',      label: 'Build',    color: 'var(--ln-cyan)', glyph: <RocketGlyph />, locked: true },
   { id: 'market',   label: 'Market',   color: 'var(--ln-cyan-bright)', glyph: <MarketGlyph /> },
-  { id: 'mission-history', label: 'Log', color: 'var(--ln-cyan)', glyph: <HistoryGlyph /> },
 ]
 
 export default function BottomTabBar({ current, onNav }: BottomTabBarProps) {
