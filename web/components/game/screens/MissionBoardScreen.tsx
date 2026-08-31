@@ -27,6 +27,7 @@ import type { Player } from '@/lib/game-types'
 import { diplomacyPayoutMultiplier } from '@/lib/systems/AcademySystem'
 import { filterMissionsForSceneScope } from '@/lib/scene-scope'
 import type { SceneScope } from '@/lib/scene-scope'
+import { isTutorialMissionInProgress } from '@/lib/mission-flow'
 
 function CornerBracket({ position }: { position: 'tl' | 'tr' | 'bl' | 'br' }) {
   const cls = { tl: styles.cornerBracketTl, tr: styles.cornerBracketTr, bl: styles.cornerBracketBl, br: styles.cornerBracketBr }[position]
@@ -181,6 +182,11 @@ export default function MissionBoardScreen({ onBack, onPick, missionsDone, freeO
 
   const useDailyPool = freeOperations && !!dailyClientPool
   const sequence = missionsDone + 1
+  // Tutorial runs are deliberately single-threaded: finish the authored
+  // mission before accepting another contract. Free Ops remains repeatable;
+  // completing a run clears activeMission and exposes the next request.
+  const tutorialMissionInProgress = isTutorialMissionInProgress(freeOperations, !!player?.activeMission)
+  const missionStartBlockedLabel = 'Finish current mission'
 
   // In daily pool mode, the display list is the pool itself (available + completed).
   // In legacy freeops mode, fall back to the catalog freeops- missions with cooldowns.
@@ -396,12 +402,14 @@ export default function MissionBoardScreen({ onBack, onPick, missionsDone, freeO
                       cardState={c.cardState}
                       lockedDetail={c.lockedDetail}
                       cooldownLabel={c.cooldownLabel}
+                      startBlocked={tutorialMissionInProgress}
+                      startBlockedLabel={missionStartBlockedLabel}
                       highlighted={c.isHighlighted}
                       previewed={c.mission.id === effectivePreviewId}
                       routeLabel={c.routeLabel}
                       crewStatus={c.crewStatus}
                       crewReady={c.crewReady}
-                      onPick={() => onPick(c.mission.id)}
+                      onPick={() => { if (!tutorialMissionInProgress) onPick(c.mission.id) }}
                       onPreview={() => setPreviewId(c.mission.id)}
                       onOpenClientDossier={setDossierClient}
                     />
@@ -459,7 +467,9 @@ export default function MissionBoardScreen({ onBack, onPick, missionsDone, freeO
                   lockedDetail={previewModel.lockedDetail}
                   cooldownLabel={previewModel.cooldownLabel}
                   routeLabel={previewModel.routeLabel}
-                  onPick={() => onPick(previewModel.mission.id)}
+                  startBlocked={tutorialMissionInProgress}
+                  startBlockedLabel={missionStartBlockedLabel}
+                  onPick={() => { if (!tutorialMissionInProgress) onPick(previewModel.mission.id) }}
                 />
               ) : (
                 <MissionDetailPanel

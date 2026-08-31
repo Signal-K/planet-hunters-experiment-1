@@ -633,7 +633,7 @@ export default function HubScreen({ player, rocketVariant = 'explorer', hasCoach
           <AvailableActionsPanel actions={availableActions} />
         </div>
       )}
-      {(!hasCoach || !!player.activeMission || !!player.pendingLaunch) && !subsurface && (
+      {!player.activeMission && (!hasCoach || !!player.pendingLaunch) && !subsurface && (
         <>
           <ProgressionCard
             player={player}

@@ -12,6 +12,7 @@
 import { describe, it, expect } from 'vitest'
 import type { Mission, Client } from '@/lib/data/types'
 import { clientUnlocked } from '@/lib/data/clients'
+import { isTutorialMissionInProgress } from '@/lib/mission-flow'
 
 // ── helpers that mirror the fixed MissionBoardScreen logic ──────────────────
 
@@ -152,6 +153,17 @@ describe('MissionBoardScreen availability — onboarding (non-freeOps)', () => {
 
     expect(available).toHaveLength(1)
     expect(available[0].id).toBe('m1')
+  })
+})
+
+describe('mission start gating', () => {
+  it('blocks a second contract while a tutorial mission is in progress', () => {
+    expect(isTutorialMissionInProgress(false, true)).toBe(true)
+  })
+
+  it('does not apply the tutorial lock once Free Ops is active', () => {
+    expect(isTutorialMissionInProgress(true, true)).toBe(false)
+    expect(isTutorialMissionInProgress(true, false)).toBe(false)
   })
 })
 

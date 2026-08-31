@@ -21,6 +21,8 @@ interface MissionDetailPanelProps {
   cardState: CardState
   lockedDetail?: string
   cooldownLabel?: string
+  startBlocked?: boolean
+  startBlockedLabel?: string
   routeLabel?: string
   onPick: () => void
 }
@@ -37,6 +39,8 @@ export default function MissionDetailPanel({
   cardState,
   lockedDetail,
   cooldownLabel,
+  startBlocked = false,
+  startBlockedLabel = 'Mission in progress',
   routeLabel,
   onPick,
 }: MissionDetailPanelProps) {
@@ -63,9 +67,11 @@ export default function MissionDetailPanel({
   const cargoUnits =Object.values(mission.requires.minerals).reduce((sum, n) => sum + n, 0)
   const tags = missionCardTags({ mission, client, isStoryMission, cardState, lockedDetail, cooldownLabel, routeLabel })
   const isAvailable = cardState === 'available'
+  const canPick = isAvailable && !startBlocked
   const ctaLabel = cardState === 'cooldown' ? (cooldownLabel ? `Cooldown · ${cooldownLabel}` : 'On cooldown')
     : cardState === 'locked' ? (lockedDetail ? `Locked · ${lockedDetail}` : 'Locked')
     : cardState === 'completed' ? 'Completed today'
+    : startBlocked ? startBlockedLabel
     : `Continue · ${targetCount} target${targetCount !== 1 ? 's' : ''}`
 
   return (
@@ -136,7 +142,7 @@ export default function MissionDetailPanel({
         </div>
       )}
 
-      <button type="button" data-testid={`mission-detail-cta-${mission.id}`} disabled={!unlocked} onClick={() => unlocked && onPick()} className={styles.detailCta}>
+      <button type="button" data-testid={`mission-detail-cta-${mission.id}`} disabled={!canPick} onClick={() => canPick && onPick()} className={styles.detailCta}>
         {ctaLabel}
       </button>
 

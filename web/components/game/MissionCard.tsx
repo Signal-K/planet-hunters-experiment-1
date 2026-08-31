@@ -21,6 +21,8 @@ interface MissionCardProps {
   cardState: CardState
   lockedDetail?: string
   cooldownLabel?: string
+  startBlocked?: boolean
+  startBlockedLabel?: string
   highlighted?: boolean
   previewed?: boolean
   routeLabel?: string
@@ -78,6 +80,8 @@ export default function MissionCard({
   cardState,
   lockedDetail,
   cooldownLabel,
+  startBlocked = false,
+  startBlockedLabel = 'Mission in progress',
   highlighted,
   previewed,
   routeLabel,
@@ -92,10 +96,12 @@ export default function MissionCard({
   const client = ownOperation ? null : clientProp
   const accent = client?.color ?? '#6cd4ff'
   const isAvailable = cardState === 'available'
+  const canPick = unlocked && !startBlocked
   const tags = missionCardTags({ mission, client, isStoryMission, cardState, lockedDetail, cooldownLabel, routeLabel, crewStatus, crewReady })
   const statusCta = cardState === 'cooldown' ? 'Cooldown'
     : cardState === 'completed' ? 'Claimed'
     : cardState === 'locked' ? (lockedDetail ?? 'Locked')
+    : startBlocked ? startBlockedLabel
     : ''
   const cardClass = [
     styles.card,
@@ -111,10 +117,13 @@ export default function MissionCard({
       data-testid={`mission-card-${mission.id}`}
       role="button"
       tabIndex={unlocked ? 0 : -1}
-      aria-disabled={!unlocked}
-      onClick={() => unlocked && onPick()}
+      aria-disabled={!canPick}
+      onClick={() => {
+        onPreview?.()
+        if (canPick) onPick()
+      }}
       onKeyDown={e => {
-        if (unlocked && (e.key === 'Enter' || e.key === ' ')) {
+        if (canPick && (e.key === 'Enter' || e.key === ' ')) {
           e.preventDefault()
           onPick()
         }
@@ -212,11 +221,11 @@ export default function MissionCard({
             {missionPayoutTier(mission)} payout
           </div>
         )}
-        {isAvailable ? (
+        {isAvailable && !startBlocked ? (
           <button
             type="button"
             data-testid={`mission-card-${mission.id}-cta`}
-            onClick={e => { e.stopPropagation(); unlocked && onPick() }}
+            onClick={e => { e.stopPropagation(); canPick && onPick() }}
             className={styles.cardBtn}
           >
             {targetCount === 0 && mission.programReward
@@ -224,7 +233,7 @@ export default function MissionCard({
               : `${targetCount} target${targetCount !== 1 ? 's' : ''} ›`}
           </button>
         ) : (
-          <span data-testid={`mission-card-${mission.id}-cta`} className={`${styles.cardBtn} ${styles.cardBtnDisabled}`}>
+          <span data-testid={`mission-card-${mission.id}-cta`} className={`${styles.cardBtn} ${styles.cardBtnDisabled}`} aria-disabled="true">
             {statusCta}
           </span>
         )}
