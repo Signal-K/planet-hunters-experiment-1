@@ -4,7 +4,6 @@ import { useRef, useState, useCallback, useEffect } from 'react'
 import type { Mission, Target, MineralMeta } from '@/lib/data'
 import { FREE_OPS_START_MISSIONS_DONE } from '@/lib/data'
 import TopBar from '@/components/ui/TopBar'
-import { PrimaryBtn } from '@/components/ui/Button'
 import Panel from '@/components/ui/Panel'
 import StatusPill from '@/components/ui/StatusPill'
 import IconBadge from '@/components/ui/IconBadge'
@@ -330,11 +329,12 @@ export default function MiningScreen({ mission, target, onComplete, onBack, onAb
   const showFreeOpsSuccessPopup = isFreeOps && orderFilled && !freeOpsFirstSuccessDismissed
 
   return (
-    <div className="game-screen mining-screen theme-blueprint">
+    <div className="game-screen mining-screen theme-deep">
       <TopBar
         eyebrow={`${target.name.toUpperCase()} · SURFACE`}
         title="Mining Run"
         onBack={() => onBack(cargoRef.current)}
+        glass
         right={isFreeOps ? <StatusPill kind="amber">Free Ops · No Client</StatusPill> : undefined}
       />
 
@@ -383,7 +383,7 @@ export default function MiningScreen({ mission, target, onComplete, onBack, onAb
             opacity: 0.8,
           }}
         >
-          ⚡ SKIP MINING
+            SKIP MINING
         </button>
       )}
 
@@ -428,8 +428,6 @@ export default function MiningScreen({ mission, target, onComplete, onBack, onAb
           </Panel>
         </div>
       )}
-
-      {hasCoach && <div style={{ height: coachManual ? 'var(--tutorial-manual-content-top)' : 'var(--tutorial-content-top)', flexShrink: 0 }} />}
 
       {/* Laser depleted without filling order — always shown, not gated on hasCoach */}
       {runFailed && (
@@ -587,27 +585,29 @@ export default function MiningScreen({ mission, target, onComplete, onBack, onAb
               animation: hasCoach && oreNear ? 'ln-pulse 0.75s ease-in-out infinite' : 'none',
               transition: 'box-shadow 150ms',
             }}>
-          <PrimaryBtn
-            kind="cyan"
+          <button
+            className="mining-command mining-command--fire"
+            type="button"
             disabled={laserCharges <= 0}
-            testId="fire-laser-btn"
+            data-testid="fire-laser-btn"
             onClick={fireLaser}
           >
             {laserCharges > 0 ? 'FIRE LASER' : 'DEPLETED'}
-          </PrimaryBtn>
+          </button>
           </div>
           <div style={{ minWidth: 0 }}>
-          <PrimaryBtn
-            kind="cyan"
+          <button
+            className="mining-command mining-command--return"
+            type="button"
             disabled={!orderFilled && laserCharges > 0}
-            testId="return-home-btn"
+            data-testid="return-home-btn"
             onClick={handleReturn}
           >
             {(() => {
               const destination = deliveryTargetName ? `DELIVER TO ${deliveryTargetName.toUpperCase()}` : 'RETURN TO EARTH'
               return orderFilled || laserCharges <= 0 ? destination : `FILL ORDER TO ${deliveryTargetName ? 'DELIVER' : 'RETURN'}`
             })()}
-          </PrimaryBtn>
+          </button>
           </div>
           <div style={{ minWidth: 0 }}>
             <ScrollTrack scrollRef={scrollRef} />

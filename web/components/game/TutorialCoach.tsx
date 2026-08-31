@@ -116,11 +116,12 @@ export default function TutorialCoach({ stepIndex, steps, step, total, onManualN
                 data-testid="coach-got-it-btn"
                 onClick={onManualNext}
                 style={{
-                  padding: '8px 18px', borderRadius: 10, cursor: 'pointer', border: 'none',
-                  background: 'linear-gradient(180deg, #6cc2ff 0%, #2d8de0 100%)',
-                  color: '#06121f', fontFamily: 'var(--ln-font-display)', fontSize: 12, fontWeight: 800,
+                  padding: '8px 12px', borderRadius: 6, cursor: 'pointer',
+                  border: '1px solid var(--ln-cyan-border)',
+                  background: 'transparent',
+                  color: 'var(--ln-cyan)', fontFamily: 'var(--ln-font-display)', fontSize: 11, fontWeight: 800,
                   letterSpacing: '0.1em', textTransform: 'uppercase',
-                  boxShadow: '0 3px 0 rgba(0,0,0,0.35), 0 0 16px rgba(112,217,234,0.3)',
+                  boxShadow: 'none',
                   display: 'inline-flex', alignItems: 'center', gap: 6,
                 }}
               >
