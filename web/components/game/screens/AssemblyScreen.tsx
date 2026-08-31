@@ -1,6 +1,5 @@
 'use client'
 
-import { useEffect } from 'react'
 import { Boxes, Check, Orbit, Pickaxe, Route, X } from 'lucide-react'
 import type { CrewMember, Mission, RocketConfig, Target } from '@/lib/data'
 import { ROCKET_MODELS, validateBuild } from '@/lib/data'
@@ -55,17 +54,6 @@ export default function AssemblyScreen(props: AssemblyScreenProps) {
   const compact = useIsShortViewport() || useIsNarrowViewport()
   const { phase: skyPhase } = useTimeOfDay()
 
-  // Confirm Rocket is now a read-only preflight scene. Once the tutorial's
-  // manual vehicle review is complete, or immediately for normal missions,
-  // the selected vehicle proceeds into the launch sequence without leaving a
-  // detached confirmation button floating over the environment.
-  const autoLaunch = launchReady && !(props.hasCoach && props.coachManual)
-  useEffect(() => {
-    if (!autoLaunch) return
-    const timer = window.setTimeout(props.onLaunch, 1200)
-    return () => window.clearTimeout(timer)
-  }, [autoLaunch, props.onLaunch])
-
   return (
     <MissionSetupShell
       className="mission-setup-screen--assembly theme-blueprint"
@@ -93,6 +81,7 @@ export default function AssemblyScreen(props: AssemblyScreenProps) {
           deliveryTargetName={props.deliveryTargetName}
           rocket={selectedRocket}
           ready={launchReady}
+          onLaunch={props.onLaunch}
           compact={compact}
         />
 
@@ -147,6 +136,7 @@ function LaunchClearance({
   deliveryTargetName,
   rocket,
   ready,
+  onLaunch,
   compact = false,
 }: {
   mission: Mission
@@ -154,6 +144,7 @@ function LaunchClearance({
   deliveryTargetName?: string
   rocket: ReturnType<typeof rocketModelForConfig>
   ready: boolean
+  onLaunch: () => void
   compact?: boolean
 }) {
   const stops = deliveryTargetName
@@ -171,6 +162,27 @@ function LaunchClearance({
             {rocket.name}
           </div>
           {!compact && <div style={{ marginTop: 3, font: '11px var(--ln-font-body)', color: 'var(--ln-text-dim)' }}>{mission.title} · single-use vehicle</div>}
+          <button
+            type="button"
+            data-testid="launch-btn"
+            disabled={!ready}
+            onClick={onLaunch}
+            style={{
+              marginTop: compact ? 6 : 8,
+              padding: compact ? '7px 9px' : '8px 12px',
+              border: '1px solid var(--ln-cyan)',
+              borderRadius: 4,
+              background: ready ? 'var(--ln-cyan)' : 'var(--ln-panel-2)',
+              color: ready ? 'var(--ln-void)' : 'var(--ln-text-dim)',
+              font: '800 10px var(--ln-font-display)',
+              letterSpacing: '0.12em',
+              textTransform: 'uppercase',
+              cursor: ready ? 'pointer' : 'not-allowed',
+              opacity: ready ? 1 : 0.55,
+            }}
+          >
+            Start launch sequence
+          </button>
         </div>
         <div style={{ width: compact ? 36 : 54, height: compact ? 36 : 54, borderRadius: 999, display: 'grid', placeItems: 'center', flexShrink: 0, border: `2px solid ${ready ? 'var(--ln-ok)' : 'var(--ln-crimson)'}`, color: ready ? 'var(--ln-ok)' : 'var(--ln-crimson)', background: ready ? 'var(--ln-ok-soft)' : 'var(--ln-crimson-soft)' }}>
           <Check size={compact ? 16 : 24} />

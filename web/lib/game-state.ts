@@ -457,7 +457,9 @@ export function mergeRemoteState(current: GameState, remoteState: PartialSave): 
   // has no active run but PocketBase does, keep the remote run and its route
   // context even when both saves are at the same mission count. This prevents
   // a stale local hub save from erasing the player's in-flight mission on
-  // reload/login.
+  // reload/login. The remote run's phase is data, not a navigation command:
+  // an explicit local /game/hub or Back navigation must remain usable while
+  // that run continues in the background.
   const remoteActiveMission = remoteState.player?.activeMission
   if (!current.player.activeMission && remoteActiveMission) {
     merged.player.activeMission = remoteActiveMission
@@ -474,7 +476,6 @@ export function mergeRemoteState(current: GameState, remoteState: PartialSave): 
     merged.deliveryTargetId = remoteState.deliveryTargetId
     merged.lastCargo = remoteState.lastCargo ?? null
     merged.deliveredCargo = remoteState.deliveredCargo ?? null
-    if (remoteState.screen && MISSION_CONTEXT_SCREENS.has(remoteState.screen)) merged.screen = remoteState.screen
   }
 
   return normalizeAndRepair(merged)

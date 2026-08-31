@@ -143,7 +143,23 @@ export default function MissionCard({
       )}
       <div className={styles.cardMain}>
         <div className={styles.cardTitle}>{mission.title}</div>
-        <div className={styles.cardClient}>{client?.name ?? (ownOperation ? 'Your program' : 'Free Ops')}</div>
+        {client && onOpenClientDossier ? (
+          <button
+            type="button"
+            className={`${styles.cardClient} ${styles.cardClientButton}`}
+            data-testid={`mission-card-${mission.id}-client-name`}
+            onClick={event => {
+              event.stopPropagation()
+              onOpenClientDossier(client)
+            }}
+            onKeyDown={event => event.stopPropagation()}
+            style={{ cursor: 'pointer', textAlign: 'left' }}
+          >
+            {client.name}
+          </button>
+        ) : (
+          <div className={styles.cardClient}>{client?.name ?? (ownOperation ? 'Your program' : 'Free Ops')}</div>
+        )}
         <div className={styles.cardWants}>
           {mission.programReward
             ? `Program outcome · ${mission.programReward.outcome}`

@@ -98,7 +98,7 @@ export default function RocketPurchaseScreen({ missionsDone, francs, mission, de
       actions={isFree ? (
         <div className="rocket-actions">
           <PrimaryBtn full={false} kind="cyan" onClick={() => onPurchase(rocket.id)}>
-          Launch with {rocket.name}
+          Continue with {rocket.name}
           </PrimaryBtn>
         </div>
       ) : (

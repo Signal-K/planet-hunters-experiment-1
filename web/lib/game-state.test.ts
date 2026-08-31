@@ -401,7 +401,7 @@ describe('mergeRemoteState — remote game_states record onto local state', () =
     expect(merged.missionId).toBe('remote-mission')
   })
 
-  it('restores a remote in-progress mission over a stale local hub save', () => {
+  it('keeps an explicit Hub route while restoring a remote in-progress mission', () => {
     const mission = MISSIONS[0]
     const target = TARGETS[0]
     const merged = mergeRemoteState(local({ screen: 'hub' }), {
@@ -415,7 +415,7 @@ describe('mergeRemoteState — remote game_states record onto local state', () =
       },
     })
 
-    expect(merged.screen).toBe('mining')
+    expect(merged.screen).toBe('hub')
     expect(merged.missionId).toBe(mission.id)
     expect(merged.targetId).toBe(target.id)
     expect(merged.player.activeMission?.id).toBe(mission.id)
@@ -423,7 +423,24 @@ describe('mergeRemoteState — remote game_states record onto local state', () =
     expect(merged.player.missionPhase).toBe('mining')
   })
 
-  it('restores a remote delivery unload with its wall-clock epoch and cargo', () => {
+  it('keeps a local mission-board route while an in-progress run is restored', () => {
+    const mission = MISSIONS[0]
+    const target = TARGETS[0]
+    const merged = mergeRemoteState(local({ screen: 'missions' }), {
+      screen: 'mining',
+      missionId: mission.id,
+      targetId: target.id,
+      player: {
+        activeMission: { id: mission.id, label: `${mission.title} → ${target.name}` },
+        missionPhase: 'mining',
+      },
+    })
+
+    expect(merged.screen).toBe('missions')
+    expect(merged.player.activeMission?.id).toBe(mission.id)
+  })
+
+  it('keeps Hub visible while restoring a remote delivery unload with its wall-clock epoch and cargo', () => {
     const mission = MISSIONS.find(candidate => candidate.deliveryTargetId)!
     const startedAt = 1_700_000_123_000
     const merged = mergeRemoteState(local({ screen: 'hub' }), {
@@ -441,7 +458,7 @@ describe('mergeRemoteState — remote game_states record onto local state', () =
       },
     })
 
-    expect(merged.screen).toBe('delivery')
+    expect(merged.screen).toBe('hub')
     expect(merged.deliveryTargetId).toBe(mission.deliveryTargetId)
     expect(merged.lastCargo).toEqual({ iron: 3 })
     expect(merged.player.missionPhase).toBe('delivery')
