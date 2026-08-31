@@ -342,3 +342,70 @@ button.launchpad-scene-object { cursor: pointer; }
 @media (orientation: portrait) and (max-width: 620px) {
   .launchpad-object-label { margin-top: 0; }
 }
+
+/* KES-279: the Hub dock is a mobile command surface, not a shrunken desktop
+   rail. The desktop flex row used a fixed 220px status column plus an action
+   strip, which made the action strip measure 0px wide at 377px and pushed its
+   contents beyond the viewport. Keep the environment full-bleed, but give the
+   dock an honest mobile composition: status row first, two-column action grid
+   below, with every child constrained to the viewport. */
+@media (max-width: 600px) {
+  .hub-bottom-dock-inner {
+    box-sizing: border-box;
+    display: block;
+    width: 100% !important;
+    max-width: none !important;
+    padding: 8px 12px 10px !important;
+  }
+
+  .hub-bottom-dock-main {
+    display: flex;
+    width: 100%;
+    min-width: 0;
+    flex: none !important;
+  }
+
+  .hub-bottom-dock-actions {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    width: 100%;
+    min-width: 0;
+    gap: 4px;
+    overflow: visible !important;
+    margin-top: 8px !important;
+  }
+
+  .hub-bottom-dock-actions > * {
+    min-width: 0;
+  }
+
+  .hub-bottom-dock-actions > button {
+    width: 100%;
+  }
+
+  /* Keep utility controls in the top-right command cluster. Their previous
+     bottom offsets put them over the mobile tab bar and the dock's status. */
+  .portrait-canvas:has(.hub-bottom-dock) [data-testid="settings-button"],
+  .portrait-canvas:has(.hub-bottom-dock) [data-testid="friends-button"] {
+    top: 54px !important;
+    bottom: auto !important;
+  }
+
+  .portrait-canvas:has(.hub-bottom-dock) [data-testid="settings-button"] {
+    right: 12px !important;
+    left: auto !important;
+  }
+
+  .portrait-canvas:has(.hub-bottom-dock) [data-testid="friends-button"] {
+    right: 54px !important;
+    left: auto !important;
+  }
+
+  .portrait-canvas:has(.hub-bottom-dock) .sync-status {
+    top: 94px;
+    right: 12px;
+    bottom: auto !important;
+    left: auto;
+    height: max-content;
+  }
+}
