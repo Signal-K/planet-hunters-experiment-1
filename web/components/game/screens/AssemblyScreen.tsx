@@ -1,11 +1,11 @@
 'use client'
 
+import { useEffect } from 'react'
 import { Boxes, Check, Orbit, Pickaxe, Route, X } from 'lucide-react'
 import type { CrewMember, Mission, RocketConfig, Target } from '@/lib/data'
 import { ROCKET_MODELS, validateBuild } from '@/lib/data'
 import type { Catalog } from '@/lib/catalog'
 import Panel from '@/components/ui/Panel'
-import { PrimaryBtn } from '@/components/ui/Button'
 import TutorialHighlight from '@/components/game/TutorialHighlight'
 import StatCard from '@/components/ui/StatCard'
 import MissionSetupShell, {
@@ -16,6 +16,8 @@ import { rocketModelForConfig } from '@/lib/data/rockets'
 import { crewRequirementStatus } from '@/lib/systems/AcademySystem'
 import { useIsShortViewport } from '@/lib/hooks/useIsShortViewport'
 import { useIsNarrowViewport } from '@/lib/hooks/useIsNarrowViewport'
+import { HubWorldBackground } from '@/components/game/hub/HubWorldBackground'
+import { useTimeOfDay } from '@/lib/hooks/useTimeOfDay'
 
 interface AssemblyScreenProps {
   mission: Mission
@@ -43,16 +45,26 @@ const METER_SEGMENTS = 8
 
 export default function AssemblyScreen(props: AssemblyScreenProps) {
   const highlightContent = props.hasCoach && props.coachManual
-  const highlightLaunch = props.hasCoach && !props.coachManual
-  const check = validateBuild({ mission: props.mission, target: props.target, rocket: props.rocket, parts: props.parts, unlockedSkillNodes: props.unlockedSkillNodes })
   const crewCheck = crewRequirementStatus(props.mission.requires.crew, props.crew ?? [])
   const crewReady = !props.mission.requires.crew || (!!props.crewModuleFitted && crewCheck.met)
-  const launchReady = check.ok && crewReady
+  const launchReady = validateBuild({ mission: props.mission, target: props.target, rocket: props.rocket, parts: props.parts, unlockedSkillNodes: props.unlockedSkillNodes }).ok && crewReady
   const selectedRocket = rocketModelForConfig(props.rocket)
-  // Portrait preflight has two fixed regions plus the launch CTA. Treat a
+  // Portrait preflight has two fixed regions plus the automatic launch handoff. Treat a
   // narrow phone as compact even when it is tall, otherwise the decorative
   // flight-plan block forces the manifest underneath the launch region.
   const compact = useIsShortViewport() || useIsNarrowViewport()
+  const { phase: skyPhase } = useTimeOfDay()
+
+  // Confirm Rocket is now a read-only preflight scene. Once the tutorial's
+  // manual vehicle review is complete, or immediately for normal missions,
+  // the selected vehicle proceeds into the launch sequence without leaving a
+  // detached confirmation button floating over the environment.
+  const autoLaunch = launchReady && !(props.hasCoach && props.coachManual)
+  useEffect(() => {
+    if (!autoLaunch) return
+    const timer = window.setTimeout(props.onLaunch, 1200)
+    return () => window.clearTimeout(timer)
+  }, [autoLaunch, props.onLaunch])
 
   return (
     <MissionSetupShell
@@ -63,12 +75,7 @@ export default function AssemblyScreen(props: AssemblyScreenProps) {
       hasCoach={props.hasCoach}
       coachManual={props.coachManual}
       hideStepFooter
-      actions={
-        <div style={{ position: 'relative' }}>
-          {highlightLaunch && <TutorialHighlight borderRadius={8} />}
-          <PrimaryBtn kind="cyan" full={false} disabled={!launchReady} testId="launch-btn" onClick={props.onLaunch}>Confirm Launch</PrimaryBtn>
-        </div>
-      }
+      sceneBackground={<HubWorldBackground phase={skyPhase} composition="earth-base-pad" />}
     >
       <MissionSetupFrame className="assembly-frame assembly-preflight-scene" style={{
         display: 'flex',

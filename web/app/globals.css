@@ -990,6 +990,24 @@ button { cursor: pointer; }
     linear-gradient(145deg, var(--ln-panel-2), var(--ln-void) 68%);
 }
 
+.mission-setup-scene-background {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+.mission-setup-scene-background > * {
+  position: absolute;
+  inset: 0;
+}
+.mission-setup-screen--assembly {
+  background: transparent !important;
+}
+.mission-setup-screen--assembly .mission-setup-content {
+  z-index: 1;
+}
+
 /* KES-181: setup is a lit operational scene, not a neutral app shell. The
    mesh is deliberately CSS-only until authored scene art is available, but
    it establishes the correct ambient depth and keeps the instrument chrome
@@ -1093,16 +1111,17 @@ button { cursor: pointer; }
   grid-template-rows: minmax(0, 1fr);
 }
 
-/* Scene 4 has one real action (Confirm Launch). Its compact content owns the
-   vertical space; the CTA is no longer accompanied by a duplicate Launch rail. */
+/* Confirm Rocket has no persistent action rail. The scene itself owns the
+   available space beneath the top chrome and keeps the launchpad environment
+   visible around the preflight instruments. */
 .mission-setup-screen--assembly .mission-setup-content {
-  padding-bottom: 104px;
+  padding-bottom: 32px;
   overflow-y: auto;
 }
 
 /* Landscape phones (e.g. 844x390) — the 82px top offset (cleared for TopBar,
    see MissionSetupShell's `contentTop`) plus the launch-clearance card's full
-   layout together overflowed past the Confirm Launch bar (STS-612). The card
+   layout together overflowed past the launch action rail (STS-612). The card
    itself compacts via AssemblyScreen's `useIsShortViewport`; this reclaims
    the rest of the room TopBar doesn't actually need at this height. */
 @media (max-height: 460px) {
@@ -1124,7 +1143,7 @@ button { cursor: pointer; }
      clipped by it. Restore the card's normal grid-row-bound height and let
      its own `.mission-setup-card-scroll` scroll internally instead — the
      manifest checklist becoming scrollable is an acceptable trade for the
-     Confirm Launch button never sitting on top of card content (STS-612). */
+     launch control never sitting on top of card content (STS-612). */
   .mission-setup-screen--assembly .assembly-card {
     height: auto !important;
     align-self: stretch !important;
@@ -1225,9 +1244,6 @@ button { cursor: pointer; }
    blueprint paper and the deliberate line drawing; remove the fading mesh
    and ambient colour washes that made the launch state feel unrelated to the
    preceding setup steps. */
-.theme-blueprint.mission-setup-screen--assembly {
-  background: var(--ln-bp-bg) !important;
-}
 .theme-blueprint.mission-setup-screen--assembly::before {
   display: none;
 }
@@ -1421,7 +1437,7 @@ button { cursor: pointer; }
     gap: 10px;
   }
 
-  /* KES-186: the portrait Confirm Launch rail is taller than the shared
+  /* KES-186: the portrait launch rail was taller than the shared
      104px reservation once the compact manifest renders. Keep the second
      setup card above the fixed rail instead of letting its border disappear
      behind the CTA. */
@@ -1622,6 +1638,13 @@ button { cursor: pointer; }
     height: 100% !important;
     overflow-y: auto !important;
   }
+}
+
+/* There is no persistent launch rail on Confirm Rocket. Reclaim that space
+   so the terrain remains visible around the manifest while the automatic
+   launch sequence is arming. */
+.mission-setup-screen--assembly .mission-setup-content {
+  padding-bottom: 32px !important;
 }
 
 .transit-screen { background: radial-gradient(circle at 80% 18%, rgba(112,217,234,.14), transparent 24%), var(--ln-bg-stars), var(--ln-void); }

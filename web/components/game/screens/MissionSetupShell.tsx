@@ -52,6 +52,7 @@ interface MissionSetupShellBaseProps {
   hasCoach?: boolean
   coachManual?: boolean
   children: React.ReactNode
+  sceneBackground?: React.ReactNode
   actions?: React.ReactNode
   hideStepFooter?: boolean
   contentBottom?: number
@@ -74,6 +75,7 @@ export default function MissionSetupShell({
   hasCoach,
   coachManual,
   children,
+  sceneBackground,
   actions,
   hideStepFooter = false,
   contentBottom,
@@ -93,6 +95,11 @@ export default function MissionSetupShell({
       coachManual && 'mission-setup-screen--coach-manual',
       className,
     ].filter(Boolean).join(' ')}>
+      {sceneBackground && (
+        <div className="mission-setup-scene-background" aria-hidden="true">
+          {sceneBackground}
+        </div>
+      )}
       <TopBar eyebrow={eyebrow} title={title} onBack={onBack} />
       <div
         className="mission-setup-content"
