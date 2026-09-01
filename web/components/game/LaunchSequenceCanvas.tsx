@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useRef } from 'react'
+import { capDpr } from '@/lib/engine/pixiDisplay'
 import { Application } from 'pixi.js'
 import { buildLaunchScene, LAUNCH_W, LAUNCH_H } from '@/lib/pixi/launchScene'
 
@@ -64,9 +65,9 @@ export function LaunchSequenceCanvas({ rocketName, rocketImageSrc, targetName, o
         width: cw,
         height: ch,
         background: 0x000000,
-        antialias: true,
+        antialias: false,
         autoDensity: true,
-        resolution: typeof window !== 'undefined' ? (window.devicePixelRatio ?? 1) : 1,
+        resolution: capDpr(),
       })
       initialized = true
       if (destroyed) { try { app.destroy() } catch (_) { /* pixi v8 cleanup */ } canvas.remove(); return }

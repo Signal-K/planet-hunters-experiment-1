@@ -341,7 +341,7 @@ export default function HubScreen({ player, rocketVariant = 'explorer', hasCoach
     return kind
   }
 
-  const BUILDING_W: Record<string, number> = { launchpad: 98, refinery: 84, 'scan-station': 80, 'deep-space-telescope': 86, 'astronaut-academy': 88, command: 84 }
+  const BUILDING_W: Record<string, number> = { launchpad: 98, 'surface-silo': 62, refinery: 84, 'scan-station': 80, 'deep-space-telescope': 86, 'astronaut-academy': 88, command: 84 }
   // Invisible click-target height for each building's spacer (Building.tsx),
   // reported unclickable 2026-08-23. EarthBaseModules renders each building's
   // modular art at a per-kind width/footprint with its
@@ -353,7 +353,7 @@ export default function HubScreen({ player, rocketVariant = 'explorer', hasCoach
   // entirely. Values below are sized to each building's actual rendered
   // silhouette (width x pixelHeight/pixelWidth of its PNG) plus headroom;
   // buildings whose art is short/squat keep the old w*0.6-ish default.
-  const HIT_H: Record<string, number> = { launchpad: 230, refinery: 60, 'scan-station': 60, 'deep-space-telescope': 60, 'astronaut-academy': 60, command: 60 }
+  const HIT_H: Record<string, number> = { launchpad: 230, 'surface-silo': 70, refinery: 60, 'scan-station': 60, 'deep-space-telescope': 60, 'astronaut-academy': 60, command: 60 }
   // Post-tutorial Hub prominence pass (STS-631): telescope/satellite
   // buildings recede visually while they're unlocked but still in their
   // early, not-yet-actively-producing state — Transit Telescope
@@ -433,6 +433,16 @@ export default function HubScreen({ player, rocketVariant = 'explorer', hasCoach
         status: 'ok' as const,
         w: 84,
         onClick: () => onFocusBuilding('refinery'),
+      }
+    }
+    if (kind === 'surface-silo') {
+      const used = Object.values(player.stash ?? {}).reduce((sum, amount) => sum + Math.max(0, amount), 0)
+      return {
+        kind, label: 'Surface Silo',
+        sub: `${Math.min(used, 40)} / 40 U`,
+        status: 'ok' as const,
+        w: 62,
+        onClick: () => onFocusBuilding('build'),
       }
     }
     if (kind === 'scan-station') {

@@ -15,6 +15,7 @@ import {
   CUSTOMIZER_PARTS,
   MINERAL_META,
   MINERAL_SILO_CAPACITY,
+  DEEP_MINERAL_SILO_CAPACITY,
   SUBSURFACE_EXCAVATE_COST,
   SUBSURFACE_ROOMS,
   canAffordSubsurface,
@@ -104,7 +105,7 @@ function RoomScene({
   parts: RegisteredPart[]
   trainingEnabled: boolean
 }) {
-  if (id === 'mineral-vault') {
+  if (id === 'mineral-vault' || id === 'deep-mineral-vault') {
     const displayedMinerals = minerals.slice(0, 4)
     return (
       <div className={styles.roomScene} aria-hidden="true">
@@ -201,7 +202,7 @@ function UnbuiltRoomScene({ room }: { room: SubsurfaceRoomDefinition }) {
 }
 
 function RoomIcon({ id, size = 18 }: { id: SubsurfaceRoomId; size?: number }) {
-  if (id === 'mineral-vault') return <Warehouse size={size} strokeWidth={2} />
+  if (id === 'mineral-vault' || id === 'deep-mineral-vault') return <Warehouse size={size} strokeWidth={2} />
   if (id === 'parts-locker') return <Boxes size={size} strokeWidth={2} />
   return <Dumbbell size={size} strokeWidth={2} />
 }
@@ -502,8 +503,8 @@ export function HubSubsurfaceView({
               <HabitatTraining enabled={trainingEnabled} />
             ) : !builtSet.has(activeRoom) ? (
               <RoomBuildPrompt room={activeDefinition} francs={francs} stash={stash} onBuild={onBuildRoom} />
-            ) : activeRoom === 'mineral-vault' ? (
-              <MineralVault minerals={minerals} capacity={MINERAL_SILO_CAPACITY} />
+            ) : activeRoom === 'mineral-vault' || activeRoom === 'deep-mineral-vault' ? (
+              <MineralVault minerals={minerals} capacity={activeRoom === 'deep-mineral-vault' ? DEEP_MINERAL_SILO_CAPACITY : MINERAL_SILO_CAPACITY} />
             ) : (
               <PartsLocker parts={parts} />
             )}

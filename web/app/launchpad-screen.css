@@ -99,6 +99,15 @@ button.launchpad-scene-object { cursor: pointer; }
   object-position: center bottom;
   pointer-events: none;
 }
+.earth-base-silo-sprite {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  color: var(--ln-cyan);
+  overflow: visible;
+}
 /* The source illustration includes a transparent-ground vignette around the
    pad. Keep the machine and its ramp, but let the shared scene own the actual
    soil, verge, and foreground contact so the pad cannot bring a second patch

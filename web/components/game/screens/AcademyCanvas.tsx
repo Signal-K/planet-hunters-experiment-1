@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useRef } from 'react'
+import { capDpr } from '@/lib/engine/pixiDisplay'
 import { Application } from 'pixi.js'
 import { AcademyController, GameLoop, RuntimeContext, Scene } from '@/lib/engine'
 
@@ -26,7 +27,7 @@ export default function AcademyCanvas({ activeTraining, funded }: { activeTraini
         const height = Math.max(190, parent.clientHeight)
         const [data] = await Promise.all([
           Scene.load('/game/scenes/academy.scene.json'),
-          app.init({ canvas, width, height, background: 0xe9edf2, antialias: true, autoDensity: true, resolution: window.devicePixelRatio || 1 }),
+          app.init({ canvas, width, height, background: 0xe9edf2, antialias: false, autoDensity: true, resolution: capDpr() }),
         ])
         if (destroyed) return
         const { scene } = Scene.fromData(data)

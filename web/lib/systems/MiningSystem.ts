@@ -42,8 +42,10 @@ export function startReturnLeg(s: GameState, cargo: Record<string, number>, arri
 export function applyReturnArrived(s: GameState): GameState {
   if (!s.player.debriefPending || !s.lastCargo) return s
   const stash = { ...(s.player.stash ?? {}) }
-  for (const [id, amount] of Object.entries(s.lastCargo)) {
-    stash[id] = (stash[id] ?? 0) + amount
+  if (!s.player.cargoSettledOffworld) {
+    for (const [id, amount] of Object.entries(s.lastCargo)) {
+      stash[id] = (stash[id] ?? 0) + amount
+    }
   }
   return {
     ...s,
@@ -55,6 +57,7 @@ export function applyReturnArrived(s: GameState): GameState {
       transitStartedAt: null,
       missionPhase: 'debrief',
       debriefPending: false,
+      cargoSettledOffworld: false,
       returningToEarth: false,
       shipDestroyed: true,
     },

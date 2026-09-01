@@ -27,7 +27,7 @@ describe('Launchpad · your own program', () => {
     },
   })
 
-  const visitLaunchpad = (save: object) => {
+  const visitLaunchpad = (save: object, authenticated = true) => {
     cy.visit('/game/launchpad', {
       onBeforeLoad(win) {
         win.localStorage.setItem('landnam-game-state-v1', JSON.stringify(save))
@@ -36,6 +36,13 @@ describe('Launchpad · your own program', () => {
         // reflow the scene mid-test, which flakes clicks on the sticky
         // action rail underneath (page-updated-while-executing races).
         win.localStorage.setItem('landnam-launchpad-guide-v1', 'complete')
+        if (authenticated) {
+          // Keep the mandatory guest-auth sheet from covering surface
+          // assertions. The final test opts out to exercise that flow.
+          win.localStorage.setItem('landnam-account-credentials', JSON.stringify({
+            email: 'e2e@example.com', password: 'e2e-guest-test',
+          }))
+        }
       },
     })
   }
@@ -85,7 +92,7 @@ describe('Launchpad · your own program', () => {
 
   it('clicking the launchpad starts the next own-program operation', () => {
     cy.viewport(390, 844)
-    visitLaunchpad(freeOpsSave())
+    visitLaunchpad(freeOpsSave(), false)
 
     cy.get('[data-testid="launchpad-program-operation-btn"]', { timeout: 15000 }).should('exist')
     // The auth gate overlays the whole screen on a fresh visit and covers

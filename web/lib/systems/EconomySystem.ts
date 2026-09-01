@@ -4,7 +4,7 @@
 import type { GameState } from '@/lib/game-types'
 import type { RefineryRecipe, ShipRoomKind, StructureBlueprint, RocketModel, SubsurfaceRoomId } from '@/lib/data'
 import { rocketConfigForModel } from '@/lib/data'
-import { MINERAL_META, CLIENT_SLOTS, LAUNCHPAD_UPGRADE_COST, OPEN_MARKET_SELL_RATE, MINERAL_SILO_CAPACITY, customizerPartById, deepSpaceTelescopeUnlocked, SUBSURFACE_EXCAVATE_COST, SUBSURFACE_ROOMS, canAffordSubsurface } from '@/lib/data'
+import { MINERAL_META, CLIENT_SLOTS, LAUNCHPAD_UPGRADE_COST, OPEN_MARKET_SELL_RATE, MINERAL_SILO_CAPACITY, SURFACE_SILO_CAPACITY, DEEP_MINERAL_SILO_CAPACITY, REMOTE_MINERAL_SILO_CAPACITY, customizerPartById, deepSpaceTelescopeUnlocked, SUBSURFACE_EXCAVATE_COST, SUBSURFACE_ROOMS, canAffordSubsurface } from '@/lib/data'
 import { structureIsStaffed } from './AcademySystem'
 
 // Sell to open market (raw): ~80% of book value — see [[Economy and Minerals]].
@@ -83,7 +83,13 @@ export function sellQuote(
   )
 }
 
-export function applySellMinerals(s: GameState, mineralId: string, amount: number, now: number = Date.now()): GameState {
+export function applySellMinerals(
+  s: GameState,
+  mineralId: string,
+  amount: number,
+  now: number = Date.now(),
+  clientId?: string | null,
+): GameState {
   const stash = { ...(s.player.stash ?? {}) }
   const held = stash[mineralId] ?? 0
   const sellAmount = Math.min(amount, held)
@@ -92,7 +98,11 @@ export function applySellMinerals(s: GameState, mineralId: string, amount: numbe
   const marketSupply = { ...(s.player.marketSupply ?? {}) }
   const marketSupplyUpdatedAt = { ...(s.player.marketSupplyUpdatedAt ?? {}) }
   const unitsSold = decayedUnitsSold(marketSupply[mineralId] ?? 0, marketSupplyUpdatedAt[mineralId], now)
-  const revenue = sellUnitPrice(mineralId, s.player, s.player.lastClient, now).price * sellAmount
+  // `null` explicitly means an open-market sale with no client premium. This
+  // matters for a self-directed haul after a client job: lastClient is a
+  // historical display context and must not leak a client's premium into the
+  // player's own sale.
+  const revenue = sellUnitPrice(mineralId, s.player, clientId === undefined ? s.player.lastClient : clientId ?? undefined, now).price * sellAmount
   marketSupply[mineralId] = unitsSold + sellAmount
   marketSupplyUpdatedAt[mineralId] = now
   stash[mineralId] = held - sellAmount
@@ -101,27 +111,31 @@ export function applySellMinerals(s: GameState, mineralId: string, amount: numbe
 }
 
 // ── Earth-side ore storage (silos) ───────────────────────────────────────────
-// A built Mineral Vault is what gives the player somewhere on Earth to KEEP a
-// self-directed haul rather than selling it on return. Storage capacity, the
+// A built Earth-side silo is what gives the player somewhere on Earth to KEEP
+// a self-directed haul rather than selling it on return. Storage capacity, the
 // silo fill visual, and the free-mission store/sell choice all read off these.
 
-type StoragePlayer = Pick<GameState['player'], 'subsurfaceExcavated' | 'subsurfaceBuilt' | 'stash'>
+type StoragePlayer = { placed?: string[]; subsurfaceExcavated?: boolean; subsurfaceBuilt?: string[]; stash?: Record<string, number> }
 
-/** True once the below-soil Mineral Vault is built — the prerequisite for
- *  keeping ore on Earth. Excavation alone is not enough; the vault is the silo. */
-export function earthStorageBuilt(player: Pick<StoragePlayer, 'subsurfaceBuilt'>): boolean {
-  return (player.subsurfaceBuilt ?? []).includes('mineral-vault')
+/** True once any Earth-side silo is built — the prerequisite for keeping ore
+ *  on Earth. Excavation alone is not enough; the room/building is the silo. */
+export function earthStorageBuilt(player: Pick<StoragePlayer, 'placed' | 'subsurfaceBuilt'>): boolean {
+  return (player.placed ?? []).includes('surface-silo')
+    || (player.subsurfaceBuilt ?? []).includes('mineral-vault')
 }
 
-/** Number of ore silos the player has. One with the Mineral Vault built; more
- *  silos are a follow-up, so this is 0 or 1 for now. */
-export function siloCount(player: Pick<StoragePlayer, 'subsurfaceBuilt'>): number {
-  return earthStorageBuilt(player) ? 1 : 0
+/** Number of Earth-side ore silos across the surface and underground tiers. */
+export function siloCount(player: Pick<StoragePlayer, 'placed' | 'subsurfaceBuilt'>): number {
+  return ((player.placed ?? []).includes('surface-silo') ? 1 : 0)
+    + ((player.subsurfaceBuilt ?? []).includes('mineral-vault') ? 1 : 0)
+    + ((player.subsurfaceBuilt ?? []).includes('deep-mineral-vault') ? 1 : 0)
 }
 
-/** Total ore units the player's silos can hold. 0 with no vault. */
-export function storageCapacity(player: Pick<StoragePlayer, 'subsurfaceBuilt'>): number {
-  return siloCount(player) * MINERAL_SILO_CAPACITY
+/** Total ore units the player's silos can hold. 0 with no silo. */
+export function storageCapacity(player: Pick<StoragePlayer, 'placed' | 'subsurfaceBuilt'>): number {
+  return ((player.placed ?? []).includes('surface-silo') ? SURFACE_SILO_CAPACITY : 0)
+    + ((player.subsurfaceBuilt ?? []).includes('mineral-vault') ? MINERAL_SILO_CAPACITY : 0)
+    + ((player.subsurfaceBuilt ?? []).includes('deep-mineral-vault') ? DEEP_MINERAL_SILO_CAPACITY : 0)
 }
 
 /** Total ore units currently held in the stash. */
@@ -136,7 +150,7 @@ export function storedUnits(stash: Record<string, number> | undefined): number {
 export function applySellHaul(s: GameState, haul: Record<string, number>, now: number = Date.now()): GameState {
   let next = s
   for (const [id, amount] of Object.entries(haul)) {
-    if (amount > 0) next = applySellMinerals(next, id, amount, now)
+    if (amount > 0) next = applySellMinerals(next, id, amount, now, null)
   }
   return next
 }
@@ -186,7 +200,67 @@ export function applyFreeHaulDisposition(
   return applySellHaul(s, pickOverflowFromHaul(haul, overflow), now)
 }
 
+export function hasOperationalRemoteSilo(player: Pick<GameState['player'], 'clientStructures'>, targetId: string): boolean {
+  return !!targetId && (player.clientStructures ?? []).some(record =>
+    record.targetId === targetId && record.structureKind === 'mineral-silo' && record.state === 'operational'
+  )
+}
+
+/** Settle a self-directed haul at its mining destination before the return leg. */
+export function applyRemoteHaulDisposition(
+  s: GameState,
+  targetId: string,
+  haul: Record<string, number>,
+  disposition: 'store' | 'sell',
+  now: number = Date.now(),
+): GameState {
+  if (!hasOperationalRemoteSilo(s.player, targetId) || !Object.values(haul).some(amount => amount > 0)) {
+    return s
+  }
+  if (disposition === 'sell') {
+    const stash = { ...(s.player.stash ?? {}) }
+    for (const [id, amount] of Object.entries(haul)) stash[id] = (stash[id] ?? 0) + amount
+    const sold = applySellHaul({ ...s, player: { ...s.player, stash } }, haul, now)
+    return { ...sold, player: { ...sold.player, cargoSettledOffworld: true } }
+  }
+  const prior = s.player.remoteStorage?.[targetId] ?? {}
+  const used = storedUnits(prior)
+  const room = Math.max(0, REMOTE_MINERAL_SILO_CAPACITY - used)
+  const stored: Record<string, number> = { ...prior }
+  const overflow: Record<string, number> = {}
+  let remaining = room
+  for (const [id, amount] of Object.entries(haul)) {
+    const keep = Math.min(Math.max(0, amount), remaining)
+    if (keep > 0) stored[id] = (stored[id] ?? 0) + keep
+    if (amount > keep) overflow[id] = amount - keep
+    remaining -= keep
+  }
+  const overflowStash = { ...(s.player.stash ?? {}) }
+  for (const [id, amount] of Object.entries(overflow)) overflowStash[id] = (overflowStash[id] ?? 0) + amount
+  const sold = Object.keys(overflow).length > 0 ? applySellHaul({ ...s, player: { ...s.player, stash: overflowStash } }, overflow, now) : s
+  return { ...sold, player: { ...sold.player, cargoSettledOffworld: true, remoteStorage: { ...(sold.player.remoteStorage ?? {}), [targetId]: stored } } }
+}
+
+/** Sell collected refined goods at their recipe output value. */
+export function applySellRefinedGoods(s: GameState, recipe: RefineryRecipe, amount: number): GameState {
+  const available = s.player.refinedGoods[recipe.id] ?? 0
+  const quantity = Math.min(Math.max(0, Math.floor(amount)), available)
+  if (quantity <= 0) return s
+  return {
+    ...s,
+    player: {
+      ...s.player,
+      francs: s.player.francs + recipe.output.price * quantity,
+      refinedGoods: { ...s.player.refinedGoods, [recipe.id]: available - quantity },
+    },
+  }
+}
+
 export function applyStartRefine(s: GameState, recipe: RefineryRecipe): GameState {
+  const lastStarted = s.player.refineryLastStartedAt
+  const currentDay = new Date().toISOString().slice(0, 10)
+  const lastDay = lastStarted == null ? null : new Date(lastStarted).toISOString().slice(0, 10)
+  if (lastDay === currentDay) return s
   const stash = { ...(s.player.stash ?? {}) }
   const current = stash[recipe.input.mineral] ?? 0
   if (current < recipe.input.amount || s.player.francs < recipe.cost) return s
@@ -202,6 +276,7 @@ export function applyStartRefine(s: GameState, recipe: RefineryRecipe): GameStat
         startedAt: Date.now(),
         durationMs: recipe.time * 1000 * (structureIsStaffed(s.player, 'refinery') ? 0.75 : 1),
       }],
+      refineryLastStartedAt: Date.now(),
     },
   }
 }

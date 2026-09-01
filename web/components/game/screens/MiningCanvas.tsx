@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
+import { capDpr } from '@/lib/engine/pixiDisplay'
 import { Application, Assets, Container, Graphics, type Texture } from 'pixi.js'
 import { Scene, GameLoop, InputManager, RuntimeContext, screenToWorld } from '@/lib/engine'
 import { wireShapeRenderers } from '@/lib/engine/components/ShapeRenderer'
@@ -165,7 +166,7 @@ export default function MiningCanvas({ minerals, requiredMinerals, mineralMeta, 
       try {
         const worldW = Math.max(300, parent.clientWidth)
         const worldH = Math.max(200, parent.clientHeight)
-        const dpr = window.devicePixelRatio || 1
+        const dpr = capDpr()
         // Ship-to-surface gap is where the laser fires and ore drifts — the
         // only part of the sky that's actually gameplay, not empty
         // starfield. Percentage-of-height sizing (0.62/0.22, gap ~40% of
@@ -201,7 +202,7 @@ export default function MiningCanvas({ minerals, requiredMinerals, mineralMeta, 
             width: worldW,
             height: worldH,
             background: SKY_COLOR,
-            antialias: true,
+            antialias: false,
             autoDensity: true,
             resolution: dpr,
           }),

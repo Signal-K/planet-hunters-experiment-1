@@ -1,7 +1,7 @@
 // Landnam game data — structures, refinery recipes, market templates
 
 import type { StructureBlueprint, RefineryRecipe, MarketTemplate } from './types'
-import { MINERAL_VALUE, REFINING_COST_RATE, REFINING_VALUE_MULTIPLIER, STRUCTURE_PRICES } from './economy'
+import { MINERAL_VALUE, REFINING_COST_RATE, REFINING_VALUE_MULTIPLIER, STRUCTURE_PRICES, SURFACE_SILO_PRICE } from './economy'
 import { MINERAL_RARITY } from './minerals'
 import { CLIENT_AFFINITY_MISSION_THRESHOLD } from './clients'
 import { FEATURE_FLAGS } from '@/lib/featureFlags'
@@ -34,6 +34,15 @@ export const REFINERY_RECIPES: RefineryRecipe[] = [
 
 export const STRUCTURES: StructureBlueprint[] = [
   { id: 'launchpad', name: 'Launchpad', kind: 'launchpad', cost: 0, unlocksAt: 'always', unlockTrigger: 'always', description: 'Rocket assembly and launch operations.' },
+  {
+    id: 'surface-silo',
+    name: 'Surface Silo',
+    kind: 'surface-silo',
+    cost: SURFACE_SILO_PRICE,
+    unlocksAt: 'Free Operations',
+    unlockTrigger: 'free-operations',
+    description: 'Small Earth-side mineral storage. Hold ore for a better market window or for refinery input.',
+  },
   {
     id: 'refinery',
     name: 'Refinery',
@@ -99,6 +108,7 @@ export function deepSpaceTelescopeUnlocked(opts: { transitSatelliteLevel?: numbe
 }
 
 export function structureUnlocked(structure: StructureBlueprint, opts: { refineryUnlocked?: boolean; academyResearched?: boolean; placed?: string[]; freeOperations?: boolean; transitSatelliteLevel?: number; clientMissions?: Record<string, number>; deepSpaceTelescopeMissionCompletedAt?: number | null; scanStationMissionCompletedAt?: number | null } = {}): boolean {
+  if (structure.id === 'surface-silo') return !!opts.freeOperations || !!opts.placed?.includes('surface-silo')
   // KES-132: the feature flag now only decides when the
   // story-scan-station-commission mission (see runtimeCatalog.ts) is
   // offered as the on-ramp — completing that mission is what actually opens

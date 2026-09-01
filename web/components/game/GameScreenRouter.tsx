@@ -278,6 +278,7 @@ export function ScreenContent({
             stash: game.player.stash,
             refineryQueue: game.player.refineryQueue,
             refinedGoods: game.player.refinedGoods,
+            refineryLastStartedAt: game.player.refineryLastStartedAt,
             staffed: !!game.player.structureCrewAssignments?.refinery,
           }}
           onBack={() => game.go('hub')}
@@ -294,6 +295,8 @@ export function ScreenContent({
           marketSupplyUpdatedAt={game.player.marketSupplyUpdatedAt ?? {}}
           francs={game.player.francs}
           onSell={game.sellMinerals}
+          refinedGoods={game.player.refinedGoods}
+          onSellRefined={game.sellRefinedGoods}
           onBack={() => game.go('hub')}
           onOpenMissions={() => game.go('missions')}
           clientId={game.player.lastClient}
@@ -339,6 +342,9 @@ export function ScreenContent({
       return (
         <MissionHistoryScreen
           records={game.player.completedMissions ?? []}
+          clients={game.catalog.clients}
+          targets={game.catalog.targets}
+          player={game.player}
           onBack={() => game.go('hub')}
         />
       )

@@ -11,7 +11,7 @@ import { UI_ZONES } from '@/lib/ui-zones'
 import { formatCurrency } from '@/lib/format'
 
 interface RefineryScreenProps {
-  player: { francs: number; stash?: Record<string, number>; refineryQueue: { recipeId: string; startedAt: number; durationMs?: number }[]; refinedGoods: Record<string, number>; staffed?: boolean }
+  player: { francs: number; stash?: Record<string, number>; refineryQueue: { recipeId: string; startedAt: number; durationMs?: number }[]; refineryLastStartedAt?: number; refinedGoods: Record<string, number>; staffed?: boolean }
   onBack: () => void
   onStartRefine: (recipeId: string) => void
   onCollect: (recipeId: string) => void
@@ -21,6 +21,8 @@ export default function RefineryScreen({ player, onBack, onStartRefine, onCollec
   const [now, setNow] = useState(0)
   const [selected, setSelected] = useState<string | null>(null)
   const stash = player.stash ?? {}
+  const startedToday = player.refineryLastStartedAt != null
+    && new Date(player.refineryLastStartedAt).toISOString().slice(0, 10) === new Date(now || Date.now()).toISOString().slice(0, 10)
 
   const running = player.refineryQueue[0] ?? null
   const runningRecipe = running ? REFINERY_RECIPES.find(r => r.id === running.recipeId) : null
@@ -43,7 +45,7 @@ export default function RefineryScreen({ player, onBack, onStartRefine, onCollec
         <Panel accent="var(--ln-amber)" style={{ padding: 12 }}>
           <div style={{ fontFamily: 'var(--ln-font-display)', fontWeight: 800, fontSize: 15, color: 'var(--ln-text)' }}>On-site Ore Processing</div>
           <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 12, color: 'var(--ln-text-dim)', marginTop: 4 }}>
-            Refine raw minerals into higher-value refined goods. {player.staffed ? 'Crew staffed · cycles 25% faster.' : 'Assign crew at the Academy for faster cycles.'}
+            Level 1 capacity: one shipment per day. Refine raw minerals into higher-value goods. {player.staffed ? 'Crew staffed · cycles 25% faster.' : 'Assign crew at the Academy for faster cycles.'}
           </div>
         </Panel>
 
@@ -91,7 +93,7 @@ export default function RefineryScreen({ player, onBack, onStartRefine, onCollec
           {REFINERY_RECIPES.map(recipe => {
             const hasInput = (stash[recipe.input.mineral] ?? 0) >= recipe.input.amount
             const affordable = player.francs >= recipe.cost
-            const canStart = hasInput && affordable && !running
+            const canStart = hasInput && affordable && !running && !startedToday
             return (
               <button
                 key={recipe.id}
@@ -112,7 +114,7 @@ export default function RefineryScreen({ player, onBack, onStartRefine, onCollec
                     <StatusPill kind="info" dim>{formatCurrency(recipe.cost)}</StatusPill>
                     <StatusPill kind="amber" dim>{Math.round(recipe.time * (player.staffed ? 0.75 : 1))}s</StatusPill>
                     <span style={{ flex: 1 }} />
-                    <StatusPill kind={hasInput ? 'ok' : 'crit'} dim>{hasInput ? `✓` : 'Missing Input'}</StatusPill>
+                    <StatusPill kind={!hasInput ? 'crit' : startedToday ? 'amber' : 'ok'} dim>{!hasInput ? 'Missing Input' : startedToday ? 'Daily Limit' : 'Ready'}</StatusPill>
                   </div>
                 </Panel>
               </button>

@@ -3,7 +3,7 @@
 import type { useGame } from '@/game-context'
 import type { Screen } from '@/lib/game-types'
 import type { Target } from '@/lib/data'
-import { rocketDisplayForConfig } from '@/lib/data'
+import { isFreeHaulMission, isOwnProgramMission, rocketDisplayForConfig } from '@/lib/data'
 import TransitScreen from '@/components/game/screens/TransitScreen'
 import LandingScreen from '@/components/game/screens/LandingScreen'
 import MiningScreen from '@/components/game/screens/MiningScreen'
@@ -11,7 +11,7 @@ import RoverMiningScreen from '@/components/game/screens/RoverMiningScreen'
 import type { RoverTerrainClass } from '@/lib/data/rover-scouting'
 import DeliveryScreen from '@/components/game/screens/DeliveryScreen'
 import DebriefScreen from '@/components/game/screens/DebriefScreen'
-import { earthStorageBuilt, storageCapacity, storedUnits, sellQuote } from '@/lib/systems/EconomySystem'
+import { earthStorageBuilt, hasOperationalRemoteSilo, storageCapacity, storedUnits, sellQuote } from '@/lib/systems/EconomySystem'
 
 type Game = ReturnType<typeof useGame>
 type RocketDisplay = ReturnType<typeof rocketDisplayForConfig>
@@ -38,6 +38,9 @@ export default function MissionOperationRoutes({
   deliveryTargetName,
   rocketDisplay,
 }: MissionOperationRoutesProps) {
+  const debriefCargo = game.deliveredCargo ?? game.lastCargo ?? {}
+  const debriefIsFreeHaul = game.mission ? isFreeHaulMission(game.mission, debriefCargo) && !game.player.cargoSettledOffworld : false
+
   switch (screen) {
     case 'transit':
       return (
@@ -163,7 +166,7 @@ export default function MissionOperationRoutes({
             }))
             game.go('hub')
           }}
-          onComplete={(cargo) => {
+          onComplete={(cargo, remoteDisposition) => {
             game.completeStep(6)
             game.completeStep(7)
             if (game.player.shipCustomizerParts?.lander) {
@@ -176,7 +179,7 @@ export default function MissionOperationRoutes({
               game.go('landing')
               return
             }
-            game.onMiningDone(cargo)
+            game.onMiningDone(cargo, remoteDisposition)
           }}
           minerals={game.catalog.minerals}
           laserChargeCap={game.laserChargeCap}
@@ -191,6 +194,8 @@ export default function MissionOperationRoutes({
             Object.keys(game.player.clientMissions ?? {}).length > 0
             || (game.player.dailyClientPool?.completedIds.length ?? 0) > 0
           }
+          remoteSiloAvailable={!!game.mission && isOwnProgramMission(game.mission) && !game.mission.deliveryTargetId && !game.mission.construction && hasOperationalRemoteSilo(game.player, game.target.id)}
+          remoteSiloUsed={storedUnits(game.player.remoteStorage?.[game.target.id])}
         />
       )
 
@@ -253,7 +258,7 @@ export default function MissionOperationRoutes({
         <DebriefScreen
           mission={game.mission}
           target={debriefOriginTarget}
-          cargo={game.deliveredCargo ?? game.lastCargo ?? {}}
+          cargo={debriefCargo}
           onDone={game.onDebriefDone}
           minerals={game.catalog.minerals}
           clients={game.catalog.clients}
@@ -274,7 +279,7 @@ export default function MissionOperationRoutes({
           hasEarthStorage={earthStorageBuilt(game.player)}
           storageCapacity={storageCapacity(game.player)}
           storageUsed={storedUnits(game.player.stash)}
-          haulMarketValue={sellQuote(game.deliveredCargo ?? game.lastCargo ?? {}, game.player, game.player.lastClient)}
+          haulMarketValue={sellQuote(debriefCargo, game.player, debriefIsFreeHaul ? undefined : game.player.lastClient)}
         />
       )
   }

@@ -54,6 +54,7 @@ export const SCAN_STATION_BUILD_MISSION_ID = 'program-build-scan-station'
 
 const refineryBlueprint = STRUCTURES.find(structure => structure.id === 'refinery')!
 const scanStationBlueprint = STRUCTURES.find(structure => structure.id === 'scan-station')!
+const remoteSiloBlueprint = { requiredMaterials: { aluminium: 18, iron: 12, copper: 6 } }
 
 function materialRequirement(materials: Record<string, number>): { minerals: Record<string, number>; cargo_min: number } {
   return {
@@ -65,6 +66,18 @@ function materialRequirement(materials: Record<string, number>): { minerals: Rec
 /** Earth Base construction is owned work, so it awards the structure rather
  * than a client fee or affinity. Keep its costs aligned with the blueprints. */
 export const OWN_PROGRAM_BUILD_MISSIONS: Mission[] = [
+  {
+    id: 'program-build-remote-silo',
+    title: 'Build a Remote Mineral Silo',
+    brief: 'Send construction materials to a target with build rights. The sealed silo stores your extracted ore off-world instead of forcing every haul into an Earth sale.',
+    tag: 'PROGRAM', difficulty: 'L2', locked: false,
+    sequence: FREE_OPS_START_MISSIONS_DONE + 1,
+    unlockAt: 'Reach Free Operations',
+    construction: { structureKind: 'mineral-silo', requiredMaterials: { ...remoteSiloBlueprint.requiredMaterials }, placementMode: 'confirm', buildTimeMs: 45 * 60 * 1000 },
+    programReward: { researchXP: 0, outcome: 'Remote Mineral Silo commissioned · ore can be held at the selected target' },
+    requires: { ...materialRequirement(remoteSiloBlueprint.requiredMaterials), drill_tier: 1, max_orbit: 5 },
+    payout: { francs: 0, affinity: 0 },
+  },
   {
     id: REFINERY_BUILD_MISSION_ID,
     title: 'Build the Refinery',

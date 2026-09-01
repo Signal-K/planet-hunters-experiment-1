@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useRef } from 'react'
+import { capDpr } from '@/lib/engine/pixiDisplay'
 import { Application } from 'pixi.js'
 import { buildScrapScene, SCRAP_W, SCRAP_H } from '@/lib/pixi/scrapScene'
 
@@ -41,9 +42,9 @@ export function ScrapSequenceCanvas({ rocketImageSrc, onComplete }: Props) {
         width: cw,
         height: ch,
         background: 0xeef3f8, // --ln-bp-bg (KES-267) — see scrapScene.ts's C palette
-        antialias: true,
+        antialias: false,
         autoDensity: true,
-        resolution: typeof window !== 'undefined' ? (window.devicePixelRatio ?? 1) : 1,
+        resolution: capDpr(),
       })
       initialized = true
       if (destroyed) { try { app.destroy() } catch (_) { /* pixi v8 cleanup */ } canvas.remove(); return }

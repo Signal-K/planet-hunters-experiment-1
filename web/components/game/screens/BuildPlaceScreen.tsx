@@ -23,11 +23,11 @@ import { FEATURE_FLAGS } from '@/lib/featureFlags'
 const DEFAULT_PLOTS: EntityData[] = buildPlotEntities()
 
 const STRUCTURE_COLORS: Record<string, string> = {
-  launchpad: '#3fa9ff',
-  refinery: '#f5a623',
-  'scan-station': '#39d36a',
-  'deep-space-telescope': '#9d7cff',
-  'astronaut-academy': '#6cc2ff',
+  launchpad: 'var(--ln-info)',
+  refinery: 'var(--ln-amber)', // structure identity exception
+  'scan-station': 'var(--ln-ok)',
+  'deep-space-telescope': 'var(--ln-crit-soft)', // purple identity
+  'astronaut-academy': 'var(--ln-cyan-bright)',
 }
 
 interface BuildPlaceScreenProps {
@@ -118,7 +118,7 @@ export default function BuildPlaceScreen({ onPlaced, onBack, hasCoach, player }:
       return [{
         kind: sel.id,
         plotX: entity.transform.position.x,
-        w: sel.id === 'launchpad' ? 98 : sel.id === 'refinery' ? 84 : 80,
+        w: sel.id === 'launchpad' ? 98 : sel.id === 'surface-silo' ? 62 : sel.id === 'refinery' ? 84 : 80,
         hot: false,
         status: 'ok' as const,
       }]
@@ -216,7 +216,7 @@ export default function BuildPlaceScreen({ onPlaced, onBack, hasCoach, player }:
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  filter: on ? 'drop-shadow(0 0 12px rgba(245,166,35,0.6))' : 'none',
+                  filter: on ? 'drop-shadow(0 0 12px rgba(245, 166, 35, 0.6))' : 'none',
                 }}>
                   {on && sel && <span style={{ color: 'var(--ln-amber)' }}><StructureIcon kind={sel.id} size={44} /></span>}
                 </div>
@@ -228,8 +228,8 @@ export default function BuildPlaceScreen({ onPlaced, onBack, hasCoach, player }:
                   borderRadius: '50% / 60%',
                   background: on
                     ? `radial-gradient(ellipse at 50% 35%, ${color}88, ${color}15 70%)`
-                    : 'radial-gradient(ellipse at 50% 35%, rgba(112,217,234,0.22), rgba(112,217,234,0.04) 70%)',
-                  border: `2px ${on ? 'solid' : 'dashed'} ${on ? color : 'rgba(112,217,234,0.4)'}`,
+                    : 'radial-gradient(ellipse at 50% 35%, var(--ln-cyan-soft), rgba(112, 217, 234, 0.04) 70%)',
+                  border: `2px ${on ? 'solid' : 'dashed'} ${on ? color : 'var(--ln-cyan-border)'}`,
                   boxShadow: on ? `0 0 24px ${color}66` : '0 2px 6px rgba(0,0,0,0.4)',
                   display: 'flex',
                   alignItems: 'center',
@@ -238,7 +238,7 @@ export default function BuildPlaceScreen({ onPlaced, onBack, hasCoach, player }:
                 }}>
                   {on
                     ? <span style={{ fontFamily: 'var(--ln-font-mono)', fontSize: 16, fontWeight: 800, color, marginTop: -1 }}>⌄</span>
-                    : <span style={{ fontFamily: 'var(--ln-font-mono)', fontSize: 20, fontWeight: 800, color: 'rgba(112,217,234,0.7)', marginTop: -2 }}>+</span>}
+                    : <span style={{ fontFamily: 'var(--ln-font-mono)', fontSize: 20, fontWeight: 800, color: 'var(--ln-cyan)', marginTop: -2 }}>+</span>}
                 </div>
               </button>
             )
@@ -311,14 +311,14 @@ export default function BuildPlaceScreen({ onPlaced, onBack, hasCoach, player }:
                         fontFamily: 'var(--ln-font-display)',
                         fontWeight: 800,
                         fontSize: 10,
-                        color: on ? color : '#c8d6ea',
+                        color: on ? color : 'var(--ln-text-dim)',
                         letterSpacing: '0.01em',
                         lineHeight: 1.25,
                       }}>{c.name}</div>
                       <div style={{
                         fontFamily: 'var(--ln-font-mono)',
                         fontSize: 8,
-                        color: on ? color : '#7a8294',
+                        color: on ? color : 'var(--ln-text-muted)',
                         marginTop: 1,
                         fontWeight: 700,
                         letterSpacing: '0.04em',
@@ -346,7 +346,7 @@ export default function BuildPlaceScreen({ onPlaced, onBack, hasCoach, player }:
             <span style={{
               fontFamily: 'var(--ln-font-body)',
               fontSize: 11,
-              color: '#a9b8ce',
+              color: 'var(--ln-text-muted)',
               whiteSpace: 'nowrap',
               overflow: 'hidden',
               textOverflow: 'ellipsis',
@@ -355,7 +355,7 @@ export default function BuildPlaceScreen({ onPlaced, onBack, hasCoach, player }:
                 ? `Select a plot for the ${sel.name} · ${formatStructureCost(sel)}`
                 : `Place ${sel.name} here? · ${formatStructureCost(sel)}`}
             </span>
-          </div> : <div style={{ padding: '6px 2px 10px', fontFamily: 'var(--ln-font-body)', fontSize: 11, color: '#a9b8ce' }}>No structures are available yet. Complete your current mission to unlock the next build.</div>}
+          </div> : <div style={{ padding: '6px 2px 10px', fontFamily: 'var(--ln-font-body)', fontSize: 11, color: 'var(--ln-text-muted)' }}>No structures are available yet. Complete your current mission to unlock the next build.</div>}
         </div>
       </div>
 

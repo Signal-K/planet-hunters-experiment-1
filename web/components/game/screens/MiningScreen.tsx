@@ -2,7 +2,7 @@
 
 import { useRef, useState, useCallback, useEffect } from 'react'
 import type { Mission, Target, MineralMeta } from '@/lib/data'
-import { FREE_OPS_START_MISSIONS_DONE } from '@/lib/data'
+import { FREE_OPS_START_MISSIONS_DONE, REMOTE_MINERAL_SILO_CAPACITY } from '@/lib/data'
 import TopBar from '@/components/ui/TopBar'
 import Panel from '@/components/ui/Panel'
 import StatusPill from '@/components/ui/StatusPill'
@@ -154,10 +154,10 @@ function miningGuide(deliveryTargetName?: string) {
   ]
 }
 
-export default function MiningScreen({ mission, target, onComplete, onBack, onAbandon, minerals, laserChargeCap, laserTier, hasCoach, coachManual, onCoachDone, addToast, deliveryTargetName, hasPriorFreeOpsExperience, initialCargo }: {
+export default function MiningScreen({ mission, target, onComplete, onBack, onAbandon, minerals, laserChargeCap, laserTier, hasCoach, coachManual, onCoachDone, addToast, deliveryTargetName, hasPriorFreeOpsExperience, initialCargo, remoteSiloAvailable, remoteSiloUsed = 0 }: {
   mission: Mission
   target: Target
-  onComplete: (cargo: Record<string, number>) => void
+  onComplete: (cargo: Record<string, number>, remoteDisposition?: 'store' | 'sell') => void
   /** Called with whatever's been collected so far (may be empty) — the caller is responsible for persisting it so a later resume doesn't lose progress. */
   onBack: (cargo: Record<string, number>) => void
   onAbandon?: () => void
@@ -176,6 +176,9 @@ export default function MiningScreen({ mission, target, onComplete, onBack, onAb
   hasPriorFreeOpsExperience?: boolean
   /** Cargo already collected before a prior "Back to hub" pause on this same mission, restored so the player doesn't lose it on resume. */
   initialCargo?: Record<string, number>
+  /** Operational player-owned silo at this target; enables arrival settlement. */
+  remoteSiloAvailable?: boolean
+  remoteSiloUsed?: number
 }) {
   // Charge count is mission-aware, not coach-aware.
   // During onboarding (sequence <= FREE_OPS_START_MISSIONS_DONE): always 16× the ore required,
@@ -204,6 +207,7 @@ export default function MiningScreen({ mission, target, onComplete, onBack, onAb
   const LOW_CHARGE_THRESHOLD = Math.max(2, Math.ceil(MAX_CHARGES * 0.2))
   const cargoRef = useRef<Record<string, number>>(initialCargo ?? {})
   const [cargo, setCargo] = useState<Record<string, number>>(initialCargo ?? {})
+  const [remoteDisposition, setRemoteDisposition] = useState<'store' | 'sell'>('store')
   const fireRef = useRef<(() => void) | null>(null)
   const scrollRef = useRef<((dx: number) => void) | null>(null)
   const [laserCharges, setLaserCharges] = useState(MAX_CHARGES)
@@ -295,14 +299,14 @@ export default function MiningScreen({ mission, target, onComplete, onBack, onAb
   }, [laserCharges])
 
   function handleReturn() {
-    if (orderFilled || laserCharges <= 0) onComplete(cargoRef.current)
+    if (orderFilled || laserCharges <= 0) onComplete(cargoRef.current, remoteDisposition)
   }
 
   // Local-dev-only shortcut: fills the order instantly so testing later
   // screens doesn't require playing the mining minigame by hand each time.
   function handleDevSkip() {
     cargoRef.current = { ...mission.requires.minerals }
-    onComplete(cargoRef.current)
+    onComplete(cargoRef.current, remoteDisposition)
   }
 
   // Deposit contains the target's full mineral pool, not just the mission's objective —
@@ -604,6 +608,19 @@ export default function MiningScreen({ mission, target, onComplete, onBack, onAb
           height={6}
           style={{ marginTop: 6, marginBottom: 6 }}
         />
+
+        {remoteSiloAvailable && (orderFilled || laserCharges <= 0) && (
+          <Panel accent="var(--ln-cyan)" surface="glass" style={{ marginBottom: 8, padding: 10 }}>
+            <div style={{ font: '800 9px var(--ln-font-display)', letterSpacing: '0.16em', color: 'var(--ln-cyan)', textTransform: 'uppercase' }}>Arrival settlement</div>
+            <div style={{ font: '12px var(--ln-font-body)', color: 'var(--ln-text-dim)', lineHeight: 1.4, marginTop: 4 }}>
+              Remote Mineral Silo online · {remoteSiloUsed} / {REMOTE_MINERAL_SILO_CAPACITY} U. Choose where this haul goes before the return leg.
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginTop: 8 }}>
+              <button type="button" onClick={() => setRemoteDisposition('store')} style={{ padding: '8px 6px', borderRadius: 6, border: `1px solid ${remoteDisposition === 'store' ? 'var(--ln-cyan)' : 'var(--ln-hairline)'}`, background: remoteDisposition === 'store' ? 'var(--ln-cyan-soft)' : 'transparent', color: 'var(--ln-text)', font: '700 10px var(--ln-font-display)' }}>PLACE IN SILO</button>
+              <button type="button" onClick={() => setRemoteDisposition('sell')} style={{ padding: '8px 6px', borderRadius: 6, border: `1px solid ${remoteDisposition === 'sell' ? 'var(--ln-amber)' : 'var(--ln-hairline)'}`, background: remoteDisposition === 'sell' ? 'var(--ln-amber-soft)' : 'transparent', color: 'var(--ln-text)', font: '700 10px var(--ln-font-display)' }}>SELL AT MARKET</button>
+            </div>
+          </Panel>
+        )}
 
         {/* ── Action row: Fire · Fill/Return · Scroll ───────────────────────── */}
         {/* minWidth: 0 on every grid item overrides <button>'s default

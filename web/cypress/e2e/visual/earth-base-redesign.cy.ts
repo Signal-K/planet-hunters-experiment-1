@@ -121,7 +121,7 @@ describe('Earth Base — redesigned scene', () => {
   })
 
   it('desktop — full base', () => {
-    cy.viewport(1440, 900)
+    cy.viewport(1280, 720)
     openHub({
       missionsDone: 4,
       missionCount: 4,
@@ -181,7 +181,7 @@ describe('Earth Base — redesigned scene', () => {
   })
 
   it('desktop — below-soil storage and habitat cutaway', () => {
-    cy.viewport(1440, 900)
+    cy.viewport(1280, 720)
     openHub({
       missionsDone: 4,
       missionCount: 4,

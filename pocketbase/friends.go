@@ -108,6 +108,22 @@ func friendsSearchHandler(app core.App) func(e *core.RequestEvent) error {
 	}
 }
 
+// isValidUsernameFormat mirrors the frontend's isValidUsername check
+// (lib/friends/username.ts) — kept as a standalone function so the format
+// rule has one authoritative Go-side test rather than being buried inline in
+// the handler.
+func isValidUsernameFormat(name string) bool {
+	if len(name) < 3 || len(name) > 24 {
+		return false
+	}
+	for _, r := range name {
+		if !(r >= 'a' && r <= 'z' || r >= 'A' && r <= 'Z' || r >= '0' && r <= '9' || r == '_') {
+			return false
+		}
+	}
+	return true
+}
+
 func friendsSetUsernameHandler(app core.App) func(e *core.RequestEvent) error {
 	return func(e *core.RequestEvent) error {
 		var body struct {
@@ -117,13 +133,8 @@ func friendsSetUsernameHandler(app core.App) func(e *core.RequestEvent) error {
 			return apis.NewBadRequestError("invalid body", err)
 		}
 		name := strings.TrimSpace(body.Username)
-		if len(name) < 3 || len(name) > 24 {
-			return apis.NewBadRequestError("username must be 3-24 characters", nil)
-		}
-		for _, r := range name {
-			if !(r >= 'a' && r <= 'z' || r >= 'A' && r <= 'Z' || r >= '0' && r <= '9' || r == '_') {
-				return apis.NewBadRequestError("username may only contain letters, numbers, and underscores", nil)
-			}
+		if !isValidUsernameFormat(name) {
+			return apis.NewBadRequestError("username must be 3-24 letters, numbers, or underscores", nil)
 		}
 		existing, _ := app.FindFirstRecordByFilter(
 			"users", "username = {:name} && id != {:self}",

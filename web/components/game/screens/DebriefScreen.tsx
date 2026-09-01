@@ -416,7 +416,7 @@ function CargoDispositionPanel({
         No client is owed this haul. Keep it in the silo to sell when the price is right or spend on your own builds, or sell the lot now at market.
       </p>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
-        <DispositionOption testId="debrief-store" active={store} disabled={!hasEarthStorage} onClick={() => setDisposition('store')} title="Keep on Earth" sub={hasEarthStorage ? 'Into the silo' : 'Needs a Vault'} />
+        <DispositionOption testId="debrief-store" active={store} disabled={!hasEarthStorage} onClick={() => setDisposition('store')} title="Keep on Earth" sub={hasEarthStorage ? 'Into the silo' : 'Needs a Vault · Earth silo'} />
         <DispositionOption testId="debrief-sell" active={!store} onClick={() => setDisposition('sell')} title="Sell now" sub="At market price" />
       </div>
       <div style={{ marginTop: 12 }}>
@@ -447,7 +447,7 @@ function CargoDispositionPanel({
       </div>
       {!hasEarthStorage && (
         <p style={{ margin: '10px 0 0', textAlign: 'left', fontFamily: 'var(--ln-font-body)', fontSize: 11, lineHeight: 1.4, color: 'var(--ln-text-muted)' }}>
-          Build a Mineral Vault in the Subsurface to keep ore on Earth instead of selling on return.
+          Build a Mineral Vault in the Subsurface or a Surface Silo after the tutorial. Underground vaults provide larger capacity; until then, ore is sold on return.
         </p>
       )}
     </Panel>

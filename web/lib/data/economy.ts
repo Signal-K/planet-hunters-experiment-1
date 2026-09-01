@@ -179,6 +179,14 @@ export const DAILY_QUEST_REWARDS = {
 // the silo fill visual, and never retroactively force-sells ore already held.
 export const MINERAL_SILO_CAPACITY = 120
 
+// The first silo is deliberately cheap and visible on the Earth Base surface;
+// underground rooms are the durable expansion path.
+export const SURFACE_SILO_CAPACITY = 40
+export const SURFACE_SILO_PRICE = 2_000_000
+export const DEEP_MINERAL_SILO_CAPACITY = 300
+export const DEEP_MINERAL_SILO_PRICE = 8_000_000
+export const REMOTE_MINERAL_SILO_CAPACITY = 180
+
 // ── Market ─────────────────────────────────────────────────────────────────
 
 /** Selling raw ore on the open market returns this share of book value. */

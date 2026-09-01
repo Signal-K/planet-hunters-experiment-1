@@ -13,7 +13,7 @@ import { applyMiningDone, applyReturnArrived, applyRoverMiningDone } from '@/lib
 import { applyDeliveryArrived, applyDeliveryUnloadComplete } from '@/lib/systems/DeliverySystem'
 import { applyLandingTouchdown, applyRedockComplete } from '@/lib/systems/LandingSystem'
 import { applyAwardMissionCrewXP, crewRequirementStatus, diplomacyPayoutMultiplier, missionCrewForLaunch } from '@/lib/systems/AcademySystem'
-import { applyPurchaseRocket, applyFreeHaulDisposition, earthStorageBuilt } from '@/lib/systems/EconomySystem'
+import { applyPurchaseRocket, applyFreeHaulDisposition, applyRemoteHaulDisposition, earthStorageBuilt, hasOperationalRemoteSilo } from '@/lib/systems/EconomySystem'
 import { applyConstructionCompletion } from '@/lib/systems/ConstructionSystem'
 import { enqueueSurvey, isRepeatSurveyEligible, getMilestoneSurveyVariant } from '@/lib/surveys'
 import { captureGameEvent } from '@/lib/posthog'
@@ -231,7 +231,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
     if (currentMissionCrew.length > 0) enqueueSurvey('lnm_crew_first_launch', 4000)
   }, [catalog.missions, catalog.targets, setState, stateRef])
 
-  const onMiningDone = useCallback((cargo: Record<string, number>) => {
+  const onMiningDone = useCallback((cargo: Record<string, number>, remoteDisposition: 'store' | 'sell' = 'sell') => {
     let hasDelivery = false
     const transitStartedAt = Date.now()
     setState(s => {
@@ -243,7 +243,14 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
       const arrivalAt = (timedTransit && nextLegTarget)
         ? transitStartedAt + travelDurationMs(nextLegTarget, s.player.unlockedSkillNodes ?? [], ORBIT_MS_PER_UNIT)
         : null
-      return applyMiningDone(s, cargo, arrivalAt, timedTransit ? transitStartedAt : null)
+      const mission = s.missionId
+        ? catalog.missions.find(m => m.id === s.missionId) ?? s.player.dailyClientPool?.missions.find(m => m.id === s.missionId)
+        : undefined
+      const settled = s.targetId && mission && isFreeHaulMission(mission, cargo)
+        && hasOperationalRemoteSilo(s.player, s.targetId)
+        ? applyRemoteHaulDisposition(s, s.targetId, cargo, remoteDisposition, transitStartedAt)
+        : s
+      return applyMiningDone(settled, cargo, arrivalAt, timedTransit ? transitStartedAt : null)
     })
     const runId = stateRef.current.player.missionRunId ?? missionRunIdRef.current
     if (runId) {
@@ -607,6 +614,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
         {
           id: mission?.id ?? s.missionId,
           title: mission?.title ?? s.player.activeMission?.label ?? s.missionId,
+          targetId: completedTarget?.id,
           clientName: mission?.client,
           targetName: completedTarget?.name,
           completedAt: Date.now(),

@@ -16,6 +16,7 @@ export interface DailyClientPool {
 export interface CompletedMissionRecord {
   id: string
   title: string
+  targetId?: string
   clientName?: string
   targetName?: string
   completedAt: number
@@ -201,6 +202,8 @@ export interface Player {
   unlockedSkillNodes?: string[]
   freeOperations: boolean
   debriefPending?: boolean
+  /** The haul was settled into an off-world silo or sold before Earth return. */
+  cargoSettledOffworld?: boolean
   returningToEarth?: boolean
   shipDestroyed?: boolean
   // True while in transit toward a two-leg mission's deliveryTargetId, after
@@ -223,7 +226,11 @@ export interface Player {
   refineryUnlocked?: boolean
   refineryUnlockNotified?: boolean
   refineryQueue: { recipeId: string; startedAt: number; durationMs?: number }[]
+  /** Level 1 refinery can accept one shipment per UTC day. */
+  refineryLastStartedAt?: number
   refinedGoods: Record<string, number>
+  /** Raw ore stored at operational player-owned off-world silos, by target. */
+  remoteStorage?: Record<string, Record<string, number>>
   launchpadUpgraded: boolean
   lastClient?: string
   loanDebt: number
@@ -416,7 +423,7 @@ export interface GameActions {
   onPickTarget: (id: string) => void
   onPurchaseRocket: (rocketId: string) => void
   onLaunch: () => void
-  onMiningDone: (cargo: Record<string, number>) => void
+  onMiningDone: (cargo: Record<string, number>, remoteDisposition?: 'store' | 'sell') => void
   onDeliveryArrived: () => void
   onDeliveryUnloadComplete: () => void
   onReturnArrived: () => void

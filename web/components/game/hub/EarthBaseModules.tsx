@@ -21,6 +21,7 @@ const SPRITES = {
 
 export const EARTH_BASE_STRUCTURE_SIZES: Record<string, { width: number; height: number }> = {
   launchpad: { width: 220, height: 160 },
+  'surface-silo': { width: 120, height: 78 },
   hangar: { width: 250, height: 161 },
   refinery: { width: 150, height: 97 },
   'scan-station': { width: 132, height: 86 },
@@ -46,6 +47,17 @@ export function HangarModules({ className = '' }: { className?: string }) {
 
 function StructureSprite({ kind, active }: { kind: string; active?: boolean }) {
   const name: SpriteName | null = kind === 'launchpad' || kind === 'hangar' ? kind : null
+  if (kind === 'surface-silo') {
+    return (
+      <svg viewBox="0 0 120 78" className="earth-base-silo-sprite" role="img" aria-label="Surface silo">
+        <path d="M26 25h68v34c0 8-15 14-34 14S26 67 26 59V25Z" fill="currentColor" opacity=".72" />
+        <ellipse cx="60" cy="25" rx="34" ry="10" fill="currentColor" opacity=".95" />
+        <path d="M42 23V12h36v11M48 12V7h24v5M18 70h84" fill="none" stroke="var(--ln-cyan-bright)" strokeWidth="3" strokeLinecap="round" />
+        <path d="M38 35h44M38 46h44M38 57h44" stroke="var(--ln-bg)" strokeWidth="2" opacity=".7" />
+        <circle cx="88" cy="38" r="4" fill="var(--ln-ok)" />
+      </svg>
+    )
+  }
   if (!name) return null
   return (
     <>
