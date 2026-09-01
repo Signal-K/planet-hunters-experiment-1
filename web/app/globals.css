@@ -843,13 +843,13 @@ button { cursor: pointer; }
   display: grid;
   grid-template-columns: minmax(260px, 0.92fr) minmax(340px, 1.08fr);
   width: min(900px, calc(100vw - 48px));
-  max-height: min(680px, calc(100dvh - 48px));
+  max-height: min(680px, calc(100dvh - 48px)) !important;
   overflow: hidden;
   padding: 0;
   background: var(--ln-panel);
   border: 1px solid var(--ln-cyan-border-strong);
-  border-radius: var(--ln-r-xl);
-  box-shadow: var(--ln-shadow-modal), 0 0 56px rgba(63,169,255,.14);
+  border-radius: var(--ln-r-xl) !important;
+  box-shadow: var(--ln-shadow-modal), 0 0 56px rgba(63,169,255,.14) !important;
   animation: gate-up 360ms var(--ln-ease-out);
 }
 
@@ -897,20 +897,41 @@ button { cursor: pointer; }
   .auth-gate__heading { font-size: 28px; }
 }
 
-/* Authentication is an app entry page, not a card over a dimmed game. */
+/* Authentication is a bounded command-deck entry over the current game scene.
+   Keep the game visible behind the gate so auth does not become a separate
+   generic SaaS page. */
 .auth-gate.ln-page-surface {
-  align-items: stretch;
-  padding: 0;
-  background: var(--ln-void);
+  align-items: center;
+  padding: var(--ln-s-4);
+  background: var(--ln-overlay);
 }
 .auth-gate .auth-gate__panel.ln-page-surface__content {
-  width: 100%;
-  max-width: none;
-  max-height: none;
-  min-height: 100%;
-  border: 0;
-  border-radius: 0;
-  box-shadow: none;
+  width: min(900px, calc(100vw - 48px));
+  max-width: 900px;
+  max-height: min(680px, calc(100dvh - 48px));
+  min-height: 0;
+  overflow: hidden;
+  background: var(--ln-panel);
+  border: 1px solid var(--ln-cyan-border-strong);
+  border-radius: var(--ln-r-xl);
+  box-shadow: var(--ln-shadow-modal), 0 0 56px rgba(63,169,255,.14);
+}
+
+@media (max-width: 759px) {
+  .auth-gate.ln-page-surface {
+    align-items: flex-end;
+    padding: 0;
+  }
+
+  .auth-gate .auth-gate__panel.ln-page-surface__content {
+    width: 100%;
+    max-width: none;
+    max-height: calc(100dvh - 16px) !important;
+    min-height: 0;
+    overflow-y: auto;
+    border-bottom: 0;
+    border-radius: var(--ln-r-xl) var(--ln-r-xl) 0 0 !important;
+  }
 }
 
 .auth-gate__scene {
@@ -954,8 +975,8 @@ button { cursor: pointer; }
 .auth-gate__input:focus { border-color: var(--ln-cyan); box-shadow: 0 0 0 2px rgba(63,169,255,.14), 0 0 18px rgba(63,169,255,.12); }
 .auth-gate__input::placeholder { color: var(--ln-text-muted); }
 .auth-gate__error { padding: var(--ln-s-3); color: var(--ln-crit); background: rgba(255,90,106,.1); border: 1px solid rgba(255,90,106,.36); border-radius: var(--ln-r-md); font: 400 12px/1.4 var(--ln-font-body); }
-.auth-gate__primary { width: 100%; padding: var(--ln-s-4); margin-top: var(--ln-s-1); color: var(--ln-void); background: var(--ln-cyan); border: 0; border-radius: var(--ln-r-md); cursor: pointer; font: 800 13px var(--ln-font-display); letter-spacing: .14em; text-transform: uppercase; box-shadow: 0 3px 0 rgba(0,0,0,.28); }
-.auth-gate__primary:hover { background: var(--ln-cyan-bright); }
+.auth-gate__primary { align-self: flex-start; min-height: 40px; padding: 0 var(--ln-s-4); margin-top: var(--ln-s-1); color: var(--ln-cyan); background: transparent; border: 1px solid var(--ln-cyan-border-strong); border-radius: var(--ln-r-md); cursor: pointer; font: 800 13px var(--ln-font-display); letter-spacing: .14em; text-transform: uppercase; }
+.auth-gate__primary:hover { background: rgba(63,169,255,.12); border-color: var(--ln-cyan); }
 .auth-gate__primary:disabled, .auth-gate__secondary:disabled { cursor: not-allowed; opacity: .55; }
 .auth-gate__quick { padding-top: var(--ln-s-5); margin-top: var(--ln-s-2); border-top: 1px solid var(--ln-divider); }
 .auth-gate__quick-copy { margin-bottom: var(--ln-s-3); color: var(--ln-text-muted); text-align: center; font: 400 12px/1.4 var(--ln-font-body); }
