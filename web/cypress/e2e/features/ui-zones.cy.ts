@@ -304,7 +304,10 @@ describe('UI zone contract', () => {
           },
         })
 
-        cy.get('[data-testid="resolve-cargo-btn"]').click()
+        // freeOperations is recomputed from missionsDone (game-state.ts) and this
+        // fixture doesn't set missionsDone, so it resolves to an onboarding
+        // mission (missionsDone 0) — debrief auto-resolves on mount there.
+        cy.get('[data-testid="resolve-cargo-btn"]').should('not.exist')
         assertTransactionalScreenZones()
       })
 

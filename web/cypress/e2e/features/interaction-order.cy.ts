@@ -165,9 +165,10 @@ describe('Interaction order hardening', () => {
       },
     })
 
-    cy.get('[data-testid="resolve-cargo-btn"]').click()
-    cy.get('[data-testid="collect-reward-btn"]').dblclick()
     // Still onboarding (missionsDone 0 -> 1, well under FREE_OPS_START_MISSIONS_DONE):
+    // debrief auto-resolves on mount, so Resolve Cargo never renders here.
+    cy.get('[data-testid="resolve-cargo-btn"]').should('not.exist')
+    cy.get('[data-testid="collect-reward-btn"]').dblclick()
     // debrief settlement routes to the hub tutorial rail, not the market — see the
     // identical assertion in smoke/game-loop.cy.ts "M1 completion returns to hub".
     cy.contains('Commodity Exchange').should('not.exist')

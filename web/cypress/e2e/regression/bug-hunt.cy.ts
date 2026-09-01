@@ -92,8 +92,9 @@ describe('Bug hunt — edge cases', () => {
       }) }),
     })
     cy.contains('Returned', { timeout: 8000 }).should('be.visible')
-    // No cargo to resolve; resolve button should still let player proceed
-    cy.get('[data-testid="resolve-cargo-btn"]').click()
+    // Onboarding missions (missionsDone < 3) auto-resolve on mount — see
+    // DebriefScreen.tsx — so there's no resolve step to click here.
+    cy.get('[data-testid="resolve-cargo-btn"]').should('not.exist')
     // Payout might be 0 but UI should not crash
     cy.contains('Francs Earned').should('be.visible')
     cy.get('[data-testid="collect-reward-btn"]').should('be.visible').click()
@@ -119,7 +120,7 @@ describe('Bug hunt — edge cases', () => {
         },
       }) }),
     })
-    cy.get('[data-testid="resolve-cargo-btn"]').click()
+    cy.get('[data-testid="resolve-cargo-btn"]').should('not.exist')
     cy.get('[data-testid="collect-reward-btn"]').click()
     cy.contains('h1', 'Earth Base', { timeout: 8000 }).should('be.visible')
     // Should not crash and state should not have negative francs

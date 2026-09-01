@@ -258,7 +258,9 @@ describe('C1–C3 persisted mission edge states', () => {
     // panel for it, just this explicit incomplete-order note (shown in both
     // the pre- and post-resolve states, so it's already visible here).
     cy.contains('Order incomplete').should('be.visible')
-    cy.get('[data-testid="resolve-cargo-btn"]').click()
+    // Onboarding missions (missionsDone < 3) auto-resolve on mount — see
+    // DebriefScreen.tsx — so the note is already in its post-resolve state here.
+    cy.get('[data-testid="resolve-cargo-btn"]').should('not.exist')
     cy.contains('Order incomplete').should('be.visible')
   })
 })

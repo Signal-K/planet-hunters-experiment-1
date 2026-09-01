@@ -136,7 +136,9 @@ describe('M3 — Transport client pick and Free Ops unlock', () => {
         targetId: 'bennu',
         lastCargo: { iron: 3, carbon: 2 },
       })
-      cy.get('[data-testid="resolve-cargo-btn"]').click()
+      // Onboarding missions (missionsDone < 3, which M3 still is) auto-resolve
+      // on mount — see DebriefScreen.tsx.
+      cy.get('[data-testid="resolve-cargo-btn"]').should('not.exist')
       cy.get('[data-testid="collect-reward-btn"]').click()
       cy.get('[role="dialog"][aria-label="Territory established"]').should('not.exist')
       // Completing M3 raises the persisted TutorialCompleteSheet before the

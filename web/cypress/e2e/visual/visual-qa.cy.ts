@@ -215,7 +215,8 @@ describe('Visual QA — game screens and mining canvas', () => {
     // Debrief
     cy.contains('MISSION COMPLETE', { timeout: 10000 }).should('be.visible')
     cy.screenshot('11-mission-debrief')
-    cy.get('[data-testid="resolve-cargo-btn"]').click()
+    // Onboarding missions (M1 here) auto-resolve on mount — see DebriefScreen.tsx.
+    cy.get('[data-testid="resolve-cargo-btn"]').should('not.exist')
     cy.get('[data-testid="collect-reward-btn"]').click()
 
     // Guided M2 handoff

@@ -275,7 +275,9 @@ describe('Satellite/TESS level plumbing (STS-493)', () => {
     })
 
     cy.contains('MISSION COMPLETE', { timeout: 10000 }).should('be.visible')
-    cy.get('[data-testid="resolve-cargo-btn"]').click()
+    // Onboarding missions (missionsDone < 3) auto-resolve on mount — see
+    // DebriefScreen.tsx — and this no-cargo satellite launch isn't a free haul.
+    cy.get('[data-testid="resolve-cargo-btn"]').should('not.exist')
     cy.get('[data-testid="collect-reward-btn"]').click()
 
     savedState().then(state => {

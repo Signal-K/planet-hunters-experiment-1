@@ -121,7 +121,7 @@ describe('Responsive Layout — Critical Screens Matrix', () => {
           });
 
         // Guide/help button visible on all sizes
-        cy.get('[data-testid="mining-guide-button"]').should('be.visible');
+        cy.get('[data-testid="mining-guide-btn"]').should('be.visible');
 
         cy.screenshot(`mining-${vp.name}`);
       });

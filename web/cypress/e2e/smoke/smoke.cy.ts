@@ -73,17 +73,35 @@ describe('Smoke — Landnam', () => {
     })
   })
 
-  it('enforces cargo resolution before reward collection', () => {
+  it('enforces cargo resolution before reward collection (post-onboarding)', () => {
+    // Debrief auto-resolves for onboarding missions (missionsDone < 3), so this
+    // gating behavior is only exercised past that boundary — see DebriefScreen.tsx.
     visitWithState({
       screen: 'debrief',
       missionId: 'generated-s1-starter-bulk-1',
       targetId: 'mars',
       lastCargo: { iron: 4 },
       tutorial: false,
+      player: { missionsDone: 3 },
     })
 
     cy.get('[data-testid="collect-reward-btn"]').should('not.exist')
     cy.get('[data-testid="resolve-cargo-btn"]').click()
+    cy.contains('Francs Earned').should('be.visible')
+    cy.get('[data-testid="collect-reward-btn"]').should('be.visible')
+  })
+
+  it('auto-resolves cargo for onboarding missions, requiring only one tap to collect', () => {
+    visitWithState({
+      screen: 'debrief',
+      missionId: 'generated-s1-starter-bulk-1',
+      targetId: 'mars',
+      lastCargo: { iron: 4 },
+      tutorial: false,
+      player: { missionsDone: 0 },
+    })
+
+    cy.get('[data-testid="resolve-cargo-btn"]').should('not.exist')
     cy.contains('Francs Earned').should('be.visible')
     cy.get('[data-testid="collect-reward-btn"]').should('be.visible')
   })

@@ -309,14 +309,16 @@ describe('Full Game Loop — Landnam', () => {
         expect(saved.player.francs).to.equal(9_500_000_000)
       })
 
+      // Onboarding missions (missionsDone < 3) auto-resolve on mount — see
+      // DebriefScreen.tsx — so once the ship is recovered and the debrief
+      // screen mounts, the reward is already collectible in one tap.
       cy.contains('Recover Ship', { timeout: 8000 }).click()
       cy.contains('MISSION COMPLETE').should('be.visible')
-      cy.get('[data-testid="collect-reward-btn"]').should('not.exist')
-      cy.get('[data-testid="resolve-cargo-btn"]').click()
+      cy.get('[data-testid="resolve-cargo-btn"]').should('not.exist')
       cy.get('[data-testid="collect-reward-btn"]').should('be.visible')
     })
 
-    it('debrief enforces cargo resolution before reward collection', () => {
+    it('debrief auto-resolves cargo for onboarding missions, requiring only one tap to collect', () => {
       const cargo = { iron: 4 }
       visitWithState(fullState({
         screen: 'debrief',
@@ -346,8 +348,7 @@ describe('Full Game Loop — Landnam', () => {
         },
       }))
       cy.contains('MISSION COMPLETE').should('be.visible')
-      cy.get('[data-testid="collect-reward-btn"]').should('not.exist')
-      cy.get('[data-testid="resolve-cargo-btn"]').click()
+      cy.get('[data-testid="resolve-cargo-btn"]').should('not.exist')
       cy.contains('Francs Earned').should('be.visible')
       cy.get('[data-testid="collect-reward-btn"]').should('be.visible')
     })
@@ -383,7 +384,8 @@ describe('Full Game Loop — Landnam', () => {
         tutorial: false,
         popup: 'sr2',
       }))
-      cy.get('[data-testid="resolve-cargo-btn"]').should('be.visible')
+      cy.get('[data-testid="resolve-cargo-btn"]').should('not.exist')
+      cy.get('[data-testid="collect-reward-btn"]').should('be.visible')
     })
 
     it('shows Prospector unlock popup after M1 completion', () => {
@@ -450,7 +452,7 @@ describe('Full Game Loop — Landnam', () => {
         tutorial: false,
       }))
 
-      cy.get('[data-testid="resolve-cargo-btn"]').click()
+      cy.get('[data-testid="resolve-cargo-btn"]').should('not.exist')
       cy.get('[data-testid="collect-reward-btn"]').click()
 
       cy.contains('Commodity Exchange').should('not.exist')
