@@ -2718,6 +2718,36 @@ html[data-coach-target="build-structure-strip"] [data-coach-id="build-structure-
   font-weight: 700;
 }
 
+/* KES-279 — Available Hub actions must own a real scene position. The panel
+   used to be a normal-flow child after the absolute world/HUD layers, so it
+   could start underneath the left HUD rail and overlap its cards. Keep it in
+   a dedicated right rail on wider scenes, then move it below the HUD stack on
+   compact scenes. */
+.hub-available-actions {
+  position: absolute;
+  top: 176px;
+  right: 16px;
+  z-index: 11;
+  width: min(460px, calc(100% - 376px));
+  max-height: max(192px, calc(100% - 272px));
+  overflow-y: auto;
+  pointer-events: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--ln-cyan-border) transparent;
+}
+
+.hub-available-actions > section { margin: 0; }
+
+@media (max-width: 720px) {
+  .hub-available-actions {
+    top: 320px;
+    right: 16px;
+    left: 16px;
+    width: auto;
+    max-height: max(192px, calc(100% - 424px));
+  }
+}
+
 .hub-push-opt-in {
   position: absolute;
   /* Keep the ambient opt-in out of the progression-card action column. At
