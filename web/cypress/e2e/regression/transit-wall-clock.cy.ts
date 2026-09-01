@@ -53,6 +53,31 @@ function visitTransit(now = EPOCH, elapsedMs = 0, useClock = true) {
   cy.contains('MISSION TRANSIT', { timeout: 15000 }).should('be.visible')
 }
 
+function tutorialTransitState(now = EPOCH, elapsedMs = 0): GameState {
+  const state = transitState(now, elapsedMs)
+  return {
+    ...state,
+    tutorial: true,
+    player: {
+      ...state.player,
+      missionsDone: 0,
+      freeOperations: false,
+      arrivalAt: null,
+    },
+  }
+}
+
+function visitTutorialTransit(now = EPOCH, elapsedMs = 0) {
+  cy.clock(now, ['Date'])
+  cy.visit('/game/transit', {
+    onBeforeLoad(win) {
+      win.localStorage.setItem(STORAGE_KEY, JSON.stringify(tutorialTransitState(now, elapsedMs)))
+      win.localStorage.setItem('landnam-account-credentials', JSON.stringify({ email: 'e2e@example.com', password: 'e2e-guest-test' }))
+    },
+  })
+  cy.contains('MISSION TRANSIT', { timeout: 15000 }).should('be.visible')
+}
+
 describe('Transit wall-clock continuity', () => {
   it('continues ETA and visual progress while the document is hidden', () => {
     visitTransit()
@@ -91,5 +116,18 @@ describe('Transit wall-clock continuity', () => {
     // Reload latency can consume the boundary second; the persisted wall
     // clock is the contract, not one exact painted frame.
     cy.get('.transit-readout').invoke('text').should('match', /01:1[45]/)
+  })
+
+  it('keeps tutorial flight progress after the transit screen remounts', () => {
+    visitTutorialTransit(EPOCH, 2_200)
+    cy.get('.transit-readout').invoke('attr', 'data-transit-progress').then(value => {
+      expect(Number(value)).to.be.within(50, 60)
+    })
+
+    cy.reload()
+    cy.contains('MISSION TRANSIT', { timeout: 15000 }).should('be.visible')
+    cy.get('.transit-readout').invoke('attr', 'data-transit-progress').then(value => {
+      expect(Number(value)).to.be.within(50, 60)
+    })
   })
 })

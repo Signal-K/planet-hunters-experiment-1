@@ -195,7 +195,10 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
           pendingLaunch: false,
           pendingRocketId: undefined,
           arrivalAt,
-          transitStartedAt: timedTransit ? transitStartedAt : null,
+          // Keep the launch timestamp for tutorial legs too. Tutorial transit
+          // is fast, but it must resume from its real position after a remount
+          // instead of restarting at the first frame.
+          transitStartedAt,
           missionPhase: 'transit',
           activeMission: mission && target
             ? { id: mission.id, label: missionTypePrimer(mission).label + ' → ' + target.name }

@@ -6,6 +6,7 @@ export interface TransitSceneOptions {
   targetName: string
   targetKind?: TargetKind
   rocketImageSrc?: string
+  renderRocket?: boolean
   getProgress: () => number  // 0..100
 }
 
@@ -168,15 +169,16 @@ export function buildTransitScene(app: Application, opts: TransitSceneOptions): 
   const planetG = new Graphics()
   app.stage.addChild(planetG)
 
+  const renderRocket = opts.renderRocket !== false
   const rocketG = new Graphics()
-  app.stage.addChild(rocketG)
+  if (renderRocket) app.stage.addChild(rocketG)
 
   const rocketSprite = new Sprite(Texture.EMPTY)
   rocketSprite.anchor.set(0.5)
   rocketSprite.rotation = Math.PI / 2
   rocketSprite.visible = false
-  app.stage.addChild(rocketSprite)
-  if (opts.rocketImageSrc) {
+  if (renderRocket) app.stage.addChild(rocketSprite)
+  if (renderRocket && opts.rocketImageSrc) {
     void Assets.load<Texture>(opts.rocketImageSrc).then(texture => {
       rocketSprite.texture = texture
       const longEdge = Math.min(H * 0.18, 110)
@@ -236,11 +238,13 @@ export function buildTransitScene(app: Application, opts: TransitSceneOptions): 
       const travelY = rocketStartY + (rocketEndY - rocketStartY) * Math.pow(p, 0.6)
       const bob = Math.sin(elapsed * 1.7) * 2.5
       const flicker = 0.5 + Math.sin(elapsed * 14) * 0.5
-      if (rocketSprite.visible) {
-        rocketSprite.x = cx
-        rocketSprite.y = travelY + bob
-      } else {
-        drawRocket(rocketG, cx, travelY + bob, flicker)
+      if (renderRocket) {
+        if (rocketSprite.visible) {
+          rocketSprite.x = cx
+          rocketSprite.y = travelY + bob
+        } else {
+          drawRocket(rocketG, cx, travelY + bob, flicker)
+        }
       }
     },
   }

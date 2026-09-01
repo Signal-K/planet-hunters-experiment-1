@@ -69,7 +69,10 @@ export default function TopBar({ eyebrow, title, onBack, right, dense, solid, gl
       left: 0,
       right: 0,
       zIndex: 20,
-      padding: '18px 14px 12px 14px',
+      // DEV shortcuts occupy the upper-left corner in local builds. Screens
+      // without a back control still need a reserved title start, otherwise
+      // the badge sits on top of the eyebrow (most visible on Debrief).
+      padding: `18px 14px 12px ${onBack ? 14 : 76}px`,
       // Fully opaque (alpha 1, not e.g. 0.97) — verified against a live page
       // that even 3% transparency on a near-black background is visible as
       // faint bleed-through text behind bright card copy scrolling beneath it.

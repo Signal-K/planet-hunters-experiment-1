@@ -373,6 +373,29 @@
   background: linear-gradient(180deg, transparent, rgba(238, 243, 248, 0.94) 34%, var(--ln-bp-bg));
 }
 
+/* ─── Construction Kit — additive utilities (KES-280) ──────────────────
+   Ported from the "Landnam construction design kit" (Claude Design project
+   8005324b-619a-4a3c-b2a1-c654e2478e97), re-themed for the light direction
+   (KES-219/KES-211) rather than the kit's original dark navy "glass HUD"
+   — no new colors, everything below reads off the existing --ln-* tokens
+   so it re-skins for free under .theme-blueprint / .theme-light / the
+   .theme-deep fallback. Scanline-sweep, reticle-glow and nebula-glow from
+   the source kit were dropped outright: they're dark-HUD-only flourishes
+   with no equivalent in a flat cel-shaded light theme. The blueprint grid
+   survives because it doubles as literal engineering-blueprint texture. */
+.ln-con-grid {
+  background-image:
+    repeating-linear-gradient(0deg, var(--ln-hairline) 0px, var(--ln-hairline) 1px, transparent 1px, transparent 22px),
+    repeating-linear-gradient(90deg, var(--ln-hairline) 0px, var(--ln-hairline) 1px, transparent 1px, transparent 22px);
+}
+.ln-con-well {
+  background: var(--ln-panel-2);
+  border: 1px solid var(--ln-hairline);
+  border-radius: var(--ln-r-lg);
+}
+@keyframes ln-flow { to { stroke-dashoffset: -24; } }
+.ln-con-flow { stroke-dasharray: 4 8; animation: ln-flow 1.1s linear infinite; }
+
 /* .theme-steel (mid-tone shell + genuinely light content cards) removed
    2026-07-23 — superseded by the revised :root/.theme-deep palette above.
    It shipped only to Mission Board/MissionCard, diverged from every other
@@ -389,7 +412,11 @@ html {
   overflow: hidden;
 }
 body {
-  height: 100dvh;
+  /* svh (small viewport height) is stable — it does not grow/shrink as the
+     mobile URL bar hides/shows, which is what made the whole game shell jump
+     and thrash layout mid-interaction (Bjorn's Symptom B). Installed PWA
+     (standalone) has no URL bar, so svh == dvh there. */
+  height: 100svh;
   min-height: 100%;
   margin: 0;
   background-color: var(--ln-void);
@@ -446,7 +473,8 @@ button { cursor: pointer; }
      centered card is pushed past the right edge and its detail panel clips. */
   box-sizing: border-box;
   width: 100%;
-  min-height: 100dvh;
+  overflow: hidden;
+  min-height: 100svh;
   display: grid;
   place-items: center;
   padding: var(--ln-s-4);
@@ -458,9 +486,9 @@ button { cursor: pointer; }
    actual phone it just wastes screen as dead margin around a shrunk canvas.
    Drop the stage padding here so .portrait-canvas can go full-bleed. */
 @media (max-width: 1023px) {
-  html, body { height: 100dvh; min-height: 100dvh; }
+  html, body { height: 100svh; min-height: 100svh; }
   body { display: block; }
-  .game-stage { width: 100%; height: 100dvh; min-height: 100dvh; padding: 0; }
+  .game-stage { width: 100%; height: 100svh; min-height: 100svh; padding: 0; }
 }
 .game-stage::before {
   content: '';
@@ -485,7 +513,9 @@ button { cursor: pointer; }
    mobile canvas below 1024px. */
 .game-stage-backdrop {
   filter: blur(3px) brightness(0.55) saturate(0.85);
-  transform: scale(1.02); /* hides the blur's soft edge at the viewport border */
+  /* Keep the transformed paint inside the stage's clipping box. A scale here
+     expands the absolute backdrop's scrollable bounds on desktop, producing
+     a horizontal scrollbar even though the stage itself is overflow-hidden. */
 }
 .game-stage-backdrop::after {
   content: '';
@@ -730,6 +760,27 @@ button { cursor: pointer; }
     bottom: calc(var(--ln-nav-h) + var(--ln-s-2));
   }
 }
+
+/* Mining owns a variable-height bottom command rail. The global status chips
+   cannot use the ordinary viewport-bottom anchor here: that puts NOT SYNCED
+   directly on top of FIRE LASER whenever the rail grows on a small viewport.
+   Keep the utility status in the quiet band below the mining header instead,
+   where it remains visible without competing with an action or ore readout. */
+.portrait-canvas:has(.mining-screen) .sync-status,
+.portrait-canvas:has(.mining-screen) .backend-status {
+  top: 78px;
+  bottom: auto;
+  padding: 3px 6px;
+  border: 1px solid var(--ln-hairline);
+  border-radius: var(--ln-r-sm);
+  background: rgba(6, 14, 26, 0.72);
+  backdrop-filter: blur(4px);
+}
+.portrait-canvas:has(.mining-screen) .sync-status {
+  left: 50%;
+  transform: translateX(-50%);
+}
+.portrait-canvas:has(.mining-screen) .backend-status { right: var(--ln-s-3); }
 
 .ln-page-surface {
   position: absolute;
@@ -1647,18 +1698,177 @@ button { cursor: pointer; }
   padding-bottom: 32px !important;
 }
 
-.transit-screen { background: radial-gradient(circle at 80% 18%, rgba(112,217,234,.14), transparent 24%), var(--ln-bg-stars), var(--ln-void); }
-.transit-stage { position: absolute; inset: 80px 0 190px; overflow: hidden; }
-.target-orb { position: absolute; right: 26px; top: 24px; width: 76px; height: 76px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, var(--ln-amber-bright), var(--ln-amber-press) 55%, var(--ln-void)); box-shadow: 0 0 40px var(--ln-amber-soft); }
-.target-orb span { position: absolute; top: calc(100% + 8px); left: 50%; transform: translateX(-50%); color: var(--ln-amber); font: 700 10px var(--ln-font-mono); letter-spacing: var(--ln-tr-label); text-transform: uppercase; white-space: nowrap; }
-.rocket-mark { position: absolute; transform: translate3d(-50%, -50%, 0) rotate(56deg); transform-origin: center; transition: left 100ms linear, top 100ms linear; filter: drop-shadow(0 0 12px rgba(112,217,234,.7)); animation: rocket-thrust 0.3s ease-in-out infinite alternate; backface-visibility: hidden; will-change: transform, filter; }
-.rocket-mark svg { display: block; overflow: visible; }
-@keyframes rocket-thrust { from { filter: drop-shadow(0 0 8px rgba(112,217,234,.5)); } to { filter: drop-shadow(0 0 16px rgba(112,217,234,.9)); } }
-.transit-readout { position: absolute; left: var(--ln-s-3); right: var(--ln-s-3); bottom: var(--ln-s-5); display: grid; gap: var(--ln-s-3); }
-.transit-readout > div { display: flex; justify-content: space-between; color: var(--ln-text-muted); font: 700 11px var(--ln-font-display); letter-spacing: var(--ln-tr-loose); text-transform: uppercase; }
-.transit-readout strong { color: var(--ln-cyan-bright); }
-.progress-track { height: 12px; overflow: hidden; border: 1px solid var(--ln-cyan-border); border-radius: var(--ln-r-pill); background: var(--ln-void); }
-.progress-track span { display: block; height: 100%; background: linear-gradient(90deg, var(--ln-amber), var(--ln-cyan)); box-shadow: var(--ln-glow-cyan); transition: width 100ms linear; }
+.transit-screen {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  background: var(--ln-void);
+  color: var(--ln-text);
+}
+.transit-flight-scene {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  padding-top: 76px;
+  background: var(--ln-void);
+}
+.transit-game-canvas { position: absolute; inset: 0; z-index: 1; }
+.transit-game-canvas canvas { display: block; width: 100%; height: 100%; }
+.transit-flight-vignette {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  background: linear-gradient(180deg, rgba(1,5,8,.12) 0%, transparent 32%, transparent 64%, rgba(1,5,8,.82) 100%);
+}
+.transit-rocket-sprite {
+  position: absolute;
+  left: 50%;
+  z-index: 4;
+  width: clamp(84px, 16vw, 128px);
+  height: auto;
+  transform: translate(-50%, -50%) rotate(56deg);
+  transform-origin: center;
+  filter: drop-shadow(0 0 8px rgba(108,194,255,.7));
+  transition: top 160ms linear;
+  pointer-events: none;
+}
+.transit-destination-chip,
+.transit-mission-card,
+.transit-flight-hud {
+  position: absolute;
+  z-index: 5;
+  border: 1px solid var(--ln-hairline);
+  background: color-mix(in srgb, var(--ln-panel) 92%, transparent);
+  box-shadow: 0 8px 24px rgba(0,0,0,.24);
+  backdrop-filter: blur(8px);
+}
+.transit-destination-chip {
+  top: 92px;
+  right: 16px;
+  display: grid;
+  gap: 3px;
+  min-width: 190px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  text-align: right;
+}
+.transit-destination-chip__status,
+.transit-mission-card__eyebrow,
+.transit-flight-hud__heading span,
+.transit-command-dock__status span,
+.transit-cargo-strip span {
+  color: var(--ln-cyan);
+  font: 800 9px var(--ln-font-display);
+  letter-spacing: .16em;
+  text-transform: uppercase;
+}
+.transit-destination-chip strong {
+  color: var(--ln-text);
+  font: 800 17px var(--ln-font-display);
+}
+.transit-destination-chip > span:last-child {
+  color: var(--ln-text-muted);
+  font: 700 9px var(--ln-font-mono);
+  letter-spacing: .08em;
+}
+.transit-mission-card {
+  top: 92px;
+  left: 16px;
+  width: min(340px, calc(100% - 244px));
+  padding: 12px 14px;
+  border-left: 3px solid var(--ln-cyan);
+  border-radius: 10px;
+}
+.transit-mission-card > strong {
+  display: block;
+  margin-top: 4px;
+  color: var(--ln-text);
+  font: 800 16px/1.15 var(--ln-font-display);
+}
+.transit-mission-card > span {
+  display: block;
+  margin-top: 4px;
+  color: var(--ln-text-dim);
+  font: 700 10px var(--ln-font-display);
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+.transit-mission-card > .transit-mission-card__own { color: var(--ln-ok); }
+.transit-mission-card p {
+  margin: 6px 0 0;
+  color: var(--ln-text-muted);
+  font: 400 12px/1.35 var(--ln-font-body);
+}
+.transit-flight-hud {
+  left: 16px;
+  bottom: 16px;
+  width: min(680px, calc(100% - 32px));
+  padding: 12px 14px;
+  border-radius: 10px;
+}
+.transit-flight-hud__heading { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+.transit-flight-hud__heading strong { color: var(--ln-text); font: 800 18px var(--ln-font-mono); }
+.transit-progress-track { height: 6px; margin-top: 8px; overflow: hidden; border-radius: 999px; background: rgba(255,255,255,.12); }
+.transit-progress-track span { display: block; height: 100%; border-radius: inherit; background: var(--ln-cyan); box-shadow: var(--ln-glow-cyan); transition: width 100ms linear; }
+.transit-telemetry { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin-top: 10px; }
+.transit-telemetry div { display: grid; gap: 2px; min-width: 0; }
+.transit-telemetry span { color: var(--ln-text-muted); font: 700 8px var(--ln-font-display); letter-spacing: .14em; text-transform: uppercase; }
+.transit-telemetry strong { overflow: hidden; color: var(--ln-text); font: 800 11px var(--ln-font-mono); text-overflow: ellipsis; white-space: nowrap; }
+.transit-cargo-strip { display: flex; align-items: baseline; gap: 10px; margin-top: 10px; padding-top: 8px; border-top: 1px solid var(--ln-hairline); }
+.transit-cargo-strip strong { overflow: hidden; color: var(--ln-text); font: 700 10px var(--ln-font-mono); text-overflow: ellipsis; white-space: nowrap; }
+.transit-command-dock {
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex: 0 0 auto;
+  min-height: 76px;
+  padding: 12px 16px;
+  border-top: 1px solid var(--ln-hairline);
+  background: var(--ln-shell);
+}
+.transit-command-dock__status { display: grid; gap: 3px; min-width: 0; }
+.transit-command-dock__status strong { overflow: hidden; color: var(--ln-text); font: 700 13px var(--ln-font-display); text-overflow: ellipsis; white-space: nowrap; }
+.transit-command-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; }
+.transit-command-btn {
+  min-height: 42px;
+  padding: 9px 14px;
+  border: 1px solid var(--ln-cyan-border);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--ln-cyan);
+  font: 800 10px var(--ln-font-display);
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+.transit-command-btn:hover:not(:disabled) { background: rgba(108,194,255,.1); }
+.transit-command-btn:disabled { border-color: var(--ln-hairline); color: var(--ln-text-muted); cursor: not-allowed; opacity: .72; }
+.transit-command-btn--arrive { border-color: var(--ln-ok); color: var(--ln-ok); }
+.transit-command-btn--danger { border-color: var(--ln-crimson-border); color: var(--ln-crimson); }
+
+@media (max-width: 600px) {
+  .transit-flight-scene { padding-top: 68px; }
+  .transit-destination-chip { top: 80px; right: 12px; min-width: 0; max-width: 48%; padding: 8px 10px; }
+  .transit-destination-chip strong { font-size: 14px; }
+  .transit-destination-chip > span:last-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .transit-mission-card { top: 80px; left: 12px; width: 48%; padding: 9px 10px; }
+  .transit-mission-card > strong { font-size: 13px; }
+  .transit-mission-card p { display: none; }
+  .transit-flight-hud { left: 12px; bottom: 12px; width: calc(100% - 24px); padding: 10px; }
+  .transit-telemetry { gap: 8px; }
+  .transit-telemetry strong { font-size: 9px; }
+  .transit-cargo-strip { display: block; }
+  .transit-cargo-strip strong { display: block; margin-top: 3px; }
+  .transit-command-dock { align-items: stretch; flex-direction: column; gap: 10px; padding: 10px 12px; }
+  .transit-command-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); width: 100%; }
+  .transit-command-btn { min-width: 0; padding-inline: 8px; font-size: 9px; }
+}
 
 .mining-screen { position: absolute; inset: 0; overflow: hidden; background: var(--ln-void); display: flex; flex-direction: column; }
 .mining-viewport {
@@ -1948,11 +2158,15 @@ button { cursor: pointer; }
   cursor: not-allowed;
 }
 
-.debrief-screen {
-  background:
-    radial-gradient(ellipse at 50% 18%, var(--ln-cyan-soft), transparent 42%),
-    linear-gradient(155deg, var(--ln-panel-2), var(--ln-void) 72%);
-}
+.debrief-screen { background: var(--ln-void); }
+.debrief-arrival-board { position: relative; min-height: 240px; overflow: hidden; border: 1px solid var(--ln-hairline); border-radius: 10px; background: var(--ln-void); }
+.debrief-arrival-canvas { position: absolute; inset: 0; }
+.debrief-arrival-canvas canvas { display: block; width: 100%; height: 100%; }
+.debrief-arrival-board__copy { position: absolute; left: 16px; right: 16px; bottom: 16px; z-index: 2; text-align: left; text-shadow: 0 2px 8px rgba(0,0,0,.8); }
+.debrief-arrival-board__status { display: flex; align-items: center; gap: 7px; color: var(--ln-cyan); font: 800 9px var(--ln-font-display); letter-spacing: .14em; text-transform: uppercase; }
+.debrief-arrival-board__status span { width: 7px; height: 7px; border-radius: 50%; background: var(--ln-ok); box-shadow: 0 0 10px var(--ln-ok); }
+.debrief-arrival-board h2 { margin: 5px 0 2px; color: var(--ln-text); font: 800 24px/1 var(--ln-font-display); letter-spacing: .1em; text-transform: uppercase; }
+.debrief-arrival-board p { margin: 0; color: var(--ln-text-muted); font: 10px var(--ln-font-mono); letter-spacing: .1em; text-transform: uppercase; }
 
 .intro-screen { position: relative; width: 100%; height: 100%; overflow: hidden; }
 .intro-earth { position: absolute; inset: 0; }
@@ -1963,7 +2177,7 @@ button { cursor: pointer; }
 .intro-title { color: #fff; font: 800 52px var(--ln-font-display); letter-spacing: 0.08em; text-transform: uppercase; text-shadow: 0 0 40px rgba(112,217,234,0.3); margin: 0 0 10px; }
 .intro-welcome { color: var(--ln-amber); font: 700 16px var(--ln-font-display); letter-spacing: 0.08em; margin: 0 0 8px; }
 .intro-subtitle { color: var(--ln-text-dim); font: 400 14px/1.5 var(--ln-font-body); max-width: 280px; margin: 0 0 36px; }
-.intro-begin-btn { padding: 18px 40px; background: linear-gradient(180deg, var(--ln-cyan-bright) 0%, var(--ln-cyan-press) 100%); color: #06121f; font-family: var(--ln-font-display); font-weight: 800; font-size: 16px; letter-spacing: 0.14em; text-transform: uppercase; border: none; border-radius: 12px; box-shadow: inset 0 1px 0 rgba(255,255,255,0.4), 0 4px 0 rgba(0,0,0,0.3), 0 0 22px rgba(255,255,255,0.28); cursor: pointer; transition: transform 100ms; }
+.intro-begin-btn { min-height: 44px; padding: 10px 18px; background: transparent; color: var(--ln-cyan); font-family: var(--ln-font-display); font-weight: 800; font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase; border: 1px solid var(--ln-cyan-border); border-radius: 8px; cursor: pointer; transition: background 120ms ease-out, transform 100ms; }
 .intro-begin-btn:active { transform: translateY(2px); }
 .intro-demo-link { margin-top: 16px; color: var(--ln-text-dim); font: 600 12px var(--ln-font-body); text-decoration: underline; text-underline-offset: 3px; }
 .intro-reconnecting-indicator { display: flex; gap: 8px; align-items: center; justify-content: center; margin-top: 4px; }
@@ -2013,6 +2227,216 @@ button { cursor: pointer; }
 .reward-label { color: var(--ln-text-dim); }
 .reward-total { margin-top: var(--ln-s-1); color: var(--ln-amber); font: 800 32px var(--ln-font-display); }
 .reward-xp { margin-top: var(--ln-s-2); color: var(--ln-info); font: 700 12px var(--ln-font-mono); letter-spacing: var(--ln-tr-label); }
+
+/* KES-279: Debrief is an arrival scene, not a receipt page. The canvas owns
+   the world and the result data sits on top as a compact in-world HUD. */
+.debrief-game {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  isolation: isolate;
+  color: var(--ln-text);
+  background: var(--ln-void);
+}
+.debrief-arrival-canvas {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  background: var(--ln-void);
+}
+.debrief-arrival-canvas canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+.debrief-game__world-shade {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background:
+    linear-gradient(180deg, rgba(2, 7, 17, .58) 0%, rgba(2, 7, 17, .06) 27%, rgba(2, 7, 17, .06) 58%, rgba(2, 7, 17, .46) 100%),
+    radial-gradient(ellipse at 50% 72%, transparent 0%, rgba(2, 7, 17, .24) 72%, rgba(2, 7, 17, .56) 100%);
+}
+.debrief-hud-header {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 10;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 18px 18px 18px 76px;
+  pointer-events: none;
+  background: linear-gradient(180deg, rgba(2, 7, 17, .8), rgba(2, 7, 17, 0));
+}
+.debrief-hud-header span:first-child {
+  display: block;
+  color: var(--ln-cyan);
+  font: 800 10px var(--ln-font-display);
+  letter-spacing: .2em;
+  text-transform: uppercase;
+}
+.debrief-hud-header h1 {
+  margin-top: 3px;
+  color: var(--ln-text);
+  font: 800 28px/1 var(--ln-font-display);
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  text-shadow: 0 3px 12px rgba(0, 0, 0, .6);
+}
+.debrief-hud-header__location {
+  margin-top: 6px;
+  color: var(--ln-text-muted);
+  font: 700 9px var(--ln-font-mono);
+  letter-spacing: .14em;
+  text-align: right;
+  text-transform: uppercase;
+}
+.debrief-game__content {
+  position: absolute;
+  inset: 0;
+  z-index: 8;
+  overflow-y: auto;
+  padding: 96px 16px 112px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--ln-cyan-border) transparent;
+}
+.debrief-game__content > * {
+  width: min(100%, 860px);
+  margin-right: auto;
+  margin-left: auto;
+}
+.debrief-mission-strip {
+  padding: 12px 16px 14px;
+  border-left: 3px solid var(--ln-cyan);
+  border-top: 1px solid var(--ln-cyan-border);
+  border-right: 1px solid rgba(112, 217, 234, .14);
+  border-bottom: 1px solid rgba(112, 217, 234, .14);
+  background: rgba(6, 14, 26, .74);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, .18);
+  backdrop-filter: blur(8px);
+}
+.debrief-mission-strip__status {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--ln-ok);
+  font: 800 9px var(--ln-font-display);
+  letter-spacing: .16em;
+  text-transform: uppercase;
+}
+.debrief-mission-strip__status span {
+  width: 7px;
+  height: 7px;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  background: currentColor;
+  box-shadow: 0 0 12px currentColor;
+}
+.debrief-mission-strip__route {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, .8fr);
+  gap: 24px;
+  margin-top: 11px;
+}
+.debrief-mission-strip__route div {
+  min-width: 0;
+}
+.debrief-mission-strip__route span {
+  display: block;
+  color: var(--ln-text-muted);
+  font: 700 8px var(--ln-font-display);
+  letter-spacing: .18em;
+  text-transform: uppercase;
+}
+.debrief-mission-strip__route strong {
+  display: block;
+  overflow: hidden;
+  margin-top: 3px;
+  color: var(--ln-text);
+  font: 800 17px/1.15 var(--ln-font-display);
+  letter-spacing: .03em;
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.debrief-game__content .debrief-overview {
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 12px;
+  margin-top: 12px;
+}
+.debrief-game__content .debrief-overview > *,
+.debrief-game__content .debrief-overview + * {
+  background: rgba(6, 14, 26, .78) !important;
+  border-color: rgba(112, 217, 234, .2) !important;
+  border-radius: 4px;
+  backdrop-filter: blur(8px);
+}
+.debrief-game__content .debrief-overview + * {
+  margin-top: 12px;
+}
+.debrief-command-dock {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 12;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  min-height: 78px;
+  padding: 12px 18px 16px;
+  border-top: 1px solid var(--ln-cyan-border);
+  background: linear-gradient(180deg, rgba(2, 7, 17, .12), rgba(2, 7, 17, .92) 28%, rgba(2, 7, 17, .98));
+  pointer-events: none;
+}
+.debrief-command-dock > * {
+  pointer-events: auto;
+}
+.debrief-command-dock [data-testid="resolve-cargo-btn"],
+.debrief-command-dock [data-testid="collect-reward-btn"] {
+  min-width: 176px;
+  min-height: 44px;
+  background: rgba(6, 14, 26, .88) !important;
+  border-color: var(--ln-cyan) !important;
+  color: var(--ln-cyan) !important;
+  box-shadow: 0 0 18px rgba(112, 217, 234, .12) !important;
+}
+.debrief-command-dock [data-testid="resolve-cargo-btn"]:hover,
+.debrief-command-dock [data-testid="collect-reward-btn"]:hover {
+  background: rgba(112, 217, 234, .12) !important;
+}
+
+@media (max-width: 620px) {
+  .debrief-hud-header {
+    gap: 12px;
+    padding-left: 68px;
+  }
+  .debrief-hud-header h1 { font-size: 22px; }
+  .debrief-hud-header__location {
+    max-width: 124px;
+    font-size: 8px;
+    line-height: 1.3;
+  }
+  .debrief-game__content { padding: 86px 12px 104px; }
+  .debrief-mission-strip { padding: 10px 12px 12px; }
+  .debrief-mission-strip__route { grid-template-columns: 1fr; gap: 8px; }
+  .debrief-mission-strip__route strong { font-size: 15px; }
+  .debrief-game__content .debrief-overview { grid-template-columns: 1fr !important; }
+  .debrief-command-dock {
+    justify-content: stretch;
+    min-height: 70px;
+    padding: 10px 12px 12px;
+  }
+  .debrief-command-dock [data-testid="resolve-cargo-btn"],
+  .debrief-command-dock [data-testid="collect-reward-btn"] {
+    width: 100%;
+  }
+}
 
 @media (max-height: 760px) and (max-width: 1023px) {
   .screen-scroll { padding-top: 68px; }
@@ -2404,110 +2828,4 @@ html[data-coach-target="build-structure-strip"] [data-coach-id="build-structure-
 .build-place-screen .sticky-actions {
   background: var(--ln-surface);
   border-top: 1px solid var(--ln-cyan-border);
-}
-
-/* ─── KES-211 — TransitScreen blueprint pass. ────────────────────────────
-   Replaces the dark starfield/radial-glow backdrop and the filled
-   progress-track bar with a plotted trajectory: a dashed navy/blue curve
-   between origin and destination markers, current position rendered as a
-   small pink dot on the line, with the numeric progress % (unchanged data,
-   just re-presented) as a label beside the dot. Scoped to .transit-screen
-   under .theme-blueprint only — does not touch any other screen's transit
-   or progress-bar styling. ─── */
-.transit-screen.theme-blueprint {
-  background: var(--ln-bp-bg);
-}
-.theme-blueprint .transit-plot {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-}
-.theme-blueprint .transit-plot-path {
-  fill: none;
-  stroke: var(--ln-bp-blue);
-  stroke-width: 0.6;
-  stroke-dasharray: 2.4 2;
-  stroke-linecap: round;
-  opacity: 0.75;
-}
-.theme-blueprint .transit-plot-marker {
-  fill: var(--ln-bp-paper);
-  stroke: var(--ln-bp-ink);
-  stroke-width: 0.6;
-}
-.theme-blueprint .transit-plot-dot {
-  fill: var(--ln-bp-pink);
-  stroke: var(--ln-bp-paper);
-  stroke-width: 0.5;
-}
-.theme-blueprint .transit-plot-label {
-  position: absolute;
-  font: 700 9px var(--ln-font-display);
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--ln-bp-ink-dim);
-}
-.theme-blueprint .transit-plot-label--origin {
-  left: calc(10% + 10px);
-  top: calc(78% - 6px);
-}
-.theme-blueprint .transit-plot-label--destination {
-  left: calc(90% - 66px);
-  top: calc(24% - 18px);
-}
-.theme-blueprint .transit-plot-progress {
-  position: absolute;
-  transform: translate(10px, -22px);
-  font: 700 10px var(--ln-font-mono);
-  color: var(--ln-bp-pink);
-  background: var(--ln-bp-paper);
-  padding: 2px 6px;
-  border-radius: 4px;
-  border: 1px solid var(--ln-bp-pink-border);
-  white-space: nowrap;
-}
-/* Passing waypoints (KES-262) — small unfilled markers along the trajectory
-   that fill in as the leg passes them, giving the wait a sense of motion
-   past real points rather than a bare percentage climbing. */
-.theme-blueprint .transit-plot-waypoint {
-  fill: var(--ln-bp-paper);
-  stroke: var(--ln-bp-ink-dim);
-  stroke-width: 0.45;
-  opacity: 0.6;
-}
-.theme-blueprint .transit-plot-waypoint--passed {
-  fill: var(--ln-bp-blue);
-  stroke: var(--ln-bp-ink);
-  opacity: 1;
-}
-.theme-blueprint .transit-waypoint-label {
-  position: absolute;
-  transform: translate(-50%, calc(-100% - 6px));
-  font: 700 8px var(--ln-font-mono);
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--ln-bp-ink-dim);
-  white-space: nowrap;
-  opacity: 0.7;
-}
-.theme-blueprint .transit-waypoint-label--passed {
-  color: var(--ln-bp-blue);
-  opacity: 1;
-}
-
-/* ─── KES-211 — DebriefScreen blueprint pass. ────────────────────────────
-   Reworks the reward/summary content from a celebratory dark-glow reward
-   card into a manifest-receipt: plain light paper background (no radial
-   glow), bordered rows with light hairline dividers. Payout stays the one
-   amber-colored figure per the standing amber-restricted-to-payout rule;
-   everything else renders in navy ink. Scoped to .debrief-screen under
-   .theme-blueprint only. ─── */
-.debrief-screen.theme-blueprint {
-  background: var(--ln-bp-bg);
-}
-.theme-blueprint .success-mark {
-  background: radial-gradient(circle at 30% 30%, #eaffef, var(--ln-bp-green) 70%, var(--ln-bp-green));
-  color: #ffffff;
-  box-shadow: 0 0 0 1px var(--ln-bp-green);
 }

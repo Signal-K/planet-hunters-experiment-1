@@ -3,7 +3,6 @@
 import { useRef, useState, type ReactNode } from 'react'
 import type { Mission, Target, MineralMeta, Client, RocketConfig } from '@/lib/data'
 import { calibrateOnboardingPayout, clientAffinityBonus, FIRST_CREW_ARRIVAL_BONUS, isOwnProgramMission, isFreeHaulMission, rocketDisplayForConfig, rocketModelForConfig, MAX_AFFINITY_BONUS, loanInstalmentFor } from '@/lib/data'
-import TopBar from '@/components/ui/TopBar'
 import { PrimaryBtn } from '@/components/ui/Button'
 import Panel from '@/components/ui/Panel'
 import StatusPill from '@/components/ui/StatusPill'
@@ -12,6 +11,7 @@ import CostSummaryRow from '@/components/game/CostSummaryRow'
 import { UI_ZONES } from '@/lib/ui-zones'
 import TutorialHighlight from '@/components/game/TutorialHighlight'
 import { ScrapSequenceCanvas } from '@/components/game/ScrapSequenceCanvas'
+import DebriefCanvas from '@/components/game/screens/DebriefCanvas'
 import { formatCurrency } from '@/lib/format'
 import ProgressBar from '@/components/ui/ProgressBar'
 import StatRow from '@/components/ui/StatRow'
@@ -86,27 +86,32 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
   const loanRepayment = isProgramOperation ? 0 : loanInstalmentFor(loanDebt)
   const netTotal = total - starterRocket.costFrancs - loanRepayment
   const manifestAccent = isFreeHaul || isProgramOperation
-    ? 'var(--ln-bp-line-strong)'
+    ? 'var(--ln-cyan)'
     : delivered ? 'var(--ln-ok)' : 'var(--ln-crimson)'
   const cargoEntries = Object.entries(cargo).filter(([, units]) => units > 0)
   const willStore = isFreeHaul && disposition === 'store' && !!hasEarthStorage
 
   return (
-    <div className="game-screen debrief-screen theme-blueprint">
-      <TopBar eyebrow="MISSION COMPLETE" title="Debrief" />
+    <div className="game-screen debrief-game">
+      <DebriefCanvas rocketImageSrc={rocketDisplay.img} />
+      <div className="debrief-game__world-shade" aria-hidden="true" />
 
-      <div className={`screen-scroll debrief-scroll${hasCoach ? ' screen-scroll--coach' : ''}`} style={{ display: 'flex', flexDirection: 'column', gap: 12 }} data-ui-zone={UI_ZONES.screenContent}>
-
-        {/* ── Hero ─────────────────────────────────────────────────────────── */}
-        <div className="debrief-hero" style={{ textAlign: 'center', paddingTop: 16, paddingBottom: 8 }}>
-          <div className="success-mark">✓</div>
-          <h2 style={{ margin: '12px 0 4px', color: 'var(--ln-text)', font: '800 28px var(--ln-font-display)', letterSpacing: '0.12em', textTransform: 'uppercase' }}>
-            {shipDestroyed ? 'Recovered' : 'Returned'}
-          </h2>
-          <p style={{ margin: 0, color: 'var(--ln-text-dim)', font: '11px var(--ln-font-mono)', letterSpacing: '0.14em', textTransform: 'uppercase' }}>
-            {shipDestroyed ? `From ${target.name} · ship destroyed on Earth return` : `From ${target.name} · Sol III orbit re-entry`}
-          </p>
+      <header className="debrief-hud-header" data-ui-zone={UI_ZONES.topChrome}>
+        <div>
+          <span>MISSION COMPLETE</span>
+          <h1>DEBRIEF</h1>
         </div>
+        <span className="debrief-hud-header__location">EARTH RECEIVING BERTH · 01</span>
+      </header>
+
+      <div className={`debrief-game__content screen-scroll${hasCoach ? ' screen-scroll--coach' : ''}`} data-ui-zone={UI_ZONES.screenContent}>
+        <section className="debrief-mission-strip" aria-label="Mission result">
+          <div className="debrief-mission-strip__status"><span aria-hidden="true" /> {shipDestroyed ? 'HULL LOST · CARGO RECOVERED' : 'DOCKED · MISSION COMPLETE'}</div>
+          <div className="debrief-mission-strip__route">
+            <div><span>MISSION</span><strong>{mission.title}</strong></div>
+            <div><span>RETURNED FROM</span><strong>{target.name}</strong></div>
+          </div>
+        </section>
 
         {/* ── Overview: client (if any) + cargo manifest ─────────────────── */}
         <div className="debrief-overview" style={(client && !isStoryMission) ? undefined : { gridTemplateColumns: 'minmax(0, 1fr)' }}>
@@ -213,7 +218,7 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
           ) : delivered ? (
             /* One Ledger panel: payout, expenses, hull and net together, rather
                than two stacked panels repeating the same section chrome. */
-            <Panel accent="var(--ln-bp-line-strong)" surface="solid" style={{ animation: 'unlock-in 0.35s ease-out' }}>
+            <Panel accent="var(--ln-cyan)" surface="solid" style={{ animation: 'unlock-in 0.35s ease-out' }}>
               <div className="ln-section-label" style={{ marginBottom: 8 }}>Ledger</div>
               {isTwoLegJob ? (
                 <>
@@ -264,13 +269,14 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
 
       </div>
 
-      <div className="sticky-actions" data-ui-zone={UI_ZONES.bottomActions}>
+      <div className="debrief-command-dock" data-ui-zone={UI_ZONES.bottomActions}>
         {hasCoach && <TutorialHighlight borderRadius={8} />}
         {!resolved ? (
           <PrimaryBtn
             // Amber is reserved for the payout amount itself. The action that
             // resolves the mission remains the cyan primary CTA in both states.
             kind="cyan"
+            full={false}
             testId="resolve-cargo-btn"
             onClick={() => {
               setResolved(true)
@@ -284,6 +290,7 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
             // Collecting a reward is still a primary action; keep payout
             // emphasis inside the payout panel rather than on the button.
             kind="cyan"
+            full={false}
             testId="collect-reward-btn"
             disabled={collecting}
             onClick={() => {
@@ -386,7 +393,7 @@ function CargoDispositionPanel({
   const cap = storageCapacity > 0 ? storageCapacity : 1
   const segments = Object.entries(cargo).filter(([, n]) => n > 0)
   return (
-    <Panel accent="var(--ln-bp-line-strong)" surface="solid" style={{ animation: 'unlock-in 0.35s ease-out' }}>
+    <Panel accent="var(--ln-cyan)" surface="solid" style={{ animation: 'unlock-in 0.35s ease-out' }}>
       <div className="ln-section-label" style={{ marginBottom: 6 }}>Your ore · keep or sell</div>
       <p style={{ margin: '0 0 12px', textAlign: 'left', fontFamily: 'var(--ln-font-body)', fontSize: 12, lineHeight: 1.5, color: 'var(--ln-text-dim)' }}>
         No client is owed this haul. Keep it in the silo to sell when the price is right or spend on your own builds, or sell the lot now at market.
@@ -403,7 +410,7 @@ function CargoDispositionPanel({
               <span style={{ fontFamily: 'var(--ln-font-mono)', fontSize: 11, color: 'var(--ln-text-dim)' }}>{Math.min(storageUsed, storageCapacity)} / {storageCapacity} U</span>
             </div>
             <div style={{ height: 12, borderRadius: 6, overflow: 'hidden', display: 'flex', background: 'var(--ln-surface-2)', border: '1px solid var(--ln-hairline)' }} aria-hidden="true">
-              {priorUnits > 0 && <span style={{ width: `${Math.min(100, (priorUnits / cap) * 100)}%`, background: 'var(--ln-bp-line-strong)', opacity: 0.5 }} />}
+              {priorUnits > 0 && <span style={{ width: `${Math.min(100, (priorUnits / cap) * 100)}%`, background: 'var(--ln-cyan)', opacity: 0.5 }} />}
               {segments.map(([id, units]) => (
                 <span key={id} style={{ width: `${Math.min(100, (units / cap) * 100)}%`, background: minerals[id]?.color ?? 'var(--ln-cyan)' }} />
               ))}
