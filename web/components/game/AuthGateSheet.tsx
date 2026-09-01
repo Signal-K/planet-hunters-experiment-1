@@ -1,7 +1,6 @@
 'use client'
 
 import React, { useState } from 'react'
-import PageSurface from '@/components/ui/PageSurface'
 
 interface AuthGateSheetProps {
   error: string | null
@@ -64,40 +63,41 @@ export default function AuthGateSheet({ error, onSignIn, onCreateAccount, onCont
   }
 
   return (
-    <PageSurface
-      className="auth-gate"
-      contentClassName="auth-gate__panel"
-      zIndex={92}
-    >
-
-      <div className="auth-gate__scene" aria-hidden="true">
-        <div className="auth-gate__scene-copy">
-          <span className="auth-gate__eyebrow">LANDNAM // EARTH BASE</span>
-          <span className="auth-gate__scene-title">MISSION CONTROL</span>
-          <span className="auth-gate__scene-status"><i /> FLIGHT SYSTEMS READY</span>
+    <div className="ln-sheet ln-sheet--bottom auth-gate">
+      <div className="auth-gate__scrim" aria-hidden="true" />
+      <section className="ln-sheet__panel auth-gate__panel">
+        <div className="ln-sheet__handle-wrap auth-gate__handle" aria-hidden="true">
+          <div className="ln-sheet__handle" />
         </div>
-        <div className="auth-gate__orbit auth-gate__orbit--outer" />
-        <div className="auth-gate__orbit auth-gate__orbit--inner" />
-        <div className="auth-gate__planet" />
-        <img className="auth-gate__ship" src="/game/assets/ships/ship_sr1.png" alt="" />
-        <div className="auth-gate__telemetry">
-          <span>ORBITAL NETWORK</span><strong>ONLINE</strong>
-          <span>LOCAL TIME</span><strong>03:17:42 UTC</strong>
-        </div>
-      </div>
 
-      <div className="auth-gate__content">
-        <div className="auth-gate__eyebrow">LANDNAM · SPACE MINING</div>
-        <div className="auth-gate__heading">{mode === 'signin' ? 'Welcome Back' : 'Create Account'}</div>
-        <p className="auth-gate__intro">Resume the program and return to the Earth Base command deck.</p>
-
-        <div className="auth-gate__tabs" role="tablist" aria-label="Account access mode">
-          {(['signin', 'signup'] as const).map(m => (
-            <button key={m} className={`auth-gate__tab${mode === m ? ' is-active' : ''}`} onClick={() => setMode(m)} role="tab" aria-selected={mode === m}>
-              {m === 'signin' ? 'Sign In' : 'Sign Up'}
-            </button>
-          ))}
+        <div className="auth-gate__scene" aria-hidden="true">
+          <div className="auth-gate__scene-copy">
+            <span className="auth-gate__eyebrow">LANDNAM // EARTH BASE</span>
+            <span className="auth-gate__scene-title">MISSION CONTROL</span>
+            <span className="auth-gate__scene-status"><i /> FLIGHT SYSTEMS READY</span>
+          </div>
+          <div className="auth-gate__orbit auth-gate__orbit--outer" />
+          <div className="auth-gate__orbit auth-gate__orbit--inner" />
+          <div className="auth-gate__planet" />
+          <img className="auth-gate__ship" src="/game/assets/ships/ship_sr1.png" alt="" />
+          <div className="auth-gate__telemetry">
+            <span>ORBITAL NETWORK</span><strong>ONLINE</strong>
+            <span>LOCAL TIME</span><strong>03:17:42 UTC</strong>
+          </div>
         </div>
+
+        <div className="auth-gate__content">
+          <div className="auth-gate__eyebrow">LANDNAM · SPACE MINING</div>
+          <div className="auth-gate__heading">{mode === 'signin' ? 'Welcome Back' : 'Create Account'}</div>
+          <p className="auth-gate__intro">Resume the program and return to the Earth Base command deck.</p>
+
+          <div className="auth-gate__tabs" role="tablist" aria-label="Account access mode">
+            {(['signin', 'signup'] as const).map(m => (
+              <button key={m} className={`auth-gate__tab${mode === m ? ' is-active' : ''}`} onClick={() => setMode(m)} role="tab" aria-selected={mode === m}>
+                {m === 'signin' ? 'Sign In' : 'Sign Up'}
+              </button>
+            ))}
+          </div>
 
         <form onSubmit={handleSubmit} className="auth-gate__form">
           <input
@@ -193,7 +193,8 @@ export default function AuthGateSheet({ error, onSignIn, onCreateAccount, onCont
             </>
           )}
         </div>
-      </div>
-    </PageSurface>
+        </div>
+      </section>
+    </div>
   )
 }
