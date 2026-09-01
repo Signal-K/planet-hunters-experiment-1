@@ -189,7 +189,9 @@ function completeMining() {
 
 function completeDebrief() {
   cy.contains('MISSION COMPLETE', { timeout: 8000 }).should('be.visible')
-  cy.get('[data-testid="resolve-cargo-btn"]').should('be.visible').click()
+  // DebriefScreen.tsx auto-resolves onboarding missions (missionsDone <
+  // FREE_OPS_START_MISSIONS_DONE) on mount, skipping the "Resolve Cargo" tap
+  // entirely — a tutorial playthrough never sees that button.
   // DebriefScreen.tsx branches on `resolved && delivered` — a successful,
   // fully-delivered mission (the only path a tutorial playthrough exercises)
   // renders a "Payout" panel with a "Total" line, not "Francs Earned" ("Francs

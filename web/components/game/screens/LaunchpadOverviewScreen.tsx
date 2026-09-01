@@ -38,6 +38,7 @@ function ActionCard({
   action,
   onClick,
   testId,
+  legacyTestId,
 }: {
   eyebrow: string
   title: string
@@ -45,10 +46,11 @@ function ActionCard({
   action: string
   onClick: () => void
   testId: string
+  legacyTestId?: string
 }) {
   return (
     <button className={styles.actionCard} data-testid={testId} onClick={onClick}>
-      <span className={styles.actionCopy}>
+      <span className={styles.actionCopy} data-testid={legacyTestId}>
         <span className={styles.cardEyebrow}>{eyebrow}</span>
         <strong>{title}</strong>
         <span className={styles.cardDetail}>{detail}</span>
@@ -91,22 +93,12 @@ export default function LaunchpadOverviewScreen({
 }: LaunchpadOverviewScreenProps) {
   const clearedRockets = ROCKET_MODELS.filter(model => !model.locked && missionsDone >= model.missionsRequired)
   const nextOperation = ownProgramOperation(catalog, player, freeOperations)
-  const ownMiningOperation = freeOperations
-    ? catalog.missions.find(mission => mission.tag === 'FREE OPS' && !mission.client && !mission.payload && !mission.construction)
-    : undefined
-  const infrastructureOperation = freeOperations
-    ? catalog.missions.find(mission => mission.payload?.type === 'satellite'
-      || mission.payload?.type === 'deep-space-survey'
-      || mission.payload?.type === 'scan-station-commission')
-      ?? catalog.missions.find(mission => mission.construction?.structureKind
-        ? !player.placed.includes(mission.construction.structureKind)
-        : false)
-    : undefined
   const nextStructure = unplacedUnlockedStructures(player)[0]
   const installableSkills = installableSkillNodes(player)
+  // Starting the next own-program operation (mining or infrastructure) is already the
+  // "Next operation" panel's job below — it is not duplicated here to avoid two CTAs
+  // for the same action. This panel surfaces everything else that unlocks.
   const availableActions: AvailableAction[] = []
-  if (ownMiningOperation) availableActions.push({ id: 'create-mission', kind: 'mission', eyebrow: 'OWN PROGRAM', title: 'Create a mining mission', detail: 'Choose a target and run the haul yourself.', cta: 'Create mission', onClick: () => onPick(ownMiningOperation.id), primary: true, testId: 'launchpad-overview-create-mission-btn' })
-  if (infrastructureOperation) availableActions.push({ id: 'launch-infrastructure', kind: 'infrastructure', eyebrow: 'PERSONAL INFRASTRUCTURE', title: 'Launch your next instrument', detail: 'Put a satellite or remote facility into service.', cta: 'Launch', onClick: () => onPick(infrastructureOperation.id), primary: true, testId: 'launchpad-overview-launch-infrastructure-btn' })
   if (nextStructure) availableActions.push({ id: `build-${nextStructure.id}`, kind: 'structure', eyebrow: 'NEW STRUCTURE', title: `Build ${nextStructure.name}`, detail: 'A new structure is unlocked; review its cost and choose a plot.', cta: 'Open build', onClick: onOpenBuild, testId: 'launchpad-overview-build-structure-btn' })
   if (!player.academyResearched && academyAffinityUnlocked(player)) availableActions.push({ id: 'research-academy', kind: 'research', eyebrow: 'ACADEMY UNLOCKED', title: 'Research Astronaut Academy', detail: 'Two trusted clients have opened the training facility path.', cta: 'Research', onClick: onOpenAcademy, testId: 'launchpad-overview-research-academy-btn' })
   if (player.placed.includes('astronaut-academy') && !player.crewModuleResearched) availableActions.push({ id: 'research-crew-module', kind: 'research', eyebrow: 'ACADEMY RESEARCH', title: 'Research crew quarters', detail: 'Develop the module that lets larger hulls carry crew.', cta: 'Open academy', onClick: onOpenAcademy, testId: 'launchpad-overview-research-crew-btn' })
@@ -123,7 +115,7 @@ export default function LaunchpadOverviewScreen({
           <div>
             <span className={styles.kicker}>LAUNCHPAD CONTROL / PROGRAM OPERATIONS</span>
             <h2>Launchpad control</h2>
-            <p>Manage the next launch from the program console. The physical pad is available as a separate scene focus.</p>
+            <p>Manage the next launch from the program console.</p>
           </div>
           <div className={styles.statusReadout}>
             <span>PAD STATUS</span>
@@ -150,14 +142,14 @@ export default function LaunchpadOverviewScreen({
                   <strong>{nextOperation.title}</strong>
                   <span>{nextOperation.brief}</span>
                 </div>
-                <button className={styles.primaryAction} data-testid="launchpad-ui-start-operation-btn" onClick={() => onPick(nextOperation.id)}>START OPERATION</button>
+                <button className={styles.primaryAction} data-testid="launchpad-program-operation-btn" onClick={() => onPick(nextOperation.id)}>START OPERATION</button>
               </div>
             ) : (
               <p className={styles.emptyState}>No own-program operation is queued. Client contracts remain available from the Mission Board.</p>
             )}
           </section>
 
-          <section className={styles.panel} aria-labelledby="launchpad-status-heading">
+          <section className={styles.panel} aria-labelledby="launchpad-status-heading" data-testid="launchpad-status-card">
             <div className={styles.panelHeader}>
               <div>
                 <span className={styles.kicker}>PHYSICAL FACILITY</span>
@@ -176,6 +168,7 @@ export default function LaunchpadOverviewScreen({
             action={player.pendingLaunch ? 'Inspect launch' : 'Open hangar'}
             onClick={onOpenHangar}
             testId="launchpad-ui-open-hangar-btn"
+            legacyTestId="launchpad-rocket-fleet"
           />
           <ActionCard
             eyebrow="CLIENT OPERATIONS"
@@ -184,6 +177,7 @@ export default function LaunchpadOverviewScreen({
             action="Open contracts"
             onClick={onViewContracts}
             testId="launchpad-ui-open-contracts-btn"
+            legacyTestId="launchpad-view-contracts-btn"
           />
           {onOpenSubsurface && (
             <ActionCard
@@ -193,6 +187,7 @@ export default function LaunchpadOverviewScreen({
               action="Open deck"
               onClick={onOpenSubsurface}
               testId="launchpad-ui-open-subsurface-btn"
+              legacyTestId="launchpad-open-subsurface-btn"
             />
           )}
         </div>
@@ -200,8 +195,7 @@ export default function LaunchpadOverviewScreen({
 
       <footer className={styles.footer} data-ui-zone={UI_ZONES.bottomActions}>
         <span><i /> FULL LAUNCHPAD UI</span>
-        <span>SCENE FOCUS IS SEPARATE</span>
-        <button className={styles.footerAction} onClick={onFocusPad}>FOCUS PAD</button>
+        <span>SCENE FOCUS IS SEPARATE — USE FOCUS LAUNCHPAD SCENE ABOVE</span>
       </footer>
     </div>
   )

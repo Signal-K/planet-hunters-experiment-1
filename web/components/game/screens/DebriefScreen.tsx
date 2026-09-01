@@ -1,8 +1,9 @@
 'use client'
 
-import { useRef, useState, type ReactNode } from 'react'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
 import type { Mission, Target, MineralMeta, Client, RocketConfig } from '@/lib/data'
 import { calibrateOnboardingPayout, clientAffinityBonus, FIRST_CREW_ARRIVAL_BONUS, isOwnProgramMission, isFreeHaulMission, rocketDisplayForConfig, rocketModelForConfig, MAX_AFFINITY_BONUS, loanInstalmentFor } from '@/lib/data'
+import { FREE_OPS_START_MISSIONS_DONE } from '@/lib/data/mission-generator'
 import { PrimaryBtn } from '@/components/ui/Button'
 import Panel from '@/components/ui/Panel'
 import StatusPill from '@/components/ui/StatusPill'
@@ -44,13 +45,22 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
   /** What this run's haul would fetch if sold now at market. */
   haulMarketValue?: number
 }) {
-  const [resolved, setResolved] = useState(false)
-  const [collecting, setCollecting] = useState(false)
-  const collectingRef = useRef(false)
   // A self-directed haul the player owns outright gets a store-vs-sell choice
   // here instead of a fixed contract payout (KES-271). Storing needs a built
   // Mineral Vault; without one the haul can only be sold on return.
   const isFreeHaul = isFreeHaulMission(mission, cargo)
+  // KES-282: the "Resolve Cargo" tap only ever existed to gate the reveal
+  // animation — on every mission, including the player's very first, it forced
+  // a second real tap ("Collect Reward") to actually finish. During onboarding
+  // (same boundary ProgressionCard/useGameLoop use for "still in the tutorial
+  // sequence") we skip that gate and start already resolved, so the reveal
+  // plays on mount and one tap collects. Free hauls are excluded — they still
+  // need the resolve tap to expose the store-vs-sell choice.
+  const isEarlyMission = (missionsDone ?? 0) < FREE_OPS_START_MISSIONS_DONE
+  const autoResolve = isEarlyMission && !isFreeHaul
+  const [resolved, setResolved] = useState(autoResolve)
+  const [collecting, setCollecting] = useState(false)
+  const collectingRef = useRef(false)
   const [disposition, setDisposition] = useState<'store' | 'sell'>(hasEarthStorage ? 'store' : 'sell')
   const haulUnits = Object.values(cargo).reduce((sum, n) => sum + Math.max(0, n), 0)
   const overflowUnits = hasEarthStorage ? Math.max(0, (storageUsed ?? 0) - (storageCapacity ?? 0)) : haulUnits
@@ -59,6 +69,13 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
   // post-onboarding, gate this on that system's own flag instead of
   // `shipDestroyed` — a reusable hull shouldn't play this at all.
   const [scrapping, setScrapping] = useState(false)
+  // Scrapping normally starts on the resolve tap; when that tap is skipped for
+  // an early mission (see autoResolve above), start it on mount instead so the
+  // hull-recovery animation still plays.
+  useEffect(() => {
+    if (autoResolve && shipDestroyed) setScrapping(true)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
   const rocketDisplay = rocketDisplayForConfig(rocket)
   const starterRocket = rocketModelForConfig(rocket)
 

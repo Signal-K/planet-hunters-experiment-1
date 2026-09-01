@@ -328,6 +328,21 @@ export default function MiningScreen({ mission, target, onComplete, onBack, onAb
   const { dismissed: freeOpsFirstSuccessDismissed, dismiss: dismissFreeOpsFirstSuccess } = useFreeOpsFirstSuccessAck()
   const showFreeOpsSuccessPopup = isFreeOps && orderFilled && !freeOpsFirstSuccessDismissed
 
+  // KES-282: a first-time player could previously face up to 4 stacked overlays at
+  // once (first-entry explainer, guide flyout, first-success popup, low-charge
+  // banner, failure overlay). Collapse to a single "assist surface" chosen by
+  // priority — the most consequential state wins outright instead of stacking on
+  // top of the others. Order: mission-ending failure > one-time success moment >
+  // active risk warning > informational guide/explainer (guide, being player-
+  // initiated, wins that last tier over the passive first-entry explainer).
+  const activeOverlay: 'failure' | 'success' | 'warning' | 'guide' | 'explainer' | null =
+    runFailed ? 'failure'
+      : showFreeOpsSuccessPopup ? 'success'
+      : chargesLow ? 'warning'
+      : guideOpen ? 'guide'
+      : (isFreeOps && showFreeOpsMiningExplainer) ? 'explainer'
+      : null
+
   return (
     <div className="game-screen mining-screen theme-deep">
       <TopBar
@@ -338,8 +353,8 @@ export default function MiningScreen({ mission, target, onComplete, onBack, onAb
         right={isFreeOps ? <StatusPill kind="amber">Free Ops · No Client</StatusPill> : undefined}
       />
 
-      {/* First-time-in-Free-Ops-mining explainer — dismiss-once, mirrors the mission-board explainer's ack pattern but covers what changes about the mining run itself (sell the haul yourself, no daily limit). */}
-      {isFreeOps && showFreeOpsMiningExplainer && (
+      {/* First-time-in-Free-Ops-mining explainer — dismiss-once, mirrors the mission-board explainer's ack pattern but covers what changes about the mining run itself (sell the haul yourself, no daily limit). Gated on activeOverlay so it never stacks with the guide, success popup, warning, or failure overlay. */}
+      {activeOverlay === 'explainer' && (
         <div style={{ position: 'absolute', top: 64, left: 14, right: 14, zIndex: 60 }}>
           <Panel className="mining-info-panel" accent="var(--ln-cyan)" surface="glass" style={{ padding: 12, position: 'relative' }}>
             <button
@@ -387,7 +402,39 @@ export default function MiningScreen({ mission, target, onComplete, onBack, onAb
         </button>
       )}
 
-      {guideOpen && (
+      {/* KES-282: moved out of the always-visible stats row (which was competing
+          with the mineral/charge readout for attention) into a small standalone
+          corner control — same button, same testid/behavior, lower prominence.
+          Sits left of the dev-only Skip Mining button so the two never overlap. */}
+      <button
+        data-testid="mining-guide-btn"
+        onClick={() => setGuideOpen(o => !o)}
+        aria-label="Mining controls guide"
+        aria-expanded={guideOpen}
+        style={{
+          position: 'absolute',
+          top: 8,
+          right: process.env.NODE_ENV === 'development' ? 92 : 8,
+          zIndex: 90,
+          width: 24,
+          height: 24,
+          padding: 0,
+          borderRadius: 6,
+          border: '1px solid var(--ln-cyan-border)',
+          background: 'var(--ln-cyan-soft)',
+          color: 'var(--ln-cyan)',
+          fontFamily: 'var(--ln-font-display)',
+          fontSize: 11,
+          fontWeight: 800,
+          lineHeight: 1,
+          cursor: 'pointer',
+          opacity: 0.85,
+        }}
+      >
+        ?
+      </button>
+
+      {activeOverlay === 'guide' && (
         <aside className="mining-guide-overlay" aria-label="Mining controls" style={{ position: 'absolute', right: 16, bottom: 'calc(var(--ln-nav-h, 64px) + 16px)', zIndex: 70, width: 'min(360px, calc(100% - 32px))' }}>
           <div className="mining-guide-panel">
             <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 9, fontWeight: 800, letterSpacing: '0.2em', color: 'var(--ln-cyan)', textTransform: 'uppercase', marginBottom: 10 }}>Mining Controls</div>
@@ -402,7 +449,7 @@ export default function MiningScreen({ mission, target, onComplete, onBack, onAb
         </aside>
       )}
 
-      {showFreeOpsSuccessPopup && (
+      {activeOverlay === 'success' && (
         <div className="mining-success-overlay" data-testid="freeops-first-success-popup" style={{ position: 'absolute', inset: 0, zIndex: 75, display: 'flex', alignItems: 'flex-end', padding: 16 }}>
           <Panel className="mining-success-panel" accent="var(--ln-ok)" surface="glass" style={{ padding: 14, width: '100%' }}>
             <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 10, fontWeight: 800, letterSpacing: '0.22em', color: 'var(--ln-ok)', textTransform: 'uppercase', marginBottom: 6 }}>
@@ -429,8 +476,8 @@ export default function MiningScreen({ mission, target, onComplete, onBack, onAb
         </div>
       )}
 
-      {/* Laser depleted without filling order — always shown, not gated on hasCoach */}
-      {runFailed && (
+      {/* Laser depleted without filling order — highest-priority overlay, always wins */}
+      {activeOverlay === 'failure' && (
         <div className="mining-failure-overlay" style={{ position: 'absolute', inset: 0, zIndex: 80, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 16, padding: 32 }}>
           <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 11, fontWeight: 800, letterSpacing: '0.22em', color: 'var(--ln-crit)', textTransform: 'uppercase' }}>Laser Depleted</div>
           <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 22, fontWeight: 800, color: 'var(--ln-text)', textAlign: 'center', lineHeight: 1.2 }}>Order Not Filled</div>
@@ -451,7 +498,7 @@ export default function MiningScreen({ mission, target, onComplete, onBack, onAb
       )}
 
       {/* Low-charge warning banner — fades in when running short without filling the order */}
-      {chargesLow && (
+      {activeOverlay === 'warning' && (
         <div className="mining-charge-warning" style={{ position: 'absolute', top: hasCoach ? (coachManual ? 'var(--tutorial-manual-content-top)' : 'var(--tutorial-content-top)') : 56, left: 0, right: 0, zIndex: 40, display: 'flex', justifyContent: 'center', pointerEvents: 'none' }}>
           <div>
             {laserCharges} charge{laserCharges !== 1 ? 's' : ''} remaining — order not filled
@@ -547,14 +594,6 @@ export default function MiningScreen({ mission, target, onComplete, onBack, onAb
               {laserCharges}/{MAX_CHARGES}
             </span>
           </div>
-          {/* Guide */}
-          <button
-            data-testid="mining-guide-btn"
-            onClick={() => setGuideOpen(o => !o)}
-            className="mining-guide-button"
-          >
-            ?
-          </button>
         </div>
 
         {/* Order progress — segmented bar, Out There: Omega chrome */}
