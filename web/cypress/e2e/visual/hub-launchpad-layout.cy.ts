@@ -86,7 +86,7 @@ describe('Hub and Launchpad visual layout', () => {
       if (viewport.name === 'desktop') {
         cy.get('.portrait-canvas').then($canvas => {
           const rect = $canvas[0].getBoundingClientRect()
-          expect(rect.width, 'Earth Base fills the desktop stage').to.eq(window.innerWidth)
+          expect(rect.width, 'Earth Base fills the desktop stage').to.eq(viewport.width)
           expect(getComputedStyle($canvas[0]).borderRadius, 'Earth Base is not presented as a card').to.eq('0px')
         })
       }
@@ -98,11 +98,26 @@ describe('Hub and Launchpad visual layout', () => {
       visit('/game/launchpad', 'launchpad')
       cy.contains('h1', 'Your Program', { timeout: 15000 }).should('be.visible')
       cy.get('[data-testid="launchpad-status-card"]').should('be.visible')
-      cy.get('[data-testid="launchpad-rocket-fleet"]').should('be.visible')
+      cy.get('[data-testid="launchpad-rocket-fleet"]').scrollIntoView().should('be.visible')
       cy.get('[data-testid="launchpad-open-subsurface-btn"]').scrollIntoView().should('be.visible')
       cy.get('[data-testid="launchpad-program-operation-btn"]').scrollIntoView().should('be.visible')
       cy.get('[data-testid="launchpad-view-contracts-btn"]').scrollIntoView().should('be.visible')
       cy.screenshot(`launchpad-scene-${viewport.name}`)
     })
   }
+
+  it('keeps Hub utility controls out of the dock at compact widths', () => {
+    cy.viewport(608, 687)
+    visit('/game', 'hub')
+    cy.contains('h1', 'Earth Base', { timeout: 15000 }).should('be.visible')
+    cy.get('.hub-bottom-dock').then($dock => {
+      const dock = $dock[0].getBoundingClientRect()
+      for (const selector of ['[data-testid="settings-button"]', '[data-testid="friends-button"]']) {
+        cy.get(selector).then($button => {
+          const button = $button[0].getBoundingClientRect()
+          expect(button.bottom, `${selector} stays above the Hub dock`).to.be.lessThan(dock.top)
+        })
+      }
+    })
+  })
 })

@@ -197,16 +197,16 @@ function GameCanvas() {
             <PushOptIn userId={game.authUserId ?? undefined} />
           </div>
         )}
-        {/* Settings — previously only reachable from the desktop sidebar's
-            gear. Small corner affordance so removing that rail doesn't strand
-            it. Hub only, so it never sits over gameplay chrome. */}
+        {/* Utility controls live in the top command cluster. Keeping them out
+            of the ground dock prevents the mission status row and bottom nav
+            from becoming their accidental hit target at narrow widths. */}
         {game.screen === 'hub' && !game.subsurfaceView && (
           <button
             data-testid="settings-button"
             aria-label="Settings"
             onClick={() => setSettingsOpen(true)}
             style={{
-              position: 'absolute', left: 12, bottom: 56, zIndex: 22,
+              position: 'absolute', top: 56, right: 12, zIndex: 22,
               width: 34, height: 34, borderRadius: 999, cursor: 'pointer',
               display: 'grid', placeItems: 'center', padding: 0,
               background: 'var(--hub-panel, #080d18)',

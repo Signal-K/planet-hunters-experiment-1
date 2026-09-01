@@ -13,7 +13,7 @@ export default function FriendsButton({ onClick }: FriendsButtonProps) {
       aria-label="Friends"
       onClick={onClick}
       style={{
-        position: 'absolute', left: 54, bottom: 56, zIndex: 22,
+        position: 'absolute', top: 56, right: 56, zIndex: 22,
         width: 34, height: 34, borderRadius: 999, cursor: 'pointer',
         display: 'grid', placeItems: 'center', padding: 0,
         background: 'var(--hub-panel, #080d18)',

@@ -184,20 +184,16 @@ function GameChrome({ children }: { children: ReactNode }) {
         )}
         <DevShortcuts />
 
-        {/* Settings — Sidebar (below) is unconditionally CSS-hidden
-            (`.desktop-sidebar { display: none }`, desktop nav is diegetic
-            per globals.css), which left its `onSettings` trigger completely
-            unreachable on this route (KES-233). GameApp.tsx's legacy shell
-            already carries this exact corner-button fix; ported here so
-            Settings isn't stranded on `/game/*`. Hub only, so it never sits
-            over gameplay chrome. */}
+        {/* Utility controls live in the top command cluster. Keeping them out
+            of the ground dock prevents the mission status row and bottom nav
+            from becoming their accidental hit target at narrow widths. */}
         {currentScreen === 'hub' && !game.subsurfaceView && (
           <button
             data-testid="settings-button"
             aria-label="Settings"
             onClick={() => setSettingsOpen(true)}
             style={{
-              position: 'absolute', left: 12, bottom: 56, zIndex: 22,
+              position: 'absolute', top: 56, right: 12, zIndex: 22,
               width: 34, height: 34, borderRadius: 999, cursor: 'pointer',
               display: 'grid', placeItems: 'center', padding: 0,
               background: 'var(--hub-panel, #080d18)',
