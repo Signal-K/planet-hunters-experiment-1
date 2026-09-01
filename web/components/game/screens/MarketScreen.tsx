@@ -3,7 +3,7 @@
 import { useState, type CSSProperties } from 'react'
 import ActionConfirmBar from '@/components/game/ActionConfirmBar'
 import MineralChip from '@/components/game/MineralChip'
-import { MINERAL_META, CLIENT_SLOTS } from '@/lib/data'
+import { MINERAL_META, CLIENT_SLOTS, REFINERY_RECIPES } from '@/lib/data'
 import { sellUnitPrice, sellQuote } from '@/lib/systems/EconomySystem'
 import { formatCurrency } from '@/lib/format'
 import styles from './MarketScreen.module.css'
@@ -14,12 +14,14 @@ interface MarketScreenProps {
   marketSupplyUpdatedAt?: Record<string, number>
   francs: number
   onSell: (mineralId: string, amount: number) => void
+  refinedGoods: Record<string, number>
+  onSellRefined: (recipeId: string, amount: number) => void
   onBack: () => void
   onOpenMissions: () => void
   clientId?: string
 }
 
-export default function MarketScreen({ stash, marketSupply, marketSupplyUpdatedAt, francs, onSell, onBack, onOpenMissions, clientId }: MarketScreenProps) {
+export default function MarketScreen({ stash, marketSupply, marketSupplyUpdatedAt, francs, onSell, refinedGoods, onSellRefined, onBack, onOpenMissions, clientId }: MarketScreenProps) {
   const [confirming, setConfirming] = useState<string | null>(null)
   const [sellAllConfirm, setSellAllConfirm] = useState(false)
 
@@ -42,6 +44,7 @@ export default function MarketScreen({ stash, marketSupply, marketSupplyUpdatedA
   }
 
   const totalUnits = entries.reduce((sum, [, qty]) => sum + qty, 0)
+  const refinedEntries = REFINERY_RECIPES.filter(recipe => (refinedGoods[recipe.id] ?? 0) > 0)
 
   return (
     <div className={`theme-light market-screen ${styles.screen}`}>
@@ -105,6 +108,41 @@ export default function MarketScreen({ stash, marketSupply, marketSupplyUpdatedA
             </div>
             <button className={styles.sellButton} onClick={() => setSellAllConfirm(true)} type="button">Sell All Minerals</button>
           </div>
+        )}
+
+        {refinedEntries.length > 0 && (
+          <>
+            <div className={styles.sectionHeader}>
+              <div>
+                <div className={styles.sectionLabel}>Processed inventory</div>
+                <h2>Refined Goods</h2>
+              </div>
+              <div className={styles.commodityMeta}>Output value · recipe rate</div>
+            </div>
+            <div className={styles.commodityGrid} data-testid="market-refined-grid">
+              {refinedEntries.map(recipe => {
+                const qty = refinedGoods[recipe.id] ?? 0
+                return (
+                  <article className={styles.commodityCard} key={recipe.id}>
+                    <div className={styles.commodityTop}>
+                      <div>
+                        <div className={styles.commodityName}>{recipe.output.name}</div>
+                        <div className={styles.commodityMeta}>{qty} units ready</div>
+                      </div>
+                      <div className={styles.commodityValue}>{formatCurrency(recipe.output.price * qty)}</div>
+                    </div>
+                    <div className={styles.rate}>
+                      <div>
+                        <div className={styles.rateLabel}>Settlement rate</div>
+                        <div className={styles.rateValue}>{formatCurrency(recipe.output.price)}/u</div>
+                      </div>
+                    </div>
+                    <button className={styles.sellButton} onClick={() => onSellRefined(recipe.id, qty)} type="button">Sell All {recipe.output.name}</button>
+                  </article>
+                )
+              })}
+            </div>
+          </>
         )}
         {sellAllConfirm && (
           <ActionConfirmBar

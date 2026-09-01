@@ -325,7 +325,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
     addToast('Touchdown confirmed — surface operations underway', 'ok')
   }, [addToast, setState])
 
-  const onRedockComplete = useCallback((cargo: Record<string, number>) => {
+  const onRedockComplete = useCallback((cargo: Record<string, number>, remoteDisposition: 'store' | 'sell' = 'sell') => {
     let hasDelivery = false
     const transitStartedAt = Date.now()
     setState(s => {
@@ -337,7 +337,14 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
       const arrivalAt = (timedTransit && nextLegTarget)
         ? transitStartedAt + travelDurationMs(nextLegTarget, s.player.unlockedSkillNodes ?? [], ORBIT_MS_PER_UNIT)
         : null
-      return applyRedockComplete(s, cargo, arrivalAt, timedTransit ? transitStartedAt : null)
+      const mission = s.missionId
+        ? catalog.missions.find(m => m.id === s.missionId) ?? s.player.dailyClientPool?.missions.find(m => m.id === s.missionId)
+        : undefined
+      const settled = s.targetId && mission && isFreeHaulMission(mission, cargo)
+        && hasOperationalRemoteSilo(s.player, s.targetId)
+        ? applyRemoteHaulDisposition(s, s.targetId, cargo, remoteDisposition, transitStartedAt)
+        : s
+      return applyRedockComplete(settled, cargo, arrivalAt, timedTransit ? transitStartedAt : null)
     })
     addToast(hasDelivery ? 'Redock complete — course set for delivery' : 'Redock complete — return to Earth for recovery', 'ok')
   }, [addToast, catalog.targets, setState])
@@ -502,7 +509,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
       const m = catalog.missions.find(item => item.id === s.missionId)
         ?? s.player.dailyClientPool?.missions.find(item => item.id === s.missionId)
         ?? null
-      if (!m || !isFreeHaulMission(m, s.lastCargo)) return s
+      if (!m || s.player.cargoSettledOffworld || !isFreeHaulMission(m, s.lastCargo)) return s
       const effective = disposition ?? (earthStorageBuilt(s.player) ? 'store' : 'sell')
       return applyFreeHaulDisposition(s, s.lastCargo, effective, Date.now())
     })
@@ -521,7 +528,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
     // so the main ledger update must neither credit a contract payout nor
     // consume the ore again. The screen passes 0/{} for these, but neutralize
     // here too so no code path can double-count the haul.
-    const completedIsFreeHaul = !!completedMission && isFreeHaulMission(completedMission, current.lastCargo)
+    const completedIsFreeHaul = !!completedMission && !current.player.cargoSettledOffworld && isFreeHaulMission(completedMission, current.lastCargo)
     const total = completedIsFreeHaul ? 0 : rawTotal
     const effectiveConsumed = completedIsFreeHaul ? {} : consumed
     const crewAwardId = current.player.missionRunId ?? `${current.missionId}:${current.player.missionsDone}`
@@ -653,6 +660,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
           missionRunId: undefined,
           missionPhase: undefined,
           debriefPending: false,
+          cargoSettledOffworld: false,
           returningToEarth: false,
           missionCrewIds: [],
           deliveryUnloadStartedAt: undefined,

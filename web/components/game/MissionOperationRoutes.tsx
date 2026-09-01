@@ -145,7 +145,7 @@ export default function MissionOperationRoutes({
               }
               return
             }
-            game.onRedockComplete(game.player.miningCargoInProgress ?? {})
+            game.onRedockComplete(game.player.miningCargoInProgress ?? {}, game.player.pendingRemoteDisposition)
           }}
         />
       )
@@ -175,6 +175,7 @@ export default function MissionOperationRoutes({
                 missionPhase: 'landing',
                 landingReturnStartedAt: Date.now(),
                 miningCargoInProgress: cargo,
+                pendingRemoteDisposition: remoteDisposition,
               }))
               game.go('landing')
               return

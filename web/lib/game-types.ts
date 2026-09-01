@@ -204,6 +204,7 @@ export interface Player {
   debriefPending?: boolean
   /** The haul was settled into an off-world silo or sold before Earth return. */
   cargoSettledOffworld?: boolean
+  pendingRemoteDisposition?: 'store' | 'sell'
   returningToEarth?: boolean
   shipDestroyed?: boolean
   // True while in transit toward a two-leg mission's deliveryTargetId, after
@@ -437,6 +438,7 @@ export interface GameActions {
   excavateSubsurface: () => void
   buildSubsurfaceRoom: (roomId: import('@/lib/data').SubsurfaceRoomId) => void
   sellMinerals: (mineralId: string, amount: number) => void
+  sellRefinedGoods: (recipeId: string, amount: number) => void
   onStartRefine: (recipeId: string) => void
   onCollectRefined: (recipeId: string) => void
   unlockSkillNode: (id: string) => void
@@ -451,7 +453,7 @@ export interface GameActions {
   submitAsteroidClassification: (candidateId: string, verdict: AsteroidVerdict) => void
   onRoverMiningDone: (cargo: Record<string, number>) => void
   onLandingTouchdown: () => void
-  onRedockComplete: (cargo: Record<string, number>) => void
+  onRedockComplete: (cargo: Record<string, number>, remoteDisposition?: 'store' | 'sell') => void
   confirmShipCustomizerBuild: (installed: Partial<Record<import('@/lib/data').ShipRoomKind, string>>, prevInstalled: Partial<Record<import('@/lib/data').ShipRoomKind, string>>) => boolean
   purchaseSiteAccess: (siteId: string) => void
   startFieldOperation: (siteId: string) => void

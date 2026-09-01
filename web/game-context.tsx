@@ -312,6 +312,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       coachManualNext: tutorial.coachManualNext,
       // Economy
       sellMinerals: economy.sellMinerals,
+      sellRefinedGoods: economy.sellRefinedGoods,
       onStartRefine: economy.onStartRefine,
       onCollectRefined: economy.onCollectRefined,
       placeStructure: economy.placeStructure,

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import type { GameState } from '@/lib/game-types'
 import { MINERAL_META, CLIENT_SLOTS, MINERAL_SILO_CAPACITY, SURFACE_SILO_CAPACITY, DEEP_MINERAL_SILO_CAPACITY, STRUCTURES, customizerPartById } from '@/lib/data'
-import { applyFreeHaulDisposition, applySellMinerals, applyConfirmShipCustomizerBuild, applyPlaceStructure, applyPurchaseRocket, applyStartRefine, decayedUnitsSold, earthStorageBuilt, openMarketSellPrice, sellQuote, sellUnitPrice, siloCount, storageCapacity, storedUnits, supplyDipMultiplier } from './EconomySystem'
+import { applyFreeHaulDisposition, applyRemoteHaulDisposition, applySellMinerals, applySellRefinedGoods, applyConfirmShipCustomizerBuild, applyPlaceStructure, applyPurchaseRocket, applyStartRefine, decayedUnitsSold, earthStorageBuilt, openMarketSellPrice, sellQuote, sellUnitPrice, siloCount, storageCapacity, storedUnits, supplyDipMultiplier } from './EconomySystem'
 import { ROCKET_MODELS } from '@/lib/data/rockets'
 
 function makeState(overrides: Partial<GameState['player']> = {}): GameState {
@@ -261,6 +261,31 @@ describe('Academy and staffing economy', () => {
     })
     expect(first.player.refineryQueue).toHaveLength(1)
     expect(second).toBe(first)
+  })
+})
+
+describe('off-world storage and refinery settlement', () => {
+  it('stores a remote haul without duplicating it into Earth inventory on return', () => {
+    const s: GameState = {
+      ...makeState({
+      clientStructures: [{ targetId: 'eros', structureKind: 'mineral-silo', clientId: 'self', state: 'operational' }],
+      stash: {},
+      }),
+      screen: 'mining',
+      targetId: 'eros',
+      missionId: 'program-build-remote-silo',
+    }
+    const next = applyRemoteHaulDisposition(s, 'eros', { iron: 4 }, 'store')
+    expect(next.player.remoteStorage?.eros).toEqual({ iron: 4 })
+    expect(next.player.cargoSettledOffworld).toBe(true)
+    expect(next.player.stash).toEqual({})
+  })
+
+  it('credits refined output at the recipe rate and consumes the goods', () => {
+    const recipe = { id: 'refined-test', name: 'Refined Test', input: { mineral: 'iron', amount: 1 }, output: { name: 'Test Ingot', sym: 'Fe+', color: '#999', price: 1250 }, time: 1, cost: 10 }
+    const next = applySellRefinedGoods(makeState({ francs: 50, refinedGoods: { [recipe.id]: 2 } }), recipe, 1)
+    expect(next.player.francs).toBe(1300)
+    expect(next.player.refinedGoods[recipe.id]).toBe(1)
   })
 })
 
