@@ -7,6 +7,7 @@ import {
   isOwnProgramMission,
   isFreeHaulMission,
   artifactNarrativeEligible,
+  missionTypePrimer,
 } from '@/lib/data'
 import { applyMiningDone, applyReturnArrived, applyRoverMiningDone } from '@/lib/systems/MiningSystem'
 import { applyDeliveryArrived, applyDeliveryUnloadComplete } from '@/lib/systems/DeliverySystem'
@@ -197,7 +198,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
           transitStartedAt: timedTransit ? transitStartedAt : null,
           missionPhase: 'transit',
           activeMission: mission && target
-            ? { id: mission.id, label: mission.title + ' → ' + target.name }
+            ? { id: mission.id, label: missionTypePrimer(mission).label + ' → ' + target.name }
             : null,
           missionCrewIds,
         },

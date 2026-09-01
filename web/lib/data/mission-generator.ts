@@ -257,10 +257,15 @@ export function generateMissionsFromRules(input: MissionGeneratorInput, count = 
       (sum, [mineral, amount]) => sum + (input.minerals[mineral]?.price ?? 0) * amount * CARGO_BONUS_RATE * template.payoutMultiplier * payoutMultiplier(client),
       0
     )
+    const title = band.sequence === 1
+      ? 'Baseline Extraction'
+      : band.sequence === 2
+        ? 'Heavy Haul'
+        : `${primary} ${template.tag.toLowerCase().replace('-', ' ')} order`
 
     return {
       id: `generated-s${band.sequence}-${template.id}-${index + 1}`,
-      title: `${primary} ${template.tag.toLowerCase().replace('-', ' ')} order`,
+      title,
       brief: `${client.name} needs ${primary.toLowerCase()} for ${client.projectType.toLowerCase()}. Preferred cargo earns a client premium; affinity improves future payouts.`,
       client: client.id,
       tag: template.tag,

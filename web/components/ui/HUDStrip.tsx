@@ -7,10 +7,10 @@ import { formatCurrency } from '@/lib/format'
 
 interface HUDStripProps {
   player: Player
-  /** Shows the mineral-stash chip row below the francs/jobs chips when the player has cargo. Off by default since not every HUD placement wants it. */
+  /** Shows the mineral-stash chip row below the Francs/Subsurface chips when the player has cargo. Off by default since not every HUD placement wants it. */
   showStash?: boolean
-  /** Second direct entry to the Mission Board, alongside the launchpad. Omit to keep the Jobs chip a plain readout. */
-  onJobsClick?: () => void
+  /** Small in-world route to the subsurface view, kept beside the Francs readout on Earth Base. */
+  onSubsurfaceClick?: () => void
 }
 
 function FrancGlyph() {
@@ -18,9 +18,9 @@ function FrancGlyph() {
     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7"><circle cx="12" cy="12" r="9" /><path d="M9 8h5M9 12h4M10 8v9" /></svg>
   )
 }
-function JobsGlyph() {
+function SubsurfaceGlyph() {
   return (
-    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7"><rect x="4" y="4" width="16" height="16" rx="1.5" /><path d="M4 10h16M10 4v16" /></svg>
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7"><path d="M12 4v16M5 13l7 7 7-7" /></svg>
   )
 }
 function MineralGlyph({ shape, color }: { shape?: string; color: string }) {
@@ -69,7 +69,7 @@ function RailCard({ glyph, children, accent = 'var(--hub-cyan)', onClick, testId
   )
 }
 
-export default function HUDStrip({ player, showStash = false, onJobsClick }: HUDStripProps) {
+export default function HUDStrip({ player, showStash = false, onSubsurfaceClick }: HUDStripProps) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 6, alignItems: 'flex-start', width: 132 }}>
       <RailCard glyph={<FrancGlyph />}>
@@ -77,9 +77,9 @@ export default function HUDStrip({ player, showStash = false, onJobsClick }: HUD
           {formatCurrency(player.francs, { compact: true })}
         </span>
       </RailCard>
-      <RailCard glyph={<JobsGlyph />} onClick={onJobsClick} testId="hud-jobs-chip">
+      <RailCard glyph={<SubsurfaceGlyph />} onClick={onSubsurfaceClick} testId="hud-subsurface-chip">
         <span style={{ fontFamily: 'var(--ln-font-display)', fontWeight: 800, fontSize: 9, letterSpacing: '0.14em', color: '#eaf1f8', textTransform: 'uppercase' }}>
-          {player.missionCount} Jobs
+          Subsurface
         </span>
       </RailCard>
       {showStash && player.stash && Object.keys(player.stash).length > 0 && (

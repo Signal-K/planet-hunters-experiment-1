@@ -99,7 +99,7 @@ function goToMissions() {
   cy.window().then(win => {
     if (win.innerWidth >= 1024) {
       cy.get('[data-testid="bottom-tab-missions"]').should('not.be.visible')
-      clickDom('[data-testid="hud-jobs-chip"]')
+      clickDom('[data-testid="hub-desktop-missions-btn"]')
     } else {
       clickDom('[data-testid="bottom-tab-missions"]')
     }

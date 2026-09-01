@@ -26,6 +26,7 @@ describe('Onboarding mission structure (M1-M3)', () => {
   it('M1 presents exactly two competing client choices', () => {
     const m1 = MISSIONS.filter(m => m.sequence === 1)
     expect(m1).toHaveLength(2)
+    expect(new Set(m1.map(m => m.title))).toEqual(new Set(['Baseline Extraction']))
     const clients = new Set(m1.map(m => m.client))
     expect(clients.size).toBe(2)
     expect(Math.max(...m1.map(m => m.payout.francs)) / Math.min(...m1.map(m => m.payout.francs))).toBeLessThanOrEqual(1.1)
@@ -34,6 +35,7 @@ describe('Onboarding mission structure (M1-M3)', () => {
   it('M2 presents exactly two competing client choices', () => {
     const m2 = MISSIONS.filter(m => m.sequence === 2)
     expect(m2).toHaveLength(2)
+    expect(new Set(m2.map(m => m.title))).toEqual(new Set(['Heavy Haul']))
     expect(new Set(m2.map(m => m.client)).size).toBe(2)
     expect(Math.max(...m2.map(m => m.payout.francs)) / Math.min(...m2.map(m => m.payout.francs))).toBeLessThanOrEqual(1.1)
   })

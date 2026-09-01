@@ -169,6 +169,27 @@ export function missionTypePrimer(mission: Mission): MissionTypePrimer {
     }
   }
 
+  // The first two onboarding contracts are intentionally named operations,
+  // not interchangeable generated orders. The name tells the player what
+  // this milestone is teaching before the client and target add detail.
+  if (mission.sequence === 1) {
+    return {
+      label: 'Baseline extraction',
+      summary: 'Fly out, mine the first client order, and bring the cargo back to Earth.',
+      steps: ['Launch', 'Mine', 'Return'],
+      owner,
+    }
+  }
+
+  if (mission.sequence === 2) {
+    return {
+      label: 'Heavy haul',
+      summary: 'Use the larger Prospector to lift the next client order and bring the cargo home.',
+      steps: ['Launch', 'Mine', 'Return'],
+      owner,
+    }
+  }
+
   if (owner === 'self') {
     return {
       label: 'Self-directed run',

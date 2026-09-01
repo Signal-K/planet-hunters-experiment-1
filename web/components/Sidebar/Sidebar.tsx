@@ -42,14 +42,6 @@ function AtlasGlyph() {
   )
 }
 
-function RocketGlyph() {
-  return (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M12 2L8 6H4l2 4-2 4h4l4 6 4-6h4l-2-4 2-4h-4L12 2z"/>
-    </svg>
-  )
-}
-
 function MarketGlyph() {
   return (
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -64,7 +56,6 @@ const NAV_ITEMS: NavItem[] = [
   { id: 'hub',      label: 'Base',     color: 'var(--ln-ok)', glyph: <HubGlyph /> },
   { id: 'missions', label: 'Missions', color: 'var(--ln-amber)', glyph: <MissionsGlyph /> }, // amber allowed - nav identity
   { id: 'galaxy',   label: 'Atlas',    color: 'var(--ln-cyan-bright)', glyph: <AtlasGlyph /> },
-  { id: 'fab',      label: 'Build',    color: 'var(--ln-crit)', glyph: <RocketGlyph />, locked: true },
   { id: 'market',   label: 'Market',   color: 'var(--ln-warn)', glyph: <MarketGlyph />, locked: true },
 ]
 

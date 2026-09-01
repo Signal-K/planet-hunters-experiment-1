@@ -21,7 +21,7 @@ import { HubSubsurfaceView } from '@/components/game/hub/HubSubsurfaceView'
 import { Building, EmptyPlot } from '@/components/game/hub/Building'
 import type { BuildingCallout } from '@/components/game/hub/Building'
 import { TUTORIAL_CONTENT_TOP, TUTORIAL_RAIL } from '@/lib/tutorial-layout'
-import { LAUNCHPAD_UPGRADE_COST, type SubsurfaceRoomId } from '@/lib/data'
+import { LAUNCHPAD_UPGRADE_COST, MISSIONS, missionTypePrimer, type SubsurfaceRoomId } from '@/lib/data'
 import { formatCurrency } from '@/lib/format'
 import { FEATURE_FLAGS } from '@/lib/featureFlags'
 import { isDevLauncherEnabled } from '@/lib/devAccess'
@@ -233,38 +233,19 @@ export default function HubScreen({ player, rocketVariant = 'explorer', hasCoach
   const { phase: skyPhase } = useTimeOfDay()
   const [editMode, setEditMode] = useState(false)
   const [activeBuilding, setActiveBuilding] = useState<string | null>(null)
-  // Lift the ground line clear of the docked bottom sheet (KES-260 follow-up).
-  //
-  // Building status pills hang `PLOT_LABEL_DROP` below the ground line, and the
-  // dock floats over the scene at `--ln-nav-h` from the *screen* bottom — which
-  // is not the same origin as the scene surface's own bottom edge. Deriving the
-  // lift arithmetically from the dock's height got this wrong by ~66px for
-  // exactly that reason, so measure the gap between the two elements directly
-  // instead. Also survives the dock growing with Edit Mode, the button count,
-  // and the <=860px padding breakpoint.
-  const dockRef = React.useRef<HTMLDivElement | null>(null)
-  const surfaceRef = React.useRef<HTMLDivElement | null>(null)
-  const [groundLift, setGroundLift] = useState(0)
-  useEffect(() => {
-    const measure = () => {
-      const dock = dockRef.current
-      const surface = surfaceRef.current
-      if (!dock || !surface) { setGroundLift(0); return }
-      // How far the dock's top edge sits above the surface's bottom edge.
-      const clearance = surface.getBoundingClientRect().bottom - dock.getBoundingClientRect().top
-      setGroundLift(Math.max(0, Math.round(clearance + PLOT_LABEL_DROP + 8)))
-    }
-    measure()
-    if (typeof ResizeObserver === 'undefined') return
-    // Only the two measured boxes are observed, and the value this sets changes
-    // neither of them — so this settles in one pass rather than looping.
-    const ro = new ResizeObserver(measure)
-    if (dockRef.current) ro.observe(dockRef.current)
-    if (surfaceRef.current) ro.observe(surfaceRef.current)
-    return () => ro.disconnect()
-  })
+  // The terrain baseline is part of the world composition. It must not move
+  // when the dock grows or the mobile browser chrome changes height: doing so
+  // pulled the launchpad up into the mountain range to make room for UI. The
+  // dock is an overlay; the scene keeps its authored `--hub-ground` contact.
   const [plotEntities, setPlotEntities] = useState<EntityData[]>(DEFAULT_PLOTS)
   const setSubsurface = (v: boolean) => onSubsurfaceChange?.(v)
+  const activeMissionDisplayLabel = (activeMission: NonNullable<Player['activeMission']>): string => {
+    const mission = MISSIONS.find(item => item.id === activeMission.id)
+    if (!mission) return activeMission.label
+    const target = activeMission.label.split('→').slice(1).join('→').trim()
+    const operation = missionTypePrimer(mission).label
+    return target ? `${operation} → ${target}` : operation
+  }
   const [confirmingLaunchpadUpgrade, setConfirmingLaunchpadUpgrade] = useState(false)
   const [tessQueueCount, setTessQueueCount] = useState(0)
   const [asteroidQueueCount, setAsteroidQueueCount] = useState(0)
@@ -517,14 +498,8 @@ export default function HubScreen({ player, rocketVariant = 'explorer', hasCoach
             readable. 22% is the floor, for viewports tall enough not to need
             any lift at all. */}
         <div
-          ref={surfaceRef}
           className={layoutStyles.surface}
-          style={{
-            position: 'absolute', top: 0, left: 0, right: 0, height: '50%', overflow: 'hidden',
-            ...(groundLift > 0
-              ? { ['--hub-ground' as string]: `max(22%, ${groundLift}px)` }
-              : {}),
-          }}
+          style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '50%', overflow: 'hidden' }}
         >
           {/* World background: sky, starfield, ridge parallax, ground, plateau */}
           <HubWorldBackground phase={skyPhase} />
@@ -622,7 +597,7 @@ export default function HubScreen({ player, rocketVariant = 'explorer', hasCoach
         </div>
         {!subsurface && (
           <div style={{ pointerEvents: 'auto' }}>
-            <HUDStrip player={player} onJobsClick={() => onOpenScene('missions')} />
+            <HUDStrip player={player} onSubsurfaceClick={() => setSubsurface(true)} />
           </div>
         )}
       </div>
@@ -662,7 +637,7 @@ export default function HubScreen({ player, rocketVariant = 'explorer', hasCoach
           dock mounted during M1 means the coach can point at Missions without
           removing the rest of the player's controls. */}
       {(
-        <div ref={dockRef} className="hub-bottom-dock" style={{
+        <div className="hub-bottom-dock" style={{
           position: 'absolute', left: 0, right: 0, bottom: 0, zIndex: 20,
           display: 'flex', justifyContent: 'center', pointerEvents: 'none',
         }}>
@@ -684,54 +659,24 @@ export default function HubScreen({ player, rocketVariant = 'explorer', hasCoach
               </div>
             ) : (
               <>
-                {/* Resume-mission banner — always visible on the persistent
-                    dock whenever a leg is in flight (KES-262). The existing
-                    Resume Mission CTA lives inside ProgressionCard, which
-                    shares a corner slot with other progression cards and is
-                    easy to miss; this is a dedicated, unmissable row instead. */}
-                {player.activeMission && (
-                  <button
-                    data-testid="hub-resume-mission-banner"
-                    onClick={() => onOpenScene(player.missionPhase ?? 'transit')}
-                    style={{
-                      width: '100%', boxSizing: 'border-box', textAlign: 'left', cursor: 'pointer',
-                      display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12,
-                      background: 'var(--hub-cyan, #6fd3ea)',
-                      border: 'none', borderRadius: 12, padding: '10px 14px', marginBottom: 10,
-                    }}
-                  >
-                    <div style={{ minWidth: 0 }}>
-                      <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 9, fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'rgba(8,13,24,0.7)' }}>
-                        Mission in progress
-                      </div>
-                      <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 13, fontWeight: 800, color: '#080d18', marginTop: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                        {player.activeMission.label}
-                      </div>
-                    </div>
-                    <span style={{
-                      flexShrink: 0, padding: '6px 10px', borderRadius: 999,
-                      background: '#080d18', color: 'var(--hub-cyan, #6fd3ea)',
-                      fontFamily: 'var(--ln-font-display)', fontSize: 9, fontWeight: 800,
-                      letterSpacing: '0.12em', textTransform: 'uppercase', whiteSpace: 'nowrap',
-                    }}>
-                      Resume ›
-                    </span>
-                  </button>
-                )}
                 {/* Row 1 — status + primary CTA, the reference's
                     "Facility Tier · status" + primary-action row. */}
-                <div className="hub-bottom-dock-main" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+                <div className="hub-bottom-dock-main" data-testid={player.activeMission ? 'hub-resume-mission-banner' : undefined} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
                   <div style={{ minWidth: 0 }}>
                     <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 9, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--hub-cyan)' }}>
-                      Launchpad
+                      {player.activeMission ? 'Mission in progress' : 'Launchpad'}
                     </div>
-                    <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 14, fontWeight: 800, color: '#eaf1f8', marginTop: 1 }}>
-                      {player.activeMission ? 'In Flight' : 'Ready'}
+                    <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: player.activeMission ? 11 : 14, fontWeight: 800, color: '#eaf1f8', marginTop: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                      {player.activeMission ? activeMissionDisplayLabel(player.activeMission) : 'Ready'}
                     </div>
                   </div>
-                  <DockPrimaryBtn testId="hub-edit-build-btn" pulse={!editMode && player.placed.length < 4} onClick={() => setEditMode(v => !v)}>
-                    {editMode ? 'Done' : 'Edit · Build'}
-                  </DockPrimaryBtn>
+                  {player.activeMission ? (
+                    <DockIconBtn testId="hub-resume-mission-btn" icon={<HistoryGlyph />} label="Resume" onClick={() => onOpenScene(player.missionPhase ?? 'transit')} accent />
+                  ) : (
+                    <DockPrimaryBtn testId="hub-edit-build-btn" pulse={!editMode && player.placed.length < 4} onClick={() => setEditMode(v => !v)}>
+                      {editMode ? 'Done' : 'Edit · Build'}
+                    </DockPrimaryBtn>
+                  )}
                 </div>
 
                 {/* Row 2 — icon-tab strip. Non-wrapping by construction
@@ -751,7 +696,6 @@ export default function HubScreen({ player, rocketVariant = 'explorer', hasCoach
                     </>
                   )}
                   <DockIconBtn icon={<HistoryGlyph />} label="Mission Log" onClick={() => onOpenScene('mission-history')} />
-                  <DockIconBtn icon={<SubsurfaceGlyph />} label="Subsurface" onClick={() => setSubsurface(true)} />
 
                   {/* Desktop has no nav rail and no bottom bar, so the
                       destinations without a building of their own hang off
@@ -763,6 +707,9 @@ export default function HubScreen({ player, rocketVariant = 'explorer', hasCoach
                       {player.hasLanded && (
                         <DockIconBtn icon={<SurfaceGlyph />} label="Surface Ops" accent testId="hub-surface-ops" onClick={() => onOpenScene('surface-ops')} />
                       )}
+                      <span className="hub-desktop-nav">
+                        <DockIconBtn testId="hub-desktop-missions-btn" icon={<HistoryGlyph />} label="Missions" onClick={() => onOpenScene('missions')} />
+                      </span>
                       <span className="hub-desktop-nav">
                         <DockIconBtn icon={<MarketGlyph />} label="Market" onClick={() => onOpenScene('market')} />
                       </span>

@@ -13,9 +13,15 @@ const base: Mission = {
 describe('missionTypePrimer', () => {
   it('reads a plain client order as a mine-and-return run', () => {
     const primer = missionTypePrimer(base)
-    expect(primer.label).toBe('Mining run')
+    expect(primer.label).toBe('Baseline extraction')
     expect(primer.steps).toEqual(['Launch', 'Mine', 'Return'])
     expect(primer.owner).toBe('client')
+  })
+
+  it('names the second onboarding milestone as a heavier haul', () => {
+    const primer = missionTypePrimer({ ...base, sequence: 2 })
+    expect(primer.label).toBe('Heavy haul')
+    expect(primer.summary).toContain('larger Prospector')
   })
 
   it('reads a delivery leg as a two-stop job', () => {

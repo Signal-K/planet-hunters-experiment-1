@@ -112,9 +112,9 @@ function navToMissions() {
       // coach (hasCoach true), the Launchpad's own "View Missions" callout
       // is also suppressed (HubScreen.tsx), so the one nav element that's
       // always present regardless of desktop/mobile or tutorial state is
-      // the HUD strip's jobs chip (`onJobsClick` -> `onNav('missions')`).
+      // the Hub dock's desktop Missions action.
       cy.get('[data-testid="bottom-tab-missions"]').should('not.be.visible')
-      cy.get('[data-testid="hud-jobs-chip"]').should('be.visible').click()
+      cy.contains('button', 'Missions').should('be.visible').click()
     } else {
       cy.get('[data-testid="bottom-tab-missions"]').should('be.visible').click()
     }
@@ -393,15 +393,15 @@ const viewportsToRun = VIEWPORTS.filter(v => !VIEWPORT_FILTER || v.label === VIE
 if (!MISSION_FILTER) describe('Desktop layout: bottom tab bar hidden, sidebar retired', () => {
   beforeEach(() => cy.viewport(1280, 800))
 
-  it('bottom-tab-missions and the retired sidebar are both hidden on desktop hub; the jobs chip reaches missions', () => {
+  it('bottom-tab-missions and the retired sidebar are both hidden on desktop hub; the desktop Missions action remains available', () => {
     visitHub({ doneSteps: { 0: true } })
     cy.get('h1', { timeout: 10000 }).contains('Earth Base').should('be.visible')
     cy.get('[data-testid="bottom-tab-missions"]').should('not.be.visible')
     // The old always-on desktop sidebar (`.desktop-sidebar`) is retired —
-    // CSS-hidden unconditionally (globals.css). `hud-jobs-chip` is the
-    // current always-present path to Missions regardless of tutorial state.
+    // CSS-hidden unconditionally (globals.css). The Hub dock's desktop-only
+    // Missions action is the current path to Missions at this breakpoint.
     cy.get('[data-testid="sidebar-nav-missions"]').should('not.be.visible')
-    cy.get('[data-testid="hud-jobs-chip"]').should('be.visible')
+    cy.get('[data-testid="hub-desktop-missions-btn"]').should('be.visible')
   })
 
   it('tutorial coach on step 1 does NOT show a spot over the hidden bottom tab bar', () => {

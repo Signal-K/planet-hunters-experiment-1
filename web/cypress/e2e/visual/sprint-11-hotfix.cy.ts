@@ -133,7 +133,7 @@ describe('Sprint 11 Launchpad and Earth Base hotfix — live browser QA', () => 
     visitGame('/game/hub', 'hub')
 
     cy.get('h1', { timeout: 15_000 }).contains('Earth Base').should('be.visible')
-    cy.get('[data-testid="hud-jobs-chip"]').should('be.visible')
+    cy.get('[data-testid="hud-subsurface-chip"]').should('be.visible')
     cy.get('[data-testid="progression-card-skills"]').should('be.visible')
     cy.get('[data-testid="progression-card-transit-satellite"]').should('be.visible')
     cy.get('[data-testid="progression-card-next-mission"]').should('be.visible')
@@ -141,7 +141,7 @@ describe('Sprint 11 Launchpad and Earth Base hotfix — live browser QA', () => 
       if ($body.text().includes('SCANNER')) cy.contains('SCANNER').should('be.visible')
     })
 
-    cy.get('[data-testid="hud-jobs-chip"]').then($hud => {
+    cy.get('[data-testid="hud-subsurface-chip"]').then($hud => {
       const hud = $hud[0].getBoundingClientRect()
       cy.get('[data-testid="progression-card-skills"]').then($skills => {
         expectNoOverlap(hud, $skills[0].getBoundingClientRect(), 'HUD does not overlap Skill Points card')
@@ -150,7 +150,7 @@ describe('Sprint 11 Launchpad and Earth Base hotfix — live browser QA', () => 
     cy.get('.hub-push-opt-in').then($prompt => {
       if ($prompt.is(':visible')) {
         const prompt = $prompt[0].getBoundingClientRect()
-        cy.get('[data-testid="hud-jobs-chip"]').then($hud => {
+        cy.get('[data-testid="hud-subsurface-chip"]').then($hud => {
           expectNoOverlap(prompt, $hud[0].getBoundingClientRect(), 'mission alerts do not overlap HUD')
         })
       }

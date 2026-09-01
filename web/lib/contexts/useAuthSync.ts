@@ -9,6 +9,7 @@ import { DEFAULT_STATE, mergeRemoteState, type PartialSave } from '@/lib/game-st
 import { isResumableMissionScreen } from '@/lib/initial-route'
 import type { GameState } from '@/lib/game-types'
 import type { Toast } from '@/components/ui/ToastLayer'
+import { MISSIONS, TARGETS, travelDurationMs } from '@/lib/data'
 
 // How often to proactively renew the shared-backend session while the tab is
 // open. authStore.isValid is a pure client-side JWT exp check with no server
@@ -432,6 +433,50 @@ export function useAuthSync({
     let active = true
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    function restoreInProgressRun() {
+      // `mission_runs` is the lifecycle receipt written at launch. Older
+      // game-state rows can lose activeMission during an equal-stage merge,
+      // so use the receipt to repair the resumable marker before the player
+      // sees a false "Launch Ready" state on Earth Base.
+      pbLandnam.collection('mission_runs')
+        .getFirstListItem(`user = "${authUserId}" && status = "in_progress"`, { sort: '-launched_at' })
+        .then(run => {
+          const missionId = typeof run.mission_id === 'string' ? run.mission_id : null
+          const targetId = typeof run.target_id === 'string' ? run.target_id : null
+          if (!missionId || !targetId) return
+          const mission = MISSIONS.find(candidate => candidate.id === missionId)
+          const target = TARGETS.find(candidate => candidate.id === targetId)
+          const launchedAt = typeof run.launched_at === 'string' ? new Date(run.launched_at).getTime() : NaN
+          const phase = ['transit', 'landing', 'mining', 'delivery', 'debrief'].includes(run.phase)
+            ? run.phase as NonNullable<GameState['player']['missionPhase']>
+            : 'transit'
+          setState(current => {
+            if (current.player.activeMission) return current
+            const transitStartedAt = Number.isFinite(launchedAt) ? launchedAt : null
+            const arrivalAt = phase === 'transit' && target && transitStartedAt !== null && current.player.missionsDone >= 3
+              ? transitStartedAt + travelDurationMs(target, current.player.unlockedSkillNodes ?? [], 42 * 1000)
+              : null
+            const label = `${mission?.title ?? 'Active mission'} → ${target?.name ?? targetId}`
+            return normalizeAndRepair({
+              ...current,
+              missionId,
+              targetId,
+              player: {
+                ...current.player,
+                activeMission: { id: missionId, label },
+                missionRunId: run.id,
+                missionPhase: phase,
+                pendingLaunch: false,
+                pendingRocketId: undefined,
+                transitStartedAt,
+                arrivalAt,
+              },
+            })
+          })
+        })
+        .catch(() => {})
+    }
+
     function applyRecord(record: any) {
       backendRecordId.current = record.id
       backendLoadedFor.current = authUserId!
@@ -446,6 +491,7 @@ export function useAuthSync({
       const remoteState: PartialSave = { ...(record.state as PartialSave), updatedAt: remoteUpdatedAt }
       setState(current => mergeRemoteState(current, remoteState))
       setBackendReady(true)
+      restoreInProgressRun()
     }
 
     function handleLoadFailure(err: unknown) {

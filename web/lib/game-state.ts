@@ -247,6 +247,11 @@ export function normalizeState(input: PartialSave): GameState {
     missionBoardScope,
     rocket: { ...DEFAULT_STATE.rocket, ...input.rocket },
     player: { ...DEFAULT_STATE.player, ...player, missionsDone, freeOperations, completedMissions, clientStructures, placed: placedList, placementPlots, licenseGrade, researchXP, unlockedBlueprints, tessClassifications, asteroidClassifications, roverTerrainClassifications, discoveredExoplanetTargets, instrumentDigestNotifiedOn, transitSatelliteLevel, deepSpaceTelescopeLevel, crew, surfaceOps,
+      // A run has crossed the launch boundary. If an older/stale save carries
+      // both flags, the active run wins so the Hub cannot render "Ready" or
+      // offer the assembly flow after the rocket has already left the pad.
+      pendingLaunch: player.activeMission ? false : (player.pendingLaunch ?? DEFAULT_STATE.player.pendingLaunch),
+      pendingRocketId: player.activeMission ? undefined : player.pendingRocketId,
       deepSpaceTelescopeBuilt, refineryBuilt, scannerBuilt },
     doneSteps: { ...DEFAULT_STATE.doneSteps, ...input.doneSteps },
     // Free Ops is the durable boundary. If an older save left `tutorial` true
@@ -461,7 +466,11 @@ export function mergeRemoteState(current: GameState, remoteState: PartialSave): 
   // an explicit local /game/hub or Back navigation must remain usable while
   // that run continues in the background.
   const remoteActiveMission = remoteState.player?.activeMission
-  if (!current.player.activeMission && remoteActiveMission) {
+  const remoteStageIsOlder = typeof remoteState.player?.missionsDone === 'number'
+    && remoteState.player.missionsDone < current.player.missionsDone
+  const remoteStageIsAhead = typeof remoteState.player?.missionsDone === 'number'
+    && remoteState.player.missionsDone > current.player.missionsDone
+  if (!current.player.activeMission && remoteActiveMission && !remoteStageIsOlder) {
     merged.player.activeMission = remoteActiveMission
     merged.player.missionRunId = remoteState.player?.missionRunId
     merged.player.missionPhase = remoteState.player?.missionPhase
@@ -476,6 +485,35 @@ export function mergeRemoteState(current: GameState, remoteState: PartialSave): 
     merged.deliveryTargetId = remoteState.deliveryTargetId
     merged.lastCargo = remoteState.lastCargo ?? null
     merged.deliveredCargo = remoteState.deliveredCargo ?? null
+  }
+  // Active-run fields are resumability state, so an equal-stage or stale
+  // remote row must not erase a run that was just launched locally. A newer
+  // remote onboarding stage is the one safe signal that the run completed on
+  // another device; let that completion win instead.
+  if (current.player.activeMission && !remoteStageIsAhead) {
+    merged.player = {
+      ...merged.player,
+      activeMission: current.player.activeMission,
+      missionRunId: current.player.missionRunId,
+      missionPhase: current.player.missionPhase,
+      arrivalAt: current.player.arrivalAt,
+      transitStartedAt: current.player.transitStartedAt,
+      deliveryUnloadStartedAt: current.player.deliveryUnloadStartedAt,
+      headingToDelivery: current.player.headingToDelivery,
+      returningToEarth: current.player.returningToEarth,
+      debriefPending: current.player.debriefPending,
+      miningCargoInProgress: current.player.miningCargoInProgress,
+      roverMiningStartedAt: current.player.roverMiningStartedAt,
+      landingStartedAt: current.player.landingStartedAt,
+      landingReturnStartedAt: current.player.landingReturnStartedAt,
+      pendingLaunch: false,
+      pendingRocketId: undefined,
+    }
+    merged.missionId = current.missionId
+    merged.targetId = current.targetId
+    merged.deliveryTargetId = current.deliveryTargetId
+    merged.lastCargo = current.lastCargo
+    merged.deliveredCargo = current.deliveredCargo
   }
 
   return normalizeAndRepair(merged)

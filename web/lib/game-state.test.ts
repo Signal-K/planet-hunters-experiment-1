@@ -517,6 +517,49 @@ describe('mergeRemoteState — remote game_states record onto local state', () =
     expect(merged.player.transitStartedAt).toBe(startedAt)
   })
 
+  it('keeps a locally launched run when Hub navigation meets a newer stale remote row', () => {
+    const mission = MISSIONS[0]
+    const target = TARGETS[0]
+    const merged = mergeRemoteState(
+      local({
+        screen: 'hub',
+        missionId: mission.id,
+        targetId: target.id,
+        updatedAt: 1_000,
+        player: {
+          ...DEFAULT_STATE.player,
+          missionsDone: 0,
+          activeMission: { id: mission.id, label: `Baseline extraction → ${target.name}` },
+          missionPhase: 'transit',
+          transitStartedAt: 1_700_000_000_000,
+        },
+      }),
+      {
+        screen: 'hub',
+        updatedAt: 5_000,
+        player: { missionsDone: 0, activeMission: null, pendingLaunch: true },
+      },
+    )
+
+    expect(merged.screen).toBe('hub')
+    expect(merged.player.activeMission?.id).toBe(mission.id)
+    expect(merged.player.pendingLaunch).toBe(false)
+    expect(merged.player.missionPhase).toBe('transit')
+  })
+
+  it('clears a stale pending launch when a saved run is active', () => {
+    const normalized = normalizeState({
+      player: {
+        activeMission: { id: MISSIONS[0].id, label: 'Baseline extraction → Eros' },
+        pendingLaunch: true,
+      },
+    })
+
+    expect(normalized.player.activeMission).not.toBeNull()
+    expect(normalized.player.pendingLaunch).toBe(false)
+    expect(normalized.player.pendingRocketId).toBeUndefined()
+  })
+
   // STS-635: a genuine tie (equal missionsDone on both sides) must not
   // discard remote resource progress wholesale — resource-like fields take
   // the max per field/key instead of blanket local-wins.
