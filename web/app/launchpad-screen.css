@@ -90,15 +90,6 @@ button.launchpad-scene-object { cursor: pointer; }
   display: block;
   transform: translateX(-50%);
 }
-.earth-base-flat-sprite {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-  object-position: center bottom;
-  pointer-events: none;
-}
 .earth-base-silo-sprite {
   position: absolute;
   inset: 0;
@@ -108,30 +99,42 @@ button.launchpad-scene-object { cursor: pointer; }
   color: var(--ln-cyan);
   overflow: visible;
 }
-/* The source illustration includes a transparent-ground vignette around the
-   pad. Keep the machine and its ramp, but let the shared scene own the actual
-   soil, verge, and foreground contact so the pad cannot bring a second patch
-   of terrain with it. */
-.earth-base-structure--launchpad .earth-base-flat-sprite {
-  clip-path: polygon(
-    0 0, 100% 0, 100% 84%, 82% 84%, 79% 90%, 79% 100%,
-    39% 100%, 39% 91%, 30% 91%, 26% 84%, 0 84%
-  );
+.earth-base-module-stack {
+  position: absolute;
+  inset: 0;
+  display: block;
 }
-.earth-base-flat-sprite--highlight {
-  inset: -8px;
-  width: calc(100% + 16px);
-  height: calc(100% + 16px);
-  opacity: 0.72;
-  filter: brightness(1.2) saturate(0.72) drop-shadow(0 0 7px var(--hub-cyan)) drop-shadow(0 0 16px color-mix(in srgb, var(--hub-cyan) 55%, transparent));
-  mix-blend-mode: screen;
+.earth-base-module {
+  position: absolute;
+  display: block;
+  width: auto;
+  height: auto;
+  max-width: none;
+  pointer-events: none;
+}
+/* One physical site composed from independently-rendered Blender bricks.
+   Foundation modules overlap the terrain at the baseline; the tower/cradle and
+   hangar shell sit on those foundations rather than on a white platform. Each
+   piece is transparent outside its own footprint, so the scene's own terrain
+   is what gives the site its ground contact instead of baked-in art. */
+.earth-base-module--pad-foundation { left: 0; bottom: 0; width: 100%; z-index: 1; }
+.earth-base-module--pad-tower { left: 7%; bottom: 10%; width: 48%; z-index: 3; }
+.earth-base-module--pad-cradle { left: 29%; bottom: 9%; width: 48%; z-index: 4; }
+.earth-base-module--pad-service { right: -4%; bottom: 9%; width: 40%; z-index: 2; }
+.earth-base-module--hangar-foundation { left: 0; bottom: 0; width: 100%; z-index: 1; }
+.earth-base-module--hangar-shell { left: 4%; bottom: 9%; width: 92%; z-index: 3; }
+.earth-base-module--hangar-workshop { left: 20%; bottom: 14%; width: 60%; z-index: 4; }
+.earth-base-module--hangar-roof { left: 0; bottom: 44%; width: 100%; z-index: 5; }
+.earth-base-module--outpost { inset: 0; width: 100%; height: 100%; }
+.earth-base-module-stack.is-active {
+  filter: brightness(1.12) drop-shadow(0 0 7px var(--hub-cyan)) drop-shadow(0 0 16px color-mix(in srgb, var(--hub-cyan) 55%, transparent));
 }
 .launchpad-tower {
   left: 7%; bottom: var(--hub-ground); width: 30%; height: auto;
 }
 .launchpad-tower-art {
   position: relative; left: auto; bottom: auto;
-  display: block; width: 100%; aspect-ratio: 220 / 160; transform: none;
+  display: block; width: 100%; aspect-ratio: 360 / 264; transform: none;
 }
 .launchpad-tower .launchpad-object-label,
 .launchpad-rocket .launchpad-object-label {
@@ -145,7 +148,7 @@ button.launchpad-scene-object { cursor: pointer; }
   display: grid; place-items: end center;
 }
 .launchpad-rocket-art img { position: relative; z-index: 2; width: 100%; filter: drop-shadow(0 12px 12px rgba(0,0,0,.6)); }
-.launchpad-hangar-art { position: relative; z-index: 2; display: block; width: 100%; aspect-ratio: 250 / 161; }
+.launchpad-hangar-art { position: relative; z-index: 2; display: block; width: 100%; aspect-ratio: 360 / 234; }
 .launchpad-rocket-glow { position: absolute; left: 5%; right: 5%; bottom: 18%; height: 14px; border-radius: 50%; background: rgba(112,217,234,.2); filter: blur(12px); }
 .launchpad-rocket:hover img,
 .launchpad-station:hover .launchpad-object-art { filter: brightness(1.12) drop-shadow(0 0 18px rgba(112,217,234,.22)); }

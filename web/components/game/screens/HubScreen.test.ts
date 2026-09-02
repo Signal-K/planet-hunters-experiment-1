@@ -10,8 +10,8 @@ describe('Earth Base module composition', () => {
     expect(sceneXPercent(342, hangarWidthPct)).toBeCloseTo(100 - hangarWidthPct / 2)
   })
   it('keeps a site-scale footprint for the composited launchpad and hangar', () => {
-    expect(EARTH_BASE_STRUCTURE_SIZES.launchpad.width).toBe(220)
-    expect(EARTH_BASE_STRUCTURE_SIZES.hangar.width).toBe(250)
+    expect(EARTH_BASE_STRUCTURE_SIZES.launchpad.width).toBe(360)
+    expect(EARTH_BASE_STRUCTURE_SIZES.hangar.width).toBe(360)
   })
 
   /** Support facilities stay smaller than the two primary Earth Base sprites. */
