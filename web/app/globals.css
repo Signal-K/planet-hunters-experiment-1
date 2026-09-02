@@ -885,21 +885,43 @@ button { cursor: pointer; }
 }
 
 @media (max-width: 759px) {
-  .auth-gate { align-items: flex-end; padding: 0; }
+  .auth-gate { align-items: center; padding: var(--ln-s-4); }
+  .auth-gate__panel {
+    width: 100%;
+    max-height: calc(100dvh - 32px);
+    overflow: hidden;
+    grid-template-columns: minmax(0, .76fr) minmax(0, 1.24fr);
+    border-bottom: 1px solid var(--ln-cyan-border-strong);
+    border-radius: var(--ln-r-xl);
+  }
+  /* Keep the approved mission-control card composition at compact widths.
+     The scene and account controls remain side by side, so this breakpoint
+     changes scale and padding rather than changing the screen into a sheet. */
+  .auth-gate__handle,
+  .auth-gate .ln-sheet__handle-wrap { display: none; }
+  .auth-gate__scene { min-height: 0; border-right: 1px solid var(--ln-hairline); border-bottom: 0; }
+  .auth-gate__scene-copy { left: var(--ln-s-3); top: var(--ln-s-3); gap: var(--ln-s-1); }
+  .auth-gate__scene-title { font-size: 18px; }
+  .auth-gate__scene-status { font-size: 8px; }
+  .auth-gate__orbit--outer { width: 220px; height: 100px; left: -8%; top: 48%; }
+  .auth-gate__orbit--inner { width: 150px; height: 68px; left: 14%; top: 53%; }
+  .auth-gate__planet { width: 64px; height: 64px; left: 31%; top: 46%; }
+  .auth-gate__ship { width: 78px; left: 54%; top: 35%; }
+  .auth-gate__telemetry { left: var(--ln-s-3); bottom: var(--ln-s-3); grid-template-columns: 1fr; gap: var(--ln-s-1); font-size: 7px; }
+  .auth-gate__content { align-self: auto; padding: var(--ln-s-5) var(--ln-s-4) var(--ln-s-5); }
+  .auth-gate__heading { font-size: 26px; }
+  .auth-gate__intro { margin-bottom: var(--ln-s-3); }
+  .auth-gate__tabs { margin-bottom: var(--ln-s-3); }
+  .auth-gate__quick { padding-top: var(--ln-s-3); margin-top: var(--ln-s-1); }
+}
+
+@media (max-width: 520px) {
   .auth-gate__panel {
     display: block;
-    width: 100%;
-    max-height: calc(100dvh - 16px);
+    max-height: calc(100dvh - 32px);
     overflow-y: auto;
-    border-bottom: 0;
-    border-radius: var(--ln-r-xl) var(--ln-r-xl) 0 0;
   }
-  /* Keep access controls in the first compact viewport. The orbital key art
-     remains the desktop composition, where it can be appreciated beside the
-     form without pushing the form below the fold. */
   .auth-gate__scene { display: none; }
-  .auth-gate__content { align-self: auto; padding: var(--ln-s-5) var(--ln-s-4) var(--ln-s-6); }
-  .auth-gate__heading { font-size: 28px; }
 }
 
 .auth-gate__scene {
