@@ -108,7 +108,7 @@ export default function LaunchpadOverviewScreen({
 
   return (
     <div className={`game-screen theme-blueprint ${styles.screen}`} data-testid="launchpad-ui-screen">
-      <TopBar eyebrow="EARTH BASE · LAUNCHPAD" title="Your Program" onBack={onBack} francs={francs} solid />
+      <TopBar eyebrow="BASE · LAUNCHPAD" title="Your Program" onBack={onBack} francs={francs} solid />
 
       <div className={styles.content} data-ui-zone={UI_ZONES.screenContent}>
         <header className={styles.header}>
@@ -183,7 +183,7 @@ export default function LaunchpadOverviewScreen({
             <ActionCard
               eyebrow="BASE INFRASTRUCTURE"
               title="Subsurface"
-              detail="Open the excavation deck beneath Earth Base."
+              detail="Open the excavation deck beneath Base."
               action="Open deck"
               onClick={onOpenSubsurface}
               testId="launchpad-ui-open-subsurface-btn"

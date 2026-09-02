@@ -110,7 +110,7 @@ export default function AsteroidDiscoveryScreen({ player, visualCandidate, onBac
   if (!player.freeOperations) {
     return (
       <GateScreen
-        eyebrow="EARTH BASE / LOCKED"
+        eyebrow="BASE / LOCKED"
         icon={<Telescope size={22} />}
         tone="amber"
         title="Free Operations Required"
@@ -123,11 +123,11 @@ export default function AsteroidDiscoveryScreen({ player, visualCandidate, onBac
   if (!player.deepSpaceTelescopeBuilt) {
     return (
       <GateScreen
-        eyebrow="EARTH BASE / TELESCOPE REQUIRED"
+        eyebrow="BASE / TELESCOPE REQUIRED"
         icon={<Telescope size={22} />}
         tone="cyan"
         title="Build Deep Space Telescope"
-        body="Place the Earth-base Deep Space Telescope to start receiving NEOCP asteroid candidates."
+        body="Place the Deep Space Telescope to start receiving NEOCP asteroid candidates."
         onBack={onBack}
         action={<PrimaryBtn testId="build-deep-space-telescope-btn" onClick={onBuildTelescope}>Build Telescope</PrimaryBtn>}
       />
@@ -137,7 +137,7 @@ export default function AsteroidDiscoveryScreen({ player, visualCandidate, onBac
   if (loading) {
     return (
       <GateScreen
-        eyebrow="EARTH BASE / DAILY DOWNLINK"
+        eyebrow="BASE / DAILY DOWNLINK"
         icon={<Telescope size={22} />}
         tone="cyan"
         title="Acquiring Signal"
@@ -150,7 +150,7 @@ export default function AsteroidDiscoveryScreen({ player, visualCandidate, onBac
   if (!candidate) {
     return (
       <GateScreen
-        eyebrow="EARTH BASE / DAILY DOWNLINK"
+        eyebrow="BASE / DAILY DOWNLINK"
         icon={<Radio size={22} />}
         tone="amber"
         title={loadFailed ? 'Live Feed Unavailable' : 'No Reviewable Candidate'}

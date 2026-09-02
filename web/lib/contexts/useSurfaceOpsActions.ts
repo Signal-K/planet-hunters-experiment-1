@@ -68,7 +68,7 @@ export function useSurfaceOpsActions(
           addToast('Automated cargo ferry dispatched.', 'info')
           void scheduleLandnamPush({
             title: 'SURFACE CARGO DELIVERED',
-            body: `${surfaceSiteById(siteId)?.name ?? 'Surface site'} manifest is ready at Earth Base.`,
+            body: `${surfaceSiteById(siteId)?.name ?? 'Surface site'} manifest is ready at Base.`,
             scheduledFor: now + SURFACE_FERRY_DURATION_MS,
           }).catch(() => {})
         })
@@ -87,7 +87,7 @@ export function useSurfaceOpsActions(
       const next = applyReconcileSurfaceFerry(state, siteId)
       if (next !== state && !notifiedOperations.current.has(operation)) {
         notifiedOperations.current.add(operation)
-        queueMicrotask(() => addToast('Surface cargo transferred to Earth Base.', 'ok'))
+        queueMicrotask(() => addToast('Surface cargo transferred to Base.', 'ok'))
       }
       return next
     })

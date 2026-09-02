@@ -72,7 +72,7 @@ export default function AuthGateSheet({ error, onSignIn, onCreateAccount, onCont
 
         <div className="auth-gate__scene" aria-hidden="true">
           <div className="auth-gate__scene-copy">
-            <span className="auth-gate__eyebrow">LANDNAM // EARTH BASE</span>
+            <span className="auth-gate__eyebrow">LANDNAM // BASE</span>
             <span className="auth-gate__scene-title">MISSION CONTROL</span>
             <span className="auth-gate__scene-status"><i /> FLIGHT SYSTEMS READY</span>
           </div>
@@ -89,7 +89,7 @@ export default function AuthGateSheet({ error, onSignIn, onCreateAccount, onCont
         <div className="auth-gate__content">
           <div className="auth-gate__eyebrow">LANDNAM · SPACE MINING</div>
           <div className="auth-gate__heading">{mode === 'signin' ? 'Welcome Back' : 'Create Account'}</div>
-          <p className="auth-gate__intro">Resume the program and return to the Earth Base command deck.</p>
+          <p className="auth-gate__intro">Resume the program and return to the command deck.</p>
 
           <div className="auth-gate__tabs" role="tablist" aria-label="Account access mode">
             {(['signin', 'signup'] as const).map(m => (

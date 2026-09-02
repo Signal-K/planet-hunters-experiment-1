@@ -204,15 +204,15 @@ export const SURVEY_DEFS: Record<string, Survey> = {
     name: '[Landnam / Missions] Resume In-Progress Mission',
     posthogUrl: 'https://us.posthog.com/project/199773/surveys/019fa559-30bb-0000-1996-5ebd41f7bea6',
     questions: [
-      { id: '65bf16e2-f677-4f0e-a412-7e12da180762', type: 'multiple_choice', question: 'How easy was it to resume your in-progress mission after leaving Earth Base?', choices: ['Very easy', 'Mostly easy', 'A bit confusing', 'I could not find my mission'] },
+      { id: '65bf16e2-f677-4f0e-a412-7e12da180762', type: 'multiple_choice', question: 'How easy was it to resume your in-progress mission after leaving Base?', choices: ['Very easy', 'Mostly easy', 'A bit confusing', 'I could not find my mission'] },
     ],
   },
   lnm_base_building: {
     id: '019fa559-3772-0000-3d55-36b4b76d3334',
-    name: '[Landnam / Earth Base] Base Building Feel',
+    name: '[Landnam / Base] Base Building Feel',
     posthogUrl: 'https://us.posthog.com/project/199773/surveys/019fa559-3772-0000-3d55-36b4b76d3334',
     questions: [
-      { id: 'f2421ef5-31d3-4adf-934b-d0aff3f7d774', type: 'rating', question: 'How satisfying was placing or upgrading a structure in Earth Base?', scale: 5 },
+      { id: 'f2421ef5-31d3-4adf-934b-d0aff3f7d774', type: 'rating', question: 'How satisfying was placing or upgrading a structure in Base?', scale: 5 },
     ],
   },
   lnm_rover_clarity: {

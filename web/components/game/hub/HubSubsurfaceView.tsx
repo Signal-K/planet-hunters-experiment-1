@@ -407,7 +407,7 @@ function ExcavatePrompt({
         </span>
         <h2 className={styles.trainingTitle}>Below-grade area unexcavated</h2>
         <p className={styles.trainingCopy}>
-          Earth Base only holds so much surface plot — the agency&apos;s
+          The surface only holds so much surface plot — the agency&apos;s
           buildable footprint above ground is fixed. Excavating this deck
           opens space below the soil for storage and habitat facilities
           without needing more land on the surface.
@@ -455,7 +455,7 @@ export function HubSubsurfaceView({
   }
 
   return (
-    <section className={styles.root} data-testid="hub-subsurface-view" aria-label="Earth Base subsurface">
+    <section className={styles.root} data-testid="hub-subsurface-view" aria-label="Base subsurface">
       <div className={styles.geology} aria-hidden="true">
         <span className={styles.surfaceCap} data-testid="subsurface-surface-continuation" />
         <span className={styles.crust} />
@@ -525,7 +525,7 @@ export function HubSubsurfaceView({
                 <span />
                 <span />
                 <span />
-                <b>EARTH BASE · BELOW-SOIL SERVICE TRUNK</b>
+                <b>BASE · BELOW-SOIL SERVICE TRUNK</b>
               </div>
               <div className={styles.roomGrid}>
                 {SUBSURFACE_ROOMS.map((room, index) => {

@@ -894,15 +894,11 @@ button { cursor: pointer; }
     border-bottom: 0;
     border-radius: var(--ln-r-xl) var(--ln-r-xl) 0 0;
   }
-  .auth-gate__scene { min-height: 176px; border-right: 0; border-bottom: 1px solid var(--ln-hairline); }
-  .auth-gate__scene-copy { left: var(--ln-s-4); top: var(--ln-s-4); }
-  .auth-gate__scene-title { font-size: 22px; }
-  .auth-gate__orbit--outer { width: 250px; height: 112px; left: 34%; top: 32%; }
-  .auth-gate__orbit--inner { width: 170px; height: 76px; left: 46%; top: 40%; }
-  .auth-gate__planet { width: 68px; height: 68px; left: 56%; top: 35%; }
-  .auth-gate__ship { width: 84px; left: 68%; top: 18%; }
-  .auth-gate__telemetry { left: var(--ln-s-4); bottom: var(--ln-s-3); font-size: 8px; }
-  .auth-gate__content { padding: var(--ln-s-5) var(--ln-s-4) var(--ln-s-6); }
+  /* Keep access controls in the first compact viewport. The orbital key art
+     remains the desktop composition, where it can be appreciated beside the
+     form without pushing the form below the fold. */
+  .auth-gate__scene { display: none; }
+  .auth-gate__content { align-self: auto; padding: var(--ln-s-5) var(--ln-s-4) var(--ln-s-6); }
   .auth-gate__heading { font-size: 28px; }
 }
 

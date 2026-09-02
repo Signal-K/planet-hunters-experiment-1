@@ -73,7 +73,7 @@ export function useCatalogSync(
       ...s,
       player: { ...s.player, refineryUnlocked: true, refineryUnlockNotified: true },
     }))
-    addToast('Refinery contracts detected — build the refinery at Earth Base', 'info')
+    addToast('Refinery contracts detected — build the refinery at Base', 'info')
   }, [addToast, catalog.missions, hydrated, isPreview, state.player.freeOperations, state.player.refineryUnlockNotified, state.screen, setState])
 
   return { catalog }

@@ -81,7 +81,7 @@ export const OWN_PROGRAM_BUILD_MISSIONS: Mission[] = [
   {
     id: REFINERY_BUILD_MISSION_ID,
     title: 'Build the Refinery',
-    brief: 'Use your stored aluminium and copper to build the Earth Base refinery. It converts raw ore into higher-value materials for your program.',
+    brief: 'Use your stored aluminium and copper to build the Base refinery. It converts raw ore into higher-value materials for your program.',
     tag: 'PROGRAM',
     difficulty: 'L1',
     locked: false,
@@ -95,7 +95,7 @@ export const OWN_PROGRAM_BUILD_MISSIONS: Mission[] = [
     },
     programReward: {
       researchXP: 0,
-      outcome: 'Refinery built · raw ore can now be processed at Earth Base',
+      outcome: 'Refinery built · raw ore can now be processed at Base',
     },
     requires: {
       ...materialRequirement(refineryBlueprint.costMaterials ?? {}),
@@ -107,7 +107,7 @@ export const OWN_PROGRAM_BUILD_MISSIONS: Mission[] = [
   {
     id: SCAN_STATION_BUILD_MISSION_ID,
     title: 'Build the Scanning Station',
-    brief: 'Commission the Scan Station at Earth Base. Its remote instruments map deposits, craters, and landmarks for your own program.',
+    brief: 'Commission the Scan Station at Base. Its remote instruments map deposits, craters, and landmarks for your own program.',
     tag: 'PROGRAM',
     difficulty: 'L1',
     locked: false,
@@ -137,7 +137,7 @@ export const AUTHORED_MISSIONS: Mission[] = [
   {
     id: ACADEMY_INTRO_MISSION_ID,
     title: 'Train the First Astronaut',
-    brief: 'Establish the Astronaut Academy at Earth Base, fund its first day-long session, and graduate a named astronaut into your roster.',
+    brief: 'Establish the Astronaut Academy at Base, fund its first day-long session, and graduate a named astronaut into your roster.',
     tag: 'STORY',
     difficulty: 'L1',
     locked: true,

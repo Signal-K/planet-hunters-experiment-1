@@ -145,7 +145,7 @@ export default function TessDiscoveryScreen({ player, visualCandidate, onBack, o
   if (!player.freeOperations) {
     return (
       <GateScreen
-        eyebrow="EARTH BASE / LOCKED"
+        eyebrow="BASE / LOCKED"
         icon={<Satellite size={22} />}
         tone="amber"
         title="Free Operations Required"
@@ -158,7 +158,7 @@ export default function TessDiscoveryScreen({ player, visualCandidate, onBack, o
   if (!player.transitSatelliteLaunchedAt) {
     return (
       <GateScreen
-        eyebrow="EARTH BASE / TELESCOPE"
+        eyebrow="BASE / TELESCOPE"
         icon={<Radio size={22} />}
         tone="amber"
         title="Launch Transit Telescope"
@@ -172,7 +172,7 @@ export default function TessDiscoveryScreen({ player, visualCandidate, onBack, o
   if (loading) {
     return (
       <GateScreen
-        eyebrow="EARTH BASE / DAILY DOWNLINK"
+        eyebrow="BASE / DAILY DOWNLINK"
         icon={<Satellite size={22} />}
         tone="cyan"
         title="Acquiring Signal"
@@ -185,7 +185,7 @@ export default function TessDiscoveryScreen({ player, visualCandidate, onBack, o
   if (!candidate) {
     return (
       <GateScreen
-        eyebrow="EARTH BASE / DAILY DOWNLINK"
+        eyebrow="BASE / DAILY DOWNLINK"
         icon={<Radio size={22} />}
         tone="amber"
         title={loadFailed ? 'Live Feed Unavailable' : 'No Reviewable Anomaly'}

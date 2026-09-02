@@ -40,7 +40,7 @@ export default function RefineryScreen({ player, onBack, onStartRefine, onCollec
 
   return (
     <div className="game-screen theme-blueprint">
-      <TopBar eyebrow="EARTH BASE · INDUSTRY" title="Refinery" onBack={onBack} />
+      <TopBar eyebrow="BASE · INDUSTRY" title="Refinery" onBack={onBack} />
       <div className="screen-scroll" data-ui-zone={UI_ZONES.screenContent}>
         <Panel accent="var(--ln-amber)" style={{ padding: 12 }}>
           <div style={{ fontFamily: 'var(--ln-font-display)', fontWeight: 800, fontSize: 15, color: 'var(--ln-text)' }}>On-site Ore Processing</div>

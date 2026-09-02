@@ -80,7 +80,7 @@ export const STRUCTURES: StructureBlueprint[] = [
     costMaterials: { aluminium: 24, silicon: 12, copper: 8 },
     unlocksAt: 'Research after reaching affinity level 2 with two clients',
     unlockTrigger: 'academy-research',
-    description: 'Trains named astronauts, manages the roster, and coordinates Earth Base staffing.',
+    description: 'Trains named astronauts, manages the roster, and coordinates Base staffing.',
   },
   { id: 'garage', name: 'Vehicle Garage', kind: 'garage', cost: STRUCTURE_PRICES.garage, unlocksAt: 'Future sprint', unlockTrigger: 'manual', description: 'Surface rover maintenance and upgrades.' },
 ]

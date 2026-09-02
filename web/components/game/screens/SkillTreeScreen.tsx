@@ -64,7 +64,7 @@ export default function SkillTreeScreen({
       <div className={styles.sceneWash} aria-hidden="true" />
       <div className={styles.blueprintGrid} aria-hidden="true" />
 
-      <TopBar eyebrow="EARTH BASE · ACADEMY" title="Skill Tree" onBack={onBack} glass />
+      <TopBar eyebrow="BASE · ACADEMY" title="Skill Tree" onBack={onBack} glass />
       {coach.visible && <SkillTreeCoach onDismiss={coach.dismiss} />}
 
       <div data-ui-zone={UI_ZONES.screenContent} className={styles.content}>
@@ -72,7 +72,7 @@ export default function SkillTreeScreen({
           <div>
             <div className={styles.kicker}>PROGRAM DEVELOPMENT / RESEARCH CONSOLE</div>
             <h2 className={styles.heading}>Build the next capability.</h2>
-            <p className={styles.subheading}>Permanent upgrades for the Earth Base flight program.</p>
+            <p className={styles.subheading}>Permanent upgrades for the flight program.</p>
           </div>
           <div className={styles.heroReadout}>
             <span className={styles.readoutLabel}>AVAILABLE</span>
@@ -241,7 +241,7 @@ export default function SkillTreeScreen({
 
       <div className={styles.bottomRail}>
         <span><i className={styles.railDot} /> ACADEMY LINK ONLINE</span>
-        <span>EARTH BASE // RESEARCH CONSOLE</span>
+        <span>BASE // RESEARCH CONSOLE</span>
       </div>
     </div>
   )

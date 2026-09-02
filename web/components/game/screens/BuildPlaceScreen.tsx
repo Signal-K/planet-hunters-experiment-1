@@ -171,7 +171,7 @@ export default function BuildPlaceScreen({ onPlaced, onBack, hasCoach, player }:
         <EarthBaseModules buildings={previewBuildings} />
       </div>
 
-      <TopBar eyebrow="EARTH BASE · SETUP" title="Build" onBack={onBack} />
+      <TopBar eyebrow="BASE · SETUP" title="Build" onBack={onBack} />
 
       {/* Plot pads */}
       <div style={{ position: 'absolute', inset: 0, zIndex: 10, pointerEvents: 'none' }}>

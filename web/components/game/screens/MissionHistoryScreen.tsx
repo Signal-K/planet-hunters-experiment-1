@@ -51,7 +51,7 @@ export default function MissionHistoryScreen({ records, clients, targets, player
     <section className="screen-scroll theme-deep" data-testid="mission-history-screen">
       <div className={styles.shell}>
         <header className={styles.header}>
-          <div><div className={styles.eyebrow}>EARTH BASE · MISSION LOG</div><h1>Mission Log</h1><p>Operations, client relationships, and the territory your program has put on the chart.</p></div>
+          <div><div className={styles.eyebrow}>BASE · MISSION LOG</div><h1>Mission Log</h1><p>Operations, client relationships, and the territory your program has put on the chart.</p></div>
           <button className={styles.backButton} onClick={onBack}>Back to base</button>
         </header>
         <nav className={styles.tabs} aria-label="Mission log sections"><a className={styles.tabActive} href="#operations">Operations <span>{ordered.length}</span></a><a className={styles.tab} href="#clients">Clients <span>{workedClients.length}</span></a><a className={styles.tab} href="#atlas">Exploration Atlas</a></nav>

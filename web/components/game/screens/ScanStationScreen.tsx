@@ -56,7 +56,7 @@ export default function ScanStationScreen({ player, targets, onBack, onStartScan
 
   return (
     <div className="game-screen theme-blueprint" data-testid="scan-station-screen">
-      <TopBar eyebrow="EARTH BASE · SCANNING" title="Scanning Station" onBack={onBack} />
+      <TopBar eyebrow="BASE · SCANNING" title="Scanning Station" onBack={onBack} />
       {coach.visible && <ScanStationCoach onDismiss={coach.dismiss} />}
       <div className="screen-scroll" data-ui-zone={UI_ZONES.screenContent}>
 

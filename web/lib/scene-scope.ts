@@ -3,13 +3,13 @@ import type { Mission, Target } from './data/types'
 import { compatibleTargetsFor } from './data/targets'
 
 export type SceneScope =
-  | { kind: 'earth-base'; id: 'earth-base'; label: 'Earth Base' }
+  | { kind: 'earth-base'; id: 'earth-base'; label: 'Base' }
   | { kind: 'body'; id: string; label: string }
 
 export const EARTH_BASE_SCOPE: SceneScope = {
   kind: 'earth-base',
   id: 'earth-base',
-  label: 'Earth Base',
+  label: 'Base',
 }
 
 interface SceneScopeInput {

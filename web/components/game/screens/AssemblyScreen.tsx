@@ -148,8 +148,8 @@ function LaunchClearance({
   compact?: boolean
 }) {
   const stops = deliveryTargetName
-    ? ['Earth Base', target.name, deliveryTargetName, 'Earth Base']
-    : ['Earth Base', target.name]
+    ? ['Base', target.name, deliveryTargetName, 'Base']
+    : ['Base', target.name]
   return (
     <div data-testid="assembly-rocket-cutaway" style={{ width: '100%', maxWidth: 620, display: 'flex', flexDirection: 'column', gap: compact ? 6 : 10 }}>
       {!compact && <PadElevation />}

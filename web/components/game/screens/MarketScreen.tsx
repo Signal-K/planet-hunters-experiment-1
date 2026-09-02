@@ -55,7 +55,7 @@ export default function MarketScreen({ stash, marketSupply, marketSupplyUpdatedA
           </svg>
         </button>
         <div className={styles.headerCopy}>
-          <div className={styles.eyebrow}>Earth Base · Resource Desk</div>
+          <div className={styles.eyebrow}>Base · Resource Desk</div>
           <h1 className={styles.title}>Commodity Exchange</h1>
         </div>
         <div className={styles.balance} aria-label={`Current balance ${formatCurrency(francs)}`}>

@@ -597,10 +597,10 @@ export default function HubScreen({ player, rocketVariant = 'explorer', hasCoach
                 opening characters ("EARTH BASE" -> "H BASE"). Only reserve
                 the clearance when that badge can actually render. */}
             <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 9.5, fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'rgba(177,198,229,0.7)', marginLeft: isDevLauncherEnabled() ? 130 : 0 }}>
-              {subsurface ? 'EARTH BASE · SUBSURFACE' : `EARTH BASE · OPS ${player.missionsDone}`}
+              {subsurface ? 'BASE · SUBSURFACE' : `BASE · OPS ${player.missionsDone}`}
             </div>
             <h1 style={{ margin: '2px 0 0', fontFamily: 'var(--ln-font-display)', fontSize: 23, fontWeight: 800, letterSpacing: '-0.01em', color: '#eaf1f8', lineHeight: 1, textShadow: '0 2px 10px rgba(0,0,0,0.6)' }}>
-              {subsurface ? 'Subsurface' : 'Earth Base'}
+              {subsurface ? 'Subsurface' : 'Base'}
             </h1>
           </div>
           {!subsurface && <HubClockWidget />}

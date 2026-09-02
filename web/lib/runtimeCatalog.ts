@@ -14,7 +14,7 @@ export const TRANSIT_TELESCOPE_TARGET: Target = {
   type: 'planet',
   orbit: 1,
   difficulty: 'L1',
-  brief: 'Low Earth orbit deployment lane for a transit telescope monitored from Earth Base operations.',
+  brief: 'Low Earth orbit deployment lane for a transit telescope monitored from Base operations.',
   minerals: [],
 }
 
@@ -49,7 +49,7 @@ export const SCAN_STATION_TARGET: Target = {
   type: 'planet',
   orbit: 1,
   difficulty: 'L1',
-  brief: 'Low Earth orbit shakedown lane for commissioning the Scan Station before it comes online at Earth Base.',
+  brief: 'Low Earth orbit shakedown lane for commissioning the Scan Station before it comes online at Base.',
   minerals: [],
 }
 
@@ -175,7 +175,7 @@ export function buildRuntimeCatalog({
     ? [{
         id: SCAN_STATION_MISSION_ID,
         title: 'Commission the Scan Station',
-        brief: 'Fly a shakedown pass in Earth orbit to calibrate the Scan Station before it comes online at Earth Base — the same commissioning pass every remote instrument gets before its build slot opens.',
+        brief: 'Fly a shakedown pass in Earth orbit to calibrate the Scan Station before it comes online at Base — the same commissioning pass every remote instrument gets before its build slot opens.',
         tag: 'STORY',
         difficulty: 'L1',
         locked: false,
