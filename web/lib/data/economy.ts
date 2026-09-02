@@ -154,12 +154,17 @@ export const STARTING_FRANCS = 9_000_000
 
 // ── Credit ─────────────────────────────────────────────────────────────────
 
+/** The public treasury issues one transparent, no-interest loan per player;
+ *  see TreasurySystem. There is deliberately no interest rate here — the
+ *  private interest-bearing loan this replaced is retired. */
 export const LOAN_PRINCIPAL = 5_000_000
-export const LOAN_INTEREST_RATE = 0.08
-export const LOAN_DEBT_ON_ACCEPT = LOAN_PRINCIPAL * (1 + LOAN_INTEREST_RATE)
 
 /** Balance below which the game offers the emergency loan. */
 export const BANKRUPTCY_THRESHOLD = 2_000_000
+
+/** Provisional seed balance for the treasury until site-deed revenue is the
+ *  real funding source (KES-287) — enough to cover a handful of loans. */
+export const TREASURY_STARTING_BALANCE = LOAN_PRINCIPAL * 4
 
 // ── Daily rewards ──────────────────────────────────────────────────────────
 

@@ -3,11 +3,11 @@ import {
   MISSIONS, TARGETS, ROCKET_MODELS, FREE_OPS_START_MISSIONS_DONE,
   getLaserChargeCap, travelDurationMs, suggestBuild,
   feasibleTargetsFor,
-  CLIENT_COOLDOWN_MS, CLIENT_STREAK_LIMIT, loanInstalmentFor, BANKRUPTCY_THRESHOLD,
   isOwnProgramMission,
   isFreeHaulMission,
   artifactNarrativeEligible,
   missionTypePrimer,
+  BANKRUPTCY_THRESHOLD,
 } from '@/lib/data'
 import { applyMiningDone, applyReturnArrived, applyRoverMiningDone } from '@/lib/systems/MiningSystem'
 import { applyDeliveryArrived, applyDeliveryUnloadComplete } from '@/lib/systems/DeliverySystem'
@@ -15,6 +15,8 @@ import { applyLandingTouchdown, applyRedockComplete } from '@/lib/systems/Landin
 import { applyAwardMissionCrewXP, crewRequirementStatus, diplomacyPayoutMultiplier, missionCrewForLaunch } from '@/lib/systems/AcademySystem'
 import { applyPurchaseRocket, applyFreeHaulDisposition, applyRemoteHaulDisposition, earthStorageBuilt, hasOperationalRemoteSilo } from '@/lib/systems/EconomySystem'
 import { applyConstructionCompletion } from '@/lib/systems/ConstructionSystem'
+import { loanOutstanding, repayBankruptcyLoan } from '@/lib/systems/TreasurySystem'
+import { TREASURY_PLAYER_ID } from '@/lib/systems/ProgressionSystem'
 import { enqueueSurvey, isRepeatSurveyEligible, getMilestoneSurveyVariant } from '@/lib/surveys'
 import { captureGameEvent } from '@/lib/posthog'
 import type { Catalog } from '@/lib/catalog'
@@ -547,17 +549,8 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
       const isStoryMission = mission?.tag === 'STORY' && !mission?.deliveryTargetId
       const isProgramOperation = !!mission && isOwnProgramMission(mission)
       const clientMissions = { ...s.player.clientMissions }
-      const clientStreaks = { ...(s.player.clientStreaks ?? {}) }
-      const clientCooldowns = { ...s.player.clientCooldowns }
       if (client && !isStoryMission) {
         clientMissions[client] = (clientMissions[client] ?? 0) + 1
-        const streak = (clientStreaks[client] ?? 0) + 1
-        if (streak >= CLIENT_STREAK_LIMIT) {
-          clientStreaks[client] = 0
-          clientCooldowns[client] = Date.now() + CLIENT_COOLDOWN_MS
-        } else {
-          clientStreaks[client] = streak
-        }
       }
       const stash = { ...(s.player.stash ?? {}) }
       // A delivery-target contract already moved the minerals out of the ship
@@ -567,13 +560,33 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
           stash[id] = Math.max(0, (stash[id] ?? 0) - amount)
         }
       }
-      let loanDebt = s.player.loanDebt
       let francs = s.player.francs + total
-      if (!isProgramOperation && loanDebt > 0) {
-        const payment = loanInstalmentFor(loanDebt)
-        francs = Math.max(0, francs - payment)
-        loanDebt = Math.max(0, loanDebt - payment)
+      // Treasury-backed emergency loan (KES-286/KES-287): the whole
+      // outstanding balance is repaid from the next payout in one shot,
+      // capped at what the payout actually covers — mirrors what
+      // loanInstalmentFor shows on the Debrief screen.
+      const treasuryPlayer = TREASURY_PLAYER_ID
+      let treasury = s.player.treasury
+      if (!isProgramOperation && treasury) {
+        const outstandingBefore = loanOutstanding(treasury, treasuryPlayer)
+        if (outstandingBefore > 0) {
+          const instalment = Math.min(outstandingBefore, Math.max(0, francs))
+          if (instalment > 0) {
+            const repayResult = repayBankruptcyLoan(treasury, {
+              entryId: `bankruptcy-loan-repayment:${treasuryPlayer}:${Date.now()}`,
+              loanId: `bankruptcy-loan:${treasuryPlayer}`,
+              playerId: treasuryPlayer,
+              amountFrancs: instalment,
+              repaidAt: Date.now(),
+            })
+            if (repayResult.changed) {
+              treasury = repayResult.treasury
+              francs -= repayResult.playerDebitFrancs
+            }
+          }
+        }
       }
+      const loanDebt = treasury ? loanOutstanding(treasury, treasuryPlayer) : 0
       const loanOffered = s.player.loanOffered
       const showLoanOffer = !isProgramOperation
         && !loanOffered
@@ -590,8 +603,6 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
         ? applyConstructionCompletion(s.player, mission, effectiveTargetId)
         : s.player
       let roverDeployments = [...(s.player.roverDeployments ?? [])]
-      let clientTerritories = { ...(s.player.clientTerritories ?? {}) }
-      let pendingTerritoryClaimFor: { targetId: string; clientId: string } | undefined
       if (mission?.payload?.type === 'rover' && client && effectiveTargetId) {
         roverDeployments = [...roverDeployments, {
           roverId: `${mission.id}-rover-${Date.now()}`,
@@ -599,11 +610,6 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
           clientId: client,
           timestamp: Date.now(),
         }]
-        const prev = clientTerritories[client] ?? []
-        if (!prev.includes(effectiveTargetId)) {
-          clientTerritories = { ...clientTerritories, [client]: [...prev, effectiveTargetId] }
-        }
-        pendingTerritoryClaimFor = { targetId: effectiveTargetId, clientId: client }
       }
       const completedDailyPool = (s.missionId?.startsWith('dcp-') && s.player.dailyClientPool)
         ? {
@@ -665,22 +671,20 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
           missionCrewIds: [],
           deliveryUnloadStartedAt: undefined,
           shipDestroyed: false,
+          loanDebt,
+          loanOffered: loanOffered || showLoanOffer,
+          treasury,
           missionsDone,
           skillPoints: (s.player.skillPoints ?? 0) + 1,
           missionCount: catalog.missions.filter(m => m.sequence === missionsDone + 1).length,
           freeOperations: missionsDone >= FREE_OPS_START_MISSIONS_DONE,
           clientMissions,
-          clientStreaks,
-          clientCooldowns,
           completedMissions,
           stash,
           lastClient: (isStoryMission || isProgramOperation) ? s.player.lastClient : client,
-          loanDebt,
-          loanOffered: loanOffered || showLoanOffer,
           seen_planets,
           crewVisitedTargets,
           roverDeployments,
-          clientTerritories,
           dailyClientPool: completedDailyPool,
           transitSatelliteLaunchedAt: mission?.payload?.type === 'satellite'
             ? (s.player.transitSatelliteLaunchedAt ?? Date.now())
@@ -703,16 +707,13 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
         tutorial: stillInTutorial,
         popup,
         doneSteps: { ...s.doneSteps, 9: true },
-          screen: pendingTerritoryClaimFor
-          ? s.screen
-          : mission?.payload?.type === 'satellite'
+          screen: mission?.payload?.type === 'satellite'
             ? 'galaxy'
             : isProgramOperation
               ? 'launchpad'
               : (stillInTutorial || justFinishedOnboardingNow)
                 ? 'hub'
                 : 'market',
-        pendingTerritoryClaimFor,
       }
       return applyGainResearchXP(next, mission?.programReward?.researchXP ?? 0)
     })

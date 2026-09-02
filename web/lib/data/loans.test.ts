@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { loanInstalmentFor, LOAN_PRINCIPAL, LOAN_DEBT_ON_ACCEPT } from './loans'
+import { loanInstalmentFor, LOAN_PRINCIPAL } from './loans'
 
 describe('loanInstalmentFor', () => {
   it('is zero with no debt', () => {
@@ -10,11 +10,8 @@ describe('loanInstalmentFor', () => {
 
   it('clears the whole debt in one debrief', () => {
     // The Debrief line must say "debt cleared", not imply an instalment plan.
-    expect(loanInstalmentFor(LOAN_DEBT_ON_ACCEPT)).toBe(LOAN_DEBT_ON_ACCEPT)
+    // The treasury loan is principal-only, no interest — see TreasurySystem.
+    expect(loanInstalmentFor(LOAN_PRINCIPAL)).toBe(LOAN_PRINCIPAL)
     expect(loanInstalmentFor(9_999_999_999)).toBe(9_999_999_999)
-  })
-
-  it('books principal plus one flat interest charge', () => {
-    expect(LOAN_DEBT_ON_ACCEPT).toBe(LOAN_PRINCIPAL * 1.08)
   })
 })

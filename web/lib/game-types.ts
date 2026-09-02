@@ -5,6 +5,8 @@ import type { RocketConfig, Mission, Target, TessClassification, TessVerdict, Tr
 import type { RoverTerrainClass } from '@/lib/data/rover-scouting'
 import type { RoverSpec } from '@takeon/engine'
 import type { SceneScope } from './scene-scope'
+import type { ClientBuildCompletionEvent, DailyEconomySnapshot } from './systems/DailyEconomySystem'
+import type { TreasuryState } from './systems/TreasurySystem'
 
 export interface DailyClientPool {
   date: string        // 'YYYY-MM-DD'
@@ -219,6 +221,10 @@ export interface Player {
   // capping out permanently once enough of a mineral has ever been sold.
   marketSupply?: Record<string, number>
   marketSupplyUpdatedAt?: Record<string, number>
+  /** Last published shared AEST price and client-demand snapshot. */
+  dailyEconomySnapshot?: DailyEconomySnapshot
+  /** Immutable evidence that a player-built client structure completed. */
+  clientBuildEvents?: ClientBuildCompletionEvent[]
   clientMissions: Record<string, number>
   completedMissions?: CompletedMissionRecord[]
   clientStreaks?: Record<string, number>
@@ -235,8 +241,11 @@ export interface Player {
   remoteStorage?: Record<string, Record<string, number>>
   launchpadUpgraded: boolean
   lastClient?: string
+  /** Mirrors treasury.loans[...].outstandingFrancs for this player; treasury is authoritative. */
   loanDebt: number
   loanOffered: boolean
+  /** Provisional per-player instance until KES-287 gives the treasury a real shared home. */
+  treasury?: TreasuryState
   arrivalAt?: number | null
   // Wall-clock departure for the current transit leg. Keeping this alongside
   // arrivalAt lets the transit animation resume at the correct visual time
