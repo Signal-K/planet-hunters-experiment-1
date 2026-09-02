@@ -146,6 +146,25 @@ export default function DevShortcuts() {
             >
               OPEN LAUNCHER
             </a>
+            <a
+              href="/game/narrative-ledger"
+              style={{
+                display: 'block',
+                marginTop: 6,
+                padding: '6px 10px',
+                border: '1px solid var(--ln-cyan-border)',
+                borderRadius: 6,
+                color: 'var(--ln-cyan)',
+                fontFamily: 'var(--ln-font-display)',
+                fontSize: 10,
+                fontWeight: 800,
+                letterSpacing: '0.08em',
+                textDecoration: 'none',
+                textAlign: 'center',
+              }}
+            >
+              OPEN NARRATIVE LEDGER
+            </a>
           </div>
 
           {DEV_GROUPS.map((group, gi) => (

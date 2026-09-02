@@ -22,6 +22,7 @@ import AsteroidDiscoveryScreen from '@/components/game/screens/AsteroidDiscovery
 import SurfaceOpsScreen from '@/components/game/screens/SurfaceOpsScreen'
 import AcademyScreen from '@/components/game/screens/AcademyScreen'
 import MissionHistoryScreen from '@/components/game/screens/MissionHistoryScreen'
+import NarrativeLedgerScreen from '@/components/game/screens/NarrativeLedgerScreen'
 import { enqueueSurvey } from '@/lib/surveys'
 import { VISUAL_ASTEROID_CANDIDATE, VISUAL_TESS_CANDIDATE } from '@/lib/visual-fixtures'
 import { captureGameEvent } from '@/lib/posthog'
@@ -35,6 +36,7 @@ export const VALID_SCREENS = new Set<Screen>([
   'academy',
   'asteroid-discovery',
   'mission-history',
+  'narrative-ledger',
 ])
 
 // Shared per-screen render map — the single source of truth for "which
@@ -348,6 +350,9 @@ export function ScreenContent({
           onBack={() => game.go('hub')}
         />
       )
+
+    case 'narrative-ledger':
+      return <NarrativeLedgerScreen onBack={() => game.go('hub')} />
 
     case 'scan-station':
       return (

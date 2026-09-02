@@ -50,6 +50,7 @@ export type Screen =
   | 'academy'
   | 'asteroid-discovery'
   | 'mission-history'
+  | 'narrative-ledger'
 
 export type LaunchpadView = 'overview' | 'focus'
 
