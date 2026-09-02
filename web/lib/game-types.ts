@@ -416,6 +416,7 @@ export interface GameActions {
   launchpadView: LaunchpadView
   openLaunchpad: () => void
   focusLaunchpad: () => void
+  returnFromHangar: () => void
   goToMissions: (scope?: SceneScope) => void
   setScreenFromUrl: (screen: Screen) => void
   setPlayer: React.Dispatch<React.SetStateAction<Player>>

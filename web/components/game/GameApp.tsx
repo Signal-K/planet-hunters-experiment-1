@@ -227,7 +227,7 @@ function GameCanvas() {
           {/* Gated the same way as [screen]/page.tsx — see STS-624. */}
           {!game.authGateOpen && (
             <ScreenContent screen={game.screen} game={game} hasCoach={hasCoach} onBackFromHangar={() => {
-              game.go('hub')
+              game.returnFromHangar()
               if (window.location.pathname.includes('/game/ship-customizer')) {
                 router.replace('/game')
               }

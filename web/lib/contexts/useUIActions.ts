@@ -26,13 +26,22 @@ export function useUIActions(
   // structure opens the close/focus composition. Keep this as ephemeral UI
   // state so the persisted game state and the public route stay unchanged.
   const [launchpadView, setLaunchpadView] = useState<LaunchpadView>('overview')
+  // Hangar can be entered from the Earth Base or either Launchpad composition.
+  // Preserve only that ephemeral return context: it is navigation chrome, not
+  // player progress and must not be persisted into a save or public URL.
+  const hangarReturnView = useRef<LaunchpadView | 'hub'>('hub')
 
   const go = useCallback((screen: Screen) => {
     // Legacy/tutorial callers keep the close/focus composition. New UI entry
     // points use openLaunchpad so the two meanings cannot drift together.
     if (screen === 'launchpad') setLaunchpadView('focus')
-    setState(s => ({ ...s, screen }))
-  }, [setState])
+    setState(s => {
+      if (screen === 'hangar') {
+        hangarReturnView.current = s.screen === 'launchpad' ? launchpadView : 'hub'
+      }
+      return { ...s, screen }
+    })
+  }, [launchpadView, setState])
 
   const openLaunchpad = useCallback(() => {
     setLaunchpadView('overview')
@@ -41,6 +50,16 @@ export function useUIActions(
 
   const focusLaunchpad = useCallback(() => {
     setLaunchpadView('focus')
+    setState(s => ({ ...s, screen: 'launchpad' }))
+  }, [setState])
+
+  const returnFromHangar = useCallback(() => {
+    const destination = hangarReturnView.current
+    if (destination === 'hub') {
+      setState(s => ({ ...s, screen: 'hub' }))
+      return
+    }
+    setLaunchpadView(destination)
     setState(s => ({ ...s, screen: 'launchpad' }))
   }, [setState])
 
@@ -97,5 +116,5 @@ export function useUIActions(
     setState(s => ({ ...s, pendingTerritoryClaimFor: undefined, screen: s.tutorial ? 'hub' : 'market' }))
   }, [setState])
 
-  return { go, goToMissions, setScreenFromUrl, skipNextUrlSync, setPopup, setMenuOpen, addToast, dismissToast, clearTerritoryClaimPopup, toasts, subsurfaceView, setSubsurfaceView, launchpadView, openLaunchpad, focusLaunchpad }
+  return { go, goToMissions, setScreenFromUrl, skipNextUrlSync, setPopup, setMenuOpen, addToast, dismissToast, clearTerritoryClaimPopup, toasts, subsurfaceView, setSubsurfaceView, launchpadView, openLaunchpad, focusLaunchpad, returnFromHangar }
 }

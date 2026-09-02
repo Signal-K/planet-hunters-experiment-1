@@ -139,20 +139,16 @@ export default function LaunchpadScreen({
   }
 
   const isGuided = (target: (typeof guideSteps)[number]['target']) => guide?.target === target
-  const startPadAction = () => {
-    if (player.activeMission || player.pendingLaunch || !freeOperations || !nextOperation) {
-      onLaunchpadAction()
-      return
-    }
-    onPick(nextOperation.id)
-  }
+  // The physical pad is an entry point to mission selection, not an implicit
+  // choice of the first operation in a computed list. Selecting a mission is
+  // a separate, visible decision; otherwise the pad jumps straight to target
+  // selection and skips the board reported in the Craft bug log.
+  const startPadAction = onLaunchpadAction
   const padActionLabel = player.activeMission
     ? 'Resume active mission'
     : player.pendingLaunch
       ? 'Inspect pending launch'
-      : freeOperations && nextOperation
-        ? 'Start own program operation'
-        : 'Start a new mission'
+      : 'Start a new mission'
 
   return (
     <div className="game-screen theme-blueprint ln-scene-launchpad" data-testid="launchpad-focus-screen">
@@ -191,7 +187,7 @@ export default function LaunchpadScreen({
           </span>
           <span className="launchpad-object-label launchpad-object-label--center">
             <small>LAUNCHPAD</small>
-            <strong>{player.activeMission ? 'RESUME MISSION' : player.pendingLaunch ? 'INSPECT LAUNCH' : freeOperations && nextOperation ? 'START OWN OP' : 'START MISSION'}</strong>
+            <strong>{player.activeMission ? 'RESUME MISSION' : player.pendingLaunch ? 'INSPECT LAUNCH' : 'START MISSION'}</strong>
           </span>
         </button>
 

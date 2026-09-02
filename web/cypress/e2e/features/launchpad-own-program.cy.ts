@@ -1,7 +1,6 @@
-// Tapping the launchpad opens the player's own program first — the work they
-// launch on their own initiative — with the Mission Board's client contracts
-// one press further in. Before this, the pad went straight to a wall of client
-// requests, which read as "this pad exists to serve other people".
+// Own-program operations remain explicit Launchpad actions. The physical pad
+// itself enters mission selection first, so it never silently chooses the
+// first generated operation and drops the player into target selection.
 describe('Launchpad · your own program', () => {
   const freeOpsSave = (extra: Record<string, unknown> = {}) => ({
     screen: 'launchpad',
@@ -90,7 +89,7 @@ describe('Launchpad · your own program', () => {
       })
   })
 
-  it('clicking the launchpad starts the next own-program operation', () => {
+  it('clicking the physical launchpad opens mission selection before targets', () => {
     cy.viewport(390, 844)
     visitLaunchpad(freeOpsSave(), false)
 
@@ -106,6 +105,28 @@ describe('Launchpad · your own program', () => {
     cy.get('[data-testid="auth-gate-quick-submit"]').click()
     cy.get('[data-testid="auth-gate-quick-email"]', { timeout: 15000 }).should('not.exist')
     cy.get('[data-testid="launchpad-status-card"]', { timeout: 15000 }).should('be.visible').click()
-    cy.contains('Pick Target', { timeout: 15000 }).should('be.visible')
+    cy.get('body').then($body => {
+      // A URL/direct-save entry can first land in the full Launchpad overview;
+      // its status card enters the close pad composition. Hub-originated play
+      // is already in that composition, so only click a second time when it
+      // is actually present.
+      if ($body.find('[data-testid="launchpad-focus-screen"]').length) {
+        cy.get('[data-testid="launchpad-status-card"]').click()
+      }
+    })
+    cy.contains('Mission Board', { timeout: 15000 }).should('be.visible')
+    cy.contains('Pick Target').should('not.exist')
+  })
+
+  it('returns to the Launchpad after opening the Hangar from it', () => {
+    cy.viewport(1280, 900)
+    visitLaunchpad(freeOpsSave())
+
+    cy.get('[data-testid="launchpad-ui-open-hangar-btn"], [data-testid="launchpad-open-hangar-btn"]', { timeout: 15000 })
+      .first()
+      .click()
+    cy.contains('Rocket Fleet', { timeout: 15000 }).should('be.visible')
+    cy.get('[data-testid="top-bar-back"]').click()
+    cy.contains('Your Program', { timeout: 15000 }).should('be.visible')
   })
 })

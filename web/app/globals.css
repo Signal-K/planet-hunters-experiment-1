@@ -2832,21 +2832,6 @@ html[data-coach-target="build-structure-strip"] [data-coach-id="build-structure-
 .build-place-field {
   z-index: 0;
 }
-/* Planning grid overlay — a sibling div painted after HubWorldBackground
-   (see BuildPlaceScreen.tsx), not `.build-place-field`'s own `background`.
-   A container's `background` always paints behind its children, so putting
-   the grid there put it BEHIND HubWorldBackground's opaque sky, invisible.
-   This is its own transparent-between-lines layer stacked on top instead. */
-.build-place-grid-overlay {
-  position: absolute;
-  inset: 0;
-  z-index: 2;
-  pointer-events: none;
-  background:
-    linear-gradient(var(--ln-hairline) 1px, transparent 1px),
-    linear-gradient(90deg, var(--ln-hairline) 1px, transparent 1px);
-  background-size: 32px 32px;
-}
 .build-place-screen [data-coach-id="build-structure-strip"] > div {
   background: linear-gradient(180deg, transparent, rgba(10, 10, 12, 0.75) 26%, var(--ln-void) 100%);
   border-top: 1px solid var(--ln-hairline-strong);

@@ -17,6 +17,8 @@ interface HangarScreenProps {
   shipCustomizerParts?: InstalledCustomizerPartsByKind
   crewModuleResearched?: boolean
   landingResearched?: boolean
+  pendingLaunch?: boolean
+  pendingRocketName?: string
   onConfirmShipCustomizerBuild?: (installed: InstalledCustomizerPartsByKind, prevInstalled: InstalledCustomizerPartsByKind) => boolean
   onBack: () => void
   onSelect?: (rocketId: string) => void
@@ -99,7 +101,7 @@ function RocketCard({ rocket, missionsDone, onSelect }: { rocket: RocketModel; m
   )
 }
 
-export default function HangarScreen({ francs, missionsDone, unlockedSkillNodes, shipCustomizerParts, crewModuleResearched, landingResearched, onConfirmShipCustomizerBuild, onBack, onSelect }: HangarScreenProps) {
+export default function HangarScreen({ francs, missionsDone, unlockedSkillNodes, shipCustomizerParts, crewModuleResearched, landingResearched, pendingLaunch, pendingRocketName, onConfirmShipCustomizerBuild, onBack, onSelect }: HangarScreenProps) {
   // Academy research is a second, explicit unlock path: a player who has
   // researched Crew Quarters must be able to enter the fitter even if they
   // have not purchased the general-purpose customiser skill node.
@@ -122,7 +124,10 @@ export default function HangarScreen({ francs, missionsDone, unlockedSkillNodes,
               <h1 className={styles.title}>Rocket Fleet</h1>
               <p className={styles.copy}>Inspect cleared vehicles, compare operating limits, and select the vessel assigned to the next launch.</p>
             </div>
-            <div className={styles.fleetReadout}><span className={styles.railLabel}>Cleared fleet</span><strong className={styles.fleetValue}>{ROCKET_MODELS.filter(rocket => !rocket.locked && missionsDone >= rocket.missionsRequired).length}/{ROCKET_MODELS.length}</strong></div>
+            <div className={styles.fleetReadout} data-testid="hangar-fleet-readout">
+              <span className={styles.railLabel}>{pendingLaunch ? 'Vehicle in build' : 'Cleared fleet'}</span>
+              <strong className={styles.fleetValue}>{pendingLaunch ? pendingRocketName ?? 'STAGED VEHICLE' : `${ROCKET_MODELS.filter(rocket => !rocket.locked && missionsDone >= rocket.missionsRequired).length}/${ROCKET_MODELS.length}`}</strong>
+            </div>
           </div>
 
         {customizerUnlocked && (

@@ -52,7 +52,7 @@ export function ScreenContent({
   screen: Screen
   game: ReturnType<typeof useGame>
   hasCoach: boolean
-  /** Overrides HangarScreen's onBack; falls back to game.go('hub'). */
+  /** Overrides HangarScreen's onBack; falls back to the remembered entry scene. */
   onBackFromHangar?: () => void
 }) {
   // Launch sequence state lives here so it's scoped to the fab screen
@@ -320,8 +320,10 @@ export function ScreenContent({
           shipCustomizerParts={game.player.shipCustomizerParts}
           crewModuleResearched={game.player.crewModuleResearched}
           landingResearched={game.player.landingResearched}
+          pendingLaunch={game.player.pendingLaunch}
+          pendingRocketName={rocketDisplay.name}
           onConfirmShipCustomizerBuild={game.confirmShipCustomizerBuild}
-          onBack={onBackFromHangar ?? (() => game.go('hub'))}
+          onBack={onBackFromHangar ?? game.returnFromHangar}
         />
       )
 
@@ -382,7 +384,7 @@ export function ScreenContent({
             }}
             onViewContracts={() => game.goToMissions()}
             onFocusPad={game.focusLaunchpad}
-            onOpenHangar={() => game.go(game.player.pendingLaunch ? 'fab' : 'hangar')}
+            onOpenHangar={() => game.go('hangar')}
             onOpenSubsurface={() => game.go('hub-subsurface')}
             onOpenBuild={() => game.go('build')}
             onOpenAcademy={() => game.go('academy')}
@@ -409,7 +411,7 @@ export function ScreenContent({
             if (game.player.pendingLaunch) return game.go('fab')
             game.goToMissions()
           }}
-          onOpenHangar={() => game.go(game.player.pendingLaunch ? 'fab' : 'hangar')}
+          onOpenHangar={() => game.go('hangar')}
           onOpenSubsurface={() => game.go('hub-subsurface')}
           onOpenBuild={() => game.go('build')}
           onOpenAcademy={() => game.go('academy')}

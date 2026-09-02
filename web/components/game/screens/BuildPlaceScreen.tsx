@@ -1,11 +1,10 @@
 'use client'
 
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import TopBar from '@/components/ui/TopBar'
 import { PrimaryBtn } from '@/components/ui/Button'
 import { canAffordStructure, STRUCTURES, structureUnlocked } from '@/lib/data'
 import type { StructureBlueprint } from '@/lib/data'
-import { Scene } from '@/lib/engine/Scene'
 import type { EntityData } from '@/lib/engine/types'
 import { buildPlotEntities } from '@/lib/engine/prefabs'
 import { readComponentNumber } from '@/lib/engine/registry'
@@ -67,16 +66,10 @@ function formatStructureCost(structure: StructureBlueprint): string {
 export default function BuildPlaceScreen({ onPlaced, onBack, hasCoach, player }: BuildPlaceScreenProps) {
   const [picked, setPicked] = useState('launchpad')
   const [cell, setCell] = useState<number | null>(null)
-  const [plotEntities, setPlotEntities] = useState<EntityData[]>(DEFAULT_PLOTS)
-  const [sceneLoaded, setSceneLoaded] = useState(false)
-  const containerRef = useRef<HTMLDivElement>(null)
-
-  useEffect(() => {
-    Scene.load('/game/scenes/hub.scene.json')
-      .then(data => { if (data.entities?.length) setPlotEntities(data.entities) })
-      .catch(() => {})
-      .finally(() => setSceneLoaded(true))
-  }, [])
+  // Build plots are authored from the shared prefab. Reloading the identical
+  // hub scene on every entry delayed Build and Back without changing any
+  // placement coordinates, so use the prefab directly.
+  const plotEntities = DEFAULT_PLOTS
 
   const catalog = STRUCTURES.filter(s =>
     s.id !== 'garage'
@@ -154,9 +147,8 @@ export default function BuildPlaceScreen({ onPlaced, onBack, hasCoach, player }:
 
   return (
     <div
-      ref={containerRef}
       data-testid="build-place-screen"
-      data-scene-loaded={sceneLoaded ? 'true' : 'false'}
+      data-scene-loaded="true"
       className="build-place-screen"
       style={{ width: '100%', height: '100%', position: 'relative', overflow: 'hidden' }}
     >
@@ -170,12 +162,9 @@ export default function BuildPlaceScreen({ onPlaced, onBack, hasCoach, player }:
           different ground line than Hub's (`bottom: calc(42% - 20px)` vs
           Hub's 22%), so `--hub-ground` is scoped to 42% for this screen only
           (see globals.css `.build-place-screen`) rather than changing the
-          shared token everyone else relies on. The planning grid stays as a
-          semi-transparent overlay on top of the terrain, not a replacement
-          for it. */}
+          shared token everyone else relies on. */}
       <div className="build-place-field" style={{ position: 'absolute', inset: 0 }}>
         <HubWorldBackground />
-        <div className="build-place-grid-overlay" aria-hidden="true" />
         <EarthBaseModules buildings={existingBuildings} />
         <EarthBaseModules buildings={previewBuildings} />
       </div>
@@ -263,9 +252,7 @@ export default function BuildPlaceScreen({ onPlaced, onBack, hasCoach, player }:
         pointerEvents: 'none',
       }}>
         <div style={{
-          background: 'linear-gradient(180deg, transparent 0%, rgba(10,10,11,0.60) 20%, rgba(10,10,11,0.85) 100%)',
-          backdropFilter: 'blur(4px)',
-          WebkitBackdropFilter: 'blur(4px)',
+          background: 'linear-gradient(180deg, transparent, var(--ln-overlay))',
           padding: '10px 12px 0',
         }}>
           <div style={{
