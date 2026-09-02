@@ -72,6 +72,19 @@ export function searchFriendCandidates(query: string): Promise<{ results: Friend
   return friendsFetch(`/search?q=${encodeURIComponent(query)}`)
 }
 
+/** A browseable directory so adding a friend never depends on knowing a username. */
+export function listFriendDirectory(): Promise<{ results: FriendPublicUser[] }> {
+  return friendsFetch<{ results: FriendPublicUser[] }>('/directory').catch(err => {
+    // Web and PocketBase can briefly be on different deploy revisions. The
+    // legacy endpoint safely yields no results for an empty query, which keeps
+    // Friends usable while the directory route rolls out.
+    if (err instanceof FriendsApiError && err.status === 404) {
+      return searchFriendCandidates('')
+    }
+    throw err
+  })
+}
+
 export function setFriendUsername(username: string): Promise<FriendPublicUser> {
   return friendsFetch('/username', { method: 'POST', body: JSON.stringify({ username }) })
 }

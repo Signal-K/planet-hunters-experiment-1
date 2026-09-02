@@ -33,6 +33,7 @@ func registerFriendsRoutes(app core.App) {
 		g.Bind(apis.RequireAuth("users"))
 
 		g.GET("/search", friendsSearchHandler(app))
+		g.GET("/directory", friendsDirectoryHandler(app))
 		g.POST("/username", friendsSetUsernameHandler(app))
 		g.POST("/request", friendsRequestHandler(app))
 		g.POST("/respond", friendsRespondHandler(app))
@@ -103,6 +104,28 @@ func friendsSearchHandler(app core.App) func(e *core.RequestEvent) error {
 				continue
 			}
 			results = append(results, publicUser(r))
+		}
+		return e.JSON(http.StatusOK, map[string]any{"results": results})
+	}
+}
+
+// friendsDirectoryHandler is intentionally separate from search: discovery is
+// a first-class social action, not a fallback for players who happen to know a
+// username. It exposes only the already-public game username and id.
+func friendsDirectoryHandler(app core.App) func(e *core.RequestEvent) error {
+	return func(e *core.RequestEvent) error {
+		records, err := app.FindRecordsByFilter(
+			"users", "username != '' && id != {:self}", "username", 500, 0,
+			dbx.Params{"self": e.Auth.Id},
+		)
+		if err != nil {
+			return apis.NewApiError(http.StatusInternalServerError, "directory failed", nil)
+		}
+		results := make([]map[string]any, 0, len(records))
+		for _, r := range records {
+			if strings.TrimSpace(r.GetString("username")) != "" {
+				results = append(results, publicUser(r))
+			}
 		}
 		return e.JSON(http.StatusOK, map[string]any{"results": results})
 	}

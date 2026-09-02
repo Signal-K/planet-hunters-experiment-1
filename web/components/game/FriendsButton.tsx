@@ -14,11 +14,13 @@ export default function FriendsButton({ onClick }: FriendsButtonProps) {
       onClick={onClick}
       style={{
         position: 'absolute', top: 56, right: 56, zIndex: 22,
-        width: 34, height: 34, borderRadius: 999, cursor: 'pointer',
-        display: 'grid', placeItems: 'center', padding: 0,
-        background: 'var(--hub-panel, #080d18)',
-        border: '1.5px solid var(--hub-outline, rgba(255,255,255,0.55))',
-        color: 'var(--hub-cyan, #6cd4ff)',
+        minHeight: 34, borderRadius: 999, cursor: 'pointer',
+        display: 'flex', alignItems: 'center', gap: 8, padding: '0 12px',
+        background: 'var(--ln-panel)',
+        border: '1px solid var(--ln-hairline)',
+        color: 'var(--ln-cyan)',
+        fontFamily: 'var(--ln-font-display)', fontSize: 10, fontWeight: 800,
+        letterSpacing: '0.12em',
       }}
     >
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -27,6 +29,7 @@ export default function FriendsButton({ onClick }: FriendsButtonProps) {
         <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
         <path d="M16 3.13a4 4 0 0 1 0 7.75" />
       </svg>
+      <span>FRIENDS</span>
     </button>
   )
 }

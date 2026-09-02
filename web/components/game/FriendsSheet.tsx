@@ -4,11 +4,16 @@ import React, { useCallback, useEffect, useState } from 'react'
 import { useGame } from '@/game-context'
 import { pbShared } from '@/lib/pb'
 import PageSurface from '@/components/ui/PageSurface'
+import ScenePanel from '@/components/game/ScenePanel'
 import FriendAvatar from '@/components/game/FriendAvatar'
+import { HubWorldBackground } from '@/components/game/hub/HubWorldBackground'
+import { useTimeOfDay } from '@/lib/hooks/useTimeOfDay'
+import styles from './FriendsSheet.module.css'
 import { generateDefaultUsername, isValidUsername } from '@/lib/friends/username'
 import {
   FriendsApiError,
   friendGiftInbox,
+  listFriendDirectory,
   listFriends,
   removeFriendship,
   respondToFriendRequest,
@@ -137,7 +142,7 @@ function FriendRow({
 
 export default function FriendsSheet({ onClose }: FriendsSheetProps) {
   const game = useGame()
-  const [tab, setTab] = useState<Tab>('friends')
+  const [tab, setTab] = useState<Tab>('find')
   const [data, setData] = useState<FriendsListResponse | null>(null)
   const [inbox, setInbox] = useState<FriendGiftInboxEntry[]>([])
   const [loading, setLoading] = useState(true)
@@ -150,6 +155,7 @@ export default function FriendsSheet({ onClose }: FriendsSheetProps) {
   const [usernameDraft, setUsernameDraft] = useState('')
   const [editingUsername, setEditingUsername] = useState(false)
   const [usernameError, setUsernameError] = useState<string | null>(null)
+  const { phase: skyPhase } = useTimeOfDay()
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -171,8 +177,9 @@ export default function FriendsSheet({ onClose }: FriendsSheetProps) {
         }
       }
       setData(list)
-      const inboxRes = await friendGiftInbox()
+      const [inboxRes, directoryRes] = await Promise.all([friendGiftInbox(), listFriendDirectory()])
       setInbox(inboxRes.gifts)
+      setResults(directoryRes.results)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load friends')
     } finally {
@@ -183,7 +190,11 @@ export default function FriendsSheet({ onClose }: FriendsSheetProps) {
   useEffect(() => { void load() }, [load])
 
   async function handleSearch() {
-    if (query.trim().length < 2) { setResults([]); return }
+    if (query.trim().length < 2) {
+      const directory = await listFriendDirectory()
+      setResults(directory.results)
+      return
+    }
     try {
       const res = await searchFriendCandidates(query.trim())
       setResults(res.results)
@@ -273,29 +284,44 @@ export default function FriendsSheet({ onClose }: FriendsSheetProps) {
 
   return (
     <PageSurface
-      className="theme-light"
+      className="theme-deep"
       zIndex={210}
       contentTestId="friends-page"
       contentStyle={{
-        background: 'var(--ln-surface)',
-        border: '1px solid var(--ln-hairline)',
-        padding: '20px 20px 32px',
-        overflowY: 'auto',
+        background: 'transparent',
+        padding: 0,
+        overflow: 'hidden',
       }}
     >
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 18 }}>
+      <ScenePanel ambient="survey" scene={<HubWorldBackground phase={skyPhase} />}>
+      <div className={styles.shell}>
+      <div className={styles.deck}>
+        <aside className={styles.visual} aria-hidden="true">
+          <div className={styles.visualLabel}>Earth Base Comms</div>
+          <div className={styles.network}>
+            <span className={styles.orbitOne} />
+            <span className={styles.orbitTwo} />
+            <span className={styles.nodeCenter} />
+            <span className={`${styles.node} ${styles.nodeOne}`} />
+            <span className={`${styles.node} ${styles.nodeTwo}`} />
+            <span className={`${styles.node} ${styles.nodeThree}`} />
+          </div>
+          <p className={styles.visualCopy}>Locate other active crews, form a connection, and exchange field support.</p>
+        </aside>
+        <div className={styles.content}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 24 }}>
         <div>
           <div style={{
             fontFamily: 'var(--ln-font-display)', fontSize: 9, fontWeight: 800,
             letterSpacing: '0.24em', color: 'var(--ln-text-muted)', textTransform: 'uppercase', marginBottom: 8,
           }}>
-            Landnam · Comms
+            Earth Base · Comms Network
           </div>
           <div style={{
             fontFamily: 'var(--ln-font-display)', fontSize: 24, fontWeight: 800,
             color: 'var(--ln-text)', letterSpacing: '-0.01em',
           }}>
-            Friends
+            Crew Connections
           </div>
         </div>
         <button
@@ -303,11 +329,12 @@ export default function FriendsSheet({ onClose }: FriendsSheetProps) {
           onClick={onClose}
           style={{
             background: 'var(--ln-surface-2)', border: '1px solid var(--ln-hairline)',
-            borderRadius: 8, width: 32, height: 32, cursor: 'pointer',
-            color: 'var(--ln-text-muted)', fontFamily: 'var(--ln-font-display)', fontSize: 14, fontWeight: 800,
+            borderRadius: 8, minHeight: 32, padding: '0 8px', cursor: 'pointer',
+            color: 'var(--ln-text-muted)', fontFamily: 'var(--ln-font-display)', fontSize: 10, fontWeight: 800,
+            letterSpacing: '0.08em',
           }}
         >
-          ✕
+          CLOSE
         </button>
       </div>
 
@@ -363,7 +390,7 @@ export default function FriendsSheet({ onClose }: FriendsSheetProps) {
           <div style={{ display: 'flex', gap: 8 }}>
             <TabButton active={tab === 'friends'} label="Friends" onClick={() => setTab('friends')} />
             <TabButton active={tab === 'requests'} label={`Requests${data ? ` (${data.incoming.length})` : ''}`} onClick={() => setTab('requests')} />
-            <TabButton active={tab === 'find'} label="Find" onClick={() => setTab('find')} />
+            <TabButton active={tab === 'find'} label="Directory" onClick={() => setTab('find')} />
           </div>
 
           {loading && <div style={{ padding: 20, color: 'var(--ln-text-muted)', fontFamily: 'var(--ln-font-body)', fontSize: 13 }}>Loading…</div>}
@@ -394,7 +421,7 @@ export default function FriendsSheet({ onClose }: FriendsSheetProps) {
               <SectionLabel>Friends{data ? ` (${data.friends.length})` : ''}</SectionLabel>
               {data?.friends.length === 0 && (
                 <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 13, color: 'var(--ln-text-muted)' }}>
-                  No friends yet — find one in the Find tab.
+                  No connections yet — browse crews in the Directory.
                 </div>
               )}
               {data?.friends.map(f => (
@@ -447,13 +474,14 @@ export default function FriendsSheet({ onClose }: FriendsSheetProps) {
 
           {!loading && !error && tab === 'find' && (
             <>
-              <SectionLabel>Find a Player</SectionLabel>
+              <SectionLabel>Player Directory</SectionLabel>
+              <p className={styles.directoryCopy}>Every crew with a public callsign is listed here. Search is optional.</p>
               <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
                 <input
                   value={query}
                   onChange={e => setQuery(e.target.value)}
                   onKeyDown={e => { if (e.key === 'Enter') void handleSearch() }}
-                  placeholder="Search by username"
+                  placeholder="Filter crews by callsign"
                   style={{
                     flex: 1, fontFamily: 'var(--ln-font-body)', fontSize: 13, padding: '8px 10px',
                     borderRadius: 6, border: '1px solid var(--ln-hairline)', background: 'var(--ln-surface-2)',
@@ -472,10 +500,17 @@ export default function FriendsSheet({ onClose }: FriendsSheetProps) {
                   <SmallButton label="Add" onClick={() => handleSendRequest(u.username)} />
                 </div>
               ))}
+              {results.length === 0 && (
+                <div className={styles.emptyDirectory}>No crews match that callsign.</div>
+              )}
             </>
           )}
         </>
       )}
+        </div>
+      </div>
+      </div>
+      </ScenePanel>
     </PageSurface>
   )
 }
