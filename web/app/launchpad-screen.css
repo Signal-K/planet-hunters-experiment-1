@@ -108,16 +108,6 @@ button.launchpad-scene-object { cursor: pointer; }
   color: var(--ln-cyan);
   overflow: visible;
 }
-/* The source illustration includes a transparent-ground vignette around the
-   pad. Keep the machine and its ramp, but let the shared scene own the actual
-   soil, verge, and foreground contact so the pad cannot bring a second patch
-   of terrain with it. */
-.earth-base-structure--launchpad .earth-base-flat-sprite {
-  clip-path: polygon(
-    0 0, 100% 0, 100% 84%, 82% 84%, 79% 90%, 79% 100%,
-    39% 100%, 39% 91%, 30% 91%, 26% 84%, 0 84%
-  );
-}
 .earth-base-flat-sprite--highlight {
   inset: -8px;
   width: calc(100% + 16px);
@@ -131,7 +121,7 @@ button.launchpad-scene-object { cursor: pointer; }
 }
 .launchpad-tower-art {
   position: relative; left: auto; bottom: auto;
-  display: block; width: 100%; aspect-ratio: 220 / 160; transform: none;
+  display: block; width: 100%; aspect-ratio: 164 / 210; transform: none;
 }
 .launchpad-tower .launchpad-object-label,
 .launchpad-rocket .launchpad-object-label {
@@ -145,7 +135,7 @@ button.launchpad-scene-object { cursor: pointer; }
   display: grid; place-items: end center;
 }
 .launchpad-rocket-art img { position: relative; z-index: 2; width: 100%; filter: drop-shadow(0 12px 12px rgba(0,0,0,.6)); }
-.launchpad-hangar-art { position: relative; z-index: 2; display: block; width: 100%; aspect-ratio: 250 / 161; }
+.launchpad-hangar-art { position: relative; z-index: 2; display: block; width: 100%; aspect-ratio: 250 / 151; }
 .launchpad-rocket-glow { position: absolute; left: 5%; right: 5%; bottom: 18%; height: 14px; border-radius: 50%; background: rgba(112,217,234,.2); filter: blur(12px); }
 .launchpad-rocket:hover img,
 .launchpad-station:hover .launchpad-object-art { filter: brightness(1.12) drop-shadow(0 0 18px rgba(112,217,234,.22)); }

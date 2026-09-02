@@ -45,6 +45,9 @@ landnam_kit.py           palette, materials, geometry helpers, camera, render
 render_all.py            driver — walks every model module, one PNG each
 models/terrain.py        modular background kit — mountains, hills, trees,
                           rocks, roads, distant facilities, clouds (KES-260)
+models/structures.py     Earth Base hero structures — launchpad, hangar. One
+                          cohesive scene/one render per structure (KES-277,
+                          2026-09-03) — see "Earth Base facilities" below.
 models/actors.py         rover and drone (2)
 models/ships.py          Explorer/Prospector hulls + Explorer cutaway (KES-41/STS-611)
 models/rooms.py          ship interior room panels (KES-41/STS-611)
@@ -94,10 +97,24 @@ component in `web/components/game/hub/EarthBaseModules.tsx`.
 
 ## Earth Base facilities
 
-The generated 3D structure kit is retired. Launchpad and Hangar currently use
-flat illustrated 2D cutouts in `web/public/game/assets/base/`. Blender remains
-available for terrain and future art, but this scene no longer depends on a 3D
-structure pass.
+Launchpad and Hangar (`base/launchpad_flat.png`, `base/hangar_flat.png`) are
+built in `models/structures.py`, one cohesive Blender scene per structure,
+rendered to one PNG each — the same pattern as `ships.py`/`rooms.py`.
+
+This supersedes an earlier composited-fragment kit (KES-260's original
+`world_modules.py`) that rendered ~9 pieces separately and absolute-positioned
+them in `EarthBaseModules.tsx`. Individually, each piece was a sparse skeleton
+of thin rods over transparent space; composited, it read as debris rather than
+a building — explicit feedback on KES-277 called it "a massive regression in
+quality." **Do not resurrect a multi-piece composited kit for a hero
+structure.** Every part in a `structures.py` build must touch or overlap its
+neighbours so the render has no dead transparent gaps; the model owns its own
+complete silhouette. See the ZenNotes decision "Landnam Earth Base structure
+art — single-mass render standard" for the full reference synthesis (Out
+There: Omega staging, Take On Mars industrial tone, Crashlands silhouette
+density, Pixel Starships panel-block surface language) and the ground-contact
+rule (flat/evenly-tapered footing at z=0, no rock/grass/soil geometry baked
+into the structure — that is the scene terrain's job).
 
 Depth is applied at runtime, not in the render: the web app's `TerrainScene`
 washes each depth band toward the sky colour through a mask of the sprite's own

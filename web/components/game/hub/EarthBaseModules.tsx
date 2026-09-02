@@ -13,16 +13,19 @@ export interface HubBuildingDef {
   active?: boolean
 }
 
-/** Temporary flat-art pass for Earth Base (KES-260). The Blender module kit is retired. */
+/** Earth Base hero structures, rendered as single-mass Blender sprites (see
+ * `tools/blender/models/structures.py` and the ZenNotes decision "Landnam
+ * Earth Base structure art — single-mass render standard"). Each is one
+ * cohesive scene/one render, not a composited multi-piece kit. */
 const SPRITES = {
-  launchpad: { src: '/game/assets/base/launchpad_flat.png', width: 220, height: 160 },
-  hangar: { src: '/game/assets/base/hangar_flat.png', width: 250, height: 161 },
+  launchpad: { src: '/game/assets/base/launchpad_flat.png', width: 164, height: 210 },
+  hangar: { src: '/game/assets/base/hangar_flat.png', width: 250, height: 151 },
 } as const
 
 export const EARTH_BASE_STRUCTURE_SIZES: Record<string, { width: number; height: number }> = {
-  launchpad: { width: 220, height: 160 },
+  launchpad: { width: 164, height: 210 },
   'surface-silo': { width: 120, height: 78 },
-  hangar: { width: 250, height: 161 },
+  hangar: { width: 250, height: 151 },
   refinery: { width: 150, height: 97 },
   'scan-station': { width: 132, height: 86 },
   command: { width: 150, height: 97 },
