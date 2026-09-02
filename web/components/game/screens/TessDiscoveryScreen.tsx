@@ -410,7 +410,7 @@ export default function TessDiscoveryScreen({ player, visualCandidate, onBack, o
   ) : null
 
   return (
-    <div className="game-screen theme-blueprint ln-scene-tess-discovery" data-testid="tess-discovery-screen">
+    <div className="game-screen theme-deep ln-scene-tess-discovery" data-testid="tess-discovery-screen">
       <TopBar eyebrow="INSTRUMENT DATA FEED · DAILY DOWNLINK" title={candidate.toi} onBack={onBack} />
       {process.env.NODE_ENV === 'development' && (
         <div style={{ position: 'absolute', top: 72, left: 'var(--ln-s-4)', right: 'var(--ln-s-4)', zIndex: 5 }}>
@@ -471,7 +471,7 @@ function GateScreen({ eyebrow, icon, tone, title, body, onBack, action, devBar }
   const bg = tone === 'amber' ? 'rgba(245,166,35,0.12)' : 'rgba(57,211,239,0.12)'
   const border = tone === 'amber' ? 'rgba(245,166,35,0.42)' : 'rgba(57,211,239,0.42)'
   return (
-    <div className="game-screen theme-blueprint ln-scene-tess-discovery">
+    <div className="game-screen theme-deep ln-scene-tess-discovery">
       <NebulaBackdrop />
       <TopBar eyebrow={eyebrow} title="Transit Telescope" onBack={onBack} />
       <div className="screen-scroll" data-ui-zone={UI_ZONES.screenContent}>

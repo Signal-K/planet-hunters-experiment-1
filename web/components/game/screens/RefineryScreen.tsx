@@ -9,6 +9,7 @@ import MineralChip from '@/components/game/MineralChip'
 import { type RefineryRecipe, REFINERY_RECIPES } from '@/lib/data'
 import { UI_ZONES } from '@/lib/ui-zones'
 import { formatCurrency } from '@/lib/format'
+import ScenePanel from '@/components/game/ScenePanel'
 
 interface RefineryScreenProps {
   player: { francs: number; stash?: Record<string, number>; refineryQueue: { recipeId: string; startedAt: number; durationMs?: number }[]; refineryLastStartedAt?: number; refinedGoods: Record<string, number>; staffed?: boolean }
@@ -39,9 +40,9 @@ export default function RefineryScreen({ player, onBack, onStartRefine, onCollec
   }, [done, runningRecipe])
 
   return (
-    <div className="game-screen theme-blueprint">
+    <div className="game-screen theme-deep">
       <TopBar eyebrow="BASE · INDUSTRY" title="Refinery" onBack={onBack} />
-      <div className="screen-scroll" data-ui-zone={UI_ZONES.screenContent}>
+      <ScenePanel ambient="industrial" className="screen-scroll" data-ui-zone={UI_ZONES.screenContent}>
         <Panel accent="var(--ln-amber)" style={{ padding: 12 }}>
           <div style={{ fontFamily: 'var(--ln-font-display)', fontWeight: 800, fontSize: 15, color: 'var(--ln-text)' }}>On-site Ore Processing</div>
           <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 12, color: 'var(--ln-text-dim)', marginTop: 4 }}>
@@ -121,7 +122,7 @@ export default function RefineryScreen({ player, onBack, onStartRefine, onCollec
             )
           })}
         </div>
-      </div>
+      </ScenePanel>
       {selected && (
         <div className="sticky-actions" data-ui-zone={UI_ZONES.bottomActions}>
           <PrimaryBtn onClick={() => { onStartRefine(selected); setSelected(null) }}>Start Refinement</PrimaryBtn>

@@ -30,11 +30,6 @@ describe('Launchpad · your own program', () => {
     cy.visit('/game/launchpad', {
       onBeforeLoad(win) {
         win.localStorage.setItem('landnam-game-state-v1', JSON.stringify(save))
-        // Pre-ack the first-visit Launchpad guide (LaunchpadScreen.tsx) —
-        // unset, it auto-opens on mount and its close/step transitions
-        // reflow the scene mid-test, which flakes clicks on the sticky
-        // action rail underneath (page-updated-while-executing races).
-        win.localStorage.setItem('landnam-launchpad-guide-v1', 'complete')
         if (authenticated) {
           // Keep the mandatory guest-auth sheet from covering surface
           // assertions. The final test opts out to exercise that flow.
@@ -61,6 +56,8 @@ describe('Launchpad · your own program', () => {
       .should('match', /OPS\s+[1-9]\d*/)
 
     cy.get('[data-testid="launchpad-view-contracts-btn"]').should('be.visible')
+    cy.get('.launchpad-available-actions').should('not.exist')
+    cy.get('[data-testid="launchpad-guide"]').should('not.exist')
   })
 
   it('keeps M1 on client contracts and hides future monitoring infrastructure', () => {

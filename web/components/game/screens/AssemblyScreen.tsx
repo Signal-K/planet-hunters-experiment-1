@@ -56,7 +56,7 @@ export default function AssemblyScreen(props: AssemblyScreenProps) {
 
   return (
     <MissionSetupShell
-      className="mission-setup-screen--assembly theme-blueprint"
+      className="mission-setup-screen--assembly theme-deep"
       eyebrow="LAUNCHPAD · PREFLIGHT"
       title="Confirm Rocket"
       onBack={props.onBack}

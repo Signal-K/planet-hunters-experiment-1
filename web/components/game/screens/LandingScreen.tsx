@@ -70,7 +70,7 @@ export default function LandingScreen({ target, mode, startedAt, onBack, onConti
   }, [])
 
   return (
-    <div className={`game-screen theme-blueprint ln-scene-landing ${styles.screen}`} data-testid="landing-screen">
+    <div className={`game-screen theme-deep ln-scene-landing ${styles.screen}`} data-testid="landing-screen">
       <TopBar eyebrow={copy.eyebrow} title={copy.title} onBack={onBack} />
 
       <div className={styles.stage}>

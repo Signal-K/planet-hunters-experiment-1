@@ -7,7 +7,7 @@ import { DEFAULT_STATE } from '@/lib/game-state'
 import { buildRuntimeCatalog } from '@/lib/runtimeCatalog'
 
 describe('Launchpad own-program actions', () => {
-  it('exposes self-directed mission creation and infrastructure launch', () => {
+  it('exposes self-directed actions once in the command rail', () => {
     const player = {
       ...DEFAULT_STATE.player,
       freeOperations: true,
@@ -29,9 +29,6 @@ describe('Launchpad own-program actions', () => {
         onLaunchpadAction={noop}
         onOpenHangar={noop}
         onOpenSubsurface={noop}
-        onOpenBuild={noop}
-        onOpenAcademy={noop}
-        onOpenSkills={noop}
         missionsDone={player.missionsDone}
         freeOperations={player.freeOperations}
         catalog={catalog}
@@ -43,8 +40,8 @@ describe('Launchpad own-program actions', () => {
     expect(markup).toContain('CREATE MISSION')
     expect(markup).toContain('data-testid="launchpad-launch-infrastructure-btn"')
     expect(markup).toContain('LAUNCH INFRASTRUCTURE')
-    expect(markup).toContain('data-testid="available-actions-panel"')
-    expect(markup).toContain('PERSONAL INFRASTRUCTURE')
+    expect(markup).not.toContain('data-testid="available-actions-panel"')
+    expect(markup).not.toContain('data-testid="launchpad-guide"')
   })
 
   it('keeps a legacy Academy unlock out of the active launch loop', () => {
@@ -70,9 +67,6 @@ describe('Launchpad own-program actions', () => {
         onLaunchpadAction={noop}
         onOpenHangar={noop}
         onOpenSubsurface={noop}
-        onOpenBuild={noop}
-        onOpenAcademy={noop}
-        onOpenSkills={noop}
         missionsDone={player.missionsDone}
         freeOperations={player.freeOperations}
         catalog={catalog}

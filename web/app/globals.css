@@ -269,108 +269,39 @@
   --ln-text-inverse: #f4f1ea;
 }
 
-/* ─── Blueprint theme — light "engineering blueprint" look for the
-   mission-setup + flight loop (KES-211). Liam repeatedly and emphatically
-   rejected dark-by-default for this flow specifically — not just
-   reference/menu surfaces, which already have .theme-light per STS-413 and
-   are unaffected by this. Pale blueprint-blue paper, deep navy ink
-   linework, no dark ground, no glow — informed by Out There: Ω Edition's
-   white/light-blue cel-shaded style and Departure Mono's tabular density.
-   Opt-in per screen (apply className="theme-blueprint" to a screen root) —
-   deliberately NOT wired as a new global default, so screens outside this
-   ticket's scope (Mining, SurfaceOps, etc.) are unaffected.
-
-   The --ln-bp-* tokens below are the new blueprint vocabulary for
-   screen-specific work (individual screens being built next). The aliases
-   further down re-point the EXISTING shared --ln-* tokens to blueprint
-   values, so already-token-driven shared shell chrome (MissionSetupShell,
-   StepFooter's inline styles, Panel.tsx, .mission-setup-frame/-card)
-   re-skins automatically wherever .theme-blueprint is applied, without
-   editing those component files — same mechanism .theme-light already
-   uses, just sourced from the bp-prefixed raw palette instead of redefining
-   the shared names directly. ─── */
+/* ─── Retired blueprint compatibility tokens ─────────────────────────────
+   `theme-blueprint` was a broad light-paper token remap. Applied to gameplay
+   roots, it converted rendered scenes into pale backgrounds and generic
+   card stacks. Operations now use the scene-panel model: a rendered setting
+   behind a small number of attached instruments. Keep these legacy tokens
+   dark so a stray old class cannot recreate that failure; new gameplay
+   screens are checked against using the class at all. */
 .theme-blueprint {
-  --ln-bp-bg:      #eef3f8;
-  --ln-bp-paper:   #ffffff;
-  --ln-bp-paper-2: #dfe9f3;
+  --ln-bp-bg:      #0a0a0c;
+  --ln-bp-paper:   #1c1c20;
+  --ln-bp-paper-2: #25252a;
 
-  --ln-bp-ink:      #0f2436;
-  --ln-bp-ink-dim:  #48596a;
-  --ln-bp-ink-mute: #7c8ea0;
+  --ln-bp-ink:      #e9e9ec;
+  --ln-bp-ink-dim:  #b4b4bc;
+  --ln-bp-ink-mute: #7c7c86;
 
-  --ln-bp-line:        rgba(15, 36, 54, 0.14);
-  --ln-bp-line-strong: rgba(15, 36, 54, 0.30);
+  --ln-bp-line:        rgba(255, 255, 255, 0.14);
+  --ln-bp-line-strong: rgba(255, 255, 255, 0.30);
 
-  --ln-bp-blue:      #1f78c1;
-  --ln-bp-blue-soft: rgba(31, 120, 193, 0.08);
+  --ln-bp-blue:      var(--ln-cyan);
+  --ln-bp-blue-soft: var(--ln-cyan-soft);
 
-  --ln-bp-pink:        #c94a86;
-  --ln-bp-pink-soft:   rgba(201, 74, 134, 0.10);
-  --ln-bp-pink-border: rgba(201, 74, 134, 0.4);
+  --ln-bp-pink:        var(--ln-play);
+  --ln-bp-pink-soft:   color-mix(in srgb, var(--ln-play) 12%, transparent);
+  --ln-bp-pink-border: color-mix(in srgb, var(--ln-play) 40%, transparent);
 
-  --ln-bp-green:      #1f8f57;
-  --ln-bp-green-soft: rgba(31, 143, 87, 0.10);
-
-  /* --ln-cyan* intentionally NOT redefined here — Landnam's existing cyan
-     (inherited from :root/.theme-deep) stays the ONE primary command
-     accent: primary CTA + confirmed/selected state only. Same restriction
-     that already applies to amber (payout/reward emphasis only, never
-     chrome) — amber itself is also left un-redefined here for the same
-     reason. */
-
-  /* Alias the shared token set so existing shell/chrome classes and
-     component inline styles (which read var(--ln-void), var(--ln-panel),
-     var(--ln-shell), var(--ln-hairline-strong), etc.) re-skin automatically
-     under this class. */
-  --ln-void:      var(--ln-bp-bg);
-  --ln-bg:        var(--ln-bp-bg);
-  --ln-bg-grid:   var(--ln-bp-paper-2);
-  --ln-surface:   var(--ln-bp-paper);
-  --ln-surface-2: var(--ln-bp-paper-2);
-  --ln-surface-3: var(--ln-bp-paper-2);
-  --ln-shell:     var(--ln-bp-bg);
-  --ln-panel:     var(--ln-bp-paper);
-  --ln-panel-2:   var(--ln-bp-paper-2);
-  --ln-overlay:   rgba(238, 243, 248, 0.86);
-
-  --ln-text:       var(--ln-bp-ink);
-  --ln-text-dim:   var(--ln-bp-ink-dim);
-  --ln-text-muted: var(--ln-bp-ink-mute);
-  --ln-text-ghost: rgba(15, 36, 54, 0.35);
-
-  --ln-hairline:        var(--ln-bp-line);
-  --ln-hairline-strong: var(--ln-bp-line-strong);
-  --ln-divider:         var(--ln-bp-line);
-
-  --ln-cyan-soft:   var(--ln-bp-blue-soft);
-  --ln-cyan-border: rgba(31, 120, 193, 0.32);
-
-  --ln-ok:      var(--ln-bp-green);
-  --ln-ok-soft: var(--ln-bp-green-soft);
-
-  --ln-shadow-card:  0 1px 0 rgba(255,255,255,0.6) inset, 0 4px 16px rgba(15,36,54,0.10);
-  --ln-shadow-modal: 0 24px 64px rgba(15,36,54,0.22);
-
-  --ln-stat-card-bg: rgba(223, 233, 243, 0.88);
-  --ln-stat-card-active-bg: rgba(31, 120, 193, 0.12);
-  --ln-stat-card-border: rgba(15, 36, 54, 0.22);
-  --ln-stat-card-ok-border: rgba(31, 143, 87, 0.32);
-  --ln-stat-card-text: var(--ln-bp-ink);
-  --ln-map-rock: #2d688f;
-  --ln-map-planet: #86536f;
-  --ln-map-match: #2c7654;
-  --ln-map-muted: #344657;
-  --ln-map-star: rgba(236, 246, 255, 0.82);
-  --ln-map-sun: #efb84d;
-  --ln-map-sun-soft: rgba(239, 184, 77, 0.22);
+  --ln-bp-green:      var(--ln-ok);
+  --ln-bp-green-soft: var(--ln-ok-soft);
 }
 
-/* .sticky-actions's command-dock gradient is hardcoded dark rgba, not
-   token-driven, so it doesn't pick up the alias above — override explicitly
-   for the mission-setup dock under .theme-blueprint so it fades to paper
-   instead of black. */
+/* Legacy roots retain the deep command dock rather than fading to paper. */
 .theme-blueprint .sticky-actions {
-  background: linear-gradient(180deg, transparent, rgba(238, 243, 248, 0.94) 34%, var(--ln-bp-bg));
+  background: linear-gradient(180deg, transparent, rgba(10, 10, 12, 0.94) 34%, var(--ln-bp-bg));
 }
 
 /* ─── Construction Kit — additive utilities (KES-280) ──────────────────
@@ -2729,34 +2660,53 @@ html[data-coach-target="build-structure-strip"] [data-coach-id="build-structure-
   font-weight: 700;
 }
 
-/* KES-279 — Available Hub actions must own a real scene position. The panel
-   used to be a normal-flow child after the absolute world/HUD layers, so it
-   could start underneath the left HUD rail and overlap its cards. Keep it in
-   a dedicated right rail on wider scenes, then move it below the HUD stack on
-   compact scenes. */
-.hub-available-actions {
+/* ============================================================
+   SCENE PANEL — generalized scene-panel model (KES-289)
+   ============================================================
+   Extracted from the Launchpad spike above (KES-61) plus the "Construction
+   Kit" design kit (KES-280) so screens stop hand-rolling a new
+   `.ln-scene-<screen>` class each time. Use via `<ScenePanel>`
+   (components/game/ScenePanel.tsx) instead of stacking Panel cards directly
+   inside a flat `--ln-bg`/`--ln-panel` fill. Ambient ramps are a CSS
+   stand-in for real Blender/Pixi-rendered backgrounds, same as the
+   Launchpad spike — swap a ramp for real art per screen as it's produced,
+   without touching the screens that consume it. */
+.ln-scene-panel {
   position: absolute;
-  top: 176px;
-  right: 16px;
-  z-index: 11;
-  width: min(460px, calc(100% - 376px));
-  max-height: max(192px, calc(100% - 272px));
+  inset: 0;
   overflow-y: auto;
-  pointer-events: auto;
-  scrollbar-width: thin;
-  scrollbar-color: var(--ln-cyan-border) transparent;
+  isolation: isolate;
 }
 
-.hub-available-actions > section { margin: 0; }
+.ln-scene-panel-backdrop {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
 
-@media (max-width: 720px) {
-  .hub-available-actions {
-    top: 320px;
-    right: 16px;
-    left: 16px;
-    width: auto;
-    max-height: max(192px, calc(100% - 424px));
-  }
+.ln-scene-panel > :not(.ln-scene-panel-backdrop) {
+  position: relative;
+  z-index: 1;
+}
+
+.ln-scene-panel--industrial {
+  background:
+    radial-gradient(140px 90px at 88% 6%, rgba(255, 197, 92, 0.16), transparent 70%),
+    linear-gradient(180deg, #142544 0%, #0e1c34 50%, #081222 100%);
+}
+
+.ln-scene-panel--survey {
+  background:
+    radial-gradient(160px 100px at 12% 8%, rgba(112, 217, 234, 0.16), transparent 70%),
+    linear-gradient(180deg, #0d2038 0%, #091729 55%, #050d1a 100%);
+}
+
+.ln-scene-panel--utility {
+  background:
+    radial-gradient(150px 90px at 50% -4%, rgba(177, 198, 229, 0.12), transparent 65%),
+    linear-gradient(180deg, #101e35 0%, #0b1729 55%, #060c17 100%);
 }
 
 .hub-push-opt-in {

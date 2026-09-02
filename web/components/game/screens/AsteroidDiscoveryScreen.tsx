@@ -239,7 +239,7 @@ export default function AsteroidDiscoveryScreen({ player, visualCandidate, onBac
   ) : null
 
   return (
-    <div className="game-screen theme-blueprint ln-scene-asteroid-discovery" data-testid="asteroid-discovery-screen">
+    <div className="game-screen theme-deep ln-scene-asteroid-discovery" data-testid="asteroid-discovery-screen">
       <TopBar eyebrow="INSTRUMENT DATA FEED · DAILY DOWNLINK" title={candidate.tempDesig} onBack={onBack} />
       {coach.visible && <AsteroidDiscoveryCoach onDismiss={coach.dismiss} />}
       {process.env.NODE_ENV === 'development' && (
@@ -293,7 +293,7 @@ function GateScreen({ eyebrow, icon, tone, title, body, onBack, action, devBar }
   const bg = tone === 'amber' ? 'rgba(245,166,35,0.12)' : 'rgba(57,211,239,0.12)'
   const border = tone === 'amber' ? 'rgba(245,166,35,0.42)' : 'rgba(57,211,239,0.42)'
   return (
-    <div className="game-screen theme-blueprint ln-scene-asteroid-discovery">
+    <div className="game-screen theme-deep ln-scene-asteroid-discovery">
       <NebulaBackdrop />
       <TopBar eyebrow={eyebrow} title="Deep Space Telescope" onBack={onBack} />
       <div className="screen-scroll" data-ui-zone={UI_ZONES.screenContent}>

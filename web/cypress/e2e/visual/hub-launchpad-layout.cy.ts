@@ -60,7 +60,6 @@ function visit(path: string, screen: GameState['screen']) {
       win.localStorage.setItem(STORAGE_KEY, JSON.stringify(state(screen)))
       win.localStorage.setItem(SURVEY_KEY, JSON.stringify(['lnm_first_launch']))
       win.localStorage.setItem('ln_tutorial_complete_ack', '1')
-      win.localStorage.setItem('landnam-launchpad-guide-v1', 'complete')
       // The fixtures intentionally exercise persisted post-onboarding screens.
       // A stored returning-account credential keeps the auth gate from
       // covering those local-only visual contracts while the remote backend is

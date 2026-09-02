@@ -114,7 +114,7 @@ export default function HangarScreen({ francs, missionsDone, unlockedSkillNodes,
   const successChance = hasLoadout ? calculateShipSuccessChance(installedIds, sequence) : null
 
   return (
-    <div className={`game-screen theme-blueprint ${styles.screen}`}>
+    <div className={`game-screen theme-deep ${styles.screen}`}>
       <TopBar eyebrow="LAUNCHPAD · HANGAR" title="Rocket Fleet" onBack={onBack} />
       <div className={`screen-scroll ${styles.scroll}`} data-ui-zone={UI_ZONES.screenContent}>
         <div className={styles.inner}>

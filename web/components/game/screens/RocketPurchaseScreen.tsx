@@ -87,7 +87,7 @@ export default function RocketPurchaseScreen({ missionsDone, francs, mission, de
 
   return (
     <MissionSetupShell
-      className="mission-setup-screen--rocket theme-blueprint"
+      className="mission-setup-screen--rocket theme-deep"
       eyebrow="LAUNCHPAD · VEHICLE"
       title="Select Rocket"
       onBack={onBack}

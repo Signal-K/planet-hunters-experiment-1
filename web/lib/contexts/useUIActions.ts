@@ -21,19 +21,15 @@ export function useUIActions(
   // is showing. Ephemeral UI state, not persisted GameState, same as
   // `toasts` above.
   const [subsurfaceView, setSubsurfaceView] = useState(false)
-  // A Launchpad route has two deliberately different entry meanings:
-  // progression cards open the full UI overview, while the physical Hub
-  // structure opens the close/focus composition. Keep this as ephemeral UI
-  // state so the persisted game state and the public route stay unchanged.
-  const [launchpadView, setLaunchpadView] = useState<LaunchpadView>('overview')
-  // Hangar can be entered from the Earth Base or either Launchpad composition.
+  // The Launchpad route is the in-world composition. It intentionally keeps
+  // the physical-pad focus rather than switching to a card-grid overview.
+  const [launchpadView, setLaunchpadView] = useState<LaunchpadView>('focus')
+  // Hangar can be entered from the Earth Base or the Launchpad composition.
   // Preserve only that ephemeral return context: it is navigation chrome, not
   // player progress and must not be persisted into a save or public URL.
   const hangarReturnView = useRef<LaunchpadView | 'hub'>('hub')
 
   const go = useCallback((screen: Screen) => {
-    // Legacy/tutorial callers keep the close/focus composition. New UI entry
-    // points use openLaunchpad so the two meanings cannot drift together.
     if (screen === 'launchpad') setLaunchpadView('focus')
     setState(s => {
       if (screen === 'hangar') {
@@ -44,7 +40,7 @@ export function useUIActions(
   }, [launchpadView, setState])
 
   const openLaunchpad = useCallback(() => {
-    setLaunchpadView('overview')
+    setLaunchpadView('focus')
     setState(s => ({ ...s, screen: 'launchpad' }))
   }, [setState])
 
@@ -79,7 +75,7 @@ export function useUIActions(
   // Updates state.screen WITHOUT triggering the URL-sync effect so we don't create
   // a push that fights the navigation.
   const setScreenFromUrl = useCallback((screen: Screen) => {
-    if (screen === 'launchpad') setLaunchpadView('overview')
+    if (screen === 'launchpad') setLaunchpadView('focus')
     setState(s => {
       // A bookmarked /game/build must not resurrect the transient plot picker
       // for an operational base after hydration has already repaired it to

@@ -149,118 +149,6 @@ button.launchpad-scene-object { cursor: pointer; }
 .launchpad-rocket-glow { position: absolute; left: 5%; right: 5%; bottom: 18%; height: 14px; border-radius: 50%; background: rgba(112,217,234,.2); filter: blur(12px); }
 .launchpad-rocket:hover img,
 .launchpad-station:hover .launchpad-object-art { filter: brightness(1.12) drop-shadow(0 0 18px rgba(112,217,234,.22)); }
-.launchpad-scene-object.is-guided { z-index: 11; }
-.launchpad-scene-object.is-guided .launchpad-object-art,
-.launchpad-scene-object.is-guided .launchpad-tower-art,
-.launchpad-scene-object.is-guided .launchpad-rocket-art {
-  border-radius: 18px;
-  filter: brightness(1.08) drop-shadow(0 0 22px rgba(112,217,234,.75));
-}
-.launchpad-scene-object.is-guided .launchpad-object-label {
-  border-color: #86e7f4;
-  box-shadow: 0 0 0 3px rgba(112,217,234,.14), 0 10px 24px rgba(0,0,0,.5);
-}
-.launchpad-satellite.is-guided {
-  z-index: 11;
-  padding: 8px 12px;
-  border: 1px solid #86e7f4;
-  border-radius: 12px;
-  background: rgba(5,14,25,.82);
-  box-shadow: 0 0 0 3px rgba(112,217,234,.12), 0 0 28px rgba(112,217,234,.3);
-}
-.launchpad-guide {
-  position: absolute;
-  z-index: 14;
-  top: 76px;
-  left: 18px;
-  width: min(340px, calc(100% - 36px));
-  padding: 16px;
-  border: 1px solid rgba(134,231,244,.78);
-  border-radius: 12px;
-  background: rgba(5,11,20,.96);
-  box-shadow: 0 18px 44px rgba(0,0,0,.48), 0 0 24px rgba(112,217,234,.1);
-  color: #f4f8ff;
-}
-.launchpad-guide-close {
-  position: absolute;
-  top: 7px;
-  right: 8px;
-  width: 30px;
-  height: 30px;
-  border: 0;
-  background: transparent;
-  color: #9fb0c5;
-  font: 400 22px/1 var(--ln-font-display);
-}
-.launchpad-guide-close:hover { color: #f4f8ff; }
-.launchpad-guide-kicker {
-  display: block;
-  padding-right: 32px;
-  color: #86e7f4;
-  font: 800 9px var(--ln-font-display);
-  letter-spacing: .18em;
-}
-.launchpad-guide h2 {
-  margin: 7px 32px 5px 0;
-  color: #f4f8ff;
-  font: 800 19px/1.15 var(--ln-font-display);
-}
-.launchpad-guide-copy {
-  display: block;
-  max-width: 295px;
-  color: #b9c7d9;
-  font: 500 12px/1.45 var(--ln-font-body);
-}
-.launchpad-guide-footer {
-  margin-top: 14px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-}
-.launchpad-guide-progress { display: flex; gap: 5px; }
-.launchpad-guide-progress i {
-  display: block;
-  width: 16px;
-  height: 3px;
-  border-radius: 3px;
-  background: rgba(169,184,206,.3);
-}
-.launchpad-guide-progress i.is-current { background: #86e7f4; box-shadow: 0 0 8px rgba(112,217,234,.5); }
-.launchpad-guide-actions { display: flex; align-items: center; gap: 6px; }
-.launchpad-guide-actions button {
-  min-width: 62px;
-  height: 32px;
-  padding: 0 10px;
-  border: 1px solid rgba(169,184,206,.35);
-  border-radius: 6px;
-  background: rgba(255,255,255,.04);
-  color: #cbd6e6;
-  font: 800 9px var(--ln-font-display);
-  letter-spacing: .12em;
-}
-.launchpad-guide-actions button.is-primary { border-color: #86e7f4; background: #86e7f4; color: #07101c; }
-
-.launchpad-available-actions {
-  position: absolute;
-  z-index: 18;
-  top: 96px;
-  right: 16px;
-  width: min(460px, calc(100% - 32px));
-  max-height: calc(100% - 178px);
-  overflow-y: auto;
-}
-
-.hub-available-actions {
-  position: absolute;
-  z-index: 12;
-  top: 140px;
-  left: 16px;
-  width: min(460px, calc(100% - 32px));
-  max-height: calc(100% - 270px);
-  overflow-y: auto;
-}
-
 /* Glass rail, not a wall. `rgba(6,9,15,.97)` was effectively opaque: it cut a
    solid 62px band off the bottom of the scene, so the ground the structures
    stand on visibly stopped at a hard edge and the background read as
@@ -317,35 +205,22 @@ button.launchpad-scene-object { cursor: pointer; }
   .hub-bottom-dock-main { flex-basis: 150px; }
 }
 @media (max-width: 860px) {
-  .launchpad-guide { top: 72px; left: 10px; width: min(310px, calc(100% - 20px)); padding: 12px; }
-  .launchpad-guide h2 { font-size: 16px; }
-  .launchpad-guide-copy { font-size: 10px; }
   .launchpad-object-label { min-width: 0; padding: 6px 8px; }
   .launchpad-object-label small { display: none; }
   .launchpad-object-label strong { font-size: 8px; }
   .launchpad-satellite svg { width: 70px; }
   .launchpad-rail-status span:not(:first-child) { display: none; }
   .launchpad-rail-actions button { padding: 0 9px; font-size: 8px; flex: 0 0 auto; }
-  /* KES-176: up to 5 rail buttons (GUIDE, BUILD STATION, HANGAR, OPS N,
-     CONTRACTS) can outgrow the available width even at compact padding —
+  /* The program rail can outgrow the available width even at compact padding —
      the row has no wrap, so the rightmost button (usually CONTRACTS) was
      clipped by page overflow instead of reachable. Scroll rather than lose
      the last action. */
   .launchpad-rail-actions { overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
   .launchpad-rail-actions::-webkit-scrollbar { display: none; }
-  .launchpad-available-actions { top: 82px; right: 10px; width: min(390px, calc(100% - 20px)); }
-  .hub-available-actions { top: 132px; left: 10px; width: min(390px, calc(100% - 20px)); }
 }
 @media (orientation: landscape) and (max-height: 600px) {
   .launchpad-visual-scene { inset: 64px 0 54px; }
   .launchpad-scene-rail { height: 54px; padding: 7px 10px; }
-  .launchpad-guide { top: 62px; left: 8px; width: 300px; padding: 10px 12px; }
-  .launchpad-available-actions { top: 62px; max-height: calc(100% - 126px); }
-  .hub-available-actions { top: 112px; max-height: calc(100% - 210px); }
-  .launchpad-guide h2 { margin-top: 4px; font-size: 15px; }
-  .launchpad-guide-copy { font-size: 9px; line-height: 1.35; }
-  .launchpad-guide-footer { margin-top: 8px; }
-  .launchpad-guide-actions button { height: 28px; }
   .launchpad-satellite { top: 2%; }
 }
 @media (orientation: portrait) and (max-width: 620px) {

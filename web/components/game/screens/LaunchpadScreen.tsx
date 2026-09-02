@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useEffect, useState } from 'react'
+import React from 'react'
 import TopBar from '@/components/ui/TopBar'
 import { ACADEMY_INTRO_MISSION_ID, partitionByOwner } from '@/lib/data'
 import { ROCKET_MODELS } from '@/lib/data/rockets'
@@ -14,8 +14,6 @@ import { useTimeOfDay } from '@/lib/hooks/useTimeOfDay'
 import { SoilCrossSection } from '@/components/game/hub/SoilCrossSection'
 import { RoadRover } from '@/components/game/hub/RoadRover'
 import { EARTH_BASE_PAD } from '@/lib/scene/compositions'
-import AvailableActionsPanel, { type AvailableAction } from '@/components/game/AvailableActionsPanel'
-import { unplacedUnlockedStructures } from '@/lib/available-actions'
 
 interface LaunchpadScreenProps {
   onBack: () => void
@@ -24,9 +22,6 @@ interface LaunchpadScreenProps {
   onLaunchpadAction: () => void
   onOpenHangar: () => void
   onOpenSubsurface?: () => void
-  onOpenBuild: () => void
-  onOpenAcademy: () => void
-  onOpenSkills: () => void
   missionsDone: number
   freeOperations: boolean
   catalog: Catalog
@@ -35,8 +30,6 @@ interface LaunchpadScreenProps {
   selectedRocketName?: string
   francs?: number
 }
-
-const LAUNCHPAD_GUIDE_KEY = 'landnam-launchpad-guide-v1'
 
 function HangarGlyph() {
   return <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 21V8l3-4h10l3 4v13M4 9h16M8 21v-7h8v7" /></svg>
@@ -50,20 +43,16 @@ function InfrastructureGlyph() {
   return <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 18h14M7 18V9l5-4 5 4v9M9 18v-5h6v5" /><path d="M12 5V2M9 3h6" /></svg>
 }
 
-function GuideGlyph() {
-  return <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" /><path d="M9.8 9a2.3 2.3 0 1 1 3.1 2.2c-.9.4-.9 1.1-.9 1.8M12 17h.01" /></svg>
-}
-
 function SubsurfaceGlyph() {
   return <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M6 11h12M8 15h8M10 19h4" /><path d="M12 3v16" /></svg>
 }
 
 export default function LaunchpadScreen({
-  onBack, onPick, onViewContracts, onLaunchpadAction, onOpenHangar, onOpenSubsurface, onOpenBuild, onOpenAcademy, onOpenSkills, missionsDone, freeOperations, catalog, player, rocketImageSrc = '/game/assets/ships/ship_sr1.png', selectedRocketName, francs,
+  onBack, onPick, onViewContracts, onLaunchpadAction, onOpenHangar, onOpenSubsurface, missionsDone, freeOperations, catalog, player, rocketImageSrc = '/game/assets/ships/ship_sr1.png', selectedRocketName, francs,
 }: LaunchpadScreenProps) {
-  // This is the in-world close composition. The routed Launchpad overview
-  // owns control/UI entry; the Hub reaches this view through focusLaunchpad.
-  const [guideStep, setGuideStep] = useState<number | null>(null)
+  // This is the Launchpad route: a playable Earth Base composition. The
+  // tower and hangar are the primary interactions; the rail only exposes
+  // secondary tools without replacing the scene with a card dashboard.
   const { phase: skyPhase } = useTimeOfDay()
   const fleet = ROCKET_MODELS.map(model => ({ model, unlocked: missionsDone >= model.missionsRequired && !model.locked }))
   const unlockedFleet = fleet.filter(item => item.unlocked)
@@ -89,56 +78,6 @@ export default function LaunchpadScreen({
         ? !player.placed.includes(mission.construction.structureKind)
         : false)
       : undefined
-  const availableStructures = unplacedUnlockedStructures(player)
-  const availableActions: AvailableAction[] = []
-  if (freeOperations && ownMiningOperation) {
-    availableActions.push({
-      id: 'create-mission', kind: 'mission', eyebrow: 'OWN PROGRAM', title: 'Create a mining mission',
-      detail: 'Choose a target and run the haul yourself.', cta: 'Create mission', onClick: () => onPick(ownMiningOperation.id),
-      primary: true, testId: 'launchpad-create-mission-panel-btn',
-    })
-  }
-  if (freeOperations && infrastructureOperation) {
-    availableActions.push({
-      id: 'launch-infrastructure', kind: 'infrastructure', eyebrow: 'PERSONAL INFRASTRUCTURE', title: 'Launch your next instrument',
-      detail: 'Put a satellite or remote facility into service.', cta: 'Launch', onClick: () => onPick(infrastructureOperation.id),
-      primary: true, testId: 'launchpad-launch-infrastructure-panel-btn',
-    })
-  }
-  const nextStructure = availableStructures[0]
-  if (nextStructure) {
-    availableActions.push({
-      id: `build-${nextStructure.id}`, kind: 'structure', eyebrow: 'NEW STRUCTURE', title: `Build ${nextStructure.name}`,
-      detail: 'A new structure is unlocked; review its cost and choose a plot.', cta: 'Open build', onClick: onOpenBuild,
-      testId: 'launchpad-build-structure-panel-btn',
-    })
-  }
-  const guideSteps = [
-    {
-      label: '01 · LAUNCHPAD',
-      title: 'Launch from here',
-      body: 'Assigned vehicles move from the hangar to this pad before flight.',
-      target: 'tower' as const,
-    },
-    {
-      label: '02 · ROCKET FLEET',
-      title: 'Prepare your vehicles',
-      body: 'Open the hangar to inspect unlocked rockets and fit upgrades.',
-      target: 'rocket' as const,
-    },
-  ] as const
-  const guide = guideStep === null ? null : guideSteps[guideStep]
-
-  useEffect(() => {
-    if (freeOperations && !window.localStorage.getItem(LAUNCHPAD_GUIDE_KEY)) setGuideStep(0)
-  }, [freeOperations])
-
-  const closeGuide = () => {
-    window.localStorage.setItem(LAUNCHPAD_GUIDE_KEY, 'complete')
-    setGuideStep(null)
-  }
-
-  const isGuided = (target: (typeof guideSteps)[number]['target']) => guide?.target === target
   // The physical pad is an entry point to mission selection, not an implicit
   // choice of the first operation in a computed list. Selecting a mission is
   // a separate, visible decision; otherwise the pad jumps straight to target
@@ -151,7 +90,7 @@ export default function LaunchpadScreen({
       : 'Start a new mission'
 
   return (
-    <div className="game-screen theme-blueprint ln-scene-launchpad" data-testid="launchpad-focus-screen">
+    <div className="game-screen theme-deep ln-scene-launchpad" data-testid="launchpad-focus-screen">
       {/* Scene chrome stays crisp over the terrain; the previous `glass` prop
           created the large frosted rectangle visible across the upper UI. */}
       <TopBar eyebrow="BASE · LAUNCHPAD" title="Your Program" onBack={onBack} francs={francs} />
@@ -180,7 +119,7 @@ export default function LaunchpadScreen({
           <HubWorldBackground phase={skyPhase} composition="earth-base-pad" />
           <RoadRover road={EARTH_BASE_PAD.roadPaths?.[0]} />
         </div>
-        <button type="button" className={`launchpad-scene-object launchpad-tower ${isGuided('tower') ? 'is-guided' : ''}`} data-testid="launchpad-status-card" onClick={startPadAction} aria-label={padActionLabel}>
+        <button type="button" className="launchpad-scene-object launchpad-tower" data-testid="launchpad-status-card" onClick={startPadAction} aria-label={padActionLabel}>
           <span className="launchpad-tower-art" data-launch-state={player.pendingLaunch ? 'hot' : 'idle'}>
             <LaunchpadModules />
             {player.pendingLaunch && <img className="launchpad-tower-rocket" src={rocketImageSrc} alt="Rocket on launchpad" />}
@@ -191,7 +130,7 @@ export default function LaunchpadScreen({
           </span>
         </button>
 
-        <button type="button" className={`launchpad-scene-object launchpad-rocket ${isGuided('rocket') ? 'is-guided' : ''}`} data-testid="launchpad-rocket-fleet" onClick={onOpenHangar}>
+        <button type="button" className="launchpad-scene-object launchpad-rocket" data-testid="launchpad-rocket-fleet" onClick={onOpenHangar}>
           <HangarModules className="launchpad-hangar-art" />
           <span className="launchpad-rocket-art">
             <img src={rocketImageSrc} alt="" />
@@ -203,33 +142,7 @@ export default function LaunchpadScreen({
           </span>
         </button>
 
-        {availableActions.length > 0 && (
-          <div className="launchpad-available-actions">
-            <AvailableActionsPanel actions={availableActions} />
-          </div>
-        )}
-
         <SoilCrossSection />
-
-        {guide && guideStep !== null && (
-          <aside className="launchpad-guide" data-testid="launchpad-guide" aria-live="polite" aria-labelledby="launchpad-guide-title">
-            <button className="launchpad-guide-close" data-testid="launchpad-guide-close" onClick={closeGuide} aria-label="Close Launchpad guide">×</button>
-            <span className="launchpad-guide-kicker">{guide.label}</span>
-            <h2 id="launchpad-guide-title">{guide.title}</h2>
-            <span className="launchpad-guide-copy">{guide.body}</span>
-            <div className="launchpad-guide-footer">
-              <div className="launchpad-guide-progress" aria-label={`Guide step ${guideStep + 1} of ${guideSteps.length}`}>
-                {guideSteps.map((step, index) => <i key={step.target} className={index === guideStep ? 'is-current' : ''} />)}
-              </div>
-              <div className="launchpad-guide-actions">
-                {guideStep > 0 && <button data-testid="launchpad-guide-back" onClick={() => setGuideStep(guideStep - 1)}>BACK</button>}
-                <button className="is-primary" data-testid="launchpad-guide-next" onClick={() => guideStep === guideSteps.length - 1 ? closeGuide() : setGuideStep(guideStep + 1)}>
-                  {guideStep === guideSteps.length - 1 ? 'DONE' : 'NEXT'}
-                </button>
-              </div>
-            </div>
-          </aside>
-        )}
 
         <div className="launchpad-ground-line" />
       </main>
@@ -241,7 +154,6 @@ export default function LaunchpadScreen({
           <span>{launchedSatellites}/{SATELLITE_MODELS.length} SAT</span>
         </div>
         <div className="launchpad-rail-actions">
-          {freeOperations && <button data-testid="launchpad-guide-open" onClick={() => setGuideStep(0)}><GuideGlyph /> GUIDE</button>}
           {onOpenSubsurface && <button data-testid="launchpad-open-subsurface-btn" onClick={onOpenSubsurface}><SubsurfaceGlyph /> SUBSURFACE</button>}
           <button data-testid="launchpad-open-hangar-btn" onClick={onOpenHangar}><HangarGlyph /> HANGAR</button>
           {freeOperations && nextOperation && <button data-testid="launchpad-program-operation-btn" onClick={() => onPick(nextOperation.id)}><MissionGlyph /> OPS {operations.length}</button>}

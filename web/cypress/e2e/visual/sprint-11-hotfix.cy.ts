@@ -103,13 +103,8 @@ describe('Sprint 11 Launchpad and Earth Base hotfix — live browser QA', () => 
     cy.get('[data-testid="launchpad-build-monitoring-btn"]').should('not.exist')
     cy.get('[data-testid="launchpad-open-hangar-btn"]').should('be.visible')
     cy.get('[data-testid="launchpad-view-contracts-btn"]').should('be.visible')
-    cy.get('[data-testid="launchpad-guide-open"]').should('be.visible')
-
-    cy.get('body').then($body => {
-      if ($body.find('[data-testid="launchpad-guide"]').length > 0) {
-        cy.get('[data-testid="launchpad-guide-close"]').click()
-      }
-    })
+    cy.get('[data-testid="launchpad-guide-open"]').should('not.exist')
+    cy.get('.launchpad-available-actions').should('not.exist')
     cy.get('[data-testid="launchpad-build-monitoring-btn"]').should('not.exist')
 
     cy.get('.launchpad-visual-scene').then($scene => {
@@ -125,7 +120,7 @@ describe('Sprint 11 Launchpad and Earth Base hotfix — live browser QA', () => 
       expect(viewport.scrollHeight, 'Launchpad scene fits its viewport').to.be.at.most(viewport.clientHeight)
     })
 
-    cy.screenshot('sprint-11-hotfix-launchpad-guide', { capture: 'viewport' })
+    cy.screenshot('sprint-11-hotfix-launchpad-actions', { capture: 'viewport' })
     cy.get('[data-testid="launchpad-open-hangar-btn"]').should('be.visible')
   })
 

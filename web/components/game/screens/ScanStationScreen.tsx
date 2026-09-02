@@ -11,6 +11,7 @@ import type { Player } from '@/lib/game-types'
 import { UI_ZONES } from '@/lib/ui-zones'
 import { formatCountdown } from '@/lib/format'
 import ScanStationCoach, { useScanStationCoach } from '@/components/game/ScanStationCoach'
+import ScenePanel from '@/components/game/ScenePanel'
 
 interface ScanStationScreenProps {
   player: Player
@@ -55,10 +56,10 @@ export default function ScanStationScreen({ player, targets, onBack, onStartScan
   const activeTarget = activeScan ? targets.find(t => t.id === activeScan.targetId) ?? null : null
 
   return (
-    <div className="game-screen theme-blueprint" data-testid="scan-station-screen">
+    <div className="game-screen theme-deep" data-testid="scan-station-screen">
       <TopBar eyebrow="BASE · SCANNING" title="Scanning Station" onBack={onBack} />
       {coach.visible && <ScanStationCoach onDismiss={coach.dismiss} />}
-      <div className="screen-scroll" data-ui-zone={UI_ZONES.screenContent}>
+      <ScenePanel ambient="survey" className="screen-scroll" data-ui-zone={UI_ZONES.screenContent}>
 
         <Panel accent="var(--ln-cyan)" style={{ padding: 12 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -209,7 +210,7 @@ export default function ScanStationScreen({ player, targets, onBack, onStartScan
             </Panel>
           )
         })}
-      </div>
+      </ScenePanel>
     </div>
   )
 }

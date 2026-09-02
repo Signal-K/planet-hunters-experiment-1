@@ -77,7 +77,6 @@ describe('Astronaut Academy', () => {
       clientMissions: { 'helios-propulsion-depot': 10, 'arcturus-battery-systems': 10 },
       transitSatelliteLaunchedAt: Date.now() - 1000,
     })
-    cy.get('[data-testid="launchpad-guide-close"]', { timeout: 10000 }).click()
     cy.get('[data-testid="launchpad-program-operation-btn"]', { timeout: 10000 }).click()
     cy.get('[data-testid="academy-screen"]', { timeout: 10000 }).should('be.visible')
     cy.contains('TRAIN THE FIRST ASTRONAUT').should('be.visible')

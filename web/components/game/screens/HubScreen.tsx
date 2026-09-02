@@ -32,8 +32,6 @@ import { instrumentDigestDateKey, unresolvedTransitInstrumentDigest, unresolvedD
 import HUDStrip from '@/components/ui/HUDStrip'
 import layoutStyles from '@/components/game/hub/HubLayout.module.css'
 import { sceneXPercent } from '@/lib/scene/terrain-kit'
-import AvailableActionsPanel, { type AvailableAction } from '@/components/game/AvailableActionsPanel'
-import { unplacedUnlockedStructures } from '@/lib/available-actions'
 
 // ── Ref-B bordered-icon-badge glyphs for Hub chrome (bottom tabs) ──
 // Simple white-line icons, no fill — matches the mockup's `i-*` <symbol> set.
@@ -362,10 +360,6 @@ export default function HubScreen({ player, rocketVariant = 'explorer', hasCoach
     if (kind === 'deep-space-telescope') return !player.deepSpaceTelescopeBuilt
     return false
   }
-  const availableStructures = unplacedUnlockedStructures(player)
-  const availableActions: AvailableAction[] = []
-  const nextStructure = availableStructures[0]
-  if (nextStructure) availableActions.push({ id: `build-${nextStructure.id}`, kind: 'structure', eyebrow: 'NEW STRUCTURE', title: `Build ${nextStructure.name}`, detail: 'A new structure is unlocked; review its cost and choose a plot.', cta: 'Open build', onClick: () => onFocusBuilding('build'), primary: true, testId: 'hub-build-structure-action' })
   const hubBuildings: HubBuildingDef[] = sortedEntities.flatMap((e, plot) => {
     const kind = structureForPlot(plot)
     if (!kind) return []
@@ -607,12 +601,9 @@ export default function HubScreen({ player, rocketVariant = 'explorer', hasCoach
         )}
       </div>
 
-      {/* Progression card — hidden when tutorial coach is active */}
-      {!hasCoach && !subsurface && availableActions.length > 0 && (
-        <div className="hub-available-actions">
-          <AvailableActionsPanel actions={availableActions} />
-        </div>
-      )}
+      {/* The progression card is the Hub's single action surface. Buildings
+          remain directly selectable in edit mode; a second generic actions
+          panel duplicated these same routes and obscured the scene. */}
       {!player.activeMission && (!hasCoach || !!player.pendingLaunch) && !subsurface && (
         <>
           <ProgressionCard

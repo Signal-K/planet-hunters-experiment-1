@@ -129,7 +129,7 @@ export default function TargetPickerScreen({ mission, onBack, onPick, hasCoach, 
 
   return (
     <MissionSetupShell
-      className="theme-blueprint mission-setup-screen--target"
+      className="theme-deep mission-setup-screen--target"
       eyebrow={mission.title.toUpperCase()}
       title="Pick Target"
       onBack={onBack}
