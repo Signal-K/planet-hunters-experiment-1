@@ -19,7 +19,7 @@ and in the foreground?". Both had one cause: three different art sources on one
 screen — a painted JPG horizon, hand-written SVG skyline glyphs, and Blender
 sprites for the foreground. Terrain rendered *here* shares the palette, the
 `side` camera, the facet split and the inverted-hull outline weight with
-`world_modules.py`'s Earth Base pieces, so a mountain and a hangar are the same kind of object drawn
+the flat Earth Base sprites, so a mountain and a hangar are the same kind of object drawn
 the same way. Depth is then applied by the scene layer as an atmospheric haze
 wash over the silhouette (see `TerrainLayer` in the web app), which is how the
 reference games do it — not by drawing distant things in a different style.

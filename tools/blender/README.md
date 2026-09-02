@@ -45,7 +45,6 @@ landnam_kit.py           palette, materials, geometry helpers, camera, render
 render_all.py            driver — walks every model module, one PNG each
 models/terrain.py        modular background kit — mountains, hills, trees,
                           rocks, roads, distant facilities, clouds (KES-260)
-models/world_modules.py  modular Earth Base foundations, towers and hangars (KES-260)
 models/actors.py         rover and drone (2)
 models/ships.py          Explorer/Prospector hulls + Explorer cutaway (KES-41/STS-611)
 models/rooms.py          ship interior room panels (KES-41/STS-611)
@@ -90,23 +89,15 @@ will read at a subtly wrong angle against the terrain underneath it.
 `layout` is the size in CSS pixels the sprite is drawn at in game; the render is
 `SUPERSAMPLE`× that (currently 3×) so it stays crisp at devicePixelRatio 2–3.
 
-Earth Base Launchpad and Hangar module sizes are owned by the `MODULE` map in
-`web/components/game/hub/EarthBaseModules.tsx`, which composes the pieces
-rendered from `models/world_modules.py` (foundation/tower/cradle/service-yard
-for the pad; foundation/shell/roof/workshop for the hangar).
+Earth Base Launchpad and Hangar layout sizes are owned by the flat-art DOM
+component in `web/components/game/hub/EarthBaseModules.tsx`.
 
 ## Earth Base facilities
 
-Launchpad and Hangar are built from `models/world_modules.py`, a small
-composable kit — foundations, tower, cradle, service yard, hangar shell, roof
-and workshop — rather than one large illustration per site. Each piece is
-transparent outside its own footprint and based at `z=0`, so React composes
-them at the same baseline as the terrain bricks instead of the building
-carrying its own patch of ground. A prior single-flat-PNG-per-site attempt
-(`launchpad_flat.png`/`hangar_flat.png`, briefly shipped under KES-260) baked
-terrain into the illustration itself, which produced a visible second, offset
-patch of ground under the structure once placed over the scene's own terrain —
-this is why the kit stays modular.
+The generated 3D structure kit is retired. Launchpad and Hangar currently use
+flat illustrated 2D cutouts in `web/public/game/assets/base/`. Blender remains
+available for terrain and future art, but this scene no longer depends on a 3D
+structure pass.
 
 Depth is applied at runtime, not in the render: the web app's `TerrainScene`
 washes each depth band toward the sky colour through a mask of the sprite's own

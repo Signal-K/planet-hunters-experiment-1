@@ -9,21 +9,8 @@ interface DebriefCanvasProps {
 }
 
 const STARFIELD = '/game/assets/backgrounds/starmap.png'
+const HANGAR = '/game/assets/base/hangar_flat.png'
 const FALLBACK_SHIP = '/game/assets/ships/ship_sr1.png'
-
-// Same modular Blender kit EarthBaseModules.tsx composes for the Hub/Launchpad
-// (tools/blender/models/world_modules.py) — a single flat hangar illustration
-// briefly shipped here under KES-260 with terrain baked into the art, which
-// showed as a second patch of ground under the berth. Box is logical 360x234,
-// matching EARTH_BASE_STRUCTURE_SIZES.hangar and the `.earth-base-module--hangar-*`
-// CSS percentages in launchpad-screen.css, so the two renderers stay in sync.
-const HANGAR_BOX = { width: 360, height: 234 }
-const HANGAR_MODULES = [
-  { key: 'hangarFoundation', src: '/game/assets/base/hangar_foundation.png', left: 0, bottom: 0, width: 1 },
-  { key: 'hangarShell', src: '/game/assets/base/hangar_shell.png', left: 0.04, bottom: 0.09, width: 0.92 },
-  { key: 'hangarWorkshop', src: '/game/assets/base/hangar_workshop.png', left: 0.2, bottom: 0.14, width: 0.6 },
-  { key: 'hangarRoof', src: '/game/assets/base/hangar_roof.png', left: 0, bottom: 0.44, width: 1 },
-] as const
 
 /**
  * Full-bleed arrival-bay scene for the debrief. The art is deliberately doing
@@ -61,9 +48,9 @@ export default function DebriefCanvas({ rocketImageSrc }: DebriefCanvasProps) {
         })
         if (destroyed) return
 
-        const [starfield, ...hangarTextures] = await Promise.all([
+        const [starfield, hangar] = await Promise.all([
           Assets.load<Texture>(STARFIELD),
-          ...HANGAR_MODULES.map(m => Assets.load<Texture>(m.src)),
+          Assets.load<Texture>(HANGAR),
         ])
         if (destroyed) return
 
@@ -86,20 +73,10 @@ export default function DebriefCanvas({ rocketImageSrc }: DebriefCanvasProps) {
         atmosphere.name = 'arrival-atmosphere'
         scene.addChild(atmosphere)
 
-        const hangarStack = new Container()
-        hangarStack.name = 'arrival-hangar'
-        hangarStack.pivot.set(HANGAR_BOX.width / 2, HANGAR_BOX.height)
-        HANGAR_MODULES.forEach((module, i) => {
-          const texture = hangarTextures[i]
-          const piece = new Sprite(texture)
-          piece.name = `arrival-hangar-${module.key}`
-          const pieceScale = (module.width * HANGAR_BOX.width) / texture.width
-          piece.scale.set(pieceScale)
-          piece.x = module.left * HANGAR_BOX.width
-          piece.y = HANGAR_BOX.height - module.bottom * HANGAR_BOX.height - texture.height * pieceScale
-          hangarStack.addChild(piece)
-        })
-        scene.addChild(hangarStack)
+        const hangarSprite = new Sprite(hangar)
+        hangarSprite.name = 'arrival-hangar'
+        hangarSprite.anchor.set(0.5, 1)
+        scene.addChild(hangarSprite)
 
         const berth = new Graphics()
         berth.name = 'arrival-berth-lights'
@@ -128,10 +105,10 @@ export default function DebriefCanvas({ rocketImageSrc }: DebriefCanvasProps) {
           atmosphere.rect(0, nextHeight * 0.76, nextWidth, 2).fill({ color: 0x70d9ea, alpha: 0.24 })
 
           const hangarWidth = Math.min(nextWidth * 0.78, 680)
-          const hangarScale = hangarWidth / HANGAR_BOX.width
-          hangarStack.scale.set(hangarScale)
-          hangarStack.x = nextWidth * 0.5
-          hangarStack.y = nextHeight * 0.96
+          const hangarScale = hangarWidth / hangar.width
+          hangarSprite.scale.set(hangarScale)
+          hangarSprite.x = nextWidth * 0.5
+          hangarSprite.y = nextHeight * 0.96
 
           const berthX = nextWidth * 0.5
           const berthY = nextHeight * 0.78

@@ -13,32 +13,16 @@ export interface HubBuildingDef {
   active?: boolean
 }
 
-/**
- * The Earth Base is assembled from the Blender module kit
- * (`tools/blender/models/world_modules.py`), not from one flat illustration
- * per building. A single-PNG-per-site pass shipped briefly under KES-260 and
- * was reverted: baking the ground into the illustration produced a visible
- * second, misaligned patch of terrain wherever the scene's own ground showed
- * through. These pieces are transparent outside their own footprint and
- * based at the ground line, so the scene's terrain provides the contact edge
- * instead of the building art.
- */
-const MODULE = {
-  padFoundation: { src: '/game/assets/base/pad_foundation.png', width: 330, height: 54 },
-  padTower: { src: '/game/assets/base/pad_tower.png', width: 168, height: 225 },
-  padCradle: { src: '/game/assets/base/pad_cradle.png', width: 156, height: 159 },
-  padService: { src: '/game/assets/base/pad_service.png', width: 174, height: 171 },
-  hangarFoundation: { src: '/game/assets/base/hangar_foundation.png', width: 330, height: 51 },
-  hangarShell: { src: '/game/assets/base/hangar_shell.png', width: 306, height: 222 },
-  hangarRoof: { src: '/game/assets/base/hangar_roof.png', width: 324, height: 132 },
-  hangarWorkshop: { src: '/game/assets/base/hangar_workshop.png', width: 210, height: 153 },
-  outpost: { src: '/game/assets/base/outpost.png', width: 153, height: 138 },
+/** Temporary flat-art pass for Earth Base (KES-260). The Blender module kit is retired. */
+const SPRITES = {
+  launchpad: { src: '/game/assets/base/launchpad_flat.png', width: 220, height: 160 },
+  hangar: { src: '/game/assets/base/hangar_flat.png', width: 250, height: 161 },
 } as const
 
 export const EARTH_BASE_STRUCTURE_SIZES: Record<string, { width: number; height: number }> = {
-  launchpad: { width: 360, height: 264 },
+  launchpad: { width: 220, height: 160 },
   'surface-silo': { width: 120, height: 78 },
-  hangar: { width: 360, height: 234 },
+  hangar: { width: 250, height: 161 },
   refinery: { width: 150, height: 97 },
   'scan-station': { width: 132, height: 86 },
   command: { width: 150, height: 97 },
@@ -46,38 +30,23 @@ export const EARTH_BASE_STRUCTURE_SIZES: Record<string, { width: number; height:
   'astronaut-academy': { width: 150, height: 97 },
 }
 
-type ModuleName = keyof typeof MODULE
+type SpriteName = keyof typeof SPRITES
 
-function ModuleImage({ name, className = '' }: { name: ModuleName; className?: string }) {
-  const asset = MODULE[name]
-  return <img className={`earth-base-module ${className}`} src={asset.src} alt="" draggable={false} aria-hidden="true" />
+function FlatSprite({ name, className = '' }: { name: SpriteName; className?: string }) {
+  const sprite = SPRITES[name]
+  return <img className={`earth-base-flat-sprite ${className}`} src={sprite.src} alt="" draggable={false} aria-hidden="true" />
 }
 
-/** Individual foundation, tower, cradle and service-yard bricks. */
 export function LaunchpadModules({ className = '' }: { className?: string }) {
-  return (
-    <span className={`earth-base-module-stack earth-base-module-stack--launchpad ${className}`}>
-      <ModuleImage name="padFoundation" className="earth-base-module--pad-foundation" />
-      <ModuleImage name="padTower" className="earth-base-module--pad-tower" />
-      <ModuleImage name="padCradle" className="earth-base-module--pad-cradle" />
-      <ModuleImage name="padService" className="earth-base-module--pad-service" />
-    </span>
-  )
+  return <FlatSprite name="launchpad" className={className} />
 }
 
-/** Individual apron, shell, roof and workshop bricks, with the bay left open. */
 export function HangarModules({ className = '' }: { className?: string }) {
-  return (
-    <span className={`earth-base-module-stack earth-base-module-stack--hangar ${className}`}>
-      <ModuleImage name="hangarFoundation" className="earth-base-module--hangar-foundation" />
-      <ModuleImage name="hangarShell" className="earth-base-module--hangar-shell" />
-      <ModuleImage name="hangarWorkshop" className="earth-base-module--hangar-workshop" />
-      <ModuleImage name="hangarRoof" className="earth-base-module--hangar-roof" />
-    </span>
-  )
+  return <FlatSprite name="hangar" className={className} />
 }
 
 function StructureSprite({ kind, active }: { kind: string; active?: boolean }) {
+  const name: SpriteName | null = kind === 'launchpad' || kind === 'hangar' ? kind : null
   if (kind === 'surface-silo') {
     return (
       <svg viewBox="0 0 120 78" className="earth-base-silo-sprite" role="img" aria-label="Surface silo">
@@ -89,9 +58,13 @@ function StructureSprite({ kind, active }: { kind: string; active?: boolean }) {
       </svg>
     )
   }
-  if (kind === 'launchpad') return <LaunchpadModules className={active ? 'is-active' : ''} />
-  if (kind === 'hangar') return <HangarModules className={active ? 'is-active' : ''} />
-  return <ModuleImage name="outpost" className="earth-base-module--outpost" />
+  if (!name) return null
+  return (
+    <>
+      <FlatSprite name={name} />
+      {active && <FlatSprite name={name} className="earth-base-flat-sprite--highlight" />}
+    </>
+  )
 }
 
 const SCENE_WIDTH_DIVISOR = 6.4
