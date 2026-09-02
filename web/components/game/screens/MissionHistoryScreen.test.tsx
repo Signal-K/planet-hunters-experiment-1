@@ -17,6 +17,8 @@ describe('MissionHistoryScreen', () => {
     expect(markup.indexOf('New Survey')).toBeLessThan(markup.indexOf('Old Survey'))
     expect(markup).toContain('MISSIONS COMPLETED')
     expect(markup).toContain('Meridian')
+    expect(markup).not.toContain('AFFINITY')
+    expect(markup).not.toContain('PROGRAM RIGHTS')
   })
 
   it('explains how to start when the log is empty', () => {
