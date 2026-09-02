@@ -24,6 +24,9 @@ export function unplacedUnlockedStructures(player: Player): StructureBlueprint[]
   return STRUCTURES.filter(structure =>
     structure.id !== 'launchpad'
     && structure.id !== 'garage'
+    // The refinery has no Earth Base placement route. It is commissioned at
+    // an approved off-world site by its own-program mission instead.
+    && structure.id !== 'refinery'
     && !player.placed.includes(structure.id)
     && structureUnlocked(structure, opts),
   ).sort((a, b) => {

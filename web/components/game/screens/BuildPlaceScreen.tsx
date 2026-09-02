@@ -80,6 +80,11 @@ export default function BuildPlaceScreen({ onPlaced, onBack, hasCoach, player }:
 
   const catalog = STRUCTURES.filter(s =>
     s.id !== 'garage'
+    // Refinery commissioning is an off-world own-program operation, not an
+    // Earth Base plot placement. Keeping it in this strip produced the Craft
+    // report's "build a refinery" dead end: an explanatory card was visible
+    // but deliberately could never become selectable here.
+    && s.id !== 'refinery'
     && (FEATURE_FLAGS.scanStation || s.id !== 'scan-station')
     && !player.placed.includes(s.id)
   )

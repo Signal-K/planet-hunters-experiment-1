@@ -10,7 +10,11 @@ describe('player availability summaries', () => {
 
   it('keeps the build list aligned with the placement unlock gate', () => {
     const player = { ...DEFAULT_STATE.player, academyResearched: true, placed: ['launchpad'] }
-    expect(unplacedUnlockedStructures(player).map(structure => structure.id)).toContain('astronaut-academy')
+    const structures = unplacedUnlockedStructures(player).map(structure => structure.id)
+    expect(structures).toContain('astronaut-academy')
+    // Refinery commissioning is an off-world operation, never a disabled
+    // Earth Base plot card.
+    expect(structures).not.toContain('refinery')
     expect(unplacedUnlockedStructures(DEFAULT_STATE.player)).toEqual([])
   })
 
