@@ -45,13 +45,13 @@ export const STRUCTURES: StructureBlueprint[] = [
   },
   {
     id: 'refinery',
-    name: 'Refinery',
+    name: 'Off-world Refinery',
     kind: 'refinery',
     cost: STRUCTURE_PRICES.refinery,
     costMaterials: { aluminium: 20, copper: 10 },
-    unlocksAt: 'First client mission requiring refined minerals',
-    unlockTrigger: 'client-mission-trigger',
-    description: 'Refines raw minerals into higher-value client-grade materials.',
+    unlocksAt: 'Commission at a site you own or lease',
+    unlockTrigger: 'manual',
+    description: 'A player-owned refinery installed at an approved off-world site. Process ore near its source for your own construction and client deliveries.',
   },
   {
     id: 'scan-station',
@@ -126,7 +126,11 @@ export function structureUnlocked(structure: StructureBlueprint, opts: { refiner
     return (deepSpaceTelescopeUnlocked(opts) && !!opts.deepSpaceTelescopeMissionCompletedAt) || !!opts.placed?.includes('deep-space-telescope')
   }
   if (structure.unlockTrigger === 'always') return true
-  if (structure.id === 'refinery') return !!opts.refineryUnlocked || !!opts.placed?.includes('refinery')
+  // A refinery is commissioned through the target-based own-program mission,
+  // not unlocked by completing a particular client contract. Retain `placed`
+  // only so existing saves which already own the retired Base placement remain
+  // usable during migration.
+  if (structure.id === 'refinery') return !!opts.placed?.includes('refinery')
   return false
 }
 

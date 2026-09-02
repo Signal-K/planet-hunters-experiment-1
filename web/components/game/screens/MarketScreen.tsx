@@ -6,12 +6,14 @@ import MineralChip from '@/components/game/MineralChip'
 import { MINERAL_META, CLIENT_SLOTS, REFINERY_RECIPES } from '@/lib/data'
 import { sellUnitPrice, sellQuote } from '@/lib/systems/EconomySystem'
 import { formatCurrency } from '@/lib/format'
+import type { DailyEconomySnapshot } from '@/lib/systems/DailyEconomySystem'
 import styles from './MarketScreen.module.css'
 
 interface MarketScreenProps {
   stash: Record<string, number>
   marketSupply?: Record<string, number>
   marketSupplyUpdatedAt?: Record<string, number>
+  dailyEconomySnapshot?: DailyEconomySnapshot
   francs: number
   onSell: (mineralId: string, amount: number) => void
   refinedGoods: Record<string, number>
@@ -21,7 +23,7 @@ interface MarketScreenProps {
   clientId?: string
 }
 
-export default function MarketScreen({ stash, marketSupply, marketSupplyUpdatedAt, francs, onSell, refinedGoods, onSellRefined, onBack, onOpenMissions, clientId }: MarketScreenProps) {
+export default function MarketScreen({ stash, marketSupply, marketSupplyUpdatedAt, dailyEconomySnapshot, francs, onSell, refinedGoods, onSellRefined, onBack, onOpenMissions, clientId }: MarketScreenProps) {
   const [confirming, setConfirming] = useState<string | null>(null)
   const [sellAllConfirm, setSellAllConfirm] = useState(false)
 
@@ -31,7 +33,7 @@ export default function MarketScreen({ stash, marketSupply, marketSupplyUpdatedA
 
   // Prices come from the same function the sale itself uses, so a quote can
   // never promise more (or less) than the player is actually paid.
-  const priceContext = { marketSupply, marketSupplyUpdatedAt }
+  const priceContext = { marketSupply, marketSupplyUpdatedAt, dailyEconomySnapshot }
   const unitPrice = (mineralId: string) => sellUnitPrice(mineralId, priceContext, clientId)
   const totalValue = () => sellQuote(stash, priceContext, clientId)
 
@@ -69,7 +71,7 @@ export default function MarketScreen({ stash, marketSupply, marketSupplyUpdatedA
           <div className={styles.paperCard}>
             <div className={styles.sectionLabel}>Open market · live rates</div>
             <h2 id="market-intro-title">Move recovered material into working capital.</h2>
-            <p>Sell mined cargo at the current exchange rate. Client preferences can improve the return on selected minerals.</p>
+            <p>Sell mined cargo at the published exchange rate. Daily client construction demand sets the next price board.</p>
           </div>
           <div className={styles.quote} aria-label={`Estimated inventory value ${formatCurrency(totalValue())}`}>
             <div>
@@ -80,7 +82,7 @@ export default function MarketScreen({ stash, marketSupply, marketSupplyUpdatedA
           </div>
         </section>
 
-        {client && (
+        {client && !dailyEconomySnapshot && (
           <section className={styles.clientCard} style={{ '--client-accent': client.color } as CSSProperties} aria-label={`${client.name} premium`}>
             <div className={styles.clientMark} aria-hidden="true">+</div>
             <div>

@@ -24,7 +24,6 @@ import AuthGateSheet from '@/components/game/AuthGateSheet'
 import SettingsSheet from '@/components/game/SettingsSheet'
 import FriendsButton from '@/components/game/FriendsButton'
 import FriendsSheet from '@/components/game/FriendsSheet'
-import TerritoryClaimPopup from '@/components/game/TerritoryClaimPopup'
 import TakeOnPwaPreload from '@/components/takeon/TakeOnPwaPreload'
 import { UI_ZONES } from '@/lib/ui-zones'
 
@@ -260,10 +259,6 @@ function GameCanvas() {
             kind={game.popup}
             onClose={() => {
               const popup = game.popup
-              if (popup === 'loan') {
-                game.acceptLoan()
-                return
-              }
               game.setPopup(null)
               if (popup === 'sr2') {
                 game.go('hub')
@@ -272,7 +267,6 @@ function GameCanvas() {
                 game.go('hangar')
               }
             }}
-            onDismiss={game.popup === 'loan' ? () => game.setPopup(null) : undefined}
           />
         )}
         {game.authGateOpen && (
@@ -283,13 +277,6 @@ function GameCanvas() {
             onContinue={game.continueWithEmail}
             otpPending={game.authGateOtpId !== null}
             onVerifyOtp={game.verifyOtp}
-          />
-        )}
-        {game.pendingTerritoryClaimFor && !game.authGateOpen && (
-          <TerritoryClaimPopup
-            targetId={game.pendingTerritoryClaimFor.targetId}
-            clientId={game.pendingTerritoryClaimFor.clientId}
-            onDismiss={game.clearTerritoryClaimPopup}
           />
         )}
       </div>

@@ -295,6 +295,7 @@ export function ScreenContent({
           stash={game.player.stash ?? {}}
           marketSupply={game.player.marketSupply ?? {}}
           marketSupplyUpdatedAt={game.player.marketSupplyUpdatedAt ?? {}}
+          dailyEconomySnapshot={game.player.dailyEconomySnapshot}
           francs={game.player.francs}
           onSell={game.sellMinerals}
           refinedGoods={game.player.refinedGoods}

@@ -20,5 +20,7 @@ export function applyConstructionCompletion(player: Player, mission: Mission, ta
 
 export function resolveConstructionState(record: ClientStructureRecord, buildTimeMs: number, now = Date.now()): ClientStructureRecord {
   if (record.state !== 'under-construction' || record.startedAt === undefined) return record
-  return now - record.startedAt >= buildTimeMs ? { ...record, state: 'operational' } : record
+  return now - record.startedAt >= buildTimeMs
+    ? { ...record, state: 'operational', completedAt: record.completedAt ?? record.startedAt + buildTimeMs }
+    : record
 }

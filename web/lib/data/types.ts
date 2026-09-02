@@ -45,6 +45,8 @@ export interface ClientStructureRecord {
   clientId: string
   state: TargetStructureState
   startedAt?: number
+  /** Set once when construction becomes operational; drives daily client XP. */
+  completedAt?: number
 }
 
 export type DailyQuestKind = 'scan' | 'land' | 'map'

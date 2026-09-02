@@ -63,8 +63,8 @@ function materialRequirement(materials: Record<string, number>): { minerals: Rec
   }
 }
 
-/** Earth Base construction is owned work, so it awards the structure rather
- * than a client fee or affinity. Keep its costs aligned with the blueprints. */
+/** Player-program construction is owned work, so it awards infrastructure
+ * rather than a client fee. Keep its costs aligned with the blueprints. */
 export const OWN_PROGRAM_BUILD_MISSIONS: Mission[] = [
   {
     id: 'program-build-remote-silo',
@@ -80,27 +80,27 @@ export const OWN_PROGRAM_BUILD_MISSIONS: Mission[] = [
   },
   {
     id: REFINERY_BUILD_MISSION_ID,
-    title: 'Build the Refinery',
-    brief: 'Use your stored aluminium and copper to build the Base refinery. It converts raw ore into higher-value materials for your program.',
+    title: 'Commission an Off-world Refinery',
+    brief: 'Deliver aluminium and copper to a site you own or lease. Your refinery processes ore close to the source for your own construction and client deliveries.',
     tag: 'PROGRAM',
     difficulty: 'L1',
     locked: false,
     sequence: FREE_OPS_START_MISSIONS_DONE + 1,
-    unlockAt: 'Reach Free Operations',
+    unlockAt: 'Reach Free Operations and choose a site you own or lease',
     construction: {
       structureKind: refineryBlueprint.kind,
       requiredMaterials: { ...(refineryBlueprint.costMaterials ?? {}) },
       placementMode: 'confirm',
-      buildTimeMs: 0,
+      buildTimeMs: 45 * 60 * 1000,
     },
     programReward: {
       researchXP: 0,
-      outcome: 'Refinery built · raw ore can now be processed at Base',
+      outcome: 'Off-world refinery commissioned · process ore at the selected site',
     },
     requires: {
       ...materialRequirement(refineryBlueprint.costMaterials ?? {}),
       drill_tier: 1,
-      max_orbit: 0,
+      max_orbit: 5,
     },
     payout: { francs: 0, affinity: 0 },
   },
