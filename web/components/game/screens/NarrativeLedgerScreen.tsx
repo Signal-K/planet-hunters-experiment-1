@@ -16,7 +16,7 @@ export default function NarrativeLedgerScreen({ onBack }: NarrativeLedgerScreenP
   }))
 
   return (
-    <section className="screen-scroll theme-deep" data-testid="narrative-ledger-screen">
+    <section className="screen-scroll theme-light" data-testid="narrative-ledger-screen">
       <div className={styles.shell}>
         <header className={styles.header}>
           <div>

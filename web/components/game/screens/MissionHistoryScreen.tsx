@@ -22,7 +22,7 @@ export default function MissionHistoryScreen({ records, onBack }: MissionHistory
   const ordered = [...records].sort((a, b) => b.completedAt - a.completedAt)
 
   return (
-    <section className="screen-scroll theme-deep" data-testid="mission-history-screen">
+    <section className="screen-scroll theme-light" data-testid="mission-history-screen">
       <div className={styles.shell}>
         <header className={styles.header}>
           <div><div className={styles.eyebrow}>BASE · MISSION LOG</div><h1>Mission Log</h1><p>A concise record of completed client work and program operations.</p></div>
