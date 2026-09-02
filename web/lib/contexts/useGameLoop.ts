@@ -675,7 +675,10 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
           loanOffered: loanOffered || showLoanOffer,
           treasury,
           missionsDone,
-          skillPoints: (s.player.skillPoints ?? 0) + 1,
+          // Player progression is intentionally deferred by the client-led
+          // operating model. Keep old saved points intact, but completing a
+          // mission no longer mints a second progression currency.
+          skillPoints: s.player.skillPoints ?? 0,
           missionCount: catalog.missions.filter(m => m.sequence === missionsDone + 1).length,
           freeOperations: missionsDone >= FREE_OPS_START_MISSIONS_DONE,
           clientMissions,

@@ -16,7 +16,7 @@ import { SoilCrossSection } from '@/components/game/hub/SoilCrossSection'
 import { RoadRover } from '@/components/game/hub/RoadRover'
 import { EARTH_BASE_PAD } from '@/lib/scene/compositions'
 import AvailableActionsPanel, { type AvailableAction } from '@/components/game/AvailableActionsPanel'
-import { installableSkillNodes, unplacedUnlockedStructures } from '@/lib/available-actions'
+import { unplacedUnlockedStructures } from '@/lib/available-actions'
 
 interface LaunchpadScreenProps {
   onBack: () => void
@@ -96,7 +96,6 @@ export default function LaunchpadScreen({
         : false)
       : undefined
   const availableStructures = unplacedUnlockedStructures(player)
-  const installableSkills = installableSkillNodes(player)
   const availableActions: AvailableAction[] = []
   if (freeOperations && ownMiningOperation) {
     availableActions.push({
@@ -132,13 +131,6 @@ export default function LaunchpadScreen({
       id: 'research-crew-module', kind: 'research', eyebrow: 'ACADEMY RESEARCH', title: 'Research crew quarters',
       detail: 'Develop the module that lets larger hulls carry crew.', cta: 'Open academy', onClick: onOpenAcademy,
       testId: 'launchpad-research-crew-panel-btn',
-    })
-  }
-  if (freeOperations && installableSkills.length > 0) {
-    availableActions.push({
-      id: 'research-skills', kind: 'research', eyebrow: 'RESEARCH AVAILABLE', title: `${installableSkills.length} skill upgrade${installableSkills.length === 1 ? '' : 's'}`,
-      detail: `${player.skillPoints ?? 0} SP can be allocated to the program.`, cta: 'Research', onClick: onOpenSkills,
-      testId: 'launchpad-research-skills-panel-btn',
     })
   }
   const guideSteps = [

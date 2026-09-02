@@ -33,7 +33,7 @@ import HUDStrip from '@/components/ui/HUDStrip'
 import layoutStyles from '@/components/game/hub/HubLayout.module.css'
 import { sceneXPercent } from '@/lib/scene/terrain-kit'
 import AvailableActionsPanel, { type AvailableAction } from '@/components/game/AvailableActionsPanel'
-import { installableSkillNodes, unplacedUnlockedStructures } from '@/lib/available-actions'
+import { unplacedUnlockedStructures } from '@/lib/available-actions'
 import { academyAffinityUnlocked } from '@/lib/systems/AcademySystem'
 
 // ── Ref-B bordered-icon-badge glyphs for Hub chrome (bottom tabs) ──
@@ -364,13 +364,11 @@ export default function HubScreen({ player, rocketVariant = 'explorer', hasCoach
     return false
   }
   const availableStructures = unplacedUnlockedStructures(player)
-  const installableSkills = installableSkillNodes(player)
   const availableActions: AvailableAction[] = []
   const nextStructure = availableStructures[0]
   if (nextStructure) availableActions.push({ id: `build-${nextStructure.id}`, kind: 'structure', eyebrow: 'NEW STRUCTURE', title: `Build ${nextStructure.name}`, detail: 'A new structure is unlocked; review its cost and choose a plot.', cta: 'Open build', onClick: () => onFocusBuilding('build'), primary: true, testId: 'hub-build-structure-action' })
   if (!player.academyResearched && academyAffinityUnlocked(player)) availableActions.push({ id: 'research-academy', kind: 'research', eyebrow: 'ACADEMY UNLOCKED', title: 'Research Astronaut Academy', detail: 'Two trusted clients have opened the training facility path.', cta: 'Research', onClick: () => onFocusBuilding('academy'), testId: 'hub-research-academy-action' })
   if (player.placed.includes('astronaut-academy') && !player.crewModuleResearched) availableActions.push({ id: 'research-crew-module', kind: 'research', eyebrow: 'ACADEMY RESEARCH', title: 'Research crew quarters', detail: 'Develop the module that lets larger hulls carry crew.', cta: 'Open academy', onClick: () => onFocusBuilding('academy'), testId: 'hub-research-crew-action' })
-  if (player.freeOperations && installableSkills.length > 0) availableActions.push({ id: 'research-skills', kind: 'research', eyebrow: 'RESEARCH AVAILABLE', title: `${installableSkills.length} skill upgrade${installableSkills.length === 1 ? '' : 's'}`, detail: `${player.skillPoints ?? 0} SP can be allocated to the program.`, cta: 'Research', onClick: () => onFocusBuilding('skills'), testId: 'hub-research-skills-action' })
   const hubBuildings: HubBuildingDef[] = sortedEntities.flatMap((e, plot) => {
     const kind = structureForPlot(plot)
     if (!kind) return []

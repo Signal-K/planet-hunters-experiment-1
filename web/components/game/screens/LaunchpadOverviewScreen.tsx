@@ -11,7 +11,7 @@ import { academyAffinityUnlocked } from '@/lib/systems/AcademySystem'
 import { UI_ZONES } from '@/lib/ui-zones'
 import styles from './LaunchpadOverviewScreen.module.css'
 import AvailableActionsPanel, { type AvailableAction } from '@/components/game/AvailableActionsPanel'
-import { installableSkillNodes, unplacedUnlockedStructures } from '@/lib/available-actions'
+import { unplacedUnlockedStructures } from '@/lib/available-actions'
 
 interface LaunchpadOverviewScreenProps {
   onBack: () => void
@@ -94,7 +94,6 @@ export default function LaunchpadOverviewScreen({
   const clearedRockets = ROCKET_MODELS.filter(model => !model.locked && missionsDone >= model.missionsRequired)
   const nextOperation = ownProgramOperation(catalog, player, freeOperations)
   const nextStructure = unplacedUnlockedStructures(player)[0]
-  const installableSkills = installableSkillNodes(player)
   // Starting the next own-program operation (mining or infrastructure) is already the
   // "Next operation" panel's job below — it is not duplicated here to avoid two CTAs
   // for the same action. This panel surfaces everything else that unlocks.
@@ -102,7 +101,6 @@ export default function LaunchpadOverviewScreen({
   if (nextStructure) availableActions.push({ id: `build-${nextStructure.id}`, kind: 'structure', eyebrow: 'NEW STRUCTURE', title: `Build ${nextStructure.name}`, detail: 'A new structure is unlocked; review its cost and choose a plot.', cta: 'Open build', onClick: onOpenBuild, testId: 'launchpad-overview-build-structure-btn' })
   if (!player.academyResearched && academyAffinityUnlocked(player)) availableActions.push({ id: 'research-academy', kind: 'research', eyebrow: 'ACADEMY UNLOCKED', title: 'Research Astronaut Academy', detail: 'Two trusted clients have opened the training facility path.', cta: 'Research', onClick: onOpenAcademy, testId: 'launchpad-overview-research-academy-btn' })
   if (player.placed.includes('astronaut-academy') && !player.crewModuleResearched) availableActions.push({ id: 'research-crew-module', kind: 'research', eyebrow: 'ACADEMY RESEARCH', title: 'Research crew quarters', detail: 'Develop the module that lets larger hulls carry crew.', cta: 'Open academy', onClick: onOpenAcademy, testId: 'launchpad-overview-research-crew-btn' })
-  if (freeOperations && installableSkills.length > 0) availableActions.push({ id: 'research-skills', kind: 'research', eyebrow: 'RESEARCH AVAILABLE', title: `${installableSkills.length} skill upgrade${installableSkills.length === 1 ? '' : 's'}`, detail: `${player.skillPoints ?? 0} SP can be allocated to the program.`, cta: 'Research', onClick: onOpenSkills, testId: 'launchpad-overview-research-skills-btn' })
   const status = player.activeMission ? 'IN FLIGHT' : player.pendingLaunch ? 'LAUNCH READY' : 'PAD READY'
   const vehicle = selectedRocketName ?? clearedRockets[0]?.name ?? 'NO VEHICLE'
 
