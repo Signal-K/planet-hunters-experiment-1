@@ -47,7 +47,7 @@ describe('Launchpad own-program actions', () => {
     expect(markup).toContain('PERSONAL INFRASTRUCTURE')
   })
 
-  it('surfaces an unlocked Academy as a build action', () => {
+  it('keeps a legacy Academy unlock out of the active launch loop', () => {
     const player = {
       ...DEFAULT_STATE.player,
       freeOperations: true,
@@ -80,7 +80,6 @@ describe('Launchpad own-program actions', () => {
       />,
     )
 
-    expect(markup).toContain('NEW STRUCTURE')
-    expect(markup).toContain('Build Astronaut Academy')
+    expect(markup).not.toContain('Build Astronaut Academy')
   })
 })

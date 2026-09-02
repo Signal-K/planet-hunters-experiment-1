@@ -7,7 +7,6 @@ import { ROCKET_MODELS } from '@/lib/data/rockets'
 import { SATELLITE_MODELS } from '@/lib/data/satellites'
 import type { Catalog } from '@/lib/catalog'
 import type { Player } from '@/lib/game-types'
-import { academyAffinityUnlocked } from '@/lib/systems/AcademySystem'
 import { UI_ZONES } from '@/lib/ui-zones'
 import styles from './LaunchpadOverviewScreen.module.css'
 import AvailableActionsPanel, { type AvailableAction } from '@/components/game/AvailableActionsPanel'
@@ -64,14 +63,7 @@ function ownProgramOperation(catalog: Catalog, player: Player, freeOperations: b
   const { own } = partitionByOwner(catalog.missions, mission => mission)
   const sequence = player.missionsDone + 1
   const operations = own.filter(mission => freeOperations || mission.sequence === sequence)
-  return operations.find(mission => {
-    if (mission.id !== ACADEMY_INTRO_MISSION_ID) return true
-    const academyUnlocked = academyAffinityUnlocked(player) || !!player.academyResearched || player.placed.includes('astronaut-academy')
-    const academyCompleted = player.placed.includes('astronaut-academy') && (player.crew ?? []).some(member =>
-      member.crewClass === 'astronaut' && member.selfTrained && member.specialisations.length > 0,
-    )
-    return academyUnlocked && !academyCompleted
-  })
+  return operations.find(mission => mission.id !== ACADEMY_INTRO_MISSION_ID)
 }
 
 export default function LaunchpadOverviewScreen({
@@ -99,8 +91,6 @@ export default function LaunchpadOverviewScreen({
   // for the same action. This panel surfaces everything else that unlocks.
   const availableActions: AvailableAction[] = []
   if (nextStructure) availableActions.push({ id: `build-${nextStructure.id}`, kind: 'structure', eyebrow: 'NEW STRUCTURE', title: `Build ${nextStructure.name}`, detail: 'A new structure is unlocked; review its cost and choose a plot.', cta: 'Open build', onClick: onOpenBuild, testId: 'launchpad-overview-build-structure-btn' })
-  if (!player.academyResearched && academyAffinityUnlocked(player)) availableActions.push({ id: 'research-academy', kind: 'research', eyebrow: 'ACADEMY UNLOCKED', title: 'Research Astronaut Academy', detail: 'Two trusted clients have opened the training facility path.', cta: 'Research', onClick: onOpenAcademy, testId: 'launchpad-overview-research-academy-btn' })
-  if (player.placed.includes('astronaut-academy') && !player.crewModuleResearched) availableActions.push({ id: 'research-crew-module', kind: 'research', eyebrow: 'ACADEMY RESEARCH', title: 'Research crew quarters', detail: 'Develop the module that lets larger hulls carry crew.', cta: 'Open academy', onClick: onOpenAcademy, testId: 'launchpad-overview-research-crew-btn' })
   const status = player.activeMission ? 'IN FLIGHT' : player.pendingLaunch ? 'LAUNCH READY' : 'PAD READY'
   const vehicle = selectedRocketName ?? clearedRockets[0]?.name ?? 'NO VEHICLE'
 

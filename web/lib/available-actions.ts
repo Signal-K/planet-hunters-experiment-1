@@ -27,6 +27,9 @@ export function unplacedUnlockedStructures(player: Player): StructureBlueprint[]
     // The refinery has no Earth Base placement route. It is commissioned at
     // an approved off-world site by its own-program mission instead.
     && structure.id !== 'refinery'
+    // Academy/crew progression is deferred until a single player-progression
+    // design replaces its former affinity dependency.
+    && structure.id !== 'astronaut-academy'
     && !player.placed.includes(structure.id)
     && structureUnlocked(structure, opts),
   ).sort((a, b) => {

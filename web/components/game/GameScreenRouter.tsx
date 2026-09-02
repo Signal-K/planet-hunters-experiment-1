@@ -93,9 +93,14 @@ export function ScreenContent({
   // screen render at all.
   useEffect(() => {
     if (screen === 'market' && !game.player.freeOperations) game.go('hub')
-    // Surface Ops additionally requires having actually landed on a target —
-    // see "Surface Ops gated on landing research and lander module" (STS-640).
-    if (screen === 'surface-ops' && (!game.player.freeOperations || !game.player.hasLanded)) game.go('hub')
+    // The old solo settlement/permit screen conflicts with client territory
+    // and predefined site rights. Keep its saved data migratable, but do not
+    // route new or returning players into a mechanic that KES-287 replaces.
+    if (screen === 'surface-ops') game.go('hub')
+    // Refining is commissioned at an approved off-world site. An old save
+    // that contains a Base refinery remains readable, but no unbuilt player
+    // can enter the retired Earth-refinery screen.
+    if (screen === 'refinery' && !game.player.refineryBuilt) game.go('hub')
     // The Build tab is a Free Ops entry point. Keep the onboarding assembly
     // flow reachable only when it has a real mission context; a bare/deep
     // linked fab route must never show a prefilled rocket.

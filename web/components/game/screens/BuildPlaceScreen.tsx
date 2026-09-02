@@ -85,6 +85,10 @@ export default function BuildPlaceScreen({ onPlaced, onBack, hasCoach, player }:
     // report's "build a refinery" dead end: an explanatory card was visible
     // but deliberately could never become selectable here.
     && s.id !== 'refinery'
+    // Academy/crew progression is deferred with the retired affinity ladder.
+    // Existing placed academies remain readable, but no new Base plot offers
+    // this unrelated progression branch in the simplified launch loop.
+    && s.id !== 'astronaut-academy'
     && (FEATURE_FLAGS.scanStation || s.id !== 'scan-station')
     && !player.placed.includes(s.id)
   )

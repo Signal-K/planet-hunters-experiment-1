@@ -34,7 +34,6 @@ import layoutStyles from '@/components/game/hub/HubLayout.module.css'
 import { sceneXPercent } from '@/lib/scene/terrain-kit'
 import AvailableActionsPanel, { type AvailableAction } from '@/components/game/AvailableActionsPanel'
 import { unplacedUnlockedStructures } from '@/lib/available-actions'
-import { academyAffinityUnlocked } from '@/lib/systems/AcademySystem'
 
 // ── Ref-B bordered-icon-badge glyphs for Hub chrome (bottom tabs) ──
 // Simple white-line icons, no fill — matches the mockup's `i-*` <symbol> set.
@@ -367,8 +366,6 @@ export default function HubScreen({ player, rocketVariant = 'explorer', hasCoach
   const availableActions: AvailableAction[] = []
   const nextStructure = availableStructures[0]
   if (nextStructure) availableActions.push({ id: `build-${nextStructure.id}`, kind: 'structure', eyebrow: 'NEW STRUCTURE', title: `Build ${nextStructure.name}`, detail: 'A new structure is unlocked; review its cost and choose a plot.', cta: 'Open build', onClick: () => onFocusBuilding('build'), primary: true, testId: 'hub-build-structure-action' })
-  if (!player.academyResearched && academyAffinityUnlocked(player)) availableActions.push({ id: 'research-academy', kind: 'research', eyebrow: 'ACADEMY UNLOCKED', title: 'Research Astronaut Academy', detail: 'Two trusted clients have opened the training facility path.', cta: 'Research', onClick: () => onFocusBuilding('academy'), testId: 'hub-research-academy-action' })
-  if (player.placed.includes('astronaut-academy') && !player.crewModuleResearched) availableActions.push({ id: 'research-crew-module', kind: 'research', eyebrow: 'ACADEMY RESEARCH', title: 'Research crew quarters', detail: 'Develop the module that lets larger hulls carry crew.', cta: 'Open academy', onClick: () => onFocusBuilding('academy'), testId: 'hub-research-crew-action' })
   const hubBuildings: HubBuildingDef[] = sortedEntities.flatMap((e, plot) => {
     const kind = structureForPlot(plot)
     if (!kind) return []
@@ -712,9 +709,6 @@ export default function HubScreen({ player, rocketVariant = 'explorer', hasCoach
                       way there. */}
                   {player.freeOperations && (
                     <>
-                      {player.hasLanded && (
-                        <DockIconBtn icon={<SurfaceGlyph />} label="Surface Ops" accent testId="hub-surface-ops" onClick={() => onOpenScene('surface-ops')} />
-                      )}
                       <span className="hub-desktop-nav">
                         <DockIconBtn testId="hub-desktop-missions-btn" icon={<HistoryGlyph />} label="Missions" onClick={() => onOpenScene('missions')} />
                       </span>
@@ -722,10 +716,11 @@ export default function HubScreen({ player, rocketVariant = 'explorer', hasCoach
                         <DockIconBtn icon={<MarketGlyph />} label="Market" onClick={() => onOpenScene('market')} />
                       </span>
                       <span className="hub-desktop-nav">
-                        <DockIconBtn icon={<AtlasGlyph />} label="Atlas" onClick={() => onOpenScene('galaxy')} />
+                        {player.transitSatelliteLaunchedAt && (
+                          <DockIconBtn icon={<AtlasGlyph />} label="Atlas" onClick={() => onOpenScene('galaxy')} />
+                        )}
                       </span>
                       <span className="hub-desktop-nav">
-                        <DockIconBtn icon={<SkillsGlyph />} label="Skills" onClick={() => onOpenScene('skills')} />
                       </span>
                     </>
                   )}

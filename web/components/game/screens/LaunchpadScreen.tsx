@@ -7,7 +7,6 @@ import { ROCKET_MODELS } from '@/lib/data/rockets'
 import { SATELLITE_MODELS } from '@/lib/data/satellites'
 import type { Catalog } from '@/lib/catalog'
 import type { Player } from '@/lib/game-types'
-import { academyAffinityUnlocked } from '@/lib/systems/AcademySystem'
 import { UI_ZONES } from '@/lib/ui-zones'
 import { HubWorldBackground } from '@/components/game/hub/HubWorldBackground'
 import { HangarModules, LaunchpadModules } from '@/components/game/hub/EarthBaseModules'
@@ -72,14 +71,9 @@ export default function LaunchpadScreen({
   const { own } = partitionByOwner(catalog.missions, mission => mission)
   const sequence = missionsDone + 1
   const operations = own.filter(mission => freeOperations || mission.sequence === sequence)
-  const nextOperation = operations.find(mission => {
-    if (mission.id !== ACADEMY_INTRO_MISSION_ID) return true
-    const academyUnlocked = academyAffinityUnlocked(player) || !!player.academyResearched || player.placed.includes('astronaut-academy')
-    const academyCompleted = player.placed.includes('astronaut-academy') && (player.crew ?? []).some(member =>
-      member.crewClass === 'astronaut' && member.selfTrained && member.specialisations.length > 0,
-    )
-    return academyUnlocked && !academyCompleted
-  })
+  // Academy/crew progression remains deferred until it has a replacement for
+  // the retired affinity ladder, so it cannot become the next required launch.
+  const nextOperation = operations.find(mission => mission.id !== ACADEMY_INTRO_MISSION_ID)
   const ownMiningOperation = freeOperations
     ? own.find(mission => mission.tag === 'FREE OPS' && !mission.client && !mission.payload && !mission.construction)
     : undefined
@@ -117,20 +111,6 @@ export default function LaunchpadScreen({
       id: `build-${nextStructure.id}`, kind: 'structure', eyebrow: 'NEW STRUCTURE', title: `Build ${nextStructure.name}`,
       detail: 'A new structure is unlocked; review its cost and choose a plot.', cta: 'Open build', onClick: onOpenBuild,
       testId: 'launchpad-build-structure-panel-btn',
-    })
-  }
-  if (freeOperations && !player.academyResearched && academyAffinityUnlocked(player)) {
-    availableActions.push({
-      id: 'research-academy', kind: 'research', eyebrow: 'ACADEMY UNLOCKED', title: 'Research Astronaut Academy',
-      detail: 'Two trusted clients have opened the training facility path.', cta: 'Research', onClick: onOpenAcademy,
-      testId: 'launchpad-research-academy-panel-btn',
-    })
-  }
-  if (player.placed.includes('astronaut-academy') && !player.crewModuleResearched) {
-    availableActions.push({
-      id: 'research-crew-module', kind: 'research', eyebrow: 'ACADEMY RESEARCH', title: 'Research crew quarters',
-      detail: 'Develop the module that lets larger hulls carry crew.', cta: 'Open academy', onClick: onOpenAcademy,
-      testId: 'launchpad-research-crew-panel-btn',
     })
   }
   const guideSteps = [

@@ -321,7 +321,12 @@ export function repairStateRoute(input: GameState): GameState {
   if (input.screen === 'galaxy' && !input.player.freeOperations) {
     return { ...input, screen: 'missions' }
   }
-  if (input.screen === 'surface-ops' && (!input.player.freeOperations || !input.player.hasLanded)) {
+  // The retired solo-settlement surface screen must not be restored from an
+  // old route. Its state stays in the save for a future site-right migration.
+  if (input.screen === 'surface-ops') {
+    return { ...input, screen: 'hub' }
+  }
+  if (input.screen === 'refinery' && !input.player.refineryBuilt) {
     return { ...input, screen: 'hub' }
   }
   // Repair the tutorial flag: during onboarding (missionsDone < FREE_OPS_START_MISSIONS_DONE),
