@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import type { Mission, Target, MineralMeta, Client, RocketConfig } from '@/lib/data'
-import { calibrateOnboardingPayout, clientAffinityBonus, FIRST_CREW_ARRIVAL_BONUS, isOwnProgramMission, isFreeHaulMission, rocketDisplayForConfig, rocketModelForConfig, MAX_AFFINITY_BONUS, loanInstalmentFor } from '@/lib/data'
+import { calibrateOnboardingPayout, FIRST_CREW_ARRIVAL_BONUS, isOwnProgramMission, isFreeHaulMission, rocketDisplayForConfig, rocketModelForConfig, loanInstalmentFor } from '@/lib/data'
 import { FREE_OPS_START_MISSIONS_DONE } from '@/lib/data/mission-generator'
 import { PrimaryBtn } from '@/components/ui/Button'
 import Panel from '@/components/ui/Panel'
@@ -14,10 +14,9 @@ import TutorialHighlight from '@/components/game/TutorialHighlight'
 import { ScrapSequenceCanvas } from '@/components/game/ScrapSequenceCanvas'
 import DebriefCanvas from '@/components/game/screens/DebriefCanvas'
 import { formatCurrency } from '@/lib/format'
-import ProgressBar from '@/components/ui/ProgressBar'
 import StatRow from '@/components/ui/StatRow'
 
-export default function DebriefScreen({ mission, target, cargo, onDone, minerals, clients, clientMissions, freeOperations, annotations, missionsDone, hasCoach, shipDestroyed, rocket, deliveryTargetName, loanDebt, firstCrewArrival, hasEarthStorage, storageCapacity, storageUsed, haulMarketValue }: {
+export default function DebriefScreen({ mission, target, cargo, onDone, minerals, clients, clientMissions: _clientMissions, freeOperations, annotations, missionsDone, hasCoach, shipDestroyed, rocket, deliveryTargetName, loanDebt, firstCrewArrival, hasEarthStorage, storageCapacity, storageUsed, haulMarketValue }: {
   mission: Mission
   target: Target
   cargo: Record<string, number>
@@ -84,10 +83,10 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
   const client = mission.client ? clients[mission.client] : undefined
   const isStoryMission = !mission.deliveryTargetId && (mission.tag === 'STORY' || mission.payload?.type === 'satellite')
   const isProgramOperation = isOwnProgramMission(mission)
-  const completedJobs = client ? (clientMissions?.[client.id] ?? 0) : 0
-  const affinityMultiplier = client && !isStoryMission ? clientAffinityBonus(client, completedJobs) : 0
-  const affinityBonus = delivered ? Math.round(mission.payout.francs * affinityMultiplier) : 0
-  const contractPayout = delivered ? mission.payout.francs + affinityBonus : 0
+  // Client level is updated from completed player-built work by the daily
+  // economy cycle. A player's repeated jobs no longer create a private
+  // affinity multiplier at debrief.
+  const contractPayout = delivered ? mission.payout.francs : 0
   const rawTotal = contractPayout
   const calibratedTotal = calibrateOnboardingPayout(rawTotal, missionsDone ?? 0)
   const crewArrivalBonus = delivered && firstCrewArrival ? FIRST_CREW_ARRIVAL_BONUS : 0
@@ -147,26 +146,10 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
               <div style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
                 <div style={{ minWidth: 0 }}>
                   <div style={{ fontFamily: 'var(--ln-font-display)', fontWeight: 800, fontSize: 15, color: 'var(--ln-text)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{client.name}</div>
-                  <div style={{ fontFamily: 'var(--ln-font-mono)', fontSize: 10, color: 'var(--ln-text-muted)', letterSpacing: '0.08em', textTransform: 'uppercase', marginTop: 2 }}>{completedJobs} jobs done</div>
+                  <div style={{ fontFamily: 'var(--ln-font-mono)', fontSize: 10, color: 'var(--ln-text-muted)', letterSpacing: '0.08em', textTransform: 'uppercase', marginTop: 2 }}>Client work complete</div>
                 </div>
-                {client.payoutPremium > 0 && <ClientStat label="premium" value={`${Math.round(client.payoutPremium * 100)}%`} highlight />}
               </div>
             </div>
-            {/* Affinity has a single home here — the meter — rather than also a
-                duplicate chip. Cyan, since amber is reserved for the payout. */}
-            {affinityMultiplier > 0 && (
-              <div style={{ marginTop: 10 }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
-                  <span style={{ font: '700 8px var(--ln-font-display)', letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--ln-text-muted)' }}>
-                    Affinity · +{(affinityMultiplier * 100).toFixed(1)}%
-                  </span>
-                  <span style={{ font: '700 8px var(--ln-font-display)', letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--ln-text-muted)' }}>
-                    Cap +{Math.round(MAX_AFFINITY_BONUS * 100)}%
-                  </span>
-                </div>
-                <ProgressBar value={affinityMultiplier} max={MAX_AFFINITY_BONUS} tone="cyan" height={4} flat label="Client affinity" />
-              </div>
-            )}
           </Panel>
         )}
 
@@ -245,7 +228,6 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
               ) : (
                 <PayRow label={isStoryMission ? 'Mission funding' : `Order · ${client?.name ?? (isProgramOperation ? 'Program' : 'Client')}`} value={mission.payout.francs} />
               )}
-              {!isStoryMission && affinityBonus > 0 && <PayRow label="Affinity bonus" value={affinityBonus} />}
               {calibratedTotal > rawTotal && <PayRow label="Onboarding bonus" value={calibratedTotal - rawTotal} />}
               {crewArrivalBonus > 0 && <PayRow label={`First astronaut at ${target.name}`} value={crewArrivalBonus} />}
               <CostSummaryRow label={`${starterRocket.name} · vehicle`} value={formatCurrency(-starterRocket.costFrancs, { signed: true })} color="var(--ln-crimson)" last={loanRepayment === 0} />
@@ -317,7 +299,7 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
               if (isFreeHaul) {
                 onDone(0, 0, {}, hasEarthStorage ? disposition : 'sell')
               } else {
-                onDone(total, delivered ? mission.payout.affinity : 0, delivered ? requiredMaterials : {})
+                onDone(total, 0, delivered ? requiredMaterials : {})
               }
             }}
           >
@@ -357,21 +339,6 @@ function PayRow({ label, value }: { label: string; value: number }) {
       valueColor="var(--ln-text)"
       style={{ borderTop: '1px solid var(--ln-hairline)' }}
     />
-  )
-}
-
-function ClientStat({ label, value, highlight }: { label: string; value: string; highlight?: boolean }) {
-  return (
-    <span style={{
-      display: 'flex', alignItems: 'center', gap: 5,
-      fontFamily: 'var(--ln-font-display)', fontWeight: 700, fontSize: 9, letterSpacing: '0.06em', textTransform: 'uppercase',
-      padding: '4px 8px', borderRadius: 5,
-      border: `1px solid ${highlight ? 'var(--ln-amber-border)' : 'var(--ln-hairline)'}`,
-      background: highlight ? 'var(--ln-amber-soft)' : 'var(--ln-surface-2)',
-    }}>
-      <span style={{ color: 'var(--ln-text)', fontSize: 10 }}>{value}</span>
-      <span style={{ color: 'var(--ln-text-muted)' }}>{label}</span>
-    </span>
   )
 }
 

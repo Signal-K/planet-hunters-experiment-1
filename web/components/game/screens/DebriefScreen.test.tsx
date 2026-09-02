@@ -57,7 +57,7 @@ const testClient = {
   projectType: 'ore',
   mineralPreferences: [],
   payoutPremium: 0,
-  affinityBonusPerMission: 0,
+  affinityBonusPerMission: 0.025,
   uiRole: 'starter' as const,
   suppliesCrew: false,
 }
@@ -229,6 +229,7 @@ describe('DebriefScreen own-program outcomes', () => {
     // required — and the single visible action collects the payout.
     expect(host.querySelector('[data-testid="resolve-cargo-btn"]')).toBeNull()
     expect(host.textContent).toContain('Ledger')
+    expect(host.textContent).not.toContain('Affinity')
     const collectBtn = host.querySelector<HTMLButtonElement>('[data-testid="collect-reward-btn"]')
     expect(collectBtn).not.toBeNull()
 
