@@ -193,7 +193,7 @@ describe('buildRuntimeCatalog', () => {
     })
   })
 
-  it('adds diplomacy premiums and a co-funded joint mission after chart sharing', () => {
+  it('does not add diplomacy premiums or affinity-gated joint missions', () => {
     const clientMission = STATIC_CATALOG.missions.find(mission =>
       !!mission.client
       && !!mission.targetId
@@ -222,18 +222,8 @@ describe('buildRuntimeCatalog', () => {
     })
 
     const improved = catalog.missions.find(mission => mission.id === clientMission.id)!
-    expect(improved.payout.francs).toBeGreaterThan(clientMission.payout.francs)
+    expect(improved.payout.francs).toBe(clientMission.payout.francs)
     const joint = catalog.missions.find(mission => mission.id === `joint-${clientId}-${clientMission.id}`)
-    expect(joint).toMatchObject({
-      client: clientId,
-      tag: 'JOINT',
-      jointProject: {
-        infrastructureOrbitBonus: 1,
-        playerCost: expect.any(Number),
-        clientCostShare: expect.any(Number),
-        payoutBonus: expect.any(Number),
-      },
-    })
-    expect(joint!.payout.francs).toBeGreaterThan(improved.payout.francs)
+    expect(joint).toBeUndefined()
   })
 })

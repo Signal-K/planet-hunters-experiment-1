@@ -1,7 +1,6 @@
 import type { Catalog } from './catalog'
 import type { Mission, Target } from './data'
 import type { Player } from './game-types'
-import { diplomacyPayoutMultiplier, jointMissionUnlocked } from './systems/AcademySystem'
 import { deepSpaceTelescopeUnlocked } from './data/structures'
 import { FEATURE_FLAGS } from './featureFlags'
 
@@ -98,20 +97,10 @@ export function buildRuntimeCatalog({
     ...(shouldIncludeScanStationMission && !existingTargetIds.has(SCAN_STATION_TARGET.id) ? [SCAN_STATION_TARGET] : []),
     ...discoveredTargetList.filter(target => !existingTargetIds.has(target.id)),
   ]
-  const relationshipMissions = player
-    ? catalog.missions.map(mission => {
-        if (!mission.client || mission.programReward) return mission
-        const multiplier = diplomacyPayoutMultiplier(player, mission.client)
-        if (multiplier === 1) return mission
-        return {
-          ...mission,
-          payout: {
-            ...mission.payout,
-            francs: Math.round(mission.payout.francs * multiplier),
-          },
-        }
-      })
-    : catalog.missions
+  // A client contract pays its stated fee. The prior academy/diplomacy
+  // multiplier was a second hidden client-progression system and conflicted
+  // with the daily client-level economy.
+  const relationshipMissions = catalog.missions
   const existingMissionIds = new Set(relationshipMissions.map(mission => mission.id))
   const transitTelescopeMission: Mission[] = shouldIncludeTransitTelescopeMission && !existingMissionIds.has(TRANSIT_TELESCOPE_MISSION_ID)
     ? [{
@@ -225,34 +214,10 @@ export function buildRuntimeCatalog({
     }))
     .filter(mission => !existingMissionIds.has(mission.id))
 
-  const jointMissions: Mission[] = player
-    ? Object.keys(catalog.clients).flatMap(clientId => {
-        if (!jointMissionUnlocked(player, clientId)) return []
-        const base = relationshipMissions.find(mission =>
-          mission.client === clientId
-          && !!mission.targetId
-          && !mission.programReward
-          && !mission.jointProject,
-        )
-        if (!base) return []
-        const basePayout = base.payout.francs
-        const payoutBonus = Math.round(basePayout * 0.2)
-        return [{
-          ...base,
-          id: `joint-${clientId}-${base.id}`,
-          title: `Joint Venture · ${base.title}`,
-          brief: `${catalog.clients[clientId].name} will co-fund this flight and contribute local infrastructure. Your Academy diplomacy desk negotiated shared risk, a range allowance, and a completion premium.`,
-          tag: 'JOINT',
-          jointProject: {
-            playerCost: Math.round(basePayout * 0.08),
-            clientCostShare: Math.round(basePayout * 0.08),
-            payoutBonus,
-            infrastructureOrbitBonus: 1,
-          },
-          payout: { ...base.payout, francs: basePayout + payoutBonus },
-        }]
-      })
-    : []
+  // Co-funded affinity/diplomacy missions are deferred with the Academy
+  // progression branch. Do not generate them until a single player-progress
+  // model specifies how they are earned and explained.
+  const jointMissions: Mission[] = []
 
   return {
     ...catalog,
