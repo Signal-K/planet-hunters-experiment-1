@@ -513,16 +513,17 @@ describe('seed bible v0 catalog', () => {
     }
   })
 
-  it('defines mission-triggered refinery structure seed data with Francs and material costs', () => {
+  it('defines off-world refinery structure seed data with Francs and material costs', () => {
     const refinery = STRUCTURES.find(structure => structure.id === 'refinery')
     expect(refinery).toMatchObject({
       kind: 'refinery',
       cost: STRUCTURE_PRICES.refinery,
       costMaterials: { aluminium: 20, copper: 10 },
-      unlockTrigger: 'client-mission-trigger',
+      unlockTrigger: 'manual',
     })
-    expect(refinery && structureUnlocked(refinery, { refineryUnlocked: false })).toBe(false)
-    expect(refinery && structureUnlocked(refinery, { refineryUnlocked: true })).toBe(true)
+    // Commissioned via the target-based own-program mission, not a client-affinity gate.
+    expect(refinery && structureUnlocked(refinery, { placed: [] })).toBe(false)
+    expect(refinery && structureUnlocked(refinery, { placed: ['refinery'] })).toBe(true)
     expect(refinery && canAffordStructure(refinery, {
       francs: STRUCTURE_PRICES.refinery,
       stash: { aluminium: 20, copper: 10 },
@@ -627,8 +628,9 @@ describe('seed bible v0 catalog', () => {
     expect(CLIENT_SLOTS.some(c => c.id === relay?.client)).toBe(true)
   })
 
-  it('defines refinery and scanning-station builds as own-program missions', () => {
+  it('defines remote-silo, refinery, and scanning-station builds as own-program missions', () => {
     expect(OWN_PROGRAM_BUILD_MISSIONS.map(mission => mission.id)).toEqual([
+      'program-build-remote-silo',
       'program-build-refinery',
       'program-build-scan-station',
     ])
@@ -642,15 +644,20 @@ describe('seed bible v0 catalog', () => {
       expect(mission.requires.cargo_min).toBe(
         Object.values(mission.requires.minerals).reduce((sum, amount) => sum + amount, 0),
       )
-      expect(mission.requires.max_orbit).toBe(0)
+      // The remote silo and off-world refinery are commissioned at a site the
+      // player owns or leases (max_orbit: 5); the scan station stays Earth-based.
+      expect(mission.requires.max_orbit).toBe(mission.id === 'program-build-scan-station' ? 0 : 5)
       expect(mission.sequence).toBe(FREE_OPS_START_MISSIONS_DONE + 1)
       expect(MISSIONS).toContainEqual(mission)
     }
 
     expect(OWN_PROGRAM_BUILD_MISSIONS[0]).toMatchObject({
-      construction: { structureKind: 'refinery', requiredMaterials: { aluminium: 20, copper: 10 } },
+      construction: { structureKind: 'mineral-silo' },
     })
     expect(OWN_PROGRAM_BUILD_MISSIONS[1]).toMatchObject({
+      construction: { structureKind: 'refinery', requiredMaterials: { aluminium: 20, copper: 10 } },
+    })
+    expect(OWN_PROGRAM_BUILD_MISSIONS[2]).toMatchObject({
       construction: { structureKind: 'scan-station', requiredMaterials: {} },
     })
   })

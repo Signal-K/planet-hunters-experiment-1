@@ -6,6 +6,7 @@ import type { RefineryRecipe, ShipRoomKind, StructureBlueprint, RocketModel, Sub
 import { rocketConfigForModel } from '@/lib/data'
 import { MINERAL_META, CLIENT_SLOTS, LAUNCHPAD_UPGRADE_COST, OPEN_MARKET_SELL_RATE, MINERAL_SILO_CAPACITY, SURFACE_SILO_CAPACITY, DEEP_MINERAL_SILO_CAPACITY, REMOTE_MINERAL_SILO_CAPACITY, customizerPartById, deepSpaceTelescopeUnlocked, SUBSURFACE_EXCAVATE_COST, SUBSURFACE_ROOMS, canAffordSubsurface } from '@/lib/data'
 import { structureIsStaffed } from './AcademySystem'
+import type { DailyEconomySnapshot } from './DailyEconomySystem'
 
 // Sell to open market (raw): ~80% of book value — see [[Economy and Minerals]].
 export { OPEN_MARKET_SELL_RATE } from '@/lib/data'
@@ -53,14 +54,18 @@ export function openMarketSellPrice(basePrice: number, unitsSold: number): numbe
  *  honoured here rather than dropped from the display. */
 export function sellUnitPrice(
   mineralId: string,
-  player: Pick<GameState['player'], 'marketSupply' | 'marketSupplyUpdatedAt'>,
+  player: Pick<GameState['player'], 'marketSupply' | 'marketSupplyUpdatedAt' | 'dailyEconomySnapshot'>,
   clientId?: string,
   now: number = Date.now(),
 ): { price: number; base: number; premiumApplied: boolean } {
   const meta = MINERAL_META[mineralId]
   if (!meta) return { price: 0, base: 0, premiumApplied: false }
+  const snapshotQuote = player.dailyEconomySnapshot?.prices[mineralId]
   const unitsSold = decayedUnitsSold(player.marketSupply?.[mineralId] ?? 0, player.marketSupplyUpdatedAt?.[mineralId], now)
-  const base = openMarketSellPrice(meta.price, unitsSold)
+  // A published daily snapshot is authoritative. The old per-player supply
+  // dip remains only as a compatibility fallback for saves created before the
+  // shared daily economy exists.
+  const base = snapshotQuote?.price ?? openMarketSellPrice(meta.price, unitsSold)
   const client = clientId ? CLIENT_SLOTS.find(c => c.id === clientId) : undefined
   const premiumApplied = !!client && client.mineralPreferences.includes(mineralId) && client.payoutPremium > 0
   return {
@@ -73,7 +78,7 @@ export function sellUnitPrice(
 /** Total francs a stash (or a subset of it) would fetch at current prices. */
 export function sellQuote(
   stash: Record<string, number>,
-  player: Pick<GameState['player'], 'marketSupply' | 'marketSupplyUpdatedAt'>,
+  player: Pick<GameState['player'], 'marketSupply' | 'marketSupplyUpdatedAt' | 'dailyEconomySnapshot'>,
   clientId?: string,
   now: number = Date.now(),
 ): number {
@@ -101,8 +106,12 @@ export function applySellMinerals(
   // `null` explicitly means an open-market sale with no client premium. This
   // matters for a self-directed haul after a client job: lastClient is a
   // historical display context and must not leak a client's premium into the
-  // player's own sale.
-  const revenue = sellUnitPrice(mineralId, s.player, clientId === undefined ? s.player.lastClient : clientId ?? undefined, now).price * sellAmount
+  // player's own sale. Omitting the argument entirely (the Market screen's
+  // "Sell" button) must resolve to the same client the screen quoted against
+  // — `player.lastClient` — or the credited amount silently undercuts the
+  // quote the player just saw.
+  const effectiveClientId = clientId === undefined ? s.player.lastClient : clientId ?? undefined
+  const revenue = sellUnitPrice(mineralId, s.player, effectiveClientId, now).price * sellAmount
   marketSupply[mineralId] = unitsSold + sellAmount
   marketSupplyUpdatedAt[mineralId] = now
   stash[mineralId] = held - sellAmount

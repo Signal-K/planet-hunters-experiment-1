@@ -1,6 +1,6 @@
 import { STARTING_FRANCS } from '@/lib/data/economy'
 import type { CompletedMissionRecord, GameState, LicenseGrade, Player, Screen } from '@/lib/game-types'
-import { MISSIONS, TARGETS } from '@/lib/data'
+import { MISSIONS, OWN_PROGRAM_CLIENT_ID, TARGETS } from '@/lib/data'
 import { FREE_OPS_START_MISSIONS_DONE } from '@/lib/data/mission-generator'
 import { migrateCrewRoster } from '@/lib/systems/CrewSystem'
 import { normalizeSurfaceOps } from '@/lib/systems/SurfaceOpsSystem'
@@ -9,12 +9,13 @@ import { FEATURE_FLAGS } from '@/lib/featureFlags'
 import { findTargetStructure } from '@/lib/data/target-structures'
 import { resolveConstructionState } from '@/lib/systems/ConstructionSystem'
 import { EARTH_BASE_SCOPE } from '@/lib/scene-scope'
+import { aestDateKey, type ClientBuildCompletionEvent } from '@/lib/systems/DailyEconomySystem'
 
 // Represents untrusted/partial saved state (e.g. from localStorage or remote sync)
 // where player fields are optional since older saves may be missing new fields.
 export type PartialSave = Omit<Partial<GameState>, 'player'> & { player?: Partial<Player> }
 
-const VALID_SCREENS: Screen[] = ['intro', 'build', 'hub', 'missions', 'galaxy', 'targets', 'fab', 'transit', 'landing', 'mining', 'delivery', 'debrief', 'refinery', 'market', 'hangar', 'rocket-buy', 'skills', 'scan-station', 'rover-mining', 'launchpad', 'surface-ops', 'academy', 'asteroid-discovery', 'mission-history']
+const VALID_SCREENS: Screen[] = ['intro', 'build', 'hub', 'missions', 'galaxy', 'targets', 'fab', 'transit', 'landing', 'mining', 'delivery', 'debrief', 'refinery', 'market', 'hangar', 'rocket-buy', 'skills', 'scan-station', 'rover-mining', 'launchpad', 'surface-ops', 'academy', 'asteroid-discovery', 'mission-history', 'narrative-ledger']
 const MISSION_CONTEXT_SCREENS = new Set<Screen>(['targets', 'rocket-buy', 'fab', 'transit', 'mining', 'rover-mining', 'delivery', 'debrief'])
 const TARGET_CONTEXT_SCREENS = new Set<Screen>(['rocket-buy', 'fab', 'transit', 'mining', 'rover-mining', 'delivery', 'debrief'])
 const VALID_LICENSE_GRADES: LicenseGrade[] = ['Grade I', 'Grade II', 'Grade III']
@@ -208,7 +209,27 @@ export function normalizeState(input: PartialSave): GameState {
       const blueprint = findTargetStructure(record.structureKind)
       return blueprint ? resolveConstructionState(record, blueprint.buildTimeMs) : record
     })
-    : DEFAULT_STATE.player.clientStructures
+    : []
+  // Only completed player-built client structures count toward the daily
+  // company cycle. Mission count, cargo runs, and player-owned program work
+  // deliberately never create these events.
+  const existingBuildEvents = Array.isArray(player.clientBuildEvents)
+    ? player.clientBuildEvents
+    : []
+  const buildEventsById = new Map(existingBuildEvents.map(event => [event.eventId, event]))
+  for (const record of clientStructures) {
+    if (record.state !== 'operational' || !record.completedAt || record.clientId === OWN_PROGRAM_CLIENT_ID) continue
+    const eventId = `client-build:${record.clientId}:${record.targetId}:${record.structureKind}:${record.completedAt}`
+    if (!buildEventsById.has(eventId)) {
+      buildEventsById.set(eventId, {
+        eventId,
+        clientId: record.clientId,
+        completedOn: aestDateKey(new Date(record.completedAt)),
+        kind: 'player-built-client-work',
+      } satisfies ClientBuildCompletionEvent)
+    }
+  }
+  const clientBuildEvents = [...buildEventsById.values()].sort((left, right) => left.eventId.localeCompare(right.eventId))
 
   // `placed` is the record of what the player actually built; the per-structure
   // booleans are conveniences derived from it. They can disagree: a save made
@@ -248,7 +269,7 @@ export function normalizeState(input: PartialSave): GameState {
     targetId,
     missionBoardScope,
     rocket: { ...DEFAULT_STATE.rocket, ...input.rocket },
-    player: { ...DEFAULT_STATE.player, ...player, missionsDone, freeOperations, completedMissions, clientStructures, placed: placedList, placementPlots, licenseGrade, researchXP, unlockedBlueprints, tessClassifications, asteroidClassifications, roverTerrainClassifications, discoveredExoplanetTargets, instrumentDigestNotifiedOn, transitSatelliteLevel, deepSpaceTelescopeLevel, crew, surfaceOps,
+    player: { ...DEFAULT_STATE.player, ...player, missionsDone, freeOperations, completedMissions, clientStructures, clientBuildEvents, placed: placedList, placementPlots, licenseGrade, researchXP, unlockedBlueprints, tessClassifications, asteroidClassifications, roverTerrainClassifications, discoveredExoplanetTargets, instrumentDigestNotifiedOn, transitSatelliteLevel, deepSpaceTelescopeLevel, crew, surfaceOps,
       // A run has crossed the launch boundary. If an older/stale save carries
       // both flags, the active run wins so the Hub cannot render "Ready" or
       // offer the assembly flow after the rocket has already left the pad.
@@ -256,6 +277,8 @@ export function normalizeState(input: PartialSave): GameState {
       pendingRocketId: player.activeMission ? undefined : player.pendingRocketId,
       deepSpaceTelescopeBuilt, refineryBuilt, scannerBuilt },
     doneSteps: { ...DEFAULT_STATE.doneSteps, ...input.doneSteps },
+    // The retired private emergency-loan popup must not survive an old save.
+    popup: input.popup === 'loan' || input.popup === undefined ? null : input.popup,
     // Free Ops is the durable boundary. If an older save left `tutorial` true
     // after the final onboarding debrief, do not let that stale flag resurrect
     // the coach on the next load.
