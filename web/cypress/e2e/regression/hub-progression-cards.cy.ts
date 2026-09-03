@@ -94,15 +94,15 @@ describe('hub progression cards are clickable after the tutorial', () => {
     cy.location('pathname', { timeout: 10_000 }).should('not.eq', '/game/hub')
   })
 
-  it('Open Launchpad enters the playable scene, not a card overview', () => {
+  it('Open Launchpad enters the full Launchpad UI', () => {
     cy.get('[data-testid="progression-card-transit-satellite"]').should('be.visible').click()
-    cy.get('[data-testid="launchpad-focus-screen"]', { timeout: 10_000 }).should('be.visible')
+    cy.get('[data-testid="launchpad-ui-screen"]', { timeout: 10_000 }).should('be.visible')
     cy.get('[data-testid="launchpad-status-card"]').should('be.visible')
     cy.get('[data-testid="launchpad-rocket-fleet"]').should('be.visible')
-    cy.get('[data-testid="launchpad-ui-screen"]').should('not.exist')
+    cy.get('[data-testid="launchpad-focus-screen"]').should('not.exist')
   })
 
-  it('the physical Launchpad enters the same playable composition', () => {
+  it('the physical Launchpad keeps its separate close-up focus entry', () => {
     cy.get('[data-testid="building-launchpad-hit"]').click({ force: true })
     cy.get('[data-testid="launchpad-focus-screen"]', { timeout: 10_000 }).should('be.visible')
     cy.get('[data-testid="launchpad-ui-screen"]').should('not.exist')

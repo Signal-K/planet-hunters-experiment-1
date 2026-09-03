@@ -54,7 +54,7 @@ export type Screen =
   | 'mission-history'
   | 'narrative-ledger'
 
-export type LaunchpadView = 'focus'
+export type LaunchpadView = 'overview' | 'focus'
 
 // Screens that render a physical place in the game world (or a step in a
 // mission run through one) get the full, edge-to-edge viewport on desktop —

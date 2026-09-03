@@ -16,6 +16,7 @@ import HangarScreen from '@/components/game/screens/HangarScreen'
 import SkillTreeScreen from '@/components/game/screens/SkillTreeScreen'
 import ScanStationScreen from '@/components/game/screens/ScanStationScreen'
 import LaunchpadScreen from '@/components/game/screens/LaunchpadScreen'
+import LaunchpadOverviewScreen from '@/components/game/screens/LaunchpadOverviewScreen'
 import TessDiscoveryScreen from '@/components/game/screens/TessDiscoveryScreen'
 import AsteroidDiscoveryScreen from '@/components/game/screens/AsteroidDiscoveryScreen'
 import SurfaceOpsScreen from '@/components/game/screens/SurfaceOpsScreen'
@@ -372,6 +373,28 @@ export function ScreenContent({
       )
 
     case 'launchpad':
+      if (game.launchpadView === 'overview') {
+        return (
+          <LaunchpadOverviewScreen
+            onBack={() => game.go('hub')}
+            onPick={id => {
+              if (id === ACADEMY_INTRO_MISSION_ID) return game.go('academy')
+              game.onPickMission(id)
+            }}
+            onViewContracts={() => game.goToMissions()}
+            onFocusPad={game.focusLaunchpad}
+            onOpenHangar={() => game.go('hangar')}
+            onOpenSubsurface={() => game.go('hub-subsurface')}
+            onOpenBuild={() => game.go('build')}
+            missionsDone={game.player.missionsDone}
+            freeOperations={game.player.freeOperations}
+            catalog={game.catalog}
+            player={game.player}
+            selectedRocketName={rocketDisplay.name}
+            francs={game.player.francs}
+          />
+        )
+      }
       return (
         <LaunchpadScreen
           onBack={() => game.go('hub')}

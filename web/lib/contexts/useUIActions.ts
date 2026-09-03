@@ -21,16 +21,17 @@ export function useUIActions(
   // is showing. Ephemeral UI state, not persisted GameState, same as
   // `toasts` above.
   const [subsurfaceView, setSubsurfaceView] = useState(false)
-  // The Launchpad route is the in-world composition. It intentionally keeps
-  // the physical-pad focus rather than switching to a card-grid overview.
-  const [launchpadView, setLaunchpadView] = useState<LaunchpadView>('focus')
+  // Keep the routed Launchpad overview separate from the physical building's
+  // close-up focus. The overview is the full program UI; the Hub building is
+  // the diegetic scene interaction.
+  const [launchpadView, setLaunchpadView] = useState<LaunchpadView>('overview')
   // Hangar can be entered from the Earth Base or the Launchpad composition.
   // Preserve only that ephemeral return context: it is navigation chrome, not
   // player progress and must not be persisted into a save or public URL.
   const hangarReturnView = useRef<LaunchpadView | 'hub'>('hub')
 
   const go = useCallback((screen: Screen) => {
-    if (screen === 'launchpad') setLaunchpadView('focus')
+    if (screen === 'launchpad') setLaunchpadView('overview')
     setState(s => {
       if (screen === 'hangar') {
         hangarReturnView.current = s.screen === 'launchpad' ? launchpadView : 'hub'
@@ -40,7 +41,7 @@ export function useUIActions(
   }, [launchpadView, setState])
 
   const openLaunchpad = useCallback(() => {
-    setLaunchpadView('focus')
+    setLaunchpadView('overview')
     setState(s => ({ ...s, screen: 'launchpad' }))
   }, [setState])
 
@@ -75,7 +76,7 @@ export function useUIActions(
   // Updates state.screen WITHOUT triggering the URL-sync effect so we don't create
   // a push that fights the navigation.
   const setScreenFromUrl = useCallback((screen: Screen) => {
-    if (screen === 'launchpad') setLaunchpadView('focus')
+    if (screen === 'launchpad') setLaunchpadView('overview')
     setState(s => {
       // A bookmarked /game/build must not resurrect the transient plot picker
       // for an operational base after hydration has already repaired it to
