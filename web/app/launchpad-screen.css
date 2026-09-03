@@ -135,7 +135,7 @@ button.launchpad-scene-object { cursor: pointer; }
   display: grid; place-items: end center;
 }
 .launchpad-rocket-art img { position: relative; z-index: 2; width: 100%; filter: drop-shadow(0 12px 12px rgba(0,0,0,.6)); }
-.launchpad-hangar-art { position: relative; z-index: 2; display: block; width: 100%; aspect-ratio: 250 / 151; }
+.launchpad-hangar-art { position: relative; z-index: 2; display: block; width: 100%; aspect-ratio: 226 / 116; }
 .launchpad-rocket-glow { position: absolute; left: 5%; right: 5%; bottom: 18%; height: 14px; border-radius: 50%; background: rgba(112,217,234,.2); filter: blur(12px); }
 /* Launchpad scene objects are instruments, not hover cards. Keep the art
    stable under a pointer; state is communicated by the attached label and
@@ -165,6 +165,108 @@ button.launchpad-scene-object { cursor: pointer; }
 .launchpad-rail-actions button svg { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 1.8; }
 .launchpad-rail-actions button.is-primary { border-color: #70d9ea; background: #70d9ea; color: #07101c; box-shadow: 0 0 18px rgba(112,217,234,.24); }
 .launchpad-action-count { opacity: .68; font-size: 8px; }
+
+/* The mission selector is an in-scene command surface attached to the pad.
+   It intentionally has no scrim or modal semantics: the Earth Base remains
+   visible while the operator chooses an own-program operation. */
+.launchpad-mission-menu {
+  position: absolute;
+  z-index: 24;
+  left: 50%;
+  bottom: 78px;
+  width: min(760px, calc(100% - 32px));
+  max-height: calc(100% - 96px);
+  overflow-y: auto;
+  transform: translateX(-50%);
+  padding: 24px;
+  border: 1px solid var(--ln-cyan);
+  border-radius: 8px;
+  background: var(--ln-shell);
+  box-shadow: var(--ln-shadow-modal);
+  color: var(--ln-text);
+}
+.launchpad-mission-menu-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 16px;
+}
+.launchpad-mission-menu-header h2 {
+  margin: 8px 0 8px;
+  color: var(--ln-text);
+  font: 800 24px var(--ln-font-display);
+  letter-spacing: .02em;
+  text-transform: uppercase;
+}
+.launchpad-mission-menu-header p {
+  max-width: 560px;
+  margin: 0;
+  color: var(--ln-text-dim);
+  font: 14px/1.45 var(--ln-font-body);
+}
+.launchpad-mission-menu-close {
+  flex: 0 0 auto;
+  min-height: 32px;
+  padding: 0 10px;
+  border: 1px solid var(--ln-hairline);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--ln-cyan);
+  cursor: pointer;
+  font: 800 10px var(--ln-font-display);
+  letter-spacing: .12em;
+}
+.launchpad-mission-menu-close:focus-visible,
+.launchpad-mission-choice:focus-visible {
+  outline: 2px solid var(--ln-cyan-bright);
+  outline-offset: 2px;
+}
+.launchpad-mission-menu-options {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+.launchpad-mission-choice {
+  display: grid;
+  min-width: 0;
+  min-height: 144px;
+  align-content: start;
+  gap: 8px;
+  padding: 16px;
+  border: 1px solid var(--ln-cyan-border);
+  border-radius: 6px;
+  background: var(--ln-panel);
+  color: var(--ln-text);
+  cursor: pointer;
+  text-align: left;
+}
+.launchpad-mission-choice:hover:not(:disabled) {
+  border-color: var(--ln-cyan-bright);
+  background: var(--ln-cyan-soft);
+}
+.launchpad-mission-choice:disabled {
+  opacity: .48;
+  cursor: not-allowed;
+}
+.launchpad-mission-choice svg {
+  width: 24px;
+  height: 24px;
+  fill: none;
+  stroke: var(--ln-cyan);
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.6;
+}
+.launchpad-mission-choice strong {
+  color: var(--ln-cyan);
+  font: 800 11px/1.25 var(--ln-font-display);
+  letter-spacing: .1em;
+}
+.launchpad-mission-choice span {
+  color: var(--ln-text-dim);
+  font: 13px/1.35 var(--ln-font-body);
+}
 
 .launchpad-guide {
   position: absolute; z-index: 24; top: 24px; left: 24px; width: min(360px, calc(100% - 48px));
@@ -237,6 +339,13 @@ button.launchpad-scene-object { cursor: pointer; }
 }
 @media (orientation: portrait) and (max-width: 620px) {
   .launchpad-object-label { margin-top: 0; }
+}
+
+@media (max-width: 720px) {
+  .launchpad-mission-menu { bottom: 70px; padding: 16px; }
+  .launchpad-mission-menu-header { gap: 16px; }
+  .launchpad-mission-menu-options { grid-template-columns: 1fr; }
+  .launchpad-mission-choice { min-height: 0; }
 }
 
 /* KES-279: the Hub dock is a mobile command surface, not a shrunken desktop

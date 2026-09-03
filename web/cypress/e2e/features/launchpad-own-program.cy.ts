@@ -86,11 +86,10 @@ describe('Launchpad · your own program', () => {
       })
   })
 
-  it('clicking the physical launchpad opens mission selection before targets', () => {
+  it('clicking the physical launchpad opens the own-program mission selector', () => {
     cy.viewport(390, 844)
     visitLaunchpad(freeOpsSave(), false)
 
-    cy.get('[data-testid="launchpad-program-operation-btn"]', { timeout: 15000 }).should('exist')
     // The auth gate overlays the whole screen on a fresh visit and covers
     // the scene; get past it (email required, KES-97) before clicking the pad.
     // This fixture deliberately has no stored credentials, so the mandatory
@@ -101,17 +100,14 @@ describe('Launchpad · your own program', () => {
     cy.get('[data-testid="auth-gate-quick-email"]').type(`cy-launchpad-${Date.now()}@example.com`)
     cy.get('[data-testid="auth-gate-quick-submit"]').click()
     cy.get('[data-testid="auth-gate-quick-email"]', { timeout: 15000 }).should('not.exist')
-    cy.get('[data-testid="launchpad-status-card"]', { timeout: 15000 }).should('be.visible').click()
-    cy.get('body').then($body => {
-      // A URL/direct-save entry can first land in the full Launchpad overview;
-      // its status card enters the close pad composition. Hub-originated play
-      // is already in that composition, so only click a second time when it
-      // is actually present.
-      if ($body.find('[data-testid="launchpad-focus-screen"]').length) {
-        cy.get('[data-testid="launchpad-status-card"]').click()
-      }
-    })
-    cy.contains('Mission Board', { timeout: 15000 }).should('be.visible')
+    cy.get('[data-testid="launchpad-ui-focus-pad-btn"]', { timeout: 15000 }).click()
+    cy.get('[data-testid="launchpad-focus-screen"]', { timeout: 15000 }).should('be.visible')
+    cy.get('[data-testid="launchpad-status-card"]', { timeout: 15000 }).click()
+    cy.get('[data-testid="launchpad-new-mission-menu"]', { timeout: 15000 }).should('be.visible')
+    cy.get('[data-testid="launchpad-new-mission-satellite-btn"]').should('not.be.disabled')
+    cy.get('[data-testid="launchpad-new-mission-mining-btn"]').should('not.be.disabled')
+    cy.get('[data-testid="launchpad-new-mission-build-btn"]').should('not.be.disabled')
+    cy.contains('Client contracts remain on the Mission Board.').should('be.visible')
     cy.contains('Pick Target').should('not.exist')
   })
 

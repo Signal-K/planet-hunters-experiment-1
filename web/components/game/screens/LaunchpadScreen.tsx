@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react'
 import TopBar from '@/components/ui/TopBar'
-import { ACADEMY_INTRO_MISSION_ID, partitionByOwner } from '@/lib/data'
+import { partitionByOwner } from '@/lib/data'
 import { ROCKET_MODELS } from '@/lib/data/rockets'
 import { SATELLITE_MODELS } from '@/lib/data/satellites'
 import type { Catalog } from '@/lib/catalog'
@@ -53,6 +53,14 @@ function GuideGlyph() {
   return <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8" /><path d="M12 10v6M12 7h.01" /></svg>
 }
 
+function SatelliteGlyph() {
+  return <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 7l10 10M9 5l10 10M5 9l10 10" /><path d="M4 4l5 1-4 4-1-5ZM20 20l-5-1 4-4 1 5Z" /><path d="M12 12h.01" /></svg>
+}
+
+function MiningGlyph() {
+  return <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 18h14M7 18l2-7h6l2 7M10 11V7h4v4M8 7h8M12 4v3" /></svg>
+}
+
 const guideSteps = [
   {
     kicker: '01 / LAUNCHPAD',
@@ -79,6 +87,7 @@ export default function LaunchpadScreen({
   // secondary tools without replacing the scene with a card dashboard.
   const { phase: skyPhase } = useTimeOfDay()
   const [guideStep, setGuideStep] = useState<number | null>(null)
+  const [missionMenuOpen, setMissionMenuOpen] = useState(false)
   const fleet = ROCKET_MODELS.map(model => ({ model, unlocked: missionsDone >= model.missionsRequired && !model.locked }))
   const unlockedFleet = fleet.filter(item => item.unlocked)
   const launchedSatellites = player.transitSatelliteLaunchedAt ? SATELLITE_MODELS.length : 0
@@ -87,27 +96,26 @@ export default function LaunchpadScreen({
   const operations = own.filter(mission => freeOperations || mission.sequence === sequence)
   // Academy/crew progression remains deferred until it has a replacement for
   // the retired affinity ladder, so it cannot become the next required launch.
-  const nextOperation = operations.find(mission => mission.id !== ACADEMY_INTRO_MISSION_ID)
-  const ownMiningOperation = freeOperations
-    ? own.find(mission => mission.tag === 'FREE OPS' && !mission.client && !mission.payload && !mission.construction)
-    : undefined
+  const ownMiningOperation = operations.find(mission => mission.tag === 'FREE OPS' && !mission.client && !mission.payload && !mission.construction)
   // Launchable instruments are the first-class infrastructure path. Only
   // fall back to a construction mission when no telescope/remote-instrument
   // operation is currently offered, so the CTA never makes a newly available
   // telescope look like a generic Earth Base build job.
-  const infrastructureOperation = freeOperations
-    ? own.find(mission => mission.payload?.type === 'satellite'
+  const infrastructureOperation = operations.find(mission => mission.payload?.type === 'satellite'
       || mission.payload?.type === 'deep-space-survey'
       || mission.payload?.type === 'scan-station-commission')
-      ?? own.find(mission => mission.construction?.structureKind
-        ? !player.placed.includes(mission.construction.structureKind)
-        : false)
-      : undefined
+  const buildOperation = operations.find(mission => mission.construction)
   // The physical pad is an entry point to mission selection, not an implicit
   // choice of the first operation in a computed list. Selecting a mission is
   // a separate, visible decision; otherwise the pad jumps straight to target
   // selection and skips the board reported in the Craft bug log.
-  const startPadAction = onLaunchpadAction
+  const openMissionMenu = () => {
+    if (player.pendingLaunch) {
+      onLaunchpadAction()
+      return
+    }
+    if (!player.activeMission) setMissionMenuOpen(true)
+  }
   const padActionLabel = player.activeMission
     ? 'Launchpad active; use the Resume Mission footer action'
     : player.pendingLaunch
@@ -144,7 +152,7 @@ export default function LaunchpadScreen({
           <HubWorldBackground phase={skyPhase} composition="earth-base-pad" />
           <RoadRover road={EARTH_BASE_PAD.roadPaths?.[0]} />
         </div>
-        <button type="button" className="launchpad-scene-object launchpad-tower" data-testid="launchpad-status-card" onClick={player.activeMission ? undefined : startPadAction} disabled={!!player.activeMission} aria-label={padActionLabel}>
+        <button type="button" className="launchpad-scene-object launchpad-tower" data-testid="launchpad-status-card" onClick={openMissionMenu} disabled={!!player.activeMission} aria-label={padActionLabel}>
           <span className="launchpad-tower-art" data-launch-state={player.pendingLaunch ? 'hot' : 'idle'}>
             <LaunchpadModules />
             {player.pendingLaunch && <img className="launchpad-tower-rocket" src={rocketImageSrc} alt="Rocket on launchpad" />}
@@ -155,15 +163,76 @@ export default function LaunchpadScreen({
           </span>
         </button>
 
+        {missionMenuOpen && !player.activeMission && !player.pendingLaunch && (
+          <section className="launchpad-mission-menu" data-testid="launchpad-new-mission-menu" aria-labelledby="launchpad-new-mission-title">
+            <div className="launchpad-mission-menu-header">
+              <div>
+                <span className="launchpad-guide-kicker">LAUNCHPAD / OWN PROGRAM</span>
+                <h2 id="launchpad-new-mission-title">New mission</h2>
+                <p>Choose the kind of operation to prepare. Client contracts remain on the Mission Board.</p>
+              </div>
+              <button type="button" className="launchpad-mission-menu-close" data-testid="launchpad-new-mission-close" onClick={() => setMissionMenuOpen(false)}>CLOSE</button>
+            </div>
+            <div className="launchpad-mission-menu-options">
+              <button
+                type="button"
+                className="launchpad-mission-choice"
+                data-testid="launchpad-new-mission-satellite-btn"
+                disabled={!infrastructureOperation}
+                onClick={() => infrastructureOperation && onPick(infrastructureOperation.id)}
+              >
+                <SatelliteGlyph />
+                <strong>LAUNCH SATELLITE / TOOL</strong>
+                <span>{infrastructureOperation?.title ?? 'No owned instrument launch is queued yet.'}</span>
+              </button>
+              <button
+                type="button"
+                className="launchpad-mission-choice"
+                data-testid="launchpad-new-mission-mining-btn"
+                disabled={!ownMiningOperation}
+                onClick={() => ownMiningOperation && onPick(ownMiningOperation.id)}
+              >
+                <MiningGlyph />
+                <strong>GO MINING</strong>
+                <span>{ownMiningOperation?.title ?? 'Self-directed mining unlocks with Free Operations.'}</span>
+              </button>
+              <button
+                type="button"
+                className="launchpad-mission-choice"
+                data-testid="launchpad-new-mission-build-btn"
+                disabled={!buildOperation}
+                onClick={() => buildOperation && onPick(buildOperation.id)}
+              >
+                <InfrastructureGlyph />
+                <strong>BUILD SOMETHING YOURSELF</strong>
+                <span>{buildOperation?.title ?? 'No player construction mission is ready for dispatch.'}</span>
+              </button>
+            </div>
+          </section>
+        )}
+
         <button type="button" className="launchpad-scene-object launchpad-rocket" data-testid="launchpad-rocket-fleet" onClick={onOpenHangar}>
           <HangarModules className="launchpad-hangar-art" />
-          <span className="launchpad-rocket-art">
-            <img src={rocketImageSrc} alt="" />
-            <i className="launchpad-rocket-glow" />
-          </span>
+          {/* 2026-09-03 (Liam feedback): this used to render `rocketImageSrc`
+              unconditionally, which defaults to Explorer's ship_sr1.png the
+              moment `game.rocket` is unset (see `rocketDisplayForConfig` ->
+              `rocketModelForConfig`'s `?? ROCKET_MODELS[0]` fallback) — so a
+              player with nothing built yet still saw a fixed "shitty" rocket
+              glued to the hangar with no way to hide it and no relationship
+              to their actual fleet. A rocket image here should mean the same
+              thing it means on the tower above: there is an actual staged
+              vehicle. Gate it on `player.pendingLaunch`, exactly like
+              `launchpad-tower-rocket`, so an empty fleet shows the (now
+              rebuilt) hangar structure alone. */}
+          {player.pendingLaunch && (
+            <span className="launchpad-rocket-art">
+              <img src={rocketImageSrc} alt="" />
+              <i className="launchpad-rocket-glow" />
+            </span>
+          )}
           <span className="launchpad-object-label">
             <small>ROCKET FLEET · {unlockedFleet.length}</small>
-            <strong>{player.pendingLaunch ? `${selectedRocketName ?? unlockedFleet[0]?.model.name ?? 'BUILT VEHICLE'} · INSPECT` : `${selectedRocketName ?? unlockedFleet[0]?.model.name ?? 'NO VEHICLE'} · HANGAR`}</strong>
+            <strong>{player.pendingLaunch ? `${selectedRocketName ?? unlockedFleet[0]?.model.name ?? 'BUILT VEHICLE'} · INSPECT` : unlockedFleet.length > 0 ? `${unlockedFleet.length} READY · HANGAR` : 'NO VEHICLE · HANGAR'}</strong>
           </span>
         </button>
 
@@ -204,26 +273,7 @@ export default function LaunchpadScreen({
           {onOpenSubsurface && <button data-testid="launchpad-open-subsurface-btn" onClick={onOpenSubsurface}><SubsurfaceGlyph /> SUBSURFACE</button>}
           <button data-testid="launchpad-open-hangar-btn" onClick={onOpenHangar}><HangarGlyph /> HANGAR</button>
           {onViewMissionLog && <button data-testid="launchpad-mission-log-btn" onClick={onViewMissionLog}><MissionGlyph /> MISSION LOG</button>}
-          {freeOperations && nextOperation && <button data-testid="launchpad-program-operation-btn" onClick={() => onPick(nextOperation.id)}><MissionGlyph /> OPS {operations.length}</button>}
-          {freeOperations && ownMiningOperation && (
-            <button
-              className="is-primary"
-              data-testid="launchpad-create-mission-btn"
-              data-action="create-mission"
-              onClick={() => onPick(ownMiningOperation.id)}
-            >
-              <MissionGlyph /> CREATE MISSION
-            </button>
-          )}
-          {freeOperations && infrastructureOperation && (
-            <button
-              data-testid="launchpad-launch-infrastructure-btn"
-              data-action="launch-infrastructure"
-              onClick={() => onPick(infrastructureOperation.id)}
-            >
-              <InfrastructureGlyph /> LAUNCH INFRASTRUCTURE
-            </button>
-          )}
+          {!player.activeMission && <button className="is-primary" data-testid="launchpad-new-mission-btn" data-action="new-mission" onClick={openMissionMenu}><MissionGlyph /> NEW MISSION</button>}
           <button className={freeOperations ? undefined : 'is-primary'} data-testid="launchpad-view-contracts-btn" onClick={onViewContracts}><MissionGlyph /> CONTRACTS</button>
         </div>
       </footer>
