@@ -166,61 +166,48 @@ describe('Mining pause/resume (STS-488)', () => {
   })
 })
 
-describe('Rover pause/resume (STS-490)', () => {
-  it('keeps the rover extraction clock close to completion after Back-to-hub resume', () => {
-    const startedAt = Date.now() - 119_000
-
+describe('Rover pause/resume (KES-205)', () => {
+  it('returns to the same live TakeOn field after Back-to-hub resume', () => {
     visitGame('/game/rover-mining', {
       screen: 'rover-mining',
       missionId: 'generated-s1-starter-bulk-1',
       targetId: 'eros',
       player: {
         activeMission: { id: 'generated-s1-starter-bulk-1', label: 'Rover landing -> Eros' },
-        roverMiningStartedAt: startedAt,
-        roverTerrainClassifications: { eros: 'vein' },
       },
     })
 
     cy.contains('Rover Mining', { timeout: 10000 }).should('be.visible')
-    cy.contains(/00:0[0-9]/, { timeout: 10000 }).should('be.visible')
+    cy.get('[data-testid="rover-mining-screen"] canvas[aria-label]', { timeout: 10000 }).should('be.visible')
     cy.get('[data-testid="top-bar-back"]').click()
 
     savedState().then(paused => {
       expect(paused.screen).to.eq('hub')
-      expect(paused.player.roverMiningStartedAt).to.eq(startedAt)
 
       paused.screen = 'rover-mining'
       window.localStorage.setItem(STORAGE_KEY, JSON.stringify(paused))
     })
 
     cy.visit('/game/rover-mining')
-    cy.contains('EXTRACTION COMPLETE', { timeout: 10000 }).should('be.visible')
-    cy.contains('COLLECT CARGO').should('be.visible')
+    cy.get('[data-testid="rover-mining-screen"] canvas[aria-label]', { timeout: 10000 }).should('be.visible')
+    cy.get('[data-testid="rover-cargo-order"]').should('be.visible')
   })
 })
 
-describe('Sprint 13 rover scouting (KES-110)', () => {
-  it('turns a terrain classification into persisted mineral intelligence before extraction', () => {
+describe('Live rover field migration (KES-205)', () => {
+  it('mounts the TakeOn field instead of the retired classification and timer flow', () => {
     visitGame('/game/rover-mining', {
       screen: 'rover-mining',
       missionId: 'generated-s1-starter-bulk-1',
       targetId: 'eros',
       player: {
         activeMission: { id: 'generated-s1-starter-bulk-1', label: 'Rover landing -> Eros' },
-        roverMiningStartedAt: undefined,
-        roverTerrainClassifications: {},
       },
     })
 
-    cy.get('[data-testid="rover-scouting-classification"]', { timeout: 10000 }).should('be.visible')
-    cy.get('[data-testid="rover-classify-vein"]').click()
-    cy.contains('MINERAL VEIN').should('be.visible')
-    cy.contains('SIGNATURE +3').should('be.visible')
-
-    savedState().then(state => {
-      expect(state.player.roverTerrainClassifications?.eros).to.eq('vein')
-      expect(state.player.roverMiningStartedAt).to.be.a('number')
-    })
+    cy.get('[data-testid="rover-mining-screen"] canvas[aria-label="Surface operations on ironrock"]', { timeout: 10000 }).should('be.visible')
+    cy.get('[data-testid="rover-scouting-classification"]').should('not.exist')
+    cy.get('[data-testid="rover-return-to-ship"]').should('be.disabled')
   })
 })
 

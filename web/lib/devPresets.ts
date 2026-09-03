@@ -9,7 +9,6 @@ const SECOND_MINERAL = Object.keys(SECOND_MISSION.requires.minerals)[0] ?? 'sili
 // M3 is the two-leg "mine then deliver" client choice — Belt Courier Run
 // (Bennu -> Vesta) is the authored pick used for these dev shots.
 const THIRD_MISSION = MISSIONS.find(m => m.id === 'lnm_m3_relay_bennu_vesta') ?? MISSIONS.find(m => m.sequence === 3) ?? SECOND_MISSION
-const ROVER_MISSION = MISSIONS.find(m => m.survey?.onWorldVehicle === 'starter-rover') ?? THIRD_MISSION
 
 const BASE_PLAYER: Player = {
   francs: 150_000_000,
@@ -164,7 +163,7 @@ export const DEV_GROUPS: DevGroup[] = [
       { key: 'ui-skill-tree', label: 'Skill Tree', hint: 'License Grade and research XP progress screen — post-onboarding, Free Ops unlocked', stage: 'free-ops' },
       { key: 'ui-target-picker', label: 'Target Picker', hint: 'Solar map target selection with a mission loaded — missionsDone: 2, Free Ops NOT unlocked', stage: 'tutorial' },
       { key: 'ui-tess-discovery', label: 'TESS Console', hint: 'Transit telescope classification screen — post-onboarding, Free Ops unlocked', stage: 'free-ops' },
-      { key: 'ui-rover-mining', label: 'Rover Mining', hint: 'Starter-rover on-world mining timer state — missionsDone: 2, Free Ops NOT unlocked', stage: 'tutorial' },
+      { key: 'ui-rover-mining', label: 'Rover Mining', hint: 'Starter-rover live TakeOn field — missionsDone: 2, Free Ops NOT unlocked', stage: 'tutorial' },
       { key: 'ship-customizer', label: 'Ship Customiser', hint: 'Unlocked hangar interior view with Explorer room slots — missionsDone: 1, Free Ops NOT unlocked', stage: 'tutorial' },
       { key: 'ui-asteroid-discovery', label: 'Asteroid Discovery', hint: 'Deep Space Telescope built (STS-622) — live NEOCP candidate review, requires seeded asteroid_candidates on the shared backend. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
       { key: 'ui-academy', label: 'Academy', hint: 'Astronaut Academy built + funded, two clients at affinity L2 — management view, AcademyCoach fires on first load. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
@@ -462,15 +461,13 @@ export function resolvePreset(name: string): Partial<GameState> | null {
         player: {
           ...BASE_PLAYER,
           missionsDone: 2,
-          activeMission: { id: ROVER_MISSION.id, label: `${ROVER_MISSION.title} → ${ROVER_MISSION.targetId ?? 'bennu'}` },
-          roverMiningStartedAt: Date.now() - 45_000,
-          roverTerrainClassifications: { [ROVER_MISSION.targetId ?? THIRD_MISSION.targetId ?? 'bennu']: 'vein' },
+          activeMission: { id: THIRD_MISSION.id, label: `${THIRD_MISSION.title} → ${THIRD_MISSION.targetId ?? 'bennu'}` },
         },
         tutorial: false,
         doneSteps: M1_AND_M2_DONE,
-        missionId: ROVER_MISSION.id,
-        targetId: ROVER_MISSION.targetId ?? THIRD_MISSION.targetId ?? 'bennu',
-        deliveryTargetId: ROVER_MISSION.deliveryTargetId ?? null,
+        missionId: THIRD_MISSION.id,
+        targetId: THIRD_MISSION.targetId ?? 'bennu',
+        deliveryTargetId: THIRD_MISSION.deliveryTargetId ?? null,
         rocket: { chassis: 'hull-mk2', propulsion: 'fusion-b2', drill: 'laser-t2' },
         lastCargo: null,
         popup: null,

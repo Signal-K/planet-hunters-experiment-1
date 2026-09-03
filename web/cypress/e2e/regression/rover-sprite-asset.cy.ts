@@ -46,11 +46,10 @@ function visitRoverMining() {
 }
 
 describe('Sprint 13 rover visual polish (KES-166)', () => {
-  it('loads the authored Blender rover sprite in the playable mining scene', () => {
-    cy.intercept('GET', '/game/assets/actors/rover.png').as('roverAsset')
+  it('loads the playable TakeOn rover scene', () => {
     visitRoverMining()
 
     cy.contains('Rover Mining', { timeout: 10000 }).should('be.visible')
-    cy.wait('@roverAsset').its('response.statusCode').should('eq', 200)
+    cy.get('[data-testid="rover-mining-screen"] canvas[aria-label]', { timeout: 10000 }).should('be.visible')
   })
 })

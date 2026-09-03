@@ -140,7 +140,7 @@ export const SCENES: readonly SceneDefinition[] = [
   { id: 'rocket-buy', name: 'Rocket Purchase', surface: 'dom', location: 'earth-base', screen: 'rocket-buy', entityTypes: [], description: 'Buy the rocket model for this run.' },
   { id: 'fab', name: 'Assembly', surface: 'dom', location: 'earth-base', screen: 'fab', entityTypes: [], description: 'Relay/launch checklist before a mission flies.' },
   { id: 'transit', name: 'Transit', surface: 'dom', location: 'transit', screen: 'transit', entityTypes: [], description: 'Physical rocket flight. Not TESS transit photometry — see the glossary rule in CLAUDE.md.' },
-  { id: 'rover-mining', name: 'Rover Mining', surface: 'dom', location: 'target-surface', screen: 'rover-mining', entityTypes: [], description: 'Deployed-rover extraction, timer-based rather than played live.' },
+  { id: 'rover-mining', name: 'Rover Mining', surface: 'dom', location: 'target-surface', screen: 'rover-mining', entityTypes: [], description: 'Live TakeOn rover extraction mounted inside the routed screen. Landnam supplies the mission order and records the required cargo.' },
   { id: 'debrief', name: 'Debrief', surface: 'dom', location: 'earth-base', screen: 'debrief', entityTypes: [], description: 'Payout and cargo settlement after a run.' },
   { id: 'refinery', name: 'Refinery', surface: 'dom', location: 'earth-base', screen: 'refinery', entityTypes: [], description: 'Refine raw minerals into higher-value goods.' },
   { id: 'market', name: 'Market', surface: 'dom', location: 'earth-base', screen: 'market', entityTypes: [], description: 'Open-market sales with supply-driven price decay.' },

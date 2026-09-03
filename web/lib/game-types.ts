@@ -172,13 +172,11 @@ export interface Player {
   // state before this, and was lost on remount). Cleared once the mission
   // completes or is abandoned.
   miningCargoInProgress?: Record<string, number>
-  // Wall-clock start of an in-progress rover mining run, persisted so a
-  // Back-to-hub pause and resume doesn't restart the extraction timer from
-  // zero (RoverMiningScreen would otherwise re-init its own Date.now() on
-  // remount). Cleared once the run completes or is abandoned.
+  // Legacy timer field retained for save migration. Live rover missions now
+  // persist their field state through TakeOnMount/LandnamSync.
   roverMiningStartedAt?: number
-  // KES-110: a synthetic rover observation is a player decision that points
-  // the extraction run at an existing target mineral signature.
+  // Legacy KES-110 observation field retained for save migration. The live
+  // rover field now exposes deposits through the TakeOn scene itself.
   roverTerrainClassifications?: Record<string, RoverTerrainClass>
   // Wall-clock start of the cargo-transfer operation at a two-leg mission's
   // delivery target. The unload scene derives progress from this epoch so

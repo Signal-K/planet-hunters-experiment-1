@@ -8,7 +8,6 @@ import TransitScreen from '@/components/game/screens/TransitScreen'
 import LandingScreen from '@/components/game/screens/LandingScreen'
 import MiningScreen from '@/components/game/screens/MiningScreen'
 import RoverMiningScreen from '@/components/game/screens/RoverMiningScreen'
-import type { RoverTerrainClass } from '@/lib/data/rover-scouting'
 import DeliveryScreen from '@/components/game/screens/DeliveryScreen'
 import DebriefScreen from '@/components/game/screens/DebriefScreen'
 import { earthStorageBuilt, hasOperationalRemoteSilo, storageCapacity, storedUnits, sellQuote } from '@/lib/systems/EconomySystem'
@@ -207,15 +206,6 @@ export default function MissionOperationRoutes({
         <RoverMiningScreen
           mission={game.mission}
           target={roverTarget}
-          startedAt={game.player.roverMiningStartedAt}
-          terrainClassification={game.player.roverTerrainClassifications?.[roverTarget.id]}
-          onClassifyTerrain={(terrain: RoverTerrainClass) => {
-            game.setPlayer(player => ({
-              ...player,
-              roverTerrainClassifications: { ...player.roverTerrainClassifications, [roverTarget.id]: terrain },
-              roverMiningStartedAt: Date.now(),
-            }))
-          }}
           onComplete={(cargo) => {
             if (game.player.missionsDone === 2 && game.mission?.deliveryTargetId) {
               game.setPlayer(player => ({

@@ -98,7 +98,8 @@ describe('M3 mission review environment', () => {
 
       cy.get('[data-testid="landing-continue"]').click()
       cy.get('[data-testid="rover-mining-screen"]', { timeout: 15000 }).should('be.visible')
-      cy.contains('ROCKET LANDED · SURVEY THE SITE').should('be.visible')
+      cy.contains('Prospector surface run').should('be.visible')
+      cy.get('[data-testid="rover-mining-screen"] canvas[aria-label]', { timeout: 15000 }).should('be.visible')
       cy.screenshot(`m3-${key}-02-rover-survey`, { capture: 'viewport' })
 
       // Phase 2: Rover mining with minerals loaded
@@ -113,8 +114,8 @@ describe('M3 mission review environment', () => {
         }),
       })
       cy.get('[data-testid="rover-mining-screen"]', { timeout: 15000 }).should('be.visible')
-      cy.contains('MINERALS LOADED INTO ROVER').should('be.visible')
-      cy.contains('LOAD ROVER AND RETURN TO SHIP').should('be.visible')
+      cy.contains('CLIENT ORDER').should('be.visible')
+      cy.get('[data-testid="rover-mining-screen"] canvas[aria-label]', { timeout: 15000 }).should('be.visible')
       cy.screenshot(`m3-${key}-03-rover-loaded`, { capture: 'viewport' })
 
       // Phase 3: Delivery leg — cargo handoff to client building site
