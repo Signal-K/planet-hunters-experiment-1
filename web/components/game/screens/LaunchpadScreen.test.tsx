@@ -70,8 +70,8 @@ describe('Launchpad own-program actions', () => {
     expect(markup).toContain('CREATE MISSION')
     expect(markup).toContain('data-testid="launchpad-launch-infrastructure-btn"')
     expect(markup).toContain('LAUNCH INFRASTRUCTURE')
+    expect(markup).toContain('data-testid="launchpad-guide-open"')
     expect(markup).not.toContain('data-testid="available-actions-panel"')
-    expect(markup).not.toContain('data-testid="launchpad-guide"')
   })
 
   it('keeps a legacy Academy unlock out of the active launch loop', () => {

@@ -19,6 +19,8 @@ interface LaunchpadOverviewScreenProps {
   onOpenHangar: () => void
   onOpenSubsurface?: () => void
   onOpenBuild: () => void
+  onResumeMission?: () => void
+  onViewMissionLog?: () => void
   missionsDone: number
   freeOperations: boolean
   catalog: Catalog
@@ -100,6 +102,8 @@ export default function LaunchpadOverviewScreen({
   onOpenHangar,
   onOpenSubsurface,
   onOpenBuild,
+  onResumeMission,
+  onViewMissionLog,
   missionsDone,
   freeOperations,
   catalog,
@@ -148,7 +152,16 @@ export default function LaunchpadOverviewScreen({
               </div>
               <span className={styles.panelCode}>OPS {String(player.missionsDone + 1).padStart(2, '0')}</span>
             </div>
-            {nextOperation ? (
+            {player.activeMission && onResumeMission ? (
+              <div className={styles.operationBody}>
+                <div className={styles.operationMark} aria-hidden="true">LIVE</div>
+                <div className={styles.operationCopy}>
+                  <strong>{player.activeMission.label}</strong>
+                  <span>This mission is already in progress. Resume it from the current flight phase.</span>
+                </div>
+                <button className={styles.primaryAction} data-testid="launchpad-ui-resume-mission-btn" onClick={onResumeMission}>RESUME MISSION</button>
+              </div>
+            ) : nextOperation ? (
               <div className={styles.operationBody}>
                 <div className={styles.operationMark} aria-hidden="true">OP</div>
                 <div className={styles.operationCopy}>
@@ -207,8 +220,18 @@ export default function LaunchpadOverviewScreen({
       </div>
 
       <footer className={styles.footer} data-ui-zone={UI_ZONES.bottomActions}>
-        <span><i /> FULL LAUNCHPAD UI</span>
-        <span>SCENE FOCUS IS SEPARATE — USE FOCUS LAUNCHPAD SCENE ABOVE</span>
+        <div className={styles.footerStatus}>
+          <span><i /> FULL LAUNCHPAD UI</span>
+          <span>PROGRAM COMMANDS</span>
+        </div>
+        <div className={styles.footerActions} aria-label="Launchpad commands">
+          {onResumeMission && <button className={`${styles.footerButton} ${styles.footerButtonPrimary}`} data-testid="launchpad-ui-footer-resume-mission-btn" onClick={onResumeMission}>RESUME MISSION</button>}
+          <button className={styles.footerButton} data-testid="launchpad-ui-footer-focus-pad-btn" onClick={onFocusPad}>FOCUS SCENE</button>
+          <button className={styles.footerButton} data-testid="launchpad-ui-footer-hangar-btn" onClick={onOpenHangar}>HANGAR</button>
+          {onViewMissionLog && <button className={styles.footerButton} data-testid="launchpad-ui-footer-mission-log-btn" onClick={onViewMissionLog}>MISSION LOG</button>}
+          {onOpenSubsurface && <button className={styles.footerButton} data-testid="launchpad-ui-footer-subsurface-btn" onClick={onOpenSubsurface}>SUBSURFACE</button>}
+          <button className={styles.footerButton} data-testid="launchpad-ui-footer-contracts-btn" onClick={onViewContracts}>CONTRACTS</button>
+        </div>
       </footer>
     </div>
   )

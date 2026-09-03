@@ -384,6 +384,12 @@ export function ScreenContent({
             onOpenHangar={() => game.go('hangar')}
             onOpenSubsurface={() => game.go('hub-subsurface')}
             onOpenBuild={() => game.go('build')}
+            onResumeMission={game.player.activeMission ? () => {
+              captureGameEvent('mission_resumed', { mission_phase: game.player.missionPhase ?? 'transit' })
+              enqueueSurvey('lnm_resume_mission', 1200)
+              game.go(game.player.missionPhase ?? 'transit')
+            } : undefined}
+            onViewMissionLog={() => game.go('mission-history')}
             missionsDone={game.player.missionsDone}
             freeOperations={game.player.freeOperations}
             catalog={game.catalog}

@@ -133,7 +133,13 @@
 .cardAction { flex: 0 0 auto; color: var(--ln-cyan); font: 800 11px var(--ln-font-display); letter-spacing: 0.1em; text-transform: uppercase; }
 
 .footer { position: absolute; right: 0; bottom: 0; left: 0; display: flex; align-items: center; justify-content: space-between; gap: 16px; min-height: 58px; padding: 8px 24px; border-top: 1px solid var(--ln-hairline); color: var(--ln-text-muted); background: var(--ln-shell); }
-.footer span:first-child { display: inline-flex; align-items: center; gap: 8px; color: var(--ln-cyan); }
+.footerStatus { display: grid; gap: 4px; flex: 0 0 auto; font: 700 10px var(--ln-font-display); letter-spacing: .12em; text-transform: uppercase; }
+.footerStatus span:first-child { display: inline-flex; align-items: center; gap: 8px; color: var(--ln-cyan); }
+.footerActions { display: flex; align-items: center; justify-content: flex-end; gap: 8px; min-width: 0; overflow-x: auto; scrollbar-width: none; }
+.footerActions::-webkit-scrollbar { display: none; }
+.footerButton { flex: 0 0 auto; min-height: 36px; padding: 0 12px; border: 1px solid var(--ln-cyan-border); border-radius: 6px; background: transparent; color: var(--ln-cyan); cursor: pointer; font: 800 10px var(--ln-font-display); letter-spacing: .12em; text-transform: uppercase; }
+.footerButton:focus-visible { outline: 2px solid var(--ln-cyan-bright); outline-offset: 2px; }
+.footerButtonPrimary { border-color: var(--ln-cyan); background: var(--ln-cyan); color: var(--ln-text-on-cyan); }
 
 @media (max-width: 720px) {
   .content { padding: 24px 16px 32px; }
@@ -144,6 +150,6 @@
   .operationBody { align-items: stretch; flex-wrap: wrap; }
   .operationCopy { flex-basis: calc(100% - 64px); }
   .primaryAction { width: 100%; }
-  .footer { padding: 8px 16px; }
-  .footer span:nth-child(2) { display: none; }
+  .footer { align-items: stretch; flex-direction: column; gap: 8px; padding: 8px 16px; }
+  .footerActions { justify-content: flex-start; }
 }

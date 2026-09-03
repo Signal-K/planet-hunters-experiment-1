@@ -161,10 +161,31 @@ button.launchpad-scene-object { cursor: pointer; }
   background: rgba(233,243,255,.10); color: #eaf2fb; font: 800 10px var(--ln-font-display); letter-spacing: .12em;
   display: inline-flex; align-items: center; gap: 7px;
 }
-.launchpad-rail-actions button:hover { background: rgba(233,243,255,.18); border-color: rgba(199,216,238,.55); }
+.launchpad-rail-actions button:focus-visible { outline: 2px solid #70d9ea; outline-offset: 2px; }
 .launchpad-rail-actions button svg { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 1.8; }
 .launchpad-rail-actions button.is-primary { border-color: #70d9ea; background: #70d9ea; color: #07101c; box-shadow: 0 0 18px rgba(112,217,234,.24); }
 .launchpad-action-count { opacity: .68; font-size: 8px; }
+
+.launchpad-guide {
+  position: absolute; z-index: 24; top: 24px; left: 24px; width: min(360px, calc(100% - 48px));
+  padding: 20px; border: 1px solid var(--ln-cyan); border-radius: 10px;
+  background: var(--ln-shell); box-shadow: var(--ln-shadow-modal); color: var(--ln-text);
+}
+.launchpad-guide-close {
+  position: absolute; top: 10px; right: 10px; width: 28px; height: 28px; border: 1px solid var(--ln-hairline); border-radius: 50%;
+  background: transparent; color: var(--ln-text-dim); font: 400 20px/1 var(--ln-font-body); cursor: pointer;
+}
+.launchpad-guide-close:focus-visible, .launchpad-guide-actions button:focus-visible { outline: 2px solid var(--ln-cyan); outline-offset: 2px; }
+.launchpad-guide-kicker { color: var(--ln-cyan); font: 800 10px var(--ln-font-display); letter-spacing: .16em; }
+.launchpad-guide h2 { margin: 10px 36px 0 0; font: 800 22px var(--ln-font-display); letter-spacing: .02em; text-transform: uppercase; }
+.launchpad-guide-copy { margin: 10px 0 20px; color: var(--ln-text-dim); font: 14px/1.45 var(--ln-font-body); }
+.launchpad-guide-footer { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.launchpad-guide-progress { display: inline-flex; gap: 6px; }
+.launchpad-guide-progress i { width: 24px; height: 4px; border-radius: 2px; background: var(--ln-hairline-strong); }
+.launchpad-guide-progress i[data-active="true"] { background: var(--ln-cyan); }
+.launchpad-guide-actions { display: flex; gap: 8px; }
+.launchpad-guide-actions button { min-height: 32px; padding: 0 10px; border: 1px solid var(--ln-hairline); border-radius: 7px; background: transparent; color: var(--ln-text); font: 800 9px var(--ln-font-display); letter-spacing: .12em; cursor: pointer; }
+.launchpad-guide-actions button.is-primary { border-color: var(--ln-cyan); background: var(--ln-cyan); color: var(--ln-text-on-cyan); }
 
 /* The Hub dock is an action rail, not a floating modal. Keep its status and
    actions on the ground line so the widened launchpad remains visible above
