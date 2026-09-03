@@ -22,6 +22,8 @@ interface LaunchpadScreenProps {
   onLaunchpadAction: () => void
   onOpenHangar: () => void
   onOpenSubsurface?: () => void
+  onResumeMission?: () => void
+  onViewMissionLog?: () => void
   missionsDone: number
   freeOperations: boolean
   catalog: Catalog
@@ -48,7 +50,7 @@ function SubsurfaceGlyph() {
 }
 
 export default function LaunchpadScreen({
-  onBack, onPick, onViewContracts, onLaunchpadAction, onOpenHangar, onOpenSubsurface, missionsDone, freeOperations, catalog, player, rocketImageSrc = '/game/assets/ships/ship_sr1.png', selectedRocketName, francs,
+  onBack, onPick, onViewContracts, onLaunchpadAction, onOpenHangar, onOpenSubsurface, onResumeMission, onViewMissionLog, missionsDone, freeOperations, catalog, player, rocketImageSrc = '/game/assets/ships/ship_sr1.png', selectedRocketName, francs,
 }: LaunchpadScreenProps) {
   // This is the Launchpad route: a playable Earth Base composition. The
   // tower and hangar are the primary interactions; the rail only exposes
@@ -84,7 +86,7 @@ export default function LaunchpadScreen({
   // selection and skips the board reported in the Craft bug log.
   const startPadAction = onLaunchpadAction
   const padActionLabel = player.activeMission
-    ? 'Resume active mission'
+    ? 'Launchpad active; use the Resume Mission footer action'
     : player.pendingLaunch
       ? 'Inspect pending launch'
       : 'Start a new mission'
@@ -119,14 +121,14 @@ export default function LaunchpadScreen({
           <HubWorldBackground phase={skyPhase} composition="earth-base-pad" />
           <RoadRover road={EARTH_BASE_PAD.roadPaths?.[0]} />
         </div>
-        <button type="button" className="launchpad-scene-object launchpad-tower" data-testid="launchpad-status-card" onClick={startPadAction} aria-label={padActionLabel}>
+        <button type="button" className="launchpad-scene-object launchpad-tower" data-testid="launchpad-status-card" onClick={player.activeMission ? undefined : startPadAction} disabled={!!player.activeMission} aria-label={padActionLabel}>
           <span className="launchpad-tower-art" data-launch-state={player.pendingLaunch ? 'hot' : 'idle'}>
             <LaunchpadModules />
             {player.pendingLaunch && <img className="launchpad-tower-rocket" src={rocketImageSrc} alt="Rocket on launchpad" />}
           </span>
           <span className="launchpad-object-label launchpad-object-label--center">
             <small>LAUNCHPAD</small>
-            <strong>{player.activeMission ? 'RESUME MISSION' : player.pendingLaunch ? 'INSPECT LAUNCH' : 'START MISSION'}</strong>
+            <strong>{player.activeMission ? 'MISSION ACTIVE' : player.pendingLaunch ? 'INSPECT LAUNCH' : 'START MISSION'}</strong>
           </span>
         </button>
 
@@ -154,8 +156,10 @@ export default function LaunchpadScreen({
           <span>{launchedSatellites}/{SATELLITE_MODELS.length} SAT</span>
         </div>
         <div className="launchpad-rail-actions">
+          {onResumeMission && <button className="is-primary" data-testid="launchpad-resume-mission-btn" aria-label="Jump back to active mission" onClick={onResumeMission}><MissionGlyph /> RESUME MISSION</button>}
           {onOpenSubsurface && <button data-testid="launchpad-open-subsurface-btn" onClick={onOpenSubsurface}><SubsurfaceGlyph /> SUBSURFACE</button>}
           <button data-testid="launchpad-open-hangar-btn" onClick={onOpenHangar}><HangarGlyph /> HANGAR</button>
+          {onViewMissionLog && <button data-testid="launchpad-mission-log-btn" onClick={onViewMissionLog}><MissionGlyph /> MISSION LOG</button>}
           {freeOperations && nextOperation && <button data-testid="launchpad-program-operation-btn" onClick={() => onPick(nextOperation.id)}><MissionGlyph /> OPS {operations.length}</button>}
           {freeOperations && ownMiningOperation && (
             <button

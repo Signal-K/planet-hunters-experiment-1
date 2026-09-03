@@ -7,6 +7,36 @@ import { DEFAULT_STATE } from '@/lib/game-state'
 import { buildRuntimeCatalog } from '@/lib/runtimeCatalog'
 
 describe('Launchpad own-program actions', () => {
+  it('keeps mission resume explicit in the footer', () => {
+    const player = {
+      ...DEFAULT_STATE.player,
+      activeMission: { id: 'baseline-extraction', label: 'Baseline extraction → Eros' },
+      missionPhase: 'transit' as const,
+    }
+    const noop = vi.fn()
+    const markup = renderToStaticMarkup(
+      <LaunchpadScreen
+        onBack={noop}
+        onPick={noop}
+        onViewContracts={noop}
+        onLaunchpadAction={noop}
+        onOpenHangar={noop}
+        onOpenSubsurface={noop}
+        onResumeMission={noop}
+        onViewMissionLog={noop}
+        missionsDone={player.missionsDone}
+        freeOperations={player.freeOperations}
+        catalog={STATIC_CATALOG}
+        player={player}
+      />,
+    )
+
+    expect(markup).toContain('data-testid="launchpad-resume-mission-btn"')
+    expect(markup).toContain('aria-label="Jump back to active mission"')
+    expect(markup).toContain('data-testid="launchpad-mission-log-btn"')
+    expect(markup).toContain('MISSION ACTIVE')
+  })
+
   it('exposes self-directed actions once in the command rail', () => {
     const player = {
       ...DEFAULT_STATE.player,

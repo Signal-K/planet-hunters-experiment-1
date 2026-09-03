@@ -121,7 +121,7 @@ button.launchpad-scene-object { cursor: pointer; }
 }
 .launchpad-tower-art {
   position: relative; left: auto; bottom: auto;
-  display: block; width: 100%; aspect-ratio: 164 / 210; transform: none;
+  display: block; width: 100%; aspect-ratio: 172 / 118; transform: none;
 }
 .launchpad-tower .launchpad-object-label,
 .launchpad-rocket .launchpad-object-label {
@@ -137,8 +137,9 @@ button.launchpad-scene-object { cursor: pointer; }
 .launchpad-rocket-art img { position: relative; z-index: 2; width: 100%; filter: drop-shadow(0 12px 12px rgba(0,0,0,.6)); }
 .launchpad-hangar-art { position: relative; z-index: 2; display: block; width: 100%; aspect-ratio: 250 / 151; }
 .launchpad-rocket-glow { position: absolute; left: 5%; right: 5%; bottom: 18%; height: 14px; border-radius: 50%; background: rgba(112,217,234,.2); filter: blur(12px); }
-.launchpad-rocket:hover img,
-.launchpad-station:hover .launchpad-object-art { filter: brightness(1.12) drop-shadow(0 0 18px rgba(112,217,234,.22)); }
+/* Launchpad scene objects are instruments, not hover cards. Keep the art
+   stable under a pointer; state is communicated by the attached label and
+   command rail. */
 /* Glass rail, not a wall. `rgba(6,9,15,.97)` was effectively opaque: it cut a
    solid 62px band off the bottom of the scene, so the ground the structures
    stand on visibly stopped at a hard edge and the background read as

@@ -67,7 +67,16 @@ const POST_TUTORIAL: Partial<GameState> = {
   },
 } as Partial<GameState>
 
-function visitHub() {
+const ACTIVE_MISSION_POST_TUTORIAL: Partial<GameState> = {
+  ...POST_TUTORIAL,
+  player: {
+    ...POST_TUTORIAL.player,
+    activeMission: { id: 'baseline-extraction', label: 'Baseline extraction → Eros' },
+    missionPhase: 'transit',
+  } as GameState['player'],
+}
+
+function visitHub(state: Partial<GameState> = POST_TUTORIAL) {
   cy.visit('/game', {
     onBeforeLoad(win) {
       win.localStorage.clear()
@@ -76,13 +85,13 @@ function visitHub() {
       win.localStorage.setItem(SNOOZE_KEY, FAR_FUTURE)
       win.localStorage.setItem(SURVEY_KEY, JSON.stringify(ALL_SURVEYS))
       win.localStorage.setItem(TUTORIAL_ACK_KEY, '1')
-      win.localStorage.setItem(STORAGE_KEY, JSON.stringify(POST_TUTORIAL))
+      win.localStorage.setItem(STORAGE_KEY, JSON.stringify(state))
     },
   })
 }
 
 describe('hub progression cards are clickable after the tutorial', () => {
-  beforeEach(visitHub)
+  beforeEach(() => visitHub())
 
   it('Open Skill Tree navigates to the skill tree', () => {
     cy.get('[data-testid="progression-card-skills"]').should('be.visible').click()
@@ -106,6 +115,15 @@ describe('hub progression cards are clickable after the tutorial', () => {
     cy.get('[data-testid="building-launchpad-hit"]').click({ force: true })
     cy.get('[data-testid="launchpad-focus-screen"]', { timeout: 10_000 }).should('be.visible')
     cy.get('[data-testid="launchpad-ui-screen"]').should('not.exist')
+  })
+
+  it('an active Launchpad opens its scene and exposes explicit resume controls', () => {
+    visitHub(ACTIVE_MISSION_POST_TUTORIAL)
+    cy.get('[data-testid="building-launchpad-hit"]').click({ force: true })
+    cy.get('[data-testid="launchpad-focus-screen"]', { timeout: 10_000 }).should('be.visible')
+    cy.get('[data-testid="launchpad-resume-mission-btn"]').should('be.visible')
+    cy.get('[data-testid="launchpad-mission-log-btn"]').should('be.visible')
+    cy.get('[data-testid="launchpad-status-card"]').should('contain', 'MISSION ACTIVE')
   })
 
   it('nothing transparent is covering the cards', () => {

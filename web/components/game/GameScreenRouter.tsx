@@ -194,12 +194,10 @@ export function ScreenContent({
               return game.goToMissions()
             }
             if (building === 'launchpad') {
-              // A run in flight always wins — the pad is how you get back to it.
-              if (game.player.activeMission) {
-                captureGameEvent('mission_resumed', { mission_phase: game.player.missionPhase ?? 'transit' })
-                enqueueSurvey('lnm_resume_mission', 1200)
-                return game.go(game.player.missionPhase ?? 'transit')
-              }
+              // The physical building opens the Launchpad scene even while a
+              // mission is active. Resuming flight is an explicit footer
+              // action on that scene, not an accidental consequence of
+              // clicking the building.
               if (game.player.pendingLaunch) return game.go('fab')
               // The Launchpad is an in-world interaction surface for every
               // entry point; it must not fall back to a dashboard overview.
@@ -404,12 +402,17 @@ export function ScreenContent({
           }}
           onViewContracts={() => game.goToMissions()}
           onLaunchpadAction={() => {
-            if (game.player.activeMission) return game.go(game.player.missionPhase ?? 'transit')
             if (game.player.pendingLaunch) return game.go('fab')
             game.goToMissions()
           }}
           onOpenHangar={() => game.go('hangar')}
           onOpenSubsurface={() => game.go('hub-subsurface')}
+          onResumeMission={game.player.activeMission ? () => {
+            captureGameEvent('mission_resumed', { mission_phase: game.player.missionPhase ?? 'transit' })
+            enqueueSurvey('lnm_resume_mission', 1200)
+            game.go(game.player.missionPhase ?? 'transit')
+          } : undefined}
+          onViewMissionLog={() => game.go('mission-history')}
           missionsDone={game.player.missionsDone}
           freeOperations={game.player.freeOperations}
           catalog={game.catalog}

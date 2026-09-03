@@ -63,6 +63,8 @@ export interface BuildingProps {
   onActiveChange?: (active: boolean) => void
   /** Controlled visual state shared with the sprite layer. */
   active?: boolean
+  /** Disable hover/press lift for scene objects whose art should stay still. */
+  disableHover?: boolean
 }
 
 const CALLOUT_W = 208
@@ -93,7 +95,7 @@ function ArrowGlyph() {
   )
 }
 
-export function Building({ kind, label, sub, status, w, hitH, style, onClick, badge, callout, calloutAlign = 'center', dimmed, onActiveChange, active = false }: BuildingProps) {
+export function Building({ kind, label, sub, status, w, hitH, style, onClick, badge, callout, calloutAlign = 'center', dimmed, onActiveChange, active = false, disableHover = false }: BuildingProps) {
   const color = STATUS_COLOR[status]
   const [calloutOpen, setCalloutOpen] = useState(false)
   const [seen, setSeen] = useState(false)
@@ -103,7 +105,7 @@ export function Building({ kind, label, sub, status, w, hitH, style, onClick, ba
   // which sits exactly over the sprite art EarthBaseModules renders
   // underneath, so it reads as the structure itself lighting up.
   const [localActive, setLocalActive] = useState(false)
-  const isActive = active || localActive
+  const isActive = active || (!disableHover && localActive)
   const setActive = (next: boolean) => {
     setLocalActive(next)
     onActiveChange?.(next)
@@ -148,11 +150,11 @@ export function Building({ kind, label, sub, status, w, hitH, style, onClick, ba
           transform: isActive ? 'translateY(-3px)' : 'translateY(0)',
           transition: 'transform 180ms',
         }}
-        onMouseEnter={() => setActive(true)}
-        onMouseLeave={() => setActive(false)}
-        onTouchStart={() => setActive(true)}
-        onTouchEnd={() => setActive(false)}
-        onTouchCancel={() => setActive(false)}
+        onMouseEnter={disableHover ? undefined : () => setActive(true)}
+        onMouseLeave={disableHover ? undefined : () => setActive(false)}
+        onTouchStart={disableHover ? undefined : () => setActive(true)}
+        onTouchEnd={disableHover ? undefined : () => setActive(false)}
+        onTouchCancel={disableHover ? undefined : () => setActive(false)}
       >
         {/* Spacer reserving the building art's clickable footprint */}
         <div style={{
