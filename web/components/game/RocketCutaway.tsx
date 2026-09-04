@@ -24,7 +24,8 @@ interface RoomSpec {
 }
 
 export default function RocketCutaway({ rocket, activeRoom, onToggle }: RocketCutawayProps) {
-  const blueprintSrc = rocketAssetsForId(rocket.id).blueprint
+  const rocketAssets = rocketAssetsForId(rocket.id)
+  const blueprintSrc = rocketAssets.blueprint
   const composition = rocketCompositionForId(rocket.id)
   const stage = composition.stages[0]
   const rooms: RoomSpec[] = [
@@ -80,8 +81,12 @@ export default function RocketCutaway({ rocket, activeRoom, onToggle }: RocketCu
   }
 
   return (
-    <div style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}>
-      <div data-testid="rocket-cutaway" style={{ position: 'relative', width: '100%', maxWidth: 760, aspectRatio: '760 / 380' }}>
+    <div className="rocket-cutaway-inspection" style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}>
+      <div data-testid="rocket-cutaway" className="rocket-cutaway-board" style={{ position: 'relative', width: '100%', maxWidth: 760, aspectRatio: '760 / 380' }}>
+        {/* The exterior render is a subdued registration silhouette behind the
+            Blender cutaway, so the technical view still reads as the same
+            substantial vehicle seen at the launchpad and in mining. */}
+        <img className="rocket-cutaway-board__silhouette" src={rocketAssets.exterior} alt="" aria-hidden="true" />
         <svg viewBox="0 0 760 380" fill="none" aria-hidden="true" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }}>
           {/* Blender render of the same body used by the operational sprite. */}
           <image href={blueprintSrc} x="0" y="0" width="760" height="380" preserveAspectRatio="none" opacity=".96" />

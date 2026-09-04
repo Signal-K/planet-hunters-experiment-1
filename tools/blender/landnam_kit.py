@@ -390,3 +390,41 @@ SUPERSAMPLE = 3
 def sprite_render(path, layout_w, layout_h, ortho_scale, mode="flat", target=(0, 0, 0)):
     setup_camera(mode, ortho_scale, target=target)
     return render_to(path, layout_w * SUPERSAMPLE, layout_h * SUPERSAMPLE)
+
+
+# --- Ground-contact verification ---------------------------------------------
+#
+# `terrain-kit.ts` documents every terrain brick as having "its base at the
+# ground line and transparency everywhere else" — the whole scene-composition
+# system (terrain-kit.ts + compositions.ts + HubWorldBackground) depends on
+# that being literally true, because bricks/structures are positioned by
+# their PNG's own bottom edge (`bottom: var(--hub-ground)` in CSS), not by
+# any metadata about where the model's z=0 actually landed in the frame.
+#
+# That invariant was silently broken for both Earth Base structures (2026-09-
+# 03): `structures.py`'s camera target_z was hand-picked per model instead of
+# derived from its own height, so the rendered frame's bottom edge sat below
+# world z=0 — 12-26px of blank transparent rows under the model. Nothing in
+# the pipeline checked for this; it only surfaced once a person screenshotted
+# the live game and it was measured by hand, after being dismissed once as
+# unreproducible. This check turns that manual pixel count into something
+# `render_all.py` runs on every render, so a bad `target_z`/`ortho_scale`
+# combination is a printed warning at render time, not a "the buildings are
+# floating" bug report weeks later.
+def ground_contact_blank_rows(path):
+    """Return how many fully-transparent rows sit below the lowest opaque
+    pixel in the rendered PNG at `path` (0 = the model's base touches the
+    image's very last row, i.e. perfect ground contact)."""
+    img = bpy.data.images.load(path, check_existing=False)
+    try:
+        w, h = img.size
+        px = img.pixels[:]  # flat RGBA, row-major, bottom-to-top (row 0 = bottom)
+        stride = w * 4
+        step = max(1, w // 64)  # sampling every pixel on a large sprite is wasted work
+        for row in range(h):
+            base = row * stride
+            if any(px[base + x * 4 + 3] > 0.02 for x in range(0, w, step)):
+                return row
+        return h
+    finally:
+        bpy.data.images.remove(img)

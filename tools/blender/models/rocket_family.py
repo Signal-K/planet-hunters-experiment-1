@@ -127,10 +127,53 @@ def _shared_body(trim_hex, *, dorsal=False, blueprint=False):
 
 
 def _blueprint_overlay(trim_hex):
-    """Add blueprint linework over the same shared body silhouette."""
+    """Add a readable inspection cutaway over the shared body silhouette.
+
+    This is still a 2D technical view, but it must communicate a built vehicle
+    at menu size. A black empty rectangle with a few divider lines makes the
+    rocket read as a SaaS diagram instead of a staged machine, so each bay gets
+    a substantial backplate and one unmistakable system silhouette.
+    """
     inset = kit.box("blueprint_bay", (4.75, 0.055, 1.20),
                     location=(-0.48, -R * 0.99, -0.60), bevel=0.025)
-    solid("blueprint_bay", inset, T["void"], "blueprint_bay", outline=0)
+    solid("blueprint_bay", inset, T["surface"], "blueprint_bay", outline=0.012)
+
+    # Three filled technical compartments: cockpit, mineral/storage + payload,
+    # and engine. Their mass and contrast remain legible at a 160px menu render
+    # while their shared axes retain the blueprint read.
+    bays = (
+        ("cockpit_bay", -2.18, 1.12, T["hull_dark"]),
+        ("storage_bay", -0.55, 1.72, T["surface_2"]),
+        ("engine_bay", 1.22, 1.06, T["hull_dark"]),
+    )
+    for name, x, width, colour in bays:
+        bay = kit.box(name, (width, 0.035, 0.82),
+                      location=(x, -R * 1.045, -0.61), bevel=0.02)
+        solid(name, bay, colour, name, outline=0.008)
+
+    cockpit_console = kit.box("blueprint_cockpit_console", (0.62, 0.035, 0.22),
+                              location=(-2.20, -R * 1.07, -0.36), bevel=0.025)
+    solid("blueprint_cockpit_console", cockpit_console, T["cyan_bright"], "blueprint_cockpit_console", outline=0.006)
+    cockpit_glass = kit.box("blueprint_cockpit_glass", (0.42, 0.035, 0.22),
+                            location=(-2.34, -R * 1.075, -0.78), bevel=0.025)
+    solid("blueprint_cockpit_glass", cockpit_glass, trim_hex, "blueprint_cockpit_glass", outline=0.005)
+
+    # Mineral canisters make storage visually distinct from an empty box; the
+    # amber payload block is the same semantic accent used in the exterior pod.
+    for x in (-0.96, -0.56, -0.16):
+        canister = kit.box("blueprint_mineral_canister", (0.24, 0.035, 0.42),
+                           location=(x, -R * 1.07, -0.60), bevel=0.025)
+        solid("blueprint_mineral_canister", canister, T["steel"], "blueprint_mineral_canister", outline=0.005)
+    payload = kit.box("blueprint_payload", (0.42, 0.035, 0.56),
+                      location=(0.45, -R * 1.07, -0.58), bevel=0.035)
+    solid("blueprint_payload", payload, T["amber"], "blueprint_payload", outline=0.007)
+
+    reactor = kit.cylinder("blueprint_reactor", R * 0.28, 0.34,
+                           location=(1.10, -R * 1.075, -0.60), rotation=(1.5708, 0, 0), verts=8)
+    solid("blueprint_reactor", reactor, T["cyan"], "blueprint_reactor", outline=0.008)
+    nozzle_block = kit.box("blueprint_engine_block", (0.30, 0.035, 0.58),
+                           location=(1.55, -R * 1.07, -0.60), bevel=0.02)
+    solid("blueprint_engine_block", nozzle_block, T["rust"], "blueprint_engine_block", outline=0.006)
 
     # 3x1 starter layout: cockpit / storage + mining payload / engine.
     for x in (-1.70, -0.05, 1.18):

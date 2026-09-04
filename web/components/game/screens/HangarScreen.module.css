@@ -183,3 +183,26 @@
   .scroll { padding-left: 12px; padding-right: 12px; }
   .constructionScene { grid-template-columns: 1fr; }.assemblyBay { grid-row: auto; min-height: 170px; }.shipment { width: 100%; }.constructionSteps { grid-template-columns: repeat(4, minmax(0, 1fr)); }.constructionStep { padding: 6px; }.constructionStep strong { font-size: 7px; }
 }
+
+/* Phone landscape has enough width for the split construction view but not
+   enough height for its desktop rhythm. Compact the animated vehicle scene
+   before fixed chrome can crowd it out of view. */
+@media (max-height: 560px) and (max-width: 899px) {
+  .scroll { padding: 56px 12px 12px; }
+  .intro { gap: 8px; margin-bottom: 8px; padding: 12px; }
+  .title { font-size: 20px; }
+  .copy { margin-top: 4px; font-size: 11px; }
+  .constructionScene { min-height: 202px; gap: 8px; margin-bottom: 8px; padding: 8px; }
+  .assemblyBay { min-height: 178px; }
+  .shipment { padding: 6px 8px; }
+  .constructionReadout { padding: 8px; }
+  .constructionReadout strong { font-size: 15px; }
+  .constructionReadout p { margin-top: 4px; }
+  .constructionSteps { gap: 4px; }
+  .constructionStep { padding: 5px 6px; }
+  .recipeNote { display: none; }
+  .sectionHeader { margin-bottom: 6px; }
+  .fleetGrid { gap: 8px; padding: 12px; }
+  .cardImage { min-height: 100px; }
+  .rail { margin-top: 8px; }
+}

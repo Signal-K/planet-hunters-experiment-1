@@ -87,6 +87,10 @@ interface MiningCanvasProps {
   /** Equipped drill/laser part tier (1-3). Gates how deep the laser can reach. */
   laserTier?: number
   onCollect: (mineral: string) => void
+  /** Signals that the rendered scene is ready to receive operator input. */
+  onReady?: () => void
+  /** Signals an initialization failure so the enclosing screen can recover. */
+  onFailure?: () => void
   fireRef: React.MutableRefObject<(() => void) | null>
   scrollRef: React.MutableRefObject<((dx: number) => void) | null>
   oreNearRef?: React.MutableRefObject<((near: boolean) => void) | null>
@@ -94,10 +98,14 @@ interface MiningCanvasProps {
   neededMineralsRef?: React.MutableRefObject<Set<string> | null>
 }
 
-export default function MiningCanvas({ rocketImageSrc, minerals, requiredMinerals, mineralMeta, laserTier, onCollect, fireRef, scrollRef, oreNearRef, neededMineralsRef }: MiningCanvasProps) {
+export default function MiningCanvas({ rocketImageSrc, minerals, requiredMinerals, mineralMeta, laserTier, onCollect, onReady, onFailure, fireRef, scrollRef, oreNearRef, neededMineralsRef }: MiningCanvasProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const onCollectRef = useRef(onCollect)
   onCollectRef.current = onCollect
+  const onReadyRef = useRef(onReady)
+  onReadyRef.current = onReady
+  const onFailureRef = useRef(onFailure)
+  onFailureRef.current = onFailure
   const controllerRef = useRef<MiningController | null>(null)
   const [missFlash, setMissFlash] = useState(false)
   const missFlashTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -276,8 +284,10 @@ export default function MiningCanvas({ rocketImageSrc, minerals, requiredMineral
 
         loop = new GameLoop(scene, app)
         loop.start()
+        if (!destroyed) onReadyRef.current?.()
       } catch (err) {
         console.error('[MiningCanvas] init failed:', err)
+        if (!destroyed) onFailureRef.current?.()
       }
     }
 

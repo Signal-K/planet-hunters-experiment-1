@@ -165,6 +165,7 @@ export const DEV_GROUPS: DevGroup[] = [
       { key: 'ui-tess-discovery', label: 'TESS Console', hint: 'Transit telescope classification screen — post-onboarding, Free Ops unlocked', stage: 'free-ops' },
       { key: 'ui-rover-mining', label: 'Rover Mining', hint: 'Starter-rover live TakeOn field — missionsDone: 2, Free Ops NOT unlocked', stage: 'tutorial' },
       { key: 'ship-customizer', label: 'Ship Customiser', hint: 'Unlocked hangar interior view with Explorer room slots — missionsDone: 1, Free Ops NOT unlocked', stage: 'tutorial' },
+      { key: 'ui-hangar-assembly', label: 'Hangar Assembly', hint: 'Prospector shipment fitting in the hangar before launchpad transfer — missionsDone: 2', stage: 'tutorial' },
       { key: 'ui-asteroid-discovery', label: 'Asteroid Discovery', hint: 'Deep Space Telescope built (STS-622) — live NEOCP candidate review, requires seeded asteroid_candidates on the shared backend. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
       { key: 'ui-academy', label: 'Academy', hint: 'Astronaut Academy built + funded, two clients at affinity L2 — management view, AcademyCoach fires on first load. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
     ],
@@ -374,6 +375,24 @@ export function resolvePreset(name: string): Partial<GameState> | null {
         missionId: SECOND_MISSION.id,
         targetId: 'eros',
         rocket: { chassis: 'hull-mk1', propulsion: 'ion-a1', drill: 'hand-drill' },
+        lastCargo: null,
+        popup: null,
+      }
+
+    case 'ui-hangar-assembly':
+      return {
+        screen: 'hangar',
+        player: {
+          ...BASE_PLAYER,
+          missionsDone: 2,
+          pendingLaunch: true,
+          unlockedSkillNodes: ['ship-customizer-1'],
+        },
+        tutorial: false,
+        doneSteps: M1_AND_M2_DONE,
+        missionId: THIRD_MISSION.id,
+        targetId: THIRD_MISSION.targetId,
+        rocket: { chassis: 'hull-mk2', propulsion: 'fusion-b2', drill: 'laser-t2' },
         lastCargo: null,
         popup: null,
       }

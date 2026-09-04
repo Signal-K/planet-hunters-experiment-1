@@ -152,7 +152,7 @@ function LaunchClearance({
     : ['Base', target.name]
   return (
     <div data-testid="assembly-rocket-cutaway" style={{ width: '100%', maxWidth: 620, display: 'flex', flexDirection: 'column', gap: compact ? 6 : 10 }}>
-      {!compact && <PadElevation />}
+      {!compact && <PadElevation rocketImageSrc={rocket.img} />}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 14 }}>
         <div>
           <div className="ln-micro" style={{ color: 'var(--ln-cyan)' }}>Launch authorization</div>
@@ -243,21 +243,23 @@ function LaunchClearance({
   )
 }
 
-// Decorative drafted elevation: unfilled pad/gantry outline + vehicle
-// silhouette, matching the blueprint linework style used on Select Rocket.
-// Purely visual — no interactive state.
-function PadElevation() {
+// The preflight pad is a physical scene, not a blank drafting placeholder.
+// It uses the same Blender exterior sprite as mining, Hangar, and launch;
+// the schematic details remain supporting instruments around that vehicle.
+function PadElevation({ rocketImageSrc }: { rocketImageSrc: string }) {
   return (
     <svg viewBox="0 0 620 120" fill="none" aria-hidden="true" style={{ width: '100%', height: 'auto', display: 'block' }}>
+      <rect x="0" y="0" width="620" height="120" fill="var(--ln-void)" />
       {/* Ground line + pad. */}
-      <line x1="16" y1="108" x2="604" y2="108" stroke="var(--ln-bp-ink-mute, var(--ln-text-muted))" strokeWidth="1" />
-      <path d="M180 108 V96 H420 V108" fill="none" stroke="var(--ln-bp-ink-dim, var(--ln-text-dim))" strokeWidth="1.5" />
-      {/* Gantry tower, unfilled. */}
-      <path d="M462 108 V28 H520 V108 M462 44 H520 M462 68 H520 M462 90 H520" stroke="var(--ln-bp-ink-mute, var(--ln-text-muted))" strokeWidth="1" />
-      {/* Vehicle silhouette, upright on the pad. */}
-      <path d="M300 96 V50 Q300 24 320 12 Q340 24 340 50 V96 Z" fill="none" stroke="var(--ln-bp-ink, var(--ln-text))" strokeWidth="1.5" />
-      <line x1="300" y1="70" x2="340" y2="70" stroke="var(--ln-bp-ink-mute, var(--ln-text-muted))" strokeWidth="1" strokeDasharray="4 5" />
-      <path d="M300 96 L286 108 M340 96 L354 108" stroke="var(--ln-bp-ink, var(--ln-text))" strokeWidth="1.5" />
+      <line x1="16" y1="108" x2="604" y2="108" stroke="var(--ln-cyan-border)" strokeWidth="1" />
+      <path d="M180 108 V96 H420 V108" fill="var(--ln-surface)" stroke="var(--ln-cyan-border)" strokeWidth="1.5" />
+      {/* Substantial gantry rails behind the launch vehicle. */}
+      <path d="M442 108 V18 H522 V108 M442 38 H522 M442 62 H522 M442 86 H522" stroke="var(--ln-text-muted)" strokeWidth="3" />
+      <path d="M450 18 H514 M470 18 V72 M494 18 V54" stroke="var(--ln-cyan)" strokeWidth="1.5" />
+      {/* The shared Blender body is upright on the same pad used by launch. */}
+      <image href={rocketImageSrc} x="250" y="-51" width="140" height="54" transform="rotate(90 320 59)" preserveAspectRatio="xMidYMid meet" />
+      <path d="M320 99 V108 M308 108 H332" stroke="var(--ln-cyan-bright)" strokeWidth="2" />
+      <path d="M314 108 L320 115 L326 108" fill="var(--ln-cyan)" opacity=".7" />
     </svg>
   )
 }

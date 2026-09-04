@@ -203,6 +203,16 @@ describe('resolvePreset — ship customizer', () => {
   })
 })
 
+describe('resolvePreset — hangar assembly', () => {
+  it('opens a staged Prospector transfer in the hangar independent of saved profile state', () => {
+    const p = resolvePreset('ui-hangar-assembly')!
+    expect(p.screen).toBe('hangar')
+    expect(p.player!.pendingLaunch).toBe(true)
+    expect(p.player!.missionsDone).toBe(2)
+    expect(p.rocket!.chassis).toBe('hull-mk2')
+  })
+})
+
 describe('resolvePreset — recent UI surfaces', () => {
   it('opens the live Mission Board restyle with Free Ops context', () => {
     const p = resolvePreset('ui-mission-board')!
@@ -250,6 +260,7 @@ describe('dev shortcut routes', () => {
     expect(presetForUiRoute(['mission-board'])).toBe('ui-mission-board')
     expect(presetForUiRoute(['skill-tree'])).toBe('ui-skill-tree')
     expect(presetForUiRoute(['ship-customizer'])).toBe('ship-customizer')
+    expect(presetForUiRoute(['hangar'])).toBe('ui-hangar-assembly')
   })
 })
 

@@ -18,14 +18,14 @@ export interface HubBuildingDef {
  * Earth Base structure art — single-mass render standard"). Each is one
  * cohesive scene/one render, not a composited multi-piece kit. */
 const SPRITES = {
-  launchpad: { src: '/game/assets/base/launchpad_flat.png', width: 164, height: 210 },
-  hangar: { src: '/game/assets/base/hangar_flat.png', width: 250, height: 151 },
+  launchpad: { src: '/game/assets/base/launchpad_flat.png', width: 172, height: 118 },
+  hangar: { src: '/game/assets/base/hangar_flat.png', width: 226, height: 116 },
 } as const
 
 export const EARTH_BASE_STRUCTURE_SIZES: Record<string, { width: number; height: number }> = {
-  launchpad: { width: 164, height: 210 },
+  launchpad: { width: 172, height: 118 },
   'surface-silo': { width: 120, height: 78 },
-  hangar: { width: 250, height: 151 },
+  hangar: { width: 226, height: 116 },
   refinery: { width: 150, height: 97 },
   'scan-station': { width: 132, height: 86 },
   command: { width: 150, height: 97 },

@@ -75,7 +75,7 @@ function OreShapeIcon({ id, color, size = 14, minerals }: { id: string; color: s
 
 // Horizontal drag track — left = slow, center = normal, right = fast forward
 // Thumb snaps back to center on release
-function ScrollTrack({ scrollRef }: { scrollRef: React.MutableRefObject<((dx: number) => void) | null> }) {
+function ScrollTrack({ scrollRef, disabled = false }: { scrollRef: React.MutableRefObject<((dx: number) => void) | null>; disabled?: boolean }) {
   const trackRef = useRef<HTMLDivElement>(null)
   const [pos, setPos] = useState(0.5)   // 0..1, 0.5 = center = normal speed
   const [active, setActive] = useState(false)
@@ -109,16 +109,18 @@ function ScrollTrack({ scrollRef }: { scrollRef: React.MutableRefObject<((dx: nu
           position: 'relative', flex: 1, height: 36, borderRadius: 8,
           background: 'var(--ln-mining-control-fill)',
           border: `1px solid ${active ? 'var(--ln-cyan-border)' : 'var(--ln-hairline)'}`,
-          cursor: 'pointer', touchAction: 'none',
+          cursor: disabled ? 'not-allowed' : 'pointer', touchAction: 'none',
+          opacity: disabled ? 0.52 : 1,
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           transition: 'border-color 120ms',
         }}
         onPointerDown={e => {
+          if (disabled) return
           setActive(true)
           e.currentTarget.setPointerCapture(e.pointerId)
           applyAt(e.clientX)
         }}
-        onPointerMove={e => { if (active) applyAt(e.clientX) }}
+        onPointerMove={e => { if (!disabled && active) applyAt(e.clientX) }}
         onPointerUp={release}
         onPointerCancel={release}
       >
@@ -227,6 +229,7 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
   const scrollRef = useRef<((dx: number) => void) | null>(null)
   const [laserCharges, setLaserCharges] = useState(MAX_CHARGES)
   const [runKey, setRunKey] = useState(0)  // bump to reset MiningCanvas
+  const [sceneStatus, setSceneStatus] = useState<'loading' | 'ready' | 'failed'>('loading')
   const firedRef = useRef(false)
   const hintedFirstHitRef = useRef(false)
   const hintedWrongOreRef = useRef(false)
@@ -258,6 +261,7 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
     setCargo({})
     setLaserCharges(MAX_CHARGES)
     firedRef.current = false
+    setSceneStatus('loading')
     setRunKey(k => k + 1)
   }
 
@@ -292,7 +296,7 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
   }, [hasCoach, addToast, mission.requires.minerals, minerals])
 
   function fireLaser() {
-    if (gateOpen || laserCharges <= 0) return
+    if (gateOpen || sceneStatus !== 'ready' || laserCharges <= 0) return
     setLaserCharges(c => c - 1)
     fireRef.current?.()
     if (!firedRef.current && coachManual) {
@@ -310,8 +314,7 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [laserCharges])
+  }, [laserCharges, sceneStatus])
 
   function handleReturn() {
     if (orderFilled || laserCharges <= 0) onComplete(cargoRef.current, remoteDisposition, earthDisposition ?? undefined)
@@ -580,11 +583,22 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
           mineralMeta={minerals}
           laserTier={laserTier}
           onCollect={collectMineral}
+          onReady={() => setSceneStatus('ready')}
+          onFailure={() => setSceneStatus('failed')}
           fireRef={fireRef}
           scrollRef={scrollRef}
           oreNearRef={oreNearRef}
           neededMineralsRef={neededMineralsRef}
         />
+        {sceneStatus !== 'ready' && (
+          <div className="mining-scene-status" role="status" aria-live="polite" data-testid="mining-scene-status">
+            <span className="mining-scene-status__eyebrow">{sceneStatus === 'failed' ? 'FIELD OFFLINE' : 'PREPARING MINING FIELD'}</span>
+            <strong>{sceneStatus === 'failed' ? 'SCENE INITIALIZATION FAILED' : 'LOADING ROCKET TELEMETRY AND ORE TARGETS'}</strong>
+            {sceneStatus === 'failed' && (
+              <button type="button" className="mining-scene-status__retry" onClick={handleTryAgain}>RETRY FIELD</button>
+            )}
+          </div>
+        )}
       </div>
 
       <div className="mining-controls">
@@ -705,7 +719,7 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
           <button
             className="mining-command mining-command--fire"
             type="button"
-            disabled={laserCharges <= 0}
+            disabled={gateOpen || sceneStatus !== 'ready' || laserCharges <= 0}
             data-testid="fire-laser-btn"
             onClick={fireLaser}
           >
@@ -727,7 +741,7 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
           </button>
           </div>
           <div style={{ minWidth: 0 }}>
-            <ScrollTrack scrollRef={scrollRef} />
+            <ScrollTrack scrollRef={scrollRef} disabled={sceneStatus !== 'ready'} />
           </div>
         </div>
       </div>
