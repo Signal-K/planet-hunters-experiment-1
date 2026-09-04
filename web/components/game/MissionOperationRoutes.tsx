@@ -207,6 +207,7 @@ export default function MissionOperationRoutes({
         <RoverMiningScreen
           mission={game.mission}
           target={roverTarget}
+          clientName={game.mission.client ? game.catalog.clients[game.mission.client]?.name : undefined}
           onComplete={(cargo) => {
             if (game.player.missionsDone === 2 && game.mission?.deliveryTargetId) {
               game.setPlayer(player => ({
