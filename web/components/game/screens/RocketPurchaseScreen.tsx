@@ -15,6 +15,7 @@ import { formatCurrency } from '@/lib/format'
 import { getRequiredRocketModel } from '@/lib/rockets'
 import { calibrateOnboardingPayout } from '@/lib/data'
 import RocketCutaway, { type RocketRoomKey } from '@/components/game/RocketCutaway'
+import { rocketCompositionForId } from '@/lib/data/rocket-composition'
 
 function orbitLabel(maxOrbit: number): string {
   if (maxOrbit <= 3) return 'Near-Earth'
@@ -77,12 +78,13 @@ export default function RocketPurchaseScreen({ missionsDone, francs, mission, de
   const canAfford = francs >= rocket.costFrancs
   const missionPayout = mission ? calibrateOnboardingPayout(mission.payout.francs, missionsDone) : undefined
   const estProfit = missionPayout !== undefined ? missionPayout - rocket.costFrancs : undefined
+  const composition = rocketCompositionForId(rocket.id)
 
   const modules: string[] = [
-    'Unibody Airframe',
-    'Standard Drive',
-    rocket.stats.drillTier > 0 ? `Drill Head T${rocket.stats.drillTier}` : 'Cargo Module',
-    `Cargo Bay · ${rocket.stats.cargo}U`,
+    `${composition.stages.length} recoverable stage`,
+    `${composition.boosters.count}× ${composition.boosters.label}`,
+    composition.payload.label,
+    ...composition.stages.flatMap(stage => stage.rooms.map(room => room.label)),
   ]
 
   return (
@@ -182,8 +184,7 @@ export default function RocketPurchaseScreen({ missionsDone, francs, mission, de
               {rocket.name}
             </div>
             <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 12.5, color: 'var(--ln-text-muted)', marginTop: 5, lineHeight: 1.5 }}>
-              Unibody prebuilt vehicle. Assigned to this mission — single-use,
-              no modifications required. Fuelled and ready at the launchpad.
+              Prebuilt staged vehicle. The operating stage carries its rooms; the mining laser is the payload beneath its fairing. Assigned to this mission and ready for automated launch.
             </div>
           </div>
 

@@ -70,6 +70,23 @@ def _shared_body(trim_hex, *, dorsal=False, blueprint=False):
                        location=(SERVICE_START, 0, 0), rotation=(0, 1.5708, 0), radius2=R * 0.52)
     solid("service_section", service, dark_hex, "rocket_service", outline=0.016)
 
+    # External launch hardware is deliberately part of the primary silhouette,
+    # not a cinematic-only prop. The same paired booster set and stage collar
+    # therefore appear in the hangar, blueprint, launchpad, mining, and menus.
+    stage_collar = kit.cylinder("stage_collar", R * 1.05, 0.16,
+                                location=(1.12, 0, 0), rotation=(0, 1.5708, 0), verts=10)
+    solid("stage_collar", stage_collar, line_hex, "rocket_stage_collar", outline=0.012)
+    for sign in (-1, 1):
+        booster = kit.cylinder("side_booster", R * 0.31, 2.15,
+                               location=(0.58, 0, sign * (R * 1.20)), rotation=(0, 1.5708, 0), verts=8)
+        solid("side_booster", booster, body_hex, "rocket_side_booster", outline=0.014)
+        booster_nose = kit.cone("side_booster_nose", R * 0.31, 0.48,
+                                location=(-0.74, 0, sign * (R * 1.20)), rotation=(0, 1.5708, 0), radius2=0.0, verts=8)
+        solid("side_booster_nose", booster_nose, dark_hex, "rocket_side_booster_nose", outline=0.012)
+        booster_nozzle = kit.cone("side_booster_nozzle", R * 0.22, 0.40,
+                                  location=(1.84, 0, sign * (R * 1.20)), rotation=(0, 1.5708, 0), radius2=R * 0.34, verts=8)
+        solid("side_booster_nozzle", booster_nozzle, T["cyan_bright"], "rocket_side_booster_nozzle", outline=0.01)
+
     # Large, low fins are a persistent silhouette cue in every view.
     for sign in (-1, 1):
         fin = kit.box("tail_fin", (0.96, 0.11, R * 1.18),

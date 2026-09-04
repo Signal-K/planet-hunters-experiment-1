@@ -1,6 +1,7 @@
 'use client'
 
 import { rocketAssetsForId } from '@/lib/rocket-assets'
+import { rocketCompositionForId } from '@/lib/data/rocket-composition'
 
 export type RocketRoomKey = 'payload' | 'fuel' | 'engine' | 'structure'
 
@@ -24,11 +25,13 @@ interface RoomSpec {
 
 export default function RocketCutaway({ rocket, activeRoom, onToggle }: RocketCutawayProps) {
   const blueprintSrc = rocketAssetsForId(rocket.id).blueprint
+  const composition = rocketCompositionForId(rocket.id)
+  const stage = composition.stages[0]
   const rooms: RoomSpec[] = [
     {
       key: 'payload',
       ariaLabel: 'Inspect Payload Bay',
-      caption: `CARGO · ${rocket.stats.cargo}U`,
+      caption: `${composition.payload.label.toUpperCase()} · PAYLOAD`,
       hit: { left: '18%', top: '30%', width: '25%', height: '40%' },
       anchor: { x: 214, y: 108 },
       label: { x: 108, y: 40, align: 'start' },
@@ -36,7 +39,7 @@ export default function RocketCutaway({ rocket, activeRoom, onToggle }: RocketCu
     {
       key: 'fuel',
       ariaLabel: 'Inspect Fuel Tank',
-      caption: 'FUEL BAY',
+      caption: `${stage.label.toUpperCase()} · STAGE 1`,
       hit: { left: '46%', top: '34%', width: '14%', height: '32%' },
       anchor: { x: 403, y: 122 },
       label: { x: 403, y: 40, align: 'middle' },
@@ -44,7 +47,7 @@ export default function RocketCutaway({ rocket, activeRoom, onToggle }: RocketCu
     {
       key: 'engine',
       ariaLabel: 'Inspect Engine',
-      caption: rocket.stats.drillTier > 0 ? `DRILL · T${rocket.stats.drillTier}` : 'NO DRILL',
+      caption: stage.propulsion.toUpperCase(),
       hit: { left: '64%', top: '28%', width: '18%', height: '46%' },
       anchor: { x: 578, y: 108 },
       label: { x: 660, y: 40, align: 'end' },
@@ -52,7 +55,7 @@ export default function RocketCutaway({ rocket, activeRoom, onToggle }: RocketCu
     {
       key: 'structure',
       ariaLabel: 'Inspect Structure Frame',
-      caption: 'STRUCTURE · SINGLE-USE',
+      caption: `${composition.boosters.label.toUpperCase()} · ${composition.boosters.count}X`,
       hit: { left: '18%', top: '76%', width: '64%', height: '12%' },
       anchor: { x: 380, y: 274 },
       label: { x: 380, y: 344, align: 'middle' },
@@ -130,6 +133,20 @@ export default function RocketCutaway({ rocket, activeRoom, onToggle }: RocketCu
         ))}
       </div>
       <div style={{ font: '600 10px var(--ln-font-body)', color: 'var(--ln-text-muted)', textAlign: 'center' }}>Select a room to inspect the systems it drives.</div>
+      <div data-testid="rocket-composition-summary" style={{ width: '100%', display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 6 }}>
+        <CompositionChip label="Stage" value={stage.label} />
+        <CompositionChip label="Rooms" value={stage.rooms.map(room => room.label).join(' · ')} />
+        <CompositionChip label="Payload" value={composition.payload.label} />
+      </div>
+    </div>
+  )
+}
+
+function CompositionChip({ label, value }: { label: string; value: string }) {
+  return (
+    <div style={{ minWidth: 0, padding: '7px 8px', border: '1px solid var(--ln-hairline)', background: 'var(--ln-panel)', color: 'var(--ln-text-dim)' }}>
+      <div style={{ color: 'var(--ln-cyan)', font: '800 8px var(--ln-font-display)', letterSpacing: '.12em', textTransform: 'uppercase' }}>{label}</div>
+      <div style={{ marginTop: 3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', font: '700 9px var(--ln-font-body)' }}>{value}</div>
     </div>
   )
 }

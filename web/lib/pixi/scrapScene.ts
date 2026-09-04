@@ -145,7 +145,7 @@ export function buildScrapScene(
   app.stage.addChild(binGfx)
 
   const binLabel = new Text({
-    text: 'SALVAGE',
+    text: 'STAGE RECOVERY',
     style: new TextStyle({
       fontFamily: '"Oxanium", "Turret Road", monospace',
       fontSize: 8, fontWeight: '800', fill: C.blue, letterSpacing: 2,
@@ -216,7 +216,7 @@ export function buildScrapScene(
   }
 
   const caption = new Text({
-    text: 'SINGLE-USE HULL — RECOVERED FOR PARTS',
+    text: 'RECOVERED STAGES — DISMANTLE INTO PARTS',
     style: new TextStyle({
       fontFamily: '"Oxanium", "Turret Road", monospace',
       fontSize: 10, fontWeight: '800', fill: C.ink, letterSpacing: 1.5,

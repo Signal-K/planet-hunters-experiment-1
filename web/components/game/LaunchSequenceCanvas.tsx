@@ -22,7 +22,7 @@ interface Props {
 // production catalog/state sync than local dev ever exercises. This watchdog
 // is a mount-once safety net, independent of those props, so no remount loop
 // can strand a player: worst case they wait a fixed ceiling, not forever.
-const LAUNCH_WATCHDOG_MS = 12_000
+const LAUNCH_WATCHDOG_MS = 18_000
 
 export function LaunchSequenceCanvas({ rocketName, rocketImageSrc, targetName, onComplete }: Props) {
   const divRef = useRef<HTMLDivElement>(null)

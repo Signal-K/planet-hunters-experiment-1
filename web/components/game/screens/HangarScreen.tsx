@@ -8,6 +8,7 @@ import type { RocketModel, InstalledCustomizerPartsByKind } from '@/lib/data'
 import { UI_ZONES } from '@/lib/ui-zones'
 import ShipInteriorPreview from '@/components/game/ShipInteriorPreview'
 import { formatCurrency } from '@/lib/format'
+import { rocketCompositionForId } from '@/lib/data/rocket-composition'
 import styles from './HangarScreen.module.css'
 
 interface HangarScreenProps {
@@ -101,6 +102,43 @@ function RocketCard({ rocket, missionsDone, onSelect }: { rocket: RocketModel; m
   )
 }
 
+function HangarAssemblyScene({ rocket, pendingLaunch }: { rocket: RocketModel; pendingLaunch: boolean }) {
+  const composition = rocketCompositionForId(rocket.id)
+  const stage = composition.stages[0]
+  const status = pendingLaunch ? 'TRANSFER CLEARED' : 'ASSEMBLY IN PROGRESS'
+  return (
+    <section className={styles.constructionScene} aria-label={`${rocket.name} hangar assembly`} data-testid="hangar-construction-scene">
+      <div className={styles.constructionGrid} aria-hidden="true" />
+      <div className={styles.shipment}>
+        <span>CLIENT DELIVERY</span>
+        <strong>SEALED SHIPMENT</strong>
+        <small>HULL · BOOSTERS · PAYLOAD</small>
+      </div>
+      <div className={styles.assemblyBay}>
+        <div className={styles.crane} aria-hidden="true"><i /><i /><i /></div>
+        <Image className={styles.assemblyRocket} src={rocket.img} alt="" width={400} height={150} priority />
+        <div className={styles.assemblyGlow} aria-hidden="true" />
+      </div>
+      <div className={styles.constructionReadout}>
+        <span className={styles.railLabel}>BUILD BAY 01 · {status}</span>
+        <strong>{rocket.name.toUpperCase()}</strong>
+        <p>{stage.label} · {composition.boosters.count} boosters · {composition.payload.label}</p>
+      </div>
+      <div className={styles.constructionSteps}>
+        <Step label="Shipment" status="RECEIVED" />
+        <Step label="Stage" status="FITTED" />
+        <Step label="Payload" status="SECURED" />
+        <Step label="Launchpad" status={pendingLaunch ? 'TRANSFER' : 'QUEUED'} />
+      </div>
+      <p className={styles.recipeNote}>CLIENT-BUILT VEHICLES ARRIVE READY; SILO MATERIALS UNLOCK THE SAME HULL, BOOSTER, STAGE, AND PAYLOAD RECIPES.</p>
+    </section>
+  )
+}
+
+function Step({ label, status }: { label: string; status: string }) {
+  return <div className={styles.constructionStep}><span>{label}</span><strong>{status}</strong></div>
+}
+
 export default function HangarScreen({ francs, missionsDone, unlockedSkillNodes, shipCustomizerParts, crewModuleResearched, landingResearched, pendingLaunch, pendingRocketName, onConfirmShipCustomizerBuild, onBack, onSelect }: HangarScreenProps) {
   // Academy research is a second, explicit unlock path: a player who has
   // researched Crew Quarters must be able to enter the fitter even if they
@@ -112,17 +150,20 @@ export default function HangarScreen({ francs, missionsDone, unlockedSkillNodes,
   const installedIds = selectedCustomizerPartIds(installed, sequence)
   const hasLoadout = installedIds.length > 0
   const successChance = hasLoadout ? calculateShipSuccessChance(installedIds, sequence) : null
+  const constructionRocket = [...ROCKET_MODELS]
+    .reverse()
+    .find(rocket => !rocket.locked && missionsDone >= rocket.missionsRequired) ?? ROCKET_MODELS[0]
 
   return (
     <div className={`game-screen theme-deep ${styles.screen}`}>
-      <TopBar eyebrow="LAUNCHPAD · HANGAR" title="Rocket Fleet" onBack={onBack} />
+      <TopBar eyebrow="BASE · HANGAR" title="Hangar" onBack={onBack} />
       <div className={`screen-scroll ${styles.scroll}`} data-ui-zone={UI_ZONES.screenContent}>
         <div className={styles.inner}>
           <div className={styles.intro}>
             <div>
               <div className={styles.eyebrow}>Launchpad · Vehicle Registry</div>
-              <h1 className={styles.title}>Rocket Fleet</h1>
-              <p className={styles.copy}>Inspect cleared vehicles, compare operating limits, and select the vessel assigned to the next launch.</p>
+              <h1 className={styles.title}>Hangar construction</h1>
+              <p className={styles.copy}>Receive client-built shipments, assemble staged vehicles, inspect their rooms and payload, then transfer them to the launchpad.</p>
             </div>
             <div className={styles.fleetReadout} data-testid="hangar-fleet-readout">
               <span className={styles.railLabel}>{pendingLaunch ? 'Vehicle in build' : 'Cleared fleet'}</span>
@@ -150,7 +191,9 @@ export default function HangarScreen({ francs, missionsDone, unlockedSkillNodes,
           </button>
         )}
 
-        <div className={styles.sectionHeader}><span>Cleared &amp; classified vehicles</span><span>{ROCKET_MODELS.length} registry entries</span></div>
+        <HangarAssemblyScene rocket={constructionRocket} pendingLaunch={!!pendingLaunch} />
+
+        <div className={styles.sectionHeader}><span>Vehicle registry</span><span>{ROCKET_MODELS.length} registry entries</span></div>
         <div className={styles.fleetGrid}>{ROCKET_MODELS.map(rocket => (
           <RocketCard key={rocket.id} rocket={rocket} missionsDone={missionsDone} onSelect={onSelect} />
         ))}</div>
