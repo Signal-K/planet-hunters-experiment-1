@@ -45,13 +45,16 @@ export const STRUCTURES: StructureBlueprint[] = [
   },
   {
     id: 'refinery',
-    name: 'Off-world Refinery',
+    name: 'Refinery',
     kind: 'refinery',
     cost: STRUCTURE_PRICES.refinery,
     costMaterials: { aluminium: 20, copper: 10 },
-    unlocksAt: 'Commission at a site you own or lease',
-    unlockTrigger: 'manual',
-    description: 'A player-owned refinery installed at an approved off-world site. Process ore near its source for your own construction and client deliveries.',
+    unlocksAt: 'Free Operations',
+    unlockTrigger: 'free-operations',
+    // KES-283: Level 1 only — processes one shipment of raw ore into refined
+    // goods per day (a queue, not instant conversion; see RefineryScreen /
+    // REFINERY_RECIPES). No multi-level tree or advanced recipes yet.
+    description: 'Level 1 ore processing. Refines one shipment of raw minerals into higher-value goods per day.',
   },
   {
     id: 'scan-station',
@@ -126,11 +129,12 @@ export function structureUnlocked(structure: StructureBlueprint, opts: { refiner
     return (deepSpaceTelescopeUnlocked(opts) && !!opts.deepSpaceTelescopeMissionCompletedAt) || !!opts.placed?.includes('deep-space-telescope')
   }
   if (structure.unlockTrigger === 'always') return true
-  // A refinery is commissioned through the target-based own-program mission,
-  // not unlocked by completing a particular client contract. Retain `placed`
-  // only so existing saves which already own the retired Base placement remain
-  // usable during migration.
-  if (structure.id === 'refinery') return !!opts.placed?.includes('refinery')
+  // KES-283: the Refinery is a normal Earth Base plot purchase available once
+  // Free Operations begins, same unlock shape as the Surface Silo. It was
+  // previously modeled as an off-world site-commissioned structure (KES-286)
+  // whose unlock condition no mission ever satisfied, so it was permanently
+  // unreachable; that off-world path is retired in favor of this one.
+  if (structure.id === 'refinery') return !!opts.freeOperations || !!opts.placed?.includes('refinery')
   return false
 }
 

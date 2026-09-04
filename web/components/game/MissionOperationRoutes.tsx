@@ -11,6 +11,7 @@ import RoverMiningScreen from '@/components/game/screens/RoverMiningScreen'
 import DeliveryScreen from '@/components/game/screens/DeliveryScreen'
 import DebriefScreen from '@/components/game/screens/DebriefScreen'
 import { earthStorageBuilt, hasOperationalRemoteSilo, storageCapacity, storedUnits, sellQuote } from '@/lib/systems/EconomySystem'
+import { isFreeHaulEligibleMission } from '@/lib/data'
 
 type Game = ReturnType<typeof useGame>
 type RocketDisplay = ReturnType<typeof rocketDisplayForConfig>
@@ -166,7 +167,7 @@ export default function MissionOperationRoutes({
             }))
             game.go('hub')
           }}
-          onComplete={(cargo, remoteDisposition) => {
+          onComplete={(cargo, remoteDisposition, earthDisposition) => {
             game.completeStep(6)
             game.completeStep(7)
             if (game.player.shipCustomizerParts?.lander) {
@@ -176,10 +177,12 @@ export default function MissionOperationRoutes({
                 landingReturnStartedAt: Date.now(),
                 miningCargoInProgress: cargo,
                 pendingRemoteDisposition: remoteDisposition,
+                freeHaulDisposition: earthDisposition ?? player.freeHaulDisposition,
               }))
               game.go('landing')
               return
             }
+            if (earthDisposition) game.setPlayer(player => ({ ...player, freeHaulDisposition: earthDisposition }))
             game.onMiningDone(cargo, remoteDisposition)
           }}
           minerals={game.catalog.minerals}
@@ -197,6 +200,12 @@ export default function MissionOperationRoutes({
           }
           remoteSiloAvailable={!!game.mission && isOwnProgramMission(game.mission) && !game.mission.deliveryTargetId && !game.mission.construction && hasOperationalRemoteSilo(game.player, game.target.id)}
           remoteSiloUsed={storedUnits(game.player.remoteStorage?.[game.target.id])}
+          // KES-283: gate a self-directed run on a storage destination before
+          // mining starts, unless one was already chosen before a prior
+          // back-to-hub pause on this same mission.
+          isFreeHaulEligible={isFreeHaulEligibleMission(game.mission)}
+          hasEarthStorage={earthStorageBuilt(game.player)}
+          initialEarthDisposition={game.player.freeHaulDisposition}
         />
       )
 
@@ -273,6 +282,7 @@ export default function MissionOperationRoutes({
           storageCapacity={storageCapacity(game.player)}
           storageUsed={storedUnits(game.player.stash)}
           haulMarketValue={sellQuote(debriefCargo, game.player, debriefIsFreeHaul ? undefined : game.player.lastClient)}
+          initialDisposition={game.player.freeHaulDisposition}
         />
       )
   }

@@ -62,6 +62,18 @@ export function isFreeHaulMission(mission: Mission, cargo: Record<string, number
 }
 
 /**
+ * Same shape test as {@link isFreeHaulMission} but usable before any ore has
+ * been collected — at mission start, not just at debrief. A self-directed
+ * mining run matching this is the only case that gates on a storage
+ * destination before mining begins (KES-283): client contracts, deliveries,
+ * and construction hauls already have a fixed destination and must not be
+ * interrupted with this choice.
+ */
+export function isFreeHaulEligibleMission(mission: Mission): boolean {
+  return isOwnProgramMission(mission) && !mission.deliveryTargetId && !mission.construction
+}
+
+/**
  * During guided onboarding, the board remains the sequence entry point. Once
  * Free Ops begins, the Mission Board is strictly client work; owned flights
  * live under Launchpad → Your Program.
