@@ -1,6 +1,7 @@
 'use client'
 
 import { useCallback, useMemo, useState } from 'react'
+import { Satellite } from 'lucide-react'
 import { defaultSpec, type MissionState, type ResourceKey } from '@takeon/engine'
 import type { Mission, Target } from '@/lib/data'
 import { MINERAL_META } from '@/lib/data'
@@ -72,9 +73,11 @@ interface RoverMiningScreenProps {
   target: Target
   onComplete: (cargo: Record<string, number>) => void
   onBack: () => void
+  /** Client display name, retained through the handoff for context only — Landnam still owns the contract. */
+  clientName?: string
 }
 
-export default function RoverMiningScreen({ mission, target, onComplete, onBack }: RoverMiningScreenProps) {
+export default function RoverMiningScreen({ mission, target, onComplete, onBack, clientName }: RoverMiningScreenProps) {
   const requirements = useMemo(() => roverCargoRequirements(mission, target), [mission, target])
   const rover = useMemo(() => defaultSpec(), [])
   const bodyId = useMemo(() => takeonBodyForTarget(target), [target])
@@ -83,6 +86,11 @@ export default function RoverMiningScreen({ mission, target, onComplete, onBack 
   const [cargo, setCargo] = useState<Record<string, number>>({})
   const [routeSteps, setRouteSteps] = useState(0)
   const [takeonReady, setTakeonReady] = useState(false)
+  // Visible handoff after landing, before TakeOn mounts. Mission/client/target/
+  // cargo context stays on screen so the player never loses track of what the
+  // deployment is for — Landnam still owns the mission, save and economy; this
+  // gate only decides when to hand control of the field layer to TakeOn.
+  const [deployed, setDeployed] = useState(false)
 
   const cargoReady = Object.entries(requirements).every(
     ([mineral, amount]) => (cargo[mineral] ?? 0) >= amount
@@ -119,6 +127,56 @@ export default function RoverMiningScreen({ mission, target, onComplete, onBack 
       <TopBar eyebrow={`SURFACE OPS · ${target.name.toUpperCase()}`} title="Rover Mining" onBack={onBack} />
 
       <main className={styles.content} data-ui-zone={UI_ZONES.screenContent}>
+        {!deployed ? (
+          <section className={styles.scenePanel} aria-label="Deploy surface operations" data-testid="deploy-surface-ops-handoff">
+            <div className={styles.sceneHeading}>
+              <div>
+                <span className={styles.eyebrow}>LANDED · {target.name.toUpperCase()}</span>
+                <h2>Deploy Surface Operations</h2>
+              </div>
+              <span className={styles.statusPill}>READY</span>
+            </div>
+            <p className={styles.sceneCopy}>
+              The ship has touched down. Deploy the Prospector to hand the field layer to TakeOn — Landnam
+              keeps the mission, the client order and the save; TakeOn only operates the rover on site.
+            </p>
+            <div className={styles.routeReadout}>
+              <span>MISSION</span>
+              <strong>{mission.title}</strong>
+            </div>
+            {clientName && (
+              <div className={styles.routeReadout}>
+                <span>CLIENT</span>
+                <strong>{clientName}</strong>
+              </div>
+            )}
+            <div className={styles.routeReadout}>
+              <span>TARGET</span>
+              <strong>{target.name.toUpperCase()}</strong>
+            </div>
+            <div className={styles.orderList} data-testid="deploy-surface-ops-cargo">
+              {Object.entries(requirements).map(([mineral, amount]) => {
+                const meta = MINERAL_META[mineral]
+                return (
+                  <div className={styles.orderRow} key={mineral}>
+                    <span className={styles.mineralIdentity}>
+                      <span className={styles.mineralDot} style={{ background: meta?.color ?? 'var(--ln-text-muted)' }} />
+                      {meta?.name ?? mineral}
+                    </span>
+                    <strong>{amount} U</strong>
+                  </div>
+                )
+              })}
+            </div>
+            <PrimaryBtn
+              kind="green"
+              onClick={() => setDeployed(true)}
+              testId="deploy-surface-ops-confirm"
+            >
+              <Satellite size={16} /> Deploy Prospector
+            </PrimaryBtn>
+          </section>
+        ) : (
         <section className={styles.scenePanel} aria-label="TakeOn rover field">
           <div className={styles.sceneHeading}>
             <div>
@@ -144,6 +202,7 @@ export default function RoverMiningScreen({ mission, target, onComplete, onBack 
             className={styles.takeonMount}
           />
         </section>
+        )}
 
         <aside className={styles.hud} aria-label="Mission cargo order">
           <Panel accent={cargoReady ? 'var(--ln-ok)' : 'var(--ln-cyan)'} style={{ padding: 16 }}>
