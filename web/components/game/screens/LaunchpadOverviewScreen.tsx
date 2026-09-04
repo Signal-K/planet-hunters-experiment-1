@@ -4,6 +4,7 @@ import React from 'react'
 import { ACADEMY_INTRO_MISSION_ID, partitionByOwner } from '@/lib/data'
 import { ROCKET_MODELS } from '@/lib/data/rockets'
 import { SATELLITE_MODELS } from '@/lib/data/satellites'
+import { compatibleTargetsFor } from '@/lib/data/targets'
 import type { Catalog } from '@/lib/catalog'
 import type { Player } from '@/lib/game-types'
 import { UI_ZONES } from '@/lib/ui-zones'
@@ -67,8 +68,17 @@ function ActionCard({
 function ownProgramOperation(catalog: Catalog, player: Player, freeOperations: boolean) {
   const { own } = partitionByOwner(catalog.missions, mission => mission)
   const sequence = player.missionsDone + 1
-  const operations = own.filter(mission => freeOperations || mission.sequence === sequence)
-  return operations.find(mission => mission.id !== ACADEMY_INTRO_MISSION_ID)
+  const operations = own
+    .filter(mission => freeOperations || mission.sequence === sequence)
+    .filter(mission => mission.id !== ACADEMY_INTRO_MISSION_ID)
+  // Prefer an operation with at least one target the player can currently
+  // pick, so the aggregate action never routes to a dead-end (e.g. a
+  // construction mission with no in-range site) while a mission tied to an
+  // actual discovery sits unreached further down the list.
+  return (
+    operations.find(mission => compatibleTargetsFor(mission, catalog.targets).length > 0) ??
+    operations[0]
+  )
 }
 
 function AvailableNow({ action }: { action: AvailableStructure }) {
