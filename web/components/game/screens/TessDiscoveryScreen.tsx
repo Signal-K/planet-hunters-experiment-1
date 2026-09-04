@@ -419,7 +419,7 @@ export default function TessDiscoveryScreen({ player, visualCandidate, onBack, o
       )}
       {isDesktop ? (
         <div data-testid="tess-discovery-desktop-grid" style={{ position: 'absolute', inset: 0, top: 72, display: 'grid', gridTemplateColumns: '55% 45%', gap: 16, padding: '0 var(--ln-s-4) var(--ln-s-4)' }}>
-          <div style={{ overflowY: 'auto' }} data-ui-zone={UI_ZONES.screenContent}>
+          <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', overflowY: 'auto' }} data-ui-zone={UI_ZONES.screenContent}>
             {chartPanel(false)}
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12, overflowY: 'auto' }}>
