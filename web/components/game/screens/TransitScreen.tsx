@@ -14,6 +14,15 @@ const FAKE_PROGRESS_START = 12
 const FAKE_PROGRESS_DURATION_MS = 4400
 const DELIVERY_FAKE_PROGRESS_DURATION_MS = 7000
 
+// Deterministic "passing waypoint" markers along the flight progress track —
+// gives Transit an active-navigation feel instead of a passive percentage
+// wait. Each flips to a "passed" state once progress crosses its threshold.
+const TRANSIT_WAYPOINTS = [
+  { atPercent: 25, label: 'MIDCOURSE' },
+  { atPercent: 50, label: 'HALFWAY' },
+  { atPercent: 75, label: 'APPROACH' },
+] as const
+
 interface Props {
   target: Target
   rocketImageSrc?: string
@@ -151,7 +160,27 @@ export default function TransitScreen({ target, rocketImageSrc, arrivalAt, trans
             <span>{returning ? 'EARTH RETURN' : 'DEEP-SPACE FLIGHT'}</span>
             <strong>{progress}%</strong>
           </div>
-          <div className="transit-progress-track" aria-hidden="true"><span style={{ width: `${progress}%` }} /></div>
+          <div className="transit-progress-wrap">
+            <div className="transit-progress-track" aria-hidden="true">
+              <span style={{ width: `${progress}%` }} />
+            </div>
+            {TRANSIT_WAYPOINTS.map(wp => {
+              const passed = progress >= wp.atPercent
+              return (
+                <div
+                  key={wp.label}
+                  className={`transit-waypoint${passed ? ' transit-waypoint--passed' : ''}`}
+                  style={{ left: `${wp.atPercent}%` }}
+                  data-testid={`transit-waypoint-${wp.label.toLowerCase()}`}
+                  data-passed={passed}
+                >
+                  <span className={`transit-waypoint-label${passed ? ' transit-waypoint-label--passed' : ''}`}>
+                    {wp.label}
+                  </span>
+                </div>
+              )
+            })}
+          </div>
           <div className="transit-telemetry">
             <div><span>ETA</span><strong>{isTimed ? (arrived ? 'ARRIVED' : formatCountdown(etaMs)) : arrived ? 'ARRIVED' : 'IN FLIGHT'}</strong></div>
             <div><span>RANGE</span><strong>{arrived ? '0 Mm' : `${remainingDistanceMm.toLocaleString()} Mm`}</strong></div>
