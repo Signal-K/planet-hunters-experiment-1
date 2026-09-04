@@ -4,6 +4,7 @@ import { useEffect, useRef } from 'react'
 import { Application } from 'pixi.js'
 import { capDpr } from '@/lib/engine/pixiDisplay'
 import { buildTransitScene, type TargetKind } from '@/lib/pixi/transitScene'
+import { ROCKET_ASSETS } from '@/lib/rocket-assets'
 
 interface TransitCanvasProps {
   targetName: string
@@ -75,7 +76,7 @@ export default function TransitCanvas({ targetName, targetKind, rocketImageSrc, 
       <img
         data-testid="transit-rocket"
         className="transit-rocket-sprite"
-        src={rocketImageSrc ?? '/game/assets/ships/ship_sr1.png'}
+        src={rocketImageSrc ?? ROCKET_ASSETS.explorer.exterior}
         alt=""
         aria-hidden="true"
         style={{ top: rocketTop }}

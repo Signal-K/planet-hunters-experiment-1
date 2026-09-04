@@ -154,9 +154,10 @@ function miningGuide(deliveryTargetName?: string) {
   ]
 }
 
-export default function MiningScreen({ mission, target, onComplete, onBack, onAbandon, minerals, laserChargeCap, laserTier, hasCoach, coachManual, onCoachDone, addToast, deliveryTargetName, hasPriorFreeOpsExperience, initialCargo, remoteSiloAvailable, remoteSiloUsed = 0 }: {
+export default function MiningScreen({ mission, target, rocketImageSrc, onComplete, onBack, onAbandon, minerals, laserChargeCap, laserTier, hasCoach, coachManual, onCoachDone, addToast, deliveryTargetName, hasPriorFreeOpsExperience, initialCargo, remoteSiloAvailable, remoteSiloUsed = 0 }: {
   mission: Mission
   target: Target
+  rocketImageSrc?: string
   onComplete: (cargo: Record<string, number>, remoteDisposition?: 'store' | 'sell') => void
   /** Called with whatever's been collected so far (may be empty) — the caller is responsible for persisting it so a later resume doesn't lose progress. */
   onBack: (cargo: Record<string, number>) => void
@@ -514,6 +515,7 @@ export default function MiningScreen({ mission, target, onComplete, onBack, onAb
         <div className="mining-stars" />
         <MiningCanvas
           key={runKey}
+          rocketImageSrc={rocketImageSrc}
           minerals={depositMinerals}
           requiredMinerals={Object.keys(mission.requires.minerals)}
           mineralMeta={minerals}

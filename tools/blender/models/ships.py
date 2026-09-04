@@ -233,3 +233,8 @@ BUILDS = {
     "ships/ship_sr2": ship_sr2,
     "ships/containers/sr1_cutaway": sr1_cutaway,
 }
+
+# Compatibility entry point: render_all keeps the historical `ships` module
+# name, while the shared family source lives in rocket_family.py. This avoids
+# two active rocket implementations in the production render path.
+from rocket_family import BUILDS  # noqa: E402,F401

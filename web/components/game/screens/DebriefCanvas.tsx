@@ -3,6 +3,7 @@
 import { useEffect, useRef } from 'react'
 import { Application, Assets, Container, Graphics, Sprite, Texture } from 'pixi.js'
 import { capDpr } from '@/lib/engine/pixiDisplay'
+import { ROCKET_ASSETS } from '@/lib/rocket-assets'
 
 interface DebriefCanvasProps {
   rocketImageSrc?: string
@@ -10,7 +11,7 @@ interface DebriefCanvasProps {
 
 const STARFIELD = '/game/assets/backgrounds/starmap.png'
 const HANGAR = '/game/assets/base/hangar_flat.png'
-const FALLBACK_SHIP = '/game/assets/ships/ship_sr1.png'
+const FALLBACK_SHIP = ROCKET_ASSETS.explorer.exterior
 
 /**
  * Full-bleed arrival-bay scene for the debrief. The art is deliberately doing

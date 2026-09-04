@@ -156,6 +156,7 @@ export default function MissionOperationRoutes({
         <MiningScreen
           mission={game.mission}
           target={game.target}
+          rocketImageSrc={rocketDisplay.img}
           initialCargo={game.player.miningCargoInProgress}
           onBack={(cargo) => {
             game.setPlayer(player => ({

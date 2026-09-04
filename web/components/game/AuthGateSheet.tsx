@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState } from 'react'
+import { ROCKET_ASSETS } from '@/lib/rocket-assets'
 
 interface AuthGateSheetProps {
   error: string | null
@@ -79,7 +80,7 @@ export default function AuthGateSheet({ error, onSignIn, onCreateAccount, onCont
           <div className="auth-gate__orbit auth-gate__orbit--outer" />
           <div className="auth-gate__orbit auth-gate__orbit--inner" />
           <div className="auth-gate__planet" />
-          <img className="auth-gate__ship" src="/game/assets/ships/ship_sr1.png" alt="" />
+          <img className="auth-gate__ship" src={ROCKET_ASSETS.explorer.exterior} alt="" />
           <div className="auth-gate__telemetry">
             <span>ORBITAL NETWORK</span><strong>ONLINE</strong>
             <span>LOCAL TIME</span><strong>03:17:42 UTC</strong>

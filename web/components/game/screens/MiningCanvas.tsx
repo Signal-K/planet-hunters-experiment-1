@@ -2,11 +2,12 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { capDpr } from '@/lib/engine/pixiDisplay'
-import { Application, Assets, Container, Graphics, type Texture } from 'pixi.js'
+import { Application, Assets, Container, Graphics, Sprite, type Texture } from 'pixi.js'
 import { Scene, GameLoop, InputManager, RuntimeContext, screenToWorld } from '@/lib/engine'
 import { wireShapeRenderers } from '@/lib/engine/components/ShapeRenderer'
 import { MiningController, SHIP_X, SCROLL_SPEED, SCROLL_SPEED_MIN, SCROLL_SPEED_MAX } from '@/lib/engine/scripts/MiningController'
 import type { MineralMeta } from '@/lib/data'
+import { ROCKET_ASSETS } from '@/lib/rocket-assets'
 
 // Keep every mineral visibly grounded in the mining scene. The authored set
 // covers the most common late-game ores; the neutral iron crystal is a
@@ -66,7 +67,7 @@ function buildAimGuide(shipY: number, surfaceY: number): Graphics {
   return g
 }
 
-function buildShip(shipY: number): Graphics {
+function buildEnginePlume(): Graphics {
   const g = new Graphics()
 
   // Engine exhaust layers
@@ -75,51 +76,11 @@ function buildShip(shipY: number): Graphics {
   g.ellipse(-24, 0, 7, 4).fill({ color: 0xffcc22, alpha: 0.82 })
   g.circle(-22, 0, 3).fill({ color: 0xfff0aa, alpha: 1 })
 
-  // Swept delta wings (drawn behind fuselage)
-  g.poly([-6, 6, 18, 6, 10, 24, -20, 18]).fill(0x0d2040)
-  g.poly([-6, -6, 18, -6, 10, -24, -20, -18]).fill(0x0d2040)
-  // Wing leading-edge highlight
-  g.poly([18, -6, 18, -8, -4, -8, -6, -6]).fill({ color: 0x2f6aaa, alpha: 0.55 })
-  g.poly([18, 6, 18, 8, -4, 8, -6, 6]).fill({ color: 0x2f6aaa, alpha: 0.55 })
-
-  // Engine cowling (rear block)
-  g.rect(-26, -5, 10, 10).fill(0x071220)
-  g.rect(-25, -3, 5, 6).fill(0x132c50)
-
-  // Main fuselage — elongated torpedo
-  g.poly([-18, -8, 30, -6, 42, 0, 30, 6, -18, 8, -23, 4, -23, -4]).fill(0x1a4282)
-
-  // Fuselage dorsal highlight (top third, lighter)
-  g.poly([-2, -7, 28, -5.5, 28, -2, -2, -3]).fill({ color: 0x3a78c8, alpha: 0.42 })
-
-  // Wing-root fairings where wings meet body
-  g.poly([-2, -6, 16, -6, 14, -10, -8, -10]).fill(0x12305c)
-  g.poly([-2, 6, 16, 6, 14, 10, -8, 10]).fill(0x12305c)
-
-  // Cockpit surround
-  g.ellipse(14, 0, 14, 8).fill(0x050d1a)
-  // Cockpit glass with two-tone reflection
-  g.ellipse(15, -1, 11, 5.5).fill({ color: 0x1e66bb, alpha: 0.65 })
-  g.ellipse(17, -2, 6, 2.8).fill({ color: 0x6ab8f0, alpha: 0.75 })
-  g.ellipse(19, -2.5, 2.5, 1.2).fill({ color: 0xc4e8ff, alpha: 0.6 })
-
-  // Nose cone
-  g.poly([30, -5.5, 44, 0, 30, 5.5]).fill(0x1e5096)
-  g.poly([30, -3, 42, 0, 30, 3]).fill({ color: 0x4a90d8, alpha: 0.45 })
-
-  // Laser emitter barrel
-  g.rect(42, -1.8, 10, 3.6).fill(0x0a1e3a)
-  g.rect(43, -0.8, 8, 1.6).fill(0x1a4470)
-  // Emitter tip glow
-  g.circle(52, 0, 3).fill({ color: 0x44bbff, alpha: 0.9 })
-  g.circle(52, 0, 1.6).fill({ color: 0xccf2ff, alpha: 1 })
-
-  g.x = SHIP_X
-  g.y = shipY
   return g
 }
 
 interface MiningCanvasProps {
+  rocketImageSrc?: string
   minerals: string[]
   requiredMinerals?: string[]
   mineralMeta: Record<string, MineralMeta>
@@ -133,7 +94,7 @@ interface MiningCanvasProps {
   neededMineralsRef?: React.MutableRefObject<Set<string> | null>
 }
 
-export default function MiningCanvas({ minerals, requiredMinerals, mineralMeta, laserTier, onCollect, fireRef, scrollRef, oreNearRef, neededMineralsRef }: MiningCanvasProps) {
+export default function MiningCanvas({ rocketImageSrc, minerals, requiredMinerals, mineralMeta, laserTier, onCollect, fireRef, scrollRef, oreNearRef, neededMineralsRef }: MiningCanvasProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const onCollectRef = useRef(onCollect)
   onCollectRef.current = onCollect
@@ -194,6 +155,13 @@ export default function MiningCanvas({ minerals, requiredMinerals, mineralMeta, 
               .catch(() => {})
           })
         )
+
+        let rocketTexture: Texture | null = null
+        try {
+          rocketTexture = await Assets.load<Texture>(rocketImageSrc ?? ROCKET_ASSETS.explorer.exterior)
+        } catch {
+          try { rocketTexture = await Assets.load<Texture>(ROCKET_ASSETS.explorer.exterior) } catch { rocketTexture = null }
+        }
 
         const [sceneData] = await Promise.all([
           Scene.load('/game/scenes/mining.scene.json'),
@@ -283,7 +251,28 @@ export default function MiningCanvas({ minerals, requiredMinerals, mineralMeta, 
         }
 
         app.stage.addChild(buildAimGuide(shipY, surfaceY))
-        app.stage.addChild(buildShip(shipY))
+        const plume = buildEnginePlume()
+        plume.x = SHIP_X - 48
+        plume.y = shipY
+        app.stage.addChild(plume)
+
+        if (rocketTexture) {
+          const ship = new Sprite(rocketTexture)
+          const shipWidth = Math.min(112, worldW * 0.26)
+          const shipScale = shipWidth / rocketTexture.width
+          ship.anchor.set(0.5)
+          ship.scale.set(-shipScale, shipScale)
+          ship.x = SHIP_X
+          ship.y = shipY
+          app.stage.addChild(ship)
+          let plumePhase = 0
+          app.ticker.add(ticker => {
+            plumePhase += ticker.deltaMS / 1000
+            const pulse = 0.92 + Math.sin(plumePhase * 18) * 0.08
+            plume.scale.set(pulse, 0.94 + Math.sin(plumePhase * 13) * 0.06)
+            plume.alpha = 0.84 + Math.sin(plumePhase * 11) * 0.10
+          })
+        }
 
         loop = new GameLoop(scene, app)
         loop.start()
@@ -311,7 +300,7 @@ export default function MiningCanvas({ minerals, requiredMinerals, mineralMeta, 
       // else: async init returns early (destroyed=true), canvas stays briefly then is GC'd with parent
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+  }, [rocketImageSrc])
 
   return (
     <div ref={containerRef} className="mining-canvas" data-testid="mining-canvas">

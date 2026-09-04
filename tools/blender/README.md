@@ -49,7 +49,8 @@ models/structures.py     Earth Base hero structures — launchpad, hangar. One
                           cohesive scene/one render per structure (KES-277,
                           2026-09-03) — see "Earth Base facilities" below.
 models/actors.py         rover and drone (2)
-models/ships.py          Explorer/Prospector hulls + Explorer cutaway (KES-41/STS-611)
+models/rocket_family.py  Shared Explorer/Prospector bodies + blueprint variants
+models/ships.py          Compatibility entry point for the shared rocket family
 models/rooms.py          ship interior room panels (KES-41/STS-611)
 models/parts.py          web/parts/ shop icons — writes outside game/assets/
                           via a "../../parts/foo" key (KES-88)

@@ -9,6 +9,7 @@
 
 import type { RocketConfig, RocketModel } from './types'
 import { ROCKET_PRICES } from './economy'
+import { ROCKET_ASSETS } from '../rocket-assets'
 
 export const ROCKET_IDS = {
   explorer: 'explorer',
@@ -35,7 +36,7 @@ export const ROCKET_MODELS: RocketModel[] = [
     missionsRequired: 0,
     locked: false,
     stats: { cargo: 6, maxOrbit: 5, drillTier: 1 },
-    img: '/game/assets/ships/ship_sr1.png',
+    img: ROCKET_ASSETS.explorer.exterior,
     unlockHint: 'Available from the start',
   },
   {
@@ -46,7 +47,7 @@ export const ROCKET_MODELS: RocketModel[] = [
     missionsRequired: 1,
     locked: false,
     stats: { cargo: 10, maxOrbit: 7, drillTier: 2 },
-    img: '/game/assets/ships/ship_sr2.png',
+    img: ROCKET_ASSETS.prospector.exterior,
     unlockHint: 'Unlocks after M1',
   },
   {

@@ -2,6 +2,7 @@
   "ship_sr1": "/game/assets/ships/ship_sr1.png",
   "ship_sr2": "/game/assets/ships/ship_sr2.png",
   "ship_sr1_cutaway": "/game/assets/ships/containers/sr1_cutaway.png",
+  "ship_sr2_cutaway": "/game/assets/ships/containers/sr2_cutaway.png",
   "room_cockpit_t1": "/game/assets/rooms/cockpit_t1.png",
   "room_engine_t1": "/game/assets/rooms/engine_room_t1.png",
   "room_cargo_bay_t1": "/game/assets/rooms/cargo_bay_t1.png",

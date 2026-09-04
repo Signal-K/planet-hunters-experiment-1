@@ -53,7 +53,7 @@ function RocketCard({ rocket, missionsDone, onSelect }: { rocket: RocketModel; m
             alt={rocket.name}
             width={240}
             height={90}
-            style={{ width: 240, height: 110 }}
+            style={{ width: 240, height: 'auto' }}
           />
         ) : (
           <div>

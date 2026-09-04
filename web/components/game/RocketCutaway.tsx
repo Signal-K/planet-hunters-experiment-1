@@ -1,5 +1,7 @@
 'use client'
 
+import { rocketAssetsForId } from '@/lib/rocket-assets'
+
 export type RocketRoomKey = 'payload' | 'fuel' | 'engine' | 'structure'
 
 interface RocketCutawayProps {
@@ -21,6 +23,7 @@ interface RoomSpec {
 }
 
 export default function RocketCutaway({ rocket, activeRoom, onToggle }: RocketCutawayProps) {
+  const blueprintSrc = rocketAssetsForId(rocket.id).blueprint
   const rooms: RoomSpec[] = [
     {
       key: 'payload',
@@ -77,28 +80,8 @@ export default function RocketCutaway({ rocket, activeRoom, onToggle }: RocketCu
     <div style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}>
       <div data-testid="rocket-cutaway" style={{ position: 'relative', width: '100%', maxWidth: 760, aspectRatio: '760 / 380' }}>
         <svg viewBox="0 0 760 380" fill="none" aria-hidden="true" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }}>
-          {/* Hull — unfilled technical linework, no glow. */}
-          <path
-            d="M22 180 L92 82 Q108 62 136 62 H640 Q690 90 726 180 Q690 270 640 298 H136 Q108 298 92 278 Z"
-            fill="none"
-            stroke="var(--ln-bp-ink, var(--ln-text))"
-            strokeWidth="2"
-          />
-          <path
-            d="M92 82 L160 106 H610 Q660 126 688 180 Q660 234 610 254 H160 L92 278"
-            fill="none"
-            stroke="var(--ln-bp-ink-dim, var(--ln-text-dim))"
-            strokeWidth="1"
-            opacity=".6"
-          />
-
-          {/* Dashed horizontal centerline through the hull. */}
-          <line x1="22" y1="180" x2="726" y2="180" stroke="var(--ln-bp-ink-mute, var(--ln-text-muted))" strokeWidth="1" strokeDasharray="6 6" />
-
-          {/* Fin / nozzle linework, restyled as outline strokes only. */}
-          <path d="M92 106 L54 122 V238 L92 254" fill="none" stroke="var(--ln-bp-ink, var(--ln-text))" strokeWidth="1.5" />
-          <path d="M640 106 L704 126 V234 L640 254" fill="none" stroke="var(--ln-bp-ink, var(--ln-text))" strokeWidth="1.5" />
-          <ellipse cx="728" cy="180" rx="20" ry="16" fill="none" stroke="var(--ln-bp-ink, var(--ln-text))" strokeWidth="1.5" />
+          {/* Blender render of the same body used by the operational sprite. */}
+          <image href={blueprintSrc} x="0" y="0" width="760" height="380" preserveAspectRatio="none" opacity=".96" />
 
           {/* Leader lines + captions, one per room. */}
           {rooms.map(room => {
