@@ -166,6 +166,7 @@ export default function MarketScreen({ stash, marketSupply, marketSupplyUpdatedA
               const meta = MINERAL_META[id]
               if (!meta) return null
               const { price, base, premiumApplied } = unitPrice(id)
+              const demandExplanation = dailyEconomySnapshot?.prices[id]?.explanation
               return (
                 <article className={styles.commodityCard} key={id}>
               <div className={styles.commodityTop}>
@@ -182,6 +183,7 @@ export default function MarketScreen({ stash, marketSupply, marketSupplyUpdatedA
                 <div>
                   <div className={styles.rateLabel}>Current rate</div>
                   <div className={styles.rateValue}>{formatCurrency(price)}/u <span className={styles.commodityMeta}>base {formatCurrency(base)}/u</span></div>
+                  {demandExplanation && <div className={styles.commodityMeta} data-testid={`market-demand-explanation-${id}`}>{demandExplanation}</div>}
                 </div>
                 {premiumApplied && client && <div className={styles.commodityMeta} style={{ color: client.color }}>Client premium</div>}
               </div>
