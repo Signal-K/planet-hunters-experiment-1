@@ -82,6 +82,13 @@ export default function DeliveryScreen({
   const [dumped, setDumped] = useState(false)
   const [roverReturned, setRoverReturned] = useState(false)
 
+  // Stable identity is load-bearing, not just perf: TakeOnMount's mount
+  // effect depends on `onReady`, and this fires that exact callback. An
+  // inline arrow here would get a fresh identity every render, so calling
+  // it (setTakeonReady) would itself re-trigger the effect it lives in —
+  // tearing down and remounting the whole Takeon scene in a tight loop.
+  const handleTakeonReady = useCallback(() => setTakeonReady(true), [])
+
   const handleDump = useCallback(() => {
     if (!takeonReady) return
     const moved = takeonRef.current?.deposit() ?? 0
@@ -149,7 +156,7 @@ export default function DeliveryScreen({
             roverName="Tutorial Rover"
             seedCargo={seedCargo}
             seedCache
-            onReady={() => setTakeonReady(true)}
+            onReady={handleTakeonReady}
             className={styles.takeonMount}
           />
           <div className={styles.targetLabel}>
