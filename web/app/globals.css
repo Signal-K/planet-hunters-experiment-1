@@ -907,6 +907,17 @@ button { cursor: pointer; }
 .auth-gate__secondary { flex: 0 0 auto; padding: 0 var(--ln-s-4); color: var(--ln-cyan); background: transparent; border: 1px solid var(--ln-cyan-border-strong); border-radius: var(--ln-r-md); cursor: pointer; font: 700 12px var(--ln-font-display); letter-spacing: .1em; text-transform: uppercase; }
 
 .screen-scroll { position: absolute; inset: 0; overflow-y: auto; padding: 76px var(--ln-s-3) var(--ln-s-5); }
+/* .screen-scroll paints no background of its own, so it normally shows
+   through to the dark ambient chrome behind .game-screen-area — fine for
+   the default .theme-deep screens, whose text also assumes that dark
+   ambient. A .theme-light screen (MissionHistoryScreen, NarrativeLedgerScreen)
+   redefines --ln-text/--ln-panel to light-theme values on this same element,
+   but without an explicit background here the header text (which sits
+   directly on .shell, not inside a --ln-panel card) renders as near-black
+   text on the unrelated dark ambient behind it — unreadable. Paint the
+   current theme's own --ln-void so light-theme screens actually get a
+   light background instead of inheriting the dark default. */
+.screen-scroll.theme-light { background: var(--ln-void); }
 .screen-scroll--coach { padding-top: var(--tutorial-content-top); }
 .screen-scroll--coach-manual { padding-top: var(--tutorial-manual-content-top); }
 /* .screen-scroll lives inside .game-screen-area, which already stops above
