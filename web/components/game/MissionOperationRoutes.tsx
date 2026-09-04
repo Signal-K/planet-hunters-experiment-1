@@ -261,6 +261,7 @@ export default function MissionOperationRoutes({
           hasCoach={hasCoach}
           shipDestroyed={!!game.player.shipDestroyed}
           rocket={game.rocket}
+          rocketSource={game.player.missionRocketSource}
           deliveryTargetName={deliveryTargetName}
           loanDebt={game.player.loanDebt}
           firstCrewArrival={

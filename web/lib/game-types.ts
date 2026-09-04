@@ -195,6 +195,9 @@ export interface Player {
   pendingLaunch: boolean
   /** Rocket already built and waiting on the launchpad; prevents re-purchase on resume. */
   pendingRocketId?: string
+  /** How the pending/active single-use vehicle entered the Hangar. */
+  pendingRocketSource?: 'company' | 'fabricated'
+  missionRocketSource?: 'company' | 'fabricated'
   placed: string[]
   placementPlots: Record<string, number>
   controlBuilt: boolean
@@ -212,6 +215,8 @@ export interface Player {
   // mining/pickup at the primary target and before the Earth-return leg.
   headingToDelivery?: boolean
   stash?: Record<string, number>
+  /** Locally fabricated components, one of each required before Hangar assembly. */
+  fabricatedRocketParts?: Record<string, number>
   // Units-sold-equivalent on the open market per mineral, decayed over real
   // time (see EconomySystem.decayedUnitsSold) — drives the supply/demand
   // price dip in EconomySystem's open-market sell price. Paired with
@@ -432,6 +437,8 @@ export interface GameActions {
   onPickMission: (id: string) => void
   onPickTarget: (id: string) => void
   onPurchaseRocket: (rocketId: string) => void
+  onFabricateRocketPart: (rocketId: string, componentId: string) => void
+  onAssembleFabricatedRocket: (rocketId: string) => void
   onLaunch: () => void
   onMiningDone: (cargo: Record<string, number>, remoteDisposition?: 'store' | 'sell') => void
   onDeliveryArrived: () => void

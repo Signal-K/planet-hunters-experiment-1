@@ -15,7 +15,7 @@ import { formatCurrency } from '@/lib/format'
 import { getRequiredRocketModel } from '@/lib/rockets'
 import { calibrateOnboardingPayout } from '@/lib/data'
 import RocketCutaway, { type RocketRoomKey } from '@/components/game/RocketCutaway'
-import { rocketCompositionForId } from '@/lib/data/rocket-composition'
+import { recipeIsAffordable, rocketCompositionForId } from '@/lib/data/rocket-composition'
 
 function orbitLabel(maxOrbit: number): string {
   if (maxOrbit <= 3) return 'Near-Earth'
@@ -63,11 +63,16 @@ interface RocketPurchaseScreenProps {
   mission?: Mission | null
   deliveryTargetName?: string | null
   onPurchase: (rocketId: string) => void
+  onFabricatePart: (rocketId: string, componentId: string) => void
+  onAssembleFabricatedRocket: (rocketId: string) => void
+  siloOnline: boolean
+  stash: Record<string, number>
+  fabricatedParts: Record<string, number>
   onBack: () => void
   hasCoach?: boolean
 }
 
-export default function RocketPurchaseScreen({ missionsDone, francs, mission, deliveryTargetName, onPurchase, onBack, hasCoach }: RocketPurchaseScreenProps) {
+export default function RocketPurchaseScreen({ missionsDone, francs, mission, deliveryTargetName, onPurchase, onFabricatePart, onAssembleFabricatedRocket, siloOnline, stash, fabricatedParts, onBack, hasCoach }: RocketPurchaseScreenProps) {
   const [activeRoom, setActiveRoom] = useState<RocketRoomKey | null>(null)
   const [modulesOpen, setModulesOpen] = useState(true)
   const defaultRocket = getRequiredRocketModel(missionsDone)
@@ -79,6 +84,7 @@ export default function RocketPurchaseScreen({ missionsDone, francs, mission, de
   const missionPayout = mission ? calibrateOnboardingPayout(mission.payout.francs, missionsDone) : undefined
   const estProfit = missionPayout !== undefined ? missionPayout - rocket.costFrancs : undefined
   const composition = rocketCompositionForId(rocket.id)
+  const fabricationReady = composition.recipes.every(recipe => (fabricatedParts[recipe.id] ?? 0) > 0)
 
   const modules: string[] = [
     `${composition.stages.length} recoverable stage`,
@@ -96,8 +102,15 @@ export default function RocketPurchaseScreen({ missionsDone, francs, mission, de
       hasCoach={hasCoach}
       coachManual={hasCoach}
       step="Rocket"
-      stepDescription={isFree ? 'Choose a vehicle, then continue to preflight.' : 'Choose a vehicle, then purchase it to continue to preflight.'}
-      actions={isFree ? (
+      stepDescription={isFree ? 'Choose a vehicle, then continue to preflight.' : 'Buy a shipment or fabricate its parts from silo minerals, then send it to the Hangar.'}
+      actions={fabricationReady && siloOnline ? (
+        <div className="rocket-actions">
+          <GhostBtn full={false} onClick={onBack}>Back</GhostBtn>
+          <PrimaryBtn full={false} kind="cyan" onClick={() => onAssembleFabricatedRocket(rocket.id)}>
+            Assemble from Silo Parts
+          </PrimaryBtn>
+        </div>
+      ) : isFree ? (
         <div className="rocket-actions">
           <PrimaryBtn full={false} kind="cyan" onClick={() => onPurchase(rocket.id)}>
           Continue with {rocket.name}
@@ -214,6 +227,37 @@ export default function RocketPurchaseScreen({ missionsDone, francs, mission, de
               </div>
             </details>
           )}
+
+          <section style={{ display: 'flex', flexDirection: 'column', gap: 8, padding: 12, border: '1px solid var(--ln-cyan-border)', borderRadius: 10, background: 'var(--ln-panel-2)' }} data-testid="rocket-fabrication-recipes">
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 8 }}>
+              <span className="ln-section-label">Silo Fabrication</span>
+              <span style={{ font: '700 10px var(--ln-font-display)', letterSpacing: '0.08em', textTransform: 'uppercase', color: siloOnline ? 'var(--ln-ok)' : 'var(--ln-text-muted)' }}>
+                {siloOnline ? fabricationReady ? 'Vehicle ready' : 'Parts required' : 'Silo required'}
+              </span>
+            </div>
+            {!siloOnline ? (
+              <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 12, lineHeight: 1.45, color: 'var(--ln-text-muted)' }}>
+                Build an Earth mineral silo or vault, then save mined minerals to fabricate local rocket parts.
+              </div>
+            ) : composition.recipes.map(recipe => {
+              const built = fabricatedParts[recipe.id] ?? 0
+              const affordable = recipeIsAffordable(recipe, stash)
+              const cost = Object.entries(recipe.ingredients).map(([mineral, amount]) => `${amount} ${mineral}`).join(' · ')
+              return (
+                <div key={recipe.id} style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) auto', alignItems: 'center', gap: 8, paddingTop: 8, borderTop: '1px solid var(--ln-hairline)' }}>
+                  <div>
+                    <div style={{ font: '700 11px var(--ln-font-display)', letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--ln-text)' }}>{recipe.label}</div>
+                    <div style={{ marginTop: 3, font: '11px var(--ln-font-mono)', color: affordable || built > 0 ? 'var(--ln-text-muted)' : 'var(--ln-crimson)' }}>{cost}</div>
+                  </div>
+                  {built > 0 ? (
+                    <span style={{ font: '800 10px var(--ln-font-display)', letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--ln-ok)' }}>Built</span>
+                  ) : (
+                    <GhostBtn full={false} disabled={!affordable} onClick={() => onFabricatePart(rocket.id, recipe.id)}>Fabricate</GhostBtn>
+                  )}
+                </div>
+              )
+            })}
+          </section>
 
           {!isFree && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 0, background: 'var(--ln-panel-2)', borderRadius: 10, border: '1px solid var(--ln-cyan-border)', overflow: 'hidden' }}>

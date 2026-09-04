@@ -56,11 +56,12 @@ export function PrimaryBtn({ children, onClick, disabled, full = true, kind = 'c
   )
 }
 
-export function GhostBtn({ children, onClick, full = true, testId }: ButtonProps) {
+export function GhostBtn({ children, onClick, disabled, full = true, testId }: ButtonProps) {
   return (
     <button
       data-testid={testId}
-      onClick={onClick}
+      onClick={!disabled ? onClick : undefined}
+      disabled={disabled}
       style={{
         width: full ? '100%' : 'auto',
         minHeight: 44, // touch-target floor (Apple HIG / WCAG 2.5.5)
@@ -77,7 +78,8 @@ export function GhostBtn({ children, onClick, full = true, testId }: ButtonProps
         textTransform: 'uppercase',
         border: '1px solid rgba(169,184,206,0.18)',
         borderRadius: 10,
-        cursor: 'pointer',
+        cursor: disabled ? 'not-allowed' : 'pointer',
+        opacity: disabled ? 0.45 : 1,
       }}
     >
       {children}

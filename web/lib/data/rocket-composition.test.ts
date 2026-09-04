@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { ROCKET_COMPOSITIONS, rocketCompositionForId } from './rocket-composition'
+import { ROCKET_COMPOSITIONS, recipeIsAffordable, rocketCompositionForId, rocketStageRecoveryForId } from './rocket-composition'
 
 describe('canonical rocket compositions', () => {
   it.each(Object.values(ROCKET_COMPOSITIONS))('%s has stages, boosters, and a payload', composition => {
@@ -12,5 +12,14 @@ describe('canonical rocket compositions', () => {
 
   it('falls back to Explorer for an unknown legacy id', () => {
     expect(rocketCompositionForId('legacy-unresolved').rocketId).toBe('explorer')
+  })
+
+  it('has numeric silo recipes and a deliberately partial recovery yield', () => {
+    const explorer = rocketCompositionForId('explorer')
+    expect(recipeIsAffordable(explorer.recipes[0], { iron: 3, silicon: 1 })).toBe(true)
+    expect(recipeIsAffordable(explorer.recipes[0], { iron: 2, silicon: 1 })).toBe(false)
+    expect(rocketStageRecoveryForId('explorer').iron).toBeLessThan(
+      explorer.recipes.reduce((sum, recipe) => sum + (recipe.ingredients.iron ?? 0), 0),
+    )
   })
 })

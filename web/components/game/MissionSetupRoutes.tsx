@@ -3,6 +3,7 @@
 import type { useGame } from '@/game-context'
 import type { Screen } from '@/lib/game-types'
 import { rocketDisplayForConfig } from '@/lib/data'
+import { earthStorageBuilt } from '@/lib/systems/EconomySystem'
 import ErrorBoundary from '@/components/ui/ErrorBoundary'
 import { LaunchSequenceCanvas } from '@/components/game/LaunchSequenceCanvas'
 import MissionBoardScreen from '@/components/game/screens/MissionBoardScreen'
@@ -82,6 +83,11 @@ export default function MissionSetupRoutes({
           mission={game.mission}
           deliveryTargetName={deliveryTargetName}
           onPurchase={game.onPurchaseRocket}
+          onFabricatePart={game.onFabricateRocketPart}
+          onAssembleFabricatedRocket={game.onAssembleFabricatedRocket}
+          siloOnline={earthStorageBuilt(game.player)}
+          stash={game.player.stash ?? {}}
+          fabricatedParts={game.player.fabricatedRocketParts ?? {}}
           onBack={() => game.go(game.mission?.targetId ? 'missions' : 'targets')}
           hasCoach={hasCoach}
         />

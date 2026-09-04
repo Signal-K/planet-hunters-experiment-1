@@ -1,7 +1,7 @@
 import { useCallback, useRef } from 'react'
 import {
   MISSIONS, TARGETS, ROCKET_MODELS, FREE_OPS_START_MISSIONS_DONE,
-  getLaserChargeCap, travelDurationMs, suggestBuild,
+  getLaserChargeCap, rocketModelForConfig, travelDurationMs, suggestBuild,
   feasibleTargetsFor,
   isOwnProgramMission,
   isFreeHaulMission,
@@ -13,7 +13,7 @@ import { applyMiningDone, applyReturnArrived, applyRoverMiningDone } from '@/lib
 import { applyDeliveryArrived, applyDeliveryUnloadComplete } from '@/lib/systems/DeliverySystem'
 import { applyLandingTouchdown, applyRedockComplete } from '@/lib/systems/LandingSystem'
 import { applyAwardMissionCrewXP, crewRequirementStatus, diplomacyPayoutMultiplier, missionCrewForLaunch } from '@/lib/systems/AcademySystem'
-import { applyPurchaseRocket, applyFreeHaulDisposition, applyRemoteHaulDisposition, earthStorageBuilt, hasOperationalRemoteSilo } from '@/lib/systems/EconomySystem'
+import { applyAssembleFabricatedRocket, applyFabricateRocketPart, applyFreeHaulDisposition, applyPurchaseRocket, applyRemoteHaulDisposition, applyRocketStageRecovery, earthStorageBuilt, hasOperationalRemoteSilo } from '@/lib/systems/EconomySystem'
 import { applyConstructionCompletion } from '@/lib/systems/ConstructionSystem'
 import { loanOutstanding, repayBankruptcyLoan } from '@/lib/systems/TreasurySystem'
 import { TREASURY_PLAYER_ID } from '@/lib/systems/ProgressionSystem'
@@ -162,6 +162,24 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
     })
   }, [setState])
 
+  const onFabricateRocketPart = useCallback((rocketId: string, componentId: string) => {
+    setState(s => {
+      if (s.screen !== 'rocket-buy' || !s.missionId || !s.targetId) return s
+      if (!ROCKET_MODELS.some(rocket => rocket.id === rocketId)) return s
+      return applyFabricateRocketPart(s, rocketId, componentId)
+    })
+  }, [setState])
+
+  const onAssembleFabricatedRocket = useCallback((rocketId: string) => {
+    setState(s => {
+      if (s.screen !== 'rocket-buy' || !s.missionId || !s.targetId) return s
+      const rocket = ROCKET_MODELS.find(candidate => candidate.id === rocketId)
+      if (!rocket) return s
+      if (s.player.pendingLaunch && s.player.pendingRocketId === rocket.id) return { ...s, screen: 'fab' }
+      return applyAssembleFabricatedRocket(s, rocket)
+    })
+  }, [setState])
+
   const onLaunch = useCallback(() => {
     const current = stateRef.current
     if (current.screen !== 'fab' || !current.missionId || !current.targetId || current.player.activeMission) return
@@ -196,6 +214,8 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
           ...s.player,
           pendingLaunch: false,
           pendingRocketId: undefined,
+          missionRocketSource: s.player.pendingRocketSource ?? 'company',
+          pendingRocketSource: undefined,
           arrivalAt,
           // Keep the launch timestamp for tutorial legs too. Tutorial transit
           // is fast, but it must resume from its real position after a remount
@@ -657,6 +677,10 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
         : showLoanOffer
           ? 'loan'
           : (missionsDone === 1 && !stillInTutorial) ? 'sr2' : s.popup
+      const recovered = applyRocketStageRecovery(
+        { ...s, player: { ...s.player, stash } },
+        rocketModelForConfig(s.rocket),
+      )
       const next: GameState = {
         ...s,
         player: {
@@ -683,7 +707,8 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
           freeOperations: missionsDone >= FREE_OPS_START_MISSIONS_DONE,
           clientMissions,
           completedMissions,
-          stash,
+          stash: recovered.player.stash,
+          missionRocketSource: undefined,
           lastClient: (isStoryMission || isProgramOperation) ? s.player.lastClient : client,
           seen_planets,
           crewVisitedTargets,
@@ -803,7 +828,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
 
   return {
     setPlayer, setMissionId, setTargetId, setRocket, setLastCargo,
-    onPickMission, onPickTarget, onPurchaseRocket, onLaunch,
+    onPickMission, onPickTarget, onPurchaseRocket, onFabricateRocketPart, onAssembleFabricatedRocket, onLaunch,
     onMiningDone, onDeliveryArrived, onDeliveryUnloadComplete, onReturnArrived, onRoverMiningDone, onDebriefDone,
     onLandingTouchdown, onRedockComplete,
     gainResearchXP, upgradeLicenseGrade, unlockBlueprint, launchTransitSatellite, submitTessClassification, chooseSatelliteTarget,

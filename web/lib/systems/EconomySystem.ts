@@ -4,6 +4,7 @@
 import type { GameState } from '@/lib/game-types'
 import type { RefineryRecipe, ShipRoomKind, StructureBlueprint, RocketModel, SubsurfaceRoomId } from '@/lib/data'
 import { rocketConfigForModel } from '@/lib/data'
+import { recipeIsAffordable, rocketCompositionForId, rocketStageRecoveryForId } from '@/lib/data/rocket-composition'
 import { MINERAL_META, CLIENT_SLOTS, LAUNCHPAD_UPGRADE_COST, OPEN_MARKET_SELL_RATE, MINERAL_SILO_CAPACITY, SURFACE_SILO_CAPACITY, DEEP_MINERAL_SILO_CAPACITY, REMOTE_MINERAL_SILO_CAPACITY, customizerPartById, deepSpaceTelescopeUnlocked, SUBSURFACE_EXCAVATE_COST, SUBSURFACE_ROOMS, canAffordSubsurface } from '@/lib/data'
 import { structureIsStaffed } from './AcademySystem'
 import type { DailyEconomySnapshot } from './DailyEconomySystem'
@@ -321,8 +322,80 @@ export function applyPurchaseRocket(s: GameState, rocket: RocketModel): GameStat
       francs: s.player.francs - rocket.costFrancs,
       pendingLaunch: true,
       pendingRocketId: rocket.id,
+      pendingRocketSource: 'company',
     },
   }
+}
+
+/** Fabricate one physical rocket component from materials actually held in an
+ * Earth silo. The component ledger is separate from ore so Hangar assembly can
+ * consume an explicitly built vehicle rather than magic a whole rocket into
+ * existence. */
+export function applyFabricateRocketPart(s: GameState, rocketId: string, componentId: string): GameState {
+  if (!earthStorageBuilt(s.player)) return s
+  const recipe = rocketCompositionForId(rocketId).recipes.find(part => part.id === componentId)
+  if (!recipe || !recipeIsAffordable(recipe, s.player.stash ?? {})) return s
+  const stash = { ...(s.player.stash ?? {}) }
+  for (const [mineral, amount] of Object.entries(recipe.ingredients)) {
+    stash[mineral] = (stash[mineral] ?? 0) - amount
+    if (stash[mineral] <= 0) delete stash[mineral]
+  }
+  return {
+    ...s,
+    player: {
+      ...s.player,
+      stash,
+      fabricatedRocketParts: {
+        ...(s.player.fabricatedRocketParts ?? {}),
+        [componentId]: (s.player.fabricatedRocketParts?.[componentId] ?? 0) + 1,
+      },
+    },
+  }
+}
+
+/** Consume one of every canonical component and move the locally assembled
+ * vehicle to the Hangar/launchpad path. */
+export function applyAssembleFabricatedRocket(s: GameState, rocket: RocketModel): GameState {
+  if (s.player.pendingLaunch && s.player.pendingRocketId === rocket.id) return s
+  if (!earthStorageBuilt(s.player)) return s
+  const recipes = rocketCompositionForId(rocket.id).recipes
+  if (!recipes.every(recipe => (s.player.fabricatedRocketParts?.[recipe.id] ?? 0) >= 1)) return s
+  const fabricatedRocketParts = { ...(s.player.fabricatedRocketParts ?? {}) }
+  for (const recipe of recipes) {
+    fabricatedRocketParts[recipe.id] -= 1
+    if (fabricatedRocketParts[recipe.id] <= 0) delete fabricatedRocketParts[recipe.id]
+  }
+  return {
+    ...s,
+    screen: 'fab',
+    rocket: rocketConfigForModel(rocket),
+    player: {
+      ...s.player,
+      fabricatedRocketParts,
+      pendingLaunch: true,
+      pendingRocketId: rocket.id,
+      pendingRocketSource: 'fabricated',
+    },
+  }
+}
+
+/** Return only the recovered materials that fit in the existing Earth silo.
+ * No silo means no hidden inventory; a full silo simply leaves excess teardown
+ * output uncollected, which keeps the storage contract intact. */
+export function applyRocketStageRecovery(s: GameState, rocket: RocketModel): GameState {
+  if (!earthStorageBuilt(s.player)) return s
+  let room = Math.max(0, storageCapacity(s.player) - storedUnits(s.player.stash))
+  if (room <= 0) return s
+  const stash = { ...(s.player.stash ?? {}) }
+  let changed = false
+  for (const [mineral, amount] of Object.entries(rocketStageRecoveryForId(rocket.id))) {
+    const recovered = Math.min(amount, room)
+    if (recovered <= 0) break
+    stash[mineral] = (stash[mineral] ?? 0) + recovered
+    room -= recovered
+    changed = true
+  }
+  return changed ? { ...s, player: { ...s.player, stash } } : s
 }
 
 /** Pay for a structure and record where it was placed. This was previously

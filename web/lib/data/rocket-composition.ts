@@ -24,7 +24,7 @@ export interface RocketComponentRecipe {
   id: string
   label: string
   purchased: boolean
-  ingredients: readonly string[]
+  ingredients: Readonly<Record<string, number>>
 }
 
 export interface RocketComposition {
@@ -51,10 +51,10 @@ const explorer: RocketComposition = {
   boosters: { label: 'Solid booster set I', count: 2, recovery: 'dismantle' },
   payload: { label: 'Mining laser I', kind: 'mining-laser', fairing: true },
   recipes: [
-    { id: 'hull-alloy', label: 'Hull alloy', purchased: false, ingredients: ['iron', 'silicon'] },
-    { id: 'ion-drive-i', label: 'Ion drive I', purchased: false, ingredients: ['iron', 'silicon'] },
-    { id: 'solid-boosters-i', label: 'Solid booster set I', purchased: false, ingredients: ['iron', 'carbon'] },
-    { id: 'mining-laser-i', label: 'Mining laser I', purchased: false, ingredients: ['silicon', 'iron'] },
+    { id: 'hull-alloy', label: 'Hull alloy', purchased: false, ingredients: { iron: 3, silicon: 1 } },
+    { id: 'ion-drive-i', label: 'Ion drive I', purchased: false, ingredients: { iron: 2, silicon: 1 } },
+    { id: 'solid-boosters-i', label: 'Solid booster set I', purchased: false, ingredients: { iron: 2, carbon: 1 } },
+    { id: 'mining-laser-i', label: 'Mining laser I', purchased: false, ingredients: { iron: 1, silicon: 2 } },
   ],
 }
 
@@ -74,10 +74,10 @@ const prospector: RocketComposition = {
   boosters: { label: 'Solid booster set II', count: 2, recovery: 'dismantle' },
   payload: { label: 'Mining laser II', kind: 'mining-laser', fairing: true },
   recipes: [
-    { id: 'hull-alloy-ii', label: 'Reinforced hull alloy', purchased: false, ingredients: ['iron', 'silicon', 'carbon'] },
-    { id: 'fusion-drive-ii', label: 'Fusion drive II', purchased: false, ingredients: ['iron', 'silicon', 'rare'] },
-    { id: 'solid-boosters-ii', label: 'Solid booster set II', purchased: false, ingredients: ['iron', 'carbon', 'silicon'] },
-    { id: 'mining-laser-ii', label: 'Mining laser II', purchased: false, ingredients: ['silicon', 'iron', 'rare'] },
+    { id: 'hull-alloy-ii', label: 'Reinforced hull alloy', purchased: false, ingredients: { iron: 5, silicon: 2, carbon: 1 } },
+    { id: 'fusion-drive-ii', label: 'Fusion drive II', purchased: false, ingredients: { iron: 3, silicon: 2, rare: 1 } },
+    { id: 'solid-boosters-ii', label: 'Solid booster set II', purchased: false, ingredients: { iron: 3, silicon: 1, carbon: 2 } },
+    { id: 'mining-laser-ii', label: 'Mining laser II', purchased: false, ingredients: { iron: 2, silicon: 3, rare: 1 } },
   ],
 }
 
@@ -85,4 +85,17 @@ export const ROCKET_COMPOSITIONS: Record<string, RocketComposition> = { explorer
 
 export function rocketCompositionForId(rocketId: string): RocketComposition {
   return ROCKET_COMPOSITIONS[rocketId] ?? explorer
+}
+
+/** Recovered materials are deliberately less than a new vehicle's recipe: the
+ * vehicle is still single-use, while successful stage teardown makes local
+ * fabrication progressively cheaper rather than creating a free-rocket loop. */
+export function rocketStageRecoveryForId(rocketId: string): Record<string, number> {
+  return rocketId === 'prospector'
+    ? { iron: 6, silicon: 4, carbon: 1, rare: 1 }
+    : { iron: 3, silicon: 2, carbon: 1 }
+}
+
+export function recipeIsAffordable(recipe: RocketComponentRecipe, stash: Record<string, number>): boolean {
+  return Object.entries(recipe.ingredients).every(([mineral, amount]) => (stash[mineral] ?? 0) >= amount)
 }

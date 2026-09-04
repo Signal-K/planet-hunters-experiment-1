@@ -34,30 +34,36 @@ export function ScrapSequenceCanvas({ rocketImageSrc, onComplete }: Props) {
     let destroyed = false
     let elapsed = 0
 
-    ;(async () => {
-      const cw = div.offsetWidth || SCRAP_W
-      const ch = div.offsetHeight || SCRAP_H
-      await app.init({
-        canvas,
-        width: cw,
-        height: ch,
-        background: 0xeef3f8, // --ln-bp-bg (KES-267) — see scrapScene.ts's C palette
-        antialias: false,
-        autoDensity: true,
-        resolution: capDpr(),
-      })
-      initialized = true
-      if (destroyed) { try { app.destroy() } catch (_) { /* pixi v8 cleanup */ } canvas.remove(); return }
+    void (async () => {
+      try {
+        const cw = div.offsetWidth || SCRAP_W
+        const ch = div.offsetHeight || SCRAP_H
+        await app.init({
+          canvas,
+          width: cw,
+          height: ch,
+          background: 0xeef3f8, // --ln-bp-bg (KES-267) — see scrapScene.ts's C palette
+          antialias: false,
+          autoDensity: true,
+          resolution: capDpr(),
+        })
+        initialized = true
+        if (destroyed) { try { app.destroy() } catch (_) { /* pixi v8 cleanup */ } canvas.remove(); return }
 
-      const scene = buildScrapScene(app, {
-        rocketImageSrc,
-        onComplete: () => completeRef.current(),
-      })
+        const scene = buildScrapScene(app, {
+          rocketImageSrc,
+          onComplete: () => completeRef.current(),
+        })
 
-      app.ticker.add(t => {
-        elapsed += t.deltaTime / 60
-        scene.update(elapsed, t.deltaTime / 60)
-      })
+        app.ticker.add(t => {
+          elapsed += t.deltaTime / 60
+          scene.update(elapsed, t.deltaTime / 60)
+        })
+      } catch {
+        // JSDOM has no 2D canvas context. Keep the debrief testable while the
+        // real browser continues to render the Pixi teardown sequence.
+        canvas.remove()
+      }
     })()
 
     return () => {

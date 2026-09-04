@@ -14,9 +14,10 @@ import TutorialHighlight from '@/components/game/TutorialHighlight'
 import { ScrapSequenceCanvas } from '@/components/game/ScrapSequenceCanvas'
 import DebriefCanvas from '@/components/game/screens/DebriefCanvas'
 import { formatCurrency } from '@/lib/format'
+import { rocketStageRecoveryForId } from '@/lib/data/rocket-composition'
 import StatRow from '@/components/ui/StatRow'
 
-export default function DebriefScreen({ mission, target, cargo, onDone, minerals, clients, clientMissions: _clientMissions, freeOperations, annotations, missionsDone, hasCoach, shipDestroyed, rocket, deliveryTargetName, loanDebt, firstCrewArrival, hasEarthStorage, storageCapacity, storageUsed, haulMarketValue }: {
+export default function DebriefScreen({ mission, target, cargo, onDone, minerals, clients, clientMissions: _clientMissions, freeOperations, annotations, missionsDone, hasCoach, shipDestroyed, rocket, rocketSource, deliveryTargetName, loanDebt, firstCrewArrival, hasEarthStorage, storageCapacity, storageUsed, haulMarketValue }: {
   mission: Mission
   target: Target
   cargo: Record<string, number>
@@ -30,6 +31,7 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
   hasCoach?: boolean
   shipDestroyed?: boolean
   rocket?: Pick<RocketConfig, 'chassis'>
+  rocketSource?: 'company' | 'fabricated'
   deliveryTargetName?: string
   /** Outstanding emergency-loan debt. Collecting this payout repays an instalment, so it is itemized rather than silently deducted (STS-542). */
   loanDebt?: number
@@ -63,20 +65,18 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
   const [disposition, setDisposition] = useState<'store' | 'sell'>(hasEarthStorage ? 'store' : 'sell')
   const haulUnits = Object.values(cargo).reduce((sum, n) => sum + Math.max(0, n), 0)
   const overflowUnits = hasEarthStorage ? Math.max(0, (storageUsed ?? 0) - (storageCapacity ?? 0)) : haulUnits
-  // Single-use hull recovery (every model, during M1-M3 onboarding) plays a scrap
-  // animation right after cargo is resolved. Once reusable rockets ship
-  // post-onboarding, gate this on that system's own flag instead of
-  // `shipDestroyed` — a reusable hull shouldn't play this at all.
+  // Every current vehicle is single-use. Show teardown on every mission so the
+  // player sees stages dismantled even when no failure flag was raised.
   const [scrapping, setScrapping] = useState(false)
-  // Scrapping normally starts on the resolve tap; when that tap is skipped for
-  // an early mission (see autoResolve above), start it on mount instead so the
-  // hull-recovery animation still plays.
   useEffect(() => {
-    if (autoResolve && shipDestroyed) setScrapping(true)
+    if (autoResolve) setScrapping(true)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
   const rocketDisplay = rocketDisplayForConfig(rocket)
   const starterRocket = rocketModelForConfig(rocket)
+  const recoveryMaterials = rocketStageRecoveryForId(starterRocket.id)
+  const recoveryEntries = Object.entries(recoveryMaterials)
+  const vehicleCost = rocketSource === 'fabricated' ? 0 : starterRocket.costFrancs
 
   const requiredMaterials = mission.construction?.requiredMaterials ?? mission.requires.minerals
   const delivered = Object.entries(requiredMaterials).every(([id, amount]) => (cargo[id] ?? 0) >= amount)
@@ -100,7 +100,7 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
   // Repaid out of this payout the moment it is collected (see onDebriefDone),
   // so it belongs in the expense panel and in Net — not silently off the balance.
   const loanRepayment = isProgramOperation ? 0 : loanInstalmentFor(loanDebt)
-  const netTotal = total - starterRocket.costFrancs - loanRepayment
+  const netTotal = total - vehicleCost - loanRepayment
   const manifestAccent = isFreeHaul || isProgramOperation
     ? 'var(--ln-cyan)'
     : delivered ? 'var(--ln-ok)' : 'var(--ln-crimson)'
@@ -230,7 +230,12 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
               )}
               {calibratedTotal > rawTotal && <PayRow label="Onboarding bonus" value={calibratedTotal - rawTotal} />}
               {crewArrivalBonus > 0 && <PayRow label={`First astronaut at ${target.name}`} value={crewArrivalBonus} />}
-              <CostSummaryRow label={`${starterRocket.name} · vehicle`} value={formatCurrency(-starterRocket.costFrancs, { signed: true })} color="var(--ln-crimson)" last={loanRepayment === 0} />
+              <CostSummaryRow
+                label={rocketSource === 'fabricated' ? `${starterRocket.name} · silo fabrication` : `${starterRocket.name} · vehicle`}
+                value={rocketSource === 'fabricated' ? 'Minerals committed' : formatCurrency(-vehicleCost, { signed: true })}
+                color={rocketSource === 'fabricated' ? 'var(--ln-cyan)' : 'var(--ln-crimson)'}
+                last={loanRepayment === 0}
+              />
               {loanRepayment > 0 && (
                 <CostSummaryRow
                   label={loanRepayment >= (loanDebt ?? 0) ? 'Loan · cleared' : 'Loan · instalment'}
@@ -243,8 +248,8 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
                 <span style={{ width: 7, height: 7, borderRadius: '50%', flexShrink: 0, background: shipDestroyed ? 'var(--ln-crimson)' : 'var(--ln-ok)' }} />
                 <span style={{ fontFamily: 'var(--ln-font-body)', fontWeight: 500, fontSize: 11, color: 'var(--ln-text-dim)', lineHeight: 1.3 }}>
                   {shipDestroyed
-                    ? <><strong style={{ color: 'var(--ln-text)' }}>Hull lost</strong> · new {starterRocket.name} needed next run</>
-                    : <><strong style={{ color: 'var(--ln-text)' }}>Ship intact</strong> · ready for next run</>}
+                    ? <><strong style={{ color: 'var(--ln-text)' }}>Hull lost</strong> · recovery crews are dismantling what remains</>
+                    : <><strong style={{ color: 'var(--ln-text)' }}>Stage recovery scheduled</strong> · this single-use vehicle is dismantled after cargo clearance</>}
                 </span>
               </div>
               <div style={{ marginTop: 8, paddingTop: 8, borderTop: '1px solid var(--ln-hairline-strong)', display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
@@ -255,6 +260,19 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
               </div>
             </Panel>
           ) : null
+        )}
+        {resolved && (
+          <Panel accent={hasEarthStorage ? 'var(--ln-ok)' : 'var(--ln-cyan)'} surface="solid" style={{ animation: 'unlock-in 0.35s ease-out' }}>
+            <div className="ln-section-label" style={{ marginBottom: 8 }}>Stage Recovery</div>
+            <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 12, color: 'var(--ln-text-dim)', lineHeight: 1.45 }}>
+              {hasEarthStorage
+                ? 'Boosters and the operating stage are dismantled into silo materials after this mission.'
+                : 'Boosters and the operating stage are dismantled, but a built Earth silo or vault is required to retain the materials.'}
+            </div>
+            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 10 }}>
+              {recoveryEntries.map(([id, amount]) => <MineralChip key={id} mineral={id} count={amount} meta={minerals[id]} />)}
+            </div>
+          </Panel>
         )}
         {/* Single incomplete note (client work only) — shown once, in both the
             pre- and post-resolve states, instead of two near-identical panels. */}
@@ -279,10 +297,10 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
             testId="resolve-cargo-btn"
             onClick={() => {
               setResolved(true)
-              if (shipDestroyed) setScrapping(true)
+              setScrapping(true)
             }}
           >
-            {shipDestroyed ? 'Resolve Recovered Cargo' : 'Resolve Cargo'}
+            {shipDestroyed ? 'Resolve Recovered Cargo' : 'Resolve Cargo & Recovery'}
           </PrimaryBtn>
         ) : (
           <PrimaryBtn
