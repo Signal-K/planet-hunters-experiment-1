@@ -39,7 +39,7 @@ export default function DemoModeApp() {
   const [track, setTrack] = useState<Track | null>(null)
 
   return (
-    <div className="game-screen theme-blueprint" style={{ position: 'relative' }}>
+    <div className="game-screen theme-blueprint">
       <TopBar
         eyebrow="QUICK MISSION"
         title={track === 'mining' ? 'Belt Run' : track === 'citizen-science' ? 'Transit Classification' : 'Try Landnám'}
