@@ -17,7 +17,7 @@ import { formatCurrency } from '@/lib/format'
 import { rocketStageRecoveryForId } from '@/lib/data/rocket-composition'
 import StatRow from '@/components/ui/StatRow'
 
-export default function DebriefScreen({ mission, target, cargo, onDone, minerals, clients, clientMissions: _clientMissions, freeOperations, annotations, missionsDone, hasCoach, shipDestroyed, rocket, rocketSource, deliveryTargetName, loanDebt, firstCrewArrival, hasEarthStorage, storageCapacity, storageUsed, haulMarketValue }: {
+export default function DebriefScreen({ mission, target, cargo, onDone, minerals, clients, clientMissions: _clientMissions, freeOperations, annotations, missionsDone, hasCoach, shipDestroyed, rocket, rocketSource, deliveryTargetName, loanDebt, firstCrewArrival, hasEarthStorage, storageCapacity, storageUsed, haulMarketValue, initialDisposition }: {
   mission: Mission
   target: Target
   cargo: Record<string, number>
@@ -45,6 +45,10 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
   storageUsed?: number
   /** What this run's haul would fetch if sold now at market. */
   haulMarketValue?: number
+  /** Destination chosen at the pre-mining storage gate (KES-283), if any.
+   *  Seeds this screen's toggle so it reads as a confirmation of that choice
+   *  rather than asking the player again from scratch. */
+  initialDisposition?: 'store' | 'sell'
 }) {
   // A self-directed haul the player owns outright gets a store-vs-sell choice
   // here instead of a fixed contract payout (KES-271). Storing needs a built
@@ -62,7 +66,9 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
   const [resolved, setResolved] = useState(autoResolve)
   const [collecting, setCollecting] = useState(false)
   const collectingRef = useRef(false)
-  const [disposition, setDisposition] = useState<'store' | 'sell'>(hasEarthStorage ? 'store' : 'sell')
+  const [disposition, setDisposition] = useState<'store' | 'sell'>(
+    initialDisposition ?? (hasEarthStorage ? 'store' : 'sell')
+  )
   const haulUnits = Object.values(cargo).reduce((sum, n) => sum + Math.max(0, n), 0)
   const overflowUnits = hasEarthStorage ? Math.max(0, (storageUsed ?? 0) - (storageCapacity ?? 0)) : haulUnits
   // Every current vehicle is single-use. Show teardown on every mission so the

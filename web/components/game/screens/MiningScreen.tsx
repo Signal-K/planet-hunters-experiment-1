@@ -154,11 +154,11 @@ function miningGuide(deliveryTargetName?: string) {
   ]
 }
 
-export default function MiningScreen({ mission, target, rocketImageSrc, onComplete, onBack, onAbandon, minerals, laserChargeCap, laserTier, hasCoach, coachManual, onCoachDone, addToast, deliveryTargetName, hasPriorFreeOpsExperience, initialCargo, remoteSiloAvailable, remoteSiloUsed = 0 }: {
+export default function MiningScreen({ mission, target, rocketImageSrc, onComplete, onBack, onAbandon, minerals, laserChargeCap, laserTier, hasCoach, coachManual, onCoachDone, addToast, deliveryTargetName, hasPriorFreeOpsExperience, initialCargo, remoteSiloAvailable, remoteSiloUsed = 0, isFreeHaulEligible, hasEarthStorage, initialEarthDisposition }: {
   mission: Mission
   target: Target
   rocketImageSrc?: string
-  onComplete: (cargo: Record<string, number>, remoteDisposition?: 'store' | 'sell') => void
+  onComplete: (cargo: Record<string, number>, remoteDisposition?: 'store' | 'sell', earthDisposition?: 'store' | 'sell') => void
   /** Called with whatever's been collected so far (may be empty) — the caller is responsible for persisting it so a later resume doesn't lose progress. */
   onBack: (cargo: Record<string, number>) => void
   onAbandon?: () => void
@@ -180,6 +180,15 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
   /** Operational player-owned silo at this target; enables arrival settlement. */
   remoteSiloAvailable?: boolean
   remoteSiloUsed?: number
+  /** True for a self-directed mining run with no client, delivery, or
+   *  construction attached (KES-283) — the only case that gates on a storage
+   *  destination before mining can begin. */
+  isFreeHaulEligible?: boolean
+  /** Whether the player has a built Earth-side silo/vault to store into. */
+  hasEarthStorage?: boolean
+  /** Destination already chosen before a prior "Back to hub" pause on this
+   *  same mission — resuming must not ask again. */
+  initialEarthDisposition?: 'store' | 'sell'
 }) {
   // Charge count is mission-aware, not coach-aware.
   // During onboarding (sequence <= FREE_OPS_START_MISSIONS_DONE): always 16× the ore required,
@@ -209,6 +218,11 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
   const cargoRef = useRef<Record<string, number>>(initialCargo ?? {})
   const [cargo, setCargo] = useState<Record<string, number>>(initialCargo ?? {})
   const [remoteDisposition, setRemoteDisposition] = useState<'store' | 'sell'>('store')
+  // KES-283: a self-directed run requires a storage destination before mining
+  // starts. A destination chosen before a prior back-to-hub pause carries
+  // over via initialEarthDisposition so resuming never asks twice.
+  const [earthDisposition, setEarthDisposition] = useState<'store' | 'sell' | null>(initialEarthDisposition ?? null)
+  const gateOpen = !!isFreeHaulEligible && earthDisposition == null
   const fireRef = useRef<(() => void) | null>(null)
   const scrollRef = useRef<((dx: number) => void) | null>(null)
   const [laserCharges, setLaserCharges] = useState(MAX_CHARGES)
@@ -278,7 +292,7 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
   }, [hasCoach, addToast, mission.requires.minerals, minerals])
 
   function fireLaser() {
-    if (laserCharges <= 0) return
+    if (gateOpen || laserCharges <= 0) return
     setLaserCharges(c => c - 1)
     fireRef.current?.()
     if (!firedRef.current && coachManual) {
@@ -300,14 +314,14 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
   }, [laserCharges])
 
   function handleReturn() {
-    if (orderFilled || laserCharges <= 0) onComplete(cargoRef.current, remoteDisposition)
+    if (orderFilled || laserCharges <= 0) onComplete(cargoRef.current, remoteDisposition, earthDisposition ?? undefined)
   }
 
   // Local-dev-only shortcut: fills the order instantly so testing later
   // screens doesn't require playing the mining minigame by hand each time.
   function handleDevSkip() {
     cargoRef.current = { ...mission.requires.minerals }
-    onComplete(cargoRef.current, remoteDisposition)
+    onComplete(cargoRef.current, remoteDisposition, earthDisposition ?? undefined)
   }
 
   // Deposit contains the target's full mineral pool, not just the mission's objective —
@@ -357,6 +371,51 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
         glass
         right={isFreeOps ? <StatusPill kind="amber">Free Ops · No Client</StatusPill> : undefined}
       />
+
+      {/* KES-283: self-directed mining requires a storage destination before
+          the run can start — takes absolute precedence over every other
+          overlay (explainer/guide/success/failure/warning) since nothing
+          about the run can proceed while it's open. */}
+      {gateOpen && (
+        <div className="mining-storage-gate-overlay" style={{ position: 'absolute', inset: 0, zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24, background: 'rgba(4, 10, 20, 0.72)' }}>
+          <Panel accent="var(--ln-cyan)" surface="solid" style={{ padding: 16, width: '100%', maxWidth: 340 }}>
+            <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 10, fontWeight: 800, letterSpacing: '0.22em', color: 'var(--ln-cyan)', textTransform: 'uppercase', marginBottom: 8 }}>
+              Choose Storage Destination
+            </div>
+            <p style={{ margin: '0 0 14px', fontFamily: 'var(--ln-font-body)', fontSize: 12, lineHeight: 1.5, color: 'var(--ln-text-dim)' }}>
+              No client is owed this haul. Pick where whatever you mine on this run goes before you start drilling.
+            </p>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+              <button
+                type="button"
+                data-testid="mining-gate-sell"
+                onClick={() => setEarthDisposition('sell')}
+                style={{
+                  textAlign: 'left', padding: '10px 12px', borderRadius: 8, cursor: 'pointer',
+                  border: '1.5px solid var(--ln-hairline)', background: 'var(--ln-surface-2)',
+                }}
+              >
+                <div style={{ font: '800 12px var(--ln-font-display)', letterSpacing: '0.04em', textTransform: 'uppercase', color: 'var(--ln-text)' }}>Sell On Earth</div>
+                <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 10, color: 'var(--ln-text-muted)', marginTop: 2 }}>At market price</div>
+              </button>
+              <button
+                type="button"
+                data-testid="mining-gate-store"
+                onClick={() => hasEarthStorage && setEarthDisposition('store')}
+                disabled={!hasEarthStorage}
+                style={{
+                  textAlign: 'left', padding: '10px 12px', borderRadius: 8, cursor: hasEarthStorage ? 'pointer' : 'not-allowed',
+                  border: '1.5px solid var(--ln-hairline)', background: 'var(--ln-surface-2)',
+                  opacity: hasEarthStorage ? 1 : 0.5,
+                }}
+              >
+                <div style={{ font: '800 12px var(--ln-font-display)', letterSpacing: '0.04em', textTransform: 'uppercase', color: 'var(--ln-text)' }}>Store On Earth</div>
+                <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 10, color: 'var(--ln-text-muted)', marginTop: 2 }}>{hasEarthStorage ? 'Into the silo' : 'Needs a silo or vault'}</div>
+              </button>
+            </div>
+          </Panel>
+        </div>
+      )}
 
       {/* First-time-in-Free-Ops-mining explainer — dismiss-once, mirrors the mission-board explainer's ack pattern but covers what changes about the mining run itself (sell the haul yourself, no daily limit). Gated on activeOverlay so it never stacks with the guide, success popup, warning, or failure overlay. */}
       {activeOverlay === 'explainer' && (

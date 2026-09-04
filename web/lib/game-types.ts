@@ -209,6 +209,11 @@ export interface Player {
   /** The haul was settled into an off-world silo or sold before Earth return. */
   cargoSettledOffworld?: boolean
   pendingRemoteDisposition?: 'store' | 'sell'
+  /** Earth-side keep/sell choice made at the pre-mining storage gate (KES-283),
+   *  before the haul exists. Debrief's store-vs-sell panel seeds its default
+   *  from this so the pre-mining choice reads as a confirmation, not a second
+   *  ask from scratch. */
+  freeHaulDisposition?: 'store' | 'sell'
   returningToEarth?: boolean
   shipDestroyed?: boolean
   // True while in transit toward a two-leg mission's deliveryTargetId, after

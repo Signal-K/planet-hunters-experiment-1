@@ -73,11 +73,11 @@ export default function BuildPlaceScreen({ onPlaced, onBack, hasCoach, player }:
 
   const catalog = STRUCTURES.filter(s =>
     s.id !== 'garage'
-    // Refinery commissioning is an off-world own-program operation, not an
-    // Earth Base plot placement. Keeping it in this strip produced the Craft
-    // report's "build a refinery" dead end: an explanatory card was visible
-    // but deliberately could never become selectable here.
-    && s.id !== 'refinery'
+    // KES-283: Refinery was previously excluded here (KES-286) because it was
+    // modeled as an off-world site-commissioned structure with an unlock
+    // condition no mission ever satisfied — a permanent dead end. It's now a
+    // normal Earth Base plot purchase (same unlock shape as Surface Silo), so
+    // it belongs in this strip.
     // Academy/crew progression is deferred with the retired affinity ladder.
     // Existing placed academies remain readable, but no new Base plot offers
     // this unrelated progression branch in the simplified launch loop.

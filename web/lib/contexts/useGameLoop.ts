@@ -532,8 +532,11 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
         ?? s.player.dailyClientPool?.missions.find(item => item.id === s.missionId)
         ?? null
       if (!m || s.player.cargoSettledOffworld || !isFreeHaulMission(m, s.lastCargo)) return s
-      const effective = disposition ?? (earthStorageBuilt(s.player) ? 'store' : 'sell')
-      return applyFreeHaulDisposition(s, s.lastCargo, effective, Date.now())
+      const effective = disposition ?? s.player.freeHaulDisposition ?? (earthStorageBuilt(s.player) ? 'store' : 'sell')
+      const settled = applyFreeHaulDisposition(s, s.lastCargo, effective, Date.now())
+      // Clear the pre-mining choice (KES-283) once it's been consumed here, so
+      // it never carries over and silently pre-picks the next free haul.
+      return settled.player.freeHaulDisposition ? { ...settled, player: { ...settled.player, freeHaulDisposition: undefined } } : settled
     })
     const newMissionsDone = current.player.missionsDone + 1
     const completedMission = catalog.missions.find(m => m.id === current.missionId)

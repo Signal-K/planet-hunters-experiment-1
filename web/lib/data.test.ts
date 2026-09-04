@@ -513,16 +513,20 @@ describe('seed bible v0 catalog', () => {
     }
   })
 
-  it('defines off-world refinery structure seed data with Francs and material costs', () => {
+  it('defines the Refinery structure seed data with Francs and material costs (KES-283)', () => {
     const refinery = STRUCTURES.find(structure => structure.id === 'refinery')
     expect(refinery).toMatchObject({
       kind: 'refinery',
       cost: STRUCTURE_PRICES.refinery,
       costMaterials: { aluminium: 20, copper: 10 },
-      unlockTrigger: 'manual',
+      unlockTrigger: 'free-operations',
     })
-    // Commissioned via the target-based own-program mission, not a client-affinity gate.
+    // KES-283: a normal Earth Base plot purchase available once Free
+    // Operations begins — same unlock shape as the Surface Silo. The prior
+    // off-world site-commissioning path (KES-286) is retired: no mission ever
+    // satisfied its unlock condition, so it was permanently unreachable.
     expect(refinery && structureUnlocked(refinery, { placed: [] })).toBe(false)
+    expect(refinery && structureUnlocked(refinery, { freeOperations: true })).toBe(true)
     expect(refinery && structureUnlocked(refinery, { placed: ['refinery'] })).toBe(true)
     expect(refinery && canAffordStructure(refinery, {
       francs: STRUCTURE_PRICES.refinery,
