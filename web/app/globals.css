@@ -1765,8 +1765,34 @@ button { cursor: pointer; }
 }
 .transit-flight-hud__heading { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
 .transit-flight-hud__heading strong { color: var(--ln-text); font: 800 18px var(--ln-font-mono); }
-.transit-progress-track { height: 6px; margin-top: 8px; overflow: hidden; border-radius: 999px; background: rgba(255,255,255,.12); }
+.transit-progress-wrap { position: relative; margin-top: 8px; padding: 4px 0; }
+.transit-progress-track { position: relative; height: 6px; overflow: hidden; border-radius: 999px; background: rgba(255,255,255,.12); }
 .transit-progress-track span { display: block; height: 100%; border-radius: inherit; background: var(--ln-cyan); box-shadow: var(--ln-glow-cyan); transition: width 100ms linear; }
+.transit-waypoint {
+  position: absolute;
+  top: 50%;
+  width: 10px;
+  height: 10px;
+  transform: translate(-50%, -50%);
+  border-radius: 999px;
+  background: var(--ln-void);
+  border: 2px solid var(--ln-text-muted);
+  transition: background-color 200ms ease, border-color 200ms ease, box-shadow 200ms ease;
+}
+.transit-waypoint--passed { background: var(--ln-cyan); border-color: var(--ln-cyan); box-shadow: var(--ln-glow-cyan); }
+.transit-waypoint-label {
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  margin-top: 4px;
+  transform: translateX(-50%);
+  color: var(--ln-text-muted);
+  font: 700 7px var(--ln-font-display);
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.transit-waypoint-label--passed { color: var(--ln-cyan); }
 .transit-telemetry { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin-top: 10px; }
 .transit-telemetry div { display: grid; gap: 2px; min-width: 0; }
 .transit-telemetry span { color: var(--ln-text-muted); font: 700 8px var(--ln-font-display); letter-spacing: .14em; text-transform: uppercase; }
