@@ -20,7 +20,7 @@ import { TREASURY_PLAYER_ID } from '@/lib/systems/ProgressionSystem'
 import { enqueueSurvey, isRepeatSurveyEligible, getMilestoneSurveyVariant } from '@/lib/surveys'
 import { captureGameEvent } from '@/lib/posthog'
 import type { Catalog } from '@/lib/catalog'
-import type { GameState, LicenseGrade } from '@/lib/game-types'
+import type { GameState, LicenseGrade, MissionRunSnapshot } from '@/lib/game-types'
 import type { Target, TessVerdict, TransitRange, AsteroidVerdict } from '@/lib/data'
 import type { Toast } from '@/components/ui/ToastLayer'
 import { applyGainResearchXP, applyUpgradeLicenseGrade, applyUnlockBlueprint } from '@/lib/systems/ProgressionSystem'
@@ -41,6 +41,73 @@ interface GameLoopOpts {
   setState: React.Dispatch<React.SetStateAction<GameState>>
   catalog: Catalog
   addToast: (message: string, kind?: Toast['kind']) => void
+}
+
+function snapshotActiveMission(state: GameState): MissionRunSnapshot | null {
+  const { activeMission } = state.player
+  if (!activeMission || !state.missionId || !state.targetId) return null
+  const key = state.player.missionRunId ?? `${activeMission.id}:${state.player.transitStartedAt ?? Date.now()}`
+  return {
+    key,
+    activeMission,
+    missionId: state.missionId,
+    targetId: state.targetId,
+    deliveryTargetId: state.deliveryTargetId,
+    rocket: state.rocket,
+    lastCargo: state.lastCargo,
+    deliveredCargo: state.deliveredCargo,
+    missionRunId: state.player.missionRunId,
+    missionPhase: state.player.missionPhase,
+    miningCargoInProgress: state.player.miningCargoInProgress,
+    deliveryUnloadStartedAt: state.player.deliveryUnloadStartedAt,
+    landingStartedAt: state.player.landingStartedAt,
+    landingReturnStartedAt: state.player.landingReturnStartedAt,
+    arrivalAt: state.player.arrivalAt,
+    transitStartedAt: state.player.transitStartedAt,
+    missionRocketSource: state.player.missionRocketSource,
+    missionCrewIds: state.player.missionCrewIds,
+    debriefPending: state.player.debriefPending,
+    cargoSettledOffworld: state.player.cargoSettledOffworld,
+    pendingRemoteDisposition: state.player.pendingRemoteDisposition,
+    freeHaulDisposition: state.player.freeHaulDisposition,
+    returningToEarth: state.player.returningToEarth,
+    headingToDelivery: state.player.headingToDelivery,
+    shipDestroyed: state.player.shipDestroyed,
+  }
+}
+
+function restoreMissionSnapshot(state: GameState, snapshot: MissionRunSnapshot): GameState {
+  return {
+    ...state,
+    screen: snapshot.missionPhase ?? 'transit',
+    missionId: snapshot.missionId,
+    targetId: snapshot.targetId,
+    deliveryTargetId: snapshot.deliveryTargetId,
+    rocket: snapshot.rocket,
+    lastCargo: snapshot.lastCargo,
+    deliveredCargo: snapshot.deliveredCargo,
+    player: {
+      ...state.player,
+      activeMission: snapshot.activeMission,
+      missionRunId: snapshot.missionRunId,
+      missionPhase: snapshot.missionPhase,
+      miningCargoInProgress: snapshot.miningCargoInProgress,
+      deliveryUnloadStartedAt: snapshot.deliveryUnloadStartedAt,
+      landingStartedAt: snapshot.landingStartedAt,
+      landingReturnStartedAt: snapshot.landingReturnStartedAt,
+      arrivalAt: snapshot.arrivalAt,
+      transitStartedAt: snapshot.transitStartedAt,
+      missionRocketSource: snapshot.missionRocketSource,
+      missionCrewIds: snapshot.missionCrewIds,
+      debriefPending: snapshot.debriefPending,
+      cargoSettledOffworld: snapshot.cargoSettledOffworld,
+      pendingRemoteDisposition: snapshot.pendingRemoteDisposition,
+      freeHaulDisposition: snapshot.freeHaulDisposition,
+      returningToEarth: snapshot.returningToEarth,
+      headingToDelivery: snapshot.headingToDelivery,
+      shipDestroyed: snapshot.shipDestroyed,
+    },
+  }
 }
 
 export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopOpts) {
@@ -72,9 +139,25 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
     setState(s => ({ ...s, lastCargo: c }))
   }, [setState])
 
+  const resumeMissionRun = useCallback((key: string) => {
+    setState(s => {
+      const selected = s.player.pausedMissionRuns?.find(run => run.key === key)
+      if (!selected) return s
+      const current = snapshotActiveMission(s)
+      const pausedMissionRuns = [
+        ...(s.player.pausedMissionRuns ?? []).filter(run => run.key !== key),
+        ...(current ? [current] : []),
+      ]
+      return restoreMissionSnapshot({
+        ...s,
+        player: { ...s.player, pausedMissionRuns },
+      }, selected)
+    })
+  }, [setState])
+
   const onPickMission = useCallback((id: string) => {
     setState(s => {
-      if ((s.screen !== 'missions' && s.screen !== 'launchpad') || s.player.activeMission) return s
+      if (s.screen !== 'missions' && s.screen !== 'launchpad') return s
       let mission = catalog.missions.find(m => m.id === id)
         ?? s.player.dailyClientPool?.missions.find(m => m.id === id)
         ?? null
@@ -100,12 +183,40 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
       const dailyClientPool = (nextDailyPool && id.startsWith('dcp-'))
         ? { ...nextDailyPool, acceptedId: id }
         : nextDailyPool
+      // Selecting another mission parks the current operational context first.
+      // The old single `activeMission` guard made this a silent no-op; runs are
+      // now independently resumable, with no arbitrary capacity limit.
+      const parkedRun = snapshotActiveMission(s)
+      const pausedMissionRuns = parkedRun
+        ? [...(s.player.pausedMissionRuns ?? []).filter(run => run.key !== parkedRun.key), parkedRun]
+        : s.player.pausedMissionRuns
       const base = {
         ...s,
+        lastCargo: parkedRun ? null : s.lastCargo,
+        deliveredCargo: parkedRun ? null : s.deliveredCargo,
         player: {
           ...s.player,
           dailyClientPool,
           francs: s.player.francs - (mission.jointProject?.playerCost ?? 0),
+          pausedMissionRuns,
+          activeMission: parkedRun ? null : s.player.activeMission,
+          missionRunId: parkedRun ? undefined : s.player.missionRunId,
+          missionPhase: parkedRun ? undefined : s.player.missionPhase,
+          miningCargoInProgress: parkedRun ? undefined : s.player.miningCargoInProgress,
+          deliveryUnloadStartedAt: parkedRun ? undefined : s.player.deliveryUnloadStartedAt,
+          landingStartedAt: parkedRun ? undefined : s.player.landingStartedAt,
+          landingReturnStartedAt: parkedRun ? undefined : s.player.landingReturnStartedAt,
+          arrivalAt: parkedRun ? undefined : s.player.arrivalAt,
+          transitStartedAt: parkedRun ? undefined : s.player.transitStartedAt,
+          missionRocketSource: parkedRun ? undefined : s.player.missionRocketSource,
+          missionCrewIds: parkedRun ? [] : s.player.missionCrewIds,
+          debriefPending: parkedRun ? false : s.player.debriefPending,
+          cargoSettledOffworld: parkedRun ? false : s.player.cargoSettledOffworld,
+          pendingRemoteDisposition: parkedRun ? undefined : s.player.pendingRemoteDisposition,
+          freeHaulDisposition: parkedRun ? undefined : s.player.freeHaulDisposition,
+          returningToEarth: parkedRun ? false : s.player.returningToEarth,
+          headingToDelivery: parkedRun ? false : s.player.headingToDelivery,
+          shipDestroyed: parkedRun ? false : s.player.shipDestroyed,
         },
       }
       if (mission?.targetId) {
@@ -831,7 +942,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
 
   return {
     setPlayer, setMissionId, setTargetId, setRocket, setLastCargo,
-    onPickMission, onPickTarget, onPurchaseRocket, onFabricateRocketPart, onAssembleFabricatedRocket, onLaunch,
+    onPickMission, onPickTarget, onPurchaseRocket, onFabricateRocketPart, onAssembleFabricatedRocket, onLaunch, resumeMissionRun,
     onMiningDone, onDeliveryArrived, onDeliveryUnloadComplete, onReturnArrived, onRoverMiningDone, onDebriefDone,
     onLandingTouchdown, onRedockComplete,
     gainResearchXP, upgradeLicenseGrade, unlockBlueprint, launchTransitSatellite, submitTessClassification, chooseSatelliteTarget,

@@ -370,6 +370,22 @@ export function ScreenContent({
       )
 
     case 'launchpad':
+      {
+        const currentRunKey = game.player.activeMission
+          ? (game.player.missionRunId ?? `${game.player.activeMission.id}:${game.player.transitStartedAt ?? 'current'}`)
+          : null
+        const missionRuns = [
+          ...(game.player.activeMission && currentRunKey ? [{
+            key: currentRunKey,
+            label: game.player.activeMission.label,
+            phase: game.player.missionPhase ?? 'transit',
+          }] : []),
+          ...(game.player.pausedMissionRuns ?? []).map(run => ({
+            key: run.key,
+            label: run.activeMission.label,
+            phase: run.missionPhase ?? 'transit',
+          })),
+        ]
       return (
         <LaunchpadScreen
           onBack={() => game.go('hub')}
@@ -390,6 +406,14 @@ export function ScreenContent({
             enqueueSurvey('lnm_resume_mission', 1200)
             game.go(game.player.missionPhase ?? 'transit')
           } : undefined}
+          missionRuns={missionRuns}
+          onResumeMissionRun={key => {
+            if (key === currentRunKey) {
+              game.go(game.player.missionPhase ?? 'transit')
+              return
+            }
+            game.resumeMissionRun(key)
+          }}
           onViewMissionLog={() => game.go('mission-history')}
           missionsDone={game.player.missionsDone}
           freeOperations={game.player.freeOperations}
@@ -400,6 +424,7 @@ export function ScreenContent({
           francs={game.player.francs}
         />
       )
+      }
 
     case 'academy':
       return (

@@ -22,6 +22,8 @@ interface LaunchpadScreenProps {
   onLaunchpadAction: () => void
   onOpenHangar: () => void
   onResumeMission?: () => void
+  missionRuns?: Array<{ key: string; label: string; phase: string }>
+  onResumeMissionRun?: (key: string) => void
   onViewMissionLog?: () => void
   missionsDone: number
   freeOperations: boolean
@@ -72,18 +74,19 @@ const guideSteps = [
   {
     kicker: '03 / COMMAND RAIL',
     title: 'Use the attached controls',
-    copy: 'The lower rail holds secondary program actions. A mission in progress is resumed explicitly here; it never changes scene just because the pad was clicked.',
+    copy: 'The lower rail holds secondary program actions. Resume an operation from here while the launchpad stays available to create another mission.',
   },
 ] as const
 
 export default function LaunchpadScreen({
-  onBack, onPick, onViewContracts, onLaunchpadAction, onOpenHangar, onResumeMission, onViewMissionLog, missionsDone, freeOperations, catalog, player, rocketImageSrc = '/game/assets/ships/ship_sr1.png', selectedRocketName, francs, missionMenuOpen: requestedMissionMenuOpen = false, onMissionMenuOpenChange,
+  onBack, onPick, onViewContracts, onLaunchpadAction, onOpenHangar, onResumeMission, missionRuns = [], onResumeMissionRun, onViewMissionLog, missionsDone, freeOperations, catalog, player, rocketImageSrc = '/game/assets/ships/ship_sr1.png', selectedRocketName, francs, missionMenuOpen: requestedMissionMenuOpen = false, onMissionMenuOpenChange,
 }: LaunchpadScreenProps) {
   // This is the Launchpad route: a playable Earth Base composition. The
   // tower and hangar are the primary interactions; the rail only exposes
   // secondary tools without replacing the scene with a card dashboard.
   const { phase: skyPhase } = useTimeOfDay()
   const [guideStep, setGuideStep] = useState<number | null>(null)
+  const [missionRunsOpen, setMissionRunsOpen] = useState(false)
   const [missionMenuOpen, setMissionMenuOpen] = useState(requestedMissionMenuOpen)
   useEffect(() => {
     setMissionMenuOpen(requestedMissionMenuOpen)
@@ -118,13 +121,17 @@ export default function LaunchpadScreen({
       onLaunchpadAction()
       return
     }
-    if (!player.activeMission) setMissionMenu(true)
+    setMissionMenu(true)
   }
-  const padActionLabel = player.activeMission
-    ? 'Launchpad active; use the Resume Mission footer action'
-    : player.pendingLaunch
+  // An in-progress operation never turns the launchpad into a dead object.
+  // Players may create another mission from the physical pad; resuming a
+  // current run remains an explicit secondary command in the rail.
+  const padActionLabel = player.pendingLaunch
       ? 'Inspect pending launch'
-      : 'Start a new mission'
+      : 'Create a new mission'
+  const padActionTitle = player.pendingLaunch
+      ? 'INSPECT LAUNCH'
+      : 'NEW MISSION'
 
   return (
     <div className="game-screen theme-deep ln-scene-launchpad" data-testid="launchpad-focus-screen">
@@ -156,18 +163,18 @@ export default function LaunchpadScreen({
           <HubWorldBackground phase={skyPhase} composition="earth-base-pad" />
           <RoadRover road={EARTH_BASE_PAD.roadPaths?.[0]} />
         </div>
-        <button type="button" className="launchpad-scene-object launchpad-tower" data-testid="launchpad-status-card" onClick={openMissionMenu} disabled={!!player.activeMission} aria-label={padActionLabel}>
+        <button type="button" className="launchpad-scene-object launchpad-tower" data-testid="launchpad-status-card" data-action="primary-mission" onClick={openMissionMenu} aria-label={padActionLabel}>
           <span className="launchpad-tower-art" data-launch-state={player.pendingLaunch ? 'hot' : 'idle'}>
             <LaunchpadModules />
             {player.pendingLaunch && <img className="launchpad-tower-rocket" src={rocketImageSrc} alt="Rocket on launchpad" />}
           </span>
-          <span className="launchpad-object-label launchpad-object-label--center">
-            <small>LAUNCHPAD</small>
-            <strong>{player.activeMission ? 'MISSION ACTIVE' : player.pendingLaunch ? 'INSPECT LAUNCH' : 'START MISSION'}</strong>
+          <span className="launchpad-primary-pad-control" data-testid="launchpad-primary-mission-btn">
+            <small>LAUNCHPAD CONTROL</small>
+            <strong>{padActionTitle}</strong>
           </span>
         </button>
 
-        {missionMenuOpen && !player.activeMission && !player.pendingLaunch && (
+        {missionMenuOpen && !player.pendingLaunch && (
           <section className="launchpad-mission-menu" data-testid="launchpad-new-mission-menu" aria-labelledby="launchpad-new-mission-title">
             <div className="launchpad-mission-menu-header">
               <div>
@@ -221,6 +228,25 @@ export default function LaunchpadScreen({
                 <strong>AVAILABLE CONTRACTS</strong>
                 <span>Review client missions and choose an available contract.</span>
               </button>
+            </div>
+          </section>
+        )}
+
+        {missionRunsOpen && missionRuns.length > 0 && (
+          <section className="launchpad-mission-runs" data-testid="launchpad-mission-runs" aria-label="Active mission runs">
+            <div>
+              <span className="launchpad-guide-kicker">PROGRAM / ACTIVE OPERATIONS</span>
+              <h2>Mission runs</h2>
+            </div>
+            <button type="button" className="launchpad-mission-menu-close" onClick={() => setMissionRunsOpen(false)}>CLOSE</button>
+            <div className="launchpad-mission-run-list">
+              {missionRuns.map(run => (
+                <button key={run.key} type="button" data-testid={`launchpad-resume-run-${run.key}`} onClick={() => onResumeMissionRun?.(run.key)}>
+                  <MissionGlyph />
+                  <span>{run.label}</span>
+                  <strong>{run.phase.toUpperCase()}</strong>
+                </button>
+              ))}
             </div>
           </section>
         )}
@@ -282,11 +308,12 @@ export default function LaunchpadScreen({
           <span>{launchedSatellites}/{SATELLITE_MODELS.length} SAT</span>
         </div>
         <div className="launchpad-rail-actions">
-          {onResumeMission && <button className="is-primary" data-testid="launchpad-resume-mission-btn" aria-label="Jump back to active mission" onClick={onResumeMission}><MissionGlyph /> RESUME MISSION</button>}
+          {player.activeMission && onResumeMission && <button className="is-primary" data-testid="launchpad-resume-mission-btn" aria-label="Jump back to active mission" onClick={onResumeMission}><MissionGlyph /> RESUME MISSION</button>}
+          {missionRuns.length > (player.activeMission ? 1 : 0) && <button data-testid="launchpad-mission-runs-btn" onClick={() => setMissionRunsOpen(true)}><MissionGlyph /> ACTIVE · {missionRuns.length}</button>}
           {freeOperations && <button data-testid="launchpad-guide-open" onClick={() => setGuideStep(0)}><GuideGlyph /> GUIDE</button>}
           <button data-testid="launchpad-open-hangar-btn" onClick={onOpenHangar}><HangarGlyph /> HANGAR</button>
           {onViewMissionLog && <button data-testid="launchpad-mission-log-btn" onClick={onViewMissionLog}><MissionGlyph /> MISSION LOG</button>}
-          {!player.activeMission && <button className="is-primary" data-testid="launchpad-new-mission-btn" data-action="new-mission" onClick={openMissionMenu}><MissionGlyph /> NEW MISSION</button>}
+          {!player.pendingLaunch && <button className="is-primary" data-testid="launchpad-new-mission-btn" data-action="new-mission" onClick={openMissionMenu}><MissionGlyph /> NEW MISSION</button>}
         </div>
       </footer>
     </div>

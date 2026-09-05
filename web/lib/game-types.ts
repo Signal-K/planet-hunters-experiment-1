@@ -26,6 +26,39 @@ export interface CompletedMissionRecord {
   kind?: 'client' | 'program'
 }
 
+/**
+ * A paused mission keeps its own operational context while another vehicle is
+ * prepared or flown. Global economy/progression stays on `Player`; only the
+ * data required to resume this specific run lives here.
+ */
+export interface MissionRunSnapshot {
+  key: string
+  activeMission: { id: string; label: string }
+  missionId: string
+  targetId: string
+  deliveryTargetId?: string | null
+  rocket: RocketConfig
+  lastCargo: Record<string, number> | null
+  deliveredCargo?: Record<string, number> | null
+  missionRunId?: string
+  missionPhase?: 'transit' | 'landing' | 'mining' | 'delivery' | 'debrief'
+  miningCargoInProgress?: Record<string, number>
+  deliveryUnloadStartedAt?: number
+  landingStartedAt?: number
+  landingReturnStartedAt?: number
+  arrivalAt?: number | null
+  transitStartedAt?: number | null
+  missionRocketSource?: 'company' | 'fabricated'
+  missionCrewIds?: string[]
+  debriefPending?: boolean
+  cargoSettledOffworld?: boolean
+  pendingRemoteDisposition?: 'store' | 'sell'
+  freeHaulDisposition?: 'store' | 'sell'
+  returningToEarth?: boolean
+  headingToDelivery?: boolean
+  shipDestroyed?: boolean
+}
+
 export type Screen =
   | 'intro'
   | 'build'
@@ -160,6 +193,8 @@ export interface Player {
   // boot. See applyPendingDemoBonus in game-context.tsx.
   demoBonusClaimed?: Partial<Record<'mining' | 'citizen-science', boolean>>
   activeMission: { id: string; label: string } | null
+  /** Paused operational contexts. There is intentionally no artificial cap. */
+  pausedMissionRuns?: MissionRunSnapshot[]
   // PocketBase mission_runs record for the current run. Kept in the save so a
   // refresh/resume continues updating the same server-side lifecycle record.
   missionRunId?: string
@@ -444,6 +479,7 @@ export interface GameActions {
   onFabricateRocketPart: (rocketId: string, componentId: string) => void
   onAssembleFabricatedRocket: (rocketId: string) => void
   onLaunch: () => void
+  resumeMissionRun: (key: string) => void
   onMiningDone: (cargo: Record<string, number>, remoteDisposition?: 'store' | 'sell') => void
   onDeliveryArrived: () => void
   onDeliveryUnloadComplete: () => void

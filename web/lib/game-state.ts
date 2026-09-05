@@ -487,6 +487,16 @@ export function mergeRemoteState(current: GameState, remoteState: PartialSave): 
     current.player.discoveredExoplanetTargets,
     remoteState.player?.discoveredExoplanetTargets,
   )
+  // Paused missions are independent runs, not a last-write-wins preference.
+  // Keep the union so a device that launched another vehicle cannot erase a
+  // run parked on the other device between syncs.
+  const pausedMissionRuns = [
+    ...(current.player.pausedMissionRuns ?? []),
+    ...(remoteState.player?.pausedMissionRuns ?? []),
+  ]
+  merged.player.pausedMissionRuns = Array.from(
+    new Map(pausedMissionRuns.map(run => [run.key, run])).values(),
+  )
 
   // A run is resumable state, not onboarding progress. If the current device
   // has no active run but PocketBase does, keep the remote run and its route

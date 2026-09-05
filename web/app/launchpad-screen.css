@@ -123,10 +123,43 @@ button.launchpad-scene-object { cursor: pointer; }
   position: relative; left: auto; bottom: auto;
   display: block; width: 100%; aspect-ratio: 172 / 118; transform: none;
 }
-.launchpad-tower .launchpad-object-label,
+.launchpad-tower .launchpad-primary-pad-control,
 .launchpad-rocket .launchpad-object-label {
   position: absolute; left: 50%; bottom: -34px; transform: translateX(-50%);
 }
+.launchpad-primary-pad-control {
+  box-sizing: border-box;
+  display: flex;
+  min-width: 232px;
+  min-height: 56px;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 16px;
+  border: 1px solid var(--ln-cyan);
+  border-radius: 10px;
+  background: linear-gradient(135deg, var(--ln-cyan) 0%, var(--ln-cyan-bright) 100%);
+  box-shadow: 0 8px 24px color-mix(in srgb, var(--ln-cyan) 38%, transparent);
+  color: var(--ln-text-on-cyan);
+  flex-direction: column;
+  gap: 3px;
+  white-space: nowrap;
+}
+.launchpad-primary-pad-control small {
+  font: 800 8px var(--ln-font-display);
+  letter-spacing: .18em;
+  opacity: .76;
+}
+.launchpad-primary-pad-control strong {
+  font: 900 13px var(--ln-font-display);
+  letter-spacing: .12em;
+}
+.launchpad-tower:hover .launchpad-primary-pad-control,
+.launchpad-tower:focus-visible .launchpad-primary-pad-control {
+  filter: brightness(1.08);
+  transform: translateX(-50%) translateY(-2px);
+}
+.launchpad-tower:focus-visible { outline: none; }
+.launchpad-tower:focus-visible .launchpad-primary-pad-control { outline: 2px solid var(--ln-text); outline-offset: 3px; }
 .launchpad-tower-rocket { position: absolute; z-index: 4; left: 50%; bottom: 16%; width: 42%; transform: translateX(-50%) rotate(-90deg); filter: drop-shadow(0 8px 14px rgba(0,0,0,.55)); }
 .launchpad-rocket { right: 3%; bottom: var(--hub-ground); width: 37%; height: auto; justify-content: flex-end; }
 .launchpad-rocket-art {
@@ -269,6 +302,43 @@ button.launchpad-scene-object { cursor: pointer; }
   font: 13px/1.35 var(--ln-font-body);
 }
 
+.launchpad-mission-runs {
+  position: absolute;
+  z-index: 24;
+  right: 24px;
+  bottom: 78px;
+  display: grid;
+  width: min(420px, calc(100% - 32px));
+  gap: 16px;
+  padding: 16px;
+  border: 1px solid var(--ln-cyan);
+  border-radius: 8px;
+  background: var(--ln-shell);
+  box-shadow: var(--ln-shadow-modal);
+}
+.launchpad-mission-runs > :first-child { min-width: 0; }
+.launchpad-mission-runs h2 { margin: 4px 0 0; color: var(--ln-text); font: 800 20px var(--ln-font-display); letter-spacing: .04em; text-transform: uppercase; }
+.launchpad-mission-runs .launchpad-mission-menu-close { position: absolute; top: 16px; right: 16px; }
+.launchpad-mission-run-list { display: grid; gap: 8px; }
+.launchpad-mission-run-list button {
+  display: grid;
+  grid-template-columns: 24px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+  min-height: 48px;
+  padding: 8px 12px;
+  border: 1px solid var(--ln-cyan-border);
+  border-radius: 6px;
+  background: var(--ln-panel);
+  color: var(--ln-text);
+  text-align: left;
+}
+.launchpad-mission-run-list button:hover,
+.launchpad-mission-run-list button:focus-visible { border-color: var(--ln-cyan); background: var(--ln-cyan-soft); outline: none; }
+.launchpad-mission-run-list svg { width: 18px; height: 18px; fill: none; stroke: var(--ln-cyan); stroke-width: 1.8; }
+.launchpad-mission-run-list span { overflow: hidden; font: 800 10px var(--ln-font-display); letter-spacing: .08em; text-overflow: ellipsis; white-space: nowrap; }
+.launchpad-mission-run-list strong { color: var(--ln-cyan); font: 800 8px var(--ln-font-display); letter-spacing: .12em; }
+
 .launchpad-guide {
   position: absolute; z-index: 24; top: 24px; left: 24px; width: min(360px, calc(100% - 48px));
   padding: 20px; border: 1px solid var(--ln-cyan); border-radius: 10px;
@@ -323,6 +393,8 @@ button.launchpad-scene-object { cursor: pointer; }
   .launchpad-object-label { min-width: 0; padding: 6px 8px; }
   .launchpad-object-label small { display: none; }
   .launchpad-object-label strong { font-size: 8px; }
+  .launchpad-primary-pad-control { min-width: 192px; min-height: 48px; padding: 8px 12px; }
+  .launchpad-primary-pad-control strong { font-size: 10px; }
   .launchpad-satellite svg { width: 70px; }
   .launchpad-rail-status span:not(:first-child) { display: none; }
   .launchpad-rail-actions { gap: 4px; }
