@@ -138,6 +138,14 @@ describe('InstrumentFeedSystem', () => {
       expect(unresolved.map(item => item.id)).not.toContain(digest[0].id)
     })
 
+    it('advances to a new deterministic candidate window on the next day', () => {
+      const feed = Array.from({ length: 20 }, (_, index) => asteroidCandidate(`candidate-${index}`))
+      const today = deepSpaceInstrumentDigest(feed, player({ deepSpaceTelescopeLevel: 3 }), '2026-07-30')
+      const tomorrow = deepSpaceInstrumentDigest(feed, player({ deepSpaceTelescopeLevel: 3 }), '2026-07-31')
+
+      expect(tomorrow.map(candidate => candidate.id)).not.toEqual(today.map(candidate => candidate.id))
+    })
+
     it('is an independent instrument from the transit telescope digest', () => {
       const tessCandidates = ['a', 'b', 'c', 'd'].map(candidate)
       const mixedPlayer = player({ transitSatelliteLevel: 2, deepSpaceTelescopeLevel: 1 })

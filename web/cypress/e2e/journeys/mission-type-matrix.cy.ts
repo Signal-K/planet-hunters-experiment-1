@@ -10,6 +10,7 @@
 import type { GameState } from '@/game-context'
 
 const STORAGE_KEY = 'landnam-game-state-v1'
+const AUTHENTICATED_STORAGE_KEY = `${STORAGE_KEY}:user:e2e-user`
 
 const VIEWPORTS = [
   { label: 'mobile portrait', width: 390, height: 844 },
@@ -63,7 +64,7 @@ function visit(path: string, screen: GameState['screen'], playerOverrides: Parti
 
   cy.visit(path, {
     onBeforeLoad(win) {
-      win.localStorage.setItem(STORAGE_KEY, JSON.stringify(state))
+      win.localStorage.setItem(AUTHENTICATED_STORAGE_KEY, JSON.stringify(state))
       win.localStorage.setItem('landnam-account-credentials', JSON.stringify({ email: 'e2e@example.com', password: 'e2e-guest-test' }))
     },
   })
@@ -97,7 +98,7 @@ describe('Deep Space Telescope / asteroid-discovery mission type across viewport
       beforeEach(() => cy.viewport(viewport.width, viewport.height))
 
       it('gates the instrument behind Free Operations', () => {
-        visit('/game/asteroid-discovery', 'asteroid-discovery', { freeOperations: false })
+        visit('/game/asteroid-discovery', 'asteroid-discovery', { freeOperations: false, missionsDone: 2 })
         cy.contains('Free Operations Required', { timeout: 10000 }).should('be.visible')
       })
 
@@ -130,7 +131,7 @@ describe('Deep Space Telescope / asteroid-discovery mission type across viewport
         // computed fresh every render) now renders correctly instead.
         cy.contains('ANNOTATION SAVED', { timeout: 15000 }).should('be.visible')
         cy.window().then(win => {
-          const saved = JSON.parse(win.localStorage.getItem(STORAGE_KEY) || '{}') as GameState
+          const saved = JSON.parse(win.localStorage.getItem(AUTHENTICATED_STORAGE_KEY) || '{}') as GameState
           expect(saved.player.asteroidClassifications?.[MOCK_CANDIDATE.id]?.verdict).to.eq('likely_real')
         })
       })

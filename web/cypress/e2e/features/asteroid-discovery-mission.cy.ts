@@ -9,6 +9,7 @@
 import type { GameState } from '@/game-context'
 
 const STORAGE_KEY = 'landnam-game-state-v1'
+const AUTHENTICATED_STORAGE_KEY = `${STORAGE_KEY}:user:e2e-user`
 const COACH_KEY = 'landnam_asteroid_discovery_coach_seen_v1'
 
 function basePlayer(overrides: Partial<GameState['player']> = {}): GameState['player'] {
@@ -34,6 +35,7 @@ function basePlayer(overrides: Partial<GameState['player']> = {}): GameState['pl
     roverDeployments: [],
     clientTerritories: {},
     transitSatelliteLaunchedAt: Date.now() - 60_000,
+    transitSatelliteLevel: 2,
     tessClassifications: {},
     deepSpaceTelescopeBuilt: false,
     deepSpaceTelescopeMissionCompletedAt: null,
@@ -58,7 +60,7 @@ function visitWithState(path: string, screen: GameState['screen'], playerOverrid
 
   cy.visit(path, {
     onBeforeLoad(win) {
-      win.localStorage.setItem(STORAGE_KEY, JSON.stringify(full))
+      win.localStorage.setItem(AUTHENTICATED_STORAGE_KEY, JSON.stringify(full))
       win.localStorage.setItem('landnam-account-credentials', JSON.stringify({ email: 'e2e@example.com', password: 'e2e-guest-test' }))
       win.localStorage.setItem('ln_tutorial_complete_ack', '1')
     },
@@ -80,7 +82,14 @@ describe('Asteroid Discovery mission on-ramp (KES-128)', () => {
     visitWithState('/game/launchpad', 'launchpad', {
       clientMissions: { 'earthbound-minerals': 10 },
     })
-    cy.get('[data-testid="launchpad-program-operation-btn"]', { timeout: 10000 }).should('be.visible')
+    cy.get('[data-testid="launchpad-new-mission-btn"]', { timeout: 10000 }).click()
+    cy.get('[data-testid="launchpad-new-mission-satellite-btn"]', { timeout: 10000 })
+      .should('be.visible')
+      .and('not.be.disabled')
+    cy.get('[data-testid="launchpad-new-mission-satellite-btn"]').click()
+    cy.get('[data-testid="launchpad-prepare-instrument-btn"]', { timeout: 10000 })
+      .should('be.visible')
+      .and('contain.text', 'Survey')
   })
 
   it('does not offer the survey mission below the SMS/affinity threshold', () => {
@@ -95,11 +104,12 @@ describe('Asteroid Discovery mission on-ramp (KES-128)', () => {
       clientMissions: { 'earthbound-minerals': 10 },
       deepSpaceTelescopeMissionCompletedAt: null,
     })
+    cy.contains('button', 'Deep Space Telescope', { timeout: 10000 }).scrollIntoView()
+    cy.wait(1500)
     cy.contains('button', 'Deep Space Telescope', { timeout: 10000 })
-      .scrollIntoView()
       .should('be.visible')
       .and('be.disabled')
-      .and('contain.text', 'Transit Telescope level 2 and affinity level 2 with a client')
+      .and('contain.text', 'Transit telescope level 2 and affinity level 2 with a client')
   })
 
   it('unlocks Deep Space Telescope at Build/Place once the survey mission is completed', () => {

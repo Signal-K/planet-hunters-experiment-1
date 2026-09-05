@@ -480,8 +480,12 @@ button { cursor: pointer; }
 @media (max-width: 1023px) {
   .portrait-canvas {
     width: 100%;
-    height: 100dvh;
-    max-height: none;
+    /* Keep the game surface inside the stable viewport. Some embedded
+       browsers report a dynamic viewport taller than the visible frame;
+       using it here lets absolute game screens extend below the actual
+       viewport and clips their bottom HUD (KES-322). */
+    height: 100svh;
+    max-height: 100svh;
     border: 0;
     border-radius: 0;
     box-shadow: none;

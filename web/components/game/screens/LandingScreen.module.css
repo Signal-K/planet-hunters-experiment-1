@@ -2,7 +2,11 @@
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  position: relative;
+  /* Preserve the shared .game-screen absolute viewport contract. A relative
+     screen sizes itself to the landing HUD's min-content height and extends
+     below short landscape viewports (KES-322). */
+  position: absolute;
+  inset: 0;
   z-index: 0;
 }
 
@@ -106,5 +110,32 @@
   .hud {
     gap: 7px;
     padding: 12px 14px;
+  }
+}
+
+@media (orientation: landscape) and (max-width: 1023px) {
+  .stage {
+    min-height: 96px;
+    margin-top: 56px;
+  }
+
+  .targetLabel {
+    top: 8px;
+    right: 12px;
+    padding: 5px 8px;
+  }
+
+  .hud {
+    gap: 4px;
+    padding: 8px 12px;
+  }
+
+  .contract,
+  .timer {
+    font-size: 12px;
+  }
+
+  .progressMeta {
+    gap: 8px;
   }
 }
