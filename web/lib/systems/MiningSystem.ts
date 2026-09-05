@@ -59,7 +59,13 @@ export function applyReturnArrived(s: GameState): GameState {
       missionPhase: 'debrief',
       debriefPending: false,
       returningToEarth: false,
-      shipDestroyed: true,
+      // KES-321: this was unconditionally `true`, so DebriefScreen's
+      // "HULL LOST · CARGO RECOVERED" branch fired on every single
+      // successful return — there is no other code path in the game that
+      // ever sets this flag, so it never represented a real failure. The
+      // single-use vehicle's routine teardown is shown separately via the
+      // `scrapping` state (ScrapSequenceCanvas), independent of this flag.
+      shipDestroyed: false,
     },
     screen: 'debrief',
     doneSteps: { ...s.doneSteps, 6: true },
