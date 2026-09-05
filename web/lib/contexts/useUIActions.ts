@@ -1,6 +1,6 @@
 import { useRef, useState, useCallback } from 'react'
 import type { Toast } from '@/components/ui/ToastLayer'
-import type { Screen, GameState, LaunchpadView } from '@/lib/game-types'
+import type { Screen, GameState } from '@/lib/game-types'
 import { EARTH_BASE_SCOPE } from '@/lib/scene-scope'
 import type { SceneScope } from '@/lib/scene-scope'
 
@@ -21,40 +21,29 @@ export function useUIActions(
   // is showing. Ephemeral UI state, not persisted GameState, same as
   // `toasts` above.
   const [subsurfaceView, setSubsurfaceView] = useState(false)
-  // Keep the routed Launchpad overview separate from the physical building's
-  // close-up focus. The overview is the full program UI; the Hub building is
-  // the diegetic scene interaction.
-  const [launchpadView, setLaunchpadView] = useState<LaunchpadView>('overview')
+  // Every Launchpad entry is now the physical scene. The retired overview was
+  // a generic dashboard that broke the Base's scene-first game flow.
   const [launchpadMissionMenuOpen, setLaunchpadMissionMenuOpen] = useState(false)
   // Hangar can be entered from the Earth Base or the Launchpad composition.
   // Preserve only that ephemeral return context: it is navigation chrome, not
   // player progress and must not be persisted into a save or public URL.
-  const hangarReturnView = useRef<LaunchpadView | 'hub'>('hub')
+  const hangarReturnView = useRef<'launchpad' | 'hub'>('hub')
 
   const go = useCallback((screen: Screen) => {
-    if (screen === 'launchpad') setLaunchpadView('overview')
     setState(s => {
       if (screen === 'hangar') {
-        hangarReturnView.current = s.screen === 'launchpad' ? launchpadView : 'hub'
+        hangarReturnView.current = s.screen === 'launchpad' ? 'launchpad' : 'hub'
       }
       return { ...s, screen }
     })
-  }, [launchpadView, setState])
-
-  const openLaunchpad = useCallback(() => {
-    setLaunchpadView('overview')
-    setLaunchpadMissionMenuOpen(false)
-    setState(s => ({ ...s, screen: 'launchpad' }))
   }, [setState])
 
-  const focusLaunchpad = useCallback(() => {
-    setLaunchpadView('focus')
+  const openLaunchpad = useCallback(() => {
     setLaunchpadMissionMenuOpen(false)
     setState(s => ({ ...s, screen: 'launchpad' }))
   }, [setState])
 
   const openLaunchpadMissionMenu = useCallback(() => {
-    setLaunchpadView('focus')
     setLaunchpadMissionMenuOpen(true)
     setState(s => ({ ...s, screen: 'launchpad' }))
   }, [setState])
@@ -65,7 +54,6 @@ export function useUIActions(
       setState(s => ({ ...s, screen: 'hub' }))
       return
     }
-    setLaunchpadView(destination)
     setState(s => ({ ...s, screen: 'launchpad' }))
   }, [setState])
 
@@ -85,7 +73,6 @@ export function useUIActions(
   // Updates state.screen WITHOUT triggering the URL-sync effect so we don't create
   // a push that fights the navigation.
   const setScreenFromUrl = useCallback((screen: Screen) => {
-    if (screen === 'launchpad') setLaunchpadView('overview')
     setState(s => {
       // A bookmarked /game/build must not resurrect the transient plot picker
       // for an operational base after hydration has already repaired it to
@@ -122,5 +109,5 @@ export function useUIActions(
     setState(s => ({ ...s, pendingTerritoryClaimFor: undefined, screen: s.tutorial ? 'hub' : 'market' }))
   }, [setState])
 
-  return { go, goToMissions, setScreenFromUrl, skipNextUrlSync, setPopup, setMenuOpen, addToast, dismissToast, clearTerritoryClaimPopup, toasts, subsurfaceView, setSubsurfaceView, launchpadView, openLaunchpad, focusLaunchpad, openLaunchpadMissionMenu, launchpadMissionMenuOpen, setLaunchpadMissionMenuOpen, returnFromHangar }
+  return { go, goToMissions, setScreenFromUrl, skipNextUrlSync, setPopup, setMenuOpen, addToast, dismissToast, clearTerritoryClaimPopup, toasts, subsurfaceView, setSubsurfaceView, openLaunchpad, openLaunchpadMissionMenu, launchpadMissionMenuOpen, setLaunchpadMissionMenuOpen, returnFromHangar }
 }

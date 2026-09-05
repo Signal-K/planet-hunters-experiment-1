@@ -54,8 +54,6 @@ export type Screen =
   | 'mission-history'
   | 'narrative-ledger'
 
-export type LaunchpadView = 'overview' | 'focus'
-
 // Screens that render a physical place in the game world (or a step in a
 // mission run through one) get the full, edge-to-edge viewport on desktop —
 // they are locations, not menus, and boxing them in the device-card chrome
@@ -421,9 +419,7 @@ export interface GameActions {
   authGateOtpId: string | null
   verifyOtp: (code: string) => Promise<void>
   go: (screen: Screen) => void
-  launchpadView: LaunchpadView
   openLaunchpad: () => void
-  focusLaunchpad: () => void
   openLaunchpadMissionMenu: () => void
   launchpadMissionMenuOpen: boolean
   setLaunchpadMissionMenuOpen: (open: boolean) => void
