@@ -1,13 +1,13 @@
 'use client'
 
-import React, { useState } from 'react'
+import { useEffect, useState } from 'react'
 import Image from 'next/image'
 import TopBar from '@/components/ui/TopBar'
 import Panel from '@/components/ui/Panel'
-import { feasibleTargetsFor, FREE_OPS_START_MISSIONS_DONE, missionTypePrimer, isMissionBoardMission, tutorialClientMissionOptions } from '@/lib/data'
+import { feasibleTargetsFor, FREE_OPS_START_MISSIONS_DONE, isMissionBoardMission, tutorialClientMissionOptions } from '@/lib/data'
 import type { DailyClientPool } from '@/lib/data'
 import type { Catalog } from '@/lib/catalog'
-import { TUTORIAL_MANUAL_CONTENT_TOP } from '@/lib/tutorial-layout'
+import { TUTORIAL_COMPACT_CONTENT_TOP, TUTORIAL_MANUAL_CONTENT_TOP } from '@/lib/tutorial-layout'
 import { UI_ZONES } from '@/lib/ui-zones'
 import MissionCard from '@/components/game/MissionCard'
 import MissionDetailPanel from '@/components/game/MissionDetailPanel'
@@ -21,6 +21,8 @@ import type { Player } from '@/lib/game-types'
 import { filterMissionsForSceneScope } from '@/lib/scene-scope'
 import type { SceneScope } from '@/lib/scene-scope'
 import { isTutorialMissionInProgress } from '@/lib/mission-flow'
+
+const SHORT_LANDSCAPE_CONTENT_TOP = 142
 
 function CornerBracket({ position }: { position: 'tl' | 'tr' | 'bl' | 'br' }) {
   const cls = { tl: styles.cornerBracketTl, tr: styles.cornerBracketTr, bl: styles.cornerBracketBl, br: styles.cornerBracketBr }[position]
@@ -39,6 +41,7 @@ interface MissionBoardScreenProps {
   missionsDone: number
   freeOperations: boolean
   hasCoach?: boolean
+  coachManual?: boolean
   catalog: Catalog
   clientMissions?: Record<string, number>
   clientCooldowns?: Record<string, number>
@@ -49,9 +52,17 @@ interface MissionBoardScreenProps {
   sceneScope?: SceneScope
 }
 
-export default function MissionBoardScreen({ onBack, onPick, missionsDone, freeOperations, hasCoach, catalog, francs, crew = [], player, sceneScope = { kind: 'earth-base', id: 'earth-base', label: 'Base' } }: MissionBoardScreenProps) {
+export default function MissionBoardScreen({ onBack, onPick, missionsDone, freeOperations, hasCoach, coachManual = false, catalog, francs, crew = [], player, sceneScope = { kind: 'earth-base', id: 'earth-base', label: 'Base' } }: MissionBoardScreenProps) {
   const { missions: MISSIONS, clients: CLIENTS, minerals: MINERAL_META, targets, parts } = catalog
   const [previewId, setPreviewId] = useState<string | null>(null)
+  const [shortLandscape, setShortLandscape] = useState(false)
+  useEffect(() => {
+    const media = window.matchMedia('(orientation: landscape) and (max-width: 1023px) and (max-height: 600px)')
+    const update = () => setShortLandscape(media.matches)
+    update()
+    media.addEventListener('change', update)
+    return () => media.removeEventListener('change', update)
+  }, [])
   const sequence = missionsDone + 1
   // Tutorial runs are deliberately single-threaded: finish the authored
   // mission before accepting another contract. Free Ops remains repeatable;
@@ -153,7 +164,9 @@ export default function MissionBoardScreen({ onBack, onPick, missionsDone, freeO
 
   const effectivePreviewId = previewId ?? cardModels.find(c => c.unlocked)?.mission.id ?? cardModels[0]?.mission.id ?? null
   const previewModel = cardModels.find(c => c.mission.id === effectivePreviewId) ?? null
-  const primer = previewModel ? missionTypePrimer(previewModel.mission) : null
+  const contentTop = hasCoach
+    ? (coachManual ? TUTORIAL_MANUAL_CONTENT_TOP : TUTORIAL_COMPACT_CONTENT_TOP)
+    : 82
 
   return (
     <div className="ln-scene-mission-board theme-blueprint" style={{ width: '100%', height: '100%', position: 'relative' }}>
@@ -170,9 +183,8 @@ export default function MissionBoardScreen({ onBack, onPick, missionsDone, freeO
           francs={francs}
         />
 
-      {/* .bottom-tab-bar now reserves its own flex row above this screen, so
-          paddingBottom only needs breathing room plus the coach panel's own
-          footprint when it's showing — no more nav-clearance guesswork. */}
+      {/* The board content viewport ends above the fixed StepFooter; it does
+          not need a guessed bottom padding reserve. */}
       {/* scrollPaddingTop (KES-146): the coach card is a fixed sibling
           overlay, not part of this scroll container, so paddingTop alone
           only protects the at-rest layout. Without scroll-padding-top,
@@ -180,12 +192,12 @@ export default function MissionBoardScreen({ onBack, onPick, missionsDone, freeO
           trigger before any click) can scroll a list item flush with this
           container's top edge, sliding it out from under the reserved gap
           and underneath the coach overlay. */}
-      <div className={`mission-board-screen-content${hasCoach ? ` ${styles.coachCompact}` : ''}`} data-ui-zone={UI_ZONES.screenContent} style={{ position: 'absolute', top: 0, bottom: 0, left: '50%', right: 'auto', width: 'min(100%, 1120px)', transform: 'translateX(-50%)', paddingTop: hasCoach ? TUTORIAL_MANUAL_CONTENT_TOP : 82, paddingBottom: hasCoach ? 138 : 76, overflowY: 'auto', scrollPaddingTop: hasCoach ? TUTORIAL_MANUAL_CONTENT_TOP : 82 }}>
+      <div className={`mission-board-screen-content${hasCoach ? ` ${styles.coachCompact}` : ''}${shortLandscape ? ' mission-board-screen-content--short-landscape' : ''}`} data-ui-zone={UI_ZONES.screenContent} style={{ position: 'absolute', top: 0, left: '50%', right: 'auto', width: 'min(100%, 1120px)', transform: 'translateX(-50%)', paddingTop: shortLandscape ? SHORT_LANDSCAPE_CONTENT_TOP : contentTop, overflowY: 'auto', scrollPaddingTop: shortLandscape ? SHORT_LANDSCAPE_CONTENT_TOP : contentTop }}>
         {/* Direct transcription of the OD mockup's `.body-layout` — no
             summary banner above it (the mockup has none; the earlier
             PlayfieldBand strip was this screen's own invention, not in the
             reference, and was cut). */}
-        <div style={{ padding: '14px' }} className={styles.layout}>
+        <div style={{ padding: shortLandscape ? '6px 14px 0' : '14px' }} className={styles.layout}>
           <div className={styles.canvas}>
             <CornerBracket position="tl" /><CornerBracket position="tr" />
             <CornerBracket position="bl" /><CornerBracket position="br" />
@@ -236,30 +248,6 @@ export default function MissionBoardScreen({ onBack, onPick, missionsDone, freeO
               </div>
             ))}
 
-            {/* The Contract Detail panel carries this job's specifics; this
-                fills the board's empty lower half with the abridged "what kind
-                of run is this" read instead — every mission type, onboarding
-                and Free Ops alike. */}
-            {primer && (
-              <div className={styles.primer} data-testid="mission-type-primer">
-                <div className={styles.primerEyebrow}>Mission Type</div>
-                <div className={styles.primerTitleRow}>
-                  <span className={styles.primerTitle}>{primer.label}</span>
-                  {primer.owner === 'self' && (
-                    <span className={styles.primerOwnTag} data-testid="mission-type-primer-own">Your operation</span>
-                  )}
-                </div>
-                <div className={styles.primerBody}>{primer.summary}</div>
-                <div className={styles.primerSteps}>
-                  {primer.steps.map((stepLabel, i) => (
-                    <React.Fragment key={stepLabel}>
-                      {i > 0 && <span className={styles.primerArrow} aria-hidden="true">→</span>}
-                      <span className={styles.primerStep}>{stepLabel}</span>
-                    </React.Fragment>
-                  ))}
-                </div>
-              </div>
-            )}
           </div>
 
           <div className={styles.panel}>

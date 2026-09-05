@@ -563,6 +563,25 @@ button { cursor: pointer; }
    per-screen paddingBottom hacks. */
 .game-screen-area { flex: 1; min-height: 0; position: relative; overflow: hidden; }
 
+/* Mission Board owns a fixed StepFooter. End its scroll viewport above that
+   rail so the board does not need artificial bottom padding or scroll past
+   content that is already visible. */
+.mission-board-screen-content {
+  bottom: 98px !important;
+}
+@media (max-width: 820px) {
+  .mission-board-screen-content {
+    bottom: 92px !important;
+  }
+}
+@media (orientation: landscape) and (max-width: 1023px) and (max-height: 600px) {
+  .mission-board-screen-content.mission-board-screen-content--short-landscape {
+    bottom: 65px !important;
+    padding-top: 142px !important;
+    scroll-padding-top: 142px !important;
+  }
+}
+
 /* Persistent account access for every gameplay route. The control sits just
    below the TopBar so it remains readable over scenes and does not compete
    with the title or route-specific right-side readouts. */
