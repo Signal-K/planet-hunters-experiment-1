@@ -155,7 +155,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
     })
   }, [setState])
 
-  const onPickMission = useCallback((id: string) => {
+  const onPickMission = useCallback((id: string, freeHaulDisposition?: 'store' | 'sell') => {
     setState(s => {
       if (s.screen !== 'missions' && s.screen !== 'launchpad') return s
       let mission = catalog.missions.find(m => m.id === id)
@@ -213,7 +213,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
           debriefPending: parkedRun ? false : s.player.debriefPending,
           cargoSettledOffworld: parkedRun ? false : s.player.cargoSettledOffworld,
           pendingRemoteDisposition: parkedRun ? undefined : s.player.pendingRemoteDisposition,
-          freeHaulDisposition: parkedRun ? undefined : s.player.freeHaulDisposition,
+          freeHaulDisposition: parkedRun ? undefined : freeHaulDisposition ?? s.player.freeHaulDisposition,
           returningToEarth: parkedRun ? false : s.player.returningToEarth,
           headingToDelivery: parkedRun ? false : s.player.headingToDelivery,
           shipDestroyed: parkedRun ? false : s.player.shipDestroyed,

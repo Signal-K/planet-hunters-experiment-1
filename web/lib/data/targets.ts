@@ -26,6 +26,7 @@ export const TARGETS: Target[] = [
     brief: 'Scorched inner planet, rich in iron and trace silicates.',
     archetype: 'S',
   }),
+  landmark({ id: 'venus', name: 'Venus', type: 'planet', orbit: 2, difficulty: 'L3', brief: 'High-pressure surface. The assigned program site remains unavailable until pressure-rated construction equipment is fitted.', archetype: 'S' }),
   landmark({
     id: 'mars',
     name: 'Mars',

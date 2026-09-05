@@ -301,6 +301,17 @@ button.launchpad-scene-object { cursor: pointer; }
   color: var(--ln-text-dim);
   font: 13px/1.35 var(--ln-font-body);
 }
+.launchpad-operation-brief { display: grid; gap: 16px; }
+.launchpad-operation-brief h2 { margin: -8px 0 0; color: var(--ln-text); font: 800 24px var(--ln-font-display); letter-spacing: .02em; text-transform: uppercase; }
+.launchpad-operation-brief > p { max-width: 720px; margin: 0; color: var(--ln-text-dim); font: 14px/1.45 var(--ln-font-body); }
+.launchpad-operation-brief__muted { color: var(--ln-text-muted) !important; }
+.launchpad-operation-brief__choices, .launchpad-operation-brief__builds { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+.launchpad-operation-brief__link { justify-self: start; min-height: 40px; padding: 0 16px; border: 1px solid var(--ln-cyan-border); border-radius: 6px; background: var(--ln-cyan-soft); color: var(--ln-cyan); font: 800 10px var(--ln-font-display); letter-spacing: .12em; cursor: pointer; }
+.launchpad-operation-brief__market { display: grid; gap: 8px; padding-top: 12px; border-top: 1px solid var(--ln-hairline); }
+.launchpad-operation-brief__prices { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+.launchpad-operation-brief__prices > div, .launchpad-operation-brief__sites > span { display: grid; gap: 4px; padding: 8px; border: 1px solid var(--ln-hairline); border-radius: 6px; color: var(--ln-text-muted); font: 800 9px var(--ln-font-mono); letter-spacing: .08em; }
+.launchpad-operation-brief__prices small { color: var(--ln-text-muted); font: 700 9px var(--ln-font-mono); text-transform: uppercase; }.launchpad-operation-brief__prices strong { color: var(--ln-text); font: 800 13px var(--ln-font-display); }.launchpad-operation-brief__prices span[data-direction="up"] { color: var(--ln-ok); }.launchpad-operation-brief__prices span[data-direction="down"] { color: var(--ln-crit); }
+.launchpad-operation-brief__sites { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }.launchpad-operation-brief__sites > span strong { color: var(--ln-text); font: 800 10px var(--ln-font-display); }.launchpad-operation-brief__sites > span[data-state="ready"] { border-color: var(--ln-ok); color: var(--ln-ok); }
 
 .launchpad-mission-runs {
   position: absolute;
@@ -415,6 +426,8 @@ button.launchpad-scene-object { cursor: pointer; }
   .launchpad-mission-menu-header { gap: 16px; }
   .launchpad-mission-menu-options { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .launchpad-mission-choice { min-height: 0; }
+  .launchpad-operation-brief__sites { grid-template-columns: 1fr; gap: 8px; }
+  .launchpad-operation-brief__prices { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 
 @media (orientation: landscape) and (max-height: 600px), (max-width: 600px) {
@@ -435,6 +448,7 @@ button.launchpad-scene-object { cursor: pointer; }
   .launchpad-mission-choice svg { width: 18px; height: 18px; }
   .launchpad-mission-choice strong { font-size: 8px; }
   .launchpad-mission-choice span { font-size: 9px; line-height: 1.2; }
+  .launchpad-operation-brief { gap: 8px; }.launchpad-operation-brief h2 { font-size: 18px; }.launchpad-operation-brief > p { font-size: 11px; line-height: 1.3; }.launchpad-operation-brief__choices, .launchpad-operation-brief__builds { gap: 8px; }
 }
 
 /* KES-279: the Hub dock is a mobile command surface, not a shrunken desktop

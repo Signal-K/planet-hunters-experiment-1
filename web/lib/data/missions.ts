@@ -67,6 +67,15 @@ function materialRequirement(materials: Record<string, number>): { minerals: Rec
  * rather than a client fee. Keep its costs aligned with the blueprints. */
 export const OWN_PROGRAM_BUILD_MISSIONS: Mission[] = [
   {
+    id: 'program-build-mars-mining-settlement', title: 'Establish Mars Mining Settlement',
+    brief: 'Carry a starter settlement kit to the program’s assigned Mars area. The permanent site anchors later extraction and support structures.',
+    tag: 'PROGRAM', difficulty: 'L1', locked: false, sequence: FREE_OPS_START_MISSIONS_DONE + 1,
+    unlockAt: 'Reach Free Operations · Mars allocation ready', targetId: 'mars',
+    construction: { structureKind: 'mining-settlement', requiredMaterials: { aluminium: 12, iron: 16, silicon: 8 }, placementMode: 'confirm', buildTimeMs: 45 * 60 * 1000 },
+    programReward: { researchXP: 0, outcome: 'Mars mining settlement established · permanent program site online' },
+    requires: { ...materialRequirement({ aluminium: 12, iron: 16, silicon: 8 }), drill_tier: 1, max_orbit: 4 }, payout: { francs: 0, affinity: 0 },
+  },
+  {
     id: 'program-build-remote-silo',
     title: 'Build a Remote Mineral Silo',
     brief: 'Send construction materials to a target with build rights. The sealed silo stores your extracted ore off-world instead of forcing every haul into an Earth sale.',

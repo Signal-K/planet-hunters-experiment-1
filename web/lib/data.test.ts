@@ -632,8 +632,9 @@ describe('seed bible v0 catalog', () => {
     expect(CLIENT_SLOTS.some(c => c.id === relay?.client)).toBe(true)
   })
 
-  it('defines remote-silo, refinery, and scanning-station builds as own-program missions', () => {
+  it('defines settlement, remote-silo, refinery, and scanning-station builds as own-program missions', () => {
     expect(OWN_PROGRAM_BUILD_MISSIONS.map(mission => mission.id)).toEqual([
+      'program-build-mars-mining-settlement',
       'program-build-remote-silo',
       'program-build-refinery',
       'program-build-scan-station',
@@ -648,20 +649,19 @@ describe('seed bible v0 catalog', () => {
       expect(mission.requires.cargo_min).toBe(
         Object.values(mission.requires.minerals).reduce((sum, amount) => sum + amount, 0),
       )
-      // The remote silo and off-world refinery are commissioned at a site the
-      // player owns or leases (max_orbit: 5); the scan station stays Earth-based.
-      expect(mission.requires.max_orbit).toBe(mission.id === 'program-build-scan-station' ? 0 : 5)
+      expect(mission.requires.max_orbit).toBe(mission.id === 'program-build-scan-station' ? 0 : mission.id === 'program-build-mars-mining-settlement' ? 4 : 5)
       expect(mission.sequence).toBe(FREE_OPS_START_MISSIONS_DONE + 1)
       expect(MISSIONS).toContainEqual(mission)
     }
 
-    expect(OWN_PROGRAM_BUILD_MISSIONS[0]).toMatchObject({
+    expect(OWN_PROGRAM_BUILD_MISSIONS[0]).toMatchObject({ targetId: 'mars', construction: { structureKind: 'mining-settlement' } })
+    expect(OWN_PROGRAM_BUILD_MISSIONS[1]).toMatchObject({
       construction: { structureKind: 'mineral-silo' },
     })
-    expect(OWN_PROGRAM_BUILD_MISSIONS[1]).toMatchObject({
+    expect(OWN_PROGRAM_BUILD_MISSIONS[2]).toMatchObject({
       construction: { structureKind: 'refinery', requiredMaterials: { aluminium: 20, copper: 10 } },
     })
-    expect(OWN_PROGRAM_BUILD_MISSIONS[2]).toMatchObject({
+    expect(OWN_PROGRAM_BUILD_MISSIONS[3]).toMatchObject({
       construction: { structureKind: 'scan-station', requiredMaterials: {} },
     })
   })

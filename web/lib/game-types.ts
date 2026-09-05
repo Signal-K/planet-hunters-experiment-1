@@ -7,6 +7,7 @@ import type { RoverSpec } from '@takeon/engine'
 import type { SceneScope } from './scene-scope'
 import type { ClientBuildCompletionEvent, DailyEconomySnapshot } from './systems/DailyEconomySystem'
 import type { TreasuryState } from './systems/TreasurySystem'
+import type { SiteRightsState } from './systems/SiteRightsSystem'
 
 export interface DailyClientPool {
   date: string        // 'YYYY-MM-DD'
@@ -399,6 +400,8 @@ export interface Player {
   // shared-world claim. Ferry records retain a stable cargo-batch id and reconciliation
   // timestamp so retries and reloads cannot credit one manifest twice.
   surfaceOps?: SurfaceOpsState
+  /** Predefined-site build/mine rights purchased or leased from client territory (KES-287). */
+  siteRights?: SiteRightsState
 }
 
 export interface GameState {
@@ -473,7 +476,7 @@ export interface GameActions {
   setMenuOpen: (v: boolean) => void
   subsurfaceView: boolean
   setSubsurfaceView: (v: boolean) => void
-  onPickMission: (id: string) => void
+  onPickMission: (id: string, freeHaulDisposition?: 'store' | 'sell') => void
   onPickTarget: (id: string) => void
   onPurchaseRocket: (rocketId: string) => void
   onFabricateRocketPart: (rocketId: string, componentId: string) => void

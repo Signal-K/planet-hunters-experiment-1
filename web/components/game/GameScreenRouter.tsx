@@ -389,9 +389,9 @@ export function ScreenContent({
       return (
         <LaunchpadScreen
           onBack={() => game.go('hub')}
-          onPick={id => {
+          onPick={(id, freeHaulDisposition) => {
             if (id === ACADEMY_INTRO_MISSION_ID) return game.go('academy')
-            game.onPickMission(id)
+            game.onPickMission(id, freeHaulDisposition)
           }}
           onViewContracts={() => game.goToMissions()}
           onLaunchpadAction={() => {
@@ -415,6 +415,7 @@ export function ScreenContent({
             game.resumeMissionRun(key)
           }}
           onViewMissionLog={() => game.go('mission-history')}
+          onOpenSiloBuild={() => game.go('build')}
           missionsDone={game.player.missionsDone}
           freeOperations={game.player.freeOperations}
           catalog={game.catalog}

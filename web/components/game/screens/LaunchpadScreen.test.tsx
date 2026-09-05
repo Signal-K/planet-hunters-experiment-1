@@ -162,7 +162,11 @@ describe('Launchpad own-program actions', () => {
       host.querySelector<HTMLButtonElement>('[data-testid="launchpad-new-mission-mining-btn"]')?.dispatchEvent(new MouseEvent('click', { bubbles: true }))
     })
 
-    expect(onPick).toHaveBeenCalledWith('freeops-self-directed-mining')
+    expect(host.querySelector('[data-testid="launchpad-operation-brief-mining"]')).not.toBeNull()
+    await act(async () => {
+      host.querySelector<HTMLButtonElement>('[data-testid="launchpad-mining-sell-btn"]')?.dispatchEvent(new MouseEvent('click', { bubbles: true }))
+    })
+    expect(onPick).toHaveBeenCalledWith('freeops-self-directed-mining', 'sell')
     await act(async () => root.unmount())
   })
 
@@ -213,7 +217,10 @@ describe('Launchpad own-program actions', () => {
     await act(async () => {
       host.querySelector<HTMLButtonElement>('[data-testid="launchpad-new-mission-mining-btn"]')?.dispatchEvent(new MouseEvent('click', { bubbles: true }))
     })
-    expect(onPick).toHaveBeenCalledWith('freeops-self-directed-mining')
+    await act(async () => {
+      host.querySelector<HTMLButtonElement>('[data-testid="launchpad-mining-sell-btn"]')?.dispatchEvent(new MouseEvent('click', { bubbles: true }))
+    })
+    expect(onPick).toHaveBeenCalledWith('freeops-self-directed-mining', 'sell')
     await act(async () => root.unmount())
   })
 })
