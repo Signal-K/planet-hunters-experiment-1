@@ -5,7 +5,8 @@ import { pbShared } from '@/lib/pb'
 import { pbLandnam, exchangeLandnamAuth } from '@/lib/pb-landnam'
 import { clearAccountCredentials, ensureAccountAuth, hasStoredCredentials, storeAccountCredentials } from '@/lib/accountAuth'
 import { identifyUser } from '@/lib/posthog'
-import { DEFAULT_STATE, mergeRemoteState, type PartialSave } from '@/lib/game-state'
+import { DEFAULT_STATE, loadState, mergeRemoteState, type PartialSave } from '@/lib/game-state'
+import { accountGameStateStorageKey, gameStateStorageKey } from '@/lib/game-state-storage'
 import { isResumableMissionScreen } from '@/lib/initial-route'
 import type { GameState } from '@/lib/game-types'
 import type { Toast } from '@/components/ui/ToastLayer'
@@ -144,6 +145,7 @@ export function useAuthSync({
   const skipNextRemotePersist = useRef(false)
   const lastPersistedMissionsDone = useRef<number | null>(null)
   const lastPersistedTutorial = useRef<boolean | null>(null)
+  const localStateKey = gameStateStorageKey(storageKey, authUserId)
 
   useEffect(() => {
     if (!hydrated || isPreview) {
@@ -257,6 +259,7 @@ export function useAuthSync({
   // re-trigger the game_states load and landnam-auth exchange effects, and
   // flash "NOT SYNCED" every few minutes, for no actual change).
   useEffect(() => pbShared.authStore.onChange((_token, record) => {
+    const previousUserId = knownAuthRecordId.current
     if (record?.id && record.id === knownAuthRecordId.current) {
       setAuthUserId(record.id)
       return
@@ -269,6 +272,13 @@ export function useAuthSync({
     setBackendReady(false)
     setLandnamAuthAttempted(false)
     setLandnamSynced(false)
+    if (record?.id && record.id !== previousUserId) {
+      // Sign-in/account creation may happen after the provider hydrated the
+      // guest/legacy slot. Never let that state become the new account's
+      // first save while remote sync is warming up (KES-324).
+      localStorage.removeItem(storageKey)
+      setState(loadState(accountGameStateStorageKey(storageKey, record.id)))
+    }
     if (!record) pbLandnam.authStore.clear()
     setAuthUserId(record?.id ?? null)
     if (record?.id) identifyUser(record.id, record.email ? { email: record.email } : undefined)
@@ -392,9 +402,9 @@ export function useAuthSync({
   // block local play while auth warms or falls back offline.
   useEffect(() => {
     if (!hydrated || isPreview) return
-    const noLocalState = !localStorage.getItem(storageKey)
+    const noLocalState = !localStorage.getItem(localStateKey)
     if (noLocalState && pbShared.authStore.isValid) setAwaitingRemoteState(true)
-  }, [hydrated, isPreview, storageKey])
+  }, [hydrated, isPreview, localStateKey])
 
   // Clear awaitingRemoteState once backend load completes
   useEffect(() => {
@@ -503,7 +513,7 @@ export function useAuthSync({
         // redirects or test remounts.
         backendLoadedFor.current = authUserId!
         setBackendReady(true)
-        if (localStorage.getItem(storageKey)) {
+        if (localStorage.getItem(localStateKey)) {
           saveRemoteState(authUserId!, stateRef.current).catch(() => {})
         }
         return
@@ -511,7 +521,7 @@ export function useAuthSync({
       // Network / availability error (Fly cold-start, timeout, etc.)
       // Only unblock persisting if the device already has local state — otherwise we
       // risk overwriting a real backend record with a blank slate from a new device.
-      const hasLocalState = !!localStorage.getItem(storageKey)
+      const hasLocalState = !!localStorage.getItem(localStateKey)
       if (hasLocalState) {
         backendLoadedFor.current = authUserId!
         setBackendReady(true)
@@ -555,7 +565,7 @@ export function useAuthSync({
       })
 
     return () => { active = false }
-  }, [authUserId, hydrated, isPreview, resetting, landnamAuthAttempted, setState, normalizeAndRepair, saveRemoteState, stateRef, storageKey])
+  }, [authUserId, hydrated, isPreview, resetting, landnamAuthAttempted, setState, normalizeAndRepair, saveRemoteState, stateRef, localStateKey])
 
   // Persist state to backend. Debounced 400ms for ordinary state churn, but
   // flushed immediately (0ms) whenever missionsDone or tutorial changes — an
@@ -625,6 +635,7 @@ export function useAuthSync({
       // Brand-new account: discard any local guest/dev state so the player
       // starts from scratch with the intro tutorial.
       localStorage.removeItem(storageKey)
+      localStorage.removeItem(accountGameStateStorageKey(storageKey, authResult.record.id))
       setState(DEFAULT_STATE)
       // Exchange for a native Landnam auth token before touching game_states —
       // ownership rules require @request.auth to be populated (see
@@ -700,6 +711,7 @@ export function useAuthSync({
     skipNextRemotePersist.current = true
     setResetting(true)
     setState(defaultState)
+    localStorage.removeItem(localStateKey)
     localStorage.removeItem(storageKey)
 
     // Stand the remote-sync machinery back down before touching the record.
@@ -740,7 +752,7 @@ export function useAuthSync({
     } finally {
       setResetting(false)
     }
-  }, [addToast, authUserId, beforeReset, setState, storageKey])
+  }, [addToast, authUserId, beforeReset, setState, localStateKey, storageKey])
 
   const signOut = useCallback(async () => {
     const signedOutUserId = authUserId
@@ -760,6 +772,7 @@ export function useAuthSync({
     pbShared.authStore.clear()
     pbLandnam.authStore.clear()
     localStorage.removeItem(storageKey)
+    if (signedOutUserId) localStorage.removeItem(accountGameStateStorageKey(storageKey, signedOutUserId))
     setState(DEFAULT_STATE)
     setAwaitingRemoteState(false)
     setAuthGateError(null)

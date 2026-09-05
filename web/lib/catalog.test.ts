@@ -1,9 +1,15 @@
 import { describe, it, expect } from 'vitest'
-import { toTarget, toMission, toPart, toClient, toStructure, withAuthoredExtras } from './catalog'
+import { mergeStructureCatalog, toTarget, toMission, toPart, toClient, toStructure, withAuthoredExtras } from './catalog'
 import { AUTHORED_MISSIONS } from './data'
 import type { Mission } from './data'
 
 describe('Landnam Catalog Mapping', () => {
+  it('keeps authored structures when a spoke catalog is missing a rollout row', () => {
+    const merged = mergeStructureCatalog([toStructure({ slug: 'launchpad', name: 'Remote Launchpad', kind: 'launchpad' })])
+    expect(merged.some(structure => structure.id === 'surface-silo')).toBe(true)
+    expect(merged.find(structure => structure.id === 'launchpad')?.name).toBe('Remote Launchpad')
+  })
+
   it('maps a raw database record to a Target object', () => {
     const raw = {
       slug: 'eros',

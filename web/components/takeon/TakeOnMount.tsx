@@ -56,6 +56,19 @@ export interface TakeOnMountProps {
   onError?: (error: Error) => void
 }
 
+/**
+ * TakeOn's controls receive pointer coordinates in CSS pixels. Pixi's
+ * `canvas.width` is the backing-buffer width (and can be multiplied by the
+ * device-pixel ratio), so using it as the game viewport makes the planner's
+ * hit tiles drift away from the rendered rover field (KES-323).
+ */
+export function takeOnViewportSize(canvas: Pick<HTMLCanvasElement, 'clientWidth' | 'clientHeight'>): { width: number; height: number } {
+  return {
+    width: Math.max(1, canvas.clientWidth || 800),
+    height: Math.max(1, canvas.clientHeight || 600),
+  }
+}
+
 const TakeOnMount = forwardRef<TakeOnMountHandle, TakeOnMountProps>(function TakeOnMount({
   missionId,
   bodyId,
@@ -101,6 +114,7 @@ const TakeOnMount = forwardRef<TakeOnMountHandle, TakeOnMountProps>(function Tak
     let saveTimer: ReturnType<typeof setTimeout> | null = null
     let unbindHostEvents: (() => void) | null = null
     let unbindStateChanged: (() => void) | null = null
+    let unbindRoutePointer: (() => void) | null = null
     let unbindPhoto: (() => void) | null = null
     let unbindDiscovery: (() => void) | null = null
     let disposed = false
@@ -150,11 +164,12 @@ const TakeOnMount = forwardRef<TakeOnMountHandle, TakeOnMountProps>(function Tak
         const resume = isSeeded ? null : await adapter.loadMission(missionId)
         if (disposed) return
 
+        const viewport = takeOnViewportSize(canvasElement)
         app = new PIXI.Application()
         await app.init({
           canvas: canvasElement,
-          width: canvasElement.clientWidth || 800,
-          height: canvasElement.clientHeight || 600,
+          width: viewport.width,
+          height: viewport.height,
           backgroundAlpha: 0,
           antialias: true,
         })
@@ -169,8 +184,10 @@ const TakeOnMount = forwardRef<TakeOnMountHandle, TakeOnMountProps>(function Tak
           stage: app.stage as unknown as import('@takeon/pixi').PixiContainerLike,
           ticker: app.ticker as unknown as import('@takeon/pixi').PixiTickerLike,
           view: app.canvas,
-          width: app.canvas.width,
-          height: app.canvas.height,
+          // Keep the engine and Controls in CSS-pixel coordinates. The Pixi
+          // backing buffer may be larger on a retina display.
+          width: viewport.width,
+          height: viewport.height,
           body,
           spec: rover,
           seed,
@@ -188,6 +205,17 @@ const TakeOnMount = forwardRef<TakeOnMountHandle, TakeOnMountProps>(function Tak
           if (saveTimer) clearTimeout(saveTimer)
           saveTimer = setTimeout(() => void save().catch(reportError), 750)
         })
+        // The vendored Pixi adapter owns the canvas Controls and handles a
+        // tap-to-drive by calling game.walkTo() directly. That operation is a
+        // route command, not a simulation state change, so no stateChanged
+        // event is emitted for Landnam's route readout. Observe the completed
+        // pointer gesture after Controls has handled it and publish the
+        // authoritative planned-route length to the host (KES-323).
+        const reportPointerRoute = () => {
+          onRouteChange?.(mounted?.game.plannedRoute().length ?? 0)
+        }
+        canvasElement.addEventListener('pointerup', reportPointerRoute)
+        unbindRoutePointer = () => canvasElement.removeEventListener('pointerup', reportPointerRoute)
         unbindPhoto = mounted.game.events.on('photo', ({ photo, dataUrl }) => {
           void adapter.uploadPhoto(photo, dataUrl, missionId).catch(reportError)
         })
@@ -266,6 +294,7 @@ const TakeOnMount = forwardRef<TakeOnMountHandle, TakeOnMountProps>(function Tak
       document.removeEventListener('visibilitychange', syncVisibility)
       unbindHostEvents?.()
       unbindStateChanged?.()
+      unbindRoutePointer?.()
       unbindPhoto?.()
       unbindDiscovery?.()
       mounted?.destroy()

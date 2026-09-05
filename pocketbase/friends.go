@@ -92,7 +92,7 @@ func friendsSearchHandler(app core.App) func(e *core.RequestEvent) error {
 		}
 		self := e.Auth.Id
 		records, err := app.FindRecordsByFilter(
-			"users", "username ~ {:q} && id != {:self}", "username", 20, 0,
+			"users", "(username ~ {:q} || id ~ {:q}) && id != {:self}", "username", 20, 0,
 			dbx.Params{"q": q, "self": self},
 		)
 		if err != nil {
@@ -100,9 +100,6 @@ func friendsSearchHandler(app core.App) func(e *core.RequestEvent) error {
 		}
 		results := make([]map[string]any, 0, len(records))
 		for _, r := range records {
-			if strings.TrimSpace(r.GetString("username")) == "" {
-				continue
-			}
 			results = append(results, publicUser(r))
 		}
 		return e.JSON(http.StatusOK, map[string]any{"results": results})
@@ -115,7 +112,7 @@ func friendsSearchHandler(app core.App) func(e *core.RequestEvent) error {
 func friendsDirectoryHandler(app core.App) func(e *core.RequestEvent) error {
 	return func(e *core.RequestEvent) error {
 		records, err := app.FindRecordsByFilter(
-			"users", "username != '' && id != {:self}", "username", 500, 0,
+			"users", "id != {:self}", "username", 500, 0,
 			dbx.Params{"self": e.Auth.Id},
 		)
 		if err != nil {
@@ -123,9 +120,11 @@ func friendsDirectoryHandler(app core.App) func(e *core.RequestEvent) error {
 		}
 		results := make([]map[string]any, 0, len(records))
 		for _, r := range records {
-			if strings.TrimSpace(r.GetString("username")) != "" {
-				results = append(results, publicUser(r))
-			}
+			// Newly provisioned Landnam identities do not have a callsign until
+			// they open Friends. Keep them discoverable with their stable record
+			// id so ghost accounts and cross-player progression can be tested
+			// without requiring every player to visit this sheet first.
+			results = append(results, publicUser(r))
 		}
 		return e.JSON(http.StatusOK, map[string]any{"results": results})
 	}

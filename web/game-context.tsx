@@ -24,12 +24,13 @@ import { useAcademyActions } from '@/lib/contexts/useAcademyActions'
 import { deriveSceneScope, EARTH_BASE_SCOPE } from '@/lib/scene-scope'
 import { claimFriendGift as claimFriendGiftRequest } from '@/lib/friends/client'
 import { applyFriendGiftToPlayer, friendGiftToastMessage } from '@/lib/friends/applyGift'
+import { GAME_STATE_STORAGE_KEY, gameStateStorageKey } from '@/lib/game-state-storage'
 
 export type { Screen, Player, GameState } from '@/lib/game-types'
 
 // ── State shape helpers ────────────────────────────────────────────────────────
 
-const STORAGE_KEY = 'landnam-game-state-v1'
+const STORAGE_KEY = GAME_STATE_STORAGE_KEY
 // ── Context ────────────────────────────────────────────────────────────────────
 
 const GameContext = createContext<(GameState & GameActions) | null>(null)
@@ -80,7 +81,11 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
         return
       }
     }
-    const loadedState = loadState(STORAGE_KEY)
+    // A signed-in PocketBase session is restored synchronously from
+    // localStorage. Hydrate only that account's private slot; the unscoped
+    // key is the guest/legacy slot and must not bleed into a new account
+    // while remote sync is warming up (KES-324).
+    const loadedState = loadState(gameStateStorageKey(STORAGE_KEY, pbShared.authStore.record?.id))
     // `/game` resolves returning players to Earth Base before this provider
     // hydrates. Keep that entry decision authoritative; otherwise hydration
     // restores the previous Contracts screen and the URL-sync effect pushes
@@ -99,21 +104,6 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     if (!hydrated || isPreview.current) return
     if (state.player.missionsDone > 0) enqueueSurvey('lnm_return_visit', 3000)
   }, [hydrated]) // eslint-disable-line react-hooks/exhaustive-deps
-
-  // Persist state to localStorage
-  useEffect(() => {
-    if (!hydrated || isPreview.current) return
-    if (skipNextLocalPersist.current) {
-      skipNextLocalPersist.current = false
-      localStorage.removeItem(STORAGE_KEY)
-      return
-    }
-    // updatedAt (STS-635) is stamped only in the serialized write, not fed back
-    // into React state, so this effect can't retrigger itself. It's read back
-    // on next load via loadState()/normalizeState() and used as a tie-breaker
-    // in mergeRemoteState when local and remote missionsDone are equal.
-    localStorage.setItem(STORAGE_KEY, JSON.stringify({ ...state, updatedAt: Date.now() }))
-  }, [state, hydrated])
 
   const router = useRouter()
 
@@ -154,6 +144,25 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     storageKey: STORAGE_KEY,
     beforeReset: () => { skipNextLocalPersist.current = true },
   })
+
+  // Persist state only after useAuthSync has resolved the current identity.
+  // Running this before the auth hook could observe a newly signed-in PocketBase
+  // record while React still held the previous player's state (KES-324).
+  useEffect(() => {
+    if (!hydrated || isPreview.current) return
+    if (skipNextLocalPersist.current) {
+      skipNextLocalPersist.current = false
+      localStorage.removeItem(STORAGE_KEY)
+      return
+    }
+    // updatedAt (STS-635) is stamped only in the serialized write, not fed back
+    // into React state, so this effect can't retrigger itself. It's read back
+    // on next load via loadState()/normalizeState() and used as a tie-breaker
+    // in mergeRemoteState when local and remote missionsDone are equal.
+    const key = gameStateStorageKey(STORAGE_KEY, auth.authUserId)
+    localStorage.setItem(key, JSON.stringify({ ...state, updatedAt: Date.now() }))
+    if (key !== STORAGE_KEY) localStorage.removeItem(STORAGE_KEY)
+  }, [state, hydrated, auth.authUserId])
   useConfirmedDiscoveryPoll({
     stateRef,
     setState,

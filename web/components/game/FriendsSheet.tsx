@@ -475,7 +475,7 @@ export default function FriendsSheet({ onClose }: FriendsSheetProps) {
           {!loading && !error && tab === 'find' && (
             <>
               <SectionLabel>Player Directory</SectionLabel>
-              <p className={styles.directoryCopy}>Every crew with a public callsign is listed here. Search is optional.</p>
+              <p className={styles.directoryCopy}>Every provisioned crew is listed here. New accounts appear under a temporary callsign until they choose one.</p>
               <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
                 <input
                   value={query}

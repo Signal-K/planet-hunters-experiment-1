@@ -6,12 +6,13 @@ import { resolvePreset } from '@/lib/devPresets'
 import { pbShared } from '@/lib/pb'
 import { hasStoredCredentials } from '@/lib/accountAuth'
 import { returningScreen } from '@/lib/initial-route'
+import { GAME_STATE_STORAGE_KEY, gameStateStorageKey } from '@/lib/game-state-storage'
 
-const STORAGE_KEY = 'landnam-game-state-v1'
+const STORAGE_KEY = GAME_STATE_STORAGE_KEY
 
 function savedScreen(): string {
   try {
-    const raw = window.localStorage.getItem(STORAGE_KEY)
+    const raw = window.localStorage.getItem(gameStateStorageKey(STORAGE_KEY, pbShared.authStore.record?.id))
     return returningScreen(raw)
   } catch {
     return 'hub'

@@ -21,6 +21,18 @@ export const STATIC_CATALOG: Catalog = {
   structures: STRUCTURES,
 }
 
+/**
+ * The Landnam spoke can lag the frontend catalog during a rollout. Keep the
+ * authored client-side blueprints available and let PocketBase override a
+ * matching row, so a missing seed row cannot turn a valid placement into a
+ * silent no-op (notably the Surface Silo).
+ */
+export function mergeStructureCatalog(remote: StructureBlueprint[]): StructureBlueprint[] {
+  const merged = new Map(STRUCTURES.map(structure => [structure.id, structure]))
+  remote.forEach(structure => merged.set(structure.id, structure))
+  return Array.from(merged.values())
+}
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function toTarget(r: any): Target {
   return {
@@ -263,6 +275,6 @@ export async function fetchCatalog(): Promise<Catalog> {
     // Merge static CLIENTS first so clients not yet seeded in PocketBase
     // (e.g. newly added M3 authored-mission clients) still resolve.
     clients: { ...CLIENTS, ...catalogClients },
-    structures: structures.length > 0 ? structures.map(toStructure) : STRUCTURES,
+    structures: mergeStructureCatalog(structures.map(toStructure)),
   }
 }

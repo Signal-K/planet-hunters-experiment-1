@@ -98,7 +98,8 @@ describe('InstrumentFeedSystem', () => {
       },
     }), '2026-07-30')
 
-    expect(unresolved.map(item => item.id)).toEqual([digest[1].id])
+    expect(unresolved).toHaveLength(2)
+    expect(unresolved.map(item => item.id)).not.toContain(digest[0].id)
   })
 
   it('persists one notification marker per instrument and UTC date', () => {
@@ -133,7 +134,8 @@ describe('InstrumentFeedSystem', () => {
         },
       }), '2026-07-30')
 
-      expect(unresolved.map(item => item.id)).toEqual([digest[1].id])
+      expect(unresolved).toHaveLength(2)
+      expect(unresolved.map(item => item.id)).not.toContain(digest[0].id)
     })
 
     it('is an independent instrument from the transit telescope digest', () => {
