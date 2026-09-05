@@ -626,160 +626,162 @@
    borders (no shadow-heavy elevation), pink border for the selected/
    previewed card, green for the "ready"/available state accents, cyan kept
    for the primary action buttons only. Root screen wrapper opts in via
-   className="theme-deep" (MissionBoardScreen.tsx). The full dark-space
-   backdrop image + starfield are hidden under blueprint (a chart-paper
-   surface, not a HUD-on-black one). */
-:global(.theme-deep) .spaceBackdrop {
+   className="theme-blueprint" (MissionBoardScreen.tsx). The dark-space
+   backdrop image + starfield are hidden; the board is a clean paper surface. */
+:global(.ln-scene-mission-board.theme-blueprint) {
+  background: var(--ln-bp-bg) !important;
+}
+:global(.ln-scene-mission-board.theme-blueprint)::before {
+  display: none;
+}
+:global(.theme-blueprint) .spaceBackdrop {
   display: none;
 }
 
-:global(.theme-deep) .canvas {
-  background:
-    repeating-linear-gradient(0deg, var(--ln-bp-line) 0px, var(--ln-bp-line) 1px, transparent 1px, transparent 26px),
-    repeating-linear-gradient(90deg, var(--ln-bp-line) 0px, var(--ln-bp-line) 1px, transparent 1px, transparent 26px),
-    var(--ln-bp-bg);
+:global(.theme-blueprint) .canvas {
+  background: var(--ln-bp-bg);
 }
 
-:global(.theme-deep) .sortSelect {
+:global(.theme-blueprint) .sortSelect {
   border-color: var(--ln-bp-line-strong);
   background: var(--ln-bp-paper);
   color: var(--ln-text-dim);
 }
 
-:global(.theme-deep) .card {
+:global(.theme-blueprint) .card {
   border-color: var(--ln-bp-line-strong);
   background: var(--ln-bp-paper);
   box-shadow: none;
 }
-:global(.theme-deep) .card:hover {
+:global(.theme-blueprint) .card:hover {
   background: var(--ln-bp-paper-2);
   border-color: var(--ln-bp-blue);
 }
-:global(.theme-deep) .cardSelected {
+:global(.theme-blueprint) .cardSelected {
   border-color: var(--ln-bp-pink);
   background: var(--ln-bp-pink-soft);
   box-shadow: 0 0 0 1px var(--ln-bp-pink-border);
 }
-:global(.theme-deep) .cardLocked,
-:global(.theme-deep) .cardCooldown {
+:global(.theme-blueprint) .cardLocked,
+:global(.theme-blueprint) .cardCooldown {
   background: var(--ln-bp-paper-2);
 }
-:global(.theme-deep) .cardLocked:hover,
-:global(.theme-deep) .cardCooldown:hover {
+:global(.theme-blueprint) .cardLocked:hover,
+:global(.theme-blueprint) .cardCooldown:hover {
   background: var(--ln-bp-paper-2);
   border-color: var(--ln-bp-line-strong);
 }
 
-:global(.theme-deep) .tag {
+:global(.theme-blueprint) .tag {
   border-color: var(--ln-bp-line-strong);
   background: var(--ln-bp-paper-2);
   color: var(--ln-text-dim);
 }
-:global(.theme-deep) .tagBurn {
+:global(.theme-blueprint) .tagBurn {
   color: var(--ln-bp-ink-dim);
   border-color: var(--ln-bp-line-strong);
   background: var(--ln-bp-paper-2);
 }
-:global(.theme-deep) .tagJob {
+:global(.theme-blueprint) .tagJob {
   color: var(--ln-bp-blue);
   border-color: rgba(31, 120, 193, 0.32);
   background: var(--ln-bp-blue-soft);
 }
-:global(.theme-deep) .tagTwostop {
+:global(.theme-blueprint) .tagTwostop {
   color: var(--ln-bp-green);
   border-color: rgba(31, 143, 87, 0.32);
   background: var(--ln-bp-green-soft);
 }
 
-:global(.theme-deep) .cardBtnDisabled {
+:global(.theme-blueprint) .cardBtnDisabled {
   background: var(--ln-bp-paper-2);
   color: var(--ln-text-muted);
 }
 
-:global(.theme-deep) .disclaimer,
-:global(.theme-deep) .detailDisclaimer {
+:global(.theme-blueprint) .disclaimer,
+:global(.theme-blueprint) .detailDisclaimer {
   border-color: var(--ln-bp-line-strong);
   color: var(--ln-text-muted);
 }
 
-:global(.theme-deep) .primer {
+:global(.theme-blueprint) .primer {
   border-color: var(--ln-bp-line-strong);
   background: var(--ln-bp-paper);
 }
-:global(.theme-deep) .primerTitle {
+:global(.theme-blueprint) .primerTitle {
   color: var(--ln-bp-blue);
 }
-:global(.theme-deep) .primerStep {
+:global(.theme-blueprint) .primerStep {
   border-color: rgba(31, 120, 193, 0.32);
   background: var(--ln-bp-blue-soft);
   color: var(--ln-bp-blue);
 }
-:global(.theme-deep) .primerArrow {
+:global(.theme-blueprint) .primerArrow {
   color: var(--ln-bp-ink-mute);
 }
 
-:global(.theme-deep) .panel {
+:global(.theme-blueprint) .panel {
   background: var(--ln-bp-paper);
   border: 1px solid var(--ln-bp-line-strong);
   backdrop-filter: none;
   -webkit-backdrop-filter: none;
 }
-:global(.theme-deep) .panelHeader {
+:global(.theme-blueprint) .panelHeader {
   background: var(--ln-bp-blue-soft);
   border-bottom: 2px solid var(--ln-bp-line);
 }
-:global(.theme-deep) .panelHeader h3 {
+:global(.theme-blueprint) .panelHeader h3 {
   color: var(--ln-bp-blue);
 }
 
-:global(.theme-deep) .emptyIcon {
+:global(.theme-blueprint) .emptyIcon {
   border-color: var(--ln-bp-line-strong);
   color: var(--ln-bp-ink-mute);
 }
-:global(.theme-deep) .emptyLabel {
+:global(.theme-blueprint) .emptyLabel {
   color: var(--ln-bp-ink-mute);
 }
 
-:global(.theme-deep) .detailWants {
+:global(.theme-blueprint) .detailWants {
   border-top-color: var(--ln-bp-line);
 }
-:global(.theme-deep) .detailChip {
+:global(.theme-blueprint) .detailChip {
   border-color: var(--ln-bp-line-strong);
   background: var(--ln-bp-paper-2);
   color: var(--ln-text-dim);
 }
-:global(.theme-deep) .detailChipPay {
+:global(.theme-blueprint) .detailChipPay {
   color: var(--ln-amber);
   border-color: var(--ln-amber-border);
   background: var(--ln-amber-soft);
 }
-:global(.theme-deep) .detailChipAff {
+:global(.theme-blueprint) .detailChipAff {
   color: var(--ln-bp-green);
   border-color: rgba(31, 143, 87, 0.32);
   background: var(--ln-bp-green-soft);
 }
-:global(.theme-deep) .detailCta:disabled {
+:global(.theme-blueprint) .detailCta:disabled {
   background: var(--ln-bp-paper-2);
   color: var(--ln-text-muted);
 }
 
 /* The selected contract is part of the board, not a floating inspector card.
    List and detail share one continuous paper console and one outer frame. */
-:global(.theme-deep) .layout {
+:global(.theme-blueprint) .layout {
   gap: 0;
   border: 1px solid var(--ln-bp-line-strong);
   background: var(--ln-bp-paper);
 }
-:global(.theme-deep) .canvas {
+:global(.theme-blueprint) .canvas {
   border-radius: 0;
 }
-:global(.theme-deep) .panel {
+:global(.theme-blueprint) .panel {
   border: 0;
   border-top: 1px solid var(--ln-bp-line-strong);
   border-radius: 0;
 }
 @media (min-width: 720px) {
-  :global(.theme-deep) .panel {
+  :global(.theme-blueprint) .panel {
     min-height: 100%;
     border-top: 0;
     border-left: 1px solid var(--ln-bp-line-strong);

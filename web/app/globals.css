@@ -35,6 +35,12 @@
    cyan/amber stay accent-only per the existing amber-restriction rule. This
    is still dark mode — just neutral-dark instead of blue-dark. */
 :root, .theme-deep {
+  --ln-blueprint-bg: #eef3f8;
+  --ln-blueprint-paper: #ffffff;
+  --ln-blueprint-paper-2: #dfe9f3;
+  --ln-blueprint-ink: #0f2436;
+  --ln-blueprint-blue: #1f78c1;
+  --ln-blueprint-line-strong: rgba(15, 36, 54, 0.30);
   --ln-void:        #0a0a0c;
   --ln-bg:          #131316;
   --ln-bg-grid:     #1a1a1e;
@@ -269,39 +275,99 @@
   --ln-text-inverse: #f4f1ea;
 }
 
-/* ─── Retired blueprint compatibility tokens ─────────────────────────────
-   `theme-blueprint` was a broad light-paper token remap. Applied to gameplay
-   roots, it converted rendered scenes into pale backgrounds and generic
-   card stacks. Operations now use the scene-panel model: a rendered setting
-   behind a small number of attached instruments. Keep these legacy tokens
-   dark so a stray old class cannot recreate that failure; new gameplay
-   screens are checked against using the class at all. */
+/* ─── Mission-setup blueprint theme ──────────────────────────────────────
+   Mission creation is intentionally light. This is the approved KES-211
+   direction: pale blueprint paper, navy ink, and restrained technical
+   accents. Keep it opt-in so unrelated operational scenes can retain their
+   own surface treatment. */
 .theme-blueprint {
-  --ln-bp-bg:      #0a0a0c;
-  --ln-bp-paper:   #1c1c20;
-  --ln-bp-paper-2: #25252a;
+  --ln-bp-bg:      #eef3f8;
+  --ln-bp-paper:   #ffffff;
+  --ln-bp-paper-2: #dfe9f3;
 
-  --ln-bp-ink:      #e9e9ec;
-  --ln-bp-ink-dim:  #b4b4bc;
-  --ln-bp-ink-mute: #7c7c86;
+  --ln-bp-ink:      #0f2436;
+  --ln-bp-ink-dim:  #48596a;
+  --ln-bp-ink-mute: #7c8ea0;
 
-  --ln-bp-line:        rgba(255, 255, 255, 0.14);
-  --ln-bp-line-strong: rgba(255, 255, 255, 0.30);
+  --ln-bp-line:        rgba(15, 36, 54, 0.14);
+  --ln-bp-line-strong: rgba(15, 36, 54, 0.30);
 
-  --ln-bp-blue:      var(--ln-cyan);
-  --ln-bp-blue-soft: var(--ln-cyan-soft);
+  --ln-bp-blue:      #1f78c1;
+  --ln-bp-blue-soft: rgba(31, 120, 193, 0.08);
 
-  --ln-bp-pink:        var(--ln-play);
-  --ln-bp-pink-soft:   color-mix(in srgb, var(--ln-play) 12%, transparent);
-  --ln-bp-pink-border: color-mix(in srgb, var(--ln-play) 40%, transparent);
+  --ln-bp-pink:        #c94a86;
+  --ln-bp-pink-soft:   rgba(201, 74, 134, 0.10);
+  --ln-bp-pink-border: rgba(201, 74, 134, 0.4);
 
-  --ln-bp-green:      var(--ln-ok);
-  --ln-bp-green-soft: var(--ln-ok-soft);
+  --ln-bp-green:      #1f8f57;
+  --ln-bp-green-soft: rgba(31, 143, 87, 0.10);
+
+  --ln-void:      var(--ln-bp-bg);
+  --ln-bg:        var(--ln-bp-bg);
+  --ln-bg-grid:   var(--ln-bp-paper-2);
+  --ln-surface:   var(--ln-bp-paper);
+  --ln-surface-2: var(--ln-bp-paper-2);
+  --ln-surface-3: var(--ln-bp-paper-2);
+  --ln-shell:     var(--ln-bp-bg);
+  --ln-panel:     var(--ln-bp-paper);
+  --ln-panel-2:   var(--ln-bp-paper-2);
+  --ln-overlay:   rgba(238, 243, 248, 0.86);
+
+  --ln-text:       var(--ln-bp-ink);
+  --ln-text-dim:   var(--ln-bp-ink-dim);
+  --ln-text-muted: var(--ln-bp-ink-mute);
+  --ln-text-ghost: rgba(15, 36, 54, 0.35);
+
+  --ln-hairline:        var(--ln-bp-line);
+  --ln-hairline-strong: var(--ln-bp-line-strong);
+  --ln-divider:         var(--ln-bp-line);
+
+  --ln-cyan-soft:   var(--ln-bp-blue-soft);
+  --ln-cyan-border: rgba(31, 120, 193, 0.32);
+  --ln-ok:          var(--ln-bp-green);
+  --ln-ok-soft:     var(--ln-bp-green-soft);
+
+  --ln-shadow-card:  0 1px 0 rgba(255,255,255,0.6) inset, 0 4px 16px rgba(15,36,54,0.10);
+  --ln-shadow-modal: 0 24px 64px rgba(15,36,54,0.22);
 }
 
-/* Legacy roots retain the deep command dock rather than fading to paper. */
+/* The setup dock is part of the paper surface, not a dark footer. */
 .theme-blueprint .sticky-actions {
-  background: linear-gradient(180deg, transparent, rgba(10, 10, 12, 0.94) 34%, var(--ln-bp-bg));
+  background: linear-gradient(180deg, transparent, rgba(238, 243, 248, 0.94) 34%, var(--ln-bp-bg));
+}
+
+/* Mission setup owns the surrounding desktop frame as well. Do not leave a
+   dark stage, starfield, or menu button visible around an otherwise light
+   creation flow. */
+.game-stage:has(.theme-blueprint) {
+  background: var(--ln-blueprint-bg);
+}
+.game-stage:has(.theme-blueprint)::before {
+  display: none;
+}
+.game-stage:has(.theme-blueprint) .game-stage-backdrop {
+  display: none;
+}
+.portrait-canvas:has(.theme-blueprint) {
+  background: var(--ln-bp-bg);
+  border-color: var(--ln-bp-line-strong);
+  box-shadow: 0 4px 16px rgba(15,36,54,0.10);
+}
+.portrait-canvas:has(.theme-blueprint) .game-menu-button {
+  background: var(--ln-blueprint-paper);
+  border-color: var(--ln-blueprint-line-strong);
+  color: var(--ln-blueprint-blue);
+  backdrop-filter: none;
+}
+.portrait-canvas:has(.theme-blueprint) .bottom-tab-bar {
+  background: var(--ln-blueprint-paper-2);
+  border-top-color: var(--ln-blueprint-line-strong);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+html:has(.theme-blueprint),
+body:has(.theme-blueprint) {
+  background-color: var(--ln-blueprint-bg);
 }
 
 /* ─── Construction Kit — additive utilities (KES-280) ──────────────────
