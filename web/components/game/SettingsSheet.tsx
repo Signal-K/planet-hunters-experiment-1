@@ -143,6 +143,16 @@ export default function SettingsSheet({ onClose }: SettingsSheetProps) {
         {IS_DEV && (
           <Section label="Debug">
             <Row>
+              <div>
+                <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 13, color: '#e6efff' }}>Preview state</div>
+                <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 11, color: '#5d7390', marginTop: 2 }}>
+                  Return to your saved game and account
+                </div>
+              </div>
+              <Btn label="My Game" onClick={() => { onClose(); window.location.href = '/game' }} variant="primary" />
+            </Row>
+
+            <Row>
               <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 13, color: '#e6efff' }}>Free Ops mode</div>
               <button
                 onClick={() => game.setPlayer(p => ({ ...p, freeOperations: !p.freeOperations }))}

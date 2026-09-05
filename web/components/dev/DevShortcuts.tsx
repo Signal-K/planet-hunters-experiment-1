@@ -98,6 +98,29 @@ export default function DevShortcuts() {
 
           <div style={{ padding: '0 10px 8px' }}>
             <button
+              data-testid="dev-return-to-game"
+              onClick={() => { window.location.href = '/game' }}
+              style={{
+                width: '100%',
+                padding: '7px 10px',
+                background: '#0a1624',
+                border: '1px solid #3fa9ff66',
+                borderRadius: 6,
+                color: '#87cffa',
+                fontFamily: 'var(--ln-font-display)',
+                fontSize: 10,
+                fontWeight: 800,
+                letterSpacing: '0.1em',
+                cursor: 'pointer',
+                textTransform: 'uppercase',
+              }}
+            >
+              Return to my game
+            </button>
+          </div>
+
+          <div style={{ padding: '0 10px 8px' }}>
+            <button
               data-testid="dev-shortcuts-mode-toggle"
               onClick={() => { setBackendMode(v => !v); setStatus(null) }}
               title={backendMode

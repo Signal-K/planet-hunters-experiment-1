@@ -111,6 +111,16 @@ describe('Launchpad · your own program', () => {
     cy.contains('Pick Target').should('not.exist')
   })
 
+  it('hides the onboarding coach while the mission selector is open', () => {
+    cy.viewport(1280, 900)
+    visitLaunchpad(m1Save())
+
+    cy.get('[data-testid="tutorial-coach-block"]', { timeout: 15000 }).should('be.visible')
+    cy.get('[data-testid="launchpad-status-card"]', { timeout: 15000 }).click()
+    cy.get('[data-testid="launchpad-new-mission-menu"]', { timeout: 15000 }).should('be.visible')
+    cy.get('[data-testid="tutorial-coach-block"]').should('not.exist')
+  })
+
   it('returns to the Launchpad after opening the Hangar from it', () => {
     cy.viewport(1280, 900)
     visitLaunchpad(freeOpsSave())

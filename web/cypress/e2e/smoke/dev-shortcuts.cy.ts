@@ -85,6 +85,7 @@ describe('DEV panel UI', () => {
   it('opens panel with all mission groups on click', () => {
     cy.get('[data-testid="dev-shortcuts-toggle"]').click()
     cy.get('[data-testid="dev-shortcuts-panel"]').should('be.visible')
+    cy.get('[data-testid="dev-return-to-game"]').should('be.visible')
     cy.get('[data-testid="dev-group-mission-1"]').should('exist')
     cy.get('[data-testid="dev-group-mission-2"]').should('exist')
     cy.get('[data-testid="dev-group-mission-3"]').should('exist')

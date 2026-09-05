@@ -120,9 +120,12 @@ function GameCanvas() {
 
   const coach = useMemo(() => {
     const activeCoach = coachSteps.find(step => step.screen === game.screen && !game.doneSteps[step.id]) ?? null
-    if (game.subsurfaceView || settingsOpen || friendsOpen || game.popup || game.authGateOpen) return null
+    // The Launchpad mission chooser is a modal owned by the current scene.
+    // Hide the coach while it is open so onboarding copy never sits over, or
+    // points back at, the control the player is already using.
+    if (game.subsurfaceView || settingsOpen || friendsOpen || game.popup || game.authGateOpen || (game.screen === 'launchpad' && game.launchpadMissionMenuOpen)) return null
     return activeCoach
-  }, [coachSteps, friendsOpen, game.authGateOpen, game.doneSteps, game.popup, game.screen, game.subsurfaceView, settingsOpen])
+  }, [coachSteps, friendsOpen, game.authGateOpen, game.doneSteps, game.launchpadMissionMenuOpen, game.popup, game.screen, game.subsurfaceView, settingsOpen])
 
   const coachIndex = coach ? coachSteps.findIndex(step => step.id === coach.id) : -1
   const hasCoach = !!coach

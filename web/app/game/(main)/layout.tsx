@@ -114,9 +114,12 @@ function GameChrome({ children }: { children: ReactNode }) {
   const coach = useMemo(() => {
     const routeCoach = coachSteps.find(step => step.screen === currentScreen && !game.doneSteps[step.id]) ?? null
     if (currentScreen === 'hub' && game.subsurfaceView) return null
-    if (settingsOpen || friendsOpen || game.popup || game.authGateOpen) return null
+    // The Launchpad mission chooser is a modal owned by the current scene.
+    // Hide the coach while it is open so onboarding copy never sits over, or
+    // points back at, the control the player is already using.
+    if (settingsOpen || friendsOpen || game.popup || game.authGateOpen || (currentScreen === 'launchpad' && game.launchpadMissionMenuOpen)) return null
     return routeCoach
-  }, [coachSteps, currentScreen, friendsOpen, game.authGateOpen, game.doneSteps, game.popup, game.subsurfaceView, settingsOpen])
+  }, [coachSteps, currentScreen, friendsOpen, game.authGateOpen, game.doneSteps, game.launchpadMissionMenuOpen, game.popup, game.subsurfaceView, settingsOpen])
 
   const coachIndex = coach ? coachSteps.findIndex(step => step.id === coach.id) : -1
   const hasCoach = !!coach
