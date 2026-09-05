@@ -2039,6 +2039,10 @@ button { cursor: pointer; }
   z-index: 3;
   bottom: 12px;
   left: 12px;
+  /* KES-311: shrink-to-fit width let this run under .rocket-view-toggle--bay
+     (bottom-right, same row) on narrow viewports — the vehicle-role line
+     wraps instead of colliding with it now. */
+  max-width: calc(100% - 150px);
   display: grid;
   gap: 4px;
   padding: 8px 10px;
@@ -3077,7 +3081,12 @@ html[data-coach-target="build-structure-strip"] [data-coach-id="build-structure-
     flex-direction: column;
     grid-template-rows: none !important;
     overflow-y: auto !important;
-    padding-bottom: 152px !important;
+    /* KES-311: the sticky .mission-setup-actions footer measures ~163px
+       tall here (step tracker + purchase button), 11px more than this
+       reservation — the shortfall clipped the tail of the Choose Vehicle
+       card under the footer even at full scroll. Padded with headroom
+       instead of chasing the exact px again. */
+    padding-bottom: 184px !important;
   }
   .mission-setup-screen--rocket .rocket-vehicle-stage,
   .mission-setup-screen--rocket .rocket-vehicle-frame,
