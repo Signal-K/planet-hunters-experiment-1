@@ -145,11 +145,11 @@ export default function RocketPurchaseScreen({ missionsDone, francs, mission, de
           }}>
             <span style={{
               padding: '4px 12px', borderRadius: 999,
-              background: isFree ? 'var(--ln-ok-soft, rgba(57,211,106,0.18))' : 'var(--ln-bp-pink-soft, rgba(245,166,35,0.18))',
-              border: `1px solid ${isFree ? 'var(--ln-ok)' : 'var(--ln-bp-pink-border, var(--ln-cyan-border))'}`,
+              background: isFree ? 'var(--ln-ok-soft)' : 'var(--ln-cyan-soft)',
+              border: `1px solid ${isFree ? 'var(--ln-ok)' : 'var(--ln-cyan-border)'}`,
               fontFamily: 'var(--ln-font-display)', fontSize: 10, fontWeight: 800,
               letterSpacing: '0.2em', textTransform: 'uppercase',
-              color: isFree ? 'var(--ln-ok)' : 'var(--ln-bp-pink, var(--ln-cyan))',
+              color: isFree ? 'var(--ln-ok)' : 'var(--ln-cyan)',
             }}>
               TIER {rocket.tier} · {isFree ? 'INCLUDED' : formatCurrency(rocket.costFrancs, { compact: true })}
             </span>

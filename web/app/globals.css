@@ -1358,7 +1358,7 @@ button { cursor: pointer; }
 .rocket-choice:focus-visible { border-color: var(--ln-cyan); background: var(--ln-surface-2); }
 .rocket-choice.is-selected { border-color: var(--ln-cyan); background: var(--ln-cyan-soft); box-shadow: var(--ln-glow-cyan); }
 .rocket-choice-topline { display: flex; justify-content: space-between; gap: 4px; color: var(--ln-text-muted); font: 700 9px var(--ln-font-mono); letter-spacing: .08em; }
-.rocket-choice-topline strong { color: var(--ln-amber); font-weight: 800; }
+.rocket-choice-topline strong { color: var(--ln-cyan); font-weight: 800; }
 .rocket-choice-name { font-size: 16px; letter-spacing: .04em; }
 .rocket-choice-role { min-height: 28px; color: var(--ln-text-dim); font: 500 10px/1.35 var(--ln-font-body); }
 .rocket-choice-stats { color: var(--ln-cyan); font: 700 9px var(--ln-font-mono); letter-spacing: .06em; white-space: nowrap; }

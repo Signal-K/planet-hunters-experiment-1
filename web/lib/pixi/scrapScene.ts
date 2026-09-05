@@ -33,13 +33,16 @@ const C = {
   pink:    0xc94a86, // --ln-bp-pink
 } as const
 
+// Trimmed from the original 3.7s total (KES-316) — early-onboarding debriefs
+// auto-play this as a full-screen blocking overlay with no visible skip
+// affordance, so its length reads as dead time rather than pacing.
 export const SCRAP_TIMELINE = {
-  hold:      0.3,
-  burst:     1.1,
-  collect:   2.7,
-  labelIn:   1.2,
-  fadeOut:   3.0,
-  done:      3.7,
+  hold:      0.2,
+  burst:     0.7,
+  collect:   1.7,
+  labelIn:   0.8,
+  fadeOut:   1.9,
+  done:      2.4,
 }
 
 export const SCRAP_W = 390
