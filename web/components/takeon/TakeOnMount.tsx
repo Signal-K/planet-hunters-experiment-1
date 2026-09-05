@@ -208,7 +208,12 @@ const TakeOnMount = forwardRef<TakeOnMountHandle, TakeOnMountProps>(function Tak
         mounted.start()
         gameRef.current = mounted.game
         document.addEventListener('visibilitychange', syncVisibility)
-        syncVisibility()
+        // Don't call syncVisibility() here: document.hidden can read true on
+        // a fully visible tab right at mount (occluded-but-onscreen windows,
+        // some automation/test harnesses), and pausing immediately after
+        // start() stops the render loop before a single frame paints —
+        // leaving a blank canvas with no error (KES-308). The event listener
+        // above still pauses/resumes on genuine visibility changes.
 
         const initialSeedCargo = seedCargoRef.current
         const initialSeedCache = seedCacheRef.current
