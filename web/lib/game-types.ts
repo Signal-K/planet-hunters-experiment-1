@@ -424,6 +424,9 @@ export interface GameActions {
   launchpadView: LaunchpadView
   openLaunchpad: () => void
   focusLaunchpad: () => void
+  openLaunchpadMissionMenu: () => void
+  launchpadMissionMenuOpen: boolean
+  setLaunchpadMissionMenuOpen: (open: boolean) => void
   returnFromHangar: () => void
   goToMissions: (scope?: SceneScope) => void
   setScreenFromUrl: (screen: Screen) => void

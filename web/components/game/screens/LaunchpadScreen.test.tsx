@@ -25,7 +25,6 @@ describe('Launchpad own-program actions', () => {
         onViewContracts={noop}
         onLaunchpadAction={noop}
         onOpenHangar={noop}
-        onOpenSubsurface={noop}
         onResumeMission={noop}
         onViewMissionLog={noop}
         missionsDone={player.missionsDone}
@@ -62,7 +61,6 @@ describe('Launchpad own-program actions', () => {
         onViewContracts={noop}
         onLaunchpadAction={noop}
         onOpenHangar={noop}
-        onOpenSubsurface={noop}
         missionsDone={player.missionsDone}
         freeOperations={player.freeOperations}
         catalog={catalog}
@@ -100,7 +98,6 @@ describe('Launchpad own-program actions', () => {
         onViewContracts={noop}
         onLaunchpadAction={noop}
         onOpenHangar={noop}
-        onOpenSubsurface={noop}
         missionsDone={player.missionsDone}
         freeOperations={player.freeOperations}
         catalog={catalog}
@@ -111,7 +108,7 @@ describe('Launchpad own-program actions', () => {
     expect(markup).not.toContain('Build Astronaut Academy')
   })
 
-  it('opens the three own-program mission choices when the pad is clicked', async () => {
+  it('opens the four-route mission picker when the pad is clicked', async () => {
     const player = {
       ...DEFAULT_STATE.player,
       freeOperations: true,
@@ -137,7 +134,6 @@ describe('Launchpad own-program actions', () => {
           onViewContracts={vi.fn()}
           onLaunchpadAction={vi.fn()}
           onOpenHangar={vi.fn()}
-          onOpenSubsurface={vi.fn()}
           missionsDone={player.missionsDone}
           freeOperations={player.freeOperations}
           catalog={catalog}
@@ -154,10 +150,11 @@ describe('Launchpad own-program actions', () => {
     expect(host.querySelector('[data-testid="launchpad-new-mission-satellite-btn"]')).not.toBeNull()
     expect(host.querySelector('[data-testid="launchpad-new-mission-mining-btn"]')).not.toBeNull()
     expect(host.querySelector('[data-testid="launchpad-new-mission-build-btn"]')).not.toBeNull()
+    expect(host.querySelector('[data-testid="launchpad-new-mission-contracts-btn"]')).not.toBeNull()
     expect(host.textContent).toContain('LAUNCH SATELLITE / TOOL')
     expect(host.textContent).toContain('GO MINING')
     expect(host.textContent).toContain('BUILD SOMETHING YOURSELF')
-    expect(host.textContent).toContain('Client contracts remain on the Mission Board.')
+    expect(host.textContent).toContain('AVAILABLE CONTRACTS')
 
     await act(async () => {
       host.querySelector<HTMLButtonElement>('[data-testid="launchpad-new-mission-mining-btn"]')?.dispatchEvent(new MouseEvent('click', { bubbles: true }))

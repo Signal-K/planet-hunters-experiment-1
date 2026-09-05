@@ -18,7 +18,6 @@ interface LaunchpadOverviewScreenProps {
   onViewContracts: () => void
   onFocusPad: () => void
   onOpenHangar: () => void
-  onOpenSubsurface?: () => void
   onOpenBuild: () => void
   onResumeMission?: () => void
   onViewMissionLog?: () => void
@@ -110,7 +109,6 @@ export default function LaunchpadOverviewScreen({
   onViewContracts,
   onFocusPad,
   onOpenHangar,
-  onOpenSubsurface,
   onOpenBuild,
   onResumeMission,
   onViewMissionLog,
@@ -215,17 +213,6 @@ export default function LaunchpadOverviewScreen({
             testId="launchpad-ui-open-contracts-btn"
             legacyTestId="launchpad-view-contracts-btn"
           />
-          {onOpenSubsurface && (
-            <ActionCard
-              eyebrow="BASE INFRASTRUCTURE"
-              title="Subsurface"
-              detail="Open the excavation deck beneath Base."
-              action="Open deck"
-              onClick={onOpenSubsurface}
-              testId="launchpad-ui-open-subsurface-btn"
-              legacyTestId="launchpad-open-subsurface-btn"
-            />
-          )}
         </div>
       </div>
 
@@ -239,7 +226,6 @@ export default function LaunchpadOverviewScreen({
           <button className={styles.footerButton} data-testid="launchpad-ui-footer-focus-pad-btn" onClick={onFocusPad}>FOCUS SCENE</button>
           <button className={styles.footerButton} data-testid="launchpad-ui-footer-hangar-btn" onClick={onOpenHangar}>HANGAR</button>
           {onViewMissionLog && <button className={styles.footerButton} data-testid="launchpad-ui-footer-mission-log-btn" onClick={onViewMissionLog}>MISSION LOG</button>}
-          {onOpenSubsurface && <button className={styles.footerButton} data-testid="launchpad-ui-footer-subsurface-btn" onClick={onOpenSubsurface}>SUBSURFACE</button>}
           <button className={styles.footerButton} data-testid="launchpad-ui-footer-contracts-btn" onClick={onViewContracts}>CONTRACTS</button>
         </div>
       </footer>

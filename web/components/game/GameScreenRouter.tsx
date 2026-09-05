@@ -201,7 +201,7 @@ export function ScreenContent({
               if (game.player.pendingLaunch) return game.go('fab')
               // The Launchpad is an in-world interaction surface for every
               // entry point; it must not fall back to a dashboard overview.
-              return game.focusLaunchpad()
+              return game.openLaunchpadMissionMenu()
             }
           }}
           onUpgradeLaunchpad={() => game.upgradeLaunchpad()}
@@ -382,7 +382,6 @@ export function ScreenContent({
             onViewContracts={() => game.goToMissions()}
             onFocusPad={game.focusLaunchpad}
             onOpenHangar={() => game.go('hangar')}
-            onOpenSubsurface={() => game.go('hub-subsurface')}
             onOpenBuild={() => game.go('build')}
             onResumeMission={game.player.activeMission ? () => {
               captureGameEvent('mission_resumed', { mission_phase: game.player.missionPhase ?? 'transit' })
@@ -412,7 +411,8 @@ export function ScreenContent({
             game.goToMissions()
           }}
           onOpenHangar={() => game.go('hangar')}
-          onOpenSubsurface={() => game.go('hub-subsurface')}
+          missionMenuOpen={game.launchpadMissionMenuOpen}
+          onMissionMenuOpenChange={game.setLaunchpadMissionMenuOpen}
           onResumeMission={game.player.activeMission ? () => {
             captureGameEvent('mission_resumed', { mission_phase: game.player.missionPhase ?? 'transit' })
             enqueueSurvey('lnm_resume_mission', 1200)

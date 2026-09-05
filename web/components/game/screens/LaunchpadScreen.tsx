@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import TopBar from '@/components/ui/TopBar'
 import { partitionByOwner } from '@/lib/data'
 import { ROCKET_MODELS } from '@/lib/data/rockets'
@@ -21,7 +21,6 @@ interface LaunchpadScreenProps {
   onViewContracts: () => void
   onLaunchpadAction: () => void
   onOpenHangar: () => void
-  onOpenSubsurface?: () => void
   onResumeMission?: () => void
   onViewMissionLog?: () => void
   missionsDone: number
@@ -31,6 +30,8 @@ interface LaunchpadScreenProps {
   rocketImageSrc?: string
   selectedRocketName?: string
   francs?: number
+  missionMenuOpen?: boolean
+  onMissionMenuOpenChange?: (open: boolean) => void
 }
 
 function HangarGlyph() {
@@ -43,10 +44,6 @@ function MissionGlyph() {
 
 function InfrastructureGlyph() {
   return <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 18h14M7 18V9l5-4 5 4v9M9 18v-5h6v5" /><path d="M12 5V2M9 3h6" /></svg>
-}
-
-function SubsurfaceGlyph() {
-  return <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M6 11h12M8 15h8M10 19h4" /><path d="M12 3v16" /></svg>
 }
 
 function GuideGlyph() {
@@ -80,14 +77,21 @@ const guideSteps = [
 ] as const
 
 export default function LaunchpadScreen({
-  onBack, onPick, onViewContracts, onLaunchpadAction, onOpenHangar, onOpenSubsurface, onResumeMission, onViewMissionLog, missionsDone, freeOperations, catalog, player, rocketImageSrc = '/game/assets/ships/ship_sr1.png', selectedRocketName, francs,
+  onBack, onPick, onViewContracts, onLaunchpadAction, onOpenHangar, onResumeMission, onViewMissionLog, missionsDone, freeOperations, catalog, player, rocketImageSrc = '/game/assets/ships/ship_sr1.png', selectedRocketName, francs, missionMenuOpen: requestedMissionMenuOpen = false, onMissionMenuOpenChange,
 }: LaunchpadScreenProps) {
   // This is the Launchpad route: a playable Earth Base composition. The
   // tower and hangar are the primary interactions; the rail only exposes
   // secondary tools without replacing the scene with a card dashboard.
   const { phase: skyPhase } = useTimeOfDay()
   const [guideStep, setGuideStep] = useState<number | null>(null)
-  const [missionMenuOpen, setMissionMenuOpen] = useState(false)
+  const [missionMenuOpen, setMissionMenuOpen] = useState(requestedMissionMenuOpen)
+  useEffect(() => {
+    setMissionMenuOpen(requestedMissionMenuOpen)
+  }, [requestedMissionMenuOpen])
+  const setMissionMenu = (open: boolean) => {
+    setMissionMenuOpen(open)
+    onMissionMenuOpenChange?.(open)
+  }
   const fleet = ROCKET_MODELS.map(model => ({ model, unlocked: missionsDone >= model.missionsRequired && !model.locked }))
   const unlockedFleet = fleet.filter(item => item.unlocked)
   const launchedSatellites = player.transitSatelliteLaunchedAt ? SATELLITE_MODELS.length : 0
@@ -114,7 +118,7 @@ export default function LaunchpadScreen({
       onLaunchpadAction()
       return
     }
-    if (!player.activeMission) setMissionMenuOpen(true)
+    if (!player.activeMission) setMissionMenu(true)
   }
   const padActionLabel = player.activeMission
     ? 'Launchpad active; use the Resume Mission footer action'
@@ -167,11 +171,11 @@ export default function LaunchpadScreen({
           <section className="launchpad-mission-menu" data-testid="launchpad-new-mission-menu" aria-labelledby="launchpad-new-mission-title">
             <div className="launchpad-mission-menu-header">
               <div>
-                <span className="launchpad-guide-kicker">LAUNCHPAD / OWN PROGRAM</span>
+                <span className="launchpad-guide-kicker">LAUNCHPAD / MISSION CONTROL</span>
                 <h2 id="launchpad-new-mission-title">New mission</h2>
-                <p>Choose the kind of operation to prepare. Client contracts remain on the Mission Board.</p>
+                <p>Choose the operation to prepare. Every route begins from this launchpad.</p>
               </div>
-              <button type="button" className="launchpad-mission-menu-close" data-testid="launchpad-new-mission-close" onClick={() => setMissionMenuOpen(false)}>CLOSE</button>
+              <button type="button" className="launchpad-mission-menu-close" data-testid="launchpad-new-mission-close" onClick={() => setMissionMenu(false)}>CLOSE</button>
             </div>
             <div className="launchpad-mission-menu-options">
               <button
@@ -206,6 +210,16 @@ export default function LaunchpadScreen({
                 <InfrastructureGlyph />
                 <strong>BUILD SOMETHING YOURSELF</strong>
                 <span>{buildOperation?.title ?? 'No player construction mission is ready for dispatch.'}</span>
+              </button>
+              <button
+                type="button"
+                className="launchpad-mission-choice"
+                data-testid="launchpad-new-mission-contracts-btn"
+                onClick={onViewContracts}
+              >
+                <MissionGlyph />
+                <strong>AVAILABLE CONTRACTS</strong>
+                <span>Review client missions and choose an available contract.</span>
               </button>
             </div>
           </section>
@@ -270,11 +284,9 @@ export default function LaunchpadScreen({
         <div className="launchpad-rail-actions">
           {onResumeMission && <button className="is-primary" data-testid="launchpad-resume-mission-btn" aria-label="Jump back to active mission" onClick={onResumeMission}><MissionGlyph /> RESUME MISSION</button>}
           {freeOperations && <button data-testid="launchpad-guide-open" onClick={() => setGuideStep(0)}><GuideGlyph /> GUIDE</button>}
-          {onOpenSubsurface && <button data-testid="launchpad-open-subsurface-btn" onClick={onOpenSubsurface}><SubsurfaceGlyph /> SUBSURFACE</button>}
           <button data-testid="launchpad-open-hangar-btn" onClick={onOpenHangar}><HangarGlyph /> HANGAR</button>
           {onViewMissionLog && <button data-testid="launchpad-mission-log-btn" onClick={onViewMissionLog}><MissionGlyph /> MISSION LOG</button>}
           {!player.activeMission && <button className="is-primary" data-testid="launchpad-new-mission-btn" data-action="new-mission" onClick={openMissionMenu}><MissionGlyph /> NEW MISSION</button>}
-          <button className={freeOperations ? undefined : 'is-primary'} data-testid="launchpad-view-contracts-btn" onClick={onViewContracts}><MissionGlyph /> CONTRACTS</button>
         </div>
       </footer>
     </div>

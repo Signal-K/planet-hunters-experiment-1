@@ -123,8 +123,8 @@ function GameChrome({ children }: { children: ReactNode }) {
   const hasCoach = !!coach
 
   const showNav = ['hub', 'missions', 'skills', 'mission-history'].includes(currentScreen)
-  const showFeedback = ['hub', 'missions', 'market', 'hangar', 'skills'].includes(currentScreen)
-    && !showNav
+  const showFeedback = currentScreen === 'hub'
+    && !game.subsurfaceView
     && !game.popup
     && !game.authGateOpen
 

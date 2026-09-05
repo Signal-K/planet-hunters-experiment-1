@@ -164,6 +164,7 @@ button.launchpad-scene-object { cursor: pointer; }
 .launchpad-rail-actions button:focus-visible { outline: 2px solid #70d9ea; outline-offset: 2px; }
 .launchpad-rail-actions button svg { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 1.8; }
 .launchpad-rail-actions button.is-primary { border-color: #70d9ea; background: #70d9ea; color: #07101c; box-shadow: 0 0 18px rgba(112,217,234,.24); }
+.launchpad-rail-actions button.is-primary { min-width: 172px; justify-content: center; }
 .launchpad-action-count { opacity: .68; font-size: 8px; }
 
 /* The mission selector is an in-scene command surface attached to the pad.
@@ -224,7 +225,7 @@ button.launchpad-scene-object { cursor: pointer; }
 }
 .launchpad-mission-menu-options {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 16px;
 }
 .launchpad-mission-choice {
@@ -324,17 +325,13 @@ button.launchpad-scene-object { cursor: pointer; }
   .launchpad-object-label strong { font-size: 8px; }
   .launchpad-satellite svg { width: 70px; }
   .launchpad-rail-status span:not(:first-child) { display: none; }
-  .launchpad-rail-actions button { padding: 0 9px; font-size: 8px; flex: 0 0 auto; }
-  /* The program rail can outgrow the available width even at compact padding —
-     the row has no wrap, so the rightmost button (usually CONTRACTS) was
-     clipped by page overflow instead of reachable. Scroll rather than lose
-     the last action. */
-  .launchpad-rail-actions { overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
-  .launchpad-rail-actions::-webkit-scrollbar { display: none; }
+  .launchpad-rail-actions { gap: 4px; }
+  .launchpad-rail-actions button { padding: 0 8px; font-size: 8px; flex: 0 1 auto; }
+  .launchpad-rail-actions button.is-primary { min-width: 142px; }
 }
 @media (orientation: landscape) and (max-height: 600px) {
-  .launchpad-visual-scene { inset: 64px 0 54px; }
-  .launchpad-scene-rail { height: 54px; padding: 7px 10px; }
+  .launchpad-visual-scene { inset: 64px 0 62px; }
+  .launchpad-scene-rail { height: 62px; padding: 7px 10px; }
   .launchpad-satellite { top: 2%; }
 }
 @media (orientation: portrait) and (max-width: 620px) {
@@ -344,8 +341,28 @@ button.launchpad-scene-object { cursor: pointer; }
 @media (max-width: 720px) {
   .launchpad-mission-menu { bottom: 70px; padding: 16px; }
   .launchpad-mission-menu-header { gap: 16px; }
-  .launchpad-mission-menu-options { grid-template-columns: 1fr; }
+  .launchpad-mission-menu-options { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .launchpad-mission-choice { min-height: 0; }
+}
+
+@media (orientation: landscape) and (max-height: 600px), (max-width: 600px) {
+  .launchpad-scene-rail { height: 62px; padding: 6px 8px; gap: 8px; }
+  .launchpad-rail-status { flex: 0 0 auto; }
+  .launchpad-rail-status span { font-size: 7px; }
+  .launchpad-rail-actions { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); flex: 1 1 auto; }
+  .launchpad-rail-actions button { width: 100%; min-width: 0; height: 44px; justify-content: center; }
+  .launchpad-rail-actions button.is-primary { min-width: 0; grid-column: span 1; }
+  .launchpad-rail-actions button svg { display: none; }
+  .launchpad-rail-actions [data-testid="launchpad-guide-open"] { display: none; }
+  .launchpad-mission-menu { bottom: 70px; padding: 12px; }
+  .launchpad-mission-menu-header { gap: 12px; margin-bottom: 8px; }
+  .launchpad-mission-menu-header h2 { margin: 4px 0; font-size: 18px; }
+  .launchpad-mission-menu-header p { font-size: 11px; line-height: 1.3; }
+  .launchpad-mission-menu-options { gap: 8px; }
+  .launchpad-mission-choice { min-height: 72px; gap: 4px; padding: 8px; }
+  .launchpad-mission-choice svg { width: 18px; height: 18px; }
+  .launchpad-mission-choice strong { font-size: 8px; }
+  .launchpad-mission-choice span { font-size: 9px; line-height: 1.2; }
 }
 
 /* KES-279: the Hub dock is a mobile command surface, not a shrunken desktop

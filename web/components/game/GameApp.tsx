@@ -173,8 +173,8 @@ function GameCanvas() {
     : game.screen === 'mission-history' ? 'mission-history' : game.screen === 'galaxy' ? 'galaxy' : game.screen === 'fab' ? 'fab' : game.screen === 'skills' ? 'skills' : 'hub'
   const showHub = game.screen === 'hub' || (game.screen === 'market' && !game.player.freeOperations)
   const showNav = (showHub || ['missions', 'skills', 'targets', 'mission-history'].includes(game.screen)) && !(game.screen === 'targets' && hasCoach)
-  const showFeedback = ['hub', 'missions', 'market', 'hangar', 'skills'].includes(game.screen)
-    && !showNav
+  const showFeedback = game.screen === 'hub'
+    && !game.subsurfaceView
     && !game.popup
     && !game.authGateOpen
 

@@ -691,6 +691,7 @@ export default function HubScreen({ player, rocketVariant = 'explorer', hasCoach
                       )}
                     </>
                   )}
+                  <DockIconBtn testId="hub-subsurface-btn" icon={<SubsurfaceGlyph />} label="Subsurface" onClick={() => setSubsurface(true)} />
                   <DockIconBtn icon={<HistoryGlyph />} label="Mission Log" onClick={() => onOpenScene('mission-history')} />
 
                   {/* Desktop has no nav rail and no bottom bar, so the

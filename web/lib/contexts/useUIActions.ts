@@ -25,6 +25,7 @@ export function useUIActions(
   // close-up focus. The overview is the full program UI; the Hub building is
   // the diegetic scene interaction.
   const [launchpadView, setLaunchpadView] = useState<LaunchpadView>('overview')
+  const [launchpadMissionMenuOpen, setLaunchpadMissionMenuOpen] = useState(false)
   // Hangar can be entered from the Earth Base or the Launchpad composition.
   // Preserve only that ephemeral return context: it is navigation chrome, not
   // player progress and must not be persisted into a save or public URL.
@@ -42,11 +43,19 @@ export function useUIActions(
 
   const openLaunchpad = useCallback(() => {
     setLaunchpadView('overview')
+    setLaunchpadMissionMenuOpen(false)
     setState(s => ({ ...s, screen: 'launchpad' }))
   }, [setState])
 
   const focusLaunchpad = useCallback(() => {
     setLaunchpadView('focus')
+    setLaunchpadMissionMenuOpen(false)
+    setState(s => ({ ...s, screen: 'launchpad' }))
+  }, [setState])
+
+  const openLaunchpadMissionMenu = useCallback(() => {
+    setLaunchpadView('focus')
+    setLaunchpadMissionMenuOpen(true)
     setState(s => ({ ...s, screen: 'launchpad' }))
   }, [setState])
 
@@ -113,5 +122,5 @@ export function useUIActions(
     setState(s => ({ ...s, pendingTerritoryClaimFor: undefined, screen: s.tutorial ? 'hub' : 'market' }))
   }, [setState])
 
-  return { go, goToMissions, setScreenFromUrl, skipNextUrlSync, setPopup, setMenuOpen, addToast, dismissToast, clearTerritoryClaimPopup, toasts, subsurfaceView, setSubsurfaceView, launchpadView, openLaunchpad, focusLaunchpad, returnFromHangar }
+  return { go, goToMissions, setScreenFromUrl, skipNextUrlSync, setPopup, setMenuOpen, addToast, dismissToast, clearTerritoryClaimPopup, toasts, subsurfaceView, setSubsurfaceView, launchpadView, openLaunchpad, focusLaunchpad, openLaunchpadMissionMenu, launchpadMissionMenuOpen, setLaunchpadMissionMenuOpen, returnFromHangar }
 }

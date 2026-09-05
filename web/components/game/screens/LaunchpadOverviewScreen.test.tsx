@@ -20,7 +20,6 @@ describe('Launchpad overview commands', () => {
         onViewContracts={noop}
         onFocusPad={noop}
         onOpenHangar={noop}
-        onOpenSubsurface={noop}
         onOpenBuild={noop}
         onResumeMission={noop}
         onViewMissionLog={noop}
@@ -36,7 +35,7 @@ describe('Launchpad overview commands', () => {
     expect(markup).toContain('data-testid="launchpad-ui-footer-focus-pad-btn"')
     expect(markup).toContain('data-testid="launchpad-ui-footer-hangar-btn"')
     expect(markup).toContain('data-testid="launchpad-ui-footer-mission-log-btn"')
-    expect(markup).toContain('data-testid="launchpad-ui-footer-subsurface-btn"')
+    expect(markup).not.toContain('data-testid="launchpad-ui-footer-subsurface-btn"')
     expect(markup).toContain('data-testid="launchpad-ui-footer-contracts-btn"')
   })
 })
