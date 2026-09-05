@@ -128,10 +128,13 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
 
       <div className={`debrief-game__content screen-scroll${hasCoach ? ' screen-scroll--coach' : ''}`} data-ui-zone={UI_ZONES.screenContent}>
         <section className="debrief-mission-strip" aria-label="Mission result">
-          <div className="debrief-mission-strip__status"><span aria-hidden="true" /> {shipDestroyed ? 'HULL LOST · CARGO RECOVERED' : 'DOCKED · MISSION COMPLETE'}</div>
+          <div className="debrief-mission-strip__status"><span aria-hidden="true" /> {shipDestroyed ? 'HULL LOST · CARGO RECOVERED' : isProgramOperation ? 'COMMISSIONED · INSTRUMENT ONLINE' : 'DOCKED · MISSION COMPLETE'}</div>
           <div className="debrief-mission-strip__route">
             <div><span>MISSION</span><strong>{mission.title}</strong></div>
-            <div><span>RETURNED FROM</span><strong>{target.name}</strong></div>
+            {/* KES-318: a program operation (e.g. deep-space telescope launch)
+                stays in orbit — it never "returns" — so this reused the
+                cargo-mission label incorrectly. */}
+            <div><span>{isProgramOperation ? 'STATIONED AT' : 'RETURNED FROM'}</span><strong>{target.name}</strong></div>
           </div>
         </section>
 
@@ -306,7 +309,7 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
               setScrapping(true)
             }}
           >
-            {shipDestroyed ? 'Resolve Recovered Cargo' : 'Resolve Cargo & Recovery'}
+            {shipDestroyed ? 'Resolve Recovered Cargo' : isProgramOperation ? 'Resolve & Log Outcome' : 'Resolve Cargo & Recovery'}
           </PrimaryBtn>
         ) : (
           <PrimaryBtn

@@ -116,7 +116,11 @@ export default function CommentsPanel({ recordType, recordId }: CommentsPanelPro
       )}
 
       <div style={{ marginTop: 10 }}>
-        {isAuthed ? (
+        {loadFailed ? (
+          <div style={{ fontFamily: 'var(--ln-font-mono)', fontSize: 10, color: 'var(--ln-text-muted)' }}>
+            Posting is unavailable while comments can&apos;t be loaded.
+          </div>
+        ) : isAuthed ? (
           <>
             <textarea
               data-testid="comment-input"

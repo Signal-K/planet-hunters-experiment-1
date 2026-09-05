@@ -570,6 +570,11 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
         dip_markers: dipMarkers,
       }).catch(error => {
         console.warn('[TESS] classification submit failed', error)
+        // KES-318: the screen's own copy promises "your call feeds live
+        // classification consensus" — a silent local-only save contradicts
+        // that, so surface it rather than letting ANNOTATION SAVED stand
+        // unqualified.
+        addToast('Saved locally — could not reach the shared classification feed', 'warn')
       })
     }
     // The TESS classification step (TessDiscoveryScreen / 'galaxy' route)
@@ -613,6 +618,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
         verdict,
       }).catch(error => {
         console.warn('[NEOCP] classification submit failed', error)
+        addToast('Saved locally — could not reach the shared classification feed', 'warn')
       })
     }
   }, [setState])
