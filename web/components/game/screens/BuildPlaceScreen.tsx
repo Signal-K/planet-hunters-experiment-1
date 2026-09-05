@@ -254,6 +254,7 @@ export default function BuildPlaceScreen({ onPlaced, onBack, hasCoach, player }:
         <div style={{
           background: 'linear-gradient(180deg, transparent, var(--ln-overlay))',
           padding: '10px 12px 0',
+          position: 'relative',
         }}>
           <div style={{
             display: 'flex',
@@ -327,6 +328,18 @@ export default function BuildPlaceScreen({ onPlaced, onBack, hasCoach, player }:
               )
             })}
           </div>
+
+          {/* Fade hint that the structure strip scrolls horizontally — mobile
+              widths clip the last card with no other affordance (KES-314). */}
+          <div style={{
+            position: 'absolute',
+            top: 10,
+            bottom: 4,
+            right: 12,
+            width: 28,
+            pointerEvents: 'none',
+            background: 'linear-gradient(90deg, transparent, var(--ln-overlay))',
+          }} />
 
           {/* Status line */}
           {sel ? <div style={{
