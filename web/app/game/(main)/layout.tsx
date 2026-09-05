@@ -9,7 +9,6 @@ import TutorialCoach from '@/components/game/TutorialCoach'
 import UnlockPopup from '@/components/game/UnlockPopup'
 import { TutorialCompleteSheet } from '@/components/game/TutorialCompleteSheet'
 import BottomTabBar from '@/components/layout/BottomTabBar'
-import Sidebar from '@/components/Sidebar/Sidebar'
 import BackendStatus from '@/components/game/BackendStatus'
 import LandnamSyncStatus from '@/components/game/LandnamSyncStatus'
 import { PushOptIn } from '@/components/game/PushOptIn'
@@ -184,27 +183,22 @@ function GameChrome({ children }: { children: ReactNode }) {
         )}
         <DevShortcuts />
 
-        {/* Utility controls live in the top command cluster. Keeping them out
-            of the ground dock prevents the mission status row and bottom nav
-            from becoming their accidental hit target at narrow widths. */}
-        {currentScreen === 'hub' && !game.subsurfaceView && (
+        {/* Account access belongs to the shared shell, not to one scene. A
+            player can leave the Hub for mission setup, flight, or debrief,
+            so this remains available across every gameplay route. */}
+        {currentScreen !== 'intro' && !game.authGateOpen && (
           <button
             data-testid="settings-button"
-            aria-label="Settings"
+            aria-label="Open menu"
+            aria-expanded={settingsOpen}
             onClick={() => setSettingsOpen(true)}
-            style={{
-              position: 'absolute', top: 56, right: 12, zIndex: 22,
-              width: 34, height: 34, borderRadius: 999, cursor: 'pointer',
-              display: 'grid', placeItems: 'center', padding: 0,
-              background: 'var(--hub-panel, #080d18)',
-              border: '1.5px solid var(--hub-outline, rgba(255,255,255,0.55))',
-              color: 'var(--hub-cyan, #6cd4ff)',
-            }}
+            className="game-menu-button"
           >
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <circle cx="12" cy="12" r="3" />
               <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 01-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z" />
             </svg>
+            <span>Menu</span>
           </button>
         )}
 
@@ -270,14 +264,6 @@ function GameChrome({ children }: { children: ReactNode }) {
         )}
       </div>
 
-      {/* Sidebar (position:fixed, desktop only) lives outside .portrait-canvas
-          on purpose: that box has `isolation: isolate` + `overflow: hidden`
-          for the mobile-canvas illusion, which scopes/clips a nested fixed
-          descendant's effective stacking in ways that made the sidebar
-          unreliable to click on desktop (Liam, 2026-07-04: "buttons in the
-          sidebar on desktop do not work"). Keeping it a sibling of
-          .portrait-canvas inside .game-stage removes that ambiguity. */}
-      <Sidebar current={currentNav} onNav={goFromNav} onSettings={() => setSettingsOpen(true)} />
       {settingsOpen && <SettingsSheet onClose={() => setSettingsOpen(false)} />}
       {friendsOpen && <FriendsSheet onClose={() => setFriendsOpen(false)} />}
     </main>

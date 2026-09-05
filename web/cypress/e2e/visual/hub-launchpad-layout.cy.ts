@@ -119,4 +119,17 @@ describe('Hub and Launchpad visual layout', () => {
       }
     })
   })
+
+  it('keeps the shared menu reachable without a desktop sidebar', () => {
+    cy.viewport(1280, 800)
+    visit('/game/launchpad', 'launchpad')
+    cy.contains('h1', 'Your Program', { timeout: 15000 }).should('be.visible')
+    cy.get('.desktop-sidebar').should('not.exist')
+    cy.get('[data-testid="settings-button"]')
+      .should('be.visible')
+      .and('have.attr', 'aria-label', 'Open menu')
+      .click()
+    cy.get('[data-testid="settings-button"]').should('have.attr', 'aria-expanded', 'true')
+    cy.contains('button', 'Sign Out').should('be.visible').and('not.be.disabled')
+  })
 })

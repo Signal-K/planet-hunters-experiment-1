@@ -497,6 +497,45 @@ button { cursor: pointer; }
    per-screen paddingBottom hacks. */
 .game-screen-area { flex: 1; min-height: 0; position: relative; overflow: hidden; }
 
+/* Persistent account access for every gameplay route. The control sits just
+   below the TopBar so it remains readable over scenes and does not compete
+   with the title or route-specific right-side readouts. */
+.game-menu-button {
+  position: absolute;
+  top: 56px;
+  right: var(--ln-s-3);
+  z-index: 22;
+  width: 72px;
+  min-width: 72px;
+  height: 36px;
+  min-height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--ln-s-2);
+  padding: 0 var(--ln-s-3);
+  border: 1px solid var(--ln-hairline-strong);
+  border-radius: var(--ln-r-md);
+  background: var(--ln-panel);
+  color: var(--ln-cyan);
+  font: 800 10px var(--ln-font-display);
+  letter-spacing: var(--ln-tr-label);
+  text-transform: uppercase;
+  cursor: pointer;
+  backdrop-filter: blur(8px);
+  transition: background var(--ln-d-quick) var(--ln-ease-snap), border-color var(--ln-d-quick) var(--ln-ease-snap), color var(--ln-d-quick) var(--ln-ease-snap);
+}
+.game-menu-button:hover,
+.game-menu-button:focus-visible {
+  border-color: var(--ln-cyan);
+  background: var(--ln-cyan-soft);
+  color: var(--ln-cyan-bright);
+}
+.game-menu-button:focus-visible {
+  outline: 2px solid var(--ln-cyan);
+  outline-offset: 2px;
+}
+
 .bottom-tab-bar {
   flex: none;
   height: var(--ln-nav-h);
@@ -2701,10 +2740,6 @@ button { cursor: pointer; }
 
    The bottom tab bar survives only under 1024px, where there is no room for
    the base action rail to carry navigation as well. */
-.desktop-sidebar {
-  display: none;
-}
-
 .hub-desktop-nav {
   display: none;
 }
@@ -2784,7 +2819,6 @@ button { cursor: pointer; }
   0%,100% { box-shadow: 0 0 0 2px rgba(245,166,35,0.65), 0 0 10px rgba(245,166,35,0.15); }
   50%      { box-shadow: 0 0 0 3px rgba(245,166,35,1),    0 0 28px rgba(245,166,35,0.45); }
 }
-html[data-coach-target="sidebar-missions"] [data-coach-id="sidebar-missions"],
 html[data-coach-target="bottom-tab-missions"] [data-coach-id="bottom-tab-missions"] {
   animation: coach-target-pulse 1.4s ease-in-out infinite;
 }
