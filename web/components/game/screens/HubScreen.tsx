@@ -319,9 +319,8 @@ export default function HubScreen({ player, rocketVariant = 'explorer', hasCoach
     // SVG grass is at 78% from top = 22% from bottom. calc(22% - 42px) puts the label
     // bottom 42px underground so the visible building base sits at the grass line.
     // left uses scene-proportional % so it matches the CSS-stretched PixiJS canvas (HUB_W=402).
-    // translateX(-50%) centers the label stack on the plot the way the PixiJS
-    // art does — scene plotX is a building *center*, so left-aligning here put
-    // every pill half a building to the right of the structure it names.
+    // `sceneXPercent` returns the structure centre, so the DOM wrapper uses
+    // the same translate as the sprite layer below.
     .map(e => {
       const plot = readComponentNumber(e, 'BuildPlot', 'index', 0)
       const kind = Object.entries(effectivePlots).find(([, index]) => index === plot)?.[0]
@@ -403,14 +402,10 @@ export default function HubScreen({ player, rocketVariant = 'explorer', hasCoach
         sub: player.activeMission ? 'IN FLIGHT' : 'READY',
         status: (player.activeMission ? 'warn' : 'ok') as 'ok' | 'warn',
         hot: !!player.pendingLaunch,
-        // Widened from 98 (KES-233) — the hit-box/highlight container was
-        // narrower than the modular composite it wraps (EarthBaseModules),
-        // so the structure's own masts crowded right up against the box
-        // edges. This is the click-target/tutorial-spotlight box, not the
-        // rendered art's own footprint (EARTH_BASE_STRUCTURE_SIZES.launchpad.width,
-        // below) — it can be wider than the art without any visual overlap
-        // risk against neighbouring plots.
-        w: 376,
+        // Match the rendered mobile footprint of the authored sprite. The
+        // taller hit area below covers the gantry without creating an
+        // oversized box that shifts the building label away from the structure.
+        w: BUILDING_W.launchpad,
         callout: launchpadCallout,
         onClick: () => onFocusBuilding('launchpad'),
       }
@@ -699,11 +694,11 @@ export default function HubScreen({ player, rocketVariant = 'explorer', hasCoach
                       the dock instead. Mobile reaches these via the bottom
                       tab bar, so `.hub-desktop-nav` keeps them out of the
                       way there. */}
+                  <span className="hub-desktop-nav">
+                    <DockIconBtn testId="hub-desktop-missions-btn" icon={<HistoryGlyph />} label="Missions" onClick={() => onOpenScene('missions')} />
+                  </span>
                   {player.freeOperations && (
                     <>
-                      <span className="hub-desktop-nav">
-                        <DockIconBtn testId="hub-desktop-missions-btn" icon={<HistoryGlyph />} label="Missions" onClick={() => onOpenScene('missions')} />
-                      </span>
                       <span className="hub-desktop-nav">
                         <DockIconBtn icon={<MarketGlyph />} label="Market" onClick={() => onOpenScene('market')} />
                       </span>

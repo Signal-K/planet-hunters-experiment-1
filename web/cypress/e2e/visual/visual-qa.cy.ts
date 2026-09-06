@@ -178,7 +178,9 @@ describe('Visual QA — game screens and mining canvas', () => {
     cy.screenshot('05-mission-board')
 
     // Open first mission → target picker
-    cy.get('[data-testid="mission-card-generated-s1-starter-bulk-1"]').click({ force: true })
+    cy.get('[data-testid="mission-detail-cta-generated-s1-starter-bulk-1"]')
+      .should('be.visible')
+      .click({ force: true })
     cy.contains('Pick Target', { timeout: 10000 }).should('be.visible')
     cy.screenshot('06-target-picker')
 

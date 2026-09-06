@@ -155,9 +155,19 @@ describe('Sprint 11 Launchpad and Earth Base hotfix — live browser QA', () => 
     })
 
     cy.screenshot('sprint-11-hotfix-earth-base', { capture: 'viewport' })
+    // This fixture is a post-onboarding HUD layout check, not a pending
+    // launch setup. The current Launchpad route owns the mission menu, so
+    // keep the saved state consistent with the route assertion below.
+    cy.window().then(win => {
+      const saved = JSON.parse(win.localStorage.getItem(STORAGE_KEY) || '{}')
+      saved.player.pendingLaunch = false
+      win.localStorage.setItem(STORAGE_KEY, JSON.stringify(saved))
+      win.localStorage.setItem(AUTHENTICATED_STORAGE_KEY, JSON.stringify(saved))
+    })
+    cy.reload()
     cy.get('[data-testid="building-launchpad-hit"]').click({ scrollBehavior: false })
     cy.location('pathname', { timeout: 10_000 }).should('eq', '/game/launchpad')
-    cy.get('[data-testid="launchpad-monitoring-structure"]').should('be.visible')
-    cy.get('[data-testid="launchpad-build-monitoring-btn"]').should('not.exist')
+    cy.get('[data-testid="launchpad-focus-screen"]').should('be.visible')
+    cy.get('[data-testid="launchpad-status-card"]').should('be.visible')
   })
 })

@@ -105,7 +105,7 @@ function goToMissions() {
       clickDom('[data-testid="bottom-tab-missions"]')
     }
   })
-  cy.contains('Mission Board', { timeout: 10000 }).should('be.visible')
+  cy.contains('Mission Dispatch', { timeout: 10000 }).should('be.visible')
 }
 
 function completeMiningDeterministically(viewport?: string, captureName?: string, expectDebrief = true) {
@@ -207,7 +207,7 @@ function playM1(viewport: string) {
   goToMissions()
   screenshot(viewport, 'm1-mission-board')
 
-  cy.get('[data-testid="mission-card-generated-s1-starter-bulk-1"]')
+  cy.get('[data-testid="mission-detail-cta-generated-s1-starter-bulk-1"]')
     .scrollIntoView()
     .should('be.visible')
     .click({ force: true })
@@ -231,7 +231,7 @@ function playM2(viewport: string) {
   goToMissions()
   screenshot(viewport, 'm2-mission-board')
 
-  cy.get('[data-testid="mission-card-generated-s2-starter-bulk-4"]')
+  cy.get('[data-testid="mission-detail-cta-generated-s2-starter-bulk-4"]')
     .scrollIntoView()
     .should('be.visible')
     .click({ force: true })
@@ -255,7 +255,7 @@ function playM3(viewport: string) {
   goToMissions()
   screenshot(viewport, 'm3-mission-board')
 
-  cy.get('[data-testid="mission-card-lnm_m3_relay_bennu_vesta"]')
+  cy.get('[data-testid="mission-detail-cta-lnm_m3_relay_bennu_vesta"]')
     .scrollIntoView()
     .should('be.visible')
     .click({ force: true })

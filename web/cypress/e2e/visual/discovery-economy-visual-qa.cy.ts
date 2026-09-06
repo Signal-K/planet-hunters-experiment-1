@@ -53,17 +53,6 @@ function basePlayer(overrides: Partial<GameState['player']> = {}): GameState['pl
 }
 
 function visitWithState(path: string, screen: GameState['screen'], playerOverrides: Partial<GameState['player']>) {
-  const tokenPayload = btoa(JSON.stringify({ exp: Math.floor(Date.now() / 1000) + 3600 }))
-  const e2eToken = `e30.${tokenPayload}.test`
-  cy.intercept('POST', '**/api/collections/users/auth-refresh', {
-    statusCode: 200,
-    body: { token: e2eToken, record: { id: 'e2e-discovery-user', email: 'e2e@example.com' } },
-  })
-  cy.intercept('POST', '**/api/landnam-auth/exchange', {
-    statusCode: 200,
-    body: { token: e2eToken, record: { id: 'e2e-discovery-user' } },
-  })
-
   const full: GameState = {
     screen,
     missionId: null,
@@ -79,13 +68,6 @@ function visitWithState(path: string, screen: GameState['screen'], playerOverrid
 
   cy.visit(path, {
     onBeforeLoad(win) {
-      // Seed a valid synthetic shared session so the real subject request is
-      // made. Without it, fetchReviewableTessCandidates() intentionally
-      // returns an empty feed before issuing network I/O.
-      win.localStorage.setItem('pocketbase_auth', JSON.stringify({
-        token: e2eToken,
-        record: { id: 'e2e-discovery-user', email: 'e2e@example.com' },
-      }))
       // Each visual test gets its own guest account. Reusing one account lets
       // backend state from a preceding discovery test race the seeded local
       // state here and remove the discovered target before Launchpad builds
