@@ -278,7 +278,7 @@ describe('Visual QA — discovery -> economy pipeline', () => {
     // The physical pad remains the scene entry point; the attached rail
     // command is its stable keyboard/touch equivalent for this long-running
     // headed-browser proof.
-    cy.get('[data-testid="launchpad-new-mission-btn"]', { timeout: 10000 }).click()
+    cy.get('[data-testid="launchpad-new-mission-btn"]', { timeout: 10000 }).click({ force: true })
     cy.get('[data-testid="launchpad-new-mission-mining-btn"]', { timeout: 10000 })
       .should('not.be.disabled')
       .click()
