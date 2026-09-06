@@ -1251,6 +1251,191 @@ button { cursor: pointer; }
   overflow-y: auto;
 }
 
+/* KES-329 — Mission creation is a daylight Earth-base journey.  It is not a
+   dark-mode dashboard, a blueprint sheet, or a decorative-grid background.
+   These scoped tokens let the existing functional instruments read clearly
+   against a real scene without turning the whole application into a new theme. */
+.mission-setup-screen--scene {
+  --ln-void: var(--ln-blueprint-paper-2);
+  --ln-shell: color-mix(in srgb, var(--ln-blueprint-paper) 86%, var(--ln-cyan));
+  --ln-panel: color-mix(in srgb, var(--ln-blueprint-paper) 68%, var(--ln-cyan));
+  --ln-panel-2: color-mix(in srgb, var(--ln-blueprint-paper) 58%, var(--ln-cyan));
+  --ln-surface: color-mix(in srgb, var(--ln-blueprint-paper) 76%, var(--ln-cyan));
+  --ln-surface-2: color-mix(in srgb, var(--ln-blueprint-paper) 62%, var(--ln-cyan));
+  --ln-overlay: color-mix(in srgb, var(--ln-blueprint-paper) 82%, var(--ln-cyan));
+  --ln-text: var(--ln-blueprint-ink);
+  --ln-text-dim: color-mix(in srgb, var(--ln-blueprint-ink) 76%, var(--ln-blueprint-paper));
+  --ln-text-muted: color-mix(in srgb, var(--ln-blueprint-ink) 58%, var(--ln-blueprint-paper));
+  --ln-text-ghost: color-mix(in srgb, var(--ln-blueprint-ink) 35%, transparent);
+  --ln-hairline: color-mix(in srgb, var(--ln-blueprint-ink) 20%, transparent);
+  --ln-hairline-strong: color-mix(in srgb, var(--ln-blueprint-ink) 38%, transparent);
+  --ln-cyan-border: color-mix(in srgb, var(--ln-cyan) 80%, var(--ln-blueprint-ink));
+  background: var(--ln-blueprint-paper-2);
+}
+.mission-setup-screen--scene::before { display: none; }
+.mission-setup-screen--scene .mission-setup-content { z-index: 2; }
+.mission-setup-screen--scene .mission-setup-scene-background::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: color-mix(in srgb, var(--ln-blueprint-paper) 14%, transparent);
+}
+.mission-setup-screen--scene .mission-setup-frame,
+.mission-setup-screen--scene .mission-setup-card {
+  border: 3px solid var(--ln-cyan-border);
+  border-radius: var(--ln-r-xl);
+  background: var(--ln-panel);
+  box-shadow: 0 8px 0 color-mix(in srgb, var(--ln-blueprint-ink) 18%, transparent);
+}
+.mission-setup-screen--scene .mission-setup-frame { background: var(--ln-surface); }
+.mission-setup-screen--scene .rocket-vehicle-frame {
+  background: color-mix(in srgb, var(--ln-blueprint-paper) 46%, var(--ln-cyan)) !important;
+}
+.mission-setup-screen--scene .rocket-inspection-bay {
+  border: 0;
+  background: color-mix(in srgb, var(--ln-blueprint-paper) 38%, var(--ln-cyan));
+}
+.mission-setup-screen--scene .rocket-inspection-bay::after { display: none; }
+.mission-setup-screen--scene .rocket-inspection-bay__gantry {
+  border-color: color-mix(in srgb, var(--ln-blueprint-ink) 44%, var(--ln-cyan));
+  opacity: .88;
+}
+.rocket-inspection-bay__systems {
+  position: absolute;
+  right: var(--ln-s-3);
+  bottom: var(--ln-s-3);
+  z-index: 3;
+  padding: 6px 8px;
+  border: 2px solid var(--ln-cyan-border);
+  border-radius: var(--ln-r-md);
+  background: var(--ln-panel);
+  color: var(--ln-cyan-press);
+  font: 800 9px var(--ln-font-display);
+  letter-spacing: var(--ln-tr-label);
+  text-transform: uppercase;
+}
+.mission-setup-screen--scene .sticky-actions {
+  background: color-mix(in srgb, var(--ln-blueprint-paper) 92%, var(--ln-cyan));
+  border-top: 3px solid var(--ln-cyan-border);
+}
+
+/* Mission dispatch is one relay installation in the base, not a list of
+   floating contract cards.  Signals plug into the rail and the selected
+   contract occupies the operator's attached desk. */
+.mission-dispatch-content {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  width: min(100%, 1120px);
+  margin: 0 auto;
+  padding: 82px 14px 112px;
+  overflow: auto;
+}
+.mission-dispatch-site {
+  display: grid;
+  grid-template-columns: minmax(0, 1.25fr) minmax(300px, .75fr);
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: var(--ln-s-5);
+  height: min(620px, calc(100vh - 204px));
+  align-items: center;
+}
+.mission-dispatch-title {
+  grid-column: 1 / -1;
+  align-self: end;
+  width: max-content;
+  max-width: 100%;
+  padding: var(--ln-s-3) var(--ln-s-4);
+  border: 3px solid var(--ln-cyan-border);
+  border-radius: var(--ln-r-lg);
+  background: var(--ln-panel);
+  box-shadow: 0 6px 0 color-mix(in srgb, var(--ln-blueprint-ink) 18%, transparent);
+}
+.mission-dispatch-title span,
+.mission-dispatch-title small,
+.mission-dispatch-dock__label {
+  display: block;
+  color: var(--ln-text-muted);
+  font: 800 10px var(--ln-font-display);
+  letter-spacing: var(--ln-tr-loose);
+  text-transform: uppercase;
+}
+.mission-dispatch-title strong {
+  display: block;
+  margin-top: 4px;
+  color: var(--ln-text);
+  font: 800 28px/1 var(--ln-font-display);
+  letter-spacing: var(--ln-tr-tight);
+  text-transform: uppercase;
+}
+.mission-dispatch-title small { margin-top: 6px; letter-spacing: var(--ln-tr-label); }
+.mission-signal-rail { display: grid; gap: var(--ln-s-3); min-height: 0; padding: 2px 10px 10px 0; overflow-y: auto; align-content: start; }
+.mission-dispatch-signal {
+  display: grid;
+  grid-template-columns: 28px 40px minmax(0, 1fr) auto;
+  gap: var(--ln-s-2);
+  align-items: center;
+  width: 100%;
+  min-height: 88px;
+  padding: var(--ln-s-3);
+  border: 3px solid color-mix(in srgb, var(--ln-blueprint-ink) 34%, var(--ln-blueprint-paper));
+  border-radius: var(--ln-r-xl);
+  background: var(--ln-panel);
+  box-shadow: 0 6px 0 color-mix(in srgb, var(--ln-blueprint-ink) 17%, transparent);
+  color: var(--ln-text);
+  cursor: pointer;
+  text-align: left;
+  transition: transform var(--ln-d-quick) var(--ln-ease-snap), border-color var(--ln-d-quick) var(--ln-ease-snap), background var(--ln-d-quick) var(--ln-ease-snap);
+}
+.mission-dispatch-signal:hover,
+.mission-dispatch-signal:focus-visible,
+.mission-dispatch-signal.is-selected { transform: translateX(8px); border-color: var(--ln-cyan); background: color-mix(in srgb, var(--ln-blueprint-paper) 44%, var(--ln-cyan)); outline: none; }
+.mission-dispatch-signal.is-disabled { cursor: not-allowed; opacity: .58; }
+.mission-dispatch-signal__index { color: var(--ln-cyan-press); font: 800 12px var(--ln-font-mono); letter-spacing: var(--ln-tr-label); }
+.mission-dispatch-signal__body { min-width: 0; }
+.mission-dispatch-signal__body strong,
+.mission-dispatch-signal__body small,
+.mission-dispatch-signal__body em { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mission-dispatch-signal__body strong { font: 800 16px var(--ln-font-display); text-transform: uppercase; }
+.mission-dispatch-signal__body small { margin-top: 3px; color: var(--ln-text-dim); font: 600 11px var(--ln-font-body); }
+.mission-dispatch-signal__body em { margin-top: 4px; color: var(--ln-cyan-press); font: 800 9px var(--ln-font-mono); font-style: normal; letter-spacing: var(--ln-tr-label); text-transform: uppercase; }
+.mission-dispatch-signal__pay { color: var(--ln-amber); font: 800 17px var(--ln-font-mono); }
+.mission-dispatch-signal__action { grid-column: 3 / -1; color: var(--ln-cyan-press); font: 800 10px var(--ln-font-display); letter-spacing: var(--ln-tr-label); text-align: right; text-transform: uppercase; }
+.mission-dispatch-dock {
+  align-self: center;
+  min-height: 312px;
+  padding: var(--ln-s-5);
+  border: 4px solid var(--ln-cyan-border);
+  border-radius: var(--ln-r-xl);
+  background: color-mix(in srgb, var(--ln-blueprint-paper) 48%, var(--ln-cyan));
+  box-shadow: 0 10px 0 color-mix(in srgb, var(--ln-blueprint-ink) 22%, transparent);
+}
+.mission-dispatch-dock__title { margin-top: 8px; font: 800 28px/1.05 var(--ln-font-display); letter-spacing: var(--ln-tr-tight); text-transform: uppercase; }
+.mission-dispatch-dock__client { margin-top: 6px; color: var(--ln-cyan-press); font: 800 11px var(--ln-font-display); letter-spacing: var(--ln-tr-label); text-transform: uppercase; }
+.mission-dispatch-dock__brief { margin-top: var(--ln-s-4); color: var(--ln-text-dim); font: 500 13px/1.5 var(--ln-font-body); }
+.mission-dispatch-dock__metrics { display: flex; flex-wrap: wrap; gap: var(--ln-s-2); margin-top: var(--ln-s-4); }
+.mission-dispatch-dock__metrics span { padding: 5px 8px; border: 2px solid var(--ln-hairline-strong); border-radius: var(--ln-r-md); color: var(--ln-text-dim); font: 800 10px var(--ln-font-mono); letter-spacing: .06em; text-transform: uppercase; }
+.mission-dispatch-dock__metrics .mission-dispatch-dock__payout { border-color: var(--ln-amber-border); color: var(--ln-amber); }
+.mission-dispatch-dock__warning { margin-top: var(--ln-s-3); color: var(--ln-crimson); font: 800 10px var(--ln-font-display); letter-spacing: var(--ln-tr-label); text-transform: uppercase; }
+.mission-dispatch-dock__cta { width: 100%; margin-top: var(--ln-s-4); padding: 12px; border: 0; border-radius: var(--ln-r-md); background: var(--ln-cyan); color: var(--ln-text-on-cyan); cursor: pointer; font: 800 12px var(--ln-font-display); letter-spacing: var(--ln-tr-label); text-transform: uppercase; }
+.mission-dispatch-dock__cta:disabled { background: var(--ln-surface-2); color: var(--ln-text-muted); cursor: not-allowed; }
+.mission-dispatch-dock__empty { color: var(--ln-text-dim); font: 700 14px/1.5 var(--ln-font-display); }
+
+@media (max-width: 760px) {
+  .mission-dispatch-content { padding-bottom: 112px; }
+  .mission-dispatch-site { display: flex; flex-direction: column; gap: var(--ln-s-3); height: auto; align-items: stretch; }
+  .mission-dispatch-title { width: 100%; }
+  .mission-dispatch-title strong { font-size: 21px; }
+  .mission-signal-rail { gap: var(--ln-s-2); }
+  .mission-dispatch-signal { min-height: 72px; grid-template-columns: 22px 40px minmax(0, 1fr) auto; padding: 10px; }
+  .mission-dispatch-signal:hover,
+  .mission-dispatch-signal:focus-visible,
+  .mission-dispatch-signal.is-selected { transform: none; }
+  .mission-dispatch-signal__body strong { font-size: 14px; }
+  .mission-dispatch-signal__pay { font-size: 14px; }
+  .mission-dispatch-dock { min-height: 0; padding: var(--ln-s-4); }
+  .mission-dispatch-dock__title { font-size: 22px; }
+}
+
 /* Landscape phones (e.g. 844x390) — the 82px top offset (cleared for TopBar,
    see MissionSetupShell's `contentTop`) plus the launch-clearance card's full
    layout together overflowed past the launch action rail (STS-612). The card

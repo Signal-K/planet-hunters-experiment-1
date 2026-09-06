@@ -1,39 +1,26 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import Image from 'next/image'
 import TopBar from '@/components/ui/TopBar'
-import Panel from '@/components/ui/Panel'
 import { feasibleTargetsFor, FREE_OPS_START_MISSIONS_DONE, isMissionBoardMission, tutorialClientMissionOptions } from '@/lib/data'
 import type { DailyClientPool } from '@/lib/data'
+import type { Client, Mission } from '@/lib/data'
 import type { Catalog } from '@/lib/catalog'
 import { TUTORIAL_COMPACT_CONTENT_TOP, TUTORIAL_MANUAL_CONTENT_TOP } from '@/lib/tutorial-layout'
 import { UI_ZONES } from '@/lib/ui-zones'
-import MissionCard from '@/components/game/MissionCard'
-import MissionDetailPanel from '@/components/game/MissionDetailPanel'
 import StepFooter from '@/components/game/StepFooter'
 import MissionBoardCompleteState from '@/components/game/MissionBoardCompleteState'
 import { formatCurrency } from '@/lib/format'
-import styles from './MissionBoard.module.css'
 import { crewRequirementStatus } from '@/lib/systems/AcademySystem'
 import type { CrewMember } from '@/lib/data'
 import type { Player } from '@/lib/game-types'
 import { filterMissionsForSceneScope } from '@/lib/scene-scope'
 import type { SceneScope } from '@/lib/scene-scope'
 import { isTutorialMissionInProgress } from '@/lib/mission-flow'
+import MissionSceneBackdrop from '@/components/game/screens/MissionSceneBackdrop'
+import ClientMark from '@/components/ui/ClientMark'
 
 const SHORT_LANDSCAPE_CONTENT_TOP = 142
-
-function CornerBracket({ position }: { position: 'tl' | 'tr' | 'bl' | 'br' }) {
-  const cls = { tl: styles.cornerBracketTl, tr: styles.cornerBracketTr, bl: styles.cornerBracketBl, br: styles.cornerBracketBr }[position]
-  return (
-    <div className={`${styles.cornerBracket} ${cls}`}>
-      <svg viewBox="0 0 24 24" fill="none" stroke="var(--ln-hairline-strong)" strokeWidth="1.8">
-        <path d="M2 22V2h20" />
-      </svg>
-    </div>
-  )
-}
 
 interface MissionBoardScreenProps {
   onBack: () => void
@@ -53,7 +40,7 @@ interface MissionBoardScreenProps {
 }
 
 export default function MissionBoardScreen({ onBack, onPick, missionsDone, freeOperations, hasCoach, coachManual = false, catalog, francs, crew = [], player, sceneScope = { kind: 'earth-base', id: 'earth-base', label: 'Base' } }: MissionBoardScreenProps) {
-  const { missions: MISSIONS, clients: CLIENTS, minerals: MINERAL_META, targets, parts } = catalog
+  const { missions: MISSIONS, clients: CLIENTS, targets, parts } = catalog
   const [previewId, setPreviewId] = useState<string | null>(null)
   const [shortLandscape, setShortLandscape] = useState(false)
   useEffect(() => {
@@ -153,15 +140,6 @@ export default function MissionBoardScreen({ onBack, onPick, missionsDone, freeO
 
   // STS-582 makes this a client-only surface in Free Ops. Owned flights are
   // filtered above and live under Launchpad → Your Program instead.
-  const sections = [
-    {
-      key: 'client' as const,
-      title: freeOperations ? 'Client Requests' : 'Active Contracts',
-      sub: 'Issued by a client · paid on delivery',
-      cards: cardModels,
-    },
-  ].filter(s => s.cards.length > 0)
-
   const effectivePreviewId = previewId ?? cardModels.find(c => c.unlocked)?.mission.id ?? cardModels[0]?.mission.id ?? null
   const previewModel = cardModels.find(c => c.mission.id === effectivePreviewId) ?? null
   const contentTop = hasCoach
@@ -169,165 +147,111 @@ export default function MissionBoardScreen({ onBack, onPick, missionsDone, freeO
     : 82
 
   return (
-    <div className="ln-scene-mission-board theme-blueprint" style={{ width: '100%', height: '100%', position: 'relative' }}>
-      <div className={styles.spaceBackdrop} style={{ position: 'absolute', inset: 0 }}>
-        <Image src="/earth-day.jpg" alt="" fill style={{ objectFit: 'cover', filter: 'brightness(0.3) saturate(0.7)' }} />
-      </div>
-      <div className={`ln-starfield ${styles.spaceBackdrop}`} style={{ position: 'absolute', inset: 0, opacity: 0.6, pointerEvents: 'none' }} />
-        <TopBar
-          eyebrow={freeOperations ? `${sceneScope.label.toUpperCase()} · FREE OPS` : `${sceneScope.label.toUpperCase()} · L${missionsDone + 1}`}
-          title="Mission Board"
-          onBack={onBack}
-          solid
-          levelBadge={`LV. ${missionsDone + 1}`}
-          francs={francs}
-        />
-
-      {/* The board content viewport ends above the fixed StepFooter; it does
-          not need a guessed bottom padding reserve. */}
-      {/* scrollPaddingTop (KES-146): the coach card is a fixed sibling
-          overlay, not part of this scroll container, so paddingTop alone
-          only protects the at-rest layout. Without scroll-padding-top,
-          scrollIntoView (browser-native, and what Cypress/keyboard nav
-          trigger before any click) can scroll a list item flush with this
-          container's top edge, sliding it out from under the reserved gap
-          and underneath the coach overlay. */}
-      <div className={`mission-board-screen-content${hasCoach ? ` ${styles.coachCompact}` : ''}${shortLandscape ? ' mission-board-screen-content--short-landscape' : ''}`} data-ui-zone={UI_ZONES.screenContent} style={{ position: 'absolute', top: 0, left: '50%', right: 'auto', width: 'min(100%, 1120px)', transform: 'translateX(-50%)', paddingTop: shortLandscape ? SHORT_LANDSCAPE_CONTENT_TOP : contentTop, overflowY: 'auto', scrollPaddingTop: shortLandscape ? SHORT_LANDSCAPE_CONTENT_TOP : contentTop }}>
-        {/* Direct transcription of the OD mockup's `.body-layout` — no
-            summary banner above it (the mockup has none; the earlier
-            PlayfieldBand strip was this screen's own invention, not in the
-            reference, and was cut). */}
-        <div style={{ padding: shortLandscape ? '6px 14px 0' : '14px' }} className={styles.layout}>
-          <div className={styles.canvas}>
-            <CornerBracket position="tl" /><CornerBracket position="tr" />
-            <CornerBracket position="bl" /><CornerBracket position="br" />
-            {sections.map((section, sectionIdx) => (
-              <div
-                key={section.key}
-                data-testid={`mission-board-section-${section.key}`}
-                className={sectionIdx > 0 ? styles.boardSectionFollowing : undefined}
-              >
-                <div className={styles.boardHeader}>
-                  <div>
-                    <div className={styles.boardHeaderTitle}>{section.title}</div>
-                    <div className={styles.boardHeaderSub}>{section.sub}</div>
-                  </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <span className={styles.boardHeaderCount}>
-                      {section.cards.filter(c => c.unlocked).length} open
-                    </span>
-                    {sectionIdx === 0 && <span className={styles.sortSelect}>Payout</span>}
-                  </div>
-                </div>
-
-                <div className={styles.cardList}>
-                  {section.cards.map(c => (
-                    <MissionCard
-                      key={c.mission.id}
-                      mission={c.mission}
-                      client={c.client}
-                      mineralMeta={MINERAL_META}
-                      targetCount={c.targetCount}
-                      displayPayout={c.displayPayout}
-                      unlocked={c.unlocked}
-                      isStoryMission={c.isStoryMission}
-                      cardState={c.cardState}
-                      lockedDetail={c.lockedDetail}
-                      startBlocked={tutorialMissionInProgress}
-                      startBlockedLabel={missionStartBlockedLabel}
-                      highlighted={c.isHighlighted}
-                      previewed={c.mission.id === effectivePreviewId}
-                      routeLabel={c.routeLabel}
-                      crewStatus={c.crewStatus}
-                      crewReady={c.crewReady}
-                      onPick={() => { if (!tutorialMissionInProgress) onPick(c.mission.id) }}
-                      onPreview={() => setPreviewId(c.mission.id)}
-                    />
-                  ))}
-                </div>
-              </div>
+    <div className="mission-setup-screen mission-setup-screen--scene mission-setup-screen--mission" style={{ width: '100%', height: '100%', position: 'relative' }}>
+      <div className="mission-setup-scene-background" aria-hidden="true"><MissionSceneBackdrop /></div>
+      <TopBar
+        eyebrow={freeOperations ? `${sceneScope.label.toUpperCase()} · FREE OPS` : `${sceneScope.label.toUpperCase()} · L${missionsDone + 1}`}
+        title="Mission Dispatch"
+        onBack={onBack}
+        scene
+        levelBadge={`LV. ${missionsDone + 1}`}
+        francs={francs}
+      />
+      <div className={`mission-dispatch-content${hasCoach ? ' mission-dispatch-content--coach' : ''}${shortLandscape ? ' mission-dispatch-content--short' : ''}`} data-ui-zone={UI_ZONES.screenContent} style={{ paddingTop: shortLandscape ? SHORT_LANDSCAPE_CONTENT_TOP : contentTop }}>
+        <div className="mission-dispatch-site" data-testid="mission-board-section-client">
+          <div className="mission-dispatch-title">
+            <span>Earth base relay</span>
+            <strong>{freeOperations ? 'Client requests' : 'Incoming contracts'}</strong>
+            <small>{cardModels.filter(contract => contract.unlocked).length} signals live · select a relay to commit</small>
+          </div>
+          <div className="mission-signal-rail">
+            {cardModels.map((contract, index) => (
+              <MissionDispatchSignal
+                key={contract.mission.id}
+                contract={contract}
+                selected={contract.mission.id === effectivePreviewId}
+                startBlocked={tutorialMissionInProgress}
+                startBlockedLabel={missionStartBlockedLabel}
+                onPreview={() => setPreviewId(contract.mission.id)}
+                onPick={() => { if (!tutorialMissionInProgress) onPick(contract.mission.id) }}
+                index={index}
+              />
             ))}
-
           </div>
-
-          <div className={styles.panel}>
-            <div className={styles.panelHeader}><h3>Selected Contract</h3></div>
-            <div className={styles.panelBody}>
-              {previewModel ? (
-                <MissionDetailPanel
-                  mission={previewModel.mission}
-                  client={null}
-                  mineralMeta={MINERAL_META}
-                  targetCount={previewModel.targetCount}
-                  displayPayout={previewModel.displayPayout}
-                  affinityReward={0}
-                  unlocked={previewModel.unlocked}
-                  isStoryMission={previewModel.isStoryMission}
-                  cardState={previewModel.cardState}
-                  lockedDetail={previewModel.lockedDetail}
-                  routeLabel={previewModel.routeLabel}
-                  startBlocked={tutorialMissionInProgress}
-                  startBlockedLabel={missionStartBlockedLabel}
-                  onPick={() => { if (!tutorialMissionInProgress) onPick(previewModel.mission.id) }}
-                />
-              ) : (
-                <MissionDetailPanel
-                  mission={null}
-                  mineralMeta={MINERAL_META}
-                  targetCount={0}
-                  displayPayout={0}
-                  affinityReward={0}
-                  unlocked={false}
-                  isStoryMission={false}
-                  cardState="locked"
-                  onPick={() => {}}
-                />
-              )}
-            </div>
-          </div>
+          <aside className="mission-dispatch-dock" aria-live="polite">
+          {previewModel ? (
+            <>
+              <div className="mission-dispatch-dock__label">Selected uplink</div>
+              <div className="mission-dispatch-dock__title">{previewModel.mission.title}</div>
+              <div className="mission-dispatch-dock__client">{previewModel.client?.name ?? 'Earth base operation'}</div>
+              <div className="mission-dispatch-dock__brief">{previewModel.mission.brief}</div>
+              <div className="mission-dispatch-dock__metrics">
+                <span>{previewModel.targetCount} targets</span>
+                <span>{Object.values(previewModel.mission.requires.minerals).reduce((total, amount) => total + amount, 0)}U cargo</span>
+                <span className="mission-dispatch-dock__payout">{formatCurrency(previewModel.displayPayout, { compact: true })}</span>
+              </div>
+              {previewModel.crewStatus && <div className="mission-dispatch-dock__warning">Crew · {previewModel.crewStatus}</div>}
+              <button
+                type="button"
+                data-testid={`mission-detail-cta-${previewModel.mission.id}`}
+                disabled={!previewModel.unlocked || tutorialMissionInProgress}
+                onClick={() => { if (!tutorialMissionInProgress) onPick(previewModel.mission.id) }}
+                className="mission-dispatch-dock__cta"
+              >
+                {tutorialMissionInProgress ? missionStartBlockedLabel : `Lock contract · ${previewModel.targetCount} targets`}
+              </button>
+            </>
+          ) : <div className="mission-dispatch-dock__empty">No active client signal from this location.</div>}
+          </aside>
         </div>
-
-        {freeOperations && <LaunchOptionsPanel />}
       </div>
-
       <StepFooter
         step="Mission"
-        description={
-          available.length === 0
-            ? 'No client requests are available from this location.'
-            : freeOperations
-              ? 'Choose client work here. Use Launchpad for own infrastructure, mining, or a test launch.'
-              : `Pick a contract to unlock Target, Rocket, and Launch for L${missionsDone + 1}.`
-        }
+        description={available.length === 0 ? 'No client requests are available from this location.' : freeOperations ? 'Client work only. Your own operations remain in Launchpad.' : `Lock a client contract to open Target, Rocket, and Launch for L${missionsDone + 1}.`}
       />
-
     </div>
   )
 }
 
-function LaunchOptionsPanel() {
-  const options = [
-    ['Client work', 'Select a request on this board.'],
-    ['Own infrastructure', 'Launchpad · Your Program'],
-    ['Mining', 'Launchpad · Your Program'],
-    ['Test launch', 'Launchpad · Your Program'],
-  ] as const
-
+function MissionDispatchSignal({
+  contract,
+  selected,
+  startBlocked,
+  startBlockedLabel,
+  onPreview,
+  onPick,
+  index,
+}: {
+  contract: { mission: Mission; client: Client | null; targetCount: number; displayPayout: number; unlocked: boolean; cardState: 'available' | 'locked'; lockedDetail?: string; isHighlighted?: boolean; routeLabel?: string; crewStatus?: string; crewReady: boolean }
+  selected: boolean
+  startBlocked: boolean
+  startBlockedLabel: string
+  onPreview: () => void
+  onPick: () => void
+  index: number
+}) {
+  const disabled = !contract.unlocked || startBlocked
   return (
-    <div style={{ padding: '0 14px 10px' }} data-testid="freeops-launch-options">
-      <Panel accent="var(--ln-cyan)" style={{ padding: 12 }}>
-        <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 10, fontWeight: 800, letterSpacing: '0.18em', color: 'var(--ln-cyan)', textTransform: 'uppercase', marginBottom: 8 }}>
-          Launch options
-        </div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 8 }}>
-          {options.map(([title, detail]) => (
-            <div key={title} style={{ border: '1px solid var(--ln-hairline)', borderRadius: 6, padding: 8 }}>
-              <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 10, fontWeight: 700, color: 'var(--ln-text)', letterSpacing: '0.1em', textTransform: 'uppercase' }}>{title}</div>
-              <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 11, color: 'var(--ln-text-muted)', lineHeight: 1.35, marginTop: 4 }}>{detail}</div>
-            </div>
-          ))}
-        </div>
-      </Panel>
-    </div>
+    <button
+      type="button"
+      data-testid={`mission-card-${contract.mission.id}`}
+      data-mission-id={contract.mission.id}
+      className={`mission-dispatch-signal${selected ? ' is-selected' : ''}${disabled ? ' is-disabled' : ''}`}
+      aria-pressed={selected}
+      aria-disabled={disabled}
+      onMouseEnter={onPreview}
+      onFocus={onPreview}
+      onClick={() => { onPreview(); if (!disabled) onPick() }}
+    >
+      <span className="mission-dispatch-signal__index">{String(index + 1).padStart(2, '0')}</span>
+      <ClientMark initial={contract.client?.initial ?? 'OP'} color={contract.client?.color ?? 'var(--ln-cyan)'} uiRole={contract.client?.uiRole ?? 'starter'} clientId={contract.client?.id} size={40} />
+      <span className="mission-dispatch-signal__body">
+        <strong>{contract.mission.title}</strong>
+        <small>{contract.client?.name ?? 'Earth base operation'} · {contract.targetCount} targets</small>
+        <em>{contract.routeLabel ?? contract.mission.difficulty}</em>
+      </span>
+      <span className="mission-dispatch-signal__pay">{formatCurrency(contract.displayPayout, { compact: true })}</span>
+      <span data-testid={`mission-card-${contract.mission.id}-cta`} className="mission-dispatch-signal__action">{disabled ? (startBlocked ? startBlockedLabel : contract.lockedDetail ?? 'Locked') : 'Lock ›'}</span>
+    </button>
   )
 }

@@ -56,6 +56,7 @@ interface MissionSetupShellBaseProps {
   actions?: React.ReactNode
   hideStepFooter?: boolean
   contentBottom?: number
+  sceneTopBar?: boolean
 }
 
 // Wayfinding footer (Craft doc Core Principle #1) — "what to do next"
@@ -79,6 +80,7 @@ export default function MissionSetupShell({
   actions,
   hideStepFooter = false,
   contentBottom,
+  sceneTopBar = false,
   step,
   stepDescription,
 }: MissionSetupShellProps) {
@@ -100,7 +102,7 @@ export default function MissionSetupShell({
           {sceneBackground}
         </div>
       )}
-      <TopBar eyebrow={eyebrow} title={title} onBack={onBack} />
+      <TopBar eyebrow={eyebrow} title={title} onBack={onBack} scene={sceneTopBar} />
       <div
         className="mission-setup-content"
         data-ui-zone={UI_ZONES.screenContent}

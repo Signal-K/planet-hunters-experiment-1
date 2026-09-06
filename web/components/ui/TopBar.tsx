@@ -25,6 +25,8 @@ interface TopBarProps {
    *  behind and underneath the UI" was describing (KES-260). Frosted glass
    *  instead: the terrain stays visible through it, the text stays legible. */
   glass?: boolean
+  /** A bright, opaque strip for daytime scene surfaces. */
+  scene?: boolean
   // Player level pill ("LV. 3") shown left of the title, per the design
   // doc's Topbar spec (§2.1: "[LV badge + icon] [Screen Title] ...
   // [Credit Balance]", consistent across all screens).
@@ -61,7 +63,7 @@ function CoinIcon() {
   )
 }
 
-export default function TopBar({ eyebrow, title, onBack, right, dense, solid, glass, levelBadge, francs }: TopBarProps) {
+export default function TopBar({ eyebrow, title, onBack, right, dense, solid, glass, scene, levelBadge, francs }: TopBarProps) {
   return (
     <div data-ui-zone={UI_ZONES.topChrome} style={{
       position: 'absolute',
@@ -76,14 +78,16 @@ export default function TopBar({ eyebrow, title, onBack, right, dense, solid, gl
       // Fully opaque (alpha 1, not e.g. 0.97) — verified against a live page
       // that even 3% transparency on a near-black background is visible as
       // faint bleed-through text behind bright card copy scrolling beneath it.
-      background: glass
+      background: scene
+        ? 'color-mix(in srgb, var(--ln-blueprint-paper) 90%, var(--ln-cyan))'
+        : glass
         ? 'linear-gradient(180deg, rgba(6,14,26,0.58) 0%, rgba(6,14,26,0.28) 72%, transparent 100%)'
         : solid
           ? 'var(--ln-shell)'
           : 'linear-gradient(180deg, var(--ln-shell) 0%, color-mix(in srgb, var(--ln-shell) 50%, transparent) 70%, transparent 100%)',
       WebkitBackdropFilter: glass ? 'blur(12px) saturate(1.1)' : undefined,
       backdropFilter: glass ? 'blur(12px) saturate(1.1)' : undefined,
-      borderBottom: solid ? '1px solid var(--ln-hairline)' : 'none',
+      borderBottom: solid || scene ? '2px solid var(--ln-cyan-border)' : 'none',
       display: 'flex',
       alignItems: 'center',
       gap: 10,

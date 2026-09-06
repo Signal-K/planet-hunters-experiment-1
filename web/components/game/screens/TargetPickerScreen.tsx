@@ -14,6 +14,7 @@ import MissionSetupShell, {
 } from '@/components/game/screens/MissionSetupShell'
 import { useIsNarrowViewport } from '@/lib/hooks/useIsNarrowViewport'
 import { ChevronDown, ChevronUp } from 'lucide-react'
+import MissionSceneBackdrop from '@/components/game/screens/MissionSceneBackdrop'
 
 const RARITY_RANK: Record<string, number> = { exotic: 3, rare: 2, uncommon: 1, common: 0 }
 const DEPOSIT_MIX_CAP = 6
@@ -129,11 +130,13 @@ export default function TargetPickerScreen({ mission, onBack, onPick, hasCoach, 
 
   return (
     <MissionSetupShell
-      className="theme-blueprint mission-setup-screen--target"
+      className="mission-setup-screen--scene mission-setup-screen--target"
       eyebrow={mission.title.toUpperCase()}
       title="Pick Target"
       onBack={onBack}
       hasCoach={hasCoach}
+      sceneTopBar
+      sceneBackground={<MissionSceneBackdrop />}
       hideStepFooter={hasCoach}
       contentBottom={hasCoach ? 104 : undefined}
       step="Target"

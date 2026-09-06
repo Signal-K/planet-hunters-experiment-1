@@ -14,8 +14,8 @@ import MissionSetupShell, {
 import { formatCurrency } from '@/lib/format'
 import { getRequiredRocketModel } from '@/lib/rockets'
 import { calibrateOnboardingPayout } from '@/lib/data'
-import RocketCutaway, { type RocketRoomKey } from '@/components/game/RocketCutaway'
 import { recipeIsAffordable, rocketCompositionForId } from '@/lib/data/rocket-composition'
+import MissionSceneBackdrop from '@/components/game/screens/MissionSceneBackdrop'
 
 function orbitLabel(maxOrbit: number): string {
   if (maxOrbit <= 3) return 'Near-Earth'
@@ -73,8 +73,6 @@ interface RocketPurchaseScreenProps {
 }
 
 export default function RocketPurchaseScreen({ missionsDone, francs, mission, deliveryTargetName, onPurchase, onFabricatePart, onAssembleFabricatedRocket, siloOnline, stash, fabricatedParts, onBack, hasCoach }: RocketPurchaseScreenProps) {
-  const [activeRoom, setActiveRoom] = useState<RocketRoomKey | null>(null)
-  const [blueprintOpen, setBlueprintOpen] = useState(false)
   const [modulesOpen, setModulesOpen] = useState(true)
   const defaultRocket = getRequiredRocketModel(missionsDone)
   const availableRockets = ROCKET_MODELS.filter(model => !model.locked && model.missionsRequired <= missionsDone)
@@ -96,12 +94,14 @@ export default function RocketPurchaseScreen({ missionsDone, francs, mission, de
 
   return (
     <MissionSetupShell
-      className="mission-setup-screen--rocket theme-blueprint"
+      className="mission-setup-screen--scene mission-setup-screen--rocket"
       eyebrow="LAUNCHPAD · VEHICLE"
       title="Select Rocket"
       onBack={onBack}
       hasCoach={hasCoach}
       coachManual={hasCoach}
+      sceneTopBar
+      sceneBackground={<MissionSceneBackdrop composition="earth-base-pad" />}
       step="Rocket"
       stepDescription={isFree ? 'Choose a vehicle, then continue to preflight.' : 'Buy a shipment or fabricate its parts from silo minerals, then send it to the Hangar.'}
       actions={fabricationReady && siloOnline ? (
@@ -154,24 +154,17 @@ export default function RocketPurchaseScreen({ missionsDone, francs, mission, de
               TIER {rocket.tier} · {isFree ? 'INCLUDED' : formatCurrency(rocket.costFrancs, { compact: true })}
             </span>
           </div>
-          {blueprintOpen ? (
-            <div className="rocket-blueprint-panel">
-              <RocketCutaway rocket={rocket} activeRoom={activeRoom} onToggle={room => setActiveRoom(current => current === room ? null : room)} />
-              <button type="button" className="rocket-view-toggle" onClick={() => setBlueprintOpen(false)}>RETURN TO VEHICLE VIEW</button>
+          <div className="rocket-inspection-bay" data-testid="rocket-inspection-bay">
+            <div className="rocket-inspection-bay__gantry" aria-hidden="true"><i /><i /><i /></div>
+            <img className="rocket-inspection-bay__rocket" src={rocket.img} alt={`${rocket.name} on the launchpad`} />
+            <div className="rocket-inspection-bay__plume" aria-hidden="true" />
+            <div className="rocket-inspection-bay__readout">
+              <span>LAUNCHPAD 01 · STAGED VEHICLE</span>
+              <strong>{rocket.name.toUpperCase()}</strong>
+              <small>{composition.stages[0].label} · {composition.boosters.count} BOOSTERS · {composition.payload.label}</small>
             </div>
-          ) : (
-            <div className="rocket-inspection-bay" data-testid="rocket-inspection-bay">
-              <div className="rocket-inspection-bay__gantry" aria-hidden="true"><i /><i /><i /></div>
-              <img className="rocket-inspection-bay__rocket" src={rocket.img} alt={`${rocket.name} in the inspection bay`} />
-              <div className="rocket-inspection-bay__plume" aria-hidden="true" />
-              <div className="rocket-inspection-bay__readout">
-                <span>BUILD BAY 01 · STAGED VEHICLE</span>
-                <strong>{rocket.name.toUpperCase()}</strong>
-                <small>{composition.stages[0].label} · {composition.boosters.count} BOOSTERS · {composition.payload.label}</small>
-              </div>
-              <button type="button" className="rocket-view-toggle rocket-view-toggle--bay" onClick={() => setBlueprintOpen(true)}>INSPECT BLUEPRINT</button>
-            </div>
-          )}
+            <span className="rocket-inspection-bay__systems">Vehicle systems staged</span>
+          </div>
         </MissionSetupFrame>
       </div>
 
@@ -194,8 +187,6 @@ export default function RocketPurchaseScreen({ missionsDone, francs, mission, de
                     className={`rocket-choice${selected ? ' is-selected' : ''}`}
                     onClick={() => {
                       setSelectedRocketId(option.id)
-                      setActiveRoom(null)
-                      setBlueprintOpen(false)
                       setModulesOpen(false)
                     }}
                   >

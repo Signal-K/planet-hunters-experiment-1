@@ -15,8 +15,7 @@ import { rocketModelForConfig } from '@/lib/data/rockets'
 import { crewRequirementStatus } from '@/lib/systems/AcademySystem'
 import { useIsShortViewport } from '@/lib/hooks/useIsShortViewport'
 import { useIsNarrowViewport } from '@/lib/hooks/useIsNarrowViewport'
-import { HubWorldBackground } from '@/components/game/hub/HubWorldBackground'
-import { useTimeOfDay } from '@/lib/hooks/useTimeOfDay'
+import MissionSceneBackdrop from '@/components/game/screens/MissionSceneBackdrop'
 
 interface AssemblyScreenProps {
   mission: Mission
@@ -52,18 +51,18 @@ export default function AssemblyScreen(props: AssemblyScreenProps) {
   // narrow phone as compact even when it is tall, otherwise the decorative
   // flight-plan block forces the manifest underneath the launch region.
   const compact = useIsShortViewport() || useIsNarrowViewport()
-  const { phase: skyPhase } = useTimeOfDay()
 
   return (
     <MissionSetupShell
-      className="mission-setup-screen--assembly theme-blueprint"
+      className="mission-setup-screen--scene mission-setup-screen--assembly"
       eyebrow="LAUNCHPAD · PREFLIGHT"
       title="Confirm Rocket"
       onBack={props.onBack}
       hasCoach={props.hasCoach}
       coachManual={props.coachManual}
+      sceneTopBar
       hideStepFooter
-      sceneBackground={<HubWorldBackground phase={skyPhase} composition="earth-base-pad" />}
+      sceneBackground={<MissionSceneBackdrop composition="earth-base-pad" />}
     >
       <MissionSetupFrame className="assembly-frame assembly-preflight-scene" style={{
         display: 'flex',

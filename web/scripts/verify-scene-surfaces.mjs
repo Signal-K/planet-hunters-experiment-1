@@ -16,8 +16,8 @@ const violations = []
 for (const path of sourceFiles(screensDirectory)) {
   const source = readFileSync(path, 'utf8')
   const file = path.slice(screensDirectory.length + 1)
-  if (source.includes('theme-blueprint') && !['MissionBoardScreen.tsx', 'TargetPickerScreen.tsx', 'RocketPurchaseScreen.tsx', 'AssemblyScreen.tsx'].includes(file)) {
-    violations.push(`${file}: gameplay screens must use the scene-panel/deep surface, never theme-blueprint outside the mission-setup flow.`)
+  if (source.includes('theme-blueprint')) {
+    violations.push(`${file}: retired blueprint presentation is not permitted on gameplay screens.`)
   }
   if (source.includes('AvailableActionsPanel')) {
     violations.push(`${file}: do not add a generic AvailableActionsPanel; gameplay must keep one contextual action surface.`)
@@ -34,7 +34,7 @@ for (const path of sourceFiles(screensDirectory)) {
 function usesPanelWithoutAScene(source) {
   const usesPanel = /from ['"]@\/components\/ui\/Panel['"]/.test(source)
   if (!usesPanel) return false
-  const hasScene = /ScenePanel|ln-scene-|HubWorldBackground|TerrainScene|Canvas/.test(source)
+  const hasScene = /ScenePanel|MissionSceneBackdrop|ln-scene-|HubWorldBackground|TerrainScene|Canvas/.test(source)
   return !hasScene
 }
 
