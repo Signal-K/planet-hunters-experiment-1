@@ -7,6 +7,10 @@
 
 import type { GameState } from '@/game-context'
 
+// This spec is a local state-machine test. Keep the shared auth stub from
+// rebinding its completed-scan fixture while the collect action is settling.
+Cypress.env('visualProfile', true)
+
 const STORAGE_KEY = 'landnam-game-state-v1'
 const AUTHENTICATED_STORAGE_KEY = `${STORAGE_KEY}:user:e2e-user`
 const COACH_KEY = 'landnam_scan_station_coach_seen_v1'
