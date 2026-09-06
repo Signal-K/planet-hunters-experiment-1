@@ -178,8 +178,12 @@ function captureExtendedSurfaces(viewport: typeof VIEWPORTS[number]) {
 
 function pickVisibleTarget(name: string) {
   cy.get('[data-testid="target-picker-orbital-map"]', { timeout: 10000 }).should('be.visible')
-  cy.get(`[data-testid="target-picker-orbital-map"] svg g[role="button"][aria-label="Select ${name}"]`)
-    .should('be.visible')
+  const targetId = name === '433 Eros' ? 'eros' : name === '101955 Bennu' ? 'bennu' : null
+  const target = targetId
+    ? cy.get(`[data-testid="target-${targetId}"]`)
+    : cy.get(`[data-testid="target-picker-orbital-map"] svg g[role="button"][aria-label="Select ${name}"]`)
+  target
+    .should('exist')
     .click({ force: true })
   cy.window().then(win => {
     if (win.innerWidth < 821) {
@@ -217,10 +221,10 @@ function playM1(viewport: string) {
   pickVisibleTarget('433 Eros')
   clickDom('[data-testid="continue-build-btn"]')
   cy.contains('Select Rocket', { timeout: 10000 }).should('be.visible')
-  assertRocketLayout('Launch with Explorer')
+  assertRocketLayout('Continue with Explorer')
   screenshot(viewport, 'm1-rocket-selection')
 
-  clickButton('Launch with Explorer')
+  clickButton('Continue with Explorer')
   clickDom('[data-testid="launch-btn"]')
   completeMiningDeterministically(viewport, 'm1-mining')
   completeDebrief()

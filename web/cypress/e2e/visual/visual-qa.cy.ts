@@ -191,7 +191,7 @@ describe('Visual QA — game screens and mining canvas', () => {
     // Rocket/fab screen
     cy.contains('Select Rocket', { timeout: 10000 }).should('be.visible')
     cy.screenshot('07-rocket-picker')
-    cy.contains('button', 'Launch with Explorer').click()
+    cy.contains('button', 'Continue with Explorer').click()
 
     // Launch confirmation
     cy.get('[data-testid="launch-btn"]', { timeout: 10000 }).should('be.visible')

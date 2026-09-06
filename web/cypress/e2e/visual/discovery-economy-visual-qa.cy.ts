@@ -218,7 +218,7 @@ describe('Visual QA — discovery -> economy pipeline', () => {
     cy.screenshot('discovery-03-confirmed-star-map')
 
     cy.window().then(win => {
-      const saved = JSON.parse(win.localStorage.getItem(AUTHENTICATED_STORAGE_KEY) || win.localStorage.getItem(STORAGE_KEY) || '{}')
+      const saved = JSON.parse(win.localStorage.getItem(STORAGE_KEY) || win.localStorage.getItem(AUTHENTICATED_STORAGE_KEY) || '{}')
       const discovered = Object.values(saved.player.discoveredExoplanetTargets ?? {}) as Array<{ archetype?: string; minerals: string[] }>
       expect(discovered, 'exactly one confirmed discovery').to.have.length(1)
       const [target] = discovered

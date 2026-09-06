@@ -139,7 +139,7 @@ export function Building({ kind, label, sub, status, w, hitH, style, onClick, ba
       data-coach-id={`building-${kind}`}
       // 'auto' because the hub's buildings layer is pointerEvents:'none' — it
       // must not be a full-screen click catcher over the progression cards.
-      style={{ position: 'absolute', display: 'flex', flexDirection: 'column', alignItems: 'center', pointerEvents: 'auto', opacity: dimmed ? 0.62 : 1, transition: 'opacity 200ms', ...style }}
+      style={{ position: 'absolute', display: 'flex', flexDirection: 'column', alignItems: 'center', width: w, pointerEvents: 'auto', opacity: dimmed ? 0.62 : 1, transition: 'opacity 200ms', ...style }}
     >
       <button
         data-testid={`building-${kind}-hit`}
