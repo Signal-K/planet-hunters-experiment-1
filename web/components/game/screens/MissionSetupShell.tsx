@@ -2,7 +2,6 @@
 
 import React from 'react'
 import TopBar from '@/components/ui/TopBar'
-import StepFooter, { type MissionFlowStep } from '@/components/game/StepFooter'
 import { UI_ZONES } from '@/lib/ui-zones'
 import { TUTORIAL_MANUAL_CONTENT_TOP } from '@/lib/tutorial-layout'
 
@@ -54,19 +53,9 @@ interface MissionSetupShellBaseProps {
   children: React.ReactNode
   sceneBackground?: React.ReactNode
   actions?: React.ReactNode
-  hideStepFooter?: boolean
-  contentBottom?: number
-  sceneTopBar?: boolean
 }
 
-// Wayfinding footer (Craft doc Core Principle #1) — "what to do next"
-// shown above the CTA. Keeping step + description as a discriminated pair
-// prevents half-configured footers from silently disappearing.
-type MissionSetupShellWayfindingProps =
-  | { step: MissionFlowStep; stepDescription: string }
-  | { step?: never; stepDescription?: never }
-
-type MissionSetupShellProps = MissionSetupShellBaseProps & MissionSetupShellWayfindingProps
+type MissionSetupShellProps = MissionSetupShellBaseProps
 
 export default function MissionSetupShell({
   eyebrow,
@@ -78,11 +67,6 @@ export default function MissionSetupShell({
   children,
   sceneBackground,
   actions,
-  hideStepFooter = false,
-  contentBottom,
-  sceneTopBar = false,
-  step,
-  stepDescription,
 }: MissionSetupShellProps) {
   // Reserve one shared coach rail height for every mission-setup step. The
   // old action/manual split made the main frame move by 10px when the player
@@ -92,7 +76,10 @@ export default function MissionSetupShell({
   return (
     <div className={[
       'game-screen',
+      'theme-deep',
+      'ln-scene-launchpad',
       'mission-setup-screen',
+      'mission-setup-screen--launchpad',
       hasCoach && 'mission-setup-screen--coached',
       coachManual && 'mission-setup-screen--coach-manual',
       className,
@@ -102,24 +89,23 @@ export default function MissionSetupShell({
           {sceneBackground}
         </div>
       )}
-      <TopBar eyebrow={eyebrow} title={title} onBack={onBack} scene={sceneTopBar} />
+      <TopBar eyebrow={eyebrow} title={title} onBack={onBack} scene={false} />
       <div
         className="mission-setup-content"
         data-ui-zone={UI_ZONES.screenContent}
-        style={{ paddingTop: contentTop, ...(contentBottom ? { paddingBottom: contentBottom } : {}) }}
+        style={{ paddingTop: contentTop }}
       >
-        {children}
-      </div>
-      {(step || actions) && (
-        <div className="sticky-actions mission-setup-actions" data-ui-zone={UI_ZONES.bottomActions}>
-          {step && !hideStepFooter && (
-            <div style={{ marginBottom: 10 }}>
-              <StepFooter step={step} description={stepDescription} inline />
+        <div className="mission-creator-container" data-testid="mission-creator-container">
+          <div className="mission-creator-body">
+            {children}
+          </div>
+          {actions && (
+            <div className="mission-creator-actions" data-ui-zone={UI_ZONES.bottomActions}>
+              {actions}
             </div>
           )}
-          {actions}
         </div>
-      )}
+      </div>
     </div>
   )
 }

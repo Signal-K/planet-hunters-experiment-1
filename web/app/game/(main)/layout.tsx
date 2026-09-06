@@ -124,7 +124,10 @@ function GameChrome({ children }: { children: ReactNode }) {
   const coachIndex = coach ? coachSteps.findIndex(step => step.id === coach.id) : -1
   const hasCoach = !!coach
 
-  const showNav = ['hub', 'missions', 'skills', 'mission-history'].includes(currentScreen)
+  // The Mission → Target → Rocket → Launch flow owns one stable frame. The
+  // bottom navigation would reserve a different amount of viewport height on
+  // the Mission step and make that frame jump when the player advances.
+  const showNav = ['hub', 'skills', 'mission-history'].includes(currentScreen)
   const showFeedback = currentScreen === 'hub'
     && !game.subsurfaceView
     && !game.popup

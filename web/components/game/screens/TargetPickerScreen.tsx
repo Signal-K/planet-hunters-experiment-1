@@ -130,21 +130,12 @@ export default function TargetPickerScreen({ mission, onBack, onPick, hasCoach, 
 
   return (
     <MissionSetupShell
-      className="mission-setup-screen--scene mission-setup-screen--target"
+      className="mission-setup-screen--target"
       eyebrow={mission.title.toUpperCase()}
       title="Pick Target"
       onBack={onBack}
       hasCoach={hasCoach}
-      sceneTopBar
       sceneBackground={<MissionSceneBackdrop />}
-      hideStepFooter={hasCoach}
-      contentBottom={hasCoach ? 104 : undefined}
-      step="Target"
-      stepDescription={
-        deliveryTarget
-          ? `Choose a mining site, then deliver cargo to ${deliveryTarget.name} before returning to Earth.`
-          : 'Choose a reachable mining site, then continue to build your rocket.'
-      }
       actions={pickedTarget && (
         <PrimaryBtn
           testId="continue-build-btn"

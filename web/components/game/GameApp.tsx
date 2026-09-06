@@ -175,7 +175,13 @@ function GameCanvas() {
     ? 'missions'
     : game.screen === 'mission-history' ? 'mission-history' : game.screen === 'galaxy' ? 'galaxy' : game.screen === 'fab' ? 'fab' : game.screen === 'skills' ? 'skills' : 'hub'
   const showHub = game.screen === 'hub' || (game.screen === 'market' && !game.player.freeOperations)
-  const showNav = (showHub || ['missions', 'skills', 'targets', 'mission-history'].includes(game.screen)) && !(game.screen === 'targets' && hasCoach)
+  const missionCreatorActive = game.screen === 'missions'
+    || game.screen === 'targets'
+    || game.screen === 'rocket-buy'
+    || (game.screen === 'fab' && !!game.mission && !!game.target)
+  const showNav = (showHub || ['missions', 'skills', 'targets', 'mission-history'].includes(game.screen))
+    && !(game.screen === 'targets' && hasCoach)
+    && !missionCreatorActive
   const showFeedback = game.screen === 'hub'
     && !game.subsurfaceView
     && !game.popup

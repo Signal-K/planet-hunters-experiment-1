@@ -94,16 +94,13 @@ export default function RocketPurchaseScreen({ missionsDone, francs, mission, de
 
   return (
     <MissionSetupShell
-      className="mission-setup-screen--scene mission-setup-screen--rocket"
+      className="mission-setup-screen--rocket"
       eyebrow="LAUNCHPAD · VEHICLE"
       title="Select Rocket"
       onBack={onBack}
       hasCoach={hasCoach}
       coachManual={hasCoach}
-      sceneTopBar
       sceneBackground={<MissionSceneBackdrop composition="earth-base-pad" />}
-      step="Rocket"
-      stepDescription={isFree ? 'Choose a vehicle, then continue to preflight.' : 'Buy a shipment or fabricate its parts from silo minerals, then send it to the Hangar.'}
       actions={fabricationReady && siloOnline ? (
         <div className="rocket-actions">
           <GhostBtn full={false} onClick={onBack}>Back</GhostBtn>

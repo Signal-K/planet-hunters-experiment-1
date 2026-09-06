@@ -3803,3 +3803,282 @@ html[data-coach-target="build-structure-strip"] [data-coach-id="build-structure-
     font-size: 9px;
   }
 }
+
+/* KES-305 — the mission creator is one stable Launchpad instrument.  The
+   screen chrome and the individual step content must not create a second
+   page-sized header/footer or change the frame's bounds between steps. */
+.mission-setup-screen--launchpad .mission-setup-content,
+.mission-setup-screen--launchpad .mission-dispatch-content {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  box-sizing: border-box;
+  width: min(100%, 1120px);
+  height: 100%;
+  margin: 0 auto;
+  padding: 82px 14px 24px !important;
+  overflow: hidden !important;
+  display: block !important;
+}
+
+.mission-setup-screen--launchpad .mission-creator-container {
+  box-sizing: border-box;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+  border: 3px solid var(--ln-cyan-border);
+  border-radius: var(--ln-r-xl);
+  background: color-mix(in srgb, var(--ln-panel) 94%, transparent);
+  box-shadow: 0 10px 0 color-mix(in srgb, var(--ln-void) 32%, transparent);
+}
+
+.mission-setup-screen--launchpad .mission-creator-container:not(.mission-relay-yard) {
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto;
+}
+
+.mission-setup-screen--launchpad .mission-creator-body {
+  min-height: 0;
+  overflow: hidden;
+}
+
+.mission-setup-screen--launchpad .mission-creator-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  min-height: 0;
+  padding: 10px 14px;
+  border-top: 1px solid var(--ln-hairline);
+  background: transparent;
+}
+
+.mission-setup-screen--launchpad .mission-creator-actions > .rocket-actions,
+.mission-setup-screen--launchpad .mission-creator-actions > * {
+  margin: 0;
+}
+
+/* Mission and Target share the same full-size frame. Target's detail is an
+   attached inspector, while the orbital map owns the entire body region. */
+.mission-setup-screen--target .mission-creator-body {
+  display: block;
+  height: 100%;
+}
+.mission-setup-screen--target .mission-board-layout {
+  width: 100%;
+  height: 100% !important;
+  min-height: 0;
+  gap: 0;
+}
+.mission-setup-screen--target .target-map-frame,
+.mission-setup-screen--target .mission-board-detail .mission-setup-card {
+  border: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  background: transparent !important;
+}
+.mission-setup-screen--target .mission-board-detail {
+  border-left: 1px solid var(--ln-hairline);
+  padding: 16px;
+  overflow: hidden;
+}
+
+/* Rocket uses one body with two attached instruments. The split is internal
+   to the stable frame; it never changes the frame's position or size. */
+.mission-setup-screen--rocket .mission-creator-body {
+  display: grid;
+  grid-template-columns: minmax(0, 1.22fr) minmax(300px, .78fr);
+  gap: 0;
+}
+.mission-setup-screen--rocket .rocket-vehicle-stage,
+.mission-setup-screen--rocket .rocket-vehicle-frame,
+.mission-setup-screen--rocket .rocket-summary-card {
+  min-width: 0;
+  min-height: 0 !important;
+  height: 100% !important;
+  align-self: stretch !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}
+.mission-setup-screen--rocket .rocket-vehicle-frame {
+  background: radial-gradient(ellipse at 50% 48%, var(--ln-cyan-soft), transparent 58%), transparent !important;
+}
+.mission-setup-screen--rocket .rocket-summary-card {
+  border-left: 1px solid var(--ln-hairline) !important;
+  overflow: hidden !important;
+}
+.mission-setup-screen--rocket .rocket-summary-scroll {
+  height: 100% !important;
+  overflow-y: auto !important;
+}
+
+/* Confirm Rocket is a single full-size preflight instrument, with no empty
+   second column and no separate paper/card shell. */
+.mission-setup-screen--assembly .mission-creator-body {
+  display: block;
+  height: 100%;
+}
+.mission-setup-screen--assembly .assembly-frame {
+  width: 100% !important;
+  height: 100% !important;
+  min-height: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  background: radial-gradient(ellipse at 50% 74%, var(--ln-cyan-soft), transparent 52%), transparent !important;
+}
+
+@media (max-width: 899px) {
+  .mission-setup-screen--rocket .mission-creator-body {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr) minmax(0, 1fr);
+  }
+  .mission-setup-screen--rocket .rocket-summary-card {
+    border-top: 1px solid var(--ln-hairline) !important;
+    border-left: 0 !important;
+  }
+}
+
+@media (max-width: 719px) {
+  .mission-setup-screen--target .mission-board-layout {
+    position: relative;
+    display: block;
+  }
+  .mission-setup-screen--target .mission-board-layout > :first-child {
+    width: 100%;
+    height: 100%;
+  }
+  .mission-setup-screen--target .mission-board-detail {
+    position: absolute;
+    z-index: 4;
+    right: 8px;
+    bottom: 8px;
+    left: 8px;
+    width: auto;
+    max-height: 42%;
+    padding: 10px;
+    border: 1px solid var(--ln-hairline);
+    border-radius: var(--ln-r-md);
+    background: color-mix(in srgb, var(--ln-panel) 96%, transparent);
+  }
+  .mission-setup-screen--target .mission-board-detail .mission-setup-card {
+    max-height: 100%;
+    overflow: auto;
+  }
+  .mission-setup-screen--launchpad .mission-creator-actions {
+    padding: 8px 10px;
+  }
+  .mission-setup-screen--launchpad .mission-creator-actions > button,
+  .mission-setup-screen--launchpad .mission-creator-actions .rocket-actions {
+    width: 100%;
+  }
+  .mission-setup-screen--launchpad .mission-creator-actions .rocket-actions > button {
+    flex: 1;
+  }
+}
+
+/* The controls are attached to the instrument, not a second horizontal
+   footer. Keep them over the lower edge so the map/body retains the full
+   shared frame height. */
+.mission-setup-screen--launchpad .mission-creator-container:not(.mission-relay-yard) {
+  position: relative;
+  display: block;
+}
+.mission-setup-screen--launchpad .mission-creator-body {
+  width: 100%;
+  height: 100%;
+}
+.mission-setup-screen--launchpad .mission-creator-actions {
+  position: absolute;
+  z-index: 8;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  justify-content: flex-end;
+  padding: 12px 16px;
+  border-top: 0;
+  pointer-events: none;
+  background: transparent;
+}
+.mission-setup-screen--launchpad .mission-creator-actions > *,
+.mission-setup-screen--launchpad .mission-creator-actions button {
+  pointer-events: auto;
+}
+.mission-setup-screen--launchpad .mission-creator-actions > button {
+  width: auto !important;
+  min-width: 220px;
+}
+.mission-setup-screen--launchpad .mission-creator-actions .rocket-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.mission-setup-screen--launchpad [data-testid="target-picker-orbital-map"] {
+  height: 100% !important;
+  min-height: 0 !important;
+  background-color: var(--ln-void) !important;
+}
+
+@media (max-width: 719px) {
+  .mission-setup-screen--launchpad .mission-creator-actions {
+    padding: 8px 10px;
+  }
+  .mission-setup-screen--launchpad .mission-creator-actions > button {
+    width: 100% !important;
+    min-width: 0;
+  }
+  .mission-setup-screen--launchpad .mission-creator-actions .rocket-actions {
+    width: 100%;
+  }
+}
+
+/* Compact Target keeps the route notice and telemetry over the atlas instead
+   of spending a vertical row on them. That makes the orbital map fill the
+   same body height as the other mission steps. */
+@media (max-width: 899px) {
+  .mission-setup-screen--target .target-map-stage {
+    position: relative;
+    display: block !important;
+    width: 100%;
+    height: 100%;
+  }
+  .mission-setup-screen--target .target-map-instrument {
+    position: absolute;
+    inset: 0;
+    display: block !important;
+    width: 100%;
+    height: auto !important;
+  }
+  .mission-setup-screen--target .target-map-frame {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100% !important;
+  }
+  .mission-setup-screen--target .target-route-notice,
+  .mission-setup-screen--target .target-map-telemetry,
+  .mission-setup-screen--target .target-map-orbit-note {
+    position: absolute;
+    z-index: 4;
+    right: 8px;
+    left: 8px;
+    pointer-events: none;
+  }
+  .mission-setup-screen--target .target-route-notice {
+    top: 8px;
+    padding: 6px 8px !important;
+    pointer-events: auto;
+  }
+  .mission-setup-screen--target .target-map-telemetry { top: 42px; }
+  .mission-setup-screen--target .target-map-orbit-note { top: 66px; }
+}
+
+@media (min-width: 720px) and (max-width: 899px) {
+  .mission-setup-screen--target .mission-creator-actions {
+    right: auto;
+    left: 0;
+    width: auto;
+  }
+}

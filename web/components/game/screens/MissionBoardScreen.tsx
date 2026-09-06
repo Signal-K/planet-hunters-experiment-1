@@ -161,7 +161,7 @@ export default function MissionBoardScreen({ onBack, onPick, missionsDone, freeO
         francs={francs}
       />
       <div className={`mission-dispatch-content${hasCoach ? ' mission-dispatch-content--coach' : ''}${shortLandscape ? ' mission-dispatch-content--short' : ''}`} data-ui-zone={UI_ZONES.screenContent} style={{ paddingTop: shortLandscape ? SHORT_LANDSCAPE_CONTENT_TOP : contentTop }}>
-        <div className="mission-relay-yard" data-testid="mission-board-section-client">
+        <div className="mission-relay-yard mission-creator-container" data-testid="mission-board-section-client" data-mission-creator-container="true">
           <img className="mission-relay-yard__hangar" src="/game/assets/base/hangar_flat.png" alt="" aria-hidden="true" />
           <img className="mission-relay-yard__launchpad" src="/game/assets/base/launchpad_flat.png" alt="" aria-hidden="true" />
           {previewModel ? (

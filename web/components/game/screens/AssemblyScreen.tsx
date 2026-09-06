@@ -47,18 +47,18 @@ export default function AssemblyScreen(props: AssemblyScreenProps) {
   const selectedRocket = rocketModelForConfig(props.rocket)
   // A narrow phone still needs a compact pad instrument so the launch control
   // remains attached to the staged vehicle rather than dropping below it.
-  const compact = useIsShortViewport() || useIsNarrowViewport()
+  const isShortViewport = useIsShortViewport()
+  const isNarrowViewport = useIsNarrowViewport()
+  const compact = isShortViewport || isNarrowViewport
 
   return (
     <MissionSetupShell
-      className="mission-setup-screen--scene mission-setup-screen--assembly"
+      className="mission-setup-screen--assembly"
       eyebrow="LAUNCHPAD · PREFLIGHT"
       title="Confirm Rocket"
       onBack={props.onBack}
       hasCoach={props.hasCoach}
       coachManual={props.coachManual}
-      sceneTopBar
-      hideStepFooter
       sceneBackground={<MissionSceneBackdrop composition="earth-base-pad" />}
     >
       <MissionSetupFrame className="assembly-frame assembly-preflight-scene" style={{
