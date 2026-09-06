@@ -1,14 +1,12 @@
 'use client'
 
-import { Boxes, Check, Orbit, Pickaxe, Route, X } from 'lucide-react'
+import { Boxes, Check, Orbit, Pickaxe } from 'lucide-react'
 import type { CrewMember, Mission, RocketConfig, Target } from '@/lib/data'
 import { ROCKET_MODELS, validateBuild } from '@/lib/data'
 import type { Catalog } from '@/lib/catalog'
-import Panel from '@/components/ui/Panel'
 import TutorialHighlight from '@/components/game/TutorialHighlight'
 import StatCard from '@/components/ui/StatCard'
 import MissionSetupShell, {
-  MissionSetupCard,
   MissionSetupFrame,
 } from '@/components/game/screens/MissionSetupShell'
 import { rocketModelForConfig } from '@/lib/data/rockets'
@@ -47,9 +45,8 @@ export default function AssemblyScreen(props: AssemblyScreenProps) {
   const crewReady = !props.mission.requires.crew || (!!props.crewModuleFitted && crewCheck.met)
   const launchReady = validateBuild({ mission: props.mission, target: props.target, rocket: props.rocket, parts: props.parts, unlockedSkillNodes: props.unlockedSkillNodes }).ok && crewReady
   const selectedRocket = rocketModelForConfig(props.rocket)
-  // Portrait preflight has two fixed regions plus the automatic launch handoff. Treat a
-  // narrow phone as compact even when it is tall, otherwise the decorative
-  // flight-plan block forces the manifest underneath the launch region.
+  // A narrow phone still needs a compact pad instrument so the launch control
+  // remains attached to the staged vehicle rather than dropping below it.
   const compact = useIsShortViewport() || useIsNarrowViewport()
 
   return (
@@ -71,7 +68,6 @@ export default function AssemblyScreen(props: AssemblyScreenProps) {
         justifyContent: 'flex-start',
         gap: 8,
         padding: 12,
-          background: 'var(--ln-void)',
       }}>
         {highlightContent && <TutorialHighlight />}
         <LaunchClearance
@@ -85,46 +81,6 @@ export default function AssemblyScreen(props: AssemblyScreenProps) {
         />
 
       </MissionSetupFrame>
-
-      <MissionSetupCard className="assembly-card" scrollStyle={{ display: 'flex', flexDirection: 'column', gap: compact ? 6 : 10 }}>
-        <Panel accent="var(--ln-cyan)" style={{ padding: compact ? 8 : 'var(--ln-s-3)', flex: '0 0 auto' }}>
-          <div className="context-row">
-            <div><span className="ln-micro">Mission</span><strong>{props.mission.title}</strong></div>
-            {/* KES-171: target name is informational text, not a payout/reward — was amber. */}
-            <div><span className="ln-micro">Target</span><strong className="cyan">{props.target.name}</strong></div>
-          </div>
-          {props.mission.deliveryTargetId && props.deliveryTargetName && (
-            <div style={{ marginTop: 6, display: 'flex', alignItems: 'center', gap: 5, font: '700 9px var(--ln-font-mono)', color: 'var(--ln-cyan)', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
-              <Route size={11} />
-              {props.target.name} → {props.deliveryTargetName}
-            </div>
-          )}
-          {/* Redundant with the OPS counter already in the top HUD strip on
-              every other screen — dropped on short viewports (STS-612) since
-              the manifest card doesn't have room to spare there. */}
-          {!compact && (
-            <div style={{ marginTop: 6, display: 'flex', gap: 8, fontSize: 10, color: 'var(--ln-text-dim)', fontFamily: 'var(--ln-font-mono)' }}>
-              <span>Missions Complete · {props.missionsDone}</span>
-            </div>
-          )}
-        </Panel>
-        <section>
-          <div className="ln-section-label" style={compact ? { marginBottom: 4 } : undefined}>Launch manifest</div>
-          <Panel accent="var(--ln-cyan)" style={{ padding: compact ? 8 : 'var(--ln-s-3)' }}>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: compact ? 4 : 8 }}>
-              <ChecklistRow ok label={`Contract confirmed — ${props.mission.title}`} />
-              <ChecklistRow ok label={`Target locked — ${props.target.name}`} />
-              <ChecklistRow ok label={`${selectedRocket.name} fuelled and ready`} />
-              {props.mission.requires.crew && (
-                <>
-                  <ChecklistRow ok={!!props.crewModuleFitted} label={props.crewModuleFitted ? 'Crew Quarters fitted · 2 seats' : 'Crew Quarters required · research and fit in Hangar'} />
-                  <ChecklistRow ok={crewCheck.met} label={crewCheck.reason} />
-                </>
-              )}
-            </div>
-          </Panel>
-        </section>
-      </MissionSetupCard>
     </MissionSetupShell>
   )
 }
@@ -260,21 +216,5 @@ function PadElevation({ rocketImageSrc }: { rocketImageSrc: string }) {
       <path d="M320 99 V108 M308 108 H332" stroke="var(--ln-cyan-bright)" strokeWidth="2" />
       <path d="M314 108 L320 115 L326 108" fill="var(--ln-cyan)" opacity=".7" />
     </svg>
-  )
-}
-
-function ChecklistRow({ ok, label }: { ok: boolean; label: string }) {
-  return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 8, font: '700 12px var(--ln-font-display)', color: ok ? 'var(--ln-text-dim)' : 'var(--ln-crimson)' }}>
-      <span style={{
-        width: 18, height: 18, borderRadius: 999, flexShrink: 0,
-        display: 'grid', placeItems: 'center',
-        background: ok ? 'var(--ln-ok-soft)' : 'var(--ln-crimson-soft)',
-        color: ok ? 'var(--ln-ok)' : 'var(--ln-crimson)',
-      }}>
-        {ok ? <Check size={11} /> : <X size={11} />}
-      </span>
-      {label}
-    </div>
   )
 }

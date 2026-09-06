@@ -4,7 +4,6 @@ import { useEffect, useState } from 'react'
 import TopBar from '@/components/ui/TopBar'
 import { feasibleTargetsFor, FREE_OPS_START_MISSIONS_DONE, isMissionBoardMission, tutorialClientMissionOptions } from '@/lib/data'
 import type { DailyClientPool } from '@/lib/data'
-import type { Client, Mission } from '@/lib/data'
 import type { Catalog } from '@/lib/catalog'
 import { TUTORIAL_COMPACT_CONTENT_TOP, TUTORIAL_MANUAL_CONTENT_TOP } from '@/lib/tutorial-layout'
 import { UI_ZONES } from '@/lib/ui-zones'
@@ -18,7 +17,7 @@ import { filterMissionsForSceneScope } from '@/lib/scene-scope'
 import type { SceneScope } from '@/lib/scene-scope'
 import { isTutorialMissionInProgress } from '@/lib/mission-flow'
 import MissionSceneBackdrop from '@/components/game/screens/MissionSceneBackdrop'
-import ClientMark from '@/components/ui/ClientMark'
+import { ChevronLeft, ChevronRight, RadioTower } from 'lucide-react'
 
 const SHORT_LANDSCAPE_CONTENT_TOP = 142
 
@@ -142,6 +141,12 @@ export default function MissionBoardScreen({ onBack, onPick, missionsDone, freeO
   // filtered above and live under Launchpad → Your Program instead.
   const effectivePreviewId = previewId ?? cardModels.find(c => c.unlocked)?.mission.id ?? cardModels[0]?.mission.id ?? null
   const previewModel = cardModels.find(c => c.mission.id === effectivePreviewId) ?? null
+  const selectedIndex = Math.max(0, cardModels.findIndex(c => c.mission.id === effectivePreviewId))
+  const selectRelativeSignal = (offset: number) => {
+    if (cardModels.length === 0) return
+    const nextIndex = (selectedIndex + offset + cardModels.length) % cardModels.length
+    setPreviewId(cardModels[nextIndex]?.mission.id ?? null)
+  }
   const contentTop = hasCoach
     ? (coachManual ? TUTORIAL_MANUAL_CONTENT_TOP : TUTORIAL_COMPACT_CONTENT_TOP)
     : 82
@@ -158,51 +163,55 @@ export default function MissionBoardScreen({ onBack, onPick, missionsDone, freeO
         francs={francs}
       />
       <div className={`mission-dispatch-content${hasCoach ? ' mission-dispatch-content--coach' : ''}${shortLandscape ? ' mission-dispatch-content--short' : ''}`} data-ui-zone={UI_ZONES.screenContent} style={{ paddingTop: shortLandscape ? SHORT_LANDSCAPE_CONTENT_TOP : contentTop }}>
-        <div className="mission-dispatch-site" data-testid="mission-board-section-client">
-          <div className="mission-dispatch-title">
-            <span>Earth base relay</span>
-            <strong>{freeOperations ? 'Client requests' : 'Incoming contracts'}</strong>
-            <small>{cardModels.filter(contract => contract.unlocked).length} signals live · select a relay to commit</small>
-          </div>
-          <div className="mission-signal-rail">
-            {cardModels.map((contract, index) => (
-              <MissionDispatchSignal
-                key={contract.mission.id}
-                contract={contract}
-                selected={contract.mission.id === effectivePreviewId}
-                startBlocked={tutorialMissionInProgress}
-                startBlockedLabel={missionStartBlockedLabel}
-                onPreview={() => setPreviewId(contract.mission.id)}
-                onPick={() => { if (!tutorialMissionInProgress) onPick(contract.mission.id) }}
-                index={index}
-              />
-            ))}
-          </div>
-          <aside className="mission-dispatch-dock" aria-live="polite">
+        <div className="mission-relay-yard" data-testid="mission-board-section-client">
+          <img className="mission-relay-yard__hangar" src="/game/assets/base/hangar_flat.png" alt="" aria-hidden="true" />
+          <img className="mission-relay-yard__launchpad" src="/game/assets/base/launchpad_flat.png" alt="" aria-hidden="true" />
           {previewModel ? (
-            <>
-              <div className="mission-dispatch-dock__label">Selected uplink</div>
-              <div className="mission-dispatch-dock__title">{previewModel.mission.title}</div>
-              <div className="mission-dispatch-dock__client">{previewModel.client?.name ?? 'Earth base operation'}</div>
-              <div className="mission-dispatch-dock__brief">{previewModel.mission.brief}</div>
-              <div className="mission-dispatch-dock__metrics">
-                <span>{previewModel.targetCount} targets</span>
-                <span>{Object.values(previewModel.mission.requires.minerals).reduce((total, amount) => total + amount, 0)}U cargo</span>
-                <span className="mission-dispatch-dock__payout">{formatCurrency(previewModel.displayPayout, { compact: true })}</span>
-              </div>
-              {previewModel.crewStatus && <div className="mission-dispatch-dock__warning">Crew · {previewModel.crewStatus}</div>}
+            <div className="mission-relay-yard__console" aria-live="polite">
               <button
                 type="button"
-                data-testid={`mission-detail-cta-${previewModel.mission.id}`}
-                disabled={!previewModel.unlocked || tutorialMissionInProgress}
-                onClick={() => { if (!tutorialMissionInProgress) onPick(previewModel.mission.id) }}
-                className="mission-dispatch-dock__cta"
+                className="mission-relay-yard__cycle"
+                aria-label="Previous client signal"
+                onClick={() => selectRelativeSignal(-1)}
               >
-                {tutorialMissionInProgress ? missionStartBlockedLabel : `Lock contract · ${previewModel.targetCount} targets`}
+                <ChevronLeft size={24} />
               </button>
-            </>
-          ) : <div className="mission-dispatch-dock__empty">No active client signal from this location.</div>}
-          </aside>
+              <div
+                className="mission-relay-yard__station"
+                data-testid={`mission-card-${previewModel.mission.id}`}
+                data-mission-id={previewModel.mission.id}
+              >
+                <div className="mission-relay-yard__station-label"><RadioTower size={16} /> Client relay · {String(selectedIndex + 1).padStart(2, '0')} / {String(cardModels.length).padStart(2, '0')}</div>
+                <img src="/parts/comms_relay_t1.png" alt="" aria-hidden="true" />
+                <div className="mission-relay-yard__contract">
+                  <strong>{previewModel.mission.title}</strong>
+                  <span>{previewModel.client?.name ?? 'Earth base operation'}</span>
+                  <small>{previewModel.targetCount} reachable targets · {Object.values(previewModel.mission.requires.minerals).reduce((total, amount) => total + amount, 0)}U cargo · <b>{formatCurrency(previewModel.displayPayout, { compact: true })}</b></small>
+                </div>
+              </div>
+              <button
+                type="button"
+                className="mission-relay-yard__cycle"
+                aria-label="Next client signal"
+                onClick={() => selectRelativeSignal(1)}
+              >
+                <ChevronRight size={24} />
+              </button>
+              <div className="mission-relay-yard__commit">
+                <p>{previewModel.mission.brief}</p>
+                {previewModel.crewStatus && <span>CREW · {previewModel.crewStatus}</span>}
+                <button
+                  type="button"
+                  data-testid={`mission-detail-cta-${previewModel.mission.id}`}
+                  data-mission-card-cta={`mission-card-${previewModel.mission.id}-cta`}
+                  disabled={!previewModel.unlocked || tutorialMissionInProgress}
+                  onClick={() => { if (!tutorialMissionInProgress) onPick(previewModel.mission.id) }}
+                >
+                  {tutorialMissionInProgress ? missionStartBlockedLabel : `Lock contract · ${previewModel.targetCount} targets`}
+                </button>
+              </div>
+            </div>
+          ) : <div className="mission-relay-yard__empty">No active client signal from this location.</div>}
         </div>
       </div>
       <StepFooter
@@ -210,48 +219,5 @@ export default function MissionBoardScreen({ onBack, onPick, missionsDone, freeO
         description={available.length === 0 ? 'No client requests are available from this location.' : freeOperations ? 'Client work only. Your own operations remain in Launchpad.' : `Lock a client contract to open Target, Rocket, and Launch for L${missionsDone + 1}.`}
       />
     </div>
-  )
-}
-
-function MissionDispatchSignal({
-  contract,
-  selected,
-  startBlocked,
-  startBlockedLabel,
-  onPreview,
-  onPick,
-  index,
-}: {
-  contract: { mission: Mission; client: Client | null; targetCount: number; displayPayout: number; unlocked: boolean; cardState: 'available' | 'locked'; lockedDetail?: string; isHighlighted?: boolean; routeLabel?: string; crewStatus?: string; crewReady: boolean }
-  selected: boolean
-  startBlocked: boolean
-  startBlockedLabel: string
-  onPreview: () => void
-  onPick: () => void
-  index: number
-}) {
-  const disabled = !contract.unlocked || startBlocked
-  return (
-    <button
-      type="button"
-      data-testid={`mission-card-${contract.mission.id}`}
-      data-mission-id={contract.mission.id}
-      className={`mission-dispatch-signal${selected ? ' is-selected' : ''}${disabled ? ' is-disabled' : ''}`}
-      aria-pressed={selected}
-      aria-disabled={disabled}
-      onMouseEnter={onPreview}
-      onFocus={onPreview}
-      onClick={() => { onPreview(); if (!disabled) onPick() }}
-    >
-      <span className="mission-dispatch-signal__index">{String(index + 1).padStart(2, '0')}</span>
-      <ClientMark initial={contract.client?.initial ?? 'OP'} color={contract.client?.color ?? 'var(--ln-cyan)'} uiRole={contract.client?.uiRole ?? 'starter'} clientId={contract.client?.id} size={40} />
-      <span className="mission-dispatch-signal__body">
-        <strong>{contract.mission.title}</strong>
-        <small>{contract.client?.name ?? 'Earth base operation'} · {contract.targetCount} targets</small>
-        <em>{contract.routeLabel ?? contract.mission.difficulty}</em>
-      </span>
-      <span className="mission-dispatch-signal__pay">{formatCurrency(contract.displayPayout, { compact: true })}</span>
-      <span data-testid={`mission-card-${contract.mission.id}-cta`} className="mission-dispatch-signal__action">{disabled ? (startBlocked ? startBlockedLabel : contract.lockedDetail ?? 'Locked') : 'Lock ›'}</span>
-    </button>
   )
 }

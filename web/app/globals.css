@@ -1420,6 +1420,187 @@ button { cursor: pointer; }
 .mission-dispatch-dock__cta:disabled { background: var(--ln-surface-2); color: var(--ln-text-muted); cursor: not-allowed; }
 .mission-dispatch-dock__empty { color: var(--ln-text-dim); font: 700 14px/1.5 var(--ln-font-display); }
 
+/* KES-330 — the dispatch choice lives at a real relay in the base.  The
+   landscape remains the playfield; labels are attached to its equipment,
+   never promoted into a page-sized list or a separate selection panel. */
+.mission-relay-yard {
+  position: relative;
+  width: 100%;
+  height: min(650px, calc(100vh - 196px));
+  overflow: hidden;
+}
+.mission-relay-yard__hangar,
+.mission-relay-yard__launchpad {
+  position: absolute;
+  bottom: 6%;
+  height: auto;
+  pointer-events: none;
+  user-select: none;
+}
+.mission-relay-yard__hangar { left: 2%; width: min(34%, 340px); }
+.mission-relay-yard__launchpad { right: 2%; width: min(31%, 310px); }
+.mission-relay-yard__console {
+  position: absolute;
+  left: 50%;
+  bottom: 13%;
+  display: grid;
+  grid-template-columns: 48px minmax(260px, 360px) 48px;
+  align-items: center;
+  gap: var(--ln-s-3);
+  width: min(100% - 32px, 520px);
+  transform: translateX(-50%);
+}
+.mission-relay-yard__station {
+  position: relative;
+  min-height: 250px;
+  padding-top: 26px;
+  background: color-mix(in srgb, var(--ln-blueprint-ink) 88%, transparent);
+  border: 3px solid color-mix(in srgb, var(--ln-cyan) 70%, var(--ln-blueprint-ink));
+  border-radius: var(--ln-r-lg);
+  box-shadow: 0 10px 0 color-mix(in srgb, var(--ln-blueprint-ink) 34%, transparent);
+}
+.mission-relay-yard__station::after {
+  content: '';
+  position: absolute;
+  right: 12%;
+  bottom: -26px;
+  left: 12%;
+  height: 24px;
+  border: 3px solid color-mix(in srgb, var(--ln-cyan) 70%, var(--ln-blueprint-ink));
+  border-top: 0;
+  background: color-mix(in srgb, var(--ln-blueprint-ink) 82%, transparent);
+}
+.mission-relay-yard__station > img {
+  display: block;
+  width: 180px;
+  max-width: 65%;
+  height: auto;
+  margin: 0 auto;
+  filter: drop-shadow(0 12px 0 color-mix(in srgb, var(--ln-blueprint-ink) 34%, transparent));
+}
+.mission-relay-yard__station-label {
+  position: absolute;
+  top: 8px;
+  left: 10px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--ln-cyan-bright);
+  font: 800 9px var(--ln-font-display);
+  letter-spacing: var(--ln-tr-label);
+  text-transform: uppercase;
+}
+.mission-relay-yard__contract { padding: 0 var(--ln-s-3) var(--ln-s-3); text-align: center; }
+.mission-relay-yard__contract strong,
+.mission-relay-yard__contract span,
+.mission-relay-yard__contract small { display: block; }
+.mission-relay-yard__contract strong { color: var(--ln-blueprint-paper); font: 800 18px var(--ln-font-display); text-transform: uppercase; }
+.mission-relay-yard__contract span { margin-top: 3px; color: var(--ln-cyan-bright); font: 700 10px var(--ln-font-display); letter-spacing: .08em; text-transform: uppercase; }
+.mission-relay-yard__contract small { margin-top: 7px; color: color-mix(in srgb, var(--ln-blueprint-paper) 74%, var(--ln-cyan)); font: 700 9px var(--ln-font-mono); letter-spacing: .04em; text-transform: uppercase; }
+.mission-relay-yard__contract b { color: var(--ln-amber-bright); }
+.mission-relay-yard__cycle {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  border: 3px solid color-mix(in srgb, var(--ln-blueprint-ink) 72%, var(--ln-cyan));
+  border-radius: var(--ln-r-md);
+  background: color-mix(in srgb, var(--ln-blueprint-paper) 72%, var(--ln-cyan));
+  color: var(--ln-blueprint-ink);
+  cursor: pointer;
+}
+.mission-relay-yard__cycle:hover,
+.mission-relay-yard__cycle:focus-visible { border-color: var(--ln-cyan); outline: none; }
+.mission-relay-yard__commit {
+  grid-column: 1 / -1;
+  z-index: 2;
+  margin: -12px 28px 0;
+  padding: var(--ln-s-2) var(--ln-s-3);
+  border: 3px solid color-mix(in srgb, var(--ln-cyan) 70%, var(--ln-blueprint-ink));
+  border-radius: 0 0 var(--ln-r-md) var(--ln-r-md);
+  background: color-mix(in srgb, var(--ln-blueprint-ink) 92%, transparent);
+  text-align: center;
+}
+.mission-relay-yard__commit p { margin: 0; color: color-mix(in srgb, var(--ln-blueprint-paper) 82%, var(--ln-cyan)); font: 600 11px/1.35 var(--ln-font-body); }
+.mission-relay-yard__commit > span { display: block; margin-top: 5px; color: var(--ln-crimson); font: 800 9px var(--ln-font-display); letter-spacing: var(--ln-tr-label); text-transform: uppercase; }
+.mission-relay-yard__commit button { width: 100%; margin-top: var(--ln-s-2); padding: 9px; border: 0; border-radius: var(--ln-r-sm); background: var(--ln-cyan); color: var(--ln-text-on-cyan); cursor: pointer; font: 800 11px var(--ln-font-display); letter-spacing: var(--ln-tr-label); text-transform: uppercase; }
+.mission-relay-yard__commit button:disabled { background: var(--ln-blueprint-paper-2); color: var(--ln-text-muted); cursor: not-allowed; }
+.mission-relay-yard__empty { position: absolute; left: 50%; top: 50%; color: var(--ln-blueprint-ink); font: 800 14px var(--ln-font-display); transform: translate(-50%, -50%); }
+
+/* The map is a field instrument, not a bright detail card beside a picture. */
+.mission-setup-screen--scene.mission-setup-screen--target .mission-setup-frame {
+  border-color: color-mix(in srgb, var(--ln-cyan) 74%, var(--ln-blueprint-ink));
+  background: var(--ln-blueprint-ink);
+}
+.mission-setup-screen--scene.mission-setup-screen--target .mission-board-detail .mission-setup-card {
+  --ln-text: var(--ln-blueprint-paper);
+  --ln-text-dim: color-mix(in srgb, var(--ln-blueprint-paper) 76%, var(--ln-cyan));
+  --ln-text-muted: color-mix(in srgb, var(--ln-blueprint-paper) 54%, var(--ln-cyan));
+  --ln-panel: color-mix(in srgb, var(--ln-blueprint-ink) 92%, transparent);
+  --ln-panel-2: color-mix(in srgb, var(--ln-blueprint-ink) 82%, transparent);
+  --ln-void: var(--ln-blueprint-ink);
+  --ln-hairline: color-mix(in srgb, var(--ln-cyan) 32%, transparent);
+  border-color: color-mix(in srgb, var(--ln-cyan) 72%, var(--ln-blueprint-ink));
+  background: var(--ln-panel);
+}
+
+/* Rocket selection keeps its real pad as the stage.  The selector is a small
+   bank of vehicle switches, not a white information panel competing with it. */
+.mission-setup-screen--scene.mission-setup-screen--rocket .rocket-summary-card {
+  --ln-text: var(--ln-blueprint-paper);
+  --ln-text-dim: color-mix(in srgb, var(--ln-blueprint-paper) 74%, var(--ln-cyan));
+  --ln-text-muted: color-mix(in srgb, var(--ln-blueprint-paper) 52%, var(--ln-cyan));
+  --ln-panel: color-mix(in srgb, var(--ln-blueprint-ink) 92%, transparent);
+  --ln-panel-2: color-mix(in srgb, var(--ln-blueprint-ink) 84%, transparent);
+  --ln-surface: color-mix(in srgb, var(--ln-blueprint-ink) 88%, transparent);
+  --ln-surface-2: color-mix(in srgb, var(--ln-blueprint-ink) 78%, transparent);
+  --ln-void: var(--ln-blueprint-ink);
+  --ln-hairline: color-mix(in srgb, var(--ln-cyan) 32%, transparent);
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+.mission-setup-screen--scene.mission-setup-screen--rocket .rocket-choice {
+  min-height: 0;
+  padding: var(--ln-s-2);
+  border: 2px solid color-mix(in srgb, var(--ln-cyan) 52%, var(--ln-blueprint-ink));
+  border-radius: var(--ln-r-md);
+  background: color-mix(in srgb, var(--ln-blueprint-ink) 88%, transparent);
+}
+.mission-setup-screen--scene.mission-setup-screen--rocket .rocket-choice.is-selected { border-color: var(--ln-cyan); background: color-mix(in srgb, var(--ln-blueprint-ink) 74%, var(--ln-cyan)); box-shadow: none; }
+
+/* Preflight is the launchpad, not a second command-deck card.  Let the actual
+   base remain visible and keep the clearance instrument tied to the rocket. */
+.mission-setup-screen--scene.mission-setup-screen--assembly .assembly-frame,
+.mission-setup-screen--scene.mission-setup-screen--assembly .assembly-preflight-scene {
+  width: min(100% - 32px, 680px);
+  min-height: 0;
+  border: 0;
+  background: transparent !important;
+  box-shadow: none;
+}
+.mission-setup-screen--scene.mission-setup-screen--assembly .mission-setup-content {
+  grid-template-columns: minmax(0, 1fr);
+  justify-items: center;
+}
+.mission-setup-screen--scene.mission-setup-screen--assembly .assembly-preflight-scene [data-testid="assembly-rocket-cutaway"] {
+  padding: var(--ln-s-3);
+  border: 3px solid color-mix(in srgb, var(--ln-cyan) 70%, var(--ln-blueprint-ink));
+  border-radius: var(--ln-r-lg);
+  background: color-mix(in srgb, var(--ln-blueprint-ink) 88%, transparent);
+  box-shadow: 0 10px 0 color-mix(in srgb, var(--ln-blueprint-ink) 28%, transparent);
+}
+.mission-setup-screen--scene.mission-setup-screen--assembly .assembly-preflight-scene [data-testid="assembly-rocket-cutaway"] * {
+  --ln-text: var(--ln-blueprint-paper);
+  --ln-text-dim: color-mix(in srgb, var(--ln-blueprint-paper) 74%, var(--ln-cyan));
+  --ln-text-muted: color-mix(in srgb, var(--ln-blueprint-paper) 52%, var(--ln-cyan));
+  --ln-panel: color-mix(in srgb, var(--ln-blueprint-ink) 92%, transparent);
+  --ln-panel-2: color-mix(in srgb, var(--ln-blueprint-ink) 82%, transparent);
+  --ln-void: var(--ln-blueprint-ink);
+  --ln-cyan-border: color-mix(in srgb, var(--ln-cyan) 42%, transparent);
+}
+
 @media (max-width: 760px) {
   .mission-dispatch-content { padding-bottom: 112px; }
   .mission-dispatch-site { display: flex; flex-direction: column; gap: var(--ln-s-3); height: auto; align-items: stretch; }
@@ -1434,6 +1615,14 @@ button { cursor: pointer; }
   .mission-dispatch-signal__pay { font-size: 14px; }
   .mission-dispatch-dock { min-height: 0; padding: var(--ln-s-4); }
   .mission-dispatch-dock__title { font-size: 22px; }
+  .mission-relay-yard { height: calc(100vh - 178px); }
+  .mission-relay-yard__hangar { left: -9%; width: 56%; }
+  .mission-relay-yard__launchpad { right: -9%; width: 50%; }
+  .mission-relay-yard__console { bottom: 8%; grid-template-columns: 42px minmax(0, 1fr) 42px; gap: 6px; width: calc(100% - 20px); }
+  .mission-relay-yard__station { min-height: 220px; }
+  .mission-relay-yard__station > img { width: 142px; }
+  .mission-relay-yard__contract strong { font-size: 15px; }
+  .mission-relay-yard__commit { margin-inline: 16px; }
 }
 
 /* Landscape phones (e.g. 844x390) — the 82px top offset (cleared for TopBar,

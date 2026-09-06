@@ -31,7 +31,7 @@ export const M1_STEPS: TutorialStep[] = [
     desktopCoachId: 'launchpad-view-contracts', desktopDir: 'down' },
   { id: 2, screen: 'missions', title: 'Lock a Contract',
     body: 'Pick a client — they specify what to mine and pay a bonus on delivery.',
-    action: 'Tap a contract card',
+    action: 'Cycle the relay, then lock a contract',
     anchor: 'bottom', spot: null, cta: 'a contract' },
   { id: 3, screen: 'targets',  title: 'Choose a Destination',
     body: 'Highlighted bodies have the ore your contract requires.',
