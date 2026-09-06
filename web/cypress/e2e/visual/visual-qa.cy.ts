@@ -174,7 +174,7 @@ describe('Visual QA — game screens and mining canvas', () => {
 
     // Mission board
     navToMissions()
-    cy.contains('Mission Board', { timeout: 10000 }).should('be.visible')
+    cy.contains('Mission Dispatch', { timeout: 10000 }).should('be.visible')
     cy.screenshot('05-mission-board')
 
     // Open first mission → target picker
@@ -353,7 +353,7 @@ describe('Visual QA — game screens and mining canvas', () => {
     })
 
     skipAuthGateIfShown()
-    cy.get('h1', { timeout: 12000 }).contains('Earth Base').should('be.visible')
+    cy.get('h1', { timeout: 12000 }).invoke('text').should('match', /^(Base|Subsurface)$/)
     cy.get('[data-testid="settings-button"]').should('be.visible').and('not.be.disabled')
     cy.get('[data-testid="building-launchpad"]').should('be.visible')
     cy.screenshot('hub-launchpad-visible')

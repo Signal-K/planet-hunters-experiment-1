@@ -301,7 +301,7 @@ describe('Release journey — onboarding and late-game operations across viewpor
 
       cy.get('[data-testid="build-plot-0"]').should('be.visible').click()
       cy.contains('button', 'Confirm · Build Here').should('be.visible').click()
-      cy.contains('h1', 'Earth Base', { timeout: 10000 }).should('be.visible')
+      cy.get('h1', { timeout: 10000 }).invoke('text').should('match', /^(Base|Subsurface)$/)
       cy.get('[data-testid="building-launchpad"]').should('be.visible')
       screenshot(viewport.label, 'base-ready')
 
