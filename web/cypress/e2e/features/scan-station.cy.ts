@@ -217,7 +217,9 @@ describe('Scan Station', () => {
             activeScan: { targetId: 'eros', completesAt: Date.now() - 1000 },
           }),
         } as GameState
-        win.localStorage.setItem(STORAGE_KEY, JSON.stringify(full))
+        const serialized = JSON.stringify(full)
+        win.localStorage.setItem(STORAGE_KEY, serialized)
+        win.localStorage.setItem(AUTHENTICATED_STORAGE_KEY, serialized)
         win.localStorage.setItem('landnam-account-credentials', JSON.stringify({ email: 'e2e@example.com', password: 'e2e-guest-test' }))
         win.localStorage.setItem('ln_tutorial_complete_ack', '1')
         win.localStorage.setItem(COACH_KEY, '1')
