@@ -236,6 +236,16 @@ describe('Earth Base — redesigned scene', () => {
       .click({ force: true, scrollBehavior: false })
     cy.get('[data-testid="build-place-screen"][data-scene-loaded="true"]', { timeout: 20000 })
       .should('be.visible')
+    cy.get('[data-testid="terrain-scene"][data-terrain-status="ready"]', { timeout: 20000 })
+      .should('be.visible')
+    cy.get('[data-testid="terrain-scene"] img[src*="/game/assets/terrain/"]')
+      .should('have.length.greaterThan', 20)
+      .should($images => {
+        expect(
+          $images.toArray().every(image => (image as HTMLImageElement).naturalWidth > 0),
+          'terrain sprites decoded',
+        ).to.eq(true)
+      })
     cy.get('[data-testid="build-plot-1"]', { timeout: 20000 })
       .should('be.visible')
       .click({ force: true, scrollBehavior: false })

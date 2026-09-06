@@ -201,10 +201,35 @@ export function TerrainScene({
   phase?: TimeOfDayPhase
 }) {
   const palette = PALETTES[phase]
+  const terrainUrls = Array.from(new Set(
+    composition.bands.flatMap(band => band.bricks.map(placement => brickSrc(placement.brick))),
+  ))
+  const [terrainStatus, setTerrainStatus] = React.useState<'loading' | 'ready' | 'failed'>('loading')
+
+  React.useEffect(() => {
+    let active = true
+    const imageChecks = terrainUrls.map(url => new Promise<boolean>(resolve => {
+      const image = new Image()
+      image.onload = () => resolve(true)
+      image.onerror = () => resolve(false)
+      image.src = url
+    }))
+
+    Promise.all(imageChecks).then(results => {
+      if (!active) return
+      setTerrainStatus(results.every(Boolean) ? 'ready' : 'failed')
+    })
+
+    return () => {
+      active = false
+    }
+  }, [terrainUrls.join('|')])
+
   return (
     <div
       data-testid="terrain-scene"
       data-composition={composition.id}
+      data-terrain-status={terrainStatus}
       aria-hidden="true"
       style={{ position: 'absolute', inset: 0, overflow: 'hidden', background: palette.skyTop }}
     >
@@ -216,6 +241,26 @@ export function TerrainScene({
         background: `linear-gradient(180deg, ${palette.skyTop} 0%, ${palette.skyMid} 52%, ${palette.skyHorizon} 100%)`,
         transition: 'background 1.2s ease',
       }} />
+
+      {/* The sky/ground shell used to be the only thing visible while the
+          terrain PNGs were cold or unavailable, which read as an empty broken
+          screen. Keep a restrained illustrated horizon underneath the authored
+          sprites until every terrain source has decoded; it also remains as a
+          graceful fallback if a single asset fails in production. */}
+      {terrainStatus !== 'ready' && (
+        <div data-testid="terrain-fallback-silhouette" aria-hidden="true" style={{ position: 'absolute', inset: 0, zIndex: 0.5, pointerEvents: 'none' }}>
+          <div style={{
+            position: 'absolute', left: '-4%', right: '-4%', bottom: 'var(--hub-ground)', height: '34%',
+            opacity: 0.42,
+            background: `radial-gradient(ellipse 22% 82% at 8% 100%, ${palette.haze} 0 58%, transparent 59%), radial-gradient(ellipse 24% 92% at 28% 100%, ${palette.haze} 0 58%, transparent 59%), radial-gradient(ellipse 25% 78% at 52% 100%, ${palette.haze} 0 58%, transparent 59%), radial-gradient(ellipse 24% 88% at 76% 100%, ${palette.haze} 0 58%, transparent 59%), radial-gradient(ellipse 20% 70% at 96% 100%, ${palette.haze} 0 58%, transparent 59%)`,
+          }} />
+          <div style={{
+            position: 'absolute', left: '-4%', right: '-4%', bottom: 'var(--hub-ground)', height: '23%',
+            opacity: 0.58,
+            background: `radial-gradient(ellipse 25% 70% at 8% 100%, ${palette.groundNear} 0 58%, transparent 59%), radial-gradient(ellipse 26% 76% at 34% 100%, ${palette.groundNear} 0 58%, transparent 59%), radial-gradient(ellipse 25% 68% at 62% 100%, ${palette.groundNear} 0 58%, transparent 59%), radial-gradient(ellipse 26% 72% at 90% 100%, ${palette.groundNear} 0 58%, transparent 59%)`,
+          }} />
+        </div>
+      )}
 
       {palette.starOpacity > 0 && (
         <div style={{
