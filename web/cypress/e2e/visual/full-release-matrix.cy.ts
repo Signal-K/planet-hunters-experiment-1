@@ -237,7 +237,7 @@ function playM2(viewport: string) {
   goToMissions()
   screenshot(viewport, 'm2-mission-board')
 
-  cy.get('[data-testid="mission-detail-cta-generated-s2-starter-bulk-4"]')
+  cy.get('[data-testid="mission-detail-cta-generated-s2-starter-bulk-3"]')
     .scrollIntoView()
     .should('be.visible')
     .click({ force: true })

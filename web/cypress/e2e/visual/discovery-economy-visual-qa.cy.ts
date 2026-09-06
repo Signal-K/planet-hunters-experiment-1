@@ -275,7 +275,7 @@ describe('Visual QA — discovery -> economy pipeline', () => {
     // MISSION control is intentionally secondary and can be omitted when a
     // pending launch occupies the rail; the fixture only needs the same
     // production action from the physical launchpad control.
-    cy.get('[data-testid="launchpad-primary-mission-btn"]', { timeout: 10000 }).click()
+    cy.get('[data-testid="launchpad-status-card"]', { timeout: 10000 }).click()
     cy.get('[data-testid="launchpad-new-mission-mining-btn"]', { timeout: 10000 })
       .should('not.be.disabled')
       .click()
