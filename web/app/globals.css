@@ -3605,3 +3605,122 @@ html[data-coach-target="build-structure-strip"] [data-coach-id="build-structure-
     padding-bottom: 136px !important;
   }
 }
+
+/* KES-330 follow-up — Mission, Target, Rocket, and Launch are four states of
+   one operation.  They must occupy one stable stage, rather than inheriting
+   different historical padding, row sizing, and action-rail reservations.
+   Keep this geometry here at the end of the cascade so it wins over those
+   per-screen exceptions without changing the interaction inside each state. */
+@media (min-width: 900px) {
+  .mission-dispatch-content,
+  .mission-setup-screen--scene .mission-setup-content {
+    padding: 164px 14px 112px !important;
+    overflow: hidden !important;
+  }
+
+  .mission-relay-yard {
+    height: 100% !important;
+    max-height: none;
+  }
+
+  .mission-relay-yard__console {
+    top: 50%;
+    bottom: auto;
+    transform: translate(-50%, -50%);
+  }
+
+  .mission-setup-screen--scene .mission-setup-content {
+    grid-template-rows: minmax(0, 1fr) !important;
+    gap: 0 !important;
+    align-items: stretch !important;
+  }
+
+  .mission-setup-screen--target .mission-board-layout {
+    height: 100%;
+    min-height: 0;
+  }
+
+  .mission-setup-screen--target .target-map-stage {
+    position: relative;
+    height: 100%;
+  }
+
+  .mission-setup-screen--target .mission-board-detail {
+    top: 0;
+  }
+
+  .mission-setup-screen--target .target-map-instrument {
+    position: relative;
+    display: block !important;
+    height: 100%;
+    min-height: 0;
+  }
+
+  .mission-setup-screen--target .target-map-frame {
+    height: 100% !important;
+  }
+
+  .mission-setup-screen--target .target-map-telemetry,
+  .mission-setup-screen--target .target-map-orbit-note,
+  .mission-setup-screen--target .target-route-notice {
+    position: absolute;
+    z-index: 4;
+    left: var(--ln-s-3);
+    right: var(--ln-s-3);
+    padding: 0 !important;
+    pointer-events: none;
+  }
+
+  .mission-setup-screen--target .target-map-telemetry { top: var(--ln-s-3); }
+  .mission-setup-screen--target .target-map-orbit-note { top: 36px; }
+  .mission-setup-screen--target .target-route-notice {
+    top: var(--ln-s-3);
+    padding: 8px 12px !important;
+    pointer-events: auto;
+  }
+
+  .mission-setup-screen--target .target-route-notice + .target-map-instrument .target-map-telemetry {
+    top: 48px;
+  }
+  .mission-setup-screen--target .target-route-notice + .target-map-instrument .target-map-orbit-note {
+    top: 72px;
+  }
+
+  .mission-setup-screen--rocket .mission-setup-content {
+    grid-template-columns: minmax(0, 1.22fr) minmax(300px, 0.78fr) !important;
+  }
+
+  .mission-setup-screen--rocket .rocket-vehicle-stage,
+  .mission-setup-screen--rocket .rocket-vehicle-frame,
+  .mission-setup-screen--rocket .rocket-summary-card {
+    min-height: 0 !important;
+    height: 100% !important;
+    align-self: stretch !important;
+  }
+
+  .mission-setup-screen--rocket .rocket-summary-card {
+    overflow: hidden !important;
+  }
+
+  .mission-setup-screen--rocket .rocket-summary-scroll {
+    height: 100% !important;
+    overflow-y: auto !important;
+  }
+
+  .mission-setup-screen--assembly .mission-setup-content {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+
+  .mission-setup-screen--assembly .assembly-frame {
+    width: 100% !important;
+    min-height: 0 !important;
+    height: 100% !important;
+    align-self: stretch !important;
+  }
+
+  .mission-setup-screen--assembly .assembly-preflight-scene [data-testid="assembly-rocket-cutaway"] {
+    height: calc(100% - 24px);
+    max-height: calc(100% - 24px);
+    overflow-y: auto;
+  }
+}
