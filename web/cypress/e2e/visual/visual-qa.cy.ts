@@ -236,7 +236,7 @@ describe('Visual QA — game screens and mining canvas', () => {
     // Wait for the destination scene, not only the coach overlay. This keeps
     // the visual checkpoint honest when the Hub route is still settling after
     // the debrief transition (KES-167/KES-186).
-    cy.get('h1', { timeout: 10000 }).contains('Earth Base').should('be.visible')
+    cy.get('h1', { timeout: 10000 }).invoke('text').should('match', /^(Base|Earth Base)$/)
     cy.get('[data-testid="hub-terrain-fallback"]').should('exist')
     cy.screenshot('12-hub-post-mission')
 

@@ -244,7 +244,7 @@ function playM2(viewport: string) {
   cy.contains('Pick Target', { timeout: 10000 }).should('be.visible')
   screenshot(viewport, 'm2-target-picker')
 
-  pickVisibleTarget('101955 Bennu')
+  pickVisibleTarget('433 Eros')
   clickDom('[data-testid="continue-build-btn"]')
   cy.contains('Select Rocket', { timeout: 10000 }).should('be.visible')
   assertRocketLayout(/Purchase/)

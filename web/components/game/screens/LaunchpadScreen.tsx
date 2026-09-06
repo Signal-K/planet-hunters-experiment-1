@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useEffect, useState } from 'react'
+import React, { useState } from 'react'
 import TopBar from '@/components/ui/TopBar'
 import { partitionByOwner } from '@/lib/data'
 import type { Mission } from '@/lib/data'
@@ -103,11 +103,10 @@ export default function LaunchpadScreen({
   const [missionRunsOpen, setMissionRunsOpen] = useState(false)
   const [missionMenuOpen, setMissionMenuOpen] = useState(requestedMissionMenuOpen)
   const [operationBrief, setOperationBrief] = useState<'instrument' | 'mining' | 'build' | null>(null)
-  useEffect(() => {
-    setMissionMenuOpen(requestedMissionMenuOpen)
-  }, [requestedMissionMenuOpen])
+  const externallyControlled = onMissionMenuOpenChange !== undefined
+  const visibleMissionMenuOpen = externallyControlled ? requestedMissionMenuOpen : missionMenuOpen
   const setMissionMenu = (open: boolean) => {
-    setMissionMenuOpen(open)
+    if (!externallyControlled) setMissionMenuOpen(open)
     onMissionMenuOpenChange?.(open)
   }
   const fleet = ROCKET_MODELS.map(model => ({ model, unlocked: missionsDone >= model.missionsRequired && !model.locked }))
@@ -191,7 +190,7 @@ export default function LaunchpadScreen({
           </span>
         </button>
 
-        {missionMenuOpen && !player.pendingLaunch && (
+        {visibleMissionMenuOpen && !player.pendingLaunch && (
           <section className="launchpad-mission-menu" data-testid="launchpad-new-mission-menu" aria-labelledby="launchpad-new-mission-title">
             <div className="launchpad-mission-menu-header">
               <div>
