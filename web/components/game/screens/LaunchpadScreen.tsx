@@ -114,7 +114,12 @@ export default function LaunchpadScreen({
   const launchedSatellites = player.transitSatelliteLaunchedAt ? SATELLITE_MODELS.length : 0
   const { own } = partitionByOwner(catalog.missions, mission => mission)
   const sequence = missionsDone + 1
-  const operations = own.filter(mission => freeOperations || mission.sequence === sequence)
+  // `freeOperations` is derived from missionsDone during state hydration. Use
+  // the progression threshold here as well so a freshly hydrated fixture (or
+  // a legacy save carrying the stale boolean) cannot disable the owned mining
+  // control after the player has already completed the active onboarding.
+  const hasFreeOpsAccess = freeOperations || missionsDone >= 3
+  const operations = own.filter(mission => hasFreeOpsAccess || mission.sequence === sequence)
   // Academy/crew progression remains deferred until it has a replacement for
   // the retired affinity ladder, so it cannot become the next required launch.
   const ownMiningOperation = operations.find(mission => mission.tag === 'FREE OPS' && !mission.client && !mission.payload && !mission.construction)

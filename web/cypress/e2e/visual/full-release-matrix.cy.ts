@@ -170,6 +170,7 @@ function completeM3Delivery(viewport: string) {
   cy.wait(1500)
   screenshot(viewport, 'm3-delivery')
   cy.get('[data-testid="delivery-dump-cargo"]', { timeout: 15000 }).click({ force: true })
+  cy.get('[data-testid="delivery-return-rover"]', { timeout: 15000 }).should('be.visible').click({ force: true })
   cy.get('.transit-screen', { timeout: 15000 }).should('be.visible')
   cy.get('[data-testid="transit-skip-btn"]', { timeout: 10000 }).click({ force: true })
   cy.get('.debrief-game', { timeout: 15000 }).should('be.visible')
