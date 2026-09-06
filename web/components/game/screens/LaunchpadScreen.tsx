@@ -104,9 +104,15 @@ export default function LaunchpadScreen({
   const [missionMenuOpen, setMissionMenuOpen] = useState(requestedMissionMenuOpen)
   const [operationBrief, setOperationBrief] = useState<'instrument' | 'mining' | 'build' | null>(null)
   const externallyControlled = onMissionMenuOpenChange !== undefined
-  const visibleMissionMenuOpen = externallyControlled ? requestedMissionMenuOpen : missionMenuOpen
+  // Keep a local open signal as well as the app-level signal. The physical pad
+  // is the primary control; an auth/catalog refresh can briefly replay the
+  // parent route state while that click is being handled, which used to make
+  // the menu appear to ignore the interaction in the discovery flow.
+  const visibleMissionMenuOpen = externallyControlled
+    ? requestedMissionMenuOpen || missionMenuOpen
+    : missionMenuOpen
   const setMissionMenu = (open: boolean) => {
-    if (!externallyControlled) setMissionMenuOpen(open)
+    setMissionMenuOpen(open)
     onMissionMenuOpenChange?.(open)
   }
   const fleet = ROCKET_MODELS.map(model => ({ model, unlocked: missionsDone >= model.missionsRequired && !model.locked }))
