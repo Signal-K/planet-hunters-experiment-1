@@ -22,6 +22,13 @@ import { tessCandidateToExoplanetTarget, toTessCandidate } from '../../../lib/da
 
 const STORAGE_KEY = 'landnam-game-state-v1'
 const AUTHENTICATED_STORAGE_KEY = `${STORAGE_KEY}:user:e2e-discovery-user`
+const ALL_SURVEY_KEYS = [
+  'lnm_first_launch', 'lnm_mining_feel', 'lnm_client_pick',
+  'lnm_mission_friction', 'lnm_progression_feel', 'lnm_end_of_content',
+  'lnm_return_visit', 'lnm_m1_complete', 'lnm_m2_mission_choice', 'lnm_m2_rocket_clarity', 'lnm_m2_rating', 'lnm_m2_freetext',
+  'lnm_m3_transport_clarity', 'lnm_m3_client_choice', 'lnm_m3_rating', 'lnm_m3_freetext',
+  'lnm_satellite_clarity', 'lnm_resume_mission', 'lnm_base_building', 'lnm_rover_clarity',
+]
 
 function basePlayer(overrides: Partial<GameState['player']> = {}): GameState['player'] {
   return {
@@ -76,11 +83,12 @@ function visitWithState(path: string, screen: GameState['screen'], playerOverrid
       // browser even though this test is intentionally offline. Clear it
       // before the provider hydrates, otherwise auth restoration can replace
       // this fixture with the account's pending-launch state.
-      win.localStorage.removeItem('pocketbase_auth')
-      win.localStorage.removeItem('pocketbase_auth_landnam')
-      Object.keys(win.localStorage)
-        .filter(key => key.startsWith(STORAGE_KEY))
-        .forEach(key => win.localStorage.removeItem(key))
+      // Clear the whole origin, not just known auth/state keys: Cypress keeps
+      // one browser profile across specs and a legacy credential or feature
+      // flag can still trigger an auth restore before the fixture hydrates.
+      win.localStorage.clear()
+      win.localStorage.setItem('landnam-surveys-shown', JSON.stringify(ALL_SURVEY_KEYS))
+      win.localStorage.setItem('landnam-upgrade-prompt-snooze-until', String(Date.now() + 365 * 24 * 60 * 60 * 1000))
       win.localStorage.setItem('landnam-account-credentials', JSON.stringify({
         email: `e2e-${Date.now()}-${Math.random().toString(36).slice(2)}@example.com`,
         password: 'e2e-guest-test',
