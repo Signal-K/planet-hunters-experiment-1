@@ -2,7 +2,7 @@ describe('Commodity Exchange visual layout', () => {
   const state = {
     screen: 'market',
     tutorial: false,
-    player: { francs: 50_000_000, missionsDone: 3, freeOperations: true },
+    player: { francs: 50_000_000, missionsDone: 3, freeOperations: true, stash: { iron: 5 } },
     stash: {},
     missionId: null,
     targetId: null,

@@ -149,6 +149,7 @@ const profiles: Record<string, Cypress.EndToEndConfigOptions> = {
     specPattern: ['cypress/e2e/visual/**/*.cy.{js,jsx,ts,tsx}'],
     viewportWidth: 390,
     viewportHeight: 844,
+    env: { visualProfile: true },
   },
   responsive: {
     baseUrl: 'http://localhost:3001',

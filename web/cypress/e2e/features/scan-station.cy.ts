@@ -229,6 +229,6 @@ describe('Scan Station', () => {
     cy.get('[data-testid="scan-station-screen"]', { timeout: 10000 }).should('be.visible')
     cy.contains('SCAN COMPLETE', { timeout: 10000 }).should('be.visible')
     cy.get('[data-testid="scan-station-collect-btn"]').click()
-    cy.contains('4/5 SCANS TODAY', { timeout: 10000 }).should('be.visible')
+    cy.contains('1/3 SCANS', { timeout: 10000 }).should('be.visible')
   })
 })

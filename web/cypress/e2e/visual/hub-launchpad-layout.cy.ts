@@ -103,11 +103,12 @@ describe('Hub and Launchpad visual layout', () => {
       cy.contains('h1', 'Your Program', { timeout: 15000 }).should('be.visible')
       cy.get('[data-testid="launchpad-status-card"]').should('be.visible')
       cy.get('[data-testid="launchpad-rocket-fleet"]').scrollIntoView().should('be.visible')
-      cy.get('[data-testid="launchpad-open-subsurface-btn"]').scrollIntoView().should('be.visible')
+      cy.get('[data-testid="launchpad-primary-mission-btn"]').scrollIntoView().should('be.visible')
       // KES-329/330 replaced the aggregate "launchpad-program-operation-btn"
       // with the spatial mission-menu entry point on the launchpad tower.
       cy.get('[data-testid="launchpad-status-card"]').scrollIntoView().should('be.visible')
-      cy.get('[data-testid="launchpad-view-contracts-btn"]').scrollIntoView().should('be.visible')
+      cy.get('[data-testid="launchpad-open-hangar-btn"]').scrollIntoView().should('be.visible')
+      cy.get('[data-testid="launchpad-new-mission-btn"]').scrollIntoView().should('be.visible')
       cy.screenshot(`launchpad-scene-${viewport.name}`)
     })
   }

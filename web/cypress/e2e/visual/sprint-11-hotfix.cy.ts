@@ -94,18 +94,18 @@ describe('Sprint 11 Launchpad and Earth Base hotfix — live browser QA', () => 
     })
   })
 
-  it('keeps every essential Launchpad control in one viewport and opens the monitoring build flow', () => {
+  it('keeps every essential Launchpad control in one viewport', () => {
     visitGame('/game/launchpad', 'launchpad')
 
     cy.contains('Your Program', { timeout: 15_000 }).should('be.visible')
-    cy.get('[data-testid="launchpad-monitoring-structure"]').should('be.visible')
-    cy.get('[data-testid="launchpad-satellite-orbit"]').should('be.visible')
+    cy.get('[data-testid="launchpad-focus-screen"]').should('be.visible')
+    cy.get('[data-testid="launchpad-status-card"]').should('be.visible')
     cy.get('[data-testid="launchpad-rocket-fleet"]').should('be.visible')
-    // Station construction is owned by Earth Base build flow; Launchpad only
-    // exposes the already-built monitoring structure (KES-177).
+    // Station construction is owned by Earth Base build flow; Launchpad exposes
+    // the current mission-control and hangar entry points (KES-177).
     cy.get('[data-testid="launchpad-build-monitoring-btn"]').should('not.exist')
     cy.get('[data-testid="launchpad-open-hangar-btn"]').should('be.visible')
-    cy.get('[data-testid="launchpad-view-contracts-btn"]').should('be.visible')
+    cy.get('[data-testid="launchpad-new-mission-btn"]').should('be.visible')
     cy.get('[data-testid="launchpad-guide-open"]').should('not.exist')
     cy.get('.launchpad-available-actions').should('not.exist')
     cy.get('[data-testid="launchpad-build-monitoring-btn"]').should('not.exist')
