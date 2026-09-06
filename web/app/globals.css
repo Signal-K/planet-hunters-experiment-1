@@ -3724,3 +3724,82 @@ html[data-coach-target="build-structure-strip"] [data-coach-id="build-structure-
     overflow-y: auto;
   }
 }
+
+/* Mission Dispatch follows the physical Launchpad route.  Keep its relay
+   instrument over the same pad composition, but do not inherit the light
+   mission-setup shell: that shell is what made the old header and footer read
+   as white page bands around an otherwise scenic operation. */
+.mission-setup-screen--launchpad {
+  background: var(--hub-void, var(--ln-void));
+}
+.mission-setup-screen--launchpad .mission-setup-scene-background::after { display: none; }
+.mission-setup-screen--launchpad .mission-dispatch-content {
+  padding: 82px 14px 24px !important;
+  overflow: hidden !important;
+}
+.mission-setup-screen--launchpad .mission-relay-yard {
+  height: 100%;
+  max-height: none;
+}
+.mission-setup-screen--launchpad .mission-relay-yard__console {
+  top: 50%;
+  bottom: auto;
+  transform: translate(-50%, -50%);
+}
+.mission-setup-screen--launchpad .mission-relay-yard__cycle {
+  border-color: var(--ln-cyan-border);
+  background: color-mix(in srgb, var(--ln-panel) 92%, transparent);
+  color: var(--ln-cyan);
+}
+.mission-setup-screen--launchpad .mission-relay-yard__empty { color: var(--ln-text); }
+@media (max-width: 760px) {
+  .mission-setup-screen--launchpad .mission-dispatch-content { padding-bottom: 24px !important; }
+  .mission-setup-screen--launchpad .mission-relay-yard { height: 100%; }
+  .mission-setup-screen--launchpad .mission-relay-yard__console {
+    top: auto;
+    bottom: 8%;
+    transform: translateX(-50%);
+  }
+}
+
+@media (orientation: landscape) and (max-height: 600px) {
+  .mission-setup-screen--launchpad .mission-relay-yard { height: 100%; }
+  .mission-setup-screen--launchpad .mission-relay-yard__console {
+    top: 46%;
+    bottom: auto;
+    grid-template-columns: 42px minmax(220px, 360px) 42px;
+    gap: 6px;
+    width: calc(100% - 20px);
+  }
+  .mission-setup-screen--launchpad .mission-relay-yard__station {
+    min-height: 0;
+    padding-top: 18px;
+  }
+  .mission-setup-screen--launchpad .mission-relay-yard__station > img { width: clamp(64px, 13vw, 100px); }
+  .mission-setup-screen--launchpad .mission-relay-yard__station-label {
+    top: 5px;
+    left: 8px;
+    font-size: 8px;
+  }
+  .mission-setup-screen--launchpad .mission-relay-yard__contract { padding: 0 8px 8px; }
+  .mission-setup-screen--launchpad .mission-relay-yard__contract strong { font-size: 13px; }
+  .mission-setup-screen--launchpad .mission-relay-yard__contract span { font-size: 8px; }
+  .mission-setup-screen--launchpad .mission-relay-yard__contract small { margin-top: 4px; font-size: 8px; }
+  .mission-setup-screen--launchpad .mission-relay-yard__commit {
+    margin: -8px 12px 0;
+    padding: 6px 8px;
+  }
+  .mission-setup-screen--launchpad .mission-relay-yard__commit p {
+    display: -webkit-box;
+    overflow: hidden;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    font-size: 9px;
+    line-height: 1.15;
+  }
+  .mission-setup-screen--launchpad .mission-relay-yard__commit button {
+    margin-top: 6px;
+    padding: 7px;
+    font-size: 9px;
+  }
+}

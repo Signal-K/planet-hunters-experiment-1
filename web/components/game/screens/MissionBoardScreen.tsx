@@ -7,7 +7,6 @@ import type { DailyClientPool } from '@/lib/data'
 import type { Catalog } from '@/lib/catalog'
 import { TUTORIAL_COMPACT_CONTENT_TOP, TUTORIAL_MANUAL_CONTENT_TOP } from '@/lib/tutorial-layout'
 import { UI_ZONES } from '@/lib/ui-zones'
-import StepFooter from '@/components/game/StepFooter'
 import MissionBoardCompleteState from '@/components/game/MissionBoardCompleteState'
 import { formatCurrency } from '@/lib/format'
 import { crewRequirementStatus } from '@/lib/systems/AcademySystem'
@@ -152,13 +151,12 @@ export default function MissionBoardScreen({ onBack, onPick, missionsDone, freeO
     : 82
 
   return (
-    <div className="mission-setup-screen mission-setup-screen--scene mission-setup-screen--mission" style={{ width: '100%', height: '100%', position: 'relative' }}>
-      <div className="mission-setup-scene-background" aria-hidden="true"><MissionSceneBackdrop /></div>
+    <div className="game-screen theme-deep ln-scene-launchpad mission-setup-screen mission-setup-screen--launchpad" style={{ width: '100%', height: '100%', position: 'relative' }}>
+      <div className="mission-setup-scene-background" aria-hidden="true"><MissionSceneBackdrop composition="earth-base-pad" /></div>
       <TopBar
-        eyebrow={freeOperations ? `${sceneScope.label.toUpperCase()} · FREE OPS` : `${sceneScope.label.toUpperCase()} · L${missionsDone + 1}`}
+        eyebrow={`LAUNCHPAD · ${freeOperations ? `${sceneScope.label.toUpperCase()} · FREE OPS` : `${sceneScope.label.toUpperCase()} · L${missionsDone + 1}`}`}
         title="Mission Dispatch"
         onBack={onBack}
-        scene
         levelBadge={`LV. ${missionsDone + 1}`}
         francs={francs}
       />
@@ -214,10 +212,6 @@ export default function MissionBoardScreen({ onBack, onPick, missionsDone, freeO
           ) : <div className="mission-relay-yard__empty">No active client signal from this location.</div>}
         </div>
       </div>
-      <StepFooter
-        step="Mission"
-        description={available.length === 0 ? 'No client requests are available from this location.' : freeOperations ? 'Client work only. Your own operations remain in Launchpad.' : `Lock a client contract to open Target, Rocket, and Launch for L${missionsDone + 1}.`}
-      />
     </div>
   )
 }
