@@ -106,8 +106,11 @@ export function buildRuntimeCatalog({
   // catalog responses are allowed to lag the authored frontend catalog; do
   // not let that transient gap render GO MINING disabled in Your Program.
   const fallbackSelfDirectedMining = MISSIONS.find(mission => mission.id === SELF_DIRECTED_MINING_MISSION_ID)
-  const relationshipMissions = catalog.missions.some(mission => mission.id === SELF_DIRECTED_MINING_MISSION_ID)
-    || !fallbackSelfDirectedMining
+    ?? MISSIONS.find(mission => mission.tag === 'FREE OPS' && !mission.client && !mission.payload && !mission.construction)
+  const hasSelfDirectedMining = catalog.missions.some(mission =>
+    mission.tag === 'FREE OPS' && !mission.client && !mission.payload && !mission.construction,
+  )
+  const relationshipMissions = hasSelfDirectedMining || !fallbackSelfDirectedMining
     ? catalog.missions
     : [...catalog.missions, fallbackSelfDirectedMining]
   const existingMissionIds = new Set(relationshipMissions.map(mission => mission.id))

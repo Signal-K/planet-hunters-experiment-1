@@ -193,10 +193,12 @@ describe('buildRuntimeCatalog', () => {
     })
   })
 
-  it('keeps the self-directed launchpad run when the remote catalog omits it', () => {
+  it('keeps a self-directed launchpad run when the remote catalog omits owned mining rows', () => {
     const remoteCatalog = {
       ...STATIC_CATALOG,
-      missions: STATIC_CATALOG.missions.filter(mission => mission.id !== 'freeops-self-directed-mining'),
+      missions: STATIC_CATALOG.missions.filter(mission =>
+        !(mission.tag === 'FREE OPS' && !mission.client && !mission.payload && !mission.construction),
+      ),
     }
     const catalog = buildRuntimeCatalog({
       catalog: remoteCatalog,
@@ -205,7 +207,9 @@ describe('buildRuntimeCatalog', () => {
       player: { ...DEFAULT_STATE.player, freeOperations: true },
     })
 
-    expect(catalog.missions.some(mission => mission.id === 'freeops-self-directed-mining')).toBe(true)
+    expect(catalog.missions.some(mission =>
+      mission.tag === 'FREE OPS' && !mission.client && !mission.payload && !mission.construction,
+    )).toBe(true)
   })
 
   it('does not add diplomacy premiums or affinity-gated joint missions', () => {

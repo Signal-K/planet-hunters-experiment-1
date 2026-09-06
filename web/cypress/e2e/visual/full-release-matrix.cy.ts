@@ -110,14 +110,22 @@ function goToMissions() {
 
 function completeMiningDeterministically(viewport?: string, captureName?: string, expectDebrief = true) {
   cy.contains('MISSION TRANSIT', { timeout: 20000 }).should('be.visible')
-  cy.get('[data-testid="mining-canvas"]', { timeout: 20000 }).should('be.visible')
-  if (viewport && captureName) screenshot(viewport, captureName)
-  // The real laser interaction has dedicated coverage. This dev-only shortcut
-  // keeps the release journey deterministic so it can cover every viewport and
-  // still prove the mission/debrief transitions.
-  cy.get('[data-testid="dev-skip-mining-btn"]')
-    .should('be.visible')
-    .click({ force: true })
+  cy.get('body', { timeout: 20000 }).then($body => {
+    if ($body.find('[data-testid="mining-canvas"]').length > 0) {
+      cy.get('[data-testid="mining-canvas"]', { timeout: 20000 }).should('be.visible')
+      if (viewport && captureName) screenshot(viewport, captureName)
+      // The real laser interaction has dedicated coverage. This dev-only shortcut
+      // keeps the release journey deterministic so it can cover every viewport and
+      // still prove the mission/debrief transitions.
+      cy.get('[data-testid="dev-skip-mining-btn"]')
+        .should('be.visible')
+        .click({ force: true })
+    } else {
+      // Lander-equipped missions enter the authored descent scene directly;
+      // their surface work is completed below through the rover shortcut.
+      cy.get('[data-testid="landing-screen"]', { timeout: 15000 }).should('be.visible')
+    }
+  })
   // Lander-equipped missions now show the authored surface handoff before
   // rover work. Keep the release journey aligned with that real route while
   // retaining the old direct-transit path for missions without a lander.
