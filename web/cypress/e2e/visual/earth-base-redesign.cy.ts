@@ -178,6 +178,11 @@ describe('Earth Base — redesigned scene', () => {
     cy.contains('Storage & habitat deck').should('be.visible')
     cy.contains('Mineral Vault').should('be.visible')
     cy.contains('Parts Stores').should('be.visible')
+    // The portrait room grid is its own scroll container; the fourth card is
+    // below the initial cutaway viewport even though the room is mounted.
+    cy.get('[data-testid="subsurface-room-habitat-training"]')
+      .scrollIntoView()
+      .should('be.visible')
     cy.contains('Habitat Training').should('be.visible')
     cy.contains('Commodity Exchange').should('not.exist')
     cy.screenshot('earth-base-04-portrait-subsurface', { capture: 'viewport' })

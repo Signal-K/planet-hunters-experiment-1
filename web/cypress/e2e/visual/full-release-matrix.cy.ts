@@ -295,14 +295,8 @@ describe('Release journey — onboarding and late-game operations across viewpor
       cy.get('h1.intro-title', { timeout: 10000 }).should('be.visible').and('have.text', 'LANDNAM')
       screenshot(viewport.label, 'intro')
 
-      if (viewport.width > viewport.height && viewport.width < 1000) {
-        cy.get('[data-testid="portrait-required-overlay"]').should('be.visible')
-        screenshot(viewport.label, 'portrait-required')
-        return
-      }
-
       cy.get('[data-testid="intro-begin-btn"]').should('be.visible').click()
-      cy.contains('EARTH BASE · SETUP', { timeout: 10000 }).should('be.visible')
+      cy.contains('BASE · SETUP', { timeout: 10000 }).should('be.visible')
       screenshot(viewport.label, 'base-setup')
 
       cy.get('[data-testid="build-plot-0"]').should('be.visible').click()

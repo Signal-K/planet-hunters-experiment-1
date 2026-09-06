@@ -70,6 +70,10 @@ function visitWithState(path: string, state: Partial<GameState>) {
   cy.visit(path, {
     onBeforeLoad(win) {
       const serialized = JSON.stringify(full)
+      // Visual QA deliberately fails the auth exchange so this state-machine
+      // fixture remains local. Seed both storage namespaces because the app
+      // starts from the guest slot before it knows whether auth is available.
+      win.localStorage.setItem(STORAGE_KEY, serialized)
       // The offline auth stub resolves to e2e-user. Seed that account's slot
       // explicitly; the production app must ignore the legacy unscoped slot
       // when an authenticated identity arrives (KES-324).

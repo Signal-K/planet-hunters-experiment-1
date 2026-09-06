@@ -272,7 +272,7 @@ describe('Visual QA — discovery -> economy pipeline', () => {
     // target is a mining destination (real mineral deposit, not an
     // instrument/build payload), so the stable proof here is the real
     // Launchpad -> "GO MINING" -> sell -> target-picker route.
-    cy.get('[data-testid="launchpad-status-card"]', { timeout: 10000 }).click({ force: true })
+    cy.get('[data-testid="launchpad-new-mission-btn"]', { timeout: 10000 }).click()
     cy.get('[data-testid="launchpad-new-mission-mining-btn"]', { timeout: 10000 })
       .should('not.be.disabled')
       .click()

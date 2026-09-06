@@ -159,7 +159,7 @@ describe('Visual QA — game screens and mining canvas', () => {
 
     // Begin → hub setup
     cy.get('[data-testid="intro-begin-btn"]').click()
-    cy.contains('EARTH BASE · SETUP', { timeout: 10000 }).should('be.visible')
+    cy.contains('BASE · SETUP', { timeout: 10000 }).should('be.visible')
     cy.screenshot('02-hub-setup')
 
     // Place launchpad
@@ -168,7 +168,7 @@ describe('Visual QA — game screens and mining canvas', () => {
     cy.contains('button', 'Confirm · Build Here').click()
 
     // Hub with launchpad
-    cy.get('h1', { timeout: 10000 }).contains('Earth Base').should('be.visible')
+    cy.get('h1', { timeout: 10000 }).invoke('text').should('match', /^(Base|Subsurface)$/)
     cy.get('[data-testid="building-launchpad"]').should('be.visible')
     cy.screenshot('04-hub-launchpad-placed')
 

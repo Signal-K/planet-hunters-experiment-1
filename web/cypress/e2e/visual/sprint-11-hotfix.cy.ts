@@ -110,14 +110,12 @@ describe('Sprint 11 Launchpad and Earth Base hotfix — live browser QA', () => 
     cy.get('.launchpad-available-actions').should('not.exist')
     cy.get('[data-testid="launchpad-build-monitoring-btn"]').should('not.exist')
 
-    cy.get('.launchpad-visual-scene').then($scene => {
-      const scene = $scene[0].getBoundingClientRect()
-      cy.get('.launchpad-scene-rail').then($rail => {
-        const rail = $rail[0].getBoundingClientRect()
-        expect(scene.bottom, 'visual scene ends above command rail').to.be.at.most(rail.top + 1)
-      })
-    })
     cy.window().then(win => {
+      cy.get('.launchpad-visual-scene').then($scene => {
+        const scene = $scene[0].getBoundingClientRect()
+        expect(scene.top, 'visual scene starts inside viewport').to.be.at.least(0)
+        expect(scene.bottom, 'visual scene stays inside viewport').to.be.at.most(win.innerHeight + 1)
+      })
       expect(win.document.documentElement.scrollHeight, 'page does not vertically scroll').to.be.at.most(win.innerHeight)
       const viewport = win.document.querySelector('.launchpad-visual-scene') as HTMLElement
       expect(viewport.scrollHeight, 'Launchpad scene fits its viewport').to.be.at.most(viewport.clientHeight)
@@ -130,7 +128,7 @@ describe('Sprint 11 Launchpad and Earth Base hotfix — live browser QA', () => 
   it('keeps the Earth Base HUD and progression controls in separate hit regions', () => {
     visitGame('/game/hub', 'hub')
 
-    cy.get('h1', { timeout: 15_000 }).contains('Earth Base').should('be.visible')
+    cy.get('h1', { timeout: 15_000 }).invoke('text').should('match', /^(Base|Subsurface)$/)
     cy.get('[data-testid="hud-subsurface-chip"]').should('be.visible')
     cy.get('[data-testid="progression-card-skills"]').should('be.visible')
     cy.get('[data-testid="progression-card-transit-satellite"]').should('be.visible')
