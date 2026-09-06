@@ -118,10 +118,25 @@ function completeMiningDeterministically(viewport?: string, captureName?: string
   cy.get('[data-testid="dev-skip-mining-btn"]')
     .should('be.visible')
     .click({ force: true })
+  // Lander-equipped missions now show the authored surface handoff before
+  // rover work. Keep the release journey aligned with that real route while
+  // retaining the old direct-transit path for missions without a lander.
+  cy.get('body', { timeout: 15000 }).then($body => {
+    if ($body.find('[data-testid="landing-screen"]').length > 0) {
+      cy.get('[data-testid="landing-continue"]', { timeout: 15000 }).should('not.be.disabled').click({ force: true })
+      cy.get('[data-testid="rover-mining-screen"]', { timeout: 15000 }).should('be.visible')
+      cy.get('[data-testid="deploy-surface-ops-confirm"]', { timeout: 15000 }).then($deploy => {
+        if ($deploy.is(':visible')) cy.wrap($deploy).click({ force: true })
+      })
+      cy.get('[data-testid="dev-skip-rover-mining-btn"]', { timeout: 15000 }).click({ force: true })
+      cy.get('[data-testid="landing-screen"]', { timeout: 15000 }).should('be.visible')
+      cy.get('[data-testid="landing-continue"]', { timeout: 15000 }).should('not.be.disabled').click({ force: true })
+    }
+  })
   // The shortcut fills cargo and begins the return leg. Skip the simulated
   // travel clock, then assert the stable destination rather than a heading
   // that can be present during a leaving transition.
-  cy.get('.transit-screen', { timeout: 10000 }).should('be.visible')
+  cy.get('.transit-screen', { timeout: 15000 }).should('be.visible')
   if (!expectDebrief) return
   cy.get('[data-testid="transit-skip-btn"]', { timeout: 10000 })
     .should('be.visible')

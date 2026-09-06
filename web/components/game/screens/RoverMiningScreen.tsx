@@ -116,6 +116,14 @@ export default function RoverMiningScreen({ mission, target, onComplete, onBack,
     setRouteSteps(steps)
   }, [])
 
+  // Keep the full release journey deterministic in the development runner.
+  // The real TakeOn interaction remains covered by the dedicated visual
+  // review; this shortcut only supplies the contract-shaped cargo needed to
+  // exercise the delivery and debrief legs in a bounded CI run.
+  const handleDevSkip = useCallback(() => {
+    onComplete(requirements)
+  }, [onComplete, requirements])
+
   const status = !takeonReady
     ? 'CONNECTING TO SURFACE SIM'
     : cargoReady
@@ -245,6 +253,29 @@ export default function RoverMiningScreen({ mission, target, onComplete, onBack,
           </Panel>
         </aside>
       </main>
+
+      {process.env.NODE_ENV === 'development' && (
+        <button
+          data-testid="dev-skip-rover-mining-btn"
+          onClick={handleDevSkip}
+          style={{
+            position: 'absolute', top: 8, right: 8, zIndex: 999,
+            padding: '3px 8px',
+            background: 'var(--ln-bp-paper)',
+            border: '1px solid var(--ln-bp-green)',
+            borderRadius: 6,
+            color: 'var(--ln-bp-green)',
+            fontFamily: 'var(--ln-font-mono)',
+            fontSize: 10,
+            fontWeight: 700,
+            letterSpacing: '0.12em',
+            cursor: 'pointer',
+            opacity: 0.8,
+          }}
+        >
+          SKIP SURFACE OPS
+        </button>
+      )}
     </div>
   )
 }

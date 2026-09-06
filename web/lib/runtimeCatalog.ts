@@ -1,4 +1,5 @@
 import type { Catalog } from './catalog'
+import { MISSIONS, SELF_DIRECTED_MINING_MISSION_ID } from './data'
 import type { Mission, Target } from './data'
 import type { Player } from './game-types'
 import { deepSpaceTelescopeUnlocked } from './data/structures'
@@ -100,7 +101,15 @@ export function buildRuntimeCatalog({
   // A client contract pays its stated fee. The prior academy/diplomacy
   // multiplier was a second hidden client-progression system and conflicted
   // with the daily client-level economy.
-  const relationshipMissions = catalog.missions
+  // The self-directed launchpad route must remain available even while a
+  // remote catalog is warming or returns only its client rows. PocketBase
+  // catalog responses are allowed to lag the authored frontend catalog; do
+  // not let that transient gap render GO MINING disabled in Your Program.
+  const fallbackSelfDirectedMining = MISSIONS.find(mission => mission.id === SELF_DIRECTED_MINING_MISSION_ID)
+  const relationshipMissions = catalog.missions.some(mission => mission.id === SELF_DIRECTED_MINING_MISSION_ID)
+    || !fallbackSelfDirectedMining
+    ? catalog.missions
+    : [...catalog.missions, fallbackSelfDirectedMining]
   const existingMissionIds = new Set(relationshipMissions.map(mission => mission.id))
   const transitTelescopeMission: Mission[] = shouldIncludeTransitTelescopeMission && !existingMissionIds.has(TRANSIT_TELESCOPE_MISSION_ID)
     ? [{
