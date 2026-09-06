@@ -112,8 +112,8 @@ describe('C1–C4 screen contracts across viewport classes', () => {
           .scrollIntoView().should('be.visible')
 
         visit('/game/missions', stateWith('missions'))
-        cy.contains('Mission Board', { timeout: 10000 }).should('be.visible')
-        cy.get('button[data-testid^="mission-card-"]', { timeout: 10000 })
+        cy.contains('Mission Dispatch', { timeout: 10000 }).should('be.visible')
+        cy.get('button[data-testid^="mission-detail-cta-"]', { timeout: 10000 })
           .first()
           .scrollIntoView().should('be.visible')
 
@@ -187,18 +187,14 @@ describe('C1–C4 screen contracts across viewport classes', () => {
           player: basePlayer({ missionsDone: 0, freeOperations: false }),
         }))
         cy.contains('Confirm Rocket', { timeout: 10000 }).should('be.visible')
-        // AssemblyScreen never passes a `step` prop to MissionSetupShell (it's
-        // the last step in the flow — "Confirm Launch" is the CTA, not a "next"
-        // step), so `[data-testid="step-footer"]` never renders here; the real
-        // fixed bottom element on this screen is the sticky actions bar.
-        cy.get('[data-ui-zone="bottom-actions"]').then($footer => {
-          const footerTop = $footer[0].getBoundingClientRect().top
+        // Assembly owns the launch CTA inside the scene rather than rendering
+        // a separate bottom action rail. Assert the current contract directly:
+        // the frame and its real launch control both fit in the viewport.
+        cy.get('[data-testid="launch-btn"]').should('be.visible')
+        cy.window().then(win => {
           cy.get('.assembly-frame, .assembly-card').each($container => {
-            expect($container[0].getBoundingClientRect().bottom, 'setup border ends above footer')
-              // Browser layout can produce fractional pixel positions in
-              // landscape; allow a 2px rasterisation tolerance while still
-              // asserting that the setup card cannot overlap the fixed bar.
-              .to.be.at.most(footerTop + 2)
+            expect($container[0].getBoundingClientRect().bottom, 'setup frame stays in viewport')
+              .to.be.at.most(win.innerHeight + 2)
           })
         })
       })
@@ -226,8 +222,8 @@ describe('C1–C3 persisted mission edge states', () => {
         miningCargoInProgress: { platinum: 2 },
       }),
     }))
-    cy.contains('Mission Board', { timeout: 10000 }).should('be.visible')
-    cy.get('button[data-testid^="mission-card-"]')
+    cy.contains('Mission Dispatch', { timeout: 10000 }).should('be.visible')
+    cy.get('button[data-testid^="mission-detail-cta-"]')
       .first()
       .scrollIntoView().click({ force: true })
     cy.window().then(win => {
@@ -261,7 +257,7 @@ describe('C1–C3 persisted mission edge states', () => {
       lastCargo: {},
       player: basePlayer({ missionsDone: 0, freeOperations: false }),
     }))
-    cy.contains('Returned', { timeout: 10000 }).should('be.visible')
+    cy.contains('RETURNED FROM', { timeout: 10000 }).should('be.visible')
     // An incomplete order pays nothing — DebriefScreen never renders a Ledger
     // panel for it, just this explicit incomplete-order note (shown in both
     // the pre- and post-resolve states, so it's already visible here).
