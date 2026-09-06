@@ -207,9 +207,7 @@ describe('buildRuntimeCatalog', () => {
       player: { ...DEFAULT_STATE.player, freeOperations: true },
     })
 
-    expect(catalog.missions.some(mission =>
-      mission.tag === 'FREE OPS' && !mission.client && !mission.payload && !mission.construction,
-    )).toBe(true)
+    expect(catalog.missions.some(mission => mission.id === 'freeops-self-directed-mining')).toBe(true)
   })
 
   it('does not add diplomacy premiums or affinity-gated joint missions', () => {

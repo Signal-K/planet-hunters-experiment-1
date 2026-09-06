@@ -110,7 +110,8 @@ function goToMissions() {
 
 function completeMiningDeterministically(viewport?: string, captureName?: string, expectDebrief = true) {
   cy.contains('MISSION TRANSIT', { timeout: 20000 }).should('be.visible')
-  cy.get('body', { timeout: 20000 }).then($body => {
+  cy.get('[data-testid="mining-canvas"], [data-testid="landing-screen"]', { timeout: 20000 }).should('exist')
+  cy.get('body').then($body => {
     if ($body.find('[data-testid="mining-canvas"]').length > 0) {
       cy.get('[data-testid="mining-canvas"]', { timeout: 20000 }).should('be.visible')
       if (viewport && captureName) screenshot(viewport, captureName)

@@ -105,8 +105,20 @@ export function buildRuntimeCatalog({
   // remote catalog is warming or returns only its client rows. PocketBase
   // catalog responses are allowed to lag the authored frontend catalog; do
   // not let that transient gap render GO MINING disabled in Your Program.
-  const fallbackSelfDirectedMining = MISSIONS.find(mission => mission.id === SELF_DIRECTED_MINING_MISSION_ID)
+  const fallbackSelfDirectedMining: Mission = MISSIONS.find(mission => mission.id === SELF_DIRECTED_MINING_MISSION_ID)
     ?? MISSIONS.find(mission => mission.tag === 'FREE OPS' && !mission.client && !mission.payload && !mission.construction)
+    ?? {
+      id: SELF_DIRECTED_MINING_MISSION_ID,
+      title: 'Self-Directed Mining Run',
+      brief: 'No client, no daily limit. Pick any reachable target, mine what looks valuable, and sell the haul yourself at market price.',
+      tag: 'FREE OPS',
+      difficulty: 'L2',
+      locked: false,
+      sequence: missionsDone + 1,
+      unlockAt: 'Complete M3',
+      requires: { minerals: { nickel: 2, cobalt: 2 }, cargo_min: 4, drill_tier: 2, max_orbit: 8 },
+      payout: { francs: 0, affinity: 0 },
+    }
   const hasSelfDirectedMining = catalog.missions.some(mission =>
     mission.tag === 'FREE OPS' && !mission.client && !mission.payload && !mission.construction,
   )
