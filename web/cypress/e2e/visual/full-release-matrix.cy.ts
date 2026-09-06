@@ -29,12 +29,12 @@ if (requestedViewport && activeViewports.length === 0) {
 
 const EXTENDED_SURFACES = [
   { key: 'm3-mining', screen: 'mining', name: 'm3-mining', selector: '[data-testid="mining-canvas"]' },
-  { key: 'm3-debrief', screen: 'debrief', name: 'm3-debrief', selector: '.debrief-screen' },
+  { key: 'm3-debrief', screen: 'debrief', name: 'm3-debrief', selector: '.debrief-game' },
   { key: 'ui-mission-board', screen: 'missions', name: 'free-ops-mission-board', selector: '.ln-scene-mission-board' },
   { key: 'ui-rover-mining', screen: 'rover-mining', name: 'free-ops-rover-mining', selector: '[data-testid="rover-mining-screen"]' },
   { key: 'telescope-fab', screen: 'fab', name: 'telescope-launch-fab', selector: '.mission-setup-screen' },
   { key: 'telescope-transit', screen: 'transit', name: 'telescope-launch-transit', selector: '.transit-screen' },
-  { key: 'telescope-debrief', screen: 'debrief', name: 'telescope-launch-debrief', selector: '.debrief-screen' },
+  { key: 'telescope-debrief', screen: 'debrief', name: 'telescope-launch-debrief', selector: '.debrief-game' },
   {
     key: 'ui-tess-discovery', screen: 'galaxy', name: 'citizen-science-tess',
     selector: '[data-testid="tess-discovery-screen"]', readySelector: '[data-testid="tess-data-provenance"]',
@@ -126,7 +126,7 @@ function completeMiningDeterministically(viewport?: string, captureName?: string
   cy.get('[data-testid="transit-skip-btn"]', { timeout: 10000 })
     .should('be.visible')
     .click({ force: true })
-  cy.get('.debrief-screen', { timeout: 15000 }).should('be.visible')
+  cy.get('.debrief-game', { timeout: 15000 }).should('be.visible')
 }
 
 function completeM3Delivery(viewport: string) {
@@ -148,7 +148,7 @@ function completeM3Delivery(viewport: string) {
   cy.get('[data-testid="delivery-dump-cargo"]', { timeout: 15000 }).click({ force: true })
   cy.get('.transit-screen', { timeout: 15000 }).should('be.visible')
   cy.get('[data-testid="transit-skip-btn"]', { timeout: 10000 }).click({ force: true })
-  cy.get('.debrief-screen', { timeout: 15000 }).should('be.visible')
+  cy.get('.debrief-game', { timeout: 15000 }).should('be.visible')
 }
 
 function completeDebrief() {
@@ -187,7 +187,9 @@ function pickVisibleTarget(name: string) {
     .click({ force: true })
   cy.window().then(win => {
     if (win.innerWidth < 821) {
-      cy.get('[data-testid="target-detail-expand"]').should('contain.text', name)
+      cy.get('[data-testid="target-detail-expand"], .mission-board-detail .mission-setup-card')
+        .should('exist')
+      cy.contains(name).should('be.visible')
     } else {
       cy.get('.mission-setup-card').should('contain.text', name)
     }

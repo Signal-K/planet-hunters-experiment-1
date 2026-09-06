@@ -200,7 +200,7 @@ describe('Visual QA — game screens and mining canvas', () => {
     cy.get('[data-testid="launch-btn"]').click()
 
     // Mining transit — wait for canvas to initialise
-    cy.contains('MISSION TRANSIT', { timeout: 12000 }).should('be.visible')
+    cy.get('.transit-screen', { timeout: 12000 }).should('be.visible')
     cy.get('[data-testid="mining-canvas"]', { timeout: 20000 }).should('be.visible')
 
     // Let the scene render for 1.5s so PixiJS has time to draw
