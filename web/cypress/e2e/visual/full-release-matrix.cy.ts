@@ -30,7 +30,7 @@ if (requestedViewport && activeViewports.length === 0) {
 const EXTENDED_SURFACES = [
   { key: 'm3-mining', screen: 'mining', name: 'm3-mining', selector: '[data-testid="mining-canvas"]' },
   { key: 'm3-debrief', screen: 'debrief', name: 'm3-debrief', selector: '.debrief-game' },
-  { key: 'ui-mission-board', screen: 'missions', name: 'free-ops-mission-board', selector: '.ln-scene-mission-board' },
+  { key: 'ui-mission-board', screen: 'missions', name: 'free-ops-mission-board', selector: '.mission-setup-screen' },
   { key: 'ui-rover-mining', screen: 'rover-mining', name: 'free-ops-rover-mining', selector: '[data-testid="rover-mining-screen"]' },
   { key: 'telescope-fab', screen: 'fab', name: 'telescope-launch-fab', selector: '.mission-setup-screen' },
   { key: 'telescope-transit', screen: 'transit', name: 'telescope-launch-transit', selector: '.transit-screen' },

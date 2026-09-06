@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react'
 import TopBar from '@/components/ui/TopBar'
-import { partitionByOwner } from '@/lib/data'
+import { partitionByOwner, SELF_DIRECTED_MINING_MISSION_ID } from '@/lib/data'
 import type { Mission } from '@/lib/data'
 import { ROCKET_MODELS } from '@/lib/data/rockets'
 import { SATELLITE_MODELS } from '@/lib/data/satellites'
@@ -123,6 +123,18 @@ export default function LaunchpadScreen({
   // Academy/crew progression remains deferred until it has a replacement for
   // the retired affinity ladder, so it cannot become the next required launch.
   const ownMiningOperation = operations.find(mission => mission.tag === 'FREE OPS' && !mission.client && !mission.payload && !mission.construction)
+    ?? (hasFreeOpsAccess ? {
+      id: SELF_DIRECTED_MINING_MISSION_ID,
+      title: 'Self-Directed Mining Run',
+      brief: 'No client, no daily limit. Pick any reachable target, mine what looks valuable, and sell the haul yourself at market price.',
+      tag: 'FREE OPS',
+      difficulty: 'L2' as const,
+      locked: false,
+      sequence: sequence,
+      unlockAt: 'Complete M3',
+      requires: { minerals: { nickel: 2, cobalt: 2 }, cargo_min: 4, drill_tier: 2, max_orbit: 8 },
+      payout: { francs: 0, affinity: 0 },
+    } satisfies Mission : undefined)
   // Launchable instruments are the first-class infrastructure path. Only
   // fall back to a construction mission when no telescope/remote-instrument
   // operation is currently offered, so the CTA never makes a newly available
