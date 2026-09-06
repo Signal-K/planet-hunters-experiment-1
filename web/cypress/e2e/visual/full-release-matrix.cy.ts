@@ -155,7 +155,7 @@ function completeDebrief() {
   // Every call site here is an onboarding mission (M1-M3, missionsDone < 3),
   // which auto-resolves the debrief reveal on mount — see DebriefScreen.tsx.
   cy.get('[data-testid="resolve-cargo-btn"]').should('not.exist')
-  cy.contains('Payout').should('be.visible')
+  cy.contains('Ledger').should('be.visible')
   clickDom('[data-testid="collect-reward-btn"]')
   cy.contains('h1', 'Earth Base', { timeout: 10000 }).should('be.visible')
 }

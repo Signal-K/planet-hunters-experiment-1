@@ -646,6 +646,15 @@ button { cursor: pointer; }
 @media (prefers-reduced-motion: reduce) {
   .earth-base-campus-transition { animation: none; }
 }
+/* The authored scene is wider than a narrow phone viewport. Scaling it from
+   the camera centre during the 520ms approach pushes the first launchpad plot
+   off the left edge before the animation settles, so the actionable building
+   is briefly clipped in the very viewport where it is most likely to be
+   tapped. Keep the composition stable on portrait phones; desktop and tablet
+   retain the camera move. */
+@media (max-width: 640px) {
+  .earth-base-campus-transition { animation: none; }
+}
 .backend-status {
   position: absolute;
   right: var(--ln-s-3);

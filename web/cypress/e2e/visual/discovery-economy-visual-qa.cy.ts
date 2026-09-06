@@ -72,6 +72,11 @@ function visitWithState(path: string, screen: GameState['screen'], playerOverrid
       // backend state from a preceding discovery test race the seeded local
       // state here and remove the discovered target before Launchpad builds
       // its runtime catalog.
+      // A previously visited visual spec can leave a PocketBase token in the
+      // browser even though this test is intentionally offline. Clear it
+      // before the provider hydrates, otherwise auth restoration can replace
+      // this fixture with the account's pending-launch state.
+      win.localStorage.removeItem('pocketbase_auth')
       win.localStorage.setItem('landnam-account-credentials', JSON.stringify({
         email: `e2e-${Date.now()}-${Math.random().toString(36).slice(2)}@example.com`,
         password: 'e2e-guest-test',

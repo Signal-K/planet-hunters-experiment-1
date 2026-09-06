@@ -198,6 +198,10 @@ describe('Visual QA — game screens and mining canvas', () => {
     cy.get('[data-testid="survey-sheet"]').should('not.exist')
     cy.screenshot('08-launch-confirmation')
     cy.get('[data-testid="launch-btn"]').click()
+    // Launch is now a real scene transition. The development build exposes a
+    // deterministic skip so visual QA does not wait on Pixi timing or the
+    // 18-second watchdog before it can inspect Transit.
+    cy.get('[data-testid="launch-sequence-skip-btn"]', { timeout: 10000 }).click()
 
     // Mining transit — wait for canvas to initialise
     cy.get('.transit-screen', { timeout: 12000 }).should('be.visible')
