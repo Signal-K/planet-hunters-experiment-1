@@ -275,11 +275,9 @@ describe('Visual QA — discovery -> economy pipeline', () => {
     // MISSION control is intentionally secondary and can be omitted when a
     // pending launch occupies the rail; the fixture only needs the same
     // production action from the physical launchpad control.
-    // The physical pad is the scene entry point. Its attached control extends
-    // outside the tower art, so use Cypress's resolved DOM target directly at
-    // this headed-browser viewport instead of making the proof depend on the
-    // art hitbox's transformed bounds.
-    cy.get('[data-testid="launchpad-status-card"]', { timeout: 10000 }).click({ force: true })
+    // The physical pad is the scene entry point; its attached mission-control
+    // label is part of the same button hit area.
+    cy.get('[data-testid="launchpad-status-card"]', { timeout: 10000 }).click()
     cy.get('[data-testid="launchpad-new-mission-mining-btn"]', { timeout: 10000 })
       .should('not.be.disabled')
       .click()

@@ -118,6 +118,9 @@ button.launchpad-scene-object { cursor: pointer; }
 }
 .launchpad-tower {
   left: 7%; bottom: var(--hub-ground); width: 30%; height: auto;
+  /* The attached mission-control label is positioned below the tower art.
+     Keep that visible control inside the button's hit area as well. */
+  padding-bottom: 40px;
 }
 .launchpad-tower-art {
   position: relative; left: auto; bottom: auto;
