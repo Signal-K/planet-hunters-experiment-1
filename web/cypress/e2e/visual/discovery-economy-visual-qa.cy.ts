@@ -264,12 +264,16 @@ describe('Visual QA — discovery -> economy pipeline', () => {
     cy.contains('Welcome Back', { timeout: 15000 }).should('not.exist')
 
     cy.contains('Your Program', { timeout: 15000 }).should('be.visible')
-    // Launchpad intentionally presents the owned program as one aggregate
-    // action. The individual mission cards live on the Mission Board, so the
-    // stable proof here is the real Launchpad -> target-picker route.
-    cy.get('[data-testid="launchpad-program-operation-btn"]', { timeout: 10000 })
-      .should('be.visible')
-      .click({ force: true })
+    // KES-329/330 replaced the single aggregate OPS button with the
+    // launchpad mission menu's explicit operation choices. The discovered
+    // target is a mining destination (real mineral deposit, not an
+    // instrument/build payload), so the stable proof here is the real
+    // Launchpad -> "GO MINING" -> sell -> target-picker route.
+    cy.get('[data-testid="launchpad-status-card"]', { timeout: 10000 }).click({ force: true })
+    cy.get('[data-testid="launchpad-new-mission-mining-btn"]', { timeout: 10000 })
+      .should('not.be.disabled')
+      .click()
+    cy.get('[data-testid="launchpad-mining-sell-btn"]', { timeout: 10000 }).click()
     cy.screenshot('discovery-04-own-program-survey-flight')
 
     // The aggregate action selects the first available own-program mission;

@@ -98,7 +98,10 @@ describe('C1–C4 screen contracts across viewport classes', () => {
 
       it('renders the Free Ops hub, client board, and own-program launchpad without losing primary actions', () => {
         visit('/game', stateWith('hub'))
-        cy.contains('h1', 'Earth Base', { timeout: 10000 }).should('be.visible')
+        // KES-329/330: HubScreen.tsx's h1 is now the short "Base" /
+        // "Subsurface" copy (state-dependent), with the fuller identity in
+        // the "BASE · OPS N" / "BASE · SUBSURFACE" eyebrow above it.
+        cy.contains('h1', /^(Base|Subsurface)$/, { timeout: 10000 }).should('be.visible')
         // Which specific progression card shows (skills, telescope, daily
         // downlink, ...) depends on player state; the contract this test
         // holds is that *some* primary progression action is present and
@@ -116,7 +119,12 @@ describe('C1–C4 screen contracts across viewport classes', () => {
 
         visit('/game/launchpad', stateWith('launchpad'))
         cy.contains('Your Program', { timeout: 10000 }).should('be.visible')
-        cy.get('[data-testid="launchpad-program-operation-btn"]', { timeout: 10000 })
+        // KES-329/330 replaced the single "launchpad-program-operation-btn"
+        // with the spatial mission-menu entry point on the launchpad tower.
+        // This test's contract is just "the launchpad screen loaded with its
+        // real primary action available" (same style as the KES-274 fix
+        // above), not a full click-through of the mission menu.
+        cy.get('[data-testid="launchpad-status-card"]', { timeout: 10000 })
           .scrollIntoView().should('be.visible')
       })
 

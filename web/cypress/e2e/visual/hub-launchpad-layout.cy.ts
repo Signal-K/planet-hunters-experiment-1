@@ -76,7 +76,9 @@ describe('Hub and Launchpad visual layout', () => {
     it(`shows authored hub structures at ${viewport.name} size`, () => {
       cy.viewport(viewport.width, viewport.height)
       visit('/game', 'hub')
-      cy.contains('h1', 'Earth Base', { timeout: 15000 }).should('be.visible')
+      // KES-329/330: HubScreen.tsx's h1 is now the short "Base" / "Subsurface"
+      // copy, with the fuller identity in the "BASE · OPS N" eyebrow above it.
+      cy.contains('h1', /^(Base|Subsurface)$/, { timeout: 15000 }).should('be.visible')
       cy.get('[data-testid="building-launchpad-hit"]').should('be.visible')
       cy.get('[data-testid="building-refinery-hit"]').should('be.visible')
       cy.get('[data-testid="building-scan-station-hit"]').should('be.visible')
@@ -99,7 +101,9 @@ describe('Hub and Launchpad visual layout', () => {
       cy.get('[data-testid="launchpad-status-card"]').should('be.visible')
       cy.get('[data-testid="launchpad-rocket-fleet"]').scrollIntoView().should('be.visible')
       cy.get('[data-testid="launchpad-open-subsurface-btn"]').scrollIntoView().should('be.visible')
-      cy.get('[data-testid="launchpad-program-operation-btn"]').scrollIntoView().should('be.visible')
+      // KES-329/330 replaced the aggregate "launchpad-program-operation-btn"
+      // with the spatial mission-menu entry point on the launchpad tower.
+      cy.get('[data-testid="launchpad-status-card"]').scrollIntoView().should('be.visible')
       cy.get('[data-testid="launchpad-view-contracts-btn"]').scrollIntoView().should('be.visible')
       cy.screenshot(`launchpad-scene-${viewport.name}`)
     })
@@ -108,7 +112,7 @@ describe('Hub and Launchpad visual layout', () => {
   it('keeps Hub utility controls out of the dock at compact widths', () => {
     cy.viewport(608, 687)
     visit('/game', 'hub')
-    cy.contains('h1', 'Earth Base', { timeout: 15000 }).should('be.visible')
+    cy.contains('h1', /^(Base|Subsurface)$/, { timeout: 15000 }).should('be.visible')
     cy.get('.hub-bottom-dock').then($dock => {
       const dock = $dock[0].getBoundingClientRect()
       for (const selector of ['[data-testid="settings-button"]', '[data-testid="friends-button"]']) {

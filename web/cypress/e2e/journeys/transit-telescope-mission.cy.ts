@@ -76,13 +76,15 @@ describe('Telescope construction/launch mission (STS-138)', () => {
     cy.contains('Launch a transit telescope').should('be.visible')
     cy.get('[data-testid="progression-card-transit-satellite"]').click({ force: true })
     cy.contains('Your Program', { timeout: 10000 }).should('be.visible')
-    // The Launchpad's own-program scene shows a single aggregate OPS button
-    // rather than per-mission cards (see git history) — the mission title
-    // and program-reward FEED badge that used to render inline here now
-    // only surface one screen deeper, once the operation is picked.
-    cy.get('[data-testid="launchpad-program-operation-btn"]', { timeout: 10000 })
-      .should('be.visible')
-      .click({ force: true })
+    // KES-329/330 replaced the single aggregate OPS button with an explicit
+    // mission-menu -> operation-brief flow off the physical launchpad: the
+    // telescope is an owned instrument, so it lives behind the
+    // "LAUNCH SATELLITE / TOOL" choice, not a per-mission card.
+    cy.get('[data-testid="launchpad-status-card"]', { timeout: 10000 }).click({ force: true })
+    cy.get('[data-testid="launchpad-new-mission-satellite-btn"]', { timeout: 10000 })
+      .should('not.be.disabled')
+      .click()
+    cy.get('[data-testid="launchpad-prepare-instrument-btn"]', { timeout: 10000 }).click()
     // Lands on the target picker (step 2 of 4: Mission -> Target -> Rocket
     // -> Launch) — the telescope mission still requires an explicit target
     // pick even though Earth Orbit is the only compatible target.
@@ -99,13 +101,15 @@ describe('Telescope construction/launch mission (STS-138)', () => {
     visitWithState('/game/launchpad', 'launchpad', {
       transitSatelliteLaunchedAt: undefined,
     })
-    // The Launchpad no longer lists own-program missions as separate cards
-    // (see git history) — the single OPS button picks the next own
-    // operation directly, which resolves to the telescope launch mission
-    // in this state.
-    cy.get('[data-testid="launchpad-program-operation-btn"]', { timeout: 10000 })
+    // KES-329/330: reach the telescope through the launchpad mission menu's
+    // "LAUNCH SATELLITE / TOOL" operation brief, not a per-mission card.
+    cy.get('[data-testid="launchpad-status-card"]', { timeout: 10000 })
       .scrollIntoView()
       .click({ force: true })
+    cy.get('[data-testid="launchpad-new-mission-satellite-btn"]', { timeout: 10000 })
+      .should('not.be.disabled')
+      .click()
+    cy.get('[data-testid="launchpad-prepare-instrument-btn"]', { timeout: 10000 }).click()
     // Lands on the target picker (step 2 of 4: Mission -> Target -> Rocket
     // -> Launch) — the telescope mission still requires an explicit target
     // pick even though Earth Orbit is the only compatible target.
