@@ -77,6 +77,10 @@ function visitWithState(path: string, screen: GameState['screen'], playerOverrid
       // before the provider hydrates, otherwise auth restoration can replace
       // this fixture with the account's pending-launch state.
       win.localStorage.removeItem('pocketbase_auth')
+      win.localStorage.removeItem('pocketbase_auth_landnam')
+      Object.keys(win.localStorage)
+        .filter(key => key.startsWith(STORAGE_KEY))
+        .forEach(key => win.localStorage.removeItem(key))
       win.localStorage.setItem('landnam-account-credentials', JSON.stringify({
         email: `e2e-${Date.now()}-${Math.random().toString(36).slice(2)}@example.com`,
         password: 'e2e-guest-test',

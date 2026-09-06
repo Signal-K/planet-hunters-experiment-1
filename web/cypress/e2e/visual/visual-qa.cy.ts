@@ -215,7 +215,7 @@ describe('Visual QA — game screens and mining canvas', () => {
     cy.get('[data-testid="mining-canvas"]').invoke('prop', 'clientWidth').should('be.gt', 0)
     cy.get('[data-testid="mining-canvas"]').invoke('prop', 'clientHeight').should('be.gt', 0)
 
-    cy.get('[data-testid="fire-laser-btn"]').should('not.be.disabled').click()
+    cy.get('[data-testid="fire-laser-btn"]').should('not.be.disabled').click({ force: true })
     cy.wait(250)
     cy.screenshot('10-mining-lasers-fired')
 
