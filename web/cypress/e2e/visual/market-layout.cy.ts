@@ -19,7 +19,9 @@ describe('Commodity Exchange visual layout', () => {
       cy.viewport(viewport.width, viewport.height)
       cy.visit('/game/market', {
         onBeforeLoad(win) {
-          win.localStorage.setItem('landnam-game-state-v1', JSON.stringify(state))
+          const serialized = JSON.stringify(state)
+          win.localStorage.setItem('landnam-game-state-v1', serialized)
+          win.localStorage.setItem('landnam-game-state-v1:user:e2e-user', serialized)
           win.localStorage.setItem('landnam-surveys-shown', JSON.stringify(['lnm_first_launch']))
           win.localStorage.setItem('ln_tutorial_complete_ack', '1')
           // KES-176: without an established session, the tablet iteration

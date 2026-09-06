@@ -21,6 +21,7 @@ import type { GameState } from '@/game-context'
 import { tessCandidateToExoplanetTarget, toTessCandidate } from '../../../lib/data/tess-candidates'
 
 const STORAGE_KEY = 'landnam-game-state-v1'
+const AUTHENTICATED_STORAGE_KEY = `${STORAGE_KEY}:user:e2e-discovery-user`
 
 function basePlayer(overrides: Partial<GameState['player']> = {}): GameState['player'] {
   return {
@@ -98,7 +99,9 @@ function visitWithState(path: string, screen: GameState['screen'], playerOverrid
       // — mark it seen so it doesn't render its banner/spacer over the
       // chart during the drag-mark gesture below.
       win.localStorage.setItem('landnam_observatory_coach_seen_v1', '1')
-      win.localStorage.setItem(STORAGE_KEY, JSON.stringify(full))
+      const serialized = JSON.stringify(full)
+      win.localStorage.setItem(STORAGE_KEY, serialized)
+      win.localStorage.setItem(AUTHENTICATED_STORAGE_KEY, serialized)
     },
   })
 }
@@ -233,7 +236,7 @@ describe('Visual QA — discovery -> economy pipeline', () => {
     cy.screenshot('discovery-03-confirmed-star-map')
 
     cy.window().then(win => {
-      const saved = JSON.parse(win.localStorage.getItem(STORAGE_KEY) || '{}')
+      const saved = JSON.parse(win.localStorage.getItem(AUTHENTICATED_STORAGE_KEY) || win.localStorage.getItem(STORAGE_KEY) || '{}')
       const discovered = Object.values(saved.player.discoveredExoplanetTargets ?? {}) as Array<{ archetype?: string; minerals: string[] }>
       expect(discovered, 'exactly one confirmed discovery').to.have.length(1)
       const [target] = discovered

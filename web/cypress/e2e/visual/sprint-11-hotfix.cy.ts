@@ -1,6 +1,7 @@
 import type { GameState } from '@/game-context'
 
 const STORAGE_KEY = 'landnam-game-state-v1'
+const AUTHENTICATED_STORAGE_KEY = `${STORAGE_KEY}:user:e2e-user`
 
 function stateFor(screen: GameState['screen']): GameState {
   return {
@@ -54,7 +55,9 @@ function visitGame(path: string, screen: GameState['screen']) {
   cy.visit(path, {
     onBeforeLoad(win) {
       win.localStorage.clear()
-      win.localStorage.setItem(STORAGE_KEY, JSON.stringify(stateFor(screen)))
+      const serialized = JSON.stringify(stateFor(screen))
+      win.localStorage.setItem(STORAGE_KEY, serialized)
+      win.localStorage.setItem(AUTHENTICATED_STORAGE_KEY, serialized)
       win.localStorage.setItem('landnam-account-credentials', JSON.stringify({
         email: 'sprint-11-hotfix-invalid@example.com',
         password: 'GuestPassword123!',

@@ -10,6 +10,7 @@ export {}
  */
 
 const STORAGE_KEY = 'landnam-game-state-v1'
+const AUTHENTICATED_STORAGE_KEY = `${STORAGE_KEY}:user:e2e-user`
 const SURVEY_KEY = 'landnam-surveys-shown'
 const SNOOZE_KEY = 'landnam-upgrade-prompt-snooze-until'
 
@@ -57,7 +58,7 @@ function seed(win: Window, player: object) {
   // Suppress the onboarding-complete sheet, which otherwise covers the scene
   // on any preset with missionsDone past the Free Ops threshold.
   win.localStorage.setItem('ln_tutorial_complete_ack', '1')
-  win.localStorage.setItem(STORAGE_KEY, JSON.stringify({
+  const serialized = JSON.stringify({
     screen: 'hub',
     player: { ...BASE_PLAYER, ...player },
     tutorial: false,
@@ -67,7 +68,9 @@ function seed(win: Window, player: object) {
     rocket: { chassis: 'hull-mk1', propulsion: 'ion-a1', drill: 'hand-drill' },
     lastCargo: null,
     popup: null,
-  }))
+  })
+  win.localStorage.setItem(STORAGE_KEY, serialized)
+  win.localStorage.setItem(AUTHENTICATED_STORAGE_KEY, serialized)
 }
 
 function openHub(player: object) {

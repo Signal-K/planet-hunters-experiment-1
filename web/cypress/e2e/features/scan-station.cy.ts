@@ -8,6 +8,7 @@
 import type { GameState } from '@/game-context'
 
 const STORAGE_KEY = 'landnam-game-state-v1'
+const AUTHENTICATED_STORAGE_KEY = `${STORAGE_KEY}:user:e2e-user`
 const COACH_KEY = 'landnam_scan_station_coach_seen_v1'
 
 function basePlayer(overrides: Partial<GameState['player']> = {}): GameState['player'] {
@@ -50,7 +51,13 @@ function visitWithState(path: string, screen: GameState['screen'], playerOverrid
 
   cy.visit(path, {
     onBeforeLoad(win) {
-      win.localStorage.setItem(STORAGE_KEY, JSON.stringify(full))
+      const serialized = JSON.stringify(full)
+      // Auth restore moves the active save from the guest key to the
+      // account-scoped key. Seed both so the fixture survives that rebind
+      // instead of falling back to DEFAULT_STATE and /game/intro once the
+      // async credential restore completes.
+      win.localStorage.setItem(STORAGE_KEY, serialized)
+      win.localStorage.setItem(AUTHENTICATED_STORAGE_KEY, serialized)
       win.localStorage.setItem('landnam-account-credentials', JSON.stringify({ email: 'e2e@example.com', password: 'e2e-guest-test' }))
       // Player already crossed the M1-M3 -> Free Ops threshold in this
       // fixture — acknowledge the one-time "Program Online" interstitial
@@ -103,7 +110,9 @@ describe('Scan Station', () => {
             scannerBuilt: true,
           }),
         } as GameState
-        win.localStorage.setItem(STORAGE_KEY, JSON.stringify(full))
+        const serialized = JSON.stringify(full)
+        win.localStorage.setItem(STORAGE_KEY, serialized)
+        win.localStorage.setItem(AUTHENTICATED_STORAGE_KEY, serialized)
         win.localStorage.setItem('landnam-account-credentials', JSON.stringify({ email: 'e2e@example.com', password: 'e2e-guest-test' }))
         win.localStorage.setItem('ln_tutorial_complete_ack', '1')
         win.localStorage.removeItem(COACH_KEY)
@@ -143,7 +152,9 @@ describe('Scan Station', () => {
             scannerBuilt: true,
           }),
         } as GameState
-        win.localStorage.setItem(STORAGE_KEY, JSON.stringify(full))
+        const serialized = JSON.stringify(full)
+        win.localStorage.setItem(STORAGE_KEY, serialized)
+        win.localStorage.setItem(AUTHENTICATED_STORAGE_KEY, serialized)
         win.localStorage.setItem('landnam-account-credentials', JSON.stringify({ email: 'e2e@example.com', password: 'e2e-guest-test' }))
         win.localStorage.setItem('ln_tutorial_complete_ack', '1')
         win.localStorage.setItem(COACH_KEY, '1')
@@ -167,7 +178,9 @@ describe('Scan Station', () => {
             scannerBuilt: true,
           }),
         } as GameState
-        win.localStorage.setItem(STORAGE_KEY, JSON.stringify(full))
+        const serialized = JSON.stringify(full)
+        win.localStorage.setItem(STORAGE_KEY, serialized)
+        win.localStorage.setItem(AUTHENTICATED_STORAGE_KEY, serialized)
         win.localStorage.setItem('landnam-account-credentials', JSON.stringify({ email: 'e2e@example.com', password: 'e2e-guest-test' }))
         win.localStorage.setItem('ln_tutorial_complete_ack', '1')
         win.localStorage.setItem(COACH_KEY, '1')

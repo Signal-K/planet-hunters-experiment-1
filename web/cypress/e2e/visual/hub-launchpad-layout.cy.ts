@@ -1,6 +1,7 @@
 import type { GameState } from '@/game-context'
 
 const STORAGE_KEY = 'landnam-game-state-v1'
+const AUTHENTICATED_STORAGE_KEY = `${STORAGE_KEY}:user:e2e-user`
 const SURVEY_KEY = 'landnam-surveys-shown'
 
 const VIEWPORTS = [
@@ -57,7 +58,9 @@ function state(screen: GameState['screen']): GameState {
 function visit(path: string, screen: GameState['screen']) {
   cy.visit(path, {
     onBeforeLoad(win) {
-      win.localStorage.setItem(STORAGE_KEY, JSON.stringify(state(screen)))
+      const serialized = JSON.stringify(state(screen))
+      win.localStorage.setItem(STORAGE_KEY, serialized)
+      win.localStorage.setItem(AUTHENTICATED_STORAGE_KEY, serialized)
       win.localStorage.setItem(SURVEY_KEY, JSON.stringify(['lnm_first_launch']))
       win.localStorage.setItem('ln_tutorial_complete_ack', '1')
       // The fixtures intentionally exercise persisted post-onboarding screens.

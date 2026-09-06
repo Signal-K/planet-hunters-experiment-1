@@ -12,6 +12,7 @@ export {}
  */
 
 const STORAGE_KEY = 'landnam-game-state-v1'
+const AUTHENTICATED_STORAGE_KEY = `${STORAGE_KEY}:user:e2e-user`
 const SURVEY_KEY = 'landnam-surveys-shown'
 const SNOOZE_KEY = 'landnam-upgrade-prompt-snooze-until'
 
@@ -42,7 +43,9 @@ function loadPreset(win: Window, preset: object) {
   // overrides the preset state with whatever the previous test saved.
   win.localStorage.removeItem('pocketbase_auth')
   suppressSurveysAndUpgrade(win)
-  win.localStorage.setItem(STORAGE_KEY, JSON.stringify(preset))
+  const serialized = JSON.stringify(preset)
+  win.localStorage.setItem(STORAGE_KEY, serialized)
+  win.localStorage.setItem(AUTHENTICATED_STORAGE_KEY, serialized)
 }
 
 // Minimal preset shapes — mirrors devPresets.ts without importing it
@@ -110,8 +113,8 @@ function navToMissions() {
 
 function jumpToCompletedDebrief(cargo: Record<string, number>) {
   cy.window().then(win => {
-    const saved = JSON.parse(win.localStorage.getItem(STORAGE_KEY) || '{}')
-    win.localStorage.setItem(STORAGE_KEY, JSON.stringify({
+    const saved = JSON.parse(win.localStorage.getItem(AUTHENTICATED_STORAGE_KEY) || win.localStorage.getItem(STORAGE_KEY) || '{}')
+    const serialized = JSON.stringify({
       ...saved,
       screen: 'debrief',
       lastCargo: cargo,
@@ -119,7 +122,9 @@ function jumpToCompletedDebrief(cargo: Record<string, number>) {
         ...saved.player,
         missionPhase: 'debrief',
       },
-    }))
+    })
+    win.localStorage.setItem(STORAGE_KEY, serialized)
+    win.localStorage.setItem(AUTHENTICATED_STORAGE_KEY, serialized)
   })
   cy.visit('/game/debrief')
 }
