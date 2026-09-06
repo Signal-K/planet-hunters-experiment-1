@@ -254,7 +254,11 @@ describe('Visual QA — discovery -> economy pipeline', () => {
     // target is a mining destination (real mineral deposit, not an
     // instrument/build payload), so the stable proof here is the real
     // Launchpad -> "GO MINING" -> sell -> target-picker route.
-    cy.get('[data-testid="launchpad-new-mission-btn"]', { timeout: 10000 }).click()
+    // The pad itself is the canonical scene entry point. The rail's NEW
+    // MISSION control is intentionally secondary and can be omitted when a
+    // pending launch occupies the rail; the fixture only needs the same
+    // production action from the physical launchpad control.
+    cy.get('[data-testid="launchpad-primary-mission-btn"]', { timeout: 10000 }).click()
     cy.get('[data-testid="launchpad-new-mission-mining-btn"]', { timeout: 10000 })
       .should('not.be.disabled')
       .click()
