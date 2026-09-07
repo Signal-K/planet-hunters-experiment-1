@@ -30,8 +30,9 @@ beforeEach(() => {
   // need the deterministic browser stubs below. cy.request() calls from the
   // auth specs still reach Docker PocketBase directly because intercepts do
   // not rewrite Cypress's Node-side requests.
-  const realBrowserAuth = Cypress.env('livePocketBase')
-    && Cypress.spec.relative.replaceAll('\\', '/').includes('/auth/')
+  const normalizedSpec = Cypress.spec.relative.replaceAll('\\', '/')
+  const isAuthSpec = normalizedSpec.startsWith('auth/') || normalizedSpec.includes('/auth/')
+  const realBrowserAuth = Cypress.env('livePocketBase') && isAuthSpec
   if (realBrowserAuth) return
 
   // Visual QA is intentionally local-only: its screenshots are driven by
@@ -48,10 +49,8 @@ beforeEach(() => {
   cy.intercept('GET', '/api/backend-health', { statusCode: 200, body: { ok: true } }).as('backendHealth')
 
   cy.intercept('POST', '**/api/collections/users/auth-with-password', {
-    statusCode: visualProfile ? 503 : 200,
-    body: visualProfile
-      ? { code: 503, message: 'Visual QA uses local fixture state.' }
-      : { token: 'e2e-token', record: { id: 'e2e-user', email: 'e2e@example.com' } },
+    statusCode: 503,
+    body: { code: 503, message: visualProfile ? 'Visual QA uses local fixture state.' : 'Fixture E2E uses guest local state.' },
   }).as('pbAuth')
 
   // The mandatory email gate creates the lightweight account before it
@@ -59,37 +58,26 @@ beforeEach(() => {
   // permanently mounted in offline journeys (KES-135), so the test never
   // reaches the gameplay flow it is meant to verify.
   cy.intercept('POST', '**/api/collections/users/records', {
-    statusCode: visualProfile ? 503 : 200,
-    body: visualProfile
-      ? { code: 503, message: 'Visual QA uses local fixture state.' }
-      : { id: 'e2e-user', email: 'e2e@example.com' },
+    statusCode: 503,
+    body: { code: 503, message: visualProfile ? 'Visual QA uses local fixture state.' : 'Fixture E2E uses guest local state.' },
   }).as('pbUserCreate')
 
   cy.intercept('POST', '**/api/collections/users/auth-refresh', {
-    statusCode: visualProfile ? 503 : 200,
-    body: visualProfile
-      ? { code: 503, message: 'Visual QA uses local fixture state.' }
-      : { token: 'e2e-token', record: { id: 'e2e-user', email: 'e2e@example.com' } },
+    statusCode: 503,
+    body: { code: 503, message: visualProfile ? 'Visual QA uses local fixture state.' : 'Fixture E2E uses guest local state.' },
   }).as('pbAuthRefresh')
 
   cy.intercept('GET', '**/api/collections/users/auth-refresh', {
-    statusCode: visualProfile ? 503 : 200,
-    body: visualProfile
-      ? { code: 503, message: 'Visual QA uses local fixture state.' }
-      : { token: 'e2e-token', record: { id: 'e2e-user', email: 'e2e@example.com' } },
+    statusCode: 503,
+    body: { code: 503, message: visualProfile ? 'Visual QA uses local fixture state.' : 'Fixture E2E uses guest local state.' },
   }).as('pbAuthRefreshGet')
 
-  // Offline journeys still exercise the real Landnam auth hand-off. Keep the
-  // hand-off deterministic alongside the shared-auth stubs so a fake guest
-  // session cannot leave the auth gate mounted after the first page load.
+  // Fixture journeys deliberately remain guests. Their localStorage state is
+  // seeded in the unscoped guest slot; returning a fake authenticated record
+  // here would switch the app to the account-scoped slot and discard it.
   cy.intercept('POST', '**/api/landnam-auth/exchange', {
-    statusCode: visualProfile ? 503 : 200,
-    body: visualProfile
-      ? { code: 503, message: 'Visual QA uses local fixture state.' }
-      : {
-          token: 'e2e-landnam-token',
-          record: { id: 'e2e-user', email: 'e2e@example.com', lastExchangeAt: new Date().toISOString() },
-        },
+    statusCode: 503,
+    body: { code: 503, message: visualProfile ? 'Visual QA uses local fixture state.' : 'Fixture E2E uses guest local state.' },
   }).as('pbLandnamExchange')
 
   // Return 404 for game_states so the real PB record for 'e2e-user' never overrides test localStorage state
