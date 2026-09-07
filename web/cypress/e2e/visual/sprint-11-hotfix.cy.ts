@@ -110,6 +110,10 @@ describe('Sprint 11 Launchpad and Earth Base hotfix — live browser QA', () => 
     cy.get('[data-testid="launchpad-build-monitoring-btn"]').should('not.exist')
 
     cy.window().then(win => {
+      // Cypress can scroll the footer into view while resolving the control
+      // assertions above. Reset before measuring the scene against the actual
+      // viewport so the check tests layout, not the runner's scroll position.
+      win.scrollTo(0, 0)
       cy.get('.launchpad-visual-scene').then($scene => {
         const scene = $scene[0].getBoundingClientRect()
         expect(scene.top, 'visual scene starts inside viewport').to.be.at.least(0)
