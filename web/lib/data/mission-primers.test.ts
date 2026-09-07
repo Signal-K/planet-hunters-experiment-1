@@ -39,13 +39,7 @@ describe('missionTypePrimer', () => {
     expect(primer.steps).toContain('Build')
   })
 
-  it('separates a station mapping scan from a rover landing', () => {
-    const scan = missionTypePrimer({
-      ...base,
-      survey: { scanRequired: true, scanCount: 3, scanSource: 'station', depositsToMap: 2, revealsMinerals: true, revealsLandmarks: [], unlocksLanding: true },
-    })
-    expect(scan.label).toBe('Mapping scan')
-
+  it('names a rover landing', () => {
     const rover = missionTypePrimer({
       ...base,
       survey: { scanRequired: true, scanCount: 1, scanSource: 'rover', depositsToMap: 1, revealsMinerals: true, revealsLandmarks: [], unlocksLanding: true, onWorldVehicle: 'starter-rover' },

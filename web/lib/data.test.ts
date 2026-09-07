@@ -34,9 +34,6 @@ import {
   effectiveCargoCapacity,
   effectiveMaxOrbit,
   FREE_OPS_START_MISSIONS_DONE,
-  SCANS_PER_DAY,
-  SCAN_DURATION_MS,
-  SCANS_REQUIRED_TO_MAP,
   TARGET_STRUCTURES,
   findTargetStructure,
   generateFreeOpsMissions,
@@ -189,7 +186,7 @@ describe('skill nodes', () => {
     expect(getLaserChargeCap(unlocked)).toBe(BASE_LASER_CHARGES + 2)
     expect(effectiveCargoCapacity({ id: 'cargo-test', name: 'Cargo Test', tier: 1, locked: false, img: '', cargo: 10 }, unlocked)).toBe(12)
     expect(effectiveMaxOrbit({ id: 'drive-test', name: 'Drive Test', tier: 1, locked: false, img: '', max_orbit: 5 }, unlocked)).toBe(6)
-    expect(travelDurationMs({ id: 'target-test', name: 'Target Test', type: 'asteroid', orbit: 4, difficulty: 'L1', brief: '', minerals: [] }, unlocked, 1000)).toBe(3400)
+    expect(travelDurationMs({ id: 'target-test', name: 'Target Test', type: 'asteroid', orbit: 4, difficulty: 'L1', brief: '', minerals: [] }, unlocked, 1000)).toBe(850)
   })
 
   it('lets Cargo Slot I satisfy marginal cargo requirements', () => {
@@ -546,7 +543,6 @@ describe('seed bible v0 catalog', () => {
       'freeops-delivery',
       'freeops-mining-survey',
       'freeops-bulk-run',
-      'freeops-station-scan',
       'freeops-rover-landing',
     ]))
     // Generated missions must map to a known template tag
@@ -559,17 +555,7 @@ describe('seed bible v0 catalog', () => {
     })).toBe(true)
   })
 
-  it('defines Sprint 6 survey templates for station scans and starter rover landing', () => {
-    const stationScan = MISSION_TEMPLATES.find(t => t.id === 'freeops-station-scan')
-    expect(stationScan?.survey).toMatchObject({
-      scanRequired: true,
-      scanCount: 3,
-      scanSource: 'station',
-      depositsToMap: 2,
-      revealsMinerals: true,
-      unlocksLanding: true,
-    })
-
+  it('defines the starter-rover survey template', () => {
     const roverLanding = MISSION_TEMPLATES.find(t => t.id === 'freeops-rover-landing')
     expect(roverLanding?.survey).toMatchObject({
       scanRequired: true,
@@ -632,12 +618,11 @@ describe('seed bible v0 catalog', () => {
     expect(CLIENT_SLOTS.some(c => c.id === relay?.client)).toBe(true)
   })
 
-  it('defines settlement, remote-silo, refinery, and scanning-station builds as own-program missions', () => {
+  it('defines settlement, remote-silo, and refinery builds as own-program missions', () => {
     expect(OWN_PROGRAM_BUILD_MISSIONS.map(mission => mission.id)).toEqual([
       'program-build-mars-mining-settlement',
       'program-build-remote-silo',
       'program-build-refinery',
-      'program-build-scan-station',
     ])
 
     for (const mission of OWN_PROGRAM_BUILD_MISSIONS) {
@@ -649,7 +634,7 @@ describe('seed bible v0 catalog', () => {
       expect(mission.requires.cargo_min).toBe(
         Object.values(mission.requires.minerals).reduce((sum, amount) => sum + amount, 0),
       )
-      expect(mission.requires.max_orbit).toBe(mission.id === 'program-build-scan-station' ? 0 : mission.id === 'program-build-mars-mining-settlement' ? 4 : 5)
+      expect(mission.requires.max_orbit).toBe(mission.id === 'program-build-mars-mining-settlement' ? 4 : 5)
       expect(mission.sequence).toBe(FREE_OPS_START_MISSIONS_DONE + 1)
       expect(MISSIONS).toContainEqual(mission)
     }
@@ -660,9 +645,6 @@ describe('seed bible v0 catalog', () => {
     })
     expect(OWN_PROGRAM_BUILD_MISSIONS[2]).toMatchObject({
       construction: { structureKind: 'refinery', requiredMaterials: { aluminium: 20, copper: 10 } },
-    })
-    expect(OWN_PROGRAM_BUILD_MISSIONS[3]).toMatchObject({
-      construction: { structureKind: 'scan-station', requiredMaterials: {} },
     })
   })
 })
@@ -705,54 +687,23 @@ describe('Construction mission templates and target structure blueprints', () =>
   })
 })
 
-describe('Scanning station constants and structure seed', () => {
-  it('exports expected scan constants', () => {
-    expect(SCANS_PER_DAY).toBe(5)
-    expect(SCAN_DURATION_MS).toBe(10 * 60 * 1000)
-    expect(SCANS_REQUIRED_TO_MAP).toBe(3)
+describe('Retired scanning-station content', () => {
+  it('does not retain a buildable scanning station', () => {
+    expect(STRUCTURES.some(structure => structure.id === 'scan-station')).toBe(false)
   })
-
-  it('stays dark regardless of Free Ops when NEXT_PUBLIC_FEATURE_SCAN_STATION is unset', () => {
-    const scanner = STRUCTURES.find(s => s.id === 'scan-station')
-    expect(scanner).toBeDefined()
-    expect(scanner?.cost).toBe(0)
-    expect(scanner && structureUnlocked(scanner, { freeOperations: false })).toBe(false)
-    expect(scanner && structureUnlocked(scanner, { freeOperations: true })).toBe(false)
-  })
-
-  it('scan-station is not unlocked for launchpad-only context', () => {
-    const scanner = STRUCTURES.find(s => s.id === 'scan-station')
-    expect(scanner && structureUnlocked(scanner, { placed: ['launchpad'] })).toBe(false)
-  })
-
-  it('requires the story-scan-station-commission mission before unlocking, even with the flag and Free Ops on (KES-132)', async () => {
-    vi.stubEnv('NEXT_PUBLIC_FEATURE_SCAN_STATION', 'true')
-    vi.resetModules()
-    const { STRUCTURES: freshStructures, structureUnlocked: freshUnlocked } = await import('./data')
-    const scanner = freshStructures.find(s => s.id === 'scan-station')
-    expect(scanner && freshUnlocked(scanner, { freeOperations: false })).toBe(false)
-    expect(scanner && freshUnlocked(scanner, { freeOperations: true })).toBe(false)
-    expect(scanner && freshUnlocked(scanner, { freeOperations: true, scanStationMissionCompletedAt: Date.now() })).toBe(true)
-    expect(scanner && freshUnlocked(scanner, { placed: ['scan-station'] })).toBe(true)
-    vi.unstubAllEnvs()
-    vi.resetModules()
-  })
-
 })
 
 describe('Daily quest framework', () => {
-  it('exports at least one scan, land, and map quest template', () => {
+  it('exports the current land quest template', () => {
     const kinds = DAILY_QUEST_TEMPLATES.map(q => q.kind)
-    expect(kinds).toContain('scan')
     expect(kinds).toContain('land')
-    expect(kinds).toContain('map')
   })
 
   it('getDailyQuestTemplate resolves by id', () => {
-    const q = getDailyQuestTemplate('daily-scan-5-asteroids')
+    const q = getDailyQuestTemplate('daily-land-rover-any')
     expect(q).toBeDefined()
-    expect(q?.count).toBe(5)
-    expect(q?.targetScope).toBe('any-asteroid')
+    expect(q?.count).toBe(1)
+    expect(q?.targetScope).toBe('any')
     expect(getDailyQuestTemplate('nonexistent')).toBeUndefined()
   })
 

@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 
 // Screen-local "Mission Coach" for the Deep Space Telescope's NEOCP feed
-// (KES-128) — modeled directly on ScanStationCoach.tsx/ObservatoryCoach.tsx.
+// (KES-128) — modeled directly on ObservatoryCoach.tsx.
 // Deliberately NOT wired into the global M1-M3 onboarding stepper; this is a
 // narrower, first-open-only beat for the AsteroidDiscoveryScreen.
 //

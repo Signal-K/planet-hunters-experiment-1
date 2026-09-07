@@ -11,9 +11,8 @@ function stateFor(screen: GameState['screen']): GameState {
       activeMission: null,
       missionCount: 9,
       pendingLaunch: false,
-      placed: ['launchpad', 'refinery', 'scan-station'],
-      placementPlots: { launchpad: 0, refinery: 1, 'scan-station': 2 },
-      scannerBuilt: true,
+      placed: ['launchpad', 'refinery'],
+      placementPlots: { launchpad: 0, refinery: 1 },
       controlBuilt: true,
       missionsDone: 4,
       skillPoints: 3,
@@ -135,9 +134,6 @@ describe('Sprint 11 Launchpad and Earth Base hotfix — live browser QA', () => 
     // Post-onboarding no longer duplicates the Mission Board in the
     // progression stack; the persistent Missions action is the entry point.
     cy.get('[data-testid="hub-desktop-missions-btn"]').should('be.visible')
-    cy.get('body').then($body => {
-      if ($body.text().includes('SCANNER')) cy.contains('SCANNER').should('be.visible')
-    })
 
     cy.get('[data-testid="hud-subsurface-chip"]').then($hud => {
       const hud = $hud[0].getBoundingClientRect()

@@ -210,23 +210,6 @@ interface HubScreenProps {
 }
 
 export default function HubScreen({ player, rocketVariant = 'explorer', hasCoach, onFocusBuilding, onOpenScene, onUpgradeLaunchpad, onExcavateSubsurface, onBuildSubsurfaceRoom, subsurface = false, onSubsurfaceChange }: HubScreenProps) {
-  // Wall-clock reads must wait until after the server/client first render.
-  // Otherwise a saved scan that completes between SSR and hydration can
-  // change the building badge and label, producing React error #418.
-  const [clientNow, setClientNow] = useState<number | null>(null)
-  const [clientDate, setClientDate] = useState<string | null>(null)
-
-  useEffect(() => {
-    const updateClock = () => {
-      const now = Date.now()
-      setClientNow(now)
-      setClientDate(new Date(now).toISOString().slice(0, 10))
-    }
-    updateClock()
-    const timer = window.setInterval(updateClock, 60_000)
-    return () => window.clearInterval(timer)
-  }, [])
-
   const { phase: skyPhase } = useTimeOfDay()
   const [editMode, setEditMode] = useState(false)
   const [activeBuilding, setActiveBuilding] = useState<string | null>(null)
@@ -256,8 +239,6 @@ export default function HubScreen({ player, rocketVariant = 'explorer', hasCoach
     ...placementPlots,
     ...(legacyPlaced('launchpad') ? { launchpad: 0 } : {}),
   }
-  if (!FEATURE_FLAGS.scanStation) delete effectivePlots['scan-station']
-
   useEffect(() => {
     Scene.load('/game/scenes/hub.scene.json')
       .then(data => { if (data.entities?.length) setPlotEntities(data.entities) })
@@ -337,7 +318,7 @@ export default function HubScreen({ player, rocketVariant = 'explorer', hasCoach
     return kind
   }
 
-  const BUILDING_W: Record<string, number> = { launchpad: 105, 'surface-silo': 62, refinery: 84, 'scan-station': 80, 'deep-space-telescope': 86, 'astronaut-academy': 88, command: 84 }
+  const BUILDING_W: Record<string, number> = { launchpad: 105, 'surface-silo': 62, refinery: 84, 'deep-space-telescope': 86, 'astronaut-academy': 88, command: 84 }
   // Invisible click-target height for each building's spacer (Building.tsx),
   // reported unclickable 2026-08-23. EarthBaseModules renders each building's
   // modular art at a per-kind width/footprint with its
@@ -349,7 +330,7 @@ export default function HubScreen({ player, rocketVariant = 'explorer', hasCoach
   // entirely. Values below are sized to each building's actual rendered
   // silhouette (width x pixelHeight/pixelWidth of its PNG) plus headroom;
   // buildings whose art is short/squat keep the old w*0.6-ish default.
-  const HIT_H: Record<string, number> = { launchpad: 140, 'surface-silo': 70, refinery: 60, 'scan-station': 60, 'deep-space-telescope': 60, 'astronaut-academy': 60, command: 60 }
+  const HIT_H: Record<string, number> = { launchpad: 140, 'surface-silo': 70, refinery: 60, 'deep-space-telescope': 60, 'astronaut-academy': 60, command: 60 }
   // Post-tutorial Hub prominence pass (STS-631): telescope/satellite
   // buildings recede visually while they're unlocked but still in their
   // early, not-yet-actively-producing state — Transit Telescope
@@ -366,7 +347,7 @@ export default function HubScreen({ player, rocketVariant = 'explorer', hasCoach
       kind,
       plotX: e.transform.position.x,
       w: BUILDING_W[kind] ?? 78,
-      hot: kind === 'launchpad' ? !!player.pendingLaunch : kind === 'scan-station' ? (!!player.activeScan && clientNow !== null && clientNow >= player.activeScan.completesAt) : false,
+      hot: kind === 'launchpad' ? !!player.pendingLaunch : false,
       status: 'ok' as const,
       dimmed: isDimmedBuildingKind(kind),
       active: activeBuilding === kind,
@@ -427,20 +408,6 @@ export default function HubScreen({ player, rocketVariant = 'explorer', hasCoach
         status: 'ok' as const,
         w: 62,
         onClick: () => onFocusBuilding('build'),
-      }
-    }
-    if (kind === 'scan-station') {
-      const today = clientDate ?? ''
-      const scanDate = player.scanDate ?? ''
-      const scansUsed = clientDate !== null && scanDate === today ? (player.scansUsedToday ?? 0) : 0
-      const hasScan = !!player.activeScan && clientNow !== null && clientNow >= player.activeScan.completesAt
-      return {
-        kind, label: 'Scanner',
-        sub: hasScan ? 'DATA READY' : `${5 - scansUsed}/5 SCANS`,
-        status: (hasScan ? 'warn' : 'ok') as 'ok' | 'warn',
-        hot: hasScan,
-        w: 80,
-        onClick: () => onFocusBuilding('scan-station'),
       }
     }
     if (kind === 'deep-space-telescope') {
@@ -591,7 +558,7 @@ export default function HubScreen({ player, rocketVariant = 'explorer', hasCoach
         </div>
         {!subsurface && (
           <div style={{ pointerEvents: 'auto' }}>
-            <HUDStrip player={player} onSubsurfaceClick={() => setSubsurface(true)} />
+            <HUDStrip player={player} />
           </div>
         )}
       </div>
@@ -704,7 +671,7 @@ export default function HubScreen({ player, rocketVariant = 'explorer', hasCoach
                       </span>
                       <span className="hub-desktop-nav">
                         {player.transitSatelliteLaunchedAt && (
-                          <DockIconBtn icon={<AtlasGlyph />} label="Atlas" onClick={() => onOpenScene('galaxy')} />
+                          <DockIconBtn icon={<AtlasGlyph />} label="TESS Data" onClick={() => onOpenScene('galaxy')} />
                         )}
                       </span>
                       <span className="hub-desktop-nav">

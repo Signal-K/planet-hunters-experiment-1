@@ -120,8 +120,7 @@ describe('Asteroid Discovery mission on-ramp (KES-128)', () => {
     })
     // The catalog re-renders once the async fetch settles (falls back to
     // STATIC_CATALOG against this offline profile), which can detach and
-    // replace this button mid-chain — matching the hydration race documented
-    // in scan-station.cy.ts. Give it a beat before asserting.
+    // replace this button mid-chain. Give it a beat before asserting.
     cy.wait(1500)
     cy.contains('button', 'Deep Space Telescope', { timeout: 10000 })
       .scrollIntoView()

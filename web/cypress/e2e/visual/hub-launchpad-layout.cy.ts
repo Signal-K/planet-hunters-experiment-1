@@ -28,8 +28,8 @@ function state(screen: GameState['screen']): GameState {
       pendingLaunch: true,
       missionCount: 4,
       missionsDone: 3,
-      placed: ['launchpad', 'refinery', 'scan-station', 'transit-telescope'],
-      placementPlots: { launchpad: 0, refinery: 1, 'scan-station': 2, 'transit-telescope': 3 },
+      placed: ['launchpad', 'refinery', 'transit-telescope'],
+      placementPlots: { launchpad: 0, refinery: 1, 'transit-telescope': 2 },
       controlBuilt: true,
       freeOperations: true,
       clientMissions: {},
@@ -47,7 +47,6 @@ function state(screen: GameState['screen']): GameState {
       seen_planets: [],
       roverDeployments: [],
       clientTerritories: {},
-      scannerBuilt: true,
       transitSatelliteLaunchedAt: Date.now() - 60_000,
       transitSatelliteLevel: 1,
       tessClassifications: {},
@@ -84,7 +83,6 @@ describe('Hub and Launchpad visual layout', () => {
       cy.contains('h1', /^(Base|Subsurface)$/, { timeout: 15000 }).should('be.visible')
       cy.get('[data-testid="building-launchpad-hit"]').should('be.visible')
       cy.get('[data-testid="building-refinery-hit"]').should('be.visible')
-      cy.get('[data-testid="building-scan-station-hit"]').should('be.visible')
       cy.get('[data-testid="terrain-scene"]').should('exist')
       cy.get('img[src="/game/assets/base/launchpad_flat.png"]').should('be.visible')
       if (viewport.name === 'desktop') {

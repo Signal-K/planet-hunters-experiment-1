@@ -14,7 +14,6 @@ import RefineryScreen from '@/components/game/screens/RefineryScreen'
 import MarketScreen from '@/components/game/screens/MarketScreen'
 import HangarScreen from '@/components/game/screens/HangarScreen'
 import SkillTreeScreen from '@/components/game/screens/SkillTreeScreen'
-import ScanStationScreen from '@/components/game/screens/ScanStationScreen'
 import LaunchpadScreen from '@/components/game/screens/LaunchpadScreen'
 import TessDiscoveryScreen from '@/components/game/screens/TessDiscoveryScreen'
 import AsteroidDiscoveryScreen from '@/components/game/screens/AsteroidDiscoveryScreen'
@@ -29,7 +28,7 @@ import { captureGameEvent } from '@/lib/posthog'
 export const VALID_SCREENS = new Set<Screen>([
   'intro', 'build', 'hub', 'hub-subsurface', 'missions', 'galaxy', 'targets', 'fab',
   'transit', 'landing', 'mining', 'rover-mining', 'delivery', 'debrief', 'refinery',
-  'market', 'hangar', 'rocket-buy', 'skills', 'scan-station',
+  'market', 'hangar', 'rocket-buy', 'skills',
   'launchpad',
   'surface-ops',
   'academy',
@@ -148,7 +147,6 @@ export function ScreenContent({
             transitSatelliteLevel: game.player.transitSatelliteLevel,
             clientMissions: game.player.clientMissions,
             deepSpaceTelescopeMissionCompletedAt: game.player.deepSpaceTelescopeMissionCompletedAt,
-            scanStationMissionCompletedAt: game.player.scanStationMissionCompletedAt,
           }}
           onPlaced={(kind, plot) => {
             const structure = game.catalog.structures.find(s => s.id === kind)
@@ -179,7 +177,6 @@ export function ScreenContent({
             if (building === 'refinery') return game.go('refinery')
             if (building === 'hangar') return game.go('hangar')
             if (building === 'skills') return game.go('skills')
-            if (building === 'scan-station') return game.go('scan-station')
             if (building === 'deep-space-telescope') return game.go('asteroid-discovery')
             if (building === 'academy' || building === 'astronaut-academy') return game.go('academy')
             if (building === 'missions') {
@@ -357,17 +354,6 @@ export function ScreenContent({
 
     case 'narrative-ledger':
       return <NarrativeLedgerScreen onBack={() => game.go('hub')} />
-
-    case 'scan-station':
-      return (
-        <ScanStationScreen
-          player={game.player}
-          targets={game.catalog.targets}
-          onBack={() => game.go('hub')}
-          onStartScan={game.startScan}
-          onCollectScan={game.collectScan}
-        />
-      )
 
     case 'launchpad':
       {

@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 
 // Self-contained "Mission Coach" walkthrough for the Free Ops Build screen,
-// modeled on ScanStationCoach.tsx / AsteroidDiscoveryCoach.tsx. Deliberately
+// modeled on AsteroidDiscoveryCoach.tsx. Deliberately
 // NOT wired into the global M1-M3 onboarding stepper — this is a narrower,
 // screen-local beat shown once (persisted in localStorage) the first time a
 // player opens Build with no mission/target selected. KES-133: this is the

@@ -241,7 +241,7 @@ export async function fetchCatalog(): Promise<Catalog> {
   const selfDirectedIds = new Set(selfDirectedPoolMissions.map(m => m.id))
   // PocketBase's missions_catalog schema requires a non-empty client_slug on
   // every record (main.go), so it can only ever seed client-contracted
-  // missions — own-program missions (build refinery/scan-station, academy
+  // missions — own-program missions (build refinery, academy
   // intro) only exist in the static fallback list. Once PocketBase seeds
   // even one real mission, `baseMissions` above drops that whole static list,
   // silently making every own-program operation unreachable in any real

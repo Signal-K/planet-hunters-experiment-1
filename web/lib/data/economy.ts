@@ -66,9 +66,6 @@ export const CARGO_BONUS_CAP = 0.18
 /** Ore value is worth this much as a fee bonus before the cap applies. */
 export const CARGO_BONUS_RATE = 0.4
 
-/** Flat fee for a scan-only contract, which carries no cargo to price. */
-export const SCAN_CONTRACT_FEE = 2_000_000
-
 // ── Mineral values ─────────────────────────────────────────────────────────
 // Priced by rarity band. The old prices spread 70× from carbon (60) to rhodium
 // (4200), which meant that once minerals were worth enough for rare ore to

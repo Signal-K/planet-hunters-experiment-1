@@ -15,9 +15,8 @@ export const TREASURY_PLAYER_ID = 'local-player'
 // Retuned 2026-07-21 (STS-492): originals (0/100/300) were set with no real
 // per-mission income data — no player had ever reached Grade III since
 // nothing in the UI called upgradeLicenseGrade. Retuned against actual XP
-// income (+15/first-time TESS classification, +10/scan-station scan, max
-// 5 scans/day per SCANS_PER_DAY) so Grade II lands after roughly a week of
-// casual daily play and Grade III after roughly a month.
+// income (+15/first-time TESS classification) so Grade II lands after
+// roughly a week of casual daily play and Grade III after roughly a month.
 export const LICENSE_GRADE_XP_GATES: Record<LicenseGrade, number> = {
   'Grade I': 0,
   'Grade II': 150,

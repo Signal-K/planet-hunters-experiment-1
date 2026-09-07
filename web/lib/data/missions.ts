@@ -50,10 +50,8 @@ export const M3_SEQUENCE = 3
 export const SELF_DIRECTED_MINING_MISSION_ID = 'freeops-self-directed-mining'
 export const ACADEMY_INTRO_MISSION_ID = 'story-astronaut-academy'
 export const REFINERY_BUILD_MISSION_ID = 'program-build-refinery'
-export const SCAN_STATION_BUILD_MISSION_ID = 'program-build-scan-station'
 
 const refineryBlueprint = STRUCTURES.find(structure => structure.id === 'refinery')!
-const scanStationBlueprint = STRUCTURES.find(structure => structure.id === 'scan-station')!
 const remoteSiloBlueprint = { requiredMaterials: { aluminium: 18, iron: 12, copper: 6 } }
 
 function materialRequirement(materials: Record<string, number>): { minerals: Record<string, number>; cargo_min: number } {
@@ -110,32 +108,6 @@ export const OWN_PROGRAM_BUILD_MISSIONS: Mission[] = [
       ...materialRequirement(refineryBlueprint.costMaterials ?? {}),
       drill_tier: 1,
       max_orbit: 5,
-    },
-    payout: { francs: 0, affinity: 0 },
-  },
-  {
-    id: SCAN_STATION_BUILD_MISSION_ID,
-    title: 'Build the Scanning Station',
-    brief: 'Commission the Scan Station at Base. Its remote instruments map deposits, craters, and landmarks for your own program.',
-    tag: 'PROGRAM',
-    difficulty: 'L1',
-    locked: false,
-    sequence: FREE_OPS_START_MISSIONS_DONE + 1,
-    unlockAt: 'Reach Free Operations and complete the commissioning pass',
-    construction: {
-      structureKind: scanStationBlueprint.kind,
-      requiredMaterials: { ...(scanStationBlueprint.costMaterials ?? {}) },
-      placementMode: 'confirm',
-      buildTimeMs: 0,
-    },
-    programReward: {
-      researchXP: 0,
-      outcome: 'Scanning Station built · remote target mapping is now available',
-    },
-    requires: {
-      ...materialRequirement(scanStationBlueprint.costMaterials ?? {}),
-      drill_tier: 1,
-      max_orbit: 0,
     },
     payout: { francs: 0, affinity: 0 },
   },

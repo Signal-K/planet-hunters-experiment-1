@@ -147,11 +147,6 @@ describe('C1–C4 screen contracts across viewport classes', () => {
       })
 
       it('renders the infrastructure and surface-operation entry points', () => {
-        visit('/game/scan-station', stateWith('scan-station', {
-          player: basePlayer({ scannerBuilt: true, scansUsedToday: 0 }),
-        }))
-        cy.contains('Scanning Station', { timeout: 10000 }).should('be.visible')
-
         // 'freeops-rover-landing' is a mission-generator *template* id
         // (mission-generator.ts), never a real instantiated mission id — real
         // freeops missions are stamped `freeops-<client>-<template>-<n>` at

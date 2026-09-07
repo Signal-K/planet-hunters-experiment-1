@@ -22,7 +22,7 @@ describe('Earth Base module composition', () => {
     const { launchpad, hangar, refinery } = EARTH_BASE_STRUCTURE_SIZES
     expect(launchpad.width).toBeGreaterThan(refinery.width)
     expect(hangar.width).toBeGreaterThan(refinery.width)
-    expect(EARTH_BASE_STRUCTURE_SIZES['scan-station'].width).toBeLessThan(refinery.width)
+    expect(EARTH_BASE_STRUCTURE_SIZES['surface-silo'].width).toBeLessThan(refinery.width)
   })
 
   it('carries an explicit height so nothing depends on intrinsic image size', () => {

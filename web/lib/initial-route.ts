@@ -3,7 +3,7 @@ import type { Screen } from '@/lib/game-types'
 const VALID_SCREENS = new Set<Screen>([
   'intro', 'build', 'hub', 'missions', 'galaxy', 'targets', 'fab',
   'transit', 'mining', 'delivery', 'debrief', 'refinery', 'market',
-  'hangar', 'rocket-buy', 'skills', 'scan-station', 'rover-mining',
+  'hangar', 'rocket-buy', 'skills', 'rover-mining',
   'launchpad', 'surface-ops', 'academy',
   'mission-history',
 ])

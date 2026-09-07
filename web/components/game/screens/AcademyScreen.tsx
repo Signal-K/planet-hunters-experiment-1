@@ -210,7 +210,6 @@ export default function AcademyScreen(props: AcademyScreenProps) {
                 <div className={styles.stack}>
                   {[
                     ['refinery', 'Refinery', '25% faster processing'],
-                    ['scan-station', 'Scanning Station', '+1 scan each day'],
                     ['diplomacy', 'Diplomacy Desk', 'More valuable trusted-client contracts'],
                   ].map(([id, name, effect]) => (
                     <label className={styles.actionCard} key={id}>

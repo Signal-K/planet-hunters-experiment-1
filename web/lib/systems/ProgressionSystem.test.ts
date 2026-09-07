@@ -10,7 +10,6 @@ import {
   applyUpgradeLicenseGrade,
   TREASURY_PLAYER_ID,
 } from './ProgressionSystem'
-import { applyCollectScan } from './ScanSystem'
 import { LOAN_PRINCIPAL, TREASURY_STARTING_BALANCE } from '@/lib/data'
 import { createTreasuryState, loanOutstanding } from './TreasurySystem'
 
@@ -132,21 +131,6 @@ describe('research progression', () => {
     expect(applyUnlockBlueprint(state, 'garage', 11)).toBe(state)
     expect(applyUnlockBlueprint(state, 'garage', 0, 11)).toBe(state)
     expect(applyUnlockBlueprint(state, 'garage', 0, 0, { copper: 2 })).toBe(state)
-  })
-
-  it('awards Research XP when a completed target scan is collected', () => {
-    const state = makeState({
-      player: {
-        activeScan: { targetId: 'mars', completesAt: Date.now() - 1 },
-        researchXP: 5,
-      },
-    })
-
-    const next = applyCollectScan(state)
-
-    expect(next.player.activeScan).toBeNull()
-    expect(next.player.targetScanCounts?.mars).toBe(1)
-    expect(next.player.researchXP).toBe(15)
   })
 
   it('clears paused mining, rover, and delivery state when abandoning an active mission', () => {

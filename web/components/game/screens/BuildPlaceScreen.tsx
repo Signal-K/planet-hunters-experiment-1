@@ -13,7 +13,6 @@ import { EarthBaseModules } from '@/components/game/hub/EarthBaseModules'
 import { HubWorldBackground } from '@/components/game/hub/HubWorldBackground'
 import type { HubBuildingDef } from '@/components/game/hub/EarthBaseModules'
 import { formatCurrency } from '@/lib/format'
-import { FEATURE_FLAGS } from '@/lib/featureFlags'
 
 // Instantiated from the build-plot prefab rather than written out by hand.
 // This same list previously existed in four places (both hub scene files and
@@ -24,7 +23,6 @@ const DEFAULT_PLOTS: EntityData[] = buildPlotEntities()
 const STRUCTURE_COLORS: Record<string, string> = {
   launchpad: 'var(--ln-info)',
   refinery: 'var(--ln-amber)', // structure identity exception
-  'scan-station': 'var(--ln-ok)',
   'deep-space-telescope': 'var(--ln-crit-soft)', // purple identity
   'astronaut-academy': 'var(--ln-cyan-bright)',
 }
@@ -44,7 +42,6 @@ interface BuildPlaceScreenProps {
     transitSatelliteLevel?: number
     clientMissions?: Record<string, number>
     deepSpaceTelescopeMissionCompletedAt?: number | null
-    scanStationMissionCompletedAt?: number | null
   }
 }
 
@@ -82,7 +79,6 @@ export default function BuildPlaceScreen({ onPlaced, onBack, hasCoach, player }:
     // Existing placed academies remain readable, but no new Base plot offers
     // this unrelated progression branch in the simplified launch loop.
     && s.id !== 'astronaut-academy'
-    && (FEATURE_FLAGS.scanStation || s.id !== 'scan-station')
     && !player.placed.includes(s.id)
   )
   const sel = catalog.find(c => c.id === picked) ?? catalog[0]
@@ -128,7 +124,7 @@ export default function BuildPlaceScreen({ onPlaced, onBack, hasCoach, player }:
   const canSelectStructure = (structure: StructureBlueprint) => {
     const alreadyBuilt = player.placed.includes(structure.id)
     return !alreadyBuilt
-      && structureUnlocked(structure, { refineryUnlocked: player.refineryUnlocked, academyResearched: player.academyResearched, placed: player.placed, freeOperations: player.freeOperations, transitSatelliteLevel: player.transitSatelliteLevel, clientMissions: player.clientMissions, deepSpaceTelescopeMissionCompletedAt: player.deepSpaceTelescopeMissionCompletedAt, scanStationMissionCompletedAt: player.scanStationMissionCompletedAt })
+      && structureUnlocked(structure, { refineryUnlocked: player.refineryUnlocked, academyResearched: player.academyResearched, placed: player.placed, freeOperations: player.freeOperations, transitSatelliteLevel: player.transitSatelliteLevel, clientMissions: player.clientMissions, deepSpaceTelescopeMissionCompletedAt: player.deepSpaceTelescopeMissionCompletedAt })
       && canAffordStructure(structure, { francs: player.francs, stash: player.stash })
   }
 
@@ -268,7 +264,7 @@ export default function BuildPlaceScreen({ onPlaced, onBack, hasCoach, player }:
           }}>
             {catalog.map(c => {
               const on = c.id === sel?.id
-              const unlocked = structureUnlocked(c, { refineryUnlocked: player.refineryUnlocked, academyResearched: player.academyResearched, placed: player.placed, freeOperations: player.freeOperations, transitSatelliteLevel: player.transitSatelliteLevel, clientMissions: player.clientMissions, deepSpaceTelescopeMissionCompletedAt: player.deepSpaceTelescopeMissionCompletedAt, scanStationMissionCompletedAt: player.scanStationMissionCompletedAt })
+              const unlocked = structureUnlocked(c, { refineryUnlocked: player.refineryUnlocked, academyResearched: player.academyResearched, placed: player.placed, freeOperations: player.freeOperations, transitSatelliteLevel: player.transitSatelliteLevel, clientMissions: player.clientMissions, deepSpaceTelescopeMissionCompletedAt: player.deepSpaceTelescopeMissionCompletedAt })
               const affordable = canAffordStructure(c, { francs: player.francs, stash: player.stash })
               const canSelect = unlocked && affordable
               const color = STRUCTURE_COLORS[c.id] ?? '#3fa9ff'

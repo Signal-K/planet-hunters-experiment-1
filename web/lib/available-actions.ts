@@ -10,7 +10,6 @@ function structureOptions(player: Player) {
     transitSatelliteLevel: player.transitSatelliteLevel,
     clientMissions: player.clientMissions,
     deepSpaceTelescopeMissionCompletedAt: player.deepSpaceTelescopeMissionCompletedAt,
-    scanStationMissionCompletedAt: player.scanStationMissionCompletedAt,
   }
 }
 

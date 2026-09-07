@@ -1,7 +1,7 @@
 // Landnam game data — all shared types and interfaces
 
 export interface MissionPayload {
-  type: 'rover' | 'satellite' | 'deep-space-survey' | 'scan-station-commission'
+  type: 'rover' | 'satellite' | 'deep-space-survey'
   name: string
   cargoCost: number
 }
@@ -9,7 +9,7 @@ export interface MissionPayload {
 export interface MissionSurveyPlan {
   scanRequired: boolean
   scanCount: number
-  scanSource: 'station' | 'satellite' | 'rover'
+  scanSource: 'satellite' | 'rover'
   depositsToMap: number
   revealsMinerals: boolean
   revealsLandmarks: string[]
@@ -49,7 +49,7 @@ export interface ClientStructureRecord {
   completedAt?: number
 }
 
-export type DailyQuestKind = 'scan' | 'land' | 'map'
+export type DailyQuestKind = 'land'
 export type DailyQuestTargetScope = 'any' | 'any-asteroid' | 'any-planet' | 'specific'
 
 export interface DailyQuestTemplate {
@@ -61,7 +61,6 @@ export interface DailyQuestTemplate {
   targetId?: string
   count: number
   payout: { francs: number; affinity: number }
-  requiresScannerBuilt?: boolean
   requiresSurveyClear?: boolean
 }
 

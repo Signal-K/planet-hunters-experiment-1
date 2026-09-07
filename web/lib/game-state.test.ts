@@ -727,10 +727,9 @@ describe('mergeRemoteState — remote game_states record onto local state', () =
 })
 
 describe('structure flags are derived from `placed`', () => {
-  it('repairs refineryBuilt while stripping the deferred scanner from old saves', () => {
+  it('repairs refineryBuilt while stripping the retired Scanning Station from old saves', () => {
     const s = normalizeState({ player: { placed: ['refinery', 'scan-station'] } })
     expect(s.player.refineryBuilt).toBe(true)
-    expect(s.player.scannerBuilt).toBe(false)
     expect(s.player.placed).toEqual(['refinery'])
     expect(s.player.placementPlots).not.toHaveProperty('scan-station')
   })

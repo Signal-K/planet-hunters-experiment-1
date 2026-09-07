@@ -1,7 +1,6 @@
 import { useCallback } from 'react'
 import { REFINERY_RECIPES } from '@/lib/data'
 import { applySellMinerals, applySellRefinedGoods, applyStartRefine, applyCollectRefined, applyUpgradeLaunchpad, applyConfirmShipCustomizerBuild, applyPlaceStructure, applyExcavateSubsurface, applyBuildSubsurfaceRoom } from '@/lib/systems/EconomySystem'
-import { applyBuildScanner, applyStartScan, applyCollectScan } from '@/lib/systems/ScanSystem'
 import { applyUnlockSkillNode, applyAcceptLoan, applyAbandonMission } from '@/lib/systems/ProgressionSystem'
 import type { Catalog } from '@/lib/catalog'
 import type { GameState } from '@/lib/game-types'
@@ -49,18 +48,6 @@ export function useEconomyActions(
     setState(s => applyBuildSubsurfaceRoom(s, roomId))
   }, [setState])
 
-  const buildScanner = useCallback(() => {
-    setState(s => applyBuildScanner(s))
-  }, [setState])
-
-  const startScan = useCallback((targetId: string) => {
-    setState(s => applyStartScan(s, targetId))
-  }, [setState])
-
-  const collectScan = useCallback(() => {
-    setState(s => applyCollectScan(s))
-  }, [setState])
-
   const unlockSkillNode = useCallback((id: string) => {
     setState(s => applyUnlockSkillNode(s, id))
   }, [setState])
@@ -90,7 +77,7 @@ export function useEconomyActions(
   return {
     sellMinerals, sellRefinedGoods, onStartRefine, onCollectRefined, placeStructure, upgradeLaunchpad,
     excavateSubsurface, buildSubsurfaceRoom,
-    buildScanner, startScan, collectScan, unlockSkillNode, acceptLoan, abandonMission,
+    unlockSkillNode, acceptLoan, abandonMission,
     confirmShipCustomizerBuild,
   }
 }

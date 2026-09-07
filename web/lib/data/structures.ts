@@ -4,7 +4,6 @@ import type { StructureBlueprint, RefineryRecipe, MarketTemplate } from './types
 import { MINERAL_VALUE, REFINING_COST_RATE, REFINING_VALUE_MULTIPLIER, STRUCTURE_PRICES, SURFACE_SILO_PRICE } from './economy'
 import { MINERAL_RARITY } from './minerals'
 import { CLIENT_AFFINITY_MISSION_THRESHOLD } from './clients'
-import { FEATURE_FLAGS } from '@/lib/featureFlags'
 
 // Refining takes raw ore and returns it worth REFINING_VALUE_MULTIPLIER more,
 // for a cycle fee proportional to the input's value. Previously each recipe
@@ -57,15 +56,6 @@ export const STRUCTURES: StructureBlueprint[] = [
     description: 'Level 1 ore processing. Refines one shipment of raw minerals into higher-value goods per day.',
   },
   {
-    id: 'scan-station',
-    name: 'Scanning Station',
-    kind: 'scan-station',
-    cost: 0,
-    unlocksAt: 'Free Operations',
-    unlockTrigger: 'always',
-    description: 'Scans remote targets to map mineral deposits, craters, and landmarks. Up to 5 scans per day, 10 minutes each.',
-  },
-  {
     id: 'deep-space-telescope',
     name: 'Deep Space Telescope',
     kind: 'deep-space-telescope',
@@ -93,10 +83,6 @@ export const STRUCTURES: StructureBlueprint[] = [
  *  HubScreen's copy, which could drift apart silently. */
 export const LAUNCHPAD_UPGRADE_COST = STRUCTURE_PRICES.launchpadUpgrade
 
-export const SCANS_PER_DAY = 5
-export const SCAN_DURATION_MS = 10 * 60 * 1000
-export const SCANS_REQUIRED_TO_MAP = 3
-
 // Deep Space Telescope unlock (STS-622): requires the transit satellite to
 // have reached level 2 and at least one client relationship to have reached
 // affinity level 2 — a lighter bar than the Academy's two-client requirement,
@@ -110,15 +96,8 @@ export function deepSpaceTelescopeUnlocked(opts: { transitSatelliteLevel?: numbe
   )
 }
 
-export function structureUnlocked(structure: StructureBlueprint, opts: { refineryUnlocked?: boolean; academyResearched?: boolean; placed?: string[]; freeOperations?: boolean; transitSatelliteLevel?: number; clientMissions?: Record<string, number>; deepSpaceTelescopeMissionCompletedAt?: number | null; scanStationMissionCompletedAt?: number | null } = {}): boolean {
+export function structureUnlocked(structure: StructureBlueprint, opts: { refineryUnlocked?: boolean; academyResearched?: boolean; placed?: string[]; freeOperations?: boolean; transitSatelliteLevel?: number; clientMissions?: Record<string, number>; deepSpaceTelescopeMissionCompletedAt?: number | null } = {}): boolean {
   if (structure.id === 'surface-silo') return !!opts.freeOperations || !!opts.placed?.includes('surface-silo')
-  // KES-132: the feature flag now only decides when the
-  // story-scan-station-commission mission (see runtimeCatalog.ts) is
-  // offered as the on-ramp — completing that mission is what actually opens
-  // the build slot, matching the Deep Space Telescope pattern below.
-  if (structure.id === 'scan-station') {
-    return (FEATURE_FLAGS.scanStation && !!opts.freeOperations && !!opts.scanStationMissionCompletedAt) || !!opts.placed?.includes('scan-station')
-  }
   if (structure.id === 'astronaut-academy') return !!opts.academyResearched || !!opts.placed?.includes('astronaut-academy')
   // KES-128: the numeric threshold (deepSpaceTelescopeUnlocked) now only
   // decides when the story-deep-space-telescope-survey mission (see

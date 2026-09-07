@@ -27,7 +27,6 @@ export const EARTH_BASE_STRUCTURE_SIZES: Record<string, { width: number; height:
   'surface-silo': { width: 120, height: 78 },
   hangar: { width: 226, height: 116 },
   refinery: { width: 150, height: 97 },
-  'scan-station': { width: 132, height: 86 },
   command: { width: 150, height: 97 },
   'deep-space-telescope': { width: 150, height: 97 },
   'astronaut-academy': { width: 150, height: 97 },

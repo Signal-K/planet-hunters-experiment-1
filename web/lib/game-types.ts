@@ -79,7 +79,6 @@ export type Screen =
   | 'hangar'
   | 'rocket-buy'
   | 'skills'
-  | 'scan-station'
   | 'rover-mining'
   | 'launchpad'
   | 'surface-ops'
@@ -108,7 +107,6 @@ export const LOCATION_SCREENS: ReadonlySet<Screen> = new Set<Screen>([
   'rover-mining',
   'delivery',
   'refinery',
-  'scan-station',
   'academy',
   'hangar',
   'surface-ops',
@@ -302,7 +300,6 @@ export interface Player {
   }>
   clientTerritories?: Record<string, string[]>
   dailyClientPool?: DailyClientPool
-  scannerBuilt?: boolean
   // Subsurface deck (STS-633): the below-soil area starts unexcavated, and
   // each room must be built into it individually before it holds live
   // inventory — mirrors the surface Build·Place cost shape.
@@ -327,14 +324,6 @@ export interface Player {
   // deepSpaceTelescopeLaunchedAt above, which marks when the structure was
   // physically placed, not when the player earned the right to build it.
   deepSpaceTelescopeMissionCompletedAt?: number | null
-  // KES-132: completing the story-scan-station-commission mission — same
-  // on-ramp pattern as deepSpaceTelescopeMissionCompletedAt above, gating
-  // the Scan Station's build slot instead of the raw feature flag.
-  scanStationMissionCompletedAt?: number | null
-  scansUsedToday?: number
-  scanDate?: string
-  activeScan?: { targetId: string; completesAt: number } | null
-  targetScanCounts?: Record<string, number>
   tessClassifications?: Record<string, TessClassification>
   // One-shot late-game narrative beat after a high-level TESS confirmation.
   artifactNarrativeSeenAt?: number | null
@@ -503,9 +492,6 @@ export interface GameActions {
   unlockSkillNode: (id: string) => void
   acceptLoan: () => void
   abandonMission: () => void
-  buildScanner: () => void
-  startScan: (targetId: string) => void
-  collectScan: () => void
   launchTransitSatellite: () => void
   submitTessClassification: (subjectId: string, verdict: TessVerdict, ranges: TransitRange[], discoveredTarget?: Target) => void
   chooseSatelliteTarget: (subjectId: string) => void

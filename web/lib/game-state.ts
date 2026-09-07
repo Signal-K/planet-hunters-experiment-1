@@ -5,7 +5,6 @@ import { FREE_OPS_START_MISSIONS_DONE } from '@/lib/data/mission-generator'
 import { migrateCrewRoster } from '@/lib/systems/CrewSystem'
 import { normalizeSurfaceOps } from '@/lib/systems/SurfaceOpsSystem'
 import { settleCrewEconomy } from '@/lib/systems/AcademySystem'
-import { FEATURE_FLAGS } from '@/lib/featureFlags'
 import { findTargetStructure } from '@/lib/data/target-structures'
 import { resolveConstructionState } from '@/lib/systems/ConstructionSystem'
 import { EARTH_BASE_SCOPE } from '@/lib/scene-scope'
@@ -15,7 +14,7 @@ import { aestDateKey, type ClientBuildCompletionEvent } from '@/lib/systems/Dail
 // where player fields are optional since older saves may be missing new fields.
 export type PartialSave = Omit<Partial<GameState>, 'player'> & { player?: Partial<Player> }
 
-const VALID_SCREENS: Screen[] = ['intro', 'build', 'hub', 'missions', 'galaxy', 'targets', 'fab', 'transit', 'landing', 'mining', 'delivery', 'debrief', 'refinery', 'market', 'hangar', 'rocket-buy', 'skills', 'scan-station', 'rover-mining', 'launchpad', 'surface-ops', 'academy', 'asteroid-discovery', 'mission-history', 'narrative-ledger']
+const VALID_SCREENS: Screen[] = ['intro', 'build', 'hub', 'missions', 'galaxy', 'targets', 'fab', 'transit', 'landing', 'mining', 'delivery', 'debrief', 'refinery', 'market', 'hangar', 'rocket-buy', 'skills', 'rover-mining', 'launchpad', 'surface-ops', 'academy', 'asteroid-discovery', 'mission-history', 'narrative-ledger']
 const MISSION_CONTEXT_SCREENS = new Set<Screen>(['targets', 'rocket-buy', 'fab', 'transit', 'mining', 'rover-mining', 'delivery', 'debrief'])
 const TARGET_CONTEXT_SCREENS = new Set<Screen>(['rocket-buy', 'fab', 'transit', 'mining', 'rover-mining', 'delivery', 'debrief'])
 const VALID_LICENSE_GRADES: LicenseGrade[] = ['Grade I', 'Grade II', 'Grade III']
@@ -69,7 +68,6 @@ export const DEFAULT_STATE: GameState = {
     deepSpaceTelescopeLevel: 1,
     deepSpaceTelescopeLaunchedAt: null,
     deepSpaceTelescopeMissionCompletedAt: null,
-    scanStationMissionCompletedAt: null,
     licenseGrade: 'Grade I',
     researchXP: 0,
     unlockedBlueprints: [],
@@ -239,16 +237,15 @@ export function normalizeState(input: PartialSave): GameState {
   // flags from `placed` so the two can never drift again — and OR rather than
   // overwrite, so a flag set by any other route still counts.
   const savedPlaced = Array.isArray(player.placed) ? player.placed : DEFAULT_STATE.player.placed
-  const placedList = FEATURE_FLAGS.scanStation
-    ? savedPlaced
-    : savedPlaced.filter(kind => kind !== 'scan-station')
+  // Scanning Station is retired (KES-333); strip it from any older save so it
+  // can never resurface as a placed structure.
+  const placedList = savedPlaced.filter(kind => kind !== 'scan-station')
   const placementPlots = Object.fromEntries(
-    Object.entries(player.placementPlots ?? {}).filter(([kind]) => FEATURE_FLAGS.scanStation || kind !== 'scan-station')
+    Object.entries(player.placementPlots ?? {}).filter(([kind]) => kind !== 'scan-station')
   )
   const builtFrom = (kind: string, flag: boolean | undefined) => !!flag || placedList.includes(kind)
   const deepSpaceTelescopeBuilt = builtFrom('deep-space-telescope', player.deepSpaceTelescopeBuilt)
   const refineryBuilt = builtFrom('refinery', player.refineryBuilt)
-  const scannerBuilt = FEATURE_FLAGS.scanStation && builtFrom('scan-station', player.scannerBuilt)
   // KES-177: Free Operations is a progression boundary, not a freely
   // persisted toggle. Older/incorrect remote saves can have the flag set
   // before M3; derive it from missionsDone so the early game can never expose
@@ -275,7 +272,7 @@ export function normalizeState(input: PartialSave): GameState {
       // offer the assembly flow after the rocket has already left the pad.
       pendingLaunch: player.activeMission ? false : (player.pendingLaunch ?? DEFAULT_STATE.player.pendingLaunch),
       pendingRocketId: player.activeMission ? undefined : player.pendingRocketId,
-      deepSpaceTelescopeBuilt, refineryBuilt, scannerBuilt },
+      deepSpaceTelescopeBuilt, refineryBuilt },
     doneSteps: { ...DEFAULT_STATE.doneSteps, ...input.doneSteps },
     // The retired private emergency-loan popup must not survive an old save.
     popup: input.popup === 'loan' || input.popup === undefined ? null : input.popup,

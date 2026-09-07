@@ -115,9 +115,8 @@ describe('Earth Base — redesigned scene', () => {
       freeOperations: true,
       refineryBuilt: true,
       refineryUnlocked: true,
-      scannerBuilt: true,
-      placed: ['launchpad', 'refinery', 'scan-station', 'transit-telescope'],
-      placementPlots: { launchpad: 0, refinery: 1, 'scan-station': 2, 'transit-telescope': 3 },
+      placed: ['launchpad', 'refinery', 'transit-telescope'],
+      placementPlots: { launchpad: 0, refinery: 1, 'transit-telescope': 2 },
       stash: { iron: 12, silicon: 5, gold: 2 },
     })
     cy.screenshot('earth-base-02-portrait-full', { capture: 'viewport' })
@@ -131,9 +130,8 @@ describe('Earth Base — redesigned scene', () => {
       freeOperations: true,
       refineryBuilt: true,
       refineryUnlocked: true,
-      scannerBuilt: true,
-      placed: ['launchpad', 'refinery', 'scan-station', 'transit-telescope'],
-      placementPlots: { launchpad: 0, refinery: 1, 'scan-station': 2, 'transit-telescope': 3 },
+      placed: ['launchpad', 'refinery', 'transit-telescope'],
+      placementPlots: { launchpad: 0, refinery: 1, 'transit-telescope': 2 },
       stash: { iron: 12, silicon: 5 },
     })
     assertNoHorizontalOverflow()
@@ -149,9 +147,8 @@ describe('Earth Base — redesigned scene', () => {
       freeOperations: true,
       refineryBuilt: true,
       refineryUnlocked: true,
-      scannerBuilt: true,
-      placed: ['launchpad', 'refinery', 'scan-station', 'transit-telescope'],
-      placementPlots: { launchpad: 0, refinery: 1, 'scan-station': 2, 'transit-telescope': 3 },
+      placed: ['launchpad', 'refinery', 'transit-telescope'],
+      placementPlots: { launchpad: 0, refinery: 1, 'transit-telescope': 2 },
     })
     assertNoHorizontalOverflow()
     assertInsideViewport('[data-testid="progression-card-transit-satellite"]')
