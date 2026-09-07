@@ -107,7 +107,7 @@ function Brick({ placement, band, haze, hazeAmount }: {
         // handful of floating cut-outs, especially on the taller desktop
         // scene where the ground band has more vertical room.
         filter: band.depth >= 0.88
-          ? 'drop-shadow(0 3px 3px color-mix(in srgb, var(--ln-void) 42%, transparent))'
+          ? 'drop-shadow(0 4px 4px color-mix(in srgb, var(--ln-void) 42%, transparent))'
           : undefined,
       }}
     >
@@ -172,8 +172,8 @@ function RoadBed({ road, palette }: { road: SceneRoadPath; palette: Palette }) {
         zIndex: 9,
         pointerEvents: 'none',
         background: `color-mix(in srgb, var(--ln-void) 78%, ${palette.groundNear})`,
-        borderTop: `2px solid ${palette.groundLip}`,
-        borderBottom: `2px solid ${palette.groundNear}`,
+        borderTop: `4px solid ${palette.groundLip}`,
+        borderBottom: `4px solid ${palette.groundNear}`,
       }}
     >
       <span
@@ -186,7 +186,7 @@ function RoadBed({ road, palette }: { road: SceneRoadPath; palette: Palette }) {
           height: 2,
           transform: 'translateY(-50%)',
           opacity: 0.82,
-          background: `repeating-linear-gradient(90deg, transparent 0 24px, color-mix(in srgb, ${palette.groundLip} 78%, var(--hub-chalk)) 24px 40px)`,
+          background: `repeating-linear-gradient(90deg, transparent 0 24px, color-mix(in srgb, ${palette.groundLip} 78%, var(--hub-chalk)) 24px 48px)`,
         }}
       />
     </div>
@@ -267,13 +267,13 @@ export function TerrainScene({
           position: 'absolute', left: 0, right: 0, top: 0, height: '46%', zIndex: 0,
           opacity: palette.starOpacity, transition: 'opacity 1.2s ease', pointerEvents: 'none',
           backgroundImage: [
-            'radial-gradient(1px 1px at 8% 18%, rgba(198,216,240,.55), transparent)',
-            'radial-gradient(1px 1px at 28% 8%, rgba(198,216,240,.4), transparent)',
-            'radial-gradient(1.5px 1.5px at 63% 13%, rgba(198,216,240,.5), transparent)',
-            'radial-gradient(1px 1px at 88% 24%, rgba(198,216,240,.35), transparent)',
-            'radial-gradient(1px 1px at 45% 30%, rgba(198,216,240,.3), transparent)',
+            'radial-gradient(4px 4px at 8% 18%, color-mix(in srgb, var(--ln-text) 55%, transparent), transparent)',
+            'radial-gradient(4px 4px at 28% 8%, color-mix(in srgb, var(--ln-text) 40%, transparent), transparent)',
+            'radial-gradient(4px 4px at 63% 13%, color-mix(in srgb, var(--ln-text) 50%, transparent), transparent)',
+            'radial-gradient(4px 4px at 88% 24%, color-mix(in srgb, var(--ln-text) 35%, transparent), transparent)',
+            'radial-gradient(4px 4px at 45% 30%, color-mix(in srgb, var(--ln-text) 30%, transparent), transparent)',
           ].join(','),
-          backgroundSize: '520px 340px',
+          backgroundSize: '256px 256px',
         }} />
       )}
 
@@ -289,8 +289,8 @@ export function TerrainScene({
         position: 'absolute', left: 0, right: 0, bottom: 0, height: 'var(--hub-ground)',
         zIndex: 9, background: palette.ground, transition: 'background 1.2s ease',
       }}>
-        {/* Enlarged from 5px/.95 opacity (KES-263) so the ground/sky contact
-            point reads as a clear, deliberate line rather than a thin seam —
+        {/* Enlarged from the earlier thin seam and opacity (KES-263) so the
+            ground/sky contact point reads as a clear, deliberate line —
             same groundLip token/palette, just more visible. */}
         <div style={{
           position: 'absolute', left: 0, right: 0, top: 0, height: 9,

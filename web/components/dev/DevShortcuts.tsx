@@ -62,11 +62,11 @@ export default function DevShortcuts() {
         data-testid="dev-shortcuts-toggle"
         onClick={() => setOpen(o => !o)}
         style={{
-          padding: '3px 8px',
-          background: open ? '#1a2e1a' : '#0e1a0e',
-          border: '1px solid #3a7a3a',
+          padding: 'var(--ln-s-1) var(--ln-s-2)',
+          background: open ? 'var(--ln-ok-soft)' : 'var(--ln-void)',
+          border: '1px solid var(--ln-ok)',
           borderRadius: 6,
-          color: '#5aff5a',
+          color: 'var(--ln-ok)',
           fontFamily: 'var(--ln-font-mono)',
           fontSize: 10,
           fontWeight: 700,
@@ -83,30 +83,30 @@ export default function DevShortcuts() {
           position: 'absolute',
           top: 28,
           left: 0,
-          background: '#060d18',
-          border: '1px solid #1a2e3a',
+          background: 'var(--ln-void)',
+          border: '1px solid var(--ln-hairline-strong)',
           borderRadius: 10,
-          padding: '8px 0 6px',
+          padding: 'var(--ln-s-2) 0 var(--ln-s-2)',
           minWidth: 220,
-          maxHeight: 'calc(100dvh - 80px)',
+          maxHeight: 'calc(100dvh - 64px)',
           overflowY: 'auto',
-          boxShadow: '0 8px 32px rgba(0,0,0,0.8)',
+          boxShadow: '0 8px 32px var(--ln-overlay)',
         }}>
-          <div data-testid="dev-shortcuts-panel" style={{ padding: '0 12px 6px', fontFamily: 'var(--ln-font-mono)', fontSize: 9, letterSpacing: '0.2em', color: '#2a5a2a', textTransform: 'uppercase' }}>
+          <div data-testid="dev-shortcuts-panel" style={{ padding: '0 var(--ln-s-3) var(--ln-s-2)', fontFamily: 'var(--ln-font-mono)', fontSize: 9, letterSpacing: '0.2em', color: 'var(--ln-text-muted)', textTransform: 'uppercase' }}>
             Mission and UI States
           </div>
 
-          <div style={{ padding: '0 10px 8px' }}>
+          <div style={{ padding: '0 var(--ln-s-3) var(--ln-s-2)' }}>
             <button
               data-testid="dev-return-to-game"
               onClick={() => { window.location.href = '/game' }}
               style={{
                 width: '100%',
-                padding: '7px 10px',
-                background: '#0a1624',
-                border: '1px solid #3fa9ff66',
+                padding: 'var(--ln-s-2) var(--ln-s-3)',
+                background: 'var(--ln-void)',
+                border: '1px solid var(--ln-cyan-border)',
                 borderRadius: 6,
-                color: '#87cffa',
+                color: 'var(--ln-cyan-bright)',
                 fontFamily: 'var(--ln-font-display)',
                 fontSize: 10,
                 fontWeight: 800,
@@ -119,7 +119,7 @@ export default function DevShortcuts() {
             </button>
           </div>
 
-          <div style={{ padding: '0 10px 8px' }}>
+          <div style={{ padding: '0 var(--ln-s-3) var(--ln-s-2)' }}>
             <button
               data-testid="dev-shortcuts-mode-toggle"
               onClick={() => { setBackendMode(v => !v); setStatus(null) }}
@@ -128,11 +128,11 @@ export default function DevShortcuts() {
                 : 'In-memory preset: instant UI preview only, zero persistence, resets on reload. Not representative of real save behavior — normal signed-in/guest play always persists to PocketBase regardless of this toggle.'}
               style={{
                 width: '100%',
-                padding: '5px 10px',
-                background: backendMode ? '#1a2a3a' : '#0a1624',
-                border: `1px solid ${backendMode ? '#3fa9ff88' : '#2a5a2a44'}`,
+                padding: 'var(--ln-s-1) var(--ln-s-3)',
+                background: backendMode ? 'var(--ln-cyan-soft)' : 'var(--ln-void)',
+                border: `1px solid ${backendMode ? 'var(--ln-cyan-border)' : 'var(--ln-ok-soft)'}`,
                 borderRadius: 6,
-                color: backendMode ? '#3fa9ff' : '#5a8a5a',
+                color: backendMode ? 'var(--ln-cyan)' : 'var(--ln-text-muted)',
                 fontFamily: 'var(--ln-font-mono)',
                 fontSize: 9,
                 fontWeight: 700,
@@ -144,21 +144,21 @@ export default function DevShortcuts() {
               {backendMode ? '● Backend (seeded account)' : '○ In-memory preset (no save)'}
             </button>
             {status && (
-              <div style={{ padding: '4px 2px 0', fontFamily: 'var(--ln-font-mono)', fontSize: 9, color: '#ffb84d', lineHeight: 1.4 }}>
+              <div style={{ padding: 'var(--ln-s-1) var(--ln-s-1) 0', fontFamily: 'var(--ln-font-mono)', fontSize: 9, color: 'var(--ln-warn)', lineHeight: 1.4 }}>
                 {status}
               </div>
             )}
           </div>
 
-          <div style={{ padding: '0 10px 8px' }}>
+          <div style={{ padding: '0 var(--ln-s-3) var(--ln-s-2)' }}>
             <a
               href="/game/launcher"
               style={{
                 display: 'block',
-                padding: '6px 10px',
-                border: '1px solid #2a5a2a88',
+                padding: 'var(--ln-s-2) var(--ln-s-3)',
+                border: '1px solid var(--ln-ok-soft)',
                 borderRadius: 6,
-                color: '#5aff5a',
+                color: 'var(--ln-ok)',
                 fontFamily: 'var(--ln-font-display)',
                 fontSize: 10,
                 fontWeight: 800,
@@ -173,8 +173,8 @@ export default function DevShortcuts() {
               href="/game/narrative-ledger"
               style={{
                 display: 'block',
-                marginTop: 6,
-                padding: '6px 10px',
+                marginTop: 8,
+                padding: 'var(--ln-s-2) var(--ln-s-3)',
                 border: '1px solid var(--ln-cyan-border)',
                 borderRadius: 6,
                 color: 'var(--ln-cyan)',
@@ -192,16 +192,16 @@ export default function DevShortcuts() {
 
           {DEV_GROUPS.map((group, gi) => (
             <div key={group.label}>
-              {gi > 0 && <div style={{ height: 1, background: '#0d1f2e', margin: '4px 0' }} />}
+              {gi > 0 && <div style={{ height: 1, background: 'var(--ln-hairline)', margin: 'var(--ln-s-1) 0' }} />}
 
-              <div style={{ padding: '4px 12px 2px', display: 'flex', alignItems: 'center', gap: 6 }}>
+              <div style={{ padding: 'var(--ln-s-1) var(--ln-s-3) var(--ln-s-1)', display: 'flex', alignItems: 'center', gap: 6 }}>
                 <div style={{ width: 6, height: 6, borderRadius: 999, background: group.color, flexShrink: 0 }} />
                 <span data-testid={`dev-group-${group.label.toLowerCase().replace(/\s+/g, '-')}`} style={{ fontFamily: 'var(--ln-font-display)', fontSize: 9, fontWeight: 800, letterSpacing: '0.2em', color: group.color, textTransform: 'uppercase' }}>
                   {group.label}
                 </span>
               </div>
 
-              <div style={{ padding: '2px 10px 2px', display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+              <div style={{ padding: 'var(--ln-s-1) var(--ln-s-3) var(--ln-s-1)', display: 'flex', flexWrap: 'wrap', gap: 4 }}>
                 {group.shots.map(shot => (
                   <button
                     key={shot.key}
@@ -209,8 +209,8 @@ export default function DevShortcuts() {
                     onClick={() => { backendMode ? jumpBackend(shot.key) : jump(shot.key) }}
                     title={backendMode ? `${shot.hint} (signs into a seeded backend account — real persistence)` : `${shot.hint} (in-memory preview only — no persistence)`}
                     style={{
-                      padding: '4px 10px',
-                      background: '#0a1624',
+                      padding: 'var(--ln-s-1) var(--ln-s-3)',
+                      background: 'var(--ln-void)',
                       border: `1px solid ${group.color}44`,
                       borderRadius: 6,
                       color: group.color,
@@ -225,7 +225,7 @@ export default function DevShortcuts() {
                       gap: 4,
                     }}
                     onMouseEnter={e => { e.currentTarget.style.background = `${group.color}18`; e.currentTarget.style.borderColor = `${group.color}88` }}
-                    onMouseLeave={e => { e.currentTarget.style.background = '#0a1624'; e.currentTarget.style.borderColor = `${group.color}44` }}
+                    onMouseLeave={e => { e.currentTarget.style.background = 'var(--ln-void)'; e.currentTarget.style.borderColor = `${group.color}44` }}
                   >
                     {shot.label}
                     {/* STS-635: stage badge — distinguishes still-mid-tutorial presets
@@ -236,10 +236,10 @@ export default function DevShortcuts() {
                         fontSize: 8,
                         fontWeight: 800,
                         letterSpacing: '0.04em',
-                        padding: '1px 4px',
+                        padding: 'var(--ln-s-1) var(--ln-s-1)',
                         borderRadius: 4,
-                        color: shot.stage === 'free-ops' ? '#39d36a' : '#ffb84d',
-                        border: `1px solid ${shot.stage === 'free-ops' ? '#39d36a88' : '#ffb84d88'}`,
+                        color: shot.stage === 'free-ops' ? 'var(--ln-ok)' : 'var(--ln-warn)',
+                        border: `1px solid ${shot.stage === 'free-ops' ? 'var(--ln-ok-soft)' : 'var(--ln-warn-soft)'}`,
                         opacity: 0.9,
                       }}
                     >

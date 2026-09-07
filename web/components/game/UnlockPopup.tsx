@@ -85,23 +85,23 @@ function RocketArt({ accent }: { accent: string }) {
     <svg width="96" height="96" viewBox="0 0 96 96">
       <defs>
         <linearGradient id="ua-body" x1="0" x2="1">
-          <stop offset="0%" stopColor="#eaf3ff"/>
-          <stop offset="100%" stopColor="#7a93b5"/>
+          <stop offset="0%" stopColor="var(--ln-text)"/>
+          <stop offset="100%" stopColor="var(--ln-text-muted)"/>
         </linearGradient>
         <linearGradient id="ua-cargo" x1="0" x2="0" y1="0" y2="1">
           <stop offset="0%" stopColor={accent}/>
-          <stop offset="100%" stopColor="#0d3158"/>
+          <stop offset="100%" stopColor="var(--ln-panel-2)"/>
         </linearGradient>
       </defs>
-      <path d="M48 6 L64 32 L62 73 L34 73 L32 32 Z" fill="url(#ua-body)" stroke="#1a2230" strokeWidth="1.2"/>
-      <path d="M48 6 L64 32 L32 32 Z" fill={accent} stroke="#1a2230" strokeWidth="1"/>
-      <rect x="39" y="47" width="18" height="20" rx="3" fill="url(#ua-cargo)" stroke="#1a2230" strokeWidth="1"/>
-      <circle cx="48" cy="39" r="5.5" fill="#f5a623" stroke="#1a2230"/>
-      <path d="M33 57 L19 79 L35 70 M63 57 L77 79 L61 70" fill={accent} stroke="#1a2230"/>
-      <path d="M25 78 C27 69 31 64 36 61" fill="none" stroke="#7ec8ff" strokeWidth="2" strokeLinecap="round" opacity="0.75"/>
-      <path d="M71 78 C69 69 65 64 60 61" fill="none" stroke="#7ec8ff" strokeWidth="2" strokeLinecap="round" opacity="0.75"/>
-      <path d="M40 73 L48 91 L56 73" fill="#f5a623"/>
-      <path d="M43 78 L48 92 L53 78" fill="#ff6b35" opacity="0.72"/>
+      <path d="M48 6 L64 32 L62 73 L34 73 L32 32 Z" fill="url(#ua-body)" stroke="var(--ln-surface)" strokeWidth="1.2"/>
+      <path d="M48 6 L64 32 L32 32 Z" fill={accent} stroke="var(--ln-surface)" strokeWidth="1"/>
+      <rect x="39" y="47" width="18" height="20" rx="3" fill="url(#ua-cargo)" stroke="var(--ln-surface)" strokeWidth="1"/>
+      <circle cx="48" cy="39" r="5.5" fill="var(--ln-warn)" stroke="var(--ln-surface)"/>
+      <path d="M33 57 L19 79 L35 70 M63 57 L77 79 L61 70" fill={accent} stroke="var(--ln-surface)"/>
+      <path d="M25 78 C27 69 31 64 36 61" fill="none" stroke="var(--ln-cyan)" strokeWidth="2" strokeLinecap="round" opacity="0.75"/>
+      <path d="M71 78 C69 69 65 64 60 61" fill="none" stroke="var(--ln-cyan)" strokeWidth="2" strokeLinecap="round" opacity="0.75"/>
+      <path d="M40 73 L48 91 L56 73" fill="var(--ln-warn)"/>
+      <path d="M43 78 L48 92 L53 78" fill="var(--ln-warn)" opacity="0.72"/>
     </svg>
   )
 }
@@ -123,9 +123,9 @@ function RoomsArt({ accent }: { accent: string }) {
 function CoinArt() {
   return (
     <svg width="96" height="96" viewBox="0 0 96 96">
-      <circle cx="48" cy="48" r="34" fill="#f5a623" stroke="#8a5300" strokeWidth="2"/>
-      <circle cx="48" cy="48" r="26" fill="none" stroke="#fff1d0" strokeWidth="1.5" opacity="0.6"/>
-      <text x="48" y="60" textAnchor="middle" fontFamily="var(--ln-font-display)" fontSize="34" fontWeight="800" fill="#7a4f00">▲</text>
+      <circle cx="48" cy="48" r="34" fill="var(--ln-amber)" stroke="var(--ln-amber-press)" strokeWidth="2"/>{/* amber allowed: coin/loan reward icon */}
+      <circle cx="48" cy="48" r="26" fill="none" stroke="var(--ln-amber-bright)" strokeWidth="1.5" opacity="0.6"/>
+      <text x="48" y="60" textAnchor="middle" fontFamily="var(--ln-font-display)" fontSize="34" fontWeight="800" fill="var(--ln-amber-press)">▲</text>
     </svg>
   )
 }
@@ -138,9 +138,9 @@ export default function UnlockPopup({ kind, onClose, onDismiss }: UnlockPopupPro
       zIndex={90}
       testId="unlock-page"
       contentStyle={{
-        background: 'linear-gradient(180deg, #0d1c30 0%, #060d18 100%)',
+        background: 'linear-gradient(180deg, var(--ln-panel-2) 0%, var(--ln-void) 100%)',
         border: `1px solid ${u.accent}88`,
-        padding: 22, textAlign: 'center',
+        padding: 24, textAlign: 'center',
       }}
     >
         <div style={{ position: 'absolute', inset: 0, borderRadius: 20, overflow: 'hidden', pointerEvents: 'none' }}>
@@ -155,7 +155,7 @@ export default function UnlockPopup({ kind, onClose, onDismiss }: UnlockPopupPro
         <div style={{ position: 'relative' }}>
           <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 10, fontWeight: 800, letterSpacing: '0.24em', color: u.accent, textTransform: 'uppercase' }}>{u.eyebrow}</div>
 
-          <div style={{ margin: '14px auto', width: 96, height: 96, position: 'relative' }}>
+          <div style={{ margin: 'var(--ln-s-4) auto', width: 96, height: 96, position: 'relative' }}>
             <div style={{ position: 'absolute', inset: -8, borderRadius: 999, background: `radial-gradient(circle, ${u.accent}44, transparent 70%)` }} />
             {u.imgSrc ? (
               <Image src={u.imgSrc} alt="" width={96} height={96} style={{ objectFit: 'contain', position: 'relative' }} />
@@ -168,30 +168,30 @@ export default function UnlockPopup({ kind, onClose, onDismiss }: UnlockPopupPro
             )}
           </div>
 
-          <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 24, fontWeight: 800, letterSpacing: '0.04em', color: '#fff', textShadow: `0 0 18px ${u.accent}88` }}>{u.title}</div>
-          <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 13, color: '#a9b8ce', marginTop: 8, lineHeight: 1.5 }}>{u.body}</div>
+          <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 24, fontWeight: 800, letterSpacing: '0.04em', color: 'var(--ln-text)', textShadow: `0 0 16px ${u.accent}88` }}>{u.title}</div>
+          <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 13, color: 'var(--ln-text-dim)', marginTop: 8, lineHeight: 1.5 }}>{u.body}</div>
 
           <div style={{ display: 'flex', gap: 8, justifyContent: 'center', marginTop: 16 }}>
             {u.stats.map(([k, v]) => (
-              <div key={k} style={{ flex: 1, padding: '8px 4px', background: 'rgba(20,20,23,0.7)', border: `1px solid ${u.accent}44`, borderRadius: 10 }}>
-                <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 8, fontWeight: 700, letterSpacing: '0.16em', color: '#7a8294', textTransform: 'uppercase' }}>{k}</div>
+              <div key={k} style={{ flex: 1, padding: '8px 4px', background: 'var(--ln-overlay)', border: `1px solid ${u.accent}44`, borderRadius: 10 }}>
+                <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 8, fontWeight: 700, letterSpacing: '0.16em', color: 'var(--ln-text-muted)', textTransform: 'uppercase' }}>{k}</div>
                 <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 15, fontWeight: 800, color: u.accent, marginTop: 2 }}>{v}</div>
               </div>
             ))}
           </div>
 
           <button data-testid="unlock-popup-primary" onClick={onClose} style={{
-            width: '100%', marginTop: 18, padding: '14px', borderRadius: 12, border: 'none', cursor: 'pointer',
+            width: '100%', marginTop: 18, padding: 'var(--ln-s-4)', borderRadius: 12, border: 'none', cursor: 'pointer',
             background: `linear-gradient(180deg, ${u.accent}, ${darkenColor(u.accent, 0.35)})`,
-            color: '#04121f', fontFamily: 'var(--ln-font-display)', fontSize: 14, fontWeight: 800,
+            color: 'var(--ln-text-on-cyan)', fontFamily: 'var(--ln-font-display)', fontSize: 14, fontWeight: 800,
             letterSpacing: '0.12em', textTransform: 'uppercase',
-            boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.4), 0 4px 0 rgba(0,0,0,0.3)',
+            boxShadow: 'inset 0 1px 0 var(--ln-hairline-strong), 0 4px 0 var(--ln-overlay)',
           }}>{u.cta}</button>
           {onDismiss && (
             <button data-testid="unlock-popup-secondary" onClick={onDismiss} style={{
-              width: '100%', marginTop: 8, padding: '10px', borderRadius: 10, cursor: 'pointer',
-              background: 'transparent', border: '1px solid rgba(169,184,206,0.2)',
-              color: 'rgba(169,184,206,0.5)', fontFamily: 'var(--ln-font-display)', fontSize: 11, fontWeight: 700,
+              width: '100%', marginTop: 8, padding: 'var(--ln-s-2)', borderRadius: 10, cursor: 'pointer',
+              background: 'transparent', border: '1px solid var(--ln-hairline)',
+              color: 'var(--ln-text-dim)', fontFamily: 'var(--ln-font-display)', fontSize: 11, fontWeight: 700,
               letterSpacing: '0.12em', textTransform: 'uppercase',
             }}>Decline</button>
           )}

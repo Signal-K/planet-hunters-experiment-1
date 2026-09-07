@@ -224,7 +224,7 @@ export default function TessDiscoveryScreen({ player, visualCandidate, onBack, o
   // keeps ObservatoryReadout nested inside this panel on mobile (unchanged
   // from before) while desktop pulls it into the right column instead.
   const chartPanel = (includeReadout: boolean) => (
-    <Panel accent="var(--ln-amber)" style={{ padding: 12, marginTop: 12 }}>
+    <Panel accent="var(--ln-cyan)" style={{ padding: 12, marginTop: 12 }}>
           <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10, marginBottom: 10 }}>
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
@@ -258,10 +258,10 @@ export default function TessDiscoveryScreen({ player, visualCandidate, onBack, o
                   data-testid={`sector-pill-${index}`}
                   onClick={() => setSectorIndex(index)}
                   style={{
-                    padding: '4px 10px', borderRadius: 999, cursor: 'pointer',
-                    border: `1px solid ${index === sectorIndex ? 'rgba(245,166,35,0.6)' : 'rgba(112,217,234,0.2)'}`,
-                    background: index === sectorIndex ? 'rgba(245,166,35,0.14)' : 'rgba(20,20,23,0.5)',
-                    color: index === sectorIndex ? 'var(--ln-amber)' : 'var(--ln-text-muted)',
+                    padding: '4px 8px', borderRadius: 999, cursor: 'pointer',
+                    border: `1px solid ${index === sectorIndex ? 'var(--ln-cyan-border)' : 'var(--ln-hairline)'}`,
+                    background: index === sectorIndex ? 'var(--ln-cyan-soft)' : 'var(--ln-overlay)',
+                    color: index === sectorIndex ? 'var(--ln-cyan)' : 'var(--ln-text-muted)',
                     fontFamily: 'var(--ln-font-display)', fontSize: 9, fontWeight: 800, letterSpacing: '0.1em',
                   }}
                 >
@@ -274,18 +274,18 @@ export default function TessDiscoveryScreen({ player, visualCandidate, onBack, o
           {!classification && player.pendingRepick && !forceMapView && (
             <div style={{
               display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8,
-              marginBottom: 8, padding: '8px 10px', borderRadius: 8,
-              background: 'rgba(245,166,35,0.12)', border: '1px solid rgba(245,166,35,0.4)',
+              marginBottom: 8, padding: '8px 8px', borderRadius: 8,
+              background: 'var(--ln-cyan-soft)', border: '1px solid var(--ln-cyan-border)',
             }}>
-              <span style={{ fontFamily: 'var(--ln-font-mono)', fontSize: 10, color: 'var(--ln-amber)' }}>
+              <span style={{ fontFamily: 'var(--ln-font-mono)', fontSize: 10, color: 'var(--ln-cyan)' }}>
                 A candidate was just confirmed as a real planet
               </span>
               <button
                 onClick={() => setForceMapView(true)}
                 style={{
-                  padding: '5px 10px', borderRadius: 6, cursor: 'pointer', whiteSpace: 'nowrap',
-                  border: '1px solid rgba(245,166,35,0.6)', background: 'rgba(245,166,35,0.2)',
-                  color: 'var(--ln-amber-bright)', fontFamily: 'var(--ln-font-display)', fontSize: 9,
+                  padding: '4px 8px', borderRadius: 6, cursor: 'pointer', whiteSpace: 'nowrap',
+                  border: '1px solid var(--ln-cyan-border)', background: 'var(--ln-cyan-soft)',
+                  color: 'var(--ln-cyan-bright)', fontFamily: 'var(--ln-font-display)', fontSize: 9,
                   fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase',
                 }}
               >
@@ -331,7 +331,7 @@ export default function TessDiscoveryScreen({ player, visualCandidate, onBack, o
           </TelescopeConsole>
 
           {showMap ? (
-            <div style={{ marginTop: 8, textAlign: 'center', fontFamily: 'var(--ln-font-mono)', fontSize: 10, color: targetChosen ? 'var(--ln-amber)' : 'var(--ln-text-muted)' }}>
+            <div style={{ marginTop: 8, textAlign: 'center', fontFamily: 'var(--ln-font-mono)', fontSize: 10, color: targetChosen ? 'var(--ln-cyan)' : 'var(--ln-text-muted)' }}>
               {targetChosen
                 ? `Target locked — ${pool.find(c => c.id === targetChosen)?.toi ?? targetChosen}`
                 : 'Tap a star to point the satellite tomorrow · green = already searched'}
@@ -348,7 +348,7 @@ export default function TessDiscoveryScreen({ player, visualCandidate, onBack, o
               )}
             </div>
           ) : (
-            <div style={{ marginTop: 8, textAlign: 'center', fontFamily: 'var(--ln-font-mono)', fontSize: 10, color: markCount > 0 ? 'var(--ln-amber)' : 'var(--ln-text-muted)' }}>
+            <div style={{ marginTop: 8, textAlign: 'center', fontFamily: 'var(--ln-font-mono)', fontSize: 10, color: markCount > 0 ? 'var(--ln-cyan)' : 'var(--ln-text-muted)' }}>
               {markCount === 0
                 ? 'Drag over the lightcurve to mark a transit'
                 : `${markCount} region${markCount !== 1 ? 's' : ''} marked`}
@@ -467,9 +467,12 @@ function GateScreen({ eyebrow, icon, tone, title, body, onBack, action, devBar }
   action?: ReactNode
   devBar?: ReactNode
 }) {
-  const accent = tone === 'amber' ? 'var(--ln-amber)' : 'var(--ln-cyan)'
-  const bg = tone === 'amber' ? 'rgba(245,166,35,0.12)' : 'rgba(57,211,239,0.12)'
-  const border = tone === 'amber' ? 'rgba(245,166,35,0.42)' : 'rgba(57,211,239,0.42)'
+  // "amber" tone here means a locked/blocked gate state, not a reward — mapped
+  // to --ln-warn rather than --ln-amber so it stays outside the reward-only
+  // amber restriction. {/* amber allowed */}
+  const accent = tone === 'amber' ? 'var(--ln-warn)' : 'var(--ln-cyan)'
+  const bg = tone === 'amber' ? 'var(--ln-warn-soft)' : 'var(--ln-cyan-soft)'
+  const border = tone === 'amber' ? 'var(--ln-warn)' : 'var(--ln-cyan-border)'
   return (
     <div className="game-screen theme-deep ln-scene-tess-discovery">
       <NebulaBackdrop />
@@ -500,22 +503,22 @@ function DevDaySkipBar({ offset, onAdvance, onReset }: { offset: number; onAdvan
   simulated.setDate(simulated.getDate() + offset)
   return (
     <div style={{
-      display: 'flex', alignItems: 'center', gap: 8, padding: '6px 10px', marginBottom: 10,
-      borderRadius: 7, border: '1px dashed var(--ln-hairline-strong)', background: 'rgba(20,20,23,0.6)',
+      display: 'flex', alignItems: 'center', gap: 8, padding: '8px 8px', marginBottom: 10,
+      borderRadius: 7, border: '1px dashed var(--ln-hairline-strong)', background: 'var(--ln-overlay)',
     }}>
       <span style={{ fontFamily: 'var(--ln-font-mono)', fontSize: 9, color: 'var(--ln-text-muted)', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
         DEV · Simulated day {simulated.toISOString().slice(0, 10)} ({offset >= 0 ? '+' : ''}{offset}d)
       </span>
       <span style={{ flex: 1 }} />
       <button data-testid="tess-dev-skip-day" onClick={onAdvance} style={{
-        padding: '3px 8px', borderRadius: 5, border: '1px solid var(--ln-cyan-border)', background: 'var(--ln-cyan-soft)',
+        padding: '4px 8px', borderRadius: 5, border: '1px solid var(--ln-cyan-border)', background: 'var(--ln-cyan-soft)',
         color: 'var(--ln-cyan)', fontFamily: 'var(--ln-font-mono)', fontSize: 9, fontWeight: 800, letterSpacing: '0.06em', cursor: 'pointer',
       }}>
         +1 DAY
       </button>
       {offset !== 0 && (
         <button data-testid="tess-dev-reset-day" onClick={onReset} style={{
-          padding: '3px 8px', borderRadius: 5, border: '1px solid var(--ln-hairline-strong)', background: 'transparent',
+          padding: '4px 8px', borderRadius: 5, border: '1px solid var(--ln-hairline-strong)', background: 'transparent',
           color: 'var(--ln-text-muted)', fontFamily: 'var(--ln-font-mono)', fontSize: 9, fontWeight: 700, letterSpacing: '0.06em', cursor: 'pointer',
         }}>
           RESET
@@ -530,7 +533,7 @@ function LiveDot({ active }: { active: boolean }) {
     <span style={{
       width: 6, height: 6, borderRadius: '50%', flexShrink: 0,
       background: active ? 'var(--ln-ok)' : 'var(--ln-text-muted)',
-      boxShadow: active ? '0 0 6px var(--ln-ok)' : 'none',
+      boxShadow: active ? '0 0 8px var(--ln-ok)' : 'none',
       animation: active ? 'ln-pulse 1.4s ease-in-out infinite' : 'none',
     }} />
   )
@@ -538,9 +541,11 @@ function LiveDot({ active }: { active: boolean }) {
 
 function VerdictButton({ action, disabled, onClick }: { action: { id: TessVerdict; label: string; kind: 'amber' | 'cyan' | 'ghost' }; disabled: boolean; onClick: () => void }) {
   const palette: Record<typeof action.kind, { border: string; bg: string; color: string; glow: string }> = {
-    amber: { border: 'rgba(245,166,35,0.7)', bg: 'linear-gradient(180deg, rgba(245,166,35,0.28), rgba(232,112,64,0.18))', color: 'var(--ln-amber-bright)', glow: 'rgba(245,166,35,0.4)' },
-    cyan:  { border: 'rgba(112,217,234,0.6)', bg: 'rgba(112,217,234,0.12)', color: 'var(--ln-cyan-bright)', glow: 'rgba(112,217,234,0.35)' },
-    ghost: { border: 'rgba(169,184,206,0.25)', bg: 'rgba(20,20,23,0.5)', color: 'var(--ln-text-muted)', glow: 'transparent' },
+    // "amber" kind is reserved for a future reward-tier verdict action; not
+    // wired up by VERDICT_ACTIONS today. {/* amber allowed */}
+    amber: { border: 'var(--ln-amber-border)', bg: 'var(--ln-amber-soft)', color: 'var(--ln-amber-bright)', glow: 'var(--ln-amber-border)' },
+    cyan:  { border: 'var(--ln-cyan-border)', bg: 'var(--ln-cyan-soft)', color: 'var(--ln-cyan-bright)', glow: 'var(--ln-cyan-border)' },
+    ghost: { border: 'var(--ln-hairline-strong)', bg: 'var(--ln-overlay)', color: 'var(--ln-text-muted)', glow: 'transparent' },
   }
   const p = palette[action.kind]
   return (
@@ -561,7 +566,7 @@ function VerdictButton({ action, disabled, onClick }: { action: { id: TessVerdic
         textTransform: 'uppercase',
         cursor: disabled ? 'not-allowed' : 'pointer',
         opacity: disabled ? 0.35 : 1,
-        boxShadow: disabled ? 'none' : `0 0 14px ${p.glow}`,
+        boxShadow: disabled ? 'none' : `0 0 12px ${p.glow}`,
       }}
     >
       {action.label}

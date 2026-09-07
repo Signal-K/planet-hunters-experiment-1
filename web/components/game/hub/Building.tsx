@@ -74,7 +74,7 @@ const CALLOUT_TAIL_INSET = 26
 
 const STATUS_COLOR: Record<BuildingProps['status'], string> = {
   ok:   'var(--hub-mint)',
-  warn: '#ffd166',
+  warn: 'var(--ln-warn)',
   info: 'var(--hub-cyan)',
 }
 
@@ -147,7 +147,7 @@ export function Building({ kind, label, sub, status, w, hitH, style, onClick, ba
         style={{
           background: 'transparent', border: 'none', padding: 0, cursor: 'pointer',
           display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6,
-          transform: isActive ? 'translateY(-3px)' : 'translateY(0)',
+          transform: isActive ? 'translateY(-4px)' : 'translateY(0)',
           transition: 'transform 180ms',
         }}
         onMouseEnter={disableHover ? undefined : () => setActive(true)}
@@ -169,10 +169,10 @@ export function Building({ kind, label, sub, status, w, hitH, style, onClick, ba
               data-testid={`building-${kind}-badge`}
               style={{
                 position: 'absolute', top: -4, right: -4, minWidth: 16, height: 16, padding: '0 4px',
-                borderRadius: 999, background: 'var(--hub-mint)', border: '2px solid #1c2438',
+                borderRadius: 999, background: 'var(--hub-mint)', border: '2px solid var(--ln-panel-2)',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontFamily: 'var(--ln-font-display)', fontWeight: 800, fontSize: 9, color: '#f4f9f4',
-                boxShadow: '0 0 10px rgba(31,143,87,0.45)',
+                fontFamily: 'var(--ln-font-display)', fontWeight: 800, fontSize: 9, color: 'var(--ln-text)',
+                boxShadow: '0 0 8px var(--ln-ok-soft)',
               }}
             >
               {badge > 9 ? '9+' : badge}
@@ -185,13 +185,13 @@ export function Building({ kind, label, sub, status, w, hitH, style, onClick, ba
           display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2,
           background: 'var(--hub-panel-deep)',
           border: '1.5px solid var(--hub-outline)',
-          borderRadius: 999, padding: '4px 10px', whiteSpace: 'nowrap',
+          borderRadius: 999, padding: 'var(--ln-s-1) var(--ln-s-3)', whiteSpace: 'nowrap',
         }}>
-          <span style={{ fontFamily: 'var(--ln-font-display)', fontWeight: 800, fontSize: 9, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'rgba(234,241,248,0.92)' }}>
+          <span style={{ fontFamily: 'var(--ln-font-display)', fontWeight: 800, fontSize: 9, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--ln-text)' }}>
             {label}
           </span>
           <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-            <span style={{ width: 4, height: 4, borderRadius: 999, background: color, boxShadow: `0 0 6px ${color}` }} />
+            <span style={{ width: 4, height: 4, borderRadius: 999, background: color, boxShadow: `0 0 8px ${color}` }} />
             <span style={{ fontFamily: 'var(--ln-font-display)', fontSize: 8, letterSpacing: '0.14em', textTransform: 'uppercase', color }}>
               {sub}
             </span>
@@ -211,11 +211,11 @@ export function Building({ kind, label, sub, status, w, hitH, style, onClick, ba
             style={{
               position: 'absolute', top: -4, right: 2, zIndex: 4,
               width: 22, height: 22, borderRadius: '50%',
-              background: seen ? 'rgba(234,241,248,0.14)' : 'var(--hub-mint)',
-              border: '2px solid #04101f',
+              background: seen ? 'var(--ln-hairline)' : 'var(--hub-mint)',
+              border: '2px solid var(--hub-panel)',
               display: 'grid', placeItems: 'center', cursor: 'pointer',
-              color: seen ? 'rgba(234,241,248,0.7)' : '#04140a',
-              boxShadow: seen ? 'none' : '0 0 12px rgba(31,143,87,0.45)',
+              color: seen ? 'var(--ln-text-dim)' : 'var(--ln-text-inverse)',
+              boxShadow: seen ? 'none' : '0 0 12px var(--ln-ok-soft)',
               animation: seen ? 'none' : 'hub-notify-pulse 1.8s ease-in-out infinite',
               padding: 0,
             }}
@@ -230,13 +230,13 @@ export function Building({ kind, label, sub, status, w, hitH, style, onClick, ba
               // 50% is the building center (the wrapper is translateX(-50%)
               // onto its plot); bubbleLeft then offsets the box from there.
               position: 'absolute', left: `calc(50% + ${bubbleLeft}px)`, bottom: 'calc(100% + 16px)',
-              transform: calloutOpen ? 'translateY(0) scale(1)' : 'translateY(6px) scale(0.96)',
+              transform: calloutOpen ? 'translateY(0) scale(1)' : 'translateY(8px) scale(0.96)',
               transformOrigin: `bottom ${tailLeft}px`,
               width: CALLOUT_W, zIndex: 22,
               background: 'var(--hub-panel)',
               border: '1.5px solid var(--hub-outline)',
-              borderRadius: 12, padding: '10px 12px 12px',
-              boxShadow: '0 20px 44px rgba(0,0,0,0.5)',
+              borderRadius: 12, padding: 'var(--ln-s-3)',
+              boxShadow: '0 24px 48px var(--ln-overlay)',
               opacity: calloutOpen ? 1 : 0,
               pointerEvents: calloutOpen ? 'auto' : 'none',
               transition: 'opacity 160ms ease, transform 160ms ease',
@@ -244,7 +244,7 @@ export function Building({ kind, label, sub, status, w, hitH, style, onClick, ba
             }}
           >
             <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 6 }}>
-              <span style={{ fontFamily: 'var(--ln-font-display)', fontWeight: 800, fontSize: 11, letterSpacing: '0.06em', color: '#eaf1f8' }}>
+              <span style={{ fontFamily: 'var(--ln-font-display)', fontWeight: 800, fontSize: 11, letterSpacing: '0.06em', color: 'var(--ln-text)' }}>
                 {callout.title}
               </span>
               <button
@@ -253,14 +253,14 @@ export function Building({ kind, label, sub, status, w, hitH, style, onClick, ba
                 onClick={e => { e.stopPropagation(); setCalloutOpen(false) }}
                 style={{
                   flexShrink: 0, width: 16, height: 16, borderRadius: '50%', border: 'none', cursor: 'pointer',
-                  background: 'rgba(234,241,248,0.12)', color: 'rgba(234,241,248,0.7)',
+                  background: 'var(--ln-hairline)', color: 'var(--ln-text-dim)',
                   fontSize: 10, lineHeight: 1, display: 'grid', placeItems: 'center', padding: 0,
                 }}
               >
                 ×
               </button>
             </div>
-            <div style={{ fontSize: 11, lineHeight: 1.45, color: 'rgba(234,241,248,0.68)', marginTop: 4 }}>
+            <div style={{ fontSize: 11, lineHeight: 1.45, color: 'var(--ln-text-dim)', marginTop: 4 }}>
               {callout.body}
             </div>
             <button
@@ -309,17 +309,19 @@ export function EmptyPlot({ w = 90, style, onClick, plot }: { w?: number; style?
       <div style={{ width: w, height: w * 0.5, position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         <div style={{
           width: '88%', height: 26, borderRadius: '50% / 60%',
-          background: 'radial-gradient(ellipse at 50% 35%, rgba(112,217,234,0.18), rgba(112,217,234,0.04) 70%)',
-          border: '2px dashed rgba(112,217,234,0.5)',
+          // 0.04 trailing gradient stop has no matching --ln-* token (nothing
+          // that faint exists); left as a literal fade-out, not swapped.
+          background: 'radial-gradient(ellipse at 50% 35%, var(--ln-cyan-soft), rgba(112,217,234,0.04) 70%)',
+          border: '2px dashed var(--ln-cyan-border)',
           display: 'grid', placeItems: 'center',
           animation: 'hub-pad-pulse 2s ease-in-out infinite',
         }}>
-          <span style={{ fontFamily: 'var(--ln-font-mono)', fontSize: 15, fontWeight: 800, color: 'rgba(112,217,234,0.85)' }}>+</span>
+          <span style={{ fontFamily: 'var(--ln-font-mono)', fontSize: 15, fontWeight: 800, color: 'var(--ln-cyan-bright)' }}>+</span>
         </div>
       </div>
       <div style={{
         background: 'var(--hub-panel-deep)', border: '1px solid var(--hub-outline)', borderRadius: 999,
-        padding: '3px 9px', fontFamily: 'var(--ln-font-display)', fontWeight: 800, fontSize: 8,
+        padding: 'var(--ln-s-1) var(--ln-s-2)', fontFamily: 'var(--ln-font-display)', fontWeight: 800, fontSize: 8,
         letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--hub-cyan)', whiteSpace: 'nowrap',
       }}>
         Build

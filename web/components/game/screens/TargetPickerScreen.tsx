@@ -32,19 +32,23 @@ interface TargetPickerScreenProps {
 
 function PlanetSVG({ id, size }: { id: string; size: number }) {
   const gradientId = React.useId()
+  // Planet body colors are matched to the nearest existing --ln-* token by hue/role
+  // (grays -> mineral-carbon/text ramp, gold/tan -> mineral-gold/mineral-iron,
+  // blues -> cyan family, red -> crimson family, green -> ok) rather than the raw
+  // hex swatches these bodies used before — there is no dedicated planet-color token set.
   const colors: Record<string, { fill: string; low: string; stroke: string; mark: string }> = {
-    mercury: { fill: '#8a7060', low: '#4d4038', stroke: '#a08070', mark: '#c1a292' },
-    venus:   { fill: '#e8c870', low: '#9f7434', stroke: '#d4a840', mark: '#fff0a8' },
-    earth:   { fill: '#2a6ea4', low: '#123152', stroke: '#4a9ec4', mark: '#54b36a' },
-    mars:    { fill: '#c1440e', low: '#5e2414', stroke: '#e05020', mark: '#f08a45' },
-    belt:    { fill: '#8a7a5a', low: '#3e372c', stroke: '#aaa080', mark: '#d0c29a' },
-    jupiter: { fill: '#c8a060', low: '#6f4f2a', stroke: '#e0b870', mark: '#f2d39a' },
-    saturn:  { fill: '#e0c880', low: '#8a7145', stroke: '#c8a860', mark: '#fff2b8' },
-    neptune: { fill: '#2040c0', low: '#091d66', stroke: '#4060e0', mark: '#79a2ff' },
-    ceres:   { fill: '#8e8f86', low: '#444740', stroke: '#b7b8ac', mark: '#d2d0bf' },
+    mercury: { fill: 'var(--ln-mineral-carbon)', low: 'var(--ln-surface-3)', stroke: 'var(--ln-text-muted)', mark: 'var(--ln-text-dim)' },
+    venus:   { fill: 'var(--ln-mineral-gold)', low: 'var(--ln-mineral-iron)', stroke: 'var(--ln-mineral-gold)', mark: 'var(--ln-text)' },
+    earth:   { fill: 'var(--ln-cyan-press)', low: 'var(--ln-void)', stroke: 'var(--ln-cyan)', mark: 'var(--ln-ok)' },
+    mars:    { fill: 'var(--ln-crimson)', low: 'var(--ln-crimson-press)', stroke: 'var(--ln-crimson-bright)', mark: 'var(--ln-mineral-iron)' },
+    belt:    { fill: 'var(--ln-mineral-carbon)', low: 'var(--ln-surface-3)', stroke: 'var(--ln-text-muted)', mark: 'var(--ln-text-dim)' },
+    jupiter: { fill: 'var(--ln-mineral-gold)', low: 'var(--ln-mineral-iron)', stroke: 'var(--ln-mineral-gold)', mark: 'var(--ln-text)' },
+    saturn:  { fill: 'var(--ln-mineral-gold)', low: 'var(--ln-mineral-iron)', stroke: 'var(--ln-mineral-gold)', mark: 'var(--ln-text)' },
+    neptune: { fill: 'var(--ln-cyan-press)', low: 'var(--ln-void)', stroke: 'var(--ln-cyan)', mark: 'var(--ln-cyan-bright)' },
+    ceres:   { fill: 'var(--ln-mineral-carbon)', low: 'var(--ln-surface-3)', stroke: 'var(--ln-text-muted)', mark: 'var(--ln-text-dim)' },
   }
   const asteroidIds = new Set(['eros', 'vesta', 'itokawa', 'ryugu', 'psyche', 'bennu', 'ceres'])
-  const col = colors[id] ?? { fill: '#607080', low: '#283340', stroke: '#809090', mark: '#aab8bd' }
+  const col = colors[id] ?? { fill: 'var(--ln-mineral-carbon)', low: 'var(--ln-surface-3)', stroke: 'var(--ln-text-muted)', mark: 'var(--ln-text-dim)' }
   const r = size / 2
   const isAsteroid = asteroidIds.has(id)
   const asteroidPoints = `${r * 0.52},${r * 0.08} ${r * 1.26},${r * 0.2} ${r * 1.82},${r * 0.72} ${r * 1.58},${r * 1.48} ${r * 0.9},${r * 1.88} ${r * 0.2},${r * 1.44} ${r * 0.08},${r * 0.62}`
@@ -83,7 +87,7 @@ function PlanetSVG({ id, size }: { id: string; size: number }) {
         <circle cx={r * 1.3} cy={r * 0.5} r={r * 0.15} fill={col.stroke} opacity={0.6}/>
         <circle cx={r * 1.1} cy={r * 1.2} r={r * 0.18} fill={col.stroke} opacity={0.65}/>
       </>}
-      <ellipse cx={r * 0.65} cy={r * 0.65} rx={r * 0.22} ry={r * 0.14} fill="#fff" opacity={0.2}/>
+      <ellipse cx={r * 0.65} cy={r * 0.65} rx={r * 0.22} ry={r * 0.14} fill="var(--ln-text)" opacity={0.2}/>
     </svg>
   )
 }
@@ -147,10 +151,10 @@ export default function TargetPickerScreen({ mission, onBack, onPick, hasCoach, 
       )}
     >
       <div className="mission-board-layout" style={{ minHeight: 0, flex: 1 }}>
-        {/* Below 821px .mission-board-layout is a plain flex column, so this
+        {/* Below the 821 px breakpoint .mission-board-layout is a plain flex column, so this
             map column must claim the free space itself — without flex:1 it is
             content-sized and the map's 1fr row has nothing to resolve against.
-            Above 821px the layout is a grid and flex is inert; the column
+            Above 821 px the layout is a grid and flex is inert; the column
             stretches there instead. */}
         <div className="target-map-stage" style={{ display: 'flex', flexDirection: 'column', gap: 8, minHeight: 0, flex: 1 }}>
         {deliveryTarget && (
@@ -164,7 +168,7 @@ export default function TargetPickerScreen({ mission, onBack, onPick, hasCoach, 
           </div>
         )}
         {/* Three rows on roomy screens (compatible-count header, the STS-544
-            orbit explainer, then the map) — two below 821px, where every
+            orbit explainer, then the map) — two below the 821 px breakpoint, where every
             explanatory line competes directly with the map for the same
             fixed, non-scrolling budget (h20xtc). The explainer is real,
             useful copy, but it's still available on desktop/tablet and via
@@ -249,7 +253,7 @@ export default function TargetPickerScreen({ mission, onBack, onPick, hasCoach, 
               {missionMineralKeys.length > 0 && (
                 <div style={{
                   display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12,
-                  padding: '8px 10px', borderRadius: 6,
+                  padding: '8px 12px', borderRadius: 6,
                   border: '1px dashed var(--ln-cyan-border)', background: 'var(--ln-cyan-soft)',
                 }}>
                   <span style={{ fontFamily: 'var(--ln-font-body)', fontSize: 11, color: 'var(--ln-text-dim)', lineHeight: 1.4 }}>
@@ -297,11 +301,11 @@ export default function TargetPickerScreen({ mission, onBack, onPick, hasCoach, 
                 <div data-testid="target-deposit-mix" style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
                   {depositMixShown.map(min => (
                     <span key={min} data-testid={`target-deposit-${min}`}>
-                      <MineralChip meta={MINERAL_META[min] ? { name: MINERAL_META[min].name, sym: MINERAL_META[min].sym, color: MINERAL_META[min].color } : { name: min, sym: min, color: '#ffffff' }} />
+                      <MineralChip meta={MINERAL_META[min] ? { name: MINERAL_META[min].name, sym: MINERAL_META[min].sym, color: MINERAL_META[min].color } : { name: min, sym: min, color: 'var(--ln-text)' }} />
                     </span>
                   ))}
                   {depositMixOverflow > 0 && (
-                    <span style={{ display: 'inline-flex', alignItems: 'center', padding: '3px 8px', fontFamily: 'var(--ln-font-mono)', fontSize: 10, color: 'var(--ln-text-muted)' }}>
+                    <span style={{ display: 'inline-flex', alignItems: 'center', padding: '4px 8px', fontFamily: 'var(--ln-font-mono)', fontSize: 10, color: 'var(--ln-text-muted)' }}>
                       +{depositMixOverflow} more
                     </span>
                   )}
@@ -312,8 +316,8 @@ export default function TargetPickerScreen({ mission, onBack, onPick, hasCoach, 
         </MissionSetupCard>
       ) : compat.length === 0 ? (
         <MissionSetupCard>
-          <div style={{ fontFamily: 'var(--ln-font-display)', fontWeight: 800, fontSize: 14, color: '#ff8290' }}>No reachable targets.</div>
-          <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 12, color: '#a9b8ce', marginTop: 4 }}>Wait for higher-tier propulsion or pick a different mission.</div>
+          <div style={{ fontFamily: 'var(--ln-font-display)', fontWeight: 800, fontSize: 14, color: 'var(--ln-crit)' }}>No reachable targets.</div>
+          <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 12, color: 'var(--ln-text-dim)', marginTop: 4 }}>Wait for higher-tier propulsion or pick a different mission.</div>
         </MissionSetupCard>
       ) : <div />}
       </div>

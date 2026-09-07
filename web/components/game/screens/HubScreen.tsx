@@ -166,15 +166,15 @@ function DockIconBtn({ icon, label, onClick, active, accent, pulse, testId }: {
       aria-label={label}
       style={{
         flex: '0 0 auto', display: 'flex', alignItems: 'center', gap: 6,
-        background: on ? 'var(--hub-chalk-soft)' : 'rgba(233,243,255,0.10)',
-        border: `1.5px solid ${on ? 'var(--hub-chalk)' : 'rgba(199,216,238,0.32)'}`,
-        borderRadius: 14, padding: '5px 10px 5px 5px', cursor: 'pointer',
+        background: on ? 'var(--hub-chalk-soft)' : 'color-mix(in srgb, var(--ln-text) 10%, transparent)',
+        border: `4px solid ${on ? 'var(--hub-chalk)' : 'color-mix(in srgb, var(--ln-text) 32%, transparent)'}`,
+        borderRadius: 14, padding: '4px 8px 4px 4px', cursor: 'pointer',
       }}
     >
       <span style={{
         width: 28, height: 28, borderRadius: 8, display: 'grid', placeItems: 'center', flexShrink: 0,
-        background: 'rgba(4,12,24,0.55)',
-        border: `1.5px solid ${on ? 'var(--hub-chalk)' : 'rgba(199,216,238,0.28)'}`,
+        background: 'color-mix(in srgb, var(--ln-void) 55%, transparent)',
+        border: `4px solid ${on ? 'var(--hub-chalk)' : 'color-mix(in srgb, var(--ln-text) 28%, transparent)'}`,
         color: on ? 'var(--hub-chalk)' : 'var(--hub-cyan)',
         animation: pulse ? 'hub-pad-pulse 2s ease-in-out infinite' : 'none',
       }}>
@@ -183,7 +183,7 @@ function DockIconBtn({ icon, label, onClick, active, accent, pulse, testId }: {
       <span style={{
         fontFamily: 'var(--ln-font-display)', fontWeight: 700, fontSize: 8,
         letterSpacing: '0.06em', textTransform: 'uppercase', lineHeight: 1.1,
-        color: on ? 'var(--hub-chalk)' : 'rgba(214,229,246,0.92)',
+        color: on ? 'var(--hub-chalk)' : 'color-mix(in srgb, var(--ln-text) 92%, transparent)',
         whiteSpace: 'nowrap',
       }}>
         {label}
@@ -199,10 +199,10 @@ function DockPrimaryBtn({ children, onClick, testId, pulse }: { children: React.
       data-testid={testId}
       style={{
         flexShrink: 0, background: 'var(--hub-chalk-soft)',
-        border: '1.5px solid var(--hub-chalk)', borderRadius: 14, padding: '10px 16px',
+        border: '4px solid var(--hub-chalk)', borderRadius: 14, padding: '8px 16px',
         fontFamily: 'var(--ln-font-display)', fontWeight: 800, fontSize: 10.5,
         letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--hub-chalk)',
-        cursor: 'pointer', boxShadow: '0 4px 14px rgba(155,201,138,0.25)',
+        cursor: 'pointer', boxShadow: '0 4px 16px color-mix(in srgb, var(--hub-chalk) 25%, transparent)',
         animation: pulse ? 'hub-pad-pulse 2s ease-in-out infinite' : 'none',
       }}
     >
@@ -586,22 +586,22 @@ export default function HubScreen({ player, rocketVariant = 'explorer', hasCoach
           share the same dark treatment; no more light/dark split. */}
       <div style={{
         position: 'absolute', top: 0, left: 0, right: 0, zIndex: 18,
-        padding: '16px 14px 22px',
+        padding: '16px 16px 24px',
         // Keep the sky crisp. The previous backdrop blur caused the broad
         // frosted patch visible through the upper-middle of the world.
-        background: 'linear-gradient(180deg, rgba(10,10,12,0.68) 0%, rgba(10,10,12,0.22) 48%, transparent 100%)',
+        background: 'linear-gradient(180deg, color-mix(in srgb, var(--ln-void) 68%, transparent) 0%, color-mix(in srgb, var(--ln-void) 22%, transparent) 48%, transparent 100%)',
         display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 10, pointerEvents: 'none',
       }}>
         <div style={{ pointerEvents: 'auto', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', width: '100%', gap: 12 }}>
           <div style={{ minWidth: 0 }}>
             {/* KES-173: DevShortcuts' fixed DEV toggle (top:8 left:8, dev-only,
-                ~120px wide) sits directly over this eyebrow, clipping the
+                roughly 120 pixels wide) sits directly over this eyebrow, clipping the
                 opening characters ("EARTH BASE" -> "H BASE"). Only reserve
                 the clearance when that badge can actually render. */}
-            <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 9.5, fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'rgba(177,198,229,0.7)', marginLeft: isDevLauncherEnabled() ? 130 : 0 }}>
+            <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 9.5, fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'color-mix(in srgb, var(--ln-text) 70%, transparent)', marginLeft: isDevLauncherEnabled() ? 130 : 0 }}>
               {subsurface ? 'BASE · SUBSURFACE' : `BASE · OPS ${player.missionsDone}`}
             </div>
-            <h1 style={{ margin: '2px 0 0', fontFamily: 'var(--ln-font-display)', fontSize: 23, fontWeight: 800, letterSpacing: '-0.01em', color: '#eaf1f8', lineHeight: 1, textShadow: '0 2px 10px rgba(0,0,0,0.6)' }}>
+            <h1 style={{ margin: '4px 0 0', fontFamily: 'var(--ln-font-display)', fontSize: 23, fontWeight: 800, letterSpacing: '-0.01em', color: 'var(--ln-text)', lineHeight: 1, textShadow: '0 4px 8px color-mix(in srgb, var(--ln-void) 60%, transparent)' }}>
               {subsurface ? 'Subsurface' : 'Base'}
             </h1>
           </div>
@@ -655,10 +655,10 @@ export default function HubScreen({ player, rocketVariant = 'explorer', hasCoach
             // A translucent command rail, deliberately without backdrop blur:
             // blurring the terrain under a fixed dock created the frosted band
             // reported in visual review and broke the scene's ground plane.
-            background: 'linear-gradient(180deg, rgba(10,10,12,0.72) 0%, rgba(10,10,12,0.88) 100%)',
-            borderTop: '1px solid rgba(177,198,229,0.24)',
-            borderRadius: '16px 16px 0 0', boxShadow: '0 -8px 24px rgba(0,0,0,0.28)',
-            padding: '12px 14px 14px',
+            background: 'linear-gradient(180deg, color-mix(in srgb, var(--ln-void) 72%, transparent) 0%, color-mix(in srgb, var(--ln-void) 88%, transparent) 100%)',
+            borderTop: '4px solid color-mix(in srgb, var(--hub-outline) 60%, transparent)',
+            borderRadius: '16px 16px 0 0', boxShadow: '0 -8px 24px color-mix(in srgb, var(--ln-void) 28%, transparent)',
+            padding: '12px 16px 16px',
           }}>
             {subsurface ? (
               <div style={{ display: 'flex', justifyContent: 'center' }}>
@@ -675,7 +675,7 @@ export default function HubScreen({ player, rocketVariant = 'explorer', hasCoach
                     <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 9, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--hub-cyan)' }}>
                       {player.activeMission ? 'Mission in progress' : 'Launchpad'}
                     </div>
-                    <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: player.activeMission ? 11 : 14, fontWeight: 800, color: '#eaf1f8', marginTop: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                    <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: player.activeMission ? 11 : 14, fontWeight: 800, color: 'var(--ln-text)', marginTop: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                       {player.activeMission ? activeMissionDisplayLabel(player.activeMission) : 'Ready'}
                     </div>
                   </div>
