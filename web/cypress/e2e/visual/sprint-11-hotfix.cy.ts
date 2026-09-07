@@ -105,7 +105,7 @@ describe('Sprint 11 Launchpad and Earth Base hotfix — live browser QA', () => 
     cy.get('[data-testid="launchpad-build-monitoring-btn"]').should('not.exist')
     cy.get('[data-testid="launchpad-open-hangar-btn"]').should('be.visible')
     cy.get('[data-testid="launchpad-new-mission-btn"]').should('be.visible')
-    cy.get('[data-testid="launchpad-guide-open"]').should('not.exist')
+    cy.get('[data-testid="launchpad-guide-open"]').should('be.visible')
     cy.get('.launchpad-available-actions').should('not.exist')
     cy.get('[data-testid="launchpad-build-monitoring-btn"]').should('not.exist')
 
@@ -128,24 +128,24 @@ describe('Sprint 11 Launchpad and Earth Base hotfix — live browser QA', () => 
     visitGame('/game/hub', 'hub')
 
     cy.get('h1', { timeout: 15_000 }).invoke('text').should('match', /^(Base|Subsurface)$/)
-    cy.get('[data-testid="hud-subsurface-chip"]').should('be.visible')
+    cy.get('[data-testid="hub-subsurface-btn"]').should('be.visible')
     cy.get('[data-testid="progression-card-skills"]').should('be.visible')
     cy.get('[data-testid="progression-card-transit-satellite"]').should('be.visible')
     // Post-onboarding no longer duplicates the Mission Board in the
     // progression stack; the persistent Missions action is the entry point.
     cy.get('[data-testid="hub-desktop-missions-btn"]').should('be.visible')
 
-    cy.get('[data-testid="hud-subsurface-chip"]').then($hud => {
-      const hud = $hud[0].getBoundingClientRect()
+    cy.get('[data-testid="hub-subsurface-btn"]').then($subsurface => {
+      const subsurface = $subsurface[0].getBoundingClientRect()
       cy.get('[data-testid="progression-card-skills"]').then($skills => {
-        expectNoOverlap(hud, $skills[0].getBoundingClientRect(), 'HUD does not overlap Skill Points card')
+        expectNoOverlap(subsurface, $skills[0].getBoundingClientRect(), 'Subsurface control does not overlap Skill Points card')
       })
     })
     cy.get('.hub-push-opt-in').then($prompt => {
       if ($prompt.is(':visible')) {
         const prompt = $prompt[0].getBoundingClientRect()
-        cy.get('[data-testid="hud-subsurface-chip"]').then($hud => {
-          expectNoOverlap(prompt, $hud[0].getBoundingClientRect(), 'mission alerts do not overlap HUD')
+        cy.get('[data-testid="hub-subsurface-btn"]').then($subsurface => {
+          expectNoOverlap(prompt, $subsurface[0].getBoundingClientRect(), 'mission alerts do not overlap Subsurface control')
         })
       }
     })

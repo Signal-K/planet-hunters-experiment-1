@@ -253,6 +253,12 @@ function playM1(viewport: string) {
 
   clickButton('Continue with Explorer')
   clickDom('[data-testid="launch-btn"]')
+  // The dev launch cinematic is intentionally asynchronous. Skip it here so
+  // this release matrix tests the post-launch route deterministically instead
+  // of spending the whole timeout waiting for the watchdog to fire.
+  cy.get('[data-testid="launch-sequence-skip-btn"]', { timeout: 10000 })
+    .should('be.visible')
+    .click({ force: true })
   completeMiningDeterministically(viewport, 'm1-mining')
   completeDebrief()
   screenshot(viewport, 'm1-complete')
@@ -277,6 +283,9 @@ function playM2(viewport: string) {
 
   cy.contains('button', /Purchase/).first().should('be.visible').click({ force: true })
   clickDom('[data-testid="launch-btn"]')
+  cy.get('[data-testid="launch-sequence-skip-btn"]', { timeout: 10000 })
+    .should('be.visible')
+    .click({ force: true })
   completeMiningDeterministically(viewport, 'm2-mining')
   completeDebrief()
   screenshot(viewport, 'm2-complete')
@@ -304,6 +313,9 @@ function playM3(viewport: string) {
     }
   })
   clickDom('[data-testid="launch-btn"]')
+  cy.get('[data-testid="launch-sequence-skip-btn"]', { timeout: 10000 })
+    .should('be.visible')
+    .click({ force: true })
   completeMiningDeterministically(viewport, 'm3-mining', false)
   completeM3Delivery(viewport)
   screenshot(viewport, 'm3-debrief')

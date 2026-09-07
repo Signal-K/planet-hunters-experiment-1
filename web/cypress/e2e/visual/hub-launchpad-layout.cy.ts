@@ -25,7 +25,7 @@ function state(screen: GameState['screen']): GameState {
     player: {
       francs: 50_000_000,
       activeMission: null,
-      pendingLaunch: true,
+      pendingLaunch: false,
       missionCount: 4,
       missionsDone: 3,
       placed: ['launchpad', 'refinery', 'transit-telescope'],
