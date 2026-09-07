@@ -24,7 +24,15 @@ beforeEach(() => {
     win.localStorage.setItem('landnam-upgrade-prompt-snooze-until', String(Date.now() + 365 * 24 * 60 * 60 * 1000))
   })
 
-  if (Cypress.env('livePocketBase')) return
+  // The Docker release suite runs both real-auth specs and fixture-driven
+  // gameplay specs. Only the auth specs should use the live browser auth
+  // endpoints; the gameplay fixtures intentionally seed e2e@example.com and
+  // need the deterministic browser stubs below. cy.request() calls from the
+  // auth specs still reach Docker PocketBase directly because intercepts do
+  // not rewrite Cypress's Node-side requests.
+  const realBrowserAuth = Cypress.env('livePocketBase')
+    && Cypress.spec.relative.replaceAll('\\', '/').includes('/auth/')
+  if (realBrowserAuth) return
 
   // Visual QA is intentionally local-only: its screenshots are driven by
   // deterministic localStorage fixtures, not by a successful account login.
