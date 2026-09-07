@@ -107,9 +107,11 @@ describe('M3 mission review environment', () => {
 
       cy.get('[data-testid="landing-continue"]').click()
       cy.get('[data-testid="rover-mining-screen"]', { timeout: 15000 }).should('be.visible')
-      cy.get('[data-testid="deploy-surface-ops-confirm"]', { timeout: 15000 }).then($deploy => {
-        if ($deploy.is(':visible')) cy.wrap($deploy).click()
-      })
+      // Deploy always starts unclicked on a fresh mount (RoverMiningScreen's
+      // `deployed` state), so wait for it to settle visible rather than
+      // snapshotting visibility once — a one-shot check can catch the panel
+      // mid-layout under CI load and silently skip the click.
+      cy.get('[data-testid="deploy-surface-ops-confirm"]', { timeout: 15000 }).should('be.visible').click()
       cy.contains('Prospector surface run').should('be.visible')
       cy.get('[data-testid="rover-mining-screen"] canvas[aria-label]', { timeout: 15000 }).should('be.visible')
       cy.screenshot(`m3-${key}-02-rover-survey`, { capture: 'viewport' })
@@ -126,9 +128,7 @@ describe('M3 mission review environment', () => {
         }),
       })
       cy.get('[data-testid="rover-mining-screen"]', { timeout: 15000 }).should('be.visible')
-      cy.get('[data-testid="deploy-surface-ops-confirm"]', { timeout: 15000 }).then($deploy => {
-        if ($deploy.is(':visible')) cy.wrap($deploy).click()
-      })
+      cy.get('[data-testid="deploy-surface-ops-confirm"]', { timeout: 15000 }).should('be.visible').click()
       cy.contains('CLIENT ORDER').should('be.visible')
       cy.get('[data-testid="rover-mining-screen"] canvas[aria-label]', { timeout: 15000 }).should('be.visible')
       cy.screenshot(`m3-${key}-03-rover-loaded`, { capture: 'viewport' })
