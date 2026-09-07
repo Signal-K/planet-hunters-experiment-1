@@ -15,7 +15,7 @@ export function SoilCrossSection() {
     <div style={{ position: 'absolute', inset: 0, zIndex: 4, pointerEvents: 'none', overflow: 'hidden' }}>
       {/* Strata hairline — level with the plateau's bottom edge */}
       <div style={{
-        position: 'absolute', left: 0, right: 0, bottom: '3.4%', height: 0,
+        position: 'absolute', left: 0, right: 0, bottom: 'var(--hub-ground)', height: 0,
         borderTop: '1.5px dashed rgba(200,220,255,0.35)',
       }} />
 
@@ -32,7 +32,7 @@ function Ore({ left, w, h, color, delay }: { left: string; w: number; h: number;
     <div
       className="hub-ore"
       style={{
-        position: 'absolute', left, bottom: '1.3%',
+        position: 'absolute', left, bottom: 'calc(var(--hub-ground) - 18px)',
         width: w, height: h, borderRadius: '50%',
         background: `radial-gradient(ellipse, ${color}, transparent 72%)`,
         filter: 'blur(1px)',

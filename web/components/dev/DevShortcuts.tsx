@@ -10,7 +10,7 @@ import { pbShared } from '@/lib/pb'
 const STORAGE_KEY = 'landnam-game-state-v1'
 // Must match scripts/seed-dev-presets.ts exactly (email scheme + password).
 const PRESET_PASSWORD = 'DevPreset123!'
-const presetEmail = (key: string) => `dev-preset-${key}@landnam.guest`
+const presetEmail = (key: string) => `dev-preset-${key}@example.com`
 
 export default function DevShortcuts() {
   const [open, setOpen] = useState(false)
@@ -98,6 +98,29 @@ export default function DevShortcuts() {
 
           <div style={{ padding: '0 10px 8px' }}>
             <button
+              data-testid="dev-return-to-game"
+              onClick={() => { window.location.href = '/game' }}
+              style={{
+                width: '100%',
+                padding: '7px 10px',
+                background: '#0a1624',
+                border: '1px solid #3fa9ff66',
+                borderRadius: 6,
+                color: '#87cffa',
+                fontFamily: 'var(--ln-font-display)',
+                fontSize: 10,
+                fontWeight: 800,
+                letterSpacing: '0.1em',
+                cursor: 'pointer',
+                textTransform: 'uppercase',
+              }}
+            >
+              Return to my game
+            </button>
+          </div>
+
+          <div style={{ padding: '0 10px 8px' }}>
+            <button
               data-testid="dev-shortcuts-mode-toggle"
               onClick={() => { setBackendMode(v => !v); setStatus(null) }}
               title={backendMode
@@ -145,6 +168,25 @@ export default function DevShortcuts() {
               }}
             >
               OPEN LAUNCHER
+            </a>
+            <a
+              href="/game/narrative-ledger"
+              style={{
+                display: 'block',
+                marginTop: 6,
+                padding: '6px 10px',
+                border: '1px solid var(--ln-cyan-border)',
+                borderRadius: 6,
+                color: 'var(--ln-cyan)',
+                fontFamily: 'var(--ln-font-display)',
+                fontSize: 10,
+                fontWeight: 800,
+                letterSpacing: '0.08em',
+                textDecoration: 'none',
+                textAlign: 'center',
+              }}
+            >
+              OPEN NARRATIVE LEDGER
             </a>
           </div>
 

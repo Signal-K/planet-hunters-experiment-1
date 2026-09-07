@@ -1,28 +1,7 @@
 import './commands'
-
-// KES-151: running the journeys suite against the deployed production build
-// (originally landnam-test.vercel.app, now landnam-web.liam-55d.workers.dev
-// per KES-193) surfaces a real, 100%-reproducible React hydration mismatch
-// (minified error #418) on every clean-storage load. It never appears
-// against local `next dev`, nor against a local `next start` production
-// build even with the real preview env vars (PocketBase URLs, PostHog keys)
-// loaded — isolated by direct comparison, not assumption. So it was specific
-// to something about the actual Vercel-hosted deployment (edge serving /
-// build pipeline) rather than app env config. Not yet re-verified against
-// the Cloudflare/OpenNext deployment — leave this filter in place until
-// confirmed either way.
-// One real contributing bug was found and fixed this way (useAuthSync and
-// CommentsPanel both read pbShared.authStore synchronously in their initial
-// useState, before jsx a signed-in device's client-side auth state differs
-// from the server's always-anonymous render) but does not by itself explain
-// the mismatch, which still reproduces after that fix. Root cause remains
-// open. The UI still renders correctly despite the console error (confirmed
-// via screenshot), so this stays a known, non-blocking issue rather than a
-// gameplay bug — this filter only stops the test runner from treating that
-// specific known error as fatal; it does not suppress other uncaught errors.
-Cypress.on('uncaught:exception', err => {
-  if (err.message.includes('Minified React error #418')) return false
-})
+import './screenshot-diff'
+import './a11y-checks'
+import './responsive-helpers'
 
 // Stub PocketBase auth so the AuthGateSheet never opens in offline E2E runs.
 // Also stub catalog calls so the game uses static fallback data without network errors.
@@ -33,18 +12,34 @@ beforeEach(() => {
   const ALL_SURVEY_KEYS = [
     'lnm_first_launch', 'lnm_mining_feel', 'lnm_client_pick',
     'lnm_mission_friction', 'lnm_progression_feel', 'lnm_end_of_content',
-    'lnm_return_visit', 'lnm_m1_complete', 'lnm_m2_complete', 'lnm_m3_complete',
+    'lnm_return_visit', 'lnm_m1_complete', 'lnm_m2_mission_choice', 'lnm_m2_rocket_clarity', 'lnm_m2_rating', 'lnm_m2_freetext',
+        'lnm_m3_transport_clarity', 'lnm_m3_client_choice', 'lnm_m3_rating', 'lnm_m3_freetext',
     'lnm_satellite_clarity', 'lnm_resume_mission', 'lnm_base_building', 'lnm_rover_clarity',
   ]
   cy.on('window:before:load', win => {
     if (!Cypress.env('allowSurveys')) {
       win.localStorage.setItem('landnam-surveys-shown', JSON.stringify(ALL_SURVEY_KEYS))
     }
-    // Snooze the upgrade prompt indefinitely so SaveProgressPrompt never opens during tests
+    // Keep legacy localStorage fixtures from affecting auth-gate coverage.
     win.localStorage.setItem('landnam-upgrade-prompt-snooze-until', String(Date.now() + 365 * 24 * 60 * 60 * 1000))
   })
 
-  if (Cypress.env('livePocketBase')) return
+  // The Docker release suite runs both real-auth specs and fixture-driven
+  // gameplay specs. Only the auth specs should use the live browser auth
+  // endpoints; the gameplay fixtures intentionally seed e2e@example.com and
+  // need the deterministic browser stubs below. cy.request() calls from the
+  // auth specs still reach Docker PocketBase directly because intercepts do
+  // not rewrite Cypress's Node-side requests.
+  const realBrowserAuth = Cypress.env('livePocketBase')
+    && Cypress.spec.relative.replaceAll('\\', '/').includes('/auth/')
+  if (realBrowserAuth) return
+
+  // Visual QA is intentionally local-only: its screenshots are driven by
+  // deterministic localStorage fixtures, not by a successful account login.
+  // Returning an auth success here rebinds the fixture from the guest slot to
+  // the account slot halfway through a visual flow and can reset the screen
+  // to the intro route. Fail these background auth attempts fast instead.
+  const visualProfile = Cypress.env('visualProfile') === true
 
   // Stub the app's own backend-health probe so BackendStatus resolves to
   // 'online' on the first check instead of polling every 2s for the whole
@@ -53,8 +48,10 @@ beforeEach(() => {
   cy.intercept('GET', '/api/backend-health', { statusCode: 200, body: { ok: true } }).as('backendHealth')
 
   cy.intercept('POST', '**/api/collections/users/auth-with-password', {
-    statusCode: 200,
-    body: { token: 'e2e-token', record: { id: 'e2e-user', email: 'e2e@landnam.guest' } },
+    statusCode: visualProfile ? 503 : 200,
+    body: visualProfile
+      ? { code: 503, message: 'Visual QA uses local fixture state.' }
+      : { token: 'e2e-token', record: { id: 'e2e-user', email: 'e2e@example.com' } },
   }).as('pbAuth')
 
   // The mandatory email gate creates the lightweight account before it
@@ -62,19 +59,38 @@ beforeEach(() => {
   // permanently mounted in offline journeys (KES-135), so the test never
   // reaches the gameplay flow it is meant to verify.
   cy.intercept('POST', '**/api/collections/users/records', {
-    statusCode: 200,
-    body: { id: 'e2e-user', email: 'e2e@landnam.guest' },
+    statusCode: visualProfile ? 503 : 200,
+    body: visualProfile
+      ? { code: 503, message: 'Visual QA uses local fixture state.' }
+      : { id: 'e2e-user', email: 'e2e@example.com' },
   }).as('pbUserCreate')
 
   cy.intercept('POST', '**/api/collections/users/auth-refresh', {
-    statusCode: 200,
-    body: { token: 'e2e-token', record: { id: 'e2e-user', email: 'e2e@landnam.guest' } },
+    statusCode: visualProfile ? 503 : 200,
+    body: visualProfile
+      ? { code: 503, message: 'Visual QA uses local fixture state.' }
+      : { token: 'e2e-token', record: { id: 'e2e-user', email: 'e2e@example.com' } },
   }).as('pbAuthRefresh')
 
   cy.intercept('GET', '**/api/collections/users/auth-refresh', {
-    statusCode: 200,
-    body: { token: 'e2e-token', record: { id: 'e2e-user', email: 'e2e@landnam.guest' } },
+    statusCode: visualProfile ? 503 : 200,
+    body: visualProfile
+      ? { code: 503, message: 'Visual QA uses local fixture state.' }
+      : { token: 'e2e-token', record: { id: 'e2e-user', email: 'e2e@example.com' } },
   }).as('pbAuthRefreshGet')
+
+  // Offline journeys still exercise the real Landnam auth hand-off. Keep the
+  // hand-off deterministic alongside the shared-auth stubs so a fake guest
+  // session cannot leave the auth gate mounted after the first page load.
+  cy.intercept('POST', '**/api/landnam-auth/exchange', {
+    statusCode: visualProfile ? 503 : 200,
+    body: visualProfile
+      ? { code: 503, message: 'Visual QA uses local fixture state.' }
+      : {
+          token: 'e2e-landnam-token',
+          record: { id: 'e2e-user', email: 'e2e@example.com', lastExchangeAt: new Date().toISOString() },
+        },
+  }).as('pbLandnamExchange')
 
   // Return 404 for game_states so the real PB record for 'e2e-user' never overrides test localStorage state
   cy.intercept('GET', '**/api/collections/game_states/records*', { statusCode: 404, body: { code: 404, message: 'The requested resource wasn\'t found.' } }).as('pbGameState')

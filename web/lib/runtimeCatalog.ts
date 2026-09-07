@@ -1,7 +1,7 @@
 import type { Catalog } from './catalog'
+import { MISSIONS, SELF_DIRECTED_MINING_MISSION_ID } from './data'
 import type { Mission, Target } from './data'
 import type { Player } from './game-types'
-import { diplomacyPayoutMultiplier, jointMissionUnlocked } from './systems/AcademySystem'
 import { deepSpaceTelescopeUnlocked } from './data/structures'
 import { FEATURE_FLAGS } from './featureFlags'
 
@@ -14,7 +14,7 @@ export const TRANSIT_TELESCOPE_TARGET: Target = {
   type: 'planet',
   orbit: 1,
   difficulty: 'L1',
-  brief: 'Low Earth orbit deployment lane for a transit telescope monitored from the Earth-base SMS.',
+  brief: 'Low Earth orbit deployment lane for a transit telescope monitored from Base operations.',
   minerals: [],
 }
 
@@ -49,7 +49,7 @@ export const SCAN_STATION_TARGET: Target = {
   type: 'planet',
   orbit: 1,
   difficulty: 'L1',
-  brief: 'Low Earth orbit shakedown lane for commissioning the Scan Station before it comes online at Earth Base.',
+  brief: 'Low Earth orbit shakedown lane for commissioning the Scan Station before it comes online at Base.',
   minerals: [],
 }
 
@@ -57,7 +57,6 @@ interface RuntimeCatalogOpts {
   catalog: Catalog
   discoveredTargets?: Record<string, Target>
   freeOperations: boolean
-  satelliteMonitoringBuilt?: boolean
   transitSatelliteLaunchedAt?: number | null
   missionId?: string | null
   targetId?: string | null
@@ -69,7 +68,6 @@ export function buildRuntimeCatalog({
   catalog,
   discoveredTargets = {},
   freeOperations,
-  satelliteMonitoringBuilt,
   transitSatelliteLaunchedAt,
   missionId,
   targetId,
@@ -77,13 +75,13 @@ export function buildRuntimeCatalog({
   player,
 }: RuntimeCatalogOpts): Catalog {
   const discoveredTargetList = Object.values(discoveredTargets)
-  const shouldOfferTransitTelescopeMission = freeOperations && !!satelliteMonitoringBuilt && !transitSatelliteLaunchedAt
+  const shouldOfferTransitTelescopeMission = freeOperations && !transitSatelliteLaunchedAt
   const hasActiveTransitTelescopeMission = missionId === TRANSIT_TELESCOPE_MISSION_ID || targetId === TRANSIT_TELESCOPE_TARGET_ID
   const shouldIncludeTransitTelescopeMission = shouldOfferTransitTelescopeMission || hasActiveTransitTelescopeMission
   const shouldOfferDeepSpaceTelescopeMission = freeOperations
     && !player?.deepSpaceTelescopeMissionCompletedAt
     && !player?.placed?.includes('deep-space-telescope')
-    && deepSpaceTelescopeUnlocked({ satelliteMonitoringLevel: player?.satelliteMonitoringLevel, clientMissions: player?.clientMissions })
+    && deepSpaceTelescopeUnlocked({ transitSatelliteLevel: player?.transitSatelliteLevel, clientMissions: player?.clientMissions })
   const hasActiveDeepSpaceTelescopeMission = missionId === DEEP_SPACE_TELESCOPE_MISSION_ID || targetId === DEEP_SPACE_TELESCOPE_TARGET_ID
   const shouldIncludeDeepSpaceTelescopeMission = shouldOfferDeepSpaceTelescopeMission || hasActiveDeepSpaceTelescopeMission
   const shouldOfferScanStationMission = FEATURE_FLAGS.scanStation
@@ -100,31 +98,44 @@ export function buildRuntimeCatalog({
     ...(shouldIncludeScanStationMission && !existingTargetIds.has(SCAN_STATION_TARGET.id) ? [SCAN_STATION_TARGET] : []),
     ...discoveredTargetList.filter(target => !existingTargetIds.has(target.id)),
   ]
-  const relationshipMissions = player
-    ? catalog.missions.map(mission => {
-        if (!mission.client || mission.programReward) return mission
-        const multiplier = diplomacyPayoutMultiplier(player, mission.client)
-        if (multiplier === 1) return mission
-        return {
-          ...mission,
-          payout: {
-            ...mission.payout,
-            francs: Math.round(mission.payout.francs * multiplier),
-          },
-        }
-      })
-    : catalog.missions
+  // A client contract pays its stated fee. The prior academy/diplomacy
+  // multiplier was a second hidden client-progression system and conflicted
+  // with the daily client-level economy.
+  // The self-directed launchpad route must remain available even while a
+  // remote catalog is warming or returns only its client rows. PocketBase
+  // catalog responses are allowed to lag the authored frontend catalog; do
+  // not let that transient gap render GO MINING disabled in Your Program.
+  const fallbackSelfDirectedMining: Mission = MISSIONS.find(mission => mission.id === SELF_DIRECTED_MINING_MISSION_ID)
+    ?? MISSIONS.find(mission => mission.tag === 'FREE OPS' && !mission.client && !mission.payload && !mission.construction)
+    ?? {
+      id: SELF_DIRECTED_MINING_MISSION_ID,
+      title: 'Self-Directed Mining Run',
+      brief: 'No client, no daily limit. Pick any reachable target, mine what looks valuable, and sell the haul yourself at market price.',
+      tag: 'FREE OPS',
+      difficulty: 'L2',
+      locked: false,
+      sequence: missionsDone + 1,
+      unlockAt: 'Complete M3',
+      requires: { minerals: { nickel: 2, cobalt: 2 }, cargo_min: 4, drill_tier: 2, max_orbit: 8 },
+      payout: { francs: 0, affinity: 0 },
+    }
+  const hasSelfDirectedMining = catalog.missions.some(mission =>
+    mission.tag === 'FREE OPS' && !mission.client && !mission.payload && !mission.construction,
+  )
+  const relationshipMissions = hasSelfDirectedMining || !fallbackSelfDirectedMining
+    ? catalog.missions
+    : [...catalog.missions, fallbackSelfDirectedMining]
   const existingMissionIds = new Set(relationshipMissions.map(mission => mission.id))
   const transitTelescopeMission: Mission[] = shouldIncludeTransitTelescopeMission && !existingMissionIds.has(TRANSIT_TELESCOPE_MISSION_ID)
     ? [{
         id: TRANSIT_TELESCOPE_MISSION_ID,
         title: 'Launch Transit Telescope',
-        brief: 'Deploy your own TESS-class telescope into Earth orbit. Its daily instrument feed will downlink to the Satellite Monitoring Station.',
+        brief: 'Deploy your own TESS-class telescope into Earth orbit. Its daily instrument feed becomes available for classification.',
         tag: 'STORY',
         difficulty: 'L1',
         locked: false,
         sequence: missionsDone + 1,
-        unlockAt: 'Build Satellite Monitoring Station',
+        unlockAt: 'Reach Free Operations',
         targetId: TRANSIT_TELESCOPE_TARGET_ID,
         payload: {
           type: 'satellite',
@@ -148,12 +159,12 @@ export function buildRuntimeCatalog({
     ? [{
         id: DEEP_SPACE_TELESCOPE_MISSION_ID,
         title: 'Survey the Deep Space Telescope Site',
-        brief: 'Your Satellite Monitoring Station and client standing have earned you a second instrument. Fly a calibration survey to establish the Deep Space Telescope before you build it.',
+        brief: 'Your transit telescope and client standing have earned you a second instrument. Fly a calibration survey to establish the Deep Space Telescope before you build it.',
         tag: 'STORY',
         difficulty: 'L1',
         locked: false,
         sequence: missionsDone + 1,
-        unlockAt: 'Satellite Monitoring Station level 2 and affinity level 2 with a client',
+        unlockAt: 'Transit telescope level 2 and affinity level 2 with a client',
         targetId: DEEP_SPACE_TELESCOPE_TARGET_ID,
         payload: {
           type: 'deep-space-survey',
@@ -177,7 +188,7 @@ export function buildRuntimeCatalog({
     ? [{
         id: SCAN_STATION_MISSION_ID,
         title: 'Commission the Scan Station',
-        brief: 'Fly a shakedown pass in Earth orbit to calibrate the Scan Station before it comes online at Earth Base — the same commissioning pass every remote instrument gets before its build slot opens.',
+        brief: 'Fly a shakedown pass in Earth orbit to calibrate the Scan Station before it comes online at Base — the same commissioning pass every remote instrument gets before its build slot opens.',
         tag: 'STORY',
         difficulty: 'L1',
         locked: false,
@@ -227,34 +238,10 @@ export function buildRuntimeCatalog({
     }))
     .filter(mission => !existingMissionIds.has(mission.id))
 
-  const jointMissions: Mission[] = player
-    ? Object.keys(catalog.clients).flatMap(clientId => {
-        if (!jointMissionUnlocked(player, clientId)) return []
-        const base = relationshipMissions.find(mission =>
-          mission.client === clientId
-          && !!mission.targetId
-          && !mission.programReward
-          && !mission.jointProject,
-        )
-        if (!base) return []
-        const basePayout = base.payout.francs
-        const payoutBonus = Math.round(basePayout * 0.2)
-        return [{
-          ...base,
-          id: `joint-${clientId}-${base.id}`,
-          title: `Joint Venture · ${base.title}`,
-          brief: `${catalog.clients[clientId].name} will co-fund this flight and contribute local infrastructure. Your Academy diplomacy desk negotiated shared risk, a range allowance, and a completion premium.`,
-          tag: 'JOINT',
-          jointProject: {
-            playerCost: Math.round(basePayout * 0.08),
-            clientCostShare: Math.round(basePayout * 0.08),
-            payoutBonus,
-            infrastructureOrbitBonus: 1,
-          },
-          payout: { ...base.payout, francs: basePayout + payoutBonus },
-        }]
-      })
-    : []
+  // Co-funded affinity/diplomacy missions are deferred with the Academy
+  // progression branch. Do not generate them until a single player-progress
+  // model specifies how they are earned and explained.
+  const jointMissions: Mission[] = []
 
   return {
     ...catalog,

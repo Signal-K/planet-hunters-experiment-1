@@ -2,14 +2,13 @@
 
 import { useRef, useState, useCallback, useEffect } from 'react'
 import type { Mission, Target, MineralMeta } from '@/lib/data'
-import { FREE_OPS_START_MISSIONS_DONE } from '@/lib/data'
+import { FREE_OPS_START_MISSIONS_DONE, REMOTE_MINERAL_SILO_CAPACITY } from '@/lib/data'
 import TopBar from '@/components/ui/TopBar'
-import { PrimaryBtn } from '@/components/ui/Button'
 import Panel from '@/components/ui/Panel'
 import StatusPill from '@/components/ui/StatusPill'
 import IconBadge from '@/components/ui/IconBadge'
 import SegmentedBar from '@/components/ui/SegmentedBar'
-import ConfirmActionSheet from '@/components/game/ConfirmActionSheet'
+import ActionConfirmBar from '@/components/game/ActionConfirmBar'
 import MiningCanvas from './MiningCanvas'
 
 // Out There: Omega Edition bolt glyph — used inside the charge-meter IconBadge.
@@ -39,11 +38,11 @@ const FREE_OPS_MINING_ACK_KEY = 'ln_mining_freeops_first_entry_ack'
 const FREE_OPS_FIRST_SUCCESS_ACK_KEY = 'ln_mining_freeops_first_success_ack'
 
 function useFreeOpsMiningAck(alreadyExperienced: boolean) {
-  const [show, setShow] = useState(() => {
-    if (alreadyExperienced) return false
-    if (typeof window === 'undefined') return true
-    return !localStorage.getItem(FREE_OPS_MINING_ACK_KEY)
-  })
+  const [show, setShow] = useState(false)
+  useEffect(() => {
+    if (alreadyExperienced) return
+    setShow(!localStorage.getItem(FREE_OPS_MINING_ACK_KEY))
+  }, [alreadyExperienced])
   const dismiss = () => {
     localStorage.setItem(FREE_OPS_MINING_ACK_KEY, '1')
     setShow(false)
@@ -52,10 +51,10 @@ function useFreeOpsMiningAck(alreadyExperienced: boolean) {
 }
 
 function useFreeOpsFirstSuccessAck() {
-  const [dismissed, setDismissed] = useState(() => {
-    if (typeof window === 'undefined') return false
-    return !!localStorage.getItem(FREE_OPS_FIRST_SUCCESS_ACK_KEY)
-  })
+  const [dismissed, setDismissed] = useState(false)
+  useEffect(() => {
+    setDismissed(!!localStorage.getItem(FREE_OPS_FIRST_SUCCESS_ACK_KEY))
+  }, [])
   const dismiss = () => {
     localStorage.setItem(FREE_OPS_FIRST_SUCCESS_ACK_KEY, '1')
     setDismissed(true)
@@ -76,7 +75,7 @@ function OreShapeIcon({ id, color, size = 14, minerals }: { id: string; color: s
 
 // Horizontal drag track — left = slow, center = normal, right = fast forward
 // Thumb snaps back to center on release
-function ScrollTrack({ scrollRef }: { scrollRef: React.MutableRefObject<((dx: number) => void) | null> }) {
+function ScrollTrack({ scrollRef, disabled = false }: { scrollRef: React.MutableRefObject<((dx: number) => void) | null>; disabled?: boolean }) {
   const trackRef = useRef<HTMLDivElement>(null)
   const [pos, setPos] = useState(0.5)   // 0..1, 0.5 = center = normal speed
   const [active, setActive] = useState(false)
@@ -108,34 +107,36 @@ function ScrollTrack({ scrollRef }: { scrollRef: React.MutableRefObject<((dx: nu
         ref={trackRef}
         style={{
           position: 'relative', flex: 1, height: 36, borderRadius: 8,
-          background: 'rgba(255,255,255,0.05)',
-          border: `1px solid ${active ? 'rgba(112,217,234,0.4)' : 'rgba(112,217,234,0.15)'}`,
-          cursor: 'pointer', touchAction: 'none',
+          background: 'var(--ln-mining-control-fill)',
+          border: `1px solid ${active ? 'var(--ln-cyan-border)' : 'var(--ln-hairline)'}`,
+          cursor: disabled ? 'not-allowed' : 'pointer', touchAction: 'none',
+          opacity: disabled ? 0.52 : 1,
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           transition: 'border-color 120ms',
         }}
         onPointerDown={e => {
+          if (disabled) return
           setActive(true)
           e.currentTarget.setPointerCapture(e.pointerId)
           applyAt(e.clientX)
         }}
-        onPointerMove={e => { if (active) applyAt(e.clientX) }}
+        onPointerMove={e => { if (!disabled && active) applyAt(e.clientX) }}
         onPointerUp={release}
         onPointerCancel={release}
       >
         {/* End labels */}
-        <span style={{ position: 'absolute', left: 6, fontSize: 9, color: 'rgba(112,217,234,0.35)', lineHeight: 1 }}>◀</span>
-        <span style={{ position: 'absolute', right: 6, fontSize: 9, color: 'rgba(112,217,234,0.35)', lineHeight: 1 }}>▶</span>
+        <span style={{ position: 'absolute', left: 6, fontSize: 9, color: 'var(--ln-text-muted)', lineHeight: 1 }}>◀</span>
+        <span style={{ position: 'absolute', right: 6, fontSize: 9, color: 'var(--ln-text-muted)', lineHeight: 1 }}>▶</span>
         {/* Center tick */}
-        <div style={{ position: 'absolute', top: '30%', bottom: '30%', left: '50%', width: 1, background: 'rgba(255,255,255,0.1)' }} />
+        <div style={{ position: 'absolute', top: '30%', bottom: '30%', left: '50%', width: 1, background: 'var(--ln-divider)' }} />
         {/* Thumb */}
         <div style={{
           position: 'absolute',
           left: `calc(${pos * 100}% - 10px)`,
           width: 20, height: 20, borderRadius: '50%',
-          background: active ? 'rgba(112,217,234,0.85)' : 'rgba(112,217,234,0.25)',
-          border: `1.5px solid ${active ? 'rgba(112,217,234,0.8)' : 'rgba(112,217,234,0.4)'}`,
-          boxShadow: active ? '0 0 10px rgba(112,217,234,0.5)' : 'none',
+          background: active ? 'var(--ln-cyan)' : 'var(--ln-cyan-soft)',
+          border: `1.5px solid ${active ? 'var(--ln-cyan)' : 'var(--ln-cyan-border)'}`,
+          boxShadow: active ? 'var(--ln-glow-cyan)' : 'none',
           transition: active ? 'background 80ms, border-color 80ms, box-shadow 80ms' : 'left 180ms ease-out, background 120ms, border-color 120ms, box-shadow 120ms',
         }} />
       </div>
@@ -155,10 +156,11 @@ function miningGuide(deliveryTargetName?: string) {
   ]
 }
 
-export default function MiningScreen({ mission, target, onComplete, onBack, onAbandon, minerals, laserChargeCap, laserTier, hasCoach, coachManual, onCoachDone, addToast, deliveryTargetName, hasPriorFreeOpsExperience, initialCargo }: {
+export default function MiningScreen({ mission, target, rocketImageSrc, onComplete, onBack, onAbandon, minerals, laserChargeCap, laserTier, hasCoach, coachManual, onCoachDone, addToast, deliveryTargetName, hasPriorFreeOpsExperience, initialCargo, remoteSiloAvailable, remoteSiloUsed = 0, isFreeHaulEligible, hasEarthStorage, initialEarthDisposition }: {
   mission: Mission
   target: Target
-  onComplete: (cargo: Record<string, number>) => void
+  rocketImageSrc?: string
+  onComplete: (cargo: Record<string, number>, remoteDisposition?: 'store' | 'sell', earthDisposition?: 'store' | 'sell') => void
   /** Called with whatever's been collected so far (may be empty) — the caller is responsible for persisting it so a later resume doesn't lose progress. */
   onBack: (cargo: Record<string, number>) => void
   onAbandon?: () => void
@@ -177,6 +179,18 @@ export default function MiningScreen({ mission, target, onComplete, onBack, onAb
   hasPriorFreeOpsExperience?: boolean
   /** Cargo already collected before a prior "Back to hub" pause on this same mission, restored so the player doesn't lose it on resume. */
   initialCargo?: Record<string, number>
+  /** Operational player-owned silo at this target; enables arrival settlement. */
+  remoteSiloAvailable?: boolean
+  remoteSiloUsed?: number
+  /** True for a self-directed mining run with no client, delivery, or
+   *  construction attached (KES-283) — the only case that gates on a storage
+   *  destination before mining can begin. */
+  isFreeHaulEligible?: boolean
+  /** Whether the player has a built Earth-side silo/vault to store into. */
+  hasEarthStorage?: boolean
+  /** Destination already chosen before a prior "Back to hub" pause on this
+   *  same mission — resuming must not ask again. */
+  initialEarthDisposition?: 'store' | 'sell'
 }) {
   // Charge count is mission-aware, not coach-aware.
   // During onboarding (sequence <= FREE_OPS_START_MISSIONS_DONE): always 16× the ore required,
@@ -205,10 +219,17 @@ export default function MiningScreen({ mission, target, onComplete, onBack, onAb
   const LOW_CHARGE_THRESHOLD = Math.max(2, Math.ceil(MAX_CHARGES * 0.2))
   const cargoRef = useRef<Record<string, number>>(initialCargo ?? {})
   const [cargo, setCargo] = useState<Record<string, number>>(initialCargo ?? {})
+  const [remoteDisposition, setRemoteDisposition] = useState<'store' | 'sell'>('store')
+  // KES-283: a self-directed run requires a storage destination before mining
+  // starts. A destination chosen before a prior back-to-hub pause carries
+  // over via initialEarthDisposition so resuming never asks twice.
+  const [earthDisposition, setEarthDisposition] = useState<'store' | 'sell' | null>(initialEarthDisposition ?? null)
+  const gateOpen = !!isFreeHaulEligible && earthDisposition == null
   const fireRef = useRef<(() => void) | null>(null)
   const scrollRef = useRef<((dx: number) => void) | null>(null)
   const [laserCharges, setLaserCharges] = useState(MAX_CHARGES)
   const [runKey, setRunKey] = useState(0)  // bump to reset MiningCanvas
+  const [sceneStatus, setSceneStatus] = useState<'loading' | 'ready' | 'failed'>('loading')
   const firedRef = useRef(false)
   const hintedFirstHitRef = useRef(false)
   const hintedWrongOreRef = useRef(false)
@@ -240,6 +261,7 @@ export default function MiningScreen({ mission, target, onComplete, onBack, onAb
     setCargo({})
     setLaserCharges(MAX_CHARGES)
     firedRef.current = false
+    setSceneStatus('loading')
     setRunKey(k => k + 1)
   }
 
@@ -274,7 +296,7 @@ export default function MiningScreen({ mission, target, onComplete, onBack, onAb
   }, [hasCoach, addToast, mission.requires.minerals, minerals])
 
   function fireLaser() {
-    if (laserCharges <= 0) return
+    if (gateOpen || sceneStatus !== 'ready' || laserCharges <= 0) return
     setLaserCharges(c => c - 1)
     fireRef.current?.()
     if (!firedRef.current && coachManual) {
@@ -292,18 +314,17 @@ export default function MiningScreen({ mission, target, onComplete, onBack, onAb
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [laserCharges])
+  }, [laserCharges, sceneStatus])
 
   function handleReturn() {
-    if (orderFilled || laserCharges <= 0) onComplete(cargoRef.current)
+    if (orderFilled || laserCharges <= 0) onComplete(cargoRef.current, remoteDisposition, earthDisposition ?? undefined)
   }
 
   // Local-dev-only shortcut: fills the order instantly so testing later
   // screens doesn't require playing the mining minigame by hand each time.
   function handleDevSkip() {
     cargoRef.current = { ...mission.requires.minerals }
-    onComplete(cargoRef.current)
+    onComplete(cargoRef.current, remoteDisposition, earthDisposition ?? undefined)
   }
 
   // Deposit contains the target's full mineral pool, not just the mission's objective —
@@ -329,35 +350,96 @@ export default function MiningScreen({ mission, target, onComplete, onBack, onAb
   const { dismissed: freeOpsFirstSuccessDismissed, dismiss: dismissFreeOpsFirstSuccess } = useFreeOpsFirstSuccessAck()
   const showFreeOpsSuccessPopup = isFreeOps && orderFilled && !freeOpsFirstSuccessDismissed
 
+  // KES-282: a first-time player could previously face up to 4 stacked overlays at
+  // once (first-entry explainer, guide flyout, first-success popup, low-charge
+  // banner, failure overlay). Collapse to a single "assist surface" chosen by
+  // priority — the most consequential state wins outright instead of stacking on
+  // top of the others. Order: mission-ending failure > one-time success moment >
+  // active risk warning > informational guide/explainer (guide, being player-
+  // initiated, wins that last tier over the passive first-entry explainer).
+  const activeOverlay: 'failure' | 'success' | 'warning' | 'guide' | 'explainer' | null =
+    runFailed ? 'failure'
+      : showFreeOpsSuccessPopup ? 'success'
+      : chargesLow ? 'warning'
+      : guideOpen ? 'guide'
+      : (isFreeOps && showFreeOpsMiningExplainer) ? 'explainer'
+      : null
+
   return (
-    <div className="game-screen mining-screen">
+    <div className="game-screen mining-screen theme-deep">
       <TopBar
         eyebrow={`${target.name.toUpperCase()} · SURFACE`}
         title="Mining Run"
         onBack={() => onBack(cargoRef.current)}
+        glass
         right={isFreeOps ? <StatusPill kind="amber">Free Ops · No Client</StatusPill> : undefined}
       />
 
-      {/* First-time-in-Free-Ops-mining explainer — dismiss-once, mirrors the mission-board explainer's ack pattern but covers what changes about the mining run itself (sell the haul yourself, no daily limit). */}
-      {isFreeOps && showFreeOpsMiningExplainer && (
+      {/* KES-283: self-directed mining requires a storage destination before
+          the run can start — takes absolute precedence over every other
+          overlay (explainer/guide/success/failure/warning) since nothing
+          about the run can proceed while it's open. */}
+      {gateOpen && (
+        <div className="mining-storage-gate-overlay" style={{ position: 'absolute', inset: 0, zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24, background: 'rgba(4, 10, 20, 0.72)' }}>
+          <Panel accent="var(--ln-cyan)" surface="solid" style={{ padding: 16, width: '100%', maxWidth: 340 }}>
+            <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 10, fontWeight: 800, letterSpacing: '0.22em', color: 'var(--ln-cyan)', textTransform: 'uppercase', marginBottom: 8 }}>
+              Choose Storage Destination
+            </div>
+            <p style={{ margin: '0 0 14px', fontFamily: 'var(--ln-font-body)', fontSize: 12, lineHeight: 1.5, color: 'var(--ln-text-dim)' }}>
+              No client is owed this haul. Pick where whatever you mine on this run goes before you start drilling.
+            </p>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+              <button
+                type="button"
+                data-testid="mining-gate-sell"
+                onClick={() => setEarthDisposition('sell')}
+                style={{
+                  textAlign: 'left', padding: '10px 12px', borderRadius: 8, cursor: 'pointer',
+                  border: '1.5px solid var(--ln-hairline)', background: 'var(--ln-surface-2)',
+                }}
+              >
+                <div style={{ font: '800 12px var(--ln-font-display)', letterSpacing: '0.04em', textTransform: 'uppercase', color: 'var(--ln-text)' }}>Sell On Earth</div>
+                <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 10, color: 'var(--ln-text-muted)', marginTop: 2 }}>At market price</div>
+              </button>
+              <button
+                type="button"
+                data-testid="mining-gate-store"
+                onClick={() => hasEarthStorage && setEarthDisposition('store')}
+                disabled={!hasEarthStorage}
+                style={{
+                  textAlign: 'left', padding: '10px 12px', borderRadius: 8, cursor: hasEarthStorage ? 'pointer' : 'not-allowed',
+                  border: '1.5px solid var(--ln-hairline)', background: 'var(--ln-surface-2)',
+                  opacity: hasEarthStorage ? 1 : 0.5,
+                }}
+              >
+                <div style={{ font: '800 12px var(--ln-font-display)', letterSpacing: '0.04em', textTransform: 'uppercase', color: 'var(--ln-text)' }}>Store On Earth</div>
+                <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 10, color: 'var(--ln-text-muted)', marginTop: 2 }}>{hasEarthStorage ? 'Into the silo' : 'Needs a silo or vault'}</div>
+              </button>
+            </div>
+          </Panel>
+        </div>
+      )}
+
+      {/* First-time-in-Free-Ops-mining explainer — dismiss-once, mirrors the mission-board explainer's ack pattern but covers what changes about the mining run itself (sell the haul yourself, no daily limit). Gated on activeOverlay so it never stacks with the guide, success popup, warning, or failure overlay. */}
+      {activeOverlay === 'explainer' && (
         <div style={{ position: 'absolute', top: 64, left: 14, right: 14, zIndex: 60 }}>
-          <Panel accent="var(--ln-amber)" surface="glass" style={{ padding: 12, position: 'relative' }}>
+          <Panel className="mining-info-panel" accent="var(--ln-cyan)" surface="glass" style={{ padding: 12, position: 'relative' }}>
             <button
               data-testid="dismiss-freeops-mining-explainer"
               onClick={dismissFreeOpsMiningExplainer}
               aria-label="Dismiss"
               style={{
                 position: 'absolute', top: 8, right: 8, width: 20, height: 20, borderRadius: 6,
-                border: '1px solid rgba(245,166,35,0.4)', background: 'rgba(20,20,23,0.6)',
+                border: '1px solid var(--ln-hairline-strong)', background: 'var(--ln-mining-control-fill)',
                 color: 'var(--ln-amber)', fontSize: 12, lineHeight: 1, cursor: 'pointer',
               }}
             >
               ×
             </button>
-            <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 10, fontWeight: 800, letterSpacing: '0.22em', color: 'var(--ln-amber)', textTransform: 'uppercase', marginBottom: 6 }}>
+            <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 10, fontWeight: 800, letterSpacing: '0.22em', color: 'var(--ln-cyan)', textTransform: 'uppercase', marginBottom: 6 }}>
               No Client On This Run
             </div>
-            <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 12, color: '#a9b8ce', lineHeight: 1.45, paddingRight: 20 }}>
+            <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 12, color: 'var(--ln-text-dim)', lineHeight: 1.45, paddingRight: 20 }}>
               You picked the target and the order. No daily limit — mine what looks valuable, then sell the haul yourself at market price instead of a fixed client payout.
             </div>
           </Panel>
@@ -371,10 +453,10 @@ export default function MiningScreen({ mission, target, onComplete, onBack, onAb
           style={{
             position: 'absolute', top: 8, right: 8, zIndex: 999,
             padding: '3px 8px',
-            background: '#0e1a0e',
-            border: '1px solid #3a7a3a',
+            background: 'var(--ln-bp-paper)',
+            border: '1px solid var(--ln-bp-green)',
             borderRadius: 6,
-            color: '#5aff5a',
+            color: 'var(--ln-bp-green)',
             fontFamily: 'var(--ln-font-mono)',
             fontSize: 10,
             fontWeight: 700,
@@ -383,44 +465,76 @@ export default function MiningScreen({ mission, target, onComplete, onBack, onAb
             opacity: 0.8,
           }}
         >
-          ⚡ SKIP MINING
+            SKIP MINING
         </button>
       )}
 
-      {guideOpen && (
-        <div style={{ position: 'absolute', inset: 0, zIndex: 70, background: 'rgba(8,8,9,0.82)', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', padding: 16, gap: 8 }} onClick={() => setGuideOpen(false)}>
-          <div style={{ background: 'rgba(8,16,30,0.97)', border: '1px solid rgba(112,217,234,0.3)', borderRadius: 14, padding: 14 }} onClick={e => e.stopPropagation()}>
-            <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 9, fontWeight: 800, letterSpacing: '0.2em', color: '#87CFFA', textTransform: 'uppercase', marginBottom: 10 }}>Mining Controls</div>
+      {/* KES-282: moved out of the always-visible stats row (which was competing
+          with the mineral/charge readout for attention) into a small standalone
+          corner control — same button, same testid/behavior, lower prominence.
+          Sits left of the dev-only Skip Mining button so the two never overlap. */}
+      <button
+        data-testid="mining-guide-btn"
+        onClick={() => setGuideOpen(o => !o)}
+        aria-label="Mining controls guide"
+        aria-expanded={guideOpen}
+        style={{
+          position: 'absolute',
+          top: 8,
+          right: process.env.NODE_ENV === 'development' ? 92 : 8,
+          zIndex: 90,
+          width: 24,
+          height: 24,
+          padding: 0,
+          borderRadius: 6,
+          border: '1px solid var(--ln-cyan-border)',
+          background: 'var(--ln-cyan-soft)',
+          color: 'var(--ln-cyan)',
+          fontFamily: 'var(--ln-font-display)',
+          fontSize: 11,
+          fontWeight: 800,
+          lineHeight: 1,
+          cursor: 'pointer',
+          opacity: 0.85,
+        }}
+      >
+        ?
+      </button>
+
+      {activeOverlay === 'guide' && (
+        <aside className="mining-guide-overlay" aria-label="Mining controls" style={{ position: 'absolute', right: 16, bottom: 'calc(var(--ln-nav-h, 64px) + 16px)', zIndex: 70, width: 'min(360px, calc(100% - 32px))' }}>
+          <div className="mining-guide-panel">
+            <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 9, fontWeight: 800, letterSpacing: '0.2em', color: 'var(--ln-cyan)', textTransform: 'uppercase', marginBottom: 10 }}>Mining Controls</div>
             {miningGuide(deliveryTargetName).map(item => (
               <div key={item.label} style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
-                <span style={{ fontFamily: 'var(--ln-font-display)', fontSize: 10, fontWeight: 800, letterSpacing: '0.1em', color: '#f5a623', whiteSpace: 'nowrap', minWidth: 90 }}>{item.label}</span>
-                <span style={{ fontFamily: 'var(--ln-font-body)', fontSize: 12, color: '#a9b8ce', lineHeight: 1.4 }}>{item.desc}</span>
+                <span style={{ fontFamily: 'var(--ln-font-display)', fontSize: 10, fontWeight: 800, letterSpacing: '0.1em', color: 'var(--ln-cyan)', whiteSpace: 'nowrap', minWidth: 90 }}>{item.label}</span>
+                <span style={{ fontFamily: 'var(--ln-font-body)', fontSize: 12, color: 'var(--ln-text-dim)', lineHeight: 1.4 }}>{item.desc}</span>
               </div>
             ))}
-            <button onClick={() => setGuideOpen(false)} style={{ marginTop: 4, width: '100%', padding: '8px 0', background: 'rgba(112,217,234,0.1)', border: '1px solid rgba(112,217,234,0.3)', borderRadius: 8, fontFamily: 'var(--ln-font-display)', fontSize: 11, fontWeight: 800, letterSpacing: '0.14em', color: '#87CFFA', cursor: 'pointer', textTransform: 'uppercase' }}>Close</button>
+            <button className="mining-guide-close" onClick={() => setGuideOpen(false)}>Close</button>
           </div>
-        </div>
+        </aside>
       )}
 
-      {showFreeOpsSuccessPopup && (
-        <div data-testid="freeops-first-success-popup" style={{ position: 'absolute', inset: 0, zIndex: 75, background: 'rgba(8,8,9,0.76)', display: 'flex', alignItems: 'flex-end', padding: 16 }}>
-          <Panel accent="var(--ln-ok)" surface="glass" style={{ padding: 14, width: '100%', boxShadow: '0 18px 48px rgba(0,0,0,0.55)' }}>
+      {activeOverlay === 'success' && (
+        <div className="mining-success-overlay" data-testid="freeops-first-success-popup" style={{ position: 'absolute', inset: 0, zIndex: 75, display: 'flex', alignItems: 'flex-end', padding: 16 }}>
+          <Panel className="mining-success-panel" accent="var(--ln-ok)" surface="glass" style={{ padding: 14, width: '100%' }}>
             <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 10, fontWeight: 800, letterSpacing: '0.22em', color: 'var(--ln-ok)', textTransform: 'uppercase', marginBottom: 6 }}>
               First Free Ops Haul Secured
             </div>
-            <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 13, color: '#dbe8f8', lineHeight: 1.45 }}>
+            <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 13, color: 'var(--ln-text-dim)', lineHeight: 1.45 }}>
               This cargo is yours. Return to Earth, recover the ship, then sell the haul on the open market instead of handing it to a client.
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginTop: 12 }}>
               <button
                 onClick={dismissFreeOpsFirstSuccess}
-                style={{ padding: '11px 10px', borderRadius: 8, border: '1px solid rgba(57,211,106,0.45)', background: 'rgba(57,211,106,0.12)', color: 'var(--ln-ok)', fontFamily: 'var(--ln-font-display)', fontSize: 10, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', cursor: 'pointer' }}
+                className="mining-success-secondary"
               >
                 Review Cargo
               </button>
               <button
                 onClick={() => { dismissFreeOpsFirstSuccess(); handleReturn() }}
-                style={{ padding: '11px 10px', borderRadius: 8, border: 'none', background: 'var(--ln-ok)', color: '#04120b', fontFamily: 'var(--ln-font-display)', fontSize: 10, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase', cursor: 'pointer' }}
+                className="mining-success-primary"
               >
                 Return Now
               </button>
@@ -429,22 +543,20 @@ export default function MiningScreen({ mission, target, onComplete, onBack, onAb
         </div>
       )}
 
-      {hasCoach && <div style={{ height: coachManual ? 248 : 152, flexShrink: 0 }} />}
-
-      {/* Laser depleted without filling order — always shown, not gated on hasCoach */}
-      {runFailed && (
-        <div style={{ position: 'absolute', inset: 0, zIndex: 80, background: 'rgba(8,8,9,0.92)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 16, padding: 32 }}>
+      {/* Laser depleted without filling order — highest-priority overlay, always wins */}
+      {activeOverlay === 'failure' && (
+        <div className="mining-failure-overlay" style={{ position: 'absolute', inset: 0, zIndex: 80, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 16, padding: 32 }}>
           <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 11, fontWeight: 800, letterSpacing: '0.22em', color: 'var(--ln-crit)', textTransform: 'uppercase' }}>Laser Depleted</div>
-          <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 22, fontWeight: 800, color: '#e6efff', textAlign: 'center', lineHeight: 1.2 }}>Order Not Filled</div>
-          <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 13, color: '#a9b8ce', textAlign: 'center', lineHeight: 1.5 }}>
+          <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 22, fontWeight: 800, color: 'var(--ln-text)', textAlign: 'center', lineHeight: 1.2 }}>Order Not Filled</div>
+          <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 13, color: 'var(--ln-text-dim)', textAlign: 'center', lineHeight: 1.5 }}>
             {totalCollected}/{totalNeeded} units collected. Fire at ore veins — each shot must hit a deposit.
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10, width: '100%', maxWidth: 280, marginTop: 8 }}>
-            <button onClick={handleTryAgain} style={{ padding: '14px 0', background: 'var(--ln-cyan)', border: 'none', borderRadius: 10, fontFamily: 'var(--ln-font-display)', fontSize: 13, fontWeight: 800, letterSpacing: '0.14em', color: '#000', cursor: 'pointer', textTransform: 'uppercase' }}>
+            <button className="mining-failure-retry" onClick={handleTryAgain}>
               Try Again
             </button>
             {onAbandon && (
-              <button onClick={() => setConfirmingAbandon(true)} style={{ padding: '12px 0', background: 'transparent', border: '1px solid rgba(255,80,80,0.35)', borderRadius: 10, fontFamily: 'var(--ln-font-display)', fontSize: 11, fontWeight: 800, letterSpacing: '0.14em', color: '#ff6060', cursor: 'pointer', textTransform: 'uppercase' }}>
+              <button className="mining-failure-abandon" onClick={() => setConfirmingAbandon(true)}>
                 Scrub Mission
               </button>
             )}
@@ -453,9 +565,9 @@ export default function MiningScreen({ mission, target, onComplete, onBack, onAb
       )}
 
       {/* Low-charge warning banner — fades in when running short without filling the order */}
-      {chargesLow && (
-        <div style={{ position: 'absolute', top: hasCoach ? (coachManual ? 248 : 152) : 56, left: 0, right: 0, zIndex: 40, display: 'flex', justifyContent: 'center', pointerEvents: 'none' }}>
-          <div style={{ margin: '8px 16px', padding: '6px 14px', background: 'rgba(255,100,60,0.18)', border: '1px solid rgba(255,100,60,0.45)', borderRadius: 8, fontFamily: 'var(--ln-font-display)', fontSize: 10, fontWeight: 800, letterSpacing: '0.18em', color: '#ff7040', textTransform: 'uppercase' }}>
+      {activeOverlay === 'warning' && (
+        <div className="mining-charge-warning" style={{ position: 'absolute', top: hasCoach ? (coachManual ? 'var(--tutorial-manual-content-top)' : 'var(--tutorial-content-top)') : 56, left: 0, right: 0, zIndex: 40, display: 'flex', justifyContent: 'center', pointerEvents: 'none' }}>
+          <div>
             {laserCharges} charge{laserCharges !== 1 ? 's' : ''} remaining — order not filled
           </div>
         </div>
@@ -465,16 +577,28 @@ export default function MiningScreen({ mission, target, onComplete, onBack, onAb
         <div className="mining-stars" />
         <MiningCanvas
           key={runKey}
+          rocketImageSrc={rocketImageSrc}
           minerals={depositMinerals}
           requiredMinerals={Object.keys(mission.requires.minerals)}
           mineralMeta={minerals}
           laserTier={laserTier}
           onCollect={collectMineral}
+          onReady={() => setSceneStatus('ready')}
+          onFailure={() => setSceneStatus('failed')}
           fireRef={fireRef}
           scrollRef={scrollRef}
           oreNearRef={oreNearRef}
           neededMineralsRef={neededMineralsRef}
         />
+        {sceneStatus !== 'ready' && (
+          <div className="mining-scene-status" role="status" aria-live="polite" data-testid="mining-scene-status">
+            <span className="mining-scene-status__eyebrow">{sceneStatus === 'failed' ? 'FIELD OFFLINE' : 'PREPARING MINING FIELD'}</span>
+            <strong>{sceneStatus === 'failed' ? 'SCENE INITIALIZATION FAILED' : 'LOADING ROCKET TELEMETRY AND ORE TARGETS'}</strong>
+            {sceneStatus === 'failed' && (
+              <button type="button" className="mining-scene-status__retry" onClick={handleTryAgain}>RETRY FIELD</button>
+            )}
+          </div>
+        )}
       </div>
 
       <div className="mining-controls">
@@ -549,14 +673,6 @@ export default function MiningScreen({ mission, target, onComplete, onBack, onAb
               {laserCharges}/{MAX_CHARGES}
             </span>
           </div>
-          {/* Guide */}
-          <button
-            data-testid="mining-guide-btn"
-            onClick={() => setGuideOpen(o => !o)}
-            style={{ padding: '2px 7px', borderRadius: 5, background: 'rgba(12,12,13,0.7)', border: '1px solid rgba(112,217,234,0.28)', fontFamily: 'var(--ln-font-display)', fontSize: 9, fontWeight: 800, letterSpacing: '0.12em', color: '#87CFFA', cursor: 'pointer', textTransform: 'uppercase', flexShrink: 0 }}
-          >
-            ?
-          </button>
         </div>
 
         {/* Order progress — segmented bar, Out There: Omega chrome */}
@@ -567,6 +683,19 @@ export default function MiningScreen({ mission, target, onComplete, onBack, onAb
           height={6}
           style={{ marginTop: 6, marginBottom: 6 }}
         />
+
+        {remoteSiloAvailable && (orderFilled || laserCharges <= 0) && (
+          <Panel accent="var(--ln-cyan)" surface="glass" style={{ marginBottom: 8, padding: 10 }}>
+            <div style={{ font: '800 9px var(--ln-font-display)', letterSpacing: '0.16em', color: 'var(--ln-cyan)', textTransform: 'uppercase' }}>Arrival settlement</div>
+            <div style={{ font: '12px var(--ln-font-body)', color: 'var(--ln-text-dim)', lineHeight: 1.4, marginTop: 4 }}>
+              Remote Mineral Silo online · {remoteSiloUsed} / {REMOTE_MINERAL_SILO_CAPACITY} U. Choose where this haul goes before the return leg.
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginTop: 8 }}>
+              <button type="button" onClick={() => setRemoteDisposition('store')} style={{ padding: '8px 6px', borderRadius: 6, border: `1px solid ${remoteDisposition === 'store' ? 'var(--ln-cyan)' : 'var(--ln-hairline)'}`, background: remoteDisposition === 'store' ? 'var(--ln-cyan-soft)' : 'transparent', color: 'var(--ln-text)', font: '700 10px var(--ln-font-display)' }}>PLACE IN SILO</button>
+              <button type="button" onClick={() => setRemoteDisposition('sell')} style={{ padding: '8px 6px', borderRadius: 6, border: `1px solid ${remoteDisposition === 'sell' ? 'var(--ln-amber)' : 'var(--ln-hairline)'}`, background: remoteDisposition === 'sell' ? 'var(--ln-amber-soft)' : 'transparent', color: 'var(--ln-text)', font: '700 10px var(--ln-font-display)' }}>SELL AT MARKET</button>
+            </div>
+          </Panel>
+        )}
 
         {/* ── Action row: Fire · Fill/Return · Scroll ───────────────────────── */}
         {/* minWidth: 0 on every grid item overrides <button>'s default
@@ -587,36 +716,38 @@ export default function MiningScreen({ mission, target, onComplete, onBack, onAb
               animation: hasCoach && oreNear ? 'ln-pulse 0.75s ease-in-out infinite' : 'none',
               transition: 'box-shadow 150ms',
             }}>
-          <PrimaryBtn
-            kind="cyan"
-            disabled={laserCharges <= 0}
-            testId="fire-laser-btn"
+          <button
+            className="mining-command mining-command--fire"
+            type="button"
+            disabled={gateOpen || sceneStatus !== 'ready' || laserCharges <= 0}
+            data-testid="fire-laser-btn"
             onClick={fireLaser}
           >
             {laserCharges > 0 ? 'FIRE LASER' : 'DEPLETED'}
-          </PrimaryBtn>
+          </button>
           </div>
           <div style={{ minWidth: 0 }}>
-          <PrimaryBtn
-            kind="amber"
+          <button
+            className="mining-command mining-command--return"
+            type="button"
             disabled={!orderFilled && laserCharges > 0}
-            testId="return-home-btn"
+            data-testid="return-home-btn"
             onClick={handleReturn}
           >
             {(() => {
               const destination = deliveryTargetName ? `DELIVER TO ${deliveryTargetName.toUpperCase()}` : 'RETURN TO EARTH'
               return orderFilled || laserCharges <= 0 ? destination : `FILL ORDER TO ${deliveryTargetName ? 'DELIVER' : 'RETURN'}`
             })()}
-          </PrimaryBtn>
+          </button>
           </div>
           <div style={{ minWidth: 0 }}>
-            <ScrollTrack scrollRef={scrollRef} />
+            <ScrollTrack scrollRef={scrollRef} disabled={sceneStatus !== 'ready'} />
           </div>
         </div>
       </div>
 
       {confirmingAbandon && onAbandon && (
-        <ConfirmActionSheet
+        <ActionConfirmBar
           eyebrow="Mining Run"
           title="Scrub Mission"
           description={`Abandon this run? ${totalCollected} of ${totalNeeded} units collected will be lost.`}

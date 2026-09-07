@@ -18,7 +18,7 @@ describe('DEV_GROUPS', () => {
     // sprint, so it must be replayable via the DEV panel like M1/M2.
     expect(labels).toContain('Mission 3')
     // Post-onboarding story mission (telescope launch) — replayable once
-    // free ops + the satellite monitoring station are built.
+    // free ops + the transit telescope are built.
     expect(labels).toContain('First Satellite Launch')
     expect(labels).toContain('Recent UI')
     expect(labels).toHaveLength(5)
@@ -203,6 +203,16 @@ describe('resolvePreset — ship customizer', () => {
   })
 })
 
+describe('resolvePreset — hangar assembly', () => {
+  it('opens a staged Prospector transfer in the hangar independent of saved profile state', () => {
+    const p = resolvePreset('ui-hangar-assembly')!
+    expect(p.screen).toBe('hangar')
+    expect(p.player!.pendingLaunch).toBe(true)
+    expect(p.player!.missionsDone).toBe(2)
+    expect(p.rocket!.chassis).toBe('hull-mk2')
+  })
+})
+
 describe('resolvePreset — recent UI surfaces', () => {
   it('opens the live Mission Board restyle with Free Ops context', () => {
     const p = resolvePreset('ui-mission-board')!
@@ -228,16 +238,13 @@ describe('resolvePreset — recent UI surfaces', () => {
   it('opens the TESS discovery console with the satellite built and launched', () => {
     const p = resolvePreset('ui-tess-discovery')!
     expect(p.screen).toBe('galaxy')
-    expect(p.player!.satelliteMonitoringBuilt).toBe(true)
     expect(p.player!.transitSatelliteLaunchedAt).not.toBeNull()
   })
 
-  it('opens rover mining with an active mission and timer state', () => {
+  it('opens rover mining with an active mission and live TakeOn state', () => {
     const p = resolvePreset('ui-rover-mining')!
     expect(p.screen).toBe('rover-mining')
     expect(p.player!.activeMission).not.toBeNull()
-    expect(p.player!.roverMiningStartedAt).toBeGreaterThan(0)
-    expect(p.player!.roverTerrainClassifications).toBeDefined()
   })
 })
 
@@ -253,6 +260,7 @@ describe('dev shortcut routes', () => {
     expect(presetForUiRoute(['mission-board'])).toBe('ui-mission-board')
     expect(presetForUiRoute(['skill-tree'])).toBe('ui-skill-tree')
     expect(presetForUiRoute(['ship-customizer'])).toBe('ship-customizer')
+    expect(presetForUiRoute(['hangar'])).toBe('ui-hangar-assembly')
   })
 })
 

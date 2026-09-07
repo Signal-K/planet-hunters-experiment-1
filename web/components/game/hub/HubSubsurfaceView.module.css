@@ -6,6 +6,18 @@
   background: var(--ln-void);
 }
 
+/* Recolored 2026-08-22 (KES-228): this deck sits directly beneath the Hub
+   surface scene in the same slide, and the old soil-brown strata (#493824 /
+   #2c241c / #191713, #92785d etc.) read as a different game's palette next
+   to the new dark-navy/cyan/pink diorama above it. Same geology-cutaway
+   shapes, recolored into that world instead of literal dirt tones. */
+/* Underground landscape (KES-271). This deck sits directly under the Hub
+   surface in the same vertical slide, so the cross-section must READ as the
+   ground continuing down from the surface seam — soil crust at the very top
+   (matching the near-ground silhouette colour used on the surface), darkening
+   through subsoil and rock to bedrock at depth — rather than starting on a sky
+   tone. Kept in the dark-navy Hub palette (KES-228) with faint semantic-mineral
+   ore veins for the "ore in the ground" texture. */
 .geology {
   position: absolute;
   inset: 0;
@@ -14,34 +26,108 @@
   background:
     linear-gradient(
       180deg,
-      color-mix(in srgb, var(--ln-bg-grid) 88%, #493824) 0 18%,
-      color-mix(in srgb, var(--ln-bg) 82%, #2c241c) 18% 56%,
-      color-mix(in srgb, var(--ln-void) 92%, #191713) 56% 100%
+      color-mix(in srgb, var(--hub-hill-far) 88%, var(--ln-panel-2)) 0 3%,
+      color-mix(in srgb, var(--hub-hill-near) 90%, #000) 3% 26%,
+      color-mix(in srgb, var(--hub-hill-near) 72%, #000) 26% 58%,
+      color-mix(in srgb, var(--ln-void) 90%, var(--hub-hill-near)) 58% 100%
     );
+}
+
+/* The subsurface is the lower half of the same vertical world slide. This
+   shallow, faceted cap is the visual hand-off from the surface ground lip to
+   the darker excavation deck; it keeps the view from starting as an unrelated
+   navy panel when the player moves below grade. */
+.surfaceCap {
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 0;
+  z-index: 1;
+  height: 72px;
+  pointer-events: none;
+  background:
+    linear-gradient(
+      180deg,
+      var(--hub-hill-far) 0 8px,
+      color-mix(in srgb, var(--hub-hill-far) 82%, var(--ln-panel-2)) 8px 34px,
+      color-mix(in srgb, var(--hub-hill-near) 78%, var(--ln-void)) 34px 100%
+    );
+  border-bottom: 1px solid color-mix(in srgb, var(--hub-cyan) 30%, var(--hub-outline));
+  box-shadow: 0 8px 20px color-mix(in srgb, var(--ln-void) 46%, transparent);
+}
+
+.surfaceCap::before {
+  position: absolute;
+  right: 0;
+  bottom: 18px;
+  left: 0;
+  height: 18px;
+  content: '';
+  opacity: 0.65;
+  background:
+    linear-gradient(
+      135deg,
+      transparent 0 12%,
+      color-mix(in srgb, var(--hub-hill-far) 70%, var(--hub-cyan)) 12% 18%,
+      transparent 18% 36%,
+      color-mix(in srgb, var(--hub-hill-near) 72%, var(--ln-panel-2)) 36% 43%,
+      transparent 43% 62%,
+      color-mix(in srgb, var(--hub-hill-far) 70%, var(--hub-cyan)) 62% 69%,
+      transparent 69% 100%
+    );
+}
+
+.surfaceCap::after {
+  position: absolute;
+  top: 8px;
+  right: 4%;
+  left: 4%;
+  height: 2px;
+  content: '';
+  background: linear-gradient(90deg, transparent, var(--hub-cyan), transparent);
+  opacity: 0.55;
+}
+
+/* Soil crust lip: a lit topsoil edge right at the surface seam so the deck
+   visually attaches to the ground plane of the Hub scene above it. */
+.crust {
+  position: absolute;
+  top: 64px;
+  left: 0;
+  right: 0;
+  z-index: 2;
+  height: 12px;
+  pointer-events: none;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--hub-hill-far) 70%, transparent), transparent);
+  border-top: 1.5px solid color-mix(in srgb, var(--hub-cyan) 26%, var(--hub-outline));
+  box-shadow: 0 1px 0 color-mix(in srgb, var(--ln-void) 60%, transparent);
 }
 
 .geology::before {
   position: absolute;
   inset: 0;
   content: '';
-  opacity: 0.22;
+  opacity: 0.16;
   background-image:
     linear-gradient(var(--ln-hairline) 1px, transparent 1px),
     linear-gradient(90deg, var(--ln-hairline) 1px, transparent 1px);
   background-size: 48px 48px;
 }
 
+/* Ore veins scattered through the strata — semantic mineral tints (iron rust,
+   silicon pale-blue, gold warm), the same locked ore palette SoilCrossSection
+   uses on the surface, so the deposits below match what glows above the seam. */
 .geology::after {
   position: absolute;
   inset: 0;
   content: '';
-  opacity: 0.24;
+  opacity: 0.5;
   background-image:
-    radial-gradient(circle at 8% 18%, #92785d 0 2px, transparent 3px),
-    radial-gradient(circle at 17% 65%, #6c5a47 0 3px, transparent 4px),
-    radial-gradient(circle at 76% 32%, #8b7258 0 2px, transparent 3px),
-    radial-gradient(circle at 91% 77%, #665646 0 4px, transparent 5px);
-  background-size: 150px 120px, 210px 170px, 180px 140px, 250px 190px;
+    radial-gradient(ellipse 22px 12px at 12% 30%, rgba(217, 113, 80, 0.4), transparent 70%),
+    radial-gradient(ellipse 18px 10px at 82% 44%, rgba(185, 216, 255, 0.34), transparent 70%),
+    radial-gradient(ellipse 26px 12px at 30% 72%, rgba(255, 209, 102, 0.26), transparent 70%),
+    radial-gradient(ellipse 16px 10px at 68% 84%, rgba(217, 113, 80, 0.3), transparent 70%);
+  background-repeat: no-repeat;
 }
 
 .stratum {
@@ -49,25 +135,25 @@
   left: -4%;
   width: 108%;
   height: 10%;
-  border-top: 1px solid var(--ln-hairline);
+  border-top: 1px solid var(--hub-outline);
   border-bottom: 1px solid var(--ln-divider);
   transform: skewY(-2deg);
 }
 
 .stratumOne {
-  top: 18%;
-  background: color-mix(in srgb, #6a5137 18%, transparent);
+  top: 26%;
+  background: color-mix(in srgb, var(--hub-hill-far) 30%, transparent);
 }
 
 .stratumTwo {
-  top: 68%;
+  top: 58%;
   transform: skewY(1.5deg);
-  background: color-mix(in srgb, #2d2924 44%, transparent);
+  background: color-mix(in srgb, var(--ln-void) 40%, transparent);
 }
 
 .serviceShaft {
   position: absolute;
-  top: 8%;
+  top: 72px;
   bottom: 0;
   left: 50%;
   width: 48px;
@@ -122,19 +208,30 @@
   letter-spacing: 0.08em;
 }
 
+/* KES-228, second correction: the previous fix reserved 72px on the right
+   for the depth rail and only 24px on the left, on the theory that the
+   card should be centered in the space "left over" once the rail's width
+   is excluded. That produced a card that's visibly NOT symmetric on the
+   actual screen — more empty space on one side than the other — which
+   reads as an off-centre bug regardless of the rationale. Fixed for real
+   this time: equal insets on both sides, full stop. `.content` (z-index 2)
+   now simply sits in front of `.depthRail` (no z-index, so it stacks below
+   by document order) and covers it wherever the card overlaps — a ruler
+   digit or two disappearing behind the card is far less visible than an
+   asymmetric layout, and this is the only way to guarantee true center. */
 .content {
   position: absolute;
   top: 72px;
+  right: 24px;
   bottom: 168px;
-  left: 50%;
+  left: 24px;
   z-index: 2;
   display: flex;
-  width: min(1184px, calc(100% - 64px));
+  max-width: 1184px;
   margin: 0 auto;
   flex-direction: column;
   gap: 16px;
   box-sizing: border-box;
-  transform: translateX(-50%);
 }
 
 .deckHeader,
@@ -815,6 +912,103 @@
   line-height: 1.5;
 }
 
+/* Storage silo (KES-271): a filling tank, segmented and coloured by mineral,
+   with a capacity readout — the visual half of "keep your ore on Earth". Spans
+   the full detail panel as a hero row above the summary + inventory columns. */
+.siloRack {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: stretch;
+  gap: 16px;
+  padding: 16px;
+  border: 1px solid var(--ln-cyan-border);
+  border-radius: var(--ln-r-md);
+  background: color-mix(in srgb, var(--ln-void) 72%, transparent);
+}
+
+.silo {
+  position: relative;
+  width: 84px;
+  min-height: 128px;
+  flex-shrink: 0;
+  border: 1.5px solid var(--ln-cyan-border);
+  border-radius: 10px 10px 6px 6px;
+  background:
+    linear-gradient(90deg, rgba(255, 255, 255, 0.05), transparent 28%, transparent 72%, rgba(0, 0, 0, 0.28)),
+    color-mix(in srgb, var(--ln-void) 82%, transparent);
+  overflow: hidden;
+  box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.4);
+}
+
+.siloFill {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  display: flex;
+  min-height: 0;
+  flex-direction: column-reverse;
+  transition: height 0.5s ease;
+}
+
+.siloSeg {
+  display: block;
+  width: 100%;
+  min-height: 3px;
+  background: var(--seg-color);
+  border-top: 1px solid rgba(0, 0, 0, 0.25);
+  box-shadow: inset 0 3px 6px rgba(255, 255, 255, 0.14);
+}
+
+.siloTick {
+  position: absolute;
+  right: 0;
+  left: 0;
+  height: 1px;
+  background: var(--ln-hairline);
+  opacity: 0.5;
+}
+
+.siloReadout {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  justify-content: center;
+  gap: 4px;
+}
+
+.siloReadValue {
+  color: var(--ln-cyan-bright);
+  font: 800 clamp(24px, 4vw, 40px) var(--ln-font-display);
+  line-height: 1;
+}
+
+.siloReadValue span {
+  margin-left: 6px;
+  color: var(--ln-text-muted);
+  font: 700 12px var(--ln-font-mono);
+}
+
+.siloReadState {
+  color: var(--ln-text-dim);
+  font: 700 9px var(--ln-font-display);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.siloReadStateFull {
+  color: var(--ln-amber);
+}
+
+.siloReadCopy {
+  margin: 4px 0 0;
+  max-width: 320px;
+  color: var(--ln-text-dim);
+  font-family: var(--ln-font-body);
+  font-size: 11px;
+  line-height: 1.5;
+}
+
 .inventoryList,
 .partsList {
   display: flex;
@@ -965,14 +1159,16 @@
 }
 
 @media (max-width: 720px) {
-  .content {
-    top: 72px;
-    right: 40px;
-    bottom: 168px;
-    left: 12px;
-    width: auto;
-    transform: none;
-  }
+  /* No `.content` override here anymore. This block used to redefine
+     top/right/bottom/left with its own hardcoded (and itself asymmetric:
+     left 12px, right 40px) values, silently overriding every attempt to
+     fix the base rule's centering above — since this is a mobile
+     breakpoint (max-width: 720px), it won on every phone-width screenshot
+     taken this whole round, which is why the card kept reading as
+     off-centre no matter what the base `.content` rule said. The base
+     rule's symmetric left/right insets already work fine at narrow
+     widths (max-width only clamps on wide screens), so this override is
+     simply removed rather than re-duplicated here. */
 
   .deckSummary {
     display: none;

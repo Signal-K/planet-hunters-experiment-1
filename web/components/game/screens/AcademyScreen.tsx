@@ -55,7 +55,7 @@ interface AcademyScreenProps {
 
 export default function AcademyScreen(props: AcademyScreenProps) {
   const [tab, setTab] = useState<Tab>('roster')
-  const [now, setNow] = useState(() => Date.now())
+  const [now, setNow] = useState(0)
   const [trainingBranch, setTrainingBranch] = useState<SkillBranch>('mining')
   const academy = STRUCTURES.find(structure => structure.id === 'astronaut-academy')!
   const built = props.player.placed.includes('astronaut-academy')
@@ -68,6 +68,7 @@ export default function AcademyScreen(props: AcademyScreenProps) {
   const showCoach = coach.visible && built
 
   useEffect(() => {
+    setNow(Date.now())
     const id = window.setInterval(() => setNow(Date.now()), 1000)
     return () => window.clearInterval(id)
   }, [])
@@ -82,7 +83,7 @@ export default function AcademyScreen(props: AcademyScreenProps) {
 
   return (
     <div className={`game-screen theme-light ${styles.screen}`} data-testid="academy-screen">
-      <TopBar eyebrow="EARTH BASE · CREW" title="Astronaut Academy" onBack={props.onBack} solid />
+      <TopBar eyebrow="BASE · CREW" title="Astronaut Academy" onBack={props.onBack} solid />
 
       {!built ? (
         <main className={styles.locked}>
@@ -95,7 +96,7 @@ export default function AcademyScreen(props: AcademyScreenProps) {
             <h2>Establish the Academy</h2>
             <Step done={affinityReady} title="Earn client trust" body="Reach affinity level 2 with two clients." />
             <Step done={!!props.player.academyResearched} title="Research the Academy" body={`${ACADEMY_RESEARCH_XP_COST} Research XP`} />
-            <Step done={built} title="Build at Earth Base" body={`${formatCurrency(academy.cost)} · 24 aluminium · 12 silicon · 8 copper`} />
+            <Step done={built} title="Build at Base" body={`${formatCurrency(academy.cost)} · 24 aluminium · 12 silicon · 8 copper`} />
             {!affinityReady ? (
               <div className={styles.notice}>Client affinity progress: {affinityClients.filter(item => item.level >= 2).length}/2 trusted partners</div>
             ) : !props.player.academyResearched ? (

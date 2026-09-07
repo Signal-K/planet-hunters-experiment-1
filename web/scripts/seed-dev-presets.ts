@@ -36,7 +36,7 @@ const SHARED_URL = 'http://localhost:8090'
 const LANDNAM_URL = process.env.LANDNAM_PB_URL_OVERRIDE ?? 'http://localhost:8091'
 const SUPERUSER_EMAIL = 'liam@skinetics.tech'
 const SUPERUSER_PASSWORD = 'ThisIsATestPassword'
-// Distinct from guestAuth.ts's real GuestPassword123! so a seeded dev-preset
+// Distinct from player account credentials so a seeded dev preset
 // account is never mistaken for (or interchangeable with) a real player's
 // throwaway guest account.
 const PRESET_PASSWORD = 'DevPreset123!'
@@ -52,7 +52,7 @@ function assertLocal(url: string) {
 }
 
 function presetEmail(key: string): string {
-  return `dev-preset-${key}@landnam.guest`
+  return `dev-preset-${key}@example.com`
 }
 
 async function json(res: Response) {
@@ -84,7 +84,7 @@ async function findUserByEmail(token: string, email: string): Promise<string | n
   return data.items[0]?.id ?? null
 }
 
-// Same field shape as guestAuth.ts's real guest signup — a seeded preset
+// Same field shape as an email account — a seeded preset
 // account should be indistinguishable from a real throwaway guest account to
 // every downstream consumer (auth exchange, mergeRemoteState, etc.).
 async function ensureUser(token: string, key: string, label: string): Promise<string> {

@@ -1,6 +1,7 @@
 import type { GameState } from '@/game-context'
 
 const STORAGE_KEY = 'landnam-game-state-v1'
+const AUTHENTICATED_STORAGE_KEY = `${STORAGE_KEY}:user:e2e-user`
 const SURVEY_KEY = 'landnam-surveys-shown'
 
 const VIEWPORTS = [
@@ -27,8 +28,8 @@ function state(screen: GameState['screen']): GameState {
       pendingLaunch: true,
       missionCount: 4,
       missionsDone: 3,
-      placed: ['launchpad', 'refinery', 'scan-station', 'satellite-monitoring-station'],
-      placementPlots: { launchpad: 0, refinery: 1, 'scan-station': 2, 'satellite-monitoring-station': 3 },
+      placed: ['launchpad', 'refinery', 'scan-station', 'transit-telescope'],
+      placementPlots: { launchpad: 0, refinery: 1, 'scan-station': 2, 'transit-telescope': 3 },
       controlBuilt: true,
       freeOperations: true,
       clientMissions: {},
@@ -47,8 +48,6 @@ function state(screen: GameState['screen']): GameState {
       roverDeployments: [],
       clientTerritories: {},
       scannerBuilt: true,
-      satelliteMonitoringBuilt: true,
-      satelliteMonitoringLevel: 1,
       transitSatelliteLaunchedAt: Date.now() - 60_000,
       transitSatelliteLevel: 1,
       tessClassifications: {},
@@ -59,16 +58,17 @@ function state(screen: GameState['screen']): GameState {
 function visit(path: string, screen: GameState['screen']) {
   cy.visit(path, {
     onBeforeLoad(win) {
-      win.localStorage.setItem(STORAGE_KEY, JSON.stringify(state(screen)))
+      const serialized = JSON.stringify(state(screen))
+      win.localStorage.setItem(STORAGE_KEY, serialized)
+      win.localStorage.setItem(AUTHENTICATED_STORAGE_KEY, serialized)
       win.localStorage.setItem(SURVEY_KEY, JSON.stringify(['lnm_first_launch']))
       win.localStorage.setItem('ln_tutorial_complete_ack', '1')
-      win.localStorage.setItem('landnam-launchpad-guide-v1', 'complete')
       // The fixtures intentionally exercise persisted post-onboarding screens.
       // A stored returning-account credential keeps the auth gate from
       // covering those local-only visual contracts while the remote backend is
       // unavailable in this Docker visual runner.
-      win.localStorage.setItem('landnam-guest-credentials', JSON.stringify({
-        email: 'e2e@landnam.guest', password: 'e2e-guest-test',
+      win.localStorage.setItem('landnam-account-credentials', JSON.stringify({
+        email: 'e2e@example.com', password: 'e2e-guest-test',
       }))
     },
   })
@@ -79,10 +79,21 @@ describe('Hub and Launchpad visual layout', () => {
     it(`shows authored hub structures at ${viewport.name} size`, () => {
       cy.viewport(viewport.width, viewport.height)
       visit('/game', 'hub')
-      cy.contains('h1', 'Earth Base', { timeout: 15000 }).should('be.visible')
+      // KES-329/330: HubScreen.tsx's h1 is now the short "Base" / "Subsurface"
+      // copy, with the fuller identity in the "BASE · OPS N" eyebrow above it.
+      cy.contains('h1', /^(Base|Subsurface)$/, { timeout: 15000 }).should('be.visible')
       cy.get('[data-testid="building-launchpad-hit"]').should('be.visible')
       cy.get('[data-testid="building-refinery-hit"]').should('be.visible')
       cy.get('[data-testid="building-scan-station-hit"]').should('be.visible')
+      cy.get('[data-testid="terrain-scene"]').should('exist')
+      cy.get('img[src="/game/assets/base/launchpad_flat.png"]').should('be.visible')
+      if (viewport.name === 'desktop') {
+        cy.get('.portrait-canvas').then($canvas => {
+          const rect = $canvas[0].getBoundingClientRect()
+          expect(rect.width, 'Earth Base fills the desktop stage').to.eq(viewport.width)
+          expect(getComputedStyle($canvas[0]).borderRadius, 'Earth Base is not presented as a card').to.eq('0px')
+        })
+      }
       cy.screenshot(`hub-authored-structures-${viewport.name}`)
     })
 
@@ -90,11 +101,43 @@ describe('Hub and Launchpad visual layout', () => {
       cy.viewport(viewport.width, viewport.height)
       visit('/game/launchpad', 'launchpad')
       cy.contains('h1', 'Your Program', { timeout: 15000 }).should('be.visible')
-      cy.get('[data-testid="launchpad-monitoring-structure"]').should('be.visible')
-      cy.get('[data-testid="launchpad-rocket-fleet"]').should('be.visible')
-      cy.get('[data-testid="launchpad-program-operation-btn"]').scrollIntoView().should('be.visible')
-      cy.get('[data-testid="launchpad-view-contracts-btn"]').scrollIntoView().should('be.visible')
+      cy.get('[data-testid="launchpad-status-card"]').should('be.visible')
+      cy.get('[data-testid="launchpad-rocket-fleet"]').scrollIntoView().should('be.visible')
+      cy.get('[data-testid="launchpad-primary-mission-btn"]').scrollIntoView().should('be.visible')
+      // KES-329/330 replaced the aggregate "launchpad-program-operation-btn"
+      // with the spatial mission-menu entry point on the launchpad tower.
+      cy.get('[data-testid="launchpad-status-card"]').scrollIntoView().should('be.visible')
+      cy.get('[data-testid="launchpad-open-hangar-btn"]').scrollIntoView().should('be.visible')
+      cy.get('[data-testid="launchpad-new-mission-btn"]').scrollIntoView().should('be.visible')
       cy.screenshot(`launchpad-scene-${viewport.name}`)
     })
   }
+
+  it('keeps Hub utility controls out of the dock at compact widths', () => {
+    cy.viewport(608, 687)
+    visit('/game', 'hub')
+    cy.contains('h1', /^(Base|Subsurface)$/, { timeout: 15000 }).should('be.visible')
+    cy.get('.hub-bottom-dock').then($dock => {
+      const dock = $dock[0].getBoundingClientRect()
+      for (const selector of ['[data-testid="settings-button"]', '[data-testid="friends-button"]']) {
+        cy.get(selector).then($button => {
+          const button = $button[0].getBoundingClientRect()
+          expect(button.bottom, `${selector} stays above the Hub dock`).to.be.lessThan(dock.top)
+        })
+      }
+    })
+  })
+
+  it('keeps the shared menu reachable without a desktop sidebar', () => {
+    cy.viewport(1280, 800)
+    visit('/game/launchpad', 'launchpad')
+    cy.contains('h1', 'Your Program', { timeout: 15000 }).should('be.visible')
+    cy.get('.desktop-sidebar').should('not.exist')
+    cy.get('[data-testid="settings-button"]')
+      .should('be.visible')
+      .and('have.attr', 'aria-label', 'Open menu')
+      .click()
+    cy.get('[data-testid="settings-button"]').should('have.attr', 'aria-expanded', 'true')
+    cy.contains('button', 'Sign Out').should('be.visible').and('not.be.disabled')
+  })
 })

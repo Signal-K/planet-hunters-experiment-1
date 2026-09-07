@@ -11,7 +11,7 @@
 
 import { describe, it, expect } from 'vitest'
 import type { Mission, Client } from '@/lib/data/types'
-import { clientUnlocked } from '@/lib/data/clients'
+import { isTutorialMissionInProgress } from '@/lib/mission-flow'
 
 // ── helpers that mirror the fixed MissionBoardScreen logic ──────────────────
 
@@ -65,18 +65,16 @@ function computeAvailableOnboarding(
 }
 
 /**
- * Compute clientReady for a mission card.
- * Mirrors the fixed expression in MissionBoardScreen.tsx.
+ * Compute whether a mission card is ready to start. This mirrors the board:
+ * client tiers are not a second player progression system.
  */
 function computeClientReady(
-  client: Client,
   mission: Mission,
   missionsDone: number,
   freeOperations: boolean,
 ): boolean {
   const sequence = missionsDone + 1
-  // Fixed: current-sequence missions are always considered ready
-  return freeOperations || mission.sequence === sequence || clientUnlocked(client, sequence)
+  return freeOperations || mission.sequence === sequence
 }
 
 /**
@@ -89,14 +87,12 @@ function computeFirstValidIdx(
   available: Mission[],
   missionsDone: number,
   freeOperations: boolean,
-  completedIds: Set<string> = new Set(),
 ): number {
   const sequence = missionsDone + 1
   return list.findIndex(m => {
-    if (completedIds.has(m.id)) return false
     const ctr = m.client ? clients[m.client] : undefined
     if (!ctr) return false
-    const cr = freeOperations || m.sequence === sequence || clientUnlocked(ctr, sequence)
+    const cr = freeOperations || m.sequence === sequence
     return cr && (freeOperations || available.some(item => item.id === m.id))
   })
 }
@@ -155,35 +151,40 @@ describe('MissionBoardScreen availability — onboarding (non-freeOps)', () => {
   })
 })
 
-describe('clientReady — current-sequence missions', () => {
+describe('mission start gating', () => {
+  it('blocks a second contract while a tutorial mission is in progress', () => {
+    expect(isTutorialMissionInProgress(false, true)).toBe(true)
+  })
+
+  it('does not apply the tutorial lock once Free Ops is active', () => {
+    expect(isTutorialMissionInProgress(true, true)).toBe(false)
+    expect(isTutorialMissionInProgress(true, false)).toBe(false)
+  })
+})
+
+describe('mission readiness — authored sequence', () => {
   it('is true for the current-sequence mission when client unlockTier exceeds sequence', () => {
-    const client = makeClient('client-03a', 3)
     const mission = makeMission('m1-iron', 1, 'client-03a')
 
-    expect(computeClientReady(client, mission, 0, false)).toBe(true)
+    expect(computeClientReady(mission, 0, false)).toBe(true)
   })
 
-  it('is false for future-sequence missions with a locked client', () => {
-    const client = makeClient('client-03a', 3)
+  it('is false for future-sequence missions', () => {
     const mission = makeMission('m2-silicon', 2, 'client-03a')
 
-    // missionsDone=0, sequence=1, m.sequence=2 → not current sequence AND unlockTier=3>1
-    expect(computeClientReady(client, mission, 0, false)).toBe(false)
+    expect(computeClientReady(mission, 0, false)).toBe(false)
   })
 
-  it('is true when client is properly unlocked via unlockTier', () => {
-    const client = makeClient('helios', 1)
+  it('is true when the authored mission is current', () => {
     const mission = makeMission('m2', 2, 'helios')
 
-    // missionsDone=1, sequence=2, unlockTier=1 ≤ 2
-    expect(computeClientReady(client, mission, 1, false)).toBe(true)
+    expect(computeClientReady(mission, 1, false)).toBe(true)
   })
 
-  it('is always true in freeOps mode regardless of tier or sequence', () => {
-    const client = makeClient('locked-client', 99)
+  it('is always true in Free Ops, without a personal client-tier gate', () => {
     const mission = makeMission('freeops-1', 5, 'locked-client')
 
-    expect(computeClientReady(client, mission, 0, true)).toBe(true)
+    expect(computeClientReady(mission, 0, true)).toBe(true)
   })
 })
 
@@ -201,22 +202,6 @@ describe('firstValidIdx — tutorial coach highlight', () => {
     const idx = computeFirstValidIdx(missions, clients, available, 0, false)
 
     expect(idx).toBe(0)
-  })
-
-  it('skips completed missions', () => {
-    const clients = {
-      'helios': makeClient('helios', 1),
-    }
-    const missions = [
-      makeMission('m1', 1, 'helios'),
-      makeMission('m2', 1, 'helios'),
-    ]
-    const available = computeAvailableOnboarding(missions, clients, 0)
-    const completed = new Set(['m1'])
-
-    const idx = computeFirstValidIdx(missions, clients, available, 0, false, completed)
-
-    expect(idx).toBe(1)
   })
 
   it('returns -1 when all missions are unavailable', () => {

@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useRef } from 'react'
+import { capDpr } from '@/lib/engine/pixiDisplay'
 import { Application } from 'pixi.js'
 import { buildLaunchScene, LAUNCH_W, LAUNCH_H } from '@/lib/pixi/launchScene'
 
@@ -21,7 +22,7 @@ interface Props {
 // production catalog/state sync than local dev ever exercises. This watchdog
 // is a mount-once safety net, independent of those props, so no remount loop
 // can strand a player: worst case they wait a fixed ceiling, not forever.
-const LAUNCH_WATCHDOG_MS = 12_000
+const LAUNCH_WATCHDOG_MS = 18_000
 
 export function LaunchSequenceCanvas({ rocketName, rocketImageSrc, targetName, onComplete }: Props) {
   const divRef = useRef<HTMLDivElement>(null)
@@ -64,9 +65,9 @@ export function LaunchSequenceCanvas({ rocketName, rocketImageSrc, targetName, o
         width: cw,
         height: ch,
         background: 0x000000,
-        antialias: true,
+        antialias: false,
         autoDensity: true,
-        resolution: typeof window !== 'undefined' ? (window.devicePixelRatio ?? 1) : 1,
+        resolution: capDpr(),
       })
       initialized = true
       if (destroyed) { try { app.destroy() } catch (_) { /* pixi v8 cleanup */ } canvas.remove(); return }

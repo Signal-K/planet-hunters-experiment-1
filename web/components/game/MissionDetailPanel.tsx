@@ -2,9 +2,8 @@
 
 import React from 'react'
 import type { Mission, Client, MineralMeta } from '@/lib/data'
-import { isOwnProgramMission, missionDifficultyLabel, missionPayoutTier } from '@/lib/data'
+import { isOwnProgramMission } from '@/lib/data'
 import MineralChip from '@/components/game/MineralChip'
-import { missionCardTags } from '@/components/game/MissionCard'
 import styles from '@/components/game/screens/MissionBoard.module.css'
 
 type CardState = 'available' | 'locked' | 'cooldown' | 'completed'
@@ -21,6 +20,8 @@ interface MissionDetailPanelProps {
   cardState: CardState
   lockedDetail?: string
   cooldownLabel?: string
+  startBlocked?: boolean
+  startBlockedLabel?: string
   routeLabel?: string
   onPick: () => void
 }
@@ -37,6 +38,8 @@ export default function MissionDetailPanel({
   cardState,
   lockedDetail,
   cooldownLabel,
+  startBlocked = false,
+  startBlockedLabel = 'Mission in progress',
   routeLabel,
   onPick,
 }: MissionDetailPanelProps) {
@@ -59,64 +62,31 @@ export default function MissionDetailPanel({
   // client name, no pay premium, no affinity, no payout disclaimer.
   const ownOperation = isOwnProgramMission(mission)
   const client = ownOperation ? null : clientProp
-  const accent = client?.color ?? '#6cd4ff'
-  const cargoUnits =Object.values(mission.requires.minerals).reduce((sum, n) => sum + n, 0)
-  const tags = missionCardTags({ mission, client, isStoryMission, cardState, lockedDetail, cooldownLabel, routeLabel })
+  const cargoUnits = Object.values(mission.requires.minerals).reduce((sum, n) => sum + n, 0)
   const isAvailable = cardState === 'available'
+  const canPick = isAvailable && !startBlocked
   const ctaLabel = cardState === 'cooldown' ? (cooldownLabel ? `Cooldown · ${cooldownLabel}` : 'On cooldown')
     : cardState === 'locked' ? (lockedDetail ? `Locked · ${lockedDetail}` : 'Locked')
     : cardState === 'completed' ? 'Completed today'
+    : startBlocked ? startBlockedLabel
     : `Continue · ${targetCount} target${targetCount !== 1 ? 's' : ''}`
 
+  // Title, client, route, difficulty, payout tier, and pay-premium already
+  // read directly off the card this panel previews (STS-282) — repeating
+  // them here was the literal duplication the board audit flagged. This
+  // panel now surfaces only what the card has no room for: cargo load,
+  // affinity reward, the mineral-by-mineral requirement breakdown, flavor
+  // text, and the client's own notes.
   return (
     <>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-        <div style={{ width: 36, height: 36, borderRadius: 6, background: accent, color: '#141018', display: 'flex', alignItems: 'center', justifyContent: 'center', font: '800 11px var(--ln-font-display)', flexShrink: 0 }}>
-          {client?.initial ?? 'OP'}
-        </div>
-        <div style={{ minWidth: 0 }}>
-          <div className={styles.detailHeading}>{mission.title}</div>
-          <div className={styles.detailClient}>{client?.name ?? (ownOperation ? 'Your program' : 'Free Ops')}</div>
-        </div>
-      </div>
-
-      <div className={styles.detailWants}>
-        {mission.programReward
-          ? `Program outcome · ${mission.programReward.outcome}`
-          : ownOperation
-          ? 'Your own operation · no client, no order to fill'
-          : isStoryMission
-          ? 'Story mission · not a client request'
-          : client
-            ? <>Wants <b>{client.mineralPreferences.map(id => mineralMeta[id]?.name ?? id).join(' / ')}</b> · +{Math.round(client.payoutPremium * 100)}% pay</>
-            : 'Choose target · keep the haul · market-led mining'}
-      </div>
-
-      {routeLabel && <div className={styles.cardRoute}>{routeLabel}</div>}
-
       <div className={styles.detailRow}>
         <span className={styles.detailChip}><b>{cargoUnits}U</b>&nbsp;Cargo</span>
-        {/* Difficulty grade + qualitative payout tier (STS-543) — the two reads
-            the board previously kept internal, so the progression curve was
-            invisible to the player. */}
-        <span className={styles.detailChip} data-testid={`mission-detail-difficulty-${mission.id}`}>
-          <b>{mission.difficulty}</b>&nbsp;{missionDifficultyLabel(mission.difficulty)}
-        </span>
-        {mission.programReward ? (
+        {mission.programReward && (
           <span className={styles.detailChip} data-testid={`mission-detail-program-reward-${mission.id}`}>
             <b>+{mission.programReward.researchXP}</b>&nbsp;Research XP
           </span>
-        ) : (
-          <span className={styles.detailChip} data-testid={`mission-detail-payout-tier-${mission.id}`}>
-            {missionPayoutTier(mission)}&nbsp;payout
-          </span>
         )}
-        {client && <span className={`${styles.detailChip} ${styles.detailChipPay}`}><b>+{Math.round(client.payoutPremium * 100)}%</b>&nbsp;Pay bonus</span>}
         {!isStoryMission && client && <span className={`${styles.detailChip} ${styles.detailChipAff}`}><b>+{affinityReward}</b>&nbsp;Affinity</span>}
-      </div>
-
-      <div className={styles.detailRow}>
-        {tags.map((t, i) => <span key={i} className={styles.tag}>{t.label}</span>)}
       </div>
 
       {Object.keys(mission.requires.minerals).length > 0 && (
@@ -136,15 +106,13 @@ export default function MissionDetailPanel({
         </div>
       )}
 
-      <button type="button" data-testid={`mission-detail-cta-${mission.id}`} disabled={!unlocked} onClick={() => unlocked && onPick()} className={styles.detailCta}>
+      {/* The payout-modifier disclaimer already runs once above the Mission
+          Type primer whenever any client contract is on the board (STS-282)
+          — repeating it per-selection here was the same duplication this
+          panel was trimmed of above. */}
+      <button type="button" data-testid={`mission-detail-cta-${mission.id}`} disabled={!canPick} onClick={() => canPick && onPick()} className={styles.detailCta}>
         {ctaLabel}
       </button>
-
-      {client && (
-        <div className={styles.detailDisclaimer}>
-          Changes this job&apos;s payout only — does not increase minerals mined.
-        </div>
-      )}
     </>
   )
 }

@@ -4,43 +4,18 @@ import { Suspense, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { resolvePreset } from '@/lib/devPresets'
 import { pbShared } from '@/lib/pb'
-import { hasStoredCredentials } from '@/lib/guestAuth'
+import { hasStoredCredentials } from '@/lib/accountAuth'
+import { returningScreen } from '@/lib/initial-route'
+import { GAME_STATE_STORAGE_KEY, gameStateStorageKey } from '@/lib/game-state-storage'
 
-const STORAGE_KEY = 'landnam-game-state-v1'
-const VALID_SCREENS = new Set([
-  'intro',
-  'build',
-  'hub',
-  'missions',
-  'galaxy',
-  'targets',
-  'fab',
-  'transit',
-  'mining',
-  'delivery',
-  'debrief',
-  'refinery',
-  'market',
-  'hangar',
-  'rocket-buy',
-  'skills',
-  'scan-station',
-  'rover-mining',
-  'launchpad',
-  'surface-ops',
-  'academy',
-])
+const STORAGE_KEY = GAME_STATE_STORAGE_KEY
 
 function savedScreen(): string {
   try {
-    const raw = window.localStorage.getItem(STORAGE_KEY)
-    if (!raw) return 'intro'
-    const parsed = JSON.parse(raw) as { screen?: unknown }
-    return typeof parsed.screen === 'string' && VALID_SCREENS.has(parsed.screen)
-      ? parsed.screen
-      : 'intro'
+    const raw = window.localStorage.getItem(gameStateStorageKey(STORAGE_KEY, pbShared.authStore.record?.id))
+    return returningScreen(raw)
   } catch {
-    return 'intro'
+    return 'hub'
   }
 }
 

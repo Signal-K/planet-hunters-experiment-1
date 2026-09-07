@@ -43,6 +43,7 @@ func main() {
 	})
 
 	registerLandnamAuthExchange(app, sharedAuth)
+	registerFriendsRoutes(app)
 
 	if err := app.Start(); err != nil {
 		log.Fatal(err)
@@ -57,6 +58,11 @@ func ensureCollections(app core.App) {
 		users.Fields.Add(&core.TextField{Name: "displayName", Max: 80})
 		users.Fields.Add(&core.DateField{Name: "lastExchangeAt"})
 		users.Fields.Add(&core.BoolField{Name: "guest"})
+		// KES-83: player-chosen handle used for friend search/display. Not
+		// unique-constrained at the field level — friends.go enforces
+		// uniqueness itself (case-insensitive) before writing, since two
+		// players racing the same name is a 409 we want to word ourselves.
+		users.Fields.Add(&core.TextField{Name: "username", Max: 24})
 		if err := app.Save(users); err != nil {
 			log.Printf("failed to save users collection: %v", err)
 		}
@@ -405,6 +411,64 @@ func ensureCollections(app core.App) {
 		}
 	}
 
+	// friendships — undirected relationship between two players, stored as a
+	// directed (requester -> addressee) row so a pending request has an
+	// obvious owner. All reads/writes to this collection go through
+	// friends.go's custom routes (which run as the server, bypassing these
+	// rules) rather than the raw Records API, so the rules below only need to
+	// cover the client's own read of its own relationships — never a raw
+	// client-side create/update, which would let a player self-accept.
+	if _, err := app.FindCollectionByNameOrId("friendships"); err != nil {
+		friendships := core.NewBaseCollection("friendships")
+		friendships.ListRule = types.Pointer("requester = @request.auth.id || addressee = @request.auth.id")
+		friendships.ViewRule = types.Pointer("requester = @request.auth.id || addressee = @request.auth.id")
+		friendships.CreateRule = nil
+		friendships.UpdateRule = nil
+		friendships.DeleteRule = nil
+		friendships.Fields.Add(&core.TextField{Name: "requester", Required: true, Max: 64})
+		friendships.Fields.Add(&core.TextField{Name: "addressee", Required: true, Max: 64})
+		friendships.Fields.Add(&core.SelectField{Name: "status", Required: true, MaxSelect: 1, Values: []string{"pending", "accepted", "declined"}})
+		friendships.Fields.Add(&core.AutodateField{Name: "created", OnCreate: true})
+		friendships.Fields.Add(&core.AutodateField{Name: "updated", OnCreate: true, OnUpdate: true})
+		friendships.Indexes = []string{
+			"CREATE UNIQUE INDEX idx_friendships_pair ON friendships (requester, addressee)",
+		}
+		if err := app.Save(friendships); err != nil {
+			log.Printf("failed to save friendships: %v", err)
+		}
+	}
+
+	// friend_gifts — one row per gift send. Creation/claiming is
+	// server-mediated only (friends.go enforces the friendship check and the
+	// one-gift-per-friend-per-AEST-day limit); the client never writes this
+	// collection directly.
+	if _, err := app.FindCollectionByNameOrId("friend_gifts"); err != nil {
+		gifts := core.NewBaseCollection("friend_gifts")
+		gifts.ListRule = types.Pointer("sender = @request.auth.id || recipient = @request.auth.id")
+		gifts.ViewRule = types.Pointer("sender = @request.auth.id || recipient = @request.auth.id")
+		gifts.CreateRule = nil
+		gifts.UpdateRule = nil
+		gifts.DeleteRule = nil
+		gifts.Fields.Add(&core.TextField{Name: "sender", Required: true, Max: 64})
+		gifts.Fields.Add(&core.TextField{Name: "recipient", Required: true, Max: 64})
+		// AEST (Australia/Sydney) calendar date the gift was sent on, as
+		// "YYYY-MM-DD" — the key the daily-limit check dedupes against. Not a
+		// UTC day: 00:01 AEST is mid-afternoon UTC the day before, so a plain
+		// UTC-date comparison would reset the limit at the wrong wall-clock
+		// moment for the AEST-anchored reset this feature was specified with.
+		gifts.Fields.Add(&core.TextField{Name: "gift_date", Required: true, Max: 10})
+		gifts.Fields.Add(&core.SelectField{Name: "kind", Required: true, MaxSelect: 1, Values: []string{"currency", "resource", "blueprint"}})
+		gifts.Fields.Add(&core.JSONField{Name: "payload", Required: true, MaxSize: 2048})
+		gifts.Fields.Add(&core.BoolField{Name: "claimed"})
+		gifts.Fields.Add(&core.AutodateField{Name: "created", OnCreate: true})
+		gifts.Indexes = []string{
+			"CREATE UNIQUE INDEX idx_friend_gifts_daily ON friend_gifts (sender, recipient, gift_date)",
+		}
+		if err := app.Save(gifts); err != nil {
+			log.Printf("failed to save friend_gifts: %v", err)
+		}
+	}
+
 	// voxel_worlds — one row per (user, target): the bulk takeon MissionState
 	// for that target (sparse voxel edits, rover snapshot, photos). Mirrors
 	// game_states' per-user JSON-blob pattern, but keyed per target since a
@@ -509,6 +573,10 @@ func migrateUsers(app core.App) {
 	}
 	if backfillGuest {
 		col.Fields.Add(&core.BoolField{Name: "guest"})
+		changed = true
+	}
+	if col.Fields.GetByName("username") == nil {
+		col.Fields.Add(&core.TextField{Name: "username", Max: 24})
 		changed = true
 	}
 

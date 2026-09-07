@@ -29,7 +29,6 @@ function basePlayer(overrides: Partial<GameState['player']> = {}): GameState['pl
     loanOffered: false,
     roverDeployments: [],
     clientTerritories: {},
-    satelliteMonitoringBuilt: false,
     transitSatelliteLaunchedAt: undefined,
     tessClassifications: {},
     ...overrides,
@@ -53,7 +52,7 @@ function visitWithState(path: string, screen: GameState['screen'], playerOverrid
   cy.visit(path, {
     onBeforeLoad(win) {
       win.localStorage.setItem(STORAGE_KEY, JSON.stringify(full))
-      win.localStorage.setItem('landnam-guest-credentials', JSON.stringify({ email: 'e2e@landnam.guest', password: 'e2e-guest-test' }))
+      win.localStorage.setItem('landnam-account-credentials', JSON.stringify({ email: 'e2e@example.com', password: 'e2e-guest-test' }))
     },
   })
 }
@@ -63,71 +62,69 @@ function visitHubWithState(playerOverrides: Partial<GameState['player']>) {
 }
 
 describe('Telescope construction/launch mission (STS-138)', () => {
-  it('prompts to build the Satellite Monitoring Station before the mission is offered', () => {
-    visitHubWithState({ satelliteMonitoringBuilt: false, transitSatelliteLaunchedAt: undefined })
-    cy.get('[data-testid="progression-card-sms"]', { timeout: 10000 }).should('be.visible')
-    cy.contains('Build a Satellite Monitoring Station').should('be.visible')
-    cy.get('[data-testid="progression-card-transit-satellite"]').should('not.exist')
-  })
+  // 2026-08-21 (Liam, direct correction): launching a transit telescope is
+  // what TESS citizen science is for, and must be reachable directly —
+  // the Transit Telescope is unrelated end-game fleet-management
+  // content, not a prerequisite for the first telescope. The three specs
+  // below that asserted the old SMS-gates-everything behavior were replaced
+  // with specs asserting the telescope mission/TESS screen are NOT gated on
+  // `transitSatelliteLaunchedAt` at all (tested false in every case here).
 
-  it('offers telescope deployment under Your Program and never on the Mission Board', () => {
-    visitHubWithState({ satelliteMonitoringBuilt: true, transitSatelliteLaunchedAt: undefined })
+  it('offers telescope deployment under Your Program and never on the Mission Board, with no SMS prerequisite', () => {
+    visitHubWithState({ transitSatelliteLaunchedAt: undefined })
     cy.get('[data-testid="progression-card-transit-satellite"]', { timeout: 10000 }).should('be.visible')
     cy.contains('Launch a transit telescope').should('be.visible')
     cy.get('[data-testid="progression-card-transit-satellite"]').click({ force: true })
     cy.contains('Your Program', { timeout: 10000 }).should('be.visible')
-    // The Launchpad's own-program scene shows a single aggregate OPS button
-    // rather than per-mission cards (see git history) — the mission title
-    // and program-reward FEED badge that used to render inline here now
-    // only surface one screen deeper, once the operation is picked.
-    cy.get('[data-testid="launchpad-program-operation-btn"]', { timeout: 10000 })
-      .should('be.visible')
-      .click({ force: true })
+    // KES-329/330 replaced the single aggregate OPS button with an explicit
+    // mission-menu -> operation-brief flow off the physical launchpad: the
+    // telescope is an owned instrument, so it lives behind the
+    // "LAUNCH SATELLITE / TOOL" choice, not a per-mission card.
+    cy.get('[data-testid="launchpad-status-card"]', { timeout: 10000 }).click({ force: true })
+    cy.get('[data-testid="launchpad-new-mission-satellite-btn"]', { timeout: 10000 })
+      .should('not.be.disabled')
+      .click()
+    cy.get('[data-testid="launchpad-prepare-instrument-btn"]', { timeout: 10000 }).click()
     // Lands on the target picker (step 2 of 4: Mission -> Target -> Rocket
     // -> Launch) — the telescope mission still requires an explicit target
     // pick even though Earth Orbit is the only compatible target.
     cy.contains('Pick Target', { timeout: 10000 }).should('be.visible')
 
     visitWithState('/game/missions', 'missions', {
-      satelliteMonitoringBuilt: true,
       transitSatelliteLaunchedAt: undefined,
     })
     cy.contains('Mission Board', { timeout: 10000 }).should('be.visible')
     cy.get('[data-testid="mission-card-story-transit-telescope-launch"]').should('not.exist')
   })
 
-  it('can start the telescope deployment from the Launchpad', () => {
+  it('can start the telescope deployment from the Launchpad with no SMS built', () => {
     visitWithState('/game/launchpad', 'launchpad', {
-      satelliteMonitoringBuilt: true,
       transitSatelliteLaunchedAt: undefined,
     })
-    // The Launchpad no longer lists own-program missions as separate cards
-    // (see git history) — the single OPS button picks the next own
-    // operation directly, which resolves to the telescope launch mission
-    // in this state.
-    cy.get('[data-testid="launchpad-program-operation-btn"]', { timeout: 10000 })
+    // KES-329/330: reach the telescope through the launchpad mission menu's
+    // "LAUNCH SATELLITE / TOOL" operation brief, not a per-mission card.
+    cy.get('[data-testid="launchpad-status-card"]', { timeout: 10000 })
       .scrollIntoView()
       .click({ force: true })
+    cy.get('[data-testid="launchpad-new-mission-satellite-btn"]', { timeout: 10000 })
+      .should('not.be.disabled')
+      .click()
+    cy.get('[data-testid="launchpad-prepare-instrument-btn"]', { timeout: 10000 }).click()
     // Lands on the target picker (step 2 of 4: Mission -> Target -> Rocket
     // -> Launch) — the telescope mission still requires an explicit target
     // pick even though Earth Orbit is the only compatible target.
     cy.contains('Pick Target', { timeout: 10000 }).should('be.visible')
   })
 
-  it('gates the TESS discovery screen behind the Satellite Monitoring Station', () => {
-    visitWithState('/game/galaxy', 'galaxy', { satelliteMonitoringBuilt: false, transitSatelliteLaunchedAt: undefined })
-    cy.contains('Place the Earth-base', { timeout: 10000 }).should('be.visible')
-  })
-
-  it('gates the TESS discovery screen behind launching the telescope even once the station is built', () => {
-    visitWithState('/game/galaxy', 'galaxy', { satelliteMonitoringBuilt: true, transitSatelliteLaunchedAt: undefined })
+  it('gates the TESS discovery screen behind launching the telescope, with no SMS prerequisite', () => {
+    visitWithState('/game/galaxy', 'galaxy', { transitSatelliteLaunchedAt: undefined })
     cy.contains('Launch Transit Telescope', { timeout: 10000 }).should('be.visible')
     cy.contains('Deploy your own telescope from the Launchpad').should('be.visible')
     cy.get('[data-testid="open-transit-telescope-program-btn"]').click({ force: true })
     cy.contains('Your Program', { timeout: 10000 }).should('be.visible')
   })
 
-  it('unlocks the TESS discovery loop once the telescope has launched', () => {
+  it('unlocks the TESS discovery loop once the telescope has launched, with no SMS built', () => {
     cy.intercept('GET', '**/api/collections/subjects/records*', {
       statusCode: 200,
       body: {
@@ -151,7 +148,7 @@ describe('Telescope construction/launch mission (STS-138)', () => {
         }],
       },
     }).as('subjects')
-    visitWithState('/game/galaxy', 'galaxy', { satelliteMonitoringBuilt: true, transitSatelliteLaunchedAt: Date.now() - 1000 })
+    visitWithState('/game/galaxy', 'galaxy', { transitSatelliteLaunchedAt: Date.now() - 1000 })
     cy.wait('@subjects')
     // STS-582's instrument-feed rename replaced the old "TESS ANOMALY"
     // heading with the TopBar eyebrow below plus the candidate's own TOI id

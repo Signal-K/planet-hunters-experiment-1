@@ -8,11 +8,13 @@ import {
   suggestBuild,
   validateBuild,
   compatibleTargetsFor,
+  feasibleTargetsFor,
   rateMission,
   calibrateOnboardingPayout,
   ONBOARDING_ROCKET_COST,
   MINERAL_META,
   MISSIONS,
+  OWN_PROGRAM_BUILD_MISSIONS,
   MISSION_TEMPLATES,
   STRUCTURES,
   TARGETS,
@@ -394,6 +396,24 @@ describe('compatibleTargetsFor', () => {
   })
 })
 
+describe('feasibleTargetsFor', () => {
+  it('rejects a mineral match that the currently unlocked propulsion cannot reach', () => {
+    const mission: import('./data/types').Mission = {
+      id: 'unreachable-test', title: 'Unreachable', brief: '', client: 'kepler-materials', targetId: 'jupiter',
+      tag: 'BULK', difficulty: 'L3', locked: false, sequence: 3,
+      requires: { minerals: { hydrogen: 2 }, cargo_min: 2, drill_tier: 1, max_orbit: 6 },
+      payout: { francs: 0, affinity: 0 },
+    }
+    expect(compatibleTargetsFor(mission, TARGETS).some(target => target.id === 'jupiter')).toBe(true)
+    expect(feasibleTargetsFor(mission, TARGETS, PARTS, 0)).toHaveLength(0)
+  })
+
+  it('keeps a compatible target when the player has unlocked the matching drive', () => {
+    const mission = MISSIONS.find(item => item.sequence === 1)!
+    expect(feasibleTargetsFor(mission, TARGETS, PARTS, 1).length).toBeGreaterThan(0)
+  })
+})
+
 describe('rateMission', () => {
   it('returns 0 when there is no active mission', () => {
     expect(rateMission({ mission: null, cargo: {}, elapsed: 10 })).toBe(0)
@@ -493,16 +513,21 @@ describe('seed bible v0 catalog', () => {
     }
   })
 
-  it('defines mission-triggered refinery structure seed data with Francs and material costs', () => {
+  it('defines the Refinery structure seed data with Francs and material costs (KES-283)', () => {
     const refinery = STRUCTURES.find(structure => structure.id === 'refinery')
     expect(refinery).toMatchObject({
       kind: 'refinery',
       cost: STRUCTURE_PRICES.refinery,
       costMaterials: { aluminium: 20, copper: 10 },
-      unlockTrigger: 'client-mission-trigger',
+      unlockTrigger: 'free-operations',
     })
-    expect(refinery && structureUnlocked(refinery, { refineryUnlocked: false })).toBe(false)
-    expect(refinery && structureUnlocked(refinery, { refineryUnlocked: true })).toBe(true)
+    // KES-283: a normal Earth Base plot purchase available once Free
+    // Operations begins — same unlock shape as the Surface Silo. The prior
+    // off-world site-commissioning path (KES-286) is retired: no mission ever
+    // satisfied its unlock condition, so it was permanently unreachable.
+    expect(refinery && structureUnlocked(refinery, { placed: [] })).toBe(false)
+    expect(refinery && structureUnlocked(refinery, { freeOperations: true })).toBe(true)
+    expect(refinery && structureUnlocked(refinery, { placed: ['refinery'] })).toBe(true)
     expect(refinery && canAffordStructure(refinery, {
       francs: STRUCTURE_PRICES.refinery,
       stash: { aluminium: 20, copper: 10 },
@@ -606,6 +631,40 @@ describe('seed bible v0 catalog', () => {
     expect(TARGETS.some(t => t.id === relay?.deliveryTargetId)).toBe(true)
     expect(CLIENT_SLOTS.some(c => c.id === relay?.client)).toBe(true)
   })
+
+  it('defines settlement, remote-silo, refinery, and scanning-station builds as own-program missions', () => {
+    expect(OWN_PROGRAM_BUILD_MISSIONS.map(mission => mission.id)).toEqual([
+      'program-build-mars-mining-settlement',
+      'program-build-remote-silo',
+      'program-build-refinery',
+      'program-build-scan-station',
+    ])
+
+    for (const mission of OWN_PROGRAM_BUILD_MISSIONS) {
+      expect(mission.client).toBeUndefined()
+      expect(mission.payout).toEqual({ francs: 0, affinity: 0 })
+      expect(mission.programReward?.researchXP).toBe(0)
+      expect(mission.construction?.structureKind).toBeTruthy()
+      expect(mission.construction?.requiredMaterials).toEqual(mission.requires.minerals)
+      expect(mission.requires.cargo_min).toBe(
+        Object.values(mission.requires.minerals).reduce((sum, amount) => sum + amount, 0),
+      )
+      expect(mission.requires.max_orbit).toBe(mission.id === 'program-build-scan-station' ? 0 : mission.id === 'program-build-mars-mining-settlement' ? 4 : 5)
+      expect(mission.sequence).toBe(FREE_OPS_START_MISSIONS_DONE + 1)
+      expect(MISSIONS).toContainEqual(mission)
+    }
+
+    expect(OWN_PROGRAM_BUILD_MISSIONS[0]).toMatchObject({ targetId: 'mars', construction: { structureKind: 'mining-settlement' } })
+    expect(OWN_PROGRAM_BUILD_MISSIONS[1]).toMatchObject({
+      construction: { structureKind: 'mineral-silo' },
+    })
+    expect(OWN_PROGRAM_BUILD_MISSIONS[2]).toMatchObject({
+      construction: { structureKind: 'refinery', requiredMaterials: { aluminium: 20, copper: 10 } },
+    })
+    expect(OWN_PROGRAM_BUILD_MISSIONS[3]).toMatchObject({
+      construction: { structureKind: 'scan-station', requiredMaterials: {} },
+    })
+  })
 })
 
 describe('Construction mission templates and target structure blueprints', () => {
@@ -679,13 +738,6 @@ describe('Scanning station constants and structure seed', () => {
     vi.resetModules()
   })
 
-  it('defines a satellite monitoring station unlocked in Free Operations', () => {
-    const station = STRUCTURES.find(s => s.id === 'satellite-monitoring-station')
-    expect(station).toBeDefined()
-    expect(station?.cost).toBe(0)
-    expect(station && structureUnlocked(station, { freeOperations: false })).toBe(false)
-    expect(station && structureUnlocked(station, { freeOperations: true })).toBe(true)
-  })
 })
 
 describe('Daily quest framework', () => {

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 
 type PushState = 'unsupported' | 'denied' | 'granted' | 'default'
 
@@ -16,6 +16,14 @@ function urlBase64ToUint8Array(base64String: string): ArrayBuffer {
 export function usePushNotifications(userId?: string) {
   const [state, setState] = useState<PushState>('default')
   const [loading, setLoading] = useState(false)
+  // Resolved ahead of time so `subscribe()` can call `pushManager.subscribe()`
+  // as the very first async step off the click handler. Safari/WebKit drops
+  // "user activation" across an awaited microtask boundary — awaiting
+  // `serviceWorker.ready` before calling subscribe() loses the gesture there,
+  // so subscribe() rejects silently (no permission prompt, button "does
+  // nothing"). Chrome tolerates the extra await, which is why this only
+  // showed up on Safari macOS/iOS/PWA.
+  const registrationRef = useRef<ServiceWorkerRegistration | null>(null)
 
   useEffect(() => {
     if (typeof window === 'undefined') return
@@ -24,13 +32,14 @@ export function usePushNotifications(userId?: string) {
       return
     }
     setState(Notification.permission as PushState)
+    navigator.serviceWorker.ready.then(reg => { registrationRef.current = reg })
   }, [])
 
   const subscribe = useCallback(async () => {
     if (!('serviceWorker' in navigator)) return
     setLoading(true)
     try {
-      const reg = await navigator.serviceWorker.ready
+      const reg = registrationRef.current ?? await navigator.serviceWorker.ready
       const sub = await reg.pushManager.subscribe({
         userVisibleOnly: true,
         applicationServerKey: urlBase64ToUint8Array(

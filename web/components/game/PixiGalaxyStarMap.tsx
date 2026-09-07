@@ -14,6 +14,7 @@
  */
 
 import { useEffect, useRef } from 'react'
+import { capDpr } from '@/lib/engine/pixiDisplay'
 import { Application, Container, Graphics, Text, TextStyle } from 'pixi.js'
 import { candidateSkyPosition, type TessCandidate } from '@/lib/data'
 
@@ -180,7 +181,7 @@ export default function PixiGalaxyStarMap({ candidates, visitedIds, selectedId, 
         const rect = host.getBoundingClientRect()
         W = Math.round(Math.max(200, rect.width))
         H = Math.round(height ?? Math.max(100, rect.height))
-        const dpr = window.devicePixelRatio || 1
+        const dpr = capDpr()
         await app.init({ canvas, width: W, height: H, background: SKY_BG, antialias: true, autoDensity: true, resolution: dpr })
         if (destroyed) return
         app.stage.addChild(bgLayer, starLayer)

@@ -57,7 +57,7 @@ function visitSkills(playerOverrides: Partial<GameState['player']> = {}, coachSe
   cy.visit('/game/skills', {
     onBeforeLoad(win) {
       win.localStorage.setItem(STORAGE_KEY, JSON.stringify(full))
-      win.localStorage.setItem('landnam-guest-credentials', JSON.stringify({ email: 'e2e@landnam.guest', password: 'e2e-guest-test' }))
+      win.localStorage.setItem('landnam-account-credentials', JSON.stringify({ email: 'e2e@example.com', password: 'e2e-guest-test' }))
       win.localStorage.setItem('ln_tutorial_complete_ack', '1')
       if (coachSeen) {
         win.localStorage.setItem(COACH_KEY, '1')

@@ -24,6 +24,8 @@ import { instrumentDigestDateKey, unresolvedTransitInstrumentDigest } from '@/li
 
 interface TessDiscoveryScreenProps {
   player: Player
+  /** Fixed record supplied only by the named visual dev preset. */
+  visualCandidate?: TessCandidate
   onBack: () => void
   onBuildStation: () => void
   onOpenProgram: () => void
@@ -42,7 +44,7 @@ const VERDICT_ACTIONS: Array<{ id: TessVerdict; label: string; requiresMark: boo
   { id: 'unsure', label: 'Skip', requiresMark: false, kind: 'ghost' },
 ]
 
-export default function TessDiscoveryScreen({ player, onBack, onBuildStation, onOpenProgram, onSubmit, onChooseTarget }: TessDiscoveryScreenProps) {
+export default function TessDiscoveryScreen({ player, visualCandidate, onBack, onBuildStation, onOpenProgram, onSubmit, onChooseTarget }: TessDiscoveryScreenProps) {
   // Stabilize the fallback — see the identical comment on
   // AsteroidDiscoveryScreen's classifications memo (STS-622 review found
   // this pattern first here; a fresh `{}` every render when the field is
@@ -70,7 +72,17 @@ export default function TessDiscoveryScreen({ player, onBack, onBuildStation, on
   const [devDayOffset, setDevDayOffset] = useState(0)
 
   useEffect(() => {
-    if (!player.freeOperations || !player.satelliteMonitoringBuilt || !player.transitSatelliteLaunchedAt) {
+    if (visualCandidate) {
+      setCandidate(visualCandidate)
+      setPool([visualCandidate])
+      setRanges([])
+      setSectorIndex(0)
+      setViewingSol(false)
+      setLoadFailed(false)
+      setLoading(false)
+      return
+    }
+    if (!player.freeOperations || !player.transitSatelliteLaunchedAt) {
       setLoading(false)
       return
     }
@@ -108,7 +120,7 @@ export default function TessDiscoveryScreen({ player, onBack, onBuildStation, on
     // post-confirmation target-selection map. Re-entering the screen remounts
     // it and naturally resolves the next still-unclassified daily candidate.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [player.freeOperations, player.satelliteMonitoringBuilt, player.satelliteMonitoringLevel, player.transitSatelliteLaunchedAt, player.transitSatelliteLevel, player.satelliteTargetId, devDayOffset])
+  }, [visualCandidate, player.freeOperations, player.transitSatelliteLaunchedAt, player.transitSatelliteLevel, player.satelliteTargetId, devDayOffset])
 
   const classification: TessClassification | undefined = candidate ? classifications[candidate.id] : undefined
   const discoveredTarget = candidate && classification?.verdict === 'planet'
@@ -127,14 +139,13 @@ export default function TessDiscoveryScreen({ player, onBack, onBuildStation, on
   // Hooks must run unconditionally — the gate screens below return early,
   // so anything hook-based (not just plain derived values) has to sit
   // above them, or its call order breaks the moment a gate flag flips
-  // (e.g. satelliteMonitoringBuilt going false -> true mid-session).
   const coach = useObservatoryCoach()
   const isDesktop = useIsDesktop()
 
   if (!player.freeOperations) {
     return (
       <GateScreen
-        eyebrow="EARTH BASE / LOCKED"
+        eyebrow="BASE / LOCKED"
         icon={<Satellite size={22} />}
         tone="amber"
         title="Free Operations Required"
@@ -144,24 +155,10 @@ export default function TessDiscoveryScreen({ player, onBack, onBuildStation, on
     )
   }
 
-  if (!player.satelliteMonitoringBuilt) {
-    return (
-      <GateScreen
-        eyebrow="EARTH BASE / SMS REQUIRED"
-        icon={<Satellite size={22} />}
-        tone="cyan"
-        title="Build Satellite Monitoring Station"
-        body="Place the Earth-base SMS before launching a transit telescope."
-        onBack={onBack}
-        action={<PrimaryBtn testId="build-sms-btn" onClick={onBuildStation}>Build SMS</PrimaryBtn>}
-      />
-    )
-  }
-
   if (!player.transitSatelliteLaunchedAt) {
     return (
       <GateScreen
-        eyebrow="EARTH BASE / TELESCOPE"
+        eyebrow="BASE / TELESCOPE"
         icon={<Radio size={22} />}
         tone="amber"
         title="Launch Transit Telescope"
@@ -175,7 +172,7 @@ export default function TessDiscoveryScreen({ player, onBack, onBuildStation, on
   if (loading) {
     return (
       <GateScreen
-        eyebrow="EARTH BASE / DAILY DOWNLINK"
+        eyebrow="BASE / DAILY DOWNLINK"
         icon={<Satellite size={22} />}
         tone="cyan"
         title="Acquiring Signal"
@@ -188,7 +185,7 @@ export default function TessDiscoveryScreen({ player, onBack, onBuildStation, on
   if (!candidate) {
     return (
       <GateScreen
-        eyebrow="EARTH BASE / DAILY DOWNLINK"
+        eyebrow="BASE / DAILY DOWNLINK"
         icon={<Radio size={22} />}
         tone="amber"
         title={loadFailed ? 'Live Feed Unavailable' : 'No Reviewable Anomaly'}
@@ -232,9 +229,9 @@ export default function TessDiscoveryScreen({ player, onBack, onBuildStation, on
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                 <LiveDot active={!classification} />
-                <div style={{ fontFamily: 'var(--ln-font-display)', fontWeight: 800, fontSize: 18, color: '#e8f0fe' }}>{candidate.host}</div>
+                <div style={{ fontFamily: 'var(--ln-font-display)', fontWeight: 800, fontSize: 18, color: 'var(--ln-text)' }}>{candidate.host}</div>
               </div>
-              <div style={{ fontFamily: 'var(--ln-font-mono)', fontSize: 10, color: '#6b7fa3', marginTop: 2 }}>
+              <div style={{ fontFamily: 'var(--ln-font-mono)', fontSize: 10, color: 'var(--ln-text-muted)', marginTop: 2 }}>
                 {candidate.constellation.toUpperCase()} / {candidate.distanceLy} LY / S/N {candidate.signalToNoise.toFixed(1)} / {candidate.periodDays.toFixed(1)}D
               </div>
             </div>
@@ -246,7 +243,7 @@ export default function TessDiscoveryScreen({ player, onBack, onBuildStation, on
           <div
             data-testid="tess-data-provenance"
             style={{
-              fontFamily: 'var(--ln-font-mono)', fontSize: 8, letterSpacing: '0.06em', color: '#4a5a75',
+              fontFamily: 'var(--ln-font-mono)', fontSize: 8, letterSpacing: '0.06em', color: 'var(--ln-text-dim)',
               textTransform: 'uppercase', marginBottom: 8, marginTop: -4,
             }}
           >
@@ -334,7 +331,7 @@ export default function TessDiscoveryScreen({ player, onBack, onBuildStation, on
           </TelescopeConsole>
 
           {showMap ? (
-            <div style={{ marginTop: 8, textAlign: 'center', fontFamily: 'var(--ln-font-mono)', fontSize: 10, color: targetChosen ? 'var(--ln-amber)' : '#5d7390' }}>
+            <div style={{ marginTop: 8, textAlign: 'center', fontFamily: 'var(--ln-font-mono)', fontSize: 10, color: targetChosen ? 'var(--ln-amber)' : 'var(--ln-text-muted)' }}>
               {targetChosen
                 ? `Target locked — ${pool.find(c => c.id === targetChosen)?.toi ?? targetChosen}`
                 : 'Tap a star to point the satellite tomorrow · green = already searched'}
@@ -351,7 +348,7 @@ export default function TessDiscoveryScreen({ player, onBack, onBuildStation, on
               )}
             </div>
           ) : (
-            <div style={{ marginTop: 8, textAlign: 'center', fontFamily: 'var(--ln-font-mono)', fontSize: 10, color: markCount > 0 ? 'var(--ln-amber)' : '#5d7390' }}>
+            <div style={{ marginTop: 8, textAlign: 'center', fontFamily: 'var(--ln-font-mono)', fontSize: 10, color: markCount > 0 ? 'var(--ln-amber)' : 'var(--ln-text-muted)' }}>
               {markCount === 0
                 ? 'Drag over the lightcurve to mark a transit'
                 : `${markCount} region${markCount !== 1 ? 's' : ''} marked`}
@@ -397,7 +394,7 @@ export default function TessDiscoveryScreen({ player, onBack, onBuildStation, on
       <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 10, fontWeight: 800, letterSpacing: '0.22em', color: classification.verdict === 'planet' ? 'var(--ln-ok)' : 'var(--ln-cyan)', textTransform: 'uppercase', marginBottom: 6 }}>
         Discovery Logged
       </div>
-      <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 13, color: '#dbe8f8', lineHeight: 1.45 }}>
+      <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 13, color: 'var(--ln-text-dim)', lineHeight: 1.45 }}>
         {classification.verdict === 'planet' && discoveredTarget
           ? `${candidate.host} is now a candidate world in your operations map. A survey flight is available from the Mission Board, and this first submission awarded research XP.`
           : 'Your annotation was saved to the review queue. Noise marks matter: they keep the shared feed clean for the next real transit, and first submissions award research XP.'}
@@ -413,7 +410,7 @@ export default function TessDiscoveryScreen({ player, onBack, onBuildStation, on
   ) : null
 
   return (
-    <div className="game-screen" data-testid="tess-discovery-screen">
+    <div className="game-screen theme-deep ln-scene-tess-discovery" data-testid="tess-discovery-screen">
       <TopBar eyebrow="INSTRUMENT DATA FEED · DAILY DOWNLINK" title={candidate.toi} onBack={onBack} />
       {process.env.NODE_ENV === 'development' && (
         <div style={{ position: 'absolute', top: 72, left: 'var(--ln-s-4)', right: 'var(--ln-s-4)', zIndex: 5 }}>
@@ -422,7 +419,7 @@ export default function TessDiscoveryScreen({ player, onBack, onBuildStation, on
       )}
       {isDesktop ? (
         <div data-testid="tess-discovery-desktop-grid" style={{ position: 'absolute', inset: 0, top: 72, display: 'grid', gridTemplateColumns: '55% 45%', gap: 16, padding: '0 var(--ln-s-4) var(--ln-s-4)' }}>
-          <div style={{ overflowY: 'auto' }} data-ui-zone={UI_ZONES.screenContent}>
+          <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', overflowY: 'auto' }} data-ui-zone={UI_ZONES.screenContent}>
             {chartPanel(false)}
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12, overflowY: 'auto' }}>
@@ -474,9 +471,9 @@ function GateScreen({ eyebrow, icon, tone, title, body, onBack, action, devBar }
   const bg = tone === 'amber' ? 'rgba(245,166,35,0.12)' : 'rgba(57,211,239,0.12)'
   const border = tone === 'amber' ? 'rgba(245,166,35,0.42)' : 'rgba(57,211,239,0.42)'
   return (
-    <div className="game-screen">
+    <div className="game-screen theme-deep ln-scene-tess-discovery">
       <NebulaBackdrop />
-      <TopBar eyebrow={eyebrow} title="Satellite Monitoring Station" onBack={onBack} />
+      <TopBar eyebrow={eyebrow} title="Transit Telescope" onBack={onBack} />
       <div className="screen-scroll" data-ui-zone={UI_ZONES.screenContent}>
         {devBar}
         <Panel accent={accent} style={{ padding: 14 }}>
@@ -486,7 +483,7 @@ function GateScreen({ eyebrow, icon, tone, title, body, onBack, action, devBar }
             </div>
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ fontFamily: 'var(--ln-font-display)', fontWeight: 800, fontSize: 15, color: accent }}>{title}</div>
-              <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 12, color: '#a9b8ce', marginTop: 2 }}>{body}</div>
+              <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 12, color: 'var(--ln-text-muted)', marginTop: 2 }}>{body}</div>
             </div>
           </div>
           {action && <div style={{ marginTop: 12 }}>{action}</div>}

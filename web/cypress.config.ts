@@ -149,6 +149,15 @@ const profiles: Record<string, Cypress.EndToEndConfigOptions> = {
     specPattern: ['cypress/e2e/visual/**/*.cy.{js,jsx,ts,tsx}'],
     viewportWidth: 390,
     viewportHeight: 844,
+    env: { visualProfile: true },
+  },
+  responsive: {
+    baseUrl: 'http://localhost:3001',
+    specPattern: ['cypress/e2e/responsive/**/*.cy.{js,jsx,ts,tsx}'],
+    // Responsive tests handle their own viewport changes
+    viewportWidth: 390,
+    viewportHeight: 844,
+    video: false,
   },
 }
 

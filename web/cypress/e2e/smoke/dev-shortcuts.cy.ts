@@ -59,8 +59,8 @@ describe('Dev preset URL param (?preset=)', () => {
     cy.visit('/game?preset=does-not-exist', {
       onBeforeLoad(win) {
         win.localStorage.setItem(
-          'landnam-guest-credentials',
-          JSON.stringify({ email: 'e2e@landnam.guest', password: 'e2e-guest-test' }),
+          'landnam-account-credentials',
+          JSON.stringify({ email: 'e2e@example.com', password: 'e2e-guest-test' }),
         )
       },
     })
@@ -85,6 +85,7 @@ describe('DEV panel UI', () => {
   it('opens panel with all mission groups on click', () => {
     cy.get('[data-testid="dev-shortcuts-toggle"]').click()
     cy.get('[data-testid="dev-shortcuts-panel"]').should('be.visible')
+    cy.get('[data-testid="dev-return-to-game"]').should('be.visible')
     cy.get('[data-testid="dev-group-mission-1"]').should('exist')
     cy.get('[data-testid="dev-group-mission-2"]').should('exist')
     cy.get('[data-testid="dev-group-mission-3"]').should('exist')

@@ -4,7 +4,7 @@ import React, { useState } from 'react'
 import { useGame } from '@/game-context'
 import { pbShared } from '@/lib/pb'
 import { DEV_GROUPS } from '@/lib/devPresets'
-import Sheet from '@/components/ui/Sheet'
+import PageSurface from '@/components/ui/PageSurface'
 
 interface SettingsSheetProps {
   onClose: () => void
@@ -69,7 +69,6 @@ export default function SettingsSheet({ onClose }: SettingsSheetProps) {
   const game = useGame()
   const [confirmReset, setConfirmReset] = useState(false)
   const email = pbShared.authStore.record?.email as string | undefined
-  const isGuest = !email
 
   function handleSignOut() {
     onClose()
@@ -89,15 +88,12 @@ export default function SettingsSheet({ onClose }: SettingsSheetProps) {
   }
 
   return (
-    <Sheet
-      onDismiss={onClose}
-      showHandle={false}
-      panelStyle={{
+    <PageSurface
+      contentStyle={{
         background: 'linear-gradient(180deg, #0d1c30, #060d18)',
         border: '1px solid rgba(112,217,234,0.2)',
         padding: '18px 20px 32px',
-        boxShadow: '0 -12px 40px rgba(0,0,0,0.6)',
-        maxHeight: '80dvh', overflowY: 'auto',
+        overflowY: 'auto',
       }}
     >
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 18 }}>
@@ -116,15 +112,15 @@ export default function SettingsSheet({ onClose }: SettingsSheetProps) {
           <Row>
             <div>
               <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 13, color: '#e6efff' }}>
-                {isGuest ? 'Guest session' : email}
+                {email ?? 'Email account'}
               </div>
-              {isGuest && (
+              {!email && (
                 <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 11, color: '#5d7390', marginTop: 2 }}>
-                  Progress saved on this device only
+                  Account details are loading
                 </div>
               )}
             </div>
-            {!isGuest && <Btn label="Sign Out" onClick={handleSignOut} variant="ghost" />}
+            <Btn label="Sign Out" onClick={handleSignOut} variant="ghost" />
           </Row>
         </Section>
 
@@ -146,6 +142,16 @@ export default function SettingsSheet({ onClose }: SettingsSheetProps) {
 
         {IS_DEV && (
           <Section label="Debug">
+            <Row>
+              <div>
+                <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 13, color: '#e6efff' }}>Preview state</div>
+                <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 11, color: '#5d7390', marginTop: 2 }}>
+                  Return to your saved game and account
+                </div>
+              </div>
+              <Btn label="My Game" onClick={() => { onClose(); window.location.href = '/game' }} variant="primary" />
+            </Row>
+
             <Row>
               <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 13, color: '#e6efff' }}>Free Ops mode</div>
               <button
@@ -192,6 +198,6 @@ export default function SettingsSheet({ onClose }: SettingsSheetProps) {
             ))}
           </Section>
         )}
-    </Sheet>
+    </PageSurface>
   )
 }

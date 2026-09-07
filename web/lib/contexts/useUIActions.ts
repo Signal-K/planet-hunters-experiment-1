@@ -1,6 +1,8 @@
 import { useRef, useState, useCallback } from 'react'
 import type { Toast } from '@/components/ui/ToastLayer'
 import type { Screen, GameState } from '@/lib/game-types'
+import { EARTH_BASE_SCOPE } from '@/lib/scene-scope'
+import type { SceneScope } from '@/lib/scene-scope'
 
 let toastSeq = 0
 function nextToastId() { return `t${++toastSeq}` }
@@ -11,18 +13,58 @@ export function useUIActions(
   const [toasts, setToasts] = useState<Toast[]>([])
   // Set by setScreenFromUrl to tell the URL-sync effect to skip one cycle
   const skipNextUrlSync = useRef(false)
+  // Whether Hub is showing its Subsurface half. HubScreen slides between
+  // surface/subsurface as one continuous scene without a route change (a
+  // real navigation would fight the slide animation and add spurious
+  // history entries), so this can't live on `state.screen` — but chrome
+  // above HubScreen (mission-alerts gating) still needs to know which half
+  // is showing. Ephemeral UI state, not persisted GameState, same as
+  // `toasts` above.
+  const [subsurfaceView, setSubsurfaceView] = useState(false)
+  // Every Launchpad entry is now the physical scene. The retired overview was
+  // a generic dashboard that broke the Base's scene-first game flow.
+  const [launchpadMissionMenuOpen, setLaunchpadMissionMenuOpen] = useState(false)
+  // Hangar can be entered from the Earth Base or the Launchpad composition.
+  // Preserve only that ephemeral return context: it is navigation chrome, not
+  // player progress and must not be persisted into a save or public URL.
+  const hangarReturnView = useRef<'launchpad' | 'hub'>('hub')
 
   const go = useCallback((screen: Screen) => {
-    setState(s => ({ ...s, screen }))
+    setState(s => {
+      if (screen === 'hangar') {
+        hangarReturnView.current = s.screen === 'launchpad' ? 'launchpad' : 'hub'
+      }
+      return { ...s, screen }
+    })
+  }, [setState])
+
+  const openLaunchpad = useCallback(() => {
+    setLaunchpadMissionMenuOpen(false)
+    setState(s => ({ ...s, screen: 'launchpad' }))
+  }, [setState])
+
+  const openLaunchpadMissionMenu = useCallback(() => {
+    setLaunchpadMissionMenuOpen(true)
+    setState(s => ({ ...s, screen: 'launchpad' }))
+  }, [setState])
+
+  const returnFromHangar = useCallback(() => {
+    const destination = hangarReturnView.current
+    if (destination === 'hub') {
+      setState(s => ({ ...s, screen: 'hub' }))
+      return
+    }
+    setState(s => ({ ...s, screen: 'launchpad' }))
   }, [setState])
 
   // Mission entry is also the first onboarding checkpoint. Keep the route
   // change and checkpoint update in one functional state transition so the
   // callout, launchpad and mission tab cannot race each other or the URL sync.
-  const goToMissions = useCallback(() => {
+  const goToMissions = useCallback((scope: SceneScope = EARTH_BASE_SCOPE) => {
     setState(s => ({
       ...s,
       screen: 'missions',
+      missionBoardScope: scope,
       doneSteps: { ...s.doneSteps, 1: true },
     }))
   }, [setState])
@@ -67,5 +109,5 @@ export function useUIActions(
     setState(s => ({ ...s, pendingTerritoryClaimFor: undefined, screen: s.tutorial ? 'hub' : 'market' }))
   }, [setState])
 
-  return { go, goToMissions, setScreenFromUrl, skipNextUrlSync, setPopup, setMenuOpen, addToast, dismissToast, clearTerritoryClaimPopup, toasts }
+  return { go, goToMissions, setScreenFromUrl, skipNextUrlSync, setPopup, setMenuOpen, addToast, dismissToast, clearTerritoryClaimPopup, toasts, subsurfaceView, setSubsurfaceView, openLaunchpad, openLaunchpadMissionMenu, launchpadMissionMenuOpen, setLaunchpadMissionMenuOpen, returnFromHangar }
 }

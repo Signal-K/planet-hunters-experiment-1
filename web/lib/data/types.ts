@@ -45,6 +45,8 @@ export interface ClientStructureRecord {
   clientId: string
   state: TargetStructureState
   startedAt?: number
+  /** Set once when construction becomes operational; drives daily client XP. */
+  completedAt?: number
 }
 
 export type DailyQuestKind = 'scan' | 'land' | 'map'
@@ -211,7 +213,7 @@ export interface StructureBlueprint {
   cost: number
   costMaterials?: Record<string, number>
   unlocksAt: string
-  unlockTrigger?: 'always' | 'client-mission-trigger' | 'academy-research' | 'deep-space-telescope-unlock' | 'manual'
+  unlockTrigger?: 'always' | 'free-operations' | 'client-mission-trigger' | 'academy-research' | 'deep-space-telescope-unlock' | 'manual'
   description: string
 }
 

@@ -1,14 +1,12 @@
 describe('TargetPicker orbital map', () => {
   const visitTargetPicker = () => {
-    cy.visit('/game', {
+    // Use the canonical dev preset so this visual contract exercises the
+    // actual target-picker state rather than a partial hand-written save
+    // that hydration repair is allowed to route away from.
+    cy.visit('/game?preset=ui-target-picker', {
       onBeforeLoad(win) {
-        win.localStorage.setItem('landnam-game-state-v1', JSON.stringify({
-          screen: 'targets',
-          missionId: 'generated-s1-starter-bulk-1',
-          tutorial: false,
-        }))
-        win.localStorage.setItem('landnam-guest-credentials', JSON.stringify({
-          email: 'e2e@landnam.guest',
+        win.localStorage.setItem('landnam-account-credentials', JSON.stringify({
+          email: 'e2e@example.com',
           password: 'e2e-guest-test',
         }))
       },

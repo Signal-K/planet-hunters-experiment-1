@@ -312,7 +312,7 @@ export default function MissionFlowPreview() {
         </nav>
 
         <div className={cx(styles.sheet, guideOpen && styles.sheetOpen)} data-od-id="client-bonus-guide-sheet">
-          <section className={styles.guide} role="dialog" aria-modal="true" aria-labelledby="guideTitle">
+          <section className={styles.guide} role="region" aria-labelledby="guideTitle">
             <h2 id="guideTitle">Client bonus rules</h2>
             {GUIDE_CARDS.map(card => (
               <article key={card.title} className={styles.guideCard} data-od-id={`guide-${card.title.toLowerCase().replace(/\s+/g, '-')}`}>

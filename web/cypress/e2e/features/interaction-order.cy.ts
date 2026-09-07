@@ -56,8 +56,8 @@ function visitWithState(state: StateOverride) {
   cy.visit('/game', {
     onBeforeLoad(win) {
       win.localStorage.setItem(STORAGE_KEY, JSON.stringify(fullState(state)))
-      win.localStorage.setItem('landnam-guest-credentials', JSON.stringify({
-        email: 'e2e@landnam.guest',
+      win.localStorage.setItem('landnam-account-credentials', JSON.stringify({
+        email: 'e2e@example.com',
         password: 'e2e-guest-test',
       }))
     },
@@ -109,7 +109,7 @@ describe('Interaction order hardening', () => {
     cy.contains('Pick Target').should('not.exist')
   })
 
-  it('scrim dismisses emergency loan instead of accepting it', () => {
+  it('explicit decline dismisses emergency loan instead of accepting it', () => {
     visitWithState({
       screen: 'hub',
       popup: 'loan',
@@ -121,7 +121,7 @@ describe('Interaction order hardening', () => {
     })
 
     cy.contains('EMERGENCY LOAN').should('be.visible')
-    cy.get('[data-testid="unlock-popup-scrim"]').click('topLeft')
+    cy.get('[data-testid="unlock-popup-secondary"]').click()
     cy.contains('EMERGENCY LOAN').should('not.exist')
     readSavedState().then(state => {
       expect(state.player.francs).to.eq(100_000_000)
@@ -165,9 +165,10 @@ describe('Interaction order hardening', () => {
       },
     })
 
-    cy.get('[data-testid="resolve-cargo-btn"]').click()
-    cy.get('[data-testid="collect-reward-btn"]').dblclick()
     // Still onboarding (missionsDone 0 -> 1, well under FREE_OPS_START_MISSIONS_DONE):
+    // debrief auto-resolves on mount, so Resolve Cargo never renders here.
+    cy.get('[data-testid="resolve-cargo-btn"]').should('not.exist')
+    cy.get('[data-testid="collect-reward-btn"]').dblclick()
     // debrief settlement routes to the hub tutorial rail, not the market — see the
     // identical assertion in smoke/game-loop.cy.ts "M1 completion returns to hub".
     cy.contains('Commodity Exchange').should('not.exist')

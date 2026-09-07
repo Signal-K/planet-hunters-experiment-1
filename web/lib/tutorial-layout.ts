@@ -31,6 +31,12 @@ export const TUTORIAL_RAIL = {
 export const TUTORIAL_CONTENT_TOP =
   TUTORIAL_RAIL.RESERVED_TOP + TUTORIAL_RAIL.RESERVED_HEIGHT + TUTORIAL_RAIL.CONTENT_MARGIN
 
+// Mission Board's contract instruction is the compact coach variant. Keep its
+// content close to the rendered card instead of reserving the worst-case
+// wrapped tutorial height used by the other screens.
+export const TUTORIAL_COMPACT_CONTENT_TOP =
+  TUTORIAL_RAIL.RESERVED_TOP + 76 + TUTORIAL_RAIL.CONTENT_MARGIN
+
 // For screens where the coach step is a manual (full) card (~160px tall)
 export const TUTORIAL_MANUAL_CONTENT_TOP =
   TUTORIAL_RAIL.RESERVED_TOP + 160 + TUTORIAL_RAIL.CONTENT_MARGIN

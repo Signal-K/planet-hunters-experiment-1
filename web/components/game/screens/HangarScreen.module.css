@@ -1,0 +1,301 @@
+.screen {
+  background: var(--ln-bg);
+}
+
+.scroll {
+  padding: 72px 16px 16px;
+}
+
+.inner {
+  width: min(1280px, 100%);
+  margin: 0 auto;
+}
+
+.intro {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 16px;
+  align-items: end;
+  margin-bottom: 16px;
+  padding: 20px;
+  border: 1px solid var(--ln-hairline-strong);
+  border-left-color: var(--ln-cyan);
+  background: var(--ln-surface);
+  box-shadow: var(--ln-shadow-card);
+}
+
+.eyebrow, .cardEyebrow, .statLabel, .railLabel {
+  font: 800 10px/1.2 var(--ln-font-display);
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  color: var(--ln-cyan);
+}
+
+.title {
+  margin-top: 4px;
+  color: var(--ln-text);
+  font: 800 24px/1.1 var(--ln-font-display);
+  letter-spacing: .02em;
+}
+
+.copy {
+  max-width: 620px;
+  margin-top: 8px;
+  color: var(--ln-text-dim);
+  font: 400 12px/1.45 var(--ln-font-body);
+}
+
+.fleetReadout {
+  min-width: 126px;
+  padding: 10px 12px;
+  border: 2px solid var(--ln-hairline);
+  background: var(--ln-panel);
+  text-align: right;
+}
+
+.fleetValue {
+  display: block;
+  margin-top: 4px;
+  color: var(--ln-text);
+  font: 800 22px/1 var(--ln-font-mono);
+}
+
+.customizer {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  margin-bottom: 16px;
+  padding: 12px 14px;
+  border: 1px solid var(--ln-bp-pink-border);
+  border-left: 4px solid var(--ln-bp-pink);
+  background: var(--ln-bp-pink-soft);
+  color: var(--ln-bp-ink);
+  text-align: left;
+  cursor: pointer;
+}
+.customizer:hover { background: rgba(201,74,134,.16); }
+.customizerIcon {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  flex: 0 0 auto;
+  border: 1px solid var(--ln-bp-pink-border);
+  color: var(--ln-bp-pink);
+}
+.customizerIcon svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.5; }
+.customizerText { flex: 1; min-width: 0; }
+.customizerTitle { color: var(--ln-bp-pink); font: 800 11px/1.2 var(--ln-font-display); letter-spacing: .14em; text-transform: uppercase; }
+.customizerSummary { margin-top: 3px; color: var(--ln-bp-ink-dim); font: 400 11px/1.3 var(--ln-font-body); }
+.customizerArrow { color: var(--ln-bp-pink); font: 400 22px/1 var(--ln-font-display); }
+
+.constructionScene {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(180px, .55fr);
+  gap: 16px;
+  overflow: hidden;
+  min-height: 184px;
+  margin-bottom: 12px;
+  padding: 12px;
+  border: 1px solid var(--ln-hairline);
+  background: var(--ln-surface);
+}
+.constructionGrid { position: absolute; inset: 0; opacity: .32; pointer-events: none; background-image: linear-gradient(var(--ln-hairline) 1px, transparent 1px), linear-gradient(90deg, var(--ln-hairline) 1px, transparent 1px); background-size: 32px 32px; }
+.shipment, .assemblyBay, .constructionReadout, .constructionSteps, .recipeNote { position: relative; z-index: 1; }
+.shipment { align-self: start; width: max-content; padding: 8px 10px; border: 1px solid var(--ln-cyan-border); background: var(--ln-panel); color: var(--ln-text); font: 800 9px/1.3 var(--ln-font-display); letter-spacing: .1em; text-transform: uppercase; }
+.shipment span, .shipment small { display: block; color: var(--ln-text-muted); font: 700 8px/1.2 var(--ln-font-mono); }
+.shipment strong { display: block; margin: 4px 0; color: var(--ln-cyan); }
+.assemblyBay { grid-row: 1 / span 3; display: grid; place-items: center; min-height: 150px; border: 1px solid var(--ln-hairline); background: var(--ln-surface-2); }
+.assemblyRocket { position: relative; z-index: 2; width: min(84%, 400px); height: auto; object-fit: contain; animation: hangar-assembly-float 2.6s ease-in-out infinite; }
+.assemblyGlow { position: absolute; z-index: 1; width: 48%; height: 5px; bottom: 24%; background: var(--ln-cyan); opacity: .38; filter: blur(9px); animation: hangar-scan 2.6s ease-in-out infinite; }
+.crane { position: absolute; z-index: 3; inset: 14px 8% auto; height: 70%; border-top: 2px solid var(--ln-text-muted); border-left: 2px solid var(--ln-text-muted); border-right: 2px solid var(--ln-text-muted); opacity: .75; }
+.crane i { position: absolute; display: block; width: 2px; background: var(--ln-cyan); animation: hangar-crane 2.6s ease-in-out infinite; }
+.crane i:nth-child(1) { left: 22%; height: 34%; }.crane i:nth-child(2) { left: 50%; height: 50%; animation-delay: -.4s; }.crane i:nth-child(3) { left: 78%; height: 38%; animation-delay: -.8s; }
+.constructionReadout { align-self: end; padding: 10px; border-left: 3px solid var(--ln-cyan); background: var(--ln-surface-2); }
+.constructionReadout strong { display: block; margin-top: 4px; color: var(--ln-text); font: 800 18px/1 var(--ln-font-display); }.constructionReadout p { margin-top: 6px; color: var(--ln-text-dim); font: 600 10px/1.4 var(--ln-font-body); }
+.constructionSteps { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; align-self: center; }
+.constructionStep { padding: 7px 8px; border: 1px solid var(--ln-hairline); background: rgba(6,9,15,.62); }.constructionStep span, .constructionStep strong { display: block; font: 800 8px/1.25 var(--ln-font-display); letter-spacing: .1em; text-transform: uppercase; }.constructionStep span { color: var(--ln-text-muted); }.constructionStep strong { margin-top: 3px; color: var(--ln-cyan); }
+.recipeNote { grid-column: 1 / -1; margin: 0; color: var(--ln-text-muted); font: 700 8px/1.4 var(--ln-font-mono); letter-spacing: .07em; }
+@keyframes hangar-assembly-float { 0%, 100% { transform: translateY(4px); } 50% { transform: translateY(-5px); } }
+@keyframes hangar-scan { 0%,100% { transform: scaleX(.75); opacity: .25; } 50% { transform: scaleX(1.25); opacity: .6; } }
+@keyframes hangar-crane { 0%,100% { transform: scaleY(.45); transform-origin: top; } 50% { transform: scaleY(1); transform-origin: top; } }
+
+.sectionHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+  color: var(--ln-bp-ink-dim);
+  font: 800 10px/1.2 var(--ln-font-display);
+  letter-spacing: .16em;
+  text-transform: uppercase;
+}
+.sectionHeader span:last-child { color: var(--ln-bp-ink-mute); font: 400 10px/1 var(--ln-font-mono); letter-spacing: .08em; }
+
+.fleetGrid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; padding: 8px; border: 1px solid var(--ln-hairline); background: var(--ln-surface); box-shadow: var(--ln-shadow-card); }
+
+.card {
+  overflow: hidden;
+  border: 1px solid var(--ln-hairline);
+  background: var(--ln-surface-2);
+  box-shadow: none;
+}
+.card.isLocked { opacity: .58; }
+.cardImage {
+  position: relative;
+  display: grid;
+  place-items: center;
+  min-height: 76px;
+  overflow: hidden;
+  border-bottom: 2px solid rgba(112,217,234,.2);
+  background:
+    repeating-linear-gradient(0deg, rgba(31,120,193,.12) 0 1px, transparent 1px 24px),
+    repeating-linear-gradient(90deg, rgba(31,120,193,.12) 0 1px, transparent 1px 24px),
+    var(--ln-void);
+}
+.cardImage::after { content: ''; position: absolute; inset: 8px; border: 1px solid var(--ln-hairline); pointer-events: none; }
+.cardImage img { position: relative; z-index: 1; object-fit: contain; filter: drop-shadow(0 8px 8px rgba(15,36,54,.18)); }
+.tier { position: absolute; z-index: 2; top: 8px; left: 8px; color: var(--ln-cyan); font: 700 8px/1 var(--ln-font-mono); letter-spacing: .12em; }
+.locked { position: absolute; z-index: 2; top: 8px; right: 8px; color: var(--ln-text-muted); font: 800 8px/1 var(--ln-font-display); letter-spacing: .12em; text-transform: uppercase; }
+.lockedTier { color: var(--ln-text-muted); font: 800 20px/1 var(--ln-font-mono); letter-spacing: .1em; }
+.lockedHint { margin-top: 6px; color: var(--ln-text-muted); font: 400 10px/1.3 var(--ln-font-body); }
+.cardBody { padding: 8px; }
+.cardTop { display: flex; justify-content: space-between; gap: 12px; align-items: flex-start; }
+.cardName { margin-top: 2px; color: var(--ln-text); font: 800 14px/1.1 var(--ln-font-display); }
+.cost, .standard { flex: 0 0 auto; padding: 6px 8px; border: 1px solid var(--ln-bp-line-strong); font: 800 10px/1 var(--ln-font-display); letter-spacing: .08em; text-transform: uppercase; }
+.cost { color: var(--ln-amber); background: var(--ln-amber-soft); border-color: var(--ln-amber-border); cursor: pointer; }
+.standard { color: var(--ln-bp-green); border-color: rgba(31,143,87,.35); background: var(--ln-bp-green-soft); }
+.stats { display: grid; gap: 4px; margin-top: 6px; padding-top: 6px; border-top: 1px solid var(--ln-hairline); }
+.stat { display: grid; grid-template-columns: 70px 1fr 24px; gap: 8px; align-items: center; }
+.statLabel { color: var(--ln-text-muted); font-size: 8px; letter-spacing: .1em; }
+.statTrack { height: 6px; overflow: hidden; background: var(--ln-bp-paper-2); border: 1px solid var(--ln-bp-line); }
+.statFill { height: 100%; background: var(--ln-bp-blue); }
+.statValue { color: var(--ln-text); font: 700 10px/1 var(--ln-font-mono); text-align: right; }
+
+.rail { display: flex; justify-content: space-between; gap: 12px; margin-top: 16px; padding: 10px 12px; border-top: 2px solid rgba(112,217,234,.22); color: var(--ln-text-muted); font: 700 9px/1.2 var(--ln-font-mono); letter-spacing: .08em; text-transform: uppercase; }
+.railValue { color: var(--ln-text); }
+
+@media (max-width: 620px) {
+  .intro { grid-template-columns: 1fr; }
+  .fleetReadout { text-align: left; }
+  .scroll { padding-left: 12px; padding-right: 12px; }
+  .fleetGrid { grid-template-columns: 1fr; }
+  .constructionScene { grid-template-columns: 1fr; }.assemblyBay { grid-row: auto; min-height: 170px; }.shipment { width: 100%; }.constructionSteps { grid-template-columns: repeat(4, minmax(0, 1fr)); }.constructionStep { padding: 6px; }.constructionStep strong { font-size: 7px; }
+}
+
+@media (orientation: landscape) and (max-height: 700px), (min-width: 900px) {
+  .scroll { padding-top: 64px; padding-bottom: 8px; overflow: hidden; }
+  .intro { margin-bottom: 8px; padding: 12px; }
+  .copy { margin-top: 4px; }
+  .constructionScene { min-height: 152px; }
+  .assemblyBay { min-height: 126px; }
+  .recipeNote { display: none; }
+  .rail { margin-top: 8px; }
+}
+
+/* Phone landscape has enough width for the split construction view but not
+   enough height for its desktop rhythm. Compact the animated vehicle scene
+   before fixed chrome can crowd it out of view. */
+@media (max-height: 560px) and (max-width: 899px) {
+  .scroll { padding: 56px 12px 12px; }
+  .intro { gap: 8px; margin-bottom: 8px; padding: 12px; }
+  .title { font-size: 20px; }
+  .copy { margin-top: 4px; font-size: 11px; }
+  .constructionScene { min-height: 202px; gap: 8px; margin-bottom: 8px; padding: 8px; }
+  .assemblyBay { min-height: 178px; }
+  .shipment { padding: 6px 8px; }
+  .constructionReadout { padding: 8px; }
+  .constructionReadout strong { font-size: 15px; }
+  .constructionReadout p { margin-top: 4px; }
+  .constructionSteps { gap: 4px; }
+  .constructionStep { padding: 5px 6px; }
+  .recipeNote { display: none; }
+  .sectionHeader { margin-bottom: 6px; }
+  .fleetGrid { gap: 8px; padding: 12px; }
+  .cardImage { min-height: 100px; }
+  .rail { margin-top: 8px; }
+}
+
+/* At landscape phone height the registry is a glanceable fleet board, not a
+   vertically stacked catalogue. All five vehicles stay visible in one row;
+   selecting a purchasable vehicle still uses its existing control. */
+@media (orientation: landscape) and (max-height: 500px) {
+  .scroll { padding: 58px 10px 6px; overflow: hidden; }
+  .intro { padding: 8px 10px; gap: 8px; margin-bottom: 6px; }
+  .eyebrow { font-size: 8px; }
+  .title { margin-top: 2px; font-size: 18px; }
+  .copy { display: none; }
+  .fleetReadout { min-width: 100px; padding: 6px 8px; }
+  .fleetValue { font-size: 16px; }
+  .customizer { min-height: 36px; margin-bottom: 6px; padding: 6px 8px; }
+  .customizerIcon { width: 24px; height: 24px; }
+  .customizerIcon svg { width: 14px; height: 14px; }
+  .customizerTitle, .customizerSummary { font-size: 8px; }
+  .constructionScene { min-height: 96px; margin-bottom: 6px; padding: 8px; }
+  .assemblyBay { min-height: 80px; }
+  .shipment { padding: 4px 6px; font-size: 7px; }
+  .shipment span, .shipment small { font-size: 6px; }
+  .constructionReadout { padding: 6px; }
+  .constructionReadout strong { font-size: 12px; }
+  .constructionReadout p { display: none; }
+  .constructionSteps { gap: 3px; }
+  .constructionStep { padding: 4px; }
+  .constructionStep span, .constructionStep strong { font-size: 6px; }
+  .sectionHeader { margin-bottom: 4px; font-size: 8px; }
+  .fleetGrid { grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 4px; padding: 4px; }
+  .cardImage { min-height: 40px; }
+  .cardImage::after { inset: 4px; }
+  .cardImage img { width: 82px !important; }
+  .tier, .locked { top: 4px; font-size: 6px; }
+  .tier { left: 4px; }.locked { right: 4px; }
+  .lockedTier { font-size: 10px; }
+  .lockedHint { margin-top: 2px; font-size: 7px; }
+  .cardBody { padding: 5px; }
+  .cardTop { gap: 4px; }
+  .cardName { font-size: 10px; }
+  .standard, .cost { padding: 3px; font-size: 6px; }
+  .stats, .rail { display: none; }
+}
+
+/* Registry stays a single-screen inspection surface on ordinary landscape
+   displays too. The detailed customiser remains available through its compact
+   command, while fleet comparison changes from a tall catalogue to five
+   simultaneous vehicle instruments. */
+@media (orientation: landscape) and (max-height: 800px) {
+  .scroll { padding: 60px 10px 6px; overflow: hidden; }
+  .intro { margin-bottom: 6px; padding: 8px 10px; }
+  .title { margin-top: 2px; font-size: 19px; }
+  .copy { margin-top: 2px; font-size: 9px; line-height: 1.25; }
+  .customizer { min-height: 34px; margin-bottom: 6px; padding: 5px 8px; }
+  .customizerIcon { width: 24px; height: 24px; }
+  .customizerIcon svg { width: 14px; height: 14px; }
+  .customizerTitle, .customizerSummary { font-size: 8px; }
+  .constructionScene { height: 132px; min-height: 0; margin-bottom: 5px; padding: 8px; }
+  .assemblyBay { min-height: 0; height: 114px; }
+  .assemblyRocket { max-height: 86px; width: auto; }
+  .crane { height: 64%; }
+  .shipment { padding: 4px 6px; font-size: 7px; }
+  .shipment span, .shipment small { font-size: 6px; }
+  .constructionReadout { padding: 6px; }
+  .constructionReadout strong { font-size: 12px; }
+  .constructionReadout p { margin-top: 2px; font-size: 7px; }
+  .constructionSteps { gap: 3px; }
+  .constructionStep { padding: 4px; }
+  .constructionStep span, .constructionStep strong { font-size: 6px; }
+  .sectionHeader { margin-bottom: 4px; font-size: 8px; }
+  .fleetGrid { grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 4px; padding: 4px; }
+  .cardImage { min-height: 46px; }
+  .cardImage::after { inset: 4px; }
+  .cardImage img { width: 96px !important; }
+  .tier, .locked { top: 4px; font-size: 6px; }
+  .tier { left: 4px; }.locked { right: 4px; }
+  .lockedTier { font-size: 11px; }
+  .lockedHint { margin-top: 2px; font-size: 7px; }
+  .cardBody { padding: 5px; }
+  .cardTop { gap: 4px; }
+  .cardName { font-size: 10px; }
+  .standard, .cost { padding: 3px; font-size: 6px; }
+  .stats, .rail { display: none; }
+}

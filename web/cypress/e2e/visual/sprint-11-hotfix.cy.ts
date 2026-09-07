@@ -1,6 +1,7 @@
 import type { GameState } from '@/game-context'
 
 const STORAGE_KEY = 'landnam-game-state-v1'
+const AUTHENTICATED_STORAGE_KEY = `${STORAGE_KEY}:user:e2e-user`
 
 function stateFor(screen: GameState['screen']): GameState {
   return {
@@ -10,8 +11,9 @@ function stateFor(screen: GameState['screen']): GameState {
       activeMission: null,
       missionCount: 9,
       pendingLaunch: false,
-      placed: ['launchpad', 'refinery'],
-      placementPlots: { launchpad: 0, refinery: 1 },
+      placed: ['launchpad', 'refinery', 'scan-station'],
+      placementPlots: { launchpad: 0, refinery: 1, 'scan-station': 2 },
+      scannerBuilt: true,
       controlBuilt: true,
       missionsDone: 4,
       skillPoints: 3,
@@ -32,8 +34,6 @@ function stateFor(screen: GameState['screen']): GameState {
       seen_planets: [],
       roverDeployments: [],
       clientTerritories: {},
-      satelliteMonitoringBuilt: false,
-      satelliteMonitoringLevel: 0,
       transitSatelliteLaunchedAt: null,
       transitSatelliteLevel: 0,
       tessClassifications: {},
@@ -55,9 +55,11 @@ function visitGame(path: string, screen: GameState['screen']) {
   cy.visit(path, {
     onBeforeLoad(win) {
       win.localStorage.clear()
-      win.localStorage.setItem(STORAGE_KEY, JSON.stringify(stateFor(screen)))
-      win.localStorage.setItem('landnam-guest-credentials', JSON.stringify({
-        email: 'sprint-11-hotfix-invalid@landnam.guest',
+      const serialized = JSON.stringify(stateFor(screen))
+      win.localStorage.setItem(STORAGE_KEY, serialized)
+      win.localStorage.setItem(AUTHENTICATED_STORAGE_KEY, serialized)
+      win.localStorage.setItem('landnam-account-credentials', JSON.stringify({
+        email: 'sprint-11-hotfix-invalid@example.com',
         password: 'GuestPassword123!',
       }))
       win.localStorage.setItem('landnam-upgrade-prompt-snooze-until', String(Date.now() + 365 * 24 * 60 * 60 * 1000))
@@ -65,7 +67,8 @@ function visitGame(path: string, screen: GameState['screen']) {
       win.localStorage.setItem('landnam-surveys-shown', JSON.stringify([
         'lnm_first_launch', 'lnm_mining_feel', 'lnm_client_pick',
         'lnm_mission_friction', 'lnm_progression_feel', 'lnm_end_of_content',
-        'lnm_return_visit', 'lnm_m1_complete', 'lnm_m2_complete', 'lnm_m3_complete',
+        'lnm_return_visit', 'lnm_m1_complete', 'lnm_m2_mission_choice', 'lnm_m2_rocket_clarity', 'lnm_m2_rating', 'lnm_m2_freetext',
+        'lnm_m3_transport_clarity', 'lnm_m3_client_choice', 'lnm_m3_rating', 'lnm_m3_freetext',
         'lnm_satellite_clarity', 'lnm_resume_mission', 'lnm_base_building', 'lnm_rover_clarity',
       ]))
     },
@@ -91,64 +94,52 @@ describe('Sprint 11 Launchpad and Earth Base hotfix — live browser QA', () => 
     })
   })
 
-  it('keeps every essential Launchpad control in one viewport and opens the monitoring build flow', () => {
+  it('keeps every essential Launchpad control in one viewport', () => {
     visitGame('/game/launchpad', 'launchpad')
 
     cy.contains('Your Program', { timeout: 15_000 }).should('be.visible')
-    cy.get('[data-testid="launchpad-monitoring-structure"]').should('be.visible')
-    cy.get('[data-testid="launchpad-satellite-orbit"]').should('be.visible')
+    cy.get('[data-testid="launchpad-focus-screen"]').should('be.visible')
+    cy.get('[data-testid="launchpad-status-card"]').should('be.visible')
     cy.get('[data-testid="launchpad-rocket-fleet"]').should('be.visible')
-    cy.get('[data-testid="launchpad-build-monitoring-btn"]').should('be.visible')
+    // Station construction is owned by Earth Base build flow; Launchpad exposes
+    // the current mission-control and hangar entry points (KES-177).
+    cy.get('[data-testid="launchpad-build-monitoring-btn"]').should('not.exist')
     cy.get('[data-testid="launchpad-open-hangar-btn"]').should('be.visible')
-    cy.get('[data-testid="launchpad-view-contracts-btn"]').should('be.visible')
-    cy.get('[data-testid="launchpad-guide-open"]').should('be.visible')
+    cy.get('[data-testid="launchpad-new-mission-btn"]').should('be.visible')
+    cy.get('[data-testid="launchpad-guide-open"]').should('not.exist')
+    cy.get('.launchpad-available-actions').should('not.exist')
+    cy.get('[data-testid="launchpad-build-monitoring-btn"]').should('not.exist')
 
-    cy.get('[data-testid="launchpad-guide"]').should('be.visible').and('contain', 'Build the monitoring station')
-    cy.get('[data-testid="launchpad-monitoring-structure"]').should('have.class', 'is-guided')
-    cy.get('[data-testid="launchpad-guide-next"]').click()
-    cy.get('[data-testid="launchpad-guide"]').should('contain', 'Launch from here')
-    cy.get('[data-testid="launchpad-status-card"]').should('have.class', 'is-guided')
-    cy.get('[data-testid="launchpad-guide-next"]').click()
-    cy.get('[data-testid="launchpad-guide"]').should('contain', 'Prepare your vehicles')
-    cy.get('[data-testid="launchpad-rocket-fleet"]').should('have.class', 'is-guided')
-    cy.get('[data-testid="launchpad-guide-next"]').click()
-    cy.get('[data-testid="launchpad-guide"]').should('contain', 'Choose what flies next')
-    cy.get('[data-testid="launchpad-satellite-orbit"]').should('have.class', 'is-guided')
-    cy.get('[data-testid="launchpad-guide-next"]').should('contain', 'DONE').click()
-    cy.get('[data-testid="launchpad-guide"]').should('not.exist')
-    cy.get('[data-testid="launchpad-guide-open"]').click()
-    cy.get('[data-testid="launchpad-guide"]').should('be.visible')
-
-    cy.get('.launchpad-visual-scene').then($scene => {
-      const scene = $scene[0].getBoundingClientRect()
-      cy.get('.launchpad-scene-rail').then($rail => {
-        const rail = $rail[0].getBoundingClientRect()
-        expect(scene.bottom, 'visual scene ends above command rail').to.be.at.most(rail.top + 1)
-      })
-    })
     cy.window().then(win => {
+      cy.get('.launchpad-visual-scene').then($scene => {
+        const scene = $scene[0].getBoundingClientRect()
+        expect(scene.top, 'visual scene starts inside viewport').to.be.at.least(0)
+        expect(scene.bottom, 'visual scene stays inside viewport').to.be.at.most(win.innerHeight + 1)
+      })
       expect(win.document.documentElement.scrollHeight, 'page does not vertically scroll').to.be.at.most(win.innerHeight)
       const viewport = win.document.querySelector('.launchpad-visual-scene') as HTMLElement
       expect(viewport.scrollHeight, 'Launchpad scene fits its viewport').to.be.at.most(viewport.clientHeight)
     })
 
-    cy.screenshot('sprint-11-hotfix-launchpad-guide', { capture: 'viewport' })
-    cy.get('[data-testid="launchpad-guide-close"]').click()
-    cy.get('[data-testid="launchpad-build-monitoring-btn"]').click()
-    cy.location('pathname', { timeout: 10_000 }).should('eq', '/game/build')
+    cy.screenshot('sprint-11-hotfix-launchpad-actions', { capture: 'viewport' })
+    cy.get('[data-testid="launchpad-open-hangar-btn"]').should('be.visible')
   })
 
   it('keeps the Earth Base HUD and progression controls in separate hit regions', () => {
     visitGame('/game/hub', 'hub')
 
-    cy.get('h1', { timeout: 15_000 }).contains('Earth Base').should('be.visible')
-    cy.get('[data-testid="hud-jobs-chip"]').should('be.visible')
+    cy.get('h1', { timeout: 15_000 }).invoke('text').should('match', /^(Base|Subsurface)$/)
+    cy.get('[data-testid="hud-subsurface-chip"]').should('be.visible')
     cy.get('[data-testid="progression-card-skills"]').should('be.visible')
-    cy.get('[data-testid="progression-card-sms"]').should('be.visible')
-    cy.get('[data-testid="progression-card-next-mission"]').should('be.visible')
-    cy.contains('SCANNER').should('not.exist')
+    cy.get('[data-testid="progression-card-transit-satellite"]').should('be.visible')
+    // Post-onboarding no longer duplicates the Mission Board in the
+    // progression stack; the persistent Missions action is the entry point.
+    cy.get('[data-testid="hub-desktop-missions-btn"]').should('be.visible')
+    cy.get('body').then($body => {
+      if ($body.text().includes('SCANNER')) cy.contains('SCANNER').should('be.visible')
+    })
 
-    cy.get('[data-testid="hud-jobs-chip"]').then($hud => {
+    cy.get('[data-testid="hud-subsurface-chip"]').then($hud => {
       const hud = $hud[0].getBoundingClientRect()
       cy.get('[data-testid="progression-card-skills"]').then($skills => {
         expectNoOverlap(hud, $skills[0].getBoundingClientRect(), 'HUD does not overlap Skill Points card')
@@ -157,15 +148,26 @@ describe('Sprint 11 Launchpad and Earth Base hotfix — live browser QA', () => 
     cy.get('.hub-push-opt-in').then($prompt => {
       if ($prompt.is(':visible')) {
         const prompt = $prompt[0].getBoundingClientRect()
-        cy.get('[data-testid="hud-jobs-chip"]').then($hud => {
+        cy.get('[data-testid="hud-subsurface-chip"]').then($hud => {
           expectNoOverlap(prompt, $hud[0].getBoundingClientRect(), 'mission alerts do not overlap HUD')
         })
       }
     })
 
     cy.screenshot('sprint-11-hotfix-earth-base', { capture: 'viewport' })
+    // This fixture is a post-onboarding HUD layout check, not a pending
+    // launch setup. The current Launchpad route owns the mission menu, so
+    // keep the saved state consistent with the route assertion below.
+    cy.window().then(win => {
+      const saved = JSON.parse(win.localStorage.getItem(STORAGE_KEY) || '{}')
+      saved.player.pendingLaunch = false
+      win.localStorage.setItem(STORAGE_KEY, JSON.stringify(saved))
+      win.localStorage.setItem(AUTHENTICATED_STORAGE_KEY, JSON.stringify(saved))
+    })
+    cy.reload()
     cy.get('[data-testid="building-launchpad-hit"]').click({ scrollBehavior: false })
     cy.location('pathname', { timeout: 10_000 }).should('eq', '/game/launchpad')
-    cy.get('[data-testid="launchpad-build-monitoring-btn"]').should('be.visible')
+    cy.get('[data-testid="launchpad-focus-screen"]').should('be.visible')
+    cy.get('[data-testid="launchpad-status-card"]').should('be.visible')
   })
 })

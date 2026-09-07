@@ -50,8 +50,23 @@ export interface TakeOnMountProps {
    */
   seedCache?: boolean
   onEvent?: (event: TakeonHostEvent) => void
+  /** Host-facing route state for the safe tap-to-drive planner. */
+  onRouteChange?: (steps: number) => void
   onReady?: (mission: MissionState) => void
   onError?: (error: Error) => void
+}
+
+/**
+ * TakeOn's controls receive pointer coordinates in CSS pixels. Pixi's
+ * `canvas.width` is the backing-buffer width (and can be multiplied by the
+ * device-pixel ratio), so using it as the game viewport makes the planner's
+ * hit tiles drift away from the rendered rover field (KES-323).
+ */
+export function takeOnViewportSize(canvas: Pick<HTMLCanvasElement, 'clientWidth' | 'clientHeight'>): { width: number; height: number } {
+  return {
+    width: Math.max(1, canvas.clientWidth || 800),
+    height: Math.max(1, canvas.clientHeight || 600),
+  }
 }
 
 const TakeOnMount = forwardRef<TakeOnMountHandle, TakeOnMountProps>(function TakeOnMount({
@@ -65,6 +80,7 @@ const TakeOnMount = forwardRef<TakeOnMountHandle, TakeOnMountProps>(function Tak
   seedCargo,
   seedCache,
   onEvent,
+  onRouteChange,
   onReady,
   onError,
 }, ref) {
@@ -98,9 +114,19 @@ const TakeOnMount = forwardRef<TakeOnMountHandle, TakeOnMountProps>(function Tak
     let saveTimer: ReturnType<typeof setTimeout> | null = null
     let unbindHostEvents: (() => void) | null = null
     let unbindStateChanged: (() => void) | null = null
+    let unbindRoutePointer: (() => void) | null = null
     let unbindPhoto: (() => void) | null = null
     let unbindDiscovery: (() => void) | null = null
     let disposed = false
+
+    // The TakeOn adapter has its own fixed-step loop and a Pixi texture
+    // presentation callback. Keep both detached while the installed PWA is
+    // backgrounded; Landnam owns resuming the same mission when it returns.
+    const syncVisibility = () => {
+      if (!mounted) return
+      if (document.hidden) mounted.pause()
+      else mounted.resume()
+    }
 
     const snapshot = (): MissionState | null => {
       if (!mounted) return null
@@ -138,11 +164,12 @@ const TakeOnMount = forwardRef<TakeOnMountHandle, TakeOnMountProps>(function Tak
         const resume = isSeeded ? null : await adapter.loadMission(missionId)
         if (disposed) return
 
+        const viewport = takeOnViewportSize(canvasElement)
         app = new PIXI.Application()
         await app.init({
           canvas: canvasElement,
-          width: canvasElement.clientWidth || 800,
-          height: canvasElement.clientHeight || 600,
+          width: viewport.width,
+          height: viewport.height,
           backgroundAlpha: 0,
           antialias: true,
         })
@@ -157,8 +184,10 @@ const TakeOnMount = forwardRef<TakeOnMountHandle, TakeOnMountProps>(function Tak
           stage: app.stage as unknown as import('@takeon/pixi').PixiContainerLike,
           ticker: app.ticker as unknown as import('@takeon/pixi').PixiTickerLike,
           view: app.canvas,
-          width: app.canvas.width,
-          height: app.canvas.height,
+          // Keep the engine and Controls in CSS-pixel coordinates. The Pixi
+          // backing buffer may be larger on a retina display.
+          width: viewport.width,
+          height: viewport.height,
           body,
           spec: rover,
           seed,
@@ -172,9 +201,21 @@ const TakeOnMount = forwardRef<TakeOnMountHandle, TakeOnMountProps>(function Tak
         }
         unbindHostEvents = bindTakeonHostEvents(mounted.game.events, handleHostEvent)
         unbindStateChanged = mounted.game.events.on('stateChanged', () => {
+          onRouteChange?.(mounted?.game.plannedRoute().length ?? 0)
           if (saveTimer) clearTimeout(saveTimer)
           saveTimer = setTimeout(() => void save().catch(reportError), 750)
         })
+        // The vendored Pixi adapter owns the canvas Controls and handles a
+        // tap-to-drive by calling game.walkTo() directly. That operation is a
+        // route command, not a simulation state change, so no stateChanged
+        // event is emitted for Landnam's route readout. Observe the completed
+        // pointer gesture after Controls has handled it and publish the
+        // authoritative planned-route length to the host (KES-323).
+        const reportPointerRoute = () => {
+          onRouteChange?.(mounted?.game.plannedRoute().length ?? 0)
+        }
+        canvasElement.addEventListener('pointerup', reportPointerRoute)
+        unbindRoutePointer = () => canvasElement.removeEventListener('pointerup', reportPointerRoute)
         unbindPhoto = mounted.game.events.on('photo', ({ photo, dataUrl }) => {
           void adapter.uploadPhoto(photo, dataUrl, missionId).catch(reportError)
         })
@@ -192,8 +233,15 @@ const TakeOnMount = forwardRef<TakeOnMountHandle, TakeOnMountProps>(function Tak
         })
         resizeObserver.observe(canvasElement)
 
-        mounted.game.start()
+        mounted.start()
         gameRef.current = mounted.game
+        document.addEventListener('visibilitychange', syncVisibility)
+        // Don't call syncVisibility() here: document.hidden can read true on
+        // a fully visible tab right at mount (occluded-but-onscreen windows,
+        // some automation/test harnesses), and pausing immediately after
+        // start() stops the render loop before a single frame paints —
+        // leaving a blank canvas with no error (KES-308). The event listener
+        // above still pauses/resumes on genuine visibility changes.
 
         const initialSeedCargo = seedCargoRef.current
         const initialSeedCache = seedCacheRef.current
@@ -217,9 +265,16 @@ const TakeOnMount = forwardRef<TakeOnMountHandle, TakeOnMountProps>(function Tak
             }
             sim.rover.cargoUsed = cargoUsed
           }
+          // Persist the authored unload point as part of the saved TakeOn
+          // environment, rather than leaving it as a screen-only overlay.
+          // Readiness is local-first: a review harness and an offline player
+          // must be able to use the mounted scene without waiting for a
+          // PocketBase round trip (KES-235).
+          void save().catch(reportError)
         }
 
         const initialState = snapshot()
+        onRouteChange?.(mounted.game.plannedRoute().length)
         if (initialState) onReady?.(initialState)
       } catch (reason) {
         reportError(reason)
@@ -236,8 +291,10 @@ const TakeOnMount = forwardRef<TakeOnMountHandle, TakeOnMountProps>(function Tak
         // offline fallback when the remote write cannot complete.
       })
       resizeObserver?.disconnect()
+      document.removeEventListener('visibilitychange', syncVisibility)
       unbindHostEvents?.()
       unbindStateChanged?.()
+      unbindRoutePointer?.()
       unbindPhoto?.()
       unbindDiscovery?.()
       mounted?.destroy()
@@ -254,6 +311,7 @@ const TakeOnMount = forwardRef<TakeOnMountHandle, TakeOnMountProps>(function Tak
     missionId,
     onError,
     onEvent,
+    onRouteChange,
     onReady,
     rover,
     roverName,

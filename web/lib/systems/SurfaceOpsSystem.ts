@@ -5,6 +5,7 @@ import {
   surfaceSiteById,
 } from '@/lib/data'
 import type {
+  FieldOperation,
   GameState,
   Player,
   SettlementFerryRecord,
@@ -12,6 +13,7 @@ import type {
   SurfaceOpsState,
   SurfaceSiteProgress,
 } from '@/lib/game-types'
+import type { RoverSpec } from '@takeon/engine'
 
 export type SettlementLaunchpadStatus =
   | 'unavailable'
@@ -20,6 +22,47 @@ export type SettlementLaunchpadStatus =
   | 'ready'
 
 const EMPTY_SITE: SurfaceSiteProgress = { storage: {} }
+
+function stableSeed(siteId: string): number {
+  let hash = 2166136261
+  for (const char of siteId) hash = Math.imul(hash ^ char.charCodeAt(0), 16777619)
+  return hash >>> 0
+}
+
+function cleanFieldOperation(value: unknown, siteId: string): FieldOperation | undefined {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return undefined
+  const operation = value as Partial<FieldOperation>
+  if (
+    typeof operation.id !== 'string'
+    || typeof operation.bodyId !== 'string'
+    || typeof operation.seed !== 'number'
+    || !Number.isFinite(operation.seed)
+    || !operation.rover
+    || typeof operation.rover !== 'object'
+    || typeof operation.startedAt !== 'number'
+    || !Number.isFinite(operation.startedAt)
+  ) return undefined
+  return {
+    id: operation.id,
+    missionId: typeof operation.missionId === 'string' ? operation.missionId : operation.id,
+    targetId: typeof operation.targetId === 'string' ? operation.targetId : siteId,
+    siteId,
+    bodyId: operation.bodyId,
+    seed: operation.seed,
+    rover: operation.rover,
+    label: typeof operation.label === 'string' ? operation.label : 'Surface operation',
+    cargo: operation.cargo && typeof operation.cargo === 'object'
+      ? operation.cargo
+      : { requirements: {}, capacity: 0 },
+    objective: operation.objective && typeof operation.objective === 'object'
+      ? operation.objective
+      : { kind: 'prospecting', description: 'Operate the surface site.' },
+    returnPolicy: operation.returnPolicy && typeof operation.returnPolicy === 'object'
+      ? operation.returnPolicy
+      : { owner: 'landnam', reconcileAt: 'field-return' },
+    startedAt: Math.max(0, operation.startedAt),
+  }
+}
 
 function cleanManifest(value: unknown): Record<string, number> {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return {}
@@ -108,6 +151,9 @@ export function normalizeSurfaceOps(value: unknown): SurfaceOpsState {
       ...(cleanFerry(record.ferry)
         ? { ferry: cleanFerry(record.ferry) }
         : {}),
+      ...(cleanFieldOperation(record.fieldOperation, siteId)
+        ? { fieldOperation: cleanFieldOperation(record.fieldOperation, siteId) }
+        : {}),
     }
   }
   return { sites }
@@ -190,6 +236,52 @@ export function applyPurchaseSiteAccess(
       francs: next.player.francs - definition.accessFee,
     },
   }
+}
+
+/**
+ * Start exactly one resumable field operation per accessed site. Landnam owns
+ * this contract; TakeOn receives it as body + rover + seed and never chooses
+ * programme identity or economics itself.
+ */
+export function applyStartFieldOperation(
+  state: GameState,
+  siteId: string,
+  now: number = Date.now()
+): GameState {
+  const definition = surfaceSiteById(siteId)
+  const site = surfaceSiteProgress(state.player, siteId)
+  if (!definition || !site.siteAccessPurchasedAt || site.fieldOperation) return state
+  const seed = stableSeed(`${siteId}:${site.siteAccessPurchasedAt}`)
+  const rover: RoverSpec = {
+    id: `prospector-${siteId}`,
+    name: 'Prospector',
+    chassis: 'chassis-lab',
+    wheels: 'wheels-rocker',
+    power: 'power-solar-xl',
+    battery: 'batt-stack',
+    modules: ['tool-drill', 'cam-pano', 'cargo-crate'],
+    color: '#f6c96a',
+  }
+  return updateSite(state, siteId, current => ({
+    ...current,
+    fieldOperation: {
+      id: `surface-${siteId}-${site.siteAccessPurchasedAt}`,
+      missionId: `surface-site-${siteId}`,
+      targetId: siteId,
+      siteId,
+      bodyId: definition.bodyId,
+      seed,
+      rover,
+      label: `${definition.name} · Prospector deployment`,
+      cargo: { requirements: {}, capacity: 0 },
+      objective: {
+        kind: 'settlement',
+        description: `Operate the ${definition.name} field site.`,
+      },
+      returnPolicy: { owner: 'landnam', reconcileAt: 'field-return' },
+      startedAt: now,
+    },
+  }))
 }
 
 function hasLaunchpadMaterials(player: Player): boolean {

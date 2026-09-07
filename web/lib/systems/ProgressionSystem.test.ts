@@ -4,11 +4,15 @@ import { MISSIONS } from '@/lib/data'
 import {
   applyGainResearchXP,
   applyAbandonMission,
+  applyAcceptLoan,
   LICENSE_GRADE_XP_GATES,
   applyUnlockBlueprint,
   applyUpgradeLicenseGrade,
+  TREASURY_PLAYER_ID,
 } from './ProgressionSystem'
 import { applyCollectScan } from './ScanSystem'
+import { LOAN_PRINCIPAL, TREASURY_STARTING_BALANCE } from '@/lib/data'
+import { createTreasuryState, loanOutstanding } from './TreasurySystem'
 
 type GameStateOverrides = Omit<Partial<GameState>, 'player'> & {
   player?: Partial<GameState['player']>
@@ -175,5 +179,38 @@ describe('research progression', () => {
     expect(next.player.debriefPending).toBe(false)
     expect(next.player.returningToEarth).toBe(false)
     expect(next.deliveredCargo).toBeNull()
+  })
+})
+
+describe('applyAcceptLoan', () => {
+  it('credits exactly the no-interest principal from the treasury and mirrors the debt', () => {
+    const state = makeState({ player: { francs: 100_000 } })
+    const next = applyAcceptLoan(state, 1_000)
+
+    expect(next.player.francs).toBe(100_000 + LOAN_PRINCIPAL)
+    expect(next.player.loanDebt).toBe(LOAN_PRINCIPAL)
+    expect(next.player.loanOffered).toBe(true)
+    expect(next.popup).toBeNull()
+    expect(loanOutstanding(next.player.treasury!, TREASURY_PLAYER_ID)).toBe(LOAN_PRINCIPAL)
+    expect(next.player.treasury!.balanceFrancs).toBe(TREASURY_STARTING_BALANCE - LOAN_PRINCIPAL)
+  })
+
+  it('refuses a second concurrent loan while one is outstanding', () => {
+    const state = makeState({ player: { francs: 100_000 } })
+    const first = applyAcceptLoan(state, 1_000)
+    const second = applyAcceptLoan(first, 2_000)
+
+    expect(second.player.francs).toBe(first.player.francs)
+    expect(second.player.loanDebt).toBe(first.player.loanDebt)
+  })
+
+  it('refuses to lend more than the treasury holds', () => {
+    const state = makeState({
+      player: { francs: 100_000, treasury: createTreasuryState(LOAN_PRINCIPAL - 1) },
+    })
+    const next = applyAcceptLoan(state, 1_000)
+
+    expect(next.player.francs).toBe(100_000)
+    expect(next.player.treasury?.loans ?? {}).toEqual({})
   })
 })

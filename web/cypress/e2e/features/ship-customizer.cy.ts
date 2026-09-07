@@ -2,13 +2,13 @@ describe('Ship Customiser staged build', () => {
   function visitCustomizer() {
     cy.visit('/game/hangar', {
       onBeforeLoad(win) {
-        win.localStorage.setItem('landnam-guest-credentials', JSON.stringify({
-          email: 'e2e@landnam.guest',
+        win.localStorage.setItem('landnam-account-credentials', JSON.stringify({
+          email: 'e2e@example.com',
           password: 'e2e-password',
         }))
         win.localStorage.setItem('pocketbase_auth', JSON.stringify({
           token: 'e2e-token',
-          record: { id: 'e2e-user', email: 'e2e@landnam.guest' },
+          record: { id: 'e2e-user', email: 'e2e@example.com' },
         }))
         win.localStorage.setItem('landnam-game-state-v1', JSON.stringify({
           screen: 'hangar',

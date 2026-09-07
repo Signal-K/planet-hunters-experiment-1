@@ -1,0 +1,683 @@
+.screen {
+  position: relative;
+  display: flex;
+  min-height: 100%;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--ln-void);
+  color: var(--ln-text);
+}
+
+.sceneWash {
+  position: absolute;
+  z-index: 1;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--ln-void) 34%, transparent), color-mix(in srgb, var(--ln-void) 78%, transparent) 84%, var(--ln-void));
+}
+
+.blueprintGrid {
+  position: absolute;
+  z-index: 2;
+  inset: 0;
+  pointer-events: none;
+  opacity: .3;
+  background-image: linear-gradient(var(--ln-hairline) 1px, transparent 1px), linear-gradient(90deg, var(--ln-hairline) 1px, transparent 1px);
+  background-size: 32px 32px;
+  mask-image: linear-gradient(180deg, var(--ln-text) 0%, transparent 88%);
+}
+
+.content {
+  position: relative;
+  z-index: 3;
+  display: flex;
+  min-height: 0;
+  flex: 1;
+  flex-direction: column;
+  gap: 16px;
+  overflow: auto;
+  padding: 76px 16px 52px;
+}
+
+.hero {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 24px;
+  width: min(1440px, 100%);
+  margin: 0 auto;
+  padding: 12px 0 4px;
+}
+
+.kicker,
+.sectionLabel,
+.readoutLabel,
+.readoutHint,
+.panelTelemetry,
+.inspectorCode,
+.inspectorStatus,
+.xpReadout,
+.bottomRail {
+  font: 700 9px/1.25 var(--ln-font-display);
+  letter-spacing: .14em;
+  text-transform: uppercase;
+}
+
+.kicker,
+.sectionLabel,
+.readoutLabel {
+  color: var(--ln-cyan);
+}
+
+.heading {
+  margin: 4px 0 0;
+  color: var(--ln-text);
+  font: 800 clamp(24px, 3vw, 40px)/1.05 var(--ln-font-display);
+  letter-spacing: .01em;
+}
+
+.subheading {
+  max-width: 560px;
+  margin: 8px 0 0;
+  color: var(--ln-text-dim);
+  font: 400 12px/1.45 var(--ln-font-body);
+}
+
+.heroReadout {
+  min-width: 152px;
+  padding: 12px 14px;
+  border: 1px solid var(--ln-hairline);
+  background: color-mix(in srgb, var(--ln-panel) 86%, transparent);
+  text-align: right;
+  box-shadow: var(--ln-shadow-card);
+}
+
+.heroReadout strong {
+  display: block;
+  margin-top: 3px;
+  color: var(--ln-text);
+  font: 800 25px/1 var(--ln-font-mono);
+}
+
+.readoutHint {
+  display: block;
+  margin-top: 5px;
+  color: var(--ln-text-muted);
+  font-size: 8px;
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: 190px minmax(0, 1fr) 260px;
+  gap: 16px;
+  width: min(1440px, 100%);
+  min-height: 0;
+  margin: 0 auto;
+}
+
+.branchRail,
+.inspector {
+  min-width: 0;
+}
+
+.branchRail {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.branchCard {
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  padding: 9px;
+  border: 1px solid var(--ln-hairline);
+  background: color-mix(in srgb, var(--ln-panel) 86%, transparent);
+}
+
+.branchMark,
+.nodeCore {
+  display: grid;
+  place-items: center;
+  color: var(--ln-cyan);
+  border: 1px solid var(--ln-cyan-border);
+  background: color-mix(in srgb, var(--ln-cyan) 8%, transparent);
+  font: 800 9px/1 var(--ln-font-mono);
+}
+
+.branchMark {
+  width: 34px;
+  height: 34px;
+}
+
+.branchCopy {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.branchCopy strong {
+  overflow: hidden;
+  color: var(--ln-text);
+  font: 700 10px/1.15 var(--ln-font-display);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.branchCopy small,
+.branchLegend {
+  color: var(--ln-text-muted);
+  font: 400 9px/1.3 var(--ln-font-body);
+}
+
+.branchCount {
+  color: var(--ln-text-dim);
+  font: 700 9px var(--ln-font-mono);
+}
+
+.branchLegend {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: auto;
+  padding: 8px 2px;
+}
+
+.legendDot,
+.statusDot,
+.railDot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  background: var(--ln-cyan);
+  box-shadow: 0 0 8px color-mix(in srgb, var(--ln-cyan) 70%, transparent);
+}
+
+.treePanel,
+.inspectorPanel,
+.licensePanel,
+.firstsPanel {
+  border: 1px solid var(--ln-hairline);
+  background: color-mix(in srgb, var(--ln-panel) 82%, transparent);
+  box-shadow: var(--ln-shadow-card);
+}
+
+.treePanel {
+  min-width: 0;
+  padding: 14px;
+}
+
+.panelHeader,
+.panelHeaderCompact,
+.inspectorTopline,
+.nodeFooter,
+.xpReadout {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.panelHeader h3,
+.inspectorPanel h3,
+.firstsHeading h3 {
+  margin: 4px 0 0;
+  color: var(--ln-text);
+  font: 800 17px/1.1 var(--ln-font-display);
+}
+
+.panelTelemetry {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+  color: var(--ln-text-muted);
+  font: 700 8px var(--ln-font-mono);
+}
+
+.treeCanvas {
+  position: relative;
+  min-height: 0;
+  margin-top: 14px;
+  padding: 16px 0 4px;
+}
+
+.treeLines {
+  position: absolute;
+  z-index: 0;
+  top: 42px;
+  right: 4%;
+  left: 4%;
+  width: 92%;
+  height: 52px;
+  overflow: visible;
+}
+
+.treeLines line {
+  stroke: var(--ln-hairline-strong);
+  stroke-width: .7;
+  vector-effect: non-scaling-stroke;
+}
+
+.nodeGrid {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.nodeCard {
+  min-width: 0;
+  padding: 8px;
+  border: 1px solid var(--ln-hairline);
+  background: color-mix(in srgb, var(--ln-void) 72%, var(--ln-panel));
+  transition: border-color var(--ln-d-quick) var(--ln-ease-out), box-shadow var(--ln-d-quick) var(--ln-ease-out);
+}
+
+.nodeCardSelected {
+  border-color: var(--ln-cyan-border);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--ln-cyan) 14%, transparent), 0 0 18px color-mix(in srgb, var(--ln-cyan) 16%, transparent);
+}
+
+.nodeCardUnlocked {
+  border-color: color-mix(in srgb, var(--ln-ok) 55%, transparent);
+}
+
+.nodeButton {
+  display: flex;
+  width: 100%;
+  min-width: 0;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.nodeCore {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+}
+
+.nodeCardUnlocked .nodeCore {
+  color: var(--ln-ok);
+  border-color: color-mix(in srgb, var(--ln-ok) 55%, transparent);
+  background: color-mix(in srgb, var(--ln-ok) 10%, transparent);
+}
+
+.nodeTitle {
+  overflow: hidden;
+  width: 100%;
+  color: var(--ln-text);
+  font: 800 11px/1.2 var(--ln-font-display);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.nodeBranch {
+  overflow: hidden;
+  width: 100%;
+  color: var(--ln-text-muted);
+  font: 700 8px/1.2 var(--ln-font-display);
+  letter-spacing: .08em;
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.nodeDescription {
+  min-height: 32px;
+  margin: 9px 0;
+  color: var(--ln-text-dim);
+  font: 400 10px/1.35 var(--ln-font-body);
+}
+
+.nodeFooter {
+  align-items: flex-end;
+}
+
+.nodeStatus {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-width: 0;
+  color: var(--ln-text-muted);
+  font: 700 8px var(--ln-font-mono);
+  text-transform: uppercase;
+}
+
+.nodeStatusUnlocked {
+  color: var(--ln-ok);
+}
+
+.nodeStatusUnlocked .statusDot {
+  background: var(--ln-ok);
+  box-shadow: 0 0 8px color-mix(in srgb, var(--ln-ok) 70%, transparent);
+}
+
+.nodeAction,
+.installButton,
+.gradeButton {
+  border: 1px solid var(--ln-cyan-border);
+  background: color-mix(in srgb, var(--ln-cyan) 10%, transparent);
+  color: var(--ln-cyan);
+  font: 800 8px/1 var(--ln-font-display);
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.nodeAction {
+  padding: 6px;
+}
+
+.nodeAction:disabled,
+.installButton:disabled,
+.gradeButton:disabled {
+  opacity: .4;
+  cursor: not-allowed;
+}
+
+.inspector {
+  display: flex;
+  min-height: 0;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.inspectorPanel {
+  padding: 14px;
+}
+
+.inspectorCode {
+  color: var(--ln-text-muted);
+  font: 700 8px var(--ln-font-mono);
+}
+
+.inspectorStatus {
+  padding: 4px 6px;
+  border: 1px solid color-mix(in srgb, var(--ln-crit) 55%, transparent);
+  color: var(--ln-crit);
+}
+
+.inspectorStatusUnlocked {
+  border-color: color-mix(in srgb, var(--ln-ok) 55%, transparent);
+  color: var(--ln-ok);
+}
+
+.inspectorPanel h3 {
+  margin-top: 14px;
+  font-size: 20px;
+}
+
+.inspectorPanel p {
+  margin: 8px 0 14px;
+  color: var(--ln-text-dim);
+  font: 400 11px/1.45 var(--ln-font-body);
+}
+
+.specRow {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 0;
+  border-top: 1px solid var(--ln-divider);
+  color: var(--ln-text-muted);
+  font: 700 8px var(--ln-font-display);
+  letter-spacing: .1em;
+  text-transform: uppercase;
+}
+
+.specRow strong {
+  color: var(--ln-text);
+  font: 700 9px var(--ln-font-mono);
+  text-align: right;
+}
+
+.installButton,
+.gradeButton {
+  width: 100%;
+  margin-top: 12px;
+  padding: 10px;
+}
+
+.installedStamp {
+  margin-top: 14px;
+  padding: 9px;
+  border: 1px solid color-mix(in srgb, var(--ln-ok) 55%, transparent);
+  color: var(--ln-ok);
+  font: 800 8px var(--ln-font-display);
+  letter-spacing: .12em;
+  text-align: center;
+}
+
+.licensePanel {
+  padding: 12px;
+}
+
+.gradePill {
+  padding: 4px 6px;
+  border: 1px solid var(--ln-cyan-border);
+  color: var(--ln-cyan);
+  font: 800 9px var(--ln-font-mono);
+}
+
+.gradeTrack {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 3px;
+  margin-top: 14px;
+}
+
+.gradeSegment,
+.gradeSegmentActive {
+  height: 5px;
+  background: var(--ln-surface-2);
+}
+
+.gradeSegmentActive {
+  background: var(--ln-cyan);
+  box-shadow: 0 0 8px color-mix(in srgb, var(--ln-cyan) 55%, transparent);
+}
+
+.xpReadout {
+  margin-top: 8px;
+  color: var(--ln-text-muted);
+  font: 700 8px var(--ln-font-mono);
+}
+
+.firstsPanel {
+  display: grid;
+  grid-template-columns: 150px minmax(0, 1fr);
+  gap: 16px;
+  width: min(1440px, 100%);
+  margin: 0 auto;
+  padding: 12px 14px;
+}
+
+.firstsGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px 16px;
+}
+
+.firstRow {
+  display: grid;
+  grid-template-columns: 8px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+  color: var(--ln-text-dim);
+  font: 400 10px/1.2 var(--ln-font-body);
+}
+
+.firstRow strong {
+  color: var(--ln-text-muted);
+  font: 800 8px var(--ln-font-mono);
+}
+
+.firstMarker {
+  width: 7px;
+  height: 7px;
+  border: 1px solid var(--ln-text-muted);
+  transform: rotate(45deg);
+}
+
+.firstMarkerDone {
+  border-color: var(--ln-ok);
+  background: var(--ln-ok);
+  box-shadow: 0 0 8px color-mix(in srgb, var(--ln-ok) 60%, transparent);
+}
+
+.firstDone {
+  color: var(--ln-ok) !important;
+}
+
+.bottomRail {
+  position: relative;
+  z-index: 4;
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 16px;
+  border-top: 1px solid var(--ln-hairline);
+  color: var(--ln-text-muted);
+  font: 700 8px var(--ln-font-mono);
+}
+
+.bottomRail span:first-child {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--ln-text-dim);
+}
+
+@media (max-width: 980px) {
+  .layout {
+    grid-template-columns: 160px minmax(0, 1fr);
+  }
+
+  .inspector {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(220px, .7fr);
+    align-items: start;
+  }
+
+  .inspector > .sectionLabel {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 680px) {
+  .content {
+    gap: 12px;
+    padding: 72px 12px 44px;
+  }
+
+  .hero {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .heroReadout {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: center;
+    min-width: 0;
+    text-align: left;
+  }
+
+  .heroReadout strong {
+    grid-row: span 2;
+    grid-column: 2;
+    margin: 0;
+  }
+
+  .readoutHint {
+    margin-top: 2px;
+  }
+
+  .layout {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .branchRail {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .branchRail > .sectionLabel,
+  .branchLegend {
+    grid-column: 1 / -1;
+  }
+
+  .branchLegend {
+    margin-top: 0;
+  }
+
+  .treePanel {
+    padding: 12px;
+  }
+
+  .nodeGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .treeLines {
+    display: none;
+  }
+
+  .inspector {
+    display: flex;
+  }
+
+  .firstsPanel {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .firstsGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .bottomRail {
+    flex-direction: column;
+    gap: 4px;
+  }
+}
+
+@media (max-width: 420px) {
+  .branchRail,
+  .firstsGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .branchRail > .sectionLabel,
+  .branchLegend {
+    grid-column: auto;
+  }
+
+  .panelHeader {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .panelTelemetry {
+    justify-content: flex-start;
+  }
+}

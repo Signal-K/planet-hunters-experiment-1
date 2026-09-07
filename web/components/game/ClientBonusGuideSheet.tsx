@@ -2,7 +2,7 @@
 
 import React from 'react'
 import { CLIENT_SLOTS, MAX_AFFINITY_BONUS, clientAffinityBonus, clientUnlocked } from '@/lib/data'
-import Sheet from '@/components/ui/Sheet'
+import PageSurface from '@/components/ui/PageSurface'
 
 interface ClientBonusGuideSheetProps {
   onClose: () => void
@@ -28,21 +28,16 @@ export default function ClientBonusGuideSheet({ onClose, clientMissions, sequenc
   const rateGroups = Array.from(new Set(CLIENT_SLOTS.map(c => c.affinityBonusPerMission))).sort((a, b) => a - b)
 
   return (
-    <Sheet
+    <PageSurface
       className="theme-light"
-      onDismiss={onClose}
       zIndex={200}
-      scrimStyle={{ background: 'rgba(28,26,20,0.45)', backdropFilter: 'blur(6px)' }}
-      panelTestId="client-bonus-guide-sheet"
-      panelStyle={{
+      contentTestId="client-bonus-guide-page"
+      contentStyle={{
           background: 'var(--ln-surface)',
           border: '1px solid var(--ln-hairline)',
           padding: '20px 20px 32px',
-          maxHeight: '86vh', overflowY: 'auto',
-          boxShadow: 'var(--ln-shadow-modal)',
+          overflowY: 'auto',
       }}
-      handleContainerStyle={{ marginBottom: 24 }}
-      handleStyle={{ width: 36, height: 3, background: 'var(--ln-hairline-strong)' }}
     >
 
         {/* Header */}
@@ -179,7 +174,7 @@ export default function ClientBonusGuideSheet({ onClose, clientMissions, sequenc
         >
           Got It
         </button>
-    </Sheet>
+    </PageSurface>
   )
 }
 

@@ -21,7 +21,10 @@ interface MissionTickerProps {
  * mission is still running.
  */
 export default function MissionTicker({ player, screen, onResume }: MissionTickerProps) {
-  if (!player.activeMission || MISSION_FLOW_SCREENS.includes(screen)) return null
+  // Hub already owns the active-run banner inside its bottom command dock.
+  // Showing this global ticker there as well creates two identical resume
+  // surfaces and crowds the terrain/HUD composition.
+  if (!player.activeMission || screen === 'hub' || MISSION_FLOW_SCREENS.includes(screen)) return null
 
   return (
     <button

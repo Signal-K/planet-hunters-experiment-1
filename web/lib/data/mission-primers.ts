@@ -46,6 +46,34 @@ export function isOwnProgramMission(mission: Mission): boolean {
 }
 
 /**
+ * True when a completed run's cargo is a *free haul* the player owns outright:
+ * a self-directed mining run (own program, no client, no delivery drop, not a
+ * construction haul) that actually came home with ore. This is the only case
+ * that gets the Debrief store-vs-sell choice — client contracts and no-mineral
+ * runs (satellite, survey, rover deploy) are deliberately excluded, so for them
+ * "nothing changes". Satellite/survey/rover runs also carry no ore and so fail
+ * the units check regardless.
+ */
+export function isFreeHaulMission(mission: Mission, cargo: Record<string, number> | null | undefined): boolean {
+  return isOwnProgramMission(mission)
+    && !mission.deliveryTargetId
+    && !mission.construction
+    && Object.values(cargo ?? {}).some(units => units > 0)
+}
+
+/**
+ * Same shape test as {@link isFreeHaulMission} but usable before any ore has
+ * been collected — at mission start, not just at debrief. A self-directed
+ * mining run matching this is the only case that gates on a storage
+ * destination before mining begins (KES-283): client contracts, deliveries,
+ * and construction hauls already have a fixed destination and must not be
+ * interrupted with this choice.
+ */
+export function isFreeHaulEligibleMission(mission: Mission): boolean {
+  return isOwnProgramMission(mission) && !mission.deliveryTargetId && !mission.construction
+}
+
+/**
  * During guided onboarding, the board remains the sequence entry point. Once
  * Free Ops begins, the Mission Board is strictly client work; owned flights
  * live under Launchpad → Your Program.
@@ -149,6 +177,27 @@ export function missionTypePrimer(mission: Mission): MissionTypePrimer {
       label: 'Two-stop delivery',
       summary: 'Mine at the first stop, drop the cargo at the second, then fly home. You are paid a mining fee and a transport fee.',
       steps: ['Mine', 'Deliver', 'Return'],
+      owner,
+    }
+  }
+
+  // The first two onboarding contracts are intentionally named operations,
+  // not interchangeable generated orders. The name tells the player what
+  // this milestone is teaching before the client and target add detail.
+  if (mission.sequence === 1) {
+    return {
+      label: 'Baseline extraction',
+      summary: 'Fly out, mine the first client order, and bring the cargo back to Earth.',
+      steps: ['Launch', 'Mine', 'Return'],
+      owner,
+    }
+  }
+
+  if (mission.sequence === 2) {
+    return {
+      label: 'Heavy haul',
+      summary: 'Use the larger Prospector to lift the next client order and bring the cargo home.',
+      steps: ['Launch', 'Mine', 'Return'],
       owner,
     }
   }

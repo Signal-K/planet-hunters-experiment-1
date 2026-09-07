@@ -5,7 +5,7 @@
  *
  * Uses the selected rocket art when available, with a procedural fallback.
  * Palette matches the design tokens in web/app/globals.css and the vector
- * style established by hubScene.ts.
+ * style established by the terrain/flat-facility scene.
  */
 import { Application, Assets, Container, Graphics, Sprite, Text, TextStyle, Texture } from 'pixi.js'
 
@@ -26,14 +26,17 @@ const C = {
 
 // ─── Timeline ────────────────────────────────────────────────────────────────
 export const LAUNCH_TIMELINE = {
-  ignitionStart: 0.0,
-  liftoff:       0.8,
-  boosterSep:    2.6,
-  stageSep:      4.4,
-  upperAtmos:    5.5,
-  blackout:      7.0,
-  fadeOut:       7.8,
-  done:          8.5,
+  countdownStart: 0.0,
+  ignitionStart: 2.2,
+  liftoff:       3.0,
+  boosterSep:    5.0,
+  stageSep:      6.8,
+  upperAtmos:    8.0,
+  blackout:      9.3,
+  orbit:         9.8,
+  departureBurn: 11.4,
+  fadeOut:       12.8,
+  done:          13.6,
 }
 
 // ─── Canvas dimensions ───────────────────────────────────────────────────────
@@ -153,6 +156,17 @@ export function buildLaunchScene(
     r: Math.random() * 1.4 + 0.3,
     phase: Math.random() * Math.PI * 2,
   }))
+
+  // Earth orbit is a separate scene beat, not merely a darker sky. The
+  // vehicle enters a visible parking orbit before its departure burn.
+  const orbitCenter = { x: W * 0.5, y: H * 0.62 }
+  const orbitRadius = Math.min(W * 0.28, H * 0.30)
+  const orbitScene = new Graphics()
+  orbitScene.circle(orbitCenter.x, orbitCenter.y, orbitRadius).stroke({ color: C.cyan, alpha: 0.28, width: 1 })
+  orbitScene.circle(orbitCenter.x, orbitCenter.y, orbitRadius * 0.54).fill({ color: 0x18476b, alpha: 1 })
+  orbitScene.circle(orbitCenter.x - orbitRadius * 0.16, orbitCenter.y - orbitRadius * 0.13, orbitRadius * 0.38).fill({ color: 0x3fa9ff, alpha: 0.32 })
+  orbitScene.alpha = 0
+  app.stage.addChild(orbitScene)
 
   // ── Launchpad ground + towers (procedural) ────────────────────────────────
   const padContainer = new Container()
@@ -304,6 +318,21 @@ export function buildLaunchScene(
   shipLabel.anchor.set(0.5, 1); shipLabel.x = W / 2; shipLabel.y = H * 0.10; shipLabel.alpha = 0
   app.stage.addChild(shipLabel)
 
+  const phaseLabel = new Text({
+    text: 'AUTOMATED COUNTDOWN',
+    style: new TextStyle({ ...hudStyle, fill: C.text, fontSize: 9, letterSpacing: 1.8 }),
+  })
+  phaseLabel.anchor.set(0.5, 0); phaseLabel.x = W / 2; phaseLabel.y = H * 0.14
+  app.stage.addChild(phaseLabel)
+
+  const automationLabel = new Text({
+    text: 'ATTITUDE  AUTO  ·  THROTTLE  AUTO  ·  STAGING  AUTO',
+    style: new TextStyle({ ...hudStyle, fill: C.text, fontSize: 7, letterSpacing: 1.1 }),
+  })
+  automationLabel.anchor.set(0.5, 0); automationLabel.x = W / 2; automationLabel.y = H * 0.18
+  automationLabel.alpha = 0.5
+  app.stage.addChild(automationLabel)
+
   // ── Fade overlay ──────────────────────────────────────────────────────────
   const fadeGfx = new Graphics()
   fadeGfx.rect(0, 0, W, H).fill({ color: 0x000000, alpha: 1 })
@@ -345,11 +374,32 @@ export function buildLaunchScene(
       cameraY = Math.max(0, rocketAltitude - H * 0.7)
     }
 
+    const orbitActive = elapsed >= T.orbit
+
     // Parallax
     padContainer.y       = -cameraY
     smokeContainer.y     = -cameraY
     highAtmosContainer.y = H * 0.12 - cameraY * 0.3
     rocketRoot.y         = H - 100 - rocketAltitude + cameraY
+    if (orbitActive) {
+      const orbitT = elapsed - T.orbit
+      const departureT = Math.max(0, elapsed - T.departureBurn)
+      const radius = orbitRadius + departureT * departureT * 78
+      const theta = -Math.PI * 0.58 + orbitT * 1.25
+      rocketRoot.x = orbitCenter.x + Math.cos(theta) * radius
+      rocketRoot.y = orbitCenter.y + Math.sin(theta) * radius
+      rocketRoot.rotation = theta + Math.PI / 2
+      padContainer.alpha = 0
+      smokeContainer.alpha = 0
+      cloudContainer.alpha = 0
+      highAtmosContainer.alpha = 0
+      orbitScene.alpha = Math.min(1, (elapsed - T.orbit) / 0.45)
+    } else {
+      rocketRoot.rotation = 0
+      padContainer.alpha = 1
+      smokeContainer.alpha = 1
+      orbitScene.alpha = 0
+    }
 
     // Cloud drift + parallax
     cloudDrift += dt
@@ -364,7 +414,7 @@ export function buildLaunchScene(
     // Sky
     const skyT = Math.max(0, Math.min(1, (elapsed - T.upperAtmos) / (T.blackout - T.upperAtmos)))
     drawSky(skyT)
-    cloudContainer.alpha    = Math.max(0, 1 - Math.max(0, (elapsed - 3.5) / 1.5))
+    cloudContainer.alpha    = orbitActive ? 0 : Math.max(0, 1 - Math.max(0, (elapsed - 3.5) / 1.5))
     highAtmosContainer.alpha = Math.max(0, Math.min(0.8, (elapsed - 3.0) / 1.5))
       * Math.max(0, 1 - (elapsed - T.upperAtmos) / 1.0)
 
@@ -379,7 +429,9 @@ export function buildLaunchScene(
     }
 
     // Plume
-    const plumeAlpha = igniting ? ignitionT * 0.7 : flying ? Math.min(1, accelT + 0.3) : 0
+    const plumeAlpha = orbitActive
+      ? (elapsed >= T.departureBurn ? 0.7 : 0)
+      : (igniting ? ignitionT * 0.7 : flying ? Math.min(1, accelT + 0.3) : 0)
     const plumeScale = igniting ? 0.4 + ignitionT * 0.6 : flying ? 0.8 + accelT * 0.5 : 0
     const plumeY     = rocketRoot.y + 40
 
@@ -455,7 +507,22 @@ export function buildLaunchScene(
     }
 
     // HUD
-    destLabel.alpha = elapsed > 1.2 ? Math.min(1, (elapsed - 1.2) / 0.6) : 0
+    if (elapsed < T.ignitionStart) {
+      phaseLabel.text = `AUTOMATED COUNTDOWN · T-${Math.max(0, Math.ceil(T.ignitionStart - elapsed))}`
+    } else if (elapsed < T.liftoff) {
+      phaseLabel.text = 'IGNITION · GUIDANCE LOCKED'
+    } else if (elapsed < T.boosterSep) {
+      phaseLabel.text = 'ASCENT · BOOSTERS NOMINAL'
+    } else if (elapsed < T.stageSep) {
+      phaseLabel.text = 'BOOSTER SEPARATION · AUTOMATED'
+    } else if (elapsed < T.orbit) {
+      phaseLabel.text = 'STAGE SEPARATION · INSERTION'
+    } else if (elapsed < T.departureBurn) {
+      phaseLabel.text = 'EARTH ORBIT · GUIDANCE HOLD'
+    } else {
+      phaseLabel.text = `DEPARTURE BURN · ${opts.targetName.toUpperCase()}`
+    }
+    destLabel.alpha = elapsed > T.liftoff ? Math.min(1, (elapsed - T.liftoff) / 0.6) : 0
     shipLabel.alpha = elapsed > 0.8 ? Math.min(1, (elapsed - 0.8) / 0.5) : 0
 
     // Fade out

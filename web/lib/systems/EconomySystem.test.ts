@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import type { GameState } from '@/lib/game-types'
-import { MINERAL_META, CLIENT_SLOTS, STRUCTURES, customizerPartById } from '@/lib/data'
-import { applySellMinerals, applyConfirmShipCustomizerBuild, applyPlaceStructure, applyPurchaseRocket, applyStartRefine, decayedUnitsSold, openMarketSellPrice, sellQuote, sellUnitPrice, supplyDipMultiplier } from './EconomySystem'
+import { MINERAL_META, CLIENT_SLOTS, MINERAL_SILO_CAPACITY, SURFACE_SILO_CAPACITY, DEEP_MINERAL_SILO_CAPACITY, STRUCTURES, customizerPartById } from '@/lib/data'
+import { applyAssembleFabricatedRocket, applyFabricateRocketPart, applyFreeHaulDisposition, applyRemoteHaulDisposition, applyRocketStageRecovery, applySellMinerals, applySellRefinedGoods, applyConfirmShipCustomizerBuild, applyPlaceStructure, applyPurchaseRocket, applyStartRefine, decayedUnitsSold, earthStorageBuilt, openMarketSellPrice, sellQuote, sellUnitPrice, siloCount, storageCapacity, storedUnits, supplyDipMultiplier } from './EconomySystem'
+import { rocketCompositionForId } from '@/lib/data/rocket-composition'
 import { ROCKET_MODELS } from '@/lib/data/rockets'
 
 function makeState(overrides: Partial<GameState['player']> = {}): GameState {
@@ -64,7 +65,41 @@ describe('applyPurchaseRocket', () => {
     expect(next.player.francs).toBe(100)
     expect(next.player.pendingLaunch).toBe(true)
     expect(next.player.pendingRocketId).toBe('prospector')
+    expect(next.rocket).toEqual({ chassis: 'hull-mk2', propulsion: 'fusion-b2', drill: 'laser-t2' })
     expect(applyPurchaseRocket(next, rocket).player.francs).toBe(100)
+  })
+})
+
+describe('silo rocket fabrication and recovery', () => {
+  const explorer = ROCKET_MODELS.find(model => model.id === 'explorer')!
+  const explorerRecipes = rocketCompositionForId('explorer').recipes
+
+  it('requires a built Earth silo before it consumes materials or creates a part', () => {
+    const state = makeState({ stash: { iron: 10, silicon: 10 } })
+    expect(applyFabricateRocketPart(state, 'explorer', explorerRecipes[0].id)).toBe(state)
+  })
+
+  it('debits a recipe from the silo and consumes completed parts during assembly', () => {
+    const stash = { iron: 20, silicon: 20, carbon: 10 }
+    let state = makeState({ placed: ['surface-silo'], stash })
+    for (const recipe of explorerRecipes) state = applyFabricateRocketPart(state, explorer.id, recipe.id)
+
+    expect(state.player.fabricatedRocketParts).toEqual(Object.fromEntries(explorerRecipes.map(recipe => [recipe.id, 1])))
+    expect(state.player.stash).toEqual({ iron: 12, silicon: 16, carbon: 9 })
+    const assembled = applyAssembleFabricatedRocket(state, explorer)
+    expect(assembled.player.pendingRocketId).toBe('explorer')
+    expect(assembled.player.pendingRocketSource).toBe('fabricated')
+    expect(assembled.player.fabricatedRocketParts).toEqual({})
+    expect(assembled.player.francs).toBe(0)
+  })
+
+  it('returns only material that fits in an Earth silo and never creates storage without one', () => {
+    const noSilo = makeState({ stash: {} })
+    expect(applyRocketStageRecovery(noSilo, explorer)).toBe(noSilo)
+
+    const almostFull = makeState({ placed: ['surface-silo'], stash: { iron: SURFACE_SILO_CAPACITY - 1 } })
+    const recovered = applyRocketStageRecovery(almostFull, explorer)
+    expect(recovered.player.stash).toEqual({ iron: SURFACE_SILO_CAPACITY })
   })
 })
 
@@ -108,6 +143,69 @@ describe('applySellMinerals', () => {
 
   it('treats missing marketSupplyUpdatedAt as no decay (legacy save data)', () => {
     expect(decayedUnitsSold(50, undefined)).toBe(50)
+  })
+})
+
+describe('Earth-side ore storage', () => {
+  it('gates storage on the built Mineral Vault, not excavation alone', () => {
+    expect(earthStorageBuilt({ subsurfaceBuilt: undefined })).toBe(false)
+    expect(earthStorageBuilt({ subsurfaceBuilt: ['parts-locker'] })).toBe(false)
+    expect(siloCount({ subsurfaceBuilt: ['mineral-vault'] })).toBe(1)
+    expect(storageCapacity({ subsurfaceBuilt: ['mineral-vault'] })).toBe(MINERAL_SILO_CAPACITY)
+    expect(storedUnits({ iron: 7, silicon: -2, carbon: 0 })).toBe(7)
+  })
+
+  it('adds the surface silo and deep vault capacities independently', () => {
+    expect(storageCapacity({ placed: ['surface-silo'], subsurfaceBuilt: [] })).toBe(SURFACE_SILO_CAPACITY)
+    expect(storageCapacity({ placed: ['surface-silo'], subsurfaceBuilt: ['mineral-vault', 'deep-mineral-vault'] }))
+      .toBe(SURFACE_SILO_CAPACITY + MINERAL_SILO_CAPACITY + DEEP_MINERAL_SILO_CAPACITY)
+  })
+
+  it('sells the complete haul when no Mineral Vault exists, even if store was requested', () => {
+    const haul = { iron: 3, nickel: 1 }
+    const state = makeState({ stash: { iron: 5, nickel: 2 } })
+    const next = applyFreeHaulDisposition(state, haul, 'store', 1_700_000_000_000)
+
+    expect(next.player.francs).toBe(
+      openMarketSellPrice(MINERAL_META.iron.price, 0) * haul.iron
+      + openMarketSellPrice(MINERAL_META.nickel.price, 0) * haul.nickel,
+    )
+    expect(next.player.stash).toEqual({ iron: 2, nickel: 1 })
+  })
+
+  it('does not leak the previous client premium into a self-directed market sale', () => {
+    const premiumClient = CLIENT_SLOTS.find(client => client.payoutPremium > 0 && client.mineralPreferences.length > 0)
+    if (!premiumClient) return
+    const mineral = premiumClient.mineralPreferences[0]
+    const state = makeState({
+      stash: { [mineral]: 1 },
+      lastClient: premiumClient.id,
+    })
+    const next = applyFreeHaulDisposition(state, { [mineral]: 1 }, 'sell', 1_700_000_000_000)
+
+    expect(next.player.francs).toBe(openMarketSellPrice(MINERAL_META[mineral].price, 0))
+  })
+
+  it('keeps the haul in the stash when a Vault has room', () => {
+    const state = makeState({
+      stash: { iron: 4, nickel: 3 },
+      subsurfaceBuilt: ['mineral-vault'],
+    })
+    const next = applyFreeHaulDisposition(state, { nickel: 3 }, 'store', 1_700_000_000_000)
+
+    expect(next.player.francs).toBe(0)
+    expect(next.player.stash).toEqual({ iron: 4, nickel: 3 })
+  })
+
+  it('sells only the cheapest part of a full-haul overflow and keeps the rest', () => {
+    const state = makeState({
+      stash: { iron: MINERAL_SILO_CAPACITY - 2 + 3, cobalt: 1 },
+      subsurfaceBuilt: ['mineral-vault'],
+    })
+    const next = applyFreeHaulDisposition(state, { iron: 3, cobalt: 1 }, 'store', 1_700_000_000_000)
+
+    expect(next.player.francs).toBe(openMarketSellPrice(MINERAL_META.iron.price, 0) * 2)
+    expect(next.player.stash).toEqual({ iron: MINERAL_SILO_CAPACITY - 2 + 1, cobalt: 1 })
   })
 })
 
@@ -184,6 +282,44 @@ describe('Academy and staffing economy', () => {
     }), recipe)
     expect(unstaffed.player.refineryQueue[0].durationMs).toBe(100_000)
     expect(staffed.player.refineryQueue[0].durationMs).toBe(75_000)
+  })
+
+  it('accepts only one Level 1 shipment per UTC day', () => {
+    const first = applyStartRefine(makeState({ stash: { iron: 2 } }), {
+      id: 'daily-test', name: 'Daily test', input: { mineral: 'iron', amount: 1 },
+      output: { name: 'Ingot', sym: 'Fe+', color: '#999', price: 1 }, time: 100, cost: 0,
+    })
+    const second = applyStartRefine(first, {
+      id: 'daily-test-2', name: 'Daily test 2', input: { mineral: 'iron', amount: 1 },
+      output: { name: 'Ingot', sym: 'Fe+', color: '#999', price: 1 }, time: 100, cost: 0,
+    })
+    expect(first.player.refineryQueue).toHaveLength(1)
+    expect(second).toBe(first)
+  })
+})
+
+describe('off-world storage and refinery settlement', () => {
+  it('stores a remote haul without duplicating it into Earth inventory on return', () => {
+    const s: GameState = {
+      ...makeState({
+      clientStructures: [{ targetId: 'eros', structureKind: 'mineral-silo', clientId: 'self', state: 'operational' }],
+      stash: {},
+      }),
+      screen: 'mining',
+      targetId: 'eros',
+      missionId: 'program-build-remote-silo',
+    }
+    const next = applyRemoteHaulDisposition(s, 'eros', { iron: 4 }, 'store')
+    expect(next.player.remoteStorage?.eros).toEqual({ iron: 4 })
+    expect(next.player.cargoSettledOffworld).toBe(true)
+    expect(next.player.stash).toEqual({})
+  })
+
+  it('credits refined output at the recipe rate and consumes the goods', () => {
+    const recipe = { id: 'refined-test', name: 'Refined Test', input: { mineral: 'iron', amount: 1 }, output: { name: 'Test Ingot', sym: 'Fe+', color: '#999', price: 1250 }, time: 1, cost: 10 }
+    const next = applySellRefinedGoods(makeState({ francs: 50, refinedGoods: { [recipe.id]: 2 } }), recipe, 1)
+    expect(next.player.francs).toBe(1300)
+    expect(next.player.refinedGoods[recipe.id]).toBe(1)
   })
 })
 

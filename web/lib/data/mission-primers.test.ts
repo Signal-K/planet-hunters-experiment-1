@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { missionTypePrimer, isMissionBoardMission, isOwnProgramMission, partitionByOwner, OWN_PROGRAM_CLIENT_ID } from './mission-primers'
+import { missionTypePrimer, isMissionBoardMission, isOwnProgramMission, isFreeHaulEligibleMission, partitionByOwner, OWN_PROGRAM_CLIENT_ID } from './mission-primers'
 import { MISSIONS, SELF_DIRECTED_MINING_MISSION_ID } from './missions'
 import type { Mission } from './types'
 
@@ -13,9 +13,15 @@ const base: Mission = {
 describe('missionTypePrimer', () => {
   it('reads a plain client order as a mine-and-return run', () => {
     const primer = missionTypePrimer(base)
-    expect(primer.label).toBe('Mining run')
+    expect(primer.label).toBe('Baseline extraction')
     expect(primer.steps).toEqual(['Launch', 'Mine', 'Return'])
     expect(primer.owner).toBe('client')
+  })
+
+  it('names the second onboarding milestone as a heavier haul', () => {
+    const primer = missionTypePrimer({ ...base, sequence: 2 })
+    expect(primer.label).toBe('Heavy haul')
+    expect(primer.summary).toContain('larger Prospector')
   })
 
   it('reads a delivery leg as a two-stop job', () => {
@@ -169,5 +175,34 @@ describe('partitionByOwner', () => {
     const { client, own } = partitionByOwner(cards, c => c.mission)
     expect(client).toHaveLength(1)
     expect(own[0].mission.id).toBe('own-refinery')
+  })
+})
+
+// KES-283: a self-directed mining run requires a storage destination before
+// mining can begin. isFreeHaulEligibleMission is the mission-shape test used
+// to decide whether that gate applies — it must work before any cargo exists
+// (unlike isFreeHaulMission, which also checks the collected haul).
+describe('isFreeHaulEligibleMission', () => {
+  it('is eligible for a self-directed run with no client, delivery, or construction', () => {
+    const selfDirected: Mission = { ...base, client: undefined, deliveryTargetId: undefined, construction: undefined }
+    expect(isFreeHaulEligibleMission(selfDirected)).toBe(true)
+  })
+
+  it('is not eligible for a client contract', () => {
+    expect(isFreeHaulEligibleMission(base)).toBe(false)
+  })
+
+  it('is not eligible for a two-leg delivery job even with no client', () => {
+    const delivery: Mission = { ...base, client: undefined, deliveryTargetId: 'vesta' }
+    expect(isFreeHaulEligibleMission(delivery)).toBe(false)
+  })
+
+  it('is not eligible for a construction haul even with no client', () => {
+    const build: Mission = {
+      ...base,
+      client: undefined,
+      construction: { structureKind: 'fuel-depot', requiredMaterials: { hydrogen: 8 }, placementMode: 'confirm', buildTimeMs: 1 },
+    }
+    expect(isFreeHaulEligibleMission(build)).toBe(false)
   })
 })

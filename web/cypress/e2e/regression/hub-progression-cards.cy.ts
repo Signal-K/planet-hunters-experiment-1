@@ -19,7 +19,7 @@ import type { GameState } from '../../../game-context'
  */
 
 const STORAGE_KEY = 'landnam-game-state-v1'
-const GUEST_KEY = 'landnam-guest-credentials'
+const GUEST_KEY = 'landnam-account-credentials'
 const SURVEY_KEY = 'landnam-surveys-shown'
 const SNOOZE_KEY = 'landnam-upgrade-prompt-snooze-until'
 // The sheet shown once when onboarding completes. Pre-acknowledged here: it is
@@ -27,12 +27,13 @@ const SNOOZE_KEY = 'landnam-upgrade-prompt-snooze-until'
 // test. (That two sheets *can* stack — this one plus the auth gate — is a
 // separate problem, see STS-614.)
 const TUTORIAL_ACK_KEY = 'ln_tutorial_complete_ack'
-const GUEST = JSON.stringify({ email: 'e2e@landnam.guest', password: 'e2e-guest-test' })
+const GUEST = JSON.stringify({ email: 'e2e@example.com', password: 'e2e-guest-test' })
 const FAR_FUTURE = String(Date.now() + 365 * 24 * 60 * 60 * 1000)
 const ALL_SURVEYS = [
   'lnm_first_launch', 'lnm_mining_feel', 'lnm_client_pick',
   'lnm_mission_friction', 'lnm_progression_feel', 'lnm_end_of_content',
-  'lnm_return_visit', 'lnm_m1_complete', 'lnm_m2_complete', 'lnm_m3_complete',
+  'lnm_return_visit', 'lnm_m1_complete', 'lnm_m2_mission_choice', 'lnm_m2_rocket_clarity', 'lnm_m2_rating', 'lnm_m2_freetext',
+        'lnm_m3_transport_clarity', 'lnm_m3_client_choice', 'lnm_m3_rating', 'lnm_m3_freetext',
 ]
 
 // Past onboarding, nothing in flight, skill points banked and no satellite
@@ -63,11 +64,19 @@ const POST_TUTORIAL: Partial<GameState> = {
     launchpadUpgraded: false,
     loanDebt: 0,
     loanOffered: false,
-    satelliteMonitoringBuilt: false,
   },
 } as Partial<GameState>
 
-function visitHub() {
+const ACTIVE_MISSION_POST_TUTORIAL: Partial<GameState> = {
+  ...POST_TUTORIAL,
+  player: {
+    ...POST_TUTORIAL.player,
+    activeMission: { id: 'baseline-extraction', label: 'Baseline extraction → Eros' },
+    missionPhase: 'transit',
+  } as GameState['player'],
+}
+
+function visitHub(state: Partial<GameState> = POST_TUTORIAL) {
   cy.visit('/game', {
     onBeforeLoad(win) {
       win.localStorage.clear()
@@ -76,13 +85,13 @@ function visitHub() {
       win.localStorage.setItem(SNOOZE_KEY, FAR_FUTURE)
       win.localStorage.setItem(SURVEY_KEY, JSON.stringify(ALL_SURVEYS))
       win.localStorage.setItem(TUTORIAL_ACK_KEY, '1')
-      win.localStorage.setItem(STORAGE_KEY, JSON.stringify(POST_TUTORIAL))
+      win.localStorage.setItem(STORAGE_KEY, JSON.stringify(state))
     },
   })
 }
 
 describe('hub progression cards are clickable after the tutorial', () => {
-  beforeEach(visitHub)
+  beforeEach(() => visitHub())
 
   it('Open Skill Tree navigates to the skill tree', () => {
     cy.get('[data-testid="progression-card-skills"]').should('be.visible').click()
@@ -92,6 +101,29 @@ describe('hub progression cards are clickable after the tutorial', () => {
   it('Browse Contracts navigates to the mission board', () => {
     cy.get('[data-testid="progression-card-next-mission"]').should('be.visible').click()
     cy.location('pathname', { timeout: 10_000 }).should('not.eq', '/game/hub')
+  })
+
+  it('Open Launchpad enters the full Launchpad UI', () => {
+    cy.get('[data-testid="progression-card-transit-satellite"]').should('be.visible').click()
+    cy.get('[data-testid="launchpad-ui-screen"]', { timeout: 10_000 }).should('be.visible')
+    cy.get('[data-testid="launchpad-status-card"]').should('be.visible')
+    cy.get('[data-testid="launchpad-rocket-fleet"]').should('be.visible')
+    cy.get('[data-testid="launchpad-focus-screen"]').should('not.exist')
+  })
+
+  it('the physical Launchpad keeps its separate close-up focus entry', () => {
+    cy.get('[data-testid="building-launchpad-hit"]').click({ force: true })
+    cy.get('[data-testid="launchpad-focus-screen"]', { timeout: 10_000 }).should('be.visible')
+    cy.get('[data-testid="launchpad-ui-screen"]').should('not.exist')
+  })
+
+  it('an active Launchpad opens its scene and exposes explicit resume controls', () => {
+    visitHub(ACTIVE_MISSION_POST_TUTORIAL)
+    cy.get('[data-testid="building-launchpad-hit"]').click({ force: true })
+    cy.get('[data-testid="launchpad-focus-screen"]', { timeout: 10_000 }).should('be.visible')
+    cy.get('[data-testid="launchpad-resume-mission-btn"]').should('be.visible')
+    cy.get('[data-testid="launchpad-mission-log-btn"]').should('be.visible')
+    cy.get('[data-testid="launchpad-status-card"]').should('contain', 'MISSION ACTIVE')
   })
 
   it('nothing transparent is covering the cards', () => {

@@ -3,6 +3,11 @@
 
 import type { RocketConfig, Mission, Target, TessClassification, TessVerdict, TransitRange, AsteroidClassification, AsteroidVerdict } from '@/lib/data'
 import type { RoverTerrainClass } from '@/lib/data/rover-scouting'
+import type { RoverSpec } from '@takeon/engine'
+import type { SceneScope } from './scene-scope'
+import type { ClientBuildCompletionEvent, DailyEconomySnapshot } from './systems/DailyEconomySystem'
+import type { TreasuryState } from './systems/TreasurySystem'
+import type { SiteRightsState } from './systems/SiteRightsSystem'
 
 export interface DailyClientPool {
   date: string        // 'YYYY-MM-DD'
@@ -11,10 +16,55 @@ export interface DailyClientPool {
   completedIds: string[]
 }
 
+export interface CompletedMissionRecord {
+  id: string
+  title: string
+  targetId?: string
+  clientName?: string
+  targetName?: string
+  completedAt: number
+  runId?: string
+  kind?: 'client' | 'program'
+}
+
+/**
+ * A paused mission keeps its own operational context while another vehicle is
+ * prepared or flown. Global economy/progression stays on `Player`; only the
+ * data required to resume this specific run lives here.
+ */
+export interface MissionRunSnapshot {
+  key: string
+  activeMission: { id: string; label: string }
+  missionId: string
+  targetId: string
+  deliveryTargetId?: string | null
+  rocket: RocketConfig
+  lastCargo: Record<string, number> | null
+  deliveredCargo?: Record<string, number> | null
+  missionRunId?: string
+  missionPhase?: 'transit' | 'landing' | 'mining' | 'delivery' | 'debrief'
+  miningCargoInProgress?: Record<string, number>
+  deliveryUnloadStartedAt?: number
+  landingStartedAt?: number
+  landingReturnStartedAt?: number
+  arrivalAt?: number | null
+  transitStartedAt?: number | null
+  missionRocketSource?: 'company' | 'fabricated'
+  missionCrewIds?: string[]
+  debriefPending?: boolean
+  cargoSettledOffworld?: boolean
+  pendingRemoteDisposition?: 'store' | 'sell'
+  freeHaulDisposition?: 'store' | 'sell'
+  returningToEarth?: boolean
+  headingToDelivery?: boolean
+  shipDestroyed?: boolean
+}
+
 export type Screen =
   | 'intro'
   | 'build'
   | 'hub'
+  | 'hub-subsurface'
   | 'missions'
   | 'galaxy'
   | 'targets'
@@ -35,6 +85,36 @@ export type Screen =
   | 'surface-ops'
   | 'academy'
   | 'asteroid-discovery'
+  | 'mission-history'
+  | 'narrative-ledger'
+
+// Screens that render a physical place in the game world (or a step in a
+// mission run through one) get the full, edge-to-edge viewport on desktop —
+// they are locations, not menus, and boxing them in the device-card chrome
+// reads as a modal sitting over the game rather than the game itself.
+// Screens NOT in this set ('intro', 'build', 'missions', 'targets', 'fab',
+// 'market', 'skills', 'rocket-buy', 'debrief') are menus/UI concepts and keep
+// the boxed card treatment. Debrief in particular is a mission-results
+// summary/paperwork screen, not a place — it was wrongly added here in
+// KES-261 and got full-screen treatment it never should have (KES-265).
+// See `.portrait-canvas--full-page` in globals.css.
+export const LOCATION_SCREENS: ReadonlySet<Screen> = new Set<Screen>([
+  'hub',
+  'hub-subsurface',
+  'launchpad',
+  'transit',
+  'landing',
+  'mining',
+  'rover-mining',
+  'delivery',
+  'refinery',
+  'scan-station',
+  'academy',
+  'hangar',
+  'surface-ops',
+  'galaxy',
+  'asteroid-discovery',
+])
 
 export type LicenseGrade = 'Grade I' | 'Grade II' | 'Grade III'
 
@@ -63,6 +143,40 @@ export interface SurfaceSiteProgress {
   launchpad?: SettlementLaunchpadRecord
   storage: Record<string, number>
   ferry?: SettlementFerryRecord
+  /** The host-owned identity/configuration for one resumable TakeOn field session. */
+  fieldOperation?: FieldOperation
+}
+
+export type FieldOperationObjectiveKind = 'settlement' | 'prospecting' | 'logistics'
+
+export interface FieldOperationCargo {
+  requirements: Record<string, number>
+  capacity: number
+}
+
+export interface FieldOperationObjective {
+  kind: FieldOperationObjectiveKind
+  description: string
+}
+
+export interface FieldOperationReturnPolicy {
+  owner: 'landnam'
+  reconcileAt: 'field-return'
+}
+
+export interface FieldOperation {
+  id: string
+  missionId: string
+  targetId: string
+  siteId: string
+  bodyId: string
+  seed: number
+  rover: RoverSpec
+  label: string
+  cargo: FieldOperationCargo
+  objective: FieldOperationObjective
+  returnPolicy: FieldOperationReturnPolicy
+  startedAt: number
 }
 
 export interface SurfaceOpsState {
@@ -71,7 +185,17 @@ export interface SurfaceOpsState {
 
 export interface Player {
   francs: number
+  // Set once per track (KES-264) when the standalone /demo sandbox's
+  // one-time completion bonus has been applied to this account, so a player
+  // can't replay a demo mission to keep re-collecting it. The demo route
+  // itself never touches this field or PocketBase directly — it only leaves
+  // a `landnam-demo-bonus-pending` localStorage note; the real game applies
+  // the bonus (and sets this) through the normal setPlayer/save path on next
+  // boot. See applyPendingDemoBonus in game-context.tsx.
+  demoBonusClaimed?: Partial<Record<'mining' | 'citizen-science', boolean>>
   activeMission: { id: string; label: string } | null
+  /** Paused operational contexts. There is intentionally no artificial cap. */
+  pausedMissionRuns?: MissionRunSnapshot[]
   // PocketBase mission_runs record for the current run. Kept in the save so a
   // refresh/resume continues updating the same server-side lifecycle record.
   missionRunId?: string
@@ -82,13 +206,11 @@ export interface Player {
   // state before this, and was lost on remount). Cleared once the mission
   // completes or is abandoned.
   miningCargoInProgress?: Record<string, number>
-  // Wall-clock start of an in-progress rover mining run, persisted so a
-  // Back-to-hub pause and resume doesn't restart the extraction timer from
-  // zero (RoverMiningScreen would otherwise re-init its own Date.now() on
-  // remount). Cleared once the run completes or is abandoned.
+  // Legacy timer field retained for save migration. Live rover missions now
+  // persist their field state through TakeOnMount/LandnamSync.
   roverMiningStartedAt?: number
-  // KES-110: a synthetic rover observation is a player decision that points
-  // the extraction run at an existing target mineral signature.
+  // Legacy KES-110 observation field retained for save migration. The live
+  // rover field now exposes deposits through the TakeOn scene itself.
   roverTerrainClassifications?: Record<string, RoverTerrainClass>
   // Wall-clock start of the cargo-transfer operation at a two-leg mission's
   // delivery target. The unload scene derives progress from this epoch so
@@ -107,6 +229,9 @@ export interface Player {
   pendingLaunch: boolean
   /** Rocket already built and waiting on the launchpad; prevents re-purchase on resume. */
   pendingRocketId?: string
+  /** How the pending/active single-use vehicle entered the Hangar. */
+  pendingRocketSource?: 'company' | 'fabricated'
+  missionRocketSource?: 'company' | 'fabricated'
   placed: string[]
   placementPlots: Record<string, number>
   controlBuilt: boolean
@@ -115,12 +240,22 @@ export interface Player {
   unlockedSkillNodes?: string[]
   freeOperations: boolean
   debriefPending?: boolean
+  /** The haul was settled into an off-world silo or sold before Earth return. */
+  cargoSettledOffworld?: boolean
+  pendingRemoteDisposition?: 'store' | 'sell'
+  /** Earth-side keep/sell choice made at the pre-mining storage gate (KES-283),
+   *  before the haul exists. Debrief's store-vs-sell panel seeds its default
+   *  from this so the pre-mining choice reads as a confirmation, not a second
+   *  ask from scratch. */
+  freeHaulDisposition?: 'store' | 'sell'
   returningToEarth?: boolean
   shipDestroyed?: boolean
   // True while in transit toward a two-leg mission's deliveryTargetId, after
   // mining/pickup at the primary target and before the Earth-return leg.
   headingToDelivery?: boolean
   stash?: Record<string, number>
+  /** Locally fabricated components, one of each required before Hangar assembly. */
+  fabricatedRocketParts?: Record<string, number>
   // Units-sold-equivalent on the open market per mineral, decayed over real
   // time (see EconomySystem.decayedUnitsSold) — drives the supply/demand
   // price dip in EconomySystem's open-market sell price. Paired with
@@ -128,7 +263,12 @@ export interface Player {
   // capping out permanently once enough of a mineral has ever been sold.
   marketSupply?: Record<string, number>
   marketSupplyUpdatedAt?: Record<string, number>
+  /** Last published shared AEST price and client-demand snapshot. */
+  dailyEconomySnapshot?: DailyEconomySnapshot
+  /** Immutable evidence that a player-built client structure completed. */
+  clientBuildEvents?: ClientBuildCompletionEvent[]
   clientMissions: Record<string, number>
+  completedMissions?: CompletedMissionRecord[]
   clientStreaks?: Record<string, number>
   clientCooldowns: Record<string, number>
   researchAnnotations: number
@@ -136,11 +276,18 @@ export interface Player {
   refineryUnlocked?: boolean
   refineryUnlockNotified?: boolean
   refineryQueue: { recipeId: string; startedAt: number; durationMs?: number }[]
+  /** Level 1 refinery can accept one shipment per UTC day. */
+  refineryLastStartedAt?: number
   refinedGoods: Record<string, number>
+  /** Raw ore stored at operational player-owned off-world silos, by target. */
+  remoteStorage?: Record<string, Record<string, number>>
   launchpadUpgraded: boolean
   lastClient?: string
+  /** Mirrors treasury.loans[...].outstandingFrancs for this player; treasury is authoritative. */
   loanDebt: number
   loanOffered: boolean
+  /** Provisional per-player instance until KES-287 gives the treasury a real shared home. */
+  treasury?: TreasuryState
   arrivalAt?: number | null
   // Wall-clock departure for the current transit leg. Keeping this alongside
   // arrivalAt lets the transit animation resume at the correct visual time
@@ -156,7 +303,6 @@ export interface Player {
   clientTerritories?: Record<string, string[]>
   dailyClientPool?: DailyClientPool
   scannerBuilt?: boolean
-  satelliteMonitoringBuilt?: boolean
   // Subsurface deck (STS-633): the below-soil area starts unexcavated, and
   // each room must be built into it individually before it holds live
   // inventory — mirrors the surface Build·Place cost shape.
@@ -168,13 +314,10 @@ export interface Player {
   // through XPSystem or describe them as "progression" in UI copy — if they
   // ever need fractional progress or a real curve, that's a new decision, not
   // an assumed migration.
-  satelliteMonitoringLevel?: number
   transitSatelliteLevel?: number
   transitSatelliteLaunchedAt?: number | null
   // Deep Space Telescope (STS-622): a separate, one-time-build structure that
   // gates the asteroid-discovery (NEOCP) instrument feed, the same way
-  // satelliteMonitoringBuilt gates the transit feed above. Not a tier on the
-  // transit satellite — its own build/unlock cost and level track.
   deepSpaceTelescopeBuilt?: boolean
   deepSpaceTelescopeLevel?: number
   deepSpaceTelescopeLaunchedAt?: number | null
@@ -257,6 +400,8 @@ export interface Player {
   // shared-world claim. Ferry records retain a stable cargo-batch id and reconciliation
   // timestamp so retries and reloads cannot credit one manifest twice.
   surfaceOps?: SurfaceOpsState
+  /** Predefined-site build/mine rights purchased or leased from client territory (KES-287). */
+  siteRights?: SiteRightsState
 }
 
 export interface GameState {
@@ -264,6 +409,10 @@ export interface GameState {
   player: Player
   missionId: string | null
   targetId: string | null
+  /** Explicit body context for a mission-board view; Earth Base is the default. */
+  // Older saved states and test fixtures predate scene-scoped mission views;
+  // normalizeAndRepair() supplies Earth Base when this is absent.
+  missionBoardScope?: SceneScope
   // Set for two-leg "mine then deliver" missions — the second-leg
   // destination, distinct from targetId (the mining/pickup target).
   deliveryTargetId?: string | null
@@ -287,6 +436,8 @@ export interface GameState {
   // reads the record's system timestamp directly). missionsDone remains the
   // primary onboarding-stage signal; this only disambiguates true ties.
   updatedAt?: number
+  /** Dev-preset-only data switch. Never set by normal gameplay or persistence. */
+  visualFixture?: 'tess' | 'asteroid'
 }
 
 import type React from 'react'
@@ -306,7 +457,12 @@ export interface GameActions {
   authGateOtpId: string | null
   verifyOtp: (code: string) => Promise<void>
   go: (screen: Screen) => void
-  goToMissions: () => void
+  openLaunchpad: () => void
+  openLaunchpadMissionMenu: () => void
+  launchpadMissionMenuOpen: boolean
+  setLaunchpadMissionMenuOpen: (open: boolean) => void
+  returnFromHangar: () => void
+  goToMissions: (scope?: SceneScope) => void
   setScreenFromUrl: (screen: Screen) => void
   setPlayer: React.Dispatch<React.SetStateAction<Player>>
   setMissionId: (id: string | null) => void
@@ -318,15 +474,20 @@ export interface GameActions {
   skipTutorial: (stepIds: number[]) => void
   setPopup: (v: string | null) => void
   setMenuOpen: (v: boolean) => void
-  onPickMission: (id: string) => void
+  subsurfaceView: boolean
+  setSubsurfaceView: (v: boolean) => void
+  onPickMission: (id: string, freeHaulDisposition?: 'store' | 'sell') => void
   onPickTarget: (id: string) => void
   onPurchaseRocket: (rocketId: string) => void
+  onFabricateRocketPart: (rocketId: string, componentId: string) => void
+  onAssembleFabricatedRocket: (rocketId: string) => void
   onLaunch: () => void
-  onMiningDone: (cargo: Record<string, number>) => void
+  resumeMissionRun: (key: string) => void
+  onMiningDone: (cargo: Record<string, number>, remoteDisposition?: 'store' | 'sell') => void
   onDeliveryArrived: () => void
   onDeliveryUnloadComplete: () => void
   onReturnArrived: () => void
-  onDebriefDone: (total: number, affinity: number, consumed?: Record<string, number>) => void
+  onDebriefDone: (total: number, affinity: number, consumed?: Record<string, number>, disposition?: 'store' | 'sell') => void
   coachManualNext: () => void
   completeStep: (id: number) => void
   resetGame: () => void
@@ -336,6 +497,7 @@ export interface GameActions {
   excavateSubsurface: () => void
   buildSubsurfaceRoom: (roomId: import('@/lib/data').SubsurfaceRoomId) => void
   sellMinerals: (mineralId: string, amount: number) => void
+  sellRefinedGoods: (recipeId: string, amount: number) => void
   onStartRefine: (recipeId: string) => void
   onCollectRefined: (recipeId: string) => void
   unlockSkillNode: (id: string) => void
@@ -350,9 +512,10 @@ export interface GameActions {
   submitAsteroidClassification: (candidateId: string, verdict: AsteroidVerdict) => void
   onRoverMiningDone: (cargo: Record<string, number>) => void
   onLandingTouchdown: () => void
-  onRedockComplete: (cargo: Record<string, number>) => void
+  onRedockComplete: (cargo: Record<string, number>, remoteDisposition?: 'store' | 'sell') => void
   confirmShipCustomizerBuild: (installed: Partial<Record<import('@/lib/data').ShipRoomKind, string>>, prevInstalled: Partial<Record<import('@/lib/data').ShipRoomKind, string>>) => boolean
   purchaseSiteAccess: (siteId: string) => void
+  startFieldOperation: (siteId: string) => void
   buildSettlementLaunchpad: (siteId: string, pad: 0 | 1 | 2) => void
   recordSurfaceMined: (siteId: string, mineralId: string, amount: number) => void
   dispatchSurfaceFerry: (siteId: string) => void
@@ -362,6 +525,7 @@ export interface GameActions {
   gainResearchXP: (amount: number) => void
   upgradeLicenseGrade: (grade: Exclude<LicenseGrade, 'Grade I'>) => void
   unlockBlueprint: (blueprintId: string, costFrancs?: number, costXP?: number, costMaterials?: Record<string, number>) => void
+  claimFriendGift: (giftId: string) => Promise<void>
   researchAcademy: () => void
   researchLanding: () => void
   setAcademyFunding: (funded: boolean) => void
@@ -378,8 +542,7 @@ export interface GameActions {
   dismissToast: (id: string) => void
   mission: Mission | null
   target: Target | null
-  upgradePromptOpen: boolean
-  upgradeAccount: (email: string, password: string) => Promise<void>
+  sceneScope: SceneScope
   awaitingRemoteState: boolean
   clearTerritoryClaimPopup: () => void
   laserChargeCap: number

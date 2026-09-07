@@ -14,11 +14,10 @@ import { DEFAULT_STATE } from './game-state'
 import { createCrewMember } from './systems/CrewSystem'
 
 describe('buildRuntimeCatalog', () => {
-  it('adds the transit telescope launch mission while the player has SMS but no launched satellite', () => {
+  it('adds the transit telescope launch mission before the satellite is launched', () => {
     const catalog = buildRuntimeCatalog({
       catalog: STATIC_CATALOG,
       freeOperations: true,
-      satelliteMonitoringBuilt: true,
       transitSatelliteLaunchedAt: null,
       missionsDone: 3,
     })
@@ -37,7 +36,6 @@ describe('buildRuntimeCatalog', () => {
     const catalog = buildRuntimeCatalog({
       catalog: STATIC_CATALOG,
       freeOperations: true,
-      satelliteMonitoringBuilt: true,
       transitSatelliteLaunchedAt: Date.now(),
       missionId: TRANSIT_TELESCOPE_MISSION_ID,
       targetId: TRANSIT_TELESCOPE_TARGET_ID,
@@ -50,11 +48,11 @@ describe('buildRuntimeCatalog', () => {
     expect(activeTelescopeMission).toMatchObject({ programReward: expect.any(Object) })
   })
 
-  it('adds the deep space telescope survey mission once the SMS/affinity threshold is met but the mission is unfinished (KES-128)', () => {
+  it('adds the deep space telescope survey mission once the telescope/affinity threshold is met but the mission is unfinished (KES-128)', () => {
     const player = {
       ...DEFAULT_STATE.player,
       freeOperations: true,
-      satelliteMonitoringLevel: 2,
+      transitSatelliteLevel: 2,
       clientMissions: { 'client-a': 10 },
       deepSpaceTelescopeMissionCompletedAt: null,
     }
@@ -76,8 +74,8 @@ describe('buildRuntimeCatalog', () => {
     })
   })
 
-  it('does not offer the deep space telescope mission below the SMS/affinity threshold', () => {
-    const player = { ...DEFAULT_STATE.player, freeOperations: true, satelliteMonitoringLevel: 1, clientMissions: {} }
+  it('does not offer the deep space telescope mission below the telescope/affinity threshold', () => {
+    const player = { ...DEFAULT_STATE.player, freeOperations: true, transitSatelliteLevel: 1, clientMissions: {} }
     const catalog = buildRuntimeCatalog({
       catalog: STATIC_CATALOG,
       freeOperations: true,
@@ -92,14 +90,14 @@ describe('buildRuntimeCatalog', () => {
     const completedPlayer = {
       ...DEFAULT_STATE.player,
       freeOperations: true,
-      satelliteMonitoringLevel: 2,
+      transitSatelliteLevel: 2,
       clientMissions: { 'client-a': 10 },
       deepSpaceTelescopeMissionCompletedAt: Date.now(),
     }
     const placedPlayer = {
       ...DEFAULT_STATE.player,
       freeOperations: true,
-      satelliteMonitoringLevel: 2,
+      transitSatelliteLevel: 2,
       clientMissions: { 'client-a': 10 },
       placed: ['deep-space-telescope'],
     }
@@ -176,7 +174,6 @@ describe('buildRuntimeCatalog', () => {
       catalog: STATIC_CATALOG,
       discoveredTargets: { [discovered.id]: discovered },
       freeOperations: true,
-      satelliteMonitoringBuilt: true,
       transitSatelliteLaunchedAt: Date.now(),
       missionsDone: 4,
     })
@@ -196,7 +193,24 @@ describe('buildRuntimeCatalog', () => {
     })
   })
 
-  it('adds diplomacy premiums and a co-funded joint mission after chart sharing', () => {
+  it('keeps a self-directed launchpad run when the remote catalog omits owned mining rows', () => {
+    const remoteCatalog = {
+      ...STATIC_CATALOG,
+      missions: STATIC_CATALOG.missions.filter(mission =>
+        !(mission.tag === 'FREE OPS' && !mission.client && !mission.payload && !mission.construction),
+      ),
+    }
+    const catalog = buildRuntimeCatalog({
+      catalog: remoteCatalog,
+      freeOperations: true,
+      missionsDone: 4,
+      player: { ...DEFAULT_STATE.player, freeOperations: true },
+    })
+
+    expect(catalog.missions.some(mission => mission.id === 'freeops-self-directed-mining')).toBe(true)
+  })
+
+  it('does not add diplomacy premiums or affinity-gated joint missions', () => {
     const clientMission = STATIC_CATALOG.missions.find(mission =>
       !!mission.client
       && !!mission.targetId
@@ -225,18 +239,8 @@ describe('buildRuntimeCatalog', () => {
     })
 
     const improved = catalog.missions.find(mission => mission.id === clientMission.id)!
-    expect(improved.payout.francs).toBeGreaterThan(clientMission.payout.francs)
+    expect(improved.payout.francs).toBe(clientMission.payout.francs)
     const joint = catalog.missions.find(mission => mission.id === `joint-${clientId}-${clientMission.id}`)
-    expect(joint).toMatchObject({
-      client: clientId,
-      tag: 'JOINT',
-      jointProject: {
-        infrastructureOrbitBonus: 1,
-        playerCost: expect.any(Number),
-        clientCostShare: expect.any(Number),
-        payoutBonus: expect.any(Number),
-      },
-    })
-    expect(joint!.payout.francs).toBeGreaterThan(improved.payout.francs)
+    expect(joint).toBeUndefined()
   })
 })

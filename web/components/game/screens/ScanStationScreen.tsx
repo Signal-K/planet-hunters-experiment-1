@@ -11,6 +11,7 @@ import type { Player } from '@/lib/game-types'
 import { UI_ZONES } from '@/lib/ui-zones'
 import { formatCountdown } from '@/lib/format'
 import ScanStationCoach, { useScanStationCoach } from '@/components/game/ScanStationCoach'
+import ScenePanel from '@/components/game/ScenePanel'
 
 interface ScanStationScreenProps {
   player: Player
@@ -29,7 +30,7 @@ function revealedMinerals(target: Target, scanCount: number): string[] {
 const SURVEY_LANDMARKS = ['crater field', 'high-albedo ridge']
 
 export default function ScanStationScreen({ player, targets, onBack, onStartScan, onCollectScan }: ScanStationScreenProps) {
-  const [now, setNow] = useState(() => Date.now())
+  const [now, setNow] = useState(0)
   const coach = useScanStationCoach()
 
   const today = todayDateKey()
@@ -46,6 +47,7 @@ export default function ScanStationScreen({ player, targets, onBack, onStartScan
     : 0
 
   useEffect(() => {
+    setNow(Date.now())
     if (!activeScan || scanReady) return
     const id = window.setInterval(() => setNow(Date.now()), 1000)
     return () => window.clearInterval(id)
@@ -54,10 +56,10 @@ export default function ScanStationScreen({ player, targets, onBack, onStartScan
   const activeTarget = activeScan ? targets.find(t => t.id === activeScan.targetId) ?? null : null
 
   return (
-    <div className="game-screen" data-testid="scan-station-screen">
-      <TopBar eyebrow="EARTH BASE · SCANNING" title="Scanning Station" onBack={onBack} />
+    <div className="game-screen theme-deep" data-testid="scan-station-screen">
+      <TopBar eyebrow="BASE · SCANNING" title="Scanning Station" onBack={onBack} />
       {coach.visible && <ScanStationCoach onDismiss={coach.dismiss} />}
-      <div className="screen-scroll" data-ui-zone={UI_ZONES.screenContent}>
+      <ScenePanel ambient="survey" className="screen-scroll" data-ui-zone={UI_ZONES.screenContent}>
 
         <Panel accent="var(--ln-cyan)" style={{ padding: 12 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -66,12 +68,12 @@ export default function ScanStationScreen({ player, targets, onBack, onStartScan
               <div style={{ fontFamily: 'var(--ln-font-display)', fontWeight: 800, fontSize: 15, color: 'var(--ln-cyan)' }}>
                 Remote Target Scanner
               </div>
-              <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 12, color: '#a9b8ce', marginTop: 2 }}>
+              <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 12, color: 'var(--ln-text-dim)', marginTop: 2 }}>
                 Scan targets to map deposits and unlock landing clearance.
               </div>
             </div>
           </div>
-          <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 11, color: '#6b7fa3', marginTop: 8, lineHeight: 1.4 }}>
+          <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 11, color: 'var(--ln-text-muted)', marginTop: 8, lineHeight: 1.4 }}>
             Scouting from orbit before you launch: a fully mapped target reveals its mineral spread and grants landing clearance, so cargo runs don&apos;t go in blind.
           </div>
           <div style={{ marginTop: 10 }}>
@@ -91,10 +93,10 @@ export default function ScanStationScreen({ player, targets, onBack, onStartScan
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
               <div style={{ flex: 1 }}>
-                <div style={{ fontFamily: 'var(--ln-font-display)', fontWeight: 700, fontSize: 14, color: '#e8f0fe' }}>
+                <div style={{ fontFamily: 'var(--ln-font-display)', fontWeight: 700, fontSize: 14, color: 'var(--ln-text)' }}>
                   {activeTarget?.name ?? activeScan.targetId}
                 </div>
-                <div style={{ fontFamily: 'var(--ln-font-mono)', fontSize: 11, color: '#6b7fa3', marginTop: 2 }}>
+                <div style={{ fontFamily: 'var(--ln-font-mono)', fontSize: 11, color: 'var(--ln-text-muted)', marginTop: 2 }}>
                   {scanReady ? 'DATA READY FOR COLLECTION' : `ETA ${formatCountdown(scanTimeLeft)}`}
                 </div>
               </div>
@@ -117,7 +119,7 @@ export default function ScanStationScreen({ player, targets, onBack, onStartScan
           </Panel>
         )}
 
-        <div style={{ marginTop: 16, marginBottom: 6, fontFamily: 'var(--ln-font-display)', fontSize: 9, fontWeight: 700, letterSpacing: '0.22em', textTransform: 'uppercase', color: '#6b7fa3' }}>
+        <div style={{ marginTop: 16, marginBottom: 6, fontFamily: 'var(--ln-font-display)', fontSize: 9, fontWeight: 700, letterSpacing: '0.22em', textTransform: 'uppercase', color: 'var(--ln-text-muted)' }}>
           AVAILABLE TARGETS
         </div>
 
@@ -140,12 +142,12 @@ export default function ScanStationScreen({ player, targets, onBack, onStartScan
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-                    <span style={{ fontFamily: 'var(--ln-font-display)', fontWeight: 700, fontSize: 14, color: '#e8f0fe' }}>{target.name}</span>
+                    <span style={{ fontFamily: 'var(--ln-font-display)', fontWeight: 700, fontSize: 14, color: 'var(--ln-text)' }}>{target.name}</span>
                     <StatusPill kind={mapped ? 'ok' : count > 0 ? 'info' : 'mute'}>
                       {mapped ? 'MAPPED' : count > 0 ? `${count}/${SCANS_REQUIRED_TO_MAP} SCANS` : 'UNSCANNED'}
                     </StatusPill>
                   </div>
-                  <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 11, color: '#6b7fa3', marginTop: 2 }}>
+                  <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 11, color: 'var(--ln-text-muted)', marginTop: 2 }}>
                     {target.type.toUpperCase()} · ORBIT {target.orbit}
                   </div>
 
@@ -157,7 +159,7 @@ export default function ScanStationScreen({ player, targets, onBack, onStartScan
 
                   {revealed.length > 0 && (
                     <div style={{ marginTop: 8 }}>
-                      <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 9, fontWeight: 700, letterSpacing: '0.18em', color: '#6b7fa3', textTransform: 'uppercase', marginBottom: 4 }}>
+                        <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 9, fontWeight: 700, letterSpacing: '0.18em', color: 'var(--ln-text-muted)', textTransform: 'uppercase', marginBottom: 4 }}>
                         {mapped ? 'MAPPED DEPOSITS' : 'PARTIAL SURVEY'}
                       </div>
                       <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
@@ -183,8 +185,8 @@ export default function ScanStationScreen({ player, targets, onBack, onStartScan
 
                   {mapped && (
                     <div style={{ marginTop: 8 }}>
-                      <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 9, fontWeight: 700, letterSpacing: '0.18em', color: '#6b7fa3', textTransform: 'uppercase', marginBottom: 4 }}>LANDMARKS</div>
-                      <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 11, color: '#a9b8ce' }}>
+                      <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 9, fontWeight: 700, letterSpacing: '0.18em', color: 'var(--ln-text-muted)', textTransform: 'uppercase', marginBottom: 4 }}>LANDMARKS</div>
+                      <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 11, color: 'var(--ln-text-dim)' }}>
                         {SURVEY_LANDMARKS.map(l => l.toUpperCase()).join(' · ')}
                       </div>
                     </div>
@@ -208,7 +210,7 @@ export default function ScanStationScreen({ player, targets, onBack, onStartScan
             </Panel>
           )
         })}
-      </div>
+      </ScenePanel>
     </div>
   )
 }

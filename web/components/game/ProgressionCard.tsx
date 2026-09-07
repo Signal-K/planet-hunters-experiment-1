@@ -5,6 +5,7 @@ import type { Player, Screen } from '@/game-context'
 import { FREE_OPS_START_MISSIONS_DONE } from '@/lib/data/mission-generator'
 import { TUTORIAL_RAIL } from '@/lib/tutorial-layout'
 import IconBadge from '@/components/ui/IconBadge'
+import layoutStyles from '@/components/game/hub/HubLayout.module.css'
 
 type CardIconBadgeTone = 'cyan' | 'amber' | 'ok' | 'crit' | 'mute'
 
@@ -26,9 +27,6 @@ function LaunchpadGlyph() {
 function SkillGlyph() {
   return <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M12 2l2.5 7.5H22l-6 4.6 2.3 7.4L12 17l-6.3 4.5 2.3-7.4-6-4.6h7.5z" /></svg>
 }
-function SmsGlyph() {
-  return <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M4 15l8-8 8 8M8 11v9M16 11v9" /></svg>
-}
 function TelescopeGlyph() {
   return <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" /></svg>
 }
@@ -38,8 +36,9 @@ function ContractGlyph() {
 
 interface ProgressionCardProps {
   player: Player
-  onGoBuilding: (b: string) => void
-  onNav: (s: Screen) => void
+  // Cards always open a routed scene. They must not call a Hub building
+  // focus handler, even when the destination is the Launchpad.
+  onOpenScene: (s: Screen) => void
   top?: number
 }
 
@@ -61,7 +60,7 @@ function CardButton({ accent, icon, eyebrow, title, cta, onClick, testId }: {
         background: 'var(--hub-panel, #080d18)',
         border: '1.5px solid var(--hub-outline, rgba(255,255,255,0.55))',
         borderRadius: 12, padding: 10,
-        boxShadow: '0 20px 44px rgba(0,0,0,0.5)',
+        boxShadow: '0 12px 28px rgba(0,0,0,0.4)',
         display: 'flex', alignItems: 'center', gap: 10,
       }}
     >
@@ -72,11 +71,11 @@ function CardButton({ accent, icon, eyebrow, title, cta, onClick, testId }: {
         size={34}
         tone={toneForAccent(accent)}
         active
-        style={{ color: accent, borderColor: accent, borderWidth: 1.5, background: 'rgba(10,10,12,0.6)', boxShadow: 'none' }}
+        style={{ color: accent, borderColor: accent, borderWidth: 1.5, background: 'rgba(234,241,248,0.06)', boxShadow: 'none' }}
       />
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 9, fontWeight: 700, letterSpacing: '0.14em', color: accent, textTransform: 'uppercase' }}>{eyebrow}</div>
-        <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 13, fontWeight: 800, color: '#fff', lineHeight: 1.3 }}>{title}</div>
+        <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 13, fontWeight: 800, color: 'rgba(234,241,248,0.94)', lineHeight: 1.3 }}>{title}</div>
       </div>
       <span style={{
         minWidth: 0, flexShrink: 1,
@@ -93,7 +92,7 @@ function CardButton({ accent, icon, eyebrow, title, cta, onClick, testId }: {
   )
 }
 
-export default function ProgressionCard({ player, onGoBuilding, onNav, top = 132 }: ProgressionCardProps) {
+export default function ProgressionCard({ player, onOpenScene, top = 132 }: ProgressionCardProps) {
   const cards: React.ReactElement[] = []
 
   if (player.activeMission) {
@@ -106,7 +105,7 @@ export default function ProgressionCard({ player, onGoBuilding, onNav, top = 132
         eyebrow="Mission In Progress"
         title={player.activeMission.label}
         cta="Resume Mission"
-        onClick={() => onNav(player.missionPhase ?? 'transit')}
+        onClick={() => onOpenScene(player.missionPhase ?? 'transit')}
       />
     )
   } else if (player.pendingLaunch) {
@@ -119,7 +118,7 @@ export default function ProgressionCard({ player, onGoBuilding, onNav, top = 132
         eyebrow="Launch Ready on Pad"
         title="Vessel fuelled & assigned"
         cta="Open Launchpad"
-        onClick={() => onGoBuilding('launchpad')}
+        onClick={() => onOpenScene('launchpad')}
       />
     )
   }
@@ -137,24 +136,11 @@ export default function ProgressionCard({ player, onGoBuilding, onNav, top = 132
           eyebrow="Skill Points"
           title={`${player.skillPoints ?? 0} SP available`}
           cta="Open Skill Tree"
-          onClick={() => onNav('skills')}
+          onClick={() => onOpenScene('skills')}
         />
       )
     }
-    if (!inOnboarding && !player.satelliteMonitoringBuilt) {
-      cards.push(
-        <CardButton
-          key="sms"
-          testId="progression-card-sms"
-          accent="var(--hub-cyan)"
-          icon={<SmsGlyph />}
-          eyebrow="New Facility"
-          title="Build a Satellite Monitoring Station"
-          cta="Build"
-          onClick={() => onGoBuilding('build')}
-        />
-      )
-    } else if (!inOnboarding && player.satelliteMonitoringBuilt && !player.transitSatelliteLaunchedAt) {
+    if (!inOnboarding && !player.transitSatelliteLaunchedAt) {
       cards.push(
         <CardButton
           key="telescope"
@@ -164,7 +150,7 @@ export default function ProgressionCard({ player, onGoBuilding, onNav, top = 132
           eyebrow="Your Program"
           title="Launch a transit telescope"
           cta="Open Launchpad"
-          onClick={() => onNav('launchpad')}
+          onClick={() => onOpenScene('launchpad')}
         />
       )
     } else if (!inOnboarding && player.transitSatelliteLaunchedAt) {
@@ -177,23 +163,27 @@ export default function ProgressionCard({ player, onGoBuilding, onNav, top = 132
           eyebrow="Daily Downlink"
           title="Classify today's transit candidates"
           cta="Review"
-          onClick={() => onNav('galaxy')}
+          onClick={() => onOpenScene('galaxy')}
         />
       )
     }
-    const justFinishedOnboarding = player.missionsDone === FREE_OPS_START_MISSIONS_DONE
-    cards.push(
-      <CardButton
-        key="next-mission"
-        testId="progression-card-next-mission"
-        accent="var(--hub-mint)"
-        icon={<ContractGlyph />}
-        eyebrow={justFinishedOnboarding ? 'Onboarding Complete' : 'Next Mission'}
-        title={justFinishedOnboarding ? 'Choose your first free contract' : 'New contract available'}
-        cta="Browse Contracts"
-        onClick={() => onNav('missions')}
-      />
-    )
+    // Once free operations is unlocked, the persistent Jobs rail is the
+    // single mission-board entry point. Repeating Browse Contracts here made
+    // the Hub present the same action twice beside the clickable Launchpad.
+    if (player.missionsDone === 0) {
+      cards.push(
+        <CardButton
+          key="next-mission"
+          testId="progression-card-next-mission"
+          accent="var(--hub-mint)"
+          icon={<ContractGlyph />}
+          eyebrow="Next Mission"
+          title="Choose a client contract"
+          cta="Browse Contracts"
+          onClick={() => onOpenScene('missions')}
+        />
+      )
+    }
   }
 
   if (cards.length === 0) return null
@@ -205,9 +195,9 @@ export default function ProgressionCard({ player, onGoBuilding, onNav, top = 132
     // Hub root is `overflow: hidden`, so without an internal scroll
     // affordance here, cards below the fold were silently unreachable
     // rather than just visually tight (STS-612).
-    <div className="hub-progression-stack" style={{
-      position: 'absolute', right: 14, top, bottom: TUTORIAL_RAIL.BOTTOM_PILL_Y, zIndex: 8,
-      width: 'calc(100% - 28px)', maxWidth: 280, pointerEvents: 'auto',
+    <div className={`${layoutStyles.progressionStack} hub-progression-stack`} style={{
+      position: 'absolute', top, bottom: TUTORIAL_RAIL.BOTTOM_PILL_Y, zIndex: 8,
+      pointerEvents: 'auto',
       display: 'flex', flexDirection: 'column', gap: 6,
       overflowY: 'auto',
     }}>

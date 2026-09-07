@@ -1,0 +1,34 @@
+version: 2
+static:
+  cleanUrls: true
+  include: 'public/**'
+  exclude:
+    - 'public/**/*.map'
+    - 'public/**/.next'
+
+discovery:
+  network-idle-timeout: 750
+
+percy:
+  version: 2
+  staticSnapshots:
+    cleanUrls: true
+
+# Snapshot settings
+snapshots:
+  widths:
+    - 390   # mobile portrait
+    - 768   # tablet
+    - 1440  # desktop
+  minHeight: 1024
+  percyCSS: |
+    /* Hide dynamic/time-sensitive content from snapshots */
+    [data-testid="mining-timer"],
+    [data-testid="transit-eta"],
+    [data-testid="current-time"] {
+      visibility: hidden;
+    }
+
+# Project settings
+project:
+  staticSnapshots: true

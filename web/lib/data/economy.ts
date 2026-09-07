@@ -154,12 +154,17 @@ export const STARTING_FRANCS = 9_000_000
 
 // ── Credit ─────────────────────────────────────────────────────────────────
 
+/** The public treasury issues one transparent, no-interest loan per player;
+ *  see TreasurySystem. There is deliberately no interest rate here — the
+ *  private interest-bearing loan this replaced is retired. */
 export const LOAN_PRINCIPAL = 5_000_000
-export const LOAN_INTEREST_RATE = 0.08
-export const LOAN_DEBT_ON_ACCEPT = LOAN_PRINCIPAL * (1 + LOAN_INTEREST_RATE)
 
 /** Balance below which the game offers the emergency loan. */
 export const BANKRUPTCY_THRESHOLD = 2_000_000
+
+/** Provisional seed balance for the treasury until site-deed revenue is the
+ *  real funding source (KES-287) — enough to cover a handful of loans. */
+export const TREASURY_STARTING_BALANCE = LOAN_PRINCIPAL * 4
 
 // ── Daily rewards ──────────────────────────────────────────────────────────
 
@@ -168,6 +173,24 @@ export const DAILY_QUEST_REWARDS = {
   medium: 1_500_000,
   large: 2_000_000,
 } as const
+
+// ── Earth-side ore storage (silos) ───────────────────────────────────────────
+// A built Mineral Vault gives the player real Earth-side ore storage, drawn as
+// a filling silo. One silo holds this many ore units; additional silos (a
+// follow-up) add capacity in multiples of this. Sized against typical hauls
+// (single- to low-double-digit units per run) so one silo fills over several
+// self-directed runs and "keep vs sell" becomes a genuine decision rather than
+// a formality. This is a soft cap: it governs the free-mission "store" path and
+// the silo fill visual, and never retroactively force-sells ore already held.
+export const MINERAL_SILO_CAPACITY = 120
+
+// The first silo is deliberately cheap and visible on the Earth Base surface;
+// underground rooms are the durable expansion path.
+export const SURFACE_SILO_CAPACITY = 40
+export const SURFACE_SILO_PRICE = 2_000_000
+export const DEEP_MINERAL_SILO_CAPACITY = 300
+export const DEEP_MINERAL_SILO_PRICE = 8_000_000
+export const REMOTE_MINERAL_SILO_CAPACITY = 180
 
 // ── Market ─────────────────────────────────────────────────────────────────
 

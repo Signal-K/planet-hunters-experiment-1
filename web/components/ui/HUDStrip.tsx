@@ -7,10 +7,10 @@ import { formatCurrency } from '@/lib/format'
 
 interface HUDStripProps {
   player: Player
-  /** Shows the mineral-stash chip row below the francs/jobs chips when the player has cargo. Off by default since not every HUD placement wants it. */
+  /** Shows the mineral-stash chip row below the Francs/Subsurface chips when the player has cargo. Off by default since not every HUD placement wants it. */
   showStash?: boolean
-  /** Second direct entry to the Mission Board, alongside the launchpad. Omit to keep the Jobs chip a plain readout. */
-  onJobsClick?: () => void
+  /** Small in-world route to the subsurface view, kept beside the Francs readout on Earth Base. */
+  onSubsurfaceClick?: () => void
 }
 
 function FrancGlyph() {
@@ -18,9 +18,9 @@ function FrancGlyph() {
     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7"><circle cx="12" cy="12" r="9" /><path d="M9 8h5M9 12h4M10 8v9" /></svg>
   )
 }
-function JobsGlyph() {
+function SubsurfaceGlyph() {
   return (
-    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7"><rect x="4" y="4" width="16" height="16" rx="1.5" /><path d="M4 10h16M10 4v16" /></svg>
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7"><path d="M12 4v16M5 13l7 7 7-7" /></svg>
   )
 }
 function MineralGlyph({ shape, color }: { shape?: string; color: string }) {
@@ -35,31 +35,32 @@ function MineralGlyph({ shape, color }: { shape?: string; color: string }) {
 }
 
 /**
- * Resource readout — reworked 2026-07-26 to the `landnam-earth-base-v2.html`
- * chip: black tile, 1.5px white outline, bordered icon tile in the accent,
- * white Turret Road numerals.
- *
- * The old amber-on-amber francs pill is gone deliberately. Amber is reserved
- * for genuine payout emphasis, and the Earth Base mockup carries no amber at
- * all — the chrome reads cyan/mint against the blue sky instead.
+ * Resource readout — a persistent left-edge stacked rail (KES-219/220),
+ * recolored dark 2026-08-21 (KES-226) when the light "blueprint" attempt
+ * was scrapped. Each stat is its own compact card, chalky-green-bordered on
+ * the interactive (clickable) card — the tapnine.com "Black Hole"
+ * reference's fixed vertical stat stack, its original hot-pink highlight
+ * swapped for a chalkier accent (2026-08-23).
  */
-function Chip({ glyph, children, accent = 'var(--hub-cyan)', onClick, testId }: { glyph: React.ReactNode; children: React.ReactNode; accent?: string; onClick?: () => void; testId?: string }) {
+function RailCard({ glyph, children, accent = 'var(--hub-cyan)', onClick, testId }: { glyph: React.ReactNode; children: React.ReactNode; accent?: string; onClick?: () => void; testId?: string }) {
   const Tag = onClick ? 'button' : 'div'
   return (
     <Tag
       data-testid={testId}
       onClick={onClick}
       style={{
-        display: 'flex', alignItems: 'center', gap: 7,
-        background: 'rgba(10,10,12,0.72)',
-        border: '1.5px solid var(--hub-outline)',
-        borderRadius: 7, padding: '6px 10px 6px 6px',
+        display: 'flex', alignItems: 'center', gap: 8, width: '100%', boxSizing: 'border-box',
+        background: 'var(--hub-panel)',
+        border: `1.5px solid ${onClick ? 'var(--hub-chalk)' : 'var(--hub-outline)'}`,
+        borderRadius: 9, padding: '7px 10px 7px 7px',
         cursor: onClick ? 'pointer' : undefined,
+        textAlign: 'left',
+        boxShadow: '0 2px 8px rgba(0,0,0,0.35)',
       }}
     >
       <span style={{
-        width: 20, height: 20, borderRadius: 5, display: 'grid', placeItems: 'center',
-        background: 'rgba(10,10,12,0.6)', border: `1.5px solid ${accent}`, color: accent,
+        width: 22, height: 22, borderRadius: 6, display: 'grid', placeItems: 'center', flexShrink: 0,
+        background: 'var(--hub-panel-deep)', border: `1.5px solid ${accent}`, color: accent,
       }}>
         {glyph}
       </span>
@@ -68,39 +69,39 @@ function Chip({ glyph, children, accent = 'var(--hub-cyan)', onClick, testId }: 
   )
 }
 
-export default function HUDStrip({ player, showStash = false, onJobsClick }: HUDStripProps) {
+export default function HUDStrip({ player, showStash = false, onSubsurfaceClick }: HUDStripProps) {
   return (
-    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, alignItems: 'center', justifyContent: 'flex-end' }}>
-      <Chip glyph={<FrancGlyph />}>
-        <span style={{ fontFamily: 'var(--ln-font-mono)', fontWeight: 700, fontSize: 12, color: '#fff' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 6, alignItems: 'flex-start', width: 132 }}>
+      <RailCard glyph={<FrancGlyph />}>
+        <span style={{ fontFamily: 'var(--ln-font-mono)', fontWeight: 700, fontSize: 12, color: '#eaf1f8' }}>
           {formatCurrency(player.francs, { compact: true })}
         </span>
-      </Chip>
-      <Chip glyph={<JobsGlyph />} onClick={onJobsClick} testId="hud-jobs-chip">
-        <span style={{ fontFamily: 'var(--ln-font-display)', fontWeight: 800, fontSize: 9, letterSpacing: '0.14em', color: '#fff', textTransform: 'uppercase' }}>
-          {player.missionCount} Jobs
+      </RailCard>
+      <RailCard glyph={<SubsurfaceGlyph />} onClick={onSubsurfaceClick} testId="hud-subsurface-chip">
+        <span style={{ fontFamily: 'var(--ln-font-display)', fontWeight: 800, fontSize: 9, letterSpacing: '0.14em', color: '#eaf1f8', textTransform: 'uppercase' }}>
+          Subsurface
         </span>
-      </Chip>
+      </RailCard>
       {showStash && player.stash && Object.keys(player.stash).length > 0 && (
-        <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'flex-end', gap: 5, maxWidth: 220 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 5, width: '100%' }}>
           {Object.entries(player.stash).map(([kind, qty]) => {
             const meta = MINERAL_META[kind]
             if (!meta || !qty) return null
             return (
               <div key={kind} style={{
-                display: 'flex', alignItems: 'center', gap: 5,
-                padding: '3px 8px 3px 4px',
-                background: 'rgba(10,10,12,0.72)',
-                border: '1.5px solid rgba(255,255,255,0.35)',
-                borderRadius: 7,
+                display: 'flex', alignItems: 'center', gap: 6, width: '100%', boxSizing: 'border-box',
+                padding: '4px 8px 4px 5px',
+                background: 'var(--hub-panel)',
+                border: '1.5px solid var(--hub-outline)',
+                borderRadius: 8,
               }}>
                 <span style={{
-                  width: 16, height: 16, borderRadius: 4, display: 'grid', placeItems: 'center',
-                  background: 'rgba(10,10,12,0.6)', border: `1.5px solid ${meta.color}`, color: meta.color,
+                  width: 17, height: 17, borderRadius: 5, display: 'grid', placeItems: 'center', flexShrink: 0,
+                  background: 'var(--hub-panel-deep)', border: `1.5px solid ${meta.color}`, color: meta.color,
                 }}>
                   <MineralGlyph shape={meta.shape} color={meta.color} />
                 </span>
-                <span style={{ fontFamily: 'var(--ln-font-mono)', fontWeight: 700, fontSize: 10, color: '#fff' }}>
+                <span style={{ fontFamily: 'var(--ln-font-mono)', fontWeight: 700, fontSize: 10, color: '#eaf1f8' }}>
                   {qty}
                 </span>
               </div>

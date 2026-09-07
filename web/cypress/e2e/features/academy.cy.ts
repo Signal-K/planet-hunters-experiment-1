@@ -51,7 +51,7 @@ function visitWithState(path: string, screen: GameState['screen'], playerOverrid
   cy.visit(path, {
     onBeforeLoad(win) {
       win.localStorage.setItem(STORAGE_KEY, JSON.stringify(full))
-      win.localStorage.setItem('landnam-guest-credentials', JSON.stringify({ email: 'e2e@landnam.guest', password: 'e2e-guest-test' }))
+      win.localStorage.setItem('landnam-account-credentials', JSON.stringify({ email: 'e2e@example.com', password: 'e2e-guest-test' }))
       // Player already crossed the M1-M3 -> Free Ops threshold in this
       // fixture — acknowledge the one-time "Program Online" interstitial
       // so it doesn't cover the screen under test (see TutorialCompleteSheet.tsx).
@@ -65,21 +65,22 @@ function visitHubWithState(playerOverrides: Partial<GameState['player']>) {
 }
 
 describe('Astronaut Academy', () => {
-  // Like the transit telescope, this is a player-owned "Your Program"
-  // operation reached from the Launchpad screen (LaunchpadScreen.tsx's
-  // "OPS N" button, gated by ACADEMY_INTRO_MISSION_ID visibility), not a
-  // client Mission Board card. That button carries no title text of its
-  // own — it just routes to the 'academy' screen, where the real mission
-  // brief ("Train the First Astronaut") lives — so the on-ramp is only
-  // meaningfully testable end-to-end, by actually clicking it.
-  it('the Launchpad OPS button routes to the Train the First Astronaut mission once affinity level 2 is reached with two clients', () => {
+  // Like the transit telescope, this is a player-owned operation, but the
+  // Academy intro mission is tagged 'STORY' — MissionBoardScreen.tsx surfaces
+  // STORY missions on the Mission Board (isStoryMission) rather than in one
+  // of the Launchpad mission-menu's three operation briefs (instrument /
+  // mining / build), so the on-ramp is Launchpad -> "AVAILABLE CONTRACTS" ->
+  // the story mission's card, not a Launchpad-native button.
+  it('the Mission Board routes to the Train the First Astronaut mission once affinity level 2 is reached with two clients', () => {
     visitWithState('/game/launchpad', 'launchpad', {
       clientMissions: { 'helios-propulsion-depot': 10, 'arcturus-battery-systems': 10 },
-      satelliteMonitoringBuilt: true,
       transitSatelliteLaunchedAt: Date.now() - 1000,
     })
-    cy.get('[data-testid="launchpad-guide-close"]', { timeout: 10000 }).click()
-    cy.get('[data-testid="launchpad-program-operation-btn"]', { timeout: 10000 }).click()
+    cy.get('[data-testid="launchpad-status-card"]', { timeout: 10000 }).click()
+    cy.get('[data-testid="launchpad-new-mission-contracts-btn"]', { timeout: 10000 }).click()
+    cy.contains('Mission Board', { timeout: 10000 }).should('be.visible')
+    cy.get('[data-testid="mission-card-story-astronaut-academy"]', { timeout: 10000 }).click()
+    cy.get('[data-testid="mission-detail-cta-story-astronaut-academy"]', { timeout: 10000 }).click()
     cy.get('[data-testid="academy-screen"]', { timeout: 10000 }).should('be.visible')
     cy.contains('TRAIN THE FIRST ASTRONAUT').should('be.visible')
     cy.contains('Establish the Academy').should('be.visible')
@@ -96,7 +97,7 @@ describe('Astronaut Academy', () => {
           player: basePlayer({ clientMissions: { 'helios-propulsion-depot': 10 } }),
         } as GameState
         win.localStorage.setItem(STORAGE_KEY, JSON.stringify(full))
-        win.localStorage.setItem('landnam-guest-credentials', JSON.stringify({ email: 'e2e@landnam.guest', password: 'e2e-guest-test' }))
+        win.localStorage.setItem('landnam-account-credentials', JSON.stringify({ email: 'e2e@example.com', password: 'e2e-guest-test' }))
       },
     })
     cy.get('[data-testid="academy-screen"]', { timeout: 10000 }).should('be.visible')
@@ -119,7 +120,7 @@ describe('Astronaut Academy', () => {
           }),
         } as GameState
         win.localStorage.setItem(STORAGE_KEY, JSON.stringify(full))
-        win.localStorage.setItem('landnam-guest-credentials', JSON.stringify({ email: 'e2e@landnam.guest', password: 'e2e-guest-test' }))
+        win.localStorage.setItem('landnam-account-credentials', JSON.stringify({ email: 'e2e@example.com', password: 'e2e-guest-test' }))
       },
     })
     cy.get('[data-testid="academy-screen"]', { timeout: 10000 }).should('be.visible')
@@ -147,7 +148,7 @@ describe('Astronaut Academy', () => {
           }),
         } as GameState
         win.localStorage.setItem(STORAGE_KEY, JSON.stringify(full))
-        win.localStorage.setItem('landnam-guest-credentials', JSON.stringify({ email: 'e2e@landnam.guest', password: 'e2e-guest-test' }))
+        win.localStorage.setItem('landnam-account-credentials', JSON.stringify({ email: 'e2e@example.com', password: 'e2e-guest-test' }))
         win.localStorage.removeItem(COACH_KEY)
       },
     })
@@ -199,7 +200,7 @@ describe('Astronaut Academy', () => {
           }),
         } as GameState
         win.localStorage.setItem(STORAGE_KEY, JSON.stringify(full))
-        win.localStorage.setItem('landnam-guest-credentials', JSON.stringify({ email: 'e2e@landnam.guest', password: 'e2e-guest-test' }))
+        win.localStorage.setItem('landnam-account-credentials', JSON.stringify({ email: 'e2e@example.com', password: 'e2e-guest-test' }))
         win.localStorage.setItem(COACH_KEY, '1')
       },
     })

@@ -4,6 +4,7 @@ import TopBar from '@/components/ui/TopBar'
 import Panel from '@/components/ui/Panel'
 import { PrimaryBtn } from '@/components/ui/Button'
 import FreeOpsBuildCoach, { useFreeOpsBuildCoach } from '@/components/game/FreeOpsBuildCoach'
+import ScenePanel from '@/components/game/ScenePanel'
 
 interface FreeOpsBuildScreenProps {
   onBack: () => void
@@ -15,10 +16,10 @@ export default function FreeOpsBuildScreen({ onBack, onMissions, onInfrastructur
   const coach = useFreeOpsBuildCoach()
 
   return (
-    <div className="game-screen" data-testid="free-ops-build-screen" style={{ display: 'flex', flexDirection: 'column' }}>
+    <div className="game-screen theme-deep" data-testid="free-ops-build-screen" style={{ display: 'flex', flexDirection: 'column' }}>
       <TopBar eyebrow="FREE OPS · LAUNCH SETUP" title="Build an Operation" onBack={onBack} />
       {coach.visible && <FreeOpsBuildCoach onDismiss={coach.dismiss} />}
-      <div className="screen-scroll" style={{ display: 'flex', flexDirection: 'column', gap: 12, padding: 14 }}>
+      <ScenePanel ambient="utility" className="screen-scroll" style={{ display: 'flex', flexDirection: 'column', gap: 12, padding: 14 }}>
         <Panel accent="var(--ln-cyan)" style={{ padding: 14 }}>
           <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 17, fontWeight: 800, color: 'var(--ln-text)' }}>
             Start with an objective
@@ -46,7 +47,7 @@ export default function FreeOpsBuildScreen({ onBack, onMissions, onInfrastructur
           </div>
           <PrimaryBtn kind="amber" onClick={onMissions}>Browse Client Missions</PrimaryBtn>
         </Panel>
-      </div>
+      </ScenePanel>
     </div>
   )
 }

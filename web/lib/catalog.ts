@@ -1,6 +1,6 @@
 import { pbLandnam } from './pb-landnam'
 import type { Target, Mission, Part, MineralMeta, Client, StructureBlueprint } from './data'
-import { TARGETS, MISSIONS, AUTHORED_MISSIONS, M3_SEQUENCE, PARTS, MINERAL_META, CLIENTS, CLIENT_SLOTS, STRUCTURES, toClient as slotToClient, generateFreeOpsMissions, generateMissions, generateSelfDirectedMiningPool } from './data'
+import { TARGETS, MISSIONS, AUTHORED_MISSIONS, M3_SEQUENCE, PARTS, MINERAL_META, CLIENTS, CLIENT_SLOTS, STRUCTURES, toClient as slotToClient, generateFreeOpsMissions, generateMissions, generateSelfDirectedMiningPool, isOwnProgramMission } from './data'
 import { normalizeMissionPayout } from './data/payouts'
 
 export interface Catalog {
@@ -19,6 +19,18 @@ export const STATIC_CATALOG: Catalog = {
   minerals: MINERAL_META,
   clients: CLIENTS,
   structures: STRUCTURES,
+}
+
+/**
+ * The Landnam spoke can lag the frontend catalog during a rollout. Keep the
+ * authored client-side blueprints available and let PocketBase override a
+ * matching row, so a missing seed row cannot turn a valid placement into a
+ * silent no-op (notably the Surface Silo).
+ */
+export function mergeStructureCatalog(remote: StructureBlueprint[]): StructureBlueprint[] {
+  const merged = new Map(STRUCTURES.map(structure => [structure.id, structure]))
+  remote.forEach(structure => merged.set(structure.id, structure))
+  return Array.from(merged.values())
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -227,9 +239,19 @@ export async function fetchCatalog(): Promise<Catalog> {
   const generatedToMerge = generatedMissions.filter(m => !pbIds.has(m.id))
   const freeOpsIds = new Set(freeOpsMissions.map(m => m.id))
   const selfDirectedIds = new Set(selfDirectedPoolMissions.map(m => m.id))
+  // PocketBase's missions_catalog schema requires a non-empty client_slug on
+  // every record (main.go), so it can only ever seed client-contracted
+  // missions — own-program missions (build refinery/scan-station, academy
+  // intro) only exist in the static fallback list. Once PocketBase seeds
+  // even one real mission, `baseMissions` above drops that whole static list,
+  // silently making every own-program operation unreachable in any real
+  // deployment. Always fold them back in, deduped against everything else.
+  const ownProgramMissions = generatedFallbackMissions.filter(isOwnProgramMission)
+  const ownProgramToMerge = ownProgramMissions.filter(m => !pbIds.has(m.id) && !freeOpsIds.has(m.id) && !selfDirectedIds.has(m.id))
   const allMissions = [
     ...baseMissions.filter(m => !freeOpsIds.has(m.id) && !selfDirectedIds.has(m.id)),
     ...generatedToMerge.filter(m => !freeOpsIds.has(m.id) && !selfDirectedIds.has(m.id)),
+    ...ownProgramToMerge,
     ...freeOpsMissions,
     ...selfDirectedPoolMissions,
   ]
@@ -253,6 +275,6 @@ export async function fetchCatalog(): Promise<Catalog> {
     // Merge static CLIENTS first so clients not yet seeded in PocketBase
     // (e.g. newly added M3 authored-mission clients) still resolve.
     clients: { ...CLIENTS, ...catalogClients },
-    structures: structures.length > 0 ? structures.map(toStructure) : STRUCTURES,
+    structures: mergeStructureCatalog(structures.map(toStructure)),
   }
 }

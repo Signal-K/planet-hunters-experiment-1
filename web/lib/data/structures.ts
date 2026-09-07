@@ -1,7 +1,7 @@
 // Landnam game data — structures, refinery recipes, market templates
 
 import type { StructureBlueprint, RefineryRecipe, MarketTemplate } from './types'
-import { MINERAL_VALUE, REFINING_COST_RATE, REFINING_VALUE_MULTIPLIER, STRUCTURE_PRICES } from './economy'
+import { MINERAL_VALUE, REFINING_COST_RATE, REFINING_VALUE_MULTIPLIER, STRUCTURE_PRICES, SURFACE_SILO_PRICE } from './economy'
 import { MINERAL_RARITY } from './minerals'
 import { CLIENT_AFFINITY_MISSION_THRESHOLD } from './clients'
 import { FEATURE_FLAGS } from '@/lib/featureFlags'
@@ -35,14 +35,26 @@ export const REFINERY_RECIPES: RefineryRecipe[] = [
 export const STRUCTURES: StructureBlueprint[] = [
   { id: 'launchpad', name: 'Launchpad', kind: 'launchpad', cost: 0, unlocksAt: 'always', unlockTrigger: 'always', description: 'Rocket assembly and launch operations.' },
   {
+    id: 'surface-silo',
+    name: 'Surface Silo',
+    kind: 'surface-silo',
+    cost: SURFACE_SILO_PRICE,
+    unlocksAt: 'Free Operations',
+    unlockTrigger: 'free-operations',
+    description: 'Small Earth-side mineral storage. Hold ore for a better market window or for refinery input.',
+  },
+  {
     id: 'refinery',
     name: 'Refinery',
     kind: 'refinery',
     cost: STRUCTURE_PRICES.refinery,
     costMaterials: { aluminium: 20, copper: 10 },
-    unlocksAt: 'First client mission requiring refined minerals',
-    unlockTrigger: 'client-mission-trigger',
-    description: 'Refines raw minerals into higher-value client-grade materials.',
+    unlocksAt: 'Free Operations',
+    unlockTrigger: 'free-operations',
+    // KES-283: Level 1 only — processes one shipment of raw ore into refined
+    // goods per day (a queue, not instant conversion; see RefineryScreen /
+    // REFINERY_RECIPES). No multi-level tree or advanced recipes yet.
+    description: 'Level 1 ore processing. Refines one shipment of raw minerals into higher-value goods per day.',
   },
   {
     id: 'scan-station',
@@ -54,21 +66,12 @@ export const STRUCTURES: StructureBlueprint[] = [
     description: 'Scans remote targets to map mineral deposits, craters, and landmarks. Up to 5 scans per day, 10 minutes each.',
   },
   {
-    id: 'satellite-monitoring-station',
-    name: 'Satellite Monitoring Station',
-    kind: 'satellite-monitoring-station',
-    cost: 0,
-    unlocksAt: 'Free Operations',
-    unlockTrigger: 'always',
-    description: 'Monitors player-launched transit telescopes and downlinks daily TESS-style candidates for classification.',
-  },
-  {
     id: 'deep-space-telescope',
     name: 'Deep Space Telescope',
     kind: 'deep-space-telescope',
     cost: STRUCTURE_PRICES.deepSpaceTelescope,
     costMaterials: { aluminium: 30, copper: 16, silicon: 10 },
-    unlocksAt: 'Satellite Monitoring Station level 2 and affinity level 2 with a client',
+    unlocksAt: 'Transit telescope level 2 and affinity level 2 with a client',
     unlockTrigger: 'deep-space-telescope-unlock',
     description: 'Independent long-baseline instrument (STS-622) that downlinks unconfirmed NEO candidates from the Minor Planet Center for asteroid-discovery classification, separate from the transit satellite.',
   },
@@ -80,7 +83,7 @@ export const STRUCTURES: StructureBlueprint[] = [
     costMaterials: { aluminium: 24, silicon: 12, copper: 8 },
     unlocksAt: 'Research after reaching affinity level 2 with two clients',
     unlockTrigger: 'academy-research',
-    description: 'Trains named astronauts, manages the roster, and coordinates Earth Base staffing.',
+    description: 'Trains named astronauts, manages the roster, and coordinates Base staffing.',
   },
   { id: 'garage', name: 'Vehicle Garage', kind: 'garage', cost: STRUCTURE_PRICES.garage, unlocksAt: 'Future sprint', unlockTrigger: 'manual', description: 'Surface rover maintenance and upgrades.' },
 ]
@@ -100,14 +103,15 @@ export const SCANS_REQUIRED_TO_MAP = 3
 // since this gates a second instrument rather than a new profession. Exact
 // numbers are a build-time call per the ticket ("decide during build rather
 // than re-asked as a blocking question"), not a re-litigated design decision.
-export function deepSpaceTelescopeUnlocked(opts: { satelliteMonitoringLevel?: number; clientMissions?: Record<string, number> } = {}): boolean {
-  if ((opts.satelliteMonitoringLevel ?? 1) < 2) return false
+export function deepSpaceTelescopeUnlocked(opts: { transitSatelliteLevel?: number; clientMissions?: Record<string, number> } = {}): boolean {
+  if ((opts.transitSatelliteLevel ?? 1) < 2) return false
   return Object.values(opts.clientMissions ?? {}).some(
     jobs => 1 + Math.floor(Math.max(0, jobs) / CLIENT_AFFINITY_MISSION_THRESHOLD) >= 2
   )
 }
 
-export function structureUnlocked(structure: StructureBlueprint, opts: { refineryUnlocked?: boolean; academyResearched?: boolean; placed?: string[]; freeOperations?: boolean; satelliteMonitoringLevel?: number; clientMissions?: Record<string, number>; deepSpaceTelescopeMissionCompletedAt?: number | null; scanStationMissionCompletedAt?: number | null } = {}): boolean {
+export function structureUnlocked(structure: StructureBlueprint, opts: { refineryUnlocked?: boolean; academyResearched?: boolean; placed?: string[]; freeOperations?: boolean; transitSatelliteLevel?: number; clientMissions?: Record<string, number>; deepSpaceTelescopeMissionCompletedAt?: number | null; scanStationMissionCompletedAt?: number | null } = {}): boolean {
+  if (structure.id === 'surface-silo') return !!opts.freeOperations || !!opts.placed?.includes('surface-silo')
   // KES-132: the feature flag now only decides when the
   // story-scan-station-commission mission (see runtimeCatalog.ts) is
   // offered as the on-ramp — completing that mission is what actually opens
@@ -115,7 +119,6 @@ export function structureUnlocked(structure: StructureBlueprint, opts: { refiner
   if (structure.id === 'scan-station') {
     return (FEATURE_FLAGS.scanStation && !!opts.freeOperations && !!opts.scanStationMissionCompletedAt) || !!opts.placed?.includes('scan-station')
   }
-  if (structure.id === 'satellite-monitoring-station') return !!opts.freeOperations
   if (structure.id === 'astronaut-academy') return !!opts.academyResearched || !!opts.placed?.includes('astronaut-academy')
   // KES-128: the numeric threshold (deepSpaceTelescopeUnlocked) now only
   // decides when the story-deep-space-telescope-survey mission (see
@@ -126,7 +129,12 @@ export function structureUnlocked(structure: StructureBlueprint, opts: { refiner
     return (deepSpaceTelescopeUnlocked(opts) && !!opts.deepSpaceTelescopeMissionCompletedAt) || !!opts.placed?.includes('deep-space-telescope')
   }
   if (structure.unlockTrigger === 'always') return true
-  if (structure.id === 'refinery') return !!opts.refineryUnlocked || !!opts.placed?.includes('refinery')
+  // KES-283: the Refinery is a normal Earth Base plot purchase available once
+  // Free Operations begins, same unlock shape as the Surface Silo. It was
+  // previously modeled as an off-world site-commissioned structure (KES-286)
+  // whose unlock condition no mission ever satisfied, so it was permanently
+  // unreachable; that off-world path is retired in favor of this one.
+  if (structure.id === 'refinery') return !!opts.freeOperations || !!opts.placed?.includes('refinery')
   return false
 }
 

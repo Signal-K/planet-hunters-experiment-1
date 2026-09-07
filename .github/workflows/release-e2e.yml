@@ -1,0 +1,123 @@
+name: Release E2E — Docker PocketBase and visual evidence
+
+on:
+  push:
+    branches: [main, "sprint/**", "sprint-*", "claude/**"]
+    paths:
+      - "web/**"
+      - "pocketbase/**"
+      - "docker-compose.e2e.yml"
+      - "cypress.docker.config.js"
+      - ".github/workflows/release-e2e.yml"
+  pull_request:
+    branches: [main, "sprint/**", "sprint-*", "claude/**"]
+    paths:
+      - "web/**"
+      - "pocketbase/**"
+      - "docker-compose.e2e.yml"
+      - "cypress.docker.config.js"
+      - ".github/workflows/release-e2e.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-e2e-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  release-e2e:
+    name: Full E2E with Docker PocketBase
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js for the mounted dependency tree
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+
+      - name: Install web dependencies
+        working-directory: web
+        run: npm ci
+
+      - name: Create artifact directories
+        run: mkdir -p web/cypress/screenshots web/cypress/videos web/cypress/results
+
+      - name: Start isolated PocketBase and Next.js environment
+        run: docker compose -f docker-compose.e2e.yml up -d --build shared-pb landnam-pb next-app
+
+      - name: Wait for the isolated services
+        run: |
+          for attempt in {1..40}; do
+            shared=$(curl -fsS http://127.0.0.1:18090/api/health >/dev/null && echo ready || echo waiting)
+            landnam=$(curl -fsS http://127.0.0.1:18091/api/health >/dev/null && echo ready || echo waiting)
+            web=$(curl -fsS http://127.0.0.1:13001/game >/dev/null && echo ready || echo waiting)
+            echo "attempt ${attempt}/40: shared=${shared} landnam=${landnam} web=${web}"
+            if [ "${shared}" = ready ] && [ "${landnam}" = ready ] && [ "${web}" = ready ]; then
+              exit 0
+            fi
+            sleep 3
+          done
+          docker compose -f docker-compose.e2e.yml ps
+          exit 1
+
+      - name: Run the complete Cypress suite with screenshots and video
+        id: cypress
+        run: docker compose --profile e2e -f docker-compose.e2e.yml run --rm cypress
+
+      - name: Collect service logs
+        if: always()
+        run: docker compose -f docker-compose.e2e.yml logs --no-color > web/cypress/results/docker-compose.log
+
+      - name: Summarize captured evidence
+        if: always()
+        run: |
+          screenshots=$(find web/cypress/screenshots -type f -name '*.png' | wc -l | tr -d ' ')
+          videos=$(find web/cypress/videos -type f | wc -l | tr -d ' ')
+          reports=$(find web/cypress/results -type f | wc -l | tr -d ' ')
+          {
+            echo "## Release E2E evidence"
+            echo "- Cypress outcome: ${{ steps.cypress.outcome }}"
+            echo "- Screenshots captured: ${screenshots}"
+            echo "- Videos captured: ${videos}"
+            echo "- Reports/log files: ${reports}"
+            echo "- Artifacts: release-e2e-screenshots-${{ github.sha }}, release-e2e-videos-${{ github.sha }}, release-e2e-reports-${{ github.sha }}"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-e2e-screenshots-${{ github.sha }}
+          path: web/cypress/screenshots/
+          if-no-files-found: warn
+          retention-days: 30
+
+      - name: Upload videos
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-e2e-videos-${{ github.sha }}
+          path: web/cypress/videos/
+          if-no-files-found: warn
+          retention-days: 14
+
+      - name: Upload reports and service logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-e2e-reports-${{ github.sha }}
+          path: web/cypress/results/
+          if-no-files-found: warn
+          retention-days: 30
+
+      - name: Tear down isolated environment
+        if: always()
+        run: docker compose -f docker-compose.e2e.yml down --volumes --remove-orphans

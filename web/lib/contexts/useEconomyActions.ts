@@ -1,6 +1,6 @@
 import { useCallback } from 'react'
 import { REFINERY_RECIPES } from '@/lib/data'
-import { applySellMinerals, applyStartRefine, applyCollectRefined, applyUpgradeLaunchpad, applyConfirmShipCustomizerBuild, applyPlaceStructure, applyExcavateSubsurface, applyBuildSubsurfaceRoom } from '@/lib/systems/EconomySystem'
+import { applySellMinerals, applySellRefinedGoods, applyStartRefine, applyCollectRefined, applyUpgradeLaunchpad, applyConfirmShipCustomizerBuild, applyPlaceStructure, applyExcavateSubsurface, applyBuildSubsurfaceRoom } from '@/lib/systems/EconomySystem'
 import { applyBuildScanner, applyStartScan, applyCollectScan } from '@/lib/systems/ScanSystem'
 import { applyUnlockSkillNode, applyAcceptLoan, applyAbandonMission } from '@/lib/systems/ProgressionSystem'
 import type { Catalog } from '@/lib/catalog'
@@ -13,6 +13,12 @@ export function useEconomyActions(
 ) {
   const sellMinerals = useCallback((mineralId: string, amount: number) => {
     setState(s => applySellMinerals(s, mineralId, amount))
+  }, [setState])
+
+  const sellRefinedGoods = useCallback((recipeId: string, amount: number) => {
+    const recipe = REFINERY_RECIPES.find(r => r.id === recipeId)
+    if (!recipe) return
+    setState(s => applySellRefinedGoods(s, recipe, amount))
   }, [setState])
 
   const onStartRefine = useCallback((recipeId: string) => {
@@ -82,7 +88,7 @@ export function useEconomyActions(
   }, [setState])
 
   return {
-    sellMinerals, onStartRefine, onCollectRefined, placeStructure, upgradeLaunchpad,
+    sellMinerals, sellRefinedGoods, onStartRefine, onCollectRefined, placeStructure, upgradeLaunchpad,
     excavateSubsurface, buildSubsurfaceRoom,
     buildScanner, startScan, collectScan, unlockSkillNode, acceptLoan, abandonMission,
     confirmShipCustomizerBuild,

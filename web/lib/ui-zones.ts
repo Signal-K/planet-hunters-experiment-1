@@ -8,7 +8,6 @@ export const UI_ZONES = {
   feedbackLauncher: 'feedback-launcher',
   ambientPrompt: 'ambient-prompt',
   statusUtility: 'status-utility',
-  modalOverlay: 'modal-overlay',
 } as const
 
 export type UiZone = typeof UI_ZONES[keyof typeof UI_ZONES]
@@ -23,5 +22,4 @@ export const UI_ZONE_CONTRACT: Record<UiZone, string> = {
   [UI_ZONES.feedbackLauncher]: 'Passive feedback affordance. Hidden while bottom action/navigation zones are in use.',
   [UI_ZONES.ambientPrompt]: 'Non-critical prompts. Only allowed on safe ambient screens such as the hub.',
   [UI_ZONES.statusUtility]: 'Non-interactive service status indicator.',
-  [UI_ZONES.modalOverlay]: 'Blocking full-screen overlay that intentionally owns the whole canvas.',
 }

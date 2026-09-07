@@ -60,7 +60,7 @@ describe('game state hydration normalization', () => {
     expect(normalized.player.unlockedBlueprints).toEqual([])
     expect(normalized.player.tessClassifications).toEqual({})
     expect(normalized.player.instrumentDigestNotifiedOn).toEqual({})
-    expect(normalized.player.satelliteMonitoringLevel).toBe(1)
+    expect(normalized.player.transitSatelliteLevel).toBe(1)
     expect(normalized.player.transitSatelliteLevel).toBe(1)
     expect(normalized.player.francs).toBe(9_500_000_000)
   })
@@ -130,13 +130,13 @@ describe('game state hydration normalization', () => {
   it('normalizes satellite discovery levels to at least one', () => {
     const normalized = normalizeState({
       player: {
-        satelliteMonitoringLevel: 0,
-        transitSatelliteLevel: 2.8,
+        transitSatelliteLevel: 0,
       },
     })
 
-    expect(normalized.player.satelliteMonitoringLevel).toBe(1)
-    expect(normalized.player.transitSatelliteLevel).toBe(2)
+    expect(normalized.player.transitSatelliteLevel).toBe(1)
+    const fractional = normalizeState({ player: { transitSatelliteLevel: 2.8 } })
+    expect(fractional.player.transitSatelliteLevel).toBe(2)
   })
 
   it('repairs mission route state when hydrated mission context is missing', () => {
@@ -166,6 +166,17 @@ describe('game state hydration normalization', () => {
     })
 
     expect(normalized.screen).toBe('hub')
+  })
+
+  it('retires legacy solo surface and unbuilt Base-refinery routes on hydration', () => {
+    expect(normalizeAndRepair({
+      screen: 'surface-ops',
+      player: { freeOperations: true, missionsDone: 3, hasLanded: true },
+    }).screen).toBe('hub')
+    expect(normalizeAndRepair({
+      screen: 'refinery',
+      player: { refineryBuilt: false },
+    }).screen).toBe('hub')
   })
 
   it('keeps the initial build screen for a brand-new program', () => {
@@ -335,6 +346,31 @@ describe('mergeRemoteState — remote game_states record onto local state', () =
     expect(merged.tutorial).toBe(true)
   })
 
+  it('cannot resurrect the tutorial after the Free Ops boundary', () => {
+    const normalized = normalizeState({
+      player: { missionsDone: 3 },
+      tutorial: true,
+    })
+
+    expect(normalized.player.freeOperations).toBe(true)
+    expect(normalized.tutorial).toBe(false)
+  })
+
+  it('preserves and bounds completed mission history for older saves', () => {
+    const normalized = normalizeState({
+      player: {
+        completedMissions: [
+          { id: 'm1', title: 'Survey', completedAt: 123, targetName: 'Mars' },
+          { id: 'invalid', title: 'Missing time', completedAt: Number.NaN },
+        ],
+      },
+    })
+
+    expect(normalized.player.completedMissions).toEqual([
+      { id: 'm1', title: 'Survey', completedAt: 123, targetName: 'Mars' },
+    ])
+  })
+
   it('never regresses onboarding stage from a stale remote record', () => {
     const merged = mergeRemoteState(
       local({ player: { ...DEFAULT_STATE.player, missionsDone: 3 }, tutorial: false }),
@@ -376,7 +412,7 @@ describe('mergeRemoteState — remote game_states record onto local state', () =
     expect(merged.missionId).toBe('remote-mission')
   })
 
-  it('restores a remote in-progress mission over a stale local hub save', () => {
+  it('keeps an explicit Hub route while restoring a remote in-progress mission', () => {
     const mission = MISSIONS[0]
     const target = TARGETS[0]
     const merged = mergeRemoteState(local({ screen: 'hub' }), {
@@ -390,7 +426,7 @@ describe('mergeRemoteState — remote game_states record onto local state', () =
       },
     })
 
-    expect(merged.screen).toBe('mining')
+    expect(merged.screen).toBe('hub')
     expect(merged.missionId).toBe(mission.id)
     expect(merged.targetId).toBe(target.id)
     expect(merged.player.activeMission?.id).toBe(mission.id)
@@ -398,7 +434,24 @@ describe('mergeRemoteState — remote game_states record onto local state', () =
     expect(merged.player.missionPhase).toBe('mining')
   })
 
-  it('restores a remote delivery unload with its wall-clock epoch and cargo', () => {
+  it('keeps a local mission-board route while an in-progress run is restored', () => {
+    const mission = MISSIONS[0]
+    const target = TARGETS[0]
+    const merged = mergeRemoteState(local({ screen: 'missions' }), {
+      screen: 'mining',
+      missionId: mission.id,
+      targetId: target.id,
+      player: {
+        activeMission: { id: mission.id, label: `${mission.title} → ${target.name}` },
+        missionPhase: 'mining',
+      },
+    })
+
+    expect(merged.screen).toBe('missions')
+    expect(merged.player.activeMission?.id).toBe(mission.id)
+  })
+
+  it('keeps Hub visible while restoring a remote delivery unload with its wall-clock epoch and cargo', () => {
     const mission = MISSIONS.find(candidate => candidate.deliveryTargetId)!
     const startedAt = 1_700_000_123_000
     const merged = mergeRemoteState(local({ screen: 'hub' }), {
@@ -416,7 +469,7 @@ describe('mergeRemoteState — remote game_states record onto local state', () =
       },
     })
 
-    expect(merged.screen).toBe('delivery')
+    expect(merged.screen).toBe('hub')
     expect(merged.deliveryTargetId).toBe(mission.deliveryTargetId)
     expect(merged.lastCargo).toEqual({ iron: 3 })
     expect(merged.player.missionPhase).toBe('delivery')
@@ -473,6 +526,49 @@ describe('mergeRemoteState — remote game_states record onto local state', () =
     expect(merged.player.missionPhase).toBe('transit')
     // The wall-clock epoch is what stops the transit animation restarting.
     expect(merged.player.transitStartedAt).toBe(startedAt)
+  })
+
+  it('keeps a locally launched run when Hub navigation meets a newer stale remote row', () => {
+    const mission = MISSIONS[0]
+    const target = TARGETS[0]
+    const merged = mergeRemoteState(
+      local({
+        screen: 'hub',
+        missionId: mission.id,
+        targetId: target.id,
+        updatedAt: 1_000,
+        player: {
+          ...DEFAULT_STATE.player,
+          missionsDone: 0,
+          activeMission: { id: mission.id, label: `Baseline extraction → ${target.name}` },
+          missionPhase: 'transit',
+          transitStartedAt: 1_700_000_000_000,
+        },
+      }),
+      {
+        screen: 'hub',
+        updatedAt: 5_000,
+        player: { missionsDone: 0, activeMission: null, pendingLaunch: true },
+      },
+    )
+
+    expect(merged.screen).toBe('hub')
+    expect(merged.player.activeMission?.id).toBe(mission.id)
+    expect(merged.player.pendingLaunch).toBe(false)
+    expect(merged.player.missionPhase).toBe('transit')
+  })
+
+  it('clears a stale pending launch when a saved run is active', () => {
+    const normalized = normalizeState({
+      player: {
+        activeMission: { id: MISSIONS[0].id, label: 'Baseline extraction → Eros' },
+        pendingLaunch: true,
+      },
+    })
+
+    expect(normalized.player.activeMission).not.toBeNull()
+    expect(normalized.player.pendingLaunch).toBe(false)
+    expect(normalized.player.pendingRocketId).toBeUndefined()
   })
 
   // STS-635: a genuine tie (equal missionsDone on both sides) must not
@@ -631,14 +727,6 @@ describe('mergeRemoteState — remote game_states record onto local state', () =
 })
 
 describe('structure flags are derived from `placed`', () => {
-  // A save made before applyPlaceStructure started setting a flag has the
-  // structure in `placed` and the flag false. The hub then kept prompting
-  // "Build a Satellite Monitoring Station" for one already standing.
-  it('repairs satelliteMonitoringBuilt from placed', () => {
-    const s = normalizeState({ player: { placed: ['launchpad', 'satellite-monitoring-station'] } })
-    expect(s.player.satelliteMonitoringBuilt).toBe(true)
-  })
-
   it('repairs refineryBuilt while stripping the deferred scanner from old saves', () => {
     const s = normalizeState({ player: { placed: ['refinery', 'scan-station'] } })
     expect(s.player.refineryBuilt).toBe(true)
@@ -649,12 +737,8 @@ describe('structure flags are derived from `placed`', () => {
 
   it('leaves the flags false when the structure is not placed', () => {
     const s = normalizeState({ player: { placed: ['launchpad'] } })
-    expect(s.player.satelliteMonitoringBuilt).toBe(false)
+    expect(s.player.transitSatelliteLaunchedAt).toBeNull()
     expect(s.player.refineryBuilt).toBe(false)
   })
 
-  it('keeps a flag that is set even if placed somehow lost the entry', () => {
-    const s = normalizeState({ player: { placed: [], satelliteMonitoringBuilt: true } })
-    expect(s.player.satelliteMonitoringBuilt).toBe(true)
-  })
 })

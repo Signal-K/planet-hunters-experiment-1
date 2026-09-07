@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useRef } from 'react'
+import { capDpr } from '@/lib/engine/pixiDisplay'
 import { Application } from 'pixi.js'
 import { buildScrapScene, SCRAP_W, SCRAP_H } from '@/lib/pixi/scrapScene'
 
@@ -33,30 +34,36 @@ export function ScrapSequenceCanvas({ rocketImageSrc, onComplete }: Props) {
     let destroyed = false
     let elapsed = 0
 
-    ;(async () => {
-      const cw = div.offsetWidth || SCRAP_W
-      const ch = div.offsetHeight || SCRAP_H
-      await app.init({
-        canvas,
-        width: cw,
-        height: ch,
-        background: 0x06090f,
-        antialias: true,
-        autoDensity: true,
-        resolution: typeof window !== 'undefined' ? (window.devicePixelRatio ?? 1) : 1,
-      })
-      initialized = true
-      if (destroyed) { try { app.destroy() } catch (_) { /* pixi v8 cleanup */ } canvas.remove(); return }
+    void (async () => {
+      try {
+        const cw = div.offsetWidth || SCRAP_W
+        const ch = div.offsetHeight || SCRAP_H
+        await app.init({
+          canvas,
+          width: cw,
+          height: ch,
+          background: 0xeef3f8, // --ln-bp-bg (KES-267) — see scrapScene.ts's C palette
+          antialias: false,
+          autoDensity: true,
+          resolution: capDpr(),
+        })
+        initialized = true
+        if (destroyed) { try { app.destroy() } catch (_) { /* pixi v8 cleanup */ } canvas.remove(); return }
 
-      const scene = buildScrapScene(app, {
-        rocketImageSrc,
-        onComplete: () => completeRef.current(),
-      })
+        const scene = buildScrapScene(app, {
+          rocketImageSrc,
+          onComplete: () => completeRef.current(),
+        })
 
-      app.ticker.add(t => {
-        elapsed += t.deltaTime / 60
-        scene.update(elapsed, t.deltaTime / 60)
-      })
+        app.ticker.add(t => {
+          elapsed += t.deltaTime / 60
+          scene.update(elapsed, t.deltaTime / 60)
+        })
+      } catch {
+        // JSDOM has no 2D canvas context. Keep the debrief testable while the
+        // real browser continues to render the Pixi teardown sequence.
+        canvas.remove()
+      }
     })()
 
     return () => {
@@ -71,23 +78,24 @@ export function ScrapSequenceCanvas({ rocketImageSrc, onComplete }: Props) {
   return (
     <div
       ref={divRef}
-      style={{ position: 'absolute', inset: 0, background: '#06090f', overflow: 'hidden', zIndex: 100 }}
+      style={{ position: 'absolute', inset: 0, background: '#eef3f8', overflow: 'hidden', zIndex: 100 }}
     >
-      {process.env.NODE_ENV === 'development' && (
-        <button
-          data-testid="scrap-sequence-skip-btn"
-          onClick={() => completeRef.current()}
-          style={{
-            position: 'absolute', bottom: 24, right: 24, zIndex: 101,
-            padding: '8px 16px', borderRadius: 8, cursor: 'pointer',
-            background: 'rgba(20,20,23,0.72)', border: '1px solid rgba(112,217,234,0.4)',
-            color: '#7ec8ff', fontFamily: 'var(--ln-font-display)', fontWeight: 800, fontSize: 11,
-            letterSpacing: '0.12em', textTransform: 'uppercase',
-          }}
-        >
-          Skip ▸
-        </button>
-      )}
+      {/* Player-facing skip, not dev-only (KES-316) — this overlay auto-plays
+          and blocks the ledger reveal on every early-onboarding debrief with
+          no other affordance. */}
+      <button
+        data-testid="scrap-sequence-skip-btn"
+        onClick={() => completeRef.current()}
+        style={{
+          position: 'absolute', bottom: 24, right: 24, zIndex: 101,
+          padding: '8px 16px', borderRadius: 8, cursor: 'pointer',
+          background: 'rgba(20,20,23,0.72)', border: '1px solid rgba(112,217,234,0.4)',
+          color: '#7ec8ff', fontFamily: 'var(--ln-font-display)', fontWeight: 800, fontSize: 11,
+          letterSpacing: '0.12em', textTransform: 'uppercase',
+        }}
+      >
+        Skip ▸
+      </button>
     </div>
   )
 }

@@ -3,6 +3,7 @@
 import type { useGame } from '@/game-context'
 import type { Screen } from '@/lib/game-types'
 import { rocketDisplayForConfig } from '@/lib/data'
+import { earthStorageBuilt } from '@/lib/systems/EconomySystem'
 import ErrorBoundary from '@/components/ui/ErrorBoundary'
 import { LaunchSequenceCanvas } from '@/components/game/LaunchSequenceCanvas'
 import MissionBoardScreen from '@/components/game/screens/MissionBoardScreen'
@@ -47,6 +48,7 @@ export default function MissionSetupRoutes({
           missionsDone={game.player.missionsDone}
           freeOperations={game.player.freeOperations}
           hasCoach={hasCoach}
+          coachManual={coachManual}
           catalog={game.catalog}
           clientMissions={game.player.clientMissions}
           clientCooldowns={game.player.clientCooldowns}
@@ -54,6 +56,7 @@ export default function MissionSetupRoutes({
           francs={game.player.francs}
           crew={game.player.crew}
           player={game.player}
+          sceneScope={game.sceneScope}
         />
       )
 
@@ -66,6 +69,9 @@ export default function MissionSetupRoutes({
           onPick={game.onPickTarget}
           hasCoach={hasCoach}
           catalog={game.catalog}
+          missionsDone={game.player.missionsDone}
+          launchpadUpgraded={game.player.launchpadUpgraded}
+          unlockedSkillNodes={game.player.unlockedSkillNodes ?? []}
         />
       )
 
@@ -78,6 +84,11 @@ export default function MissionSetupRoutes({
           mission={game.mission}
           deliveryTargetName={deliveryTargetName}
           onPurchase={game.onPurchaseRocket}
+          onFabricatePart={game.onFabricateRocketPart}
+          onAssembleFabricatedRocket={game.onAssembleFabricatedRocket}
+          siloOnline={earthStorageBuilt(game.player)}
+          stash={game.player.stash ?? {}}
+          fabricatedParts={game.player.fabricatedRocketParts ?? {}}
           onBack={() => game.go(game.mission?.targetId ? 'missions' : 'targets')}
           hasCoach={hasCoach}
         />

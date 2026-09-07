@@ -1,102 +1,226 @@
-import React from 'react'
-import { describe, expect, it } from 'vitest'
+// @vitest-environment jsdom
+
+import React, { act } from 'react'
+import { createRoot } from 'react-dom/client'
 import { renderToStaticMarkup } from 'react-dom/server'
+import { describe, expect, it, vi } from 'vitest'
+
 import LaunchpadScreen from './LaunchpadScreen'
 import { STATIC_CATALOG } from '@/lib/catalog'
 import { DEFAULT_STATE } from '@/lib/game-state'
+import { buildRuntimeCatalog } from '@/lib/runtimeCatalog'
 
-function renderLaunchpad(satelliteMonitoringBuilt: boolean, freeOperations = true): string {
-  return renderToStaticMarkup(
-    <LaunchpadScreen
-      onBack={() => undefined}
-      onPick={() => undefined}
-      onViewContracts={() => undefined}
-      onOpenHangar={() => undefined}
-      onBuildMonitoring={() => undefined}
-      missionsDone={freeOperations ? 4 : 0}
-      freeOperations={freeOperations}
-      catalog={STATIC_CATALOG}
-      player={{ ...DEFAULT_STATE.player, missionsDone: freeOperations ? 4 : 0, freeOperations, satelliteMonitoringBuilt }}
-      francs={DEFAULT_STATE.player.francs}
-    />
-  )
-}
+describe('Launchpad own-program actions', () => {
+  it('keeps mission resume explicit in the footer', () => {
+    const player = {
+      ...DEFAULT_STATE.player,
+      activeMission: { id: 'baseline-extraction', label: 'Baseline extraction → Eros' },
+      missionPhase: 'transit' as const,
+    }
+    const noop = vi.fn()
+    const markup = renderToStaticMarkup(
+      <LaunchpadScreen
+        onBack={noop}
+        onPick={noop}
+        onViewContracts={noop}
+        onLaunchpadAction={noop}
+        onOpenHangar={noop}
+        onResumeMission={noop}
+        onViewMissionLog={noop}
+        missionsDone={player.missionsDone}
+        freeOperations={player.freeOperations}
+        catalog={STATIC_CATALOG}
+        player={player}
+      />,
+    )
 
-describe('LaunchpadScreen infrastructure hierarchy', () => {
-  it('renders the built monitoring station as post-onboarding scene infrastructure', () => {
-    const markup = renderLaunchpad(true)
-    expect(markup).toContain('data-testid="launchpad-monitoring-structure"')
-    expect(markup).toContain('data-testid="launchpad-satellite-orbit"')
-    expect(markup).toContain('data-testid="launchpad-rocket-fleet"')
+    expect(markup).toContain('data-testid="launchpad-resume-mission-btn"')
+    expect(markup).toContain('aria-label="Jump back to active mission"')
+    expect(markup).toContain('data-testid="launchpad-mission-log-btn"')
+    expect(markup).toContain('data-testid="launchpad-primary-mission-btn"')
+    expect(markup).toContain('NEW MISSION')
+  })
+
+  it('exposes one new-mission command once in the command rail', () => {
+    const player = {
+      ...DEFAULT_STATE.player,
+      freeOperations: true,
+      missionsDone: 3,
+      placed: ['launchpad'],
+    }
+    const catalog = buildRuntimeCatalog({
+      catalog: STATIC_CATALOG,
+      freeOperations: true,
+      missionsDone: player.missionsDone,
+      player,
+    })
+    const noop = vi.fn()
+    const markup = renderToStaticMarkup(
+      <LaunchpadScreen
+        onBack={noop}
+        onPick={noop}
+        onViewContracts={noop}
+        onLaunchpadAction={noop}
+        onOpenHangar={noop}
+        missionsDone={player.missionsDone}
+        freeOperations={player.freeOperations}
+        catalog={catalog}
+        player={player}
+      />,
+    )
+
+    expect(markup).toContain('data-testid="launchpad-new-mission-btn"')
+    expect(markup).toContain('data-testid="launchpad-primary-mission-btn"')
+    expect(markup).toContain('NEW MISSION')
+    expect(markup).not.toContain('data-testid="launchpad-create-mission-btn"')
+    expect(markup).not.toContain('data-testid="launchpad-launch-infrastructure-btn"')
     expect(markup).toContain('data-testid="launchpad-guide-open"')
-    expect(markup).toContain('S.M.S. · ONLINE')
-    expect(markup).toContain('class="game-screen theme-deep ln-scene-launchpad"')
-    expect(markup).not.toContain('launchpad-command-grid')
-    expect(markup).not.toMatch(/<p(?:\s|>)/)
+    expect(markup).not.toContain('data-testid="available-actions-panel"')
   })
 
-  it('shows the built state without a duplicate build CTA', () => {
-    const markup = renderLaunchpad(true)
-    expect(markup).toContain('S.M.S. · ONLINE')
-    expect(markup).not.toContain('data-testid="launchpad-build-monitoring-btn"')
-    expect(markup).not.toMatch(/<button[^>]*data-testid="launchpad-monitoring-structure"/)
-  })
-
-  it('keeps an unbuilt post-onboarding station out of Launchpad', () => {
-    const markup = renderLaunchpad(false)
-    expect(markup).not.toContain('data-testid="launchpad-monitoring-structure"')
-    expect(markup).not.toContain('data-testid="launchpad-build-monitoring-btn"')
-    expect(markup).not.toContain('data-testid="launchpad-guide-open"')
-    expect(markup).toContain('data-testid="launchpad-view-contracts-btn"')
-  })
-
-  it('keeps M1 focused on contracts instead of locked monitoring infrastructure', () => {
-    const markup = renderLaunchpad(false, false)
-    expect(markup).not.toContain('data-testid="launchpad-monitoring-structure"')
-    expect(markup).not.toContain('data-testid="launchpad-build-monitoring-btn"')
-    expect(markup).not.toContain('data-testid="launchpad-guide-open"')
-    expect(markup).not.toContain('data-testid="launchpad-program-operation-btn"')
-    expect(markup).toContain('data-testid="launchpad-view-contracts-btn"')
-    expect(markup).toContain('data-testid="launchpad-view-contracts-btn"')
-  })
-
-  it('does not trust a stale Free Ops flag before the three-mission boundary', () => {
+  it('keeps a legacy Academy unlock out of the active launch loop', () => {
+    const player = {
+      ...DEFAULT_STATE.player,
+      freeOperations: true,
+      missionsDone: 3,
+      academyResearched: true,
+      placed: ['launchpad'],
+    }
+    const catalog = buildRuntimeCatalog({
+      catalog: STATIC_CATALOG,
+      freeOperations: true,
+      missionsDone: player.missionsDone,
+      player,
+    })
+    const noop = vi.fn()
     const markup = renderToStaticMarkup(
       <LaunchpadScreen
-        onBack={() => undefined}
-        onPick={() => undefined}
-        onViewContracts={() => undefined}
-        onOpenHangar={() => undefined}
-        onBuildMonitoring={() => undefined}
-        missionsDone={1}
-        freeOperations
-        catalog={STATIC_CATALOG}
-        player={{ ...DEFAULT_STATE.player, missionsDone: 1, freeOperations: true, satelliteMonitoringBuilt: false }}
+        onBack={noop}
+        onPick={noop}
+        onViewContracts={noop}
+        onLaunchpadAction={noop}
+        onOpenHangar={noop}
+        missionsDone={player.missionsDone}
+        freeOperations={player.freeOperations}
+        catalog={catalog}
+        player={player}
       />,
     )
-    expect(markup).not.toContain('BUILD MONITORING STATION')
-    expect(markup).not.toContain('data-testid="launchpad-guide-open"')
-    expect(markup).toContain('data-testid="launchpad-view-contracts-btn"')
+
+    expect(markup).not.toContain('Build Astronaut Academy')
   })
 
-  it('uses the selected rocket art and name throughout the launchpad scene', () => {
-    const markup = renderToStaticMarkup(
-      <LaunchpadScreen
-        onBack={() => undefined}
-        onPick={() => undefined}
-        onViewContracts={() => undefined}
-        onOpenHangar={() => undefined}
-        onBuildMonitoring={() => undefined}
-        missionsDone={4}
-        freeOperations
-        catalog={STATIC_CATALOG}
-        player={{ ...DEFAULT_STATE.player, missionsDone: 4, freeOperations: true, satelliteMonitoringBuilt: true }}
-        rocketImageSrc="/game/assets/ships/ship_sr2.png"
-        selectedRocketName="Prospector"
-      />,
-    )
-    expect(markup.match(/ship_sr2\.png/g)?.length).toBe(3)
-    expect(markup).toContain('Prospector · HANGAR')
-    expect(markup).not.toContain('ship_sr1.png')
+  it('opens the four-route mission picker when the pad is clicked', async () => {
+    const player = {
+      ...DEFAULT_STATE.player,
+      freeOperations: true,
+      missionsDone: 3,
+      placed: ['launchpad'],
+    }
+    const catalog = buildRuntimeCatalog({
+      catalog: STATIC_CATALOG,
+      freeOperations: true,
+      missionsDone: player.missionsDone,
+      player,
+    })
+    const host = document.createElement('div')
+    const root = createRoot(host)
+    const onPick = vi.fn()
+    ;(globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT: boolean }).IS_REACT_ACT_ENVIRONMENT = true
+
+    await act(async () => {
+      root.render(
+        <LaunchpadScreen
+          onBack={vi.fn()}
+          onPick={onPick}
+          onViewContracts={vi.fn()}
+          onLaunchpadAction={vi.fn()}
+          onOpenHangar={vi.fn()}
+          missionsDone={player.missionsDone}
+          freeOperations={player.freeOperations}
+          catalog={catalog}
+          player={player}
+        />,
+      )
+    })
+
+    await act(async () => {
+      host.querySelector<HTMLButtonElement>('[data-testid="launchpad-status-card"]')?.dispatchEvent(new MouseEvent('click', { bubbles: true }))
+    })
+
+    expect(host.querySelector('[data-testid="launchpad-new-mission-menu"]')).not.toBeNull()
+    expect(host.querySelector('[data-testid="launchpad-new-mission-satellite-btn"]')).not.toBeNull()
+    expect(host.querySelector('[data-testid="launchpad-new-mission-mining-btn"]')).not.toBeNull()
+    expect(host.querySelector('[data-testid="launchpad-new-mission-build-btn"]')).not.toBeNull()
+    expect(host.querySelector('[data-testid="launchpad-new-mission-contracts-btn"]')).not.toBeNull()
+    expect(host.textContent).toContain('LAUNCH SATELLITE / TOOL')
+    expect(host.textContent).toContain('GO MINING')
+    expect(host.textContent).toContain('BUILD SOMETHING YOURSELF')
+    expect(host.textContent).toContain('AVAILABLE CONTRACTS')
+
+    await act(async () => {
+      host.querySelector<HTMLButtonElement>('[data-testid="launchpad-new-mission-mining-btn"]')?.dispatchEvent(new MouseEvent('click', { bubbles: true }))
+    })
+
+    expect(host.querySelector('[data-testid="launchpad-operation-brief-mining"]')).not.toBeNull()
+    await act(async () => {
+      host.querySelector<HTMLButtonElement>('[data-testid="launchpad-mining-sell-btn"]')?.dispatchEvent(new MouseEvent('click', { bubbles: true }))
+    })
+    expect(onPick).toHaveBeenCalledWith('freeops-self-directed-mining', 'sell')
+    await act(async () => root.unmount())
+  })
+
+  it('keeps the physical launchpad available to create another mission while one is active', async () => {
+    const player = {
+      ...DEFAULT_STATE.player,
+      activeMission: { id: 'baseline-extraction', label: 'Baseline extraction → Eros' },
+      missionPhase: 'transit' as const,
+      freeOperations: true,
+      missionsDone: 3,
+      placed: ['launchpad'],
+    }
+    const host = document.createElement('div')
+    const root = createRoot(host)
+    const onResumeMission = vi.fn()
+    const onPick = vi.fn()
+    const catalog = buildRuntimeCatalog({
+      catalog: STATIC_CATALOG,
+      freeOperations: true,
+      missionsDone: player.missionsDone,
+      player,
+    })
+    ;(globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT: boolean }).IS_REACT_ACT_ENVIRONMENT = true
+
+    await act(async () => {
+      root.render(
+        <LaunchpadScreen
+          onBack={vi.fn()}
+          onPick={onPick}
+          onViewContracts={vi.fn()}
+          onLaunchpadAction={vi.fn()}
+          onOpenHangar={vi.fn()}
+          onResumeMission={onResumeMission}
+          missionsDone={player.missionsDone}
+          freeOperations={player.freeOperations}
+          catalog={catalog}
+          player={player}
+        />,
+      )
+    })
+
+    await act(async () => {
+      host.querySelector<HTMLButtonElement>('[data-testid="launchpad-status-card"]')?.dispatchEvent(new MouseEvent('click', { bubbles: true }))
+    })
+
+    expect(onResumeMission).not.toHaveBeenCalled()
+    expect(host.querySelector('[data-testid="launchpad-new-mission-menu"]')).not.toBeNull()
+    await act(async () => {
+      host.querySelector<HTMLButtonElement>('[data-testid="launchpad-new-mission-mining-btn"]')?.dispatchEvent(new MouseEvent('click', { bubbles: true }))
+    })
+    await act(async () => {
+      host.querySelector<HTMLButtonElement>('[data-testid="launchpad-mining-sell-btn"]')?.dispatchEvent(new MouseEvent('click', { bubbles: true }))
+    })
+    expect(onPick).toHaveBeenCalledWith('freeops-self-directed-mining', 'sell')
+    await act(async () => root.unmount())
   })
 })

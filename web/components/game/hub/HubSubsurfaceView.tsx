@@ -14,6 +14,8 @@ import {
 import {
   CUSTOMIZER_PARTS,
   MINERAL_META,
+  MINERAL_SILO_CAPACITY,
+  DEEP_MINERAL_SILO_CAPACITY,
   SUBSURFACE_EXCAVATE_COST,
   SUBSURFACE_ROOMS,
   canAffordSubsurface,
@@ -103,7 +105,7 @@ function RoomScene({
   parts: RegisteredPart[]
   trainingEnabled: boolean
 }) {
-  if (id === 'mineral-vault') {
+  if (id === 'mineral-vault' || id === 'deep-mineral-vault') {
     const displayedMinerals = minerals.slice(0, 4)
     return (
       <div className={styles.roomScene} aria-hidden="true">
@@ -200,12 +202,51 @@ function UnbuiltRoomScene({ room }: { room: SubsurfaceRoomDefinition }) {
 }
 
 function RoomIcon({ id, size = 18 }: { id: SubsurfaceRoomId; size?: number }) {
-  if (id === 'mineral-vault') return <Warehouse size={size} strokeWidth={2} />
+  if (id === 'mineral-vault' || id === 'deep-mineral-vault') return <Warehouse size={size} strokeWidth={2} />
   if (id === 'parts-locker') return <Boxes size={size} strokeWidth={2} />
   return <Dumbbell size={size} strokeWidth={2} />
 }
 
-function MineralVault({ minerals }: { minerals: StoredMineral[] }) {
+function StorageSilo({ minerals, capacity }: { minerals: StoredMineral[]; capacity: number }) {
+  const totalUnits = minerals.reduce((sum, mineral) => sum + mineral.amount, 0)
+  const filledPct = capacity > 0 ? Math.min(100, (totalUnits / capacity) * 100) : 0
+  const full = totalUnits >= capacity
+  return (
+    <div className={styles.siloRack} data-testid="subsurface-storage-silo">
+      <div className={styles.silo}>
+        <div className={styles.siloFill} style={{ height: `${filledPct}%` }}>
+          {minerals.map(mineral => (
+            <span
+              key={mineral.id}
+              className={styles.siloSeg}
+              title={`${mineral.name} · ${mineral.amount} U`}
+              style={{
+                flexGrow: mineral.amount,
+                '--seg-color': mineral.color,
+              } as React.CSSProperties}
+            />
+          ))}
+        </div>
+        {[25, 50, 75].map(tick => (
+          <i key={tick} className={styles.siloTick} style={{ bottom: `${tick}%` }} />
+        ))}
+      </div>
+      <div className={styles.siloReadout}>
+        <div className={styles.siloReadValue}>
+          {totalUnits}<span>/ {capacity} U</span>
+        </div>
+        <div className={`${styles.siloReadState} ${full ? styles.siloReadStateFull : ''}`}>
+          {full ? 'Silo full' : `${Math.round(filledPct)}% full · Silo 01`}
+        </div>
+        <p className={styles.siloReadCopy}>
+          One silo, filling by mineral. Overflow past capacity is sold on return.
+        </p>
+      </div>
+    </div>
+  )
+}
+
+function MineralVault({ minerals, capacity }: { minerals: StoredMineral[]; capacity: number }) {
   const totalUnits = minerals.reduce((sum, mineral) => sum + mineral.amount, 0)
   return (
     <div className={styles.detailPanel} data-testid="subsurface-mineral-vault">
@@ -214,12 +255,14 @@ function MineralVault({ minerals }: { minerals: StoredMineral[] }) {
           <div className={styles.metricValue}>{totalUnits}</div>
           <div className={styles.metricLabel}>Units in secure storage</div>
           <p className={styles.summaryCopy}>
-            Recovered ore remains in the Earth Base stash until it is refined,
-            committed to construction, or sold at the Commodity Exchange.
+            Ore you keep sits in the silo until you sell it at the Commodity
+            Exchange or spend it on your own builds. Selling later, when prices
+            are up, beats the fixed payout for auto-selling on return.
           </p>
         </div>
         <span className={styles.status}>{minerals.length} species catalogued</span>
       </div>
+      <StorageSilo minerals={minerals} capacity={capacity} />
       <div className={styles.inventoryList}>
         {minerals.length > 0 ? minerals.map(mineral => (
           <div className={styles.inventoryRow} key={mineral.id}>
@@ -364,7 +407,7 @@ function ExcavatePrompt({
         </span>
         <h2 className={styles.trainingTitle}>Below-grade area unexcavated</h2>
         <p className={styles.trainingCopy}>
-          Earth Base only holds so much surface plot — the agency&apos;s
+          The surface only holds so much surface plot — the agency&apos;s
           buildable footprint above ground is fixed. Excavating this deck
           opens space below the soil for storage and habitat facilities
           without needing more land on the surface.
@@ -412,8 +455,10 @@ export function HubSubsurfaceView({
   }
 
   return (
-    <section className={styles.root} data-testid="hub-subsurface-view" aria-label="Earth Base subsurface">
+    <section className={styles.root} data-testid="hub-subsurface-view" aria-label="Base subsurface">
       <div className={styles.geology} aria-hidden="true">
+        <span className={styles.surfaceCap} data-testid="subsurface-surface-continuation" />
+        <span className={styles.crust} />
         <span className={`${styles.stratum} ${styles.stratumOne}`} />
         <span className={`${styles.stratum} ${styles.stratumTwo}`} />
         <span className={styles.serviceShaft} />
@@ -458,8 +503,8 @@ export function HubSubsurfaceView({
               <HabitatTraining enabled={trainingEnabled} />
             ) : !builtSet.has(activeRoom) ? (
               <RoomBuildPrompt room={activeDefinition} francs={francs} stash={stash} onBuild={onBuildRoom} />
-            ) : activeRoom === 'mineral-vault' ? (
-              <MineralVault minerals={minerals} />
+            ) : activeRoom === 'mineral-vault' || activeRoom === 'deep-mineral-vault' ? (
+              <MineralVault minerals={minerals} capacity={activeRoom === 'deep-mineral-vault' ? DEEP_MINERAL_SILO_CAPACITY : MINERAL_SILO_CAPACITY} />
             ) : (
               <PartsLocker parts={parts} />
             )}
@@ -480,7 +525,7 @@ export function HubSubsurfaceView({
                 <span />
                 <span />
                 <span />
-                <b>EARTH BASE · BELOW-SOIL SERVICE TRUNK</b>
+                <b>BASE · BELOW-SOIL SERVICE TRUNK</b>
               </div>
               <div className={styles.roomGrid}>
                 {SUBSURFACE_ROOMS.map((room, index) => {

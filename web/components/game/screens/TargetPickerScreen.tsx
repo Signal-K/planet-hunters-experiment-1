@@ -3,7 +3,7 @@
 import React, { useState } from 'react'
 import StatusPill from '@/components/ui/StatusPill'
 import { PrimaryBtn } from '@/components/ui/Button'
-import { compatibleTargetsFor, orbitBandLabel, type Mission, type Target } from '@/lib/data'
+import { feasibleTargetsFor, orbitBandLabel, type Mission, type Target } from '@/lib/data'
 import type { Catalog } from '@/lib/catalog'
 import TutorialHighlight from '@/components/game/TutorialHighlight'
 import GalaxyMap from '@/components/TargetPicker/GalaxyMap'
@@ -14,6 +14,7 @@ import MissionSetupShell, {
 } from '@/components/game/screens/MissionSetupShell'
 import { useIsNarrowViewport } from '@/lib/hooks/useIsNarrowViewport'
 import { ChevronDown, ChevronUp } from 'lucide-react'
+import MissionSceneBackdrop from '@/components/game/screens/MissionSceneBackdrop'
 
 const RARITY_RANK: Record<string, number> = { exotic: 3, rare: 2, uncommon: 1, common: 0 }
 const DEPOSIT_MIX_CAP = 6
@@ -24,6 +25,9 @@ interface TargetPickerScreenProps {
   onPick: (id: string) => void
   hasCoach?: boolean
   catalog: Catalog
+  missionsDone: number
+  launchpadUpgraded?: boolean
+  unlockedSkillNodes?: string[]
 }
 
 function PlanetSVG({ id, size }: { id: string; size: number }) {
@@ -84,9 +88,9 @@ function PlanetSVG({ id, size }: { id: string; size: number }) {
   )
 }
 
-export default function TargetPickerScreen({ mission, onBack, onPick, hasCoach, catalog }: TargetPickerScreenProps) {
-  const { targets: TARGETS, minerals: MINERAL_META } = catalog
-  const compat = compatibleTargetsFor(mission, TARGETS)
+export default function TargetPickerScreen({ mission, onBack, onPick, hasCoach, catalog, missionsDone, launchpadUpgraded = false, unlockedSkillNodes = [] }: TargetPickerScreenProps) {
+  const { targets: TARGETS, minerals: MINERAL_META, parts } = catalog
+  const compat = feasibleTargetsFor(mission, TARGETS, parts, missionsDone, launchpadUpgraded, unlockedSkillNodes)
   const compatIds = new Set(compat.map(t => t.id))
   const quickPickForOnboarding = hasCoach && mission.sequence === 1
   // Default pick first compatible, prioritizing recommended if they are actually in compat
@@ -131,14 +135,7 @@ export default function TargetPickerScreen({ mission, onBack, onPick, hasCoach, 
       title="Pick Target"
       onBack={onBack}
       hasCoach={hasCoach}
-      hideStepFooter={hasCoach}
-      contentBottom={hasCoach ? 104 : undefined}
-      step="Target"
-      stepDescription={
-        deliveryTarget
-          ? `Choose a mining site, then deliver cargo to ${deliveryTarget.name} before returning to Earth.`
-          : 'Choose a reachable mining site, then continue to build your rocket.'
-      }
+      sceneBackground={<MissionSceneBackdrop />}
       actions={pickedTarget && (
         <PrimaryBtn
           testId="continue-build-btn"
@@ -155,11 +152,11 @@ export default function TargetPickerScreen({ mission, onBack, onPick, hasCoach, 
             content-sized and the map's 1fr row has nothing to resolve against.
             Above 821px the layout is a grid and flex is inert; the column
             stretches there instead. */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 8, minHeight: 0, flex: 1 }}>
+        <div className="target-map-stage" style={{ display: 'flex', flexDirection: 'column', gap: 8, minHeight: 0, flex: 1 }}>
         {deliveryTarget && (
-          <div style={{
+          <div className="target-route-notice" style={{
             padding: '8px 12px', borderRadius: 6,
-            background: 'rgba(112,217,234,0.08)', border: '1px solid rgba(112,217,234,0.3)',
+            background: 'var(--ln-cyan-soft)', border: '1px solid var(--ln-cyan-border)',
             fontFamily: 'var(--ln-font-display)', fontSize: 10, fontWeight: 700,
             letterSpacing: '0.08em', color: 'var(--ln-cyan)', textTransform: 'uppercase',
           }}>
@@ -174,8 +171,8 @@ export default function TargetPickerScreen({ mission, onBack, onPick, hasCoach, 
             the detail card's expand toggle on narrow screens — the grid
             track count must match the actual row count or an empty auto
             track eats the map's space again (the original h20xtc bug). */}
-        <div style={{ display: 'grid', gridTemplateRows: isNarrow ? 'auto minmax(0, 1fr)' : 'auto auto minmax(0, 1fr)', minHeight: 0, flex: 1 }}>
-          <div style={{ padding: '0 0 8px', display: 'flex', alignItems: 'center', gap: 8 }}>
+        <div className="target-map-instrument" style={{ display: 'grid', gridTemplateRows: isNarrow ? 'auto minmax(0, 1fr)' : 'auto auto minmax(0, 1fr)', minHeight: 0, flex: 1 }}>
+          <div className="target-map-telemetry" style={{ padding: '0 0 8px', display: 'flex', alignItems: 'center', gap: 8 }}>
             <span style={{ fontFamily: 'var(--ln-font-display)', fontSize: 10, fontWeight: 700, letterSpacing: '0.22em', color: 'var(--ln-text-muted)', textTransform: 'uppercase' }}>Compatible · {compat.length}</span>
             <span style={{ flex: 1 }} />
             <StatusPill kind="info" dim>Rocket range · Orbit ≤ {mission.requires.max_orbit}</StatusPill>
@@ -185,11 +182,11 @@ export default function TargetPickerScreen({ mission, onBack, onPick, hasCoach, 
               real game logic (target-archetypes.ts). One line, once, where
               orbit is first read (STS-544). */}
           {!isNarrow && (
-            <div style={{ padding: '0 0 8px', fontFamily: 'var(--ln-font-body)', fontSize: 11, color: 'var(--ln-text-muted)', lineHeight: 1.4 }}>
+            <div className="target-map-orbit-note" style={{ padding: '0 0 8px', fontFamily: 'var(--ln-font-body)', fontSize: 11, color: 'var(--ln-text-muted)', lineHeight: 1.4 }}>
               <b style={{ color: 'var(--ln-text-dim)', fontWeight: 700 }}>Orbit</b> is the distance band from Earth — farther orbits reach rarer minerals, and need more rocket range.
             </div>
           )}
-          <MissionSetupFrame style={{ position: 'relative', height: '100%' }}>
+          <MissionSetupFrame className="target-map-frame" style={{ position: 'relative', height: '100%' }}>
             <GalaxyMap
               mission={mission}
               targets={TARGETS}

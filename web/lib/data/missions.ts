@@ -4,6 +4,7 @@ import { missionPayoutFloor } from './payouts'
 import type { Mission } from './types'
 import { CLIENT_SLOTS } from './clients'
 import { MINERAL_META } from './minerals'
+import { STRUCTURES } from './structures'
 import {
   DEFAULT_MISSION_TEMPLATES,
   FREE_OPS_START_MISSIONS_DONE,
@@ -14,6 +15,7 @@ import {
 } from './mission-generator'
 
 export { FREE_OPS_START_MISSIONS_DONE, OFFLINE_MISSION_COUNT }
+export { tutorialClientMissionOptions } from './mission-generator'
 export const MISSION_TEMPLATES = DEFAULT_MISSION_TEMPLATES
 
 export function generateMissions(count = OFFLINE_MISSION_COUNT): Mission[] {
@@ -47,12 +49,104 @@ export const M3_SEQUENCE = 3
 // Free Ops self-directed mining — no client, no daily limit, no cooldown.
 export const SELF_DIRECTED_MINING_MISSION_ID = 'freeops-self-directed-mining'
 export const ACADEMY_INTRO_MISSION_ID = 'story-astronaut-academy'
+export const REFINERY_BUILD_MISSION_ID = 'program-build-refinery'
+export const SCAN_STATION_BUILD_MISSION_ID = 'program-build-scan-station'
+
+const refineryBlueprint = STRUCTURES.find(structure => structure.id === 'refinery')!
+const scanStationBlueprint = STRUCTURES.find(structure => structure.id === 'scan-station')!
+const remoteSiloBlueprint = { requiredMaterials: { aluminium: 18, iron: 12, copper: 6 } }
+
+function materialRequirement(materials: Record<string, number>): { minerals: Record<string, number>; cargo_min: number } {
+  return {
+    minerals: { ...materials },
+    cargo_min: Object.values(materials).reduce((total, amount) => total + amount, 0),
+  }
+}
+
+/** Player-program construction is owned work, so it awards infrastructure
+ * rather than a client fee. Keep its costs aligned with the blueprints. */
+export const OWN_PROGRAM_BUILD_MISSIONS: Mission[] = [
+  {
+    id: 'program-build-mars-mining-settlement', title: 'Establish Mars Mining Settlement',
+    brief: 'Carry a starter settlement kit to the program’s assigned Mars area. The permanent site anchors later extraction and support structures.',
+    tag: 'PROGRAM', difficulty: 'L1', locked: false, sequence: FREE_OPS_START_MISSIONS_DONE + 1,
+    unlockAt: 'Reach Free Operations · Mars allocation ready', targetId: 'mars',
+    construction: { structureKind: 'mining-settlement', requiredMaterials: { aluminium: 12, iron: 16, silicon: 8 }, placementMode: 'confirm', buildTimeMs: 45 * 60 * 1000 },
+    programReward: { researchXP: 0, outcome: 'Mars mining settlement established · permanent program site online' },
+    requires: { ...materialRequirement({ aluminium: 12, iron: 16, silicon: 8 }), drill_tier: 1, max_orbit: 4 }, payout: { francs: 0, affinity: 0 },
+  },
+  {
+    id: 'program-build-remote-silo',
+    title: 'Build a Remote Mineral Silo',
+    brief: 'Send construction materials to a target with build rights. The sealed silo stores your extracted ore off-world instead of forcing every haul into an Earth sale.',
+    tag: 'PROGRAM', difficulty: 'L2', locked: false,
+    sequence: FREE_OPS_START_MISSIONS_DONE + 1,
+    unlockAt: 'Reach Free Operations',
+    construction: { structureKind: 'mineral-silo', requiredMaterials: { ...remoteSiloBlueprint.requiredMaterials }, placementMode: 'confirm', buildTimeMs: 45 * 60 * 1000 },
+    programReward: { researchXP: 0, outcome: 'Remote Mineral Silo commissioned · ore can be held at the selected target' },
+    requires: { ...materialRequirement(remoteSiloBlueprint.requiredMaterials), drill_tier: 1, max_orbit: 5 },
+    payout: { francs: 0, affinity: 0 },
+  },
+  {
+    id: REFINERY_BUILD_MISSION_ID,
+    title: 'Commission an Off-world Refinery',
+    brief: 'Deliver aluminium and copper to a site you own or lease. Your refinery processes ore close to the source for your own construction and client deliveries.',
+    tag: 'PROGRAM',
+    difficulty: 'L1',
+    locked: false,
+    sequence: FREE_OPS_START_MISSIONS_DONE + 1,
+    unlockAt: 'Reach Free Operations and choose a site you own or lease',
+    construction: {
+      structureKind: refineryBlueprint.kind,
+      requiredMaterials: { ...(refineryBlueprint.costMaterials ?? {}) },
+      placementMode: 'confirm',
+      buildTimeMs: 45 * 60 * 1000,
+    },
+    programReward: {
+      researchXP: 0,
+      outcome: 'Off-world refinery commissioned · process ore at the selected site',
+    },
+    requires: {
+      ...materialRequirement(refineryBlueprint.costMaterials ?? {}),
+      drill_tier: 1,
+      max_orbit: 5,
+    },
+    payout: { francs: 0, affinity: 0 },
+  },
+  {
+    id: SCAN_STATION_BUILD_MISSION_ID,
+    title: 'Build the Scanning Station',
+    brief: 'Commission the Scan Station at Base. Its remote instruments map deposits, craters, and landmarks for your own program.',
+    tag: 'PROGRAM',
+    difficulty: 'L1',
+    locked: false,
+    sequence: FREE_OPS_START_MISSIONS_DONE + 1,
+    unlockAt: 'Reach Free Operations and complete the commissioning pass',
+    construction: {
+      structureKind: scanStationBlueprint.kind,
+      requiredMaterials: { ...(scanStationBlueprint.costMaterials ?? {}) },
+      placementMode: 'confirm',
+      buildTimeMs: 0,
+    },
+    programReward: {
+      researchXP: 0,
+      outcome: 'Scanning Station built · remote target mapping is now available',
+    },
+    requires: {
+      ...materialRequirement(scanStationBlueprint.costMaterials ?? {}),
+      drill_tier: 1,
+      max_orbit: 0,
+    },
+    payout: { francs: 0, affinity: 0 },
+  },
+]
 
 export const AUTHORED_MISSIONS: Mission[] = [
+  ...OWN_PROGRAM_BUILD_MISSIONS,
   {
     id: ACADEMY_INTRO_MISSION_ID,
     title: 'Train the First Astronaut',
-    brief: 'Establish the Astronaut Academy at Earth Base, fund its first day-long session, and graduate a named astronaut into your roster.',
+    brief: 'Establish the Astronaut Academy at Base, fund its first day-long session, and graduate a named astronaut into your roster.',
     tag: 'STORY',
     difficulty: 'L1',
     locked: true,

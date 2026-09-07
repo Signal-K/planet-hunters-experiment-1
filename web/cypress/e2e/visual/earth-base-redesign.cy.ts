@@ -10,13 +10,15 @@ export {}
  */
 
 const STORAGE_KEY = 'landnam-game-state-v1'
+const AUTHENTICATED_STORAGE_KEY = `${STORAGE_KEY}:user:e2e-user`
 const SURVEY_KEY = 'landnam-surveys-shown'
 const SNOOZE_KEY = 'landnam-upgrade-prompt-snooze-until'
 
 const ALL_SURVEYS = [
   'lnm_first_launch', 'lnm_mining_feel', 'lnm_client_pick',
   'lnm_mission_friction', 'lnm_progression_feel', 'lnm_end_of_content',
-  'lnm_return_visit', 'lnm_m1_complete', 'lnm_m2_complete', 'lnm_m3_complete',
+  'lnm_return_visit', 'lnm_m1_complete', 'lnm_m2_mission_choice', 'lnm_m2_rocket_clarity', 'lnm_m2_rating', 'lnm_m2_freetext',
+        'lnm_m3_transport_clarity', 'lnm_m3_client_choice', 'lnm_m3_rating', 'lnm_m3_freetext',
 ]
 
 const BASE_PLAYER = {
@@ -49,14 +51,14 @@ function seed(win: Window, player: object) {
   win.localStorage.setItem(SNOOZE_KEY, String(Date.now() + 365 * 24 * 60 * 60 * 1000))
   // Keep visual specs isolated from any remote game state left by another
   // test in the same PocketBase-backed run.
-  win.localStorage.setItem('landnam-guest-credentials', JSON.stringify({
-    email: `ci-seed-${Date.now()}-${Math.random().toString(36).slice(2)}@landnam.guest`,
+  win.localStorage.setItem('landnam-account-credentials', JSON.stringify({
+    email: `ci-seed-${Date.now()}-${Math.random().toString(36).slice(2)}@example.com`,
     password: 'GuestPassword123!',
   }))
   // Suppress the onboarding-complete sheet, which otherwise covers the scene
   // on any preset with missionsDone past the Free Ops threshold.
   win.localStorage.setItem('ln_tutorial_complete_ack', '1')
-  win.localStorage.setItem(STORAGE_KEY, JSON.stringify({
+  const serialized = JSON.stringify({
     screen: 'hub',
     player: { ...BASE_PLAYER, ...player },
     tutorial: false,
@@ -66,7 +68,9 @@ function seed(win: Window, player: object) {
     rocket: { chassis: 'hull-mk1', propulsion: 'ion-a1', drill: 'hand-drill' },
     lastCargo: null,
     popup: null,
-  }))
+  })
+  win.localStorage.setItem(STORAGE_KEY, serialized)
+  win.localStorage.setItem(AUTHENTICATED_STORAGE_KEY, serialized)
 }
 
 function openHub(player: object) {
@@ -81,6 +85,14 @@ function assertNoHorizontalOverflow() {
   cy.window().then(win => {
     expect(win.document.documentElement.scrollWidth, 'document width').to.be.at.most(win.innerWidth)
   })
+}
+
+function assertInsideViewport(selector: string) {
+  cy.window().then(win => cy.get(selector).then($element => {
+    const rect = $element[0].getBoundingClientRect()
+    expect(rect.left, `${selector} left edge`).to.be.at.least(0)
+    expect(rect.right, `${selector} right edge`).to.be.at.most(win.innerWidth)
+  }))
 }
 
 describe('Earth Base — redesigned scene', () => {
@@ -104,16 +116,15 @@ describe('Earth Base — redesigned scene', () => {
       refineryBuilt: true,
       refineryUnlocked: true,
       scannerBuilt: true,
-      satelliteMonitoringBuilt: true,
-      placed: ['launchpad', 'refinery', 'scan-station', 'satellite-monitoring-station'],
-      placementPlots: { launchpad: 0, refinery: 1, 'scan-station': 2, 'satellite-monitoring-station': 3 },
+      placed: ['launchpad', 'refinery', 'scan-station', 'transit-telescope'],
+      placementPlots: { launchpad: 0, refinery: 1, 'scan-station': 2, 'transit-telescope': 3 },
       stash: { iron: 12, silicon: 5, gold: 2 },
     })
     cy.screenshot('earth-base-02-portrait-full', { capture: 'viewport' })
   })
 
   it('desktop — full base', () => {
-    cy.viewport(1440, 900)
+    cy.viewport(1280, 720)
     openHub({
       missionsDone: 4,
       missionCount: 4,
@@ -121,13 +132,30 @@ describe('Earth Base — redesigned scene', () => {
       refineryBuilt: true,
       refineryUnlocked: true,
       scannerBuilt: true,
-      satelliteMonitoringBuilt: true,
-      placed: ['launchpad', 'refinery', 'scan-station', 'satellite-monitoring-station'],
-      placementPlots: { launchpad: 0, refinery: 1, 'scan-station': 2, 'satellite-monitoring-station': 3 },
+      placed: ['launchpad', 'refinery', 'scan-station', 'transit-telescope'],
+      placementPlots: { launchpad: 0, refinery: 1, 'scan-station': 2, 'transit-telescope': 3 },
       stash: { iron: 12, silicon: 5 },
     })
     assertNoHorizontalOverflow()
+    assertInsideViewport('[data-testid="progression-card-transit-satellite"]')
     cy.screenshot('earth-base-03-desktop-full', { capture: 'viewport' })
+  })
+
+  it('narrow landscape — desktop composition stays inside the viewport', () => {
+    cy.viewport(1024, 600)
+    openHub({
+      missionsDone: 4,
+      missionCount: 4,
+      freeOperations: true,
+      refineryBuilt: true,
+      refineryUnlocked: true,
+      scannerBuilt: true,
+      placed: ['launchpad', 'refinery', 'scan-station', 'transit-telescope'],
+      placementPlots: { launchpad: 0, refinery: 1, 'scan-station': 2, 'transit-telescope': 3 },
+    })
+    assertNoHorizontalOverflow()
+    assertInsideViewport('[data-testid="progression-card-transit-satellite"]')
+    cy.screenshot('earth-base-08-narrow-landscape', { capture: 'viewport' })
   })
 
   it('portrait — below-soil storage and habitat cutaway', () => {
@@ -150,13 +178,18 @@ describe('Earth Base — redesigned scene', () => {
     cy.contains('Storage & habitat deck').should('be.visible')
     cy.contains('Mineral Vault').should('be.visible')
     cy.contains('Parts Stores').should('be.visible')
+    // The portrait room grid is its own scroll container; the fourth card is
+    // below the initial cutaway viewport even though the room is mounted.
+    cy.get('[data-testid="subsurface-room-habitat-training"]')
+      .scrollIntoView()
+      .should('be.visible')
     cy.contains('Habitat Training').should('be.visible')
     cy.contains('Commodity Exchange').should('not.exist')
     cy.screenshot('earth-base-04-portrait-subsurface', { capture: 'viewport' })
   })
 
   it('desktop — below-soil storage and habitat cutaway', () => {
-    cy.viewport(1440, 900)
+    cy.viewport(1280, 720)
     openHub({
       missionsDone: 4,
       missionCount: 4,
@@ -203,6 +236,16 @@ describe('Earth Base — redesigned scene', () => {
       .click({ force: true, scrollBehavior: false })
     cy.get('[data-testid="build-place-screen"][data-scene-loaded="true"]', { timeout: 20000 })
       .should('be.visible')
+    cy.get('[data-testid="terrain-scene"][data-terrain-status="ready"]', { timeout: 20000 })
+      .should('be.visible')
+    cy.get('[data-testid="terrain-scene"] img[src*="/game/assets/terrain/"]')
+      .should('have.length.greaterThan', 20)
+      .should($images => {
+        expect(
+          $images.toArray().every(image => (image as HTMLImageElement).naturalWidth > 0),
+          'terrain sprites decoded',
+        ).to.eq(true)
+      })
     cy.get('[data-testid="build-plot-1"]', { timeout: 20000 })
       .should('be.visible')
       .click({ force: true, scrollBehavior: false })
