@@ -134,7 +134,7 @@ export function ScreenContent({
     case 'build':
       return (
         <BuildPlaceScreen
-          onBack={() => game.go('hub')}
+          onBack={() => game.goBack()}
           hasCoach={hasCoach}
           player={{
             francs: game.player.francs,
@@ -213,7 +213,7 @@ export function ScreenContent({
         <TessDiscoveryScreen
           player={game.player}
           visualCandidate={game.visualFixture === 'tess' ? VISUAL_TESS_CANDIDATE : undefined}
-          onBack={() => game.go('hub')}
+          onBack={() => game.goBack()}
           onBuildStation={() => game.go('build')}
           onOpenProgram={game.openLaunchpad}
           onSubmit={game.submitTessClassification}
@@ -226,7 +226,7 @@ export function ScreenContent({
         <AsteroidDiscoveryScreen
           player={game.player}
           visualCandidate={game.visualFixture === 'asteroid' ? VISUAL_ASTEROID_CANDIDATE : undefined}
-          onBack={() => game.go('hub')}
+          onBack={() => game.goBack()}
           onBuildTelescope={() => game.go('build')}
           onSubmit={game.submitAsteroidClassification}
         />
@@ -281,7 +281,7 @@ export function ScreenContent({
             refineryLastStartedAt: game.player.refineryLastStartedAt,
             staffed: !!game.player.structureCrewAssignments?.refinery,
           }}
-          onBack={() => game.go('hub')}
+          onBack={() => game.goBack()}
           onStartRefine={game.onStartRefine}
           onCollect={game.onCollectRefined}
         />
@@ -298,7 +298,7 @@ export function ScreenContent({
           onSell={game.sellMinerals}
           refinedGoods={game.player.refinedGoods}
           onSellRefined={game.sellRefinedGoods}
-          onBack={() => game.go('hub')}
+          onBack={() => game.goBack()}
           onOpenMissions={() => game.go('missions')}
           clientId={game.player.lastClient}
         />
@@ -326,7 +326,7 @@ export function ScreenContent({
           skillPoints={game.player.skillPoints ?? 0}
           unlockedSkillNodes={game.player.unlockedSkillNodes ?? []}
           onUnlock={game.unlockSkillNode}
-          onBack={() => game.go('hub')}
+          onBack={() => game.goBack()}
           researchXP={game.player.researchXP ?? 0}
           licenseGrade={game.player.licenseGrade ?? 'Grade I'}
           onUpgradeLicenseGrade={game.upgradeLicenseGrade}
@@ -348,12 +348,12 @@ export function ScreenContent({
           clients={game.catalog.clients}
           targets={game.catalog.targets}
           player={game.player}
-          onBack={() => game.go('hub')}
+          onBack={() => game.goBack()}
         />
       )
 
     case 'narrative-ledger':
-      return <NarrativeLedgerScreen onBack={() => game.go('hub')} />
+      return <NarrativeLedgerScreen onBack={() => game.goBack()} />
 
     case 'launchpad':
       {
@@ -374,7 +374,7 @@ export function ScreenContent({
         ]
       return (
         <LaunchpadScreen
-          onBack={() => game.go('hub')}
+          onBack={() => game.goBack()}
           onPick={(id, freeHaulDisposition) => {
             if (id === ACADEMY_INTRO_MISSION_ID) return game.go('academy')
             game.onPickMission(id, freeHaulDisposition)
@@ -419,7 +419,7 @@ export function ScreenContent({
         <AcademyScreen
           player={game.player}
           catalog={game.catalog}
-          onBack={() => game.go('hub')}
+          onBack={() => game.goBack()}
           onBuild={() => game.go('build')}
           onOpenHangar={() => game.go('hangar')}
           onResearch={game.researchAcademy}
@@ -439,7 +439,7 @@ export function ScreenContent({
       return (
         <SurfaceOpsScreen
           player={game.player}
-          onBack={() => game.go('hub')}
+          onBack={() => game.goBack()}
           onPurchaseSiteAccess={game.purchaseSiteAccess}
           onStartFieldOperation={game.startFieldOperation}
           onBuildLaunchpad={game.buildSettlementLaunchpad}

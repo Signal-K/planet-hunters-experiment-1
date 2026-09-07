@@ -1101,9 +1101,15 @@
 .trainingPanel {
   display: grid;
   min-height: 0;
-  padding: 24px;
+  padding: 16px;
   flex: 1;
-  place-items: center;
+  /* `safe center` falls back to start-alignment once content is taller than
+     the panel, instead of centering and clipping both ends equally — on a
+     short viewport that used to hide the Excavate Deck CTA below the fold
+     with no visible cue that the panel scrolls (07/09/26 QA report). The
+     tighter icon/copy/button spacing below keeps the CTA in view without
+     scrolling on common phone heights in the first place. */
+  place-items: safe center;
   overflow: auto;
   border: 1px dashed var(--ln-cyan-border);
   border-radius: var(--ln-r-lg);
@@ -1113,9 +1119,9 @@
 
 .trainingLock {
   display: grid;
-  width: 64px;
-  height: 64px;
-  margin: 0 auto 16px;
+  width: 48px;
+  height: 48px;
+  margin: 0 auto 12px;
   place-items: center;
   border: 1px solid var(--ln-cyan-border);
   border-radius: 50%;

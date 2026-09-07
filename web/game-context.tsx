@@ -109,6 +109,20 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
 
   // ── Domain hooks ───────────────────────────────────────────────────────────
   const ui      = useUIActions(setState)
+  const priorTrailScreen = useRef<Screen | null>(null)
+
+  // Domain actions own their state changes, so record every completed screen
+  // transition centrally. This includes Mission → Target → Rocket and avoids
+  // every screen inventing a separate, usually Hub-only, return destination.
+  useEffect(() => {
+    if (!hydrated) return
+    if (priorTrailScreen.current === null) {
+      priorTrailScreen.current = state.screen
+      return
+    }
+    ui.recordScreenTransition(priorTrailScreen.current, state.screen)
+    priorTrailScreen.current = state.screen
+  }, [hydrated, state.screen, ui.recordScreenTransition])
 
   // Apply a /demo sandbox completion bonus left for this session (KES-264).
   // Runs once per boot, through the same setState path as any other player
@@ -254,6 +268,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       laserChargeCap: getLaserChargeCap(state.player.unlockedSkillNodes ?? []),
       // UI
       go: ui.go,
+      goBack: ui.goBack,
       openLaunchpad: ui.openLaunchpad,
       openLaunchpadMissionMenu: ui.openLaunchpadMissionMenu,
       launchpadMissionMenuOpen: ui.launchpadMissionMenuOpen,

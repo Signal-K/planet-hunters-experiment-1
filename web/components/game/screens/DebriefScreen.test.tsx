@@ -109,7 +109,8 @@ describe('DebriefScreen own-program outcomes', () => {
 
     expect(host.textContent).toContain('Program Outcome')
     expect(host.textContent).toContain('daily instrument feed unlocked')
-    expect(host.textContent).toContain('+0 XP')
+    expect(host.textContent).toContain('remains in Earth orbit')
+    expect(host.textContent).toContain('sky-side status indicator')
     expect(host.textContent).toContain('Log Program Outcome')
     expect(host.textContent).not.toContain('Loan repayment')
 

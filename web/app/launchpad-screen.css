@@ -508,7 +508,12 @@ button.launchpad-scene-object { cursor: pointer; }
   }
 
   .portrait-canvas:has(.hub-bottom-dock) [data-testid="friends-button"] {
-    right: 54px !important;
+    /* Clears the Menu pill's mobile span (right:12px, 72px wide -> occupies
+       12-84px from the edge) — this used to sit at right:54px, landing
+       inside that span and rendering FRIENDS on top of MENU (07/09/26 QA
+       report). Menu was a 34px icon-only circle when this was tuned; it is
+       now a 72px text pill (`.game-menu-button` in globals.css). */
+    right: 96px !important;
     left: auto !important;
   }
 

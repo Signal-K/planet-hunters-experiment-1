@@ -13,7 +13,11 @@ export default function FriendsButton({ onClick }: FriendsButtonProps) {
       aria-label="Friends"
       onClick={onClick}
       style={{
-        position: 'absolute', top: 56, right: 56, zIndex: 22,
+        // right:96 clears the shared shell's Menu pill (app/globals.css
+        // .game-menu-button: right 12px, width 72px -> occupies 12-84px from
+        // the edge) — it used to sit at right:56, landing inside that span
+        // and rendering the two pills overlapping (07/09/26 QA report).
+        position: 'absolute', top: 56, right: 96, zIndex: 22,
         minHeight: 34, borderRadius: 999, cursor: 'pointer',
         display: 'flex', alignItems: 'center', gap: 8, padding: '0 12px',
         background: 'var(--ln-panel)',

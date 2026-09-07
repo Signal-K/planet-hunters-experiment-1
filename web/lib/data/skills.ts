@@ -82,8 +82,11 @@ export function effectiveMaxOrbit(part: Part, unlockedSkillNodes?: string[]): nu
   return orbit + 1
 }
 
+/** The 07/09 QA pass set the current baseline to one quarter of the former wait. */
+export const TRAVEL_TIME_SCALE = 0.25
+
 export function travelDurationMs(target: Target, unlockedSkillNodes?: string[], msPerOrbit = 2 * 60 * 1000): number {
-  const base = target.orbit * msPerOrbit
+  const base = target.orbit * msPerOrbit * TRAVEL_TIME_SCALE
   if (!hasSkill(unlockedSkillNodes, 'near-range-1')) return base
   return Math.round(base * 0.85)
 }

@@ -223,4 +223,64 @@ describe('Launchpad own-program actions', () => {
     expect(onPick).toHaveBeenCalledWith('freeops-self-directed-mining', 'sell')
     await act(async () => root.unmount())
   })
+
+  it('gates the off-world refinery build behind an existing silo and mining settlement', async () => {
+    const basePlayer = {
+      ...DEFAULT_STATE.player,
+      freeOperations: true,
+      missionsDone: 3,
+      placed: ['launchpad'],
+    }
+    const catalog = buildRuntimeCatalog({
+      catalog: STATIC_CATALOG,
+      freeOperations: true,
+      missionsDone: basePlayer.missionsDone,
+      player: basePlayer,
+    })
+    ;(globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT: boolean }).IS_REACT_ACT_ENVIRONMENT = true
+
+    async function openBuildMenu(player: typeof basePlayer) {
+      const host = document.createElement('div')
+      const root = createRoot(host)
+      await act(async () => {
+        root.render(
+          <LaunchpadScreen
+            onBack={vi.fn()}
+            onPick={vi.fn()}
+            onViewContracts={vi.fn()}
+            onLaunchpadAction={vi.fn()}
+            onOpenHangar={vi.fn()}
+            missionsDone={player.missionsDone}
+            freeOperations={player.freeOperations}
+            catalog={catalog}
+            player={player}
+          />,
+        )
+      })
+      await act(async () => {
+        host.querySelector<HTMLButtonElement>('[data-testid="launchpad-status-card"]')?.dispatchEvent(new MouseEvent('click', { bubbles: true }))
+      })
+      await act(async () => {
+        host.querySelector<HTMLButtonElement>('[data-testid="launchpad-new-mission-build-btn"]')?.dispatchEvent(new MouseEvent('click', { bubbles: true }))
+      })
+      return { host, root }
+    }
+
+    const { host: withoutPrereqs, root: rootA } = await openBuildMenu(basePlayer)
+    expect(withoutPrereqs.querySelector('[data-testid="launchpad-build-program-build-mars-mining-settlement"]')).not.toBeNull()
+    expect(withoutPrereqs.querySelector('[data-testid="launchpad-build-program-build-remote-silo"]')).not.toBeNull()
+    expect(withoutPrereqs.querySelector('[data-testid="launchpad-build-program-build-refinery"]')).toBeNull()
+    await act(async () => rootA.unmount())
+
+    const readyPlayer = {
+      ...basePlayer,
+      clientStructures: [
+        { targetId: 'mars', structureKind: 'mining-settlement', clientId: 'mission-control', state: 'delivered' as const, startedAt: 0 },
+        { targetId: 'mars', structureKind: 'mineral-silo', clientId: 'mission-control', state: 'delivered' as const, startedAt: 0 },
+      ],
+    }
+    const { host: withPrereqs, root: rootB } = await openBuildMenu(readyPlayer)
+    expect(withPrereqs.querySelector('[data-testid="launchpad-build-program-build-refinery"]')).not.toBeNull()
+    await act(async () => rootB.unmount())
+  })
 })

@@ -31,13 +31,21 @@ export default function ScreenPage({ params }: { params: Promise<{ screen: strin
   }, [screen, game.hydrated, game.authGateOpen, game.authUserId]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Coach: lightweight derivation without importing the full hook
+  // Screen actions update game state synchronously; the URL is deliberately
+  // synced in a following effect. Rendering from the route segment here left
+  // a completed Back action showing its old panel until Next finished the
+  // client navigation. That was especially visible after nested setup steps.
+  // Keep the route segment for browser-history synchronisation above, but let
+  // the interactive game render the authoritative state immediately.
+  const activeScreen = game.screen
+
   const coachSteps = !game.tutorial || game.player.missionsDone >= FREE_OPS_START_MISSIONS_DONE ? [] :
     game.player.missionsDone === 0 ? M1_STEPS :
     game.player.missionsDone === 1 ? M2_STEPS :
     game.player.missionsDone === 2 ? M3_STEPS : []
   const hasCoach = coachSteps.some(
-    step => step.screen === screen && !game.doneSteps[step.id]
-  ) && !(screen === 'hub' && game.subsurfaceView)
+    step => step.screen === activeScreen && !game.doneSteps[step.id]
+  ) && !(activeScreen === 'hub' && game.subsurfaceView)
 
   if (!VALID_SCREENS.has(screen as Screen)) return notFound()
 
@@ -47,5 +55,5 @@ export default function ScreenPage({ params }: { params: Promise<{ screen: strin
   // already live and interactive. See STS-624.
   if (game.authGateOpen) return null
 
-  return <ScreenContent screen={screen as Screen} game={game} hasCoach={hasCoach} />
+  return <ScreenContent screen={activeScreen} game={game} hasCoach={hasCoach} />
 }

@@ -71,11 +71,6 @@ function MarketGlyph() {
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M4 10h16l-2-6H6l-2 6zM5 10v10h14V10M9 20v-6h6v6" /></svg>
   )
 }
-function AtlasGlyph() {
-  return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><circle cx="12" cy="12" r="9" /><path d="M3 12h18M12 3a14 14 0 013.5 9 14 14 0 01-3.5 9 14 14 0 01-3.5-9A14 14 0 0112 3z" /></svg>
-  )
-}
 function SkillsGlyph() {
   return (
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M12 2l2.5 7.5H22l-6 4.6 2.3 7.4L12 17l-6.3 4.5 2.3-7.4-6-4.6h7.5z" /></svg>
@@ -84,6 +79,52 @@ function SkillsGlyph() {
 function HistoryGlyph() {
   return (
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M4 5h16v14H4z" /><path d="M8 9h8M8 13h6M8 17h4" /></svg>
+  )
+}
+
+/**
+ * The instrument network belongs in the sky, not in the Base dock. It is a
+ * contextual scene object: the orbit shows what is online and its attached
+ * telemetry strip says whether there is data waiting.
+ */
+function OrbitalInstrumentNetwork({
+  transitOnline,
+  deepSpaceOnline,
+  tessQueueCount,
+  asteroidQueueCount,
+  onOpen,
+}: {
+  transitOnline: boolean
+  deepSpaceOnline: boolean
+  tessQueueCount: number
+  asteroidQueueCount: number
+  onOpen: () => void
+}) {
+  const readyCount = tessQueueCount + asteroidQueueCount
+  const hasWork = readyCount > 0
+  const primaryLabel = transitOnline ? 'TESS instrument data' : 'Deep space instrument data'
+  const status = hasWork ? `${readyCount} DATA READY` : 'DATA LINKED'
+
+  return (
+    <button
+      type="button"
+      className="hub-orbital-network"
+      data-testid="hub-orbital-network"
+      aria-label={`${primaryLabel}: ${status}`}
+      onClick={onOpen}
+    >
+      <span className="hub-orbital-network__sky" aria-hidden="true">
+        <span className="hub-orbital-network__ring hub-orbital-network__ring--outer" />
+        <span className="hub-orbital-network__ring hub-orbital-network__ring--inner" />
+        <span className="hub-orbital-network__earth" />
+        {transitOnline && <span className="hub-orbital-network__satellite" />}
+        {deepSpaceOnline && <span className="hub-orbital-network__telescope" />}
+      </span>
+      <span className={`hub-orbital-network__status${hasWork ? ' hub-orbital-network__status--ready' : ''}`}>
+        <span className="hub-orbital-network__dot" />
+        {status}
+      </span>
+    </button>
   )
 }
 
@@ -470,6 +511,16 @@ export default function HubScreen({ player, rocketVariant = 'explorer', hasCoach
               which read as overcast weather against the new deep-blue sky. */}
           <AmbientMotes />
 
+          {(player.transitSatelliteLaunchedAt || player.deepSpaceTelescopeBuilt) && (
+            <OrbitalInstrumentNetwork
+              transitOnline={!!player.transitSatelliteLaunchedAt}
+              deepSpaceOnline={!!player.deepSpaceTelescopeBuilt}
+              tessQueueCount={tessQueueCount}
+              asteroidQueueCount={asteroidQueueCount}
+              onOpen={() => onOpenScene(player.transitSatelliteLaunchedAt ? 'galaxy' : 'asteroid-discovery')}
+            />
+          )}
+
           {/* Authored structure sprites. DOM rendering keeps the Hub legible
               in both hardware WebGL and Docker/Electron screenshot runners. */}
           <EarthBaseModules buildings={hubBuildings} />
@@ -668,13 +719,6 @@ export default function HubScreen({ player, rocketVariant = 'explorer', hasCoach
                     <>
                       <span className="hub-desktop-nav">
                         <DockIconBtn icon={<MarketGlyph />} label="Market" onClick={() => onOpenScene('market')} />
-                      </span>
-                      <span className="hub-desktop-nav">
-                        {player.transitSatelliteLaunchedAt && (
-                          <DockIconBtn icon={<AtlasGlyph />} label="TESS Data" onClick={() => onOpenScene('galaxy')} />
-                        )}
-                      </span>
-                      <span className="hub-desktop-nav">
                       </span>
                     </>
                   )}

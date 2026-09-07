@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import { DEFAULT_STATE } from '@/lib/game-state'
 import type { Mission } from '@/lib/data'
-import { applyConstructionCompletion, resolveConstructionState } from './ConstructionSystem'
+import { applyConstructionCompletion, ownProgramStructureDelivered, resolveConstructionState } from './ConstructionSystem'
+import { OWN_PROGRAM_CLIENT_ID } from '@/lib/data'
 
 const mission: Mission = {
   id: 'construct-fuel-depot', title: 'Fuel depot', brief: '', client: 'helios', tag: 'CONSTRUCT', difficulty: 'L2', locked: false, sequence: 4,
@@ -28,5 +29,35 @@ describe('ConstructionSystem', () => {
     const record = { targetId: 'bennu', structureKind: 'fuel-depot', clientId: 'helios', state: 'under-construction' as const, startedAt: 10_000 }
     expect(resolveConstructionState(record, 1000, 11_000).state).toBe('operational')
     expect(resolveConstructionState(record, 1000, 10_999).state).toBe('under-construction')
+  })
+
+  describe('ownProgramStructureDelivered', () => {
+    it('is false with no matching structure', () => {
+      expect(ownProgramStructureDelivered(DEFAULT_STATE.player, 'mineral-silo')).toBe(false)
+    })
+
+    it('is false while the own-program structure is still under construction', () => {
+      const player = {
+        ...DEFAULT_STATE.player,
+        clientStructures: [{ targetId: 'mars', structureKind: 'mineral-silo', clientId: OWN_PROGRAM_CLIENT_ID, state: 'under-construction' as const, startedAt: 0 }],
+      }
+      expect(ownProgramStructureDelivered(player, 'mineral-silo')).toBe(false)
+    })
+
+    it('ignores a client-owned structure of the same kind', () => {
+      const player = {
+        ...DEFAULT_STATE.player,
+        clientStructures: [{ targetId: 'mars', structureKind: 'mineral-silo', clientId: 'helios', state: 'delivered' as const, startedAt: 0 }],
+      }
+      expect(ownProgramStructureDelivered(player, 'mineral-silo')).toBe(false)
+    })
+
+    it('is true once the own-program structure has been delivered', () => {
+      const player = {
+        ...DEFAULT_STATE.player,
+        clientStructures: [{ targetId: 'mars', structureKind: 'mineral-silo', clientId: OWN_PROGRAM_CLIENT_ID, state: 'delivered' as const, startedAt: 0 }],
+      }
+      expect(ownProgramStructureDelivered(player, 'mineral-silo')).toBe(true)
+    })
   })
 })

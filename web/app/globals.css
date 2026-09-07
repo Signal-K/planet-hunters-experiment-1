@@ -1505,7 +1505,9 @@ button { cursor: pointer; }
 .mission-relay-yard__contract small { display: block; }
 .mission-relay-yard__contract strong { color: var(--ln-blueprint-paper); font: 800 18px var(--ln-font-display); text-transform: uppercase; }
 .mission-relay-yard__contract span { margin-top: 3px; color: var(--ln-cyan-bright); font: 700 10px var(--ln-font-display); letter-spacing: .08em; text-transform: uppercase; }
-.mission-relay-yard__contract small { margin-top: 7px; color: color-mix(in srgb, var(--ln-blueprint-paper) 74%, var(--ln-cyan)); font: 700 9px var(--ln-font-mono); letter-spacing: .04em; text-transform: uppercase; }
+/* 9px read as illegible on the fulfillment requirements line (07/09/26 QA
+   report) — bumped to 11px, still a step down from `span` above it. */
+.mission-relay-yard__contract small { margin-top: 7px; color: color-mix(in srgb, var(--ln-blueprint-paper) 74%, var(--ln-cyan)); font: 700 11px var(--ln-font-mono); letter-spacing: .04em; text-transform: uppercase; }
 .mission-relay-yard__contract b { color: var(--ln-amber-bright); }
 .mission-relay-yard__cycle {
   display: grid;
@@ -3514,6 +3516,123 @@ html[data-coach-target="build-structure-strip"] [data-coach-id="build-structure-
   .hub-push-opt-in { display: none; }
 }
 
+/* The orbital network is an in-world instrument, not Base navigation chrome.
+   Its only UI is a compact telemetry strip attached to the visible orbit. */
+.hub-orbital-network {
+  position: absolute;
+  top: 27%;
+  right: 8%;
+  z-index: 7;
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+  width: 128px;
+  padding: 0;
+  color: var(--hub-cyan);
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+}
+
+.hub-orbital-network:focus-visible {
+  outline: 2px solid var(--ln-cyan);
+  outline-offset: 4px;
+}
+
+.hub-orbital-network__sky {
+  position: relative;
+  width: 128px;
+  height: 64px;
+}
+
+.hub-orbital-network__ring {
+  position: absolute;
+  border: 1px solid var(--ln-hairline);
+  border-radius: 50%;
+  transform: rotate(-18deg);
+}
+
+.hub-orbital-network__ring--outer { inset: 4px 0; }
+.hub-orbital-network__ring--inner { inset: 16px 24px; border-color: color-mix(in srgb, var(--hub-cyan) 48%, transparent); }
+
+.hub-orbital-network__earth {
+  position: absolute;
+  top: 24px;
+  left: 56px;
+  width: 16px;
+  height: 16px;
+  background: var(--hub-bg);
+  border: 2px solid var(--hub-cyan);
+  border-radius: 50%;
+  box-shadow: 0 0 12px color-mix(in srgb, var(--hub-cyan) 42%, transparent);
+}
+
+.hub-orbital-network__satellite,
+.hub-orbital-network__telescope {
+  position: absolute;
+  display: block;
+  width: 8px;
+  height: 8px;
+  background: var(--hub-chalk);
+  border: 1px solid var(--hub-void);
+  box-shadow: 0 0 8px color-mix(in srgb, var(--hub-chalk) 55%, transparent);
+}
+
+.hub-orbital-network__satellite { top: 9px; right: 18px; }
+.hub-orbital-network__satellite::before,
+.hub-orbital-network__satellite::after {
+  position: absolute;
+  top: 2px;
+  width: 8px;
+  height: 3px;
+  content: '';
+  background: var(--hub-cyan);
+}
+.hub-orbital-network__satellite::before { right: 8px; }
+.hub-orbital-network__satellite::after { left: 8px; }
+
+.hub-orbital-network__telescope {
+  bottom: 11px;
+  left: 16px;
+  width: 14px;
+  height: 5px;
+  transform: rotate(24deg);
+}
+.hub-orbital-network__telescope::after {
+  position: absolute;
+  top: 1px;
+  right: -6px;
+  width: 6px;
+  height: 1px;
+  content: '';
+  background: var(--hub-cyan);
+}
+
+.hub-orbital-network__status {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 16px;
+  padding: 0 8px;
+  color: var(--ln-text-muted);
+  background: color-mix(in srgb, var(--hub-panel-deep) 82%, transparent);
+  border: 1px solid var(--ln-hairline);
+  border-radius: 2px;
+  font-family: var(--ln-font-display);
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.hub-orbital-network__status--ready { color: var(--hub-chalk); border-color: var(--hub-chalk); }
+.hub-orbital-network__dot { width: 4px; height: 4px; background: currentColor; border-radius: 50%; }
+
+@media (max-width: 520px) {
+  .hub-orbital-network { top: 30%; right: 4%; transform: scale(0.82); transform-origin: top right; }
+}
+
 /* ─── KES-211 — Rocket Purchase + Assembly/Launch Preflight blueprint pass.
    Both screens already opt into .theme-blueprint on their root and their
    layout classes (.rocket-vehicle-frame, .assembly-preflight-scene, etc.)
@@ -3793,7 +3912,7 @@ html[data-coach-target="build-structure-strip"] [data-coach-id="build-structure-
   .mission-setup-screen--launchpad .mission-relay-yard__contract { padding: 0 8px 8px; }
   .mission-setup-screen--launchpad .mission-relay-yard__contract strong { font-size: 13px; }
   .mission-setup-screen--launchpad .mission-relay-yard__contract span { font-size: 8px; }
-  .mission-setup-screen--launchpad .mission-relay-yard__contract small { margin-top: 4px; font-size: 8px; }
+  .mission-setup-screen--launchpad .mission-relay-yard__contract small { margin-top: 4px; font-size: 10px; }
   .mission-setup-screen--launchpad .mission-relay-yard__commit {
     margin: -8px 12px 0;
     padding: 6px 8px;

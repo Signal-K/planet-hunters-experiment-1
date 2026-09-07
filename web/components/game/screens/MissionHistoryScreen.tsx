@@ -18,8 +18,14 @@ function formatCompletedAt(value: number): string {
   return date.toISOString().slice(0, 10)
 }
 
-export default function MissionHistoryScreen({ records, onBack }: MissionHistoryScreenProps) {
+export default function MissionHistoryScreen({ records, player, onBack }: MissionHistoryScreenProps) {
   const ordered = [...records].sort((a, b) => b.completedAt - a.completedAt)
+  // The detailed log below only holds the most recent runs (capped, and only
+  // populated since this record-keeping shipped), so a long-lived account's
+  // true lifetime count (missionsDone) can exceed ordered.length — show the
+  // real total here rather than undercounting a veteran player's history.
+  const lifetimeCompleted = Math.max(player?.missionsDone ?? 0, ordered.length)
+  const logIsPartial = lifetimeCompleted > ordered.length
 
   return (
     <section className="screen-scroll theme-light" data-testid="mission-history-screen">
@@ -28,8 +34,8 @@ export default function MissionHistoryScreen({ records, onBack }: MissionHistory
           <div><div className={styles.eyebrow}>BASE · MISSION LOG</div><h1>Mission Log</h1><p>A concise record of completed client work and program operations.</p></div>
           <button className={styles.backButton} onClick={onBack}>Back to base</button>
         </header>
-        <nav className={styles.tabs} aria-label="Mission log sections"><a className={styles.tabActive} href="#operations">Operations <span>{ordered.length}</span></a></nav>
-        <section className={styles.summary} id="operations"><span className={styles.count}>{ordered.length}</span><span><strong>MISSIONS COMPLETED</strong><br />Your record stays available after the daily contract board refreshes.</span></section>
+        <nav className={styles.tabs} aria-label="Mission log sections"><a className={styles.tabActive} href="#operations">Operations <span>{lifetimeCompleted}</span></a></nav>
+        <section className={styles.summary} id="operations"><span className={styles.count}>{lifetimeCompleted}</span><span><strong>MISSIONS COMPLETED</strong><br />{logIsPartial ? 'Detailed entries below cover your most recent operations.' : 'Your record stays available after the daily contract board refreshes.'}</span></section>
         {ordered.length === 0 ? <div className={styles.empty}>No completed missions yet. Choose a contract from the Mission Board to start your log.</div> : <div className={styles.list}>{ordered.map((record, index) => <article className={styles.record} key={record.runId ?? `${record.id}-${record.completedAt}`}><span className={styles.index}>{String(ordered.length - index).padStart(2, '0')}</span><div className={styles.recordCopy}><div className={styles.recordTitle}>{record.title}</div><div className={styles.recordMeta}>{record.kind === 'program' ? 'OWN PROGRAM' : record.clientName ?? 'CLIENT OPERATION'}{record.targetName ? ` · ${record.targetName}` : ''}</div></div><time className={styles.date} dateTime={new Date(record.completedAt).toISOString()}>{formatCompletedAt(record.completedAt)}</time></article>)}</div>}
       </div>
     </section>

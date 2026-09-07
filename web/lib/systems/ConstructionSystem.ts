@@ -18,6 +18,18 @@ export function applyConstructionCompletion(player: Player, mission: Mission, ta
   return { ...player, clientStructures: structures }
 }
 
+/** Whether the player's own program has delivered (or further along) a
+ * structure of this kind anywhere off-world. Used to gate a build option
+ * that only makes sense once an earlier one exists (07/09/26 QA report: a
+ * refinery was offered before the player had any silo or mining settlement
+ * to feed it). */
+export function ownProgramStructureDelivered(player: Player, structureKind: string): boolean {
+  return (player.clientStructures ?? []).some(structure =>
+    structure.clientId === OWN_PROGRAM_CLIENT_ID
+    && structure.structureKind === structureKind
+    && (structure.state === 'delivered' || structure.state === 'operational'))
+}
+
 export function resolveConstructionState(record: ClientStructureRecord, buildTimeMs: number, now = Date.now()): ClientStructureRecord {
   if (record.state !== 'under-construction' || record.startedAt === undefined) return record
   return now - record.startedAt >= buildTimeMs

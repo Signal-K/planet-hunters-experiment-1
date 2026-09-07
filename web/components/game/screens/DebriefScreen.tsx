@@ -63,6 +63,9 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
   // need the resolve tap to expose the store-vs-sell choice.
   const isEarlyMission = (missionsDone ?? 0) < FREE_OPS_START_MISSIONS_DONE
   const autoResolve = isEarlyMission && !isFreeHaul
+  // The Transit Telescope is the payload, not the launch vehicle. It remains
+  // in Earth orbit, so this completion must never use cargo-recovery imagery.
+  const isOrbitalInstrumentDeployment = mission.payload?.type === 'satellite'
   const [resolved, setResolved] = useState(autoResolve)
   const [collecting, setCollecting] = useState(false)
   const collectingRef = useRef(false)
@@ -75,9 +78,8 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
   // player sees stages dismantled even when no failure flag was raised.
   const [scrapping, setScrapping] = useState(false)
   useEffect(() => {
-    if (autoResolve) setScrapping(true)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+    if (autoResolve && !isOrbitalInstrumentDeployment) setScrapping(true)
+  }, [autoResolve, isOrbitalInstrumentDeployment])
   const rocketDisplay = rocketDisplayForConfig(rocket)
   const starterRocket = rocketModelForConfig(rocket)
   const recoveryMaterials = rocketStageRecoveryForId(starterRocket.id)
@@ -121,9 +123,9 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
       <header className="debrief-hud-header" data-ui-zone={UI_ZONES.topChrome}>
         <div>
           <span>MISSION COMPLETE</span>
-          <h1>DEBRIEF</h1>
+          <h1>{isOrbitalInstrumentDeployment ? 'DEPLOYMENT' : 'DEBRIEF'}</h1>
         </div>
-        <span className="debrief-hud-header__location">EARTH RECEIVING BERTH · 01</span>
+        <span className="debrief-hud-header__location">{isOrbitalInstrumentDeployment ? 'EARTH ORBIT · INSTRUMENT ONLINE' : 'EARTH RECEIVING BERTH · 01'}</span>
       </header>
 
       <div className={`debrief-game__content screen-scroll${hasCoach ? ' screen-scroll--coach' : ''}`} data-ui-zone={UI_ZONES.screenContent}>
@@ -219,10 +221,10 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
               <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 13, lineHeight: 1.5, color: 'var(--ln-text)' }}>
                 {mission.programReward.outcome}
               </div>
-              <div style={{ marginTop: 10, paddingTop: 10, borderTop: '1px solid var(--ln-cyan-border)', display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+              {isOrbitalInstrumentDeployment ? <div style={{ marginTop: 10, paddingTop: 10, borderTop: '1px solid var(--ln-cyan-border)', fontFamily: 'var(--ln-font-body)', fontSize: 13, lineHeight: 1.5, color: 'var(--ln-text-dim)' }}>The Transit Telescope remains in Earth orbit. Its sky-side status indicator shows when a daily downlink is ready to review.</div> : <div style={{ marginTop: 10, paddingTop: 10, borderTop: '1px solid var(--ln-cyan-border)', display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
                 <span style={{ fontFamily: 'var(--ln-font-display)', fontSize: 10, fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--ln-text-dim)' }}>Research</span>
                 <span style={{ fontFamily: 'var(--ln-font-display)', fontSize: 24, fontWeight: 800, color: 'var(--ln-cyan)', lineHeight: 1 }}>+{mission.programReward.researchXP} XP</span>
-              </div>
+              </div>}
             </Panel>
           ) : delivered ? (
             /* One Ledger panel: payout, expenses, hull and net together, rather
@@ -270,7 +272,7 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
             </Panel>
           ) : null
         )}
-        {resolved && (
+        {resolved && !isOrbitalInstrumentDeployment && (
           <Panel accent={hasEarthStorage ? 'var(--ln-ok)' : 'var(--ln-cyan)'} surface="solid" style={{ animation: 'unlock-in 0.35s ease-out' }}>
             <div className="ln-section-label" style={{ marginBottom: 8 }}>Stage Recovery</div>
             <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 12, color: 'var(--ln-text-dim)', lineHeight: 1.45 }}>
@@ -306,7 +308,7 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
             testId="resolve-cargo-btn"
             onClick={() => {
               setResolved(true)
-              setScrapping(true)
+              if (!isOrbitalInstrumentDeployment) setScrapping(true)
             }}
           >
             {shipDestroyed ? 'Resolve Recovered Cargo' : isProgramOperation ? 'Resolve & Log Outcome' : 'Resolve Cargo & Recovery'}

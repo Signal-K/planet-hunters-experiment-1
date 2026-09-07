@@ -77,11 +77,11 @@ export default function HUDStrip({ player, showStash = false, onSubsurfaceClick 
           {formatCurrency(player.francs, { compact: true })}
         </span>
       </RailCard>
-      <RailCard glyph={<SubsurfaceGlyph />} onClick={onSubsurfaceClick} testId="hud-subsurface-chip">
+      {onSubsurfaceClick && <RailCard glyph={<SubsurfaceGlyph />} onClick={onSubsurfaceClick} testId="hud-subsurface-chip">
         <span style={{ fontFamily: 'var(--ln-font-display)', fontWeight: 800, fontSize: 9, letterSpacing: '0.14em', color: '#eaf1f8', textTransform: 'uppercase' }}>
           Subsurface
         </span>
-      </RailCard>
+      </RailCard>}
       {showStash && player.stash && Object.keys(player.stash).length > 0 && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 5, width: '100%' }}>
           {Object.entries(player.stash).map(([kind, qty]) => {

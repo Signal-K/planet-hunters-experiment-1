@@ -43,7 +43,7 @@ export default function MissionSetupRoutes({
     case 'missions':
       return (
         <MissionBoardScreen
-          onBack={() => game.go('hub')}
+          onBack={() => game.goBack()}
           onPick={game.onPickMission}
           missionsDone={game.player.missionsDone}
           freeOperations={game.player.freeOperations}
@@ -89,7 +89,7 @@ export default function MissionSetupRoutes({
           siloOnline={earthStorageBuilt(game.player)}
           stash={game.player.stash ?? {}}
           fabricatedParts={game.player.fabricatedRocketParts ?? {}}
-          onBack={() => game.go(game.mission?.targetId ? 'missions' : 'targets')}
+          onBack={() => game.goBack()}
           hasCoach={hasCoach}
         />
       )
@@ -98,7 +98,7 @@ export default function MissionSetupRoutes({
       if (!game.mission || !game.target) {
         return (
           <FreeOpsBuildScreen
-            onBack={() => game.go('hub')}
+            onBack={() => game.goBack()}
             onMissions={() => game.go('missions')}
             onInfrastructure={() => game.go('build')}
           />
@@ -114,7 +114,7 @@ export default function MissionSetupRoutes({
             missionsDone={game.player.missionsDone}
             unlockedSkillNodes={game.player.unlockedSkillNodes ?? []}
             onLaunch={onLaunch}
-            onBack={() => game.go('rocket-buy')}
+            onBack={() => game.goBack('rocket-buy')}
             hasCoach={hasCoach}
             coachManual={coachManual}
             deliveryTargetName={deliveryTargetName}

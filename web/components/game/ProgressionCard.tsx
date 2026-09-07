@@ -153,19 +153,6 @@ export default function ProgressionCard({ player, onOpenScene, top = 132 }: Prog
           onClick={() => onOpenScene('launchpad')}
         />
       )
-    } else if (!inOnboarding && player.transitSatelliteLaunchedAt) {
-      cards.push(
-        <CardButton
-          key="daily-candidates"
-          testId="progression-card-tess-candidates"
-          accent="var(--hub-cyan)"
-          icon={<TelescopeGlyph />}
-          eyebrow="Daily Downlink"
-          title="Classify today's transit candidates"
-          cta="Review"
-          onClick={() => onOpenScene('galaxy')}
-        />
-      )
     }
     // Once free operations is unlocked, the persistent Jobs rail is the
     // single mission-board entry point. Repeating Browse Contracts here made

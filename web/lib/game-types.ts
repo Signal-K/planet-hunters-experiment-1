@@ -446,6 +446,7 @@ export interface GameActions {
   authGateOtpId: string | null
   verifyOtp: (code: string) => Promise<void>
   go: (screen: Screen) => void
+  goBack: (fallback?: Screen) => void
   openLaunchpad: () => void
   openLaunchpadMissionMenu: () => void
   launchpadMissionMenuOpen: boolean

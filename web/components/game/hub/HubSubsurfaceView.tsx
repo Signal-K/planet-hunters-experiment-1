@@ -415,7 +415,7 @@ function ExcavatePrompt({
         <p className={styles.trainingCopy}>
           Excavation cost: <strong>{formatRoomCost(SUBSURFACE_EXCAVATE_COST)}</strong>
         </p>
-        <div style={{ marginTop: 24, maxWidth: 320, marginInline: 'auto' }}>
+        <div style={{ marginTop: 12, maxWidth: 320, marginInline: 'auto' }}>
           <PrimaryBtn
             testId="subsurface-excavate-cta"
             onClick={onExcavate}

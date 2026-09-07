@@ -24,6 +24,11 @@ export function useUIActions(
   // Every Launchpad entry is now the physical scene. The retired overview was
   // a generic dashboard that broke the Base's scene-first game flow.
   const [launchpadMissionMenuOpen, setLaunchpadMissionMenuOpen] = useState(false)
+  // Screen changes are made by both this hook and domain actions such as
+  // Mission → Target → Rocket. Keep a short ephemeral trail here instead of
+  // teaching every screen a bespoke "back to Hub" route.
+  const screenTrail = useRef<Screen[]>([])
+  const returningToTrailScreen = useRef(false)
   // Hangar can be entered from the Earth Base or the Launchpad composition.
   // Preserve only that ephemeral return context: it is navigation chrome, not
   // player progress and must not be persisted into a save or public URL.
@@ -36,6 +41,21 @@ export function useUIActions(
       }
       return { ...s, screen }
     })
+  }, [setState])
+
+  const recordScreenTransition = useCallback((from: Screen, to: Screen) => {
+    if (from === to) return
+    if (returningToTrailScreen.current) {
+      returningToTrailScreen.current = false
+      return
+    }
+    screenTrail.current = [...screenTrail.current.slice(-15), from]
+  }, [])
+
+  const goBack = useCallback((fallback: Screen = 'hub') => {
+    const destination = screenTrail.current.pop() ?? fallback
+    returningToTrailScreen.current = true
+    setState(s => ({ ...s, screen: destination }))
   }, [setState])
 
   const openLaunchpad = useCallback(() => {
@@ -109,5 +129,5 @@ export function useUIActions(
     setState(s => ({ ...s, pendingTerritoryClaimFor: undefined, screen: s.tutorial ? 'hub' : 'market' }))
   }, [setState])
 
-  return { go, goToMissions, setScreenFromUrl, skipNextUrlSync, setPopup, setMenuOpen, addToast, dismissToast, clearTerritoryClaimPopup, toasts, subsurfaceView, setSubsurfaceView, openLaunchpad, openLaunchpadMissionMenu, launchpadMissionMenuOpen, setLaunchpadMissionMenuOpen, returnFromHangar }
+  return { go, goBack, recordScreenTransition, goToMissions, setScreenFromUrl, skipNextUrlSync, setPopup, setMenuOpen, addToast, dismissToast, clearTerritoryClaimPopup, toasts, subsurfaceView, setSubsurfaceView, openLaunchpad, openLaunchpadMissionMenu, launchpadMissionMenuOpen, setLaunchpadMissionMenuOpen, returnFromHangar }
 }
