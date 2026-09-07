@@ -97,7 +97,13 @@ describe('C1–C4 screen contracts across viewport classes', () => {
       beforeEach(() => cy.viewport(viewport.width, viewport.height))
 
       it('renders the Free Ops hub, client board, and own-program launchpad without losing primary actions', () => {
-        visit('/game', stateWith('hub'))
+        // Enter the screen under test directly. The root `/game` bridge makes
+        // an auth-dependent returning-player decision before the route tree
+        // mounts; against a deployed Worker that can briefly resolve to the
+        // intro route even though this fixture has already seeded its state.
+        // This matrix is a screen-contract check, so avoid coupling it to
+        // that separate entry-routing race.
+        visit('/game/hub', stateWith('hub'))
         // KES-329/330: HubScreen.tsx's h1 is now the short "Base" /
         // "Subsurface" copy (state-dependent), with the fuller identity in
         // the "BASE · OPS N" / "BASE · SUBSURFACE" eyebrow above it.
