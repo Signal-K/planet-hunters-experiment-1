@@ -418,6 +418,7 @@ export function ScreenContent({
           onOpenSiloBuild={() => game.go('build')}
           missionsDone={game.player.missionsDone}
           freeOperations={game.player.freeOperations}
+          hydrated={game.hydrated}
           catalog={game.catalog}
           player={game.player}
           rocketImageSrc={rocketDisplay.img}

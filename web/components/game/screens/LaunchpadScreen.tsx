@@ -34,6 +34,7 @@ interface LaunchpadScreenProps {
   rocketImageSrc?: string
   selectedRocketName?: string
   francs?: number
+  hydrated?: boolean
   missionMenuOpen?: boolean
   onMissionMenuOpenChange?: (open: boolean) => void
   onOpenSiloBuild?: () => void
@@ -93,7 +94,7 @@ const guideSteps = [
 ] as const
 
 export default function LaunchpadScreen({
-  onBack, onPick, onViewContracts, onLaunchpadAction, onOpenHangar, onResumeMission, missionRuns = [], onResumeMissionRun, onViewMissionLog, missionsDone, freeOperations, catalog, player, rocketImageSrc = '/game/assets/ships/ship_sr1.png', selectedRocketName, francs, missionMenuOpen: requestedMissionMenuOpen = false, onMissionMenuOpenChange, onOpenSiloBuild,
+  onBack, onPick, onViewContracts, onLaunchpadAction, onOpenHangar, onResumeMission, missionRuns = [], onResumeMissionRun, onViewMissionLog, missionsDone, freeOperations, catalog, player, rocketImageSrc = '/game/assets/ships/ship_sr1.png', selectedRocketName, francs, hydrated = false, missionMenuOpen: requestedMissionMenuOpen = false, onMissionMenuOpenChange, onOpenSiloBuild,
 }: LaunchpadScreenProps) {
   // This is the Launchpad route: a playable Earth Base composition. The
   // tower and hangar are the primary interactions; the rail only exposes
@@ -173,7 +174,7 @@ export default function LaunchpadScreen({
       : 'NEW MISSION'
 
   return (
-    <div className="game-screen theme-deep ln-scene-launchpad" data-testid="launchpad-focus-screen">
+    <div className="game-screen theme-deep ln-scene-launchpad" data-testid="launchpad-focus-screen" data-game-hydrated={hydrated ? 'true' : 'false'}>
       {/* Scene chrome stays crisp over the terrain; the previous `glass` prop
           created the large frosted rectangle visible across the upper UI. */}
       <TopBar eyebrow="BASE · LAUNCHPAD" title="Your Program" onBack={onBack} francs={francs} />

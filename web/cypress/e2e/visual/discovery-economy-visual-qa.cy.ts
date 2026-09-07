@@ -266,6 +266,11 @@ describe('Visual QA — discovery -> economy pipeline', () => {
     cy.contains('Welcome Back', { timeout: 15000 }).should('not.exist')
 
     cy.contains('Your Program', { timeout: 15000 }).should('be.visible')
+    // The route renders its server/default shell before GameProvider hydration.
+    // Waiting for the explicit client-ready marker prevents Cypress from
+    // clicking the SSR button before React has attached its event handler.
+    cy.get('[data-testid="launchpad-focus-screen"][data-game-hydrated="true"]', { timeout: 15000 })
+      .should('be.visible')
     // KES-329/330 replaced the single aggregate OPS button with the
     // launchpad mission menu's explicit operation choices. The discovered
     // target is a mining destination (real mineral deposit, not an
