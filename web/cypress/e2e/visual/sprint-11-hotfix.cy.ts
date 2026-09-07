@@ -109,19 +109,27 @@ describe('Sprint 11 Launchpad and Earth Base hotfix — live browser QA', () => 
     cy.get('.launchpad-available-actions').should('not.exist')
     cy.get('[data-testid="launchpad-build-monitoring-btn"]').should('not.exist')
 
+    // Cypress can scroll the footer into view while resolving the control
+    // assertions above. Reset before measuring the scene against the actual
+    // viewport so the check tests layout, not the runner's scroll position.
+    let viewportHeight = 0
     cy.window().then(win => {
-      // Cypress can scroll the footer into view while resolving the control
-      // assertions above. Reset before measuring the scene against the actual
-      // viewport so the check tests layout, not the runner's scroll position.
       win.scrollTo(0, 0)
-      cy.get('.launchpad-visual-scene').then($scene => {
-        const scene = $scene[0].getBoundingClientRect()
-        expect(scene.top, 'visual scene starts inside viewport').to.be.at.least(0)
-        expect(scene.bottom, 'visual scene stays inside viewport').to.be.at.most(win.innerHeight + 1)
+      viewportHeight = win.innerHeight
+    })
+    // The location scene has a short camera-approach animation. A retrying
+    // assertion waits for the settled composition instead of sampling its
+    // intentionally overscanned opening transform.
+    cy.get('.launchpad-visual-scene').should($scene => {
+      const scene = $scene[0].getBoundingClientRect()
+      expect(scene.top, 'visual scene starts inside viewport').to.be.at.least(0)
+      expect(scene.bottom, 'visual scene stays inside viewport').to.be.at.most(viewportHeight + 1)
+    }).then(() => {
+      cy.window().then(win => {
+        expect(win.document.documentElement.scrollHeight, 'page does not vertically scroll').to.be.at.most(win.innerHeight)
+        const viewport = win.document.querySelector('.launchpad-visual-scene') as HTMLElement
+        expect(viewport.scrollHeight, 'Launchpad scene fits its viewport').to.be.at.most(viewport.clientHeight)
       })
-      expect(win.document.documentElement.scrollHeight, 'page does not vertically scroll').to.be.at.most(win.innerHeight)
-      const viewport = win.document.querySelector('.launchpad-visual-scene') as HTMLElement
-      expect(viewport.scrollHeight, 'Launchpad scene fits its viewport').to.be.at.most(viewport.clientHeight)
     })
 
     cy.screenshot('sprint-11-hotfix-launchpad-actions', { capture: 'viewport' })
