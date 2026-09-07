@@ -192,7 +192,12 @@ function GameCanvas() {
     || !SURVEY_SAFE_SCREENS.includes(game.screen)
 
   return (
-    <main className="game-stage" aria-label="Landnam game">
+    <main
+      className="game-stage"
+      aria-label="Landnam game"
+      aria-busy={!game.hydrated}
+      data-game-hydrated={game.hydrated ? 'true' : 'false'}
+    >
       <TakeOnPwaPreload />
       <div className="portrait-canvas">
         <BackendStatus />
@@ -232,7 +237,10 @@ function GameCanvas() {
           <FriendsButton onClick={() => setFriendsOpen(true)} />
         )}
         <DevShortcuts />
-        <div className="game-screen-area">
+        <div
+          className="game-screen-area"
+          style={{ pointerEvents: game.hydrated ? 'auto' : 'none' }}
+        >
           {/* Gated the same way as [screen]/page.tsx — see STS-624. */}
           {!game.authGateOpen && (
             <ScreenContent screen={game.screen} game={game} hasCoach={hasCoach} onBackFromHangar={() => {
