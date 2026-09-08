@@ -1,6 +1,8 @@
 'use client'
 
 import { HubWorldBackground } from '@/components/game/hub/HubWorldBackground'
+import { HangarModules, LaunchpadModules } from '@/components/game/hub/EarthBaseModules'
+import styles from './MissionSceneBackdrop.module.css'
 
 /**
  * The mission-creation journey is one physical place: the Earth base.  Each
@@ -14,8 +16,16 @@ export default function MissionSceneBackdrop({
   composition?: 'earth-base-wide' | 'earth-base-pad'
 }) {
   return (
-    <div data-testid="mission-setup-background" style={{ position: 'absolute', inset: 0 }}>
-      <HubWorldBackground phase="day" composition={composition} />
+    <div className={styles.backdrop} data-testid="mission-setup-background">
+      <div className={styles.terrain}>
+        <HubWorldBackground phase="day" composition={composition} />
+      </div>
+      <div className={styles.launchpad} data-testid="mission-setup-launchpad-structure">
+        <LaunchpadModules />
+      </div>
+      <div className={styles.hangar} data-testid="mission-setup-hangar-structure">
+        <HangarModules />
+      </div>
     </div>
   )
 }
