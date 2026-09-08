@@ -16,6 +16,8 @@ describe('Launchpad own-program actions', () => {
       ...DEFAULT_STATE.player,
       activeMission: { id: 'baseline-extraction', label: 'Baseline extraction → Eros' },
       missionPhase: 'transit' as const,
+      freeOperations: true,
+      missionsDone: 3,
     }
     const noop = vi.fn()
     const markup = renderToStaticMarkup(
@@ -108,6 +110,51 @@ describe('Launchpad own-program actions', () => {
     )
 
     expect(markup).not.toContain('Build Astronaut Academy')
+  })
+
+  it('skips the four-route picker and goes straight to contracts during onboarding', async () => {
+    const player = {
+      ...DEFAULT_STATE.player,
+      freeOperations: false,
+      missionsDone: 0,
+      placed: ['launchpad'],
+    }
+    const catalog = buildRuntimeCatalog({
+      catalog: STATIC_CATALOG,
+      freeOperations: false,
+      missionsDone: player.missionsDone,
+      player,
+    })
+    const host = document.createElement('div')
+    const root = createRoot(host)
+    const onViewContracts = vi.fn()
+    ;(globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT: boolean }).IS_REACT_ACT_ENVIRONMENT = true
+
+    await act(async () => {
+      root.render(
+        <LaunchpadScreen
+          onBack={vi.fn()}
+          onPick={vi.fn()}
+          onViewContracts={onViewContracts}
+          onLaunchpadAction={vi.fn()}
+          onOpenHangar={vi.fn()}
+          missionsDone={player.missionsDone}
+          freeOperations={player.freeOperations}
+          catalog={catalog}
+          player={player}
+        />,
+      )
+    })
+
+    expect(host.textContent).toContain('YOUR MISSION')
+
+    await act(async () => {
+      host.querySelector<HTMLButtonElement>('[data-testid="launchpad-status-card"]')?.dispatchEvent(new MouseEvent('click', { bubbles: true }))
+    })
+
+    expect(onViewContracts).toHaveBeenCalledTimes(1)
+    expect(host.querySelector('[data-testid="launchpad-new-mission-menu"]')).toBeNull()
+    await act(async () => root.unmount())
   })
 
   it('opens the four-route mission picker when the pad is clicked', async () => {

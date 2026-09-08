@@ -163,9 +163,26 @@ export default function LaunchpadScreen({
   // choice of the first operation in a computed list. Selecting a mission is
   // a separate, visible decision; otherwise the pad jumps straight to target
   // selection and skips the board reported in the Craft bug log.
+  //
+  // That reasoning only holds once a player actually has multiple live
+  // routes to weigh (own-program flights, builds, satellites) — which is
+  // exactly what Free Ops unlocks. Before that (still in guided onboarding,
+  // `!hasFreeOpsAccess`), three of this menu's four tiles are always
+  // disabled placeholders ("no owned instrument launch queued", "unlocks
+  // with Free Operations", "no player construction ready") and the one live
+  // tile is always Available Contracts — because during onboarding every
+  // operation is sequence-gated onto the Mission Board (see
+  // `isMissionBoardMission`). Showing that mostly-dead grid to a brand-new
+  // player, with no coach pointer wired to any tile in it, was reported as
+  // "users are not told what to do." Skip straight to the one thing that's
+  // actually there: their assigned starter mission(s) on the Mission Board.
   const openMissionMenu = () => {
     if (player.pendingLaunch) {
       onLaunchpadAction()
+      return
+    }
+    if (!hasFreeOpsAccess) {
+      onViewContracts()
       return
     }
     setOperationBrief(null)
@@ -176,10 +193,14 @@ export default function LaunchpadScreen({
   // current run remains an explicit secondary command in the rail.
   const padActionLabel = player.pendingLaunch
       ? 'Inspect pending launch'
-      : 'Create a new mission'
+      : hasFreeOpsAccess
+      ? 'Create a new mission'
+      : 'View your assigned mission'
   const padActionTitle = player.pendingLaunch
       ? 'INSPECT LAUNCH'
-      : 'NEW MISSION'
+      : hasFreeOpsAccess
+      ? 'NEW MISSION'
+      : 'YOUR MISSION'
 
   return (
     <div className="game-screen theme-deep ln-scene-launchpad" data-testid="launchpad-focus-screen" data-game-hydrated={hydrated ? 'true' : 'false'}>
@@ -361,7 +382,7 @@ export default function LaunchpadScreen({
           {freeOperations && <button data-testid="launchpad-guide-open" onClick={() => setGuideStep(0)}><GuideGlyph /> GUIDE</button>}
           <button data-testid="launchpad-open-hangar-btn" onClick={onOpenHangar}><HangarGlyph /> HANGAR</button>
           {onViewMissionLog && <button data-testid="launchpad-mission-log-btn" onClick={onViewMissionLog}><MissionGlyph /> MISSION LOG</button>}
-          {!player.pendingLaunch && <button className="is-primary" data-testid="launchpad-new-mission-btn" data-action="new-mission" onClick={openMissionMenu}><MissionGlyph /> NEW MISSION</button>}
+          {!player.pendingLaunch && <button className="is-primary" data-testid="launchpad-new-mission-btn" data-action="new-mission" onClick={openMissionMenu}><MissionGlyph /> {hasFreeOpsAccess ? 'NEW MISSION' : 'YOUR MISSION'}</button>}
         </div>
       </footer>
     </div>
