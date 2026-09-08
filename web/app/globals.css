@@ -1540,18 +1540,26 @@ button { cursor: pointer; }
 .mission-relay-yard__contract small { margin-top: 7px; color: color-mix(in srgb, var(--ln-blueprint-paper) 74%, var(--ln-cyan)); font: 700 11px var(--ln-font-mono); letter-spacing: .04em; text-transform: uppercase; }
 .mission-relay-yard__contract b { color: var(--ln-amber-bright); }
 .mission-relay-yard__cycle {
-  display: grid;
-  place-items: center;
-  width: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--ln-s-2);
+  width: 104px;
   height: 48px;
+  padding: 0 var(--ln-s-2);
   border: 3px solid color-mix(in srgb, var(--ln-blueprint-ink) 72%, var(--ln-cyan));
   border-radius: var(--ln-r-md);
   background: color-mix(in srgb, var(--ln-blueprint-paper) 72%, var(--ln-cyan));
   color: var(--ln-blueprint-ink);
   cursor: pointer;
+  font: 800 9px var(--ln-font-display);
+  letter-spacing: var(--ln-tr-label);
+  line-height: 1.1;
+  text-transform: uppercase;
 }
 .mission-relay-yard__cycle:hover,
 .mission-relay-yard__cycle:focus-visible { border-color: var(--ln-cyan); outline: none; }
+.mission-relay-yard__cycle span { min-width: 0; }
 .mission-relay-yard__commit {
   grid-column: 1 / -1;
   z-index: 2;
@@ -1948,6 +1956,29 @@ button { cursor: pointer; }
 .rocket-modules summary::marker {
   color: var(--ln-cyan);
 }
+
+.rocket-fabrication {
+  padding: var(--ln-s-2) 0;
+  border-top: 1px solid var(--ln-hairline);
+  border-bottom: 1px solid var(--ln-hairline);
+}
+
+.rocket-fabrication summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--ln-s-2);
+  cursor: pointer;
+  color: var(--ln-text-muted);
+  font: 700 9px var(--ln-font-display);
+  letter-spacing: var(--ln-tr-label);
+  list-style: none;
+  text-transform: uppercase;
+}
+
+.rocket-fabrication summary::-webkit-details-marker { display: none; }
+.rocket-fabrication summary strong { color: var(--ln-ok); font-weight: 800; }
+.rocket-fabrication__recipes { display: grid; gap: var(--ln-s-2); padding-top: var(--ln-s-2); }
 
 @media (max-width: 899px) {
   .mission-setup-screen--rocket .rocket-vehicle-frame {

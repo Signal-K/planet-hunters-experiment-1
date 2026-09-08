@@ -29,4 +29,27 @@ describe('mission setup ownership', () => {
     expect(layout).toMatch(/<ScreenContent\s+screen=\{game\.screen\}/)
     expect(routePage).not.toMatch(/<ScreenContent\b/)
   })
+
+  it('keeps target and rocket visuals full-stage with attached, non-scrolling inspectors', () => {
+    const shellStyles = read('./screens/MissionSetupShell.module.css')
+    const rocket = read('./screens/RocketPurchaseScreen.tsx')
+
+    expect(shellStyles).toMatch(/mission-setup-screen--target[\s\S]*target-map-frame[\s\S]*height:\s*100%\s*!important/)
+    expect(shellStyles).toMatch(/mission-setup-screen--target[\s\S]*mission-board-detail[\s\S]*position:\s*absolute/)
+    expect(shellStyles).toMatch(/mission-setup-screen--rocket[\s\S]*rocket-vehicle-frame[\s\S]*width:\s*100%\s*!important/)
+    expect(shellStyles).toMatch(/mission-setup-screen--rocket[\s\S]*rocket-summary-card[\s\S]*position:\s*absolute/)
+    expect(shellStyles).toMatch(/rocket-summary-scroll[\s\S]*overflow:\s*hidden\s*!important/)
+    expect(rocket).toMatch(/useState\(false\)/)
+  })
+
+  it('uses explicit client cycling and mission-selection language', () => {
+    const relay = read('./MissionRelayCard.tsx')
+    const tutorial = read('../../lib/data/tutorial.ts')
+
+    expect(relay).toContain('Previous client')
+    expect(relay).toContain('Next client')
+    expect(relay).toContain('Select mission ·')
+    expect(relay).not.toContain('Lock contract ·')
+    expect(tutorial).toContain("title: 'Select a Mission'")
+  })
 })

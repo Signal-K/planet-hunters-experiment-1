@@ -128,7 +128,7 @@ describe('Launchpad · your own program', () => {
     cy.get('[data-testid="launchpad-status-card"]', { timeout: 15000 }).click()
     cy.get('[data-testid="launchpad-new-mission-menu"]').should('not.exist')
     cy.get('[data-testid="mission-board-section-client"]', { timeout: 15000 }).should('be.visible')
-    cy.get('[data-testid="tutorial-coach-block"]', { timeout: 15000 }).should('contain', 'Lock a Contract')
+    cy.get('[data-testid="tutorial-coach-block"]', { timeout: 15000 }).should('contain', 'Select a Mission')
   })
 
   it('returns to the Launchpad after opening the Hangar from it', () => {

@@ -73,7 +73,7 @@ interface RocketPurchaseScreenProps {
 }
 
 export default function RocketPurchaseScreen({ missionsDone, francs, mission, deliveryTargetName, onPurchase, onFabricatePart, onAssembleFabricatedRocket, siloOnline, stash, fabricatedParts, onBack, hasCoach }: RocketPurchaseScreenProps) {
-  const [modulesOpen, setModulesOpen] = useState(true)
+  const [modulesOpen, setModulesOpen] = useState(false)
   const defaultRocket = getRequiredRocketModel(missionsDone)
   const availableRockets = ROCKET_MODELS.filter(model => !model.locked && model.missionsRequired <= missionsDone)
   const [selectedRocketId, setSelectedRocketId] = useState(defaultRocket.id)
@@ -158,7 +158,7 @@ export default function RocketPurchaseScreen({ missionsDone, francs, mission, de
         </MissionSetupFrame>
       </div>
 
-      <MissionSetupCard className="rocket-summary-card" scrollClassName="rocket-summary-scroll" scrollStyle={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
+      <MissionSetupCard className="rocket-summary-card" scrollClassName="rocket-summary-scroll" scrollStyle={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
           <div className="rocket-selector" role="radiogroup" aria-label="Available rocket types">
             <div className="rocket-selector-heading">
               <span className="rocket-selector-label">Choose vehicle</span>
@@ -192,11 +192,11 @@ export default function RocketPurchaseScreen({ missionsDone, francs, mission, de
               })}
             </div>
           </div>
-          <div>
+          <div className="rocket-summary-heading">
             <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 22, fontWeight: 800, color: 'var(--ln-text)', letterSpacing: '-0.01em' }}>
               {rocket.name}
             </div>
-            <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 12.5, color: 'var(--ln-text-muted)', marginTop: 5, lineHeight: 1.5 }}>
+            <div className="rocket-summary-description" style={{ fontFamily: 'var(--ln-font-body)', fontSize: 12.5, color: 'var(--ln-text-muted)', marginTop: 5, lineHeight: 1.5 }}>
               Prebuilt staged vehicle. The operating stage carries its rooms; the mining laser is the payload beneath its fairing. Assigned to this mission and ready for automated launch.
             </div>
           </div>
@@ -228,18 +228,14 @@ export default function RocketPurchaseScreen({ missionsDone, francs, mission, de
             </details>
           )}
 
-          <section style={{ display: 'flex', flexDirection: 'column', gap: 8, padding: 12, border: '1px solid var(--ln-cyan-border)', borderRadius: 10, background: 'var(--ln-panel-2)' }} data-testid="rocket-fabrication-recipes">
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 8 }}>
-              <span className="ln-section-label">Silo Fabrication</span>
-              <span style={{ font: '700 10px var(--ln-font-display)', letterSpacing: '0.08em', textTransform: 'uppercase', color: siloOnline ? 'var(--ln-ok)' : 'var(--ln-text-muted)' }}>
-                {siloOnline ? fabricationReady ? 'Vehicle ready' : 'Parts required' : 'Silo required'}
-              </span>
-            </div>
-            {!siloOnline ? (
-              <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 12, lineHeight: 1.45, color: 'var(--ln-text-muted)' }}>
-                Build an Earth mineral silo or vault, then save mined minerals to fabricate local rocket parts.
-              </div>
-            ) : composition.recipes.map(recipe => {
+          {siloOnline && (
+            <details className="rocket-fabrication" data-testid="rocket-fabrication-recipes">
+              <summary>
+                <span>Silo Fabrication</span>
+                <strong>{fabricationReady ? 'Vehicle ready' : 'Parts required'}</strong>
+              </summary>
+              <div className="rocket-fabrication__recipes">
+              {composition.recipes.map(recipe => {
               const built = fabricatedParts[recipe.id] ?? 0
               const affordable = recipeIsAffordable(recipe, stash)
               const cost = Object.entries(recipe.ingredients).map(([mineral, amount]) => `${amount} ${mineral}`).join(' · ')
@@ -256,11 +252,13 @@ export default function RocketPurchaseScreen({ missionsDone, francs, mission, de
                   )}
                 </div>
               )
-            })}
-          </section>
+              })}
+              </div>
+            </details>
+          )}
 
           {!isFree && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 0, background: 'var(--ln-panel-2)', borderRadius: 10, border: '1px solid var(--ln-cyan-border)', overflow: 'hidden' }}>
+            <div className="rocket-cost-summary" style={{ display: 'flex', flexDirection: 'column', gap: 0, background: 'var(--ln-surface-2)', borderRadius: 10, border: '1px solid var(--ln-cyan-border)', overflow: 'hidden' }}>
               {missionPayout !== undefined && (
                 <CostSummaryRow label="Mission Payout (base)" value={formatCurrency(missionPayout, { compact: true })} color="var(--ln-cyan)" />
               )}
@@ -282,7 +280,7 @@ export default function RocketPurchaseScreen({ missionsDone, francs, mission, de
             </div>
           )}
 
-          <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 10, color: 'var(--ln-text-dim)', letterSpacing: '0.08em', lineHeight: 1.6, paddingBottom: 8 }}>
+          <div className="rocket-single-use-note" style={{ fontFamily: 'var(--ln-font-display)', fontSize: 10, color: 'var(--ln-text-dim)', letterSpacing: '0.08em', lineHeight: 1.6 }}>
             Rockets are single-use. Each mission requires a fresh vehicle.
           </div>
       </MissionSetupCard>

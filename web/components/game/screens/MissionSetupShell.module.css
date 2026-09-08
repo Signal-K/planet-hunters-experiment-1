@@ -124,7 +124,9 @@
 .shell:global(.mission-setup-screen--mission) :global(.mission-relay-yard__console) {
   top: 50%;
   bottom: auto;
+  grid-template-columns: 112px minmax(340px, 520px) 112px;
   justify-content: center;
+  width: min(calc(100% - 32px), 776px);
   transform: translate(-50%, -50%);
 }
 
@@ -137,18 +139,45 @@
   min-height: 0;
 }
 
+.shell:global(.mission-setup-screen--target) :global(.mission-board-layout) {
+  position: relative;
+  display: block !important;
+}
+
+.shell:global(.mission-setup-screen--target) :global(.target-map-stage),
+.shell:global(.mission-setup-screen--target) :global(.target-map-instrument) {
+  position: absolute !important;
+  inset: 0;
+  display: block !important;
+}
+
 .shell:global(.mission-setup-screen--target) :global(.mission-board-detail) {
-  background: var(--ln-panel-2) !important;
+  position: absolute;
+  z-index: 6;
+  top: 16px;
+  right: 16px;
+  width: 320px;
+  max-width: calc(100% - 32px);
+  max-height: calc(100% - 96px);
+  padding: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
 }
 
 .shell:global(.mission-setup-screen--target) :global(.target-map-frame) {
   background: var(--ln-void) !important;
 }
 
+.shell:global(.mission-setup-screen--target) :global(.mission-board-detail .mission-setup-card) {
+  border: 1px solid var(--ln-hairline-strong) !important;
+  border-radius: var(--ln-r-lg) !important;
+  background: var(--ln-panel) !important;
+  box-shadow: var(--ln-shadow-card) !important;
+}
+
 .shell:global(.mission-setup-screen--rocket) .body.body {
-  display: grid !important;
-  grid-template-columns: minmax(0, 1.22fr) minmax(300px, .78fr) !important;
-  grid-template-rows: minmax(0, 1fr) !important;
+  position: relative;
+  display: block !important;
 }
 
 .shell:global(.mission-setup-screen--rocket) :global(.rocket-vehicle-stage),
@@ -163,11 +192,39 @@
 }
 
 .shell:global(.mission-setup-screen--rocket) :global(.rocket-vehicle-frame) {
-  background: var(--ln-surface) !important;
+  background: color-mix(in srgb, var(--ln-surface) 92%, transparent) !important;
 }
 
 .shell:global(.mission-setup-screen--rocket) :global(.rocket-summary-card) {
-  background: var(--ln-panel-2) !important;
+  position: absolute;
+  z-index: 6;
+  top: 16px;
+  right: 16px;
+  bottom: 16px;
+  width: 368px !important;
+  height: auto !important;
+  max-width: calc(100% - 32px);
+  border: 1px solid var(--ln-hairline-strong) !important;
+  border-radius: var(--ln-r-lg) !important;
+  background: var(--ln-panel) !important;
+  box-shadow: var(--ln-shadow-card) !important;
+}
+
+.shell:global(.mission-setup-screen--rocket) :global(.rocket-summary-scroll) {
+  gap: 8px !important;
+  padding: 12px !important;
+  overflow: hidden !important;
+}
+
+.shell:global(.mission-setup-screen--rocket) :global(.rocket-summary-description) {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.shell:global(.mission-setup-screen--rocket) :global(.rocket-single-use-note) {
+  display: none;
 }
 
 .shell:global(.mission-setup-screen--assembly) :global(.assembly-frame) {
@@ -220,12 +277,42 @@
     padding: 7px 10px;
     font-size: 9px;
   }
+
+  .shell:global(.mission-setup-screen--target) :global(.mission-board-detail),
+  .shell:global(.mission-setup-screen--rocket) :global(.rocket-summary-card) {
+    top: 8px;
+    right: 8px;
+    bottom: 8px;
+    width: 320px !important;
+    max-height: calc(100% - 16px);
+  }
+
+  .shell:global(.mission-setup-screen--rocket) :global(.rocket-summary-scroll) {
+    gap: 8px !important;
+    padding: 10px !important;
+  }
+
+  .shell:global(.mission-setup-screen--rocket) :global(.rocket-summary-description),
+  .shell:global(.mission-setup-screen--rocket) :global(.rocket-modules),
+  .shell:global(.mission-setup-screen--rocket) :global(.rocket-fabrication) {
+    display: none;
+  }
 }
 
 @media (max-width: 719px) {
   .shell:global(.mission-setup-screen--rocket) .body.body {
-    grid-template-columns: minmax(0, 1fr) !important;
-    grid-template-rows: minmax(0, 1fr) minmax(0, 1fr) !important;
+    display: block !important;
+  }
+
+  .shell:global(.mission-setup-screen--target) :global(.mission-board-detail),
+  .shell:global(.mission-setup-screen--rocket) :global(.rocket-summary-card) {
+    top: auto;
+    right: 8px;
+    bottom: 8px;
+    left: 8px;
+    width: auto !important;
+    max-width: none;
+    max-height: 44%;
   }
 
   .shell .actions > button,

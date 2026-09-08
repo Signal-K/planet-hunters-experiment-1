@@ -22,7 +22,7 @@ describe('tutorial layout rail', () => {
   })
 
   it('reserves enough height for a real two-line-wrapped coach card (KES-146)', () => {
-    // At the 390px mobile viewport, the "Lock a Contract" step's body copy
+    // At the 390px mobile viewport, the mission-selection step's body copy
     // wraps to two lines and measured 134px tall in practice — the old 84px
     // estimate undershot that by 50px, which let scrollIntoView tuck list
     // items under the coach overlay. Guard against silently shrinking this

@@ -12,7 +12,7 @@ export const TUTORIAL_RAIL = {
   RESERVED_TOP: 76,
   // Measured action-card height (avatar row + padding, single-line action
   // text) is ~71px in practice. KES-146: at the 390px mobile viewport, steps
-  // whose body copy wraps to two lines (e.g. "Lock a Contract") measured
+  // whose body copy wraps to two lines measured
   // 134px tall — the old 84px estimate undershot that, leaving reserved
   // content areas too shallow and letting scrollIntoView tuck list items
   // under the coach card. Sized with headroom above the worst-case measured

@@ -1,7 +1,7 @@
 'use client'
 
 import { type CSSProperties } from 'react'
-import { ChevronLeft, ChevronRight, RadioTower } from 'lucide-react'
+import { ChevronsLeft, ChevronsRight, RadioTower } from 'lucide-react'
 import { formatCurrency } from '@/lib/format'
 import type { MissionRelayCardModel } from '@/lib/hooks/useMissionRelayModels'
 import ClientMark from '@/components/ui/ClientMark'
@@ -44,14 +44,14 @@ export function MissionRelayCommit({
         disabled={!previewModel.unlocked || tutorialMissionInProgress}
         onClick={() => { if (!tutorialMissionInProgress) onPick(previewModel.mission.id) }}
       >
-        {tutorialMissionInProgress ? missionStartBlockedLabel : `Lock contract · ${previewModel.targetCount} targets`}
+        {tutorialMissionInProgress ? missionStartBlockedLabel : `Select mission · ${previewModel.targetCount} targets`}
       </button>
     </div>
   )
 }
 
-/** The client-relay console itself — cycle buttons either side of the
- * instrument card, client identity, contract summary, and the Lock Contract
+/** The client-relay console itself — explicitly labelled signal controls sit
+ * either side of the instrument card, followed by the mission selection
  * CTA. Shared by the standalone Mission Dispatch route and Launchpad's
  * embedded contract view (KES-343) so the two never drift out of sync again. */
 export default function MissionRelayCard({
@@ -76,7 +76,8 @@ export default function MissionRelayCard({
         aria-label="Previous client signal"
         onClick={onPrev}
       >
-        <ChevronLeft size={24} />
+        <ChevronsLeft size={18} aria-hidden="true" />
+        <span>Previous client</span>
       </button>
       <div
         className="mission-relay-yard__station"
@@ -111,7 +112,8 @@ export default function MissionRelayCard({
         aria-label="Next client signal"
         onClick={onNext}
       >
-        <ChevronRight size={24} />
+        <span>Next client</span>
+        <ChevronsRight size={18} aria-hidden="true" />
       </button>
       {showCommit && (
         <MissionRelayCommit
