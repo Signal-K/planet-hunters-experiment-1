@@ -249,7 +249,11 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
        ?? null)
     : null
   const target = state.targetId ? runtimeCatalog.targets.find(t => t.id === state.targetId) ?? null : null
-  const sceneScope = state.screen === 'missions'
+  // Launchpad's embedded contract view (KES-343) reads missionBoardScope the
+  // same way the standalone Mission Dispatch screen does — it never gets its
+  // own screen value to key off, since opening it no longer changes
+  // state.screen away from 'launchpad'.
+  const sceneScope = (state.screen === 'missions' || state.screen === 'launchpad')
     ? state.missionBoardScope ?? EARTH_BASE_SCOPE
     : deriveSceneScope({ screen: state.screen, targetId: state.targetId, target })
 
@@ -275,6 +279,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       setLaunchpadMissionMenuOpen: ui.setLaunchpadMissionMenuOpen,
       returnFromHangar: ui.returnFromHangar,
       goToMissions: ui.goToMissions,
+      markContractsOpened: ui.markContractsOpened,
       setScreenFromUrl: ui.setScreenFromUrl,
       setPopup: ui.setPopup,
       setMenuOpen: ui.setMenuOpen,

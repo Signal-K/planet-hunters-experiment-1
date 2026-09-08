@@ -453,6 +453,7 @@ export interface GameActions {
   setLaunchpadMissionMenuOpen: (open: boolean) => void
   returnFromHangar: () => void
   goToMissions: (scope?: SceneScope) => void
+  markContractsOpened: (scope?: SceneScope) => void
   setScreenFromUrl: (screen: Screen) => void
   setPlayer: React.Dispatch<React.SetStateAction<Player>>
   setMissionId: (id: string | null) => void

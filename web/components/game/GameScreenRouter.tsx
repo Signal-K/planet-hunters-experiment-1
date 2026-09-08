@@ -379,7 +379,7 @@ export function ScreenContent({
             if (id === ACADEMY_INTRO_MISSION_ID) return game.go('academy')
             game.onPickMission(id, freeHaulDisposition)
           }}
-          onViewContracts={() => game.goToMissions()}
+          onViewContracts={() => game.markContractsOpened()}
           onLaunchpadAction={() => {
             if (game.player.pendingLaunch) return game.go('fab')
             game.goToMissions()
@@ -387,6 +387,10 @@ export function ScreenContent({
           onOpenHangar={() => game.go('hangar')}
           missionMenuOpen={game.launchpadMissionMenuOpen}
           onMissionMenuOpenChange={game.setLaunchpadMissionMenuOpen}
+          hasCoach={hasCoach}
+          coachManual={coach?.manual ?? false}
+          crew={game.player.crew}
+          sceneScope={game.sceneScope}
           onResumeMission={game.player.activeMission ? () => {
             captureGameEvent('mission_resumed', { mission_phase: game.player.missionPhase ?? 'transit' })
             enqueueSurvey('lnm_resume_mission', 1200)

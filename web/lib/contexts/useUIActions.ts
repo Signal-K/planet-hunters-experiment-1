@@ -89,6 +89,20 @@ export function useUIActions(
     }))
   }, [setState])
 
+  // Launchpad's embedded contract view (KES-343) keeps the player on the
+  // physical Launchpad scene — "Available Contracts" no longer navigates to
+  // a separate screen, it swaps the relay console into the same persistent
+  // scene. This still needs to mark the same onboarding checkpoint
+  // goToMissions marked and remember the scope the board should filter to,
+  // just without the screen change.
+  const markContractsOpened = useCallback((scope: SceneScope = EARTH_BASE_SCOPE) => {
+    setState(s => ({
+      ...s,
+      missionBoardScope: scope,
+      doneSteps: { ...s.doneSteps, 1: true },
+    }))
+  }, [setState])
+
   // Called by the [screen] page component when the URL changes (browser back/forward).
   // Updates state.screen WITHOUT triggering the URL-sync effect so we don't create
   // a push that fights the navigation.
@@ -129,5 +143,5 @@ export function useUIActions(
     setState(s => ({ ...s, pendingTerritoryClaimFor: undefined, screen: s.tutorial ? 'hub' : 'market' }))
   }, [setState])
 
-  return { go, goBack, recordScreenTransition, goToMissions, setScreenFromUrl, skipNextUrlSync, setPopup, setMenuOpen, addToast, dismissToast, clearTerritoryClaimPopup, toasts, subsurfaceView, setSubsurfaceView, openLaunchpad, openLaunchpadMissionMenu, launchpadMissionMenuOpen, setLaunchpadMissionMenuOpen, returnFromHangar }
+  return { go, goBack, recordScreenTransition, goToMissions, markContractsOpened, setScreenFromUrl, skipNextUrlSync, setPopup, setMenuOpen, addToast, dismissToast, clearTerritoryClaimPopup, toasts, subsurfaceView, setSubsurfaceView, openLaunchpad, openLaunchpadMissionMenu, launchpadMissionMenuOpen, setLaunchpadMissionMenuOpen, returnFromHangar }
 }
