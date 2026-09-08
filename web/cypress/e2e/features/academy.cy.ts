@@ -172,13 +172,13 @@ describe('Astronaut Academy', () => {
     })
 
     // Tab switching reaches every management surface.
-    cy.contains('button', 'training').click()
+    cy.get('[data-testid="academy-tab-training"]').click()
     cy.contains('Day-long sessions').should('be.visible')
-    cy.contains('button', 'hire').click()
+    cy.get('[data-testid="academy-tab-hire"]').click()
     cy.contains('Instant level 3 hires').should('be.visible')
-    cy.contains('button', 'staffing').click()
+    cy.get('[data-testid="academy-tab-staffing"]').click()
     cy.contains('Refinery').should('be.visible')
-    cy.contains('button', 'partners').click()
+    cy.get('[data-testid="academy-tab-partners"]').click()
     cy.contains('Crew Quarters T1').should('be.visible')
   })
 
@@ -206,5 +206,88 @@ describe('Astronaut Academy', () => {
     })
     cy.get('[data-testid="academy-screen"]', { timeout: 10000 }).should('be.visible')
     cy.get('[data-testid="academy-coach"]').should('not.exist')
+  })
+
+  // KES-341: compact-landscape rendered regression. The old AcademyCoach
+  // absolutely-positioned itself over the top of the 190px scene canvas —
+  // these assert the scene keeps real, non-trivial visible height whether
+  // the coach is up or dismissed, at both audited compact-landscape sizes.
+  const LANDSCAPE_VIEWPORTS = [
+    { key: 'landscape-844', width: 844, height: 390 },
+    { key: 'landscape-926', width: 926, height: 428 },
+  ] as const
+
+  LANDSCAPE_VIEWPORTS.forEach(({ key, width, height }) => {
+    it(`[${key}] keeps the academy scene visible and dominant with the coach up, and after dismissal`, () => {
+      cy.viewport(width, height)
+      cy.visit('/game/academy', {
+        onBeforeLoad(win) {
+          const full: GameState = {
+            screen: 'academy',
+            missionId: null, targetId: null,
+            rocket: { chassis: 'hull-mk2', propulsion: 'fusion-b2', drill: 'hand-drill' },
+            lastCargo: null, tutorial: false, doneSteps: {}, popup: null, menuOpen: false,
+            player: basePlayer({
+              placed: ['launchpad', 'astronaut-academy'],
+              placementPlots: { launchpad: 0, 'astronaut-academy': 1 },
+              clientMissions: { 'helios-propulsion-depot': 10, 'arcturus-battery-systems': 10 },
+              academyResearched: true,
+              academyFunded: true,
+              crew: [],
+            }),
+          } as GameState
+          win.localStorage.setItem(STORAGE_KEY, JSON.stringify(full))
+          win.localStorage.setItem('landnam-account-credentials', JSON.stringify({ email: 'e2e@example.com', password: 'e2e-guest-test' }))
+          win.localStorage.removeItem(COACH_KEY)
+        },
+      })
+
+      cy.get('[data-testid="academy-screen"]', { timeout: 10000 }).should('be.visible')
+      cy.get('[data-testid="academy-coach"]').should('be.visible')
+      // The coach reserves its own row (tutorialRail) rather than overlaying
+      // the scene, so the scene canvas must still report a real visible height.
+      cy.get('[data-testid="academy-canvas"]').then($canvas => {
+        expect($canvas.height()).to.be.greaterThan(120)
+      })
+      cy.get('[data-testid="academy-tab-roster"]').then($tab => {
+        expect($tab.height()).to.be.at.least(40)
+      })
+
+      cy.get('[data-testid="academy-coach-skip"]').click()
+      cy.get('[data-testid="academy-coach"]').should('not.exist')
+      cy.get('[data-testid="academy-canvas"]').then($canvas => {
+        expect($canvas.height()).to.be.greaterThan(120)
+      })
+      cy.screenshot(`academy-${key}-coach-dismissed`)
+    })
+
+    it(`[${key}] shows an actionable empty-roster state for astronauts`, () => {
+      cy.viewport(width, height)
+      cy.visit('/game/academy', {
+        onBeforeLoad(win) {
+          const full: GameState = {
+            screen: 'academy',
+            missionId: null, targetId: null,
+            rocket: { chassis: 'hull-mk2', propulsion: 'fusion-b2', drill: 'hand-drill' },
+            lastCargo: null, tutorial: false, doneSteps: {}, popup: null, menuOpen: false,
+            player: basePlayer({
+              placed: ['launchpad', 'astronaut-academy'],
+              placementPlots: { launchpad: 0, 'astronaut-academy': 1 },
+              clientMissions: { 'helios-propulsion-depot': 10, 'arcturus-battery-systems': 10 },
+              academyResearched: true,
+              academyFunded: true,
+              crew: [],
+            }),
+          } as GameState
+          win.localStorage.setItem(STORAGE_KEY, JSON.stringify(full))
+          win.localStorage.setItem('landnam-account-credentials', JSON.stringify({ email: 'e2e@example.com', password: 'e2e-guest-test' }))
+          win.localStorage.setItem(COACH_KEY, '1')
+        },
+      })
+      cy.get('[data-testid="academy-screen"]', { timeout: 10000 }).should('be.visible')
+      cy.get('[data-testid="academy-empty-astronaut"]').should('be.visible').and('contain.text', 'No astronauts yet')
+      cy.get('[data-testid="academy-empty-astronaut"]').contains('button', 'Train').click()
+      cy.contains('Day-long sessions').should('be.visible')
+    })
   })
 })

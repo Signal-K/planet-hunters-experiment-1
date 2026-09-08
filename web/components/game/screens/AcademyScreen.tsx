@@ -30,10 +30,21 @@ import { GhostBtn, PrimaryBtn } from '@/components/ui/Button'
 import ProgressBar from '@/components/ui/ProgressBar'
 import AcademyCanvas from './AcademyCanvas'
 import AcademyCoach, { useAcademyCoach } from '@/components/game/AcademyCoach'
+import { UI_ZONES } from '@/lib/ui-zones'
 import styles from './AcademyScreen.module.css'
 
 type Tab = 'roster' | 'training' | 'hire' | 'staffing' | 'partners'
 const BRANCHES: SkillBranch[] = ['mining', 'cargo', 'range', 'engineering']
+// Roster first — it's the screen's actual identity, not an admin section
+// equal to the other four. The rest stay reachable in one row of real
+// 44px-tall touch targets rather than the old five equal-width 28px tabs.
+const TAB_META: Array<{ id: Tab; label: string }> = [
+  { id: 'roster', label: 'Roster' },
+  { id: 'training', label: 'Train' },
+  { id: 'hire', label: 'Hire' },
+  { id: 'staffing', label: 'Staff' },
+  { id: 'partners', label: 'Partners' },
+]
 
 interface AcademyScreenProps {
   player: Player
@@ -66,6 +77,11 @@ export default function AcademyScreen(props: AcademyScreenProps) {
   const level = academyLevel(props.player)
   const coach = useAcademyCoach()
   const showCoach = coach.visible && built
+  const crewCounts = useMemo(() => ({
+    astronaut: crew.filter(member => member.crewClass === 'astronaut').length,
+    rover: crew.filter(member => member.crewClass === 'rover').length,
+    drone: crew.filter(member => member.crewClass === 'drone').length,
+  }), [crew])
 
   useEffect(() => {
     setNow(Date.now())
@@ -84,6 +100,7 @@ export default function AcademyScreen(props: AcademyScreenProps) {
   return (
     <div className={`game-screen theme-light ${styles.screen}`} data-testid="academy-screen">
       <TopBar eyebrow="BASE · CREW" title="Astronaut Academy" onBack={props.onBack} solid />
+      {showCoach && <AcademyCoach onDismiss={coach.dismiss} />}
 
       {!built ? (
         <main className={styles.locked}>
@@ -109,14 +126,14 @@ export default function AcademyScreen(props: AcademyScreenProps) {
       ) : (
         <>
           <div className={styles.scene}>
-            <AcademyCanvas activeTraining={sessions.length} funded={!!props.player.academyFunded} />
+            <AcademyCanvas activeTraining={sessions.length} funded={!!props.player.academyFunded} crewCounts={crewCounts} />
             <div className={styles.sceneHud}>
               <strong>ACADEMY L{level}</strong>
               <span>{props.player.academyFunded ? `${sessions.length}/${academyTrainingCapacity(props.player)} ACTIVE` : 'FUNDING PAUSED'}</span>
             </div>
           </div>
 
-          <div className={styles.management}>
+          <div className={styles.management} data-ui-zone={UI_ZONES.screenContent}>
             <div className={styles.summary}>
               <span>{crew.length} rostered</span>
               <span>{formatCurrency(CREW_DAILY_UPKEEP)} / astronaut / day</span>
@@ -124,9 +141,9 @@ export default function AcademyScreen(props: AcademyScreenProps) {
                 {props.player.academyFunded ? `Funded · ${formatCurrency(ACADEMY_DAILY_UPKEEP)}/day` : 'Restore funding'}
               </button>
             </div>
-            <nav className={styles.tabs}>
-              {(['roster', 'training', 'hire', 'staffing', 'partners'] as Tab[]).map(item => (
-                <button key={item} className={tab === item ? styles.activeTab : ''} onClick={() => setTab(item)}>{item}</button>
+            <nav className={styles.tabs} aria-label="Academy operations">
+              {TAB_META.map(item => (
+                <button key={item.id} data-testid={`academy-tab-${item.id}`} className={tab === item.id ? styles.activeTab : ''} onClick={() => setTab(item.id)}>{item.label}</button>
               ))}
             </nav>
 
@@ -138,6 +155,18 @@ export default function AcademyScreen(props: AcademyScreenProps) {
                     return (
                       <section key={archetype.id}>
                         <div className={styles.sectionHead}><strong>{archetype.plural}</strong><span>{members.length}{archetype.rosterCap ? `/${archetype.rosterCap}` : ''}</span></div>
+                        {members.length === 0 && (
+                          <div className={styles.emptyRoster} data-testid={`academy-empty-${archetype.id}`}>
+                            <div className={`${styles.classMark} ${styles[archetype.id]}`} />
+                            <div className={styles.emptyRosterMain}>
+                              <strong>No {archetype.plural.toLowerCase()} yet</strong>
+                              <p>{archetype.id === 'astronaut' ? 'Train a candidate or hire one instantly.' : archetype.description}</p>
+                            </div>
+                            {archetype.id === 'astronaut' && (
+                              <GhostBtn full={false} onClick={() => setTab('training')}>Train</GhostBtn>
+                            )}
+                          </div>
+                        )}
                         {members.map(member => {
                           const progress = crewProgress(member)
                           return (
@@ -242,7 +271,6 @@ export default function AcademyScreen(props: AcademyScreenProps) {
               )}
             </div>
           </div>
-          {showCoach && <AcademyCoach onDismiss={coach.dismiss} />}
         </>
       )}
     </div>
