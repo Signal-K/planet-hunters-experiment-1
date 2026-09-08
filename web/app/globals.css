@@ -3945,7 +3945,10 @@ html[data-coach-target="build-structure-strip"] [data-coach-id="build-structure-
 .mission-setup-screen--launchpad .mission-dispatch-content {
   position: absolute;
   inset: 0;
-  z-index: 2;
+  /* Reused .launchpad-scene-object (the tower/hangar structures, KES-343)
+     sits at z-index:6 — this must stay above that so the relay console
+     renders as an overlay on top of the scene instead of behind it. */
+  z-index: 7;
   box-sizing: border-box;
   width: min(100%, 1120px);
   height: 100%;

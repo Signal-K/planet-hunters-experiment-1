@@ -15,7 +15,9 @@ import type { Player } from '@/lib/game-types'
 import { filterMissionsForSceneScope } from '@/lib/scene-scope'
 import type { SceneScope } from '@/lib/scene-scope'
 import { isTutorialMissionInProgress } from '@/lib/mission-flow'
-import MissionSceneBackdrop from '@/components/game/screens/MissionSceneBackdrop'
+import { HubWorldBackground } from '@/components/game/hub/HubWorldBackground'
+import { HangarModules, LaunchpadModules } from '@/components/game/hub/EarthBaseModules'
+import { useTimeOfDay } from '@/lib/hooks/useTimeOfDay'
 import { ChevronLeft, ChevronRight, RadioTower } from 'lucide-react'
 
 const SHORT_LANDSCAPE_CONTENT_TOP = 142
@@ -39,6 +41,7 @@ interface MissionBoardScreenProps {
 
 export default function MissionBoardScreen({ onBack, onPick, missionsDone, freeOperations, hasCoach, coachManual = false, catalog, francs, crew = [], player, sceneScope = { kind: 'earth-base', id: 'earth-base', label: 'Base' } }: MissionBoardScreenProps) {
   const { missions: MISSIONS, clients: CLIENTS, targets, parts } = catalog
+  const { phase: skyPhase } = useTimeOfDay()
   const [previewId, setPreviewId] = useState<string | null>(null)
   const [shortLandscape, setShortLandscape] = useState(false)
   useEffect(() => {
@@ -152,7 +155,22 @@ export default function MissionBoardScreen({ onBack, onPick, missionsDone, freeO
 
   return (
     <div className="game-screen theme-deep ln-scene-launchpad mission-setup-screen mission-setup-screen--launchpad" style={{ width: '100%', height: '100%', position: 'relative' }}>
-      <div className="mission-setup-scene-background" aria-hidden="true"><MissionSceneBackdrop composition="earth-base-pad" /></div>
+      {/* Reuse the real Launchpad screen's own scene markup (same background,
+          same LaunchpadModules/HangarModules structures, same positions) so
+          Mission Dispatch is the identical place, not a separately hand-
+          rolled flat-sprite scene that happened to drift out of sync with it
+          (2026-09-08 design feedback: the two screens must look the same). */}
+      <div className="launchpad-visual-scene" aria-hidden="true">
+        <div className="launchpad-scene-zoom">
+          <HubWorldBackground phase={skyPhase} composition="earth-base-pad" />
+        </div>
+        <div className="launchpad-scene-object launchpad-tower">
+          <span className="launchpad-tower-art"><LaunchpadModules /></span>
+        </div>
+        <div className="launchpad-scene-object launchpad-rocket">
+          <HangarModules className="launchpad-hangar-art" />
+        </div>
+      </div>
       <TopBar
         eyebrow={`LAUNCHPAD · ${freeOperations ? `${sceneScope.label.toUpperCase()} · FREE OPS` : `${sceneScope.label.toUpperCase()} · L${missionsDone + 1}`}`}
         title="Mission Dispatch"
@@ -162,8 +180,6 @@ export default function MissionBoardScreen({ onBack, onPick, missionsDone, freeO
       />
       <div className={`mission-dispatch-content${hasCoach ? ' mission-dispatch-content--coach' : ''}${shortLandscape ? ' mission-dispatch-content--short' : ''}`} data-ui-zone={UI_ZONES.screenContent} style={{ paddingTop: shortLandscape ? SHORT_LANDSCAPE_CONTENT_TOP : contentTop }}>
         <div className="mission-relay-yard mission-creator-container" data-testid="mission-board-section-client" data-mission-creator-container="true">
-          <img className="mission-relay-yard__hangar" src="/game/assets/base/hangar_flat.png" alt="" aria-hidden="true" />
-          <img className="mission-relay-yard__launchpad" src="/game/assets/base/launchpad_flat.png" alt="" aria-hidden="true" />
           {previewModel ? (
             <div className="mission-relay-yard__console" aria-live="polite">
               <button
