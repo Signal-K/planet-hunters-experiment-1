@@ -70,9 +70,10 @@ interface RocketPurchaseScreenProps {
   fabricatedParts: Record<string, number>
   onBack: () => void
   hasCoach?: boolean
+  coachManual?: boolean
 }
 
-export default function RocketPurchaseScreen({ missionsDone, francs, mission, deliveryTargetName, onPurchase, onFabricatePart, onAssembleFabricatedRocket, siloOnline, stash, fabricatedParts, onBack, hasCoach }: RocketPurchaseScreenProps) {
+export default function RocketPurchaseScreen({ missionsDone, francs, mission, deliveryTargetName, onPurchase, onFabricatePart, onAssembleFabricatedRocket, siloOnline, stash, fabricatedParts, onBack, hasCoach, coachManual }: RocketPurchaseScreenProps) {
   const [modulesOpen, setModulesOpen] = useState(true)
   const defaultRocket = getRequiredRocketModel(missionsDone)
   const availableRockets = ROCKET_MODELS.filter(model => !model.locked && model.missionsRequired <= missionsDone)
@@ -99,7 +100,7 @@ export default function RocketPurchaseScreen({ missionsDone, francs, mission, de
       title="Select Rocket"
       onBack={onBack}
       hasCoach={hasCoach}
-      coachManual={hasCoach}
+      coachManual={coachManual}
       sceneBackground={<MissionSceneBackdrop composition="earth-base-pad" />}
       actions={fabricationReady && siloOnline ? (
         <div className="rocket-actions">

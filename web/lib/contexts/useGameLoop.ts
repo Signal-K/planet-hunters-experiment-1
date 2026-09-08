@@ -268,8 +268,11 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
       if (s.screen !== 'rocket-buy' || !s.missionId || !s.targetId) return s
       const rocket = ROCKET_MODELS.find(r => r.id === rocketId)
       if (!rocket) return s
-      if (s.player.pendingLaunch && s.player.pendingRocketId === rocket.id) return { ...s, screen: 'fab' }
-      return applyPurchaseRocket(s, rocket)
+      if (s.player.pendingLaunch && s.player.pendingRocketId === rocket.id) {
+        return { ...s, screen: 'fab', doneSteps: { ...s.doneSteps, 8: true } }
+      }
+      const next = applyPurchaseRocket(s, rocket)
+      return { ...next, doneSteps: { ...next.doneSteps, 8: true } }
     })
   }, [setState])
 
@@ -286,8 +289,11 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
       if (s.screen !== 'rocket-buy' || !s.missionId || !s.targetId) return s
       const rocket = ROCKET_MODELS.find(candidate => candidate.id === rocketId)
       if (!rocket) return s
-      if (s.player.pendingLaunch && s.player.pendingRocketId === rocket.id) return { ...s, screen: 'fab' }
-      return applyAssembleFabricatedRocket(s, rocket)
+      if (s.player.pendingLaunch && s.player.pendingRocketId === rocket.id) {
+        return { ...s, screen: 'fab', doneSteps: { ...s.doneSteps, 8: true } }
+      }
+      const next = applyAssembleFabricatedRocket(s, rocket)
+      return { ...next, doneSteps: { ...next.doneSteps, 8: true } }
     })
   }, [setState])
 

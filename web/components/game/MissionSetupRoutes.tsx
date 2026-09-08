@@ -91,6 +91,7 @@ export default function MissionSetupRoutes({
           fabricatedParts={game.player.fabricatedRocketParts ?? {}}
           onBack={() => game.goBack()}
           hasCoach={hasCoach}
+          coachManual={coachManual}
         />
       )
 

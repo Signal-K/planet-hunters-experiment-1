@@ -22,6 +22,7 @@ export default function TutorialCoach({ stepIndex, steps, step, total, onManualN
 
   if (!step) return null
   const manual = !!step.manual
+  const missionSetupStep = ['missions', 'targets', 'rocket-buy', 'fab'].includes(step.screen)
   // Hub owns a stacked title/HUD rail at every viewport. The old shared tutorial
   // rectangle started at 76px, which put the coach directly over the Jobs
   // chip and made the rest of the navigation look missing. Leave a small
@@ -63,12 +64,14 @@ export default function TutorialCoach({ stepIndex, steps, step, total, onManualN
   // ── Manual (full card) ──────────────────────────────────────────────────────
   if (manual) {
     return (
-      <div style={{ position: 'absolute', inset: 0, zIndex: 96, pointerEvents: 'none' }} data-testid="tutorial-coach-overlay">
+      <div className={missionSetupStep ? 'tutorial-coach-overlay--mission-setup' : undefined} style={{ position: 'absolute', inset: 0, zIndex: 96, pointerEvents: 'none' }} data-testid="tutorial-coach-overlay">
         {resolvedCoachId && showPointer && <CoachPointer coachId={resolvedCoachId} />}
         <div
           data-ui-zone={UI_ZONES.tutorialRail}
           data-testid="tutorial-coach-block"
-          style={{ position: 'absolute', left: 14, right: 14, top: coachRail.top, maxHeight: 160, zIndex: 98, pointerEvents: 'auto', overflowY: 'auto' }}
+          style={missionSetupStep
+            ? { position: 'absolute', left: '50%', right: 'auto', top: 94, width: 'min(calc(100% - 56px), 1064px)', maxHeight: 160, zIndex: 98, pointerEvents: 'auto', overflowY: 'auto', transform: 'translateX(-50%)' }
+            : { position: 'absolute', left: 14, right: 14, top: coachRail.top, maxHeight: 160, zIndex: 98, pointerEvents: 'auto', overflowY: 'auto' }}
         >
           <div className="tutorial-coach-card tutorial-coach-card--manual" style={{
             background: 'linear-gradient(160deg, rgba(16,16,18,0.98) 0%, rgba(11,11,13,0.98) 100%)',
@@ -140,18 +143,21 @@ export default function TutorialCoach({ stepIndex, steps, step, total, onManualN
 
   // ── Active instruction card ─────────────────────────────────────────────────
   return (
-    <div style={{ position: 'absolute', inset: 0, zIndex: 96, pointerEvents: 'none' }} data-testid="tutorial-coach-overlay">
+    <div className={missionSetupStep ? 'tutorial-coach-overlay--mission-setup' : undefined} style={{ position: 'absolute', inset: 0, zIndex: 96, pointerEvents: 'none' }} data-testid="tutorial-coach-overlay">
       {resolvedCoachId && showPointer && <CoachPointer coachId={resolvedCoachId} dir={resolvedDir} />}
       <div
         data-ui-zone={UI_ZONES.tutorialRail}
         data-testid="tutorial-coach-block"
-        style={{
-          position: 'absolute',
-          left: 12, right: 12,
-          top: coachRail.top,
-          zIndex: 98,
-          pointerEvents: 'auto',
-        }}
+        style={missionSetupStep
+          ? {
+              position: 'absolute', left: '50%', right: 'auto', top: 94,
+              width: 'min(calc(100% - 56px), 1064px)', transform: 'translateX(-50%)',
+              zIndex: 98, pointerEvents: 'auto',
+            }
+          : {
+              position: 'absolute', left: 12, right: 12, top: coachRail.top,
+              zIndex: 98, pointerEvents: 'auto',
+            }}
       >
         <div className="tutorial-coach-card" style={{
           position: 'relative',

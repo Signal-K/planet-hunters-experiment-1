@@ -34,7 +34,7 @@ const BASE_PLAYER: Player = {
   loanOffered: false,
 }
 
-const M1_DONE: Record<number, boolean> = { 0: true, 1: true, 2: true, 3: true, 4: true, 5: true, 6: true, 9: true }
+const M1_DONE: Record<number, boolean> = { 0: true, 1: true, 2: true, 3: true, 4: true, 5: true, 6: true, 8: true, 9: true }
 const M1_AND_M2_DONE: Record<number, boolean> = { ...M1_DONE, 20: true, 21: true }
 const M1_M2_M3_DONE: Record<number, boolean> = { ...M1_AND_M2_DONE, 30: true, 31: true, 32: true }
 

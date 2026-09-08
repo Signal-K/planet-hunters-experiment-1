@@ -3,7 +3,7 @@
 import React from 'react'
 import TopBar from '@/components/ui/TopBar'
 import { UI_ZONES } from '@/lib/ui-zones'
-import { TUTORIAL_MANUAL_CONTENT_TOP } from '@/lib/tutorial-layout'
+import styles from './MissionSetupShell.module.css'
 
 type DivProps = React.ComponentPropsWithoutRef<'div'>
 
@@ -53,6 +53,8 @@ interface MissionSetupShellBaseProps {
   children: React.ReactNode
   sceneBackground?: React.ReactNode
   actions?: React.ReactNode
+  levelBadge?: string
+  francs?: number
 }
 
 type MissionSetupShellProps = MissionSetupShellBaseProps
@@ -67,14 +69,12 @@ export default function MissionSetupShell({
   children,
   sceneBackground,
   actions,
+  levelBadge,
+  francs,
 }: MissionSetupShellProps) {
-  // Reserve one shared coach rail height for every mission-setup step. The
-  // old action/manual split made the main frame move by 10px when the player
-  // advanced through the flow, even though the content contract was the same.
-  const contentTop = hasCoach ? TUTORIAL_MANUAL_CONTENT_TOP : 82
-
   return (
     <div className={[
+      styles.shell,
       'game-screen',
       'theme-deep',
       'ln-scene-launchpad',
@@ -83,24 +83,30 @@ export default function MissionSetupShell({
       hasCoach && 'mission-setup-screen--coached',
       coachManual && 'mission-setup-screen--coach-manual',
       className,
-    ].filter(Boolean).join(' ')}>
+    ].filter(Boolean).join(' ')} data-mission-setup-shell="true">
       {sceneBackground && (
         <div className="mission-setup-scene-background" aria-hidden="true">
           {sceneBackground}
         </div>
       )}
-      <TopBar eyebrow={eyebrow} title={title} onBack={onBack} scene={false} />
+      <TopBar
+        eyebrow={eyebrow}
+        title={title}
+        onBack={onBack}
+        scene={false}
+        levelBadge={levelBadge}
+        francs={francs}
+      />
       <div
-        className="mission-setup-content"
+        className={[styles.content, 'mission-setup-content'].join(' ')}
         data-ui-zone={UI_ZONES.screenContent}
-        style={{ paddingTop: contentTop }}
       >
-        <div className="mission-creator-container" data-testid="mission-creator-container">
-          <div className="mission-creator-body">
+        <div className={[styles.container, 'mission-creator-container'].join(' ')} data-testid="mission-creator-container">
+          <div className={[styles.body, 'mission-creator-body'].join(' ')}>
             {children}
           </div>
           {actions && (
-            <div className="mission-creator-actions" data-ui-zone={UI_ZONES.bottomActions}>
+            <div className={[styles.actions, 'mission-creator-actions'].join(' ')} data-ui-zone={UI_ZONES.bottomActions}>
               {actions}
             </div>
           )}

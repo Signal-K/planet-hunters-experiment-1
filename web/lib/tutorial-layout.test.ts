@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { content_rect, reserved_rect, TUTORIAL_CONTENT_TOP, TUTORIAL_RAIL } from '@/lib/tutorial-layout'
+import { M1_STEPS } from '@/lib/data/tutorial'
 
 describe('tutorial layout rail', () => {
   it('reserves the same dedicated top rail for every coach anchor', () => {
@@ -28,5 +29,15 @@ describe('tutorial layout rail', () => {
     // back below the worst measured height.
     const MEASURED_TWO_LINE_CARD_HEIGHT = 134
     expect(TUTORIAL_RAIL.RESERVED_HEIGHT).toBeGreaterThanOrEqual(MEASURED_TWO_LINE_CARD_HEIGHT)
+  })
+
+  it('coaches every mission setup step inside the shared frame (KES-347)', () => {
+    const coachedSetupScreens = new Set(
+      M1_STEPS
+        .filter(step => ['missions', 'targets', 'rocket-buy', 'fab'].includes(step.screen))
+        .map(step => step.screen),
+    )
+
+    expect(coachedSetupScreens).toEqual(new Set(['missions', 'targets', 'rocket-buy', 'fab']))
   })
 })

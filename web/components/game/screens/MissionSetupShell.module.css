@@ -1,0 +1,167 @@
+/*
+ * Mission setup owns one outer frame. Individual steps may arrange their
+ * content inside the body, but cannot change the frame, coach reservation, or
+ * action-row geometry.
+ */
+.shell.shell > .content {
+  position: absolute !important;
+  inset: 0 !important;
+  z-index: 7 !important;
+  display: block !important;
+  box-sizing: border-box;
+  width: min(100%, 1120px) !important;
+  height: 100% !important;
+  margin: 0 auto !important;
+  padding: 82px 14px 24px !important;
+  overflow: hidden !important;
+}
+
+.shell .container.container {
+  position: relative !important;
+  display: grid !important;
+  grid-template: minmax(0, 1fr) auto / minmax(0, 1fr) !important;
+  box-sizing: border-box;
+  width: 100% !important;
+  height: 100% !important;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.shell .body.body {
+  grid-area: 1 / 1;
+  box-sizing: border-box;
+  width: 100% !important;
+  height: auto !important;
+  min-width: 0;
+  min-height: 0;
+  padding-top: 0 !important;
+  overflow: hidden !important;
+}
+
+.shell:global(.mission-setup-screen--coached) .body.body {
+  padding-top: 122px !important;
+}
+
+.shell:global(.mission-setup-screen--coach-manual) .body.body {
+  padding-top: 174px !important;
+}
+
+.shell .actions.actions {
+  position: static !important;
+  inset: auto !important;
+  grid-area: 2 / 1;
+  z-index: 8;
+  display: flex !important;
+  align-items: center;
+  justify-content: flex-end;
+  box-sizing: border-box;
+  width: 100% !important;
+  min-height: 56px;
+  padding: 8px 16px !important;
+  border-top: 1px solid var(--ln-hairline) !important;
+  background: color-mix(in srgb, var(--ln-panel) 96%, transparent) !important;
+  pointer-events: auto;
+}
+
+.shell .actions > button {
+  width: auto !important;
+  min-width: 220px;
+}
+
+.shell .actions :global(.rocket-actions) {
+  display: flex;
+  justify-content: flex-end;
+  width: auto !important;
+  margin: 0;
+  gap: 8px;
+}
+
+.shell:global(.mission-setup-screen--mission) :global(.mission-relay-yard) {
+  width: 100%;
+  height: 100% !important;
+  min-height: 0;
+}
+
+.shell:global(.mission-setup-screen--mission) :global(.mission-relay-yard__console) {
+  top: 50%;
+  bottom: auto;
+  justify-content: center;
+  transform: translate(-50%, -50%);
+}
+
+.shell:global(.mission-setup-screen--target) :global(.mission-board-layout),
+.shell:global(.mission-setup-screen--target) :global(.target-map-stage),
+.shell:global(.mission-setup-screen--target) :global(.target-map-instrument),
+.shell:global(.mission-setup-screen--target) :global(.target-map-frame) {
+  width: 100%;
+  height: 100% !important;
+  min-height: 0;
+}
+
+.shell:global(.mission-setup-screen--rocket) .body.body {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1.22fr) minmax(300px, .78fr) !important;
+  grid-template-rows: minmax(0, 1fr) !important;
+}
+
+.shell:global(.mission-setup-screen--rocket) :global(.rocket-vehicle-stage),
+.shell:global(.mission-setup-screen--rocket) :global(.rocket-vehicle-frame),
+.shell:global(.mission-setup-screen--rocket) :global(.rocket-summary-card),
+.shell:global(.mission-setup-screen--assembly) :global(.assembly-frame) {
+  width: 100% !important;
+  height: 100% !important;
+  min-width: 0;
+  min-height: 0 !important;
+  align-self: stretch !important;
+}
+
+.shell:global(.mission-setup-screen--assembly) :global(.assembly-frame) {
+  background: var(--ln-panel) !important;
+}
+
+@media (orientation: landscape) and (max-height: 600px) {
+  .shell.shell > .content {
+    padding: 70px 12px 12px !important;
+  }
+
+  .shell:global(.mission-setup-screen--coached) .body.body {
+    padding-top: 96px !important;
+  }
+
+  .shell:global(.mission-setup-screen--coach-manual) .body.body {
+    padding-top: 138px !important;
+  }
+
+  .shell:global(.mission-setup-screen--mission):global(.mission-setup-screen--coached) :global(.mission-relay-yard__console) {
+    width: calc((100% - 20px) / .66) !important;
+    max-width: none;
+    transform: translate(-50%, -50%) scale(.66);
+  }
+
+  .shell .actions.actions {
+    min-height: 44px;
+    padding: 6px 10px !important;
+  }
+}
+
+@media (max-width: 719px) {
+  .shell:global(.mission-setup-screen--rocket) .body.body {
+    grid-template-columns: minmax(0, 1fr) !important;
+    grid-template-rows: minmax(0, 1fr) minmax(0, 1fr) !important;
+  }
+
+  .shell .actions > button,
+  .shell .actions :global(.rocket-actions) {
+    width: 100% !important;
+    min-width: 0;
+  }
+
+  .shell .actions :global(.rocket-actions) > button {
+    flex: 1;
+  }
+}

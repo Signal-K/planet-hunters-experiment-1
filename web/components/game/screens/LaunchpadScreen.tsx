@@ -18,12 +18,6 @@ import { EARTH_BASE_PAD } from '@/lib/scene/compositions'
 import { earthStorageBuilt, sellUnitPrice } from '@/lib/systems/EconomySystem'
 import { ownProgramStructureDelivered } from '@/lib/systems/ConstructionSystem'
 import { REFINERY_BUILD_MISSION_ID } from '@/lib/data/missions'
-import type { CrewMember } from '@/lib/data'
-import type { SceneScope } from '@/lib/scene-scope'
-import { EARTH_BASE_SCOPE } from '@/lib/scene-scope'
-import { useMissionRelayModels } from '@/lib/hooks/useMissionRelayModels'
-import MissionRelayCard from '@/components/game/MissionRelayCard'
-import { TUTORIAL_COMPACT_CONTENT_TOP, TUTORIAL_MANUAL_CONTENT_TOP } from '@/lib/tutorial-layout'
 
 interface LaunchpadScreenProps {
   onBack: () => void
@@ -46,10 +40,6 @@ interface LaunchpadScreenProps {
   missionMenuOpen?: boolean
   onMissionMenuOpenChange?: (open: boolean) => void
   onOpenSiloBuild?: () => void
-  hasCoach?: boolean
-  coachManual?: boolean
-  crew?: CrewMember[]
-  sceneScope?: SceneScope
 }
 
 function HangarGlyph() {
@@ -106,7 +96,7 @@ const guideSteps = [
 ] as const
 
 export default function LaunchpadScreen({
-  onBack, onPick, onViewContracts, onLaunchpadAction, onOpenHangar, onResumeMission, missionRuns = [], onResumeMissionRun, onViewMissionLog, missionsDone, freeOperations, catalog, player, rocketImageSrc = '/game/assets/ships/ship_sr1.png', selectedRocketName, francs, hydrated = false, missionMenuOpen: requestedMissionMenuOpen = false, onMissionMenuOpenChange, onOpenSiloBuild, hasCoach, coachManual = false, crew = [], sceneScope = EARTH_BASE_SCOPE,
+  onBack, onPick, onViewContracts, onLaunchpadAction, onOpenHangar, onResumeMission, missionRuns = [], onResumeMissionRun, onViewMissionLog, missionsDone, freeOperations, catalog, player, rocketImageSrc = '/game/assets/ships/ship_sr1.png', selectedRocketName, francs, hydrated = false, missionMenuOpen: requestedMissionMenuOpen = false, onMissionMenuOpenChange, onOpenSiloBuild,
 }: LaunchpadScreenProps) {
   // This is the Launchpad route: a playable Earth Base composition. The
   // tower and hangar are the primary interactions; the rail only exposes
@@ -116,22 +106,6 @@ export default function LaunchpadScreen({
   const [missionRunsOpen, setMissionRunsOpen] = useState(false)
   const [missionMenuOpen, setMissionMenuOpen] = useState(requestedMissionMenuOpen)
   const [operationBrief, setOperationBrief] = useState<'instrument' | 'mining' | 'build' | null>(null)
-  // Launchpad's embedded contract view (KES-343): "Available Contracts" swaps
-  // the relay console into this same persistent scene instead of navigating
-  // to a separate Mission Dispatch route, so the transition never leaves the
-  // physical Launchpad.
-  const [contractsOpen, setContractsOpen] = useState(false)
-  const {
-    cardModels: relayCardModels,
-    previewModel: relayPreviewModel,
-    selectedIndex: relaySelectedIndex,
-    selectRelativeSignal: relaySelectRelativeSignal,
-    tutorialMissionInProgress: relayTutorialMissionInProgress,
-    missionStartBlockedLabel: relayMissionStartBlockedLabel,
-  } = useMissionRelayModels({ catalog, missionsDone, freeOperations, hasCoach, francs, crew, player, sceneScope })
-  const contentTop = hasCoach
-    ? (coachManual ? TUTORIAL_MANUAL_CONTENT_TOP : TUTORIAL_COMPACT_CONTENT_TOP)
-    : 82
   const externallyControlled = onMissionMenuOpenChange !== undefined
   // Keep a local open signal as well as the app-level signal. The physical pad
   // is the primary control; an auth/catalog refresh can briefly replay the
@@ -209,19 +183,10 @@ export default function LaunchpadScreen({
     }
     if (!hasFreeOpsAccess) {
       onViewContracts()
-      setContractsOpen(true)
       return
     }
     setOperationBrief(null)
     setMissionMenu(true)
-  }
-  const closeContracts = () => setContractsOpen(false)
-  const handleBack = () => {
-    if (contractsOpen) {
-      closeContracts()
-      return
-    }
-    onBack()
   }
   // An in-progress operation never turns the launchpad into a dead object.
   // Players may create another mission from the physical pad; resuming a
@@ -239,23 +204,13 @@ export default function LaunchpadScreen({
 
   return (
     <div
-      className={`game-screen theme-deep ln-scene-launchpad${contractsOpen ? ' mission-setup-screen mission-setup-screen--launchpad' : ''}`}
+      className="game-screen theme-deep ln-scene-launchpad"
       data-testid="launchpad-focus-screen"
       data-game-hydrated={hydrated ? 'true' : 'false'}
     >
       {/* Scene chrome stays crisp over the terrain; the previous `glass` prop
           created the large frosted rectangle visible across the upper UI. */}
-      {contractsOpen ? (
-        <TopBar
-          eyebrow={`LAUNCHPAD · ${freeOperations ? `${sceneScope.label.toUpperCase()} · FREE OPS` : `${sceneScope.label.toUpperCase()} · L${missionsDone + 1}`}`}
-          title="Mission Dispatch"
-          onBack={handleBack}
-          levelBadge={`LV. ${missionsDone + 1}`}
-          francs={francs}
-        />
-      ) : (
-        <TopBar eyebrow="BASE · LAUNCHPAD" title="Your Program" onBack={onBack} francs={francs} />
-      )}
+      <TopBar eyebrow="BASE · LAUNCHPAD" title="Your Program" onBack={onBack} francs={francs} />
 
       <main data-ui-zone={UI_ZONES.screenContent} className="launchpad-visual-scene earth-base-campus-transition">
         {/* Same Earth Base backdrop the Hub screen uses (KES-233) — this
@@ -292,7 +247,7 @@ export default function LaunchpadScreen({
           </span>
         </button>
 
-        {visibleMissionMenuOpen && !player.pendingLaunch && !contractsOpen && (
+        {visibleMissionMenuOpen && !player.pendingLaunch && (
           <section className="launchpad-mission-menu" data-testid="launchpad-new-mission-menu" aria-labelledby="launchpad-new-mission-title">
             <div className="launchpad-mission-menu-header">
               <div>
@@ -340,7 +295,7 @@ export default function LaunchpadScreen({
                 type="button"
                 className="launchpad-mission-choice"
                 data-testid="launchpad-new-mission-contracts-btn"
-                onClick={() => { onViewContracts(); setContractsOpen(true) }}
+                onClick={onViewContracts}
               >
                 <MissionGlyph />
                 <strong>AVAILABLE CONTRACTS</strong>
@@ -350,7 +305,7 @@ export default function LaunchpadScreen({
           </section>
         )}
 
-        {missionRunsOpen && missionRuns.length > 0 && !contractsOpen && (
+        {missionRunsOpen && missionRuns.length > 0 && (
           <section className="launchpad-mission-runs" data-testid="launchpad-mission-runs" aria-label="Active mission runs">
             <div>
               <span className="launchpad-guide-kicker">PROGRAM / ACTIVE OPERATIONS</span>
@@ -367,23 +322,6 @@ export default function LaunchpadScreen({
               ))}
             </div>
           </section>
-        )}
-
-        {contractsOpen && (
-          <div className={`mission-dispatch-content${hasCoach ? ' mission-dispatch-content--coach' : ''}`} data-ui-zone={UI_ZONES.screenContent} style={{ paddingTop: contentTop }}>
-            <div className="mission-relay-yard mission-creator-container" data-testid="mission-board-section-client" data-mission-creator-container="true">
-              <MissionRelayCard
-                previewModel={relayPreviewModel}
-                selectedIndex={relaySelectedIndex}
-                totalCount={relayCardModels.length}
-                onPrev={() => relaySelectRelativeSignal(-1)}
-                onNext={() => relaySelectRelativeSignal(1)}
-                onPick={onPick}
-                tutorialMissionInProgress={relayTutorialMissionInProgress}
-                missionStartBlockedLabel={relayMissionStartBlockedLabel}
-              />
-            </div>
-          </div>
         )}
 
         <button type="button" className="launchpad-scene-object launchpad-rocket" data-testid="launchpad-rocket-fleet" onClick={onOpenHangar}>
