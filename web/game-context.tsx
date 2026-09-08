@@ -25,6 +25,7 @@ import { deriveSceneScope, EARTH_BASE_SCOPE } from '@/lib/scene-scope'
 import { claimFriendGift as claimFriendGiftRequest } from '@/lib/friends/client'
 import { applyFriendGiftToPlayer, friendGiftToastMessage } from '@/lib/friends/applyGift'
 import { GAME_STATE_STORAGE_KEY, gameStateStorageKey } from '@/lib/game-state-storage'
+import { canonicalGamePath } from '@/lib/game-route'
 
 export type { Screen, Player, GameState } from '@/lib/game-types'
 
@@ -226,8 +227,9 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     addToast: ui.addToast,
   })
 
-  // Sync game.screen → URL on every screen change.
-  // skipNextUrlSync prevents a loop when the change was triggered BY a URL change.
+  // Sync location changes to the URL. Mission creation is one location at
+  // /game/missions; its target, vehicle, and preflight steps stay in React
+  // state and never trigger a Next route transition.
   useEffect(() => {
     // Before hydration resolves, state.screen is still DEFAULT_STATE's 'intro'
     // regardless of route (preview/preset routes included) — pushing here races
@@ -239,8 +241,9 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       ui.skipNextUrlSync.current = false
       return
     }
-    router.push(`/game/${state.screen}`)
-  }, [state.screen]) // eslint-disable-line react-hooks/exhaustive-deps
+    const nextPath = canonicalGamePath(state)
+    if (window.location.pathname !== nextPath) router.push(nextPath)
+  }, [state.screen, state.missionId, state.targetId]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Derived values ─────────────────────────────────────────────────────────
   const mission = state.missionId

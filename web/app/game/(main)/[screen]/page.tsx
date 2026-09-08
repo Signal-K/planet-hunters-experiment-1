@@ -5,6 +5,7 @@ import { notFound } from 'next/navigation'
 import { useGame } from '@/game-context'
 import type { Screen } from '@/lib/game-types'
 import { VALID_SCREENS } from '@/components/game/GameScreenRouter'
+import { isMissionSetupInternalScreen } from '@/lib/game-route'
 
 export default function ScreenPage({ params }: { params: Promise<{ screen: string }> }) {
   const { screen } = use(params)
@@ -23,6 +24,9 @@ export default function ScreenPage({ params }: { params: Promise<{ screen: strin
     // opened underneath the entry gate. Letting it write into GameState here
     // races sign-in's canonical Earth Base redirect and can reopen Contracts.
     if (game.authGateOpen || !game.authUserId) return
+    // /game/missions owns the whole creation flow. Do not let the stable URL
+    // reset an in-progress internal step during hydration or a rerender.
+    if (screen === 'missions' && isMissionSetupInternalScreen(game.screen)) return
     if (VALID_SCREENS.has(screen as Screen) && game.screen !== screen) {
       game.setScreenFromUrl(screen as Screen)
     }
