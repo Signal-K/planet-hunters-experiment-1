@@ -23,13 +23,22 @@
   /* Background is HubWorldBackground now (KES-233, `.launchpad-scene-zoom`
      below) — this screen no longer paints its own gradient/mountain here. */
   background: var(--hub-void, #07101c);
+  /* `--hub-ground` is scoped here, not just on `.launchpad-scene-zoom` below,
+     so it also reaches `.launchpad-tower`/`.launchpad-rocket`
+     (`.launchpad-scene-object`) — those are its SIBLINGS, not its
+     descendants, so a scope on `.launchpad-scene-zoom` alone never reached
+     them; they fell back to the root `--hub-ground: 22%` (Hub's convention)
+     while the terrain plane sat at this screen's own 20% baseline, leaving
+     the structures visibly floating ~2% above the ground line they were
+     authored against (2026-09-08 design feedback, KES-343). */
+  --hub-ground: 20%;
 }
 /* Shares the Hub's own backdrop instead of a separately hand-rolled one
    (KES-233) — scaled up from the bottom-center so the ground line stays
    anchored where this screen's foreground objects expect it (see
-   `--hub-ground` below) while the mountains/skyline loom larger, reading as
+   `--hub-ground` above) while the mountains/skyline loom larger, reading as
    a close-up of the pad rather than the Hub screen's wide establishing shot.
-   `--hub-ground` is scoped here the same way `.build-place-field` scopes it
+   `--hub-ground` is scoped the same way `.build-place-field` scopes it
    in globals.css — this screen's foreground (tower/rocket/ground-line) was
    authored against a 20%-from-bottom ground line, a different, pre-existing
    convention from Hub's 22%. */
@@ -39,10 +48,6 @@
    and it could never change what was actually on the horizon. */
 .launchpad-scene-zoom {
   position: absolute; inset: 0;
-  /* Keep the tall desktop view from turning the foreground into a blank slab.
-     The Blender ground apron now carries the facility contact transition, so
-     this plane can recede to the authored 20% baseline. */
-  --hub-ground: 20%;
 }
 .launchpad-orbit-line {
   position: absolute; z-index: 2; top: 4%; left: 13%; width: 74%; height: 40%;
