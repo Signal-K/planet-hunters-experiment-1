@@ -3856,10 +3856,11 @@ html[data-coach-target="build-structure-strip"] [data-coach-id="build-structure-
 /* Mission Dispatch follows the physical Launchpad route.  Keep its relay
    instrument over the same pad composition, but do not inherit the light
    mission-setup shell: that shell is what made the old header and footer read
-   as white page bands around an otherwise scenic operation. */
-.mission-setup-screen--launchpad {
-  background: var(--hub-void, var(--ln-void));
-}
+   as white page bands around an otherwise scenic operation.
+   Do NOT set a flat `background` here — this selector has the same
+   specificity as `.ln-scene-launchpad` (STS-630's lit sky/ground scene
+   panel) and comes after it in the cascade, so a flat color here wins and
+   blacks out the whole screen instead of just dropping the light shell. */
 .mission-setup-screen--launchpad .mission-setup-scene-background::after { display: none; }
 .mission-setup-screen--launchpad .mission-dispatch-content {
   padding: 82px 14px 24px !important;
@@ -3949,7 +3950,7 @@ html[data-coach-target="build-structure-strip"] [data-coach-id="build-structure-
   display: block !important;
 }
 
-.mission-setup-screen--launchpad .mission-creator-container {
+.mission-setup-screen--launchpad .mission-creator-container:not(.mission-relay-yard) {
   box-sizing: border-box;
   width: 100%;
   height: 100%;

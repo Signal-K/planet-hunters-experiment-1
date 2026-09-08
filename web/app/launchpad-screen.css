@@ -1,5 +1,11 @@
-/* STS-641 visual reset: Launchpad is a place, not a dashboard. */
-.ln-scene-launchpad { background: var(--hub-void, var(--ln-void)); }
+/* STS-641 visual reset: Launchpad is a place, not a dashboard.
+   Scoped off `.mission-setup-screen--launchpad`: Mission Dispatch
+   (MissionBoardScreen/MissionSetupShell) shares the `.ln-scene-launchpad`
+   class name for an unrelated purpose — STS-630's lit sky/ground scene-panel
+   background (see globals.css) — and this flat void fill has the same
+   specificity, so applying it unscoped blacked out that screen instead of
+   only resetting the real Launchpad hub screen (LaunchpadScreen.tsx). */
+.ln-scene-launchpad:not(.mission-setup-screen--launchpad) { background: var(--hub-void, var(--ln-void)); }
 /* The launchpad is a destination, not a phone mockup floating on the desktop
    backdrop. The route adds this class in GameChrome so only this operations
    page escapes the generic 1320px rounded canvas. */
