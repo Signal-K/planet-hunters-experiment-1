@@ -3870,10 +3870,15 @@ html[data-coach-target="build-structure-strip"] [data-coach-id="build-structure-
   height: 100%;
   max-height: none;
 }
+/* Anchor the console near the ground with the hangar/tower instead of
+   dead-center: on a tall/wide desktop viewport, centering it left a huge gap
+   above the structures that read as "the buildings got pushed down into a
+   sliver at the bottom" (2026-09-08 design feedback on KES-343). Bottom-
+   anchoring keeps the console and the structures reading as one scene. */
 .mission-setup-screen--launchpad .mission-relay-yard__console {
-  top: 50%;
-  bottom: auto;
-  transform: translate(-50%, -50%);
+  top: auto;
+  bottom: 16%;
+  transform: translateX(-50%);
 }
 .mission-setup-screen--launchpad .mission-relay-yard__cycle {
   border-color: var(--ln-cyan-border);
@@ -3950,12 +3955,18 @@ html[data-coach-target="build-structure-strip"] [data-coach-id="build-structure-
   display: block !important;
 }
 
-.mission-setup-screen--launchpad .mission-creator-container:not(.mission-relay-yard) {
+.mission-setup-screen--launchpad .mission-creator-container {
   box-sizing: border-box;
   width: 100%;
   height: 100%;
   min-height: 0;
   overflow: hidden;
+}
+
+/* The relay yard is the STS-630 lit scene itself — it must stay transparent
+   so the sky/ground shows through. The boxed dark instrument-panel chrome
+   below is for the other mission-setup steps only. */
+.mission-setup-screen--launchpad .mission-creator-container:not(.mission-relay-yard) {
   border: 3px solid var(--ln-cyan-border);
   border-radius: var(--ln-r-xl);
   background: color-mix(in srgb, var(--ln-panel) 94%, transparent);
