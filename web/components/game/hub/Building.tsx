@@ -4,8 +4,8 @@ import React, { useEffect, useState } from 'react'
 
 /**
  * DOM half of a hub structure — hit area, status pill, and the notification
- * callout. The visual body is drawn by HubPixiCanvas underneath; the spacer
- * div here reserves that footprint so the pill lands under the building.
+ * callout. The visual body is rendered by EarthBaseModules underneath; the
+ * spacer div here reserves that footprint so the pill lands under the building.
  *
  * Restyled 2026-07-26 from `landnam-earth-base-v2.html`: black tile with a
  * 1.5px white outline (not a status-tinted border), mint status dot, and a
@@ -26,6 +26,15 @@ export interface BuildingProps {
   status: 'ok' | 'warn' | 'info'
   hot?: boolean
   w: number
+  /**
+   * Height of the invisible click-target spacer above the status pill.
+   * Defaults to `w * 0.6` (the old flat guess) when omitted, but that guess
+   * badly undershoots tall art like the launchpad's gantry PNG, which
+   * renders far above the footprint this spacer used to reserve — see
+   * HubScreen.tsx's HIT_H map, which sizes this per building kind against
+   * each PNG's actual rendered height.
+   */
+  hitH?: number
   style?: React.CSSProperties
   onClick: () => void
   /** Small numeric badge — used for the SMS daily-candidate-queue count. */
@@ -50,6 +59,12 @@ export interface BuildingProps {
    * primary structure. Never applied to the Launchpad itself.
    */
   dimmed?: boolean
+  /** Called while the pointer/finger is actively pressing this structure. */
+  onActiveChange?: (active: boolean) => void
+  /** Controlled visual state shared with the sprite layer. */
+  active?: boolean
+  /** Disable hover/press lift for scene objects whose art should stay still. */
+  disableHover?: boolean
 }
 
 const CALLOUT_W = 208
@@ -59,7 +74,7 @@ const CALLOUT_TAIL_INSET = 26
 
 const STATUS_COLOR: Record<BuildingProps['status'], string> = {
   ok:   'var(--hub-mint)',
-  warn: '#ffd166',
+  warn: 'var(--ln-warn)',
   info: 'var(--hub-cyan)',
 }
 
@@ -80,10 +95,21 @@ function ArrowGlyph() {
   )
 }
 
-export function Building({ kind, label, sub, status, w, style, onClick, badge, callout, calloutAlign = 'center', dimmed }: BuildingProps) {
+export function Building({ kind, label, sub, status, w, hitH, style, onClick, badge, callout, calloutAlign = 'center', dimmed, onActiveChange, active = false, disableHover = false }: BuildingProps) {
   const color = STATUS_COLOR[status]
   const [calloutOpen, setCalloutOpen] = useState(false)
   const [seen, setSeen] = useState(false)
+  // Hover (desktop) and press (mobile — there's no real :hover on touch) both
+  // drive the same lift + glow, via one piece of state instead of two
+  // separate code paths (KES-231/KES-263). The glow lands on the spacer,
+  // which sits exactly over the sprite art EarthBaseModules renders
+  // underneath, so it reads as the structure itself lighting up.
+  const [localActive, setLocalActive] = useState(false)
+  const isActive = active || (!disableHover && localActive)
+  const setActive = (next: boolean) => {
+    setLocalActive(next)
+    onActiveChange?.(next)
+  }
 
   // Bubble box offset from the building center, and the tail's offset within
   // the bubble — the two always add back up to the building center.
@@ -113,7 +139,7 @@ export function Building({ kind, label, sub, status, w, style, onClick, badge, c
       data-coach-id={`building-${kind}`}
       // 'auto' because the hub's buildings layer is pointerEvents:'none' — it
       // must not be a full-screen click catcher over the progression cards.
-      style={{ position: 'absolute', display: 'flex', flexDirection: 'column', alignItems: 'center', pointerEvents: 'auto', opacity: dimmed ? 0.62 : 1, transition: 'opacity 200ms', ...style }}
+      style={{ position: 'absolute', display: 'flex', flexDirection: 'column', alignItems: 'center', width: w, minWidth: w, maxWidth: w, pointerEvents: 'auto', opacity: dimmed ? 0.62 : 1, transition: 'opacity 200ms', ...style }}
     >
       <button
         data-testid={`building-${kind}-hit`}
@@ -121,22 +147,32 @@ export function Building({ kind, label, sub, status, w, style, onClick, badge, c
         style={{
           background: 'transparent', border: 'none', padding: 0, cursor: 'pointer',
           display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6,
+          transform: isActive ? 'translateY(-4px)' : 'translateY(0)',
           transition: 'transform 180ms',
         }}
-        onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-3px)' }}
-        onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)' }}
+        onMouseEnter={disableHover ? undefined : () => setActive(true)}
+        onMouseLeave={disableHover ? undefined : () => setActive(false)}
+        onTouchStart={disableHover ? undefined : () => setActive(true)}
+        onTouchEnd={disableHover ? undefined : () => setActive(false)}
+        onTouchCancel={disableHover ? undefined : () => setActive(false)}
       >
-        {/* Spacer reserving the PixiJS building's footprint */}
-        <div style={{ width: w, height: w * 0.6, position: 'relative' }}>
+        {/* Spacer reserving the building art's clickable footprint */}
+        <div style={{
+          width: w, height: hitH ?? w * 0.6, position: 'relative',
+          borderRadius: 12,
+          // The sprite layer owns the silhouette highlight. Keep this spacer
+          // visually empty so a tall hit target cannot read as a rectangle.
+          boxShadow: 'none',
+        }}>
           {!!badge && badge > 0 && (
             <span
               data-testid={`building-${kind}-badge`}
               style={{
                 position: 'absolute', top: -4, right: -4, minWidth: 16, height: 16, padding: '0 4px',
-                borderRadius: 999, background: 'var(--hub-mint)', border: '2px solid #060b16',
+                borderRadius: 999, background: 'var(--hub-mint)', border: '2px solid var(--ln-panel-2)',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontFamily: 'var(--ln-font-display)', fontWeight: 800, fontSize: 9, color: '#04140a',
-                boxShadow: '0 0 10px rgba(47,191,106,0.55)',
+                fontFamily: 'var(--ln-font-display)', fontWeight: 800, fontSize: 9, color: 'var(--ln-text)',
+                boxShadow: '0 0 8px var(--ln-ok-soft)',
               }}
             >
               {badge > 9 ? '9+' : badge}
@@ -145,17 +181,17 @@ export function Building({ kind, label, sub, status, w, style, onClick, badge, c
         </div>
 
         {/* Status pill — black tile, white outline */}
-        <div style={{
+        <div className="hub-building-status" style={{
           display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2,
           background: 'var(--hub-panel-deep)',
           border: '1.5px solid var(--hub-outline)',
-          borderRadius: 999, padding: '4px 10px', whiteSpace: 'nowrap',
+          borderRadius: 999, padding: 'var(--ln-s-1) var(--ln-s-3)', whiteSpace: 'nowrap',
         }}>
-          <span style={{ fontFamily: 'var(--ln-font-display)', fontWeight: 800, fontSize: 9, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.92)' }}>
+          <span style={{ fontFamily: 'var(--ln-font-display)', fontWeight: 800, fontSize: 9, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--ln-text)' }}>
             {label}
           </span>
           <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-            <span style={{ width: 4, height: 4, borderRadius: 999, background: color, boxShadow: `0 0 6px ${color}` }} />
+            <span style={{ width: 4, height: 4, borderRadius: 999, background: color, boxShadow: `0 0 8px ${color}` }} />
             <span style={{ fontFamily: 'var(--ln-font-display)', fontSize: 8, letterSpacing: '0.14em', textTransform: 'uppercase', color }}>
               {sub}
             </span>
@@ -175,11 +211,11 @@ export function Building({ kind, label, sub, status, w, style, onClick, badge, c
             style={{
               position: 'absolute', top: -4, right: 2, zIndex: 4,
               width: 22, height: 22, borderRadius: '50%',
-              background: seen ? 'rgba(255,255,255,0.25)' : 'var(--hub-mint)',
-              border: '2px solid #060b16',
+              background: seen ? 'var(--ln-hairline)' : 'var(--hub-mint)',
+              border: '2px solid var(--hub-panel)',
               display: 'grid', placeItems: 'center', cursor: 'pointer',
-              color: seen ? 'rgba(255,255,255,0.8)' : '#04140a',
-              boxShadow: seen ? 'none' : '0 0 12px rgba(47,191,106,0.55)',
+              color: seen ? 'var(--ln-text-dim)' : 'var(--ln-text-inverse)',
+              boxShadow: seen ? 'none' : '0 0 12px var(--ln-ok-soft)',
               animation: seen ? 'none' : 'hub-notify-pulse 1.8s ease-in-out infinite',
               padding: 0,
             }}
@@ -194,13 +230,13 @@ export function Building({ kind, label, sub, status, w, style, onClick, badge, c
               // 50% is the building center (the wrapper is translateX(-50%)
               // onto its plot); bubbleLeft then offsets the box from there.
               position: 'absolute', left: `calc(50% + ${bubbleLeft}px)`, bottom: 'calc(100% + 16px)',
-              transform: calloutOpen ? 'translateY(0) scale(1)' : 'translateY(6px) scale(0.96)',
+              transform: calloutOpen ? 'translateY(0) scale(1)' : 'translateY(8px) scale(0.96)',
               transformOrigin: `bottom ${tailLeft}px`,
               width: CALLOUT_W, zIndex: 22,
               background: 'var(--hub-panel)',
-              border: '1.5px solid rgba(255,255,255,0.6)',
-              borderRadius: 12, padding: '10px 12px 12px',
-              boxShadow: '0 20px 44px rgba(0,0,0,0.5)',
+              border: '1.5px solid var(--hub-outline)',
+              borderRadius: 12, padding: 'var(--ln-s-3)',
+              boxShadow: '0 24px 48px var(--ln-overlay)',
               opacity: calloutOpen ? 1 : 0,
               pointerEvents: calloutOpen ? 'auto' : 'none',
               transition: 'opacity 160ms ease, transform 160ms ease',
@@ -208,7 +244,7 @@ export function Building({ kind, label, sub, status, w, style, onClick, badge, c
             }}
           >
             <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 6 }}>
-              <span style={{ fontFamily: 'var(--ln-font-display)', fontWeight: 800, fontSize: 11, letterSpacing: '0.06em', color: '#fff' }}>
+              <span style={{ fontFamily: 'var(--ln-font-display)', fontWeight: 800, fontSize: 11, letterSpacing: '0.06em', color: 'var(--ln-text)' }}>
                 {callout.title}
               </span>
               <button
@@ -217,14 +253,14 @@ export function Building({ kind, label, sub, status, w, style, onClick, badge, c
                 onClick={e => { e.stopPropagation(); setCalloutOpen(false) }}
                 style={{
                   flexShrink: 0, width: 16, height: 16, borderRadius: '50%', border: 'none', cursor: 'pointer',
-                  background: 'rgba(255,255,255,0.12)', color: 'rgba(255,255,255,0.7)',
+                  background: 'var(--ln-hairline)', color: 'var(--ln-text-dim)',
                   fontSize: 10, lineHeight: 1, display: 'grid', placeItems: 'center', padding: 0,
                 }}
               >
                 ×
               </button>
             </div>
-            <div style={{ fontSize: 11, lineHeight: 1.45, color: 'rgba(255,255,255,0.68)', marginTop: 4 }}>
+            <div style={{ fontSize: 11, lineHeight: 1.45, color: 'var(--ln-text-dim)', marginTop: 4 }}>
               {callout.body}
             </div>
             <button
@@ -244,7 +280,7 @@ export function Building({ kind, label, sub, status, w, style, onClick, badge, c
               position: 'absolute', left: tailLeft, top: '100%', transform: 'translateX(-50%)',
               width: 0, height: 0,
               borderLeft: '8px solid transparent', borderRight: '8px solid transparent',
-              borderTop: '9px solid rgba(255,255,255,0.6)',
+              borderTop: '9px solid var(--hub-outline)',
             }} />
             <span style={{
               position: 'absolute', left: tailLeft, top: 'calc(100% - 1.5px)', transform: 'translateX(-50%)',
@@ -273,17 +309,19 @@ export function EmptyPlot({ w = 90, style, onClick, plot }: { w?: number; style?
       <div style={{ width: w, height: w * 0.5, position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         <div style={{
           width: '88%', height: 26, borderRadius: '50% / 60%',
-          background: 'radial-gradient(ellipse at 50% 35%, rgba(112,217,234,0.18), rgba(112,217,234,0.04) 70%)',
-          border: '2px dashed rgba(112,217,234,0.5)',
+          // 0.04 trailing gradient stop has no matching --ln-* token (nothing
+          // that faint exists); left as a literal fade-out, not swapped.
+          background: 'radial-gradient(ellipse at 50% 35%, var(--ln-cyan-soft), rgba(112,217,234,0.04) 70%)',
+          border: '2px dashed var(--ln-cyan-border)',
           display: 'grid', placeItems: 'center',
           animation: 'hub-pad-pulse 2s ease-in-out infinite',
         }}>
-          <span style={{ fontFamily: 'var(--ln-font-mono)', fontSize: 15, fontWeight: 800, color: 'rgba(112,217,234,0.85)' }}>+</span>
+          <span style={{ fontFamily: 'var(--ln-font-mono)', fontSize: 15, fontWeight: 800, color: 'var(--ln-cyan-bright)' }}>+</span>
         </div>
       </div>
       <div style={{
-        background: 'var(--hub-panel-deep)', border: '1px solid rgba(255,255,255,0.3)', borderRadius: 999,
-        padding: '3px 9px', fontFamily: 'var(--ln-font-display)', fontWeight: 800, fontSize: 8,
+        background: 'var(--hub-panel-deep)', border: '1px solid var(--hub-outline)', borderRadius: 999,
+        padding: 'var(--ln-s-1) var(--ln-s-2)', fontFamily: 'var(--ln-font-display)', fontWeight: 800, fontSize: 8,
         letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--hub-cyan)', whiteSpace: 'nowrap',
       }}>
         Build

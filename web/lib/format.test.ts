@@ -20,7 +20,7 @@ describe('formatFrancs', () => {
 
   // STS-539 policy boundary: HUD/summary surfaces read compactly, but anywhere
   // the player must verify an exact figure before committing money (Debrief
-  // itemization, Market sell confirmation, ConfirmActionSheet) stays on the
+  // itemization, Market sell confirmation, ActionConfirmBar) stays on the
   // full comma format. Both behaviours come from this one helper.
   it('keeps sub-million amounts exact even when compact is requested', () => {
     expect(formatFrancs(999_999, { compact: true })).toBe('999,999')

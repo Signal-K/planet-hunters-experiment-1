@@ -10,7 +10,7 @@ export default function MissionBoardCompleteState({ onBack }: { onBack: () => vo
       <div style={{ position: 'absolute', inset: 0 }}>
         <Image src="/earth-day.jpg" alt="" fill style={{ objectFit: 'cover', filter: 'brightness(0.22) saturate(0.6)' }} />
       </div>
-      <TopBar eyebrow="EARTH BASE · COMPLETE" title="Mission Board" onBack={onBack} solid />
+      <TopBar eyebrow="BASE · COMPLETE" title="Mission Board" onBack={onBack} solid />
       <div data-ui-zone={UI_ZONES.screenContent} style={{
         position: 'absolute', inset: 0, paddingTop: 72,
         display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',

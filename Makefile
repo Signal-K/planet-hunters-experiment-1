@@ -1,4 +1,4 @@
-.PHONY: help up up-ecosystem pb-up pb-stop down build web-deps logs e2e e2e-open web-dev pb-dev web-build web-check pb-reset docker-disk docker-prune migrate seed
+.PHONY: help up up-ecosystem pb-up pb-stop down build web-deps logs e2e e2e-open web-dev pb-dev web-build web-check pb-reset reset-dev-data test-reset-dev-data docker-disk docker-prune migrate seed
 
 FRONTEND_COMPOSE := docker compose -f docker-compose.frontend.yml
 PARENT_COMPOSE   := docker compose -p navigation -f ../docker-compose.yml
@@ -41,6 +41,8 @@ help:
 	@echo "    web-check      Typecheck + production build"
 	@echo "    pb-stop        Stop PocketBase services only (keeps volumes)"
 	@echo "    pb-reset       Remove local PocketBase data volume"
+	@echo "    reset-dev-data Purge local test data, preserving liam@skinetics.tech"
+	@echo "    test-reset-dev-data Verify reset protection with an offline mock"
 	@echo "    docker-disk    Report Docker disk usage and the largest objects"
 	@echo "    docker-prune   Remove stale rebuildable Docker data (never volumes)"
 
@@ -58,6 +60,12 @@ pb-up:
 
 pb-stop:
 	$(PARENT_COMPOSE) stop landnam-backend backend
+
+reset-dev-data:
+	./scripts/reset-dev-data.sh
+
+test-reset-dev-data:
+	bash ./scripts/test-reset-dev-data.sh
 
 down:
 	$(FRONTEND_COMPOSE) down --remove-orphans

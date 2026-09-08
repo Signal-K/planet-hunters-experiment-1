@@ -2,9 +2,10 @@ import {
   SUBSURFACE_EXCAVATION_COST,
   SUBSURFACE_EXCAVATION_MATERIALS,
   SUBSURFACE_ROOM_PRICES,
+  DEEP_MINERAL_SILO_PRICE,
 } from './economy'
 
-export type SubsurfaceRoomId = 'mineral-vault' | 'parts-locker' | 'habitat-training'
+export type SubsurfaceRoomId = 'mineral-vault' | 'deep-mineral-vault' | 'parts-locker' | 'habitat-training'
 
 export interface SubsurfaceRoomDefinition {
   id: SubsurfaceRoomId
@@ -40,6 +41,14 @@ export const SUBSURFACE_ROOMS: readonly SubsurfaceRoomDefinition[] = [
     description: 'Recovered ore is catalogued by species and held for refining, construction, or sale.',
     cost: SUBSURFACE_ROOM_PRICES['mineral-vault'],
     costMaterials: { aluminium: 15, copper: 8 },
+  },
+  {
+    id: 'deep-mineral-vault',
+    eyebrow: 'STORAGE · BAY 04',
+    name: 'Deep Mineral Vault',
+    description: 'Expanded underground storage for timing sales, refinery queues, and remote-site logistics.',
+    cost: DEEP_MINERAL_SILO_PRICE,
+    costMaterials: { aluminium: 30, copper: 16, silicon: 8 },
   },
   {
     id: 'parts-locker',

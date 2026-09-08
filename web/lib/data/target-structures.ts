@@ -4,6 +4,17 @@
 import type { TargetStructureBlueprint } from './types'
 
 export const TARGET_STRUCTURES: TargetStructureBlueprint[] = [
+  // Player-owned off-world storage. The mission target picker supplies the
+  // destination, so this blueprint can be used on any target with build rights.
+  {
+    id: 'mineral-silo',
+    name: 'Remote Mineral Silo',
+    kind: 'mineral-silo',
+    clientRole: 'self',
+    requiredMaterials: { aluminium: 18, iron: 12, copper: 6 },
+    buildTimeMs: 45 * 60 * 1000,
+    description: 'Sealed off-world storage for holding extracted ore between mining runs and Earth market windows.',
+  },
   // Helios (prospect client) — propellant and thrust infrastructure
   {
     id: 'fuel-depot',

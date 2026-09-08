@@ -8,12 +8,18 @@ describe('Landnam frontend stack', () => {
   })
 
   it('renders the design-system onboarding surface', () => {
+    cy.get('[data-testid="auth-gate-quick-email"]', { timeout: 10000 })
+      .should('be.visible')
+      .type(`frontend-stack-${Date.now()}@example.com`)
+    cy.get('[data-testid="auth-gate-quick-submit"]').click()
+    cy.get('[data-testid="auth-gate-quick-email"]', { timeout: 10000 }).should('not.exist')
     cy.get('[data-testid="intro-begin-btn"]').click()
-    cy.contains('EARTH BASE · SETUP').should('be.visible')
-    cy.contains('Build a Launchpad').should('be.visible')
-    cy.contains('DATA LINK · online', { matchCase: false }).should('be.visible')
-    cy.contains('button', 'Select a Plot').click()
-    cy.contains('Choose a Plot').should('be.visible')
+    cy.get('[data-testid="build-place-screen"]', { timeout: 10000 }).should('be.visible')
+    cy.contains('BASE · SETUP').should('be.visible')
+    cy.contains('Launchpad').should('be.visible')
+    // Online status is intentionally rendered as absence of the transient
+    // status utility; backend connectivity is asserted by the next test.
+    cy.get('[data-ui-zone="status-utility"]', { timeout: 10000 }).should('not.exist')
   })
 
   it('connects to PocketBase through the compose network', () => {

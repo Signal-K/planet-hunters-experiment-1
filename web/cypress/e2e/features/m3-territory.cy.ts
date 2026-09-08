@@ -41,7 +41,7 @@ function visitWithState(state: Partial<GameState>) {
   cy.visit('/game', {
     onBeforeLoad(win) {
       win.localStorage.setItem(STORAGE_KEY, JSON.stringify({ ...base, ...state }))
-      win.localStorage.setItem('landnam-guest-credentials', JSON.stringify({ email: 'e2e@landnam.guest', password: 'e2e-guest-test' }))
+      win.localStorage.setItem('landnam-account-credentials', JSON.stringify({ email: 'e2e@example.com', password: 'e2e-guest-test' }))
       // Unset, TutorialCompleteSheet (components/game/TutorialCompleteSheet.tsx)
       // full-screens over the hub the first time missionsDone crosses the
       // onboarding threshold, which is exactly the transition the M3 reward
@@ -136,7 +136,9 @@ describe('M3 — Transport client pick and Free Ops unlock', () => {
         targetId: 'bennu',
         lastCargo: { iron: 3, carbon: 2 },
       })
-      cy.get('[data-testid="resolve-cargo-btn"]').click()
+      // Onboarding missions (missionsDone < 3, which M3 still is) auto-resolve
+      // on mount — see DebriefScreen.tsx.
+      cy.get('[data-testid="resolve-cargo-btn"]').should('not.exist')
       cy.get('[data-testid="collect-reward-btn"]').click()
       cy.get('[role="dialog"][aria-label="Territory established"]').should('not.exist')
       // Completing M3 raises the persisted TutorialCompleteSheet before the

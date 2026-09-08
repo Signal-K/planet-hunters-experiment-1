@@ -1,0 +1,382 @@
+.screen {
+  /* Was `min-height: 100dvh`, built assuming normal page-level scroll — but
+     this screen actually mounts inside .game-screen-area, which is
+     `overflow: hidden` (KES-268). Content taller than the boxed card's
+     available height had nowhere to go and just got clipped. This screen
+     owns its own scroll now, same as every other screen's .screen-scroll
+     convention, so the sticky .header still sticks correctly within it. */
+  position: absolute;
+  inset: 0;
+  overflow-y: auto;
+  color: var(--ln-text);
+  background:
+    linear-gradient(var(--ln-hairline) 1px, transparent 1px),
+    linear-gradient(90deg, var(--ln-hairline) 1px, transparent 1px),
+    var(--ln-void);
+  background-size: 32px 32px;
+}
+
+.header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: var(--ln-s-3);
+  min-height: 72px;
+  padding: var(--ln-s-3) max(var(--ln-s-4), 4vw);
+  background: color-mix(in srgb, var(--ln-bg) 94%, transparent);
+  border-bottom: 1px solid var(--ln-hairline-strong);
+}
+
+.backButton,
+.sellButton,
+.primaryButton {
+  font-family: var(--ln-font-display);
+  font-weight: 800;
+  letter-spacing: var(--ln-tr-label);
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.backButton {
+  display: inline-grid;
+  flex: 0 0 auto;
+  width: 44px;
+  height: 44px;
+  place-items: center;
+  color: var(--ln-cyan);
+  background: var(--ln-cyan-soft);
+  border: 1px solid var(--ln-cyan-border);
+  border-radius: var(--ln-r-md);
+}
+
+.backButton:focus-visible,
+.sellButton:focus-visible,
+.primaryButton:focus-visible {
+  outline: 2px solid var(--ln-cyan);
+  outline-offset: 2px;
+}
+
+.headerCopy {
+  min-width: 0;
+  flex: 1;
+}
+
+.eyebrow,
+.sectionLabel,
+.metricLabel,
+.commodityMeta,
+.rateLabel {
+  font-family: var(--ln-font-display);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: var(--ln-tr-label);
+  text-transform: uppercase;
+}
+
+.eyebrow,
+.sectionLabel,
+.metricLabel,
+.rateLabel {
+  color: var(--ln-text-muted);
+}
+
+.title {
+  margin: 2px 0 0;
+  color: var(--ln-text);
+  font-family: var(--ln-font-display);
+  font-size: clamp(20px, 3vw, 32px);
+  font-weight: 800;
+  line-height: 1.05;
+}
+
+.balance {
+  display: flex;
+  flex: 0 0 auto;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+  padding-left: var(--ln-s-3);
+  border-left: 1px solid var(--ln-hairline);
+}
+
+.balanceValue,
+.quoteValue,
+.commodityValue {
+  color: var(--ln-payout);
+  font-family: var(--ln-font-mono);
+  font-weight: 800;
+}
+
+.balanceValue {
+  font-size: 16px;
+}
+
+.content {
+  width: min(100%, 1280px);
+  margin: 0 auto;
+  padding: clamp(var(--ln-s-4), 4vw, var(--ln-s-7));
+}
+
+.intro {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(220px, 0.6fr);
+  gap: var(--ln-s-5);
+  align-items: stretch;
+  margin-bottom: var(--ln-s-5);
+}
+
+.paperCard,
+.clientCard,
+.commodityCard,
+.emptyCard {
+  background: var(--ln-surface);
+  border: 1px solid var(--ln-hairline-strong);
+  border-radius: var(--ln-r-lg);
+  box-shadow: var(--ln-shadow-card);
+}
+
+.paperCard {
+  padding: clamp(var(--ln-s-4), 3vw, var(--ln-s-6));
+}
+
+.paperCard h2,
+.clientCard h2,
+.emptyCard h2 {
+  margin: var(--ln-s-2) 0 0;
+  color: var(--ln-text);
+  font-family: var(--ln-font-display);
+  font-size: clamp(20px, 2.6vw, 28px);
+  line-height: 1.1;
+}
+
+.paperCard p,
+.clientCard p,
+.emptyCard p {
+  margin: var(--ln-s-3) 0 0;
+  color: var(--ln-text-dim);
+  font-family: var(--ln-font-body);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.quote {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: var(--ln-s-4);
+  padding: clamp(var(--ln-s-4), 3vw, var(--ln-s-6));
+  background: var(--ln-surface-2);
+  border: 1px solid var(--ln-amber-border);
+  border-radius: var(--ln-r-lg);
+}
+
+.quoteValue {
+  display: block;
+  margin-top: var(--ln-s-2);
+  font-size: clamp(24px, 4vw, 40px);
+  line-height: 1;
+}
+
+.quoteNote {
+  color: var(--ln-text-dim);
+  font-family: var(--ln-font-body);
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.clientCard {
+  display: flex;
+  align-items: center;
+  gap: var(--ln-s-4);
+  margin-bottom: var(--ln-s-5);
+  padding: var(--ln-s-4) var(--ln-s-5);
+  border-left: 5px solid var(--client-accent, var(--ln-cyan));
+}
+
+.clientMark {
+  display: grid;
+  flex: 0 0 auto;
+  width: 40px;
+  height: 40px;
+  place-items: center;
+  color: var(--client-accent, var(--ln-cyan));
+  font-family: var(--ln-font-mono);
+  font-size: 15px;
+  font-weight: 800;
+  border: 1px solid currentColor;
+  border-radius: var(--ln-r-md);
+  background: color-mix(in srgb, currentColor 10%, transparent);
+}
+
+.clientCard h2 {
+  margin: 0;
+  font-size: 18px;
+}
+
+.clientCard p {
+  margin-top: 4px;
+  font-size: 13px;
+}
+
+.sectionHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--ln-s-4);
+  margin-bottom: var(--ln-s-3);
+}
+
+.sectionHeader h2 {
+  margin: 0;
+  color: var(--ln-text);
+  font-family: var(--ln-font-display);
+  font-size: 18px;
+  font-weight: 800;
+}
+
+.sellButton,
+.primaryButton {
+  min-height: 44px;
+  padding: 10px 16px;
+  color: var(--ln-text-on-cyan);
+  background: var(--ln-cyan);
+  border: 0;
+  border-radius: var(--ln-r-md);
+  box-shadow: 0 3px 0 color-mix(in srgb, var(--ln-cyan-press) 65%, transparent);
+}
+
+.sellButton {
+  flex: 0 0 auto;
+  font-size: 11px;
+}
+
+.primaryButton {
+  width: 100%;
+  margin-top: var(--ln-s-4);
+  font-size: 12px;
+}
+
+.sellButton:active,
+.primaryButton:active {
+  background: var(--ln-cyan-press);
+  transform: translateY(1px);
+}
+
+.commodityGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr));
+  gap: var(--ln-s-4);
+}
+
+.commodityCard {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ln-s-4);
+  padding: var(--ln-s-4);
+}
+
+.commodityTop,
+.commodityFooter,
+.rate {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--ln-s-3);
+}
+
+.commodityIdentity {
+  display: flex;
+  align-items: center;
+  gap: var(--ln-s-3);
+  min-width: 0;
+}
+
+.commodityName {
+  overflow: hidden;
+  color: var(--ln-text);
+  font-family: var(--ln-font-display);
+  font-size: 18px;
+  font-weight: 800;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.commodityMeta {
+  margin-top: 4px;
+  color: var(--ln-text-muted);
+  font-family: var(--ln-font-mono);
+  font-size: 11px;
+  letter-spacing: 0.03em;
+  text-transform: none;
+}
+
+.rate {
+  padding-top: var(--ln-s-3);
+  border-top: 1px solid var(--ln-divider);
+}
+
+.rateValue {
+  color: var(--ln-text);
+  font-family: var(--ln-font-mono);
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.commodityValue {
+  font-size: 20px;
+  white-space: nowrap;
+}
+
+.emptyCard {
+  max-width: 760px;
+  margin: var(--ln-s-4) auto 0;
+  padding: clamp(var(--ln-s-5), 5vw, var(--ln-s-7));
+  text-align: center;
+}
+
+@media (max-width: 640px) {
+  .header {
+    min-height: 64px;
+    padding-inline: var(--ln-s-3);
+  }
+
+  .balanceValue {
+    font-size: 13px;
+  }
+
+  .intro {
+    grid-template-columns: 1fr;
+  }
+
+  .sectionHeader {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .sectionHeader .sellButton {
+    width: 100%;
+  }
+
+  .commodityTop {
+    align-items: flex-start;
+  }
+}
+
+@media (min-width: 1024px) and (orientation: landscape) {
+  .content {
+    padding-block: var(--ln-s-7);
+  }
+
+  .commodityGrid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sellButton,
+  .primaryButton {
+    transition: none;
+  }
+}

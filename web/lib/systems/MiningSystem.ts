@@ -28,6 +28,7 @@ export function startReturnLeg(s: GameState, cargo: Record<string, number>, arri
       transitStartedAt: transitStartedAt ?? (arrivalAt ? Date.now() : null),
       missionPhase: 'transit',
       miningCargoInProgress: undefined,
+      pendingRemoteDisposition: undefined,
       roverMiningStartedAt: undefined,
       landingReturnStartedAt: undefined,
       headingToDelivery: hasDelivery,
@@ -42,8 +43,10 @@ export function startReturnLeg(s: GameState, cargo: Record<string, number>, arri
 export function applyReturnArrived(s: GameState): GameState {
   if (!s.player.debriefPending || !s.lastCargo) return s
   const stash = { ...(s.player.stash ?? {}) }
-  for (const [id, amount] of Object.entries(s.lastCargo)) {
-    stash[id] = (stash[id] ?? 0) + amount
+  if (!s.player.cargoSettledOffworld) {
+    for (const [id, amount] of Object.entries(s.lastCargo)) {
+      stash[id] = (stash[id] ?? 0) + amount
+    }
   }
   return {
     ...s,
@@ -56,7 +59,13 @@ export function applyReturnArrived(s: GameState): GameState {
       missionPhase: 'debrief',
       debriefPending: false,
       returningToEarth: false,
-      shipDestroyed: true,
+      // KES-321: this was unconditionally `true`, so DebriefScreen's
+      // "HULL LOST · CARGO RECOVERED" branch fired on every single
+      // successful return — there is no other code path in the game that
+      // ever sets this flag, so it never represented a real failure. The
+      // single-use vehicle's routine teardown is shown separately via the
+      // `scrapping` state (ScrapSequenceCanvas), independent of this flag.
+      shipDestroyed: false,
     },
     screen: 'debrief',
     doneSteps: { ...s.doneSteps, 6: true },

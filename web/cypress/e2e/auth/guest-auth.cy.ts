@@ -1,7 +1,7 @@
-describe('Email-only quick account creation (KES-97)', () => {
+describe('Email-only account creation (KES-97)', () => {
   const pbUrl = Cypress.env('SHARED_PB_URL') || 'http://localhost:8090'
   const PB_AUTH_KEY = 'pocketbase_auth'
-  const GUEST_CREDENTIALS_KEY = 'landnam-guest-credentials'
+  const ACCOUNT_CREDENTIALS_KEY = 'landnam-account-credentials'
 
   let createdUserId: string | undefined
   let createdToken: string | undefined
@@ -40,15 +40,15 @@ describe('Email-only quick account creation (KES-97)', () => {
     cy.get('[data-testid="auth-gate-quick-email"]', { timeout: 10000 }).type(email)
     cy.get('[data-testid="auth-gate-quick-submit"]').click()
 
-    // Wait for createAccountWithEmail to succeed: both keys must be set
+    // Wait for real email-account creation to succeed: both keys must be set
     cy.window({ timeout: 15000 }).should(win => {
       expect(win.localStorage.getItem(PB_AUTH_KEY)).to.not.be.null
-      expect(win.localStorage.getItem(GUEST_CREDENTIALS_KEY)).to.not.be.null
+      expect(win.localStorage.getItem(ACCOUNT_CREDENTIALS_KEY)).to.not.be.null
     })
 
     cy.window().then(win => {
       const auth = JSON.parse(win.localStorage.getItem(PB_AUTH_KEY) || '{}')
-      const creds = JSON.parse(win.localStorage.getItem(GUEST_CREDENTIALS_KEY) || '{}')
+      const creds = JSON.parse(win.localStorage.getItem(ACCOUNT_CREDENTIALS_KEY) || '{}')
       expect(auth.token).to.be.a('string').and.not.empty
       expect(auth.record.email).to.eq(email)
       expect(creds.email).to.eq(email)
@@ -74,7 +74,8 @@ describe('Email-only quick account creation (KES-97)', () => {
     cy.get('[data-testid="auth-gate-quick-submit"]').click()
 
     cy.window({ timeout: 15000 }).should(win => {
-      expect(win.localStorage.getItem(GUEST_CREDENTIALS_KEY)).to.not.be.null
+      expect(win.localStorage.getItem(ACCOUNT_CREDENTIALS_KEY)).to.not.be.null
+      expect(win.localStorage.getItem(PB_AUTH_KEY)).to.not.be.null
     })
 
     let firstEmail: string
@@ -82,7 +83,7 @@ describe('Email-only quick account creation (KES-97)', () => {
       const auth = JSON.parse(win.localStorage.getItem(PB_AUTH_KEY) || '{}')
       createdUserId = auth.record.id
       createdToken = auth.token
-      firstEmail = JSON.parse(win.localStorage.getItem(GUEST_CREDENTIALS_KEY) || '{}').email
+      firstEmail = JSON.parse(win.localStorage.getItem(ACCOUNT_CREDENTIALS_KEY) || '{}').email
     })
 
     // Simulate a return visit: clear only the PB auth token, keep credentials
@@ -96,7 +97,7 @@ describe('Email-only quick account creation (KES-97)', () => {
     })
 
     cy.window().then(win => {
-      const creds = JSON.parse(win.localStorage.getItem(GUEST_CREDENTIALS_KEY) || '{}')
+      const creds = JSON.parse(win.localStorage.getItem(ACCOUNT_CREDENTIALS_KEY) || '{}')
       expect(creds.email).to.eq(firstEmail)
       const auth = JSON.parse(win.localStorage.getItem(PB_AUTH_KEY) || '{}')
       expect(auth.record.id).to.eq(createdUserId)

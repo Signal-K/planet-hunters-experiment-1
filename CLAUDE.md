@@ -80,7 +80,7 @@ Durable rules pulled from sprint-planning discussion (Craft doc "Landnam sprint 
 - **Onboarding mission content mapping** — do not reorder without a new design decision:
   - Mission 1 — pick a mission, pick a target, build and send a rocket
   - Mission 2 — unlock a new, larger-capacity rocket; expose a mission-tier indicator to the player
-  - Mission 3 — introduce clients requesting non-mineral cargo; payout is a service fee, not the cargo's raw value
+  - Mission 3 — two-stop mineral mining and haul job: mine the required minerals at one target, deliver them to a second target; payout splits into a mining fee and a transport fee (decided 2026-09-05, KES-313 — supersedes the earlier "non-mineral cargo / flat service fee" line, which was never implemented and had only landed as an incidental docs-sync edit on 2026-07-15, not a deliberate design decision)
 
 ## Backend connections
 

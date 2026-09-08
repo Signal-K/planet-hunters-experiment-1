@@ -80,7 +80,6 @@ describe('InstrumentFeedSystem', () => {
   it('scales the daily digest from the highest owned instrument level', () => {
     expect(transitInstrumentDigest(candidates, player(), '2026-07-30')).toHaveLength(1)
     expect(transitInstrumentDigest(candidates, player({
-      satelliteMonitoringLevel: 2,
       transitSatelliteLevel: 3,
     }), '2026-07-30')).toHaveLength(3)
   })
@@ -99,7 +98,8 @@ describe('InstrumentFeedSystem', () => {
       },
     }), '2026-07-30')
 
-    expect(unresolved.map(item => item.id)).toEqual([digest[1].id])
+    expect(unresolved).toHaveLength(2)
+    expect(unresolved.map(item => item.id)).not.toContain(digest[0].id)
   })
 
   it('persists one notification marker per instrument and UTC date', () => {
@@ -134,7 +134,16 @@ describe('InstrumentFeedSystem', () => {
         },
       }), '2026-07-30')
 
-      expect(unresolved.map(item => item.id)).toEqual([digest[1].id])
+      expect(unresolved).toHaveLength(2)
+      expect(unresolved.map(item => item.id)).not.toContain(digest[0].id)
+    })
+
+    it('advances to a new deterministic candidate window on the next day', () => {
+      const feed = Array.from({ length: 20 }, (_, index) => asteroidCandidate(`candidate-${index}`))
+      const today = deepSpaceInstrumentDigest(feed, player({ deepSpaceTelescopeLevel: 3 }), '2026-07-30')
+      const tomorrow = deepSpaceInstrumentDigest(feed, player({ deepSpaceTelescopeLevel: 3 }), '2026-07-31')
+
+      expect(tomorrow.map(candidate => candidate.id)).not.toEqual(today.map(candidate => candidate.id))
     })
 
     it('is an independent instrument from the transit telescope digest', () => {

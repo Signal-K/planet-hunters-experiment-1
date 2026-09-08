@@ -1,95 +1,48 @@
 'use client'
 
 import React from 'react'
+import type { TimeOfDayPhase } from '@/lib/hooks/useTimeOfDay'
+import { TerrainScene } from '@/components/game/hub/TerrainScene'
+import { COMPOSITIONS, type CompositionId } from '@/lib/scene/compositions'
 
 /**
- * Earth Base sky — the atmospheric backdrop only.
+ * Earth Base backdrop — rebuilt 2026-08-26 (KES-260).
  *
- * Earth seen from the surface: deep-space navy at the top fading through true
- * atmosphere blue to a pale horizon, with a starfield in the upper band and a
- * haze shelf where the ranges meet the sky.
+ * **What this replaced, and why.** Three separate art sources used to share this
+ * one component: a painted plate (`hub/earth_base_exterior_v1.jpg`) stretched
+ * over the whole scene, a set of hand-written SVG mountain paths underneath it,
+ * and a row of hand-written SVG skyline glyphs (`DomeBuilding`, `RadioTower`,
+ * `DishTower`, `TankSilo`) on top. The Blender-rendered structures then sat in
+ * front of all of it. Four rendering languages on one screen, which is why the
+ * buildings read as *"just sprites pasted on top of a background image"* and why
+ * the background and foreground buildings looked like different games.
  *
- * Terrain used to live here as SVG. It now renders in PixiJS
- * (`lib/pixi/hubScene.ts` → `buildTerrain`) so the ground, the plateau and the
- * structures standing on them are shaded by one system, and so the ground can
- * carry real cel-shaded facets rather than flat clip-path silhouettes. This
- * file keeps only what Pixi is poor at: large soft gradients.
+ * Now there is one source: the modular Blender terrain kit
+ * (`tools/blender/models/terrain.py`), placed by `TerrainScene` and composed by
+ * the entries in `lib/scene/compositions.ts`. Mountains, trees, roads, distant
+ * facilities and the real foreground structures are all rendered by the same
+ * pipeline, at the same camera, with the same facet split and outline weight.
  *
- * Layout contract: the ground line sits 22% from the bottom. hubScene.ts draws
- * terrain and building feet against it (`containerH * 0.78`) and
- * HubScreen/BuildPlaceScreen position DOM plot labels against it — changing it
- * means changing it in all three.
+ * `composition` is what makes the Launchpad a different place rather than the
+ * same picture scaled up — see `EARTH_BASE_PAD` vs `EARTH_BASE_WIDE`.
+ *
+ * Layout contract (unchanged): the ground line sits at `--hub-ground` from the
+ * bottom. `HubScreen`/`BuildPlaceScreen` position DOM plot labels against the
+ * same variable, so changing it means changing it in all of them.
  */
-
-// Plateau top surface sits ~3.4% above the scene floor; structure feet land
-// at 22%, i.e. 3.4% inset inside the plateau's top edge, so buildings read as
-// planted into the platform rather than balanced on its rim.
-export function HubWorldBackground() {
+export function HubWorldBackground({
+  phase = 'day',
+  composition = 'earth-base-wide',
+}: {
+  phase?: TimeOfDayPhase
+  composition?: CompositionId
+}) {
   return (
-    <div style={{ position: 'absolute', inset: 0, zIndex: 1, overflow: 'hidden' }}>
-
-      {/* ── Sky — deep space to atmosphere ─────────────────────────────── */}
-      <div style={{
-        position: 'absolute', inset: 0,
-        background: 'linear-gradient(180deg, var(--hub-sky-space) 0%, var(--hub-sky-upper) 28%, var(--hub-sky-mid) 56%, var(--hub-sky-haze) 80%, var(--hub-sky-horizon) 100%)',
-      }} />
-
-      {/* ── Starfield — upper band only, slow twinkle ──────────────────── */}
-      <div
-        className="hub-stars"
-        style={{
-          position: 'absolute', left: 0, right: 0, top: '-10%', height: '58%',
-          pointerEvents: 'none',
-          backgroundImage: [
-            'radial-gradient(1px 1px at 10% 20%, rgba(255,255,255,.55), transparent)',
-            'radial-gradient(1px 1px at 30% 45%, rgba(255,255,255,.4), transparent)',
-            'radial-gradient(1.5px 1.5px at 55% 15%, rgba(255,255,255,.5), transparent)',
-            'radial-gradient(1px 1px at 75% 35%, rgba(255,255,255,.36), transparent)',
-            'radial-gradient(1px 1px at 90% 10%, rgba(255,255,255,.44), transparent)',
-            'radial-gradient(1px 1px at 22% 62%, rgba(255,255,255,.28), transparent)',
-            'radial-gradient(1px 1px at 68% 58%, rgba(255,255,255,.24), transparent)',
-          ].join(','),
-          backgroundSize: '480px 320px',
-          animation: 'hub-twinkle 5s ease-in-out infinite alternate',
-        }}
-      />
-
-      {/* ── Atmospheric haze sitting on the ridgeline ──────────────────── */}
-      <div style={{
-        position: 'absolute', left: 0, right: 0, bottom: '25%', height: '22%',
-        pointerEvents: 'none',
-        background: 'linear-gradient(180deg, transparent 0%, rgba(255,255,255,0.08) 60%, rgba(255,255,255,0.14) 100%)',
-      }} />
-
-      {/* Renderer-independent base silhouette. Pixi paints richer terrain and
-          structures above this when available, but a failed WebGL context must
-          never reduce Earth Base to an empty sky. Keep this deliberately small:
-          one ridge band, turf, and a service deck are enough to establish a
-          readable playable place while the canvas is unavailable. */}
-      <div
-        data-testid="hub-terrain-fallback"
-        aria-hidden="true"
-        style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}
-      >
-        <div style={{
-          position: 'absolute', left: 0, right: 0, bottom: '21%', height: '20%',
-          background: 'var(--hub-fallback-ridge)',
-          clipPath: 'polygon(0 72%, 8% 48%, 17% 68%, 29% 30%, 39% 60%, 51% 36%, 62% 70%, 73% 28%, 85% 58%, 100% 38%, 100% 100%, 0 100%)',
-        }} />
-        <div style={{
-          position: 'absolute', left: 0, right: 0, bottom: 0, height: '24%',
-          background: 'var(--hub-fallback-ground)',
-          clipPath: 'polygon(0 18%, 12% 12%, 26% 18%, 39% 8%, 53% 16%, 66% 6%, 79% 15%, 91% 7%, 100% 13%, 100% 100%, 0 100%)',
-        }} />
-        <div style={{
-          position: 'absolute', left: '13%', right: '13%', bottom: '14%', height: '9%',
-          background: 'var(--hub-fallback-deck)',
-          borderTop: '2px solid var(--hub-fallback-deck-edge)',
-          borderRadius: '8% 8% 2px 2px / 30% 30% 2px 2px',
-          boxShadow: 'inset 0 -14px 0 var(--hub-fallback-deck-shadow)',
-        }} />
-      </div>
-
+    <div
+      data-testid="hub-terrain-fallback"
+      style={{ position: 'absolute', inset: 0, zIndex: 1, overflow: 'hidden' }}
+    >
+      <TerrainScene composition={COMPOSITIONS[composition]} phase={phase} />
     </div>
   )
 }

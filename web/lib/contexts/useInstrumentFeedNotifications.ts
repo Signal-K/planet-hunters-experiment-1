@@ -29,10 +29,13 @@ export function useInstrumentFeedNotifications({
   setState,
   addToast,
 }: InstrumentFeedNotificationOpts): void {
-  const [dateKey, setDateKey] = useState(() => instrumentDigestDateKey())
+  // Keep the first render identical on the server and client. The real UTC
+  // date is only needed by the post-commit notification effect.
+  const [dateKey, setDateKey] = useState('')
   const emitted = useRef(new Set<string>())
 
   useEffect(() => {
+    setDateKey(instrumentDigestDateKey())
     const timer = window.setInterval(() => {
       const next = instrumentDigestDateKey()
       setDateKey(current => current === next ? current : next)
@@ -43,8 +46,8 @@ export function useInstrumentFeedNotifications({
   useEffect(() => {
     if (
       !enabled
+      || !dateKey
       || !player.freeOperations
-      || !player.satelliteMonitoringBuilt
       || !player.transitSatelliteLaunchedAt
       || instrumentDigestWasNotified(
         player,
@@ -86,7 +89,7 @@ export function useInstrumentFeedNotifications({
               )
               void scheduleLandnamPush({
                 title: 'INSTRUMENT DATA READY',
-                body: `${pending.length} transit candidate${pending.length === 1 ? '' : 's'} arrived in today's S.M.S. downlink.`,
+                body: `${pending.length} transit candidate${pending.length === 1 ? '' : 's'} arrived in today's telescope downlink.`,
               }).catch(() => {})
             })
           }
@@ -110,8 +113,7 @@ export function useInstrumentFeedNotifications({
     enabled,
     player.freeOperations,
     player.instrumentDigestNotifiedOn,
-    player.satelliteMonitoringBuilt,
-    player.satelliteMonitoringLevel,
+    player.transitSatelliteLevel,
     player.satelliteTargetId,
     player.tessClassifications,
     player.transitSatelliteLaunchedAt,

@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useRef } from 'react'
+import { capDpr } from '@/lib/engine/pixiDisplay'
 import { Application } from 'pixi.js'
 import { Scene, GameLoop, RuntimeContext } from '@/lib/engine'
 import { ConstructionController } from '@/lib/engine/scripts/ConstructionController'
@@ -46,9 +47,9 @@ export default function ConstructionTargetCanvas({ state, selectedPad, onSelectP
             width: worldW,
             height: worldH,
             background: 0x06090f,
-            antialias: true,
+            antialias: false,
             autoDensity: true,
-            resolution: window.devicePixelRatio || 1,
+            resolution: capDpr(),
           }),
         ])
         if (destroyed) return

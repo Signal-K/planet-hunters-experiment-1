@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import {
   Boxes,
   Clock3,
@@ -12,7 +12,6 @@ import {
   Satellite,
   Truck,
 } from 'lucide-react'
-import { defaultSpec } from '@takeon/engine'
 import type { Player } from '@/lib/game-types'
 import {
   MINERAL_META,
@@ -42,6 +41,7 @@ interface SurfaceOpsScreenProps {
   player: Player
   onBack: () => void
   onPurchaseSiteAccess: (siteId: string) => void
+  onStartFieldOperation: (siteId: string) => void
   onBuildLaunchpad: (siteId: string, pad: 0 | 1 | 2) => void
   onMined: (siteId: string, mineralId: string, amount: number) => void
   onDispatch: (siteId: string) => void
@@ -85,6 +85,7 @@ export default function SurfaceOpsScreen({
   player,
   onBack,
   onPurchaseSiteAccess,
+  onStartFieldOperation,
   onBuildLaunchpad,
   onMined,
   onDispatch,
@@ -95,8 +96,8 @@ export default function SurfaceOpsScreen({
   const [selectedSiteId, setSelectedSiteId] = useState(SURFACE_SITES[0].id)
   const [selectedPad, setSelectedPad] = useState<0 | 1 | 2>(0)
   const [view, setView] = useState<SurfaceView>('logistics')
-  const [now, setNow] = useState(() => Date.now())
-  const rover = useMemo(() => defaultSpec(), [])
+  const [routeSteps, setRouteSteps] = useState(0)
+  const [now, setNow] = useState(0)
 
   const definition = SURFACE_SITES.find(site => site.id === selectedSiteId)
     ?? SURFACE_SITES[0]
@@ -127,6 +128,7 @@ export default function SurfaceOpsScreen({
   }, [progress.launchpad])
 
   useEffect(() => {
+    setNow(Date.now())
     const timer = window.setInterval(() => setNow(Date.now()), 1000)
     return () => window.clearInterval(timer)
   }, [])
@@ -143,6 +145,10 @@ export default function SurfaceOpsScreen({
     if (mineralId) onMined(definition.id, mineralId, event.payload.amount)
   }, [definition.id, onMined])
 
+  const handleRouteChange = useCallback((steps: number) => {
+    setRouteSteps(steps)
+  }, [])
+
   const launchpadCost = `${formatCurrency(SETTLEMENT_LAUNCHPAD.costFrancs, { compact: true })} · ${
     Object.entries(SETTLEMENT_LAUNCHPAD.costMaterials)
       .map(([id, amount]) => `${amount} ${MINERAL_META[id]?.sym ?? id}`)
@@ -150,7 +156,7 @@ export default function SurfaceOpsScreen({
   }`
 
   return (
-    <div className={styles.screen} data-testid="surface-ops-screen">
+    <div className={`theme-deep ln-scene-surface-ops ${styles.screen}`} data-testid="surface-ops-screen" data-view={view}>
       <TopBar
         eyebrow="SURFACE OPS · SOLO SITE CONTROL"
         title="Surface Operations"
@@ -159,7 +165,7 @@ export default function SurfaceOpsScreen({
         francs={player.francs}
       />
 
-      <main className={styles.content}>
+      <main className={styles.content} data-view={view}>
         <section className={styles.siteRail} aria-label="Surface sites">
           {SURFACE_SITES.map(site => {
             const siteProgress = surfaceSiteProgress(player, site.id)
@@ -214,27 +220,44 @@ export default function SurfaceOpsScreen({
           </button>
         </div>
 
-        {view === 'field' && accessPurchased ? (
+        {view === 'field' && accessPurchased && progress.fieldOperation ? (
           <section className={styles.fieldPanel} data-testid="surface-field-view">
             <div className={styles.sectionHeading}>
               <div>
                 <span className={styles.eyebrow}>LIVE FIELD · {definition.region}</span>
-                <h2>Takeon Surface Mission</h2>
+                <h2>{progress.fieldOperation.label}</h2>
               </div>
               <span className={styles.statusPill}>SYNCED</span>
             </div>
-            <p className={styles.sectionCopy}>
-              Mined resources feed the settlement mining-station buffer. Return
-              to Logistics when capacity is reached.
-            </p>
+            <p className={styles.sectionCopy}>The Prospector is a named Landnam operation. Field yield feeds the settlement buffer; return to Logistics when full.</p>
+            <div className={styles.routeReadout} data-testid="surface-field-route-readout">
+              <span>FIELD ROUTE</span>
+              <strong>{routeSteps > 0 ? `${routeSteps} SAFE STEPS` : 'TAP TERRAIN TO PLAN'}</strong>
+            </div>
             <TakeOnMount
-              missionId={`settlement-${definition.id}`}
-              bodyId={definition.bodyId}
-              rover={rover}
-              roverName="Settlement Pathfinder"
+              missionId={progress.fieldOperation.id}
+              bodyId={progress.fieldOperation.bodyId}
+              seed={progress.fieldOperation.seed}
+              rover={progress.fieldOperation.rover}
+              roverName={progress.fieldOperation.rover.name}
               onEvent={handleTakeonEvent}
+              onRouteChange={handleRouteChange}
               className={styles.takeonMount}
             />
+          </section>
+        ) : view === 'field' && accessPurchased ? (
+          <section className={styles.fieldPanel} data-testid="surface-field-operation-start">
+            <div className={styles.sectionHeading}>
+              <div>
+                <span className={styles.eyebrow}>DEPLOYMENT READY · {definition.region}</span>
+                <h2>Start Prospector operation</h2>
+              </div>
+              <span className={styles.statusPill}>LOCAL READY</span>
+            </div>
+            <p className={styles.sectionCopy}>Landnam commits the mission identity, lunar site and rover assembly before mounting TakeOn. Programme state stays here; the field layer only operates the site.</p>
+            <PrimaryBtn onClick={() => onStartFieldOperation(definition.id)}>
+              <Satellite size={16} /> Deploy Prospector
+            </PrimaryBtn>
           </section>
         ) : (
           <div className={styles.operationsGrid}>

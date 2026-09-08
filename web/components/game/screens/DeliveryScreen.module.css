@@ -2,9 +2,9 @@
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  background:
-    radial-gradient(circle at 72% 35%, rgba(112,217,234, .09), transparent 34%),
-    #0a0a0c;
+  position: absolute;
+  inset: 0;
+  z-index: 0;
 }
 
 .stage {
@@ -31,8 +31,11 @@
   padding: 7px 10px;
   border: 1px solid rgba(112,217,234, .26);
   border-radius: 6px;
-  background: rgba(18,18,20, .78);
-  backdrop-filter: blur(6px);
+  /* KES-231: backdrop-filter: blur() here recomposites every frame the
+     Takeon canvas beneath it updates — a real GPU cost stacked onto that
+     canvas's own render loop, worth cutting since the panel is already
+     opaque enough (.9) to read clearly without it. */
+  background: var(--ln-panel);
 }
 
 .targetLabel span,
@@ -61,7 +64,7 @@
   gap: 9px;
   padding: 16px;
   border-top: 1px solid rgba(112,217,234, .18);
-  background: linear-gradient(180deg, rgba(18,18,20, .94), #0a0a0c 24%);
+  background: linear-gradient(180deg, var(--ln-panel), var(--ln-void) 24%);
 }
 
 .statusRow,
@@ -76,7 +79,7 @@
 }
 
 .kicker {
-  color: var(--ln-amber);
+  color: var(--ln-cyan);
 }
 
 .contract {
@@ -86,12 +89,12 @@
 }
 
 .timer {
-  color: var(--ln-amber);
+  color: var(--ln-cyan);
   font: 700 15px var(--ln-font-mono);
 }
 
 .progressMeta strong {
-  color: var(--ln-amber);
+  color: var(--ln-cyan);
   font: 700 12px var(--ln-font-mono);
 }
 
@@ -99,14 +102,14 @@
   height: 5px;
   overflow: hidden;
   border-radius: 99px;
-  background: rgba(245, 166, 35, .12);
+  background: rgba(112, 217, 234, .12);
 }
 
 .fill {
   height: 100%;
   border-radius: inherit;
-  background: linear-gradient(90deg, #b96e0b, var(--ln-amber));
-  box-shadow: 0 0 12px rgba(245, 166, 35, .45);
+  background: linear-gradient(90deg, var(--ln-cyan-press), var(--ln-cyan));
+  box-shadow: 0 0 12px rgba(112, 217, 234, .45);
   transition: width .1s linear;
 }
 
@@ -120,9 +123,9 @@
 .holdState {
   min-width: 0;
   padding: 7px 9px;
-  border: 1px solid rgba(169, 184, 206, .12);
+  border: 1px solid var(--ln-hairline);
   border-radius: 6px;
-  background: rgba(16, 27, 43, .72);
+  background: var(--ln-panel-2);
   color: var(--ln-text-dim);
   font: 600 10px var(--ln-font-display);
 }
@@ -144,11 +147,11 @@
 
 .holdState {
   grid-column: 1 / -1;
-  border-color: rgba(245, 166, 35, .22);
+  border-color: rgba(112, 217, 234, .22);
 }
 
 .holdState strong {
-  color: var(--ln-amber);
+  color: var(--ln-cyan);
 }
 
 .fee {
@@ -173,6 +176,25 @@
   font: 800 14px var(--ln-font-mono);
 }
 
+.dumpError {
+  padding: 8px 10px;
+  border: 1px solid rgba(255, 179, 71, .36);
+  border-radius: 6px;
+  background: rgba(255, 179, 71, .08);
+  color: var(--ln-warn);
+  font: 700 10px var(--ln-font-display);
+  letter-spacing: .12em;
+  text-align: center;
+}
+
+.transferNote {
+  padding: 8px 10px;
+  border-left: 2px solid var(--ln-ok);
+  background: color-mix(in srgb, var(--ln-ok) 8%, transparent);
+  color: var(--ln-text-dim);
+  font: 600 10px/1.4 var(--ln-font-body);
+}
+
 @media (max-height: 720px) {
   .stage {
     min-height: 190px;
@@ -181,5 +203,38 @@
   .hud {
     gap: 7px;
     padding: 12px 14px;
+  }
+}
+
+@media (orientation: landscape) and (max-width: 1023px) {
+  .stage {
+    min-height: 96px;
+    margin-top: 56px;
+  }
+
+  .targetLabel {
+    top: 8px;
+    right: 12px;
+    padding: 5px 8px;
+  }
+
+  .hud {
+    gap: 4px;
+    padding: 8px 12px;
+  }
+
+  .contract,
+  .timer {
+    font-size: 12px;
+  }
+
+  .cargoRow,
+  .holdState {
+    padding-block: 5px;
+  }
+
+  .fee,
+  .transferNote {
+    padding-block: 6px;
   }
 }

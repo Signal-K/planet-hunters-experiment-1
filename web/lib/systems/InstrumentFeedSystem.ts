@@ -6,7 +6,7 @@ export const DEEP_SPACE_TELESCOPE_INSTRUMENT_ID = 'deep-space-telescope'
 
 type InstrumentFeedPlayer = Pick<
   Player,
-  | 'satelliteMonitoringLevel'
+  | 'transitSatelliteLevel'
   | 'transitSatelliteLevel'
   | 'satelliteTargetId'
   | 'tessClassifications'
@@ -27,7 +27,6 @@ export function instrumentDigestDateKey(now: Date = new Date()): string {
 export function transitInstrumentLevel(player: InstrumentFeedPlayer): number {
   return Math.max(
     1,
-    Math.floor(player.satelliteMonitoringLevel ?? 1),
     Math.floor(player.transitSatelliteLevel ?? 1)
   )
 }
@@ -56,8 +55,15 @@ export function unresolvedTransitInstrumentDigest(
   dateKey: string
 ): TessCandidate[] {
   const classifications = player.tessClassifications ?? {}
-  return transitInstrumentDigest(candidates, player, dateKey)
-    .filter(candidate => !classifications[candidate.id])
+  // Select the daily window from the still-reviewable pool. Filtering only
+  // after the date hash could leave the digest empty forever when the hash
+  // landed on a candidate the player classified yesterday, even though new
+  // shared-feed data was available.
+  return transitInstrumentDigest(
+    candidates.filter(candidate => !classifications[candidate.id]),
+    player,
+    dateKey,
+  )
 }
 
 export function deepSpaceInstrumentLevel(player: DeepSpaceInstrumentFeedPlayer): number {
@@ -84,8 +90,11 @@ export function unresolvedDeepSpaceInstrumentDigest(
   dateKey: string
 ): AsteroidCandidate[] {
   const classifications = player.asteroidClassifications ?? {}
-  return deepSpaceInstrumentDigest(candidates, player, dateKey)
-    .filter(candidate => !classifications[candidate.id])
+  return deepSpaceInstrumentDigest(
+    candidates.filter(candidate => !classifications[candidate.id]),
+    player,
+    dateKey,
+  )
 }
 
 export function instrumentDigestWasNotified(

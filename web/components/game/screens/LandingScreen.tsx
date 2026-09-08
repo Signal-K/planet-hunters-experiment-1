@@ -49,7 +49,7 @@ const COPY: Record<LandingSequenceMode, {
 }
 
 export default function LandingScreen({ target, mode, startedAt, onBack, onContinue }: LandingScreenProps) {
-  const [now, setNow] = useState(() => Date.now())
+  const [now, setNow] = useState(0)
   const durationMs = mode === 'descend' ? LANDING_DESCEND_DURATION_MS : LANDING_ASCEND_DURATION_MS
   const progress = landingProgress(startedAt, now, durationMs)
   const progressPct = Math.round(progress * 100)
@@ -59,6 +59,7 @@ export default function LandingScreen({ target, mode, startedAt, onBack, onConti
 
   useEffect(() => {
     const tick = () => setNow(Date.now())
+    tick()
     const id = window.setInterval(tick, 100)
     const onVisible = () => { if (!document.hidden) tick() }
     document.addEventListener('visibilitychange', onVisible)
@@ -69,7 +70,7 @@ export default function LandingScreen({ target, mode, startedAt, onBack, onConti
   }, [])
 
   return (
-    <div className={`game-screen theme-deep ${styles.screen}`} data-testid="landing-screen">
+    <div className={`game-screen theme-deep ln-scene-landing ${styles.screen}`} data-testid="landing-screen">
       <TopBar eyebrow={copy.eyebrow} title={copy.title} onBack={onBack} />
 
       <div className={styles.stage}>

@@ -9,6 +9,7 @@ import StatusPill from '@/components/ui/StatusPill'
 import { PrimaryBtn } from '@/components/ui/Button'
 import CommentsPanel from '@/components/game/CommentsPanel'
 import NebulaBackdrop from '@/components/game/NebulaBackdrop'
+import AsteroidSkyPlot from '@/components/game/AsteroidSkyPlot'
 import type { AsteroidCandidate, AsteroidClassification, AsteroidVerdict } from '@/lib/data'
 import type { Player } from '@/lib/game-types'
 import { UI_ZONES } from '@/lib/ui-zones'
@@ -19,6 +20,8 @@ import AsteroidDiscoveryCoach, { useAsteroidDiscoveryCoach } from '@/components/
 
 interface AsteroidDiscoveryScreenProps {
   player: Player
+  /** Fixed record supplied only by the named visual dev preset. */
+  visualCandidate?: AsteroidCandidate
   onBack: () => void
   onBuildTelescope: () => void
   onSubmit: (candidateId: string, verdict: AsteroidVerdict) => void
@@ -35,7 +38,7 @@ const VERDICT_ACTIONS: Array<{ id: AsteroidVerdict; label: string; kind: 'amber'
   { id: 'unsure', label: 'Skip', kind: 'ghost' },
 ]
 
-export default function AsteroidDiscoveryScreen({ player, onBack, onBuildTelescope, onSubmit }: AsteroidDiscoveryScreenProps) {
+export default function AsteroidDiscoveryScreen({ player, visualCandidate, onBack, onBuildTelescope, onSubmit }: AsteroidDiscoveryScreenProps) {
   // Stabilize the fallback so the fetch effect below (keyed on `classifications`)
   // doesn't get a new object identity every render when the field is unset —
   // e.g. preset-loaded dev state, which bypasses normalizeAndRepair()'s
@@ -49,8 +52,15 @@ export default function AsteroidDiscoveryScreen({ player, onBack, onBuildTelesco
   // Dev/staging-only day-skip, same rationale as TessDiscoveryScreen's
   // devDayOffset — the daily pool is keyed by real calendar date.
   const [devDayOffset, setDevDayOffset] = useState(0)
+  const [showMoreData, setShowMoreData] = useState(false)
 
   useEffect(() => {
+    if (visualCandidate) {
+      setCandidate(visualCandidate)
+      setLoadFailed(false)
+      setLoading(false)
+      return
+    }
     if (!player.freeOperations || !player.deepSpaceTelescopeBuilt) {
       setLoading(false)
       return
@@ -94,7 +104,7 @@ export default function AsteroidDiscoveryScreen({ player, onBack, onBuildTelesco
     // player is still looking at. A new candidate is only fetched on mount
     // or when the telescope/day actually changes.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [player.freeOperations, player.deepSpaceTelescopeBuilt, player.deepSpaceTelescopeLevel, devDayOffset])
+  }, [visualCandidate, player.freeOperations, player.deepSpaceTelescopeBuilt, player.deepSpaceTelescopeLevel, devDayOffset])
 
   const isDesktop = useIsDesktop()
   const coach = useAsteroidDiscoveryCoach()
@@ -102,7 +112,7 @@ export default function AsteroidDiscoveryScreen({ player, onBack, onBuildTelesco
   if (!player.freeOperations) {
     return (
       <GateScreen
-        eyebrow="EARTH BASE / LOCKED"
+        eyebrow="BASE / LOCKED"
         icon={<Telescope size={22} />}
         tone="amber"
         title="Free Operations Required"
@@ -115,11 +125,11 @@ export default function AsteroidDiscoveryScreen({ player, onBack, onBuildTelesco
   if (!player.deepSpaceTelescopeBuilt) {
     return (
       <GateScreen
-        eyebrow="EARTH BASE / TELESCOPE REQUIRED"
+        eyebrow="BASE / TELESCOPE REQUIRED"
         icon={<Telescope size={22} />}
         tone="cyan"
         title="Build Deep Space Telescope"
-        body="Place the Earth-base Deep Space Telescope to start receiving NEOCP asteroid candidates."
+        body="Place the Deep Space Telescope to start receiving NEOCP asteroid candidates."
         onBack={onBack}
         action={<PrimaryBtn testId="build-deep-space-telescope-btn" onClick={onBuildTelescope}>Build Telescope</PrimaryBtn>}
       />
@@ -129,7 +139,7 @@ export default function AsteroidDiscoveryScreen({ player, onBack, onBuildTelesco
   if (loading) {
     return (
       <GateScreen
-        eyebrow="EARTH BASE / DAILY DOWNLINK"
+        eyebrow="BASE / DAILY DOWNLINK"
         icon={<Telescope size={22} />}
         tone="cyan"
         title="Acquiring Signal"
@@ -142,7 +152,7 @@ export default function AsteroidDiscoveryScreen({ player, onBack, onBuildTelesco
   if (!candidate) {
     return (
       <GateScreen
-        eyebrow="EARTH BASE / DAILY DOWNLINK"
+        eyebrow="BASE / DAILY DOWNLINK"
         icon={<Radio size={22} />}
         tone="amber"
         title={loadFailed ? 'Live Feed Unavailable' : 'No Reviewable Candidate'}
@@ -170,9 +180,9 @@ export default function AsteroidDiscoveryScreen({ player, onBack, onBuildTelesco
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
             <LiveDot active={!classification} />
-            <div style={{ fontFamily: 'var(--ln-font-display)', fontWeight: 800, fontSize: 18, color: '#e8f0fe' }}>{candidate.tempDesig}</div>
+            <div style={{ fontFamily: 'var(--ln-font-display)', fontWeight: 800, fontSize: 18, color: 'var(--ln-text)' }}>{candidate.tempDesig}</div>
           </div>
-          <div style={{ fontFamily: 'var(--ln-font-mono)', fontSize: 10, color: '#6b7fa3', marginTop: 2 }}>
+          <div style={{ fontFamily: 'var(--ln-font-mono)', fontSize: 10, color: 'var(--ln-text-muted)', marginTop: 2 }}>
             SCORE {candidate.score} / V{candidate.vMag.toFixed(1)} / DISC. {candidate.discoveryDate || 'UNKNOWN'}
           </div>
         </div>
@@ -184,24 +194,50 @@ export default function AsteroidDiscoveryScreen({ player, onBack, onBuildTelesco
       <div
         data-testid="neocp-data-provenance"
         style={{
-          fontFamily: 'var(--ln-font-mono)', fontSize: 8, letterSpacing: '0.06em', color: '#4a5a75',
+          fontFamily: 'var(--ln-font-mono)', fontSize: 8, letterSpacing: '0.06em', color: 'var(--ln-text-dim)',
           textTransform: 'uppercase', marginBottom: 10, marginTop: -4,
         }}
       >
         Real candidate data · Minor Planet Center NEOCP — your call feeds live follow-up prioritisation
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 8 }}>
+      <AsteroidSkyPlot
+        tempDesig={candidate.tempDesig}
+        ra={candidate.ra}
+        decl={candidate.decl}
+        vMag={candidate.vMag}
+        arcDays={candidate.arcDays}
+        lastSeenDays={candidate.lastSeenDays}
+      />
+
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 8, marginTop: 10 }}>
         <StatCard variant="readout" label="NEO Score" value={`${candidate.score}`} />
         <StatCard variant="readout" label="V Mag" value={candidate.vMag.toFixed(1)} />
-        <StatCard variant="readout" label="H Mag" value={candidate.hMag.toFixed(1)} />
-        <StatCard variant="readout" label="Observations" value={`${candidate.nObs}`} />
         <StatCard variant="readout" label="Arc" value={`${candidate.arcDays.toFixed(2)}D`} />
-        <StatCard variant="readout" label="Not Seen" value={`${candidate.lastSeenDays.toFixed(1)}D`} />
-        <StatCard variant="readout" label="R.A. (hrs)" value={candidate.ra.toFixed(4)} />
-        <StatCard variant="readout" label="Decl. (deg)" value={candidate.decl.toFixed(4)} />
-        <StatCard variant="readout" label="Discovered" value={candidate.discoveryDate || 'UNKNOWN'} />
       </div>
+
+      <button
+        data-testid="neocp-more-data-toggle"
+        onClick={() => setShowMoreData(value => !value)}
+        style={{
+          marginTop: 10, minHeight: 44, width: '100%', background: 'transparent', border: '1px solid var(--ln-hairline-strong)',
+          borderRadius: 8, color: 'var(--ln-text-muted)', fontFamily: 'var(--ln-font-display)', fontSize: 10, fontWeight: 700,
+          letterSpacing: '0.08em', textTransform: 'uppercase', cursor: 'pointer',
+        }}
+      >
+        {showMoreData ? 'Hide Data ▴' : 'More Data ▾'}
+      </button>
+
+      {showMoreData && (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 8, marginTop: 8 }}>
+          <StatCard variant="readout" label="H Mag" value={candidate.hMag.toFixed(1)} />
+          <StatCard variant="readout" label="Observations" value={`${candidate.nObs}`} />
+          <StatCard variant="readout" label="Not Seen" value={`${candidate.lastSeenDays.toFixed(1)}D`} />
+          <StatCard variant="readout" label="R.A. (hrs)" value={candidate.ra.toFixed(4)} />
+          <StatCard variant="readout" label="Decl. (deg)" value={candidate.decl.toFixed(4)} />
+          <StatCard variant="readout" label="Discovered" value={candidate.discoveryDate || 'UNKNOWN'} />
+        </div>
+      )}
     </Panel>
   )
 
@@ -224,24 +260,24 @@ export default function AsteroidDiscoveryScreen({ player, onBack, onBuildTelesco
       <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 10, fontWeight: 800, letterSpacing: '0.22em', color: classification.verdict === 'likely_real' ? 'var(--ln-ok)' : 'var(--ln-cyan)', textTransform: 'uppercase', marginBottom: 6 }}>
         Annotation Logged
       </div>
-      <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 13, color: '#dbe8f8', lineHeight: 1.45 }}>
+      <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 13, color: 'var(--ln-text-dim)', lineHeight: 1.45 }}>
         Your call was saved to the review queue. First submissions award research XP — real NEO follow-up observers use this same score/arc/magnitude data to prioritise which candidates get chased before they drop off the confirmation page.
       </div>
     </Panel>
   ) : null
 
+  const devBar = process.env.NODE_ENV === 'development' ? (
+    <DevDaySkipBar offset={devDayOffset} onAdvance={() => setDevDayOffset(o => o + 1)} onReset={() => setDevDayOffset(0)} />
+  ) : null
+
   return (
-    <div className="game-screen" data-testid="asteroid-discovery-screen">
+    <div className="game-screen theme-deep ln-scene-asteroid-discovery" data-testid="asteroid-discovery-screen">
       <TopBar eyebrow="INSTRUMENT DATA FEED · DAILY DOWNLINK" title={candidate.tempDesig} onBack={onBack} />
-      {coach.visible && <AsteroidDiscoveryCoach onDismiss={coach.dismiss} />}
-      {process.env.NODE_ENV === 'development' && (
-        <div style={{ position: 'absolute', top: 72, left: 'var(--ln-s-4)', right: 'var(--ln-s-4)', zIndex: 5 }}>
-          <DevDaySkipBar offset={devDayOffset} onAdvance={() => setDevDayOffset(o => o + 1)} onReset={() => setDevDayOffset(0)} />
-        </div>
-      )}
       {isDesktop ? (
         <div data-testid="asteroid-discovery-desktop-grid" style={{ position: 'absolute', inset: 0, top: 72, display: 'grid', gridTemplateColumns: '55% 45%', gap: 16, padding: '0 var(--ln-s-4) var(--ln-s-4)' }}>
           <div style={{ overflowY: 'auto' }} data-ui-zone={UI_ZONES.screenContent}>
+            {coach.visible && <AsteroidDiscoveryCoach onDismiss={coach.dismiss} />}
+            {devBar}
             {dataPanel}
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12, overflowY: 'auto' }}>
@@ -255,9 +291,15 @@ export default function AsteroidDiscoveryScreen({ player, onBack, onBuildTelesco
       ) : (
         <>
           <div className="screen-scroll" data-ui-zone={UI_ZONES.screenContent}>
+            {coach.visible && <AsteroidDiscoveryCoach onDismiss={coach.dismiss} />}
+            {devBar}
             {dataPanel}
             {payoffPanel && <div style={{ marginTop: 12 }}>{payoffPanel}</div>}
-            <div style={{ marginTop: 12 }}>
+            {/* .screen-scroll's shared padding-bottom (24px) is shorter than
+                this screen's sticky 3-button verdict bar (~78px); pad the
+                last block locally rather than widening the shared class,
+                which other screens also rely on. */}
+            <div style={{ marginTop: 12, paddingBottom: 64 }}>
               <CommentsPanel recordType="classification" recordId={candidate.id} />
             </div>
           </div>
@@ -285,7 +327,7 @@ function GateScreen({ eyebrow, icon, tone, title, body, onBack, action, devBar }
   const bg = tone === 'amber' ? 'rgba(245,166,35,0.12)' : 'rgba(57,211,239,0.12)'
   const border = tone === 'amber' ? 'rgba(245,166,35,0.42)' : 'rgba(57,211,239,0.42)'
   return (
-    <div className="game-screen">
+    <div className="game-screen theme-deep ln-scene-asteroid-discovery">
       <NebulaBackdrop />
       <TopBar eyebrow={eyebrow} title="Deep Space Telescope" onBack={onBack} />
       <div className="screen-scroll" data-ui-zone={UI_ZONES.screenContent}>
@@ -297,7 +339,7 @@ function GateScreen({ eyebrow, icon, tone, title, body, onBack, action, devBar }
             </div>
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ fontFamily: 'var(--ln-font-display)', fontWeight: 800, fontSize: 15, color: accent }}>{title}</div>
-              <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 12, color: '#a9b8ce', marginTop: 2 }}>{body}</div>
+              <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 12, color: 'var(--ln-text-muted)', marginTop: 2 }}>{body}</div>
             </div>
           </div>
           {action && <div style={{ marginTop: 12 }}>{action}</div>}

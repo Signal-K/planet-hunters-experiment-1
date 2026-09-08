@@ -1,28 +1,29 @@
 'use client'
 
-import { useState } from 'react'
-import TopBar from '@/components/ui/TopBar'
-import Panel from '@/components/ui/Panel'
-import { PrimaryBtn } from '@/components/ui/Button'
-import StatusPill from '@/components/ui/StatusPill'
-import ConfirmActionSheet from '@/components/game/ConfirmActionSheet'
+import { useState, type CSSProperties } from 'react'
+import ActionConfirmBar from '@/components/game/ActionConfirmBar'
 import MineralChip from '@/components/game/MineralChip'
-import { MINERAL_META, CLIENT_SLOTS } from '@/lib/data'
+import { MINERAL_META, CLIENT_SLOTS, REFINERY_RECIPES } from '@/lib/data'
 import { sellUnitPrice, sellQuote } from '@/lib/systems/EconomySystem'
 import { formatCurrency } from '@/lib/format'
+import type { DailyEconomySnapshot } from '@/lib/systems/DailyEconomySystem'
+import styles from './MarketScreen.module.css'
 
 interface MarketScreenProps {
   stash: Record<string, number>
   marketSupply?: Record<string, number>
   marketSupplyUpdatedAt?: Record<string, number>
+  dailyEconomySnapshot?: DailyEconomySnapshot
   francs: number
   onSell: (mineralId: string, amount: number) => void
+  refinedGoods: Record<string, number>
+  onSellRefined: (recipeId: string, amount: number) => void
   onBack: () => void
   onOpenMissions: () => void
   clientId?: string
 }
 
-export default function MarketScreen({ stash, marketSupply, marketSupplyUpdatedAt, francs, onSell, onBack, onOpenMissions, clientId }: MarketScreenProps) {
+export default function MarketScreen({ stash, marketSupply, marketSupplyUpdatedAt, dailyEconomySnapshot, francs, onSell, refinedGoods, onSellRefined, onBack, onOpenMissions, clientId }: MarketScreenProps) {
   const [confirming, setConfirming] = useState<string | null>(null)
   const [sellAllConfirm, setSellAllConfirm] = useState(false)
 
@@ -32,7 +33,7 @@ export default function MarketScreen({ stash, marketSupply, marketSupplyUpdatedA
 
   // Prices come from the same function the sale itself uses, so a quote can
   // never promise more (or less) than the player is actually paid.
-  const priceContext = { marketSupply, marketSupplyUpdatedAt }
+  const priceContext = { marketSupply, marketSupplyUpdatedAt, dailyEconomySnapshot }
   const unitPrice = (mineralId: string) => sellUnitPrice(mineralId, priceContext, clientId)
   const totalValue = () => sellQuote(stash, priceContext, clientId)
 
@@ -44,44 +45,109 @@ export default function MarketScreen({ stash, marketSupply, marketSupplyUpdatedA
     setConfirming(null)
   }
 
+  const totalUnits = entries.reduce((sum, [, qty]) => sum + qty, 0)
+  const refinedEntries = REFINERY_RECIPES.filter(recipe => (refinedGoods[recipe.id] ?? 0) > 0)
+
   return (
-    <div className="theme-light market-screen flex flex-col min-h-screen" style={{ background: 'var(--ln-void)', color: 'var(--ln-text)' }}>
-      <TopBar title="Commodity Exchange" onBack={onBack} solid right={
-        <StatusPill kind="info">{formatCurrency(francs, { compact: true })}</StatusPill>
-      } />
+    <div className={`theme-light market-screen ${styles.screen}`}>
+      <header className={styles.header}>
+        <button className={styles.backButton} onClick={onBack} aria-label="Back to previous screen" type="button">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="M15 18l-6-6 6-6" />
+          </svg>
+        </button>
+        <div className={styles.headerCopy}>
+          <div className={styles.eyebrow}>Base · Resource Desk</div>
+          <h1 className={styles.title}>Commodity Exchange</h1>
+        </div>
+        <div className={styles.balance} aria-label={`Current balance ${formatCurrency(francs)}`}>
+          <span className={styles.metricLabel}>Available francs</span>
+          <span className={styles.balanceValue}>{formatCurrency(francs, { compact: true })}</span>
+        </div>
+      </header>
 
-      <div className="flex-1 p-4 space-y-4 overflow-y-auto" style={{ paddingTop: 88 }}>
-        <Panel>
-          <div style={{ fontFamily: 'var(--ln-font-display)', fontWeight: 800, fontSize: 15, color: 'var(--ln-cyan)' }}>Mineral Inventory</div>
-          <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 12, color: 'var(--ln-text-dim)', marginTop: 4 }}>
-            Total estimated value: {formatCurrency(totalValue())}
+      <main className={styles.content}>
+        <section className={styles.intro} aria-labelledby="market-intro-title">
+          <div className={styles.paperCard}>
+            <div className={styles.sectionLabel}>Open market · live rates</div>
+            <h2 id="market-intro-title">Move recovered material into working capital.</h2>
+            <p>Sell mined cargo at the published exchange rate. Daily client construction demand sets the next price board.</p>
           </div>
-        </Panel>
+          <div className={styles.quote} aria-label={`Estimated inventory value ${formatCurrency(totalValue())}`}>
+            <div>
+              <div className={styles.sectionLabel}>Estimated inventory value</div>
+              <span className={styles.quoteValue}>{formatCurrency(totalValue())}</span>
+            </div>
+            <div className={styles.quoteNote}>{totalUnits > 0 ? `${totalUnits} units across ${entries.length} mineral${entries.length === 1 ? '' : 's'}.` : 'No cargo currently buffered.'}</div>
+          </div>
+        </section>
 
-        {client && (
-          <Panel accent="var(--ln-cyan)">
-            <div style={{ fontFamily: 'var(--ln-font-display)', fontWeight: 800, fontSize: 13, color: client.color }}>
-              {client.name} Premium
+        {client && !dailyEconomySnapshot && (
+          <section className={styles.clientCard} style={{ '--client-accent': client.color } as CSSProperties} aria-label={`${client.name} premium`}>
+            <div className={styles.clientMark} aria-hidden="true">+</div>
+            <div>
+              <div className={styles.sectionLabel}>Active client preference</div>
+              <h2>{client.name} Premium</h2>
+              <p>Preferred minerals sell at {Math.round((1 + client.payoutPremium) * 100)}% market rate.</p>
             </div>
-            <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 11, color: 'var(--ln-text-dim)', marginTop: 2 }}>
-              Preferred minerals sell at {Math.round((1 + client.payoutPremium) * 100)}% market rate
-            </div>
-          </Panel>
+          </section>
         )}
 
         {entries.length === 0 && (
-          <Panel accent="var(--ln-cyan)" style={{ padding: 14 }}>
-            <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 15, fontWeight: 800, color: 'var(--ln-text)' }}>No cargo to sell yet</div>
-            <p className="text-sm" style={{ color: 'var(--ln-text-dim)', margin: '6px 0 12px', lineHeight: 1.45 }}>The exchange becomes useful after a mining run. Choose a client job or launch a self-directed run, then bring the ore home.</p>
-            <PrimaryBtn onClick={onOpenMissions}>Find a Mining Run</PrimaryBtn>
-          </Panel>
+          <section className={styles.emptyCard} aria-labelledby="empty-market-title">
+            <div className={styles.sectionLabel}>Inventory status · empty</div>
+            <h2 id="empty-market-title">No cargo to sell yet</h2>
+            <p>The exchange becomes useful after a mining run. Choose a client job or launch a self-directed run, then bring the ore home.</p>
+            <button className={styles.primaryButton} onClick={onOpenMissions} type="button">Find a Mining Run</button>
+          </section>
         )}
 
         {entries.length > 0 && (
-          <PrimaryBtn onClick={() => setSellAllConfirm(true)}>Sell All Minerals</PrimaryBtn>
+          <div className={styles.sectionHeader}>
+            <div>
+              <div className={styles.sectionLabel}>Cargo manifest</div>
+              <h2>Mineral Inventory</h2>
+            </div>
+            <button className={styles.sellButton} onClick={() => setSellAllConfirm(true)} type="button">Sell All Minerals</button>
+          </div>
+        )}
+
+        {refinedEntries.length > 0 && (
+          <>
+            <div className={styles.sectionHeader}>
+              <div>
+                <div className={styles.sectionLabel}>Processed inventory</div>
+                <h2>Refined Goods</h2>
+              </div>
+              <div className={styles.commodityMeta}>Output value · recipe rate</div>
+            </div>
+            <div className={styles.commodityGrid} data-testid="market-refined-grid">
+              {refinedEntries.map(recipe => {
+                const qty = refinedGoods[recipe.id] ?? 0
+                return (
+                  <article className={styles.commodityCard} key={recipe.id}>
+                    <div className={styles.commodityTop}>
+                      <div>
+                        <div className={styles.commodityName}>{recipe.output.name}</div>
+                        <div className={styles.commodityMeta}>{qty} units ready</div>
+                      </div>
+                      <div className={styles.commodityValue}>{formatCurrency(recipe.output.price * qty)}</div>
+                    </div>
+                    <div className={styles.rate}>
+                      <div>
+                        <div className={styles.rateLabel}>Settlement rate</div>
+                        <div className={styles.rateValue}>{formatCurrency(recipe.output.price)}/u</div>
+                      </div>
+                    </div>
+                    <button className={styles.sellButton} onClick={() => onSellRefined(recipe.id, qty)} type="button">Sell All {recipe.output.name}</button>
+                  </article>
+                )
+              })}
+            </div>
+          </>
         )}
         {sellAllConfirm && (
-          <ConfirmActionSheet
+          <ActionConfirmBar
             eyebrow="Commodity Exchange"
             title="Sell Entire Inventory"
             description={`Sell all cargo for ${formatCurrency(totalValue())}? This can't be undone.`}
@@ -94,41 +160,43 @@ export default function MarketScreen({ stash, marketSupply, marketSupplyUpdatedA
           />
         )}
 
-        {entries.map(([id, qty]) => {
-          const meta = MINERAL_META[id]
-          if (!meta) return null
-          const { price, base, premiumApplied } = unitPrice(id)
-          return (
-            <Panel key={id}>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
+        {entries.length > 0 && (
+          <div className={styles.commodityGrid} data-testid="market-commodity-grid">
+            {entries.map(([id, qty]) => {
+              const meta = MINERAL_META[id]
+              if (!meta) return null
+              const { price, base, premiumApplied } = unitPrice(id)
+              const demandExplanation = dailyEconomySnapshot?.prices[id]?.explanation
+              return (
+                <article className={styles.commodityCard} key={id}>
+              <div className={styles.commodityTop}>
+                <div className={styles.commodityIdentity}>
                   <MineralChip mineral={id} variant="avatar" size={36} />
                   <div>
-                    <div style={{ fontFamily: 'var(--ln-font-display)', fontWeight: 800, fontSize: 14, color: 'var(--ln-text)' }}>{meta.name}</div>
-                    <div style={{ fontFamily: 'var(--ln-font-mono)', fontSize: 10, color: 'var(--ln-text-muted)' }}>
-                      {qty} units · {formatCurrency(base)}/u
-                      {premiumApplied && client && (
-                        <span style={{ color: client.color, marginLeft: 8 }}>
-                          · Contract {formatCurrency(price)}/u
-                        </span>
-                      )}
-                    </div>
+                    <div className={styles.commodityName}>{meta.name}</div>
+                    <div className={styles.commodityMeta}>{qty} units held</div>
                   </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <div style={{ fontFamily: 'var(--ln-font-display)', fontWeight: 800, fontSize: 16, color: 'var(--ln-payout)' }}>
-                    {formatCurrency(price * qty)}
-                  </div>
-                  <PrimaryBtn onClick={() => setConfirming(id)}>Sell All</PrimaryBtn>
-                </div>
+                <div className={styles.commodityValue}>{formatCurrency(price * qty)}</div>
               </div>
-            </Panel>
-          )
-        })}
-      </div>
+              <div className={styles.rate}>
+                <div>
+                  <div className={styles.rateLabel}>Current rate</div>
+                  <div className={styles.rateValue}>{formatCurrency(price)}/u <span className={styles.commodityMeta}>base {formatCurrency(base)}/u</span></div>
+                  {demandExplanation && <div className={styles.commodityMeta} data-testid={`market-demand-explanation-${id}`}>{demandExplanation}</div>}
+                </div>
+                {premiumApplied && client && <div className={styles.commodityMeta} style={{ color: client.color }}>Client premium</div>}
+              </div>
+              <button className={styles.sellButton} onClick={() => setConfirming(id)} type="button">Sell All {meta.name}</button>
+                </article>
+              )
+            })}
+          </div>
+        )}
+      </main>
 
       {confirming && MINERAL_META[confirming] && (
-        <ConfirmActionSheet
+        <ActionConfirmBar
           eyebrow="Commodity Exchange"
           title={`Sell All ${MINERAL_META[confirming].name}`}
           description={`Sell ${stash[confirming] ?? 0} units for ${formatCurrency(unitPrice(confirming).price * (stash[confirming] ?? 0))}? This can't be undone.`}

@@ -6,9 +6,8 @@ import type { RoverGame } from '@takeon/engine'
 // Standalone technical proof that the vendored @takeon/engine + @takeon/pixi
 // modules actually render and simulate inside this app's PixiJS/Next.js
 // stack. Deliberately has zero dependency on game-context.tsx or any
-// existing mission/onboarding state — see STS-414 discussion: takeon
-// replacing the existing RoverMiningScreen is a separate, later decision,
-// not something this demo should touch or assume.
+// existing mission/onboarding state. The routed rover mission now mounts the
+// same TakeOn field through TakeOnMount; this demo remains an isolated proof.
 
 const BODIES = ['moon', 'mars', 'europa'] as const
 

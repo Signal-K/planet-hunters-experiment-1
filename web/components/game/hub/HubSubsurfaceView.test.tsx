@@ -18,6 +18,7 @@ describe('HubSubsurfaceView', () => {
     )
 
     expect(markup).toContain('data-testid="hub-subsurface-view"')
+    expect(markup).toContain('data-testid="subsurface-surface-continuation"')
     expect(markup).toContain('Unexcavated')
     expect(markup).toContain('data-testid="subsurface-excavate-prompt"')
     expect(markup).toContain('data-testid="subsurface-excavate-cta"')

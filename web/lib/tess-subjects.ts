@@ -8,10 +8,10 @@ export const REVIEWABLE_TESS_SUBJECT_FILTER = [
 ].join(' && ')
 
 export async function fetchReviewableTessCandidates(): Promise<TessCandidate[]> {
-  // Shared auth can disappear between an effect's guard and its request
-  // (logout, expired restore, or a cleared storage session). Treat that as an
-  // empty feed instead of issuing a guaranteed 401 from a background poll.
-  if (!pbShared.authStore.isValid) return []
+  // Let PocketBase make the request even while auth restoration is finishing.
+  // The screen can mount in the same commit as the restored auth record; an
+  // `isValid` early return here made that one-shot effect silently resolve to
+  // an empty feed and never retry when the token arrived (KES-318).
   const records = await pbShared.collection('subjects').getFullList({
     filter: REVIEWABLE_TESS_SUBJECT_FILTER,
     sort: '-created',

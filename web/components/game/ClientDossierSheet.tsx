@@ -1,7 +1,7 @@
 'use client'
 
 import React from 'react'
-import Sheet from '@/components/ui/Sheet'
+import PageSurface from '@/components/ui/PageSurface'
 import ClientMark from '@/components/ui/ClientMark'
 import type { Client, MineralMeta } from '@/lib/data'
 
@@ -28,7 +28,7 @@ export default function ClientDossierSheet({
   onDismiss: () => void
 }) {
   return (
-    <Sheet onDismiss={onDismiss} testId="client-dossier-sheet" ariaLabel={`${client.name} dossier`}>
+    <PageSurface testId="client-dossier-page" ariaLabel={`${client.name} dossier`}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 18 }}>
         <ClientMark initial={client.initial} color={client.color} uiRole={client.uiRole} clientId={client.id} size={52} />
         <div style={{ flex: 1, minWidth: 0 }}>
@@ -67,6 +67,6 @@ export default function ClientDossierSheet({
           {client.affinityNotes ?? `+${Math.round(client.affinityBonusPerMission * 100)}% payout per completed ${client.name} job.`}
         </div>
       </div>
-    </Sheet>
+    </PageSurface>
   )
 }

@@ -1,8 +1,9 @@
 // Landnam game data — targets and stars
 
-import type { Target, Star, Mission } from './types'
+import type { Target, Star, Mission, Part, RocketConfig } from './types'
 import { mineralsForArchetype } from './target-archetypes'
 import { ONBOARDING_SEQUENCE_COUNT } from './mission-generator'
+import { suggestBuild, validateBuild } from './parts'
 
 // A landmark target: real body, hand-authored id/name/brief for narrative
 // recognizability, minerals derived from its composition archetype + orbit
@@ -25,6 +26,7 @@ export const TARGETS: Target[] = [
     brief: 'Scorched inner planet, rich in iron and trace silicates.',
     archetype: 'S',
   }),
+  landmark({ id: 'venus', name: 'Venus', type: 'planet', orbit: 2, difficulty: 'L3', brief: 'High-pressure surface. The assigned program site remains unavailable until pressure-rated construction equipment is fitted.', archetype: 'S' }),
   landmark({
     id: 'mars',
     name: 'Mars',
@@ -159,5 +161,34 @@ export function compatibleTargetsFor(mission: Mission, targets: Target[] = TARGE
     const inRange = t.orbit <= mission.requires.max_orbit
     const typeOk = !isOnboarding || t.type === 'asteroid'
     return inRange && typeOk && required.every(mineral => t.minerals.includes(mineral))
+  })
+}
+
+/** Contract-compatible targets that the player's currently unlocked parts can
+ * actually reach, carry, and mine. Keep this beside compatibleTargetsFor so
+ * the board and target picker cannot disagree about mission feasibility. */
+export function feasibleTargetsFor(
+  mission: Mission,
+  targets: Target[],
+  parts: { chassis: Part[]; propulsion: Part[]; drill: Part[] },
+  missionsDone: number,
+  launchpadUpgraded = false,
+  unlockedSkillNodes: string[] = [],
+): Target[] {
+  const deliveryTarget = mission.deliveryTargetId
+    ? targets.find(target => target.id === mission.deliveryTargetId) ?? null
+    : null
+
+  return compatibleTargetsFor(mission, targets).filter(target => {
+    const rocket: RocketConfig = suggestBuild({
+      mission,
+      target,
+      deliveryTarget,
+      missionsDone,
+      launchpadUpgraded,
+      parts,
+      unlockedSkillNodes,
+    })
+    return validateBuild({ mission, target, rocket, parts, unlockedSkillNodes }).ok
   })
 }

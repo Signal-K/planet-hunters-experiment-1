@@ -18,6 +18,15 @@ interface TopBarProps {
   // sits in the low-opacity tail of the gradient and the scrolled-past card
   // text shows straight through it — solid avoids that.
   solid?: boolean
+  /** Scene screens (Earth Base, Launchpad) float their chrome over a rendered
+   *  world rather than over scrolling copy, so the bleed-through `solid`
+   *  exists to prevent is not a risk there — and an opaque bar cuts the scene
+   *  off at a hard horizontal edge, which is what "the background continues
+   *  behind and underneath the UI" was describing (KES-260). Frosted glass
+   *  instead: the terrain stays visible through it, the text stays legible. */
+  glass?: boolean
+  /** A bright, opaque strip for daytime scene surfaces. */
+  scene?: boolean
   // Player level pill ("LV. 3") shown left of the title, per the design
   // doc's Topbar spec (§2.1: "[LV badge + icon] [Screen Title] ...
   // [Credit Balance]", consistent across all screens).
@@ -32,16 +41,6 @@ function BackIcon() {
   return (
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
       <path d="M15 18l-6-6 6-6"/>
-    </svg>
-  )
-}
-
-function MenuIcon() {
-  return (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
-      <line x1="3" y1="8" x2="21" y2="8"/>
-      <line x1="3" y1="12" x2="21" y2="12"/>
-      <line x1="3" y1="16" x2="21" y2="16"/>
     </svg>
   )
 }
@@ -64,7 +63,7 @@ function CoinIcon() {
   )
 }
 
-export default function TopBar({ eyebrow, title, onBack, right, dense, solid, levelBadge, francs }: TopBarProps) {
+export default function TopBar({ eyebrow, title, onBack, right, dense, solid, glass, scene, levelBadge, francs }: TopBarProps) {
   return (
     <div data-ui-zone={UI_ZONES.topChrome} style={{
       position: 'absolute',
@@ -72,24 +71,32 @@ export default function TopBar({ eyebrow, title, onBack, right, dense, solid, le
       left: 0,
       right: 0,
       zIndex: 20,
-      padding: '18px 14px 12px 14px',
+      // DEV shortcuts occupy the upper-left corner in local builds. Screens
+      // without a back control still need a reserved title start, otherwise
+      // the badge sits on top of the eyebrow (most visible on Debrief).
+      padding: `18px 14px 12px ${onBack ? 14 : 76}px`,
       // Fully opaque (alpha 1, not e.g. 0.97) — verified against a live page
       // that even 3% transparency on a near-black background is visible as
       // faint bleed-through text behind bright card copy scrolling beneath it.
-      background: solid
-        ? 'var(--ln-shell)'
-        : 'linear-gradient(180deg, var(--ln-shell) 0%, color-mix(in srgb, var(--ln-shell) 50%, transparent) 70%, transparent 100%)',
-      borderBottom: solid ? '1px solid var(--ln-hairline)' : 'none',
+      background: scene
+        ? 'color-mix(in srgb, var(--ln-blueprint-paper) 90%, var(--ln-cyan))'
+        : glass
+        ? 'linear-gradient(180deg, rgba(6,14,26,0.58) 0%, rgba(6,14,26,0.28) 72%, transparent 100%)'
+        : solid
+          ? 'var(--ln-shell)'
+          : 'linear-gradient(180deg, var(--ln-shell) 0%, color-mix(in srgb, var(--ln-shell) 50%, transparent) 70%, transparent 100%)',
+      WebkitBackdropFilter: glass ? 'blur(12px) saturate(1.1)' : undefined,
+      backdropFilter: glass ? 'blur(12px) saturate(1.1)' : undefined,
+      borderBottom: solid || scene ? '2px solid var(--ln-cyan-border)' : 'none',
       display: 'flex',
       alignItems: 'center',
       gap: 10,
       pointerEvents: 'none',
     }}>
       <div style={{ pointerEvents: 'auto', display: 'flex', alignItems: 'center', gap: 8 }}>
-        {onBack
-          ? <IconBtn onClick={onBack} ariaLabel="back" testId="top-bar-back"><BackIcon /></IconBtn>
-          : <IconBtn ariaLabel="menu"><MenuIcon /></IconBtn>
-        }
+        {/* Screens without a back action leave this slot empty. Account access
+            is owned by the shared shell's persistent MENU control. */}
+        {onBack && <IconBtn onClick={onBack} ariaLabel="back" testId="top-bar-back"><BackIcon /></IconBtn>}
         {levelBadge && (
           <span style={{
             display: 'flex', alignItems: 'center', gap: 4,

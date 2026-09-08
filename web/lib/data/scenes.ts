@@ -41,7 +41,7 @@ export const SCENES: readonly SceneDefinition[] = [
     screen: 'hub',
     sceneFile: '/game/scenes/hub.scene.json',
     entityTypes: ['BuildPlot'],
-    description: 'The player\'s home surface. Four build plots hold the Launchpad, Refinery, Scan Station and — once built — the Astronaut Academy.',
+    description: 'The player\'s home surface. Build plots hold the Launchpad, Refinery, and — once built — the Astronaut Academy.',
   },
   {
     id: 'build-place',
@@ -140,13 +140,12 @@ export const SCENES: readonly SceneDefinition[] = [
   { id: 'rocket-buy', name: 'Rocket Purchase', surface: 'dom', location: 'earth-base', screen: 'rocket-buy', entityTypes: [], description: 'Buy the rocket model for this run.' },
   { id: 'fab', name: 'Assembly', surface: 'dom', location: 'earth-base', screen: 'fab', entityTypes: [], description: 'Relay/launch checklist before a mission flies.' },
   { id: 'transit', name: 'Transit', surface: 'dom', location: 'transit', screen: 'transit', entityTypes: [], description: 'Physical rocket flight. Not TESS transit photometry — see the glossary rule in CLAUDE.md.' },
-  { id: 'rover-mining', name: 'Rover Mining', surface: 'dom', location: 'target-surface', screen: 'rover-mining', entityTypes: [], description: 'Deployed-rover extraction, timer-based rather than played live.' },
+  { id: 'rover-mining', name: 'Rover Mining', surface: 'dom', location: 'target-surface', screen: 'rover-mining', entityTypes: [], description: 'Live TakeOn rover extraction mounted inside the routed screen. Landnam supplies the mission order and records the required cargo.' },
   { id: 'debrief', name: 'Debrief', surface: 'dom', location: 'earth-base', screen: 'debrief', entityTypes: [], description: 'Payout and cargo settlement after a run.' },
   { id: 'refinery', name: 'Refinery', surface: 'dom', location: 'earth-base', screen: 'refinery', entityTypes: [], description: 'Refine raw minerals into higher-value goods.' },
   { id: 'market', name: 'Market', surface: 'dom', location: 'earth-base', screen: 'market', entityTypes: [], description: 'Open-market sales with supply-driven price decay.' },
   { id: 'hangar', name: 'Hangar', surface: 'dom', location: 'earth-base', screen: 'hangar', entityTypes: [], description: 'Owned ships and the ship customiser interior view.' },
   { id: 'skills', name: 'Skill Tree', surface: 'dom', location: 'menu', screen: 'skills', entityTypes: [], description: 'Four branches — mining, cargo, range, engineering.' },
-  { id: 'scan-station', name: 'Scan Station', surface: 'dom', location: 'earth-base', screen: 'scan-station', entityTypes: [], description: 'Daily target scans; grants research XP.' },
   { id: 'launchpad', name: 'Launchpad', surface: 'dom', location: 'earth-base', screen: 'launchpad', entityTypes: [], description: 'The player\'s own program — satellites and self-directed runs they launch on their own initiative. Client contracts live one press away on the Mission Board.' },
   { id: 'galaxy', name: 'Galaxy Map', surface: 'dom', location: 'orbit', screen: 'galaxy', entityTypes: [], description: 'Star map beyond the solar system. Free Ops only.' },
 ]

@@ -21,6 +21,14 @@ import type { GameState } from '@/game-context'
 import { tessCandidateToExoplanetTarget, toTessCandidate } from '../../../lib/data/tess-candidates'
 
 const STORAGE_KEY = 'landnam-game-state-v1'
+const AUTHENTICATED_STORAGE_KEY = `${STORAGE_KEY}:user:e2e-discovery-user`
+const ALL_SURVEY_KEYS = [
+  'lnm_first_launch', 'lnm_mining_feel', 'lnm_client_pick',
+  'lnm_mission_friction', 'lnm_progression_feel', 'lnm_end_of_content',
+  'lnm_return_visit', 'lnm_m1_complete', 'lnm_m2_mission_choice', 'lnm_m2_rocket_clarity', 'lnm_m2_rating', 'lnm_m2_freetext',
+  'lnm_m3_transport_clarity', 'lnm_m3_client_choice', 'lnm_m3_rating', 'lnm_m3_freetext',
+  'lnm_satellite_clarity', 'lnm_resume_mission', 'lnm_base_building', 'lnm_rover_clarity',
+]
 
 function basePlayer(overrides: Partial<GameState['player']> = {}): GameState['player'] {
   return {
@@ -44,7 +52,6 @@ function basePlayer(overrides: Partial<GameState['player']> = {}): GameState['pl
     loanOffered: false,
     roverDeployments: [],
     clientTerritories: {},
-    satelliteMonitoringBuilt: true,
     transitSatelliteLaunchedAt: Date.now() - 1000,
     tessClassifications: {},
     discoveredExoplanetTargets: {},
@@ -53,17 +60,6 @@ function basePlayer(overrides: Partial<GameState['player']> = {}): GameState['pl
 }
 
 function visitWithState(path: string, screen: GameState['screen'], playerOverrides: Partial<GameState['player']>) {
-  const tokenPayload = btoa(JSON.stringify({ exp: Math.floor(Date.now() / 1000) + 3600 }))
-  const e2eToken = `e30.${tokenPayload}.test`
-  cy.intercept('POST', '**/api/collections/users/auth-refresh', {
-    statusCode: 200,
-    body: { token: e2eToken, record: { id: 'e2e-discovery-user', email: 'e2e@landnam.guest' } },
-  })
-  cy.intercept('POST', '**/api/landnam-auth/exchange', {
-    statusCode: 200,
-    body: { token: e2eToken, record: { id: 'e2e-discovery-user' } },
-  })
-
   const full: GameState = {
     screen,
     missionId: null,
@@ -79,19 +75,22 @@ function visitWithState(path: string, screen: GameState['screen'], playerOverrid
 
   cy.visit(path, {
     onBeforeLoad(win) {
-      // Seed a valid synthetic shared session so the real subject request is
-      // made. Without it, fetchReviewableTessCandidates() intentionally
-      // returns an empty feed before issuing network I/O.
-      win.localStorage.setItem('pocketbase_auth', JSON.stringify({
-        token: e2eToken,
-        record: { id: 'e2e-discovery-user', email: 'e2e@landnam.guest' },
-      }))
       // Each visual test gets its own guest account. Reusing one account lets
       // backend state from a preceding discovery test race the seeded local
       // state here and remove the discovered target before Launchpad builds
       // its runtime catalog.
-      win.localStorage.setItem('landnam-guest-credentials', JSON.stringify({
-        email: `e2e-${Date.now()}-${Math.random().toString(36).slice(2)}@landnam.guest`,
+      // A previously visited visual spec can leave a PocketBase token in the
+      // browser even though this test is intentionally offline. Clear it
+      // before the provider hydrates, otherwise auth restoration can replace
+      // this fixture with the account's pending-launch state.
+      // Clear the whole origin, not just known auth/state keys: Cypress keeps
+      // one browser profile across specs and a legacy credential or feature
+      // flag can still trigger an auth restore before the fixture hydrates.
+      win.localStorage.clear()
+      win.localStorage.setItem('landnam-surveys-shown', JSON.stringify(ALL_SURVEY_KEYS))
+      win.localStorage.setItem('landnam-upgrade-prompt-snooze-until', String(Date.now() + 365 * 24 * 60 * 60 * 1000))
+      win.localStorage.setItem('landnam-account-credentials', JSON.stringify({
+        email: `e2e-${Date.now()}-${Math.random().toString(36).slice(2)}@example.com`,
         password: 'e2e-guest-test',
       }))
       // ObservatoryCoach is a separate one-time beat from the main M1-M3
@@ -99,7 +98,9 @@ function visitWithState(path: string, screen: GameState['screen'], playerOverrid
       // — mark it seen so it doesn't render its banner/spacer over the
       // chart during the drag-mark gesture below.
       win.localStorage.setItem('landnam_observatory_coach_seen_v1', '1')
-      win.localStorage.setItem(STORAGE_KEY, JSON.stringify(full))
+      const serialized = JSON.stringify(full)
+      win.localStorage.setItem(STORAGE_KEY, serialized)
+      win.localStorage.setItem(AUTHENTICATED_STORAGE_KEY, serialized)
     },
   })
 }
@@ -123,6 +124,23 @@ const HOT_CLOSE_SUBJECT = {
   st_teff: 9500,
 }
 
+function stubBackgroundSubjectReads() {
+  // The exo-survey mission is generated from the discovered target persisted
+  // in GameState (see buildRuntimeCatalog), not from the shared subjects feed.
+  // CI runs a vanilla shared PocketBase without the subjects collection or
+  // /api/ss/subjects/last-confirmed route, so leave these unrelated background
+  // reads deterministic instead of letting 401/400 responses obscure the
+  // local discovery -> mission path under test.
+  cy.intercept('GET', '**/api/ss/subjects/last-confirmed', {
+    statusCode: 200,
+    body: { lastConfirmedAt: null, subjectId: null },
+  }).as('lastConfirmedSubject')
+  cy.intercept('GET', '**/api/collections/subjects/records*', {
+    statusCode: 200,
+    body: { page: 1, perPage: 500, totalItems: 0, totalPages: 1, items: [] },
+  }).as('backgroundSubjects')
+}
+
 describe('Visual QA — discovery -> economy pipeline', () => {
   Cypress.on('uncaught:exception', (err) => {
     if (err.message.includes('_cancelResize')) return false
@@ -131,6 +149,8 @@ describe('Visual QA — discovery -> economy pipeline', () => {
 
   it('confirming a hot, close-in transit assigns a real archetype and non-empty minerals', () => {
     cy.viewport(1280, 800)
+
+    stubBackgroundSubjectReads()
 
     cy.intercept('GET', '**/api/collections/subjects/records*', {
       statusCode: 200,
@@ -145,7 +165,7 @@ describe('Visual QA — discovery -> economy pipeline', () => {
     cy.wait('@subjects')
 
     // The injected fake guest credentials only satisfy hasStoredCredentials()
-    // — the app still fires ensureGuestAuth() in the background, which fails
+    // — the app still fires ensureAccountAuth() in the background, which fails
     // against the real local PocketBase (no such account), deletes the fake
     // credentials, and races to create a real one. Until that resolves, the
     // "Welcome Back" auth gate can render on top of everything below. A fixed
@@ -215,7 +235,7 @@ describe('Visual QA — discovery -> economy pipeline', () => {
     cy.screenshot('discovery-03-confirmed-star-map')
 
     cy.window().then(win => {
-      const saved = JSON.parse(win.localStorage.getItem(STORAGE_KEY) || '{}')
+      const saved = JSON.parse(win.localStorage.getItem(STORAGE_KEY) || win.localStorage.getItem(AUTHENTICATED_STORAGE_KEY) || '{}')
       const discovered = Object.values(saved.player.discoveredExoplanetTargets ?? {}) as Array<{ archetype?: string; minerals: string[] }>
       expect(discovered, 'exactly one confirmed discovery').to.have.length(1)
       const [target] = discovered
@@ -226,6 +246,7 @@ describe('Visual QA — discovery -> economy pipeline', () => {
 
   it('a discovered target is reachable through Your Program and the target picker', () => {
     cy.viewport(1280, 800)
+    stubBackgroundSubjectReads()
 
     // Build the discovered target through the real production function
     // (not hand-authored) so the fixture can never drift from what the app
@@ -241,16 +262,32 @@ describe('Visual QA — discovery -> economy pipeline', () => {
     })
 
     // See the matching comment in the first test — waits out the
-    // ensureGuestAuth() race instead of guessing at a fixed delay.
+    // ensureAccountAuth() race instead of guessing at a fixed delay.
     cy.contains('Welcome Back', { timeout: 15000 }).should('not.exist')
 
     cy.contains('Your Program', { timeout: 15000 }).should('be.visible')
-    // Launchpad intentionally presents the owned program as one aggregate
-    // action. The individual mission cards live on the Mission Board, so the
-    // stable proof here is the real Launchpad -> target-picker route.
-    cy.get('[data-testid="launchpad-program-operation-btn"]', { timeout: 10000 })
+    // The route renders its server/default shell before GameProvider hydration.
+    // Waiting for the explicit client-ready marker prevents Cypress from
+    // clicking the SSR button before React has attached its event handler.
+    cy.get('[data-testid="launchpad-focus-screen"][data-game-hydrated="true"]', { timeout: 15000 })
       .should('be.visible')
-      .click({ force: true })
+    // KES-329/330 replaced the single aggregate OPS button with the
+    // launchpad mission menu's explicit operation choices. The discovered
+    // target is a mining destination (real mineral deposit, not an
+    // instrument/build payload), so the stable proof here is the real
+    // Launchpad -> "GO MINING" -> sell -> target-picker route.
+    // The pad itself is the canonical scene entry point. The rail's NEW
+    // MISSION control is intentionally secondary and can be omitted when a
+    // pending launch occupies the rail; the fixture only needs the same
+    // production action from the physical launchpad control.
+    // The physical pad remains the scene entry point; the attached rail
+    // command is its stable keyboard/touch equivalent for this long-running
+    // headed-browser proof.
+    cy.get('[data-testid="launchpad-new-mission-btn"]', { timeout: 10000 }).invoke('click')
+    cy.get('[data-testid="launchpad-new-mission-mining-btn"]', { timeout: 10000 })
+      .should('not.be.disabled')
+      .click()
+    cy.get('[data-testid="launchpad-mining-sell-btn"]', { timeout: 10000 }).click()
     cy.screenshot('discovery-04-own-program-survey-flight')
 
     // The aggregate action selects the first available own-program mission;

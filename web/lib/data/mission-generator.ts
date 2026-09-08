@@ -1,4 +1,4 @@
-import { CARGO_BONUS_RATE, SCAN_CONTRACT_FEE } from './economy'
+import { CARGO_BONUS_RATE } from './economy'
 import type { ClientSlot, MineralMeta, Mission, MissionTemplate, MissionConstructionPlan } from './types'
 import { normalizeMissionPayout } from './payouts'
 
@@ -12,6 +12,7 @@ export interface MissionComplexity {
   mineralCount: number
   amountBias: number
   clientOffset: number
+  mineralOffset?: number
 }
 
 export interface MissionGeneratorInput {
@@ -66,16 +67,6 @@ export interface PocketBaseMissionSeed {
   payout_affinity: number
 }
 
-const SCANNING_STATION_SURVEY = {
-  scanRequired: true,
-  scanCount: 3,
-  scanSource: 'station',
-  depositsToMap: 2,
-  revealsMinerals: true,
-  revealsLandmarks: ['crater field', 'high-albedo ridge'],
-  unlocksLanding: true,
-} satisfies MissionTemplate['survey']
-
 const STARTER_ROVER_SURVEY = {
   scanRequired: true,
   scanCount: 1,
@@ -117,7 +108,6 @@ export const DEFAULT_MISSION_TEMPLATES: MissionTemplate[] = [
   { id: 'freeops-delivery', tag: 'DELIVERY', difficulty: 'L1', mineralKeys: ['hydrogen', 'cobalt', 'copper', 'aluminium'], cargoRange: [4, 10], drillTierMin: 1, orbitMax: 5, payoutMultiplier: 1.25, clientRole: 'starter', payoutFormula: 'contract fee + cargo value bonus' },
   { id: 'freeops-mining-survey', tag: 'SURVEY', difficulty: 'L1', mineralKeys: ['cobalt', 'copper', 'aluminium', 'gold'], cargoRange: [3, 7], drillTierMin: 1, orbitMax: 5, payoutMultiplier: 1.55, clientRole: 'prospect', payoutFormula: 'contract fee + cargo value bonus' },
   { id: 'freeops-bulk-run', tag: 'BULK', difficulty: 'L1', mineralKeys: ['hydrogen', 'aluminium', 'copper'], cargoRange: [8, 16], drillTierMin: 1, orbitMax: 5, payoutMultiplier: 1.15, clientRole: 'bulk', payoutFormula: 'contract fee + cargo value bonus' },
-  { id: 'freeops-station-scan', tag: 'SCAN', difficulty: 'L1', mineralKeys: ['cobalt', 'copper', 'aluminium', 'gold'], cargoRange: [0, 0], drillTierMin: 1, orbitMax: 5, payoutMultiplier: 0.85, clientRole: 'prospect', payoutFormula: 'scan fee + mapped deposit bonus', survey: SCANNING_STATION_SURVEY },
   { id: 'freeops-rover-landing', tag: 'ROVER', difficulty: 'L1', mineralKeys: ['cobalt', 'copper', 'aluminium', 'hydrogen'], cargoRange: [2, 5], drillTierMin: 1, orbitMax: 5, payoutMultiplier: 1.7, clientRole: 'starter', payoutFormula: 'contract fee + cargo value bonus + landing bonus', survey: STARTER_ROVER_SURVEY },
   { id: 'construct-fuel-depot', tag: 'CONSTRUCT', difficulty: 'L2', mineralKeys: ['hydrogen', 'aluminium', 'copper'], cargoRange: [8, 14], drillTierMin: 1, orbitMax: 5, payoutMultiplier: 2.8, clientRole: 'prospect', payoutFormula: 'structure value * 2 + delivery bonus', construction: FUEL_DEPOT_CONSTRUCTION },
   { id: 'construct-battery-station', tag: 'CONSTRUCT', difficulty: 'L2', mineralKeys: ['cobalt', 'nickel', 'copper', 'gold'], cargoRange: [8, 14], drillTierMin: 2, orbitMax: 6, payoutMultiplier: 3.2, clientRole: 'command', payoutFormula: 'structure value * 2 + delivery bonus', construction: BATTERY_STATION_CONSTRUCTION },
@@ -126,15 +116,14 @@ export const DEFAULT_MISSION_TEMPLATES: MissionTemplate[] = [
 
 export const DEFAULT_COMPLEXITY_BANDS: MissionComplexity[] = [
   { sequence: 1, templateId: 'starter-bulk', mineralCount: 1, amountBias: 0, clientOffset: 0 },
-  { sequence: 1, templateId: 'starter-bulk', mineralCount: 1, amountBias: 1, clientOffset: 1 },
-  { sequence: 1, templateId: 'volatile-bulk', mineralCount: 1, amountBias: 0, clientOffset: 2 },
+  // The tutorial is a decision between two clients, not a catalogue browse.
+  // Give the second card a different client role so the requests genuinely
+  // differ while the sequence payout floor keeps both offers close together.
+  { sequence: 1, templateId: 'volatile-bulk', mineralCount: 1, amountBias: 1, clientOffset: 0, mineralOffset: 0 },
   { sequence: 2, templateId: 'starter-bulk', mineralCount: 1, amountBias: 2, clientOffset: 3 },
-  { sequence: 2, templateId: 'volatile-bulk', mineralCount: 1, amountBias: 2, clientOffset: 4 },
-  // mineralCount: 2 (not 1) — a single-mineral metal-prospect order tops out at
-  // cargoRange max 6, which Explorer's stock hull (cargo 6) can still clear. M2 is
-  // meant to force a Prospector purchase across every onboarding option, so this band
-  // needs two minerals to push cargo_min past Explorer's ceiling.
-  { sequence: 2, templateId: 'metal-prospect', mineralCount: 2, amountBias: 0, clientOffset: 5 },
+  // Both M2 choices still need more cargo than Explorer can carry, forcing
+  // the Prospector purchase while keeping the choice client-led and legible.
+  { sequence: 2, templateId: 'volatile-bulk', mineralCount: 1, amountBias: 2, clientOffset: 0, mineralOffset: 0 },
   { sequence: 3, templateId: 'volatile-bulk', mineralCount: 2, amountBias: 1, clientOffset: 6 },
   { sequence: 3, templateId: 'metal-prospect', mineralCount: 2, amountBias: 1, clientOffset: 7 },
   { sequence: 3, templateId: 'command-reserve', mineralCount: 1, amountBias: 0, clientOffset: 8 },
@@ -142,6 +131,35 @@ export const DEFAULT_COMPLEXITY_BANDS: MissionComplexity[] = [
   { sequence: 4, templateId: 'command-reserve', mineralCount: 2, amountBias: 1, clientOffset: 0 },
   { sequence: 4, templateId: 'command-reserve', mineralCount: 3, amountBias: 2, clientOffset: 1 },
 ]
+
+/**
+ * Keep the authored onboarding decision small even when a live catalog still
+ * contains older/generated rows. Prefer two different clients, then choose
+ * the closest payout pair so the player compares the request and destination
+ * rather than hunting for the largest number.
+ */
+export function tutorialClientMissionOptions(missions: Mission[], sequence: number): Mission[] {
+  const candidates = missions.filter(mission => mission.sequence === sequence && !!mission.client)
+  if (candidates.length <= 2) return candidates
+
+  let bestPair: [Mission, Mission] | undefined
+  let bestScore = Number.POSITIVE_INFINITY
+  for (let firstIndex = 0; firstIndex < candidates.length - 1; firstIndex += 1) {
+    for (let secondIndex = firstIndex + 1; secondIndex < candidates.length; secondIndex += 1) {
+      const first = candidates[firstIndex]
+      const second = candidates[secondIndex]
+      if (first.client === second.client) continue
+      const scale = Math.max(first.payout.francs, second.payout.francs, 1)
+      const score = Math.abs(first.payout.francs - second.payout.francs) / scale
+      if (score < bestScore) {
+        bestScore = score
+        bestPair = [first, second]
+      }
+    }
+  }
+
+  return bestPair ?? candidates.slice(0, 2)
+}
 
 const MINERAL_LABELS: Record<string, string> = {
   platinum:  'Platinum',
@@ -216,7 +234,7 @@ export function generateMissionsFromRules(input: MissionGeneratorInput, count = 
     const client = fallbackPool[band.clientOffset % fallbackPool.length] ?? input.clients[0]
     const eligibleMineralKeys = deliveryEligibleMineralKeys(template, input.minerals)
     const minerals = Object.fromEntries(
-      selectMinerals(eligibleMineralKeys, client.mineralPreferences, index, band.mineralCount).map((mineral, mineralIndex) => [
+      selectMinerals(eligibleMineralKeys, client.mineralPreferences, band.mineralOffset ?? index, band.mineralCount).map((mineral, mineralIndex) => [
         mineral,
         amountFor(template, band.sequence, band.amountBias, mineralIndex),
       ])
@@ -228,10 +246,15 @@ export function generateMissionsFromRules(input: MissionGeneratorInput, count = 
       (sum, [mineral, amount]) => sum + (input.minerals[mineral]?.price ?? 0) * amount * CARGO_BONUS_RATE * template.payoutMultiplier * payoutMultiplier(client),
       0
     )
+    const title = band.sequence === 1
+      ? 'Baseline Extraction'
+      : band.sequence === 2
+        ? 'Heavy Haul'
+        : `${primary} ${template.tag.toLowerCase().replace('-', ' ')} order`
 
     return {
       id: `generated-s${band.sequence}-${template.id}-${index + 1}`,
-      title: `${primary} ${template.tag.toLowerCase().replace('-', ' ')} order`,
+      title,
       brief: `${client.name} needs ${primary.toLowerCase()} for ${client.projectType.toLowerCase()}. Preferred cargo earns a client premium; affinity improves future payouts.`,
       client: client.id,
       tag: template.tag,
@@ -269,20 +292,13 @@ export function generateFreeOpsMissionsFromRules(input: MissionGeneratorInput): 
       const eligibleMineralKeys = deliveryEligibleMineralKeys(template, input.minerals)
       const mineral = eligibleMineralKeys.find(key => client.mineralPreferences.includes(key))
         ?? eligibleMineralKeys[(clientIndex + templateIndex) % eligibleMineralKeys.length]
-      const scanOnly = template.cargoRange[0] === 0 && template.cargoRange[1] === 0
-      const amount = scanOnly ? 0 : template.cargoRange[0] + clientIndex + templateIndex
+      const amount = template.cargoRange[0] + clientIndex + templateIndex
       const mineralName = input.minerals[mineral]?.name ?? mineral
-      const francs = scanOnly
-        ? SCAN_CONTRACT_FEE * template.payoutMultiplier * payoutMultiplier(client)
-        : (input.minerals[mineral]?.price ?? 0) * amount * CARGO_BONUS_RATE * template.payoutMultiplier * payoutMultiplier(client)
+      const francs = (input.minerals[mineral]?.price ?? 0) * amount * CARGO_BONUS_RATE * template.payoutMultiplier * payoutMultiplier(client)
       return {
         id: `freeops-${client.id}-${template.id}-${templateIndex + 1}`,
-        title: scanOnly
-          ? `${client.name} target mapping scan`
-          : `${mineralName} ${template.tag.toLowerCase()} contract`,
-        brief: scanOnly
-          ? `${client.name} needs a reachable target mapped before landing crews commit. Run station scans to reveal minerals, deposits, and landmarks.`
-          : `${client.name} needs ${amount} units of ${mineralName.toLowerCase()} delivered from a reachable asteroid. ${client.projectType}.`,
+        title: `${mineralName} ${template.tag.toLowerCase()} contract`,
+        brief: `${client.name} needs ${amount} units of ${mineralName.toLowerCase()} delivered from a reachable asteroid. ${client.projectType}.`,
         client: client.id,
         tag: template.tag,
         difficulty: template.difficulty,
@@ -290,9 +306,9 @@ export function generateFreeOpsMissionsFromRules(input: MissionGeneratorInput): 
         sequence: FREE_OPS_START_MISSIONS_DONE + 1,
         unlockAt: 'Complete M3',
         requires: {
-          minerals: scanOnly ? {} : { [mineral]: amount },
+          minerals: { [mineral]: amount },
           cargo_min: amount,
-          drill_tier: scanOnly ? template.drillTierMin : requiredDrillTier([mineral], template.drillTierMin, input.minerals),
+          drill_tier: requiredDrillTier([mineral], template.drillTierMin, input.minerals),
           max_orbit: template.orbitMax,
         },
         payout: {

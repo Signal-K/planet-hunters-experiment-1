@@ -16,6 +16,7 @@ import {
   applyReconcileSurfaceFerry,
   applyRecordSurfaceMined,
   applyRetrySurfaceFerry,
+  applyStartFieldOperation,
   settlementLaunchpadStatus,
   surfaceCargoReady,
   surfaceSiteProgress,
@@ -114,6 +115,29 @@ describe('Settlement launchpad', () => {
       siteAccessPurchasedAt: NOW,
       storage: { iron: 2 },
     })
+  })
+})
+
+describe('Field operation contract', () => {
+  it('creates one stable Prospector operation only after site access', () => {
+    const initial = freeOpsState()
+    expect(applyStartFieldOperation(initial, SITE_ID, NOW)).toBe(initial)
+
+    const accessed = applyPurchaseSiteAccess(initial, SITE_ID, NOW)
+    const started = applyStartFieldOperation(accessed, SITE_ID, NOW + 1)
+    const operation = surfaceSiteProgress(started.player, SITE_ID).fieldOperation
+    const startedAgain = applyStartFieldOperation(started, SITE_ID, NOW + 2)
+
+    expect(operation).toMatchObject({
+      id: `surface-${SITE_ID}-${NOW}`,
+      siteId: SITE_ID,
+      bodyId: 'moon',
+      label: expect.stringContaining('Prospector'),
+      rover: { id: `prospector-${SITE_ID}`, chassis: 'chassis-lab', wheels: 'wheels-rocker' },
+    })
+    expect(startedAgain).toBe(started)
+    expect(normalizeState(JSON.parse(JSON.stringify(started))).player.surfaceOps)
+      .toEqual(started.player.surfaceOps)
   })
 })
 

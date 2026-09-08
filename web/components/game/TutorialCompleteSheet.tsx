@@ -1,7 +1,7 @@
 'use client'
 
 import { PrimaryBtn } from '@/components/ui/Button'
-import Sheet from '@/components/ui/Sheet'
+import PageSurface from '@/components/ui/PageSurface'
 
 // Shown exactly once, at the tick Free Ops actually starts — see the
 // justFinishedOnboarding branch in lib/contexts/useGameLoop.ts, which sets
@@ -10,18 +10,13 @@ import Sheet from '@/components/ui/Sheet'
 // repeated on a new browser/device or after storage was cleared).
 export function TutorialCompleteSheet({ onDone }: { onDone: () => void }) {
   return (
-    <Sheet
-      onDismiss={onDone}
+    <PageSurface
       zIndex={200}
-      scrimStyle={{ background: 'rgba(1,5,14,0.88)', backdropFilter: 'blur(8px)' }}
-      panelStyle={{
+      contentStyle={{
           background: 'linear-gradient(180deg, #081828 0%, #06121f 100%)',
           border: '1px solid rgba(57,211,106,0.25)',
-          borderTopLeftRadius: 22, borderTopRightRadius: 22,
           padding: '32px 24px 48px',
       }}
-      handleContainerStyle={{ marginBottom: 28 }}
-      handleStyle={{ width: 36, height: 3, background: 'rgba(57,211,106,0.3)' }}
     >
 
         <div style={{ textAlign: 'center', marginBottom: 28 }}>
@@ -63,6 +58,6 @@ export function TutorialCompleteSheet({ onDone }: { onDone: () => void }) {
         </div>
 
         <PrimaryBtn kind="green" onClick={onDone}>Start Playing</PrimaryBtn>
-    </Sheet>
+    </PageSurface>
   )
 }

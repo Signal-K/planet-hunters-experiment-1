@@ -1,0 +1,47 @@
+name: Landnam Daily Economy
+
+on:
+  schedule:
+    # 00:01 AEST is 14:01 UTC. AEST is deliberately fixed UTC+10, rather than
+    # Melbourne daylight time, so the economy date never shifts seasonally.
+    - cron: "1 14 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: landnam-daily-economy
+  cancel-in-progress: false
+
+jobs:
+  publish-snapshot:
+    name: Resolve daily client demand and market snapshot
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+
+      # The event/snapshot adapter supplies immutable client-build events,
+      # client experience, material baselines, and the last published snapshot
+      # as one JSON payload. It must atomically persist the output under its
+      # idempotencyKey after this workflow. No Docker or network service starts
+      # here, so the deterministic calculation is runnable offline.
+      - name: Resolve authoritative daily snapshot
+        env:
+          LANDNAM_DAILY_ECONOMY_INPUT_JSON: ${{ vars.LANDNAM_DAILY_ECONOMY_INPUT_JSON }}
+        run: node --experimental-strip-types scripts/run-daily-economy.ts --output daily-economy-snapshot.json
+
+      - name: Upload auditable daily snapshot
+        uses: actions/upload-artifact@v4
+        with:
+          name: landnam-daily-economy-${{ github.run_id }}
+          path: web/daily-economy-snapshot.json
+          if-no-files-found: error
+          retention-days: 90

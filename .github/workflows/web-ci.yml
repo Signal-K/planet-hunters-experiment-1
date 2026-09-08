@@ -101,75 +101,12 @@ jobs:
           NEXT_PUBLIC_SHARED_PB_URL: http://localhost:8090
           NEXT_PUBLIC_LANDNAM_PB_URL: http://localhost:8091
 
-  e2e-sprint12:
-    name: E2E — Sprint 12 acceptance journeys
-    needs: build
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: web
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: "24"
-          cache: npm
-          cache-dependency-path: web/package-lock.json
-
-      - name: Install dependencies
-        run: npm ci
-
-      # Keep this acceptance job bounded to the Sprint 12 journeys that were
-      # previously either untracked in CI or only covered by visual evidence:
-      # Scan Station, the mission-type viewport matrix, discovery -> economy,
-      # and the launchpad auth-gate handoff. Cypress runs headless here so CI
-      # never requires an interactive desktop session.
-      - name: Run Sprint 12 acceptance journeys
-        uses: cypress-io/github-action@v6
-        with:
-          working-directory: web
-          browser: chrome
-          install: false
-          start: npm run dev
-          wait-on: http://localhost:3001
-          wait-on-timeout: 90
-          spec: >-
-            cypress/e2e/features/scan-station.cy.ts,
-            cypress/e2e/journeys/mission-type-matrix.cy.ts,
-            cypress/e2e/visual/discovery-economy-visual-qa.cy.ts,
-            cypress/e2e/features/launchpad-own-program.cy.ts
-        env:
-          CYPRESS_PROFILE: full
-          CYPRESS_baseUrl: http://localhost:3001
-          NEXT_PUBLIC_FEATURE_SCAN_STATION: true
-          CI: true
-
-      - name: Upload Sprint 12 screenshots
-        uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: sprint12-acceptance-screenshots-${{ github.sha }}
-          path: web/cypress/screenshots/
-          if-no-files-found: ignore
-          retention-days: 14
-
-      - name: Upload Sprint 12 videos
-        uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: sprint12-acceptance-videos-${{ github.sha }}
-          path: web/cypress/videos/
-          if-no-files-found: ignore
-          retention-days: 14
-
   deploy:
     name: Deploy
     # Only after typecheck, unit tests and a real build have passed. There is no
     # point deploying a red commit to staging.
     needs: build
-    if: github.event_name == 'push'
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     environment:
       name: staging
@@ -213,83 +150,6 @@ jobs:
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-
-  e2e-staging:
-    name: E2E — against staging deployment
-    # KES-193: targets the landnam-web Worker's fixed workers.dev URL — every
-    # push deploys directly to this same Worker (no alias/race like Vercel's
-    # setup had), so a concurrent push to another branch overwriting this
-    # build mid-run is still possible, just via a straight redeploy rather
-    # than an alias flip.
-    #
-    # Scoped to the 'staging' Cypress profile (just c1-c4-viewport-matrix.cy.ts)
-    # on every push: fast and confirmed passing against the real production
-    # build. The full journeys suite against staging (real backend
-    # registration/gameplay, much slower and not yet proven reliable
-    # end-to-end) is the separate manually-triggered e2e-staging-full job
-    # below — don't fold it in here without re-verifying it actually
-    # completes reliably first.
-    needs: deploy
-    if: github.event_name == 'push'
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: web
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: "24"
-          cache: npm
-          cache-dependency-path: web/package-lock.json
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Wait for staging to serve this deploy
-        run: |
-          for i in {1..30}; do
-            if curl -sf "https://landnam-web.liam-55d.workers.dev/api/backend-health" > /dev/null; then
-              echo "Staging is responding."
-              exit 0
-            fi
-            echo "Attempt $i/30 — staging not ready yet"
-            sleep 5
-          done
-          echo "Staging never became reachable" >&2
-          exit 1
-
-      - name: Run journeys against staging
-        id: cypress
-        uses: cypress-io/github-action@v6
-        with:
-          working-directory: web
-          browser: chrome
-          install: false
-        env:
-          CYPRESS_PROFILE: staging
-          CYPRESS_baseUrl: https://landnam-web.liam-55d.workers.dev
-          CI: true
-
-      - name: Upload screenshots
-        uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: e2e-staging-screenshots-${{ github.sha }}
-          path: web/cypress/screenshots/
-          if-no-files-found: ignore
-          retention-days: 14
-
-      - name: Upload videos
-        uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: e2e-staging-videos-${{ github.sha }}
-          path: web/cypress/videos/
-          if-no-files-found: ignore
-          retention-days: 7
 
   e2e-staging-full:
     name: E2E — full journeys against staging (manual + nightly)

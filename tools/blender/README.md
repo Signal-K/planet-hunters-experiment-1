@@ -43,10 +43,14 @@ only the far side shows. Deterministic headless, no render-engine config.
 ```
 landnam_kit.py           palette, materials, geometry helpers, camera, render
 render_all.py            driver — walks every model module, one PNG each
-models/hub_structures.py Earth Base props (4)
-models/launchpad.py      modular six-sprite launch pad (KES-41/STS-611)
+models/terrain.py        modular background kit — mountains, hills, trees,
+                          rocks, roads, distant facilities, clouds (KES-260)
+models/structures.py     Earth Base hero structures — launchpad, hangar. One
+                          cohesive scene/one render per structure (KES-277,
+                          2026-09-03) — see "Earth Base facilities" below.
 models/actors.py         rover and drone (2)
-models/ships.py          Explorer/Prospector hulls + Explorer cutaway (KES-41/STS-611)
+models/rocket_family.py  Shared Explorer/Prospector bodies + blueprint variants
+models/ships.py          Compatibility entry point for the shared rocket family
 models/rooms.py          ship interior room panels (KES-41/STS-611)
 models/parts.py          web/parts/ shop icons — writes outside game/assets/
                           via a "../../parts/foo" key (KES-88)
@@ -89,9 +93,40 @@ will read at a subtly wrong angle against the terrain underneath it.
 `layout` is the size in CSS pixels the sprite is drawn at in game; the render is
 `SUPERSAMPLE`× that (currently 3×) so it stays crisp at devicePixelRatio 2–3.
 
-For the hub props, layout sizes are fixed by the `makeSprite` calls in
-`lib/pixi/hubScene.ts`. Changing one without the other produces a squashed
-sprite, not an error.
+Earth Base Launchpad and Hangar layout sizes are owned by the flat-art DOM
+component in `web/components/game/hub/EarthBaseModules.tsx`.
+
+## Earth Base facilities
+
+Launchpad and Hangar (`base/launchpad_flat.png`, `base/hangar_flat.png`) are
+built in `models/structures.py`, one cohesive Blender scene per structure,
+rendered to one PNG each — the same pattern as `ships.py`/`rooms.py`.
+
+This supersedes an earlier composited-fragment kit (KES-260's original
+`world_modules.py`) that rendered ~9 pieces separately and absolute-positioned
+them in `EarthBaseModules.tsx`. Individually, each piece was a sparse skeleton
+of thin rods over transparent space; composited, it read as debris rather than
+a building — explicit feedback on KES-277 called it "a massive regression in
+quality." **Do not resurrect a multi-piece composited kit for a hero
+structure.** Every part in a `structures.py` build must touch or overlap its
+neighbours so the render has no dead transparent gaps; the model owns its own
+complete silhouette. See the ZenNotes decision "Landnam Earth Base structure
+art — single-mass render standard" for the full reference synthesis (Out
+There: Omega staging, Take On Mars industrial tone, Crashlands silhouette
+density, Pixel Starships panel-block surface language) and the ground-contact
+rule (flat/evenly-tapered footing at z=0, no rock/grass/soil geometry baked
+into the structure — that is the scene terrain's job).
+
+Depth is applied at runtime, not in the render: the web app's `TerrainScene`
+washes each depth band toward the sky colour through a mask of the sprite's own
+silhouette. So terrain is authored *mid-tone and unhazed*, and one
+`mtn_peak_tall.png` serves as both a pale horizon ridge and a solid near mass.
+Pre-hazing a brick locks it to one distance and defeats the kit.
+
+Scene composition lives in `web/lib/scene/compositions.ts` — one line per placed
+brick. `earth-base-wide` (Hub) and `earth-base-pad` (Launchpad) are deliberately
+different placements of the same kit, which is what makes walking up to the pad
+change the horizon.
 
 ## Not done yet
 

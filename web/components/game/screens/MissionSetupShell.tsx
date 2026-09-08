@@ -2,9 +2,8 @@
 
 import React from 'react'
 import TopBar from '@/components/ui/TopBar'
-import StepFooter, { type MissionFlowStep } from '@/components/game/StepFooter'
 import { UI_ZONES } from '@/lib/ui-zones'
-import { TUTORIAL_CONTENT_TOP } from '@/lib/tutorial-layout'
+import { TUTORIAL_MANUAL_CONTENT_TOP } from '@/lib/tutorial-layout'
 
 type DivProps = React.ComponentPropsWithoutRef<'div'>
 
@@ -52,19 +51,11 @@ interface MissionSetupShellBaseProps {
   hasCoach?: boolean
   coachManual?: boolean
   children: React.ReactNode
+  sceneBackground?: React.ReactNode
   actions?: React.ReactNode
-  hideStepFooter?: boolean
-  contentBottom?: number
 }
 
-// Wayfinding footer (Craft doc Core Principle #1) — "what to do next"
-// shown above the CTA. Keeping step + description as a discriminated pair
-// prevents half-configured footers from silently disappearing.
-type MissionSetupShellWayfindingProps =
-  | { step: MissionFlowStep; stepDescription: string }
-  | { step?: never; stepDescription?: never }
-
-type MissionSetupShellProps = MissionSetupShellBaseProps & MissionSetupShellWayfindingProps
+type MissionSetupShellProps = MissionSetupShellBaseProps
 
 export default function MissionSetupShell({
   eyebrow,
@@ -74,34 +65,47 @@ export default function MissionSetupShell({
   hasCoach,
   coachManual,
   children,
+  sceneBackground,
   actions,
-  hideStepFooter = false,
-  contentBottom,
-  step,
-  stepDescription,
 }: MissionSetupShellProps) {
-  const contentTop = hasCoach ? (coachManual ? 248 : TUTORIAL_CONTENT_TOP) : 82
+  // Reserve one shared coach rail height for every mission-setup step. The
+  // old action/manual split made the main frame move by 10px when the player
+  // advanced through the flow, even though the content contract was the same.
+  const contentTop = hasCoach ? TUTORIAL_MANUAL_CONTENT_TOP : 82
 
   return (
-    <div className={['game-screen', 'mission-setup-screen', className].filter(Boolean).join(' ')}>
-      <TopBar eyebrow={eyebrow} title={title} onBack={onBack} />
+    <div className={[
+      'game-screen',
+      'theme-deep',
+      'ln-scene-launchpad',
+      'mission-setup-screen',
+      'mission-setup-screen--launchpad',
+      hasCoach && 'mission-setup-screen--coached',
+      coachManual && 'mission-setup-screen--coach-manual',
+      className,
+    ].filter(Boolean).join(' ')}>
+      {sceneBackground && (
+        <div className="mission-setup-scene-background" aria-hidden="true">
+          {sceneBackground}
+        </div>
+      )}
+      <TopBar eyebrow={eyebrow} title={title} onBack={onBack} scene={false} />
       <div
         className="mission-setup-content"
         data-ui-zone={UI_ZONES.screenContent}
-        style={{ paddingTop: contentTop, ...(contentBottom ? { paddingBottom: contentBottom } : {}) }}
+        style={{ paddingTop: contentTop }}
       >
-        {children}
-      </div>
-      {(step || actions) && (
-        <div className="sticky-actions mission-setup-actions" data-ui-zone={UI_ZONES.bottomActions}>
-          {step && !hideStepFooter && (
-            <div style={{ marginBottom: 10 }}>
-              <StepFooter step={step} description={stepDescription} inline />
+        <div className="mission-creator-container" data-testid="mission-creator-container">
+          <div className="mission-creator-body">
+            {children}
+          </div>
+          {actions && (
+            <div className="mission-creator-actions" data-ui-zone={UI_ZONES.bottomActions}>
+              {actions}
             </div>
           )}
-          {actions}
         </div>
-      )}
+      </div>
     </div>
   )
 }

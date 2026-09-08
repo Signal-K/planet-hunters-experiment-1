@@ -1,3 +1,5 @@
+import { ROCKET_ASSETS } from '../rocket-assets'
+
 export type ShipRoomKind =
   | 'engine'
   | 'booster'
@@ -100,8 +102,8 @@ export const SHIP_ROOM_DETAIL_ASSETS: Record<ShipRoomKind, string> = {
 export const SHIP_INTERIOR_LAYOUTS: Record<string, ShipInteriorLayout> = {
   explorer: {
     rocketId: 'explorer',
-    exteriorSrc: '/game/assets/ships/ship_sr1.png',
-    containerSrc: '/game/assets/ships/containers/sr1_cutaway.png',
+    exteriorSrc: ROCKET_ASSETS.explorer.exterior,
+    containerSrc: ROCKET_ASSETS.explorer.blueprint,
     // 9x3 cell grid over the cutaway's opened bay (x 7–93%, y 13–84%) —
     // one continuous Pixel-Starships-style grid rather than separate boxed
     // compartments; rooms are dragged between cells within it.

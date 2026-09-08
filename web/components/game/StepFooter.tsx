@@ -38,23 +38,19 @@ interface StepFooterProps {
 // done = green text, future = dim with border.
 function StepPills({ idx }: { idx: number }) {
   return (
-    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, flexWrap: 'wrap' }} aria-hidden="true">
+    <div className="step-footer-pills" aria-hidden="true">
       {STEP_SEQUENCE.map((s, i) => (
         <React.Fragment key={s}>
-          {i > 0 && (
-            <span style={{ fontSize: 13, color: 'var(--ln-text-muted)', opacity: 0.6 }}>→</span>
-          )}
+          {i > 0 && <span className="step-footer-arrow">→</span>}
           <span
-            style={{
-              fontFamily: 'var(--ln-font-display)', fontWeight: 800, fontSize: 12,
-              letterSpacing: '0.04em',
-              padding: '7px 16px', borderRadius: 999, whiteSpace: 'nowrap',
-              ...(i === idx
+            className="step-footer-pill"
+            style={
+              i === idx
                 ? { background: 'var(--ln-cyan)', color: 'var(--ln-text-on-cyan)', border: '1px solid transparent' }
                 : i < idx
                   ? { background: 'transparent', color: 'var(--ln-ok)', border: '1px solid rgba(90,208,126,0.3)' }
-                  : { background: 'transparent', color: 'var(--ln-text-muted)', border: '1px solid var(--ln-hairline-strong)' }),
-            }}
+                  : { background: 'transparent', color: 'var(--ln-text-muted)', border: '1px solid var(--ln-hairline-strong)' }
+            }
           >
             {s}
           </span>
@@ -68,15 +64,18 @@ export default function StepFooter({ step, description, inline = false }: StepFo
   const idx = STEP_SEQUENCE.indexOf(step)
   return (
     <aside
+      className={`step-footer ${inline ? 'step-footer--inline' : 'step-footer--strip'}`}
       data-testid="step-footer"
       data-step={step.toLowerCase()}
       aria-label={`Mission flow: ${step}, step ${idx + 1} of ${STEP_SEQUENCE.length}`}
       style={inline ? {
-        display: 'flex', flexDirection: 'column', gap: 8,
-        padding: '8px 12px',
+        display: 'flex', flexDirection: 'column',
         borderRadius: 8,
         background: 'var(--ln-shell, var(--ln-surface))',
         border: '1px solid var(--ln-hairline-strong)',
+        // gap + padding live in the .step-footer--inline CSS class (globals.css)
+        // instead of here so the mobile breakpoint can tighten them — an
+        // inline style value can't be overridden by a media query.
       } : {
         // Centered strip, matching the Open Design shells (landnam-mission-board.html):
         // "STEP 1 OF 4" caption centered above a centered row of step pills.
@@ -89,19 +88,11 @@ export default function StepFooter({ step, description, inline = false }: StepFo
         textAlign: 'center',
       }}
     >
-      <div style={{
-        fontFamily: 'var(--ln-font-display)', fontSize: 9, fontWeight: 800,
-        letterSpacing: '0.18em', color: 'var(--ln-text-muted)', textTransform: 'uppercase',
-      }}>
+      <div className="step-footer-caption">
         Step {idx + 1} of {STEP_SEQUENCE.length}
       </div>
       <StepPills idx={idx} />
-      <div style={{
-        fontFamily: 'var(--ln-font-body)', fontSize: 11, color: 'var(--ln-text-dim)',
-        opacity: 0.8, lineHeight: 1.35, maxWidth: 560,
-        display: '-webkit-box', WebkitBoxOrient: 'vertical', WebkitLineClamp: 2,
-        overflow: 'hidden',
-      }}>
+      <div className="step-footer-desc">
         {description}
       </div>
     </aside>

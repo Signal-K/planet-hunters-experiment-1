@@ -13,6 +13,8 @@ Astronauts get no sprite. Q31 of the academy question set: "Let's keep it simple
 for now, just names." Typographic identity only — do not add one speculatively.
 """
 
+import math
+
 import landnam_kit as kit
 
 T = kit.TOKENS
@@ -46,6 +48,39 @@ def rover():
     return dict(layout=(64, 48), ortho=3.0, mode="iso", target=(0, 0, 0.5))
 
 
+def road_rover():
+    """Small side-on utility rover for the Earth Base service road.
+
+    This is intentionally separate from the isometric roster rover above: the
+    Earth Base is a side-on 2.5D scene, so its ambient traffic needs a matching
+    silhouette and a flat ground contact rather than a tile-plane projection.
+    """
+    body = kit.box("road_chassis", (1.45, 0.62, 0.42), location=(0, 0, 0.36), bevel=0.06)
+    kit.solid("road_chassis", body, T["hull"], "hull", outline=0.018)
+
+    nose = kit.box("road_nose", (0.28, 0.58, 0.26), location=(0.82, 0, 0.47), bevel=0.04)
+    kit.solid("road_nose", nose, T["rust"], "rust", outline=0.012)
+
+    cabin = kit.box("road_cabin", (0.68, 0.56, 0.42), location=(0.12, 0, 0.76), bevel=0.05)
+    kit.solid("road_cabin", cabin, T["surface_2"], "surface2", outline=0.016)
+
+    window = kit.box("road_window", (0.38, 0.04, 0.18), location=(0.18, -0.3, 0.82), bevel=0.02)
+    kit.solid("road_window", window, T["cyan_bright"], "cyanbright", outline=0)
+
+    beacon = kit.cylinder("road_beacon", 0.07, 0.16, location=(0.46, 0, 1.08), verts=6)
+    kit.solid("road_beacon", beacon, T["amber"], "amber", outline=0.006)
+
+    for x in (-0.52, 0.52):
+        wheel = kit.cylinder("road_wheel", 0.23, 0.16, location=(x, -0.34, 0.23),
+                             rotation=(math.pi / 2, 0, 0), verts=8)
+        kit.solid("road_wheel", wheel, T["hull_dark"], "hulldark", outline=0.01)
+        hub = kit.cylinder("road_hub", 0.08, 0.18, location=(x, -0.35, 0.23),
+                           rotation=(math.pi / 2, 0, 0), verts=8)
+        kit.solid("road_hub", hub, T["steel"], "steel", outline=0)
+
+    return dict(layout=(72, 48), ortho=2.5, mode="side", target=(0, 0, 0.52))
+
+
 def drone():
     """Quadrotor building drone. Reads at 48x48."""
     body = kit.box("body", (0.62, 0.62, 0.34), location=(0, 0, 0.5), bevel=0.06)
@@ -77,5 +112,6 @@ def drone():
 
 BUILDS = {
     "actors/rover": rover,
+    "actors/road_rover": road_rover,
     "actors/drone": drone,
 }

@@ -1,3 +1,11 @@
+# Patterns here match at ANY depth, exactly like .gitignore — a bare `foo/`
+# excludes `web/lib/foo/` just as readily as a top-level `foo/`. A source
+# directory silently dropped from the upload still builds fine locally and then
+# fails the Vercel build with "Module not found", so prefix anything that is
+# meant to be top-level only with `/`, and keep this list free of dead entries.
+# See `web/lib/engine/vercelignore.test.ts`, which fails if a pattern here ever
+# starts matching a tracked source file under `web/`.
+
 # Dependencies and local metadata
 node_modules/
 .git/
@@ -6,17 +14,10 @@ node_modules/
 .DS_Store
 
 # Native/mobile build trees (not needed for web deploy)
-android/
-ios/
-electron/
-electron-dist/
-
-# Godot/editor/tooling artifacts
-.godot-bin/
-scene/
-project/.godot/
-GodotTest/
-GodotTest.pck
+/android/
+/ios/
+/electron/
+/electron-dist/
 
 # Test and CI output
 coverage/

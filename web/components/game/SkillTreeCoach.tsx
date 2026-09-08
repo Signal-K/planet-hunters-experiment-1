@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 
 // Self-contained "Mission Coach" walkthrough for the Skill Tree, modeled on
-// ScanStationCoach.tsx / FreeOpsBuildCoach.tsx. Deliberately NOT wired into
+// FreeOpsBuildCoach.tsx. Deliberately NOT wired into
 // the global M1-M3 onboarding stepper — this is a narrower, screen-local
 // beat shown once (persisted in localStorage) the first time a player opens
 // the Skill Tree. KES-134: the screen shipped with per-node descriptions but

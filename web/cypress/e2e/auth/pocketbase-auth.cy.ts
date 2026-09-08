@@ -4,7 +4,6 @@ describe('PocketBase Guest Auth Pattern', () => {
   const landnamPbUrl = Cypress.env('LANDNAM_PB_URL') || Cypress.env('POCKETBASE_URL') || 'http://localhost:8091'
   const STORAGE_KEY = 'landnam-game-state-v1'
   const PB_AUTH_KEY = 'pocketbase_auth'
-  const LANDNAM_AUTH_KEY = 'pocketbase_auth_landnam'
 
   let guestId: string
   let guestPassword: string
@@ -127,11 +126,6 @@ describe('PocketBase Guest Auth Pattern', () => {
     }
   }
 
-  function injectAuth(win: Window) {
-    win.localStorage.setItem(PB_AUTH_KEY, JSON.stringify({ token, record }))
-    win.localStorage.setItem(LANDNAM_AUTH_KEY, JSON.stringify({ token: landnamToken, record: landnamRecord }))
-  }
-
   it('keeps a full-account session signed in after refresh', () => {
     cy.visit('/game', {
       onBeforeLoad(win) {
@@ -157,18 +151,20 @@ describe('PocketBase Guest Auth Pattern', () => {
   })
 
   it('should persist game state to PB and restore it after localStorage is cleared', () => {
+    cy.intercept('POST', '**/api/collections/game_states/records').as('createGameState')
     cy.visit('/game/hub', {
       onBeforeLoad(win) {
         win.localStorage.clear()
-        injectAuth(win)
+        // Exercise the production shared-to-Landnam auth exchange on load.
+        win.localStorage.setItem(PB_AUTH_KEY, JSON.stringify({ token, record }))
         win.localStorage.setItem(STORAGE_KEY, JSON.stringify(makeState('hub')))
       },
     })
 
     cy.contains('BASE', { timeout: 15000 }).should('be.visible')
+    cy.wait('@createGameState', { timeout: 15000 }).its('response.statusCode').should('be.oneOf', [200, 201])
     cy.window().then(win => {
       expect(win.localStorage.getItem(PB_AUTH_KEY), PB_AUTH_KEY).to.contain(record.id as string)
-      expect(win.localStorage.getItem(LANDNAM_AUTH_KEY), LANDNAM_AUTH_KEY).to.contain(record.id as string)
       expect(win.localStorage.getItem(STORAGE_KEY), STORAGE_KEY).to.contain('Grade II')
     })
     cy.wait(3000)
@@ -191,14 +187,12 @@ describe('PocketBase Guest Auth Pattern', () => {
     cy.visit('/game/hub', {
       onBeforeLoad(win) {
         win.localStorage.clear()
-        injectAuth(win)
+        win.localStorage.setItem(PB_AUTH_KEY, JSON.stringify({ token, record }))
       },
     })
 
     cy.contains('BASE', { timeout: 15000 }).should('be.visible')
-    cy.wait(3000)
-
-    cy.window().then(win => {
+    cy.window({ timeout: 15000 }).should(win => {
       const restored = JSON.parse(win.localStorage.getItem(STORAGE_KEY) || '{}')
       expect(restored.screen).to.eq('hub')
       expect(restored.player.francs).to.eq(9_500_000_000)

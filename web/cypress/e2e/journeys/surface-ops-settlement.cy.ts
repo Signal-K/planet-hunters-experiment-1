@@ -3,8 +3,8 @@ const STORAGE_KEY = 'landnam-game-state-v1'
 function seedState(win: Window, player: Record<string, unknown>, screen = 'hub') {
   win.localStorage.setItem('ln_tutorial_complete_ack', '1')
   // The offline auth stub in cypress/support/e2e.ts always resolves to an
-  // @landnam.guest email regardless of what dismissAuthGate() submits, which
-  // otherwise trips the mandatory (non-dismissible) SaveProgressPrompt and
+  // @example.com email regardless of what dismissAuthGate() submits, which
+  // otherwise trips the auth gate and
   // covers the surface-ops UI. See tutorial-m1.cy.ts's suppressSurveys().
   win.localStorage.setItem('landnam-upgrade-prompt-snooze-until', String(Date.now() + 365 * 24 * 60 * 60 * 1000))
   win.localStorage.setItem(STORAGE_KEY, JSON.stringify({

@@ -9,6 +9,7 @@
 import type { GameState } from '@/game-context'
 
 const STORAGE_KEY = 'landnam-game-state-v1'
+const AUTHENTICATED_STORAGE_KEY = `${STORAGE_KEY}:user:e2e-user`
 const COACH_KEY = 'landnam_asteroid_discovery_coach_seen_v1'
 
 function basePlayer(overrides: Partial<GameState['player']> = {}): GameState['player'] {
@@ -17,8 +18,8 @@ function basePlayer(overrides: Partial<GameState['player']> = {}): GameState['pl
     activeMission: null,
     missionCount: 4,
     pendingLaunch: false,
-    placed: ['launchpad', 'satellite-monitoring-station'],
-    placementPlots: { launchpad: 0, 'satellite-monitoring-station': 1 },
+    placed: ['launchpad', 'transit-telescope'],
+    placementPlots: { launchpad: 0, 'transit-telescope': 1 },
     controlBuilt: false,
     missionsDone: 4,
     freeOperations: true,
@@ -33,9 +34,8 @@ function basePlayer(overrides: Partial<GameState['player']> = {}): GameState['pl
     loanOffered: false,
     roverDeployments: [],
     clientTerritories: {},
-    satelliteMonitoringBuilt: true,
-    satelliteMonitoringLevel: 2,
     transitSatelliteLaunchedAt: Date.now() - 60_000,
+    transitSatelliteLevel: 2,
     tessClassifications: {},
     deepSpaceTelescopeBuilt: false,
     deepSpaceTelescopeMissionCompletedAt: null,
@@ -60,8 +60,8 @@ function visitWithState(path: string, screen: GameState['screen'], playerOverrid
 
   cy.visit(path, {
     onBeforeLoad(win) {
-      win.localStorage.setItem(STORAGE_KEY, JSON.stringify(full))
-      win.localStorage.setItem('landnam-guest-credentials', JSON.stringify({ email: 'e2e@landnam.guest', password: 'e2e-guest-test' }))
+      win.localStorage.setItem(AUTHENTICATED_STORAGE_KEY, JSON.stringify(full))
+      win.localStorage.setItem('landnam-account-credentials', JSON.stringify({ email: 'e2e@example.com', password: 'e2e-guest-test' }))
       win.localStorage.setItem('ln_tutorial_complete_ack', '1')
     },
   })
@@ -80,15 +80,20 @@ function openBuildFromHub(playerOverrides: Partial<GameState['player']> = {}) {
 describe('Asteroid Discovery mission on-ramp (KES-128)', () => {
   it('offers the survey mission at Launchpad once the SMS/affinity threshold is met', () => {
     visitWithState('/game/launchpad', 'launchpad', {
-      satelliteMonitoringLevel: 2,
       clientMissions: { 'earthbound-minerals': 10 },
     })
-    cy.get('[data-testid="launchpad-program-operation-btn"]', { timeout: 10000 }).should('be.visible')
+    cy.get('[data-testid="launchpad-new-mission-btn"]', { timeout: 10000 }).click()
+    cy.get('[data-testid="launchpad-new-mission-satellite-btn"]', { timeout: 10000 })
+      .should('be.visible')
+      .and('not.be.disabled')
+    cy.get('[data-testid="launchpad-new-mission-satellite-btn"]').click()
+    cy.get('[data-testid="launchpad-prepare-instrument-btn"]', { timeout: 10000 })
+      .should('be.visible')
+      .and('contain.text', 'Survey')
   })
 
   it('does not offer the survey mission below the SMS/affinity threshold', () => {
     visitWithState('/game/launchpad', 'launchpad', {
-      satelliteMonitoringLevel: 1,
       clientMissions: {},
     })
     cy.contains('Deep Space Telescope').should('not.exist')
@@ -96,28 +101,26 @@ describe('Asteroid Discovery mission on-ramp (KES-128)', () => {
 
   it('keeps Deep Space Telescope locked at Build/Place until the survey mission is completed', () => {
     openBuildFromHub({
-      satelliteMonitoringLevel: 2,
       clientMissions: { 'earthbound-minerals': 10 },
       deepSpaceTelescopeMissionCompletedAt: null,
     })
+    cy.contains('button', 'Deep Space Telescope', { timeout: 10000 }).scrollIntoView()
+    cy.wait(1500)
     cy.contains('button', 'Deep Space Telescope', { timeout: 10000 })
-      .scrollIntoView()
       .should('be.visible')
       .and('be.disabled')
-      .and('contain.text', 'Satellite Monitoring Station level 2 and affinity level 2 with a client')
+      .and('contain.text', 'Transit telescope level 2 and affinity level 2 with a client')
   })
 
   it('unlocks Deep Space Telescope at Build/Place once the survey mission is completed', () => {
     openBuildFromHub({
-      satelliteMonitoringLevel: 2,
       clientMissions: { 'earthbound-minerals': 10 },
       deepSpaceTelescopeMissionCompletedAt: Date.now(),
       stash: { aluminium: 100, copper: 100, silicon: 100 },
     })
     // The catalog re-renders once the async fetch settles (falls back to
     // STATIC_CATALOG against this offline profile), which can detach and
-    // replace this button mid-chain — matching the hydration race documented
-    // in scan-station.cy.ts. Give it a beat before asserting.
+    // replace this button mid-chain. Give it a beat before asserting.
     cy.wait(1500)
     cy.contains('button', 'Deep Space Telescope', { timeout: 10000 })
       .scrollIntoView()
@@ -160,7 +163,7 @@ describe('AsteroidDiscoveryCoach (KES-128)', () => {
     cy.get('[data-testid="asteroid-discovery-coach"]').should('be.visible')
     cy.contains('A REAL UNCONFIRMED OBJECT FEED').should('be.visible')
     cy.get('[data-testid="asteroid-discovery-coach-next"]').click()
-    cy.contains('YOUR CALL FEEDS FOLLOW-UP').should('be.visible')
+    cy.contains('READ THE SKY POSITION').should('be.visible')
     cy.get('[data-testid="asteroid-discovery-coach-next"]').click()
     cy.contains('FLAG, MARK, OR SKIP').should('be.visible')
     cy.get('[data-testid="asteroid-discovery-coach-next"]').click()
@@ -180,5 +183,74 @@ describe('AsteroidDiscoveryCoach (KES-128)', () => {
     cy.visit('/game/asteroid-discovery')
     cy.get('[data-testid="asteroid-discovery-screen"]', { timeout: 15000 }).should('be.visible')
     cy.get('[data-testid="asteroid-discovery-coach"]').should('not.exist')
+  })
+})
+
+// KES-342: compact-landscape rendered regression. The old AsteroidDiscoveryCoach
+// absolutely-positioned itself over the top of the screen; these confirm the
+// coach reserves its own space instead, that the new truthful sky-position
+// visualization renders with the real candidate fields, and that verdict
+// actions stay reachable at a real touch size through to the saved state.
+const LANDSCAPE_VIEWPORTS = [
+  { key: 'landscape-844', width: 844, height: 390 },
+  { key: 'landscape-926', width: 926, height: 428 },
+] as const
+
+describe('Asteroid Discovery compact-landscape visualization (KES-342)', () => {
+  LANDSCAPE_VIEWPORTS.forEach(({ key, width, height }) => {
+    it(`[${key}] renders the sky plot from real candidate fields, coach visible and dismissed`, () => {
+      cy.viewport(width, height)
+      interceptCandidates()
+      visitWithState('/game/asteroid-discovery', 'asteroid-discovery', {
+        deepSpaceTelescopeBuilt: true,
+        deepSpaceTelescopeMissionCompletedAt: Date.now(),
+      })
+
+      cy.get('[data-testid="asteroid-discovery-screen"]', { timeout: 15000 }).should('be.visible')
+      cy.get('[data-testid="asteroid-discovery-coach"]').should('be.visible')
+      cy.get('[data-testid="asteroid-sky-plot"]').should('be.visible')
+        .and('contain.text', MOCK_CANDIDATE.ra.toFixed(4))
+        .and('contain.text', MOCK_CANDIDATE.decl.toFixed(4))
+      // Verdict buttons stay attached and real touch size even while the
+      // coach is up — it must never cover them.
+      cy.get('[data-testid="neocp-verdict-likely_real"]').should('be.visible').then($btn => {
+        expect($btn.height()).to.be.at.least(44)
+      })
+
+      cy.get('[data-testid="asteroid-discovery-coach-skip"]').click()
+      cy.get('[data-testid="asteroid-discovery-coach"]').should('not.exist')
+      cy.get('[data-testid="asteroid-sky-plot"]').should('be.visible')
+      cy.screenshot(`asteroid-discovery-${key}-coach-dismissed`)
+    })
+
+    it(`[${key}] reduces to the primary readouts by default, with the rest behind More Data`, () => {
+      cy.viewport(width, height)
+      interceptCandidates()
+      visitWithState('/game/asteroid-discovery', 'asteroid-discovery', {
+        deepSpaceTelescopeBuilt: true,
+        deepSpaceTelescopeMissionCompletedAt: Date.now(),
+      })
+      cy.window().then(win => win.localStorage.setItem(COACH_KEY, '1'))
+      cy.visit('/game/asteroid-discovery')
+      cy.get('[data-testid="asteroid-discovery-screen"]', { timeout: 15000 }).should('be.visible')
+      cy.contains('NEO Score').should('be.visible')
+      cy.contains('H Mag').should('not.exist')
+      cy.get('[data-testid="neocp-more-data-toggle"]').click()
+      cy.contains('H Mag').should('be.visible')
+    })
+
+    it(`[${key}] reaches the verdict-ready state after casting a call`, () => {
+      cy.viewport(width, height)
+      interceptCandidates()
+      visitWithState('/game/asteroid-discovery', 'asteroid-discovery', {
+        deepSpaceTelescopeBuilt: true,
+        deepSpaceTelescopeMissionCompletedAt: Date.now(),
+      })
+      cy.window().then(win => win.localStorage.setItem(COACH_KEY, '1'))
+      cy.visit('/game/asteroid-discovery')
+      cy.get('[data-testid="asteroid-discovery-screen"]', { timeout: 15000 }).should('be.visible')
+      cy.get('[data-testid="neocp-verdict-likely_artifact"]').click()
+      cy.contains('ANNOTATION SAVED').should('be.visible')
+    })
   })
 })

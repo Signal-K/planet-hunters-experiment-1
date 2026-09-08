@@ -2,7 +2,7 @@ describe('Commodity Exchange visual layout', () => {
   const state = {
     screen: 'market',
     tutorial: false,
-    player: { francs: 50_000_000, missionsDone: 3, freeOperations: true },
+    player: { francs: 50_000_000, missionsDone: 3, freeOperations: true, stash: { iron: 5 } },
     stash: {},
     missionId: null,
     targetId: null,
@@ -13,12 +13,15 @@ describe('Commodity Exchange visual layout', () => {
     { name: 'mobile', width: 390, height: 844 },
     { name: 'tablet', width: 768, height: 1024 },
     { name: 'desktop', width: 1280, height: 800 },
+    { name: 'desktop-landscape', width: 1440, height: 900 },
   ]) {
     it(`keeps the header clear at ${viewport.name} size`, () => {
       cy.viewport(viewport.width, viewport.height)
       cy.visit('/game/market', {
         onBeforeLoad(win) {
-          win.localStorage.setItem('landnam-game-state-v1', JSON.stringify(state))
+          const serialized = JSON.stringify(state)
+          win.localStorage.setItem('landnam-game-state-v1', serialized)
+          win.localStorage.setItem('landnam-game-state-v1:user:e2e-user', serialized)
           win.localStorage.setItem('landnam-surveys-shown', JSON.stringify(['lnm_first_launch']))
           win.localStorage.setItem('ln_tutorial_complete_ack', '1')
           // KES-176: without an established session, the tablet iteration
@@ -27,8 +30,8 @@ describe('Commodity Exchange visual layout', () => {
           // screenshot firing, so the captured artifact showed sign-in
           // instead of the layout under test. Same guest-session seed used
           // by tutorial-rail.cy.ts's visitWithState.
-          win.localStorage.setItem('landnam-guest-credentials', JSON.stringify({
-            email: 'e2e@landnam.guest',
+          win.localStorage.setItem('landnam-account-credentials', JSON.stringify({
+            email: 'e2e@example.com',
             password: 'e2e-guest-test',
           }))
         },

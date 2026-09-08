@@ -16,6 +16,7 @@
  */
 
 import { useEffect, useRef } from 'react'
+import { capDpr } from '@/lib/engine/pixiDisplay'
 import { Application, Container, Graphics, Text, TextStyle } from 'pixi.js'
 import type { LightcurvePoint } from '@/components/game/LightcurvePlot'
 import type { TransitRange } from '@/lib/data'
@@ -301,7 +302,7 @@ export default function ObservatoryChart({ points, ranges, onRange, onRemoveRang
         const rect = host.getBoundingClientRect()
         W = Math.round(Math.max(200, rect.width))
         H = Math.round(height ?? Math.max(100, rect.height))
-        const dpr = window.devicePixelRatio || 1
+        const dpr = capDpr()
         await app.init({ canvas, width: W, height: H, background: SKY_BASE, antialias: true, autoDensity: true, resolution: dpr })
         if (destroyed) return
         app.stage.addChild(bgG, gridG, scanG, rangeG, selG, dataG, labelsC)

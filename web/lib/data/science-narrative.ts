@@ -5,17 +5,17 @@ export const ARTIFACT_NARRATIVE_KIND = 'artifact-signal'
 export const ARTIFACT_NARRATIVE_MIN_MONITORING_LEVEL = 3
 
 export function artifactNarrativeEligible({
-  satelliteMonitoringLevel,
+  transitSatelliteLevel,
   verdict,
   hasExistingClassification,
   seenAt,
 }: {
-  satelliteMonitoringLevel?: number
+  transitSatelliteLevel?: number
   verdict: TessVerdict
   hasExistingClassification: boolean
   seenAt?: number | null
 }): boolean {
-  return (satelliteMonitoringLevel ?? 1) >= ARTIFACT_NARRATIVE_MIN_MONITORING_LEVEL
+  return (transitSatelliteLevel ?? 1) >= ARTIFACT_NARRATIVE_MIN_MONITORING_LEVEL
     && verdict === 'planet'
     && !hasExistingClassification
     && !seenAt

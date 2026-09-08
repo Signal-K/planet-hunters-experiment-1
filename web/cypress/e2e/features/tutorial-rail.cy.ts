@@ -63,8 +63,8 @@ function visitWithState(state: GameState) {
   cy.visit('/game', {
     onBeforeLoad(win) {
       win.localStorage.setItem(STORAGE_KEY, JSON.stringify(state))
-      win.localStorage.setItem('landnam-guest-credentials', JSON.stringify({
-        email: 'e2e@landnam.guest',
+      win.localStorage.setItem('landnam-account-credentials', JSON.stringify({
+        email: 'e2e@example.com',
         password: 'e2e-guest-test',
       }))
     },

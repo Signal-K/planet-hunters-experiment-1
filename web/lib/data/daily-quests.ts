@@ -3,16 +3,6 @@ import { DAILY_QUEST_REWARDS } from './economy'
 
 export const DAILY_QUEST_TEMPLATES: DailyQuestTemplate[] = [
   {
-    id: 'daily-scan-5-asteroids',
-    kind: 'scan',
-    title: 'Orbital Survey Run',
-    brief: 'Run the station scanner on five different asteroid targets before the day resets.',
-    targetScope: 'any-asteroid',
-    count: 5,
-    payout: { francs: DAILY_QUEST_REWARDS.medium, affinity: 12 },
-    requiresScannerBuilt: true,
-  },
-  {
     id: 'daily-land-rover-any',
     kind: 'land',
     title: 'Surface Contact',
@@ -21,16 +11,6 @@ export const DAILY_QUEST_TEMPLATES: DailyQuestTemplate[] = [
     count: 1,
     payout: { francs: DAILY_QUEST_REWARDS.large, affinity: 15 },
     requiresSurveyClear: true,
-  },
-  {
-    id: 'daily-map-asteroid',
-    kind: 'map',
-    title: 'Deposit Mapping',
-    brief: 'Accumulate the required scans to fully map one asteroid target today.',
-    targetScope: 'any-asteroid',
-    count: 1,
-    payout: { francs: DAILY_QUEST_REWARDS.small, affinity: 10 },
-    requiresScannerBuilt: true,
   },
 ]
 

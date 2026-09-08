@@ -86,10 +86,10 @@ describe('asset manifest', () => {
   })
 })
 
-describe('production hub and actor sprites', () => {
-  const RENDERED = ['game/assets/hub', 'game/assets/actors']
+describe('production hub, terrain and actor sprites', () => {
+  const RENDERED = ['game/assets/base', 'game/assets/actors', 'game/assets/terrain']
 
-  it('has every shipped hub and actor sprite registered in the manifest', () => {
+  it('has every shipped Earth Base, terrain and actor sprite registered in the manifest', () => {
     // The reverse of the dangling check: a sprite rendered but never added to
     // the manifest is invisible to AssetManager and silently unused.
     const registered = new Set(Object.values(manifest))
@@ -100,13 +100,18 @@ describe('production hub and actor sprites', () => {
     expect(unregistered).toEqual([])
   })
 
-  it('renders the Earth Base structure slots hubScene declares', () => {
+  it('registers the flat Earth Base facility sprites', () => {
+    for (const name of ['base_launchpad_flat', 'base_hangar_flat']) {
+      expect({ name, present: name in manifest }).toEqual({ name, present: true })
+    }
+  })
+
+  it('registers the modular terrain kit the scenes compose from', () => {
+    // A brick missing here resolves to the magenta placeholder at runtime,
+    // which in a background layer is easy to miss for months.
     for (const name of [
-      'hub_pad_deck', 'hub_pad_gantry_frame', 'hub_pad_swing_arm',
-      'hub_pad_clamp', 'hub_pad_mast', 'hub_pad_tank',
-      'hub_depot_tank', 'hub_scan_dish', 'hub_refinery_modular_v2', 'hub_scan_station_modular_v2',
-      'hub_cmd_building',
-      'hub_deep_space_telescope', 'hub_astronaut_academy',
+      'terrain_mtn_peak_tall', 'terrain_hill_round', 'terrain_tree_pine_cluster',
+      'terrain_road_segment', 'terrain_far_dome', 'terrain_cloud_bank_a',
     ]) {
       expect({ name, present: name in manifest }).toEqual({ name, present: true })
     }
@@ -115,6 +120,7 @@ describe('production hub and actor sprites', () => {
   it('renders the two non-human crew archetypes', () => {
     // Astronauts deliberately have no sprite — Q31, "just names".
     expect('actor_rover' in manifest).toBe(true)
+    expect('actor_road_rover' in manifest).toBe(true)
     expect('actor_drone' in manifest).toBe(true)
     expect('actor_astronaut' in manifest).toBe(false)
   })

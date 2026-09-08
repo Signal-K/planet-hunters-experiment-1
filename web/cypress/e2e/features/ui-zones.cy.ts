@@ -12,7 +12,6 @@ const KNOWN_ZONES = [
   'feedback-launcher',
   'ambient-prompt',
   'status-utility',
-  'modal-overlay',
 ]
 
 const VIEWPORTS = [
@@ -88,8 +87,8 @@ function visitWithState(state: StateOverride) {
   cy.visit('/game', {
     onBeforeLoad(win) {
       win.localStorage.setItem(STORAGE_KEY, JSON.stringify(fullState(state)))
-      win.localStorage.setItem('landnam-guest-credentials', JSON.stringify({
-        email: 'e2e@landnam.guest',
+      win.localStorage.setItem('landnam-account-credentials', JSON.stringify({
+        email: 'e2e@example.com',
         password: 'e2e-guest-test',
       }))
     },
@@ -305,7 +304,10 @@ describe('UI zone contract', () => {
           },
         })
 
-        cy.get('[data-testid="resolve-cargo-btn"]').click()
+        // freeOperations is recomputed from missionsDone (game-state.ts) and this
+        // fixture doesn't set missionsDone, so it resolves to an onboarding
+        // mission (missionsDone 0) — debrief auto-resolves on mount there.
+        cy.get('[data-testid="resolve-cargo-btn"]').should('not.exist')
         assertTransactionalScreenZones()
       })
 

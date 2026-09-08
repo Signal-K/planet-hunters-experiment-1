@@ -2,9 +2,12 @@
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  background:
-    radial-gradient(circle at 72% 35%, rgba(112,217,234, .09), transparent 34%),
-    #0a0a0c;
+  /* Preserve the shared .game-screen absolute viewport contract. A relative
+     screen sizes itself to the landing HUD's min-content height and extends
+     below short landscape viewports (KES-322). */
+  position: absolute;
+  inset: 0;
+  z-index: 0;
 }
 
 .stage {
@@ -26,8 +29,7 @@
   padding: 7px 10px;
   border: 1px solid rgba(112,217,234, .26);
   border-radius: 6px;
-  background: rgba(18,18,20, .78);
-  backdrop-filter: blur(6px);
+  background: var(--ln-panel);
 }
 
 .targetLabel span,
@@ -54,7 +56,7 @@
   gap: 9px;
   padding: 16px;
   border-top: 1px solid rgba(112,217,234, .18);
-  background: linear-gradient(180deg, rgba(18,18,20, .94), #0a0a0c 24%);
+  background: linear-gradient(180deg, var(--ln-panel), var(--ln-void) 24%);
 }
 
 .statusRow,
@@ -108,5 +110,32 @@
   .hud {
     gap: 7px;
     padding: 12px 14px;
+  }
+}
+
+@media (orientation: landscape) and (max-width: 1023px) {
+  .stage {
+    min-height: 96px;
+    margin-top: 56px;
+  }
+
+  .targetLabel {
+    top: 8px;
+    right: 12px;
+    padding: 5px 8px;
+  }
+
+  .hud {
+    gap: 4px;
+    padding: 8px 12px;
+  }
+
+  .contract,
+  .timer {
+    font-size: 12px;
+  }
+
+  .progressMeta {
+    gap: 8px;
   }
 }

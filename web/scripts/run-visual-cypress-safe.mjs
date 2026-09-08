@@ -17,7 +17,7 @@ if (!process.env.CI && macMajor !== null && macMajor >= 26) {
 
 const result = spawnSync(
   'npx',
-  ['cypress', 'run', '--browser', 'chrome'],
+  ['cypress', 'run', '--browser', 'chrome', ...process.argv.slice(2)],
   {
     env: {
       ...process.env,

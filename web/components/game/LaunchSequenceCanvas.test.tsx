@@ -62,7 +62,7 @@ describe('LaunchSequenceCanvas watchdog', () => {
     expect(onComplete).not.toHaveBeenCalled()
 
     await act(async () => {
-      await vi.advanceTimersByTimeAsync(12_000)
+      await vi.advanceTimersByTimeAsync(18_000)
     })
 
     expect(onComplete).toHaveBeenCalledTimes(1)
@@ -80,7 +80,7 @@ describe('LaunchSequenceCanvas watchdog', () => {
 
     await act(async () => {
       capturedSceneOnComplete?.()
-      await vi.advanceTimersByTimeAsync(12_000)
+      await vi.advanceTimersByTimeAsync(18_000)
     })
 
     expect(onComplete).toHaveBeenCalledTimes(1)

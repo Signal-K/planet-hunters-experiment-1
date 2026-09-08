@@ -6,18 +6,19 @@
 import type { GameState } from '@/game-context'
 
 const STORAGE_KEY = 'landnam-game-state-v1'
-const GUEST_KEY = 'landnam-guest-credentials'
+const GUEST_KEY = 'landnam-account-credentials'
 const SURVEY_KEY = 'landnam-surveys-shown'
 
 const ALL_SURVEYS = [
   'lnm_first_launch', 'lnm_mining_feel', 'lnm_client_pick',
   'lnm_mission_friction', 'lnm_progression_feel', 'lnm_end_of_content',
-  'lnm_return_visit', 'lnm_m1_complete', 'lnm_m2_complete', 'lnm_m3_complete',
+  'lnm_return_visit', 'lnm_m1_complete', 'lnm_m2_mission_choice', 'lnm_m2_rocket_clarity', 'lnm_m2_rating', 'lnm_m2_freetext',
+        'lnm_m3_transport_clarity', 'lnm_m3_client_choice', 'lnm_m3_rating', 'lnm_m3_freetext',
 ]
 
 const SNOOZE_KEY = 'landnam-upgrade-prompt-snooze-until'
 const FAR_FUTURE = String(Date.now() + 365 * 24 * 60 * 60 * 1000)
-const GUEST = JSON.stringify({ email: 'e2e@landnam.guest', password: 'e2e-guest-test' })
+const GUEST = JSON.stringify({ email: 'e2e@example.com', password: 'e2e-guest-test' })
 
 function baseLoad(extra: Record<string, string> = {}) {
   return (win: Window) => {
@@ -91,8 +92,9 @@ describe('Bug hunt — edge cases', () => {
       }) }),
     })
     cy.contains('Returned', { timeout: 8000 }).should('be.visible')
-    // No cargo to resolve; resolve button should still let player proceed
-    cy.get('[data-testid="resolve-cargo-btn"]').click()
+    // Onboarding missions (missionsDone < 3) auto-resolve on mount — see
+    // DebriefScreen.tsx — so there's no resolve step to click here.
+    cy.get('[data-testid="resolve-cargo-btn"]').should('not.exist')
     // Payout might be 0 but UI should not crash
     cy.contains('Francs Earned').should('be.visible')
     cy.get('[data-testid="collect-reward-btn"]').should('be.visible').click()
@@ -118,7 +120,7 @@ describe('Bug hunt — edge cases', () => {
         },
       }) }),
     })
-    cy.get('[data-testid="resolve-cargo-btn"]').click()
+    cy.get('[data-testid="resolve-cargo-btn"]').should('not.exist')
     cy.get('[data-testid="collect-reward-btn"]').click()
     cy.contains('h1', 'Earth Base', { timeout: 8000 }).should('be.visible')
     // Should not crash and state should not have negative francs
