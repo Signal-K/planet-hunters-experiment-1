@@ -3970,7 +3970,17 @@ html[data-coach-target="build-structure-strip"] [data-coach-id="build-structure-
 
 /* KES-305 — the mission creator is one stable Launchpad instrument.  The
    screen chrome and the individual step content must not create a second
-   page-sized header/footer or change the frame's bounds between steps. */
+   page-sized header/footer or change the frame's bounds between steps.
+   Only the geometry (position/size/stacking) is shared with every
+   mission-setup step here — padding/overflow/display stay scoped to
+   .mission-dispatch-content below. Every step through MissionSetupShell
+   (Mission Board's own screen aside) carries `--launchpad` unconditionally
+   (KES-305's unified frame class), so a padding override here would force
+   the same fixed 82px top on Target/Rocket/Assembly too and silently
+   clobber their own coach-reserved padding-top (KES-345 regression: the
+   onboarding coach card ended up rendered on top of the Target Picker's
+   compatible-targets panel because this rule's `!important` beat that
+   inline reservation). */
 .mission-setup-screen--launchpad .mission-setup-content,
 .mission-setup-screen--launchpad .mission-dispatch-content {
   position: absolute;
@@ -3983,6 +3993,8 @@ html[data-coach-target="build-structure-strip"] [data-coach-id="build-structure-
   width: min(100%, 1120px);
   height: 100%;
   margin: 0 auto;
+}
+.mission-setup-screen--launchpad .mission-dispatch-content {
   padding: 82px 14px 24px !important;
   overflow: hidden !important;
   display: block !important;
