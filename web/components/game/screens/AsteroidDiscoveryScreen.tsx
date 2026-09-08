@@ -9,6 +9,7 @@ import StatusPill from '@/components/ui/StatusPill'
 import { PrimaryBtn } from '@/components/ui/Button'
 import CommentsPanel from '@/components/game/CommentsPanel'
 import NebulaBackdrop from '@/components/game/NebulaBackdrop'
+import AsteroidSkyPlot from '@/components/game/AsteroidSkyPlot'
 import type { AsteroidCandidate, AsteroidClassification, AsteroidVerdict } from '@/lib/data'
 import type { Player } from '@/lib/game-types'
 import { UI_ZONES } from '@/lib/ui-zones'
@@ -51,6 +52,7 @@ export default function AsteroidDiscoveryScreen({ player, visualCandidate, onBac
   // Dev/staging-only day-skip, same rationale as TessDiscoveryScreen's
   // devDayOffset — the daily pool is keyed by real calendar date.
   const [devDayOffset, setDevDayOffset] = useState(0)
+  const [showMoreData, setShowMoreData] = useState(false)
 
   useEffect(() => {
     if (visualCandidate) {
@@ -199,17 +201,43 @@ export default function AsteroidDiscoveryScreen({ player, visualCandidate, onBac
         Real candidate data · Minor Planet Center NEOCP — your call feeds live follow-up prioritisation
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 8 }}>
+      <AsteroidSkyPlot
+        tempDesig={candidate.tempDesig}
+        ra={candidate.ra}
+        decl={candidate.decl}
+        vMag={candidate.vMag}
+        arcDays={candidate.arcDays}
+        lastSeenDays={candidate.lastSeenDays}
+      />
+
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 8, marginTop: 10 }}>
         <StatCard variant="readout" label="NEO Score" value={`${candidate.score}`} />
         <StatCard variant="readout" label="V Mag" value={candidate.vMag.toFixed(1)} />
-        <StatCard variant="readout" label="H Mag" value={candidate.hMag.toFixed(1)} />
-        <StatCard variant="readout" label="Observations" value={`${candidate.nObs}`} />
         <StatCard variant="readout" label="Arc" value={`${candidate.arcDays.toFixed(2)}D`} />
-        <StatCard variant="readout" label="Not Seen" value={`${candidate.lastSeenDays.toFixed(1)}D`} />
-        <StatCard variant="readout" label="R.A. (hrs)" value={candidate.ra.toFixed(4)} />
-        <StatCard variant="readout" label="Decl. (deg)" value={candidate.decl.toFixed(4)} />
-        <StatCard variant="readout" label="Discovered" value={candidate.discoveryDate || 'UNKNOWN'} />
       </div>
+
+      <button
+        data-testid="neocp-more-data-toggle"
+        onClick={() => setShowMoreData(value => !value)}
+        style={{
+          marginTop: 10, minHeight: 44, width: '100%', background: 'transparent', border: '1px solid var(--ln-hairline-strong)',
+          borderRadius: 8, color: 'var(--ln-text-muted)', fontFamily: 'var(--ln-font-display)', fontSize: 10, fontWeight: 700,
+          letterSpacing: '0.08em', textTransform: 'uppercase', cursor: 'pointer',
+        }}
+      >
+        {showMoreData ? 'Hide Data ▴' : 'More Data ▾'}
+      </button>
+
+      {showMoreData && (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 8, marginTop: 8 }}>
+          <StatCard variant="readout" label="H Mag" value={candidate.hMag.toFixed(1)} />
+          <StatCard variant="readout" label="Observations" value={`${candidate.nObs}`} />
+          <StatCard variant="readout" label="Not Seen" value={`${candidate.lastSeenDays.toFixed(1)}D`} />
+          <StatCard variant="readout" label="R.A. (hrs)" value={candidate.ra.toFixed(4)} />
+          <StatCard variant="readout" label="Decl. (deg)" value={candidate.decl.toFixed(4)} />
+          <StatCard variant="readout" label="Discovered" value={candidate.discoveryDate || 'UNKNOWN'} />
+        </div>
+      )}
     </Panel>
   )
 
@@ -238,18 +266,18 @@ export default function AsteroidDiscoveryScreen({ player, visualCandidate, onBac
     </Panel>
   ) : null
 
+  const devBar = process.env.NODE_ENV === 'development' ? (
+    <DevDaySkipBar offset={devDayOffset} onAdvance={() => setDevDayOffset(o => o + 1)} onReset={() => setDevDayOffset(0)} />
+  ) : null
+
   return (
     <div className="game-screen theme-deep ln-scene-asteroid-discovery" data-testid="asteroid-discovery-screen">
       <TopBar eyebrow="INSTRUMENT DATA FEED · DAILY DOWNLINK" title={candidate.tempDesig} onBack={onBack} />
-      {coach.visible && <AsteroidDiscoveryCoach onDismiss={coach.dismiss} />}
-      {process.env.NODE_ENV === 'development' && (
-        <div style={{ position: 'absolute', top: 72, left: 'var(--ln-s-4)', right: 'var(--ln-s-4)', zIndex: 5 }}>
-          <DevDaySkipBar offset={devDayOffset} onAdvance={() => setDevDayOffset(o => o + 1)} onReset={() => setDevDayOffset(0)} />
-        </div>
-      )}
       {isDesktop ? (
         <div data-testid="asteroid-discovery-desktop-grid" style={{ position: 'absolute', inset: 0, top: 72, display: 'grid', gridTemplateColumns: '55% 45%', gap: 16, padding: '0 var(--ln-s-4) var(--ln-s-4)' }}>
           <div style={{ overflowY: 'auto' }} data-ui-zone={UI_ZONES.screenContent}>
+            {coach.visible && <AsteroidDiscoveryCoach onDismiss={coach.dismiss} />}
+            {devBar}
             {dataPanel}
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12, overflowY: 'auto' }}>
@@ -263,9 +291,15 @@ export default function AsteroidDiscoveryScreen({ player, visualCandidate, onBac
       ) : (
         <>
           <div className="screen-scroll" data-ui-zone={UI_ZONES.screenContent}>
+            {coach.visible && <AsteroidDiscoveryCoach onDismiss={coach.dismiss} />}
+            {devBar}
             {dataPanel}
             {payoffPanel && <div style={{ marginTop: 12 }}>{payoffPanel}</div>}
-            <div style={{ marginTop: 12 }}>
+            {/* .screen-scroll's shared padding-bottom (24px) is shorter than
+                this screen's sticky 3-button verdict bar (~78px); pad the
+                last block locally rather than widening the shared class,
+                which other screens also rely on. */}
+            <div style={{ marginTop: 12, paddingBottom: 64 }}>
               <CommentsPanel recordType="classification" recordId={candidate.id} />
             </div>
           </div>
