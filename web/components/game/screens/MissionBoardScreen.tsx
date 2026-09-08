@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, type CSSProperties } from 'react'
 import TopBar from '@/components/ui/TopBar'
 import { feasibleTargetsFor, FREE_OPS_START_MISSIONS_DONE, isMissionBoardMission, tutorialClientMissionOptions } from '@/lib/data'
 import type { DailyClientPool } from '@/lib/data'
@@ -19,6 +19,7 @@ import { HubWorldBackground } from '@/components/game/hub/HubWorldBackground'
 import { HangarModules, LaunchpadModules } from '@/components/game/hub/EarthBaseModules'
 import { useTimeOfDay } from '@/lib/hooks/useTimeOfDay'
 import { ChevronLeft, ChevronRight, RadioTower } from 'lucide-react'
+import ClientMark from '@/components/ui/ClientMark'
 
 const SHORT_LANDSCAPE_CONTENT_TOP = 142
 
@@ -194,12 +195,26 @@ export default function MissionBoardScreen({ onBack, onPick, missionsDone, freeO
                 className="mission-relay-yard__station"
                 data-testid={`mission-card-${previewModel.mission.id}`}
                 data-mission-id={previewModel.mission.id}
+                style={{ '--relay-accent': previewModel.client?.color ?? 'var(--ln-cyan)' } as CSSProperties}
               >
                 <div className="mission-relay-yard__station-label"><RadioTower size={16} /> Client relay · {String(selectedIndex + 1).padStart(2, '0')} / {String(cardModels.length).padStart(2, '0')}</div>
+                <div className="mission-relay-yard__identity" data-testid={`mission-card-${previewModel.mission.id}-client-identity`}>
+                  <ClientMark
+                    initial={previewModel.client?.initial ?? 'OP'}
+                    color={previewModel.client?.color ?? 'var(--ln-cyan)'}
+                    uiRole={previewModel.client?.uiRole ?? 'starter'}
+                    clientId={previewModel.client?.id}
+                    size={64}
+                  />
+                  <div>
+                    <span className="mission-relay-yard__identity-label">Client signal</span>
+                    <strong>{previewModel.client?.name ?? 'Earth base operation'}</strong>
+                    <small>{previewModel.client?.projectType ?? 'Self-directed program work'}</small>
+                  </div>
+                </div>
                 <img src="/parts/comms_relay_t1.png" alt="" aria-hidden="true" />
                 <div className="mission-relay-yard__contract">
                   <strong>{previewModel.mission.title}</strong>
-                  <span>{previewModel.client?.name ?? 'Earth base operation'}</span>
                   <small>{previewModel.targetCount} reachable targets · {Object.values(previewModel.mission.requires.minerals).reduce((total, amount) => total + amount, 0)}U cargo · <b>{formatCurrency(previewModel.displayPayout, { compact: true })}</b></small>
                 </div>
               </div>
