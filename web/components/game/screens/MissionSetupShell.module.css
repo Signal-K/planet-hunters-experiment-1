@@ -16,10 +16,14 @@
   overflow: hidden !important;
 }
 
+.shell.shell::before {
+  display: none !important;
+}
+
 .shell .container.container {
   position: relative !important;
   display: grid !important;
-  grid-template: minmax(0, 1fr) auto / minmax(0, 1fr) !important;
+  grid-template: 128px minmax(0, 1fr) 64px / minmax(0, 1fr) !important;
   box-sizing: border-box;
   width: 100% !important;
   height: 100% !important;
@@ -32,39 +36,40 @@
   box-shadow: none !important;
 }
 
-.shell .body.body {
+.coachSlot {
   grid-area: 1 / 1;
+  min-width: 0;
+  min-height: 0;
+  pointer-events: none;
+  border: 0;
+}
+
+.shell .body.body {
+  grid-area: 2 / 1;
   box-sizing: border-box;
   width: 100% !important;
   height: auto !important;
   min-width: 0;
   min-height: 0;
-  padding-top: 0 !important;
+  padding: 0 !important;
   overflow: hidden !important;
-}
-
-.shell:global(.mission-setup-screen--coached) .body.body {
-  padding-top: 122px !important;
-}
-
-.shell:global(.mission-setup-screen--coach-manual) .body.body {
-  padding-top: 174px !important;
 }
 
 .shell .actions.actions {
   position: static !important;
   inset: auto !important;
-  grid-area: 2 / 1;
+  grid-area: 3 / 1;
   z-index: 8;
   display: flex !important;
   align-items: center;
   justify-content: flex-end;
   box-sizing: border-box;
   width: 100% !important;
-  min-height: 56px;
-  padding: 8px 16px !important;
-  border-top: 1px solid var(--ln-hairline) !important;
-  background: color-mix(in srgb, var(--ln-panel) 96%, transparent) !important;
+  height: 64px;
+  min-height: 64px;
+  padding: 8px 0 !important;
+  border: 0 !important;
+  background: transparent !important;
   pointer-events: auto;
 }
 
@@ -79,6 +84,35 @@
   width: auto !important;
   margin: 0;
   gap: 8px;
+}
+
+.shell .actions :global(.mission-relay-yard__commit) {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-rows: auto auto;
+  align-items: center;
+  column-gap: 16px;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  text-align: left;
+}
+
+.shell .actions :global(.mission-relay-yard__commit p) {
+  grid-area: 1 / 1;
+}
+
+.shell .actions :global(.mission-relay-yard__commit > span) {
+  grid-area: 2 / 1;
+}
+
+.shell .actions :global(.mission-relay-yard__commit button) {
+  grid-area: 1 / 2 / 3 / 3;
+  width: auto;
+  min-width: 240px;
+  margin: 0;
 }
 
 .shell:global(.mission-setup-screen--mission) :global(.mission-relay-yard) {
@@ -103,6 +137,14 @@
   min-height: 0;
 }
 
+.shell:global(.mission-setup-screen--target) :global(.mission-board-detail) {
+  background: var(--ln-panel-2) !important;
+}
+
+.shell:global(.mission-setup-screen--target) :global(.target-map-frame) {
+  background: var(--ln-void) !important;
+}
+
 .shell:global(.mission-setup-screen--rocket) .body.body {
   display: grid !important;
   grid-template-columns: minmax(0, 1.22fr) minmax(300px, .78fr) !important;
@@ -120,8 +162,28 @@
   align-self: stretch !important;
 }
 
+.shell:global(.mission-setup-screen--rocket) :global(.rocket-vehicle-frame) {
+  background: var(--ln-surface) !important;
+}
+
+.shell:global(.mission-setup-screen--rocket) :global(.rocket-summary-card) {
+  background: var(--ln-panel-2) !important;
+}
+
 .shell:global(.mission-setup-screen--assembly) :global(.assembly-frame) {
-  background: var(--ln-panel) !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  border: 0 !important;
+  background: transparent !important;
+}
+
+.shell:global(.mission-setup-screen--assembly) :global(.launch-clearance-panel) {
+  box-sizing: border-box;
+  padding: 16px;
+  border: 1px solid var(--ln-cyan-border);
+  border-radius: var(--ln-r-lg);
+  background: var(--ln-panel);
+  box-shadow: var(--ln-shadow-card);
 }
 
 @media (orientation: landscape) and (max-height: 600px) {
@@ -129,23 +191,34 @@
     padding: 70px 12px 12px !important;
   }
 
-  .shell:global(.mission-setup-screen--coached) .body.body {
-    padding-top: 96px !important;
+  .shell .container.container {
+    grid-template-rows: 112px minmax(0, 1fr) 48px !important;
   }
 
-  .shell:global(.mission-setup-screen--coach-manual) .body.body {
-    padding-top: 138px !important;
-  }
-
-  .shell:global(.mission-setup-screen--mission):global(.mission-setup-screen--coached) :global(.mission-relay-yard__console) {
-    width: calc((100% - 20px) / .66) !important;
+  .shell:global(.mission-setup-screen--mission) :global(.mission-relay-yard__console) {
+    width: calc((100% - 20px) / .45) !important;
     max-width: none;
-    transform: translate(-50%, -50%) scale(.66);
+    transform: translate(-50%, -50%) scale(.45);
   }
 
   .shell .actions.actions {
-    min-height: 44px;
+    height: 48px;
+    min-height: 48px;
     padding: 6px 10px !important;
+  }
+
+  .shell .actions :global(.mission-relay-yard__commit p) {
+    -webkit-line-clamp: 2;
+    display: -webkit-box;
+    overflow: hidden;
+    -webkit-box-orient: vertical;
+    font-size: 9px;
+  }
+
+  .shell .actions :global(.mission-relay-yard__commit button) {
+    min-width: 190px;
+    padding: 7px 10px;
+    font-size: 9px;
   }
 }
 
@@ -163,5 +236,20 @@
 
   .shell .actions :global(.rocket-actions) > button {
     flex: 1;
+  }
+
+  .shell .actions :global(.mission-relay-yard__commit) {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .shell .actions :global(.mission-relay-yard__commit p),
+  .shell .actions :global(.mission-relay-yard__commit > span) {
+    display: none;
+  }
+
+  .shell .actions :global(.mission-relay-yard__commit button) {
+    grid-area: 1 / 1;
+    width: 100%;
+    min-width: 0;
   }
 }

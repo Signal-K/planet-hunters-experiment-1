@@ -7,6 +7,25 @@ import styles from './MissionSetupShell.module.css'
 
 type DivProps = React.ComponentPropsWithoutRef<'div'>
 
+interface MissionSetupStepProps {
+  children: React.ReactNode
+  actions: React.ReactNode
+  className?: string
+}
+
+export function MissionSetupStep({ children, actions, className }: MissionSetupStepProps) {
+  return (
+    <>
+      <div className={[styles.body, 'mission-creator-body', className].filter(Boolean).join(' ')}>
+        {children}
+      </div>
+      <div className={[styles.actions, 'mission-creator-actions'].join(' ')} data-ui-zone={UI_ZONES.bottomActions}>
+        {actions}
+      </div>
+    </>
+  )
+}
+
 export function MissionSetupFrame({ className, ...props }: DivProps) {
   return (
     <div
@@ -52,7 +71,6 @@ interface MissionSetupShellBaseProps {
   coachManual?: boolean
   children: React.ReactNode
   sceneBackground?: React.ReactNode
-  actions?: React.ReactNode
   levelBadge?: string
   francs?: number
 }
@@ -68,7 +86,6 @@ export default function MissionSetupShell({
   coachManual,
   children,
   sceneBackground,
-  actions,
   levelBadge,
   francs,
 }: MissionSetupShellProps) {
@@ -102,14 +119,8 @@ export default function MissionSetupShell({
         data-ui-zone={UI_ZONES.screenContent}
       >
         <div className={[styles.container, 'mission-creator-container'].join(' ')} data-testid="mission-creator-container">
-          <div className={[styles.body, 'mission-creator-body'].join(' ')}>
-            {children}
-          </div>
-          {actions && (
-            <div className={[styles.actions, 'mission-creator-actions'].join(' ')} data-ui-zone={UI_ZONES.bottomActions}>
-              {actions}
-            </div>
-          )}
+          <div className={styles.coachSlot} data-testid="mission-setup-coach-slot" aria-hidden="true" />
+          {children}
         </div>
       </div>
     </div>

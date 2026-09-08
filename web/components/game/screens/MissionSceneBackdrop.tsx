@@ -13,5 +13,9 @@ export default function MissionSceneBackdrop({
 }: {
   composition?: 'earth-base-wide' | 'earth-base-pad'
 }) {
-  return <HubWorldBackground phase="day" composition={composition} />
+  return (
+    <div data-testid="mission-setup-background" style={{ position: 'absolute', inset: 0 }}>
+      <HubWorldBackground phase="day" composition={composition} />
+    </div>
+  )
 }

@@ -1,7 +1,6 @@
 'use client'
 
 import { type ReactNode, useMemo, useEffect, useRef, useState } from 'react'
-import { usePathname } from 'next/navigation'
 import { GameProvider, useGame } from '@/game-context'
 import { M1_STEPS, M2_STEPS, M3_STEPS } from '@/lib/data'
 import { FREE_OPS_START_MISSIONS_DONE } from '@/lib/data/mission-generator'
@@ -27,10 +26,10 @@ import { isSurveySafeScreen } from '@/lib/survey-gating'
 import { LOCATION_SCREENS, type Screen } from '@/lib/game-types'
 import { HubWorldBackground } from '@/components/game/hub/HubWorldBackground'
 import { useTimeOfDay } from '@/lib/hooks/useTimeOfDay'
+import { ScreenContent } from '@/components/game/GameScreenRouter'
 
 function GameChrome({ children }: { children: ReactNode }) {
   const game = useGame()
-  const pathname = usePathname()
   const arrivalScheduledFor = useRef<number | null>(null)
   const returnScheduledKey = useRef<string | null>(null)
   const [settingsOpen, setSettingsOpen] = useState(false)
@@ -109,8 +108,10 @@ function GameChrome({ children }: { children: ReactNode }) {
     return []
   }, [game.player.missionsDone, game.tutorial])
 
-  // Derive current screen from URL (reliable even before state syncs)
-  const currentScreen = pathname.replace(/^\/game\//, '')
+  // The game state changes synchronously, while the URL follows in a client
+  // navigation. Render the persistent scene from that state so route segment
+  // replacement cannot tear down and recreate the background between steps.
+  const currentScreen = game.screen
   const coach = useMemo(() => {
     const routeCoach = coachSteps.find(step => step.screen === currentScreen && !game.doneSteps[step.id]) ?? null
     if (currentScreen === 'hub' && game.subsurfaceView) return null
@@ -215,8 +216,14 @@ function GameChrome({ children }: { children: ReactNode }) {
           <FriendsButton onClick={() => setFriendsOpen(true)} />
         )}
 
-        {/* Current screen (injected by [screen]/page.tsx) */}
-        <div className="game-screen-area">{children}</div>
+        {/* The route page remains mounted below as a URL/state synchronizer,
+            but the visible game tree belongs to this persistent layout. */}
+        <div className="game-screen-area">
+          {!game.authGateOpen && (
+            <ScreenContent screen={game.screen} game={game} hasCoach={hasCoach} />
+          )}
+        </div>
+        {children}
 
         <ToastLayer toasts={game.toasts} onDismiss={game.dismissToast} />
         {showFeedback && <FeedbackButton />}

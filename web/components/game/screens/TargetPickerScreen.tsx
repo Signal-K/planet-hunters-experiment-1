@@ -8,20 +8,19 @@ import type { Catalog } from '@/lib/catalog'
 import TutorialHighlight from '@/components/game/TutorialHighlight'
 import GalaxyMap from '@/components/TargetPicker/GalaxyMap'
 import MineralChip from '@/components/game/MineralChip'
-import MissionSetupShell, {
+import {
   MissionSetupCard,
   MissionSetupFrame,
+  MissionSetupStep,
 } from '@/components/game/screens/MissionSetupShell'
 import { useIsNarrowViewport } from '@/lib/hooks/useIsNarrowViewport'
 import { ChevronDown, ChevronUp } from 'lucide-react'
-import MissionSceneBackdrop from '@/components/game/screens/MissionSceneBackdrop'
 
 const RARITY_RANK: Record<string, number> = { exotic: 3, rare: 2, uncommon: 1, common: 0 }
 const DEPOSIT_MIX_CAP = 6
 
 interface TargetPickerScreenProps {
   mission: Mission
-  onBack: () => void
   onPick: (id: string) => void
   hasCoach?: boolean
   catalog: Catalog
@@ -92,7 +91,7 @@ function PlanetSVG({ id, size }: { id: string; size: number }) {
   )
 }
 
-export default function TargetPickerScreen({ mission, onBack, onPick, hasCoach, catalog, missionsDone, launchpadUpgraded = false, unlockedSkillNodes = [] }: TargetPickerScreenProps) {
+export default function TargetPickerScreen({ mission, onPick, hasCoach, catalog, missionsDone, launchpadUpgraded = false, unlockedSkillNodes = [] }: TargetPickerScreenProps) {
   const { targets: TARGETS, minerals: MINERAL_META, parts } = catalog
   const compat = feasibleTargetsFor(mission, TARGETS, parts, missionsDone, launchpadUpgraded, unlockedSkillNodes)
   const compatIds = new Set(compat.map(t => t.id))
@@ -133,13 +132,7 @@ export default function TargetPickerScreen({ mission, onBack, onPick, hasCoach, 
   const depositMixOverflow = Math.max(0, depositMixAll.length - DEPOSIT_MIX_CAP)
 
   return (
-    <MissionSetupShell
-      className="mission-setup-screen--target"
-      eyebrow={mission.title.toUpperCase()}
-      title="Pick Target"
-      onBack={onBack}
-      hasCoach={hasCoach}
-      sceneBackground={<MissionSceneBackdrop />}
+    <MissionSetupStep
       actions={pickedTarget && (
         <PrimaryBtn
           testId="continue-build-btn"
@@ -323,6 +316,6 @@ export default function TargetPickerScreen({ mission, onBack, onPick, hasCoach, 
       </div>
       </div>
 
-    </MissionSetupShell>
+    </MissionSetupStep>
   )
 }

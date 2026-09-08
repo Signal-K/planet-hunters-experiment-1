@@ -2,7 +2,7 @@ import React from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, expect, it, vi } from 'vitest'
 
-import MissionSetupShell from './MissionSetupShell'
+import MissionSetupShell, { MissionSetupStep } from './MissionSetupShell'
 
 describe('MissionSetupShell', () => {
   it('owns one shared content frame, body, and non-overlaid action row', () => {
@@ -13,14 +13,16 @@ describe('MissionSetupShell', () => {
         onBack={vi.fn()}
         hasCoach
         sceneBackground={<div data-testid="test-scene" />}
-        actions={<button type="button">Continue</button>}
       >
-        <div data-testid="test-step">Step content</div>
+        <MissionSetupStep actions={<button type="button">Continue</button>}>
+          <div data-testid="test-step">Step content</div>
+        </MissionSetupStep>
       </MissionSetupShell>,
     )
 
     expect(markup.match(/data-mission-setup-shell="true"/g)).toHaveLength(1)
     expect(markup.match(/data-testid="mission-creator-container"/g)).toHaveLength(1)
+    expect(markup.match(/data-testid="mission-setup-coach-slot"/g)).toHaveLength(1)
     expect(markup.match(/mission-creator-body/g)).toHaveLength(1)
     expect(markup.match(/mission-creator-actions/g)).toHaveLength(1)
     expect(markup).toContain('mission-setup-screen--coached')

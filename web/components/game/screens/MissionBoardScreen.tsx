@@ -6,12 +6,9 @@ import MissionBoardCompleteState from '@/components/game/MissionBoardCompleteSta
 import type { CrewMember } from '@/lib/data'
 import type { Player } from '@/lib/game-types'
 import type { SceneScope } from '@/lib/scene-scope'
-import { HubWorldBackground } from '@/components/game/hub/HubWorldBackground'
-import { HangarModules, LaunchpadModules } from '@/components/game/hub/EarthBaseModules'
-import { useTimeOfDay } from '@/lib/hooks/useTimeOfDay'
 import { useMissionRelayModels } from '@/lib/hooks/useMissionRelayModels'
-import MissionRelayCard from '@/components/game/MissionRelayCard'
-import MissionSetupShell from '@/components/game/screens/MissionSetupShell'
+import MissionRelayCard, { MissionRelayCommit } from '@/components/game/MissionRelayCard'
+import { MissionSetupStep } from '@/components/game/screens/MissionSetupShell'
 
 interface MissionBoardScreenProps {
   onBack: () => void
@@ -19,7 +16,6 @@ interface MissionBoardScreenProps {
   missionsDone: number
   freeOperations: boolean
   hasCoach?: boolean
-  coachManual?: boolean
   catalog: Catalog
   clientMissions?: Record<string, number>
   clientCooldowns?: Record<string, number>
@@ -30,9 +26,7 @@ interface MissionBoardScreenProps {
   sceneScope?: SceneScope
 }
 
-export default function MissionBoardScreen({ onBack, onPick, missionsDone, freeOperations, hasCoach, coachManual = false, catalog, francs, crew = [], player, sceneScope = { kind: 'earth-base', id: 'earth-base', label: 'Base' } }: MissionBoardScreenProps) {
-  const { phase: skyPhase } = useTimeOfDay()
-
+export default function MissionBoardScreen({ onBack, onPick, missionsDone, freeOperations, hasCoach, catalog, francs, crew = [], player, sceneScope = { kind: 'earth-base', id: 'earth-base', label: 'Base' } }: MissionBoardScreenProps) {
   const {
     cardModels,
     previewModel,
@@ -44,33 +38,22 @@ export default function MissionBoardScreen({ onBack, onPick, missionsDone, freeO
   } = useMissionRelayModels({ catalog, missionsDone, freeOperations, hasCoach, francs, crew, player, sceneScope })
 
   if (onboardingComplete) {
-    return <MissionBoardCompleteState onBack={onBack} />
+    return (
+      <MissionSetupStep actions={<span />}>
+        <MissionBoardCompleteState onBack={onBack} />
+      </MissionSetupStep>
+    )
   }
 
   return (
-    <MissionSetupShell
-      className="mission-setup-screen--mission"
-      eyebrow={`LAUNCHPAD · ${freeOperations ? `${sceneScope.label.toUpperCase()} · FREE OPS` : `${sceneScope.label.toUpperCase()} · L${missionsDone + 1}`}`}
-      title="Mission Dispatch"
-      onBack={onBack}
-      hasCoach={hasCoach}
-      coachManual={coachManual}
-      levelBadge={`LV. ${missionsDone + 1}`}
-      francs={francs}
-      sceneBackground={(
-        <div className="launchpad-visual-scene">
-          <div className="launchpad-scene-zoom">
-            <HubWorldBackground phase={skyPhase} composition="earth-base-pad" />
-          </div>
-          <div className="launchpad-scene-object launchpad-tower">
-            <span className="launchpad-tower-art"><LaunchpadModules /></span>
-          </div>
-          <div className="launchpad-scene-object launchpad-rocket">
-            <HangarModules className="launchpad-hangar-art" />
-          </div>
-        </div>
-      )}
-    >
+    <MissionSetupStep actions={(
+      <MissionRelayCommit
+        previewModel={previewModel}
+        onPick={onPick}
+        tutorialMissionInProgress={tutorialMissionInProgress}
+        missionStartBlockedLabel={missionStartBlockedLabel}
+      />
+    )}>
       <div className="mission-relay-yard" data-testid="mission-board-section-client">
         <MissionRelayCard
           previewModel={previewModel}
@@ -81,8 +64,9 @@ export default function MissionBoardScreen({ onBack, onPick, missionsDone, freeO
           onPick={onPick}
           tutorialMissionInProgress={tutorialMissionInProgress}
           missionStartBlockedLabel={missionStartBlockedLabel}
+          showCommit={false}
         />
       </div>
-    </MissionSetupShell>
+    </MissionSetupStep>
   )
 }

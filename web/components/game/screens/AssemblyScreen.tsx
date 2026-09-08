@@ -6,14 +6,15 @@ import { ROCKET_MODELS, validateBuild } from '@/lib/data'
 import type { Catalog } from '@/lib/catalog'
 import TutorialHighlight from '@/components/game/TutorialHighlight'
 import StatCard from '@/components/ui/StatCard'
-import MissionSetupShell, {
+import { PrimaryBtn } from '@/components/ui/Button'
+import {
   MissionSetupFrame,
+  MissionSetupStep,
 } from '@/components/game/screens/MissionSetupShell'
 import { rocketModelForConfig } from '@/lib/data/rockets'
 import { crewRequirementStatus } from '@/lib/systems/AcademySystem'
 import { useIsShortViewport } from '@/lib/hooks/useIsShortViewport'
 import { useIsNarrowViewport } from '@/lib/hooks/useIsNarrowViewport'
-import MissionSceneBackdrop from '@/components/game/screens/MissionSceneBackdrop'
 
 interface AssemblyScreenProps {
   mission: Mission
@@ -23,7 +24,6 @@ interface AssemblyScreenProps {
   missionsDone: number
   unlockedSkillNodes: string[]
   onLaunch: () => void
-  onBack: () => void
   hasCoach?: boolean
   coachManual?: boolean
   deliveryTargetName?: string
@@ -52,15 +52,11 @@ export default function AssemblyScreen(props: AssemblyScreenProps) {
   const compact = isShortViewport || isNarrowViewport
 
   return (
-    <MissionSetupShell
-      className="mission-setup-screen--assembly"
-      eyebrow="LAUNCHPAD · PREFLIGHT"
-      title="Confirm Rocket"
-      onBack={props.onBack}
-      hasCoach={props.hasCoach}
-      coachManual={props.coachManual}
-      sceneBackground={<MissionSceneBackdrop composition="earth-base-pad" />}
-    >
+    <MissionSetupStep actions={(
+      <PrimaryBtn testId="launch-btn" disabled={!launchReady} onClick={props.onLaunch}>
+        Start launch sequence
+      </PrimaryBtn>
+    )}>
       <MissionSetupFrame className="assembly-frame assembly-preflight-scene" style={{
         display: 'flex',
         flexDirection: 'column',
@@ -69,19 +65,18 @@ export default function AssemblyScreen(props: AssemblyScreenProps) {
         gap: 8,
         padding: 12,
       }}>
-        {highlightContent && <TutorialHighlight />}
         <LaunchClearance
           mission={props.mission}
           target={props.target}
           deliveryTargetName={props.deliveryTargetName}
           rocket={selectedRocket}
           ready={launchReady}
-          onLaunch={props.onLaunch}
           compact={compact}
+          highlight={highlightContent}
         />
 
       </MissionSetupFrame>
-    </MissionSetupShell>
+    </MissionSetupStep>
   )
 }
 
@@ -91,22 +86,23 @@ function LaunchClearance({
   deliveryTargetName,
   rocket,
   ready,
-  onLaunch,
   compact = false,
+  highlight = false,
 }: {
   mission: Mission
   target: Target
   deliveryTargetName?: string
   rocket: ReturnType<typeof rocketModelForConfig>
   ready: boolean
-  onLaunch: () => void
   compact?: boolean
+  highlight?: boolean
 }) {
   const stops = deliveryTargetName
     ? ['Base', target.name, deliveryTargetName, 'Base']
     : ['Base', target.name]
   return (
-    <div data-testid="assembly-rocket-cutaway" style={{ width: '100%', maxWidth: 620, display: 'flex', flexDirection: 'column', gap: compact ? 6 : 10 }}>
+    <div className="launch-clearance-panel" data-testid="assembly-rocket-cutaway" style={{ position: 'relative', width: '100%', maxWidth: 620, display: 'flex', flexDirection: 'column', gap: compact ? 6 : 10 }}>
+      {highlight && <TutorialHighlight borderRadius={10} />}
       {!compact && <PadElevation rocketImageSrc={rocket.img} />}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 14 }}>
         <div>
@@ -117,27 +113,6 @@ function LaunchClearance({
             {rocket.name}
           </div>
           {!compact && <div style={{ marginTop: 3, font: '11px var(--ln-font-body)', color: 'var(--ln-text-dim)' }}>{mission.title} · single-use vehicle</div>}
-          <button
-            type="button"
-            data-testid="launch-btn"
-            disabled={!ready}
-            onClick={onLaunch}
-            style={{
-              marginTop: compact ? 6 : 8,
-              padding: compact ? '7px 9px' : '8px 12px',
-              border: '1px solid var(--ln-cyan)',
-              borderRadius: 4,
-              background: ready ? 'var(--ln-cyan)' : 'var(--ln-panel-2)',
-              color: ready ? 'var(--ln-void)' : 'var(--ln-text-dim)',
-              font: '800 10px var(--ln-font-display)',
-              letterSpacing: '0.12em',
-              textTransform: 'uppercase',
-              cursor: ready ? 'pointer' : 'not-allowed',
-              opacity: ready ? 1 : 0.55,
-            }}
-          >
-            Start launch sequence
-          </button>
         </div>
         <div style={{ width: compact ? 36 : 54, height: compact ? 36 : 54, borderRadius: 999, display: 'grid', placeItems: 'center', flexShrink: 0, border: `2px solid ${ready ? 'var(--ln-ok)' : 'var(--ln-crimson)'}`, color: ready ? 'var(--ln-ok)' : 'var(--ln-crimson)', background: ready ? 'var(--ln-ok-soft)' : 'var(--ln-crimson-soft)' }}>
           <Check size={compact ? 16 : 24} />

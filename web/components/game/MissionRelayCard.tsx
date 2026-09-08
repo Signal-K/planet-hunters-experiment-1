@@ -15,6 +15,39 @@ interface MissionRelayCardProps {
   onPick: (id: string) => void
   tutorialMissionInProgress: boolean
   missionStartBlockedLabel: string
+  showCommit?: boolean
+}
+
+interface MissionRelayCommitProps {
+  previewModel: MissionRelayCardModel | null
+  onPick: (id: string) => void
+  tutorialMissionInProgress: boolean
+  missionStartBlockedLabel: string
+}
+
+export function MissionRelayCommit({
+  previewModel,
+  onPick,
+  tutorialMissionInProgress,
+  missionStartBlockedLabel,
+}: MissionRelayCommitProps) {
+  if (!previewModel) return <span />
+
+  return (
+    <div className="mission-relay-yard__commit">
+      <p>{previewModel.mission.brief}</p>
+      {previewModel.crewStatus && <span>CREW · {previewModel.crewStatus}</span>}
+      <button
+        type="button"
+        data-testid={`mission-detail-cta-${previewModel.mission.id}`}
+        data-mission-card-cta={`mission-card-${previewModel.mission.id}-cta`}
+        disabled={!previewModel.unlocked || tutorialMissionInProgress}
+        onClick={() => { if (!tutorialMissionInProgress) onPick(previewModel.mission.id) }}
+      >
+        {tutorialMissionInProgress ? missionStartBlockedLabel : `Lock contract · ${previewModel.targetCount} targets`}
+      </button>
+    </div>
+  )
 }
 
 /** The client-relay console itself — cycle buttons either side of the
@@ -30,6 +63,7 @@ export default function MissionRelayCard({
   onPick,
   tutorialMissionInProgress,
   missionStartBlockedLabel,
+  showCommit = true,
 }: MissionRelayCardProps) {
   if (!previewModel) {
     return <div className="mission-relay-yard__empty">No active client signal from this location.</div>
@@ -79,19 +113,14 @@ export default function MissionRelayCard({
       >
         <ChevronRight size={24} />
       </button>
-      <div className="mission-relay-yard__commit">
-        <p>{previewModel.mission.brief}</p>
-        {previewModel.crewStatus && <span>CREW · {previewModel.crewStatus}</span>}
-        <button
-          type="button"
-          data-testid={`mission-detail-cta-${previewModel.mission.id}`}
-          data-mission-card-cta={`mission-card-${previewModel.mission.id}-cta`}
-          disabled={!previewModel.unlocked || tutorialMissionInProgress}
-          onClick={() => { if (!tutorialMissionInProgress) onPick(previewModel.mission.id) }}
-        >
-          {tutorialMissionInProgress ? missionStartBlockedLabel : `Lock contract · ${previewModel.targetCount} targets`}
-        </button>
-      </div>
+      {showCommit && (
+        <MissionRelayCommit
+          previewModel={previewModel}
+          onPick={onPick}
+          tutorialMissionInProgress={tutorialMissionInProgress}
+          missionStartBlockedLabel={missionStartBlockedLabel}
+        />
+      )}
     </div>
   )
 }

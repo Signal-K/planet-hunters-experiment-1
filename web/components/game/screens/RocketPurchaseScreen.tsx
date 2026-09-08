@@ -7,15 +7,15 @@ import { ROCKET_MODELS } from '@/lib/data'
 import TutorialHighlight from '@/components/game/TutorialHighlight'
 import StatCard from '@/components/ui/StatCard'
 import CostSummaryRow from '@/components/game/CostSummaryRow'
-import MissionSetupShell, {
+import {
   MissionSetupCard,
   MissionSetupFrame,
+  MissionSetupStep,
 } from '@/components/game/screens/MissionSetupShell'
 import { formatCurrency } from '@/lib/format'
 import { getRequiredRocketModel } from '@/lib/rockets'
 import { calibrateOnboardingPayout } from '@/lib/data'
 import { recipeIsAffordable, rocketCompositionForId } from '@/lib/data/rocket-composition'
-import MissionSceneBackdrop from '@/components/game/screens/MissionSceneBackdrop'
 
 function orbitLabel(maxOrbit: number): string {
   if (maxOrbit <= 3) return 'Near-Earth'
@@ -70,10 +70,9 @@ interface RocketPurchaseScreenProps {
   fabricatedParts: Record<string, number>
   onBack: () => void
   hasCoach?: boolean
-  coachManual?: boolean
 }
 
-export default function RocketPurchaseScreen({ missionsDone, francs, mission, deliveryTargetName, onPurchase, onFabricatePart, onAssembleFabricatedRocket, siloOnline, stash, fabricatedParts, onBack, hasCoach, coachManual }: RocketPurchaseScreenProps) {
+export default function RocketPurchaseScreen({ missionsDone, francs, mission, deliveryTargetName, onPurchase, onFabricatePart, onAssembleFabricatedRocket, siloOnline, stash, fabricatedParts, onBack, hasCoach }: RocketPurchaseScreenProps) {
   const [modulesOpen, setModulesOpen] = useState(true)
   const defaultRocket = getRequiredRocketModel(missionsDone)
   const availableRockets = ROCKET_MODELS.filter(model => !model.locked && model.missionsRequired <= missionsDone)
@@ -94,14 +93,7 @@ export default function RocketPurchaseScreen({ missionsDone, francs, mission, de
   ]
 
   return (
-    <MissionSetupShell
-      className="mission-setup-screen--rocket"
-      eyebrow="LAUNCHPAD · VEHICLE"
-      title="Select Rocket"
-      onBack={onBack}
-      hasCoach={hasCoach}
-      coachManual={coachManual}
-      sceneBackground={<MissionSceneBackdrop composition="earth-base-pad" />}
+    <MissionSetupStep
       actions={fabricationReady && siloOnline ? (
         <div className="rocket-actions">
           <GhostBtn full={false} onClick={onBack}>Back</GhostBtn>
@@ -294,6 +286,6 @@ export default function RocketPurchaseScreen({ missionsDone, francs, mission, de
             Rockets are single-use. Each mission requires a fresh vehicle.
           </div>
       </MissionSetupCard>
-    </MissionSetupShell>
+    </MissionSetupStep>
   )
 }
