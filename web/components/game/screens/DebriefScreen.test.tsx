@@ -206,7 +206,7 @@ describe('DebriefScreen own-program outcomes', () => {
     root.unmount()
   })
 
-  it('KES-282: collapses the two-tap resolve/collect ritual to one tap on an early onboarding mission', async () => {
+  it('KES-348: requires explicit vehicle teardown before an early onboarding ledger', async () => {
     const host = document.createElement('div')
     const root = createRoot(host)
     const onDone = vi.fn()
@@ -226,9 +226,14 @@ describe('DebriefScreen own-program outcomes', () => {
       )
     })
 
-    // The reveal/ledger is already showing on mount — no "Resolve Cargo" tap
-    // required — and the single visible action collects the payout.
-    expect(host.querySelector('[data-testid="resolve-cargo-btn"]')).toBeNull()
+    expect(host.querySelector('[data-testid="resolve-cargo-btn"]')).not.toBeNull()
+    expect(host.textContent).not.toContain('Ledger')
+
+    await act(async () => {
+      host.querySelector<HTMLButtonElement>('[data-testid="resolve-cargo-btn"]')
+        ?.dispatchEvent(new MouseEvent('click', { bubbles: true }))
+    })
+
     expect(host.textContent).toContain('Ledger')
     expect(host.textContent).not.toContain('Affinity')
     const collectBtn = host.querySelector<HTMLButtonElement>('[data-testid="collect-reward-btn"]')

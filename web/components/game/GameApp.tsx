@@ -10,6 +10,7 @@ import { ScreenContent } from '@/components/game/GameScreenRouter'
 import TutorialCoach from '@/components/game/TutorialCoach'
 import MissionTicker from '@/components/game/MissionTicker'
 import UnlockPopup from '@/components/game/UnlockPopup'
+import { TutorialCompleteSheet } from '@/components/game/TutorialCompleteSheet'
 import BottomTabBar from '@/components/layout/BottomTabBar'
 import BackendStatus from '@/components/game/BackendStatus'
 import LandnamSyncStatus from '@/components/game/LandnamSyncStatus'
@@ -271,7 +272,20 @@ function GameCanvas() {
             onSkip={() => game.skipTutorial(coachSteps.map(s => s.id))}
           />
         )}
-        {game.popup && game.screen !== 'market' && !game.authGateOpen && (
+        {game.popup === 'tutorial-complete' && !game.authGateOpen && (
+          <TutorialCompleteSheet
+            onDone={focuses => {
+              game.setPlayer(player => ({ ...player, programFocuses: focuses }))
+              game.setPopup(null)
+            }}
+            onBuildSilo={focuses => {
+              game.setPlayer(player => ({ ...player, programFocuses: focuses }))
+              game.setPopup(null)
+              game.go('build')
+            }}
+          />
+        )}
+        {game.popup && game.popup !== 'tutorial-complete' && game.screen !== 'market' && !game.authGateOpen && (
           <UnlockPopup
             kind={game.popup}
             onClose={() => {

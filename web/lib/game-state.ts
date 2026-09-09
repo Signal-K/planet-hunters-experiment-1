@@ -36,6 +36,7 @@ export const DEFAULT_STATE: GameState = {
     skillPoints: 0,
     unlockedSkillNodes: [],
     freeOperations: false,
+    programFocuses: [],
     clientMissions: {},
     completedMissions: [],
     clientStreaks: {},

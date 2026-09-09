@@ -682,7 +682,7 @@ export default function HubScreen({ player, rocketVariant = 'explorer', hasCoach
                   {player.activeMission ? (
                     <DockIconBtn testId="hub-resume-mission-btn" icon={<HistoryGlyph />} label="Resume" onClick={() => onOpenScene(player.missionPhase ?? 'transit')} accent />
                   ) : (
-                    <DockPrimaryBtn testId="hub-edit-build-btn" pulse={!editMode && player.placed.length < 4} onClick={() => setEditMode(v => !v)}>
+                    <DockPrimaryBtn testId="hub-edit-build-btn" onClick={() => setEditMode(v => !v)}>
                       {editMode ? 'Done' : 'Edit · Build'}
                     </DockPrimaryBtn>
                   )}
@@ -700,7 +700,7 @@ export default function HubScreen({ player, rocketVariant = 'explorer', hasCoach
                         <DockIconBtn icon={<HangarGlyph />} label="Hangar" onClick={() => onFocusBuilding('hangar')} />
                       )}
                       {player.placed.includes('launchpad') && !player.launchpadUpgraded && onUpgradeLaunchpad && (
-                        <DockIconBtn icon={<UpgradeGlyph />} label={`+${formatCurrency(LAUNCHPAD_UPGRADE_COST, { compact: true })}`} accent onClick={() => setConfirmingLaunchpadUpgrade(true)} />
+                        <DockIconBtn icon={<UpgradeGlyph />} label="UPGRADE" accent onClick={() => setConfirmingLaunchpadUpgrade(true)} />
                       )}
                     </>
                   )}

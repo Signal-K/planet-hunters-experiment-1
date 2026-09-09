@@ -69,9 +69,9 @@ export default function TutorialCoach({ stepIndex, steps, step, total, onManualN
         <div
           data-ui-zone={UI_ZONES.tutorialRail}
           data-testid="tutorial-coach-block"
-          style={missionSetupStep
-            ? { position: 'absolute', left: '50%', right: 'auto', top: 94, width: 'min(calc(100% - 56px), 1064px)', maxHeight: 160, zIndex: 98, pointerEvents: 'auto', overflowY: 'auto', transform: 'translateX(-50%)' }
-            : { position: 'absolute', left: 14, right: 14, top: coachRail.top, maxHeight: 160, zIndex: 98, pointerEvents: 'auto', overflowY: 'auto' }}
+          style={missionSetupStep && isDesktop
+            ? { position: 'absolute', left: 16, top: 94, width: 'min(calc(38% - 32px), 380px)', maxHeight: 190, zIndex: 98, pointerEvents: 'auto', overflowY: 'auto' }
+            : { position: 'absolute', right: 14, top: coachRail.top, width: 'min(calc(100% - 28px), 560px)', maxHeight: 190, zIndex: 98, pointerEvents: 'auto', overflowY: 'auto' }}
         >
           <div className="tutorial-coach-card tutorial-coach-card--manual" style={{
             background: 'linear-gradient(160deg, rgba(16,16,18,0.98) 0%, rgba(11,11,13,0.98) 100%)',
@@ -148,14 +148,15 @@ export default function TutorialCoach({ stepIndex, steps, step, total, onManualN
       <div
         data-ui-zone={UI_ZONES.tutorialRail}
         data-testid="tutorial-coach-block"
-        style={missionSetupStep
+        style={missionSetupStep && isDesktop
           ? {
-              position: 'absolute', left: '50%', right: 'auto', top: 94,
-              width: 'min(calc(100% - 56px), 1064px)', transform: 'translateX(-50%)',
+              position: 'absolute', left: 16, top: 94,
+              width: 'min(calc(38% - 32px), 380px)',
               zIndex: 98, pointerEvents: 'auto',
             }
           : {
-              position: 'absolute', left: 12, right: 12, top: coachRail.top,
+              position: 'absolute', right: 12, top: coachRail.top,
+              width: 'min(calc(100% - 24px), 560px)',
               zIndex: 98, pointerEvents: 'auto',
             }}
       >

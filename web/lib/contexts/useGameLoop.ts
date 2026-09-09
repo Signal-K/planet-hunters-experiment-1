@@ -641,7 +641,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
     enqueueSurvey('lnm_satellite_clarity', 1200)
   }, [setState])
 
-  const onDebriefDone = useCallback((rawTotal: number, _affinity = 0, consumed: Record<string, number> = {}, disposition?: 'store' | 'sell') => {
+  const onDebriefDone = useCallback((rawTotal: number, affinity = 0, consumed: Record<string, number> = {}, disposition?: 'store' | 'sell') => {
     const current = stateRef.current
     if (current.screen !== 'debrief' || !current.missionId || !current.targetId || !current.lastCargo) return
     // A self-directed ("free") haul lands in the stash on return; here the
@@ -696,7 +696,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
       const isProgramOperation = !!mission && isOwnProgramMission(mission)
       const clientMissions = { ...s.player.clientMissions }
       if (client && !isStoryMission) {
-        clientMissions[client] = (clientMissions[client] ?? 0) + 1
+        clientMissions[client] = (clientMissions[client] ?? 0) + Math.max(1, affinity)
       }
       const stash = { ...(s.player.stash ?? {}) }
       // A delivery-target contract already moved the minerals out of the ship

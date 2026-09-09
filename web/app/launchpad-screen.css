@@ -275,6 +275,19 @@ button.launchpad-scene-object { cursor: pointer; }
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 16px;
 }
+
+.launchpad-show-all-operations {
+  grid-column: 1 / -1;
+  min-height: 40px;
+  border: 1px solid var(--ln-cyan-border);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--ln-cyan);
+  font: 800 9px var(--ln-font-display);
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
 .launchpad-mission-choice {
   display: grid;
   min-width: 0;

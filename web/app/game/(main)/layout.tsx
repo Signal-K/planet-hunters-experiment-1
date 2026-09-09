@@ -243,7 +243,17 @@ function GameChrome({ children }: { children: ReactNode }) {
         )}
 
         {game.popup === 'tutorial-complete' && !game.authGateOpen && (
-          <TutorialCompleteSheet onDone={() => game.setPopup(null)} />
+          <TutorialCompleteSheet
+            onDone={focuses => {
+              game.setPlayer(player => ({ ...player, programFocuses: focuses }))
+              game.setPopup(null)
+            }}
+            onBuildSilo={focuses => {
+              game.setPlayer(player => ({ ...player, programFocuses: focuses }))
+              game.setPopup(null)
+              game.go('build')
+            }}
+          />
         )}
         {game.popup && game.popup !== 'tutorial-complete' && currentScreen !== 'market' && !game.authGateOpen && (
           <UnlockPopup

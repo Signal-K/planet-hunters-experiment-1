@@ -181,6 +181,8 @@ export interface SurfaceOpsState {
   sites: Record<string, SurfaceSiteProgress>
 }
 
+export type ProgramFocus = 'client-contracts' | 'mining' | 'instruments' | 'construction'
+
 export interface Player {
   francs: number
   // Set once per track (KES-264) when the standalone /demo sandbox's
@@ -237,6 +239,8 @@ export interface Player {
   skillPoints?: number
   unlockedSkillNodes?: string[]
   freeOperations: boolean
+  /** Operation areas chosen when guided onboarding hands the program to the player. */
+  programFocuses?: ProgramFocus[]
   debriefPending?: boolean
   /** The haul was settled into an off-world silo or sold before Earth return. */
   cargoSettledOffworld?: boolean

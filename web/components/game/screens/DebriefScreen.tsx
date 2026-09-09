@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState, type ReactNode } from 'react'
+import { useRef, useState, type ReactNode } from 'react'
 import type { Mission, Target, MineralMeta, Client, RocketConfig } from '@/lib/data'
 import { calibrateOnboardingPayout, FIRST_CREW_ARRIVAL_BONUS, isOwnProgramMission, isFreeHaulMission, rocketDisplayForConfig, rocketModelForConfig, loanInstalmentFor } from '@/lib/data'
 import { FREE_OPS_START_MISSIONS_DONE } from '@/lib/data/mission-generator'
@@ -54,19 +54,14 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
   // here instead of a fixed contract payout (KES-271). Storing needs a built
   // Mineral Vault; without one the haul can only be sold on return.
   const isFreeHaul = isFreeHaulMission(mission, cargo)
-  // KES-282: the "Resolve Cargo" tap only ever existed to gate the reveal
-  // animation — on every mission, including the player's very first, it forced
-  // a second real tap ("Collect Reward") to actually finish. During onboarding
-  // (same boundary ProgressionCard/useGameLoop use for "still in the tutorial
-  // sequence") we skip that gate and start already resolved, so the reveal
-  // plays on mount and one tap collects. Free hauls are excluded — they still
-  // need the resolve tap to expose the store-vs-sell choice.
   const isEarlyMission = (missionsDone ?? 0) < FREE_OPS_START_MISSIONS_DONE
-  const autoResolve = isEarlyMission && !isFreeHaul
   // The Transit Telescope is the payload, not the launch vehicle. It remains
   // in Earth orbit, so this completion must never use cargo-recovery imagery.
   const isOrbitalInstrumentDeployment = mission.payload?.type === 'satellite'
-  const [resolved, setResolved] = useState(autoResolve)
+  // An ordinary rocket must remain visibly intact until the player authorises
+  // teardown. Instrument deployments have no returning launch vehicle to
+  // dismantle, so their result can open directly.
+  const [resolved, setResolved] = useState(isOrbitalInstrumentDeployment)
   const [collecting, setCollecting] = useState(false)
   const collectingRef = useRef(false)
   const [disposition, setDisposition] = useState<'store' | 'sell'>(
@@ -75,11 +70,8 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
   const haulUnits = Object.values(cargo).reduce((sum, n) => sum + Math.max(0, n), 0)
   const overflowUnits = hasEarthStorage ? Math.max(0, (storageUsed ?? 0) - (storageCapacity ?? 0)) : haulUnits
   // Every current vehicle is single-use. Show teardown on every mission so the
-  // player sees stages dismantled even when no failure flag was raised.
+  // player sees stages dismantled after — never before — their explicit action.
   const [scrapping, setScrapping] = useState(false)
-  useEffect(() => {
-    if (autoResolve && !isOrbitalInstrumentDeployment) setScrapping(true)
-  }, [autoResolve, isOrbitalInstrumentDeployment])
   const rocketDisplay = rocketDisplayForConfig(rocket)
   const starterRocket = rocketModelForConfig(rocket)
   const recoveryMaterials = rocketStageRecoveryForId(starterRocket.id)
@@ -91,9 +83,7 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
   const client = mission.client ? clients[mission.client] : undefined
   const isStoryMission = !mission.deliveryTargetId && (mission.tag === 'STORY' || mission.payload?.type === 'satellite')
   const isProgramOperation = isOwnProgramMission(mission)
-  // Client level is updated from completed player-built work by the daily
-  // economy cycle. A player's repeated jobs no longer create a private
-  // affinity multiplier at debrief.
+  const affinityEarned = delivered && client && !isStoryMission ? Math.max(0, mission.payout.affinity) : 0
   const contractPayout = delivered ? mission.payout.francs : 0
   const rawTotal = contractPayout
   const calibratedTotal = calibrateOnboardingPayout(rawTotal, missionsDone ?? 0)
@@ -159,6 +149,7 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
                   <div style={{ fontFamily: 'var(--ln-font-display)', fontWeight: 800, fontSize: 15, color: 'var(--ln-text)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{client.name}</div>
                   <div style={{ fontFamily: 'var(--ln-font-mono)', fontSize: 10, color: 'var(--ln-text-muted)', letterSpacing: '0.08em', textTransform: 'uppercase', marginTop: 2 }}>Client work complete</div>
                 </div>
+                {affinityEarned > 0 && <strong style={{ color: 'var(--ln-cyan)', font: '800 14px var(--ln-font-mono)', whiteSpace: 'nowrap' }}>+{affinityEarned} AFFINITY</strong>}
               </div>
             </div>
           </Panel>
@@ -237,12 +228,12 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
                   <PayRow label="Transport fee · relay" value={transportFee} />
                 </>
               ) : (
-                <PayRow label={isStoryMission ? 'Mission funding' : `Order · ${client?.name ?? (isProgramOperation ? 'Program' : 'Client')}`} value={mission.payout.francs} />
+                <PayRow label={isStoryMission ? 'Mission funding' : 'Contract value'} value={mission.payout.francs} />
               )}
               {calibratedTotal > rawTotal && <PayRow label="Onboarding bonus" value={calibratedTotal - rawTotal} />}
               {crewArrivalBonus > 0 && <PayRow label={`First astronaut at ${target.name}`} value={crewArrivalBonus} />}
               <CostSummaryRow
-                label={rocketSource === 'fabricated' ? `${starterRocket.name} · silo fabrication` : `${starterRocket.name} · vehicle`}
+                label={rocketSource === 'fabricated' ? `Vehicle cost · ${starterRocket.name} · silo fabrication` : `Vehicle cost · ${starterRocket.name}`}
                 value={rocketSource === 'fabricated' ? 'Minerals committed' : formatCurrency(-vehicleCost, { signed: true })}
                 color={rocketSource === 'fabricated' ? 'var(--ln-cyan)' : 'var(--ln-crimson)'}
                 last={loanRepayment === 0}
@@ -274,15 +265,17 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
         )}
         {resolved && !isOrbitalInstrumentDeployment && (
           <Panel accent={hasEarthStorage ? 'var(--ln-ok)' : 'var(--ln-cyan)'} surface="solid" style={{ animation: 'unlock-in 0.35s ease-out' }}>
-            <div className="ln-section-label" style={{ marginBottom: 8 }}>Stage Recovery</div>
+            <div className="ln-section-label" style={{ marginBottom: 8 }}>Vehicle Recovery</div>
             <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 12, color: 'var(--ln-text-dim)', lineHeight: 1.45 }}>
-              {hasEarthStorage
+              {isEarlyMission && !hasEarthStorage
+                ? 'You can salvage parts once you build a silo.'
+                : hasEarthStorage
                 ? 'Boosters and the operating stage are dismantled into silo materials after this mission.'
                 : 'Boosters and the operating stage are dismantled, but a built Earth silo or vault is required to retain the materials.'}
             </div>
-            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 10 }}>
+            {(!isEarlyMission || hasEarthStorage) && <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 10 }}>
               {recoveryEntries.map(([id, amount]) => <MineralChip key={id} mineral={id} count={amount} meta={minerals[id]} />)}
-            </div>
+            </div>}
           </Panel>
         )}
         {/* Single incomplete note (client work only) — shown once, in both the
@@ -306,12 +299,13 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
             kind="cyan"
             full={false}
             testId="resolve-cargo-btn"
+            disabled={scrapping}
             onClick={() => {
               setResolved(true)
               if (!isOrbitalInstrumentDeployment) setScrapping(true)
             }}
           >
-            {shipDestroyed ? 'Resolve Recovered Cargo' : isProgramOperation ? 'Resolve & Log Outcome' : 'Resolve Cargo & Recovery'}
+            {scrapping ? 'VEHICLE TEARDOWN IN PROGRESS' : shipDestroyed ? 'AUTHORISE RECOVERY' : isProgramOperation ? 'LOG PROGRAM OUTCOME' : 'AUTHORISE VEHICLE TEARDOWN'}
           </PrimaryBtn>
         ) : (
           <PrimaryBtn
@@ -328,7 +322,7 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
               if (isFreeHaul) {
                 onDone(0, 0, {}, hasEarthStorage ? disposition : 'sell')
               } else {
-                onDone(total, 0, delivered ? requiredMaterials : {})
+                onDone(total, affinityEarned, delivered ? requiredMaterials : {})
               }
             }}
           >
@@ -348,7 +342,9 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
       {scrapping && (
         <ScrapSequenceCanvas
           rocketImageSrc={rocketDisplay.img}
-          onComplete={() => setScrapping(false)}
+          onComplete={() => {
+            setScrapping(false)
+          }}
         />
       )}
     </div>

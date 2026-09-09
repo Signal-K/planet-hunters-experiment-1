@@ -106,6 +106,7 @@ export default function LaunchpadScreen({
   const [missionRunsOpen, setMissionRunsOpen] = useState(false)
   const [missionMenuOpen, setMissionMenuOpen] = useState(requestedMissionMenuOpen)
   const [operationBrief, setOperationBrief] = useState<'instrument' | 'mining' | 'build' | null>(null)
+  const [showAllOperations, setShowAllOperations] = useState(false)
   const externallyControlled = onMissionMenuOpenChange !== undefined
   // Keep a local open signal as well as the app-level signal. The physical pad
   // is the primary control; an auth/catalog refresh can briefly replay the
@@ -128,6 +129,10 @@ export default function LaunchpadScreen({
   // a legacy save carrying the stale boolean) cannot disable the owned mining
   // control after the player has already completed the active onboarding.
   const hasFreeOpsAccess = freeOperations || missionsDone >= 3
+  const focusSet = new Set(player.programFocuses ?? [])
+  const hasProgramFocus = focusSet.size > 0
+  const focusVisible = (focus: 'client-contracts' | 'mining' | 'instruments' | 'construction') =>
+    showAllOperations || !hasProgramFocus || focusSet.has(focus)
   const operations = own.filter(mission => hasFreeOpsAccess || mission.sequence === sequence)
   // Academy/crew progression remains deferred until it has a replacement for
   // the retired affinity ladder, so it cannot become the next required launch.
@@ -262,6 +267,7 @@ export default function LaunchpadScreen({
                 type="button"
                 className="launchpad-mission-choice"
                 data-testid="launchpad-new-mission-satellite-btn"
+                hidden={!focusVisible('instruments')}
                 disabled={!infrastructureOperation}
                 onClick={() => setOperationBrief('instrument')}
               >
@@ -273,6 +279,7 @@ export default function LaunchpadScreen({
                 type="button"
                 className="launchpad-mission-choice"
                 data-testid="launchpad-new-mission-mining-btn"
+                hidden={!focusVisible('mining')}
                 disabled={!ownMiningOperation}
                 onClick={() => setOperationBrief('mining')}
               >
@@ -284,6 +291,7 @@ export default function LaunchpadScreen({
                 type="button"
                 className="launchpad-mission-choice"
                 data-testid="launchpad-new-mission-build-btn"
+                hidden={!focusVisible('construction')}
                 disabled={!buildOperation}
                 onClick={() => setOperationBrief('build')}
               >
@@ -295,12 +303,18 @@ export default function LaunchpadScreen({
                 type="button"
                 className="launchpad-mission-choice"
                 data-testid="launchpad-new-mission-contracts-btn"
+                hidden={!focusVisible('client-contracts')}
                 onClick={onViewContracts}
               >
                 <MissionGlyph />
                 <strong>AVAILABLE CONTRACTS</strong>
                 <span>Review client missions and choose an available contract.</span>
               </button>
+              {hasProgramFocus && (
+                <button type="button" className="launchpad-show-all-operations" onClick={() => setShowAllOperations(value => !value)}>
+                  {showAllOperations ? 'SHOW MY SUBSCRIPTIONS' : 'SHOW ALL OPERATIONS'}
+                </button>
+              )}
             </div> : <OperationBrief kind={operationBrief} instrument={infrastructureOperation} mining={ownMiningOperation} builds={buildOperations} player={player} catalog={catalog} onPick={onPick} onBack={() => setOperationBrief(null)} onOpenSiloBuild={onOpenSiloBuild} />}
           </section>
         )}
