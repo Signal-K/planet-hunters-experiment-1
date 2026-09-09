@@ -1,6 +1,6 @@
 # Mission setup clean-slate handoff
 
-The previous Mission Dispatch, Target Picker, Rocket Purchase, and Preflight component set was removed under KES-347. KES-348 replaces it with one continuous command-blueprint console in `MissionSetupRoutes.tsx`.
+The previous Mission Dispatch, Target Picker, Rocket Purchase, and Preflight component set was removed under KES-347. KES-348 replaces it with one continuous Earth Base scene in `MissionSetupRoutes.tsx`.
 
 Do not restore or visually copy the deleted shell, relay card, map detail shell, rocket inspection bay, right-side summary panel, or preflight clearance panel. Do not treat the remaining legacy selectors in `app/globals.css` as a specification; they are unreferenced historical CSS and should be deleted as the replacement component set lands.
 
@@ -18,9 +18,8 @@ All setup states use the canonical `/game/missions` URL. The internal `GameState
    - Action: `game.onPickTarget(targetId)`.
    - Result: `rocket-buy`, or `fab` when a rocket is already pending.
 3. `rocket-buy`
-   - Input: selected mission and target, unlocked `ROCKET_MODELS`, Franc balance, optional Surface Silo inventory/fabricated parts.
+   - Input: selected mission and target, compatible unlocked `ROCKET_MODELS`, and Franc balance.
    - Company rocket action: `game.onPurchaseRocket(rocketId)`.
-   - Silo actions: `game.onFabricateRocketPart(rocketId, componentId)` and `game.onAssembleFabricatedRocket(rocketId)`.
    - Result: `fab`; the chosen rocket becomes `player.pendingLaunch`.
 4. `fab`
    - Input: mission, target, configured rocket, parts, skills, and crew readiness.
@@ -43,11 +42,14 @@ The replacement should consume the existing `MissionSetupRoutesProps` contract o
 
 Direct visual constraints for the replacement:
 
-- mission setup is an operations surface and uses the dark command-deck theme;
-- no white document page, generic text list, or card-grid treatment for a primary game action;
+- the colored Earth Base landscape remains visible behind every mission-setup state;
+- no generic dark-grey/blue page, blueprint-page background, white document page, text list, or card-grid treatment for a primary game action;
 - use actual game identity and telemetry: client marks, mineral glyphs, orbit bodies, target reticles, rocket renders, and instrument icons;
-- keep a stable full-stage blueprint frame across contract, target, vehicle, and clearance steps;
-- the solar-system map and rocket stage use the same full stage bounds;
-- the selected rocket is large, visible, and centred in the unobscured stage;
+- use one and only one bordered stage container with identical bounds and coordinates across all four steps;
+- contract selection is a one-item-at-a-time portfolio gallery that fills the entire stage, with previous and next arrows;
+- the map fills the entire stage, highlights only targets that satisfy the mission minerals, range, cargo, and drill parameters, and states that filter in visible copy;
+- the blueprint fills the entire stage and uses only a minimal schematic background, a visually distinct rocket render, its name, its room list, and rocket-switching controls when more than one compatible unlocked rocket exists;
+- the review fills the entire stage as one composition, not as a collection of separate cards;
+- do not add a second inspector, sidebar, tutorial column, or differently sized step wrapper inside or beside the stage;
 - avoid default page or inspector scrolling at supported landscape sizes;
-- preserve a compact command rail for secondary navigation and keep the primary action anchored to the illustrated scene.
+- the tutorial coach uses one fixed 320px width and one fixed top-left anchor across all four setup states and never changes stage geometry.

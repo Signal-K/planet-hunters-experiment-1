@@ -93,9 +93,10 @@ interface GalaxyMapProps {
   compatibleIds: Set<string>
   pickedId: string
   onPick: (id: string) => void
+  eligibleOnlyHighlight?: boolean
 }
 
-export default function GalaxyMap({ mission, targets, compatibleIds, pickedId, onPick }: GalaxyMapProps) {
+export default function GalaxyMap({ mission, targets, compatibleIds, pickedId, onPick, eligibleOnlyHighlight = false }: GalaxyMapProps) {
   const missionMinerals = new Set(Object.keys(mission.requires.minerals))
   // Tutorial missions need a close read of the reachable band. Keep the
   // outer context bodies in the chart, but use the viewport for the
@@ -217,7 +218,7 @@ export default function GalaxyMap({ mission, targets, compatibleIds, pickedId, o
                 {compatible && !selected && (
                   <circle cx={cx} cy={cy} r={size + 6} fill="none" stroke="var(--ln-cyan)" strokeWidth={1.25} opacity={0.4} />
                 )}
-                {contractMatch && !selected && (
+                {contractMatch && (!eligibleOnlyHighlight || compatible) && !selected && (
                   <circle cx={cx} cy={cy} r={size + 5} fill="none" stroke="var(--ln-ok)" strokeWidth={1.5} strokeDasharray="2 3" opacity={0.85} />
                 )}
                 {isAsteroid ? (
@@ -284,7 +285,7 @@ export default function GalaxyMap({ mission, targets, compatibleIds, pickedId, o
           <span style={{ width: 7, height: 7, borderRadius: '50%', background: 'var(--ln-crit)', opacity: 0.6 }} />Out of range
         </span>
         <span style={{ display: 'flex', alignItems: 'center', gap: 6, fontFamily: 'var(--ln-font-display)', fontSize: 9, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--ln-text-muted)' }}>
-          <span style={{ width: 7, height: 7, borderRadius: '50%', border: '1.5px dashed var(--ln-ok)' }} />Contract match
+          <span style={{ width: 7, height: 7, borderRadius: '50%', border: '1.5px dashed var(--ln-ok)' }} />{eligibleOnlyHighlight ? 'Mission-compatible' : 'Contract match'}
         </span>
         <span style={{ display: 'flex', alignItems: 'center', gap: 6, fontFamily: 'var(--ln-font-display)', fontSize: 9, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--ln-text-muted)' }}>
           <span style={{ width: 7, height: 7, borderRadius: '50%', border: '1.5px solid var(--ln-cyan)' }} />Selected

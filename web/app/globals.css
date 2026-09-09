@@ -684,7 +684,7 @@ button { cursor: pointer; }
 .tutorial-coach-action { max-width: 760px; }
 
 @media (min-width: 900px) {
-  [data-testid="tutorial-coach-block"] {
+  .tutorial-coach-overlay:not(.tutorial-coach-overlay--mission-setup) [data-testid="tutorial-coach-block"] {
     left: 50% !important;
     right: auto !important;
     width: min(920px, calc(100% - 48px));

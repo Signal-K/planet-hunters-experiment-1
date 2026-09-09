@@ -4,18 +4,53 @@ import { describe, expect, it } from 'vitest'
 const read = (relativePath: string) => readFileSync(new URL(relativePath, import.meta.url), 'utf8')
 
 describe('mission setup replacement boundary', () => {
-  it('keeps the four setup states in one visual mission-control console', () => {
+  it('keeps the four setup states in one fixed Earth Base stage', () => {
     const routes = read('./MissionSetupRoutes.tsx')
+    const styles = read('./MissionSetupRoutes.module.css')
 
     expect(routes).toContain("Extract<Screen, 'missions' | 'targets' | 'rocket-buy' | 'fab'>")
     expect(routes).toContain('data-testid="mission-setup-scaffold"')
+    expect(routes).toContain('data-testid="mission-setup-landscape"')
+    expect(routes).toContain('data-testid="mission-setup-stage"')
+    expect(routes).toContain('HubWorldBackground')
+    expect(routes).toContain('LaunchpadModules')
+    expect(routes).toContain('HangarModules')
     expect(routes).toContain('ClientMark')
     expect(routes).toContain('MineralChip')
     expect(routes).toContain('GalaxyMap')
     expect(routes).toContain('selectedRocket.img')
-    expect(routes).toContain('FLIGHT MANIFEST')
+    expect(routes).toContain('MISSION REVIEW')
+    expect(styles).toMatch(/\.stage\s*\{[\s\S]*?inset:\s*96px 32px 32px/)
+    expect(styles).toMatch(/\.contractGallery,[\s\S]*\.missionReview\s*\{[^}]*position:\s*absolute;[^}]*inset:\s*0;/)
     expect(routes).not.toMatch(/MissionSetupShell|MissionBoardScreen|TargetPickerScreen|RocketPurchaseScreen|AssemblyScreen/)
     expect(routes).not.toMatch(/MissionSceneBackdrop|mission-relay-yard|rocket-inspection-bay|launch-clearance-panel|visual layer removed/)
+  })
+
+  it('implements the four full-stage compositions rather than a panel dashboard', () => {
+    const routes = read('./MissionSetupRoutes.tsx')
+    const styles = read('./MissionSetupRoutes.module.css')
+
+    expect(routes).not.toContain('theme-deep')
+    expect(styles).toContain('.landscape')
+    expect(styles).toContain('.contractGallery')
+    expect(styles).toContain('.targetMap')
+    expect(styles).toContain('.rocketBlueprint')
+    expect(styles).toContain('.missionReview')
+    expect(routes).toContain('relay.selectRelativeSignal(-1)')
+    expect(routes).toContain('relay.selectRelativeSignal(1)')
+    expect(routes).toContain('ONLY TARGETS WITH THE REQUIRED MINERALS, RANGE, CARGO, AND DRILL PARAMETERS ARE HIGHLIGHTED.')
+    expect(routes).toContain('eligibleOnlyHighlight')
+    expect(routes).toContain('selectableRockets.length > 1')
+    expect(routes).toContain('selectedRooms')
+  })
+
+  it('keeps the mission coach at one fixed width and anchor', () => {
+    const coach = read('./TutorialCoach.tsx')
+    const globals = read('../../app/globals.css')
+
+    expect(coach).toContain("left: 16, top: 80, width: 320")
+    expect(coach).toContain('tutorial-coach-overlay tutorial-coach-overlay--mission-setup')
+    expect(globals).toContain('.tutorial-coach-overlay:not(.tutorial-coach-overlay--mission-setup)')
   })
 
   it('retains the state-transition actions needed by a replacement component set', () => {
@@ -24,8 +59,6 @@ describe('mission setup replacement boundary', () => {
     expect(routes).toContain('game.onPickMission')
     expect(routes).toContain('game.onPickTarget')
     expect(routes).toContain('game.onPurchaseRocket')
-    expect(routes).toContain('game.onFabricateRocketPart')
-    expect(routes).toContain('game.onAssembleFabricatedRocket')
     expect(routes).toContain('validateBuild')
     expect(routes).toContain('onLaunch')
   })
