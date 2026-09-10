@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState, type CSSProperties, type ReactNode } from 'react'
 import type { useGame } from '@/game-context'
+import type { Catalog } from '@/lib/catalog'
 import type { Screen } from '@/lib/game-types'
 import {
   ROCKET_MODELS,
@@ -11,14 +12,13 @@ import {
   rocketModelForConfig,
   validateBuild,
 } from '@/lib/data'
-import { crewRequirementStatus } from '@/lib/systems/AcademySystem'
+import { clientAffinityLevel, crewRequirementStatus } from '@/lib/systems/AcademySystem'
 import { getRequiredRocketModel } from '@/lib/rockets'
-import { rocketCompositionForId } from '@/lib/data/rocket-composition'
+import { rocketCompositionForId, type RocketRoomRole } from '@/lib/data/rocket-composition'
 import { useMissionRelayModels } from '@/lib/hooks/useMissionRelayModels'
 import { formatCurrency } from '@/lib/format'
 import ErrorBoundary from '@/components/ui/ErrorBoundary'
 import ClientMark from '@/components/ui/ClientMark'
-import MineralChip from '@/components/game/MineralChip'
 import GalaxyMap from '@/components/TargetPicker/GalaxyMap'
 import { LaunchSequenceCanvas } from '@/components/game/LaunchSequenceCanvas'
 import FreeOpsBuildScreen from '@/components/game/screens/FreeOpsBuildScreen'
@@ -44,6 +44,33 @@ interface MissionSetupRoutesProps {
 
 const STEP_LABELS = ['CONTRACT', 'MAP', 'BLUEPRINT', 'REVIEW'] as const
 
+const ROOM_DESCRIPTIONS: Record<RocketRoomRole, string> = {
+  cockpit: 'Flight control, navigation, and mission command.',
+  storage: 'Sealed capacity for the contracted mineral payload.',
+  engine: 'Propulsion, power routing, and orbital manoeuvres.',
+}
+
+function targetTypeLabel(type: 'planet' | 'asteroid' | 'exoplanet'): string {
+  if (type === 'asteroid') return 'ASTEROID'
+  if (type === 'exoplanet') return 'EXOPLANET'
+  return 'PLANET'
+}
+
+function RequiredCargo({ minerals, catalog }: {
+  minerals: Record<string, number>
+  catalog: Catalog['minerals']
+}) {
+  return <div className={styles.cargoReadout} data-testid="required-cargo-readout">
+    {Object.entries(minerals).map(([id, amount]) => {
+      const meta = catalog[id]
+      if (!meta) return null
+      return <div key={id} className={styles.cargoChip} style={{ '--mineral-accent': meta.color } as CSSProperties}>
+        <i>{meta.sym}</i><strong>×{amount}</strong><span>{meta.name}</span>
+      </div>
+    })}
+  </div>
+}
+
 function BackGlyph() {
   return <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 5-7 7 7 7M8 12h12" /></svg>
 }
@@ -61,14 +88,15 @@ function StepGlyph({ step }: { step: number }) {
   return <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v14H4zM7 9h10M7 13h7" /><path d="m15 16 2 2 4-5" /></svg>
 }
 
-function SetupFrame({ step, title, onBack, children }: {
+function SetupFrame({ step, title, onBack, hasCoach, children }: {
   step: number
   title: string
   onBack: () => void
+  hasCoach: boolean
   children: ReactNode
 }) {
   return (
-    <div className={`game-screen ${styles.root}`} data-testid="mission-setup-scaffold" data-step={step}>
+    <div className={`game-screen ${styles.root}`} data-testid="mission-setup-scaffold" data-step={step} data-coach={hasCoach}>
       <div className={styles.landscape} data-testid="mission-setup-landscape" aria-hidden="true">
         <HubWorldBackground phase="day" composition="earth-base-wide" />
         <div className={styles.launchpad}><LaunchpadModules /></div>
@@ -92,7 +120,7 @@ function SetupFrame({ step, title, onBack, children }: {
   )
 }
 
-export default function MissionSetupRoutes({ screen, game, rocketDisplay, launchPending, onLaunch, onLaunchComplete }: MissionSetupRoutesProps) {
+export default function MissionSetupRoutes({ screen, game, hasCoach, rocketDisplay, launchPending, onLaunch, onLaunchComplete }: MissionSetupRoutesProps) {
   const relay = useMissionRelayModels({
     catalog: game.catalog,
     missionsDone: game.player.missionsDone,
@@ -155,8 +183,19 @@ export default function MissionSetupRoutes({ screen, game, rocketDisplay, launch
   if (screen === 'missions') {
     const model = relay.previewModel
     const client = model?.client
+    const clientJobs = client ? game.player.clientMissions[client.id] ?? 0 : 0
+    const clientLevel = client ? clientAffinityLevel(clientJobs) : 0
+    const previewTargets = model ? feasibleTargetsFor(
+      model.mission,
+      game.catalog.targets,
+      game.catalog.parts,
+      game.player.missionsDone,
+      game.player.launchpadUpgraded,
+      game.player.unlockedSkillNodes ?? [],
+    ) : []
+    const previewTargetTypes = [...new Set(previewTargets.map(target => targetTypeLabel(target.type)))]
     return (
-      <SetupFrame step={1} title="Contract" onBack={() => game.goBack()}>
+      <SetupFrame step={1} title="Contract" onBack={() => game.goBack()} hasCoach={hasCoach}>
         <section
           className={styles.contractGallery}
           data-testid="mission-board-section-client"
@@ -176,12 +215,14 @@ export default function MissionSetupRoutes({ screen, game, rocketDisplay, launch
               </div>
               <div className={styles.contractFacts}>
                 <div><span>CONTRACT VALUE</span><strong>{formatCurrency(model.displayPayout, { compact: true })}</strong></div>
-                <div><span>CLIENT AFFINITY</span><strong>+{model.mission.payout.affinity}</strong></div>
+                <div><span>CURRENT AFFINITY</span><strong>{client ? `L${clientLevel} · ${clientJobs} ${clientJobs === 1 ? 'JOB' : 'JOBS'}` : 'PROGRAM'}</strong></div>
+                <div><span>AFFINITY REWARD</span><strong>+{model.mission.payout.affinity}</strong></div>
                 <div><span>MISSION TIER</span><strong>{model.mission.difficulty}</strong></div>
               </div>
               <div className={styles.contractCargo}>
                 <span>REQUIRED CARGO</span>
-                <div>{Object.entries(model.mission.requires.minerals).map(([id, amount]) => <MineralChip key={id} mineral={id} count={amount} meta={game.catalog.minerals[id]} />)}</div>
+                <RequiredCargo minerals={model.mission.requires.minerals} catalog={game.catalog.minerals} />
+                <p><b>DESTINATION CLASS</b>{previewTargetTypes.join(' / ') || 'FIXED ROUTE'}</p>
               </div>
               <img className={styles.contractRocket} src={requiredRocket.img} alt={`${requiredRocket.name} mission vehicle`} />
               <button type="button" className={styles.primary} disabled={!model.unlocked || relay.tutorialMissionInProgress} onClick={() => game.onPickMission(model.mission.id)}><StepGlyph step={1} /> ACCEPT CONTRACT</button>
@@ -197,7 +238,7 @@ export default function MissionSetupRoutes({ screen, game, rocketDisplay, launch
   if (screen === 'targets' && game.mission) {
     const selectedTarget = compatibleTargets.find(target => target.id === targetId)
     return (
-      <SetupFrame step={2} title="Map" onBack={() => game.go('missions')}>
+      <SetupFrame step={2} title="Map" onBack={() => game.go('missions')} hasCoach={hasCoach}>
         <section className={styles.targetMap} data-testid="mission-target-map">
           <div className={styles.mapCanvas}>
             <GalaxyMap mission={game.mission} targets={game.catalog.targets} compatibleIds={new Set(compatibleTargets.map(target => target.id))} pickedId={targetId} onPick={setTargetId} eligibleOnlyHighlight />
@@ -205,10 +246,10 @@ export default function MissionSetupRoutes({ screen, game, rocketDisplay, launch
           <div className={styles.filterRibbon}>
             <strong>MISSION FILTER ACTIVE</strong>
             <span>ONLY TARGETS WITH THE REQUIRED MINERALS, RANGE, CARGO, AND DRILL PARAMETERS ARE HIGHLIGHTED.</span>
-            <div>{Object.entries(game.mission.requires.minerals).map(([id, amount]) => <MineralChip key={id} mineral={id} count={amount} meta={game.catalog.minerals[id]} />)}</div>
+            <RequiredCargo minerals={game.mission.requires.minerals} catalog={game.catalog.minerals} />
           </div>
           <div className={styles.mapAction}>
-            <div><span>ELIGIBLE TARGET</span><h2>{selectedTarget?.name ?? 'SELECT A HIGHLIGHTED BODY'}</h2>{selectedTarget && <p>ORBIT {selectedTarget.orbit} · {selectedTarget.type.toUpperCase()} · MISSION PARAMETERS PASS</p>}</div>
+            <div><span>{selectedTarget ? `${targetTypeLabel(selectedTarget.type)} · ELIGIBLE TARGET` : 'ELIGIBLE TARGET'}</span><h2>{selectedTarget?.name ?? 'SELECT A HIGHLIGHTED BODY'}</h2>{selectedTarget && <p><b>{targetTypeLabel(selectedTarget.type)}</b> · ORBIT {selectedTarget.orbit} · MISSION PARAMETERS PASS</p>}</div>
             <button type="button" className={styles.primary} data-testid="continue-build-btn" disabled={!selectedTarget} onClick={() => selectedTarget && game.onPickTarget(selectedTarget.id)}><StepGlyph step={2} /> CONFIRM TARGET</button>
           </div>
         </section>
@@ -219,11 +260,19 @@ export default function MissionSetupRoutes({ screen, game, rocketDisplay, launch
   if (screen === 'rocket-buy' && game.mission && game.target) {
     const canAfford = game.player.francs >= selectedRocket.costFrancs
     return (
-      <SetupFrame step={3} title="Blueprint" onBack={() => game.goBack()}>
+      <SetupFrame step={3} title="Blueprint" onBack={() => game.goBack()} hasCoach={hasCoach}>
         <section className={styles.rocketBlueprint} data-testid="mission-rocket-blueprint">
           <div className={styles.blueprintHeading}><span>ROCKET {selectableRockets.findIndex(model => model.id === selectedRocket.id) + 1} / {selectableRockets.length}</span><h2>{selectedRocket.name}</h2></div>
           <div className={styles.rocketSchematic} aria-label={`${selectedRocket.name} schematic`}><img src={selectedRocket.img} alt="" /></div>
-          <div className={styles.roomManifest}><span>ROOMS</span><ol>{selectedRooms.map((room, index) => <li key={room.id}><i>{String(index + 1).padStart(2, '0')}</i><strong>{room.label}</strong></li>)}</ol></div>
+          <div className={styles.roomManifest}>
+            <div className={styles.manifestHeading}><span>ROOM SLOTS</span><strong>FIXED CONFIGURATION</strong></div>
+            <ol>{selectedRooms.map((room, index) => <li key={room.id}>
+              <i>{String(index + 1).padStart(2, '0')}</i>
+              <div><strong>{room.label}</strong><p>{ROOM_DESCRIPTIONS[room.role]}</p></div>
+              <button type="button" disabled title="No alternate rooms are available yet">SWAP</button>
+            </li>)}</ol>
+            <p className={styles.modularNote}>MODULAR MOUNTS ONLINE · ALTERNATE ROOMS NOT YET AVAILABLE</p>
+          </div>
           {selectableRockets.length > 1 && <nav className={styles.rocketSwitcher} aria-label="Available rockets">
             <button type="button" onClick={() => selectRelativeRocket(-1)} aria-label="Previous rocket"><ChevronGlyph direction="previous" /></button>
             <span>SWITCH ROCKET</span>
@@ -243,20 +292,20 @@ export default function MissionSetupRoutes({ screen, game, rocketDisplay, launch
     const rocket = rocketModelForConfig(game.rocket)
     const reviewRooms = rocketCompositionForId(rocket.id).stages.flatMap(stage => stage.rooms)
     return <>
-      <SetupFrame step={4} title="Review" onBack={() => game.goBack('rocket-buy')}>
+      <SetupFrame step={4} title="Review" onBack={() => game.goBack('rocket-buy')} hasCoach={hasCoach}>
         <section className={styles.missionReview} data-testid="mission-launch-review">
           <div className={styles.reviewHeading}><span>MISSION REVIEW</span><h2>{game.mission.title}</h2></div>
           <div className={styles.reviewRoute} aria-label="Mission route">
             <div className={styles.routeLine} />
             <div className={styles.routeNode}><StepGlyph step={1} /><span>CONTRACT</span><strong>{game.mission.title}</strong></div>
-            <div className={styles.routeNode}><StepGlyph step={2} /><span>TARGET</span><strong>{game.target.name}</strong></div>
+            <div className={styles.routeNode}><StepGlyph step={2} /><span>{targetTypeLabel(game.target.type)}</span><strong>{game.target.name}</strong></div>
             <div className={styles.routeNode}><StepGlyph step={3} /><span>ROCKET</span><strong data-testid="assembly-selected-rocket">{rocket.name}</strong></div>
             <div className={styles.routeNode}><StepGlyph step={4} /><span>STATUS</span><strong>{launchReady ? 'READY' : 'HOLD'}</strong></div>
           </div>
           <img className={styles.reviewRocket} src={rocketDisplay.img} alt={`${rocket.name} prepared for launch`} />
           <div className={styles.reviewManifest}>
             <div><span>ROOMS</span><p>{reviewRooms.map(room => room.label).join(' · ')}</p></div>
-            <div><span>REQUIRED CARGO</span><div>{Object.entries(game.mission.requires.minerals).map(([id, amount]) => <MineralChip key={id} mineral={id} count={amount} meta={game.catalog.minerals[id]} />)}</div></div>
+            <div><span>REQUIRED CARGO</span><RequiredCargo minerals={game.mission.requires.minerals} catalog={game.catalog.minerals} /></div>
             <div><span>LAUNCH CLEARANCE</span><p>{launchReady ? 'ALL MISSION PARAMETERS PASS' : validation.problems[0] ?? crewStatus.reason ?? 'BUILD HOLD'}</p></div>
           </div>
           <button type="button" className={styles.primary} data-testid="launch-btn" disabled={!launchReady} onClick={onLaunch}><StepGlyph step={4} /> ACCEPT &amp; PREPARE LAUNCH</button>

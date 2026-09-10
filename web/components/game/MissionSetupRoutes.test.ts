@@ -16,7 +16,7 @@ describe('mission setup replacement boundary', () => {
     expect(routes).toContain('LaunchpadModules')
     expect(routes).toContain('HangarModules')
     expect(routes).toContain('ClientMark')
-    expect(routes).toContain('MineralChip')
+    expect(routes).toContain('RequiredCargo')
     expect(routes).toContain('GalaxyMap')
     expect(routes).toContain('selectedRocket.img')
     expect(routes).toContain('MISSION REVIEW')
@@ -42,6 +42,11 @@ describe('mission setup replacement boundary', () => {
     expect(routes).toContain('eligibleOnlyHighlight')
     expect(routes).toContain('selectableRockets.length > 1')
     expect(routes).toContain('selectedRooms')
+    expect(routes).toContain('ALTERNATE ROOMS NOT YET AVAILABLE')
+    expect(routes).toContain('CURRENT AFFINITY')
+    expect(routes).toContain('DESTINATION CLASS')
+    expect(routes).toContain('targetTypeLabel(game.target.type)')
+    expect(styles).toContain('.cargoChip')
   })
 
   it('keeps the mission coach at one fixed width and anchor', () => {
