@@ -13,6 +13,7 @@ import type { GameState } from '@/lib/game-types'
 interface LoopHandle {
   state: GameState
   onPickMission: (id: string) => void
+  onMoveStagedRocket: (id: string) => void
   onTransferToLaunchpad: () => void
   onLaunch: () => void
   resumeMissionRun: (key: string) => void
@@ -30,8 +31,8 @@ function LoopHarness({ initial, onReady }: { initial: GameState; onReady: (handl
   })
   const loop = useGameLoop({ stateRef, setState, catalog, addToast: vi.fn() })
   useEffect(() => {
-    onReady({ state, onPickMission: loop.onPickMission, onTransferToLaunchpad: loop.onTransferToLaunchpad, onLaunch: loop.onLaunch, resumeMissionRun: loop.resumeMissionRun })
-  }, [loop.onLaunch, loop.onPickMission, loop.onTransferToLaunchpad, loop.resumeMissionRun, onReady, state])
+    onReady({ state, onPickMission: loop.onPickMission, onMoveStagedRocket: loop.onMoveStagedRocket, onTransferToLaunchpad: loop.onTransferToLaunchpad, onLaunch: loop.onLaunch, resumeMissionRun: loop.resumeMissionRun })
+  }, [loop.onLaunch, loop.onMoveStagedRocket, loop.onPickMission, loop.onTransferToLaunchpad, loop.resumeMissionRun, onReady, state])
   return null
 }
 
@@ -48,6 +49,7 @@ describe('useGameLoop concurrent mission runs', () => {
         pendingLaunch: true,
         pendingRocketId: 'prospector',
         pendingRocketLocation: 'hangar',
+        stagedRockets: [{ id: 'prospector-old', rocketId: 'prospector', rocket: { chassis: 'hull-mk2', propulsion: 'fusion-b2', drill: 'laser-t2' }, location: 'hangar', source: 'company', missionId: 'baseline-extraction', targetId: 'eros' }],
       },
     }
     const host = document.createElement('div')
@@ -58,6 +60,8 @@ describe('useGameLoop concurrent mission runs', () => {
 
     await act(async () => { root.render(<LoopHarness initial={stagedState} onReady={onReady} />) })
     await act(async () => { handleRef.current?.onPickMission('lnm_m3_relay_bennu_vesta') })
+    expect(handleRef.current?.state.screen).toBe('rocket-buy')
+    await act(async () => { handleRef.current?.onMoveStagedRocket('prospector-old') })
     expect(handleRef.current?.state.screen).toBe('fab')
     expect(handleRef.current?.state.player.pendingRocketId).toBe('prospector')
     expect(handleRef.current?.state.player.pendingRocketLocation).toBe('hangar')
@@ -80,6 +84,7 @@ describe('useGameLoop concurrent mission runs', () => {
         pendingLaunch: true,
         pendingRocketId: 'explorer',
         pendingRocketLocation: 'hangar',
+        stagedRockets: [{ id: 'explorer-old', rocketId: 'explorer', rocket: { chassis: 'hull-mk1', propulsion: 'ion-a1', drill: 'hand-drill' }, location: 'hangar', source: 'company', missionId: 'baseline-extraction', targetId: 'eros' }],
       },
     }
     const host = document.createElement('div')
@@ -163,6 +168,9 @@ describe('useGameLoop concurrent mission runs', () => {
         missionsDone: 3,
         pendingLaunch: true,
         pendingRocketId: 'sr1',
+        pendingRocketLocation: 'launchpad',
+        selectedStagedRocketId: 'sr1-current',
+        stagedRockets: [{ id: 'sr1-current', rocketId: 'sr1', rocket: { chassis: 'hull-mk1', propulsion: 'ion-a1', drill: 'hand-drill' }, location: 'launchpad', source: 'company', missionId: 'freeops-self-directed-mining', targetId: 'eros' }],
         pausedMissionRuns: [{
           key: 'baseline:1700000000000',
           activeMission: { id: 'baseline-extraction', label: 'Baseline extraction → Eros' },

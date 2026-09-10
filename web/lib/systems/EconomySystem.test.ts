@@ -57,17 +57,19 @@ describe('openMarketSellPrice', () => {
 })
 
 describe('applyPurchaseRocket', () => {
-  it('persists a built vehicle so returning to the launchpad cannot charge twice', () => {
+  it('persists each built vehicle separately so a second preparation has its own charge', () => {
     const rocket = ROCKET_MODELS.find(model => model.id === 'prospector')!
-    const s = makeState({ francs: rocket.costFrancs + 100 })
+    const s = makeState({ francs: rocket.costFrancs * 2 + 100 })
     const next = applyPurchaseRocket(s, rocket)
 
-    expect(next.player.francs).toBe(100)
+    expect(next.player.francs).toBe(rocket.costFrancs + 100)
     expect(next.player.pendingLaunch).toBe(true)
     expect(next.player.pendingRocketId).toBe('prospector')
     expect(next.player.pendingRocketLocation).toBe('hangar')
     expect(next.rocket).toEqual({ chassis: 'hull-mk2', propulsion: 'fusion-b2', drill: 'laser-t2' })
-    expect(applyPurchaseRocket(next, rocket).player.francs).toBe(100)
+    const second = applyPurchaseRocket(next, rocket)
+    expect(second.player.francs).toBe(100)
+    expect(second.player.stagedRockets).toHaveLength(2)
   })
 })
 

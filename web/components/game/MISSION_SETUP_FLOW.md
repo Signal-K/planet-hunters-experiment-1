@@ -12,15 +12,15 @@ All setup states use the canonical `/game/missions` URL. The internal `GameState
    - Input: catalog missions, clients, player progression, scene scope, crew, funds.
    - Action: `game.onPickMission(missionId)`.
    - Normal result: `targets`.
-   - Fixed-target mission result: `rocket-buy`, or `fab` when the matching rocket is already pending.
+   - Fixed-target mission result: `rocket-buy`, or `fab` when a prepared vehicle is already assigned to that exact mission and target.
 2. `targets`
    - Input: selected mission plus `feasibleTargetsFor(...)`.
    - Action: `game.onPickTarget(targetId)`.
-   - Result: `rocket-buy`, or `fab` when a rocket is already pending.
+   - Result: `rocket-buy`, or `fab` when a prepared vehicle is already assigned to that exact mission and target.
 3. `rocket-buy`
    - Input: selected mission and target, compatible unlocked `ROCKET_MODELS`, and Franc balance.
-   - Company rocket action: `game.onPurchaseRocket(rocketId)` charges the shipment once and creates a physical pending vehicle in the Hangar.
-   - Result: `fab`; a compatible pending vehicle is reassigned without another charge. An incompatible vehicle stays in the Hangar until the operator selects work it can fly.
+   - Company rocket action: `game.onPurchaseRocket(rocketId)` charges the shipment once and creates a distinct physical vehicle in the Hangar.
+   - A compatible vehicle assigned to another prepared mission is presented as an explicit move: `game.onMoveStagedRocket(vehicleId)` changes its assignment without another charge and releases its former preparation. `onPurchaseRocket` remains available to build another same-class vehicle without changing the former mission.
 4. `fab`
    - Input: mission, target, configured rocket, parts, skills, crew readiness, and pending vehicle location.
    - Gate: `validateBuild(...)` plus `crewRequirementStatus(...)` when crew is required.
@@ -31,7 +31,7 @@ All setup states use the canonical `/game/missions` URL. The internal `GameState
 
 - Flow mutation lives in `lib/contexts/useGameLoop.ts`.
 - Rocket purchase/fabrication mutation lives in `lib/systems/EconomySystem.ts`.
-- Mission, target, rocket, and pending-launch identifiers live in `GameState` and persist through the existing game-state sync path.
+- Mission, target, rocket, and the `player.stagedRockets` prepared-vehicle ledger live in `GameState` and persist through the existing game-state sync path. The old single pending fields mirror the currently inspected vehicle for legacy surfaces only.
 - Tutorial coach selection and rendering live above this boundary in `GameScreenRouter.tsx` and `GameApp.tsx`.
 - URL canonicalization lives in `lib/game-route.ts`; individual setup routes are intentionally not exposed.
 - `LaunchSequenceCanvas` remains downstream of the setup scaffold and calls `game.onLaunch()` only after completion.

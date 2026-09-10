@@ -28,6 +28,8 @@ export const DEFAULT_STATE: GameState = {
     activeMission: null,
     missionCount: 1,
     pendingLaunch: false,
+    stagedRockets: [],
+    selectedStagedRocketId: undefined,
     pendingRocketId: undefined,
     pendingRocketLocation: undefined,
     placed: [],
@@ -279,6 +281,24 @@ export function normalizeState(input: PartialSave): GameState {
       pendingRocketLocation: player.activeMission ? undefined : player.pendingLaunch
         ? (player.pendingRocketLocation ?? 'launchpad')
         : undefined,
+      // Convert the former single pending-vehicle save shape into the prepared
+      // vehicle ledger. It is assigned to the mission the player was setting
+      // up, so a later move can say exactly which preparation will be changed.
+      stagedRockets: player.activeMission ? [] : (player.stagedRockets ?? (player.pendingLaunch && player.pendingRocketId && missionId && targetId
+        ? [{
+            id: `legacy-${player.pendingRocketId}-${missionId}-${targetId}`,
+            rocketId: player.pendingRocketId,
+            rocket: { ...DEFAULT_STATE.rocket, ...input.rocket },
+            location: player.pendingRocketLocation ?? 'launchpad',
+            source: player.pendingRocketSource ?? 'company',
+            missionId,
+            targetId,
+            deliveryTargetId: input.deliveryTargetId,
+          }]
+        : [])),
+      selectedStagedRocketId: player.activeMission ? undefined : (player.selectedStagedRocketId ?? (player.pendingLaunch && player.pendingRocketId && missionId && targetId
+        ? `legacy-${player.pendingRocketId}-${missionId}-${targetId}`
+        : undefined)),
       deepSpaceTelescopeBuilt, refineryBuilt },
     doneSteps: { ...DEFAULT_STATE.doneSteps, ...input.doneSteps },
     // The retired private emergency-loan popup must not survive an old save.

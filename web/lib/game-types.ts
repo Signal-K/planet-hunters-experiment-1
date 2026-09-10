@@ -227,6 +227,11 @@ export interface Player {
   hasLanded?: boolean
   missionCount: number
   pendingLaunch: boolean
+  /** Prepared single-use vehicles. A vehicle stays assigned to its mission
+   * until it is explicitly moved or consumed at launch. */
+  stagedRockets?: StagedRocket[]
+  /** The prepared vehicle currently being inspected in mission setup. */
+  selectedStagedRocketId?: string
   /** A single-use vehicle exists before launch; it can be reassigned while staged. */
   pendingRocketId?: string
   /** Physical position of the staged vehicle. New vehicles begin in the Hangar. */
@@ -399,6 +404,17 @@ export interface Player {
   siteRights?: SiteRightsState
 }
 
+export interface StagedRocket {
+  id: string
+  rocketId: string
+  rocket: RocketConfig
+  location: 'hangar' | 'launchpad'
+  source: 'company' | 'fabricated'
+  missionId: string
+  targetId: string
+  deliveryTargetId?: string | null
+}
+
 export interface GameState {
   screen: Screen
   player: Player
@@ -476,6 +492,7 @@ export interface GameActions {
   onPickMission: (id: string, freeHaulDisposition?: 'store' | 'sell') => void
   onPickTarget: (id: string) => void
   onPurchaseRocket: (rocketId: string) => void
+  onMoveStagedRocket: (stagedRocketId: string) => void
   onFabricateRocketPart: (rocketId: string, componentId: string) => void
   onAssembleFabricatedRocket: (rocketId: string) => void
   onTransferToLaunchpad: () => void

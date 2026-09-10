@@ -260,8 +260,14 @@ export default function MissionSetupRoutes({ screen, game, hasCoach, rocketDispl
 
   if (screen === 'rocket-buy' && game.mission && game.target) {
     const canAfford = game.player.francs >= selectedRocket.costFrancs
-    const stagedRocket = game.player.pendingLaunch ? rocketModelForConfig(game.rocket) : null
-    const stagedRocketCompatible = !stagedRocket || validateBuild({ mission: game.mission, target: game.target, rocket: game.rocket, parts: game.catalog.parts, unlockedSkillNodes: game.player.unlockedSkillNodes ?? [] }).ok
+    const movableVehicle = (game.player.stagedRockets ?? []).find(vehicle =>
+      vehicle.missionId !== game.mission!.id
+      && validateBuild({ mission: game.mission!, target: game.target!, rocket: vehicle.rocket, parts: game.catalog.parts, unlockedSkillNodes: game.player.unlockedSkillNodes ?? [] }).ok,
+    )
+    const movableMission = movableVehicle
+      ? game.catalog.missions.find(mission => mission.id === movableVehicle.missionId)
+        ?? game.player.dailyClientPool?.missions.find(mission => mission.id === movableVehicle.missionId)
+      : null
     return (
       <SetupFrame step={3} title="Blueprint" onBack={() => game.goBack()} hasCoach={hasCoach}>
         <section className={styles.rocketBlueprint} data-testid="mission-rocket-blueprint">
@@ -281,13 +287,13 @@ export default function MissionSetupRoutes({ screen, game, hasCoach, rocketDispl
             <span>SWITCH ROCKET</span>
             <button type="button" onClick={() => selectRelativeRocket(1)} aria-label="Next rocket"><ChevronGlyph direction="next" /></button>
           </nav>}
-          {stagedRocket && !stagedRocketCompatible ? <div className={styles.stagedHold}>
-            <span>HANGAR HOLD</span><strong>{stagedRocket.name.toUpperCase()} IS STAGED · THIS MISSION NEEDS A DIFFERENT CONFIGURATION</strong>
-            <button type="button" onClick={() => game.go('missions')}>RETURN TO CONTRACTS</button>
-          </div> : <>
-            <p className={styles.purchaseTerms}>{selectedRocket.costFrancs === 0 ? 'STARTER ALLOCATION · ₣0 · SINGLE-USE AFTER LAUNCH' : `COMPANY SHIPMENT · ${formatCurrency(selectedRocket.costFrancs, { compact: true })} · CHARGED ONCE`}</p>
-            <button type="button" className={styles.primary} disabled={!canAfford} onClick={() => game.onPurchaseRocket(selectedRocket.id)}><StepGlyph step={3} /> {selectedRocket.costFrancs === 0 ? 'ALLOCATE EXPLORER · ₣0' : `PURCHASE SHIPMENT · ${formatCurrency(selectedRocket.costFrancs, { compact: true })}`}</button>
-          </>}
+          {movableVehicle && <div className={styles.stagedHold}>
+            <span>STAGED VEHICLE</span><strong>{rocketModelForConfig(movableVehicle.rocket).name.toUpperCase()} IS ASSIGNED TO {movableMission?.title.toUpperCase() ?? 'ANOTHER PREPARED MISSION'}</strong>
+            <p>MOVING IT HERE RELEASES THAT MISSION’S PREPARATION. NO SECOND CHARGE.</p>
+            <button type="button" onClick={() => game.onMoveStagedRocket(movableVehicle.id)}>MOVE VEHICLE TO THIS MISSION</button>
+          </div>}
+          <p className={styles.purchaseTerms}>{selectedRocket.costFrancs === 0 ? 'BUILD QUEUE · ₣0 · SINGLE-USE AFTER LAUNCH' : `COMPANY SHIPMENT · ${formatCurrency(selectedRocket.costFrancs, { compact: true })} · CHARGED ONCE`}</p>
+          <button type="button" className={styles.primary} disabled={!canAfford} onClick={() => game.onPurchaseRocket(selectedRocket.id)}><StepGlyph step={3} /> {selectedRocket.costFrancs === 0 ? 'BUILD EXPLORER · ₣0' : `BUILD ANOTHER ${selectedRocket.name.toUpperCase()} · ${formatCurrency(selectedRocket.costFrancs, { compact: true })}`}</button>
         </section>
       </SetupFrame>
     )
