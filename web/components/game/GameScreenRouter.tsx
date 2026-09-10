@@ -245,6 +245,7 @@ export function ScreenContent({
           deliveryTargetName={deliveryTargetName}
           rocketDisplay={rocketDisplay}
           launchPending={launchPending}
+          onTransferToLaunchpad={game.onTransferToLaunchpad}
           onLaunch={handleLaunch}
           onLaunchComplete={handleLaunchComplete}
         />

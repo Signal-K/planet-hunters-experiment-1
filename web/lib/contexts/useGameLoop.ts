@@ -2,7 +2,7 @@ import { useCallback, useRef } from 'react'
 import {
   MISSIONS, TARGETS, ROCKET_MODELS, FREE_OPS_START_MISSIONS_DONE,
   getLaserChargeCap, rocketModelForConfig, travelDurationMs, suggestBuild,
-  feasibleTargetsFor,
+  feasibleTargetsFor, validateBuild,
   isOwnProgramMission,
   isFreeHaulMission,
   artifactNarrativeEligible,
@@ -21,7 +21,7 @@ import { enqueueSurvey, isRepeatSurveyEligible, getMilestoneSurveyVariant } from
 import { captureGameEvent } from '@/lib/posthog'
 import type { Catalog } from '@/lib/catalog'
 import type { GameState, LicenseGrade, MissionRunSnapshot } from '@/lib/game-types'
-import type { Target, TessVerdict, TransitRange, AsteroidVerdict } from '@/lib/data'
+import type { Mission, Target, TessVerdict, TransitRange, AsteroidVerdict } from '@/lib/data'
 import type { Toast } from '@/components/ui/ToastLayer'
 import { applyGainResearchXP, applyUpgradeLicenseGrade, applyUnlockBlueprint } from '@/lib/systems/ProgressionSystem'
 import { pbShared } from '@/lib/pb'
@@ -74,6 +74,16 @@ function snapshotActiveMission(state: GameState): MissionRunSnapshot | null {
     headingToDelivery: state.player.headingToDelivery,
     shipDestroyed: state.player.shipDestroyed,
   }
+}
+
+function pendingRocketSupportsMission(state: GameState, mission: Mission, target: Target, catalog: Catalog): boolean {
+  return !state.player.pendingLaunch || validateBuild({
+    mission,
+    target,
+    rocket: state.rocket,
+    parts: catalog.parts,
+    unlockedSkillNodes: state.player.unlockedSkillNodes ?? [],
+  }).ok
 }
 
 function restoreMissionSnapshot(state: GameState, snapshot: MissionRunSnapshot): GameState {
@@ -230,7 +240,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
           targetId: mission.targetId,
           deliveryTargetId: mission.deliveryTargetId ?? null,
           rocket: s.player.pendingLaunch ? s.rocket : next,
-          screen: s.player.pendingLaunch ? 'fab' : 'rocket-buy',
+          screen: target && pendingRocketSupportsMission(s, mission, target, catalog) && s.player.pendingLaunch ? 'fab' : 'rocket-buy',
           doneSteps: { ...s.doneSteps, 2: true, 3: true },
         }
       }
@@ -257,7 +267,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
         ...s,
         targetId: id,
         rocket: s.player.pendingLaunch ? s.rocket : next,
-        screen: s.player.pendingLaunch ? 'fab' : 'rocket-buy',
+        screen: pendingRocketSupportsMission(s, mission, target, catalog) && s.player.pendingLaunch ? 'fab' : 'rocket-buy',
         doneSteps: { ...s.doneSteps, 3: true },
       }
     })
@@ -268,11 +278,16 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
       if (s.screen !== 'rocket-buy' || !s.missionId || !s.targetId) return s
       const rocket = ROCKET_MODELS.find(r => r.id === rocketId)
       if (!rocket) return s
-      if (s.player.pendingLaunch && s.player.pendingRocketId === rocket.id) {
-        return { ...s, screen: 'fab', doneSteps: { ...s.doneSteps, 8: true } }
-      }
+      if (s.player.pendingLaunch) return s
       const next = applyPurchaseRocket(s, rocket)
       return { ...next, doneSteps: { ...next.doneSteps, 8: true } }
+    })
+  }, [setState])
+
+  const onTransferToLaunchpad = useCallback(() => {
+    setState(s => {
+      if (s.screen !== 'fab' || !s.player.pendingLaunch || s.player.pendingRocketLocation !== 'hangar') return s
+      return { ...s, player: { ...s.player, pendingRocketLocation: 'launchpad' } }
     })
   }, [setState])
 
@@ -299,7 +314,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
 
   const onLaunch = useCallback(() => {
     const current = stateRef.current
-    if (current.screen !== 'fab' || !current.missionId || !current.targetId || current.player.activeMission) return
+    if (current.screen !== 'fab' || !current.missionId || !current.targetId || current.player.activeMission || current.player.pendingRocketLocation === 'hangar') return
     const currentMission = catalog.missions.find(m => m.id === current.missionId)
       ?? current.player.dailyClientPool?.missions.find(m => m.id === current.missionId)
       ?? null
@@ -331,6 +346,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
           ...s.player,
           pendingLaunch: false,
           pendingRocketId: undefined,
+          pendingRocketLocation: undefined,
           missionRocketSource: s.player.pendingRocketSource ?? 'company',
           pendingRocketSource: undefined,
           arrivalAt,
@@ -951,7 +967,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
 
   return {
     setPlayer, setMissionId, setTargetId, setRocket, setLastCargo,
-    onPickMission, onPickTarget, onPurchaseRocket, onFabricateRocketPart, onAssembleFabricatedRocket, onLaunch, resumeMissionRun,
+    onPickMission, onPickTarget, onPurchaseRocket, onFabricateRocketPart, onAssembleFabricatedRocket, onTransferToLaunchpad, onLaunch, resumeMissionRun,
     onMiningDone, onDeliveryArrived, onDeliveryUnloadComplete, onReturnArrived, onRoverMiningDone, onDebriefDone,
     onLandingTouchdown, onRedockComplete,
     gainResearchXP, upgradeLicenseGrade, unlockBlueprint, launchTransitSatellite, submitTessClassification, chooseSatelliteTarget,

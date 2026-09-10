@@ -13,6 +13,7 @@ import type { GameState } from '@/lib/game-types'
 interface LoopHandle {
   state: GameState
   onPickMission: (id: string) => void
+  onTransferToLaunchpad: () => void
   onLaunch: () => void
   resumeMissionRun: (key: string) => void
 }
@@ -29,12 +30,72 @@ function LoopHarness({ initial, onReady }: { initial: GameState; onReady: (handl
   })
   const loop = useGameLoop({ stateRef, setState, catalog, addToast: vi.fn() })
   useEffect(() => {
-    onReady({ state, onPickMission: loop.onPickMission, onLaunch: loop.onLaunch, resumeMissionRun: loop.resumeMissionRun })
-  }, [loop.onLaunch, loop.onPickMission, loop.resumeMissionRun, onReady, state])
+    onReady({ state, onPickMission: loop.onPickMission, onTransferToLaunchpad: loop.onTransferToLaunchpad, onLaunch: loop.onLaunch, resumeMissionRun: loop.resumeMissionRun })
+  }, [loop.onLaunch, loop.onPickMission, loop.onTransferToLaunchpad, loop.resumeMissionRun, onReady, state])
   return null
 }
 
 describe('useGameLoop concurrent mission runs', () => {
+  it('reassigns a compatible staged vehicle without another purchase, then requires launchpad transfer', async () => {
+    const stagedState: GameState = {
+      ...DEFAULT_STATE,
+      screen: 'missions',
+      rocket: { chassis: 'hull-mk2', propulsion: 'fusion-b2', drill: 'laser-t2' },
+      player: {
+        ...DEFAULT_STATE.player,
+        freeOperations: true,
+        missionsDone: 3,
+        pendingLaunch: true,
+        pendingRocketId: 'prospector',
+        pendingRocketLocation: 'hangar',
+      },
+    }
+    const host = document.createElement('div')
+    const root = createRoot(host)
+    const handleRef: { current: LoopHandle | null } = { current: null }
+    const onReady = (next: LoopHandle) => { handleRef.current = next }
+    ;(globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT: boolean }).IS_REACT_ACT_ENVIRONMENT = true
+
+    await act(async () => { root.render(<LoopHarness initial={stagedState} onReady={onReady} />) })
+    await act(async () => { handleRef.current?.onPickMission('lnm_m3_relay_bennu_vesta') })
+    expect(handleRef.current?.state.screen).toBe('fab')
+    expect(handleRef.current?.state.player.pendingRocketId).toBe('prospector')
+    expect(handleRef.current?.state.player.pendingRocketLocation).toBe('hangar')
+    expect(handleRef.current?.state.player.francs).toBe(stagedState.player.francs)
+
+    await act(async () => { handleRef.current?.onTransferToLaunchpad() })
+    expect(handleRef.current?.state.player.pendingRocketLocation).toBe('launchpad')
+    await act(async () => root.unmount())
+  })
+
+  it('keeps an incompatible staged vehicle in the Hangar instead of replacing it', async () => {
+    const stagedState: GameState = {
+      ...DEFAULT_STATE,
+      screen: 'missions',
+      rocket: { chassis: 'hull-mk1', propulsion: 'ion-a1', drill: 'hand-drill' },
+      player: {
+        ...DEFAULT_STATE.player,
+        freeOperations: true,
+        missionsDone: 4,
+        pendingLaunch: true,
+        pendingRocketId: 'explorer',
+        pendingRocketLocation: 'hangar',
+      },
+    }
+    const host = document.createElement('div')
+    const root = createRoot(host)
+    const handleRef: { current: LoopHandle | null } = { current: null }
+    const onReady = (next: LoopHandle) => { handleRef.current = next }
+    ;(globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT: boolean }).IS_REACT_ACT_ENVIRONMENT = true
+
+    await act(async () => { root.render(<LoopHarness initial={stagedState} onReady={onReady} />) })
+    await act(async () => { handleRef.current?.onPickMission('lnm_relay_psyche_ceres') })
+    expect(handleRef.current?.state.screen).toBe('rocket-buy')
+    expect(handleRef.current?.state.player.pendingRocketId).toBe('explorer')
+    expect(handleRef.current?.state.player.pendingRocketLocation).toBe('hangar')
+    await act(async () => root.unmount())
+  })
+
   it('parks an active run before setting up another mission, then restores it intact', async () => {
     const activeState: GameState = {
       ...DEFAULT_STATE,

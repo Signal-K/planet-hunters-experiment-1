@@ -29,6 +29,7 @@ export const DEFAULT_STATE: GameState = {
     missionCount: 1,
     pendingLaunch: false,
     pendingRocketId: undefined,
+    pendingRocketLocation: undefined,
     placed: [],
     placementPlots: {},
     controlBuilt: false,
@@ -273,6 +274,11 @@ export function normalizeState(input: PartialSave): GameState {
       // offer the assembly flow after the rocket has already left the pad.
       pendingLaunch: player.activeMission ? false : (player.pendingLaunch ?? DEFAULT_STATE.player.pendingLaunch),
       pendingRocketId: player.activeMission ? undefined : player.pendingRocketId,
+      // Old saves staged a vehicle directly on the pad. Preserve that progress;
+      // only newly purchased or fabricated vehicles start in the Hangar.
+      pendingRocketLocation: player.activeMission ? undefined : player.pendingLaunch
+        ? (player.pendingRocketLocation ?? 'launchpad')
+        : undefined,
       deepSpaceTelescopeBuilt, refineryBuilt },
     doneSteps: { ...DEFAULT_STATE.doneSteps, ...input.doneSteps },
     // The retired private emergency-loan popup must not survive an old save.

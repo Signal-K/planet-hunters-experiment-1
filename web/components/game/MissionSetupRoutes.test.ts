@@ -47,6 +47,9 @@ describe('mission setup replacement boundary', () => {
     expect(routes).toContain('DESTINATION CLASS')
     expect(routes).toContain('targetTypeLabel(game.target.type)')
     expect(styles).toContain('.cargoChip')
+    expect(routes).toContain('ALLOCATE EXPLORER · ₣0')
+    expect(routes).toContain('MOVE TO LAUNCHPAD')
+    expect(routes).toContain('HANGAR HOLD')
   })
 
   it('keeps the mission coach at one fixed width and anchor', () => {

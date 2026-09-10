@@ -38,6 +38,7 @@ interface MissionSetupRoutesProps {
   deliveryTargetName?: string
   rocketDisplay: RocketDisplay
   launchPending: boolean
+  onTransferToLaunchpad: () => void
   onLaunch: () => void
   onLaunchComplete: () => void
 }
@@ -120,7 +121,7 @@ function SetupFrame({ step, title, onBack, hasCoach, children }: {
   )
 }
 
-export default function MissionSetupRoutes({ screen, game, hasCoach, rocketDisplay, launchPending, onLaunch, onLaunchComplete }: MissionSetupRoutesProps) {
+export default function MissionSetupRoutes({ screen, game, hasCoach, rocketDisplay, launchPending, onTransferToLaunchpad, onLaunch, onLaunchComplete }: MissionSetupRoutesProps) {
   const relay = useMissionRelayModels({
     catalog: game.catalog,
     missionsDone: game.player.missionsDone,
@@ -259,6 +260,8 @@ export default function MissionSetupRoutes({ screen, game, hasCoach, rocketDispl
 
   if (screen === 'rocket-buy' && game.mission && game.target) {
     const canAfford = game.player.francs >= selectedRocket.costFrancs
+    const stagedRocket = game.player.pendingLaunch ? rocketModelForConfig(game.rocket) : null
+    const stagedRocketCompatible = !stagedRocket || validateBuild({ mission: game.mission, target: game.target, rocket: game.rocket, parts: game.catalog.parts, unlockedSkillNodes: game.player.unlockedSkillNodes ?? [] }).ok
     return (
       <SetupFrame step={3} title="Blueprint" onBack={() => game.goBack()} hasCoach={hasCoach}>
         <section className={styles.rocketBlueprint} data-testid="mission-rocket-blueprint">
@@ -278,7 +281,13 @@ export default function MissionSetupRoutes({ screen, game, hasCoach, rocketDispl
             <span>SWITCH ROCKET</span>
             <button type="button" onClick={() => selectRelativeRocket(1)} aria-label="Next rocket"><ChevronGlyph direction="next" /></button>
           </nav>}
-          <button type="button" className={styles.primary} disabled={!canAfford} onClick={() => game.onPurchaseRocket(selectedRocket.id)}><StepGlyph step={3} /> {selectedRocket.costFrancs === 0 ? 'USE THIS ROCKET' : `PURCHASE · ${formatCurrency(selectedRocket.costFrancs, { compact: true })}`}</button>
+          {stagedRocket && !stagedRocketCompatible ? <div className={styles.stagedHold}>
+            <span>HANGAR HOLD</span><strong>{stagedRocket.name.toUpperCase()} IS STAGED · THIS MISSION NEEDS A DIFFERENT CONFIGURATION</strong>
+            <button type="button" onClick={() => game.go('missions')}>RETURN TO CONTRACTS</button>
+          </div> : <>
+            <p className={styles.purchaseTerms}>{selectedRocket.costFrancs === 0 ? 'STARTER ALLOCATION · ₣0 · SINGLE-USE AFTER LAUNCH' : `COMPANY SHIPMENT · ${formatCurrency(selectedRocket.costFrancs, { compact: true })} · CHARGED ONCE`}</p>
+            <button type="button" className={styles.primary} disabled={!canAfford} onClick={() => game.onPurchaseRocket(selectedRocket.id)}><StepGlyph step={3} /> {selectedRocket.costFrancs === 0 ? 'ALLOCATE EXPLORER · ₣0' : `PURCHASE SHIPMENT · ${formatCurrency(selectedRocket.costFrancs, { compact: true })}`}</button>
+          </>}
         </section>
       </SetupFrame>
     )
@@ -289,10 +298,11 @@ export default function MissionSetupRoutes({ screen, game, hasCoach, rocketDispl
     const crewReady = !game.mission.requires.crew || (game.player.shipCustomizerParts?.['crew-module'] === 'crew-quarters-t1' && crewStatus.met)
     const validation = validateBuild({ mission: game.mission, target: game.target, rocket: game.rocket, parts: game.catalog.parts, unlockedSkillNodes: game.player.unlockedSkillNodes ?? [] })
     const launchReady = validation.ok && crewReady
+    const vehicleInHangar = game.player.pendingRocketLocation === 'hangar'
     const rocket = rocketModelForConfig(game.rocket)
     const reviewRooms = rocketCompositionForId(rocket.id).stages.flatMap(stage => stage.rooms)
     return <>
-      <SetupFrame step={4} title="Review" onBack={() => game.goBack('rocket-buy')} hasCoach={hasCoach}>
+      <SetupFrame step={4} title={vehicleInHangar ? 'Transfer' : 'Review'} onBack={() => game.goBack('rocket-buy')} hasCoach={hasCoach}>
         <section className={styles.missionReview} data-testid="mission-launch-review">
           <div className={styles.reviewHeading}><span>MISSION REVIEW</span><h2>{game.mission.title}</h2></div>
           <div className={styles.reviewRoute} aria-label="Mission route">
@@ -300,18 +310,20 @@ export default function MissionSetupRoutes({ screen, game, hasCoach, rocketDispl
             <div className={styles.routeNode}><StepGlyph step={1} /><span>CONTRACT</span><strong>{game.mission.title}</strong></div>
             <div className={styles.routeNode}><StepGlyph step={2} /><span>{targetTypeLabel(game.target.type)}</span><strong>{game.target.name}</strong></div>
             <div className={styles.routeNode}><StepGlyph step={3} /><span>ROCKET</span><strong data-testid="assembly-selected-rocket">{rocket.name}</strong></div>
-            <div className={styles.routeNode}><StepGlyph step={4} /><span>STATUS</span><strong>{launchReady ? 'READY' : 'HOLD'}</strong></div>
+            <div className={styles.routeNode}><StepGlyph step={4} /><span>{vehicleInHangar ? 'HANGAR' : 'LAUNCHPAD'}</span><strong>{vehicleInHangar ? 'TRANSFER' : launchReady ? 'READY' : 'HOLD'}</strong></div>
           </div>
           <img className={styles.reviewRocket} src={rocketDisplay.img} alt={`${rocket.name} prepared for launch`} />
           <div className={styles.reviewManifest}>
             <div><span>ROOMS</span><p>{reviewRooms.map(room => room.label).join(' · ')}</p></div>
             <div><span>REQUIRED CARGO</span><RequiredCargo minerals={game.mission.requires.minerals} catalog={game.catalog.minerals} /></div>
-            <div><span>LAUNCH CLEARANCE</span><p>{launchReady ? 'ALL MISSION PARAMETERS PASS' : validation.problems[0] ?? crewStatus.reason ?? 'BUILD HOLD'}</p></div>
+            <div><span>{vehicleInHangar ? 'VEHICLE STATUS' : 'LAUNCH CLEARANCE'}</span><p>{vehicleInHangar ? 'ASSEMBLED IN HANGAR · MOVE TO LAUNCHPAD BEFORE COUNTDOWN' : launchReady ? 'ALL MISSION PARAMETERS PASS' : validation.problems[0] ?? crewStatus.reason ?? 'BUILD HOLD'}</p></div>
           </div>
-          <button type="button" className={styles.primary} data-testid="launch-btn" disabled={!launchReady} onClick={onLaunch}><StepGlyph step={4} /> ACCEPT &amp; PREPARE LAUNCH</button>
+          {vehicleInHangar
+            ? <button type="button" className={styles.primary} data-testid="transfer-to-launchpad-btn" disabled={!launchReady} onClick={onTransferToLaunchpad}><StepGlyph step={4} /> MOVE TO LAUNCHPAD</button>
+            : <button type="button" className={styles.primary} data-testid="launch-btn" disabled={!launchReady} onClick={onLaunch}><StepGlyph step={4} /> ACCEPT &amp; PREPARE LAUNCH</button>}
         </section>
       </SetupFrame>
-      {launchPending && <ErrorBoundary fallback={null} onError={onLaunchComplete}><LaunchSequenceCanvas rocketName={rocketDisplay.name} rocketImageSrc={rocketDisplay.img} targetName={game.target.name} onComplete={onLaunchComplete} /></ErrorBoundary>}
+      {launchPending && !vehicleInHangar && <ErrorBoundary fallback={null} onError={onLaunchComplete}><LaunchSequenceCanvas rocketName={rocketDisplay.name} rocketImageSrc={rocketDisplay.img} targetName={game.target.name} onComplete={onLaunchComplete} /></ErrorBoundary>}
     </>
   }
 

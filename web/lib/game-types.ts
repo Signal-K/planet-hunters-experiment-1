@@ -227,8 +227,10 @@ export interface Player {
   hasLanded?: boolean
   missionCount: number
   pendingLaunch: boolean
-  /** Rocket already built and waiting on the launchpad; prevents re-purchase on resume. */
+  /** A single-use vehicle exists before launch; it can be reassigned while staged. */
   pendingRocketId?: string
+  /** Physical position of the staged vehicle. New vehicles begin in the Hangar. */
+  pendingRocketLocation?: 'hangar' | 'launchpad'
   /** How the pending/active single-use vehicle entered the Hangar. */
   pendingRocketSource?: 'company' | 'fabricated'
   missionRocketSource?: 'company' | 'fabricated'
@@ -476,6 +478,7 @@ export interface GameActions {
   onPurchaseRocket: (rocketId: string) => void
   onFabricateRocketPart: (rocketId: string, componentId: string) => void
   onAssembleFabricatedRocket: (rocketId: string) => void
+  onTransferToLaunchpad: () => void
   onLaunch: () => void
   resumeMissionRun: (key: string) => void
   onMiningDone: (cargo: Record<string, number>, remoteDisposition?: 'store' | 'sell') => void

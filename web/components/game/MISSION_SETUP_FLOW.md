@@ -19,12 +19,12 @@ All setup states use the canonical `/game/missions` URL. The internal `GameState
    - Result: `rocket-buy`, or `fab` when a rocket is already pending.
 3. `rocket-buy`
    - Input: selected mission and target, compatible unlocked `ROCKET_MODELS`, and Franc balance.
-   - Company rocket action: `game.onPurchaseRocket(rocketId)`.
-   - Result: `fab`; the chosen rocket becomes `player.pendingLaunch`.
+   - Company rocket action: `game.onPurchaseRocket(rocketId)` charges the shipment once and creates a physical pending vehicle in the Hangar.
+   - Result: `fab`; a compatible pending vehicle is reassigned without another charge. An incompatible vehicle stays in the Hangar until the operator selects work it can fly.
 4. `fab`
-   - Input: mission, target, configured rocket, parts, skills, and crew readiness.
+   - Input: mission, target, configured rocket, parts, skills, crew readiness, and pending vehicle location.
    - Gate: `validateBuild(...)` plus `crewRequirementStatus(...)` when crew is required.
-   - Action: request the launch sequence, then call `game.onLaunch()` when its animation completes.
+   - Action: `game.onTransferToLaunchpad()` moves a Hangar vehicle to the pad. Only then can the launch sequence call `game.onLaunch()`.
    - Result: `transit` with an active mission run.
 
 ## State ownership

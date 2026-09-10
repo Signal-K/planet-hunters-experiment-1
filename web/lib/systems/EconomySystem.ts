@@ -322,6 +322,7 @@ export function applyPurchaseRocket(s: GameState, rocket: RocketModel): GameStat
       francs: s.player.francs - rocket.costFrancs,
       pendingLaunch: true,
       pendingRocketId: rocket.id,
+      pendingRocketLocation: 'hangar',
       pendingRocketSource: 'company',
     },
   }
@@ -374,6 +375,7 @@ export function applyAssembleFabricatedRocket(s: GameState, rocket: RocketModel)
       fabricatedRocketParts,
       pendingLaunch: true,
       pendingRocketId: rocket.id,
+      pendingRocketLocation: 'hangar',
       pendingRocketSource: 'fabricated',
     },
   }
