@@ -47,9 +47,13 @@ Direct visual constraints for the replacement:
 - use actual game identity and telemetry: client marks, mineral glyphs, orbit bodies, target reticles, rocket renders, and instrument icons;
 - use one and only one bordered stage container with identical bounds and coordinates across all four steps;
 - contract selection is a one-item-at-a-time portfolio gallery that fills the entire stage, with previous and next arrows;
+- portrait Contract reserves the coach band, separates client/cargo identity from the title and vehicle, and keeps facts and the CTA in distinct lower zones rather than shrinking the desktop composition;
 - the map fills the entire stage, highlights only targets that satisfy the mission minerals, range, cargo, and drill parameters, and states that filter in visible copy;
+- portrait Map keeps the coach, filter readout, map field, and confirmation rail in separate vertical bands;
 - the blueprint fills the entire stage and uses only a minimal schematic background, a visually distinct rocket render, its name, its room list, and rocket-switching controls when more than one compatible unlocked rocket exists;
 - the review fills the entire stage as one composition, not as a collection of separate cards;
+- while the vehicle is in the Hangar, step 4 is a visible construction event: shipment/components arrive, stage and payload fit, inspection clears, and the assembled rocket remains scene-dominant; mission facts and the transfer action stay in a subordinate command rail;
+- after transfer, step 4 replaces the Hangar construction scene with the rocket visibly locked to the Launchpad before countdown;
 - do not add a second inspector, sidebar, tutorial column, or differently sized step wrapper inside or beside the stage;
 - avoid default page or inspector scrolling at supported landscape sizes;
 - the tutorial coach uses one fixed 320px width and one fixed top-left anchor across all four setup states and never changes stage geometry.

@@ -45,6 +45,13 @@ interface MissionSetupRoutesProps {
 
 const STEP_LABELS = ['CONTRACT', 'MAP', 'BLUEPRINT', 'REVIEW'] as const
 
+const ASSEMBLY_STEPS = [
+  { label: 'SHIPMENT', status: 'UNLOADED' },
+  { label: 'STAGE', status: 'FITTED' },
+  { label: 'PAYLOAD', status: 'SECURED' },
+  { label: 'INSPECTION', status: 'CLEARED' },
+] as const
+
 const ROOM_DESCRIPTIONS: Record<RocketRoomRole, string> = {
   cockpit: 'Flight control, navigation, and mission command.',
   storage: 'Sealed capacity for the contracted mineral payload.',
@@ -87,6 +94,59 @@ function StepGlyph({ step }: { step: number }) {
   if (step === 2) return <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8" /><circle cx="12" cy="12" r="3" /><path d="M2 12h4M18 12h4M12 2v4M12 18v4" /></svg>
   if (step === 3) return <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2c4 3 6 7 6 12l-6 7-6-7c0-5 2-9 6-12Z" /><circle cx="12" cy="10" r="2" /></svg>
   return <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v14H4zM7 9h10M7 13h7" /><path d="m15 16 2 2 4-5" /></svg>
+}
+
+function HangarAssembly({ rocket, rocketImage, source }: {
+  rocket: ReturnType<typeof rocketModelForConfig>
+  rocketImage: string
+  source: 'company' | 'fabricated'
+}) {
+  const [cycle, setCycle] = useState(0)
+  const [phase, setPhase] = useState(0)
+  const composition = rocketCompositionForId(rocket.id)
+  const stage = composition.stages[0]
+
+  useEffect(() => {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      setPhase(4)
+      return
+    }
+
+    setPhase(0)
+    const timers = [700, 1500, 2300, 3200].map((delay, index) => window.setTimeout(() => setPhase(index + 1), delay))
+    return () => timers.forEach(window.clearTimeout)
+  }, [cycle, rocket.id])
+
+  return <div className={styles.hangarBuildScene} data-testid="hangar-assembly-animation" data-phase={phase}>
+    <div className={styles.hangarDepth} aria-hidden="true"><i /><i /><i /><i /></div>
+    <div className={styles.hangarBayHeading}>
+      <span>HANGAR 01 · BUILD BAY</span>
+      <strong>{phase < 4 ? 'ASSEMBLY IN PROGRESS' : 'VEHICLE CLEARED'}</strong>
+    </div>
+    <div className={styles.deliveryCrates} aria-hidden="true">
+      <i /><i /><i />
+      <span>{source === 'fabricated' ? 'SILO COMPONENTS' : 'COMPANY SHIPMENT'}</span>
+    </div>
+    <div className={styles.overheadCrane} aria-hidden="true"><i /><i /><i /></div>
+    <div className={styles.assemblyVehicle} key={cycle} aria-label={`${rocket.name} being assembled in the hangar`}>
+      <img className={`${styles.rocketPart} ${styles.rocketAft}`} src={rocketImage} alt="" />
+      <img className={`${styles.rocketPart} ${styles.rocketStage}`} src={rocketImage} alt="" />
+      <img className={`${styles.rocketPart} ${styles.rocketPayload}`} src={rocketImage} alt="" />
+      <img className={styles.assembledRocket} src={rocketImage} alt="" />
+      <div className={styles.inspectionSweep} aria-hidden="true" />
+    </div>
+    <div className={styles.vehicleReadout}>
+      <span>{rocket.name.toUpperCase()}</span>
+      <strong>{stage.label.toUpperCase()}</strong>
+      <small>{composition.boosters.count} BOOSTERS · {composition.payload.label.toUpperCase()}</small>
+    </div>
+    <ol className={styles.assemblyTimeline} aria-label="Assembly progress">
+      {ASSEMBLY_STEPS.map((step, index) => <li key={step.label} data-complete={phase > index} data-current={phase === index}>
+        <i>{index + 1}</i><span>{step.label}</span><strong>{phase > index ? step.status : phase === index ? 'WORKING' : 'QUEUED'}</strong>
+      </li>)}
+    </ol>
+    {phase === 4 && <button type="button" className={styles.replayAssembly} onClick={() => setCycle(value => value + 1)}>REPLAY ASSEMBLY</button>}
+  </div>
 }
 
 function SetupFrame({ step, title, onBack, hasCoach, children }: {
@@ -307,26 +367,34 @@ export default function MissionSetupRoutes({ screen, game, hasCoach, rocketDispl
     const vehicleInHangar = game.player.pendingRocketLocation === 'hangar'
     const rocket = rocketModelForConfig(game.rocket)
     const reviewRooms = rocketCompositionForId(rocket.id).stages.flatMap(stage => stage.rooms)
+    const selectedVehicle = game.player.stagedRockets?.find(vehicle => vehicle.id === game.player.selectedStagedRocketId)
     return <>
-      <SetupFrame step={4} title={vehicleInHangar ? 'Transfer' : 'Review'} onBack={() => game.goBack('rocket-buy')} hasCoach={hasCoach}>
-        <section className={styles.missionReview} data-testid="mission-launch-review">
-          <div className={styles.reviewHeading}><span>MISSION REVIEW</span><h2>{game.mission.title}</h2></div>
-          <div className={styles.reviewRoute} aria-label="Mission route">
-            <div className={styles.routeLine} />
-            <div className={styles.routeNode}><StepGlyph step={1} /><span>CONTRACT</span><strong>{game.mission.title}</strong></div>
-            <div className={styles.routeNode}><StepGlyph step={2} /><span>{targetTypeLabel(game.target.type)}</span><strong>{game.target.name}</strong></div>
-            <div className={styles.routeNode}><StepGlyph step={3} /><span>ROCKET</span><strong data-testid="assembly-selected-rocket">{rocket.name}</strong></div>
-            <div className={styles.routeNode}><StepGlyph step={4} /><span>{vehicleInHangar ? 'HANGAR' : 'LAUNCHPAD'}</span><strong>{vehicleInHangar ? 'TRANSFER' : launchReady ? 'READY' : 'HOLD'}</strong></div>
-          </div>
-          <img className={styles.reviewRocket} src={rocketDisplay.img} alt={`${rocket.name} prepared for launch`} />
-          <div className={styles.reviewManifest}>
-            <div><span>ROOMS</span><p>{reviewRooms.map(room => room.label).join(' · ')}</p></div>
-            <div><span>REQUIRED CARGO</span><RequiredCargo minerals={game.mission.requires.minerals} catalog={game.catalog.minerals} /></div>
-            <div><span>{vehicleInHangar ? 'VEHICLE STATUS' : 'LAUNCH CLEARANCE'}</span><p>{vehicleInHangar ? 'ASSEMBLED IN HANGAR · MOVE TO LAUNCHPAD BEFORE COUNTDOWN' : launchReady ? 'ALL MISSION PARAMETERS PASS' : validation.problems[0] ?? crewStatus.reason ?? 'BUILD HOLD'}</p></div>
-          </div>
+      <SetupFrame step={4} title={vehicleInHangar ? 'Hangar assembly' : 'Launch review'} onBack={() => game.goBack('rocket-buy')} hasCoach={hasCoach}>
+        <section className={styles.missionReview} data-testid="mission-launch-review" data-location={vehicleInHangar ? 'hangar' : 'launchpad'}>
+          {vehicleInHangar
+            ? <HangarAssembly rocket={rocket} rocketImage={rocketDisplay.img} source={selectedVehicle?.source ?? 'company'} />
+            : <div className={styles.launchpadReview}>
+              <div className={styles.launchTower} aria-hidden="true"><i /><i /><i /></div>
+              <img src={rocketDisplay.img} alt={`${rocket.name} on the launchpad`} />
+              <div><span>LAUNCHPAD · VEHICLE LOCKED</span><strong>{rocket.name.toUpperCase()}</strong><small>TRANSFER COMPLETE · COUNTDOWN SYSTEM ONLINE</small></div>
+            </div>}
+          <aside className={styles.reviewBrief}>
+            <div className={styles.reviewHeading}><span>{vehicleInHangar ? 'MISSION VEHICLE' : 'MISSION REVIEW'}</span><h2>{game.mission.title}</h2></div>
+            <dl className={styles.reviewFacts}>
+              <div><dt>{targetTypeLabel(game.target.type)} · DESTINATION</dt><dd>{game.target.name}</dd></div>
+              <div><dt>VEHICLE</dt><dd data-testid="assembly-selected-rocket">{rocket.name}</dd></div>
+              <div><dt>ROOMS</dt><dd>{reviewRooms.map(room => room.label).join(' · ')}</dd></div>
+              <div><dt>REQUIRED CARGO</dt><dd><RequiredCargo minerals={game.mission.requires.minerals} catalog={game.catalog.minerals} /></dd></div>
+            </dl>
+            <div className={styles.clearance} data-ready={launchReady}>
+              <span>{vehicleInHangar ? 'NEXT OPERATION' : 'LAUNCH CLEARANCE'}</span>
+              <strong>{vehicleInHangar ? 'ROLL OUT TO LAUNCHPAD' : launchReady ? 'ALL PARAMETERS PASS' : 'BUILD HOLD'}</strong>
+              {!launchReady && <small>{validation.problems[0] ?? crewStatus.reason ?? 'MISSION REQUIREMENTS NOT MET'}</small>}
+            </div>
           {vehicleInHangar
             ? <button type="button" className={styles.primary} data-testid="transfer-to-launchpad-btn" disabled={!launchReady} onClick={onTransferToLaunchpad}><StepGlyph step={4} /> MOVE TO LAUNCHPAD</button>
             : <button type="button" className={styles.primary} data-testid="launch-btn" disabled={!launchReady} onClick={onLaunch}><StepGlyph step={4} /> ACCEPT &amp; PREPARE LAUNCH</button>}
+          </aside>
         </section>
       </SetupFrame>
       {launchPending && !vehicleInHangar && <ErrorBoundary fallback={null} onError={onLaunchComplete}><LaunchSequenceCanvas rocketName={rocketDisplay.name} rocketImageSrc={rocketDisplay.img} targetName={game.target.name} onComplete={onLaunchComplete} /></ErrorBoundary>}
