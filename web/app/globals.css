@@ -575,6 +575,22 @@ button { cursor: pointer; }
   outline-offset: 2px;
 }
 
+/* Hub utilities form one deliberate two-row header on device-sized canvases:
+   title/time above, balance/friends/menu below. They used to be four unrelated
+   absolute coordinates, which drifted as soon as the viewport changed. */
+@media (max-width: 1023px) {
+  .portrait-canvas:has([data-screen="hub"]) .game-menu-button { top: 66px; right: 12px; }
+  .portrait-canvas:has([data-screen="hub"]) .hub-friends-button { top: 66px !important; right: 92px !important; }
+  .portrait-canvas:has([data-screen="hub"]) .sync-status { top: 110px; bottom: auto !important; left: 12px; height: max-content; }
+  .portrait-canvas:has([data-screen="hub"]) .feedback-launcher { top: 110px !important; right: 12px !important; bottom: auto !important; }
+  .portrait-canvas:has([data-screen="hub"]) .feedback-panel { right: 12px !important; bottom: calc(var(--ln-nav-h) + 12px) !important; }
+}
+
+@media (max-width: 379px) {
+  .portrait-canvas:has([data-screen="hub"]) .hub-friends-button { width: 36px; min-width: 36px; padding: 0 !important; justify-content: center; }
+  .portrait-canvas:has([data-screen="hub"]) .hub-friends-button span { display: none; }
+}
+
 .bottom-tab-bar {
   flex: none;
   height: var(--ln-nav-h);

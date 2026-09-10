@@ -642,13 +642,16 @@ button:focus-visible { outline: 4px solid var(--ln-cyan); outline-offset: 3px; }
 @media (max-width: 720px), (max-height: 520px) {
   .header { inset: 6px 8px auto; height: 48px; }
   .back, .titleGlyph { width: 40px; height: 40px; }
-  .title { min-width: 0; width: 164px; padding: 5px 8px; }
-  .title span { font-size: 7px; }
-  .title h1 { font-size: 15px; }
+  .title { min-width: 0; width: 164px; padding: 5px 8px; overflow: hidden; }
+  .title span { display: block; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font-size: 7px; }
+  .title h1 { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font-size: 15px; }
   .progress { gap: 4px; }
   .progress li { height: 30px; border-width: 2px; box-shadow: none; }
   .progress i { width: 20px; height: 20px; }
-  .stage { inset: 64px 8px 16px; border-width: 3px; border-radius: 5px; box-shadow: 0 6px 0 color-mix(in srgb, var(--mission-ink) 42%, transparent); }
+  /* top clears the global .game-menu-button (top:56px + height:36px = bottom
+     92px), which is a fixed-position sibling outside this component and
+     can't be reasoned about from in here. */
+  .stage { inset: 96px 8px 16px; border-width: 3px; border-radius: 5px; box-shadow: 0 6px 0 color-mix(in srgb, var(--mission-ink) 42%, transparent); }
 
   .contractGallery::before { inset: 12px; }
   .contractIdentity { left: 6%; top: 6%; gap: 8px; }
@@ -730,7 +733,17 @@ button:focus-visible { outline: 4px solid var(--ln-cyan); outline-offset: 3px; }
 
 /* The narrow app panel is tall, not compact landscape. Recompose around that
    vertical room instead of squeezing desktop's two columns into half-widths. */
-@media (orientation: portrait) and (max-width: 720px) {
+@media (orientation: portrait) {
+  .header { inset: 6px 8px auto; height: 48px; gap: 6px; }
+  .back { width: 40px; height: 40px; }
+  .titleGlyph { display: none; }
+  .title { flex: 1 1 auto; min-width: 76px; width: auto; padding: 5px 7px; }
+  .title span { font-size: 6px; letter-spacing: .12em; white-space: nowrap; }
+  .title h1 { overflow: hidden; margin-top: 3px; font-size: clamp(12px, 2.6vw, 18px); text-overflow: ellipsis; white-space: nowrap; }
+  .progress { flex: 0 0 auto; gap: 3px; }
+  .progress li { width: 28px; height: 30px; padding: 2px; justify-content: center; }
+  .progress i { width: 20px; height: 20px; }
+  .stage { inset: 96px 8px 16px; }
   .contractGallery::before { inset: 10px; }
   .contractIdentity { left: 7%; top: 5%; gap: 8px; }
   .contractIdentity > div:first-child { transform: scale(.72); transform-origin: left center; margin-right: -28px; }
@@ -766,8 +779,8 @@ button:focus-visible { outline: 4px solid var(--ln-cyan); outline-offset: 3px; }
   .rocketBlueprint::after { left: 6%; right: 6%; top: 43%; bottom: auto; border-left: 0; border-top: 2px dashed color-mix(in srgb, var(--mission-ink) 28%, transparent); }
   .blueprintHeading { left: 6%; top: 4%; }
   .blueprintHeading h2 { font-size: 30px; }
-  .rocketSchematic { left: 12%; top: 11%; width: 76%; height: 30%; }
-  .roomManifest { left: 6%; top: 46%; width: 88%; }
+  .rocketSchematic { left: 6%; top: 15%; width: 88%; height: auto; aspect-ratio: 8 / 3; }
+  .roomManifest { left: 6%; top: 35%; width: 88%; }
   .roomManifest li { grid-template-columns: 34px minmax(0, 1fr) auto; gap: 10px; min-height: 58px; }
   .roomManifest li i { width: 32px; height: 32px; }
   .roomManifest li strong { font-size: 14px; }
@@ -779,21 +792,22 @@ button:focus-visible { outline: 4px solid var(--ln-cyan); outline-offset: 3px; }
   .rocketSwitcher { left: 6%; bottom: 16%; }
   .stagedHold { left: 6%; bottom: 15%; width: 88%; }
 
-  .root[data-step='3'][data-coach='true'] .blueprintHeading { top: 25%; }
-  .root[data-step='3'][data-coach='true'] .rocketSchematic { top: 31%; height: 15%; }
-  .root[data-step='3'][data-coach='true'] .roomManifest { top: 49%; }
+  .root[data-step='3'][data-coach='true'] .blueprintHeading { top: 20%; }
+  .root[data-step='3'][data-coach='true'] .rocketSchematic { top: 27%; width: 66%; }
+  .root[data-step='3'][data-coach='true'] .roomManifest { top: 45%; }
 
-  .hangarBuildScene, .launchpadReview { inset: 0 0 18% 0; }
-  .reviewBrief { inset: 82% 0 0; display: grid; grid-template-columns: 24% 50% 26%; grid-template-rows: 1fr auto; gap: 4px 12px; padding: 8px 12px; border-top: 3px solid var(--mission-ink); border-left: 0; }
-  .reviewHeading { grid-column: 1; grid-row: 1; }
-  .reviewHeading h2 { font-size: 17px; }
-  .reviewFacts { grid-column: 2; grid-row: 1 / 3; grid-template-columns: repeat(3, minmax(0, 1fr)); align-self: stretch; gap: 8px; margin: 0; }
-  .reviewFacts > div { padding: 0 8px; border-top: 0; border-left: 1px solid color-mix(in srgb, var(--mission-ink) 23%, transparent); }
-  .reviewFacts > div:nth-child(3) { display: none; }
+  .hangarBuildScene, .launchpadReview { inset: 0 0 clamp(220px, 31%, 300px) 0; }
+  .reviewBrief { inset: auto 0 0; height: clamp(220px, 31%, 300px); overflow: hidden; display: grid; grid-template-columns: minmax(0, 1fr) minmax(132px, .8fr); grid-template-rows: auto 1fr auto; gap: 8px 12px; padding: 10px 12px; border-top: 3px solid var(--mission-ink); border-left: 0; }
+  .reviewHeading { grid-column: 1 / 3; grid-row: 1; min-width: 0; }
+  .reviewHeading h2 { overflow: hidden; margin-top: 3px; font-size: 17px; text-overflow: ellipsis; white-space: nowrap; }
+  .reviewFacts { grid-column: 1 / 3; grid-row: 2; grid-template-columns: repeat(4, minmax(0, 1fr)); align-self: stretch; gap: 0; margin: 0; }
+  .reviewFacts > div { min-width: 0; padding: 4px 8px; border-top: 1px solid color-mix(in srgb, var(--mission-ink) 23%, transparent); border-left: 1px solid color-mix(in srgb, var(--mission-ink) 23%, transparent); }
+  .reviewFacts > div:first-child { border-left: 0; }
+  .reviewFacts > div:nth-child(3) { display: block; }
   .reviewFacts dt { font-size: 6px; }
-  .reviewFacts dd { margin-top: 4px; font-size: 8px; }
-  .clearance { grid-column: 1; grid-row: 2; align-self: end; margin: 0; padding: 6px 7px; }
-  .reviewBrief > .primary { grid-column: 3; grid-row: 1 / 3; align-self: end; min-height: 44px; margin: 0; }
+  .reviewFacts dd { overflow: hidden; margin-top: 4px; font-size: 8px; text-overflow: ellipsis; }
+  .clearance { grid-column: 1; grid-row: 3; align-self: stretch; margin: 0; padding: 6px 7px; }
+  .reviewBrief > .primary { grid-column: 2; grid-row: 3; align-self: stretch; min-height: 48px; margin: 0; white-space: normal; }
   .hangarBayHeading strong { font-size: 19px; }
   .assemblyVehicle { left: 17%; right: 5%; top: 22%; height: 48%; }
   .assemblyTimeline { height: 19%; }
@@ -808,4 +822,15 @@ button:focus-visible { outline: 4px solid var(--ln-cyan); outline-offset: 3px; }
   .root[data-step='4'][data-coach='true'] .overheadCrane { top: 31%; height: 28%; }
   .root[data-step='4'][data-coach='true'] .assemblyVehicle { top: 35%; height: 32%; }
   .root[data-step='4'][data-coach='true'] .replayAssembly { top: 27%; }
+}
+
+@media (orientation: portrait) and (max-width: 560px) {
+  .reviewBrief { grid-template-columns: minmax(0, 1fr) minmax(124px, .9fr); }
+  .reviewFacts { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .reviewFacts > div:nth-child(odd) { border-left: 0; }
+  .reviewFacts dt { white-space: normal; }
+  .reviewFacts dd { overflow: visible; white-space: normal; text-overflow: clip; }
+  .clearance small { display: none; }
+  .assemblyTimeline span,
+  .assemblyTimeline strong { overflow: visible; font-size: 5px; line-height: 1.1; letter-spacing: .05em; text-overflow: clip; white-space: normal; }
 }

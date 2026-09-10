@@ -348,7 +348,10 @@ export default function HubScreen({ player, rocketVariant = 'explorer', hasCoach
       const kind = Object.entries(effectivePlots).find(([, index]) => index === plot)?.[0]
       const widthPct = kind ? (EARTH_BASE_STRUCTURE_SIZES[kind]?.width ?? 0) / 6.4 : 0
       return ({
-        left: `${sceneXPercent(e.transform.position.x, widthPct)}%`,
+        // The authored outer plots sit close to the scene edge. Clamp the DOM
+        // hit target (which is wider than the sprite) so its entire button and
+        // status remain reachable even on a 320px viewport.
+        left: `clamp(62px, ${sceneXPercent(e.transform.position.x, widthPct)}%, calc(100% - 62px))`,
         bottom: `calc(var(--hub-ground) - ${PLOT_LABEL_DROP}px)`,
         transform: 'translateX(-50%)',
       } as React.CSSProperties)
@@ -482,7 +485,7 @@ export default function HubScreen({ player, rocketVariant = 'explorer', hasCoach
   }
 
   return (
-    <div className={layoutStyles.root} style={{ width: '100%', height: '100%', position: 'relative', overflow: 'hidden' }}>
+    <div className={layoutStyles.root} data-screen="hub" style={{ width: '100%', height: '100%', position: 'relative', overflow: 'hidden' }}>
 
       {/* ── Sliding world: surface (top 50%) + subsurface (bottom 50%) ── */}
       <div className="earth-base-campus-transition" style={{
@@ -584,31 +587,24 @@ export default function HubScreen({ player, rocketVariant = 'explorer', hasCoach
           title, top-left, matching the reference's fixed left-edge rail
           rather than corner-scattered readouts. Surface and subsurface now
           share the same dark treatment; no more light/dark split. */}
-      <div style={{
-        position: 'absolute', top: 0, left: 0, right: 0, zIndex: 18,
-        padding: '16px 16px 24px',
-        // Keep the sky crisp. The previous backdrop blur caused the broad
-        // frosted patch visible through the upper-middle of the world.
-        background: 'linear-gradient(180deg, color-mix(in srgb, var(--ln-void) 68%, transparent) 0%, color-mix(in srgb, var(--ln-void) 22%, transparent) 48%, transparent 100%)',
-        display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 10, pointerEvents: 'none',
-      }}>
-        <div style={{ pointerEvents: 'auto', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', width: '100%', gap: 12 }}>
-          <div style={{ minWidth: 0 }}>
+      <div className={layoutStyles.topHud}>
+        <div className={layoutStyles.topRow}>
+          <div className={layoutStyles.titleBlock}>
             {/* KES-173: DevShortcuts' fixed DEV toggle (top:8 left:8, dev-only,
                 roughly 120 pixels wide) sits directly over this eyebrow, clipping the
                 opening characters ("EARTH BASE" -> "H BASE"). Only reserve
                 the clearance when that badge can actually render. */}
-            <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 9.5, fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'color-mix(in srgb, var(--ln-text) 70%, transparent)', marginLeft: isDevLauncherEnabled() ? 130 : 0 }}>
+            <div className={layoutStyles.eyebrow} data-dev-launcher={isDevLauncherEnabled()}>
               {subsurface ? 'BASE · SUBSURFACE' : `BASE · OPS ${player.missionsDone}`}
             </div>
-            <h1 style={{ margin: '4px 0 0', fontFamily: 'var(--ln-font-display)', fontSize: 23, fontWeight: 800, letterSpacing: '-0.01em', color: 'var(--ln-text)', lineHeight: 1, textShadow: '0 4px 8px color-mix(in srgb, var(--ln-void) 60%, transparent)' }}>
+            <h1 className={layoutStyles.titleText}>
               {subsurface ? 'Subsurface' : 'Base'}
             </h1>
           </div>
           {!subsurface && <HubClockWidget />}
         </div>
         {!subsurface && (
-          <div style={{ pointerEvents: 'auto' }}>
+          <div className={layoutStyles.balance}>
             <HUDStrip player={player} />
           </div>
         )}

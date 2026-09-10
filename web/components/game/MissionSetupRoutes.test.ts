@@ -59,11 +59,27 @@ describe('mission setup replacement boundary', () => {
     expect(styles).toContain('@keyframes assemble-payload')
     expect(styles).toContain('@keyframes inspect-vehicle')
     expect(styles).toContain('.reviewBrief')
-    expect(styles).toContain("@media (orientation: portrait) and (max-width: 720px)")
+    expect(styles).toContain('@media (orientation: portrait) {')
+    expect(styles).toContain('height: clamp(220px, 31%, 300px)')
+    expect(styles).toContain('grid-template-columns: repeat(4, minmax(0, 1fr))')
+    expect(styles).toContain('.reviewFacts > div:nth-child(3) { display: block; }')
     expect(styles).toContain('.purchaseTerms')
     expect(styles).toContain(".root[data-step='1'][data-coach='true'] .contractIdentity")
     expect(styles).toContain(".root[data-step='2'][data-coach='true'] .filterRibbon")
     expect(styles).toContain(".root[data-step='4'][data-coach='true'] .hangarBayHeading")
+  })
+
+  it('keeps Hub mobile chrome and scene objects in non-overlapping zones', () => {
+    const globals = read('../../app/globals.css')
+    const hub = read('./screens/HubScreen.tsx')
+    const structures = read('../../app/launchpad-screen.css')
+
+    expect(hub).toContain('data-screen="hub"')
+    expect(hub).toContain('left: `clamp(62px,')
+    expect(globals).toContain('.portrait-canvas:has([data-screen="hub"]) .hub-friends-button')
+    expect(globals).toContain('.portrait-canvas:has([data-screen="hub"]) .feedback-launcher')
+    expect(globals).toContain('bottom: auto !important')
+    expect(structures).toContain('.portrait-canvas:has([data-screen="hub"]) .earth-base-flat-sprite')
   })
 
   it('keeps the mission coach at one fixed width and anchor', () => {

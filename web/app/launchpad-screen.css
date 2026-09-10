@@ -127,6 +127,25 @@ button.launchpad-scene-object { cursor: pointer; }
   filter: brightness(1.2) saturate(0.72) drop-shadow(0 0 7px var(--hub-cyan)) drop-shadow(0 0 16px color-mix(in srgb, var(--hub-cyan) 55%, transparent));
   mix-blend-mode: screen;
 }
+
+/* Foreground facilities must read as interactive structures, not another
+   pale mountain band. A dark contact shadow plus a restrained cyan rim keeps
+   their silhouette legible at phone scale without changing the authored art. */
+.portrait-canvas:has([data-screen="hub"]) .earth-base-structure::before {
+  position: absolute;
+  right: 4%;
+  bottom: -3%;
+  left: 4%;
+  height: 18%;
+  content: '';
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--ln-void) 74%, transparent);
+  filter: blur(4px);
+}
+.portrait-canvas:has([data-screen="hub"]) .earth-base-flat-sprite,
+.portrait-canvas:has([data-screen="hub"]) .earth-base-silo-sprite {
+  filter: brightness(1.14) saturate(1.18) drop-shadow(0 3px 0 color-mix(in srgb, var(--ln-void) 86%, transparent)) drop-shadow(0 0 3px color-mix(in srgb, var(--hub-cyan) 48%, transparent));
+}
 .launchpad-tower {
   left: 7%; bottom: var(--hub-ground); width: 30%; height: auto;
   /* The attached mission-control label is positioned below the tower art.
@@ -484,7 +503,7 @@ button.launchpad-scene-object { cursor: pointer; }
    contents beyond the viewport. Keep the environment full-bleed, but give the
    dock an honest mobile composition: status row first, two-column action grid
    below, with every child constrained to the viewport. */
-@media (max-width: 600px) {
+@media (orientation: portrait) and (max-width: 1023px), (max-width: 600px) {
   .hub-bottom-dock-inner {
     box-sizing: border-box;
     display: block;
@@ -518,34 +537,4 @@ button.launchpad-scene-object { cursor: pointer; }
     width: 100%;
   }
 
-  /* Keep utility controls in the top-right command cluster. Their previous
-     bottom offsets put them over the mobile tab bar and the dock's status. */
-  .portrait-canvas:has(.hub-bottom-dock) [data-testid="settings-button"],
-  .portrait-canvas:has(.hub-bottom-dock) [data-testid="friends-button"] {
-    top: 54px !important;
-    bottom: auto !important;
-  }
-
-  .portrait-canvas:has(.hub-bottom-dock) [data-testid="settings-button"] {
-    right: 12px !important;
-    left: auto !important;
-  }
-
-  .portrait-canvas:has(.hub-bottom-dock) [data-testid="friends-button"] {
-    /* Clears the Menu pill's mobile span (right:12px, 72px wide -> occupies
-       12-84px from the edge) — this used to sit at right:54px, landing
-       inside that span and rendering FRIENDS on top of MENU (07/09/26 QA
-       report). Menu was a 34px icon-only circle when this was tuned; it is
-       now a 72px text pill (`.game-menu-button` in globals.css). */
-    right: 96px !important;
-    left: auto !important;
-  }
-
-  .portrait-canvas:has(.hub-bottom-dock) .sync-status {
-    top: 94px;
-    right: 12px;
-    bottom: auto !important;
-    left: auto;
-    height: max-content;
-  }
 }

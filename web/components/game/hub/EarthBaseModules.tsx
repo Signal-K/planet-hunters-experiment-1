@@ -84,7 +84,7 @@ export function EarthBaseModules({ buildings }: { buildings: HubBuildingDef[] })
             className={`earth-base-structure earth-base-structure--${building.kind}`}
             data-structure={building.kind}
             style={{
-              left: `${left}%`,
+              left: `clamp(62px, ${left}%, calc(100% - 62px))`,
               bottom: 'var(--hub-ground)',
               // Mobile keeps the authored scene-proportional scale. Desktop
               // receives a viewport-aware cap so structures retain the same
