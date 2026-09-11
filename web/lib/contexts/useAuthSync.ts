@@ -786,6 +786,7 @@ export function useAuthSync({
 
     pbShared.authStore.clear()
     pbLandnam.authStore.clear()
+    clearAccountCredentials()
     localStorage.removeItem(storageKey)
     if (signedOutUserId) localStorage.removeItem(accountGameStateStorageKey(storageKey, signedOutUserId))
     setState(DEFAULT_STATE)
