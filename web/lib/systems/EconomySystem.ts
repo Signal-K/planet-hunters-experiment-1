@@ -370,6 +370,7 @@ export function applyFabricateRocketPart(s: GameState, rocketId: string, compone
 /** Consume one of every canonical component and move the locally assembled
  * vehicle to the Hangar/launchpad path. */
 export function applyAssembleFabricatedRocket(s: GameState, rocket: RocketModel): GameState {
+  if (s.player.pendingLaunch && s.player.pendingRocketId === rocket.id) return s
   if (!earthStorageBuilt(s.player)) return s
   const recipes = rocketCompositionForId(rocket.id).recipes
   if (!recipes.every(recipe => (s.player.fabricatedRocketParts?.[recipe.id] ?? 0) >= 1)) return s

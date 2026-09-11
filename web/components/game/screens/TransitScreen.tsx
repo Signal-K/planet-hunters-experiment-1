@@ -144,8 +144,16 @@ export default function TransitScreen({ target, rocketImageSrc, arrivalAt, trans
           <span className="transit-destination-chip__status">COURSE LOCKED</span>
           <strong>{destinationName}</strong>
           <span>{returning ? 'EARTH RECOVERY VECTOR' : `${target.type.toUpperCase()} · ORBIT ${target.orbit}`}</span>
-          {mission && <small data-testid="transit-mission-context">{mission.title}{issuedBy ? ` · ${issuedBy}` : ''}</small>}
         </div>
+
+        {mission && (
+          <section className="transit-mission-card" data-testid="transit-mission-context" aria-label="Mission context">
+            <div className="transit-mission-card__eyebrow">{legLabel} mission</div>
+            <strong>{mission.title}</strong>
+            {issuedBy && <span className={ownProgram ? 'transit-mission-card__own' : ''}>{ownProgram ? issuedBy : `Issued by ${issuedBy}`}</span>}
+            {legPurpose && <p>{legPurpose}</p>}
+          </section>
+        )}
 
         <section className="transit-flight-hud transit-readout" data-transit-progress={progress} aria-label="Flight telemetry">
           <div className="transit-flight-hud__heading">

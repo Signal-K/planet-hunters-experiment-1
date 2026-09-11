@@ -232,6 +232,7 @@
 
   .landedShip { width: min(23vw, 220px); bottom: 8%; }
 
+
   .hud {
     gap: 4px;
     padding: 8px 12px;

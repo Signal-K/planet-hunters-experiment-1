@@ -359,6 +359,124 @@ body:has(.theme-blueprint) {
 @keyframes ln-flow { to { stroke-dashoffset: -24; } }
 .ln-con-flow { stroke-dasharray: 4 8; animation: ln-flow 1.1s linear infinite; }
 
+/* ─── Mission-setup blueprint theme ──────────────────────────────────────
+   Mission creation is intentionally light. This is the approved KES-211
+   direction: pale blueprint paper, navy ink, and restrained technical
+   accents. Keep it opt-in so unrelated operational scenes can retain their
+   own surface treatment. */
+.theme-blueprint {
+  --ln-bp-bg:      #eef3f8;
+  --ln-bp-paper:   #ffffff;
+  --ln-bp-paper-2: #dfe9f3;
+
+  --ln-bp-ink:      #0f2436;
+  --ln-bp-ink-dim:  #48596a;
+  --ln-bp-ink-mute: #7c8ea0;
+
+  --ln-bp-line:        rgba(15, 36, 54, 0.14);
+  --ln-bp-line-strong: rgba(15, 36, 54, 0.30);
+
+  --ln-bp-blue:      #1f78c1;
+  --ln-bp-blue-soft: rgba(31, 120, 193, 0.08);
+
+  --ln-bp-pink:        #c94a86;
+  --ln-bp-pink-soft:   rgba(201, 74, 134, 0.10);
+  --ln-bp-pink-border: rgba(201, 74, 134, 0.4);
+
+  --ln-bp-green:      #1f8f57;
+  --ln-bp-green-soft: rgba(31, 143, 87, 0.10);
+
+  --ln-void:      var(--ln-bp-bg);
+  --ln-bg:        var(--ln-bp-bg);
+  --ln-bg-grid:   var(--ln-bp-paper-2);
+  --ln-surface:   var(--ln-bp-paper);
+  --ln-surface-2: var(--ln-bp-paper-2);
+  --ln-surface-3: var(--ln-bp-paper-2);
+  --ln-shell:     var(--ln-bp-bg);
+  --ln-panel:     var(--ln-bp-paper);
+  --ln-panel-2:   var(--ln-bp-paper-2);
+  --ln-overlay:   rgba(238, 243, 248, 0.86);
+
+  --ln-text:       var(--ln-bp-ink);
+  --ln-text-dim:   var(--ln-bp-ink-dim);
+  --ln-text-muted: var(--ln-bp-ink-mute);
+  --ln-text-ghost: rgba(15, 36, 54, 0.35);
+
+  --ln-hairline:        var(--ln-bp-line);
+  --ln-hairline-strong: var(--ln-bp-line-strong);
+  --ln-divider:         var(--ln-bp-line);
+
+  --ln-cyan-soft:   var(--ln-bp-blue-soft);
+  --ln-cyan-border: rgba(31, 120, 193, 0.32);
+  --ln-ok:          var(--ln-bp-green);
+  --ln-ok-soft:     var(--ln-bp-green-soft);
+
+  --ln-shadow-card:  0 1px 0 rgba(255,255,255,0.6) inset, 0 4px 16px rgba(15,36,54,0.10);
+  --ln-shadow-modal: 0 24px 64px rgba(15,36,54,0.22);
+}
+
+/* The setup dock is part of the paper surface, not a dark footer. */
+.theme-blueprint .sticky-actions {
+  background: linear-gradient(180deg, transparent, rgba(238, 243, 248, 0.94) 34%, var(--ln-bp-bg));
+}
+
+/* Mission setup owns the surrounding desktop frame as well. Do not leave a
+   dark stage, starfield, or menu button visible around an otherwise light
+   creation flow. */
+.game-stage:has(.theme-blueprint) {
+  background: var(--ln-blueprint-bg);
+}
+.game-stage:has(.theme-blueprint)::before {
+  display: none;
+}
+.game-stage:has(.theme-blueprint) .game-stage-backdrop {
+  display: none;
+}
+.portrait-canvas:has(.theme-blueprint) {
+  background: var(--ln-bp-bg);
+  border-color: var(--ln-bp-line-strong);
+  box-shadow: 0 4px 16px rgba(15,36,54,0.10);
+}
+.portrait-canvas:has(.theme-blueprint) .game-menu-button {
+  background: var(--ln-blueprint-paper);
+  border-color: var(--ln-blueprint-line-strong);
+  color: var(--ln-blueprint-blue);
+  backdrop-filter: none;
+}
+.portrait-canvas:has(.theme-blueprint) .bottom-tab-bar {
+  background: var(--ln-blueprint-paper-2);
+  border-top-color: var(--ln-blueprint-line-strong);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+html:has(.theme-blueprint),
+body:has(.theme-blueprint) {
+  background-color: var(--ln-blueprint-bg);
+}
+
+/* ─── Construction Kit — additive utilities (KES-280) ──────────────────
+   Ported from the "Landnam construction design kit" (Claude Design project
+   8005324b-619a-4a3c-b2a1-c654e2478e97), re-themed for the light direction
+   (KES-219/KES-211) rather than the kit's original dark navy "glass HUD"
+   — no new colors, everything below reads off the existing --ln-* tokens
+   so it re-skins for free under .theme-blueprint / .theme-light / the
+   .theme-deep fallback. Scanline-sweep, reticle-glow and nebula-glow from
+   the source kit were dropped outright: they're dark-HUD-only flourishes
+   with no equivalent in a flat cel-shaded light theme. The blueprint grid
+   survives because it doubles as literal engineering-blueprint texture. */
+.ln-con-grid {
+  background-image:
+    repeating-linear-gradient(0deg, var(--ln-hairline) 0px, var(--ln-hairline) 1px, transparent 1px, transparent 22px),
+    repeating-linear-gradient(90deg, var(--ln-hairline) 0px, var(--ln-hairline) 1px, transparent 1px, transparent 22px);
+}
+.ln-con-well {
+  background: var(--ln-panel-2);
+  border: 1px solid var(--ln-hairline);
+  border-radius: var(--ln-r-lg);
+}
+@keyframes ln-flow { to { stroke-dashoffset: -24; } }
+.ln-con-flow { stroke-dasharray: 4 8; animation: ln-flow 1.1s linear infinite; }
+
 /* .theme-steel (mid-tone shell + genuinely light content cards) removed
    2026-07-23 — superseded by the revised :root/.theme-deep palette above.
    It shipped only to Mission Board/MissionCard, diverged from every other
@@ -406,10 +524,6 @@ button { cursor: pointer; }
     --tutorial-manual-content-top: 164px;
   }
 }
-
-/* Tablet/compact desktop uses the same reserved rail as portrait. Keeping
-   this breakpoint aligned with the target layout prevents the coach from
-   pushing the setup frame into a different vertical position at 720–899px. */
 
 /* Page backdrop. Superseded 2026-07-31 — the previous blue-violet radial
    (#2a4170/#24366a/#0e1526) was itself a replacement for a flat navy
@@ -1046,15 +1160,22 @@ button { cursor: pointer; }
 .compatibility--bad { color: var(--ln-crit); border: 1px solid var(--ln-crit); background: var(--ln-crit-soft); }
 .sticky-actions { position: absolute; z-index: 30; left: 0; right: 0; bottom: 0; padding: var(--ln-s-2) var(--ln-s-3) var(--ln-s-5); background: linear-gradient(180deg, transparent, rgba(10,10,11,.94) 34%, var(--ln-void)); }
 
-/* Step wayfinding footer (StepFooter.tsx) — desktop-sized defaults, matching
-   the values that used to be inline. Mobile gets a tighter pass below: this
-   strip sits directly above the primary CTA in .sticky-actions, so on a
-   narrow phone every px it takes is a px the thumb-reachable button loses. */
-
-@media (max-width: 1023px) {
-  /* Fewer, smaller words in the wayfinding strip: current step's name is
-     still the one filled-in pill, but the row no longer competes with the
-     Purchase/Launch button beneath it for thumb space or attention. */
+.mission-setup-scene-background {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+.mission-setup-scene-background > * {
+  position: absolute;
+  inset: 0;
+}
+.mission-setup-screen--assembly {
+  background: transparent !important;
+}
+.mission-setup-screen--assembly .mission-setup-content {
+  z-index: 1;
 }
 
 /* KES-181: setup is a lit operational scene, not a neutral app shell. The
@@ -1268,14 +1389,6 @@ button { cursor: pointer; }
   color: var(--ln-text-muted);
   font: 700 9px var(--ln-font-mono);
   letter-spacing: .08em;
-}
-.transit-destination-chip small {
-  max-width: 240px;
-  overflow: hidden;
-  color: var(--ln-text-dim);
-  font: 600 10px var(--ln-font-body);
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 .transit-mission-card {
   top: 92px;
@@ -2108,6 +2221,17 @@ button { cursor: pointer; }
   }
   .sticky-actions { padding-bottom: var(--ln-s-5); }
 }
+
+/* Desktop has NO persistent global navigation — no side rail, no bottom bar.
+   Neither appears in any Open Design shell, and both ate a permanent strip of
+   the playfield. Navigation on desktop is diegetic: structures on the Earth
+   Base are the menu, the topbar carries Back, and the mission flow is driven
+   by the step footer and progression cards. `.hub-desktop-nav` adds the few
+   destinations that have no building (Market, Atlas, Skills) to the base's own
+   action rail at desktop widths.
+
+   The bottom tab bar survives only under 1024px, where there is no room for
+   the base action rail to carry navigation as well. */
 .hub-desktop-nav {
   display: none;
 }

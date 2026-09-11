@@ -10,6 +10,7 @@ interface DebriefCanvasProps {
 }
 
 const STARFIELD = '/game/assets/backgrounds/starmap.png'
+const HANGAR = '/game/assets/base/hangar_flat.png'
 const FALLBACK_SHIP = ROCKET_ASSETS.explorer.exterior
 
 /**
@@ -48,7 +49,10 @@ export default function DebriefCanvas({ rocketImageSrc }: DebriefCanvasProps) {
         })
         if (destroyed) return
 
-        const starfield = await Assets.load<Texture>(STARFIELD)
+        const [starfield, hangar] = await Promise.all([
+          Assets.load<Texture>(STARFIELD),
+          Assets.load<Texture>(HANGAR),
+        ])
         if (destroyed) return
 
         let shipTexture: Texture | null = null
@@ -69,6 +73,11 @@ export default function DebriefCanvas({ rocketImageSrc }: DebriefCanvasProps) {
         const atmosphere = new Graphics()
         atmosphere.name = 'arrival-atmosphere'
         scene.addChild(atmosphere)
+
+        const hangarSprite = new Sprite(hangar)
+        hangarSprite.name = 'arrival-hangar'
+        hangarSprite.anchor.set(0.5, 1)
+        scene.addChild(hangarSprite)
 
         const berth = new Graphics()
         berth.name = 'arrival-berth-lights'
@@ -95,6 +104,12 @@ export default function DebriefCanvas({ rocketImageSrc }: DebriefCanvasProps) {
           atmosphere.rect(0, 0, nextWidth, nextHeight * 0.42).fill({ color: 0x020711, alpha: 0.32 })
           atmosphere.rect(0, nextHeight * 0.68, nextWidth, nextHeight * 0.32).fill({ color: 0x020711, alpha: 0.74 })
           atmosphere.rect(0, nextHeight * 0.76, nextWidth, 2).fill({ color: 0x70d9ea, alpha: 0.24 })
+
+          const hangarWidth = Math.min(nextWidth * 0.78, 680)
+          const hangarScale = hangarWidth / hangar.width
+          hangarSprite.scale.set(hangarScale)
+          hangarSprite.x = nextWidth * 0.5
+          hangarSprite.y = nextHeight * 0.96
 
           const berthX = nextWidth * 0.5
           const berthY = nextHeight * 0.78
