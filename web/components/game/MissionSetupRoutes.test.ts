@@ -86,7 +86,7 @@ describe('mission setup replacement boundary', () => {
     const coach = read('./TutorialCoach.tsx')
     const globals = read('../../app/globals.css')
 
-    expect(coach).toContain("left: 16, top: 80, width: 320")
+    expect(coach).toContain("left: 16, top: TUTORIAL_RAIL.RESERVED_TOP, width: 320")
     expect(coach).toContain('tutorial-coach-overlay tutorial-coach-overlay--mission-setup')
     expect(globals).toContain('.tutorial-coach-overlay:not(.tutorial-coach-overlay--mission-setup)')
   })

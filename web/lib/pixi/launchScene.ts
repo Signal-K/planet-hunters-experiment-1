@@ -367,7 +367,7 @@ export function buildLaunchScene(
       ...hudStyle, fill: C.text, fontSize: 7, letterSpacing: 1.1,
       // Narrow portrait canvases (KES-352) are narrower than this line's
       // rendered width; wrap it instead of letting it run off both edges.
-      align: 'center', wordWrap: true, wordWrapWidth: Math.max(160, W - 32),
+      align: 'center', wordWrap: true, wordWrapWidth: 180,
     }),
   })
   automationLabel.anchor.set(0.5, 0); automationLabel.x = W / 2; automationLabel.y = H * 0.18
