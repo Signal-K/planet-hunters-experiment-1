@@ -9,7 +9,7 @@ export interface ScheduledPush {
  * route. If push is unsupported or not enabled, gameplay continues silently.
  */
 export async function scheduleLandnamPush(notification: ScheduledPush): Promise<void> {
-  if (typeof navigator === 'undefined' || !('serviceWorker' in navigator)) return
+  if (typeof navigator === 'undefined' || !('serviceWorker' in navigator) || !('PushManager' in window)) return
 
   const registration = await navigator.serviceWorker.ready
   const subscription = await registration.pushManager.getSubscription()
