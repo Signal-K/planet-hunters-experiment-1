@@ -1,4 +1,5 @@
 import PocketBase, { LocalAuthStore, type RecordModel } from 'pocketbase'
+import { LANDNAM_PB_URL } from '@/lib/pb-config'
 
 // Explicit, distinct storage key — PocketBase's SDK defaults every client to
 // the same localStorage key ('pocketbase_auth') when none is given, so
@@ -11,7 +12,7 @@ import PocketBase, { LocalAuthStore, type RecordModel } from 'pocketbase'
 // no-migration fix — pbShared intentionally keeps the SDK's default key so
 // existing players' stored sessions keep working.
 export const pbLandnam = new PocketBase(
-  process.env.NEXT_PUBLIC_LANDNAM_PB_URL || 'http://localhost:8093',
+  LANDNAM_PB_URL,
   new LocalAuthStore('pocketbase_auth_landnam')
 )
 

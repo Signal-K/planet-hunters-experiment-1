@@ -14,6 +14,7 @@ import type { AsteroidCandidate, AsteroidClassification, AsteroidVerdict } from 
 import type { Player } from '@/lib/game-types'
 import { UI_ZONES } from '@/lib/ui-zones'
 import { fetchReviewableAsteroidCandidates } from '@/lib/asteroid-subjects'
+import { sharedBackendMisconfigured } from '@/lib/pb-config'
 import { useIsDesktop } from '@/lib/hooks/useIsDesktop'
 import { instrumentDigestDateKey, unresolvedDeepSpaceInstrumentDigest } from '@/lib/systems/InstrumentFeedSystem'
 import AsteroidDiscoveryCoach, { useAsteroidDiscoveryCoach } from '@/components/game/AsteroidDiscoveryCoach'
@@ -49,6 +50,8 @@ export default function AsteroidDiscoveryScreen({ player, visualCandidate, onBac
   const [candidate, setCandidate] = useState<AsteroidCandidate | null>(null)
   const [loading, setLoading] = useState(true)
   const [loadFailed, setLoadFailed] = useState(false)
+  // Same in-place retry as TessDiscoveryScreen — see its comment (KES-357).
+  const [retryToken, setRetryToken] = useState(0)
   // Dev/staging-only day-skip, same rationale as TessDiscoveryScreen's
   // devDayOffset — the daily pool is keyed by real calendar date.
   const [devDayOffset, setDevDayOffset] = useState(0)
@@ -104,7 +107,7 @@ export default function AsteroidDiscoveryScreen({ player, visualCandidate, onBac
     // player is still looking at. A new candidate is only fetched on mount
     // or when the telescope/day actually changes.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [visualCandidate, player.freeOperations, player.deepSpaceTelescopeBuilt, player.deepSpaceTelescopeLevel, devDayOffset])
+  }, [visualCandidate, player.freeOperations, player.deepSpaceTelescopeBuilt, player.deepSpaceTelescopeLevel, devDayOffset, retryToken])
 
   const isDesktop = useIsDesktop()
   const coach = useAsteroidDiscoveryCoach()
@@ -150,16 +153,24 @@ export default function AsteroidDiscoveryScreen({ player, visualCandidate, onBac
   }
 
   if (!candidate) {
+    // See TessDiscoveryScreen — a localhost-pointing deployed build is a
+    // build-time misconfiguration, not an outage to wait out.
+    const misconfigured = loadFailed && sharedBackendMisconfigured()
     return (
       <GateScreen
         eyebrow="BASE / DAILY DOWNLINK"
         icon={<Radio size={22} />}
         tone="amber"
-        title={loadFailed ? 'Live Feed Unavailable' : 'No Reviewable Candidate'}
-        body={loadFailed
-          ? 'The shared NEOCP candidate feed could not be reached. Check back later.'
-          : 'Every live NEOCP candidate is currently classified or has resolved off the feed.'}
+        title={misconfigured ? 'Feed Not Configured' : loadFailed ? 'Live Feed Unavailable' : 'No Reviewable Candidate'}
+        body={misconfigured
+          ? 'This build has no shared-backend address, so the NEOCP feed cannot be reached from here. Report this — a reload will not clear it.'
+          : loadFailed
+            ? 'The shared NEOCP candidate feed could not be reached. Retry, or check back later.'
+            : 'Every live NEOCP candidate is currently classified or has resolved off the feed.'}
         onBack={onBack}
+        action={loadFailed && !misconfigured ? (
+          <PrimaryBtn testId="neocp-feed-retry-btn" onClick={() => setRetryToken(t => t + 1)}>Retry Downlink</PrimaryBtn>
+        ) : undefined}
         devBar={process.env.NODE_ENV === 'development' ? (
           <DevDaySkipBar offset={devDayOffset} onAdvance={() => setDevDayOffset(o => o + 1)} onReset={() => setDevDayOffset(0)} />
         ) : undefined}

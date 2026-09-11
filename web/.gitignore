@@ -34,6 +34,9 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+# ...except the documented template of the build-time NEXT_PUBLIC_* values a
+# deploy needs (KES-357) — it holds no secrets and is useless uncommitted.
+!.env.example
 
 # vercel
 .vercel

@@ -19,6 +19,7 @@ import { deriveObservatoryStats, periodFromRanges, sectorWindows, tessCandidateT
 import type { Player } from '@/lib/game-types'
 import { UI_ZONES } from '@/lib/ui-zones'
 import { fetchReviewableTessCandidates } from '@/lib/tess-subjects'
+import { sharedBackendMisconfigured } from '@/lib/pb-config'
 import { useIsDesktop } from '@/lib/hooks/useIsDesktop'
 import { instrumentDigestDateKey, unresolvedTransitInstrumentDigest } from '@/lib/systems/InstrumentFeedSystem'
 
@@ -64,6 +65,11 @@ export default function TessDiscoveryScreen({ player, visualCandidate, onBack, o
   const [forceMapView, setForceMapView] = useState(false)
   const [loading, setLoading] = useState(true)
   const [loadFailed, setLoadFailed] = useState(false)
+  // A failed downlink used to be terminal for the whole visit: the fetch runs
+  // once per mount, so a player who hit a cold backend (or a flaky mobile
+  // connection) had no way back to the feed short of leaving the screen and
+  // returning. Bumping this re-runs the effect in place (KES-357).
+  const [retryToken, setRetryToken] = useState(0)
   // Dev/staging-only: the daily candidate pool is keyed by real calendar date
   // (InstrumentFeedSystem below), so there's no in-scene timer to fast-forward
   // the way TransitScreen's ETA has — testing "the next day's downlink"
@@ -120,7 +126,7 @@ export default function TessDiscoveryScreen({ player, visualCandidate, onBack, o
     // post-confirmation target-selection map. Re-entering the screen remounts
     // it and naturally resolves the next still-unclassified daily candidate.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [visualCandidate, player.freeOperations, player.transitSatelliteLaunchedAt, player.transitSatelliteLevel, player.satelliteTargetId, devDayOffset])
+  }, [visualCandidate, player.freeOperations, player.transitSatelliteLaunchedAt, player.transitSatelliteLevel, player.satelliteTargetId, devDayOffset, retryToken])
 
   const classification: TessClassification | undefined = candidate ? classifications[candidate.id] : undefined
   const discoveredTarget = candidate && classification?.verdict === 'planet'
@@ -183,16 +189,26 @@ export default function TessDiscoveryScreen({ player, visualCandidate, onBack, o
   }
 
   if (!candidate) {
+    // A deployed build whose NEXT_PUBLIC_SHARED_PB_URL was never set talks to
+    // localhost and fails every single call, so "check back later" is wrong
+    // advice — nothing about waiting fixes a build-time misconfiguration.
+    // Name it instead, so the report that reaches us is actionable.
+    const misconfigured = loadFailed && sharedBackendMisconfigured()
     return (
       <GateScreen
         eyebrow="BASE / DAILY DOWNLINK"
         icon={<Radio size={22} />}
         tone="amber"
-        title={loadFailed ? 'Live Feed Unavailable' : 'No Reviewable Anomaly'}
-        body={loadFailed
-          ? 'The shared TESS subject feed could not be reached. Check back later.'
-          : 'Every live TESS transit subject is currently confirmed, rejected, or already resolved by consensus.'}
+        title={misconfigured ? 'Feed Not Configured' : loadFailed ? 'Live Feed Unavailable' : 'No Reviewable Anomaly'}
+        body={misconfigured
+          ? 'This build has no shared-backend address, so the TESS feed cannot be reached from here. Report this — a reload will not clear it.'
+          : loadFailed
+            ? 'The shared TESS subject feed could not be reached. Retry, or check back later.'
+            : 'Every live TESS transit subject is currently confirmed, rejected, or already resolved by consensus.'}
         onBack={onBack}
+        action={loadFailed && !misconfigured ? (
+          <PrimaryBtn testId="tess-feed-retry-btn" onClick={() => setRetryToken(t => t + 1)}>Retry Downlink</PrimaryBtn>
+        ) : undefined}
         devBar={process.env.NODE_ENV === 'development' ? (
           <DevDaySkipBar offset={devDayOffset} onAdvance={() => setDevDayOffset(o => o + 1)} onReset={() => setDevDayOffset(0)} />
         ) : undefined}
