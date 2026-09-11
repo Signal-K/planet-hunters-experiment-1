@@ -22,6 +22,12 @@ const C = {
   amberBright:0xffc25c,
   crimson:   0xc8293e,
   text:      0xe6efff,
+  // KES-353: distinct from surface/surface2/surface3 on purpose — those are
+  // also the rocket body's fill colors, and clouds sharing them at similar
+  // alpha camouflaged the vehicle against its own background.
+  cloud1:    0x1a2438,
+  cloud2:    0x232f47,
+  cloud3:    0x2c3a56,
 } as const
 
 // ─── Timeline ────────────────────────────────────────────────────────────────
@@ -73,6 +79,11 @@ function makeSoftCircleTexture(app: Application, radius: number): Texture {
 }
 
 // ─── Rocket parts ──────────────────────────────────────────────────────────
+// KES-353: the previous build was both small (32px body width, ~270px tall
+// against a 780px canvas) and low-contrast — dark surface2/surface3 fills
+// read as a grey smudge against the near-black night sky. This version is
+// ~1.6x larger and every silhouette edge carries a bright cyan rim stroke so
+// the vehicle stays legible against both the night sky and deep-space black.
 function buildRocket(): {
   root: Container
   boosterL: Graphics
@@ -80,37 +91,39 @@ function buildRocket(): {
   lowerStage: Container
 } {
   const root = new Container()
+  const rim = { width: 2, color: C.cyanBright, alpha: 0.85 }
 
   // Lower stage (body tube + engine bell) — separates as one unit at stageSep
   const lowerStage = new Container()
   const body = new Graphics()
-  body.rect(-16, -175, 32, 115).fill(C.surface2)
-  body.rect(-16, -175, 32, 4).fill(C.surface3)
-  body.rect(-16, -90, 32, 3).fill(C.cyan) // stripe / stage separation ring
+  body.rect(-26, -280, 52, 184).fill(C.surface2).stroke(rim)
+  body.rect(-26, -280, 52, 7).fill(C.surface3)
+  body.rect(-26, -145, 52, 5).fill(C.cyan) // stripe / stage separation ring
+  body.rect(-22, -270, 6, 66).fill({ color: 0xffffff, alpha: 0.14 }) // highlight edge
   lowerStage.addChild(body)
 
   const engineBell = new Graphics()
-  engineBell.poly([-14, -60, 14, -60, 20, -20, -20, -20]).fill(C.void)
-  engineBell.poly([-14, -60, 14, -60, 17, -35, -17, -35]).fill(C.surface3)
+  engineBell.poly([-22, -96, 22, -96, 32, -32, -32, -32]).fill(C.void).stroke(rim)
+  engineBell.poly([-22, -96, 22, -96, 27, -56, -27, -56]).fill(C.surface3)
   lowerStage.addChild(engineBell)
   root.addChild(lowerStage)
 
   // Upper body + nose cone — stays attached
   const upper = new Graphics()
-  upper.rect(-16, -220, 32, 45).fill(C.surface2)
-  upper.rect(-14, -218, 4, 41).fill({ color: C.cyanBright, alpha: 0.4 })
-  upper.poly([-16, -220, 0, -268, 16, -220]).fill(C.surface3)
-  upper.poly([-6, -222, 0, -260, 6, -222]).fill({ color: C.amber, alpha: 0.5 })
+  upper.rect(-26, -352, 52, 72).fill(C.surface2).stroke(rim)
+  upper.rect(-22, -349, 7, 66).fill({ color: 0xffffff, alpha: 0.16 })
+  upper.poly([-26, -352, 0, -429, 26, -352]).fill(C.surface3).stroke(rim)
+  upper.poly([-9, -356, 0, -416, 9, -356]).fill({ color: C.amber, alpha: 0.6 })
   root.addChild(upper)
 
   // Side boosters — each separates independently at boosterSep
   function makeBooster(side: 1 | -1): Graphics {
     const g = new Graphics()
-    g.rect(-6, -175, 12, 100).fill(C.surface)
-    g.rect(-6, -175, 12, 4).fill(C.surface3)
-    g.poly([-6, -175, 0, -195, 6, -175]).fill(C.surface2)
-    g.rect(-6, -85, 12, 20).fill(C.void)
-    g.x = side * 22
+    g.rect(-10, -280, 20, 160).fill(C.surface).stroke(rim)
+    g.rect(-10, -280, 20, 7).fill(C.surface3)
+    g.poly([-10, -280, 0, -312, 10, -280]).fill(C.surface2).stroke(rim)
+    g.rect(-10, -136, 20, 32).fill(C.void).stroke({ width: 1.5, color: C.cyanBright, alpha: 0.7 })
+    g.x = side * 35
     return g
   }
   const boosterL = makeBooster(-1)
@@ -172,6 +185,17 @@ export function buildLaunchScene(
   const padContainer = new Container()
   app.stage.addChild(padContainer)
 
+  // KES-353: a soft cyan spotlight behind the grounded vehicle so it reads
+  // against the night sky/cloud deck from the first frame, before ignition
+  // gives it its own light source.
+  const padGlow = new Graphics()
+  const glowSteps = 5
+  for (let i = glowSteps; i >= 1; i--) {
+    const t = i / glowSteps
+    padGlow.circle(W / 2, H - 220, 170 * t).fill({ color: C.cyan, alpha: 0.05 * (1 - t) + 0.015 })
+  }
+  padContainer.addChild(padGlow)
+
   const groundGfx = new Graphics()
   groundGfx.rect(0, H - 60, W, 60).fill({ color: C.void })
   groundGfx.rect(0, H - 62, W, 2).fill({ color: C.surface3 })
@@ -196,10 +220,13 @@ export function buildLaunchScene(
   app.stage.addChild(cloudContainer)
 
   const cloudLayers: { container: Container; puffs: CloudPuff[]; speed: number; parallax: number }[] = []
+  // Kept below ~0.62H (below where the grounded rocket's nose sits) so the
+  // cloud deck reads as ground-level weather instead of overlapping the
+  // vehicle silhouette for the whole pre-liftoff/ignition beat.
   const layerDefs = [
-    { count: 5, yMin: 0.55, yMax: 0.82, rMin: 34, rMax: 58, color: C.surface,  alpha: 0.55, speed: 4,  parallax: 0.4 },
-    { count: 4, yMin: 0.35, yMax: 0.6,  rMin: 24, rMax: 40, color: C.surface2, alpha: 0.45, speed: 7,  parallax: 0.6 },
-    { count: 3, yMin: 0.15, yMax: 0.35, rMin: 16, rMax: 26, color: C.surface3, alpha: 0.35, speed: 10, parallax: 0.8 },
+    { count: 5, yMin: 0.58, yMax: 0.78, rMin: 34, rMax: 58, color: C.cloud1, alpha: 0.4,  speed: 4,  parallax: 0.4 },
+    { count: 4, yMin: 0.45, yMax: 0.6,  rMin: 24, rMax: 40, color: C.cloud2, alpha: 0.32, speed: 7,  parallax: 0.6 },
+    { count: 3, yMin: 0.35, yMax: 0.48, rMin: 16, rMax: 26, color: C.cloud3, alpha: 0.26, speed: 10, parallax: 0.8 },
   ]
   for (const def of layerDefs) {
     const container = new Container()
@@ -221,17 +248,25 @@ export function buildLaunchScene(
   }
 
   // ── High atmosphere band (vector gradient via stacked bands) ──────────────
+  // KES-353: this used to be a fixed 70px block pinned at H*0.12 — on wide
+  // desktop canvases that lands squarely on top of the phase/automation HUD
+  // text below, reading as harsh horizontal stripes slashed through the
+  // readout rather than atmosphere. Scale it to the canvas, keep it clear of
+  // the HUD band (which runs through ~H*0.22), and soften the falloff with
+  // more, thinner, lower-alpha bands.
+  const atmosBandTop = H * 0.24
+  const atmosBandHeight = H * 0.16
   const highAtmosContainer = new Container()
-  highAtmosContainer.y = H * 0.12
+  highAtmosContainer.y = atmosBandTop
   highAtmosContainer.alpha = 0
   app.stage.addChild(highAtmosContainer)
 
-  const atmosBandCount = 6
+  const atmosBandCount = 14
   for (let i = 0; i < atmosBandCount; i++) {
     const t = i / (atmosBandCount - 1)
     const band = new Graphics()
-    band.rect(0, i * (70 / atmosBandCount), W, 70 / atmosBandCount + 1)
-      .fill({ color: C.cyan, alpha: 0.35 * (1 - t) })
+    band.rect(0, i * (atmosBandHeight / atmosBandCount), W, atmosBandHeight / atmosBandCount + 1)
+      .fill({ color: C.cyan, alpha: 0.16 * (1 - t) })
     highAtmosContainer.addChild(band)
   }
 
@@ -281,8 +316,9 @@ export function buildLaunchScene(
   if (opts.rocketImageSrc) {
     void Assets.load<Texture>(opts.rocketImageSrc).then(texture => {
       rocketSprite.texture = texture
-      const longEdge = Math.min(H * 0.34, 260)
-      const thickEdge = Math.min(W * 0.48, 170)
+      // KES-353: was capped at 260/170 — too small to read against the sky.
+      const longEdge = Math.min(H * 0.44, 340)
+      const thickEdge = Math.min(W * 0.56, 220)
       const scale = Math.min(longEdge / Math.max(texture.width, 1), thickEdge / Math.max(texture.height, 1))
       rocketSprite.scale.set(scale)
       rocketSprite.visible = true
@@ -379,7 +415,7 @@ export function buildLaunchScene(
     // Parallax
     padContainer.y       = -cameraY
     smokeContainer.y     = -cameraY
-    highAtmosContainer.y = H * 0.12 - cameraY * 0.3
+    highAtmosContainer.y = atmosBandTop - cameraY * 0.3
     rocketRoot.y         = H - 100 - rocketAltitude + cameraY
     if (orbitActive) {
       const orbitT = elapsed - T.orbit

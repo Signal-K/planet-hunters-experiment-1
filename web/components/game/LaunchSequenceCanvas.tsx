@@ -39,9 +39,42 @@ export function LaunchSequenceCanvas({ rocketName, rocketImageSrc, targetName, o
     completeRef.current()
   }).current
 
+  // KES-353: the watchdog above used a single fixed setTimeout, which browsers
+  // keep running (just throttled) while the tab is hidden — but the PixiJS
+  // ticker driving the actual animation is paused solid while hidden (no rAF
+  // in a background tab). Net effect: a player who launches, switches tabs
+  // for >18s, and comes back finds the sequence force-completed by the
+  // watchdog despite the animation having made zero visible progress, which
+  // reads as the launch being cancelled out from under them. Fix: only spend
+  // the watchdog's budget while the tab is actually visible, banking the
+  // remainder across a hide/show cycle instead of letting it run down blind.
   useEffect(() => {
-    const timer = window.setTimeout(fireComplete, LAUNCH_WATCHDOG_MS)
-    return () => window.clearTimeout(timer)
+    let remainingMs = LAUNCH_WATCHDOG_MS
+    let timer: number | null = null
+    let segmentStartedAt = 0
+
+    function startSegment() {
+      segmentStartedAt = Date.now()
+      timer = window.setTimeout(fireComplete, remainingMs)
+    }
+    function stopSegment() {
+      if (timer === null) return
+      window.clearTimeout(timer)
+      timer = null
+      remainingMs = Math.max(0, remainingMs - (Date.now() - segmentStartedAt))
+    }
+    function onVisibilityChange() {
+      if (document.hidden) stopSegment()
+      else startSegment()
+    }
+
+    if (!document.hidden) startSegment()
+    document.addEventListener('visibilitychange', onVisibilityChange)
+
+    return () => {
+      stopSegment()
+      document.removeEventListener('visibilitychange', onVisibilityChange)
+    }
   }, [fireComplete])
 
   useEffect(() => {
