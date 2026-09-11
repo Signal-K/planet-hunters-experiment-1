@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useEffect, useState } from 'react'
+import { structureBuildMs, hubConstructionProgress } from '@/lib/systems/HubConstructionSystem'
 
 /**
  * DOM half of a hub structure — hit area, status pill, and the notification
@@ -23,7 +24,9 @@ export interface BuildingProps {
   kind: string
   label: string
   sub: string
-  status: 'ok' | 'warn' | 'info'
+  status: 'ok' | 'warn' | 'info' | 'building'
+  /** When `status` is 'building', the timestamp construction started — drives the countdown label. */
+  buildStartedAt?: number
   hot?: boolean
   w: number
   /**
@@ -76,6 +79,7 @@ const STATUS_COLOR: Record<BuildingProps['status'], string> = {
   ok:   'var(--hub-mint)',
   warn: 'var(--ln-warn)',
   info: 'var(--hub-cyan)',
+  building: 'var(--hub-cyan)',
 }
 
 function BellGlyph() {
@@ -95,10 +99,25 @@ function ArrowGlyph() {
   )
 }
 
-export function Building({ kind, label, sub, status, w, hitH, style, onClick, badge, callout, calloutAlign = 'center', dimmed, onActiveChange, active = false, disableHover = false }: BuildingProps) {
+export function Building({ kind, label, sub, status, buildStartedAt, w, hitH, style, onClick, badge, callout, calloutAlign = 'center', dimmed, onActiveChange, active = false, disableHover = false }: BuildingProps) {
   const color = STATUS_COLOR[status]
   const [calloutOpen, setCalloutOpen] = useState(false)
   const [seen, setSeen] = useState(false)
+  // Nothing else in the codebase ticks in the background — everything else
+  // resolves (now - startedAt) lazily on renders that happen for other
+  // reasons. A player just watching a structure build won't reliably trigger
+  // those, so this is the one place a local interval is worth it: just to
+  // force a re-render every second so the countdown visibly moves.
+  const [, forceTick] = useState(0)
+  useEffect(() => {
+    if (status !== 'building') return
+    const id = setInterval(() => forceTick(t => t + 1), 1000)
+    return () => clearInterval(id)
+  }, [status])
+  const buildRemainingS = status === 'building'
+    ? Math.max(0, Math.ceil(structureBuildMs(kind) * (1 - hubConstructionProgress(buildStartedAt, kind)) / 1000))
+    : 0
+  const displaySub = status === 'building' ? `BUILDING · ${buildRemainingS}S` : sub
   // Hover (desktop) and press (mobile — there's no real :hover on touch) both
   // drive the same lift + glow, via one piece of state instead of two
   // separate code paths (KES-231/KES-263). The glow lands on the spacer,
@@ -193,7 +212,7 @@ export function Building({ kind, label, sub, status, w, hitH, style, onClick, ba
           <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
             <span style={{ width: 4, height: 4, borderRadius: 999, background: color, boxShadow: `0 0 8px ${color}` }} />
             <span style={{ fontFamily: 'var(--ln-font-display)', fontSize: 8, letterSpacing: '0.14em', textTransform: 'uppercase', color }}>
-              {sub}
+              {displaySub}
             </span>
           </span>
         </div>

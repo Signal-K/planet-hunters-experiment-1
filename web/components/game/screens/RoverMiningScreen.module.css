@@ -29,7 +29,10 @@
 .primaryAction:disabled { opacity: .45; cursor: not-allowed; }
 
 @media (max-width: 760px) {
-  .landingHandoff { grid-template-columns: 1fr; align-content: end; gap: 8px; padding: 12px; }
+  /* .hud goes full-width and bottom-anchored at this breakpoint too (below)
+     — bottom padding here keeps the deploy card clear of it instead of the
+     two stacking on top of each other (KES-352). */
+  .landingHandoff { grid-template-columns: 1fr; align-content: end; gap: 8px; padding: 12px; padding-bottom: 200px; }
   .landingHandoff::before { background: linear-gradient(180deg, transparent 10%, color-mix(in srgb, var(--ln-void) 94%, transparent) 64%); }
   .landingHandoff img { width: min(54vw, 280px); max-height: 34vh; align-self: end; }
   .landingHandoff > div { padding: 14px; }

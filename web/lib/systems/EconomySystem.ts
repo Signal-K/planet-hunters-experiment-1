@@ -448,6 +448,7 @@ export function applyPlaceStructure(s: GameState, structure: StructureBlueprint 
       stash,
       placed: Array.from(new Set([...s.player.placed, kind])),
       placementPlots: { ...s.player.placementPlots, [kind]: plot },
+      underConstruction: { ...s.player.underConstruction, [kind]: Date.now() },
       refineryBuilt: kind === 'refinery' ? true : s.player.refineryBuilt,
       deepSpaceTelescopeBuilt: kind === 'deep-space-telescope' ? true : s.player.deepSpaceTelescopeBuilt,
       deepSpaceTelescopeLevel: kind === 'deep-space-telescope'

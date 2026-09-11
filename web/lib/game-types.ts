@@ -241,6 +241,8 @@ export interface Player {
   missionRocketSource?: 'company' | 'fabricated'
   placed: string[]
   placementPlots: Record<string, number>
+  /** kind -> startedAt ms. Absence means the structure is fully built. */
+  underConstruction?: Record<string, number>
   controlBuilt: boolean
   missionsDone: number
   skillPoints?: number

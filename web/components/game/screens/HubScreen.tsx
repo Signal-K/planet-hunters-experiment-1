@@ -32,6 +32,7 @@ import { instrumentDigestDateKey, unresolvedTransitInstrumentDigest, unresolvedD
 import HUDStrip from '@/components/ui/HUDStrip'
 import layoutStyles from '@/components/game/hub/HubLayout.module.css'
 import { sceneXPercent } from '@/lib/scene/terrain-kit'
+import { isUnderConstruction } from '@/lib/systems/HubConstructionSystem'
 
 // ── Ref-B bordered-icon-badge glyphs for Hub chrome (bottom tabs) ──
 // Simple white-line icons, no fill — matches the mockup's `i-*` <symbol> set.
@@ -387,14 +388,16 @@ export default function HubScreen({ player, rocketVariant = 'explorer', hasCoach
   const hubBuildings: HubBuildingDef[] = sortedEntities.flatMap((e, plot) => {
     const kind = structureForPlot(plot)
     if (!kind) return []
+    const startedAt = player.underConstruction?.[kind]
     return [{
       kind,
       plotX: e.transform.position.x,
       w: BUILDING_W[kind] ?? 78,
       hot: kind === 'launchpad' ? !!player.pendingLaunch : false,
-      status: 'ok' as const,
+      status: isUnderConstruction(startedAt, kind) ? ('building' as const) : ('ok' as const),
       dimmed: isDimmedBuildingKind(kind),
       active: activeBuilding === kind,
+      buildStartedAt: startedAt,
     }]
   })
   const launchpadPlot = hubBuildings.find(building => building.kind === 'launchpad')
@@ -550,7 +553,10 @@ export default function HubScreen({ player, rocketVariant = 'explorer', hasCoach
                   if (!editMode) return null
                   return <EmptyPlot key={plot} plot={plot} w={78} style={style} onClick={() => onFocusBuilding('build')} />
                 }
-                const building = structureProps(kind)
+                const startedAt = player.underConstruction?.[kind]
+                const building = isUnderConstruction(startedAt, kind)
+                  ? { ...structureProps(kind), status: 'building' as const, buildStartedAt: startedAt }
+                  : structureProps(kind)
                 // Outer plots open their callout inward so a 208px bubble
                 // can't run off the edge of the scene.
                 const xFrac = (sortedEntities[plot]?.transform.position.x ?? 201) / 402

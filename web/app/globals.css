@@ -1241,7 +1241,7 @@ button { cursor: pointer; }
   backdrop-filter: blur(8px);
 }
 .transit-destination-chip {
-  top: 92px;
+  top: 96px;
   right: 16px;
   display: grid;
   gap: 3px;
@@ -1382,7 +1382,9 @@ button { cursor: pointer; }
 
 @media (max-width: 600px) {
   .transit-flight-scene { padding-top: 68px; }
-  .transit-destination-chip { top: 80px; right: 12px; min-width: 0; max-width: 48%; padding: 8px 10px; }
+  /* top clears the global .game-menu-button (top:56 + height:36 = bottom 92,
+     a fixed-position sibling this stylesheet section can't otherwise see). */
+  .transit-destination-chip { top: 96px; right: 12px; min-width: 0; max-width: 48%; padding: 8px 10px; }
   .transit-destination-chip strong { font-size: 14px; }
   .transit-destination-chip > span:last-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .transit-mission-card { top: 80px; left: 12px; width: 48%; padding: 9px 10px; }
@@ -2248,8 +2250,74 @@ html[data-coach-target="build-structure-strip"] [data-coach-id="build-structure-
   90%  { opacity: 0.45; }
   100% { transform: translateY(-58%) translateX(var(--drift, 20px)); opacity: 0; }
 }
+
+/* Structure construction — layer-by-layer reveal + drone rig (KES-354).
+   Every piece shares one fixed animation-duration (the structure's build
+   time) with a negative animation-delay set inline per-instance, so the
+   CSS animation resumes at the correct point even after a page reload
+   mid-build instead of restarting from 0. */
+.hub-construct-reveal {
+  clip-path: inset(0% 0 0 0);
+  animation-name: hub-construct-reveal;
+  animation-timing-function: var(--ln-ease-mech, ease);
+  animation-fill-mode: forwards;
+  animation-iteration-count: 1;
+}
+@keyframes hub-construct-reveal {
+  from { clip-path: inset(100% 0 0 0); }
+  to   { clip-path: inset(0% 0 0 0); }
+}
+.hub-construction-rig { pointer-events: none; }
+.hub-scaffold-bar {
+  fill: var(--ln-cyan-bright);
+  opacity: 0.85;
+  transform: scaleY(1);
+  animation-name: hub-scaffold-bar;
+  animation-timing-function: linear;
+  animation-fill-mode: forwards;
+  animation-iteration-count: 1;
+}
+@keyframes hub-scaffold-bar {
+  from { transform: scaleY(0); }
+  to   { transform: scaleY(1); }
+}
+.hub-scaffold-brace {
+  fill: var(--hub-cyan);
+  opacity: 1;
+  animation-timing-function: steps(1, end);
+  animation-fill-mode: both;
+  animation-iteration-count: 1;
+}
+.hub-scaffold-brace--1 { animation-name: hub-scaffold-brace-1; }
+.hub-scaffold-brace--2 { animation-name: hub-scaffold-brace-2; }
+@keyframes hub-scaffold-brace-1 { 0%, 34% { opacity: 0; } 35%, 100% { opacity: 1; } }
+@keyframes hub-scaffold-brace-2 { 0%, 71% { opacity: 0; } 72%, 100% { opacity: 1; } }
+.hub-drone {
+  opacity: 0;
+  animation-timing-function: var(--ln-ease-mech, ease);
+  animation-fill-mode: forwards;
+  animation-iteration-count: 1;
+}
+.hub-drone--1 { animation-name: hub-drone-drift-1; }
+.hub-drone--2 { animation-name: hub-drone-drift-2; }
+@keyframes hub-drone-drift-1 {
+  0%   { transform: translate(-6px, 4px); opacity: 0; }
+  10%  { opacity: 1; }
+  50%  { transform: translate(6px, -8px); }
+  92%  { opacity: 1; }
+  100% { transform: translate(0, -2px); opacity: 0; }
+}
+@keyframes hub-drone-drift-2 {
+  0%   { transform: translate(5px, -3px); opacity: 0; }
+  14%  { opacity: 1; }
+  55%  { transform: translate(-7px, 6px); }
+  92%  { opacity: 1; }
+  100% { transform: translate(0, 3px); opacity: 0; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .hub-stars, .hub-ridge, .hub-mote, .hub-ore, .hub-notify, .hub-light-dot { animation: none !important; }
+  .hub-construct-reveal, .hub-scaffold-bar, .hub-scaffold-brace, .hub-drone { animation: none !important; }
 }
 @keyframes unlock-in { from { transform: scale(0.85); opacity: 0; } to { transform: scale(1); opacity: 1; } }
 @keyframes unlock-spin { to { transform: translate(-50%,-50%) rotate(360deg); } }

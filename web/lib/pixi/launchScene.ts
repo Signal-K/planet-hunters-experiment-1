@@ -363,7 +363,12 @@ export function buildLaunchScene(
 
   const automationLabel = new Text({
     text: 'ATTITUDE  AUTO  ·  THROTTLE  AUTO  ·  STAGING  AUTO',
-    style: new TextStyle({ ...hudStyle, fill: C.text, fontSize: 7, letterSpacing: 1.1 }),
+    style: new TextStyle({
+      ...hudStyle, fill: C.text, fontSize: 7, letterSpacing: 1.1,
+      // Narrow portrait canvases (KES-352) are narrower than this line's
+      // rendered width; wrap it instead of letting it run off both edges.
+      align: 'center', wordWrap: true, wordWrapWidth: Math.max(160, W - 32),
+    }),
   })
   automationLabel.anchor.set(0.5, 0); automationLabel.x = W / 2; automationLabel.y = H * 0.18
   automationLabel.alpha = 0.5

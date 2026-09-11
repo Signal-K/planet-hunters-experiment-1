@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import CoachAvatar from '@/components/layout/CoachAvatar'
 import CoachPointer from './CoachPointer'
 import type { TutorialStep } from '@/lib/data'
-import { reserved_rect } from '@/lib/tutorial-layout'
+import { reserved_rect, TUTORIAL_RAIL } from '@/lib/tutorial-layout'
 import { UI_ZONES } from '@/lib/ui-zones'
 import { useIsDesktop } from '@/lib/hooks/useIsDesktop'
 
@@ -70,7 +70,7 @@ export default function TutorialCoach({ stepIndex, steps, step, total, onManualN
           data-ui-zone={UI_ZONES.tutorialRail}
           data-testid="tutorial-coach-block"
           style={missionSetupStep
-            ? { position: 'absolute', left: 16, top: 80, width: 320, maxWidth: 'calc(100% - 32px)', maxHeight: 176, zIndex: 98, pointerEvents: 'auto', overflowY: 'auto' }
+            ? { position: 'absolute', left: 16, top: TUTORIAL_RAIL.RESERVED_TOP, width: 320, maxWidth: 'calc(100% - 32px)', maxHeight: 176, zIndex: 98, pointerEvents: 'auto', overflowY: 'auto' }
             : { position: 'absolute', right: 14, top: coachRail.top, width: 'min(calc(100% - 28px), 560px)', maxHeight: 190, zIndex: 98, pointerEvents: 'auto', overflowY: 'auto' }}
         >
           <div className="tutorial-coach-card tutorial-coach-card--manual" style={{
@@ -150,7 +150,7 @@ export default function TutorialCoach({ stepIndex, steps, step, total, onManualN
         data-testid="tutorial-coach-block"
         style={missionSetupStep
           ? {
-              position: 'absolute', left: 16, top: 80,
+              position: 'absolute', left: 16, top: TUTORIAL_RAIL.RESERVED_TOP,
               width: 320, maxWidth: 'calc(100% - 32px)',
               zIndex: 98, pointerEvents: 'auto',
             }

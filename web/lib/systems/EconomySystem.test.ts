@@ -268,6 +268,15 @@ describe('Academy and staffing economy', () => {
     expect(built.player.stash).toMatchObject({ aluminium: 0, silicon: 0, copper: 0 })
     expect(built.player.academyFunded).toBe(true)
     expect(built.player.crewUpkeepSettledDate).toMatch(/^\d{4}-\d{2}-\d{2}$/)
+    expect(built.player.underConstruction?.['astronaut-academy']).toBeGreaterThan(0)
+  })
+
+  it('stamps underConstruction on placement without disturbing an existing entry for another kind', () => {
+    const silo = STRUCTURES.find(structure => structure.id === 'surface-silo')!
+    const before = makeState({ francs: silo.cost, underConstruction: { launchpad: 111 } })
+    const after = applyPlaceStructure(before, silo, silo.kind, 3)
+    expect(after.player.underConstruction?.launchpad).toBe(111)
+    expect(after.player.underConstruction?.['surface-silo']).toBeGreaterThanOrEqual(before.player.underConstruction?.launchpad ?? 0)
   })
 
   it('cuts refinery duration by 25% while the refinery is staffed', () => {

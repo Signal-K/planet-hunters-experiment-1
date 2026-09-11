@@ -4,7 +4,7 @@ import type { RecordModel } from 'pocketbase'
 import { pbShared } from '@/lib/pb'
 import { pbLandnam, exchangeLandnamAuth } from '@/lib/pb-landnam'
 import { clearAccountCredentials, ensureAccountAuth, hasStoredCredentials, storeAccountCredentials } from '@/lib/accountAuth'
-import { identifyUser } from '@/lib/posthog'
+import { identifyUser, captureGameEvent } from '@/lib/posthog'
 import { DEFAULT_STATE, loadState, mergeRemoteState, type PartialSave } from '@/lib/game-state'
 import { accountGameStateStorageKey, gameStateStorageKey } from '@/lib/game-state-storage'
 import { isResumableMissionScreen } from '@/lib/initial-route'
@@ -318,6 +318,14 @@ export function useAuthSync({
       setLandnamSynced(success)
       if (!success) {
         addToast('Offline mode — progress saved on this device only', 'warn')
+        // This is the exhausted-retry-ladder path: exchangeLandnamAuth kept
+        // failing (Fly cold start taking longer than ~9s, or a real outage)
+        // and the failure is swallowed into a toast + local-only fallback
+        // rather than thrown, so capture_exceptions never sees it.
+        captureGameEvent('sync_retry_failed', {
+          sync_kind: 'landnam_auth_exchange',
+          attempts: delays.length + 1,
+        })
       }
     }
 
@@ -528,6 +536,13 @@ export function useAuthSync({
       }
       // Devices with no local state remain in awaitingRemoteState so the user
       // sees a loading indicator rather than playing from empty state.
+      // The retry ladder above exhausts silently either way — capture it so
+      // "stuck on loading indicator" / "started from blank state" reports can
+      // be correlated with real backend unavailability instead of guessed at.
+      captureGameEvent('sync_retry_failed', {
+        sync_kind: 'game_state_load',
+        had_local_state: hasLocalState,
+      })
     }
 
     pbLandnam.collection('game_states')

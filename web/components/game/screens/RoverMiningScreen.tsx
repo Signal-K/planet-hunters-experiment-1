@@ -117,11 +117,13 @@ export default function RoverMiningScreen({ mission, target, onComplete, onBack,
     onComplete(requirements)
   }, [onComplete, requirements])
 
-  const status = !takeonReady
-    ? 'CONNECTING TO SURFACE SIM'
-    : cargoReady
-      ? 'MISSION CARGO READY'
-      : 'ROVER ACTIVE · MINE THE ORDER'
+  const status = !deployed
+    ? 'AWAITING ROVER DEPLOYMENT'
+    : !takeonReady
+      ? 'CONNECTING TO SURFACE SIM'
+      : cargoReady
+        ? 'MISSION CARGO READY'
+        : 'ROVER ACTIVE · MINE THE ORDER'
 
   return (
     <div className={`game-screen theme-deep ln-scene-takeon ${styles.screen}`} data-testid="rover-mining-screen">

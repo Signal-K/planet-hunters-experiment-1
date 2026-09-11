@@ -1,6 +1,7 @@
 .surface {
   width: min(920px, calc(100vw - 32px));
   max-height: calc(100vh - 32px);
+  margin-inline: auto;
   overflow: auto;
   padding: 32px;
   border: 1px solid var(--ln-cyan-border);
@@ -38,7 +39,9 @@
 .actions { display: flex; justify-content: flex-end; gap: 12px; }
 
 @media (max-width: 700px) {
-  .surface { padding: 24px 16px; }
+  /* top padding clears the dev-only shortcuts badge fixed at top:8 left:8
+     (components/dev/DevShortcuts.tsx), which sits above every screen. */
+  .surface { padding: 40px 16px 24px; }
   .focusGrid { grid-template-columns: 1fr; }
   .siloRecommendation { align-items: stretch; flex-direction: column; }
   .actions { flex-direction: column-reverse; }

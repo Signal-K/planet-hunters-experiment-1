@@ -185,6 +185,19 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
   }, [setState])
 
   const onPickMission = useCallback((id: string, freeHaulDisposition?: 'store' | 'sell') => {
+    // Counterpart to mission_completed — without a started event, Trends/
+    // Funnels can't tell "never picked a mission" apart from "picked one and
+    // dropped off before finishing it".
+    const pickedMission = catalog.missions.find(m => m.id === id)
+      ?? stateRef.current.player.dailyClientPool?.missions.find(m => m.id === id)
+      ?? null
+    if (pickedMission) {
+      captureGameEvent('mission_started', {
+        mission_id: id,
+        mission_type: pickedMission.payload?.type ?? null,
+        missions_done: stateRef.current.player.missionsDone,
+      })
+    }
     setState(s => {
       if (s.screen !== 'missions' && s.screen !== 'launchpad') return s
       let mission = catalog.missions.find(m => m.id === id)

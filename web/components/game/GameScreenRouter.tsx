@@ -73,6 +73,14 @@ export function ScreenContent({
   const deliveryTargetName = game.mission?.deliveryTargetId
     ? game.catalog.targets.find(t => t.id === game.mission!.deliveryTargetId)?.name
     : undefined
+  // For the debrief Route chip specifically: debriefOriginTarget above is
+  // deliberately the delivery target (last waypoint), so the Route display
+  // needs the actual mining site's name separately, resolved from
+  // mission.targetId rather than reusing debriefOriginTarget (KES-352 —
+  // this rendered as "deliveryTarget -> deliveryTarget" before this fix).
+  const originTargetName = game.mission?.deliveryTargetId
+    ? game.catalog.targets.find(t => t.id === game.mission!.targetId)?.name
+    : undefined
 
   // Derive the coach step for coachManual (needed by AssemblyScreen)
   const coachSteps = !game.tutorial || game.player.missionsDone >= FREE_OPS_START_MISSIONS_DONE ? [] :
@@ -267,6 +275,7 @@ export function ScreenContent({
           transitTarget={transitTarget}
           debriefOriginTarget={debriefOriginTarget}
           deliveryTargetName={deliveryTargetName}
+          originTargetName={originTargetName}
           rocketDisplay={rocketDisplay}
         />
       )

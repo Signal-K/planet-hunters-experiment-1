@@ -25,6 +25,7 @@ interface MissionOperationRoutesProps {
   transitTarget: Target
   debriefOriginTarget: Target
   deliveryTargetName?: string
+  originTargetName?: string
   rocketDisplay: RocketDisplay
 }
 
@@ -36,6 +37,7 @@ export default function MissionOperationRoutes({
   transitTarget,
   debriefOriginTarget,
   deliveryTargetName,
+  originTargetName,
   rocketDisplay,
 }: MissionOperationRoutesProps) {
   const debriefCargo = game.deliveredCargo ?? game.lastCargo ?? {}
@@ -249,6 +251,7 @@ export default function MissionOperationRoutes({
         <DebriefScreen
           mission={game.mission}
           target={debriefOriginTarget}
+          originTargetName={originTargetName}
           cargo={debriefCargo}
           onDone={game.onDebriefDone}
           minerals={game.catalog.minerals}

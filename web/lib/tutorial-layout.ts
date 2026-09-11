@@ -9,7 +9,11 @@ export const TUTORIAL_RAIL = {
   // Top HUD/back buttons occupy this area.
   TOP_CHROME_HEIGHT: 68,
   // Dedicated space for onboarding/tutorial blocks. Gameplay buttons must stay out of it.
-  RESERVED_TOP: 76,
+  // Must clear the global .game-menu-button (top:56 + height:36 = bottom 92,
+  // app/globals.css .game-menu-button), which is a fixed-position sibling
+  // this module can't see — KES-352 found the coach rail sliced through it
+  // at the old value of 76.
+  RESERVED_TOP: 96,
   // Measured action-card height (avatar row + padding, single-line action
   // text) is ~71px in practice. KES-146: at the 390px mobile viewport, steps
   // whose body copy wraps to two lines measured

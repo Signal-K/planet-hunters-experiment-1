@@ -18,7 +18,7 @@ import { PushOptIn } from '@/components/game/PushOptIn'
 import FeedbackButton from '@/components/ui/FeedbackButton'
 import SurveySheet from '@/components/ui/SurveySheet'
 import ToastLayer from '@/components/ui/ToastLayer'
-import { initPostHog, captureScreenView } from '@/lib/posthog'
+import { initPostHog, captureScreenView, captureGameEvent } from '@/lib/posthog'
 import { SURVEY_SAFE_SCREENS } from '@/lib/survey-gating'
 import DevShortcuts from '@/components/dev/DevShortcuts'
 import AuthGateSheet from '@/components/game/AuthGateSheet'
@@ -130,6 +130,22 @@ function GameCanvas() {
 
   const coachIndex = coach ? coachSteps.findIndex(step => step.id === coach.id) : -1
   const hasCoach = !!coach
+
+  // No onboarding-step-level analytics existed before — only the
+  // mission-level events (mission_completed etc). Without per-step coverage
+  // there's no way to see where inside M1/M2/M3 players actually stall.
+  useEffect(() => {
+    if (!coach) return
+    captureGameEvent('tutorial_step_started', {
+      step_id: coach.id,
+      screen: coach.screen,
+      step_index: coachIndex,
+      total_steps: coachSteps.length,
+    })
+    // Only re-fire when the active step itself changes, not on every
+    // re-render that keeps the same coach step.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [coach?.id])
 
   // A status toast belongs to the action that caused it. Keeping it mounted
   // after a screen change made Earth-recovery and payout messages obscure the
@@ -269,7 +285,18 @@ function GameCanvas() {
             step={coach}
             total={coachSteps.length}
             onManualNext={game.coachManualNext}
-            onSkip={() => game.skipTutorial(coachSteps.map(s => s.id))}
+            onSkip={() => {
+              // Distinct from a step being completed in the normal flow —
+              // this is the player bailing out of onboarding entirely, which
+              // mission_completed/tutorial_step_started alone can't surface.
+              captureGameEvent('tutorial_skipped', {
+                step_id: coach?.id ?? null,
+                screen: coach?.screen ?? null,
+                step_index: coachIndex,
+                total_steps: coachSteps.length,
+              })
+              game.skipTutorial(coachSteps.map(s => s.id))
+            }}
           />
         )}
         {game.popup === 'tutorial-complete' && !game.authGateOpen && (

@@ -17,7 +17,7 @@ import { formatCurrency } from '@/lib/format'
 import { rocketStageRecoveryForId } from '@/lib/data/rocket-composition'
 import StatRow from '@/components/ui/StatRow'
 
-export default function DebriefScreen({ mission, target, cargo, onDone, minerals, clients, clientMissions: _clientMissions, freeOperations, annotations, missionsDone, hasCoach, shipDestroyed, rocket, rocketSource, deliveryTargetName, loanDebt, firstCrewArrival, hasEarthStorage, storageCapacity, storageUsed, haulMarketValue, initialDisposition }: {
+export default function DebriefScreen({ mission, target, cargo, onDone, minerals, clients, clientMissions: _clientMissions, freeOperations, annotations, missionsDone, hasCoach, shipDestroyed, rocket, rocketSource, deliveryTargetName, originTargetName, loanDebt, firstCrewArrival, hasEarthStorage, storageCapacity, storageUsed, haulMarketValue, initialDisposition }: {
   mission: Mission
   target: Target
   cargo: Record<string, number>
@@ -33,6 +33,10 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
   rocket?: Pick<RocketConfig, 'chassis'>
   rocketSource?: 'company' | 'fabricated'
   deliveryTargetName?: string
+  /** The two-leg job's mining site (mission.targetId), resolved by the caller.
+   * `target` above is deliberately the delivery target (last waypoint) for
+   * "RETURNED FROM", so the Route chip's origin side needs this separately. */
+  originTargetName?: string
   /** Outstanding emergency-loan debt. Collecting this payout repays an instalment, so it is itemized rather than silently deducted (STS-542). */
   loanDebt?: number
   /** First time any astronaut in this save reaches this mission target. */
@@ -169,7 +173,7 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
           {isTwoLegJob && deliveryTargetName && (
             <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap', paddingBottom: 10 }}>
               <span style={{ font: '600 9px var(--ln-font-display)', letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--ln-text-muted)' }}>Route</span>
-              <span style={{ font: '700 10px var(--ln-font-display)', padding: '3px 10px', borderRadius: 4, background: 'rgba(112,217,234,0.06)', border: '1px solid rgba(112,217,234,0.12)', color: 'var(--ln-cyan)' }}>{target.name}</span>
+              <span style={{ font: '700 10px var(--ln-font-display)', padding: '3px 10px', borderRadius: 4, background: 'rgba(112,217,234,0.06)', border: '1px solid rgba(112,217,234,0.12)', color: 'var(--ln-cyan)' }}>{originTargetName ?? target.name}</span>
               <span style={{ color: 'var(--ln-text-muted)', fontSize: 9 }}>→</span>
               <span style={{ font: '700 10px var(--ln-font-display)', padding: '3px 10px', borderRadius: 4, background: 'rgba(112,217,234,0.06)', border: '1px solid rgba(112,217,234,0.12)', color: 'var(--ln-cyan)' }}>{deliveryTargetName}</span>
             </div>
