@@ -1922,7 +1922,6 @@ button { cursor: pointer; }
 .intro-subtitle { color: var(--ln-text-dim); font: 400 14px/1.5 var(--ln-font-body); max-width: 280px; margin: 0 0 36px; }
 .intro-begin-btn { min-height: 44px; padding: 10px 18px; background: transparent; color: var(--ln-cyan); font-family: var(--ln-font-display); font-weight: 800; font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase; border: 1px solid var(--ln-cyan-border); border-radius: 8px; cursor: pointer; transition: background 120ms ease-out, transform 100ms; }
 .intro-begin-btn:active { transform: translateY(2px); }
-.intro-demo-link { margin-top: 16px; color: var(--ln-text-dim); font: 600 12px var(--ln-font-body); text-decoration: underline; text-underline-offset: 3px; }
 .intro-reconnecting-indicator { display: flex; gap: 8px; align-items: center; justify-content: center; margin-top: 4px; }
 .intro-reconnecting-indicator span { width: 6px; height: 6px; border-radius: 50%; background: var(--ln-cyan); opacity: 0.3; animation: ln-pulse 1.2s ease-in-out infinite; }
 .intro-reconnecting-indicator span:nth-child(2) { animation-delay: 0.2s; }

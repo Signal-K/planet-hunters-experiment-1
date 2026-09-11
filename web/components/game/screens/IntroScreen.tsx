@@ -1,7 +1,6 @@
 'use client'
 
 import Image from 'next/image'
-import Link from 'next/link'
 import { formatCurrency } from '@/lib/format'
 
 interface IntroScreenProps {
@@ -56,11 +55,6 @@ export default function IntroScreen({
           <button className="intro-begin-btn" onClick={onBegin} data-testid="intro-begin-btn">
             {returning ? 'RESUME OPERATIONS' : 'BEGIN OPERATIONS'}
           </button>
-          {/* No account needed, no auth gate — a fast, frictionless preview
-              for anyone not ready to sign up yet (KES-264). */}
-          <Link href="/demo" className="intro-demo-link" data-testid="intro-demo-link">
-            Try a Quick Mission — no account needed
-          </Link>
         </div>
       )}
     </div>

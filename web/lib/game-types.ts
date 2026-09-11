@@ -185,14 +185,6 @@ export type ProgramFocus = 'client-contracts' | 'mining' | 'instruments' | 'cons
 
 export interface Player {
   francs: number
-  // Set once per track (KES-264) when the standalone /demo sandbox's
-  // one-time completion bonus has been applied to this account, so a player
-  // can't replay a demo mission to keep re-collecting it. The demo route
-  // itself never touches this field or PocketBase directly — it only leaves
-  // a `landnam-demo-bonus-pending` localStorage note; the real game applies
-  // the bonus (and sets this) through the normal setPlayer/save path on next
-  // boot. See applyPendingDemoBonus in game-context.tsx.
-  demoBonusClaimed?: Partial<Record<'mining' | 'citizen-science', boolean>>
   activeMission: { id: string; label: string } | null
   /** Paused operational contexts. There is intentionally no artificial cap. */
   pausedMissionRuns?: MissionRunSnapshot[]
