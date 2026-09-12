@@ -33,6 +33,7 @@ import HUDStrip from '@/components/ui/HUDStrip'
 import layoutStyles from '@/components/game/hub/HubLayout.module.css'
 import { sceneXPercent } from '@/lib/scene/terrain-kit'
 import { isUnderConstruction } from '@/lib/systems/HubConstructionSystem'
+import { missionResumeScreen } from '@/lib/mission-resume'
 
 // ── Ref-B bordered-icon-badge glyphs for Hub chrome (bottom tabs) ──
 // Simple white-line icons, no fill — matches the mockup's `i-*` <symbol> set.
@@ -247,11 +248,12 @@ interface HubScreenProps {
   onUpgradeLaunchpad?: () => void
   onExcavateSubsurface?: () => void
   onBuildSubsurfaceRoom?: (roomId: SubsurfaceRoomId) => void
+  onFocusResources?: (label: string, minerals: Record<string, number>) => void
   subsurface?: boolean
   onSubsurfaceChange?: (v: boolean) => void
 }
 
-export default function HubScreen({ player, rocketVariant = 'explorer', hasCoach, onFocusBuilding, onOpenScene, onUpgradeLaunchpad, onExcavateSubsurface, onBuildSubsurfaceRoom, subsurface = false, onSubsurfaceChange }: HubScreenProps) {
+export default function HubScreen({ player, rocketVariant = 'explorer', hasCoach, onFocusBuilding, onOpenScene, onUpgradeLaunchpad, onExcavateSubsurface, onBuildSubsurfaceRoom, onFocusResources, subsurface = false, onSubsurfaceChange }: HubScreenProps) {
   const { phase: skyPhase } = useTimeOfDay()
   const [editMode, setEditMode] = useState(false)
   const [activeBuilding, setActiveBuilding] = useState<string | null>(null)
@@ -561,7 +563,7 @@ export default function HubScreen({ player, rocketVariant = 'explorer', hasCoach
                 // can't run off the edge of the scene.
                 const xFrac = (sortedEntities[plot]?.transform.position.x ?? 201) / 402
                 const calloutAlign = xFrac < 0.32 ? 'start' : xFrac > 0.68 ? 'end' : 'center'
-                return <Building key={kind} {...building} hitH={HIT_H[kind] ?? 60} active={activeBuilding === kind} disableHover={kind === 'launchpad'} onActiveChange={active => setActiveBuilding(active ? kind : null)} style={style} calloutAlign={calloutAlign} />
+                return <Building key={kind} {...building} hitH={HIT_H[kind] ?? 60} active={activeBuilding === kind} disableHover onActiveChange={active => setActiveBuilding(active ? kind : null)} style={style} calloutAlign={calloutAlign} />
               })}
             </div>
           </div>
@@ -581,6 +583,7 @@ export default function HubScreen({ player, rocketVariant = 'explorer', hasCoach
             subsurfaceBuilt={player.subsurfaceBuilt}
             onExcavate={onExcavateSubsurface}
             onBuildRoom={onBuildSubsurfaceRoom}
+            onFocusResources={onFocusResources}
           />
         </div>
 
@@ -682,7 +685,7 @@ export default function HubScreen({ player, rocketVariant = 'explorer', hasCoach
                     </div>
                   </div>
                   {player.activeMission ? (
-                    <DockIconBtn testId="hub-resume-mission-btn" icon={<HistoryGlyph />} label="Resume" onClick={() => onOpenScene(player.missionPhase ?? 'transit')} accent />
+                    <DockIconBtn testId="hub-resume-mission-btn" icon={<HistoryGlyph />} label="Resume" onClick={() => onOpenScene(missionResumeScreen(player))} accent />
                   ) : (
                     <DockPrimaryBtn testId="hub-edit-build-btn" onClick={() => setEditMode(v => !v)}>
                       {editMode ? 'Done' : 'Edit · Build'}

@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react'
 import TopBar from '@/components/ui/TopBar'
-import { partitionByOwner, SELF_DIRECTED_MINING_MISSION_ID } from '@/lib/data'
+import { partitionByOwner, RESOURCE_FOCUS_MISSION_ID, SELF_DIRECTED_MINING_MISSION_ID } from '@/lib/data'
 import type { Mission } from '@/lib/data'
 import { ROCKET_MODELS } from '@/lib/data/rockets'
 import { SATELLITE_MODELS } from '@/lib/data/satellites'
@@ -104,6 +104,7 @@ export default function LaunchpadScreen({
   const { phase: skyPhase } = useTimeOfDay()
   const [guideStep, setGuideStep] = useState<number | null>(null)
   const [missionRunsOpen, setMissionRunsOpen] = useState(false)
+  const [activeMissionCalloutDismissed, setActiveMissionCalloutDismissed] = useState(false)
   const [missionMenuOpen, setMissionMenuOpen] = useState(requestedMissionMenuOpen)
   const [operationBrief, setOperationBrief] = useState<'instrument' | 'mining' | 'build' | null>(null)
   const [showAllOperations, setShowAllOperations] = useState(false)
@@ -164,6 +165,7 @@ export default function LaunchpadScreen({
   const buildOperations = operations.filter(mission => mission.construction
     && (mission.id !== REFINERY_BUILD_MISSION_ID || hasRefineryPrereqs))
   const buildOperation = buildOperations[0]
+  const resourceFocusOperation = operations.find(mission => mission.id === RESOURCE_FOCUS_MISSION_ID)
   // The physical pad is an entry point to mission selection, not an implicit
   // choice of the first operation in a computed list. Selecting a mission is
   // a separate, visible decision; otherwise the pad jumps straight to target
@@ -252,6 +254,20 @@ export default function LaunchpadScreen({
           </span>
         </button>
 
+        {player.activeMission && onResumeMission && !activeMissionCalloutDismissed && !visibleMissionMenuOpen && !missionRunsOpen && (
+          <section className="launchpad-active-mission" data-testid="launchpad-active-mission-callout" aria-label="Mission in progress">
+            <div>
+              <span className="launchpad-guide-kicker">MISSION IN PROGRESS</span>
+              <h2>{player.activeMission.label}</h2>
+              <p>{(player.missionPhase ?? 'transit').toUpperCase()} · VEHICLE ACTIVE</p>
+            </div>
+            <div className="launchpad-active-mission__actions">
+              <button type="button" className="launchpad-active-mission__dismiss" onClick={() => setActiveMissionCalloutDismissed(true)}>DISMISS</button>
+              <button type="button" className="launchpad-active-mission__resume" onClick={onResumeMission}><MissionGlyph /> RESUME MISSION</button>
+            </div>
+          </section>
+        )}
+
         {visibleMissionMenuOpen && !player.pendingLaunch && (
           <section className="launchpad-mission-menu" data-testid="launchpad-new-mission-menu" aria-labelledby="launchpad-new-mission-title">
             <div className="launchpad-mission-menu-header">
@@ -310,6 +326,18 @@ export default function LaunchpadScreen({
                 <strong>AVAILABLE CONTRACTS</strong>
                 <span>Review client missions and choose an available contract.</span>
               </button>
+              {resourceFocusOperation && (
+                <button
+                  type="button"
+                  className="launchpad-mission-choice launchpad-mission-choice--focus"
+                  data-testid="launchpad-new-mission-resource-focus-btn"
+                  onClick={() => onPick(resourceFocusOperation.id, 'store')}
+                >
+                  <MiningGlyph />
+                  <strong>RESOURCE FOCUS</strong>
+                  <span>{resourceFocusOperation.title}. Configuration is ready; choose a highlighted source and dispatch.</span>
+                </button>
+              )}
               {hasProgramFocus && (
                 <button type="button" className="launchpad-show-all-operations" onClick={() => setShowAllOperations(value => !value)}>
                   {showAllOperations ? 'SHOW MY SUBSCRIPTIONS' : 'SHOW ALL OPERATIONS'}

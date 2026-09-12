@@ -183,6 +183,11 @@ export interface SurfaceOpsState {
 
 export type ProgramFocus = 'client-contracts' | 'mining' | 'instruments' | 'construction'
 
+export interface ResourceFocus {
+  label: string
+  minerals: Record<string, number>
+}
+
 export interface Player {
   francs: number
   activeMission: { id: string; label: string } | null
@@ -242,6 +247,8 @@ export interface Player {
   freeOperations: boolean
   /** Operation areas chosen when guided onboarding hands the program to the player. */
   programFocuses?: ProgramFocus[]
+  /** Materials currently being gathered for a player-selected construction. */
+  resourceFocus?: ResourceFocus
   debriefPending?: boolean
   /** The haul was settled into an off-world silo or sold before Earth return. */
   cargoSettledOffworld?: boolean

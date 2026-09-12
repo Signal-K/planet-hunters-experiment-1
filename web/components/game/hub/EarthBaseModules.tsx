@@ -117,7 +117,7 @@ function StructureSprite({ kind, active, buildStartedAt }: { kind: string; activ
     <>
       <span className={isBuilding ? 'hub-construct-reveal' : ''} style={isBuilding ? { display: 'block', animationDuration: animDuration, animationDelay: animDelay } : undefined}>
         <FlatSprite name={name} />
-        {active && <FlatSprite name={name} className="earth-base-flat-sprite--highlight" />}
+        {active && <span className="earth-base-structure-focus" />}
       </span>
       {rig}
     </>

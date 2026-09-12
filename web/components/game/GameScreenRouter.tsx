@@ -24,6 +24,7 @@ import NarrativeLedgerScreen from '@/components/game/screens/NarrativeLedgerScre
 import { enqueueSurvey } from '@/lib/surveys'
 import { VISUAL_ASTEROID_CANDIDATE, VISUAL_TESS_CANDIDATE } from '@/lib/visual-fixtures'
 import { captureGameEvent } from '@/lib/posthog'
+import { missionResumeScreen } from '@/lib/mission-resume'
 
 export const VALID_SCREENS = new Set<Screen>([
   'intro', 'build', 'hub', 'hub-subsurface', 'missions', 'galaxy', 'targets', 'fab',
@@ -211,6 +212,11 @@ export function ScreenContent({
           onUpgradeLaunchpad={() => game.upgradeLaunchpad()}
           onExcavateSubsurface={() => game.excavateSubsurface()}
           onBuildSubsurfaceRoom={roomId => game.buildSubsurfaceRoom(roomId)}
+          onFocusResources={(label, minerals) => {
+            game.setPlayer(player => ({ ...player, resourceFocus: { label, minerals } }))
+            game.addToast(`${label} added to focus`, 'info')
+            game.openLaunchpadMissionMenu()
+          }}
           subsurface={game.subsurfaceView}
           onSubsurfaceChange={game.setSubsurfaceView}
         />
@@ -400,12 +406,12 @@ export function ScreenContent({
           onResumeMission={game.player.activeMission ? () => {
             captureGameEvent('mission_resumed', { mission_phase: game.player.missionPhase ?? 'transit' })
             enqueueSurvey('lnm_resume_mission', 1200)
-            game.go(game.player.missionPhase ?? 'transit')
+            game.go(missionResumeScreen(game.player))
           } : undefined}
           missionRuns={missionRuns}
           onResumeMissionRun={key => {
             if (key === currentRunKey) {
-              game.go(game.player.missionPhase ?? 'transit')
+              game.go(missionResumeScreen(game.player))
               return
             }
             game.resumeMissionRun(key)

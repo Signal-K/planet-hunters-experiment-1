@@ -1,5 +1,5 @@
 import type { Catalog } from './catalog'
-import { MISSIONS, SELF_DIRECTED_MINING_MISSION_ID } from './data'
+import { MISSIONS, RESOURCE_FOCUS_MISSION_ID, SELF_DIRECTED_MINING_MISSION_ID } from './data'
 import type { Mission, Target } from './data'
 import type { Player } from './game-types'
 import { deepSpaceTelescopeUnlocked } from './data/structures'
@@ -188,9 +188,33 @@ export function buildRuntimeCatalog({
   // model specifies how they are earned and explained.
   const jointMissions: Mission[] = []
 
+  const focusedMinerals = Object.entries(player?.resourceFocus?.minerals ?? {}).reduce<Record<string, number>>(
+    (missing, [mineral, required]) => {
+      const amount = Math.max(0, required - (player?.stash?.[mineral] ?? 0))
+      if (amount > 0) missing[mineral] = amount
+      return missing
+    },
+    {},
+  )
+  const focusedCargo = Object.values(focusedMinerals).reduce((total, amount) => total + amount, 0)
+  const resourceFocusMissions: Mission[] = player?.resourceFocus && focusedCargo > 0
+    ? [{
+        id: RESOURCE_FOCUS_MISSION_ID,
+        title: `Materials for ${player.resourceFocus.label}`,
+        brief: `A program mining run configured to recover the missing materials for ${player.resourceFocus.label}. The haul returns to Base storage for construction.`,
+        tag: 'RESOURCE',
+        difficulty: 'L1',
+        locked: false,
+        sequence: missionsDone + 1,
+        unlockAt: 'Add a construction requirement to focus',
+        requires: { minerals: focusedMinerals, cargo_min: focusedCargo, drill_tier: 1, max_orbit: 8 },
+        payout: { francs: 0, affinity: 0 },
+      }]
+    : []
+
   return {
     ...catalog,
     targets: mergedTargets,
-    missions: [...relationshipMissions, ...transitTelescopeMission, ...deepSpaceTelescopeMission, ...surveyMissions, ...jointMissions],
+    missions: [...relationshipMissions, ...transitTelescopeMission, ...deepSpaceTelescopeMission, ...surveyMissions, ...jointMissions, ...resourceFocusMissions],
   }
 }

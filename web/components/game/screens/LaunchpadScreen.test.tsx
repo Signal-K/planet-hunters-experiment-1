@@ -37,10 +37,28 @@ describe('Launchpad own-program actions', () => {
     )
 
     expect(markup).toContain('data-testid="launchpad-resume-mission-btn"')
+    expect(markup).toContain('data-testid="launchpad-active-mission-callout"')
+    expect(markup).toContain('DISMISS')
     expect(markup).toContain('aria-label="Jump back to active mission"')
     expect(markup).toContain('data-testid="launchpad-mission-log-btn"')
     expect(markup).toContain('data-testid="launchpad-primary-mission-btn"')
     expect(markup).toContain('NEW MISSION')
+  })
+
+  it('shows a focused resource run as a fifth, preconfigured operation', () => {
+    const player = {
+      ...DEFAULT_STATE.player,
+      freeOperations: true,
+      missionsDone: 3,
+      resourceFocus: { label: 'Mineral Vault', minerals: { aluminium: 15 } },
+    }
+    const catalog = buildRuntimeCatalog({ catalog: STATIC_CATALOG, freeOperations: true, missionsDone: 3, player })
+    const markup = renderToStaticMarkup(
+      <LaunchpadScreen onBack={vi.fn()} onPick={vi.fn()} onViewContracts={vi.fn()} onLaunchpadAction={vi.fn()} onOpenHangar={vi.fn()} missionsDone={3} freeOperations catalog={catalog} player={player} missionMenuOpen />,
+    )
+    expect(markup).toContain('data-testid="launchpad-new-mission-resource-focus-btn"')
+    expect(markup).toContain('RESOURCE FOCUS')
+    expect(markup).toContain('Materials for Mineral Vault')
   })
 
   it('exposes one new-mission command once in the command rail', () => {

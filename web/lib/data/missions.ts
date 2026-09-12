@@ -48,6 +48,7 @@ export const M3_SEQUENCE = 3
 
 // Free Ops self-directed mining — no client, no daily limit, no cooldown.
 export const SELF_DIRECTED_MINING_MISSION_ID = 'freeops-self-directed-mining'
+export const RESOURCE_FOCUS_MISSION_ID = 'focus-resource-mining'
 export const ACADEMY_INTRO_MISSION_ID = 'story-astronaut-academy'
 export const REFINERY_BUILD_MISSION_ID = 'program-build-refinery'
 
