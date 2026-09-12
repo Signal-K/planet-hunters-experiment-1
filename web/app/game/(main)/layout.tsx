@@ -273,9 +273,6 @@ function GameChrome({ children }: { children: ReactNode }) {
             error={game.authGateError}
             onSignIn={game.signInFromGate}
             onCreateAccount={game.createAccountFromGate}
-            onContinue={game.continueWithEmail}
-            otpPending={game.authGateOtpId !== null}
-            onVerifyOtp={game.verifyOtp}
           />
         )}
         {game.pendingTerritoryClaimFor && !game.authGateOpen && (

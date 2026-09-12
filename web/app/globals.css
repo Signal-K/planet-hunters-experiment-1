@@ -1043,7 +1043,6 @@ button { cursor: pointer; }
   .auth-gate__heading { font-size: 26px; }
   .auth-gate__intro { margin-bottom: var(--ln-s-3); }
   .auth-gate__tabs { margin-bottom: var(--ln-s-3); }
-  .auth-gate__quick { padding-top: var(--ln-s-3); margin-top: var(--ln-s-1); }
 }
 
 @media (max-width: 520px) {
@@ -1098,13 +1097,7 @@ button { cursor: pointer; }
 .auth-gate__error { padding: var(--ln-s-3); color: var(--ln-crit); background: rgba(255,90,106,.1); border: 1px solid rgba(255,90,106,.36); border-radius: var(--ln-r-md); font: 400 12px/1.4 var(--ln-font-body); }
 .auth-gate__primary { width: 100%; padding: var(--ln-s-4); margin-top: var(--ln-s-1); color: var(--ln-void); background: var(--ln-cyan); border: 0; border-radius: var(--ln-r-md); cursor: pointer; font: 800 13px var(--ln-font-display); letter-spacing: .14em; text-transform: uppercase; box-shadow: 0 3px 0 rgba(0,0,0,.28); }
 .auth-gate__primary:hover { background: var(--ln-cyan-bright); }
-.auth-gate__primary:disabled, .auth-gate__secondary:disabled { cursor: not-allowed; opacity: .55; }
-.auth-gate__quick { padding-top: var(--ln-s-5); margin-top: var(--ln-s-2); border-top: 1px solid var(--ln-divider); }
-.auth-gate__quick-copy { margin-bottom: var(--ln-s-3); color: var(--ln-text-muted); text-align: center; font: 400 12px/1.4 var(--ln-font-body); }
-.auth-gate__quick-copy span { display: block; margin-bottom: var(--ln-s-1); color: var(--ln-cyan); font: 700 10px var(--ln-font-display); letter-spacing: .14em; }
-.auth-gate__quick-form { display: flex; gap: var(--ln-s-2); }
-.auth-gate__input--compact { min-width: 0; }
-.auth-gate__secondary { flex: 0 0 auto; padding: 0 var(--ln-s-4); color: var(--ln-cyan); background: transparent; border: 1px solid var(--ln-cyan-border-strong); border-radius: var(--ln-r-md); cursor: pointer; font: 700 12px var(--ln-font-display); letter-spacing: .1em; text-transform: uppercase; }
+.auth-gate__primary:disabled { cursor: not-allowed; opacity: .55; }
 
 .screen-scroll { position: absolute; inset: 0; overflow-y: auto; padding: 76px var(--ln-s-3) var(--ln-s-5); }
 /* .screen-scroll paints no background of its own, so it normally shows

@@ -272,9 +272,6 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       authGateError: auth.authGateError,
       signInFromGate: auth.signInFromGate,
       createAccountFromGate: auth.createAccountFromGate,
-      continueWithEmail: auth.continueWithEmail,
-      authGateOtpId: auth.authGateOtpId,
-      verifyOtp: auth.verifyOtp,
       resetGame: useCallback(() => { void auth.resetGame(DEFAULT_STATE) }, [auth.resetGame]), // eslint-disable-line react-hooks/rules-of-hooks
       signOut: auth.signOut,
       // Game loop

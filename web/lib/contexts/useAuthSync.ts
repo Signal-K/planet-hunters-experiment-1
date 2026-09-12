@@ -3,7 +3,6 @@ import { useRouter } from 'next/navigation'
 import type { RecordModel } from 'pocketbase'
 import { pbShared } from '@/lib/pb'
 import { pbLandnam, exchangeLandnamAuth } from '@/lib/pb-landnam'
-import { clearAccountCredentials, ensureAccountAuth, hasStoredCredentials, storeAccountCredentials } from '@/lib/accountAuth'
 import { identifyUser, captureGameEvent } from '@/lib/posthog'
 import { DEFAULT_STATE, loadState, mergeRemoteState, type PartialSave } from '@/lib/game-state'
 import { accountGameStateStorageKey, gameStateStorageKey } from '@/lib/game-state-storage'
@@ -111,9 +110,6 @@ export function useAuthSync({
   const [awaitingRemoteState, setAwaitingRemoteState] = useState(false)
   const [authGateOpen, setAuthGateOpen] = useState(false)
   const [authGateError, setAuthGateError] = useState<string | null>(null)
-  // Kept for the explicit sign-in recovery path; email-only signup creates a
-  // real account immediately and does not require an inbox code.
-  const [authGateOtpId, setAuthGateOtpId] = useState<string | null>(null)
   const [resetting, setResetting] = useState(false)
   // The gate must not decide that a returning user is anonymous until the
   // persisted PocketBase auth store has had a chance to restore. Keeping this
@@ -405,9 +401,8 @@ export function useAuthSync({
     }
   }, [authUserId, isPreview, landnamAuthAttempted, landnamSynced])
 
-  // Returning full-account user on a new device: no local state but an active
-  // session can hydrate from the backend. Stored guest credentials should not
-  // block local play while auth warms or falls back offline.
+  // Returning signed-in user on a new device: no local state but an active
+  // PocketBase session can hydrate from the backend.
   useEffect(() => {
     if (!hydrated || isPreview) return
     const noLocalState = !localStorage.getItem(localStateKey)
@@ -419,31 +414,29 @@ export function useAuthSync({
     if (backendReady) setAwaitingRemoteState(false)
   }, [backendReady])
 
-  // Show auth gate for brand-new users (no stored credentials, no active session).
+  // Accounts are required. A brand-new user without a persisted PocketBase
+  // session must authenticate before gameplay becomes reachable.
   useEffect(() => {
     if (!hydrated || isPreview || !sharedAuthRestoreSettled) return
     if (authGateDismissed.current) return
-    if (pbShared.authStore.isValid || hasStoredCredentials()) return
+    if (pbShared.authStore.isValid) return
     setAuthGateOpen(true)
   }, [hydrated, isPreview, sharedAuthRestoreSettled])
 
-  // If background guest/session restoration succeeds after the gate was
+  // If session restoration succeeds after the gate was
   // opened, close it. This can happen on route bridges and fast local loads
   // where the "brand-new user" check wins the race by a render.
   useEffect(() => {
     if (authUserId) setAuthGateOpen(false)
   }, [authUserId])
 
-  // Restore a returning email account.
+  // `landnam-account-credentials` was used by a retired email-only flow to
+  // retain a plaintext password. Remove it on sight; PocketBase's persisted
+  // auth token is the sole returning-session mechanism.
   useEffect(() => {
     if (isPreview) return
-    if (pbShared.authStore.isValid) return
-    if (!hasStoredCredentials()) return
-    ensureAccountAuth().catch(() => {
-      addToast('Offline mode — progress saved on this device only', 'warn')
-      setAwaitingRemoteState(false)
-    })
-  }, [addToast, isPreview])
+    localStorage.removeItem('landnam-account-credentials')
+  }, [isPreview])
 
   // Load remote game state on auth
   useEffect(() => {
@@ -635,7 +628,7 @@ export function useAuthSync({
     } catch (e) {
       const raw = authErrorMessage(e, 'Sign in failed')
       const msg = /^failed to authenticate\.?$/i.test(raw)
-        ? 'Sign in failed. Check your email and password, or use the one-time code below.'
+        ? 'Sign in failed. Check your email and password.'
         : raw
       setAuthGateError(msg)
       throw new Error(msg)
@@ -668,58 +661,13 @@ export function useAuthSync({
       setBackendReady(true)
       setAuthGateOpen(false)
     } catch (e) {
-      clearAccountCredentials()
       const msg = isUniqueConstraintError(e)
-        ? 'An account already exists for this email. Use Sign In, or send a one-time code below.'
+        ? 'An account already exists for this email. Use Sign In.'
         : authErrorMessage(e, 'Account creation failed')
       setAuthGateError(msg)
       throw new Error(msg)
     }
   }, [saveRemoteState, setState, storageKey])
-
-  // Email-only signup creates a real PocketBase account with a generated
-  // device-held password. The email remains the contact address and the
-  // player starts immediately without being asked to invent a password.
-  const continueWithEmail = useCallback(async (email: string) => {
-    setAuthGateError(null)
-    try {
-      const password = `EmailOnly-${Date.now()}-Aa1!`
-      // Persist the recovery credential before the account/bootstrap request.
-      // Account creation also performs the initial remote game-state write,
-      // which can take several seconds on a cold local backend; the player
-      // must still have a contactable account record if that write is slow.
-      storeAccountCredentials(email, password)
-      await createAccountFromGate(email, password)
-    } catch (e) {
-      const msg = isUniqueConstraintError(e)
-        ? 'An account already exists for this email. Sign in with your password.'
-        : authErrorMessage(e, 'Could not create your account — check your email and try again')
-      setAuthGateError(msg)
-      throw new Error(msg)
-    }
-  }, [createAccountFromGate])
-
-  // Dormant since the continueWithEmail revert above — kept so OTP login can
-  // be re-wired in one place once SMTP is confirmed working.
-  const verifyOtp = useCallback(async (code: string) => {
-    if (!authGateOtpId) {
-      const msg = 'Request a new code and try again'
-      setAuthGateError(msg)
-      throw new Error(msg)
-    }
-    setAuthGateError(null)
-    try {
-      await pbShared.collection('users').authWithOTP(authGateOtpId, code)
-      setAuthGateOtpId(null)
-      authGateDismissed.current = true
-      setAuthGateOpen(false)
-      landOnHubUnlessResumable()
-    } catch (e) {
-      const msg = authErrorMessage(e, 'Incorrect or expired code — try again')
-      setAuthGateError(msg)
-      throw new Error(msg)
-    }
-  }, [authGateOtpId, createAccountFromGate, landOnHubUnlessResumable])
 
   const resetGame = useCallback(async (defaultState: GameState) => {
     beforeReset()
@@ -786,13 +734,12 @@ export function useAuthSync({
 
     pbShared.authStore.clear()
     pbLandnam.authStore.clear()
-    clearAccountCredentials()
+    localStorage.removeItem('landnam-account-credentials')
     localStorage.removeItem(storageKey)
     if (signedOutUserId) localStorage.removeItem(accountGameStateStorageKey(storageKey, signedOutUserId))
     setState(DEFAULT_STATE)
     setAwaitingRemoteState(false)
     setAuthGateError(null)
-    setAuthGateOtpId(null)
     authGateDismissed.current = false
     if (!isPreview) setAuthGateOpen(true)
   }, [addToast, authUserId, backendReady, isPreview, saveRemoteState, setState, stateRef, storageKey])
@@ -801,8 +748,7 @@ export function useAuthSync({
     authUserId, backendReady,
     landnamSynced,
     awaitingRemoteState,
-    authGateOpen, authGateError, signInFromGate, createAccountFromGate, continueWithEmail,
-    authGateOtpId, verifyOtp,
+    authGateOpen, authGateError, signInFromGate, createAccountFromGate,
     resetGame, signOut,
   }
 }

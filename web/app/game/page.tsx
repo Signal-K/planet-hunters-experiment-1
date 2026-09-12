@@ -4,7 +4,6 @@ import { Suspense, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { resolvePreset } from '@/lib/devPresets'
 import { pbShared } from '@/lib/pb'
-import { hasStoredCredentials } from '@/lib/accountAuth'
 import { returningScreen } from '@/lib/initial-route'
 import { GAME_STATE_STORAGE_KEY, gameStateStorageKey } from '@/lib/game-state-storage'
 import { canonicalGameRoute } from '@/lib/game-route'
@@ -29,10 +28,10 @@ function GameRouteBridge() {
     const presetName = searchParams.get('preset')
     const preset = presetName ? resolvePreset(presetName) : null
     // A saved deep screen (e.g. 'missions') only means something once this
-    // device has actually authenticated (signed in, signed up, or completed
-    // guest auth) — otherwise the auth gate is about to open, and resuming
+    // device has an active authenticated session — otherwise the auth gate is
+    // about to open, and resuming
     // straight into gameplay would sit the URL behind it. See STS-624.
-    const canResume = pbShared.authStore.isValid || hasStoredCredentials()
+    const canResume = pbShared.authStore.isValid
     const screen = preset?.screen ?? (canResume ? savedScreen() : 'intro')
     const route = canonicalGameRoute({
       screen,
