@@ -109,8 +109,28 @@ button.launchpad-scene-object { cursor: pointer; }
   object-fit: contain;
   object-position: center bottom;
   pointer-events: none;
+  transition: filter 160ms ease;
 }
+/* Hover/press affordance (KES-231/KES-263, regressed to a no-op — SSL-95):
+   Building.tsx's localActive state reaches this element correctly via
+   HubScreen's activeBuilding -> EarthBaseModules -> this marker span, but the
+   marker itself carried no styling, so the whole pipeline fired for nothing.
+   A drop-shadow on the sprite (rather than a box-shadow on this inset:0 box)
+   hugs the PNG's actual transparent silhouette instead of glowing as a flat
+   rectangle. */
 .earth-base-structure-focus { position: absolute; inset: 0; pointer-events: none; }
+.earth-base-structure:has(.earth-base-structure-focus) .earth-base-flat-sprite {
+  filter: drop-shadow(0 0 6px var(--ln-cyan-bright)) drop-shadow(0 0 18px var(--ln-cyan-soft));
+}
+/* `filter` isn't additive across rules — whichever selector wins the cascade
+   replaces the whole value, so the portrait contact-shadow rule below (same
+   specificity, later in source) was silently discarding the hover glow above
+   on every portrait/mobile viewport, which is where this game mostly runs.
+   Re-stated combined with portrait's own filter, and kept more specific
+   (three chained selectors vs two) so it wins regardless of source order. */
+.portrait-canvas:has([data-screen="hub"]) .earth-base-structure:has(.earth-base-structure-focus) .earth-base-flat-sprite {
+  filter: brightness(1.14) saturate(1.18) drop-shadow(0 3px 0 color-mix(in srgb, var(--ln-void) 86%, transparent)) drop-shadow(0 0 6px var(--ln-cyan-bright)) drop-shadow(0 0 18px var(--ln-cyan-soft));
+}
 
 /* Foreground facilities must read as interactive structures, not another
    pale mountain band. A dark contact shadow plus a restrained cyan rim keeps

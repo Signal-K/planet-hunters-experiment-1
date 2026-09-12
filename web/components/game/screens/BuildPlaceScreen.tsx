@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react'
 import TopBar from '@/components/ui/TopBar'
 import { PrimaryBtn } from '@/components/ui/Button'
-import { canAffordStructure, STRUCTURES, structureUnlocked } from '@/lib/data'
+import { canAffordStructure, STRUCTURES, structureAffordabilityGaps, structureUnlocked } from '@/lib/data'
 import type { StructureBlueprint } from '@/lib/data'
 import type { EntityData } from '@/lib/engine/types'
 import { buildPlotEntities } from '@/lib/engine/prefabs'
@@ -65,6 +65,12 @@ function formatStructureCost(structure: StructureBlueprint): string {
 export default function BuildPlaceScreen({ onPlaced, onBack, hasCoach, player }: BuildPlaceScreenProps) {
   const [picked, setPicked] = useState('launchpad')
   const [cell, setCell] = useState<number | null>(null)
+  // A tap on a locked/unaffordable card previously only fired an analytics
+  // event — dimmed opacity was the only feedback, identical whether the
+  // block was missing francs, missing minerals (e.g. Refinery's aluminium/
+  // copper), or a narrative unlock gate. This names the actual reason so the
+  // player can tell "why won't this place" instead of it reading as dead.
+  const [blocked, setBlocked] = useState<{ id: string; reason: string } | null>(null)
   // Build plots are authored from the shared prefab. Reloading the identical
   // hub scene on every entry delayed Build and Back without changing any
   // placement coordinates, so use the prefab directly.
@@ -141,6 +147,7 @@ export default function BuildPlaceScreen({ onPlaced, onBack, hasCoach, player }:
   function handlePick(id: string) {
     setPicked(id)
     setCell(null)
+    setBlocked(null)
   }
 
   return (
@@ -245,7 +252,7 @@ export default function BuildPlaceScreen({ onPlaced, onBack, hasCoach, player }:
       <div data-ui-zone={UI_ZONES.screenContent} data-coach-id="build-structure-strip" style={{
         position: 'absolute',
         left: 0, right: 0,
-        bottom: 48,
+        bottom: 64,
         zIndex: 12,
         pointerEvents: 'none',
       }}>
@@ -284,6 +291,13 @@ export default function BuildPlaceScreen({ onPlaced, onBack, hasCoach, player }:
                     // looked at this card at all. Kept the same visual
                     // (dimmed, non-interactive-looking) but let the tap
                     // through so "why won't this place" moments are visible.
+                    const gaps = structureAffordabilityGaps(c, { francs: player.francs, stash: player.stash })
+                    setBlocked({
+                      id: c.id,
+                      reason: !unlocked
+                        ? `Unlocks at ${c.unlocksAt}`
+                        : `Need ${gaps.join(', ')}`,
+                    })
                     captureGameEvent('structure_placement_blocked', {
                       structure_kind: c.id,
                       reason: !unlocked ? 'locked' : 'unaffordable',
@@ -355,7 +369,31 @@ export default function BuildPlaceScreen({ onPlaced, onBack, hasCoach, player }:
           }} />
 
           {/* Status line */}
-          {sel ? <div style={{
+          {blocked ? (() => {
+            const blockedStructure = catalog.find(c => c.id === blocked.id)
+            if (!blockedStructure) return null
+            return <div style={{
+              pointerEvents: 'none',
+              padding: '6px 2px 10px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 6,
+            }}>
+              <span style={{ color: STRUCTURE_COLORS[blockedStructure.id] ?? '#3fa9ff', flexShrink: 0 }}>
+                <StructureIcon kind={blockedStructure.id} size={14} />
+              </span>
+              <span style={{
+                fontFamily: 'var(--ln-font-body)',
+                fontSize: 11,
+                color: 'var(--ln-warn)',
+                whiteSpace: 'nowrap',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+              }}>
+                {blockedStructure.name} · {formatStructureCost(blockedStructure)} · {blocked.reason}
+              </span>
+            </div>
+          })() : sel ? <div style={{
             pointerEvents: 'none',
             padding: '6px 2px 10px',
             display: 'flex',

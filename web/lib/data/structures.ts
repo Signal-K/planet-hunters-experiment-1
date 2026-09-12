@@ -122,6 +122,20 @@ export function canAffordStructure(structure: StructureBlueprint, opts: { francs
   return Object.entries(structure.costMaterials ?? {}).every(([mineral, amount]) => (opts.stash?.[mineral] ?? 0) >= amount)
 }
 
+// Card UI dims an unaffordable structure identically whether it's short on
+// francs or short on a required mineral (e.g. Refinery's aluminium/copper),
+// with no way for the player to tell which — this names the actual shortfall
+// so the UI can surface it instead of a silent no-op.
+export function structureAffordabilityGaps(structure: StructureBlueprint, opts: { francs: number; stash?: Record<string, number> }): string[] {
+  const gaps: string[] = []
+  if (opts.francs < structure.cost) gaps.push(`₣${(structure.cost - opts.francs).toLocaleString()} more`)
+  for (const [mineral, amount] of Object.entries(structure.costMaterials ?? {})) {
+    const held = opts.stash?.[mineral] ?? 0
+    if (held < amount) gaps.push(`${amount - held} more ${mineral}`)
+  }
+  return gaps
+}
+
 export const MARKET_TEMPLATES: MarketTemplate[] = [
   { id: 'spot',     label: 'Spot Price',     currency: '₣', baseRate: 1.0, volatility: 0.05 },
   { id: 'futures',  label: 'Futures Contract', currency: '₣', baseRate: 0.92, volatility: 0.02 },
