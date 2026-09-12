@@ -24,6 +24,7 @@ import { LaunchSequenceCanvas } from '@/components/game/LaunchSequenceCanvas'
 import FreeOpsBuildScreen from '@/components/game/screens/FreeOpsBuildScreen'
 import { HubWorldBackground } from '@/components/game/hub/HubWorldBackground'
 import { HangarModules, LaunchpadModules } from '@/components/game/hub/EarthBaseModules'
+import { isDevLauncherEnabled } from '@/lib/devAccess'
 import styles from './MissionSetupRoutes.module.css'
 
 type Game = ReturnType<typeof useGame>
@@ -163,7 +164,12 @@ function SetupFrame({ step, title, onBack, hasCoach, children }: {
         <div className={styles.launchpad}><LaunchpadModules /></div>
         <div className={styles.hangar}><HangarModules /></div>
       </div>
-      <header className={styles.header}>
+      {/* DevShortcuts' fixed DEV toggle (top:8/left:8, dev/staging-only) sits
+          directly over this header's own top-left corner, and lives outside
+          this screen's isolated stacking context so no z-index here can win
+          against it — drop the header below its footprint instead, same
+          approach HubScreen already uses (KES-173). */}
+      <header className={styles.header} data-dev-launcher={isDevLauncherEnabled()}>
         <button type="button" className={styles.back} onClick={onBack} aria-label="Back"><BackGlyph /></button>
         <div className={styles.titleGlyph}><StepGlyph step={step} /></div>
         <div className={styles.title}><span>MISSION SETUP · {step}/4</span><h1>{title}</h1></div>

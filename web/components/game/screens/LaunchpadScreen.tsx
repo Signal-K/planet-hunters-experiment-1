@@ -243,7 +243,14 @@ export default function LaunchpadScreen({
           <HubWorldBackground phase={skyPhase} composition="earth-base-pad" />
           <RoadRover road={EARTH_BASE_PAD.roadPaths?.[0]} />
         </div>
-        <button type="button" className="launchpad-scene-object launchpad-tower" data-testid="launchpad-status-card" data-action="primary-mission" onClick={openMissionMenu} aria-label={padActionLabel}>
+        {/* KES-59: the tutorial's "Tap View All Contracts" step (tutorial.ts
+            id:1, screen:'launchpad') points its coach ring at coachId
+            'launchpad-view-contracts', but no element carried that id after
+            STS-625's later simplification made a single tap on the pad go
+            straight to Contracts pre-Free-Ops (see openMissionMenu above) —
+            there is no separate "View All Contracts" button to ring at that
+            stage, only this pad. The ring silently never appeared. */}
+        <button type="button" className="launchpad-scene-object launchpad-tower" data-testid="launchpad-status-card" data-coach-id="launchpad-view-contracts" data-action="primary-mission" onClick={openMissionMenu} aria-label={padActionLabel}>
           <span className="launchpad-tower-art" data-launch-state={player.pendingLaunch ? 'hot' : 'idle'}>
             <LaunchpadModules />
             {player.pendingLaunch && <img className="launchpad-tower-rocket" src={rocketImageSrc} alt="Rocket on launchpad" />}

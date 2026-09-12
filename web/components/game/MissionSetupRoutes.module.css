@@ -60,6 +60,18 @@
   pointer-events: none;
 }
 
+/* DevShortcuts' global dev-only toggle (top:8/left:8, z-index:999 — see
+   components/dev/DevShortcuts.tsx) sits inside this screen's own isolated
+   stacking context (.root has isolation:isolate), so no z-index change here
+   can ever paint .back above it — raising .header's z-index only reorders
+   children within .root, it can't escape the isolation boundary. DevShortcuts
+   is a shared global element (KES-173 already reserves clearance for it on
+   HubScreen the same way), so the fix is to move below its footprint instead
+   of fighting for a stacking layer we can't reach. */
+.header[data-dev-launcher='true'] {
+  top: 36px;
+}
+
 .back,
 .titleGlyph,
 .title,
