@@ -23,6 +23,7 @@ export interface HubBuildingDef {
  * cohesive scene/one render, not a composited multi-piece kit. */
 const SPRITES = {
   launchpad: { src: '/game/assets/base/launchpad_flat.png', width: 172, height: 118 },
+  'surface-silo': { src: '/game/assets/base/surface_silo_flat.png', width: 120, height: 78 },
   hangar: { src: '/game/assets/base/hangar_flat.png', width: 226, height: 116 },
 } as const
 
@@ -104,24 +105,7 @@ function StructureSprite({ kind, active, buildStartedAt }: { kind: string; activ
     ? <ConstructionRig w={size.width} h={size.height} animDuration={animDuration} animDelay={animDelay} />
     : null
 
-  const name: SpriteName | null = kind === 'launchpad' || kind === 'hangar' ? kind : null
-  if (kind === 'surface-silo') {
-    return (
-      <>
-        <svg
-          viewBox="0 0 120 78" className={`earth-base-silo-sprite ${isBuilding ? 'hub-construct-reveal' : ''}`} role="img" aria-label="Surface silo"
-          style={isBuilding ? { animationDuration: animDuration, animationDelay: animDelay } : undefined}
-        >
-          <path d="M26 25h68v34c0 8-15 14-34 14S26 67 26 59V25Z" fill="currentColor" opacity=".72" />
-          <ellipse cx="60" cy="25" rx="34" ry="10" fill="currentColor" opacity=".95" />
-          <path d="M42 23V12h36v11M48 12V7h24v5M18 70h84" fill="none" stroke="var(--ln-cyan-bright)" strokeWidth="3" strokeLinecap="round" />
-          <path d="M38 35h44M38 46h44M38 57h44" stroke="var(--ln-bg)" strokeWidth="2" opacity=".7" />
-          <circle cx="88" cy="38" r="4" fill="var(--ln-ok)" />
-        </svg>
-        {rig}
-      </>
-    )
-  }
+  const name: SpriteName | null = kind === 'launchpad' || kind === 'surface-silo' || kind === 'hangar' ? kind : null
   if (!name) {
     // No base art exists yet for this kind (command/refinery/deep-space-telescope/
     // astronaut-academy) — only ever show the construction rig while it's

@@ -25,6 +25,7 @@
   "actor_road_rover": "/game/assets/actors/road_rover.png",
   "actor_drone": "/game/assets/actors/drone.png",
   "base_launchpad_flat": "/game/assets/base/launchpad_flat.png",
+  "base_surface_silo_flat": "/game/assets/base/surface_silo_flat.png",
   "base_hangar_flat": "/game/assets/base/hangar_flat.png",
   "terrain_mtn_peak_tall": "/game/assets/terrain/mtn_peak_tall.png",
   "terrain_mtn_peak_broad": "/game/assets/terrain/mtn_peak_broad.png",

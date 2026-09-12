@@ -45,7 +45,7 @@ landnam_kit.py           palette, materials, geometry helpers, camera, render
 render_all.py            driver — walks every model module, one PNG each
 models/terrain.py        modular background kit — mountains, hills, trees,
                           rocks, roads, distant facilities, clouds (KES-260)
-models/structures.py     Earth Base hero structures — launchpad, hangar. One
+models/structures.py     Earth Base hero structures — launchpad, silo, hangar. One
                           cohesive scene/one render per structure (KES-277,
                           2026-09-03) — see "Earth Base facilities" below.
 models/actors.py         rover and drone (2)
@@ -98,7 +98,8 @@ component in `web/components/game/hub/EarthBaseModules.tsx`.
 
 ## Earth Base facilities
 
-Launchpad and Hangar (`base/launchpad_flat.png`, `base/hangar_flat.png`) are
+Launchpad, Surface Silo, and Hangar (`base/launchpad_flat.png`,
+`base/surface_silo_flat.png`, `base/hangar_flat.png`) are
 built in `models/structures.py`, one cohesive Blender scene per structure,
 rendered to one PNG each — the same pattern as `ships.py`/`rooms.py`.
 
