@@ -9,6 +9,7 @@ import MissionSetupRoutes from '@/components/game/MissionSetupRoutes'
 import MissionOperationRoutes from '@/components/game/MissionOperationRoutes'
 import IntroScreen from '@/components/game/screens/IntroScreen'
 import BuildPlaceScreen from '@/components/game/screens/BuildPlaceScreen'
+import { hasEstablishedMiningSettlement } from '@/lib/systems/SurfaceOpsSystem'
 import HubScreen from '@/components/game/screens/HubScreen'
 import RefineryScreen from '@/components/game/screens/RefineryScreen'
 import MarketScreen from '@/components/game/screens/MarketScreen'
@@ -156,6 +157,7 @@ export function ScreenContent({
             transitSatelliteLevel: game.player.transitSatelliteLevel,
             clientMissions: game.player.clientMissions,
             deepSpaceTelescopeMissionCompletedAt: game.player.deepSpaceTelescopeMissionCompletedAt,
+            hasMiningSettlement: hasEstablishedMiningSettlement(game.player),
           }}
           onPlaced={(kind, plot) => {
             const structure = game.catalog.structures.find(s => s.id === kind)

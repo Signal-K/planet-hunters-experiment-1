@@ -378,6 +378,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
     const currentMissionCrew = missionCrewForLaunch(current, currentMission)
     if (currentMission.requires.crew && (!currentCrewStatus.met || currentMissionCrew.length === 0)) return
     const isFirstEver = current.player.missionsDone === 0
+    let launchedTransitStartedAt: number | null = null
     setState(s => {
       const vehicle = s.player.stagedRockets?.find(candidate => candidate.id === s.player.selectedStagedRocketId)
       if (s.screen !== 'fab' || !s.missionId || !s.targetId || s.player.activeMission || !vehicle || vehicle.location !== 'launchpad') return s
@@ -393,6 +394,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
       if (mission.requires.crew && (!crewStatus.met || missionCrewIds.length === 0)) return s
       const timedTransit = s.player.missionsDone >= FREE_OPS_START_MISSIONS_DONE
       const transitStartedAt = Date.now()
+      launchedTransitStartedAt = transitStartedAt
       const remainingStagedRockets = (s.player.stagedRockets ?? []).filter(candidate => candidate.id !== vehicle.id)
       const nextStagedRocket = remainingStagedRockets[0]
       const arrivalAt = (timedTransit && target)
@@ -435,8 +437,21 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
         cargo: {},
         launched_at: new Date().toISOString(),
       }).then(record => {
-        missionRunIdRef.current = record.id
-        setState(s => s.player.activeMission?.id === currentMission.id
+        // Guard on transitStartedAt, not just mission ID: launching the same
+        // mission again after parking the first run (SSL-92 concurrent-runs
+        // support) produces two in-flight PocketBase creates sharing one
+        // mission ID. Matching by ID alone let whichever create() resolved
+        // last stamp its record ID onto whatever run currently held that
+        // mission ID — including a run this call never belonged to — so two
+        // flights ended up sharing one `mission_runs` record (visible as a
+        // duplicate React key in LaunchpadScreen's mission-runs list, and as
+        // silent cross-writes to the wrong backend record on mining/delivery/
+        // debrief). transitStartedAt is unique per launch and preserved
+        // through park/resume, so this only ever lands on its own run.
+        if (stateRef.current.player.transitStartedAt === launchedTransitStartedAt) {
+          missionRunIdRef.current = record.id
+        }
+        setState(s => (s.player.activeMission?.id === currentMission.id && s.player.transitStartedAt === launchedTransitStartedAt)
           ? { ...s, player: { ...s.player, missionRunId: record.id } }
           : s)
       }).catch(error => console.warn('[GameLoop] mission run create failed', error))
