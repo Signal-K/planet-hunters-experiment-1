@@ -337,9 +337,16 @@
   color: var(--mission-ink);
   box-shadow: 0 3px 0 color-mix(in srgb, var(--mission-ink) 20%, transparent);
 }
-.cargoChip i { display: grid; place-items: center; align-self: stretch; min-width: 32px; background: color-mix(in srgb, var(--mineral-accent) 58%, var(--mission-paper-bright)); border-right: 2px solid var(--mission-ink); font: 900 11px var(--ln-font-mono); }
-.cargoChip strong { padding-left: 8px; font: 900 12px var(--ln-font-display); }
-.cargoChip span { padding: 0 8px 0 5px; font: 800 9px var(--ln-font-display); letter-spacing: .05em; text-transform: uppercase; }
+/* SSL-74 (07/09/26 QA report): "the text for the mission fulfillment
+   requirements is too small" — these are the values a player actually reads
+   to know what to bring (mineral symbol/quantity/name), not the shared
+   small-caps kicker-label convention used for section eyebrows elsewhere in
+   this file (that stays as-is; it's a deliberate, consistent design-system
+   choice, not what was reported). Measured at 9-12px on a real 500px-wide
+   viewport before this change. */
+.cargoChip i { display: grid; place-items: center; align-self: stretch; min-width: 32px; background: color-mix(in srgb, var(--mineral-accent) 58%, var(--mission-paper-bright)); border-right: 2px solid var(--mission-ink); font: 900 13px var(--ln-font-mono); }
+.cargoChip strong { padding-left: 8px; font: 900 14px var(--ln-font-display); }
+.cargoChip span { padding: 0 8px 0 5px; font: 800 11px var(--ln-font-display); letter-spacing: .05em; text-transform: uppercase; }
 
 .contractRocket {
   position: absolute;
