@@ -114,7 +114,19 @@ export function LaunchSequenceCanvas({ rocketName, rocketImageSrc, targetName, o
 
       app.ticker.add(t => {
         elapsed += t.deltaTime / 60
-        scene.update(elapsed, t.deltaTime / 60)
+        // SSL-281: a thrown error from inside scene.update() previously took
+        // the whole PixiJS ticker down with it (an exception on one frame
+        // stops the rAF loop from ever being rescheduled), leaving the
+        // rocket frozen mid-sequence with no visible error and no recovery —
+        // reads exactly like "the rocket wasn't moving". Isolate each frame
+        // so one bad frame can't permanently stall the animation; fall back
+        // to completing the sequence if updates keep failing.
+        try {
+          scene.update(elapsed, t.deltaTime / 60)
+        } catch (err) {
+          console.error('[LaunchSequenceCanvas] scene.update failed, ending sequence', err)
+          fireComplete()
+        }
       })
     })()
 

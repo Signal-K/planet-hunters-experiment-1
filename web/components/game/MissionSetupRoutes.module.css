@@ -266,8 +266,8 @@
   gap: 16px;
 }
 
-.contractIdentity > div { display: grid; gap: 7px; }
-.contractIdentity strong { font: 800 15px var(--ln-font-display); letter-spacing: .08em; text-transform: uppercase; }
+.contractIdentity > div { display: grid; gap: 7px; min-width: 0; }
+.contractIdentity strong { display: block; overflow-wrap: break-word; font: 800 15px var(--ln-font-display); letter-spacing: .08em; text-transform: uppercase; }
 
 .contractCopy {
   position: absolute;
@@ -767,7 +767,15 @@ button:focus-visible { outline: 4px solid var(--ln-cyan); outline-offset: 3px; }
   .contractIdentity { left: 7%; top: 5%; gap: 8px; }
   .contractIdentity > div:first-child { transform: scale(.72); transform-origin: left center; margin-right: -28px; }
   .contractIdentity > div { gap: 4px; }
-  .contractIdentity strong { max-width: 190px; font-size: 12px; }
+  /* SSL-283: 190px was wider than the gap actually available before
+     .contractCargo starts (right: 7%, width: 39%, i.e. its box begins around
+     the 54% mark) once the scaled ClientMark's un-transformed layout width is
+     accounted for — long client names like "Helios Propulsion Depot" fit
+     under 190px on one line and never triggered the wrap that would have
+     kept them clear of the cargo box. Narrow enough that even the longest
+     name ("Ferrum Orbital Construction") wraps well inside the identity
+     column's real available width. */
+  .contractIdentity strong { max-width: 100px; font-size: 12px; }
   .contractCargo { right: 7%; top: 5%; width: 39%; }
   .contractCargo > .cargoReadout { margin-top: 6px; }
   .contractCargo > p { margin-top: 7px; font-size: 9px; }

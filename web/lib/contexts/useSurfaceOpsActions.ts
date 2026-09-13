@@ -26,42 +26,53 @@ import type { Toast } from '@/components/ui/ToastLayer'
 
 export function useSurfaceOpsActions(
   setState: React.Dispatch<React.SetStateAction<GameState>>,
-  addToast: (message: string, kind?: Toast['kind']) => void
+  addToast: (message: string, kind?: Toast['kind']) => void,
+  stateRef: React.RefObject<GameState>,
 ) {
   const notifiedOperations = useRef(new Set<symbol>())
 
   const purchaseSiteAccess = useCallback((siteId: string) => {
     const now = Date.now()
-    const idempotencyKey = `site-deed:${siteId}:${now}`
-    setState(state => {
-      const site = predefinedSiteRightById(siteId)
-      if (!site) return state
-      const siteRights = state.player.siteRights ?? createSiteRightsState([...CLIENT_TERRITORIES])
-      const treasury = state.player.treasury ?? createTreasuryState(TREASURY_STARTING_BALANCE)
-      const result = acquireSiteRight(siteRights, treasury, site, {
-        rightId: `site-right:${siteId}:${now}`,
-        ledgerEntryId: idempotencyKey,
-        playerId: 'local-player',
-        mode: 'purchase',
-        activities: ['build', 'mine'],
-        acquiredAt: now,
-      })
-      if (!result.acquired || state.player.francs < result.playerDebitFrancs) return state
-      const granted = applyGrantedSiteAccess(state, siteId, now)
-      return {
-        ...granted,
-        player: {
-          ...granted.player,
-          francs: granted.player.francs - result.playerDebitFrancs,
-          siteRights: result.siteRights,
-          treasury: result.treasury,
-        },
-      }
+    const site = predefinedSiteRightById(siteId)
+    const current = stateRef.current
+    if (!site || !current) return
+    const siteRights = current.player.siteRights ?? createSiteRightsState([...CLIENT_TERRITORIES])
+    const treasury = current.player.treasury ?? createTreasuryState(TREASURY_STARTING_BALANCE)
+    const preview = acquireSiteRight(siteRights, treasury, site, {
+      rightId: `site-right:${siteId}:${now}`, ledgerEntryId: `preview:${siteId}:${now}`, playerId: 'local-player',
+      mode: 'purchase', activities: ['build', 'mine'], acquiredAt: now,
     })
-    void pbLandnam.send('/api/treasury/site-deed', {
-      method: 'POST', body: { siteId, idempotencyKey },
-    }).catch(() => {})
-  }, [setState])
+    if (!preview.acquired || current.player.francs < preview.playerDebitFrancs) return
+
+    void pbLandnam.send<{ acquired: boolean; state: typeof treasury; referenceId: string }>('/api/treasury/site-deed', {
+      method: 'POST', body: { siteId },
+    }).then(response => {
+      if (!response.acquired) return
+      setState(state => {
+        const liveRights = state.player.siteRights ?? createSiteRightsState([...CLIENT_TERRITORIES])
+        const liveTreasury = state.player.treasury ?? createTreasuryState(TREASURY_STARTING_BALANCE)
+        const result = acquireSiteRight(liveRights, liveTreasury, site, {
+          rightId: `site-right:${siteId}:${now}`,
+          ledgerEntryId: response.referenceId,
+          playerId: 'local-player',
+          mode: 'purchase',
+          activities: ['build', 'mine'],
+          acquiredAt: now,
+        })
+        if (!result.acquired || state.player.francs < result.playerDebitFrancs) return state
+        const granted = applyGrantedSiteAccess(state, siteId, now)
+        return {
+          ...granted,
+          player: {
+            ...granted.player,
+            francs: granted.player.francs - result.playerDebitFrancs,
+            siteRights: result.siteRights,
+            treasury: response.state,
+          },
+        }
+      })
+    }).catch(() => addToast('Site deed could not be recorded. Try again.', 'warn'))
+  }, [addToast, setState, stateRef])
 
   const buildSettlementLaunchpad = useCallback((siteId: string, pad: 0 | 1 | 2) => {
     setState(state => applyBuildSettlementLaunchpad(state, siteId, pad))

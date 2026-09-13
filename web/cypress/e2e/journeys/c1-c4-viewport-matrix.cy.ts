@@ -1,4 +1,5 @@
 import type { GameState } from '@/game-context'
+import { seedAuthenticatedFixture } from '../../support/authenticated-fixture'
 
 const STORAGE_KEY = 'landnam-game-state-v1'
 const SURVEY_KEY = 'landnam-surveys-shown'
@@ -69,7 +70,7 @@ function stateWith(screen: GameState['screen'], overrides: Partial<GameState> = 
 function visit(path: string, state: GameState) {
   cy.visit(path, {
     onBeforeLoad(win) {
-      win.localStorage.setItem(STORAGE_KEY, JSON.stringify(state))
+      seedAuthenticatedFixture(win, state)
       win.localStorage.setItem(SURVEY_KEY, JSON.stringify([
         'lnm_first_launch', 'lnm_mining_feel', 'lnm_client_pick',
         'lnm_mission_friction', 'lnm_progression_feel', 'lnm_end_of_content',
@@ -86,7 +87,6 @@ function visit(path: string, state: GameState) {
       // viewports (mobile landscape) and silently fits beside content on tall ones — pre-ack
       // it so these are steady-state screen-contract checks, not incidental first-run coverage.
       win.localStorage.setItem('ln_tutorial_complete_ack', '1')
-      win.localStorage.setItem('landnam-account-credentials', JSON.stringify({ email: 'e2e@example.com', password: 'e2e-guest-test' }))
     },
   })
 }
@@ -118,9 +118,8 @@ describe('C1–C4 screen contracts across viewport classes', () => {
           .scrollIntoView().should('be.visible')
 
         visit('/game/missions', stateWith('missions'))
-        cy.contains('Mission Dispatch', { timeout: 10000 }).should('be.visible')
-        cy.get('button[data-testid^="mission-detail-cta-"]', { timeout: 10000 })
-          .first()
+        cy.get('[data-testid="mission-setup-scaffold"]', { timeout: 10000 }).should('have.attr', 'data-step', '1')
+        cy.get('[data-testid="mission-board-section-client"]')
           .scrollIntoView().should('be.visible')
 
         visit('/game/launchpad', stateWith('launchpad'))
@@ -223,12 +222,12 @@ describe('C1–C3 persisted mission edge states', () => {
         miningCargoInProgress: { platinum: 2 },
       }),
     }))
-    cy.contains('Mission Dispatch', { timeout: 10000 }).should('be.visible')
-    cy.get('button[data-testid^="mission-detail-cta-"]')
-      .first()
-      .scrollIntoView().click({ force: true })
+    cy.get('[data-testid="mission-setup-scaffold"]', { timeout: 10000 }).should('have.attr', 'data-step', '1')
+    cy.get('[data-testid="mission-board-section-client"]')
+      .scrollIntoView().should('be.visible')
+    cy.contains('button', 'ACCEPT CONTRACT').click({ force: true })
     cy.window().then(win => {
-      const saved = JSON.parse(win.localStorage.getItem(STORAGE_KEY) || '{}') as GameState
+      const saved = JSON.parse(win.localStorage.getItem(`${STORAGE_KEY}:user:e2e-fixture-user`) || '{}') as GameState
       expect(saved.player.activeMission?.id).to.eq('generated-s1-starter-bulk-1')
       expect(saved.missionId).to.eq(null)
     })

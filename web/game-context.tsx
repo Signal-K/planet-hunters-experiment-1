@@ -179,7 +179,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
   const loop    = useGameLoop({ stateRef, setState, catalog: runtimeCatalog, addToast: ui.addToast })
   const tutorial = useTutorialActions(setState)
   const economy = useEconomyActions(setState, useCallback(() => runtimeCatalog.missions, [runtimeCatalog.missions]))
-  const surfaceOps = useSurfaceOpsActions(setState, ui.addToast)
+  const surfaceOps = useSurfaceOpsActions(setState, ui.addToast, stateRef)
 
   // KES-83: applies a claimed friend gift to local player state through the
   // same setState path (and, for blueprints, the same unlockBlueprint action

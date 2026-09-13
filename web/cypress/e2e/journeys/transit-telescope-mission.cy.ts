@@ -4,8 +4,7 @@
 // never a client contract on the Mission Board.
 
 import type { GameState } from '@/game-context'
-
-const STORAGE_KEY = 'landnam-game-state-v1'
+import { seedAuthenticatedFixture } from '../../support/authenticated-fixture'
 
 function basePlayer(overrides: Partial<GameState['player']> = {}): GameState['player'] {
   return {
@@ -51,8 +50,11 @@ function visitWithState(path: string, screen: GameState['screen'], playerOverrid
 
   cy.visit(path, {
     onBeforeLoad(win) {
-      win.localStorage.setItem(STORAGE_KEY, JSON.stringify(full))
-      win.localStorage.setItem('landnam-account-credentials', JSON.stringify({ email: 'e2e@example.com', password: 'e2e-guest-test' }))
+      // `cy.visit()` can retain storage written by the prior leg of this
+      // journey. Start each leg as a distinct signed-in account snapshot so
+      // a completed launch cannot overwrite the screen under test.
+      win.localStorage.clear()
+      seedAuthenticatedFixture(win, full)
     },
   })
 }
@@ -85,15 +87,18 @@ describe('Telescope construction/launch mission (STS-138)', () => {
       .should('not.be.disabled')
       .click()
     cy.get('[data-testid="launchpad-prepare-instrument-btn"]', { timeout: 10000 }).click()
-    // Lands on the target picker (step 2 of 4: Mission -> Target -> Rocket
-    // -> Launch) — the telescope mission still requires an explicit target
-    // pick even though Earth Orbit is the only compatible target.
-    cy.contains('Pick Target', { timeout: 10000 }).should('be.visible')
+    // Earth Orbit is the telescope's fixed compatible target, so the current
+    // setup flow proceeds directly to the rocket blueprint rather than
+    // presenting a one-option target picker.
+    cy.contains('BUILD ANOTHER PROSPECTOR', { timeout: 10000 }).should('be.visible')
 
     visitWithState('/game/missions', 'missions', {
       transitSatelliteLaunchedAt: undefined,
     })
-    cy.contains('Mission Board', { timeout: 10000 }).should('be.visible')
+    // The current client board is the Contract stage of the continuous
+    // mission-setup scene, not the retired standalone Mission Dispatch view.
+    cy.get('[data-testid="mission-setup-scaffold"]', { timeout: 10000 }).should('have.attr', 'data-step', '1')
+    cy.contains('h1', 'Contract').should('be.visible')
     cy.get('[data-testid="mission-card-story-transit-telescope-launch"]').should('not.exist')
   })
 
@@ -110,10 +115,7 @@ describe('Telescope construction/launch mission (STS-138)', () => {
       .should('not.be.disabled')
       .click()
     cy.get('[data-testid="launchpad-prepare-instrument-btn"]', { timeout: 10000 }).click()
-    // Lands on the target picker (step 2 of 4: Mission -> Target -> Rocket
-    // -> Launch) — the telescope mission still requires an explicit target
-    // pick even though Earth Orbit is the only compatible target.
-    cy.contains('Pick Target', { timeout: 10000 }).should('be.visible')
+    cy.contains('BUILD ANOTHER PROSPECTOR', { timeout: 10000 }).should('be.visible')
   })
 
   it('gates the TESS discovery screen behind launching the telescope, with no SMS prerequisite', () => {

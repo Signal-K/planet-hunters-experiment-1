@@ -6,8 +6,8 @@
 // the built management view, tab switching, and the new AcademyCoach.
 
 import type { GameState } from '@/game-context'
+import { seedAuthenticatedFixture } from '../../support/authenticated-fixture'
 
-const STORAGE_KEY = 'landnam-game-state-v1'
 const COACH_KEY = 'landnam_academy_coach_seen_v1'
 
 function basePlayer(overrides: Partial<GameState['player']> = {}): GameState['player'] {
@@ -50,8 +50,7 @@ function visitWithState(path: string, screen: GameState['screen'], playerOverrid
 
   cy.visit(path, {
     onBeforeLoad(win) {
-      win.localStorage.setItem(STORAGE_KEY, JSON.stringify(full))
-      win.localStorage.setItem('landnam-account-credentials', JSON.stringify({ email: 'e2e@example.com', password: 'e2e-guest-test' }))
+      seedAuthenticatedFixture(win, full, 'e2e-academy-user')
       // Player already crossed the M1-M3 -> Free Ops threshold in this
       // fixture — acknowledge the one-time "Program Online" interstitial
       // so it doesn't cover the screen under test (see TutorialCompleteSheet.tsx).
@@ -96,8 +95,7 @@ describe('Astronaut Academy', () => {
           lastCargo: null, tutorial: false, doneSteps: {}, popup: null, menuOpen: false,
           player: basePlayer({ clientMissions: { 'helios-propulsion-depot': 10 } }),
         } as GameState
-        win.localStorage.setItem(STORAGE_KEY, JSON.stringify(full))
-        win.localStorage.setItem('landnam-account-credentials', JSON.stringify({ email: 'e2e@example.com', password: 'e2e-guest-test' }))
+        seedAuthenticatedFixture(win, full, 'e2e-academy-user')
       },
     })
     cy.get('[data-testid="academy-screen"]', { timeout: 10000 }).should('be.visible')
@@ -119,8 +117,7 @@ describe('Astronaut Academy', () => {
             researchXP: 0,
           }),
         } as GameState
-        win.localStorage.setItem(STORAGE_KEY, JSON.stringify(full))
-        win.localStorage.setItem('landnam-account-credentials', JSON.stringify({ email: 'e2e@example.com', password: 'e2e-guest-test' }))
+        seedAuthenticatedFixture(win, full, 'e2e-academy-user')
       },
     })
     cy.get('[data-testid="academy-screen"]', { timeout: 10000 }).should('be.visible')
@@ -147,8 +144,7 @@ describe('Astronaut Academy', () => {
             crew: [],
           }),
         } as GameState
-        win.localStorage.setItem(STORAGE_KEY, JSON.stringify(full))
-        win.localStorage.setItem('landnam-account-credentials', JSON.stringify({ email: 'e2e@example.com', password: 'e2e-guest-test' }))
+        seedAuthenticatedFixture(win, full, 'e2e-academy-user')
         win.localStorage.removeItem(COACH_KEY)
       },
     })
@@ -199,8 +195,7 @@ describe('Astronaut Academy', () => {
             crew: [],
           }),
         } as GameState
-        win.localStorage.setItem(STORAGE_KEY, JSON.stringify(full))
-        win.localStorage.setItem('landnam-account-credentials', JSON.stringify({ email: 'e2e@example.com', password: 'e2e-guest-test' }))
+        seedAuthenticatedFixture(win, full, 'e2e-academy-user')
         win.localStorage.setItem(COACH_KEY, '1')
       },
     })
@@ -236,8 +231,7 @@ describe('Astronaut Academy', () => {
               crew: [],
             }),
           } as GameState
-          win.localStorage.setItem(STORAGE_KEY, JSON.stringify(full))
-          win.localStorage.setItem('landnam-account-credentials', JSON.stringify({ email: 'e2e@example.com', password: 'e2e-guest-test' }))
+          seedAuthenticatedFixture(win, full, 'e2e-academy-user')
           win.localStorage.removeItem(COACH_KEY)
         },
       })
@@ -279,8 +273,7 @@ describe('Astronaut Academy', () => {
               crew: [],
             }),
           } as GameState
-          win.localStorage.setItem(STORAGE_KEY, JSON.stringify(full))
-          win.localStorage.setItem('landnam-account-credentials', JSON.stringify({ email: 'e2e@example.com', password: 'e2e-guest-test' }))
+          seedAuthenticatedFixture(win, full, 'e2e-academy-user')
           win.localStorage.setItem(COACH_KEY, '1')
         },
       })

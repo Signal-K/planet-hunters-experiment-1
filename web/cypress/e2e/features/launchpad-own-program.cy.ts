@@ -1,6 +1,8 @@
 // Own-program operations remain explicit Launchpad actions. The physical pad
 // itself enters mission selection first, so it never silently chooses the
 // first generated operation and drops the player into target selection.
+import { seedAuthenticatedFixture } from '../../support/authenticated-fixture'
+
 describe('Launchpad · your own program', () => {
   const freeOpsSave = (extra: Record<string, unknown> = {}) => ({
     screen: 'launchpad',
@@ -26,17 +28,10 @@ describe('Launchpad · your own program', () => {
     },
   })
 
-  const visitLaunchpad = (save: object, authenticated = true) => {
+  const visitLaunchpad = (save: object) => {
     cy.visit('/game/launchpad', {
       onBeforeLoad(win) {
-        win.localStorage.setItem('landnam-game-state-v1', JSON.stringify(save))
-        if (authenticated) {
-          // Keep the mandatory guest-auth sheet from covering surface
-          // assertions. The final test opts out to exercise that flow.
-          win.localStorage.setItem('landnam-account-credentials', JSON.stringify({
-            email: 'e2e@example.com', password: 'e2e-guest-test',
-          }))
-        }
+        seedAuthenticatedFixture(win, save)
       },
     })
   }
@@ -97,18 +92,10 @@ describe('Launchpad · your own program', () => {
 
   it('clicking the physical launchpad opens the own-program mission selector', () => {
     cy.viewport(390, 844)
-    visitLaunchpad(freeOpsSave(), false)
+    visitLaunchpad(freeOpsSave())
 
-    // The auth gate overlays the whole screen on a fresh visit and covers
-    // the scene; get past it (email required, KES-97) before clicking the pad.
-    // This fixture deliberately has no stored credentials, so the mandatory
-    // email gate must be handled before the launchpad action. Waiting directly
-    // for the gate avoids resolving the CTA first and then racing its async
-    // mount/removal (KES-135).
-    cy.get('[data-testid="auth-gate-quick-email"]', { timeout: 15000 }).should('be.visible')
-    cy.get('[data-testid="auth-gate-quick-email"]').type(`cy-launchpad-${Date.now()}@example.com`)
-    cy.get('[data-testid="auth-gate-quick-submit"]').click()
-    cy.get('[data-testid="auth-gate-quick-email"]', { timeout: 15000 }).should('not.exist')
+    // This is a Launchpad interaction test. Its account-scoped fixture keeps
+    // the independent email/password gate out of the spatial scene contract.
     cy.get('[data-testid="launchpad-ui-focus-pad-btn"]', { timeout: 15000 }).click()
     cy.get('[data-testid="launchpad-focus-screen"]', { timeout: 15000 }).should('be.visible')
     cy.get('[data-testid="launchpad-status-card"]', { timeout: 15000 }).click()

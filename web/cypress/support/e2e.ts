@@ -26,8 +26,8 @@ beforeEach(() => {
 
   // The Docker release suite runs both real-auth specs and fixture-driven
   // gameplay specs. Only the auth specs should use the live browser auth
-  // endpoints; the gameplay fixtures intentionally seed e2e@example.com and
-  // need the deterministic browser stubs below. cy.request() calls from the
+  // endpoints; gameplay specs seed deterministic account-scoped sessions and
+  // need the browser stubs below. cy.request() calls from the
   // auth specs still reach Docker PocketBase directly because intercepts do
   // not rewrite Cypress's Node-side requests.
   const normalizedSpec = Cypress.spec.relative.replaceAll('\\', '/')
@@ -36,10 +36,9 @@ beforeEach(() => {
   if (realBrowserAuth) return
 
   // Visual QA is intentionally local-only: its screenshots are driven by
-  // deterministic localStorage fixtures, not by a successful account login.
-  // Returning an auth success here rebinds the fixture from the guest slot to
-  // the account slot halfway through a visual flow and can reset the screen
-  // to the intro route. Fail these background auth attempts fast instead.
+  // deterministic account-scoped fixtures, not a remote account login.
+  // Returning an auth success here can rebind the fixture halfway through a
+  // visual flow and reset the screen to the intro route. Fail refreshes fast.
   const visualProfile = Cypress.env('visualProfile') === true
 
   // Stub the app's own backend-health probe so BackendStatus resolves to
@@ -50,7 +49,7 @@ beforeEach(() => {
 
   cy.intercept('POST', '**/api/collections/users/auth-with-password', {
     statusCode: 503,
-    body: { code: 503, message: visualProfile ? 'Visual QA uses local fixture state.' : 'Fixture E2E uses guest local state.' },
+    body: { code: 503, message: visualProfile ? 'Visual QA uses local fixture state.' : 'Fixture E2E uses account-scoped local state.' },
   }).as('pbAuth')
 
   // The mandatory email gate creates the lightweight account before it
@@ -59,25 +58,25 @@ beforeEach(() => {
   // reaches the gameplay flow it is meant to verify.
   cy.intercept('POST', '**/api/collections/users/records', {
     statusCode: 503,
-    body: { code: 503, message: visualProfile ? 'Visual QA uses local fixture state.' : 'Fixture E2E uses guest local state.' },
+    body: { code: 503, message: visualProfile ? 'Visual QA uses local fixture state.' : 'Fixture E2E uses account-scoped local state.' },
   }).as('pbUserCreate')
 
   cy.intercept('POST', '**/api/collections/users/auth-refresh', {
     statusCode: 503,
-    body: { code: 503, message: visualProfile ? 'Visual QA uses local fixture state.' : 'Fixture E2E uses guest local state.' },
+    body: { code: 503, message: visualProfile ? 'Visual QA uses local fixture state.' : 'Fixture E2E uses account-scoped local state.' },
   }).as('pbAuthRefresh')
 
   cy.intercept('GET', '**/api/collections/users/auth-refresh', {
     statusCode: 503,
-    body: { code: 503, message: visualProfile ? 'Visual QA uses local fixture state.' : 'Fixture E2E uses guest local state.' },
+    body: { code: 503, message: visualProfile ? 'Visual QA uses local fixture state.' : 'Fixture E2E uses account-scoped local state.' },
   }).as('pbAuthRefreshGet')
 
-  // Fixture journeys deliberately remain guests. Their localStorage state is
-  // seeded in the unscoped guest slot; returning a fake authenticated record
-  // here would switch the app to the account-scoped slot and discard it.
+  // Fixture journeys seed a deterministic account-scoped session before the
+  // app hydrates. Keep remote exchange unavailable so Cypress exercises the
+  // seeded local snapshot rather than mutating a shared developer account.
   cy.intercept('POST', '**/api/landnam-auth/exchange', {
     statusCode: 503,
-    body: { code: 503, message: visualProfile ? 'Visual QA uses local fixture state.' : 'Fixture E2E uses guest local state.' },
+    body: { code: 503, message: visualProfile ? 'Visual QA uses local fixture state.' : 'Fixture E2E uses account-scoped local state.' },
   }).as('pbLandnamExchange')
 
   // Return 404 for game_states so the real PB record for 'e2e-user' never overrides test localStorage state

@@ -37,7 +37,18 @@ export default function TutorialCoach({ stepIndex, steps, step, total, onManualN
   // The desktop Hub instruction already names the Launchpad. A large ring
   // around the building duplicates that instruction and reads like a second
   // active state; mobile keeps its compact target ring for touch wayfinding.
+  //
+  // These two ids already get a pixel-perfect highlight straight from CSS
+  // (globals.css `html[data-coach-target="…"] [data-coach-id="…"]`, set via
+  // the effect below) which sits directly on the element's own box-shadow —
+  // it can't drift. CoachPointer's ring is measured separately via
+  // getBoundingClientRect() and can render one frame stale (e.g. while the
+  // hub scene is still laying out), producing a second, briefly-misaligned
+  // ring hovering near the real one (SSL-280). Suppress the measured ring
+  // wherever the exact CSS one already covers the target.
+  const CSS_DRIVEN_COACH_IDS = ['bottom-tab-missions', 'build-structure-strip']
   const showPointer = !(isDesktop && step.screen === 'hub')
+    && !(resolvedCoachId && CSS_DRIVEN_COACH_IDS.includes(resolvedCoachId))
 
   // Set data-coach-target on <html> for CSS element highlighting (works across fixed/absolute boundaries)
   useEffect(() => {

@@ -234,6 +234,8 @@ function GameCanvas() {
           <button
             data-testid="settings-button"
             aria-label="Settings"
+            aria-haspopup="dialog"
+            aria-expanded={settingsOpen}
             onClick={() => setSettingsOpen(true)}
             style={{
               position: 'absolute', top: 56, right: 12, zIndex: 22,
