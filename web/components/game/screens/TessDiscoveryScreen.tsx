@@ -19,6 +19,7 @@ import { deriveObservatoryStats, periodFromRanges, sectorWindows, tessCandidateT
 import type { Player } from '@/lib/game-types'
 import { UI_ZONES } from '@/lib/ui-zones'
 import { fetchReviewableTessCandidates } from '@/lib/tess-subjects'
+import { sharedBackendMisconfigured } from '@/lib/pb-config'
 import { useIsDesktop } from '@/lib/hooks/useIsDesktop'
 import { instrumentDigestDateKey, unresolvedTransitInstrumentDigest } from '@/lib/systems/InstrumentFeedSystem'
 
@@ -70,6 +71,10 @@ export default function TessDiscoveryScreen({ player, visualCandidate, onBack, o
   // otherwise means literally waiting a day. This offset fakes `today` by N
   // days; it's a no-op (stays 0) outside development builds.
   const [devDayOffset, setDevDayOffset] = useState(0)
+  // Bumped by the "Retry Downlink" action so a genuine (non-misconfiguration)
+  // fetch failure can be retried in place instead of being a dead end for
+  // the rest of the visit.
+  const [retryToken, setRetryToken] = useState(0)
 
   useEffect(() => {
     if (visualCandidate) {
@@ -120,7 +125,7 @@ export default function TessDiscoveryScreen({ player, visualCandidate, onBack, o
     // post-confirmation target-selection map. Re-entering the screen remounts
     // it and naturally resolves the next still-unclassified daily candidate.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [visualCandidate, player.freeOperations, player.transitSatelliteLaunchedAt, player.transitSatelliteLevel, player.satelliteTargetId, devDayOffset])
+  }, [visualCandidate, player.freeOperations, player.transitSatelliteLaunchedAt, player.transitSatelliteLevel, player.satelliteTargetId, devDayOffset, retryToken])
 
   const classification: TessClassification | undefined = candidate ? classifications[candidate.id] : undefined
   const discoveredTarget = candidate && classification?.verdict === 'planet'
@@ -183,16 +188,22 @@ export default function TessDiscoveryScreen({ player, visualCandidate, onBack, o
   }
 
   if (!candidate) {
+    const misconfigured = loadFailed && sharedBackendMisconfigured()
     return (
       <GateScreen
         eyebrow="BASE / DAILY DOWNLINK"
         icon={<Radio size={22} />}
         tone="amber"
-        title={loadFailed ? 'Live Feed Unavailable' : 'No Reviewable Anomaly'}
-        body={loadFailed
-          ? 'The shared TESS subject feed could not be reached. Check back later.'
-          : 'Every live TESS transit subject is currently confirmed, rejected, or already resolved by consensus.'}
+        title={misconfigured ? 'Feed Not Configured' : loadFailed ? 'Live Feed Unavailable' : 'No Reviewable Anomaly'}
+        body={misconfigured
+          ? 'This build has no shared backend configured. Reloading will not help — this needs a deploy fix.'
+          : loadFailed
+            ? 'The shared TESS subject feed could not be reached.'
+            : 'Every live TESS transit subject is currently confirmed, rejected, or already resolved by consensus.'}
         onBack={onBack}
+        action={loadFailed && !misconfigured ? (
+          <GhostBtn onClick={() => setRetryToken(t => t + 1)}>Retry Downlink</GhostBtn>
+        ) : undefined}
         devBar={process.env.NODE_ENV === 'development' ? (
           <DevDaySkipBar offset={devDayOffset} onAdvance={() => setDevDayOffset(o => o + 1)} onReset={() => setDevDayOffset(0)} />
         ) : undefined}

@@ -1,7 +1,38 @@
 'use client'
 
 import React from 'react'
-import type { Mission, Target } from '@/lib/data'
+import type { Mission, Target, TargetArchetype } from '@/lib/data'
+
+// ── Composition colour ───────────────────────────────────────────────────────
+// Every body's base colour keys off its real composition archetype
+// (target.archetype, see lib/data/target-archetypes.ts) or, for named
+// planets, its actual identity — the same source PixiGalaxyMap's
+// SPECTRAL_PALETTE/PLANET_COLORS read from, so the two maps can't drift.
+// State (compatible / contract match / selected) used to be encoded by
+// swapping this base colour out entirely, which made every asteroid read as
+// the same flat grey or green depending on state — no sense of what body you
+// were actually looking at. State is now layered on top as rings/glow
+// instead, so the body's own identity colour always shows through.
+const SPECTRAL_PALETTE: Record<TargetArchetype, { fill: string; low: string; stroke: string; mark: string }> = {
+  C: { fill: '#3c3a36', low: '#1e1c1a', stroke: '#5a5450', mark: '#7a7268' },
+  S: { fill: '#8a6040', low: '#4a3020', stroke: '#aa8060', mark: '#d0a880' },
+  M: { fill: '#8090a0', low: '#3c4a56', stroke: '#a8bccc', mark: '#d0e0ec' },
+  icy: { fill: '#7ec8dc', low: '#2e4a54', stroke: '#9ee0f0', mark: '#d4f4fa' },
+  'gas-giant': { fill: '#c8a060', low: '#6f4f2a', stroke: '#e0b870', mark: '#f2d39a' },
+}
+const PLANET_COLORS: Record<string, { fill: string; low: string; stroke: string; mark: string }> = {
+  mercury: { fill: '#8a7060', low: '#4d4038', stroke: '#a08070', mark: '#c1a292' },
+  venus:   { fill: '#e8c870', low: '#9f7434', stroke: '#d4a840', mark: '#fff0a8' },
+  earth:   { fill: '#2a6ea4', low: '#123152', stroke: '#4a9ec4', mark: '#54b36a' },
+  mars:    { fill: '#c1440e', low: '#5e2414', stroke: '#e05020', mark: '#f08a45' },
+  jupiter: { fill: '#c8a060', low: '#6f4f2a', stroke: '#e0b870', mark: '#f2d39a' },
+  saturn:  { fill: '#e0c880', low: '#8a7145', stroke: '#c8a860', mark: '#fff2b8' },
+  neptune: { fill: '#2040c0', low: '#091d66', stroke: '#4060e0', mark: '#79a2ff' },
+}
+
+function bodyColors(target: Target) {
+  return PLANET_COLORS[target.id] ?? SPECTRAL_PALETTE[target.archetype ?? 'C']
+}
 
 // ── Orbital layout ───────────────────────────────────────────────────────────
 // Fixed per-target angle so bodies don't jump around between renders — same
@@ -47,6 +78,12 @@ function asteroidSilhouette(id: string): [number, number][] {
   return ASTEROID_SILHOUETTES[hashId(id) % ASTEROID_SILHOUETTES.length]
 }
 
+function seededFloat(seed: number, index: number): number {
+  let h = seed ^ (index * 0x9e3779b9)
+  h = ((h >> 16) ^ h) * 0x45d9f3b; h = ((h >> 16) ^ h) * 0x45d9f3b; h = (h >> 16) ^ h
+  return (h >>> 0) / 0xffffffff
+}
+
 const VIEW = 640
 const CENTER = VIEW / 2
 
@@ -56,9 +93,10 @@ interface GalaxyMapProps {
   compatibleIds: Set<string>
   pickedId: string
   onPick: (id: string) => void
+  eligibleOnlyHighlight?: boolean
 }
 
-export default function GalaxyMap({ mission, targets, compatibleIds, pickedId, onPick }: GalaxyMapProps) {
+export default function GalaxyMap({ mission, targets, compatibleIds, pickedId, onPick, eligibleOnlyHighlight = false }: GalaxyMapProps) {
   const missionMinerals = new Set(Object.keys(mission.requires.minerals))
   // Tutorial missions need a close read of the reachable band. Keep the
   // outer context bodies in the chart, but use the viewport for the
@@ -137,30 +175,15 @@ export default function GalaxyMap({ mission, targets, compatibleIds, pickedId, o
             const selected = pickedId === t.id
             const sil = asteroidSilhouette(t.id)
             const polyPoints = sil.map(([mx, my]) => `${cx + mx * size},${cy + my * size}`).join(' ')
-            const bodyFill = selected
-              ? 'var(--ln-cyan)'
-              : !compatible
-              ? 'var(--ln-map-muted, var(--ln-text-dim))'
-              : contractMatch
-                  ? 'var(--ln-map-match, var(--ln-ok))'
-                  : isAsteroid
-                    ? 'var(--ln-map-rock, var(--ln-cyan))'
-                    : 'var(--ln-map-planet, var(--ln-play))'
-            const bodyDetail = selected
-              ? 'var(--ln-panel)'
-              : contractMatch
-                ? 'var(--ln-ok)'
-                : 'var(--ln-cyan)'
-            // Chart nodes use a distinct fill for compatible bodies and a
-            // saturated reticle for the current selection. The old paper-fill
-            // treatment made every body read as the same colour.
-            const lineColor = !compatible
-              ? 'var(--ln-text-muted)'
-              : selected
-                ? 'var(--ln-cyan)'
-                : contractMatch
-                  ? 'var(--ln-ok)'
-                  : 'var(--ln-cyan)'
+            const seed = hashId(t.id)
+            const colors = bodyColors(t)
+            // The body keeps its own composition colour at every state — an
+            // out-of-range body just desaturates via the group opacity below.
+            // Selection/contract-match are layered on as rings/glow instead
+            // of overwriting the fill, so a picked body still reads as what
+            // it actually is (metallic, icy, carbonaceous...) rather than
+            // turning into a flat cyan disc.
+            const lineColor = selected ? 'var(--ln-cyan)' : colors.stroke
 
             return (
               <g
@@ -189,25 +212,43 @@ export default function GalaxyMap({ mission, targets, compatibleIds, pickedId, o
                   fill="transparent"
                   pointerEvents={compatible ? 'all' : 'none'}
                 />
-                {contractMatch && !selected && (
+                {/* Faint cyan ring marks a compatible-but-unpicked body so
+                    it's discoverable before the player commits, without
+                    reaching for amber (reserved for payout/reward emphasis). */}
+                {compatible && !selected && (
+                  <circle cx={cx} cy={cy} r={size + 6} fill="none" stroke="var(--ln-cyan)" strokeWidth={1.25} opacity={0.4} />
+                )}
+                {contractMatch && (!eligibleOnlyHighlight || compatible) && !selected && (
                   <circle cx={cx} cy={cy} r={size + 5} fill="none" stroke="var(--ln-ok)" strokeWidth={1.5} strokeDasharray="2 3" opacity={0.85} />
                 )}
                 {isAsteroid ? (
                   <>
-                    <polygon points={polyPoints} fill={bodyFill} stroke={lineColor} strokeWidth={1.5} />
+                    <polygon points={polyPoints} fill={colors.fill} stroke={lineColor} strokeWidth={1.5} />
+                    {/* Facet shading — one low (shadow) facet, one mark
+                        (highlight) facet, deterministically placed per body
+                        id so the same target always reads the same way. */}
                     <polygon
                       points={sil.slice(0, Math.max(3, sil.length - 2)).map(([mx, my]) => `${cx + mx * size * 0.68},${cy + my * size * 0.68}`).join(' ')}
-                      fill={bodyDetail}
-                      opacity={compatible ? 0.9 : 0.55}
+                      fill={colors.low}
+                      opacity={compatible ? 0.75 : 0.5}
                     />
-                    <circle cx={cx - size * 0.25} cy={cy - size * 0.1} r={Math.max(1.5, size * 0.12)} fill="var(--ln-panel)" opacity={0.6} />
-                    <circle cx={cx + size * 0.28} cy={cy + size * 0.25} r={Math.max(1, size * 0.09)} fill="var(--ln-panel)" opacity={0.5} />
+                    <polygon
+                      points={sil.slice(1, Math.max(4, sil.length - 1)).map(([mx, my]) => `${cx + mx * size * 0.42},${cy + my * size * 0.42}`).join(' ')}
+                      fill={colors.mark}
+                      opacity={compatible ? 0.55 : 0.35}
+                    />
+                    <circle cx={cx + (seededFloat(seed, 1) - 0.5) * size * 0.7} cy={cy + (seededFloat(seed, 2) - 0.5) * size * 0.7} r={Math.max(1.5, size * (seededFloat(seed, 3) * 0.14 + 0.08))} fill={colors.low} opacity={0.55} />
+                    <circle cx={cx + (seededFloat(seed, 4) - 0.5) * size * 0.9} cy={cy + (seededFloat(seed, 5) - 0.5) * size * 0.9} r={Math.max(1, size * (seededFloat(seed, 6) * 0.1 + 0.05))} fill={colors.mark} opacity={0.4} />
                   </>
                 ) : (
                   <>
-                    <circle cx={cx} cy={cy} r={size} fill={bodyFill} stroke={lineColor} strokeWidth={1.5} />
-                    <path d={`M ${cx - size * 0.76} ${cy - size * 0.2} Q ${cx} ${cy - size * 0.62} ${cx + size * 0.76} ${cy - size * 0.16}`} fill="none" stroke={bodyDetail} strokeWidth={Math.max(1, size * 0.16)} opacity={0.9} />
-                    <circle cx={cx - size * 0.3} cy={cy + size * 0.25} r={Math.max(1, size * 0.1)} fill="var(--ln-panel)" opacity={0.5} />
+                    <circle cx={cx} cy={cy} r={size} fill={colors.fill} stroke={lineColor} strokeWidth={1.5} />
+                    {/* Terminator-style shading — a lit facet toward the sun
+                        and a shadowed facet away from it, plus one accent
+                        band, instead of one generic highlight arc. */}
+                    <path d={`M ${cx - size * 0.78} ${cy - size * 0.22} Q ${cx} ${cy - size * 0.64} ${cx + size * 0.78} ${cy - size * 0.18}`} fill="none" stroke={colors.mark} strokeWidth={Math.max(1, size * 0.18)} opacity={0.85} />
+                    <path d={`M ${cx - size * 0.6} ${cy + size * 0.42} Q ${cx + size * 0.1} ${cy + size * 0.7} ${cx + size * 0.7} ${cy + size * 0.3}`} fill="none" stroke={colors.low} strokeWidth={Math.max(1, size * 0.22)} opacity={0.7} />
+                    {t.id === 'saturn' && <ellipse cx={cx} cy={cy} rx={size * 1.7} ry={size * 0.4} fill="none" stroke={colors.stroke} strokeWidth={1.5} opacity={0.75} />}
                   </>
                 )}
                 {/* Selected target — cyan reticle plus a dimension line running
@@ -238,13 +279,13 @@ export default function GalaxyMap({ mission, targets, compatibleIds, pickedId, o
 
       <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', padding: '8px 16px 10px', borderTop: '1px solid var(--ln-hairline)', flexShrink: 0 }}>
         <span style={{ display: 'flex', alignItems: 'center', gap: 6, fontFamily: 'var(--ln-font-display)', fontSize: 9, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--ln-text-muted)' }}>
-          <span style={{ width: 7, height: 7, borderRadius: '50%', border: '1.5px solid var(--ln-cyan)' }} />Reachable and selectable
+          <span style={{ width: 7, height: 7, borderRadius: '50%', border: '1.5px solid var(--ln-cyan)', opacity: 0.6 }} />Reachable and selectable
         </span>
         <span style={{ display: 'flex', alignItems: 'center', gap: 6, fontFamily: 'var(--ln-font-display)', fontSize: 9, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--ln-text-muted)' }}>
           <span style={{ width: 7, height: 7, borderRadius: '50%', background: 'var(--ln-crit)', opacity: 0.6 }} />Out of range
         </span>
         <span style={{ display: 'flex', alignItems: 'center', gap: 6, fontFamily: 'var(--ln-font-display)', fontSize: 9, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--ln-text-muted)' }}>
-          <span style={{ width: 7, height: 7, borderRadius: '50%', border: '1.5px dashed var(--ln-ok)' }} />Contract match
+          <span style={{ width: 7, height: 7, borderRadius: '50%', border: '1.5px dashed var(--ln-ok)' }} />{eligibleOnlyHighlight ? 'Mission-compatible' : 'Contract match'}
         </span>
         <span style={{ display: 'flex', alignItems: 'center', gap: 6, fontFamily: 'var(--ln-font-display)', fontSize: 9, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--ln-text-muted)' }}>
           <span style={{ width: 7, height: 7, borderRadius: '50%', border: '1.5px solid var(--ln-cyan)' }} />Selected

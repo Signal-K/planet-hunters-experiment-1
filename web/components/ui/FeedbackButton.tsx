@@ -28,6 +28,7 @@ export default function FeedbackButton() {
   return (
     <>
       <button
+        className="feedback-launcher"
         data-ui-zone={UI_ZONES.feedbackLauncher}
         onClick={() => setOpen(true)}
         style={{
@@ -46,7 +47,7 @@ export default function FeedbackButton() {
       </button>
 
       {open && (
-        <aside data-ui-zone={UI_ZONES.screenContent} aria-label="Send feedback" style={{
+        <aside className="feedback-panel" data-ui-zone={UI_ZONES.screenContent} aria-label="Send feedback" style={{
             position: 'absolute', right: 12, bottom: 52, zIndex: 96,
             width: 'min(420px, calc(100% - 24px))',
             background: 'linear-gradient(180deg, #0d1c30, #060d18)',

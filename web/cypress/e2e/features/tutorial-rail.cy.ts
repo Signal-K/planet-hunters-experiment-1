@@ -140,7 +140,7 @@ describe('Tutorial rail regression', () => {
           doneSteps: { 0: true, 1: true },
         }))
 
-        cy.get('[data-testid="tutorial-coach-block"]').should('contain', 'Lock a Contract')
+        cy.get('[data-testid="tutorial-coach-block"]').should('contain', 'Select a Mission')
         cy.get('[data-testid="mission-card-generated-s1-starter-bulk-1"]').should('be.visible')
         assertGameplayButtonsAvoidCoachBlock()
       })

@@ -1,0 +1,49 @@
+.backdrop {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  --hub-ground: 20%;
+}
+
+.terrain {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+}
+
+.launchpad,
+.hangar {
+  position: absolute;
+  z-index: 6;
+  bottom: var(--hub-ground);
+}
+
+.launchpad {
+  left: 7%;
+  width: 30%;
+  aspect-ratio: 172 / 118;
+}
+
+.hangar {
+  right: 3%;
+  width: 37%;
+  aspect-ratio: 226 / 116;
+}
+
+.launchpad :global(.earth-base-flat-sprite),
+.hangar :global(.earth-base-flat-sprite) {
+  filter: drop-shadow(0 12px 12px color-mix(in srgb, var(--ln-void) 60%, transparent));
+}
+
+@media (orientation: landscape) and (max-height: 600px) {
+  .launchpad {
+    left: 5%;
+    width: 28%;
+  }
+
+  .hangar {
+    right: 2%;
+    width: 35%;
+  }
+}

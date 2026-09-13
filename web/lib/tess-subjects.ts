@@ -14,7 +14,11 @@ export async function fetchReviewableTessCandidates(): Promise<TessCandidate[]> 
   // an empty feed and never retry when the token arrived (KES-318).
   const records = await pbShared.collection('subjects').getFullList({
     filter: REVIEWABLE_TESS_SUBJECT_FILTER,
-    sort: '-created',
+    // `subjects` does not define `created`/`updated` as columns; sorting on
+    // either is a hard 400 from PocketBase. Recency isn't load-bearing here
+    // (dailyTessCandidates() picks the day's window via a date-hash rotation
+    // over the pool), so any stable order works — `id` always exists.
+    sort: 'id',
     // The observatory screen and the instrument-feed notification poll can
     // legitimately request this same list at the same time. PocketBase's
     // default request-key auto-cancellation makes one consumer abort the

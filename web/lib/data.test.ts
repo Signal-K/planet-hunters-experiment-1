@@ -518,12 +518,19 @@ describe('seed bible v0 catalog', () => {
       costMaterials: { aluminium: 20, copper: 10 },
       unlockTrigger: 'free-operations',
     })
-    // KES-283: a normal Earth Base plot purchase available once Free
-    // Operations begins — same unlock shape as the Surface Silo. The prior
-    // off-world site-commissioning path (KES-286) is retired: no mission ever
-    // satisfied its unlock condition, so it was permanently unreachable.
+    // KES-283: a normal Earth Base plot purchase (same unlock shape as the
+    // Surface Silo), not the KES-286 off-world site-commissioned structure
+    // whose unlock condition no mission ever satisfied — that dead trigger
+    // stays retired for good.
+    //
+    // SSL-74: on top of Free Operations, unlock now also requires the
+    // Surface Silo already built and an established mining settlement
+    // (purchased off-world site access) — both ordinary player-controlled
+    // purchases, unlike KES-286's unreachable trigger.
     expect(refinery && structureUnlocked(refinery, { placed: [] })).toBe(false)
-    expect(refinery && structureUnlocked(refinery, { freeOperations: true })).toBe(true)
+    expect(refinery && structureUnlocked(refinery, { freeOperations: true })).toBe(false)
+    expect(refinery && structureUnlocked(refinery, { freeOperations: true, placed: ['surface-silo'] })).toBe(false)
+    expect(refinery && structureUnlocked(refinery, { freeOperations: true, placed: ['surface-silo'], hasMiningSettlement: true })).toBe(true)
     expect(refinery && structureUnlocked(refinery, { placed: ['refinery'] })).toBe(true)
     expect(refinery && canAffordStructure(refinery, {
       francs: STRUCTURE_PRICES.refinery,

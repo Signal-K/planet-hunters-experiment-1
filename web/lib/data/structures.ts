@@ -48,12 +48,19 @@ export const STRUCTURES: StructureBlueprint[] = [
     kind: 'refinery',
     cost: STRUCTURE_PRICES.refinery,
     costMaterials: { aluminium: 20, copper: 10 },
-    unlocksAt: 'Free Operations',
+    unlocksAt: 'Surface Silo + an established mining settlement',
     unlockTrigger: 'free-operations',
     // KES-283: Level 1 only — processes one shipment of raw ore into refined
     // goods per day (a queue, not instant conversion; see RefineryScreen /
     // REFINERY_RECIPES). No multi-level tree or advanced recipes yet.
-    description: 'Level 1 ore processing. Refines one shipment of raw minerals into higher-value goods per day.',
+    //
+    // SSL-74: gated on the Surface Silo (refining needs somewhere to hold
+    // input ore) plus an established off-world mining settlement (purchased
+    // site access — see SurfaceOpsSystem/applyPurchaseSiteAccess). A
+    // settlement lets a ferry bring home a full hold in one trip instead of
+    // repeated one-off mining runs; refining is the payoff for having made
+    // that investment, not a plain Free-Ops purchase.
+    description: 'Level 1 ore processing. Refines one shipment of raw minerals into higher-value goods per day. Requires a Surface Silo for input storage and an established mining settlement — settlements ferry ore home in bulk, giving the Refinery a steady supply instead of one-off mining runs.',
   },
   {
     id: 'deep-space-telescope',
@@ -96,7 +103,7 @@ export function deepSpaceTelescopeUnlocked(opts: { transitSatelliteLevel?: numbe
   )
 }
 
-export function structureUnlocked(structure: StructureBlueprint, opts: { refineryUnlocked?: boolean; academyResearched?: boolean; placed?: string[]; freeOperations?: boolean; transitSatelliteLevel?: number; clientMissions?: Record<string, number>; deepSpaceTelescopeMissionCompletedAt?: number | null } = {}): boolean {
+export function structureUnlocked(structure: StructureBlueprint, opts: { refineryUnlocked?: boolean; academyResearched?: boolean; placed?: string[]; freeOperations?: boolean; transitSatelliteLevel?: number; clientMissions?: Record<string, number>; deepSpaceTelescopeMissionCompletedAt?: number | null; hasMiningSettlement?: boolean } = {}): boolean {
   if (structure.id === 'surface-silo') return !!opts.freeOperations || !!opts.placed?.includes('surface-silo')
   if (structure.id === 'astronaut-academy') return !!opts.academyResearched || !!opts.placed?.includes('astronaut-academy')
   // KES-128: the numeric threshold (deepSpaceTelescopeUnlocked) now only
@@ -108,18 +115,41 @@ export function structureUnlocked(structure: StructureBlueprint, opts: { refiner
     return (deepSpaceTelescopeUnlocked(opts) && !!opts.deepSpaceTelescopeMissionCompletedAt) || !!opts.placed?.includes('deep-space-telescope')
   }
   if (structure.unlockTrigger === 'always') return true
-  // KES-283: the Refinery is a normal Earth Base plot purchase available once
-  // Free Operations begins, same unlock shape as the Surface Silo. It was
-  // previously modeled as an off-world site-commissioned structure (KES-286)
-  // whose unlock condition no mission ever satisfied, so it was permanently
-  // unreachable; that off-world path is retired in favor of this one.
-  if (structure.id === 'refinery') return !!opts.freeOperations || !!opts.placed?.includes('refinery')
+  // KES-283: the Refinery is a normal Earth Base plot purchase (same unlock
+  // shape as the Surface Silo) rather than the KES-286 off-world
+  // site-commissioned structure whose unlock condition no mission ever
+  // satisfied — that broken trigger is retired for good.
+  //
+  // SSL-74 adds two live, player-controlled prerequisites on top of
+  // Free Operations (neither is a dead trigger like KES-286's): the Surface
+  // Silo must already be built, and the player must have an established
+  // off-world mining settlement (purchased site access). Both are ordinary
+  // purchases the player can always complete, so this cannot reproduce
+  // KES-286's permanently-unreachable failure mode.
+  if (structure.id === 'refinery') {
+    return !!opts.placed?.includes('refinery')
+      || (!!opts.freeOperations && !!opts.placed?.includes('surface-silo') && !!opts.hasMiningSettlement)
+  }
   return false
 }
 
 export function canAffordStructure(structure: StructureBlueprint, opts: { francs: number; stash?: Record<string, number> }): boolean {
   if (opts.francs < structure.cost) return false
   return Object.entries(structure.costMaterials ?? {}).every(([mineral, amount]) => (opts.stash?.[mineral] ?? 0) >= amount)
+}
+
+// Card UI dims an unaffordable structure identically whether it's short on
+// francs or short on a required mineral (e.g. Refinery's aluminium/copper),
+// with no way for the player to tell which — this names the actual shortfall
+// so the UI can surface it instead of a silent no-op.
+export function structureAffordabilityGaps(structure: StructureBlueprint, opts: { francs: number; stash?: Record<string, number> }): string[] {
+  const gaps: string[] = []
+  if (opts.francs < structure.cost) gaps.push(`₣${(structure.cost - opts.francs).toLocaleString()} more`)
+  for (const [mineral, amount] of Object.entries(structure.costMaterials ?? {})) {
+    const held = opts.stash?.[mineral] ?? 0
+    if (held < amount) gaps.push(`${amount - held} more ${mineral}`)
+  }
+  return gaps
 }
 
 export const MARKET_TEMPLATES: MarketTemplate[] = [

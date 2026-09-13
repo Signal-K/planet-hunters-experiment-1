@@ -157,7 +157,7 @@ export default function TransitScreen({ target, rocketImageSrc, arrivalAt, trans
 
         <section className="transit-flight-hud transit-readout" data-transit-progress={progress} aria-label="Flight telemetry">
           <div className="transit-flight-hud__heading">
-            <span>{returning ? 'EARTH RETURN' : 'DEEP-SPACE FLIGHT'}</span>
+            <span>{legPurpose ?? (returning ? 'EARTH RETURN' : 'DEEP-SPACE FLIGHT')}</span>
             <strong>{progress}%</strong>
           </div>
           <div className="transit-progress-wrap">

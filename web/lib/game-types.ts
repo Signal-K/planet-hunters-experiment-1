@@ -8,6 +8,7 @@ import type { SceneScope } from './scene-scope'
 import type { ClientBuildCompletionEvent, DailyEconomySnapshot } from './systems/DailyEconomySystem'
 import type { TreasuryState } from './systems/TreasurySystem'
 import type { SiteRightsState } from './systems/SiteRightsSystem'
+import type { OffworldRefineryDeployment } from './systems/OffworldRefinerySystem'
 
 export interface DailyClientPool {
   date: string        // 'YYYY-MM-DD'
@@ -181,16 +182,15 @@ export interface SurfaceOpsState {
   sites: Record<string, SurfaceSiteProgress>
 }
 
+export type ProgramFocus = 'client-contracts' | 'mining' | 'instruments' | 'construction'
+
+export interface ResourceFocus {
+  label: string
+  minerals: Record<string, number>
+}
+
 export interface Player {
   francs: number
-  // Set once per track (KES-264) when the standalone /demo sandbox's
-  // one-time completion bonus has been applied to this account, so a player
-  // can't replay a demo mission to keep re-collecting it. The demo route
-  // itself never touches this field or PocketBase directly — it only leaves
-  // a `landnam-demo-bonus-pending` localStorage note; the real game applies
-  // the bonus (and sets this) through the normal setPlayer/save path on next
-  // boot. See applyPendingDemoBonus in game-context.tsx.
-  demoBonusClaimed?: Partial<Record<'mining' | 'citizen-science', boolean>>
   activeMission: { id: string; label: string } | null
   /** Paused operational contexts. There is intentionally no artificial cap. */
   pausedMissionRuns?: MissionRunSnapshot[]
@@ -225,18 +225,31 @@ export interface Player {
   hasLanded?: boolean
   missionCount: number
   pendingLaunch: boolean
-  /** Rocket already built and waiting on the launchpad; prevents re-purchase on resume. */
+  /** Prepared single-use vehicles. A vehicle stays assigned to its mission
+   * until it is explicitly moved or consumed at launch. */
+  stagedRockets?: StagedRocket[]
+  /** The prepared vehicle currently being inspected in mission setup. */
+  selectedStagedRocketId?: string
+  /** A single-use vehicle exists before launch; it can be reassigned while staged. */
   pendingRocketId?: string
+  /** Physical position of the staged vehicle. New vehicles begin in the Hangar. */
+  pendingRocketLocation?: 'hangar' | 'launchpad'
   /** How the pending/active single-use vehicle entered the Hangar. */
   pendingRocketSource?: 'company' | 'fabricated'
   missionRocketSource?: 'company' | 'fabricated'
   placed: string[]
   placementPlots: Record<string, number>
+  /** kind -> startedAt ms. Absence means the structure is fully built. */
+  underConstruction?: Record<string, number>
   controlBuilt: boolean
   missionsDone: number
   skillPoints?: number
   unlockedSkillNodes?: string[]
   freeOperations: boolean
+  /** Operation areas chosen when guided onboarding hands the program to the player. */
+  programFocuses?: ProgramFocus[]
+  /** Materials currently being gathered for a player-selected construction. */
+  resourceFocus?: ResourceFocus
   debriefPending?: boolean
   /** The haul was settled into an off-world silo or sold before Earth return. */
   cargoSettledOffworld?: boolean
@@ -284,7 +297,7 @@ export interface Player {
   /** Mirrors treasury.loans[...].outstandingFrancs for this player; treasury is authoritative. */
   loanDebt: number
   loanOffered: boolean
-  /** Provisional per-player instance until KES-287 gives the treasury a real shared home. */
+  /** Cached treasury state while the shared treasury service hydrates. */
   treasury?: TreasuryState
   arrivalAt?: number | null
   // Wall-clock departure for the current transit leg. Keeping this alongside
@@ -352,6 +365,8 @@ export interface Player {
   instrumentDigestNotifiedOn?: Record<string, string>
   discoveredExoplanetTargets?: Record<string, Target>
   clientStructures?: import('@/lib/data').ClientStructureRecord[]
+  /** Refineries commissioned against a specific client-territory site right. */
+  offworldRefineries?: OffworldRefineryDeployment[]
   dailyQuestProgress?: import('@/lib/data').DailyQuestProgress[]
   licenseGrade?: LicenseGrade
   researchXP?: number
@@ -385,12 +400,23 @@ export interface Player {
   // Landing research: unlocks the Lander Module ship room. Not a crew/academy
   // mechanic — kept separate from academyResearched's prerequisite chain.
   landingResearched?: boolean
-  // Solo Surface Ops state. Site access is a build-cost gate, not a
-  // shared-world claim. Ferry records retain a stable cargo-batch id and reconciliation
-  // timestamp so retries and reloads cannot credit one manifest twice.
+  // Surface Operations state. Ferry records retain a stable cargo-batch id
+  // and reconciliation timestamp so retries and reloads cannot credit one
+  // manifest twice.
   surfaceOps?: SurfaceOpsState
   /** Predefined-site build/mine rights purchased or leased from client territory (KES-287). */
   siteRights?: SiteRightsState
+}
+
+export interface StagedRocket {
+  id: string
+  rocketId: string
+  rocket: RocketConfig
+  location: 'hangar' | 'launchpad'
+  source: 'company' | 'fabricated'
+  missionId: string
+  targetId: string
+  deliveryTargetId?: string | null
 }
 
 export interface GameState {
@@ -442,9 +468,6 @@ export interface GameActions {
   authGateError: string | null
   signInFromGate: (email: string, password: string) => Promise<void>
   createAccountFromGate: (email: string, password: string) => Promise<void>
-  continueWithEmail: (email: string) => Promise<void>
-  authGateOtpId: string | null
-  verifyOtp: (code: string) => Promise<void>
   go: (screen: Screen) => void
   goBack: (fallback?: Screen) => void
   openLaunchpad: () => void
@@ -453,6 +476,7 @@ export interface GameActions {
   setLaunchpadMissionMenuOpen: (open: boolean) => void
   returnFromHangar: () => void
   goToMissions: (scope?: SceneScope) => void
+  markContractsOpened: (scope?: SceneScope) => void
   setScreenFromUrl: (screen: Screen) => void
   setPlayer: React.Dispatch<React.SetStateAction<Player>>
   setMissionId: (id: string | null) => void
@@ -469,8 +493,10 @@ export interface GameActions {
   onPickMission: (id: string, freeHaulDisposition?: 'store' | 'sell') => void
   onPickTarget: (id: string) => void
   onPurchaseRocket: (rocketId: string) => void
+  onMoveStagedRocket: (stagedRocketId: string) => void
   onFabricateRocketPart: (rocketId: string, componentId: string) => void
   onAssembleFabricatedRocket: (rocketId: string) => void
+  onTransferToLaunchpad: () => void
   onLaunch: () => void
   resumeMissionRun: (key: string) => void
   onMiningDone: (cargo: Record<string, number>, remoteDisposition?: 'store' | 'sell') => void

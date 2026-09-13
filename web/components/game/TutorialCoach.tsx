@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import CoachAvatar from '@/components/layout/CoachAvatar'
 import CoachPointer from './CoachPointer'
 import type { TutorialStep } from '@/lib/data'
-import { reserved_rect } from '@/lib/tutorial-layout'
+import { reserved_rect, TUTORIAL_RAIL } from '@/lib/tutorial-layout'
 import { UI_ZONES } from '@/lib/ui-zones'
 import { useIsDesktop } from '@/lib/hooks/useIsDesktop'
 
@@ -22,6 +22,7 @@ export default function TutorialCoach({ stepIndex, steps, step, total, onManualN
 
   if (!step) return null
   const manual = !!step.manual
+  const missionSetupStep = ['missions', 'targets', 'rocket-buy', 'fab'].includes(step.screen)
   // Hub owns a stacked title/HUD rail at every viewport. The old shared tutorial
   // rectangle started at 76px, which put the coach directly over the Jobs
   // chip and made the rest of the navigation look missing. Leave a small
@@ -63,36 +64,38 @@ export default function TutorialCoach({ stepIndex, steps, step, total, onManualN
   // ── Manual (full card) ──────────────────────────────────────────────────────
   if (manual) {
     return (
-      <div style={{ position: 'absolute', inset: 0, zIndex: 96, pointerEvents: 'none' }} data-testid="tutorial-coach-overlay">
+      <div className={missionSetupStep ? 'tutorial-coach-overlay tutorial-coach-overlay--mission-setup' : 'tutorial-coach-overlay'} style={{ position: 'absolute', inset: 0, zIndex: 96, pointerEvents: 'none' }} data-testid="tutorial-coach-overlay">
         {resolvedCoachId && showPointer && <CoachPointer coachId={resolvedCoachId} />}
         <div
           data-ui-zone={UI_ZONES.tutorialRail}
           data-testid="tutorial-coach-block"
-          style={{ position: 'absolute', left: 14, right: 14, top: coachRail.top, maxHeight: 160, zIndex: 98, pointerEvents: 'auto', overflowY: 'auto' }}
+          style={missionSetupStep
+            ? { position: 'absolute', left: 16, top: TUTORIAL_RAIL.RESERVED_TOP, width: 320, maxWidth: 'calc(100% - 32px)', maxHeight: 176, zIndex: 98, pointerEvents: 'auto', overflowY: 'auto' }
+            : { position: 'absolute', right: 14, top: coachRail.top, width: 'min(calc(100% - 28px), 560px)', maxHeight: 190, zIndex: 98, pointerEvents: 'auto', overflowY: 'auto' }}
         >
           <div className="tutorial-coach-card tutorial-coach-card--manual" style={{
-            background: 'linear-gradient(160deg, rgba(16,16,18,0.98) 0%, rgba(11,11,13,0.98) 100%)',
-            border: '1px solid rgba(112,217,234,0.4)',
-            borderRadius: 14,
+            background: missionSetupStep ? 'color-mix(in srgb, var(--ln-blueprint-paper) 96%, transparent)' : 'linear-gradient(160deg, rgba(16,16,18,0.98) 0%, rgba(11,11,13,0.98) 100%)',
+            border: missionSetupStep ? '3px solid var(--ln-ok)' : '1px solid rgba(112,217,234,0.4)',
+            borderRadius: missionSetupStep ? 4 : 14,
             padding: '10px 12px 10px',
-            boxShadow: '0 16px 48px rgba(0,0,0,0.7), 0 0 0 1px rgba(112,217,234,0.08)',
+            boxShadow: missionSetupStep ? '0 6px 0 color-mix(in srgb, var(--ln-blueprint-ink) 38%, transparent)' : '0 16px 48px rgba(0,0,0,0.7), 0 0 0 1px rgba(112,217,234,0.08)',
           }}>
             <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
               <div className="tutorial-coach-avatar"><CoachAvatar size={isDesktop ? 36 : 32} talking /></div>
               <div className="tutorial-coach-copy" style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
-                  <span style={{ fontFamily: 'var(--ln-font-display)', fontSize: 9, fontWeight: 800, letterSpacing: '0.22em', color: 'var(--ln-cyan)', textTransform: 'uppercase' }}>
+                  <span style={{ fontFamily: 'var(--ln-font-display)', fontSize: 9, fontWeight: 800, letterSpacing: '0.22em', color: missionSetupStep ? 'var(--ln-blueprint-ink)' : 'var(--ln-cyan)', textTransform: 'uppercase' }}>
                     Mission Coach
                   </span>
                   <span style={{ flex: 1 }} />
-                  <span style={{ fontFamily: 'var(--ln-font-mono)', fontSize: 9, color: '#4a5a6e', letterSpacing: '0.1em' }}>
+                  <span style={{ fontFamily: 'var(--ln-font-mono)', fontSize: 9, color: missionSetupStep ? 'var(--ln-blueprint-ink)' : '#4a5a6e', letterSpacing: '0.1em' }}>
                     {stepIndex + 1} / {total}
                   </span>
                 </div>
-                <div className="tutorial-coach-title" style={{ fontFamily: 'var(--ln-font-display)', fontSize: 13, fontWeight: 800, color: '#e8f0ff', lineHeight: 1.2, marginBottom: 3 }}>
+                <div className="tutorial-coach-title" style={{ fontFamily: 'var(--ln-font-display)', fontSize: 13, fontWeight: 800, color: missionSetupStep ? 'var(--ln-blueprint-ink)' : '#e8f0ff', lineHeight: 1.2, marginBottom: 3 }}>
                   {step.title}
                 </div>
-                <div className="tutorial-coach-body" style={{ fontFamily: 'var(--ln-font-body)', fontSize: 11.5, color: '#9ab0c8', lineHeight: 1.4, wordBreak: 'break-word' }}>
+                <div className="tutorial-coach-body" style={{ fontFamily: 'var(--ln-font-body)', fontSize: 11.5, color: missionSetupStep ? 'var(--ln-blueprint-ink)' : '#9ab0c8', lineHeight: 1.4, wordBreak: 'break-word' }}>
                   {resolvedBody}
                 </div>
               </div>
@@ -104,9 +107,9 @@ export default function TutorialCoach({ stepIndex, steps, step, total, onManualN
                 data-testid="coach-skip-btn"
                 onClick={onSkip}
                 style={{
-                  padding: '8px 12px', borderRadius: 10, cursor: 'pointer', border: '1px solid rgba(154,176,200,0.3)',
+                  padding: '8px 12px', borderRadius: missionSetupStep ? 4 : 10, cursor: 'pointer', border: missionSetupStep ? '2px solid var(--ln-blueprint-ink)' : '1px solid rgba(154,176,200,0.3)',
                   background: 'transparent',
-                  color: '#9ab0c8', fontFamily: 'var(--ln-font-display)', fontSize: 11, fontWeight: 700,
+                  color: missionSetupStep ? 'var(--ln-blueprint-ink)' : '#9ab0c8', fontFamily: 'var(--ln-font-display)', fontSize: 11, fontWeight: 700,
                   letterSpacing: '0.1em', textTransform: 'uppercase',
                 }}
               >
@@ -117,9 +120,9 @@ export default function TutorialCoach({ stepIndex, steps, step, total, onManualN
                 onClick={onManualNext}
                 style={{
                   padding: '8px 12px', borderRadius: 6, cursor: 'pointer',
-                  border: '1px solid var(--ln-cyan-border)',
-                  background: 'transparent',
-                  color: 'var(--ln-cyan)', fontFamily: 'var(--ln-font-display)', fontSize: 11, fontWeight: 800,
+                  border: missionSetupStep ? '2px solid var(--ln-blueprint-ink)' : '1px solid var(--ln-cyan-border)',
+                  background: missionSetupStep ? 'var(--ln-ok)' : 'transparent',
+                  color: missionSetupStep ? 'var(--ln-blueprint-ink)' : 'var(--ln-cyan)', fontFamily: 'var(--ln-font-display)', fontSize: 11, fontWeight: 800,
                   letterSpacing: '0.1em', textTransform: 'uppercase',
                   boxShadow: 'none',
                   display: 'inline-flex', alignItems: 'center', gap: 6,
@@ -140,29 +143,33 @@ export default function TutorialCoach({ stepIndex, steps, step, total, onManualN
 
   // ── Active instruction card ─────────────────────────────────────────────────
   return (
-    <div style={{ position: 'absolute', inset: 0, zIndex: 96, pointerEvents: 'none' }} data-testid="tutorial-coach-overlay">
+    <div className={missionSetupStep ? 'tutorial-coach-overlay tutorial-coach-overlay--mission-setup' : 'tutorial-coach-overlay'} style={{ position: 'absolute', inset: 0, zIndex: 96, pointerEvents: 'none' }} data-testid="tutorial-coach-overlay">
       {resolvedCoachId && showPointer && <CoachPointer coachId={resolvedCoachId} dir={resolvedDir} />}
       <div
         data-ui-zone={UI_ZONES.tutorialRail}
         data-testid="tutorial-coach-block"
-        style={{
-          position: 'absolute',
-          left: 12, right: 12,
-          top: coachRail.top,
-          zIndex: 98,
-          pointerEvents: 'auto',
-        }}
+        style={missionSetupStep
+          ? {
+              position: 'absolute', left: 16, top: TUTORIAL_RAIL.RESERVED_TOP,
+              width: 320, maxWidth: 'calc(100% - 32px)',
+              zIndex: 98, pointerEvents: 'auto',
+            }
+          : {
+              position: 'absolute', right: 12, top: coachRail.top,
+              width: 'min(calc(100% - 24px), 560px)',
+              zIndex: 98, pointerEvents: 'auto',
+            }}
       >
         <div className="tutorial-coach-card" style={{
           position: 'relative',
           display: 'flex',
           alignItems: 'center',
           gap: 12,
-          background: 'linear-gradient(160deg, rgba(16,16,18,0.98), rgba(11,11,13,0.98))',
-          border: '1.5px solid rgba(112,217,234,0.7)',
-          borderRadius: 16,
+          background: missionSetupStep ? 'color-mix(in srgb, var(--ln-blueprint-paper) 96%, transparent)' : 'linear-gradient(160deg, rgba(16,16,18,0.98), rgba(11,11,13,0.98))',
+          border: missionSetupStep ? '3px solid var(--ln-ok)' : '1.5px solid rgba(112,217,234,0.7)',
+          borderRadius: missionSetupStep ? 4 : 16,
           padding: '12px 16px 12px 12px',
-          boxShadow: '0 8px 32px rgba(0,0,0,0.6), 0 0 24px rgba(112,217,234,0.12)',
+          boxShadow: missionSetupStep ? '0 6px 0 color-mix(in srgb, var(--ln-blueprint-ink) 38%, transparent)' : '0 8px 32px rgba(0,0,0,0.6), 0 0 24px rgba(112,217,234,0.12)',
         }}>
           {/* Pulsing glow is its own opacity-animated overlay rather than an
               animated box-shadow on this card — see .coach-glow-ring. */}
@@ -175,15 +182,15 @@ export default function TutorialCoach({ stepIndex, steps, step, total, onManualN
 
           {/* Text */}
           <div className="tutorial-coach-copy" style={{ flex: 1, minWidth: 0 }}>
-              <div className="tutorial-coach-title" style={{ fontFamily: 'var(--ln-font-display)', fontSize: 10, fontWeight: 800, letterSpacing: '0.2em', color: 'var(--ln-cyan)', textTransform: 'uppercase', marginBottom: 4 }}>
+              <div className="tutorial-coach-title" style={{ fontFamily: 'var(--ln-font-display)', fontSize: 10, fontWeight: 800, letterSpacing: '0.2em', color: missionSetupStep ? 'var(--ln-blueprint-ink)' : 'var(--ln-cyan)', textTransform: 'uppercase', marginBottom: 4 }}>
               {step.title}
             </div>
             {resolvedBody && (
-              <div className="tutorial-coach-body" style={{ fontFamily: 'var(--ln-font-body)', fontSize: 12.5, color: '#9ab0c8', lineHeight: 1.35, wordBreak: 'break-word', marginBottom: 4 }}>
+              <div className="tutorial-coach-body" style={{ fontFamily: 'var(--ln-font-body)', fontSize: 12.5, color: missionSetupStep ? 'var(--ln-blueprint-ink)' : '#9ab0c8', lineHeight: 1.35, wordBreak: 'break-word', marginBottom: 4 }}>
                 {resolvedBody}
               </div>
             )}
-            <div className="tutorial-coach-action" style={{ fontFamily: 'var(--ln-font-body)', fontSize: 14, color: '#e8f4ff', lineHeight: 1.35, wordBreak: 'break-word' }}>
+            <div className="tutorial-coach-action" style={{ fontFamily: 'var(--ln-font-body)', fontSize: 14, color: missionSetupStep ? 'var(--ln-blueprint-ink)' : '#e8f4ff', lineHeight: 1.35, wordBreak: 'break-word' }}>
               {resolvedAction ?? ((isDesktop ? 'Click ' : 'Tap ') + step.cta)}
             </div>
           </div>
@@ -195,9 +202,9 @@ export default function TutorialCoach({ stepIndex, steps, step, total, onManualN
               data-testid="coach-skip-btn"
               onClick={onSkip}
               style={{
-                padding: '4px 8px', borderRadius: 8, cursor: 'pointer', border: '1px solid rgba(154,176,200,0.3)',
+                padding: '4px 8px', borderRadius: missionSetupStep ? 4 : 8, cursor: 'pointer', border: missionSetupStep ? '2px solid var(--ln-blueprint-ink)' : '1px solid rgba(154,176,200,0.3)',
                 background: 'transparent',
-                color: '#9ab0c8', fontFamily: 'var(--ln-font-display)', fontSize: 9, fontWeight: 700,
+                color: missionSetupStep ? 'var(--ln-blueprint-ink)' : '#9ab0c8', fontFamily: 'var(--ln-font-display)', fontSize: 9, fontWeight: 700,
                 letterSpacing: '0.1em', textTransform: 'uppercase', whiteSpace: 'nowrap',
               }}
             >

@@ -9,14 +9,19 @@ import {
   applyBuildSettlementLaunchpad,
   applyStartFieldOperation,
   applyDispatchSurfaceFerry,
-  applyPurchaseSiteAccess,
+  applyGrantedSiteAccess,
   applyReconcileSurfaceFerry,
   applyRecordSurfaceMined,
   applyRetrySurfaceFerry,
   surfaceCargoReady,
   surfaceSiteProgress,
 } from '@/lib/systems/SurfaceOpsSystem'
+import { CLIENT_TERRITORIES, predefinedSiteRightById } from '@/lib/data/site-rights'
+import { acquireSiteRight, createSiteRightsState } from '@/lib/systems/SiteRightsSystem'
+import { createTreasuryState } from '@/lib/systems/TreasurySystem'
+import { TREASURY_STARTING_BALANCE } from '@/lib/data'
 import { scheduleLandnamPush } from '@/lib/takeon/push'
+import { pbLandnam } from '@/lib/pb-landnam'
 import type { Toast } from '@/components/ui/ToastLayer'
 
 export function useSurfaceOpsActions(
@@ -26,7 +31,36 @@ export function useSurfaceOpsActions(
   const notifiedOperations = useRef(new Set<symbol>())
 
   const purchaseSiteAccess = useCallback((siteId: string) => {
-    setState(state => applyPurchaseSiteAccess(state, siteId))
+    const now = Date.now()
+    const idempotencyKey = `site-deed:${siteId}:${now}`
+    setState(state => {
+      const site = predefinedSiteRightById(siteId)
+      if (!site) return state
+      const siteRights = state.player.siteRights ?? createSiteRightsState([...CLIENT_TERRITORIES])
+      const treasury = state.player.treasury ?? createTreasuryState(TREASURY_STARTING_BALANCE)
+      const result = acquireSiteRight(siteRights, treasury, site, {
+        rightId: `site-right:${siteId}:${now}`,
+        ledgerEntryId: idempotencyKey,
+        playerId: 'local-player',
+        mode: 'purchase',
+        activities: ['build', 'mine'],
+        acquiredAt: now,
+      })
+      if (!result.acquired || state.player.francs < result.playerDebitFrancs) return state
+      const granted = applyGrantedSiteAccess(state, siteId, now)
+      return {
+        ...granted,
+        player: {
+          ...granted.player,
+          francs: granted.player.francs - result.playerDebitFrancs,
+          siteRights: result.siteRights,
+          treasury: result.treasury,
+        },
+      }
+    })
+    void pbLandnam.send('/api/treasury/site-deed', {
+      method: 'POST', body: { siteId, idempotencyKey },
+    }).catch(() => {})
   }, [setState])
 
   const buildSettlementLaunchpad = useCallback((siteId: string, pad: 0 | 1 | 2) => {

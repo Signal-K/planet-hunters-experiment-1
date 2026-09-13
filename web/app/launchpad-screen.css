@@ -109,23 +109,45 @@ button.launchpad-scene-object { cursor: pointer; }
   object-fit: contain;
   object-position: center bottom;
   pointer-events: none;
+  transition: filter 160ms ease;
 }
-.earth-base-silo-sprite {
+/* Hover/press affordance (KES-231/KES-263, regressed to a no-op — SSL-95):
+   Building.tsx's localActive state reaches this element correctly via
+   HubScreen's activeBuilding -> EarthBaseModules -> this marker span, but the
+   marker itself carried no styling, so the whole pipeline fired for nothing.
+   A drop-shadow on the sprite (rather than a box-shadow on this inset:0 box)
+   hugs the PNG's actual transparent silhouette instead of glowing as a flat
+   rectangle. */
+.earth-base-structure-focus { position: absolute; inset: 0; pointer-events: none; }
+.earth-base-structure:has(.earth-base-structure-focus) .earth-base-flat-sprite {
+  filter: drop-shadow(0 0 6px var(--ln-cyan-bright)) drop-shadow(0 0 18px var(--ln-cyan-soft));
+}
+/* `filter` isn't additive across rules — whichever selector wins the cascade
+   replaces the whole value, so the portrait contact-shadow rule below (same
+   specificity, later in source) was silently discarding the hover glow above
+   on every portrait/mobile viewport, which is where this game mostly runs.
+   Re-stated combined with portrait's own filter, and kept more specific
+   (three chained selectors vs two) so it wins regardless of source order. */
+.portrait-canvas:has([data-screen="hub"]) .earth-base-structure:has(.earth-base-structure-focus) .earth-base-flat-sprite {
+  filter: brightness(1.14) saturate(1.18) drop-shadow(0 3px 0 color-mix(in srgb, var(--ln-void) 86%, transparent)) drop-shadow(0 0 6px var(--ln-cyan-bright)) drop-shadow(0 0 18px var(--ln-cyan-soft));
+}
+
+/* Foreground facilities must read as interactive structures, not another
+   pale mountain band. A dark contact shadow plus a restrained cyan rim keeps
+   their silhouette legible at phone scale without changing the authored art. */
+.portrait-canvas:has([data-screen="hub"]) .earth-base-structure::before {
   position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
-  color: var(--ln-cyan);
-  overflow: visible;
+  right: 4%;
+  bottom: -3%;
+  left: 4%;
+  height: 18%;
+  content: '';
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--ln-void) 74%, transparent);
+  filter: blur(4px);
 }
-.earth-base-flat-sprite--highlight {
-  inset: -8px;
-  width: calc(100% + 16px);
-  height: calc(100% + 16px);
-  opacity: 0.72;
-  filter: brightness(1.2) saturate(0.72) drop-shadow(0 0 7px var(--hub-cyan)) drop-shadow(0 0 16px color-mix(in srgb, var(--hub-cyan) 55%, transparent));
-  mix-blend-mode: screen;
+.portrait-canvas:has([data-screen="hub"]) .earth-base-flat-sprite {
+  filter: brightness(1.14) saturate(1.18) drop-shadow(0 3px 0 color-mix(in srgb, var(--ln-void) 86%, transparent)) drop-shadow(0 0 3px color-mix(in srgb, var(--hub-cyan) 48%, transparent));
 }
 .launchpad-tower {
   left: 7%; bottom: var(--hub-ground); width: 30%; height: auto;
@@ -275,6 +297,19 @@ button.launchpad-scene-object { cursor: pointer; }
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 16px;
 }
+
+.launchpad-show-all-operations {
+  grid-column: 1 / -1;
+  min-height: 40px;
+  border: 1px solid var(--ln-cyan-border);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--ln-cyan);
+  font: 800 9px var(--ln-font-display);
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
 .launchpad-mission-choice {
   display: grid;
   min-width: 0;
@@ -315,6 +350,7 @@ button.launchpad-scene-object { cursor: pointer; }
   color: var(--ln-text-dim);
   font: 13px/1.35 var(--ln-font-body);
 }
+.launchpad-mission-choice--focus { grid-column: 1 / -1; min-height: 96px; border-width: 4px; }
 .launchpad-operation-brief { display: grid; gap: 16px; }
 .launchpad-operation-brief h2 { margin: -8px 0 0; color: var(--ln-text); font: 800 24px var(--ln-font-display); letter-spacing: .02em; text-transform: uppercase; }
 .launchpad-operation-brief > p { max-width: 720px; margin: 0; color: var(--ln-text-dim); font: 14px/1.45 var(--ln-font-body); }
@@ -340,6 +376,24 @@ button.launchpad-scene-object { cursor: pointer; }
   border-radius: 8px;
   background: var(--ln-shell);
   box-shadow: var(--ln-shadow-modal);
+}
+.launchpad-active-mission {
+  position: absolute; z-index: 21; top: 96px; right: 24px;
+  display: grid; width: min(448px, calc(100% - 48px)); gap: 16px; padding: 16px;
+  border: 4px solid var(--hub-outline); border-radius: 12px;
+  background: color-mix(in srgb, var(--ln-void) 84%, transparent);
+  box-shadow: 0 16px 32px color-mix(in srgb, var(--ln-void) 44%, transparent);
+}
+.launchpad-active-mission h2 { margin: 4px 0; color: var(--ln-text); font: 800 16px/1.2 var(--ln-font-display); text-transform: uppercase; }
+.launchpad-active-mission p { margin: 0; color: var(--ln-text-dim); font: 800 9px var(--ln-font-mono); letter-spacing: .12em; }
+.launchpad-active-mission__actions { display: flex; justify-content: flex-end; gap: 8px; }
+.launchpad-active-mission__actions button { min-height: 48px; padding: 0 12px; border-radius: 8px; font: 800 9px var(--ln-font-display); letter-spacing: .12em; }
+.launchpad-active-mission__dismiss { border: 1px solid var(--ln-hairline-strong); background: transparent; color: var(--ln-text-dim); }
+.launchpad-active-mission__resume { display: inline-flex; align-items: center; gap: 8px; border: 1px solid var(--ln-cyan); background: var(--ln-cyan); color: var(--ln-text-on-cyan); }
+.launchpad-active-mission__resume svg { width: 16px; fill: none; stroke: currentColor; stroke-width: 1.8; }
+@media (max-width: 720px), (max-height: 600px) {
+  .launchpad-active-mission { top: 64px; right: 12px; width: min(352px, calc(100% - 24px)); gap: 8px; padding: 12px; }
+  .launchpad-active-mission h2 { font-size: 14px; }
 }
 .launchpad-mission-runs > :first-child { min-width: 0; }
 .launchpad-mission-runs h2 { margin: 4px 0 0; color: var(--ln-text); font: 800 20px var(--ln-font-display); letter-spacing: .04em; text-transform: uppercase; }
@@ -471,7 +525,7 @@ button.launchpad-scene-object { cursor: pointer; }
    contents beyond the viewport. Keep the environment full-bleed, but give the
    dock an honest mobile composition: status row first, two-column action grid
    below, with every child constrained to the viewport. */
-@media (max-width: 600px) {
+@media (orientation: portrait) and (max-width: 1023px), (max-width: 600px) {
   .hub-bottom-dock-inner {
     box-sizing: border-box;
     display: block;
@@ -505,34 +559,4 @@ button.launchpad-scene-object { cursor: pointer; }
     width: 100%;
   }
 
-  /* Keep utility controls in the top-right command cluster. Their previous
-     bottom offsets put them over the mobile tab bar and the dock's status. */
-  .portrait-canvas:has(.hub-bottom-dock) [data-testid="settings-button"],
-  .portrait-canvas:has(.hub-bottom-dock) [data-testid="friends-button"] {
-    top: 54px !important;
-    bottom: auto !important;
-  }
-
-  .portrait-canvas:has(.hub-bottom-dock) [data-testid="settings-button"] {
-    right: 12px !important;
-    left: auto !important;
-  }
-
-  .portrait-canvas:has(.hub-bottom-dock) [data-testid="friends-button"] {
-    /* Clears the Menu pill's mobile span (right:12px, 72px wide -> occupies
-       12-84px from the edge) — this used to sit at right:54px, landing
-       inside that span and rendering FRIENDS on top of MENU (07/09/26 QA
-       report). Menu was a 34px icon-only circle when this was tuned; it is
-       now a 72px text pill (`.game-menu-button` in globals.css). */
-    right: 96px !important;
-    left: auto !important;
-  }
-
-  .portrait-canvas:has(.hub-bottom-dock) .sync-status {
-    top: 94px;
-    right: 12px;
-    bottom: auto !important;
-    left: auto;
-    height: max-content;
-  }
 }

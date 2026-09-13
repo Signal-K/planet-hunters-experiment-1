@@ -311,17 +311,31 @@ export function applyCollectRefined(s: GameState, recipe: RefineryRecipe): GameS
 /** Buy the rocket a mission will fly. Francs used to be deducted inline in
  *  `useGameLoop`; every purchase in the game now goes through this file. */
 export function applyPurchaseRocket(s: GameState, rocket: RocketModel): GameState {
-  if (s.player.pendingLaunch && s.player.pendingRocketId === rocket.id) return s
   if (s.player.francs < rocket.costFrancs) return s
+  const missionId = s.missionId ?? 'unassigned'
+  const targetId = s.targetId ?? 'unassigned'
+  const stagedRocket = {
+    id: `${rocket.id}-${missionId}-${targetId}-${(s.player.stagedRockets ?? []).length + 1}`,
+    rocketId: rocket.id,
+    rocket: rocketConfigForModel(rocket),
+    location: 'hangar' as const,
+    source: 'company' as const,
+    missionId,
+    targetId,
+    deliveryTargetId: s.deliveryTargetId,
+  }
   return {
     ...s,
     screen: 'fab',
-    rocket: rocketConfigForModel(rocket),
+    rocket: stagedRocket.rocket,
     player: {
       ...s.player,
       francs: s.player.francs - rocket.costFrancs,
       pendingLaunch: true,
+      stagedRockets: [...(s.player.stagedRockets ?? []), stagedRocket],
+      selectedStagedRocketId: stagedRocket.id,
       pendingRocketId: rocket.id,
+      pendingRocketLocation: 'hangar',
       pendingRocketSource: 'company',
     },
   }
@@ -365,15 +379,30 @@ export function applyAssembleFabricatedRocket(s: GameState, rocket: RocketModel)
     fabricatedRocketParts[recipe.id] -= 1
     if (fabricatedRocketParts[recipe.id] <= 0) delete fabricatedRocketParts[recipe.id]
   }
+  const missionId = s.missionId ?? 'unassigned'
+  const targetId = s.targetId ?? 'unassigned'
+  const stagedRocket = {
+    id: `${rocket.id}-${missionId}-${targetId}-${(s.player.stagedRockets ?? []).length + 1}`,
+    rocketId: rocket.id,
+    rocket: rocketConfigForModel(rocket),
+    location: 'hangar' as const,
+    source: 'fabricated' as const,
+    missionId,
+    targetId,
+    deliveryTargetId: s.deliveryTargetId,
+  }
   return {
     ...s,
     screen: 'fab',
-    rocket: rocketConfigForModel(rocket),
+    rocket: stagedRocket.rocket,
     player: {
       ...s.player,
       fabricatedRocketParts,
       pendingLaunch: true,
+      stagedRockets: [...(s.player.stagedRockets ?? []), stagedRocket],
+      selectedStagedRocketId: stagedRocket.id,
       pendingRocketId: rocket.id,
+      pendingRocketLocation: 'hangar',
       pendingRocketSource: 'fabricated',
     },
   }
@@ -420,6 +449,7 @@ export function applyPlaceStructure(s: GameState, structure: StructureBlueprint 
       stash,
       placed: Array.from(new Set([...s.player.placed, kind])),
       placementPlots: { ...s.player.placementPlots, [kind]: plot },
+      underConstruction: { ...s.player.underConstruction, [kind]: Date.now() },
       refineryBuilt: kind === 'refinery' ? true : s.player.refineryBuilt,
       deepSpaceTelescopeBuilt: kind === 'deep-space-telescope' ? true : s.player.deepSpaceTelescopeBuilt,
       deepSpaceTelescopeLevel: kind === 'deep-space-telescope'

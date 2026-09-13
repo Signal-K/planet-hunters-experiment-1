@@ -10,11 +10,8 @@ import TopBar from '@/components/ui/TopBar'
 import { GhostBtn, PrimaryBtn } from '@/components/ui/Button'
 import DeliveryCanvas from './DeliveryCanvas'
 import TakeOnMount, { type TakeOnMountHandle } from '@/components/takeon/TakeOnMount'
+import { takeonBodyForTarget } from './RoverMiningScreen'
 import styles from './DeliveryScreen.module.css'
-
-/** Fixed flavor body for the Takeon dropoff scene — not tied to the real
- * delivery target's astronomy; Landnam still owns target/mission selection. */
-const DROPOFF_BODY_ID = 'moon'
 
 interface DeliveryScreenProps {
   target: Target
@@ -28,6 +25,7 @@ interface DeliveryScreenProps {
   /** Render an interactive Takeon dropoff scene instead of the animated
    * timer — used for the M3 tutorial delivery leg only. */
   useTakeonDropoff?: boolean
+  rocketImageSrc?: string
 }
 
 export default function DeliveryScreen({
@@ -40,6 +38,7 @@ export default function DeliveryScreen({
   onComplete,
   clientName,
   useTakeonDropoff,
+  rocketImageSrc,
 }: DeliveryScreenProps) {
   const [now, setNow] = useState(0)
   const completedRef = useRef(false)
@@ -151,16 +150,17 @@ export default function DeliveryScreen({
           <TakeOnMount
             ref={takeonRef}
             missionId={`tutorial-delivery-${mission.id}`}
-            bodyId={DROPOFF_BODY_ID}
+            bodyId={takeonBodyForTarget(target)}
             rover={rover}
-            roverName="Tutorial Rover"
+            roverName="Mule Field Rover"
             seedCargo={seedCargo}
             seedCache
             onReady={handleTakeonReady}
             className={styles.takeonMount}
           />
+          {rocketImageSrc && <img className={styles.landedShip} src={rocketImageSrc} alt="Prospector rocket landed beside the client build site" />}
           <div className={styles.targetLabel}>
-            <span>CLIENT BUILDING SITE</span>
+            <span>LANDED ROVER SITE · CLIENT BUILD SITE</span>
             <strong>{clientName ?? 'CLIENT SITE'} · {target.name}</strong>
           </div>
         </div>
@@ -207,7 +207,7 @@ export default function DeliveryScreen({
           )}
           {dumped && !roverReturned && (
             <div className={styles.transferNote} role="status">
-              Minerals delivered to the client&apos;s building site. Return the empty rover to the ship before launch.
+              Minerals delivered beside the landed Prospector. Return the empty Mule rover to the ship before launch.
             </div>
           )}
           {roverReturned && (

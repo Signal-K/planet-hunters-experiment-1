@@ -63,18 +63,16 @@ describe('Launchpad · your own program', () => {
     cy.viewport(390, 844)
     visitLaunchpad(m1Save())
 
-    // KES-329/330: the standalone "view contracts" button was folded into
-    // the launchpad mission menu (onViewContracts is now wired only to
-    // launchpad-new-mission-contracts-btn). At M1 (freeOperations: false),
-    // the satellite/mining/build operation choices are all disabled and
-    // "AVAILABLE CONTRACTS" is the only live path — preserving this test's
-    // original contract that M1 keeps the player on client contracts.
+    // During onboarding (freeOperations: false), the satellite/mining/build
+    // operation choices are always disabled placeholders and "AVAILABLE
+    // CONTRACTS" is the only live path — so the pad now skips that
+    // mostly-dead four-tile menu entirely and takes the player straight to
+    // the Mission Board, preserving this test's original contract that M1
+    // keeps the player on client contracts (reported as "users are not told
+    // what to do" when the dead menu was still shown first).
     cy.get('[data-testid="launchpad-status-card"]', { timeout: 15000 }).click()
-    cy.get('[data-testid="launchpad-new-mission-menu"]', { timeout: 15000 }).should('be.visible')
-    cy.get('[data-testid="launchpad-new-mission-satellite-btn"]').should('be.disabled')
-    cy.get('[data-testid="launchpad-new-mission-mining-btn"]').should('be.disabled')
-    cy.get('[data-testid="launchpad-new-mission-build-btn"]').should('be.disabled')
-    cy.get('[data-testid="launchpad-new-mission-contracts-btn"]').should('be.visible').and('not.be.disabled')
+    cy.get('[data-testid="launchpad-new-mission-menu"]').should('not.exist')
+    cy.get('[data-testid="mission-board-section-client"]', { timeout: 15000 }).should('be.visible')
     cy.get('[data-testid="launchpad-monitoring-structure"]').should('not.exist')
     cy.get('[data-testid="launchpad-build-monitoring-btn"]').should('not.exist')
   })
@@ -122,14 +120,15 @@ describe('Launchpad · your own program', () => {
     cy.contains('Pick Target').should('not.exist')
   })
 
-  it('hides the onboarding coach while the mission selector is open', () => {
+  it('advances the onboarding coach onto the Mission Board once the pad is used', () => {
     cy.viewport(1280, 900)
     visitLaunchpad(m1Save())
 
-    cy.get('[data-testid="tutorial-coach-block"]', { timeout: 15000 }).should('be.visible')
+    cy.get('[data-testid="tutorial-coach-block"]', { timeout: 15000 }).should('contain', 'Open a Mission')
     cy.get('[data-testid="launchpad-status-card"]', { timeout: 15000 }).click()
-    cy.get('[data-testid="launchpad-new-mission-menu"]', { timeout: 15000 }).should('be.visible')
-    cy.get('[data-testid="tutorial-coach-block"]').should('not.exist')
+    cy.get('[data-testid="launchpad-new-mission-menu"]').should('not.exist')
+    cy.get('[data-testid="mission-board-section-client"]', { timeout: 15000 }).should('be.visible')
+    cy.get('[data-testid="tutorial-coach-block"]', { timeout: 15000 }).should('contain', 'Select a Mission')
   })
 
   it('returns to the Launchpad after opening the Hangar from it', () => {

@@ -19,6 +19,12 @@ export function initPostHog() {
     // paths (PocketBase sync, push scheduling); knowing what actually
     // throws for real players is otherwise invisible.
     capture_exceptions: true,
+    // Click/mousemove heatmaps for every routed screen. Screens with no
+    // dedicated survey or captureGameEvent (Refinery, Market, Hangar,
+    // Skills, Fab, mission history, narrative ledger, galaxy/target picker
+    // — see the 2026-09-11 instrumentation coverage audit) get a passive
+    // usage signal this way instead of adding more popovers.
+    capture_heatmaps: true,
     // Session replay complements the qualitative surveys (mining feel,
     // launch feel, mission friction) by letting the team watch the actual
     // friction instead of only reading a rating. Mask all text inputs by

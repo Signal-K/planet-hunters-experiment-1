@@ -166,6 +166,13 @@ export function surfaceSiteProgress(
   return player.surfaceOps?.sites[siteId] ?? EMPTY_SITE
 }
 
+// SSL-74: gates the Earth Base Refinery — an established mining settlement is
+// any off-world site where the player has purchased site access, regardless
+// of how far its launchpad/ferry build-out has progressed.
+export function hasEstablishedMiningSettlement(player: Pick<Player, 'surfaceOps'>): boolean {
+  return Object.values(player.surfaceOps?.sites ?? {}).some(site => !!site.siteAccessPurchasedAt)
+}
+
 function updateSite(
   state: GameState,
   siteId: string,
@@ -236,6 +243,22 @@ export function applyPurchaseSiteAccess(
       francs: next.player.francs - definition.accessFee,
     },
   }
+}
+
+/**
+ * Completes Surface Ops' local readiness record after the canonical site-right
+ * transaction has debited the player and credited the treasury. This avoids
+ * the retired generic access fee being charged a second time.
+ */
+export function applyGrantedSiteAccess(
+  state: GameState,
+  siteId: string,
+  now: number = Date.now()
+): GameState {
+  const definition = surfaceSiteById(siteId)
+  const current = surfaceSiteProgress(state.player, siteId)
+  if (!definition || definition.availability !== 'available' || !state.player.freeOperations || current.siteAccessPurchasedAt) return state
+  return updateSite(state, siteId, site => ({ ...site, siteAccessPurchasedAt: now }))
 }
 
 /**

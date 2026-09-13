@@ -2,6 +2,7 @@ import { useCallback } from 'react'
 import { REFINERY_RECIPES } from '@/lib/data'
 import { applySellMinerals, applySellRefinedGoods, applyStartRefine, applyCollectRefined, applyUpgradeLaunchpad, applyConfirmShipCustomizerBuild, applyPlaceStructure, applyExcavateSubsurface, applyBuildSubsurfaceRoom } from '@/lib/systems/EconomySystem'
 import { applyUnlockSkillNode, applyAcceptLoan, applyAbandonMission } from '@/lib/systems/ProgressionSystem'
+import { captureGameEvent } from '@/lib/posthog'
 import type { Catalog } from '@/lib/catalog'
 import type { GameState } from '@/lib/game-types'
 import type { Mission, ShipRoomKind, StructureBlueprint, SubsurfaceRoomId } from '@/lib/data'
@@ -58,7 +59,23 @@ export function useEconomyActions(
 
   const abandonMission = useCallback(() => {
     if (!confirm('Abort this mission? You will lose 10% of the mission payout as a penalty.')) return
-    setState(s => applyAbandonMission(s, getCatalogMissions()))
+    // mission_completed has no failure counterpart today — a player who
+    // aborts mid-transit (cargo + progress lost, 10% payout penalty) would
+    // otherwise just look like a player who never finished, indistinguishable
+    // from someone still in progress.
+    let abandonedMissionId: string | null = null
+    let abandonedMissionPhase: string | undefined
+    setState(s => {
+      abandonedMissionId = s.missionId
+      abandonedMissionPhase = s.player.missionPhase
+      return applyAbandonMission(s, getCatalogMissions())
+    })
+    if (abandonedMissionId) {
+      captureGameEvent('mission_abandoned', {
+        mission_id: abandonedMissionId,
+        mission_phase: abandonedMissionPhase ?? 'transit',
+      })
+    }
   }, [setState, getCatalogMissions])
 
   const confirmShipCustomizerBuild = useCallback((

@@ -7,8 +7,12 @@ import { normalizeSurfaceOps } from '@/lib/systems/SurfaceOpsSystem'
 import { settleCrewEconomy } from '@/lib/systems/AcademySystem'
 import { findTargetStructure } from '@/lib/data/target-structures'
 import { resolveConstructionState } from '@/lib/systems/ConstructionSystem'
+import { resolveOffworldRefinery } from '@/lib/systems/OffworldRefinerySystem'
+import { isUnderConstruction } from '@/lib/systems/HubConstructionSystem'
 import { EARTH_BASE_SCOPE } from '@/lib/scene-scope'
 import { aestDateKey, type ClientBuildCompletionEvent } from '@/lib/systems/DailyEconomySystem'
+import { CLIENT_TERRITORIES } from '@/lib/data/site-rights'
+import { createSiteRightsState } from '@/lib/systems/SiteRightsSystem'
 
 // Represents untrusted/partial saved state (e.g. from localStorage or remote sync)
 // where player fields are optional since older saves may be missing new fields.
@@ -28,7 +32,10 @@ export const DEFAULT_STATE: GameState = {
     activeMission: null,
     missionCount: 1,
     pendingLaunch: false,
+    stagedRockets: [],
+    selectedStagedRocketId: undefined,
     pendingRocketId: undefined,
+    pendingRocketLocation: undefined,
     placed: [],
     placementPlots: {},
     controlBuilt: false,
@@ -36,6 +43,7 @@ export const DEFAULT_STATE: GameState = {
     skillPoints: 0,
     unlockedSkillNodes: [],
     freeOperations: false,
+    programFocuses: [],
     clientMissions: {},
     completedMissions: [],
     clientStreaks: {},
@@ -87,6 +95,7 @@ export const DEFAULT_STATE: GameState = {
     academyXP: 0,
     crewModuleResearched: false,
     surfaceOps: { sites: {} },
+    siteRights: createSiteRightsState([...CLIENT_TERRITORIES]),
   },
   missionId: null,
   targetId: null,
@@ -228,6 +237,9 @@ export function normalizeState(input: PartialSave): GameState {
     }
   }
   const clientBuildEvents = [...buildEventsById.values()].sort((left, right) => left.eventId.localeCompare(right.eventId))
+  const offworldRefineries = (player.offworldRefineries ?? []).map(refinery =>
+    resolveOffworldRefinery(refinery)
+  )
 
   // `placed` is the record of what the player actually built; the per-structure
   // booleans are conveniences derived from it. They can disagree: a save made
@@ -242,6 +254,12 @@ export function normalizeState(input: PartialSave): GameState {
   const placedList = savedPlaced.filter(kind => kind !== 'scan-station')
   const placementPlots = Object.fromEntries(
     Object.entries(player.placementPlots ?? {}).filter(([kind]) => kind !== 'scan-station')
+  )
+  // Drop completed construction entries at the same choke point everything
+  // else gets normalized, so `underConstruction` never grows unbounded with
+  // stale finished records.
+  const underConstruction = Object.fromEntries(
+    Object.entries(player.underConstruction ?? {}).filter(([kind, startedAt]) => isUnderConstruction(startedAt, kind))
   )
   const builtFrom = (kind: string, flag: boolean | undefined) => !!flag || placedList.includes(kind)
   const deepSpaceTelescopeBuilt = builtFrom('deep-space-telescope', player.deepSpaceTelescopeBuilt)
@@ -266,12 +284,35 @@ export function normalizeState(input: PartialSave): GameState {
     targetId,
     missionBoardScope,
     rocket: { ...DEFAULT_STATE.rocket, ...input.rocket },
-    player: { ...DEFAULT_STATE.player, ...player, missionsDone, freeOperations, completedMissions, clientStructures, clientBuildEvents, placed: placedList, placementPlots, licenseGrade, researchXP, unlockedBlueprints, tessClassifications, asteroidClassifications, roverTerrainClassifications, discoveredExoplanetTargets, instrumentDigestNotifiedOn, transitSatelliteLevel, deepSpaceTelescopeLevel, crew, surfaceOps,
+    player: { ...DEFAULT_STATE.player, ...player, missionsDone, freeOperations, completedMissions, clientStructures, clientBuildEvents, offworldRefineries, placed: placedList, placementPlots, underConstruction, licenseGrade, researchXP, unlockedBlueprints, tessClassifications, asteroidClassifications, roverTerrainClassifications, discoveredExoplanetTargets, instrumentDigestNotifiedOn, transitSatelliteLevel, deepSpaceTelescopeLevel, crew, surfaceOps,
       // A run has crossed the launch boundary. If an older/stale save carries
       // both flags, the active run wins so the Hub cannot render "Ready" or
       // offer the assembly flow after the rocket has already left the pad.
       pendingLaunch: player.activeMission ? false : (player.pendingLaunch ?? DEFAULT_STATE.player.pendingLaunch),
       pendingRocketId: player.activeMission ? undefined : player.pendingRocketId,
+      // Old saves staged a vehicle directly on the pad. Preserve that progress;
+      // only newly purchased or fabricated vehicles start in the Hangar.
+      pendingRocketLocation: player.activeMission ? undefined : player.pendingLaunch
+        ? (player.pendingRocketLocation ?? 'launchpad')
+        : undefined,
+      // Convert the former single pending-vehicle save shape into the prepared
+      // vehicle ledger. It is assigned to the mission the player was setting
+      // up, so a later move can say exactly which preparation will be changed.
+      stagedRockets: player.activeMission ? [] : (player.stagedRockets ?? (player.pendingLaunch && player.pendingRocketId && missionId && targetId
+        ? [{
+            id: `legacy-${player.pendingRocketId}-${missionId}-${targetId}`,
+            rocketId: player.pendingRocketId,
+            rocket: { ...DEFAULT_STATE.rocket, ...input.rocket },
+            location: player.pendingRocketLocation ?? 'launchpad',
+            source: player.pendingRocketSource ?? 'company',
+            missionId,
+            targetId,
+            deliveryTargetId: input.deliveryTargetId,
+          }]
+        : [])),
+      selectedStagedRocketId: player.activeMission ? undefined : (player.selectedStagedRocketId ?? (player.pendingLaunch && player.pendingRocketId && missionId && targetId
+        ? `legacy-${player.pendingRocketId}-${missionId}-${targetId}`
+        : undefined)),
       deepSpaceTelescopeBuilt, refineryBuilt },
     doneSteps: { ...DEFAULT_STATE.doneSteps, ...input.doneSteps },
     // The retired private emergency-loan popup must not survive an old save.
@@ -317,11 +358,6 @@ export function repairStateRoute(input: GameState): GameState {
   }
   if (input.screen === 'galaxy' && !input.player.freeOperations) {
     return { ...input, screen: 'missions' }
-  }
-  // The retired solo-settlement surface screen must not be restored from an
-  // old route. Its state stays in the save for a future site-right migration.
-  if (input.screen === 'surface-ops') {
-    return { ...input, screen: 'hub' }
   }
   if (input.screen === 'refinery' && !input.player.refineryBuilt) {
     return { ...input, screen: 'hub' }

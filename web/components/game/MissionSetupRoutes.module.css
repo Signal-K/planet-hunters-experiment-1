@@ -1,0 +1,855 @@
+.root {
+  --mission-paper: var(--ln-blueprint-paper-2);
+  --mission-paper-bright: var(--ln-blueprint-paper);
+  --mission-paper-muted: var(--ln-blueprint-bg);
+  --mission-ink: var(--ln-blueprint-ink);
+  --mission-green: var(--ln-ok);
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  color: var(--mission-ink);
+  isolation: isolate;
+}
+
+.root::after {
+  content: '';
+  position: absolute;
+  z-index: 7;
+  inset: 0;
+  pointer-events: none;
+  box-shadow: inset 0 0 0 4px color-mix(in srgb, var(--mission-ink) 24%, transparent);
+}
+
+.landscape {
+  --hub-ground: 19%;
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  filter: saturate(1.12) contrast(1.04);
+}
+
+.launchpad,
+.hangar {
+  position: absolute;
+  z-index: 6;
+  bottom: var(--hub-ground);
+}
+
+.launchpad { left: 3%; width: 31%; aspect-ratio: 172 / 118; }
+.hangar { right: 1%; width: 38%; aspect-ratio: 226 / 116; }
+
+.launchpad :global(.earth-base-flat-sprite),
+.hangar :global(.earth-base-flat-sprite) {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  filter: drop-shadow(0 12px 8px color-mix(in srgb, var(--mission-ink) 34%, transparent));
+}
+
+.header {
+  position: absolute;
+  inset: 12px 32px auto;
+  z-index: 20;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  pointer-events: none;
+}
+
+/* DevShortcuts' global dev-only toggle (top:8/left:8, z-index:999 — see
+   components/dev/DevShortcuts.tsx) sits inside this screen's own isolated
+   stacking context (.root has isolation:isolate), so no z-index change here
+   can ever paint .back above it — raising .header's z-index only reorders
+   children within .root, it can't escape the isolation boundary. DevShortcuts
+   is a shared global element (KES-173 already reserves clearance for it on
+   HubScreen the same way), so the fix is to move below its footprint instead
+   of fighting for a stacking layer we can't reach. */
+.header[data-dev-launcher='true'] {
+  top: 36px;
+}
+
+.back,
+.titleGlyph,
+.title,
+.progress li {
+  border: 3px solid var(--mission-ink);
+  background: var(--mission-paper-bright);
+  box-shadow: 0 4px 0 color-mix(in srgb, var(--mission-ink) 42%, transparent);
+}
+
+.back,
+.titleGlyph {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  flex: 0 0 auto;
+  border-radius: 5px;
+  color: var(--mission-ink);
+}
+
+.back { cursor: pointer; pointer-events: auto; }
+
+.back svg,
+.titleGlyph svg,
+.primary svg,
+.carouselArrow svg,
+.rocketSwitcher svg,
+.routeNode svg {
+  width: 22px;
+  height: 22px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.title {
+  align-self: stretch;
+  min-width: 248px;
+  padding: 7px 12px;
+  border-left: 7px solid var(--mission-green);
+}
+
+.title span,
+.contractIdentity span,
+.contractFacts span,
+.contractCargo > span,
+.filterRibbon,
+.mapAction span,
+.blueprintHeading span,
+.manifestHeading span,
+.rocketSwitcher span,
+.reviewHeading span,
+.routeNode span,
+.reviewManifest span {
+  font: 800 9px/1 var(--ln-font-display);
+  letter-spacing: .17em;
+  text-transform: uppercase;
+}
+
+.title h1 {
+  margin: 4px 0 0;
+  font: 800 21px/1 var(--ln-font-display);
+  letter-spacing: .01em;
+}
+
+.progress {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 0 auto;
+  padding: 0;
+  list-style: none;
+}
+
+.progress li {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 36px;
+  padding: 4px 10px 4px 4px;
+  color: color-mix(in srgb, var(--mission-ink) 60%, transparent);
+  font: 800 8px var(--ln-font-display);
+  letter-spacing: .11em;
+}
+
+.progress i {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border: 2px solid currentColor;
+  border-radius: 50%;
+  font: 800 9px var(--ln-font-mono);
+}
+
+.progress li[data-current='true'] {
+  border-color: var(--mission-ink);
+  background: var(--mission-green);
+  color: var(--mission-ink);
+}
+
+.progress li[data-complete='true'] { color: var(--mission-ink); }
+.progress li[data-complete='true'] i { background: var(--mission-green); }
+
+/* This is the only mission-setup container. Its bounds never change by step. */
+.stage {
+  position: absolute;
+  inset: 96px 32px 32px;
+  z-index: 10;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  border: 4px solid var(--mission-ink);
+  border-radius: 8px;
+  background: var(--mission-paper-bright);
+  box-shadow: 0 10px 0 color-mix(in srgb, var(--mission-ink) 42%, transparent), 0 18px 40px color-mix(in srgb, var(--mission-ink) 24%, transparent);
+}
+
+.contractGallery,
+.targetMap,
+.rocketBlueprint,
+.missionReview {
+  position: absolute;
+  inset: 0;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.footer { display: none; }
+
+.primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 48px;
+  padding: 10px 20px;
+  border: 3px solid var(--mission-ink);
+  border-radius: 5px;
+  background: var(--mission-green);
+  color: var(--mission-ink);
+  box-shadow: 0 5px 0 color-mix(in srgb, var(--mission-ink) 72%, transparent);
+  font: 800 11px var(--ln-font-display);
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.primary:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 6px 0 color-mix(in srgb, var(--mission-ink) 72%, transparent); }
+.primary:active:not(:disabled) { transform: translateY(3px); box-shadow: 0 2px 0 color-mix(in srgb, var(--mission-ink) 72%, transparent); }
+.primary:disabled { opacity: .48; cursor: not-allowed; }
+
+/* Step 1: one portfolio work fills the stage. */
+.contractGallery {
+  background:
+    radial-gradient(circle at 84% 18%, color-mix(in srgb, var(--client-accent) 22%, transparent) 0 12%, transparent 12.5%),
+    linear-gradient(110deg, color-mix(in srgb, var(--client-accent) 12%, var(--mission-paper-bright)) 0 50%, var(--mission-paper) 50% 100%);
+}
+
+.contractGallery::before,
+.contractGallery::after {
+  content: '';
+  position: absolute;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.contractGallery::before {
+  inset: 24px;
+  border: 2px solid color-mix(in srgb, var(--mission-ink) 24%, transparent);
+}
+
+.contractGallery::after {
+  right: 0;
+  top: 0;
+  width: 44%;
+  height: 100%;
+  background: linear-gradient(145deg, transparent 0 30%, color-mix(in srgb, var(--client-accent) 18%, transparent) 30.2% 31%, transparent 31.2% 62%, color-mix(in srgb, var(--mission-ink) 10%, transparent) 62.2% 63%, transparent 63.2%);
+}
+
+.contractSlide { position: absolute; inset: 0; z-index: 1; }
+
+.contractIdentity {
+  position: absolute;
+  left: 7%;
+  top: 7%;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.contractIdentity > div { display: grid; gap: 7px; }
+.contractIdentity strong { font: 800 15px var(--ln-font-display); letter-spacing: .08em; text-transform: uppercase; }
+
+.contractCopy {
+  position: absolute;
+  left: 7%;
+  top: 31%;
+  width: 48%;
+}
+
+.contractCopy h2 {
+  margin: 0;
+  max-width: 720px;
+  font: 800 clamp(32px, 4.4vw, 68px)/.96 var(--ln-font-display);
+  letter-spacing: -.025em;
+  text-wrap: balance;
+}
+
+.contractRoute {
+  display: inline-block;
+  margin: 14px 0 0;
+  padding: 6px 10px;
+  border-left: 6px solid var(--client-accent);
+  background: var(--mission-paper-bright);
+  font: 800 11px var(--ln-font-mono);
+  letter-spacing: .09em;
+  text-transform: uppercase;
+}
+
+.contractDescription {
+  max-width: 640px;
+  margin: 16px 0 0;
+  color: color-mix(in srgb, var(--mission-ink) 76%, transparent);
+  font: 600 14px/1.45 var(--ln-font-body);
+}
+
+.contractFacts {
+  position: absolute;
+  left: 7%;
+  bottom: 18%;
+  display: flex;
+  gap: 24px;
+}
+
+.contractFacts > div { display: grid; gap: 6px; min-width: 96px; }
+.contractFacts strong { font: 800 20px var(--ln-font-display); white-space: nowrap; }
+.contractFacts > div:first-child strong { color: var(--ln-warn); }
+
+.contractCargo {
+  position: absolute;
+  right: 7%;
+  top: 9%;
+  width: 27%;
+}
+
+.contractCargo > .cargoReadout { margin-top: 10px; }
+.contractCargo > p { display: grid; gap: 4px; margin: 12px 0 0; font: 800 12px/1.3 var(--ln-font-display); letter-spacing: .05em; }
+.contractCargo > p b { font-size: 8px; letter-spacing: .17em; }
+
+.cargoReadout { display: flex; flex-wrap: wrap; gap: 8px; }
+.cargoChip {
+  display: inline-flex;
+  align-items: center;
+  min-height: 32px;
+  overflow: hidden;
+  border: 2px solid var(--mission-ink);
+  border-radius: 4px;
+  background: var(--mission-paper-bright);
+  color: var(--mission-ink);
+  box-shadow: 0 3px 0 color-mix(in srgb, var(--mission-ink) 20%, transparent);
+}
+/* SSL-74 (07/09/26 QA report): "the text for the mission fulfillment
+   requirements is too small" — these are the values a player actually reads
+   to know what to bring (mineral symbol/quantity/name), not the shared
+   small-caps kicker-label convention used for section eyebrows elsewhere in
+   this file (that stays as-is; it's a deliberate, consistent design-system
+   choice, not what was reported). Measured at 9-12px on a real 500px-wide
+   viewport before this change. */
+.cargoChip i { display: grid; place-items: center; align-self: stretch; min-width: 32px; background: color-mix(in srgb, var(--mineral-accent) 58%, var(--mission-paper-bright)); border-right: 2px solid var(--mission-ink); font: 900 13px var(--ln-font-mono); }
+.cargoChip strong { padding-left: 8px; font: 900 14px var(--ln-font-display); }
+.cargoChip span { padding: 0 8px 0 5px; font: 800 11px var(--ln-font-display); letter-spacing: .05em; text-transform: uppercase; }
+
+.contractRocket {
+  position: absolute;
+  right: 10%;
+  top: 20%;
+  width: 25%;
+  height: 55%;
+  object-fit: contain;
+  filter: drop-shadow(0 15px 0 color-mix(in srgb, var(--mission-ink) 13%, transparent)) drop-shadow(0 20px 18px color-mix(in srgb, var(--mission-ink) 24%, transparent));
+}
+
+.contractSlide > .primary { position: absolute; right: 7%; bottom: 8%; min-width: 28%; }
+
+.carouselArrow {
+  position: absolute;
+  z-index: 4;
+  top: 50%;
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 72px;
+  transform: translateY(-50%);
+  border: 3px solid var(--mission-ink);
+  background: var(--mission-paper-bright);
+  color: var(--mission-ink);
+  box-shadow: 0 5px 0 color-mix(in srgb, var(--mission-ink) 42%, transparent);
+  cursor: pointer;
+}
+
+.carouselArrow:disabled { opacity: .3; cursor: default; }
+.previous { left: 0; border-left: 0; border-radius: 0 6px 6px 0; }
+.next { right: 0; border-right: 0; border-radius: 6px 0 0 6px; }
+
+.galleryDots {
+  position: absolute;
+  z-index: 4;
+  left: 50%;
+  bottom: 4%;
+  display: flex;
+  gap: 6px;
+  transform: translateX(-50%);
+}
+
+.galleryDots i { width: 8px; height: 8px; border: 2px solid var(--mission-ink); border-radius: 50%; background: transparent; }
+.galleryDots i[data-active='true'] { width: 24px; border-radius: 6px; background: var(--mission-green); }
+
+.empty { display: grid; place-items: center; width: 100%; height: 100%; font: 800 18px var(--ln-font-display); letter-spacing: .14em; }
+
+/* Step 2: the atlas itself fills the stage; only its control strips overlay it. */
+.targetMap {
+  --ln-text: var(--mission-paper-bright);
+  --ln-panel: var(--mission-ink);
+  --ln-text-muted: color-mix(in srgb, var(--mission-ink) 56%, transparent);
+  --ln-hairline: color-mix(in srgb, var(--mission-ink) 20%, transparent);
+  --ln-map-star: var(--mission-ink);
+  --ln-map-sun: var(--ln-warn);
+  --ln-map-sun-soft: color-mix(in srgb, var(--ln-warn) 35%, var(--mission-paper-bright));
+  background: var(--mission-paper-bright);
+}
+
+.mapCanvas { position: absolute; inset: 0; }
+.mapCanvas > div > div:first-child { min-height: 0 !important; padding: 0 !important; }
+.mapCanvas > div > div:last-child { padding: 8px 20px 10px 28% !important; }
+
+.filterRibbon {
+  position: absolute;
+  z-index: 4;
+  right: 16px;
+  top: 16px;
+  display: grid;
+  gap: 6px;
+  width: min(410px, 40%);
+  padding: 12px 16px;
+  border: 3px solid var(--mission-ink);
+  border-left: 8px solid var(--mission-green);
+  border-radius: 5px;
+  background: color-mix(in srgb, var(--mission-paper-bright) 96%, transparent);
+  box-shadow: 0 5px 0 color-mix(in srgb, var(--mission-ink) 34%, transparent);
+}
+
+.filterRibbon strong { font: 800 12px var(--ln-font-display); letter-spacing: .14em; }
+.filterRibbon > span { font: 700 10px/1.35 var(--ln-font-body); letter-spacing: .03em; }
+.filterRibbon > div { display: flex; flex-wrap: wrap; gap: 6px; }
+
+.mapAction {
+  position: absolute;
+  z-index: 4;
+  right: 16px;
+  bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  min-width: min(590px, 68%);
+  padding: 12px;
+  border: 3px solid var(--mission-ink);
+  border-radius: 5px;
+  background: color-mix(in srgb, var(--mission-paper-bright) 96%, transparent);
+  box-shadow: 0 5px 0 color-mix(in srgb, var(--mission-ink) 34%, transparent);
+}
+
+.mapAction > div:first-child { flex: 1; min-width: 0; }
+.mapAction h2 { margin: 4px 0 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: 800 20px var(--ln-font-display); }
+.mapAction p { margin: 0; font: 700 9px var(--ln-font-mono); letter-spacing: .07em; }
+.mapAction p b { display: inline-block; padding: 3px 6px; border: 2px solid var(--mission-ink); background: var(--mission-green); font: inherit; }
+.mapAction .primary { flex: 0 0 auto; }
+
+/* Step 3: one restrained blueprint field, with the vehicle lifted above it. */
+.rocketBlueprint {
+  background-color: var(--mission-paper-bright);
+  background-image:
+    linear-gradient(color-mix(in srgb, var(--mission-ink) 7%, transparent) 1px, transparent 1px),
+    linear-gradient(90deg, color-mix(in srgb, var(--mission-ink) 7%, transparent) 1px, transparent 1px),
+    linear-gradient(color-mix(in srgb, var(--mission-ink) 14%, transparent) 1px, transparent 1px),
+    linear-gradient(90deg, color-mix(in srgb, var(--mission-ink) 14%, transparent) 1px, transparent 1px);
+  background-size: 16px 16px, 16px 16px, 80px 80px, 80px 80px;
+}
+
+.rocketBlueprint::after {
+  content: '';
+  position: absolute;
+  left: 53%;
+  top: 8%;
+  bottom: 8%;
+  border-left: 2px dashed color-mix(in srgb, var(--mission-ink) 28%, transparent);
+}
+
+.blueprintHeading { position: absolute; left: 6%; top: 7%; z-index: 2; }
+.blueprintHeading h2 { margin: 8px 0 0; font: 800 clamp(34px, 4vw, 64px)/1 var(--ln-font-display); letter-spacing: -.02em; }
+
+.rocketSchematic {
+  position: absolute;
+  z-index: 2;
+  left: 9%;
+  top: 20%;
+  width: 35%;
+  height: 58%;
+  display: grid;
+  place-items: center;
+}
+
+.rocketSchematic::before,
+.rocketSchematic::after {
+  content: '';
+  position: absolute;
+  pointer-events: none;
+}
+
+.rocketSchematic::before { left: 50%; top: -4%; bottom: -4%; border-left: 2px solid color-mix(in srgb, var(--mission-ink) 30%, transparent); }
+.rocketSchematic::after { top: 50%; left: -4%; right: -4%; border-top: 2px solid color-mix(in srgb, var(--mission-ink) 30%, transparent); }
+
+.rocketSchematic img {
+  position: relative;
+  z-index: 2;
+  width: 84%;
+  height: 100%;
+  object-fit: contain;
+  filter:
+    drop-shadow(3px 0 0 var(--mission-paper-bright))
+    drop-shadow(-3px 0 0 var(--mission-paper-bright))
+    drop-shadow(0 3px 0 var(--mission-paper-bright))
+    drop-shadow(0 -3px 0 var(--mission-paper-bright))
+    drop-shadow(0 14px 10px color-mix(in srgb, var(--mission-ink) 28%, transparent));
+}
+
+.roomManifest {
+  position: absolute;
+  z-index: 2;
+  left: 59%;
+  top: 13%;
+  width: 34%;
+}
+
+.manifestHeading { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+.manifestHeading strong { font: 800 9px var(--ln-font-mono); letter-spacing: .08em; }
+.roomManifest ol { display: grid; gap: 0; margin: 10px 0 0; padding: 0; border-top: 3px solid var(--mission-ink); list-style: none; }
+.roomManifest li { display: grid; grid-template-columns: 34px minmax(0, 1fr) auto; align-items: center; gap: 12px; min-height: 68px; border-bottom: 2px solid color-mix(in srgb, var(--mission-ink) 34%, transparent); }
+.roomManifest li i { display: grid; place-items: center; width: 34px; height: 34px; border: 2px solid var(--mission-ink); border-radius: 50%; font: 800 10px var(--ln-font-mono); }
+.roomManifest li strong { font: 800 17px var(--ln-font-display); letter-spacing: .04em; text-transform: uppercase; }
+.roomManifest li p { margin: 3px 0 0; font: 600 10px/1.3 var(--ln-font-body); }
+.roomManifest li button { min-height: 32px; padding: 5px 8px; border: 2px dashed var(--mission-ink); border-radius: 4px; background: transparent; color: var(--mission-ink); font: 800 8px var(--ln-font-display); letter-spacing: .1em; }
+.roomManifest li button:disabled { opacity: .45; cursor: not-allowed; }
+.modularNote { margin: 10px 0 0; font: 800 8px/1.3 var(--ln-font-mono); letter-spacing: .09em; }
+
+.rocketSwitcher {
+  position: absolute;
+  z-index: 3;
+  left: 7%;
+  bottom: 7%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.rocketSwitcher button { display: grid; place-items: center; width: 44px; height: 44px; border: 3px solid var(--mission-ink); border-radius: 50%; background: var(--mission-paper-bright); color: var(--mission-ink); cursor: pointer; }
+.purchaseTerms { position: absolute; z-index: 3; right: 7%; bottom: 17%; width: 34%; margin: 0; font: 800 8px/1.3 var(--ln-font-mono); letter-spacing: .09em; text-align: right; }
+.stagedHold { position: absolute; z-index: 4; left: 7%; bottom: 7%; width: 38%; padding: 10px 12px; border: 2px solid var(--mission-ink); border-left: 7px solid var(--mission-green); background: var(--mission-paper-bright); box-shadow: 0 4px 0 color-mix(in srgb, var(--mission-ink) 32%, transparent); }
+.stagedHold span, .stagedHold strong { display: block; font: 800 8px/1.25 var(--ln-font-display); letter-spacing: .08em; }
+.stagedHold p { margin: 5px 0; font: 700 8px/1.25 var(--ln-font-body); }
+.stagedHold button { padding: 5px 7px; border: 2px solid var(--mission-ink); background: var(--mission-green); color: var(--mission-ink); font: 800 7px var(--ln-font-display); letter-spacing: .08em; }
+.rocketBlueprint > .primary { position: absolute; z-index: 3; right: 7%; bottom: 7%; min-width: 30%; }
+
+/* Step 4: the Hangar build is the event. Mission facts form a subordinate
+   command rail instead of replacing the scene with another review sheet. */
+.missionReview { background: var(--mission-ink); }
+
+.hangarBuildScene,
+.launchpadReview {
+  position: absolute;
+  inset: 0 31% 0 0;
+  overflow: hidden;
+  color: var(--mission-paper-bright);
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--ln-cyan) 16%, transparent), transparent 32%),
+    var(--mission-ink);
+}
+
+.hangarDepth { position: absolute; inset: 0; opacity: .7; }
+.hangarDepth::before { content: ''; position: absolute; inset: 10% 7% 18%; border: 3px solid color-mix(in srgb, var(--ln-cyan) 28%, transparent); border-bottom-width: 8px; }
+.hangarDepth::after { content: ''; position: absolute; left: 7%; right: 7%; bottom: 18%; height: 13%; background: repeating-linear-gradient(135deg, var(--ln-warn) 0 12px, var(--mission-ink) 12px 24px); clip-path: polygon(0 74%, 100% 0, 100% 100%, 0 100%); opacity: .72; }
+.hangarDepth i { position: absolute; top: 10%; bottom: 18%; width: 3px; background: color-mix(in srgb, var(--ln-cyan) 18%, transparent); }
+.hangarDepth i:nth-child(1) { left: 25%; }.hangarDepth i:nth-child(2) { left: 44%; }.hangarDepth i:nth-child(3) { left: 63%; }.hangarDepth i:nth-child(4) { left: 82%; }
+
+.hangarBayHeading { position: absolute; z-index: 10; left: 4%; top: 4%; display: grid; gap: 5px; }
+.hangarBayHeading span { color: var(--ln-cyan); font: 800 9px var(--ln-font-mono); letter-spacing: .16em; }
+.hangarBayHeading strong { font: 800 clamp(17px, 2vw, 28px) var(--ln-font-display); letter-spacing: .06em; }
+
+.deliveryCrates { position: absolute; z-index: 4; left: 4%; bottom: 22%; width: 17%; height: 22%; }
+.deliveryCrates i { position: absolute; bottom: 0; width: 48%; height: 62%; border: 2px solid var(--ln-cyan-border); background: var(--ln-surface-2); box-shadow: inset 0 0 0 4px var(--mission-ink); }
+.deliveryCrates i:nth-child(2) { left: 42%; height: 85%; }.deliveryCrates i:nth-child(3) { left: 20%; bottom: 56%; height: 40%; }
+.deliveryCrates span { position: absolute; left: 0; bottom: -17px; width: 160%; color: var(--ln-text-dim); font: 800 7px var(--ln-font-mono); letter-spacing: .1em; }
+
+.overheadCrane { position: absolute; z-index: 7; left: 21%; right: 5%; top: 11%; height: 41%; border-top: 7px solid var(--ln-surface-3); }
+.overheadCrane::before, .overheadCrane::after { content: ''; position: absolute; top: -13px; width: 22px; height: 22px; border: 5px solid var(--ln-surface-3); border-radius: 50%; background: var(--mission-ink); }
+.overheadCrane::before { left: 4%; }.overheadCrane::after { right: 4%; }
+.overheadCrane i { position: absolute; top: 0; width: 3px; height: 54%; background: var(--ln-cyan); transform-origin: top; animation: assembly-cable 3.2s ease-in-out both; }
+.overheadCrane i::after { content: ''; position: absolute; left: -5px; bottom: -7px; width: 11px; height: 7px; border: 2px solid var(--ln-cyan); border-top: 0; }
+.overheadCrane i:nth-child(1) { left: 18%; animation-delay: .15s; }.overheadCrane i:nth-child(2) { left: 51%; animation-delay: .45s; }.overheadCrane i:nth-child(3) { left: 82%; animation-delay: .75s; }
+
+.assemblyVehicle { position: absolute; z-index: 5; left: 19%; right: 5%; top: 24%; height: 48%; }
+.rocketPart,
+.assembledRocket { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(0 13px 7px rgba(0,0,0,.55)); }
+.rocketPart { opacity: 0; animation-duration: 3.2s; animation-timing-function: cubic-bezier(.24,.7,.22,1); animation-fill-mode: both; }
+.rocketAft { clip-path: polygon(0 0, 35% 0, 35% 100%, 0 100%); animation-name: assemble-aft; }
+.rocketStage { clip-path: polygon(29% 0, 70% 0, 70% 100%, 29% 100%); animation-name: assemble-stage; }
+.rocketPayload { clip-path: polygon(64% 0, 100% 0, 100% 100%, 64% 100%); animation-name: assemble-payload; }
+.assembledRocket { opacity: 0; animation: assembled-lock 3.2s linear both; }
+.inspectionSweep { position: absolute; z-index: 8; top: 5%; bottom: 5%; width: 4px; background: var(--ln-ok); box-shadow: 0 0 18px 5px color-mix(in srgb, var(--ln-ok) 55%, transparent); opacity: 0; animation: inspect-vehicle 3.2s ease-in-out both; }
+
+.vehicleReadout { position: absolute; z-index: 8; left: 22%; bottom: 19%; display: flex; align-items: baseline; gap: 10px; max-width: 72%; }
+.vehicleReadout span { color: var(--ln-cyan); font: 900 13px var(--ln-font-display); letter-spacing: .1em; }
+.vehicleReadout strong, .vehicleReadout small { color: var(--ln-text-dim); font: 800 7px var(--ln-font-mono); letter-spacing: .08em; }
+
+.assemblyTimeline { position: absolute; z-index: 9; left: 0; right: 0; bottom: 0; display: grid; grid-template-columns: repeat(4, 1fr); height: 18%; margin: 0; padding: 0; border-top: 3px solid var(--ln-cyan-border); background: color-mix(in srgb, var(--mission-ink) 92%, transparent); list-style: none; }
+.assemblyTimeline li { position: relative; display: grid; grid-template-columns: 24px 1fr; grid-template-rows: 1fr 1fr; align-content: center; column-gap: 7px; min-width: 0; padding: 7px 8px; color: var(--ln-text-muted); }
+.assemblyTimeline li + li { border-left: 1px solid var(--ln-hairline); }
+.assemblyTimeline i { grid-row: 1 / 3; display: grid; place-items: center; align-self: center; width: 22px; height: 22px; border: 2px solid currentColor; border-radius: 50%; font: 800 8px var(--ln-font-mono); }
+.assemblyTimeline span, .assemblyTimeline strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: 800 7px var(--ln-font-display); letter-spacing: .1em; }
+.assemblyTimeline strong { color: inherit; }
+.assemblyTimeline li[data-current='true'] { color: var(--ln-cyan); background: var(--ln-cyan-soft); }
+.assemblyTimeline li[data-complete='true'] { color: var(--ln-ok); }
+.assemblyTimeline li[data-complete='true'] i { background: var(--ln-ok); color: var(--ln-text-on-cyan); border-color: var(--ln-ok); }
+
+.replayAssembly { position: absolute; z-index: 12; right: 2%; top: 3%; padding: 7px 9px; border: 1px solid var(--ln-cyan-border); background: var(--mission-ink); color: var(--ln-cyan); font: 800 7px var(--ln-font-display); letter-spacing: .12em; cursor: pointer; }
+
+.launchpadReview { display: grid; place-items: center; background: linear-gradient(180deg, var(--ln-surface-2), var(--mission-ink)); }
+.launchpadReview img { width: 66%; height: 66%; object-fit: contain; transform: rotate(-90deg); filter: drop-shadow(15px 10px 8px rgba(0,0,0,.5)); }
+.launchpadReview > div:last-child { position: absolute; left: 4%; bottom: 6%; display: grid; gap: 4px; }
+.launchpadReview span, .launchpadReview small { color: var(--ln-cyan); font: 800 8px var(--ln-font-mono); letter-spacing: .1em; }
+.launchpadReview strong { color: var(--mission-paper-bright); font: 800 22px var(--ln-font-display); letter-spacing: .08em; }
+.launchTower { position: absolute; right: 18%; top: 7%; bottom: 0; width: 18%; border: 5px solid var(--ln-surface-3); border-bottom: 0; opacity: .7; }
+.launchTower i { position: absolute; left: -45%; width: 55%; height: 3px; background: var(--ln-cyan); }.launchTower i:nth-child(1) { top: 22%; }.launchTower i:nth-child(2) { top: 48%; }.launchTower i:nth-child(3) { top: 74%; }
+
+.reviewBrief { position: absolute; z-index: 10; inset: 0 0 0 69%; display: flex; flex-direction: column; min-width: 0; padding: 20px; border-left: 4px solid var(--mission-ink); background: var(--mission-paper-bright); color: var(--mission-ink); }
+.reviewHeading { flex: 0 0 auto; }
+.reviewHeading h2 { margin: 6px 0 0; font: 800 clamp(20px, 2vw, 32px)/1 var(--ln-font-display); text-wrap: balance; }
+.reviewFacts { display: grid; align-content: start; gap: 0; min-height: 0; margin: 14px 0 0; }
+.reviewFacts > div { padding: 9px 0; border-top: 2px solid color-mix(in srgb, var(--mission-ink) 23%, transparent); }
+.reviewFacts dt { font: 800 7px var(--ln-font-display); letter-spacing: .16em; }
+.reviewFacts dd { margin: 4px 0 0; font: 800 11px/1.25 var(--ln-font-display); text-transform: uppercase; }
+.reviewFacts .cargoChip { min-height: 24px; border-width: 1px; box-shadow: none; }
+.reviewFacts .cargoChip i { min-width: 24px; border-right-width: 1px; }
+.reviewFacts .cargoChip span { display: none; }
+.clearance { margin-top: auto; padding: 9px 10px; border-left: 6px solid var(--ln-warn); background: var(--mission-paper); }
+.clearance[data-ready='true'] { border-left-color: var(--mission-green); }
+.clearance span, .clearance strong, .clearance small { display: block; }
+.clearance span { font: 800 7px var(--ln-font-display); letter-spacing: .16em; }
+.clearance strong { margin-top: 4px; font: 800 10px/1.2 var(--ln-font-display); letter-spacing: .05em; }
+.clearance small { margin-top: 4px; font: 700 8px/1.25 var(--ln-font-body); }
+.reviewBrief > .primary { flex: 0 0 auto; width: 100%; min-height: 44px; margin-top: 10px; padding-inline: 8px; font-size: 9px; }
+
+@keyframes assemble-aft { 0%, 8% { opacity: 0; transform: translateX(-34%); } 22%, 88% { opacity: 1; transform: translateX(0); } 96%, 100% { opacity: 0; transform: translateX(0); } }
+@keyframes assemble-stage { 0%, 22% { opacity: 0; transform: translateY(-48%); } 42%, 88% { opacity: 1; transform: translateY(0); } 96%, 100% { opacity: 0; transform: translateY(0); } }
+@keyframes assemble-payload { 0%, 44% { opacity: 0; transform: translateX(38%); } 65%, 88% { opacity: 1; transform: translateX(0); } 96%, 100% { opacity: 0; transform: translateX(0); } }
+@keyframes assembled-lock { 0%, 87% { opacity: 0; } 96%, 100% { opacity: 1; } }
+@keyframes inspect-vehicle { 0%, 70% { left: 2%; opacity: 0; } 76% { opacity: 1; } 94% { left: 98%; opacity: 1; } 100% { left: 98%; opacity: 0; } }
+@keyframes assembly-cable { 0% { transform: scaleY(.2); } 24% { transform: scaleY(1); } 70%, 100% { transform: scaleY(.45); } }
+
+button:focus-visible { outline: 4px solid var(--ln-cyan); outline-offset: 3px; }
+
+@media (max-width: 980px) {
+  .header { inset-inline: 16px; }
+  .stage { inset: 80px 16px 24px; }
+  .progress li { padding-right: 4px; }
+  .progress li span { display: none; }
+  .title { min-width: 190px; }
+  .contractDescription { max-width: 48vw; }
+  .contractRocket { right: 8%; width: 27%; }
+  .filterRibbon { width: 47%; }
+  .mapAction { min-width: 61%; }
+}
+
+@media (max-width: 720px), (max-height: 520px) {
+  .header { inset: 6px 8px auto; height: 48px; }
+  .back, .titleGlyph { width: 40px; height: 40px; }
+  .title { min-width: 0; width: 164px; padding: 5px 8px; overflow: hidden; }
+  .title span { display: block; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font-size: 7px; }
+  .title h1 { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font-size: 15px; }
+  .progress { gap: 4px; }
+  .progress li { height: 30px; border-width: 2px; box-shadow: none; }
+  .progress i { width: 20px; height: 20px; }
+  /* top clears the global .game-menu-button (top:56px + height:36px = bottom
+     92px), which is a fixed-position sibling outside this component and
+     can't be reasoned about from in here. */
+  .stage { inset: 96px 8px 16px; border-width: 3px; border-radius: 5px; box-shadow: 0 6px 0 color-mix(in srgb, var(--mission-ink) 42%, transparent); }
+
+  .contractGallery::before { inset: 12px; }
+  .contractIdentity { left: 6%; top: 6%; gap: 8px; }
+  .contractIdentity > div:first-child { transform: scale(.68); transform-origin: left top; margin-right: -32px; }
+  .contractCopy { left: 6%; top: 34%; width: 50%; }
+  .contractCopy h2 { font-size: clamp(22px, 4.5vw, 34px); }
+  .contractRoute { margin-top: 7px; font-size: 8px; }
+  .contractDescription { display: none; }
+  .contractFacts { left: 6%; bottom: 14%; gap: 10px; }
+  .contractFacts > div { min-width: 72px; }
+  .contractFacts strong { font-size: 14px; }
+  .contractCargo { right: 6%; top: 7%; width: 30%; }
+  .contractRocket { right: 8%; top: 22%; width: 24%; height: 51%; }
+  .contractSlide > .primary { right: 5%; bottom: 7%; min-width: 32%; }
+  .carouselArrow { width: 38px; height: 54px; border-width: 2px; }
+  .galleryDots { bottom: 2%; }
+
+  .filterRibbon { right: 8px; top: 8px; width: 42%; padding: 8px 10px; border-width: 2px; border-left-width: 6px; }
+  .filterRibbon strong { font-size: 9px; }
+  .filterRibbon > span { font-size: 8px; }
+  .filterRibbon .cargoReadout { gap: 4px; }
+  .filterRibbon .cargoChip { min-height: 24px; border-width: 1px; box-shadow: none; }
+  .filterRibbon .cargoChip i { min-width: 24px; border-right-width: 1px; font-size: 8px; }
+  .filterRibbon .cargoChip strong { padding-left: 5px; font-size: 9px; }
+  .filterRibbon .cargoChip span { padding-inline: 3px 5px; font-size: 7px; }
+  .mapCanvas > div > div:last-child { display: none !important; }
+  .mapAction { right: 8px; bottom: 8px; min-width: 52%; padding: 8px; border-width: 2px; gap: 8px; }
+  .mapAction h2 { font-size: 15px; }
+  .mapAction p { display: none; }
+  .mapAction .primary { min-height: 40px; padding: 7px 10px; font-size: 9px; }
+
+  .blueprintHeading { left: 5%; top: 5%; }
+  .blueprintHeading h2 { font-size: 28px; }
+  .rocketSchematic { left: 8%; top: 19%; width: 36%; height: 59%; }
+  .roomManifest { left: 56%; top: 8%; width: 39%; }
+  .manifestHeading strong { font-size: 7px; }
+  .roomManifest ol { margin-top: 5px; }
+  .roomManifest li { grid-template-columns: 26px minmax(0, 1fr) auto; gap: 6px; min-height: 49px; }
+  .roomManifest li i { width: 26px; height: 26px; }
+  .roomManifest li strong { font-size: 11px; }
+  .roomManifest li p { font-size: 8px; line-height: 1.15; }
+  .roomManifest li button { min-height: 26px; padding: 3px 5px; font-size: 7px; }
+  .modularNote { margin-top: 5px; font-size: 7px; }
+  .rocketBlueprint > .primary { right: 5%; bottom: 5%; min-width: 32%; }
+  .rocketSwitcher { left: 5%; bottom: 5%; }
+  .rocketSwitcher button { width: 36px; height: 36px; border-width: 2px; }
+
+  .hangarBuildScene, .launchpadReview { right: 34%; }
+  .reviewBrief { left: 66%; padding: 10px; border-left-width: 3px; }
+  .reviewHeading h2 { font-size: 15px; }
+  .reviewFacts { margin-top: 7px; }
+  .reviewFacts > div { padding: 5px 0; border-top-width: 1px; }
+  .reviewFacts dd { margin-top: 2px; font-size: 8px; line-height: 1.15; }
+  .reviewFacts > div:nth-child(3) { display: none; }
+  .clearance { padding: 6px 7px; border-left-width: 4px; }
+  .clearance strong { font-size: 8px; }
+  .reviewBrief > .primary { min-height: 36px; margin-top: 6px; padding: 5px 6px; font-size: 7px; }
+  .hangarBayHeading strong { font-size: 15px; }
+  .hangarBayHeading span { font-size: 7px; }
+  .assemblyVehicle { left: 17%; right: 3%; top: 21%; height: 50%; }
+  .vehicleReadout { left: 20%; bottom: 20%; gap: 6px; }
+  .vehicleReadout span { font-size: 9px; }
+  .vehicleReadout strong { font-size: 6px; }
+  .vehicleReadout small { display: none; }
+  .assemblyTimeline li { grid-template-columns: 18px 1fr; column-gap: 4px; padding: 4px; }
+  .assemblyTimeline i { width: 17px; height: 17px; border-width: 1px; font-size: 6px; }
+  .assemblyTimeline span, .assemblyTimeline strong { font-size: 5px; }
+  .deliveryCrates span { display: none; }
+  .replayAssembly { top: 2%; right: 2%; padding: 5px; font-size: 5px; }
+
+  .primary { min-height: 40px; padding: 7px 12px; border-width: 2px; font-size: 9px; box-shadow: 0 3px 0 color-mix(in srgb, var(--mission-ink) 72%, transparent); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rocketPart, .overheadCrane i { animation: none; opacity: 0; }
+  .assembledRocket { animation: none; opacity: 1; }
+  .inspectionSweep { animation: none; display: none; }
+}
+
+/* The narrow app panel is tall, not compact landscape. Recompose around that
+   vertical room instead of squeezing desktop's two columns into half-widths. */
+@media (orientation: portrait) {
+  .header { inset: 6px 8px auto; height: 48px; gap: 6px; }
+  .back { width: 40px; height: 40px; }
+  .titleGlyph { display: none; }
+  .title { flex: 1 1 auto; min-width: 76px; width: auto; padding: 5px 7px; }
+  .title span { font-size: 6px; letter-spacing: .12em; white-space: nowrap; }
+  .title h1 { overflow: hidden; margin-top: 3px; font-size: clamp(12px, 2.6vw, 18px); text-overflow: ellipsis; white-space: nowrap; }
+  .progress { flex: 0 0 auto; gap: 3px; }
+  .progress li { width: 28px; height: 30px; padding: 2px; justify-content: center; }
+  .progress i { width: 20px; height: 20px; }
+  .stage { inset: 96px 8px 16px; }
+  .contractGallery::before { inset: 10px; }
+  .contractIdentity { left: 7%; top: 5%; gap: 8px; }
+  .contractIdentity > div:first-child { transform: scale(.72); transform-origin: left center; margin-right: -28px; }
+  .contractIdentity > div { gap: 4px; }
+  .contractIdentity strong { max-width: 190px; font-size: 12px; }
+  .contractCargo { right: 7%; top: 5%; width: 39%; }
+  .contractCargo > .cargoReadout { margin-top: 6px; }
+  .contractCargo > p { margin-top: 7px; font-size: 9px; }
+  .contractCopy { left: 8%; top: 27%; width: 54%; }
+  .contractCopy h2 { font-size: 28px; }
+  .contractRoute { margin-top: 8px; }
+  .contractRocket { right: 7%; top: 24%; width: 38%; height: 34%; }
+  .contractFacts { left: 7%; bottom: 14%; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px 18px; width: 50%; }
+  .contractFacts > div { min-width: 0; gap: 3px; }
+  .contractFacts span { font-size: 7px; }
+  .contractFacts strong { font-size: 13px; }
+  .contractSlide > .primary { right: 7%; bottom: 4%; width: 43%; min-width: 0; }
+  .carouselArrow { top: 55%; width: 36px; height: 50px; }
+  .galleryDots { left: 28%; bottom: 3%; }
+
+  .root[data-step='1'][data-coach='true'] .contractIdentity,
+  .root[data-step='1'][data-coach='true'] .contractCargo { top: 24%; }
+  .root[data-step='1'][data-coach='true'] .contractCopy { top: 41%; }
+  .root[data-step='1'][data-coach='true'] .contractRocket { top: 39%; height: 28%; }
+
+  .filterRibbon { left: 6%; right: 6%; top: 3%; width: auto; }
+  .filterRibbon > span { max-width: 420px; }
+  .mapAction { left: 6%; right: 6%; bottom: 3%; display: grid; grid-template-columns: minmax(0, 1fr) auto; width: auto; min-width: 0; }
+  .mapAction h2 { font-size: 17px; }
+  .mapAction .primary { min-width: 150px; }
+  .root[data-step='2'][data-coach='true'] .filterRibbon { top: 24%; }
+
+  .rocketBlueprint::after { left: 6%; right: 6%; top: 43%; bottom: auto; border-left: 0; border-top: 2px dashed color-mix(in srgb, var(--mission-ink) 28%, transparent); }
+  .blueprintHeading { left: 6%; top: 4%; }
+  .blueprintHeading h2 { font-size: 30px; }
+  .rocketSchematic { left: 6%; top: 15%; width: 88%; height: auto; aspect-ratio: 8 / 3; }
+  .roomManifest { left: 6%; top: 35%; width: 88%; }
+  .roomManifest li { grid-template-columns: 34px minmax(0, 1fr) auto; gap: 10px; min-height: 58px; }
+  .roomManifest li i { width: 32px; height: 32px; }
+  .roomManifest li strong { font-size: 14px; }
+  .roomManifest li p { font-size: 9px; }
+  .roomManifest li button { min-height: 30px; padding: 4px 7px; font-size: 7px; }
+  .modularNote { margin-top: 7px; }
+  .purchaseTerms { left: 6%; right: auto; bottom: 11%; width: 88%; text-align: left; }
+  .rocketBlueprint > .primary { left: 6%; right: auto; bottom: 3%; width: 88%; min-width: 0; }
+  .rocketSwitcher { left: 6%; bottom: 16%; }
+  .stagedHold { left: 6%; bottom: 15%; width: 88%; }
+
+  .root[data-step='3'][data-coach='true'] .blueprintHeading { top: 20%; }
+  .root[data-step='3'][data-coach='true'] .rocketSchematic { top: 27%; width: 66%; }
+  .root[data-step='3'][data-coach='true'] .roomManifest { top: 45%; }
+
+  .hangarBuildScene, .launchpadReview { inset: 0 0 clamp(220px, 31%, 300px) 0; }
+  .reviewBrief { inset: auto 0 0; height: clamp(220px, 31%, 300px); overflow: hidden; display: grid; grid-template-columns: minmax(0, 1fr) minmax(132px, .8fr); grid-template-rows: auto 1fr auto; gap: 8px 12px; padding: 10px 12px; border-top: 3px solid var(--mission-ink); border-left: 0; }
+  .reviewHeading { grid-column: 1 / 3; grid-row: 1; min-width: 0; }
+  .reviewHeading h2 { overflow: hidden; margin-top: 3px; font-size: 17px; text-overflow: ellipsis; white-space: nowrap; }
+  .reviewFacts { grid-column: 1 / 3; grid-row: 2; grid-template-columns: repeat(4, minmax(0, 1fr)); align-self: stretch; gap: 0; margin: 0; }
+  .reviewFacts > div { min-width: 0; padding: 4px 8px; border-top: 1px solid color-mix(in srgb, var(--mission-ink) 23%, transparent); border-left: 1px solid color-mix(in srgb, var(--mission-ink) 23%, transparent); }
+  .reviewFacts > div:first-child { border-left: 0; }
+  .reviewFacts > div:nth-child(3) { display: block; }
+  .reviewFacts dt { font-size: 6px; }
+  .reviewFacts dd { overflow: hidden; margin-top: 4px; font-size: 8px; text-overflow: ellipsis; }
+  .clearance { grid-column: 1; grid-row: 3; align-self: stretch; margin: 0; padding: 6px 7px; }
+  .reviewBrief > .primary { grid-column: 2; grid-row: 3; align-self: stretch; min-height: 48px; margin: 0; white-space: normal; }
+  .hangarBayHeading strong { font-size: 19px; }
+  .assemblyVehicle { left: 17%; right: 5%; top: 22%; height: 48%; }
+  .assemblyTimeline { height: 19%; }
+  .assemblyTimeline li { grid-template-columns: 22px 1fr; padding: 6px; }
+  .assemblyTimeline i { width: 21px; height: 21px; }
+  .assemblyTimeline span, .assemblyTimeline strong { font-size: 6px; }
+  .vehicleReadout { left: 20%; bottom: 20%; }
+  .vehicleReadout span { font-size: 11px; }
+  .launchpadReview img { width: 70%; height: 64%; }
+
+  .root[data-step='4'][data-coach='true'] .hangarBayHeading { top: 27%; }
+  .root[data-step='4'][data-coach='true'] .overheadCrane { top: 31%; height: 28%; }
+  .root[data-step='4'][data-coach='true'] .assemblyVehicle { top: 35%; height: 32%; }
+  .root[data-step='4'][data-coach='true'] .replayAssembly { top: 27%; }
+}
+
+@media (orientation: portrait) and (max-width: 560px) {
+  .reviewBrief { grid-template-columns: minmax(0, 1fr) minmax(124px, .9fr); }
+  .reviewFacts { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .reviewFacts > div:nth-child(odd) { border-left: 0; }
+  .reviewFacts dt { white-space: normal; }
+  .reviewFacts dd { overflow: visible; white-space: normal; text-overflow: clip; }
+  .clearance small { display: none; }
+  .assemblyTimeline span,
+  .assemblyTimeline strong { overflow: visible; font-size: 5px; line-height: 1.1; letter-spacing: .05em; text-overflow: clip; white-space: normal; }
+}

@@ -44,6 +44,7 @@ func main() {
 
 	registerLandnamAuthExchange(app, sharedAuth)
 	registerFriendsRoutes(app)
+	registerTreasuryRoutes(app)
 
 	if err := app.Start(); err != nil {
 		log.Fatal(err)
@@ -99,6 +100,60 @@ func ensureCollections(app core.App) {
 	}
 
 	emptyStr := types.Pointer("")
+
+	// daily_economy_snapshots is the auditable, shared AEST market board. The
+	// scheduler writes it with a service credential; players can only read the
+	// newest published snapshot. Keeping the complete resolved payload makes a
+	// price explainable after the day has rolled over and gives retries a real
+	// idempotency boundary instead of a CI artifact.
+	if _, err := app.FindCollectionByNameOrId("daily_economy_snapshots"); err != nil {
+		col := core.NewBaseCollection("daily_economy_snapshots")
+		col.ListRule = emptyStr
+		col.ViewRule = emptyStr
+		col.CreateRule = nil
+		col.UpdateRule = nil
+		col.DeleteRule = nil
+		col.Fields.Add(&core.TextField{Name: "snapshot_date", Required: true, Max: 10})
+		col.Fields.Add(&core.TextField{Name: "idempotency_key", Required: true, Max: 80})
+		col.Fields.Add(&core.JSONField{Name: "snapshot", Required: true, MaxSize: 200000})
+		col.Fields.Add(&core.AutodateField{Name: "created", OnCreate: true})
+		col.Fields.Add(&core.AutodateField{Name: "updated", OnCreate: true, OnUpdate: true})
+		col.Indexes = []string{
+			"CREATE UNIQUE INDEX idx_daily_economy_snapshots_key ON daily_economy_snapshots (idempotency_key)",
+			"CREATE UNIQUE INDEX idx_daily_economy_snapshots_date ON daily_economy_snapshots (snapshot_date)",
+		}
+		if err := app.Save(col); err != nil {
+			log.Printf("failed to save daily_economy_snapshots collection: %v", err)
+		}
+	}
+
+	// public_treasury is the singleton, server-owned counterpart to the
+	// client-side TreasurySystem value. Players may read the published ledger,
+	// but no collection rule permits client mutation; write routes are added
+	// alongside each audited treasury transaction.
+	if _, err := app.FindCollectionByNameOrId("public_treasury"); err != nil {
+		col := core.NewBaseCollection("public_treasury")
+		col.ListRule = emptyStr
+		col.ViewRule = emptyStr
+		col.CreateRule = nil
+		col.UpdateRule = nil
+		col.DeleteRule = nil
+		col.Fields.Add(&core.TextField{Name: "singleton_key", Required: true, Max: 32})
+		col.Fields.Add(&core.JSONField{Name: "state", Required: true, MaxSize: 200000})
+		col.Fields.Add(&core.AutodateField{Name: "created", OnCreate: true})
+		col.Fields.Add(&core.AutodateField{Name: "updated", OnCreate: true, OnUpdate: true})
+		col.Indexes = []string{"CREATE UNIQUE INDEX idx_public_treasury_singleton ON public_treasury (singleton_key)"}
+		if err := app.Save(col); err != nil {
+			log.Printf("failed to save public_treasury collection: %v", err)
+		} else {
+			record := core.NewRecord(col)
+			record.Set("singleton_key", "public")
+			record.Set("state", map[string]any{"balanceFrancs": 20000000, "ledger": []any{}, "loans": map[string]any{}})
+			if err := app.Save(record); err != nil {
+				log.Printf("failed to seed public_treasury: %v", err)
+			}
+		}
+	}
 
 	// minerals
 	if _, err := app.FindCollectionByNameOrId("minerals"); err != nil {

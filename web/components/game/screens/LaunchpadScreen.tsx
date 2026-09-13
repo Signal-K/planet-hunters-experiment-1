@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react'
 import TopBar from '@/components/ui/TopBar'
-import { partitionByOwner, SELF_DIRECTED_MINING_MISSION_ID } from '@/lib/data'
+import { partitionByOwner, RESOURCE_FOCUS_MISSION_ID, SELF_DIRECTED_MINING_MISSION_ID } from '@/lib/data'
 import type { Mission } from '@/lib/data'
 import { ROCKET_MODELS } from '@/lib/data/rockets'
 import { SATELLITE_MODELS } from '@/lib/data/satellites'
@@ -16,7 +16,7 @@ import { SoilCrossSection } from '@/components/game/hub/SoilCrossSection'
 import { RoadRover } from '@/components/game/hub/RoadRover'
 import { EARTH_BASE_PAD } from '@/lib/scene/compositions'
 import { earthStorageBuilt, sellUnitPrice } from '@/lib/systems/EconomySystem'
-import { ownProgramStructureDelivered } from '@/lib/systems/ConstructionSystem'
+import { hasActiveBuildSiteRight, ownProgramStructureDelivered } from '@/lib/systems/ConstructionSystem'
 import { REFINERY_BUILD_MISSION_ID } from '@/lib/data/missions'
 
 interface LaunchpadScreenProps {
@@ -104,8 +104,10 @@ export default function LaunchpadScreen({
   const { phase: skyPhase } = useTimeOfDay()
   const [guideStep, setGuideStep] = useState<number | null>(null)
   const [missionRunsOpen, setMissionRunsOpen] = useState(false)
+  const [activeMissionCalloutDismissed, setActiveMissionCalloutDismissed] = useState(false)
   const [missionMenuOpen, setMissionMenuOpen] = useState(requestedMissionMenuOpen)
   const [operationBrief, setOperationBrief] = useState<'instrument' | 'mining' | 'build' | null>(null)
+  const [showAllOperations, setShowAllOperations] = useState(false)
   const externallyControlled = onMissionMenuOpenChange !== undefined
   // Keep a local open signal as well as the app-level signal. The physical pad
   // is the primary control; an auth/catalog refresh can briefly replay the
@@ -128,6 +130,10 @@ export default function LaunchpadScreen({
   // a legacy save carrying the stale boolean) cannot disable the owned mining
   // control after the player has already completed the active onboarding.
   const hasFreeOpsAccess = freeOperations || missionsDone >= 3
+  const focusSet = new Set(player.programFocuses ?? [])
+  const hasProgramFocus = focusSet.size > 0
+  const focusVisible = (focus: 'client-contracts' | 'mining' | 'instruments' | 'construction') =>
+    showAllOperations || !hasProgramFocus || focusSet.has(focus)
   const operations = own.filter(mission => hasFreeOpsAccess || mission.sequence === sequence)
   // Academy/crew progression remains deferred until it has a replacement for
   // the retired affinity ladder, so it cannot become the next required launch.
@@ -156,16 +162,35 @@ export default function LaunchpadScreen({
   // QA report).
   const hasRefineryPrereqs = ownProgramStructureDelivered(player, 'mining-settlement')
     && ownProgramStructureDelivered(player, 'mineral-silo')
+    && hasActiveBuildSiteRight(player)
   const buildOperations = operations.filter(mission => mission.construction
     && (mission.id !== REFINERY_BUILD_MISSION_ID || hasRefineryPrereqs))
   const buildOperation = buildOperations[0]
+  const resourceFocusOperation = operations.find(mission => mission.id === RESOURCE_FOCUS_MISSION_ID)
   // The physical pad is an entry point to mission selection, not an implicit
   // choice of the first operation in a computed list. Selecting a mission is
   // a separate, visible decision; otherwise the pad jumps straight to target
   // selection and skips the board reported in the Craft bug log.
+  //
+  // That reasoning only holds once a player actually has multiple live
+  // routes to weigh (own-program flights, builds, satellites) — which is
+  // exactly what Free Ops unlocks. Before that (still in guided onboarding,
+  // `!hasFreeOpsAccess`), three of this menu's four tiles are always
+  // disabled placeholders ("no owned instrument launch queued", "unlocks
+  // with Free Operations", "no player construction ready") and the one live
+  // tile is always Available Contracts — because during onboarding every
+  // operation is sequence-gated onto the Mission Board (see
+  // `isMissionBoardMission`). Showing that mostly-dead grid to a brand-new
+  // player, with no coach pointer wired to any tile in it, was reported as
+  // "users are not told what to do." Skip straight to the one thing that's
+  // actually there: their assigned starter mission(s) on the Mission Board.
   const openMissionMenu = () => {
     if (player.pendingLaunch) {
       onLaunchpadAction()
+      return
+    }
+    if (!hasFreeOpsAccess) {
+      onViewContracts()
       return
     }
     setOperationBrief(null)
@@ -176,13 +201,21 @@ export default function LaunchpadScreen({
   // current run remains an explicit secondary command in the rail.
   const padActionLabel = player.pendingLaunch
       ? 'Inspect pending launch'
-      : 'Create a new mission'
+      : hasFreeOpsAccess
+      ? 'Create a new mission'
+      : 'View your assigned mission'
   const padActionTitle = player.pendingLaunch
       ? 'INSPECT LAUNCH'
-      : 'NEW MISSION'
+      : hasFreeOpsAccess
+      ? 'NEW MISSION'
+      : 'YOUR MISSION'
 
   return (
-    <div className="game-screen theme-deep ln-scene-launchpad" data-testid="launchpad-focus-screen" data-game-hydrated={hydrated ? 'true' : 'false'}>
+    <div
+      className="game-screen theme-deep ln-scene-launchpad"
+      data-testid="launchpad-focus-screen"
+      data-game-hydrated={hydrated ? 'true' : 'false'}
+    >
       {/* Scene chrome stays crisp over the terrain; the previous `glass` prop
           created the large frosted rectangle visible across the upper UI. */}
       <TopBar eyebrow="BASE · LAUNCHPAD" title="Your Program" onBack={onBack} francs={francs} />
@@ -211,7 +244,14 @@ export default function LaunchpadScreen({
           <HubWorldBackground phase={skyPhase} composition="earth-base-pad" />
           <RoadRover road={EARTH_BASE_PAD.roadPaths?.[0]} />
         </div>
-        <button type="button" className="launchpad-scene-object launchpad-tower" data-testid="launchpad-status-card" data-action="primary-mission" onClick={openMissionMenu} aria-label={padActionLabel}>
+        {/* KES-59: the tutorial's "Tap View All Contracts" step (tutorial.ts
+            id:1, screen:'launchpad') points its coach ring at coachId
+            'launchpad-view-contracts', but no element carried that id after
+            STS-625's later simplification made a single tap on the pad go
+            straight to Contracts pre-Free-Ops (see openMissionMenu above) —
+            there is no separate "View All Contracts" button to ring at that
+            stage, only this pad. The ring silently never appeared. */}
+        <button type="button" className="launchpad-scene-object launchpad-tower" data-testid="launchpad-status-card" data-coach-id="launchpad-view-contracts" data-action="primary-mission" onClick={openMissionMenu} aria-label={padActionLabel}>
           <span className="launchpad-tower-art" data-launch-state={player.pendingLaunch ? 'hot' : 'idle'}>
             <LaunchpadModules />
             {player.pendingLaunch && <img className="launchpad-tower-rocket" src={rocketImageSrc} alt="Rocket on launchpad" />}
@@ -221,6 +261,20 @@ export default function LaunchpadScreen({
             <strong>{padActionTitle}</strong>
           </span>
         </button>
+
+        {player.activeMission && onResumeMission && !activeMissionCalloutDismissed && !visibleMissionMenuOpen && !missionRunsOpen && (
+          <section className="launchpad-active-mission" data-testid="launchpad-active-mission-callout" aria-label="Mission in progress">
+            <div>
+              <span className="launchpad-guide-kicker">MISSION IN PROGRESS</span>
+              <h2>{player.activeMission.label}</h2>
+              <p>{(player.missionPhase ?? 'transit').toUpperCase()} · VEHICLE ACTIVE</p>
+            </div>
+            <div className="launchpad-active-mission__actions">
+              <button type="button" className="launchpad-active-mission__dismiss" onClick={() => setActiveMissionCalloutDismissed(true)}>DISMISS</button>
+              <button type="button" className="launchpad-active-mission__resume" onClick={onResumeMission}><MissionGlyph /> RESUME MISSION</button>
+            </div>
+          </section>
+        )}
 
         {visibleMissionMenuOpen && !player.pendingLaunch && (
           <section className="launchpad-mission-menu" data-testid="launchpad-new-mission-menu" aria-labelledby="launchpad-new-mission-title">
@@ -237,6 +291,7 @@ export default function LaunchpadScreen({
                 type="button"
                 className="launchpad-mission-choice"
                 data-testid="launchpad-new-mission-satellite-btn"
+                hidden={!focusVisible('instruments')}
                 disabled={!infrastructureOperation}
                 onClick={() => setOperationBrief('instrument')}
               >
@@ -248,6 +303,7 @@ export default function LaunchpadScreen({
                 type="button"
                 className="launchpad-mission-choice"
                 data-testid="launchpad-new-mission-mining-btn"
+                hidden={!focusVisible('mining')}
                 disabled={!ownMiningOperation}
                 onClick={() => setOperationBrief('mining')}
               >
@@ -259,6 +315,7 @@ export default function LaunchpadScreen({
                 type="button"
                 className="launchpad-mission-choice"
                 data-testid="launchpad-new-mission-build-btn"
+                hidden={!focusVisible('construction')}
                 disabled={!buildOperation}
                 onClick={() => setOperationBrief('build')}
               >
@@ -270,12 +327,30 @@ export default function LaunchpadScreen({
                 type="button"
                 className="launchpad-mission-choice"
                 data-testid="launchpad-new-mission-contracts-btn"
+                hidden={!focusVisible('client-contracts')}
                 onClick={onViewContracts}
               >
                 <MissionGlyph />
                 <strong>AVAILABLE CONTRACTS</strong>
                 <span>Review client missions and choose an available contract.</span>
               </button>
+              {resourceFocusOperation && (
+                <button
+                  type="button"
+                  className="launchpad-mission-choice launchpad-mission-choice--focus"
+                  data-testid="launchpad-new-mission-resource-focus-btn"
+                  onClick={() => onPick(resourceFocusOperation.id, 'store')}
+                >
+                  <MiningGlyph />
+                  <strong>RESOURCE FOCUS</strong>
+                  <span>{resourceFocusOperation.title}. Configuration is ready; choose a highlighted source and dispatch.</span>
+                </button>
+              )}
+              {hasProgramFocus && (
+                <button type="button" className="launchpad-show-all-operations" onClick={() => setShowAllOperations(value => !value)}>
+                  {showAllOperations ? 'SHOW MY SUBSCRIPTIONS' : 'SHOW ALL OPERATIONS'}
+                </button>
+              )}
             </div> : <OperationBrief kind={operationBrief} instrument={infrastructureOperation} mining={ownMiningOperation} builds={buildOperations} player={player} catalog={catalog} onPick={onPick} onBack={() => setOperationBrief(null)} onOpenSiloBuild={onOpenSiloBuild} />}
           </section>
         )}
@@ -361,7 +436,7 @@ export default function LaunchpadScreen({
           {freeOperations && <button data-testid="launchpad-guide-open" onClick={() => setGuideStep(0)}><GuideGlyph /> GUIDE</button>}
           <button data-testid="launchpad-open-hangar-btn" onClick={onOpenHangar}><HangarGlyph /> HANGAR</button>
           {onViewMissionLog && <button data-testid="launchpad-mission-log-btn" onClick={onViewMissionLog}><MissionGlyph /> MISSION LOG</button>}
-          {!player.pendingLaunch && <button className="is-primary" data-testid="launchpad-new-mission-btn" data-action="new-mission" onClick={openMissionMenu}><MissionGlyph /> NEW MISSION</button>}
+          {!player.pendingLaunch && <button className="is-primary" data-testid="launchpad-new-mission-btn" data-action="new-mission" onClick={openMissionMenu}><MissionGlyph /> {hasFreeOpsAccess ? 'NEW MISSION' : 'YOUR MISSION'}</button>}
         </div>
       </footer>
     </div>

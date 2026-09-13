@@ -1,4 +1,5 @@
 import { CLIENT_AFFINITY_MISSION_THRESHOLD, SKILL_NODES, canUnlockSkillNode, STRUCTURES, structureUnlocked, type SkillNode, type StructureBlueprint } from '@/lib/data'
+import { hasEstablishedMiningSettlement } from '@/lib/systems/SurfaceOpsSystem'
 import type { Player } from '@/lib/game-types'
 
 function structureOptions(player: Player) {
@@ -10,6 +11,7 @@ function structureOptions(player: Player) {
     transitSatelliteLevel: player.transitSatelliteLevel,
     clientMissions: player.clientMissions,
     deepSpaceTelescopeMissionCompletedAt: player.deepSpaceTelescopeMissionCompletedAt,
+    hasMiningSettlement: hasEstablishedMiningSettlement(player),
   }
 }
 

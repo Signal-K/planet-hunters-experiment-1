@@ -10,11 +10,12 @@ import { resolvePreset } from '@/lib/devPresets'
 import { pbShared } from '@/lib/pb'
 import { identifyUser } from '@/lib/posthog'
 import { enqueueSurvey } from '@/lib/surveys'
-import { readPendingDemoBonus, clearPendingDemoBonus, DEMO_BONUS_FRANCS } from '@/lib/demo-bonus'
 import { useUIActions } from '@/lib/contexts/useUIActions'
 import { useAuthSync } from '@/lib/contexts/useAuthSync'
 import { useConfirmedDiscoveryPoll } from '@/lib/contexts/useConfirmedDiscoveryPoll'
 import { useCatalogSync } from '@/lib/contexts/useCatalogSync'
+import { useDailyEconomySync } from '@/lib/contexts/useDailyEconomySync'
+import { useTreasurySync } from '@/lib/contexts/useTreasurySync'
 import { useGameLoop } from '@/lib/contexts/useGameLoop'
 import { useTutorialActions } from '@/lib/contexts/useTutorialActions'
 import { useEconomyActions } from '@/lib/contexts/useEconomyActions'
@@ -25,6 +26,7 @@ import { deriveSceneScope, EARTH_BASE_SCOPE } from '@/lib/scene-scope'
 import { claimFriendGift as claimFriendGiftRequest } from '@/lib/friends/client'
 import { applyFriendGiftToPlayer, friendGiftToastMessage } from '@/lib/friends/applyGift'
 import { GAME_STATE_STORAGE_KEY, gameStateStorageKey } from '@/lib/game-state-storage'
+import { canonicalGamePath } from '@/lib/game-route'
 
 export type { Screen, Player, GameState } from '@/lib/game-types'
 
@@ -106,6 +108,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
   }, [hydrated]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const router = useRouter()
+  useTreasurySync(setState, hydrated, isPreview.current)
 
   // ── Domain hooks ───────────────────────────────────────────────────────────
   const ui      = useUIActions(setState)
@@ -123,29 +126,6 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     ui.recordScreenTransition(priorTrailScreen.current, state.screen)
     priorTrailScreen.current = state.screen
   }, [hydrated, state.screen, ui.recordScreenTransition])
-
-  // Apply a /demo sandbox completion bonus left for this session (KES-264).
-  // Runs once per boot, through the same setState path as any other player
-  // change, so it's persisted/synced identically — the demo route itself
-  // never writes to PocketBase or this context directly.
-  useEffect(() => {
-    if (!hydrated || isPreview.current) return
-    if (!pbShared.authStore.isValid) return
-    const pending = readPendingDemoBonus()
-    if (!pending) return
-    clearPendingDemoBonus()
-    if (state.player.demoBonusClaimed?.[pending.track]) return
-    setState(s => ({
-      ...s,
-      player: {
-        ...s.player,
-        francs: s.player.francs + DEMO_BONUS_FRANCS,
-        demoBonusClaimed: { ...s.player.demoBonusClaimed, [pending.track]: true },
-      },
-    }))
-    ui.addToast(`Quick mission bonus: +${DEMO_BONUS_FRANCS}₣`, 'ok')
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [hydrated])
 
   const auth    = useAuthSync({
     state,
@@ -185,6 +165,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     addToast: ui.addToast,
   })
   const { catalog } = useCatalogSync(state, setState, hydrated, isPreview.current, ui.addToast)
+  useDailyEconomySync(setState, hydrated, isPreview.current)
   const runtimeCatalog = useMemo(() => buildRuntimeCatalog({
     catalog,
     discoveredTargets: state.player.discoveredExoplanetTargets,
@@ -226,8 +207,9 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     addToast: ui.addToast,
   })
 
-  // Sync game.screen → URL on every screen change.
-  // skipNextUrlSync prevents a loop when the change was triggered BY a URL change.
+  // Sync location changes to the URL. Mission creation is one location at
+  // /game/missions; its target, vehicle, and preflight steps stay in React
+  // state and never trigger a Next route transition.
   useEffect(() => {
     // Before hydration resolves, state.screen is still DEFAULT_STATE's 'intro'
     // regardless of route (preview/preset routes included) — pushing here races
@@ -239,8 +221,9 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       ui.skipNextUrlSync.current = false
       return
     }
-    router.push(`/game/${state.screen}`)
-  }, [state.screen]) // eslint-disable-line react-hooks/exhaustive-deps
+    const nextPath = canonicalGamePath(state)
+    if (window.location.pathname !== nextPath) router.push(nextPath)
+  }, [state.screen, state.missionId, state.targetId]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Derived values ─────────────────────────────────────────────────────────
   const mission = state.missionId
@@ -249,7 +232,11 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
        ?? null)
     : null
   const target = state.targetId ? runtimeCatalog.targets.find(t => t.id === state.targetId) ?? null : null
-  const sceneScope = state.screen === 'missions'
+  // Launchpad's embedded contract view (KES-343) reads missionBoardScope the
+  // same way the standalone Mission Dispatch screen does — it never gets its
+  // own screen value to key off, since opening it no longer changes
+  // state.screen away from 'launchpad'.
+  const sceneScope = (state.screen === 'missions' || state.screen === 'launchpad')
     ? state.missionBoardScope ?? EARTH_BASE_SCOPE
     : deriveSceneScope({ screen: state.screen, targetId: state.targetId, target })
 
@@ -275,6 +262,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       setLaunchpadMissionMenuOpen: ui.setLaunchpadMissionMenuOpen,
       returnFromHangar: ui.returnFromHangar,
       goToMissions: ui.goToMissions,
+      markContractsOpened: ui.markContractsOpened,
       setScreenFromUrl: ui.setScreenFromUrl,
       setPopup: ui.setPopup,
       setMenuOpen: ui.setMenuOpen,
@@ -288,9 +276,6 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       authGateError: auth.authGateError,
       signInFromGate: auth.signInFromGate,
       createAccountFromGate: auth.createAccountFromGate,
-      continueWithEmail: auth.continueWithEmail,
-      authGateOtpId: auth.authGateOtpId,
-      verifyOtp: auth.verifyOtp,
       resetGame: useCallback(() => { void auth.resetGame(DEFAULT_STATE) }, [auth.resetGame]), // eslint-disable-line react-hooks/rules-of-hooks
       signOut: auth.signOut,
       // Game loop
@@ -302,8 +287,10 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       onPickMission: loop.onPickMission,
       onPickTarget: loop.onPickTarget,
       onPurchaseRocket: loop.onPurchaseRocket,
+      onMoveStagedRocket: loop.onMoveStagedRocket,
       onFabricateRocketPart: loop.onFabricateRocketPart,
       onAssembleFabricatedRocket: loop.onAssembleFabricatedRocket,
+      onTransferToLaunchpad: loop.onTransferToLaunchpad,
       onLaunch: loop.onLaunch,
       resumeMissionRun: loop.resumeMissionRun,
       onMiningDone: loop.onMiningDone,
