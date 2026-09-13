@@ -126,6 +126,34 @@ func ensureCollections(app core.App) {
 		}
 	}
 
+	// public_treasury is the singleton, server-owned counterpart to the
+	// client-side TreasurySystem value. Players may read the published ledger,
+	// but no collection rule permits client mutation; write routes are added
+	// alongside each audited treasury transaction.
+	if _, err := app.FindCollectionByNameOrId("public_treasury"); err != nil {
+		col := core.NewBaseCollection("public_treasury")
+		col.ListRule = emptyStr
+		col.ViewRule = emptyStr
+		col.CreateRule = nil
+		col.UpdateRule = nil
+		col.DeleteRule = nil
+		col.Fields.Add(&core.TextField{Name: "singleton_key", Required: true, Max: 32})
+		col.Fields.Add(&core.JSONField{Name: "state", Required: true, MaxSize: 200000})
+		col.Fields.Add(&core.AutodateField{Name: "created", OnCreate: true})
+		col.Fields.Add(&core.AutodateField{Name: "updated", OnCreate: true, OnUpdate: true})
+		col.Indexes = []string{"CREATE UNIQUE INDEX idx_public_treasury_singleton ON public_treasury (singleton_key)"}
+		if err := app.Save(col); err != nil {
+			log.Printf("failed to save public_treasury collection: %v", err)
+		} else {
+			record := core.NewRecord(col)
+			record.Set("singleton_key", "public")
+			record.Set("state", map[string]any{"balanceFrancs": 20000000, "ledger": []any{}, "loans": map[string]any{}})
+			if err := app.Save(record); err != nil {
+				log.Printf("failed to seed public_treasury: %v", err)
+			}
+		}
+	}
+
 	// minerals
 	if _, err := app.FindCollectionByNameOrId("minerals"); err != nil {
 		col := core.NewBaseCollection("minerals")
