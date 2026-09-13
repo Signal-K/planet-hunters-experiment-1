@@ -10,6 +10,8 @@ import { resolveConstructionState } from '@/lib/systems/ConstructionSystem'
 import { isUnderConstruction } from '@/lib/systems/HubConstructionSystem'
 import { EARTH_BASE_SCOPE } from '@/lib/scene-scope'
 import { aestDateKey, type ClientBuildCompletionEvent } from '@/lib/systems/DailyEconomySystem'
+import { CLIENT_TERRITORIES } from '@/lib/data/site-rights'
+import { createSiteRightsState } from '@/lib/systems/SiteRightsSystem'
 
 // Represents untrusted/partial saved state (e.g. from localStorage or remote sync)
 // where player fields are optional since older saves may be missing new fields.
@@ -92,6 +94,7 @@ export const DEFAULT_STATE: GameState = {
     academyXP: 0,
     crewModuleResearched: false,
     surfaceOps: { sites: {} },
+    siteRights: createSiteRightsState([...CLIENT_TERRITORIES]),
   },
   missionId: null,
   targetId: null,

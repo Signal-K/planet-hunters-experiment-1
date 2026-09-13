@@ -158,7 +158,7 @@ export default function SurfaceOpsScreen({
   return (
     <div className={`theme-deep ln-scene-surface-ops ${styles.screen}`} data-testid="surface-ops-screen" data-view={view}>
       <TopBar
-        eyebrow="SURFACE OPS · SOLO SITE CONTROL"
+        eyebrow="SURFACE OPS · CLIENT TERRITORY"
         title="Surface Operations"
         onBack={onBack}
         solid

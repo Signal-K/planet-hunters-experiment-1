@@ -246,6 +246,22 @@ export function applyPurchaseSiteAccess(
 }
 
 /**
+ * Completes Surface Ops' local readiness record after the canonical site-right
+ * transaction has debited the player and credited the treasury. This avoids
+ * the retired generic access fee being charged a second time.
+ */
+export function applyGrantedSiteAccess(
+  state: GameState,
+  siteId: string,
+  now: number = Date.now()
+): GameState {
+  const definition = surfaceSiteById(siteId)
+  const current = surfaceSiteProgress(state.player, siteId)
+  if (!definition || definition.availability !== 'available' || !state.player.freeOperations || current.siteAccessPurchasedAt) return state
+  return updateSite(state, siteId, site => ({ ...site, siteAccessPurchasedAt: now }))
+}
+
+/**
  * Start exactly one resumable field operation per accessed site. Landnam owns
  * this contract; TakeOn receives it as body + rover + seed and never chooses
  * programme identity or economics itself.
