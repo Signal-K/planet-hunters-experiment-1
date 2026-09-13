@@ -16,7 +16,7 @@ import { SoilCrossSection } from '@/components/game/hub/SoilCrossSection'
 import { RoadRover } from '@/components/game/hub/RoadRover'
 import { EARTH_BASE_PAD } from '@/lib/scene/compositions'
 import { earthStorageBuilt, sellUnitPrice } from '@/lib/systems/EconomySystem'
-import { ownProgramStructureDelivered } from '@/lib/systems/ConstructionSystem'
+import { hasActiveBuildSiteRight, ownProgramStructureDelivered } from '@/lib/systems/ConstructionSystem'
 import { REFINERY_BUILD_MISSION_ID } from '@/lib/data/missions'
 
 interface LaunchpadScreenProps {
@@ -162,6 +162,7 @@ export default function LaunchpadScreen({
   // QA report).
   const hasRefineryPrereqs = ownProgramStructureDelivered(player, 'mining-settlement')
     && ownProgramStructureDelivered(player, 'mineral-silo')
+    && hasActiveBuildSiteRight(player)
   const buildOperations = operations.filter(mission => mission.construction
     && (mission.id !== REFINERY_BUILD_MISSION_ID || hasRefineryPrereqs))
   const buildOperation = buildOperations[0]

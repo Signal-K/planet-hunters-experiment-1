@@ -343,6 +343,15 @@ describe('Launchpad own-program actions', () => {
         { targetId: 'mars', structureKind: 'mining-settlement', clientId: 'mission-control', state: 'delivered' as const, startedAt: 0 },
         { targetId: 'mars', structureKind: 'mineral-silo', clientId: 'mission-control', state: 'delivered' as const, startedAt: 0 },
       ],
+      siteRights: {
+        territories: basePlayer.siteRights?.territories ?? {},
+        rights: {
+          'moon-build-right': {
+            id: 'moon-build-right', playerId: 'local-player', clientId: 'atlas-aggregate', targetId: 'moon', siteId: 'moon-south-pole',
+            mode: 'purchase' as const, activities: ['build' as const, 'mine' as const], acquiredAt: 0,
+          },
+        },
+      },
     }
     const { host: withPrereqs, root: rootB } = await openBuildMenu(readyPlayer)
     expect(withPrereqs.querySelector('[data-testid="launchpad-build-program-build-refinery"]')).not.toBeNull()

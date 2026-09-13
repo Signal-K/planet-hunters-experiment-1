@@ -73,7 +73,7 @@ export const NARRATIVE_LEDGER: NarrativeLedgerEntry[] = [
     owner: 'PLAYER',
     state: 'adapt',
     dependencies: ['Storage', 'Refinery recipe', 'Off-world site'],
-    implementation: 'The refinery loop exists. Its early off-world advantage and site integration are still a design and data-model extension.',
+    implementation: 'Own-program refinery completion now records a target-specific deployment and only proceeds against an active build right. The Earth-side refinery queue remains the first recipe interface while off-world processing surfaces are expanded.',
   },
   {
     id: 'sites',
@@ -82,9 +82,9 @@ export const NARRATIVE_LEDGER: NarrativeLedgerEntry[] = [
     purpose: 'Clients hold target territory. Planets begin as predefined sites where operations happen automatically after access is secured.',
     cadence: 'PER SITE AGREEMENT',
     owner: 'CLIENT + PLAYER',
-    state: 'adapt',
+    state: 'live',
     dependencies: ['Target catalog', 'Client territory', 'Site agreement', 'Surface operations'],
-    implementation: 'Client territory and site access foundations exist, but the active permit/solo semantics must be replaced with purchasable or leaseable rights.',
+    implementation: 'Predefined client sites now sell scoped purchase or lease rights; Surface Operations charges the deed once, credits the treasury ledger, and grants build and mine authority without a parcel editor.',
   },
   {
     id: 'treasury',
@@ -93,9 +93,9 @@ export const NARRATIVE_LEDGER: NarrativeLedgerEntry[] = [
     purpose: 'Site-deed revenue funds citizen-science contributions and bankruptcy loans instead of disappearing into generic fees.',
     cadence: 'ON SITE AGREEMENT',
     owner: 'TREASURY',
-    state: 'planned',
+    state: 'adapt',
     dependencies: ['Site agreement revenue', 'Treasury ledger', 'Contribution rewards', 'Loan rules'],
-    implementation: 'The player loan and citizen-science activities exist separately. A treasury ledger and payout rules do not yet exist.',
+    implementation: 'Site-right purchases now write deed revenue into a treasury ledger and the existing loan and contribution systems can consume its rules. Cross-player treasury persistence is the remaining backend step.',
   },
   {
     id: 'citizen-science',

@@ -3,6 +3,7 @@ import { DEFAULT_STATE } from '@/lib/game-state'
 import type { Mission } from '@/lib/data'
 import { applyConstructionCompletion, ownProgramStructureDelivered, resolveConstructionState } from './ConstructionSystem'
 import { OWN_PROGRAM_CLIENT_ID } from '@/lib/data'
+import { OWN_PROGRAM_BUILD_MISSIONS } from '@/lib/data/missions'
 
 const mission: Mission = {
   id: 'construct-fuel-depot', title: 'Fuel depot', brief: '', client: 'helios', tag: 'CONSTRUCT', difficulty: 'L2', locked: false, sequence: 4,
@@ -23,6 +24,32 @@ describe('ConstructionSystem', () => {
     const twice = applyConstructionCompletion(once, mission, 'bennu', 20_000)
     expect(twice.clientStructures).toHaveLength(1)
     expect(twice.clientStructures?.[0]?.startedAt).toBe(10_000)
+  })
+
+  it('commissions an own-program refinery only at an active build-right site', () => {
+    const refineryMission = OWN_PROGRAM_BUILD_MISSIONS.find(candidate => candidate.id === 'program-build-refinery')
+    expect(refineryMission).toBeDefined()
+    const player = {
+      ...DEFAULT_STATE.player,
+      siteRights: {
+        ...DEFAULT_STATE.player.siteRights!,
+        rights: {
+          'moon-build-right': {
+            id: 'moon-build-right', playerId: 'local-player', clientId: 'atlas-aggregate', targetId: 'moon', siteId: 'moon-south-pole',
+            mode: 'purchase' as const, activities: ['build' as const, 'mine' as const], acquiredAt: 0,
+          },
+        },
+      },
+    }
+
+    expect(applyConstructionCompletion(player, refineryMission!, 'mars', 10_000)).toBe(player)
+
+    const commissioned = applyConstructionCompletion(player, refineryMission!, 'moon', 10_000)
+    expect(commissioned.offworldRefineries).toEqual([{
+      owner: 'player', structureKind: 'refinery', targetId: 'moon', siteId: 'moon-south-pole', rightKind: 'owned',
+      state: 'under-construction', startedAt: 10_000, completesAt: 2_710_000,
+    }])
+    expect(commissioned.clientStructures?.[0]).toMatchObject({ targetId: 'moon', structureKind: 'refinery', clientId: OWN_PROGRAM_CLIENT_ID })
   })
 
   it('resolves an elapsed build to operational', () => {

@@ -7,6 +7,7 @@ import { normalizeSurfaceOps } from '@/lib/systems/SurfaceOpsSystem'
 import { settleCrewEconomy } from '@/lib/systems/AcademySystem'
 import { findTargetStructure } from '@/lib/data/target-structures'
 import { resolveConstructionState } from '@/lib/systems/ConstructionSystem'
+import { resolveOffworldRefinery } from '@/lib/systems/OffworldRefinerySystem'
 import { isUnderConstruction } from '@/lib/systems/HubConstructionSystem'
 import { EARTH_BASE_SCOPE } from '@/lib/scene-scope'
 import { aestDateKey, type ClientBuildCompletionEvent } from '@/lib/systems/DailyEconomySystem'
@@ -236,6 +237,9 @@ export function normalizeState(input: PartialSave): GameState {
     }
   }
   const clientBuildEvents = [...buildEventsById.values()].sort((left, right) => left.eventId.localeCompare(right.eventId))
+  const offworldRefineries = (player.offworldRefineries ?? []).map(refinery =>
+    resolveOffworldRefinery(refinery)
+  )
 
   // `placed` is the record of what the player actually built; the per-structure
   // booleans are conveniences derived from it. They can disagree: a save made
@@ -280,7 +284,7 @@ export function normalizeState(input: PartialSave): GameState {
     targetId,
     missionBoardScope,
     rocket: { ...DEFAULT_STATE.rocket, ...input.rocket },
-    player: { ...DEFAULT_STATE.player, ...player, missionsDone, freeOperations, completedMissions, clientStructures, clientBuildEvents, placed: placedList, placementPlots, underConstruction, licenseGrade, researchXP, unlockedBlueprints, tessClassifications, asteroidClassifications, roverTerrainClassifications, discoveredExoplanetTargets, instrumentDigestNotifiedOn, transitSatelliteLevel, deepSpaceTelescopeLevel, crew, surfaceOps,
+    player: { ...DEFAULT_STATE.player, ...player, missionsDone, freeOperations, completedMissions, clientStructures, clientBuildEvents, offworldRefineries, placed: placedList, placementPlots, underConstruction, licenseGrade, researchXP, unlockedBlueprints, tessClassifications, asteroidClassifications, roverTerrainClassifications, discoveredExoplanetTargets, instrumentDigestNotifiedOn, transitSatelliteLevel, deepSpaceTelescopeLevel, crew, surfaceOps,
       // A run has crossed the launch boundary. If an older/stale save carries
       // both flags, the active run wins so the Hub cannot render "Ready" or
       // offer the assembly flow after the rocket has already left the pad.
@@ -354,11 +358,6 @@ export function repairStateRoute(input: GameState): GameState {
   }
   if (input.screen === 'galaxy' && !input.player.freeOperations) {
     return { ...input, screen: 'missions' }
-  }
-  // The retired solo-settlement surface screen must not be restored from an
-  // old route. Its state stays in the save for a future site-right migration.
-  if (input.screen === 'surface-ops') {
-    return { ...input, screen: 'hub' }
   }
   if (input.screen === 'refinery' && !input.player.refineryBuilt) {
     return { ...input, screen: 'hub' }

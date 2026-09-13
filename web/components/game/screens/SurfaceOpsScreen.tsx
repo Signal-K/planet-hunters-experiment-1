@@ -292,15 +292,15 @@ export default function SurfaceOpsScreen({
               <section className={styles.controlPanel} data-testid="site-access-panel">
                 <div className={styles.panelTitle}>
                   <MapPin size={18} />
-                  <span>SITE ACCESS</span>
+                  <span>CLIENT SITE RIGHT</span>
                 </div>
                 <div className={styles.readoutRow}>
-                  <span>ACCESS FEE</span>
+                  <span>DEED PRICE</span>
                   <strong>{formatCurrency(definition.accessFee, { compact: true })}</strong>
                 </div>
                 <div className={styles.readoutRow}>
-                  <span>MODEL</span>
-                  <strong>SOLO · NON-TRANSFERABLE</strong>
+                  <span>GRANT</span>
+                  <strong>BUILD + MINE · PERMANENT</strong>
                 </div>
                 {!accessPurchased ? (
                   <PrimaryBtn
@@ -313,11 +313,11 @@ export default function SurfaceOpsScreen({
                     onClick={() => onPurchaseSiteAccess(definition.id)}
                   >
                     {definition.availability === 'available'
-                      ? `Open Site · ${formatCurrency(definition.accessFee, { compact: true })}`
+                      ? `Acquire Site Right · ${formatCurrency(definition.accessFee, { compact: true })}`
                       : definition.unlockHint}
                   </PrimaryBtn>
                 ) : (
-                  <span className={styles.confirmedLine}>ACCESS PERMIT ACTIVE</span>
+                  <span className={styles.confirmedLine}>CLIENT SITE RIGHT ACTIVE</span>
                 )}
               </section>
 
@@ -328,7 +328,7 @@ export default function SurfaceOpsScreen({
                   <span className={styles.panelState}>{launchpadStatus.toUpperCase()}</span>
                 </div>
                 {!accessPurchased ? (
-                  <p className={styles.emptyCopy}>Open site access before placing infrastructure.</p>
+                  <p className={styles.emptyCopy}>Acquire a build right before placing infrastructure.</p>
                 ) : !progress.launchpad ? (
                   <>
                     <p className={styles.sectionCopy}>

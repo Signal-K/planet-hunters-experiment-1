@@ -8,6 +8,7 @@ import type { SceneScope } from './scene-scope'
 import type { ClientBuildCompletionEvent, DailyEconomySnapshot } from './systems/DailyEconomySystem'
 import type { TreasuryState } from './systems/TreasurySystem'
 import type { SiteRightsState } from './systems/SiteRightsSystem'
+import type { OffworldRefineryDeployment } from './systems/OffworldRefinerySystem'
 
 export interface DailyClientPool {
   date: string        // 'YYYY-MM-DD'
@@ -296,7 +297,7 @@ export interface Player {
   /** Mirrors treasury.loans[...].outstandingFrancs for this player; treasury is authoritative. */
   loanDebt: number
   loanOffered: boolean
-  /** Provisional per-player instance until KES-287 gives the treasury a real shared home. */
+  /** Cached treasury state while the shared treasury service hydrates. */
   treasury?: TreasuryState
   arrivalAt?: number | null
   // Wall-clock departure for the current transit leg. Keeping this alongside
@@ -364,6 +365,8 @@ export interface Player {
   instrumentDigestNotifiedOn?: Record<string, string>
   discoveredExoplanetTargets?: Record<string, Target>
   clientStructures?: import('@/lib/data').ClientStructureRecord[]
+  /** Refineries commissioned against a specific client-territory site right. */
+  offworldRefineries?: OffworldRefineryDeployment[]
   dailyQuestProgress?: import('@/lib/data').DailyQuestProgress[]
   licenseGrade?: LicenseGrade
   researchXP?: number
@@ -397,9 +400,9 @@ export interface Player {
   // Landing research: unlocks the Lander Module ship room. Not a crew/academy
   // mechanic — kept separate from academyResearched's prerequisite chain.
   landingResearched?: boolean
-  // Solo Surface Ops state. Site access is a build-cost gate, not a
-  // shared-world claim. Ferry records retain a stable cargo-batch id and reconciliation
-  // timestamp so retries and reloads cannot credit one manifest twice.
+  // Surface Operations state. Ferry records retain a stable cargo-batch id
+  // and reconciliation timestamp so retries and reloads cannot credit one
+  // manifest twice.
   surfaceOps?: SurfaceOpsState
   /** Predefined-site build/mine rights purchased or leased from client territory (KES-287). */
   siteRights?: SiteRightsState
