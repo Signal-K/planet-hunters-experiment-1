@@ -15,6 +15,7 @@ import { useAuthSync } from '@/lib/contexts/useAuthSync'
 import { useConfirmedDiscoveryPoll } from '@/lib/contexts/useConfirmedDiscoveryPoll'
 import { useCatalogSync } from '@/lib/contexts/useCatalogSync'
 import { useDailyEconomySync } from '@/lib/contexts/useDailyEconomySync'
+import { useTreasurySync } from '@/lib/contexts/useTreasurySync'
 import { useGameLoop } from '@/lib/contexts/useGameLoop'
 import { useTutorialActions } from '@/lib/contexts/useTutorialActions'
 import { useEconomyActions } from '@/lib/contexts/useEconomyActions'
@@ -107,6 +108,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
   }, [hydrated]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const router = useRouter()
+  useTreasurySync(setState, hydrated, isPreview.current)
 
   // ── Domain hooks ───────────────────────────────────────────────────────────
   const ui      = useUIActions(setState)
