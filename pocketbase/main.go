@@ -44,6 +44,7 @@ func main() {
 
 	registerLandnamAuthExchange(app, sharedAuth)
 	registerFriendsRoutes(app)
+	registerTreasuryRoutes(app)
 
 	if err := app.Start(); err != nil {
 		log.Fatal(err)

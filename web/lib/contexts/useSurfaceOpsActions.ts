@@ -21,6 +21,7 @@ import { acquireSiteRight, createSiteRightsState } from '@/lib/systems/SiteRight
 import { createTreasuryState } from '@/lib/systems/TreasurySystem'
 import { TREASURY_STARTING_BALANCE } from '@/lib/data'
 import { scheduleLandnamPush } from '@/lib/takeon/push'
+import { pbLandnam } from '@/lib/pb-landnam'
 import type { Toast } from '@/components/ui/ToastLayer'
 
 export function useSurfaceOpsActions(
@@ -31,6 +32,7 @@ export function useSurfaceOpsActions(
 
   const purchaseSiteAccess = useCallback((siteId: string) => {
     const now = Date.now()
+    const idempotencyKey = `site-deed:${siteId}:${now}`
     setState(state => {
       const site = predefinedSiteRightById(siteId)
       if (!site) return state
@@ -38,7 +40,7 @@ export function useSurfaceOpsActions(
       const treasury = state.player.treasury ?? createTreasuryState(TREASURY_STARTING_BALANCE)
       const result = acquireSiteRight(siteRights, treasury, site, {
         rightId: `site-right:${siteId}:${now}`,
-        ledgerEntryId: `site-deed:${siteId}:${now}`,
+        ledgerEntryId: idempotencyKey,
         playerId: 'local-player',
         mode: 'purchase',
         activities: ['build', 'mine'],
@@ -56,6 +58,9 @@ export function useSurfaceOpsActions(
         },
       }
     })
+    void pbLandnam.send('/api/treasury/site-deed', {
+      method: 'POST', body: { siteId, idempotencyKey },
+    }).catch(() => {})
   }, [setState])
 
   const buildSettlementLaunchpad = useCallback((siteId: string, pad: 0 | 1 | 2) => {
