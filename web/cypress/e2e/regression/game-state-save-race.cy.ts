@@ -125,7 +125,7 @@ describe('game_states save race recovery', () => {
         }))
       },
     })
-    cy.contains('h1', 'Earth Base', { timeout: 15000 }).should('be.visible')
+    cy.contains('h1', /^(Base|Earth Base)$/, { timeout: 15000 }).should('be.visible')
 
     cy.wait('@pbGameStateCreateConflict', { timeout: 20000 })
     cy.wait('@pbGameStateLookup', { timeout: 20000 })

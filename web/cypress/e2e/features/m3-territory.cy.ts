@@ -147,7 +147,7 @@ describe('M3 — Transport client pick and Free Ops unlock', () => {
       cy.contains('button', 'Start Playing', { timeout: 10000 }).click()
       // Debrief routes back to the Hub (not the Market screen) — navigate to
       // the mission board from there to see the Free Ops explanation.
-      cy.contains('h1', 'Earth Base', { timeout: 10000 }).should('be.visible')
+      cy.contains('h1', /^(Base|Earth Base)$/, { timeout: 10000 }).should('be.visible')
       cy.get('[data-testid="bottom-tab-missions"]').click()
       // The M3 relay run is itself a client mission (Bennu -> Vesta transport
       // for Atlas Aggregate), so completing it already satisfies

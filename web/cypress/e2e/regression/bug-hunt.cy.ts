@@ -98,7 +98,7 @@ describe('Bug hunt — edge cases', () => {
     // Payout might be 0 but UI should not crash
     cy.contains('Francs Earned').should('be.visible')
     cy.get('[data-testid="collect-reward-btn"]').should('be.visible').click()
-    cy.contains('h1', 'Earth Base', { timeout: 8000 }).should('be.visible')
+    cy.contains('h1', /^(Base|Earth Base)$/, { timeout: 8000 }).should('be.visible')
   })
 
   // ─── 2. Loan system: player in debt clears it from debrief payout ────────────
@@ -122,7 +122,7 @@ describe('Bug hunt — edge cases', () => {
     })
     cy.get('[data-testid="resolve-cargo-btn"]').should('not.exist')
     cy.get('[data-testid="collect-reward-btn"]').click()
-    cy.contains('h1', 'Earth Base', { timeout: 8000 }).should('be.visible')
+    cy.contains('h1', /^(Base|Earth Base)$/, { timeout: 8000 }).should('be.visible')
     // Should not crash and state should not have negative francs
     cy.window().then(win => {
       const state = JSON.parse(win.localStorage.getItem(STORAGE_KEY) || '{}') as GameState

@@ -8,7 +8,7 @@ const presetCases: Array<{ key: string; assertion: () => void }> = [
   },
   {
     key: 'm1-hub',
-    assertion: () => cy.contains('h1', 'Earth Base').should('be.visible'),
+    assertion: () => cy.contains('h1', /^(Base|Earth Base)$/).should('be.visible'),
   },
   {
     key: 'm1-fab',
@@ -17,7 +17,7 @@ const presetCases: Array<{ key: string; assertion: () => void }> = [
   {
     key: 'm2-hub',
     assertion: () => {
-      cy.contains('h1', 'Earth Base').should('be.visible')
+      cy.contains('h1', /^(Base|Earth Base)$/).should('be.visible')
     },
   },
   {
@@ -29,7 +29,7 @@ const presetCases: Array<{ key: string; assertion: () => void }> = [
   {
     key: 'm3-hub',
     assertion: () => {
-      cy.contains('h1', 'Earth Base').should('be.visible')
+      cy.contains('h1', /^(Base|Earth Base)$/).should('be.visible')
     },
   },
   {
