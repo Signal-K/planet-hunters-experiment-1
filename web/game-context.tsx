@@ -14,6 +14,7 @@ import { useUIActions } from '@/lib/contexts/useUIActions'
 import { useAuthSync } from '@/lib/contexts/useAuthSync'
 import { useConfirmedDiscoveryPoll } from '@/lib/contexts/useConfirmedDiscoveryPoll'
 import { useCatalogSync } from '@/lib/contexts/useCatalogSync'
+import { useDailyEconomySync } from '@/lib/contexts/useDailyEconomySync'
 import { useGameLoop } from '@/lib/contexts/useGameLoop'
 import { useTutorialActions } from '@/lib/contexts/useTutorialActions'
 import { useEconomyActions } from '@/lib/contexts/useEconomyActions'
@@ -162,6 +163,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     addToast: ui.addToast,
   })
   const { catalog } = useCatalogSync(state, setState, hydrated, isPreview.current, ui.addToast)
+  useDailyEconomySync(setState, hydrated, isPreview.current)
   const runtimeCatalog = useMemo(() => buildRuntimeCatalog({
     catalog,
     discoveredTargets: state.player.discoveredExoplanetTargets,

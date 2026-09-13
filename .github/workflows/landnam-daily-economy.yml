@@ -36,7 +36,9 @@ jobs:
       - name: Resolve authoritative daily snapshot
         env:
           LANDNAM_DAILY_ECONOMY_INPUT_JSON: ${{ vars.LANDNAM_DAILY_ECONOMY_INPUT_JSON }}
-        run: node --experimental-strip-types scripts/run-daily-economy.ts --output daily-economy-snapshot.json
+          LANDNAM_PB_SERVICE_EMAIL: ${{ secrets.LANDNAM_PB_SERVICE_EMAIL }}
+          LANDNAM_PB_SERVICE_PASSWORD: ${{ secrets.LANDNAM_PB_SERVICE_PASSWORD }}
+        run: node --experimental-strip-types scripts/run-daily-economy.ts --output daily-economy-snapshot.json --publish-url "${{ vars.LANDNAM_PB_URL }}"
 
       - name: Upload auditable daily snapshot
         uses: actions/upload-artifact@v4
