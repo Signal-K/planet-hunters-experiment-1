@@ -40,7 +40,7 @@ export const NARRATIVE_LEDGER: NarrativeLedgerEntry[] = [
     owner: 'CLIENT',
     state: 'live',
     dependencies: ['Missions', 'Targets', 'Rockets', 'Debrief'],
-    implementation: 'Client missions, payout, mission records, and client affinity are present. Rename and consolidate any remaining legacy terminology.',
+    implementation: 'Client missions, payout, mission records, and client-experience progress are present. Legacy affinity terminology is retired from active player-facing surfaces.',
   },
   {
     id: 'client-growth',
@@ -51,7 +51,7 @@ export const NARRATIVE_LEDGER: NarrativeLedgerEntry[] = [
     owner: 'CLIENT',
     state: 'planned',
     dependencies: ['Build completion ledger', 'Client experience', 'GitHub Action'],
-    implementation: 'Needs a canonical build-event record and an idempotent scheduled GitHub Action. This is not live yet.',
+    implementation: 'The idempotent scheduled publisher and shared snapshot store are live. A canonical completed-build event feed still needs to supply the publisher input before client growth can be presented as fully live.',
   },
   {
     id: 'market',
@@ -62,7 +62,7 @@ export const NARRATIVE_LEDGER: NarrativeLedgerEntry[] = [
     owner: 'MARKET',
     state: 'adapt',
     dependencies: ['Client growth', 'Mineral catalog', 'Refined goods', 'Price snapshot'],
-    implementation: 'A local market and refined-goods sale path exist. Shared, demand-led daily pricing needs the client scheduler and an audited price snapshot.',
+    implementation: 'Raw and refined sale paths consume the shared, auditable daily snapshot when it is published. The missing completed-build event feed keeps the client-demand input in adaptation rather than presenting it as complete.',
   },
   {
     id: 'refining',

@@ -283,8 +283,8 @@ export default function MissionSetupRoutes({ screen, game, hasCoach, rocketDispl
               </div>
               <div className={styles.contractFacts}>
                 <div><span>CONTRACT VALUE</span><strong>{formatCurrency(model.displayPayout, { compact: true })}</strong></div>
-                <div><span>CURRENT AFFINITY</span><strong>{client ? `L${clientLevel} · ${clientJobs} ${clientJobs === 1 ? 'JOB' : 'JOBS'}` : 'PROGRAM'}</strong></div>
-                <div><span>AFFINITY REWARD</span><strong>+{model.mission.payout.affinity}</strong></div>
+                <div><span>CLIENT LEVEL</span><strong>{client ? `L${clientLevel} · ${clientJobs} ${clientJobs === 1 ? 'JOB' : 'JOBS'}` : 'PROGRAM'}</strong></div>
+                <div><span>CLIENT EXPERIENCE</span><strong>+{model.mission.payout.affinity} XP</strong></div>
                 <div><span>MISSION TIER</span><strong>{model.mission.difficulty}</strong></div>
               </div>
               <div className={styles.contractCargo}>

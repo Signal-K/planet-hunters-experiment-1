@@ -68,7 +68,7 @@ export const STRUCTURES: StructureBlueprint[] = [
     kind: 'deep-space-telescope',
     cost: STRUCTURE_PRICES.deepSpaceTelescope,
     costMaterials: { aluminium: 30, copper: 16, silicon: 10 },
-    unlocksAt: 'Transit telescope level 2 and affinity level 2 with a client',
+    unlocksAt: 'Transit telescope level 2 and client level 2 with a client',
     unlockTrigger: 'deep-space-telescope-unlock',
     description: 'Independent long-baseline instrument (STS-622) that downlinks unconfirmed NEO candidates from the Minor Planet Center for asteroid-discovery classification, separate from the transit satellite.',
   },
@@ -78,7 +78,7 @@ export const STRUCTURES: StructureBlueprint[] = [
     kind: 'astronaut-academy',
     cost: STRUCTURE_PRICES.academy,
     costMaterials: { aluminium: 24, silicon: 12, copper: 8 },
-    unlocksAt: 'Research after reaching affinity level 2 with two clients',
+    unlocksAt: 'Research after reaching client level 2 with two clients',
     unlockTrigger: 'academy-research',
     description: 'Trains named astronauts, manages the roster, and coordinates Base staffing.',
   },
@@ -92,7 +92,7 @@ export const LAUNCHPAD_UPGRADE_COST = STRUCTURE_PRICES.launchpadUpgrade
 
 // Deep Space Telescope unlock (STS-622): requires the transit satellite to
 // have reached level 2 and at least one client relationship to have reached
-// affinity level 2 — a lighter bar than the Academy's two-client requirement,
+// client level 2 — a lighter bar than the Academy's two-client requirement,
 // since this gates a second instrument rather than a new profession. Exact
 // numbers are a build-time call per the ticket ("decide during build rather
 // than re-asked as a blocking question"), not a re-litigated design decision.

@@ -138,7 +138,7 @@ export function buildRuntimeCatalog({
         difficulty: 'L1',
         locked: false,
         sequence: missionsDone + 1,
-        unlockAt: 'Transit telescope level 2 and affinity level 2 with a client',
+        unlockAt: 'Transit telescope level 2 and client level 2 with a client',
         targetId: DEEP_SPACE_TELESCOPE_TARGET_ID,
         payload: {
           type: 'deep-space-survey',
@@ -183,7 +183,7 @@ export function buildRuntimeCatalog({
     }))
     .filter(mission => !existingMissionIds.has(mission.id))
 
-  // Co-funded affinity/diplomacy missions are deferred with the Academy
+  // Co-funded client-progress/diplomacy missions are deferred with the Academy
   // progression branch. Do not generate them until a single player-progress
   // model specifies how they are earned and explained.
   const jointMissions: Mission[] = []

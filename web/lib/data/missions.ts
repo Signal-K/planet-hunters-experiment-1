@@ -124,7 +124,7 @@ export const AUTHORED_MISSIONS: Mission[] = [
     difficulty: 'L1',
     locked: true,
     sequence: FREE_OPS_START_MISSIONS_DONE + 1,
-    unlockAt: 'Reach affinity level 2 with two clients',
+    unlockAt: 'Reach client level 2 with two clients',
     requires: { minerals: {}, cargo_min: 0, drill_tier: 1, max_orbit: 0 },
     programReward: {
       researchXP: 0,
