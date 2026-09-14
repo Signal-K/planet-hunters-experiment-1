@@ -323,7 +323,7 @@ export default function MissionSetupRoutes({ screen, game, hasCoach, rocketDispl
             <span>ONLY TARGETS WITH THE REQUIRED MINERALS, RANGE, CARGO, AND DRILL PARAMETERS ARE HIGHLIGHTED.</span>
             <RequiredCargo minerals={game.mission.requires.minerals} catalog={game.catalog.minerals} />
           </div>
-          <div className={styles.mapAction}>
+          <div className={styles.mapAction} data-testid="target-selection-summary">
             <div><span>{selectedTarget ? `${targetTypeLabel(selectedTarget.type)} · ELIGIBLE TARGET` : 'ELIGIBLE TARGET'}</span><h2>{selectedTarget?.name ?? 'SELECT A HIGHLIGHTED BODY'}</h2>{selectedTarget && <p><b>{targetTypeLabel(selectedTarget.type)}</b> · ORBIT {selectedTarget.orbit} · MISSION PARAMETERS PASS</p>}</div>
             <button type="button" className={styles.primary} data-testid="continue-build-btn" disabled={!selectedTarget} onClick={() => selectedTarget && game.onPickTarget(selectedTarget.id)}><StepGlyph step={2} /> CONFIRM TARGET</button>
           </div>

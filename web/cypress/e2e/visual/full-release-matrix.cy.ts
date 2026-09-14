@@ -189,6 +189,11 @@ function completeDebrief() {
   // collected. This keeps the visual journey aligned with the live cargo
   // teardown rather than assuming the retired auto-resolve behavior.
   cy.get('[data-testid="resolve-cargo-btn"]').should('be.visible').click({ force: true })
+  // The dismantle scene is player-visible and can be skipped. Use that live
+  // affordance instead of racing its renderer before asking for the payout.
+  cy.get('[data-testid="scrap-sequence-skip-btn"]', { timeout: 10000 })
+    .should('be.visible')
+    .click({ force: true })
   cy.contains('Ledger').scrollIntoView().should('be.visible')
   clickDom('[data-testid="collect-reward-btn"]')
   cy.contains('h1', /^(Base|Earth Base)$/i, { timeout: 10000 }).should('be.visible')
@@ -221,11 +226,11 @@ function pickVisibleTarget(name: string) {
     .click({ force: true })
   cy.window().then(win => {
     if (win.innerWidth < 821) {
-      cy.get('[data-testid="target-detail-expand"], .mission-board-detail .mission-setup-card')
+      cy.get('[data-testid="target-detail-expand"], [data-testid="target-selection-summary"]')
         .should('exist')
       cy.contains(name).should('be.visible')
     } else {
-      cy.get('.mission-setup-card').should('contain.text', name)
+      cy.get('[data-testid="target-selection-summary"]').should('contain.text', name)
     }
   })
 }

@@ -227,6 +227,7 @@ describe('Visual QA — game screens and mining canvas', () => {
     // Every returning vehicle now holds at debrief until the player explicitly
     // authorises its teardown, then collects the settled client fee.
     cy.get('[data-testid="resolve-cargo-btn"]').should('be.visible').click()
+    cy.get('[data-testid="scrap-sequence-skip-btn"]', { timeout: 10000 }).should('be.visible').click()
     cy.get('[data-testid="collect-reward-btn"]', { timeout: 10000 }).should('be.visible').click()
 
     // Guided M2 handoff

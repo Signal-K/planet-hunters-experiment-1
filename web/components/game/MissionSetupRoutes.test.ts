@@ -40,6 +40,7 @@ describe('mission setup replacement boundary', () => {
     expect(routes).toContain('relay.selectRelativeSignal(1)')
     expect(routes).toContain('ONLY TARGETS WITH THE REQUIRED MINERALS, RANGE, CARGO, AND DRILL PARAMETERS ARE HIGHLIGHTED.')
     expect(routes).toContain('eligibleOnlyHighlight')
+    expect(routes).toContain('data-testid="target-selection-summary"')
     expect(routes).toContain('selectableRockets.length > 1')
     expect(routes).toContain('selectedRooms')
     expect(routes).toContain('ALTERNATE ROOMS NOT YET AVAILABLE')

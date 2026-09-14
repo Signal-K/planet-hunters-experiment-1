@@ -170,6 +170,7 @@ describe('M3 mission review environment', () => {
       cy.contains('MISSION COMPLETE').should('be.visible')
       cy.contains('Belt Courier Run').should('be.visible')
       cy.get('[data-testid="resolve-cargo-btn"]').should('be.visible').click()
+      cy.get('[data-testid="scrap-sequence-skip-btn"]', { timeout: 10000 }).should('be.visible').click()
       cy.get('[data-testid="collect-reward-btn"]', { timeout: 10000 }).should('be.visible').click()
       cy.contains('h1', /^(Base|Earth Base)$/i, { timeout: 15000 }).should('be.visible')
     })
