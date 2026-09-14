@@ -118,7 +118,7 @@ function goToMissions() {
 
 function completeMiningDeterministically(viewport?: string, captureName?: string, expectDebrief = true) {
   cy.contains('MISSION TRANSIT', { timeout: 20000 }).should('be.visible')
-  cy.get('[data-testid="mining-canvas"], [data-testid="landing-screen"]', { timeout: 20000 }).should('exist')
+  cy.get('[data-testid="mining-canvas"], [data-testid="landing-screen"], [data-testid="rover-mining-screen"]', { timeout: 20000 }).should('exist')
   cy.get('body').then($body => {
     if ($body.find('[data-testid="mining-canvas"]').length > 0) {
       cy.get('[data-testid="mining-canvas"]', { timeout: 20000 }).should('be.visible')
@@ -129,7 +129,7 @@ function completeMiningDeterministically(viewport?: string, captureName?: string
       cy.get('[data-testid="dev-skip-mining-btn"]')
         .should('be.visible')
         .click({ force: true })
-    } else {
+    } else if ($body.find('[data-testid="landing-screen"]').length > 0) {
       // Lander-equipped missions enter the authored descent scene directly;
       // their surface work is completed below through the rover shortcut.
       cy.get('[data-testid="landing-screen"]', { timeout: 15000 }).should('be.visible')
@@ -139,6 +139,14 @@ function completeMiningDeterministically(viewport?: string, captureName?: string
   // rover work. Keep the release journey aligned with that real route while
   // retaining the old direct-transit path for missions without a lander.
   cy.get('body', { timeout: 15000 }).then($body => {
+    if ($body.find('[data-testid="rover-mining-screen"]').length > 0) {
+      cy.get('[data-testid="deploy-surface-ops-confirm"]', { timeout: 15000 }).then($deploy => {
+        if ($deploy.is(':visible')) cy.wrap($deploy).click({ force: true })
+      })
+      cy.get('[data-testid="dev-skip-rover-mining-btn"]', { timeout: 15000 }).click({ force: true })
+      cy.get('[data-testid="landing-screen"]', { timeout: 15000 }).should('be.visible')
+      cy.get('[data-testid="landing-continue"]', { timeout: 15000 }).should('not.be.disabled').click({ force: true })
+    }
     if ($body.find('[data-testid="landing-screen"]').length > 0) {
       cy.get('[data-testid="landing-continue"]', { timeout: 15000 }).should('not.be.disabled').click({ force: true })
       cy.get('[data-testid="rover-mining-screen"]', { timeout: 15000 }).should('be.visible')
