@@ -5,6 +5,7 @@ import type { useGame } from '@/game-context'
 import type { Catalog } from '@/lib/catalog'
 import type { Screen } from '@/lib/game-types'
 import {
+  ACADEMY_INTRO_MISSION_ID,
   ROCKET_MODELS,
   feasibleTargetsFor,
   rocketConfigForModel,
@@ -292,7 +293,14 @@ export default function MissionSetupRoutes({ screen, game, hasCoach, rocketDispl
                 <p><b>DESTINATION CLASS</b>{previewTargetTypes.join(' / ') || 'FIXED ROUTE'}</p>
               </div>
               <img className={styles.contractRocket} src={requiredRocket.img} alt={`${requiredRocket.name} mission vehicle`} />
-              <button type="button" className={styles.primary} disabled={!model.unlocked || relay.tutorialMissionInProgress} onClick={() => game.onPickMission(model.mission.id)}><StepGlyph step={1} /> ACCEPT CONTRACT</button>
+              <button type="button" className={styles.primary} disabled={!model.unlocked || relay.tutorialMissionInProgress} onClick={() => {
+                // The Academy intro is a Base operation, not a flight. The
+                // retired MissionDetailPanel handled this special route; keep
+                // the equivalent behavior inside the current scene-first
+                // contract surface rather than sending it into target setup.
+                if (model.mission.id === ACADEMY_INTRO_MISSION_ID) game.go('academy')
+                else game.onPickMission(model.mission.id)
+              }}><StepGlyph step={1} /> ACCEPT CONTRACT</button>
             </article>
             <button type="button" className={`${styles.carouselArrow} ${styles.next}`} onClick={() => relay.selectRelativeSignal(1)} disabled={relay.cardModels.length < 2} aria-label="Next contract"><ChevronGlyph direction="next" /></button>
             <div className={styles.galleryDots} aria-hidden="true">{relay.cardModels.map((item, index) => <i key={item.mission.id} data-active={index === relay.selectedIndex} />)}</div>
