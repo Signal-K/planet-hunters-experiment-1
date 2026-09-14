@@ -681,3 +681,96 @@
     justify-content: flex-start;
   }
 }
+
+/* Compact landscape is an operations layout, not a compressed portrait page.
+   Keep the branch map, selected-node inspector, and its unlock control in one
+   bounded stage so the primary action never falls below a screen scroll. */
+@media (orientation: landscape) and (max-height: 520px) {
+  .content {
+    gap: 8px;
+    overflow: hidden;
+    padding: 54px 12px 4px;
+  }
+
+  .hero,
+  .firstsPanel {
+    display: none;
+  }
+
+  .layout {
+    grid-template-columns: 128px minmax(0, 1fr) 220px;
+    gap: 8px;
+    height: 100%;
+    min-height: 0;
+  }
+
+  .branchRail {
+    gap: 4px;
+    overflow: hidden;
+  }
+
+  .branchRail > .sectionLabel,
+  .branchLegend,
+  .branchCopy small {
+    display: none;
+  }
+
+  .branchCard {
+    grid-template-columns: 26px minmax(0, 1fr) auto;
+    gap: 5px;
+    padding: 5px;
+  }
+
+  .branchMark {
+    width: 26px;
+    height: 26px;
+  }
+
+  .branchCopy strong {
+    font-size: 8px;
+  }
+
+  .treePanel,
+  .inspectorPanel,
+  .licensePanel {
+    padding: 8px;
+  }
+
+  .panelHeader h3,
+  .inspectorPanel h3 {
+    font-size: 13px;
+  }
+
+  .treeCanvas {
+    margin-top: 6px;
+    padding-top: 6px;
+  }
+
+  .treeLines {
+    top: 28px;
+    height: 36px;
+  }
+
+  .nodeGrid {
+    gap: 4px;
+  }
+
+  .nodeCard {
+    padding: 4px;
+  }
+
+  .inspector {
+    grid-column: auto;
+    display: flex;
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  .inspector > .sectionLabel {
+    display: none;
+  }
+
+  .bottomRail {
+    display: none;
+  }
+}
