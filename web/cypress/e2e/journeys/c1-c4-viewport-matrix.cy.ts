@@ -138,7 +138,16 @@ describe('C1–C4 screen contracts across viewport classes', () => {
         cy.contains('Commodity Exchange', { timeout: 10000 }).should('be.visible')
         cy.screenshot(`c4-market-${viewport.label.replaceAll(' ', '-')}`)
 
-        visit('/game/refinery', stateWith('refinery'))
+        // The router correctly sends an unbuilt refinery route back to Base.
+        // This is a screen contract test, so seed the completed structure
+        // rather than asserting against the retired unbuilt route.
+        visit('/game/refinery', stateWith('refinery', {
+          player: basePlayer({
+            placed: ['launchpad', 'refinery'],
+            placementPlots: { launchpad: 0, refinery: 1 },
+            refineryBuilt: true,
+          }),
+        }))
         cy.contains('Refinery', { timeout: 10000 }).should('be.visible')
 
         visit('/game/skills', stateWith('skills'))
