@@ -67,7 +67,7 @@ export default function SkillTreeScreen({
       <TopBar eyebrow="BASE · ACADEMY" title="Skill Tree" onBack={onBack} glass />
       {coach.visible && <SkillTreeCoach onDismiss={coach.dismiss} />}
 
-      <div data-ui-zone={UI_ZONES.screenContent} className={styles.content}>
+      <div data-ui-zone={UI_ZONES.screenContent} data-testid="skill-tree-content" className={styles.content}>
         <header className={styles.hero}>
           <div>
             <div className={styles.kicker}>PROGRAM DEVELOPMENT / RESEARCH CONSOLE</div>

@@ -687,9 +687,11 @@
    bounded stage so the primary action never falls below a screen scroll. */
 @media (orientation: landscape) and (max-height: 520px) {
   .content {
+    position: absolute;
+    inset: 68px 0 0;
     gap: 8px;
     overflow: hidden;
-    padding: 54px 12px 4px;
+    padding: 8px 12px;
   }
 
   .hero,
@@ -700,6 +702,7 @@
   .layout {
     grid-template-columns: 128px minmax(0, 1fr) 220px;
     gap: 8px;
+    flex: 1;
     height: 100%;
     min-height: 0;
   }
@@ -757,6 +760,46 @@
 
   .nodeCard {
     padding: 4px;
+  }
+
+  .nodeDescription {
+    display: none;
+  }
+
+  .nodeFooter {
+    align-items: center;
+  }
+
+  .nodeAction,
+  .installButton,
+  .gradeButton {
+    min-height: 44px;
+    padding: 8px;
+  }
+
+  .installButton,
+  .gradeButton {
+    margin-top: 8px;
+  }
+
+  .inspectorPanel h3 {
+    margin-top: 8px;
+  }
+
+  .inspectorPanel p {
+    display: none;
+  }
+
+  .specRow {
+    padding: 5px 0;
+  }
+
+  .licensePanel {
+    padding: 8px;
+  }
+
+  .gradeTrack {
+    margin-top: 8px;
   }
 
   .inspector {

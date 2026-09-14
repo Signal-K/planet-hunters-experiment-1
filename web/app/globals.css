@@ -1153,6 +1153,65 @@ button { cursor: pointer; }
 .compatibility--bad { color: var(--ln-crit); border: 1px solid var(--ln-crit); background: var(--ln-crit-soft); }
 .sticky-actions { position: absolute; z-index: 30; left: 0; right: 0; bottom: 0; padding: var(--ln-s-2) var(--ln-s-3) var(--ln-s-5); background: linear-gradient(180deg, transparent, rgba(10,10,11,.94) 34%, var(--ln-void)); }
 
+/* SSL-27: short landscape is a bounded two-column instrument stage. The
+   routed discovery screens previously inherited desktop flex sizing, which
+   allowed the metadata stack to push verdict controls below the 390/428px
+   viewport. Keep the science field scrollable inside its column and reserve
+   the action dock as a non-scrolling, 44px-touchable region. */
+@media (orientation: landscape) and (max-width: 1023px) and (max-height: 520px) {
+  [data-testid="tess-discovery-desktop-grid"],
+  [data-testid="asteroid-discovery-desktop-grid"] {
+    top: 68px !important;
+    gap: 8px !important;
+    height: calc(100% - 68px) !important;
+    padding: 0 12px 8px !important;
+    min-height: 0;
+  }
+
+  [data-testid="tess-discovery-desktop-grid"] > *,
+  [data-testid="asteroid-discovery-desktop-grid"] > * {
+    min-width: 0;
+    min-height: 0;
+  }
+
+  [data-testid="tess-discovery-desktop-grid"] > :last-child,
+  [data-testid="asteroid-discovery-desktop-grid"] > :last-child {
+    gap: 8px !important;
+    overflow: hidden !important;
+  }
+
+  [data-testid="tess-discovery-desktop-grid"] [data-ui-zone="bottom-actions"],
+  [data-testid="asteroid-discovery-desktop-grid"] [data-ui-zone="bottom-actions"] {
+    flex: 0 0 auto;
+    padding-top: 4px;
+  }
+
+  [data-testid="tess-discovery-desktop-grid"] [data-ui-zone="bottom-actions"] > div,
+  [data-testid="asteroid-discovery-desktop-grid"] [data-ui-zone="bottom-actions"] > div {
+    min-height: 44px;
+  }
+
+  [data-testid="tess-discovery-desktop-grid"] [data-ui-zone="bottom-actions"] button,
+  [data-testid="asteroid-discovery-desktop-grid"] [data-ui-zone="bottom-actions"] button {
+    min-height: 44px !important;
+  }
+
+  [data-testid="observatory-coach"],
+  [data-testid="asteroid-discovery-coach"] {
+    top: 76px !important;
+    right: auto !important;
+    width: min(44vw, 360px) !important;
+    max-height: 112px;
+    overflow-y: auto;
+  }
+
+  [data-testid="tess-discovery-desktop-grid"] .screen-scroll,
+  [data-testid="asteroid-discovery-desktop-grid"] .screen-scroll {
+    padding-top: 0;
+    padding-bottom: 8px;
+  }
+}
+
 .mission-setup-scene-background {
   position: absolute;
   inset: 0;
