@@ -1,5 +1,7 @@
 export {}
 
+import { seedAuthenticatedFixture } from '../../support/authenticated-fixture'
+
 /**
  * Visual QA tests — run these in headed Chrome to actually watch the game.
  *
@@ -27,14 +29,6 @@ const ALL_SURVEYS = [
 function suppressSurveysAndUpgrade(win: Window) {
   win.localStorage.setItem(SURVEY_KEY, JSON.stringify(ALL_SURVEYS))
   win.localStorage.setItem(SNOOZE_KEY, String(Date.now() + 365 * 24 * 60 * 60 * 1000))
-  // Set fake guest credentials so hasStoredCredentials() returns true and the
-  // auth gate never appears. ensureAccountAuth() will fail to re-auth with these
-  // non-existent credentials and fall back to offline mode — the game is fully
-  // functional from localStorage without a live PocketBase session.
-  win.localStorage.setItem('landnam-account-credentials', JSON.stringify({
-    email: 'ci_seed_guest@example.com',
-    password: 'GuestPassword123!',
-  }))
 }
 
 function loadPreset(win: Window, preset: object) {
@@ -43,9 +37,7 @@ function loadPreset(win: Window, preset: object) {
   // overrides the preset state with whatever the previous test saved.
   win.localStorage.removeItem('pocketbase_auth')
   suppressSurveysAndUpgrade(win)
-  const serialized = JSON.stringify(preset)
-  win.localStorage.setItem(STORAGE_KEY, serialized)
-  win.localStorage.setItem(AUTHENTICATED_STORAGE_KEY, serialized)
+  seedAuthenticatedFixture(win, preset, 'e2e-user')
 }
 
 // Minimal preset shapes — mirrors devPresets.ts without importing it

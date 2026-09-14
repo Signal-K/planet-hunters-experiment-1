@@ -10,9 +10,8 @@
 // - Game state transitions and mission completion
 
 import type { GameState } from '@/game-context'
+import { seedAuthenticatedFixture } from '../../support/authenticated-fixture'
 
-const STORAGE_KEY = 'landnam-game-state-v1'
-const AUTHENTICATED_STORAGE_KEY = `${STORAGE_KEY}:user:e2e-user`
 const INITIAL_FRANCS = 9_000_000_000
 const EXPECTED_CARGO = { iron: 3, carbon: 2 }
 const CLIENT_NAME = 'Atlas Aggregate'
@@ -69,19 +68,10 @@ function visitWithState(path: string, state: Partial<GameState>) {
 
   cy.visit(path, {
     onBeforeLoad(win) {
-      const serialized = JSON.stringify(full)
-      // Visual QA deliberately fails the auth exchange so this state-machine
-      // fixture remains local. Seed both storage namespaces because the app
-      // starts from the guest slot before it knows whether auth is available.
-      win.localStorage.setItem(STORAGE_KEY, serialized)
-      // The offline auth stub resolves to e2e-user. Seed that account's slot
-      // explicitly; the production app must ignore the legacy unscoped slot
-      // when an authenticated identity arrives (KES-324).
-      win.localStorage.setItem(AUTHENTICATED_STORAGE_KEY, serialized)
-      win.localStorage.setItem(
-        'landnam-account-credentials',
-        JSON.stringify({ email: 'e2e@example.com', password: 'e2e-guest-test' }),
-      )
+      // Seed the same authenticated identity that owns the account-scoped
+      // state. A credentials-only fixture leaves the current shell anonymous
+      // after its deliberate offline refresh failure, so it ignores this run.
+      seedAuthenticatedFixture(win, full, 'e2e-user')
     },
   })
 }

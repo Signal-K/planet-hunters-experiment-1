@@ -1,5 +1,7 @@
 export {}
 
+import { seedAuthenticatedFixture } from '../../support/authenticated-fixture'
+
 // Release-gate journey: a fresh player completes the active onboarding path at
 // every supported layout class. A second, deterministic surface pass records
 // the late-game operations that are not yet part of that onboarding route.
@@ -77,10 +79,10 @@ function suppressNonGameplaySurfaces(win: Window) {
   // hides the data evidence it is meant to audit.
   win.localStorage.setItem('landnam_observatory_coach_seen_v1', '1')
   win.localStorage.setItem('landnam_asteroid_discovery_coach_seen_v1', '1')
-  win.localStorage.setItem('landnam-account-credentials', JSON.stringify({
-    email: 'release-matrix@example.com',
-    password: 'ReleaseMatrix123!',
-  }))
+  // The normal shell derives its storage namespace from PocketBase's restored
+  // user record. Seed a valid-shaped fixture record, not retired credentials,
+  // so the fresh intro and every state transition stay in one account slot.
+  seedAuthenticatedFixture(win, { screen: 'intro' }, 'e2e-user')
 }
 
 function continuePastAuthIfShown() {

@@ -1,5 +1,8 @@
 export {}
 
+import type { GameState } from '@/game-context'
+import { seedAuthenticatedFixture } from '../../support/authenticated-fixture'
+
 /**
  * Screenshot pass for the Earth Base scene redesign (Open Design
  * `landnam-earth-base-v2.html`). Not an assertion suite — it seeds a base at
@@ -9,8 +12,6 @@ export {}
  * Run: CYPRESS_PROFILE=earth-base npx cypress run --browser chrome
  */
 
-const STORAGE_KEY = 'landnam-game-state-v1'
-const AUTHENTICATED_STORAGE_KEY = `${STORAGE_KEY}:user:e2e-user`
 const SURVEY_KEY = 'landnam-surveys-shown'
 const SNOOZE_KEY = 'landnam-upgrade-prompt-snooze-until'
 
@@ -51,14 +52,10 @@ function seed(win: Window, player: object) {
   win.localStorage.setItem(SNOOZE_KEY, String(Date.now() + 365 * 24 * 60 * 60 * 1000))
   // Keep visual specs isolated from any remote game state left by another
   // test in the same PocketBase-backed run.
-  win.localStorage.setItem('landnam-account-credentials', JSON.stringify({
-    email: `ci-seed-${Date.now()}-${Math.random().toString(36).slice(2)}@example.com`,
-    password: 'GuestPassword123!',
-  }))
   // Suppress the onboarding-complete sheet, which otherwise covers the scene
   // on any preset with missionsDone past the Free Ops threshold.
   win.localStorage.setItem('ln_tutorial_complete_ack', '1')
-  const serialized = JSON.stringify({
+  const state = {
     screen: 'hub',
     player: { ...BASE_PLAYER, ...player },
     tutorial: false,
@@ -68,9 +65,8 @@ function seed(win: Window, player: object) {
     rocket: { chassis: 'hull-mk1', propulsion: 'ion-a1', drill: 'hand-drill' },
     lastCargo: null,
     popup: null,
-  })
-  win.localStorage.setItem(STORAGE_KEY, serialized)
-  win.localStorage.setItem(AUTHENTICATED_STORAGE_KEY, serialized)
+  }
+  seedAuthenticatedFixture(win, state as unknown as GameState, 'e2e-user')
 }
 
 function openHub(player: object) {
