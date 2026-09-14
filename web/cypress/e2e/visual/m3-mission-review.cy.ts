@@ -102,7 +102,7 @@ describe('M3 mission review environment', () => {
       // snapshotting visibility once — a one-shot check can catch the panel
       // mid-layout under CI load and silently skip the click.
       cy.get('[data-testid="deploy-surface-ops-confirm"]', { timeout: 15000 }).should('be.visible').click()
-      cy.contains('Prospector surface run').should('be.visible')
+      cy.get('[data-testid="rover-mining-screen"]').should('contain.text', 'Field Rover')
       cy.get('[data-testid="rover-mining-screen"] canvas[aria-label]', { timeout: 15000 }).should('be.visible')
       cy.screenshot(`m3-${key}-02-rover-survey`, { capture: 'viewport' })
 

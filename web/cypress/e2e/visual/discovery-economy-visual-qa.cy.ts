@@ -278,7 +278,7 @@ describe('Visual QA — discovery -> economy pipeline', () => {
     // The aggregate action selects the first available own-program mission;
     // this ordinary mission -> target-picker path is what proves the newly
     // discovered target is usable outside the fixed-target survey flight.
-    cy.contains('Pick Target', { timeout: 10000 }).should('be.visible')
+    cy.get('[data-testid="mission-target-map"]', { timeout: 10000 }).should('be.visible')
 
     cy.get(`[data-testid="target-${discovered.id}"]`).click({ force: true })
     cy.contains(discovered.name).should('be.visible')

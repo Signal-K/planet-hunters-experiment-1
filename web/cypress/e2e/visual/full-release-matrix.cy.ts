@@ -107,7 +107,7 @@ function goToMissions() {
       clickDom('[data-testid="bottom-tab-missions"]')
     }
   })
-  cy.contains('Mission Dispatch', { timeout: 10000 }).should('be.visible')
+  cy.get('[data-testid="mission-board-section-client"]', { timeout: 10000 }).should('be.visible')
 }
 
 function completeMiningDeterministically(viewport?: string, captureName?: string, expectDebrief = true) {
@@ -224,36 +224,29 @@ function pickVisibleTarget(name: string) {
 }
 
 function assertRocketLayout(action: RegExp | string) {
-  cy.get('.rocket-vehicle-frame').should('be.visible')
-  cy.get('.rocket-tier-badge').should('be.visible')
+  cy.get('[data-testid="mission-rocket-blueprint"]').should('be.visible')
+  cy.get('[aria-label$="schematic"]').should('be.visible')
   cy.get('button', { timeout: 10000 }).contains(action).should('be.visible')
-  cy.get('body').then(body => {
-    const notice = body.find('.rocket-route-notice')
-    if (notice.length === 0) return
-    cy.get('.rocket-vehicle-frame').then(frame => {
-      expect(notice[0].getBoundingClientRect().bottom).to.be.at.most(frame[0].getBoundingClientRect().top + 1)
-    })
-  })
 }
 
 function playM1(viewport: string) {
   goToMissions()
   screenshot(viewport, 'm1-mission-board')
 
-  cy.get('[data-testid="mission-detail-cta-generated-s1-starter-bulk-1"]')
+  cy.get('[data-testid="mission-accept-generated-s1-starter-bulk-1"]')
     .scrollIntoView()
     .should('be.visible')
     .click({ force: true })
-  cy.contains('Pick Target', { timeout: 10000 }).should('be.visible')
+  cy.get('[data-testid="mission-target-map"]', { timeout: 10000 }).should('be.visible')
   screenshot(viewport, 'm1-target-picker')
 
   pickVisibleTarget('433 Eros')
   clickDom('[data-testid="continue-build-btn"]')
-  cy.contains('Select Rocket', { timeout: 10000 }).should('be.visible')
-  assertRocketLayout('Continue with Explorer')
+  cy.get('[data-testid="mission-rocket-blueprint"]', { timeout: 10000 }).should('be.visible')
+  assertRocketLayout(/BUILD EXPLORER/)
   screenshot(viewport, 'm1-rocket-selection')
 
-  clickButton('Continue with Explorer')
+  clickButton(/BUILD EXPLORER/)
   clickDom('[data-testid="launch-btn"]')
   // The dev launch cinematic is intentionally asynchronous. Skip it here so
   // this release matrix tests the post-launch route deterministically instead
@@ -270,20 +263,20 @@ function playM2(viewport: string) {
   goToMissions()
   screenshot(viewport, 'm2-mission-board')
 
-  cy.get('[data-testid="mission-detail-cta-generated-s2-starter-bulk-3"]')
+  cy.get('[data-testid="mission-accept-generated-s2-starter-bulk-3"]')
     .scrollIntoView()
     .should('be.visible')
     .click({ force: true })
-  cy.contains('Pick Target', { timeout: 10000 }).should('be.visible')
+  cy.get('[data-testid="mission-target-map"]', { timeout: 10000 }).should('be.visible')
   screenshot(viewport, 'm2-target-picker')
 
   pickVisibleTarget('433 Eros')
   clickDom('[data-testid="continue-build-btn"]')
-  cy.contains('Select Rocket', { timeout: 10000 }).should('be.visible')
-  assertRocketLayout(/Purchase/)
+  cy.get('[data-testid="mission-rocket-blueprint"]', { timeout: 10000 }).should('be.visible')
+  assertRocketLayout(/BUILD ANOTHER/)
   screenshot(viewport, 'm2-rocket-selection')
 
-  cy.contains('button', /Purchase/).first().should('be.visible').click({ force: true })
+  cy.contains('button', /BUILD ANOTHER/).first().should('be.visible').click({ force: true })
   clickDom('[data-testid="launch-btn"]')
   cy.get('[data-testid="launch-sequence-skip-btn"]', { timeout: 10000 })
     .should('be.visible')
@@ -297,18 +290,18 @@ function playM3(viewport: string) {
   goToMissions()
   screenshot(viewport, 'm3-mission-board')
 
-  cy.get('[data-testid="mission-detail-cta-lnm_m3_relay_bennu_vesta"]')
+  cy.get('[data-testid="mission-accept-lnm_m3_relay_bennu_vesta"]')
     .scrollIntoView()
     .should('be.visible')
     .click({ force: true })
-  cy.contains('Select Rocket', { timeout: 10000 }).should('be.visible')
+  cy.get('[data-testid="mission-rocket-blueprint"]', { timeout: 10000 }).should('be.visible')
   screenshot(viewport, 'm3-rocket-selection')
   cy.get('body').then($body => {
     if ($body.find('[data-testid="coach-got-it-btn"]').length > 0) {
       cy.get('[data-testid="coach-got-it-btn"]').click({ force: true })
     }
   })
-  cy.contains('button', /Purchase/).first().should('be.visible').click({ force: true })
+  cy.contains('button', /BUILD ANOTHER/).first().should('be.visible').click({ force: true })
   cy.get('body').then($body => {
     if ($body.find('[data-testid="coach-got-it-btn"]').length > 0) {
       cy.get('[data-testid="coach-got-it-btn"]').click({ force: true })

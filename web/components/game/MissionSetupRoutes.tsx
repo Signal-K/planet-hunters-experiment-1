@@ -293,7 +293,7 @@ export default function MissionSetupRoutes({ screen, game, hasCoach, rocketDispl
                 <p><b>DESTINATION CLASS</b>{previewTargetTypes.join(' / ') || 'FIXED ROUTE'}</p>
               </div>
               <img className={styles.contractRocket} src={requiredRocket.img} alt={`${requiredRocket.name} mission vehicle`} />
-              <button type="button" className={styles.primary} disabled={!model.unlocked || relay.tutorialMissionInProgress} onClick={() => {
+              <button type="button" className={styles.primary} data-testid={`mission-accept-${model.mission.id}`} disabled={!model.unlocked || relay.tutorialMissionInProgress} onClick={() => {
                 // The Academy intro is a Base operation, not a flight. The
                 // retired MissionDetailPanel handled this special route; keep
                 // the equivalent behavior inside the current scene-first
