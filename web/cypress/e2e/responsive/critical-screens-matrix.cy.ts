@@ -41,7 +41,7 @@ describe('Responsive Layout — Critical Screens Matrix', () => {
         }
 
         // Buttons should not be clipped or misaligned
-        cy.get('[data-testid="hub-quick-action"]', { timeout: 5000 })
+        cy.get('[data-testid="hub-edit-build-btn"]', { timeout: 5000 })
           .should('be.visible')
           .invoke('width').should('be.gt', 0);
 
