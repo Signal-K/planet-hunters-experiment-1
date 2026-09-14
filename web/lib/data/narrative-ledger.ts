@@ -95,7 +95,7 @@ export const NARRATIVE_LEDGER: NarrativeLedgerEntry[] = [
     owner: 'TREASURY',
     state: 'adapt',
     dependencies: ['Site agreement revenue', 'Treasury ledger', 'Contribution rewards', 'Loan rules'],
-    implementation: 'Site-right purchases now write deed revenue into a treasury ledger and the existing loan and contribution systems can consume its rules. Cross-player treasury persistence is the remaining backend step.',
+    implementation: 'Site-right purchases write server-authoritative deed revenue into a shared, auditable treasury ledger, then hydrate its public projection for players. Treasury-backed loan and contribution payouts still need their own authenticated transaction routes.',
   },
   {
     id: 'citizen-science',

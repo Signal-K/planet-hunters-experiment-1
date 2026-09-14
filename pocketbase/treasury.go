@@ -9,7 +9,12 @@ import (
 	"github.com/pocketbase/pocketbase/tools/types"
 )
 
-var siteDeedPrices = map[string]int{"moon-south-pole": 4000000, "mars-arcadia": 12000000, "europa-chaos": 24000000}
+// These prices must remain aligned with web/lib/data/economy.ts. The browser
+// uses that catalogue only to present and preflight an offer; this server map
+// is authoritative for the treasury credit. Keeping the values equal prevents
+// a deed from charging a player one amount while crediting the public ledger
+// another.
+var siteDeedPrices = map[string]int{"moon-south-pole": 4000000, "mars-arcadia": 5500000, "europa-chaos": 7500000}
 
 type treasuryLedgerEntry struct {
 	ID                 string `json:"id"`

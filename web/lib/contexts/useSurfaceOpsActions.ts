@@ -19,7 +19,6 @@ import {
 import { CLIENT_TERRITORIES, predefinedSiteRightById } from '@/lib/data/site-rights'
 import { acquireSiteRight, createSiteRightsState } from '@/lib/systems/SiteRightsSystem'
 import { createTreasuryState } from '@/lib/systems/TreasurySystem'
-import { TREASURY_STARTING_BALANCE } from '@/lib/data'
 import { scheduleLandnamPush } from '@/lib/takeon/push'
 import { pbLandnam } from '@/lib/pb-landnam'
 import type { Toast } from '@/components/ui/ToastLayer'
@@ -37,21 +36,28 @@ export function useSurfaceOpsActions(
     const current = stateRef.current
     if (!site || !current) return
     const siteRights = current.player.siteRights ?? createSiteRightsState([...CLIENT_TERRITORIES])
-    const treasury = current.player.treasury ?? createTreasuryState(TREASURY_STARTING_BALANCE)
-    const preview = acquireSiteRight(siteRights, treasury, site, {
+    // The public treasury may already contain this user's durable deed after
+    // a response was lost. Use an ephemeral ledger for the local entitlement
+    // preflight so a retry can restore the player-side right without writing
+    // or charging the global ledger a second time.
+    const preview = acquireSiteRight(siteRights, createTreasuryState(), site, {
       rightId: `site-right:${siteId}:${now}`, ledgerEntryId: `preview:${siteId}:${now}`, playerId: 'local-player',
       mode: 'purchase', activities: ['build', 'mine'], acquiredAt: now,
     })
     if (!preview.acquired || current.player.francs < preview.playerDebitFrancs) return
 
-    void pbLandnam.send<{ acquired: boolean; state: typeof treasury; referenceId: string }>('/api/treasury/site-deed', {
+    void pbLandnam.send<{ acquired: boolean; state: ReturnType<typeof createTreasuryState>; priceFrancs: number; referenceId: string }>('/api/treasury/site-deed', {
       method: 'POST', body: { siteId },
     }).then(response => {
-      if (!response.acquired) return
+      if (response.priceFrancs !== preview.playerDebitFrancs) {
+        addToast('Site deed quote changed. Review the current offer.', 'warn')
+        return
+      }
       setState(state => {
         const liveRights = state.player.siteRights ?? createSiteRightsState([...CLIENT_TERRITORIES])
-        const liveTreasury = state.player.treasury ?? createTreasuryState(TREASURY_STARTING_BALANCE)
-        const result = acquireSiteRight(liveRights, liveTreasury, site, {
+        // Do not use the hydrated shared ledger to construct a local right:
+        // its idempotency entry is deliberately already present on a retry.
+        const result = acquireSiteRight(liveRights, createTreasuryState(), site, {
           rightId: `site-right:${siteId}:${now}`,
           ledgerEntryId: response.referenceId,
           playerId: 'local-player',
