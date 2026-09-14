@@ -23,7 +23,10 @@ describe('Responsive Layout — Critical Screens Matrix', () => {
 
         // Main layout should be visible
         cy.get('[data-testid="hub-terrain-fallback"]').should('exist');
-        cy.get('[data-testid="launchpad-scene-object"]').should('exist');
+        // Launchpad is a physical destination, not an element rendered in
+        // the Base scene. The dock's Edit · Build control is the current
+        // scene-attached affordance that must remain reachable at every size.
+        cy.get('[data-testid="hub-edit-build-btn"]').should('exist');
 
         // Navigation must be visible and accessible
         if (vp.width >= 1024) {
