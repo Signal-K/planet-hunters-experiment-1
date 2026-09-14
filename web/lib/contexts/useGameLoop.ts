@@ -802,7 +802,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
       // outstanding balance is repaid from the next payout in one shot,
       // capped at what the payout actually covers — mirrors what
       // loanInstalmentFor shows on the Debrief screen.
-      const treasuryPlayer = TREASURY_PLAYER_ID
+      const treasuryPlayer = pbLandnam.authStore.record?.id ?? TREASURY_PLAYER_ID
       let treasury = s.player.treasury
       if (!isProgramOperation && treasury) {
         const outstandingBefore = loanOutstanding(treasury, treasuryPlayer)
@@ -959,6 +959,20 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
       }
       return applyGainResearchXP(next, mission?.programReward?.researchXP ?? 0)
     })
+    // Keep the public ledger authoritative too: the local state update above
+    // removes the exact instalment from the visible payout, while this
+    // authenticated transaction records the matching credit in PocketBase.
+    const authenticatedPlayerId = pbLandnam.authStore.record?.id
+    const availableForRepayment = completedIsFreeHaul ? 0 : Math.max(0, rawTotal)
+    const outstandingAtDebrief = authenticatedPlayerId && current.player.treasury
+      ? loanOutstanding(current.player.treasury, authenticatedPlayerId)
+      : 0
+    const repaymentAmount = Math.min(availableForRepayment, outstandingAtDebrief)
+    if (authenticatedPlayerId && repaymentAmount > 0) {
+      void pbLandnam.send('/api/treasury/bankruptcy-loan/repayment', {
+        method: 'POST', body: { amountFrancs: repaymentAmount },
+      }).catch(error => console.warn('[GameLoop] treasury repayment failed', error))
+    }
     // The destination HUD/debrief presents the collected reward. Keeping a
     // second global confirmation leaks it over the following mission setup.
     const userId = pbShared.authStore.record?.id

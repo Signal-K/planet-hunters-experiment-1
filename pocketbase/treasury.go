@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 
 	"github.com/pocketbase/dbx"
@@ -144,6 +145,56 @@ func registerTreasuryRoutes(app core.App) {
 				return apis.NewApiError(http.StatusInternalServerError, "treasury loan failed", err)
 			}
 			return e.JSON(http.StatusOK, map[string]any{"state": state, "changed": changed, "principalFrancs": bankruptcyLoanPrincipal})
+		})
+		g.POST("/bankruptcy-loan/repayment", func(e *core.RequestEvent) error {
+			var body struct {
+				AmountFrancs int `json:"amountFrancs"`
+			}
+			if err := e.BindBody(&body); err != nil {
+				return apis.NewBadRequestError("invalid body", err)
+			}
+			if body.AmountFrancs <= 0 {
+				return apis.NewBadRequestError("invalid repayment", nil)
+			}
+			loanID := "bankruptcy-loan:" + e.Auth.Id
+			state := treasuryState{}
+			paid := 0
+			err := app.RunInTransaction(func(tx core.App) error {
+				treasury, err := tx.FindFirstRecordByFilter("public_treasury", "singleton_key = 'public'")
+				if err != nil {
+					return err
+				}
+				raw, _ := json.Marshal(treasury.GetRaw("state"))
+				if err := json.Unmarshal(raw, &state); err != nil {
+					return err
+				}
+				loan, ok := state.Loans[loanID].(map[string]any)
+				if !ok {
+					return nil
+				}
+				outstanding, ok := loan["outstandingFrancs"].(float64)
+				if !ok || outstanding <= 0 {
+					return nil
+				}
+				paid = min(body.AmountFrancs, int(outstanding))
+				if paid == 0 {
+					return nil
+				}
+				now := types.NowDateTime().Time().UnixMilli()
+				loan["outstandingFrancs"] = outstanding - float64(paid)
+				if loan["outstandingFrancs"].(float64) == 0 {
+					loan["status"] = "repaid"
+					loan["repaidAt"] = now
+				}
+				state.BalanceFrancs += paid
+				state.Ledger = append(state.Ledger, treasuryLedgerEntry{ID: "bankruptcy-loan-repayment:" + e.Auth.Id + ":" + fmt.Sprint(now), Kind: "bankruptcy-loan-repayment", ReferenceID: loanID, OccurredAt: now, AmountFrancs: paid, Direction: "credit", BalanceAfterFrancs: state.BalanceFrancs, Description: "Emergency loan repayment"})
+				treasury.Set("state", state)
+				return tx.Save(treasury)
+			})
+			if err != nil {
+				return apis.NewApiError(http.StatusInternalServerError, "treasury repayment failed", err)
+			}
+			return e.JSON(http.StatusOK, map[string]any{"state": state, "paidFrancs": paid})
 		})
 		return se.Next()
 	})
