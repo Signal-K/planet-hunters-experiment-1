@@ -5,6 +5,7 @@ const SURVEY_KEY = 'landnam-surveys-shown'
 
 const VIEWPORTS = [
   { name: 'mobile', width: 390, height: 844 },
+  { name: 'compact-landscape', width: 926, height: 428 },
   { name: 'tablet', width: 768, height: 1024 },
   { name: 'desktop', width: 1280, height: 800 },
 ] as const
@@ -97,6 +98,16 @@ describe('Hub and Launchpad visual layout', () => {
       cy.get('[data-testid="launchpad-status-card"]').scrollIntoView().should('be.visible')
       cy.get('[data-testid="launchpad-open-hangar-btn"]').scrollIntoView().should('be.visible')
       cy.get('[data-testid="launchpad-new-mission-btn"]').scrollIntoView().should('be.visible')
+      if (viewport.name === 'compact-landscape') {
+        cy.get('.launchpad-scene-rail').then($rail => {
+          const rail = $rail[0].getBoundingClientRect()
+          cy.get('.launchpad-rail-actions button').each($button => {
+            const button = $button[0].getBoundingClientRect()
+            expect(button.top, 'compact rail action stays inside rail').to.be.gte(rail.top)
+            expect(button.bottom, 'compact rail action stays inside rail').to.be.lte(rail.bottom)
+          })
+        })
+      }
       cy.screenshot(`launchpad-scene-${viewport.name}`)
     })
   }
