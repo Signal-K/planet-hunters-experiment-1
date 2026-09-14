@@ -75,6 +75,15 @@ export default function TessDiscoveryScreen({ player, visualCandidate, onBack, o
   // fetch failure can be retried in place instead of being a dead end for
   // the rest of the visit.
   const [retryToken, setRetryToken] = useState(0)
+  const [isCompactLandscape, setIsCompactLandscape] = useState(false)
+
+  useEffect(() => {
+    const query = window.matchMedia('(orientation: landscape) and (max-height: 520px)')
+    const update = () => setIsCompactLandscape(query.matches)
+    update()
+    query.addEventListener('change', update)
+    return () => query.removeEventListener('change', update)
+  }, [])
 
   useEffect(() => {
     if (visualCandidate) {
@@ -428,7 +437,7 @@ export default function TessDiscoveryScreen({ player, visualCandidate, onBack, o
           <DevDaySkipBar offset={devDayOffset} onAdvance={() => setDevDayOffset(o => o + 1)} onReset={() => setDevDayOffset(0)} />
         </div>
       )}
-      {isDesktop ? (
+      {isDesktop || isCompactLandscape ? (
         <div data-testid="tess-discovery-desktop-grid" style={{ position: 'absolute', inset: 0, top: 72, display: 'grid', gridTemplateColumns: '55% 45%', gap: 16, padding: '0 var(--ln-s-4) var(--ln-s-4)' }}>
           <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', overflowY: 'auto' }} data-ui-zone={UI_ZONES.screenContent}>
             {chartPanel(false)}
