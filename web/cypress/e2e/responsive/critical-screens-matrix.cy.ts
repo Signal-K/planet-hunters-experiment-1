@@ -23,14 +23,16 @@ describe('Responsive Layout — Critical Screens Matrix', () => {
 
         // Main layout should be visible
         cy.get('[data-testid="hub-terrain-fallback"]').should('exist');
-        cy.get('[data-testid="launchpad-scene-object"]').should('exist');
+        // Launchpad is a physical destination, not an element rendered in
+        // the Base scene. The dock's Edit · Build control is the current
+        // scene-attached affordance that must remain reachable at every size.
+        cy.get('[data-testid="hub-edit-build-btn"]').should('exist');
 
         // Navigation must be visible and accessible
         if (vp.width >= 1024) {
-          // Desktop: sidebar nav
-          cy.get('[data-testid="sidebar-nav-launchpad"]').should('be.visible');
-          cy.get('[data-testid="sidebar-nav-missions"]').should('be.visible');
-          cy.get('[data-testid="sidebar-nav-market"]').should('be.visible');
+          // Desktop uses the scene-attached Base dock, not the retired sidebar.
+          cy.get('[data-testid="hub-desktop-missions-btn"]').should('be.visible');
+          cy.get('[data-testid="hub-edit-build-btn"]').should('be.visible');
         } else {
           // Mobile: bottom tab bar
           cy.get('[data-testid="bottom-tab-launchpad"]').should('be.visible');
@@ -39,7 +41,7 @@ describe('Responsive Layout — Critical Screens Matrix', () => {
         }
 
         // Buttons should not be clipped or misaligned
-        cy.get('[data-testid="hub-quick-action"]', { timeout: 5000 })
+        cy.get('[data-testid="hub-edit-build-btn"]', { timeout: 5000 })
           .should('be.visible')
           .invoke('width').should('be.gt', 0);
 
@@ -136,7 +138,7 @@ describe('Responsive Layout — Critical Screens Matrix', () => {
 
         // From Hub → Market
         if (vp.width >= 1024) {
-          cy.get('[data-testid="sidebar-nav-market"]').click();
+          cy.contains('button', 'Market').click();
         } else {
           cy.get('[data-testid="bottom-tab-market"]').click();
         }

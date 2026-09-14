@@ -48,6 +48,7 @@ export const M3_SEQUENCE = 3
 
 // Free Ops self-directed mining — no client, no daily limit, no cooldown.
 export const SELF_DIRECTED_MINING_MISSION_ID = 'freeops-self-directed-mining'
+export const RESOURCE_FOCUS_MISSION_ID = 'focus-resource-mining'
 export const ACADEMY_INTRO_MISSION_ID = 'story-astronaut-academy'
 export const REFINERY_BUILD_MISSION_ID = 'program-build-refinery'
 
@@ -123,7 +124,7 @@ export const AUTHORED_MISSIONS: Mission[] = [
     difficulty: 'L1',
     locked: true,
     sequence: FREE_OPS_START_MISSIONS_DONE + 1,
-    unlockAt: 'Reach affinity level 2 with two clients',
+    unlockAt: 'Reach client level 2 with two clients',
     requires: { minerals: {}, cargo_min: 0, drill_tier: 1, max_orbit: 0 },
     programReward: {
       researchXP: 0,

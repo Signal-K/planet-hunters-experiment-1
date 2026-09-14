@@ -12,6 +12,7 @@ import {
   applyBuildSettlementLaunchpad,
   applyDispatchSurfaceFerry,
   applyFailSurfaceFerry,
+  applyGrantedSiteAccess,
   applyPurchaseSiteAccess,
   applyReconcileSurfaceFerry,
   applyRecordSurfaceMined,
@@ -64,6 +65,15 @@ describe('Surface Ops site access', () => {
     expect(bought.player.francs).toBe(initial.player.francs - 4_000_000)
     expect(surfaceSiteProgress(bought.player, SITE_ID).siteAccessPurchasedAt).toBe(NOW)
     expect(boughtAgain).toBe(bought)
+  })
+
+  it('opens an acquired predefined right without charging the retired generic fee again', () => {
+    const initial = freeOpsState()
+    const granted = applyGrantedSiteAccess(initial, SITE_ID, NOW)
+
+    expect(granted.player.francs).toBe(initial.player.francs)
+    expect(surfaceSiteProgress(granted.player, SITE_ID).siteAccessPurchasedAt).toBe(NOW)
+    expect(applyGrantedSiteAccess(granted, SITE_ID, NOW + 1)).toBe(granted)
   })
 
   it('rejects locked targets and players outside Free Operations', () => {

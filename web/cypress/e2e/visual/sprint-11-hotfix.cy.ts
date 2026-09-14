@@ -1,4 +1,5 @@
 import type { GameState } from '@/game-context'
+import { seedAuthenticatedFixture } from '../../support/authenticated-fixture'
 
 const STORAGE_KEY = 'landnam-game-state-v1'
 const AUTHENTICATED_STORAGE_KEY = `${STORAGE_KEY}:user:e2e-user`
@@ -54,13 +55,7 @@ function visitGame(path: string, screen: GameState['screen']) {
   cy.visit(path, {
     onBeforeLoad(win) {
       win.localStorage.clear()
-      const serialized = JSON.stringify(stateFor(screen))
-      win.localStorage.setItem(STORAGE_KEY, serialized)
-      win.localStorage.setItem(AUTHENTICATED_STORAGE_KEY, serialized)
-      win.localStorage.setItem('landnam-account-credentials', JSON.stringify({
-        email: 'sprint-11-hotfix-invalid@example.com',
-        password: 'GuestPassword123!',
-      }))
+      seedAuthenticatedFixture(win, stateFor(screen), 'e2e-user')
       win.localStorage.setItem('landnam-upgrade-prompt-snooze-until', String(Date.now() + 365 * 24 * 60 * 60 * 1000))
       win.localStorage.setItem('ln_tutorial_complete_ack', '1')
       win.localStorage.setItem('landnam-surveys-shown', JSON.stringify([
@@ -167,7 +162,7 @@ describe('Sprint 11 Launchpad and Earth Base hotfix — live browser QA', () => 
     // launch setup. The current Launchpad route owns the mission menu, so
     // keep the saved state consistent with the route assertion below.
     cy.window().then(win => {
-      const saved = JSON.parse(win.localStorage.getItem(STORAGE_KEY) || '{}')
+      const saved = JSON.parse(win.localStorage.getItem(AUTHENTICATED_STORAGE_KEY) || win.localStorage.getItem(STORAGE_KEY) || '{}')
       saved.player.pendingLaunch = false
       win.localStorage.setItem(STORAGE_KEY, JSON.stringify(saved))
       win.localStorage.setItem(AUTHENTICATED_STORAGE_KEY, JSON.stringify(saved))

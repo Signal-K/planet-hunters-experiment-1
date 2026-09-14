@@ -9,6 +9,7 @@ import MissionSetupRoutes from '@/components/game/MissionSetupRoutes'
 import MissionOperationRoutes from '@/components/game/MissionOperationRoutes'
 import IntroScreen from '@/components/game/screens/IntroScreen'
 import BuildPlaceScreen from '@/components/game/screens/BuildPlaceScreen'
+import { hasEstablishedMiningSettlement } from '@/lib/systems/SurfaceOpsSystem'
 import HubScreen from '@/components/game/screens/HubScreen'
 import RefineryScreen from '@/components/game/screens/RefineryScreen'
 import MarketScreen from '@/components/game/screens/MarketScreen'
@@ -24,6 +25,7 @@ import NarrativeLedgerScreen from '@/components/game/screens/NarrativeLedgerScre
 import { enqueueSurvey } from '@/lib/surveys'
 import { VISUAL_ASTEROID_CANDIDATE, VISUAL_TESS_CANDIDATE } from '@/lib/visual-fixtures'
 import { captureGameEvent } from '@/lib/posthog'
+import { missionResumeScreen } from '@/lib/mission-resume'
 
 export const VALID_SCREENS = new Set<Screen>([
   'intro', 'build', 'hub', 'hub-subsurface', 'missions', 'galaxy', 'targets', 'fab',
@@ -73,6 +75,14 @@ export function ScreenContent({
   const deliveryTargetName = game.mission?.deliveryTargetId
     ? game.catalog.targets.find(t => t.id === game.mission!.deliveryTargetId)?.name
     : undefined
+  // For the debrief Route chip specifically: debriefOriginTarget above is
+  // deliberately the delivery target (last waypoint), so the Route display
+  // needs the actual mining site's name separately, resolved from
+  // mission.targetId rather than reusing debriefOriginTarget (KES-352 —
+  // this rendered as "deliveryTarget -> deliveryTarget" before this fix).
+  const originTargetName = game.mission?.deliveryTargetId
+    ? game.catalog.targets.find(t => t.id === game.mission!.targetId)?.name
+    : undefined
 
   // Derive the coach step for coachManual (needed by AssemblyScreen)
   const coachSteps = !game.tutorial || game.player.missionsDone >= FREE_OPS_START_MISSIONS_DONE ? [] :
@@ -91,10 +101,6 @@ export function ScreenContent({
   // screen render at all.
   useEffect(() => {
     if (screen === 'market' && !game.player.freeOperations) game.go('hub')
-    // The old solo settlement/permit screen conflicts with client territory
-    // and predefined site rights. Keep its saved data migratable, but do not
-    // route new or returning players into a mechanic that KES-287 replaces.
-    if (screen === 'surface-ops') game.go('hub')
     // Refining is commissioned at an approved off-world site. An old save
     // that contains a Base refinery remains readable, but no unbuilt player
     // can enter the retired Earth-refinery screen.
@@ -147,6 +153,7 @@ export function ScreenContent({
             transitSatelliteLevel: game.player.transitSatelliteLevel,
             clientMissions: game.player.clientMissions,
             deepSpaceTelescopeMissionCompletedAt: game.player.deepSpaceTelescopeMissionCompletedAt,
+            hasMiningSettlement: hasEstablishedMiningSettlement(game.player),
           }}
           onPlaced={(kind, plot) => {
             const structure = game.catalog.structures.find(s => s.id === kind)
@@ -203,6 +210,11 @@ export function ScreenContent({
           onUpgradeLaunchpad={() => game.upgradeLaunchpad()}
           onExcavateSubsurface={() => game.excavateSubsurface()}
           onBuildSubsurfaceRoom={roomId => game.buildSubsurfaceRoom(roomId)}
+          onFocusResources={(label, minerals) => {
+            game.setPlayer(player => ({ ...player, resourceFocus: { label, minerals } }))
+            game.addToast(`${label} added to focus`, 'info')
+            game.openLaunchpadMissionMenu()
+          }}
           subsurface={game.subsurfaceView}
           onSubsurfaceChange={game.setSubsurfaceView}
         />
@@ -245,6 +257,7 @@ export function ScreenContent({
           deliveryTargetName={deliveryTargetName}
           rocketDisplay={rocketDisplay}
           launchPending={launchPending}
+          onTransferToLaunchpad={game.onTransferToLaunchpad}
           onLaunch={handleLaunch}
           onLaunchComplete={handleLaunchComplete}
         />
@@ -266,6 +279,7 @@ export function ScreenContent({
           transitTarget={transitTarget}
           debriefOriginTarget={debriefOriginTarget}
           deliveryTargetName={deliveryTargetName}
+          originTargetName={originTargetName}
           rocketDisplay={rocketDisplay}
         />
       )
@@ -390,12 +404,12 @@ export function ScreenContent({
           onResumeMission={game.player.activeMission ? () => {
             captureGameEvent('mission_resumed', { mission_phase: game.player.missionPhase ?? 'transit' })
             enqueueSurvey('lnm_resume_mission', 1200)
-            game.go(game.player.missionPhase ?? 'transit')
+            game.go(missionResumeScreen(game.player))
           } : undefined}
           missionRuns={missionRuns}
           onResumeMissionRun={key => {
             if (key === currentRunKey) {
-              game.go(game.player.missionPhase ?? 'transit')
+              game.go(missionResumeScreen(game.player))
               return
             }
             game.resumeMissionRun(key)

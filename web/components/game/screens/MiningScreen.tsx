@@ -299,7 +299,7 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
     if (gateOpen || sceneStatus !== 'ready' || laserCharges <= 0) return
     setLaserCharges(c => c - 1)
     fireRef.current?.()
-    if (!firedRef.current && coachManual) {
+    if (!firedRef.current && hasCoach) {
       firedRef.current = true
       onCoachDone?.()
     }

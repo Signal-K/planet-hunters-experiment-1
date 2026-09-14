@@ -10,9 +10,8 @@
 // - Game state transitions and mission completion
 
 import type { GameState } from '@/game-context'
+import { seedAuthenticatedFixture } from '../../support/authenticated-fixture'
 
-const STORAGE_KEY = 'landnam-game-state-v1'
-const AUTHENTICATED_STORAGE_KEY = `${STORAGE_KEY}:user:e2e-user`
 const INITIAL_FRANCS = 9_000_000_000
 const EXPECTED_CARGO = { iron: 3, carbon: 2 }
 const CLIENT_NAME = 'Atlas Aggregate'
@@ -69,19 +68,10 @@ function visitWithState(path: string, state: Partial<GameState>) {
 
   cy.visit(path, {
     onBeforeLoad(win) {
-      const serialized = JSON.stringify(full)
-      // Visual QA deliberately fails the auth exchange so this state-machine
-      // fixture remains local. Seed both storage namespaces because the app
-      // starts from the guest slot before it knows whether auth is available.
-      win.localStorage.setItem(STORAGE_KEY, serialized)
-      // The offline auth stub resolves to e2e-user. Seed that account's slot
-      // explicitly; the production app must ignore the legacy unscoped slot
-      // when an authenticated identity arrives (KES-324).
-      win.localStorage.setItem(AUTHENTICATED_STORAGE_KEY, serialized)
-      win.localStorage.setItem(
-        'landnam-account-credentials',
-        JSON.stringify({ email: 'e2e@example.com', password: 'e2e-guest-test' }),
-      )
+      // Seed the same authenticated identity that owns the account-scoped
+      // state. A credentials-only fixture leaves the current shell anonymous
+      // after its deliberate offline refresh failure, so it ignores this run.
+      seedAuthenticatedFixture(win, full, 'e2e-user')
     },
   })
 }
@@ -112,7 +102,7 @@ describe('M3 mission review environment', () => {
       // snapshotting visibility once — a one-shot check can catch the panel
       // mid-layout under CI load and silently skip the click.
       cy.get('[data-testid="deploy-surface-ops-confirm"]', { timeout: 15000 }).should('be.visible').click()
-      cy.contains('Prospector surface run').should('be.visible')
+      cy.get('[data-testid="rover-mining-screen"]').should('contain.text', 'Field Rover')
       cy.get('[data-testid="rover-mining-screen"] canvas[aria-label]', { timeout: 15000 }).should('be.visible')
       cy.screenshot(`m3-${key}-02-rover-survey`, { capture: 'viewport' })
 
@@ -153,7 +143,7 @@ describe('M3 mission review environment', () => {
       cy.get('[data-testid="delivery-screen"] canvas[aria-label]', { timeout: 15000 })
         .should('be.visible')
         .and('have.attr', 'aria-label') // Canvas exists and is labelled
-      cy.contains('CLIENT BUILDING SITE').should('be.visible')
+      cy.contains('CLIENT BUILD SITE').should('be.visible')
       cy.contains(CLIENT_NAME).should('be.visible')
 
       // Dump cargo button visible before unload (canvas render time: ~1.2s for TakeOn scene setup)
@@ -164,8 +154,8 @@ describe('M3 mission review environment', () => {
       // Unload cargo at building site
       cy.get('[data-testid="delivery-dump-cargo"]').click({ force: true })
       cy.contains('MINERALS UNLOADED').should('be.visible')
-      cy.contains('Return the empty rover to the ship').should('be.visible')
-      cy.get('[data-testid="delivery-return-rover"]').should('be.visible')
+      cy.contains('Return the empty Mule rover to the ship').should('be.visible')
+      cy.get('[data-testid="delivery-return-rover"]').should('be.visible').and('contain.text', 'Return Rover To Ship')
       cy.screenshot(`m3-${key}-05-building-site-unloaded`, { capture: 'viewport' })
 
       // Redock rover and confirm launch ready
@@ -174,15 +164,15 @@ describe('M3 mission review environment', () => {
       cy.contains('LAUNCH READY').should('be.visible')
       cy.screenshot(`m3-${key}-06-rover-redocked`, { capture: 'viewport' })
 
-      // Verify return to transit screen (next phase: return to Earth)
-      cy.get('.transit-screen', { timeout: 15000 }).should('be.visible')
-      cy.contains('EARTH RETURN', { timeout: 5000 }).should('be.visible')
-
-      // Verify game state post-delivery
-      // Note: In a full integration test, we could verify francs increase.
-      // This harness focuses on UI/canvas flow; state validation is covered by unit tests.
-      cy.get('[data-testid="transit-mission-context"]')
-        .should('contain.text', 'Belt Courier Run') // Mission context preserved
+      // The M3 handoff settles into Debrief after redock. Verify the real
+      // client completion state, then finish the explicit teardown/reward path.
+      cy.get('.debrief-game', { timeout: 15000 }).should('be.visible')
+      cy.contains('MISSION COMPLETE').should('be.visible')
+      cy.contains('Belt Courier Run').should('be.visible')
+      cy.get('[data-testid="resolve-cargo-btn"]').should('be.visible').click()
+      cy.get('[data-testid="scrap-sequence-skip-btn"]', { timeout: 10000 }).should('be.visible').click()
+      cy.get('[data-testid="collect-reward-btn"]', { timeout: 10000 }).should('be.visible').click()
+      cy.contains('h1', /^(Base|Earth Base)$/i, { timeout: 15000 }).should('be.visible')
     })
   })
 })

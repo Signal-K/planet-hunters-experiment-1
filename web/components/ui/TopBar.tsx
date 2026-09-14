@@ -3,7 +3,7 @@
 import React from 'react'
 import { IconBtn } from './Button'
 import { UI_ZONES } from '@/lib/ui-zones'
-import { formatCurrency } from '@/lib/format'
+import { formatFrancs } from '@/lib/format'
 
 interface TopBarProps {
   eyebrow?: string
@@ -50,15 +50,6 @@ function ClockIcon() {
     <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
       <circle cx="12" cy="12" r="9" />
       <path d="M12 7v5l3.5 2" />
-    </svg>
-  )
-}
-
-function CoinIcon() {
-  return (
-    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-      <circle cx="12" cy="12" r="9" />
-      <path d="M9.5 15.5V9.5a2 2 0 0 1 2-2h1a2 2 0 0 1 0 4h-3.5" />
     </svg>
   )
 }
@@ -150,7 +141,7 @@ export default function TopBar({ eyebrow, title, onBack, right, dense, solid, gl
             fontFamily: 'var(--ln-font-mono)', fontWeight: 800, fontSize: 11,
             whiteSpace: 'nowrap',
           }}>
-            <CoinIcon /> {formatCurrency(francs, { compact: true })}
+            FRANCS · {formatFrancs(francs, { compact: true })}
           </span>
         )}
         {right}

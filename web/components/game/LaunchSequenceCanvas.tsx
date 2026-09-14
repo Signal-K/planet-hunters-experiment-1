@@ -39,9 +39,42 @@ export function LaunchSequenceCanvas({ rocketName, rocketImageSrc, targetName, o
     completeRef.current()
   }).current
 
+  // KES-353: the watchdog above used a single fixed setTimeout, which browsers
+  // keep running (just throttled) while the tab is hidden — but the PixiJS
+  // ticker driving the actual animation is paused solid while hidden (no rAF
+  // in a background tab). Net effect: a player who launches, switches tabs
+  // for >18s, and comes back finds the sequence force-completed by the
+  // watchdog despite the animation having made zero visible progress, which
+  // reads as the launch being cancelled out from under them. Fix: only spend
+  // the watchdog's budget while the tab is actually visible, banking the
+  // remainder across a hide/show cycle instead of letting it run down blind.
   useEffect(() => {
-    const timer = window.setTimeout(fireComplete, LAUNCH_WATCHDOG_MS)
-    return () => window.clearTimeout(timer)
+    let remainingMs = LAUNCH_WATCHDOG_MS
+    let timer: number | null = null
+    let segmentStartedAt = 0
+
+    function startSegment() {
+      segmentStartedAt = Date.now()
+      timer = window.setTimeout(fireComplete, remainingMs)
+    }
+    function stopSegment() {
+      if (timer === null) return
+      window.clearTimeout(timer)
+      timer = null
+      remainingMs = Math.max(0, remainingMs - (Date.now() - segmentStartedAt))
+    }
+    function onVisibilityChange() {
+      if (document.hidden) stopSegment()
+      else startSegment()
+    }
+
+    if (!document.hidden) startSegment()
+    document.addEventListener('visibilitychange', onVisibilityChange)
+
+    return () => {
+      stopSegment()
+      document.removeEventListener('visibilitychange', onVisibilityChange)
+    }
   }, [fireComplete])
 
   useEffect(() => {
@@ -56,6 +89,8 @@ export function LaunchSequenceCanvas({ rocketName, rocketImageSrc, targetName, o
     let initialized = false
     let destroyed = false
     let elapsed = 0
+    let devWorker: Worker | null = null
+    let devWorkerUrl: string | null = null
 
     ;(async () => {
       const cw = div.offsetWidth  || LAUNCH_W
@@ -79,14 +114,57 @@ export function LaunchSequenceCanvas({ rocketName, rocketImageSrc, targetName, o
         onComplete: fireComplete,
       })
 
-      app.ticker.add(t => {
-        elapsed += t.deltaTime / 60
-        scene.update(elapsed, t.deltaTime / 60)
-      })
+      const runFrame = (deltaFrames: number) => {
+        elapsed += deltaFrames / 60
+        // SSL-281: a thrown error from inside scene.update() previously took
+        // the whole PixiJS ticker down with it (an exception on one frame
+        // stops the rAF loop from ever being rescheduled), leaving the
+        // rocket frozen mid-sequence with no visible error and no recovery —
+        // reads exactly like "the rocket wasn't moving". Isolate each frame
+        // so one bad frame can't permanently stall the animation; fall back
+        // to completing the sequence if updates keep failing.
+        try {
+          scene.update(elapsed, deltaFrames / 60)
+        } catch (err) {
+          console.error('[LaunchSequenceCanvas] scene.update failed, ending sequence', err)
+          fireComplete()
+        }
+      }
+
+      if (process.env.NODE_ENV === 'development') {
+        // PixiJS's ticker runs on requestAnimationFrame, which Chrome throttles
+        // to a full stop whenever it considers the tab hidden/occluded — a
+        // state that's not limited to real tab-switching (an OS-level occluded
+        // or automation-driven window reports document.hidden=true too, with
+        // no way for app code to detect or opt out of it). A plain
+        // setInterval on the main thread doesn't escape this either — Chrome
+        // throttles ALL main-thread timers in a backgrounded tab to ~1/sec.
+        // A dedicated Worker's timers aren't subject to that page-visibility
+        // throttling, so drive the tick from one and just react to it here.
+        app.ticker.stop()
+        const workerSrc = `let id=null; onmessage=(e)=>{ if(e.data==='start') id=setInterval(()=>postMessage(1), ${1000 / 60}); else if(e.data==='stop'){ clearInterval(id); id=null } };`
+        devWorkerUrl = URL.createObjectURL(new Blob([workerSrc], { type: 'application/javascript' }))
+        devWorker = new Worker(devWorkerUrl)
+        devWorker.onmessage = () => {
+          runFrame(1)
+          // The ticker normally drives PixiJS's own render call too — stopping
+          // it to escape rAF throttling means we must also trigger the draw
+          // ourselves, or scene.update() runs with nothing ever painted.
+          app.renderer.render(app.stage)
+        }
+        devWorker.postMessage('start')
+      } else {
+        app.ticker.add(t => runFrame(t.deltaTime))
+      }
     })()
 
     return () => {
       destroyed = true
+      if (devWorker) {
+        devWorker.postMessage('stop')
+        devWorker.terminate()
+      }
+      if (devWorkerUrl) URL.revokeObjectURL(devWorkerUrl)
       if (initialized) {
         try { app.destroy() } catch { /* pixi v8 cleanup */ }
         canvas.remove()

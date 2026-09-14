@@ -32,6 +32,8 @@ import { instrumentDigestDateKey, unresolvedTransitInstrumentDigest, unresolvedD
 import HUDStrip from '@/components/ui/HUDStrip'
 import layoutStyles from '@/components/game/hub/HubLayout.module.css'
 import { sceneXPercent } from '@/lib/scene/terrain-kit'
+import { isUnderConstruction } from '@/lib/systems/HubConstructionSystem'
+import { missionResumeScreen } from '@/lib/mission-resume'
 
 // ── Ref-B bordered-icon-badge glyphs for Hub chrome (bottom tabs) ──
 // Simple white-line icons, no fill — matches the mockup's `i-*` <symbol> set.
@@ -246,11 +248,12 @@ interface HubScreenProps {
   onUpgradeLaunchpad?: () => void
   onExcavateSubsurface?: () => void
   onBuildSubsurfaceRoom?: (roomId: SubsurfaceRoomId) => void
+  onFocusResources?: (label: string, minerals: Record<string, number>) => void
   subsurface?: boolean
   onSubsurfaceChange?: (v: boolean) => void
 }
 
-export default function HubScreen({ player, rocketVariant = 'explorer', hasCoach, onFocusBuilding, onOpenScene, onUpgradeLaunchpad, onExcavateSubsurface, onBuildSubsurfaceRoom, subsurface = false, onSubsurfaceChange }: HubScreenProps) {
+export default function HubScreen({ player, rocketVariant = 'explorer', hasCoach, onFocusBuilding, onOpenScene, onUpgradeLaunchpad, onExcavateSubsurface, onBuildSubsurfaceRoom, onFocusResources, subsurface = false, onSubsurfaceChange }: HubScreenProps) {
   const { phase: skyPhase } = useTimeOfDay()
   const [editMode, setEditMode] = useState(false)
   const [activeBuilding, setActiveBuilding] = useState<string | null>(null)
@@ -348,7 +351,10 @@ export default function HubScreen({ player, rocketVariant = 'explorer', hasCoach
       const kind = Object.entries(effectivePlots).find(([, index]) => index === plot)?.[0]
       const widthPct = kind ? (EARTH_BASE_STRUCTURE_SIZES[kind]?.width ?? 0) / 6.4 : 0
       return ({
-        left: `${sceneXPercent(e.transform.position.x, widthPct)}%`,
+        // The authored outer plots sit close to the scene edge. Clamp the DOM
+        // hit target (which is wider than the sprite) so its entire button and
+        // status remain reachable even on a 320px viewport.
+        left: `clamp(62px, ${sceneXPercent(e.transform.position.x, widthPct)}%, calc(100% - 62px))`,
         bottom: `calc(var(--hub-ground) - ${PLOT_LABEL_DROP}px)`,
         transform: 'translateX(-50%)',
       } as React.CSSProperties)
@@ -384,14 +390,16 @@ export default function HubScreen({ player, rocketVariant = 'explorer', hasCoach
   const hubBuildings: HubBuildingDef[] = sortedEntities.flatMap((e, plot) => {
     const kind = structureForPlot(plot)
     if (!kind) return []
+    const startedAt = player.underConstruction?.[kind]
     return [{
       kind,
       plotX: e.transform.position.x,
       w: BUILDING_W[kind] ?? 78,
       hot: kind === 'launchpad' ? !!player.pendingLaunch : false,
-      status: 'ok' as const,
+      status: isUnderConstruction(startedAt, kind) ? ('building' as const) : ('ok' as const),
       dimmed: isDimmedBuildingKind(kind),
       active: activeBuilding === kind,
+      buildStartedAt: startedAt,
     }]
   })
   const launchpadPlot = hubBuildings.find(building => building.kind === 'launchpad')
@@ -482,7 +490,7 @@ export default function HubScreen({ player, rocketVariant = 'explorer', hasCoach
   }
 
   return (
-    <div className={layoutStyles.root} style={{ width: '100%', height: '100%', position: 'relative', overflow: 'hidden' }}>
+    <div className={layoutStyles.root} data-screen="hub" style={{ width: '100%', height: '100%', position: 'relative', overflow: 'hidden' }}>
 
       {/* ── Sliding world: surface (top 50%) + subsurface (bottom 50%) ── */}
       <div className="earth-base-campus-transition" style={{
@@ -547,7 +555,10 @@ export default function HubScreen({ player, rocketVariant = 'explorer', hasCoach
                   if (!editMode) return null
                   return <EmptyPlot key={plot} plot={plot} w={78} style={style} onClick={() => onFocusBuilding('build')} />
                 }
-                const building = structureProps(kind)
+                const startedAt = player.underConstruction?.[kind]
+                const building = isUnderConstruction(startedAt, kind)
+                  ? { ...structureProps(kind), status: 'building' as const, buildStartedAt: startedAt }
+                  : structureProps(kind)
                 // Outer plots open their callout inward so a 208px bubble
                 // can't run off the edge of the scene.
                 const xFrac = (sortedEntities[plot]?.transform.position.x ?? 201) / 402
@@ -572,6 +583,7 @@ export default function HubScreen({ player, rocketVariant = 'explorer', hasCoach
             subsurfaceBuilt={player.subsurfaceBuilt}
             onExcavate={onExcavateSubsurface}
             onBuildRoom={onBuildSubsurfaceRoom}
+            onFocusResources={onFocusResources}
           />
         </div>
 
@@ -584,31 +596,24 @@ export default function HubScreen({ player, rocketVariant = 'explorer', hasCoach
           title, top-left, matching the reference's fixed left-edge rail
           rather than corner-scattered readouts. Surface and subsurface now
           share the same dark treatment; no more light/dark split. */}
-      <div style={{
-        position: 'absolute', top: 0, left: 0, right: 0, zIndex: 18,
-        padding: '16px 16px 24px',
-        // Keep the sky crisp. The previous backdrop blur caused the broad
-        // frosted patch visible through the upper-middle of the world.
-        background: 'linear-gradient(180deg, color-mix(in srgb, var(--ln-void) 68%, transparent) 0%, color-mix(in srgb, var(--ln-void) 22%, transparent) 48%, transparent 100%)',
-        display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 10, pointerEvents: 'none',
-      }}>
-        <div style={{ pointerEvents: 'auto', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', width: '100%', gap: 12 }}>
-          <div style={{ minWidth: 0 }}>
+      <div className={layoutStyles.topHud}>
+        <div className={layoutStyles.topRow}>
+          <div className={layoutStyles.titleBlock}>
             {/* KES-173: DevShortcuts' fixed DEV toggle (top:8 left:8, dev-only,
                 roughly 120 pixels wide) sits directly over this eyebrow, clipping the
                 opening characters ("EARTH BASE" -> "H BASE"). Only reserve
                 the clearance when that badge can actually render. */}
-            <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 9.5, fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'color-mix(in srgb, var(--ln-text) 70%, transparent)', marginLeft: isDevLauncherEnabled() ? 130 : 0 }}>
+            <div className={layoutStyles.eyebrow} data-dev-launcher={isDevLauncherEnabled()}>
               {subsurface ? 'BASE · SUBSURFACE' : `BASE · OPS ${player.missionsDone}`}
             </div>
-            <h1 style={{ margin: '4px 0 0', fontFamily: 'var(--ln-font-display)', fontSize: 23, fontWeight: 800, letterSpacing: '-0.01em', color: 'var(--ln-text)', lineHeight: 1, textShadow: '0 4px 8px color-mix(in srgb, var(--ln-void) 60%, transparent)' }}>
+            <h1 className={layoutStyles.titleText}>
               {subsurface ? 'Subsurface' : 'Base'}
             </h1>
           </div>
           {!subsurface && <HubClockWidget />}
         </div>
         {!subsurface && (
-          <div style={{ pointerEvents: 'auto' }}>
+          <div className={layoutStyles.balance}>
             <HUDStrip player={player} />
           </div>
         )}
@@ -680,9 +685,9 @@ export default function HubScreen({ player, rocketVariant = 'explorer', hasCoach
                     </div>
                   </div>
                   {player.activeMission ? (
-                    <DockIconBtn testId="hub-resume-mission-btn" icon={<HistoryGlyph />} label="Resume" onClick={() => onOpenScene(player.missionPhase ?? 'transit')} accent />
+                    <DockIconBtn testId="hub-resume-mission-btn" icon={<HistoryGlyph />} label="Resume" onClick={() => onOpenScene(missionResumeScreen(player))} accent />
                   ) : (
-                    <DockPrimaryBtn testId="hub-edit-build-btn" pulse={!editMode && player.placed.length < 4} onClick={() => setEditMode(v => !v)}>
+                    <DockPrimaryBtn testId="hub-edit-build-btn" onClick={() => setEditMode(v => !v)}>
                       {editMode ? 'Done' : 'Edit · Build'}
                     </DockPrimaryBtn>
                   )}
@@ -700,12 +705,15 @@ export default function HubScreen({ player, rocketVariant = 'explorer', hasCoach
                         <DockIconBtn icon={<HangarGlyph />} label="Hangar" onClick={() => onFocusBuilding('hangar')} />
                       )}
                       {player.placed.includes('launchpad') && !player.launchpadUpgraded && onUpgradeLaunchpad && (
-                        <DockIconBtn icon={<UpgradeGlyph />} label={`+${formatCurrency(LAUNCHPAD_UPGRADE_COST, { compact: true })}`} accent onClick={() => setConfirmingLaunchpadUpgrade(true)} />
+                        <DockIconBtn icon={<UpgradeGlyph />} label="UPGRADE" accent onClick={() => setConfirmingLaunchpadUpgrade(true)} />
                       )}
                     </>
                   )}
                   <DockIconBtn testId="hub-subsurface-btn" icon={<SubsurfaceGlyph />} label="Subsurface" onClick={() => setSubsurface(true)} />
                   <DockIconBtn icon={<HistoryGlyph />} label="Mission Log" onClick={() => onOpenScene('mission-history')} />
+                  {player.freeOperations && (
+                    <DockIconBtn testId="hub-surface-ops" icon={<SurfaceGlyph />} label="Sites" onClick={() => onOpenScene('surface-ops')} />
+                  )}
 
                   {/* Desktop has no nav rail and no bottom bar, so the
                       destinations without a building of their own hang off

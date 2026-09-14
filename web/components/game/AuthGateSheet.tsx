@@ -7,24 +7,23 @@ interface AuthGateSheetProps {
   error: string | null
   onSignIn: (email: string, password: string) => Promise<void>
   onCreateAccount: (email: string, password: string) => Promise<void>
-  onContinue: (email: string) => Promise<void>
-  /** Retained for the explicit OTP recovery path. */
-  otpPending: boolean
-  onVerifyOtp: (code: string) => Promise<void>
 }
 
-export default function AuthGateSheet({ error, onSignIn, onCreateAccount, onContinue, otpPending, onVerifyOtp }: AuthGateSheetProps) {
+export default function AuthGateSheet({ error, onSignIn, onCreateAccount }: AuthGateSheetProps) {
   const [mode, setMode] = useState<'signin' | 'signup'>('signin')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [passwordConfirmation, setPasswordConfirmation] = useState('')
   const [submitting, setSubmitting] = useState(false)
-  const [quickEmail, setQuickEmail] = useState('')
-  const [quickSubmitting, setQuickSubmitting] = useState(false)
-  const [otpCode, setOtpCode] = useState('')
-  const [otpSubmitting, setOtpSubmitting] = useState(false)
+  const [validationError, setValidationError] = useState<string | null>(null)
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
+    if (mode === 'signup' && password !== passwordConfirmation) {
+      setValidationError('Passwords do not match.')
+      return
+    }
+    setValidationError(null)
     setSubmitting(true)
     try {
       if (mode === 'signin') {
@@ -36,30 +35,6 @@ export default function AuthGateSheet({ error, onSignIn, onCreateAccount, onCont
       // error shown via props
     } finally {
       setSubmitting(false)
-    }
-  }
-
-  async function handleQuickContinue(e: React.FormEvent) {
-    e.preventDefault()
-    setQuickSubmitting(true)
-    try {
-      await onContinue(quickEmail)
-    } catch {
-      // error shown via props
-    } finally {
-      setQuickSubmitting(false)
-    }
-  }
-
-  async function handleVerifyOtp(e: React.FormEvent) {
-    e.preventDefault()
-    setOtpSubmitting(true)
-    try {
-      await onVerifyOtp(otpCode)
-    } catch {
-      // error shown via props
-    } finally {
-      setOtpSubmitting(false)
     }
   }
 
@@ -121,10 +96,22 @@ export default function AuthGateSheet({ error, onSignIn, onCreateAccount, onCont
             data-testid="auth-gate-password"
             className="auth-gate__input"
           />
+          {mode === 'signup' && (
+            <input
+              type="password"
+              value={passwordConfirmation}
+              onChange={e => setPasswordConfirmation(e.target.value)}
+              required
+              autoComplete="new-password"
+              placeholder="Confirm password"
+              data-testid="auth-gate-password-confirmation"
+              className="auth-gate__input"
+            />
+          )}
 
-          {error && (
+          {(error ?? validationError) && (
             <div className="auth-gate__error" role="alert">
-              {error}
+              {error ?? validationError}
             </div>
           )}
 
@@ -138,62 +125,6 @@ export default function AuthGateSheet({ error, onSignIn, onCreateAccount, onCont
           </button>
         </form>
 
-        <div className="auth-gate__quick">
-          {otpPending ? (
-            <>
-              <div className="auth-gate__quick-copy">
-                Enter the code we emailed to {quickEmail}
-              </div>
-              <form onSubmit={handleVerifyOtp} className="auth-gate__quick-form">
-                <input
-                  type="text"
-                  inputMode="numeric"
-                  value={otpCode}
-                  onChange={e => setOtpCode(e.target.value)}
-                  required
-                  autoComplete="one-time-code"
-                  placeholder="Code"
-                  data-testid="auth-gate-otp-code"
-                  className="auth-gate__input auth-gate__input--compact"
-                />
-                <button
-                  type="submit"
-                  disabled={otpSubmitting}
-                  data-testid="auth-gate-otp-submit"
-                  className="auth-gate__secondary"
-                >
-                  {otpSubmitting ? '…' : 'Verify'}
-                </button>
-              </form>
-            </>
-          ) : (
-            <>
-              <div className="auth-gate__quick-copy">
-                <span>NO PASSWORD NEEDED</span> Use your email to create an account and start playing.
-              </div>
-              <form onSubmit={handleQuickContinue} className="auth-gate__quick-form">
-                <input
-                  type="email"
-                  value={quickEmail}
-                  onChange={e => setQuickEmail(e.target.value)}
-                  required
-                  autoComplete="email"
-                  placeholder="you@example.com"
-                  data-testid="auth-gate-quick-email"
-                  className="auth-gate__input auth-gate__input--compact"
-                />
-                <button
-                  type="submit"
-                  disabled={quickSubmitting}
-                  data-testid="auth-gate-quick-submit"
-                  className="auth-gate__secondary"
-                >
-                  {quickSubmitting ? '…' : 'Continue with Email'}
-                </button>
-              </form>
-            </>
-          )}
-        </div>
         </div>
       </section>
     </div>

@@ -70,7 +70,10 @@ export function RoadRover({ road, durationMs = 18000 }: { road?: SceneRoadPath; 
         bottom: groundOffsetCss(point.groundOffset),
         width: 'clamp(36px, 5vw, 72px)',
         aspectRatio: '72 / 48',
-        zIndex: 13,
+        // Below the building status-pill layer (HubScreen.tsx, zIndex 10) —
+        // KES-352 found this rover driving in front of and obscuring the
+        // "LAUNCHPAD · READY" pill text as it crossed behind the structure.
+        zIndex: 9,
         pointerEvents: 'none',
         transform: 'translateX(-50%)',
         filter: 'drop-shadow(0 3px 3px color-mix(in srgb, var(--ln-void) 48%, transparent))',

@@ -9,6 +9,7 @@ interface FriendsButtonProps {
 export default function FriendsButton({ onClick }: FriendsButtonProps) {
   return (
     <button
+      className="hub-friends-button"
       data-testid="friends-button"
       aria-label="Friends"
       onClick={onClick}

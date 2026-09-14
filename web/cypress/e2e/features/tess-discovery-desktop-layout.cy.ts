@@ -89,6 +89,21 @@ function visitGalaxyScreen() {
 }
 
 describe('TessDiscoveryScreen — desktop two-column layout', () => {
+  it('keeps the compact landscape verdict rail in the viewport', () => {
+    cy.viewport(844, 390)
+    visitGalaxyScreen()
+    cy.get('[data-testid="tess-discovery-desktop-grid"]', { timeout: 10000 }).should('be.visible')
+    cy.get('[data-testid="tess-verdict-planet"]').then($button => {
+      const rect = $button[0].getBoundingClientRect()
+      expect(rect.height, 'verdict hit area').to.be.at.least(44)
+      expect(rect.top, 'verdict top edge').to.be.at.least(0)
+      expect(rect.bottom, 'verdict bottom edge').to.be.at.most(390)
+    })
+    cy.get('[data-testid="tess-discovery-desktop-grid"]').should($grid => {
+      expect($grid[0].scrollHeight, 'stage scroll height').to.be.at.most($grid[0].clientHeight + 1)
+    })
+  })
+
   it('renders a single-column stack on mobile (unchanged)', () => {
     cy.viewport(390, 844)
     visitGalaxyScreen()

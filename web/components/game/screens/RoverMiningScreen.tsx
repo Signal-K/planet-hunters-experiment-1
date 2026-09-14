@@ -1,7 +1,6 @@
 'use client'
 
 import { useCallback, useMemo, useState } from 'react'
-import { Satellite } from 'lucide-react'
 import { defaultSpec, type MissionState, type ResourceKey } from '@takeon/engine'
 import type { Mission, Target } from '@/lib/data'
 import { MINERAL_META } from '@/lib/data'
@@ -10,9 +9,6 @@ import type { TakeonHostEvent } from '@/lib/takeon/events'
 import { TAKEON_TO_LANDNAM_MINERAL } from '@/lib/takeon/minerals'
 import TakeOnMount from '@/components/takeon/TakeOnMount'
 import TopBar from '@/components/ui/TopBar'
-import Panel from '@/components/ui/Panel'
-import StatusPill from '@/components/ui/StatusPill'
-import { PrimaryBtn } from '@/components/ui/Button'
 import styles from './RoverMiningScreen.module.css'
 
 /**
@@ -75,9 +71,10 @@ interface RoverMiningScreenProps {
   onBack: () => void
   /** Client display name, retained through the handoff for context only — Landnam still owns the contract. */
   clientName?: string
+  rocketImageSrc?: string
 }
 
-export default function RoverMiningScreen({ mission, target, onComplete, onBack, clientName }: RoverMiningScreenProps) {
+export default function RoverMiningScreen({ mission, target, onComplete, onBack, clientName, rocketImageSrc }: RoverMiningScreenProps) {
   const requirements = useMemo(() => roverCargoRequirements(mission, target), [mission, target])
   const rover = useMemo(() => defaultSpec(), [])
   const bodyId = useMemo(() => takeonBodyForTarget(target), [target])
@@ -86,10 +83,6 @@ export default function RoverMiningScreen({ mission, target, onComplete, onBack,
   const [cargo, setCargo] = useState<Record<string, number>>({})
   const [routeSteps, setRouteSteps] = useState(0)
   const [takeonReady, setTakeonReady] = useState(false)
-  // Visible handoff after landing, before TakeOn mounts. Mission/client/target/
-  // cargo context stays on screen so the player never loses track of what the
-  // deployment is for — Landnam still owns the mission, save and economy; this
-  // gate only decides when to hand control of the field layer to TakeOn.
   const [deployed, setDeployed] = useState(false)
 
   const cargoReady = Object.entries(requirements).every(
@@ -124,133 +117,64 @@ export default function RoverMiningScreen({ mission, target, onComplete, onBack,
     onComplete(requirements)
   }, [onComplete, requirements])
 
-  const status = !takeonReady
-    ? 'CONNECTING TO SURFACE SIM'
-    : cargoReady
-      ? 'MISSION CARGO READY'
-      : 'ROVER ACTIVE · MINE THE ORDER'
+  const status = !deployed
+    ? 'AWAITING ROVER DEPLOYMENT'
+    : !takeonReady
+      ? 'CONNECTING TO SURFACE SIM'
+      : cargoReady
+        ? 'MISSION CARGO READY'
+        : 'ROVER ACTIVE · MINE THE ORDER'
 
   return (
     <div className={`game-screen theme-deep ln-scene-takeon ${styles.screen}`} data-testid="rover-mining-screen">
-      <TopBar eyebrow={`SURFACE OPS · ${target.name.toUpperCase()}`} title="Rover Mining" onBack={onBack} />
+      <TopBar eyebrow={`SURFACE OPS · ${target.name.toUpperCase()}`} title="Field Rover" onBack={onBack} />
 
       <main className={styles.content} data-ui-zone={UI_ZONES.screenContent}>
-        {!deployed ? (
-          <section className={styles.scenePanel} aria-label="Deploy surface operations" data-testid="deploy-surface-ops-handoff">
-            <div className={styles.sceneHeading}>
-              <div>
-                <span className={styles.eyebrow}>LANDED · {target.name.toUpperCase()}</span>
-                <h2>Deploy Surface Operations</h2>
-              </div>
-              <span className={styles.statusPill}>READY</span>
-            </div>
-            <p className={styles.sceneCopy}>
-              The ship has touched down. Deploy the Prospector to hand the field layer to TakeOn — Landnam
-              keeps the mission, the client order and the save; TakeOn only operates the rover on site.
-            </p>
-            <div className={styles.routeReadout}>
-              <span>MISSION</span>
-              <strong>{mission.title}</strong>
-            </div>
-            {clientName && (
-              <div className={styles.routeReadout}>
-                <span>CLIENT</span>
-                <strong>{clientName}</strong>
-              </div>
-            )}
-            <div className={styles.routeReadout}>
-              <span>TARGET</span>
-              <strong>{target.name.toUpperCase()}</strong>
-            </div>
-            <div className={styles.orderList} data-testid="deploy-surface-ops-cargo">
-              {Object.entries(requirements).map(([mineral, amount]) => {
-                const meta = MINERAL_META[mineral]
-                return (
-                  <div className={styles.orderRow} key={mineral}>
-                    <span className={styles.mineralIdentity}>
-                      <span className={styles.mineralDot} style={{ background: meta?.color ?? 'var(--ln-text-muted)' }} />
-                      {meta?.name ?? mineral}
-                    </span>
-                    <strong>{amount} U</strong>
-                  </div>
-                )
-              })}
-            </div>
-            <PrimaryBtn
-              kind="green"
-              onClick={() => setDeployed(true)}
-              testId="deploy-surface-ops-confirm"
-            >
-              <Satellite size={16} /> Deploy Prospector
-            </PrimaryBtn>
-          </section>
-        ) : (
         <section className={styles.scenePanel} aria-label="TakeOn rover field">
-          <div className={styles.sceneHeading}>
-            <div>
-              <span className={styles.eyebrow}>LIVE FIELD · {target.name.toUpperCase()}</span>
-              <h2>Prospector surface run</h2>
-            </div>
-            <span className={styles.statusPill}>{takeonReady ? 'SYNCED' : 'LOADING'}</span>
-          </div>
-          <p className={styles.sceneCopy}>Tap terrain to plot a safe route. Stop on exposed deposits to drill the minerals listed in the client order.</p>
-          <div className={styles.routeReadout} data-testid="rover-route-readout">
-            <span>FIELD ROUTE</span>
-            <strong>{routeSteps > 0 ? `${routeSteps} SAFE STEPS` : 'TAP TERRAIN TO PLAN'}</strong>
-          </div>
           <TakeOnMount
             missionId={missionId}
             bodyId={bodyId}
             seed={seed}
             rover={rover}
-            roverName="Mission Prospector"
+            roverName="Mule Field Rover"
             onEvent={handleTakeonEvent}
             onReady={handleReady}
             onRouteChange={handleRouteChange}
             className={styles.takeonMount}
           />
+          {!deployed && (
+            <div className={styles.landingHandoff} data-testid="deploy-surface-ops-handoff">
+              {rocketImageSrc && <img src={rocketImageSrc} alt="Prospector rocket landed on the surface" />}
+              <div>
+                <span className={styles.eyebrow}>TOUCHDOWN · {target.name.toUpperCase()}</span>
+                <h2>Deploy the Mule rover</h2>
+                <p>The Prospector is your rocket. The Mule is the rover in its hold. Deploy it to drive across the visible terrain and drill the client order.</p>
+                <button type="button" className={styles.primaryAction} onClick={() => setDeployed(true)} data-testid="deploy-surface-ops-confirm">DEPLOY MULE ROVER</button>
+              </div>
+            </div>
+          )}
+          {deployed && (
+            <div className={styles.controls} data-testid="rover-control-guide">
+              <span><strong>MOVE</strong> · TAP TERRAIN</span>
+              <span><strong>DRILL</strong> · STOP ON AN EXPOSED DEPOSIT</span>
+              <span data-testid="rover-route-readout"><strong>ROUTE</strong> · {routeSteps > 0 ? `${routeSteps} SAFE STEPS` : 'NOT SET'}</span>
+            </div>
+          )}
         </section>
-        )}
 
         <aside className={styles.hud} aria-label="Mission cargo order">
-          <Panel accent={cargoReady ? 'var(--ln-ok)' : 'var(--ln-cyan)'} style={{ padding: 16 }}>
-            <div className={styles.statusHeader}>
-              <div>
-                <span className={styles.kicker}>CLIENT ORDER</span>
-                <strong>{mission.title}</strong>
-              </div>
-              <StatusPill kind={cargoReady ? 'ok' : 'info'}>{status}</StatusPill>
-            </div>
-
-            <div className={styles.orderList} data-testid="rover-cargo-order">
-              {Object.entries(requirements).map(([mineral, amount]) => {
-                const loaded = Math.min(amount, cargo[mineral] ?? 0)
-                const meta = MINERAL_META[mineral]
-                return (
-                  <div className={styles.orderRow} key={mineral}>
-                    <span className={styles.mineralIdentity}>
-                      <span className={styles.mineralDot} style={{ background: meta?.color ?? 'var(--ln-text-muted)' }} />
-                      {meta?.name ?? mineral}
-                    </span>
-                    <strong>{loaded} / {amount} U</strong>
-                  </div>
-                )
-              })}
-            </div>
-
-            <p className={styles.instruction}>
-              TakeOn owns the rover, terrain and drill loop. Landnam records only the required contract minerals.
-            </p>
-
-            <PrimaryBtn
-              kind="green"
-              disabled={!takeonReady || !cargoReady}
-              onClick={() => onComplete(cargo)}
-              testId="rover-return-to-ship"
-            >
-              RETURN TO SHIP
-            </PrimaryBtn>
-          </Panel>
+          <div className={styles.statusHeader}>
+            <div><span className={styles.kicker}>{clientName ? `${clientName} · CLIENT ORDER` : 'MISSION ORDER'}</span><strong>{mission.title}</strong></div>
+            <span className={styles.statusPill} data-ready={cargoReady}>{status}</span>
+          </div>
+          <div className={styles.orderList} data-testid="rover-cargo-order">
+            {Object.entries(requirements).map(([mineral, amount]) => {
+              const loaded = Math.min(amount, cargo[mineral] ?? 0)
+              const meta = MINERAL_META[mineral]
+              return <div className={styles.orderRow} key={mineral}><span className={styles.mineralIdentity}><span className={styles.mineralDot} style={{ background: meta?.color ?? 'var(--ln-text-muted)' }} />{meta?.name ?? mineral}</span><strong>{loaded} / {amount} U</strong></div>
+            })}
+          </div>
+          <button type="button" className={styles.primaryAction} disabled={!takeonReady || !cargoReady} onClick={() => onComplete(cargo)} data-testid="rover-return-to-ship">RETURN MULE TO PROSPECTOR</button>
         </aside>
       </main>
 

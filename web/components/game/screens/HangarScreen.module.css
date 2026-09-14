@@ -229,7 +229,7 @@
   .copy { display: none; }
   .fleetReadout { min-width: 100px; padding: 6px 8px; }
   .fleetValue { font-size: 16px; }
-  .customizer { min-height: 36px; margin-bottom: 6px; padding: 6px 8px; }
+  .customizer { min-height: 44px; margin-bottom: 6px; padding: 6px 8px; }
   .customizerIcon { width: 24px; height: 24px; }
   .customizerIcon svg { width: 14px; height: 14px; }
   .customizerTitle, .customizerSummary { font-size: 8px; }
@@ -268,7 +268,7 @@
   .intro { margin-bottom: 6px; padding: 8px 10px; }
   .title { margin-top: 2px; font-size: 19px; }
   .copy { margin-top: 2px; font-size: 9px; line-height: 1.25; }
-  .customizer { min-height: 34px; margin-bottom: 6px; padding: 5px 8px; }
+  .customizer { min-height: 44px; margin-bottom: 6px; padding: 5px 8px; }
   .customizerIcon { width: 24px; height: 24px; }
   .customizerIcon svg { width: 14px; height: 14px; }
   .customizerTitle, .customizerSummary { font-size: 8px; }

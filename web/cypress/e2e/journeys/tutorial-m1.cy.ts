@@ -204,7 +204,7 @@ function completeDebrief() {
 // ─── Full M1 play-through ─────────────────────────────────────────────────────
 
 function playM1() {
-  cy.get('h1', { timeout: 10000 }).contains('Earth Base').should('be.visible')
+  cy.contains('h1', /^(Base|Earth Base)$/, { timeout: 10000 }).should('be.visible')
 
   // Step 1: tutorial coach says to open missions — follow what's VISIBLE on screen
   cy.get('[data-testid="tutorial-coach-block"]').should('be.visible')
@@ -249,7 +249,7 @@ function playM1() {
   // clicks a tab the coach isn't directing the player toward yet; it doesn't
   // navigate anywhere. Assert the real post-M1 state instead: back on Hub,
   // M2 guided-ops coaching visible.
-  cy.get('h1', { timeout: 10000 }).contains('Earth Base').should('be.visible')
+  cy.contains('h1', /^(Base|Earth Base)$/, { timeout: 10000 }).should('be.visible')
   // Case-insensitive: the label is visually all-caps via CSS text-transform
   // (this project's standing "UPPERCASE + letter-spacing for instrument
   // labels" rule), not literal uppercase DOM text — a plain 'GUIDED OPS'
@@ -265,7 +265,7 @@ function playM1() {
 // a manual coach card on rocket-buy.
 
 function playM2() {
-  cy.get('h1', { timeout: 10000 }).contains('Earth Base').should('be.visible')
+  cy.contains('h1', /^(Base|Earth Base)$/, { timeout: 10000 }).should('be.visible')
 
   // M2 step 20: hub action step (not manual — no "got it" button, it
   // auto-dismisses when the player navigates to missions). Current copy is
@@ -318,7 +318,7 @@ function playM2() {
 // as the old self-directed M3 flow it replaced.
 
 function playM3ToLaunch() {
-  cy.get('h1', { timeout: 10000 }).contains('Earth Base').should('be.visible')
+  cy.contains('h1', /^(Base|Earth Base)$/, { timeout: 10000 }).should('be.visible')
 
   // Step 30: hub action step (not manual — auto-dismisses on nav, like M2's
   // step 20). Current copy is 'Guided Ops · Mission 3' (lib/data/tutorial.ts
@@ -397,7 +397,7 @@ if (!MISSION_FILTER) describe('Desktop layout: bottom tab bar hidden, sidebar re
 
   it('bottom-tab-missions and the retired sidebar are both hidden on desktop hub; the desktop Missions action remains available', () => {
     visitHub({ doneSteps: { 0: true } })
-    cy.get('h1', { timeout: 10000 }).contains('Earth Base').should('be.visible')
+    cy.contains('h1', /^(Base|Earth Base)$/, { timeout: 10000 }).should('be.visible')
     cy.get('[data-testid="bottom-tab-missions"]').should('not.be.visible')
     // The old always-on desktop sidebar (`.desktop-sidebar`) is retired —
     // CSS-hidden unconditionally (globals.css). The Hub dock's desktop-only
@@ -408,7 +408,7 @@ if (!MISSION_FILTER) describe('Desktop layout: bottom tab bar hidden, sidebar re
 
   it('tutorial coach on step 1 does NOT show a spot over the hidden bottom tab bar', () => {
     visitHub({ doneSteps: { 0: true } })
-    cy.get('h1', { timeout: 10000 }).contains('Earth Base').should('be.visible')
+    cy.contains('h1', /^(Base|Earth Base)$/, { timeout: 10000 }).should('be.visible')
     cy.get('[data-testid="tutorial-coach-block"]').should('contain', 'Open a Mission')
     // On desktop, desktopSpot is null so the pulsing spot element must not exist
     cy.get('[data-testid="tutorial-coach-spot"]').should('not.exist')
@@ -424,7 +424,7 @@ if (!MISSION_FILTER) describe('Mobile layout: bottom tab bar visible, sidebar hi
 
   it('bottom-tab-missions is visible and sidebar is not visible on mobile hub', () => {
     visitHub({ doneSteps: { 0: true } })
-    cy.get('h1', { timeout: 10000 }).contains('Earth Base').should('be.visible')
+    cy.contains('h1', /^(Base|Earth Base)$/, { timeout: 10000 }).should('be.visible')
     cy.get('[data-testid="bottom-tab-missions"]').should('be.visible')
     cy.get('[data-testid="sidebar-nav-missions"]').should('not.be.visible')
   })
@@ -435,7 +435,7 @@ if (!MISSION_FILTER) describe('Mobile layout: bottom tab bar visible, sidebar hi
     // the element matching step.coachId ('bottom-tab-missions' for step 1)
     // — see lib/data/tutorial.ts and components/game/CoachPointer.tsx.
     visitHub({ doneSteps: { 0: true } })
-    cy.get('h1', { timeout: 10000 }).contains('Earth Base').should('be.visible')
+    cy.contains('h1', /^(Base|Earth Base)$/, { timeout: 10000 }).should('be.visible')
     cy.get('[data-testid="tutorial-coach-block"]').should('contain', 'Open a Mission')
     // The ring is a decorative, pointerEvents:'none' overlay — Cypress's
     // be.visible check uses elementFromPoint, which always reports it as

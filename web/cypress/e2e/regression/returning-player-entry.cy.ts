@@ -28,6 +28,6 @@ describe('returning player entry route', () => {
 
     cy.location('pathname', { timeout: 10_000 }).should('eq', '/game/hub')
     cy.get('[data-testid="hub-skyline-fallback"]', { timeout: 10_000 }).should('exist')
-    cy.get('h1').should('contain.text', 'Earth Base')
+    cy.get('h1').invoke('text').should('match', /^(Base|Earth Base)$/)
   })
 })

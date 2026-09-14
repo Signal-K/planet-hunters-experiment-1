@@ -1,11 +1,11 @@
 import type { GameState } from '@/game-context'
+import { seedAuthenticatedFixture } from '../../support/authenticated-fixture'
 
-const STORAGE_KEY = 'landnam-game-state-v1'
-const AUTHENTICATED_STORAGE_KEY = `${STORAGE_KEY}:user:e2e-user`
 const SURVEY_KEY = 'landnam-surveys-shown'
 
 const VIEWPORTS = [
   { name: 'mobile', width: 390, height: 844 },
+  { name: 'compact-landscape', width: 926, height: 428 },
   { name: 'tablet', width: 768, height: 1024 },
   { name: 'desktop', width: 1280, height: 800 },
 ] as const
@@ -57,18 +57,9 @@ function state(screen: GameState['screen']): GameState {
 function visit(path: string, screen: GameState['screen']) {
   cy.visit(path, {
     onBeforeLoad(win) {
-      const serialized = JSON.stringify(state(screen))
-      win.localStorage.setItem(STORAGE_KEY, serialized)
-      win.localStorage.setItem(AUTHENTICATED_STORAGE_KEY, serialized)
+      seedAuthenticatedFixture(win, state(screen))
       win.localStorage.setItem(SURVEY_KEY, JSON.stringify(['lnm_first_launch']))
       win.localStorage.setItem('ln_tutorial_complete_ack', '1')
-      // The fixtures intentionally exercise persisted post-onboarding screens.
-      // A stored returning-account credential keeps the auth gate from
-      // covering those local-only visual contracts while the remote backend is
-      // unavailable in this Docker visual runner.
-      win.localStorage.setItem('landnam-account-credentials', JSON.stringify({
-        email: 'e2e@example.com', password: 'e2e-guest-test',
-      }))
     },
   })
 }
@@ -107,6 +98,16 @@ describe('Hub and Launchpad visual layout', () => {
       cy.get('[data-testid="launchpad-status-card"]').scrollIntoView().should('be.visible')
       cy.get('[data-testid="launchpad-open-hangar-btn"]').scrollIntoView().should('be.visible')
       cy.get('[data-testid="launchpad-new-mission-btn"]').scrollIntoView().should('be.visible')
+      if (viewport.name === 'compact-landscape') {
+        cy.get('.launchpad-scene-rail').then($rail => {
+          const rail = $rail[0].getBoundingClientRect()
+          cy.get('.launchpad-rail-actions button').each($button => {
+            const button = $button[0].getBoundingClientRect()
+            expect(button.top, 'compact rail action stays inside rail').to.be.gte(rail.top)
+            expect(button.bottom, 'compact rail action stays inside rail').to.be.lte(rail.bottom)
+          })
+        })
+      }
       cy.screenshot(`launchpad-scene-${viewport.name}`)
     })
   }
@@ -128,14 +129,15 @@ describe('Hub and Launchpad visual layout', () => {
 
   it('keeps the shared menu reachable without a desktop sidebar', () => {
     cy.viewport(1280, 800)
-    visit('/game/launchpad', 'launchpad')
-    cy.contains('h1', 'Your Program', { timeout: 15000 }).should('be.visible')
+    visit('/game/hub', 'hub')
+    cy.contains('h1', /^(Base|Subsurface)$/, { timeout: 15000 }).should('be.visible')
     cy.get('.desktop-sidebar').should('not.exist')
     cy.get('[data-testid="settings-button"]')
       .should('be.visible')
       .and('have.attr', 'aria-label', 'Open menu')
       .click()
     cy.get('[data-testid="settings-button"]').should('have.attr', 'aria-expanded', 'true')
+    cy.contains('Settings').should('be.visible')
     cy.contains('button', 'Sign Out').should('be.visible').and('not.be.disabled')
   })
 })

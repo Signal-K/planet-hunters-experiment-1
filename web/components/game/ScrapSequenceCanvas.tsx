@@ -42,7 +42,7 @@ export function ScrapSequenceCanvas({ rocketImageSrc, onComplete }: Props) {
           canvas,
           width: cw,
           height: ch,
-          background: 0xeef3f8, // --ln-bp-bg (KES-267) — see scrapScene.ts's C palette
+          background: 0x050b16, // --ln-void mirror for the Pixi renderer
           antialias: false,
           autoDensity: true,
           resolution: capDpr(),
@@ -78,7 +78,7 @@ export function ScrapSequenceCanvas({ rocketImageSrc, onComplete }: Props) {
   return (
     <div
       ref={divRef}
-      style={{ position: 'absolute', inset: 0, background: '#eef3f8', overflow: 'hidden', zIndex: 100 }}
+      style={{ position: 'absolute', inset: 0, background: 'var(--ln-void)', overflow: 'hidden', zIndex: 100 }}
     >
       {/* Player-facing skip, not dev-only (KES-316) — this overlay auto-plays
           and blocks the ledger reveal on every early-onboarding debrief with

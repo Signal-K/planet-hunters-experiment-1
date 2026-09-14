@@ -1,6 +1,8 @@
 // Own-program operations remain explicit Launchpad actions. The physical pad
 // itself enters mission selection first, so it never silently chooses the
 // first generated operation and drops the player into target selection.
+import { seedAuthenticatedFixture } from '../../support/authenticated-fixture'
+
 describe('Launchpad · your own program', () => {
   const freeOpsSave = (extra: Record<string, unknown> = {}) => ({
     screen: 'launchpad',
@@ -26,17 +28,10 @@ describe('Launchpad · your own program', () => {
     },
   })
 
-  const visitLaunchpad = (save: object, authenticated = true) => {
+  const visitLaunchpad = (save: object) => {
     cy.visit('/game/launchpad', {
       onBeforeLoad(win) {
-        win.localStorage.setItem('landnam-game-state-v1', JSON.stringify(save))
-        if (authenticated) {
-          // Keep the mandatory guest-auth sheet from covering surface
-          // assertions. The final test opts out to exercise that flow.
-          win.localStorage.setItem('landnam-account-credentials', JSON.stringify({
-            email: 'e2e@example.com', password: 'e2e-guest-test',
-          }))
-        }
+        seedAuthenticatedFixture(win, save)
       },
     })
   }
@@ -63,18 +58,16 @@ describe('Launchpad · your own program', () => {
     cy.viewport(390, 844)
     visitLaunchpad(m1Save())
 
-    // KES-329/330: the standalone "view contracts" button was folded into
-    // the launchpad mission menu (onViewContracts is now wired only to
-    // launchpad-new-mission-contracts-btn). At M1 (freeOperations: false),
-    // the satellite/mining/build operation choices are all disabled and
-    // "AVAILABLE CONTRACTS" is the only live path — preserving this test's
-    // original contract that M1 keeps the player on client contracts.
+    // During onboarding (freeOperations: false), the satellite/mining/build
+    // operation choices are always disabled placeholders and "AVAILABLE
+    // CONTRACTS" is the only live path — so the pad now skips that
+    // mostly-dead four-tile menu entirely and takes the player straight to
+    // the Mission Board, preserving this test's original contract that M1
+    // keeps the player on client contracts (reported as "users are not told
+    // what to do" when the dead menu was still shown first).
     cy.get('[data-testid="launchpad-status-card"]', { timeout: 15000 }).click()
-    cy.get('[data-testid="launchpad-new-mission-menu"]', { timeout: 15000 }).should('be.visible')
-    cy.get('[data-testid="launchpad-new-mission-satellite-btn"]').should('be.disabled')
-    cy.get('[data-testid="launchpad-new-mission-mining-btn"]').should('be.disabled')
-    cy.get('[data-testid="launchpad-new-mission-build-btn"]').should('be.disabled')
-    cy.get('[data-testid="launchpad-new-mission-contracts-btn"]').should('be.visible').and('not.be.disabled')
+    cy.get('[data-testid="launchpad-new-mission-menu"]').should('not.exist')
+    cy.get('[data-testid="mission-board-section-client"]', { timeout: 15000 }).should('be.visible')
     cy.get('[data-testid="launchpad-monitoring-structure"]').should('not.exist')
     cy.get('[data-testid="launchpad-build-monitoring-btn"]').should('not.exist')
   })
@@ -99,18 +92,10 @@ describe('Launchpad · your own program', () => {
 
   it('clicking the physical launchpad opens the own-program mission selector', () => {
     cy.viewport(390, 844)
-    visitLaunchpad(freeOpsSave(), false)
+    visitLaunchpad(freeOpsSave())
 
-    // The auth gate overlays the whole screen on a fresh visit and covers
-    // the scene; get past it (email required, KES-97) before clicking the pad.
-    // This fixture deliberately has no stored credentials, so the mandatory
-    // email gate must be handled before the launchpad action. Waiting directly
-    // for the gate avoids resolving the CTA first and then racing its async
-    // mount/removal (KES-135).
-    cy.get('[data-testid="auth-gate-quick-email"]', { timeout: 15000 }).should('be.visible')
-    cy.get('[data-testid="auth-gate-quick-email"]').type(`cy-launchpad-${Date.now()}@example.com`)
-    cy.get('[data-testid="auth-gate-quick-submit"]').click()
-    cy.get('[data-testid="auth-gate-quick-email"]', { timeout: 15000 }).should('not.exist')
+    // This is a Launchpad interaction test. Its account-scoped fixture keeps
+    // the independent email/password gate out of the spatial scene contract.
     cy.get('[data-testid="launchpad-ui-focus-pad-btn"]', { timeout: 15000 }).click()
     cy.get('[data-testid="launchpad-focus-screen"]', { timeout: 15000 }).should('be.visible')
     cy.get('[data-testid="launchpad-status-card"]', { timeout: 15000 }).click()
@@ -122,14 +107,15 @@ describe('Launchpad · your own program', () => {
     cy.contains('Pick Target').should('not.exist')
   })
 
-  it('hides the onboarding coach while the mission selector is open', () => {
+  it('advances the onboarding coach onto the Mission Board once the pad is used', () => {
     cy.viewport(1280, 900)
     visitLaunchpad(m1Save())
 
-    cy.get('[data-testid="tutorial-coach-block"]', { timeout: 15000 }).should('be.visible')
+    cy.get('[data-testid="tutorial-coach-block"]', { timeout: 15000 }).should('contain', 'Open a Mission')
     cy.get('[data-testid="launchpad-status-card"]', { timeout: 15000 }).click()
-    cy.get('[data-testid="launchpad-new-mission-menu"]', { timeout: 15000 }).should('be.visible')
-    cy.get('[data-testid="tutorial-coach-block"]').should('not.exist')
+    cy.get('[data-testid="launchpad-new-mission-menu"]').should('not.exist')
+    cy.get('[data-testid="mission-board-section-client"]', { timeout: 15000 }).should('be.visible')
+    cy.get('[data-testid="tutorial-coach-block"]', { timeout: 15000 }).should('contain', 'Select a Mission')
   })
 
   it('returns to the Launchpad after opening the Hangar from it', () => {

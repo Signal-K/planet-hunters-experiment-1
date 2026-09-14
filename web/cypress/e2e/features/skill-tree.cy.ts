@@ -69,6 +69,29 @@ function visitSkills(playerOverrides: Partial<GameState['player']> = {}, coachSe
 }
 
 describe('Skill Tree screen', () => {
+  ;[844, 926].forEach((width, index) => {
+    const height = index === 0 ? 390 : 428
+    it(`keeps compact landscape install controls reachable at ${width}x${height}`, () => {
+      cy.viewport(width, height)
+      visitSkills({}, true)
+      cy.get('[data-testid="skill-tree-screen"]', { timeout: 10000 }).should('be.visible')
+      cy.contains('[data-testid="skill-tree-screen"] button', 'Install Upgrade').then($button => {
+        const rect = $button[0].getBoundingClientRect()
+        expect(rect.height, 'skill install hit area').to.be.at.least(44)
+        expect(rect.top, 'skill install top edge').to.be.at.least(0)
+        expect(rect.bottom, 'skill install bottom edge').to.be.at.most(height)
+      })
+      cy.contains('[data-testid="skill-tree-screen"] button', 'Upgrade to').then($button => {
+        const rect = $button[0].getBoundingClientRect()
+        expect(rect.height, 'license upgrade hit area').to.be.at.least(44)
+        expect(rect.bottom, 'license upgrade bottom edge').to.be.at.most(height)
+      })
+      cy.get('[data-testid="skill-tree-content"]').should($content => {
+        expect($content[0].scrollHeight, 'screen scroll height').to.be.at.most($content[0].clientHeight + 1)
+      })
+    })
+  })
+
   it('renders the license grade panel and every skill node', () => {
     visitSkills({}, true)
     cy.get('[data-testid="skill-tree-screen"]', { timeout: 10000 }).should('be.visible')

@@ -168,11 +168,11 @@ describe('game state hydration normalization', () => {
     expect(normalized.screen).toBe('hub')
   })
 
-  it('retires legacy solo surface and unbuilt Base-refinery routes on hydration', () => {
+  it('keeps the client-territory surface route and retires unbuilt Base-refinery routes on hydration', () => {
     expect(normalizeAndRepair({
       screen: 'surface-ops',
       player: { freeOperations: true, missionsDone: 3, hasLanded: true },
-    }).screen).toBe('hub')
+    }).screen).toBe('surface-ops')
     expect(normalizeAndRepair({
       screen: 'refinery',
       player: { refineryBuilt: false },

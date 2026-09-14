@@ -9,40 +9,39 @@
  * scene entirely for a reusable hull rather than adapting it — see the
  * shipDestroyed-gated trigger in DebriefScreen.tsx.
  *
- * Rebuilt 2026-08-27 (KES-267): was a flat near-black scene (a hardcoded
- * `0x06090f` void, disconnected from the rest of the UI's light "blueprint"
- * direction) with a plain 6-piece shatter. PixiJS can't read CSS custom
- * properties, so the palette below is a hand-kept hex mirror of the
- * `--ln-bp-*` tokens in globals.css — keep the two in sync if that palette
- * changes. The animation itself is a proper two-phase burst-then-collect
+ * KES-348 returns this to the active command-deck palette. The temporary white
+ * blueprint treatment turned the transition into a blank document between two
+ * dark gameplay scenes. PixiJS cannot read CSS variables, so this palette is a
+ * hand-kept numeric mirror of the current deep tokens. The animation is a
+ * two-phase burst-then-collect
  * (radial explosion, then an eased pull into the salvage crate) with an
  * impact flash and spark particles instead of a static shard grid drifting
  * in a straight line.
  */
 import { Application, Assets, Container, Graphics, Sprite, Text, TextStyle, Texture } from 'pixi.js'
 
-// Mirrors app/globals.css's --ln-bp-* blueprint tokens (KES-267).
+// Mirrors the current deep command tokens for Pixi.
 const C = {
-  bg:      0xeef3f8, // --ln-bp-bg
-  paper:   0xffffff, // --ln-bp-paper
-  paper2:  0xdfe9f3, // --ln-bp-paper-2
-  ink:     0x0f2436, // --ln-bp-ink
-  inkDim:  0x48596a, // --ln-bp-ink-dim
-  line:    0x0f2436, // --ln-bp-line, alpha applied separately
-  blue:    0x1f78c1, // --ln-bp-blue
-  pink:    0xc94a86, // --ln-bp-pink
+  bg:      0x050b16,
+  paper:   0xe6efff,
+  paper2:  0x122236,
+  ink:     0xe6efff,
+  inkDim:  0xa9b8ce,
+  line:    0x70d9ea,
+  blue:    0x70d9ea,
+  pink:    0xff5a6a,
 } as const
 
 // Trimmed from the original 3.7s total (KES-316) — early-onboarding debriefs
 // auto-play this as a full-screen blocking overlay with no visible skip
 // affordance, so its length reads as dead time rather than pacing.
 export const SCRAP_TIMELINE = {
-  hold:      0.2,
-  burst:     0.7,
-  collect:   1.7,
-  labelIn:   0.8,
-  fadeOut:   1.9,
-  done:      2.4,
+  hold:      0.55,
+  burst:     1.05,
+  collect:   2.05,
+  labelIn:   0.35,
+  fadeOut:   2.35,
+  done:      2.8,
 }
 
 export const SCRAP_W = 390
@@ -93,8 +92,7 @@ export function buildScrapScene(
   const H = app.screen.height
   const T = SCRAP_TIMELINE
 
-  // Backdrop — flat blueprint paper, matching the boxed-screen theme instead
-  // of the old hardcoded void.
+  // Full command-deck backdrop keeps recovery continuous with debrief.
   const bg = new Graphics()
   bg.rect(0, 0, W, H).fill({ color: C.bg })
   app.stage.addChild(bg)
