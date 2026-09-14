@@ -111,7 +111,16 @@ export default function AsteroidDiscoveryScreen({ player, visualCandidate, onBac
   }, [visualCandidate, player.freeOperations, player.deepSpaceTelescopeBuilt, player.deepSpaceTelescopeLevel, devDayOffset, retryToken])
 
   const isDesktop = useIsDesktop()
+  const [isCompactLandscape, setIsCompactLandscape] = useState(false)
   const coach = useAsteroidDiscoveryCoach()
+
+  useEffect(() => {
+    const query = window.matchMedia('(orientation: landscape) and (max-height: 520px)')
+    const update = () => setIsCompactLandscape(query.matches)
+    update()
+    query.addEventListener('change', update)
+    return () => query.removeEventListener('change', update)
+  }, [])
 
   if (!player.freeOperations) {
     return (
@@ -283,7 +292,7 @@ export default function AsteroidDiscoveryScreen({ player, visualCandidate, onBac
   return (
     <div className="game-screen theme-deep ln-scene-asteroid-discovery" data-testid="asteroid-discovery-screen">
       <TopBar eyebrow="INSTRUMENT DATA FEED · DAILY DOWNLINK" title={candidate.tempDesig} onBack={onBack} />
-      {isDesktop ? (
+      {isDesktop || isCompactLandscape ? (
         <div data-testid="asteroid-discovery-desktop-grid" style={{ position: 'absolute', inset: 0, top: 72, display: 'grid', gridTemplateColumns: '55% 45%', gap: 16, padding: '0 var(--ln-s-4) var(--ln-s-4)' }}>
           <div style={{ overflowY: 'auto' }} data-ui-zone={UI_ZONES.screenContent}>
             {coach.visible && <AsteroidDiscoveryCoach onDismiss={coach.dismiss} />}

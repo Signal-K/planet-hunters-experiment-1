@@ -25,7 +25,7 @@
 .orderRow strong { color: var(--ln-text); font: 700 10px var(--ln-font-mono); }
 .mineralIdentity { display: inline-flex; align-items: center; gap: 8px; }
 .mineralDot { width: 8px; height: 8px; border-radius: 2px; }
-.primaryAction { min-height: 42px; padding: 10px 14px; border: 1px solid var(--ln-cyan); border-radius: 8px; background: var(--ln-cyan); color: var(--ln-text-on-cyan); font: 800 10px var(--ln-font-display); letter-spacing: .12em; text-transform: uppercase; cursor: pointer; }
+.primaryAction { min-height: 44px; padding: 10px 14px; border: 1px solid var(--ln-cyan); border-radius: 8px; background: var(--ln-cyan); color: var(--ln-text-on-cyan); font: 800 10px var(--ln-font-display); letter-spacing: .12em; text-transform: uppercase; cursor: pointer; }
 .primaryAction:disabled { opacity: .45; cursor: not-allowed; }
 
 @media (max-width: 760px) {
@@ -41,9 +41,12 @@
 }
 
 @media (orientation: landscape) and (max-height: 520px) {
-  .landingHandoff { grid-template-columns: minmax(160px, .8fr) minmax(300px, 1.2fr); padding: 12px; }
-  .landingHandoff img { max-height: 54vh; }
+  .landingHandoff { grid-template-columns: minmax(240px, .9fr) minmax(240px, 1.1fr); align-items: start; padding: 12px; }
+  .landingHandoff img { grid-column: 2; grid-row: 1; max-height: 54vh; }
+  .landingHandoff > div { grid-column: 1; grid-row: 1; }
   .landingHandoff > div { padding: 12px; gap: 7px; }
   .landingHandoff p { font-size: 11px; }
-  .hud { width: min(360px, 44vw); }
+  .hud { right: 8px; bottom: 8px; width: min(320px, 40vw); gap: 8px; padding: 8px; }
+  .orderRow { min-height: 28px; padding: 4px 8px; }
+  .statusPill { padding: 4px 8px; }
 }
