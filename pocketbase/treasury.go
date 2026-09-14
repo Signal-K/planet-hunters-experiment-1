@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"github.com/pocketbase/dbx"
 	"github.com/pocketbase/pocketbase/apis"
 	"github.com/pocketbase/pocketbase/core"
 	"github.com/pocketbase/pocketbase/tools/types"
@@ -15,6 +16,8 @@ import (
 // a deed from charging a player one amount while crediting the public ledger
 // another.
 var siteDeedPrices = map[string]int{"moon-south-pole": 4000000, "mars-arcadia": 5500000, "europa-chaos": 7500000}
+
+const bankruptcyLoanPrincipal = 5_000_000
 
 type treasuryLedgerEntry struct {
 	ID                 string `json:"id"`
@@ -81,6 +84,66 @@ func registerTreasuryRoutes(app core.App) {
 				return apis.NewApiError(http.StatusInternalServerError, "treasury update failed", err)
 			}
 			return e.JSON(http.StatusOK, map[string]any{"state": state, "acquired": acquired, "priceFrancs": price, "referenceId": referenceID})
+		})
+		g.POST("/bankruptcy-loan", func(e *core.RequestEvent) error {
+			loanID := "bankruptcy-loan:" + e.Auth.Id
+			state := treasuryState{}
+			changed := false
+			err := app.RunInTransaction(func(tx core.App) error {
+				treasury, err := tx.FindFirstRecordByFilter("public_treasury", "singleton_key = 'public'")
+				if err != nil {
+					return err
+				}
+				raw, _ := json.Marshal(treasury.GetRaw("state"))
+				if err := json.Unmarshal(raw, &state); err != nil {
+					return err
+				}
+				if state.Loans == nil {
+					state.Loans = map[string]any{}
+				}
+				if _, exists := state.Loans[loanID]; exists || state.BalanceFrancs < bankruptcyLoanPrincipal {
+					return nil
+				}
+
+				gameState, err := tx.FindFirstRecordByFilter("game_states", "user = {:user}", dbx.Params{"user": e.Auth.Id})
+				if err != nil {
+					return err
+				}
+				gameRaw, _ := json.Marshal(gameState.GetRaw("state"))
+				var saved map[string]any
+				if err := json.Unmarshal(gameRaw, &saved); err != nil {
+					return err
+				}
+				player, ok := saved["player"].(map[string]any)
+				if !ok {
+					return apis.NewBadRequestError("invalid player state", nil)
+				}
+				francs, ok := player["francs"].(float64)
+				if !ok {
+					return apis.NewBadRequestError("invalid player balance", nil)
+				}
+				now := types.NowDateTime().Time().UnixMilli()
+				state.BalanceFrancs -= bankruptcyLoanPrincipal
+				state.Loans[loanID] = map[string]any{"id": loanID, "playerId": e.Auth.Id, "principalFrancs": bankruptcyLoanPrincipal, "outstandingFrancs": bankruptcyLoanPrincipal, "issuedAt": now, "status": "open"}
+				state.Ledger = append(state.Ledger, treasuryLedgerEntry{ID: "bankruptcy-loan-issue:" + e.Auth.Id, Kind: "bankruptcy-loan-issued", ReferenceID: loanID, OccurredAt: now, AmountFrancs: bankruptcyLoanPrincipal, Direction: "debit", BalanceAfterFrancs: state.BalanceFrancs, Description: "No-interest emergency loan"})
+				player["francs"] = francs + bankruptcyLoanPrincipal
+				player["loanDebt"] = bankruptcyLoanPrincipal
+				player["loanOffered"] = true
+				gameState.Set("state", saved)
+				treasury.Set("state", state)
+				if err := tx.Save(gameState); err != nil {
+					return err
+				}
+				if err := tx.Save(treasury); err != nil {
+					return err
+				}
+				changed = true
+				return nil
+			})
+			if err != nil {
+				return apis.NewApiError(http.StatusInternalServerError, "treasury loan failed", err)
+			}
+			return e.JSON(http.StatusOK, map[string]any{"state": state, "changed": changed, "principalFrancs": bankruptcyLoanPrincipal})
 		})
 		return se.Next()
 	})
