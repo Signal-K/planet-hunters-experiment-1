@@ -20,6 +20,7 @@ describe('GalaxyMap', () => {
     )
 
     expect(markup).toContain('data-testid="target-picker-orbital-map"')
+    expect(markup).toContain('data-testid="target-bennu"')
     expect(markup).toContain('viewBox="72 72 496 496"')
     expect(markup).toContain('>SUN</text>')
     expect(markup).toContain('Solar system · target range')

@@ -188,6 +188,7 @@ export default function GalaxyMap({ mission, targets, compatibleIds, pickedId, o
             return (
               <g
                 key={t.id}
+                data-testid={`target-${t.id}`}
                 opacity={compatible ? 1 : 0.4}
                 role={compatible ? 'button' : undefined}
                 tabIndex={compatible ? 0 : -1}

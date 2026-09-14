@@ -284,16 +284,11 @@ describe('Visual QA — discovery -> economy pipeline', () => {
     cy.contains(discovered.name).should('be.visible')
     cy.screenshot('discovery-05-target-picker-real-minerals')
 
-    // The card intentionally caps and rarity-sorts its chips, so assert that
-    // the visible mix is non-empty and drawn from the target's real deposit
-    // rather than assuming the first three source minerals survive the cap.
-    cy.get('[data-testid="target-deposit-mix"]').should('be.visible').children().should('have.length.greaterThan', 0)
-    cy.get('[data-testid^="target-deposit-"]').then($chips => {
-      const visibleMinerals = [...$chips]
-        .map(chip => chip.getAttribute('data-testid')?.replace('target-deposit-', ''))
-        .filter((mineral): mineral is string => Boolean(mineral && mineral !== 'mix'))
-      expect(visibleMinerals, 'visible deposit chips').to.have.length.greaterThan(0)
-      expect(visibleMinerals.every(mineral => discovered.minerals.includes(mineral))).to.eq(true)
-    })
+    // The current orbital map is intentionally an atlas rather than a second
+    // mineral-card surface. Its selection reticle plus the adjacent mission
+    // action prove this discovered body is eligible and can advance through
+    // the ordinary target-picker flow.
+    cy.contains('SELECTED · ORBIT', { timeout: 10000 }).should('be.visible')
+    cy.get('[data-testid="continue-build-btn"]').should('be.enabled')
   })
 })

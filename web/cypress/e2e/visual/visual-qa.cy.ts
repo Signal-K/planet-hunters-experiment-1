@@ -186,6 +186,11 @@ describe('Visual QA — game screens and mining canvas', () => {
     cy.screenshot('07-rocket-picker')
     cy.contains('button', /BUILD EXPLORER/).click()
 
+    // Newly built vehicles are a physical Hangar asset. Roll the cleared
+    // vehicle out to the launchpad before the actual launch confirmation.
+    cy.get('[data-testid="mission-launch-review"]', { timeout: 10000 }).should('have.attr', 'data-location', 'hangar')
+    cy.get('[data-testid="transfer-to-launchpad-btn"]').should('be.visible').click({ force: true })
+
     // Launch confirmation
     cy.get('[data-testid="launch-btn"]', { timeout: 10000 }).should('be.visible')
     cy.get('[data-testid="survey-sheet"]').should('not.exist')
@@ -219,9 +224,10 @@ describe('Visual QA — game screens and mining canvas', () => {
     // Debrief
     cy.contains('MISSION COMPLETE', { timeout: 10000 }).should('be.visible')
     cy.screenshot('11-mission-debrief')
-    // Onboarding missions (M1 here) auto-resolve on mount — see DebriefScreen.tsx.
-    cy.get('[data-testid="resolve-cargo-btn"]').should('not.exist')
-    cy.get('[data-testid="collect-reward-btn"]').click()
+    // Every returning vehicle now holds at debrief until the player explicitly
+    // authorises its teardown, then collects the settled client fee.
+    cy.get('[data-testid="resolve-cargo-btn"]').should('be.visible').click()
+    cy.get('[data-testid="collect-reward-btn"]', { timeout: 10000 }).should('be.visible').click()
 
     // Guided M2 handoff
     cy.contains('Guided Ops · Mission 2', { timeout: 10000 }).should('be.visible')
@@ -234,7 +240,7 @@ describe('Visual QA — game screens and mining canvas', () => {
 
     // Final state assertion
     cy.window().then(win => {
-      const saved = JSON.parse(win.localStorage.getItem(STORAGE_KEY) || '{}')
+      const saved = JSON.parse(win.localStorage.getItem(AUTHENTICATED_STORAGE_KEY) || win.localStorage.getItem(STORAGE_KEY) || '{}')
       expect(saved.player?.missionsDone).to.eq(1)
     })
   })

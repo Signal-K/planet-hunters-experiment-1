@@ -32,9 +32,9 @@ if (requestedViewport && activeViewports.length === 0) {
 const EXTENDED_SURFACES = [
   { key: 'm3-mining', screen: 'mining', name: 'm3-mining', selector: '[data-testid="mining-canvas"]' },
   { key: 'm3-debrief', screen: 'debrief', name: 'm3-debrief', selector: '.debrief-game' },
-  { key: 'ui-mission-board', screen: 'missions', name: 'free-ops-mission-board', selector: '.mission-setup-screen' },
+  { key: 'ui-mission-board', screen: 'missions', name: 'free-ops-mission-board', selector: '[data-testid="mission-board-section-client"]' },
   { key: 'ui-rover-mining', screen: 'rover-mining', name: 'free-ops-rover-mining', selector: '[data-testid="rover-mining-screen"]' },
-  { key: 'telescope-fab', screen: 'fab', name: 'telescope-launch-fab', selector: '.mission-setup-screen' },
+  { key: 'telescope-fab', screen: 'fab', name: 'telescope-launch-fab', selector: '[data-testid="mission-launch-review"]' },
   { key: 'telescope-transit', screen: 'transit', name: 'telescope-launch-transit', selector: '.transit-screen' },
   { key: 'telescope-debrief', screen: 'debrief', name: 'telescope-launch-debrief', selector: '.debrief-game' },
   {
@@ -69,6 +69,12 @@ function clickDom(selector: string) {
 
 function clickButton(text: string | RegExp) {
   cy.contains('button', text).should('be.visible').click({ force: true })
+}
+
+function rollOutToLaunchpad() {
+  cy.get('[data-testid="mission-launch-review"]', { timeout: 10000 }).should('have.attr', 'data-location', 'hangar')
+  clickDom('[data-testid="transfer-to-launchpad-btn"]')
+  cy.get('[data-testid="mission-launch-review"]', { timeout: 10000 }).should('have.attr', 'data-location', 'launchpad')
 }
 
 function suppressNonGameplaySurfaces(win: Window) {
@@ -179,12 +185,13 @@ function completeM3Delivery(viewport: string) {
 }
 
 function completeDebrief() {
-  // Every call site here is an onboarding mission (M1-M3, missionsDone < 3),
-  // which auto-resolves the debrief reveal on mount — see DebriefScreen.tsx.
-  cy.get('[data-testid="resolve-cargo-btn"]').should('not.exist')
+  // Debrief is an explicit player recovery step before rewards can be
+  // collected. This keeps the visual journey aligned with the live cargo
+  // teardown rather than assuming the retired auto-resolve behavior.
+  cy.get('[data-testid="resolve-cargo-btn"]').should('be.visible').click({ force: true })
   cy.contains('Ledger').scrollIntoView().should('be.visible')
   clickDom('[data-testid="collect-reward-btn"]')
-  cy.contains('h1', /^(Base|Earth Base)$/, { timeout: 10000 }).should('be.visible')
+  cy.contains('h1', /^(Base|Earth Base)$/i, { timeout: 10000 }).should('be.visible')
 }
 
 function captureExtendedSurfaces(viewport: typeof VIEWPORTS[number]) {
@@ -247,6 +254,7 @@ function playM1(viewport: string) {
   screenshot(viewport, 'm1-rocket-selection')
 
   clickButton(/BUILD EXPLORER/)
+  rollOutToLaunchpad()
   clickDom('[data-testid="launch-btn"]')
   // The dev launch cinematic is intentionally asynchronous. Skip it here so
   // this release matrix tests the post-launch route deterministically instead
@@ -277,6 +285,7 @@ function playM2(viewport: string) {
   screenshot(viewport, 'm2-rocket-selection')
 
   cy.contains('button', /BUILD ANOTHER/).first().should('be.visible').click({ force: true })
+  rollOutToLaunchpad()
   clickDom('[data-testid="launch-btn"]')
   cy.get('[data-testid="launch-sequence-skip-btn"]', { timeout: 10000 })
     .should('be.visible')
@@ -307,6 +316,7 @@ function playM3(viewport: string) {
       cy.get('[data-testid="coach-got-it-btn"]').click({ force: true })
     }
   })
+  rollOutToLaunchpad()
   clickDom('[data-testid="launch-btn"]')
   cy.get('[data-testid="launch-sequence-skip-btn"]', { timeout: 10000 })
     .should('be.visible')

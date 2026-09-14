@@ -143,7 +143,7 @@ describe('M3 mission review environment', () => {
       cy.get('[data-testid="delivery-screen"] canvas[aria-label]', { timeout: 15000 })
         .should('be.visible')
         .and('have.attr', 'aria-label') // Canvas exists and is labelled
-      cy.contains('CLIENT BUILDING SITE').should('be.visible')
+      cy.contains('CLIENT BUILD SITE').should('be.visible')
       cy.contains(CLIENT_NAME).should('be.visible')
 
       // Dump cargo button visible before unload (canvas render time: ~1.2s for TakeOn scene setup)
@@ -154,8 +154,8 @@ describe('M3 mission review environment', () => {
       // Unload cargo at building site
       cy.get('[data-testid="delivery-dump-cargo"]').click({ force: true })
       cy.contains('MINERALS UNLOADED').should('be.visible')
-      cy.contains('Return the empty rover to the ship').should('be.visible')
-      cy.get('[data-testid="delivery-return-rover"]').should('be.visible')
+      cy.contains('Return the empty Mule rover to the ship').should('be.visible')
+      cy.get('[data-testid="delivery-return-rover"]').should('be.visible').and('contain.text', 'Return Rover To Ship')
       cy.screenshot(`m3-${key}-05-building-site-unloaded`, { capture: 'viewport' })
 
       // Redock rover and confirm launch ready
@@ -164,15 +164,14 @@ describe('M3 mission review environment', () => {
       cy.contains('LAUNCH READY').should('be.visible')
       cy.screenshot(`m3-${key}-06-rover-redocked`, { capture: 'viewport' })
 
-      // Verify return to transit screen (next phase: return to Earth)
-      cy.get('.transit-screen', { timeout: 15000 }).should('be.visible')
-      cy.contains('EARTH RETURN', { timeout: 5000 }).should('be.visible')
-
-      // Verify game state post-delivery
-      // Note: In a full integration test, we could verify francs increase.
-      // This harness focuses on UI/canvas flow; state validation is covered by unit tests.
-      cy.get('[data-testid="transit-mission-context"]')
-        .should('contain.text', 'Belt Courier Run') // Mission context preserved
+      // The M3 handoff settles into Debrief after redock. Verify the real
+      // client completion state, then finish the explicit teardown/reward path.
+      cy.get('.debrief-game', { timeout: 15000 }).should('be.visible')
+      cy.contains('MISSION COMPLETE').should('be.visible')
+      cy.contains('Belt Courier Run').should('be.visible')
+      cy.get('[data-testid="resolve-cargo-btn"]').should('be.visible').click()
+      cy.get('[data-testid="collect-reward-btn"]', { timeout: 10000 }).should('be.visible').click()
+      cy.contains('h1', /^(Base|Earth Base)$/i, { timeout: 15000 }).should('be.visible')
     })
   })
 })
