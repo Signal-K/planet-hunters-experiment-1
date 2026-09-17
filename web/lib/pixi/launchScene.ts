@@ -228,7 +228,7 @@ export function buildLaunchScene(
   groundGfx.rect(padX - 18, layout.padDeckY - 4, padW + 36, 22).fill(C.dirtDark)
   groundGfx.rect(padX, layout.padDeckY - 10, padW, 20).fill(C.pad)
   groundGfx.rect(padX, layout.padDeckY - 12, padW, 3).fill(C.padLite)
-  groundGfx.rect(W / 2 - 16, layout.padDeckY - 10, 32, layout.groundHeight).fill(0x121214)
+  groundGfx.rect(W / 2 - 16, layout.padDeckY - 4, 32, 22).fill(0x121214)
   groundGfx.rect(padX + 12, layout.padDeckY - 10, 14, 5).fill({ color: C.amber, alpha: 0.7 })
   groundGfx.rect(padX + padW - 26, layout.padDeckY - 10, 14, 5).fill({ color: C.amber, alpha: 0.7 })
   padContainer.addChild(groundGfx)
@@ -424,7 +424,7 @@ export function buildLaunchScene(
     const orbitActive = elapsed >= T.orbit
     padContainer.y = launchPadOffsetY(cameraY)
     smokeContainer.y = launchPadOffsetY(cameraY)
-    highAtmosContainer.y = H * 0.08 - cameraY * 0.25
+    highAtmosContainer.y = H * 0.08 + cameraY * 0.25
     rocketRoot.y = launchRocketScreenY(altitude, cameraY, layout.rocketPadY)
 
     if (orbitActive) {
@@ -455,7 +455,7 @@ export function buildLaunchScene(
 
     cloudDrift += dt
     for (const layer of cloudLayers) {
-      layer.container.y = -cameraY * layer.parallax
+      layer.container.y = cameraY * layer.parallax
       for (const puff of layer.puffs) {
         puff.g.x = ((puff.x + cloudDrift * layer.speed) % (W + 120)) - 60
       }
@@ -515,20 +515,20 @@ export function buildLaunchScene(
 
     if (!boostersSeparated && elapsed >= T.boosterSep) {
       boostersSeparated = true
-      detachPart(boosterL, -70, 40, 0.06, 3.4)
-      detachPart(boosterR, 70, 40, -0.06, 3.4)
+      detachPart(boosterL, -70, 55, 0.9, 3.4)
+      detachPart(boosterR, 70, 55, -0.9, 3.4)
     }
 
     if (!stageSeparated && elapsed >= T.stageSep) {
       stageSeparated = true
-      detachPart(lowerStage, (Math.random() - 0.5) * 18, 85, 0.03, 4.2)
+      detachPart(lowerStage, (Math.random() - 0.5) * 18, 90, 0.45, 4.2)
     }
 
     for (const d of debris) {
       d.life -= dt
       d.sprite.x += d.vx * dt
       d.sprite.y += d.vy * dt
-      d.sprite.rotation += d.rot
+      d.sprite.rotation += d.rot * dt
       d.sprite.alpha = Math.min(1, d.life * 0.85)
     }
 

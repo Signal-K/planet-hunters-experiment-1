@@ -237,7 +237,7 @@ export function buildTransitScene(app: Application, opts: TransitSceneOptions): 
       const earthR = transitOriginEarthRadius(progress, H, kind)
       originEarthG.clear()
       if (earthR > 8) {
-        drawPlanet(originEarthG, cx, H + earthR * 0.22, earthR, 'earth', elapsed * 0.12)
+        drawPlanet(originEarthG, cx, H * 0.92, earthR, 'earth', elapsed * 0.12)
       }
 
       drawPlanet(planetG, cx, planetCY, r, kind, elapsed * 0.22)

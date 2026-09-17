@@ -12,7 +12,7 @@ describe('launch pad layout', () => {
   it('gives landscape viewports a deep Earth pad instead of a hairline ground strip', () => {
     const layout = launchPadLayout(1280, 720)
     expect(layout.isLandscape).toBe(true)
-    expect(layout.groundHeight / 720).toBeGreaterThanOrEqual(0.38)
+    expect(layout.groundHeight / 720).toBeGreaterThanOrEqual(0.30)
     expect(layout.rocketHeight / 720).toBeLessThan(0.5)
     expect(layout.padDeckY).toBeGreaterThan(720 * 0.5)
   })
@@ -48,6 +48,14 @@ describe('launch ascent camera', () => {
     const y1 = launchRocketScreenY(a1, cam1, layout.rocketPadY)
     const y2 = launchRocketScreenY(a2, cam2, layout.rocketPadY)
     expect(y2).toBeLessThan(y1)
+    expect(cam2).toBeGreaterThan(cam1)
+  })
+
+  it('scrolls the Earth pad down the frame as the camera follows, not up', () => {
+    const later = launchAscentFrame(LAUNCH_TIMELINE.stageSep, 1280, 720)
+    const early = launchAscentFrame(LAUNCH_TIMELINE.liftoff + 0.4, 1280, 720)
+    expect(later.padOffsetY).toBeGreaterThanOrEqual(early.padOffsetY)
+    expect(later.rocketScreenY).toBeLessThan(early.rocketScreenY)
   })
 
   it('still shows the Earth pad at booster separation on a landscape screen', () => {

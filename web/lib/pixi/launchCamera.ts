@@ -34,7 +34,7 @@ export function launchPadLayout(W: number, H: number): LaunchPadLayout {
   // Landscape needs a deep ground band so the Earth pad is actually on screen
   // instead of a hairline under a stack that already fills the viewport.
   const groundHeight = isLandscape
-    ? Math.max(Math.round(H * 0.40), 150)
+    ? Math.max(Math.round(H * 0.32), 140)
     : Math.max(Math.round(H * 0.18), 96)
   const groundTop = H - groundHeight
   const padDeckY = groundTop + Math.round(groundHeight * 0.18)
@@ -86,7 +86,10 @@ export function launchRocketScreenY(altitude: number, cameraY: number, rocketPad
 }
 
 export function launchPadOffsetY(cameraY: number): number {
-  return -cameraY
+  // Positive Y is down in Pixi. The pad must recede toward the BOTTOM as the
+  // vehicle climbs, otherwise the Earth scene is shoved up and the rocket
+  // appears to fall into a pit (SSL-295).
+  return cameraY
 }
 
 export interface LaunchAscentFrame {
@@ -103,13 +106,13 @@ export function launchAscentFrame(elapsed: number, W: number, H: number): Launch
   const cameraY = launchCameraY(altitude, layout.followStart)
   const rocketScreenY = launchRocketScreenY(altitude, cameraY, layout.rocketPadY)
   const padOffsetY = launchPadOffsetY(cameraY)
-  const padBottomOnScreen = H + padOffsetY
+  const padDeckOnScreen = layout.padDeckY + padOffsetY
   return {
     altitude,
     cameraY,
     rocketScreenY,
     padOffsetY,
-    padVisible: padBottomOnScreen > H * 0.12,
+    padVisible: padDeckOnScreen < H && padDeckOnScreen > H * 0.08,
   }
 }
 
