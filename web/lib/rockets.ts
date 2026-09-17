@@ -35,7 +35,7 @@ export function rocketMissionFit(rocket: RocketModel, mission: Mission): RocketF
       key: 'cargo',
       label: 'Cargo',
       have: `${rocket.stats.cargo}U`,
-      need: `${needCargo}U`,
+      need: needCargo === 0 ? 'NONE' : `${needCargo}U`,
       ok: rocket.stats.cargo >= needCargo,
     },
     {

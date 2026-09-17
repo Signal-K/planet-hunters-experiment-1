@@ -2296,22 +2296,15 @@ button { cursor: pointer; }
 
   .mission-setup-screen--rocket .rocket-summary-card {
     flex: none;
-    height: auto;
-    overflow: visible;
+    min-height: 0;
+    overflow: hidden;
   }
 
   .mission-setup-screen--rocket .rocket-summary-scroll {
     gap: 12px !important;
     padding: 12px;
-    height: auto;
-    overflow: visible;
-  }
-
-  .mission-setup-screen--rocket .rocket-summary-card > .rocket-summary-scroll > div:first-child > div:last-child {
-    display: -webkit-box;
-    overflow: hidden;
-    -webkit-box-orient: vertical;
-    -webkit-line-clamp: 2;
+    height: 100% !important;
+    overflow-y: auto !important;
   }
 
   .mission-setup-screen--rocket .rocket-stat-grid {
@@ -2788,12 +2781,16 @@ button { cursor: pointer; }
   /* KES-311: shrink-to-fit width let this run under .rocket-view-toggle--bay
      (bottom-right, same row) on narrow viewports — the vehicle-role line
      wraps instead of colliding with it now. */
-  max-width: calc(100% - 150px);
+  max-width: calc(100% - 48px);
   display: grid;
   gap: 4px;
-  padding: 8px 10px;
+  padding: 8px 12px;
   border-left: 3px solid var(--ln-cyan);
-  background: color-mix(in srgb, var(--ln-void) 82%, transparent);
+  background: color-mix(in srgb, var(--ln-panel) 88%, transparent);
+}
+
+.mission-setup-screen--rocket .rocket-inspection-bay__readout {
+  max-width: calc(100% - 24px);
 }
 .rocket-inspection-bay__readout span,
 .rocket-inspection-bay__readout small {
@@ -4299,7 +4296,7 @@ html[data-coach-target="build-structure-strip"] [data-coach-id="build-structure-
 .mission-setup-screen--rocket .rocket-summary-scroll {
   height: 100% !important;
   overflow-y: auto !important;
-  padding-bottom: 64px !important;
+  padding-bottom: 16px !important;
 }
 
 .mission-setup-screen--rocket .mission-creator-actions {
@@ -4327,7 +4324,7 @@ html[data-coach-target="build-structure-strip"] [data-coach-id="build-structure-
 @media (max-width: 899px) {
   .mission-setup-screen--rocket .mission-creator-body {
     grid-template-columns: minmax(0, 1fr);
-    grid-template-rows: minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-rows: minmax(140px, 0.7fr) minmax(0, 1.3fr);
   }
   .mission-setup-screen--rocket .rocket-summary-card {
     border-top: 1px solid var(--ln-hairline) !important;
@@ -4401,6 +4398,17 @@ html[data-coach-target="build-structure-strip"] [data-coach-id="build-structure-
   border-top: 1px solid var(--ln-hairline);
   background: color-mix(in srgb, var(--ln-panel) 96%, transparent);
   pointer-events: auto;
+  position: static;
+}
+
+.mission-setup-screen--launchpad.mission-setup-screen--rocket .mission-creator-container:not(.mission-relay-yard) {
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto;
+}
+
+.mission-setup-screen--launchpad.mission-setup-screen--rocket .mission-creator-body {
+  height: auto;
+  min-height: 0;
 }
 .mission-setup-screen--launchpad .mission-creator-actions > *,
 .mission-setup-screen--launchpad .mission-creator-actions button {

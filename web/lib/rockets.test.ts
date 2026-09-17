@@ -77,7 +77,7 @@ describe('selectRocketForMission', () => {
 
     expect(fit.map(check => check.key)).toEqual(['cargo', 'orbit', 'drill'])
     expect(fit.every(check => check.ok)).toBe(true)
-    expect(fit.find(check => check.key === 'cargo')).toMatchObject({ have: '6U', need: '0U' })
+    expect(fit.find(check => check.key === 'cargo')).toMatchObject({ have: '6U', need: 'NONE' })
   })
 })
 

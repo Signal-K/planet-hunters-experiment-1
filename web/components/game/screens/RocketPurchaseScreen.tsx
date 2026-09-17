@@ -220,13 +220,13 @@ export default function RocketPurchaseScreen({ missionsDone, francs, mission, de
 
           {!isFree && (
             <div className="rocket-cost-card">
-              {missionPayout !== undefined && (
+              {missionPayout ? (
                 <CostSummaryRow label="Mission Payout (base)" value={formatCurrency(missionPayout, { compact: true })} color="var(--ln-cyan)" />
-              )}
+              ) : null}
               <CostSummaryRow label="Vehicle Cost" value={formatCurrency(rocket.costFrancs, { compact: true })} color="var(--ln-crimson)" />
-              {estProfit !== undefined && (
-                <CostSummaryRow label="Est. Profit" value={formatCurrency(estProfit, { compact: true, signed: true })} color={estProfit >= 0 ? 'var(--ln-ok)' : 'var(--ln-crimson)'} />
-              )}
+              {missionPayout ? (
+                <CostSummaryRow label="Est. Profit" value={formatCurrency(estProfit ?? 0, { compact: true, signed: true })} color={(estProfit ?? 0) >= 0 ? 'var(--ln-ok)' : 'var(--ln-crimson)'} />
+              ) : null}
               <CostSummaryRow label="Your Balance" value={formatCurrency(francs, { compact: true })} color={canAfford ? 'var(--ln-text)' : 'var(--ln-crimson)'} last />
               {!canAfford && (
                 <div className="rocket-cost-warn">
