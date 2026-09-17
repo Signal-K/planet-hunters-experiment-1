@@ -3,7 +3,7 @@
 import { useEffect, useRef } from 'react'
 import { capDpr } from '@/lib/engine/pixiDisplay'
 import { Application } from 'pixi.js'
-import { buildLaunchScene, LAUNCH_W, LAUNCH_H } from '@/lib/pixi/launchScene'
+import { buildLaunchScene, LAUNCH_W, LAUNCH_H, launchFrameDt } from '@/lib/pixi/launchScene'
 
 interface Props {
   rocketName: string
@@ -80,9 +80,8 @@ export function LaunchSequenceCanvas({ rocketName, rocketImageSrc, targetName, o
       })
 
       app.ticker.add(t => {
-        // deltaMS is wall-clock milliseconds. deltaTime/60 is only correct at
-        // a 60 Hz display and runs several times real-time on 120/144 Hz.
-        const dt = t.deltaMS / 1000
+        const dt = launchFrameDt(t.deltaMS)
+        if (dt === 0) return
         elapsed += dt
         scene.update(elapsed, dt)
       })

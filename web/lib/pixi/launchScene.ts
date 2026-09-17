@@ -23,8 +23,7 @@ import {
 import { LAUNCH_TIMELINE } from './launchTimeline'
 import { drawPlanet } from './transitScene'
 
-export { LAUNCH_TIMELINE } from './launchTimeline'
-export { LAUNCH_W, LAUNCH_H } from './launchTimeline'
+export { LAUNCH_TIMELINE, LAUNCH_W, LAUNCH_H, launchFrameDt } from './launchTimeline'
 export {
   launchAltitude,
   launchAscentFrame,

@@ -6,7 +6,7 @@ import {
   launchPadLayout,
   launchRocketScreenY,
 } from './launchCamera'
-import { LAUNCH_TIMELINE } from './launchTimeline'
+import { LAUNCH_TIMELINE, launchFrameDt } from './launchTimeline'
 
 describe('launch pad layout', () => {
   it('gives landscape viewports a deep Earth pad instead of a hairline ground strip', () => {
@@ -68,5 +68,14 @@ describe('launch ascent camera', () => {
     expect(launchAltitude(LAUNCH_TIMELINE.ignitionStart)).toBe(0)
     expect(launchAltitude(LAUNCH_TIMELINE.liftoff)).toBe(0)
     expect(launchAltitude(LAUNCH_TIMELINE.liftoff + 1)).toBeGreaterThan(0)
+  })
+})
+
+describe('launch frame dt', () => {
+  it('converts milliseconds to seconds at 60 Hz without skipping the cinematic', () => {
+    expect(launchFrameDt(16.67)).toBeCloseTo(0.01667, 4)
+    expect(launchFrameDt(5000)).toBe(0.05)
+    expect(launchFrameDt(0)).toBe(0)
+    expect(launchFrameDt(Number.NaN)).toBe(0)
   })
 })
