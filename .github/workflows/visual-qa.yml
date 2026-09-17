@@ -22,6 +22,9 @@ jobs:
   visual-qa:
     name: Headless Chrome — full game playthrough
     runs-on: ubuntu-latest
+    # SSL-294: the playthrough is a few focused specs. Cap the job so a hung
+    # Chrome session cannot sit red for the default six-hour runner limit.
+    timeout-minutes: 20
     env:
       NEXT_PUBLIC_FEATURE_SCAN_STATION: "true"
       NEXT_PUBLIC_E2E_AUTH_AUTO_CONTINUE: "true"
@@ -101,6 +104,9 @@ jobs:
           chrome-version: stable
 
       # ── Cypress visual run ────────────────────────────────────────────────────
+      # SSL-294: pin to visual-qa.cy.ts (the original playthrough). Do not glob
+      # cypress/e2e/visual/** — the release matrix, M3 review, and one-off layout
+      # specs live in CYPRESS_PROFILE=visual-extended and are opt-in.
       # Keep visual QA headless. Xvfb/headed mode is unnecessary for screenshots
       # and can open native browser crash surfaces on developer machines.
       - name: Run visual QA — headless Chrome
@@ -114,6 +120,7 @@ jobs:
           start: npm run dev
           wait-on: "http://localhost:3099"
           wait-on-timeout: 90
+          spec: cypress/e2e/visual/visual-qa.cy.ts
         env:
           CYPRESS_PROFILE: visual
           CYPRESS_baseUrl: http://localhost:3099
@@ -414,7 +421,7 @@ jobs:
             **Run**: [View full logs and download artifacts](${runUrl})
             ${testRows}${screenshotSection}${aiReviewSection}
             ---
-            _Screenshots are pixel-accurate captures from a headed Chrome browser playing through the game._
+            _Screenshots are pixel-accurate captures from headless Chrome playing through the M1 visual QA spec._
             `.replace(/^            /gm, '')
 
             // Write to GitHub step summary

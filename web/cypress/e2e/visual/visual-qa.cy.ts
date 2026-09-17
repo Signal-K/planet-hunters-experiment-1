@@ -1,11 +1,14 @@
 export {}
 
 /**
- * Visual QA tests — run these in headed Chrome to actually watch the game.
+ * Visual QA playthrough — the per-push Headless Chrome gate (SSL-294).
  *
  * Run:
+ *   CYPRESS_PROFILE=visual npx cypress run --browser chrome
  *   CYPRESS_PROFILE=visual npx cypress open --browser chrome
- *   CYPRESS_PROFILE=visual npx cypress run --browser chrome --headed
+ *
+ * Extra visual specs (release matrix, M3 review, layout contracts) are not
+ * part of this profile. Run them with CYPRESS_PROFILE=visual-extended.
  *
  * Each test takes screenshots at key moments. Find them in cypress/screenshots/.
  * Videos land in cypress/videos/ when video:true is set (CI or CYPRESS_VIDEO=1).

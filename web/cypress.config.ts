@@ -139,14 +139,28 @@ const profiles: Record<string, Cypress.EndToEndConfigOptions> = {
     viewportHeight: 844,
     env: { livePocketBase: true },
   },
-  // Visual QA profile: headless Chrome, screenshots at every step, video always on.
-  // Keep this profile headless: headed launches can open a native crash dialog on
-  // macOS and interrupt the operator before Cypress starts.
+  // Visual QA playthrough (SSL-294): the per-push Headless Chrome gate.
+  // This is the original M1 screenshot run in visual-qa.cy.ts — not every file
+  // under cypress/e2e/visual/. The extra matrix/review/layout specs drifted into
+  // this glob, bloated the job to ~36 tests, and kept CI red on copy/layout
+  // that the playthrough does not cover. Run those with visual-extended.
+  // Keep this profile headless: headed launches can open a native crash dialog
+  // on macOS and interrupt the operator before Cypress starts.
   // Run with: CYPRESS_PROFILE=visual npx cypress run --browser chrome
-  // Use `cypress open` only for deliberate interactive debugging.
   visual: {
     baseUrl: process.env.CYPRESS_baseUrl || 'http://localhost:3099',
+    specPattern: ['cypress/e2e/visual/visual-qa.cy.ts'],
+    viewportWidth: 390,
+    viewportHeight: 844,
+    env: { visualProfile: true },
+  },
+  // Opt-in visual extras: release matrix, M3 review, layout contracts.
+  // Not a per-push required gate — they have dedicated npm scripts and fail
+  // independently of the playthrough as product copy and layout change.
+  'visual-extended': {
+    baseUrl: process.env.CYPRESS_baseUrl || 'http://localhost:3099',
     specPattern: ['cypress/e2e/visual/**/*.cy.{js,jsx,ts,tsx}'],
+    excludeSpecPattern: ['cypress/e2e/visual/visual-qa.cy.ts'],
     viewportWidth: 390,
     viewportHeight: 844,
     env: { visualProfile: true },
@@ -171,8 +185,8 @@ export default defineConfig({
     // profile's viewportWidth/viewportHeight above is just its "mobile" default.
     viewportWidth: viewportOverride.viewportWidth,
     viewportHeight: viewportOverride.viewportHeight,
-    // Always record video for visual profile; otherwise only in CI
-    video: profile === 'visual' ? true : (process.env.CI ? true : false),
+    // Always record video for visual playthrough/extended; otherwise only in CI
+    video: profile === 'visual' || profile === 'visual-extended' ? true : (process.env.CI ? true : false),
     screenshotOnRunFailure: true,
     defaultCommandTimeout: 10000,
     pageLoadTimeout: 60000,

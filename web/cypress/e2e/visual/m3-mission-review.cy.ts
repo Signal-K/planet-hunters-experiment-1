@@ -1,4 +1,6 @@
 // Dedicated M3 mission review harness (KES-235).
+// Opt-in: CYPRESS_PROFILE=visual-extended. Not part of the per-push Visual QA
+// playthrough (SSL-294).
 // This is intentionally a state-seeded review environment: it reaches each
 // authored operation state deterministically, while the delivery leg still
 // mounts the real TakeOn canvas and exercises the real dump/redock controls.

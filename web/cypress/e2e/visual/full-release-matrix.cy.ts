@@ -1,8 +1,10 @@
 export {}
 
-// Release-gate journey: a fresh player completes the active onboarding path at
-// every supported layout class. A second, deterministic surface pass records
-// the late-game operations that are not yet part of that onboarding route.
+// Release-gate journey (opt-in: CYPRESS_PROFILE=visual-extended).
+// Not part of the per-push Visual QA playthrough (SSL-294).
+// A fresh player completes the active onboarding path at every supported
+// layout class. A second, deterministic surface pass records the late-game
+// operations that are not yet part of that onboarding route.
 // Screenshots are evidence of visible state; assertions after interactions
 // prove the route progressed.
 
