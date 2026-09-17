@@ -80,8 +80,11 @@ export function LaunchSequenceCanvas({ rocketName, rocketImageSrc, targetName, o
       })
 
       app.ticker.add(t => {
-        elapsed += t.deltaTime / 60
-        scene.update(elapsed, t.deltaTime / 60)
+        // deltaMS is wall-clock milliseconds. deltaTime/60 is only correct at
+        // a 60 Hz display and runs several times real-time on 120/144 Hz.
+        const dt = t.deltaMS / 1000
+        elapsed += dt
+        scene.update(elapsed, dt)
       })
     })()
 
