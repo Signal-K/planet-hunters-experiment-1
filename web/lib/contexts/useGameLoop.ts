@@ -14,6 +14,7 @@ import { applyDeliveryArrived, applyDeliveryUnloadComplete } from '@/lib/systems
 import { applyLandingTouchdown, applyRedockComplete } from '@/lib/systems/LandingSystem'
 import { applyAwardMissionCrewXP, crewRequirementStatus, diplomacyPayoutMultiplier, missionCrewForLaunch } from '@/lib/systems/AcademySystem'
 import { applyAssembleFabricatedRocket, applyFabricateRocketPart, applyFreeHaulDisposition, applyPurchaseRocket, applyRemoteHaulDisposition, applyRocketStageRecovery, earthStorageBuilt, hasOperationalRemoteSilo } from '@/lib/systems/EconomySystem'
+import { rocketCompatibleWithMission } from '@/lib/rockets'
 import { applyConstructionCompletion } from '@/lib/systems/ConstructionSystem'
 import { loanOutstanding, repayBankruptcyLoan } from '@/lib/systems/TreasurySystem'
 import { TREASURY_PLAYER_ID } from '@/lib/systems/ProgressionSystem'
@@ -268,10 +269,14 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
       if (s.screen !== 'rocket-buy' || !s.missionId || !s.targetId) return s
       const rocket = ROCKET_MODELS.find(r => r.id === rocketId)
       if (!rocket) return s
+      const mission = catalog.missions.find(m => m.id === s.missionId)
+        ?? s.player.dailyClientPool?.missions.find(m => m.id === s.missionId)
+        ?? null
+      if (mission && !rocketCompatibleWithMission(rocket, mission)) return s
       if (s.player.pendingLaunch && s.player.pendingRocketId === rocket.id) return { ...s, screen: 'fab' }
       return applyPurchaseRocket(s, rocket)
     })
-  }, [setState])
+  }, [catalog.missions, setState])
 
   const onFabricateRocketPart = useCallback((rocketId: string, componentId: string) => {
     setState(s => {
@@ -286,10 +291,14 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
       if (s.screen !== 'rocket-buy' || !s.missionId || !s.targetId) return s
       const rocket = ROCKET_MODELS.find(candidate => candidate.id === rocketId)
       if (!rocket) return s
+      const mission = catalog.missions.find(m => m.id === s.missionId)
+        ?? s.player.dailyClientPool?.missions.find(m => m.id === s.missionId)
+        ?? null
+      if (mission && !rocketCompatibleWithMission(rocket, mission)) return s
       if (s.player.pendingLaunch && s.player.pendingRocketId === rocket.id) return { ...s, screen: 'fab' }
       return applyAssembleFabricatedRocket(s, rocket)
     })
-  }, [setState])
+  }, [catalog.missions, setState])
 
   const onLaunch = useCallback(() => {
     const current = stateRef.current
