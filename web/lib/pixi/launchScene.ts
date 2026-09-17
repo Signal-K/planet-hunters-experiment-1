@@ -136,13 +136,13 @@ function buildLaunchStack(variant: 'explorer' | 'prospector'): {
 
   function makeBooster(side: 1 | -1): Graphics {
     const g = new Graphics()
-    const x = side * (wide + 12)
-    g.rect(x - 7, -boosterH, 14, boosterH - 8).fill(C.booster)
-    g.rect(x - 7, -boosterH, 14, 4).fill(C.hull)
-    g.rect(x - 2, -boosterH + 16, 4, boosterH - 40).fill({ color: C.hull, alpha: 0.55 })
-    g.poly([x - 7, -boosterH, x, -boosterH - 22, x + 7, -boosterH]).fill(C.panel)
-    g.poly([x - 7, -12, x + 7, -12, x + 9, 0, x - 9, 0]).fill(C.panel)
-    g.x = 0
+    const cx = side * (wide + 12)
+    g.rect(-7, -boosterH, 14, boosterH - 8).fill(C.booster)
+    g.rect(-7, -boosterH, 14, 4).fill(C.hull)
+    g.rect(-2, -boosterH + 16, 4, boosterH - 40).fill({ color: C.hull, alpha: 0.55 })
+    g.poly([-7, -boosterH, 0, -boosterH - 22, 7, -boosterH]).fill(C.panel)
+    g.poly([-7, -12, 7, -12, 9, 0, -9, 0]).fill(C.panel)
+    g.x = cx
     return g
   }
   const boosterL = makeBooster(-1)
