@@ -1790,10 +1790,18 @@ button { cursor: pointer; }
    scene a real stage and keep the technical readout subordinate beside it. */
 .mission-setup-screen--rocket .rocket-vehicle-frame {
   min-height: 320px;
-  background:
-    radial-gradient(ellipse at 50% 48%, var(--ln-cyan-soft), transparent 58%),
-    linear-gradient(135deg, var(--ln-panel-2), var(--ln-void));
+  background: transparent;
   border-color: var(--ln-cyan-border);
+}
+
+.mission-setup-screen--rocket .rocket-inspection-bay {
+  background: transparent;
+  border: 0;
+}
+
+.mission-setup-screen--rocket .rocket-inspection-bay::after {
+  background: linear-gradient(180deg, transparent, color-mix(in srgb, var(--ln-void) 24%, transparent));
+  opacity: 0.4;
 }
 
 .mission-setup-screen--rocket .mission-setup-content {
@@ -1875,6 +1883,213 @@ button { cursor: pointer; }
 .rocket-choice-name { font-size: 16px; letter-spacing: .04em; }
 .rocket-choice-role { min-height: 28px; color: var(--ln-text-dim); font: 500 10px/1.35 var(--ln-font-body); }
 .rocket-choice-stats { color: var(--ln-cyan); font: 700 9px var(--ln-font-mono); letter-spacing: .06em; white-space: nowrap; }
+.rocket-choice-fit {
+  color: var(--ln-crimson);
+  font: 700 11px/1.3 var(--ln-font-display);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.rocket-choice-fit.is-ok { color: var(--ln-ok); }
+.rocket-choice.is-blocked { opacity: 0.72; }
+
+.rocket-summary-scroll {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.rocket-job {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+  border: 1px solid var(--ln-cyan-border);
+  border-radius: var(--ln-r-md);
+  background: var(--ln-panel-2);
+}
+
+.rocket-job-row {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.rocket-job-row span,
+.rocket-fit-label {
+  color: var(--ln-text-muted);
+  font: 700 11px var(--ln-font-display);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.rocket-job-row strong {
+  color: var(--ln-text);
+  font: 800 16px/1.2 var(--ln-font-display);
+  letter-spacing: 0.04em;
+}
+
+.rocket-fit-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 4px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.rocket-fit-list li {
+  display: grid;
+  grid-template-columns: 12px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+  color: var(--ln-crimson);
+}
+
+.rocket-fit-list li.is-ok { color: var(--ln-ok); }
+
+.rocket-fit-mark {
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+  background: currentColor;
+}
+
+.rocket-fit-list strong {
+  color: var(--ln-text);
+  font: 700 12px var(--ln-font-mono);
+  letter-spacing: 0.04em;
+}
+
+.rocket-fit-reject {
+  margin: 0;
+  color: var(--ln-crimson);
+  font: 700 12px/1.4 var(--ln-font-display);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.rocket-cost-card {
+  overflow: hidden;
+  border: 1px solid var(--ln-cyan-border);
+  border-radius: var(--ln-r-md);
+  background: var(--ln-panel-2);
+}
+
+.rocket-cost-warn {
+  padding: 8px 16px 12px;
+  border-top: 1px solid color-mix(in srgb, var(--ln-crimson) 20%, transparent);
+  color: var(--ln-crimson);
+  font: 700 11px var(--ln-font-display);
+  letter-spacing: 0.06em;
+}
+
+.rocket-specs {
+  padding-top: 8px;
+  border-top: 1px solid var(--ln-hairline);
+}
+
+.rocket-specs summary {
+  margin-bottom: 8px;
+  color: var(--ln-text-muted);
+  cursor: pointer;
+  font: 700 11px var(--ln-font-display);
+  letter-spacing: 0.16em;
+  list-style-position: inside;
+  text-transform: uppercase;
+}
+
+.rocket-specs summary::marker { color: var(--ln-cyan); }
+
+.rocket-stat-grid {
+  display: flex;
+  gap: 8px;
+}
+
+.rocket-module-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.rocket-module-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 8px;
+  border: 1px solid var(--ln-cyan-border);
+  border-radius: 8px;
+  background: var(--ln-cyan-soft);
+  color: var(--ln-cyan);
+  font: 700 10px var(--ln-font-display);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.rocket-fab {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 12px;
+  padding: 12px;
+  border: 1px solid var(--ln-cyan-border);
+  border-radius: var(--ln-r-md);
+  background: var(--ln-panel-2);
+}
+
+.rocket-fab-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.rocket-fab-heading span {
+  color: var(--ln-text-muted);
+  font: 700 10px var(--ln-font-display);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.rocket-fab-heading span.is-online { color: var(--ln-ok); }
+
+.rocket-fab p,
+.rocket-specs-note {
+  margin: 0;
+  color: var(--ln-text-muted);
+  font: 500 12px/1.4 var(--ln-font-body);
+}
+
+.rocket-specs-note { margin-top: 12px; }
+
+.rocket-fab-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--ln-hairline);
+}
+
+.rocket-fab-name {
+  color: var(--ln-text);
+  font: 700 11px var(--ln-font-display);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.rocket-fab-row div:last-child {
+  color: var(--ln-text-muted);
+  font: 11px var(--ln-font-mono);
+}
+
+.rocket-fab-row .is-blocked { color: var(--ln-crimson); }
+
+.rocket-fab-built {
+  color: var(--ln-ok);
+  font: 800 10px var(--ln-font-display);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
 
 .rocket-actions {
   display: flex;
@@ -1901,8 +2116,26 @@ button { cursor: pointer; }
 
 .rocket-tier-badge {
   position: absolute;
-  top: 14px;
+  top: 16px;
   right: 16px;
+  z-index: 2;
+}
+
+.rocket-tier-badge span {
+  padding: 4px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--ln-cyan-border);
+  background: var(--ln-cyan-soft);
+  color: var(--ln-cyan);
+  font: 800 10px var(--ln-font-display);
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+
+.rocket-tier-badge span.is-included {
+  border-color: var(--ln-ok);
+  background: var(--ln-ok-soft);
+  color: var(--ln-ok);
 }
 
 .rocket-modules summary {
@@ -4044,16 +4277,35 @@ html[data-coach-target="build-structure-strip"] [data-coach-id="build-structure-
   border-radius: 0 !important;
   box-shadow: none !important;
 }
-.mission-setup-screen--rocket .rocket-vehicle-frame {
-  background: radial-gradient(ellipse at 50% 48%, var(--ln-cyan-soft), transparent 58%), transparent !important;
+
+.mission-setup-screen--rocket .mission-creator-container:not(.mission-relay-yard) {
+  background: transparent;
 }
+.mission-setup-screen--rocket .rocket-vehicle-frame {
+  background: transparent !important;
+}
+
+.mission-setup-screen--rocket .rocket-inspection-bay {
+  background: transparent !important;
+  border: 0;
+}
+
 .mission-setup-screen--rocket .rocket-summary-card {
   border-left: 1px solid var(--ln-hairline) !important;
   overflow: hidden !important;
+  background: color-mix(in srgb, var(--ln-panel) 92%, transparent) !important;
 }
+
 .mission-setup-screen--rocket .rocket-summary-scroll {
   height: 100% !important;
   overflow-y: auto !important;
+  padding-bottom: 64px !important;
+}
+
+.mission-setup-screen--rocket .mission-creator-actions {
+  background: color-mix(in srgb, var(--ln-panel) 96%, transparent);
+  border-top: 1px solid var(--ln-hairline);
+  pointer-events: auto;
 }
 
 /* Confirm Rocket is a single full-size preflight instrument, with no empty
@@ -4143,6 +4395,12 @@ html[data-coach-target="build-structure-strip"] [data-coach-id="build-structure-
   border-top: 0;
   pointer-events: none;
   background: transparent;
+}
+
+.mission-setup-screen--launchpad.mission-setup-screen--rocket .mission-creator-actions {
+  border-top: 1px solid var(--ln-hairline);
+  background: color-mix(in srgb, var(--ln-panel) 96%, transparent);
+  pointer-events: auto;
 }
 .mission-setup-screen--launchpad .mission-creator-actions > *,
 .mission-setup-screen--launchpad .mission-creator-actions button {

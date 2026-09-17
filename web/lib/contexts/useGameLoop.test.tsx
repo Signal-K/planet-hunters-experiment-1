@@ -13,6 +13,7 @@ import type { GameState } from '@/lib/game-types'
 interface LoopHandle {
   state: GameState
   onPickMission: (id: string) => void
+  onPurchaseRocket: (id: string) => void
   onLaunch: () => void
   resumeMissionRun: (key: string) => void
 }
@@ -29,8 +30,8 @@ function LoopHarness({ initial, onReady }: { initial: GameState; onReady: (handl
   })
   const loop = useGameLoop({ stateRef, setState, catalog, addToast: vi.fn() })
   useEffect(() => {
-    onReady({ state, onPickMission: loop.onPickMission, onLaunch: loop.onLaunch, resumeMissionRun: loop.resumeMissionRun })
-  }, [loop.onLaunch, loop.onPickMission, loop.resumeMissionRun, onReady, state])
+    onReady({ state, onPickMission: loop.onPickMission, onPurchaseRocket: loop.onPurchaseRocket, onLaunch: loop.onLaunch, resumeMissionRun: loop.resumeMissionRun })
+  }, [loop.onLaunch, loop.onPickMission, loop.onPurchaseRocket, loop.resumeMissionRun, onReady, state])
   return null
 }
 
@@ -131,6 +132,45 @@ describe('useGameLoop concurrent mission runs', () => {
     expect(handleRef.current?.state.player.pausedMissionRuns).toHaveLength(1)
     expect(handleRef.current?.state.player.pausedMissionRuns?.[0]?.key).toBe('baseline:1700000000000')
     expect(handleRef.current?.state.screen).toBe('transit')
+    await act(async () => root.unmount())
+  })
+})
+
+describe('useGameLoop rocket compatibility', () => {
+  it('rejects Explorer on an M2 Heavy Haul and accepts Prospector', async () => {
+    const heavyHaul = STATIC_CATALOG.missions.find(mission => mission.sequence === 2)
+    expect(heavyHaul).toBeTruthy()
+    const staged: GameState = {
+      ...DEFAULT_STATE,
+      screen: 'rocket-buy',
+      missionId: heavyHaul!.id,
+      targetId: 'eros',
+      player: {
+        ...DEFAULT_STATE.player,
+        missionsDone: 1,
+        francs: 50_000_000,
+      },
+    }
+    const host = document.createElement('div')
+    const root = createRoot(host)
+    const handleRef: { current: LoopHandle | null } = { current: null }
+    const onReady = (next: LoopHandle) => { handleRef.current = next }
+    ;(globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT: boolean }).IS_REACT_ACT_ENVIRONMENT = true
+
+    await act(async () => {
+      root.render(<LoopHarness initial={staged} onReady={onReady} />)
+    })
+    await act(async () => {
+      handleRef.current?.onPurchaseRocket('explorer')
+    })
+    expect(handleRef.current?.state.screen).toBe('rocket-buy')
+    expect(handleRef.current?.state.player.pendingLaunch).toBeFalsy()
+
+    await act(async () => {
+      handleRef.current?.onPurchaseRocket('prospector')
+    })
+    expect(handleRef.current?.state.screen).toBe('fab')
+    expect(handleRef.current?.state.player.pendingRocketId).toBe('prospector')
     await act(async () => root.unmount())
   })
 })

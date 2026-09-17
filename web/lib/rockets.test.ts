@@ -1,7 +1,26 @@
 import { describe, expect, it } from 'vitest'
-import { ROCKET_MODELS, ROCKET_IDS, canonicalRocketId, rocketConfigForModel } from '@/lib/data'
+import { MISSIONS, ROCKET_MODELS, ROCKET_IDS, canonicalRocketId, rocketConfigForModel } from '@/lib/data'
+import type { Mission } from '@/lib/data'
 import { ROCKET_ASSETS } from './rocket-assets'
-import { getRequiredRocketModel } from './rockets'
+import {
+  getRequiredRocketModel,
+  rocketCompatibleWithMission,
+  rocketMissionFit,
+  selectRocketForMission,
+} from './rockets'
+
+const telescopeLaunch: Mission = {
+  id: 'story-transit-telescope-launch',
+  title: 'Launch Transit Telescope',
+  brief: 'Deploy your own TESS-class telescope into Earth orbit.',
+  tag: 'STORY',
+  difficulty: 'L1',
+  locked: false,
+  sequence: 4,
+  payload: { type: 'satellite', name: 'Transit Telescope', cargoCost: 0 },
+  requires: { minerals: {}, cargo_min: 0, drill_tier: 1, max_orbit: 1 },
+  payout: { francs: 0, affinity: 0 },
+}
 
 describe('getRequiredRocketModel', () => {
   it('uses canonical runtime ids and resolves legacy ids only at the compatibility boundary', () => {
@@ -28,6 +47,37 @@ describe('getRequiredRocketModel', () => {
     )
 
     expect(getRequiredRocketModel(missionsDone).tier).toBe(expectedTier)
+  })
+})
+
+describe('selectRocketForMission', () => {
+  it('defaults the telescope launch to Explorer when both vehicles can fly it', () => {
+    const explorer = ROCKET_MODELS.find(rocket => rocket.id === ROCKET_IDS.explorer)!
+    const prospector = ROCKET_MODELS.find(rocket => rocket.id === ROCKET_IDS.prospector)!
+
+    expect(rocketCompatibleWithMission(explorer, telescopeLaunch)).toBe(true)
+    expect(rocketCompatibleWithMission(prospector, telescopeLaunch)).toBe(true)
+    expect(selectRocketForMission(3, telescopeLaunch).id).toBe(ROCKET_IDS.explorer)
+  })
+
+  it('defaults M2 Heavy Haul to Prospector because Explorer cannot carry the job', () => {
+    const heavyHaul = MISSIONS.find(mission => mission.sequence === 2)!
+    const explorer = ROCKET_MODELS.find(rocket => rocket.id === ROCKET_IDS.explorer)!
+    const prospector = ROCKET_MODELS.find(rocket => rocket.id === ROCKET_IDS.prospector)!
+
+    expect(heavyHaul.requires.cargo_min).toBeGreaterThan(explorer.stats.cargo)
+    expect(rocketCompatibleWithMission(explorer, heavyHaul)).toBe(false)
+    expect(rocketCompatibleWithMission(prospector, heavyHaul)).toBe(true)
+    expect(selectRocketForMission(1, heavyHaul).id).toBe(ROCKET_IDS.prospector)
+  })
+
+  it('reports cargo, orbit, and drill against the current job', () => {
+    const explorer = ROCKET_MODELS.find(rocket => rocket.id === ROCKET_IDS.explorer)!
+    const fit = rocketMissionFit(explorer, telescopeLaunch)
+
+    expect(fit.map(check => check.key)).toEqual(['cargo', 'orbit', 'drill'])
+    expect(fit.every(check => check.ok)).toBe(true)
+    expect(fit.find(check => check.key === 'cargo')).toMatchObject({ have: '6U', need: '0U' })
   })
 })
 
