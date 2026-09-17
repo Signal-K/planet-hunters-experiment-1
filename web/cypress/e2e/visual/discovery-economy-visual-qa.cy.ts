@@ -7,8 +7,8 @@
 // flow, not just its own one-off survey flight.
 //
 // Run:
-//   CYPRESS_PROFILE=visual npx cypress run --browser chrome --headed --spec "cypress/e2e/visual/discovery-economy-visual-qa.cy.ts"
-//   CYPRESS_PROFILE=visual npx cypress open --browser chrome
+//   CYPRESS_PROFILE=visual-extended npx cypress run --browser chrome --spec "cypress/e2e/visual/discovery-economy-visual-qa.cy.ts"
+//   CYPRESS_PROFILE=visual-extended npx cypress open --browser chrome
 
 import type { GameState } from '@/game-context'
 // Relative path, not the `@/` alias: Cypress's bundled webpack preprocessor
