@@ -3,6 +3,7 @@ import type { Toast } from '@/components/ui/ToastLayer'
 import type { Screen, GameState } from '@/lib/game-types'
 import { EARTH_BASE_SCOPE } from '@/lib/scene-scope'
 import type { SceneScope } from '@/lib/scene-scope'
+import { isHostScene, resolveLogicalBack, type HostScene } from '@/lib/screen-back'
 
 let toastSeq = 0
 function nextToastId() { return `t${++toastSeq}` }
@@ -24,58 +25,64 @@ export function useUIActions(
   // Every Launchpad entry is now the physical scene. The retired overview was
   // a generic dashboard that broke the Base's scene-first game flow.
   const [launchpadMissionMenuOpen, setLaunchpadMissionMenuOpen] = useState(false)
-  // Screen changes are made by both this hook and domain actions such as
-  // Mission → Target → Rocket. Keep a short ephemeral trail here instead of
-  // teaching every screen a bespoke "back to Hub" route.
-  const screenTrail = useRef<Screen[]>([])
-  const returningToTrailScreen = useRef(false)
-  // Hangar can be entered from the Earth Base or the Launchpad composition.
-  // Preserve only that ephemeral return context: it is navigation chrome, not
-  // player progress and must not be persisted into a save or public URL.
-  const hangarReturnView = useRef<'launchpad' | 'hub'>('hub')
+  // Last physical place the player stood in (Hub / Launchpad / Academy).
+  // Overlay Back uses this instead of visit history, so Launchpad never
+  // returns to Hangar. Not persisted — it is chrome, not save data.
+  const lastHost = useRef<HostScene>('hub')
+  const hangarReturnView = useRef<HostScene>('hub')
+
+  const rememberHost = useCallback((screen: Screen) => {
+    if (isHostScene(screen)) lastHost.current = screen
+    else if (screen === 'hub-subsurface') lastHost.current = 'hub'
+  }, [])
 
   const go = useCallback((screen: Screen) => {
     setState(s => {
       if (screen === 'hangar') {
-        hangarReturnView.current = s.screen === 'launchpad' ? 'launchpad' : 'hub'
+        hangarReturnView.current = s.screen === 'launchpad' || s.screen === 'academy'
+          ? s.screen
+          : 'hub'
       }
+      rememberHost(screen)
       return { ...s, screen }
     })
-  }, [setState])
+  }, [rememberHost, setState])
 
-  const recordScreenTransition = useCallback((from: Screen, to: Screen) => {
-    if (from === to) return
-    if (returningToTrailScreen.current) {
-      returningToTrailScreen.current = false
-      return
-    }
-    screenTrail.current = [...screenTrail.current.slice(-15), from]
-  }, [])
+  const recordScreenTransition = useCallback((_from: Screen, to: Screen) => {
+    rememberHost(to)
+  }, [rememberHost])
 
   const goBack = useCallback((fallback: Screen = 'hub') => {
-    const destination = screenTrail.current.pop() ?? fallback
-    returningToTrailScreen.current = true
-    setState(s => ({ ...s, screen: destination }))
-  }, [setState])
+    setState(s => {
+      const destination = resolveLogicalBack({
+        current: s.screen,
+        fallback,
+        lastHost: lastHost.current,
+        hangarReturn: hangarReturnView.current,
+      })
+      rememberHost(destination)
+      if (destination === s.screen) return s
+      return { ...s, screen: destination }
+    })
+  }, [rememberHost, setState])
 
   const openLaunchpad = useCallback(() => {
     setLaunchpadMissionMenuOpen(false)
+    rememberHost('launchpad')
     setState(s => ({ ...s, screen: 'launchpad' }))
-  }, [setState])
+  }, [rememberHost, setState])
 
   const openLaunchpadMissionMenu = useCallback(() => {
     setLaunchpadMissionMenuOpen(true)
+    rememberHost('launchpad')
     setState(s => ({ ...s, screen: 'launchpad' }))
-  }, [setState])
+  }, [rememberHost, setState])
 
   const returnFromHangar = useCallback(() => {
     const destination = hangarReturnView.current
-    if (destination === 'hub') {
-      setState(s => ({ ...s, screen: 'hub' }))
-      return
-    }
-    setState(s => ({ ...s, screen: 'launchpad' }))
-  }, [setState])
+    rememberHost(destination)
+    setState(s => ({ ...s, screen: destination }))
+  }, [rememberHost, setState])
 
   // Mission entry is also the first onboarding checkpoint. Keep the route
   // change and checkpoint update in one functional state transition so the
