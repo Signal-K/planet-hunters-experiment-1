@@ -33,6 +33,17 @@ export interface TakeOnFieldOrder {
   pos: { x: number; y: number }
 }
 
+export type TakeOnBlockedReason = 'cliff' | 'battery' | 'edge' | 'busy'
+
+export interface TakeOnRoverPose {
+  x: number
+  y: number
+  /** True while the rover is animating between tiles. */
+  moving: boolean
+  /** Battery 0..1 as a fraction of capacity. */
+  battery: number
+}
+
 export interface TakeOnMountHandle {
   /** Deposit all rover cargo into an adjacent cache. Returns units moved. */
   deposit: () => number
@@ -45,7 +56,18 @@ export interface TakeOnMountHandle {
   currentOrder: () => TakeOnFieldOrder | null
   cancelOrder: () => void
   plannedRouteLength: () => number
+  /**
+   * Drive one tile in a screen-relative direction (0 right/SE, 1 down/SW,
+   * 2 left/NW, 3 up/NE as seen). Clears any tap-to-drive order. False when
+   * the tile ahead is not traversable.
+   */
+  move: (dir: 0 | 1 | 2 | 3) => boolean
+  /** Where the rover is and whether it is mid-step, for the drive readout. */
+  rover: () => TakeOnRoverPose | null
+  /** Subscribe to refused moves (cliff, edge, battery, busy). Returns an unsubscribe. */
+  onBlocked: (handler: (reason: TakeOnBlockedReason) => void) => () => void
   view: () => ViewKind | null
+  setView: (kind: ViewKind) => void
   toggleView: () => ViewKind | null
   rotateView: () => void
   /** Structures currently placed on the field (read-only snapshot for sharing). */
@@ -81,6 +103,13 @@ export interface TakeOnMountProps {
   lifeStage?: LifeStage
   /** Read-only visit: pointer input is disabled and no save is written. */
   readOnly?: boolean
+  /**
+   * View the field opens in. Landnam defaults to the flat top-down map
+   * (SSL-316 decision, 2026-09-19): screen up/down/left/right map straight
+   * onto world tiles on every device, so tap-to-drive and the drive pad
+   * need no rotated-axis reasoning. The iso diorama stays one toggle away.
+   */
+  startView?: ViewKind
   onEvent?: (event: TakeonHostEvent) => void
   /** Host-facing route state for the safe tap-to-drive planner. */
   onRouteChange?: (steps: number) => void
@@ -120,6 +149,7 @@ const TakeOnMount = forwardRef<TakeOnMountHandle, TakeOnMountProps>(function Tak
   target,
   lifeStage = 'dormant',
   readOnly = false,
+  startView = 'flat',
   onEvent,
   onRouteChange,
   onReady,
@@ -166,7 +196,21 @@ const TakeOnMount = forwardRef<TakeOnMountHandle, TakeOnMountProps>(function Tak
     },
     cancelOrder: () => gameRef.current?.cancelOrder(),
     plannedRouteLength: () => gameRef.current?.plannedRoute().length ?? 0,
+    move: dir => gameRef.current?.move(dir) ?? false,
+    rover: () => {
+      const game = gameRef.current
+      if (!game) return null
+      const r = game.sim.rover
+      const capacity = r.stats.batteryCapacity > 0 ? r.stats.batteryCapacity : 1
+      return { x: r.pos.x, y: r.pos.y, moving: r.moveFrom !== null, battery: Math.max(0, Math.min(1, r.battery / capacity)) }
+    },
+    onBlocked: handler => {
+      const game = gameRef.current
+      if (!game) return () => {}
+      return game.events.on('blocked', ({ reason }) => handler(reason))
+    },
     view: () => gameRef.current?.view ?? null,
+    setView: kind => gameRef.current?.setView(kind),
     toggleView: () => gameRef.current?.toggleView() ?? null,
     rotateView: () => gameRef.current?.rotateView(),
     structures: () => (gameRef.current?.sim.structures ?? []).map(s => ({
@@ -269,6 +313,7 @@ const TakeOnMount = forwardRef<TakeOnMountHandle, TakeOnMountProps>(function Tak
           spec: rover,
           seed,
           resume: resume ?? undefined,
+          startView,
         })
 
         const handleHostEvent = (event: TakeonHostEvent) => {
@@ -395,6 +440,7 @@ const TakeOnMount = forwardRef<TakeOnMountHandle, TakeOnMountProps>(function Tak
     rover,
     roverName,
     seed,
+    startView,
     targetId,
   ])
 

@@ -10,8 +10,8 @@
 .landingHandoff p { margin: 0; color: var(--ln-text-dim); font: 500 13px/1.55 var(--ln-font-body); }
 .eyebrow,
 .kicker { color: var(--ln-cyan); font: 800 9px var(--ln-font-display); letter-spacing: .18em; text-transform: uppercase; }
-.controls { position: absolute; left: 16px; top: 16px; z-index: 2; display: flex; gap: 16px; padding: 10px 12px; border: 1px solid var(--ln-cyan-border); background: color-mix(in srgb, var(--ln-panel) 92%, transparent); color: var(--ln-text-dim); font: 700 9px var(--ln-font-mono); letter-spacing: .08em; }
-.controls strong { color: var(--ln-cyan); font-family: var(--ln-font-display); }
+/* Drive pad (SSL-316): top-left on every layout so it never fights the cargo HUD (bottom-right) or the build dock (bottom-left). */
+.controls { position: absolute; left: 16px; top: 16px; z-index: 2; }
 .hud { position: absolute; z-index: 4; right: 16px; bottom: 16px; width: min(380px, calc(100% - 32px)); display: grid; gap: 10px; padding: 14px; border: 1px solid var(--ln-cyan-border); border-radius: 10px; background: color-mix(in srgb, var(--ln-panel) 94%, transparent); box-shadow: var(--ln-shadow-card); }
 .statusHeader,
 .orderRow { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
@@ -27,8 +27,8 @@
 .mineralDot { width: 8px; height: 8px; border-radius: 2px; }
 .primaryAction { min-height: 44px; padding: 10px 14px; border: 1px solid var(--ln-cyan); border-radius: 8px; background: var(--ln-cyan); color: var(--ln-text-on-cyan); font: 800 10px var(--ln-font-display); letter-spacing: .12em; text-transform: uppercase; cursor: pointer; }
 .primaryAction:disabled { opacity: .45; cursor: not-allowed; }
-.buildToggle { padding: 0; border: 0; background: transparent; color: inherit; font: inherit; letter-spacing: inherit; cursor: pointer; }
-.buildToggle[aria-pressed='true'] strong { color: var(--ln-ok); }
+.buildToggle { display: inline-flex; flex: 1 1 auto; align-items: center; justify-content: center; min-height: 36px; padding: 0 8px; border: 1px solid var(--ln-cyan-border); border-radius: 6px; background: transparent; color: var(--ln-cyan); font: 800 var(--ln-fs-micro) var(--ln-font-display); letter-spacing: var(--ln-tr-label); text-transform: uppercase; cursor: pointer; }
+.buildToggle[aria-pressed='true'] { border-color: var(--ln-ok); color: var(--ln-ok); }
 /* Build mode docks the sandbox controls bottom-left so the cargo HUD (bottom-right) stays visible. */
 .sandboxDock { position: absolute; left: 16px; bottom: 16px; z-index: 4; width: min(440px, calc(100% - 32px)); max-height: calc(100% - 96px); overflow: auto; }
 
@@ -40,7 +40,7 @@
   .landingHandoff::before { background: linear-gradient(180deg, transparent 10%, color-mix(in srgb, var(--ln-void) 94%, transparent) 64%); }
   .landingHandoff img { width: min(54vw, 280px); max-height: 34vh; align-self: end; }
   .landingHandoff > div { padding: 14px; }
-  .controls { right: 12px; left: 12px; flex-wrap: wrap; gap: 8px 14px; }
+  .controls { left: 12px; top: 12px; }
   .hud { right: 12px; bottom: 12px; left: 12px; width: auto; }
   /* Build mode replaces the cargo HUD's slot on a narrow canvas; the toggle closes it again. */
   .sandboxDock { left: 12px; right: 12px; bottom: 12px; width: auto; max-height: 60%; z-index: 5; }
@@ -52,6 +52,7 @@
   .landingHandoff > div { grid-column: 1; grid-row: 1; }
   .landingHandoff > div { padding: 12px; gap: 7px; }
   .landingHandoff p { font-size: 11px; }
+  .controls { left: 8px; top: 8px; }
   .hud { right: 8px; bottom: 8px; width: min(320px, 40vw); gap: 8px; padding: 8px; }
   .sandboxDock { left: 8px; bottom: 8px; width: min(400px, 55vw); max-height: calc(100% - 64px); }
   .orderRow { min-height: 28px; padding: 4px 8px; }

@@ -8,6 +8,12 @@
 // The biome texture is sampled once per (target, lifeStage) into a small
 // equirectangular map; each frame only rotates and lights it, so the sphere
 // stays cheap on phones.
+//
+// Life is animated (decided 2026-09-19, SSL-317): a blooming body shows its
+// living biomes spreading out from the warm lowlands and pulling back, and a
+// thriving body shimmers. Both are per-texel colour swaps on the same map, so
+// they cost nothing extra on sterile or dormant bodies. `prefers-reduced-motion`
+// freezes the sphere at full bloom and stops the rotation.
 
 import { useEffect, useMemo, useRef } from 'react'
 import {
@@ -32,10 +38,19 @@ const FRAME_MS = 90
 const ROTATION_PER_MS = (Math.PI * 2) / 24_000
 
 interface Texture {
-  /** RGB per texel, row-major from the north pole. */
+  /** RGB per texel at the requested life stage, row-major from the north pole. */
   rgb: Uint8ClampedArray
-  /** Per-texel 0..1 elevation for the shade pass. */
-  elevation: Float32Array
+  /** RGB per texel before life took hold (the dormant palette). */
+  latentRgb: Uint8ClampedArray
+  /** 1 where the texel is a living biome at this stage. */
+  living: Uint8Array
+  /**
+   * 0..1 order in which living texels bloom: warm lowlands first, cold ridges
+   * last. Compared against `bloomProgress` each frame.
+   */
+  front: Float32Array
+  /** Number of living texels; 0 means nothing to animate. */
+  livingCount: number
 }
 
 function hexToRgb(hex: string): [number, number, number] {
@@ -44,25 +59,59 @@ function hexToRgb(hex: string): [number, number, number] {
   return [(v >> 16) & 255, (v >> 8) & 255, v & 255]
 }
 
+/** Slow breathing front for a blooming body; a thriving body is fully bloomed. */
+export function bloomProgress(stage: LifeStage, t: number): number {
+  if (stage === 'thriving') return 1
+  if (stage !== 'blooming') return 0
+  // 0.35..0.75 over an 8 s cycle: life visibly spreads, then eases back.
+  return 0.55 + 0.2 * Math.sin((t / 8000) * Math.PI * 2)
+}
+
+/** Brightness multiplier for a living texel: a shimmer that travels along the bloom front. */
+export function lifePulse(t: number, front: number): number {
+  return 1 + 0.08 * Math.sin((t / 2400) * Math.PI * 2 + front * 5)
+}
+
 function buildTexture(target: SurfaceTarget, lifeStage: LifeStage): Texture {
-  const rgb = new Uint8ClampedArray(TEX_W * TEX_H * 3)
-  const elevation = new Float32Array(TEX_W * TEX_H)
+  const count = TEX_W * TEX_H
+  const rgb = new Uint8ClampedArray(count * 3)
+  const latentRgb = new Uint8ClampedArray(count * 3)
+  const living = new Uint8Array(count)
+  const front = new Float32Array(count)
   const colorCache = new Map<string, [number, number, number]>()
+  const colorFor = (key: string): [number, number, number] => {
+    let c = colorCache.get(key)
+    if (!c) { c = hexToRgb(key); colorCache.set(key, c) }
+    return c
+  }
+  const animated = lifeStage === 'blooming' || lifeStage === 'thriving'
+  let livingCount = 0
   for (let y = 0; y < TEX_H; y++) {
     const lat = Math.PI / 2 - ((y + 0.5) / TEX_H) * Math.PI
     for (let x = 0; x < TEX_W; x++) {
       const lon = -Math.PI + ((x + 0.5) / TEX_W) * Math.PI * 2
       const sample = sampleSurface(target, lat, lon, lifeStage)
       const meta = BIOME_META[sample.biome]
-      const key = sample.elevation < 0.42 ? meta.shade : meta.color
-      let c = colorCache.get(key)
-      if (!c) { c = hexToRgb(key); colorCache.set(key, c) }
+      const low = sample.elevation < 0.42
+      const c = colorFor(low ? meta.shade : meta.color)
       const i = y * TEX_W + x
       rgb[i * 3] = c[0]; rgb[i * 3 + 1] = c[1]; rgb[i * 3 + 2] = c[2]
-      elevation[i] = sample.elevation
+      // Latent palette: the same texel with life switched off. Only sampled
+      // on animated stages; sterile/dormant bodies never touch it.
+      const latent = animated ? sampleSurface(target, lat, lon, 'dormant') : sample
+      const lm = BIOME_META[latent.biome]
+      const lc = latent === sample ? c : colorFor(low ? lm.shade : lm.color)
+      latentRgb[i * 3] = lc[0]; latentRgb[i * 3 + 1] = lc[1]; latentRgb[i * 3 + 2] = lc[2]
+      const isLiving = animated && (latent.biome !== sample.biome || meta.lifeCapacity >= 2)
+      if (isLiving) {
+        living[i] = 1
+        livingCount++
+        // Warm, low ground blooms first; cold ridges last.
+        front[i] = Math.min(1, Math.max(0, (1 - sample.temperature) * 0.7 + sample.elevation * 0.3))
+      }
     }
   }
-  return { rgb, elevation }
+  return { rgb, latentRgb, living, front, livingCount }
 }
 
 /** Quantised cel lighting: lit, mid, shadow. */
@@ -72,7 +121,14 @@ function celBand(dot: number): number {
   return 0.5
 }
 
-function paint(ctx: CanvasRenderingContext2D, tex: Texture, rotation: number, showDivisions: boolean) {
+interface LifeFrame {
+  /** Living texels with `front` below this are drawn in their living colour. */
+  progress: number
+  /** Clock for the shimmer, ms. */
+  t: number
+}
+
+function paint(ctx: CanvasRenderingContext2D, tex: Texture, rotation: number, showDivisions: boolean, life: LifeFrame) {
   const size = RENDER_PX
   const image = ctx.createImageData(size, size)
   const data = image.data
@@ -105,10 +161,16 @@ function paint(ctx: CanvasRenderingContext2D, tex: Texture, rotation: number, sh
         const latInBand = ((lat + Math.PI / 2) % latStep + latStep) % latStep
         boundary = lonInSector < 0.035 || lonInSector > lonStep - 0.035 || latInBand < 0.03 || latInBand > latStep - 0.03
       }
-      const k = boundary ? light * 0.45 : light
-      data[o] = tex.rgb[ti * 3] * k
-      data[o + 1] = tex.rgb[ti * 3 + 1] * k
-      data[o + 2] = tex.rgb[ti * 3 + 2] * k
+      let k = boundary ? light * 0.45 : light
+      let src = tex.rgb
+      if (tex.living[ti]) {
+        const bloomed = tex.front[ti] <= life.progress
+        if (bloomed) k *= lifePulse(life.t, tex.front[ti])
+        else src = tex.latentRgb
+      }
+      data[o] = src[ti * 3] * k
+      data[o + 1] = src[ti * 3 + 1] * k
+      data[o + 2] = src[ti * 3 + 2] * k
       data[o + 3] = 255
     }
   }
@@ -142,26 +204,37 @@ export default function TargetSphere({ target, lifeStage, ownership, size = 160,
     if (!canvas) return
     const ctx = canvas.getContext('2d')
     if (!ctx) return
+    const reduceMotion = typeof window.matchMedia === 'function'
+      && window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    if (reduceMotion) {
+      // One still frame at full bloom: the stage still reads, nothing moves.
+      paint(ctx, texture, 0, !compact, { progress: lifeStage === 'blooming' || lifeStage === 'thriving' ? 1 : 0, t: 0 })
+      return
+    }
     let frame = 0
     let last = 0
-    let rotation = 0
     const tick = (t: number) => {
       if (t - last >= FRAME_MS) {
-        rotation = (t * ROTATION_PER_MS) % (Math.PI * 2)
-        paint(ctx, texture, rotation, !compact)
+        const rotation = (t * ROTATION_PER_MS) % (Math.PI * 2)
+        paint(ctx, texture, rotation, !compact, { progress: bloomProgress(lifeStage, t), t })
         last = t
       }
       frame = window.requestAnimationFrame(tick)
     }
-    paint(ctx, texture, 0, !compact)
+    paint(ctx, texture, 0, !compact, { progress: bloomProgress(lifeStage, 0), t: 0 })
     frame = window.requestAnimationFrame(tick)
     return () => window.cancelAnimationFrame(frame)
-  }, [compact, texture])
+  }, [compact, lifeStage, texture])
 
   const mineCount = ownership?.divisions.filter(d => d.mine).length ?? 0
 
   return (
-    <div className={`${styles.wrap} ${compact ? styles.compact : ''}`} data-testid="target-sphere" data-life-stage={lifeStage}>
+    <div
+      className={`${styles.wrap} ${compact ? styles.compact : ''}`}
+      data-testid="target-sphere"
+      data-life-stage={lifeStage}
+      data-life-animated={texture.livingCount > 0 || undefined}
+    >
       <div className={styles.head}>
         <span className={styles.eyebrow}>{eyebrow}</span>
         <strong className={styles.name}>{target.name}</strong>

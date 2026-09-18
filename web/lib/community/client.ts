@@ -4,7 +4,7 @@
 // friend/public visibility filter server-side.
 
 import { pbLandnam } from '@/lib/pb-landnam'
-import type { HubChannel, ShareComment, SharePost, ShareVisibility, ShareKind } from '@/lib/data/community'
+import type { HubChannel, ReportReason, ShareComment, SharePost, ShareVisibility, ShareKind } from '@/lib/data/community'
 import type { FieldStructureRecord } from '@/lib/game-types'
 import type { BiosphereSeed, TerritoryClaim } from '@/lib/data'
 
@@ -74,6 +74,16 @@ export function fetchShareComments(postId: string): Promise<{ comments: ShareCom
 
 export function postShareComment(postId: string, body: string): Promise<{ comment: ShareComment }> {
   return communityFetch('/comment', { method: 'POST', body: JSON.stringify({ postId, body }) })
+}
+
+/** Report a comment once with a fixed reason. The server hides it at the threshold. */
+export function reportShareComment(commentId: string, reason: ReportReason): Promise<{ reportCount: number; hidden: boolean }> {
+  return communityFetch('/report', { method: 'POST', body: JSON.stringify({ commentId, reason }) })
+}
+
+/** Remove a comment you wrote, or any comment on a post you own. */
+export function removeShareComment(commentId: string): Promise<{ removed: true }> {
+  return communityFetch(`/comment/${encodeURIComponent(commentId)}/remove`, { method: 'POST' })
 }
 
 /** Read-only visit to a friend's world. The server refuses non-friends and never exposes a write path. */

@@ -11,6 +11,7 @@ import type { TakeonHostEvent } from '@/lib/takeon/events'
 import { TAKEON_TO_LANDNAM_MINERAL } from '@/lib/takeon/minerals'
 import TakeOnMount, { type TakeOnMountHandle } from '@/components/takeon/TakeOnMount'
 import SandboxFieldControls from '@/components/takeon/SandboxFieldControls'
+import RoverDrivePad from '@/components/takeon/RoverDrivePad'
 import { shareFieldCreation } from '@/lib/community/shareField'
 import TopBar from '@/components/ui/TopBar'
 import styles from './RoverMiningScreen.module.css'
@@ -196,21 +197,22 @@ export default function RoverMiningScreen({
             </div>
           )}
           {deployed && (
-            <div className={styles.controls} data-testid="rover-control-guide">
-              <span><strong>MOVE</strong> · TAP TERRAIN</span>
-              <span><strong>DRILL</strong> · STOP ON AN EXPOSED DEPOSIT</span>
-              <span data-testid="rover-route-readout"><strong>ROUTE</strong> · {routeSteps > 0 ? `${routeSteps} SAFE STEPS` : 'NOT SET'}</span>
-              {sandboxEnabled && (
-                <button
-                  type="button"
-                  className={styles.buildToggle}
-                  aria-pressed={buildMode}
-                  onClick={() => setBuildMode(open => !open)}
-                  data-testid="rover-build-mode-toggle"
-                >
-                  <strong>BUILD</strong> · {buildMode ? 'CLOSE' : 'OPEN'}
-                </button>
-              )}
+            <div className={styles.controls} data-testid="rover-control-guide" data-route-steps={routeSteps}>
+              <RoverDrivePad
+                handle={takeonHandle}
+                compact={buildMode}
+                trailing={sandboxEnabled ? (
+                  <button
+                    type="button"
+                    className={styles.buildToggle}
+                    aria-pressed={buildMode}
+                    onClick={() => setBuildMode(open => !open)}
+                    data-testid="rover-build-mode-toggle"
+                  >
+                    {buildMode ? 'CLOSE BUILD' : 'BUILD'}
+                  </button>
+                ) : null}
+              />
             </div>
           )}
           {deployed && sandboxEnabled && buildMode && player && (

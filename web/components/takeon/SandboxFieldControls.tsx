@@ -203,7 +203,7 @@ export default function SandboxFieldControls({
           onClick={() => { handle.current?.toggleView(); setSnapshot(readHandle(handle)) }}
           data-testid="sandbox-toggle-view"
         >
-          <MapIcon size={14} /> {snapshot.view === 'map' ? 'DIORAMA' : 'MAP'}
+          <MapIcon size={14} /> {snapshot.view === 'iso' ? 'MAP VIEW' : 'DIORAMA VIEW'}
         </button>
         {onShare && (
           <button

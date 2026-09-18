@@ -6,6 +6,11 @@
 //    construction, not by moderation.
 //  - Friends see each other's bases and worlds by default; strangers only see
 //    what a player explicitly shares as `public`.
+//  - Strangers may comment on public posts as well as react (decided
+//    2026-09-19). The counterweight is a report flow: any viewer can report a
+//    comment once with a fixed reason, a comment is hidden after
+//    `COMMENT_HIDE_AFTER_REPORTS` distinct reports, and the comment author or
+//    the post author can remove it outright.
 //  - Every share is a snapshot with provenance (programme id), so a discovery
 //    and a creation travel through the same hub with the same shape.
 
@@ -94,11 +99,51 @@ export interface ShareComment {
   authorName: string
   body: string
   createdAt: number
+  /** Distinct reports so far; the server hides the comment at the threshold. */
+  reportCount?: number
 }
 
 export const SHARE_TITLE_MAX = 64
 export const SHARE_SUMMARY_MAX = 280
 export const SHARE_COMMENT_MAX = 500
+
+// ── Moderation ─────────────────────────────────────────────────────────────
+
+/** Fixed report reasons: no free text, so a report cannot itself be abuse. */
+export const REPORT_REASONS = [
+  { id: 'abuse', label: 'Abusive or harassing' },
+  { id: 'spam', label: 'Spam or advertising' },
+  { id: 'off-topic', label: 'Not about the share' },
+  { id: 'personal', label: 'Personal information' },
+] as const
+
+export type ReportReason = (typeof REPORT_REASONS)[number]['id']
+
+/** A comment disappears from every thread once this many different players report it. */
+export const COMMENT_HIDE_AFTER_REPORTS = 3
+
+export function isReportReason(value: string): value is ReportReason {
+  return REPORT_REASONS.some(r => r.id === value)
+}
+
+/** Anyone but the comment's own author may report it, once. */
+export function canReportComment(viewerId: string, comment: Pick<ShareComment, 'authorId'>): boolean {
+  return viewerId !== comment.authorId
+}
+
+/** The comment author and the post author can remove a comment; nobody else. */
+export function canRemoveComment(
+  viewerId: string,
+  comment: Pick<ShareComment, 'authorId'>,
+  post: Pick<SharePost, 'authorId'>,
+): boolean {
+  return viewerId === comment.authorId || viewerId === post.authorId
+}
+
+/** True once a comment has crossed the hide threshold. Mirrors the server rule. */
+export function isCommentHidden(comment: Pick<ShareComment, 'reportCount'>): boolean {
+  return (comment.reportCount ?? 0) >= COMMENT_HIDE_AFTER_REPORTS
+}
 
 export interface NewShareInput {
   kind: ShareKind

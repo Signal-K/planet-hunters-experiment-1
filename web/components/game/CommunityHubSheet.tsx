@@ -12,7 +12,16 @@ import PageSurface from '@/components/ui/PageSurface'
 import ScenePanel from '@/components/game/ScenePanel'
 import { HubWorldBackground } from '@/components/game/hub/HubWorldBackground'
 import { useTimeOfDay } from '@/lib/hooks/useTimeOfDay'
-import { HUB_SECTIONS, type HubChannel, type ShareComment, type SharePost } from '@/lib/data/community'
+import {
+  canRemoveComment,
+  canReportComment,
+  HUB_SECTIONS,
+  REPORT_REASONS,
+  type HubChannel,
+  type ReportReason,
+  type ShareComment,
+  type SharePost,
+} from '@/lib/data/community'
 import { TARGETS, LIFE_STAGE_LABELS, lifeStageForTarget } from '@/lib/data'
 import { PROGRAMMES } from '@/lib/data/programmes'
 import {
@@ -22,6 +31,8 @@ import {
   postShareComment,
   publishShare,
   reactToShare,
+  removeShareComment,
+  reportShareComment,
 } from '@/lib/community/client'
 import styles from './CommunityHubSheet.module.css'
 
@@ -59,8 +70,96 @@ function SnapshotChips({ post }: { post: SharePost }) {
   )
 }
 
+/**
+ * One comment with its moderation controls. Strangers can reply on public
+ * posts, so every comment carries REPORT (fixed reasons, once per player) and,
+ * for the comment author or the post author, REMOVE.
+ */
+function CommentRow({ comment, post, viewerId, now, onChanged }: {
+  comment: ShareComment
+  post: SharePost
+  viewerId: string
+  now: number
+  onChanged: () => void
+}) {
+  const game = useGame()
+  const [reporting, setReporting] = useState(false)
+  const [reported, setReported] = useState(false)
+  const [busy, setBusy] = useState(false)
+
+  async function report(reason: ReportReason) {
+    setBusy(true)
+    try {
+      const res = await reportShareComment(comment.id, reason)
+      setReported(true)
+      setReporting(false)
+      game.addToast(res.hidden ? 'Comment hidden after reports' : 'Report received', 'ok')
+      if (res.hidden) onChanged()
+    } catch (err) {
+      game.addToast(err instanceof CommunityApiError ? err.message : 'Could not report', 'warn')
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  async function remove() {
+    setBusy(true)
+    try {
+      await removeShareComment(comment.id)
+      onChanged()
+    } catch (err) {
+      game.addToast(err instanceof CommunityApiError ? err.message : 'Could not remove comment', 'warn')
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  const mayReport = viewerId !== '' && canReportComment(viewerId, comment) && !reported
+  const mayRemove = viewerId !== '' && canRemoveComment(viewerId, comment, post)
+
+  return (
+    <div className={styles.comment} data-testid={`hub-comment-${comment.id}`}>
+      <span className={styles.commentAuthor}>{comment.authorName} · {timeAgo(comment.createdAt, now)}</span>
+      <p className={styles.commentBody}>{comment.body}</p>
+      {(mayReport || mayRemove || reported) && (
+        <div className={styles.commentTools}>
+          {reported && <span className={styles.commentTool} aria-live="polite">REPORTED</span>}
+          {mayReport && !reporting && (
+            <button type="button" className={styles.commentTool} disabled={busy} onClick={() => setReporting(true)} data-testid="hub-comment-report">
+              REPORT
+            </button>
+          )}
+          {mayRemove && (
+            <button type="button" className={`${styles.commentTool} ${styles.commentToolDanger}`} disabled={busy} onClick={remove} data-testid="hub-comment-remove">
+              REMOVE
+            </button>
+          )}
+          {reporting && (
+            <span className={styles.reportReasons} role="group" aria-label="Report reason">
+              {REPORT_REASONS.map(reason => (
+                <button
+                  key={reason.id}
+                  type="button"
+                  className={styles.commentTool}
+                  disabled={busy}
+                  onClick={() => void report(reason.id)}
+                  data-testid={`hub-report-${reason.id}`}
+                >
+                  {reason.label.toUpperCase()}
+                </button>
+              ))}
+              <button type="button" className={styles.commentTool} disabled={busy} onClick={() => setReporting(false)}>CANCEL</button>
+            </span>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
+
 function PostCard({ post, now, onReact }: { post: SharePost; now: number; onReact: (id: string, reaction: 'signal' | 'build') => void }) {
   const game = useGame()
+  const viewerId = game.authUserId ?? ''
   const [open, setOpen] = useState(false)
   const [comments, setComments] = useState<ShareComment[] | null>(null)
   const [draft, setDraft] = useState('')
@@ -121,10 +220,7 @@ function PostCard({ post, now, onReact }: { post: SharePost; now: number; onReac
           {comments === null && <div className={styles.status}>Loading thread…</div>}
           {comments?.length === 0 && <div className={styles.status}>No replies yet. Start the thread.</div>}
           {comments?.map(c => (
-            <div key={c.id} className={styles.comment}>
-              <span className={styles.commentAuthor}>{c.authorName} · {timeAgo(c.createdAt, now)}</span>
-              <p className={styles.commentBody}>{c.body}</p>
-            </div>
+            <CommentRow key={c.id} comment={c} post={post} viewerId={viewerId} now={now} onChanged={() => void loadComments()} />
           ))}
           <div className={styles.composer}>
             <input
@@ -285,7 +381,7 @@ export default function CommunityHubSheet({ onClose }: CommunityHubSheetProps) {
                 <div className={styles.eyebrow}>Earth Base · Community Hub</div>
                 <div className={styles.title}>Shared Log</div>
                 <p className={styles.lede}>
-                  Discoveries, field builds and claimed worlds other crews chose to show. Every entry is a snapshot: you can look, react and discuss, never change.
+                  Discoveries, field builds and claimed worlds other crews chose to show. Every entry is a snapshot: you can look, react and discuss, never change. Public posts are open to everyone; report a reply that does not belong.
                 </p>
               </div>
               <button type="button" className={styles.close} onClick={onClose} data-testid="community-hub-close">CLOSE</button>

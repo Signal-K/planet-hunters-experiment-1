@@ -232,6 +232,37 @@
   overflow-wrap: anywhere;
 }
 
+.commentTools {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.reportReasons {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.commentTool {
+  min-height: 24px;
+  padding: 0 8px;
+  border: 1px solid var(--ln-hairline);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--ln-text-muted);
+  font-family: var(--ln-font-display);
+  font-size: 8px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.commentTool:disabled { opacity: 0.5; cursor: not-allowed; }
+.commentToolDanger { border-color: var(--ln-crit); color: var(--ln-crit); }
+
 .composer {
   display: flex;
   gap: 8px;

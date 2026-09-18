@@ -1,11 +1,17 @@
 import { describe, expect, it } from 'vitest'
 import {
   allowedVisitorActions,
+  canRemoveComment,
+  canReportComment,
   canVisitorAct,
+  COMMENT_HIDE_AFTER_REPORTS,
   createSharePost,
   HOST_ONLY_ACTIONS,
   HUB_SECTIONS,
+  isCommentHidden,
+  isReportReason,
   relationTo,
+  REPORT_REASONS,
   SHARE_KIND_CHANNEL,
   SHARE_TITLE_MAX,
   visibleSharePosts,
@@ -67,6 +73,32 @@ describe('share posts', () => {
     expect(relationTo(viewer, ME.id)).toBe('owner')
     expect(relationTo(viewer, FRIEND.id)).toBe('friend')
     expect(relationTo(viewer, STRANGER.id)).toBe('stranger')
+  })
+})
+
+describe('comment moderation', () => {
+  const post = { authorId: 'host' }
+  const comment = { authorId: 'stranger', reportCount: 0 }
+
+  it('lets strangers comment on public posts, never on friends-only ones', () => {
+    expect(canVisitorAct('comment', 'stranger', 'public')).toBe(true)
+    expect(canVisitorAct('comment', 'stranger', 'friends')).toBe(false)
+  })
+
+  it('anyone but the author can report; author or host can remove', () => {
+    expect(canReportComment('me', comment)).toBe(true)
+    expect(canReportComment('stranger', comment)).toBe(false)
+    expect(canRemoveComment('stranger', comment, post)).toBe(true)
+    expect(canRemoveComment('host', comment, post)).toBe(true)
+    expect(canRemoveComment('me', comment, post)).toBe(false)
+  })
+
+  it('hides a comment at the report threshold with fixed reasons only', () => {
+    expect(isCommentHidden({ reportCount: COMMENT_HIDE_AFTER_REPORTS - 1 })).toBe(false)
+    expect(isCommentHidden({ reportCount: COMMENT_HIDE_AFTER_REPORTS })).toBe(true)
+    expect(REPORT_REASONS.length).toBeGreaterThanOrEqual(3)
+    expect(isReportReason('spam')).toBe(true)
+    expect(isReportReason('I just do not like it')).toBe(false)
   })
 })
 
