@@ -1,4 +1,6 @@
 import { describe, expect, it } from 'vitest'
+import { readFileSync } from 'node:fs'
+import { join } from 'node:path'
 import { EARTH_BASE_STRUCTURE_SIZES } from './HubScreen'
 import { sceneXPercent } from '@/lib/scene/terrain-kit'
 
@@ -15,6 +17,14 @@ describe('Earth Base module composition', () => {
     // retired modular-kit dimensions.
     expect(EARTH_BASE_STRUCTURE_SIZES.launchpad.width).toBe(172)
     expect(EARTH_BASE_STRUCTURE_SIZES.hangar.width).toBe(226)
+    expect(EARTH_BASE_STRUCTURE_SIZES['surface-silo']).toEqual({ width: 120, height: 78 })
+  })
+
+  it('uses the rust/steel silo render instead of the cyan SVG placeholder', () => {
+    const source = readFileSync(join(process.cwd(), 'components/game/hub/EarthBaseModules.tsx'), 'utf8')
+    expect(source).toContain("src: '/game/assets/base/surface_silo_flat.png'")
+    expect(source).not.toContain('earth-base-silo-sprite')
+    expect(source).toContain('hub-construct-reveal')
   })
 
   /** Support facilities stay smaller than the two primary Earth Base sprites. */

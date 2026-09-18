@@ -1,4 +1,4 @@
-"""Earth Base hero structures — launchpad and hangar, single-mass sprites.
+"""Earth Base hero structures — launchpad, silo and hangar, single-mass sprites.
 
 Supersedes `world_modules.py`'s composited-fragment kit (KES-260/KES-277). That
 kit rendered ~9 pieces separately and absolute-positioned them in CSS; each
@@ -531,7 +531,62 @@ def hangar():
     return spec(w, h)
 
 
+def surface_silo():
+    """A compact mineral-storage plant, not a cyan UI glyph.
+
+    Three stout, visibly connected bins make the storage function legible at
+    Hub scale.  Their shared plinth, lower manifold and attached service block
+    keep the silhouette as one industrial mass; the rust bins and pale steel
+    collars provide the warm/cool material separation used by the other Earth
+    Base structures.  Cyan is deliberately absent from the body materials — it
+    remains an interface/status colour rather than painted building texture.
+    """
+    w, h = 6.0, 3.9
+    base_z = 0.30
+
+    # One grounded plinth. Its flat z=0 footing is the only ground contact;
+    # terrain belongs to HubWorldBackground, never to the structure render.
+    box("silo_plinth", (5.8, 1.8, base_z), (0, 0.0, 0.0), PLATE_DARK, "plate_dark", bevel=0.10)
+    box("silo_plinth_lip", (5.35, 1.55, 0.10), (0, -0.16, base_z), INK, "ink", bevel=0.03, outline=FINE)
+
+    tank_radius = 0.72
+    tank_height = 2.35
+    tank_xs = (-1.65, 0.0, 1.65)
+    for index, x in enumerate(tank_xs):
+        cylinder(f"silo_bin_{index}", tank_radius, tank_height, (x, 0.02, base_z), RUST, "rust", verts=12)
+        dome = kit.cone(
+            f"silo_dome_{index}", tank_radius, 0.48,
+            location=(x, 0.02, base_z + tank_height), verts=12,
+            radius2=tank_radius * 0.18,
+        )
+        solid(f"silo_dome_{index}", dome, STEEL, "steel")
+        cylinder(
+            f"silo_collar_{index}", tank_radius * 1.04, 0.12,
+            (x, 0.0, base_z + tank_height * 0.58), STEEL_DARK,
+            "steel_dark", outline=0, verts=12,
+        )
+        # A narrow front sight strip gives each bin a readable capacity cue
+        # without turning the whole building into glowing interface chrome.
+        box(
+            f"silo_sight_{index}", (0.13, 0.06, 1.20),
+            (x, -tank_radius - 0.03, base_z + 0.56), BRIGHT,
+            "bright", bevel=0.015, outline=0,
+        )
+
+    # One continuous discharge manifold overlaps every bin and terminates in
+    # a service housing. These are functional surface details, not floating
+    # decorative rods.
+    box("silo_manifold", (4.75, 0.30, 0.28), (0, -0.55, base_z + 0.16), STEEL_DARK, "steel_dark", bevel=0.07)
+    box("silo_service", (1.05, 1.35, 1.45), (2.35, 0.02, base_z), INK, "ink", bevel=0.09)
+    box("silo_service_cap", (1.20, 1.42, 0.22), (2.35, 0.02, base_z + 1.45), STEEL, "steel", bevel=0.05)
+    box("silo_service_door", (0.48, 0.06, 0.88), (2.35, -0.69, base_z + 0.08), PLATE, "plate", bevel=0.03, outline=FINE)
+    box("silo_warning_bar", (0.62, 0.06, 0.10), (2.35, -0.73, base_z + 1.12), SAFETY, "safety", bevel=0.01, outline=0)
+
+    return spec(w, h)
+
+
 BUILDS = {
     "base/launchpad_flat": launchpad,
+    "base/surface_silo_flat": surface_silo,
     "base/hangar_flat": hangar,
 }

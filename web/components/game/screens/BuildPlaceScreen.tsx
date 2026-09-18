@@ -13,6 +13,7 @@ import { EarthBaseModules } from '@/components/game/hub/EarthBaseModules'
 import { HubWorldBackground } from '@/components/game/hub/HubWorldBackground'
 import type { HubBuildingDef } from '@/components/game/hub/EarthBaseModules'
 import { formatCurrency } from '@/lib/format'
+import { structureBuildMs } from '@/lib/systems/HubConstructionSystem'
 
 // Instantiated from the build-plot prefab rather than written out by hand.
 // This same list previously existed in four places (both hub scene files and
@@ -357,8 +358,8 @@ export default function BuildPlaceScreen({ onPlaced, onBack, hasCoach, player }:
               textOverflow: 'ellipsis',
             }}>
               {cell == null
-                ? `Select a plot for the ${sel.name} · ${formatStructureCost(sel)}`
-                : `Place ${sel.name} here? · ${formatStructureCost(sel)}`}
+                ? `Select a plot for the ${sel.name} · ${formatStructureCost(sel)} · Builds in ${Math.round(structureBuildMs(sel.id) / 1000)}s`
+                : `Place ${sel.name} here? · ${formatStructureCost(sel)} · Builds in ${Math.round(structureBuildMs(sel.id) / 1000)}s`}
             </span>
           </div> : <div style={{ padding: '6px 2px 10px', fontFamily: 'var(--ln-font-body)', fontSize: 11, color: 'var(--ln-text-muted)' }}>No structures are available yet. Complete your current mission to unlock the next build.</div>}
         </div>
