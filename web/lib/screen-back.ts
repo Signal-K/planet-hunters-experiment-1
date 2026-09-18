@@ -61,6 +61,5 @@ export function resolveLogicalBack(input: {
     return LOGICAL_BACK[current]
   }
 
-  if (lastHost !== current) return lastHost
-  return LOGICAL_BACK[current] ?? fallback
+  return lastHost
 }
