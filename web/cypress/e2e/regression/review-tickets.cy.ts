@@ -159,7 +159,13 @@ describe('Surface Silo placement persistence (KES-271)', () => {
     savedState().then(state => {
       expect(state.player.placed).to.include('surface-silo')
       expect(state.player.placementPlots?.['surface-silo']).to.eq(1)
+      expect(state.player.underConstruction?.['surface-silo']).to.be.a('number')
     })
+
+    cy.get('[data-structure="surface-silo"] img.earth-base-flat-sprite')
+      .should('have.attr', 'src', '/game/assets/base/surface_silo_flat.png')
+    cy.contains('BUILDING').should('be.visible')
+    cy.get('.hub-construction-rig').should('exist')
 
     cy.reload()
     cy.get('[data-testid="building-surface-silo-hit"]', { timeout: 10000 }).should('be.visible')
@@ -167,6 +173,8 @@ describe('Surface Silo placement persistence (KES-271)', () => {
       expect(state.player.placed).to.include('surface-silo')
       expect(state.player.placementPlots?.['surface-silo']).to.eq(1)
     })
+    cy.get('[data-structure="surface-silo"] img.earth-base-flat-sprite')
+      .should('have.attr', 'src', '/game/assets/base/surface_silo_flat.png')
   })
 })
 
