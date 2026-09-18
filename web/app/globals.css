@@ -3859,6 +3859,24 @@ html[data-coach-target="build-structure-strip"] [data-coach-id="build-structure-
 .hub-orbital-network__status--ready { color: var(--hub-chalk); border-color: var(--hub-chalk); }
 .hub-orbital-network__dot { width: 4px; height: 4px; background: currentColor; border-radius: 50%; }
 
+.hub-orbital-network__ping {
+  position: absolute;
+  top: 16px;
+  left: 48px;
+  width: 32px;
+  height: 32px;
+  border: 1px solid var(--hub-chalk);
+  border-radius: 50%;
+  animation: hub-orbit-ping 1.8s ease-out infinite;
+  pointer-events: none;
+}
+
+@keyframes hub-orbit-ping {
+  0% { transform: scale(0.4); opacity: 0.9; }
+  70% { transform: scale(1.8); opacity: 0; }
+  100% { transform: scale(1.8); opacity: 0; }
+}
+
 @media (max-width: 520px) {
   .hub-orbital-network { top: 30%; right: 4%; transform: scale(0.82); transform-origin: top right; }
 }

@@ -2,10 +2,12 @@ import { describe, expect, it } from 'vitest'
 import type { Player } from '@/lib/game-types'
 import type { AsteroidCandidate, TessCandidate } from '@/lib/data'
 import {
+  collectInstrumentSignals,
   deepSpaceInstrumentDigest,
   instrumentDigestDateKey,
   instrumentDigestWasNotified,
   markInstrumentDigestNotified,
+  pickInstrumentInspectCandidate,
   transitInstrumentDigest,
   unresolvedDeepSpaceInstrumentDigest,
   unresolvedTransitInstrumentDigest,
@@ -173,5 +175,31 @@ describe('InstrumentFeedSystem', () => {
       expect(instrumentDigestWasNotified(bothMarked, 'deep-space-telescope', '2026-07-30')).toBe(true)
       expect(instrumentDigestWasNotified(bothMarked, 'transit-telescope', '2026-07-30')).toBe(true)
     })
+  })
+
+  it('lists unresolved transit and deep-space signals together', () => {
+    const signals = collectInstrumentSignals({
+      tess: candidates,
+      asteroids: ['neo-a', 'neo-b'].map(asteroidCandidate),
+      player: player({
+        freeOperations: true,
+        transitSatelliteLaunchedAt: 1,
+        deepSpaceTelescopeBuilt: true,
+        transitSatelliteLevel: 1,
+        deepSpaceTelescopeLevel: 1,
+      }),
+      dateKey: '2026-07-30',
+    })
+
+    expect(signals).toHaveLength(2)
+    expect(signals.map(signal => signal.kind).sort()).toEqual(['deep-space', 'transit'])
+    expect(signals.every(signal => signal.inspectorScreen === 'galaxy' || signal.inspectorScreen === 'asteroid-discovery')).toBe(true)
+  })
+
+  it('opens the selected digest item in the inspector, then falls back to the first unresolved', () => {
+    const digest = transitInstrumentDigest(candidates, player({ transitSatelliteLevel: 2 }), '2026-07-30')
+    expect(pickInstrumentInspectCandidate(digest, digest[1].id)?.id).toBe(digest[1].id)
+    expect(pickInstrumentInspectCandidate(digest, 'missing')?.id).toBe(digest[0].id)
+    expect(pickInstrumentInspectCandidate([], 'missing')).toBeNull()
   })
 })

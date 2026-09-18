@@ -3,7 +3,7 @@ import { isSurveySafeScreen, SURVEY_SAFE_SCREENS } from '@/lib/survey-gating'
 
 describe('survey gating allowlist', () => {
   it('allows surveys only on resting screens', () => {
-    for (const screen of ['hub', 'missions', 'market', 'hangar', 'skills', 'galaxy', 'refinery']) {
+    for (const screen of ['hub', 'missions', 'market', 'hangar', 'skills', 'galaxy', 'refinery', 'instrument-hub']) {
       expect(isSurveySafeScreen(screen)).toBe(true)
     }
   })
