@@ -149,7 +149,8 @@ export default function CommentsPanel({ recordType, recordId }: CommentsPanelPro
                 onClick={handleSubmit}
                 disabled={!draft.trim() || submitting}
                 style={{
-                  padding: '6px 14px',
+                  minHeight: 44,
+                  padding: '0 16px',
                   borderRadius: 8,
                   border: '1px solid rgba(112,217,234,0.6)',
                   background: !draft.trim() || submitting ? 'rgba(20,20,23,0.5)' : 'rgba(112,217,234,0.18)',

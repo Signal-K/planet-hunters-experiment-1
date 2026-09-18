@@ -299,10 +299,12 @@ export default function AsteroidDiscoveryScreen({ player, visualCandidate, onBac
             {devBar}
             {dataPanel}
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 12, overflowY: 'auto' }}>
-            {payoffPanel}
-            <CommentsPanel recordType="classification" recordId={candidate.id} />
-            <div style={{ marginTop: 'auto' }} data-ui-zone={UI_ZONES.bottomActions}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12, minHeight: 0 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12, flex: '1 1 auto', minHeight: 0, overflowY: 'auto' }}>
+              {payoffPanel}
+              <CommentsPanel recordType="classification" recordId={candidate.id} />
+            </div>
+            <div style={{ flex: '0 0 auto' }} data-ui-zone={UI_ZONES.bottomActions}>
               {verdictActions}
             </div>
           </div>
