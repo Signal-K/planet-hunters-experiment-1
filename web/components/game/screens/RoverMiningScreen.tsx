@@ -1,13 +1,17 @@
 'use client'
 
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useMemo, useRef, useState } from 'react'
 import { defaultSpec, type MissionState, type ResourceKey } from '@takeon/engine'
-import type { Mission, Target } from '@/lib/data'
-import { MINERAL_META } from '@/lib/data'
+import type { Mission, SurfaceTarget, Target } from '@/lib/data'
+import { MINERAL_META, lifeStageForTarget } from '@/lib/data'
+import type { Player } from '@/lib/game-types'
+import type { FieldBuildInput, FieldIdentity } from '@/lib/systems/SandboxSystem'
 import { UI_ZONES } from '@/lib/ui-zones'
 import type { TakeonHostEvent } from '@/lib/takeon/events'
 import { TAKEON_TO_LANDNAM_MINERAL } from '@/lib/takeon/minerals'
-import TakeOnMount from '@/components/takeon/TakeOnMount'
+import TakeOnMount, { type TakeOnMountHandle } from '@/components/takeon/TakeOnMount'
+import SandboxFieldControls from '@/components/takeon/SandboxFieldControls'
+import { shareFieldCreation } from '@/lib/community/shareField'
 import TopBar from '@/components/ui/TopBar'
 import styles from './RoverMiningScreen.module.css'
 
@@ -72,9 +76,18 @@ interface RoverMiningScreenProps {
   /** Client display name, retained through the handoff for context only — Landnam still owns the contract. */
   clientName?: string
   rocketImageSrc?: string
+  /** SSL-316 sandbox: when the host supplies the player and build actions, the field gains build mode. */
+  player?: Player
+  onFieldBuild?: (field: FieldIdentity, structure: FieldBuildInput) => boolean
+  onFieldDemolish?: (targetId: string, structureId: string) => void
+  onFabricate?: (targetId: string, recipeId: string) => boolean
+  onSeedBiosphere?: (target: SurfaceTarget) => boolean
 }
 
-export default function RoverMiningScreen({ mission, target, onComplete, onBack, clientName, rocketImageSrc }: RoverMiningScreenProps) {
+export default function RoverMiningScreen({
+  mission, target, onComplete, onBack, clientName, rocketImageSrc,
+  player, onFieldBuild, onFieldDemolish, onFabricate, onSeedBiosphere,
+}: RoverMiningScreenProps) {
   const requirements = useMemo(() => roverCargoRequirements(mission, target), [mission, target])
   const rover = useMemo(() => defaultSpec(), [])
   const bodyId = useMemo(() => takeonBodyForTarget(target), [target])
@@ -84,12 +97,38 @@ export default function RoverMiningScreen({ mission, target, onComplete, onBack,
   const [routeSteps, setRouteSteps] = useState(0)
   const [takeonReady, setTakeonReady] = useState(false)
   const [deployed, setDeployed] = useState(false)
+  const [buildMode, setBuildMode] = useState(false)
+  const [fieldNotice, setFieldNotice] = useState<string | null>(null)
+  const takeonHandle = useRef<TakeOnMountHandle | null>(null)
+  const fieldIdentity = useMemo<FieldIdentity>(() => ({ targetId: target.id }), [target.id])
+  const lifeStage = lifeStageForTarget(target, player?.biosphereSeeds?.[target.id])
+  const sandboxEnabled = !!player && !!onFieldBuild
 
   const cargoReady = Object.entries(requirements).every(
     ([mineral, amount]) => (cargo[mineral] ?? 0) >= amount
   )
 
   const handleTakeonEvent = useCallback((event: TakeonHostEvent) => {
+    if (event.type === 'built') {
+      if (!onFieldBuild) return
+      const s = event.payload.structure
+      const funded = onFieldBuild(fieldIdentity, { id: s.id, type: s.type, x: s.pos.x, y: s.pos.y, facing: s.facing ?? 0 })
+      if (!funded) {
+        takeonHandle.current?.demolish(s.id)
+        setFieldNotice('Structure removed: it could not be funded from your stash.')
+      } else {
+        setFieldNotice(null)
+      }
+      return
+    }
+    if (event.type === 'demolished') {
+      onFieldDemolish?.(fieldIdentity.targetId, event.payload.id)
+      return
+    }
+    if (event.type === 'buildFailed') {
+      setFieldNotice(`Cannot build here: ${event.payload.reason}.`)
+      return
+    }
     if (event.type !== 'mined' || !event.payload.resource) return
     const mineral = TAKEON_TO_LANDNAM_MINERAL[event.payload.resource]
     const required = mineral ? requirements[mineral] : undefined
@@ -98,7 +137,7 @@ export default function RoverMiningScreen({ mission, target, onComplete, onBack,
       ...previous,
       [mineral]: Math.min(required, (previous[mineral] ?? 0) + event.payload.amount),
     }))
-  }, [requirements])
+  }, [fieldIdentity, onFieldBuild, onFieldDemolish, requirements])
 
   const handleReady = useCallback((state: MissionState) => {
     setCargo(landnamCargoFromTakeon(state.rover.cargo, requirements))
@@ -132,11 +171,14 @@ export default function RoverMiningScreen({ mission, target, onComplete, onBack,
       <main className={styles.content} data-ui-zone={UI_ZONES.screenContent}>
         <section className={styles.scenePanel} aria-label="TakeOn rover field">
           <TakeOnMount
+            ref={takeonHandle}
             missionId={missionId}
             bodyId={bodyId}
             seed={seed}
             rover={rover}
             roverName="Mule Field Rover"
+            target={target}
+            lifeStage={lifeStage}
             onEvent={handleTakeonEvent}
             onReady={handleReady}
             onRouteChange={handleRouteChange}
@@ -158,6 +200,34 @@ export default function RoverMiningScreen({ mission, target, onComplete, onBack,
               <span><strong>MOVE</strong> · TAP TERRAIN</span>
               <span><strong>DRILL</strong> · STOP ON AN EXPOSED DEPOSIT</span>
               <span data-testid="rover-route-readout"><strong>ROUTE</strong> · {routeSteps > 0 ? `${routeSteps} SAFE STEPS` : 'NOT SET'}</span>
+              {sandboxEnabled && (
+                <button
+                  type="button"
+                  className={styles.buildToggle}
+                  aria-pressed={buildMode}
+                  onClick={() => setBuildMode(open => !open)}
+                  data-testid="rover-build-mode-toggle"
+                >
+                  <strong>BUILD</strong> · {buildMode ? 'CLOSE' : 'OPEN'}
+                </button>
+              )}
+            </div>
+          )}
+          {deployed && sandboxEnabled && buildMode && player && (
+            <div className={styles.sandboxDock} data-testid="rover-sandbox-dock">
+              <SandboxFieldControls
+                player={player}
+                handle={takeonHandle}
+                target={target}
+                targetId={target.id}
+                lifeStage={lifeStage}
+                notice={fieldNotice}
+                onFabricate={onFabricate ? recipeId => onFabricate(target.id, recipeId) : undefined}
+                onSeedBiosphere={onSeedBiosphere ? () => onSeedBiosphere(target) : undefined}
+                onShare={snapshot => {
+                  void shareFieldCreation(snapshot, target.name).then(result => setFieldNotice(result.message))
+                }}
+              />
             </div>
           )}
         </section>

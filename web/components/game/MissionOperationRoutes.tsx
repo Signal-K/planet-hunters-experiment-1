@@ -11,6 +11,7 @@ import RoverMiningScreen from '@/components/game/screens/RoverMiningScreen'
 import DeliveryScreen from '@/components/game/screens/DeliveryScreen'
 import DebriefScreen from '@/components/game/screens/DebriefScreen'
 import { earthStorageBuilt, hasOperationalRemoteSilo, storageCapacity, storedUnits, sellQuote } from '@/lib/systems/EconomySystem'
+import { ownershipIdentity } from '@/lib/systems/SandboxSystem'
 import { isFreeHaulEligibleMission } from '@/lib/data'
 
 type Game = ReturnType<typeof useGame>
@@ -57,6 +58,7 @@ export default function MissionOperationRoutes({
           minerals={game.catalog.minerals}
           mission={game.mission}
           client={game.mission?.client ? game.catalog.clients[game.mission.client] ?? null : null}
+          ownership={ownershipIdentity(game.player, game.authUserId)}
           onBack={() => game.go('hub')}
           onArrive={() => {
             if (game.player.returningToEarth) {
@@ -217,6 +219,11 @@ export default function MissionOperationRoutes({
           target={roverTarget}
           rocketImageSrc={rocketDisplay.img}
           clientName={game.mission.client ? game.catalog.clients[game.mission.client]?.name : undefined}
+          player={game.player}
+          onFieldBuild={game.recordFieldBuild}
+          onFieldDemolish={game.recordFieldDemolish}
+          onFabricate={game.fabricateAtField}
+          onSeedBiosphere={game.seedBiosphere}
           onComplete={(cargo) => {
             game.onRoverMiningDone(cargo)
           }}

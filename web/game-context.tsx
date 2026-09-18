@@ -179,7 +179,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
   const loop    = useGameLoop({ stateRef, setState, catalog: runtimeCatalog, addToast: ui.addToast })
   const tutorial = useTutorialActions(setState)
   const economy = useEconomyActions(setState, useCallback(() => runtimeCatalog.missions, [runtimeCatalog.missions]))
-  const surfaceOps = useSurfaceOpsActions(setState, ui.addToast, stateRef)
+  const surfaceOps = useSurfaceOpsActions(setState, ui.addToast, stateRef, auth.authUserId)
 
   // KES-83: applies a claimed friend gift to local player state through the
   // same setState path (and, for blueprints, the same unlockBlueprint action
@@ -347,6 +347,11 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       retrySurfaceFerry: surfaceOps.retrySurfaceFerry,
       reconcileSurfaceFerry: surfaceOps.reconcileSurfaceFerry,
       acknowledgeSurfaceFerry: surfaceOps.acknowledgeSurfaceFerry,
+      recordFieldBuild: surfaceOps.recordFieldBuild,
+      recordFieldDemolish: surfaceOps.recordFieldDemolish,
+      runFieldRefining: surfaceOps.runFieldRefining,
+      fabricateAtField: surfaceOps.fabricateAtField,
+      seedBiosphere: surfaceOps.seedBiosphere,
     }}>
       {children}
     </GameContext.Provider>

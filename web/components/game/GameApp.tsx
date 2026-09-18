@@ -25,6 +25,8 @@ import AuthGateSheet from '@/components/game/AuthGateSheet'
 import SettingsSheet from '@/components/game/SettingsSheet'
 import FriendsButton from '@/components/game/FriendsButton'
 import FriendsSheet from '@/components/game/FriendsSheet'
+import CommunityButton from '@/components/game/CommunityButton'
+import CommunityHubSheet from '@/components/game/CommunityHubSheet'
 import TakeOnPwaPreload from '@/components/takeon/TakeOnPwaPreload'
 import { UI_ZONES } from '@/lib/ui-zones'
 
@@ -36,6 +38,7 @@ function GameCanvas() {
   const priorScreenRef = useRef<Screen | null>(null)
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [friendsOpen, setFriendsOpen] = useState(false)
+  const [hubOpen, setHubOpen] = useState(false)
 
   // PostHog injects recorder/survey scripts. Initialising during module
   // evaluation can let those scripts mutate the document while React is
@@ -124,9 +127,9 @@ function GameCanvas() {
     // The Launchpad mission chooser is a modal owned by the current scene.
     // Hide the coach while it is open so onboarding copy never sits over, or
     // points back at, the control the player is already using.
-    if (game.subsurfaceView || settingsOpen || friendsOpen || game.popup || game.authGateOpen || (game.screen === 'launchpad' && game.launchpadMissionMenuOpen)) return null
+    if (game.subsurfaceView || settingsOpen || friendsOpen || hubOpen || game.popup || game.authGateOpen || (game.screen === 'launchpad' && game.launchpadMissionMenuOpen)) return null
     return activeCoach
-  }, [coachSteps, friendsOpen, game.authGateOpen, game.doneSteps, game.launchpadMissionMenuOpen, game.popup, game.screen, game.subsurfaceView, settingsOpen])
+  }, [coachSteps, friendsOpen, hubOpen, game.authGateOpen, game.doneSteps, game.launchpadMissionMenuOpen, game.popup, game.screen, game.subsurfaceView, settingsOpen])
 
   const coachIndex = coach ? coachSteps.findIndex(step => step.id === coach.id) : -1
   const hasCoach = !!coach
@@ -253,7 +256,10 @@ function GameCanvas() {
           </button>
         )}
         {game.screen === 'hub' && !game.subsurfaceView && !game.authGateOpen && (
-          <FriendsButton onClick={() => setFriendsOpen(true)} />
+          <>
+            <FriendsButton onClick={() => setFriendsOpen(true)} />
+            <CommunityButton onClick={() => setHubOpen(true)} />
+          </>
         )}
         <DevShortcuts />
         <div
@@ -344,6 +350,7 @@ function GameCanvas() {
           corner button above; everything else routes through the base. */}
       {settingsOpen && <SettingsSheet onClose={() => setSettingsOpen(false)} />}
       {friendsOpen && <FriendsSheet onClose={() => setFriendsOpen(false)} />}
+      {hubOpen && <CommunityHubSheet onClose={() => setHubOpen(false)} />}
     </main>
   )
 }

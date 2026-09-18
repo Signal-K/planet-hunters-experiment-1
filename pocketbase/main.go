@@ -37,6 +37,7 @@ func main() {
 
 	app.OnServe().BindFunc(func(se *core.ServeEvent) error {
 		ensureCollections(app)
+		ensureCommunityCollections(app)
 		seedCatalog(app)
 		registerGuestStateArchival(app)
 		return se.Next()
@@ -44,6 +45,7 @@ func main() {
 
 	registerLandnamAuthExchange(app, sharedAuth)
 	registerFriendsRoutes(app)
+	registerCommunityRoutes(app)
 	registerTreasuryRoutes(app)
 
 	if err := app.Start(); err != nil {

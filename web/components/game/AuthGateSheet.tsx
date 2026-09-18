@@ -65,7 +65,13 @@ export default function AuthGateSheet({ error, onSignIn, onCreateAccount }: Auth
         <div className="auth-gate__content">
           <div className="auth-gate__eyebrow">LANDNAM · SPACE MINING</div>
           <div className="auth-gate__heading">{mode === 'signin' ? 'Welcome Back' : 'Create Account'}</div>
-          <p className="auth-gate__intro">Resume the program and return to the command deck.</p>
+          {/* SSL-302: the subtitle used to stay on the "resume" line for both
+              tabs — a brand-new player on Sign Up has nothing to resume. */}
+          <p className="auth-gate__intro" data-testid="auth-gate-intro">
+            {mode === 'signin'
+              ? 'Resume the program and return to the command deck.'
+              : 'Start the program and take command of your first launch.'}
+          </p>
 
           <div className="auth-gate__tabs" role="tablist" aria-label="Account access mode">
             {(['signin', 'signup'] as const).map(m => (

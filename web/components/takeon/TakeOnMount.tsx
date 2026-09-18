@@ -13,9 +13,13 @@ import type {
   ResourceKey,
   RoverGame,
   RoverSpec,
+  StructureType,
   SyncAdapter,
+  ViewKind,
 } from '@takeon/engine'
+import type { LifeStage, SurfaceTarget } from '@/lib/data'
 import { LandnamSync } from '@/lib/takeon/LandnamSync'
+import { buildLandnamBody, registerLandnamSandbox } from '@/lib/takeon/sandbox'
 import {
   bindTakeonHostEvents,
   notificationForTakeonEvent,
@@ -24,9 +28,28 @@ import {
 import { scheduleLandnamPush } from '@/lib/takeon/push'
 import styles from './TakeOnMount.module.css'
 
+export interface TakeOnFieldOrder {
+  type: 'goto' | 'mine'
+  pos: { x: number; y: number }
+}
+
 export interface TakeOnMountHandle {
   /** Deposit all rover cargo into an adjacent cache. Returns units moved. */
   deposit: () => number
+  /** Place a structure on the tile the rover faces. False when the engine refuses (a `buildFailed` event follows). */
+  build: (type: StructureType) => boolean
+  demolish: (structureId: string) => boolean
+  rotateStructure: (structureId: string) => boolean
+  /** The structure on the tile the rover currently faces, if any. */
+  facedStructure: () => { id: string; type: StructureType } | null
+  currentOrder: () => TakeOnFieldOrder | null
+  cancelOrder: () => void
+  plannedRouteLength: () => number
+  view: () => ViewKind | null
+  toggleView: () => ViewKind | null
+  rotateView: () => void
+  /** Structures currently placed on the field (read-only snapshot for sharing). */
+  structures: () => { id: string; type: StructureType; x: number; y: number; facing: number }[]
 }
 
 export interface TakeOnMountProps {
@@ -49,6 +72,15 @@ export interface TakeOnMountProps {
    * Ignored on a resumed mission (structures already exist).
    */
   seedCache?: boolean
+  /**
+   * Landnam target this field belongs to. When supplied, the takeon body is
+   * rebuilt with Landnam biomes gated by the target's habitability and
+   * `lifeStage` (SSL-317); otherwise the stock takeon body is mounted.
+   */
+  target?: SurfaceTarget
+  lifeStage?: LifeStage
+  /** Read-only visit: pointer input is disabled and no save is written. */
+  readOnly?: boolean
   onEvent?: (event: TakeonHostEvent) => void
   /** Host-facing route state for the safe tap-to-drive planner. */
   onRouteChange?: (steps: number) => void
@@ -69,6 +101,12 @@ export function takeOnViewportSize(canvas: Pick<HTMLCanvasElement, 'clientWidth'
   }
 }
 
+/** Tile in front of the rover. Facing follows takeon's iso convention: 0 SE, 1 SW, 2 NW, 3 NE. */
+export function facedTile(pos: { x: number; y: number }, facing: 0 | 1 | 2 | 3): { x: number; y: number } {
+  const delta = [[1, 0], [0, 1], [-1, 0], [0, -1]][facing] ?? [1, 0]
+  return { x: pos.x + delta[0], y: pos.y + delta[1] }
+}
+
 const TakeOnMount = forwardRef<TakeOnMountHandle, TakeOnMountProps>(function TakeOnMount({
   missionId,
   bodyId,
@@ -79,6 +117,9 @@ const TakeOnMount = forwardRef<TakeOnMountHandle, TakeOnMountProps>(function Tak
   className,
   seedCargo,
   seedCache,
+  target,
+  lifeStage = 'dormant',
+  readOnly = false,
   onEvent,
   onRouteChange,
   onReady,
@@ -100,8 +141,37 @@ const TakeOnMount = forwardRef<TakeOnMountHandle, TakeOnMountProps>(function Tak
   const seedCacheRef = useRef(seedCache)
   seedCacheRef.current = seedCache
 
+  // Only the target identity matters for the mount; a fresh object with the
+  // same id must not remount the field.
+  const targetId = target?.id
+  const targetRef = useRef(target)
+  targetRef.current = target
+
   useImperativeHandle(ref, () => ({
     deposit: () => gameRef.current?.deposit() ?? 0,
+    build: type => gameRef.current?.build(type) ?? false,
+    demolish: id => gameRef.current?.demolish(id) ?? false,
+    rotateStructure: id => gameRef.current?.rotateStructure(id) ?? false,
+    facedStructure: () => {
+      const game = gameRef.current
+      if (!game) return null
+      const { pos, facing } = game.sim.rover
+      const faced = facedTile(pos, facing)
+      const structure = game.sim.structures.find(s => s.pos.x === faced.x && s.pos.y === faced.y)
+      return structure ? { id: structure.id, type: structure.type } : null
+    },
+    currentOrder: () => {
+      const order = gameRef.current?.currentOrder()
+      return order ? { type: order.type, pos: { x: order.pos.x, y: order.pos.y } } : null
+    },
+    cancelOrder: () => gameRef.current?.cancelOrder(),
+    plannedRouteLength: () => gameRef.current?.plannedRoute().length ?? 0,
+    view: () => gameRef.current?.view ?? null,
+    toggleView: () => gameRef.current?.toggleView() ?? null,
+    rotateView: () => gameRef.current?.rotateView(),
+    structures: () => (gameRef.current?.sim.structures ?? []).map(s => ({
+      id: s.id, type: s.type, x: s.pos.x, y: s.pos.y, facing: s.facing ?? 0,
+    })),
   }), [])
 
   useEffect(() => {
@@ -138,6 +208,7 @@ const TakeOnMount = forwardRef<TakeOnMountHandle, TakeOnMountProps>(function Tak
     }
 
     const save = async () => {
+      if (readOnly) return
       const state = snapshot()
       if (state) await adapter.saveMission(state, roverName)
     }
@@ -152,8 +223,14 @@ const TakeOnMount = forwardRef<TakeOnMountHandle, TakeOnMountProps>(function Tak
       try {
         const PIXI = await import('pixi.js')
         const { mountRoverGame } = await import('@takeon/pixi')
-        const { getBody } = await import('@takeon/engine')
-        const body = getBody(bodyId)
+        const engine = await import('@takeon/engine')
+        // Landnam's structures (roads, factories, silos…) and its biome
+        // palette must exist before a saved mission referencing them resumes.
+        registerLandnamSandbox(engine)
+        const currentTarget = targetRef.current
+        const body = currentTarget
+          ? buildLandnamBody(engine, bodyId, currentTarget, lifeStage)
+          : engine.getBody(bodyId)
         if (!body) throw new Error(`Unknown Takeon body: ${bodyId}`)
 
         // Seeded scenes (a tutorial dropoff, etc.) are ephemeral flavor —
@@ -308,22 +385,26 @@ const TakeOnMount = forwardRef<TakeOnMountHandle, TakeOnMountProps>(function Tak
   }, [
     adapter,
     bodyId,
+    lifeStage,
     missionId,
     onError,
     onEvent,
     onRouteChange,
     onReady,
+    readOnly,
     rover,
     roverName,
     seed,
+    targetId,
   ])
 
   return (
-    <div className={[styles.mount, className].filter(Boolean).join(' ')}>
+    <div className={[styles.mount, className].filter(Boolean).join(' ')} data-readonly={readOnly || undefined}>
       <canvas
         ref={canvasRef}
         className={styles.canvas}
-        aria-label={`Surface operations on ${bodyId}`}
+        style={readOnly ? { pointerEvents: 'none' } : undefined}
+        aria-label={readOnly ? `Read-only visit to ${bodyId}` : `Surface operations on ${bodyId}`}
       />
       {error && (
         <p className={styles.error} role="alert">

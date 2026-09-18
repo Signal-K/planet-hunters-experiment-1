@@ -233,6 +233,9 @@ export function tessCandidateToExoplanetTarget(candidate: TessCandidate, measure
     brief: `${candidate.host} candidate in ${candidate.constellation}. Added from satellite lightcurve review; plot in the star map, not the solar system.`,
     minerals: mineralsForArchetype(archetype, orbit),
     archetype,
+    planetRadiusEarth: candidate.planetRadiusEarth,
+    periodDays,
+    starTeffK,
   }
 }
 

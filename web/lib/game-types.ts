@@ -182,6 +182,21 @@ export interface SurfaceOpsState {
   sites: Record<string, SurfaceSiteProgress>
 }
 
+/** A structure the player built on a takeon field and paid Landnam for. */
+export interface FieldStructureRecord {
+  /** takeon structure id (stable across the saved mission). */
+  id: string
+  /** takeon StructureType, e.g. 'refinery', 'beacon', 'road'. */
+  type: string
+  recipeId: string
+  x: number
+  y: number
+  facing: number
+  builtAt: number
+  /** Site the field belongs to, when it is a client-territory surface site. */
+  siteId?: string
+}
+
 export type ProgramFocus = 'client-contracts' | 'mining' | 'instruments' | 'construction'
 
 export interface ResourceFocus {
@@ -236,6 +251,8 @@ export interface Player {
   pendingRocketLocation?: 'hangar' | 'launchpad'
   /** How the pending/active single-use vehicle entered the Hangar. */
   pendingRocketSource?: 'company' | 'fabricated'
+  /** Lifetime company purchases per rocket model id (SSL-313 copy gate). */
+  rocketPurchaseCounts?: Record<string, number>
   missionRocketSource?: 'company' | 'fabricated'
   placed: string[]
   placementPlots: Record<string, number>
@@ -364,6 +381,21 @@ export interface Player {
    */
   instrumentDigestNotifiedOn?: Record<string, string>
   discoveredExoplanetTargets?: Record<string, Target>
+  // SSL-317 ownership: divisions of a body this player has staked with a
+  // Nav Beacon in the sandbox field. Mirrored to the `territory_claims`
+  // PocketBase collection so other players' claims are visible.
+  territoryClaims?: import('@/lib/data').TerritoryClaim[]
+  // SSL-317 life: bodies whose biosphere this player has seeded, keyed by
+  // target id. Only possible once the tech tree and SETI programme are done.
+  biosphereSeeds?: Record<string, import('@/lib/data').BiosphereSeed>
+  setiProgrammeCompletedAt?: number | null
+  // SSL-316 sandbox: structures the player has paid for on each takeon field,
+  // keyed by Landnam target id. The takeon save owns placement; this record
+  // owns the economics (what was charged, which beacon staked which claim)
+  // and feeds site refinery/factory processing.
+  fieldStructures?: Record<string, FieldStructureRecord[]>
+  /** Last refinery pass per target id, for the field processing cadence. */
+  fieldProcessedAt?: Record<string, number>
   clientStructures?: import('@/lib/data').ClientStructureRecord[]
   /** Refineries commissioned against a specific client-territory site right. */
   offworldRefineries?: OffworldRefineryDeployment[]
@@ -535,6 +567,12 @@ export interface GameActions {
   retrySurfaceFerry: (siteId: string) => void
   reconcileSurfaceFerry: (siteId: string) => void
   acknowledgeSurfaceFerry: (siteId: string) => void
+  /** SSL-316 sandbox: charge a structure the engine already placed; false means the caller must demolish it. */
+  recordFieldBuild: (field: import('@/lib/systems/SandboxSystem').FieldIdentity, structure: import('@/lib/systems/SandboxSystem').FieldBuildInput) => boolean
+  recordFieldDemolish: (targetId: string, structureId: string) => void
+  runFieldRefining: (field: import('@/lib/systems/SandboxSystem').FieldIdentity) => void
+  fabricateAtField: (targetId: string, recipeId: string) => boolean
+  seedBiosphere: (target: import('@/lib/data').SurfaceTarget) => boolean
   gainResearchXP: (amount: number) => void
   upgradeLicenseGrade: (grade: Exclude<LicenseGrade, 'Grade I'>) => void
   unlockBlueprint: (blueprintId: string, costFrancs?: number, costXP?: number, costMaterials?: Record<string, number>) => void

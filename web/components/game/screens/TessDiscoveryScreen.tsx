@@ -432,29 +432,42 @@ export default function TessDiscoveryScreen({ player, visualCandidate, onBack, o
   return (
     <div className="game-screen theme-deep ln-scene-tess-discovery" data-testid="tess-discovery-screen">
       <TopBar eyebrow="INSTRUMENT DATA FEED · DAILY DOWNLINK" title={candidate.toi} onBack={onBack} />
-      {process.env.NODE_ENV === 'development' && (
-        <div style={{ position: 'absolute', top: 72, left: 'var(--ln-s-4)', right: 'var(--ln-s-4)', zIndex: 5 }}>
-          <DevDaySkipBar offset={devDayOffset} onAdvance={() => setDevDayOffset(o => o + 1)} onReset={() => setDevDayOffset(0)} />
-        </div>
-      )}
       {isDesktop || isCompactLandscape ? (
-        <div data-testid="tess-discovery-desktop-grid" style={{ position: 'absolute', inset: 0, top: 72, display: 'grid', gridTemplateColumns: '55% 45%', gap: 16, padding: '0 var(--ln-s-4) var(--ln-s-4)' }}>
-          <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', overflowY: 'auto' }} data-ui-zone={UI_ZONES.screenContent}>
-            {chartPanel(false)}
-          </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 12, minHeight: 0 }}>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 12, flex: '1 1 auto', minHeight: 0, overflowY: 'auto' }}>
-              <ObservatoryReadout stats={stats} />
-              {payoffPanel}
-              <CommentsPanel recordType="classification" recordId={candidate.id} />
+        /* SSL-300: the DEV day-skip bar used to be absolutely positioned over
+           the grid, so its height was never subtracted from the space the
+           right column thought it had — at 844x390 that pushed the comments
+           composer's Post button underneath the pinned verdict dock. Put the
+           bar in flow above the grid inside one bounded column so the
+           scroll region is always sized from what is actually left. */
+        <div data-testid="tess-discovery-desktop-frame" style={{ position: 'absolute', inset: 0, top: 72, display: 'flex', flexDirection: 'column', minHeight: 0, padding: '0 var(--ln-s-4) var(--ln-s-4)' }}>
+          {process.env.NODE_ENV === 'development' && (
+            <div style={{ flex: '0 0 auto' }}>
+              <DevDaySkipBar offset={devDayOffset} onAdvance={() => setDevDayOffset(o => o + 1)} onReset={() => setDevDayOffset(0)} />
             </div>
-            <div style={{ flex: '0 0 auto' }} data-ui-zone={UI_ZONES.bottomActions}>
-              {verdictActions}
+          )}
+          <div data-testid="tess-discovery-desktop-grid" style={{ flex: '1 1 0px', minHeight: 0, display: 'grid', gridTemplateColumns: '55% 45%', gridTemplateRows: 'minmax(0, 1fr)', gap: 16 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', minHeight: 0, overflowY: 'auto' }} data-ui-zone={UI_ZONES.screenContent}>
+              {chartPanel(false)}
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12, minHeight: 0 }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 12, flex: '1 1 0px', minHeight: 0, overflowY: 'auto' }}>
+                <ObservatoryReadout stats={stats} />
+                {payoffPanel}
+                <CommentsPanel recordType="classification" recordId={candidate.id} />
+              </div>
+              <div style={{ flex: '0 0 auto', background: 'var(--ln-void)' }} data-ui-zone={UI_ZONES.bottomActions}>
+                {verdictActions}
+              </div>
             </div>
           </div>
         </div>
       ) : (
         <>
+          {process.env.NODE_ENV === 'development' && (
+            <div style={{ position: 'absolute', top: 72, left: 'var(--ln-s-4)', right: 'var(--ln-s-4)', zIndex: 5 }}>
+              <DevDaySkipBar offset={devDayOffset} onAdvance={() => setDevDayOffset(o => o + 1)} onReset={() => setDevDayOffset(0)} />
+            </div>
+          )}
           <div className={`screen-scroll${!classification && markCount > 0 ? ' screen-scroll--tall-actions' : ''}`} data-ui-zone={UI_ZONES.screenContent}>
             {chartPanel(true)}
             {payoffPanel && <div style={{ marginTop: 12 }}>{payoffPanel}</div>}

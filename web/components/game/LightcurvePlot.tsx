@@ -34,8 +34,41 @@ function makeFallbackPoints(): LightcurvePoint[] {
 // Round to 3 decimal places so labels are readable
 function fmt(n: number) { return n.toFixed(3) }
 
+const Y_TICK_COUNT = 5
+
+/**
+ * SSL-301: a fixed 3-decimal formatter on an auto domain produced runs of
+ * identical labels ("1.000, 1.000, 1.000") whenever the flux span was under a
+ * few millimag. Compute the ticks ourselves and pick the smallest precision
+ * (3..6 dp) at which every label is distinct, so the axis always reads as a
+ * real scale.
+ */
+export function lightcurveYTicks(data: LightcurvePoint[], count = Y_TICK_COUNT): { ticks: number[]; decimals: number } {
+  if (data.length === 0) return { ticks: [], decimals: 3 }
+  let min = Infinity
+  let max = -Infinity
+  for (const point of data) {
+    if (point.y < min) min = point.y
+    if (point.y > max) max = point.y
+  }
+  if (!Number.isFinite(min) || !Number.isFinite(max)) return { ticks: [], decimals: 3 }
+  if (max - min < 1e-9) {
+    const pad = Math.max(1e-4, Math.abs(min) * 1e-4)
+    min -= pad
+    max += pad
+  }
+  const ticks = Array.from({ length: count }, (_, index) => min + ((max - min) * index) / (count - 1))
+  for (let decimals = 3; decimals <= 6; decimals++) {
+    const labels = new Set(ticks.map(tick => tick.toFixed(decimals)))
+    if (labels.size === ticks.length) return { ticks, decimals }
+  }
+  return { ticks, decimals: 6 }
+}
+
 export default function LightcurvePlot({ points, markers, onMarker, height = 190 }: LightcurvePlotProps) {
   const data = useMemo(() => (points.length > 0 ? points : makeFallbackPoints()), [points])
+  const yAxis = useMemo(() => lightcurveYTicks(data), [data])
+  const fmtY = (value: number) => value.toFixed(yAxis.decimals)
 
   function handleClick(chartData: { activeLabel?: string | number } | null) {
     if (chartData?.activeLabel == null) return
@@ -71,10 +104,11 @@ export default function LightcurvePlot({ points, markers, onMarker, height = 190
             label={{ value: 'Time (days)', position: 'insideBottom', offset: -8, fontFamily: 'var(--ln-font-mono)', fontSize: 8, fill: '#5d7390' }}
           />
           <YAxis
-            domain={['auto', 'auto']}
+            domain={yAxis.ticks.length > 0 ? [yAxis.ticks[0], yAxis.ticks[yAxis.ticks.length - 1]] : ['auto', 'auto']}
+            ticks={yAxis.ticks.length > 0 ? yAxis.ticks : undefined}
             tick={{ fontFamily: 'var(--ln-font-mono)', fontSize: 8, fill: '#5d7390' }}
-            width={46}
-            tickFormatter={v => fmt(v)}
+            width={yAxis.decimals > 4 ? 58 : 46}
+            tickFormatter={v => fmtY(Number(v))}
           />
           <Tooltip
             contentStyle={{ background: '#0a121d', border: '1px solid rgba(112,217,234,0.3)', borderRadius: 6, fontFamily: 'var(--ln-font-mono)', fontSize: 9 }}

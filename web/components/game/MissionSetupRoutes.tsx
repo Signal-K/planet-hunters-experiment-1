@@ -367,7 +367,10 @@ export default function MissionSetupRoutes({ screen, game, hasCoach, rocketDispl
             <button type="button" onClick={() => game.onMoveStagedRocket(movableVehicle.id)}>MOVE VEHICLE TO THIS MISSION</button>
           </div>}
           <p className={styles.purchaseTerms}>{selectedRocket.costFrancs === 0 ? 'BUILD QUEUE · ₣0 · SINGLE-USE AFTER LAUNCH' : `COMPANY SHIPMENT · ${formatCurrency(selectedRocket.costFrancs, { compact: true })} · CHARGED ONCE`}</p>
-          <button type="button" className={styles.primary} disabled={!canAfford} onClick={() => game.onPurchaseRocket(selectedRocket.id)}><StepGlyph step={3} /> {selectedRocket.costFrancs === 0 ? 'BUILD EXPLORER · ₣0' : `BUILD ANOTHER ${selectedRocket.name.toUpperCase()} · ${formatCurrency(selectedRocket.costFrancs, { compact: true })}`}</button>
+          <button type="button" className={styles.primary} disabled={!canAfford} onClick={() => game.onPurchaseRocket(selectedRocket.id)} data-testid="purchase-rocket-btn"><StepGlyph step={3} /> {selectedRocket.costFrancs === 0
+            ? 'BUILD EXPLORER · ₣0'
+            /* SSL-313: "ANOTHER" only once this model has actually been built before. */
+            : `${(game.player.rocketPurchaseCounts?.[selectedRocket.id] ?? 0) > 0 ? 'BUILD ANOTHER' : 'BUILD'} ${selectedRocket.name.toUpperCase()} · ${formatCurrency(selectedRocket.costFrancs, { compact: true })}`}</button>
         </section>
       </SetupFrame>
     )

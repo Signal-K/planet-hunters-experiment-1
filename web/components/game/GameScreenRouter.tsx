@@ -462,6 +462,11 @@ export function ScreenContent({
           onRetry={game.retrySurfaceFerry}
           onReconcile={game.reconcileSurfaceFerry}
           onAcknowledge={game.acknowledgeSurfaceFerry}
+          onFieldBuild={game.recordFieldBuild}
+          onFieldDemolish={game.recordFieldDemolish}
+          onFieldRefine={game.runFieldRefining}
+          onFabricate={game.fabricateAtField}
+          onSeedBiosphere={game.seedBiosphere}
         />
       )
 

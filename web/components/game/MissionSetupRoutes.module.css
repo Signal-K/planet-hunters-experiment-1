@@ -659,7 +659,12 @@ button:focus-visible { outline: 4px solid var(--ln-cyan); outline-offset: 3px; }
 }
 
 @media (max-width: 720px), (max-height: 520px) {
-  .header { inset: 6px 8px auto; height: 48px; }
+  /* SSL-303: the global .game-menu-button (top:56px, right:12px, 72×36 —
+     see app/globals.css) sits inside this header's vertical band whenever
+     the header is pushed down for the dev launcher, and always shares its
+     right edge. Reserve the pill's footprint on the right so the step dots
+     end before the pill starts instead of underneath it. */
+  .header { inset: 6px 96px auto 8px; height: 48px; }
   .back, .titleGlyph { width: 40px; height: 40px; }
   .title { min-width: 0; width: 164px; padding: 5px 8px; overflow: hidden; }
   .title span { display: block; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font-size: 7px; }
@@ -753,7 +758,8 @@ button:focus-visible { outline: 4px solid var(--ln-cyan); outline-offset: 3px; }
 /* The narrow app panel is tall, not compact landscape. Recompose around that
    vertical room instead of squeezing desktop's two columns into half-widths. */
 @media (orientation: portrait) {
-  .header { inset: 6px 8px auto; height: 48px; gap: 6px; }
+  /* SSL-303: same MENU-pill clearance as the compact-landscape block above. */
+  .header { inset: 6px 96px auto 8px; height: 48px; gap: 6px; }
   .back { width: 40px; height: 40px; }
   .titleGlyph { display: none; }
   .title { flex: 1 1 auto; min-width: 76px; width: auto; padding: 5px 7px; }
@@ -795,6 +801,19 @@ button:focus-visible { outline: 4px solid var(--ln-cyan); outline-offset: 3px; }
   .root[data-step='1'][data-coach='true'] .contractCargo { top: 24%; }
   .root[data-step='1'][data-coach='true'] .contractCopy { top: 41%; }
   .root[data-step='1'][data-coach='true'] .contractRocket { top: 39%; height: 28%; }
+}
+
+/* SSL-308: on desktop the tutorial coach card is pinned at left:16 /
+   top:96 / width:320 (TutorialCoach mission-setup variant), which lands
+   squarely on the contract identity and the mission title at left:7% /
+   top:31%. The portrait block above already shifts the copy down for the
+   coach; desktop needs the same clearance, expressed as a left offset past
+   the card's right edge so the title never sits underneath it. */
+@media (orientation: landscape) and (min-width: 1024px) {
+  .root[data-step='1'][data-coach='true'] .contractIdentity,
+  .root[data-step='1'][data-coach='true'] .contractCopy { left: max(7%, 372px); }
+  .root[data-step='1'][data-coach='true'] .contractCopy { width: min(48%, calc(100% - 372px - 34%)); }
+  .root[data-step='1'][data-coach='true'] .contractCopy h2 { font-size: clamp(28px, 3.6vw, 52px); }
 
   .filterRibbon { left: 6%; right: 6%; top: 3%; width: auto; }
   .filterRibbon > span { max-width: 420px; }

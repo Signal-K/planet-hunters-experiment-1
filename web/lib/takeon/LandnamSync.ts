@@ -43,7 +43,12 @@ export interface LandnamSyncOptions {
   spendCredits?: (amount: number) => Promise<boolean>
 }
 
-const STRUCTURE_TYPES = new Set<StructureType>([
+/**
+ * Field structure types Landnam persists. The first ten are takeon built-ins;
+ * `road`, `factory` and `silo` are Landnam sandbox additions registered by
+ * `lib/takeon/sandbox.ts` (SSL-316).
+ */
+export const STRUCTURE_TYPES = new Set<StructureType>([
   'solar-array',
   'beacon',
   'drill-rig',
@@ -54,6 +59,9 @@ const STRUCTURE_TYPES = new Set<StructureType>([
   'launch-pad',
   'generator',
   'pylon',
+  'road',
+  'factory',
+  'silo',
 ])
 
 const BLUEPRINT_BY_TAKEON_TYPE: Record<StructureType, string> = {
@@ -67,6 +75,9 @@ const BLUEPRINT_BY_TAKEON_TYPE: Record<StructureType, string> = {
   'launch-pad': 'launchpad',
   generator: 'generator',
   pylon: 'pylon',
+  road: 'road',
+  factory: 'factory',
+  silo: 'silo',
 }
 
 const TAKEON_TYPE_BY_BLUEPRINT = new Map(
@@ -295,7 +306,7 @@ export class LandnamSync implements SyncAdapter {
         user: userId,
         target_id: missionId,
         structure_id: structure.id,
-        blueprint_slug: BLUEPRINT_BY_TAKEON_TYPE[structure.type],
+        blueprint_slug: BLUEPRINT_BY_TAKEON_TYPE[structure.type] ?? structure.type,
         pos_x: structure.pos.x,
         pos_y: structure.pos.y,
         facing: structure.facing ?? 0,

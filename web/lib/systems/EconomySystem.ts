@@ -332,6 +332,12 @@ export function applyPurchaseRocket(s: GameState, rocket: RocketModel): GameStat
       ...s.player,
       francs: s.player.francs - rocket.costFrancs,
       pendingLaunch: true,
+      // SSL-313: remembered per model so the Blueprint CTA can say "BUILD"
+      // the first time and "BUILD ANOTHER" only for a genuine repeat.
+      rocketPurchaseCounts: {
+        ...(s.player.rocketPurchaseCounts ?? {}),
+        [rocket.id]: (s.player.rocketPurchaseCounts?.[rocket.id] ?? 0) + 1,
+      },
       stagedRockets: [...(s.player.stagedRockets ?? []), stagedRocket],
       selectedStagedRocketId: stagedRocket.id,
       pendingRocketId: rocket.id,

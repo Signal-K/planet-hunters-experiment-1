@@ -27,6 +27,10 @@
 .mineralDot { width: 8px; height: 8px; border-radius: 2px; }
 .primaryAction { min-height: 44px; padding: 10px 14px; border: 1px solid var(--ln-cyan); border-radius: 8px; background: var(--ln-cyan); color: var(--ln-text-on-cyan); font: 800 10px var(--ln-font-display); letter-spacing: .12em; text-transform: uppercase; cursor: pointer; }
 .primaryAction:disabled { opacity: .45; cursor: not-allowed; }
+.buildToggle { padding: 0; border: 0; background: transparent; color: inherit; font: inherit; letter-spacing: inherit; cursor: pointer; }
+.buildToggle[aria-pressed='true'] strong { color: var(--ln-ok); }
+/* Build mode docks the sandbox controls bottom-left so the cargo HUD (bottom-right) stays visible. */
+.sandboxDock { position: absolute; left: 16px; bottom: 16px; z-index: 4; width: min(440px, calc(100% - 32px)); max-height: calc(100% - 96px); overflow: auto; }
 
 @media (max-width: 760px) {
   /* .hud goes full-width and bottom-anchored at this breakpoint too (below)
@@ -38,6 +42,8 @@
   .landingHandoff > div { padding: 14px; }
   .controls { right: 12px; left: 12px; flex-wrap: wrap; gap: 8px 14px; }
   .hud { right: 12px; bottom: 12px; left: 12px; width: auto; }
+  /* Build mode replaces the cargo HUD's slot on a narrow canvas; the toggle closes it again. */
+  .sandboxDock { left: 12px; right: 12px; bottom: 12px; width: auto; max-height: 60%; z-index: 5; }
 }
 
 @media (orientation: landscape) and (max-height: 520px) {
@@ -47,6 +53,7 @@
   .landingHandoff > div { padding: 12px; gap: 7px; }
   .landingHandoff p { font-size: 11px; }
   .hud { right: 8px; bottom: 8px; width: min(320px, 40vw); gap: 8px; padding: 8px; }
+  .sandboxDock { left: 8px; bottom: 8px; width: min(400px, 55vw); max-height: calc(100% - 64px); }
   .orderRow { min-height: 28px; padding: 4px 8px; }
   .statusPill { padding: 4px 8px; }
 }

@@ -16,6 +16,17 @@ import {
   surfaceCargoReady,
   surfaceSiteProgress,
 } from '@/lib/systems/SurfaceOpsSystem'
+import {
+  applyFieldBuild,
+  applyFieldDemolish,
+  applyFieldFabricate,
+  applyFieldRefining,
+  applySeedBiosphere,
+  ownershipIdentity,
+  type FieldBuildInput,
+  type FieldIdentity,
+} from '@/lib/systems/SandboxSystem'
+import type { SurfaceTarget } from '@/lib/data'
 import { CLIENT_TERRITORIES, predefinedSiteRightById } from '@/lib/data/site-rights'
 import { acquireSiteRight, createSiteRightsState } from '@/lib/systems/SiteRightsSystem'
 import { createTreasuryState } from '@/lib/systems/TreasurySystem'
@@ -27,8 +38,59 @@ export function useSurfaceOpsActions(
   setState: React.Dispatch<React.SetStateAction<GameState>>,
   addToast: (message: string, kind?: Toast['kind']) => void,
   stateRef: React.RefObject<GameState>,
+  authUserId: string | null = null,
 ) {
   const notifiedOperations = useRef(new Set<symbol>())
+
+  // SSL-316 sandbox: the engine has already placed the structure when `built`
+  // fires, so the host charges after the fact and reports whether it could.
+  // A false return means the screen must demolish the structure it just placed.
+  const recordFieldBuild = useCallback((field: FieldIdentity, structure: FieldBuildInput): boolean => {
+    const current = stateRef.current
+    if (!current) return false
+    const result = applyFieldBuild(current, field, structure, ownershipIdentity(current.player, authUserId), Date.now())
+    if (!result.ok) {
+      addToast(result.reason ?? 'Structure could not be funded.', 'warn')
+      return false
+    }
+    setState(state => applyFieldBuild(state, field, structure, ownershipIdentity(state.player, authUserId), Date.now()).state)
+    if (result.claim) addToast(`Division ${result.claim.divisionId} staked by your beacon.`, 'ok')
+    return true
+  }, [addToast, authUserId, setState, stateRef])
+
+  const recordFieldDemolish = useCallback((targetId: string, structureId: string) => {
+    setState(state => applyFieldDemolish(state, targetId, structureId))
+  }, [setState])
+
+  const runFieldRefining = useCallback((field: FieldIdentity) => {
+    setState(state => applyFieldRefining(state, field, Date.now()))
+  }, [setState])
+
+  const fabricateAtField = useCallback((targetId: string, recipeId: string): boolean => {
+    const current = stateRef.current
+    if (!current) return false
+    const result = applyFieldFabricate(current, targetId, recipeId)
+    if (!result.ok) {
+      addToast(result.reason ?? 'Fabrication failed.', 'warn')
+      return false
+    }
+    setState(state => applyFieldFabricate(state, targetId, recipeId).state)
+    addToast('Part fabricated at the field factory.', 'ok')
+    return true
+  }, [addToast, setState, stateRef])
+
+  const seedBiosphere = useCallback((target: SurfaceTarget): boolean => {
+    const current = stateRef.current
+    if (!current) return false
+    const result = applySeedBiosphere(current, target, Date.now())
+    if (!result.ok) {
+      addToast(result.reason ?? 'Biosphere could not be seeded.', 'warn')
+      return false
+    }
+    setState(state => applySeedBiosphere(state, target, Date.now()).state)
+    addToast('Biosphere seeded. Life will bloom over the next surface cycle.', 'ok')
+    return true
+  }, [addToast, setState, stateRef])
 
   const purchaseSiteAccess = useCallback((siteId: string) => {
     const now = Date.now()
@@ -157,5 +219,10 @@ export function useSurfaceOpsActions(
     retrySurfaceFerry,
     reconcileSurfaceFerry,
     acknowledgeSurfaceFerry,
+    recordFieldBuild,
+    recordFieldDemolish,
+    runFieldRefining,
+    fabricateAtField,
+    seedBiosphere,
   }
 }

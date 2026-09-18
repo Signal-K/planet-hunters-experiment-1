@@ -133,6 +133,13 @@ export interface Target {
   // archetypeForDiscovery() in tess-candidates.ts.
   archetype?: import('./target-archetypes').TargetArchetype
   recommended?: boolean
+  // Exoplanet transit physics carried from the TESS candidate at discovery
+  // (SSL-317). Used by biomes.ts to judge habitability: rocky size + a
+  // temperate equilibrium temperature makes a "habitable candidate" whose
+  // latent biomes can bloom late-game.
+  planetRadiusEarth?: number
+  periodDays?: number
+  starTeffK?: number
 }
 
 export interface Part {
