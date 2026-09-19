@@ -717,6 +717,8 @@ button { cursor: pointer; }
   font-weight: 800;
   letter-spacing: 0.12em;
   text-transform: uppercase;
+}
+
 /* Hub utilities form one deliberate two-row header on device-sized canvases:
    title/time above, balance/friends/menu below. They used to be four unrelated
    absolute coordinates, which drifted as soon as the viewport changed. */

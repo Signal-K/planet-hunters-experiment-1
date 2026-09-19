@@ -2,9 +2,8 @@ name: Web CI
 
 on:
   push:
-    # Every branch, not a glob list. Staging deploys on any green push, so a
-    # branch whose name happens not to match a pattern must not silently skip
-    # CI and the deploy with it.
+    # Every branch, not a glob list, so a branch whose name happens not to
+    # match a pattern must not silently skip CI. Only pushes to main deploy.
     branches: ["**"]
     paths:
       - "web/**"
@@ -103,14 +102,14 @@ jobs:
 
   deploy:
     name: Deploy
-    # Only after typecheck, unit tests and a real build have passed. There is no
-    # point deploying a red commit to staging.
+    # Only after typecheck, unit tests and a real build have passed, and only
+    # from main: this publishes the production Worker served at playlandnam.space.
     needs: build
-    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+    if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
     runs-on: ubuntu-latest
     environment:
-      name: staging
-      url: https://landnam-web.liam-55d.workers.dev
+      name: production
+      url: https://playlandnam.space
     defaults:
       run:
         working-directory: web
@@ -127,19 +126,16 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      # KES-193: every push deploys straight to the landnam-web Worker — no
-      # alias/aliasing step needed like Vercel's, since `wrangler deploy`
-      # publishes directly to the same Worker name every time. Staging is
-      # therefore always "the last green push", same semantics as before.
-      # NEXT_PUBLIC_* vars are inlined at build time (Next.js convention) —
-      # these mirror what Vercel's Preview environment had configured.
+      # KES-193: every push to main deploys straight to the landnam-web Worker,
+      # which wrangler.jsonc binds to playlandnam.space as a custom domain.
+      # NEXT_PUBLIC_* vars are inlined at build time (Next.js convention).
       - name: Build (OpenNext/Cloudflare)
         run: npm run build:cf
         env:
           NEXT_TELEMETRY_DISABLED: 1
           NEXT_PUBLIC_SHARED_PB_URL: https://signal-k-starsailors.fly.dev
           NEXT_PUBLIC_LANDNAM_PB_URL: https://signal-k-landnam.fly.dev
-          NEXT_PUBLIC_LANDNAM_ENV: staging
+          NEXT_PUBLIC_LANDNAM_ENV: production
           NEXT_PUBLIC_POSTHOG_HOST: https://us.i.posthog.com
           NEXT_PUBLIC_POSTHOG_KEY: ${{ secrets.NEXT_PUBLIC_POSTHOG_KEY }}
           NEXT_PUBLIC_VAPID_PUBLIC_KEY: ${{ secrets.NEXT_PUBLIC_VAPID_PUBLIC_KEY }}
