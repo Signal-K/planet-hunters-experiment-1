@@ -32,6 +32,16 @@ export function usePushNotifications(userId?: string) {
       setState('unsupported')
       return
     }
+    // iOS only delivers web push to an installed (Add to Home Screen) app; in a
+    // plain Safari tab the prompt could never work, so hide it (SSL-322).
+    const isIos = /iPad|iPhone|iPod/.test(navigator.userAgent)
+      || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)
+    const standalone = (navigator as Navigator & { standalone?: boolean }).standalone === true
+      || window.matchMedia('(display-mode: standalone)').matches
+    if (isIos && !standalone) {
+      setState('unsupported')
+      return
+    }
     setState(Notification.permission as PushState)
     navigator.serviceWorker.ready.then(reg => { registrationRef.current = reg })
   }, [])

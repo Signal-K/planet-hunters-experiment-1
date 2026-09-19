@@ -500,6 +500,11 @@ body {
   height: 100svh;
   min-height: 100%;
   margin: 0;
+  /* SSL-322: keep content clear of the notch, home indicator and landscape
+     side insets (viewport-fit=cover is set in app/layout.tsx). */
+  padding: env(safe-area-inset-top, 0px) env(safe-area-inset-right, 0px) env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px);
+  -webkit-text-size-adjust: 100%;
+  -webkit-tap-highlight-color: transparent;
   background-color: var(--ln-void);
   display: flex;
   align-items: center;
