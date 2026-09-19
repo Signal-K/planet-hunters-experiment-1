@@ -54,7 +54,7 @@ function GameChrome({ children }: { children: ReactNode }) {
     arrivalScheduledFor.current = arrivalAt
 
     async function schedule() {
-      if (!('serviceWorker' in navigator)) return
+      if (!('serviceWorker' in navigator) || !('PushManager' in window)) return
       const reg = await navigator.serviceWorker.ready
       const sub = await reg.pushManager.getSubscription()
       if (!sub) return
@@ -72,7 +72,7 @@ function GameChrome({ children }: { children: ReactNode }) {
         }),
       })
     }
-    void schedule()
+    void schedule().catch(() => {})
   }, [game.screen, game.player.arrivalAt, game.mission, game.target])
 
   // Schedule return notification when debrief is reached
@@ -85,7 +85,7 @@ function GameChrome({ children }: { children: ReactNode }) {
     returnScheduledKey.current = key
 
     async function schedule() {
-      if (!('serviceWorker' in navigator)) return
+      if (!('serviceWorker' in navigator) || !('PushManager' in window)) return
       const reg = await navigator.serviceWorker.ready
       const sub = await reg.pushManager.getSubscription()
       if (!sub) return
@@ -101,7 +101,7 @@ function GameChrome({ children }: { children: ReactNode }) {
         }),
       })
     }
-    void schedule()
+    void schedule().catch(() => {})
   }, [game.screen, game.lastCargo, game.mission, game.target])
 
   const coachSteps = useMemo(() => {
