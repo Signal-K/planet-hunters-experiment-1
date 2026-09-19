@@ -4,6 +4,8 @@ import { useEffect, useRef } from 'react'
 import { capDpr } from '@/lib/engine/pixiDisplay'
 import { Application } from 'pixi.js'
 import { buildLaunchScene, LAUNCH_W, LAUNCH_H } from '@/lib/pixi/launchScene'
+import { useIsDesktop } from '@/lib/hooks/useIsDesktop'
+import SequenceDesktopFrame from '@/components/game/SequenceDesktopFrame'
 
 interface Props {
   rocketName: string
@@ -29,6 +31,8 @@ export function LaunchSequenceCanvas({ rocketName, rocketImageSrc, targetName, o
   const completeRef = useRef(onComplete)
   const firedRef = useRef(false)
   completeRef.current = onComplete
+  // The stage resizes when the desktop frame kicks in; rebuild the scene then so it lays out at the real size.
+  const isDesktop = useIsDesktop()
 
   // Single guarded entry point — the watchdog, the scene's natural
   // completion, and the dev skip button all route through this so a
@@ -170,12 +174,24 @@ export function LaunchSequenceCanvas({ rocketName, rocketImageSrc, targetName, o
         canvas.remove()
       }
     }
-  }, [rocketImageSrc, rocketName, targetName])
+  }, [rocketImageSrc, rocketName, targetName, isDesktop])
 
   return (
-    <div
-      ref={divRef}
-      style={{ position: 'absolute', inset: 0, background: '#000', overflow: 'hidden', zIndex: 100 }}
+    <SequenceDesktopFrame
+      background="#000"
+      stageAspect={`${LAUNCH_W} / ${LAUNCH_H}`}
+      leftTitle="MISSION"
+      leftRows={[
+        { label: 'VEHICLE', value: rocketName },
+        { label: 'DESTINATION', value: targetName },
+      ]}
+      rightTitle="LAUNCH TELEMETRY"
+      rightRows={[
+        { label: 'SEQUENCE', value: 'AUTOMATED' },
+        { label: 'STATUS', value: 'NOMINAL' },
+      ]}
+      showClock
+      renderStage={style => <div ref={divRef} data-testid="launch-sequence-stage" style={{ background: '#000', ...style }} />}
     >
       {process.env.NODE_ENV === 'development' && (
         <button
@@ -192,6 +208,6 @@ export function LaunchSequenceCanvas({ rocketName, rocketImageSrc, targetName, o
           Skip ▸
         </button>
       )}
-    </div>
+    </SequenceDesktopFrame>
   )
 }

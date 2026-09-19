@@ -8,6 +8,8 @@ export function useIsDesktop(): boolean {
   const [isDesktop, setIsDesktop] = useState(false)
 
   useEffect(() => {
+    // Environments without matchMedia (jsdom, very old webviews) stay on the mobile layout.
+    if (typeof window.matchMedia !== 'function') return
     const mq = window.matchMedia(`(min-width: ${DESKTOP_BREAKPOINT}px)`)
     setIsDesktop(mq.matches)
     const handler = (e: MediaQueryListEvent) => setIsDesktop(e.matches)
