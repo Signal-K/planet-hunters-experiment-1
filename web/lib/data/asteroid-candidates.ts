@@ -3,6 +3,8 @@
 // confirmed-candidate -> minable target follow-up). Mirrors the shape and
 // conventions of tess-candidates.ts as a second, independent instrument.
 
+import { ASTEROID_SETTLED_LABELS, recordHasOpenConsensus } from '@/lib/citizen-science/open-anomaly'
+
 export type AsteroidVerdict = 'likely_real' | 'likely_artifact' | 'unsure'
 
 export interface AsteroidCandidate {
@@ -63,7 +65,11 @@ export function dailyAsteroidCandidates(
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function isReviewableAsteroidCandidate(record: any): boolean {
-  return record.resolved !== true
+  if (record.resolved === true) return false
+  // Live shared `asteroid_candidates` has no consensus/gold_label columns
+  // today. Still reject them here so a later shared-schema add cannot
+  // re-serve a settled row (SSL-323).
+  return recordHasOpenConsensus(record as Record<string, unknown>, ASTEROID_SETTLED_LABELS)
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any

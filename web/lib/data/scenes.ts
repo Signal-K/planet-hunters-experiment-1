@@ -148,6 +148,7 @@ export const SCENES: readonly SceneDefinition[] = [
   { id: 'skills', name: 'Skill Tree', surface: 'dom', location: 'menu', screen: 'skills', entityTypes: [], description: 'Four branches — mining, cargo, range, engineering.' },
   { id: 'launchpad', name: 'Launchpad', surface: 'dom', location: 'earth-base', screen: 'launchpad', entityTypes: [], description: 'The player\'s own program — satellites and self-directed runs they launch on their own initiative. Client contracts live one press away on the Mission Board.' },
   { id: 'galaxy', name: 'Galaxy Map', surface: 'dom', location: 'orbit', screen: 'galaxy', entityTypes: [], description: 'Star map beyond the solar system. Free Ops only.' },
+  { id: 'instrument-hub', name: 'Instrument Hub', surface: 'dom', location: 'orbit', screen: 'instrument-hub', entityTypes: [], description: 'Owned telescope and satellite downlink queue. Opens the matching inspector. Not TESS transit photometry itself — see the glossary rule in CLAUDE.md.' },
 ]
 
 const BY_ID = new Map(SCENES.map(s => [s.id, s]))

@@ -1,0 +1,57 @@
+name: Shared TESS/NEOCP ingest
+
+# SSL-323: one scheduled runner into the shared PocketBase pool
+# (https://signal-k-starsailors.fly.dev), not Landnam PocketBase and not a
+# per-game job. Spectra is not ingested here.
+#
+# Required repository secrets to actually write:
+#   PB_STARSAILORS_URL      (optional; defaults to the Fly shared backend)
+#   PB_ADMIN_EMAIL
+#   PB_ADMIN_PASSWORD
+# Aliases SHARED_PB_URL / SHARED_PB_ADMIN_EMAIL / SHARED_PB_ADMIN_PASSWORD
+# are also accepted by the script.
+#
+# If those secrets are unset the job still fetches NASA TAP + MPC NEOCP,
+# prints a dry-run plan, and succeeds. It does not invent credentials or
+# fake a write.
+
+on:
+  schedule:
+    - cron: "20 6 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: shared-subject-ingest
+  cancel-in-progress: false
+
+jobs:
+  ingest:
+    name: Ingest open TESS + NEOCP into shared PocketBase
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run shared-pool ingest
+        env:
+          PB_STARSAILORS_URL: ${{ secrets.PB_STARSAILORS_URL }}
+          PB_ADMIN_EMAIL: ${{ secrets.PB_ADMIN_EMAIL }}
+          PB_ADMIN_PASSWORD: ${{ secrets.PB_ADMIN_PASSWORD }}
+          SHARED_PB_URL: ${{ secrets.SHARED_PB_URL }}
+          SHARED_PB_ADMIN_EMAIL: ${{ secrets.SHARED_PB_ADMIN_EMAIL }}
+          SHARED_PB_ADMIN_PASSWORD: ${{ secrets.SHARED_PB_ADMIN_PASSWORD }}
+        run: node --experimental-strip-types scripts/run-shared-subject-ingest.ts

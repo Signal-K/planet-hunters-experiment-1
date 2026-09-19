@@ -15,6 +15,7 @@ import MarketScreen from '@/components/game/screens/MarketScreen'
 import HangarScreen from '@/components/game/screens/HangarScreen'
 import SkillTreeScreen from '@/components/game/screens/SkillTreeScreen'
 import LaunchpadScreen from '@/components/game/screens/LaunchpadScreen'
+import InstrumentHubScreen from '@/components/game/screens/InstrumentHubScreen'
 import TessDiscoveryScreen from '@/components/game/screens/TessDiscoveryScreen'
 import AsteroidDiscoveryScreen from '@/components/game/screens/AsteroidDiscoveryScreen'
 import SurfaceOpsScreen from '@/components/game/screens/SurfaceOpsScreen'
@@ -24,6 +25,8 @@ import NarrativeLedgerScreen from '@/components/game/screens/NarrativeLedgerScre
 import { enqueueSurvey } from '@/lib/surveys'
 import { VISUAL_ASTEROID_CANDIDATE, VISUAL_TESS_CANDIDATE } from '@/lib/visual-fixtures'
 import { captureGameEvent } from '@/lib/posthog'
+import { dismissHubPrompt } from '@/lib/hub-prompts'
+import type { InstrumentSignal } from '@/lib/systems/InstrumentFeedSystem'
 
 export const VALID_SCREENS = new Set<Screen>([
   'intro', 'build', 'hub', 'hub-subsurface', 'missions', 'galaxy', 'targets', 'fab',
@@ -33,6 +36,7 @@ export const VALID_SCREENS = new Set<Screen>([
   'surface-ops',
   'academy',
   'asteroid-discovery',
+  'instrument-hub',
   'mission-history',
   'narrative-ledger',
 ])
@@ -55,6 +59,7 @@ export function ScreenContent({
 }) {
   // Launch sequence state lives here so it's scoped to the fab screen
   const [launchPending, setLaunchPending] = useState(false)
+  const [inspectSignal, setInspectSignal] = useState<InstrumentSignal | null>(null)
   const handleLaunch = useCallback(() => setLaunchPending(true), [])
   const handleLaunchComplete = useCallback(() => {
     setLaunchPending(false)
@@ -172,6 +177,7 @@ export function ScreenContent({
             if (s === 'launchpad') { game.openLaunchpad(); return }
             game.go(s)
           }}
+          onDismissHubPrompt={key => game.setPlayer(current => dismissHubPrompt(current, key))}
           onFocusBuilding={building => {
             if (building === 'build') return game.go('build')
             if (building === 'refinery') return game.go('refinery')
@@ -208,10 +214,23 @@ export function ScreenContent({
         />
       )
 
+    case 'instrument-hub':
+      return (
+        <InstrumentHubScreen
+          player={game.player}
+          onBack={() => game.goBack()}
+          onInspect={signal => {
+            setInspectSignal(signal)
+            game.go(signal.inspectorScreen)
+          }}
+        />
+      )
+
     case 'galaxy':
       return (
         <TessDiscoveryScreen
           player={game.player}
+          inspectSubjectId={inspectSignal?.kind === 'transit' ? inspectSignal.id : undefined}
           visualCandidate={game.visualFixture === 'tess' ? VISUAL_TESS_CANDIDATE : undefined}
           onBack={() => game.goBack()}
           onBuildStation={() => game.go('build')}
@@ -225,6 +244,7 @@ export function ScreenContent({
       return (
         <AsteroidDiscoveryScreen
           player={game.player}
+          inspectSubjectId={inspectSignal?.kind === 'deep-space' ? inspectSignal.id : undefined}
           visualCandidate={game.visualFixture === 'asteroid' ? VISUAL_ASTEROID_CANDIDATE : undefined}
           onBack={() => game.goBack()}
           onBuildTelescope={() => game.go('build')}

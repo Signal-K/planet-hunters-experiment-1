@@ -1,4 +1,5 @@
 import { Application, Assets, Graphics, Container, Sprite, Text, TextStyle, Texture } from 'pixi.js'
+import { transitOriginEarthRadius, transitRocketScreenPos } from './transitFlight'
 
 export type TargetKind = 'asteroid' | 'planet' | 'moon' | 'earth'
 
@@ -64,7 +65,7 @@ function drawGlobeFeature(
     .fill({ color, alpha: baseAlpha * Math.min(1, visibility * 1.6) })
 }
 
-function drawPlanet(g: Graphics, cx: number, cy: number, r: number, kind: TargetKind, rotation = 0) {
+export function drawPlanet(g: Graphics, cx: number, cy: number, r: number, kind: TargetKind, rotation = 0) {
   g.clear()
   if (r < 1) return
 
@@ -133,6 +134,8 @@ function drawPlanet(g: Graphics, cx: number, cy: number, r: number, kind: Target
   g.circle(cx + r * 0.22, cy + r * 0.05, r * 0.92).fill({ color: 0x000510, alpha: 0.55 })
 }
 
+export { transitOriginEarthRadius, transitRocketScreenPos } from './transitFlight'
+
 function drawRocket(g: Graphics, rx: number, ry: number, flicker: number) {
   g.clear()
   // body
@@ -166,8 +169,14 @@ export function buildTransitScene(app: Application, opts: TransitSceneOptions): 
     starContainers.push(c)
   }
 
+  const originEarthG = new Graphics()
+  app.stage.addChild(originEarthG)
+
   const planetG = new Graphics()
   app.stage.addChild(planetG)
+
+  const plumeG = new Graphics()
+  app.stage.addChild(plumeG)
 
   const renderRocket = opts.renderRocket !== false
   const rocketG = new Graphics()
@@ -216,7 +225,7 @@ export function buildTransitScene(app: Application, opts: TransitSceneOptions): 
       // Stars scroll downward (rocket flying upward) — each layer at different speed for parallax.
       // Modulo H produces seamless looping since stars tile vertically.
       for (let i = 0; i < starContainers.length; i++) {
-        starContainers[i].y = (elapsed * LAYER_SPEEDS[i]) % H
+        starContainers[i].y = (elapsed * LAYER_SPEEDS[i] * 1.35) % H
       }
 
       const progress = opts.getProgress()
@@ -225,25 +234,45 @@ export function buildTransitScene(app: Application, opts: TransitSceneOptions): 
       const maxR = Math.min(W * 0.52, H * 0.52)
       const r = minR + (maxR - minR) * Math.pow(p, 1.5)
 
+      const earthR = transitOriginEarthRadius(progress, H, kind)
+      originEarthG.clear()
+      if (earthR > 8) {
+        drawPlanet(originEarthG, cx, H * 0.92, earthR, 'earth', elapsed * 0.12)
+      }
+
       drawPlanet(planetG, cx, planetCY, r, kind, elapsed * 0.22)
 
       // label below planet, fades in past 10%
       label.y = planetCY + r + 8
       label.alpha = Math.max(0, (p - 0.1) / 0.2)
 
-      // Rocket travels from bottom toward the planet as progress increases.
-      // startY → just below the planet's current edge, eased with pow(0.6).
-      const rocketStartY = H * 0.88
-      const rocketEndY = planetCY + Math.max(r, 30) + 70
-      const travelY = rocketStartY + (rocketEndY - rocketStartY) * Math.pow(p, 0.6)
+      const rocketPos = transitRocketScreenPos(progress, W, H)
       const bob = Math.sin(elapsed * 1.7) * 2.5
       const flicker = 0.5 + Math.sin(elapsed * 14) * 0.5
+      const rx = rocketPos.x
+      const ry = rocketPos.y + bob
+      const angle = 56 * Math.PI / 180
+
+      plumeG.clear()
+      const ph = 28 + flicker * 10
+      const px = rx - Math.sin(angle) * 18
+      const py = ry + Math.cos(angle) * 22
+      plumeG
+        .circle(px, py, 10 + flicker * 4).fill({ color: 0xf5a623, alpha: 0.35 })
+        .circle(px, py + 6, 6).fill({ color: 0xa3ecf5, alpha: 0.55 })
+        .poly([
+          px - 4, py,
+          px + 4, py,
+          px + 2, py + ph,
+          px - 2, py + ph,
+        ]).fill({ color: 0x70d9ea, alpha: 0.45 })
+
       if (renderRocket) {
         if (rocketSprite.visible) {
-          rocketSprite.x = cx
-          rocketSprite.y = travelY + bob
+          rocketSprite.x = rx
+          rocketSprite.y = ry
         } else {
-          drawRocket(rocketG, cx, travelY + bob, flicker)
+          drawRocket(rocketG, rx, ry, flicker)
         }
       }
     },

@@ -60,6 +60,7 @@ describe('game state hydration normalization', () => {
     expect(normalized.player.unlockedBlueprints).toEqual([])
     expect(normalized.player.tessClassifications).toEqual({})
     expect(normalized.player.instrumentDigestNotifiedOn).toEqual({})
+    expect(normalized.player.dismissedHubPrompts).toEqual({})
     expect(normalized.player.transitSatelliteLevel).toBe(1)
     expect(normalized.player.transitSatelliteLevel).toBe(1)
     expect(normalized.player.francs).toBe(9_500_000_000)
@@ -124,6 +125,23 @@ describe('game state hydration normalization', () => {
 
     expect(normalized.player.instrumentDigestNotifiedOn).toEqual({
       'transit-telescope': '2026-07-30',
+    })
+  })
+
+  it('persists dismissed Hub prompts as non-negative integers', () => {
+    const normalized = normalizeState({
+      player: {
+        dismissedHubPrompts: {
+          skills: 3.8,
+          'transit-telescope': 1,
+          blank: 'nope',
+        },
+      } as never,
+    })
+
+    expect(normalized.player.dismissedHubPrompts).toEqual({
+      skills: 3,
+      'transit-telescope': 1,
     })
   })
 

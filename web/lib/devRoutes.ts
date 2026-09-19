@@ -48,6 +48,7 @@ export const UI_ROUTE_PRESETS: Record<string, string> = {
   'skill-tree': 'ui-skill-tree',
   skills: 'ui-skill-tree',
   'tess-discovery': 'ui-tess-discovery',
+  'instrument-hub': 'ui-instrument-hub',
   galaxy: 'ui-tess-discovery',
   'rover-mining': 'ui-rover-mining',
   'ship-customizer': 'ship-customizer',

@@ -8,7 +8,7 @@
 
 import { describe, it, expect, vi } from 'vitest'
 
-const getFullList = vi.fn((options: { sort?: string }) => {
+const getFullList = vi.fn((options: { sort?: string; filter?: string }) => {
   if (options.sort && options.sort !== 'id') {
     return Promise.reject(new Error(`400: cannot sort by unknown field "${options.sort}"`))
   }
@@ -21,11 +21,20 @@ vi.mock('@/lib/pb', () => ({
   },
 }))
 
-import { fetchReviewableTessCandidates } from '@/lib/tess-subjects'
+import { REVIEWABLE_TESS_SUBJECT_FILTER, fetchReviewableTessCandidates } from '@/lib/tess-subjects'
 
 describe('fetchReviewableTessCandidates', () => {
   it('sorts by id, not created, since subjects does not define created/updated', async () => {
     await expect(fetchReviewableTessCandidates()).resolves.toEqual([])
     expect(getFullList).toHaveBeenCalledWith(expect.objectContaining({ sort: 'id' }))
+  })
+
+  it('asks PocketBase for open consensus only', async () => {
+    await fetchReviewableTessCandidates()
+    expect(getFullList).toHaveBeenCalledWith(expect.objectContaining({
+      filter: REVIEWABLE_TESS_SUBJECT_FILTER,
+    }))
+    expect(REVIEWABLE_TESS_SUBJECT_FILTER).toContain('gold_label = ""')
+    expect(REVIEWABLE_TESS_SUBJECT_FILTER).toContain('consensus = ""')
   })
 })

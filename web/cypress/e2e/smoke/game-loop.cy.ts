@@ -82,9 +82,9 @@ describe('Full Game Loop — Landnam', () => {
   describe('Phase 1: Onboarding (Intro → Build → Hub)', () => {
     it('intro screen renders and begins onboarding', () => {
       visitWithState({ screen: 'intro' })
-      // The mobile orientation guard also contains LANDNAM in its copy. Use
-      // the authored intro title so this assertion cannot pass/fail against
-      // the hidden guard when Cypress runs at a desktop viewport.
+      // Intro and other chrome both say LANDNAM. Pin this to the authored
+      // intro title so a compact-landscape session cannot pass against a
+      // leftover rotate-to-portrait overlay (retired in SSL-326).
       cy.get('.intro-title').should('be.visible').and('contain.text', 'LANDNAM')
       cy.contains('BEGIN OPERATIONS').should('be.visible')
       cy.get('[data-testid="intro-begin-btn"]').click()
