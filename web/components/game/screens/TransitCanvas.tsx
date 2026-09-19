@@ -4,6 +4,7 @@ import { useEffect, useRef } from 'react'
 import { Application } from 'pixi.js'
 import { capDpr } from '@/lib/engine/pixiDisplay'
 import { buildTransitScene, type TargetKind } from '@/lib/pixi/transitScene'
+import { transitRocketTopPercent } from '@/lib/pixi/transitFlight'
 import { ROCKET_ASSETS } from '@/lib/rocket-assets'
 
 interface TransitCanvasProps {
@@ -69,7 +70,7 @@ export default function TransitCanvas({ targetName, targetKind, rocketImageSrc, 
     }
   }, [rocketImageSrc, targetKind, targetName])
 
-  const rocketTop = `${88 - Math.min(42, progress * 0.42)}%`
+  const rocketTop = `${transitRocketTopPercent(progress)}%`
 
   return (
     <div ref={containerRef} className="transit-game-canvas">

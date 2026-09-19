@@ -2516,7 +2516,7 @@ button { cursor: pointer; }
   height: auto;
   transform: translate(-50%, -50%) rotate(56deg);
   transform-origin: center;
-  filter: drop-shadow(0 0 8px rgba(108,194,255,.7));
+  filter: drop-shadow(0 0 10px var(--ln-cyan-border)) drop-shadow(0 14px 12px var(--ln-amber-soft));
   transition: top 160ms linear;
   pointer-events: none;
 }
