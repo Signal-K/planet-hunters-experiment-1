@@ -71,17 +71,19 @@ function visitGame(path: string, overrides: GameStateOverride = {}) {
   const state = stateWith(overrides)
   cy.visit(path, {
     onBeforeLoad(win) {
+      win.localStorage.setItem(STORAGE_KEY, JSON.stringify(state))
       win.localStorage.setItem(AUTHENTICATED_STORAGE_KEY, JSON.stringify(state))
       win.localStorage.setItem('landnam-account-credentials', JSON.stringify({ email: 'e2e@example.com', password: 'e2e-guest-test' }))
       win.localStorage.setItem('ln_missionboard_freeops_explainer_ack', '1')
       win.localStorage.setItem('ln_mining_freeops_first_entry_ack', '1')
       win.localStorage.setItem('ln_mining_freeops_first_success_ack', '1')
+      win.localStorage.setItem('ln_tutorial_complete_ack', '1')
     },
   })
 }
 
 function savedState() {
-  return cy.window().then(win => JSON.parse(win.localStorage.getItem(AUTHENTICATED_STORAGE_KEY) || '{}') as GameState)
+  return cy.window().then(win => JSON.parse(win.localStorage.getItem(STORAGE_KEY) || win.localStorage.getItem(AUTHENTICATED_STORAGE_KEY) || '{}') as GameState)
 }
 
 function interceptTessSubjects(count = 4) {
@@ -136,9 +138,9 @@ describe('Active mission guard (STS-487)', () => {
 })
 
 describe('Surface Silo placement persistence (KES-271)', () => {
-  it('persists the placed silo and plot after returning to the base and reloading', () => {
-    visitGame('/game/build', {
-      screen: 'build',
+  it.only('persists the placed silo and plot after returning to the base and reloading', () => {
+    visitGame('/game/hub', {
+      screen: 'hub',
       player: {
         francs: 15_000_000_000,
         placed: ['launchpad'],
@@ -148,18 +150,27 @@ describe('Surface Silo placement persistence (KES-271)', () => {
       },
     })
 
+    cy.contains('h1', 'Base', { timeout: 10000 }).should('be.visible')
+    cy.get('[data-testid="hub-edit-build-btn"]').click()
+    cy.get('[data-testid="hub-new-structure-btn"]').click()
+    cy.get('[data-testid="build-place-screen"]', { timeout: 10000 }).should('be.visible')
     cy.contains('button', 'Surface Silo', { timeout: 10000 })
       .should('be.visible')
-      .and('not.be.disabled')
       .click()
     cy.get('[data-testid="build-plot-1"]', { timeout: 10000 }).click()
     cy.contains('button', 'Confirm · Build Here', { timeout: 10000 }).click()
-    cy.contains('h1', 'Base', { timeout: 10000 }).should('be.visible')
+    cy.get('[data-testid="building-surface-silo-hit"]', { timeout: 10000 }).should('be.visible')
 
     savedState().then(state => {
       expect(state.player.placed).to.include('surface-silo')
       expect(state.player.placementPlots?.['surface-silo']).to.eq(1)
+      expect(state.player.underConstruction?.['surface-silo']).to.be.a('number')
     })
+
+    cy.get('[data-structure="surface-silo"] img.earth-base-flat-sprite')
+      .should('have.attr', 'src', '/game/assets/base/surface_silo_flat.png')
+    cy.contains('BUILDING').should('be.visible')
+    cy.get('.hub-construction-rig').should('exist')
 
     cy.reload()
     cy.get('[data-testid="building-surface-silo-hit"]', { timeout: 10000 }).should('be.visible')
@@ -167,6 +178,8 @@ describe('Surface Silo placement persistence (KES-271)', () => {
       expect(state.player.placed).to.include('surface-silo')
       expect(state.player.placementPlots?.['surface-silo']).to.eq(1)
     })
+    cy.get('[data-structure="surface-silo"] img.earth-base-flat-sprite')
+      .should('have.attr', 'src', '/game/assets/base/surface_silo_flat.png')
   })
 })
 

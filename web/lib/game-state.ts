@@ -7,6 +7,7 @@ import { normalizeSurfaceOps } from '@/lib/systems/SurfaceOpsSystem'
 import { settleCrewEconomy } from '@/lib/systems/AcademySystem'
 import { findTargetStructure } from '@/lib/data/target-structures'
 import { resolveConstructionState } from '@/lib/systems/ConstructionSystem'
+import { isUnderConstruction } from '@/lib/systems/HubConstructionSystem'
 import { EARTH_BASE_SCOPE } from '@/lib/scene-scope'
 import { aestDateKey, type ClientBuildCompletionEvent } from '@/lib/systems/DailyEconomySystem'
 
@@ -256,6 +257,12 @@ export function normalizeState(input: PartialSave): GameState {
   const placedList = savedPlaced.filter(kind => kind !== 'scan-station')
   const placementPlots = Object.fromEntries(
     Object.entries(player.placementPlots ?? {}).filter(([kind]) => kind !== 'scan-station')
+  )
+  // Drop completed construction entries at the same choke point everything
+  // else gets normalized, so `underConstruction` never grows unbounded with
+  // stale finished records.
+  const underConstruction = Object.fromEntries(
+    Object.entries(player.underConstruction ?? {}).filter(([kind, startedAt]) => isUnderConstruction(startedAt, kind))
   )
   const builtFrom = (kind: string, flag: boolean | undefined) => !!flag || placedList.includes(kind)
   const deepSpaceTelescopeBuilt = builtFrom('deep-space-telescope', player.deepSpaceTelescopeBuilt)

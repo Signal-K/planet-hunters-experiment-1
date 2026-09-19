@@ -758,4 +758,16 @@ describe('structure flags are derived from `placed`', () => {
     expect(s.player.refineryBuilt).toBe(false)
   })
 
+  it('keeps an in-progress Hub build timestamp and drops a finished one', () => {
+    const now = Date.now()
+    const s = normalizeState({
+      player: {
+        placed: ['surface-silo', 'launchpad'],
+        underConstruction: { 'surface-silo': now - 1_000, launchpad: now - 60_000 },
+      },
+    })
+    expect(s.player.underConstruction?.['surface-silo']).toBe(now - 1_000)
+    expect(s.player.underConstruction).not.toHaveProperty('launchpad')
+  })
+
 })
