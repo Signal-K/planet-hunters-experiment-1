@@ -10,6 +10,7 @@ import IconBadge from '@/components/ui/IconBadge'
 import SegmentedBar from '@/components/ui/SegmentedBar'
 import ActionConfirmBar from '@/components/game/ActionConfirmBar'
 import MiningCanvas from './MiningCanvas'
+import MiningAimCoach, { useMiningAimCoach } from '@/components/game/MiningAimCoach'
 
 // Out There: Omega Edition bolt glyph — used inside the charge-meter IconBadge.
 // Kept local since it's a one-off HUD glyph, not a shared icon set yet.
@@ -230,6 +231,7 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
   const [laserCharges, setLaserCharges] = useState(MAX_CHARGES)
   const [runKey, setRunKey] = useState(0)  // bump to reset MiningCanvas
   const [sceneStatus, setSceneStatus] = useState<'loading' | 'ready' | 'failed'>('loading')
+  const aimCoach = useMiningAimCoach()
   const firedRef = useRef(false)
   const hintedFirstHitRef = useRef(false)
   const hintedWrongOreRef = useRef(false)
@@ -297,6 +299,7 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
 
   function fireLaser() {
     if (gateOpen || sceneStatus !== 'ready' || laserCharges <= 0) return
+    if (aimCoach.visible) aimCoach.dismiss()
     setLaserCharges(c => c - 1)
     fireRef.current?.()
     if (!firedRef.current && hasCoach) {
@@ -571,6 +574,10 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
             {laserCharges} charge{laserCharges !== 1 ? 's' : ''} remaining — order not filled
           </div>
         </div>
+      )}
+
+      {aimCoach.visible && !hasCoach && !gateOpen && activeOverlay === null && sceneStatus === 'ready' && (
+        <MiningAimCoach onDismiss={aimCoach.dismiss} />
       )}
 
       <div className="mining-viewport">
