@@ -4,6 +4,17 @@ import type { Player } from '@/lib/game-types'
 export const TRANSIT_TELESCOPE_INSTRUMENT_ID = 'transit-telescope'
 export const DEEP_SPACE_TELESCOPE_INSTRUMENT_ID = 'deep-space-telescope'
 
+export type InstrumentSignalKind = 'transit' | 'deep-space'
+
+export interface InstrumentSignal {
+  id: string
+  kind: InstrumentSignalKind
+  instrumentId: string
+  title: string
+  subtitle: string
+  inspectorScreen: 'galaxy' | 'asteroid-discovery'
+}
+
 type InstrumentFeedPlayer = Pick<
   Player,
   | 'transitSatelliteLevel'
@@ -118,4 +129,60 @@ export function markInstrumentDigestNotified(
       [instrumentId]: dateKey,
     },
   }
+}
+
+export function pickInstrumentInspectCandidate<T extends { id: string }>(
+  digest: T[],
+  inspectId?: string | null,
+): T | null {
+  if (inspectId) {
+    const focused = digest.find(item => item.id === inspectId)
+    if (focused) return focused
+  }
+  return digest[0] ?? null
+}
+
+export function collectInstrumentSignals(opts: {
+  tess: TessCandidate[]
+  asteroids: AsteroidCandidate[]
+  player: Pick<
+    Player,
+    | 'freeOperations'
+    | 'transitSatelliteLaunchedAt'
+    | 'deepSpaceTelescopeBuilt'
+    | 'transitSatelliteLevel'
+    | 'satelliteTargetId'
+    | 'tessClassifications'
+    | 'deepSpaceTelescopeLevel'
+    | 'asteroidClassifications'
+    | 'instrumentDigestNotifiedOn'
+  >
+  dateKey: string
+}): InstrumentSignal[] {
+  const signals: InstrumentSignal[] = []
+  if (opts.player.freeOperations && opts.player.transitSatelliteLaunchedAt) {
+    for (const item of unresolvedTransitInstrumentDigest(opts.tess, opts.player, opts.dateKey)) {
+      signals.push({
+        id: item.id,
+        kind: 'transit',
+        instrumentId: TRANSIT_TELESCOPE_INSTRUMENT_ID,
+        title: item.toi,
+        subtitle: `${item.host} · ${item.constellation} · S/N ${item.signalToNoise.toFixed(1)}`,
+        inspectorScreen: 'galaxy',
+      })
+    }
+  }
+  if (opts.player.freeOperations && opts.player.deepSpaceTelescopeBuilt) {
+    for (const item of unresolvedDeepSpaceInstrumentDigest(opts.asteroids, opts.player, opts.dateKey)) {
+      signals.push({
+        id: item.id,
+        kind: 'deep-space',
+        instrumentId: DEEP_SPACE_TELESCOPE_INSTRUMENT_ID,
+        title: item.tempDesig,
+        subtitle: `V ${item.vMag.toFixed(1)} · score ${Math.round(item.score)}`,
+        inspectorScreen: 'asteroid-discovery',
+      })
+    }
+  }
+  return signals
 }

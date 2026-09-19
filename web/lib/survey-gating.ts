@@ -12,7 +12,7 @@ import type { Screen } from '@/lib/game-types'
 // blocklist of "screens to avoid" rots the same way: miss one screen and a
 // survey slides up over it the moment that's the one screen not blocked.
 export const SURVEY_SAFE_SCREENS: Screen[] = [
-  'hub', 'missions', 'market', 'hangar', 'skills', 'galaxy', 'refinery',
+  'hub', 'missions', 'market', 'hangar', 'skills', 'galaxy', 'refinery', 'instrument-hub',
 ]
 
 export function isSurveySafeScreen(screen: Screen | string): boolean {

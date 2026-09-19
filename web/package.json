@@ -13,6 +13,7 @@
     "verify:scene-surfaces": "node scripts/verify-scene-surfaces.mjs",
     "test:unit": "npm run verify:scene-surfaces && vitest run",
     "missions:emit": "node --experimental-strip-types scripts/generate-missions.ts",
+    "ingest:shared-subjects": "node --experimental-strip-types scripts/run-shared-subject-ingest.ts",
     "cypress:open": "env -u ELECTRON_RUN_AS_NODE cypress open",
     "cypress:run": "node scripts/run-cypress-safe.mjs",
     "cypress:run:regression": "CYPRESS_PROFILE=regression node scripts/run-cypress-safe.mjs",

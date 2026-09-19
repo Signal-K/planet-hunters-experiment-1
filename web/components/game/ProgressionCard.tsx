@@ -6,6 +6,7 @@ import { FREE_OPS_START_MISSIONS_DONE } from '@/lib/data/mission-generator'
 import { TUTORIAL_RAIL } from '@/lib/tutorial-layout'
 import IconBadge from '@/components/ui/IconBadge'
 import layoutStyles from '@/components/game/hub/HubLayout.module.css'
+import { HUB_PROMPT_SKILLS, HUB_PROMPT_TRANSIT_TELESCOPE, isHubPromptDismissed, type HubPromptKey } from '@/lib/hub-prompts'
 
 type CardIconBadgeTone = 'cyan' | 'amber' | 'ok' | 'crit' | 'mute'
 
@@ -39,31 +40,40 @@ interface ProgressionCardProps {
   // Cards always open a routed scene. They must not call a Hub building
   // focus handler, even when the destination is the Launchpad.
   onOpenScene: (s: Screen) => void
+  onDismissPrompt?: (key: HubPromptKey) => void
   top?: number
 }
 
-function CardButton({ accent, icon, eyebrow, title, cta, onClick, testId }: {
+function CardButton({ accent, icon, eyebrow, title, cta, onClick, onDismiss, testId }: {
   accent: string
   icon: React.ReactNode
   eyebrow: string
   title: string
   cta: string
   onClick: () => void
+  onDismiss?: () => void
   testId?: string
 }) {
   return (
-    <button
-      data-testid={testId}
-      onClick={onClick}
+    <div
       style={{
-        width: '100%', minWidth: 0, boxSizing: 'border-box', textAlign: 'left', cursor: 'pointer',
+        width: '100%', minWidth: 0, boxSizing: 'border-box',
         background: 'var(--hub-panel, #080d18)',
         border: '1.5px solid var(--hub-outline, rgba(255,255,255,0.55))',
-        borderRadius: 12, padding: 10,
+        borderRadius: 12, padding: 8,
         boxShadow: '0 12px 28px rgba(0,0,0,0.4)',
-        display: 'flex', alignItems: 'center', gap: 10,
+        display: 'flex', alignItems: 'center', gap: 8,
       }}
     >
+      <button
+        data-testid={testId}
+        onClick={onClick}
+        style={{
+          flex: 1, minWidth: 0, boxSizing: 'border-box', textAlign: 'left', cursor: 'pointer',
+          background: 'transparent', border: 0, padding: 4,
+          display: 'flex', alignItems: 'center', gap: 10,
+        }}
+      >
       {/* Bordered icon tile — the `.bp-panel` / `.picker-icon` chrome from the
           Earth Base mockup: black tile, accent-colored 1.5px outline. */}
       <IconBadge
@@ -88,11 +98,30 @@ function CardButton({ accent, icon, eyebrow, title, cta, onClick, testId }: {
       }}>
         {cta} ›
       </span>
-    </button>
+      </button>
+      {onDismiss && (
+        <button
+          type="button"
+          data-testid={testId ? `${testId}-dismiss` : undefined}
+          aria-label="Dismiss"
+          onClick={onDismiss}
+          style={{
+            flexShrink: 0, minWidth: 44, minHeight: 44, padding: '8px 8px',
+            background: 'transparent', border: '1.5px solid var(--hub-outline, rgba(255,255,255,0.55))',
+            borderRadius: 8, cursor: 'pointer',
+            color: 'color-mix(in srgb, var(--ln-text) 78%, transparent)',
+            fontFamily: 'var(--ln-font-display)', fontSize: 8, fontWeight: 800,
+            letterSpacing: '0.12em', textTransform: 'uppercase',
+          }}
+        >
+          Dismiss
+        </button>
+      )}
+    </div>
   )
 }
 
-export default function ProgressionCard({ player, onOpenScene, top = 132 }: ProgressionCardProps) {
+export default function ProgressionCard({ player, onOpenScene, onDismissPrompt, top = 132 }: ProgressionCardProps) {
   const cards: React.ReactElement[] = []
 
   if (player.activeMission) {
@@ -126,7 +155,7 @@ export default function ProgressionCard({ player, onOpenScene, top = 132 }: Prog
   const inOnboarding = player.missionsDone < FREE_OPS_START_MISSIONS_DONE
 
   if (!player.activeMission && player.missionsDone > 0) {
-    if (!inOnboarding && (player.skillPoints ?? 0) > 0) {
+    if (!inOnboarding && (player.skillPoints ?? 0) > 0 && !isHubPromptDismissed(player, HUB_PROMPT_SKILLS)) {
       cards.push(
         <CardButton
           key="skills"
@@ -137,10 +166,11 @@ export default function ProgressionCard({ player, onOpenScene, top = 132 }: Prog
           title={`${player.skillPoints ?? 0} SP available`}
           cta="Open Skill Tree"
           onClick={() => onOpenScene('skills')}
+          onDismiss={onDismissPrompt ? () => onDismissPrompt(HUB_PROMPT_SKILLS) : undefined}
         />
       )
     }
-    if (!inOnboarding && !player.transitSatelliteLaunchedAt) {
+    if (!inOnboarding && !player.transitSatelliteLaunchedAt && !isHubPromptDismissed(player, HUB_PROMPT_TRANSIT_TELESCOPE)) {
       cards.push(
         <CardButton
           key="telescope"
@@ -151,6 +181,7 @@ export default function ProgressionCard({ player, onOpenScene, top = 132 }: Prog
           title="Launch a transit telescope"
           cta="Open Launchpad"
           onClick={() => onOpenScene('launchpad')}
+          onDismiss={onDismissPrompt ? () => onDismissPrompt(HUB_PROMPT_TRANSIT_TELESCOPE) : undefined}
         />
       )
     }

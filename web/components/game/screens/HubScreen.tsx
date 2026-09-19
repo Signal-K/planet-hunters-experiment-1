@@ -26,9 +26,9 @@ import { formatCurrency } from '@/lib/format'
 import { FEATURE_FLAGS } from '@/lib/featureFlags'
 import { isDevLauncherEnabled } from '@/lib/devAccess'
 import type { HubBuildingDef } from '@/components/game/hub/EarthBaseModules'
-import { fetchReviewableTessCandidates } from '@/lib/tess-subjects'
-import { fetchReviewableAsteroidCandidates } from '@/lib/asteroid-subjects'
-import { instrumentDigestDateKey, unresolvedTransitInstrumentDigest, unresolvedDeepSpaceInstrumentDigest } from '@/lib/systems/InstrumentFeedSystem'
+import { OrbitalInstrumentNetwork } from '@/components/game/hub/OrbitalInstrumentNetwork'
+import { useInstrumentSignals } from '@/lib/hooks/useInstrumentSignals'
+import type { HubPromptKey } from '@/lib/hub-prompts'
 import HUDStrip from '@/components/ui/HUDStrip'
 import layoutStyles from '@/components/game/hub/HubLayout.module.css'
 import { sceneXPercent } from '@/lib/scene/terrain-kit'
@@ -80,52 +80,6 @@ function SkillsGlyph() {
 function HistoryGlyph() {
   return (
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M4 5h16v14H4z" /><path d="M8 9h8M8 13h6M8 17h4" /></svg>
-  )
-}
-
-/**
- * The instrument network belongs in the sky, not in the Base dock. It is a
- * contextual scene object: the orbit shows what is online and its attached
- * telemetry strip says whether there is data waiting.
- */
-function OrbitalInstrumentNetwork({
-  transitOnline,
-  deepSpaceOnline,
-  tessQueueCount,
-  asteroidQueueCount,
-  onOpen,
-}: {
-  transitOnline: boolean
-  deepSpaceOnline: boolean
-  tessQueueCount: number
-  asteroidQueueCount: number
-  onOpen: () => void
-}) {
-  const readyCount = tessQueueCount + asteroidQueueCount
-  const hasWork = readyCount > 0
-  const primaryLabel = transitOnline ? 'TESS instrument data' : 'Deep space instrument data'
-  const status = hasWork ? `${readyCount} DATA READY` : 'DATA LINKED'
-
-  return (
-    <button
-      type="button"
-      className="hub-orbital-network"
-      data-testid="hub-orbital-network"
-      aria-label={`${primaryLabel}: ${status}`}
-      onClick={onOpen}
-    >
-      <span className="hub-orbital-network__sky" aria-hidden="true">
-        <span className="hub-orbital-network__ring hub-orbital-network__ring--outer" />
-        <span className="hub-orbital-network__ring hub-orbital-network__ring--inner" />
-        <span className="hub-orbital-network__earth" />
-        {transitOnline && <span className="hub-orbital-network__satellite" />}
-        {deepSpaceOnline && <span className="hub-orbital-network__telescope" />}
-      </span>
-      <span className={`hub-orbital-network__status${hasWork ? ' hub-orbital-network__status--ready' : ''}`}>
-        <span className="hub-orbital-network__dot" />
-        {status}
-      </span>
-    </button>
   )
 }
 
@@ -244,6 +198,7 @@ interface HubScreenProps {
   hasCoach?: boolean
   onFocusBuilding: (b: string) => void
   onOpenScene: (s: Screen) => void
+  onDismissHubPrompt?: (key: HubPromptKey) => void
   onUpgradeLaunchpad?: () => void
   onExcavateSubsurface?: () => void
   onBuildSubsurfaceRoom?: (roomId: SubsurfaceRoomId) => void
@@ -251,7 +206,7 @@ interface HubScreenProps {
   onSubsurfaceChange?: (v: boolean) => void
 }
 
-export default function HubScreen({ player, rocketVariant = 'explorer', hasCoach, onFocusBuilding, onOpenScene, onUpgradeLaunchpad, onExcavateSubsurface, onBuildSubsurfaceRoom, subsurface = false, onSubsurfaceChange }: HubScreenProps) {
+export default function HubScreen({ player, rocketVariant = 'explorer', hasCoach, onFocusBuilding, onOpenScene, onDismissHubPrompt, onUpgradeLaunchpad, onExcavateSubsurface, onBuildSubsurfaceRoom, subsurface = false, onSubsurfaceChange }: HubScreenProps) {
   const { phase: skyPhase } = useTimeOfDay()
   const [editMode, setEditMode] = useState(false)
   const [activeBuilding, setActiveBuilding] = useState<string | null>(null)
@@ -269,8 +224,8 @@ export default function HubScreen({ player, rocketVariant = 'explorer', hasCoach
     return target ? `${operation} → ${target}` : operation
   }
   const [confirmingLaunchpadUpgrade, setConfirmingLaunchpadUpgrade] = useState(false)
-  const [tessQueueCount, setTessQueueCount] = useState(0)
-  const [asteroidQueueCount, setAsteroidQueueCount] = useState(0)
+  const { signals } = useInstrumentSignals(player)
+  const asteroidQueueCount = signals.filter(signal => signal.kind === 'deep-space').length
   const placed = player.placed ?? []
   const placementPlots = player.placementPlots ?? {}
   const legacyPlaced = (kind: string) => placed.includes(kind) && placementPlots[kind] == null
@@ -286,51 +241,6 @@ export default function HubScreen({ player, rocketVariant = 'explorer', hasCoach
       .then(data => { if (data.entities?.length) setPlotEntities(data.entities) })
       .catch(() => {})
   }, [])
-
-  // SMS badge: unresolved items in today's level-scaled instrument digest.
-  // This shares InstrumentFeedSystem with TessDiscoveryScreen so the badge
-  // never promises more work than the feed can actually show.
-  useEffect(() => {
-    if (!player.freeOperations || !player.transitSatelliteLaunchedAt) {
-      setTessQueueCount(0)
-      return
-    }
-    let cancelled = false
-    fetchReviewableTessCandidates()
-      .then(candidates => {
-        if (cancelled) return
-        const unresolved = unresolvedTransitInstrumentDigest(
-          candidates,
-          player,
-          instrumentDigestDateKey()
-        )
-        setTessQueueCount(unresolved.length)
-      })
-      .catch(() => { if (!cancelled) setTessQueueCount(0) })
-    return () => { cancelled = true }
-  }, [player.freeOperations, player.transitSatelliteLaunchedAt, player.tessClassifications])
-
-  // Deep Space Telescope badge: same InstrumentFeedSystem-shared pattern as
-  // the SMS badge above, for the second (asteroid/NEOCP) instrument (STS-622).
-  useEffect(() => {
-    if (!player.freeOperations || !player.deepSpaceTelescopeBuilt) {
-      setAsteroidQueueCount(0)
-      return
-    }
-    let cancelled = false
-    fetchReviewableAsteroidCandidates()
-      .then(candidates => {
-        if (cancelled) return
-        const unresolved = unresolvedDeepSpaceInstrumentDigest(
-          candidates,
-          player,
-          instrumentDigestDateKey()
-        )
-        setAsteroidQueueCount(unresolved.length)
-      })
-      .catch(() => { if (!cancelled) setAsteroidQueueCount(0) })
-    return () => { cancelled = true }
-  }, [player.freeOperations, player.deepSpaceTelescopeBuilt, player.asteroidClassifications])
 
   const sortedEntities = plotEntities.slice().sort((a, b) => {
     const ai = readComponentNumber(a, 'BuildPlot', 'index', 0)
@@ -518,9 +428,9 @@ export default function HubScreen({ player, rocketVariant = 'explorer', hasCoach
             <OrbitalInstrumentNetwork
               transitOnline={!!player.transitSatelliteLaunchedAt}
               deepSpaceOnline={!!player.deepSpaceTelescopeBuilt}
-              tessQueueCount={tessQueueCount}
-              asteroidQueueCount={asteroidQueueCount}
-              onOpen={() => onOpenScene(player.transitSatelliteLaunchedAt ? 'galaxy' : 'asteroid-discovery')}
+              readyCount={signals.length}
+              ping
+              onOpen={() => onOpenScene('instrument-hub')}
             />
           )}
 
@@ -628,6 +538,7 @@ export default function HubScreen({ player, rocketVariant = 'explorer', hasCoach
           <ProgressionCard
             player={player}
             onOpenScene={onOpenScene}
+            onDismissPrompt={onDismissHubPrompt}
             top={hasCoach ? TUTORIAL_CONTENT_TOP : TUTORIAL_RAIL.TOP_CHROME_HEIGHT + 8 + HUB_HUD_RAIL_CLEARANCE}
           />
         </>

@@ -20,10 +20,11 @@ import type { Player } from '@/lib/game-types'
 import { UI_ZONES } from '@/lib/ui-zones'
 import { fetchReviewableTessCandidates } from '@/lib/tess-subjects'
 import { useIsDesktop } from '@/lib/hooks/useIsDesktop'
-import { instrumentDigestDateKey, unresolvedTransitInstrumentDigest } from '@/lib/systems/InstrumentFeedSystem'
+import { instrumentDigestDateKey, pickInstrumentInspectCandidate, unresolvedTransitInstrumentDigest } from '@/lib/systems/InstrumentFeedSystem'
 
 interface TessDiscoveryScreenProps {
   player: Player
+  inspectSubjectId?: string
   /** Fixed record supplied only by the named visual dev preset. */
   visualCandidate?: TessCandidate
   onBack: () => void
@@ -44,7 +45,7 @@ const VERDICT_ACTIONS: Array<{ id: TessVerdict; label: string; requiresMark: boo
   { id: 'unsure', label: 'Skip', requiresMark: false, kind: 'ghost' },
 ]
 
-export default function TessDiscoveryScreen({ player, visualCandidate, onBack, onBuildStation, onOpenProgram, onSubmit, onChooseTarget }: TessDiscoveryScreenProps) {
+export default function TessDiscoveryScreen({ player, inspectSubjectId, visualCandidate, onBack, onBuildStation, onOpenProgram, onSubmit, onChooseTarget }: TessDiscoveryScreenProps) {
   // Stabilize the fallback — see the identical comment on
   // AsteroidDiscoveryScreen's classifications memo (STS-622 review found
   // this pattern first here; a fresh `{}` every render when the field is
@@ -96,9 +97,9 @@ export default function TessDiscoveryScreen({ player, visualCandidate, onBack, o
         const todayDate = new Date()
         if (devDayOffset) todayDate.setDate(todayDate.getDate() + devDayOffset)
         const today = instrumentDigestDateKey(todayDate)
-        const nextDaily = unresolvedTransitInstrumentDigest(liveCandidates, player, today)[0]
+        const nextDaily = unresolvedTransitInstrumentDigest(liveCandidates, player, today)
         setPool(liveCandidates)
-        setCandidate(nextDaily ?? null)
+        setCandidate(pickInstrumentInspectCandidate(nextDaily, inspectSubjectId))
         setRanges([])
         setSectorIndex(0)
         setViewingSol(false)
@@ -120,7 +121,7 @@ export default function TessDiscoveryScreen({ player, visualCandidate, onBack, o
     // post-confirmation target-selection map. Re-entering the screen remounts
     // it and naturally resolves the next still-unclassified daily candidate.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [visualCandidate, player.freeOperations, player.transitSatelliteLaunchedAt, player.transitSatelliteLevel, player.satelliteTargetId, devDayOffset])
+  }, [visualCandidate, inspectSubjectId, player.freeOperations, player.transitSatelliteLaunchedAt, player.transitSatelliteLevel, player.satelliteTargetId, devDayOffset])
 
   const classification: TessClassification | undefined = candidate ? classifications[candidate.id] : undefined
   const discoveredTarget = candidate && classification?.verdict === 'planet'

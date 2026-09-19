@@ -15,7 +15,7 @@ import { aestDateKey, type ClientBuildCompletionEvent } from '@/lib/systems/Dail
 // where player fields are optional since older saves may be missing new fields.
 export type PartialSave = Omit<Partial<GameState>, 'player'> & { player?: Partial<Player> }
 
-const VALID_SCREENS: Screen[] = ['intro', 'build', 'hub', 'missions', 'galaxy', 'targets', 'fab', 'transit', 'landing', 'mining', 'delivery', 'debrief', 'refinery', 'market', 'hangar', 'rocket-buy', 'skills', 'rover-mining', 'launchpad', 'surface-ops', 'academy', 'asteroid-discovery', 'mission-history', 'narrative-ledger']
+const VALID_SCREENS: Screen[] = ['intro', 'build', 'hub', 'missions', 'galaxy', 'targets', 'fab', 'transit', 'landing', 'mining', 'delivery', 'debrief', 'refinery', 'market', 'hangar', 'rocket-buy', 'skills', 'rover-mining', 'launchpad', 'surface-ops', 'academy', 'asteroid-discovery', 'instrument-hub', 'mission-history', 'narrative-ledger']
 const MISSION_CONTEXT_SCREENS = new Set<Screen>(['targets', 'rocket-buy', 'fab', 'transit', 'mining', 'rover-mining', 'delivery', 'debrief'])
 const TARGET_CONTEXT_SCREENS = new Set<Screen>(['rocket-buy', 'fab', 'transit', 'mining', 'rover-mining', 'delivery', 'debrief'])
 const VALID_LICENSE_GRADES: LicenseGrade[] = ['Grade I', 'Grade II', 'Grade III']
@@ -60,6 +60,7 @@ export const DEFAULT_STATE: GameState = {
     artifactNarrativeSeenAt: null,
     asteroidClassifications: {},
     instrumentDigestNotifiedOn: {},
+    dismissedHubPrompts: {},
     discoveredExoplanetTargets: {},
     subsurfaceExcavated: false,
     subsurfaceBuilt: [],
@@ -192,6 +193,19 @@ export function normalizeState(input: PartialSave): GameState {
         )
     )
     : DEFAULT_STATE.player.instrumentDigestNotifiedOn
+  const dismissedHubPrompts = player.dismissedHubPrompts
+    && typeof player.dismissedHubPrompts === 'object'
+    && !Array.isArray(player.dismissedHubPrompts)
+    ? Object.fromEntries(
+      Object.entries(player.dismissedHubPrompts)
+        .filter((entry): entry is [string, number] =>
+          typeof entry[0] === 'string'
+          && entry[0].length > 0
+          && Number.isFinite(entry[1])
+        )
+        .map(([key, value]) => [key, Math.max(0, Math.floor(value))])
+    )
+    : DEFAULT_STATE.player.dismissedHubPrompts
   const transitSatelliteLevel = Number.isFinite(player.transitSatelliteLevel)
     ? Math.max(1, Math.floor(player.transitSatelliteLevel ?? 1))
     : DEFAULT_STATE.player.transitSatelliteLevel
@@ -273,7 +287,7 @@ export function normalizeState(input: PartialSave): GameState {
     targetId,
     missionBoardScope,
     rocket: { ...DEFAULT_STATE.rocket, ...input.rocket },
-    player: { ...DEFAULT_STATE.player, ...player, missionsDone, freeOperations, completedMissions, clientStructures, clientBuildEvents, placed: placedList, placementPlots, underConstruction, licenseGrade, researchXP, unlockedBlueprints, tessClassifications, asteroidClassifications, roverTerrainClassifications, discoveredExoplanetTargets, instrumentDigestNotifiedOn, transitSatelliteLevel, deepSpaceTelescopeLevel, crew, surfaceOps,
+    player: { ...DEFAULT_STATE.player, ...player, missionsDone, freeOperations, completedMissions, clientStructures, clientBuildEvents, placed: placedList, placementPlots, licenseGrade, researchXP, unlockedBlueprints, tessClassifications, asteroidClassifications, roverTerrainClassifications, discoveredExoplanetTargets, instrumentDigestNotifiedOn, dismissedHubPrompts, transitSatelliteLevel, deepSpaceTelescopeLevel, crew, surfaceOps,
       // A run has crossed the launch boundary. If an older/stale save carries
       // both flags, the active run wins so the Hub cannot render "Ready" or
       // offer the assembly flow after the rocket has already left the pad.
@@ -324,6 +338,9 @@ export function repairStateRoute(input: GameState): GameState {
   }
   if (input.screen === 'galaxy' && !input.player.freeOperations) {
     return { ...input, screen: 'missions' }
+  }
+  if (input.screen === 'instrument-hub' && !input.player.freeOperations) {
+    return { ...input, screen: 'hub' }
   }
   // The retired solo-settlement surface screen must not be restored from an
   // old route. Its state stays in the save for a future site-right migration.

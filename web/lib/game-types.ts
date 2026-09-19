@@ -84,6 +84,7 @@ export type Screen =
   | 'surface-ops'
   | 'academy'
   | 'asteroid-discovery'
+  | 'instrument-hub'
   | 'mission-history'
   | 'narrative-ledger'
 
@@ -112,6 +113,7 @@ export const LOCATION_SCREENS: ReadonlySet<Screen> = new Set<Screen>([
   'surface-ops',
   'galaxy',
   'asteroid-discovery',
+  'instrument-hub',
 ])
 
 export type LicenseGrade = 'Grade I' | 'Grade II' | 'Grade III'
@@ -352,6 +354,8 @@ export interface Player {
    * the daily downlink from re-notifying after reloads or React remounts.
    */
   instrumentDigestNotifiedOn?: Record<string, string>
+  /** Last seen value for optional Hub prompts; a higher live value shows the card again. */
+  dismissedHubPrompts?: Record<string, number>
   discoveredExoplanetTargets?: Record<string, Target>
   clientStructures?: import('@/lib/data').ClientStructureRecord[]
   dailyQuestProgress?: import('@/lib/data').DailyQuestProgress[]

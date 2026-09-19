@@ -3,7 +3,7 @@
 import { useEffect, useRef } from 'react'
 import { capDpr } from '@/lib/engine/pixiDisplay'
 import { Application } from 'pixi.js'
-import { buildLaunchScene, LAUNCH_W, LAUNCH_H } from '@/lib/pixi/launchScene'
+import { buildLaunchScene, LAUNCH_W, LAUNCH_H, launchFrameDt } from '@/lib/pixi/launchScene'
 
 interface Props {
   rocketName: string
@@ -80,8 +80,10 @@ export function LaunchSequenceCanvas({ rocketName, rocketImageSrc, targetName, o
       })
 
       app.ticker.add(t => {
-        elapsed += t.deltaTime / 60
-        scene.update(elapsed, t.deltaTime / 60)
+        const dt = launchFrameDt(t.deltaMS)
+        if (dt === 0) return
+        elapsed += dt
+        scene.update(elapsed, dt)
       })
     })()
 

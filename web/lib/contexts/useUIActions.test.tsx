@@ -10,7 +10,7 @@ import type { GameState, Screen } from '@/lib/game-types'
 
 interface UiHandle {
   screen: Screen
-  transition: (screen: Screen) => void
+  go: (screen: Screen) => void
   goBack: (fallback?: Screen) => void
 }
 
@@ -21,22 +21,23 @@ function UiHarness({ onReady }: { onReady: (handle: UiHandle) => void }) {
 
   useEffect(() => {
     if (priorScreen.current !== null) ui.recordScreenTransition(priorScreen.current, state.screen)
+    else ui.recordScreenTransition(state.screen, state.screen)
     priorScreen.current = state.screen
   }, [state.screen, ui.recordScreenTransition])
 
   useEffect(() => {
     onReady({
       screen: state.screen,
-      transition: screen => setState(current => ({ ...current, screen })),
+      go: ui.go,
       goBack: ui.goBack,
     })
-  }, [onReady, state.screen, ui.goBack])
+  }, [onReady, state.screen, ui.go, ui.goBack])
 
   return null
 }
 
-describe('useUIActions navigation trail', () => {
-  it('returns through direct mission-state transitions one screen at a time', async () => {
+describe('useUIActions logical back', () => {
+  it('returns through mission setup one logical step at a time', async () => {
     const host = document.createElement('div')
     const root = createRoot(host)
     const handleRef: { current: UiHandle | null } = { current: null }
@@ -46,7 +47,7 @@ describe('useUIActions navigation trail', () => {
       root.render(<UiHarness onReady={handle => { handleRef.current = handle }} />)
     })
     for (const screen of ['missions', 'targets', 'rocket-buy'] as const) {
-      await act(async () => { handleRef.current?.transition(screen) })
+      await act(async () => { handleRef.current?.go(screen) })
     }
 
     await act(async () => { handleRef.current?.goBack() })
@@ -68,14 +69,40 @@ describe('useUIActions navigation trail', () => {
     await act(async () => {
       root.render(<UiHarness onReady={handle => { handleRef.current = handle }} />)
     })
-    // hub -> launchpad -> missions (mirrors opening "Available Contracts"
-    // from the Launchpad's New Mission menu), then Back from Missions.
     for (const screen of ['launchpad', 'missions'] as const) {
-      await act(async () => { handleRef.current?.transition(screen) })
+      await act(async () => { handleRef.current?.go(screen) })
     }
 
     await act(async () => { handleRef.current?.goBack() })
     expect(handleRef.current?.screen).toBe('launchpad')
+
+    await act(async () => root.unmount())
+  })
+
+  it('does not bounce between Launchpad and Hangar', async () => {
+    const host = document.createElement('div')
+    const root = createRoot(host)
+    const handleRef: { current: UiHandle | null } = { current: null }
+    ;(globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT: boolean }).IS_REACT_ACT_ENVIRONMENT = true
+
+    await act(async () => {
+      root.render(<UiHarness onReady={handle => { handleRef.current = handle }} />)
+    })
+    await act(async () => { handleRef.current?.go('launchpad') })
+    await act(async () => { handleRef.current?.go('hangar') })
+    await act(async () => { handleRef.current?.goBack() })
+    expect(handleRef.current?.screen).toBe('launchpad')
+    await act(async () => { handleRef.current?.goBack() })
+    expect(handleRef.current?.screen).toBe('hub')
+    await act(async () => { handleRef.current?.goBack() })
+    expect(handleRef.current?.screen).toBe('hub')
+
+    await act(async () => { handleRef.current?.go('launchpad') })
+    await act(async () => { handleRef.current?.go('hangar') })
+    await act(async () => { handleRef.current?.goBack() })
+    expect(handleRef.current?.screen).toBe('launchpad')
+    await act(async () => { handleRef.current?.goBack() })
+    expect(handleRef.current?.screen).toBe('hub')
 
     await act(async () => root.unmount())
   })
