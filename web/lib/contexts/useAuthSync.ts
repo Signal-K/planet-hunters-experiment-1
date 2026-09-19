@@ -141,6 +141,9 @@ export function useAuthSync({
   const skipNextRemotePersist = useRef(false)
   const lastPersistedMissionsDone = useRef<number | null>(null)
   const lastPersistedTutorial = useRef<boolean | null>(null)
+  const remoteSaveDirty = useRef(false)
+  const resettingRef = useRef(false)
+  resettingRef.current = resetting
   const localStateKey = gameStateStorageKey(storageKey, authUserId)
 
   useEffect(() => {
@@ -594,14 +597,48 @@ export function useAuthSync({
     const timer = window.setTimeout(async () => {
       try {
         await saveRemoteState(authUserId, state)
+        remoteSaveDirty.current = false
         lastPersistedMissionsDone.current = state.player.missionsDone
         lastPersistedTutorial.current = state.tutorial
       } catch {
         // Local storage remains the offline source of truth until the data link recovers.
+        remoteSaveDirty.current = true
       }
     }, delay)
     return () => window.clearTimeout(timer)
   }, [authUserId, hydrated, isPreview, resetting, backendReady, state, saveRemoteState])
+
+  // SSL-321: Safari has no Background Sync, and a failed game_states save used
+  // to wait for the next state change. Retry whenever the app resumes or the
+  // network returns (online / visible / pageshow), and try once more as the
+  // page is hidden, since iOS may never run another tick.
+  useEffect(() => {
+    if (isPreview || !authUserId || !backendReady || backendLoadedFor.current !== authUserId) return
+    const userId = authUserId
+    function retrySave() {
+      if (!remoteSaveDirty.current || navigator.onLine === false) return
+      saveRemoteState(userId, stateRef.current)
+        .then(() => { remoteSaveDirty.current = false })
+        .catch(() => { /* stays dirty for the next trigger */ })
+    }
+    function onVisibility() {
+      if (document.visibilityState === 'visible') retrySave()
+      else if (!resettingRef.current) {
+        // Last chance before iOS suspends the page: send the latest state now.
+        saveRemoteState(userId, stateRef.current)
+          .then(() => { remoteSaveDirty.current = false })
+          .catch(() => { remoteSaveDirty.current = true })
+      }
+    }
+    window.addEventListener('online', retrySave)
+    window.addEventListener('pageshow', retrySave)
+    document.addEventListener('visibilitychange', onVisibility)
+    return () => {
+      window.removeEventListener('online', retrySave)
+      window.removeEventListener('pageshow', retrySave)
+      document.removeEventListener('visibilitychange', onVisibility)
+    }
+  }, [authUserId, backendReady, isPreview, saveRemoteState, stateRef])
 
   // Signing in must always land the player on Earth Base, never wherever the
   // auth gate happened to be sitting on top of (e.g. a deep-linked or

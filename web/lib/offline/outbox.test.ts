@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { syncLabel } from '@/components/game/LandnamSyncStatus'
 import { backoffMs, createOutbox, MAX_ATTEMPTS, memoryStore, newRecordId, type OutboxFailure, type OutboxOp } from './outbox'
+import { classifyHttpStatus } from './pbOutbox'
 
 function harness(results: Array<OutboxFailure | null>) {
   const calls: OutboxOp[] = []
@@ -18,6 +19,24 @@ const create: OutboxOp = { type: 'create', collection: 'mission_runs', id: 'aaaa
 const update: OutboxOp = { type: 'update', collection: 'mission_runs', id: 'aaaaaaaaaaaaaaa', data: { status: 'completed' } }
 
 describe('outbox', () => {
+  it('keeps only the latest snapshot of a keyed upsert', async () => {
+    const h = harness([])
+    const upsert = (time: number, filter = 'target_id = "t1"'): OutboxOp => ({ type: 'upsert', collection: 'voxel_worlds', id: 'bbbbbbbbbbbbbbb', filter, data: { time } })
+    await h.outbox.enqueue(upsert(1))
+    await h.outbox.enqueue(upsert(2))
+    await h.outbox.enqueue(upsert(3, 'target_id = "t2"'))
+    expect(h.outbox.pending()).toHaveLength(2)
+    await h.outbox.flush()
+    expect(h.calls.map(c => (c.type === 'upsert' ? c.data.time : null))).toEqual([2, 3])
+  })
+
+  it('classifies community HTTP statuses for retry', () => {
+    expect(classifyHttpStatus(200)).toBeNull()
+    expect(classifyHttpStatus(401)).toEqual({ kind: 'offline' })
+    expect(classifyHttpStatus(503)).toEqual({ kind: 'offline' })
+    expect(classifyHttpStatus(400)).toMatchObject({ kind: 'rejected' })
+  })
+
   it('replays queued writes in the order they were made', async () => {
     const h = harness([])
     await h.outbox.enqueue(create)

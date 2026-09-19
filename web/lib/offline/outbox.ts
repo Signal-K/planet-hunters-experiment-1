@@ -9,6 +9,10 @@
 export type OutboxOp =
   | { type: 'create'; collection: string; id: string; data: Record<string, unknown> }
   | { type: 'update'; collection: string; id: string; data: Record<string, unknown> }
+  /** Create-or-update keyed by a PocketBase filter (e.g. one voxel world per user + target). */
+  | { type: 'upsert'; collection: string; id: string; filter: string; data: Record<string, unknown> }
+  /** A Landnam custom-route call (community API). `body.id` is the client-generated idempotency key. */
+  | { type: 'http'; path: string; method: 'POST'; body: Record<string, unknown> }
 
 export interface OutboxItem {
   id: string
@@ -178,6 +182,10 @@ export function createOutbox({ store, execute, now = Date.now, isOnline = () => 
 
   async function enqueue(op: OutboxOp) {
     await ensureLoaded()
+    // Only the latest snapshot of a keyed upsert matters; drop superseded ones.
+    if (op.type === 'upsert') {
+      items = items.filter(i => !(i.op.type === 'upsert' && i.op.collection === op.collection && i.op.filter === op.filter))
+    }
     items.push({ id: newRecordId(), op, createdAt: now(), attempts: 0, nextAttemptAt: 0, failed: false })
     await persist()
     emit()

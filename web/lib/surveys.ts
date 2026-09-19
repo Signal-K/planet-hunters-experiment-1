@@ -1,6 +1,6 @@
 import { initPostHog, posthog } from '@/lib/posthog'
 import { pbShared } from '@/lib/pb'
-import { pbLandnam } from '@/lib/pb-landnam'
+import { queueCreate } from '@/lib/offline/pbOutbox'
 import { SURVEY_DEFS, type Survey, type SurveyQuestion } from '@/lib/survey-defs'
 
 export { SURVEY_DEFS, type Survey, type SurveyQuestion } from '@/lib/survey-defs'
@@ -90,14 +90,14 @@ function storeSurveyInPb(missionId: string, responses: SurveyResponses, dismisse
   const textVals = Object.values(responses).filter(v => typeof v === 'string')
   const freetext = textVals.find(v => (v as string).length > 10) ?? null
   const optionChoice = textVals.find(v => (v as string).length <= 80) ?? null
-  pbLandnam.collection('onboarding_feedback').create({
+  queueCreate('onboarding_feedback', {
     user_id: userId ?? '',
     mission_id: missionId,
     rating: ratingVal ?? null,
     freetext: freetext ?? null,
     option_choice: optionChoice ?? null,
     dismissed,
-  }).catch(() => {/* non-critical — PostHog is source of truth */})
+  })
 }
 
 function createSurveySubmissionId(surveyId: string) {

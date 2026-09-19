@@ -4,6 +4,8 @@
 // friend/public visibility filter server-side.
 
 import { pbLandnam } from '@/lib/pb-landnam'
+import { getOutbox } from '@/lib/offline/pbOutbox'
+import { newRecordId } from '@/lib/offline/outbox'
 import type { HubChannel, ReportReason, ShareComment, SharePost, ShareVisibility, ShareKind } from '@/lib/data/community'
 import type { FieldStructureRecord } from '@/lib/game-types'
 import type { BiosphereSeed, TerritoryClaim } from '@/lib/data'
@@ -60,8 +62,24 @@ export function fetchHubFeed(channel?: HubChannel): Promise<{ posts: SharePost[]
   return communityFetch(`/feed${channel ? `?channel=${encodeURIComponent(channel)}` : ''}`)
 }
 
+/**
+ * SSL-321: writes that fail because the device is offline are queued in the
+ * outbox (with a client id the server dedupes on) and surface as a status-0
+ * error the UI can present as "will post when you are back online".
+ */
+async function communityWrite<T>(path: string, body: Record<string, unknown>): Promise<T> {
+  const id = newRecordId()
+  try {
+    return await communityFetch<T>(path, { method: 'POST', body: JSON.stringify({ ...body, id }) })
+  } catch (error) {
+    if (error instanceof CommunityApiError) throw error
+    void getOutbox().enqueue({ type: 'http', path: `/api/community${path}`, method: 'POST', body: { ...body, id } })
+    throw new CommunityApiError('You are offline. This will be sent when you reconnect.', 0)
+  }
+}
+
 export function publishShare(input: ShareInput): Promise<{ post: SharePost }> {
-  return communityFetch('/share', { method: 'POST', body: JSON.stringify(input) })
+  return communityWrite('/share', { ...input })
 }
 
 export function reactToShare(postId: string, reaction: 'signal' | 'build'): Promise<{ post: SharePost }> {
@@ -73,12 +91,12 @@ export function fetchShareComments(postId: string): Promise<{ comments: ShareCom
 }
 
 export function postShareComment(postId: string, body: string): Promise<{ comment: ShareComment }> {
-  return communityFetch('/comment', { method: 'POST', body: JSON.stringify({ postId, body }) })
+  return communityWrite('/comment', { postId, body })
 }
 
 /** Report a comment once with a fixed reason. The server hides it at the threshold. */
 export function reportShareComment(commentId: string, reason: ReportReason): Promise<{ reportCount: number; hidden: boolean }> {
-  return communityFetch('/report', { method: 'POST', body: JSON.stringify({ commentId, reason }) })
+  return communityWrite('/report', { commentId, reason })
 }
 
 /** Remove a comment you wrote, or any comment on a post you own. */

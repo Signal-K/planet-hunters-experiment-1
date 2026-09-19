@@ -13,6 +13,7 @@ import {
   type SyncAdapter,
   type TakeonProfile,
 } from '@takeon/engine'
+import { queueUpsert } from '@/lib/offline/pbOutbox'
 import { pbLandnam } from '@/lib/pb-landnam'
 
 type JsonRecord = Record<string, unknown>
@@ -285,6 +286,48 @@ export class LandnamSync implements SyncAdapter {
       await this.saveStructures(userId, state.id, state.structures)
     } catch {
       await this.fallback.saveMission(state, roverName)
+      this.queueMissionUpload(userId, state, roverName)
+    }
+  }
+
+  /**
+   * SSL-321: the local fallback copy is not enough on its own, so the same
+   * snapshot is queued for upload and replays when the device reconnects.
+   * Keyed upserts mean only the latest snapshot per world/structure is kept.
+   */
+  private queueMissionUpload(userId: string, state: MissionState, roverName: string): void {
+    queueUpsert('voxel_worlds', this.worldFilter(userId, state.id), {
+      user: userId,
+      target_id: state.id,
+      body_id: state.bodyId,
+      rover_name: roverName,
+      seed: state.seed,
+      schema_version: state.schemaVersion ?? 0,
+      status: state.status,
+      time: state.time,
+      edits: state.edits,
+      rover: state.rover,
+      anomalies: state.anomalies,
+      photos: state.photos,
+      weather: state.weather ?? null,
+    })
+    for (const structure of state.structures) {
+      queueUpsert(
+        'structures',
+        `${this.worldFilter(userId, state.id)} && structure_id = "${filterValue(structure.id)}"`,
+        {
+          user: userId,
+          target_id: state.id,
+          structure_id: structure.id,
+          blueprint_slug: BLUEPRINT_BY_TAKEON_TYPE[structure.type] ?? structure.type,
+          pos_x: structure.pos.x,
+          pos_y: structure.pos.y,
+          facing: structure.facing ?? 0,
+          buffer: structure.buffer,
+          cooldown_until: structure.cooldownUntil ?? 0,
+          progress: structure.progress ?? 0,
+        }
+      )
     }
   }
 

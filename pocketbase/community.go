@@ -144,6 +144,20 @@ func ensureCommentModerationFields(app core.App) {
 	}
 }
 
+// validClientRecordID reports whether id looks like a PocketBase record id
+// (15 lowercase alphanumerics) a client may pick for idempotent replays.
+func validClientRecordID(id string) bool {
+	if len(id) != 15 {
+		return false
+	}
+	for _, c := range id {
+		if !(c >= 'a' && c <= 'z') && !(c >= '0' && c <= '9') {
+			return false
+		}
+	}
+	return true
+}
+
 func registerCommunityRoutes(app core.App) {
 	app.OnServe().BindFunc(func(se *core.ServeEvent) error {
 		g := se.Router.Group("/api/community")
@@ -240,6 +254,7 @@ func communityFeedHandler(app core.App) func(e *core.RequestEvent) error {
 func communityShareHandler(app core.App) func(e *core.RequestEvent) error {
 	return func(e *core.RequestEvent) error {
 		var body struct {
+			ClientID    string         `json:"id"`
 			Kind        string         `json:"kind"`
 			ProgrammeID string         `json:"programmeId"`
 			Title       string         `json:"title"`
@@ -251,6 +266,13 @@ func communityShareHandler(app core.App) func(e *core.RequestEvent) error {
 		}
 		if err := e.BindBody(&body); err != nil {
 			return apis.NewBadRequestError("invalid body", err)
+		}
+		// SSL-321: a replayed offline write carries its client-generated id, so a
+		// request that already landed (or was killed mid-flight) is not duplicated.
+		if validClientRecordID(body.ClientID) {
+			if existing, err := app.FindRecordById("share_posts", body.ClientID); err == nil && existing.GetString("author") == e.Auth.Id {
+				return e.JSON(http.StatusOK, map[string]any{"post": sharePostJSON(existing)})
+			}
 		}
 		if _, ok := shareKinds[body.Kind]; !ok {
 			return apis.NewBadRequestError("unknown share kind", nil)
@@ -281,6 +303,9 @@ func communityShareHandler(app core.App) func(e *core.RequestEvent) error {
 			return apis.NewApiError(http.StatusInternalServerError, "share_posts missing", nil)
 		}
 		rec := core.NewRecord(col)
+		if validClientRecordID(body.ClientID) {
+			rec.Id = body.ClientID
+		}
 		rec.Set("author", e.Auth.Id)
 		rec.Set("author_name", usernameFromUser(e.Auth))
 		rec.Set("kind", body.Kind)
@@ -361,8 +386,9 @@ func communityCommentsHandler(app core.App) func(e *core.RequestEvent) error {
 func communityCommentHandler(app core.App) func(e *core.RequestEvent) error {
 	return func(e *core.RequestEvent) error {
 		var body struct {
-			PostID string `json:"postId"`
-			Body   string `json:"body"`
+			ClientID string `json:"id"`
+			PostID   string `json:"postId"`
+			Body     string `json:"body"`
 		}
 		if err := e.BindBody(&body); err != nil {
 			return apis.NewBadRequestError("invalid body", err)
@@ -382,7 +408,24 @@ func communityCommentHandler(app core.App) func(e *core.RequestEvent) error {
 		if err != nil {
 			return apis.NewApiError(http.StatusInternalServerError, "share_comments missing", nil)
 		}
+		if validClientRecordID(body.ClientID) {
+			if existing, err := app.FindRecordById("share_comments", body.ClientID); err == nil && existing.GetString("author") == e.Auth.Id {
+				return e.JSON(http.StatusOK, map[string]any{
+					"comment": map[string]any{
+						"id":         existing.Id,
+						"postId":     post.Id,
+						"authorId":   e.Auth.Id,
+						"authorName": usernameFromUser(e.Auth),
+						"body":       existing.GetString("body"),
+						"createdAt":  existing.GetDateTime("created").Time().UnixMilli(),
+					},
+				})
+			}
+		}
 		rec := core.NewRecord(col)
+		if validClientRecordID(body.ClientID) {
+			rec.Id = body.ClientID
+		}
 		rec.Set("post", post.Id)
 		rec.Set("author", e.Auth.Id)
 		rec.Set("author_name", usernameFromUser(e.Auth))
