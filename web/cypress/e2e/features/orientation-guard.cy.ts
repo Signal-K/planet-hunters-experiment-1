@@ -79,15 +79,47 @@ describe('Compact landscape play path (SSL-326)', () => {
     })
 
     assertNoRotateWall()
-    cy.get('[data-testid="auth-gate-quick-email"]', { timeout: 15000 })
-      .scrollIntoView()
-      .should('be.visible')
+    cy.get('[data-testid="auth-gate-email"]', { timeout: 15000 }).should('be.visible')
+    cy.get('[data-testid="auth-gate-password"]').should('be.visible')
+    cy.get('[data-testid="auth-gate-submit"]').should('be.visible')
+    cy.get('[data-testid="auth-gate-quick-email"]').scrollIntoView().should('be.visible')
     cy.get('[data-testid="auth-gate-quick-submit"]').scrollIntoView().should('be.visible')
-    cy.contains('button', /create account/i).click()
-    cy.get('[data-testid="auth-gate-email"]').scrollIntoView().should('be.visible')
-    cy.get('[data-testid="auth-gate-password"]').scrollIntoView().should('be.visible')
-    cy.get('[data-testid="auth-gate-submit"]').scrollIntoView().should('be.visible')
+    cy.contains('button', /create account|sign up/i).click()
+    cy.get('[data-testid="auth-gate-submit"]').should('be.visible')
     cy.screenshot('mobile-landscape-auth-reachable')
+  })
+
+  it('keeps mission dispatch and the target map reachable at 844×390', () => {
+    cy.viewport(844, 390)
+    cy.visit('/game/missions', {
+      onBeforeLoad(win) {
+        Object.defineProperty(win.navigator, 'userAgent', { configurable: true, value: PHONE_UA })
+        seedAuthenticatedHub(win)
+      },
+    })
+    assertNoRotateWall()
+    cy.screenshot('mobile-landscape-missions')
+
+    cy.visit('/game/targets', {
+      onBeforeLoad(win) {
+        Object.defineProperty(win.navigator, 'userAgent', { configurable: true, value: PHONE_UA })
+        win.localStorage.setItem(
+          ORIENTATION_STORAGE_KEY,
+          JSON.stringify({
+            ...HUB_STATE,
+            screen: 'targets',
+            missionId: 'generated-s1-starter-bulk-1',
+          }),
+        )
+        win.localStorage.setItem(
+          'landnam-account-credentials',
+          JSON.stringify({ email: 'e2e@example.com', password: 'e2e-guest-test' }),
+        )
+      },
+    })
+    assertNoRotateWall()
+    cy.get('[data-testid="target-picker-orbital-map"]', { timeout: 15000 }).should('be.visible')
+    cy.screenshot('mobile-landscape-target-picker')
   })
 
   it('lets 926×428 play without a rotate wall', () => {
@@ -113,6 +145,7 @@ describe('Compact landscape play path (SSL-326)', () => {
     })
     assertNoRotateWall()
     cy.get('[data-testid="building-launchpad"]', { timeout: 15000 }).should('be.visible')
+    cy.screenshot('desktop-landscape-hub-playable')
   })
 
   it('keeps phone portrait as a first-class play path', () => {
@@ -126,5 +159,6 @@ describe('Compact landscape play path (SSL-326)', () => {
     assertNoRotateWall()
     cy.get('[data-testid="building-launchpad"]', { timeout: 15000 }).should('be.visible')
     cy.get('.bottom-tab-bar').should('be.visible')
+    cy.screenshot('phone-portrait-hub-control')
   })
 })
