@@ -6,7 +6,7 @@ import TopBar from '@/components/ui/TopBar'
 import StatCard from '@/components/ui/StatCard'
 import Panel from '@/components/ui/Panel'
 import StatusPill from '@/components/ui/StatusPill'
-import { PrimaryBtn } from '@/components/ui/Button'
+import { GhostBtn, PrimaryBtn } from '@/components/ui/Button'
 import CommentsPanel from '@/components/game/CommentsPanel'
 import NebulaBackdrop from '@/components/game/NebulaBackdrop'
 import AsteroidSkyPlot from '@/components/game/AsteroidSkyPlot'
@@ -14,6 +14,7 @@ import type { AsteroidCandidate, AsteroidClassification, AsteroidVerdict } from 
 import type { Player } from '@/lib/game-types'
 import { UI_ZONES } from '@/lib/ui-zones'
 import { fetchReviewableAsteroidCandidates } from '@/lib/asteroid-subjects'
+import { sharedBackendMisconfigured } from '@/lib/pb-config'
 import { useIsDesktop } from '@/lib/hooks/useIsDesktop'
 import { instrumentDigestDateKey, pickInstrumentInspectCandidate, unresolvedDeepSpaceInstrumentDigest } from '@/lib/systems/InstrumentFeedSystem'
 import AsteroidDiscoveryCoach, { useAsteroidDiscoveryCoach } from '@/components/game/AsteroidDiscoveryCoach'
@@ -54,6 +55,9 @@ export default function AsteroidDiscoveryScreen({ player, inspectSubjectId, visu
   // devDayOffset — the daily pool is keyed by real calendar date.
   const [devDayOffset, setDevDayOffset] = useState(0)
   const [showMoreData, setShowMoreData] = useState(false)
+  // Bumped by the "Retry Downlink" action — see TessDiscoveryScreen's
+  // identical retryToken.
+  const [retryToken, setRetryToken] = useState(0)
 
   useEffect(() => {
     if (visualCandidate) {
@@ -105,10 +109,19 @@ export default function AsteroidDiscoveryScreen({ player, inspectSubjectId, visu
     // player is still looking at. A new candidate is only fetched on mount
     // or when the telescope/day actually changes.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [visualCandidate, inspectSubjectId, player.freeOperations, player.deepSpaceTelescopeBuilt, player.deepSpaceTelescopeLevel, devDayOffset])
+  }, [visualCandidate, inspectSubjectId, player.freeOperations, player.deepSpaceTelescopeBuilt, player.deepSpaceTelescopeLevel, devDayOffset, retryToken])
 
   const isDesktop = useIsDesktop()
+  const [isCompactLandscape, setIsCompactLandscape] = useState(false)
   const coach = useAsteroidDiscoveryCoach()
+
+  useEffect(() => {
+    const query = window.matchMedia('(orientation: landscape) and (max-height: 520px)')
+    const update = () => setIsCompactLandscape(query.matches)
+    update()
+    query.addEventListener('change', update)
+    return () => query.removeEventListener('change', update)
+  }, [])
 
   if (!player.freeOperations) {
     return (
@@ -151,16 +164,22 @@ export default function AsteroidDiscoveryScreen({ player, inspectSubjectId, visu
   }
 
   if (!candidate) {
+    const misconfigured = loadFailed && sharedBackendMisconfigured()
     return (
       <GateScreen
         eyebrow="BASE / DAILY DOWNLINK"
         icon={<Radio size={22} />}
         tone="amber"
-        title={loadFailed ? 'Live Feed Unavailable' : 'No Reviewable Candidate'}
-        body={loadFailed
-          ? 'The shared NEOCP candidate feed could not be reached. Check back later.'
-          : 'Every live NEOCP candidate is currently classified or has resolved off the feed.'}
+        title={misconfigured ? 'Feed Not Configured' : loadFailed ? 'Live Feed Unavailable' : 'No Reviewable Candidate'}
+        body={misconfigured
+          ? 'This build has no shared backend configured. Reloading will not help — this needs a deploy fix.'
+          : loadFailed
+            ? 'The shared NEOCP candidate feed could not be reached.'
+            : 'Every live NEOCP candidate is currently classified or has resolved off the feed.'}
         onBack={onBack}
+        action={loadFailed && !misconfigured ? (
+          <GhostBtn onClick={() => setRetryToken(t => t + 1)}>Retry Downlink</GhostBtn>
+        ) : undefined}
         devBar={process.env.NODE_ENV === 'development' ? (
           <DevDaySkipBar offset={devDayOffset} onAdvance={() => setDevDayOffset(o => o + 1)} onReset={() => setDevDayOffset(0)} />
         ) : undefined}
@@ -274,17 +293,19 @@ export default function AsteroidDiscoveryScreen({ player, inspectSubjectId, visu
   return (
     <div className="game-screen theme-deep ln-scene-asteroid-discovery" data-testid="asteroid-discovery-screen">
       <TopBar eyebrow="INSTRUMENT DATA FEED · DAILY DOWNLINK" title={candidate.tempDesig} onBack={onBack} />
-      {isDesktop ? (
+      {isDesktop || isCompactLandscape ? (
         <div data-testid="asteroid-discovery-desktop-grid" style={{ position: 'absolute', inset: 0, top: 72, display: 'grid', gridTemplateColumns: '55% 45%', gap: 16, padding: '0 var(--ln-s-4) var(--ln-s-4)' }}>
           <div style={{ overflowY: 'auto' }} data-ui-zone={UI_ZONES.screenContent}>
             {coach.visible && <AsteroidDiscoveryCoach onDismiss={coach.dismiss} />}
             {devBar}
             {dataPanel}
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 12, overflowY: 'auto' }}>
-            {payoffPanel}
-            <CommentsPanel recordType="classification" recordId={candidate.id} />
-            <div style={{ marginTop: 'auto' }} data-ui-zone={UI_ZONES.bottomActions}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12, minHeight: 0 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12, flex: '1 1 auto', minHeight: 0, overflowY: 'auto' }}>
+              {payoffPanel}
+              <CommentsPanel recordType="classification" recordId={candidate.id} />
+            </div>
+            <div style={{ flex: '0 0 auto' }} data-ui-zone={UI_ZONES.bottomActions}>
               {verdictActions}
             </div>
           </div>

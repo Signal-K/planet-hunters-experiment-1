@@ -40,7 +40,7 @@ export const NARRATIVE_LEDGER: NarrativeLedgerEntry[] = [
     owner: 'CLIENT',
     state: 'live',
     dependencies: ['Missions', 'Targets', 'Rockets', 'Debrief'],
-    implementation: 'Client missions, payout, mission records, and client affinity are present. Rename and consolidate any remaining legacy terminology.',
+    implementation: 'Client missions, payout, mission records, and client-experience progress are present. Legacy affinity terminology is retired from active player-facing surfaces.',
   },
   {
     id: 'client-growth',
@@ -51,7 +51,7 @@ export const NARRATIVE_LEDGER: NarrativeLedgerEntry[] = [
     owner: 'CLIENT',
     state: 'planned',
     dependencies: ['Build completion ledger', 'Client experience', 'GitHub Action'],
-    implementation: 'Needs a canonical build-event record and an idempotent scheduled GitHub Action. This is not live yet.',
+    implementation: 'The idempotent scheduled publisher and shared snapshot store are live. A canonical completed-build event feed still needs to supply the publisher input before client growth can be presented as fully live.',
   },
   {
     id: 'market',
@@ -62,7 +62,7 @@ export const NARRATIVE_LEDGER: NarrativeLedgerEntry[] = [
     owner: 'MARKET',
     state: 'adapt',
     dependencies: ['Client growth', 'Mineral catalog', 'Refined goods', 'Price snapshot'],
-    implementation: 'A local market and refined-goods sale path exist. Shared, demand-led daily pricing needs the client scheduler and an audited price snapshot.',
+    implementation: 'Raw and refined sale paths consume the shared, auditable daily snapshot when it is published. The missing completed-build event feed keeps the client-demand input in adaptation rather than presenting it as complete.',
   },
   {
     id: 'refining',
@@ -73,7 +73,7 @@ export const NARRATIVE_LEDGER: NarrativeLedgerEntry[] = [
     owner: 'PLAYER',
     state: 'adapt',
     dependencies: ['Storage', 'Refinery recipe', 'Off-world site'],
-    implementation: 'The refinery loop exists. Its early off-world advantage and site integration are still a design and data-model extension.',
+    implementation: 'Own-program refinery completion now records a target-specific deployment and only proceeds against an active build right. The Earth-side refinery queue remains the first recipe interface while off-world processing surfaces are expanded.',
   },
   {
     id: 'sites',
@@ -82,9 +82,9 @@ export const NARRATIVE_LEDGER: NarrativeLedgerEntry[] = [
     purpose: 'Clients hold target territory. Planets begin as predefined sites where operations happen automatically after access is secured.',
     cadence: 'PER SITE AGREEMENT',
     owner: 'CLIENT + PLAYER',
-    state: 'adapt',
+    state: 'live',
     dependencies: ['Target catalog', 'Client territory', 'Site agreement', 'Surface operations'],
-    implementation: 'Client territory and site access foundations exist, but the active permit/solo semantics must be replaced with purchasable or leaseable rights.',
+    implementation: 'Predefined client sites now sell scoped purchase or lease rights; Surface Operations charges the deed once, credits the treasury ledger, and grants build and mine authority without a parcel editor.',
   },
   {
     id: 'treasury',
@@ -93,9 +93,9 @@ export const NARRATIVE_LEDGER: NarrativeLedgerEntry[] = [
     purpose: 'Site-deed revenue funds citizen-science contributions and bankruptcy loans instead of disappearing into generic fees.',
     cadence: 'ON SITE AGREEMENT',
     owner: 'TREASURY',
-    state: 'planned',
+    state: 'adapt',
     dependencies: ['Site agreement revenue', 'Treasury ledger', 'Contribution rewards', 'Loan rules'],
-    implementation: 'The player loan and citizen-science activities exist separately. A treasury ledger and payout rules do not yet exist.',
+    implementation: 'Site-right purchases write server-authoritative deed revenue into a shared, auditable treasury ledger, then hydrate its public projection for players. Treasury-backed loan and contribution payouts still need their own authenticated transaction routes.',
   },
   {
     id: 'citizen-science',

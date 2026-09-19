@@ -84,7 +84,7 @@ function LockGlyph() {
 const MENU: NavItem[] = [
   { id: 'hub',      label: 'Base',     color: 'var(--ln-cyan)', glyph: <HubGlyph /> },
   { id: 'missions', label: 'Missions', color: 'var(--ln-cyan)', glyph: <MissionsGlyph /> },
-  { id: 'galaxy',   label: 'Atlas',    color: 'var(--ln-cyan)', glyph: <AtlasGlyph /> },
+  { id: 'galaxy',   label: 'Telescope', color: 'var(--ln-cyan)', glyph: <AtlasGlyph /> },
   { id: 'market',   label: 'Market',   color: 'var(--ln-cyan-bright)', glyph: <MarketGlyph /> },
 ]
 

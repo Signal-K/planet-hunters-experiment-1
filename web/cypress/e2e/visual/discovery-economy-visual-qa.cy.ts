@@ -11,6 +11,7 @@
 //   CYPRESS_PROFILE=visual-extended npx cypress open --browser chrome
 
 import type { GameState } from '@/game-context'
+import { seedAuthenticatedFixture } from '../../support/authenticated-fixture'
 // Relative path, not the `@/` alias: Cypress's bundled webpack preprocessor
 // has no tsconfig-paths plugin configured (unlike Next.js's own bundler), so
 // it can't resolve `@/...` imports. No other spec hits this because none of
@@ -20,8 +21,7 @@ import type { GameState } from '@/game-context'
 // in lib/data/structures.ts's own `@/lib/featureFlags` import transitively.
 import { tessCandidateToExoplanetTarget, toTessCandidate } from '../../../lib/data/tess-candidates'
 
-const STORAGE_KEY = 'landnam-game-state-v1'
-const AUTHENTICATED_STORAGE_KEY = `${STORAGE_KEY}:user:e2e-discovery-user`
+const AUTHENTICATED_STORAGE_KEY = 'landnam-game-state-v1:user:e2e-discovery-user'
 const ALL_SURVEY_KEYS = [
   'lnm_first_launch', 'lnm_mining_feel', 'lnm_client_pick',
   'lnm_mission_friction', 'lnm_progression_feel', 'lnm_end_of_content',
@@ -75,10 +75,7 @@ function visitWithState(path: string, screen: GameState['screen'], playerOverrid
 
   cy.visit(path, {
     onBeforeLoad(win) {
-      // Each visual test gets its own guest account. Reusing one account lets
-      // backend state from a preceding discovery test race the seeded local
-      // state here and remove the discovered target before Launchpad builds
-      // its runtime catalog.
+      // Each visual test gets an isolated, authenticated fixture account.
       // A previously visited visual spec can leave a PocketBase token in the
       // browser even though this test is intentionally offline. Clear it
       // before the provider hydrates, otherwise auth restoration can replace
@@ -89,18 +86,12 @@ function visitWithState(path: string, screen: GameState['screen'], playerOverrid
       win.localStorage.clear()
       win.localStorage.setItem('landnam-surveys-shown', JSON.stringify(ALL_SURVEY_KEYS))
       win.localStorage.setItem('landnam-upgrade-prompt-snooze-until', String(Date.now() + 365 * 24 * 60 * 60 * 1000))
-      win.localStorage.setItem('landnam-account-credentials', JSON.stringify({
-        email: `e2e-${Date.now()}-${Math.random().toString(36).slice(2)}@example.com`,
-        password: 'e2e-guest-test',
-      }))
       // ObservatoryCoach is a separate one-time beat from the main M1-M3
       // tutorial (gated by its own localStorage key, not GameState.tutorial)
       // — mark it seen so it doesn't render its banner/spacer over the
       // chart during the drag-mark gesture below.
       win.localStorage.setItem('landnam_observatory_coach_seen_v1', '1')
-      const serialized = JSON.stringify(full)
-      win.localStorage.setItem(STORAGE_KEY, serialized)
-      win.localStorage.setItem(AUTHENTICATED_STORAGE_KEY, serialized)
+      seedAuthenticatedFixture(win, full, 'e2e-discovery-user')
     },
   })
 }
@@ -164,13 +155,7 @@ describe('Visual QA — discovery -> economy pipeline', () => {
     visitWithState('/game/galaxy', 'galaxy', {})
     cy.wait('@subjects')
 
-    // The injected fake guest credentials only satisfy hasStoredCredentials()
-    // — the app still fires ensureAccountAuth() in the background, which fails
-    // against the real local PocketBase (no such account), deletes the fake
-    // credentials, and races to create a real one. Until that resolves, the
-    // "Welcome Back" auth gate can render on top of everything below. A fixed
-    // cy.wait() guesses at that race; asserting the gate is gone (with
-    // Cypress's built-in retry) actually waits for it.
+    // The authenticated fixture must leave the required account gate closed.
     cy.contains('Welcome Back', { timeout: 15000 }).should('not.exist')
 
     cy.contains('INSTRUMENT DATA FEED', { timeout: 15000 }).should('be.visible')
@@ -235,7 +220,7 @@ describe('Visual QA — discovery -> economy pipeline', () => {
     cy.screenshot('discovery-03-confirmed-star-map')
 
     cy.window().then(win => {
-      const saved = JSON.parse(win.localStorage.getItem(STORAGE_KEY) || win.localStorage.getItem(AUTHENTICATED_STORAGE_KEY) || '{}')
+      const saved = JSON.parse(win.localStorage.getItem(AUTHENTICATED_STORAGE_KEY) || '{}')
       const discovered = Object.values(saved.player.discoveredExoplanetTargets ?? {}) as Array<{ archetype?: string; minerals: string[] }>
       expect(discovered, 'exactly one confirmed discovery').to.have.length(1)
       const [target] = discovered
@@ -293,22 +278,17 @@ describe('Visual QA — discovery -> economy pipeline', () => {
     // The aggregate action selects the first available own-program mission;
     // this ordinary mission -> target-picker path is what proves the newly
     // discovered target is usable outside the fixed-target survey flight.
-    cy.contains('Pick Target', { timeout: 10000 }).should('be.visible')
+    cy.get('[data-testid="mission-target-map"]', { timeout: 10000 }).should('be.visible')
 
     cy.get(`[data-testid="target-${discovered.id}"]`).click({ force: true })
     cy.contains(discovered.name).should('be.visible')
     cy.screenshot('discovery-05-target-picker-real-minerals')
 
-    // The card intentionally caps and rarity-sorts its chips, so assert that
-    // the visible mix is non-empty and drawn from the target's real deposit
-    // rather than assuming the first three source minerals survive the cap.
-    cy.get('[data-testid="target-deposit-mix"]').should('be.visible').children().should('have.length.greaterThan', 0)
-    cy.get('[data-testid^="target-deposit-"]').then($chips => {
-      const visibleMinerals = [...$chips]
-        .map(chip => chip.getAttribute('data-testid')?.replace('target-deposit-', ''))
-        .filter((mineral): mineral is string => Boolean(mineral && mineral !== 'mix'))
-      expect(visibleMinerals, 'visible deposit chips').to.have.length.greaterThan(0)
-      expect(visibleMinerals.every(mineral => discovered.minerals.includes(mineral))).to.eq(true)
-    })
+    // The current orbital map is intentionally an atlas rather than a second
+    // mineral-card surface. Its selection reticle plus the adjacent mission
+    // action prove this discovered body is eligible and can advance through
+    // the ordinary target-picker flow.
+    cy.contains('SELECTED · ORBIT', { timeout: 10000 }).should('be.visible')
+    cy.get('[data-testid="continue-build-btn"]').should('be.enabled')
   })
 })

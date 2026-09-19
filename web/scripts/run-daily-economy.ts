@@ -16,6 +16,7 @@ interface Arguments {
   inputPath?: string
   outputPath?: string
   snapshotDate?: DateKey
+  publishUrl?: string
 }
 
 async function main(): Promise<void> {
@@ -34,9 +35,44 @@ async function main(): Promise<void> {
   const output = `${JSON.stringify(snapshot, null, 2)}\n`
   if (args.outputPath) {
     await writeFile(args.outputPath, output, 'utf8')
-    return
   }
-  process.stdout.write(output)
+  if (args.publishUrl) await publishSnapshot(args.publishUrl, snapshot)
+  if (!args.outputPath) process.stdout.write(output)
+}
+
+async function publishSnapshot(baseUrl: string, snapshot: ReturnType<typeof resolveDailyEconomy>): Promise<void> {
+  const email = process.env.LANDNAM_PB_SERVICE_EMAIL
+  const password = process.env.LANDNAM_PB_SERVICE_PASSWORD
+  if (!email || !password) {
+    throw new Error('Set LANDNAM_PB_SERVICE_EMAIL and LANDNAM_PB_SERVICE_PASSWORD before publishing a daily economy snapshot.')
+  }
+  const base = baseUrl.replace(/\/$/, '')
+  const authResponse = await fetch(`${base}/api/collections/_superusers/auth-with-password`, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ identity: email, password }),
+  })
+  if (!authResponse.ok) throw new Error(`Daily economy service authentication failed: ${authResponse.status}`)
+  const auth = await authResponse.json() as { token?: unknown }
+  if (typeof auth.token !== 'string' || auth.token.length === 0) throw new Error('Daily economy service authentication returned no token.')
+  const headers = { authorization: auth.token, 'content-type': 'application/json' }
+  const filter = encodeURIComponent(`idempotency_key = "${snapshot.idempotencyKey}"`)
+  const existingResponse = await fetch(`${base}/api/collections/daily_economy_snapshots/records?filter=${filter}&perPage=1`, { headers })
+  if (!existingResponse.ok) throw new Error(`Daily economy snapshot lookup failed: ${existingResponse.status}`)
+  const existing = await existingResponse.json() as { items?: Array<{ id?: unknown }> }
+  const recordId = existing.items?.[0]?.id
+  const body = JSON.stringify({
+    snapshot_date: snapshot.snapshotDate,
+    idempotency_key: snapshot.idempotencyKey,
+    snapshot,
+  })
+  const response = await fetch(
+    typeof recordId === 'string' && recordId.length > 0
+      ? `${base}/api/collections/daily_economy_snapshots/records/${recordId}`
+      : `${base}/api/collections/daily_economy_snapshots/records`,
+    { method: typeof recordId === 'string' && recordId.length > 0 ? 'PATCH' : 'POST', headers, body }
+  )
+  if (!response.ok) throw new Error(`Daily economy snapshot publish failed: ${response.status}`)
 }
 
 function parseArguments(args: readonly string[]): Arguments {
@@ -44,10 +80,11 @@ function parseArguments(args: readonly string[]): Arguments {
   for (let index = 0; index < args.length; index += 1) {
     const option = args[index]
     const value = args[index + 1]
-    if ((option === '--input' || option === '--output' || option === '--date') && value) {
+    if ((option === '--input' || option === '--output' || option === '--date' || option === '--publish-url') && value) {
       if (option === '--input') parsed.inputPath = value
       else if (option === '--output') parsed.outputPath = value
-      else parsed.snapshotDate = value as DateKey
+      else if (option === '--date') parsed.snapshotDate = value as DateKey
+      else parsed.publishUrl = value
       index += 1
       continue
     }

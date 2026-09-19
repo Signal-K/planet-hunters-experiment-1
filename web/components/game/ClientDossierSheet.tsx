@@ -15,7 +15,7 @@ const UI_ROLE_LABEL: Record<Client['uiRole'], string> = {
 
 // Per-client detail card (STS-235) — tapped from a client's mark on the
 // Mission Board. Real, already-modeled client data only (mineral
-// preferences, payout premium, affinity mechanic) — no invented lore or
+// preferences, payout premium, client-experience mechanic) — no invented lore or
 // backstory, per the narrative rule (real science/real terminology, no
 // fictional wrapper on mainline content).
 export default function ClientDossierSheet({
@@ -61,10 +61,10 @@ export default function ClientDossierSheet({
 
       <div>
         <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 8, fontWeight: 700, letterSpacing: '0.22em', color: 'var(--ln-text-muted)', textTransform: 'uppercase', marginBottom: 6 }}>
-          Affinity
+          Work record
         </div>
         <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 13, color: 'var(--ln-text-dim)', lineHeight: 1.5 }}>
-          {client.affinityNotes ?? `+${Math.round(client.affinityBonusPerMission * 100)}% payout per completed ${client.name} job.`}
+          Completed work informs this client’s next daily demand and level progression.
         </div>
       </div>
     </PageSurface>

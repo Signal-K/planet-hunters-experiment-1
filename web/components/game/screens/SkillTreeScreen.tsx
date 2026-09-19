@@ -67,7 +67,7 @@ export default function SkillTreeScreen({
       <TopBar eyebrow="BASE · ACADEMY" title="Skill Tree" onBack={onBack} glass />
       {coach.visible && <SkillTreeCoach onDismiss={coach.dismiss} />}
 
-      <div data-ui-zone={UI_ZONES.screenContent} className={styles.content}>
+      <div data-ui-zone={UI_ZONES.screenContent} data-testid="skill-tree-content" className={styles.content}>
         <header className={styles.hero}>
           <div>
             <div className={styles.kicker}>PROGRAM DEVELOPMENT / RESEARCH CONSOLE</div>
@@ -88,19 +88,30 @@ export default function SkillTreeScreen({
               const branchNodes = SKILL_NODES.filter(node => node.branch === branch)
               const branchUnlocked = branchNodes.filter(node => hasSkill(unlockedSkillNodes, node.id)).length
               return (
-                <div className={styles.branchCard} key={branch}>
+                <button
+                  type="button"
+                  className={`${styles.branchCard} ${selectedNode.branch === branch ? styles.branchCardActive : ''}`}
+                  key={branch}
+                  aria-label={`Show ${BRANCHES[branch].label} nodes`}
+                  onClick={() => {
+                    const first = branchNodes[0]
+                    if (!first) return
+                    setSelectedNodeId(first.id)
+                    document.getElementById(`skill-node-${first.id}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+                  }}
+                >
                   <span className={styles.branchMark}>{BRANCHES[branch].short}</span>
                   <span className={styles.branchCopy}>
                     <strong>{BRANCHES[branch].label}</strong>
                     <small>{BRANCHES[branch].detail}</small>
                   </span>
                   <span className={styles.branchCount}>{branchUnlocked}/{branchNodes.length}</span>
-                </div>
+                </button>
               )
             })}
             <div className={styles.branchLegend}>
               <span className={styles.legendDot} />
-              <span>Tap a node to inspect</span>
+              <span>Tap a branch or node to inspect</span>
             </div>
           </aside>
 
@@ -133,6 +144,7 @@ export default function SkillTreeScreen({
                     <article
                       className={`${styles.nodeCard} ${selected ? styles.nodeCardSelected : ''} ${unlocked ? styles.nodeCardUnlocked : ''}`}
                       key={node.id}
+                      id={`skill-node-${node.id}`}
                     >
                       <button
                         className={styles.nodeButton}

@@ -12,6 +12,22 @@ import { DEFAULT_STATE } from './game-state'
 import { createCrewMember } from './systems/CrewSystem'
 
 describe('buildRuntimeCatalog', () => {
+  it('adds a stored-haul mission for missing construction focus materials', () => {
+    const catalog = buildRuntimeCatalog({
+      catalog: STATIC_CATALOG,
+      freeOperations: true,
+      missionsDone: 3,
+      player: {
+        ...DEFAULT_STATE.player,
+        freeOperations: true,
+        stash: { aluminium: 4 },
+        resourceFocus: { label: 'Mineral Vault', minerals: { aluminium: 15, copper: 8 } },
+      },
+    })
+    const mission = catalog.missions.find(item => item.id === 'focus-resource-mining')
+    expect(mission?.requires.minerals).toEqual({ aluminium: 11, copper: 8 })
+    expect(mission?.requires.cargo_min).toBe(19)
+  })
   it('adds the transit telescope launch mission before the satellite is launched', () => {
     const catalog = buildRuntimeCatalog({
       catalog: STATIC_CATALOG,

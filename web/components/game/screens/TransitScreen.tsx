@@ -1,8 +1,10 @@
 'use client'
 
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { Target, MineralMeta, Mission, Client } from '@/lib/data'
 import { isOwnProgramMission, missionTypePrimer } from '@/lib/data'
+import { resolveBodyOwnership, type OwnershipPlayer } from '@/lib/systems/OwnershipSystem'
+import TargetSphere from '@/components/game/TargetSphere'
 import TopBar from '@/components/ui/TopBar'
 import ActionConfirmBar from '@/components/game/ActionConfirmBar'
 import TransitCanvas from '@/components/game/screens/TransitCanvas'
@@ -37,9 +39,19 @@ interface Props {
   minerals?: Record<string, MineralMeta>
   mission?: Mission | null
   client?: Client | null
+  /**
+   * Player identity + claims for the approach sphere (SSL-317). When omitted
+   * the sphere is not shown (e.g. preview routes without a player).
+   */
+  ownership?: OwnershipPlayer
 }
 
-export default function TransitScreen({ target, rocketImageSrc, arrivalAt, transitStartedAt, returning = false, onArrive, onBack, onAbandon, isDelivery = false, cargo, minerals, mission, client }: Props) {
+export default function TransitScreen({ target, rocketImageSrc, arrivalAt, transitStartedAt, returning = false, onArrive, onBack, onAbandon, isDelivery = false, cargo, minerals, mission, client, ownership }: Props) {
+  // Ownership/divisions are resolved once per flight; claims cannot change mid-transit.
+  const bodyOwnership = useMemo(
+    () => resolveBodyOwnership(target, ownership ?? { id: 'local-player', name: 'You' }),
+    [ownership, target],
+  )
   const isTimed = typeof arrivalAt === 'number'
   const fakeDurationMs = isDelivery ? DELIVERY_FAKE_PROGRESS_DURATION_MS : FAKE_PROGRESS_DURATION_MS
   const [now, setNow] = useState(0)
@@ -146,6 +158,19 @@ export default function TransitScreen({ target, rocketImageSrc, arrivalAt, trans
           <span>{returning ? 'EARTH RECOVERY VECTOR' : `${target.type.toUpperCase()} · ORBIT ${target.orbit}`}</span>
         </div>
 
+        {!returning && ownership && (
+          <div className={`transit-approach${progress >= 70 ? ' transit-approach--close' : ''}`} data-testid="transit-approach" data-progress={progress}>
+            <TargetSphere
+              target={target}
+              lifeStage={bodyOwnership.lifeStage}
+              ownership={bodyOwnership}
+              size={progress >= 70 ? 152 : 112}
+              compact={progress < 70}
+              eyebrow={progress >= 70 ? 'ON APPROACH · DIVISIONS' : 'TARGET BODY'}
+            />
+          </div>
+        )}
+
         {mission && (
           <section className="transit-mission-card" data-testid="transit-mission-context" aria-label="Mission context">
             <div className="transit-mission-card__eyebrow">{legLabel} mission</div>
@@ -157,7 +182,7 @@ export default function TransitScreen({ target, rocketImageSrc, arrivalAt, trans
 
         <section className="transit-flight-hud transit-readout" data-transit-progress={progress} aria-label="Flight telemetry">
           <div className="transit-flight-hud__heading">
-            <span>{returning ? 'EARTH RETURN' : 'DEEP-SPACE FLIGHT'}</span>
+            <span>{legPurpose ?? (returning ? 'EARTH RETURN' : 'DEEP-SPACE FLIGHT')}</span>
             <strong>{progress}%</strong>
           </div>
           <div className="transit-progress-wrap">

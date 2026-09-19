@@ -11,6 +11,7 @@ import RoverMiningScreen from '@/components/game/screens/RoverMiningScreen'
 import DeliveryScreen from '@/components/game/screens/DeliveryScreen'
 import DebriefScreen from '@/components/game/screens/DebriefScreen'
 import { earthStorageBuilt, hasOperationalRemoteSilo, storageCapacity, storedUnits, sellQuote } from '@/lib/systems/EconomySystem'
+import { ownershipIdentity } from '@/lib/systems/SandboxSystem'
 import { isFreeHaulEligibleMission } from '@/lib/data'
 
 type Game = ReturnType<typeof useGame>
@@ -25,6 +26,7 @@ interface MissionOperationRoutesProps {
   transitTarget: Target
   debriefOriginTarget: Target
   deliveryTargetName?: string
+  originTargetName?: string
   rocketDisplay: RocketDisplay
 }
 
@@ -36,6 +38,7 @@ export default function MissionOperationRoutes({
   transitTarget,
   debriefOriginTarget,
   deliveryTargetName,
+  originTargetName,
   rocketDisplay,
 }: MissionOperationRoutesProps) {
   const debriefCargo = game.deliveredCargo ?? game.lastCargo ?? {}
@@ -55,6 +58,7 @@ export default function MissionOperationRoutes({
           minerals={game.catalog.minerals}
           mission={game.mission}
           client={game.mission?.client ? game.catalog.clients[game.mission.client] ?? null : null}
+          ownership={ownershipIdentity(game.player, game.authUserId)}
           onBack={() => game.go('hub')}
           onArrive={() => {
             if (game.player.returningToEarth) {
@@ -98,10 +102,11 @@ export default function MissionOperationRoutes({
             if (isTutorialDelivery) {
               game.setPlayer(player => ({
                 ...player,
-                missionPhase: 'landing',
-                landingStartedAt: Date.now(),
+                missionPhase: 'mining',
+                landingStartedAt: undefined,
+                hasLanded: true,
               }))
-              game.go('landing')
+              game.go('rover-mining')
               return
             }
             game.setPlayer(player => ({
@@ -166,7 +171,6 @@ export default function MissionOperationRoutes({
           }}
           onComplete={(cargo, remoteDisposition, earthDisposition) => {
             game.completeStep(6)
-            game.completeStep(7)
             if (game.player.shipCustomizerParts?.lander) {
               game.setPlayer(player => ({
                 ...player,
@@ -213,18 +217,14 @@ export default function MissionOperationRoutes({
         <RoverMiningScreen
           mission={game.mission}
           target={roverTarget}
+          rocketImageSrc={rocketDisplay.img}
           clientName={game.mission.client ? game.catalog.clients[game.mission.client]?.name : undefined}
+          player={game.player}
+          onFieldBuild={game.recordFieldBuild}
+          onFieldDemolish={game.recordFieldDemolish}
+          onFabricate={game.fabricateAtField}
+          onSeedBiosphere={game.seedBiosphere}
           onComplete={(cargo) => {
-            if (game.player.missionsDone === 2 && game.mission?.deliveryTargetId) {
-              game.setPlayer(player => ({
-                ...player,
-                missionPhase: 'landing',
-                landingReturnStartedAt: Date.now(),
-                miningCargoInProgress: cargo,
-              }))
-              game.go('landing')
-              return
-            }
             game.onRoverMiningDone(cargo)
           }}
           onBack={() => {
@@ -248,6 +248,7 @@ export default function MissionOperationRoutes({
           onComplete={game.onDeliveryUnloadComplete}
           clientName={game.mission.client ? game.catalog.clients[game.mission.client]?.name : undefined}
           useTakeonDropoff={game.player.missionsDone === 2}
+          rocketImageSrc={rocketDisplay.img}
         />
       )
 
@@ -257,6 +258,7 @@ export default function MissionOperationRoutes({
         <DebriefScreen
           mission={game.mission}
           target={debriefOriginTarget}
+          originTargetName={originTargetName}
           cargo={debriefCargo}
           onDone={game.onDebriefDone}
           minerals={game.catalog.minerals}

@@ -36,6 +36,7 @@ interface HubSubsurfaceViewProps {
   subsurfaceBuilt?: string[]
   onExcavate?: () => void
   onBuildRoom?: (roomId: SubsurfaceRoomId) => void
+  onFocusResources?: (label: string, minerals: Record<string, number>) => void
 }
 
 interface StoredMineral {
@@ -357,11 +358,13 @@ function RoomBuildPrompt({
   francs,
   stash,
   onBuild,
+  onFocusResources,
 }: {
   room: SubsurfaceRoomDefinition
   francs: number
   stash?: Record<string, number>
   onBuild?: (roomId: SubsurfaceRoomId) => void
+  onFocusResources?: (label: string, minerals: Record<string, number>) => void
 }) {
   const affordable = canAffordSubsurface(room, { francs, stash })
   return (
@@ -383,6 +386,7 @@ function RoomBuildPrompt({
           >
             Build {room.name}
           </PrimaryBtn>
+          {!affordable && <button type="button" className={styles.focusButton} data-testid={`subsurface-focus-${room.id}`} onClick={() => onFocusResources?.(room.name, room.costMaterials)}>FOCUS MATERIALS</button>}
         </div>
       </div>
     </div>
@@ -393,10 +397,12 @@ function ExcavatePrompt({
   francs,
   stash,
   onExcavate,
+  onFocusResources,
 }: {
   francs: number
   stash?: Record<string, number>
   onExcavate?: () => void
+  onFocusResources?: (label: string, minerals: Record<string, number>) => void
 }) {
   const affordable = canAffordSubsurface(SUBSURFACE_EXCAVATE_COST, { francs, stash })
   return (
@@ -423,6 +429,7 @@ function ExcavatePrompt({
           >
             Excavate deck
           </PrimaryBtn>
+          {!affordable && <button type="button" className={styles.focusButton} data-testid="subsurface-focus-excavation" onClick={() => onFocusResources?.('Subsurface excavation', SUBSURFACE_EXCAVATE_COST.costMaterials)}>FOCUS MATERIALS</button>}
         </div>
       </div>
     </div>
@@ -438,6 +445,7 @@ export function HubSubsurfaceView({
   subsurfaceBuilt = [],
   onExcavate,
   onBuildRoom,
+  onFocusResources,
 }: HubSubsurfaceViewProps) {
   const [activeRoom, setActiveRoom] = useState<SubsurfaceRoomId | null>(null)
   const minerals = storedMinerals(stash)
@@ -481,7 +489,7 @@ export function HubSubsurfaceView({
                 <h2 className={styles.deckTitle}>Unexcavated</h2>
               </div>
             </div>
-            <ExcavatePrompt francs={francs} stash={stash} onExcavate={onExcavate} />
+            <ExcavatePrompt francs={francs} stash={stash} onExcavate={onExcavate} onFocusResources={onFocusResources} />
           </div>
         ) : activeRoom && activeDefinition ? (
           <div className={styles.detailView}>
@@ -502,7 +510,7 @@ export function HubSubsurfaceView({
             {activeRoom === 'habitat-training' ? (
               <HabitatTraining enabled={trainingEnabled} />
             ) : !builtSet.has(activeRoom) ? (
-              <RoomBuildPrompt room={activeDefinition} francs={francs} stash={stash} onBuild={onBuildRoom} />
+              <RoomBuildPrompt room={activeDefinition} francs={francs} stash={stash} onBuild={onBuildRoom} onFocusResources={onFocusResources} />
             ) : activeRoom === 'mineral-vault' || activeRoom === 'deep-mineral-vault' ? (
               <MineralVault minerals={minerals} capacity={activeRoom === 'deep-mineral-vault' ? DEEP_MINERAL_SILO_CAPACITY : MINERAL_SILO_CAPACITY} />
             ) : (

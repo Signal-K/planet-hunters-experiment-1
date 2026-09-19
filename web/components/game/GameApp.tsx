@@ -10,6 +10,7 @@ import { ScreenContent } from '@/components/game/GameScreenRouter'
 import TutorialCoach from '@/components/game/TutorialCoach'
 import MissionTicker from '@/components/game/MissionTicker'
 import UnlockPopup from '@/components/game/UnlockPopup'
+import { TutorialCompleteSheet } from '@/components/game/TutorialCompleteSheet'
 import BottomTabBar from '@/components/layout/BottomTabBar'
 import BackendStatus from '@/components/game/BackendStatus'
 import LandnamSyncStatus from '@/components/game/LandnamSyncStatus'
@@ -17,13 +18,15 @@ import { PushOptIn } from '@/components/game/PushOptIn'
 import FeedbackButton from '@/components/ui/FeedbackButton'
 import SurveySheet from '@/components/ui/SurveySheet'
 import ToastLayer from '@/components/ui/ToastLayer'
-import { initPostHog, captureScreenView } from '@/lib/posthog'
+import { initPostHog, captureScreenView, captureGameEvent } from '@/lib/posthog'
 import { SURVEY_SAFE_SCREENS } from '@/lib/survey-gating'
 import DevShortcuts from '@/components/dev/DevShortcuts'
 import AuthGateSheet from '@/components/game/AuthGateSheet'
 import SettingsSheet from '@/components/game/SettingsSheet'
 import FriendsButton from '@/components/game/FriendsButton'
 import FriendsSheet from '@/components/game/FriendsSheet'
+import CommunityButton from '@/components/game/CommunityButton'
+import CommunityHubSheet from '@/components/game/CommunityHubSheet'
 import TakeOnPwaPreload from '@/components/takeon/TakeOnPwaPreload'
 import { UI_ZONES } from '@/lib/ui-zones'
 
@@ -35,6 +38,7 @@ function GameCanvas() {
   const priorScreenRef = useRef<Screen | null>(null)
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [friendsOpen, setFriendsOpen] = useState(false)
+  const [hubOpen, setHubOpen] = useState(false)
 
   // PostHog injects recorder/survey scripts. Initialising during module
   // evaluation can let those scripts mutate the document while React is
@@ -123,12 +127,28 @@ function GameCanvas() {
     // The Launchpad mission chooser is a modal owned by the current scene.
     // Hide the coach while it is open so onboarding copy never sits over, or
     // points back at, the control the player is already using.
-    if (game.subsurfaceView || settingsOpen || friendsOpen || game.popup || game.authGateOpen || (game.screen === 'launchpad' && game.launchpadMissionMenuOpen)) return null
+    if (game.subsurfaceView || settingsOpen || friendsOpen || hubOpen || game.popup || game.authGateOpen || (game.screen === 'launchpad' && game.launchpadMissionMenuOpen)) return null
     return activeCoach
-  }, [coachSteps, friendsOpen, game.authGateOpen, game.doneSteps, game.launchpadMissionMenuOpen, game.popup, game.screen, game.subsurfaceView, settingsOpen])
+  }, [coachSteps, friendsOpen, hubOpen, game.authGateOpen, game.doneSteps, game.launchpadMissionMenuOpen, game.popup, game.screen, game.subsurfaceView, settingsOpen])
 
   const coachIndex = coach ? coachSteps.findIndex(step => step.id === coach.id) : -1
   const hasCoach = !!coach
+
+  // No onboarding-step-level analytics existed before — only the
+  // mission-level events (mission_completed etc). Without per-step coverage
+  // there's no way to see where inside M1/M2/M3 players actually stall.
+  useEffect(() => {
+    if (!coach) return
+    captureGameEvent('tutorial_step_started', {
+      step_id: coach.id,
+      screen: coach.screen,
+      step_index: coachIndex,
+      total_steps: coachSteps.length,
+    })
+    // Only re-fire when the active step itself changes, not on every
+    // re-render that keeps the same coach step.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [coach?.id])
 
   // A status toast belongs to the action that caused it. Keeping it mounted
   // after a screen change made Earth-recovery and payout messages obscure the
@@ -217,6 +237,8 @@ function GameCanvas() {
           <button
             data-testid="settings-button"
             aria-label="Settings"
+            aria-haspopup="dialog"
+            aria-expanded={settingsOpen}
             onClick={() => setSettingsOpen(true)}
             style={{
               position: 'absolute', top: 56, right: 12, zIndex: 22,
@@ -234,7 +256,10 @@ function GameCanvas() {
           </button>
         )}
         {game.screen === 'hub' && !game.subsurfaceView && !game.authGateOpen && (
-          <FriendsButton onClick={() => setFriendsOpen(true)} />
+          <>
+            <FriendsButton onClick={() => setFriendsOpen(true)} />
+            <CommunityButton onClick={() => setHubOpen(true)} />
+          </>
         )}
         <DevShortcuts />
         <div
@@ -268,10 +293,34 @@ function GameCanvas() {
             step={coach}
             total={coachSteps.length}
             onManualNext={game.coachManualNext}
-            onSkip={() => game.skipTutorial(coachSteps.map(s => s.id))}
+            onSkip={() => {
+              // Distinct from a step being completed in the normal flow —
+              // this is the player bailing out of onboarding entirely, which
+              // mission_completed/tutorial_step_started alone can't surface.
+              captureGameEvent('tutorial_skipped', {
+                step_id: coach?.id ?? null,
+                screen: coach?.screen ?? null,
+                step_index: coachIndex,
+                total_steps: coachSteps.length,
+              })
+              game.skipTutorial(coachSteps.map(s => s.id))
+            }}
           />
         )}
-        {game.popup && game.screen !== 'market' && !game.authGateOpen && (
+        {game.popup === 'tutorial-complete' && !game.authGateOpen && (
+          <TutorialCompleteSheet
+            onDone={focuses => {
+              game.setPlayer(player => ({ ...player, programFocuses: focuses }))
+              game.setPopup(null)
+            }}
+            onBuildSilo={focuses => {
+              game.setPlayer(player => ({ ...player, programFocuses: focuses }))
+              game.setPopup(null)
+              game.go('build')
+            }}
+          />
+        )}
+        {game.popup && game.popup !== 'tutorial-complete' && game.screen !== 'market' && !game.authGateOpen && (
           <UnlockPopup
             kind={game.popup}
             onClose={() => {
@@ -291,9 +340,6 @@ function GameCanvas() {
             error={game.authGateError}
             onSignIn={game.signInFromGate}
             onCreateAccount={game.createAccountFromGate}
-            onContinue={game.continueWithEmail}
-            otpPending={game.authGateOtpId !== null}
-            onVerifyOtp={game.verifyOtp}
           />
         )}
       </div>
@@ -304,6 +350,7 @@ function GameCanvas() {
           corner button above; everything else routes through the base. */}
       {settingsOpen && <SettingsSheet onClose={() => setSettingsOpen(false)} />}
       {friendsOpen && <FriendsSheet onClose={() => setFriendsOpen(false)} />}
+      {hubOpen && <CommunityHubSheet onClose={() => setHubOpen(false)} />}
     </main>
   )
 }

@@ -57,16 +57,53 @@ describe('openMarketSellPrice', () => {
 })
 
 describe('applyPurchaseRocket', () => {
-  it('persists a built vehicle so returning to the launchpad cannot charge twice', () => {
+  it('persists each built vehicle separately so a second preparation has its own charge', () => {
     const rocket = ROCKET_MODELS.find(model => model.id === 'prospector')!
-    const s = makeState({ francs: rocket.costFrancs + 100 })
+    const s = makeState({ francs: rocket.costFrancs * 2 + 100 })
     const next = applyPurchaseRocket(s, rocket)
 
-    expect(next.player.francs).toBe(100)
+    expect(next.player.francs).toBe(rocket.costFrancs + 100)
     expect(next.player.pendingLaunch).toBe(true)
     expect(next.player.pendingRocketId).toBe('prospector')
+    expect(next.player.pendingRocketLocation).toBe('hangar')
     expect(next.rocket).toEqual({ chassis: 'hull-mk2', propulsion: 'fusion-b2', drill: 'laser-t2' })
-    expect(applyPurchaseRocket(next, rocket).player.francs).toBe(100)
+    const second = applyPurchaseRocket(next, rocket)
+    expect(second.player.francs).toBe(100)
+    expect(second.player.stagedRockets).toHaveLength(2)
+  })
+})
+
+describe('silo rocket fabrication and recovery', () => {
+  const explorer = ROCKET_MODELS.find(model => model.id === 'explorer')!
+  const explorerRecipes = rocketCompositionForId('explorer').recipes
+
+  it('requires a built Earth silo before it consumes materials or creates a part', () => {
+    const state = makeState({ stash: { iron: 10, silicon: 10 } })
+    expect(applyFabricateRocketPart(state, 'explorer', explorerRecipes[0].id)).toBe(state)
+  })
+
+  it('debits a recipe from the silo and consumes completed parts during assembly', () => {
+    const stash = { iron: 20, silicon: 20, carbon: 10 }
+    let state = makeState({ placed: ['surface-silo'], stash })
+    for (const recipe of explorerRecipes) state = applyFabricateRocketPart(state, explorer.id, recipe.id)
+
+    expect(state.player.fabricatedRocketParts).toEqual(Object.fromEntries(explorerRecipes.map(recipe => [recipe.id, 1])))
+    expect(state.player.stash).toEqual({ iron: 12, silicon: 16, carbon: 9 })
+    const assembled = applyAssembleFabricatedRocket(state, explorer)
+    expect(assembled.player.pendingRocketId).toBe('explorer')
+    expect(assembled.player.pendingRocketSource).toBe('fabricated')
+    expect(assembled.player.pendingRocketLocation).toBe('hangar')
+    expect(assembled.player.fabricatedRocketParts).toEqual({})
+    expect(assembled.player.francs).toBe(0)
+  })
+
+  it('returns only material that fits in an Earth silo and never creates storage without one', () => {
+    const noSilo = makeState({ stash: {} })
+    expect(applyRocketStageRecovery(noSilo, explorer)).toBe(noSilo)
+
+    const almostFull = makeState({ placed: ['surface-silo'], stash: { iron: SURFACE_SILO_CAPACITY - 1 } })
+    const recovered = applyRocketStageRecovery(almostFull, explorer)
+    expect(recovered.player.stash).toEqual({ iron: SURFACE_SILO_CAPACITY })
   })
 })
 

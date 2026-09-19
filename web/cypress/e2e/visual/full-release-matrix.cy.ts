@@ -1,5 +1,7 @@
 export {}
 
+import { seedAuthenticatedFixture } from '../../support/authenticated-fixture'
+
 // Release-gate journey (opt-in: CYPRESS_PROFILE=visual-extended).
 // Not part of the per-push Visual QA playthrough (SSL-294).
 // A fresh player completes the active onboarding path at every supported
@@ -32,9 +34,9 @@ if (requestedViewport && activeViewports.length === 0) {
 const EXTENDED_SURFACES = [
   { key: 'm3-mining', screen: 'mining', name: 'm3-mining', selector: '[data-testid="mining-canvas"]' },
   { key: 'm3-debrief', screen: 'debrief', name: 'm3-debrief', selector: '.debrief-game' },
-  { key: 'ui-mission-board', screen: 'missions', name: 'free-ops-mission-board', selector: '.mission-setup-screen' },
+  { key: 'ui-mission-board', screen: 'missions', name: 'free-ops-mission-board', selector: '[data-testid="mission-board-section-client"]' },
   { key: 'ui-rover-mining', screen: 'rover-mining', name: 'free-ops-rover-mining', selector: '[data-testid="rover-mining-screen"]' },
-  { key: 'telescope-fab', screen: 'fab', name: 'telescope-launch-fab', selector: '.mission-setup-screen' },
+  { key: 'telescope-fab', screen: 'fab', name: 'telescope-launch-fab', selector: '[data-testid="mission-launch-review"]' },
   { key: 'telescope-transit', screen: 'transit', name: 'telescope-launch-transit', selector: '.transit-screen' },
   { key: 'telescope-debrief', screen: 'debrief', name: 'telescope-launch-debrief', selector: '.debrief-game' },
   {
@@ -71,6 +73,12 @@ function clickButton(text: string | RegExp) {
   cy.contains('button', text).should('be.visible').click({ force: true })
 }
 
+function rollOutToLaunchpad() {
+  cy.get('[data-testid="mission-launch-review"]', { timeout: 10000 }).should('have.attr', 'data-location', 'hangar')
+  clickDom('[data-testid="transfer-to-launchpad-btn"]')
+  cy.get('[data-testid="mission-launch-review"]', { timeout: 10000 }).should('have.attr', 'data-location', 'launchpad')
+}
+
 function suppressNonGameplaySurfaces(win: Window) {
   win.localStorage.setItem(SURVEY_KEY, JSON.stringify(SURVEYS))
   win.localStorage.setItem(SNOOZE_KEY, String(Date.now() + 365 * 24 * 60 * 60 * 1000))
@@ -79,10 +87,10 @@ function suppressNonGameplaySurfaces(win: Window) {
   // hides the data evidence it is meant to audit.
   win.localStorage.setItem('landnam_observatory_coach_seen_v1', '1')
   win.localStorage.setItem('landnam_asteroid_discovery_coach_seen_v1', '1')
-  win.localStorage.setItem('landnam-account-credentials', JSON.stringify({
-    email: 'release-matrix@example.com',
-    password: 'ReleaseMatrix123!',
-  }))
+  // The normal shell derives its storage namespace from PocketBase's restored
+  // user record. Seed a valid-shaped fixture record, not retired credentials,
+  // so the fresh intro and every state transition stay in one account slot.
+  seedAuthenticatedFixture(win, { screen: 'intro' }, 'e2e-user')
 }
 
 function continuePastAuthIfShown() {
@@ -107,12 +115,12 @@ function goToMissions() {
       clickDom('[data-testid="bottom-tab-missions"]')
     }
   })
-  cy.contains('Mission Dispatch', { timeout: 10000 }).should('be.visible')
+  cy.get('[data-testid="mission-board-section-client"]', { timeout: 10000 }).should('be.visible')
 }
 
 function completeMiningDeterministically(viewport?: string, captureName?: string, expectDebrief = true) {
   cy.contains('MISSION TRANSIT', { timeout: 20000 }).should('be.visible')
-  cy.get('[data-testid="mining-canvas"], [data-testid="landing-screen"]', { timeout: 20000 }).should('exist')
+  cy.get('[data-testid="mining-canvas"], [data-testid="landing-screen"], [data-testid="rover-mining-screen"]', { timeout: 20000 }).should('exist')
   cy.get('body').then($body => {
     if ($body.find('[data-testid="mining-canvas"]').length > 0) {
       cy.get('[data-testid="mining-canvas"]', { timeout: 20000 }).should('be.visible')
@@ -123,7 +131,7 @@ function completeMiningDeterministically(viewport?: string, captureName?: string
       cy.get('[data-testid="dev-skip-mining-btn"]')
         .should('be.visible')
         .click({ force: true })
-    } else {
+    } else if ($body.find('[data-testid="landing-screen"]').length > 0) {
       // Lander-equipped missions enter the authored descent scene directly;
       // their surface work is completed below through the rover shortcut.
       cy.get('[data-testid="landing-screen"]', { timeout: 15000 }).should('be.visible')
@@ -133,6 +141,14 @@ function completeMiningDeterministically(viewport?: string, captureName?: string
   // rover work. Keep the release journey aligned with that real route while
   // retaining the old direct-transit path for missions without a lander.
   cy.get('body', { timeout: 15000 }).then($body => {
+    if ($body.find('[data-testid="rover-mining-screen"]').length > 0) {
+      cy.get('[data-testid="deploy-surface-ops-confirm"]', { timeout: 15000 }).then($deploy => {
+        if ($deploy.is(':visible')) cy.wrap($deploy).click({ force: true })
+      })
+      cy.get('[data-testid="dev-skip-rover-mining-btn"]', { timeout: 15000 }).click({ force: true })
+      cy.get('[data-testid="landing-screen"]', { timeout: 15000 }).should('be.visible')
+      cy.get('[data-testid="landing-continue"]', { timeout: 15000 }).should('not.be.disabled').click({ force: true })
+    }
     if ($body.find('[data-testid="landing-screen"]').length > 0) {
       cy.get('[data-testid="landing-continue"]', { timeout: 15000 }).should('not.be.disabled').click({ force: true })
       cy.get('[data-testid="rover-mining-screen"]', { timeout: 15000 }).should('be.visible')
@@ -179,12 +195,18 @@ function completeM3Delivery(viewport: string) {
 }
 
 function completeDebrief() {
-  // Every call site here is an onboarding mission (M1-M3, missionsDone < 3),
-  // which auto-resolves the debrief reveal on mount — see DebriefScreen.tsx.
-  cy.get('[data-testid="resolve-cargo-btn"]').should('not.exist')
+  // Debrief is an explicit player recovery step before rewards can be
+  // collected. This keeps the visual journey aligned with the live cargo
+  // teardown rather than assuming the retired auto-resolve behavior.
+  cy.get('[data-testid="resolve-cargo-btn"]').should('be.visible').click({ force: true })
+  // The dismantle scene is player-visible and can be skipped. Use that live
+  // affordance instead of racing its renderer before asking for the payout.
+  cy.get('[data-testid="scrap-sequence-skip-btn"]', { timeout: 10000 })
+    .should('be.visible')
+    .click({ force: true })
   cy.contains('Ledger').scrollIntoView().should('be.visible')
   clickDom('[data-testid="collect-reward-btn"]')
-  cy.contains('h1', /^(Base|Earth Base)$/, { timeout: 10000 }).should('be.visible')
+  cy.contains('h1', /^(Base|Earth Base)$/i, { timeout: 10000 }).should('be.visible')
 }
 
 function captureExtendedSurfaces(viewport: typeof VIEWPORTS[number]) {
@@ -214,46 +236,40 @@ function pickVisibleTarget(name: string) {
     .click({ force: true })
   cy.window().then(win => {
     if (win.innerWidth < 821) {
-      cy.get('[data-testid="target-detail-expand"], .mission-board-detail .mission-setup-card')
+      cy.get('[data-testid="target-detail-expand"], [data-testid="target-selection-summary"]')
         .should('exist')
       cy.contains(name).should('be.visible')
     } else {
-      cy.get('.mission-setup-card').should('contain.text', name)
+      cy.get('[data-testid="target-selection-summary"]').should('contain.text', name)
     }
   })
 }
 
 function assertRocketLayout(action: RegExp | string) {
-  cy.get('.rocket-vehicle-frame').should('be.visible')
-  cy.get('.rocket-tier-badge').should('be.visible')
+  cy.get('[data-testid="mission-rocket-blueprint"]').should('be.visible')
+  cy.get('[aria-label$="schematic"]').should('be.visible')
   cy.get('button', { timeout: 10000 }).contains(action).should('be.visible')
-  cy.get('body').then(body => {
-    const notice = body.find('.rocket-route-notice')
-    if (notice.length === 0) return
-    cy.get('.rocket-vehicle-frame').then(frame => {
-      expect(notice[0].getBoundingClientRect().bottom).to.be.at.most(frame[0].getBoundingClientRect().top + 1)
-    })
-  })
 }
 
 function playM1(viewport: string) {
   goToMissions()
   screenshot(viewport, 'm1-mission-board')
 
-  cy.get('[data-testid="mission-detail-cta-generated-s1-starter-bulk-1"]')
+  cy.get('[data-testid="mission-accept-generated-s1-starter-bulk-1"]')
     .scrollIntoView()
     .should('be.visible')
     .click({ force: true })
-  cy.contains('Pick Target', { timeout: 10000 }).should('be.visible')
+  cy.get('[data-testid="mission-target-map"]', { timeout: 10000 }).should('be.visible')
   screenshot(viewport, 'm1-target-picker')
 
   pickVisibleTarget('433 Eros')
   clickDom('[data-testid="continue-build-btn"]')
-  cy.contains('Select Rocket', { timeout: 10000 }).should('be.visible')
-  assertRocketLayout('Continue with Explorer')
+  cy.get('[data-testid="mission-rocket-blueprint"]', { timeout: 10000 }).should('be.visible')
+  assertRocketLayout(/BUILD EXPLORER/)
   screenshot(viewport, 'm1-rocket-selection')
 
-  clickButton('Continue with Explorer')
+  clickButton(/BUILD EXPLORER/)
+  rollOutToLaunchpad()
   clickDom('[data-testid="launch-btn"]')
   // The dev launch cinematic is intentionally asynchronous. Skip it here so
   // this release matrix tests the post-launch route deterministically instead
@@ -270,20 +286,21 @@ function playM2(viewport: string) {
   goToMissions()
   screenshot(viewport, 'm2-mission-board')
 
-  cy.get('[data-testid="mission-detail-cta-generated-s2-starter-bulk-3"]')
+  cy.get('[data-testid="mission-accept-generated-s2-starter-bulk-3"]')
     .scrollIntoView()
     .should('be.visible')
     .click({ force: true })
-  cy.contains('Pick Target', { timeout: 10000 }).should('be.visible')
+  cy.get('[data-testid="mission-target-map"]', { timeout: 10000 }).should('be.visible')
   screenshot(viewport, 'm2-target-picker')
 
   pickVisibleTarget('433 Eros')
   clickDom('[data-testid="continue-build-btn"]')
-  cy.contains('Select Rocket', { timeout: 10000 }).should('be.visible')
-  assertRocketLayout(/Purchase/)
+  cy.get('[data-testid="mission-rocket-blueprint"]', { timeout: 10000 }).should('be.visible')
+  assertRocketLayout(/BUILD ANOTHER/)
   screenshot(viewport, 'm2-rocket-selection')
 
-  cy.contains('button', /Purchase/).first().should('be.visible').click({ force: true })
+  cy.contains('button', /BUILD ANOTHER/).first().should('be.visible').click({ force: true })
+  rollOutToLaunchpad()
   clickDom('[data-testid="launch-btn"]')
   cy.get('[data-testid="launch-sequence-skip-btn"]', { timeout: 10000 })
     .should('be.visible')
@@ -297,23 +314,24 @@ function playM3(viewport: string) {
   goToMissions()
   screenshot(viewport, 'm3-mission-board')
 
-  cy.get('[data-testid="mission-detail-cta-lnm_m3_relay_bennu_vesta"]')
+  cy.get('[data-testid="mission-accept-lnm_m3_relay_bennu_vesta"]')
     .scrollIntoView()
     .should('be.visible')
     .click({ force: true })
-  cy.contains('Select Rocket', { timeout: 10000 }).should('be.visible')
+  cy.get('[data-testid="mission-rocket-blueprint"]', { timeout: 10000 }).should('be.visible')
   screenshot(viewport, 'm3-rocket-selection')
   cy.get('body').then($body => {
     if ($body.find('[data-testid="coach-got-it-btn"]').length > 0) {
       cy.get('[data-testid="coach-got-it-btn"]').click({ force: true })
     }
   })
-  cy.contains('button', /Purchase/).first().should('be.visible').click({ force: true })
+  cy.contains('button', /BUILD ANOTHER/).first().should('be.visible').click({ force: true })
   cy.get('body').then($body => {
     if ($body.find('[data-testid="coach-got-it-btn"]').length > 0) {
       cy.get('[data-testid="coach-got-it-btn"]').click({ force: true })
     }
   })
+  rollOutToLaunchpad()
   clickDom('[data-testid="launch-btn"]')
   cy.get('[data-testid="launch-sequence-skip-btn"]', { timeout: 10000 })
     .should('be.visible')

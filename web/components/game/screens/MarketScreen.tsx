@@ -3,7 +3,16 @@
 import { useState, type CSSProperties } from 'react'
 import ActionConfirmBar from '@/components/game/ActionConfirmBar'
 import MineralChip from '@/components/game/MineralChip'
-import { MINERAL_META, CLIENT_SLOTS, REFINERY_RECIPES } from '@/lib/data'
+import {
+  MINERAL_META,
+  CLIENT_SLOTS,
+  REFINERY_RECIPES,
+  CRAFTING_RECIPES,
+  CRAFTING_CATEGORY_LABELS,
+  CRAFTING_CATEGORY_ORDER,
+  craftingAffordability,
+  type CraftingCategory,
+} from '@/lib/data'
 import { sellUnitPrice, sellQuote } from '@/lib/systems/EconomySystem'
 import { formatCurrency } from '@/lib/format'
 import type { DailyEconomySnapshot } from '@/lib/systems/DailyEconomySystem'
@@ -26,6 +35,11 @@ interface MarketScreenProps {
 export default function MarketScreen({ stash, marketSupply, marketSupplyUpdatedAt, dailyEconomySnapshot, francs, onSell, refinedGoods, onSellRefined, onBack, onOpenMissions, clientId }: MarketScreenProps) {
   const [confirming, setConfirming] = useState<string | null>(null)
   const [sellAllConfirm, setSellAllConfirm] = useState(false)
+  // SSL-316: every recipe in the game is published here so the player can
+  // plan purchases against their stash before they are standing on a field.
+  const recipeCategories = CRAFTING_CATEGORY_ORDER.filter(c => CRAFTING_RECIPES.some(r => r.category === c))
+  const [recipeCategory, setRecipeCategory] = useState<CraftingCategory>(recipeCategories[0])
+  const visibleRecipes = CRAFTING_RECIPES.filter(r => r.category === recipeCategory)
 
   const entries = Object.entries(stash).filter(([, v]) => v > 0)
 
@@ -146,6 +160,62 @@ export default function MarketScreen({ stash, marketSupply, marketSupplyUpdatedA
             </div>
           </>
         )}
+        <section className={styles.recipes} aria-labelledby="market-recipes-title" data-testid="market-recipes">
+          <div className={styles.sectionHeader}>
+            <div>
+              <div className={styles.sectionLabel}>Fabrication &amp; build recipes</div>
+              <h2 id="market-recipes-title">What your cargo can become</h2>
+            </div>
+            <div className={styles.commodityMeta}>Costs are charged when you build or fabricate</div>
+          </div>
+          <div className={styles.recipeTabs} role="tablist" aria-label="Recipe categories">
+            {recipeCategories.map(category => (
+              <button
+                key={category}
+                type="button"
+                role="tab"
+                aria-selected={recipeCategory === category}
+                className={styles.recipeTab}
+                onClick={() => setRecipeCategory(category)}
+                data-testid={`market-recipe-tab-${category}`}
+              >
+                {CRAFTING_CATEGORY_LABELS[category]}
+              </button>
+            ))}
+          </div>
+          <div className={styles.commodityGrid} data-testid="market-recipe-grid">
+            {visibleRecipes.map(recipe => {
+              const can = craftingAffordability(recipe, francs, stash, refinedGoods)
+              return (
+                <article className={`${styles.commodityCard} ${styles.recipeCard}`} key={recipe.id} data-affordable={can.ok} data-testid={`market-recipe-${recipe.id}`}>
+                  <div className={styles.commodityTop}>
+                    <div>
+                      <div className={styles.commodityName}>{recipe.name}</div>
+                      <div className={styles.commodityMeta}>Made at {recipe.producedAt.replace(/-/g, ' ')}{recipe.placeable ? ' · placeable on the field' : ''}</div>
+                    </div>
+                    <span className={styles.recipeState} data-ok={can.ok}>{can.ok ? 'Ready' : 'Short'}</span>
+                  </div>
+                  <p className={styles.recipeDescription}>{recipe.description}</p>
+                  <div className={styles.recipeCosts}>
+                    {recipe.costFrancs > 0 && <span className={styles.recipeChip}>{formatCurrency(recipe.costFrancs, { compact: true })}</span>}
+                    {Object.entries(recipe.costMinerals).map(([id, amount]) => (
+                      <span className={styles.recipeChip} key={id} data-short={(can.mineralsShort[id] ?? 0) > 0}>
+                        <MineralChip mineral={id} variant="avatar" size={16} />
+                        {amount} {MINERAL_META[id]?.name ?? id}
+                      </span>
+                    ))}
+                    {Object.entries(recipe.costRefined ?? {}).map(([id, amount]) => (
+                      <span className={styles.recipeChip} key={id} data-short={(can.refinedShort[id] ?? 0) > 0}>
+                        {amount} {REFINERY_RECIPES.find(r => r.id === id)?.name ?? id}
+                      </span>
+                    ))}
+                  </div>
+                </article>
+              )
+            })}
+          </div>
+        </section>
+
         {sellAllConfirm && (
           <ActionConfirmBar
             eyebrow="Commodity Exchange"

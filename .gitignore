@@ -64,7 +64,6 @@ pocketbase/landnam-backend
 *.apk
 *.aab
 
-.vercel
 .env
 
 # Local tooling/runtime state

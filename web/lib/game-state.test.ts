@@ -186,7 +186,7 @@ describe('game state hydration normalization', () => {
     expect(normalized.screen).toBe('hub')
   })
 
-  it('retires legacy solo surface and unbuilt Base-refinery routes on hydration', () => {
+  it('retires the solo-settlement surface route and unbuilt Base-refinery routes on hydration', () => {
     expect(normalizeAndRepair({
       screen: 'surface-ops',
       player: { freeOperations: true, missionsDone: 3, hasLanded: true },

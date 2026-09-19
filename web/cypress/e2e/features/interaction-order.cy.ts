@@ -192,7 +192,7 @@ describe('Interaction order hardening', () => {
     })
 
     cy.get('[aria-label="back"]').click()
-    cy.contains('h1', 'Earth Base').should('be.visible')
+    cy.contains('h1', /^(Base|Earth Base)$/).should('be.visible')
     cy.get('[data-testid="progression-card-active"]').click()
     cy.contains('Mining Run').should('be.visible')
   })

@@ -4,6 +4,8 @@ import { useEffect, useRef } from 'react'
 import { capDpr } from '@/lib/engine/pixiDisplay'
 import { Application } from 'pixi.js'
 import { buildScrapScene, SCRAP_W, SCRAP_H } from '@/lib/pixi/scrapScene'
+import { useIsDesktop } from '@/lib/hooks/useIsDesktop'
+import SequenceDesktopFrame from '@/components/game/SequenceDesktopFrame'
 
 interface Props {
   rocketImageSrc?: string
@@ -20,6 +22,8 @@ export function ScrapSequenceCanvas({ rocketImageSrc, onComplete }: Props) {
   const divRef = useRef<HTMLDivElement>(null)
   const completeRef = useRef(onComplete)
   completeRef.current = onComplete
+  // The stage resizes when the desktop frame kicks in; rebuild the scene then so it lays out at the real size.
+  const isDesktop = useIsDesktop()
 
   useEffect(() => {
     const div = divRef.current
@@ -42,7 +46,7 @@ export function ScrapSequenceCanvas({ rocketImageSrc, onComplete }: Props) {
           canvas,
           width: cw,
           height: ch,
-          background: 0xeef3f8, // --ln-bp-bg (KES-267) — see scrapScene.ts's C palette
+          background: 0x050b16, // --ln-void mirror for the Pixi renderer
           antialias: false,
           autoDensity: true,
           resolution: capDpr(),
@@ -73,12 +77,24 @@ export function ScrapSequenceCanvas({ rocketImageSrc, onComplete }: Props) {
         canvas.remove()
       }
     }
-  }, [rocketImageSrc])
+  }, [rocketImageSrc, isDesktop])
 
   return (
-    <div
-      ref={divRef}
-      style={{ position: 'absolute', inset: 0, background: '#eef3f8', overflow: 'hidden', zIndex: 100 }}
+    <SequenceDesktopFrame
+      background="var(--ln-void)"
+      stageAspect="4 / 3"
+      stageMaxWidth={720}
+      leftTitle="RECOVERY"
+      leftRows={[
+        { label: 'PROCEDURE', value: 'VEHICLE TEARDOWN' },
+        { label: 'HULL', value: 'SINGLE-USE' },
+      ]}
+      rightTitle="TEARDOWN STATUS"
+      rightRows={[
+        { label: 'SEQUENCE', value: 'AUTOMATED' },
+        { label: 'RESULT', value: 'HULL RETIRED' },
+      ]}
+      renderStage={style => <div ref={divRef} data-testid="scrap-sequence-stage" style={{ background: 'var(--ln-void)', ...style }} />}
     >
       {/* Player-facing skip, not dev-only (KES-316) — this overlay auto-plays
           and blocks the ledger reveal on every early-onboarding debrief with
@@ -96,6 +112,6 @@ export function ScrapSequenceCanvas({ rocketImageSrc, onComplete }: Props) {
       >
         Skip ▸
       </button>
-    </div>
+    </SequenceDesktopFrame>
   )
 }

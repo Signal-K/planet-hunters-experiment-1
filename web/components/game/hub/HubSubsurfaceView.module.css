@@ -415,6 +415,13 @@
 .roomCard:hover {
   background: color-mix(in srgb, var(--ln-panel-2) 94%, transparent);
 }
+.focusButton {
+  width: 100%; min-height: 48px; margin-top: 8px; padding: 0 12px;
+  border: 1px solid var(--ln-cyan); border-radius: 8px;
+  background: transparent; color: var(--ln-cyan); cursor: pointer;
+  font: 800 9px var(--ln-font-display); letter-spacing: .12em;
+}
+.focusButton:focus-visible { outline: 2px solid var(--ln-cyan); outline-offset: 2px; }
 
 .roomCard:focus-visible,
 .backButton:focus-visible {
@@ -1111,9 +1118,11 @@
      scrolling on common phone heights in the first place. */
   place-items: safe center;
   overflow: auto;
-  border: 1px dashed var(--ln-cyan-border);
+  border: 4px solid color-mix(in srgb, var(--hub-outline) 72%, transparent);
   border-radius: var(--ln-r-lg);
-  background: color-mix(in srgb, var(--ln-panel) 88%, transparent);
+  /* Keep the geology visible: this is an instrument attached to the
+     excavation scene, not the dark-grey overlay the old prompt painted. */
+  background: transparent;
   text-align: center;
 }
 

@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback, useRef } from 'react'
+import { captureGameEvent } from '@/lib/posthog'
 
 type PushState = 'unsupported' | 'denied' | 'granted' | 'default'
 
@@ -31,6 +32,16 @@ export function usePushNotifications(userId?: string) {
       setState('unsupported')
       return
     }
+    // iOS only delivers web push to an installed (Add to Home Screen) app; in a
+    // plain Safari tab the prompt could never work, so hide it (SSL-322).
+    const isIos = /iPad|iPhone|iPod/.test(navigator.userAgent)
+      || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)
+    const standalone = (navigator as Navigator & { standalone?: boolean }).standalone === true
+      || window.matchMedia('(display-mode: standalone)').matches
+    if (isIos && !standalone) {
+      setState('unsupported')
+      return
+    }
     setState(Notification.permission as PushState)
     navigator.serviceWorker.ready.then(reg => { registrationRef.current = reg })
   }, [])
@@ -52,7 +63,19 @@ export function usePushNotifications(userId?: string) {
         body: JSON.stringify({ subscription: sub.toJSON(), userId }),
       })
       setState('granted')
-    } catch {
+    } catch (err) {
+      // Caught rather than thrown so the button just quietly reverts to the
+      // pre-click permission state — from the player's side this is "I
+      // tapped Enable notifications and nothing happened", with no
+      // $exception ever recorded. Skip the ordinary "player said no"
+      // outcome and only flag it when the browser actually granted
+      // permission but the subscribe/registration call itself failed.
+      if (Notification.permission === 'granted') {
+        captureGameEvent('sync_retry_failed', {
+          sync_kind: 'push_subscribe',
+          error: err instanceof Error ? err.message : String(err),
+        })
+      }
       setState(Notification.permission as PushState)
     } finally {
       setLoading(false)

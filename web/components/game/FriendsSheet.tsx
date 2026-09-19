@@ -13,7 +13,7 @@ import { generateDefaultUsername, isValidUsername } from '@/lib/friends/username
 import {
   FriendsApiError,
   friendGiftInbox,
-  listFriendDirectory,
+  isSearchableCallsign,
   listFriends,
   removeFriendship,
   respondToFriendRequest,
@@ -29,6 +29,8 @@ import {
   type FriendsListResponse,
   type FriendBaseSnapshot,
 } from '@/lib/friends/client'
+import { CommunityApiError, visitFriendWorld, type FriendWorldSnapshot } from '@/lib/community/client'
+import { TARGETS, LIFE_STAGE_LABELS, lifeStageForTarget } from '@/lib/data'
 
 interface FriendsSheetProps {
   onClose: () => void
@@ -94,10 +96,11 @@ function SmallButton({
 }
 
 function FriendRow({
-  entry, onViewBase, onSendGift, onRemove, sendingGiftKind, removable,
+  entry, onViewBase, onVisitWorld, onSendGift, onRemove, sendingGiftKind, removable,
 }: {
   entry: FriendEntry
   onViewBase?: () => void
+  onVisitWorld?: () => void
   onSendGift?: (kind: FriendGiftKind) => void
   onRemove: () => void
   sendingGiftKind?: FriendGiftKind | null
@@ -115,6 +118,7 @@ function FriendRow({
           {entry.username}
         </div>
         {onViewBase && <SmallButton label="View Base" onClick={onViewBase} />}
+        {onVisitWorld && <SmallButton label="Visit Worlds" onClick={onVisitWorld} />}
         {onSendGift && !pickingGift && (
           <SmallButton
             label={entry.giftSentToday ? 'Sent Today' : 'Send Gift'}
@@ -148,10 +152,12 @@ export default function FriendsSheet({ onClose }: FriendsSheetProps) {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [query, setQuery] = useState('')
+  const [searched, setSearched] = useState(false)
   const [results, setResults] = useState<FriendPublicUser[]>([])
   const [sendingGiftFor, setSendingGiftFor] = useState<{ id: string; kind: FriendGiftKind } | null>(null)
   const [claimingId, setClaimingId] = useState<string | null>(null)
   const [baseView, setBaseView] = useState<{ id: string; snapshot: FriendBaseSnapshot } | null>(null)
+  const [worldView, setWorldView] = useState<FriendWorldSnapshot | null>(null)
   const [usernameDraft, setUsernameDraft] = useState('')
   const [editingUsername, setEditingUsername] = useState(false)
   const [usernameError, setUsernameError] = useState<string | null>(null)
@@ -177,9 +183,8 @@ export default function FriendsSheet({ onClose }: FriendsSheetProps) {
         }
       }
       setData(list)
-      const [inboxRes, directoryRes] = await Promise.all([friendGiftInbox(), listFriendDirectory()])
+      const inboxRes = await friendGiftInbox()
       setInbox(inboxRes.gifts)
-      setResults(directoryRes.results)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load friends')
     } finally {
@@ -190,17 +195,19 @@ export default function FriendsSheet({ onClose }: FriendsSheetProps) {
   useEffect(() => { void load() }, [load])
 
   async function handleSearch() {
-    if (query.trim().length < 2) {
-      const directory = await listFriendDirectory()
-      setResults(directory.results)
+    const q = query.trim()
+    if (!isSearchableCallsign(q)) {
+      setResults([])
+      setSearched(false)
       return
     }
     try {
-      const res = await searchFriendCandidates(query.trim())
+      const res = await searchFriendCandidates(q)
       setResults(res.results)
     } catch {
       setResults([])
     }
+    setSearched(true)
   }
 
   async function handleSendRequest(username: string) {
@@ -238,6 +245,15 @@ export default function FriendsSheet({ onClose }: FriendsSheetProps) {
       setBaseView({ id: friendId, snapshot: res.base })
     } catch (err) {
       game.addToast(err instanceof FriendsApiError ? err.message : 'Could not load base', 'warn')
+    }
+  }
+
+  async function handleVisitWorld(friendId: string) {
+    try {
+      const res = await visitFriendWorld(friendId)
+      setWorldView(res.world)
+    } catch (err) {
+      game.addToast(err instanceof CommunityApiError ? err.message : 'Could not load their worlds', 'warn')
     }
   }
 
@@ -374,7 +390,13 @@ export default function FriendsSheet({ onClose }: FriendsSheetProps) {
         </div>
       )}
 
-      {baseView ? (
+      {worldView ? (
+        <div data-testid="friend-world-view">
+          <SmallButton label="← Back" onClick={() => setWorldView(null)} />
+          <SectionLabel>{worldView.username}'s Worlds · Read-only visit</SectionLabel>
+          <FriendWorldSummary world={worldView} />
+        </div>
+      ) : baseView ? (
         <div>
           <SmallButton label="← Back" onClick={() => setBaseView(null)} />
           <SectionLabel>{baseView.snapshot.username}'s Base</SectionLabel>
@@ -430,6 +452,7 @@ export default function FriendsSheet({ onClose }: FriendsSheetProps) {
                   entry={f}
                   removable
                   onViewBase={() => handleViewBase(f.id)}
+                  onVisitWorld={() => handleVisitWorld(f.id)}
                   onSendGift={kind => handleSendGift(f.id, kind)}
                   sendingGiftKind={sendingGiftFor?.id === f.id ? sendingGiftFor.kind : null}
                   onRemove={() => handleRemove(f.friendshipId)}
@@ -475,13 +498,13 @@ export default function FriendsSheet({ onClose }: FriendsSheetProps) {
           {!loading && !error && tab === 'find' && (
             <>
               <SectionLabel>Player Directory</SectionLabel>
-              <p className={styles.directoryCopy}>Every provisioned crew is listed here. New accounts appear under a temporary callsign until they choose one.</p>
+              <p className={styles.directoryCopy}>Crews are not listed publicly. Enter a crew's exact callsign to find them and send a request.</p>
               <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
                 <input
                   value={query}
                   onChange={e => setQuery(e.target.value)}
                   onKeyDown={e => { if (e.key === 'Enter') void handleSearch() }}
-                  placeholder="Filter crews by callsign"
+                  placeholder="Exact callsign"
                   style={{
                     flex: 1, fontFamily: 'var(--ln-font-body)', fontSize: 13, padding: '8px 10px',
                     borderRadius: 6, border: '1px solid var(--ln-hairline)', background: 'var(--ln-surface-2)',
@@ -500,8 +523,8 @@ export default function FriendsSheet({ onClose }: FriendsSheetProps) {
                   <SmallButton label="Add" onClick={() => handleSendRequest(u.username)} />
                 </div>
               ))}
-              {results.length === 0 && (
-                <div className={styles.emptyDirectory}>No crews match that callsign.</div>
+              {searched && results.length === 0 && (
+                <div className={styles.emptyDirectory}>No crew found with that exact callsign.</div>
               )}
             </>
           )}
@@ -512,6 +535,55 @@ export default function FriendsSheet({ onClose }: FriendsSheetProps) {
       </div>
       </ScenePanel>
     </PageSurface>
+  )
+}
+
+/**
+ * A friend's worlds as a read-only summary (SSL-320): per body, what they
+ * built, what they claimed and whether they seeded life. Visitors can only
+ * look; there is no write path from this view by construction.
+ */
+function FriendWorldSummary({ world }: { world: FriendWorldSnapshot }) {
+  const now = Date.now()
+  const bodyIds = new Set<string>([
+    ...Object.keys(world.fieldStructures ?? {}),
+    ...(world.territoryClaims ?? []).map(c => c.targetId),
+    ...Object.keys(world.biosphereSeeds ?? {}),
+  ])
+  const discovered = Object.values(world.discoveredExoplanetTargets ?? {})
+  if (bodyIds.size === 0 && discovered.length === 0) {
+    return (
+      <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 13, color: 'var(--ln-text-muted)' }}>
+        No field builds, claims or discoveries yet.
+      </div>
+    )
+  }
+  return (
+    <div style={{ display: 'grid', gap: 12 }}>
+      {[...bodyIds].map(bodyId => {
+        const target = TARGETS.find(t => t.id === bodyId)
+        const structures = world.fieldStructures?.[bodyId] ?? []
+        const claims = (world.territoryClaims ?? []).filter(c => c.targetId === bodyId)
+        const seed = world.biosphereSeeds?.[bodyId]
+        const stage = target ? LIFE_STAGE_LABELS[lifeStageForTarget(target, seed, now)] : seed ? 'Seeded' : 'Sterile'
+        const counts = structures.reduce<Record<string, number>>((acc, s) => { acc[s.type] = (acc[s.type] ?? 0) + 1; return acc }, {})
+        return (
+          <div key={bodyId} data-testid={`friend-world-${bodyId}`} style={{ display: 'grid', gap: 1, background: 'var(--ln-divider)', borderRadius: 10, overflow: 'hidden' }}>
+            <StatRow label={target?.name ?? bodyId} value={`${structures.length} structures`} />
+            <StatRow label="Divisions claimed" value={String(claims.length)} />
+            <StatRow label="Life stage" value={stage} />
+            {Object.keys(counts).length > 0 && (
+              <StatRow label="Built" value={Object.entries(counts).map(([type, n]) => `${n} ${type.replace(/-/g, ' ')}`).join(', ')} />
+            )}
+          </div>
+        )
+      })}
+      {discovered.length > 0 && (
+        <div style={{ display: 'grid', gap: 1, background: 'var(--ln-divider)', borderRadius: 10, overflow: 'hidden' }}>
+          {discovered.map(t => <StatRow key={t.id} label="Discovered" value={t.name} />)}
+        </div>
+      )}
+    </div>
   )
 }
 

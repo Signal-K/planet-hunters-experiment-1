@@ -135,6 +135,19 @@
   padding: 9px;
   border: 1px solid var(--ln-hairline);
   background: color-mix(in srgb, var(--ln-panel) 86%, transparent);
+  width: 100%;
+  min-height: 44px;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color var(--ln-d-quick) var(--ln-ease-out);
+}
+
+.branchCard:hover,
+.branchCard:focus-visible,
+.branchCardActive {
+  border-color: var(--ln-cyan-border);
 }
 
 .branchMark,
@@ -679,5 +692,141 @@
 
   .panelTelemetry {
     justify-content: flex-start;
+  }
+}
+
+/* Compact landscape is an operations layout, not a compressed portrait page.
+   Keep the branch map, selected-node inspector, and its unlock control in one
+   bounded stage so the primary action never falls below a screen scroll. */
+@media (orientation: landscape) and (max-height: 520px) {
+  .content {
+    position: absolute;
+    inset: 68px 0 0;
+    gap: 8px;
+    overflow: hidden;
+    padding: 8px 12px;
+  }
+
+  .hero,
+  .firstsPanel {
+    display: none;
+  }
+
+  .layout {
+    grid-template-columns: 128px minmax(0, 1fr) 220px;
+    gap: 8px;
+    flex: 1;
+    height: 100%;
+    min-height: 0;
+  }
+
+  .branchRail {
+    gap: 4px;
+    overflow: hidden;
+  }
+
+  .branchRail > .sectionLabel,
+  .branchLegend,
+  .branchCopy small {
+    display: none;
+  }
+
+  .branchCard {
+    grid-template-columns: 26px minmax(0, 1fr) auto;
+    gap: 5px;
+    padding: 5px;
+  }
+
+  .branchMark {
+    width: 26px;
+    height: 26px;
+  }
+
+  .branchCopy strong {
+    font-size: 8px;
+  }
+
+  .treePanel,
+  .inspectorPanel,
+  .licensePanel {
+    padding: 8px;
+  }
+
+  .panelHeader h3,
+  .inspectorPanel h3 {
+    font-size: 13px;
+  }
+
+  .treeCanvas {
+    margin-top: 6px;
+    padding-top: 6px;
+  }
+
+  .treeLines {
+    top: 28px;
+    height: 36px;
+  }
+
+  .nodeGrid {
+    gap: 4px;
+  }
+
+  .nodeCard {
+    padding: 4px;
+  }
+
+  .nodeDescription {
+    display: none;
+  }
+
+  .nodeFooter {
+    align-items: center;
+  }
+
+  .nodeAction,
+  .installButton,
+  .gradeButton {
+    min-height: 44px;
+    padding: 8px;
+  }
+
+  .installButton,
+  .gradeButton {
+    margin-top: 8px;
+  }
+
+  .inspectorPanel h3 {
+    margin-top: 8px;
+  }
+
+  .inspectorPanel p {
+    display: none;
+  }
+
+  .specRow {
+    padding: 5px 0;
+  }
+
+  .licensePanel {
+    padding: 8px;
+  }
+
+  .gradeTrack {
+    margin-top: 8px;
+  }
+
+  .inspector {
+    grid-column: auto;
+    display: flex;
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  .inspector > .sectionLabel {
+    display: none;
+  }
+
+  .bottomRail {
+    display: none;
   }
 }

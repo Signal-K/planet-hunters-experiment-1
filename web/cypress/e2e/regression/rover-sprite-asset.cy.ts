@@ -53,3 +53,34 @@ describe('Sprint 13 rover visual polish (KES-166)', () => {
     cy.get('[data-testid="rover-mining-screen"] canvas[aria-label]', { timeout: 10000 }).should('be.visible')
   })
 })
+
+// SSL-27: these are real compact landscape viewports, rather than portrait
+// dimensions labelled as landscape. The deploy handoff must not compete with
+// the cargo HUD, and both primary actions need an in-viewport 44px target.
+const COMPACT_LANDSCAPE_VIEWPORTS = [
+  { key: '844x390', width: 844, height: 390 },
+  { key: '926x428', width: 926, height: 428 },
+] as const
+
+function expectTappableInViewport(selector: string) {
+  cy.get(selector, { timeout: 10000 }).should('be.visible').then($button => {
+    const rect = $button[0].getBoundingClientRect()
+    expect(rect.width, `${selector} width`).to.be.at.least(44)
+    expect(rect.height, `${selector} height`).to.be.at.least(44)
+    expect(rect.top, `${selector} top edge`).to.be.at.least(0)
+    expect(rect.bottom, `${selector} bottom edge`).to.be.at.most(Cypress.config('viewportHeight'))
+  })
+}
+
+describe('Rover mining compact landscape (SSL-27)', () => {
+  COMPACT_LANDSCAPE_VIEWPORTS.forEach(({ key, width, height }) => {
+    it(`[${key}] keeps deploy and return actions in the viewport`, () => {
+      cy.viewport(width, height)
+      visitRoverMining()
+
+      expectTappableInViewport('[data-testid="deploy-surface-ops-confirm"]')
+      cy.get('[data-testid="deploy-surface-ops-confirm"]').click()
+      expectTappableInViewport('[data-testid="rover-return-to-ship"]')
+    })
+  })
+})

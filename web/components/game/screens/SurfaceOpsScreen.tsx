@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   Boxes,
   Clock3,
@@ -18,8 +18,12 @@ import {
   SETTLEMENT_LAUNCHPAD,
   SURFACE_SITES,
   SURFACE_STORAGE_CAPACITY,
+  TARGETS,
+  lifeStageForTarget,
   type SurfaceSiteDefinition,
+  type SurfaceTarget,
 } from '@/lib/data'
+import type { FieldBuildInput, FieldIdentity } from '@/lib/systems/SandboxSystem'
 import {
   settlementLaunchpadStatus,
   surfaceCargoReady,
@@ -32,7 +36,9 @@ import { formatCountdown, formatCurrency } from '@/lib/format'
 import TopBar from '@/components/ui/TopBar'
 import { GhostBtn, PrimaryBtn } from '@/components/ui/Button'
 import ConstructionTargetCanvas from './ConstructionTargetCanvas'
-import TakeOnMount from '@/components/takeon/TakeOnMount'
+import TakeOnMount, { type TakeOnMountHandle } from '@/components/takeon/TakeOnMount'
+import SandboxFieldControls from '@/components/takeon/SandboxFieldControls'
+import { shareFieldCreation } from '@/lib/community/shareField'
 import styles from './SurfaceOpsScreen.module.css'
 
 type SurfaceView = 'logistics' | 'field'
@@ -48,6 +54,11 @@ interface SurfaceOpsScreenProps {
   onRetry: (siteId: string) => void
   onReconcile: (siteId: string) => void
   onAcknowledge: (siteId: string) => void
+  onFieldBuild: (field: FieldIdentity, structure: FieldBuildInput) => boolean
+  onFieldDemolish: (targetId: string, structureId: string) => void
+  onFieldRefine: (field: FieldIdentity) => void
+  onFabricate: (targetId: string, recipeId: string) => boolean
+  onSeedBiosphere: (target: SurfaceTarget) => boolean
 }
 
 function siteStatusLabel(
@@ -92,15 +103,33 @@ export default function SurfaceOpsScreen({
   onRetry,
   onReconcile,
   onAcknowledge,
+  onFieldBuild,
+  onFieldDemolish,
+  onFieldRefine,
+  onFabricate,
+  onSeedBiosphere,
 }: SurfaceOpsScreenProps) {
   const [selectedSiteId, setSelectedSiteId] = useState(SURFACE_SITES[0].id)
   const [selectedPad, setSelectedPad] = useState<0 | 1 | 2>(0)
   const [view, setView] = useState<SurfaceView>('logistics')
   const [routeSteps, setRouteSteps] = useState(0)
   const [now, setNow] = useState(0)
+  const [fieldNotice, setFieldNotice] = useState<string | null>(null)
+  const takeonHandle = useRef<TakeOnMountHandle | null>(null)
 
   const definition = SURFACE_SITES.find(site => site.id === selectedSiteId)
     ?? SURFACE_SITES[0]
+  const fieldTarget = useMemo<SurfaceTarget | undefined>(
+    () => TARGETS.find(t => t.id === definition.bodyId),
+    [definition.bodyId],
+  )
+  const fieldIdentity = useMemo<FieldIdentity>(
+    () => ({ targetId: definition.bodyId, siteId: definition.id }),
+    [definition.bodyId, definition.id],
+  )
+  const lifeStage = fieldTarget
+    ? lifeStageForTarget(fieldTarget, player.biosphereSeeds?.[fieldTarget.id], now || Date.now())
+    : 'dormant'
   const progress = surfaceSiteProgress(player, definition.id)
   const accessPurchased = !!progress.siteAccessPurchasedAt
   const launchpadStatus = settlementLaunchpadStatus(player, definition.id, now)
@@ -139,11 +168,36 @@ export default function SurfaceOpsScreen({
     }
   }, [definition.id, ferry?.arrivesAt, ferry?.status, now, onReconcile])
 
+  // A placed refinery turns buffered site ore into refined goods once per
+  // interval; the system is a no-op until the interval has elapsed.
+  useEffect(() => {
+    if (view === 'field' && progress.fieldOperation) onFieldRefine(fieldIdentity)
+  }, [fieldIdentity, now, onFieldRefine, progress.fieldOperation, view])
+
   const handleTakeonEvent = useCallback((event: TakeonHostEvent) => {
+    if (event.type === 'built') {
+      const s = event.payload.structure
+      const funded = onFieldBuild(fieldIdentity, { id: s.id, type: s.type, x: s.pos.x, y: s.pos.y, facing: s.facing ?? 0 })
+      if (!funded) {
+        takeonHandle.current?.demolish(s.id)
+        setFieldNotice('Structure removed: it could not be funded from site storage or your stash.')
+      } else {
+        setFieldNotice(null)
+      }
+      return
+    }
+    if (event.type === 'demolished') {
+      onFieldDemolish(fieldIdentity.targetId, event.payload.id)
+      return
+    }
+    if (event.type === 'buildFailed') {
+      setFieldNotice(`Cannot build here: ${event.payload.reason}.`)
+      return
+    }
     if (event.type !== 'mined' || !event.payload.resource) return
     const mineralId = TAKEON_TO_LANDNAM_MINERAL[event.payload.resource]
     if (mineralId) onMined(definition.id, mineralId, event.payload.amount)
-  }, [definition.id, onMined])
+  }, [definition.id, fieldIdentity, onFieldBuild, onFieldDemolish, onMined])
 
   const handleRouteChange = useCallback((steps: number) => {
     setRouteSteps(steps)
@@ -158,7 +212,7 @@ export default function SurfaceOpsScreen({
   return (
     <div className={`theme-deep ln-scene-surface-ops ${styles.screen}`} data-testid="surface-ops-screen" data-view={view}>
       <TopBar
-        eyebrow="SURFACE OPS · SOLO SITE CONTROL"
+        eyebrow="SURFACE OPS · CLIENT TERRITORY"
         title="Surface Operations"
         onBack={onBack}
         solid
@@ -234,12 +288,29 @@ export default function SurfaceOpsScreen({
               <span>FIELD ROUTE</span>
               <strong>{routeSteps > 0 ? `${routeSteps} SAFE STEPS` : 'TAP TERRAIN TO PLAN'}</strong>
             </div>
+            <SandboxFieldControls
+              player={player}
+              handle={takeonHandle}
+              target={fieldTarget}
+              targetId={fieldIdentity.targetId}
+              siteId={definition.id}
+              lifeStage={lifeStage}
+              notice={fieldNotice}
+              onFabricate={recipeId => onFabricate(fieldIdentity.targetId, recipeId)}
+              onSeedBiosphere={fieldTarget ? () => onSeedBiosphere(fieldTarget) : undefined}
+              onShare={snapshot => {
+                void shareFieldCreation(snapshot, definition.name).then(result => setFieldNotice(result.message))
+              }}
+            />
             <TakeOnMount
+              ref={takeonHandle}
               missionId={progress.fieldOperation.id}
               bodyId={progress.fieldOperation.bodyId}
               seed={progress.fieldOperation.seed}
               rover={progress.fieldOperation.rover}
               roverName={progress.fieldOperation.rover.name}
+              target={fieldTarget}
+              lifeStage={lifeStage}
               onEvent={handleTakeonEvent}
               onRouteChange={handleRouteChange}
               className={styles.takeonMount}
@@ -292,15 +363,15 @@ export default function SurfaceOpsScreen({
               <section className={styles.controlPanel} data-testid="site-access-panel">
                 <div className={styles.panelTitle}>
                   <MapPin size={18} />
-                  <span>SITE ACCESS</span>
+                  <span>CLIENT SITE RIGHT</span>
                 </div>
                 <div className={styles.readoutRow}>
-                  <span>ACCESS FEE</span>
+                  <span>DEED PRICE</span>
                   <strong>{formatCurrency(definition.accessFee, { compact: true })}</strong>
                 </div>
                 <div className={styles.readoutRow}>
-                  <span>MODEL</span>
-                  <strong>SOLO · NON-TRANSFERABLE</strong>
+                  <span>GRANT</span>
+                  <strong>BUILD + MINE · PERMANENT</strong>
                 </div>
                 {!accessPurchased ? (
                   <PrimaryBtn
@@ -313,11 +384,11 @@ export default function SurfaceOpsScreen({
                     onClick={() => onPurchaseSiteAccess(definition.id)}
                   >
                     {definition.availability === 'available'
-                      ? `Open Site · ${formatCurrency(definition.accessFee, { compact: true })}`
+                      ? `Acquire Site Right · ${formatCurrency(definition.accessFee, { compact: true })}`
                       : definition.unlockHint}
                   </PrimaryBtn>
                 ) : (
-                  <span className={styles.confirmedLine}>ACCESS PERMIT ACTIVE</span>
+                  <span className={styles.confirmedLine}>CLIENT SITE RIGHT ACTIVE</span>
                 )}
               </section>
 
@@ -328,7 +399,7 @@ export default function SurfaceOpsScreen({
                   <span className={styles.panelState}>{launchpadStatus.toUpperCase()}</span>
                 </div>
                 {!accessPurchased ? (
-                  <p className={styles.emptyCopy}>Open site access before placing infrastructure.</p>
+                  <p className={styles.emptyCopy}>Acquire a build right before placing infrastructure.</p>
                 ) : !progress.launchpad ? (
                   <>
                     <p className={styles.sectionCopy}>

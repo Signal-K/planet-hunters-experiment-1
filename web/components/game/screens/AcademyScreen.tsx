@@ -111,11 +111,11 @@ export default function AcademyScreen(props: AcademyScreenProps) {
           <section className={styles.missionCard}>
             <div className={styles.eyebrow}>PROGRAM TASK · TRAIN THE FIRST ASTRONAUT</div>
             <h2>Establish the Academy</h2>
-            <Step done={affinityReady} title="Earn client trust" body="Reach affinity level 2 with two clients." />
+            <Step done={affinityReady} title="Build client experience" body="Reach client level 2 with two clients." />
             <Step done={!!props.player.academyResearched} title="Research the Academy" body={`${ACADEMY_RESEARCH_XP_COST} Research XP`} />
             <Step done={built} title="Build at Base" body={`${formatCurrency(academy.cost)} · 24 aluminium · 12 silicon · 8 copper`} />
             {!affinityReady ? (
-              <div className={styles.notice}>Client affinity progress: {affinityClients.filter(item => item.level >= 2).length}/2 trusted partners</div>
+              <div className={styles.notice}>Client level progress: {affinityClients.filter(item => item.level >= 2).length}/2 partner programmes</div>
             ) : !props.player.academyResearched ? (
               <PrimaryBtn disabled={(props.player.researchXP ?? 0) < ACADEMY_RESEARCH_XP_COST} onClick={props.onResearch}>Research Academy</PrimaryBtn>
             ) : (
@@ -263,7 +263,7 @@ export default function AcademyScreen(props: AcademyScreenProps) {
                   {props.player.crewModuleResearched && <PrimaryBtn onClick={props.onOpenHangar}>Fit Crew Quarters in Hangar</PrimaryBtn>}
                   {Object.values(props.catalog.clients).filter(client => client.suppliesCrew).map(client => (
                     <article className={styles.actionCard} key={client.id}>
-                      <div><strong>{client.name}</strong><span>Affinity L{clientAffinityLevel(props.player.clientMissions[client.id] ?? 0)} · {props.player.sharedChartsByClient?.[client.id] ?? 0} charts shared</span></div>
+                      <div><strong>{client.name}</strong><span>Client level L{clientAffinityLevel(props.player.clientMissions[client.id] ?? 0)} · {props.player.sharedChartsByClient?.[client.id] ?? 0} charts shared</span></div>
                       <GhostBtn full={false} onClick={() => props.onShareCharts(client.id)}>Share chart</GhostBtn>
                     </article>
                   ))}
