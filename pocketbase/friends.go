@@ -87,12 +87,14 @@ func loadUser(app core.App, id string) (*core.Record, error) {
 func friendsSearchHandler(app core.App) func(e *core.RequestEvent) error {
 	return func(e *core.RequestEvent) error {
 		q := strings.TrimSpace(e.Request.URL.Query().Get("q"))
-		if len(q) < 2 {
+		// SSL-312: exact callsign lookup only. Partial/substring matching (and
+		// matching on record id) would let short queries enumerate accounts.
+		if len(q) < 3 {
 			return e.JSON(http.StatusOK, map[string]any{"results": []any{}})
 		}
 		self := e.Auth.Id
 		records, err := app.FindRecordsByFilter(
-			"users", "(username ~ {:q} || id ~ {:q}) && id != {:self}", "username", 20, 0,
+			"users", "username = {:q} && id != {:self}", "username", 1, 0,
 			dbx.Params{"q": q, "self": self},
 		)
 		if err != nil {
@@ -106,27 +108,12 @@ func friendsSearchHandler(app core.App) func(e *core.RequestEvent) error {
 	}
 }
 
-// friendsDirectoryHandler is intentionally separate from search: discovery is
-// a first-class social action, not a fallback for players who happen to know a
-// username. It exposes only the already-public game username and id.
+// friendsDirectoryHandler no longer lists accounts (SSL-312 privacy fix). The
+// route is kept so older clients get an empty list instead of a 404; players
+// are found by exact callsign via /search, and existing friends via /list.
 func friendsDirectoryHandler(app core.App) func(e *core.RequestEvent) error {
 	return func(e *core.RequestEvent) error {
-		records, err := app.FindRecordsByFilter(
-			"users", "id != {:self}", "username", 500, 0,
-			dbx.Params{"self": e.Auth.Id},
-		)
-		if err != nil {
-			return apis.NewApiError(http.StatusInternalServerError, "directory failed", nil)
-		}
-		results := make([]map[string]any, 0, len(records))
-		for _, r := range records {
-			// Newly provisioned Landnam identities do not have a callsign until
-			// they open Friends. Keep them discoverable with their stable record
-			// id so ghost accounts and cross-player progression can be tested
-			// without requiring every player to visit this sheet first.
-			results = append(results, publicUser(r))
-		}
-		return e.JSON(http.StatusOK, map[string]any{"results": results})
+		return e.JSON(http.StatusOK, map[string]any{"results": []any{}})
 	}
 }
 

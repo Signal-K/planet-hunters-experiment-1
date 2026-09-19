@@ -68,21 +68,15 @@ async function friendsFetch<T>(path: string, init?: RequestInit): Promise<T> {
   return body as T
 }
 
-export function searchFriendCandidates(query: string): Promise<{ results: FriendPublicUser[] }> {
-  return friendsFetch(`/search?q=${encodeURIComponent(query)}`)
+/** Minimum callsign length before a lookup is sent (SSL-312: exact match only, no browsing). */
+export const MIN_CALLSIGN_SEARCH_LENGTH = 3
+
+export function isSearchableCallsign(query: string): boolean {
+  return query.trim().length >= MIN_CALLSIGN_SEARCH_LENGTH
 }
 
-/** A browseable directory so adding a friend never depends on knowing a username. */
-export function listFriendDirectory(): Promise<{ results: FriendPublicUser[] }> {
-  return friendsFetch<{ results: FriendPublicUser[] }>('/directory').catch(err => {
-    // Web and PocketBase can briefly be on different deploy revisions. The
-    // legacy endpoint safely yields no results for an empty query, which keeps
-    // Friends usable while the directory route rolls out.
-    if (err instanceof FriendsApiError && err.status === 404) {
-      return searchFriendCandidates('')
-    }
-    throw err
-  })
+export function searchFriendCandidates(query: string): Promise<{ results: FriendPublicUser[] }> {
+  return friendsFetch(`/search?q=${encodeURIComponent(query)}`)
 }
 
 export function setFriendUsername(username: string): Promise<FriendPublicUser> {

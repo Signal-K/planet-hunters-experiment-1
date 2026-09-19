@@ -13,7 +13,7 @@ import { generateDefaultUsername, isValidUsername } from '@/lib/friends/username
 import {
   FriendsApiError,
   friendGiftInbox,
-  listFriendDirectory,
+  isSearchableCallsign,
   listFriends,
   removeFriendship,
   respondToFriendRequest,
@@ -152,6 +152,7 @@ export default function FriendsSheet({ onClose }: FriendsSheetProps) {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [query, setQuery] = useState('')
+  const [searched, setSearched] = useState(false)
   const [results, setResults] = useState<FriendPublicUser[]>([])
   const [sendingGiftFor, setSendingGiftFor] = useState<{ id: string; kind: FriendGiftKind } | null>(null)
   const [claimingId, setClaimingId] = useState<string | null>(null)
@@ -182,9 +183,8 @@ export default function FriendsSheet({ onClose }: FriendsSheetProps) {
         }
       }
       setData(list)
-      const [inboxRes, directoryRes] = await Promise.all([friendGiftInbox(), listFriendDirectory()])
+      const inboxRes = await friendGiftInbox()
       setInbox(inboxRes.gifts)
-      setResults(directoryRes.results)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load friends')
     } finally {
@@ -195,17 +195,19 @@ export default function FriendsSheet({ onClose }: FriendsSheetProps) {
   useEffect(() => { void load() }, [load])
 
   async function handleSearch() {
-    if (query.trim().length < 2) {
-      const directory = await listFriendDirectory()
-      setResults(directory.results)
+    const q = query.trim()
+    if (!isSearchableCallsign(q)) {
+      setResults([])
+      setSearched(false)
       return
     }
     try {
-      const res = await searchFriendCandidates(query.trim())
+      const res = await searchFriendCandidates(q)
       setResults(res.results)
     } catch {
       setResults([])
     }
+    setSearched(true)
   }
 
   async function handleSendRequest(username: string) {
@@ -496,13 +498,13 @@ export default function FriendsSheet({ onClose }: FriendsSheetProps) {
           {!loading && !error && tab === 'find' && (
             <>
               <SectionLabel>Player Directory</SectionLabel>
-              <p className={styles.directoryCopy}>Every provisioned crew is listed here. New accounts appear under a temporary callsign until they choose one.</p>
+              <p className={styles.directoryCopy}>Crews are not listed publicly. Enter a crew's exact callsign to find them and send a request.</p>
               <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
                 <input
                   value={query}
                   onChange={e => setQuery(e.target.value)}
                   onKeyDown={e => { if (e.key === 'Enter') void handleSearch() }}
-                  placeholder="Filter crews by callsign"
+                  placeholder="Exact callsign"
                   style={{
                     flex: 1, fontFamily: 'var(--ln-font-body)', fontSize: 13, padding: '8px 10px',
                     borderRadius: 6, border: '1px solid var(--ln-hairline)', background: 'var(--ln-surface-2)',
@@ -521,8 +523,8 @@ export default function FriendsSheet({ onClose }: FriendsSheetProps) {
                   <SmallButton label="Add" onClick={() => handleSendRequest(u.username)} />
                 </div>
               ))}
-              {results.length === 0 && (
-                <div className={styles.emptyDirectory}>No crews match that callsign.</div>
+              {searched && results.length === 0 && (
+                <div className={styles.emptyDirectory}>No crew found with that exact callsign.</div>
               )}
             </>
           )}
