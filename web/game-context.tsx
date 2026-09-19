@@ -111,13 +111,13 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
   const ui      = useUIActions(setState)
   const priorTrailScreen = useRef<Screen | null>(null)
 
-  // Domain actions own their state changes, so record every completed screen
-  // transition centrally. This includes Mission → Target → Rocket and avoids
-  // every screen inventing a separate, usually Hub-only, return destination.
+  // Domain actions (and URL sync) change `state.screen` without `go()`.
+  // Keep the logical-back host in sync with wherever the player actually is.
   useEffect(() => {
     if (!hydrated) return
     if (priorTrailScreen.current === null) {
       priorTrailScreen.current = state.screen
+      ui.recordScreenTransition(state.screen, state.screen)
       return
     }
     ui.recordScreenTransition(priorTrailScreen.current, state.screen)
