@@ -20,6 +20,8 @@ import AuthGateSheet from '@/components/game/AuthGateSheet'
 import SettingsSheet from '@/components/game/SettingsSheet'
 import FriendsButton from '@/components/game/FriendsButton'
 import FriendsSheet from '@/components/game/FriendsSheet'
+import CommunityButton from '@/components/game/CommunityButton'
+import CommunityHubSheet from '@/components/game/CommunityHubSheet'
 import TerritoryClaimPopup from '@/components/game/TerritoryClaimPopup'
 import { UI_ZONES } from '@/lib/ui-zones'
 import { isSurveySafeScreen } from '@/lib/survey-gating'
@@ -34,6 +36,7 @@ function GameChrome({ children }: { children: ReactNode }) {
   const returnScheduledKey = useRef<string | null>(null)
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [friendsOpen, setFriendsOpen] = useState(false)
+  const [communityOpen, setCommunityOpen] = useState(false)
   const { phase: backdropSkyPhase } = useTimeOfDay()
 
   // Keep third-party analytics script injection out of React hydration. See
@@ -118,9 +121,9 @@ function GameChrome({ children }: { children: ReactNode }) {
     // The Launchpad mission chooser is a modal owned by the current scene.
     // Hide the coach while it is open so onboarding copy never sits over, or
     // points back at, the control the player is already using.
-    if (settingsOpen || friendsOpen || game.popup || game.authGateOpen || (currentScreen === 'launchpad' && game.launchpadMissionMenuOpen)) return null
+    if (settingsOpen || friendsOpen || communityOpen || game.popup || game.authGateOpen || (currentScreen === 'launchpad' && game.launchpadMissionMenuOpen)) return null
     return routeCoach
-  }, [coachSteps, currentScreen, friendsOpen, game.authGateOpen, game.doneSteps, game.launchpadMissionMenuOpen, game.popup, game.subsurfaceView, settingsOpen])
+  }, [coachSteps, communityOpen, currentScreen, friendsOpen, game.authGateOpen, game.doneSteps, game.launchpadMissionMenuOpen, game.popup, game.subsurfaceView, settingsOpen])
 
   const coachIndex = coach ? coachSteps.findIndex(step => step.id === coach.id) : -1
   const hasCoach = !!coach
@@ -213,7 +216,10 @@ function GameChrome({ children }: { children: ReactNode }) {
             legacy GameApp.tsx shell isn't what serves /game/hub, so KES-83's
             corner button needs its own copy here too. Hub only. */}
         {currentScreen === 'hub' && !game.subsurfaceView && !game.authGateOpen && (
-          <FriendsButton onClick={() => setFriendsOpen(true)} />
+          <>
+            <FriendsButton onClick={() => setFriendsOpen(true)} />
+            <CommunityButton onClick={() => setCommunityOpen(true)} />
+          </>
         )}
 
         {/* The route page remains mounted below as a URL/state synchronizer,
@@ -286,6 +292,7 @@ function GameChrome({ children }: { children: ReactNode }) {
 
       {settingsOpen && <SettingsSheet onClose={() => setSettingsOpen(false)} />}
       {friendsOpen && <FriendsSheet onClose={() => setFriendsOpen(false)} />}
+      {communityOpen && <CommunityHubSheet onClose={() => setCommunityOpen(false)} />}
     </main>
   )
 }

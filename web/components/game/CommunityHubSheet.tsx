@@ -62,10 +62,11 @@ function SnapshotChips({ post }: { post: SharePost }) {
   if (typeof snap.lifeStage === 'string') chips.push(`life: ${snap.lifeStage}`)
   if (typeof snap.candidateId === 'string') chips.push(snap.candidateId)
   if (typeof snap.divisions === 'number') chips.push(`${snap.divisions} divisions claimed`)
-  if (chips.length === 0) return null
+  const shown = chips.filter((chip, i) => chips.findIndex(c => c.toLowerCase() === chip.toLowerCase()) === i)
+  if (shown.length === 0) return null
   return (
     <div className={styles.snapshotList}>
-      {chips.map(chip => <span key={chip} className={styles.snapshotChip}>{chip}</span>)}
+      {shown.map(chip => <span key={chip} className={styles.snapshotChip}>{chip}</span>)}
     </div>
   )
 }
