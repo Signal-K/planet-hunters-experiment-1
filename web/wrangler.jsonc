@@ -8,7 +8,10 @@
     "directory": ".open-next/assets",
     "binding": "ASSETS"
   },
-  "routes": [{ "pattern": "playlandnam.space", "custom_domain": true }],
+  "routes": [
+    { "pattern": "playlandnam.space", "custom_domain": true },
+    { "pattern": "www.playlandnam.space", "custom_domain": true }
+  ],
   "observability": {
     "enabled": true
   }
