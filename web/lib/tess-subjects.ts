@@ -1,11 +1,8 @@
+import { REVIEWABLE_TESS_SUBJECT_FILTER, TESS_SUBJECT_SORT } from '@/lib/citizen-science/open-anomaly'
 import { pbShared } from '@/lib/pb'
 import { isReviewableTessSubject, toTessCandidate, type TessCandidate } from '@/lib/data'
 
-export const REVIEWABLE_TESS_SUBJECT_FILTER = [
-  'subject_type = "transit"',
-  'gold_label = ""',
-  '(consensus = "" || consensus = "unsure")',
-].join(' && ')
+export { REVIEWABLE_TESS_SUBJECT_FILTER, TESS_SUBJECT_SORT }
 
 export async function fetchReviewableTessCandidates(): Promise<TessCandidate[]> {
   // Let PocketBase make the request even while auth restoration is finishing.
@@ -14,7 +11,10 @@ export async function fetchReviewableTessCandidates(): Promise<TessCandidate[]> 
   // an empty feed and never retry when the token arrived (KES-318).
   const records = await pbShared.collection('subjects').getFullList({
     filter: REVIEWABLE_TESS_SUBJECT_FILTER,
-    sort: '-created',
+    // SSL-10: shared `subjects` does not define `created`/`updated`. Sorting
+    // on either is a hard 400 and the observatory maps that to Live Feed
+    // Unavailable. `id` is stable; dailyTessCandidates already rotates the pool.
+    sort: TESS_SUBJECT_SORT,
     // The observatory screen and the instrument-feed notification poll can
     // legitimately request this same list at the same time. PocketBase's
     // default request-key auto-cancellation makes one consumer abort the

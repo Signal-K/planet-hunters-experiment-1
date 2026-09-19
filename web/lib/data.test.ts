@@ -51,6 +51,7 @@ import {
   getDailyQuestTemplate,
   todayKey,
   dailyTessCandidates,
+  isReviewableAsteroidCandidate,
   isReviewableTessSubject,
   tessCandidateToExoplanetTarget,
   toTessCandidate,
@@ -746,6 +747,12 @@ describe('TESS live subject filtering', () => {
     expect(isReviewableTessSubject({ ...baseSubject, tfopwg_disp: 'FP' })).toBe(false)
   })
 
+  it('does not re-serve TESS rows after consensus or gold_label settles', () => {
+    expect(isReviewableTessSubject({ ...baseSubject, consensus: 'planet' })).toBe(false)
+    expect(isReviewableTessSubject({ ...baseSubject, gold_label: 'not_planet' })).toBe(false)
+    expect(isReviewableTessSubject({ ...baseSubject, consensus: 'unsure' })).toBe(true)
+  })
+
   it('maps live subject records into TESS candidates with lightcurve points', () => {
     const candidate = toTessCandidate(baseSubject)
 
@@ -829,6 +836,24 @@ describe('TESS live subject filtering', () => {
     const longMeasured = tessCandidateToExoplanetTarget(candidate, 300) // now long-period -> gas-giant
     expect(shortMeasured.archetype).toBe('M')
     expect(longMeasured.archetype).toBe('gas-giant')
+  })
+})
+
+describe('NEOCP live candidate filtering', () => {
+  const baseCandidate = {
+    id: 'pb-neo-1',
+    temp_desig: 'XL0918A',
+    resolved: false,
+    consensus: '',
+    gold_label: '',
+  }
+
+  it('does not re-serve settled asteroid rows', () => {
+    expect(isReviewableAsteroidCandidate(baseCandidate)).toBe(true)
+    expect(isReviewableAsteroidCandidate({ ...baseCandidate, consensus: 'unsure' })).toBe(true)
+    expect(isReviewableAsteroidCandidate({ ...baseCandidate, resolved: true })).toBe(false)
+    expect(isReviewableAsteroidCandidate({ ...baseCandidate, consensus: 'likely_real' })).toBe(false)
+    expect(isReviewableAsteroidCandidate({ ...baseCandidate, gold_label: 'likely_artifact' })).toBe(false)
   })
 })
 
