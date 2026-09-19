@@ -22,6 +22,7 @@ import FriendsButton from '@/components/game/FriendsButton'
 import FriendsSheet from '@/components/game/FriendsSheet'
 import CommunityButton from '@/components/game/CommunityButton'
 import CommunityHubSheet from '@/components/game/CommunityHubSheet'
+import SuiteHopRail from '@/components/game/SuiteHopRail'
 import TerritoryClaimPopup from '@/components/game/TerritoryClaimPopup'
 import { UI_ZONES } from '@/lib/ui-zones'
 import { isSurveySafeScreen } from '@/lib/survey-gating'
@@ -220,6 +221,11 @@ function GameChrome({ children }: { children: ReactNode }) {
             <FriendsButton onClick={() => setFriendsOpen(true)} />
             <CommunityButton onClick={() => setCommunityOpen(true)} />
           </>
+        )}
+
+        {/* Suite return rail (SSL-296): hop back to the SSC garden / Spectra. */}
+        {(currentScreen === 'hub' || currentScreen === 'launchpad') && !game.subsurfaceView && !game.authGateOpen && (
+          <SuiteHopRail signedIn={!!game.authUserId} />
         )}
 
         {/* The route page remains mounted below as a URL/state synchronizer,
