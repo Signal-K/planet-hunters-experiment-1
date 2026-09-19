@@ -18,7 +18,7 @@ import { createSiteRightsState } from '@/lib/systems/SiteRightsSystem'
 // where player fields are optional since older saves may be missing new fields.
 export type PartialSave = Omit<Partial<GameState>, 'player'> & { player?: Partial<Player> }
 
-const VALID_SCREENS: Screen[] = ['intro', 'build', 'hub', 'missions', 'galaxy', 'targets', 'fab', 'transit', 'landing', 'mining', 'delivery', 'debrief', 'refinery', 'market', 'hangar', 'rocket-buy', 'skills', 'rover-mining', 'launchpad', 'surface-ops', 'academy', 'asteroid-discovery', 'mission-history', 'narrative-ledger']
+const VALID_SCREENS: Screen[] = ['intro', 'build', 'hub', 'missions', 'galaxy', 'targets', 'fab', 'transit', 'landing', 'mining', 'delivery', 'debrief', 'refinery', 'market', 'hangar', 'rocket-buy', 'skills', 'rover-mining', 'launchpad', 'surface-ops', 'academy', 'asteroid-discovery', 'mission-history', 'narrative-ledger', 'instrument-hub']
 const MISSION_CONTEXT_SCREENS = new Set<Screen>(['targets', 'rocket-buy', 'fab', 'transit', 'mining', 'rover-mining', 'delivery', 'debrief'])
 const TARGET_CONTEXT_SCREENS = new Set<Screen>(['rocket-buy', 'fab', 'transit', 'mining', 'rover-mining', 'delivery', 'debrief'])
 const VALID_LICENSE_GRADES: LicenseGrade[] = ['Grade I', 'Grade II', 'Grade III']
@@ -67,6 +67,7 @@ export const DEFAULT_STATE: GameState = {
     artifactNarrativeSeenAt: null,
     asteroidClassifications: {},
     instrumentDigestNotifiedOn: {},
+    dismissedHubPrompts: {},
     discoveredExoplanetTargets: {},
     subsurfaceExcavated: false,
     subsurfaceBuilt: [],

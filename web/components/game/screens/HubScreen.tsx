@@ -119,6 +119,7 @@ function OrbitalInstrumentNetwork({
         <span className="hub-orbital-network__ring hub-orbital-network__ring--outer" />
         <span className="hub-orbital-network__ring hub-orbital-network__ring--inner" />
         <span className="hub-orbital-network__earth" />
+        {hasWork && <span className="hub-orbital-network__ping" data-testid="hub-orbital-ping" />}
         {transitOnline && <span className="hub-orbital-network__satellite" />}
         {deepSpaceOnline && <span className="hub-orbital-network__telescope" />}
       </span>
@@ -245,6 +246,7 @@ interface HubScreenProps {
   hasCoach?: boolean
   onFocusBuilding: (b: string) => void
   onOpenScene: (s: Screen) => void
+  onDismissPrompt?: (key: string, value: number) => void
   onUpgradeLaunchpad?: () => void
   onExcavateSubsurface?: () => void
   onBuildSubsurfaceRoom?: (roomId: SubsurfaceRoomId) => void
@@ -253,7 +255,7 @@ interface HubScreenProps {
   onSubsurfaceChange?: (v: boolean) => void
 }
 
-export default function HubScreen({ player, rocketVariant = 'explorer', hasCoach, onFocusBuilding, onOpenScene, onUpgradeLaunchpad, onExcavateSubsurface, onBuildSubsurfaceRoom, onFocusResources, subsurface = false, onSubsurfaceChange }: HubScreenProps) {
+export default function HubScreen({ player, rocketVariant = 'explorer', hasCoach, onFocusBuilding, onOpenScene, onDismissPrompt, onUpgradeLaunchpad, onExcavateSubsurface, onBuildSubsurfaceRoom, onFocusResources, subsurface = false, onSubsurfaceChange }: HubScreenProps) {
   const { phase: skyPhase } = useTimeOfDay()
   const [editMode, setEditMode] = useState(false)
   const [activeBuilding, setActiveBuilding] = useState<string | null>(null)
@@ -525,7 +527,7 @@ export default function HubScreen({ player, rocketVariant = 'explorer', hasCoach
               deepSpaceOnline={!!player.deepSpaceTelescopeBuilt}
               tessQueueCount={tessQueueCount}
               asteroidQueueCount={asteroidQueueCount}
-              onOpen={() => onOpenScene(player.transitSatelliteLaunchedAt ? 'galaxy' : 'asteroid-discovery')}
+              onOpen={() => onOpenScene('instrument-hub')}
             />
           )}
 
@@ -627,6 +629,7 @@ export default function HubScreen({ player, rocketVariant = 'explorer', hasCoach
           <ProgressionCard
             player={player}
             onOpenScene={onOpenScene}
+            onDismissPrompt={onDismissPrompt}
             top={hasCoach ? TUTORIAL_CONTENT_TOP : TUTORIAL_RAIL.TOP_CHROME_HEIGHT + 8 + HUB_HUD_RAIL_CLEARANCE}
           />
         </>

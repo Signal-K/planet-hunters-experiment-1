@@ -319,6 +319,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       launchTransitSatellite: loop.launchTransitSatellite,
       submitTessClassification: loop.submitTessClassification,
       chooseSatelliteTarget: loop.chooseSatelliteTarget,
+      dismissHubPrompt: loop.dismissHubPrompt,
       submitAsteroidClassification: loop.submitAsteroidClassification,
       // Tutorial
       setTutorial: tutorial.setTutorial,

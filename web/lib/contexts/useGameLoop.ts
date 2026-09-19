@@ -19,6 +19,7 @@ import { loanOutstanding, repayBankruptcyLoan } from '@/lib/systems/TreasurySyst
 import { TREASURY_PLAYER_ID } from '@/lib/systems/ProgressionSystem'
 import { enqueueSurvey, isRepeatSurveyEligible, getMilestoneSurveyVariant } from '@/lib/surveys'
 import { captureGameEvent } from '@/lib/posthog'
+import { dismissHubPrompt } from '@/lib/hub-prompts'
 import type { Catalog } from '@/lib/catalog'
 import type { GameState, LicenseGrade, MissionRunSnapshot, StagedRocket } from '@/lib/game-types'
 import type { Mission, Target, TessVerdict, TransitRange, AsteroidVerdict } from '@/lib/data'
@@ -723,6 +724,13 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
     enqueueSurvey('lnm_satellite_clarity', 1200)
   }, [setState])
 
+  const dismissHubPromptAction = useCallback((key: string, value: number) => {
+    setState(s => ({
+      ...s,
+      player: { ...s.player, dismissedHubPrompts: dismissHubPrompt(s.player.dismissedHubPrompts, key, value) },
+    }))
+  }, [setState])
+
   const onDebriefDone = useCallback((rawTotal: number, affinity = 0, consumed: Record<string, number> = {}, disposition?: 'store' | 'sell') => {
     const current = stateRef.current
     if (current.screen !== 'debrief' || !current.missionId || !current.targetId || !current.lastCargo) return
@@ -1050,7 +1058,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
     onPickMission, onPickTarget, onPurchaseRocket, onMoveStagedRocket, onFabricateRocketPart, onAssembleFabricatedRocket, onTransferToLaunchpad, onLaunch, resumeMissionRun,
     onMiningDone, onDeliveryArrived, onDeliveryUnloadComplete, onReturnArrived, onRoverMiningDone, onDebriefDone,
     onLandingTouchdown, onRedockComplete,
-    gainResearchXP, upgradeLicenseGrade, unlockBlueprint, launchTransitSatellite, submitTessClassification, chooseSatelliteTarget,
+    gainResearchXP, upgradeLicenseGrade, unlockBlueprint, launchTransitSatellite, submitTessClassification, chooseSatelliteTarget, dismissHubPrompt: dismissHubPromptAction,
     submitAsteroidClassification,
   }
 }

@@ -2842,6 +2842,21 @@ html[data-coach-target="build-structure-strip"] [data-coach-id="build-structure-
 
 .hub-orbital-network__status--ready { color: var(--hub-chalk); border-color: var(--hub-chalk); }
 .hub-orbital-network__dot { width: 4px; height: 4px; background: currentColor; border-radius: 50%; }
+.hub-orbital-network__ping {
+  position: absolute;
+  inset: 0;
+  border: 2px solid var(--hub-cyan);
+  border-radius: 50%;
+  pointer-events: none;
+  animation: hub-orbital-ping 2s ease-out infinite;
+}
+@keyframes hub-orbital-ping {
+  0% { transform: scale(0.6); opacity: 0.9; }
+  100% { transform: scale(1.6); opacity: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hub-orbital-network__ping { animation: none; opacity: 0.6; }
+}
 
 @media (max-width: 520px) {
   .hub-orbital-network { top: 30%; right: 4%; transform: scale(0.82); transform-origin: top right; }

@@ -4,6 +4,7 @@ import React from 'react'
 import type { Player, Screen } from '@/game-context'
 import { FREE_OPS_START_MISSIONS_DONE } from '@/lib/data/mission-generator'
 import { TUTORIAL_RAIL } from '@/lib/tutorial-layout'
+import { isHubPromptDismissed } from '@/lib/hub-prompts'
 import IconBadge from '@/components/ui/IconBadge'
 import layoutStyles from '@/components/game/hub/HubLayout.module.css'
 
@@ -39,10 +40,12 @@ interface ProgressionCardProps {
   // Cards always open a routed scene. They must not call a Hub building
   // focus handler, even when the destination is the Launchpad.
   onOpenScene: (s: Screen) => void
+  /** Optional cards can be dismissed; they return if `value` grows (SSL-304). */
+  onDismissPrompt?: (key: string, value: number) => void
   top?: number
 }
 
-function CardButton({ accent, icon, eyebrow, title, cta, onClick, testId }: {
+function CardButton({ accent, icon, eyebrow, title, cta, onClick, testId, onDismiss }: {
   accent: string
   icon: React.ReactNode
   eyebrow: string
@@ -50,8 +53,9 @@ function CardButton({ accent, icon, eyebrow, title, cta, onClick, testId }: {
   cta: string
   onClick: () => void
   testId?: string
+  onDismiss?: () => void
 }) {
-  return (
+  const card = (
     <button
       data-testid={testId}
       onClick={onClick}
@@ -90,10 +94,34 @@ function CardButton({ accent, icon, eyebrow, title, cta, onClick, testId }: {
       </span>
     </button>
   )
+  if (!onDismiss) return card
+  return (
+    <div style={{ position: 'relative', width: '100%', minWidth: 0 }}>
+      {card}
+      <button
+        type="button"
+        aria-label={`Dismiss ${eyebrow}`}
+        data-testid={testId ? `${testId}-dismiss` : undefined}
+        onClick={onDismiss}
+        style={{
+          position: 'absolute', top: -8, right: -8, width: 24, height: 24, padding: 0,
+          borderRadius: '50%', cursor: 'pointer', color: 'rgba(234,241,248,0.94)',
+          background: 'var(--hub-panel, #080d18)',
+          border: '1.5px solid var(--hub-outline, rgba(255,255,255,0.55))',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+        }}
+      >
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><path d="M5 5l14 14M19 5L5 19" /></svg>
+      </button>
+    </div>
+  )
 }
 
-export default function ProgressionCard({ player, onOpenScene, top = 132 }: ProgressionCardProps) {
+export default function ProgressionCard({ player, onOpenScene, onDismissPrompt, top = 132 }: ProgressionCardProps) {
   const cards: React.ReactElement[] = []
+  const skillPoints = player.skillPoints ?? 0
+  const dismissible = (key: string, value: number) =>
+    onDismissPrompt ? () => onDismissPrompt(key, value) : undefined
 
   if (player.activeMission) {
     cards.push(
@@ -126,7 +154,7 @@ export default function ProgressionCard({ player, onOpenScene, top = 132 }: Prog
   const inOnboarding = player.missionsDone < FREE_OPS_START_MISSIONS_DONE
 
   if (!player.activeMission && player.missionsDone > 0) {
-    if (!inOnboarding && (player.skillPoints ?? 0) > 0) {
+    if (!inOnboarding && skillPoints > 0 && !isHubPromptDismissed(player.dismissedHubPrompts, 'skills', skillPoints)) {
       cards.push(
         <CardButton
           key="skills"
@@ -137,10 +165,11 @@ export default function ProgressionCard({ player, onOpenScene, top = 132 }: Prog
           title={`${player.skillPoints ?? 0} SP available`}
           cta="Open Skill Tree"
           onClick={() => onOpenScene('skills')}
+          onDismiss={dismissible('skills', skillPoints)}
         />
       )
     }
-    if (!inOnboarding && !player.transitSatelliteLaunchedAt) {
+    if (!inOnboarding && !player.transitSatelliteLaunchedAt && !isHubPromptDismissed(player.dismissedHubPrompts, 'transit-telescope', 1)) {
       cards.push(
         <CardButton
           key="telescope"
@@ -151,6 +180,7 @@ export default function ProgressionCard({ player, onOpenScene, top = 132 }: Prog
           title="Launch a transit telescope"
           cta="Open Launchpad"
           onClick={() => onOpenScene('launchpad')}
+          onDismiss={dismissible('transit-telescope', 1)}
         />
       )
     }

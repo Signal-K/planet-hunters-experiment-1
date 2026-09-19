@@ -17,6 +17,7 @@ import HangarScreen from '@/components/game/screens/HangarScreen'
 import SkillTreeScreen from '@/components/game/screens/SkillTreeScreen'
 import LaunchpadScreen from '@/components/game/screens/LaunchpadScreen'
 import TessDiscoveryScreen from '@/components/game/screens/TessDiscoveryScreen'
+import InstrumentHubScreen from '@/components/game/screens/InstrumentHubScreen'
 import AsteroidDiscoveryScreen from '@/components/game/screens/AsteroidDiscoveryScreen'
 import SurfaceOpsScreen from '@/components/game/screens/SurfaceOpsScreen'
 import AcademyScreen from '@/components/game/screens/AcademyScreen'
@@ -35,6 +36,7 @@ export const VALID_SCREENS = new Set<Screen>([
   'surface-ops',
   'academy',
   'asteroid-discovery',
+  'instrument-hub',
   'mission-history',
   'narrative-ledger',
 ])
@@ -179,6 +181,7 @@ export function ScreenContent({
             if (s === 'launchpad') { game.openLaunchpad(); return }
             game.go(s)
           }}
+          onDismissPrompt={game.dismissHubPrompt}
           onFocusBuilding={building => {
             if (building === 'build') return game.go('build')
             if (building === 'refinery') return game.go('refinery')
@@ -230,6 +233,16 @@ export function ScreenContent({
           onOpenProgram={game.openLaunchpad}
           onSubmit={game.submitTessClassification}
           onChooseTarget={game.chooseSatelliteTarget}
+        />
+      )
+
+    case 'instrument-hub':
+      return (
+        <InstrumentHubScreen
+          player={game.player}
+          onBack={() => game.goBack()}
+          onOpenTess={() => game.go('galaxy')}
+          onOpenAsteroid={() => game.go('asteroid-discovery')}
         />
       )
 

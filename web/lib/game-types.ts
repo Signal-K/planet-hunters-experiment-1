@@ -87,6 +87,7 @@ export type Screen =
   | 'asteroid-discovery'
   | 'mission-history'
   | 'narrative-ledger'
+  | 'instrument-hub'
 
 // Screens that render a physical place in the game world (or a step in a
 // mission run through one) get the full, edge-to-edge viewport on desktop —
@@ -113,6 +114,7 @@ export const LOCATION_SCREENS: ReadonlySet<Screen> = new Set<Screen>([
   'surface-ops',
   'galaxy',
   'asteroid-discovery',
+  'instrument-hub',
 ])
 
 export type LicenseGrade = 'Grade I' | 'Grade II' | 'Grade III'
@@ -380,6 +382,8 @@ export interface Player {
    * the daily downlink from re-notifying after reloads or React remounts.
    */
   instrumentDigestNotifiedOn?: Record<string, string>
+  /** Hub prompt key -> value it showed when dismissed; reappears if the value grows (SSL-304). */
+  dismissedHubPrompts?: Record<string, number>
   discoveredExoplanetTargets?: Record<string, Target>
   // SSL-317 ownership: divisions of a body this player has staked with a
   // Nav Beacon in the sandbox field. Mirrored to the `territory_claims`
@@ -554,6 +558,7 @@ export interface GameActions {
   launchTransitSatellite: () => void
   submitTessClassification: (subjectId: string, verdict: TessVerdict, ranges: TransitRange[], discoveredTarget?: Target) => void
   chooseSatelliteTarget: (subjectId: string) => void
+  dismissHubPrompt: (key: string, value: number) => void
   submitAsteroidClassification: (candidateId: string, verdict: AsteroidVerdict) => void
   onRoverMiningDone: (cargo: Record<string, number>) => void
   onLandingTouchdown: () => void

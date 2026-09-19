@@ -6,5 +6,6 @@ describe('game screen routes', () => {
     expect(VALID_SCREENS.has('hub-subsurface')).toBe(true)
     expect(VALID_SCREENS.has('mission-history')).toBe(true)
     expect(VALID_SCREENS.has('narrative-ledger')).toBe(true)
+    expect(VALID_SCREENS.has('instrument-hub')).toBe(true)
   })
 })
