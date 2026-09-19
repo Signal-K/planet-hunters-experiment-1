@@ -135,6 +135,19 @@
   padding: 9px;
   border: 1px solid var(--ln-hairline);
   background: color-mix(in srgb, var(--ln-panel) 86%, transparent);
+  width: 100%;
+  min-height: 44px;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color var(--ln-d-quick) var(--ln-ease-out);
+}
+
+.branchCard:hover,
+.branchCard:focus-visible,
+.branchCardActive {
+  border-color: var(--ln-cyan-border);
 }
 
 .branchMark,
