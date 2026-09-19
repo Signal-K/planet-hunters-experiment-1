@@ -4,7 +4,7 @@ import './globals.css'
 
 export const metadata: Metadata = {
   title: 'Landnam — Space Mining',
-  description: 'Portrait-canvas space mining browser game',
+  description: 'Space mining browser game — portrait and landscape',
   manifest: '/manifest.webmanifest',
 }
 

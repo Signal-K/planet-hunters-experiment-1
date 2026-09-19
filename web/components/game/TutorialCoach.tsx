@@ -7,6 +7,7 @@ import type { TutorialStep } from '@/lib/data'
 import { reserved_rect } from '@/lib/tutorial-layout'
 import { UI_ZONES } from '@/lib/ui-zones'
 import { useIsDesktop } from '@/lib/hooks/useIsDesktop'
+import { useIsShortViewport } from '@/lib/hooks/useIsShortViewport'
 
 interface TutorialCoachProps {
   stepIndex: number
@@ -19,6 +20,7 @@ interface TutorialCoachProps {
 
 export default function TutorialCoach({ stepIndex, steps, step, total, onManualNext, onSkip }: TutorialCoachProps) {
   const isDesktop = useIsDesktop()
+  const isShort = useIsShortViewport()
 
   if (!step) return null
   const manual = !!step.manual
@@ -26,8 +28,10 @@ export default function TutorialCoach({ stepIndex, steps, step, total, onManualN
   // rectangle started at 76px, which put the coach directly over the Jobs
   // chip and made the rest of the navigation look missing. Leave a small
   // gap below that chrome on the one screen with the extra HUD row.
+  // Compact landscape (SSL-326) cannot spend 160+150px on the rail — park it
+  // under the 48px command cluster so the base stays visible.
   const coachRail = step.screen === 'hub'
-    ? { top: 160, height: 150 }
+    ? (isShort ? { top: 48, height: 112 } : { top: 160, height: 150 })
     : reserved_rect(step.anchor === 'bottom' ? 'bottom' : 'top')
 
   const resolvedBody   = (isDesktop && step.desktopBody   !== undefined) ? step.desktopBody   : step.body

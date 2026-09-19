@@ -621,6 +621,31 @@ button { cursor: pointer; }
   outline-offset: 2px;
 }
 
+/* right:96 clears the shared shell's Menu pill (.game-menu-button occupies
+   12–84px from the edge). Compact landscape drops both pills to the 8px
+   command cluster so they do not sit on the hub HUD. */
+.game-friends-button {
+  position: absolute;
+  top: 56px;
+  right: 96px;
+  z-index: 22;
+  min-height: 34px;
+  border-radius: 999px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 12px;
+  background: var(--ln-panel);
+  border: 1px solid var(--ln-hairline);
+  color: var(--ln-cyan);
+  font-family: var(--ln-font-display);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
 .bottom-tab-bar {
   flex: none;
   height: var(--ln-nav-h);
@@ -822,6 +847,16 @@ button { cursor: pointer; }
    indicators above it so they don't sit on top of the tab labels. Scoped to
    the same breakpoint the mobile bar uses; desktop status indicators keep
    their normal position above the full-width command rail. */
+@media (orientation: landscape) and (max-width: 1023px) and (max-height: 500px) {
+  .game-menu-button,
+  .game-friends-button {
+    top: var(--ln-s-2);
+  }
+  [data-testid="tutorial-coach-block"] {
+    max-height: 112px !important;
+  }
+}
+
 @media (max-width: 1023px) {
   .portrait-canvas:has(.bottom-tab-bar) .backend-status,
   .portrait-canvas:has(.bottom-tab-bar) .sync-status {
@@ -990,6 +1025,36 @@ button { cursor: pointer; }
     overflow-y: auto;
   }
   .auth-gate__scene { display: none; }
+}
+
+/* Compact landscape is a real play path (SSL-326). Keep the mission-control
+   two-column card — do not swap it for a rotate-to-portrait wall — and let
+   the account column scroll so Sign In / Continue stay reachable at 844×390
+   and 926×428. Scene stays as command-deck flavor; form is the scroll owner. */
+@media (orientation: landscape) and (max-height: 500px) {
+  .auth-gate {
+    align-items: stretch;
+    padding: var(--ln-s-2);
+  }
+  .auth-gate__panel {
+    width: 100%;
+    max-height: calc(100dvh - 16px);
+    height: calc(100dvh - 16px);
+    overflow: hidden;
+    grid-template-columns: minmax(0, 0.72fr) minmax(0, 1.28fr);
+  }
+  .auth-gate__scene {
+    min-height: 0;
+  }
+  .auth-gate__content {
+    min-height: 0;
+    overflow-y: auto;
+    padding: var(--ln-s-4);
+  }
+  .auth-gate__heading { font-size: 22px; }
+  .auth-gate__intro { margin-bottom: var(--ln-s-2); }
+  .auth-gate__tabs { margin-bottom: var(--ln-s-2); }
+  .auth-gate__quick { padding-top: var(--ln-s-3); margin-top: var(--ln-s-1); }
 }
 
 .auth-gate__scene {
