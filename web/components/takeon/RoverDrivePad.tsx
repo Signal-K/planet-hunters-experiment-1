@@ -8,7 +8,7 @@
 // The readout answers the two questions playtests kept asking: where is the
 // rover going, and how do I stop it.
 
-import { useCallback, useEffect, useState, type RefObject } from 'react'
+import { useCallback, useEffect, useRef, useState, type RefObject } from 'react'
 import { ArrowDown, ArrowDownLeft, ArrowDownRight, ArrowLeft, ArrowRight, ArrowUp, ArrowUpLeft, ArrowUpRight, Map as MapIcon, X } from 'lucide-react'
 import type { ViewKind } from '@takeon/engine'
 import type { TakeOnBlockedReason, TakeOnFieldOrder, TakeOnMountHandle, TakeOnRoverPose } from './TakeOnMount'
@@ -71,7 +71,9 @@ export function driveStatus(
   if (order) return `DRIVING TO ${order.pos.x}, ${order.pos.y} · ${routeSteps} STEPS LEFT`
   if (routeSteps > 0) return `${routeSteps} SAFE STEPS PLANNED`
   if (rover?.moving) return `MOVING · ${rover.x}, ${rover.y}`
-  if (rover) return `PARKED AT ${rover.x}, ${rover.y} · TAP A TILE OR USE THE PAD`
+  // Short enough to survive the 160px compact-landscape pad without
+  // truncating the coordinates; the help line carries the "tap a tile" hint.
+  if (rover) return `PARKED AT ${rover.x}, ${rover.y}`
   return 'IDLE · TAP A TILE OR USE THE PAD'
 }
 
@@ -90,6 +92,16 @@ const EMPTY: Snapshot = { order: null, routeSteps: 0, view: null, rover: null }
 
 /** How long a refused press stays on the readout before the pose returns. */
 const BLOCKED_MS = 1600
+
+/**
+ * A press the engine refused as `busy` is replayed the moment the rover is
+ * free. Nothing replays while the pose is unknown or a step is still
+ * animating, so the queued press never fires into another refusal.
+ */
+export function replayPending(pending: DriveDir | null, rover: TakeOnRoverPose | null): DriveDir | null {
+  if (pending === null || !rover || rover.moving) return null
+  return pending
+}
 
 function read(handle: RefObject<TakeOnMountHandle | null>): Snapshot {
   const h = handle.current
@@ -113,9 +125,25 @@ export interface RoverDrivePadProps {
 export default function RoverDrivePad({ handle, compact = false, trailing }: RoverDrivePadProps) {
   const [snapshot, setSnapshot] = useState<Snapshot>(EMPTY)
   const [blocked, setBlocked] = useState<TakeOnBlockedReason | null>(null)
+  // The engine refuses a press while the previous step is still animating.
+  // Rather than drop it (which made the pad feel dead when tapped at a
+  // natural rhythm), remember the last direction and replay it as soon as
+  // the rover is free. One slot is enough: a newer press replaces it.
+  const pendingDir = useRef<DriveDir | null>(null)
+  const lastDir = useRef<DriveDir | null>(null)
 
   useEffect(() => {
-    const timer = window.setInterval(() => setSnapshot(read(handle)), POLL_MS)
+    const timer = window.setInterval(() => {
+      const next = read(handle)
+      const dir = replayPending(pendingDir.current, next.rover)
+      if (dir !== null) {
+        pendingDir.current = null
+        handle.current?.move(dir)
+        setSnapshot(read(handle))
+        return
+      }
+      setSnapshot(next)
+    }, POLL_MS)
     return () => window.clearInterval(timer)
   }, [handle])
 
@@ -128,8 +156,12 @@ export default function RoverDrivePad({ handle, compact = false, trailing }: Rov
       if (!handle.current || unsubscribe) return
       unsubscribe = handle.current.onBlocked(reason => {
         // A tap while a step is still animating is not a refusal worth
-        // shouting about: the readout already says MOVING.
-        if (reason === 'busy') return
+        // shouting about: the readout already says MOVING. Queue it instead.
+        if (reason === 'busy') {
+          pendingDir.current = lastDir.current
+          return
+        }
+        pendingDir.current = null
         setBlocked(reason)
         window.clearTimeout(clearTimer)
         clearTimer = window.setTimeout(() => setBlocked(null), BLOCKED_MS)
@@ -143,7 +175,17 @@ export default function RoverDrivePad({ handle, compact = false, trailing }: Rov
   }, [handle])
 
   const move = useCallback((dir: DriveDir) => {
-    if (handle.current?.move(dir)) setBlocked(null)
+    lastDir.current = dir
+    if (handle.current?.move(dir)) {
+      pendingDir.current = null
+      setBlocked(null)
+    }
+    setSnapshot(read(handle))
+  }, [handle])
+
+  const stop = useCallback(() => {
+    pendingDir.current = null
+    handle.current?.cancelOrder()
     setSnapshot(read(handle))
   }, [handle])
 
@@ -183,7 +225,7 @@ export default function RoverDrivePad({ handle, compact = false, trailing }: Rov
           className={`${styles.dir} ${styles.stop}`}
           data-slot="centre"
           disabled={!hasOrder}
-          onClick={() => { handle.current?.cancelOrder(); setSnapshot(read(handle)) }}
+          onClick={stop}
           aria-label="Stop the rover"
           data-testid="rover-drive-stop"
         >

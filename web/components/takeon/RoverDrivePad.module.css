@@ -15,15 +15,20 @@
   min-width: 0;
 }
 
+/* Two lines max: long readouts (DRIVING TO x, y · N STEPS LEFT) wrap on the
+   phone-width pad instead of losing the coordinates to an ellipsis. */
 .status strong {
+  display: -webkit-box;
   overflow: hidden;
   color: var(--ln-cyan);
   font-family: var(--ln-font-display);
   font-size: var(--ln-fs-micro);
   font-weight: 800;
+  line-height: 1.3;
   letter-spacing: var(--ln-tr-label);
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
 }
 
 .status .statusBlocked { color: var(--ln-crit); }

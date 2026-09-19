@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { driveButtons, driveStatus, viewToggleLabel } from './RoverDrivePad'
+import { driveButtons, driveStatus, replayPending, viewToggleLabel } from './RoverDrivePad'
 
 describe('RoverDrivePad', () => {
   it('reads as a compass rose on the flat map and as diagonals in the diorama', () => {
@@ -20,11 +20,19 @@ describe('RoverDrivePad', () => {
 
   it('explains a refused press and otherwise reports the rover pose', () => {
     const parked = { x: 7, y: 3, moving: false, battery: 1 }
-    expect(driveStatus(null, 0, parked)).toBe('PARKED AT 7, 3 · TAP A TILE OR USE THE PAD')
+    expect(driveStatus(null, 0, parked)).toBe('PARKED AT 7, 3')
     expect(driveStatus(null, 0, { ...parked, moving: true })).toBe('MOVING · 7, 3')
     expect(driveStatus(null, 0, parked, 'cliff')).toBe('BLOCKED · TOO STEEP THAT WAY')
     // A blocked reason outranks an order so the player learns why nothing happened.
     expect(driveStatus({ type: 'goto', pos: { x: 1, y: 1 } }, 2, parked, 'edge')).toBe('BLOCKED · EDGE OF THE FIELD')
+  })
+
+  it('replays a press refused as busy only once the rover is free', () => {
+    const parked = { x: 7, y: 3, moving: false, battery: 1 }
+    expect(replayPending(3, { ...parked, moving: true })).toBeNull()
+    expect(replayPending(3, null)).toBeNull()
+    expect(replayPending(null, parked)).toBeNull()
+    expect(replayPending(3, parked)).toBe(3)
   })
 
   it('labels the view toggle with the view it switches to', () => {
