@@ -3,6 +3,15 @@
 import { useEffect, useState } from 'react'
 import { useGame } from '@/game-context'
 import { UI_ZONES } from '@/lib/ui-zones'
+import { getOutbox } from '@/lib/offline/pbOutbox'
+import type { OutboxSnapshot } from '@/lib/offline/outbox'
+
+export function syncLabel(landnamSynced: boolean, outbox: OutboxSnapshot): string | null {
+  if (outbox.flushing && outbox.waiting > 0) return 'UPLOADING…'
+  if (outbox.waiting > 0) return `${outbox.waiting} ${outbox.waiting === 1 ? 'CHANGE' : 'CHANGES'} WAITING`
+  if (outbox.failed > 0 || !landnamSynced) return 'NOT SYNCED'
+  return null
+}
 
 // Persistent indicator for whether this device's guest/account identity has
 // been mirrored onto Landnam's own PocketBase (see landnam_auth.go's
@@ -20,14 +29,22 @@ export default function LandnamSyncStatus() {
   // hydration pass itself always null on both sides; only fine to differ
   // once React is done reconciling.
   const [mounted, setMounted] = useState(false)
+  const [outbox, setOutbox] = useState<OutboxSnapshot>({ waiting: 0, failed: 0, flushing: false })
   useEffect(() => setMounted(true), [])
+  useEffect(() => {
+    const box = getOutbox()
+    const unsubscribe = box.subscribe(setOutbox)
+    const stop = box.start()
+    return () => { unsubscribe(); stop() }
+  }, [])
 
-  if (!mounted || !game.authUserId || game.landnamSynced) return null
+  const label = syncLabel(game.landnamSynced, outbox)
+  if (!mounted || !game.authUserId || !label) return null
 
   return (
-    <div data-ui-zone={UI_ZONES.statusUtility} className="sync-status" title="Progress is saved on this device only until this reconnects">
+    <div data-ui-zone={UI_ZONES.statusUtility} className="sync-status" title="Progress is saved on this device and uploads when this reconnects">
       <span aria-hidden="true" />
-      NOT SYNCED
+      {label}
     </div>
   )
 }

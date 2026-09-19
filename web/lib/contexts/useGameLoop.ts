@@ -26,6 +26,7 @@ import type { Toast } from '@/components/ui/ToastLayer'
 import { applyGainResearchXP, applyUpgradeLicenseGrade, applyUnlockBlueprint } from '@/lib/systems/ProgressionSystem'
 import { pbShared } from '@/lib/pb'
 import { pbLandnam } from '@/lib/pb-landnam'
+import { queueCreate, queueUpdate } from '@/lib/offline/pbOutbox'
 import { justFinishedOnboarding } from '@/lib/game-state'
 
 // 42s/orbit-unit — a ~65% cut from the original 2min/unit pace (KES-262):
@@ -428,7 +429,11 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
     })
     const userId = pbLandnam.authStore.record?.id
     if (userId) {
-      pbLandnam.collection('mission_runs').create({
+      // The id is minted here so the run can be updated straight away, even
+      // while offline; the outbox replays the create, then its updates, in
+      // order once a connection returns (SSL-321). transitStartedAt is unique
+      // per launch, so the state write below only ever lands on its own run.
+      const runId = queueCreate('mission_runs', {
         user: userId,
         mission_id: currentMission.id,
         target_id: current.targetId,
@@ -436,25 +441,11 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
         phase: 'transit',
         cargo: {},
         launched_at: new Date().toISOString(),
-      }).then(record => {
-        // Guard on transitStartedAt, not just mission ID: launching the same
-        // mission again after parking the first run (SSL-92 concurrent-runs
-        // support) produces two in-flight PocketBase creates sharing one
-        // mission ID. Matching by ID alone let whichever create() resolved
-        // last stamp its record ID onto whatever run currently held that
-        // mission ID — including a run this call never belonged to — so two
-        // flights ended up sharing one `mission_runs` record (visible as a
-        // duplicate React key in LaunchpadScreen's mission-runs list, and as
-        // silent cross-writes to the wrong backend record on mining/delivery/
-        // debrief). transitStartedAt is unique per launch and preserved
-        // through park/resume, so this only ever lands on its own run.
-        if (stateRef.current.player.transitStartedAt === launchedTransitStartedAt) {
-          missionRunIdRef.current = record.id
-        }
-        setState(s => (s.player.activeMission?.id === currentMission.id && s.player.transitStartedAt === launchedTransitStartedAt)
-          ? { ...s, player: { ...s.player, missionRunId: record.id } }
-          : s)
-      }).catch(error => console.warn('[GameLoop] mission run create failed', error))
+      })
+      missionRunIdRef.current = runId
+      setState(s => (s.player.activeMission?.id === currentMission.id && s.player.transitStartedAt === launchedTransitStartedAt)
+        ? { ...s, player: { ...s.player, missionRunId: runId } }
+        : s)
     }
     captureGameEvent('rocket_launched', { mission_id: currentMission.id, target_id: current.targetId, is_first_ever: isFirstEver })
     if (isFirstEver) enqueueSurvey('lnm_first_launch', 4000)
@@ -484,9 +475,9 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
     })
     const runId = stateRef.current.player.missionRunId ?? missionRunIdRef.current
     if (runId) {
-      pbLandnam.collection('mission_runs').update(runId, {
+      queueUpdate('mission_runs', runId, {
         status: 'in_progress', phase: hasDelivery ? 'transit' : 'debrief', cargo,
-      }).catch(error => console.warn('[GameLoop] mission run update failed', error))
+      })
     }
     // The transit/debrief screen supplies this status in its own persistent
     // readout. A global toast survives the route change and obscures the next
@@ -498,9 +489,9 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
     setState(s => applyDeliveryArrived(s, startedAt))
     const runId = stateRef.current.player.missionRunId ?? missionRunIdRef.current
     if (runId) {
-      pbLandnam.collection('mission_runs').update(runId, {
+      queueUpdate('mission_runs', runId, {
         status: 'in_progress', phase: 'delivery',
-      }).catch(error => console.warn('[GameLoop] mission run delivery update failed', error))
+      })
     }
     // The dedicated delivery view has the berth and transfer state in its
     // persistent HUD. Keeping another global notification across this route
@@ -519,9 +510,9 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
     })
     const runId = stateRef.current.player.missionRunId ?? missionRunIdRef.current
     if (runId) {
-      pbLandnam.collection('mission_runs').update(runId, {
+      queueUpdate('mission_runs', runId, {
         status: 'in_progress', phase: 'transit', cargo: {},
-      }).catch(error => console.warn('[GameLoop] mission run Earth-return update failed', error))
+      })
     }
     // Transit owns the inbound status. Do not leave a transient toast over
     // the next operation once the transfer screen disappears.
@@ -977,7 +968,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
     // second global confirmation leaks it over the following mission setup.
     const userId = pbShared.authStore.record?.id
     if (userId) {
-      pbLandnam.collection('mission_log').create({
+      queueCreate('mission_log', {
         user: userId,
         mission_id: current.missionId,
         target_id: current.targetId,
@@ -985,14 +976,14 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
         minerals_delivered: effectiveConsumed,
         missions_done_after: newMissionsDone,
         completed_at: new Date().toISOString(),
-      }).catch(() => {})
+      })
     }
     const runId = current.player.missionRunId ?? missionRunIdRef.current
     if (runId) {
-      pbLandnam.collection('mission_runs').update(runId, {
+      queueUpdate('mission_runs', runId, {
         status: 'completed', phase: 'debrief', cargo: current.deliveredCargo ?? current.lastCargo,
         payout_francs: total, completed_at: new Date().toISOString(),
-      }).catch(error => console.warn('[GameLoop] mission run completion update failed', error))
+      })
     }
     missionRunIdRef.current = null
     // Unconditional analytics event — separate from the (now sampled)
