@@ -98,6 +98,13 @@ describe('hub progression cards are clickable after the tutorial', () => {
     cy.contains('Skill Nodes', { timeout: 10_000 }).should('be.visible')
   })
 
+  it('Dismiss hides the skill-point card without opening the tree', () => {
+    cy.get('[data-testid="progression-card-skills"]').should('be.visible')
+    cy.get('[data-testid="progression-card-skills-dismiss"]').click()
+    cy.get('[data-testid="progression-card-skills"]').should('not.exist')
+    cy.contains('Skill Nodes').should('not.exist')
+  })
+
   it('Browse Contracts navigates to the mission board', () => {
     cy.get('[data-testid="progression-card-next-mission"]').should('be.visible').click()
     cy.location('pathname', { timeout: 10_000 }).should('not.eq', '/game/hub')

@@ -15,11 +15,12 @@ import type { Player } from '@/lib/game-types'
 import { UI_ZONES } from '@/lib/ui-zones'
 import { fetchReviewableAsteroidCandidates } from '@/lib/asteroid-subjects'
 import { useIsDesktop } from '@/lib/hooks/useIsDesktop'
-import { instrumentDigestDateKey, unresolvedDeepSpaceInstrumentDigest } from '@/lib/systems/InstrumentFeedSystem'
+import { instrumentDigestDateKey, pickInstrumentInspectCandidate, unresolvedDeepSpaceInstrumentDigest } from '@/lib/systems/InstrumentFeedSystem'
 import AsteroidDiscoveryCoach, { useAsteroidDiscoveryCoach } from '@/components/game/AsteroidDiscoveryCoach'
 
 interface AsteroidDiscoveryScreenProps {
   player: Player
+  inspectSubjectId?: string
   /** Fixed record supplied only by the named visual dev preset. */
   visualCandidate?: AsteroidCandidate
   onBack: () => void
@@ -38,7 +39,7 @@ const VERDICT_ACTIONS: Array<{ id: AsteroidVerdict; label: string; kind: 'amber'
   { id: 'unsure', label: 'Skip', kind: 'ghost' },
 ]
 
-export default function AsteroidDiscoveryScreen({ player, visualCandidate, onBack, onBuildTelescope, onSubmit }: AsteroidDiscoveryScreenProps) {
+export default function AsteroidDiscoveryScreen({ player, inspectSubjectId, visualCandidate, onBack, onBuildTelescope, onSubmit }: AsteroidDiscoveryScreenProps) {
   // Stabilize the fallback so the fetch effect below (keyed on `classifications`)
   // doesn't get a new object identity every render when the field is unset —
   // e.g. preset-loaded dev state, which bypasses normalizeAndRepair()'s
@@ -75,8 +76,8 @@ export default function AsteroidDiscoveryScreen({ player, visualCandidate, onBac
         const todayDate = new Date()
         if (devDayOffset) todayDate.setDate(todayDate.getDate() + devDayOffset)
         const today = instrumentDigestDateKey(todayDate)
-        const nextDaily = unresolvedDeepSpaceInstrumentDigest(liveCandidates, player, today)[0]
-        setCandidate(nextDaily ?? null)
+        const nextDaily = unresolvedDeepSpaceInstrumentDigest(liveCandidates, player, today)
+        setCandidate(pickInstrumentInspectCandidate(nextDaily, inspectSubjectId))
       })
       .catch(error => {
         console.warn('[NEOCP] live candidate fetch failed', error)
@@ -104,7 +105,7 @@ export default function AsteroidDiscoveryScreen({ player, visualCandidate, onBac
     // player is still looking at. A new candidate is only fetched on mount
     // or when the telescope/day actually changes.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [visualCandidate, player.freeOperations, player.deepSpaceTelescopeBuilt, player.deepSpaceTelescopeLevel, devDayOffset])
+  }, [visualCandidate, inspectSubjectId, player.freeOperations, player.deepSpaceTelescopeBuilt, player.deepSpaceTelescopeLevel, devDayOffset])
 
   const isDesktop = useIsDesktop()
   const coach = useAsteroidDiscoveryCoach()
