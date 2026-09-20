@@ -3,9 +3,11 @@
  *
  * Landnam still authenticates through shared PocketBase (not Clerk). The
  * Clerk-style "skip verification on a staging account" behaviour maps here:
- * `@landnam.test` addresses are IANA-reserved (RFC 2606), never a real player,
- * and may be created without an email verification round-trip, then deleted
- * with their game_states after a cycle playthrough.
+ * `@landnam.test` addresses are IANA-reserved (RFC 2606), never a real player.
+ * Do not send `verified: true` on the public users create API — PocketBase
+ * treats that extra field as a values-mismatch validation error. Shared PB
+ * already lets these test accounts sign in without an email challenge; Landnam
+ * marks the exchanged users row verified and exposes purge-playtest.
  */
 export const STAGING_PLAYTEST_EMAIL_SUFFIX = '@landnam.test'
 

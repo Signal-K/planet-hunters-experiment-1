@@ -8,9 +8,10 @@ describe('staging playtest accounts', () => {
     expect(isStagingPlaytestAccount(null)).toBe(false)
   })
 
-  it('marks staging playtest signups verified without an email challenge', () => {
-    const fields = stagingSignupFields('qa@landnam.test')
-    expect(fields.verified).toBe(true)
+  it('does not instruct public signup to send verified (PocketBase rejects that)', () => {
+    // Helper still describes the Clerk-like intent for tests/docs, but the
+    // game create path must not spread these fields onto the shared users API.
+    expect(stagingSignupFields('qa@landnam.test').verified).toBe(true)
     expect(stagingSignupFields('real@example.com')).toEqual({})
   })
 })
