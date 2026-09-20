@@ -17,7 +17,9 @@
   },
   "env": {
     "staging": {
-      "name": "landnam-web-staging"
+      "name": "landnam-web-staging",
+      "workers_dev": true,
+      "routes": []
     }
   }
 }
