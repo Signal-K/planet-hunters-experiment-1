@@ -2,7 +2,7 @@
 
 import React from 'react'
 
-export type SceneAmbient = 'industrial' | 'survey' | 'utility'
+export type SceneAmbient = 'industrial' | 'survey' | 'utility' | 'observatory'
 
 interface ScenePanelProps extends React.HTMLAttributes<HTMLDivElement> {
   /**

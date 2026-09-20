@@ -8,27 +8,33 @@
 .frame {
   position: absolute;
   inset: 72px 16px 16px;
-  display: grid;
-  grid-template-rows: auto 1fr;
-  gap: 16px;
-}
-
-.place {
   display: flex;
   justify-content: flex-end;
   pointer-events: none;
 }
 
 .feed {
-  min-height: 0;
+  width: min(100%, 600px);
+  min-height: min(350px, 52%);
   overflow-y: auto;
   display: flex;
   flex-direction: column;
   gap: 8px;
   padding: 16px;
-  background: color-mix(in srgb, var(--ln-void) 72%, transparent);
-  border: 1px solid var(--ln-hairline);
-  border-radius: 8px;
+  pointer-events: auto;
+  background: color-mix(in srgb, var(--ln-void) 72%, var(--ln-warn));
+  border: 2px solid color-mix(in srgb, var(--ln-warn) 54%, var(--ln-hairline));
+  border-radius: 12px;
+  box-shadow: 10px 12px 0 color-mix(in srgb, var(--ln-void) 54%, transparent);
+}
+
+.feedHeader {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid color-mix(in srgb, var(--ln-warn) 36%, transparent);
 }
 
 .feedEyebrow {
@@ -38,6 +44,24 @@
   letter-spacing: 0.16em;
   text-transform: uppercase;
   color: var(--ln-cyan);
+}
+
+.feedSummary {
+  max-width: 40ch;
+  margin: 6px 0 0;
+  color: var(--ln-text-dim);
+  font-family: var(--ln-font-body);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.queueCount {
+  flex: 0 0 auto;
+  padding: 6px 8px;
+  border: 1px solid var(--ln-ok);
+  color: var(--ln-ok);
+  font: 800 10px/1 var(--ln-font-mono);
+  letter-spacing: .1em;
 }
 
 .empty,
@@ -54,9 +78,9 @@
   gap: 12px;
   align-items: center;
   padding: 12px;
-  border: 1px solid var(--ln-hairline);
-  border-radius: 8px;
-  background: color-mix(in srgb, var(--ln-panel) 78%, transparent);
+  border: 1px solid color-mix(in srgb, var(--ln-text) 22%, transparent);
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--ln-void) 76%, var(--ln-purple-depth));
 }
 
 .signalCopy {
@@ -92,8 +116,8 @@
   min-height: 44px;
   padding: 8px 12px;
   border: 1px solid var(--ln-cyan-border);
-  border-radius: 8px;
-  background: transparent;
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--ln-cyan) 8%, transparent);
   color: var(--ln-cyan);
   font-family: var(--ln-font-display);
   font-size: 11px;
@@ -103,15 +127,24 @@
   cursor: pointer;
 }
 
-@media (min-width: 1024px) {
-  .frame {
-    grid-template-columns: 40% 1fr;
-    grid-template-rows: 1fr;
-    align-items: stretch;
+@media (max-width: 1023px) {
+  .feed {
+    width: 48%;
   }
 
-  .place {
-    align-items: center;
-    justify-content: center;
+  .feedHeader {
+    gap: 8px;
+  }
+
+  .feedSummary,
+  .empty,
+  .loading {
+    font-size: 11px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .frame {
+    align-items: flex-end;
   }
 }

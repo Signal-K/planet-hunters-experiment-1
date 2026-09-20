@@ -1,15 +1,13 @@
 'use client'
 
 import ScenePanel from '@/components/game/ScenePanel'
-import { HubWorldBackground } from '@/components/game/hub/HubWorldBackground'
-import { OrbitalInstrumentNetwork } from '@/components/game/hub/OrbitalInstrumentNetwork'
 import TopBar from '@/components/ui/TopBar'
-import { useTimeOfDay } from '@/lib/hooks/useTimeOfDay'
 import { useInstrumentSignals } from '@/lib/hooks/useInstrumentSignals'
 import { UI_ZONES } from '@/lib/ui-zones'
 import type { Player, Screen } from '@/lib/game-types'
 import type { InstrumentSignal } from '@/lib/systems/InstrumentFeedSystem'
 import styles from './InstrumentHubScreen.module.css'
+import { TessDownlinkObservatoryScene } from './TessDownlinkObservatoryScene'
 
 interface InstrumentHubScreenProps {
   player: Player
@@ -22,30 +20,27 @@ function sourceLabel(kind: InstrumentSignal['kind']): string {
 }
 
 export default function InstrumentHubScreen({ player, onBack, onInspect }: InstrumentHubScreenProps) {
-  const { phase } = useTimeOfDay()
   const { signals, loading } = useInstrumentSignals(player)
   const transitOnline = !!player.transitSatelliteLaunchedAt
   const deepSpaceOnline = !!player.deepSpaceTelescopeBuilt
 
   return (
     <ScenePanel
-      ambient="survey"
+      ambient="observatory"
       className={`game-screen theme-deep ${styles.screen}`}
       data-testid="instrument-hub-screen"
-      scene={<HubWorldBackground phase={phase} />}
+      scene={<TessDownlinkObservatoryScene transitOnline={transitOnline} deepSpaceOnline={deepSpaceOnline} readyCount={signals.length} />}
     >
-      <TopBar eyebrow="BASE / ORBIT" title="Instrument Hub" onBack={onBack} glass />
+      <TopBar eyebrow="ORBITAL OBSERVATORY / DATA LINK" title="Instrument Hub" onBack={onBack} glass />
       <div className={styles.frame} data-ui-zone={UI_ZONES.screenContent}>
-        <div className={styles.place} aria-hidden={false}>
-          <OrbitalInstrumentNetwork
-            transitOnline={transitOnline}
-            deepSpaceOnline={deepSpaceOnline}
-            readyCount={signals.length}
-            ping={signals.length > 0}
-          />
-        </div>
         <section className={styles.feed} aria-label="Instrument signals">
-          <div className={styles.feedEyebrow}>Downlink queue</div>
+          <header className={styles.feedHeader}>
+            <div>
+              <div className={styles.feedEyebrow}>Downlink queue</div>
+              <p className={styles.feedSummary}>Raw cadence packets become reviewable light curves here. Inspect a queued subject to classify the observation.</p>
+            </div>
+            <span className={styles.queueCount}>{signals.length.toString().padStart(2, '0')} READY</span>
+          </header>
           {loading && <p className={styles.loading}>Acquiring instrument downlink.</p>}
           {!loading && signals.length === 0 && (
             <p className={styles.empty} data-testid="instrument-hub-empty">

@@ -100,7 +100,7 @@
      --ln-panel-2 is the next charcoal step up from --ln-panel. */
   --ln-shell:        #0a0a0c;
   --ln-panel:        #1c1c20;
-  --ln-panel-2:      #183149;
+  --ln-panel-2:      #25252a;
   --ln-border:       rgba(255, 255, 255, 0.22);
   --ln-payout:       #d8ff55;
   --ln-play:         #fa49ca;
@@ -170,8 +170,8 @@
    Corner brackets already exist in Panel.tsx's <Corners>; this only adds
    the frosted-glass surface + starfield backdrop. */
 :root {
-  --ln-glass-panel:    rgba(18, 46, 68, 0.92);
-  --ln-glass-panel-2:  rgba(24, 62, 88, 0.96);
+  --ln-glass-panel:    rgba(28, 28, 32, 0.92);
+  --ln-glass-panel-2:  rgba(48, 48, 54, 0.96);
   --ln-glass-border:   rgba(112, 217, 234, 0.48);
   --ln-glass-blur:     blur(8px);
 }
@@ -2777,8 +2777,15 @@ html[data-coach-target="build-structure-strip"] [data-coach-id="build-structure-
 
 .ln-scene-panel--survey {
   background:
-    radial-gradient(160px 100px at 12% 8%, rgba(112, 217, 234, 0.16), transparent 70%),
-    linear-gradient(180deg, #0d2038 0%, #091729 55%, #050d1a 100%);
+    radial-gradient(160px 100px at 12% 8%, color-mix(in srgb, var(--ln-warn) 14%, transparent), transparent 70%),
+    linear-gradient(180deg, color-mix(in srgb, var(--ln-bg) 88%, var(--ln-warn)) 0%, var(--ln-bg) 55%, var(--ln-void) 100%);
+}
+
+.ln-scene-panel--observatory {
+  background:
+    radial-gradient(240px 160px at 78% 14%, color-mix(in srgb, var(--ln-warn) 22%, transparent), transparent 70%),
+    radial-gradient(260px 180px at 20% 86%, color-mix(in srgb, var(--ln-play) 14%, transparent), transparent 74%),
+    linear-gradient(180deg, color-mix(in srgb, var(--ln-void) 72%, var(--ln-purple-depth)) 0%, var(--ln-void) 100%);
 }
 
 .ln-scene-panel--utility {
