@@ -1,13 +1,14 @@
 import type { Metadata, Viewport } from 'next'
 import Script from 'next/script'
+import { PRODUCT_DESCRIPTION, PRODUCT_NAME } from '@/lib/brand'
 import './globals.css'
 
 export const metadata: Metadata = {
-  title: 'Landnam — Space Mining',
-  description: 'Space mining browser game — portrait and landscape',
+  title: PRODUCT_NAME,
+  description: PRODUCT_DESCRIPTION,
   manifest: '/manifest.webmanifest',
   // SSL-322: iOS only honours installed-app chrome via these apple- tags.
-  appleWebApp: { capable: true, title: 'Landnam', statusBarStyle: 'black' },
+  appleWebApp: { capable: true, title: PRODUCT_NAME, statusBarStyle: 'black' },
   formatDetection: { telephone: false },
 }
 

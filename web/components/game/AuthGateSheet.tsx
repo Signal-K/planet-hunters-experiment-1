@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState } from 'react'
+import { PRODUCT_DESCRIPTOR, PRODUCT_WORDMARK } from '@/lib/brand'
 import { ROCKET_ASSETS } from '@/lib/rocket-assets'
 
 interface AuthGateSheetProps {
@@ -63,7 +64,7 @@ export default function AuthGateSheet({ error, onSignIn, onCreateAccount }: Auth
         </div>
 
         <div className="auth-gate__content">
-          <div className="auth-gate__eyebrow">LANDNAM · SPACE MINING</div>
+          <div className="auth-gate__eyebrow">{PRODUCT_WORDMARK} · {PRODUCT_DESCRIPTOR}</div>
           <div className="auth-gate__heading">{mode === 'signin' ? 'Welcome Back' : 'Create Account'}</div>
           {/* SSL-302: the subtitle used to stay on the "resume" line for both
               tabs — a brand-new player on Sign Up has nothing to resume. */}

@@ -48,7 +48,7 @@ describe('Smoke — Landnam', () => {
 
   it('/game page has the expected title', () => {
     cy.visit('/game')
-    cy.title().should('eq', 'Landnam — Space Mining')
+    cy.title().should('eq', 'Landnam: Space Program')
   })
 
   it('backend-health API route responds', () => {
