@@ -69,7 +69,7 @@ export default function CommentsPanel({ recordType, recordId }: CommentsPanelPro
   }
 
   return (
-    <Panel accent="var(--ln-cyan)" style={{ padding: 12 }}>
+    <Panel accent="var(--ln-cyan)" style={{ padding: 12, alignSelf: 'stretch', height: 'auto' }}>
       <div className="ln-section-label">Comments</div>
 
       {loading ? (
@@ -107,7 +107,7 @@ export default function CommentsPanel({ recordType, recordId }: CommentsPanelPro
                   {new Date(comment.created).toLocaleString()}
                 </span>
               </div>
-              <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 12, color: '#c7d4e6', whiteSpace: 'pre-wrap' }}>
+              <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 12, color: 'var(--ln-text)', whiteSpace: 'pre-wrap' }}>
                 {comment.body}
               </div>
             </div>
@@ -135,7 +135,7 @@ export default function CommentsPanel({ recordType, recordId }: CommentsPanelPro
                 borderRadius: 8,
                 border: '1px solid var(--ln-hairline-strong)',
                 background: 'rgba(20,20,23,0.6)',
-                color: '#e8f0fe',
+                color: 'var(--ln-text)',
                 fontFamily: 'var(--ln-font-body)',
                 fontSize: 12,
               }}

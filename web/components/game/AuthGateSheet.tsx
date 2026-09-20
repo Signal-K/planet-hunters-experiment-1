@@ -11,7 +11,10 @@ interface AuthGateSheetProps {
 }
 
 export default function AuthGateSheet({ error, onSignIn, onCreateAccount }: AuthGateSheetProps) {
-  const [mode, setMode] = useState<'signin' | 'signup'>('signin')
+  const [mode, setMode] = useState<'signin' | 'signup'>(() => {
+    if (typeof window === 'undefined') return 'signin'
+    return new URLSearchParams(window.location.search).get('gate') === 'signup' ? 'signup' : 'signin'
+  })
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [passwordConfirmation, setPasswordConfirmation] = useState('')

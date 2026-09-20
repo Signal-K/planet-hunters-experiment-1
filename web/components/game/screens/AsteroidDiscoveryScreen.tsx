@@ -300,8 +300,8 @@ export default function AsteroidDiscoveryScreen({ player, inspectSubjectId, visu
             {devBar}
             {dataPanel}
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 12, minHeight: 0 }}>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 12, flex: '1 1 auto', minHeight: 0, overflowY: 'auto' }}>
+          <div data-testid="asteroid-discovery-comments-column" style={{ display: 'flex', flexDirection: 'column', gap: 12, minHeight: 0, justifyContent: 'flex-start' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12, flex: '0 1 auto' }}>
               {payoffPanel}
               <CommentsPanel recordType="classification" recordId={candidate.id} />
             </div>

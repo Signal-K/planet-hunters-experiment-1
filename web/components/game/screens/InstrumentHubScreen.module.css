@@ -22,8 +22,8 @@
   gap: 8px;
   padding: 16px;
   pointer-events: auto;
-  background: color-mix(in srgb, var(--ln-void) 72%, var(--ln-warn));
-  border: 2px solid color-mix(in srgb, var(--ln-warn) 54%, var(--ln-hairline));
+  background: color-mix(in srgb, var(--ln-void) 72%, var(--ln-cyan));
+  border: 2px solid color-mix(in srgb, var(--ln-cyan) 54%, var(--ln-hairline));
   border-radius: 12px;
   box-shadow: 10px 12px 0 color-mix(in srgb, var(--ln-void) 54%, transparent);
 }
@@ -34,7 +34,7 @@
   justify-content: space-between;
   gap: 16px;
   padding-bottom: 12px;
-  border-bottom: 1px solid color-mix(in srgb, var(--ln-warn) 36%, transparent);
+  border-bottom: 1px solid color-mix(in srgb, var(--ln-cyan) 36%, transparent);
 }
 
 .feedEyebrow {

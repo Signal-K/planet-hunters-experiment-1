@@ -10,6 +10,7 @@ import { isResumableMissionScreen } from '@/lib/initial-route'
 import type { GameState } from '@/lib/game-types'
 import type { Toast } from '@/components/ui/ToastLayer'
 import { MISSIONS, TARGETS, travelDurationMs } from '@/lib/data'
+import { stagingSignupFields } from '@/lib/staging-account'
 
 // How often to proactively renew the shared-backend session while the tab is
 // open. authStore.isValid is a pure client-side JWT exp check with no server
@@ -675,7 +676,13 @@ export function useAuthSync({
   const createAccountFromGate = useCallback(async (email: string, password: string) => {
     setAuthGateError(null)
     try {
-      await pbShared.collection('users').create({ email, password, passwordConfirm: password, name: '' })
+      await pbShared.collection('users').create({
+        email,
+        password,
+        passwordConfirm: password,
+        name: '',
+        ...stagingSignupFields(email),
+      })
       const authResult = await pbShared.collection('users').authWithPassword(email, password)
       // Brand-new account: discard any local guest/dev state so the player
       // starts from scratch with the intro tutorial.
