@@ -12,6 +12,7 @@ describe('mission setup replacement boundary', () => {
     expect(routes).toContain('data-testid="mission-setup-scaffold"')
     expect(routes).toContain('data-testid="mission-setup-landscape"')
     expect(routes).toContain('data-testid="mission-setup-stage"')
+    expect(routes).toContain('SSL-311')
     expect(routes).toContain('HubWorldBackground')
     expect(routes).toContain('LaunchpadModules')
     expect(routes).toContain('HangarModules')
