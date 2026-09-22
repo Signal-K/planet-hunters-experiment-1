@@ -54,7 +54,5 @@
   "terrain_cloud_bank_a": "/game/assets/terrain/cloud_bank_a.png",
   "terrain_cloud_bank_b": "/game/assets/terrain/cloud_bank_b.png",
   "terrain_mtn_horn": "/game/assets/terrain/mtn_horn.png",
-  "terrain_mtn_saw_ridge": "/game/assets/terrain/mtn_saw_ridge.png",
-  "instrument_hub_plate_j": "/game/assets/instrument-hub/plate-j-console.jpg",
-  "instrument_hub_window_warm": "/game/assets/instrument-hub/window-warm-daylight.jpg"
+  "terrain_mtn_saw_ridge": "/game/assets/terrain/mtn_saw_ridge.png"
 }
