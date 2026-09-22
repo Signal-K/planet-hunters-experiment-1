@@ -275,9 +275,111 @@ export const EARTH_BASE_PAD: SceneComposition = {
   ],
 }
 
+/**
+ * Interior courtyard shot for the Instrument Hub downlink desk. The player
+ * is inside the agency looking out a window, so this is closer than the
+ * Launchpad pad shot and carries only a handful of buildings (mast, hangar
+ * block, dish) instead of the wide campus skyline.
+ */
+export const EARTH_BASE_COURTYARD: SceneComposition = {
+  id: 'earth-base-courtyard',
+  roadPaths: [{
+    id: 'courtyard-apron',
+    points: [
+      { x: 0, groundOffset: -5 },
+      { x: 22, groundOffset: -5 },
+      { x: 48, groundOffset: -4.5 },
+      { x: 72, groundOffset: -5 },
+      { x: 100, groundOffset: -5.5 },
+    ],
+  }],
+  bands: [
+    {
+      id: 'clouds',
+      depth: 0.05,
+      baseline: '74%',
+      bricks: [
+        { brick: 'cloud_bank_a', x: 18, scale: 1.6 },
+        { brick: 'cloud_bank_b', x: 62, scale: 1.35, flip: true },
+        { brick: 'cloud_bank_a', x: 92, scale: 1.2, lift: 18 },
+      ],
+    },
+    {
+      id: 'range-far',
+      depth: 0.22,
+      baseline: 'calc(var(--hub-ground) + 2%)',
+      scale: 1.7,
+      bricks: [
+        { brick: 'mtn_peak_broad', x: -6, scale: 0.9 },
+        { brick: 'mtn_horn', x: 28, scale: 0.72 },
+        { brick: 'mtn_peak_tall', x: 58, scale: 0.78, flip: true },
+        { brick: 'mtn_shoulder', x: 88, scale: 0.82 },
+      ],
+    },
+    {
+      id: 'hills-near',
+      depth: 0.48,
+      baseline: 'calc(var(--hub-ground) + 0.4%)',
+      scale: 1.5,
+      bricks: [
+        { brick: 'hill_long', x: 8, scale: 1.05 },
+        { brick: 'hill_round', x: 42, scale: 0.95, flip: true },
+        { brick: 'bluff', x: 78, scale: 0.9 },
+      ],
+    },
+    {
+      id: 'campus-near',
+      depth: 0.62,
+      baseline: 'calc(var(--hub-ground) + 0.6%)',
+      scale: 1.85,
+      bricks: [
+        { brick: 'far_block', x: 18, scale: 1.35 },
+        { brick: 'far_mast', x: 32, scale: 1.2 },
+        { brick: 'far_block', x: 48, scale: 1.7 },
+        { brick: 'far_dish', x: 68, scale: 1.55 },
+        { brick: 'far_silo', x: 82, scale: 1.1 },
+      ],
+    },
+    {
+      id: 'treeline',
+      depth: 0.74,
+      baseline: 'calc(var(--hub-ground) - 0.4%)',
+      scale: 1.4,
+      bricks: [
+        { brick: 'tree_pine_cluster', x: 6, scale: 0.95 },
+        { brick: 'tree_pine_tall', x: 88, scale: 1.0 },
+        { brick: 'tree_pine_short', x: 96, scale: 0.9 },
+      ],
+    },
+    {
+      id: 'ground-detail',
+      depth: 0.9,
+      baseline: 'calc(var(--hub-ground) - 6%)',
+      scale: 1.4,
+      bricks: [
+        { brick: 'fence_run', x: 24, scale: 1.1 },
+        { brick: 'rock_cluster', x: 52, scale: 0.95 },
+        { brick: 'fence_run', x: 76, scale: 1.05 },
+      ],
+    },
+    {
+      id: 'window-sill-edge',
+      depth: 1,
+      baseline: 'calc(var(--hub-ground) - 12%)',
+      scale: 1.6,
+      bricks: [
+        { brick: 'shrub', x: 8, scale: 1.2 },
+        { brick: 'rock_boulder', x: 14, scale: 1.05 },
+        { brick: 'shrub', x: 90, scale: 1.15, flip: true },
+      ],
+    },
+  ],
+}
+
 export const COMPOSITIONS = {
   'earth-base-wide': EARTH_BASE_WIDE,
   'earth-base-pad': EARTH_BASE_PAD,
+  'earth-base-courtyard': EARTH_BASE_COURTYARD,
 } as const
 
 export type CompositionId = keyof typeof COMPOSITIONS

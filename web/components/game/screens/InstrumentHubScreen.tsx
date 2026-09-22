@@ -7,7 +7,7 @@ import { UI_ZONES } from '@/lib/ui-zones'
 import type { Player, Screen } from '@/lib/game-types'
 import type { InstrumentSignal } from '@/lib/systems/InstrumentFeedSystem'
 import styles from './InstrumentHubScreen.module.css'
-import { TessDownlinkObservatoryScene } from './TessDownlinkObservatoryScene'
+import { ControlRoomBackdrop } from './ControlRoomBackdrop'
 
 interface InstrumentHubScreenProps {
   player: Player
@@ -29,7 +29,7 @@ export default function InstrumentHubScreen({ player, onBack, onInspect }: Instr
       ambient="observatory"
       className={`game-screen theme-deep ${styles.screen}`}
       data-testid="instrument-hub-screen"
-      scene={<TessDownlinkObservatoryScene transitOnline={transitOnline} deepSpaceOnline={deepSpaceOnline} readyCount={signals.length} />}
+      scene={<ControlRoomBackdrop phase="day" windowLabel={transitOnline ? 'COURTYARD / TESS LINK' : deepSpaceOnline ? 'COURTYARD / NEOCP LINK' : 'COURTYARD / RECEIVER STANDBY'} />}
     >
       <TopBar eyebrow="ORBITAL OBSERVATORY / DATA LINK" title="Instrument Hub" onBack={onBack} glass />
       <div className={styles.frame} data-ui-zone={UI_ZONES.screenContent}>
