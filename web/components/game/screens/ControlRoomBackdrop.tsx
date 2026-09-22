@@ -1,24 +1,27 @@
 'use client'
 
-import { HangarModules } from '@/components/game/hub/EarthBaseModules'
-import { HubWorldBackground } from '@/components/game/hub/HubWorldBackground'
 import type { TimeOfDayPhase } from '@/lib/hooks/useTimeOfDay'
 import styles from './ControlRoomBackdrop.module.css'
 
 interface ControlRoomBackdropProps {
   phase?: TimeOfDayPhase
-  showHangar?: boolean
   windowLabel?: string
+}
+
+const COURTYARD_PLATES: Record<TimeOfDayPhase, string> = {
+  day: '/game/assets/scenes/instrument-hub/courtyard-day.webp',
+  dawn: '/game/assets/scenes/instrument-hub/courtyard-dusk.webp',
+  dusk: '/game/assets/scenes/instrument-hub/courtyard-dusk.webp',
+  night: '/game/assets/scenes/instrument-hub/courtyard-night.webp',
 }
 
 /**
  * Interior downlink desk: command-deck walls + a courtyard window.
- * The window uses the Earth Base terrain kit from a closer camera so the
- * player sees a handful of campus buildings instead of the establishing shot.
+ * Purpose-built plates keep the camera close on the hangar, mast, and dish;
+ * this is a room view, not a crop of the Earth Base establishing shot.
  */
 export function ControlRoomBackdrop({
   phase = 'day',
-  showHangar = true,
   windowLabel = 'COURTYARD / EARTH BASE',
 }: ControlRoomBackdropProps) {
   return (
@@ -26,13 +29,20 @@ export function ControlRoomBackdrop({
       <div className={styles.ceiling} />
       <div className={styles.bezel}>
         <div className={styles.window}>
-          <HubWorldBackground phase={phase} composition="earth-base-courtyard" />
-          {showHangar && <div className={styles.hangar}><HangarModules /></div>}
+          <img
+            className={styles.courtyardPlate}
+            src={COURTYARD_PLATES[phase]}
+            alt=""
+            data-courtyard-plate={phase}
+            draggable={false}
+          />
           <div className={styles.windowLabel}>{windowLabel}</div>
+          <div className={styles.glassGlint} />
         </div>
       </div>
       <div className={styles.sill} />
-      <div className={styles.deck} />
+      <div className={styles.roomSideLeft} />
+      <div className={styles.roomSideRight} />
     </div>
   )
 }

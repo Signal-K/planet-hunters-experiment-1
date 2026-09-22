@@ -8,15 +8,16 @@ describe('ControlRoomBackdrop', () => {
     const markup = renderToStaticMarkup(<ControlRoomBackdrop />)
 
     expect(markup).toContain('data-testid="control-room-backdrop"')
-    expect(markup).toContain('data-composition="earth-base-courtyard"')
+    expect(markup).toContain('data-courtyard-plate="day"')
+    expect(markup).toContain('/game/assets/scenes/instrument-hub/courtyard-day.webp')
     expect(markup).toContain('COURTYARD / EARTH BASE')
-    expect(markup).toContain('hangar_flat.png')
     expect(markup).not.toContain('data-composition="earth-base-wide"')
     expect(markup).not.toContain('TESS RAW CADENCE')
   })
 
-  it('can hide the hangar overlay for the empty-window comparison', () => {
-    const markup = renderToStaticMarkup(<ControlRoomBackdrop showHangar={false} />)
-    expect(markup).not.toContain('hangar_flat.png')
+  it('uses a separately authored plate for night lighting', () => {
+    const markup = renderToStaticMarkup(<ControlRoomBackdrop phase="night" />)
+    expect(markup).toContain('data-courtyard-plate="night"')
+    expect(markup).toContain('/game/assets/scenes/instrument-hub/courtyard-night.webp')
   })
 })

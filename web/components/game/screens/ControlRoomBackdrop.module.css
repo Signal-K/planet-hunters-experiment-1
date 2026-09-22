@@ -2,86 +2,118 @@
   position: absolute;
   inset: 0;
   overflow: hidden;
-  background:
-    linear-gradient(180deg, color-mix(in srgb, var(--ln-void) 70%, var(--ln-purple-depth)) 0%, var(--ln-void) 100%);
+  background: var(--ln-void);
 }
 
 .ceiling {
   position: absolute;
   inset: 0 0 auto;
-  height: 48px;
-  background: linear-gradient(180deg, color-mix(in srgb, var(--ln-void) 82%, var(--ln-cyan)) 0%, transparent 100%);
+  height: 64px;
+  background: var(--ln-panel);
+  border-bottom: 1px solid var(--ln-hairline);
   pointer-events: none;
 }
 
 .bezel {
   position: absolute;
   top: 64px;
-  left: 16px;
-  right: 16px;
-  height: 52%;
-  min-height: 240px;
-  max-height: none;
-  padding: 8px;
-  border: 2px solid var(--ln-hairline);
-  border-radius: 12px;
-  background: color-mix(in srgb, var(--ln-void) 72%, var(--ln-cyan));
-  box-shadow: 0 12px 0 color-mix(in srgb, var(--ln-void) 54%, transparent);
+  left: 24px;
+  right: 24px;
+  height: 46%;
+  min-height: 208px;
+  padding: 12px 12px 16px;
+  border: 1px solid var(--ln-hairline-strong);
+  border-radius: 8px 8px 4px 4px;
+  background: color-mix(in srgb, var(--ln-text-dim) 56%, var(--ln-panel));
+  box-shadow:
+    inset 0 2px 0 color-mix(in srgb, var(--ln-text) 20%, transparent),
+    0 16px 24px color-mix(in srgb, var(--ln-void) 76%, transparent);
 }
+
+.bezel::before,
+.bezel::after {
+  content: '';
+  position: absolute;
+  top: 12px;
+  bottom: 16px;
+  width: 4px;
+  background: color-mix(in srgb, var(--ln-void) 48%, transparent);
+  z-index: 5;
+}
+
+.bezel::before { left: 12px; }
+.bezel::after { right: 12px; }
 
 .window {
   position: relative;
   width: 100%;
   height: 100%;
   overflow: hidden;
-  border-radius: 6px;
+  border: 4px solid color-mix(in srgb, var(--ln-void) 72%, var(--ln-panel-2));
+  border-radius: 4px;
+  background: var(--ln-void);
 }
 
-.window :global([data-testid="hub-terrain-fallback"]) {
-  --hub-ground: 38%;
-}
-
-.hangar {
+.courtyardPlate {
   position: absolute;
-  left: 34%;
-  bottom: 22%;
-  width: min(48%, 340px);
-  z-index: 3;
-  pointer-events: none;
-  filter: drop-shadow(8px 10px 0 color-mix(in srgb, var(--ln-void) 40%, transparent));
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 50% 61%;
+  user-select: none;
 }
 
 .sill {
   position: absolute;
   left: 16px;
   right: 16px;
-  top: calc(64px + 52%);
-  height: 12px;
-  background: color-mix(in srgb, var(--ln-surface-3) 70%, var(--ln-cyan));
-  border-left: 2px solid var(--ln-hairline);
-  border-right: 2px solid var(--ln-hairline);
+  top: calc(64px + 46% - 4px);
+  height: 24px;
+  z-index: 5;
+  border: 1px solid var(--ln-hairline-strong);
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--ln-text-dim) 42%, var(--ln-panel));
+  box-shadow: 0 8px 0 var(--ln-void);
 }
 
-.deck {
+.roomSideLeft,
+.roomSideRight {
   position: absolute;
-  left: 0;
-  right: 0;
+  top: 64px;
   bottom: 0;
-  top: calc(64px + 52% + 12px);
-  background:
-    linear-gradient(180deg, color-mix(in srgb, var(--ln-panel) 88%, var(--ln-cyan)) 0%, var(--ln-void) 100%);
-  border-top: 1px solid var(--ln-hairline);
+  width: 24px;
+  background: var(--ln-panel);
+  border-color: var(--ln-hairline);
+  z-index: 0;
 }
+
+.roomSideLeft { left: 0; border-right: 1px solid; }
+.roomSideRight { right: 0; border-left: 1px solid; }
 
 .windowLabel {
   position: absolute;
-  left: 12px;
-  bottom: 8px;
+  left: 16px;
+  bottom: 12px;
   z-index: 4;
   padding: 4px 8px;
-  background: color-mix(in srgb, var(--ln-void) 62%, transparent);
+  background: color-mix(in srgb, var(--ln-void) 78%, transparent);
   color: var(--ln-cyan);
   font: 800 10px/1 var(--ln-font-display);
   letter-spacing: 0.16em;
   text-transform: uppercase;
+}
+
+.glassGlint {
+  position: absolute;
+  inset: 4px;
+  z-index: 4;
+  pointer-events: none;
+  border-top: 1px solid color-mix(in srgb, var(--ln-text) 24%, transparent);
+}
+
+@media (max-height: 520px) and (orientation: landscape) {
+  .bezel { top: 56px; height: 44%; min-height: 168px; left: 16px; right: 16px; padding: 8px 8px 12px; }
+  .sill { top: calc(56px + 44% - 4px); height: 16px; }
+  .courtyardPlate { object-position: 50% 64%; }
 }

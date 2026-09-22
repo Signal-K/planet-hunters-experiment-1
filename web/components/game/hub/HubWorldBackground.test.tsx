@@ -44,13 +44,4 @@ describe('HubWorldBackground', () => {
     expect((pad.match(/data-road-bed="site-service-road"/g) ?? []).length).toBe(1)
   })
 
-  it('renders a courtyard composition with a handful of campus bricks', () => {
-    const courtyard = renderToStaticMarkup(<HubWorldBackground composition="earth-base-courtyard" />)
-
-    expect(courtyard).toContain('data-composition="earth-base-courtyard"')
-    expect(courtyard).toContain('data-band="campus-near"')
-    expect(courtyard).not.toContain('data-band="facilities-far"')
-    expect(courtyard).toContain('/game/assets/terrain/far_dish.png')
-    expect(courtyard).toContain('/game/assets/terrain/far_mast.png')
-  })
 })
