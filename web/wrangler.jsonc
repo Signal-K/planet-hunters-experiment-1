@@ -14,5 +14,12 @@
   ],
   "observability": {
     "enabled": true
+  },
+  "env": {
+    "staging": {
+      "name": "landnam-web-staging",
+      "workers_dev": true,
+      "routes": []
+    }
   }
 }

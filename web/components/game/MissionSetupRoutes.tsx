@@ -161,6 +161,10 @@ function SetupFrame({ step, title, onBack, hasCoach, children }: {
   return (
     <div className={`game-screen ${styles.root}`} data-testid="mission-setup-scaffold" data-step={step} data-coach={hasCoach}>
       <div className={styles.landscape} data-testid="mission-setup-landscape" aria-hidden="true">
+        {/* SSL-311: this is the Earth Base operations place (same family as
+            Launchpad's STS-630 scene panel), not a washed steel/light-card
+            theme regression. Daylight is the depot vista; instrument chrome
+            stays paper/ink on top of that place. */}
         <HubWorldBackground phase="day" composition="earth-base-wide" />
         <div className={styles.launchpad}><LaunchpadModules /></div>
         <div className={styles.hangar}><HangarModules /></div>

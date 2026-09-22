@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, expect, it } from 'vitest'
 
@@ -24,5 +25,11 @@ describe('TessDownlinkObservatoryScene', () => {
 
     expect(markup).toContain('RECEIVER STANDBY')
     expect(markup).toContain('SYNCED')
+  })
+
+  it('does not use warn/amber chrome for the observatory feed', () => {
+    const css = readFileSync(new URL('./TessDownlinkObservatoryScene.module.css', import.meta.url), 'utf8')
+    expect(css).not.toContain('--ln-warn')
+    expect(css).toContain('--ln-cyan')
   })
 })

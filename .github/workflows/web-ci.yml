@@ -147,6 +147,40 @@ jobs:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
 
+  deploy-staging:
+    name: Deploy staging
+    needs: build
+    if: github.ref != 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - name: Install dependencies
+        run: npm ci
+      - name: Build (OpenNext/Cloudflare staging)
+        run: npm run build:cf
+        env:
+          NEXT_TELEMETRY_DISABLED: 1
+          NEXT_PUBLIC_SHARED_PB_URL: https://signal-k-starsailors.fly.dev
+          NEXT_PUBLIC_LANDNAM_PB_URL: https://signal-k-landnam.fly.dev
+          NEXT_PUBLIC_LANDNAM_ENV: staging
+          NEXT_PUBLIC_POSTHOG_HOST: https://us.i.posthog.com
+          NEXT_PUBLIC_POSTHOG_KEY: ${{ secrets.NEXT_PUBLIC_POSTHOG_KEY }}
+          NEXT_PUBLIC_VAPID_PUBLIC_KEY: ${{ secrets.NEXT_PUBLIC_VAPID_PUBLIC_KEY }}
+          NEXT_PUBLIC_FEATURE_SCAN_STATION: true
+      - name: Deploy staging worker
+        run: npx wrangler deploy --env staging
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+
   e2e-staging-full:
     name: E2E — full journeys against staging (manual + nightly)
     # Manual (workflow_dispatch) or nightly (schedule), not on every push:
