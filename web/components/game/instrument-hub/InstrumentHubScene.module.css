@@ -1,0 +1,59 @@
+.scene {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  background: color-mix(in srgb, var(--ln-void) 90%, var(--ln-bg));
+}
+
+.plate,
+.warmWindow {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  pointer-events: none;
+  user-select: none;
+}
+
+.warmWindow {
+  clip-path: inset(0 0 84% 0);
+  filter: saturate(1.08) brightness(1.04);
+}
+
+.plate {
+  mix-blend-mode: normal;
+}
+
+.classifyMount,
+.queueMount {
+  position: absolute;
+  z-index: 2;
+  pointer-events: auto;
+}
+
+.classifyMount {
+  padding: 8px;
+}
+
+.queueMount {
+  padding: 8px 12px;
+  overflow: hidden;
+}
+
+@media (max-width: 720px) {
+  .classifyMount {
+    padding: 4px;
+  }
+
+  .queueMount {
+    padding: 4px 8px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .scene {
+    background: #12141a;
+  }
+}
