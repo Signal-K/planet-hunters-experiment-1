@@ -20,32 +20,32 @@ export default function ControlRoomPreviewPage() {
     <div className={`theme-deep ${styles.page}`} data-testid="control-room-preview">
       <ControlRoomBackdrop phase={phase} showHangar={hangar} />
       <TopBar eyebrow="PREVIEW / SSL-329" title="Downlink Desk" glass />
-      <div className={styles.notes}>
-        <p className={styles.eyebrow}>Slice 1 — weigh in before tutorials</p>
-        <p>
-          You are inside the agency. The window is a courtyard camera (mast, hangar, dish), not the wide Earth Base strip. Deck chrome stays command-deck cyan, not analog beige knobs.
-        </p>
-        <div className={styles.toggles}>
-          {PHASES.map(option => (
-            <button
-              key={option.id}
-              type="button"
-              className={phase === option.id ? styles.toggleOn : styles.toggle}
-              onClick={() => setPhase(option.id)}
-            >
-              {option.label}
-            </button>
-          ))}
-          <button
-            type="button"
-            className={hangar ? styles.toggleOn : styles.toggle}
-            onClick={() => setHangar(value => !value)}
-          >
-            HANGAR {hangar ? 'ON' : 'OFF'}
-          </button>
-        </div>
-      </div>
       <section className={styles.console} aria-label="Classify workspace preview">
+        <div className={styles.notes}>
+          <p className={styles.eyebrow}>Slice 1 — weigh in before tutorials</p>
+          <p>
+            You are inside the agency. Courtyard window (mast, hangar, dish), command-deck chrome, not analog beige knobs.
+          </p>
+          <div className={styles.toggles}>
+            {PHASES.map(option => (
+              <button
+                key={option.id}
+                type="button"
+                className={phase === option.id ? styles.toggleOn : styles.toggle}
+                onClick={() => setPhase(option.id)}
+              >
+                {option.label}
+              </button>
+            ))}
+            <button
+              type="button"
+              className={hangar ? styles.toggleOn : styles.toggle}
+              onClick={() => setHangar(value => !value)}
+            >
+              HANGAR {hangar ? 'ON' : 'OFF'}
+            </button>
+          </div>
+        </div>
         <header className={styles.consoleHead}>
           <div>
             <div className={styles.eyebrow}>Classify workspace</div>

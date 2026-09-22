@@ -19,9 +19,9 @@
   top: 64px;
   left: 16px;
   right: 16px;
-  height: 42%;
-  min-height: 180px;
-  max-height: 320px;
+  height: 52%;
+  min-height: 240px;
+  max-height: none;
   padding: 8px;
   border: 2px solid var(--ln-hairline);
   border-radius: 12px;
@@ -38,14 +38,14 @@
 }
 
 .window :global([data-testid="hub-terrain-fallback"]) {
-  --hub-ground: 28%;
+  --hub-ground: 38%;
 }
 
 .hangar {
   position: absolute;
-  left: 38%;
-  bottom: 18%;
-  width: min(42%, 280px);
+  left: 34%;
+  bottom: 22%;
+  width: min(48%, 340px);
   z-index: 3;
   pointer-events: none;
   filter: drop-shadow(8px 10px 0 color-mix(in srgb, var(--ln-void) 40%, transparent));
@@ -55,7 +55,7 @@
   position: absolute;
   left: 16px;
   right: 16px;
-  top: calc(64px + 42%);
+  top: calc(64px + 52%);
   height: 12px;
   background: color-mix(in srgb, var(--ln-surface-3) 70%, var(--ln-cyan));
   border-left: 2px solid var(--ln-hairline);
@@ -67,7 +67,7 @@
   left: 0;
   right: 0;
   bottom: 0;
-  top: calc(64px + 42% + 12px);
+  top: calc(64px + 52% + 12px);
   background:
     linear-gradient(180deg, color-mix(in srgb, var(--ln-panel) 88%, var(--ln-cyan)) 0%, var(--ln-void) 100%);
   border-top: 1px solid var(--ln-hairline);

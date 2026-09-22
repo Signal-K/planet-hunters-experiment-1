@@ -8,15 +8,8 @@
 }
 
 .notes {
-  position: absolute;
-  top: 72px;
-  left: 16px;
-  z-index: 4;
-  max-width: 360px;
-  padding: 12px;
-  border: 1px solid var(--ln-hairline);
-  border-radius: 8px;
-  background: color-mix(in srgb, var(--ln-void) 72%, transparent);
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--ln-hairline);
 }
 
 .eyebrow {
@@ -68,6 +61,7 @@
   position: absolute;
   left: 16px;
   right: 16px;
+  top: calc(64px + 52% + 24px);
   bottom: 16px;
   z-index: 4;
   display: flex;
