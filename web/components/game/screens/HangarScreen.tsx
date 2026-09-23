@@ -9,6 +9,7 @@ import { UI_ZONES } from '@/lib/ui-zones'
 import ShipInteriorPreview from '@/components/game/ShipInteriorPreview'
 import { formatCurrency } from '@/lib/format'
 import { rocketCompositionForId } from '@/lib/data/rocket-composition'
+import { captureGameEvent } from '@/lib/posthog'
 import styles from './HangarScreen.module.css'
 
 interface HangarScreenProps {
@@ -174,7 +175,7 @@ export default function HangarScreen({ francs, missionsDone, unlockedSkillNodes,
         {customizerUnlocked && (
           <button
             data-testid="open-ship-customizer"
-            onClick={() => setCustomizerOpen(true)}
+            onClick={() => { captureGameEvent('hangar_customizer_opened'); setCustomizerOpen(true) }}
             className={styles.customizer}
           >
             {/* Icon */}
@@ -195,7 +196,7 @@ export default function HangarScreen({ francs, missionsDone, unlockedSkillNodes,
 
         <div className={styles.sectionHeader}><span>Vehicle registry</span><span>{ROCKET_MODELS.length} registry entries</span></div>
         <div className={styles.fleetGrid}>{ROCKET_MODELS.map(rocket => (
-          <RocketCard key={rocket.id} rocket={rocket} missionsDone={missionsDone} onSelect={onSelect} />
+          <RocketCard key={rocket.id} rocket={rocket} missionsDone={missionsDone} onSelect={onSelect ? (id) => { captureGameEvent('hangar_rocket_selected', { rocket_id: id, cost_francs: rocket.costFrancs }); onSelect(id) } : onSelect} />
         ))}</div>
         <div className={styles.rail}><span><i className={styles.railValue}>●</i> Registry online</span><span>{missionsDone} missions logged</span><span>Balance {formatCurrency(francs, { compact: true })}</span></div>
         </div>
@@ -210,7 +211,11 @@ export default function HangarScreen({ francs, missionsDone, unlockedSkillNodes,
             installedParts={installed}
             crewModuleResearched={crewModuleResearched}
             landingResearched={landingResearched}
-            onConfirm={onConfirmShipCustomizerBuild}
+            onConfirm={onConfirmShipCustomizerBuild ? (installed, prevInstalled) => {
+              const ok = onConfirmShipCustomizerBuild(installed, prevInstalled)
+              captureGameEvent('hangar_customizer_build_confirmed', { success: ok })
+              return ok
+            } : onConfirmShipCustomizerBuild}
             onClose={() => setCustomizerOpen(false)}
           />
         </div>

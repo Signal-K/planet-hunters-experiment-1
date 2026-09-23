@@ -16,6 +16,7 @@ import DebriefCanvas from '@/components/game/screens/DebriefCanvas'
 import { formatCurrency } from '@/lib/format'
 import { rocketStageRecoveryForId } from '@/lib/data/rocket-composition'
 import StatRow from '@/components/ui/StatRow'
+import { captureGameEvent } from '@/lib/posthog'
 
 export default function DebriefScreen({ mission, target, cargo, onDone, minerals, clients, clientMissions: _clientMissions, freeOperations, annotations, missionsDone, hasCoach, shipDestroyed, rocket, rocketSource, deliveryTargetName, originTargetName, loanDebt, firstCrewArrival, hasEarthStorage, storageCapacity, storageUsed, haulMarketValue, initialDisposition }: {
   mission: Mission
@@ -412,8 +413,8 @@ function CargoDispositionPanel({
         No client is owed this haul. Keep it in the silo to sell when the price is right or spend on your own builds, or sell the lot now at market.
       </p>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
-        <DispositionOption testId="debrief-store" active={store} disabled={!hasEarthStorage} onClick={() => setDisposition('store')} title="Keep on Earth" sub={hasEarthStorage ? 'Into the silo' : 'Needs a Vault · Earth silo'} />
-        <DispositionOption testId="debrief-sell" active={!store} onClick={() => setDisposition('sell')} title="Sell now" sub="At market price" />
+        <DispositionOption testId="debrief-store" active={store} disabled={!hasEarthStorage} onClick={() => { captureGameEvent('debrief_disposition_chosen', { disposition: 'store' }); setDisposition('store') }} title="Keep on Earth" sub={hasEarthStorage ? 'Into the silo' : 'Needs a Vault · Earth silo'} />
+        <DispositionOption testId="debrief-sell" active={!store} onClick={() => { captureGameEvent('debrief_disposition_chosen', { disposition: 'sell' }); setDisposition('sell') }} title="Sell now" sub="At market price" />
       </div>
       <div style={{ marginTop: 12 }}>
         {store ? (

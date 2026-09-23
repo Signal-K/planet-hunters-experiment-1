@@ -39,6 +39,7 @@ import ConstructionTargetCanvas from './ConstructionTargetCanvas'
 import TakeOnMount, { type TakeOnMountHandle } from '@/components/takeon/TakeOnMount'
 import SandboxFieldControls from '@/components/takeon/SandboxFieldControls'
 import { shareFieldCreation } from '@/lib/community/shareField'
+import { captureGameEvent } from '@/lib/posthog'
 import styles from './SurfaceOpsScreen.module.css'
 
 type SurfaceView = 'logistics' | 'field'
@@ -167,6 +168,13 @@ export default function SurfaceOpsScreen({
       onReconcile(definition.id)
     }
   }, [definition.id, ferry?.arrivesAt, ferry?.status, now, onReconcile])
+
+  useEffect(() => {
+    if (ferry?.status === 'failed') {
+      captureGameEvent('surface_ops_ferry_dispatch_failed', { site_id: definition.id, failure_reason: ferry.failureReason ?? null })
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [definition.id, ferry?.status])
 
   // A placed refinery turns buffered site ore into refined goods once per
   // interval; the system is a no-op until the interval has elapsed.
@@ -326,7 +334,7 @@ export default function SurfaceOpsScreen({
               <span className={styles.statusPill}>LOCAL READY</span>
             </div>
             <p className={styles.sectionCopy}>Landnam commits the mission identity, lunar site and rover assembly before mounting TakeOn. Programme state stays here; the field layer only operates the site.</p>
-            <PrimaryBtn onClick={() => onStartFieldOperation(definition.id)}>
+            <PrimaryBtn onClick={() => { captureGameEvent('surface_ops_field_operation_started', { site_id: definition.id }); onStartFieldOperation(definition.id) }}>
               <Satellite size={16} /> Deploy Prospector
             </PrimaryBtn>
           </section>
@@ -381,7 +389,7 @@ export default function SurfaceOpsScreen({
                       || !canAffordAccess
                     }
                     testId="surface-purchase-access"
-                    onClick={() => onPurchaseSiteAccess(definition.id)}
+                    onClick={() => { captureGameEvent('surface_ops_site_access_purchased', { site_id: definition.id, cost: definition.accessFee }); onPurchaseSiteAccess(definition.id) }}
                   >
                     {definition.availability === 'available'
                       ? `Acquire Site Right · ${formatCurrency(definition.accessFee, { compact: true })}`
@@ -408,7 +416,7 @@ export default function SurfaceOpsScreen({
                     <PrimaryBtn
                       disabled={!canAffordLaunchpad}
                       testId="surface-build-launchpad"
-                      onClick={() => onBuildLaunchpad(definition.id, selectedPad)}
+                      onClick={() => { captureGameEvent('surface_ops_launchpad_build_started', { site_id: definition.id, pad: selectedPad }); onBuildLaunchpad(definition.id, selectedPad) }}
                     >
                       Build Settlement Pad
                     </PrimaryBtn>
@@ -455,7 +463,7 @@ export default function SurfaceOpsScreen({
                   <PrimaryBtn
                     disabled={!dispatchReady}
                     testId="surface-dispatch-ferry"
-                    onClick={() => onDispatch(definition.id)}
+                    onClick={() => { captureGameEvent('surface_ops_ferry_dispatched', { site_id: definition.id }); onDispatch(definition.id) }}
                   >
                     <Truck size={16} /> Dispatch Cargo Ferry
                   </PrimaryBtn>
@@ -478,7 +486,7 @@ export default function SurfaceOpsScreen({
                         <strong>{ferry.failureReason ?? 'Telemetry fault'}</strong>
                       </span>
                     </div>
-                    <GhostBtn onClick={() => onRetry(definition.id)}>
+                    <GhostBtn onClick={() => { captureGameEvent('surface_ops_ferry_dispatch_retried', { site_id: definition.id, failure_reason: ferry.failureReason ?? null }); onRetry(definition.id) }}>
                       <RotateCcw size={16} /> Retry Same Manifest
                     </GhostBtn>
                   </>

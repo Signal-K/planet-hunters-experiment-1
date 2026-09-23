@@ -16,6 +16,7 @@ import {
 import { sellUnitPrice, sellQuote } from '@/lib/systems/EconomySystem'
 import { formatCurrency } from '@/lib/format'
 import type { DailyEconomySnapshot } from '@/lib/systems/DailyEconomySystem'
+import { captureGameEvent } from '@/lib/posthog'
 import styles from './MarketScreen.module.css'
 
 interface MarketScreenProps {
@@ -54,6 +55,7 @@ export default function MarketScreen({ stash, marketSupply, marketSupplyUpdatedA
   function handleSell(mineralId: string) {
     const qty = stash[mineralId] ?? 0
     if (qty > 0) {
+      captureGameEvent('market_mineral_sold', { mineral_id: mineralId, quantity: qty })
       onSell(mineralId, qty)
     }
     setConfirming(null)
@@ -153,7 +155,7 @@ export default function MarketScreen({ stash, marketSupply, marketSupplyUpdatedA
                         <div className={styles.rateValue}>{formatCurrency(recipe.output.price)}/u</div>
                       </div>
                     </div>
-                    <button className={styles.sellButton} onClick={() => onSellRefined(recipe.id, qty)} type="button">Sell All {recipe.output.name}</button>
+                    <button className={styles.sellButton} onClick={() => { captureGameEvent('market_refined_sold', { recipe_id: recipe.id, quantity: qty }); onSellRefined(recipe.id, qty) }} type="button">Sell All {recipe.output.name}</button>
                   </article>
                 )
               })}
@@ -223,6 +225,7 @@ export default function MarketScreen({ stash, marketSupply, marketSupplyUpdatedA
             description={`Sell all cargo for ${formatCurrency(totalValue())}? This can't be undone.`}
             confirmLabel={`Confirm Sell (${formatCurrency(totalValue())})`}
             onConfirm={() => {
+              captureGameEvent('market_sell_all', { mineral_count: entries.length, total_value: totalValue() })
               entries.forEach(([id]) => onSell(id, stash[id]))
               setSellAllConfirm(false)
             }}

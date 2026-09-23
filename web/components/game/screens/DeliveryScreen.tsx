@@ -11,6 +11,7 @@ import { GhostBtn, PrimaryBtn } from '@/components/ui/Button'
 import DeliveryCanvas from './DeliveryCanvas'
 import TakeOnMount, { type TakeOnMountHandle } from '@/components/takeon/TakeOnMount'
 import { takeonBodyForTarget } from './RoverMiningScreen'
+import { captureGameEvent } from '@/lib/posthog'
 import styles from './DeliveryScreen.module.css'
 
 interface DeliveryScreenProps {
@@ -94,9 +95,11 @@ export default function DeliveryScreen({
     // eslint-disable-next-line no-console
     console.log('[DeliveryScreen] DUMP CARGO clicked, units moved:', moved)
     if (moved > 0) {
+      captureGameEvent('delivery_cargo_dumped', { units_moved: moved })
       setDumpError(null)
       setDumped(true)
     } else {
+      captureGameEvent('delivery_cargo_dump_failed', { cargo_units: cargoUnits })
       setDumpError(cargoUnits > 0 ? 'PARK BESIDE THE DEPOT CACHE' : 'NO CARGO IN ROVER HOLD')
     }
   }, [cargoUnits, takeonReady])
