@@ -754,6 +754,10 @@ button { cursor: pointer; }
 
 .game-screen { position: absolute; inset: 0; overflow: hidden; background: var(--ln-bg); }
 
+/* Fallback while a code-split screen chunk loads (GameScreenRouter's
+   next/dynamic screens). Matches .game-screen so there's no flash/jump. */
+.game-screen-loading { position: absolute; inset: 0; background: var(--ln-bg); }
+
 /* The Hub and Launchpad share one physical campus. Each screen enters with a
    short ground-line camera move so navigation feels like approaching the pad,
    not replacing the entire scene. */
