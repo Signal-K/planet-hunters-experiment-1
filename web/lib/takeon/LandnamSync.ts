@@ -133,10 +133,29 @@ function structureFromRecord(record: JsonRecord): Structure | null {
     facing: facing === 1 || facing === 2 || facing === 3 ? facing : 0,
   }
   const cooldownUntil = record.cooldown_until
-  const progress = record.progress
+  const progress = restoredStructureProgress(type, record.progress)
   if (typeof cooldownUntil === 'number') structure.cooldownUntil = cooldownUntil
-  if (typeof progress === 'number') structure.progress = progress
+  if (progress !== undefined) structure.progress = progress
   return structure
+}
+
+/**
+ * `progress` is habitat-frame construction (0..1), not a general build flag.
+ * A finished structure leaves it unset. Writing `0` for that absence made the
+ * flat view (the field's default) paint the structure as an unfinished
+ * blueprint — a blue-gray block for a storage silo, which has no built-in glyph.
+ * Rows already saved that way are repaired on load.
+ */
+export function persistedStructureProgress(structure: Structure): number | null {
+  if (structure.type !== 'habitat-frame') return null
+  if (typeof structure.progress !== 'number' || !Number.isFinite(structure.progress)) return null
+  return structure.progress
+}
+
+export function restoredStructureProgress(type: StructureType, value: unknown): number | undefined {
+  if (type !== 'habitat-frame') return undefined
+  if (typeof value !== 'number' || !Number.isFinite(value) || value <= 0) return undefined
+  return value
 }
 
 /**
@@ -325,7 +344,7 @@ export class LandnamSync implements SyncAdapter {
           facing: structure.facing ?? 0,
           buffer: structure.buffer,
           cooldown_until: structure.cooldownUntil ?? 0,
-          progress: structure.progress ?? 0,
+          progress: persistedStructureProgress(structure),
         }
       )
     }
@@ -355,7 +374,7 @@ export class LandnamSync implements SyncAdapter {
         facing: structure.facing ?? 0,
         buffer: structure.buffer,
         cooldown_until: structure.cooldownUntil ?? 0,
-        progress: structure.progress ?? 0,
+        progress: persistedStructureProgress(structure),
       }
       const record = byStructureId.get(structure.id)
       if (record) {

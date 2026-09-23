@@ -144,6 +144,63 @@ describe('LandnamSync', () => {
     expect(structures.records).toHaveLength(0)
   })
 
+  it('persists a storage silo as a finished structure and reloads it that way', async () => {
+    const { client, structures } = memoryClient()
+    const sync = new LandnamSync({ client })
+    const state = missionFixture()
+    state.structures = [{
+      id: 'silo-1',
+      type: 'silo',
+      pos: { x: 8, y: 4 },
+      buffer: { iron: 2 },
+      facing: 1,
+    }]
+
+    await sync.saveMission(state, 'Pathfinder')
+    const loaded = await sync.loadMission(state.id)
+
+    expect(structures.records[0]).toMatchObject({
+      blueprint_slug: 'silo',
+      structure_id: 'silo-1',
+      pos_x: 8,
+      pos_y: 4,
+      progress: null,
+    })
+    expect(loaded?.structures[0]).toMatchObject({
+      id: 'silo-1',
+      type: 'silo',
+      pos: { x: 8, y: 4 },
+      buffer: { iron: 2 },
+      facing: 1,
+    })
+    expect(loaded?.structures[0]).not.toHaveProperty('progress')
+
+    // Rows saved before this fix stored the missing progress as 0, which the
+    // flat view paints as an unfinished blueprint.
+    structures.records[0].progress = 0
+    const repaired = await sync.loadMission(state.id)
+    expect(repaired?.structures[0]).not.toHaveProperty('progress')
+  })
+
+  it('still round-trips habitat-frame construction progress', async () => {
+    const { client, structures } = memoryClient()
+    const sync = new LandnamSync({ client })
+    const state = missionFixture()
+    state.structures = [{
+      id: 'frame-1',
+      type: 'habitat-frame',
+      pos: { x: 1, y: 1 },
+      buffer: {},
+      progress: 0.4,
+    }]
+
+    await sync.saveMission(state, 'Pathfinder')
+    const loaded = await sync.loadMission(state.id)
+
+    expect(structures.records[0].progress).toBe(0.4)
+    expect(loaded?.structures[0]).toMatchObject({ type: 'habitat-frame', progress: 0.4 })
+  })
+
   it('stores Takeon launch-pad instances under the canonical Landnam blueprint', async () => {
     const { client, structures } = memoryClient()
     const sync = new LandnamSync({ client })

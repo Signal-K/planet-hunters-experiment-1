@@ -20,6 +20,7 @@ import type {
 import type { LifeStage, SurfaceTarget } from '@/lib/data'
 import { LandnamSync } from '@/lib/takeon/LandnamSync'
 import { buildLandnamBody, registerLandnamSandbox } from '@/lib/takeon/sandbox'
+import { installLandnamStructureGlyphs } from '@/lib/takeon/structureGlyphs'
 import {
   bindTakeonHostEvents,
   notificationForTakeonEvent,
@@ -271,6 +272,7 @@ const TakeOnMount = forwardRef<TakeOnMountHandle, TakeOnMountProps>(function Tak
         // Landnam's structures (roads, factories, silos…) and its biome
         // palette must exist before a saved mission referencing them resumes.
         registerLandnamSandbox(engine)
+        installLandnamStructureGlyphs(engine)
         const currentTarget = targetRef.current
         const body = currentTarget
           ? buildLandnamBody(engine, bodyId, currentTarget, lifeStage)

@@ -138,7 +138,7 @@ describe('Active mission guard (STS-487)', () => {
 })
 
 describe('Surface Silo placement persistence (KES-271)', () => {
-  it.only('persists the placed silo and plot after returning to the base and reloading', () => {
+  it('persists the placed silo and plot after returning to the base and reloading', () => {
     visitGame('/game/hub', {
       screen: 'hub',
       player: {

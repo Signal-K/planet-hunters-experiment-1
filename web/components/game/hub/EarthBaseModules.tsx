@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useMemo } from 'react'
+import React, { useEffect, useState } from 'react'
 import { sceneXPercent } from '@/lib/scene/terrain-kit'
 import { structureBuildMs } from '@/lib/systems/HubConstructionSystem'
 export interface HubBuildingDef {
@@ -89,12 +89,20 @@ function ConstructionRig({ animDuration, animDelay }: { animDuration: string; an
 
 function StructureSprite({ kind, active, buildStartedAt }: { kind: string; active?: boolean; buildStartedAt?: number }) {
   const buildMs = structureBuildMs(kind)
-  // Computed once per construction instance (memoized on buildStartedAt, which
-  // is stable while a structure is building) so a negative `animation-delay`
-  // places the CSS animation at the correct point in its timeline immediately
-  // on mount — including after a page reload mid-build — instead of
-  // restarting from 0 and desyncing from the status pill's own countdown.
-  const elapsedMs = useMemo(() => (buildStartedAt !== undefined ? Math.max(0, Date.now() - buildStartedAt) : Infinity), [buildStartedAt])
+  // `buildStartedAt` does not change when the build finishes, so a value
+  // captured once at mount left `isBuilding` true forever and the cyan
+  // scaffold stayed on top of the finished sprite. Re-render when the
+  // remaining time elapses. The negative animation-delay still places the
+  // CSS timeline correctly on mount, including a reload mid-build.
+  const [now, setNow] = useState(() => Date.now())
+  useEffect(() => {
+    if (buildStartedAt === undefined) return
+    const remaining = buildStartedAt + buildMs - Date.now()
+    if (remaining <= 0) return
+    const timer = window.setTimeout(() => setNow(Date.now()), remaining)
+    return () => window.clearTimeout(timer)
+  }, [buildMs, buildStartedAt])
+  const elapsedMs = buildStartedAt !== undefined ? Math.max(0, now - buildStartedAt) : Infinity
   const isBuilding = elapsedMs < buildMs
   const animDuration = `${buildMs}ms`
   const animDelay = `-${elapsedMs}ms`
