@@ -2,15 +2,15 @@
   position: absolute;
   inset: 0;
   overflow: hidden;
-  background: var(--ln-void);
+  background: var(--ln-purple-depth);
 }
 
 .ceiling {
   position: absolute;
   inset: 0 0 auto;
   height: 64px;
-  background: var(--ln-panel);
-  border-bottom: 1px solid var(--ln-hairline);
+  background: color-mix(in srgb, var(--ln-purple-depth) 84%, var(--ln-void));
+  border-bottom: 1px solid var(--ln-cyan-border);
   pointer-events: none;
 }
 
@@ -22,12 +22,12 @@
   height: 46%;
   min-height: 208px;
   padding: 12px 12px 16px;
-  border: 1px solid var(--ln-hairline-strong);
+  border: 1px solid var(--ln-blueprint-line-strong);
   border-radius: 8px 8px 4px 4px;
-  background: color-mix(in srgb, var(--ln-text-dim) 56%, var(--ln-panel));
+  background: var(--ln-blueprint-paper-2);
   box-shadow:
-    inset 0 2px 0 color-mix(in srgb, var(--ln-text) 20%, transparent),
-    0 16px 24px color-mix(in srgb, var(--ln-void) 76%, transparent);
+    inset 0 2px 0 var(--ln-blueprint-paper),
+    0 16px 24px color-mix(in srgb, var(--ln-purple-depth) 76%, transparent);
 }
 
 .bezel::before,
@@ -37,7 +37,7 @@
   top: 12px;
   bottom: 16px;
   width: 4px;
-  background: color-mix(in srgb, var(--ln-void) 48%, transparent);
+  background: color-mix(in srgb, var(--ln-blueprint-ink) 36%, transparent);
   z-index: 5;
 }
 
@@ -49,9 +49,9 @@
   width: 100%;
   height: 100%;
   overflow: hidden;
-  border: 4px solid color-mix(in srgb, var(--ln-void) 72%, var(--ln-panel-2));
+  border: 4px solid var(--ln-blueprint-ink);
   border-radius: 4px;
-  background: var(--ln-void);
+  background: var(--ln-blueprint-ink);
 }
 
 .courtyardPlate {
@@ -71,10 +71,10 @@
   top: calc(64px + 46% - 4px);
   height: 24px;
   z-index: 5;
-  border: 1px solid var(--ln-hairline-strong);
+  border: 1px solid var(--ln-blueprint-line-strong);
   border-radius: 4px;
-  background: color-mix(in srgb, var(--ln-text-dim) 42%, var(--ln-panel));
-  box-shadow: 0 8px 0 var(--ln-void);
+  background: var(--ln-blueprint-paper-2);
+  box-shadow: 0 8px 0 color-mix(in srgb, var(--ln-purple-depth) 84%, var(--ln-void));
 }
 
 .roomSideLeft,
@@ -83,8 +83,8 @@
   top: 64px;
   bottom: 0;
   width: 24px;
-  background: var(--ln-panel);
-  border-color: var(--ln-hairline);
+  background: var(--ln-purple-depth);
+  border-color: var(--ln-cyan-border);
   z-index: 0;
 }
 
@@ -97,8 +97,8 @@
   bottom: 12px;
   z-index: 4;
   padding: 4px 8px;
-  background: color-mix(in srgb, var(--ln-void) 78%, transparent);
-  color: var(--ln-cyan);
+  background: color-mix(in srgb, var(--ln-blueprint-paper) 88%, transparent);
+  color: var(--ln-blueprint-ink);
   font: 800 10px/1 var(--ln-font-display);
   letter-spacing: 0.16em;
   text-transform: uppercase;
@@ -109,7 +109,7 @@
   inset: 4px;
   z-index: 4;
   pointer-events: none;
-  border-top: 1px solid color-mix(in srgb, var(--ln-text) 24%, transparent);
+  border-top: 1px solid color-mix(in srgb, var(--ln-blueprint-paper) 64%, transparent);
 }
 
 @media (max-height: 520px) and (orientation: landscape) {

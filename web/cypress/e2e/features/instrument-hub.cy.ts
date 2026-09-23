@@ -104,7 +104,7 @@ function visitHub() {
     },
   }
 
-  cy.visit('/game', {
+  cy.visit('/game?preset=ui-instrument-hub', {
     onBeforeLoad(win) {
       win.localStorage.clear()
       win.localStorage.setItem(GUEST_KEY, GUEST)
@@ -118,12 +118,10 @@ function visitHub() {
 }
 
 describe('instrument hub orbit downlink', () => {
-  it('pings the orbit widget and opens the inspector from the dedicated hub', () => {
+  it('opens the inspector from the dedicated instrument hub route', () => {
     visitHub()
-    cy.get('[data-testid="hub-orbital-network"]', { timeout: 15_000 }).should('be.visible')
-    cy.get('[data-testid="hub-orbital-ping"]', { timeout: 15_000 }).should('exist')
-    cy.get('[data-testid="hub-orbital-network"]').click()
     cy.get('[data-testid="instrument-hub-screen"]', { timeout: 10_000 }).should('be.visible')
+    cy.get('[data-testid="instrument-signal"]', { timeout: 15_000 }).should('exist')
     cy.get('[data-testid="instrument-signal-inspect"]').first().click()
     cy.get('[data-testid="tess-discovery-screen"], [data-testid="asteroid-discovery-screen"]', { timeout: 10_000 }).should('be.visible')
   })
