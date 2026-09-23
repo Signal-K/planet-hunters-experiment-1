@@ -574,8 +574,8 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
         // success/failure overlays on this same screen) instead of the old
         // bare, unstyled div, so it reads as the same chrome as the rest of
         // the mining HUD rather than floating text with no card behind it.
-        <aside className="mining-guide-overlay" aria-label="Mining controls" style={{ position: 'absolute', right: 16, top: 64, zIndex: 70, width: 'min(360px, calc(100% - 32px))', maxHeight: 'calc(100% - 220px)' }}>
-          <Panel accent="var(--ln-cyan)" surface="glass" style={{ padding: 12, maxHeight: '100%', overflowY: 'auto' }}>
+        <aside className="mining-guide-overlay" aria-label="Mining controls" style={{ position: 'absolute', right: 16, top: 64, zIndex: 70, width: 'min(360px, calc(100% - 32px))', maxHeight: 'calc(100% - 220px)', overflowY: 'auto' }}>
+          <Panel accent="var(--ln-cyan)" surface="glass" style={{ padding: 12 }}>
             <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 9, fontWeight: 800, letterSpacing: '0.2em', color: 'var(--ln-cyan)', textTransform: 'uppercase', marginBottom: 10 }}>Mining Controls</div>
             {miningGuide(deliveryTargetName).map(item => (
               <div key={item.label} style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
