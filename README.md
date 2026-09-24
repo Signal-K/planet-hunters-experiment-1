@@ -49,7 +49,7 @@ cd web
 npm run deploy:cf
 ```
 
-Test URL: https://landnam-web.liam-55d.workers.dev
+Test URL: https://landnam-web-staging.liam-55d.workers.dev
 
 ## 🤝 Contributing
 
