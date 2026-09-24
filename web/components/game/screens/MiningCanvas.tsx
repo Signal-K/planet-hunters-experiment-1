@@ -67,6 +67,17 @@ function buildAimGuide(shipY: number, surfaceY: number): Graphics {
   return g
 }
 
+// SSL-307: a brighter, thicker version of the same fire line, shown only
+// while a player hasn't fired their first shot yet (see aimAssistActive).
+// The always-present buildAimGuide dots are too subtle to read as "this is
+// where the laser fires" on a first look; this pulses to draw the eye.
+function buildAimAssistGuide(shipY: number, surfaceY: number): Graphics {
+  const g = new Graphics()
+  g.moveTo(SHIP_X, shipY + 18).lineTo(SHIP_X, surfaceY - 6).stroke({ color: 0x9becff, width: 2, alpha: 0.55 })
+  g.circle(SHIP_X, surfaceY - 6, 4).fill({ color: 0x9becff, alpha: 0.55 })
+  return g
+}
+
 function buildEnginePlume(): Graphics {
   const g = new Graphics()
 
@@ -96,9 +107,11 @@ interface MiningCanvasProps {
   oreNearRef?: React.MutableRefObject<((near: boolean) => void) | null>
   /** Live-updating set of mineral keys still needed to fill the order — see MiningControllerOptions.neededMineralsRef. */
   neededMineralsRef?: React.MutableRefObject<Set<string> | null>
+  /** SSL-307: true for a player who hasn't fired their first shot yet (new or returning). Slows the field and highlights the fire line until the first shot. */
+  aimAssistActive?: boolean
 }
 
-export default function MiningCanvas({ rocketImageSrc, minerals, requiredMinerals, mineralMeta, laserTier, onCollect, onReady, onFailure, fireRef, scrollRef, oreNearRef, neededMineralsRef }: MiningCanvasProps) {
+export default function MiningCanvas({ rocketImageSrc, minerals, requiredMinerals, mineralMeta, laserTier, onCollect, onReady, onFailure, fireRef, scrollRef, oreNearRef, neededMineralsRef, aimAssistActive }: MiningCanvasProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const onCollectRef = useRef(onCollect)
   onCollectRef.current = onCollect
@@ -106,6 +119,12 @@ export default function MiningCanvas({ rocketImageSrc, minerals, requiredMineral
   onReadyRef.current = onReady
   const onFailureRef = useRef(onFailure)
   onFailureRef.current = onFailure
+  // SSL-307: read at the time the deferred doInit() actually runs, not at
+  // mount-effect-schedule time — aimCoach.visible starts false and only
+  // flips true in a later effect, so a closure over the raw prop would
+  // capture the stale initial value.
+  const aimAssistActiveRef = useRef(aimAssistActive)
+  aimAssistActiveRef.current = aimAssistActive
   const controllerRef = useRef<MiningController | null>(null)
   const [missFlash, setMissFlash] = useState(false)
   const missFlashTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -232,6 +251,8 @@ export default function MiningCanvas({ rocketImageSrc, minerals, requiredMineral
           },
           onOreNearby: (near) => { oreNearRef?.current?.(near) },
           neededMineralsRef,
+          aimAssistActive: aimAssistActiveRef.current,
+          onAimAssistEnd: () => { assistGuide.visible = false },
         })
 
         app.ticker.add(ticker => {
@@ -259,6 +280,15 @@ export default function MiningCanvas({ rocketImageSrc, minerals, requiredMineral
         }
 
         app.stage.addChild(buildAimGuide(shipY, surfaceY))
+        const assistGuide = buildAimAssistGuide(shipY, surfaceY)
+        assistGuide.visible = !!aimAssistActiveRef.current
+        app.stage.addChild(assistGuide)
+        let assistPhase = 0
+        app.ticker.add(ticker => {
+          if (!assistGuide.visible) return
+          assistPhase += ticker.deltaMS / 1000
+          assistGuide.alpha = 0.55 + Math.sin(assistPhase * 4) * 0.35
+        })
         const plume = buildEnginePlume()
         plume.x = SHIP_X - 48
         plume.y = shipY
