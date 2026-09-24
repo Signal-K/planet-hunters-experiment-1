@@ -31,6 +31,7 @@ import ProgressBar from '@/components/ui/ProgressBar'
 import AcademyCanvas from './AcademyCanvas'
 import AcademyCoach, { useAcademyCoach } from '@/components/game/AcademyCoach'
 import { UI_ZONES } from '@/lib/ui-zones'
+import { captureGameEvent } from '@/lib/posthog'
 import styles from './AcademyScreen.module.css'
 
 type Tab = 'roster' | 'training' | 'hire' | 'staffing' | 'partners'
@@ -117,7 +118,7 @@ export default function AcademyScreen(props: AcademyScreenProps) {
             {!affinityReady ? (
               <div className={styles.notice}>Client level progress: {affinityClients.filter(item => item.level >= 2).length}/2 partner programmes</div>
             ) : !props.player.academyResearched ? (
-              <PrimaryBtn disabled={(props.player.researchXP ?? 0) < ACADEMY_RESEARCH_XP_COST} onClick={props.onResearch}>Research Academy</PrimaryBtn>
+              <PrimaryBtn disabled={(props.player.researchXP ?? 0) < ACADEMY_RESEARCH_XP_COST} onClick={() => { captureGameEvent('academy_researched'); props.onResearch() }}>Research Academy</PrimaryBtn>
             ) : (
               <PrimaryBtn onClick={props.onBuild}>Open Build &amp; Place</PrimaryBtn>
             )}
@@ -137,7 +138,7 @@ export default function AcademyScreen(props: AcademyScreenProps) {
             <div className={styles.summary}>
               <span>{crew.length} rostered</span>
               <span>{formatCurrency(CREW_DAILY_UPKEEP)} / astronaut / day</span>
-              <button onClick={() => props.onFunding(!props.player.academyFunded)}>
+              <button onClick={() => { captureGameEvent('academy_funding_toggled', { funded: !props.player.academyFunded }); props.onFunding(!props.player.academyFunded) }}>
                 {props.player.academyFunded ? `Funded · ${formatCurrency(ACADEMY_DAILY_UPKEEP)}/day` : 'Restore funding'}
               </button>
             </div>
@@ -205,9 +206,9 @@ export default function AcademyScreen(props: AcademyScreenProps) {
                     </article>
                   ))}
                   <BranchPicker value={trainingBranch} onChange={setTrainingBranch} />
-                  <PrimaryBtn disabled={!props.player.academyFunded} onClick={() => props.onTrainCandidate(trainingBranch)}>Train New Candidate · Level 1</PrimaryBtn>
+                  <PrimaryBtn disabled={!props.player.academyFunded} onClick={() => { captureGameEvent('academy_candidate_training_started', { branch: trainingBranch }); props.onTrainCandidate(trainingBranch) }}>Train New Candidate · Level 1</PrimaryBtn>
                   {crew.filter(member => member.crewClass === 'astronaut' && member.condition === 'fit').map(member => (
-                    <button className={styles.inlineAction} key={member.id} onClick={() => props.onTrain(member.id, trainingBranch)}>
+                    <button className={styles.inlineAction} key={member.id} onClick={() => { captureGameEvent('academy_crew_training_advanced', { crew_id: member.id, branch: trainingBranch }); props.onTrain(member.id, trainingBranch) }}>
                       Advance {member.name} in {trainingBranch}
                     </button>
                   ))}
@@ -222,7 +223,7 @@ export default function AcademyScreen(props: AcademyScreenProps) {
                     return (
                       <article className={styles.actionCard} key={source.id}>
                         <div><strong>{source.name}</strong><span>{source.kind === 'agency' ? 'REAL AGENCY' : 'TRUSTED CLIENT'} · {source.description}</span></div>
-                        <GhostBtn full={false} onClick={() => props.onHire(source.id)}>{eligibility.ok ? 'Hire' : eligibility.reason?.replace('-', ' ')}</GhostBtn>
+                        <GhostBtn full={false} onClick={() => { captureGameEvent('academy_crew_hired', { source_id: source.id }); props.onHire(source.id) }}>{eligibility.ok ? 'Hire' : eligibility.reason?.replace('-', ' ')}</GhostBtn>
                       </article>
                     )
                   })}
@@ -257,7 +258,7 @@ export default function AcademyScreen(props: AcademyScreenProps) {
                   {!props.player.crewModuleResearched && (
                     <article className={styles.moduleCard}>
                       <div><strong>Crew Quarters T1</strong><span>Research a two-seat module, then purchase and fit it to a larger hull in the Hangar.</span></div>
-                      <PrimaryBtn disabled={(props.player.researchXP ?? 0) < CREW_MODULE_RESEARCH_XP_COST} onClick={props.onResearchCrewModule}>Research · {CREW_MODULE_RESEARCH_XP_COST} XP</PrimaryBtn>
+                      <PrimaryBtn disabled={(props.player.researchXP ?? 0) < CREW_MODULE_RESEARCH_XP_COST} onClick={() => { captureGameEvent('academy_crew_module_researched'); props.onResearchCrewModule() }}>Research · {CREW_MODULE_RESEARCH_XP_COST} XP</PrimaryBtn>
                     </article>
                   )}
                   {props.player.crewModuleResearched && <PrimaryBtn onClick={props.onOpenHangar}>Fit Crew Quarters in Hangar</PrimaryBtn>}

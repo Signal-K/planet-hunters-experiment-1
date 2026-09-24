@@ -14,6 +14,7 @@ import SandboxFieldControls from '@/components/takeon/SandboxFieldControls'
 import RoverDrivePad from '@/components/takeon/RoverDrivePad'
 import { shareFieldCreation } from '@/lib/community/shareField'
 import TopBar from '@/components/ui/TopBar'
+import { captureGameEvent } from '@/lib/posthog'
 import styles from './RoverMiningScreen.module.css'
 
 /**
@@ -192,7 +193,7 @@ export default function RoverMiningScreen({
                 <span className={styles.eyebrow}>TOUCHDOWN · {target.name.toUpperCase()}</span>
                 <h2>Deploy the Mule rover</h2>
                 <p>The Prospector is your rocket. The Mule is the rover in its hold. Deploy it to drive across the visible terrain and drill the client order.</p>
-                <button type="button" className={styles.primaryAction} onClick={() => setDeployed(true)} data-testid="deploy-surface-ops-confirm">DEPLOY MULE ROVER</button>
+                <button type="button" className={styles.primaryAction} onClick={() => { captureGameEvent('rover_deployed', { target_id: target.id }); setDeployed(true) }} data-testid="deploy-surface-ops-confirm">DEPLOY MULE ROVER</button>
               </div>
             </div>
           )}
@@ -246,7 +247,7 @@ export default function RoverMiningScreen({
               return <div className={styles.orderRow} key={mineral}><span className={styles.mineralIdentity}><span className={styles.mineralDot} style={{ background: meta?.color ?? 'var(--ln-text-muted)' }} />{meta?.name ?? mineral}</span><strong>{loaded} / {amount} U</strong></div>
             })}
           </div>
-          <button type="button" className={styles.primaryAction} disabled={!takeonReady || !cargoReady} onClick={() => onComplete(cargo)} data-testid="rover-return-to-ship">RETURN MULE TO PROSPECTOR</button>
+          <button type="button" className={styles.primaryAction} disabled={!takeonReady || !cargoReady} onClick={() => { captureGameEvent('rover_returned_to_ship', { target_id: target.id }); onComplete(cargo) }} data-testid="rover-return-to-ship">RETURN MULE TO PROSPECTOR</button>
         </aside>
       </main>
 

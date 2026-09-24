@@ -1,0 +1,15 @@
+.page { --ln-shell: var(--ln-purple-depth); position: relative; width: 100%; min-height: 100dvh; overflow: hidden; background: var(--ln-purple-depth); color: var(--ln-text); }
+.previewControls { margin-top: auto; padding-top: 8px; border-top: 1px solid var(--ln-blueprint-line-strong); }
+.previewControls p { margin: 0 0 8px; color: var(--ln-blueprint-ink); font: 800 9px/1 var(--ln-font-display); letter-spacing: .12em; }
+.toggles { display: flex; flex-wrap: wrap; gap: 4px; }
+.toggle,
+.toggleOn { min-height: 32px; padding: 4px 8px; border-radius: 4px; font: 800 9px/1 var(--ln-font-display); letter-spacing: .1em; cursor: pointer; }
+.toggle { border: 1px solid var(--ln-blueprint-line-strong); background: var(--ln-blueprint-paper); color: var(--ln-blueprint-ink); }
+.toggleOn { border: 1px solid var(--ln-blueprint-blue); background: color-mix(in srgb, var(--ln-cyan) 18%, var(--ln-blueprint-paper)); color: var(--ln-blueprint-blue); }
+
+@media (max-height: 520px) and (orientation: landscape) {
+  .previewControls p { display: none; }
+  .previewControls { padding-top: 4px; }
+  .toggle,
+  .toggleOn { min-height: 24px; padding: 4px; font-size: 8px; }
+}

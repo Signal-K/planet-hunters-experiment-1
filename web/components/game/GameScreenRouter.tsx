@@ -1,28 +1,37 @@
 'use client'
 
 import { useEffect, useState, useCallback } from 'react'
+import dynamic from 'next/dynamic'
 import { useGame } from '@/game-context'
 import { ACADEMY_INTRO_MISSION_ID, M1_STEPS, M2_STEPS, M3_STEPS, rocketDisplayForConfig, rocketModelForConfig } from '@/lib/data'
 import { FREE_OPS_START_MISSIONS_DONE } from '@/lib/data/mission-generator'
 import type { Screen } from '@/lib/game-types'
-import MissionSetupRoutes from '@/components/game/MissionSetupRoutes'
-import MissionOperationRoutes from '@/components/game/MissionOperationRoutes'
-import IntroScreen from '@/components/game/screens/IntroScreen'
-import BuildPlaceScreen from '@/components/game/screens/BuildPlaceScreen'
 import { hasEstablishedMiningSettlement } from '@/lib/systems/SurfaceOpsSystem'
+// IntroScreen and HubScreen are the two most likely first paints (cold start
+// and post-onboarding default), so they stay in the main bundle. Every other
+// screen below is code-split with next/dynamic — the switch below only ever
+// renders one of them at a time, so there's no reason to ship all ~20
+// screens' JS on the very first load.
+import IntroScreen from '@/components/game/screens/IntroScreen'
 import HubScreen from '@/components/game/screens/HubScreen'
-import RefineryScreen from '@/components/game/screens/RefineryScreen'
-import MarketScreen from '@/components/game/screens/MarketScreen'
-import HangarScreen from '@/components/game/screens/HangarScreen'
-import SkillTreeScreen from '@/components/game/screens/SkillTreeScreen'
-import LaunchpadScreen from '@/components/game/screens/LaunchpadScreen'
-import InstrumentHubScreen from '@/components/game/screens/InstrumentHubScreen'
-import TessDiscoveryScreen from '@/components/game/screens/TessDiscoveryScreen'
-import AsteroidDiscoveryScreen from '@/components/game/screens/AsteroidDiscoveryScreen'
-import SurfaceOpsScreen from '@/components/game/screens/SurfaceOpsScreen'
-import AcademyScreen from '@/components/game/screens/AcademyScreen'
-import MissionHistoryScreen from '@/components/game/screens/MissionHistoryScreen'
-import NarrativeLedgerScreen from '@/components/game/screens/NarrativeLedgerScreen'
+
+const ScreenLoading = () => <div className="game-screen-loading" aria-hidden="true" />
+
+const MissionSetupRoutes = dynamic(() => import('@/components/game/MissionSetupRoutes'), { loading: ScreenLoading })
+const MissionOperationRoutes = dynamic(() => import('@/components/game/MissionOperationRoutes'), { loading: ScreenLoading })
+const BuildPlaceScreen = dynamic(() => import('@/components/game/screens/BuildPlaceScreen'), { loading: ScreenLoading })
+const RefineryScreen = dynamic(() => import('@/components/game/screens/RefineryScreen'), { loading: ScreenLoading })
+const MarketScreen = dynamic(() => import('@/components/game/screens/MarketScreen'), { loading: ScreenLoading })
+const HangarScreen = dynamic(() => import('@/components/game/screens/HangarScreen'), { loading: ScreenLoading })
+const SkillTreeScreen = dynamic(() => import('@/components/game/screens/SkillTreeScreen'), { loading: ScreenLoading })
+const LaunchpadScreen = dynamic(() => import('@/components/game/screens/LaunchpadScreen'), { loading: ScreenLoading })
+const InstrumentHubScreen = dynamic(() => import('@/components/game/screens/InstrumentHubScreen'), { loading: ScreenLoading })
+const TessDiscoveryScreen = dynamic(() => import('@/components/game/screens/TessDiscoveryScreen'), { loading: ScreenLoading })
+const AsteroidDiscoveryScreen = dynamic(() => import('@/components/game/screens/AsteroidDiscoveryScreen'), { loading: ScreenLoading })
+const SurfaceOpsScreen = dynamic(() => import('@/components/game/screens/SurfaceOpsScreen'), { loading: ScreenLoading })
+const AcademyScreen = dynamic(() => import('@/components/game/screens/AcademyScreen'), { loading: ScreenLoading })
+const MissionHistoryScreen = dynamic(() => import('@/components/game/screens/MissionHistoryScreen'), { loading: ScreenLoading })
+const NarrativeLedgerScreen = dynamic(() => import('@/components/game/screens/NarrativeLedgerScreen'), { loading: ScreenLoading })
 import { enqueueSurvey } from '@/lib/surveys'
 import { VISUAL_ASTEROID_CANDIDATE, VISUAL_TESS_CANDIDATE } from '@/lib/visual-fixtures'
 import { captureGameEvent } from '@/lib/posthog'

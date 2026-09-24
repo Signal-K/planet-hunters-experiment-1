@@ -6,20 +6,20 @@
    ============================================================ */
 
 /* ─── Fonts ──────────────────────────────────────────────── */
-@font-face { font-family: "Oxanium"; src: url("/fonts/Oxanium-ExtraLight.ttf") format("truetype"); font-weight: 200; font-style: normal; font-display: swap; }
-@font-face { font-family: "Oxanium"; src: url("/fonts/Oxanium-Light.ttf")      format("truetype"); font-weight: 300; font-style: normal; font-display: swap; }
-@font-face { font-family: "Oxanium"; src: url("/fonts/Oxanium-Regular.ttf")    format("truetype"); font-weight: 400; font-style: normal; font-display: swap; }
-@font-face { font-family: "Oxanium"; src: url("/fonts/Oxanium-Medium.ttf")     format("truetype"); font-weight: 500; font-style: normal; font-display: swap; }
-@font-face { font-family: "Oxanium"; src: url("/fonts/Oxanium-SemiBold.ttf")   format("truetype"); font-weight: 600; font-style: normal; font-display: swap; }
-@font-face { font-family: "Oxanium"; src: url("/fonts/Oxanium-Bold.ttf")       format("truetype"); font-weight: 700; font-style: normal; font-display: swap; }
-@font-face { font-family: "Oxanium"; src: url("/fonts/Oxanium-ExtraBold.ttf")  format("truetype"); font-weight: 800; font-style: normal; font-display: swap; }
+@font-face { font-family: "Oxanium"; src: url("/fonts/Oxanium-ExtraLight.woff2") format("woff2"); font-weight: 200; font-style: normal; font-display: swap; }
+@font-face { font-family: "Oxanium"; src: url("/fonts/Oxanium-Light.woff2")      format("woff2"); font-weight: 300; font-style: normal; font-display: swap; }
+@font-face { font-family: "Oxanium"; src: url("/fonts/Oxanium-Regular.woff2")    format("woff2"); font-weight: 400; font-style: normal; font-display: swap; }
+@font-face { font-family: "Oxanium"; src: url("/fonts/Oxanium-Medium.woff2")     format("woff2"); font-weight: 500; font-style: normal; font-display: swap; }
+@font-face { font-family: "Oxanium"; src: url("/fonts/Oxanium-SemiBold.woff2")   format("woff2"); font-weight: 600; font-style: normal; font-display: swap; }
+@font-face { font-family: "Oxanium"; src: url("/fonts/Oxanium-Bold.woff2")       format("woff2"); font-weight: 700; font-style: normal; font-display: swap; }
+@font-face { font-family: "Oxanium"; src: url("/fonts/Oxanium-ExtraBold.woff2")  format("woff2"); font-weight: 800; font-style: normal; font-display: swap; }
 
-@font-face { font-family: "Turret Road"; src: url("/fonts/TurretRoad-ExtraLight.ttf") format("truetype"); font-weight: 200; font-style: normal; font-display: swap; }
-@font-face { font-family: "Turret Road"; src: url("/fonts/TurretRoad-Light.ttf")      format("truetype"); font-weight: 300; font-style: normal; font-display: swap; }
-@font-face { font-family: "Turret Road"; src: url("/fonts/TurretRoad-Regular.ttf")    format("truetype"); font-weight: 400; font-style: normal; font-display: swap; }
-@font-face { font-family: "Turret Road"; src: url("/fonts/TurretRoad-Medium.ttf")     format("truetype"); font-weight: 500; font-style: normal; font-display: swap; }
-@font-face { font-family: "Turret Road"; src: url("/fonts/TurretRoad-Bold.ttf")       format("truetype"); font-weight: 700; font-style: normal; font-display: swap; }
-@font-face { font-family: "Turret Road"; src: url("/fonts/TurretRoad-ExtraBold.ttf")  format("truetype"); font-weight: 800; font-style: normal; font-display: swap; }
+@font-face { font-family: "Turret Road"; src: url("/fonts/TurretRoad-ExtraLight.woff2") format("woff2"); font-weight: 200; font-style: normal; font-display: swap; }
+@font-face { font-family: "Turret Road"; src: url("/fonts/TurretRoad-Light.woff2")      format("woff2"); font-weight: 300; font-style: normal; font-display: swap; }
+@font-face { font-family: "Turret Road"; src: url("/fonts/TurretRoad-Regular.woff2")    format("woff2"); font-weight: 400; font-style: normal; font-display: swap; }
+@font-face { font-family: "Turret Road"; src: url("/fonts/TurretRoad-Medium.woff2")     format("woff2"); font-weight: 500; font-style: normal; font-display: swap; }
+@font-face { font-family: "Turret Road"; src: url("/fonts/TurretRoad-Bold.woff2")       format("woff2"); font-weight: 700; font-style: normal; font-display: swap; }
+@font-face { font-family: "Turret Road"; src: url("/fonts/TurretRoad-ExtraBold.woff2")  format("woff2"); font-weight: 800; font-style: normal; font-display: swap; }
 
 /* ─── Root tokens (deep-space default) ──────────────────── */
 /* Superseded 2026-07-31 — the 2026-07-23 navy palette below read as a heavy
@@ -753,6 +753,10 @@ button { cursor: pointer; }
 }
 
 .game-screen { position: absolute; inset: 0; overflow: hidden; background: var(--ln-bg); }
+
+/* Fallback while a code-split screen chunk loads (GameScreenRouter's
+   next/dynamic screens). Matches .game-screen so there's no flash/jump. */
+.game-screen-loading { position: absolute; inset: 0; background: var(--ln-bg); }
 
 /* The Hub and Launchpad share one physical campus. Each screen enters with a
    short ground-line camera move so navigation feels like approaching the pad,

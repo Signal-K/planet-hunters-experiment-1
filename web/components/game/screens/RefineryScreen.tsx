@@ -10,6 +10,7 @@ import { type RefineryRecipe, REFINERY_RECIPES } from '@/lib/data'
 import { UI_ZONES } from '@/lib/ui-zones'
 import { formatCurrency } from '@/lib/format'
 import ScenePanel from '@/components/game/ScenePanel'
+import { captureGameEvent } from '@/lib/posthog'
 
 interface RefineryScreenProps {
   player: { francs: number; stash?: Record<string, number>; refineryQueue: { recipeId: string; startedAt: number; durationMs?: number }[]; refineryLastStartedAt?: number; refinedGoods: Record<string, number>; staffed?: boolean }
@@ -66,7 +67,7 @@ export default function RefineryScreen({ player, onBack, onStartRefine, onCollec
                 )}
               </div>
               {done && (
-                <GhostBtn testId="refinery-collect-btn" onClick={() => onCollect(running.recipeId)}>Collect</GhostBtn>
+                <GhostBtn testId="refinery-collect-btn" onClick={() => { captureGameEvent('refinery_goods_collected', { recipe_id: running.recipeId }); onCollect(running.recipeId) }}>Collect</GhostBtn>
               )}
             </div>
           </Panel>
@@ -125,7 +126,7 @@ export default function RefineryScreen({ player, onBack, onStartRefine, onCollec
       </ScenePanel>
       {selected && (
         <div className="sticky-actions" data-ui-zone={UI_ZONES.bottomActions}>
-          <PrimaryBtn onClick={() => { onStartRefine(selected); setSelected(null) }}>Start Refinement</PrimaryBtn>
+          <PrimaryBtn onClick={() => { captureGameEvent('refinery_started', { recipe_id: selected }); onStartRefine(selected); setSelected(null) }}>Start Refinement</PrimaryBtn>
         </div>
       )}
     </div>

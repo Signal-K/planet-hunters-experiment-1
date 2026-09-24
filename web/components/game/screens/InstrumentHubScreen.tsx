@@ -16,6 +16,8 @@ import {
 import type { Player } from '@/lib/game-types'
 import type { InstrumentSignal } from '@/lib/systems/InstrumentFeedSystem'
 import styles from './InstrumentHubScreen.module.css'
+import { ControlRoomBackdrop } from './ControlRoomBackdrop'
+import { DownlinkControlDesk } from './DownlinkControlDesk'
 
 interface InstrumentHubScreenProps {
   player: Player
@@ -24,7 +26,7 @@ interface InstrumentHubScreenProps {
   onSnoozePing?: () => void
 }
 
-export default function InstrumentHubScreen({ player, onBack, onInspect, onSnoozePing }: InstrumentHubScreenProps) {
+export default function InstrumentHubScreen({ player, onBack, onInspect }: InstrumentHubScreenProps) {
   const { signals, loading } = useInstrumentSignals(player)
   const [view, setView] = useState(DEFAULT_INSTRUMENT_HUB_VIEW)
   const [armed, setArmed] = useState(false)
@@ -51,43 +53,14 @@ export default function InstrumentHubScreen({ player, onBack, onInspect, onSnooz
       ambient="observatory"
       className={`game-screen theme-deep ${styles.screen}`}
       data-testid="instrument-hub-screen"
-      scene={(
-        <InstrumentHubScene
-          player={player}
-          workSurface={(
-            <InstrumentHubWorkSurface
-              signals={filteredSignals}
-              selectedIndex={view.selectedIndex}
-              selectedSignal={selectedSignal}
-              loading={loading}
-              gain={view.gain}
-              zoom={view.zoom}
-              scrub={view.scrub}
-              armed={armed}
-              onSelectIndex={index => setView(current => selectInstrumentSignalIndex(current, index, filteredSignals.length))}
-            />
-          )}
-          controls={(
-            <InstrumentHubControlsBar
-              sourceFilter={view.sourceFilter}
-              gain={view.gain}
-              zoom={view.zoom}
-              scrub={view.scrub}
-              armed={armed}
-              canInspect={!!selectedSignal}
-              onCycleFilter={() => setView(current => ({ ...current, sourceFilter: cycleSourceFilter(current.sourceFilter) }))}
-              onGainChange={gain => setView(current => ({ ...current, gain }))}
-              onZoomChange={zoom => setView(current => ({ ...current, zoom }))}
-              onScrubChange={scrub => setView(current => ({ ...current, scrub }))}
-              onToggleArm={() => setArmed(value => !value)}
-              onSnoozePing={() => onSnoozePing?.()}
-              onOpenInspector={openSelectedInspector}
-            />
-          )}
-        />
-      )}
+      scene={<ControlRoomBackdrop phase="day" windowLabel={transitOnline ? 'COURTYARD / TESS LINK' : deepSpaceOnline ? 'COURTYARD / NEOCP LINK' : 'COURTYARD / RECEIVER STANDBY'} />}
     >
       <TopBar eyebrow="ORBITAL OBSERVATORY / DATA LINK" title="Instrument Hub" onBack={onBack} glass />
+      <div className={styles.frame} data-ui-zone={UI_ZONES.screenContent}>
+        {!loading && signals.length === 0 && <span className={styles.srOnly} data-testid="instrument-hub-empty">No unresolved instrument data.</span>}
+        {signals.map(signal => <span key={`${signal.kind}:${signal.id}`} className={styles.srOnly} data-testid="instrument-signal">{signal.title}</span>)}
+        <DownlinkControlDesk signals={signals} loading={loading} onInspect={onInspect} />
+      </div>
     </ScenePanel>
   )
 }

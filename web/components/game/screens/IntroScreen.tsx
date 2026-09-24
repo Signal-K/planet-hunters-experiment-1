@@ -22,7 +22,7 @@ export default function IntroScreen({
   return (
     <div className="game-screen intro-screen">
       <Image
-        src="/earth-dusk.png"
+        src="/earth-dusk.webp"
         alt="Earth from orbit"
         fill
         className="intro-earth"
