@@ -84,7 +84,9 @@ function LockGlyph() {
 const MENU: NavItem[] = [
   { id: 'hub',      label: 'Base',     color: 'var(--ln-cyan)', glyph: <HubGlyph /> },
   { id: 'missions', label: 'Missions', color: 'var(--ln-cyan)', glyph: <MissionsGlyph /> },
-  { id: 'galaxy',   label: 'Telescope', color: 'var(--ln-cyan)', glyph: <AtlasGlyph /> },
+  // SSL-304 plate is the live telescope scene. `galaxy` still mounts the
+  // legacy TessDiscovery inspector, reached only from Instrument Hub Inspect.
+  { id: 'instrument-hub', label: 'Telescope', color: 'var(--ln-cyan)', glyph: <AtlasGlyph /> },
   { id: 'market',   label: 'Market',   color: 'var(--ln-cyan-bright)', glyph: <MarketGlyph /> },
 ]
 
@@ -95,7 +97,7 @@ export default function BottomTabBar({ current, onNav }: BottomTabBarProps) {
     <div className="bottom-tab-bar" data-ui-zone={UI_ZONES.bottomNav}>
       {MENU.map(m => {
         const active = current === m.id
-        const locked = (m.locked || m.id === 'market') && !game.player.freeOperations
+        const locked = (m.locked || m.id === 'market' || m.id === 'instrument-hub') && !game.player.freeOperations
         const color = locked ? 'var(--ln-text-muted)' : m.color
 
         return (

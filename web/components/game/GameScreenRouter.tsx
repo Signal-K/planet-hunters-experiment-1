@@ -262,6 +262,8 @@ export function ScreenContent({
       )
 
     case 'galaxy':
+      // Legacy inspector. Telescope tab and post-launch landing use instrument-hub.
+      // Inspect still arrives here until the plate owns real TESS verdicts.
       return (
         <TessDiscoveryScreen
           player={game.player}
