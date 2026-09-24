@@ -193,7 +193,7 @@ function GameCanvas() {
 
   const currentNav = game.screen === 'missions' || game.screen === 'targets'
     ? 'missions'
-    : game.screen === 'mission-history' ? 'mission-history' : game.screen === 'galaxy' ? 'galaxy' : game.screen === 'fab' ? 'fab' : game.screen === 'skills' ? 'skills' : 'hub'
+    : game.screen === 'mission-history' ? 'mission-history' : game.screen === 'instrument-hub' || game.screen === 'galaxy' ? 'instrument-hub' : game.screen === 'fab' ? 'fab' : game.screen === 'skills' ? 'skills' : 'hub'
   const showHub = game.screen === 'hub' || (game.screen === 'market' && !game.player.freeOperations)
   const missionCreatorActive = game.screen === 'missions'
     || game.screen === 'targets'

@@ -950,7 +950,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
         popup,
         doneSteps: { ...s.doneSteps, 9: true },
           screen: mission?.payload?.type === 'satellite'
-            ? 'galaxy'
+            ? 'instrument-hub'
             : isProgramOperation
               ? 'launchpad'
               : (stillInTutorial || justFinishedOnboardingNow)

@@ -148,7 +148,7 @@ function GameChrome({ children }: { children: ReactNode }) {
 
   const currentNav = ['missions', 'targets'].includes(currentScreen)
     ? 'missions'
-    : currentScreen === 'mission-history' ? 'mission-history' : currentScreen === 'galaxy' ? 'galaxy' : currentScreen === 'fab' ? 'fab' : currentScreen === 'skills' ? 'skills' : 'hub'
+    : currentScreen === 'mission-history' ? 'mission-history' : currentScreen === 'instrument-hub' || currentScreen === 'galaxy' ? 'instrument-hub' : currentScreen === 'fab' ? 'fab' : currentScreen === 'skills' ? 'skills' : 'hub'
   // Location screens (physical places in the game world, and the mission-run
   // sequence through them) own the full viewport instead of sitting inside
   // the generic desktop device-card — that boxed treatment is for menus

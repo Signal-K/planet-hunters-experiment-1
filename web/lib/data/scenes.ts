@@ -147,8 +147,8 @@ export const SCENES: readonly SceneDefinition[] = [
   { id: 'hangar', name: 'Hangar', surface: 'dom', location: 'earth-base', screen: 'hangar', entityTypes: [], description: 'Owned ships and the ship customiser interior view.' },
   { id: 'skills', name: 'Skill Tree', surface: 'dom', location: 'menu', screen: 'skills', entityTypes: [], description: 'Four branches — mining, cargo, range, engineering.' },
   { id: 'launchpad', name: 'Launchpad', surface: 'dom', location: 'earth-base', screen: 'launchpad', entityTypes: [], description: 'The player\'s own program — satellites and self-directed runs they launch on their own initiative. Client contracts live one press away on the Mission Board.' },
-  { id: 'galaxy', name: 'Galaxy Map', surface: 'dom', location: 'orbit', screen: 'galaxy', entityTypes: [], description: 'Star map beyond the solar system. Free Ops only.' },
-  { id: 'instrument-hub', name: 'Instrument Hub', surface: 'dom', location: 'orbit', screen: 'instrument-hub', entityTypes: [], description: 'Owned telescope and satellite downlink queue. Opens the matching inspector. Not TESS transit photometry itself — see the glossary rule in CLAUDE.md.' },
+  { id: 'galaxy', name: 'Galaxy Map', surface: 'dom', location: 'orbit', screen: 'galaxy', entityTypes: [], description: 'Legacy TESS inspector (TessDiscoveryScreen). Full-screen lightcurve plus verdict dock, two-column on desktop (SSL-300). Kept only as the Instrument Hub Inspect handoff. Player nav uses instrument-hub.' },
+  { id: 'instrument-hub', name: 'Instrument Hub', surface: 'dom', location: 'orbit', screen: 'instrument-hub', entityTypes: [], description: 'Current telescope scene (SSL-304 plate): Earth Base viewport, classify workspace, control bar. Sky chip and the Telescope tab open here. Inspect still hands TESS/NEOCP rows to the legacy galaxy and asteroid-discovery inspectors.' },
 ]
 
 const BY_ID = new Map(SCENES.map(s => [s.id, s]))
