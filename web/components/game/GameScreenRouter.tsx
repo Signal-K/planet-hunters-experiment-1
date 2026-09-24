@@ -37,6 +37,12 @@ import { VISUAL_ASTEROID_CANDIDATE, VISUAL_TESS_CANDIDATE } from '@/lib/visual-f
 import { captureGameEvent } from '@/lib/posthog'
 import { dismissHubPrompt } from '@/lib/hub-prompts'
 import type { InstrumentSignal } from '@/lib/systems/InstrumentFeedSystem'
+import {
+  DEEP_SPACE_TELESCOPE_INSTRUMENT_ID,
+  TRANSIT_TELESCOPE_INSTRUMENT_ID,
+  instrumentDigestDateKey,
+  markInstrumentDigestNotified,
+} from '@/lib/systems/InstrumentFeedSystem'
 import { missionResumeScreen } from '@/lib/mission-resume'
 
 export const VALID_SCREENS = new Set<Screen>([
@@ -243,6 +249,14 @@ export function ScreenContent({
           onInspect={signal => {
             setInspectSignal(signal)
             game.go(signal.inspectorScreen)
+          }}
+          onSnoozePing={() => {
+            const dateKey = instrumentDigestDateKey()
+            game.setPlayer(player => markInstrumentDigestNotified(
+              markInstrumentDigestNotified(player, TRANSIT_TELESCOPE_INSTRUMENT_ID, dateKey),
+              DEEP_SPACE_TELESCOPE_INSTRUMENT_ID,
+              dateKey,
+            ))
           }}
         />
       )
