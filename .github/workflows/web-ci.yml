@@ -22,7 +22,7 @@ on:
     # backend/content change with no code push at all) doesn't sit
     # undetected until the next person happens to touch web/. Runs the full
     # journeys suite (e2e-staging-full below) against whatever build is
-    # currently live on landnam-web.liam-55d.workers.dev -- not tied to a
+    # currently live on landnam-web-staging.liam-55d.workers.dev -- not tied to a
     # specific commit's deploy, since a schedule event has no push to deploy
     # from.
     - cron: "0 3 * * *"
@@ -193,8 +193,11 @@ jobs:
     # happens between reviewed pushes. No `needs: deploy` deliberately: a
     # schedule event has no push/deploy in the same run, so this always
     # tests whatever build is currently live on
-    # landnam-web.liam-55d.workers.dev, not a specific commit's fresh
-    # deploy. Any @landnam.test account it creates
+    # landnam-web-staging.liam-55d.workers.dev (the `--env staging` worker
+    # deploy-staging pushes to; SSL-47 — this job had drifted to probing the
+    # production worker's workers.dev host, which 404s because the prod
+    # worker only serves its custom domain routes), not a specific commit's
+    # fresh deploy. Any @landnam.test account it creates
     # is cleaned up by the existing KES-149 purge migrations on the next
     # backend deploy.
     if: github.event_name == 'workflow_dispatch' || github.event_name == 'schedule'
@@ -218,7 +221,7 @@ jobs:
       - name: Wait for staging to serve this deploy
         run: |
           for i in {1..30}; do
-            if curl -sf "https://landnam-web.liam-55d.workers.dev/api/backend-health" > /dev/null; then
+            if curl -sf "https://landnam-web-staging.liam-55d.workers.dev/api/backend-health" > /dev/null; then
               echo "Staging is responding."
               exit 0
             fi
@@ -237,7 +240,7 @@ jobs:
           install: false
         env:
           CYPRESS_PROFILE: staging-full
-          CYPRESS_baseUrl: https://landnam-web.liam-55d.workers.dev
+          CYPRESS_baseUrl: https://landnam-web-staging.liam-55d.workers.dev
           CI: true
 
       - name: Upload screenshots
