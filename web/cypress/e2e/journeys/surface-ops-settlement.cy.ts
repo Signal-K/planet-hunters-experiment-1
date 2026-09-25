@@ -1,3 +1,5 @@
+import { SURFACE_SITE_ACCESS_FEES } from '../../../lib/data/economy'
+import { createTreasuryState } from '../../../lib/systems/TreasurySystem'
 import { seedFixtureSession } from '../../support/authenticated-fixture'
 
 const STORAGE_KEY = 'landnam-game-state-v1'
@@ -56,10 +58,23 @@ describe('Surface Ops settlement journey', () => {
     })
     cy.get('[data-testid="hub-surface-ops"]', { timeout: 15000 }).should('be.visible')
 
+    // Site rights are recorded by the Landnam treasury (SSL-76) before the
+    // local right is granted; stand in for it with the site's real deed price.
+    cy.intercept('POST', '**/api/treasury/site-deed', {
+      statusCode: 200,
+      body: {
+        acquired: true,
+        priceFrancs: SURFACE_SITE_ACCESS_FEES['moon-south-pole'],
+        referenceId: 'e2e-site-deed',
+        state: createTreasuryState(),
+      },
+    }).as('siteDeed')
+
     cy.get('[data-testid="hub-surface-ops"]').click()
     cy.location('pathname').should('eq', '/game/surface-ops')
     cy.get('[data-testid="surface-purchase-access"]').click()
-    cy.contains('ACCESS PERMIT ACTIVE').should('be.visible')
+    cy.wait('@siteDeed')
+    cy.contains('CLIENT SITE RIGHT ACTIVE').should('be.visible')
     cy.get('[data-testid="surface-build-launchpad"]').click()
     cy.contains('CONSTRUCTION ACTIVE').should('be.visible')
     cy.screenshot('surface-ops-portrait-building')
