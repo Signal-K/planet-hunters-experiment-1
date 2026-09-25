@@ -1,5 +1,6 @@
 'use client'
 
+import { routeSegmentForScreen } from '@/lib/game-route'
 import { useState } from 'react'
 import { DEV_GROUPS, resolvePreset } from '@/lib/devPresets'
 import { isDevLauncherEnabled } from '@/lib/devAccess'
@@ -28,7 +29,7 @@ export default function DevShortcuts() {
 
   function jump(key: string) {
     const preset = resolvePreset(key)
-    const url = new URL(`/game/${preset?.screen ?? 'intro'}`, window.location.origin)
+    const url = new URL(`/game/${routeSegmentForScreen(preset?.screen ?? 'intro')}`, window.location.origin)
     url.searchParams.set('preset', key)
     window.location.href = url.toString()
   }

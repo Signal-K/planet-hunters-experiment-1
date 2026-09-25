@@ -1,0 +1,50 @@
+/* SSL-35 layout-type shells: the small amount of chrome each type owns on
+   top of the shared frame. Screens keep their own content. */
+
+/* « » switch between missions in progress (Orbit). */
+.switchBar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  /* The bottom 24px leave room for the status chips, which sit at the very
+     bottom edge, below the buttons instead of on them. */
+  padding: 8px 16px 24px;
+  background: var(--ln-void);
+  border-top: 1px solid var(--ln-hairline);
+}
+.switchButton {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  flex: 0 0 auto;
+  border: 1.5px solid var(--ln-cyan-border);
+  border-radius: var(--ln-r-pill);
+  background: transparent;
+  color: var(--ln-cyan);
+  cursor: pointer;
+}
+.switchButton svg { width: 18px; height: 18px; }
+.switchLabel {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+  text-align: center;
+}
+.switchLabel span {
+  color: var(--ln-text-muted);
+  font: 700 9px/1 var(--ln-font-display);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+.switchLabel strong {
+  max-width: 100%;
+  overflow: hidden;
+  color: var(--ln-text);
+  font: 700 12px/1.2 var(--ln-font-display);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

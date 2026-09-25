@@ -13,6 +13,11 @@ const nextConfig: NextConfig = {
   // it was intercepting Cypress clicks on the bottom tab bar in dev-mode e2e
   // runs (KES-42). Compile/runtime errors still surface in the terminal.
   devIndicators: false,
+  // SSL-35: the descent screen moved off /game/landing so it does not read
+  // as the Landing layout type. Keep old links and bookmarks working.
+  async redirects() {
+    return [{ source: '/game/landing', destination: '/game/descent', permanent: false }]
+  },
 };
 
 export default nextConfig;

@@ -933,6 +933,14 @@ button { cursor: pointer; }
 }
 .portrait-canvas:has(.mining-screen) .backend-status { right: var(--ln-s-3); }
 
+/* SSL-35: a shell sheet that is itself a layout type (Community Hub is an
+   Instrument surface) gets its own full-page frame above the screen. */
+.shell-instrument-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 89;
+}
+
 .ln-page-surface {
   position: absolute;
   inset: 0;

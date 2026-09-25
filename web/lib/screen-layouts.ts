@@ -38,7 +38,7 @@ export interface ScreenSurfaceSpec {
 export const SCREEN_SURFACES: Record<Exclude<ScreenSurface, 'dev'>, ScreenSurfaceSpec> = {
   landing: { label: 'Landing', chrome: 'docked', summary: 'Base yard grows in a light loop, then Continue / Start new game, then sign in.' },
   launch: { label: 'Launch', chrome: 'floating', summary: 'The launch sequence. Every launch renders here; it has no URL of its own.' },
-  orbit: { label: 'Orbit', chrome: 'floating', summary: 'Rocket in flight, with « » to switch between missions in progress.' },
+  orbit: { label: 'Orbit', chrome: 'docked', summary: 'Rocket in flight, with « » to switch between missions in progress.' },
   mining: { label: 'Mining / hovering', chrome: 'floating', summary: 'Descent and mining at a target.' },
   home: { label: 'Home (Earth Base)', chrome: 'floating', summary: 'Tap rockets in the sky and buildings on the landscape. Bottom bar: « » Market Menu.' },
   instrument: { label: 'Instrument', chrome: 'docked', summary: 'Inside a building or instrument: consoles, hangar, academy, refinery, skills, community.' },
@@ -90,7 +90,9 @@ export const GAME_ROUTES = [
   { path: '/game/transit', screen: 'transit', surface: 'orbit' },
 
   // Mining / hovering
-  { path: '/game/landing', screen: 'landing', surface: 'mining' },
+  // The descent screen keeps its internal `landing` value; see routeSegmentForScreen.
+  { path: '/game/descent', screen: 'landing', surface: 'mining' },
+  { path: '/game/landing', surface: 'mining', redirectTo: '/game/descent' },
   { path: '/game/mining', screen: 'mining', surface: 'mining' },
 
   // Takeon

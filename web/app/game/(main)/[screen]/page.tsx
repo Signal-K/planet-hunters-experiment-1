@@ -3,12 +3,12 @@
 import { use, useEffect } from 'react'
 import { notFound } from 'next/navigation'
 import { useGame } from '@/game-context'
-import type { Screen } from '@/lib/game-types'
 import { VALID_SCREENS } from '@/components/game/GameScreenRouter'
-import { isMissionSetupInternalScreen } from '@/lib/game-route'
+import { isMissionSetupInternalScreen, screenForRouteSegment } from '@/lib/game-route'
 
 export default function ScreenPage({ params }: { params: Promise<{ screen: string }> }) {
-  const { screen } = use(params)
+  const { screen: segment } = use(params)
+  const screen = screenForRouteSegment(segment)
   const game = useGame()
 
   // When the URL changes (browser back/forward), sync it into game state
@@ -27,12 +27,12 @@ export default function ScreenPage({ params }: { params: Promise<{ screen: strin
     // /game/missions owns the whole creation flow. Do not let the stable URL
     // reset an in-progress internal step during hydration or a rerender.
     if (screen === 'missions' && isMissionSetupInternalScreen(game.screen)) return
-    if (VALID_SCREENS.has(screen as Screen) && game.screen !== screen) {
-      game.setScreenFromUrl(screen as Screen)
+    if (VALID_SCREENS.has(screen) && game.screen !== screen) {
+      game.setScreenFromUrl(screen)
     }
   }, [screen, game.hydrated, game.authGateOpen, game.authUserId]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  if (!VALID_SCREENS.has(screen as Screen)) return notFound()
+  if (!VALID_SCREENS.has(screen)) return notFound()
 
   // Auth gate (sign in / sign up / continue with email) must be resolved
   // before any gameplay screen mounts — otherwise it's a purely cosmetic

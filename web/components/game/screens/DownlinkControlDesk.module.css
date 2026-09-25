@@ -89,3 +89,19 @@
   .upperDeck { grid-template-columns: 132px minmax(0, 1fr); }
   .controlRail { grid-template-columns: repeat(5, minmax(76px, 1fr)); overflow-x: auto; }
 }
+
+/* SSL-35: phone portrait (375x812). The rack beside the scope and the
+   five-column control rail need ~570px; share the width and let the rail
+   wrap to three columns instead of clipping off the right edge. */
+@media (max-width: 520px) and (orientation: portrait) {
+  .desk { left: 8px; right: 8px; padding: 8px; }
+  .upperDeck { grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr); gap: 8px; }
+  .packetRack,
+  .scope { min-width: 0; padding: 8px; }
+  .scopeHead h2 { font-size: 14px; overflow-wrap: anywhere; }
+  .controlRail { grid-template-columns: repeat(3, minmax(0, 1fr)); padding-top: 8px; }
+  .controlRail label,
+  .arm,
+  .armed,
+  .inspect { min-height: 44px; padding: 4px 8px; }
+}
