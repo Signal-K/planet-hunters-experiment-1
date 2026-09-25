@@ -16,7 +16,6 @@ export function isHostScene(screen: Screen): screen is HostScene {
 export const LOGICAL_BACK: Record<Screen, Screen> = {
   intro: 'hub',
   hub: 'hub',
-  'hub-subsurface': 'hub',
   launchpad: 'hub',
   academy: 'hub',
   hangar: 'hub',
@@ -58,7 +57,7 @@ export function resolveLogicalBack(input: {
   if (current === 'rocket-buy') return 'targets'
   if (current === 'fab' && fallback === 'rocket-buy') return 'rocket-buy'
 
-  if (current === 'launchpad' || current === 'academy' || current === 'hub-subsurface') {
+  if (current === 'launchpad' || current === 'academy') {
     return LOGICAL_BACK[current]
   }
 

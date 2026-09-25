@@ -11,8 +11,9 @@ export function initPostHog() {
     // The app is a single-page SPA (app/game/page.tsx) that swaps an
     // internal `screen` value instead of navigating — the default
     // history-based pageview capture never fires past the initial load, so
-    // it's off here and screen changes are captured manually instead (see
-    // captureScreenView below, called from GameApp).
+    // it's off here. Nothing in the live (main) shell captures per-screen
+    // pageviews yet; the old GameApp shell's manual capture only ever ran on
+    // the dev ship-customizer page and was removed with it.
     capture_pageview: false,
     // Autocapture unhandled JS errors/promise rejections as PostHog
     // exception events — the game has a lot of offline/cold-start retry
@@ -45,19 +46,6 @@ export function initPostHog() {
     },
   })
   initialised = true
-}
-
-// Fires a virtual pageview for the given in-game screen. The SPA never
-// changes `window.location`, so PostHog's own pageview capture (disabled
-// above) would otherwise see a single URL for the entire session — Paths/
-// Trends/Funnels need this to tell screens apart.
-export function captureScreenView(screen: string) {
-  if (typeof window === 'undefined') return
-  initPostHog()
-  posthog.capture('$pageview', {
-    $current_url: `${window.location.origin}/game/${screen}`,
-    screen,
-  })
 }
 
 export function identifyUser(userId: string, props?: Record<string, string>) {

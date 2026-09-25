@@ -9,7 +9,7 @@
  */
 
 export const DAILY_ECONOMY_SCHEMA_VERSION = 1
-export const CLIENT_EXPERIENCE_PER_LEVEL = 5
+const CLIENT_EXPERIENCE_PER_LEVEL = 5
 export const DAILY_PRICE_MIN_MULTIPLIER = 0.85
 export const DAILY_PRICE_MAX_MULTIPLIER = 1.18
 
@@ -181,7 +181,7 @@ export function resolveDailyEconomy(input: DailyEconomyInput): DailyEconomySnaps
   }
 }
 
-export function dailyEconomyIdempotencyKey(snapshotDate: DateKey): string {
+function dailyEconomyIdempotencyKey(snapshotDate: DateKey): string {
   assertDateKey(snapshotDate, 'snapshotDate')
   return `daily-economy:${snapshotDate}`
 }

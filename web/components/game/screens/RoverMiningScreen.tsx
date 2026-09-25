@@ -46,7 +46,7 @@ export function takeonBodyForTarget(target: Pick<Target, 'id' | 'type'>): string
     ?? (target.type === 'asteroid' ? 'ironrock' : 'mars')
 }
 
-export function roverCargoRequirements(mission: Mission, target: Target): Record<string, number> {
+function roverCargoRequirements(mission: Mission, target: Target): Record<string, number> {
   if (Object.keys(mission.requires.minerals).length > 0) return { ...mission.requires.minerals }
 
   return Object.fromEntries(

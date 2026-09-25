@@ -20,7 +20,7 @@ export type ScreenLayoutType = typeof SCREEN_LAYOUT_TYPES[number]
 
 /** Mission setup and Post-mission summary keep their own screens but sit on
  * the same frame (no boxed card on desktop). */
-export const MISSION_SURFACES = ['mission-setup', 'post-mission'] as const
+const MISSION_SURFACES = ['mission-setup', 'post-mission'] as const
 export type MissionSurface = typeof MISSION_SURFACES[number]
 
 /** Dev-only tooling (launcher, redirect shortcuts, Forge preview) renders no
@@ -73,7 +73,6 @@ export const GAME_ROUTES = [
 
   // Home
   { path: '/game/hub', screen: 'hub', surface: 'home' },
-  { path: '/game/hub-subsurface', screen: 'hub-subsurface', surface: 'home' },
   { path: '/game/build', screen: 'build', surface: 'home' },
   // Market is a pop-up over Home; the old page URL opens it there.
   { path: '/game/market', screen: 'market', surface: 'home', redirectTo: '/game/hub (Market pop-up open)' },

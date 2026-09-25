@@ -34,8 +34,8 @@ describe('Responsive Layout — Critical Screens Matrix', () => {
           cy.get('[data-testid="hub-desktop-missions-btn"]').should('be.visible');
           cy.get('[data-testid="hub-edit-build-btn"]').should('be.visible');
         } else {
-          // Mobile: bottom tab bar
-          cy.get('[data-testid="bottom-tab-launchpad"]').should('be.visible');
+          // Mobile: bottom tab bar (its Base tab replaced the Launchpad tab)
+          cy.get('[data-testid="bottom-tab-hub"]').should('be.visible');
           cy.get('[data-testid="bottom-tab-missions"]').should('be.visible');
           cy.get('[data-testid="bottom-tab-market"]').should('be.visible');
         }
@@ -107,20 +107,23 @@ describe('Responsive Layout — Critical Screens Matrix', () => {
         // Canvas must render
         cy.get('[data-testid="mining-canvas"]', { timeout: 20000 })
           .should('be.visible')
-          .invoke('width').should('be.gt', 0)
-          .invoke('height').should('be.gt', 0);
-
-        // Mining HUD controls must be visible and accessible
-        cy.get('[data-testid="fire-laser-btn"]', { timeout: 5000 }).should('be.visible');
-        cy.get('[data-testid="mining-timer"]').should('be.visible');
-
-        // Control buttons should not overlap or be clipped
-        cy.get('[data-testid="mining-controls"]').should('be.visible');
-        cy.get('[data-testid="mining-controls"] button')
-          .each($btn => {
-            cy.wrap($btn).invoke('width').should('be.gt', 0);
-            cy.wrap($btn).invoke('height').should('be.gt', 0);
+          .should($canvas => {
+            const rect = $canvas[0].getBoundingClientRect();
+            expect(rect.width, 'canvas width').to.be.greaterThan(0);
+            expect(rect.height, 'canvas height').to.be.greaterThan(0);
           });
+
+        // Mining HUD controls (fire + return) must be visible and not clipped
+        ['fire-laser-btn', 'return-home-btn'].forEach(testId => {
+          cy.get(`[data-testid="${testId}"]`, { timeout: 5000 })
+            .should('be.visible')
+            .should($btn => {
+              const rect = $btn[0].getBoundingClientRect();
+              expect(rect.width, `${testId} width`).to.be.greaterThan(0);
+              expect(rect.height, `${testId} height`).to.be.greaterThan(0);
+              expect(rect.bottom, `${testId} bottom`).to.be.at.most(vp.height);
+            });
+        });
 
         // Guide/help button visible on all sizes
         cy.get('[data-testid="mining-guide-btn"]').should('be.visible');

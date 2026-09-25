@@ -5,7 +5,6 @@ import type { Catalog } from '@/lib/catalog'
 import type { Player } from '@/lib/game-types'
 import {
   ACADEMY_DAILY_UPKEEP,
-  ACADEMY_RESEARCH_XP_COST,
   ACTOR_ARCHETYPES,
   CREW_DAILY_UPKEEP,
   CREW_MODULE_RESEARCH_XP_COST,
@@ -14,7 +13,6 @@ import {
   type SkillBranch,
 } from '@/lib/data'
 import {
-  academyAffinityUnlocked,
   academyLevel,
   academyTrainingCapacity,
   availableCrewSources,
@@ -53,7 +51,6 @@ interface AcademyScreenProps {
   onBack: () => void
   onBuild: () => void
   onOpenHangar: () => void
-  onResearch: () => void
   onFunding: (funded: boolean) => void
   onHire: (sourceId: string) => void
   onRehire: (crewId: string) => void
@@ -71,7 +68,6 @@ export default function AcademyScreen(props: AcademyScreenProps) {
   const [trainingBranch, setTrainingBranch] = useState<SkillBranch>('mining')
   const academy = STRUCTURES.find(structure => structure.id === 'astronaut-academy')!
   const built = props.player.placed.includes('astronaut-academy')
-  const affinityReady = academyAffinityUnlocked(props.player)
   const crew = props.player.crew ?? []
   const sessions = props.player.crewTraining ?? []
   const sources = availableCrewSources(props.player, props.catalog.clients)
@@ -90,14 +86,6 @@ export default function AcademyScreen(props: AcademyScreenProps) {
     return () => window.clearInterval(id)
   }, [])
 
-  const affinityClients = useMemo(
-    () => Object.entries(props.player.clientMissions)
-      .map(([id, jobs]) => ({ client: props.catalog.clients[id], jobs, level: clientAffinityLevel(jobs) }))
-      .filter(item => item.client)
-      .sort((a, b) => b.level - a.level),
-    [props.catalog.clients, props.player.clientMissions],
-  )
-
   return (
     <div className={`game-screen theme-light ${styles.screen}`} data-testid="academy-screen">
       <TopBar eyebrow="BASE · CREW" title="Astronaut Academy" onBack={props.onBack} solid />
@@ -107,21 +95,13 @@ export default function AcademyScreen(props: AcademyScreenProps) {
         <main className={styles.locked}>
           <div className={styles.scenePreview}>
             <AcademyCanvas activeTraining={0} funded={false} />
-            <div className={styles.lockVeil}>{props.player.academyResearched ? 'SITE CLEARED' : 'RESEARCH LOCKED'}</div>
+            <div className={styles.lockVeil}>SITE CLEARED</div>
           </div>
           <section className={styles.missionCard}>
             <div className={styles.eyebrow}>PROGRAM TASK · TRAIN THE FIRST ASTRONAUT</div>
             <h2>Establish the Academy</h2>
-            <Step done={affinityReady} title="Build client experience" body="Reach client level 2 with two clients." />
-            <Step done={!!props.player.academyResearched} title="Research the Academy" body={`${ACADEMY_RESEARCH_XP_COST} Research XP`} />
             <Step done={built} title="Build at Base" body={`${formatCurrency(academy.cost)} · 24 aluminium · 12 silicon · 8 copper`} />
-            {!affinityReady ? (
-              <div className={styles.notice}>Client level progress: {affinityClients.filter(item => item.level >= 2).length}/2 partner programmes</div>
-            ) : !props.player.academyResearched ? (
-              <PrimaryBtn disabled={(props.player.researchXP ?? 0) < ACADEMY_RESEARCH_XP_COST} onClick={() => { captureGameEvent('academy_researched'); props.onResearch() }}>Research Academy</PrimaryBtn>
-            ) : (
-              <PrimaryBtn onClick={props.onBuild}>Open Build &amp; Place</PrimaryBtn>
-            )}
+            <PrimaryBtn onClick={props.onBuild}>Open Build &amp; Place</PrimaryBtn>
           </section>
         </main>
       ) : (

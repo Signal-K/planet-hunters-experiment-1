@@ -132,7 +132,7 @@ export function takeOnViewportSize(canvas: Pick<HTMLCanvasElement, 'clientWidth'
 }
 
 /** Tile in front of the rover. Facing follows takeon's iso convention: 0 SE, 1 SW, 2 NW, 3 NE. */
-export function facedTile(pos: { x: number; y: number }, facing: 0 | 1 | 2 | 3): { x: number; y: number } {
+function facedTile(pos: { x: number; y: number }, facing: 0 | 1 | 2 | 3): { x: number; y: number } {
   const delta = [[1, 0], [0, 1], [-1, 0], [0, -1]][facing] ?? [1, 0]
   return { x: pos.x + delta[0], y: pos.y + delta[1] }
 }

@@ -519,24 +519,30 @@ describe('seed bible v0 catalog', () => {
       costMaterials: { aluminium: 20, copper: 10 },
       unlockTrigger: 'free-operations',
     })
-    // KES-283: a normal Earth Base plot purchase (same unlock shape as the
-    // Surface Silo), not the KES-286 off-world site-commissioned structure
-    // whose unlock condition no mission ever satisfied — that dead trigger
-    // stays retired for good.
-    //
-    // SSL-74: on top of Free Operations, unlock now also requires the
-    // Surface Silo already built and an established mining settlement
-    // (purchased off-world site access) — both ordinary player-controlled
-    // purchases, unlike KES-286's unreachable trigger.
+    // KES-283: a normal Earth Base plot purchase. After the tutorial every
+    // structure is open and only its cost limits it; the SSL-74 silo and
+    // mining-settlement prerequisites were unlock gates and are gone.
     expect(refinery && structureUnlocked(refinery, { placed: [] })).toBe(false)
-    expect(refinery && structureUnlocked(refinery, { freeOperations: true })).toBe(false)
-    expect(refinery && structureUnlocked(refinery, { freeOperations: true, placed: ['surface-silo'] })).toBe(false)
-    expect(refinery && structureUnlocked(refinery, { freeOperations: true, placed: ['surface-silo'], hasMiningSettlement: true })).toBe(true)
+    expect(refinery && structureUnlocked(refinery, { freeOperations: true })).toBe(true)
     expect(refinery && structureUnlocked(refinery, { placed: ['refinery'] })).toBe(true)
     expect(refinery && canAffordStructure(refinery, {
       francs: STRUCTURE_PRICES.refinery,
       stash: { aluminium: 20, copper: 10 },
     })).toBe(true)
+  })
+
+  it('opens every Base structure after the tutorial, limited only by cost', () => {
+    const tutorial = { placed: ['launchpad'], freeOperations: false }
+    const freeOps = { placed: ['launchpad'], freeOperations: true }
+    const byId = (id: string) => STRUCTURES.find(structure => structure.id === id)!
+    expect(structureUnlocked(byId('launchpad'), { placed: [], freeOperations: false })).toBe(true)
+    for (const id of ['surface-silo', 'refinery', 'deep-space-telescope', 'astronaut-academy']) {
+      expect(structureUnlocked(byId(id), tutorial)).toBe(false)
+      expect(structureUnlocked(byId(id), freeOps)).toBe(true)
+    }
+    // The garage has no Base building behind it yet.
+    expect(structureUnlocked(byId('garage'), freeOps)).toBe(false)
+    expect(canAffordStructure(byId('deep-space-telescope'), { francs: 0, stash: {} })).toBe(false)
   })
 
   it('keeps Landnam targets to real solar-system bodies for the seed catalog', () => {

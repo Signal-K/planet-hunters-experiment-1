@@ -128,7 +128,7 @@ export function instantiate(prefab: Prefab, opts: InstantiateOptions): EntityDat
  * The four Earth Base build plots, in index order. The single definition the
  * hub scene, the build-place screen and the hub screen should all read.
  */
-export const BUILD_PLOT_POSITIONS: readonly Vector2[] = [
+const BUILD_PLOT_POSITIONS: readonly Vector2[] = [
   { x: 60, y: 570 },
   { x: 154, y: 570 },
   { x: 248, y: 570 },

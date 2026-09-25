@@ -5,7 +5,7 @@ export const HUB_PROMPT_TRANSIT_TELESCOPE = 'transit-telescope'
 
 export type HubPromptKey = typeof HUB_PROMPT_SKILLS | typeof HUB_PROMPT_TRANSIT_TELESCOPE
 
-export function hubPromptValue(key: HubPromptKey, player: Pick<Player, 'skillPoints' | 'transitSatelliteLaunchedAt'>): number {
+function hubPromptValue(key: HubPromptKey, player: Pick<Player, 'skillPoints' | 'transitSatelliteLaunchedAt'>): number {
   if (key === HUB_PROMPT_SKILLS) return Math.max(0, player.skillPoints ?? 0)
   return player.transitSatelliteLaunchedAt ? 0 : 1
 }

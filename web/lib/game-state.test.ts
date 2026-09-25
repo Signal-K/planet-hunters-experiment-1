@@ -186,10 +186,17 @@ describe('game state hydration normalization', () => {
     expect(normalized.screen).toBe('hub')
   })
 
-  it('retires the solo-settlement surface route and unbuilt Base-refinery routes on hydration', () => {
+  it('restores Surface Ops for a Free Ops player, the same screen the Hub Sites entry opens', () => {
     expect(normalizeAndRepair({
       screen: 'surface-ops',
       player: { freeOperations: true, missionsDone: 3, hasLanded: true },
+    }).screen).toBe('surface-ops')
+  })
+
+  it('returns pre-Free Ops Surface Ops and unbuilt Base-refinery routes to the Hub on hydration', () => {
+    expect(normalizeAndRepair({
+      screen: 'surface-ops',
+      player: { freeOperations: false, missionsDone: 1 },
     }).screen).toBe('hub')
     expect(normalizeAndRepair({
       screen: 'refinery',

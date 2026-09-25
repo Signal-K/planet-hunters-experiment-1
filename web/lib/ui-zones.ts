@@ -11,15 +11,3 @@ export const UI_ZONES = {
 } as const
 
 export type UiZone = typeof UI_ZONES[keyof typeof UI_ZONES]
-
-export const UI_ZONE_CONTRACT: Record<UiZone, string> = {
-  [UI_ZONES.topChrome]: 'Screen header/back controls. Content starts below this zone.',
-  [UI_ZONES.tutorialRail]: 'Dedicated onboarding copy rail. Gameplay controls must not overlap it.',
-  [UI_ZONES.screenContent]: 'Scrollable screen-owned content. Must leave room for top chrome and bottom actions.',
-  [UI_ZONES.bottomActions]: 'Screen-owned primary/secondary action strip.',
-  [UI_ZONES.bottomNav]: 'Global bottom tab bar. Hidden on transactional screens.',
-  [UI_ZONES.toastStack]: 'Temporary status messages. Must be pointer-light and never cover primary actions.',
-  [UI_ZONES.feedbackLauncher]: 'Passive feedback affordance. Hidden while bottom action/navigation zones are in use.',
-  [UI_ZONES.ambientPrompt]: 'Non-critical prompts. Only allowed on safe ambient screens such as the hub.',
-  [UI_ZONES.statusUtility]: 'Non-interactive service status indicator.',
-}

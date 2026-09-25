@@ -157,10 +157,6 @@ export function getScene(id: string): SceneDefinition | undefined {
   return BY_ID.get(id)
 }
 
-export function scenesAtLocation(location: SceneLocation): SceneDefinition[] {
-  return SCENES.filter(s => s.location === location)
-}
-
 /** Scene files on disk that no SceneDefinition claims. Asserted in tests so orphans get noticed. */
 export const KNOWN_SCENE_FILES: readonly string[] = [
   '/game/scenes/hub.scene.json',

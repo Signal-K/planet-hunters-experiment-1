@@ -93,12 +93,6 @@ const profiles: Record<string, Cypress.EndToEndConfigOptions> = {
     viewportWidth: 390,
     viewportHeight: 844,
   },
-  'clean-start-loop': {
-    baseUrl: 'http://localhost:3001',
-    specPattern: ['cypress/e2e/journeys/clean-start-loop.cy.ts'],
-    viewportWidth: 390,
-    viewportHeight: 844,
-  },
   surveys: {
     baseUrl: 'http://localhost:3001',
     specPattern: ['cypress/e2e/features/surveys.cy.ts'],
@@ -127,9 +121,8 @@ const profiles: Record<string, Cypress.EndToEndConfigOptions> = {
     viewportHeight: 844,
     env: { livePocketBase: true },
   },
-  // Full journeys suite against a live deployment, including
-  // clean-start-loop.cy.ts's real registration/playthrough against the
-  // actual staging PocketBase backends. Slow and not yet proven reliable
+  // Full journeys suite against a live deployment and the actual staging
+  // PocketBase backends. Slow and not yet proven reliable
   // end-to-end (see 'staging' above) — run manually via workflow_dispatch,
   // not on every push.
   'staging-full': {

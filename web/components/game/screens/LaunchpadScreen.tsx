@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react'
 import TopBar from '@/components/ui/TopBar'
-import { partitionByOwner, RESOURCE_FOCUS_MISSION_ID, SELF_DIRECTED_MINING_MISSION_ID } from '@/lib/data'
+import { partitionByOwner, rocketModelAvailable, RESOURCE_FOCUS_MISSION_ID, SELF_DIRECTED_MINING_MISSION_ID } from '@/lib/data'
 import type { Mission } from '@/lib/data'
 import { ROCKET_MODELS } from '@/lib/data/rockets'
 import { SATELLITE_MODELS } from '@/lib/data/satellites'
@@ -121,7 +121,7 @@ export default function LaunchpadScreen({
     setMissionMenuOpen(open)
     onMissionMenuOpenChange?.(open)
   }
-  const fleet = ROCKET_MODELS.map(model => ({ model, unlocked: missionsDone >= model.missionsRequired && !model.locked }))
+  const fleet = ROCKET_MODELS.map(model => ({ model, unlocked: rocketModelAvailable(model, missionsDone) }))
   const unlockedFleet = fleet.filter(item => item.unlocked)
   const launchedSatellites = player.transitSatelliteLaunchedAt ? SATELLITE_MODELS.length : 0
   const { own } = partitionByOwner(catalog.missions, mission => mission)

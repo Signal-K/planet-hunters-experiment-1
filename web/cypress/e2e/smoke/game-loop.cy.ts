@@ -1,4 +1,5 @@
 import type { GameState } from '@/game-context'
+import { seedFixtureSession } from '../../support/authenticated-fixture'
 
 const STORAGE_KEY = 'landnam-game-state-v1'
 
@@ -38,7 +39,7 @@ function visitWithState(state: Partial<GameState>) {
   cy.visit(`/game/${nextState.screen}`, {
     onBeforeLoad(win) {
       win.localStorage.setItem(STORAGE_KEY, JSON.stringify(nextState))
-      win.localStorage.setItem('landnam-account-credentials', JSON.stringify({ email: 'e2e@example.com', password: 'e2e-guest-test' }))
+      seedFixtureSession(win)
     },
   })
 }
@@ -78,6 +79,12 @@ function fullState(overrides: Partial<GameState> = {}): GameState {
   }
 }
 
+/** Authorise the teardown and skip its Pixi scrap sequence (KES-348). */
+function teardownVehicle() {
+  cy.get('[data-testid="resolve-cargo-btn"]').click()
+  cy.get('[data-testid="scrap-sequence-skip-btn"]', { timeout: 10000 }).click()
+}
+
 describe('Full Game Loop — Landnam', () => {
   describe('Phase 1: Onboarding (Intro → Build → Hub)', () => {
     it('intro screen renders and begins onboarding', () => {
@@ -88,7 +95,8 @@ describe('Full Game Loop — Landnam', () => {
       cy.get('.intro-title').should('be.visible').and('contain.text', 'LANDNAM')
       cy.contains('BEGIN OPERATIONS').should('be.visible')
       cy.get('[data-testid="intro-begin-btn"]').click()
-      cy.contains('EARTH BASE · SETUP').should('be.visible')
+      cy.get('[data-testid="build-place-screen"]').should('be.visible')
+      cy.contains('BASE · SETUP').should('be.visible')
       cy.url().should('include', '/game')
     })
 
@@ -111,93 +119,82 @@ describe('Full Game Loop — Landnam', () => {
       cy.get('[data-testid="building-launchpad"]').should('be.visible')
     })
 
-    it('mission board shows M1 card when landing on missions screen with launchpad built', () => {
+    // Mission setup is one routed scene (MissionSetupRoutes): a contract
+    // carousel, then target map, vehicle blueprint and launch review as
+    // internal steps. The old MissionCard board and TargetPicker are gone.
+    it('mission board shows the M1 contract with the coach when landing on missions', () => {
       visitWithState(fullState({ screen: 'missions', doneSteps: { 1: true } }))
-      cy.get('[data-testid="tutorial-coach-highlight"]').should('be.visible')
-      cy.contains('pay a bonus on delivery').should('be.visible')
-      cy.get('[data-testid="mission-card-generated-s1-starter-bulk-1"]').should('be.visible')
-      cy.get('[data-testid="mission-card-generated-s1-starter-bulk-1"]').should('have.attr', 'data-mission-id', 'generated-s1-starter-bulk-1')
-      cy.get('[data-testid="mission-card-generated-s1-starter-bulk-1"]').should('contain', 'order')
+      cy.get('[data-testid="tutorial-coach-block"]').should('be.visible').and('contain', 'Select a Mission')
+      cy.get('[data-testid="mission-board-section-client"]').should('be.visible').and('contain', 'Helios Propulsion Depot')
+      cy.get('[data-testid="mission-accept-generated-s1-starter-bulk-1"]').should('be.visible').and('not.be.disabled')
     })
 
-    it('M1 card exposes target picking CTA', () => {
+    it('M1 contract shows a nonzero eligible-target count', () => {
       visitWithState(fullState({ screen: 'missions', missionId: null, doneSteps: { 1: true } }))
-      cy.get('[data-testid="mission-card-generated-s1-starter-bulk-1-cta"]').should('be.visible')
       // Target count is derived from mineral/archetype coverage, not a fixed
       // number — assert it's genuinely nonzero rather than pinning an exact
       // count that shifts whenever target data legitimately changes.
-      cy.get('[data-testid="mission-card-generated-s1-starter-bulk-1-cta"]').invoke('text').should('match', /^(?!0 targets)\d+ targets/)
+      cy.get('[data-testid="mission-board-section-client"]').contains(/^[1-9]\d* ELIGIBLE TARGETS?$/).should('be.visible')
     })
 
-    it('M1 target and rocket selection proceeds to assembly during onboarding', () => {
+    it('M1 target and rocket selection proceeds to launch review during onboarding', () => {
       visitWithState(fullState({
-        screen: 'targets',
-        missionId: 'generated-s1-starter-bulk-1',
-        doneSteps: { 1: true, 2: true },
+        screen: 'missions',
+        doneSteps: { 1: true },
       }))
-      cy.get('[data-testid="target-eros"]').click({ force: true })
-      cy.contains('Continue · Build').click()
-      cy.contains('Select Rocket').should('be.visible')
-      cy.contains('Launch with Explorer').click()
+      cy.get('[data-testid="mission-accept-generated-s1-starter-bulk-1"]').click()
+      cy.get('[data-testid="mission-target-map"]').should('be.visible')
+      cy.get('[data-testid="coach-skip-btn"]').click()
+      cy.get('[data-testid="target-selection-summary"]').should('contain', 'ELIGIBLE TARGET')
+      cy.get('[data-testid="continue-build-btn"]').should('not.be.disabled').click()
+      cy.get('[data-testid="mission-rocket-blueprint"]').should('be.visible')
+      cy.get('[data-testid="purchase-rocket-btn"]').should('contain', 'BUILD EXPLORER').click()
+      // A newly built vehicle is assembled in the Hangar, then rolled out.
+      cy.get('[data-testid="mission-launch-review"]').should('have.attr', 'data-location', 'hangar')
+      cy.get('[data-testid="transfer-to-launchpad-btn"]').click()
+      cy.get('[data-testid="mission-launch-review"]').should('have.attr', 'data-location', 'launchpad')
       cy.get('[data-testid="launch-btn"]').should('be.visible')
     })
 
-    it('target picker shows compatible targets for M1', () => {
+    it('target map highlights compatible targets for M1', () => {
       visitWithState(fullState({
         screen: 'targets',
         missionId: 'generated-s1-starter-bulk-1',
         doneSteps: { 1: true, 2: true },
       }))
-      cy.contains('Compatible').should('be.visible')
-      // M1 compat = asteroids with orbit ≤ 4; 433 Eros is recommended and auto-selected
-      cy.contains('433 Eros').should('be.visible')
+      cy.get('[data-testid="mission-target-map"]').should('be.visible')
+      cy.contains('MISSION FILTER ACTIVE').should('be.visible')
     })
   })
 
   describe('Phase 3: Rocket Assembly → Launch', () => {
-    it('assembly screen shows the prebuilt Explorer and launch button', () => {
-      // AssemblyScreen was refactored to show the prebuilt Explorer (not individual parts)
+    it('launch review shows the prebuilt Explorer and launch button', () => {
       visitWithState(fullState({
         screen: 'fab',
         missionId: 'generated-s1-starter-bulk-1',
-        targetId: 'mars',
+        targetId: 'eros',
         rocket: { chassis: 'hull-mk1', propulsion: 'ion-a1', drill: 'hand-drill' },
         doneSteps: { 1: true, 2: true, 3: true, 4: true, 5: false },
       }))
-      cy.contains('Explorer').should('be.visible')
-      cy.contains('single-use vehicle').should('be.visible')
-      cy.get('[data-testid="launch-btn"]').should('be.visible')
+      cy.get('[data-testid="assembly-selected-rocket"]').should('have.text', 'Explorer')
+      cy.contains('ALL PARAMETERS PASS').should('be.visible')
+      cy.get('[data-testid="launch-btn"]').should('be.visible').and('not.be.disabled')
     })
 
-    it('launch transitions to transit screen', () => {
-      visitWithState(fullState({
-        screen: 'fab',
-        missionId: 'generated-s1-starter-bulk-1',
-        targetId: 'mars',
-        rocket: { chassis: 'hull-mk1', propulsion: 'ion-a1', drill: 'hand-drill' },
-        doneSteps: { 1: true, 2: true, 3: true, 4: true, 5: false },
-        player: {
-          francs: 9_500_000_000,
-          activeMission: null,
-          missionCount: 1,
-          pendingLaunch: false,
-          placed: ['launchpad'],
-          placementPlots: { launchpad: 0 },
-          controlBuilt: false,
-          missionsDone: 0,
-          freeOperations: false,
-          clientMissions: {},
-          clientCooldowns: {},
-          researchAnnotations: 0,
-          refineryBuilt: false,
-          refineryQueue: [],
-          refinedGoods: {},
-          launchpadUpgraded: false,
-          loanDebt: 0,
-          loanOffered: false,
-        },
-      }))
-      cy.contains('Confirm Launch').should('be.visible')
+    it('launch runs the launch sequence and transitions to transit', () => {
+      // Launch needs a built vehicle staged for this mission, so drive the
+      // real setup flow rather than seeding the launch review directly.
+      visitWithState(fullState({ screen: 'missions', doneSteps: { 1: true } }))
+      cy.get('[data-testid="mission-accept-generated-s1-starter-bulk-1"]').click()
+      cy.get('[data-testid="coach-skip-btn"]').click()
+      cy.get('[data-testid="continue-build-btn"]').click()
+      cy.get('[data-testid="purchase-rocket-btn"]').click()
+      cy.get('[data-testid="transfer-to-launchpad-btn"]').click()
+      cy.get('[data-testid="launch-btn"]').click()
+      // The dev build exposes a deterministic skip for the Pixi launch scene.
+      cy.get('[data-testid="launch-sequence-skip-btn"]', { timeout: 10000 }).click()
+      cy.location('pathname', { timeout: 20000 }).should('eq', '/game/transit')
+      cy.get('[data-testid="transit-rocket"]').should('be.visible')
     })
   })
 
@@ -302,24 +299,25 @@ describe('Full Game Loop — Landnam', () => {
         },
       }))
 
-      cy.contains('Inbound · Earth').should('be.visible')
+      // An onboarding return leg is untimed: the ship docks on its own, and
+      // nothing is paid until the debrief is resolved and collected.
+      cy.location('pathname', { timeout: 20000 }).should('eq', '/game/debrief')
+      cy.contains('MISSION COMPLETE').should('be.visible')
       cy.get('[data-testid="collect-reward-btn"]').should('not.exist')
       cy.window().then(win => {
-        const saved = JSON.parse(win.localStorage.getItem(STORAGE_KEY) ?? '{}')
+        // A signed-in save lives in the account slot.
+        const saved = JSON.parse(win.localStorage.getItem(`${STORAGE_KEY}:user:e2e-fixture-user`) ?? '{}')
         expect(saved.player.francs).to.equal(9_500_000_000)
       })
 
-      // Onboarding missions (missionsDone < 3) auto-resolve on mount — see
-      // DebriefScreen.tsx — so once the ship is recovered and the debrief
-      // screen mounts, the reward is already collectible in one tap.
-      cy.contains('Recover Ship', { timeout: 8000 }).click()
-      cy.contains('MISSION COMPLETE').should('be.visible')
-      cy.get('[data-testid="resolve-cargo-btn"]').should('not.exist')
+      // The debrief still asks for an explicit vehicle teardown before the
+      // reward (KES-348).
+      teardownVehicle()
       cy.get('[data-testid="collect-reward-btn"]').should('be.visible')
     })
 
-    it('debrief auto-resolves cargo for onboarding missions, requiring only one tap to collect', () => {
-      const cargo = { iron: 4 }
+    it('debrief asks for vehicle teardown before the reward during onboarding (KES-348)', () => {
+      const cargo = { platinum: 5 }
       visitWithState(fullState({
         screen: 'debrief',
         missionId: 'generated-s1-starter-bulk-1',
@@ -348,13 +346,14 @@ describe('Full Game Loop — Landnam', () => {
         },
       }))
       cy.contains('MISSION COMPLETE').should('be.visible')
-      cy.get('[data-testid="resolve-cargo-btn"]').should('not.exist')
-      cy.contains('Francs Earned').should('be.visible')
+      cy.get('[data-testid="collect-reward-btn"]').should('not.exist')
+      teardownVehicle()
+      cy.contains('Net').should('be.visible')
       cy.get('[data-testid="collect-reward-btn"]').should('be.visible')
     })
 
-    it('collecting reward transitions to hub with M1 completion popup', () => {
-      const cargo = { iron: 6 }
+    it('collecting the M1 reward returns to the Hub', () => {
+      const cargo = { platinum: 5 }
       visitWithState(fullState({
         screen: 'debrief',
         missionId: 'generated-s1-starter-bulk-1',
@@ -382,10 +381,10 @@ describe('Full Game Loop — Landnam', () => {
           loanOffered: false,
         },
         tutorial: false,
-        popup: 'sr2',
       }))
-      cy.get('[data-testid="resolve-cargo-btn"]').should('not.exist')
-      cy.get('[data-testid="collect-reward-btn"]').should('be.visible')
+      teardownVehicle()
+      cy.get('[data-testid="collect-reward-btn"]').click()
+      cy.location('pathname').should('eq', '/game/hub')
     })
 
     it('shows Prospector unlock popup after M1 completion', () => {
@@ -421,17 +420,17 @@ describe('Full Game Loop — Landnam', () => {
     })
 
     it('M1 completion returns to hub with Prospector popup and does not open the market', () => {
-      // M1 requires 6 iron; player mined 8 so 2 are excess after delivery
+      // M1 requires 5 platinum; player mined 7 so 2 are excess after delivery
       visitWithState(fullState({
         screen: 'debrief',
         missionId: 'generated-s1-starter-bulk-1',
         targetId: 'mars',
-        lastCargo: { iron: 8 },
+        lastCargo: { platinum: 7 },
         doneSteps: { 1: true, 2: true, 3: true, 5: true, 6: true },
         player: {
           francs: 9_500_000_000,
           activeMission: { id: 'generated-s1-starter-bulk-1', label: 'Iron starter order → Mars' },
-          stash: { iron: 8 },
+          stash: { platinum: 7 },
           missionCount: 1,
           pendingLaunch: false,
           placed: ['launchpad'],
@@ -452,12 +451,13 @@ describe('Full Game Loop — Landnam', () => {
         tutorial: false,
       }))
 
-      cy.get('[data-testid="resolve-cargo-btn"]').should('not.exist')
+      teardownVehicle()
       cy.get('[data-testid="collect-reward-btn"]').click()
 
       cy.contains('Commodity Exchange').should('not.exist')
       cy.contains('Guided Ops · Mission 2').should('be.visible')
-      cy.contains('Prospector is now available').should('be.visible')
+      // The M2 coach opens collapsed; its body still names the new vehicle.
+      cy.contains('Prospector is now available').should('exist')
     })
   })
 
@@ -554,14 +554,13 @@ describe('Full Game Loop — Landnam', () => {
         },
         tutorial: false,
       }))
-      cy.get('[data-testid="mission-card-generated-s2-starter-bulk-4"]').scrollIntoView().should('be.visible')
-      cy.get('[data-testid="mission-card-generated-s2-starter-bulk-4"]').should('have.attr', 'data-mission-id', 'generated-s2-starter-bulk-4')
+      cy.get('[data-testid^="mission-accept-generated-s2-"]').should('be.visible').and('not.be.disabled')
     })
 
     it('M2 rocket purchase shows Prospector and purchase coach step', () => {
       visitWithState(fullState({
         screen: 'rocket-buy',
-        missionId: 'generated-s2-starter-bulk-4',
+        missionId: 'generated-s2-volatile-bulk-4',
         targetId: 'eros',
         doneSteps: { 1: true, 2: true, 3: true, 4: true, 5: true, 6: true, 9: true, 20: true },
         player: {
@@ -593,7 +592,7 @@ describe('Full Game Loop — Landnam', () => {
     it('M2 preflight launch button visible with prebuilt Prospector', () => {
       visitWithState(fullState({
         screen: 'fab',
-        missionId: 'generated-s2-starter-bulk-4',
+        missionId: 'generated-s2-volatile-bulk-4',
         targetId: 'eros',
         doneSteps: { 1: true, 2: true, 3: true, 4: true, 5: true, 6: true, 9: true, 20: true, 21: true },
         rocket: { chassis: 'hull-mk2', propulsion: 'fusion-b2', drill: 'laser-t2' },
@@ -619,8 +618,7 @@ describe('Full Game Loop — Landnam', () => {
         },
         tutorial: false,
       }))
-      cy.contains('Prospector').should('be.visible')
-      cy.contains('single-use vehicle').should('be.visible')
+      cy.get('[data-testid="assembly-selected-rocket"]').should('have.text', 'Prospector')
       cy.get('[data-testid="launch-btn"]').should('be.visible')
     })
   })

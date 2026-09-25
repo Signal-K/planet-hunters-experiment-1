@@ -2,7 +2,7 @@ import type { Client } from './types'
 import type { CrewSource } from './crew'
 
 /** Real agencies keep their real names; they are sources, not clients. */
-export const CREW_AGENCIES: readonly CrewSource[] = [
+const CREW_AGENCIES: readonly CrewSource[] = [
   { id: 'nasa', name: 'NASA', kind: 'agency', description: 'United States civil spaceflight agency.' },
   { id: 'esa', name: 'ESA', kind: 'agency', description: 'European intergovernmental spaceflight agency.' },
   { id: 'jaxa', name: 'JAXA', kind: 'agency', description: 'Japan Aerospace Exploration Agency.' },

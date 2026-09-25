@@ -49,7 +49,7 @@ export interface LandnamSyncOptions {
  * `road`, `factory` and `silo` are Landnam sandbox additions registered by
  * `lib/takeon/sandbox.ts` (SSL-316).
  */
-export const STRUCTURE_TYPES = new Set<StructureType>([
+const STRUCTURE_TYPES = new Set<StructureType>([
   'solar-array',
   'beacon',
   'drill-rig',
@@ -146,13 +146,13 @@ function structureFromRecord(record: JsonRecord): Structure | null {
  * blueprint — a blue-gray block for a storage silo, which has no built-in glyph.
  * Rows already saved that way are repaired on load.
  */
-export function persistedStructureProgress(structure: Structure): number | null {
+function persistedStructureProgress(structure: Structure): number | null {
   if (structure.type !== 'habitat-frame') return null
   if (typeof structure.progress !== 'number' || !Number.isFinite(structure.progress)) return null
   return structure.progress
 }
 
-export function restoredStructureProgress(type: StructureType, value: unknown): number | undefined {
+function restoredStructureProgress(type: StructureType, value: unknown): number | undefined {
   if (type !== 'habitat-frame') return undefined
   if (typeof value !== 'number' || !Number.isFinite(value) || value <= 0) return undefined
   return value

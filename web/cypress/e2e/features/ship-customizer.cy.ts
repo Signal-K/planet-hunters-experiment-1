@@ -1,15 +1,9 @@
+import { seedFixtureSession } from '../../support/authenticated-fixture'
+
 describe('Ship Customiser staged build', () => {
   function visitCustomizer() {
     cy.visit('/game/hangar', {
       onBeforeLoad(win) {
-        win.localStorage.setItem('landnam-account-credentials', JSON.stringify({
-          email: 'e2e@example.com',
-          password: 'e2e-password',
-        }))
-        win.localStorage.setItem('pocketbase_auth', JSON.stringify({
-          token: 'e2e-token',
-          record: { id: 'e2e-user', email: 'e2e@example.com' },
-        }))
         win.localStorage.setItem('landnam-game-state-v1', JSON.stringify({
           screen: 'hangar',
           player: {
@@ -32,20 +26,14 @@ describe('Ship Customiser staged build', () => {
           lastCargo: null,
           popup: null,
         }))
+        seedFixtureSession(win)
       },
     })
   }
 
   function openCustomizer() {
     cy.location('pathname', { timeout: 10000 }).should('eq', '/game/hangar')
-    cy.contains('Rocket Fleet').should('be.visible')
-    cy.get('body').then($body => {
-      if ($body.find('[data-testid="auth-gate-quick-email"]').length > 0) {
-        cy.get('[data-testid="auth-gate-quick-email"]').type(`cy-ship-customizer-${Date.now()}@example.com`)
-        cy.get('[data-testid="auth-gate-quick-submit"]').click()
-        cy.get('[data-testid="auth-gate-quick-email"]').should('not.exist')
-      }
-    })
+    cy.get('[data-testid="hangar-fleet-readout"]').scrollIntoView().should('be.visible')
     cy.get('[data-testid="open-ship-customizer"]', { timeout: 8000 }).should('be.visible').click()
     cy.get('[data-testid="ship-interior-explorer"]').should('be.visible')
   }
@@ -103,9 +91,9 @@ describe('Ship Customiser staged build', () => {
     cy.get('[data-testid="ship-review"]').should('have.attr', 'data-installed', '4')
 
     cy.get('[data-testid="confirm-ship-config"]').should('not.be.disabled').click()
-    // onClose() fires immediately after confirm, so the interior unmounts and the fleet page returns
+    // onClose() fires immediately after confirm, so the interior unmounts and the Hangar fleet readout returns
     cy.get('[data-testid="ship-interior-explorer"]').should('not.exist')
-    cy.contains('Rocket Fleet').should('be.visible')
+    cy.get('[data-testid="hangar-fleet-readout"]').scrollIntoView().should('be.visible')
 
     // Confirmed loadout is real game state, not a mock that resets on close —
     // the Hangar reflects it immediately without needing to reopen the modal.

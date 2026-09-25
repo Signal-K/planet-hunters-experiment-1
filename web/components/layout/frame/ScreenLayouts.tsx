@@ -12,18 +12,18 @@ export interface LayoutSlots {
   children: ReactNode
 }
 
-export function LandingLayout(props: LayoutSlots) { return <ScreenFrame surface="landing" {...props} /> }
-export function LaunchLayout(props: LayoutSlots) { return <ScreenFrame surface="launch" {...props} /> }
-export function OrbitLayout(props: LayoutSlots) { return <ScreenFrame surface="orbit" {...props} /> }
-export function MiningLayout(props: LayoutSlots) { return <ScreenFrame surface="mining" {...props} /> }
-export function HomeLayout(props: LayoutSlots) { return <ScreenFrame surface="home" {...props} /> }
-export function InstrumentLayout(props: LayoutSlots) { return <ScreenFrame surface="instrument" {...props} /> }
-export function MapLayout(props: LayoutSlots) { return <ScreenFrame surface="map" {...props} /> }
-export function TakeonLayout(props: LayoutSlots) { return <ScreenFrame surface="takeon" {...props} /> }
-export function MissionSetupLayout(props: LayoutSlots) { return <ScreenFrame surface="mission-setup" {...props} /> }
-export function PostMissionLayout(props: LayoutSlots) { return <ScreenFrame surface="post-mission" {...props} /> }
+function LandingLayout(props: LayoutSlots) { return <ScreenFrame surface="landing" {...props} /> }
+function LaunchLayout(props: LayoutSlots) { return <ScreenFrame surface="launch" {...props} /> }
+function OrbitLayout(props: LayoutSlots) { return <ScreenFrame surface="orbit" {...props} /> }
+function MiningLayout(props: LayoutSlots) { return <ScreenFrame surface="mining" {...props} /> }
+function HomeLayout(props: LayoutSlots) { return <ScreenFrame surface="home" {...props} /> }
+function InstrumentLayout(props: LayoutSlots) { return <ScreenFrame surface="instrument" {...props} /> }
+function MapLayout(props: LayoutSlots) { return <ScreenFrame surface="map" {...props} /> }
+function TakeonLayout(props: LayoutSlots) { return <ScreenFrame surface="takeon" {...props} /> }
+function MissionSetupLayout(props: LayoutSlots) { return <ScreenFrame surface="mission-setup" {...props} /> }
+function PostMissionLayout(props: LayoutSlots) { return <ScreenFrame surface="post-mission" {...props} /> }
 
-export const LAYOUT_COMPONENTS: Record<FrameSurface, (props: LayoutSlots) => ReactNode> = {
+const LAYOUT_COMPONENTS: Record<FrameSurface, (props: LayoutSlots) => ReactNode> = {
   landing: LandingLayout,
   launch: LaunchLayout,
   orbit: OrbitLayout,

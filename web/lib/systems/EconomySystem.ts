@@ -5,12 +5,11 @@ import type { GameState } from '@/lib/game-types'
 import type { RefineryRecipe, ShipRoomKind, StructureBlueprint, RocketModel, SubsurfaceRoomId } from '@/lib/data'
 import { rocketConfigForModel } from '@/lib/data'
 import { recipeIsAffordable, rocketCompositionForId, rocketStageRecoveryForId } from '@/lib/data/rocket-composition'
-import { MINERAL_META, CLIENT_SLOTS, LAUNCHPAD_UPGRADE_COST, OPEN_MARKET_SELL_RATE, MINERAL_SILO_CAPACITY, SURFACE_SILO_CAPACITY, DEEP_MINERAL_SILO_CAPACITY, REMOTE_MINERAL_SILO_CAPACITY, customizerPartById, deepSpaceTelescopeUnlocked, SUBSURFACE_EXCAVATE_COST, SUBSURFACE_ROOMS, canAffordSubsurface } from '@/lib/data'
+import { MINERAL_META, CLIENT_SLOTS, LAUNCHPAD_UPGRADE_COST, OPEN_MARKET_SELL_RATE, MINERAL_SILO_CAPACITY, SURFACE_SILO_CAPACITY, DEEP_MINERAL_SILO_CAPACITY, REMOTE_MINERAL_SILO_CAPACITY, customizerPartById, structureUnlocked, SUBSURFACE_EXCAVATE_COST, SUBSURFACE_ROOMS, canAffordSubsurface } from '@/lib/data'
 import { structureIsStaffed } from './AcademySystem'
-import type { DailyEconomySnapshot } from './DailyEconomySystem'
 
 // Sell to open market (raw): ~80% of book value — see [[Economy and Minerals]].
-export { OPEN_MARKET_SELL_RATE } from '@/lib/data'
+
 // Market price fluctuates based on supply — selling excess repeatedly causes
 // a price dip, capped so a mineral never sells for less than 40% of its
 // (already 80%-discounted) reference price.
@@ -157,7 +156,7 @@ export function storedUnits(stash: Record<string, number> | undefined): number {
  *  crediting francs and applying supply pressure per mineral — the same path a
  *  manual Commodity Exchange sale takes, run once per mineral in the set. Used
  *  when a self-directed haul (or a silo overflow) is sold on return. */
-export function applySellHaul(s: GameState, haul: Record<string, number>, now: number = Date.now()): GameState {
+function applySellHaul(s: GameState, haul: Record<string, number>, now: number = Date.now()): GameState {
   let next = s
   for (const [id, amount] of Object.entries(haul)) {
     if (amount > 0) next = applySellMinerals(next, id, amount, now, null)
@@ -168,7 +167,7 @@ export function applySellHaul(s: GameState, haul: Record<string, number>, now: n
 /** Pick which of a haul's units spill when a silo is over capacity: cheapest ore
  *  first, so the player keeps the valuable ore and only common ore is sold off.
  *  Never returns more units than the haul contains. */
-export function pickOverflowFromHaul(haul: Record<string, number>, overflow: number): Record<string, number> {
+function pickOverflowFromHaul(haul: Record<string, number>, overflow: number): Record<string, number> {
   if (overflow <= 0) return {}
   const byCheapest = Object.entries(haul)
     .filter(([, n]) => n > 0)
@@ -439,8 +438,8 @@ export function applyRocketStageRecovery(s: GameState, rocket: RocketModel): Gam
 export function applyPlaceStructure(s: GameState, structure: StructureBlueprint | undefined, kind: string, plot: number): GameState {
   if (!structure || structure.kind !== kind) return s
   if (s.player.placed.includes(kind)) return s
-  if (kind === 'astronaut-academy' && !s.player.academyResearched) return s
-  if (kind === 'deep-space-telescope' && !deepSpaceTelescopeUnlocked({ transitSatelliteLevel: s.player.transitSatelliteLevel, clientMissions: s.player.clientMissions })) return s
+  // The tutorial's own order is enforced here; after it, only cost limits a build.
+  if (!structureUnlocked(structure, { placed: s.player.placed, freeOperations: s.player.freeOperations })) return s
   if (s.player.francs < structure.cost) return s
   if (!Object.entries(structure.costMaterials ?? {}).every(([mineral, amount]) => (s.player.stash?.[mineral] ?? 0) >= amount)) return s
   const stash = { ...(s.player.stash ?? {}) }

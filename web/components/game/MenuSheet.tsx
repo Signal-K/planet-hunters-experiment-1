@@ -105,8 +105,9 @@ export default function MenuSheet({ onClose, onOpen }: MenuSheetProps) {
 
   function openSubsurface() {
     onClose()
-    if (game.screen === 'hub' || game.screen === 'hub-subsurface') game.setSubsurfaceView(true)
-    else game.go('hub-subsurface')
+    // Menu only opens from Home's bottom bar, so the Hub is already mounted;
+    // the subsurface is its slide, not a route.
+    game.setSubsurfaceView(true)
   }
 
   function handleUpgrade() {

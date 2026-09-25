@@ -23,7 +23,6 @@ const GRID_COLOR = 0x87cffa
 const STAR_OPEN  = 0x3fa9ff
 const STAR_VISITED = 0x39d36a
 const STAR_SELECTED = 0xf5a623
-const TICK_COLOR = 0x6b7fa3
 const SOL_ID = '__sol__'
 // Fixed normalized position (not hash-derived like TESS candidates) — our
 // own solar system is always in the same place on the map.

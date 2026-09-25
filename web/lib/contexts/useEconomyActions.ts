@@ -5,7 +5,6 @@ import { applyUnlockSkillNode, applyAcceptLoan, applyAbandonMission } from '@/li
 import type { TreasuryState } from '@/lib/systems/TreasurySystem'
 import { captureGameEvent } from '@/lib/posthog'
 import { pbLandnam } from '@/lib/pb-landnam'
-import type { Catalog } from '@/lib/catalog'
 import type { GameState } from '@/lib/game-types'
 import type { Mission, ShipRoomKind, StructureBlueprint, SubsurfaceRoomId } from '@/lib/data'
 

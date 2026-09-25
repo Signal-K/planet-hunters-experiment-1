@@ -36,7 +36,6 @@ export function useUIActions(
 
   const rememberHost = useCallback((screen: Screen) => {
     if (isHostScene(screen)) lastHost.current = screen
-    else if (screen === 'hub-subsurface') lastHost.current = 'hub'
   }, [])
 
   const go = useCallback((screen: Screen) => {

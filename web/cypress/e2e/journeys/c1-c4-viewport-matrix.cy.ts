@@ -171,7 +171,7 @@ describe('C1–C4 screen contracts across viewport classes', () => {
             roverTerrainClassifications: { eros: 'vein' },
           }),
         }))
-        cy.contains('Rover Mining', { timeout: 10000 }).should('be.visible')
+        cy.get('[data-testid="rover-mining-screen"]', { timeout: 10000 }).should('be.visible')
       })
 
       it('keeps the satellite narrative gates explicit at each C4 stage', () => {
@@ -195,14 +195,14 @@ describe('C1–C4 screen contracts across viewport classes', () => {
           targetId: 'eros',
           player: basePlayer({ missionsDone: 0, freeOperations: false }),
         }))
-        cy.contains('Confirm Rocket', { timeout: 10000 }).should('be.visible')
-        // Assembly owns the launch CTA inside the scene rather than rendering
-        // a separate bottom action rail. Assert the current contract directly:
-        // the frame and its real launch control both fit in the viewport.
+        // Scene 4 is the Launch review step of the mission-setup scene. It
+        // owns the launch CTA inside the step rather than a separate bottom
+        // action rail: the review frame and its launch control both fit.
+        cy.get('[data-testid="mission-launch-review"]', { timeout: 10000 }).should('be.visible')
         cy.get('[data-testid="launch-btn"]').should('be.visible')
         cy.window().then(win => {
-          cy.get('.assembly-frame, .assembly-card').each($container => {
-            expect($container[0].getBoundingClientRect().bottom, 'setup frame stays in viewport')
+          cy.get('[data-testid="launch-btn"]').then($button => {
+            expect($button[0].getBoundingClientRect().bottom, 'launch control stays in viewport')
               .to.be.at.most(win.innerHeight + 2)
           })
         })
@@ -271,9 +271,10 @@ describe('C1–C3 persisted mission edge states', () => {
     // panel for it, just this explicit incomplete-order note (shown in both
     // the pre- and post-resolve states, so it's already visible here).
     cy.contains('Order incomplete').should('be.visible')
-    // Onboarding missions (missionsDone < 3) auto-resolve on mount — see
-    // DebriefScreen.tsx — so the note is already in its post-resolve state here.
-    cy.get('[data-testid="resolve-cargo-btn"]').should('not.exist')
+    // Every debrief now starts with the explicit vehicle teardown (KES-348),
+    // onboarding included; the incomplete note survives it.
+    cy.get('[data-testid="resolve-cargo-btn"]').click()
+    cy.get('[data-testid="scrap-sequence-skip-btn"]', { timeout: 10000 }).click()
     cy.contains('Order incomplete').should('be.visible')
   })
 })

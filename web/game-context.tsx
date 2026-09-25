@@ -26,7 +26,7 @@ import { deriveSceneScope, EARTH_BASE_SCOPE } from '@/lib/scene-scope'
 import { claimFriendGift as claimFriendGiftRequest } from '@/lib/friends/client'
 import { applyFriendGiftToPlayer, friendGiftToastMessage } from '@/lib/friends/applyGift'
 import { GAME_STATE_STORAGE_KEY, gameStateStorageKey } from '@/lib/game-state-storage'
-import { canonicalGamePath } from '@/lib/game-route'
+import { canonicalGamePath, shouldPushGamePath } from '@/lib/game-route'
 
 export type { Screen, Player, GameState } from '@/lib/game-types'
 
@@ -207,6 +207,8 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     addToast: ui.addToast,
   })
 
+  const lastPushedPath = useRef<string | null>(null)
+
   // Sync location changes to the URL. Mission creation is one location at
   // /game/missions; its target, vehicle, and preflight steps stay in React
   // state and never trigger a Next route transition.
@@ -222,7 +224,10 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       return
     }
     const nextPath = canonicalGamePath(state)
-    if (window.location.pathname !== nextPath) router.push(nextPath)
+    if (shouldPushGamePath(nextPath, window.location.pathname, lastPushedPath.current)) {
+      lastPushedPath.current = nextPath
+      router.push(nextPath)
+    }
   }, [state.screen, state.missionId, state.targetId]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Derived values ─────────────────────────────────────────────────────────
@@ -307,7 +312,6 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       upgradeLicenseGrade: loop.upgradeLicenseGrade,
       unlockBlueprint: loop.unlockBlueprint,
       claimFriendGift,
-      researchAcademy: academy.researchAcademy,
       researchLanding: academy.researchLanding,
       setAcademyFunding: academy.setAcademyFunding,
       hireCrew: academy.hireCrew,

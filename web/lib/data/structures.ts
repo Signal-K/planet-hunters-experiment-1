@@ -1,6 +1,6 @@
 // Landnam game data — structures, refinery recipes, market templates
 
-import type { StructureBlueprint, RefineryRecipe, MarketTemplate } from './types'
+import type { StructureBlueprint, RefineryRecipe } from './types'
 import { MINERAL_VALUE, REFINING_COST_RATE, REFINING_VALUE_MULTIPLIER, STRUCTURE_PRICES, SURFACE_SILO_PRICE } from './economy'
 import { MINERAL_RARITY } from './minerals'
 import { CLIENT_AFFINITY_MISSION_THRESHOLD } from './clients'
@@ -48,19 +48,12 @@ export const STRUCTURES: StructureBlueprint[] = [
     kind: 'refinery',
     cost: STRUCTURE_PRICES.refinery,
     costMaterials: { aluminium: 20, copper: 10 },
-    unlocksAt: 'Surface Silo + an established mining settlement',
+    unlocksAt: 'Free Operations',
     unlockTrigger: 'free-operations',
     // KES-283: Level 1 only — processes one shipment of raw ore into refined
     // goods per day (a queue, not instant conversion; see RefineryScreen /
     // REFINERY_RECIPES). No multi-level tree or advanced recipes yet.
-    //
-    // SSL-74: gated on the Surface Silo (refining needs somewhere to hold
-    // input ore) plus an established off-world mining settlement (purchased
-    // site access — see SurfaceOpsSystem/applyPurchaseSiteAccess). A
-    // settlement lets a ferry bring home a full hold in one trip instead of
-    // repeated one-off mining runs; refining is the payoff for having made
-    // that investment, not a plain Free-Ops purchase.
-    description: 'Level 1 ore processing. Refines one shipment of raw minerals into higher-value goods per day. Requires a Surface Silo for input storage and an established mining settlement — settlements ferry ore home in bulk, giving the Refinery a steady supply instead of one-off mining runs.',
+    description: 'Level 1 ore processing. Refines one shipment of raw minerals into higher-value goods per day.',
   },
   {
     id: 'deep-space-telescope',
@@ -68,8 +61,8 @@ export const STRUCTURES: StructureBlueprint[] = [
     kind: 'deep-space-telescope',
     cost: STRUCTURE_PRICES.deepSpaceTelescope,
     costMaterials: { aluminium: 30, copper: 16, silicon: 10 },
-    unlocksAt: 'Transit telescope level 2 and client level 2 with a client',
-    unlockTrigger: 'deep-space-telescope-unlock',
+    unlocksAt: 'Free Operations',
+    unlockTrigger: 'free-operations',
     description: 'Independent long-baseline instrument (STS-622) that downlinks unconfirmed NEO candidates from the Minor Planet Center for asteroid-discovery classification, separate from the transit satellite.',
   },
   {
@@ -78,8 +71,8 @@ export const STRUCTURES: StructureBlueprint[] = [
     kind: 'astronaut-academy',
     cost: STRUCTURE_PRICES.academy,
     costMaterials: { aluminium: 24, silicon: 12, copper: 8 },
-    unlocksAt: 'Research after reaching client level 2 with two clients',
-    unlockTrigger: 'academy-research',
+    unlocksAt: 'Free Operations',
+    unlockTrigger: 'free-operations',
     description: 'Trains named astronauts, manages the roster, and coordinates Base staffing.',
   },
   { id: 'garage', name: 'Vehicle Garage', kind: 'garage', cost: STRUCTURE_PRICES.garage, unlocksAt: 'Future sprint', unlockTrigger: 'manual', description: 'Surface rover maintenance and upgrades.' },
@@ -90,12 +83,10 @@ export const STRUCTURES: StructureBlueprint[] = [
  *  HubScreen's copy, which could drift apart silently. */
 export const LAUNCHPAD_UPGRADE_COST = STRUCTURE_PRICES.launchpadUpgrade
 
-// Deep Space Telescope unlock (STS-622): requires the transit satellite to
-// have reached level 2 and at least one client relationship to have reached
-// client level 2 — a lighter bar than the Academy's two-client requirement,
-// since this gates a second instrument rather than a new profession. Exact
-// numbers are a build-time call per the ticket ("decide during build rather
-// than re-asked as a blocking question"), not a re-litigated design decision.
+// When the story-deep-space-telescope-survey mission is offered (STS-622,
+// KES-128): the transit satellite at level 2 and one client relationship at
+// client level 2. It only decides when that mission appears; the telescope
+// itself is an ordinary Free Operations purchase (see structureUnlocked).
 export function deepSpaceTelescopeUnlocked(opts: { transitSatelliteLevel?: number; clientMissions?: Record<string, number> } = {}): boolean {
   if ((opts.transitSatelliteLevel ?? 1) < 2) return false
   return Object.values(opts.clientMissions ?? {}).some(
@@ -103,34 +94,24 @@ export function deepSpaceTelescopeUnlocked(opts: { transitSatelliteLevel?: numbe
   )
 }
 
-export function structureUnlocked(structure: StructureBlueprint, opts: { refineryUnlocked?: boolean; academyResearched?: boolean; placed?: string[]; freeOperations?: boolean; transitSatelliteLevel?: number; clientMissions?: Record<string, number>; deepSpaceTelescopeMissionCompletedAt?: number | null; hasMiningSettlement?: boolean } = {}): boolean {
-  if (structure.id === 'surface-silo') return !!opts.freeOperations || !!opts.placed?.includes('surface-silo')
-  if (structure.id === 'astronaut-academy') return !!opts.academyResearched || !!opts.placed?.includes('astronaut-academy')
-  // KES-128: the numeric threshold (deepSpaceTelescopeUnlocked) now only
-  // decides when the story-deep-space-telescope-survey mission (see
-  // runtimeCatalog.ts) is offered as the on-ramp — completing that mission is
-  // what actually opens the build slot, so a player never sees a bare
-  // structure appear with no narrative reason it happened.
-  if (structure.id === 'deep-space-telescope') {
-    return (deepSpaceTelescopeUnlocked(opts) && !!opts.deepSpaceTelescopeMissionCompletedAt) || !!opts.placed?.includes('deep-space-telescope')
-  }
+/**
+ * Structure availability. The tutorial teaches a fixed set of buildings (the
+ * Launchpad); once it ends (Free Operations), every structure is open and only
+ * its cost limits it. 'manual' blueprints have no Base building behind them
+ * yet, so they stay unavailable. A structure already placed stays available.
+ */
+export function structureUnlocked(structure: StructureBlueprint, opts: { placed?: string[]; freeOperations?: boolean } = {}): boolean {
   if (structure.unlockTrigger === 'always') return true
-  // KES-283: the Refinery is a normal Earth Base plot purchase (same unlock
-  // shape as the Surface Silo) rather than the KES-286 off-world
-  // site-commissioned structure whose unlock condition no mission ever
-  // satisfied — that broken trigger is retired for good.
-  //
-  // SSL-74 adds two live, player-controlled prerequisites on top of
-  // Free Operations (neither is a dead trigger like KES-286's): the Surface
-  // Silo must already be built, and the player must have an established
-  // off-world mining settlement (purchased site access). Both are ordinary
-  // purchases the player can always complete, so this cannot reproduce
-  // KES-286's permanently-unreachable failure mode.
-  if (structure.id === 'refinery') {
-    return !!opts.placed?.includes('refinery')
-      || (!!opts.freeOperations && !!opts.placed?.includes('surface-silo') && !!opts.hasMiningSettlement)
-  }
-  return false
+  if (opts.placed?.includes(structure.id)) return true
+  if (structure.unlockTrigger === 'manual') return false
+  return !!opts.freeOperations
+}
+
+/** What a still-locked structure waits for, derived from the same rule so an
+ *  older catalog row's unlocksAt copy cannot promise a retired gate. */
+export function structureUnlockLabel(structure: StructureBlueprint): string {
+  if (structure.unlockTrigger === 'manual') return structure.unlocksAt || 'Not yet available'
+  return 'Free Operations'
 }
 
 export function canAffordStructure(structure: StructureBlueprint, opts: { francs: number; stash?: Record<string, number> }): boolean {
@@ -151,9 +132,3 @@ export function structureAffordabilityGaps(structure: StructureBlueprint, opts: 
   }
   return gaps
 }
-
-export const MARKET_TEMPLATES: MarketTemplate[] = [
-  { id: 'spot',     label: 'Spot Price',     currency: '₣', baseRate: 1.0, volatility: 0.05 },
-  { id: 'futures',  label: 'Futures Contract', currency: '₣', baseRate: 0.92, volatility: 0.02 },
-  { id: 'bulk',     label: 'Bulk Rate',       currency: '₣', baseRate: 0.85, volatility: 0.08 },
-]

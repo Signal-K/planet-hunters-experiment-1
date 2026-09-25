@@ -16,7 +16,7 @@ import {
   type CrewCondition,
   type CrewMember,
 } from '@/lib/data'
-import { CREW_XP_CURVE, grantXP, levelForXP, xpProgress, type XPProgress } from './XPSystem'
+import { CREW_XP_CURVE, levelForXP, xpProgress, type XPProgress } from './XPSystem'
 
 /** Crew level is derived, never stored — see the note on `CrewMember.xp`. */
 export function crewLevel(member: Pick<CrewMember, 'xp'>): number {
@@ -125,21 +125,6 @@ export function applySetCrewCondition(
       }),
     },
   }
-}
-
-/**
- * Grant XP to one crew member. Goes through the shared `grantXP` primitive, so
- * crew progression and player research obey the same rules — no per-track
- * arithmetic. Missions grant XP to the crew that flew them, which is why a
- * benched astronaut falls behind one that works.
- */
-export function applyGrantCrewXP(s: GameState, id: string, amount: number): GameState {
-  const crew = s.player.crew ?? []
-  const target = crew.find(c => c.id === id)
-  if (!target) return s
-  const granted = grantXP(target, amount)
-  if (granted === target) return s
-  return { ...s, player: { ...s.player, crew: crew.map(c => (c.id === id ? granted : c)) } }
 }
 
 /**

@@ -1,4 +1,5 @@
 import type { GameState } from '@/game-context'
+import { seedFixtureSession } from '../../support/authenticated-fixture'
 
 const STORAGE_KEY = 'landnam-game-state-v1'
 
@@ -59,14 +60,13 @@ function fullState(overrides: StateOverride = {}): GameState {
   }
 }
 
+/** /game resumes signed-in players to Earth Base; in-flight mission screens
+ *  are opened from their own route. */
 function visitWithState(state: GameState) {
-  cy.visit('/game', {
+  cy.visit(state.screen === 'fab' ? '/game/fab' : '/game', {
     onBeforeLoad(win) {
       win.localStorage.setItem(STORAGE_KEY, JSON.stringify(state))
-      win.localStorage.setItem('landnam-account-credentials', JSON.stringify({
-        email: 'e2e@example.com',
-        password: 'e2e-guest-test',
-      }))
+      seedFixtureSession(win)
     },
   })
 }
@@ -96,6 +96,17 @@ function assertGameplayButtonsAvoidCoachBlock() {
   })
 }
 
+function openContracts() {
+  cy.contains('h1', /^(Base|Earth Base)$/, { timeout: 10000 }).should('be.visible')
+  cy.window().then(win => {
+    // No standing missions nav on desktop; the launchpad callout's
+    // "View Missions" is the entry there (see the retirement note below).
+    if (win.innerWidth >= 1024) cy.contains('button', 'View Missions', { timeout: 10000 }).click()
+    else cy.get('[data-testid="bottom-tab-missions"]').click()
+  })
+  cy.get('[data-testid="mission-board-section-client"]', { timeout: 10000 }).should('be.visible')
+}
+
 describe('Tutorial rail regression', () => {
   for (const viewport of VIEWPORTS) {
     describe(viewport.name, () => {
@@ -123,7 +134,7 @@ describe('Tutorial rail regression', () => {
         // hidden rather than asserting a stand-in that doesn't exist here.
         cy.window().then(win => {
           if (win.innerWidth >= 1024) {
-            cy.get('[data-testid="sidebar-nav-missions"]').should('not.be.visible')
+            cy.get('[data-testid="sidebar-nav-missions"]').should('not.exist')
             cy.get('[data-testid="bottom-tab-missions"]').should('not.be.visible')
           } else {
             cy.get('[data-testid="bottom-tab-missions"]').should('be.visible')
@@ -135,48 +146,56 @@ describe('Tutorial rail regression', () => {
 
       it('keeps mission board actions below the tutorial rail', () => {
         visitWithState(fullState({
-          screen: 'missions',
+          screen: 'hub',
           tutorial: true,
           doneSteps: { 0: true, 1: true },
         }))
+        openContracts()
 
         cy.get('[data-testid="tutorial-coach-block"]').should('contain', 'Select a Mission')
-        cy.get('[data-testid="mission-card-generated-s1-starter-bulk-1"]').should('be.visible')
+        cy.get('[data-testid="mission-accept-generated-s1-starter-bulk-1"]').should('be.visible')
         assertGameplayButtonsAvoidCoachBlock()
       })
 
       it('keeps target picker and continue actions below the tutorial rail', () => {
         visitWithState(fullState({
-          screen: 'targets',
-          missionId: 'generated-s1-starter-bulk-1',
+          screen: 'hub',
           tutorial: true,
-          doneSteps: { 0: true, 1: true, 2: true },
+          doneSteps: { 0: true, 1: true },
         }))
+        openContracts()
+        cy.get('[data-testid="mission-accept-generated-s1-starter-bulk-1"]').click()
 
         cy.get('[data-testid="tutorial-coach-block"]').should('contain', 'Choose a Destination')
-        cy.contains('Continue · Build').should('be.visible')
+        cy.get('[data-testid="continue-build-btn"]').should('be.visible')
         assertGameplayButtonsAvoidCoachBlock()
       })
 
-      // KES-192: TutorialHighlight (.coach-glow-ring) wraps whole content
-      // panels — the map card here, the rocket-assembly card on 'fab', the
-      // launch-authorization card on 'fab' step 5, Debrief's summary card —
-      // whenever hasCoach is true. That makes its border color a panel
-      // accent on every onboarding screen, which the standing amber rule
-      // (CLAUDE.md / design-language doc) explicitly forbids ("never a panel
-      // accent... or generic UI chrome"). Was hardcoded amber
-      // (rgb(245, 166, 35)) until this ticket; must stay cyan.
-      it('highlights the target picker map with cyan, never amber (KES-192)', () => {
+      // KES-192: onboarding coaching must never use amber as a panel accent
+      // (CLAUDE.md / design-language doc: "never a panel accent... or generic
+      // UI chrome"). The target map no longer wraps the map in a
+      // TutorialHighlight ring; the coach block itself is the accent, and it
+      // must not be amber either.
+      it('coaches the target map without an amber accent (KES-192)', () => {
         visitWithState(fullState({
-          screen: 'targets',
-          missionId: 'generated-s1-starter-bulk-1',
+          screen: 'hub',
           tutorial: true,
-          doneSteps: { 0: true, 1: true, 2: true },
+          doneSteps: { 0: true, 1: true },
         }))
+        openContracts()
+        cy.get('[data-testid="mission-accept-generated-s1-starter-bulk-1"]').click()
 
-        cy.get('[data-testid="tutorial-coach-highlight"]').should('be.visible').then($ring => {
-          const borderColor = getComputedStyle($ring[0]).borderTopColor
-          expect(borderColor).to.equal('rgb(112, 217, 234)')
+        cy.get('[data-testid="mission-setup-scaffold"]').should('have.attr', 'data-coach', 'true')
+        cy.get('[data-testid="tutorial-coach-block"]').should('be.visible').then($coach => {
+          const style = getComputedStyle($coach[0])
+          expect(style.borderTopColor).not.to.equal('rgb(245, 166, 35)')
+          expect(style.outlineColor).not.to.equal('rgb(245, 166, 35)')
+        })
+        // Any highlight ring that is present must not be amber either.
+        cy.document().then(doc => {
+          doc.querySelectorAll('[data-testid="tutorial-coach-highlight"]').forEach(ring => {
+            expect(getComputedStyle(ring).borderTopColor).not.to.equal('rgb(245, 166, 35)')
+          })
         })
       })
 
@@ -222,8 +241,8 @@ describe('Tutorial rail regression', () => {
             cy.get('[data-testid="bottom-tab-missions"]').click()
           }
         })
-        cy.get('[data-testid="mission-card-generated-s1-starter-bulk-1"]').should('be.visible').click()
-        cy.contains('Continue · Build').should('be.visible')
+        cy.get('[data-testid="mission-accept-generated-s1-starter-bulk-1"]').should('be.visible').click()
+        cy.get('[data-testid="continue-build-btn"]').should('be.visible')
       })
     })
   }

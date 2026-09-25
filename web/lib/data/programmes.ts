@@ -23,14 +23,6 @@ export type ProgrammeStage = 'observe' | 'contribute' | 'review' | 'accepted' | 
 
 export const PROGRAMME_STAGES: readonly ProgrammeStage[] = ['observe', 'contribute', 'review', 'accepted', 'shared']
 
-export const PROGRAMME_STAGE_LABELS: Record<ProgrammeStage, string> = {
-  observe: 'Observe',
-  contribute: 'Contribute',
-  review: 'Review',
-  accepted: 'Accepted',
-  shared: 'Shared',
-}
-
 /** How much fictional framing a programme may carry (narrative boundary decision, 2026-07-08). */
 export type FramingTier = 'none' | 'speculative'
 
@@ -106,13 +98,6 @@ export interface ProgrammeDefinition {
 
 export type HubChannel = 'discoveries' | 'creations' | 'worlds' | 'discussion'
 
-export const HUB_CHANNEL_LABELS: Record<HubChannel, string> = {
-  discoveries: 'Discoveries',
-  creations: 'Creations',
-  worlds: 'Worlds',
-  discussion: 'Discussion',
-}
-
 export type ShareVisibility = 'private' | 'friends' | 'public'
 
 // ── Registry ───────────────────────────────────────────────────────────────
@@ -134,7 +119,7 @@ const TESS_TRANSIT_SEARCH: ProgrammeDefinition = {
   reward: { francs: false, progression: 'discovery-record' },
   framing: 'none',
   events: { contribute: 'tess_classification', accepted: 'exoplanet_confirmed' },
-  surfaces: ['TessDiscoveryScreen', 'InstrumentFeedSystem', 'LightcurvePlot'],
+  surfaces: ['TessDiscoveryScreen', 'InstrumentFeedSystem', 'ObservatoryChart'],
   live: true,
 }
 

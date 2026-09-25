@@ -1,3 +1,5 @@
+import { seedFixtureSession } from '../../support/authenticated-fixture'
+
 // Tests for the ?preset= URL param and the DEV panel one-shots.
 // Runs in the offline profile (no PocketBase required).
 
@@ -11,8 +13,13 @@ const presetCases: Array<{ key: string; assertion: () => void }> = [
     assertion: () => cy.contains('h1', /^(Base|Earth Base)$/).should('be.visible'),
   },
   {
+    // Mission setup owns one route: target, vehicle and launch review are
+    // internal steps of /game/missions (canonicalGameRoute), not /game/fab.
     key: 'm1-fab',
-    assertion: () => cy.url().should('include', '/game/fab'),
+    assertion: () => {
+      cy.location('pathname').should('eq', '/game/missions')
+      cy.get('[data-testid="mission-launch-review"]').should('be.visible')
+    },
   },
   {
     key: 'm2-hub',
@@ -23,7 +30,8 @@ const presetCases: Array<{ key: string; assertion: () => void }> = [
   {
     key: 'm2-fab',
     assertion: () => {
-      cy.url().should('include', '/game/fab')
+      cy.location('pathname').should('eq', '/game/missions')
+      cy.get('[data-testid="assembly-selected-rocket"]').should('contain', 'Prospector')
     },
   },
   {
@@ -35,7 +43,7 @@ const presetCases: Array<{ key: string; assertion: () => void }> = [
   {
     key: 'm3-debrief',
     assertion: () => {
-      cy.contains('Debrief').should('be.visible')
+      cy.contains(/^debrief$/i).should('be.visible')
     },
   },
 ]
@@ -49,22 +57,19 @@ describe('Dev preset URL param (?preset=)', () => {
     })
   })
 
-  it('unknown preset falls back to normal load (intro screen)', () => {
+  it('unknown preset falls back to normal load (Earth Base)', () => {
     // resolvePreset() returns null for an unrecognized key, so this device
     // takes the ordinary (non-preview) hydration path — which, same as any
-    // other fresh session with no stored credentials, opens the auth gate
-    // before gameplay (STS-624). Seed guest credentials first so the
-    // fallback path actually reaches the intro screen instead of stalling
-    // on sign-in.
+    // other fresh session, opens the auth gate before gameplay (STS-624).
+    // Seed a signed-in session so the fallback path reaches gameplay; a
+    // signed-in player always lands on Earth Base (initial-route.ts).
     cy.visit('/game?preset=does-not-exist', {
       onBeforeLoad(win) {
-        win.localStorage.setItem(
-          'landnam-account-credentials',
-          JSON.stringify({ email: 'e2e@example.com', password: 'e2e-guest-test' }),
-        )
+        seedFixtureSession(win)
       },
     })
-    cy.contains('BEGIN OPERATIONS').should('be.visible')
+    cy.location('pathname').should('eq', '/game/hub')
+    cy.contains('h1', /^(Base|Earth Base)$/).should('be.visible')
   })
 
   it('preset param is stripped from URL after load', () => {
@@ -121,22 +126,24 @@ describe('DEV panel UI', () => {
     cy.get('[data-testid="dev-shot-ship-customizer"]').should('exist')
     cy.get('[data-testid="dev-shot-ui-asteroid-discovery"]').should('exist')
     cy.get('[data-testid="dev-shot-ui-academy"]').should('exist')
-    cy.get('[data-testid^="dev-shot-"]').should('have.length', 27)
+    cy.get('[data-testid="dev-shot-ui-hangar-assembly"]').should('exist')
+    cy.get('[data-testid="dev-shot-ui-instrument-hub"]').should('exist')
+    // ui-tess-discovery is listed in two groups, so 28 presets render 29 buttons.
+    cy.get('[data-testid^="dev-shot-"]').should('have.length', 29)
   })
 
   it('clicking M2 Hub navigates to hub with M2 coach, no Save Progress prompt', () => {
     cy.get('[data-testid="dev-shortcuts-toggle"]').click()
     cy.get('[data-testid="dev-shot-m2-hub"]').click()
-    cy.contains('Prospector').should('be.visible')
+    cy.contains('Guided Ops · Mission 2').should('be.visible')
     cy.contains('Create a free account').should('not.exist')
   })
 
   it('clicking M2 rocket purchase shows purchasable Prospector', () => {
     cy.get('[data-testid="dev-shortcuts-toggle"]').click()
     cy.get('[data-testid="dev-shot-m2-rocket-buy"]').click()
-    cy.contains('Select Rocket').should('be.visible')
-    cy.contains('Prospector').should('be.visible')
-    cy.contains('Purchase').should('be.visible')
+    cy.get('[data-testid="mission-rocket-blueprint"]').should('be.visible')
+    cy.get('[data-testid="purchase-rocket-btn"]').should('contain', 'PROSPECTOR').and('not.be.disabled')
   })
 
   it('clicking M2 Fab shows fab screen after Prospector purchase', () => {
@@ -156,8 +163,9 @@ describe('DEV panel UI', () => {
   it('clicking M3 Debrief shows the two-leg mission attributed to the delivery target', () => {
     cy.get('[data-testid="dev-shortcuts-toggle"]').click()
     cy.get('[data-testid="dev-shot-m3-debrief"]').click()
-    cy.contains('From 4 Vesta').should('be.visible')
-    cy.contains('From 101955 Bennu').should('not.exist')
+    // The ship returns from the delivery stop; the route chip still names the
+    // mining site first (KES-352).
+    cy.contains('span', 'RETURNED FROM').next().should('have.text', '4 Vesta')
   })
 
   it('closes panel when DEV button clicked again', () => {

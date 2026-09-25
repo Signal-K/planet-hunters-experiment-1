@@ -1,0 +1,20 @@
+{
+  "$schema": "https://unpkg.com/knip@5/schema.json",
+  "entry": [
+    "scripts/*.{ts,mjs}",
+    "cypress/e2e/**/*.cy.{js,ts}",
+    "cypress/support/*.ts",
+    "public/sw.js",
+    "open-next.config.ts"
+  ],
+  "project": [
+    "**/*.{ts,tsx,js,mjs,css}"
+  ],
+  "ignore": [
+    "design-reference/**",
+    "eslint-rules/**"
+  ],
+  "ignoreDependencies": [
+    "esbuild"
+  ]
+}

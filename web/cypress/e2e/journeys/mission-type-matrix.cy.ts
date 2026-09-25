@@ -8,6 +8,7 @@
 // coverage.
 
 import type { GameState } from '@/game-context'
+import { seedFixtureSession } from '../../support/authenticated-fixture'
 
 const STORAGE_KEY = 'landnam-game-state-v1'
 const AUTHENTICATED_STORAGE_KEY = `${STORAGE_KEY}:user:e2e-user`
@@ -65,7 +66,7 @@ function visit(path: string, screen: GameState['screen'], playerOverrides: Parti
   cy.visit(path, {
     onBeforeLoad(win) {
       win.localStorage.setItem(AUTHENTICATED_STORAGE_KEY, JSON.stringify(state))
-      win.localStorage.setItem('landnam-account-credentials', JSON.stringify({ email: 'e2e@example.com', password: 'e2e-guest-test' }))
+      seedFixtureSession(win, 'e2e-user')
     },
   })
 }

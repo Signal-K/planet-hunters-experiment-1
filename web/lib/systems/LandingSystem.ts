@@ -8,7 +8,7 @@ import { startReturnLeg } from './MiningSystem'
 
 export const LANDING_DESCEND_DURATION_MS = 8_000
 export const LANDING_ASCEND_DURATION_MS = 8_000
-export const LANDING_RESEARCH_PREREQUISITE_MISSIONS_DONE = 2
+const LANDING_RESEARCH_PREREQUISITE_MISSIONS_DONE = 2
 
 export function landingProgress(
   startedAt: number | undefined,

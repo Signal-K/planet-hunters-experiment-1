@@ -1,7 +1,7 @@
 import type { GameState } from '../../../game-context'
+import { seedFixtureSession } from '../../support/authenticated-fixture'
 
 const STORAGE_KEY = 'landnam-game-state-v1'
-const ACCOUNT_KEY = 'landnam-account-credentials'
 
 const RETURNING_PLAYER = {
   screen: 'missions',
@@ -18,16 +18,13 @@ describe('returning player entry route', () => {
     cy.visit('/game', {
       onBeforeLoad(win) {
         win.localStorage.clear()
-        win.localStorage.setItem(ACCOUNT_KEY, JSON.stringify({
-          email: 'e2e@example.com',
-          password: 'e2e-guest-test',
-        }))
         win.localStorage.setItem(STORAGE_KEY, JSON.stringify(RETURNING_PLAYER))
+        seedFixtureSession(win)
       },
     })
 
     cy.location('pathname', { timeout: 10_000 }).should('eq', '/game/hub')
-    cy.get('[data-testid="hub-skyline-fallback"]', { timeout: 10_000 }).should('exist')
+    cy.get('[data-testid="hub-terrain-fallback"]', { timeout: 10_000 }).should('exist')
     cy.get('h1').invoke('text').should('match', /^(Base|Earth Base)$/)
   })
 })

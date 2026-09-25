@@ -1,3 +1,5 @@
+import { seedFixtureSession } from '../../support/authenticated-fixture'
+
 export {}
 
 const ORIENTATION_STORAGE_KEY = 'landnam-game-state-v1'
@@ -38,10 +40,7 @@ const HUB_STATE = {
 
 function seedAuthenticatedHub(win: Cypress.AUTWindow) {
   win.localStorage.setItem(ORIENTATION_STORAGE_KEY, JSON.stringify(HUB_STATE))
-  win.localStorage.setItem(
-    'landnam-account-credentials',
-    JSON.stringify({ email: 'e2e@example.com', password: 'e2e-guest-test' }),
-  )
+  seedFixtureSession(win)
   win.localStorage.setItem('landnam-surveys-shown', JSON.stringify(['lnm_first_launch']))
 }
 
@@ -74,7 +73,6 @@ describe('Compact landscape play path (SSL-326)', () => {
       onBeforeLoad(win) {
         Object.defineProperty(win.navigator, 'userAgent', { configurable: true, value: PHONE_UA })
         win.localStorage.removeItem(ORIENTATION_STORAGE_KEY)
-        win.localStorage.removeItem('landnam-account-credentials')
       },
     })
 
@@ -82,8 +80,8 @@ describe('Compact landscape play path (SSL-326)', () => {
     cy.get('[data-testid="auth-gate-email"]', { timeout: 15000 }).should('be.visible')
     cy.get('[data-testid="auth-gate-password"]').should('be.visible')
     cy.get('[data-testid="auth-gate-submit"]').should('be.visible')
-    cy.get('[data-testid="auth-gate-quick-email"]').scrollIntoView().should('be.visible')
-    cy.get('[data-testid="auth-gate-quick-submit"]').scrollIntoView().should('be.visible')
+    // The quick "continue with email" path was retired with the email-only
+    // accounts; email + password sign-in and sign-up are the whole gate.
     cy.contains('button', /create account|sign up/i).click()
     cy.get('[data-testid="auth-gate-submit"]').should('be.visible')
     cy.screenshot('mobile-landscape-auth-reachable')
@@ -91,34 +89,21 @@ describe('Compact landscape play path (SSL-326)', () => {
 
   it('keeps mission dispatch and the target map reachable at 844×390', () => {
     cy.viewport(844, 390)
-    cy.visit('/game/missions', {
+    cy.visit('/game/hub', {
       onBeforeLoad(win) {
         Object.defineProperty(win.navigator, 'userAgent', { configurable: true, value: PHONE_UA })
         seedAuthenticatedHub(win)
       },
     })
     assertNoRotateWall()
+    cy.get('[data-testid="bottom-tab-missions"]', { timeout: 15000 }).click()
+    cy.get('[data-testid="mission-board-section-client"]', { timeout: 15000 }).should('be.visible')
+    assertNoRotateWall()
     cy.screenshot('mobile-landscape-missions')
 
-    cy.visit('/game/targets', {
-      onBeforeLoad(win) {
-        Object.defineProperty(win.navigator, 'userAgent', { configurable: true, value: PHONE_UA })
-        win.localStorage.setItem(
-          ORIENTATION_STORAGE_KEY,
-          JSON.stringify({
-            ...HUB_STATE,
-            screen: 'targets',
-            missionId: 'generated-s1-starter-bulk-1',
-          }),
-        )
-        win.localStorage.setItem(
-          'landnam-account-credentials',
-          JSON.stringify({ email: 'e2e@example.com', password: 'e2e-guest-test' }),
-        )
-      },
-    })
+    cy.get('[data-testid="mission-accept-generated-s1-starter-bulk-1"]').click()
     assertNoRotateWall()
-    cy.get('[data-testid="target-picker-orbital-map"]', { timeout: 15000 }).should('be.visible')
+    cy.get('[data-testid="mission-target-map"]', { timeout: 15000 }).should('be.visible')
     cy.screenshot('mobile-landscape-target-picker')
   })
 

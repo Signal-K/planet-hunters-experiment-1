@@ -16,61 +16,42 @@ import { initPostHog } from '@/lib/posthog'
 import DevShortcuts from '@/components/dev/DevShortcuts'
 import GateLanding from '@/components/game/landing/GateLanding'
 import ShellSheets from '@/components/game/ShellSheets'
+import TakeOnPwaPreload from '@/components/takeon/TakeOnPwaPreload'
 import TerritoryClaimPopup from '@/components/game/TerritoryClaimPopup'
 import { UI_ZONES } from '@/lib/ui-zones'
 import { isSurveySafeScreen } from '@/lib/survey-gating'
 import { ScreenContent } from '@/components/game/GameScreenRouter'
+import { returnNotification, type ReturnNotification } from '@/lib/return-notification'
 
 function GameChrome({ children }: { children: ReactNode }) {
   const game = useGame()
-  const arrivalScheduledFor = useRef<number | null>(null)
-  const returnScheduledKey = useRef<string | null>(null)
+  const returnScheduledFor = useRef<number | null>(null)
 
-  // Keep third-party analytics script injection out of React hydration. See
-  // GameApp's equivalent effect for the legacy route shell.
+  // PostHog injects recorder/survey scripts. Initialising during module
+  // evaluation can let those scripts mutate the document while React is
+  // still hydrating, producing a real production hydration mismatch. Run it
+  // after the first client commit instead.
   useEffect(() => {
     initPostHog()
   }, [])
 
-  // Schedule push notification when transit starts
+  // Schedule the "rocket returned" push when the Earth-return leg starts, for
+  // the moment that leg actually lands. The rocket returns from the delivery
+  // stop on two-leg jobs, otherwise from the mining target.
   useEffect(() => {
-    const arrivalAt = game.player.arrivalAt
-    if (game.screen !== 'transit' || !arrivalAt) return
-    if (arrivalScheduledFor.current === arrivalAt) return
-    arrivalScheduledFor.current = arrivalAt
+    const notice = returnNotification({
+      arrivalAt: game.player.arrivalAt,
+      returningToEarth: game.player.returningToEarth,
+      missionTitle: game.mission?.title,
+      originName: (game.mission?.deliveryTargetId
+        ? game.catalog.targets.find(t => t.id === game.mission?.deliveryTargetId)
+        : game.target)?.name,
+    })
+    if (game.screen !== 'transit' || !notice) return
+    if (returnScheduledFor.current === notice.scheduledFor) return
+    returnScheduledFor.current = notice.scheduledFor
 
-    async function schedule() {
-      if (!('serviceWorker' in navigator) || !('PushManager' in window)) return
-      const reg = await navigator.serviceWorker.ready
-      const sub = await reg.pushManager.getSubscription()
-      if (!sub) return
-      const mission = game.mission
-      const target = game.target
-      await fetch('/api/push/schedule', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          endpoint: sub.endpoint,
-          keys: sub.toJSON().keys,
-          scheduledFor: Date.now() + 1000,
-          title: mission ? `${mission.title} — RETURNED` : 'ROCKET RETURNED',
-          body: target ? `Your rocket has returned from ${target.name}. Cargo is ready for debrief.` : 'Your rocket has returned to Earth.',
-        }),
-      })
-    }
-    void schedule().catch(() => {})
-  }, [game.screen, game.player.arrivalAt, game.mission, game.target])
-
-  // Schedule return notification when debrief is reached
-  useEffect(() => {
-    if (game.screen !== 'debrief' || !game.lastCargo) return
-    const mission = game.mission
-    const target = game.target
-    const key = `${mission?.id ?? 'mission'}:${target?.id ?? 'target'}:${JSON.stringify(game.lastCargo)}`
-    if (returnScheduledKey.current === key) return
-    returnScheduledKey.current = key
-
-    async function schedule() {
+    async function schedule(payload: ReturnNotification) {
       if (!('serviceWorker' in navigator) || !('PushManager' in window)) return
       const reg = await navigator.serviceWorker.ready
       const sub = await reg.pushManager.getSubscription()
@@ -81,14 +62,12 @@ function GameChrome({ children }: { children: ReactNode }) {
         body: JSON.stringify({
           endpoint: sub.endpoint,
           keys: sub.toJSON().keys,
-          scheduledFor: Date.now() + 1000,
-          title: mission ? `${mission.title} — RETURNED` : 'ROCKET RETURNED',
-          body: target ? `Your rocket has returned from ${target.name}. Cargo is ready for debrief.` : 'Your rocket has returned to Earth.',
+          ...payload,
         }),
       })
     }
-    void schedule().catch(() => {})
-  }, [game.screen, game.lastCargo, game.mission, game.target])
+    void schedule(notice).catch(() => {})
+  }, [game.screen, game.player.arrivalAt, game.player.returningToEarth, game.mission, game.target, game.catalog.targets])
 
   const coachSteps = useMemo(() => {
     if (!game.tutorial || game.player.missionsDone >= FREE_OPS_START_MISSIONS_DONE) return []
@@ -117,6 +96,9 @@ function GameChrome({ children }: { children: ReactNode }) {
 
   return (
     <main className="game-stage" aria-label="Landnam game">
+      {/* No-op unless running as an installed PWA; warms the Takeon/Pixi
+          chunks so Surface Ops works offline (see web/vendor/takeon/README.md). */}
+      <TakeOnPwaPreload />
       {/* SSL-35: every screen sits on the shared full-page frame. The old
           boxed desktop device-card for menu screens (and the blurred Earth
           Base backdrop behind it) is retired; see lib/screen-layouts.ts. */}
@@ -187,7 +169,6 @@ function GameChrome({ children }: { children: ReactNode }) {
               if (popup === 'loan') { game.acceptLoan(); return }
               game.setPopup(null)
               if (popup === 'sr2') game.go('hub')
-              if (popup === 'ship-customizer') game.go('hangar')
             }}
             onDismiss={game.popup === 'loan' ? () => game.setPopup(null) : undefined}
           />

@@ -285,14 +285,18 @@ describe('applyConfirmShipCustomizerBuild', () => {
 })
 
 describe('Academy and staffing economy', () => {
-  it('charges the Academy build cost and materials only after research', () => {
+  it('charges the Academy build cost and materials in Free Ops without a research step', () => {
     const academy = STRUCTURES.find(structure => structure.id === 'astronaut-academy')!
     const stash = { aluminium: 24, silicon: 12, copper: 8 }
-    const locked = makeState({ francs: academy.cost, stash, academyResearched: false })
-    expect(applyPlaceStructure(locked, academy, academy.kind, 2)).toBe(locked)
+    // The tutorial's own order still holds: nothing but the Launchpad before Free Ops.
+    const tutorial = makeState({ francs: academy.cost, stash, freeOperations: false, missionsDone: 1 })
+    expect(applyPlaceStructure(tutorial, academy, academy.kind, 2)).toBe(tutorial)
+    // Cost checks stay.
+    const short = makeState({ francs: academy.cost - 1, stash })
+    expect(applyPlaceStructure(short, academy, academy.kind, 2)).toBe(short)
 
     const built = applyPlaceStructure(
-      makeState({ francs: academy.cost, stash, academyResearched: true }),
+      makeState({ francs: academy.cost, stash, academyResearched: false }),
       academy,
       academy.kind,
       2,

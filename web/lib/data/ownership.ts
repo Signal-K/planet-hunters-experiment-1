@@ -12,8 +12,8 @@
 // Body-level and division-level owners are data + player state; the
 // OwnershipSystem resolves them and applies claims.
 
-export const COLLECTIVE_OWNER_ID = 'collective'
-export const COLLECTIVE_OWNER_NAME = 'The Collective'
+const COLLECTIVE_OWNER_ID = 'collective'
+const COLLECTIVE_OWNER_NAME = 'The Collective'
 
 export type OwnerKind = 'collective' | 'player' | 'client'
 
@@ -43,7 +43,3 @@ export const CLIENT_DIVISION_HOLDINGS: readonly { targetId: string; divisionId: 
   { targetId: 'mars', divisionId: 'mars:1-2', clientId: 'ferrum-orbital-construction', siteId: 'mars-arcadia' },
   { targetId: 'europa', divisionId: 'europa:1-0', clientId: 'ceres-volatiles-collective', siteId: 'europa-chaos' },
 ]
-
-export function clientHoldingForSite(siteId: string) {
-  return CLIENT_DIVISION_HOLDINGS.find(h => h.siteId === siteId)
-}

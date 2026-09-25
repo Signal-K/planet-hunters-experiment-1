@@ -11,7 +11,7 @@ interface PbErrorBody {
 }
 
 /** Turn a PocketBase error into the outbox's retry vocabulary. */
-export function classifyPbError(op: OutboxOp, error: unknown): OutboxFailure {
+function classifyPbError(op: OutboxOp, error: unknown): OutboxFailure {
   if (!(error instanceof ClientResponseError)) return { kind: 'offline' }
   // status 0 is fetch failing outright: offline, aborted, or backgrounded.
   if (error.status === 0) return { kind: 'offline' }
@@ -94,13 +94,6 @@ export function queueCreate(collection: string, data: Record<string, unknown>, i
 /** Create-or-update the record matching `filter`; safe to replay. */
 export function queueUpsert(collection: string, filter: string, data: Record<string, unknown>): void {
   void getOutbox().enqueue({ type: 'upsert', collection, id: newRecordId(), filter, data })
-}
-
-/** Queue a community API POST. Returns the client id sent as `body.id` so the server can dedupe replays. */
-export function queueCommunityPost(path: string, body: Record<string, unknown>): string {
-  const id = newRecordId()
-  void getOutbox().enqueue({ type: 'http', path: `/api/community${path}`, method: 'POST', body: { ...body, id } })
-  return id
 }
 
 export function queueUpdate(collection: string, id: string, data: Record<string, unknown>): void {
