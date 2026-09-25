@@ -87,7 +87,7 @@ export default function SequenceDesktopFrame({
   return (
     <div
       data-testid="sequence-desktop-frame"
-      data-layout={isDesktop ? 'desktop' : 'mobile'}
+      data-sequence-mode={isDesktop ? 'desktop' : 'mobile'}
       style={{
         position: 'absolute', inset: 0, zIndex: 100, overflow: 'hidden', background,
         ...(isDesktop

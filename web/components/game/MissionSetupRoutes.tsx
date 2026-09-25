@@ -18,10 +18,8 @@ import { getRequiredRocketModel } from '@/lib/rockets'
 import { rocketCompositionForId, type RocketRoomRole } from '@/lib/data/rocket-composition'
 import { useMissionRelayModels } from '@/lib/hooks/useMissionRelayModels'
 import { formatCurrency } from '@/lib/format'
-import ErrorBoundary from '@/components/ui/ErrorBoundary'
 import ClientMark from '@/components/ui/ClientMark'
 import GalaxyMap from '@/components/TargetPicker/GalaxyMap'
-import { LaunchSequenceCanvas } from '@/components/game/LaunchSequenceCanvas'
 import FreeOpsBuildScreen from '@/components/game/screens/FreeOpsBuildScreen'
 import { HubWorldBackground } from '@/components/game/hub/HubWorldBackground'
 import { HangarModules, LaunchpadModules } from '@/components/game/hub/EarthBaseModules'
@@ -39,10 +37,9 @@ interface MissionSetupRoutesProps {
   coachManual: boolean
   deliveryTargetName?: string
   rocketDisplay: RocketDisplay
-  launchPending: boolean
   onTransferToLaunchpad: () => void
+  /** Starts the launch; the sequence itself renders in the Launch layout. */
   onLaunch: () => void
-  onLaunchComplete: () => void
 }
 
 const STEP_LABELS = ['CONTRACT', 'MAP', 'BLUEPRINT', 'REVIEW'] as const
@@ -192,7 +189,7 @@ function SetupFrame({ step, title, onBack, hasCoach, children }: {
   )
 }
 
-export default function MissionSetupRoutes({ screen, game, hasCoach, rocketDisplay, launchPending, onTransferToLaunchpad, onLaunch, onLaunchComplete }: MissionSetupRoutesProps) {
+export default function MissionSetupRoutes({ screen, game, hasCoach, rocketDisplay, onTransferToLaunchpad, onLaunch }: MissionSetupRoutesProps) {
   const relay = useMissionRelayModels({
     catalog: game.catalog,
     missionsDone: game.player.missionsDone,
@@ -418,7 +415,6 @@ export default function MissionSetupRoutes({ screen, game, hasCoach, rocketDispl
           </aside>
         </section>
       </SetupFrame>
-      {launchPending && !vehicleInHangar && <ErrorBoundary fallback={null} onError={onLaunchComplete}><LaunchSequenceCanvas rocketName={rocketDisplay.name} rocketImageSrc={rocketDisplay.img} targetName={game.target.name} onComplete={onLaunchComplete} /></ErrorBoundary>}
     </>
   }
 

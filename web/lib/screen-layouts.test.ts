@@ -2,6 +2,7 @@ import { readdirSync, statSync } from 'node:fs'
 import { join, relative, sep } from 'node:path'
 import { describe, expect, it } from 'vitest'
 import { VALID_SCREENS } from '@/components/game/GameScreenRouter'
+import { routeSegmentForScreen } from './game-route'
 import { GAME_ROUTES, SCREEN_LAYOUT_TYPES, SCREEN_SURFACES, surfaceForScreen } from './screen-layouts'
 
 const APP_DIR = join(__dirname, '..', 'app')
@@ -32,9 +33,14 @@ describe('GAME_ROUTES (SSL-35)', () => {
     for (const screen of VALID_SCREENS) {
       const matches = GAME_ROUTES.filter(route => 'screen' in route && route.screen === screen)
       expect(matches, `/game/${screen}`).toHaveLength(1)
-      expect(matches[0].path).toBe(`/game/${screen}`)
+      expect(matches[0].path).toBe(`/game/${routeSegmentForScreen(screen)}`)
       expect(surfaceForScreen(screen)).toBe(matches[0].surface)
     }
+  })
+
+  it('serves the descent screen at /game/descent, clear of the Landing type', () => {
+    expect(routeSegmentForScreen('landing')).toBe('descent')
+    expect(GAME_ROUTES.find(route => route.path === '/game/landing')).toMatchObject({ redirectTo: '/game/descent' })
   })
 
   it('has no duplicate paths', () => {

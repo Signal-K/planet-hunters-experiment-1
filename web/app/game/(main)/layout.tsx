@@ -139,23 +139,8 @@ function GameChrome({ children }: { children: ReactNode }) {
         {/* Account access belongs to the shared shell, not to one scene. A
             player can leave the Hub for mission setup, flight, or debrief,
             so this remains available across every gameplay route. */}
-        {/* Home carries Menu in its bottom bar (SSL-340); other screens keep
-            this corner control until their layout type gives it a slot. */}
-        {currentScreen !== 'intro' && currentScreen !== 'hub' && currentScreen !== 'hub-subsurface' && !game.authGateOpen && (
-          <button
-            data-testid="settings-button"
-            aria-label="Open menu"
-            aria-expanded={game.shellSheet === 'menu'}
-            onClick={() => game.setShellSheet('menu')}
-            className="game-menu-button"
-          >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <circle cx="12" cy="12" r="3" />
-              <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 01-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z" />
-            </svg>
-            <span>Menu</span>
-          </button>
-        )}
+        {/* SSL-35: Menu lives in Home's bottom bar. The old corner Menu pill
+            sat on top of every other screen's header at phone width. */}
 
         {/* The route page remains mounted below as a URL/state synchronizer,
             but the visible game tree belongs to this persistent layout. */}

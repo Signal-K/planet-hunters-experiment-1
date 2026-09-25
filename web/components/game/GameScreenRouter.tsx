@@ -49,6 +49,8 @@ import { missionRunsFor } from '@/lib/mission-runs'
 import { surfaceForScreen } from '@/lib/screen-layouts'
 import { SurfaceLayout } from '@/components/layout/frame/ScreenLayouts'
 import { FrameSlot } from '@/components/layout/frame/FrameSlot'
+import LaunchShell from '@/components/layout/frame/shells/LaunchShell'
+import MissionSwitch from '@/components/layout/frame/shells/MissionSwitch'
 
 export const VALID_SCREENS = new Set<Screen>([
   'intro', 'build', 'hub', 'hub-subsurface', 'missions', 'galaxy', 'targets', 'fab',
@@ -76,11 +78,28 @@ interface ScreenContentProps {
 }
 
 // SSL-35: every screen renders inside the shared frame, labelled with the
-// layout type its route maps to in GAME_ROUTES.
+// layout type its route maps to in GAME_ROUTES. A launch is its own layout
+// type: while the sequence runs it replaces the screen that started it.
 export function ScreenContent(props: ScreenContentProps) {
+  const { game, screen } = props
+  const [launchPending, setLaunchPending] = useState(false)
+  const handleLaunch = useCallback(() => setLaunchPending(true), [])
+  const handleLaunchComplete = useCallback(() => {
+    setLaunchPending(false)
+    game.onLaunch()
+  }, [game.onLaunch])
+  const launching = launchPending && screen === 'fab' && !!game.mission && !!game.target
+  if (launching && game.target) {
+    const rocketDisplay = rocketDisplayForConfig(game.rocket)
+    return (
+      <SurfaceLayout surface="launch">
+        <LaunchShell rocketName={rocketDisplay.name} rocketImageSrc={rocketDisplay.img} targetName={game.target.name} onComplete={handleLaunchComplete} />
+      </SurfaceLayout>
+    )
+  }
   return (
-    <SurfaceLayout surface={surfaceForScreen(props.screen)}>
-      <ScreenBody {...props} />
+    <SurfaceLayout surface={surfaceForScreen(screen)}>
+      <ScreenBody {...props} onLaunch={handleLaunch} />
     </SurfaceLayout>
   )
 }
@@ -90,15 +109,9 @@ function ScreenBody({
   game,
   hasCoach,
   onBackFromHangar,
-}: ScreenContentProps) {
-  // Launch sequence state lives here so it's scoped to the fab screen
-  const [launchPending, setLaunchPending] = useState(false)
+  onLaunch,
+}: ScreenContentProps & { onLaunch: () => void }) {
   const [inspectSignal, setInspectSignal] = useState<InstrumentSignal | null>(null)
-  const handleLaunch = useCallback(() => setLaunchPending(true), [])
-  const handleLaunchComplete = useCallback(() => {
-    setLaunchPending(false)
-    game.onLaunch()
-  }, [game.onLaunch])
   const rocketDisplay = rocketDisplayForConfig(game.rocket)
   const transitTarget = game.player.headingToDelivery && game.deliveryTargetId
     ? game.catalog.targets.find(t => t.id === game.deliveryTargetId) ?? game.target
@@ -361,10 +374,8 @@ function ScreenBody({
           coachManual={coach?.manual ?? false}
           deliveryTargetName={deliveryTargetName}
           rocketDisplay={rocketDisplay}
-          launchPending={launchPending}
           onTransferToLaunchpad={game.onTransferToLaunchpad}
-          onLaunch={handleLaunch}
-          onLaunchComplete={handleLaunchComplete}
+          onLaunch={onLaunch}
         />
       )
 
@@ -376,6 +387,20 @@ function ScreenBody({
     case 'debrief':
       if (!transitTarget || !debriefOriginTarget) return null
       return (
+        <>
+        {screen === 'transit' && (
+          // Orbit layout: « » between missions in progress.
+          <FrameSlot name="bottom">
+            <MissionSwitch
+              runs={missionRunsFor(game.player)}
+              onSwitch={run => {
+                if (run.current) return
+                captureGameEvent('mission_resumed', { mission_phase: run.phase })
+                game.resumeMissionRun(run.key)
+              }}
+            />
+          </FrameSlot>
+        )}
         <MissionOperationRoutes
           screen={screen}
           game={game}
@@ -387,6 +412,7 @@ function ScreenBody({
           originTargetName={originTargetName}
           rocketDisplay={rocketDisplay}
         />
+        </>
       )
 
     case 'refinery':
