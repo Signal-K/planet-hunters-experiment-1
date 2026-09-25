@@ -21,14 +21,6 @@ interface ArchetypeMineralPool {
   exotic: string[]
 }
 
-export const ARCHETYPE_LABELS: Record<TargetArchetype, string> = {
-  C: 'Carbonaceous',
-  S: 'Silicate',
-  M: 'Metallic',
-  icy: 'Icy',
-  'gas-giant': 'Gas giant',
-}
-
 // Real-world grounding per archetype:
 // - M (metallic): iron/nickel cores are real (16 Psyche is a genuine NASA
 //   mission target hypothesized to be an exposed metallic core); siderophile

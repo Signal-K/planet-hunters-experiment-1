@@ -18,10 +18,7 @@ export interface SuiteHop {
 
 export const SUITE_GARDEN_URL = 'https://starsailors.space/game'
 
-/** Spectra has no confirmed public URL yet; set NEXT_PUBLIC_SPECTRA_URL to enable. */
-export const SPECTRA_URL_ENV = 'NEXT_PUBLIC_SPECTRA_URL'
-
-export const SUITE_HOP_SOURCE = 'landnam'
+const SUITE_HOP_SOURCE = 'landnam'
 
 function isHttpsUrl(value: string | undefined): value is string {
   if (!value) return false

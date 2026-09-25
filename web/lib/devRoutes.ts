@@ -1,6 +1,4 @@
-import { DEV_GROUPS, type DevGroup } from '@/lib/devPresets'
-
-export const MISSION_ROUTE_DEFAULTS: Record<string, string> = {
+const MISSION_ROUTE_DEFAULTS: Record<string, string> = {
   m1: 'm1-hub',
   mission1: 'm1-hub',
   m2: 'm2-hub',
@@ -11,7 +9,7 @@ export const MISSION_ROUTE_DEFAULTS: Record<string, string> = {
   satellite: 'telescope-hub',
 }
 
-export const MISSION_ROUTE_SHOTS: Record<string, Record<string, string>> = {
+const MISSION_ROUTE_SHOTS: Record<string, Record<string, string>> = {
   m1: {
     intro: 'm1-intro',
     hub: 'm1-hub',
@@ -42,7 +40,7 @@ export const MISSION_ROUTE_SHOTS: Record<string, Record<string, string>> = {
   },
 }
 
-export const UI_ROUTE_PRESETS: Record<string, string> = {
+const UI_ROUTE_PRESETS: Record<string, string> = {
   'mission-board': 'ui-mission-board',
   'target-picker': 'ui-target-picker',
   'skill-tree': 'ui-skill-tree',
@@ -54,16 +52,6 @@ export const UI_ROUTE_PRESETS: Record<string, string> = {
   'ship-customizer': 'ship-customizer',
   hangar: 'ui-hangar-assembly',
   'hangar-assembly': 'ui-hangar-assembly',
-}
-
-const MISSION_LABELS = new Set(['Mission 1', 'Mission 2', 'Mission 3', 'First Satellite Launch'])
-
-export function missionGroups(): DevGroup[] {
-  return DEV_GROUPS.filter(group => MISSION_LABELS.has(group.label))
-}
-
-export function uiGroups(): DevGroup[] {
-  return DEV_GROUPS.filter(group => !MISSION_LABELS.has(group.label))
 }
 
 export function presetForMissionRoute(slug: string[] | undefined): string | null {

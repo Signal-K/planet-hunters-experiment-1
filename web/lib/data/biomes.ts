@@ -129,8 +129,8 @@ export const BIOME_META: Record<BiomeId, BiomeMeta> = {
   'crimson-bloom': { id: 'crimson-bloom', label: 'Crimson bloom', color: '#e0405a', shade: '#8a1f33', help: 'Red-pigmented alien vegetation adapted to a dim host star.', lifeCapacity: 3 },
 }
 
-export const BIOME_IDS = Object.keys(BIOME_META) as BiomeId[]
-export const TAKEON_BUILTIN_BIOME_IDS: readonly BiomeId[] = [
+const BIOME_IDS = Object.keys(BIOME_META) as BiomeId[]
+const TAKEON_BUILTIN_BIOME_IDS: readonly BiomeId[] = [
   'dust-basin', 'redrock-desert', 'crater-highlands', 'frozen-tundra', 'grassland-plains', 'temperate-forest',
   'icefield', 'cryovolcanic', 'carbonaceous-rubble', 'metallic-regolith', 'cloud-platform',
 ]
@@ -407,8 +407,8 @@ export function estimateEquilibriumTempK(periodDays: number, starTeffK: number):
 }
 
 /** Radius in Earth radii and equilibrium temperature bounds for a rocky, temperate candidate. */
-export const HABITABLE_RADIUS_EARTH = { min: 0.5, max: 1.8 }
-export const HABITABLE_TEMP_K = { min: 195, max: 335 }
+const HABITABLE_RADIUS_EARTH = { min: 0.5, max: 1.8 }
+const HABITABLE_TEMP_K = { min: 195, max: 335 }
 
 const SUBSURFACE_HABITABLE_TARGETS = new Set(['mars', 'europa', 'ceres'])
 
@@ -539,7 +539,7 @@ export function bloomBiome(biome: BiomeId, stage: LifeStage, temperature: number
 
 // ── Noise ──────────────────────────────────────────────────────────────────
 
-export function stableSeed(value: string): number {
+function stableSeed(value: string): number {
   let hash = 2166136261
   for (const char of value) hash = Math.imul(hash ^ char.charCodeAt(0), 16777619)
   return hash >>> 0
@@ -572,7 +572,7 @@ function valueNoise3(x: number, y: number, z: number, seed: number): number {
 }
 
 /** Fractal Brownian motion over the unit sphere, 0..1. */
-export function fbmOnSphere(px: number, py: number, pz: number, seed: number, roughness: number, octaves = 4): number {
+function fbmOnSphere(px: number, py: number, pz: number, seed: number, roughness: number, octaves = 4): number {
   let amp = 1, freq = 2.2, sum = 0, norm = 0
   for (let i = 0; i < octaves; i++) {
     sum += amp * valueNoise3(px * freq + 17.3, py * freq + 9.1, pz * freq + 4.7, seed + i * 101)
@@ -654,11 +654,11 @@ export interface TargetDivision {
   lifeCapacity: LifeCapacity
 }
 
-export function divisionId(targetId: string, band: number, sector: number): string {
+function divisionId(targetId: string, band: number, sector: number): string {
   return `${targetId}:${band}-${sector}`
 }
 
-export function divisionLabel(band: number, sector: number): string {
+function divisionLabel(band: number, sector: number): string {
   const hemi = band < DIVISION_LAT_BANDS / 2 ? 'S' : 'N'
   return `${hemi}-${sector + 1}`
 }

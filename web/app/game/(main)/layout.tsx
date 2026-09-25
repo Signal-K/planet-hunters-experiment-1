@@ -16,6 +16,7 @@ import { initPostHog } from '@/lib/posthog'
 import DevShortcuts from '@/components/dev/DevShortcuts'
 import GateLanding from '@/components/game/landing/GateLanding'
 import ShellSheets from '@/components/game/ShellSheets'
+import TakeOnPwaPreload from '@/components/takeon/TakeOnPwaPreload'
 import TerritoryClaimPopup from '@/components/game/TerritoryClaimPopup'
 import { UI_ZONES } from '@/lib/ui-zones'
 import { isSurveySafeScreen } from '@/lib/survey-gating'
@@ -26,8 +27,10 @@ function GameChrome({ children }: { children: ReactNode }) {
   const arrivalScheduledFor = useRef<number | null>(null)
   const returnScheduledKey = useRef<string | null>(null)
 
-  // Keep third-party analytics script injection out of React hydration. See
-  // GameApp's equivalent effect for the legacy route shell.
+  // PostHog injects recorder/survey scripts. Initialising during module
+  // evaluation can let those scripts mutate the document while React is
+  // still hydrating, producing a real production hydration mismatch. Run it
+  // after the first client commit instead.
   useEffect(() => {
     initPostHog()
   }, [])
@@ -117,6 +120,9 @@ function GameChrome({ children }: { children: ReactNode }) {
 
   return (
     <main className="game-stage" aria-label="Landnam game">
+      {/* No-op unless running as an installed PWA; warms the Takeon/Pixi
+          chunks so Surface Ops works offline (see web/vendor/takeon/README.md). */}
+      <TakeOnPwaPreload />
       {/* SSL-35: every screen sits on the shared full-page frame. The old
           boxed desktop device-card for menu screens (and the blurred Earth
           Base backdrop behind it) is retired; see lib/screen-layouts.ts. */}

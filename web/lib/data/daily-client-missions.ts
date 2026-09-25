@@ -27,11 +27,6 @@ export interface DailyClientPool {
   completedIds: string[]      // ids completed today (reward already received via debrief)
 }
 
-export function todayDateKey(): string {
-  const d = new Date()
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
-}
-
 // Unsigned DJB2 hash — deterministic seeding for daily mission variety
 function djb2(s: string): number {
   let h = 5381
@@ -128,21 +123,4 @@ export function generateDailyClientPool(
   }
 
   return missions
-}
-
-export function refreshPoolIfStale(
-  existing: DailyClientPool | undefined,
-  missionsDone: number,
-  clients: ClientSlot[],
-  minerals: Record<string, MineralMeta>,
-  clientMissions: Record<string, number> = {},
-): DailyClientPool {
-  const today = todayDateKey()
-  if (existing?.date === today) return existing
-  return {
-    date: today,
-    missions: generateDailyClientPool(today, missionsDone, clients, minerals, clientMissions),
-    acceptedId: null,
-    completedIds: [],
-  }
 }

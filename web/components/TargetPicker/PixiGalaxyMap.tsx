@@ -13,7 +13,6 @@ const LN_CYAN  = 0x3fa9ff
 const LN_AMBER = 0xf5a623
 
 // ── Body classification ──────────────────────────────────────────────────────
-const PLANET_IDS    = new Set(['mercury', 'venus', 'earth', 'mars', 'jupiter', 'saturn', 'neptune'])
 // The belt is a region, not a Target — every body here is a real, individually
 // pickable target (see lib/data/targets.ts); this set only groups them for the
 // zoomed-in "belt view" rendering below.

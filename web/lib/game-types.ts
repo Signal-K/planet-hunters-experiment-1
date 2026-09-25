@@ -65,7 +65,6 @@ export type Screen =
   | 'intro'
   | 'build'
   | 'hub'
-  | 'hub-subsurface'
   | 'missions'
   | 'galaxy'
   | 'targets'

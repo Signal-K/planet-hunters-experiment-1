@@ -1,12 +1,9 @@
 import { redirect } from 'next/navigation'
-import GameApp from '@/components/game/GameApp'
-import ErrorBoundary from '@/components/ui/ErrorBoundary'
 
+// Dev-only shortcut into the Hangar ship customiser. It enters the live
+// (main) shell through the same preset redirect as /game/ui/*, rather than
+// mounting a second app shell with its own GameProvider.
 export default function ShipCustomizerPage() {
   if (process.env.NODE_ENV !== 'development') redirect('/game')
-  return (
-    <ErrorBoundary>
-      <GameApp />
-    </ErrorBoundary>
-  )
+  redirect('/game/ui/ship-customizer')
 }

@@ -27,7 +27,3 @@ export function landnamPbUrl(): string {
 export function sharedBackendMisconfigured(): boolean {
   return isDeployedOrigin() && isLoopback(SHARED_PB_URL)
 }
-
-export function landnamBackendMisconfigured(): boolean {
-  return isDeployedOrigin() && isLoopback(LANDNAM_PB_URL)
-}

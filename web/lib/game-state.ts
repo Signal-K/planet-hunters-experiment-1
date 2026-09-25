@@ -339,7 +339,7 @@ export function normalizeState(input: PartialSave): GameState {
   }
 }
 
-export function repairStateRoute(input: GameState): GameState {
+function repairStateRoute(input: GameState): GameState {
   const mission = input.missionId
     ? (MISSIONS.find(m => m.id === input.missionId)
        ?? input.player.dailyClientPool?.missions.find(m => m.id === input.missionId)

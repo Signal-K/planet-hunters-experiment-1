@@ -1,7 +1,7 @@
 import { initPostHog, posthog } from '@/lib/posthog'
 import { pbShared } from '@/lib/pb'
 import { queueCreate } from '@/lib/offline/pbOutbox'
-import { SURVEY_DEFS, type Survey, type SurveyQuestion } from '@/lib/survey-defs'
+import { SURVEY_DEFS, type Survey } from '@/lib/survey-defs'
 
 export { SURVEY_DEFS, type Survey, type SurveyQuestion } from '@/lib/survey-defs'
 

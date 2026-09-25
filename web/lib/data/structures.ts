@@ -1,6 +1,6 @@
 // Landnam game data — structures, refinery recipes, market templates
 
-import type { StructureBlueprint, RefineryRecipe, MarketTemplate } from './types'
+import type { StructureBlueprint, RefineryRecipe } from './types'
 import { MINERAL_VALUE, REFINING_COST_RATE, REFINING_VALUE_MULTIPLIER, STRUCTURE_PRICES, SURFACE_SILO_PRICE } from './economy'
 import { MINERAL_RARITY } from './minerals'
 import { CLIENT_AFFINITY_MISSION_THRESHOLD } from './clients'
@@ -151,9 +151,3 @@ export function structureAffordabilityGaps(structure: StructureBlueprint, opts: 
   }
   return gaps
 }
-
-export const MARKET_TEMPLATES: MarketTemplate[] = [
-  { id: 'spot',     label: 'Spot Price',     currency: '₣', baseRate: 1.0, volatility: 0.05 },
-  { id: 'futures',  label: 'Futures Contract', currency: '₣', baseRate: 0.92, volatility: 0.02 },
-  { id: 'bulk',     label: 'Bulk Rate',       currency: '₣', baseRate: 0.85, volatility: 0.08 },
-]

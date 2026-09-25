@@ -127,4 +127,3 @@ export function IconBtn({
   )
 }
 
-export default PrimaryBtn

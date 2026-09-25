@@ -11,8 +11,8 @@ export const SCROLL_SPEED_MIN = 16
 export const SCROLL_SPEED_MAX = 96
 const LASER_SPEED = 480
 export const SHIP_X = 80
-export const SHIP_Y = 112
-export const SURFACE_Y = 320
+const SHIP_Y = 112
+const SURFACE_Y = 320
 // Wider than ship X so ore movement during laser flight doesn't cause misses on tall screens
 const HIT_TOLERANCE = 48
 const LASER_SIZE = { width: 4, height: 16 }

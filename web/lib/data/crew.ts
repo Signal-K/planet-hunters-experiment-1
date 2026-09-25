@@ -32,8 +32,6 @@ export interface CrewSpecialisation {
   tier: number
 }
 
-export const CREW_SPEC_MAX_TIER = 3
-
 export interface CrewMember {
   /** Stable across saves; roster identity everything else keys off. */
   id: string

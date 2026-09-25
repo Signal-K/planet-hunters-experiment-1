@@ -24,7 +24,7 @@ export interface LaunchPadLayout {
 }
 
 /** Authored stack height in local pixels (engine exit at y=0, nose at -H). */
-export const LAUNCH_ROCKET_AUTHOR_HEIGHT = 248
+const LAUNCH_ROCKET_AUTHOR_HEIGHT = 248
 
 const ACCEL_DUR = 3.2
 const VMAX = 220

@@ -16,7 +16,7 @@
 //
 // The "MiningScreen return button" describe block below closes a real gap:
 // a 2026-07-14 commit fixed this exact copy in GameApp.tsx (the legacy,
-// dev-route-only screen renderer) but never touched
+// dev-route-only screen renderer, since deleted) but never touched
 // app/game/(main)/[screen]/page.tsx — the router real players actually go
 // through — so the bug shipped un-fixed to production and was reported
 // again days later. Nothing in this file (or anywhere else) previously
