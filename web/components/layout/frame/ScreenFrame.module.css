@@ -16,6 +16,14 @@
 }
 
 .top,
+.main,
+.bottom {
+  /* Explicit column: with a fixed row but auto column, a floating main
+     (rows 1 / -1) would be auto-placed beside the bars in a 0px column. */
+  grid-column: 1;
+}
+
+.top,
 .bottom {
   position: relative;
   z-index: 2;
@@ -49,3 +57,8 @@
   pointer-events: none;
 }
 .overlay > * { pointer-events: auto; }
+
+/* Slots are always mounted so screens can portal into them; an empty one
+   takes no space and catches no input. */
+.top:empty,
+.bottom:empty { display: none; }

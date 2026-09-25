@@ -1,28 +1,21 @@
 'use client'
 
-import { type ReactNode, useMemo, useEffect, useRef, useState } from 'react'
+import { type ReactNode, useMemo, useEffect, useRef } from 'react'
 import { GameProvider, useGame } from '@/game-context'
 import { M1_STEPS, M2_STEPS, M3_STEPS } from '@/lib/data'
 import { FREE_OPS_START_MISSIONS_DONE } from '@/lib/data/mission-generator'
 import TutorialCoach from '@/components/game/TutorialCoach'
 import UnlockPopup from '@/components/game/UnlockPopup'
 import { TutorialCompleteSheet } from '@/components/game/TutorialCompleteSheet'
-import BottomTabBar from '@/components/layout/BottomTabBar'
 import BackendStatus from '@/components/game/BackendStatus'
 import LandnamSyncStatus from '@/components/game/LandnamSyncStatus'
 import { PushOptIn } from '@/components/game/PushOptIn'
-import FeedbackButton from '@/components/ui/FeedbackButton'
 import SurveySheet from '@/components/ui/SurveySheet'
 import ToastLayer from '@/components/ui/ToastLayer'
 import { initPostHog } from '@/lib/posthog'
 import DevShortcuts from '@/components/dev/DevShortcuts'
 import AuthGateSheet from '@/components/game/AuthGateSheet'
-import SettingsSheet from '@/components/game/SettingsSheet'
-import FriendsButton from '@/components/game/FriendsButton'
-import FriendsSheet from '@/components/game/FriendsSheet'
-import CommunityButton from '@/components/game/CommunityButton'
-import CommunityHubSheet from '@/components/game/CommunityHubSheet'
-import SuiteHopRail from '@/components/game/SuiteHopRail'
+import ShellSheets from '@/components/game/ShellSheets'
 import TerritoryClaimPopup from '@/components/game/TerritoryClaimPopup'
 import { UI_ZONES } from '@/lib/ui-zones'
 import { isSurveySafeScreen } from '@/lib/survey-gating'
@@ -32,9 +25,6 @@ function GameChrome({ children }: { children: ReactNode }) {
   const game = useGame()
   const arrivalScheduledFor = useRef<number | null>(null)
   const returnScheduledKey = useRef<string | null>(null)
-  const [settingsOpen, setSettingsOpen] = useState(false)
-  const [friendsOpen, setFriendsOpen] = useState(false)
-  const [communityOpen, setCommunityOpen] = useState(false)
 
   // Keep third-party analytics script injection out of React hydration. See
   // GameApp's equivalent effect for the legacy route shell.
@@ -118,33 +108,13 @@ function GameChrome({ children }: { children: ReactNode }) {
     // The Launchpad mission chooser is a modal owned by the current scene.
     // Hide the coach while it is open so onboarding copy never sits over, or
     // points back at, the control the player is already using.
-    if (settingsOpen || friendsOpen || communityOpen || game.popup || game.authGateOpen || (currentScreen === 'launchpad' && game.launchpadMissionMenuOpen)) return null
+    if (game.shellSheet || game.popup || game.authGateOpen || (currentScreen === 'launchpad' && game.launchpadMissionMenuOpen)) return null
     return routeCoach
-  }, [coachSteps, communityOpen, currentScreen, friendsOpen, game.authGateOpen, game.doneSteps, game.launchpadMissionMenuOpen, game.popup, game.subsurfaceView, settingsOpen])
+  }, [coachSteps, currentScreen, game.authGateOpen, game.doneSteps, game.launchpadMissionMenuOpen, game.popup, game.shellSheet, game.subsurfaceView])
 
   const coachIndex = coach ? coachSteps.findIndex(step => step.id === coach.id) : -1
   const hasCoach = !!coach
 
-  // The Mission → Target → Rocket → Launch flow owns one stable frame. The
-  // bottom navigation would reserve a different amount of viewport height on
-  // the Mission step and make that frame jump when the player advances.
-  const showNav = ['hub', 'skills', 'mission-history'].includes(currentScreen)
-  const showFeedback = currentScreen === 'hub'
-    && !game.subsurfaceView
-    && !game.popup
-    && !game.authGateOpen
-
-  function goFromNav(id: string) {
-    if (id === 'missions') { game.goToMissions(); return }
-    if (id === 'fab') { game.go(game.mission && game.target ? 'fab' : 'missions'); return }
-    if (id === 'market') { game.go('market'); return }
-    if (id === 'skills') { game.go('skills'); return }
-    game.go(id as Parameters<typeof game.go>[0])
-  }
-
-  const currentNav = ['missions', 'targets'].includes(currentScreen)
-    ? 'missions'
-    : currentScreen === 'mission-history' ? 'mission-history' : currentScreen === 'instrument-hub' || currentScreen === 'galaxy' ? 'instrument-hub' : currentScreen === 'fab' ? 'fab' : currentScreen === 'skills' ? 'skills' : 'hub'
   return (
     <main className="game-stage" aria-label="Landnam game">
       {/* SSL-35: every screen sits on the shared full-page frame. The old
@@ -169,12 +139,14 @@ function GameChrome({ children }: { children: ReactNode }) {
         {/* Account access belongs to the shared shell, not to one scene. A
             player can leave the Hub for mission setup, flight, or debrief,
             so this remains available across every gameplay route. */}
-        {currentScreen !== 'intro' && !game.authGateOpen && (
+        {/* Home carries Menu in its bottom bar (SSL-340); other screens keep
+            this corner control until their layout type gives it a slot. */}
+        {currentScreen !== 'intro' && currentScreen !== 'hub' && currentScreen !== 'hub-subsurface' && !game.authGateOpen && (
           <button
             data-testid="settings-button"
             aria-label="Open menu"
-            aria-expanded={settingsOpen}
-            onClick={() => setSettingsOpen(true)}
+            aria-expanded={game.shellSheet === 'menu'}
+            onClick={() => game.setShellSheet('menu')}
             className="game-menu-button"
           >
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -183,21 +155,6 @@ function GameChrome({ children }: { children: ReactNode }) {
             </svg>
             <span>Menu</span>
           </button>
-        )}
-
-        {/* Friends — same porting fix as Settings above (KES-233): the
-            legacy GameApp.tsx shell isn't what serves /game/hub, so KES-83's
-            corner button needs its own copy here too. Hub only. */}
-        {currentScreen === 'hub' && !game.subsurfaceView && !game.authGateOpen && (
-          <>
-            <FriendsButton onClick={() => setFriendsOpen(true)} />
-            <CommunityButton onClick={() => setCommunityOpen(true)} />
-          </>
-        )}
-
-        {/* Suite return rail (SSL-296): hop back to the SSC garden / Spectra. */}
-        {(currentScreen === 'hub' || currentScreen === 'launchpad') && !game.subsurfaceView && !game.authGateOpen && (
-          <SuiteHopRail signedIn={!!game.authUserId} />
         )}
 
         {/* The route page remains mounted below as a URL/state synchronizer,
@@ -210,9 +167,7 @@ function GameChrome({ children }: { children: ReactNode }) {
         {children}
 
         <ToastLayer toasts={game.toasts} onDismiss={game.dismissToast} />
-        {showFeedback && <FeedbackButton />}
         <SurveySheet blockWhile={!!game.popup || !!coach || !!game.pendingTerritoryClaimFor || !isSurveySafeScreen(currentScreen)} />
-        {showNav && <BottomTabBar current={currentNav} onNav={goFromNav} />}
 
         {coach && !game.popup && !game.authGateOpen && (
           <TutorialCoach
@@ -268,9 +223,7 @@ function GameChrome({ children }: { children: ReactNode }) {
         )}
       </div>
 
-      {settingsOpen && <SettingsSheet onClose={() => setSettingsOpen(false)} />}
-      {friendsOpen && <FriendsSheet onClose={() => setFriendsOpen(false)} />}
-      {communityOpen && <CommunityHubSheet onClose={() => setCommunityOpen(false)} />}
+      {!game.authGateOpen && <ShellSheets />}
     </main>
   )
 }

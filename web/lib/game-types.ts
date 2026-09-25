@@ -93,6 +93,10 @@ export type Screen =
 // (GAME_ROUTES). The old LOCATION_SCREENS boxed-vs-full-page split is retired:
 // every screen now sits on the shared full-page frame.
 
+/** Shell-level sheets and pop-ups (SSL-35). Menu is the root; the rest open
+ * from it. */
+export type ShellSheet = 'menu' | 'friends' | 'community' | 'feedback'
+
 export type LicenseGrade = 'Grade I' | 'Grade II' | 'Grade III'
 
 export type SettlementFerryStatus = 'in-flight' | 'delivered' | 'failed'
@@ -486,6 +490,8 @@ export interface GameActions {
   openLaunchpadMissionMenu: () => void
   launchpadMissionMenuOpen: boolean
   setLaunchpadMissionMenuOpen: (open: boolean) => void
+  shellSheet: ShellSheet | null
+  setShellSheet: (sheet: ShellSheet | null) => void
   returnFromHangar: () => void
   goToMissions: (scope?: SceneScope) => void
   markContractsOpened: (scope?: SceneScope) => void

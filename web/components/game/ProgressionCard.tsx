@@ -42,6 +42,8 @@ interface ProgressionCardProps {
   onOpenScene: (s: Screen) => void
   onDismissPrompt?: (key: HubPromptKey) => void
   top?: number
+  /** Home shows a rocket waiting on the pad in the sky instead (SSL-340). */
+  hidePendingLaunch?: boolean
 }
 
 function CardButton({ accent, icon, eyebrow, title, cta, onClick, onDismiss, testId }: {
@@ -121,7 +123,7 @@ function CardButton({ accent, icon, eyebrow, title, cta, onClick, onDismiss, tes
   )
 }
 
-export default function ProgressionCard({ player, onOpenScene, onDismissPrompt, top = 132 }: ProgressionCardProps) {
+export default function ProgressionCard({ player, onOpenScene, onDismissPrompt, top = 132, hidePendingLaunch = false }: ProgressionCardProps) {
   const cards: React.ReactElement[] = []
 
   if (player.activeMission) {
@@ -137,7 +139,7 @@ export default function ProgressionCard({ player, onOpenScene, onDismissPrompt, 
         onClick={() => onOpenScene(player.missionPhase ?? 'transit')}
       />
     )
-  } else if (player.pendingLaunch) {
+  } else if (player.pendingLaunch && !hidePendingLaunch) {
     cards.push(
       <CardButton
         key="pending"
