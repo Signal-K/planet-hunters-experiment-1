@@ -1,0 +1,23 @@
+.button {
+  position: absolute;
+  left: 12px;
+  bottom: 56px;
+  z-index: 22;
+  display: grid;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  place-items: center;
+  color: var(--hub-cyan, #6cd4ff);
+  cursor: pointer;
+  background: var(--hub-panel, #080d18);
+  border: 1.5px solid var(--hub-outline, rgba(255, 255, 255, 0.55));
+  border-radius: 999px;
+}
+
+.button:hover,
+.button:focus-visible {
+  color: #e6efff;
+  border-color: var(--hub-cyan, #6cd4ff);
+  box-shadow: 0 0 16px rgba(108, 212, 255, 0.22);
+}

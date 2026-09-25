@@ -14,6 +14,7 @@ import BottomTabBar from '@/components/layout/BottomTabBar'
 import BackendStatus from '@/components/game/BackendStatus'
 import LandnamSyncStatus from '@/components/game/LandnamSyncStatus'
 import { PushOptIn } from '@/components/game/PushOptIn'
+import ContentUpdateNotice from '@/components/game/ContentUpdateNotice'
 import FeedbackButton from '@/components/ui/FeedbackButton'
 import SurveySheet from '@/components/ui/SurveySheet'
 import ToastLayer from '@/components/ui/ToastLayer'
@@ -21,6 +22,7 @@ import { initPostHog } from '@/lib/posthog'
 import DevShortcuts from '@/components/dev/DevShortcuts'
 import AuthGateSheet from '@/components/game/AuthGateSheet'
 import SettingsSheet from '@/components/game/SettingsSheet'
+import SettingsButton from '@/components/game/SettingsButton'
 import TerritoryClaimPopup from '@/components/game/TerritoryClaimPopup'
 import { UI_ZONES } from '@/lib/ui-zones'
 
@@ -174,24 +176,7 @@ function GameCanvas() {
             gear. Small corner affordance so removing that rail doesn't strand
             it. Hub only, so it never sits over gameplay chrome. */}
         {game.screen === 'hub' && (
-          <button
-            data-testid="settings-button"
-            aria-label="Settings"
-            onClick={() => setSettingsOpen(true)}
-            style={{
-              position: 'absolute', left: 12, bottom: 56, zIndex: 22,
-              width: 34, height: 34, borderRadius: 999, cursor: 'pointer',
-              display: 'grid', placeItems: 'center', padding: 0,
-              background: 'var(--hub-panel, #080d18)',
-              border: '1.5px solid var(--hub-outline, rgba(255,255,255,0.55))',
-              color: 'var(--hub-cyan, #6cd4ff)',
-            }}
-          >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <circle cx="12" cy="12" r="3" />
-              <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 01-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z" />
-            </svg>
-          </button>
+          <SettingsButton onClick={() => setSettingsOpen(true)} />
         )}
         <DevShortcuts />
         <div className="game-screen-area">
@@ -211,6 +196,13 @@ function GameCanvas() {
           <MissionTicker player={game.player} screen={game.screen} onResume={game.go} />
         )}
         {showFeedback && <FeedbackButton />}
+        {['hub', 'missions', 'launchpad'].includes(game.screen) && (
+          <ContentUpdateNotice
+            player={game.player}
+            blocked={surveyBlocked || game.upgradePromptOpen || game.authGateOpen}
+            onNavigate={screen => game.go(screen)}
+          />
+        )}
         <SurveySheet blockWhile={surveyBlocked} />
         {showNav && <BottomTabBar current={currentNav} onNav={goFromNav} />}
 
