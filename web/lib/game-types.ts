@@ -89,33 +89,9 @@ export type Screen =
   | 'mission-history'
   | 'narrative-ledger'
 
-// Screens that render a physical place in the game world (or a step in a
-// mission run through one) get the full, edge-to-edge viewport on desktop —
-// they are locations, not menus, and boxing them in the device-card chrome
-// reads as a modal sitting over the game rather than the game itself.
-// Screens NOT in this set ('intro', 'build', 'missions', 'targets', 'fab',
-// 'market', 'skills', 'rocket-buy', 'debrief') are menus/UI concepts and keep
-// the boxed card treatment. Debrief in particular is a mission-results
-// summary/paperwork screen, not a place — it was wrongly added here in
-// KES-261 and got full-screen treatment it never should have (KES-265).
-// See `.portrait-canvas--full-page` in globals.css.
-export const LOCATION_SCREENS: ReadonlySet<Screen> = new Set<Screen>([
-  'hub',
-  'hub-subsurface',
-  'launchpad',
-  'transit',
-  'landing',
-  'mining',
-  'rover-mining',
-  'delivery',
-  'refinery',
-  'academy',
-  'hangar',
-  'surface-ops',
-  'galaxy',
-  'asteroid-discovery',
-  'instrument-hub',
-])
+// SSL-35: which layout each screen renders in lives in lib/screen-layouts.ts
+// (GAME_ROUTES). The old LOCATION_SCREENS boxed-vs-full-page split is retired:
+// every screen now sits on the shared full-page frame.
 
 export type LicenseGrade = 'Grade I' | 'Grade II' | 'Grade III'
 

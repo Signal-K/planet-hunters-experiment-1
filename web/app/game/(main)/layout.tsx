@@ -26,9 +26,6 @@ import SuiteHopRail from '@/components/game/SuiteHopRail'
 import TerritoryClaimPopup from '@/components/game/TerritoryClaimPopup'
 import { UI_ZONES } from '@/lib/ui-zones'
 import { isSurveySafeScreen } from '@/lib/survey-gating'
-import { LOCATION_SCREENS, type Screen } from '@/lib/game-types'
-import { HubWorldBackground } from '@/components/game/hub/HubWorldBackground'
-import { useTimeOfDay } from '@/lib/hooks/useTimeOfDay'
 import { ScreenContent } from '@/components/game/GameScreenRouter'
 
 function GameChrome({ children }: { children: ReactNode }) {
@@ -38,7 +35,6 @@ function GameChrome({ children }: { children: ReactNode }) {
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [friendsOpen, setFriendsOpen] = useState(false)
   const [communityOpen, setCommunityOpen] = useState(false)
-  const { phase: backdropSkyPhase } = useTimeOfDay()
 
   // Keep third-party analytics script injection out of React hydration. See
   // GameApp's equivalent effect for the legacy route shell.
@@ -149,36 +145,12 @@ function GameChrome({ children }: { children: ReactNode }) {
   const currentNav = ['missions', 'targets'].includes(currentScreen)
     ? 'missions'
     : currentScreen === 'mission-history' ? 'mission-history' : currentScreen === 'instrument-hub' || currentScreen === 'galaxy' ? 'instrument-hub' : currentScreen === 'fab' ? 'fab' : currentScreen === 'skills' ? 'skills' : 'hub'
-  // Location screens (physical places in the game world, and the mission-run
-  // sequence through them) own the full viewport instead of sitting inside
-  // the generic desktop device-card — that boxed treatment is for menus
-  // (Missions, Market, Skills, ...) and reads as a modal over the game
-  // itself when applied to a place the player is actually standing in.
-  // See LOCATION_SCREENS.
-  const isImmersiveEarthBaseRoute = LOCATION_SCREENS.has(currentScreen as Screen)
-
   return (
     <main className="game-stage" aria-label="Landnam game">
-      {/* Boxed/menu screens (Mission Board, Market, Skills, Debrief, ...)
-          leave real margin around the device-card on desktop — that used to
-          be a flat neutral gradient, which read as a blank grey void behind
-          the modal instead of the game continuing underneath it. Earth Base
-          is the one location every player always has (the de facto home),
-          so it stands in as "the world behind the modal" for every boxed
-          screen rather than trying to track and re-render whichever
-          specific screen the player was on before navigating into a menu.
-          Fully covered by `.portrait-canvas--full-page` on location screens,
-          so no conditional render needed. */}
-      {!isImmersiveEarthBaseRoute && (
-        <div
-          className="game-stage-backdrop"
-          aria-hidden="true"
-          style={{ position: 'absolute', inset: 0, zIndex: 0, overflow: 'hidden' }}
-        >
-          <HubWorldBackground phase={backdropSkyPhase} />
-        </div>
-      )}
-      <div className={`portrait-canvas ${isImmersiveEarthBaseRoute ? 'portrait-canvas--full-page' : ''}`}>
+      {/* SSL-35: every screen sits on the shared full-page frame. The old
+          boxed desktop device-card for menu screens (and the blurred Earth
+          Base backdrop behind it) is retired; see lib/screen-layouts.ts. */}
+      <div className="portrait-canvas portrait-canvas--full-page">
         <BackendStatus />
         <LandnamSyncStatus />
         {/* Mission alerts have a reserved desktop slot to the left of the
