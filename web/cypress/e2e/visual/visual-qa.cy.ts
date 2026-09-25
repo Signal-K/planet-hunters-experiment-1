@@ -97,13 +97,10 @@ function skipAuthGateIfShown() {
 }
 
 function navToMissions() {
-  cy.window().then(win => {
-    if (win.innerWidth >= 1024) {
-      cy.get('[data-testid="hub-desktop-missions-btn"]').should('be.visible').click()
-    } else {
-      cy.get('[data-testid="bottom-tab-missions"]').should('be.visible').click()
-    }
-  })
+  // SSL-35: Home has no Missions tab or dock button. Contracts open from the
+  // Launchpad building, the same path the M1 coach points at on every viewport.
+  cy.get('[data-testid="building-launchpad"]').should('be.visible').click()
+  cy.get('[data-testid="launchpad-new-mission-contracts-btn"]', { timeout: 10000 }).should('be.visible').click()
 }
 
 function jumpToCompletedDebrief(cargo: Record<string, number>) {
@@ -131,6 +128,12 @@ describe('Visual QA — game screens and mining canvas', () => {
   // cleanup races async app.init(). Suppress — the visual content is unaffected.
   Cypress.on('uncaught:exception', (err) => {
     if (err.message.includes('_cancelResize')) return false
+    // Cypress's in-page load listener can resume a React commit that was
+    // waiting on a stylesheet after React already committed it (the stack
+    // runs through $Cypress.pause into react-dom's completeRootWhenReady).
+    // Seen only under Cypress on a cold /game/hub visit, never in a plain
+    // browser, and the retried attempt renders the same screen.
+    if (err.message.includes('Cannot commit the same tree as before')) return false
     return true
   })
   // ── 1. Full M1 playthrough with screenshots at every screen ────────────────
@@ -164,7 +167,7 @@ describe('Visual QA — game screens and mining canvas', () => {
     cy.contains('button', 'Confirm · Build Here').click()
 
     // Hub with launchpad
-    cy.get('h1', { timeout: 10000 }).invoke('text').should('match', /^(Base|Subsurface)$/)
+    cy.get('[data-testid="home-top-bar"]', { timeout: 10000 }).should('be.visible')
     cy.get('[data-testid="building-launchpad"]').should('be.visible')
     cy.screenshot('04-hub-launchpad-placed')
 
@@ -238,7 +241,7 @@ describe('Visual QA — game screens and mining canvas', () => {
     // Wait for the destination scene, not only the coach overlay. This keeps
     // the visual checkpoint honest when the Hub route is still settling after
     // the debrief transition (KES-167/KES-186).
-    cy.get('h1', { timeout: 10000 }).invoke('text').should('match', /^(Base|Earth Base)$/)
+    cy.get('[data-testid="home-top-bar"]', { timeout: 10000 }).should('be.visible')
     cy.get('[data-testid="hub-terrain-fallback"]').should('exist')
     cy.screenshot('12-hub-post-mission')
 
@@ -361,7 +364,7 @@ describe('Visual QA — game screens and mining canvas', () => {
     })
 
     skipAuthGateIfShown()
-    cy.get('h1', { timeout: 12000 }).invoke('text').should('match', /^(Base|Subsurface)$/)
+    cy.get('[data-testid="home-top-bar"]', { timeout: 12000 }).should('be.visible')
     cy.get('[data-testid="settings-button"]').should('be.visible').and('not.be.disabled')
     cy.get('[data-testid="building-launchpad"]').should('be.visible')
     cy.screenshot('hub-launchpad-visible')
