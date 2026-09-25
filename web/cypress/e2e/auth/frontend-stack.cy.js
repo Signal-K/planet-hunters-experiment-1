@@ -1,3 +1,5 @@
+import { signUpThroughGate } from '../../support/authenticated-fixture'
+
 describe('Landnam frontend stack', () => {
   beforeEach(() => {
     cy.visit('/game', {
@@ -8,11 +10,8 @@ describe('Landnam frontend stack', () => {
   })
 
   it('renders the design-system onboarding surface', () => {
-    cy.get('[data-testid="auth-gate-quick-email"]', { timeout: 10000 })
-      .should('be.visible')
-      .type(`frontend-stack-${Date.now()}@example.com`)
-    cy.get('[data-testid="auth-gate-quick-submit"]').click()
-    cy.get('[data-testid="auth-gate-quick-email"]', { timeout: 10000 }).should('not.exist')
+    // Accounts are email + password; the quick-email path was retired.
+    signUpThroughGate(`frontend-stack-${Date.now()}@example.com`)
     cy.get('[data-testid="intro-begin-btn"]').click()
     cy.get('[data-testid="build-place-screen"]', { timeout: 10000 }).should('be.visible')
     cy.contains('BASE · SETUP').should('be.visible')

@@ -2,8 +2,9 @@
 // mechanic audit in KES-126): the mission on-ramp already existed
 // (story-astronaut-academy) and was system-tested (AcademySystem.test.ts),
 // but the screen itself had zero e2e coverage and no in-game explanation.
-// This spec covers the mission-board on-ramp, the pre-build mission card,
-// the built management view, tab switching, and the new AcademyCoach.
+// This spec covers the pre-build mission card, the built management view,
+// tab switching, and the AcademyCoach. The on-ramp contract is no longer on
+// the mission board (own-program work, deferred with the affinity ladder).
 
 import type { GameState } from '@/game-context'
 import { seedAuthenticatedFixture } from '../../support/authenticated-fixture'
@@ -34,50 +35,7 @@ function basePlayer(overrides: Partial<GameState['player']> = {}): GameState['pl
   } as GameState['player']
 }
 
-function visitWithState(path: string, screen: GameState['screen'], playerOverrides: Partial<GameState['player']>) {
-  const full: GameState = {
-    screen,
-    missionId: null,
-    targetId: null,
-    rocket: { chassis: 'hull-mk2', propulsion: 'fusion-b2', drill: 'hand-drill' },
-    lastCargo: null,
-    tutorial: false,
-    doneSteps: {},
-    popup: null,
-    menuOpen: false,
-    player: basePlayer(playerOverrides),
-  } as GameState
-
-  cy.visit(path, {
-    onBeforeLoad(win) {
-      seedAuthenticatedFixture(win, full, 'e2e-academy-user')
-      // Player already crossed the M1-M3 -> Free Ops threshold in this
-      // fixture — acknowledge the one-time "Program Online" interstitial
-      // so it doesn't cover the screen under test (see TutorialCompleteSheet.tsx).
-      win.localStorage.setItem('ln_tutorial_complete_ack', '1')
-    },
-  })
-}
-
-function visitHubWithState(playerOverrides: Partial<GameState['player']>) {
-  visitWithState('/game', 'hub', playerOverrides)
-}
-
 describe('Astronaut Academy', () => {
-  it('routes the Academy contract into Base setup once the two-client prerequisite is reached', () => {
-    visitWithState('/game/launchpad', 'launchpad', {
-      clientMissions: { 'helios-propulsion-depot': 10, 'arcturus-battery-systems': 10 },
-      transitSatelliteLaunchedAt: Date.now() - 1000,
-    })
-    cy.get('[data-testid="launchpad-status-card"]', { timeout: 10000 }).click()
-    cy.get('[data-testid="launchpad-new-mission-contracts-btn"]', { timeout: 10000 }).click()
-    cy.get('[data-testid="mission-board-section-client"]', { timeout: 10000 }).should('contain.text', 'Train the First Astronaut')
-    cy.contains('button', 'ACCEPT CONTRACT').click()
-    cy.get('[data-testid="academy-screen"]', { timeout: 10000 }).should('be.visible')
-    cy.contains('TRAIN THE FIRST ASTRONAUT').should('be.visible')
-    cy.contains('Establish the Academy').should('be.visible')
-  })
-
   it('does not offer the mission before two-client affinity level 2 is reached', () => {
     cy.visit('/game/academy', {
       onBeforeLoad(win) {
@@ -92,7 +50,7 @@ describe('Astronaut Academy', () => {
       },
     })
     cy.get('[data-testid="academy-screen"]', { timeout: 10000 }).should('be.visible')
-    cy.contains('Client affinity progress: 1/2 trusted partners').should('be.visible')
+    cy.contains('Client level progress: 1/2 partner programmes').should('be.visible')
     cy.contains('button', 'Research Academy').should('not.exist')
   })
 
@@ -276,7 +234,9 @@ describe('Astronaut Academy', () => {
       // The current starter state may already include a rostered astronaut;
       // the stable contract is that training remains reachable either way.
       cy.get('[data-testid="academy-tab-training"]').click()
-      cy.contains('button', 'Train New Candidate').should('be.visible')
+      // Compact landscape scrolls the management panel; reachable by scroll
+      // is the contract, not visible without scrolling.
+      cy.contains('button', 'Train New Candidate').scrollIntoView().should('be.visible')
     })
   })
 })

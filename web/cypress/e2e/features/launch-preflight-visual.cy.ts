@@ -1,6 +1,8 @@
+import { seedFixtureSession } from '../../support/authenticated-fixture'
+
 describe('Launch preflight visual contract', () => {
   const visitPreflight = () => {
-    cy.visit('/game', {
+    cy.visit('/game/fab', {
       onBeforeLoad(win) {
         win.localStorage.setItem('landnam-game-state-v1', JSON.stringify({
           screen: 'fab',
@@ -18,7 +20,7 @@ describe('Launch preflight visual contract', () => {
             freeOperations: false,
           },
         }))
-        win.localStorage.setItem('landnam-account-credentials', JSON.stringify({ email: 'e2e@example.com', password: 'e2e-guest-test' }))
+        seedFixtureSession(win)
       },
     })
   }
@@ -26,15 +28,16 @@ describe('Launch preflight visual contract', () => {
   it('keeps the preflight scene and confirmation action readable across viewports', () => {
     cy.viewport(390, 844)
     visitPreflight()
-    cy.get('[data-testid="assembly-rocket-cutaway"]', { timeout: 10000 }).should('be.visible')
-    cy.contains('Flight cleared').should('be.visible')
+    // The preflight is the Launch review step of the one mission-setup scene.
+    cy.get('[data-testid="mission-launch-review"]', { timeout: 10000 }).should('be.visible')
+    cy.contains('ALL PARAMETERS PASS').should('be.visible')
     cy.get('[data-testid="launch-btn"]').should('be.visible').and('not.have.css', 'background-color', 'rgb(245, 166, 35)')
     cy.screenshot('sprint-13-launch-preflight-mobile')
 
     cy.viewport(1440, 900)
     visitPreflight()
-    cy.get('[data-testid="assembly-rocket-cutaway"]', { timeout: 10000 }).should('be.visible')
-    cy.contains('Flight plan').should('be.visible')
+    cy.get('[data-testid="mission-launch-review"]', { timeout: 10000 }).should('be.visible')
+    cy.contains('MISSION REVIEW').should('be.visible')
     cy.get('[data-testid="launch-btn"]').should('be.visible')
     cy.screenshot('sprint-13-launch-preflight-desktop')
   })

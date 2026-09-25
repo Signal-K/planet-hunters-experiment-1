@@ -1,3 +1,5 @@
+import { seedFixtureSession } from '../../support/authenticated-fixture'
+
 describe('TargetPicker orbital map', () => {
   const visitTargetPicker = () => {
     // Use the canonical dev preset so this visual contract exercises the
@@ -5,10 +7,7 @@ describe('TargetPicker orbital map', () => {
     // that hydration repair is allowed to route away from.
     cy.visit('/game?preset=ui-target-picker', {
       onBeforeLoad(win) {
-        win.localStorage.setItem('landnam-account-credentials', JSON.stringify({
-          email: 'e2e@example.com',
-          password: 'e2e-guest-test',
-        }))
+        seedFixtureSession(win)
       },
     })
   }
@@ -84,8 +83,15 @@ describe('TargetPicker orbital map', () => {
       .invoke('attr', 'aria-label')
       .then(label => {
         const targetName = String(label).replace(/^Select\s+/, '')
-        cy.get('[data-testid="target-picker-orbital-map"] svg g[role="button"]').first().click()
-        cy.get('[data-testid="target-detail-expand"]').should('contain.text', targetName)
+        // Tap the centre of the body's own touch circle. The group's
+        // bounding-box centre sits between the body and its label, where a
+        // neighbouring body's label can be topmost; a finger lands on the body.
+        cy.get('[data-testid="target-picker-orbital-map"] svg g[role="button"]').first().then($body => {
+          const group = $body[0].getBoundingClientRect()
+          const hit = $body.find('circle')[0].getBoundingClientRect()
+          cy.wrap($body).click(hit.left + hit.width / 2 - group.left, hit.top + hit.height / 2 - group.top)
+        })
+        cy.get('[data-testid="target-selection-summary"]').should('contain.text', targetName)
       })
   })
 })

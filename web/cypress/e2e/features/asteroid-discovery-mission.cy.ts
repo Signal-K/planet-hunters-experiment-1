@@ -7,6 +7,7 @@
 // existing (mission-bypassing) build-gate/classify coverage.
 
 import type { GameState } from '@/game-context'
+import { seedFixtureSession } from '../../support/authenticated-fixture'
 
 const STORAGE_KEY = 'landnam-game-state-v1'
 const AUTHENTICATED_STORAGE_KEY = `${STORAGE_KEY}:user:e2e-user`
@@ -61,7 +62,7 @@ function visitWithState(path: string, screen: GameState['screen'], playerOverrid
   cy.visit(path, {
     onBeforeLoad(win) {
       win.localStorage.setItem(AUTHENTICATED_STORAGE_KEY, JSON.stringify(full))
-      win.localStorage.setItem('landnam-account-credentials', JSON.stringify({ email: 'e2e@example.com', password: 'e2e-guest-test' }))
+      seedFixtureSession(win, 'e2e-user')
       win.localStorage.setItem('ln_tutorial_complete_ack', '1')
     },
   })
@@ -106,10 +107,12 @@ describe('Asteroid Discovery mission on-ramp (KES-128)', () => {
     })
     cy.contains('button', 'Deep Space Telescope', { timeout: 10000 }).scrollIntoView()
     cy.wait(1500)
+    // Locked Build cards stay tappable (so the reason can be shown) and are
+    // marked aria-disabled rather than natively disabled.
     cy.contains('button', 'Deep Space Telescope', { timeout: 10000 })
       .should('be.visible')
-      .and('be.disabled')
-      .and('contain.text', 'Transit telescope level 2 and affinity level 2 with a client')
+      .and('have.attr', 'aria-disabled', 'true')
+      .and('contain.text', 'Transit telescope level 2 and client level 2 with a client')
   })
 
   it('unlocks Deep Space Telescope at Build/Place once the survey mission is completed', () => {
@@ -214,7 +217,9 @@ describe('Asteroid Discovery compact-landscape visualization (KES-342)', () => {
       // Verdict buttons stay attached and real touch size even while the
       // coach is up — it must never cover them.
       cy.get('[data-testid="neocp-verdict-likely_real"]').should('be.visible').then($btn => {
-        expect($btn.height()).to.be.at.least(44)
+        // The touch target is the border box; jQuery height() drops padding
+        // and border.
+        expect($btn.outerHeight()).to.be.at.least(44)
       })
 
       cy.get('[data-testid="asteroid-discovery-coach-skip"]').click()
@@ -233,10 +238,11 @@ describe('Asteroid Discovery compact-landscape visualization (KES-342)', () => {
       cy.window().then(win => win.localStorage.setItem(COACH_KEY, '1'))
       cy.visit('/game/asteroid-discovery')
       cy.get('[data-testid="asteroid-discovery-screen"]', { timeout: 15000 }).should('be.visible')
-      cy.contains('NEO Score').should('be.visible')
+      // Compact landscape scrolls the readout column; reachable is the contract.
+      cy.contains('NEO Score').scrollIntoView().should('be.visible')
       cy.contains('H Mag').should('not.exist')
       cy.get('[data-testid="neocp-more-data-toggle"]').click()
-      cy.contains('H Mag').should('be.visible')
+      cy.contains('H Mag').scrollIntoView().should('be.visible')
     })
 
     it(`[${key}] reaches the verdict-ready state after casting a call`, () => {
