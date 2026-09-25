@@ -25,6 +25,10 @@ import { AssetManager } from '@/lib/engine/AssetManager'
 const LAUNCHPAD_SPRITES = [
   'hub_pad_deck', 'hub_pad_gantry_frame', 'hub_pad_swing_arm',
   'hub_pad_clamp', 'hub_pad_mast', 'hub_pad_tank',
+  // Loaded alongside the pad, not just when hot — a launch can be triggered
+  // between renders, and the alternative (loading these lazily on the first
+  // `hot` frame) would show a bare pad for one frame every time.
+  'ship_sr1', 'ship_sr2',
 ] as const
 
 async function loadLaunchpadTextures(): Promise<HubTextures> {
@@ -38,6 +42,8 @@ async function loadLaunchpadTextures(): Promise<HubTextures> {
   tex.pad_clamp = loaded[3].isPlaceholder ? null : loaded[3].texture
   tex.pad_mast = loaded[4].isPlaceholder ? null : loaded[4].texture
   tex.pad_tank = loaded[5].isPlaceholder ? null : loaded[5].texture
+  tex.ship_sr1 = loaded[6].isPlaceholder ? null : loaded[6].texture
+  tex.ship_sr2 = loaded[7].isPlaceholder ? null : loaded[7].texture
   return tex
 }
 

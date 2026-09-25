@@ -8,9 +8,6 @@ import { DEFAULT_STATE, mergeRemoteState, type PartialSave } from '@/lib/game-st
 import type { GameState } from '@/lib/game-types'
 import type { Toast } from '@/components/ui/ToastLayer'
 
-const UPGRADE_SNOOZE_KEY = 'landnam-upgrade-prompt-snooze-until'
-const UPGRADE_SNOOZE_MS = 24 * 60 * 60 * 1000
-
 function responseStatus(err: unknown): number | null {
   if (typeof err === 'object' && err && 'status' in err && typeof err.status === 'number') return err.status
   return null
@@ -80,6 +77,10 @@ export function useAuthSync({
   const [awaitingRemoteState, setAwaitingRemoteState] = useState(false)
   const [authGateOpen, setAuthGateOpen] = useState(false)
   const [authGateError, setAuthGateError] = useState<string | null>(null)
+  // Set once requestOTP() succeeds; its presence is what switches the gate's
+  // quick-continue step from "enter email" to "enter code". Cleared on gate
+  // close/reopen so a stale otpId from a previous email can't be submitted.
+  const [authGateOtpId, setAuthGateOtpId] = useState<string | null>(null)
   // The gate must not decide that a returning user is anonymous until the
   // persisted PocketBase auth store has had a chance to restore. Keeping this
   // as an explicit phase prevents the sign-in sheet flashing/reopening during
@@ -324,15 +325,16 @@ export function useAuthSync({
     })
   }, [addToast, isPreview])
 
-  // Show upgrade prompt after first mission done
+  // Mandatory email prompt for legacy anonymous guest accounts (created
+  // before KES-97 retired guest signup). Unlike the old post-first-mission,
+  // snoozable nudge, this is not dismissible and re-opens every session
+  // until the account has a real email — Liam has no way to reach a player
+  // stuck on an @landnam.guest address otherwise.
   useEffect(() => {
-    if (!hydrated || isPreview) return
-    if (state.player.missionsDone < 1) return
+    if (!hydrated || isPreview || !authUserId) return
     if (!isGuestAccount()) return
-    const snoozeUntil = Number(localStorage.getItem(UPGRADE_SNOOZE_KEY) ?? 0)
-    if (Date.now() < snoozeUntil) return
     setUpgradePromptOpen(true)
-  }, [hydrated, isPreview, state.player.missionsDone, authUserId])
+  }, [hydrated, isPreview, authUserId])
 
   // Load remote game state on auth
   useEffect(() => {
@@ -443,14 +445,8 @@ export function useAuthSync({
     return () => window.clearTimeout(timer)
   }, [authUserId, hydrated, isPreview, backendReady, state, saveRemoteState])
 
-  const dismissUpgradePrompt = useCallback(() => {
-    localStorage.setItem(UPGRADE_SNOOZE_KEY, String(Date.now() + UPGRADE_SNOOZE_MS))
-    setUpgradePromptOpen(false)
-  }, [])
-
   const upgradeAccount = useCallback(async (email: string, password: string) => {
     const { emailChangeRequested } = await upgradeGuestAccount(email, password)
-    localStorage.removeItem(UPGRADE_SNOOZE_KEY)
     setUpgradePromptOpen(false)
     addToast(
       emailChangeRequested
@@ -503,14 +499,47 @@ export function useAuthSync({
     }
   }, [saveRemoteState, setState, storageKey])
 
-  const skipAuthGate = useCallback(() => {
-    authGateDismissed.current = true
-    setAuthGateOpen(false)
-    ensureGuestAuth().catch(() => {
-      addToast('Offline mode — progress saved on this device only', 'warn')
-      setAwaitingRemoteState(false)
-    })
-  }, [addToast])
+  // Replaces the old anonymous "continue as guest" skip (KES-97): the gate
+  // now always requires at least an email before play continues, even on the
+  // lightweight path — no account with no way to contact the player.
+  //
+  // KES-107: this is now a two-step OTP flow (requestOTP then authWithOTP)
+  // instead of always creating a brand-new account, so the same "just an
+  // email" input works for both first-time signup and returning login on a
+  // new device. The shared backend's OnRecordRequestOTPRequest("users") hook
+  // (main.go) auto-creates the record server-side when the email doesn't
+  // match an existing account yet, so requestOTP() below succeeds either way
+  // — the client never needs to know in advance which case it is.
+  const continueWithEmail = useCallback(async (email: string) => {
+    setAuthGateError(null)
+    try {
+      const { otpId } = await pbShared.collection('users').requestOTP(email)
+      setAuthGateOtpId(otpId)
+    } catch (e) {
+      const msg = authErrorMessage(e, 'Could not continue — check your email and try again')
+      setAuthGateError(msg)
+      throw new Error(msg)
+    }
+  }, [])
+
+  const verifyOtp = useCallback(async (code: string) => {
+    if (!authGateOtpId) {
+      const msg = 'Request a new code and try again'
+      setAuthGateError(msg)
+      throw new Error(msg)
+    }
+    setAuthGateError(null)
+    try {
+      await pbShared.collection('users').authWithOTP(authGateOtpId, code)
+      setAuthGateOtpId(null)
+      authGateDismissed.current = true
+      setAuthGateOpen(false)
+    } catch (e) {
+      const msg = authErrorMessage(e, 'Incorrect or expired code — try again')
+      setAuthGateError(msg)
+      throw new Error(msg)
+    }
+  }, [authGateOtpId])
 
   const resetGame = useCallback(async (defaultState: GameState) => {
     setState(defaultState)
@@ -566,6 +595,7 @@ export function useAuthSync({
     setAwaitingRemoteState(false)
     setUpgradePromptOpen(false)
     setAuthGateError(null)
+    setAuthGateOtpId(null)
     authGateDismissed.current = false
     if (!isPreview) setAuthGateOpen(true)
   }, [addToast, authUserId, backendReady, isPreview, saveRemoteState, setState, stateRef, storageKey])
@@ -573,9 +603,10 @@ export function useAuthSync({
   return {
     authUserId, backendReady,
     landnamSynced,
-    upgradePromptOpen, dismissUpgradePrompt, upgradeAccount,
+    upgradePromptOpen, upgradeAccount,
     awaitingRemoteState,
-    authGateOpen, authGateError, signInFromGate, createAccountFromGate, skipAuthGate,
+    authGateOpen, authGateError, signInFromGate, createAccountFromGate, continueWithEmail,
+    authGateOtpId, verifyOtp,
     resetGame, signOut,
   }
 }

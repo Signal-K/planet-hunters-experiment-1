@@ -98,9 +98,16 @@ def reset_scene():
     return scene
 
 
-def emission_material(name, hex_str, alpha=1.0):
+def emission_material(name, hex_str, alpha=1.0, grain=False):
     """Flat colour, no shading model. Reused by name so repeated calls across
-    models share one material rather than accumulating duplicates."""
+    models share one material rather than accumulating duplicates.
+
+    `grain=True` mixes in a faint procedural noise texture (Liam, 2026-08-03
+    — see the ZenNotes art-pipeline decision doc for why this reverses the
+    prior "no grain, ever" rule). Kept deliberately subtle: a ~8% multiply so
+    the flat cel-shaded facets are still what reads, not a gradient wash.
+    Opt-in per material rather than global, so only the models that have
+    actually been checked against it (ships, parts) use it for now."""
     existing = bpy.data.materials.get(name)
     if existing:
         return existing
@@ -110,7 +117,31 @@ def emission_material(name, hex_str, alpha=1.0):
     nodes.clear()
     out = nodes.new("ShaderNodeOutputMaterial")
     emit = nodes.new("ShaderNodeEmission")
-    emit.inputs["Color"].default_value = hex_to_linear_rgba(hex_str)
+    base_rgba = hex_to_linear_rgba(hex_str)
+    if grain:
+        # First pass (0.08 multiply, 0.4-0.6 ramp) was invisible at sprite
+        # scale — checked the actual rendered PNG, not just the node graph.
+        # Wider ramp (more contrast between noise cells) and a stronger mix
+        # factor so it reads as texture rather than being technically present
+        # but imperceptible.
+        coord = nodes.new("ShaderNodeTexCoord")
+        noise = nodes.new("ShaderNodeTexNoise")
+        noise.inputs["Scale"].default_value = 22.0
+        noise.inputs["Detail"].default_value = 3.0
+        noise.inputs["Roughness"].default_value = 0.75
+        links.new(coord.outputs["Object"], noise.inputs["Vector"])
+        ramp = nodes.new("ShaderNodeValToRGB")
+        ramp.color_ramp.elements[0].position = 0.3
+        ramp.color_ramp.elements[1].position = 0.7
+        mix = nodes.new("ShaderNodeMixRGB")
+        mix.blend_type = "MULTIPLY"
+        mix.inputs["Fac"].default_value = 0.22
+        mix.inputs["Color1"].default_value = base_rgba
+        links.new(noise.outputs["Fac"], ramp.inputs["Fac"])
+        links.new(ramp.outputs["Color"], mix.inputs["Color2"])
+        links.new(mix.outputs["Color"], emit.inputs["Color"])
+    else:
+        emit.inputs["Color"].default_value = base_rgba
     emit.inputs["Strength"].default_value = 1.0
     if alpha < 1.0:
         mix = nodes.new("ShaderNodeMixShader")
@@ -125,23 +156,23 @@ def emission_material(name, hex_str, alpha=1.0):
     return mat
 
 
-def facet_materials(base_hex, key):
+def facet_materials(base_hex, key, grain=False):
     """The lit / mid / shade triple every solid uses."""
     return (
-        emission_material(f"{key}_lit", tint(base_hex, FACET_LIT)),
-        emission_material(f"{key}_mid", tint(base_hex, FACET_MID)),
-        emission_material(f"{key}_shade", tint(base_hex, FACET_SHADE)),
+        emission_material(f"{key}_lit", tint(base_hex, FACET_LIT), grain=grain),
+        emission_material(f"{key}_mid", tint(base_hex, FACET_MID), grain=grain),
+        emission_material(f"{key}_shade", tint(base_hex, FACET_SHADE), grain=grain),
     )
 
 
-def apply_facets(obj, base_hex, key):
+def apply_facets(obj, base_hex, key, grain=False):
     """Assign the three tones by face normal.
 
     Uses the *world* normal so a rotated part still shades from the same light
     direction as everything else in the scene — assigning on local normals is
     the classic way to end up with one crate lit from underneath.
     """
-    lit, mid, shade = facet_materials(base_hex, key)
+    lit, mid, shade = facet_materials(base_hex, key, grain=grain)
     obj.data.materials.clear()
     for m in (lit, mid, shade):
         obj.data.materials.append(m)
@@ -246,10 +277,10 @@ def cone(name, radius, depth, location=(0, 0, 0), rotation=(0, 0, 0), verts=8, r
     return obj
 
 
-def solid(name, obj, base_hex, key, outline=0.012):
+def solid(name, obj, base_hex, key, outline=0.012, grain=False):
     """Finish a primitive: facet it, outline it, name it."""
     obj.name = name
-    apply_facets(obj, base_hex, key)
+    apply_facets(obj, base_hex, key, grain=grain)
     if outline:
         add_outline(obj, outline)
     return obj
@@ -257,7 +288,7 @@ def solid(name, obj, base_hex, key, outline=0.012):
 
 # --- Camera ------------------------------------------------------------------
 #
-# Two projections, because the game has two kinds of sprite:
+# Three projections, because the game has three kinds of sprite:
 #
 #   ISO  — matches takeon's isometric terrain. Its tiles are 32x16, a 2:1
 #          ratio, so the camera pitch is atan(0.5) = 26.565 degrees, not the
@@ -266,9 +297,19 @@ def solid(name, obj, base_hex, key, outline=0.012):
 #   FLAT — straight-on elevation, for sprites composited into 2D side views
 #          (the launch stack, the hub structures) where there is no ground
 #          plane to agree with.
+#   ROOM — a shallow 3/4 interior-diorama view (2026-08-03, room icon
+#          rebuild): a much milder pitch/yaw than ISO's true corner-view, so
+#          a room shell (back wall + floor + one side wall) reads mostly
+#          front-on with just enough tilt to reveal the floor and the near
+#          side wall — the "dollhouse cutaway" look reference art like Out
+#          There: Omega/Pixel Starships room interiors use, not a full
+#          isometric corner view (ISO_YAW=45 showed too much of both side
+#          walls and read as a diamond, not a room you're looking into).
 
 ISO_PITCH = math.degrees(math.atan(0.5))   # 26.565
 ISO_YAW = 45.0
+ROOM_PITCH = 22.0
+ROOM_YAW = 20.0
 
 
 def setup_camera(mode, ortho_scale, target=(0, 0, 0), distance=20.0):
@@ -285,8 +326,11 @@ def setup_camera(mode, ortho_scale, target=(0, 0, 0), distance=20.0):
     elif mode == "flat":
         pitch = math.radians(90.0)
         yaw = 0.0
+    elif mode == "room":
+        pitch = math.radians(90.0 - ROOM_PITCH)
+        yaw = math.radians(ROOM_YAW)
     else:
-        raise ValueError("mode must be 'iso' or 'flat'")
+        raise ValueError("mode must be 'iso', 'flat', or 'room'")
 
     cam.rotation_euler = (pitch, 0.0, yaw)
     direction = Vector((

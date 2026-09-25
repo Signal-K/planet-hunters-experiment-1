@@ -40,9 +40,10 @@ describe('Ship Customiser staged build', () => {
     cy.location('pathname', { timeout: 10000 }).should('eq', '/game/hangar')
     cy.contains('Rocket Fleet').should('be.visible')
     cy.get('body').then($body => {
-      if ($body.find('[data-testid="auth-gate-skip"]').length > 0) {
-        cy.get('[data-testid="auth-gate-skip"]').click()
-        cy.get('[data-testid="auth-gate-skip"]').should('not.exist')
+      if ($body.find('[data-testid="auth-gate-quick-email"]').length > 0) {
+        cy.get('[data-testid="auth-gate-quick-email"]').type(`cy-ship-customizer-${Date.now()}@example.com`)
+        cy.get('[data-testid="auth-gate-quick-submit"]').click()
+        cy.get('[data-testid="auth-gate-quick-email"]').should('not.exist')
       }
     })
     cy.get('[data-testid="open-ship-customizer"]', { timeout: 8000 }).should('be.visible').click()

@@ -16,64 +16,31 @@ function sleep(ms: number) {
   return new Promise<void>(r => setTimeout(r, ms))
 }
 
-async function tryAuth(stored: GuestCredentials | null): Promise<GuestCredentials | null> {
-  if (stored) {
-    try {
-      await pbShared.collection('users').authWithPassword(stored.email, stored.password)
-      return null // used stored creds; caller has nothing new to persist
-    } catch {
-      // Fall through to create a fresh guest account below. Do NOT clear
-      // GUEST_CREDENTIALS_KEY here — the retry loop below already tracks
-      // "stored creds known bad" via the local `stored` variable, not via
-      // localStorage. Removing the key here opened a window where
-      // hasStoredCredentials() returns false before a replacement account
-      // exists, which could make a re-mounted "brand-new user" check
-      // incorrectly pop the full-screen sign-in gate over live gameplay.
-    }
-  }
-
-  // Create a fresh throwaway account.
-  const guestId = `guest_${Math.random().toString(36).slice(2, 10)}`
-  const fresh: GuestCredentials = {
-    email: `${guestId}@landnam.guest`,
-    password: 'GuestPassword123!',
-  }
-  await pbShared.collection('users').create({
-    email: fresh.email,
-    password: fresh.password,
-    passwordConfirm: fresh.password,
-    name: 'Anonymous Explorer',
-  })
-  await pbShared.collection('users').authWithPassword(fresh.email, fresh.password)
-  return fresh
-}
-
 /**
- * Ensures `pbShared` has a valid auth session, creating a throwaway guest
- * PocketBase account on first visit so the game can sync state to the
- * backend without requiring the user to register.
+ * Re-authenticates `pbShared` using device-stored credentials (from either a
+ * legacy `@landnam.guest` account or a `createAccountWithEmail` account —
+ * both are stored under the same key and re-authenticated the same way).
  *
  * Retries with staged backoff to survive Fly.io cold starts (typically
  * 2–5 s). The game runs fully from localStorage while this resolves in the
  * background — it does not block rendering.
  *
- * - Valid session already present → returns immediately.
- * - Stored guest credentials → re-authenticates (covers expired tokens).
- * - No credentials → creates new guest account and persists credentials.
+ * As of KES-97, this never manufactures a new anonymous account on failure —
+ * guest accounts with no reachable contact email are retired. If reauth
+ * exhausts its retries, the caller falls back to local-only play; a brand
+ * new account (with a real email) only comes from `createAccountWithEmail`.
  */
 export async function ensureGuestAuth(): Promise<void> {
   if (pbShared.authStore.isValid) return
 
   const stored = readStoredCredentials()
-  let lastError: unknown
+  if (!stored) return
 
+  let lastError: unknown
   for (let i = 0; i <= RETRY_DELAYS.length; i++) {
     if (i > 0) await sleep(RETRY_DELAYS[i - 1])
-    // Only try stored credentials on the first pass; if they failed, clear
-    // them and register a fresh guest on subsequent attempts.
     try {
-      const newCreds = await tryAuth(i === 0 ? stored : null)
-      if (newCreds) localStorage.setItem(GUEST_CREDENTIALS_KEY, JSON.stringify(newCreds))
+      await pbShared.collection('users').authWithPassword(stored.email, stored.password)
       return
     } catch (err) {
       lastError = err
@@ -81,6 +48,30 @@ export async function ensureGuestAuth(): Promise<void> {
   }
 
   throw lastError
+}
+
+function generatePassword(): string {
+  // Per-account random password — these accounts now carry real, guessable
+  // emails, so (unlike the old fixed 'GuestPassword123!' shared across every
+  // anonymous guest) reusing one password across accounts would let anyone
+  // who knows a player's email sign in as them.
+  return `${Math.random().toString(36).slice(2)}${Math.random().toString(36).slice(2)}-Aa1!`
+}
+
+/**
+ * Creates a real PocketBase account for a player who only wants to give an
+ * email (no password) to continue — the replacement for the old anonymous
+ * `@landnam.guest` skip path (KES-97). A random password is generated and
+ * persisted to this device the same way guest credentials were, so the
+ * account restores automatically on return visits via `ensureGuestAuth`.
+ */
+export async function createAccountWithEmail(email: string): Promise<void> {
+  const password = generatePassword()
+  await pbShared.collection('users').create({
+    email, password, passwordConfirm: password, name: '',
+  })
+  await pbShared.collection('users').authWithPassword(email, password)
+  localStorage.setItem(GUEST_CREDENTIALS_KEY, JSON.stringify({ email, password }))
 }
 
 /** True if this device has stored guest credentials — i.e. this is a returning user. */

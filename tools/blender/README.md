@@ -43,8 +43,13 @@ only the far side shows. Deterministic headless, no render-engine config.
 ```
 landnam_kit.py           palette, materials, geometry helpers, camera, render
 render_all.py            driver — walks every model module, one PNG each
-models/hub_structures.py Earth Base props (6)
+models/hub_structures.py Earth Base props (4)
+models/launchpad.py      modular six-sprite launch pad (KES-41/STS-611)
 models/actors.py         rover and drone (2)
+models/ships.py          Explorer/Prospector hulls + SR1 cutaway (KES-41/STS-611)
+models/rooms.py          ship interior room panels (KES-41/STS-611)
+models/parts.py          web/parts/ shop icons — writes outside game/assets/
+                          via a "../../parts/foo" key (KES-88)
 ```
 
 ## Adding a sprite
@@ -90,14 +95,25 @@ sprite, not an error.
 
 ## Not done yet
 
-- **Atlas packing.** Each sprite is its own PNG and its own HTTP request.
-  At 39 KB across 8 files that is not yet worth solving; past ~30 sprites it
-  will be. `AssetManager` would need a frame-rect lookup to support it.
+- **Atlas packing.** Each sprite is its own PNG and its own HTTP request. Past
+  ~30 sprites (getting close — the set is at 20+ now across hub, launchpad,
+  actors, ships and rooms) it will be worth solving. `AssetManager` would need
+  a frame-rect lookup to support it.
 - **Landscape / terrain.** takeon draws its iso terrain procedurally
   (`SpriteCache.renderTile` composes three-face cubes per material), so Blender
   is not in that path today. The route in would be rendering *tile* and *prop*
   sheets at the same 32×16 metrics and having takeon blit those instead of its
   generated cubes — a takeon-side change, in `signal-k/takeon`, not here.
-- **Re-rendering the legacy sprites.** The four room interiors, two ships and
-  the cutaway are the 3.7 MB above and are off-style. Pinned in
-  `manifest.test.ts` so the list can shrink but never grow.
+- **The rest of `web/parts/`.** `parts.py` (KES-88) covers only the two shop
+  icons that were off-style/oversized outliers (`basic_hull_t1`,
+  `starter_rocket_t1`). The other 13 hand-made part icons are already small
+  and on-style — revisit for consistency, not urgency.
+
+Done, despite being listed here as pending as recently as 2026-08-01: the four
+room interiors, two ships and the cutaway that used to total 3.7 MB were
+re-rendered through `models/ships.py`/`models/rooms.py` (KES-41/STS-611) and
+are pinned in `manifest.test.ts`'s `LEGACY_OVERSIZED` list — now empty — as the
+record of what "photographic PNG in a flat-faceted game" looked like. Check
+that list and the manifest test's own comment before trusting this file on
+what's re-rendered and what isn't; this section drifted out of date once
+already (KES-57's investigation, 2026-08-03) and nearly caused duplicate work.

@@ -284,7 +284,9 @@ export interface GameActions {
   authGateError: string | null
   signInFromGate: (email: string, password: string) => Promise<void>
   createAccountFromGate: (email: string, password: string) => Promise<void>
-  skipAuthGate: () => void
+  continueWithEmail: (email: string) => Promise<void>
+  authGateOtpId: string | null
+  verifyOtp: (code: string) => Promise<void>
   go: (screen: Screen) => void
   goToMissions: () => void
   setScreenFromUrl: (screen: Screen) => void
@@ -359,7 +361,6 @@ export interface GameActions {
   mission: Mission | null
   target: Target | null
   upgradePromptOpen: boolean
-  dismissUpgradePrompt: () => void
   upgradeAccount: (email: string, password: string) => Promise<void>
   awaitingRemoteState: boolean
   clearTerritoryClaimPopup: () => void

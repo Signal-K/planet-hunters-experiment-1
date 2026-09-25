@@ -18,29 +18,83 @@ export interface ShipRoomSlot {
   y: number
   w: number
   h: number
+  // Home grid cell (column/row, in `ShipGridConfig` cell units) — where this
+  // room sits the first time it's installed. The player can drag it to any
+  // other open cell afterwards (ShipCustomizerCanvas), so gx/gy is a default
+  // arrangement, not a fixed requirement the way kind-matching is.
+  gx: number
+  gy: number
+}
+
+// Pixel-Starships-style interior: one continuous cell grid overlaid on the
+// cutaway art, rooms occupy 1x1-2x2 footprints and can be dragged between
+// open cells. `area` is the grid's bounding rect in the same x/y/w/h percent
+// units as `ShipRoomSlot`, so both share one coordinate system.
+export interface ShipGridConfig {
+  cols: number
+  rows: number
+  area: { x: number; y: number; w: number; h: number }
 }
 
 export interface ShipInteriorLayout {
   rocketId: string
   exteriorSrc: string
   containerSrc: string
+  grid: ShipGridConfig
   slots: ShipRoomSlot[]
 }
 
+// Grid-cell footprint per room kind — how many cells a room's icon occupies
+// when placed, independent of its home position.
+export const SHIP_ROOM_FOOTPRINT: Record<ShipRoomKind, { w: number; h: number }> = {
+  cockpit: { w: 2, h: 2 },
+  payload: { w: 2, h: 2 },
+  booster: { w: 2, h: 1 },
+  engine: { w: 2, h: 1 },
+  'fuel-stage': { w: 2, h: 2 },
+  fairing: { w: 1, h: 1 },
+  'docking-port': { w: 1, h: 1 },
+  'heat-shield': { w: 1, h: 1 },
+  'crew-module': { w: 2, h: 1 },
+  lander: { w: 2, h: 1 },
+}
+
+// Grid-cell icons: bold, single-shape, high-contrast, flat-camera renders
+// (`rooms.py`'s `*_icon` builds) sized for the customiser's small grid cells
+// (~70-142px, several visible at once). Kept deliberately separate from
+// SHIP_ROOM_DETAIL_ASSETS below — a full walls+floor+furniture diorama reads
+// fine at a big single-room preview size but turns to illegible mush at grid
+// scale, aspect-ratio distortion or not (2026-08-03, fourth pass: Liam's two
+// reference images — a Pixel Starships grid and an Out There: Omega room
+// interior — were for these two different UI contexts, not one style
+// answering both).
 export const SHIP_ROOM_ASSETS: Record<ShipRoomKind, string> = {
+  cockpit: '/game/assets/rooms/cockpit_t1_icon.png',
+  engine: '/game/assets/rooms/engine_room_t1_icon.png',
+  booster: '/game/assets/rooms/mining_room_t1_icon.png',
+  payload: '/game/assets/rooms/cargo_bay_t1_icon.png',
+  'fuel-stage': '/game/assets/rooms/fuel_stage_t1_icon.png',
+  fairing: '/game/assets/rooms/fairing_t1_icon.png',
+  'docking-port': '/game/assets/rooms/docking_port_t1_icon.png',
+  'heat-shield': '/game/assets/rooms/heat_shield_t1_icon.png',
+  'crew-module': '/game/assets/rooms/crew_module_t1_icon.png',
+  lander: '/game/assets/rooms/lander_t1_icon.png',
+}
+
+// Full interior dioramas (floor + walls + window + door + furniture) — the
+// OTO-reference detail art, used by ShipInteriorPreview's per-step detail
+// panel where a single room gets real screen space, not the grid.
+export const SHIP_ROOM_DETAIL_ASSETS: Record<ShipRoomKind, string> = {
   cockpit: '/game/assets/rooms/cockpit_t1.png',
   engine: '/game/assets/rooms/engine_room_t1.png',
   booster: '/game/assets/rooms/mining_room_t1.png',
   payload: '/game/assets/rooms/cargo_bay_t1.png',
-  // Dedicated art for these later room kinds is not in the current asset pack.
-  // Reuse the closest existing room panels so confirmed builds never request
-  // missing images while keeping the slot kinds distinct in game state.
-  'fuel-stage': '/game/assets/rooms/engine_room_t1.png',
-  fairing: '/game/assets/rooms/cockpit_t1.png',
-  'docking-port': '/game/assets/rooms/cargo_bay_t1.png',
-  'heat-shield': '/game/assets/rooms/mining_room_t1.png',
-  'crew-module': '/game/assets/rooms/cockpit_t1.png',
-  lander: '/game/assets/rooms/mining_room_t1.png',
+  'fuel-stage': '/game/assets/rooms/fuel_stage_t1.png',
+  fairing: '/game/assets/rooms/fairing_t1.png',
+  'docking-port': '/game/assets/rooms/docking_port_t1.png',
+  'heat-shield': '/game/assets/rooms/heat_shield_t1.png',
+  'crew-module': '/game/assets/rooms/crew_module_t1.png',
+  lander: '/game/assets/rooms/lander_t1.png',
 }
 
 export const SHIP_INTERIOR_LAYOUTS: Record<string, ShipInteriorLayout> = {
@@ -48,20 +102,22 @@ export const SHIP_INTERIOR_LAYOUTS: Record<string, ShipInteriorLayout> = {
     rocketId: 'sr1',
     exteriorSrc: '/game/assets/ships/ship_sr1.png',
     containerSrc: '/game/assets/ships/containers/sr1_cutaway.png',
+    // 9x3 cell grid over the cutaway's opened bay (x 7–93%, y 13–84%) —
+    // one continuous Pixel-Starships-style grid rather than separate boxed
+    // compartments; rooms are dragged between cells within it.
+    grid: { cols: 9, rows: 3, area: { x: 7.0, y: 13.0, w: 86.0, h: 71.0 } },
     slots: [
-      // x/y/w/h are % of canvas (720×300). Interior bays span x≈7–79%, y≈13–84%.
-      // Left-to-right: cockpit (near nose), payload, booster, engine room.
-      { id: 'sr1-cockpit', kind: 'cockpit',  label: 'Cockpit',     x:  7.0, y: 13.0, w: 14.5, h: 71.0 },
-      { id: 'sr1-payload', kind: 'payload',  label: 'Payload Bay', x: 22.0, y: 13.0, w: 19.5, h: 71.0 },
-      { id: 'sr1-booster', kind: 'booster',  label: 'Boosters',    x: 42.0, y: 13.0, w: 19.5, h: 71.0 },
-      { id: 'sr1-engine',  kind: 'engine',   label: 'Engine Room', x: 62.0, y: 13.0, w: 17.0, h: 71.0 },
-      // A post-onboarding bolt-on section, outside the original four-room hull.
-      // It stays visually separate from the payload bay so fitting quarters
-      // never replaces or obscures cargo capacity.
-      { id: 'sr1-crew', kind: 'crew-module', label: 'Crew Module', x: 80.5, y: 20.0, w: 12.5, h: 57.0 },
-      // A second post-onboarding bolt-on, below the crew module rather than
-      // beside it — the hull has no more horizontal room past the crew bay.
-      { id: 'sr1-lander', kind: 'lander', label: 'Lander Module', x: 80.5, y: 78.0, w: 12.5, h: 20.0 },
+      // x/y/w/h below are each room's home-cell rect in the same % units,
+      // kept only so existing bounds-checks/tests have a concrete rect;
+      // gx/gy (grid cell units) are what ShipCustomizerCanvas actually uses
+      // to place and drag rooms.
+      { id: 'sr1-cockpit', kind: 'cockpit',  label: 'Cockpit',     x:  7.0, y: 13.0, w: 19.1, h: 47.3, gx: 0, gy: 0 },
+      { id: 'sr1-payload', kind: 'payload',  label: 'Payload Bay', x: 26.1, y: 13.0, w: 19.1, h: 47.3, gx: 2, gy: 0 },
+      { id: 'sr1-booster', kind: 'booster',  label: 'Boosters',    x: 45.2, y: 13.0, w: 19.1, h: 23.7, gx: 4, gy: 0 },
+      { id: 'sr1-engine',  kind: 'engine',   label: 'Engine Room', x: 45.2, y: 36.7, w: 19.1, h: 23.7, gx: 4, gy: 1 },
+      // Post-onboarding bolt-ons — installed into the same grid, further aft.
+      { id: 'sr1-crew', kind: 'crew-module', label: 'Crew Module', x: 64.3, y: 13.0, w: 19.1, h: 23.7, gx: 6, gy: 0 },
+      { id: 'sr1-lander', kind: 'lander', label: 'Lander Module', x: 64.3, y: 36.7, w: 19.1, h: 23.7, gx: 6, gy: 1 },
     ],
   },
 }

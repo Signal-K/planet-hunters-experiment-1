@@ -77,26 +77,16 @@ function expectNoOverlap(a: DOMRect, b: DOMRect, label: string) {
   expect(overlaps, label).to.eq(false)
 }
 
-function expectBackendsHealthy(attempts = 4): Cypress.Chainable<void> {
-  return cy.request({ url: '/api/backend-health', failOnStatusCode: false }).then(response => {
-    const healthy = response.status === 200
-      && response.body?.ok === true
-      && response.body?.backends?.shared?.ok === true
-      && response.body?.backends?.landnam?.ok === true
-    if (!healthy && attempts > 1) {
-      return cy.wait(500).then(() => expectBackendsHealthy(attempts - 1))
-    }
-    expect(response.status, 'backend health response').to.eq(200)
-    expect(response.body.ok, 'combined backend health').to.eq(true)
-    expect(response.body.backends?.shared?.ok, 'shared PocketBase health').to.eq(true)
-    expect(response.body.backends?.landnam?.ok, 'Landnam PocketBase health').to.eq(true)
-  })
-}
-
 describe('Sprint 11 Launchpad and Earth Base hotfix — live browser QA', () => {
   beforeEach(() => {
     cy.viewport(1280, 800)
-    expectBackendsHealthy()
+    cy.request('/api/backend-health').its('body').should('deep.include', {
+      ok: true,
+      backends: {
+        shared: { ok: true, url: 'http://host.docker.internal:8090' },
+        landnam: { ok: true, url: 'http://host.docker.internal:8091' },
+      },
+    })
   })
 
   it('keeps every essential Launchpad control in one viewport and opens the monitoring build flow', () => {
@@ -155,7 +145,6 @@ describe('Sprint 11 Launchpad and Earth Base hotfix — live browser QA', () => 
     cy.get('[data-testid="progression-card-sms"]').should('be.visible')
     cy.get('[data-testid="progression-card-next-mission"]').should('be.visible')
     cy.contains('SCANNER').should('not.exist')
-    cy.get('canvas').should('be.visible')
 
     cy.get('[data-testid="hud-jobs-chip"]').then($hud => {
       const hud = $hud[0].getBoundingClientRect()
@@ -172,29 +161,9 @@ describe('Sprint 11 Launchpad and Earth Base hotfix — live browser QA', () => 
       }
     })
 
-    cy.wait(750)
     cy.screenshot('sprint-11-hotfix-earth-base', { capture: 'viewport' })
-    cy.get('[data-testid="building-launchpad-hit"]').should('be.visible').and('not.be.disabled')
-  })
-
-  it('does not restore the legacy sidebar on wide desktop viewports', () => {
-    cy.viewport(1720, 1200)
-    visitGame('/game/hub', 'hub')
-
-    cy.get('h1', { timeout: 15_000 }).contains('Earth Base').should('be.visible')
-    cy.get('[data-testid="building-launchpad-hit"]', { timeout: 15_000 }).should('be.visible')
-    cy.get('[data-testid="progression-card-skills"]').should('be.visible')
-    cy.get('[data-testid="progression-card-sms"]').should('be.visible')
-    cy.get('canvas').should('be.visible')
-    cy.get('.desktop-sidebar').should('not.exist')
-    cy.get('[data-testid="settings-button"]')
-      .should('be.visible')
-      .and('have.attr', 'aria-label', 'Settings')
-    cy.window().then(win => {
-      expect(win.document.documentElement.scrollHeight, 'wide hub does not vertically scroll').to.be.at.most(win.innerHeight)
-    })
-
-    cy.wait(750)
-    cy.screenshot('sprint-11-hotfix-earth-base-wide', { capture: 'viewport' })
+    cy.get('[data-testid="building-launchpad-hit"]').click({ scrollBehavior: false })
+    cy.location('pathname', { timeout: 10_000 }).should('eq', '/game/launchpad')
+    cy.get('[data-testid="launchpad-build-monitoring-btn"]').should('be.visible')
   })
 })

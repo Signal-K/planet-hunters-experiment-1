@@ -1,9 +1,11 @@
 <!-- LANDNAM PROJECT REQUIREMENTS START -->
 # Landnam — Agent Instructions
 
-## Desk-first agent workflow
+## Linear-first agent workflow
 
-Desk is the sole project-management system for Landnam. Before changing code, resolve the relevant Desk ticket or create one with `create_ticket`. During work, update it when scope, status, blockers, or decisions change. Before finishing, add implementation evidence and tests with `add_comment`, move it to the correct Desk status, attach useful file references with `attach_file_ref`, and include the Desk key in the commit subject or body. Never use Knowns, `.knowns`, Plate, or workspace ticket Markdown as a replacement for Desk ticket state. If no Desk key exists, stop before committing and create or resolve the ticket.
+As of 2026-08-02, **Linear is the sole project-management system for Landnam**, superseding Desk for this project only (every other repo under `~/Navigation` still uses Desk — see the root `CLAUDE.md`). Landnam lives in Linear workspace team **Kestloome**, project **Landnam** (issues use the `KES-` prefix; Landnam does not have its own team/prefix yet — that's a known follow-up, not a bug). Before changing code, resolve the relevant Linear issue or create one with `save_issue`. During work, update it when scope, status, blockers, or decisions change — set `cycle`/`milestone` for sprint tracking (currently milestone-based: Sprint 9 and earlier, Sprint 10, Sprint 11, Sprint 12, Backlog/unscheduled). Before finishing, add implementation evidence via `save_comment`, move it to the correct status (Backlog/Todo/In Progress/In Review/Done), link related issues with `blockedBy`/`blocks`, and include the Linear issue ID (e.g. `KES-123`) in the commit subject or body. Never use Desk, Knowns, `.knowns`, Plate, or workspace ticket Markdown as a replacement for Linear issue state on this project. If no Linear ID exists, stop before committing and create or resolve the issue.
+
+Historical Landnam tickets predating 2026-08-02 live in Desk, migrated into Linear under the `landnam-migration` label; Desk tickets were labeled `migrated-to-linear` rather than deleted. ZenNotes remains the source of truth for durable decisions/specs — Linear issues should reference it rather than duplicating detail.
 
 > **Canonical guidance**: Read `KNOWNS.md` in the repository root for full workflow rules. This file covers Landnam-specific repo layout and conventions only.
 

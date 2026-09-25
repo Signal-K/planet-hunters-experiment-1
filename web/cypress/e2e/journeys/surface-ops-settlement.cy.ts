@@ -38,8 +38,9 @@ function seedState(win: Window, player: Record<string, unknown>, screen = 'hub')
 }
 
 function dismissAuthGate() {
-  cy.get('[data-testid="auth-gate-skip"]', { timeout: 15000 }).click()
-  cy.get('[data-testid="auth-gate-skip"]').should('not.exist')
+  cy.get('[data-testid="auth-gate-quick-email"]', { timeout: 15000 }).type(`cy-surface-ops-${Date.now()}@example.com`)
+  cy.get('[data-testid="auth-gate-quick-submit"]').click()
+  cy.get('[data-testid="auth-gate-quick-email"]').should('not.exist')
 }
 
 describe('Surface Ops settlement journey', () => {
