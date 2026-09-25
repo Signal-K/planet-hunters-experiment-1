@@ -44,6 +44,8 @@ import {
   markInstrumentDigestNotified,
 } from '@/lib/systems/InstrumentFeedSystem'
 import { missionResumeScreen } from '@/lib/mission-resume'
+import { surfaceForScreen } from '@/lib/screen-layouts'
+import { SurfaceLayout } from '@/components/layout/frame/ScreenLayouts'
 
 export const VALID_SCREENS = new Set<Screen>([
   'intro', 'build', 'hub', 'hub-subsurface', 'missions', 'galaxy', 'targets', 'fab',
@@ -62,18 +64,30 @@ export const VALID_SCREENS = new Set<Screen>([
 // component renders for game.screen". Used by both the URL-synced
 // (main)/[screen] route and the standalone ship-customizer dev route, which
 // otherwise diverged silently (each bugfix had to be ported twice).
-export function ScreenContent({
-  screen,
-  game,
-  hasCoach,
-  onBackFromHangar,
-}: {
+interface ScreenContentProps {
   screen: Screen
   game: ReturnType<typeof useGame>
   hasCoach: boolean
   /** Overrides HangarScreen's onBack; falls back to the remembered entry scene. */
   onBackFromHangar?: () => void
-}) {
+}
+
+// SSL-35: every screen renders inside the shared frame, labelled with the
+// layout type its route maps to in GAME_ROUTES.
+export function ScreenContent(props: ScreenContentProps) {
+  return (
+    <SurfaceLayout surface={surfaceForScreen(props.screen)}>
+      <ScreenBody {...props} />
+    </SurfaceLayout>
+  )
+}
+
+function ScreenBody({
+  screen,
+  game,
+  hasCoach,
+  onBackFromHangar,
+}: ScreenContentProps) {
   // Launch sequence state lives here so it's scoped to the fab screen
   const [launchPending, setLaunchPending] = useState(false)
   const [inspectSignal, setInspectSignal] = useState<InstrumentSignal | null>(null)

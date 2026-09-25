@@ -1,0 +1,46 @@
+'use client'
+
+import type { ReactNode } from 'react'
+import ScreenFrame, { type FrameSurface } from './ScreenFrame'
+
+/** Slots a layout type accepts. Per-type props are added as each type gets
+ * its own chrome (SSL-35 follow-up PRs). */
+export interface LayoutSlots {
+  top?: ReactNode
+  bottom?: ReactNode
+  overlay?: ReactNode
+  children: ReactNode
+}
+
+export function LandingLayout(props: LayoutSlots) { return <ScreenFrame surface="landing" {...props} /> }
+export function LaunchLayout(props: LayoutSlots) { return <ScreenFrame surface="launch" {...props} /> }
+export function OrbitLayout(props: LayoutSlots) { return <ScreenFrame surface="orbit" {...props} /> }
+export function MiningLayout(props: LayoutSlots) { return <ScreenFrame surface="mining" {...props} /> }
+export function HomeLayout(props: LayoutSlots) { return <ScreenFrame surface="home" {...props} /> }
+export function InstrumentLayout(props: LayoutSlots) { return <ScreenFrame surface="instrument" {...props} /> }
+export function MapLayout(props: LayoutSlots) { return <ScreenFrame surface="map" {...props} /> }
+export function TakeonLayout(props: LayoutSlots) { return <ScreenFrame surface="takeon" {...props} /> }
+export function MissionSetupLayout(props: LayoutSlots) { return <ScreenFrame surface="mission-setup" {...props} /> }
+export function PostMissionLayout(props: LayoutSlots) { return <ScreenFrame surface="post-mission" {...props} /> }
+
+export const LAYOUT_COMPONENTS: Record<FrameSurface, (props: LayoutSlots) => ReactNode> = {
+  landing: LandingLayout,
+  launch: LaunchLayout,
+  orbit: OrbitLayout,
+  mining: MiningLayout,
+  home: HomeLayout,
+  instrument: InstrumentLayout,
+  map: MapLayout,
+  takeon: TakeonLayout,
+  'mission-setup': MissionSetupLayout,
+  'post-mission': PostMissionLayout,
+}
+
+/**
+ * Route-driven entry point used by the game shell. It always renders the one
+ * `ScreenFrame` element type, so moving between screens of different layout
+ * types re-labels the frame instead of remounting the screen tree under it.
+ */
+export function SurfaceLayout({ surface, ...slots }: LayoutSlots & { surface: FrameSurface }) {
+  return <ScreenFrame surface={surface} {...slots} />
+}

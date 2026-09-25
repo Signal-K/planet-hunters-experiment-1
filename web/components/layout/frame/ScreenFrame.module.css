@@ -1,0 +1,51 @@
+/* SSL-35: one frame, four named slots. Screens render into `main`; the
+   layout types decide what goes in `top`, `bottom` and `overlay`.
+
+   docked   — top / main / bottom are stacked rows; main ends where the bars
+              begin, so nothing needs per-screen bottom padding.
+   floating — bars sit over the full-height main area (the world shows
+              through); only the controls inside the bars take pointer input. */
+.frame {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  grid-template-columns: minmax(0, 1fr);
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.top,
+.bottom {
+  position: relative;
+  z-index: 2;
+  min-width: 0;
+}
+.top { grid-row: 1; padding-top: env(safe-area-inset-top, 0px); }
+.bottom { grid-row: 3; padding-bottom: env(safe-area-inset-bottom, 0px); }
+
+.main {
+  grid-row: 2;
+  position: relative;
+  z-index: 1;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.frame[data-chrome='floating'] > .main { grid-row: 1 / -1; }
+.frame[data-chrome='floating'] > .top { align-self: start; }
+.frame[data-chrome='floating'] > .bottom { align-self: end; }
+.frame[data-chrome='floating'] > .top,
+.frame[data-chrome='floating'] > .bottom { pointer-events: none; }
+.frame[data-chrome='floating'] > .top > *,
+.frame[data-chrome='floating'] > .bottom > * { pointer-events: auto; }
+
+/* Pop-ups and sheets. Pointer-transparent until something is mounted. */
+.overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+}
+.overlay > * { pointer-events: auto; }
