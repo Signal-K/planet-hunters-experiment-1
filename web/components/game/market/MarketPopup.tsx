@@ -17,9 +17,9 @@ import { sellUnitPrice, sellQuote } from '@/lib/systems/EconomySystem'
 import { formatCurrency } from '@/lib/format'
 import type { DailyEconomySnapshot } from '@/lib/systems/DailyEconomySystem'
 import { captureGameEvent } from '@/lib/posthog'
-import styles from './MarketScreen.module.css'
+import styles from './MarketPopup.module.css'
 
-interface MarketScreenProps {
+interface MarketPopupProps {
   stash: Record<string, number>
   marketSupply?: Record<string, number>
   marketSupplyUpdatedAt?: Record<string, number>
@@ -28,12 +28,17 @@ interface MarketScreenProps {
   onSell: (mineralId: string, amount: number) => void
   refinedGoods: Record<string, number>
   onSellRefined: (recipeId: string, amount: number) => void
-  onBack: () => void
+  onClose: () => void
   onOpenMissions: () => void
   clientId?: string
 }
 
-export default function MarketScreen({ stash, marketSupply, marketSupplyUpdatedAt, dailyEconomySnapshot, francs, onSell, refinedGoods, onSellRefined, onBack, onOpenMissions, clientId }: MarketScreenProps) {
+/**
+ * SSL-35: Market is a pop-up over Home, opened from Home's bottom bar. It
+ * replaces the old fullscreen /game/market page (which now redirects here)
+ * and keeps the crafting recipes that page carried.
+ */
+export default function MarketPopup({ stash, marketSupply, marketSupplyUpdatedAt, dailyEconomySnapshot, francs, onSell, refinedGoods, onSellRefined, onClose, onOpenMissions, clientId }: MarketPopupProps) {
   const [confirming, setConfirming] = useState<string | null>(null)
   const [sellAllConfirm, setSellAllConfirm] = useState(false)
   // SSL-316: every recipe in the game is published here so the player can
@@ -65,21 +70,23 @@ export default function MarketScreen({ stash, marketSupply, marketSupplyUpdatedA
   const refinedEntries = REFINERY_RECIPES.filter(recipe => (refinedGoods[recipe.id] ?? 0) > 0)
 
   return (
-    <div className={`theme-light market-screen ${styles.screen}`}>
+    <div className={styles.popup} data-testid="market-popup">
+    <button type="button" className={styles.scrim} onClick={onClose} aria-label="Close market" tabIndex={-1} />
+    <section className={`theme-light market-screen ${styles.screen}`} role="region" aria-labelledby="market-title">
       <header className={styles.header}>
-        <button className={styles.backButton} onClick={onBack} aria-label="Back to previous screen" type="button">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-            <path d="M15 18l-6-6 6-6" />
-          </svg>
-        </button>
         <div className={styles.headerCopy}>
           <div className={styles.eyebrow}>Base · Resource Desk</div>
-          <h1 className={styles.title}>Commodity Exchange</h1>
+          <h1 className={styles.title} id="market-title">Commodity Exchange</h1>
         </div>
         <div className={styles.balance} aria-label={`Current balance ${formatCurrency(francs)}`}>
           <span className={styles.metricLabel}>Available francs</span>
           <span className={styles.balanceValue}>{formatCurrency(francs, { compact: true })}</span>
         </div>
+        <button className={styles.backButton} onClick={onClose} aria-label="Close market" type="button" data-testid="market-close">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="M6 6l12 12M18 6L6 18" />
+          </svg>
+        </button>
       </header>
 
       <main className={styles.content}>
@@ -278,6 +285,7 @@ export default function MarketScreen({ stash, marketSupply, marketSupplyUpdatedA
           onDismiss={() => setConfirming(null)}
         />
       )}
+    </section>
     </div>
   )
 }

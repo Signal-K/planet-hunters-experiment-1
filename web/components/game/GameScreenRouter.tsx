@@ -22,7 +22,7 @@ const MissionSetupRoutes = dynamic(() => import('@/components/game/MissionSetupR
 const MissionOperationRoutes = dynamic(() => import('@/components/game/MissionOperationRoutes'), { loading: ScreenLoading })
 const BuildPlaceScreen = dynamic(() => import('@/components/game/screens/BuildPlaceScreen'), { loading: ScreenLoading })
 const RefineryScreen = dynamic(() => import('@/components/game/screens/RefineryScreen'), { loading: ScreenLoading })
-const MarketScreen = dynamic(() => import('@/components/game/screens/MarketScreen'), { loading: ScreenLoading })
+const MarketPopup = dynamic(() => import('@/components/game/market/MarketPopup'))
 const HangarScreen = dynamic(() => import('@/components/game/screens/HangarScreen'), { loading: ScreenLoading })
 const SkillTreeScreen = dynamic(() => import('@/components/game/screens/SkillTreeScreen'), { loading: ScreenLoading })
 const LaunchpadScreen = dynamic(() => import('@/components/game/screens/LaunchpadScreen'), { loading: ScreenLoading })
@@ -48,6 +48,7 @@ import { missionResumeScreen } from '@/lib/mission-resume'
 import { missionRunsFor } from '@/lib/mission-runs'
 import { surfaceForScreen } from '@/lib/screen-layouts'
 import { SurfaceLayout } from '@/components/layout/frame/ScreenLayouts'
+import { FrameSlot } from '@/components/layout/frame/FrameSlot'
 
 export const VALID_SCREENS = new Set<Screen>([
   'intro', 'build', 'hub', 'hub-subsurface', 'missions', 'galaxy', 'targets', 'fab',
@@ -136,7 +137,13 @@ function ScreenBody({
   // here directly (bookmarked URL, back/forward) shouldn't see a locked
   // screen render at all.
   useEffect(() => {
-    if (screen === 'market' && !game.player.freeOperations) game.go('hub')
+    // SSL-35: the fullscreen Market page is retired. /game/market (old links,
+    // old saves, the post-debrief hop) lands on Home with the Market pop-up
+    // open — still a Free Ops feature, so onboarding players just get Home.
+    if (screen === 'market') {
+      game.go('hub')
+      if (game.player.freeOperations) game.setShellSheet('market')
+    }
     // Refining is commissioned at an approved off-world site. An old save
     // that contains a Base refinery remains readable, but no unbuilt player
     // can enter the retired Earth-refinery screen.
@@ -149,7 +156,7 @@ function ScreenBody({
     // screens, and the Launchpad availability panel. It has its own back
     // action, so a returning player must be allowed to open it and place a
     // newly unlocked structure.
-  }, [screen, game.player.freeOperations, game.player.hasLanded, game.mission, game.target, game.go])
+  }, [screen, game.player.freeOperations, game.player.hasLanded, game.mission, game.target, game.go, game.setShellSheet])
 
   // HubScreen's surface/subsurface slide is driven by ephemeral UI state
   // (game.subsurfaceView), not the route, so a real navigation into
@@ -210,7 +217,9 @@ function ScreenBody({
 
     case 'hub':
     case 'hub-subsurface':
+    case 'market':
       return (
+        <>
         <HubScreen
           player={game.player}
           rocketVariant={rocketModelForConfig(game.rocket).tier >= 2 ? 'prospector' : 'explorer'}
@@ -266,12 +275,30 @@ function ScreenBody({
           onOpenPendingLaunch={() => game.go('fab')}
           shell={{
             showMarket: game.player.freeOperations,
-            marketOpen: false,
+            marketOpen: game.shellSheet === 'market',
             menuOpen: game.shellSheet === 'menu',
-            onMarket: () => game.go('market'),
+            onMarket: () => game.setShellSheet(game.shellSheet === 'market' ? null : 'market'),
             onMenu: () => game.setShellSheet(game.shellSheet === 'menu' ? null : 'menu'),
           }}
         />
+        {game.shellSheet === 'market' && game.player.freeOperations && (
+          <FrameSlot name="overlay">
+            <MarketPopup
+              stash={game.player.stash ?? {}}
+              marketSupply={game.player.marketSupply ?? {}}
+              marketSupplyUpdatedAt={game.player.marketSupplyUpdatedAt ?? {}}
+              dailyEconomySnapshot={game.player.dailyEconomySnapshot}
+              francs={game.player.francs}
+              onSell={game.sellMinerals}
+              refinedGoods={game.player.refinedGoods}
+              onSellRefined={game.sellRefinedGoods}
+              onClose={() => game.setShellSheet(null)}
+              onOpenMissions={() => { game.setShellSheet(null); game.goToMissions() }}
+              clientId={game.player.lastClient}
+            />
+          </FrameSlot>
+        )}
+        </>
       )
 
     case 'instrument-hub':
@@ -376,23 +403,6 @@ function ScreenBody({
           onBack={() => game.goBack()}
           onStartRefine={game.onStartRefine}
           onCollect={game.onCollectRefined}
-        />
-      )
-
-    case 'market':
-      return (
-        <MarketScreen
-          stash={game.player.stash ?? {}}
-          marketSupply={game.player.marketSupply ?? {}}
-          marketSupplyUpdatedAt={game.player.marketSupplyUpdatedAt ?? {}}
-          dailyEconomySnapshot={game.player.dailyEconomySnapshot}
-          francs={game.player.francs}
-          onSell={game.sellMinerals}
-          refinedGoods={game.player.refinedGoods}
-          onSellRefined={game.sellRefinedGoods}
-          onBack={() => game.goBack()}
-          onOpenMissions={() => game.go('missions')}
-          clientId={game.player.lastClient}
         />
       )
 

@@ -194,7 +194,7 @@ function GameChrome({ children }: { children: ReactNode }) {
             }}
           />
         )}
-        {game.popup && game.popup !== 'tutorial-complete' && currentScreen !== 'market' && !game.authGateOpen && (
+        {game.popup && game.popup !== 'tutorial-complete' && game.shellSheet !== 'market' && !game.authGateOpen && (
           <UnlockPopup
             kind={game.popup}
             onClose={() => {

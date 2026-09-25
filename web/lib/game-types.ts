@@ -93,9 +93,9 @@ export type Screen =
 // (GAME_ROUTES). The old LOCATION_SCREENS boxed-vs-full-page split is retired:
 // every screen now sits on the shared full-page frame.
 
-/** Shell-level sheets and pop-ups (SSL-35). Menu is the root; the rest open
- * from it. */
-export type ShellSheet = 'menu' | 'friends' | 'community' | 'feedback'
+/** Shell-level sheets and pop-ups (SSL-35). Market and Menu open from Home's
+ * bottom bar; Friends, Community and Feedback open from Menu. */
+export type ShellSheet = 'menu' | 'market' | 'friends' | 'community' | 'feedback'
 
 export type LicenseGrade = 'Grade I' | 'Grade II' | 'Grade III'
 

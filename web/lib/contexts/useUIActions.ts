@@ -40,6 +40,9 @@ export function useUIActions(
   }, [])
 
   const go = useCallback((screen: Screen) => {
+    // Shell sheets (Menu, the Market pop-up) belong to the screen they were
+    // opened over; moving on closes them.
+    setShellSheet(null)
     setState(s => {
       if (screen === 'hangar') {
         hangarReturnView.current = s.screen === 'launchpad' || s.screen === 'academy'

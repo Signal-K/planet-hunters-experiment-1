@@ -1,19 +1,47 @@
-.screen {
-  /* Was `min-height: 100dvh`, built assuming normal page-level scroll — but
-     this screen actually mounts inside .game-screen-area, which is
-     `overflow: hidden` (KES-268). Content taller than the boxed card's
-     available height had nowhere to go and just got clipped. This screen
-     owns its own scroll now, same as every other screen's .screen-scroll
-     convention, so the sticky .header still sticks correctly within it. */
+/* SSL-35: a pop-up over Home, mounted in the frame's overlay slot. Home
+   stays visible (dimmed) above the panel; the panel owns its own scroll so
+   the sticky header keeps sticking. */
+.popup {
   position: absolute;
   inset: 0;
+  z-index: 40;
+}
+.scrim {
+  position: absolute;
+  inset: 0;
+  padding: 0;
+  border: 0;
+  background: color-mix(in srgb, var(--ln-void) 55%, transparent);
+  cursor: pointer;
+}
+
+.screen {
+  position: absolute;
+  top: 64px;
+  right: 0;
+  bottom: 0;
+  left: 0;
   overflow-y: auto;
+  border-radius: var(--ln-r-xl) var(--ln-r-xl) 0 0;
+  box-shadow: var(--ln-shadow-modal);
   color: var(--ln-text);
   background:
     linear-gradient(var(--ln-hairline) 1px, transparent 1px),
     linear-gradient(90deg, var(--ln-hairline) 1px, transparent 1px),
     var(--ln-void);
   background-size: 32px 32px;
+}
+
+@media (min-width: 1024px) {
+  .screen {
+    top: 48px;
+    bottom: 48px;
+    left: 50%;
+    right: auto;
+    width: min(880px, calc(100% - 64px));
+    transform: translateX(-50%);
+    border-radius: var(--ln-r-xl);
+  }
 }
 
 .header {
@@ -25,7 +53,7 @@
   gap: var(--ln-s-3);
   min-height: 72px;
   padding: var(--ln-s-3) max(var(--ln-s-4), 4vw);
-  background: color-mix(in srgb, var(--ln-bg) 94%, transparent);
+  background: var(--ln-bg);
   border-bottom: 1px solid var(--ln-hairline-strong);
 }
 
