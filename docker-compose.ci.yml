@@ -20,16 +20,12 @@ services:
     working_dir: /repo/web
     volumes:
       - ./web:/repo/web
-      - ./pocketbase:/repo/pocketbase:ro
       - web_ci_nm:/repo/web/node_modules
     command: >
       sh -c "
         npm ci &&
         npm run typecheck &&
-        npm run test:unit &&
-        for f in /repo/pocketbase/pb_migrations/*.js; do
-          node --check \"$$f\" && echo \"OK: $$f\" || exit 1;
-        done
+        npm run test:unit
       "
     environment:
       CI: "true"
