@@ -675,6 +675,7 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
           scrollRef={scrollRef}
           oreNearRef={oreNearRef}
           neededMineralsRef={neededMineralsRef}
+          aimAssistActive={aimCoach.visible}
         />
         {sceneStatus !== 'ready' && (
           <div className="mining-scene-status" role="status" aria-live="polite" data-testid="mining-scene-status">

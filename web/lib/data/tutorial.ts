@@ -49,10 +49,18 @@ export const M1_STEPS: TutorialStep[] = [
     body: 'Everything checks out. The selected vehicle is entering the launch sequence.',
     action: 'Review the flight manifest while the sequence starts',
     anchor: 'top', spot: null, cta: 'the flight manifest' },
+  // SSL-307: this used to read "Tap an exposed deposit to fire", describing a
+  // point-and-aim mechanic the game doesn't have. The laser always fires
+  // straight down from the ship's fixed screen position while the ore field
+  // drifts underneath — it's a timing game, not aim-and-click. This is the
+  // coach a first-time player actually sees (the separate MiningAimCoach
+  // hint is suppressed for the whole tutorial, since `hasCoach` is true),
+  // so the correction has to live here, not just in that component.
   { id: 6, screen: 'mining',   title: 'Mine the Asteroid',
-    body: 'Ore deposits are the coloured seams in the rock. Fire the laser at one now; this guide will leave once you demonstrate the control.',
-    action: 'Tap an exposed deposit to fire',
-    anchor: 'top', spot: null, cta: 'Fire the laser' },
+    body: 'You can\'t aim the laser — it always fires straight down from your ship. Ore deposits (the coloured seams) drift past underneath. Wait for one to line up, then fire.',
+    action: 'Tap FIRE LASER when a deposit lines up',
+    anchor: 'top', spot: null, cta: 'Fire the laser',
+    desktopAction: 'Click FIRE LASER when a deposit lines up' },
 ]
 
 export const M2_STEPS: TutorialStep[] = [
