@@ -14,7 +14,7 @@ import SurveySheet from '@/components/ui/SurveySheet'
 import ToastLayer from '@/components/ui/ToastLayer'
 import { initPostHog } from '@/lib/posthog'
 import DevShortcuts from '@/components/dev/DevShortcuts'
-import AuthGateSheet from '@/components/game/AuthGateSheet'
+import GateLanding from '@/components/game/landing/GateLanding'
 import ShellSheets from '@/components/game/ShellSheets'
 import TerritoryClaimPopup from '@/components/game/TerritoryClaimPopup'
 import { UI_ZONES } from '@/lib/ui-zones'
@@ -207,13 +207,7 @@ function GameChrome({ children }: { children: ReactNode }) {
             onDismiss={game.popup === 'loan' ? () => game.setPopup(null) : undefined}
           />
         )}
-        {game.authGateOpen && (
-          <AuthGateSheet
-            error={game.authGateError}
-            onSignIn={game.signInFromGate}
-            onCreateAccount={game.createAccountFromGate}
-          />
-        )}
+        {game.authGateOpen && <GateLanding />}
         {game.pendingTerritoryClaimFor && !game.authGateOpen && (
           <TerritoryClaimPopup
             targetId={game.pendingTerritoryClaimFor.targetId}

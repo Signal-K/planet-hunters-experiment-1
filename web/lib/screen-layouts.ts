@@ -36,7 +36,7 @@ export interface ScreenSurfaceSpec {
 }
 
 export const SCREEN_SURFACES: Record<Exclude<ScreenSurface, 'dev'>, ScreenSurfaceSpec> = {
-  landing: { label: 'Landing', chrome: 'floating', summary: 'Base yard grows in a light loop, then Continue / Start new game, then sign in.' },
+  landing: { label: 'Landing', chrome: 'docked', summary: 'Base yard grows in a light loop, then Continue / Start new game, then sign in.' },
   launch: { label: 'Launch', chrome: 'floating', summary: 'The launch sequence. Every launch renders here; it has no URL of its own.' },
   orbit: { label: 'Orbit', chrome: 'floating', summary: 'Rocket in flight, with « » to switch between missions in progress.' },
   mining: { label: 'Mining / hovering', chrome: 'floating', summary: 'Descent and mining at a target.' },
@@ -67,7 +67,7 @@ export interface GameRoute {
  */
 export const GAME_ROUTES = [
   // Landing
-  { path: '/', surface: 'landing' },
+  { path: '/', surface: 'landing', redirectTo: '/game' },
   { path: '/game', surface: 'landing', redirectTo: '/game/<saved screen>' },
   { path: '/game/intro', screen: 'intro', surface: 'landing' },
 
