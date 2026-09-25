@@ -20,7 +20,7 @@ export type ScreenLayoutType = typeof SCREEN_LAYOUT_TYPES[number]
 
 /** Mission setup and Post-mission summary keep their own screens but sit on
  * the same frame (no boxed card on desktop). */
-export const MISSION_SURFACES = ['mission-setup', 'post-mission'] as const
+const MISSION_SURFACES = ['mission-setup', 'post-mission'] as const
 export type MissionSurface = typeof MISSION_SURFACES[number]
 
 /** Dev-only tooling (launcher, redirect shortcuts, Forge preview) renders no
