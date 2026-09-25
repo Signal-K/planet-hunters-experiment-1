@@ -1,0 +1,55 @@
+.surface {
+  width: min(920px, calc(100vw - 32px));
+  max-height: calc(100vh - 32px);
+  margin-inline: auto;
+  overflow: auto;
+  padding: 32px;
+  border: 1px solid var(--ln-cyan-border);
+  background: var(--ln-panel);
+}
+
+.intro,
+.chooser { display: grid; gap: 24px; }
+.intro { max-width: 640px; margin: auto; text-align: left; }
+.intro h1,
+.heading h1 { margin: 0; color: var(--ln-text); font: 800 clamp(26px, 4vw, 42px)/1.05 var(--ln-font-display); }
+.intro p,
+.heading p,
+.siloRecommendation p { margin: 0; color: var(--ln-text-dim); font: 500 14px/1.55 var(--ln-font-body); }
+.eyebrow,
+.siloRecommendation span { color: var(--ln-cyan); font: 800 9px var(--ln-font-display); letter-spacing: .2em; text-transform: uppercase; }
+.heading { display: grid; gap: 8px; }
+.focusGrid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.focus { position: relative; display: grid; gap: 6px; min-height: 116px; padding: 16px 16px 16px 48px; border: 1px solid var(--ln-hairline); border-radius: 12px; background: var(--ln-surface-2); color: var(--ln-text); text-align: left; cursor: pointer; }
+.focus[data-active='true'] { border-color: var(--ln-cyan); background: var(--ln-cyan-soft); }
+.focus strong { font: 800 14px var(--ln-font-display); text-transform: uppercase; letter-spacing: .04em; }
+.focus > span:last-child { color: var(--ln-text-dim); font: 500 12px/1.45 var(--ln-font-body); }
+.selector { position: absolute; top: 18px; left: 16px; width: 16px; height: 16px; border: 2px solid var(--ln-text-muted); border-radius: 50%; }
+.focus[data-active='true'] .selector { border: 5px solid var(--ln-cyan); }
+.siloRecommendation { display: flex; align-items: center; justify-content: space-between; gap: 24px; padding: 16px; border-left: 3px solid var(--ln-cyan); background: var(--ln-surface-2); }
+.siloRecommendation > div { display: grid; gap: 4px; }
+.siloRecommendation strong { color: var(--ln-text); font: 800 16px var(--ln-font-display); text-transform: uppercase; }
+.siloRecommendation button,
+.primary,
+.secondary { min-height: 44px; padding: 10px 16px; border-radius: 8px; font: 800 10px var(--ln-font-display); letter-spacing: .12em; text-transform: uppercase; cursor: pointer; }
+.siloRecommendation button,
+.primary { border: 1px solid var(--ln-cyan); background: var(--ln-cyan); color: var(--ln-text-on-cyan); }
+.secondary { border: 1px solid var(--ln-cyan-border); background: transparent; color: var(--ln-cyan); }
+.primary:disabled { opacity: .45; cursor: not-allowed; }
+.actions { display: flex; justify-content: flex-end; gap: 12px; }
+
+@media (max-width: 700px) {
+  /* top padding clears the dev-only shortcuts badge fixed at top:8 left:8
+     (components/dev/DevShortcuts.tsx), which sits above every screen. */
+  .surface { padding: 40px 16px 24px; }
+  .focusGrid { grid-template-columns: 1fr; }
+  .siloRecommendation { align-items: stretch; flex-direction: column; }
+  .actions { flex-direction: column-reverse; }
+}
+
+@media (orientation: landscape) and (max-height: 520px) {
+  .surface { padding: 16px; }
+  .chooser { gap: 12px; }
+  .focus { min-height: 84px; padding-block: 12px; }
+  .siloRecommendation p { display: none; }
+}

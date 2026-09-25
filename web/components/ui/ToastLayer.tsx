@@ -16,7 +16,7 @@ interface ToastLayerProps {
 
 export default function ToastLayer({ toasts, onDismiss }: ToastLayerProps) {
   return (
-    <div data-ui-zone={UI_ZONES.toastStack} style={{ position: 'absolute', top: 52, right: 10, left: 10, zIndex: 85, pointerEvents: 'none', display: 'flex', flexDirection: 'column', gap: 6 }}>
+    <div data-ui-zone={UI_ZONES.toastStack} className="toast-stack">
       {toasts.map(t => (
         <ToastItem key={t.id} toast={t} onDismiss={onDismiss} />
       ))}
@@ -37,7 +37,7 @@ function ToastItem({ toast, onDismiss }: { toast: Toast; onDismiss: (id: string)
   const accent = toast.kind === 'ok' ? '#39d36a' : toast.kind === 'warn' ? '#f5a623' : 'rgba(112,217,234,0.8)'
 
   return (
-    <div style={{
+    <div className="toast-item" style={{
       pointerEvents: 'auto',
       padding: '8px 12px',
       background: 'rgba(6,13,24,0.92)',
@@ -55,7 +55,8 @@ function ToastItem({ toast, onDismiss }: { toast: Toast; onDismiss: (id: string)
       transform: visible ? 'translateY(0)' : 'translateY(-6px)',
       transition: 'opacity 0.25s, transform 0.25s',
     }} onClick={() => onDismiss(toast.id)}>
-      {toast.message}
+      <span>{toast.message}</span>
+      <button type="button" className="toast-dismiss" aria-label={`Dismiss ${toast.message}`} onClick={event => { event.stopPropagation(); onDismiss(toast.id) }}>×</button>
     </div>
   )
 }

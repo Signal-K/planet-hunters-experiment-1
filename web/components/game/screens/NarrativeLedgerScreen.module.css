@@ -1,0 +1,40 @@
+.shell { max-width: 1280px; margin: 0 auto; padding: 32px 24px 64px; color: var(--ln-text); }
+.header, .sectionHeading, .cardTop { display: flex; align-items: flex-start; justify-content: space-between; gap: 24px; }
+.header { margin-bottom: 32px; }
+.eyebrow, .card dt, .owner, .cycleTiming { color: var(--ln-text-muted); font-family: var(--ln-font-mono); font-size: 11px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; }
+.shell h1, .shell h2, .shell h3, .shell p { margin: 0; }
+.shell h1, .shell h2, .shell h3 { color: var(--ln-text); font-family: var(--ln-font-display); }
+.shell h1 { font-size: clamp(28px, 4vw, 48px); line-height: 1; margin: 8px 0 12px; }
+.shell h2 { font-size: clamp(20px, 2.5vw, 28px); line-height: 1.15; }
+.shell h3 { font-size: 18px; line-height: 1.2; }
+.header p, .command p, .card > p, .footer p { color: var(--ln-text-dim); font-size: 14px; line-height: 1.5; max-width: 680px; }
+.backButton { border: 1px solid var(--ln-hairline); border-radius: 6px; background: var(--ln-panel); color: var(--ln-cyan); cursor: pointer; font-family: var(--ln-font-display); font-size: 12px; font-weight: 800; letter-spacing: .08em; padding: 12px 16px; text-transform: uppercase; white-space: nowrap; }
+.backButton:hover { border-color: var(--ln-cyan-border); background: var(--ln-surface-2); }
+.command, .cycle, .card, .footer { border: 1px solid var(--ln-hairline); border-radius: 8px; background: var(--ln-panel); box-shadow: var(--ln-shadow-card); }
+.command { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(280px, .7fr); gap: 32px; padding: 24px; }
+.command h2 { margin: 8px 0 12px; }
+.actions { align-content: center; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.actions span { border: 1px solid var(--ln-cyan-border); border-radius: 4px; color: var(--ln-cyan); font-family: var(--ln-font-display); font-size: 11px; font-weight: 800; letter-spacing: .08em; padding: 12px; text-align: center; }
+.cycle { margin-top: 24px; padding: 24px; }
+.cycleTiming { border: 1px solid var(--ln-hairline); border-radius: 4px; padding: 8px; white-space: nowrap; }
+.flow { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; list-style: none; margin: 24px 0 0; padding: 0; }
+.flow li { align-items: center; background: var(--ln-surface); border: 1px solid var(--ln-hairline); border-radius: 6px; display: flex; gap: 8px; min-height: 80px; padding: 12px; }
+.flow strong { color: var(--ln-cyan); font-family: var(--ln-font-display); font-size: 24px; }
+.flow span { color: var(--ln-text-dim); font-family: var(--ln-font-mono); font-size: 10px; font-weight: 700; letter-spacing: .06em; line-height: 1.45; }
+.inventory { margin-top: 32px; }
+.stateSummary { display: flex; flex-wrap: wrap; gap: 8px; }
+.state_live, .state_adapt, .state_planned { border-radius: 999px; font-family: var(--ln-font-mono); font-size: 10px; font-weight: 800; letter-spacing: .08em; padding: 4px 8px; text-transform: uppercase; }
+.state_live { background: var(--ln-ok-soft); color: var(--ln-ok); }
+.state_adapt { background: var(--ln-cyan-soft); color: var(--ln-cyan); }
+.state_planned { background: var(--ln-warn-soft); color: var(--ln-warn); }
+.grid { display: grid; gap: 16px; grid-template-columns: repeat(2, minmax(0, 1fr)); margin-top: 24px; }
+.card { display: flex; flex-direction: column; gap: 12px; min-width: 0; padding: 16px; }
+.owner { color: var(--ln-text-muted); }
+.verb { color: var(--ln-cyan) !important; font-family: var(--ln-font-display); font-size: 13px !important; font-weight: 700; letter-spacing: .04em; }
+.card dl { border-top: 1px solid var(--ln-divider); display: grid; gap: 8px; margin: 4px 0 0; padding-top: 12px; }
+.card dl div { display: grid; gap: 4px; }
+.card dd { color: var(--ln-text-dim); font-family: var(--ln-font-mono); font-size: 11px; line-height: 1.45; margin: 0; }
+.implementation { border-left: 2px solid var(--ln-cyan-border); color: var(--ln-text-muted) !important; font-size: 12px !important; padding-left: 12px; }
+.footer { align-items: center; display: flex; gap: 12px; margin-top: 24px; padding: 16px; }
+.footerMark { background: var(--ln-cyan); border-radius: 999px; box-shadow: var(--ln-glow-cyan); height: 8px; width: 8px; }
+@media (max-width: 760px) { .shell { padding: 24px 16px 48px; } .header, .sectionHeading { align-items: stretch; flex-direction: column; gap: 16px; } .command { grid-template-columns: 1fr; } .flow { grid-template-columns: 1fr; } .flow li { min-height: 56px; } .grid { grid-template-columns: 1fr; } .backButton { align-self: flex-start; } }

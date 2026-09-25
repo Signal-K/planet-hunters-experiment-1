@@ -40,8 +40,8 @@ export function AmbientMotes() {
             width: 3, height: 3, borderRadius: '50%',
             background: m.mint ? 'var(--hub-mint)' : 'var(--hub-cyan)',
             boxShadow: m.mint
-              ? '0 0 6px 1px rgba(47,191,106,0.8)'
-              : '0 0 6px 1px rgba(108,212,255,0.8)',
+              ? '0 0 6px 1px rgba(90,208,126,0.8)'
+              : '0 0 6px 1px rgba(112,217,234,0.8)',
             opacity: 0,
             animation: 'hub-float-up linear infinite',
             animationDuration: `${m.dur}s`,

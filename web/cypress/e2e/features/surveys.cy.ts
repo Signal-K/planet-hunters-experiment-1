@@ -68,7 +68,7 @@ function visitGame() {
     onBeforeLoad(win) {
       win.localStorage.setItem(STORAGE_KEY, JSON.stringify(baseState))
       win.localStorage.removeItem(SURVEY_STORAGE_KEY)
-      win.localStorage.setItem('landnam-guest-credentials', JSON.stringify({ email: 'e2e@landnam.guest', password: 'e2e-guest-test' }))
+      win.localStorage.setItem('landnam-account-credentials', JSON.stringify({ email: 'e2e@example.com', password: 'e2e-guest-test' }))
       win.localStorage.setItem('landnam-upgrade-prompt-snooze-until', String(Date.now() + 365 * 24 * 60 * 60 * 1000))
     },
   })
@@ -111,6 +111,7 @@ function answerSurvey(surveyKey: string) {
 
   dispatchSurvey()
   cy.get('[data-testid="survey-sheet"]').should('be.visible')
+  if (surveyKey === SURVEY_KEYS[0]) cy.screenshot('sprint-13-survey-sheet-mobile')
 
   def.questions.forEach((question, index) => {
     cy.get('[data-testid="survey-question"]')
@@ -157,7 +158,7 @@ describe('Survey QA flow', () => {
     cy.intercept('POST', '/api/milestone-feedback', { statusCode: 200, body: { ok: true } }).as('milestoneFeedback')
 
     visitGame()
-    cy.contains('Earth Base', { timeout: 10000 }).should('be.visible')
+    cy.contains('h1', /^(Base|Earth Base)$/, { timeout: 10000 }).should('be.visible')
     cy.window({ timeout: 10000 })
       .its('__landnamTriggerSurvey')
       .should('be.a', 'function')

@@ -61,8 +61,8 @@ Shared constraints:
 
 The first generation batch should produce:
 
-- `ship_sr1_exterior`: closed Tier 1 starter rocket/mining ship.
-- `ship_sr1_cutaway_container`: open interior container for SR1, with 5-7 empty room bays.
+- `ship_sr1_exterior`: closed Tier 1 Explorer mining ship. The filename is retained as an asset compatibility key.
+- `ship_sr1_cutaway_container`: open Explorer interior container, with 5-7 empty room bays. The filename is retained as an asset compatibility key.
 - `room_cockpit_t1`: command/cockpit room module.
 - `room_engine_t1`: engine/power room module.
 - `room_cargo_bay_t1`: cargo/storage bay module.

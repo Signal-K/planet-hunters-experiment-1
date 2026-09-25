@@ -14,18 +14,25 @@ import { useUIActions } from '@/lib/contexts/useUIActions'
 import { useAuthSync } from '@/lib/contexts/useAuthSync'
 import { useConfirmedDiscoveryPoll } from '@/lib/contexts/useConfirmedDiscoveryPoll'
 import { useCatalogSync } from '@/lib/contexts/useCatalogSync'
+import { useDailyEconomySync } from '@/lib/contexts/useDailyEconomySync'
+import { useTreasurySync } from '@/lib/contexts/useTreasurySync'
 import { useGameLoop } from '@/lib/contexts/useGameLoop'
 import { useTutorialActions } from '@/lib/contexts/useTutorialActions'
 import { useEconomyActions } from '@/lib/contexts/useEconomyActions'
 import { useSurfaceOpsActions } from '@/lib/contexts/useSurfaceOpsActions'
 import { useInstrumentFeedNotifications } from '@/lib/contexts/useInstrumentFeedNotifications'
 import { useAcademyActions } from '@/lib/contexts/useAcademyActions'
+import { deriveSceneScope, EARTH_BASE_SCOPE } from '@/lib/scene-scope'
+import { claimFriendGift as claimFriendGiftRequest } from '@/lib/friends/client'
+import { applyFriendGiftToPlayer, friendGiftToastMessage } from '@/lib/friends/applyGift'
+import { GAME_STATE_STORAGE_KEY, gameStateStorageKey } from '@/lib/game-state-storage'
+import { canonicalGamePath } from '@/lib/game-route'
 
 export type { Screen, Player, GameState } from '@/lib/game-types'
 
 // ── State shape helpers ────────────────────────────────────────────────────────
 
-const STORAGE_KEY = 'landnam-game-state-v1'
+const STORAGE_KEY = GAME_STATE_STORAGE_KEY
 // ── Context ────────────────────────────────────────────────────────────────────
 
 const GameContext = createContext<(GameState & GameActions) | null>(null)
@@ -37,6 +44,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
 
   const [hydrated, setHydrated] = useState(false)
   const isPreview = useRef(false)
+  const skipNextLocalPersist = useRef(false)
   // React StrictMode double-invokes effects in dev. This effect strips the
   // `?preset=`/`?preview=` query via history.replaceState as one of its own
   // side effects, so a second invocation reads an already-stripped URL and
@@ -75,7 +83,19 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
         return
       }
     }
-    setState(loadState(STORAGE_KEY))
+    // A signed-in PocketBase session is restored synchronously from
+    // localStorage. Hydrate only that account's private slot; the unscoped
+    // key is the guest/legacy slot and must not bleed into a new account
+    // while remote sync is warming up (KES-324).
+    const loadedState = loadState(gameStateStorageKey(STORAGE_KEY, pbShared.authStore.record?.id))
+    // `/game` resolves returning players to Earth Base before this provider
+    // hydrates. Keep that entry decision authoritative; otherwise hydration
+    // restores the previous Contracts screen and the URL-sync effect pushes
+    // the player straight back to `/game/missions` (KES-226).
+    const entryState = window.location.pathname === '/game/hub'
+      ? { ...loadedState, screen: 'hub' as Screen }
+      : loadedState
+    setState(entryState)
     setHydrated(true)
     const record = pbShared.authStore.record
     if (record?.id) identifyUser(record.id, record.email ? { email: record.email } : undefined)
@@ -87,28 +107,69 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     if (state.player.missionsDone > 0) enqueueSurvey('lnm_return_visit', 3000)
   }, [hydrated]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Persist state to localStorage
+  const router = useRouter()
+  useTreasurySync(setState, hydrated, isPreview.current)
+
+  // ── Domain hooks ───────────────────────────────────────────────────────────
+  const ui      = useUIActions(setState)
+  const priorTrailScreen = useRef<Screen | null>(null)
+
+  // Domain actions (and URL sync) change `state.screen` without `go()`.
+  // Keep the logical-back host in sync with wherever the player actually is.
+  useEffect(() => {
+    if (!hydrated) return
+    if (priorTrailScreen.current === null) {
+      priorTrailScreen.current = state.screen
+      ui.recordScreenTransition(state.screen, state.screen)
+      return
+    }
+    ui.recordScreenTransition(priorTrailScreen.current, state.screen)
+    priorTrailScreen.current = state.screen
+  }, [hydrated, state.screen, ui.recordScreenTransition])
+
+  const auth    = useAuthSync({
+    state,
+    setState,
+    stateRef,
+    hydrated,
+    isPreview: isPreview.current,
+    addToast: ui.addToast,
+    normalizeAndRepair,
+    storageKey: STORAGE_KEY,
+    beforeReset: () => { skipNextLocalPersist.current = true },
+  })
+
+  // Persist state only after useAuthSync has resolved the current identity.
+  // Running this before the auth hook could observe a newly signed-in PocketBase
+  // record while React still held the previous player's state (KES-324).
   useEffect(() => {
     if (!hydrated || isPreview.current) return
+    if (skipNextLocalPersist.current) {
+      skipNextLocalPersist.current = false
+      localStorage.removeItem(STORAGE_KEY)
+      return
+    }
     // updatedAt (STS-635) is stamped only in the serialized write, not fed back
     // into React state, so this effect can't retrigger itself. It's read back
     // on next load via loadState()/normalizeState() and used as a tie-breaker
     // in mergeRemoteState when local and remote missionsDone are equal.
-    localStorage.setItem(STORAGE_KEY, JSON.stringify({ ...state, updatedAt: Date.now() }))
-  }, [state, hydrated])
-
-  const router = useRouter()
-
-  // ── Domain hooks ───────────────────────────────────────────────────────────
-  const ui      = useUIActions(setState)
-  const auth    = useAuthSync({ state, setState, stateRef, hydrated, isPreview: isPreview.current, addToast: ui.addToast, normalizeAndRepair, storageKey: STORAGE_KEY })
-  useConfirmedDiscoveryPoll({ stateRef, setState, hydrated, addToast: ui.addToast })
+    const key = gameStateStorageKey(STORAGE_KEY, auth.authUserId)
+    localStorage.setItem(key, JSON.stringify({ ...state, updatedAt: Date.now() }))
+    if (key !== STORAGE_KEY) localStorage.removeItem(STORAGE_KEY)
+  }, [state, hydrated, auth.authUserId])
+  useConfirmedDiscoveryPoll({
+    stateRef,
+    setState,
+    hydrated,
+    enabled: !!auth.authUserId && pbShared.authStore.isValid,
+    addToast: ui.addToast,
+  })
   const { catalog } = useCatalogSync(state, setState, hydrated, isPreview.current, ui.addToast)
+  useDailyEconomySync(setState, hydrated, isPreview.current)
   const runtimeCatalog = useMemo(() => buildRuntimeCatalog({
     catalog,
     discoveredTargets: state.player.discoveredExoplanetTargets,
     freeOperations: state.player.freeOperations,
-    satelliteMonitoringBuilt: state.player.satelliteMonitoringBuilt,
     transitSatelliteLaunchedAt: state.player.transitSatelliteLaunchedAt,
     missionId: state.missionId,
     targetId: state.targetId,
@@ -118,17 +179,37 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
   const loop    = useGameLoop({ stateRef, setState, catalog: runtimeCatalog, addToast: ui.addToast })
   const tutorial = useTutorialActions(setState)
   const economy = useEconomyActions(setState, useCallback(() => runtimeCatalog.missions, [runtimeCatalog.missions]))
-  const surfaceOps = useSurfaceOpsActions(setState, ui.addToast)
+  const surfaceOps = useSurfaceOpsActions(setState, ui.addToast, stateRef, auth.authUserId)
+
+  // KES-83: applies a claimed friend gift to local player state through the
+  // same setState path (and, for blueprints, the same unlockBlueprint action
+  // used elsewhere) every other reward uses — the friends UI never touches
+  // player state directly.
+  const claimFriendGift = useCallback(async (giftId: string) => {
+    const { kind, payload } = await claimFriendGiftRequest(giftId)
+    if (kind === 'blueprint' && payload.slug) {
+      loop.unlockBlueprint(payload.slug, 0, 0, {})
+    } else {
+      setState(s => applyFriendGiftToPlayer(s, kind, payload))
+    }
+    ui.addToast(friendGiftToastMessage(kind, payload), 'ok')
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loop.unlockBlueprint])
   const academy = useAcademyActions(stateRef, setState, useCallback(() => runtimeCatalog, [runtimeCatalog]), ui.addToast)
   useInstrumentFeedNotifications({
-    enabled: hydrated && !isPreview.current,
+    // Instrument feeds are shared-backend data. Do not start a background
+    // request while the auth restore is still pending (or after logout),
+    // otherwise a returning guest can generate a noisy 401 before the gate
+    // settles.
+    enabled: hydrated && !isPreview.current && !!auth.authUserId && pbShared.authStore.isValid,
     player: state.player,
     setState,
     addToast: ui.addToast,
   })
 
-  // Sync game.screen → URL on every screen change.
-  // skipNextUrlSync prevents a loop when the change was triggered BY a URL change.
+  // Sync location changes to the URL. Mission creation is one location at
+  // /game/missions; its target, vehicle, and preflight steps stay in React
+  // state and never trigger a Next route transition.
   useEffect(() => {
     // Before hydration resolves, state.screen is still DEFAULT_STATE's 'intro'
     // regardless of route (preview/preset routes included) — pushing here races
@@ -140,8 +221,9 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       ui.skipNextUrlSync.current = false
       return
     }
-    router.push(`/game/${state.screen}`)
-  }, [state.screen]) // eslint-disable-line react-hooks/exhaustive-deps
+    const nextPath = canonicalGamePath(state)
+    if (window.location.pathname !== nextPath) router.push(nextPath)
+  }, [state.screen, state.missionId, state.targetId]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Derived values ─────────────────────────────────────────────────────────
   const mission = state.missionId
@@ -150,6 +232,13 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
        ?? null)
     : null
   const target = state.targetId ? runtimeCatalog.targets.find(t => t.id === state.targetId) ?? null : null
+  // Launchpad's embedded contract view (KES-343) reads missionBoardScope the
+  // same way the standalone Mission Dispatch screen does — it never gets its
+  // own screen value to key off, since opening it no longer changes
+  // state.screen away from 'launchpad'.
+  const sceneScope = (state.screen === 'missions' || state.screen === 'launchpad')
+    ? state.missionBoardScope ?? EARTH_BASE_SCOPE
+    : deriveSceneScope({ screen: state.screen, targetId: state.targetId, target })
 
   return (
     <GameContext.Provider value={{
@@ -160,28 +249,33 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       landnamSynced: auth.landnamSynced,
       mission,
       target,
+      sceneScope,
       toasts: ui.toasts,
       addToast: ui.addToast,
       laserChargeCap: getLaserChargeCap(state.player.unlockedSkillNodes ?? []),
       // UI
       go: ui.go,
+      goBack: ui.goBack,
+      openLaunchpad: ui.openLaunchpad,
+      openLaunchpadMissionMenu: ui.openLaunchpadMissionMenu,
+      launchpadMissionMenuOpen: ui.launchpadMissionMenuOpen,
+      setLaunchpadMissionMenuOpen: ui.setLaunchpadMissionMenuOpen,
+      returnFromHangar: ui.returnFromHangar,
       goToMissions: ui.goToMissions,
+      markContractsOpened: ui.markContractsOpened,
       setScreenFromUrl: ui.setScreenFromUrl,
       setPopup: ui.setPopup,
       setMenuOpen: ui.setMenuOpen,
       dismissToast: ui.dismissToast,
+      subsurfaceView: ui.subsurfaceView,
+      setSubsurfaceView: ui.setSubsurfaceView,
       clearTerritoryClaimPopup: ui.clearTerritoryClaimPopup,
       // Auth
-      upgradePromptOpen: auth.upgradePromptOpen,
-      upgradeAccount: auth.upgradeAccount,
       awaitingRemoteState: auth.awaitingRemoteState,
       authGateOpen: auth.authGateOpen,
       authGateError: auth.authGateError,
       signInFromGate: auth.signInFromGate,
       createAccountFromGate: auth.createAccountFromGate,
-      continueWithEmail: auth.continueWithEmail,
-      authGateOtpId: auth.authGateOtpId,
-      verifyOtp: auth.verifyOtp,
       resetGame: useCallback(() => { void auth.resetGame(DEFAULT_STATE) }, [auth.resetGame]), // eslint-disable-line react-hooks/rules-of-hooks
       signOut: auth.signOut,
       // Game loop
@@ -193,7 +287,12 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       onPickMission: loop.onPickMission,
       onPickTarget: loop.onPickTarget,
       onPurchaseRocket: loop.onPurchaseRocket,
+      onMoveStagedRocket: loop.onMoveStagedRocket,
+      onFabricateRocketPart: loop.onFabricateRocketPart,
+      onAssembleFabricatedRocket: loop.onAssembleFabricatedRocket,
+      onTransferToLaunchpad: loop.onTransferToLaunchpad,
       onLaunch: loop.onLaunch,
+      resumeMissionRun: loop.resumeMissionRun,
       onMiningDone: loop.onMiningDone,
       onDeliveryArrived: loop.onDeliveryArrived,
       onDeliveryUnloadComplete: loop.onDeliveryUnloadComplete,
@@ -205,6 +304,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       gainResearchXP: loop.gainResearchXP,
       upgradeLicenseGrade: loop.upgradeLicenseGrade,
       unlockBlueprint: loop.unlockBlueprint,
+      claimFriendGift,
       researchAcademy: academy.researchAcademy,
       researchLanding: academy.researchLanding,
       setAcademyFunding: academy.setAcademyFunding,
@@ -228,26 +328,30 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       coachManualNext: tutorial.coachManualNext,
       // Economy
       sellMinerals: economy.sellMinerals,
+      sellRefinedGoods: economy.sellRefinedGoods,
       onStartRefine: economy.onStartRefine,
       onCollectRefined: economy.onCollectRefined,
       placeStructure: economy.placeStructure,
       upgradeLaunchpad: economy.upgradeLaunchpad,
       excavateSubsurface: economy.excavateSubsurface,
       buildSubsurfaceRoom: economy.buildSubsurfaceRoom,
-      buildScanner: economy.buildScanner,
-      startScan: economy.startScan,
-      collectScan: economy.collectScan,
       unlockSkillNode: economy.unlockSkillNode,
       acceptLoan: economy.acceptLoan,
       abandonMission: economy.abandonMission,
       confirmShipCustomizerBuild: economy.confirmShipCustomizerBuild,
-      purchaseTerrainRights: surfaceOps.purchaseTerrainRights,
+      purchaseSiteAccess: surfaceOps.purchaseSiteAccess,
+      startFieldOperation: surfaceOps.startFieldOperation,
       buildSettlementLaunchpad: surfaceOps.buildSettlementLaunchpad,
       recordSurfaceMined: surfaceOps.recordSurfaceMined,
       dispatchSurfaceFerry: surfaceOps.dispatchSurfaceFerry,
       retrySurfaceFerry: surfaceOps.retrySurfaceFerry,
       reconcileSurfaceFerry: surfaceOps.reconcileSurfaceFerry,
       acknowledgeSurfaceFerry: surfaceOps.acknowledgeSurfaceFerry,
+      recordFieldBuild: surfaceOps.recordFieldBuild,
+      recordFieldDemolish: surfaceOps.recordFieldDemolish,
+      runFieldRefining: surfaceOps.runFieldRefining,
+      fabricateAtField: surfaceOps.fabricateAtField,
+      seedBiosphere: surfaceOps.seedBiosphere,
     }}>
       {children}
     </GameContext.Provider>

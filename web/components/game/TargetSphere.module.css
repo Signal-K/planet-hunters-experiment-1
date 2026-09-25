@@ -1,0 +1,97 @@
+.wrap {
+  display: grid;
+  gap: var(--ln-s-2);
+  justify-items: center;
+  padding: var(--ln-s-3);
+  border: 1px solid var(--ln-hairline);
+  border-radius: var(--ln-r-md, 10px);
+  background: color-mix(in srgb, var(--ln-panel) 92%, transparent);
+  color: var(--ln-text);
+}
+
+.head,
+.owner {
+  display: grid;
+  gap: 2px;
+  justify-items: center;
+  text-align: center;
+}
+
+.eyebrow {
+  color: var(--ln-cyan);
+  font: 800 9px var(--ln-font-display);
+  letter-spacing: var(--ln-tr-label);
+  text-transform: uppercase;
+}
+
+.name {
+  color: var(--ln-text);
+  font: 800 15px var(--ln-font-display);
+}
+
+.owner strong {
+  color: var(--ln-text);
+  font: 800 12px var(--ln-font-display);
+}
+
+.sub {
+  color: var(--ln-text-muted);
+  font: 700 9px var(--ln-font-mono);
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+/* Pixelated upscale keeps the chunky cel look instead of blurring texels. */
+.canvas {
+  display: block;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+  border-radius: 50%;
+  box-shadow: 0 0 0 1px var(--ln-hairline), 0 12px 24px color-mix(in srgb, var(--ln-void) 70%, transparent);
+}
+
+.legend,
+.divisions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--ln-s-1) var(--ln-s-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  color: var(--ln-text-dim);
+  font: 700 9px var(--ln-font-mono);
+  letter-spacing: .04em;
+  text-transform: uppercase;
+}
+
+.legend li,
+.divisions li {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.divisions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  width: 100%;
+  padding-top: var(--ln-s-2);
+  border-top: 1px solid var(--ln-hairline);
+}
+
+.divisions li[data-mine] .divOwner { color: var(--ln-ok); }
+
+.divLabel { color: var(--ln-text); }
+.divOwner { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.swatch {
+  flex: none;
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+  box-shadow: 0 0 0 1px var(--ln-hairline);
+}
+
+.compact { padding: var(--ln-s-2); gap: var(--ln-s-1); }
+.compact .name { font-size: 12px; }

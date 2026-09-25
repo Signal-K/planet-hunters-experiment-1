@@ -28,7 +28,7 @@ for p in (HERE, os.path.join(HERE, "models")):
 
 import landnam_kit as kit  # noqa: E402
 
-MODULES = ["hub_structures", "launchpad", "actors", "ships", "rooms", "parts"]
+MODULES = ["terrain", "structures", "actors", "ships", "rooms", "parts"]
 
 
 def parse_args():
@@ -47,9 +47,12 @@ def wanted(name, filters):
 
 def main():
     args = parse_args()
-    written, skipped = [], []
+    written, skipped, ground_flags = [], [], []
 
     for mod_name in MODULES:
+        # Terrain carries its own explicit palette (see terrain.py) rather than
+        # a TOKENS swap — rock/grass/snow have no equivalent in the UI token set.
+        kit.set_palette("hub_light" if mod_name == "terrain" else "default")
         mod = importlib.import_module(mod_name)
         importlib.reload(mod)
         for key, build in mod.BUILDS.items():
@@ -74,6 +77,17 @@ def main():
             )
             written.append((key, path, layout_w, layout_h))
 
+            # Ground-anchored art only (terrain bricks + Earth Base structures)
+            # — ships/rooms/parts are inventory icons or in-flight vehicles
+            # with no ground line to sit on, so a blank-row check there would
+            # just be noise. See `ground_contact_blank_rows`'s doc comment for
+            # why this exists.
+            if mod_name in ("terrain", "structures"):
+                blank = kit.ground_contact_blank_rows(path)
+                pct = blank / (layout_h * kit.SUPERSAMPLE) * 100
+                if pct > 1.5:
+                    ground_flags.append((key, blank, pct))
+
     print("\n=== landnam sprite render ===")
     for key, path, w, h in written:
         size = os.path.getsize(path) if os.path.exists(path) else -1
@@ -84,6 +98,11 @@ def main():
         print(f"  skipped {len(skipped)}: {', '.join(skipped)}")
     total = sum(os.path.getsize(p) for _, p, _, _ in written if os.path.exists(p))
     print(f"  {len(written)} sprites, {total/1024:.1f} KB total")
+    if ground_flags:
+        print("\n  WARNING: possible floating ground contact (blank rows under the model's own base):")
+        for key, blank, pct in ground_flags:
+            print(f"    {key:24s} {blank}px blank ({pct:.1f}% of sprite height) — check the model's "
+                  f"target_z/ortho_scale against its own height, not the terrain/HubWorldBackground CSS.")
 
 
 main()

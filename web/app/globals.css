@@ -35,6 +35,12 @@
    cyan/amber stay accent-only per the existing amber-restriction rule. This
    is still dark mode — just neutral-dark instead of blue-dark. */
 :root, .theme-deep {
+  --ln-blueprint-bg: #eef3f8;
+  --ln-blueprint-paper: #ffffff;
+  --ln-blueprint-paper-2: #dfe9f3;
+  --ln-blueprint-ink: #0f2436;
+  --ln-blueprint-blue: #1f78c1;
+  --ln-blueprint-line-strong: rgba(15, 36, 54, 0.30);
   --ln-void:        #0a0a0c;
   --ln-bg:          #131316;
   --ln-bg-grid:     #1a1a1e;
@@ -94,7 +100,7 @@
      --ln-panel-2 is the next charcoal step up from --ln-panel. */
   --ln-shell:        #0a0a0c;
   --ln-panel:        #1c1c20;
-  --ln-panel-2:      #26262b;
+  --ln-panel-2:      #25252a;
   --ln-border:       rgba(255, 255, 255, 0.22);
   --ln-payout:       #d8ff55;
   --ln-play:         #fa49ca;
@@ -164,9 +170,9 @@
    Corner brackets already exist in Panel.tsx's <Corners>; this only adds
    the frosted-glass surface + starfield backdrop. */
 :root {
-  --ln-glass-panel:    rgba(255, 255, 255, 0.20);
-  --ln-glass-panel-2:  rgba(255, 255, 255, 0.28);
-  --ln-glass-border:   rgba(255, 255, 255, 0.45);
+  --ln-glass-panel:    rgba(28, 28, 32, 0.92);
+  --ln-glass-panel-2:  rgba(48, 48, 54, 0.96);
+  --ln-glass-border:   rgba(112, 217, 234, 0.48);
   --ln-glass-blur:     blur(8px);
 }
 
@@ -193,33 +199,8 @@
 }
 
 /* Mission Board two-column "canvas + Contract Detail" layout — ported from
-   the OD "Full Panel Re-skin" mission-board mockup's `.body-layout` (stacked
-   below 821px, side-by-side with a fixed-width sticky detail panel above
-   it — same breakpoint the mission-setup-* classes already use). */
-.mission-board-layout {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-@media (min-width: 821px) {
-  .mission-board-layout {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) 320px;
-    /* stretch, not start: the Target Picker's galaxy map fills its column via
-       `height:100%` over an absolutely-positioned SVG, so a content-sized
-       (start-aligned) column resolved to 0 and the whole solar-system map
-       rendered invisible — measured at 2px tall with a 0px svg. The detail
-       panel opts back out with align-self:start below so it can still stick. */
-    align-items: stretch;
-    gap: 14px;
-  }
-  .mission-board-detail {
-    position: sticky;
-    top: 12px;
-    /* position:sticky does nothing on a stretched grid item. */
-    align-self: start;
-  }
-}
+   the OD "Full Panel Re-skin" mission-board mockup's `.body-layout`. Keep the
+   inspector beside the choices on compact desktop/browser widths too. */
 
 /* ─── Light editorial theme — reference/guide/market/menu surfaces only.
    Operations screens (Launchpad, Mining HUD, Transit, Debrief, live Mission
@@ -269,6 +250,232 @@
   --ln-purple-depth: #d9d0f0;
   --ln-text-inverse: #f4f1ea;
 }
+.theme-blueprint {
+  --ln-bp-bg:      #eef3f8;
+  --ln-bp-paper:   #ffffff;
+  --ln-bp-paper-2: #dfe9f3;
+
+  --ln-bp-ink:      #0f2436;
+  --ln-bp-ink-dim:  #48596a;
+  --ln-bp-ink-mute: #7c8ea0;
+
+  --ln-bp-line:        rgba(15, 36, 54, 0.14);
+  --ln-bp-line-strong: rgba(15, 36, 54, 0.30);
+
+  --ln-bp-blue:      #1f78c1;
+  --ln-bp-blue-soft: rgba(31, 120, 193, 0.08);
+
+  --ln-bp-pink:        #c94a86;
+  --ln-bp-pink-soft:   rgba(201, 74, 134, 0.10);
+  --ln-bp-pink-border: rgba(201, 74, 134, 0.4);
+
+  --ln-bp-green:      #1f8f57;
+  --ln-bp-green-soft: rgba(31, 143, 87, 0.10);
+
+  --ln-void:      var(--ln-bp-bg);
+  --ln-bg:        var(--ln-bp-bg);
+  --ln-bg-grid:   var(--ln-bp-paper-2);
+  --ln-surface:   var(--ln-bp-paper);
+  --ln-surface-2: var(--ln-bp-paper-2);
+  --ln-surface-3: var(--ln-bp-paper-2);
+  --ln-shell:     var(--ln-bp-bg);
+  --ln-panel:     var(--ln-bp-paper);
+  --ln-panel-2:   var(--ln-bp-paper-2);
+  --ln-overlay:   rgba(238, 243, 248, 0.86);
+
+  --ln-text:       var(--ln-bp-ink);
+  --ln-text-dim:   var(--ln-bp-ink-dim);
+  --ln-text-muted: var(--ln-bp-ink-mute);
+  --ln-text-ghost: rgba(15, 36, 54, 0.35);
+
+  --ln-hairline:        var(--ln-bp-line);
+  --ln-hairline-strong: var(--ln-bp-line-strong);
+  --ln-divider:         var(--ln-bp-line);
+
+  --ln-cyan-soft:   var(--ln-bp-blue-soft);
+  --ln-cyan-border: rgba(31, 120, 193, 0.32);
+  --ln-ok:          var(--ln-bp-green);
+  --ln-ok-soft:     var(--ln-bp-green-soft);
+
+  --ln-shadow-card:  0 1px 0 rgba(255,255,255,0.6) inset, 0 4px 16px rgba(15,36,54,0.10);
+  --ln-shadow-modal: 0 24px 64px rgba(15,36,54,0.22);
+}
+
+/* The setup dock is part of the paper surface, not a dark footer. */
+.theme-blueprint .sticky-actions {
+  background: linear-gradient(180deg, transparent, rgba(238, 243, 248, 0.94) 34%, var(--ln-bp-bg));
+}
+.game-stage:has(.theme-blueprint) {
+  background: var(--ln-blueprint-bg);
+}
+.game-stage:has(.theme-blueprint)::before {
+  display: none;
+}
+.game-stage:has(.theme-blueprint) .game-stage-backdrop {
+  display: none;
+}
+.portrait-canvas:has(.theme-blueprint) {
+  background: var(--ln-bp-bg);
+  border-color: var(--ln-bp-line-strong);
+  box-shadow: 0 4px 16px rgba(15,36,54,0.10);
+}
+.portrait-canvas:has(.theme-blueprint) .game-menu-button {
+  background: var(--ln-blueprint-paper);
+  border-color: var(--ln-blueprint-line-strong);
+  color: var(--ln-blueprint-blue);
+  backdrop-filter: none;
+}
+.portrait-canvas:has(.theme-blueprint) .bottom-tab-bar {
+  background: var(--ln-blueprint-paper-2);
+  border-top-color: var(--ln-blueprint-line-strong);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+html:has(.theme-blueprint),
+body:has(.theme-blueprint) {
+  background-color: var(--ln-blueprint-bg);
+}
+
+/* ─── Construction Kit — additive utilities (KES-280) ──────────────────
+   Ported from the "Landnam construction design kit" (Claude Design project
+   8005324b-619a-4a3c-b2a1-c654e2478e97), re-themed for the light direction
+   (KES-219/KES-211) rather than the kit's original dark navy "glass HUD"
+   — no new colors, everything below reads off the existing --ln-* tokens
+   so it re-skins for free under .theme-blueprint / .theme-light / the
+   .theme-deep fallback. Scanline-sweep, reticle-glow and nebula-glow from
+   the source kit were dropped outright: they're dark-HUD-only flourishes
+   with no equivalent in a flat cel-shaded light theme. The blueprint grid
+   survives because it doubles as literal engineering-blueprint texture. */
+.ln-con-grid {
+  background-image:
+    repeating-linear-gradient(0deg, var(--ln-hairline) 0px, var(--ln-hairline) 1px, transparent 1px, transparent 22px),
+    repeating-linear-gradient(90deg, var(--ln-hairline) 0px, var(--ln-hairline) 1px, transparent 1px, transparent 22px);
+}
+.ln-con-well {
+  background: var(--ln-panel-2);
+  border: 1px solid var(--ln-hairline);
+  border-radius: var(--ln-r-lg);
+}
+@keyframes ln-flow { to { stroke-dashoffset: -24; } }
+.ln-con-flow { stroke-dasharray: 4 8; animation: ln-flow 1.1s linear infinite; }
+
+/* ─── Mission-setup blueprint theme ──────────────────────────────────────
+   Mission creation is intentionally light. This is the approved KES-211
+   direction: pale blueprint paper, navy ink, and restrained technical
+   accents. Keep it opt-in so unrelated operational scenes can retain their
+   own surface treatment. */
+.theme-blueprint {
+  --ln-bp-bg:      #eef3f8;
+  --ln-bp-paper:   #ffffff;
+  --ln-bp-paper-2: #dfe9f3;
+
+  --ln-bp-ink:      #0f2436;
+  --ln-bp-ink-dim:  #48596a;
+  --ln-bp-ink-mute: #7c8ea0;
+
+  --ln-bp-line:        rgba(15, 36, 54, 0.14);
+  --ln-bp-line-strong: rgba(15, 36, 54, 0.30);
+
+  --ln-bp-blue:      #1f78c1;
+  --ln-bp-blue-soft: rgba(31, 120, 193, 0.08);
+
+  --ln-bp-pink:        #c94a86;
+  --ln-bp-pink-soft:   rgba(201, 74, 134, 0.10);
+  --ln-bp-pink-border: rgba(201, 74, 134, 0.4);
+
+  --ln-bp-green:      #1f8f57;
+  --ln-bp-green-soft: rgba(31, 143, 87, 0.10);
+
+  --ln-void:      var(--ln-bp-bg);
+  --ln-bg:        var(--ln-bp-bg);
+  --ln-bg-grid:   var(--ln-bp-paper-2);
+  --ln-surface:   var(--ln-bp-paper);
+  --ln-surface-2: var(--ln-bp-paper-2);
+  --ln-surface-3: var(--ln-bp-paper-2);
+  --ln-shell:     var(--ln-bp-bg);
+  --ln-panel:     var(--ln-bp-paper);
+  --ln-panel-2:   var(--ln-bp-paper-2);
+  --ln-overlay:   rgba(238, 243, 248, 0.86);
+
+  --ln-text:       var(--ln-bp-ink);
+  --ln-text-dim:   var(--ln-bp-ink-dim);
+  --ln-text-muted: var(--ln-bp-ink-mute);
+  --ln-text-ghost: rgba(15, 36, 54, 0.35);
+
+  --ln-hairline:        var(--ln-bp-line);
+  --ln-hairline-strong: var(--ln-bp-line-strong);
+  --ln-divider:         var(--ln-bp-line);
+
+  --ln-cyan-soft:   var(--ln-bp-blue-soft);
+  --ln-cyan-border: rgba(31, 120, 193, 0.32);
+  --ln-ok:          var(--ln-bp-green);
+  --ln-ok-soft:     var(--ln-bp-green-soft);
+
+  --ln-shadow-card:  0 1px 0 rgba(255,255,255,0.6) inset, 0 4px 16px rgba(15,36,54,0.10);
+  --ln-shadow-modal: 0 24px 64px rgba(15,36,54,0.22);
+}
+
+/* The setup dock is part of the paper surface, not a dark footer. */
+.theme-blueprint .sticky-actions {
+  background: linear-gradient(180deg, transparent, rgba(238, 243, 248, 0.94) 34%, var(--ln-bp-bg));
+}
+
+/* Mission setup owns the surrounding desktop frame as well. Do not leave a
+   dark stage, starfield, or menu button visible around an otherwise light
+   creation flow. */
+.game-stage:has(.theme-blueprint) {
+  background: var(--ln-blueprint-bg);
+}
+.game-stage:has(.theme-blueprint)::before {
+  display: none;
+}
+.game-stage:has(.theme-blueprint) .game-stage-backdrop {
+  display: none;
+}
+.portrait-canvas:has(.theme-blueprint) {
+  background: var(--ln-bp-bg);
+  border-color: var(--ln-bp-line-strong);
+  box-shadow: 0 4px 16px rgba(15,36,54,0.10);
+}
+.portrait-canvas:has(.theme-blueprint) .game-menu-button {
+  background: var(--ln-blueprint-paper);
+  border-color: var(--ln-blueprint-line-strong);
+  color: var(--ln-blueprint-blue);
+  backdrop-filter: none;
+}
+.portrait-canvas:has(.theme-blueprint) .bottom-tab-bar {
+  background: var(--ln-blueprint-paper-2);
+  border-top-color: var(--ln-blueprint-line-strong);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+html:has(.theme-blueprint),
+body:has(.theme-blueprint) {
+  background-color: var(--ln-blueprint-bg);
+}
+
+/* ─── Construction Kit — additive utilities (KES-280) ──────────────────
+   Ported from the "Landnam construction design kit" (Claude Design project
+   8005324b-619a-4a3c-b2a1-c654e2478e97), re-themed for the light direction
+   (KES-219/KES-211) rather than the kit's original dark navy "glass HUD"
+   — no new colors, everything below reads off the existing --ln-* tokens
+   so it re-skins for free under .theme-blueprint / .theme-light / the
+   .theme-deep fallback. Scanline-sweep, reticle-glow and nebula-glow from
+   the source kit were dropped outright: they're dark-HUD-only flourishes
+   with no equivalent in a flat cel-shaded light theme. The blueprint grid
+   survives because it doubles as literal engineering-blueprint texture. */
+.ln-con-grid {
+  background-image:
+    repeating-linear-gradient(0deg, var(--ln-hairline) 0px, var(--ln-hairline) 1px, transparent 1px, transparent 22px),
+    repeating-linear-gradient(90deg, var(--ln-hairline) 0px, var(--ln-hairline) 1px, transparent 1px, transparent 22px);
+}
+.ln-con-well {
+  background: var(--ln-panel-2);
+  border: 1px solid var(--ln-hairline);
+  border-radius: var(--ln-r-lg);
+}
+@keyframes ln-flow { to { stroke-dashoffset: -24; } }
+.ln-con-flow { stroke-dasharray: 4 8; animation: ln-flow 1.1s linear infinite; }
 
 /* .theme-steel (mid-tone shell + genuinely light content cards) removed
    2026-07-23 — superseded by the revised :root/.theme-deep palette above.
@@ -286,8 +493,18 @@ html {
   overflow: hidden;
 }
 body {
+  /* svh (small viewport height) is stable — it does not grow/shrink as the
+     mobile URL bar hides/shows, which is what made the whole game shell jump
+     and thrash layout mid-interaction (Bjorn's Symptom B). Installed PWA
+     (standalone) has no URL bar, so svh == dvh there. */
+  height: 100svh;
   min-height: 100%;
   margin: 0;
+  /* SSL-322: keep content clear of the notch, home indicator and landscape
+     side insets (viewport-fit=cover is set in app/layout.tsx). */
+  padding: env(safe-area-inset-top, 0px) env(safe-area-inset-right, 0px) env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px);
+  -webkit-text-size-adjust: 100%;
+  -webkit-tap-highlight-color: transparent;
   background-color: var(--ln-void);
   display: flex;
   align-items: center;
@@ -302,8 +519,15 @@ body {
 button { cursor: pointer; }
 
 :root {
-  --tutorial-content-top: 152px;
+  --tutorial-content-top: 238px;
   --tutorial-manual-content-top: 248px;
+}
+
+@media (max-width: 720px) {
+  :root {
+    --tutorial-content-top: 156px;
+    --tutorial-manual-content-top: 164px;
+  }
 }
 
 /* Page backdrop. Superseded 2026-07-31 — the previous blue-violet radial
@@ -319,11 +543,22 @@ button { cursor: pointer; }
      centered card is pushed past the right edge and its detail panel clips. */
   box-sizing: border-box;
   width: 100%;
-  min-height: 100dvh;
+  overflow: hidden;
+  min-height: 100svh;
   display: grid;
   place-items: center;
   padding: var(--ln-s-4);
   background: radial-gradient(ellipse at 30% -15%, #2c2c30 0%, #1c1c1f 45%, #08080a 80%);
+}
+/* Below the desktop breakpoint the device itself IS the phone — the padded,
+   bordered "phone card floating in a browser" treatment below was designed
+   for shrinking a desktop window, not for real mobile viewports, and on an
+   actual phone it just wastes screen as dead margin around a shrunk canvas.
+   Drop the stage padding here so .portrait-canvas can go full-bleed. */
+@media (max-width: 1023px) {
+  html, body { height: 100svh; min-height: 100svh; }
+  body { display: block; }
+  .game-stage { width: 100%; height: 100svh; min-height: 100svh; padding: 0; }
 }
 .game-stage::before {
   content: '';
@@ -340,12 +575,32 @@ button { cursor: pointer; }
   background-size: 180px 180px;
 }
 
+/* World-behind-the-modal backdrop (KES-266) — dimmed/blurred so it reads as
+   "the game continuing behind this menu" rather than competing for
+   attention with the boxed card's own content. Only visible in the margin
+   .game-stage leaves around .portrait-canvas on desktop; fully covered by
+   .portrait-canvas--full-page on location screens and by the full-bleed
+   mobile canvas below 1024px. */
+.game-stage-backdrop {
+  filter: blur(3px) brightness(0.55) saturate(0.85);
+  /* Keep the transformed paint inside the stage's clipping box. A scale here
+     expands the absolute backdrop's scrollable bounds on desktop, producing
+     a horizontal scrollbar even though the stage itself is overflow-hidden. */
+}
+.game-stage-backdrop::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(8, 8, 10, 0.35);
+}
+
 .portrait-canvas {
   position: relative;
-  z-index: 1; /* above .game-stage::before starfield */
+  z-index: 1; /* above .game-stage::before starfield and .game-stage-backdrop */
   display: flex;
   flex-direction: column;
-  width: min(402px, calc(100vw - var(--ln-s-4)));
+  width: min(402px, 100%);
+  max-width: 100%;
   height: min(874px, calc(100dvh - var(--ln-s-4)));
   max-height: 874px;
   overflow: hidden;
@@ -355,11 +610,133 @@ button { cursor: pointer; }
   box-shadow: var(--ln-shadow-modal), var(--ln-glow-cyan);
   isolation: isolate;
 }
+/* Real mobile viewports (and a resized-narrow desktop window, which shares
+   this breakpoint) get the full device screen, not a shrunk card with dead
+   margin around it — the 402x874 card above is a "phone mockup" treatment
+   that only makes sense once there's a larger frame around it to mock up
+   inside of. Safe-area padding for installed-PWA standalone mode is added
+   separately via body[data-pwa="standalone"] .portrait-canvas. */
+@media (max-width: 1023px) {
+  .portrait-canvas {
+    width: 100%;
+    /* Keep the game surface inside the stable viewport. Some embedded
+       browsers report a dynamic viewport taller than the visible frame;
+       using it here lets absolute game screens extend below the actual
+       viewport and clips their bottom HUD (KES-322). */
+    height: 100svh;
+    max-height: 100svh;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+  }
+}
 
 /* Flex row above .bottom-tab-bar — screen content's own overflow-y:auto
    box naturally ends above the bar instead of guessing its height via
    per-screen paddingBottom hacks. */
 .game-screen-area { flex: 1; min-height: 0; position: relative; overflow: hidden; }
+
+/* Mission Board owns a fixed StepFooter. End its scroll viewport above that
+   rail so the board does not need artificial bottom padding or scroll past
+   content that is already visible. */
+.mission-board-screen-content {
+  bottom: 98px !important;
+}
+@media (max-width: 820px) {
+  .mission-board-screen-content {
+    bottom: 92px !important;
+  }
+}
+@media (orientation: landscape) and (max-width: 1023px) and (max-height: 600px) {
+  .mission-board-screen-content.mission-board-screen-content--short-landscape {
+    bottom: 65px !important;
+    padding-top: 142px !important;
+    scroll-padding-top: 142px !important;
+  }
+}
+
+/* Persistent account access for every gameplay route. The control sits just
+   below the TopBar so it remains readable over scenes and does not compete
+   with the title or route-specific right-side readouts. */
+.game-menu-button {
+  position: absolute;
+  top: 56px;
+  right: var(--ln-s-3);
+  z-index: 22;
+  width: 72px;
+  min-width: 72px;
+  height: 36px;
+  min-height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--ln-s-2);
+  padding: 0 var(--ln-s-3);
+  border: 1px solid var(--ln-hairline-strong);
+  border-radius: var(--ln-r-md);
+  background: var(--ln-panel);
+  color: var(--ln-cyan);
+  font: 800 10px var(--ln-font-display);
+  letter-spacing: var(--ln-tr-label);
+  text-transform: uppercase;
+  cursor: pointer;
+  backdrop-filter: blur(8px);
+  transition: background var(--ln-d-quick) var(--ln-ease-snap), border-color var(--ln-d-quick) var(--ln-ease-snap), color var(--ln-d-quick) var(--ln-ease-snap);
+}
+.game-menu-button:hover,
+.game-menu-button:focus-visible {
+  border-color: var(--ln-cyan);
+  background: var(--ln-cyan-soft);
+  color: var(--ln-cyan-bright);
+}
+.game-menu-button:focus-visible {
+  outline: 2px solid var(--ln-cyan);
+  outline-offset: 2px;
+}
+
+/* right:96 clears the shared shell's Menu pill (.game-menu-button occupies
+   12–84px from the edge). Compact landscape drops both pills to the 8px
+   command cluster so they do not sit on the hub HUD. */
+.game-friends-button {
+  position: absolute;
+  top: 56px;
+  right: 96px;
+  z-index: 22;
+  min-height: 34px;
+  border-radius: 999px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 12px;
+  background: var(--ln-panel);
+  border: 1px solid var(--ln-hairline);
+  color: var(--ln-cyan);
+  font-family: var(--ln-font-display);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+/* Hub utilities form one deliberate two-row header on device-sized canvases:
+   title/time above, balance/friends/menu below. They used to be four unrelated
+   absolute coordinates, which drifted as soon as the viewport changed. */
+@media (max-width: 1023px) {
+  .portrait-canvas:has([data-screen="hub"]) .game-menu-button { top: 66px; right: 12px; }
+  .portrait-canvas:has([data-screen="hub"]) .hub-friends-button { top: 66px !important; right: 92px !important; }
+  .portrait-canvas:has([data-screen="hub"]) .hub-community-button { top: 66px !important; right: 196px !important; }
+  .portrait-canvas:has([data-screen="hub"]) .sync-status { top: 110px; bottom: auto !important; left: 12px; height: max-content; }
+  .portrait-canvas:has([data-screen="hub"]) .feedback-launcher { top: 110px !important; right: 12px !important; bottom: auto !important; }
+  .portrait-canvas:has([data-screen="hub"]) .feedback-panel { right: 12px !important; bottom: calc(var(--ln-nav-h) + 12px) !important; }
+}
+
+@media (max-width: 379px) {
+  .portrait-canvas:has([data-screen="hub"]) .hub-friends-button { width: 36px; min-width: 36px; padding: 0 !important; justify-content: center; }
+  .portrait-canvas:has([data-screen="hub"]) .hub-friends-button span { display: none; }
+  .portrait-canvas:has([data-screen="hub"]) .hub-community-button { width: 36px; min-width: 36px; padding: 0 !important; justify-content: center; right: 136px !important; }
+  .portrait-canvas:has([data-screen="hub"]) .hub-community-button span { display: none; }
+}
 
 .bottom-tab-bar {
   flex: none;
@@ -376,6 +753,25 @@ button { cursor: pointer; }
 }
 
 .game-screen { position: absolute; inset: 0; overflow: hidden; background: var(--ln-bg); }
+
+/* The Hub and Launchpad share one physical campus. Each screen enters with a
+   short ground-line camera move so navigation feels like approaching the pad,
+   not replacing the entire scene. */
+.earth-base-campus-transition { animation: 520ms var(--ln-ease-mech) both earth-base-approach; transform-origin: 50% 76%; }
+@keyframes earth-base-recede { to { opacity: 0; transform: scale(0.90); } }
+@keyframes earth-base-approach { from { opacity: 0.72; transform: scale(1.16); } to { opacity: 1; transform: scale(1); } }
+@media (prefers-reduced-motion: reduce) {
+  .earth-base-campus-transition { animation: none; }
+}
+/* The authored scene is wider than a narrow phone viewport. Scaling it from
+   the camera centre during the 520ms approach pushes the first launchpad plot
+   off the left edge before the animation settles, so the actionable building
+   is briefly clipped in the very viewport where it is most likely to be
+   tapped. Keep the composition stable on portrait phones; desktop and tablet
+   retain the camera move. */
+@media (max-width: 640px) {
+  .earth-base-campus-transition { animation: none; }
+}
 .backend-status {
   position: absolute;
   right: var(--ln-s-3);
@@ -410,11 +806,131 @@ button { cursor: pointer; }
 }
 .sync-status span { width: 5px; height: 5px; border-radius: var(--ln-r-pill); background: currentColor; }
 
+.toast-stack {
+  position: absolute;
+  top: 8px;
+  right: 12px;
+  z-index: 85;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+  width: min(360px, calc(100% - 24px));
+  pointer-events: none;
+}
+.toast-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: fit-content;
+  max-width: 100%;
+}
+.toast-item > span { min-width: 0; }
+.toast-dismiss {
+  flex: none;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  color: var(--ln-text-dim);
+  background: transparent;
+  border: 1px solid var(--ln-hairline);
+  border-radius: var(--ln-r-pill);
+  font: 700 16px/1 var(--ln-font-body);
+}
+.toast-dismiss:hover { color: var(--ln-text); border-color: var(--ln-cyan-border); }
+.tutorial-coach-body,
+.tutorial-coach-action { min-width: 0; }
+
+/* Coach copy is guidance, not a second screen. Keep the rail compact enough
+   that the surface underneath remains legible and interactive. */
+.tutorial-coach-body,
+.tutorial-coach-action { max-width: 760px; }
+
+@media (min-width: 900px) {
+  .tutorial-coach-overlay:not(.tutorial-coach-overlay--mission-setup) [data-testid="tutorial-coach-block"] {
+    left: 50% !important;
+    right: auto !important;
+    width: min(920px, calc(100% - 48px));
+    transform: translateX(-50%);
+  }
+}
+
+@media (max-width: 899px) {
+  .tutorial-coach-card {
+    gap: 8px !important;
+    padding: 10px 10px 10px 8px !important;
+    border-radius: 12px !important;
+  }
+  .tutorial-coach-card .tutorial-coach-body {
+    display: -webkit-box;
+    overflow: hidden;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    font-size: 11px !important;
+    line-height: 1.3 !important;
+  }
+  .tutorial-coach-card .tutorial-coach-action {
+    display: -webkit-box;
+    overflow: hidden;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    font-size: 13px !important;
+    line-height: 1.25 !important;
+  }
+  .tutorial-coach-card--manual {
+    max-height: 132px !important;
+    overflow: hidden !important;
+  }
+  .tutorial-coach-controls { margin-top: 6px !important; }
+}
+
+/* At compact desktop widths the target map is the primary object. A rigid
+   1fr + 320px split reduced it to a thumbnail while leaving unused paper
+   around it. Let the atlas fill the setup canvas and float the selected-body
+   inspector over the quieter right side of the map. */
+
+@media (max-width: 520px) {
+  .tutorial-coach-card {
+    gap: 8px !important;
+    padding: 8px !important;
+  }
+  .tutorial-coach-card .tutorial-coach-body {
+    display: none;
+  }
+  .tutorial-coach-card .tutorial-coach-title {
+    font-size: 9px !important;
+    margin-bottom: 2px !important;
+  }
+  .tutorial-coach-card .tutorial-coach-action {
+    -webkit-line-clamp: 2;
+    font-size: 12px !important;
+  }
+  .tutorial-coach-card .tutorial-coach-side {
+    gap: 4px !important;
+  }
+  .tutorial-coach-card .tutorial-coach-side button {
+    padding: 3px 6px !important;
+  }
+}
+
 /* When .bottom-tab-bar is present it permanently occupies the bottom
    var(--ln-nav-h), unlike the old floating radial nav — lift these corner
    indicators above it so they don't sit on top of the tab labels. Scoped to
    the same breakpoint the mobile bar uses; desktop status indicators keep
    their normal position above the full-width command rail. */
+@media (orientation: landscape) and (max-width: 1023px) and (max-height: 500px) {
+  .game-menu-button,
+  .game-friends-button {
+    top: var(--ln-s-2);
+  }
+  [data-testid="tutorial-coach-block"] {
+    max-height: 96px !important;
+  }
+  .tutorial-coach-card .tutorial-coach-body {
+    display: none;
+  }
+}
+
 @media (max-width: 1023px) {
   .portrait-canvas:has(.bottom-tab-bar) .backend-status,
   .portrait-canvas:has(.bottom-tab-bar) .sync-status {
@@ -422,6 +938,74 @@ button { cursor: pointer; }
   }
 }
 
+/* Mining owns a variable-height bottom command rail. The global status chips
+   cannot use the ordinary viewport-bottom anchor here: that puts NOT SYNCED
+   directly on top of FIRE LASER whenever the rail grows on a small viewport.
+   Keep the utility status in the quiet band below the mining header instead,
+   where it remains visible without competing with an action or ore readout. */
+.portrait-canvas:has(.mining-screen) .sync-status,
+.portrait-canvas:has(.mining-screen) .backend-status {
+  top: 78px;
+  bottom: auto;
+  padding: 3px 6px;
+  border: 1px solid var(--ln-hairline);
+  border-radius: var(--ln-r-sm);
+  background: rgba(6, 14, 26, 0.72);
+  backdrop-filter: blur(4px);
+}
+.portrait-canvas:has(.mining-screen) .sync-status {
+  left: 50%;
+  transform: translateX(-50%);
+}
+.portrait-canvas:has(.mining-screen) .backend-status { right: var(--ln-s-3); }
+
+.ln-page-surface {
+  position: absolute;
+  inset: 0;
+  overflow: auto;
+  background: var(--ln-void);
+}
+
+.ln-page-surface__content {
+  position: relative;
+  width: 100%;
+  min-height: 100%;
+  border-radius: 0 !important;
+  max-height: none !important;
+  box-shadow: none !important;
+  overflow-y: auto;
+}
+
+.ln-action-confirm {
+  position: absolute;
+  z-index: 88;
+  right: var(--ln-s-3);
+  bottom: calc(var(--ln-nav-h, 64px) + var(--ln-s-3));
+  left: var(--ln-s-3);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--ln-s-3);
+  padding: var(--ln-s-3);
+  background: var(--ln-panel);
+  border: 1px solid var(--ln-cyan-border);
+  box-shadow: var(--ln-shadow-panel);
+}
+.ln-action-confirm__copy { min-width: 0; }
+.ln-action-confirm__copy > span { display: block; color: var(--ln-cyan); font: 800 9px var(--ln-font-display); letter-spacing: .22em; text-transform: uppercase; }
+.ln-action-confirm__copy > strong { display: block; margin-top: 2px; color: var(--ln-text); font: 800 16px var(--ln-font-display); text-transform: uppercase; }
+.ln-action-confirm__copy > p { margin: 4px 0 0; color: var(--ln-text-dim); font: 12px/1.4 var(--ln-font-body); }
+.ln-action-confirm__actions { display: flex; align-items: center; gap: var(--ln-s-2); flex: 0 0 auto; }
+.ln-action-confirm__actions button { min-height: 40px; padding: 0 var(--ln-s-3); border: 1px solid var(--ln-hairline); background: var(--ln-surface-2); color: var(--ln-text-dim); font: 800 10px var(--ln-font-display); letter-spacing: .12em; cursor: pointer; }
+.ln-action-confirm__actions button.is-primary { border-color: var(--ln-cyan); background: var(--ln-cyan); color: var(--ln-text-on-cyan); }
+@media (max-width: 640px) {
+  .ln-action-confirm { align-items: stretch; flex-direction: column; }
+  .ln-action-confirm__actions { width: 100%; }
+  .ln-action-confirm__actions button { flex: 1; }
+}
+
+/* Authentication matches main's centered command-deck card: a playable orbital
+   scene beside the account controls, with a bottom sheet only on phones. */
 .ln-sheet {
   position: absolute;
   inset: 0;
@@ -431,47 +1015,11 @@ button { cursor: pointer; }
 }
 
 .ln-sheet--bottom { align-items: flex-end; }
-.ln-sheet--centered { align-items: center; padding: var(--ln-s-5); }
-
-.ln-sheet__scrim {
-  position: absolute;
-  inset: 0;
-  background: var(--ln-overlay);
-}
-
-.ln-sheet__panel {
-  position: relative;
-  background: linear-gradient(180deg, #232327, #0f0f11);
-  border: 1px solid var(--ln-hairline);
-  box-shadow: var(--ln-shadow-modal);
-}
-
-.ln-sheet__panel--bottom {
-  width: 100%;
-  border-bottom: 0;
-  border-radius: 20px 20px 0 0;
-}
-
-.ln-sheet__panel--centered {
-  width: min(360px, 100%);
-  border-radius: var(--ln-r-xl);
-}
-
-.ln-sheet__panel--sheet-in { animation: sheet-up var(--ln-d-slow) var(--ln-ease-out); }
-.ln-sheet__panel--popup-in { animation: unlock-in var(--ln-d-slow) var(--ln-ease-out); }
-
-.ln-sheet__handle-wrap {
-  display: flex;
-  justify-content: center;
-  margin-bottom: 14px;
-}
-
-.ln-sheet__handle {
-  width: 40px;
-  height: 4px;
-  border-radius: 2px;
-  background: rgba(255,255,255,0.22);
-}
+.ln-sheet__scrim { position: absolute; inset: 0; background: rgba(8, 8, 10, 0.72); }
+.auth-gate__scrim { position: absolute; inset: 0; background: rgba(8, 8, 10, 0.72); }
+.ln-sheet__panel { position: relative; background: linear-gradient(180deg, #232327, #0f0f11); border: 1px solid var(--ln-hairline); box-shadow: var(--ln-shadow-modal); }
+.ln-sheet__handle-wrap { display: flex; justify-content: center; margin-bottom: 14px; }
+.ln-sheet__handle { width: 40px; height: 4px; border-radius: 2px; background: rgba(255,255,255,0.22); }
 
 .auth-gate {
   position: absolute;
@@ -483,57 +1031,202 @@ button { cursor: pointer; }
   padding: 0;
 }
 
-.auth-gate__scrim {
-  position: absolute;
-  inset: 0;
-  background: rgba(8, 8, 10, 0.72);
-}
-
 .auth-gate__panel {
   position: relative;
-  width: 100%;
-  max-height: calc(100dvh - 32px);
-  overflow-y: auto;
-  padding: 18px 16px 28px;
-  background: linear-gradient(180deg, #232327, #0f0f11);
-  border: 1px solid rgba(255,255,255,0.28);
-  border-bottom: 0;
-  border-top-left-radius: 20px;
-  border-top-right-radius: 20px;
-  box-shadow: 0 -16px 48px rgba(0,0,0,0.7);
+  display: grid;
+  grid-template-columns: minmax(260px, 0.92fr) minmax(340px, 1.08fr);
+  width: min(900px, calc(100vw - 48px));
+  max-height: min(680px, calc(100dvh - 48px));
+  overflow: hidden;
+  padding: 0;
+  background: var(--ln-panel);
+  border: 1px solid var(--ln-cyan-border-strong);
+  border-radius: var(--ln-r-xl);
+  box-shadow: var(--ln-shadow-modal), 0 0 56px rgba(63,169,255,.14);
   animation: gate-up 360ms cubic-bezier(.16,1,.3,1);
 }
 
-.auth-gate__handle {
-  display: flex;
-  justify-content: center;
-  margin-bottom: 14px;
-}
+.auth-gate__handle { display: flex; justify-content: center; margin-bottom: 14px; }
 
 @media (min-width: 760px) {
-  .auth-gate {
-    align-items: center;
-    padding: 24px;
-  }
-
+  .auth-gate { align-items: center; padding: 24px; }
   .auth-gate__panel {
-    width: min(392px, calc(100vw - 48px));
-    padding: 24px;
-    border: 1px solid rgba(255,255,255,0.3);
+    width: min(900px, calc(100vw - 48px));
+    padding: 0;
+    border: 1px solid var(--ln-cyan-border-strong);
     border-radius: var(--ln-r-xl);
-    box-shadow: var(--ln-shadow-modal), var(--ln-glow-cyan);
+    box-shadow: var(--ln-shadow-modal), 0 0 56px rgba(63,169,255,.14);
   }
+  .auth-gate__handle { display: none; }
+  .auth-gate .ln-sheet__handle-wrap { display: none; }
+}
 
-  .auth-gate__handle {
-    display: none;
+@media (max-width: 759px) {
+  .auth-gate { align-items: center; padding: var(--ln-s-4); }
+  .auth-gate__panel {
+    width: 100%;
+    max-height: calc(100dvh - 32px);
+    overflow: hidden;
+    grid-template-columns: minmax(0, .76fr) minmax(0, 1.24fr);
+    border-bottom: 1px solid var(--ln-cyan-border-strong);
+    border-radius: var(--ln-r-xl);
   }
+  /* Keep the approved mission-control card composition at compact widths.
+     The scene and account controls remain side by side, so this breakpoint
+     changes scale and padding rather than changing the screen into a sheet. */
+  .auth-gate__handle,
+  .auth-gate .ln-sheet__handle-wrap { display: none; }
+  .auth-gate__scene { min-height: 0; border-right: 1px solid var(--ln-hairline); border-bottom: 0; }
+  .auth-gate__scene-copy { left: var(--ln-s-3); top: var(--ln-s-3); gap: var(--ln-s-1); }
+  .auth-gate__scene-title { font-size: 18px; }
+  .auth-gate__scene-status { font-size: 8px; }
+  .auth-gate__orbit--outer { width: 220px; height: 100px; left: -8%; top: 48%; }
+  .auth-gate__orbit--inner { width: 150px; height: 68px; left: 14%; top: 53%; }
+  .auth-gate__planet { width: 64px; height: 64px; left: 31%; top: 46%; }
+  .auth-gate__ship { width: 78px; left: 54%; top: 35%; }
+  .auth-gate__telemetry { left: var(--ln-s-3); bottom: var(--ln-s-3); grid-template-columns: 1fr; gap: var(--ln-s-1); font-size: 7px; }
+  .auth-gate__content { align-self: auto; padding: var(--ln-s-5) var(--ln-s-4) var(--ln-s-5); }
+  .auth-gate__heading { font-size: 26px; }
+  .auth-gate__intro { margin-bottom: var(--ln-s-3); }
+  .auth-gate__tabs { margin-bottom: var(--ln-s-3); }
+}
 
-  .auth-gate .ln-sheet__handle-wrap {
-    display: none;
+@media (max-width: 520px) {
+  .auth-gate__panel {
+    display: block;
+    max-height: calc(100dvh - 32px);
+    overflow-y: auto;
+  }
+  .auth-gate__scene { display: none; }
+}
+
+/* SSL-299: at a phone in landscape (844x390) the two-column card is ~551px
+   of content inside a ~342px box with overflow hidden, so Password / Confirm
+   / Create Account render below the clip edge with no scroll path — a new
+   player literally cannot sign up. The scene column is decorative; drop it
+   and let the account column scroll inside the bounded panel, the same
+   bounded-inner-scroll shape SSL-27 used for the discovery screens. */
+@media (orientation: landscape) and (max-height: 520px) {
+  .auth-gate { align-items: center; padding: var(--ln-s-2); }
+  .auth-gate__panel {
+    display: block;
+    width: min(560px, 100%);
+    max-height: calc(100dvh - 16px);
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .auth-gate__scene { display: none; }
+  .auth-gate__content { align-self: auto; padding: var(--ln-s-4); }
+  .auth-gate__heading { font-size: 22px; }
+  .auth-gate__intro { margin: var(--ln-s-1) 0 var(--ln-s-2); }
+  .auth-gate__tabs { margin-bottom: var(--ln-s-2); }
+  .auth-gate__form { gap: var(--ln-s-2); }
+  .auth-gate__input { padding: var(--ln-s-3); }
+  .auth-gate__primary { padding: var(--ln-s-3); }
+}
+
+.auth-gate__scene {
+  position: relative;
+  min-height: 520px;
+  overflow: hidden;
+  isolation: isolate;
+  background: linear-gradient(180deg, rgba(10,18,29,.12), rgba(10,18,29,.92)), url('/game/assets/backgrounds/starmap.png') center / cover;
+  border-right: 1px solid var(--ln-hairline);
+}
+
+.auth-gate__scene::after {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  content: '';
+  background: linear-gradient(135deg, rgba(63,169,255,.12), transparent 42%), linear-gradient(0deg, var(--ln-void), transparent 46%);
+}
+
+.auth-gate__scene-copy { position: absolute; left: var(--ln-s-6); top: var(--ln-s-6); display: grid; gap: var(--ln-s-2); }
+.auth-gate__eyebrow, .auth-gate__scene-status, .auth-gate__telemetry { font: 700 11px var(--ln-font-display); letter-spacing: .16em; text-transform: uppercase; }
+.auth-gate__eyebrow { color: var(--ln-cyan); }
+.auth-gate__scene-title { color: var(--ln-text); font: 700 30px var(--ln-font-display); letter-spacing: .08em; }
+.auth-gate__scene-status { color: var(--ln-ok); font-size: 10px; }
+.auth-gate__scene-status i { display: inline-block; width: 7px; height: 7px; margin-right: 6px; border-radius: 50%; background: var(--ln-ok); box-shadow: 0 0 12px var(--ln-ok); }
+.auth-gate__orbit { position: absolute; border: 1px solid rgba(63,169,255,.32); border-radius: 50%; transform: rotate(-24deg); }
+.auth-gate__orbit--outer { width: 390px; height: 180px; left: 2%; top: 42%; }
+.auth-gate__orbit--inner { width: 260px; height: 120px; left: 18%; top: 48%; border-color: rgba(245,166,35,.36); }
+.auth-gate__planet { position: absolute; width: 112px; height: 112px; left: 36%; top: 44%; border-radius: 50%; background: radial-gradient(circle at 32% 28%, var(--ln-cyan-bright), var(--ln-cyan-press) 46%, var(--ln-void) 78%); box-shadow: 0 0 42px rgba(63,169,255,.32); }
+.auth-gate__ship { position: absolute; width: 130px; left: 54%; top: 33%; transform: rotate(18deg); filter: drop-shadow(0 0 14px rgba(63,169,255,.55)); }
+.auth-gate__telemetry { position: absolute; bottom: var(--ln-s-6); left: var(--ln-s-6); display: grid; grid-template-columns: auto auto; gap: var(--ln-s-2) var(--ln-s-5); color: var(--ln-text-muted); font-size: 9px; }
+.auth-gate__telemetry strong { color: var(--ln-text-dim); font-weight: 700; }
+.auth-gate__content { align-self: center; padding: var(--ln-s-7); }
+.auth-gate__heading { margin-top: var(--ln-s-2); color: var(--ln-text); font: 700 34px var(--ln-font-display); letter-spacing: -.02em; }
+.auth-gate__intro { margin: var(--ln-s-3) 0 var(--ln-s-5); color: var(--ln-text-dim); font: 400 14px/1.5 var(--ln-font-body); }
+.auth-gate__tabs { display: flex; gap: var(--ln-s-2); margin-bottom: var(--ln-s-5); }
+.auth-gate__tab { flex: 1; padding: var(--ln-s-3); color: var(--ln-text-muted); background: transparent; border: 1px solid var(--ln-hairline); border-radius: var(--ln-r-md); cursor: pointer; font: 700 12px var(--ln-font-display); letter-spacing: .14em; text-transform: uppercase; }
+.auth-gate__tab.is-active { color: var(--ln-cyan); background: rgba(63,169,255,.12); border-color: var(--ln-cyan-border-strong); }
+.auth-gate__form { display: flex; flex-direction: column; gap: var(--ln-s-3); }
+.auth-gate__input { width: 100%; box-sizing: border-box; padding: var(--ln-s-4); color: var(--ln-text); background: var(--ln-void); border: 1px solid var(--ln-cyan-border); border-radius: var(--ln-r-md); outline: none; font: 400 15px var(--ln-font-body); }
+.auth-gate__input:focus { border-color: var(--ln-cyan); box-shadow: 0 0 0 2px rgba(63,169,255,.14), 0 0 18px rgba(63,169,255,.12); }
+.auth-gate__input::placeholder { color: var(--ln-text-muted); }
+.auth-gate__error { padding: var(--ln-s-3); color: var(--ln-crit); background: rgba(255,90,106,.1); border: 1px solid rgba(255,90,106,.36); border-radius: var(--ln-r-md); font: 400 12px/1.4 var(--ln-font-body); }
+.auth-gate__primary { width: 100%; padding: var(--ln-s-4); margin-top: var(--ln-s-1); color: var(--ln-void); background: var(--ln-cyan); border: 0; border-radius: var(--ln-r-md); cursor: pointer; font: 800 13px var(--ln-font-display); letter-spacing: .14em; text-transform: uppercase; box-shadow: 0 3px 0 rgba(0,0,0,.28); }
+.auth-gate__primary:hover { background: var(--ln-cyan-bright); }
+.auth-gate__primary:disabled { cursor: not-allowed; opacity: .55; }
+
+/* After the base auth-gate rules so compact-landscape stretch/scroll wins
+   over `.auth-gate__content { align-self: center }` and the 520px scene
+   min-height (SSL-326 / overlaps SSL-299). */
+@media (orientation: landscape) and (max-height: 500px) {
+  .auth-gate {
+    align-items: stretch;
+    padding: var(--ln-s-2);
+  }
+  .auth-gate__panel {
+    width: 100%;
+    max-height: calc(100dvh - 16px);
+    height: calc(100dvh - 16px);
+    overflow: hidden;
+    grid-template-columns: minmax(0, 0.72fr) minmax(0, 1.28fr);
+  }
+  .auth-gate__scene {
+    min-height: 0;
+  }
+  .auth-gate__content {
+    align-self: stretch;
+    min-height: 0;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    padding: var(--ln-s-3) var(--ln-s-4);
+  }
+  .auth-gate__content > .auth-gate__eyebrow { display: none; }
+  .auth-gate__heading { margin-top: 0; font-size: 20px; }
+  .auth-gate__intro { display: none; }
+  .auth-gate__tabs { margin-bottom: var(--ln-s-2); }
+  .auth-gate__tab { padding: var(--ln-s-2); }
+  .auth-gate__form {
+    min-height: 0;
+    overflow-y: auto;
+    flex: 1 1 auto;
+  }
+  .auth-gate__input { padding: var(--ln-s-2) var(--ln-s-3); }
+  .auth-gate__primary { padding: var(--ln-s-2) var(--ln-s-3); }
+  .auth-gate__quick {
+    flex: 0 0 auto;
+    padding-top: var(--ln-s-2);
+    margin-top: var(--ln-s-1);
   }
 }
 
 .screen-scroll { position: absolute; inset: 0; overflow-y: auto; padding: 76px var(--ln-s-3) var(--ln-s-5); }
+/* .screen-scroll paints no background of its own, so it normally shows
+   through to the dark ambient chrome behind .game-screen-area — fine for
+   the default .theme-deep screens, whose text also assumes that dark
+   ambient. A .theme-light screen (MissionHistoryScreen, NarrativeLedgerScreen)
+   redefines --ln-text/--ln-panel to light-theme values on this same element,
+   but without an explicit background here the header text (which sits
+   directly on .shell, not inside a --ln-panel card) renders as near-black
+   text on the unrelated dark ambient behind it — unreadable. Paint the
+   current theme's own --ln-void so light-theme screens actually get a
+   light background instead of inheriting the dark default. */
+.screen-scroll.theme-light { background: var(--ln-void); }
 .screen-scroll--coach { padding-top: var(--tutorial-content-top); }
 .screen-scroll--coach-manual { padding-top: var(--tutorial-manual-content-top); }
 /* .screen-scroll lives inside .game-screen-area, which already stops above
@@ -569,230 +1262,456 @@ button { cursor: pointer; }
 .context-row div { display: flex; flex-direction: column; gap: var(--ln-s-1); }
 .context-row strong { font: 800 13px var(--ln-font-display); color: var(--ln-text); }
 .amber { color: var(--ln-amber) !important; }
+.cyan { color: var(--ln-cyan) !important; }
 .compatibility { padding: var(--ln-s-3); border-radius: var(--ln-r-lg); font: 700 11px var(--ln-font-display); letter-spacing: var(--ln-tr-label); text-transform: uppercase; }
 .compatibility span { display: inline-block; width: 6px; height: 6px; margin-right: var(--ln-s-2); border-radius: var(--ln-r-pill); background: currentColor; box-shadow: 0 0 8px currentColor; }
 .compatibility--ok { color: var(--ln-ok); border: 1px solid var(--ln-ok); background: var(--ln-ok-soft); }
 .compatibility--bad { color: var(--ln-crit); border: 1px solid var(--ln-crit); background: var(--ln-crit-soft); }
 .sticky-actions { position: absolute; z-index: 30; left: 0; right: 0; bottom: 0; padding: var(--ln-s-2) var(--ln-s-3) var(--ln-s-5); background: linear-gradient(180deg, transparent, rgba(10,10,11,.94) 34%, var(--ln-void)); }
 
-.mission-setup-screen {
-  background:
-    radial-gradient(ellipse at 50% 12%, rgba(112,217,234,0.09), transparent 32%),
-    linear-gradient(180deg, #141417 0%, #08080a 100%);
-}
-
-/* TargetPicker's wayfinding footer contains both the step rail and a large
-   primary CTA. Reserve their full footprint so the galaxy frame never sits
-   underneath the sticky actions on wide or narrow screens. */
-.mission-setup-screen--target .mission-setup-content {
-  padding-bottom: 190px;
-  /* The shell's default `auto auto` is for screens that pass two children.
-     TargetPicker passes exactly one (.mission-board-layout owns the map/detail
-     split itself), so the leftover explicit track stayed empty — and because
-     align-content stretches auto tracks, the free space was split between the
-     one real row and the empty one instead of going to the map. That was the
-     band of dead black space below the picker on narrow screens, with the map
-     squeezed to a 24px sliver. The >=821px rule below already did this; narrow
-     screens need it too. */
-  grid-template-rows: minmax(0, 1fr);
-}
-
-/* Scene 4 has one real action (Confirm Launch). Its compact content owns the
-   vertical space; the CTA is no longer accompanied by a duplicate Launch rail. */
-.mission-setup-screen--assembly .mission-setup-content {
-  padding-bottom: 104px;
-  overflow-y: auto;
-}
-
-/* Landscape phones (e.g. 844x390) — the 82px top offset (cleared for TopBar,
-   see MissionSetupShell's `contentTop`) plus the launch-clearance card's full
-   layout together overflowed past the Confirm Launch bar (STS-612). The card
-   itself compacts via AssemblyScreen's `useIsShortViewport`; this reclaims
-   the rest of the room TopBar doesn't actually need at this height. */
-@media (max-height: 460px) {
-  .mission-setup-screen--assembly .mission-setup-content {
-    padding-top: 64px !important;
-    /* AssemblyScreen's `compact` prop (useIsShortViewport) shrinks the
-       frame and card content itself; these two just reclaim the fixed
-       inter-block gap and bottom reservation that the JS changes can't
-       reach, since they're plain CSS on the shared grid container. */
-    padding-bottom: 88px !important;
+/* SSL-27: short landscape is a bounded two-column instrument stage. The
+   routed discovery screens previously inherited desktop flex sizing, which
+   allowed the metadata stack to push verdict controls below the 390/428px
+   viewport. Keep the science field scrollable inside its column and reserve
+   the action dock as a non-scrolling, 44px-touchable region. */
+@media (orientation: landscape) and (max-width: 1023px) and (max-height: 520px) {
+  /* SSL-300: TESS now wraps its grid in an in-flow frame (dev bar + grid);
+     the frame takes the viewport offset and the grid only owns the gap. */
+  [data-testid="tess-discovery-desktop-frame"] {
+    top: 68px !important;
+    padding: 0 12px 8px !important;
+  }
+  [data-testid="tess-discovery-desktop-grid"] {
     gap: 8px !important;
+    min-height: 0;
+  }
+  [data-testid="asteroid-discovery-desktop-grid"] {
+    top: 68px !important;
+    gap: 8px !important;
+    height: calc(100% - 68px) !important;
+    padding: 0 12px 8px !important;
+    min-height: 0;
   }
 
-  /* `height: fit-content` (below, wide-screen rule) lets .assembly-card grow
-     past its own grid row instead of respecting it — on a roomy screen that's
-     fine (the row just grows to match), but on a viewport this short the row
-     itself is capped by padding-bottom above, so a fit-content card ends up
-     rendering *underneath* the sticky Confirm Launch bar rather than being
-     clipped by it. Restore the card's normal grid-row-bound height and let
-     its own `.mission-setup-card-scroll` scroll internally instead — the
-     manifest checklist becoming scrollable is an acceptable trade for the
-     Confirm Launch button never sitting on top of card content (STS-612). */
-  .mission-setup-screen--assembly .assembly-card {
-    height: auto !important;
-    align-self: stretch !important;
+  [data-testid="tess-discovery-desktop-grid"] > *,
+  [data-testid="asteroid-discovery-desktop-grid"] > * {
+    min-width: 0;
+    min-height: 0;
   }
-  .mission-setup-screen--assembly .assembly-card .mission-setup-card-scroll {
-    height: 100% !important;
-    overflow-y: auto !important;
+
+  [data-testid="tess-discovery-desktop-grid"] > :last-child,
+  [data-testid="asteroid-discovery-desktop-grid"] > :last-child {
+    gap: 8px !important;
+    overflow: hidden !important;
+  }
+
+  [data-testid="tess-discovery-desktop-grid"] [data-ui-zone="bottom-actions"],
+  [data-testid="asteroid-discovery-desktop-grid"] [data-ui-zone="bottom-actions"] {
+    flex: 0 0 auto;
+    padding-top: 4px;
+  }
+
+  [data-testid="tess-discovery-desktop-grid"] [data-ui-zone="bottom-actions"] > div,
+  [data-testid="asteroid-discovery-desktop-grid"] [data-ui-zone="bottom-actions"] > div {
+    min-height: 44px;
+  }
+
+  [data-testid="tess-discovery-desktop-grid"] [data-ui-zone="bottom-actions"] button,
+  [data-testid="asteroid-discovery-desktop-grid"] [data-ui-zone="bottom-actions"] button {
+    min-height: 44px !important;
+  }
+
+  [data-testid="observatory-coach"],
+  [data-testid="asteroid-discovery-coach"] {
+    top: 76px !important;
+    right: auto !important;
+    width: min(44vw, 360px) !important;
+    max-height: 112px;
+    overflow-y: auto;
+  }
+
+  [data-testid="tess-discovery-desktop-grid"] .screen-scroll,
+  [data-testid="asteroid-discovery-desktop-grid"] .screen-scroll {
+    padding-top: 0;
+    padding-bottom: 8px;
   }
 }
 
-.mission-setup-content {
+.mission-setup-scene-background {
   position: absolute;
   inset: 0;
-  display: grid;
-  grid-template-rows: auto auto;
-  gap: 14px;
-  width: min(100%, 1120px);
-  margin: 0 auto;
-  padding: 82px 14px 110px;
+  z-index: 0;
   overflow: hidden;
+  pointer-events: none;
+}
+.mission-setup-scene-background > * {
+  position: absolute;
+  inset: 0;
+}
+.mission-setup-screen--assembly {
+  background: transparent !important;
+}
+.mission-setup-screen--assembly .mission-setup-content {
+  z-index: 1;
 }
 
-.mission-setup-frame {
-  position: relative;
-  min-height: 0;
+/* KES-181: setup is a lit operational scene, not a neutral app shell. The
+   mesh is deliberately CSS-only until authored scene art is available, but
+   it establishes the correct ambient depth and keeps the instrument chrome
+   attached to one surface. */
+
+.ln-scene-mission-board {
+  isolation: isolate;
   overflow: hidden;
-  border: 1px solid var(--ln-glass-border);
-  border-radius: 14px;
-  /* Neutral charcoal glass (2026-07-31) — was a dark-navy-tinted gradient,
-     one of the specific "everything is heavy blue" surfaces across the
-     entire Mission Board/Rocket/Launch/Mining flow. See the superseded-
-     palette comment above :root/.theme-deep. */
-  background: linear-gradient(180deg, rgba(255,255,255,0.10), rgba(255,255,255,0.04));
-  backdrop-filter: var(--ln-glass-blur);
-  -webkit-backdrop-filter: var(--ln-glass-blur);
-  /* Forces its own compositing layer on mount. Without this, content painted
-     inside this nested position:absolute + overflow:hidden frame (e.g. the
-     rocket stat values / rocket image on Select Rocket and Confirm Rocket)
-     can fail to paint on first render until any scroll forces a repaint. */
-  transform: translateZ(0);
+  background:
+    radial-gradient(ellipse at 16% 20%, var(--ln-cyan-soft), transparent 36%),
+    radial-gradient(ellipse at 84% 70%, var(--ln-ok-soft), transparent 30%),
+    var(--ln-void) !important;
 }
 
-.mission-setup-card {
-  position: relative;
-  min-height: 0;
+/* Cargo Transfer (KES-262) — was still hardcoded dark (theme-deep, near-black
+   hex) with no ambient backdrop, reading as a UI panel under a canvas rather
+   than a berth/depot scene. Same lit-mesh recipe as Mission Board, just a
+   warmer secondary tint (deep-space blue leads for a cargo depot). */
+.ln-scene-delivery::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(115deg, transparent 0 44%, var(--ln-cyan-soft) 44.2% 44.35%, transparent 44.5%),
+    linear-gradient(25deg, transparent 0 62%, var(--ln-ok-soft) 62.2% 62.35%, transparent 62.5%),
+    repeating-linear-gradient(90deg, transparent 0 47px, var(--ln-hairline) 48px, transparent 49px),
+    repeating-linear-gradient(0deg, transparent 0 47px, var(--ln-hairline) 48px, transparent 49px);
+  opacity: 0.42;
+  z-index: 0;
+}
+.ln-scene-delivery {
+  isolation: isolate;
   overflow: hidden;
-  /* Cyan, not amber — this is generic panel chrome, and amber is restricted
-     to genuine payout/reward emphasis (see design rules in CLAUDE.md). */
-  border: 1px solid var(--ln-cyan-border);
-  border-radius: 14px;
-  background: linear-gradient(180deg, rgba(255,255,255,0.09) 0%, rgba(255,255,255,0.03) 100%);
-  backdrop-filter: var(--ln-glass-blur);
-  -webkit-backdrop-filter: var(--ln-glass-blur);
-  transform: translateZ(0);
+  background:
+    radial-gradient(ellipse at 78% 30%, var(--ln-cyan-soft), transparent 34%),
+    radial-gradient(ellipse at 20% 78%, var(--ln-ok-soft), transparent 30%),
+    var(--ln-void) !important;
 }
 
-.mission-setup-card-scroll {
-  height: 100%;
-  overflow-y: auto;
-  padding: 18px;
+/* Landing, Intro, Asteroid Discovery, TESS Discovery, Surface Ops (KES-262) —
+   same lit-mesh recipe as Mission Board/Delivery, one block per screen so
+   each keeps its own ambient emphasis rather than sharing a generic look. */
+.ln-scene-landing::before,
+.ln-scene-intro::before,
+.ln-scene-asteroid-discovery::before,
+.ln-scene-tess-discovery::before,
+.ln-scene-surface-ops::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(115deg, transparent 0 44%, var(--ln-cyan-soft) 44.2% 44.35%, transparent 44.5%),
+    linear-gradient(25deg, transparent 0 62%, var(--ln-ok-soft) 62.2% 62.35%, transparent 62.5%),
+    repeating-linear-gradient(90deg, transparent 0 47px, var(--ln-hairline) 48px, transparent 49px),
+    repeating-linear-gradient(0deg, transparent 0 47px, var(--ln-hairline) 48px, transparent 49px);
+  opacity: 0.42;
+  z-index: 0;
+}
+.ln-scene-landing,
+.ln-scene-intro,
+.ln-scene-asteroid-discovery,
+.ln-scene-tess-discovery,
+.ln-scene-surface-ops {
+  isolation: isolate;
+  overflow: hidden;
+  background:
+    radial-gradient(ellipse at 16% 20%, var(--ln-cyan-soft), transparent 36%),
+    radial-gradient(ellipse at 84% 70%, var(--ln-ok-soft), transparent 30%),
+    var(--ln-void) !important;
 }
 
-/* Confirm Rocket and Select Rocket each have one visual frame and one
-   summary card. Keep them beside each other on roomy screens so the player
-   can complete the setup without a scrollable page. */
+/* KES-329 — Mission creation is a daylight Earth-base journey.  It is not a
+   dark-mode dashboard, a blueprint sheet, or a decorative-grid background.
+   These scoped tokens let the existing functional instruments read clearly
+   against a real scene without turning the whole application into a new theme. */
+.mission-signal-rail { display: grid; gap: var(--ln-s-3); min-height: 0; padding: 2px 10px 10px 0; overflow-y: auto; align-content: start; }
+
+/* KES-330 — the dispatch choice lives at a real relay in the base.  The
+   landscape remains the playfield; labels are attached to its equipment,
+   never promoted into a page-sized list or a separate selection panel. */
+/* 9px read as illegible on the fulfillment requirements line (07/09/26 QA
+   report) — bumped to 11px, still a step down from `span` above it. */
+
+/* The map is a field instrument, not a bright detail card beside a picture. */
+
+/* Rocket selection keeps its real pad as the stage.  The selector is a small
+   bank of vehicle switches, not a white information panel competing with it. */
+
+/* Preflight is the launchpad, not a second command-deck card.  Let the actual
+   base remain visible and keep the clearance instrument tied to the rocket. */
+
+@media (max-width: 760px) {
+  .mission-signal-rail { gap: var(--ln-s-2); }
+}
+
+/* KES-185: make preflight a purposeful command-deck scene, with the route
+   and readiness instrument carrying the visual centre of the final setup step. */
+
 @media (min-width: 900px) {
-  .mission-setup-screen--assembly .mission-setup-content,
-  .mission-setup-screen--rocket .mission-setup-content {
-    grid-template-columns: minmax(0, 1.22fr) minmax(300px, 0.78fr);
-    grid-template-rows: auto;
-    align-items: start;
-  }
-
-  /* TargetPicker owns its desktop two-column layout via .mission-board-layout
-     (map + detail). The shell has only one child here; splitting the shell
-     again left an empty second grid column and stranded the picker on the
-     left half of wide screens. */
-  .mission-setup-screen--target .mission-setup-content {
-    grid-template-columns: minmax(0, 1fr);
-    grid-template-rows: minmax(0, 1fr);
-    align-items: stretch;
-  }
-}
-
-.mission-setup-screen--assembly .assembly-frame {
-  display: flex;
-  min-height: 0;
-  align-self: start;
-  height: fit-content;
-}
-
-.mission-setup-screen--assembly .assembly-card .mission-setup-card-scroll {
-  padding: 12px;
-}
-
-/* Assembly uses the same full-height two-column shell as the other mission
-   steps. Keep both shared containers in the shell's grid row so their borders
-   and the fixed step footer line up consistently. */
-.mission-setup-screen--assembly .assembly-card {
-  align-self: start;
-  height: fit-content;
-}
-
-.mission-setup-screen--assembly .assembly-card .mission-setup-card-scroll {
-  height: auto;
+  /* The action rail is fixed. Keep both rocket columns inside the remaining
+     viewport and let each card own any extra detail through its scroll area;
+     otherwise their intrinsic height extends underneath the rail. */
 }
 
 @media (max-width: 899px) {
-  .mission-setup-screen--assembly .mission-setup-content,
-  .mission-setup-screen--rocket .mission-setup-content {
-    grid-template-rows: auto auto;
-    gap: 10px;
-  }
+
+  /* KES-186: the portrait launch rail was taller than the shared
+     104px reservation once the compact manifest renders. Keep the second
+     setup card above the fixed rail instead of letting its border disappear
+     behind the CTA. */
 
   /* One child (.mission-board-layout), so one track. The old three-track
      value dated from when the picker passed map/detail/legend as separate
      shell children: the two now-empty 1fr tracks still claimed ~99px each,
      capping the map's row at 54% and then squeezing it to a 24px sliver once
      the detail card shared that row. */
-  .mission-setup-screen--target .mission-setup-content {
-    grid-template-rows: minmax(0, 1fr);
-    gap: 8px;
-  }
-
-  .mission-setup-screen--target .mission-setup-content > :first-child {
-    min-height: 0;
-  }
-
-  .mission-setup-screen--assembly .assembly-card .mission-setup-card-scroll {
-    padding: 10px;
-  }
-}
-
-.mission-setup-actions {
-  left: 50%;
-  right: auto;
-  width: min(100%, 1120px);
-  transform: translateX(-50%);
-  padding-left: 14px;
-  padding-right: 14px;
 }
 
 @media (max-width: 760px) {
-  .mission-setup-content {
-    grid-template-rows: minmax(320px, 45%) minmax(0, 1fr);
-    gap: 12px;
-  }
-  .mission-setup-card-scroll {
-    padding: 14px;
-  }
+  /* Target Picker has one shell child: the map/detail layout. The generic
+     compact setup rule above is for two-card screens and otherwise caps that
+     single child at 45%, leaving the orbital map below its tested usable
+     height on phones. */
+
+  /* Portrait preflight is a two-region operation. The desktop scene's
+     300px minimum exceeds its assigned grid row and paints over the manifest
+     below; compact content has enough room without that artificial minimum. */
 }
 
-.transit-screen { background: radial-gradient(circle at 80% 18%, rgba(112,217,234,.14), transparent 24%), var(--ln-bg-stars), var(--ln-void); }
-.transit-stage { position: absolute; inset: 80px 0 190px; overflow: hidden; }
-.target-orb { position: absolute; right: 26px; top: 24px; width: 76px; height: 76px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, var(--ln-amber-bright), var(--ln-amber-press) 55%, var(--ln-void)); box-shadow: 0 0 40px var(--ln-amber-soft); }
-.target-orb span { position: absolute; top: calc(100% + 8px); left: 50%; transform: translateX(-50%); color: var(--ln-amber); font: 700 10px var(--ln-font-mono); letter-spacing: var(--ln-tr-label); text-transform: uppercase; white-space: nowrap; }
-.rocket-mark { position: absolute; transform: translate3d(-50%, -50%, 0) rotate(56deg); transform-origin: center; transition: left 100ms linear, top 100ms linear; filter: drop-shadow(0 0 12px rgba(112,217,234,.7)); animation: rocket-thrust 0.3s ease-in-out infinite alternate; backface-visibility: hidden; will-change: transform, filter; }
-.rocket-mark svg { display: block; overflow: visible; }
-@keyframes rocket-thrust { from { filter: drop-shadow(0 0 8px rgba(112,217,234,.5)); } to { filter: drop-shadow(0 0 16px rgba(112,217,234,.9)); } }
-.transit-readout { position: absolute; left: var(--ln-s-3); right: var(--ln-s-3); bottom: var(--ln-s-5); display: grid; gap: var(--ln-s-3); }
-.transit-readout > div:first-child { display: flex; justify-content: space-between; color: var(--ln-text-muted); font: 700 11px var(--ln-font-display); letter-spacing: var(--ln-tr-loose); text-transform: uppercase; }
-.transit-readout strong { color: var(--ln-cyan-bright); }
-.progress-track { height: 12px; overflow: hidden; border: 1px solid var(--ln-cyan-border); border-radius: var(--ln-r-pill); background: var(--ln-void); }
-.progress-track span { display: block; height: 100%; background: linear-gradient(90deg, var(--ln-amber), var(--ln-cyan)); box-shadow: var(--ln-glow-cyan); transition: width 100ms linear; }
+/* Keep the two-card setup steps geometrically stable on tablet and compact
+   desktop. Each card owns its own scroll, so the shell does not grow or move
+   when a different rocket/manifest has more detail. */
+
+.transit-screen {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  background: var(--ln-void);
+  color: var(--ln-text);
+}
+.transit-flight-scene {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  padding-top: 76px;
+  background: var(--ln-void);
+}
+.transit-game-canvas { position: absolute; inset: 0; z-index: 1; }
+.transit-game-canvas canvas { display: block; width: 100%; height: 100%; }
+.transit-flight-vignette {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  background: linear-gradient(180deg, rgba(1,5,8,.12) 0%, transparent 32%, transparent 64%, rgba(1,5,8,.82) 100%);
+}
+.transit-rocket-sprite {
+  position: absolute;
+  left: 50%;
+  z-index: 4;
+  width: clamp(84px, 16vw, 128px);
+  height: auto;
+  transform: translate(-50%, -50%) rotate(56deg);
+  transform-origin: center;
+  filter: drop-shadow(0 0 10px var(--ln-cyan-border)) drop-shadow(0 14px 12px var(--ln-amber-soft));
+  transition: top 160ms linear;
+  pointer-events: none;
+}
+.transit-destination-chip,
+.transit-mission-card,
+.transit-flight-hud {
+  position: absolute;
+  z-index: 5;
+  border: 1px solid var(--ln-hairline);
+  background: color-mix(in srgb, var(--ln-panel) 92%, transparent);
+  box-shadow: 0 8px 24px rgba(0,0,0,.24);
+  backdrop-filter: blur(8px);
+}
+.transit-destination-chip {
+  top: 96px;
+  right: 16px;
+  display: grid;
+  gap: 3px;
+  min-width: 190px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  text-align: right;
+}
+.transit-destination-chip__status,
+.transit-mission-card__eyebrow,
+.transit-flight-hud__heading span,
+.transit-command-dock__status span,
+.transit-cargo-strip span {
+  color: var(--ln-cyan);
+  font: 800 9px var(--ln-font-display);
+  letter-spacing: .16em;
+  text-transform: uppercase;
+}
+.transit-destination-chip strong {
+  color: var(--ln-text);
+  font: 800 17px var(--ln-font-display);
+}
+.transit-destination-chip > span:last-child {
+  color: var(--ln-text-muted);
+  font: 700 9px var(--ln-font-mono);
+  letter-spacing: .08em;
+}
+.transit-mission-card {
+  top: 92px;
+  left: 16px;
+  width: min(340px, calc(100% - 244px));
+  padding: 12px 14px;
+  border-left: 3px solid var(--ln-cyan);
+  border-radius: 10px;
+}
+.transit-mission-card > strong {
+  display: block;
+  margin-top: 4px;
+  color: var(--ln-text);
+  font: 800 16px/1.15 var(--ln-font-display);
+}
+.transit-mission-card > span {
+  display: block;
+  margin-top: 4px;
+  color: var(--ln-text-dim);
+  font: 700 10px var(--ln-font-display);
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+.transit-mission-card > .transit-mission-card__own { color: var(--ln-ok); }
+.transit-mission-card p {
+  margin: 6px 0 0;
+  color: var(--ln-text-muted);
+  font: 400 12px/1.35 var(--ln-font-body);
+}
+.transit-flight-hud {
+  left: 16px;
+  bottom: 16px;
+  width: min(680px, calc(100% - 32px));
+  padding: 12px 14px;
+  border-radius: 10px;
+}
+/* Approach sphere (SSL-317): sits under the destination chip on the right so
+   the mission card (left) and flight HUD (bottom) keep their slots. It grows
+   and reveals the division legend once the flight passes 70%. */
+.transit-approach {
+  position: absolute;
+  z-index: 5;
+  top: 184px;
+  right: 16px;
+  width: 168px;
+  transition: width 240ms ease;
+}
+.transit-approach--close { width: 232px; }
+@media (orientation: landscape) and (max-height: 520px) {
+  /* Compact landscape: no vertical room under the chip, so the sphere folds
+     to a small badge beside it and the legend is dropped. */
+  .transit-approach, .transit-approach--close { top: 88px; right: 220px; width: 120px; }
+  .transit-approach canvas { width: 64px !important; height: 64px !important; }
+  .transit-approach ul { display: none; }
+}
+.transit-flight-hud__heading { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+.transit-flight-hud__heading strong { color: var(--ln-text); font: 800 18px var(--ln-font-mono); }
+.transit-progress-wrap { position: relative; margin-top: 8px; padding: 4px 0; }
+.transit-progress-track { position: relative; height: 6px; overflow: hidden; border-radius: 999px; background: rgba(255,255,255,.12); }
+.transit-progress-track span { display: block; height: 100%; border-radius: inherit; background: var(--ln-cyan); box-shadow: var(--ln-glow-cyan); transition: width 100ms linear; }
+.transit-waypoint {
+  position: absolute;
+  top: 50%;
+  width: 10px;
+  height: 10px;
+  transform: translate(-50%, -50%);
+  border-radius: 999px;
+  background: var(--ln-void);
+  border: 2px solid var(--ln-text-muted);
+  transition: background-color 200ms ease, border-color 200ms ease, box-shadow 200ms ease;
+}
+.transit-waypoint--passed { background: var(--ln-cyan); border-color: var(--ln-cyan); box-shadow: var(--ln-glow-cyan); }
+.transit-waypoint-label {
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  margin-top: 4px;
+  transform: translateX(-50%);
+  color: var(--ln-text-muted);
+  font: 700 7px var(--ln-font-display);
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.transit-waypoint-label--passed { color: var(--ln-cyan); }
+.transit-telemetry { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin-top: 10px; }
+.transit-telemetry div { display: grid; gap: 2px; min-width: 0; }
+.transit-telemetry span { color: var(--ln-text-muted); font: 700 8px var(--ln-font-display); letter-spacing: .14em; text-transform: uppercase; }
+.transit-telemetry strong { overflow: hidden; color: var(--ln-text); font: 800 11px var(--ln-font-mono); text-overflow: ellipsis; white-space: nowrap; }
+.transit-cargo-strip { display: flex; align-items: baseline; gap: 10px; margin-top: 10px; padding-top: 8px; border-top: 1px solid var(--ln-hairline); }
+.transit-cargo-strip strong { overflow: hidden; color: var(--ln-text); font: 700 10px var(--ln-font-mono); text-overflow: ellipsis; white-space: nowrap; }
+.transit-command-dock {
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex: 0 0 auto;
+  min-height: 76px;
+  padding: 12px 16px;
+  border-top: 1px solid var(--ln-hairline);
+  background: var(--ln-shell);
+}
+.transit-command-dock__status { display: grid; gap: 3px; min-width: 0; }
+.transit-command-dock__status strong { overflow: hidden; color: var(--ln-text); font: 700 13px var(--ln-font-display); text-overflow: ellipsis; white-space: nowrap; }
+.transit-command-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; }
+.transit-command-btn {
+  min-height: 42px;
+  padding: 9px 14px;
+  border: 1px solid var(--ln-cyan-border);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--ln-cyan);
+  font: 800 10px var(--ln-font-display);
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+.transit-command-btn:hover:not(:disabled) { background: rgba(108,194,255,.1); }
+.transit-command-btn:disabled { border-color: var(--ln-hairline); color: var(--ln-text-muted); cursor: not-allowed; opacity: .72; }
+.transit-command-btn--arrive { border-color: var(--ln-ok); color: var(--ln-ok); }
+.transit-command-btn--danger { border-color: var(--ln-crimson-border); color: var(--ln-crimson); }
+
+@media (max-width: 600px) {
+  .transit-flight-scene { padding-top: 68px; }
+  /* top clears the global .game-menu-button (top:56 + height:36 = bottom 92,
+     a fixed-position sibling this stylesheet section can't otherwise see). */
+  .transit-destination-chip { top: 96px; right: 12px; min-width: 0; max-width: 48%; padding: 8px 10px; }
+  .transit-destination-chip strong { font-size: 14px; }
+  .transit-destination-chip > span:last-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .transit-mission-card { top: 80px; left: 12px; width: 48%; padding: 9px 10px; }
+  .transit-mission-card > strong { font-size: 13px; }
+  .transit-mission-card p { display: none; }
+  .transit-flight-hud { left: 12px; bottom: 12px; width: calc(100% - 24px); padding: 10px; }
+  /* Phones: the sphere stays compact so the HUD below it is never covered. */
+  .transit-approach, .transit-approach--close { top: 168px; right: 12px; width: 136px; }
+  .transit-approach canvas { width: 88px !important; height: 88px !important; }
+  .transit-approach ul { display: none; }
+  .transit-telemetry { gap: 8px; }
+  .transit-telemetry strong { font-size: 9px; }
+  .transit-cargo-strip { display: block; }
+  .transit-cargo-strip strong { display: block; margin-top: 3px; }
+  .transit-command-dock { align-items: stretch; flex-direction: column; gap: 10px; padding: 10px 12px; }
+  .transit-command-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); width: 100%; }
+  .transit-command-btn { min-width: 0; padding-inline: 8px; font-size: 9px; }
+}
 
 .mining-screen { position: absolute; inset: 0; overflow: hidden; background: var(--ln-void); display: flex; flex-direction: column; }
 .mining-viewport {
@@ -800,6 +1719,108 @@ button { cursor: pointer; }
   background: radial-gradient(ellipse at 70% 10%, #12203d, transparent 50%), linear-gradient(180deg, #090e1a 0%, var(--ln-void) 60%, #000000 100%);
 }
 .mining-canvas { position: absolute; inset: 0; z-index: 1; }
+.mining-scene-status {
+  position: absolute;
+  z-index: 11;
+  top: 50%;
+  left: 50%;
+  display: grid;
+  gap: var(--ln-s-2);
+  width: min(360px, calc(100% - 32px));
+  padding: var(--ln-s-3);
+  border: 1px solid var(--ln-cyan-border);
+  background: color-mix(in srgb, var(--ln-panel) 94%, transparent);
+  box-shadow: var(--ln-glow-cyan);
+  text-align: center;
+  transform: translate(-50%, -50%);
+}
+.mining-scene-status__eyebrow {
+  color: var(--ln-cyan);
+  font: 800 9px/1.2 var(--ln-font-display);
+  letter-spacing: var(--ln-tr-label);
+}
+.mining-scene-status strong {
+  color: var(--ln-text);
+  font: 700 11px/1.4 var(--ln-font-mono);
+  letter-spacing: .08em;
+}
+.mining-scene-status__retry {
+  min-height: 36px;
+  border: 1px solid var(--ln-cyan-border);
+  background: var(--ln-cyan-soft);
+  color: var(--ln-cyan);
+  font: 800 10px/1 var(--ln-font-display);
+  letter-spacing: var(--ln-tr-label);
+  cursor: pointer;
+}
+.rocket-cutaway-inspection {
+  position: relative;
+  isolation: isolate;
+}
+.rocket-cutaway-board {
+  overflow: hidden;
+  border: 1px solid var(--ln-cyan-border);
+  background:
+    linear-gradient(var(--ln-hairline) 1px, transparent 1px),
+    linear-gradient(90deg, var(--ln-hairline) 1px, transparent 1px),
+    radial-gradient(ellipse at 50% 58%, var(--ln-cyan-soft), transparent 64%),
+    var(--ln-surface);
+  background-size: 32px 32px, 32px 32px, auto, auto;
+  box-shadow: inset 0 0 0 1px var(--ln-hairline), var(--ln-glow-cyan);
+}
+.rocket-cutaway-board::before,
+.rocket-cutaway-board::after {
+  position: absolute;
+  z-index: 0;
+  content: '';
+  pointer-events: none;
+}
+.rocket-cutaway-board::before {
+  inset: 12px;
+  border: 1px solid var(--ln-hairline);
+}
+.rocket-cutaway-board::after {
+  right: 7%;
+  bottom: 13%;
+  width: 28%;
+  height: 2px;
+  background: var(--ln-cyan);
+  box-shadow: 0 0 14px var(--ln-cyan);
+  opacity: .42;
+}
+.rocket-cutaway-board svg { z-index: 2; }
+.rocket-cutaway-board__silhouette {
+  position: absolute;
+  z-index: 1;
+  top: 19%;
+  left: 13%;
+  width: 74%;
+  height: 56%;
+  object-fit: contain;
+  opacity: .22;
+  filter: saturate(1.15) contrast(1.08);
+}
+.rocket-blueprint-panel {
+  display: grid;
+  gap: var(--ln-s-2);
+  width: 100%;
+}
+.rocket-view-toggle {
+  min-height: 36px;
+  padding: 8px 12px;
+  border: 1px solid var(--ln-cyan-border);
+  background: var(--ln-surface);
+  color: var(--ln-cyan);
+  font: 800 9px/1 var(--ln-font-display);
+  letter-spacing: var(--ln-tr-label);
+}
+.rocket-view-toggle--bay {
+  position: absolute;
+  z-index: 4;
+  right: 12px;
+  bottom: 12px;
+  background: color-mix(in srgb, var(--ln-void) 82%, transparent);
+}
 .game-canvas-loading {
   position: absolute; inset: 0; display: grid; place-items: center;
   font: 800 12px var(--ln-font-mono); letter-spacing: 0.1em; color: var(--ln-cyan);
@@ -847,8 +1868,6 @@ button { cursor: pointer; }
   min-width: 0;
   gap: var(--ln-s-2);
   background: linear-gradient(0deg, rgba(8,8,10,0.98) 0%, rgba(8,8,10,0.88) 100%);
-  /* Glass HUD (Open Design "Full Panel Re-skin", 2026-07-25): blur layered on
-     top of the existing opaque gradient, matching .mission-setup-frame/-card. */
   backdrop-filter: var(--ln-glass-blur);
   -webkit-backdrop-filter: var(--ln-glass-blur);
 }
@@ -862,7 +1881,235 @@ button { cursor: pointer; }
 .mining-progress-fill { height: 100%; border-radius: 3px; background: linear-gradient(90deg, var(--ln-amber), var(--ln-cyan)); transition: width 120ms linear; }
 .mining-actions { display: grid; gap: var(--ln-s-2); }
 
-.debrief-screen { background: var(--ln-bg-stars), var(--ln-void); }
+/* KES-219 — keep the mining field atmospheric, but bring the persistent
+   operator surface into the light blueprint language used by Launchpad and
+   Contract List. The canvas is intentionally still dark: ore silhouettes,
+   laser beams, and hit feedback need a high-contrast scene behind them. */
+.theme-blueprint.mining-screen {
+  background: var(--ln-bp-bg);
+}
+.theme-blueprint.mining-screen .mining-controls {
+  color: var(--ln-bp-ink);
+  border-top: 1px solid var(--ln-bp-line-strong);
+  background: linear-gradient(0deg, rgba(238,243,248,.98), rgba(255,255,255,.94));
+  box-shadow: 0 -8px 20px rgba(15,36,54,.12);
+}
+.theme-blueprint.mining-screen .mining-controls .mining-progress-track,
+.theme-blueprint.mining-screen .mining-controls .mining-charge-track {
+  background: var(--ln-bp-paper-2);
+  border-color: var(--ln-bp-line-strong);
+}
+.theme-blueprint.mining-screen .mining-controls .mineral-stat,
+.theme-blueprint.mining-screen .mining-controls .ln-section-label {
+  color: var(--ln-bp-ink-dim);
+}
+.theme-blueprint.mining-screen .mining-controls .mineral-stat-count {
+  color: var(--ln-bp-ink);
+}
+.theme-blueprint.mining-screen {
+  --ln-mining-control-fill: rgba(255, 255, 255, 0.72);
+  --ln-mining-control-fill-strong: #ffffff;
+  --ln-mining-overlay: rgba(238, 243, 248, 0.88);
+  --ln-mining-action: var(--ln-bp-blue);
+  --ln-mining-action-press: #145f8f;
+}
+.theme-blueprint.mining-screen .mining-info-panel {
+  background: var(--ln-mining-control-fill-strong) !important;
+  border-color: var(--ln-bp-line-strong) !important;
+  box-shadow: var(--ln-shadow-card);
+}
+.theme-blueprint.mining-screen .mining-success-overlay,
+.theme-blueprint.mining-screen .mining-failure-overlay {
+  background: var(--ln-mining-overlay);
+}
+.theme-blueprint.mining-screen .mining-guide-panel {
+  padding: var(--ln-s-4);
+  border: 1px solid var(--ln-bp-line-strong);
+  border-radius: var(--ln-r-lg);
+  background: var(--ln-mining-control-fill-strong);
+  box-shadow: var(--ln-shadow-panel);
+}
+.theme-blueprint.mining-screen .mining-guide-close,
+.theme-blueprint.mining-screen .mining-success-secondary,
+.theme-blueprint.mining-screen .mining-success-primary {
+  font: 800 10px var(--ln-font-display);
+  letter-spacing: var(--ln-tr-label);
+  text-transform: uppercase;
+  cursor: pointer;
+}
+.theme-blueprint.mining-screen .mining-guide-close {
+  width: 100%;
+  margin-top: var(--ln-s-1);
+  padding: var(--ln-s-2) 0;
+  border: 1px solid var(--ln-cyan-border);
+  border-radius: var(--ln-r-md);
+  background: var(--ln-cyan-soft);
+  color: var(--ln-cyan);
+}
+.theme-blueprint.mining-screen .mining-success-panel {
+  background: var(--ln-mining-control-fill-strong) !important;
+  border-color: var(--ln-bp-green) !important;
+  box-shadow: var(--ln-shadow-modal);
+}
+.theme-blueprint.mining-screen .mining-success-secondary,
+.theme-blueprint.mining-screen .mining-success-primary {
+  padding: 11px 10px;
+  border-radius: var(--ln-r-md);
+}
+.theme-blueprint.mining-screen .mining-success-secondary {
+  border: 1px solid var(--ln-bp-green);
+  background: var(--ln-bp-green-soft);
+  color: var(--ln-bp-green);
+}
+.theme-blueprint.mining-screen .mining-success-primary {
+  border: 0;
+  background: var(--ln-bp-green);
+  color: #ffffff;
+}
+.theme-blueprint.mining-screen .mining-failure-overlay {
+  background: rgba(238, 243, 248, 0.94);
+}
+.theme-blueprint.mining-screen .mining-failure-retry,
+.theme-blueprint.mining-screen .mining-failure-abandon {
+  width: 100%;
+  padding: var(--ln-s-3) 0;
+  border-radius: var(--ln-r-md);
+  font: 800 11px var(--ln-font-display);
+  letter-spacing: var(--ln-tr-label);
+  text-transform: uppercase;
+  cursor: pointer;
+}
+.theme-blueprint.mining-screen .mining-failure-retry {
+  border: 0;
+  background: var(--ln-cyan);
+  color: var(--ln-text-on-cyan);
+}
+.theme-blueprint.mining-screen .mining-failure-abandon {
+  border: 1px solid var(--ln-crimson-border);
+  background: transparent;
+  color: var(--ln-crimson);
+}
+.theme-blueprint.mining-screen .mining-charge-warning > div {
+  margin: var(--ln-s-2) var(--ln-s-4);
+  padding: 6px 14px;
+  border: 1px solid var(--ln-crimson-border);
+  border-radius: var(--ln-r-md);
+  background: var(--ln-crimson-soft);
+  color: var(--ln-crimson);
+  font: 800 10px var(--ln-font-display);
+  letter-spacing: var(--ln-tr-loose);
+  text-transform: uppercase;
+}
+.theme-blueprint.mining-screen .mining-guide-button {
+  padding: var(--ln-s-1) var(--ln-s-2);
+  border: 1px solid var(--ln-cyan-border);
+  border-radius: var(--ln-r-xs);
+  background: var(--ln-cyan-soft);
+  color: var(--ln-cyan);
+  font: 800 9px var(--ln-font-display);
+  letter-spacing: var(--ln-tr-label);
+  text-transform: uppercase;
+  cursor: pointer;
+}
+.theme-blueprint.mining-screen .mining-controls button {
+  border-radius: var(--ln-r-md);
+}
+.theme-blueprint.mining-screen .mining-controls > div:last-child button {
+  background: var(--ln-mining-action);
+  color: #ffffff;
+  box-shadow: 0 3px 0 rgba(15, 36, 54, 0.18);
+}
+.theme-blueprint.mining-screen .mining-controls > div:last-child button:active:not(:disabled) {
+  background: var(--ln-mining-action-press);
+}
+.theme-blueprint.mining-screen .mining-controls > div:last-child button:disabled {
+  background: var(--ln-bp-paper-2);
+  color: var(--ln-bp-ink-mute);
+  box-shadow: none;
+}
+.theme-blueprint[data-testid="rover-mining-screen"] .rover-mining-hud {
+  background: linear-gradient(180deg, transparent, var(--ln-bp-bg) 18%);
+  border-top: 1px solid var(--ln-bp-line-strong);
+}
+
+/* KES-279: mining is a location scene, not a stacked form. Keep the field
+   edge-to-edge and float the operator HUD over it; the old flex column made
+   the white control surface consume the lower third of the scene. Actions
+   stay compact command controls instead of the oversized blue PrimaryBtn. */
+.mining-screen .mining-viewport {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+}
+.mining-screen .mining-controls {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 12;
+  padding: var(--ln-s-3) var(--ln-s-4) var(--ln-s-4);
+  background: rgba(6, 14, 26, 0.88);
+  border-top: 1px solid var(--ln-cyan-border);
+  box-shadow: 0 -12px 28px rgba(0, 0, 0, 0.3);
+  color: var(--ln-text);
+}
+.theme-deep.mining-screen {
+  background: var(--ln-void);
+}
+.theme-deep.mining-screen .mining-controls {
+  background: rgba(6, 14, 26, 0.88);
+  border-top-color: var(--ln-cyan-border);
+  box-shadow: 0 -12px 28px rgba(0, 0, 0, 0.3);
+}
+.theme-deep.mining-screen .mining-controls .ln-section-label,
+.theme-deep.mining-screen .mining-controls .mineral-stat {
+  color: var(--ln-text-muted);
+}
+.theme-deep.mining-screen .mining-controls .mineral-stat-count {
+  color: var(--ln-text);
+}
+.theme-deep.mining-screen .mining-command {
+  appearance: none;
+  min-width: 0;
+  min-height: 44px;
+  padding: 8px 14px;
+  border: 1px solid var(--ln-cyan-border);
+  border-radius: var(--ln-r-md);
+  background: rgba(18, 34, 54, 0.72) !important;
+  color: var(--ln-cyan) !important;
+  box-shadow: none !important;
+  font: 800 11px var(--ln-font-display);
+  letter-spacing: var(--ln-tr-label);
+  text-transform: uppercase;
+  cursor: pointer;
+}
+.theme-deep.mining-screen .mining-command--fire {
+  border-color: var(--ln-cyan);
+  background: rgba(63, 169, 255, 0.12) !important;
+}
+.theme-deep.mining-screen .mining-command--return {
+  border-color: var(--ln-ok);
+  color: var(--ln-ok) !important;
+}
+.theme-deep.mining-screen .mining-command:active:not(:disabled) {
+  background: rgba(63, 169, 255, 0.24) !important;
+}
+.theme-deep.mining-screen .mining-command:disabled {
+  border-color: var(--ln-hairline);
+  background: rgba(18, 34, 54, 0.42) !important;
+  color: var(--ln-text-muted) !important;
+  cursor: not-allowed;
+}
+
+.debrief-screen { background: var(--ln-void); }
+.debrief-arrival-board { position: relative; min-height: 240px; overflow: hidden; border: 1px solid var(--ln-hairline); border-radius: 10px; background: var(--ln-void); }
+.debrief-arrival-canvas { position: absolute; inset: 0; }
+.debrief-arrival-canvas canvas { display: block; width: 100%; height: 100%; }
+.debrief-arrival-board__copy { position: absolute; left: 16px; right: 16px; bottom: 16px; z-index: 2; text-align: left; text-shadow: 0 2px 8px rgba(0,0,0,.8); }
+.debrief-arrival-board__status { display: flex; align-items: center; gap: 7px; color: var(--ln-cyan); font: 800 9px var(--ln-font-display); letter-spacing: .14em; text-transform: uppercase; }
+.debrief-arrival-board__status span { width: 7px; height: 7px; border-radius: 50%; background: var(--ln-ok); box-shadow: 0 0 10px var(--ln-ok); }
+.debrief-arrival-board h2 { margin: 5px 0 2px; color: var(--ln-text); font: 800 24px/1 var(--ln-font-display); letter-spacing: .1em; text-transform: uppercase; }
+.debrief-arrival-board p { margin: 0; color: var(--ln-text-muted); font: 10px var(--ln-font-mono); letter-spacing: .1em; text-transform: uppercase; }
 
 .intro-screen { position: relative; width: 100%; height: 100%; overflow: hidden; }
 .intro-earth { position: absolute; inset: 0; }
@@ -871,9 +2118,9 @@ button { cursor: pointer; }
 .intro-badge { color: var(--ln-cyan); font: 700 11px var(--ln-font-mono); letter-spacing: 0.22em; text-transform: uppercase; margin-bottom: 12px; }
 .intro-logo-mark { width: 104px; height: 104px; margin: 0 0 8px; filter: drop-shadow(0 0 18px rgba(112,217,234,0.28)); }
 .intro-title { color: #fff; font: 800 52px var(--ln-font-display); letter-spacing: 0.08em; text-transform: uppercase; text-shadow: 0 0 40px rgba(112,217,234,0.3); margin: 0 0 10px; }
-.intro-welcome { color: var(--ln-amber); font: 700 16px var(--ln-font-display); letter-spacing: 0.08em; margin: 0 0 8px; }
+.intro-welcome { color: var(--ln-text); font: 700 16px var(--ln-font-display); letter-spacing: 0.08em; margin: 0 0 8px; }
 .intro-subtitle { color: var(--ln-text-dim); font: 400 14px/1.5 var(--ln-font-body); max-width: 280px; margin: 0 0 36px; }
-.intro-begin-btn { padding: 18px 40px; background: linear-gradient(180deg, var(--ln-cyan-bright) 0%, var(--ln-cyan-press) 100%); color: #06121f; font-family: var(--ln-font-display); font-weight: 800; font-size: 16px; letter-spacing: 0.14em; text-transform: uppercase; border: none; border-radius: 12px; box-shadow: inset 0 1px 0 rgba(255,255,255,0.4), 0 4px 0 rgba(0,0,0,0.3), 0 0 22px rgba(255,255,255,0.28); cursor: pointer; transition: transform 100ms; }
+.intro-begin-btn { min-height: 44px; padding: 10px 18px; background: transparent; color: var(--ln-cyan); font-family: var(--ln-font-display); font-weight: 800; font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase; border: 1px solid var(--ln-cyan-border); border-radius: 8px; cursor: pointer; transition: background 120ms ease-out, transform 100ms; }
 .intro-begin-btn:active { transform: translateY(2px); }
 .intro-reconnecting-indicator { display: flex; gap: 8px; align-items: center; justify-content: center; margin-top: 4px; }
 .intro-reconnecting-indicator span { width: 6px; height: 6px; border-radius: 50%; background: var(--ln-cyan); opacity: 0.3; animation: ln-pulse 1.2s ease-in-out infinite; }
@@ -888,6 +2135,34 @@ button { cursor: pointer; }
 .reward-label { color: var(--ln-text-dim); }
 
 .debrief-scroll { display: flex; flex-direction: column; gap: var(--ln-s-3); text-align: center; }
+.debrief-overview { display: grid; gap: var(--ln-s-3); text-align: left; }
+
+@media (min-width: 900px) {
+  .debrief-screen .screen-scroll {
+    padding: 68px var(--ln-s-5) 104px;
+  }
+  .debrief-hero {
+    padding-top: 8px !important;
+    padding-bottom: 0 !important;
+  }
+  .debrief-hero .success-mark {
+    width: 56px;
+    height: 56px;
+    font-size: 28px;
+  }
+  .debrief-hero h2 {
+    margin-top: 8px !important;
+    font-size: 22px !important;
+  }
+  .debrief-overview {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    align-items: start;
+  }
+  .debrief-client-panel,
+  .debrief-delivery-panel {
+    padding: 12px !important;
+  }
+}
 .debrief-scroll h2 { color: var(--ln-text); font: 800 28px var(--ln-font-display); letter-spacing: var(--ln-tr-label); text-transform: uppercase; }
 .debrief-scroll p { color: var(--ln-text-dim); font: 11px var(--ln-font-mono); letter-spacing: var(--ln-tr-label); text-transform: uppercase; }
 .success-mark { width: 88px; height: 88px; margin: 0 auto; display: grid; place-items: center; border-radius: 50%; color: var(--ln-text-on-cyan); background: radial-gradient(circle at 30% 30%, #a9ffc8, var(--ln-ok) 70%, #02180c); box-shadow: var(--ln-glow-ok); font: 800 44px var(--ln-font-display); animation: glow-anim 2s ease-in-out infinite; }
@@ -895,8 +2170,234 @@ button { cursor: pointer; }
 .reward-total { margin-top: var(--ln-s-1); color: var(--ln-amber); font: 800 32px var(--ln-font-display); }
 .reward-xp { margin-top: var(--ln-s-2); color: var(--ln-info); font: 700 12px var(--ln-font-mono); letter-spacing: var(--ln-tr-label); }
 
+/* KES-279: Debrief is an arrival scene, not a receipt page. The canvas owns
+   the world and the result data sits on top as a compact in-world HUD. */
+.debrief-game {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  isolation: isolate;
+  color: var(--ln-text);
+  background: var(--ln-void);
+}
+.debrief-arrival-canvas {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  background: var(--ln-void);
+}
+.debrief-arrival-canvas canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+.debrief-game__world-shade {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background:
+    linear-gradient(180deg, rgba(2, 7, 17, .58) 0%, rgba(2, 7, 17, .06) 27%, rgba(2, 7, 17, .06) 58%, rgba(2, 7, 17, .46) 100%),
+    radial-gradient(ellipse at 50% 72%, transparent 0%, rgba(2, 7, 17, .24) 72%, rgba(2, 7, 17, .56) 100%);
+}
+.debrief-hud-header {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 10;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 18px 18px 18px 76px;
+  pointer-events: none;
+  background: linear-gradient(180deg, rgba(2, 7, 17, .8), rgba(2, 7, 17, 0));
+}
+.debrief-hud-header span:first-child {
+  display: block;
+  color: var(--ln-cyan);
+  font: 800 10px var(--ln-font-display);
+  letter-spacing: .2em;
+  text-transform: uppercase;
+}
+.debrief-hud-header h1 {
+  margin-top: 3px;
+  color: var(--ln-text);
+  font: 800 28px/1 var(--ln-font-display);
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  text-shadow: 0 3px 12px rgba(0, 0, 0, .6);
+}
+.debrief-hud-header__location {
+  margin-top: 6px;
+  color: var(--ln-text-muted);
+  font: 700 9px var(--ln-font-mono);
+  letter-spacing: .14em;
+  text-align: right;
+  text-transform: uppercase;
+}
+.debrief-game__content {
+  position: absolute;
+  inset: 0;
+  z-index: 8;
+  overflow-y: auto;
+  padding: 96px 16px 112px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--ln-cyan-border) transparent;
+}
+.debrief-game__content > * {
+  width: min(100%, 860px);
+  margin-right: auto;
+  margin-left: auto;
+}
+.debrief-mission-strip {
+  padding: 12px 16px 14px;
+  border-left: 3px solid var(--ln-cyan);
+  border-top: 1px solid var(--ln-cyan-border);
+  border-right: 1px solid rgba(112, 217, 234, .14);
+  border-bottom: 1px solid rgba(112, 217, 234, .14);
+  background: rgba(6, 14, 26, .74);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, .18);
+  backdrop-filter: blur(8px);
+}
+.debrief-mission-strip__status {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--ln-ok);
+  font: 800 9px var(--ln-font-display);
+  letter-spacing: .16em;
+  text-transform: uppercase;
+}
+.debrief-mission-strip__status span {
+  width: 7px;
+  height: 7px;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  background: currentColor;
+  box-shadow: 0 0 12px currentColor;
+}
+.debrief-mission-strip__route {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, .8fr);
+  gap: 24px;
+  margin-top: 11px;
+}
+.debrief-mission-strip__route div {
+  min-width: 0;
+}
+.debrief-mission-strip__route span {
+  display: block;
+  color: var(--ln-text-muted);
+  font: 700 8px var(--ln-font-display);
+  letter-spacing: .18em;
+  text-transform: uppercase;
+}
+.debrief-mission-strip__route strong {
+  display: block;
+  overflow: hidden;
+  margin-top: 3px;
+  color: var(--ln-text);
+  font: 800 17px/1.15 var(--ln-font-display);
+  letter-spacing: .03em;
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.debrief-game__content .debrief-overview {
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 12px;
+  margin-top: 12px;
+}
+.debrief-game__content .debrief-overview > *,
+.debrief-game__content .debrief-overview + * {
+  background: rgba(6, 14, 26, .78) !important;
+  border-color: rgba(112, 217, 234, .2) !important;
+  border-radius: 4px;
+  backdrop-filter: blur(8px);
+}
+/* SSL-305: the arrival canvas draws bright berth/orbit strokes behind the
+   content column. At mobile widths those strokes ran straight through the
+   Ledger rows ("Contract value") and the NOT SYNCED chip because the panels
+   were only ~78% opaque and the chip had no background at all. Make every
+   content panel on this screen opaque and give the sync chip its own
+   solid pill, so no decorative line can intersect text. */
+.debrief-game__content > *:not(.debrief-overview),
+.debrief-game__content > .debrief-overview > * {
+  background: var(--ln-panel) !important;
+  backdrop-filter: none;
+}
+.portrait-canvas:has(.debrief-game) .sync-status {
+  padding: 4px 8px;
+  border: 1px solid var(--ln-hairline);
+  border-radius: var(--ln-r-pill);
+  background: var(--ln-void);
+}
+.debrief-game__content .debrief-overview + * {
+  margin-top: 12px;
+}
+.debrief-command-dock {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 12;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  min-height: 78px;
+  padding: 12px 18px 16px;
+  border-top: 1px solid var(--ln-cyan-border);
+  background: linear-gradient(180deg, rgba(2, 7, 17, .12), rgba(2, 7, 17, .92) 28%, rgba(2, 7, 17, .98));
+  pointer-events: none;
+}
+.debrief-command-dock > * {
+  pointer-events: auto;
+}
+.debrief-command-dock [data-testid="resolve-cargo-btn"],
+.debrief-command-dock [data-testid="collect-reward-btn"] {
+  min-width: 176px;
+  min-height: 44px;
+  background: rgba(6, 14, 26, .88) !important;
+  border-color: var(--ln-cyan) !important;
+  color: var(--ln-cyan) !important;
+  box-shadow: 0 0 18px rgba(112, 217, 234, .12) !important;
+}
+.debrief-command-dock [data-testid="resolve-cargo-btn"]:hover,
+.debrief-command-dock [data-testid="collect-reward-btn"]:hover {
+  background: rgba(112, 217, 234, .12) !important;
+}
+
+@media (max-width: 620px) {
+  .debrief-hud-header {
+    gap: 12px;
+    padding-left: 68px;
+  }
+  .debrief-hud-header h1 { font-size: 22px; }
+  .debrief-hud-header__location {
+    max-width: 124px;
+    font-size: 8px;
+    line-height: 1.3;
+  }
+  .debrief-game__content { padding: 86px 12px 104px; }
+  .debrief-mission-strip { padding: 10px 12px 12px; }
+  .debrief-mission-strip__route { grid-template-columns: 1fr; gap: 8px; }
+  .debrief-mission-strip__route strong { font-size: 15px; }
+  .debrief-game__content .debrief-overview { grid-template-columns: 1fr !important; }
+  .debrief-command-dock {
+    justify-content: stretch;
+    min-height: 70px;
+    padding: 10px 12px 12px;
+  }
+  .debrief-command-dock [data-testid="resolve-cargo-btn"],
+  .debrief-command-dock [data-testid="collect-reward-btn"] {
+    width: 100%;
+  }
+}
+
 @media (max-height: 760px) and (max-width: 1023px) {
-  .portrait-canvas { border-radius: var(--ln-r-xl); }
   .screen-scroll { padding-top: 68px; }
   .screen-scroll--coach { padding-top: var(--tutorial-content-top); }
   .screen-scroll--coach-manual { padding-top: var(--tutorial-manual-content-top); }
@@ -921,6 +2422,19 @@ button { cursor: pointer; }
     border: 2px solid rgba(108, 212, 255, 0.08);
     box-shadow: 0 30px 80px rgba(0, 0, 0, 0.4);
   }
+  /* KES-233: Earth Base is the root game world and Launchpad is part of that
+     world, not a generic device-card preview. This must live after the
+     desktop canvas rule so the route class wins even when imported screen CSS
+     is separately bundled/cached. */
+  .portrait-canvas.portrait-canvas--full-page {
+    width: 100%;
+    max-width: none;
+    height: 100dvh;
+    max-height: none;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+  }
   .sticky-actions { padding-bottom: var(--ln-s-5); }
 }
 
@@ -934,10 +2448,6 @@ button { cursor: pointer; }
 
    The bottom tab bar survives only under 1024px, where there is no room for
    the base action rail to carry navigation as well. */
-.desktop-sidebar {
-  display: none;
-}
-
 .hub-desktop-nav {
   display: none;
 }
@@ -949,28 +2459,14 @@ button { cursor: pointer; }
   .hub-desktop-nav {
     display: flex;
   }
-}
 
-/* Mobile landscape: fill landscape viewport with adjusted chrome */
-@media (orientation: landscape) and (max-width: 1023px) {
-  .game-stage {
-    padding: 0;
-  }
-  .portrait-canvas {
-    width: calc(100dvw - var(--ln-s-2));
-    height: calc(100dvh - var(--ln-s-2));
-    max-height: none;
-    border-radius: var(--ln-r-lg);
-  }
-  .screen-scroll {
-    padding-top: 52px;
-    padding-bottom: var(--ln-s-4);
-  }
-  .screen-scroll--coach {
-    padding-top: var(--tutorial-content-top);
-  }
-  .screen-scroll--coach-manual {
-    padding-top: var(--tutorial-manual-content-top);
+  /* The tutorial rail spans the desktop content width. Keep the optional
+     ambient notification prompt in a separate lower-left slot while that
+     rail is present instead of claiming the rail's reserved rectangle. */
+  .portrait-canvas:has([data-ui-zone="tutorial-rail"]) .hub-push-opt-in {
+    top: auto;
+    bottom: 14px;
+    left: 14px;
   }
 }
 
@@ -983,26 +2479,24 @@ button { cursor: pointer; }
   0%,100% { border-color: rgba(255,255,255,0.28); box-shadow: 0 0 8px rgba(112,217,234,0.15); }
   50% { border-color: rgba(112,217,234,0.9); box-shadow: 0 0 20px rgba(112,217,234,0.45); }
 }
-/* The coach glow used to animate box-shadow + border-color directly, which
-   repaints the animated element (and re-composites the backdrop-filter panels
-   it sits over — .mission-setup-frame/.mission-setup-card on Select Rocket)
-   on every single frame, for as long as a coach step is on screen. That is
-   what made the setup screens feel laggy while the tutorial was active.
-   The glow is now a separate overlay ring whose *opacity* animates: opacity
-   is compositor-driven, so the pulse costs no repaints at all. */
 @keyframes coach-glow-fade {
   0%,100% { opacity: 0.35; }
   50% { opacity: 1; }
 }
 
-/* Amber pulse ring. Sits over its positioned parent (or fills a highlight
-   overlay); never paints text, so animating the whole layer's opacity is safe. */
+/* Cyan pulse ring. Sits over its positioned parent (or fills a highlight
+   overlay); never paints text, so animating the whole layer's opacity is safe.
+   Was amber (rgba(245,166,35,...)) until KES-192 — TutorialHighlight wraps
+   whole content panels (Target Picker, Rocket Buy, Launch Preflight, Debrief)
+   whenever hasCoach is true, so that amber was a panel accent on every
+   onboarding screen, not the small payout-emphasis use the standing amber
+   rule allows. Cyan matches TutorialCoach's own instruction-card border. */
 .coach-glow-ring {
   position: absolute;
   inset: 0;
-  border: 2px solid rgba(245,166,35,1);
+  border: 2px solid rgba(112,217,234,1);
   border-radius: inherit;
-  box-shadow: 0 0 20px 5px rgba(245,166,35,0.45);
+  box-shadow: 0 0 20px 5px rgba(112,217,234,0.45);
   pointer-events: none;
   will-change: opacity;
   animation: coach-glow-fade 1.6s ease-in-out infinite;
@@ -1026,7 +2520,6 @@ button { cursor: pointer; }
   0%,100% { box-shadow: 0 0 0 2px rgba(245,166,35,0.65), 0 0 10px rgba(245,166,35,0.15); }
   50%      { box-shadow: 0 0 0 3px rgba(245,166,35,1),    0 0 28px rgba(245,166,35,0.45); }
 }
-html[data-coach-target="sidebar-missions"] [data-coach-id="sidebar-missions"],
 html[data-coach-target="bottom-tab-missions"] [data-coach-id="bottom-tab-missions"] {
   animation: coach-target-pulse 1.4s ease-in-out infinite;
 }
@@ -1037,24 +2530,52 @@ html[data-coach-target="build-structure-strip"] [data-coach-id="build-structure-
 @keyframes pad-pulse { 0%,100% { transform: scale(1); opacity: 0.85; } 50% { transform: scale(1.05); opacity: 1; } }
 
 /* ── Earth Base scene (Open Design "landnam-earth-base-v2") ──────────────
-   Ported 2026-07-26 from open-design/.od/projects/a531c672-.../
-   landnam-earth-base-v2.html. Replaces the old procedural sine-ridge +
-   amber-horizon world with the flat-shaded deep-blue scene: layered ridge
-   parallax, octagonal plateau, dirt-mound structure collars, drifting
-   motes, and white-outline black chrome. No amber anywhere on this screen —
-   accents are cyan (--ln-cyan) and mint (--hub-mint) only. */
+   Ported 2026-07-26. Rebuilt 2026-08-21 (KES-220) into a light daylight
+   scene, SCRAPPED AND REBUILT (KES-226) into a circular orbit-ring diorama
+   framed after tapnine.com's "Black Hole" reference — then corrected again
+   2026-08-22 (KES-228): the ring was a narrative error. Earth Base is a
+   space *agency facility on Earth*, not a station in orbit; a giant
+   space-hole diorama behind the launchpad implied the wrong setting. What
+   the Black Hole reference actually contributes to Landnam is layout
+   language (a persistent stacked HUD rail, a docked bottom sheet with a
+   title/CTA row + icon strip) — not its literal ring motif. That layout
+   language stays (HUDStrip, HubScreen's dock). The backdrop itself is now
+   a grounded Earth diorama: a dusk sky, three parallax hill-silhouette
+   bands, and a horizon glow, in Out There: Ω Edition's dark navy palette
+   with the reference's pink kept as a warm horizon/accent color, not a
+   dominant space object. Flat structure sprites are authored as transparent
+   DOM assets; these tokens cover the surrounding scene: sky, hills, horizon
+   glow, and HUD/sheet chrome. */
 :root {
-  /* Scene-local accents. Mint is the mockup's --ln-ok (#2fbf6a); kept as a
-     hub-scoped token rather than overriding the global --ln-ok, which other
-     screens already tune against. */
-  --hub-mint:       #2fbf6a;
-  --hub-cyan:       #6cd4ff;
-  --hub-outline:    rgba(255, 255, 255, 0.55);
-  --hub-panel:      #080d18;
-  --hub-panel-deep: #0a0f1a;
-  /* Ground contact line — 22% from the bottom. MUST stay in agreement with
-     hubScene.ts (groundY = containerH * 0.78) and the DOM plot positions in
-     HubScreen/BuildPlaceScreen, which all derive from the same 22%. */
+  /* Scene-local accents. Kept as hub-scoped tokens rather than overriding
+     the global --ln-cyan/--ln-ok, which other screens already tune against. */
+  --hub-mint:       #5ad07e;
+  --hub-cyan:       #70d9ea;
+  /* Chalky, slightly desaturated sage green — replaces the earlier hot-pink
+     interactive accent (2026-08-23) across the Hub's clickable chrome (Jobs
+     chip, Edit/Build CTA, active dock icons). The atmospheric dusk-horizon
+     pink below is a separate, still-standing decision (KES-228) and is left
+     alone — it's backdrop color, not interactive UI. */
+  --hub-chalk:       #9bc98a;
+  --hub-chalk-soft:  rgba(155, 201, 138, 0.16);
+  --hub-outline:    rgba(177, 198, 229, 0.4);
+  --hub-panel:      #04101f;
+  --hub-panel-deep: #020a16;
+  /* Dusk sky — deep navy overhead, warming toward the horizon. */
+  --hub-void:       #00040a;
+  --hub-bg:         #000d1f;
+  --hub-sky-top:    #050d1f;
+  --hub-sky-mid:    #12213f;
+  --hub-horizon:    #d9527e;
+  --hub-horizon-glow: rgba(227, 95, 160, 0.22);
+  /* Parallax hill silhouettes, far to near. */
+  --hub-hill-far:   #16233f;
+  --hub-hill-mid:   #0f1b34;
+  --hub-hill-near:  #0a1428;
+  --hub-skyline:    #0a1626;
+  /* Ground contact line — 22% from the bottom. Keep this aligned with the DOM
+     plot positions in HubScreen/BuildPlaceScreen, which derive from the same
+     scene-local baseline. */
   --hub-ground: 22%;
 }
 @keyframes hub-twinkle   { from { opacity: 0.55; } to { opacity: 1; } }
@@ -1069,8 +2590,81 @@ html[data-coach-target="build-structure-strip"] [data-coach-id="build-structure-
   90%  { opacity: 0.45; }
   100% { transform: translateY(-58%) translateX(var(--drift, 20px)); opacity: 0; }
 }
+
+/* Structure construction — layer-by-layer reveal + drone rig (SSL-315).
+   Every piece shares one fixed animation-duration (the structure's build
+   time) with a negative animation-delay set inline per-instance, so the
+   CSS animation resumes at the correct point even after a page reload
+   mid-build instead of restarting from 0. */
+.hub-construct-reveal {
+  clip-path: inset(0% 0 0 0);
+  animation-name: hub-construct-reveal;
+  animation-timing-function: var(--ln-ease-mech, ease);
+  animation-fill-mode: forwards;
+  animation-iteration-count: 1;
+}
+@keyframes hub-construct-reveal {
+  from { clip-path: inset(100% 0 0 0); }
+  to   { clip-path: inset(0% 0 0 0); }
+}
+.hub-construction-rig {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  pointer-events: none;
+}
+.hub-scaffold-bar {
+  fill: var(--ln-cyan-bright);
+  opacity: 0.85;
+  transform: scaleY(1);
+  animation-name: hub-scaffold-bar;
+  animation-timing-function: linear;
+  animation-fill-mode: forwards;
+  animation-iteration-count: 1;
+}
+@keyframes hub-scaffold-bar {
+  from { transform: scaleY(0); }
+  to   { transform: scaleY(1); }
+}
+.hub-scaffold-brace {
+  fill: var(--hub-cyan);
+  opacity: 1;
+  animation-timing-function: steps(1, end);
+  animation-fill-mode: both;
+  animation-iteration-count: 1;
+}
+.hub-scaffold-brace--1 { animation-name: hub-scaffold-brace-1; }
+.hub-scaffold-brace--2 { animation-name: hub-scaffold-brace-2; }
+@keyframes hub-scaffold-brace-1 { 0%, 34% { opacity: 0; } 35%, 100% { opacity: 1; } }
+@keyframes hub-scaffold-brace-2 { 0%, 71% { opacity: 0; } 72%, 100% { opacity: 1; } }
+.hub-drone {
+  opacity: 0;
+  animation-timing-function: var(--ln-ease-mech, ease);
+  animation-fill-mode: forwards;
+  animation-iteration-count: 1;
+}
+.hub-drone--1 { animation-name: hub-drone-drift-1; }
+.hub-drone--2 { animation-name: hub-drone-drift-2; }
+@keyframes hub-drone-drift-1 {
+  0%   { transform: translate(-6px, 4px); opacity: 0; }
+  10%  { opacity: 1; }
+  50%  { transform: translate(6px, -8px); }
+  92%  { opacity: 1; }
+  100% { transform: translate(0, -2px); opacity: 0; }
+}
+@keyframes hub-drone-drift-2 {
+  0%   { transform: translate(5px, -3px); opacity: 0; }
+  14%  { opacity: 1; }
+  55%  { transform: translate(-7px, 6px); }
+  92%  { opacity: 1; }
+  100% { transform: translate(0, 3px); opacity: 0; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .hub-stars, .hub-ridge, .hub-mote, .hub-ore, .hub-notify, .hub-light-dot { animation: none !important; }
+  .hub-construct-reveal, .hub-scaffold-bar, .hub-scaffold-brace, .hub-drone { animation: none !important; }
 }
 @keyframes unlock-in { from { transform: scale(0.85); opacity: 0; } to { transform: scale(1); opacity: 1; } }
 @keyframes unlock-spin { to { transform: translate(-50%,-50%) rotate(360deg); } }
@@ -1091,56 +2685,373 @@ html[data-coach-target="build-structure-strip"] [data-coach-id="build-structure-
   100% { opacity: 0; transform: translate(calc(-50% + var(--sx, 0px)), calc(-50% + var(--sy, 0px))); }
 }
 
-/* Keep the Earth Base scene chrome in separate reserved bands. The previous
-   110px action-rail offset landed directly on the building status pills at
-   short landscape heights. */
-.hub-action-rail { bottom: 110px; }
+/* ============================================================
+   SCENE-PANEL SPIKE (STS-630) — Launchpad only
+   ============================================================
+   CSS approximation of the scene-panel model (see ZenNotes
+   landnam-scene-panel-background-direction-2026-07-31): the panel
+   background is a lit surface, not a flat color fill, and instrument
+   chrome uses thick opaque outlines instead of thin glass hairlines.
+   This is a stand-in for a future PixiJS-rendered control-room
+   background — not the final rendering technique. Scoped under
+   .ln-scene-launchpad so it cannot leak into any other screen. */
+.ln-scene-launchpad {
+  --scene-sky-top:    #bfe8f5;
+  --scene-sky-mid:    #eaf8ea;
+  --scene-ground:     #6fae63;
+  --scene-sun:        rgba(255, 235, 150, 0.9);
+  --scene-ink:        #14171c;
+  --scene-card-bg:    #ffffff;
+  --scene-card-text:  #14171c;
+  --scene-card-muted: #3f4854;
+
+  background:
+    radial-gradient(140px 90px at 82% 12%, var(--scene-sun), transparent 70%),
+    linear-gradient(0deg, var(--scene-ground) 0%, var(--scene-ground) 20%, transparent 20%),
+    linear-gradient(180deg, var(--scene-sky-top) 0%, var(--scene-sky-mid) 55%, var(--scene-ground) 100%);
+}
+
+.ln-instrument-card {
+  background: var(--scene-card-bg);
+  border: 3px solid var(--scene-ink);
+  border-radius: 10px;
+  box-shadow: 0 4px 0 var(--scene-ink);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.ln-instrument-label {
+  font-family: var(--ln-font-display);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--scene-card-muted);
+  font-weight: 700;
+}
+
+.ln-instrument-value {
+  font-family: var(--ln-font-display);
+  font-size: 16px;
+  color: var(--scene-card-text);
+  font-weight: 700;
+}
+
+/* ============================================================
+   SCENE PANEL — generalized scene-panel model (KES-289)
+   ============================================================
+   Extracted from the Launchpad spike above (KES-61) plus the "Construction
+   Kit" design kit (KES-280) so screens stop hand-rolling a new
+   `.ln-scene-<screen>` class each time. Use via `<ScenePanel>`
+   (components/game/ScenePanel.tsx) instead of stacking Panel cards directly
+   inside a flat `--ln-bg`/`--ln-panel` fill. Ambient ramps are a CSS
+   stand-in for real Blender/Pixi-rendered backgrounds, same as the
+   Launchpad spike — swap a ramp for real art per screen as it's produced,
+   without touching the screens that consume it. */
+.ln-scene-panel {
+  position: absolute;
+  inset: 0;
+  overflow-y: auto;
+  isolation: isolate;
+}
+
+.ln-scene-panel-backdrop {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.ln-scene-panel > :not(.ln-scene-panel-backdrop) {
+  position: relative;
+  z-index: 1;
+}
+
+.ln-scene-panel--industrial {
+  background:
+    radial-gradient(140px 90px at 88% 6%, rgba(255, 197, 92, 0.16), transparent 70%),
+    linear-gradient(180deg, #142544 0%, #0e1c34 50%, #081222 100%);
+}
+
+.ln-scene-panel--survey {
+  background:
+    radial-gradient(160px 100px at 12% 8%, color-mix(in srgb, var(--ln-warn) 14%, transparent), transparent 70%),
+    linear-gradient(180deg, color-mix(in srgb, var(--ln-bg) 88%, var(--ln-warn)) 0%, var(--ln-bg) 55%, var(--ln-void) 100%);
+}
+
+.ln-scene-panel--observatory {
+  background:
+    radial-gradient(240px 160px at 78% 14%, color-mix(in srgb, var(--ln-warn) 22%, transparent), transparent 70%),
+    radial-gradient(260px 180px at 20% 86%, color-mix(in srgb, var(--ln-play) 14%, transparent), transparent 74%),
+    linear-gradient(180deg, color-mix(in srgb, var(--ln-void) 72%, var(--ln-purple-depth)) 0%, var(--ln-void) 100%);
+}
+
+.ln-scene-panel--utility {
+  background:
+    radial-gradient(150px 90px at 50% -4%, rgba(177, 198, 229, 0.12), transparent 65%),
+    linear-gradient(180deg, #101e35 0%, #0b1729 55%, #060c17 100%);
+}
 
 .hub-push-opt-in {
   position: absolute;
-  top: 16px;
-  right: 196px;
+  /* Keep the ambient opt-in out of the progression-card action column. At
+     desktop widths the cards occupy the upper-right content rail; the old
+     `right: 196px` placement landed directly over their click targets.
+     `top` was 74px, tuned against the HUD's old single-row height — the
+     KES-220/226 stacked rail (eyebrow + title + two HUDStrip chips) now
+     reaches ~150px at the left edge, so 74px sat this prompt directly on
+     top of the Francs/Jobs chips (reported 2026-08-23: "Enable Mission
+     Alerts" overlapping "E11.6B"). Must clear the same rail height
+     HubScreen.tsx's HUB_HUD_RAIL_CLEARANCE is tuned against. */
+  top: 170px;
+  left: 14px;
+  right: auto;
   z-index: 19;
   max-width: 210px;
 }
 .hub-push-opt-in button,
 .hub-push-opt-in div { white-space: nowrap; }
 
-@media (min-width: 1024px) {
-  .hub-action-rail { bottom: var(--ln-s-5); }
+/* Structure labels share the same authored plot centres as the sprites. On a
+   narrow scene, long facility names must wrap inside their own pill instead of
+   colliding with the adjacent plot's label. */
+.hub-building-status { text-align: center; }
+@media (max-width: 520px) {
+  .hub-building-status { max-width: 86px; white-space: normal !important; padding-inline: 7px !important; }
+  .hub-building-status > span:first-child { display: block; width: 72px; line-height: 1.05; overflow-wrap: anywhere; white-space: normal; }
 }
 
 @media (max-width: 1023px) {
   .hub-push-opt-in { display: none; }
 }
 
-@media (orientation: landscape) and (max-height: 600px) {
-  .hub-progression-stack { bottom: 76px !important; }
+/* The orbital network is an in-world instrument, not Base navigation chrome.
+   Its only UI is a compact telemetry strip attached to the visible orbit. */
+.hub-orbital-network {
+  position: absolute;
+  top: 27%;
+  right: 8%;
+  z-index: 7;
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+  width: 128px;
+  padding: 0;
+  color: var(--hub-cyan);
+  background: transparent;
+  border: 0;
+  cursor: pointer;
 }
 
-/* Keep the Earth Base scene chrome in separate reserved bands. The previous
-   110px action-rail offset landed directly on the building status pills at
-   short landscape heights. */
-.hub-action-rail { bottom: 110px; }
+.hub-orbital-network:focus-visible {
+  outline: 2px solid var(--ln-cyan);
+  outline-offset: 4px;
+}
 
-.hub-push-opt-in {
+.hub-orbital-network__sky {
+  position: relative;
+  width: 128px;
+  height: 64px;
+}
+
+.hub-orbital-network__ring {
+  position: absolute;
+  border: 1px solid var(--ln-hairline);
+  border-radius: 50%;
+  transform: rotate(-18deg);
+}
+
+.hub-orbital-network__ring--outer { inset: 4px 0; }
+.hub-orbital-network__ring--inner { inset: 16px 24px; border-color: color-mix(in srgb, var(--hub-cyan) 48%, transparent); }
+
+.hub-orbital-network__earth {
+  position: absolute;
+  top: 24px;
+  left: 56px;
+  width: 16px;
+  height: 16px;
+  background: var(--hub-bg);
+  border: 2px solid var(--hub-cyan);
+  border-radius: 50%;
+  box-shadow: 0 0 12px color-mix(in srgb, var(--hub-cyan) 42%, transparent);
+}
+
+.hub-orbital-network__satellite,
+.hub-orbital-network__telescope {
+  position: absolute;
+  display: block;
+  width: 8px;
+  height: 8px;
+  background: var(--hub-chalk);
+  border: 1px solid var(--hub-void);
+  box-shadow: 0 0 8px color-mix(in srgb, var(--hub-chalk) 55%, transparent);
+}
+
+.hub-orbital-network__satellite { top: 9px; right: 18px; }
+.hub-orbital-network__satellite::before,
+.hub-orbital-network__satellite::after {
+  position: absolute;
+  top: 2px;
+  width: 8px;
+  height: 3px;
+  content: '';
+  background: var(--hub-cyan);
+}
+.hub-orbital-network__satellite::before { right: 8px; }
+.hub-orbital-network__satellite::after { left: 8px; }
+
+.hub-orbital-network__telescope {
+  bottom: 11px;
+  left: 16px;
+  width: 14px;
+  height: 5px;
+  transform: rotate(24deg);
+}
+.hub-orbital-network__telescope::after {
+  position: absolute;
+  top: 1px;
+  right: -6px;
+  width: 6px;
+  height: 1px;
+  content: '';
+  background: var(--hub-cyan);
+}
+
+.hub-orbital-network__status {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 16px;
+  padding: 0 8px;
+  color: var(--ln-text-muted);
+  background: color-mix(in srgb, var(--hub-panel-deep) 82%, transparent);
+  border: 1px solid var(--ln-hairline);
+  border-radius: 2px;
+  font-family: var(--ln-font-display);
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.hub-orbital-network__status--ready { color: var(--hub-chalk); border-color: var(--hub-chalk); }
+.hub-orbital-network__dot { width: 4px; height: 4px; background: currentColor; border-radius: 50%; }
+.hub-orbital-network__ping {
+  position: absolute;
+  inset: 0;
+  border: 2px solid var(--hub-cyan);
+  border-radius: 50%;
+  pointer-events: none;
+  animation: hub-orbital-ping 2s ease-out infinite;
+}
+@keyframes hub-orbital-ping {
+  0% { transform: scale(0.6); opacity: 0.9; }
+  100% { transform: scale(1.6); opacity: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hub-orbital-network__ping { animation: none; opacity: 0.6; }
+}
+
+.hub-orbital-network__ping {
   position: absolute;
   top: 16px;
-  right: 196px;
-  z-index: 19;
-  max-width: 210px;
-}
-.hub-push-opt-in button,
-.hub-push-opt-in div { white-space: nowrap; }
-
-@media (min-width: 1024px) {
-  .hub-action-rail { bottom: var(--ln-s-5); }
+  left: 48px;
+  width: 32px;
+  height: 32px;
+  border: 1px solid var(--hub-chalk);
+  border-radius: 50%;
+  animation: hub-orbit-ping 1.8s ease-out infinite;
+  pointer-events: none;
 }
 
-@media (max-width: 1023px) {
-  .hub-push-opt-in { display: none; }
+@keyframes hub-orbit-ping {
+  0% { transform: scale(0.4); opacity: 0.9; }
+  70% { transform: scale(1.8); opacity: 0; }
+  100% { transform: scale(1.8); opacity: 0; }
 }
 
-@media (orientation: landscape) and (max-height: 600px) {
-  .hub-progression-stack { bottom: 76px !important; }
+@media (max-width: 520px) {
+  .hub-orbital-network { top: 30%; right: 4%; transform: scale(0.82); transform-origin: top right; }
 }
+
+/* Corrected 2026-08-22 (KES-228): this block hardcoded a light "blueprint"
+   surface directly on `.build-place-screen` — unconditionally, with
+   `!important`, completely outside the `.theme-blueprint` opt-in class this
+   file's other blueprint passes use. Removing `theme-blueprint` from the
+   component's root (it was never applied here to begin with) did nothing,
+   because these rules never checked for it. Build placement sits directly
+   between two dark operations screens (Hub before it, Fab/Mining after) —
+   a light onboarding surface mid-flow read as broken, not migrated. Now
+   dark, matching the rest of the operations flow: `--ln-void` field,
+   `--ln-surface`/`--ln-panel-2` cards, cyan hairline grid instead of navy-
+   on-white. */
+.build-place-screen {
+  background: var(--ln-void);
+  color: var(--ln-text);
+  /* HubWorldBackground (rendered inside .build-place-field) reads this to
+     place its horizon/hills/skyline. Hub's own ground line is 22% from the
+     bottom, but this screen's build plots sit at `calc(42% - 20px)` — a
+     different, pre-existing convention for this screen's plot layout, not
+     something to change here. Scoping the token locally lets the shared
+     background component line up with THIS screen's ground without moving
+     Hub's. */
+  --hub-ground: 42%;
+}
+.build-place-field {
+  z-index: 0;
+}
+.build-place-screen [data-coach-id="build-structure-strip"] > div {
+  background: linear-gradient(180deg, transparent, rgba(10, 10, 12, 0.75) 26%, var(--ln-void) 100%);
+  border-top: 1px solid var(--ln-hairline-strong);
+}
+.build-place-screen [data-coach-id="build-structure-strip"] button {
+  background: var(--ln-surface);
+  border-color: var(--ln-cyan-border);
+  box-shadow: 0 2px 0 rgba(0, 0, 0, 0.3);
+}
+.build-place-screen [data-coach-id="build-structure-strip"] button:disabled {
+  opacity: 0.52;
+}
+.build-place-screen [data-coach-id="build-structure-strip"] button div,
+.build-place-screen [data-coach-id="build-structure-strip"] button div div {
+  color: var(--ln-text);
+}
+.build-place-screen [data-coach-id="build-structure-strip"] span:last-child {
+  color: var(--ln-text-dim);
+}
+.build-place-screen .sticky-actions {
+  background: var(--ln-surface);
+  border-top: 1px solid var(--ln-cyan-border);
+}
+
+/* Narrow screens need one continuous, reachable document rather than two
+   equally tall internal panes. The tablet rule keeps compact landscape stable;
+   this final rule restores the phone layout it must not override. */
+
+/* KES-330 follow-up — Mission, Target, Rocket, and Launch are four states of
+   one operation.  They must occupy one stable stage, rather than inheriting
+   different historical padding, row sizing, and action-rail reservations.
+   Keep this geometry here at the end of the cascade so it wins over those
+   per-screen exceptions without changing the interaction inside each state. */
+/* Anchor the console near the ground with the hangar/tower instead of
+   dead-center: on a tall/wide desktop viewport, centering it left a huge gap
+   above the structures that read as "the buildings got pushed down into a
+   sliver at the bottom" (2026-09-08 design feedback on KES-343). Bottom-
+   anchoring keeps the console and the structures reading as one scene. */
+
+/* Mission and Target share the same full-size frame. Target's detail is an
+   attached inspector, while the orbital map owns the entire body region. */
+
+/* Rocket uses one body with two attached instruments. The split is internal
+   to the stable frame; it never changes the frame's position or size. */
+
+/* The controls are attached to the instrument, not a second horizontal
+   footer. Keep them over the lower edge so the map/body retains the full
+   shared frame height. */
+
+/* Compact Target keeps the route notice and telemetry over the atlas instead
+   of spending a vertical row on them. That makes the orbital map fill the
+   same body height as the other mission steps. */

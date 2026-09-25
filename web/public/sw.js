@@ -105,6 +105,42 @@ self.addEventListener('fetch', event => {
   )
 })
 
+// The installed Landnam PWA warms TakeOn at idle. Next emits hashed chunk
+// names, so the client reports just-fetched same-origin static URLs here for
+// durable caching instead of hard-coding a build-specific asset list.
+self.addEventListener('message', event => {
+  const data = event.data
+  if (data?.type !== 'CACHE_URLS' || !Array.isArray(data.urls)) return
+
+  const urls = data.urls
+    .filter(url => typeof url === 'string')
+    .slice(0, 64)
+    .reduce((accepted, rawUrl) => {
+      try {
+        const url = new URL(rawUrl, self.location.origin)
+        if (url.origin === self.location.origin && url.pathname.startsWith('/_next/static/')) {
+          accepted.push(url.href)
+        }
+      } catch {
+        // Ignore malformed optional warm-up URLs from a page client.
+      }
+      return accepted
+    }, [])
+
+  const cacheUrls = caches.open(CACHE).then(async cache => {
+    await Promise.all(urls.map(async url => {
+      try {
+        const response = await fetch(url)
+        if (response.ok) await cache.put(url, response)
+      } catch {
+        // A failed optional warm-up must never make the offline shell fail.
+      }
+    }))
+    event.ports[0]?.postMessage({ type: 'CACHE_URLS_COMPLETE', urls })
+  })
+  event.waitUntil(cacheUrls)
+})
+
 self.addEventListener('push', event => {
   let data = { title: 'Landnam', body: 'Something happened in your space program.' }
   try { data = event.data?.json() ?? data } catch {}

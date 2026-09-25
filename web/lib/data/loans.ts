@@ -3,7 +3,7 @@
  * same repayment the game loop is about to deduct (STS-542).
  */
 
-export { LOAN_PRINCIPAL, LOAN_INTEREST_RATE, LOAN_DEBT_ON_ACCEPT } from './economy'
+export { LOAN_PRINCIPAL, TREASURY_STARTING_BALANCE } from './economy'
 
 /**
  * What the next debrief deducts against an outstanding debt: all of it.

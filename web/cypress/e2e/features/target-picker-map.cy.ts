@@ -1,14 +1,12 @@
 describe('TargetPicker orbital map', () => {
   const visitTargetPicker = () => {
-    cy.visit('/game', {
+    // Use the canonical dev preset so this visual contract exercises the
+    // actual target-picker state rather than a partial hand-written save
+    // that hydration repair is allowed to route away from.
+    cy.visit('/game?preset=ui-target-picker', {
       onBeforeLoad(win) {
-        win.localStorage.setItem('landnam-game-state-v1', JSON.stringify({
-          screen: 'targets',
-          missionId: 'generated-s1-starter-bulk-1',
-          tutorial: false,
-        }))
-        win.localStorage.setItem('landnam-guest-credentials', JSON.stringify({
-          email: 'e2e@landnam.guest',
+        win.localStorage.setItem('landnam-account-credentials', JSON.stringify({
+          email: 'e2e@example.com',
           password: 'e2e-guest-test',
         }))
       },
@@ -31,12 +29,14 @@ describe('TargetPicker orbital map', () => {
     cy.viewport(390, 844)
     visitTargetPicker()
     expectMapToFillAndRender()
+    cy.screenshot('sprint-13-target-picker-mobile')
   })
 
   it('renders a nonblank orbital map on desktop', () => {
     cy.viewport(1280, 900)
     visitTargetPicker()
     expectMapToFillAndRender()
+    cy.screenshot('sprint-13-target-picker-desktop')
   })
 
   // Regression guard for h20xtc: map must expand to fill available vertical
@@ -62,6 +62,30 @@ describe('TargetPicker orbital map', () => {
       .should($map => {
         const rect = $map[0].getBoundingClientRect()
         expect(rect.height).to.be.greaterThan(320)
+      })
+  })
+
+  it('keeps an unavailable context body from changing the selected target', () => {
+    cy.viewport(1280, 900)
+    visitTargetPicker()
+    cy.get('[data-testid="target-picker-orbital-map"]', { timeout: 10000 }).should('be.visible')
+    cy.get('svg text').contains('Jupiter').click()
+    cy.contains('433 Eros').should('be.visible')
+    cy.get('[data-testid="continue-build-btn"]').should('not.be.disabled')
+  })
+
+  it('selects a compatible body from its mobile touch target', () => {
+    cy.viewport(390, 844)
+    visitTargetPicker()
+    cy.get('[data-testid="target-picker-orbital-map"]', { timeout: 10000 }).should('be.visible')
+    cy.get('[data-testid="target-picker-orbital-map"] svg g[role="button"]')
+      .should('have.length.greaterThan', 0)
+      .first()
+      .invoke('attr', 'aria-label')
+      .then(label => {
+        const targetName = String(label).replace(/^Select\s+/, '')
+        cy.get('[data-testid="target-picker-orbital-map"] svg g[role="button"]').first().click()
+        cy.get('[data-testid="target-detail-expand"]').should('contain.text', targetName)
       })
   })
 })

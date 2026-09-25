@@ -4,7 +4,7 @@ import React from 'react'
 import { PrimaryBtn } from '@/components/ui/Button'
 import { CLIENTS } from '@/lib/data/clients'
 import { TARGETS } from '@/lib/data/targets'
-import Sheet from '@/components/ui/Sheet'
+import PageSurface from '@/components/ui/PageSurface'
 
 interface TerritoryClaimPopupProps {
   targetId: string
@@ -20,20 +20,13 @@ export default function TerritoryClaimPopup({ targetId, clientId, onDismiss }: T
   const targetName = target?.name ?? targetId
 
   return (
-    <Sheet
-      variant="centered"
-      onDismiss={onDismiss}
-      dismissOnBackdrop={false}
+    <PageSurface
       zIndex={200}
       ariaLabel="Territory established"
-      scrimStyle={{ background: 'rgba(10,10,11, 0.88)' }}
-      panelStyle={{
+      contentStyle={{
         background: 'var(--ln-panel)',
         border: '1px solid var(--ln-hairline)',
-        borderRadius: 16,
         padding: '32px 24px',
-        width: '100%',
-        maxWidth: 360,
         display: 'flex',
         flexDirection: 'column',
         gap: 16,
@@ -78,6 +71,6 @@ export default function TerritoryClaimPopup({ targetId, clientId, onDismiss }: T
           Your rover has been deployed and will transmit data back to base. The client holds operational claim — no restrictions apply to you or other pilots.
         </div>
         <PrimaryBtn onClick={onDismiss}>UNDERSTOOD</PrimaryBtn>
-    </Sheet>
+    </PageSurface>
   )
 }

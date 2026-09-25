@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Landnam — Mission Setup Reference Explorer</title>
+  <style>
+    @font-face { font-family: "Oxanium"; src: url("../../web/public/fonts/Oxanium-Regular.ttf") format("truetype"); font-weight: 400; }
+    @font-face { font-family: "Oxanium"; src: url("../../web/public/fonts/Oxanium-Bold.ttf") format("truetype"); font-weight: 800; }
+    @font-face { font-family: "Turret Road"; src: url("../../web/public/fonts/TurretRoad-Regular.ttf") format("truetype"); font-weight: 400; }
+
+    :root {
+      --void: #0a0a0c;
+      --bg: #131316;
+      --surface: #1c1c20;
+      --surface-2: #25252a;
+      --cyan: #70d9ea;
+      --cyan-bright: #a3ecf5;
+      --cyan-soft: rgba(112, 217, 234, .14);
+      --cyan-border: rgba(112, 217, 234, .42);
+      --cyan-faint: rgba(112, 217, 234, .08);
+      --cyan-orbit: rgba(112, 217, 234, .28);
+      --cyan-glow: rgba(112, 217, 234, .35);
+      --ok: #5ad07e;
+      --ok-soft: rgba(90, 208, 126, .12);
+      --warn: #ffb347;
+      --crit: #ff5a6a;
+      --amber: #f5a623;
+      --text: #e9e9ec;
+      --dim: #b4b4bc;
+      --muted: #7c7c86;
+      --hairline: rgba(255, 255, 255, .14);
+      --void-glass: rgba(10, 10, 12, .42);
+      --void-bar: rgba(10, 10, 12, .84);
+      --void-dock: rgba(10, 10, 12, .95);
+      --surface-glass: rgba(28, 28, 32, .96);
+      --surface-bar: rgba(28, 28, 32, .9);
+      --shadow-strong: rgba(0, 0, 0, .55);
+      --shadow-soft: rgba(0, 0, 0, .36);
+      --planet-light: #9becff;
+      --planet-mid: #2f6d80;
+      --planet-shade: #143142;
+      --planet-deep: #091316;
+      --rocket-dark: #13313a;
+      --rocket-light: #d9fbff;
+      --rocket-shade: #1c4b57;
+      --font-display: "Oxanium", system-ui, sans-serif;
+      --font-mono: "Turret Road", ui-monospace, monospace;
+    }
+
+    * { box-sizing: border-box; }
+    body { margin: 0; min-width: 320px; background: var(--void); color: var(--text); font-family: var(--font-display); }
+    button { font: inherit; }
+    .page { display: grid; grid-template-columns: 312px minmax(0, 1fr); min-height: 100vh; }
+    .controls { position: sticky; top: 0; height: 100vh; padding: 32px 24px; overflow: auto; background: var(--bg); border-right: 1px solid var(--hairline); }
+    .eyebrow, .meta, .metric-label, .operation-copy, .step { color: var(--muted); font: 800 10px var(--font-display); letter-spacing: .17em; text-transform: uppercase; }
+    h1 { margin: 8px 0 12px; font-size: 28px; line-height: 1.1; letter-spacing: -.03em; }
+    p { color: var(--dim); font-size: 13px; line-height: 1.55; }
+    .reference-note { padding: 16px; margin: 24px 0; border: 1px solid var(--hairline); border-left: 2px solid var(--cyan); background: var(--surface); border-radius: 8px; }
+    .reference-note p { margin: 6px 0 0; }
+    .controls h2 { margin: 28px 0 10px; color: var(--text); font-size: 12px; letter-spacing: .12em; text-transform: uppercase; }
+    .button-grid { display: grid; gap: 8px; }
+    .choice { width: 100%; padding: 12px; border: 1px solid var(--hairline); border-radius: 6px; color: var(--dim); cursor: pointer; text-align: left; background: transparent; font-size: 12px; }
+    .choice:hover, .choice[aria-pressed="true"] { border-color: var(--cyan-border); color: var(--cyan); background: var(--cyan-soft); }
+    .principles { padding: 0; list-style: none; }
+    .principles li { display: grid; grid-template-columns: 20px 1fr; gap: 8px; margin: 10px 0; color: var(--dim); font-size: 12px; line-height: 1.45; }
+    .principles span { color: var(--cyan); font-family: var(--font-mono); }
+
+    .preview { min-width: 0; padding: 32px; display: grid; place-items: center; background: radial-gradient(circle at 20% 10%, var(--cyan-soft), transparent 28%), var(--void); overflow: auto; }
+    .device-wrap { max-width: 100%; max-height: calc(100vh - 64px); aspect-ratio: var(--w) / var(--h); }
+    .device { --w: 390; --h: 844; width: min(100%, calc((100vh - 64px) * var(--w) / var(--h))); height: auto; aspect-ratio: var(--w) / var(--h); position: relative; overflow: hidden; border: 1px solid var(--cyan-border); border-radius: 14px; background: var(--void); box-shadow: 0 28px 80px var(--shadow-strong); }
+    .device[data-viewport="desktop"] { --w: 1440; --h: 900; }
+    .device[data-viewport="short"] { --w: 844; --h: 390; }
+    .scene { position: absolute; inset: 0; overflow: hidden; background: radial-gradient(ellipse at 20% 28%, var(--cyan-soft), transparent 32%), radial-gradient(ellipse at 78% 68%, var(--ok-soft), transparent 34%), linear-gradient(155deg, var(--surface-2), var(--void) 72%); }
+    .scene::before { content: ""; position: absolute; inset: 0; opacity: .46; background: linear-gradient(120deg, transparent 0 42%, var(--cyan-soft) 42.2% 42.35%, transparent 42.5%), repeating-linear-gradient(90deg, transparent 0 47px, var(--hairline) 48px, transparent 49px), repeating-linear-gradient(0deg, transparent 0 47px, var(--hairline) 48px, transparent 49px); }
+    .topbar { position: absolute; z-index: 3; top: 0; left: 0; right: 0; display: flex; align-items: center; gap: 10px; height: 58px; padding: 0 16px; border-bottom: 1px solid var(--hairline); background: var(--void-bar); }
+    .back { width: 28px; height: 28px; display: grid; place-items: center; border: 1px solid var(--hairline); color: var(--cyan); background: transparent; border-radius: 4px; cursor: pointer; }.back::before { content: ""; width: 7px; height: 7px; border-left: 2px solid currentColor; border-bottom: 2px solid currentColor; transform: rotate(45deg); }
+    .title { min-width: 0; flex: 1; font-size: 13px; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; }
+    .title small { display: block; margin-top: 3px; color: var(--muted); font: 8px var(--font-mono); letter-spacing: .12em; }
+    .top-status { color: var(--ok); font: 800 9px var(--font-display); letter-spacing: .1em; text-transform: uppercase; }
+    .operation-strip { position: absolute; z-index: 3; top: 58px; left: 0; right: 0; display: flex; gap: 4px; align-items: center; padding: 8px 16px; border-bottom: 1px solid var(--hairline); background: var(--surface-bar); }
+    .step { display: flex; align-items: center; gap: 5px; white-space: nowrap; font-size: 8px; }
+    .step i { width: 13px; height: 13px; display: grid; place-items: center; border: 1px solid var(--hairline); border-radius: 50%; color: var(--muted); font-style: normal; font-size: 7px; }
+    .step.done { color: var(--dim); }.step.done i { border-color: var(--ok); }.step.done i::before { content: ""; width: 5px; height: 5px; border-radius: 50%; background: var(--ok); }.step.active { color: var(--cyan); }.step.active i { border-color: var(--cyan); color: var(--void); background: var(--cyan); }
+    .step-line { width: 12px; height: 1px; background: var(--hairline); }
+    .stage { position: absolute; z-index: 1; top: 98px; bottom: 76px; left: 0; right: 0; min-height: 0; }
+    .focal { position: absolute; inset: 16px 12px; display: grid; place-items: center; overflow: hidden; border: 1px solid var(--cyan-border); border-radius: 8px; background: var(--void-glass); }
+    .focal::after { content: ""; position: absolute; inset: 8px; border: 1px solid var(--hairline); pointer-events: none; }
+    .evidence { position: absolute; z-index: 2; right: 24px; bottom: 16px; width: 188px; padding: 12px; border: 1px solid var(--cyan-border); border-radius: 7px; background: var(--surface-glass); box-shadow: 0 12px 28px var(--shadow-soft); }
+    .evidence h2 { margin: 0 0 10px; color: var(--text); font-size: 12px; }.evidence p { margin: 0 0 8px; font-size: 10px; line-height: 1.4; }
+    .readout { display: grid; grid-template-columns: 1fr auto; gap: 6px 8px; padding-top: 10px; border-top: 1px solid var(--hairline); color: var(--dim); font: 9px var(--font-mono); }.readout strong { color: var(--cyan); font-weight: 400; }
+    .dock { position: absolute; z-index: 4; bottom: 0; left: 0; right: 0; min-height: 76px; display: flex; align-items: center; gap: 12px; padding: 10px 16px; border-top: 1px solid var(--cyan-border); background: var(--void-dock); }.dock .operation-copy { flex: 1; font-size: 8px; }.dock .operation-copy b { display: block; color: var(--text); margin-top: 3px; font: 10px var(--font-display); letter-spacing: .03em; text-transform: none; }.primary { min-height: 42px; padding: 0 14px; border: 0; border-radius: 5px; color: var(--void); background: var(--cyan); cursor: pointer; font: 800 10px var(--font-display); letter-spacing: .1em; text-transform: uppercase; }.primary:hover { background: var(--cyan-bright); }
+
+    .orbit { position: absolute; border: 1px solid var(--cyan-orbit); border-radius: 50%; }.o1 { width: 34%; height: 34%; }.o2 { width: 58%; height: 58%; }.o3 { width: 84%; height: 84%; }.star { width: 28px; height: 28px; border-radius: 50%; background: var(--cyan); box-shadow: 0 0 36px var(--cyan); }.mission-node, .target-node { position: absolute; display: grid; place-items: center; border-radius: 50%; border: 2px solid var(--cyan); background: var(--surface); box-shadow: 0 0 0 6px var(--cyan-faint); cursor: pointer; }.mission-node { width: 38px; height: 38px; color: var(--cyan); font: 10px var(--font-mono); }.mission-node.active, .target-node.active { background: var(--cyan); color: var(--void); }.n1 { left: 28%; top: 28%; }.n2 { left: 62%; top: 42%; }.n3 { left: 41%; top: 68%; }.target-node { width: 24px; height: 24px; color: var(--cyan); font-size: 7px; }.t1 { left: 33%; top: 31%; }.t2 { left: 59%; top: 47%; }.t3 { left: 43%; top: 66%; }
+    .route { position: absolute; width: 46%; border-top: 1px dashed var(--cyan); transform: rotate(-19deg); opacity: .78; }.route-label { position: absolute; padding: 4px 6px; color: var(--cyan); background: var(--surface); font: 8px var(--font-mono); letter-spacing: .1em; }
+    .planet { position: absolute; width: 120px; height: 120px; border-radius: 50%; border: 2px solid var(--cyan); background: radial-gradient(circle at 32% 26%, var(--planet-light) 0 4%, var(--planet-mid) 5% 24%, var(--planet-shade) 25% 56%, var(--planet-deep) 57%); box-shadow: 0 0 42px var(--cyan-soft); }.planet::after { content: ""; position: absolute; inset: 20px 12px 50px 36px; border-radius: 50%; background: var(--cyan-soft); transform: rotate(-22deg); }
+    .rocket { position: relative; width: 92px; height: 228px; border: 2px solid var(--cyan); clip-path: polygon(50% 0, 82% 19%, 82% 80%, 100% 96%, 67% 91%, 50% 100%, 33% 91%, 0 96%, 18% 80%, 18% 19%); background: linear-gradient(90deg, var(--rocket-dark) 0 35%, var(--cyan) 36% 49%, var(--rocket-light) 50% 57%, var(--rocket-shade) 58%); filter: drop-shadow(0 0 22px var(--cyan-glow)); }.rocket::before { content: ""; position: absolute; left: 14px; right: 14px; top: 57px; height: 2px; background: var(--void); box-shadow: 0 24px var(--void), 0 48px var(--void), 0 72px var(--void); }.rocket::after { content: ""; position: absolute; left: 34px; top: 22px; width: 18px; height: 24px; border: 2px solid var(--void); border-radius: 50% 50% 40% 40%; }
+    .callout { position: absolute; display: flex; align-items: center; gap: 6px; color: var(--dim); font: 8px var(--font-mono); letter-spacing: .08em; }.callout::before { content: ""; width: 22px; height: 1px; background: var(--cyan); }.c1 { top: 31%; left: 13%; }.c2 { top: 53%; right: 12%; }.c3 { bottom: 17%; left: 15%; }
+    .preflight-route { position: absolute; width: 2px; height: 64%; left: 50%; bottom: 14%; background: linear-gradient(var(--cyan), transparent); }.preflight-target { position: absolute; top: 14%; left: calc(50% - 15px); width: 30px; height: 30px; border: 1px solid var(--cyan); border-radius: 50%; }.preflight-target::after { content: ""; position: absolute; inset: 8px; border-radius: 50%; background: var(--cyan); }.launchpad { position: absolute; bottom: 8%; width: 70%; height: 11%; border: 1px solid var(--cyan-border); background: var(--surface-2); }.launchpad::before { content: ""; position: absolute; left: 48%; bottom: 100%; width: 4%; height: 85%; background: var(--surface-2); border: 1px solid var(--cyan-border); }
+    .checklist { position: absolute; z-index: 2; left: 24px; bottom: 16px; width: 174px; padding: 12px; border: 1px solid var(--cyan-border); background: var(--surface-glass); border-radius: 7px; }.check { display: flex; align-items: center; gap: 7px; margin: 7px 0; color: var(--dim); font-size: 9px; }.check span { width: 6px; height: 6px; flex: 0 0 auto; border-radius: 50%; background: var(--ok); }
+
+    .device[data-viewport="desktop"] .focal { inset: 22px 250px 22px 22px; }.device[data-viewport="desktop"] .evidence { top: 22px; right: 22px; bottom: auto; width: 206px; }.device[data-viewport="desktop"] .checklist { left: 32px; bottom: 26px; }.device[data-viewport="desktop"] .planet { width: 190px; height: 190px; }.device[data-viewport="desktop"] .rocket { transform: scale(1.18); }.device[data-viewport="short"] .topbar { height: 42px; }.device[data-viewport="short"] .operation-strip { top: 42px; padding: 5px 12px; }.device[data-viewport="short"] .stage { top: 70px; bottom: 54px; }.device[data-viewport="short"] .focal { inset: 8px 190px 8px 8px; }.device[data-viewport="short"] .evidence { top: 8px; right: 8px; bottom: 8px; width: 172px; }.device[data-viewport="short"] .dock { min-height: 54px; padding: 6px 12px; }.device[data-viewport="short"] .primary { min-height: 34px; }.device[data-viewport="short"] .checklist { left: 16px; bottom: 8px; transform: scale(.78); transform-origin: left bottom; }.device[data-viewport="short"] .rocket { transform: scale(.72); }.device[data-viewport="short"] .planet { transform: scale(.72); }.device[data-viewport="short"] .step { font-size: 7px; }
+    @media (max-width: 820px) { .page { display: block; }.controls { position: relative; height: auto; padding: 24px; border-right: 0; border-bottom: 1px solid var(--hairline); }.preview { min-height: 700px; padding: 24px 12px; }.device { width: min(100%, 430px); }.device[data-viewport="desktop"], .device[data-viewport="short"] { width: 100%; } }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <aside class="controls">
+      <div class="eyebrow">Landnam · KES-210</div>
+      <h1>Focal operation,<br>not card overload.</h1>
+      <p>A responsive mission-setup direction informed by the calm data density of Departure Mono and the consequential, object-led pacing of <em>Out There: Ω Edition</em>.</p>
+      <div class="reference-note"><div class="meta">Reference boundary</div><p>These are behavioural references only. No external typeface, imagery, screen layout, or game content is used.</p></div>
+      <h2>Operation</h2>
+      <div class="button-grid" role="group" aria-label="Choose an explored setup step">
+        <button class="choice" data-screen="mission" aria-pressed="true">01 · Programme selection</button>
+        <button class="choice" data-screen="target" aria-pressed="false">02 · Target selection</button>
+        <button class="choice" data-screen="vehicle" aria-pressed="false">03 · Vehicle confirmation</button>
+        <button class="choice" data-screen="preflight" aria-pressed="false">04 · Launch preflight</button>
+      </div>
+      <h2>Viewport</h2>
+      <div class="button-grid" role="group" aria-label="Choose viewport">
+        <button class="choice" data-viewport="phone" aria-pressed="true">Phone · 390 × 844</button>
+        <button class="choice" data-viewport="desktop" aria-pressed="false">Desktop · 1440 × 900</button>
+        <button class="choice" data-viewport="short" aria-pressed="false">Short landscape · 844 × 390</button>
+      </div>
+      <h2>Non-negotiables</h2>
+      <ul class="principles"><li><span>01</span>One enlarged mission object per step.</li><li><span>02</span>Evidence is compact; the game scene gets the area.</li><li><span>03</span>One cyan primary command stays in a stable dock.</li><li><span>04</span>Cost and payout are facts, not generic chrome.</li></ul>
+    </aside>
+    <section class="preview" aria-label="Interactive mission setup concept preview"><div class="device-wrap"><div class="device" data-viewport="phone"></div></div></section>
+  </main>
+  <script>
+    const device = document.querySelector('.device');
+    const screens = {
+      mission: { title: 'Programme field', eyebrow: 'Mission Control', status: '2 OPEN', active: 1, copy: 'SELECTED · SILICON RECOVERY', action: 'SELECT PROGRAMME', focal: `<div class="orbit o3"></div><div class="orbit o2"></div><div class="orbit o1"></div><div class="star"></div><button class="mission-node n1" aria-label="Silicon recovery selected">SR</button><button class="mission-node n2 active" aria-label="Delivery relay">DR</button><button class="mission-node n3" aria-label="Rover survey">RS</button><span class="route" style="left:43%;top:45%"></span><span class="route-label" style="left:49%;top:33%">VESTA · 2.4 AU</span>`, evidence: `<h2>Silicon Recovery</h2><p>Recover silicon from a reachable belt target. One operational decision, not a feed of equal cards.</p><div class="readout"><span>PAYMENT</span><strong>₣ 1,200</strong><span>RANGE</span><strong>ORB ≤ 5</strong><span>STATUS</span><strong>READY</strong></div>` },
+      target: { title: 'Target selection', eyebrow: 'Mission Control', status: 'MAP ACTIVE', active: 2, copy: 'TARGET · VESTA · REACHABLE', action: 'CONFIRM TARGET', focal: `<div class="orbit o3"></div><div class="orbit o2"></div><div class="orbit o1"></div><div class="star"></div><button class="target-node t1" aria-label="Eros target">ER</button><button class="target-node t2 active" aria-label="Vesta selected target">VE</button><button class="target-node t3" aria-label="Bennu target">BE</button><span class="route" style="left:43%;top:49%;transform:rotate(18deg)"></span><div class="planet" style="left:calc(50% - 60px);top:calc(50% - 60px)"></div>`, evidence: `<h2>Vesta</h2><p>Reachable and mission-fit. Full deposit analysis belongs behind inspect on phone—not above the map.</p><div class="readout"><span>ORBIT</span><strong>2.36 AU</strong><span>DEPOSIT</span><strong>Si · Fe</strong><span>FIT</span><strong>CONFIRMED</strong></div>` },
+      vehicle: { title: 'Vehicle confirmation', eyebrow: 'Launchpad', status: 'TIER 2', active: 3, copy: 'PROSPECTOR · FLIGHT READY', action: 'PURCHASE · ₣ 800', focal: `<div class="rocket"></div><div class="callout c1">FUEL BAY</div><div class="callout c2">CARGO · 10U</div><div class="callout c3">DRILL · T2</div>`, evidence: `<h2>Prospector</h2><p>Vehicle first. Three capability facts support the purchase; peripheral modules do not compete with the craft.</p><div class="readout"><span>RANGE</span><strong>ORB ≤ 5</strong><span>CAPACITY</span><strong>10U</strong><span>RETURN</span><strong style="color:var(--ok)">+₣ 400 EST.</strong></div>` },
+      preflight: { title: 'Launch preflight', eyebrow: 'Launchpad', status: 'ALL GREEN', active: 4, copy: 'VESTA TRANSFER · CLEAR', action: 'CONFIRM LAUNCH', focal: `<div class="preflight-target"></div><div class="preflight-route"></div><div class="launchpad"></div><div class="rocket" style="position:absolute;bottom:13%;left:calc(50% - 46px);transform:scale(.74);transform-origin:bottom center"></div>`, evidence: `<h2>Launch window</h2><p>The route, vehicle and readiness state share one composed scene.</p><div class="readout"><span>DESTINATION</span><strong>VESTA</strong><span>TRANSFER</span><strong>03:42</strong><span>RISK</span><strong style="color:var(--ok)">NOMINAL</strong></div>`, checklist: `<div class="checklist"><div class="meta">Readiness</div><div class="check"><span></span>Fuel and drive confirmed</div><div class="check"><span></span>Target route verified</div><div class="check"><span></span>Cargo bay available</div></div>` }
+    };
+    function steps(active) { return [1,2,3,4].map((step) => `<div class="step ${step < active ? 'done' : step === active ? 'active' : ''}"><i>${step < active ? '' : step}</i><span>${['Mission','Target','Rocket','Launch'][step - 1]}</span></div>${step < 4 ? '<div class="step-line"></div>' : ''}`).join(''); }
+    function render(screenName) { const s = screens[screenName]; device.innerHTML = `<div class="scene"></div><header class="topbar"><button class="back" aria-label="Go back"></button><div class="title">${s.title}<small>${s.eyebrow}</small></div><div class="top-status">${s.status}</div></header><nav class="operation-strip" aria-label="Mission stages">${steps(s.active)}</nav><section class="stage"><div class="focal">${s.focal}</div><aside class="evidence">${s.evidence}</aside>${s.checklist || ''}</section><footer class="dock"><div class="operation-copy">${s.copy}<b>One clear decision remains.</b></div><button class="primary">${s.action}</button></footer>`; }
+    let current = 'mission'; render(current);
+    document.querySelectorAll('[data-screen]').forEach((button) => button.addEventListener('click', () => { current = button.dataset.screen; render(current); document.querySelectorAll('[data-screen]').forEach((item) => item.setAttribute('aria-pressed', String(item === button))); }));
+    document.querySelectorAll('[data-viewport]').forEach((button) => button.addEventListener('click', () => { device.dataset.viewport = button.dataset.viewport; document.querySelectorAll('[data-viewport]').forEach((item) => item.setAttribute('aria-pressed', String(item === button))); }));
+  </script>
+</body>
+</html>

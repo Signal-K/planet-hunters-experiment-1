@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
+import { captureGameEvent } from '@/lib/posthog'
 
 type PushState = 'unsupported' | 'denied' | 'granted' | 'default'
 
@@ -16,6 +17,14 @@ function urlBase64ToUint8Array(base64String: string): ArrayBuffer {
 export function usePushNotifications(userId?: string) {
   const [state, setState] = useState<PushState>('default')
   const [loading, setLoading] = useState(false)
+  // Resolved ahead of time so `subscribe()` can call `pushManager.subscribe()`
+  // as the very first async step off the click handler. Safari/WebKit drops
+  // "user activation" across an awaited microtask boundary — awaiting
+  // `serviceWorker.ready` before calling subscribe() loses the gesture there,
+  // so subscribe() rejects silently (no permission prompt, button "does
+  // nothing"). Chrome tolerates the extra await, which is why this only
+  // showed up on Safari macOS/iOS/PWA.
+  const registrationRef = useRef<ServiceWorkerRegistration | null>(null)
 
   useEffect(() => {
     if (typeof window === 'undefined') return
@@ -23,14 +32,25 @@ export function usePushNotifications(userId?: string) {
       setState('unsupported')
       return
     }
+    // iOS only delivers web push to an installed (Add to Home Screen) app; in a
+    // plain Safari tab the prompt could never work, so hide it (SSL-322).
+    const isIos = /iPad|iPhone|iPod/.test(navigator.userAgent)
+      || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)
+    const standalone = (navigator as Navigator & { standalone?: boolean }).standalone === true
+      || window.matchMedia('(display-mode: standalone)').matches
+    if (isIos && !standalone) {
+      setState('unsupported')
+      return
+    }
     setState(Notification.permission as PushState)
+    navigator.serviceWorker.ready.then(reg => { registrationRef.current = reg })
   }, [])
 
   const subscribe = useCallback(async () => {
     if (!('serviceWorker' in navigator)) return
     setLoading(true)
     try {
-      const reg = await navigator.serviceWorker.ready
+      const reg = registrationRef.current ?? await navigator.serviceWorker.ready
       const sub = await reg.pushManager.subscribe({
         userVisibleOnly: true,
         applicationServerKey: urlBase64ToUint8Array(
@@ -43,7 +63,19 @@ export function usePushNotifications(userId?: string) {
         body: JSON.stringify({ subscription: sub.toJSON(), userId }),
       })
       setState('granted')
-    } catch {
+    } catch (err) {
+      // Caught rather than thrown so the button just quietly reverts to the
+      // pre-click permission state — from the player's side this is "I
+      // tapped Enable notifications and nothing happened", with no
+      // $exception ever recorded. Skip the ordinary "player said no"
+      // outcome and only flag it when the browser actually granted
+      // permission but the subscribe/registration call itself failed.
+      if (Notification.permission === 'granted') {
+        captureGameEvent('sync_retry_failed', {
+          sync_kind: 'push_subscribe',
+          error: err instanceof Error ? err.message : String(err),
+        })
+      }
       setState(Notification.permission as PushState)
     } finally {
       setLoading(false)

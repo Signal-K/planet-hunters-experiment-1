@@ -123,7 +123,7 @@ describe('applyReturnArrived', () => {
     expect(next.player.stash).toEqual({})
     expect(next.lastCargo).toEqual({})
     expect(next.deliveredCargo).toEqual({ nickel: 2 })
-    expect(next.player.shipDestroyed).toBe(true)
+    expect(next.player.shipDestroyed).toBe(false)
     expect(next.player.debriefPending).toBe(false)
     expect(next.player.returningToEarth).toBe(false)
   })

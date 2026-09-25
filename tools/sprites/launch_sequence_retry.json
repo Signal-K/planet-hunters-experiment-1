@@ -2,7 +2,7 @@
   {
     "name": "launch_rocket_nose",
     "profile": "launch_rocket_part",
-    "prompt": "SR1 rocket nose cone and payload fairing section, vertical portrait pointing upward, aerodynamic ogive nose cap, faint payload separation ring near base of cone, cyan sensor port dots on tip, amber explosive bolt markers at base ring, streamlined silhouette narrowing to a blunt rounded point, isolated fairing only no body",
+    "prompt": "Explorer rocket nose cone and payload fairing section, vertical portrait pointing upward, aerodynamic ogive nose cap, faint payload separation ring near base of cone, cyan sensor port dots on tip, amber explosive bolt markers at base ring, streamlined silhouette narrowing to a blunt rounded point, isolated fairing only no body",
     "aspect_ratio": "2:3"
   },
   {
@@ -14,7 +14,7 @@
   {
     "name": "launch_stage_lower",
     "profile": "launch_rocket_part",
-    "prompt": "SR1 rocket first stage lower section with engine cluster, vertical portrait pointing upward, short wide cylindrical fuel tank section, four engine nozzle bells at base arranged in square pattern, cyan propellant crossfeed pipes, orange-amber thermal shielding on engine bells, stage separation ring at very top with pyrotechnic bolt markers, isolated lower stage only no upper hull",
+    "prompt": "Explorer rocket first stage lower section with engine cluster, vertical portrait pointing upward, short wide cylindrical fuel tank section, four engine nozzle bells at base arranged in square pattern, cyan propellant crossfeed pipes, orange-amber thermal shielding on engine bells, stage separation ring at very top with pyrotechnic bolt markers, isolated lower stage only no upper hull",
     "aspect_ratio": "2:3"
   },
   {

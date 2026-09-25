@@ -50,8 +50,10 @@ const MAP_PREVIEW_ROUNDS = [50, 51, 52, 53]
 
 // Direct-action verdict buttons, matching the citizen-science ticket wording
 // (kkhyll: CONFIRM TRANSIT / MARK NOISE / SKIP) and mirroring TessDiscoveryScreen.
-const VERDICT_ACTIONS: Array<{ id: TessVerdict; label: string; requiresMark: boolean; kind: 'amber' | 'cyan' | 'ghost' }> = [
-  { id: 'planet', label: 'Confirm Transit', requiresMark: true, kind: 'amber' },
+// "confirm" (was "amber") uses --ln-ok green — this is a citizen-science
+// classification verdict, not a payout/reward, so --ln-amber is off-limits here.
+const VERDICT_ACTIONS: Array<{ id: TessVerdict; label: string; requiresMark: boolean; kind: 'confirm' | 'cyan' | 'ghost' }> = [
+  { id: 'planet', label: 'Confirm Transit', requiresMark: true, kind: 'confirm' },
   { id: 'not_planet', label: 'Mark Noise', requiresMark: true, kind: 'cyan' },
   { id: 'unsure', label: 'Skip', requiresMark: false, kind: 'ghost' },
 ]
@@ -68,28 +70,31 @@ type LogEntry = { verdict: TessVerdict; ranges: TransitRange[] }
 // buttons don't work" (Liam, 2026-07-04).
 function DemoSidebar() {
   const router = useRouter()
+  // item.color values are CSS var() references; alpha blending below uses
+  // color-mix() instead of the old hex-alpha-suffix trick (`${hex}66`) since
+  // var() strings can't have a hex alpha suffix appended.
   const items: Array<{ id: string; label: string; color: string; glyph: ReactNode }> = [
-    { id: 'hub', label: 'Base', color: '#39d36a', glyph: (
+    { id: 'hub', label: 'Base', color: 'var(--ln-ok)', glyph: (
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <path d="M5 19c0-3 3-9 7-9s7 6 7 9"/><circle cx="12" cy="9" r="2"/><path d="M12 21c-1.5-1-2-2-2-3M12 21c1.5-1 2-2 2-3"/>
       </svg>
     ) },
-    { id: 'missions', label: 'Missions', color: '#f5a623', glyph: (
+    { id: 'missions', label: 'Missions', color: 'var(--ln-mineral-gold)', glyph: (
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <rect x="3" y="3" width="18" height="18" rx="2"/><line x1="8" y1="9" x2="16" y2="9"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="12" y2="17"/>
       </svg>
     ) },
-    { id: 'galaxy', label: 'Atlas', color: '#7ec8ff', glyph: (
+    { id: 'galaxy', label: 'Atlas', color: 'var(--ln-cyan-bright)', glyph: (
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/>
       </svg>
     ) },
-    { id: 'fab', label: 'Build', color: '#c084ff', glyph: (
+    { id: 'fab', label: 'Build', color: 'var(--ln-mineral-rare)', glyph: (
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <path d="M12 2L8 6H4l2 4-2 4h4l4 6 4-6h4l-2-4 2-4h-4L12 2z"/>
       </svg>
     ) },
-    { id: 'market', label: 'Market', color: '#ffb347', glyph: (
+    { id: 'market', label: 'Market', color: 'var(--ln-warn)', glyph: (
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <path d="M4 10h16l-2-6H6l-2 6z"/><path d="M5 10v10h14V10"/><path d="M9 20v-6h6v6"/>
       </svg>
@@ -107,17 +112,17 @@ function DemoSidebar() {
               onClick={() => router.push(`/game/${item.id}`)}
               style={{
                 display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 6,
-                width: '100%', padding: '10px 4px', borderRadius: 8, cursor: 'pointer',
-                border: active ? `1px solid ${item.color}66` : '1px solid transparent',
-                background: active ? `radial-gradient(circle at 50% 30%, ${item.color}22, ${item.color}0d)` : 'transparent',
+                width: '100%', padding: '8px 4px', borderRadius: 8, cursor: 'pointer',
+                border: active ? `1px solid color-mix(in srgb, ${item.color} 40%, transparent)` : '1px solid transparent',
+                background: active ? `radial-gradient(circle at 50% 30%, color-mix(in srgb, ${item.color} 13%, transparent), color-mix(in srgb, ${item.color} 5%, transparent))` : 'transparent',
               }}
             >
               <span style={{
                 display: 'flex', alignItems: 'center', justifyContent: 'center', width: 36, height: 36, borderRadius: 8,
-                background: active ? `radial-gradient(circle at 35% 30%, ${item.color}, ${item.color}cc 70%, ${item.color}88)` : 'rgba(24,24,28,0.72)',
-                border: `1.5px solid ${active ? '#ffffff33' : item.color + '44'}`,
-                boxShadow: active ? `0 0 12px ${item.color}66` : `0 0 8px ${item.color}22`,
-                color: active ? '#06121f' : item.color,
+                background: active ? `radial-gradient(circle at 35% 30%, ${item.color}, color-mix(in srgb, ${item.color} 80%, transparent) 70%, color-mix(in srgb, ${item.color} 53%, transparent))` : 'var(--ln-overlay)',
+                border: `1px solid ${active ? 'var(--ln-text-ghost)' : `color-mix(in srgb, ${item.color} 27%, transparent)`}`,
+                boxShadow: active ? `0 0 12px color-mix(in srgb, ${item.color} 40%, transparent)` : `0 0 8px color-mix(in srgb, ${item.color} 13%, transparent)`,
+                color: active ? 'var(--ln-text-inverse)' : item.color,
               }}>
                 {item.glyph}
               </span>
@@ -190,14 +195,14 @@ function TransitDemo() {
         <div className="game-screen">
           <TopBar eyebrow="DEV · TESS ANOMALY" title={candidate.toi} onBack={() => window.history.back()} />
           <div className={`screen-scroll${logged || markCount > 0 ? ' screen-scroll--tall-actions' : ''}`} data-ui-zone={UI_ZONES.screenContent}>
-            <Panel accent="var(--ln-amber)" style={{ padding: 12, marginTop: 12 }}>
+            <Panel accent="var(--ln-cyan)" style={{ padding: 12, marginTop: 12 }}>
               <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10, marginBottom: 10 }}>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                     <LiveDot active={!logged} />
-                    <div style={{ fontFamily: 'var(--ln-font-display)', fontWeight: 800, fontSize: 18, color: '#e8f0fe' }}>{candidate.host}</div>
+                    <div style={{ fontFamily: 'var(--ln-font-display)', fontWeight: 800, fontSize: 18, color: 'var(--ln-text)' }}>{candidate.host}</div>
                   </div>
-                  <div style={{ fontFamily: 'var(--ln-font-mono)', fontSize: 10, color: '#6b7fa3', marginTop: 2 }}>
+                  <div style={{ fontFamily: 'var(--ln-font-mono)', fontSize: 10, color: 'var(--ln-text-muted)', marginTop: 2 }}>
                     {candidate.ticId} / {candidate.constellation.toUpperCase()} / {candidate.distanceLy} LY
                   </div>
                 </div>
@@ -214,10 +219,10 @@ function TransitDemo() {
                       data-testid={`sector-pill-${index}`}
                       onClick={() => setSectorIndex(index)}
                       style={{
-                        padding: '4px 10px', borderRadius: 999, cursor: 'pointer',
-                        border: `1px solid ${index === sectorIndex ? 'rgba(245,166,35,0.6)' : 'rgba(112,217,234,0.2)'}`,
-                        background: index === sectorIndex ? 'rgba(245,166,35,0.14)' : 'rgba(20,20,23,0.5)',
-                        color: index === sectorIndex ? 'var(--ln-amber)' : 'var(--ln-text-muted)',
+                        padding: '4px 8px', borderRadius: 999, cursor: 'pointer',
+                        border: `1px solid ${index === sectorIndex ? 'var(--ln-cyan-border)' : 'var(--ln-hairline)'}`,
+                        background: index === sectorIndex ? 'var(--ln-cyan-soft)' : 'var(--ln-surface-2)',
+                        color: index === sectorIndex ? 'var(--ln-cyan)' : 'var(--ln-text-muted)',
                         fontFamily: 'var(--ln-font-display)', fontSize: 9, fontWeight: 800, letterSpacing: '0.1em',
                       }}
                     >
@@ -263,7 +268,7 @@ function TransitDemo() {
               </TelescopeConsole>
 
               {logged ? (
-                <div style={{ marginTop: 8, textAlign: 'center', fontFamily: 'var(--ln-font-mono)', fontSize: 10, color: targetId ? 'var(--ln-amber)' : '#5d7390' }}>
+                <div style={{ marginTop: 8, textAlign: 'center', fontFamily: 'var(--ln-font-mono)', fontSize: 10, color: targetId ? 'var(--ln-cyan)' : 'var(--ln-text-muted)' }}>
                   {mapCandidates.length === 0
                     ? 'No anomalies to classify yet — check back later.'
                     : targetId
@@ -271,7 +276,7 @@ function TransitDemo() {
                       : 'Tap a star to point the satellite tomorrow · green = already searched'}
                 </div>
               ) : (
-                <div style={{ marginTop: 8, textAlign: 'center', fontFamily: 'var(--ln-font-mono)', fontSize: 10, color: markCount > 0 ? 'var(--ln-amber)' : '#5d7390' }}>
+                <div style={{ marginTop: 8, textAlign: 'center', fontFamily: 'var(--ln-font-mono)', fontSize: 10, color: markCount > 0 ? 'var(--ln-cyan)' : 'var(--ln-text-muted)' }}>
                   {markCount === 0
                     ? 'Drag over the lightcurve to mark a transit'
                     : `${markCount} region${markCount !== 1 ? 's' : ''} marked`}
@@ -326,17 +331,17 @@ function LiveDot({ active }: { active: boolean }) {
     <span style={{
       width: 6, height: 6, borderRadius: '50%', flexShrink: 0,
       background: active ? 'var(--ln-ok)' : 'var(--ln-text-muted)',
-      boxShadow: active ? '0 0 6px var(--ln-ok)' : 'none',
+      boxShadow: active ? '0 0 8px var(--ln-ok)' : 'none',
       animation: active ? 'ln-pulse 1.4s ease-in-out infinite' : 'none',
     }} />
   )
 }
 
-function VerdictButton({ action, disabled, onClick }: { action: { id: TessVerdict; label: string; kind: 'amber' | 'cyan' | 'ghost' }; disabled: boolean; onClick: () => void }) {
+function VerdictButton({ action, disabled, onClick }: { action: { id: TessVerdict; label: string; kind: 'confirm' | 'cyan' | 'ghost' }; disabled: boolean; onClick: () => void }) {
   const palette: Record<typeof action.kind, { border: string; bg: string; color: string; glow: string }> = {
-    amber: { border: 'rgba(245,166,35,0.7)', bg: 'linear-gradient(180deg, rgba(245,166,35,0.28), rgba(232,112,64,0.18))', color: 'var(--ln-amber-bright)', glow: 'rgba(245,166,35,0.4)' },
-    cyan:  { border: 'rgba(112,217,234,0.6)', bg: 'rgba(112,217,234,0.12)', color: 'var(--ln-cyan-bright)', glow: 'rgba(112,217,234,0.35)' },
-    ghost: { border: 'rgba(169,184,206,0.25)', bg: 'rgba(20,20,23,0.5)', color: 'var(--ln-text-muted)', glow: 'transparent' },
+    confirm: { border: 'color-mix(in srgb, var(--ln-ok) 70%, transparent)', bg: 'linear-gradient(180deg, color-mix(in srgb, var(--ln-ok) 28%, transparent), color-mix(in srgb, var(--ln-ok) 14%, transparent))', color: 'var(--ln-ok)', glow: 'color-mix(in srgb, var(--ln-ok) 40%, transparent)' },
+    cyan:  { border: 'var(--ln-cyan-border)', bg: 'var(--ln-cyan-soft)', color: 'var(--ln-cyan-bright)', glow: 'color-mix(in srgb, var(--ln-cyan) 35%, transparent)' },
+    ghost: { border: 'var(--ln-hairline-strong)', bg: 'var(--ln-surface-2)', color: 'var(--ln-text-muted)', glow: 'transparent' },
   }
   const p = palette[action.kind]
   return (
@@ -357,7 +362,7 @@ function VerdictButton({ action, disabled, onClick }: { action: { id: TessVerdic
         textTransform: 'uppercase',
         cursor: disabled ? 'not-allowed' : 'pointer',
         opacity: disabled ? 0.35 : 1,
-        boxShadow: disabled ? 'none' : `0 0 14px ${p.glow}`,
+        boxShadow: disabled ? 'none' : `0 0 16px ${p.glow}`,
       }}
     >
       {action.label}

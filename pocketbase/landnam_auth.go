@@ -6,12 +6,16 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/pocketbase/dbx"
+	"github.com/pocketbase/pocketbase/apis"
 	"github.com/pocketbase/pocketbase/core"
 	"github.com/pocketbase/pocketbase/tools/security"
 	"github.com/pocketbase/pocketbase/tools/types"
 
 	"landnam-backend/sharedauth"
 )
+
+const playtestEmailSuffix = "@landnam.test"
 
 // registerLandnamAuthExchange adds POST /api/landnam-auth/exchange, which lets
 // a client holding a verified session on the *shared* PocketBase backend mint
@@ -74,6 +78,9 @@ func registerLandnamAuthExchange(app core.App, verifier *sharedauth.Verifier) {
 				if usersCollection.Fields.GetByName("guest") != nil {
 					record.Set("guest", strings.HasSuffix(sharedUser.Email, guestEmailSuffix))
 				}
+				if usersCollection.Fields.GetByName("verified") != nil && strings.HasSuffix(strings.ToLower(sharedUser.Email), playtestEmailSuffix) {
+					record.Set("verified", true)
+				}
 				// Auth collections require a password; the client never signs in
 				// with it directly — only via this exchange — so a random value
 				// scoped to this record is sufficient.
@@ -105,6 +112,32 @@ func registerLandnamAuthExchange(app core.App, verifier *sharedauth.Verifier) {
 				"token":  landnamToken,
 				"record": record,
 			})
+		})
+
+		purge := se.Router.Group("/api/landnam-auth")
+		purge.Bind(apis.RequireAuth("users"))
+		purge.POST("/purge-playtest", func(e *core.RequestEvent) error {
+			if e.Auth == nil {
+				return e.JSON(http.StatusUnauthorized, map[string]any{"error": "auth required"})
+			}
+			email := strings.ToLower(e.Auth.GetString("email"))
+			if !strings.HasSuffix(email, playtestEmailSuffix) {
+				return e.JSON(http.StatusForbidden, map[string]any{"error": "not a playtest account"})
+			}
+
+			if state, err := e.App.FindFirstRecordByFilter("game_states", "user = {:user}", dbx.Params{"user": e.Auth.Id}); err == nil {
+				if delErr := e.App.Delete(state); delErr != nil {
+					log.Printf("landnam-auth purge-playtest: failed to delete game_states for %s: %v", e.Auth.Id, delErr)
+					return e.JSON(http.StatusInternalServerError, map[string]any{"error": "failed to delete game state"})
+				}
+			}
+
+			if delErr := e.App.Delete(e.Auth); delErr != nil {
+				log.Printf("landnam-auth purge-playtest: failed to delete user %s: %v", e.Auth.Id, delErr)
+				return e.JSON(http.StatusInternalServerError, map[string]any{"error": "failed to delete user"})
+			}
+
+			return e.JSON(http.StatusOK, map[string]any{"ok": true})
 		})
 
 		return se.Next()

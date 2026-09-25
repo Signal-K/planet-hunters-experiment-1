@@ -9,18 +9,21 @@ import MineralChip from '@/components/game/MineralChip'
 import { type RefineryRecipe, REFINERY_RECIPES } from '@/lib/data'
 import { UI_ZONES } from '@/lib/ui-zones'
 import { formatCurrency } from '@/lib/format'
+import ScenePanel from '@/components/game/ScenePanel'
 
 interface RefineryScreenProps {
-  player: { francs: number; stash?: Record<string, number>; refineryQueue: { recipeId: string; startedAt: number; durationMs?: number }[]; refinedGoods: Record<string, number>; staffed?: boolean }
+  player: { francs: number; stash?: Record<string, number>; refineryQueue: { recipeId: string; startedAt: number; durationMs?: number }[]; refineryLastStartedAt?: number; refinedGoods: Record<string, number>; staffed?: boolean }
   onBack: () => void
   onStartRefine: (recipeId: string) => void
   onCollect: (recipeId: string) => void
 }
 
 export default function RefineryScreen({ player, onBack, onStartRefine, onCollect }: RefineryScreenProps) {
-  const [now, setNow] = useState(() => Date.now())
+  const [now, setNow] = useState(0)
   const [selected, setSelected] = useState<string | null>(null)
   const stash = player.stash ?? {}
+  const startedToday = player.refineryLastStartedAt != null
+    && new Date(player.refineryLastStartedAt).toISOString().slice(0, 10) === new Date(now || Date.now()).toISOString().slice(0, 10)
 
   const running = player.refineryQueue[0] ?? null
   const runningRecipe = running ? REFINERY_RECIPES.find(r => r.id === running.recipeId) : null
@@ -30,19 +33,20 @@ export default function RefineryScreen({ player, onBack, onStartRefine, onCollec
   const done = runningRecipe ? elapsed >= durationMs : false
 
   useEffect(() => {
+    setNow(Date.now())
     if (!runningRecipe || done) return
     const id = window.setInterval(() => setNow(Date.now()), 1000)
     return () => window.clearInterval(id)
   }, [done, runningRecipe])
 
   return (
-    <div className="game-screen">
-      <TopBar eyebrow="EARTH BASE · INDUSTRY" title="Refinery" onBack={onBack} />
-      <div className="screen-scroll" data-ui-zone={UI_ZONES.screenContent}>
+    <div className="game-screen theme-deep">
+      <TopBar eyebrow="BASE · INDUSTRY" title="Refinery" onBack={onBack} />
+      <ScenePanel ambient="industrial" className="screen-scroll" data-ui-zone={UI_ZONES.screenContent}>
         <Panel accent="var(--ln-amber)" style={{ padding: 12 }}>
-          <div style={{ fontFamily: 'var(--ln-font-display)', fontWeight: 800, fontSize: 15, color: '#f5a623' }}>On-site Ore Processing</div>
-          <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 12, color: '#a9b8ce', marginTop: 4 }}>
-            Refine raw minerals into higher-value refined goods. {player.staffed ? 'Crew staffed · cycles 25% faster.' : 'Assign crew at the Academy for faster cycles.'}
+          <div style={{ fontFamily: 'var(--ln-font-display)', fontWeight: 800, fontSize: 15, color: 'var(--ln-text)' }}>On-site Ore Processing</div>
+          <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 12, color: 'var(--ln-text-dim)', marginTop: 4 }}>
+            Level 1 capacity: one shipment per day. Refine raw minerals into higher-value goods. {player.staffed ? 'Crew staffed · cycles 25% faster.' : 'Assign crew at the Academy for faster cycles.'}
           </div>
         </Panel>
 
@@ -51,8 +55,8 @@ export default function RefineryScreen({ player, onBack, onStartRefine, onCollec
             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
               <MineralChip meta={runningRecipe.output} variant="avatar" size={40} />
               <div style={{ flex: 1 }}>
-                <div style={{ fontFamily: 'var(--ln-font-display)', fontWeight: 800, fontSize: 14, color: '#e6efff' }}>{runningRecipe.name} {done && '✓'}</div>
-                <div style={{ fontFamily: 'var(--ln-font-mono)', fontSize: 10, color: '#7a8294' }}>
+                <div style={{ fontFamily: 'var(--ln-font-display)', fontWeight: 800, fontSize: 14, color: 'var(--ln-text)' }}>{runningRecipe.name} {done && '✓'}</div>
+                <div style={{ fontFamily: 'var(--ln-font-mono)', fontSize: 10, color: 'var(--ln-text-muted)' }}>
                   {done ? 'Complete — tap to collect' : `${Math.max(0, Math.ceil((durationMs - elapsed) / 1000))}s remaining`}
                 </div>
                 {!done && (
@@ -90,7 +94,7 @@ export default function RefineryScreen({ player, onBack, onStartRefine, onCollec
           {REFINERY_RECIPES.map(recipe => {
             const hasInput = (stash[recipe.input.mineral] ?? 0) >= recipe.input.amount
             const affordable = player.francs >= recipe.cost
-            const canStart = hasInput && affordable && !running
+            const canStart = hasInput && affordable && !running && !startedToday
             return (
               <button
                 key={recipe.id}
@@ -101,8 +105,8 @@ export default function RefineryScreen({ player, onBack, onStartRefine, onCollec
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                     <MineralChip meta={recipe.output} variant="avatar" size={44} />
                     <div style={{ flex: 1 }}>
-                      <div style={{ fontFamily: 'var(--ln-font-display)', fontWeight: 800, fontSize: 14, color: '#e6efff' }}>{recipe.name}</div>
-                      <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 11, color: '#a9b8ce' }}>
+                      <div style={{ fontFamily: 'var(--ln-font-display)', fontWeight: 800, fontSize: 14, color: 'var(--ln-text)' }}>{recipe.name}</div>
+                      <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 11, color: 'var(--ln-text-dim)' }}>
                         {recipe.input.amount}× {recipe.input.mineral} → {recipe.output.name}
                       </div>
                     </div>
@@ -111,14 +115,14 @@ export default function RefineryScreen({ player, onBack, onStartRefine, onCollec
                     <StatusPill kind="info" dim>{formatCurrency(recipe.cost)}</StatusPill>
                     <StatusPill kind="amber" dim>{Math.round(recipe.time * (player.staffed ? 0.75 : 1))}s</StatusPill>
                     <span style={{ flex: 1 }} />
-                    <StatusPill kind={hasInput ? 'ok' : 'crit'} dim>{hasInput ? `✓` : 'Missing Input'}</StatusPill>
+                    <StatusPill kind={!hasInput ? 'crit' : startedToday ? 'amber' : 'ok'} dim>{!hasInput ? 'Missing Input' : startedToday ? 'Daily Limit' : 'Ready'}</StatusPill>
                   </div>
                 </Panel>
               </button>
             )
           })}
         </div>
-      </div>
+      </ScenePanel>
       {selected && (
         <div className="sticky-actions" data-ui-zone={UI_ZONES.bottomActions}>
           <PrimaryBtn onClick={() => { onStartRefine(selected); setSelected(null) }}>Start Refinement</PrimaryBtn>

@@ -14,6 +14,7 @@
  */
 
 import { useEffect, useRef } from 'react'
+import { capDpr } from '@/lib/engine/pixiDisplay'
 import { Application, Container, Graphics, Text, TextStyle } from 'pixi.js'
 import { candidateSkyPosition, type TessCandidate } from '@/lib/data'
 
@@ -111,7 +112,10 @@ export default function PixiGalaxyStarMap({ candidates, visitedIds, selectedId, 
       marker.addChild(labelBg, label)
 
       starLayer.addChild(marker)
-      hits.push({ id: SOL_ID, x: sx, y: sy, r: radius + 16 })
+      // SSL-282: hit radius must clear a comfortable touch target (~44px
+      // diameter / 22px radius), not just hug the drawn glyph — a canvas
+      // marker has no native tap-target sizing the way a DOM button does.
+      hits.push({ id: SOL_ID, x: sx, y: sy, r: Math.max(radius + 16, 22) })
     }
 
     function drawStars(w: number, h: number, phase: number) {
@@ -161,7 +165,10 @@ export default function PixiGalaxyStarMap({ candidates, visitedIds, selectedId, 
         marker.addChild(labelBg, label)
 
         starLayer.addChild(marker)
-        hits.push({ id: candidate.id, x: sx, y: sy, r: radius + 10 })
+        // SSL-282: same minimum touch-target reasoning as drawSol() above —
+        // a 15px hit radius (30px across) was well under mobile tap-target
+        // guidelines, which read as "buttons" that wouldn't press reliably.
+        hits.push({ id: candidate.id, x: sx, y: sy, r: Math.max(radius + 10, 22) })
       }
     }
 
@@ -169,10 +176,20 @@ export default function PixiGalaxyStarMap({ candidates, visitedIds, selectedId, 
       const rect = canvas.getBoundingClientRect()
       const mx = (e.clientX - rect.left) * (W / rect.width)
       const my = (e.clientY - rect.top) * (H / rect.height)
-      const hit = hits.find(b => Math.hypot(mx - b.x, my - b.y) <= b.r)
-      if (!hit) return
-      if (hit.id === SOL_ID) onOpenSolRef.current()
-      else onSelectRef.current(hit.id)
+      // Pick the closest matching star, not the first one added — with hit
+      // circles this size, neighboring stars on a crowded map can overlap,
+      // and always resolving to whichever was drawn first made taps land on
+      // the "wrong" star (SSL-282: felt unpredictable, not like pressing a
+      // normal button).
+      let best: HitRegion | null = null
+      let bestDist = Infinity
+      for (const b of hits) {
+        const dist = Math.hypot(mx - b.x, my - b.y)
+        if (dist <= b.r && dist < bestDist) { best = b; bestDist = dist }
+      }
+      if (!best) return
+      if (best.id === SOL_ID) onOpenSolRef.current()
+      else onSelectRef.current(best.id)
     })
 
     const doInit = async () => {
@@ -180,7 +197,7 @@ export default function PixiGalaxyStarMap({ candidates, visitedIds, selectedId, 
         const rect = host.getBoundingClientRect()
         W = Math.round(Math.max(200, rect.width))
         H = Math.round(height ?? Math.max(100, rect.height))
-        const dpr = window.devicePixelRatio || 1
+        const dpr = capDpr()
         await app.init({ canvas, width: W, height: H, background: SKY_BG, antialias: true, autoDensity: true, resolution: dpr })
         if (destroyed) return
         app.stage.addChild(bgLayer, starLayer)

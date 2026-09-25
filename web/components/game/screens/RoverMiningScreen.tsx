@@ -1,30 +1,72 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-import TopBar from '@/components/ui/TopBar'
-import Panel from '@/components/ui/Panel'
-import StatusPill from '@/components/ui/StatusPill'
-import { PrimaryBtn } from '@/components/ui/Button'
-import type { Mission, Target } from '@/lib/data'
-import { MINERAL_META } from '@/lib/data'
+import { useCallback, useMemo, useRef, useState } from 'react'
+import { defaultSpec, type MissionState, type ResourceKey } from '@takeon/engine'
+import type { Mission, SurfaceTarget, Target } from '@/lib/data'
+import { MINERAL_META, lifeStageForTarget } from '@/lib/data'
+import type { Player } from '@/lib/game-types'
+import type { FieldBuildInput, FieldIdentity } from '@/lib/systems/SandboxSystem'
 import { UI_ZONES } from '@/lib/ui-zones'
-import { formatCountdown } from '@/lib/format'
-import RoverMiningCanvas from './RoverMiningCanvas'
+import type { TakeonHostEvent } from '@/lib/takeon/events'
+import { TAKEON_TO_LANDNAM_MINERAL } from '@/lib/takeon/minerals'
+import TakeOnMount, { type TakeOnMountHandle } from '@/components/takeon/TakeOnMount'
+import SandboxFieldControls from '@/components/takeon/SandboxFieldControls'
+import RoverDrivePad from '@/components/takeon/RoverDrivePad'
+import { shareFieldCreation } from '@/lib/community/shareField'
+import TopBar from '@/components/ui/TopBar'
+import styles from './RoverMiningScreen.module.css'
 
-const ROVER_MINING_DURATION_MS = 2 * 60 * 1000
+/**
+ * TakeOn's body registry uses authored simulation bodies, while Landnam's
+ * mission catalog uses real target ids. Keep that translation at the host
+ * boundary instead of teaching the engine about Landnam's astronomy catalog.
+ */
+const TAKEON_BODY_BY_LANDNAM_TARGET: Record<string, string> = {
+  bennu: 'bennu',
+  itokawa: 'ironrock',
+  vesta: 'ceres',
+  ceres: 'ceres',
+  eros: 'ironrock',
+  psyche: 'ironrock',
+  mars: 'mars',
+  moon: 'moon',
+  europa: 'europa',
+  io: 'io',
+}
 
-// Rover cargo mirrors what the mission actually requires — same contract as
-// the laser MiningScreen's mission.requires.minerals — so a rover deployment
-// yields real, usable mission cargo instead of an arbitrary fixed haul.
-function generateRoverCargo(mission: Mission, target: Target): Record<string, number> {
-  const required = mission.requires.minerals
-  if (Object.keys(required).length > 0) return { ...required }
-  const cargo: Record<string, number> = {}
-  const minerals = target.minerals.slice(0, 3)
-  minerals.forEach((mineral, i) => {
-    cargo[mineral] = 2 + i
-  })
-  return cargo
+function stableSeed(value: string): number {
+  let hash = 2166136261
+  for (const char of value) hash = Math.imul(hash ^ char.charCodeAt(0), 16777619)
+  return hash >>> 0
+}
+
+export function takeonBodyForTarget(target: Pick<Target, 'id' | 'type'>): string {
+  return TAKEON_BODY_BY_LANDNAM_TARGET[target.id]
+    ?? (target.type === 'asteroid' ? 'ironrock' : 'mars')
+}
+
+export function roverCargoRequirements(mission: Mission, target: Target): Record<string, number> {
+  if (Object.keys(mission.requires.minerals).length > 0) return { ...mission.requires.minerals }
+
+  return Object.fromEntries(
+    target.minerals.slice(0, 3).map((mineral, index) => [mineral, 2 + index])
+  )
+}
+
+/** Translate the TakeOn rover hold into the contract-shaped Landnam manifest. */
+export function landnamCargoFromTakeon(
+  cargo: Partial<Record<ResourceKey, number>>,
+  requirements: Record<string, number>
+): Record<string, number> {
+  const result: Record<string, number> = {}
+  for (const [resource, amount] of Object.entries(cargo)) {
+    if (!amount || amount <= 0) continue
+    const mineral = TAKEON_TO_LANDNAM_MINERAL[resource]
+    const required = mineral ? requirements[mineral] : undefined
+    if (!mineral || required == null) continue
+    result[mineral] = Math.min(required, (result[mineral] ?? 0) + amount)
+  }
+  return result
 }
 
 interface RoverMiningScreenProps {
@@ -32,110 +74,204 @@ interface RoverMiningScreenProps {
   target: Target
   onComplete: (cargo: Record<string, number>) => void
   onBack: () => void
-  /** Wall-clock start of this run, restored across a Back-to-hub pause so the extraction timer doesn't restart. */
-  startedAt?: number
+  /** Client display name, retained through the handoff for context only — Landnam still owns the contract. */
+  clientName?: string
+  rocketImageSrc?: string
+  /** SSL-316 sandbox: when the host supplies the player and build actions, the field gains build mode. */
+  player?: Player
+  onFieldBuild?: (field: FieldIdentity, structure: FieldBuildInput) => boolean
+  onFieldDemolish?: (targetId: string, structureId: string) => void
+  onFabricate?: (targetId: string, recipeId: string) => boolean
+  onSeedBiosphere?: (target: SurfaceTarget) => boolean
 }
 
-export default function RoverMiningScreen({ mission, target, onComplete, onBack, startedAt: startedAtProp }: RoverMiningScreenProps) {
-  const [startedAt] = useState(() => startedAtProp ?? Date.now())
-  const [now, setNow] = useState(() => Date.now())
+export default function RoverMiningScreen({
+  mission, target, onComplete, onBack, clientName, rocketImageSrc,
+  player, onFieldBuild, onFieldDemolish, onFabricate, onSeedBiosphere,
+}: RoverMiningScreenProps) {
+  const requirements = useMemo(() => roverCargoRequirements(mission, target), [mission, target])
+  const rover = useMemo(() => defaultSpec(), [])
+  const bodyId = useMemo(() => takeonBodyForTarget(target), [target])
+  const missionId = useMemo(() => `landnam-rover-${mission.id}-${target.id}`, [mission.id, target.id])
+  const seed = useMemo(() => stableSeed(`${mission.id}:${target.id}:takeon`), [mission.id, target.id])
+  const [cargo, setCargo] = useState<Record<string, number>>({})
+  const [routeSteps, setRouteSteps] = useState(0)
+  const [takeonReady, setTakeonReady] = useState(false)
+  const [deployed, setDeployed] = useState(false)
+  const [buildMode, setBuildMode] = useState(false)
+  const [fieldNotice, setFieldNotice] = useState<string | null>(null)
+  const takeonHandle = useRef<TakeOnMountHandle | null>(null)
+  const fieldIdentity = useMemo<FieldIdentity>(() => ({ targetId: target.id }), [target.id])
+  const lifeStage = lifeStageForTarget(target, player?.biosphereSeeds?.[target.id])
+  const sandboxEnabled = !!player && !!onFieldBuild
 
-  const elapsed = now - startedAt
-  const done = elapsed >= ROVER_MINING_DURATION_MS
-  const progressPct = Math.min(100, (elapsed / ROVER_MINING_DURATION_MS) * 100)
-  const remaining = Math.max(0, ROVER_MINING_DURATION_MS - elapsed)
-  const cargo = generateRoverCargo(mission, target)
-
-  const countdown = formatCountdown(remaining)
-
-  useEffect(() => {
-    if (done) return
-    const id = window.setInterval(() => setNow(Date.now()), 1000)
-    return () => window.clearInterval(id)
-  }, [done])
-
-  return (
-    <div className="game-screen" style={{ display: 'flex', flexDirection: 'column' }}>
-      <TopBar eyebrow={`SURFACE OPS · ${target.name.toUpperCase()}`} title="Rover Mining" onBack={onBack} />
-
-      {/* PixiJS rover scene — grows to fill available space */}
-      <div style={{ flex: 1, position: 'relative', minHeight: 0, marginTop: 56 }}>
-        <RoverMiningCanvas target={target} done={done} />
-      </div>
-
-      {/* HUD strip — status + timer + cargo */}
-      <div data-ui-zone={UI_ZONES.screenContent} style={{
-        padding: '10px 16px',
-        background: 'linear-gradient(180deg, transparent, var(--ln-void) 18%)',
-        flexShrink: 0,
-      }}>
-        <Panel accent={done ? 'var(--ln-ok)' : 'var(--ln-amber)'} style={{ padding: 10, marginBottom: 8 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: done ? 0 : 8 }}>
-            <RoverIcon done={done} />
-            <div>
-              <div style={{ fontFamily: 'var(--ln-font-display)', fontWeight: 800, fontSize: 14, color: done ? 'var(--ln-ok)' : 'var(--ln-amber)' }}>
-                {done ? 'EXTRACTION COMPLETE' : 'EXTRACTING DEPOSITS'}
-              </div>
-              <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 11, color: '#a9b8ce', marginTop: 2 }}>
-                {mission.title}
-              </div>
-            </div>
-          </div>
-          {!done && (
-            <>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 5 }}>
-                <span style={{ fontFamily: 'var(--ln-font-display)', fontSize: 9, fontWeight: 700, letterSpacing: '0.18em', color: '#6b7fa3' }}>OPERATION PROGRESS</span>
-                <span style={{ fontFamily: 'var(--ln-font-mono)', fontSize: 15, fontWeight: 700, color: 'var(--ln-amber)' }}>{countdown}</span>
-              </div>
-              <div style={{ height: 5, background: 'rgba(245,166,35,0.15)', borderRadius: 3, overflow: 'hidden' }}>
-                <div style={{ height: '100%', width: `${progressPct}%`, background: 'var(--ln-amber)', borderRadius: 3, transition: 'width 1s linear' }} />
-              </div>
-            </>
-          )}
-        </Panel>
-
-        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 8 }}>
-          {Object.entries(cargo).map(([mineral, amount]) => {
-            const meta = MINERAL_META[mineral]
-            return (
-              <div key={mineral} style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '4px 8px', borderRadius: 6, background: (meta?.color ?? '#888') + '18', border: `1px solid ${meta?.color ?? '#888'}44` }}>
-                <span style={{ fontFamily: 'var(--ln-font-mono)', fontSize: 10, fontWeight: 700, color: meta?.color ?? '#888' }}>
-                  {meta?.sym ?? mineral.slice(0, 2).toUpperCase()}
-                </span>
-                <span style={{ fontFamily: 'var(--ln-font-display)', fontSize: 11, color: '#e8f0fe' }}>×{amount}</span>
-              </div>
-            )
-          })}
-        </div>
-
-        {done ? (
-          <>
-            <StatusPill kind="ok">ROVER RETURNED — MINERALS SECURED</StatusPill>
-            <div style={{ marginTop: 8 }}>
-              <PrimaryBtn kind="green" onClick={() => onComplete(cargo)}>
-                COLLECT CARGO
-              </PrimaryBtn>
-            </div>
-          </>
-        ) : (
-          <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 9, letterSpacing: '0.15em', color: '#6b7fa3', textTransform: 'uppercase' }}>
-            Use joystick to drive rover · Drill auto-activates when stationary
-          </div>
-        )}
-      </div>
-    </div>
+  const cargoReady = Object.entries(requirements).every(
+    ([mineral, amount]) => (cargo[mineral] ?? 0) >= amount
   )
-}
 
-function RoverIcon({ done }: { done: boolean }) {
-  const color = done ? 'var(--ln-ok)' : 'var(--ln-amber)'
+  const handleTakeonEvent = useCallback((event: TakeonHostEvent) => {
+    if (event.type === 'built') {
+      if (!onFieldBuild) return
+      const s = event.payload.structure
+      const funded = onFieldBuild(fieldIdentity, { id: s.id, type: s.type, x: s.pos.x, y: s.pos.y, facing: s.facing ?? 0 })
+      if (!funded) {
+        takeonHandle.current?.demolish(s.id)
+        setFieldNotice('Structure removed: it could not be funded from your stash.')
+      } else {
+        setFieldNotice(null)
+      }
+      return
+    }
+    if (event.type === 'demolished') {
+      onFieldDemolish?.(fieldIdentity.targetId, event.payload.id)
+      return
+    }
+    if (event.type === 'buildFailed') {
+      setFieldNotice(`Cannot build here: ${event.payload.reason}.`)
+      return
+    }
+    if (event.type !== 'mined' || !event.payload.resource) return
+    const mineral = TAKEON_TO_LANDNAM_MINERAL[event.payload.resource]
+    const required = mineral ? requirements[mineral] : undefined
+    if (!mineral || required == null) return
+    setCargo(previous => ({
+      ...previous,
+      [mineral]: Math.min(required, (previous[mineral] ?? 0) + event.payload.amount),
+    }))
+  }, [fieldIdentity, onFieldBuild, onFieldDemolish, requirements])
+
+  const handleReady = useCallback((state: MissionState) => {
+    setCargo(landnamCargoFromTakeon(state.rover.cargo, requirements))
+    setTakeonReady(true)
+  }, [requirements])
+
+  const handleRouteChange = useCallback((steps: number) => {
+    setRouteSteps(steps)
+  }, [])
+
+  // Keep the full release journey deterministic in the development runner.
+  // The real TakeOn interaction remains covered by the dedicated visual
+  // review; this shortcut only supplies the contract-shaped cargo needed to
+  // exercise the delivery and debrief legs in a bounded CI run.
+  const handleDevSkip = useCallback(() => {
+    onComplete(requirements)
+  }, [onComplete, requirements])
+
+  const status = !deployed
+    ? 'AWAITING ROVER DEPLOYMENT'
+    : !takeonReady
+      ? 'CONNECTING TO SURFACE SIM'
+      : cargoReady
+        ? 'MISSION CARGO READY'
+        : 'ROVER ACTIVE · MINE THE ORDER'
+
   return (
-    <svg width={28} height={28} viewBox="0 0 32 32" fill="none" aria-hidden="true">
-      <rect x="8" y="12" width="16" height="10" rx="2" stroke={color} strokeWidth="1.5" />
-      <path d="M8 17h16M13 12V9m6 3V9" stroke={color} strokeWidth="1.5" strokeLinecap="round" />
-      <circle cx="10" cy="24" r="2.5" stroke={color} strokeWidth="1.5" />
-      <circle cx="22" cy="24" r="2.5" stroke={color} strokeWidth="1.5" />
-      {done && <path d="M13 16l2 2 4-4" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />}
-    </svg>
+    <div className={`game-screen theme-deep ln-scene-takeon ${styles.screen}`} data-testid="rover-mining-screen">
+      <TopBar eyebrow={`SURFACE OPS · ${target.name.toUpperCase()}`} title="Field Rover" onBack={onBack} />
+
+      <main className={styles.content} data-ui-zone={UI_ZONES.screenContent}>
+        <section className={styles.scenePanel} aria-label="TakeOn rover field">
+          <TakeOnMount
+            ref={takeonHandle}
+            missionId={missionId}
+            bodyId={bodyId}
+            seed={seed}
+            rover={rover}
+            roverName="Mule Field Rover"
+            target={target}
+            lifeStage={lifeStage}
+            onEvent={handleTakeonEvent}
+            onReady={handleReady}
+            onRouteChange={handleRouteChange}
+            className={styles.takeonMount}
+          />
+          {!deployed && (
+            <div className={styles.landingHandoff} data-testid="deploy-surface-ops-handoff">
+              {rocketImageSrc && <img src={rocketImageSrc} alt="Prospector rocket landed on the surface" />}
+              <div>
+                <span className={styles.eyebrow}>TOUCHDOWN · {target.name.toUpperCase()}</span>
+                <h2>Deploy the Mule rover</h2>
+                <p>The Prospector is your rocket. The Mule is the rover in its hold. Deploy it to drive across the visible terrain and drill the client order.</p>
+                <button type="button" className={styles.primaryAction} onClick={() => setDeployed(true)} data-testid="deploy-surface-ops-confirm">DEPLOY MULE ROVER</button>
+              </div>
+            </div>
+          )}
+          {deployed && (
+            <div className={styles.controls} data-testid="rover-control-guide" data-route-steps={routeSteps}>
+              <RoverDrivePad
+                handle={takeonHandle}
+                compact={buildMode}
+                trailing={sandboxEnabled ? (
+                  <button
+                    type="button"
+                    className={styles.buildToggle}
+                    aria-pressed={buildMode}
+                    onClick={() => setBuildMode(open => !open)}
+                    data-testid="rover-build-mode-toggle"
+                  >
+                    {buildMode ? 'CLOSE BUILD' : 'BUILD'}
+                  </button>
+                ) : null}
+              />
+            </div>
+          )}
+          {deployed && sandboxEnabled && buildMode && player && (
+            <div className={styles.sandboxDock} data-testid="rover-sandbox-dock">
+              <SandboxFieldControls
+                player={player}
+                handle={takeonHandle}
+                target={target}
+                targetId={target.id}
+                lifeStage={lifeStage}
+                notice={fieldNotice}
+                onFabricate={onFabricate ? recipeId => onFabricate(target.id, recipeId) : undefined}
+                onSeedBiosphere={onSeedBiosphere ? () => onSeedBiosphere(target) : undefined}
+                onShare={snapshot => {
+                  void shareFieldCreation(snapshot, target.name).then(result => setFieldNotice(result.message))
+                }}
+              />
+            </div>
+          )}
+        </section>
+
+        <aside className={styles.hud} aria-label="Mission cargo order">
+          <div className={styles.statusHeader}>
+            <div><span className={styles.kicker}>{clientName ? `${clientName} · CLIENT ORDER` : 'MISSION ORDER'}</span><strong>{mission.title}</strong></div>
+            <span className={styles.statusPill} data-ready={cargoReady}>{status}</span>
+          </div>
+          <div className={styles.orderList} data-testid="rover-cargo-order">
+            {Object.entries(requirements).map(([mineral, amount]) => {
+              const loaded = Math.min(amount, cargo[mineral] ?? 0)
+              const meta = MINERAL_META[mineral]
+              return <div className={styles.orderRow} key={mineral}><span className={styles.mineralIdentity}><span className={styles.mineralDot} style={{ background: meta?.color ?? 'var(--ln-text-muted)' }} />{meta?.name ?? mineral}</span><strong>{loaded} / {amount} U</strong></div>
+            })}
+          </div>
+          <button type="button" className={styles.primaryAction} disabled={!takeonReady || !cargoReady} onClick={() => onComplete(cargo)} data-testid="rover-return-to-ship">RETURN MULE TO PROSPECTOR</button>
+        </aside>
+      </main>
+
+      {process.env.NODE_ENV === 'development' && (
+        <button
+          data-testid="dev-skip-rover-mining-btn"
+          onClick={handleDevSkip}
+          style={{
+            position: 'absolute', top: 8, right: 8, zIndex: 999,
+            padding: '3px 8px',
+            background: 'var(--ln-bp-paper)',
+            border: '1px solid var(--ln-bp-green)',
+            borderRadius: 6,
+            color: 'var(--ln-bp-green)',
+            fontFamily: 'var(--ln-font-mono)',
+            fontSize: 10,
+            fontWeight: 700,
+            letterSpacing: '0.12em',
+            cursor: 'pointer',
+            opacity: 0.8,
+          }}
+        >
+          SKIP SURFACE OPS
+        </button>
+      )}
+    </div>
   )
 }

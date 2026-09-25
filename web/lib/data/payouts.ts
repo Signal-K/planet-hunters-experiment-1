@@ -40,7 +40,7 @@ export function normalizeMissionPayout(raw: number, sequence: number): number {
 // sits between M1 and M2 — you must already own it to fly M2 — so M1's floor
 // alone (not "M1+M2 combined") has to cover the purchase; M2's payout arrives
 // too late to help fund it.
-export const ONBOARDING_ROCKET_COST = ROCKET_MODELS.find(r => r.id === 'sr2')?.costFrancs ?? 1_300_000_000
+export const ONBOARDING_ROCKET_COST = ROCKET_MODELS.find(r => r.name === 'Prospector')?.costFrancs ?? 1_300_000_000
 
 /** Onboarding floor: 1.05× the Prospector's cost for the first two missions. */
 const ONBOARDING_PAYOUT_FLOOR = Math.round(ONBOARDING_ROCKET_COST * 1.05)

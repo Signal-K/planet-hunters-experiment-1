@@ -11,23 +11,10 @@ export function PushOptIn({ userId }: PushOptInProps) {
 
   if (state === 'unsupported') return null
 
-  if (state === 'denied') {
-    return (
-      <div
-        style={{
-          padding: '8px 12px',
-          background: 'var(--ln-surface)',
-          border: '1px solid var(--ln-hairline)',
-          borderRadius: 4,
-          color: 'var(--ln-text-muted)',
-          fontSize: 11,
-          letterSpacing: '0.06em',
-        }}
-      >
-        NOTIFICATIONS BLOCKED — enable in browser settings
-      </div>
-    )
-  }
+  // A denied browser permission cannot be repaired from inside the game.
+  // Rendering a persistent warning over the Hub only competes with mission
+  // controls; Settings can explain how to re-enable it later.
+  if (state === 'denied') return null
 
   if (state === 'granted') {
     return (

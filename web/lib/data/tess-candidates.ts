@@ -1,4 +1,5 @@
 import type { LightcurvePoint } from '@/components/game/LightcurvePlot'
+import { TESS_SETTLED_LABELS, recordHasOpenConsensus } from '@/lib/citizen-science/open-anomaly'
 import { mineralsForArchetype, type TargetArchetype } from './target-archetypes'
 
 export type TessVerdict = 'planet' | 'not_planet' | 'unsure'
@@ -233,6 +234,9 @@ export function tessCandidateToExoplanetTarget(candidate: TessCandidate, measure
     brief: `${candidate.host} candidate in ${candidate.constellation}. Added from satellite lightcurve review; plot in the star map, not the solar system.`,
     minerals: mineralsForArchetype(archetype, orbit),
     archetype,
+    planetRadiusEarth: candidate.planetRadiusEarth,
+    periodDays,
+    starTeffK,
   }
 }
 
@@ -240,12 +244,7 @@ export function tessCandidateToExoplanetTarget(candidate: TessCandidate, measure
 export function isReviewableTessSubject(record: any): boolean {
   const subjectType = String(record.subject_type ?? '').toLowerCase()
   if (subjectType !== 'transit') return false
-
-  const goldLabel = String(record.gold_label ?? '').toLowerCase()
-  if (goldLabel === 'planet' || goldLabel === 'not_planet') return false
-
-  const consensus = String(record.consensus ?? '').toLowerCase()
-  if (consensus === 'planet' || consensus === 'not_planet') return false
+  if (!recordHasOpenConsensus(record as Record<string, unknown>, TESS_SETTLED_LABELS)) return false
 
   const disposition = String(record.tfopwg_disp ?? record.disposition ?? '').toUpperCase()
   if (disposition === 'KP' || disposition === 'CP' || disposition === 'FP') return false

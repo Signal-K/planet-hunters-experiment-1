@@ -1,4 +1,21 @@
-import { Application, Graphics, Container } from 'pixi.js'
+import { Application, Assets, Graphics, Container, Sprite, Texture } from 'pixi.js'
+
+// Rendered by tools/blender/models/actors.py. Keep this source explicit: the
+// rover scene is a production consumer of the authored asset, not a second
+// hand-drawn rover design.
+export const ROVER_SPRITE_SRC = '/game/assets/actors/rover.png'
+export const ROVER_SPRITE_SCALE = 1 / 3
+
+export function roverSpritePlacement(x: number, y: number, speed: number, elapsed: number) {
+  const moving = Math.abs(speed) > 0.05
+  const bob = moving ? Math.sin(elapsed * 8 + x * 0.05) * 1.5 : 0
+  return {
+    x,
+    y: y + 14 + bob,
+    scaleX: (speed < -0.05 ? -1 : 1) * ROVER_SPRITE_SCALE,
+    scaleY: ROVER_SPRITE_SCALE,
+  }
+}
 
 export interface RoverSceneOptions {
   targetName: string
@@ -72,7 +89,7 @@ function buildSurface(W: number, surfaceY: number, H: number): Graphics {
   return g
 }
 
-function drawRover(g: Graphics, x: number, y: number, speed: number, elapsed: number, done: boolean) {
+function drawFallbackRover(g: Graphics, x: number, y: number, speed: number, elapsed: number, done: boolean) {
   g.clear()
   const color = done ? 0x4ade80 : 0x9becff
   const wheelBob = Math.sin(elapsed * 8 + x * 0.05) * (Math.abs(speed) > 0.05 ? 1.5 : 0)
@@ -148,6 +165,21 @@ export function buildRoverScene(app: Application, opts: RoverSceneOptions): Rove
   const roverG = new Graphics()
   app.stage.addChild(roverG)
 
+  // The Blender sprite gives the rover a legible six-wheel silhouette, solar
+  // panel and scanner mast at mobile size. Keep the prior vector version as a
+  // local fallback if the image fails to load on an interrupted connection.
+  const roverSprite = new Sprite(Texture.EMPTY)
+  roverSprite.anchor.set(0.5, 1)
+  app.stage.addChild(roverSprite)
+  void Assets.load<Texture>(ROVER_SPRITE_SRC)
+    .then(texture => {
+      roverSprite.texture = texture
+      roverG.visible = false
+    })
+    .catch(() => {
+      roverG.visible = true
+    })
+
   let roverX = W * 0.35
   const roverY = surfaceY - 14
   let roverVx = 0
@@ -195,7 +227,12 @@ export function buildRoverScene(app: Application, opts: RoverSceneOptions): Rove
         dustG.circle(p.x, p.y, p.r).fill({ color: DUST_COLOR, alpha })
       }
 
-      drawRover(roverG, roverX, roverY, roverVx / 80, elapsed, done)
+      const placement = roverSpritePlacement(roverX, roverY, roverVx / 80, elapsed)
+      roverSprite.position.set(placement.x, placement.y)
+      roverSprite.scale.set(placement.scaleX, placement.scaleY)
+      if (roverG.visible) {
+        drawFallbackRover(roverG, roverX, roverY, roverVx / 80, elapsed, done)
+      }
 
       // Done glow
       if (done) {

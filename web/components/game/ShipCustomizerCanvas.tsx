@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useRef } from 'react'
+import { capDpr } from '@/lib/engine/pixiDisplay'
 import { Application, Assets, Container, FederatedPointerEvent, FillGradient, Graphics, Sprite, Text, TextStyle, Texture } from 'pixi.js'
 import type { ShipInteriorLayout, ShipRoomKind, InstalledCustomizerPartsByKind } from '@/lib/data'
 import { CUSTOMIZER_PARTS, getRoomIconArt, SHIP_ROOM_ASSETS, SHIP_ROOM_FOOTPRINT } from '@/lib/data'
@@ -107,9 +108,9 @@ export function ShipCustomizerCanvas({ layout, activeKind, installedParts, onSlo
         width: W,
         height: H,
         background: 0x06090f,
-        antialias: true,
+        antialias: false,
         autoDensity: true,
-        resolution: typeof window !== 'undefined' ? window.devicePixelRatio ?? 1 : 1,
+        resolution: capDpr(),
       })
       initialized = true
       if (destroyed) { try { app.destroy() } catch (_) { /* pixi v8 cleanup */ } canvas.remove(); return }

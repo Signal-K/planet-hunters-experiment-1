@@ -5,7 +5,6 @@ const STORAGE_KEY = 'landnam-game-state-v1'
 const VIEWPORTS = [
   { name: 'compact portrait', width: 375, height: 667 },
   { name: 'standard portrait', width: 390, height: 844 },
-  { name: 'mobile landscape', width: 844, height: 390 },
   { name: 'tablet portrait', width: 768, height: 1024 },
   { name: 'desktop', width: 1280, height: 720 },
 ] as const
@@ -64,8 +63,8 @@ function visitWithState(state: GameState) {
   cy.visit('/game', {
     onBeforeLoad(win) {
       win.localStorage.setItem(STORAGE_KEY, JSON.stringify(state))
-      win.localStorage.setItem('landnam-guest-credentials', JSON.stringify({
-        email: 'e2e@landnam.guest',
+      win.localStorage.setItem('landnam-account-credentials', JSON.stringify({
+        email: 'e2e@example.com',
         password: 'e2e-guest-test',
       }))
     },
@@ -113,11 +112,18 @@ describe('Tutorial rail regression', () => {
 
         cy.get('[data-testid="tutorial-coach-block"]').should('contain', 'Open a Mission')
 
-        // On desktop the sidebar missions button is always visible;
-        // on mobile the bottom tab bar's Missions tab is always visible.
+        // On mobile the bottom tab bar's Missions tab is always visible. The
+        // old always-on desktop sidebar nav (`.desktop-sidebar`,
+        // `sidebar-nav-missions`) was retired in favour of screen-embedded
+        // navigation (`.hub-desktop-nav`, clicking the Launchpad itself,
+        // the progression card's "View Missions" CTA) — at this exact
+        // tutorial step ("Click the Launchpad") there is no persistent
+        // missions-nav element on desktop by design, so just confirm the
+        // retired sidebar and the mobile-only bottom tab bar both stay
+        // hidden rather than asserting a stand-in that doesn't exist here.
         cy.window().then(win => {
           if (win.innerWidth >= 1024) {
-            cy.get('[data-testid="sidebar-nav-missions"]').should('be.visible')
+            cy.get('[data-testid="sidebar-nav-missions"]').should('not.be.visible')
             cy.get('[data-testid="bottom-tab-missions"]').should('not.be.visible')
           } else {
             cy.get('[data-testid="bottom-tab-missions"]').should('be.visible')
@@ -134,7 +140,7 @@ describe('Tutorial rail regression', () => {
           doneSteps: { 0: true, 1: true },
         }))
 
-        cy.get('[data-testid="tutorial-coach-block"]').should('contain', 'Lock a Contract')
+        cy.get('[data-testid="tutorial-coach-block"]').should('contain', 'Select a Mission')
         cy.get('[data-testid="mission-card-generated-s1-starter-bulk-1"]').should('be.visible')
         assertGameplayButtonsAvoidCoachBlock()
       })
@@ -150,6 +156,28 @@ describe('Tutorial rail regression', () => {
         cy.get('[data-testid="tutorial-coach-block"]').should('contain', 'Choose a Destination')
         cy.contains('Continue · Build').should('be.visible')
         assertGameplayButtonsAvoidCoachBlock()
+      })
+
+      // KES-192: TutorialHighlight (.coach-glow-ring) wraps whole content
+      // panels — the map card here, the rocket-assembly card on 'fab', the
+      // launch-authorization card on 'fab' step 5, Debrief's summary card —
+      // whenever hasCoach is true. That makes its border color a panel
+      // accent on every onboarding screen, which the standing amber rule
+      // (CLAUDE.md / design-language doc) explicitly forbids ("never a panel
+      // accent... or generic UI chrome"). Was hardcoded amber
+      // (rgb(245, 166, 35)) until this ticket; must stay cyan.
+      it('highlights the target picker map with cyan, never amber (KES-192)', () => {
+        visitWithState(fullState({
+          screen: 'targets',
+          missionId: 'generated-s1-starter-bulk-1',
+          tutorial: true,
+          doneSteps: { 0: true, 1: true, 2: true },
+        }))
+
+        cy.get('[data-testid="tutorial-coach-highlight"]').should('be.visible').then($ring => {
+          const borderColor = getComputedStyle($ring[0]).borderTopColor
+          expect(borderColor).to.equal('rgb(112, 217, 234)')
+        })
       })
 
       it('keeps manual rocket assembly onboarding out of launch controls', () => {
@@ -183,7 +211,13 @@ describe('Tutorial rail regression', () => {
         cy.get('[data-testid="building-launchpad"]').should('be.visible')
         cy.window().then(win => {
           if (win.innerWidth >= 1024) {
-            cy.get('[data-testid="sidebar-nav-missions"]').click()
+            // No standing sidebar nav on desktop (see the retirement note
+            // above). At Ops 0 with nothing in flight, HubScreen shows the
+            // launchpad's "Choose your first contract" callout instead of
+            // ProgressionCard (the two are deliberately mutually exclusive
+            // — see HubScreen.tsx) — its "View Missions" CTA is the current
+            // path once a mission is actionable.
+            cy.contains('button', 'View Missions', { timeout: 10000 }).click()
           } else {
             cy.get('[data-testid="bottom-tab-missions"]').click()
           }

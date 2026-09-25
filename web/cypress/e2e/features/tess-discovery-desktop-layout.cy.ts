@@ -8,6 +8,16 @@ import type { GameState } from '@/game-context'
 const STORAGE_KEY = 'landnam-game-state-v1'
 
 function visitGalaxyScreen() {
+  const tokenPayload = btoa(JSON.stringify({ exp: Math.floor(Date.now() / 1000) + 3600 }))
+  const e2eToken = `e30.${tokenPayload}.test`
+  cy.intercept('POST', '**/api/collections/users/auth-refresh', {
+    statusCode: 200,
+    body: { token: e2eToken, record: { id: 'e2e-subject-user', email: 'e2e@example.com' } },
+  })
+  cy.intercept('POST', '**/api/landnam-auth/exchange', {
+    statusCode: 200,
+    body: { token: e2eToken, record: { id: 'e2e-subject-user' } },
+  })
   cy.intercept('GET', '**/api/collections/subjects/records*', {
     statusCode: 200,
     body: {
@@ -55,7 +65,6 @@ function visitGalaxyScreen() {
       loanOffered: false,
       roverDeployments: [],
       clientTerritories: {},
-      satelliteMonitoringBuilt: true,
       transitSatelliteLaunchedAt: Date.now() - 1000,
       tessClassifications: {},
     },
@@ -72,13 +81,29 @@ function visitGalaxyScreen() {
   cy.visit('/game', {
     onBeforeLoad(win) {
       win.localStorage.setItem(STORAGE_KEY, JSON.stringify(base))
-      win.localStorage.setItem('landnam-guest-credentials', JSON.stringify({ email: 'e2e@landnam.guest', password: 'e2e-guest-test' }))
+      win.localStorage.setItem('landnam-account-credentials', JSON.stringify({ email: 'e2e@example.com', password: 'e2e-guest-test' }))
+      win.localStorage.setItem('pocketbase_auth', JSON.stringify({ token: e2eToken, record: { id: 'e2e-subject-user', email: 'e2e@example.com' } }))
     },
   })
   cy.wait('@subjects')
 }
 
 describe('TessDiscoveryScreen — desktop two-column layout', () => {
+  it('keeps the compact landscape verdict rail in the viewport', () => {
+    cy.viewport(844, 390)
+    visitGalaxyScreen()
+    cy.get('[data-testid="tess-discovery-desktop-grid"]', { timeout: 10000 }).should('be.visible')
+    cy.get('[data-testid="tess-verdict-planet"]').then($button => {
+      const rect = $button[0].getBoundingClientRect()
+      expect(rect.height, 'verdict hit area').to.be.at.least(44)
+      expect(rect.top, 'verdict top edge').to.be.at.least(0)
+      expect(rect.bottom, 'verdict bottom edge').to.be.at.most(390)
+    })
+    cy.get('[data-testid="tess-discovery-desktop-grid"]').should($grid => {
+      expect($grid[0].scrollHeight, 'stage scroll height').to.be.at.most($grid[0].clientHeight + 1)
+    })
+  })
+
   it('renders a single-column stack on mobile (unchanged)', () => {
     cy.viewport(390, 844)
     visitGalaxyScreen()
@@ -100,7 +125,6 @@ describe('TessDiscoveryScreen — desktop two-column layout', () => {
     cy.get('[data-testid="tess-discovery-desktop-grid"]').should('be.visible').then($grid => {
       expect($grid.css('display')).to.eq('grid')
     })
-    // Both the chart column and the metadata/actions column are visible side by side.
     cy.get('[data-testid="tess-verdict-planet"]').should('be.visible')
   })
 })

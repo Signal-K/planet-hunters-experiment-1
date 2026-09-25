@@ -11,6 +11,13 @@ export type TakeonHostEvent =
   | { type: 'mined'; payload: { resource: ResourceKey | null; amount: number } }
   | { type: 'scan'; payload: { found: Anomaly[] } }
   | { type: 'built'; payload: { structure: Structure } }
+  | { type: 'buildFailed'; payload: GameEvents['buildFailed'] }
+  | { type: 'demolished'; payload: GameEvents['demolished'] }
+  | { type: 'demolishFailed'; payload: GameEvents['demolishFailed'] }
+  | { type: 'rotated'; payload: GameEvents['rotated'] }
+  | { type: 'crafted'; payload: GameEvents['crafted'] }
+  | { type: 'craftFailed'; payload: GameEvents['craftFailed'] }
+  | { type: 'viewChanged'; payload: GameEvents['viewChanged'] }
   | { type: 'batteryEmpty'; payload: GameEvents['batteryEmpty'] }
   | { type: 'roverLost'; payload: GameEvents['roverLost'] }
   | { type: 'anomalyDocumented'; payload: GameEvents['anomalyDocumented'] }
@@ -52,6 +59,27 @@ export function bindTakeonHostEvents(
     }),
     events.on('built', ({ structure }) => {
       onEvent({ type: 'built', payload: { structure } })
+    }),
+    events.on('buildFailed', payload => {
+      onEvent({ type: 'buildFailed', payload })
+    }),
+    events.on('demolished', payload => {
+      onEvent({ type: 'demolished', payload })
+    }),
+    events.on('demolishFailed', payload => {
+      onEvent({ type: 'demolishFailed', payload })
+    }),
+    events.on('rotated', payload => {
+      onEvent({ type: 'rotated', payload })
+    }),
+    events.on('crafted', payload => {
+      onEvent({ type: 'crafted', payload })
+    }),
+    events.on('craftFailed', payload => {
+      onEvent({ type: 'craftFailed', payload })
+    }),
+    events.on('viewChanged', payload => {
+      onEvent({ type: 'viewChanged', payload })
     }),
     events.on('batteryEmpty', payload => {
       onEvent({ type: 'batteryEmpty', payload })

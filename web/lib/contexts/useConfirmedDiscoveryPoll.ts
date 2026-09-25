@@ -16,14 +16,15 @@ interface Opts {
   stateRef: React.RefObject<GameState>
   setState: React.Dispatch<React.SetStateAction<GameState>>
   hydrated: boolean
+  enabled: boolean
   addToast: (message: string, kind?: Toast['kind']) => void
 }
 
-export function useConfirmedDiscoveryPoll({ stateRef, setState, hydrated, addToast }: Opts) {
+export function useConfirmedDiscoveryPoll({ stateRef, setState, hydrated, enabled, addToast }: Opts) {
   const inFlight = useRef(false)
 
   useEffect(() => {
-    if (!hydrated) return
+    if (!hydrated || !enabled) return
 
     const check = async () => {
       if (inFlight.current) return
@@ -55,5 +56,5 @@ export function useConfirmedDiscoveryPoll({ stateRef, setState, hydrated, addToa
     check()
     const id = setInterval(check, POLL_MS)
     return () => clearInterval(id)
-  }, [hydrated, stateRef, setState, addToast])
+  }, [hydrated, enabled, stateRef, setState, addToast])
 }

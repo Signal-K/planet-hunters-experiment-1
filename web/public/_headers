@@ -1,0 +1,9 @@
+# KES-193: /sw.js is served directly by the Workers ASSETS binding (a literal
+# static file), bypassing the Next server and middleware.ts entirely — needs
+# Cloudflare's own static-asset header mechanism. Ported from the old
+# vercel.json. See middleware.ts for the headers that DO route through the
+# Next server (dynamic/SSR pages).
+/sw.js
+  Content-Type: application/javascript; charset=utf-8
+  Cache-Control: no-cache, no-store, must-revalidate
+  Content-Security-Policy: default-src 'self'; script-src 'self'

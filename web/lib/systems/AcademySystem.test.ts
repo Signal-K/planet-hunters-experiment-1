@@ -232,20 +232,21 @@ describe('AcademySystem', () => {
     expect(returned.player.crew![0].xp).toBeGreaterThan(specialists[0].xp)
   })
 
-  it('staffs each structure once and unlocks chart-driven joint missions', () => {
+  it('staffs the diplomacy desk for a payout bonus', () => {
     const member = astronaut()
     const supplier = Object.values(STATIC_CATALOG.clients).find(client => client.suppliesCrew)!
     let state = game({
       crew: [member],
       clientMissions: { [supplier.id]: 5 },
-      targetScanCounts: { eros: 1 },
     })
     state = applyAssignCrewToStructure(state, 'diplomacy', member.id)
     expect(diplomacyPayoutMultiplier(state.player, supplier.id)).toBeGreaterThan(1)
     expect(jointMissionUnlocked(state.player, supplier.id)).toBe(false)
 
+    // Chart intel previously came from Scanning Station scans (removed
+    // KES-333); with no source populating it, sharing is inert.
     state = applyShareChartsWithClient(state, supplier.id)
-    expect(state.player.sharedChartsByClient?.[supplier.id]).toBe(1)
-    expect(jointMissionUnlocked(state.player, supplier.id)).toBe(true)
+    expect(state.player.sharedChartsByClient?.[supplier.id]).toBeUndefined()
+    expect(jointMissionUnlocked(state.player, supplier.id)).toBe(false)
   })
 })

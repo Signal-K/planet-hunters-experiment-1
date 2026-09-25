@@ -23,9 +23,17 @@ export default function CommentsPanel({ recordType, recordId }: CommentsPanelPro
   const [draft, setDraft] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState<string | null>(null)
-  const [isAuthed, setIsAuthed] = useState(pbShared.authStore.isValid)
+  // KES-151: must not read authStore synchronously at initial render — the
+  // SDK already has localStorage-backed state by the time this module
+  // evaluates on the client, but the server always renders as signed-out,
+  // producing a hydration mismatch. Deferred to the effect below instead.
+  const [isAuthed, setIsAuthed] = useState(false)
 
   useEffect(() => {
+    // onChange only fires on future changes, not the store's current value —
+    // set it explicitly once on mount so an already-signed-in device doesn't
+    // stay stuck showing isAuthed=false until its next auth event.
+    setIsAuthed(pbShared.authStore.isValid)
     return pbShared.authStore.onChange(() => setIsAuthed(pbShared.authStore.isValid))
   }, [])
 
@@ -61,7 +69,7 @@ export default function CommentsPanel({ recordType, recordId }: CommentsPanelPro
   }
 
   return (
-    <Panel accent="var(--ln-cyan)" style={{ padding: 12 }}>
+    <Panel accent="var(--ln-cyan)" style={{ padding: 12, alignSelf: 'stretch', height: 'auto' }}>
       <div className="ln-section-label">Comments</div>
 
       {loading ? (
@@ -99,7 +107,7 @@ export default function CommentsPanel({ recordType, recordId }: CommentsPanelPro
                   {new Date(comment.created).toLocaleString()}
                 </span>
               </div>
-              <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 12, color: '#c7d4e6', whiteSpace: 'pre-wrap' }}>
+              <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 12, color: 'var(--ln-text)', whiteSpace: 'pre-wrap' }}>
                 {comment.body}
               </div>
             </div>
@@ -108,7 +116,11 @@ export default function CommentsPanel({ recordType, recordId }: CommentsPanelPro
       )}
 
       <div style={{ marginTop: 10 }}>
-        {isAuthed ? (
+        {loadFailed ? (
+          <div style={{ fontFamily: 'var(--ln-font-mono)', fontSize: 10, color: 'var(--ln-text-muted)' }}>
+            Posting is unavailable while comments can&apos;t be loaded.
+          </div>
+        ) : isAuthed ? (
           <>
             <textarea
               data-testid="comment-input"
@@ -123,7 +135,7 @@ export default function CommentsPanel({ recordType, recordId }: CommentsPanelPro
                 borderRadius: 8,
                 border: '1px solid var(--ln-hairline-strong)',
                 background: 'rgba(20,20,23,0.6)',
-                color: '#e8f0fe',
+                color: 'var(--ln-text)',
                 fontFamily: 'var(--ln-font-body)',
                 fontSize: 12,
               }}
@@ -137,7 +149,8 @@ export default function CommentsPanel({ recordType, recordId }: CommentsPanelPro
                 onClick={handleSubmit}
                 disabled={!draft.trim() || submitting}
                 style={{
-                  padding: '6px 14px',
+                  minHeight: 44,
+                  padding: '0 16px',
                   borderRadius: 8,
                   border: '1px solid rgba(112,217,234,0.6)',
                   background: !draft.trim() || submitting ? 'rgba(20,20,23,0.5)' : 'rgba(112,217,234,0.18)',

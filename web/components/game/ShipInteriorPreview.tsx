@@ -120,7 +120,7 @@ export default function ShipInteriorPreview({
         gridTemplateColumns: '1fr auto',
         alignItems: 'center',
         gap: 8,
-        padding: '10px 14px 8px',
+        padding: '8px 16px 8px',
         borderLeft: 'none',
         borderRight: 'none',
         borderTop: 'none',
@@ -143,7 +143,7 @@ export default function ShipInteriorPreview({
           {onClose && (
             <button
               onClick={onClose}
-              style={{ padding: '5px 8px', borderRadius: 6, border: '1px solid var(--ln-glass-border)', background: 'transparent', color: 'var(--ln-text-dim)', fontFamily: 'var(--ln-font-display)', fontSize: 9, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', cursor: 'pointer' }}
+              style={{ padding: '4px 8px', borderRadius: 6, border: '1px solid var(--ln-glass-border)', background: 'transparent', color: 'var(--ln-text-dim)', fontFamily: 'var(--ln-font-display)', fontSize: 9, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', cursor: 'pointer' }}
             >
               ✕
             </button>
@@ -154,7 +154,7 @@ export default function ShipInteriorPreview({
       {/* ── SHIP DIAGRAM (PixiJS, glass-framed with corner brackets) ── */}
       <div style={{ flex: 'none', maxHeight: '28%', padding: 6 }}>
         <Panel surface="glass" style={{ padding: 0, overflow: 'hidden' }}>
-          <ErrorBoundary fallback={<div style={{ height: 80, background: 'rgba(12,12,13,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'var(--ln-font-mono)', fontSize: 10, color: 'var(--ln-text-muted)', letterSpacing: '0.1em' }}>DIAGRAM UNAVAILABLE</div>}>
+          <ErrorBoundary fallback={<div style={{ height: 80, background: 'var(--ln-overlay)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'var(--ln-font-mono)', fontSize: 10, color: 'var(--ln-text-muted)', letterSpacing: '0.1em' }}>DIAGRAM UNAVAILABLE</div>}>
             <ShipCustomizerCanvas
               layout={layout}
               activeKind={step.kind}
@@ -186,7 +186,7 @@ export default function ShipInteriorPreview({
         display: 'grid',
         gridTemplateColumns: `repeat(${buildSteps.length}, minmax(0, 1fr))`,
         gap: 4,
-        padding: '6px 8px',
+        padding: '8px 8px',
       }}>
         {buildSteps.map((item, index) => {
           const active = index === stepIndex
@@ -200,9 +200,9 @@ export default function ShipInteriorPreview({
               style={{
                 minHeight: 28,
                 borderRadius: 999,
-                border: `1px solid ${active ? 'var(--ln-cyan)' : done ? 'rgba(90,208,126,0.4)' : 'var(--ln-glass-border)'}`,
-                background: active ? 'var(--ln-cyan)' : done ? 'rgba(90,208,126,0.12)' : 'rgba(255,255,255,0.05)',
-                color: active ? '#0e1526' : done ? 'var(--ln-ok)' : 'var(--ln-text-dim)',
+                border: `1px solid ${active ? 'var(--ln-cyan)' : done ? 'var(--ln-ok)' : 'var(--ln-glass-border)'}`,
+                background: active ? 'var(--ln-cyan)' : done ? 'var(--ln-ok-soft)' : 'var(--ln-hairline)',
+                color: active ? 'var(--ln-text-on-cyan)' : done ? 'var(--ln-ok)' : 'var(--ln-text-dim)',
                 fontFamily: 'var(--ln-font-display)',
                 fontSize: 7,
                 fontWeight: active ? 900 : 700,
@@ -219,7 +219,7 @@ export default function ShipInteriorPreview({
       </div>
 
       {/* ── STEP CONTENT (fills remaining) ───────────────────────────── */}
-      <div data-testid="ship-build-step" style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', padding: '8px 10px 6px' }}>
+      <div data-testid="ship-build-step" style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', padding: '8px 8px 8px' }}>
         {/* Step title + desc, with the room's full interior diorama as a
             detail preview — the walls/floor/furniture art that's too
             low-contrast to read at grid-cell scale gets real screen space
@@ -235,7 +235,7 @@ export default function ShipInteriorPreview({
               height: 56,
               borderRadius: 8,
               border: '1px solid var(--ln-glass-border)',
-              background: 'rgba(0,0,0,0.3)',
+              background: 'var(--ln-overlay)',
               objectFit: 'cover',
             }}
           />
@@ -243,7 +243,7 @@ export default function ShipInteriorPreview({
             <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 8, fontWeight: 900, letterSpacing: '0.16em', color: 'var(--ln-cyan)', textTransform: 'uppercase' }}>
               Step {stepIndex + 1} / {buildSteps.length}
             </div>
-            <h3 style={{ margin: '1px 0 3px', fontFamily: 'var(--ln-font-display)', fontSize: 15, fontWeight: 800, color: 'var(--ln-text)', lineHeight: 1.1 }}>
+            <h3 style={{ margin: '4px 0 4px', fontFamily: 'var(--ln-font-display)', fontSize: 15, fontWeight: 800, color: 'var(--ln-text)', lineHeight: 1.1 }}>
               {step.title}
             </h3>
             <p style={{ margin: 0, fontFamily: 'var(--ln-font-body)', fontSize: 10, color: 'var(--ln-text-muted)', lineHeight: 1.35 }}>
@@ -270,10 +270,10 @@ export default function ShipInteriorPreview({
                   display: 'flex',
                   flexDirection: 'column',
                   gap: 4,
-                  padding: '8px 9px',
+                  padding: '8px 8px',
                   borderRadius: 8,
-                  border: selected ? '1px solid rgba(90,208,126,0.72)' : undefined,
-                  background: selected ? 'rgba(90,208,126,0.14)' : undefined,
+                  border: selected ? '1px solid var(--ln-ok)' : undefined,
+                  background: selected ? 'var(--ln-ok-soft)' : undefined,
                   color: 'var(--ln-text)',
                   textAlign: 'left',
                   cursor: buildState.confirmed || !affordable ? 'not-allowed' : 'pointer',
@@ -289,7 +289,7 @@ export default function ShipInteriorPreview({
                   {part.description}
                 </div>
                 <div style={{ flex: 'none', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 4 }}>
-                  <span style={{ fontFamily: 'var(--ln-font-mono)', fontSize: 9, color: 'var(--ln-amber)' }}>
+                  <span style={{ fontFamily: 'var(--ln-font-mono)', fontSize: 9, color: 'var(--ln-cyan)' }}>
                     {formatCurrency(part.price, { compact: true })}
                   </span>
                   <span style={{ fontFamily: 'var(--ln-font-display)', fontSize: 9, fontWeight: 900, color: selected ? 'var(--ln-ok)' : 'var(--ln-cyan)', letterSpacing: '0.07em', textTransform: 'uppercase' }}>
@@ -310,7 +310,7 @@ export default function ShipInteriorPreview({
         borderBottom: 'none',
       }}>
         {/* Stage summary chips */}
-        <div style={{ display: 'flex', gap: 3, padding: '5px 10px 0', overflowX: 'auto', flexWrap: 'wrap', alignItems: 'center' }}>
+        <div style={{ display: 'flex', gap: 3, padding: '4px 8px 0', overflowX: 'auto', flexWrap: 'wrap', alignItems: 'center' }}>
           <span data-testid="ship-review" data-installed={installedIds.length} data-total={buildSteps.length} style={{ fontFamily: 'var(--ln-font-display)', fontSize: 7, color: 'var(--ln-text-muted)', fontWeight: 700, letterSpacing: '0.08em', marginRight: 4 }}>
             {buildState.confirmed ? 'Configuration confirmed' : `${installedIds.length}/${buildSteps.length} stages selected`}
           </span>
@@ -320,9 +320,9 @@ export default function ShipInteriorPreview({
             return (
               <div key={item.kind} style={{
                 flex: 'none',
-                padding: '2px 6px',
+                padding: '4px 8px',
                 borderRadius: 4,
-                border: `1px solid ${active ? 'var(--ln-cyan)' : part ? 'rgba(90,208,126,0.4)' : 'var(--ln-glass-border)'}`,
+                border: `1px solid ${active ? 'var(--ln-cyan)' : part ? 'var(--ln-ok)' : 'var(--ln-glass-border)'}`,
                 color: active ? 'var(--ln-cyan)' : part ? 'var(--ln-ok)' : 'var(--ln-text-muted)',
                 fontFamily: 'var(--ln-font-display)',
                 fontSize: 7,
@@ -337,14 +337,14 @@ export default function ShipInteriorPreview({
         </div>
 
         {/* Nav row */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'auto 1fr auto', gap: 6, padding: '5px 10px 8px', alignItems: 'center' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'auto 1fr auto', gap: 6, padding: '4px 8px 8px', alignItems: 'center' }}>
           <button
             data-testid="ship-step-back"
             onClick={() => setStepIndex(i => Math.max(0, i - 1))}
             disabled={isFirst || buildState.confirmed}
             style={{
-              minHeight: 36, minWidth: 56, padding: '0 10px', borderRadius: 7,
-              border: '1px solid var(--ln-glass-border)', background: 'rgba(255,255,255,0.05)',
+              minHeight: 36, minWidth: 56, padding: '0 8px', borderRadius: 7,
+              border: '1px solid var(--ln-glass-border)', background: 'var(--ln-hairline)',
               color: isFirst || buildState.confirmed ? 'var(--ln-text-muted)' : 'var(--ln-text-dim)',
               fontFamily: 'var(--ln-font-display)', fontSize: 9, fontWeight: 900, letterSpacing: '0.1em',
               textTransform: 'uppercase', cursor: isFirst || buildState.confirmed ? 'not-allowed' : 'pointer',
@@ -363,8 +363,8 @@ export default function ShipInteriorPreview({
                 disabled={!currentInstalled}
                 style={{
                   minHeight: 28, borderRadius: 6,
-                  border: `1px solid ${currentInstalled ? 'var(--ln-crimson)' : 'rgba(255,255,255,0.08)'}`,
-                  background: currentInstalled ? 'rgba(200,41,62,0.1)' : 'transparent',
+                  border: `1px solid ${currentInstalled ? 'var(--ln-crimson)' : 'var(--ln-hairline)'}`,
+                  background: currentInstalled ? 'var(--ln-crimson-soft)' : 'transparent',
                   color: currentInstalled ? 'var(--ln-crimson)' : 'var(--ln-text-muted)',
                   fontFamily: 'var(--ln-font-display)', fontSize: 9, fontWeight: 900,
                   letterSpacing: '0.1em', textTransform: 'uppercase',
@@ -383,9 +383,9 @@ export default function ShipInteriorPreview({
                 minHeight: 28, borderRadius: 6,
                 border: 'none',
                 background: readyToConfirm && !buildState.confirmed
-                  ? 'linear-gradient(180deg, #6cf09a, #1ea54a)'
-                  : 'rgba(90,208,126,0.12)',
-                color: readyToConfirm && !buildState.confirmed ? '#02180c' : 'var(--ln-ok)',
+                  ? 'var(--ln-ok)'
+                  : 'var(--ln-ok-soft)',
+                color: readyToConfirm && !buildState.confirmed ? 'var(--ln-text-inverse)' : 'var(--ln-ok)',
                 fontFamily: 'var(--ln-font-display)', fontSize: 9,
                 fontWeight: 900, letterSpacing: '0.12em', textTransform: 'uppercase',
                 cursor: readyToConfirm && !buildState.confirmed ? 'pointer' : 'not-allowed',
@@ -401,8 +401,8 @@ export default function ShipInteriorPreview({
             onClick={() => setStepIndex(i => Math.min(buildSteps.length - 1, i + 1))}
             disabled={isLast || buildState.confirmed}
             style={{
-              minHeight: 36, minWidth: 56, padding: '0 10px', borderRadius: 7,
-              border: '1px solid rgba(112,217,234,0.4)', background: 'rgba(112,217,234,0.12)',
+              minHeight: 36, minWidth: 56, padding: '0 8px', borderRadius: 7,
+              border: '1px solid var(--ln-cyan-border)', background: 'var(--ln-cyan-soft)',
               color: isLast || buildState.confirmed ? 'var(--ln-text-muted)' : 'var(--ln-cyan)',
               fontFamily: 'var(--ln-font-display)', fontSize: 9, fontWeight: 900, letterSpacing: '0.1em',
               textTransform: 'uppercase', cursor: isLast || buildState.confirmed ? 'not-allowed' : 'pointer',

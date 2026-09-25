@@ -55,7 +55,7 @@ migrate((app) => {
 
   upsert('rocket_parts', 'slug', [
     { slug: 'hull-mk1', name: 'Hull MK1', part_type: 'chassis', tier: 1, locked: false, img: '/parts/basic_hull_t1.png', mass: 2, cargo_capacity: 6 },
-    { slug: 'hull-mk2', name: 'SR2 Unibody Frame', part_type: 'chassis', tier: 2, locked: false, img: '/parts/reinforced_hull_t2.png', mass: 3, cargo_capacity: 10 },
+    { slug: 'hull-mk2', name: 'Prospector Unibody Frame', part_type: 'chassis', tier: 2, locked: false, img: '/parts/reinforced_hull_t2.png', mass: 3, cargo_capacity: 10 },
     { slug: 'hull-cargo', name: 'Cargo Bay T1', part_type: 'chassis', tier: 1, locked: false, img: '/parts/cargo_bay_t1.png', mass: 2, cargo_capacity: 14 },
     { slug: 'ion-a1', name: 'Ion Drive A1', part_type: 'propulsion', tier: 1, locked: false, img: '/parts/basic_thruster_t1.png', power: 40, max_orbit: 5 },
     { slug: 'fusion-b2', name: 'Fusion Drive B2', part_type: 'propulsion', tier: 2, locked: false, img: '/parts/fusion_drive_t2.png', power: 80, max_orbit: 7 },

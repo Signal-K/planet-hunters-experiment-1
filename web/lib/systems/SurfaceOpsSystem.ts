@@ -5,6 +5,7 @@ import {
   surfaceSiteById,
 } from '@/lib/data'
 import type {
+  FieldOperation,
   GameState,
   Player,
   SettlementFerryRecord,
@@ -12,6 +13,7 @@ import type {
   SurfaceOpsState,
   SurfaceSiteProgress,
 } from '@/lib/game-types'
+import type { RoverSpec } from '@takeon/engine'
 
 export type SettlementLaunchpadStatus =
   | 'unavailable'
@@ -20,6 +22,47 @@ export type SettlementLaunchpadStatus =
   | 'ready'
 
 const EMPTY_SITE: SurfaceSiteProgress = { storage: {} }
+
+function stableSeed(siteId: string): number {
+  let hash = 2166136261
+  for (const char of siteId) hash = Math.imul(hash ^ char.charCodeAt(0), 16777619)
+  return hash >>> 0
+}
+
+function cleanFieldOperation(value: unknown, siteId: string): FieldOperation | undefined {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return undefined
+  const operation = value as Partial<FieldOperation>
+  if (
+    typeof operation.id !== 'string'
+    || typeof operation.bodyId !== 'string'
+    || typeof operation.seed !== 'number'
+    || !Number.isFinite(operation.seed)
+    || !operation.rover
+    || typeof operation.rover !== 'object'
+    || typeof operation.startedAt !== 'number'
+    || !Number.isFinite(operation.startedAt)
+  ) return undefined
+  return {
+    id: operation.id,
+    missionId: typeof operation.missionId === 'string' ? operation.missionId : operation.id,
+    targetId: typeof operation.targetId === 'string' ? operation.targetId : siteId,
+    siteId,
+    bodyId: operation.bodyId,
+    seed: operation.seed,
+    rover: operation.rover,
+    label: typeof operation.label === 'string' ? operation.label : 'Surface operation',
+    cargo: operation.cargo && typeof operation.cargo === 'object'
+      ? operation.cargo
+      : { requirements: {}, capacity: 0 },
+    objective: operation.objective && typeof operation.objective === 'object'
+      ? operation.objective
+      : { kind: 'prospecting', description: 'Operate the surface site.' },
+    returnPolicy: operation.returnPolicy && typeof operation.returnPolicy === 'object'
+      ? operation.returnPolicy
+      : { owner: 'landnam', reconcileAt: 'field-return' },
+    startedAt: Math.max(0, operation.startedAt),
+  }
+}
 
 function cleanManifest(value: unknown): Record<string, number> {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return {}
@@ -91,17 +134,25 @@ export function normalizeSurfaceOps(value: unknown): SurfaceOpsState {
   const sites: Record<string, SurfaceSiteProgress> = {}
   for (const [siteId, raw] of Object.entries(source)) {
     if (!raw || typeof raw !== 'object' || Array.isArray(raw)) continue
-    const record = raw as Partial<SurfaceSiteProgress>
+    const record = raw as Partial<SurfaceSiteProgress> & { rightsPurchasedAt?: unknown }
+    const accessPurchasedAt = typeof record.siteAccessPurchasedAt === 'number'
+      ? record.siteAccessPurchasedAt
+      : typeof record.rightsPurchasedAt === 'number'
+        ? record.rightsPurchasedAt
+        : undefined
     sites[siteId] = {
       storage: cleanManifest(record.storage),
-      ...(Number.isFinite(record.rightsPurchasedAt)
-        ? { rightsPurchasedAt: Math.max(0, record.rightsPurchasedAt ?? 0) }
+      ...(Number.isFinite(accessPurchasedAt)
+        ? { siteAccessPurchasedAt: Math.max(0, accessPurchasedAt ?? 0) }
         : {}),
       ...(cleanLaunchpad(record.launchpad)
         ? { launchpad: cleanLaunchpad(record.launchpad) }
         : {}),
       ...(cleanFerry(record.ferry)
         ? { ferry: cleanFerry(record.ferry) }
+        : {}),
+      ...(cleanFieldOperation(record.fieldOperation, siteId)
+        ? { fieldOperation: cleanFieldOperation(record.fieldOperation, siteId) }
         : {}),
     }
   }
@@ -113,6 +164,13 @@ export function surfaceSiteProgress(
   siteId: string
 ): SurfaceSiteProgress {
   return player.surfaceOps?.sites[siteId] ?? EMPTY_SITE
+}
+
+// SSL-74: gates the Earth Base Refinery — an established mining settlement is
+// any off-world site where the player has purchased site access, regardless
+// of how far its launchpad/ferry build-out has progressed.
+export function hasEstablishedMiningSettlement(player: Pick<Player, 'surfaceOps'>): boolean {
+  return Object.values(player.surfaceOps?.sites ?? {}).some(site => !!site.siteAccessPurchasedAt)
 }
 
 function updateSite(
@@ -154,11 +212,11 @@ export function settlementLaunchpadStatus(
     return 'unavailable'
   }
   const site = surfaceSiteProgress(player, siteId)
-  if (!site.rightsPurchasedAt || !site.launchpad) return 'locked'
+  if (!site.siteAccessPurchasedAt || !site.launchpad) return 'locked'
   return now >= site.launchpad.completesAt ? 'ready' : 'building'
 }
 
-export function applyPurchaseTerrainRights(
+export function applyPurchaseSiteAccess(
   state: GameState,
   siteId: string,
   now: number = Date.now()
@@ -169,22 +227,84 @@ export function applyPurchaseTerrainRights(
     !definition
     || definition.availability !== 'available'
     || !state.player.freeOperations
-    || current.rightsPurchasedAt
-    || state.player.francs < definition.rightsCost
+    || current.siteAccessPurchasedAt
+    || state.player.francs < definition.accessFee
   ) {
     return state
   }
   const next = updateSite(state, siteId, site => ({
     ...site,
-    rightsPurchasedAt: now,
+    siteAccessPurchasedAt: now,
   }))
   return {
     ...next,
     player: {
       ...next.player,
-      francs: next.player.francs - definition.rightsCost,
+      francs: next.player.francs - definition.accessFee,
     },
   }
+}
+
+/**
+ * Completes Surface Ops' local readiness record after the canonical site-right
+ * transaction has debited the player and credited the treasury. This avoids
+ * the retired generic access fee being charged a second time.
+ */
+export function applyGrantedSiteAccess(
+  state: GameState,
+  siteId: string,
+  now: number = Date.now()
+): GameState {
+  const definition = surfaceSiteById(siteId)
+  const current = surfaceSiteProgress(state.player, siteId)
+  if (!definition || definition.availability !== 'available' || !state.player.freeOperations || current.siteAccessPurchasedAt) return state
+  return updateSite(state, siteId, site => ({ ...site, siteAccessPurchasedAt: now }))
+}
+
+/**
+ * Start exactly one resumable field operation per accessed site. Landnam owns
+ * this contract; TakeOn receives it as body + rover + seed and never chooses
+ * programme identity or economics itself.
+ */
+export function applyStartFieldOperation(
+  state: GameState,
+  siteId: string,
+  now: number = Date.now()
+): GameState {
+  const definition = surfaceSiteById(siteId)
+  const site = surfaceSiteProgress(state.player, siteId)
+  if (!definition || !site.siteAccessPurchasedAt || site.fieldOperation) return state
+  const seed = stableSeed(`${siteId}:${site.siteAccessPurchasedAt}`)
+  const rover: RoverSpec = {
+    id: `prospector-${siteId}`,
+    name: 'Prospector',
+    chassis: 'chassis-lab',
+    wheels: 'wheels-rocker',
+    power: 'power-solar-xl',
+    battery: 'batt-stack',
+    modules: ['tool-drill', 'cam-pano', 'cargo-crate'],
+    color: '#f6c96a',
+  }
+  return updateSite(state, siteId, current => ({
+    ...current,
+    fieldOperation: {
+      id: `surface-${siteId}-${site.siteAccessPurchasedAt}`,
+      missionId: `surface-site-${siteId}`,
+      targetId: siteId,
+      siteId,
+      bodyId: definition.bodyId,
+      seed,
+      rover,
+      label: `${definition.name} · Prospector deployment`,
+      cargo: { requirements: {}, capacity: 0 },
+      objective: {
+        kind: 'settlement',
+        description: `Operate the ${definition.name} field site.`,
+      },
+      returnPolicy: { owner: 'landnam', reconcileAt: 'field-return' },
+      startedAt: now,
+    },
+  }))
 }
 
 function hasLaunchpadMaterials(player: Player): boolean {
@@ -197,7 +317,7 @@ export function canBuildSettlementLaunchpad(
   siteId: string
 ): boolean {
   const site = surfaceSiteProgress(state.player, siteId)
-  return !!site.rightsPurchasedAt
+  return !!site.siteAccessPurchasedAt
     && !site.launchpad
     && state.player.freeOperations
     && state.player.francs >= SETTLEMENT_LAUNCHPAD.costFrancs
@@ -241,7 +361,7 @@ export function applyRecordSurfaceMined(
   amount: number
 ): GameState {
   const site = surfaceSiteProgress(state.player, siteId)
-  if (!site.rightsPurchasedAt || amount <= 0 || !Number.isFinite(amount)) return state
+  if (!site.siteAccessPurchasedAt || amount <= 0 || !Number.isFinite(amount)) return state
   const room = Math.max(0, SURFACE_STORAGE_CAPACITY - surfaceStorageTotal(site))
   const accepted = Math.min(room, Math.floor(amount))
   if (accepted <= 0) return state

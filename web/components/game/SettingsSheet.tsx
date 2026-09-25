@@ -4,7 +4,7 @@ import React, { useState } from 'react'
 import { useGame } from '@/game-context'
 import { pbShared } from '@/lib/pb'
 import { DEV_GROUPS } from '@/lib/devPresets'
-import Sheet from '@/components/ui/Sheet'
+import PageSurface from '@/components/ui/PageSurface'
 
 interface SettingsSheetProps {
   onClose: () => void
@@ -17,7 +17,7 @@ function Section({ label, children }: { label: string; children: React.ReactNode
     <div style={{ marginBottom: 20 }}>
       <div style={{
         fontFamily: 'var(--ln-font-display)', fontSize: 9, fontWeight: 800,
-        letterSpacing: '0.22em', color: '#3fa9ff', textTransform: 'uppercase',
+        letterSpacing: '0.22em', color: 'var(--ln-cyan-press)', textTransform: 'uppercase',
         marginBottom: 10,
       }}>
         {label}
@@ -31,8 +31,8 @@ function Row({ children }: { children: React.ReactNode }) {
   return (
     <div style={{
       display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-      padding: '10px 0',
-      borderBottom: '1px solid rgba(112,217,234,0.08)',
+      padding: 'var(--ln-s-2) 0',
+      borderBottom: '1px solid var(--ln-cyan-soft)',
     }}>
       {children}
     </div>
@@ -43,9 +43,9 @@ function Btn({
   label, onClick, variant = 'ghost', disabled,
 }: { label: string; onClick: () => void; variant?: 'ghost' | 'danger' | 'primary'; disabled?: boolean }) {
   const colors = {
-    ghost:   { bg: 'rgba(112,217,234,0.08)',  border: 'rgba(112,217,234,0.25)',  color: '#87cffa' },
-    primary: { bg: 'rgba(112,217,234,0.15)',  border: 'rgba(112,217,234,0.45)',  color: '#3fa9ff' },
-    danger:  { bg: 'rgba(255,59,48,0.10)',   border: 'rgba(255,59,48,0.35)',   color: '#ff6b5b' },
+    ghost:   { bg: 'var(--ln-cyan-soft)',   border: 'var(--ln-cyan-border)',      color: 'var(--ln-cyan)' },
+    primary: { bg: 'var(--ln-cyan-soft)',   border: 'var(--ln-cyan-border)',      color: 'var(--ln-cyan-press)' },
+    danger:  { bg: 'var(--ln-crit-soft)',   border: 'var(--ln-crimson-border)',   color: 'var(--ln-crit)' },
   }
   const c = colors[variant]
   return (
@@ -53,7 +53,7 @@ function Btn({
       onClick={onClick}
       disabled={disabled}
       style={{
-        padding: '7px 14px', borderRadius: 8,
+        padding: 'var(--ln-s-2) var(--ln-s-4)', borderRadius: 8,
         background: c.bg, border: `1px solid ${c.border}`, color: c.color,
         fontFamily: 'var(--ln-font-display)', fontSize: 11, fontWeight: 800,
         letterSpacing: '0.12em', textTransform: 'uppercase',
@@ -69,7 +69,6 @@ export default function SettingsSheet({ onClose }: SettingsSheetProps) {
   const game = useGame()
   const [confirmReset, setConfirmReset] = useState(false)
   const email = pbShared.authStore.record?.email as string | undefined
-  const isGuest = !email
 
   function handleSignOut() {
     onClose()
@@ -89,50 +88,47 @@ export default function SettingsSheet({ onClose }: SettingsSheetProps) {
   }
 
   return (
-    <Sheet
-      onDismiss={onClose}
-      showHandle={false}
-      panelStyle={{
-        background: 'linear-gradient(180deg, #0d1c30, #060d18)',
-        border: '1px solid rgba(112,217,234,0.2)',
-        padding: '18px 20px 32px',
-        boxShadow: '0 -12px 40px rgba(0,0,0,0.6)',
-        maxHeight: '80dvh', overflowY: 'auto',
+    <PageSurface
+      contentStyle={{
+        background: 'linear-gradient(180deg, var(--ln-panel-2), var(--ln-void))',
+        border: '1px solid var(--ln-cyan-soft)',
+        padding: 'var(--ln-s-4) var(--ln-s-5) var(--ln-s-6)',
+        overflowY: 'auto',
       }}
     >
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 18 }}>
           <div>
-            <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 9, fontWeight: 800, letterSpacing: '0.22em', color: '#3fa9ff', textTransform: 'uppercase' }}>Landnam</div>
-            <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 18, fontWeight: 800, color: '#e6efff', marginTop: 2 }}>Settings</div>
+            <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 9, fontWeight: 800, letterSpacing: '0.22em', color: 'var(--ln-cyan-press)', textTransform: 'uppercase' }}>Landnam</div>
+            <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 18, fontWeight: 800, color: 'var(--ln-text)', marginTop: 2 }}>Settings</div>
           </div>
           <button onClick={onClose} style={{
-            background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)',
+            background: 'var(--ln-divider)', border: '1px solid var(--ln-divider)',
             borderRadius: 8, width: 32, height: 32, cursor: 'pointer',
-            color: '#5d7390', fontFamily: 'var(--ln-font-display)', fontSize: 14, fontWeight: 800,
+            color: 'var(--ln-text-muted)', fontFamily: 'var(--ln-font-display)', fontSize: 14, fontWeight: 800,
           }}>✕</button>
         </div>
 
         <Section label="Account">
           <Row>
             <div>
-              <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 13, color: '#e6efff' }}>
-                {isGuest ? 'Guest session' : email}
+              <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 13, color: 'var(--ln-text)' }}>
+                {email ?? 'Email account'}
               </div>
-              {isGuest && (
-                <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 11, color: '#5d7390', marginTop: 2 }}>
-                  Progress saved on this device only
+              {!email && (
+                <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 11, color: 'var(--ln-text-muted)', marginTop: 2 }}>
+                  Account details are loading
                 </div>
               )}
             </div>
-            {!isGuest && <Btn label="Sign Out" onClick={handleSignOut} variant="ghost" />}
+            <Btn label="Sign Out" onClick={handleSignOut} variant="ghost" />
           </Row>
         </Section>
 
         <Section label="Data">
           <Row>
             <div>
-              <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 13, color: '#e6efff' }}>Reset game</div>
-              <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 11, color: '#5d7390', marginTop: 2 }}>
+              <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 13, color: 'var(--ln-text)' }}>Reset game</div>
+              <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 11, color: 'var(--ln-text-muted)', marginTop: 2 }}>
                 {confirmReset ? 'This will erase all progress. Tap again to confirm.' : 'Erase all local progress and start over'}
               </div>
             </div>
@@ -147,14 +143,24 @@ export default function SettingsSheet({ onClose }: SettingsSheetProps) {
         {IS_DEV && (
           <Section label="Debug">
             <Row>
-              <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 13, color: '#e6efff' }}>Free Ops mode</div>
+              <div>
+                <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 13, color: 'var(--ln-text)' }}>Preview state</div>
+                <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 11, color: 'var(--ln-text-muted)', marginTop: 2 }}>
+                  Return to your saved game and account
+                </div>
+              </div>
+              <Btn label="My Game" onClick={() => { onClose(); window.location.href = '/game' }} variant="primary" />
+            </Row>
+
+            <Row>
+              <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 13, color: 'var(--ln-text)' }}>Free Ops mode</div>
               <button
                 onClick={() => game.setPlayer(p => ({ ...p, freeOperations: !p.freeOperations }))}
                 style={{
-                  padding: '7px 14px', borderRadius: 8,
-                  background: game.player.freeOperations ? 'rgba(90,255,90,0.12)' : 'rgba(255,255,255,0.06)',
-                  border: `1px solid ${game.player.freeOperations ? 'rgba(90,255,90,0.35)' : 'rgba(255,255,255,0.12)'}`,
-                  color: game.player.freeOperations ? '#5aff5a' : '#5d7390',
+                  padding: 'var(--ln-s-2) var(--ln-s-4)', borderRadius: 8,
+                  background: game.player.freeOperations ? 'var(--ln-ok-soft)' : 'var(--ln-divider)',
+                  border: `1px solid ${game.player.freeOperations ? 'var(--ln-ok-soft)' : 'var(--ln-divider)'}`,
+                  color: game.player.freeOperations ? 'var(--ln-ok)' : 'var(--ln-text-muted)',
                   fontFamily: 'var(--ln-font-display)', fontSize: 11, fontWeight: 800,
                   letterSpacing: '0.12em', textTransform: 'uppercase', cursor: 'pointer',
                 }}
@@ -178,8 +184,8 @@ export default function SettingsSheet({ onClose }: SettingsSheetProps) {
                       onClick={() => jumpPreset(shot.key)}
                       title={shot.hint}
                       style={{
-                        padding: '5px 10px', borderRadius: 6,
-                        background: '#0a1624', border: `1px solid ${group.color}44`,
+                        padding: 'var(--ln-s-1) var(--ln-s-2)', borderRadius: 6,
+                        background: 'var(--ln-bg)', border: `1px solid ${group.color}44`,
                         color: group.color, fontFamily: 'var(--ln-font-display)',
                         fontSize: 11, fontWeight: 700, letterSpacing: '0.08em', cursor: 'pointer',
                       }}
@@ -192,6 +198,6 @@ export default function SettingsSheet({ onClose }: SettingsSheetProps) {
             ))}
           </Section>
         )}
-    </Sheet>
+    </PageSurface>
   )
 }

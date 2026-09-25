@@ -2,15 +2,21 @@
 
 import type { GameState, LicenseGrade } from '@/lib/game-types'
 import type { Mission } from '@/lib/data'
-import { canUnlockSkillNode, getSkillNode, LOAN_PRINCIPAL, LOAN_DEBT_ON_ACCEPT } from '@/lib/data'
+import { canUnlockSkillNode, getSkillNode, LOAN_PRINCIPAL, TREASURY_STARTING_BALANCE } from '@/lib/data'
 import { grantXP } from './XPSystem'
+import { createTreasuryState, issueBankruptcyLoan, loanOutstanding } from './TreasurySystem'
+
+/** The persisted GameState carries no account id (that lives only in the
+ *  React auth context), and this per-player treasury instance is local to
+ *  one save regardless — a fixed id keeps its loan ledger self-consistent
+ *  until KES-287 gives the treasury a real shared, account-keyed home. */
+export const TREASURY_PLAYER_ID = 'local-player'
 
 // Retuned 2026-07-21 (STS-492): originals (0/100/300) were set with no real
 // per-mission income data — no player had ever reached Grade III since
 // nothing in the UI called upgradeLicenseGrade. Retuned against actual XP
-// income (+15/first-time TESS classification, +10/scan-station scan, max
-// 5 scans/day per SCANS_PER_DAY) so Grade II lands after roughly a week of
-// casual daily play and Grade III after roughly a month.
+// income (+15/first-time TESS classification) so Grade II lands after
+// roughly a week of casual daily play and Grade III after roughly a month.
 export const LICENSE_GRADE_XP_GATES: Record<LicenseGrade, number> = {
   'Grade I': 0,
   'Grade II': 150,
@@ -94,15 +100,30 @@ export function applyUnlockBlueprint(
   }
 }
 
-export function applyAcceptLoan(s: GameState): GameState {
+/** Issues one transparent, no-interest emergency loan from the public
+ *  treasury (see TreasurySystem). `loanDebt` stays a plain mirror of the
+ *  treasury's outstanding balance for this player so the Debrief screen
+ *  and older saves keep reading a simple number. */
+export function applyAcceptLoan(s: GameState, now: number = Date.now()): GameState {
+  const playerId = TREASURY_PLAYER_ID
+  const treasury = s.player.treasury ?? createTreasuryState(TREASURY_STARTING_BALANCE)
+  const result = issueBankruptcyLoan(treasury, {
+    entryId: `bankruptcy-loan-issue:${playerId}:${now}`,
+    loanId: `bankruptcy-loan:${playerId}`,
+    playerId,
+    principalFrancs: LOAN_PRINCIPAL,
+    issuedAt: now,
+  })
+  if (!result.changed) return { ...s, popup: null }
   return {
     ...s,
     popup: null,
     player: {
       ...s.player,
-      francs: s.player.francs + LOAN_PRINCIPAL,
-      loanDebt: s.player.loanDebt + LOAN_DEBT_ON_ACCEPT,
+      francs: s.player.francs + result.playerCreditFrancs,
+      loanDebt: loanOutstanding(result.treasury, playerId),
       loanOffered: true,
+      treasury: result.treasury,
     },
   }
 }

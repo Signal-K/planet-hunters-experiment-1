@@ -1,10 +1,9 @@
 // Landnam game data — structures, refinery recipes, market templates
 
 import type { StructureBlueprint, RefineryRecipe, MarketTemplate } from './types'
-import { MINERAL_VALUE, REFINING_COST_RATE, REFINING_VALUE_MULTIPLIER, STRUCTURE_PRICES } from './economy'
+import { MINERAL_VALUE, REFINING_COST_RATE, REFINING_VALUE_MULTIPLIER, STRUCTURE_PRICES, SURFACE_SILO_PRICE } from './economy'
 import { MINERAL_RARITY } from './minerals'
 import { CLIENT_AFFINITY_MISSION_THRESHOLD } from './clients'
-import { FEATURE_FLAGS } from '@/lib/featureFlags'
 
 // Refining takes raw ore and returns it worth REFINING_VALUE_MULTIPLIER more,
 // for a cycle fee proportional to the input's value. Previously each recipe
@@ -35,32 +34,33 @@ export const REFINERY_RECIPES: RefineryRecipe[] = [
 export const STRUCTURES: StructureBlueprint[] = [
   { id: 'launchpad', name: 'Launchpad', kind: 'launchpad', cost: 0, unlocksAt: 'always', unlockTrigger: 'always', description: 'Rocket assembly and launch operations.' },
   {
+    id: 'surface-silo',
+    name: 'Surface Silo',
+    kind: 'surface-silo',
+    cost: SURFACE_SILO_PRICE,
+    unlocksAt: 'Free Operations',
+    unlockTrigger: 'free-operations',
+    description: 'Small Earth-side mineral storage. Hold ore for a better market window or for refinery input.',
+  },
+  {
     id: 'refinery',
     name: 'Refinery',
     kind: 'refinery',
     cost: STRUCTURE_PRICES.refinery,
     costMaterials: { aluminium: 20, copper: 10 },
-    unlocksAt: 'First client mission requiring refined minerals',
-    unlockTrigger: 'client-mission-trigger',
-    description: 'Refines raw minerals into higher-value client-grade materials.',
-  },
-  {
-    id: 'scan-station',
-    name: 'Scanning Station',
-    kind: 'scan-station',
-    cost: 0,
-    unlocksAt: 'Free Operations',
-    unlockTrigger: 'always',
-    description: 'Scans remote targets to map mineral deposits, craters, and landmarks. Up to 5 scans per day, 10 minutes each.',
-  },
-  {
-    id: 'satellite-monitoring-station',
-    name: 'Satellite Monitoring Station',
-    kind: 'satellite-monitoring-station',
-    cost: 0,
-    unlocksAt: 'Free Operations',
-    unlockTrigger: 'always',
-    description: 'Monitors player-launched transit telescopes and downlinks daily TESS-style candidates for classification.',
+    unlocksAt: 'Surface Silo + an established mining settlement',
+    unlockTrigger: 'free-operations',
+    // KES-283: Level 1 only — processes one shipment of raw ore into refined
+    // goods per day (a queue, not instant conversion; see RefineryScreen /
+    // REFINERY_RECIPES). No multi-level tree or advanced recipes yet.
+    //
+    // SSL-74: gated on the Surface Silo (refining needs somewhere to hold
+    // input ore) plus an established off-world mining settlement (purchased
+    // site access — see SurfaceOpsSystem/applyPurchaseSiteAccess). A
+    // settlement lets a ferry bring home a full hold in one trip instead of
+    // repeated one-off mining runs; refining is the payoff for having made
+    // that investment, not a plain Free-Ops purchase.
+    description: 'Level 1 ore processing. Refines one shipment of raw minerals into higher-value goods per day. Requires a Surface Silo for input storage and an established mining settlement — settlements ferry ore home in bulk, giving the Refinery a steady supply instead of one-off mining runs.',
   },
   {
     id: 'deep-space-telescope',
@@ -68,7 +68,7 @@ export const STRUCTURES: StructureBlueprint[] = [
     kind: 'deep-space-telescope',
     cost: STRUCTURE_PRICES.deepSpaceTelescope,
     costMaterials: { aluminium: 30, copper: 16, silicon: 10 },
-    unlocksAt: 'Satellite Monitoring Station level 2 and affinity level 2 with a client',
+    unlocksAt: 'Transit telescope level 2 and client level 2 with a client',
     unlockTrigger: 'deep-space-telescope-unlock',
     description: 'Independent long-baseline instrument (STS-622) that downlinks unconfirmed NEO candidates from the Minor Planet Center for asteroid-discovery classification, separate from the transit satellite.',
   },
@@ -78,9 +78,9 @@ export const STRUCTURES: StructureBlueprint[] = [
     kind: 'astronaut-academy',
     cost: STRUCTURE_PRICES.academy,
     costMaterials: { aluminium: 24, silicon: 12, copper: 8 },
-    unlocksAt: 'Research after reaching affinity level 2 with two clients',
+    unlocksAt: 'Research after reaching client level 2 with two clients',
     unlockTrigger: 'academy-research',
-    description: 'Trains named astronauts, manages the roster, and coordinates Earth Base staffing.',
+    description: 'Trains named astronauts, manages the roster, and coordinates Base staffing.',
   },
   { id: 'garage', name: 'Vehicle Garage', kind: 'garage', cost: STRUCTURE_PRICES.garage, unlocksAt: 'Future sprint', unlockTrigger: 'manual', description: 'Surface rover maintenance and upgrades.' },
 ]
@@ -90,36 +90,66 @@ export const STRUCTURES: StructureBlueprint[] = [
  *  HubScreen's copy, which could drift apart silently. */
 export const LAUNCHPAD_UPGRADE_COST = STRUCTURE_PRICES.launchpadUpgrade
 
-export const SCANS_PER_DAY = 5
-export const SCAN_DURATION_MS = 10 * 60 * 1000
-export const SCANS_REQUIRED_TO_MAP = 3
-
 // Deep Space Telescope unlock (STS-622): requires the transit satellite to
 // have reached level 2 and at least one client relationship to have reached
-// affinity level 2 — a lighter bar than the Academy's two-client requirement,
+// client level 2 — a lighter bar than the Academy's two-client requirement,
 // since this gates a second instrument rather than a new profession. Exact
 // numbers are a build-time call per the ticket ("decide during build rather
 // than re-asked as a blocking question"), not a re-litigated design decision.
-export function deepSpaceTelescopeUnlocked(opts: { satelliteMonitoringLevel?: number; clientMissions?: Record<string, number> } = {}): boolean {
-  if ((opts.satelliteMonitoringLevel ?? 1) < 2) return false
+export function deepSpaceTelescopeUnlocked(opts: { transitSatelliteLevel?: number; clientMissions?: Record<string, number> } = {}): boolean {
+  if ((opts.transitSatelliteLevel ?? 1) < 2) return false
   return Object.values(opts.clientMissions ?? {}).some(
     jobs => 1 + Math.floor(Math.max(0, jobs) / CLIENT_AFFINITY_MISSION_THRESHOLD) >= 2
   )
 }
 
-export function structureUnlocked(structure: StructureBlueprint, opts: { refineryUnlocked?: boolean; academyResearched?: boolean; placed?: string[]; freeOperations?: boolean; satelliteMonitoringLevel?: number; clientMissions?: Record<string, number> } = {}): boolean {
-  if (structure.id === 'scan-station') return FEATURE_FLAGS.scanStation && !!opts.freeOperations
-  if (structure.id === 'satellite-monitoring-station') return !!opts.freeOperations
+export function structureUnlocked(structure: StructureBlueprint, opts: { refineryUnlocked?: boolean; academyResearched?: boolean; placed?: string[]; freeOperations?: boolean; transitSatelliteLevel?: number; clientMissions?: Record<string, number>; deepSpaceTelescopeMissionCompletedAt?: number | null; hasMiningSettlement?: boolean } = {}): boolean {
+  if (structure.id === 'surface-silo') return !!opts.freeOperations || !!opts.placed?.includes('surface-silo')
   if (structure.id === 'astronaut-academy') return !!opts.academyResearched || !!opts.placed?.includes('astronaut-academy')
-  if (structure.id === 'deep-space-telescope') return deepSpaceTelescopeUnlocked(opts) || !!opts.placed?.includes('deep-space-telescope')
+  // KES-128: the numeric threshold (deepSpaceTelescopeUnlocked) now only
+  // decides when the story-deep-space-telescope-survey mission (see
+  // runtimeCatalog.ts) is offered as the on-ramp — completing that mission is
+  // what actually opens the build slot, so a player never sees a bare
+  // structure appear with no narrative reason it happened.
+  if (structure.id === 'deep-space-telescope') {
+    return (deepSpaceTelescopeUnlocked(opts) && !!opts.deepSpaceTelescopeMissionCompletedAt) || !!opts.placed?.includes('deep-space-telescope')
+  }
   if (structure.unlockTrigger === 'always') return true
-  if (structure.id === 'refinery') return !!opts.refineryUnlocked || !!opts.placed?.includes('refinery')
+  // KES-283: the Refinery is a normal Earth Base plot purchase (same unlock
+  // shape as the Surface Silo) rather than the KES-286 off-world
+  // site-commissioned structure whose unlock condition no mission ever
+  // satisfied — that broken trigger is retired for good.
+  //
+  // SSL-74 adds two live, player-controlled prerequisites on top of
+  // Free Operations (neither is a dead trigger like KES-286's): the Surface
+  // Silo must already be built, and the player must have an established
+  // off-world mining settlement (purchased site access). Both are ordinary
+  // purchases the player can always complete, so this cannot reproduce
+  // KES-286's permanently-unreachable failure mode.
+  if (structure.id === 'refinery') {
+    return !!opts.placed?.includes('refinery')
+      || (!!opts.freeOperations && !!opts.placed?.includes('surface-silo') && !!opts.hasMiningSettlement)
+  }
   return false
 }
 
 export function canAffordStructure(structure: StructureBlueprint, opts: { francs: number; stash?: Record<string, number> }): boolean {
   if (opts.francs < structure.cost) return false
   return Object.entries(structure.costMaterials ?? {}).every(([mineral, amount]) => (opts.stash?.[mineral] ?? 0) >= amount)
+}
+
+// Card UI dims an unaffordable structure identically whether it's short on
+// francs or short on a required mineral (e.g. Refinery's aluminium/copper),
+// with no way for the player to tell which — this names the actual shortfall
+// so the UI can surface it instead of a silent no-op.
+export function structureAffordabilityGaps(structure: StructureBlueprint, opts: { francs: number; stash?: Record<string, number> }): string[] {
+  const gaps: string[] = []
+  if (opts.francs < structure.cost) gaps.push(`₣${(structure.cost - opts.francs).toLocaleString()} more`)
+  for (const [mineral, amount] of Object.entries(structure.costMaterials ?? {})) {
+    const held = opts.stash?.[mineral] ?? 0
+    if (held < amount) gaps.push(`${amount - held} more ${mineral}`)
+  }
+  return gaps
 }
 
 export const MARKET_TEMPLATES: MarketTemplate[] = [

@@ -5,6 +5,8 @@ import type { Player, Screen } from '@/game-context'
 import { FREE_OPS_START_MISSIONS_DONE } from '@/lib/data/mission-generator'
 import { TUTORIAL_RAIL } from '@/lib/tutorial-layout'
 import IconBadge from '@/components/ui/IconBadge'
+import layoutStyles from '@/components/game/hub/HubLayout.module.css'
+import { HUB_PROMPT_SKILLS, HUB_PROMPT_TRANSIT_TELESCOPE, isHubPromptDismissed, type HubPromptKey } from '@/lib/hub-prompts'
 
 type CardIconBadgeTone = 'cyan' | 'amber' | 'ok' | 'crit' | 'mute'
 
@@ -26,9 +28,6 @@ function LaunchpadGlyph() {
 function SkillGlyph() {
   return <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M12 2l2.5 7.5H22l-6 4.6 2.3 7.4L12 17l-6.3 4.5 2.3-7.4-6-4.6h7.5z" /></svg>
 }
-function SmsGlyph() {
-  return <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M4 15l8-8 8 8M8 11v9M16 11v9" /></svg>
-}
 function TelescopeGlyph() {
   return <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" /></svg>
 }
@@ -38,33 +37,43 @@ function ContractGlyph() {
 
 interface ProgressionCardProps {
   player: Player
-  onGoBuilding: (b: string) => void
-  onNav: (s: Screen) => void
+  // Cards always open a routed scene. They must not call a Hub building
+  // focus handler, even when the destination is the Launchpad.
+  onOpenScene: (s: Screen) => void
+  onDismissPrompt?: (key: HubPromptKey) => void
   top?: number
 }
 
-function CardButton({ accent, icon, eyebrow, title, cta, onClick, testId }: {
+function CardButton({ accent, icon, eyebrow, title, cta, onClick, onDismiss, testId }: {
   accent: string
   icon: React.ReactNode
   eyebrow: string
   title: string
   cta: string
   onClick: () => void
+  onDismiss?: () => void
   testId?: string
 }) {
   return (
-    <button
-      data-testid={testId}
-      onClick={onClick}
+    <div
       style={{
-        width: '100%', textAlign: 'left', cursor: 'pointer',
+        width: '100%', minWidth: 0, boxSizing: 'border-box',
         background: 'var(--hub-panel, #080d18)',
         border: '1.5px solid var(--hub-outline, rgba(255,255,255,0.55))',
-        borderRadius: 12, padding: 10,
-        boxShadow: '0 20px 44px rgba(0,0,0,0.5)',
-        display: 'flex', alignItems: 'center', gap: 10,
+        borderRadius: 12, padding: 8,
+        boxShadow: '0 12px 28px rgba(0,0,0,0.4)',
+        display: 'flex', alignItems: 'center', gap: 8,
       }}
     >
+      <button
+        data-testid={testId}
+        onClick={onClick}
+        style={{
+          flex: 1, minWidth: 0, boxSizing: 'border-box', textAlign: 'left', cursor: 'pointer',
+          background: 'transparent', border: 0, padding: 4,
+          display: 'flex', alignItems: 'center', gap: 10,
+        }}
+      >
       {/* Bordered icon tile — the `.bp-panel` / `.picker-icon` chrome from the
           Earth Base mockup: black tile, accent-colored 1.5px outline. */}
       <IconBadge
@@ -72,28 +81,47 @@ function CardButton({ accent, icon, eyebrow, title, cta, onClick, testId }: {
         size={34}
         tone={toneForAccent(accent)}
         active
-        style={{ color: accent, borderColor: accent, borderWidth: 1.5, background: 'rgba(10,10,12,0.6)', boxShadow: 'none' }}
+        style={{ color: accent, borderColor: accent, borderWidth: 1.5, background: 'rgba(234,241,248,0.06)', boxShadow: 'none' }}
       />
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 9, fontWeight: 700, letterSpacing: '0.14em', color: accent, textTransform: 'uppercase' }}>{eyebrow}</div>
-        <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 13, fontWeight: 800, color: '#fff', lineHeight: 1.3 }}>{title}</div>
+        <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 13, fontWeight: 800, color: 'rgba(234,241,248,0.94)', lineHeight: 1.3 }}>{title}</div>
       </div>
       <span style={{
-        flexShrink: 0,
-        padding: '5px 10px', borderRadius: 999,
+        minWidth: 0, flexShrink: 1,
+        padding: '5px 8px', borderRadius: 999,
         background: 'transparent', border: `1.5px solid ${accent}`,
         color: accent,
         fontFamily: 'var(--ln-font-display)', fontSize: 9, fontWeight: 800,
         letterSpacing: '0.12em', textTransform: 'uppercase',
-        display: 'inline-flex', alignItems: 'center', gap: 4,
+        display: 'inline-flex', alignItems: 'center', gap: 4, whiteSpace: 'nowrap',
       }}>
         {cta} ›
       </span>
-    </button>
+      </button>
+      {onDismiss && (
+        <button
+          type="button"
+          data-testid={testId ? `${testId}-dismiss` : undefined}
+          aria-label="Dismiss"
+          onClick={onDismiss}
+          style={{
+            flexShrink: 0, minWidth: 44, minHeight: 44, padding: '8px 8px',
+            background: 'transparent', border: '1.5px solid var(--hub-outline, rgba(255,255,255,0.55))',
+            borderRadius: 8, cursor: 'pointer',
+            color: 'color-mix(in srgb, var(--ln-text) 78%, transparent)',
+            fontFamily: 'var(--ln-font-display)', fontSize: 8, fontWeight: 800,
+            letterSpacing: '0.12em', textTransform: 'uppercase',
+          }}
+        >
+          Dismiss
+        </button>
+      )}
+    </div>
   )
 }
 
-export default function ProgressionCard({ player, onGoBuilding, onNav, top = 132 }: ProgressionCardProps) {
+export default function ProgressionCard({ player, onOpenScene, onDismissPrompt, top = 132 }: ProgressionCardProps) {
   const cards: React.ReactElement[] = []
 
   if (player.activeMission) {
@@ -106,7 +134,7 @@ export default function ProgressionCard({ player, onGoBuilding, onNav, top = 132
         eyebrow="Mission In Progress"
         title={player.activeMission.label}
         cta="Resume Mission"
-        onClick={() => onNav(player.missionPhase ?? 'transit')}
+        onClick={() => onOpenScene(player.missionPhase ?? 'transit')}
       />
     )
   } else if (player.pendingLaunch) {
@@ -119,7 +147,7 @@ export default function ProgressionCard({ player, onGoBuilding, onNav, top = 132
         eyebrow="Launch Ready on Pad"
         title="Vessel fuelled & assigned"
         cta="Open Launchpad"
-        onClick={() => onGoBuilding('launchpad')}
+        onClick={() => onOpenScene('launchpad')}
       />
     )
   }
@@ -127,7 +155,7 @@ export default function ProgressionCard({ player, onGoBuilding, onNav, top = 132
   const inOnboarding = player.missionsDone < FREE_OPS_START_MISSIONS_DONE
 
   if (!player.activeMission && player.missionsDone > 0) {
-    if (!inOnboarding && (player.skillPoints ?? 0) > 0) {
+    if (!inOnboarding && (player.skillPoints ?? 0) > 0 && !isHubPromptDismissed(player, HUB_PROMPT_SKILLS)) {
       cards.push(
         <CardButton
           key="skills"
@@ -137,24 +165,12 @@ export default function ProgressionCard({ player, onGoBuilding, onNav, top = 132
           eyebrow="Skill Points"
           title={`${player.skillPoints ?? 0} SP available`}
           cta="Open Skill Tree"
-          onClick={() => onNav('skills')}
+          onClick={() => onOpenScene('skills')}
+          onDismiss={onDismissPrompt ? () => onDismissPrompt(HUB_PROMPT_SKILLS) : undefined}
         />
       )
     }
-    if (!inOnboarding && !player.satelliteMonitoringBuilt) {
-      cards.push(
-        <CardButton
-          key="sms"
-          testId="progression-card-sms"
-          accent="var(--hub-cyan)"
-          icon={<SmsGlyph />}
-          eyebrow="New Facility"
-          title="Build a Satellite Monitoring Station"
-          cta="Build"
-          onClick={() => onGoBuilding('build')}
-        />
-      )
-    } else if (!inOnboarding && player.satelliteMonitoringBuilt && !player.transitSatelliteLaunchedAt) {
+    if (!inOnboarding && !player.transitSatelliteLaunchedAt && !isHubPromptDismissed(player, HUB_PROMPT_TRANSIT_TELESCOPE)) {
       cards.push(
         <CardButton
           key="telescope"
@@ -164,36 +180,28 @@ export default function ProgressionCard({ player, onGoBuilding, onNav, top = 132
           eyebrow="Your Program"
           title="Launch a transit telescope"
           cta="Open Launchpad"
-          onClick={() => onNav('launchpad')}
-        />
-      )
-    } else if (!inOnboarding && player.transitSatelliteLaunchedAt) {
-      cards.push(
-        <CardButton
-          key="daily-candidates"
-          testId="progression-card-tess-candidates"
-          accent="var(--hub-cyan)"
-          icon={<TelescopeGlyph />}
-          eyebrow="Daily Downlink"
-          title="Classify today's transit candidates"
-          cta="Review"
-          onClick={() => onNav('galaxy')}
+          onClick={() => onOpenScene('launchpad')}
+          onDismiss={onDismissPrompt ? () => onDismissPrompt(HUB_PROMPT_TRANSIT_TELESCOPE) : undefined}
         />
       )
     }
-    const justFinishedOnboarding = player.missionsDone === FREE_OPS_START_MISSIONS_DONE
-    cards.push(
-      <CardButton
-        key="next-mission"
-        testId="progression-card-next-mission"
-        accent="var(--hub-mint)"
-        icon={<ContractGlyph />}
-        eyebrow={justFinishedOnboarding ? 'Onboarding Complete' : 'Next Mission'}
-        title={justFinishedOnboarding ? 'Choose your first free contract' : 'New contract available'}
-        cta="Browse Contracts"
-        onClick={() => onNav('missions')}
-      />
-    )
+    // Once free operations is unlocked, the persistent Jobs rail is the
+    // single mission-board entry point. Repeating Browse Contracts here made
+    // the Hub present the same action twice beside the clickable Launchpad.
+    if (player.missionsDone === 0) {
+      cards.push(
+        <CardButton
+          key="next-mission"
+          testId="progression-card-next-mission"
+          accent="var(--hub-mint)"
+          icon={<ContractGlyph />}
+          eyebrow="Next Mission"
+          title="Choose a client contract"
+          cta="Browse Contracts"
+          onClick={() => onOpenScene('missions')}
+        />
+      )
+    }
   }
 
   if (cards.length === 0) return null
@@ -205,9 +213,9 @@ export default function ProgressionCard({ player, onGoBuilding, onNav, top = 132
     // Hub root is `overflow: hidden`, so without an internal scroll
     // affordance here, cards below the fold were silently unreachable
     // rather than just visually tight (STS-612).
-    <div className="hub-progression-stack" style={{
-      position: 'absolute', right: 14, top, bottom: TUTORIAL_RAIL.BOTTOM_PILL_Y, zIndex: 8,
-      width: 'calc(100% - 28px)', maxWidth: 280, pointerEvents: 'auto',
+    <div className={`${layoutStyles.progressionStack} hub-progression-stack`} style={{
+      position: 'absolute', top, bottom: TUTORIAL_RAIL.BOTTOM_PILL_Y, zIndex: 8,
+      pointerEvents: 'auto',
       display: 'flex', flexDirection: 'column', gap: 6,
       overflowY: 'auto',
     }}>

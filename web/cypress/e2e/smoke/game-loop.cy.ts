@@ -38,7 +38,7 @@ function visitWithState(state: Partial<GameState>) {
   cy.visit(`/game/${nextState.screen}`, {
     onBeforeLoad(win) {
       win.localStorage.setItem(STORAGE_KEY, JSON.stringify(nextState))
-      win.localStorage.setItem('landnam-guest-credentials', JSON.stringify({ email: 'e2e@landnam.guest', password: 'e2e-guest-test' }))
+      win.localStorage.setItem('landnam-account-credentials', JSON.stringify({ email: 'e2e@example.com', password: 'e2e-guest-test' }))
     },
   })
 }
@@ -82,7 +82,10 @@ describe('Full Game Loop — Landnam', () => {
   describe('Phase 1: Onboarding (Intro → Build → Hub)', () => {
     it('intro screen renders and begins onboarding', () => {
       visitWithState({ screen: 'intro' })
-      cy.contains('LANDNAM').should('be.visible')
+      // Intro and other chrome both say LANDNAM. Pin this to the authored
+      // intro title so a compact-landscape session cannot pass against a
+      // leftover rotate-to-portrait overlay (retired in SSL-326).
+      cy.get('.intro-title').should('be.visible').and('contain.text', 'LANDNAM')
       cy.contains('BEGIN OPERATIONS').should('be.visible')
       cy.get('[data-testid="intro-begin-btn"]').click()
       cy.contains('EARTH BASE · SETUP').should('be.visible')
@@ -152,8 +155,8 @@ describe('Full Game Loop — Landnam', () => {
   })
 
   describe('Phase 3: Rocket Assembly → Launch', () => {
-    it('assembly screen shows prebuilt starter rocket and launch button', () => {
-      // AssemblyScreen was refactored to show a prebuilt starter rocket (not individual parts)
+    it('assembly screen shows the prebuilt Explorer and launch button', () => {
+      // AssemblyScreen was refactored to show the prebuilt Explorer (not individual parts)
       visitWithState(fullState({
         screen: 'fab',
         missionId: 'generated-s1-starter-bulk-1',
@@ -306,14 +309,16 @@ describe('Full Game Loop — Landnam', () => {
         expect(saved.player.francs).to.equal(9_500_000_000)
       })
 
+      // Onboarding missions (missionsDone < 3) auto-resolve on mount — see
+      // DebriefScreen.tsx — so once the ship is recovered and the debrief
+      // screen mounts, the reward is already collectible in one tap.
       cy.contains('Recover Ship', { timeout: 8000 }).click()
       cy.contains('MISSION COMPLETE').should('be.visible')
-      cy.get('[data-testid="collect-reward-btn"]').should('not.exist')
-      cy.get('[data-testid="resolve-cargo-btn"]').click()
+      cy.get('[data-testid="resolve-cargo-btn"]').should('not.exist')
       cy.get('[data-testid="collect-reward-btn"]').should('be.visible')
     })
 
-    it('debrief enforces cargo resolution before reward collection', () => {
+    it('debrief auto-resolves cargo for onboarding missions, requiring only one tap to collect', () => {
       const cargo = { iron: 4 }
       visitWithState(fullState({
         screen: 'debrief',
@@ -343,8 +348,7 @@ describe('Full Game Loop — Landnam', () => {
         },
       }))
       cy.contains('MISSION COMPLETE').should('be.visible')
-      cy.get('[data-testid="collect-reward-btn"]').should('not.exist')
-      cy.get('[data-testid="resolve-cargo-btn"]').click()
+      cy.get('[data-testid="resolve-cargo-btn"]').should('not.exist')
       cy.contains('Francs Earned').should('be.visible')
       cy.get('[data-testid="collect-reward-btn"]').should('be.visible')
     })
@@ -380,7 +384,8 @@ describe('Full Game Loop — Landnam', () => {
         tutorial: false,
         popup: 'sr2',
       }))
-      cy.get('[data-testid="resolve-cargo-btn"]').should('be.visible')
+      cy.get('[data-testid="resolve-cargo-btn"]').should('not.exist')
+      cy.get('[data-testid="collect-reward-btn"]').should('be.visible')
     })
 
     it('shows Prospector unlock popup after M1 completion', () => {
@@ -447,7 +452,7 @@ describe('Full Game Loop — Landnam', () => {
         tutorial: false,
       }))
 
-      cy.get('[data-testid="resolve-cargo-btn"]').click()
+      cy.get('[data-testid="resolve-cargo-btn"]').should('not.exist')
       cy.get('[data-testid="collect-reward-btn"]').click()
 
       cy.contains('Commodity Exchange').should('not.exist')

@@ -5,6 +5,7 @@ import { act } from 'react'
 import { createRoot } from 'react-dom/client'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, expect, it } from 'vitest'
+import { SUBSURFACE_EXCAVATE_COST } from '@/lib/data'
 import {
   HubSubsurfaceView,
   registeredParts,
@@ -18,6 +19,7 @@ describe('HubSubsurfaceView', () => {
     )
 
     expect(markup).toContain('data-testid="hub-subsurface-view"')
+    expect(markup).toContain('data-testid="subsurface-surface-continuation"')
     expect(markup).toContain('Unexcavated')
     expect(markup).toContain('data-testid="subsurface-excavate-prompt"')
     expect(markup).toContain('data-testid="subsurface-excavate-cta"')
@@ -140,6 +142,20 @@ describe('HubSubsurfaceView', () => {
     await act(async () => {
       root.unmount()
     })
+  })
+
+  it('can focus missing excavation materials when the build is unaffordable', async () => {
+    const host = document.createElement('div')
+    const root = createRoot(host)
+    let focus: { label: string; minerals: Record<string, number> } | null = null
+    await act(async () => {
+      root.render(<HubSubsurfaceView francs={0} stash={{}} onFocusResources={(label, minerals) => { focus = { label, minerals } }} />)
+    })
+    await act(async () => {
+      host.querySelector<HTMLButtonElement>('[data-testid="subsurface-focus-excavation"]')?.click()
+    })
+    expect(focus).toEqual({ label: 'Subsurface excavation', minerals: SUBSURFACE_EXCAVATE_COST.costMaterials })
+    await act(async () => root.unmount())
   })
 
   it('building an unbuilt room calls onBuildRoom with the room id', async () => {

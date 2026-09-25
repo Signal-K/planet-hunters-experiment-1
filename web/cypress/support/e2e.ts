@@ -1,4 +1,7 @@
 import './commands'
+import './screenshot-diff'
+import './a11y-checks'
+import './responsive-helpers'
 
 // Stub PocketBase auth so the AuthGateSheet never opens in offline E2E runs.
 // Also stub catalog calls so the game uses static fallback data without network errors.
@@ -9,18 +12,34 @@ beforeEach(() => {
   const ALL_SURVEY_KEYS = [
     'lnm_first_launch', 'lnm_mining_feel', 'lnm_client_pick',
     'lnm_mission_friction', 'lnm_progression_feel', 'lnm_end_of_content',
-    'lnm_return_visit', 'lnm_m1_complete', 'lnm_m2_complete', 'lnm_m3_complete',
+    'lnm_return_visit', 'lnm_m1_complete', 'lnm_m2_mission_choice', 'lnm_m2_rocket_clarity', 'lnm_m2_rating', 'lnm_m2_freetext',
+        'lnm_m3_transport_clarity', 'lnm_m3_client_choice', 'lnm_m3_rating', 'lnm_m3_freetext',
     'lnm_satellite_clarity', 'lnm_resume_mission', 'lnm_base_building', 'lnm_rover_clarity',
   ]
   cy.on('window:before:load', win => {
     if (!Cypress.env('allowSurveys')) {
       win.localStorage.setItem('landnam-surveys-shown', JSON.stringify(ALL_SURVEY_KEYS))
     }
-    // Snooze the upgrade prompt indefinitely so SaveProgressPrompt never opens during tests
+    // Keep legacy localStorage fixtures from affecting auth-gate coverage.
     win.localStorage.setItem('landnam-upgrade-prompt-snooze-until', String(Date.now() + 365 * 24 * 60 * 60 * 1000))
   })
 
-  if (Cypress.env('livePocketBase')) return
+  // The Docker release suite runs both real-auth specs and fixture-driven
+  // gameplay specs. Only the auth specs should use the live browser auth
+  // endpoints; gameplay specs seed deterministic account-scoped sessions and
+  // need the browser stubs below. cy.request() calls from the
+  // auth specs still reach Docker PocketBase directly because intercepts do
+  // not rewrite Cypress's Node-side requests.
+  const normalizedSpec = Cypress.spec.relative.replaceAll('\\', '/')
+  const isAuthSpec = normalizedSpec.startsWith('auth/') || normalizedSpec.includes('/auth/')
+  const realBrowserAuth = Cypress.env('livePocketBase') && isAuthSpec
+  if (realBrowserAuth) return
+
+  // Visual QA is intentionally local-only: its screenshots are driven by
+  // deterministic account-scoped fixtures, not a remote account login.
+  // Returning an auth success here can rebind the fixture halfway through a
+  // visual flow and reset the screen to the intro route. Fail refreshes fast.
+  const visualProfile = Cypress.env('visualProfile') === true
 
   // Stub the app's own backend-health probe so BackendStatus resolves to
   // 'online' on the first check instead of polling every 2s for the whole
@@ -29,19 +48,36 @@ beforeEach(() => {
   cy.intercept('GET', '/api/backend-health', { statusCode: 200, body: { ok: true } }).as('backendHealth')
 
   cy.intercept('POST', '**/api/collections/users/auth-with-password', {
-    statusCode: 200,
-    body: { token: 'e2e-token', record: { id: 'e2e-user', email: 'e2e@landnam.guest' } },
+    statusCode: 503,
+    body: { code: 503, message: visualProfile ? 'Visual QA uses local fixture state.' : 'Fixture E2E uses account-scoped local state.' },
   }).as('pbAuth')
 
+  // The mandatory email gate creates the lightweight account before it
+  // authenticates it. Stubbing only auth-with-password leaves the gate
+  // permanently mounted in offline journeys (KES-135), so the test never
+  // reaches the gameplay flow it is meant to verify.
+  cy.intercept('POST', '**/api/collections/users/records', {
+    statusCode: 503,
+    body: { code: 503, message: visualProfile ? 'Visual QA uses local fixture state.' : 'Fixture E2E uses account-scoped local state.' },
+  }).as('pbUserCreate')
+
   cy.intercept('POST', '**/api/collections/users/auth-refresh', {
-    statusCode: 200,
-    body: { token: 'e2e-token', record: { id: 'e2e-user', email: 'e2e@landnam.guest' } },
+    statusCode: 503,
+    body: { code: 503, message: visualProfile ? 'Visual QA uses local fixture state.' : 'Fixture E2E uses account-scoped local state.' },
   }).as('pbAuthRefresh')
 
   cy.intercept('GET', '**/api/collections/users/auth-refresh', {
-    statusCode: 200,
-    body: { token: 'e2e-token', record: { id: 'e2e-user', email: 'e2e@landnam.guest' } },
+    statusCode: 503,
+    body: { code: 503, message: visualProfile ? 'Visual QA uses local fixture state.' : 'Fixture E2E uses account-scoped local state.' },
   }).as('pbAuthRefreshGet')
+
+  // Fixture journeys seed a deterministic account-scoped session before the
+  // app hydrates. Keep remote exchange unavailable so Cypress exercises the
+  // seeded local snapshot rather than mutating a shared developer account.
+  cy.intercept('POST', '**/api/landnam-auth/exchange', {
+    statusCode: 503,
+    body: { code: 503, message: visualProfile ? 'Visual QA uses local fixture state.' : 'Fixture E2E uses account-scoped local state.' },
+  }).as('pbLandnamExchange')
 
   // Return 404 for game_states so the real PB record for 'e2e-user' never overrides test localStorage state
   cy.intercept('GET', '**/api/collections/game_states/records*', { statusCode: 404, body: { code: 404, message: 'The requested resource wasn\'t found.' } }).as('pbGameState')

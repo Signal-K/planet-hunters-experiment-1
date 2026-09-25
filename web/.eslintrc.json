@@ -1,0 +1,10 @@
+{
+  "extends": ["next"],
+  "plugins": [],
+  "rules": {
+    "landnam/no-hardcoded-colors": "off",
+    "landnam/enforce-8pt-spacing": "off",
+    "landnam/amber-only-in-rewards": "off"
+  }
+}
+

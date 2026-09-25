@@ -7,13 +7,28 @@
 // flow, not just its own one-off survey flight.
 //
 // Run:
-//   CYPRESS_PROFILE=visual npx cypress run --browser chrome --headed --spec "cypress/e2e/visual/discovery-economy-visual-qa.cy.ts"
-//   CYPRESS_PROFILE=visual npx cypress open --browser chrome
+//   CYPRESS_PROFILE=visual-extended npx cypress run --browser chrome --spec "cypress/e2e/visual/discovery-economy-visual-qa.cy.ts"
+//   CYPRESS_PROFILE=visual-extended npx cypress open --browser chrome
 
 import type { GameState } from '@/game-context'
-import { tessCandidateToExoplanetTarget, toTessCandidate } from '../../../lib/data'
+import { seedAuthenticatedFixture } from '../../support/authenticated-fixture'
+// Relative path, not the `@/` alias: Cypress's bundled webpack preprocessor
+// has no tsconfig-paths plugin configured (unlike Next.js's own bundler), so
+// it can't resolve `@/...` imports. No other spec hits this because none of
+// them import real (non-type) values from app source — `@/` only appears in
+// `import type` here, which is erased before bundling and never resolved.
+// Imported from the submodule, not the `@/lib/data` barrel, to avoid pulling
+// in lib/data/structures.ts's own `@/lib/featureFlags` import transitively.
+import { tessCandidateToExoplanetTarget, toTessCandidate } from '../../../lib/data/tess-candidates'
 
-const STORAGE_KEY = 'landnam-game-state-v1'
+const AUTHENTICATED_STORAGE_KEY = 'landnam-game-state-v1:user:e2e-discovery-user'
+const ALL_SURVEY_KEYS = [
+  'lnm_first_launch', 'lnm_mining_feel', 'lnm_client_pick',
+  'lnm_mission_friction', 'lnm_progression_feel', 'lnm_end_of_content',
+  'lnm_return_visit', 'lnm_m1_complete', 'lnm_m2_mission_choice', 'lnm_m2_rocket_clarity', 'lnm_m2_rating', 'lnm_m2_freetext',
+  'lnm_m3_transport_clarity', 'lnm_m3_client_choice', 'lnm_m3_rating', 'lnm_m3_freetext',
+  'lnm_satellite_clarity', 'lnm_resume_mission', 'lnm_base_building', 'lnm_rover_clarity',
+]
 
 function basePlayer(overrides: Partial<GameState['player']> = {}): GameState['player'] {
   return {
@@ -37,7 +52,6 @@ function basePlayer(overrides: Partial<GameState['player']> = {}): GameState['pl
     loanOffered: false,
     roverDeployments: [],
     clientTerritories: {},
-    satelliteMonitoringBuilt: true,
     transitSatelliteLaunchedAt: Date.now() - 1000,
     tessClassifications: {},
     discoveredExoplanetTargets: {},
@@ -61,25 +75,23 @@ function visitWithState(path: string, screen: GameState['screen'], playerOverrid
 
   cy.visit(path, {
     onBeforeLoad(win) {
-      // Remove any real PocketBase auth token left by an earlier test — if
-      // present, the SDK restores a valid session and the "brand-new user"
-      // auth-gate check never even runs (see useAuthSync.ts's authGateOpen
-      // effect), which would make this a false negative for other specs
-      // rather than a false positive for us. Matches visual-qa.cy.ts's
-      // loadPreset, which established this pattern first.
-      win.localStorage.removeItem('pocketbase_auth')
-      // Fake guest credentials make hasStoredCredentials() true, which is
-      // what actually suppresses the auth gate on mount (see useAuthSync.ts)
-      // — ensureGuestAuth() then fails to re-auth with these non-existent
-      // credentials and falls back to offline mode, same as
-      // visual-qa.cy.ts's suppressSurveysAndUpgrade.
-      win.localStorage.setItem('landnam-guest-credentials', JSON.stringify({ email: 'e2e@landnam.guest', password: 'e2e-guest-test' }))
+      // Each visual test gets an isolated, authenticated fixture account.
+      // A previously visited visual spec can leave a PocketBase token in the
+      // browser even though this test is intentionally offline. Clear it
+      // before the provider hydrates, otherwise auth restoration can replace
+      // this fixture with the account's pending-launch state.
+      // Clear the whole origin, not just known auth/state keys: Cypress keeps
+      // one browser profile across specs and a legacy credential or feature
+      // flag can still trigger an auth restore before the fixture hydrates.
+      win.localStorage.clear()
+      win.localStorage.setItem('landnam-surveys-shown', JSON.stringify(ALL_SURVEY_KEYS))
+      win.localStorage.setItem('landnam-upgrade-prompt-snooze-until', String(Date.now() + 365 * 24 * 60 * 60 * 1000))
       // ObservatoryCoach is a separate one-time beat from the main M1-M3
       // tutorial (gated by its own localStorage key, not GameState.tutorial)
       // — mark it seen so it doesn't render its banner/spacer over the
       // chart during the drag-mark gesture below.
       win.localStorage.setItem('landnam_observatory_coach_seen_v1', '1')
-      win.localStorage.setItem(STORAGE_KEY, JSON.stringify(full))
+      seedAuthenticatedFixture(win, full, 'e2e-discovery-user')
     },
   })
 }
@@ -103,6 +115,23 @@ const HOT_CLOSE_SUBJECT = {
   st_teff: 9500,
 }
 
+function stubBackgroundSubjectReads() {
+  // The exo-survey mission is generated from the discovered target persisted
+  // in GameState (see buildRuntimeCatalog), not from the shared subjects feed.
+  // CI runs a vanilla shared PocketBase without the subjects collection or
+  // /api/ss/subjects/last-confirmed route, so leave these unrelated background
+  // reads deterministic instead of letting 401/400 responses obscure the
+  // local discovery -> mission path under test.
+  cy.intercept('GET', '**/api/ss/subjects/last-confirmed', {
+    statusCode: 200,
+    body: { lastConfirmedAt: null, subjectId: null },
+  }).as('lastConfirmedSubject')
+  cy.intercept('GET', '**/api/collections/subjects/records*', {
+    statusCode: 200,
+    body: { page: 1, perPage: 500, totalItems: 0, totalPages: 1, items: [] },
+  }).as('backgroundSubjects')
+}
+
 describe('Visual QA — discovery -> economy pipeline', () => {
   Cypress.on('uncaught:exception', (err) => {
     if (err.message.includes('_cancelResize')) return false
@@ -111,6 +140,8 @@ describe('Visual QA — discovery -> economy pipeline', () => {
 
   it('confirming a hot, close-in transit assigns a real archetype and non-empty minerals', () => {
     cy.viewport(1280, 800)
+
+    stubBackgroundSubjectReads()
 
     cy.intercept('GET', '**/api/collections/subjects/records*', {
       statusCode: 200,
@@ -124,13 +155,7 @@ describe('Visual QA — discovery -> economy pipeline', () => {
     visitWithState('/game/galaxy', 'galaxy', {})
     cy.wait('@subjects')
 
-    // The injected fake guest credentials only satisfy hasStoredCredentials()
-    // — the app still fires ensureGuestAuth() in the background, which fails
-    // against the real local PocketBase (no such account), deletes the fake
-    // credentials, and races to create a real one. Until that resolves, the
-    // "Welcome Back" auth gate can render on top of everything below. A fixed
-    // cy.wait() guesses at that race; asserting the gate is gone (with
-    // Cypress's built-in retry) actually waits for it.
+    // The authenticated fixture must leave the required account gate closed.
     cy.contains('Welcome Back', { timeout: 15000 }).should('not.exist')
 
     cy.contains('INSTRUMENT DATA FEED', { timeout: 15000 }).should('be.visible')
@@ -195,7 +220,7 @@ describe('Visual QA — discovery -> economy pipeline', () => {
     cy.screenshot('discovery-03-confirmed-star-map')
 
     cy.window().then(win => {
-      const saved = JSON.parse(win.localStorage.getItem(STORAGE_KEY) || '{}')
+      const saved = JSON.parse(win.localStorage.getItem(AUTHENTICATED_STORAGE_KEY) || '{}')
       const discovered = Object.values(saved.player.discoveredExoplanetTargets ?? {}) as Array<{ archetype?: string; minerals: string[] }>
       expect(discovered, 'exactly one confirmed discovery').to.have.length(1)
       const [target] = discovered
@@ -206,6 +231,7 @@ describe('Visual QA — discovery -> economy pipeline', () => {
 
   it('a discovered target is reachable through Your Program and the target picker', () => {
     cy.viewport(1280, 800)
+    stubBackgroundSubjectReads()
 
     // Build the discovered target through the real production function
     // (not hand-authored) so the fixture can never drift from what the app
@@ -221,44 +247,48 @@ describe('Visual QA — discovery -> economy pipeline', () => {
     })
 
     // See the matching comment in the first test — waits out the
-    // ensureGuestAuth() race instead of guessing at a fixed delay.
+    // ensureAccountAuth() race instead of guessing at a fixed delay.
     cy.contains('Welcome Back', { timeout: 15000 }).should('not.exist')
 
     cy.contains('Your Program', { timeout: 15000 }).should('be.visible')
-    cy.get(`[data-testid="mission-card-exo-survey-${discovered.id}"]`, { timeout: 10000 })
-      .should('exist')
-      .scrollIntoView()
+    // The route renders its server/default shell before GameProvider hydration.
+    // Waiting for the explicit client-ready marker prevents Cypress from
+    // clicking the SSR button before React has attached its event handler.
+    cy.get('[data-testid="launchpad-focus-screen"][data-game-hydrated="true"]', { timeout: 15000 })
       .should('be.visible')
-    cy.get(`[data-testid="mission-card-exo-survey-${discovered.id}-program-reward"]`)
-      .should('contain.text', '+25 XP')
+    // KES-329/330 replaced the single aggregate OPS button with the
+    // launchpad mission menu's explicit operation choices. The discovered
+    // target is a mining destination (real mineral deposit, not an
+    // instrument/build payload), so the stable proof here is the real
+    // Launchpad -> "GO MINING" -> sell -> target-picker route.
+    // The pad itself is the canonical scene entry point. The rail's NEW
+    // MISSION control is intentionally secondary and can be omitted when a
+    // pending launch occupies the rail; the fixture only needs the same
+    // production action from the physical launchpad control.
+    // The physical pad remains the scene entry point; the attached rail
+    // command is its stable keyboard/touch equivalent for this long-running
+    // headed-browser proof.
+    cy.get('[data-testid="launchpad-new-mission-btn"]', { timeout: 10000 }).invoke('click')
+    cy.get('[data-testid="launchpad-new-mission-mining-btn"]', { timeout: 10000 })
+      .should('not.be.disabled')
+      .click()
+    cy.get('[data-testid="launchpad-mining-sell-btn"]', { timeout: 10000 }).click()
     cy.screenshot('discovery-04-own-program-survey-flight')
 
-    // The exo-survey mission card above is fixed to this one target
-    // (game-context.tsx sets targetId directly when generating it), so
-    // picking it intentionally skips the target picker and jumps straight to
-    // rocket-buy with the target pre-selected — proving that flow doesn't
-    // prove the target is reachable any *other* way. Self-Directed Mining
-    // has no fixed targetId, so it's the ordinary mission -> target-picker
-    // path this test is actually meant to exercise; it requires nickel +
-    // cobalt and orbit <= 8, which every 'M'-archetype discovery satisfies
-    // (see mineralsForArchetype / tessCandidateToExoplanetTarget).
-    cy.get('[data-testid="mission-card-freeops-self-directed-mining"]').scrollIntoView().click({ force: true })
-    cy.contains('Pick Target', { timeout: 10000 }).should('be.visible')
+    // The aggregate action selects the first available own-program mission;
+    // this ordinary mission -> target-picker path is what proves the newly
+    // discovered target is usable outside the fixed-target survey flight.
+    cy.get('[data-testid="mission-target-map"]', { timeout: 10000 }).should('be.visible')
 
     cy.get(`[data-testid="target-${discovered.id}"]`).click({ force: true })
     cy.contains(discovered.name).should('be.visible')
     cy.screenshot('discovery-05-target-picker-real-minerals')
 
-    // The card intentionally caps and rarity-sorts its chips, so assert that
-    // the visible mix is non-empty and drawn from the target's real deposit
-    // rather than assuming the first three source minerals survive the cap.
-    cy.get('[data-testid="target-deposit-mix"]').should('be.visible').children().should('have.length.greaterThan', 0)
-    cy.get('[data-testid^="target-deposit-"]').then($chips => {
-      const visibleMinerals = [...$chips]
-        .map(chip => chip.getAttribute('data-testid')?.replace('target-deposit-', ''))
-        .filter((mineral): mineral is string => Boolean(mineral && mineral !== 'mix'))
-      expect(visibleMinerals, 'visible deposit chips').to.have.length.greaterThan(0)
-      expect(visibleMinerals.every(mineral => discovered.minerals.includes(mineral))).to.eq(true)
-    })
+    // The current orbital map is intentionally an atlas rather than a second
+    // mineral-card surface. Its selection reticle plus the adjacent mission
+    // action prove this discovered body is eligible and can advance through
+    // the ordinary target-picker flow.
+    cy.contains('SELECTED · ORBIT', { timeout: 10000 }).should('be.visible')
+    cy.get('[data-testid="continue-build-btn"]').should('be.enabled')
   })
 })

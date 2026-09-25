@@ -1,4 +1,4 @@
-"""Explorer (SR1) and Prospector (SR2) hulls, plus the SR1 cutaway background
+"""Explorer and Prospector hulls, plus the Explorer cutaway background
 the ship customiser draws room slots over.
 
 Re-renders the three legacy hand-drawn PNGs pinned in manifest.test.ts's
@@ -37,7 +37,7 @@ TAIL_END = 3.7
 NOZZLE_END = 4.0
 R = 0.75             # main tube radius — bumped from 0.5 (2026-08-03, third
                       # pass): the ship is shown as small as 80x30px in-game
-                      # (HubPixiCanvas's launchpad), and every fine surface
+                      # (EarthBaseModules' launchpad), and every fine surface
                       # detail (windows, seams, canards, the sensor spike) the
                       # second pass added was invisible at that size — those
                       # are described in code but never verified at the size
@@ -58,7 +58,7 @@ def _hull(trim_hex, band_x, dorsal=False):
     Third pass (2026-08-03): the second pass added surface detail (windows,
     seams, canards, a sensor spike) that only ever got checked against the
     480x180 supersampled render, never against the ~80x30px the game
-    actually displays this at (HubPixiCanvas's launchpad). All of it was
+    actually displays this at (EarthBaseModules' launchpad). All of it was
     below the pixel threshold to read at real size, so the ship still looked
     like a bare tube in-game. That detail is removed here rather than kept
     "for later" — dead weight in both the mesh and the code. Everything that
@@ -146,7 +146,7 @@ def ship_sr2():
 
 
 def sr1_cutaway():
-    """SR1 hull with the tube section opened up into the four onboarding
+    """Explorer hull with the tube section opened up into the four onboarding
     compartments (cockpit/payload/booster/engine) `ShipCustomizerCanvas`
     overlays slot borders onto. See module docstring for why the divider
     x-positions are computed, not chosen."""
@@ -233,3 +233,8 @@ BUILDS = {
     "ships/ship_sr2": ship_sr2,
     "ships/containers/sr1_cutaway": sr1_cutaway,
 }
+
+# Compatibility entry point: render_all keeps the historical `ships` module
+# name, while the shared family source lives in rocket_family.py. This avoids
+# two active rocket implementations in the production render path.
+from rocket_family import BUILDS  # noqa: E402,F401

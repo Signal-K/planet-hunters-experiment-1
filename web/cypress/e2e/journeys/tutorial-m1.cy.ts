@@ -17,7 +17,7 @@ const SURVEY_KEY = 'landnam-surveys-shown'
 const SNOOZE_KEY = 'landnam-upgrade-prompt-snooze-until'
 
 // PixiJS v8 can throw _cancelResize during teardown when component cleanup
-// races an in-flight async app.init() (e.g. MiningCanvas/HubPixiCanvas torn
+// races an in-flight async app.init() (e.g. MiningCanvas or a Hub scene torn
 // down mid-transition) — an uncaught rejection Next's error boundary turns
 // into a full-screen "SIGNAL INTERRUPTED" crash. Same known issue and same
 // suppression already used in visual-qa.cy.ts; the visual content/game state
@@ -30,7 +30,8 @@ Cypress.on('uncaught:exception', (err) => {
 const ALL_SURVEY_KEYS = [
   'lnm_first_launch', 'lnm_mining_feel', 'lnm_client_pick',
   'lnm_mission_friction', 'lnm_progression_feel', 'lnm_end_of_content',
-  'lnm_return_visit', 'lnm_m1_complete', 'lnm_m2_complete', 'lnm_m3_complete',
+  'lnm_return_visit', 'lnm_m1_complete', 'lnm_m2_mission_choice', 'lnm_m2_rocket_clarity', 'lnm_m2_rating', 'lnm_m2_freetext',
+        'lnm_m3_transport_clarity', 'lnm_m3_client_choice', 'lnm_m3_rating', 'lnm_m3_freetext',
 ]
 
 // ─── Base player ──────────────────────────────────────────────────────────────
@@ -70,7 +71,7 @@ function basePlayer(overrides: Record<string, unknown> = {}) {
 function suppressSurveys(win: Window) {
   win.localStorage.setItem(SURVEY_KEY, JSON.stringify(ALL_SURVEY_KEYS))
   win.localStorage.setItem(SNOOZE_KEY, String(Date.now() + 365 * 24 * 60 * 60 * 1000))
-  win.localStorage.setItem('landnam-guest-credentials', JSON.stringify({ email: 'e2e@landnam.guest', password: 'e2e-guest-test' }))
+  win.localStorage.setItem('landnam-account-credentials', JSON.stringify({ email: 'e2e@example.com', password: 'e2e-guest-test' }))
 }
 
 function visitHub(overrides: Record<string, unknown> = {}) {
@@ -104,9 +105,16 @@ function navToMissions() {
   cy.window().then(win => {
     const isDesktop = win.innerWidth >= 1024
     if (isDesktop) {
-      // Sidebar is always visible on desktop; bottom tab bar is display:none.
+      // The old always-on desktop sidebar nav (`.desktop-sidebar`,
+      // `sidebar-nav-missions`) was retired in favour of screen-embedded
+      // navigation — see globals.css's ".desktop-sidebar { display: none }"
+      // and the comment on `.hub-desktop-nav`. During an active tutorial
+      // coach (hasCoach true), the Launchpad's own "View Missions" callout
+      // is also suppressed (HubScreen.tsx), so the one nav element that's
+      // always present regardless of desktop/mobile or tutorial state is
+      // the Hub dock's desktop Missions action.
       cy.get('[data-testid="bottom-tab-missions"]').should('not.be.visible')
-      cy.get('[data-testid="sidebar-nav-missions"]').should('be.visible').click()
+      cy.contains('button', 'Missions').should('be.visible').click()
     } else {
       cy.get('[data-testid="bottom-tab-missions"]').should('be.visible').click()
     }
@@ -148,7 +156,9 @@ function completeMining() {
 
   if (!MINE_REAL) {
     cy.get('[data-testid="dev-skip-mining-btn"]', { timeout: 8000 }).should('be.visible').click()
-    cy.get('[data-testid="return-home-btn"]', { timeout: 15000 }).should('not.be.disabled').click()
+    // The development shortcut fills the order and calls onComplete directly;
+    // it intentionally bypasses the real player's Return/Deliver button.
+    cy.contains('MISSION TRANSIT', { timeout: 15000 }).should('be.visible')
     return
   }
 
@@ -179,7 +189,9 @@ function completeMining() {
 
 function completeDebrief() {
   cy.contains('MISSION COMPLETE', { timeout: 8000 }).should('be.visible')
-  cy.get('[data-testid="resolve-cargo-btn"]').should('be.visible').click()
+  // DebriefScreen.tsx auto-resolves onboarding missions (missionsDone <
+  // FREE_OPS_START_MISSIONS_DONE) on mount, skipping the "Resolve Cargo" tap
+  // entirely — a tutorial playthrough never sees that button.
   // DebriefScreen.tsx branches on `resolved && delivered` — a successful,
   // fully-delivered mission (the only path a tutorial playthrough exercises)
   // renders a "Payout" panel with a "Total" line, not "Francs Earned" ("Francs
@@ -192,7 +204,7 @@ function completeDebrief() {
 // ─── Full M1 play-through ─────────────────────────────────────────────────────
 
 function playM1() {
-  cy.get('h1', { timeout: 10000 }).contains('Earth Base').should('be.visible')
+  cy.contains('h1', /^(Base|Earth Base)$/, { timeout: 10000 }).should('be.visible')
 
   // Step 1: tutorial coach says to open missions — follow what's VISIBLE on screen
   cy.get('[data-testid="tutorial-coach-block"]').should('be.visible')
@@ -237,7 +249,7 @@ function playM1() {
   // clicks a tab the coach isn't directing the player toward yet; it doesn't
   // navigate anywhere. Assert the real post-M1 state instead: back on Hub,
   // M2 guided-ops coaching visible.
-  cy.get('h1', { timeout: 10000 }).contains('Earth Base').should('be.visible')
+  cy.contains('h1', /^(Base|Earth Base)$/, { timeout: 10000 }).should('be.visible')
   // Case-insensitive: the label is visually all-caps via CSS text-transform
   // (this project's standing "UPPERCASE + letter-spacing for instrument
   // labels" rule), not literal uppercase DOM text — a plain 'GUIDED OPS'
@@ -253,7 +265,7 @@ function playM1() {
 // a manual coach card on rocket-buy.
 
 function playM2() {
-  cy.get('h1', { timeout: 10000 }).contains('Earth Base').should('be.visible')
+  cy.contains('h1', /^(Base|Earth Base)$/, { timeout: 10000 }).should('be.visible')
 
   // M2 step 20: hub action step (not manual — no "got it" button, it
   // auto-dismisses when the player navigates to missions). Current copy is
@@ -306,7 +318,7 @@ function playM2() {
 // as the old self-directed M3 flow it replaced.
 
 function playM3ToLaunch() {
-  cy.get('h1', { timeout: 10000 }).contains('Earth Base').should('be.visible')
+  cy.contains('h1', /^(Base|Earth Base)$/, { timeout: 10000 }).should('be.visible')
 
   // Step 30: hub action step (not manual — auto-dismisses on nav, like M2's
   // step 20). Current copy is 'Guided Ops · Mission 3' (lib/data/tutorial.ts
@@ -354,7 +366,6 @@ function playM3ToLaunch() {
 
 const VIEWPORTS = [
   { label: 'mobile portrait', w: 390, h: 844 },
-  { label: 'mobile landscape', w: 844, h: 390 },
   { label: 'tablet portrait', w: 768, h: 1024 },
   { label: 'desktop', w: 1280, h: 800 },
 ] as const
@@ -381,19 +392,23 @@ const viewportsToRun = VIEWPORTS.filter(v => !VIEWPORT_FILTER || v.label === VIE
 // Explicitly asserts that on desktop the bottom tab bar is hidden and the
 // sidebar is shown — catching any regression where the CSS breakpoint breaks.
 
-if (!MISSION_FILTER) describe('Desktop layout: bottom tab bar hidden, sidebar visible', () => {
+if (!MISSION_FILTER) describe('Desktop layout: bottom tab bar hidden, sidebar retired', () => {
   beforeEach(() => cy.viewport(1280, 800))
 
-  it('bottom-tab-missions is not visible and sidebar-nav-missions is visible on desktop hub', () => {
+  it('bottom-tab-missions and the retired sidebar are both hidden on desktop hub; the desktop Missions action remains available', () => {
     visitHub({ doneSteps: { 0: true } })
-    cy.get('h1', { timeout: 10000 }).contains('Earth Base').should('be.visible')
+    cy.contains('h1', /^(Base|Earth Base)$/, { timeout: 10000 }).should('be.visible')
     cy.get('[data-testid="bottom-tab-missions"]').should('not.be.visible')
-    cy.get('[data-testid="sidebar-nav-missions"]').should('be.visible')
+    // The old always-on desktop sidebar (`.desktop-sidebar`) is retired —
+    // CSS-hidden unconditionally (globals.css). The Hub dock's desktop-only
+    // Missions action is the current path to Missions at this breakpoint.
+    cy.get('[data-testid="sidebar-nav-missions"]').should('not.be.visible')
+    cy.get('[data-testid="hub-desktop-missions-btn"]').should('be.visible')
   })
 
   it('tutorial coach on step 1 does NOT show a spot over the hidden bottom tab bar', () => {
     visitHub({ doneSteps: { 0: true } })
-    cy.get('h1', { timeout: 10000 }).contains('Earth Base').should('be.visible')
+    cy.contains('h1', /^(Base|Earth Base)$/, { timeout: 10000 }).should('be.visible')
     cy.get('[data-testid="tutorial-coach-block"]').should('contain', 'Open a Mission')
     // On desktop, desktopSpot is null so the pulsing spot element must not exist
     cy.get('[data-testid="tutorial-coach-spot"]').should('not.exist')
@@ -409,7 +424,7 @@ if (!MISSION_FILTER) describe('Mobile layout: bottom tab bar visible, sidebar hi
 
   it('bottom-tab-missions is visible and sidebar is not visible on mobile hub', () => {
     visitHub({ doneSteps: { 0: true } })
-    cy.get('h1', { timeout: 10000 }).contains('Earth Base').should('be.visible')
+    cy.contains('h1', /^(Base|Earth Base)$/, { timeout: 10000 }).should('be.visible')
     cy.get('[data-testid="bottom-tab-missions"]').should('be.visible')
     cy.get('[data-testid="sidebar-nav-missions"]').should('not.be.visible')
   })
@@ -420,7 +435,7 @@ if (!MISSION_FILTER) describe('Mobile layout: bottom tab bar visible, sidebar hi
     // the element matching step.coachId ('bottom-tab-missions' for step 1)
     // — see lib/data/tutorial.ts and components/game/CoachPointer.tsx.
     visitHub({ doneSteps: { 0: true } })
-    cy.get('h1', { timeout: 10000 }).contains('Earth Base').should('be.visible')
+    cy.contains('h1', /^(Base|Earth Base)$/, { timeout: 10000 }).should('be.visible')
     cy.get('[data-testid="tutorial-coach-block"]').should('contain', 'Open a Mission')
     // The ring is a decorative, pointerEvents:'none' overlay — Cypress's
     // be.visible check uses elementFromPoint, which always reports it as

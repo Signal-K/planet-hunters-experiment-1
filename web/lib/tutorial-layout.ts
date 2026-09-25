@@ -9,10 +9,19 @@ export const TUTORIAL_RAIL = {
   // Top HUD/back buttons occupy this area.
   TOP_CHROME_HEIGHT: 68,
   // Dedicated space for onboarding/tutorial blocks. Gameplay buttons must stay out of it.
-  RESERVED_TOP: 76,
+  // Must clear the global .game-menu-button (top:56 + height:36 = bottom 92,
+  // app/globals.css .game-menu-button), which is a fixed-position sibling
+  // this module can't see — KES-352 found the coach rail sliced through it
+  // at the old value of 76.
+  RESERVED_TOP: 96,
   // Measured action-card height (avatar row + padding, single-line action
-  // text) is ~71px in practice; a little headroom for longer per-step copy.
-  RESERVED_HEIGHT: 84,
+  // text) is ~71px in practice. KES-146: at the 390px mobile viewport, steps
+  // whose body copy wraps to two lines measured
+  // 134px tall — the old 84px estimate undershot that, leaving reserved
+  // content areas too shallow and letting scrollIntoView tuck list items
+  // under the coach card. Sized with headroom above the worst-case measured
+  // height rather than the single-line optimum.
+  RESERVED_HEIGHT: 150,
   // Compact pill height including shadow bleed (px).
   PILL_HEIGHT: 64,
   // Bottom clearance for screens with sticky actions above the reserved
@@ -25,6 +34,12 @@ export const TUTORIAL_RAIL = {
 // For screens where the coach step is a compact action card (~56px tall)
 export const TUTORIAL_CONTENT_TOP =
   TUTORIAL_RAIL.RESERVED_TOP + TUTORIAL_RAIL.RESERVED_HEIGHT + TUTORIAL_RAIL.CONTENT_MARGIN
+
+// Mission Board's contract instruction is the compact coach variant. Keep its
+// content close to the rendered card instead of reserving the worst-case
+// wrapped tutorial height used by the other screens.
+export const TUTORIAL_COMPACT_CONTENT_TOP =
+  TUTORIAL_RAIL.RESERVED_TOP + 76 + TUTORIAL_RAIL.CONTENT_MARGIN
 
 // For screens where the coach step is a manual (full) card (~160px tall)
 export const TUTORIAL_MANUAL_CONTENT_TOP =

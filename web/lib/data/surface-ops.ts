@@ -1,3 +1,5 @@
+import { SURFACE_SITE_ACCESS_FEES } from './economy'
+
 export type SurfaceSiteAvailability = 'available' | 'equipment-locked'
 
 export interface SurfaceSiteDefinition {
@@ -7,14 +9,14 @@ export interface SurfaceSiteDefinition {
   region: string
   orbitBand: number
   demand: 'baseline' | 'elevated' | 'high'
-  rightsCost: number
+  accessFee: number
   availability: SurfaceSiteAvailability
   unlockHint: string
   description: string
 }
 
 /**
- * Rights prices sit on the current ₣15–25M contract scale. Proximity and
+ * Site-access fees sit on the current ₣15–25M contract scale. Proximity and
  * demand both affect the quote, but only the Moon is equipment-eligible in v0.
  */
 export const SURFACE_SITES: readonly SurfaceSiteDefinition[] = [
@@ -25,7 +27,7 @@ export const SURFACE_SITES: readonly SurfaceSiteDefinition[] = [
     region: 'Shackleton Rim',
     orbitBand: 1,
     demand: 'baseline',
-    rightsCost: 4_000_000,
+    accessFee: SURFACE_SITE_ACCESS_FEES['moon-south-pole'],
     availability: 'available',
     unlockHint: 'Free Operations',
     description: 'Near-Earth logistics corridor with surveyed illumination and ice access.',
@@ -37,7 +39,7 @@ export const SURFACE_SITES: readonly SurfaceSiteDefinition[] = [
     region: 'Arcadia Planitia',
     orbitBand: 4,
     demand: 'elevated',
-    rightsCost: 5_500_000,
+    accessFee: SURFACE_SITE_ACCESS_FEES['mars-arcadia'],
     availability: 'equipment-locked',
     unlockHint: 'Interplanetary construction kit required',
     description: 'High-demand settlement terrain with shallow subsurface ice.',
@@ -49,7 +51,7 @@ export const SURFACE_SITES: readonly SurfaceSiteDefinition[] = [
     region: 'Conamara Chaos',
     orbitBand: 6,
     demand: 'high',
-    rightsCost: 7_500_000,
+    accessFee: SURFACE_SITE_ACCESS_FEES['europa-chaos'],
     availability: 'equipment-locked',
     unlockHint: 'Outer-system construction kit required',
     description: 'Remote high-value terrain with severe radiation and logistics constraints.',

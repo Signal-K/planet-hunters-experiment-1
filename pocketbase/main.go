@@ -4,6 +4,7 @@ import (
 	"log"
 	"math"
 	"os"
+	"slices"
 	"strings"
 
 	"github.com/pocketbase/pocketbase"
@@ -11,6 +12,12 @@ import (
 	"github.com/pocketbase/pocketbase/plugins/migratecmd"
 	"github.com/pocketbase/pocketbase/tools/types"
 
+	// Registers compiled app migrations (core.AppMigrations) via each file's
+	// own init(). KES-149: these only ever actually run via `migrate up`,
+	// which fly.toml's release_command now invokes on every deploy — they do
+	// NOT run automatically just because this package is imported, and they
+	// do NOT run on a plain `serve` boot.
+	_ "landnam-backend/migrations"
 	"landnam-backend/sharedauth"
 )
 
@@ -30,12 +37,16 @@ func main() {
 
 	app.OnServe().BindFunc(func(se *core.ServeEvent) error {
 		ensureCollections(app)
+		ensureCommunityCollections(app)
 		seedCatalog(app)
 		registerGuestStateArchival(app)
 		return se.Next()
 	})
 
 	registerLandnamAuthExchange(app, sharedAuth)
+	registerFriendsRoutes(app)
+	registerCommunityRoutes(app)
+	registerTreasuryRoutes(app)
 
 	if err := app.Start(); err != nil {
 		log.Fatal(err)
@@ -50,6 +61,11 @@ func ensureCollections(app core.App) {
 		users.Fields.Add(&core.TextField{Name: "displayName", Max: 80})
 		users.Fields.Add(&core.DateField{Name: "lastExchangeAt"})
 		users.Fields.Add(&core.BoolField{Name: "guest"})
+		// KES-83: player-chosen handle used for friend search/display. Not
+		// unique-constrained at the field level — friends.go enforces
+		// uniqueness itself (case-insensitive) before writing, since two
+		// players racing the same name is a 409 we want to word ourselves.
+		users.Fields.Add(&core.TextField{Name: "username", Max: 24})
 		if err := app.Save(users); err != nil {
 			log.Printf("failed to save users collection: %v", err)
 		}
@@ -86,6 +102,60 @@ func ensureCollections(app core.App) {
 	}
 
 	emptyStr := types.Pointer("")
+
+	// daily_economy_snapshots is the auditable, shared AEST market board. The
+	// scheduler writes it with a service credential; players can only read the
+	// newest published snapshot. Keeping the complete resolved payload makes a
+	// price explainable after the day has rolled over and gives retries a real
+	// idempotency boundary instead of a CI artifact.
+	if _, err := app.FindCollectionByNameOrId("daily_economy_snapshots"); err != nil {
+		col := core.NewBaseCollection("daily_economy_snapshots")
+		col.ListRule = emptyStr
+		col.ViewRule = emptyStr
+		col.CreateRule = nil
+		col.UpdateRule = nil
+		col.DeleteRule = nil
+		col.Fields.Add(&core.TextField{Name: "snapshot_date", Required: true, Max: 10})
+		col.Fields.Add(&core.TextField{Name: "idempotency_key", Required: true, Max: 80})
+		col.Fields.Add(&core.JSONField{Name: "snapshot", Required: true, MaxSize: 200000})
+		col.Fields.Add(&core.AutodateField{Name: "created", OnCreate: true})
+		col.Fields.Add(&core.AutodateField{Name: "updated", OnCreate: true, OnUpdate: true})
+		col.Indexes = []string{
+			"CREATE UNIQUE INDEX idx_daily_economy_snapshots_key ON daily_economy_snapshots (idempotency_key)",
+			"CREATE UNIQUE INDEX idx_daily_economy_snapshots_date ON daily_economy_snapshots (snapshot_date)",
+		}
+		if err := app.Save(col); err != nil {
+			log.Printf("failed to save daily_economy_snapshots collection: %v", err)
+		}
+	}
+
+	// public_treasury is the singleton, server-owned counterpart to the
+	// client-side TreasurySystem value. Players may read the published ledger,
+	// but no collection rule permits client mutation; write routes are added
+	// alongside each audited treasury transaction.
+	if _, err := app.FindCollectionByNameOrId("public_treasury"); err != nil {
+		col := core.NewBaseCollection("public_treasury")
+		col.ListRule = emptyStr
+		col.ViewRule = emptyStr
+		col.CreateRule = nil
+		col.UpdateRule = nil
+		col.DeleteRule = nil
+		col.Fields.Add(&core.TextField{Name: "singleton_key", Required: true, Max: 32})
+		col.Fields.Add(&core.JSONField{Name: "state", Required: true, MaxSize: 200000})
+		col.Fields.Add(&core.AutodateField{Name: "created", OnCreate: true})
+		col.Fields.Add(&core.AutodateField{Name: "updated", OnCreate: true, OnUpdate: true})
+		col.Indexes = []string{"CREATE UNIQUE INDEX idx_public_treasury_singleton ON public_treasury (singleton_key)"}
+		if err := app.Save(col); err != nil {
+			log.Printf("failed to save public_treasury collection: %v", err)
+		} else {
+			record := core.NewRecord(col)
+			record.Set("singleton_key", "public")
+			record.Set("state", map[string]any{"balanceFrancs": 20000000, "ledger": []any{}, "loans": map[string]any{}})
+			if err := app.Save(record); err != nil {
+				log.Printf("failed to seed public_treasury: %v", err)
+			}
+		}
+	}
 
 	// minerals
 	if _, err := app.FindCollectionByNameOrId("minerals"); err != nil {
@@ -281,7 +351,7 @@ func ensureCollections(app core.App) {
 		col.Fields.Add(&core.JSONField{Name: "cost_materials", MaxSize: 1000})
 		col.Fields.Add(&core.SelectField{
 			Name: "unlock_trigger_type", MaxSelect: 1,
-			Values: []string{"always", "client-mission-trigger", "manual"},
+			Values: []string{"always", "client-mission-trigger", "academy-research", "deep-space-telescope-unlock", "manual"},
 		})
 		col.Fields.Add(&core.TextField{Name: "unlocks_at", Max: 200})
 		col.Fields.Add(&core.TextField{Name: "description", Max: 400})
@@ -398,11 +468,69 @@ func ensureCollections(app core.App) {
 		}
 	}
 
+	// friendships — undirected relationship between two players, stored as a
+	// directed (requester -> addressee) row so a pending request has an
+	// obvious owner. All reads/writes to this collection go through
+	// friends.go's custom routes (which run as the server, bypassing these
+	// rules) rather than the raw Records API, so the rules below only need to
+	// cover the client's own read of its own relationships — never a raw
+	// client-side create/update, which would let a player self-accept.
+	if _, err := app.FindCollectionByNameOrId("friendships"); err != nil {
+		friendships := core.NewBaseCollection("friendships")
+		friendships.ListRule = types.Pointer("requester = @request.auth.id || addressee = @request.auth.id")
+		friendships.ViewRule = types.Pointer("requester = @request.auth.id || addressee = @request.auth.id")
+		friendships.CreateRule = nil
+		friendships.UpdateRule = nil
+		friendships.DeleteRule = nil
+		friendships.Fields.Add(&core.TextField{Name: "requester", Required: true, Max: 64})
+		friendships.Fields.Add(&core.TextField{Name: "addressee", Required: true, Max: 64})
+		friendships.Fields.Add(&core.SelectField{Name: "status", Required: true, MaxSelect: 1, Values: []string{"pending", "accepted", "declined"}})
+		friendships.Fields.Add(&core.AutodateField{Name: "created", OnCreate: true})
+		friendships.Fields.Add(&core.AutodateField{Name: "updated", OnCreate: true, OnUpdate: true})
+		friendships.Indexes = []string{
+			"CREATE UNIQUE INDEX idx_friendships_pair ON friendships (requester, addressee)",
+		}
+		if err := app.Save(friendships); err != nil {
+			log.Printf("failed to save friendships: %v", err)
+		}
+	}
+
+	// friend_gifts — one row per gift send. Creation/claiming is
+	// server-mediated only (friends.go enforces the friendship check and the
+	// one-gift-per-friend-per-AEST-day limit); the client never writes this
+	// collection directly.
+	if _, err := app.FindCollectionByNameOrId("friend_gifts"); err != nil {
+		gifts := core.NewBaseCollection("friend_gifts")
+		gifts.ListRule = types.Pointer("sender = @request.auth.id || recipient = @request.auth.id")
+		gifts.ViewRule = types.Pointer("sender = @request.auth.id || recipient = @request.auth.id")
+		gifts.CreateRule = nil
+		gifts.UpdateRule = nil
+		gifts.DeleteRule = nil
+		gifts.Fields.Add(&core.TextField{Name: "sender", Required: true, Max: 64})
+		gifts.Fields.Add(&core.TextField{Name: "recipient", Required: true, Max: 64})
+		// AEST (Australia/Sydney) calendar date the gift was sent on, as
+		// "YYYY-MM-DD" — the key the daily-limit check dedupes against. Not a
+		// UTC day: 00:01 AEST is mid-afternoon UTC the day before, so a plain
+		// UTC-date comparison would reset the limit at the wrong wall-clock
+		// moment for the AEST-anchored reset this feature was specified with.
+		gifts.Fields.Add(&core.TextField{Name: "gift_date", Required: true, Max: 10})
+		gifts.Fields.Add(&core.SelectField{Name: "kind", Required: true, MaxSelect: 1, Values: []string{"currency", "resource", "blueprint"}})
+		gifts.Fields.Add(&core.JSONField{Name: "payload", Required: true, MaxSize: 2048})
+		gifts.Fields.Add(&core.BoolField{Name: "claimed"})
+		gifts.Fields.Add(&core.AutodateField{Name: "created", OnCreate: true})
+		gifts.Indexes = []string{
+			"CREATE UNIQUE INDEX idx_friend_gifts_daily ON friend_gifts (sender, recipient, gift_date)",
+		}
+		if err := app.Save(gifts); err != nil {
+			log.Printf("failed to save friend_gifts: %v", err)
+		}
+	}
+
 	// voxel_worlds — one row per (user, target): the bulk takeon MissionState
 	// for that target (sparse voxel edits, rover snapshot, photos). Mirrors
 	// game_states' per-user JSON-blob pattern, but keyed per target since a
 	// player has one voxel world per mining/exploration target, not one
-	// global world. See STS-403/404 (Desk) for the design decision.
+	// global world. See the parent-workspace voxel-world decision for rationale.
 	if _, err := app.FindCollectionByNameOrId("voxel_worlds"); err != nil {
 		col := core.NewBaseCollection("voxel_worlds")
 		col.ListRule = types.Pointer("user = @request.auth.id")
@@ -502,6 +630,10 @@ func migrateUsers(app core.App) {
 	}
 	if backfillGuest {
 		col.Fields.Add(&core.BoolField{Name: "guest"})
+		changed = true
+	}
+	if col.Fields.GetByName("username") == nil {
+		col.Fields.Add(&core.TextField{Name: "username", Max: 24})
 		changed = true
 	}
 
@@ -668,14 +800,29 @@ func migrateStructureBlueprints(app core.App) {
 	if err != nil {
 		return
 	}
-	if col.Fields.GetByName("takeon_type") != nil {
+	changed := false
+	if col.Fields.GetByName("takeon_type") == nil {
+		col.Fields.Add(&core.TextField{Name: "takeon_type", Max: 40})
+		changed = true
+	}
+	// academy-research and deep-space-telescope-unlock were added after the
+	// initial three-value enum shipped; existing collections need this
+	// backfilled or seeding astronaut-academy/deep-space-telescope blueprints
+	// fails validation on every restart.
+	if triggerField, ok := col.Fields.GetByName("unlock_trigger_type").(*core.SelectField); ok {
+		want := []string{"always", "client-mission-trigger", "academy-research", "deep-space-telescope-unlock", "manual"}
+		if !slices.Equal(triggerField.Values, want) {
+			triggerField.Values = want
+			changed = true
+		}
+	}
+	if !changed {
 		return
 	}
-	col.Fields.Add(&core.TextField{Name: "takeon_type", Max: 40})
 	if err := app.Save(col); err != nil {
 		log.Printf("migrateStructureBlueprints: failed to save: %v", err)
 	} else {
-		log.Printf("migrateStructureBlueprints: added takeon_type field")
+		log.Printf("migrateStructureBlueprints: migrated fields")
 	}
 }
 
@@ -1009,7 +1156,7 @@ func seedCatalog(app core.App) {
 		part
 	}{
 		{"hull-mk1", part{"Hull MK1", "chassis", "/parts/basic_hull_t1.png", 1, false, 2, 6, 0, 0, 0}},
-		{"hull-mk2", part{"SR2 Unibody Frame", "chassis", "/parts/reinforced_hull_t2.png", 2, false, 3, 10, 0, 0, 0}},
+		{"hull-mk2", part{"Prospector Unibody Frame", "chassis", "/parts/reinforced_hull_t2.png", 2, false, 3, 10, 0, 0, 0}},
 		{"hull-cargo", part{"Cargo Bay T1", "chassis", "/parts/cargo_bay_t1.png", 1, false, 2, 14, 0, 0, 0}},
 		{"ion-a1", part{"Ion Drive A1", "propulsion", "/parts/basic_thruster_t1.png", 1, false, 0, 0, 40, 5, 0}},
 		{"fusion-b2", part{"Fusion Drive B2", "propulsion", "/parts/fusion_drive_t2.png", 2, false, 0, 0, 80, 7, 0}},
@@ -1017,7 +1164,7 @@ func seedCatalog(app core.App) {
 		{"hand-drill", part{"Hand Drill", "drill", "/parts/mining_drill_t1.png", 1, false, 0, 0, 0, 0, 1}},
 		{"laser-t2", part{"Laser T2", "drill", "/parts/mining_drill_t1.png", 2, false, 0, 0, 0, 0, 2}},
 		{"plasma-t3", part{"Plasma T3", "drill", "/parts/mining_drill_t1.png", 3, true, 0, 0, 0, 0, 4}},
-		{"cargo-module-t1", part{"Cargo Module T1", "drill", "/parts/drill-hand.png", 1, false, 0, 0, 0, 0, 0}},
+		{"cargo-module-t1", part{"Cargo Module T1", "drill", "/parts/cargo_bay_t1.png", 1, false, 0, 0, 0, 0, 0}},
 	}
 	for _, p := range parts {
 		fields := map[string]any{

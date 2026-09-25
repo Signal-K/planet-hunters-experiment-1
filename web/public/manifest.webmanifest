@@ -1,7 +1,7 @@
 {
-  "name": "Landnam — Space Mining",
+  "name": "Landnam: Space Program",
   "short_name": "Landnam",
-  "description": "Space mining browser game — portrait and desktop/landscape supported",
+  "description": "Command a space program of launches, logistics, discovery, and settlement building.",
   "start_url": "/game",
   "display": "standalone",
   "orientation": "any",

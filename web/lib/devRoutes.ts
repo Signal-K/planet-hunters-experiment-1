@@ -48,9 +48,12 @@ export const UI_ROUTE_PRESETS: Record<string, string> = {
   'skill-tree': 'ui-skill-tree',
   skills: 'ui-skill-tree',
   'tess-discovery': 'ui-tess-discovery',
+  'instrument-hub': 'ui-instrument-hub',
   galaxy: 'ui-tess-discovery',
   'rover-mining': 'ui-rover-mining',
   'ship-customizer': 'ship-customizer',
+  hangar: 'ui-hangar-assembly',
+  'hangar-assembly': 'ui-hangar-assembly',
 }
 
 const MISSION_LABELS = new Set(['Mission 1', 'Mission 2', 'Mission 3', 'First Satellite Launch'])

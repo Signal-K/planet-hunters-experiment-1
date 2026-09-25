@@ -1,9 +1,15 @@
 import { describe, it, expect } from 'vitest'
-import { toTarget, toMission, toPart, toClient, toStructure, withAuthoredExtras } from './catalog'
+import { mergeStructureCatalog, toTarget, toMission, toPart, toClient, toStructure, withAuthoredExtras } from './catalog'
 import { AUTHORED_MISSIONS } from './data'
 import type { Mission } from './data'
 
 describe('Landnam Catalog Mapping', () => {
+  it('keeps authored structures when a spoke catalog is missing a rollout row', () => {
+    const merged = mergeStructureCatalog([toStructure({ slug: 'launchpad', name: 'Remote Launchpad', kind: 'launchpad' })])
+    expect(merged.some(structure => structure.id === 'surface-silo')).toBe(true)
+    expect(merged.find(structure => structure.id === 'launchpad')?.name).toBe('Remote Launchpad')
+  })
+
   it('maps a raw database record to a Target object', () => {
     const raw = {
       slug: 'eros',
@@ -35,6 +41,18 @@ describe('Landnam Catalog Mapping', () => {
     expect(mission.id).toBe('m1')
     expect(mission.payout.francs).toBe(5000)
     expect(mission.requires.minerals).toEqual({ Water: 10 })
+  })
+
+  it('maps construction fields from a PocketBase mission record', () => {
+    const mission = toMission({
+      slug: 'construct-fuel-depot', title: 'Fuel Depot', requires_minerals: '{}',
+      construction_structure_kind: 'fuel-depot',
+      construction_required_materials: '{"hydrogen":8,"aluminium":6}',
+      construction_placement_mode: 'confirm', construction_build_time_ms: 1200,
+    })
+    expect(mission.construction).toEqual({
+      structureKind: 'fuel-depot', requiredMaterials: { hydrogen: 8, aluminium: 6 }, placementMode: 'confirm', buildTimeMs: 1200,
+    })
   })
 
   it('normalizes legacy M3 catalog records to one of the corrected transport-client missions', () => {

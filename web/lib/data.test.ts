@@ -1,4 +1,6 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
+import { existsSync } from 'node:fs'
+import { resolve } from 'node:path'
 import {
   REFINING_VALUE_MULTIPLIER,
   STRUCTURE_PRICES,
@@ -6,11 +8,13 @@ import {
   suggestBuild,
   validateBuild,
   compatibleTargetsFor,
+  feasibleTargetsFor,
   rateMission,
   calibrateOnboardingPayout,
   ONBOARDING_ROCKET_COST,
   MINERAL_META,
   MISSIONS,
+  OWN_PROGRAM_BUILD_MISSIONS,
   MISSION_TEMPLATES,
   STRUCTURES,
   TARGETS,
@@ -30,9 +34,6 @@ import {
   effectiveCargoCapacity,
   effectiveMaxOrbit,
   FREE_OPS_START_MISSIONS_DONE,
-  SCANS_PER_DAY,
-  SCAN_DURATION_MS,
-  SCANS_REQUIRED_TO_MAP,
   TARGET_STRUCTURES,
   findTargetStructure,
   generateFreeOpsMissions,
@@ -50,6 +51,7 @@ import {
   getDailyQuestTemplate,
   todayKey,
   dailyTessCandidates,
+  isReviewableAsteroidCandidate,
   isReviewableTessSubject,
   tessCandidateToExoplanetTarget,
   toTessCandidate,
@@ -58,6 +60,21 @@ import {
   SUN_TEFF_K,
   SELF_DIRECTED_MINING_MISSION_ID,
 } from './data'
+
+describe('rocket-part assets', () => {
+  it('keeps every rocket-part image reference backed by a public asset', () => {
+    for (const part of Object.values(PARTS).flat()) {
+      expect(existsSync(resolve(process.cwd(), 'public', part.img.slice(1))), part.img).toBe(true)
+    }
+  })
+
+  it('gives each named heavy part its own visible sprite', () => {
+    const byId = new Map(Object.values(PARTS).flat().map(part => [part.id, part.img]))
+    expect(byId.get('hull-mk3')).toBe('/parts/hull_mk3_heavy_t3.png')
+    expect(byId.get('hull-hauler')).toBe('/parts/bulk_hauler_t3.png')
+    expect(byId.get('plasma-t3')).toBe('/parts/plasma_drill_t3.png')
+  })
+})
 
 describe('sellCargo', () => {
   it('sums cargo value using mineral prices', () => {
@@ -170,7 +187,7 @@ describe('skill nodes', () => {
     expect(getLaserChargeCap(unlocked)).toBe(BASE_LASER_CHARGES + 2)
     expect(effectiveCargoCapacity({ id: 'cargo-test', name: 'Cargo Test', tier: 1, locked: false, img: '', cargo: 10 }, unlocked)).toBe(12)
     expect(effectiveMaxOrbit({ id: 'drive-test', name: 'Drive Test', tier: 1, locked: false, img: '', max_orbit: 5 }, unlocked)).toBe(6)
-    expect(travelDurationMs({ id: 'target-test', name: 'Target Test', type: 'asteroid', orbit: 4, difficulty: 'L1', brief: '', minerals: [] }, unlocked, 1000)).toBe(3400)
+    expect(travelDurationMs({ id: 'target-test', name: 'Target Test', type: 'asteroid', orbit: 4, difficulty: 'L1', brief: '', minerals: [] }, unlocked, 1000)).toBe(850)
   })
 
   it('lets Cargo Slot I satisfy marginal cargo requirements', () => {
@@ -200,8 +217,10 @@ describe('skill nodes', () => {
 })
 
 describe('ship room layouts', () => {
-  it('slots SR1 rooms into the cutaway container bounds', () => {
-    const layout = getShipInteriorLayout('sr1')
+  it('slots Explorer rooms into the cutaway container bounds', () => {
+    const layout = getShipInteriorLayout('explorer')
+    const legacyLayout = getShipInteriorLayout('sr1')
+    expect(legacyLayout).toBe(layout)
     expect(layout?.containerSrc).toBe('/game/assets/ships/containers/sr1_cutaway.png')
     expect(layout?.slots.map(slot => slot.kind).sort()).toEqual(['booster', 'cockpit', 'crew-module', 'engine', 'lander', 'payload'])
     for (const slot of layout?.slots ?? []) {
@@ -329,6 +348,12 @@ describe('compatibleTargetsFor', () => {
     expect(compatible.every(t => t.type === 'asteroid')).toBe(true)
   })
 
+  it('keeps Jupiter body copy specific and excludes planets from onboarding targets', () => {
+    const m1 = MISSIONS.find(m => m.sequence === 1)!
+    expect(compatibleTargetsFor(m1, TARGETS).some(t => t.id === 'jupiter')).toBe(false)
+    expect(TARGETS.find(t => t.id === 'jupiter')?.brief).not.toContain('moons')
+  })
+
   it('allows planets for M3+ missions that require their minerals', () => {
     // Synthesise a sequence-3 mission without a fixed targetId that requires ice
     const m3: import('./data/types').Mission = {
@@ -366,6 +391,24 @@ describe('compatibleTargetsFor', () => {
     }
     const compatible = compatibleTargetsFor(metalProspect, [...TARGETS, discovered])
     expect(compatible.some(t => t.id === discovered.id)).toBe(true)
+  })
+})
+
+describe('feasibleTargetsFor', () => {
+  it('rejects a mineral match that the currently unlocked propulsion cannot reach', () => {
+    const mission: import('./data/types').Mission = {
+      id: 'unreachable-test', title: 'Unreachable', brief: '', client: 'kepler-materials', targetId: 'jupiter',
+      tag: 'BULK', difficulty: 'L3', locked: false, sequence: 3,
+      requires: { minerals: { hydrogen: 2 }, cargo_min: 2, drill_tier: 1, max_orbit: 6 },
+      payout: { francs: 0, affinity: 0 },
+    }
+    expect(compatibleTargetsFor(mission, TARGETS).some(target => target.id === 'jupiter')).toBe(true)
+    expect(feasibleTargetsFor(mission, TARGETS, PARTS, 0)).toHaveLength(0)
+  })
+
+  it('keeps a compatible target when the player has unlocked the matching drive', () => {
+    const mission = MISSIONS.find(item => item.sequence === 1)!
+    expect(feasibleTargetsFor(mission, TARGETS, PARTS, 1).length).toBeGreaterThan(0)
   })
 })
 
@@ -468,16 +511,28 @@ describe('seed bible v0 catalog', () => {
     }
   })
 
-  it('defines mission-triggered refinery structure seed data with Francs and material costs', () => {
+  it('defines the Refinery structure seed data with Francs and material costs (KES-283)', () => {
     const refinery = STRUCTURES.find(structure => structure.id === 'refinery')
     expect(refinery).toMatchObject({
       kind: 'refinery',
       cost: STRUCTURE_PRICES.refinery,
       costMaterials: { aluminium: 20, copper: 10 },
-      unlockTrigger: 'client-mission-trigger',
+      unlockTrigger: 'free-operations',
     })
-    expect(refinery && structureUnlocked(refinery, { refineryUnlocked: false })).toBe(false)
-    expect(refinery && structureUnlocked(refinery, { refineryUnlocked: true })).toBe(true)
+    // KES-283: a normal Earth Base plot purchase (same unlock shape as the
+    // Surface Silo), not the KES-286 off-world site-commissioned structure
+    // whose unlock condition no mission ever satisfied — that dead trigger
+    // stays retired for good.
+    //
+    // SSL-74: on top of Free Operations, unlock now also requires the
+    // Surface Silo already built and an established mining settlement
+    // (purchased off-world site access) — both ordinary player-controlled
+    // purchases, unlike KES-286's unreachable trigger.
+    expect(refinery && structureUnlocked(refinery, { placed: [] })).toBe(false)
+    expect(refinery && structureUnlocked(refinery, { freeOperations: true })).toBe(false)
+    expect(refinery && structureUnlocked(refinery, { freeOperations: true, placed: ['surface-silo'] })).toBe(false)
+    expect(refinery && structureUnlocked(refinery, { freeOperations: true, placed: ['surface-silo'], hasMiningSettlement: true })).toBe(true)
+    expect(refinery && structureUnlocked(refinery, { placed: ['refinery'] })).toBe(true)
     expect(refinery && canAffordStructure(refinery, {
       francs: STRUCTURE_PRICES.refinery,
       stash: { aluminium: 20, copper: 10 },
@@ -496,7 +551,6 @@ describe('seed bible v0 catalog', () => {
       'freeops-delivery',
       'freeops-mining-survey',
       'freeops-bulk-run',
-      'freeops-station-scan',
       'freeops-rover-landing',
     ]))
     // Generated missions must map to a known template tag
@@ -509,17 +563,7 @@ describe('seed bible v0 catalog', () => {
     })).toBe(true)
   })
 
-  it('defines Sprint 6 survey templates for station scans and starter rover landing', () => {
-    const stationScan = MISSION_TEMPLATES.find(t => t.id === 'freeops-station-scan')
-    expect(stationScan?.survey).toMatchObject({
-      scanRequired: true,
-      scanCount: 3,
-      scanSource: 'station',
-      depositsToMap: 2,
-      revealsMinerals: true,
-      unlocksLanding: true,
-    })
-
+  it('defines the starter-rover survey template', () => {
     const roverLanding = MISSION_TEMPLATES.find(t => t.id === 'freeops-rover-landing')
     expect(roverLanding?.survey).toMatchObject({
       scanRequired: true,
@@ -581,6 +625,36 @@ describe('seed bible v0 catalog', () => {
     expect(TARGETS.some(t => t.id === relay?.deliveryTargetId)).toBe(true)
     expect(CLIENT_SLOTS.some(c => c.id === relay?.client)).toBe(true)
   })
+
+  it('defines settlement, remote-silo, and refinery builds as own-program missions', () => {
+    expect(OWN_PROGRAM_BUILD_MISSIONS.map(mission => mission.id)).toEqual([
+      'program-build-mars-mining-settlement',
+      'program-build-remote-silo',
+      'program-build-refinery',
+    ])
+
+    for (const mission of OWN_PROGRAM_BUILD_MISSIONS) {
+      expect(mission.client).toBeUndefined()
+      expect(mission.payout).toEqual({ francs: 0, affinity: 0 })
+      expect(mission.programReward?.researchXP).toBe(0)
+      expect(mission.construction?.structureKind).toBeTruthy()
+      expect(mission.construction?.requiredMaterials).toEqual(mission.requires.minerals)
+      expect(mission.requires.cargo_min).toBe(
+        Object.values(mission.requires.minerals).reduce((sum, amount) => sum + amount, 0),
+      )
+      expect(mission.requires.max_orbit).toBe(mission.id === 'program-build-mars-mining-settlement' ? 4 : 5)
+      expect(mission.sequence).toBe(FREE_OPS_START_MISSIONS_DONE + 1)
+      expect(MISSIONS).toContainEqual(mission)
+    }
+
+    expect(OWN_PROGRAM_BUILD_MISSIONS[0]).toMatchObject({ targetId: 'mars', construction: { structureKind: 'mining-settlement' } })
+    expect(OWN_PROGRAM_BUILD_MISSIONS[1]).toMatchObject({
+      construction: { structureKind: 'mineral-silo' },
+    })
+    expect(OWN_PROGRAM_BUILD_MISSIONS[2]).toMatchObject({
+      construction: { structureKind: 'refinery', requiredMaterials: { aluminium: 20, copper: 10 } },
+    })
+  })
 })
 
 describe('Construction mission templates and target structure blueprints', () => {
@@ -621,48 +695,23 @@ describe('Construction mission templates and target structure blueprints', () =>
   })
 })
 
-describe('Scanning station constants and structure seed', () => {
-  it('exports expected scan constants', () => {
-    expect(SCANS_PER_DAY).toBe(5)
-    expect(SCAN_DURATION_MS).toBe(10 * 60 * 1000)
-    expect(SCANS_REQUIRED_TO_MAP).toBe(3)
-  })
-
-  it('keeps the Sprint 12 scan-station structure dark in the Sprint 11 build', () => {
-    const scanner = STRUCTURES.find(s => s.id === 'scan-station')
-    expect(scanner).toBeDefined()
-    expect(scanner?.cost).toBe(0)
-    expect(scanner && structureUnlocked(scanner, { freeOperations: false })).toBe(false)
-    expect(scanner && structureUnlocked(scanner, { freeOperations: true })).toBe(false)
-  })
-
-  it('scan-station is not unlocked for launchpad-only context', () => {
-    const scanner = STRUCTURES.find(s => s.id === 'scan-station')
-    expect(scanner && structureUnlocked(scanner, { placed: ['launchpad'] })).toBe(false)
-  })
-
-  it('defines a satellite monitoring station unlocked in Free Operations', () => {
-    const station = STRUCTURES.find(s => s.id === 'satellite-monitoring-station')
-    expect(station).toBeDefined()
-    expect(station?.cost).toBe(0)
-    expect(station && structureUnlocked(station, { freeOperations: false })).toBe(false)
-    expect(station && structureUnlocked(station, { freeOperations: true })).toBe(true)
+describe('Retired scanning-station content', () => {
+  it('does not retain a buildable scanning station', () => {
+    expect(STRUCTURES.some(structure => structure.id === 'scan-station')).toBe(false)
   })
 })
 
 describe('Daily quest framework', () => {
-  it('exports at least one scan, land, and map quest template', () => {
+  it('exports the current land quest template', () => {
     const kinds = DAILY_QUEST_TEMPLATES.map(q => q.kind)
-    expect(kinds).toContain('scan')
     expect(kinds).toContain('land')
-    expect(kinds).toContain('map')
   })
 
   it('getDailyQuestTemplate resolves by id', () => {
-    const q = getDailyQuestTemplate('daily-scan-5-asteroids')
+    const q = getDailyQuestTemplate('daily-land-rover-any')
     expect(q).toBeDefined()
-    expect(q?.count).toBe(5)
-    expect(q?.targetScope).toBe('any-asteroid')
+    expect(q?.count).toBe(1)
+    expect(q?.targetScope).toBe('any')
     expect(getDailyQuestTemplate('nonexistent')).toBeUndefined()
   })
 
@@ -703,6 +752,12 @@ describe('TESS live subject filtering', () => {
     expect(isReviewableTessSubject({ ...baseSubject, tfopwg_disp: 'KP' })).toBe(false)
     expect(isReviewableTessSubject({ ...baseSubject, tfopwg_disp: 'CP' })).toBe(false)
     expect(isReviewableTessSubject({ ...baseSubject, tfopwg_disp: 'FP' })).toBe(false)
+  })
+
+  it('does not re-serve TESS rows after consensus or gold_label settles', () => {
+    expect(isReviewableTessSubject({ ...baseSubject, consensus: 'planet' })).toBe(false)
+    expect(isReviewableTessSubject({ ...baseSubject, gold_label: 'not_planet' })).toBe(false)
+    expect(isReviewableTessSubject({ ...baseSubject, consensus: 'unsure' })).toBe(true)
   })
 
   it('maps live subject records into TESS candidates with lightcurve points', () => {
@@ -788,6 +843,24 @@ describe('TESS live subject filtering', () => {
     const longMeasured = tessCandidateToExoplanetTarget(candidate, 300) // now long-period -> gas-giant
     expect(shortMeasured.archetype).toBe('M')
     expect(longMeasured.archetype).toBe('gas-giant')
+  })
+})
+
+describe('NEOCP live candidate filtering', () => {
+  const baseCandidate = {
+    id: 'pb-neo-1',
+    temp_desig: 'XL0918A',
+    resolved: false,
+    consensus: '',
+    gold_label: '',
+  }
+
+  it('does not re-serve settled asteroid rows', () => {
+    expect(isReviewableAsteroidCandidate(baseCandidate)).toBe(true)
+    expect(isReviewableAsteroidCandidate({ ...baseCandidate, consensus: 'unsure' })).toBe(true)
+    expect(isReviewableAsteroidCandidate({ ...baseCandidate, resolved: true })).toBe(false)
+    expect(isReviewableAsteroidCandidate({ ...baseCandidate, consensus: 'likely_real' })).toBe(false)
+    expect(isReviewableAsteroidCandidate({ ...baseCandidate, gold_label: 'likely_artifact' })).toBe(false)
   })
 })
 

@@ -1,12 +1,26 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
+import { useRouter } from 'next/navigation'
 import type { RecordModel } from 'pocketbase'
 import { pbShared } from '@/lib/pb'
 import { pbLandnam, exchangeLandnamAuth } from '@/lib/pb-landnam'
-import { ensureGuestAuth, hasStoredCredentials, isGuestAccount, upgradeGuestAccount } from '@/lib/guestAuth'
-import { identifyUser } from '@/lib/posthog'
-import { DEFAULT_STATE, mergeRemoteState, type PartialSave } from '@/lib/game-state'
+import { identifyUser, captureGameEvent } from '@/lib/posthog'
+import { DEFAULT_STATE, loadState, mergeRemoteState, type PartialSave } from '@/lib/game-state'
+import { accountGameStateStorageKey, gameStateStorageKey } from '@/lib/game-state-storage'
+import { isResumableMissionScreen } from '@/lib/initial-route'
 import type { GameState } from '@/lib/game-types'
 import type { Toast } from '@/components/ui/ToastLayer'
+import { MISSIONS, TARGETS, travelDurationMs } from '@/lib/data'
+
+// How often to proactively renew the shared-backend session while the tab is
+// open. authStore.isValid is a pure client-side JWT exp check with no server
+// round trip and nothing else in this file ever calls authRefresh(), so a
+// session that's actively being played can still silently expire mid-session
+// and bounce the player back to the sign-in gate even though their stored
+// token is "right there". Refreshing well inside the token's lifetime (not
+// only once it's already stale) keeps a genuinely active session alive
+// indefinitely; a token that fails to refresh has actually lapsed (device
+// offline for real, or truly abandoned) and the gate is the correct outcome.
+const SESSION_REFRESH_INTERVAL_MS = 4 * 60 * 1000
 
 function responseStatus(err: unknown): number | null {
   if (typeof err === 'object' && err && 'status' in err && typeof err.status === 'number') return err.status
@@ -37,6 +51,10 @@ function authErrorMessage(err: unknown, fallback: string): string {
   return status ? `${fallback} (${status})` : fallback
 }
 
+function isUniqueConstraintError(err: unknown): boolean {
+  return /\bunique\b/i.test(authErrorMessage(err, ''))
+}
+
 function storedSharedAuth(): { token?: string; record: RecordModel | null } | null {
   if (typeof window === 'undefined') return null
   try {
@@ -58,29 +76,41 @@ interface AuthSyncOpts {
   addToast: (message: string, kind?: Toast['kind']) => void
   normalizeAndRepair: (partial: Partial<GameState>) => GameState
   storageKey: string
+  beforeReset: () => void
 }
 
 export function useAuthSync({
   state, setState, stateRef, hydrated, isPreview,
   addToast, normalizeAndRepair, storageKey,
+  beforeReset,
 }: AuthSyncOpts) {
-  const [authUserId, setAuthUserId] = useState<string | null>(pbShared.authStore.record?.id ?? null)
+  const router = useRouter()
+  // KES-151: must start `null` on both server and client, even though a
+  // signed-in device already has `pbShared.authStore.record` populated
+  // synchronously by the time this module evaluates on the client (the
+  // PocketBase SDK reads localStorage at construction, before React ever
+  // renders). Seeding this from the authStore directly made the very first
+  // client render diverge from the server-rendered (always-anonymous) HTML —
+  // a full-tree hydration mismatch (React error #418). The hydration effect
+  // below already re-derives the real value from `pbShared.authStore.record`
+  // once `hydrated` flips true, exactly like `state` defers to `loadState()`.
+  const [authUserId, setAuthUserId] = useState<string | null>(null)
 
   // Pre-emptive warmup ping — Fly machines stop when idle. Firing this early
   // means the machine is live by the time auth + state-load requests arrive.
+  // Both backends need this: identity/auth restore below hits pbShared
+  // first (KES-151), then the shared→Landnam token exchange hits pbLandnam
+  // — warming only one left the other's cold start unmasked.
   useEffect(() => {
     if (isPreview) return
+    pbShared.health.check().catch(() => {})
     pbLandnam.health.check().catch(() => {})
   }, [isPreview])
   const [backendReady, setBackendReady] = useState(false)
-  const [upgradePromptOpen, setUpgradePromptOpen] = useState(false)
   const [awaitingRemoteState, setAwaitingRemoteState] = useState(false)
   const [authGateOpen, setAuthGateOpen] = useState(false)
   const [authGateError, setAuthGateError] = useState<string | null>(null)
-  // Set once requestOTP() succeeds; its presence is what switches the gate's
-  // quick-continue step from "enter email" to "enter code". Cleared on gate
-  // close/reopen so a stale otpId from a previous email can't be submitted.
-  const [authGateOtpId, setAuthGateOtpId] = useState<string | null>(null)
+  const [resetting, setResetting] = useState(false)
   // The gate must not decide that a returning user is anonymous until the
   // persisted PocketBase auth store has had a chance to restore. Keeping this
   // as an explicit phase prevents the sign-in sheet flashing/reopening during
@@ -102,18 +132,26 @@ export function useAuthSync({
 
   const backendRecordId = useRef<string | null>(null)
   const backendLoadedFor = useRef<string | null>(null)
+  // Kept in sync with authUserId's deferred-to-mount initialization above.
+  const knownAuthRecordId = useRef<string | null>(null)
   const landnamAuthAttemptedFor = useRef<string | null>(null)
   const landnamRetryDelay = useRef(60_000)
   const landnamRetryInFlight = useRef(false)
   const authGateDismissed = useRef(false)
+  const skipNextRemotePersist = useRef(false)
   const lastPersistedMissionsDone = useRef<number | null>(null)
   const lastPersistedTutorial = useRef<boolean | null>(null)
+  const remoteSaveDirty = useRef(false)
+  const resettingRef = useRef(false)
+  resettingRef.current = resetting
+  const localStateKey = gameStateStorageKey(storageKey, authUserId)
 
   useEffect(() => {
     if (!hydrated || isPreview) {
       if (isPreview) setSharedAuthRestoreSettled(true)
       return
     }
+    let active = true
     const stored = storedSharedAuth()
     if (!pbShared.authStore.record && stored?.token && stored.record) {
       pbShared.authStore.save(stored.token, stored.record)
@@ -121,12 +159,66 @@ export function useAuthSync({
     const record = pbShared.authStore.record ?? stored?.record
     if (!record?.id) {
       pbLandnam.authStore.clear()
+      setSharedAuthRestoreSettled(true)
+      return
     }
-    if (record?.id && record.id !== authUserId) {
+    if (record.id !== authUserId) {
       setAuthUserId(record.id)
     }
-    setSharedAuthRestoreSettled(true)
+    // A token restored from storage may already be past its client-decoded
+    // exp (or close enough that it will lapse before the periodic refresh
+    // below gets a chance to run) — give it one immediate renewal attempt
+    // before letting the gate-open effect decide whether this is a returning,
+    // signed-in player. Only settle (and thus only risk opening the gate)
+    // once this has resolved either way.
+    pbShared.collection('users').authRefresh()
+      .catch((err: unknown) => {
+        // A revoked or otherwise server-invalid shared token cannot exchange
+        // into Landnam auth. Keeping the stale record around made the Hub look
+        // signed in while its background requests repeatedly emitted 401s.
+        if (responseStatus(err) === 401) {
+          pbShared.authStore.clear()
+          pbLandnam.authStore.clear()
+          setAuthUserId(null)
+        }
+      })
+      .finally(() => { if (active) setSharedAuthRestoreSettled(true) })
+    return () => { active = false }
   }, [authUserId, hydrated, isPreview])
+
+  // Keep the shared-backend session alive for the whole time the player is
+  // actually here — without this, isValid's client-side exp check inevitably
+  // trips mid-session (see SESSION_REFRESH_INTERVAL_MS above) and the player
+  // gets bounced to "Welcome Back" despite a token sitting unused in
+  // localStorage the entire time. Runs on a timer plus immediately whenever
+  // the tab regains focus (the case most likely to find a token that expired
+  // while the tab was backgrounded/asleep).
+  useEffect(() => {
+    if (isPreview || !authUserId) return
+
+    let active = true
+    async function refresh() {
+      if (!active || !pbShared.authStore.token) return
+      try {
+        await pbShared.collection('users').authRefresh()
+      } catch {
+        // Token has genuinely lapsed (or we're offline) — the gate-open
+        // effect (driven by authStore.isValid) is the correct fallback here.
+      }
+    }
+
+    const timer = window.setInterval(refresh, SESSION_REFRESH_INTERVAL_MS)
+    function onVisibilityChange() {
+      if (document.visibilityState === 'visible') refresh()
+    }
+    document.addEventListener('visibilitychange', onVisibilityChange)
+
+    return () => {
+      active = false
+      window.clearInterval(timer)
+      document.removeEventListener('visibilitychange', onVisibilityChange)
+    }
+  }, [authUserId, isPreview])
 
   const saveRemoteState = useCallback(async (userId: string, nextState: GameState) => {
     const payload = { user: userId, state: nextState, missions_done: nextState.player.missionsDone }
@@ -158,8 +250,20 @@ export function useAuthSync({
     }
   }, [])
 
-  // Track auth identity changes
+  // Track auth identity changes. authRefresh() (called by the session-keepalive
+  // effect above) also routes through authStore.save() and therefore fires
+  // this same onChange on every renewal — for the same record id, that's not
+  // an identity change, just a new token, so it must not reset the backend/
+  // landnam-sync state machinery on every refresh tick (that would repeatedly
+  // re-trigger the game_states load and landnam-auth exchange effects, and
+  // flash "NOT SYNCED" every few minutes, for no actual change).
   useEffect(() => pbShared.authStore.onChange((_token, record) => {
+    const previousUserId = knownAuthRecordId.current
+    if (record?.id && record.id === knownAuthRecordId.current) {
+      setAuthUserId(record.id)
+      return
+    }
+    knownAuthRecordId.current = record?.id ?? null
     backendRecordId.current = null
     backendLoadedFor.current = null
     landnamAuthAttemptedFor.current = null
@@ -167,6 +271,13 @@ export function useAuthSync({
     setBackendReady(false)
     setLandnamAuthAttempted(false)
     setLandnamSynced(false)
+    if (record?.id && record.id !== previousUserId) {
+      // Sign-in/account creation may happen after the provider hydrated the
+      // guest/legacy slot. Never let that state become the new account's
+      // first save while remote sync is warming up (KES-324).
+      localStorage.removeItem(storageKey)
+      setState(loadState(accountGameStateStorageKey(storageKey, record.id)))
+    }
     if (!record) pbLandnam.authStore.clear()
     setAuthUserId(record?.id ?? null)
     if (record?.id) identifyUser(record.id, record.email ? { email: record.email } : undefined)
@@ -206,15 +317,23 @@ export function useAuthSync({
       setLandnamSynced(success)
       if (!success) {
         addToast('Offline mode — progress saved on this device only', 'warn')
+        // This is the exhausted-retry-ladder path: exchangeLandnamAuth kept
+        // failing (Fly cold start taking longer than ~9s, or a real outage)
+        // and the failure is swallowed into a toast + local-only fallback
+        // rather than thrown, so capture_exceptions never sees it.
+        captureGameEvent('sync_retry_failed', {
+          sync_kind: 'landnam_auth_exchange',
+          attempts: delays.length + 1,
+        })
       }
     }
 
     function attempt(delayIndex: number) {
       exchangeLandnamAuth(sharedToken)
         .then(({ token, record }) => {
-          if (!active) return
-          pbLandnam.authStore.save(token, record)
-          finish(true)
+        if (!active) return
+        pbLandnam.authStore.save(token, record)
+        finish(true)
         })
         .catch(() => {
           if (!active) return
@@ -228,7 +347,7 @@ export function useAuthSync({
     attempt(0)
 
     return () => { active = false }
-  }, [addToast, authUserId, isPreview])
+  }, [addToast, authUserId, isPreview, saveRemoteState, stateRef, storageKey])
 
   // Background re-sync: the initial ladder above gives up after ~9s of
   // retries (covers a Fly cold start, not much more). Without this, a
@@ -285,63 +404,93 @@ export function useAuthSync({
     }
   }, [authUserId, isPreview, landnamAuthAttempted, landnamSynced])
 
-  // Returning full-account user on a new device: no local state but an active
-  // session can hydrate from the backend. Stored guest credentials should not
-  // block local play while auth warms or falls back offline.
+  // Returning signed-in user on a new device: no local state but an active
+  // PocketBase session can hydrate from the backend.
   useEffect(() => {
     if (!hydrated || isPreview) return
-    const noLocalState = !localStorage.getItem(storageKey)
+    const noLocalState = !localStorage.getItem(localStateKey)
     if (noLocalState && pbShared.authStore.isValid) setAwaitingRemoteState(true)
-  }, [hydrated, isPreview, storageKey])
+  }, [hydrated, isPreview, localStateKey])
 
   // Clear awaitingRemoteState once backend load completes
   useEffect(() => {
     if (backendReady) setAwaitingRemoteState(false)
   }, [backendReady])
 
-  // Show auth gate for brand-new users (no stored credentials, no active session)
+  // Accounts are required. A brand-new user without a persisted PocketBase
+  // session must authenticate before gameplay becomes reachable.
   useEffect(() => {
     if (!hydrated || isPreview || !sharedAuthRestoreSettled) return
     if (authGateDismissed.current) return
-    if (pbShared.authStore.isValid || hasStoredCredentials()) return
+    if (pbShared.authStore.isValid) return
     setAuthGateOpen(true)
   }, [hydrated, isPreview, sharedAuthRestoreSettled])
 
-  // If background guest/session restoration succeeds after the gate was
+  // If session restoration succeeds after the gate was
   // opened, close it. This can happen on route bridges and fast local loads
   // where the "brand-new user" check wins the race by a render.
   useEffect(() => {
     if (authUserId) setAuthGateOpen(false)
   }, [authUserId])
 
-  // Restore returning guest session
+  // `landnam-account-credentials` was used by a retired email-only flow to
+  // retain a plaintext password. Remove it on sight; PocketBase's persisted
+  // auth token is the sole returning-session mechanism.
   useEffect(() => {
     if (isPreview) return
-    if (pbShared.authStore.isValid) return
-    if (!hasStoredCredentials()) return
-    ensureGuestAuth().catch(() => {
-      addToast('Offline mode — progress saved on this device only', 'warn')
-      setAwaitingRemoteState(false)
-    })
-  }, [addToast, isPreview])
-
-  // Mandatory email prompt for legacy anonymous guest accounts (created
-  // before KES-97 retired guest signup). Unlike the old post-first-mission,
-  // snoozable nudge, this is not dismissible and re-opens every session
-  // until the account has a real email — Liam has no way to reach a player
-  // stuck on an @landnam.guest address otherwise.
-  useEffect(() => {
-    if (!hydrated || isPreview || !authUserId) return
-    if (!isGuestAccount()) return
-    setUpgradePromptOpen(true)
-  }, [hydrated, isPreview, authUserId])
+    localStorage.removeItem('landnam-account-credentials')
+  }, [isPreview])
 
   // Load remote game state on auth
   useEffect(() => {
-    if (!hydrated || isPreview || !authUserId || !landnamAuthAttempted || backendLoadedFor.current === authUserId) return
+    if (!hydrated || isPreview || resetting || !authUserId || !landnamAuthAttempted || backendLoadedFor.current === authUserId) return
     let active = true
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    function restoreInProgressRun() {
+      // `mission_runs` is the lifecycle receipt written at launch. Older
+      // game-state rows can lose activeMission during an equal-stage merge,
+      // so use the receipt to repair the resumable marker before the player
+      // sees a false "Launch Ready" state on Earth Base.
+      pbLandnam.collection('mission_runs')
+        .getFirstListItem(`user = "${authUserId}" && status = "in_progress"`, { sort: '-launched_at' })
+        .then(run => {
+          const missionId = typeof run.mission_id === 'string' ? run.mission_id : null
+          const targetId = typeof run.target_id === 'string' ? run.target_id : null
+          if (!missionId || !targetId) return
+          const mission = MISSIONS.find(candidate => candidate.id === missionId)
+          const target = TARGETS.find(candidate => candidate.id === targetId)
+          const launchedAt = typeof run.launched_at === 'string' ? new Date(run.launched_at).getTime() : NaN
+          const phase = ['transit', 'landing', 'mining', 'delivery', 'debrief'].includes(run.phase)
+            ? run.phase as NonNullable<GameState['player']['missionPhase']>
+            : 'transit'
+          setState(current => {
+            if (current.player.activeMission) return current
+            const transitStartedAt = Number.isFinite(launchedAt) ? launchedAt : null
+            const arrivalAt = phase === 'transit' && target && transitStartedAt !== null && current.player.missionsDone >= 3
+              ? transitStartedAt + travelDurationMs(target, current.player.unlockedSkillNodes ?? [], 42 * 1000)
+              : null
+            const label = `${mission?.title ?? 'Active mission'} → ${target?.name ?? targetId}`
+            return normalizeAndRepair({
+              ...current,
+              missionId,
+              targetId,
+              player: {
+                ...current.player,
+                activeMission: { id: missionId, label },
+                missionRunId: run.id,
+                missionPhase: phase,
+                pendingLaunch: false,
+                pendingRocketId: undefined,
+                transitStartedAt,
+                arrivalAt,
+              },
+            })
+          })
+        })
+        .catch(() => {})
+    }
+
     function applyRecord(record: any) {
       backendRecordId.current = record.id
       backendLoadedFor.current = authUserId!
@@ -356,6 +505,7 @@ export function useAuthSync({
       const remoteState: PartialSave = { ...(record.state as PartialSave), updatedAt: remoteUpdatedAt }
       setState(current => mergeRemoteState(current, remoteState))
       setBackendReady(true)
+      restoreInProgressRun()
     }
 
     function handleLoadFailure(err: unknown) {
@@ -367,7 +517,7 @@ export function useAuthSync({
         // redirects or test remounts.
         backendLoadedFor.current = authUserId!
         setBackendReady(true)
-        if (localStorage.getItem(storageKey)) {
+        if (localStorage.getItem(localStateKey)) {
           saveRemoteState(authUserId!, stateRef.current).catch(() => {})
         }
         return
@@ -375,13 +525,20 @@ export function useAuthSync({
       // Network / availability error (Fly cold-start, timeout, etc.)
       // Only unblock persisting if the device already has local state — otherwise we
       // risk overwriting a real backend record with a blank slate from a new device.
-      const hasLocalState = !!localStorage.getItem(storageKey)
+      const hasLocalState = !!localStorage.getItem(localStateKey)
       if (hasLocalState) {
         backendLoadedFor.current = authUserId!
         setBackendReady(true)
       }
       // Devices with no local state remain in awaitingRemoteState so the user
       // sees a loading indicator rather than playing from empty state.
+      // The retry ladder above exhausts silently either way — capture it so
+      // "stuck on loading indicator" / "started from blank state" reports can
+      // be correlated with real backend unavailability instead of guessed at.
+      captureGameEvent('sync_retry_failed', {
+        sync_kind: 'game_state_load',
+        had_local_state: hasLocalState,
+      })
     }
 
     pbLandnam.collection('game_states')
@@ -419,7 +576,7 @@ export function useAuthSync({
       })
 
     return () => { active = false }
-  }, [authUserId, hydrated, isPreview, landnamAuthAttempted, setState, normalizeAndRepair, saveRemoteState, stateRef, storageKey])
+  }, [authUserId, hydrated, isPreview, resetting, landnamAuthAttempted, setState, normalizeAndRepair, saveRemoteState, stateRef, localStateKey])
 
   // Persist state to backend. Debounced 400ms for ordinary state churn, but
   // flushed immediately (0ms) whenever missionsDone or tutorial changes — an
@@ -429,44 +586,91 @@ export function useAuthSync({
   // monotonic guard in applyRecord above, which is the second line of
   // defense if this flush is ever missed, e.g. offline at the exact moment).
   useEffect(() => {
-    if (!hydrated || isPreview || !authUserId || !backendReady || backendLoadedFor.current !== authUserId) return
+    if (!hydrated || isPreview || resetting || !authUserId || !backendReady || backendLoadedFor.current !== authUserId) return
+    if (skipNextRemotePersist.current) {
+      skipNextRemotePersist.current = false
+      return
+    }
     const isProgressionTransition = lastPersistedMissionsDone.current !== null
       && (lastPersistedMissionsDone.current !== state.player.missionsDone || lastPersistedTutorial.current !== state.tutorial)
     const delay = isProgressionTransition ? 0 : 400
     const timer = window.setTimeout(async () => {
       try {
         await saveRemoteState(authUserId, state)
+        remoteSaveDirty.current = false
         lastPersistedMissionsDone.current = state.player.missionsDone
         lastPersistedTutorial.current = state.tutorial
       } catch {
         // Local storage remains the offline source of truth until the data link recovers.
+        remoteSaveDirty.current = true
       }
     }, delay)
     return () => window.clearTimeout(timer)
-  }, [authUserId, hydrated, isPreview, backendReady, state, saveRemoteState])
+  }, [authUserId, hydrated, isPreview, resetting, backendReady, state, saveRemoteState])
 
-  const upgradeAccount = useCallback(async (email: string, password: string) => {
-    const { emailChangeRequested } = await upgradeGuestAccount(email, password)
-    setUpgradePromptOpen(false)
-    addToast(
-      emailChangeRequested
-        ? 'Account saved — check your email to confirm your new address'
-        : 'Account saved — your new password is active now',
-      'ok',
-    )
-  }, [addToast])
+  // SSL-321: Safari has no Background Sync, and a failed game_states save used
+  // to wait for the next state change. Retry whenever the app resumes or the
+  // network returns (online / visible / pageshow), and try once more as the
+  // page is hidden, since iOS may never run another tick.
+  useEffect(() => {
+    if (isPreview || !authUserId || !backendReady || backendLoadedFor.current !== authUserId) return
+    const userId = authUserId
+    function retrySave() {
+      if (!remoteSaveDirty.current || navigator.onLine === false) return
+      saveRemoteState(userId, stateRef.current)
+        .then(() => { remoteSaveDirty.current = false })
+        .catch(() => { /* stays dirty for the next trigger */ })
+    }
+    function onVisibility() {
+      if (document.visibilityState === 'visible') retrySave()
+      else if (!resettingRef.current) {
+        // Last chance before iOS suspends the page: send the latest state now.
+        saveRemoteState(userId, stateRef.current)
+          .then(() => { remoteSaveDirty.current = false })
+          .catch(() => { remoteSaveDirty.current = true })
+      }
+    }
+    window.addEventListener('online', retrySave)
+    window.addEventListener('pageshow', retrySave)
+    document.addEventListener('visibilitychange', onVisibility)
+    return () => {
+      window.removeEventListener('online', retrySave)
+      window.removeEventListener('pageshow', retrySave)
+      document.removeEventListener('visibilitychange', onVisibility)
+    }
+  }, [authUserId, backendReady, isPreview, saveRemoteState, stateRef])
+
+  // Signing in must always land the player on Earth Base, never wherever the
+  // auth gate happened to be sitting on top of (e.g. a deep-linked or
+  // bookmarked /game/missions). The one exception is a genuinely resumable
+  // in-flight mission, matching returningScreen's rule for the root /game
+  // bridge — see isResumableMissionScreen.
+  const landOnHubUnlessResumable = useCallback(() => {
+    const current = stateRef.current
+    if (isResumableMissionScreen(current.screen, current.missionId, current.targetId)) return
+    // Auth can complete while the route page is still rendering the old
+    // deep-linked screen. Replace the URL here as well as the game state so
+    // that the route's URL -> state effect cannot put the player straight
+    // back onto Contracts after the gate closes (especially on mobile).
+    if (current.screen !== 'hub') setState(s => ({ ...s, screen: 'hub' }))
+    router.replace('/game/hub')
+  }, [router, setState, stateRef])
 
   const signInFromGate = useCallback(async (email: string, password: string) => {
     setAuthGateError(null)
     try {
       await pbShared.collection('users').authWithPassword(email, password)
       setAuthGateOpen(false)
+      landOnHubUnlessResumable()
     } catch (e) {
-      const msg = authErrorMessage(e, 'Sign in failed')
+      const raw = authErrorMessage(e, 'Sign in failed')
+      const msg = /^failed to authenticate\.?$/i.test(raw)
+        ? 'Sign in failed. Check your email and password.'
+        : raw
       setAuthGateError(msg)
       throw new Error(msg)
     }
-  }, [])
+  }, [landOnHubUnlessResumable])
 
   const createAccountFromGate = useCallback(async (email: string, password: string) => {
     setAuthGateError(null)
@@ -476,6 +680,7 @@ export function useAuthSync({
       // Brand-new account: discard any local guest/dev state so the player
       // starts from scratch with the intro tutorial.
       localStorage.removeItem(storageKey)
+      localStorage.removeItem(accountGameStateStorageKey(storageKey, authResult.record.id))
       setState(DEFAULT_STATE)
       // Exchange for a native Landnam auth token before touching game_states —
       // ownership rules require @request.auth to be populated (see
@@ -493,56 +698,20 @@ export function useAuthSync({
       setBackendReady(true)
       setAuthGateOpen(false)
     } catch (e) {
-      const msg = authErrorMessage(e, 'Account creation failed')
+      const msg = isUniqueConstraintError(e)
+        ? 'An account already exists for this email. Use Sign In.'
+        : authErrorMessage(e, 'Account creation failed')
       setAuthGateError(msg)
       throw new Error(msg)
     }
   }, [saveRemoteState, setState, storageKey])
 
-  // Replaces the old anonymous "continue as guest" skip (KES-97): the gate
-  // now always requires at least an email before play continues, even on the
-  // lightweight path — no account with no way to contact the player.
-  //
-  // KES-107: this is now a two-step OTP flow (requestOTP then authWithOTP)
-  // instead of always creating a brand-new account, so the same "just an
-  // email" input works for both first-time signup and returning login on a
-  // new device. The shared backend's OnRecordRequestOTPRequest("users") hook
-  // (main.go) auto-creates the record server-side when the email doesn't
-  // match an existing account yet, so requestOTP() below succeeds either way
-  // — the client never needs to know in advance which case it is.
-  const continueWithEmail = useCallback(async (email: string) => {
-    setAuthGateError(null)
-    try {
-      const { otpId } = await pbShared.collection('users').requestOTP(email)
-      setAuthGateOtpId(otpId)
-    } catch (e) {
-      const msg = authErrorMessage(e, 'Could not continue — check your email and try again')
-      setAuthGateError(msg)
-      throw new Error(msg)
-    }
-  }, [])
-
-  const verifyOtp = useCallback(async (code: string) => {
-    if (!authGateOtpId) {
-      const msg = 'Request a new code and try again'
-      setAuthGateError(msg)
-      throw new Error(msg)
-    }
-    setAuthGateError(null)
-    try {
-      await pbShared.collection('users').authWithOTP(authGateOtpId, code)
-      setAuthGateOtpId(null)
-      authGateDismissed.current = true
-      setAuthGateOpen(false)
-    } catch (e) {
-      const msg = authErrorMessage(e, 'Incorrect or expired code — try again')
-      setAuthGateError(msg)
-      throw new Error(msg)
-    }
-  }, [authGateOtpId])
-
   const resetGame = useCallback(async (defaultState: GameState) => {
+    beforeReset()
+    skipNextRemotePersist.current = true
+    setResetting(true)
     setState(defaultState)
+    localStorage.removeItem(localStateKey)
     localStorage.removeItem(storageKey)
 
     // Stand the remote-sync machinery back down before touching the record.
@@ -557,11 +726,21 @@ export function useAuthSync({
     lastPersistedMissionsDone.current = null
     lastPersistedTutorial.current = null
 
-    const recordId = backendRecordId.current
+    let recordId = backendRecordId.current
     backendRecordId.current = null
-    if (!authUserId || !recordId) return
+    if (!authUserId) {
+      setResetting(false)
+      return
+    }
 
     try {
+      // The load can still be in flight when the player confirms reset. Find
+      // the record by owner as a fallback instead of silently leaving the
+      // server save behind when backendRecordId has not been populated yet.
+      if (!recordId) {
+        const existing = await pbLandnam.collection('game_states').getFirstListItem(`user = "${authUserId}"`)
+        recordId = existing.id
+      }
       await pbLandnam.collection('game_states').delete(recordId)
     } catch (err) {
       // Previously `.catch(() => {})`. A silently-swallowed failure here is
@@ -570,8 +749,10 @@ export function useAuthSync({
       if (responseStatus(err) !== 404) {
         addToast('Reset cleared this device, but your saved data on the server could not be deleted', 'warn')
       }
+    } finally {
+      setResetting(false)
     }
-  }, [addToast, authUserId, setState, storageKey])
+  }, [addToast, authUserId, beforeReset, setState, localStateKey, storageKey])
 
   const signOut = useCallback(async () => {
     const signedOutUserId = authUserId
@@ -590,12 +771,12 @@ export function useAuthSync({
 
     pbShared.authStore.clear()
     pbLandnam.authStore.clear()
+    localStorage.removeItem('landnam-account-credentials')
     localStorage.removeItem(storageKey)
+    if (signedOutUserId) localStorage.removeItem(accountGameStateStorageKey(storageKey, signedOutUserId))
     setState(DEFAULT_STATE)
     setAwaitingRemoteState(false)
-    setUpgradePromptOpen(false)
     setAuthGateError(null)
-    setAuthGateOtpId(null)
     authGateDismissed.current = false
     if (!isPreview) setAuthGateOpen(true)
   }, [addToast, authUserId, backendReady, isPreview, saveRemoteState, setState, stateRef, storageKey])
@@ -603,10 +784,8 @@ export function useAuthSync({
   return {
     authUserId, backendReady,
     landnamSynced,
-    upgradePromptOpen, upgradeAccount,
     awaitingRemoteState,
-    authGateOpen, authGateError, signInFromGate, createAccountFromGate, continueWithEmail,
-    authGateOtpId, verifyOtp,
+    authGateOpen, authGateError, signInFromGate, createAccountFromGate,
     resetGame, signOut,
   }
 }

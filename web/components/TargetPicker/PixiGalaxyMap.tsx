@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { capDpr } from '@/lib/engine/pixiDisplay'
 import { Application, Container, Graphics, Text } from 'pixi.js'
 import type { Mission, Target, TargetArchetype } from '@/lib/data'
 import { RARE_TIER_MIN_ORBIT, EXOTIC_TIER_MIN_ORBIT } from '@/lib/data'
@@ -360,8 +361,8 @@ export default function PixiGalaxyMap(props: PixiGalaxyMapProps) {
 
     ;(async () => {
       try {
-        const dpr = window.devicePixelRatio || 1
-        await app.init({ canvas, width: w, height: h, background: 0x03060a, antialias: true, autoDensity: true, preserveDrawingBuffer: true, resolution: dpr })
+        const dpr = capDpr()
+        await app.init({ canvas, width: w, height: h, background: 0x03060a, antialias: true, autoDensity: true, resolution: dpr })
         if (destroyed) { try { app.destroy() } catch (_) { /* pixi v8 */ } canvas.remove(); return }
 
         app.stage.addChild(bgLayer, orbitLayer, bodyLayer)

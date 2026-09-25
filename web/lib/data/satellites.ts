@@ -2,9 +2,7 @@
 //
 // Unlike ROCKET_MODELS, satellites are not purchased per-flight and don't
 // unlock on `missionsRequired` — the only one that exists today, the Transit
-// Telescope, is gated on the Satellite Monitoring Station structure
-// (`player.satelliteMonitoringBuilt`) and launched exactly once
-// (`player.transitSatelliteLaunchedAt`). See
+// Telescope is launched exactly once (`player.transitSatelliteLaunchedAt`). See
 // `lib/runtimeCatalog.ts` (TRANSIT_TELESCOPE_MISSION_ID) for the mission that
 // actually flies it.
 //
@@ -23,6 +21,6 @@ export const SATELLITE_MODELS: SatelliteModel[] = [
   {
     id: 'transit-telescope',
     name: 'Transit Telescope',
-    unlockHint: 'Build Satellite Monitoring Station',
+    unlockHint: 'Reach Free Operations',
   },
 ]

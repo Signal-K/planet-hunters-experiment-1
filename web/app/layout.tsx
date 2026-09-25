@@ -1,12 +1,24 @@
-import type { Metadata } from 'next'
+import type { Metadata, Viewport } from 'next'
 import Script from 'next/script'
-import { Analytics } from '@vercel/analytics/next'
+import { PRODUCT_DESCRIPTION, PRODUCT_NAME } from '@/lib/brand'
 import './globals.css'
 
 export const metadata: Metadata = {
-  title: 'Landnam — Space Mining',
-  description: 'Portrait-canvas space mining browser game',
+  title: PRODUCT_NAME,
+  description: PRODUCT_DESCRIPTION,
   manifest: '/manifest.webmanifest',
+  // SSL-322: iOS only honours installed-app chrome via these apple- tags.
+  appleWebApp: { capable: true, title: PRODUCT_NAME, statusBarStyle: 'black' },
+  formatDetection: { telephone: false },
+}
+
+// viewport-fit=cover exposes env(safe-area-inset-*) on notched iPhones; the
+// body pads itself with those insets (globals.css).
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  viewportFit: 'cover',
+  themeColor: '#030912',
 }
 
 export default function RootLayout({
@@ -17,12 +29,17 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
-        <meta name="theme-color" content="#030912" />
         <link rel="apple-touch-icon" href="/icons/icon-192.png" />
       </head>
       <body>
         {children}
-        <Analytics />
+        <Script id="pwa-standalone" strategy="afterInteractive">{`
+          // body[data-pwa="standalone"] drives the installed-app layout rules.
+          // iOS reports installs via navigator.standalone, others via display-mode.
+          if (window.navigator.standalone === true || window.matchMedia('(display-mode: standalone)').matches) {
+            document.body.setAttribute('data-pwa', 'standalone')
+          }
+        `}</Script>
         {process.env.NODE_ENV === 'production' ? (
           <Script id="sw-register" strategy="afterInteractive">{`
             if ('serviceWorker' in navigator) {

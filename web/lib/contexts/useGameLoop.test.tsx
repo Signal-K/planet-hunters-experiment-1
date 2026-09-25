@@ -1,0 +1,245 @@
+// @vitest-environment jsdom
+
+import React, { act, useEffect, useRef, useState } from 'react'
+import { createRoot } from 'react-dom/client'
+import { describe, expect, it, vi } from 'vitest'
+
+import { useGameLoop } from './useGameLoop'
+import { STATIC_CATALOG } from '@/lib/catalog'
+import { buildRuntimeCatalog } from '@/lib/runtimeCatalog'
+import { DEFAULT_STATE } from '@/lib/game-state'
+import type { GameState } from '@/lib/game-types'
+
+interface LoopHandle {
+  state: GameState
+  onPickMission: (id: string) => void
+  onPurchaseRocket: (id: string) => void
+  onMoveStagedRocket: (id: string) => void
+  onTransferToLaunchpad: () => void
+  onLaunch: () => void
+  resumeMissionRun: (key: string) => void
+}
+
+function LoopHarness({ initial, onReady }: { initial: GameState; onReady: (handle: LoopHandle) => void }) {
+  const [state, setState] = useState(initial)
+  const stateRef = useRef(state)
+  useEffect(() => { stateRef.current = state }, [state])
+  const catalog = buildRuntimeCatalog({
+    catalog: STATIC_CATALOG,
+    player: state.player,
+    missionsDone: state.player.missionsDone,
+    freeOperations: state.player.freeOperations,
+  })
+  const loop = useGameLoop({ stateRef, setState, catalog, addToast: vi.fn() })
+  useEffect(() => {
+    onReady({ state, onPickMission: loop.onPickMission, onPurchaseRocket: loop.onPurchaseRocket, onMoveStagedRocket: loop.onMoveStagedRocket, onTransferToLaunchpad: loop.onTransferToLaunchpad, onLaunch: loop.onLaunch, resumeMissionRun: loop.resumeMissionRun })
+  }, [loop.onLaunch, loop.onMoveStagedRocket, loop.onPickMission, loop.onPurchaseRocket, loop.onTransferToLaunchpad, loop.resumeMissionRun, onReady, state])
+  return null
+}
+
+describe('useGameLoop concurrent mission runs', () => {
+  it('reassigns a compatible staged vehicle without another purchase, then requires launchpad transfer', async () => {
+    const stagedState: GameState = {
+      ...DEFAULT_STATE,
+      screen: 'missions',
+      rocket: { chassis: 'hull-mk2', propulsion: 'fusion-b2', drill: 'laser-t2' },
+      player: {
+        ...DEFAULT_STATE.player,
+        freeOperations: true,
+        missionsDone: 3,
+        pendingLaunch: true,
+        pendingRocketId: 'prospector',
+        pendingRocketLocation: 'hangar',
+        stagedRockets: [{ id: 'prospector-old', rocketId: 'prospector', rocket: { chassis: 'hull-mk2', propulsion: 'fusion-b2', drill: 'laser-t2' }, location: 'hangar', source: 'company', missionId: 'baseline-extraction', targetId: 'eros' }],
+      },
+    }
+    const host = document.createElement('div')
+    const root = createRoot(host)
+    const handleRef: { current: LoopHandle | null } = { current: null }
+    const onReady = (next: LoopHandle) => { handleRef.current = next }
+    ;(globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT: boolean }).IS_REACT_ACT_ENVIRONMENT = true
+
+    await act(async () => { root.render(<LoopHarness initial={stagedState} onReady={onReady} />) })
+    await act(async () => { handleRef.current?.onPickMission('lnm_m3_relay_bennu_vesta') })
+    expect(handleRef.current?.state.screen).toBe('rocket-buy')
+    await act(async () => { handleRef.current?.onMoveStagedRocket('prospector-old') })
+    expect(handleRef.current?.state.screen).toBe('fab')
+    expect(handleRef.current?.state.player.pendingRocketId).toBe('prospector')
+    expect(handleRef.current?.state.player.pendingRocketLocation).toBe('hangar')
+    expect(handleRef.current?.state.player.francs).toBe(stagedState.player.francs)
+
+    await act(async () => { handleRef.current?.onTransferToLaunchpad() })
+    expect(handleRef.current?.state.player.pendingRocketLocation).toBe('launchpad')
+    await act(async () => root.unmount())
+  })
+
+  it('keeps an incompatible staged vehicle in the Hangar instead of replacing it', async () => {
+    const stagedState: GameState = {
+      ...DEFAULT_STATE,
+      screen: 'missions',
+      rocket: { chassis: 'hull-mk1', propulsion: 'ion-a1', drill: 'hand-drill' },
+      player: {
+        ...DEFAULT_STATE.player,
+        freeOperations: true,
+        missionsDone: 4,
+        pendingLaunch: true,
+        pendingRocketId: 'explorer',
+        pendingRocketLocation: 'hangar',
+        stagedRockets: [{ id: 'explorer-old', rocketId: 'explorer', rocket: { chassis: 'hull-mk1', propulsion: 'ion-a1', drill: 'hand-drill' }, location: 'hangar', source: 'company', missionId: 'baseline-extraction', targetId: 'eros' }],
+      },
+    }
+    const host = document.createElement('div')
+    const root = createRoot(host)
+    const handleRef: { current: LoopHandle | null } = { current: null }
+    const onReady = (next: LoopHandle) => { handleRef.current = next }
+    ;(globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT: boolean }).IS_REACT_ACT_ENVIRONMENT = true
+
+    await act(async () => { root.render(<LoopHarness initial={stagedState} onReady={onReady} />) })
+    await act(async () => { handleRef.current?.onPickMission('lnm_relay_psyche_ceres') })
+    expect(handleRef.current?.state.screen).toBe('rocket-buy')
+    expect(handleRef.current?.state.player.pendingRocketId).toBe('explorer')
+    expect(handleRef.current?.state.player.pendingRocketLocation).toBe('hangar')
+    await act(async () => root.unmount())
+  })
+
+  it('parks an active run before setting up another mission, then restores it intact', async () => {
+    const activeState: GameState = {
+      ...DEFAULT_STATE,
+      screen: 'launchpad',
+      missionId: 'baseline-extraction',
+      targetId: 'eros',
+      rocket: { chassis: 'hull-mk1', propulsion: 'ion-a1', drill: 'hand-drill' },
+      player: {
+        ...DEFAULT_STATE.player,
+        freeOperations: true,
+        missionsDone: 3,
+        placed: ['launchpad'],
+        activeMission: { id: 'baseline-extraction', label: 'Baseline extraction → Eros' },
+        missionPhase: 'transit',
+        transitStartedAt: 1_700_000_000_000,
+        arrivalAt: 1_700_000_040_000,
+      },
+    }
+    const host = document.createElement('div')
+    const root = createRoot(host)
+    const handleRef: { current: LoopHandle | null } = { current: null }
+    const onReady = (next: LoopHandle) => { handleRef.current = next }
+    ;(globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT: boolean }).IS_REACT_ACT_ENVIRONMENT = true
+
+    await act(async () => {
+      root.render(<LoopHarness initial={activeState} onReady={onReady} />)
+    })
+    await act(async () => {
+      handleRef.current?.onPickMission('freeops-self-directed-mining')
+    })
+
+    expect(handleRef.current?.state.player.activeMission).toBeNull()
+    expect(handleRef.current?.state.player.pausedMissionRuns).toHaveLength(1)
+    expect(handleRef.current?.state.player.pausedMissionRuns?.[0]).toMatchObject({
+      missionId: 'baseline-extraction',
+      targetId: 'eros',
+      missionPhase: 'transit',
+    })
+    expect(handleRef.current?.state.missionId).toBe('freeops-self-directed-mining')
+    expect(handleRef.current?.state.screen).toBe('targets')
+
+    const parkedKey = handleRef.current?.state.player.pausedMissionRuns?.[0]?.key
+    expect(parkedKey).toBeTruthy()
+    await act(async () => {
+      if (parkedKey) handleRef.current?.resumeMissionRun(parkedKey)
+    })
+
+    expect(handleRef.current?.state.missionId).toBe('baseline-extraction')
+    expect(handleRef.current?.state.targetId).toBe('eros')
+    expect(handleRef.current?.state.player.activeMission?.id).toBe('baseline-extraction')
+    expect(handleRef.current?.state.screen).toBe('transit')
+    await act(async () => root.unmount())
+  })
+
+  it('launches a new run without consuming paused missions', async () => {
+    const stagedState: GameState = {
+      ...DEFAULT_STATE,
+      screen: 'fab',
+      missionId: 'freeops-self-directed-mining',
+      targetId: 'eros',
+      rocket: { chassis: 'hull-mk1', propulsion: 'ion-a1', drill: 'hand-drill' },
+      player: {
+        ...DEFAULT_STATE.player,
+        freeOperations: true,
+        missionsDone: 3,
+        pendingLaunch: true,
+        pendingRocketId: 'sr1',
+        pendingRocketLocation: 'launchpad',
+        selectedStagedRocketId: 'sr1-current',
+        stagedRockets: [{ id: 'sr1-current', rocketId: 'sr1', rocket: { chassis: 'hull-mk1', propulsion: 'ion-a1', drill: 'hand-drill' }, location: 'launchpad', source: 'company', missionId: 'freeops-self-directed-mining', targetId: 'eros' }],
+        pausedMissionRuns: [{
+          key: 'baseline:1700000000000',
+          activeMission: { id: 'baseline-extraction', label: 'Baseline extraction → Eros' },
+          missionId: 'baseline-extraction',
+          targetId: 'eros',
+          rocket: { chassis: 'hull-mk1', propulsion: 'ion-a1', drill: 'hand-drill' },
+          lastCargo: null,
+          missionPhase: 'transit',
+          transitStartedAt: 1_700_000_000_000,
+        }],
+      },
+    }
+    const host = document.createElement('div')
+    const root = createRoot(host)
+    const handleRef: { current: LoopHandle | null } = { current: null }
+    const onReady = (next: LoopHandle) => { handleRef.current = next }
+    ;(globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT: boolean }).IS_REACT_ACT_ENVIRONMENT = true
+
+    await act(async () => {
+      root.render(<LoopHarness initial={stagedState} onReady={onReady} />)
+    })
+    await act(async () => {
+      handleRef.current?.onLaunch()
+    })
+
+    expect(handleRef.current?.state.player.activeMission?.id).toBe('freeops-self-directed-mining')
+    expect(handleRef.current?.state.player.pausedMissionRuns).toHaveLength(1)
+    expect(handleRef.current?.state.player.pausedMissionRuns?.[0]?.key).toBe('baseline:1700000000000')
+    expect(handleRef.current?.state.screen).toBe('transit')
+    await act(async () => root.unmount())
+  })
+})
+
+describe('useGameLoop rocket compatibility', () => {
+  it('rejects Explorer on an M2 Heavy Haul and accepts Prospector', async () => {
+    const heavyHaul = STATIC_CATALOG.missions.find(mission => mission.sequence === 2)
+    expect(heavyHaul).toBeTruthy()
+    const staged: GameState = {
+      ...DEFAULT_STATE,
+      screen: 'rocket-buy',
+      missionId: heavyHaul!.id,
+      targetId: 'eros',
+      player: {
+        ...DEFAULT_STATE.player,
+        missionsDone: 1,
+        francs: 50_000_000,
+      },
+    }
+    const host = document.createElement('div')
+    const root = createRoot(host)
+    const handleRef: { current: LoopHandle | null } = { current: null }
+    const onReady = (next: LoopHandle) => { handleRef.current = next }
+    ;(globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT: boolean }).IS_REACT_ACT_ENVIRONMENT = true
+
+    await act(async () => {
+      root.render(<LoopHarness initial={staged} onReady={onReady} />)
+    })
+    await act(async () => {
+      handleRef.current?.onPurchaseRocket('explorer')
+    })
+    expect(handleRef.current?.state.screen).toBe('rocket-buy')
+    expect(handleRef.current?.state.player.pendingLaunch).toBeFalsy()
+
+    await act(async () => {
+      handleRef.current?.onPurchaseRocket('prospector')
+    })
+    expect(handleRef.current?.state.screen).toBe('fab')
+    expect(handleRef.current?.state.player.pendingRocketId).toBe('prospector')
+    await act(async () => root.unmount())
+  })
+})

@@ -1,38 +1,37 @@
 export {}
 
+import { seedAuthenticatedFixture } from '../../support/authenticated-fixture'
+
 /**
- * Visual QA tests — run these in headed Chrome to actually watch the game.
+ * Visual QA playthrough — the per-push Headless Chrome gate (SSL-294).
  *
  * Run:
+ *   CYPRESS_PROFILE=visual npx cypress run --browser chrome
  *   CYPRESS_PROFILE=visual npx cypress open --browser chrome
- *   CYPRESS_PROFILE=visual npx cypress run --browser chrome --headed
+ *
+ * Extra visual specs (release matrix, M3 review, layout contracts) are not
+ * part of this profile. Run them with CYPRESS_PROFILE=visual-extended.
  *
  * Each test takes screenshots at key moments. Find them in cypress/screenshots/.
  * Videos land in cypress/videos/ when video:true is set (CI or CYPRESS_VIDEO=1).
  */
 
 const STORAGE_KEY = 'landnam-game-state-v1'
+const AUTHENTICATED_STORAGE_KEY = `${STORAGE_KEY}:user:e2e-user`
 const SURVEY_KEY = 'landnam-surveys-shown'
 const SNOOZE_KEY = 'landnam-upgrade-prompt-snooze-until'
 
 const ALL_SURVEYS = [
   'lnm_first_launch', 'lnm_mining_feel', 'lnm_client_pick',
   'lnm_mission_friction', 'lnm_progression_feel', 'lnm_end_of_content',
-  'lnm_return_visit', 'lnm_m1_complete', 'lnm_m2_complete', 'lnm_m3_complete',
+  'lnm_return_visit', 'lnm_m1_complete', 'lnm_m2_mission_choice', 'lnm_m2_rocket_clarity', 'lnm_m2_rating', 'lnm_m2_freetext',
+        'lnm_m3_transport_clarity', 'lnm_m3_client_choice', 'lnm_m3_rating', 'lnm_m3_freetext',
   'lnm_satellite_clarity', 'lnm_resume_mission', 'lnm_base_building', 'lnm_rover_clarity',
 ]
 
 function suppressSurveysAndUpgrade(win: Window) {
   win.localStorage.setItem(SURVEY_KEY, JSON.stringify(ALL_SURVEYS))
   win.localStorage.setItem(SNOOZE_KEY, String(Date.now() + 365 * 24 * 60 * 60 * 1000))
-  // Set fake guest credentials so hasStoredCredentials() returns true and the
-  // auth gate never appears. ensureGuestAuth() will fail to re-auth with these
-  // non-existent credentials and fall back to offline mode — the game is fully
-  // functional from localStorage without a live PocketBase session.
-  win.localStorage.setItem('landnam-guest-credentials', JSON.stringify({
-    email: 'ci_seed_guest@landnam.guest',
-    password: 'GuestPassword123!',
-  }))
 }
 
 function loadPreset(win: Window, preset: object) {
@@ -41,7 +40,7 @@ function loadPreset(win: Window, preset: object) {
   // overrides the preset state with whatever the previous test saved.
   win.localStorage.removeItem('pocketbase_auth')
   suppressSurveysAndUpgrade(win)
-  win.localStorage.setItem(STORAGE_KEY, JSON.stringify(preset))
+  seedAuthenticatedFixture(win, preset, 'e2e-user')
 }
 
 // Minimal preset shapes — mirrors devPresets.ts without importing it
@@ -100,7 +99,7 @@ function skipAuthGateIfShown() {
 function navToMissions() {
   cy.window().then(win => {
     if (win.innerWidth >= 1024) {
-      cy.get('[data-testid="sidebar-nav-missions"]').should('be.visible').click()
+      cy.get('[data-testid="hub-desktop-missions-btn"]').should('be.visible').click()
     } else {
       cy.get('[data-testid="bottom-tab-missions"]').should('be.visible').click()
     }
@@ -109,8 +108,8 @@ function navToMissions() {
 
 function jumpToCompletedDebrief(cargo: Record<string, number>) {
   cy.window().then(win => {
-    const saved = JSON.parse(win.localStorage.getItem(STORAGE_KEY) || '{}')
-    win.localStorage.setItem(STORAGE_KEY, JSON.stringify({
+    const saved = JSON.parse(win.localStorage.getItem(AUTHENTICATED_STORAGE_KEY) || win.localStorage.getItem(STORAGE_KEY) || '{}')
+    const serialized = JSON.stringify({
       ...saved,
       screen: 'debrief',
       lastCargo: cargo,
@@ -118,7 +117,9 @@ function jumpToCompletedDebrief(cargo: Record<string, number>) {
         ...saved.player,
         missionPhase: 'debrief',
       },
-    }))
+    })
+    win.localStorage.setItem(STORAGE_KEY, serialized)
+    win.localStorage.setItem(AUTHENTICATED_STORAGE_KEY, serialized)
   })
   cy.visit('/game/debrief')
 }
@@ -140,17 +141,21 @@ describe('Visual QA — game screens and mining canvas', () => {
       onBeforeLoad(win) {
         win.localStorage.clear()
         suppressSurveysAndUpgrade(win)
+        seedAuthenticatedFixture(win, { screen: 'intro' }, 'e2e-user')
       },
     })
 
     // Intro screen
     skipAuthGateIfShown()
-    cy.contains('LANDNAM', { timeout: 12000 }).should('be.visible')
+    // The app always mounts a hidden portrait-guard dialog whose copy starts
+    // with "LANDNAM OPERATIONS". Scope this assertion to the actual intro
+    // title so the hidden guard cannot win Cypress's text lookup in portrait.
+    cy.get('.intro-title', { timeout: 12000 }).should('be.visible').and('have.text', 'LANDNAM')
     cy.screenshot('01-intro-screen')
 
     // Begin → hub setup
     cy.get('[data-testid="intro-begin-btn"]').click()
-    cy.contains('EARTH BASE · SETUP', { timeout: 10000 }).should('be.visible')
+    cy.contains('BASE · SETUP', { timeout: 10000 }).should('be.visible')
     cy.screenshot('02-hub-setup')
 
     // Place launchpad
@@ -159,18 +164,20 @@ describe('Visual QA — game screens and mining canvas', () => {
     cy.contains('button', 'Confirm · Build Here').click()
 
     // Hub with launchpad
-    cy.get('h1', { timeout: 10000 }).contains('Earth Base').should('be.visible')
+    cy.get('h1', { timeout: 10000 }).invoke('text').should('match', /^(Base|Subsurface)$/)
     cy.get('[data-testid="building-launchpad"]').should('be.visible')
     cy.screenshot('04-hub-launchpad-placed')
 
     // Mission board
     navToMissions()
-    cy.contains('Mission Board', { timeout: 10000 }).should('be.visible')
+    cy.get('[data-testid="mission-board-section-client"]', { timeout: 10000 }).should('be.visible')
     cy.screenshot('05-mission-board')
 
     // Open first mission → target picker
-    cy.get('[data-testid="mission-card-generated-s1-starter-bulk-1"]').click({ force: true })
-    cy.contains('Pick Target', { timeout: 10000 }).should('be.visible')
+    cy.get('[data-testid="mission-accept-generated-s1-starter-bulk-1"]')
+      .should('be.visible')
+      .click({ force: true })
+    cy.get('[data-testid="mission-target-map"]', { timeout: 10000 }).should('be.visible')
     cy.screenshot('06-target-picker')
 
     // Select Eros
@@ -178,18 +185,27 @@ describe('Visual QA — game screens and mining canvas', () => {
     cy.get('[data-testid="continue-build-btn"]').should('be.visible').click()
 
     // Rocket/fab screen
-    cy.contains('Select Rocket', { timeout: 10000 }).should('be.visible')
+    cy.get('[data-testid="mission-rocket-blueprint"]', { timeout: 10000 }).should('be.visible')
     cy.screenshot('07-rocket-picker')
-    cy.contains('button', 'Launch with Explorer').click()
+    cy.contains('button', /BUILD EXPLORER/).click()
+
+    // Newly built vehicles are a physical Hangar asset. Roll the cleared
+    // vehicle out to the launchpad before the actual launch confirmation.
+    cy.get('[data-testid="mission-launch-review"]', { timeout: 10000 }).should('have.attr', 'data-location', 'hangar')
+    cy.get('[data-testid="transfer-to-launchpad-btn"]').should('be.visible').click({ force: true })
 
     // Launch confirmation
     cy.get('[data-testid="launch-btn"]', { timeout: 10000 }).should('be.visible')
     cy.get('[data-testid="survey-sheet"]').should('not.exist')
     cy.screenshot('08-launch-confirmation')
     cy.get('[data-testid="launch-btn"]').click()
+    // Launch is now a real scene transition. The development build exposes a
+    // deterministic skip so visual QA does not wait on Pixi timing or the
+    // 18-second watchdog before it can inspect Transit.
+    cy.get('[data-testid="launch-sequence-skip-btn"]', { timeout: 10000 }).click()
 
     // Mining transit — wait for canvas to initialise
-    cy.contains('MISSION TRANSIT', { timeout: 12000 }).should('be.visible')
+    cy.get('.transit-screen', { timeout: 12000 }).should('be.visible')
     cy.get('[data-testid="mining-canvas"]', { timeout: 20000 }).should('be.visible')
 
     // Let the scene render for 1.5s so PixiJS has time to draw
@@ -200,7 +216,7 @@ describe('Visual QA — game screens and mining canvas', () => {
     cy.get('[data-testid="mining-canvas"]').invoke('prop', 'clientWidth').should('be.gt', 0)
     cy.get('[data-testid="mining-canvas"]').invoke('prop', 'clientHeight').should('be.gt', 0)
 
-    cy.get('[data-testid="fire-laser-btn"]').should('not.be.disabled').click()
+    cy.get('[data-testid="fire-laser-btn"]').should('not.be.disabled').click({ force: true })
     cy.wait(250)
     cy.screenshot('10-mining-lasers-fired')
 
@@ -211,17 +227,24 @@ describe('Visual QA — game screens and mining canvas', () => {
     // Debrief
     cy.contains('MISSION COMPLETE', { timeout: 10000 }).should('be.visible')
     cy.screenshot('11-mission-debrief')
-    cy.get('[data-testid="resolve-cargo-btn"]').click()
-    cy.get('[data-testid="collect-reward-btn"]').click()
+    // Every returning vehicle now holds at debrief until the player explicitly
+    // authorises its teardown, then collects the settled client fee.
+    cy.get('[data-testid="resolve-cargo-btn"]').should('be.visible').click()
+    cy.get('[data-testid="scrap-sequence-skip-btn"]', { timeout: 10000 }).should('be.visible').click()
+    cy.get('[data-testid="collect-reward-btn"]', { timeout: 10000 }).should('be.visible').click()
 
     // Guided M2 handoff
     cy.contains('Guided Ops · Mission 2', { timeout: 10000 }).should('be.visible')
-    cy.contains('Prospector is now available').should('be.visible')
+    // Wait for the destination scene, not only the coach overlay. This keeps
+    // the visual checkpoint honest when the Hub route is still settling after
+    // the debrief transition (KES-167/KES-186).
+    cy.get('h1', { timeout: 10000 }).invoke('text').should('match', /^(Base|Earth Base)$/)
+    cy.get('[data-testid="hub-terrain-fallback"]').should('exist')
     cy.screenshot('12-hub-post-mission')
 
     // Final state assertion
     cy.window().then(win => {
-      const saved = JSON.parse(win.localStorage.getItem(STORAGE_KEY) || '{}')
+      const saved = JSON.parse(win.localStorage.getItem(AUTHENTICATED_STORAGE_KEY) || win.localStorage.getItem(STORAGE_KEY) || '{}')
       expect(saved.player?.missionsDone).to.eq(1)
     })
   })
@@ -299,7 +322,7 @@ describe('Visual QA — game screens and mining canvas', () => {
     })
 
     skipAuthGateIfShown()
-    cy.contains('Pick Target', { timeout: 12000 }).should('be.visible')
+    cy.get('[data-testid="mission-target-map"]', { timeout: 12000 }).should('be.visible')
     cy.wait(1000) // let orbital animation start
     cy.screenshot('target-picker-orbital-animation')
 
@@ -338,7 +361,8 @@ describe('Visual QA — game screens and mining canvas', () => {
     })
 
     skipAuthGateIfShown()
-    cy.get('h1', { timeout: 12000 }).contains('Earth Base').should('be.visible')
+    cy.get('h1', { timeout: 12000 }).invoke('text').should('match', /^(Base|Subsurface)$/)
+    cy.get('[data-testid="settings-button"]').should('be.visible').and('not.be.disabled')
     cy.get('[data-testid="building-launchpad"]').should('be.visible')
     cy.screenshot('hub-launchpad-visible')
 

@@ -464,7 +464,10 @@ export function diplomacyActive(player: Player): boolean {
 
 export function applyShareChartsWithClient(state: GameState, clientId: string): GameState {
   if (!diplomacyActive(state.player) || clientAffinityLevel(state.player.clientMissions[clientId] ?? 0) < 2) return state
-  const chartsAvailable = Object.values(state.player.targetScanCounts ?? {}).reduce((sum, count) => sum + count, 0)
+  // Chart intel previously came from Scanning Station scans (removed KES-333);
+  // no source populates it now, so this is inert until a replacement intel
+  // source is designed.
+  const chartsAvailable = 0
   const shared = state.player.sharedChartsByClient?.[clientId] ?? 0
   if (chartsAvailable <= shared) return state
   return {

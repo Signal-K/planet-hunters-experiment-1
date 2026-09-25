@@ -41,7 +41,13 @@ function visitWithState(state: Partial<GameState>) {
   cy.visit('/game', {
     onBeforeLoad(win) {
       win.localStorage.setItem(STORAGE_KEY, JSON.stringify({ ...base, ...state }))
-      win.localStorage.setItem('landnam-guest-credentials', JSON.stringify({ email: 'e2e@landnam.guest', password: 'e2e-guest-test' }))
+      win.localStorage.setItem('landnam-account-credentials', JSON.stringify({ email: 'e2e@example.com', password: 'e2e-guest-test' }))
+      // Unset, TutorialCompleteSheet (components/game/TutorialCompleteSheet.tsx)
+      // full-screens over the hub the first time missionsDone crosses the
+      // onboarding threshold, which is exactly the transition the M3 reward
+      // test below drives — pre-ack it so the test exercises the Free Ops
+      // explanation flow, not this one-time completion modal.
+      win.localStorage.setItem('ln_tutorial_complete_ack', '1')
     },
   })
 }
@@ -130,17 +136,28 @@ describe('M3 — Transport client pick and Free Ops unlock', () => {
         targetId: 'bennu',
         lastCargo: { iron: 3, carbon: 2 },
       })
-      cy.get('[data-testid="resolve-cargo-btn"]').click()
+      // Onboarding missions (missionsDone < 3, which M3 still is) auto-resolve
+      // on mount — see DebriefScreen.tsx.
+      cy.get('[data-testid="resolve-cargo-btn"]').should('not.exist')
       cy.get('[data-testid="collect-reward-btn"]').click()
       cy.get('[role="dialog"][aria-label="Territory established"]').should('not.exist')
-      // Debrief routes to the Market screen (sell your haul) rather than
-      // straight back to the mission board — navigate there to see the
-      // Free Ops explanation.
-      cy.get('[data-testid="top-bar-back"]').click()
+      // Completing M3 raises the persisted TutorialCompleteSheet before the
+      // Hub's navigation is actionable. Dismiss the real product modal rather
+      // than forcing a covered bottom-tab click.
+      cy.contains('button', 'Start Playing', { timeout: 10000 }).click()
+      // Debrief routes back to the Hub (not the Market screen) — navigate to
+      // the mission board from there to see the Free Ops explanation.
+      cy.contains('h1', /^(Base|Earth Base)$/, { timeout: 10000 }).should('be.visible')
       cy.get('[data-testid="bottom-tab-missions"]').click()
-      cy.contains('Custom Missions Unlocked').should('be.visible')
-      cy.contains('Free Ops · Hot Minerals').should('be.visible')
-      cy.contains('Infrastructure').should('be.visible')
+      // The M3 relay run is itself a client mission (Bennu -> Vesta transport
+      // for Atlas Aggregate), so completing it already satisfies
+      // MissionBoardScreen's `hasPriorFreeOpsExperience` check — the
+      // one-time "Custom Missions Unlocked" explainer correctly stays
+      // suppressed (see its comment: anyone who's completed a client
+      // mission has plainly already seen how Free Ops works). What this
+      // test actually needs to prove is that Free Ops itself is live.
+      cy.contains('FREE OPS', { timeout: 10000 }).should('be.visible')
+      cy.contains('Client Requests', { matchCase: false }).should('be.visible')
     })
   })
 
@@ -187,7 +204,10 @@ describe('M3 — Transport client pick and Free Ops unlock', () => {
         const rect = $el[0].getBoundingClientRect()
         // Desktop sidebar (~72px) reduces canvas width; check it fills most of the viewport
         expect(rect.width).to.be.at.least(1000)
-        expect(rect.height).to.be.closeTo(800, 2)
+        // The card sits inset by --ln-s-6 (32px) on desktop — a deliberate
+        // centered-card treatment (see globals.css's "do not reintroduce
+        // full-bleed" comment on .portrait-canvas), not full-bleed 100dvh.
+        expect(rect.height).to.be.closeTo(768, 2)
       })
     })
 

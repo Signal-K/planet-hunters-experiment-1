@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useRef } from 'react'
+import { capDpr } from '@/lib/engine/pixiDisplay'
 import { Application } from 'pixi.js'
 import { GameLoop, LandingController, RuntimeContext, Scene } from '@/lib/engine'
 import type { LandingSequenceMode } from '@/lib/engine/scripts/LandingController'
@@ -39,9 +40,9 @@ export default function LandingCanvas({ progress, mode }: LandingCanvasProps) {
             width: worldWidth,
             height: worldHeight,
             background: 0x07101c,
-            antialias: true,
+            antialias: false,
             autoDensity: true,
-            resolution: window.devicePixelRatio || 1,
+            resolution: capDpr(),
           }),
         ])
         if (destroyed) return

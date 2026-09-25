@@ -16,14 +16,14 @@ interface ButtonProps {
   testId?: string
 }
 
-const GRADS: Record<ButtonKind, [string, string, string, string]> = {
-  cyan:  ['#6cc2ff', '#2d8de0', '#06121f', 'rgba(112,217,234,0.4)'],
-  amber: ['#ffc25c', '#d68a0d', '#1d0c00', 'rgba(245,166,35,0.4)'],
-  green: ['#6cf09a', '#1ea54a', '#02180c', 'rgba(57,211,106,0.4)'],
+const KIND_TOKENS: Record<ButtonKind, { color: string; border: string }> = {
+  cyan: { color: 'var(--ln-cyan)', border: 'var(--ln-cyan-border)' },
+  amber: { color: 'var(--ln-amber)', border: 'var(--ln-amber-border)' },
+  green: { color: 'var(--ln-ok)', border: 'var(--ln-ok)' },
 }
 
 export function PrimaryBtn({ children, onClick, disabled, full = true, kind = 'cyan', testId }: ButtonProps) {
-  const [h1, h2, fg, glow] = GRADS[kind]
+  const { color, border } = KIND_TOKENS[kind]
   return (
     <button
       data-testid={testId}
@@ -31,24 +31,24 @@ export function PrimaryBtn({ children, onClick, disabled, full = true, kind = 'c
       disabled={disabled}
       style={{
         width: full ? '100%' : 'auto',
-        padding: '16px 22px',
-        background: `linear-gradient(180deg, ${h1} 0%, ${h2} 100%)`,
-        color: fg,
+        minHeight: 44,
+        padding: '10px 16px',
+        background: 'transparent',
+        color,
         fontFamily: 'var(--ln-font-display)',
         fontWeight: 800,
-        fontSize: 16,
-        letterSpacing: '0.14em',
+        fontSize: 12,
+        letterSpacing: '0.12em',
         textTransform: 'uppercase',
-        border: 'none',
-        borderRadius: 12,
-        boxShadow: `inset 0 1px 0 rgba(255,255,255,0.4), 0 4px 0 rgba(0,0,0,0.3), 0 0 22px ${glow}`,
+        border: `1px solid ${border}`,
+        borderRadius: 8,
+        boxShadow: 'none',
         cursor: disabled ? 'not-allowed' : 'pointer',
         display: 'inline-flex',
         alignItems: 'center',
         justifyContent: 'center',
         gap: 10,
-        opacity: disabled ? 0.4 : 1,
-        filter: disabled ? 'saturate(0.5)' : 'none',
+        opacity: disabled ? 0.45 : 1,
       }}
     >
       {children}
@@ -56,24 +56,30 @@ export function PrimaryBtn({ children, onClick, disabled, full = true, kind = 'c
   )
 }
 
-export function GhostBtn({ children, onClick, full = true, testId }: ButtonProps) {
+export function GhostBtn({ children, onClick, disabled, full = true, testId }: ButtonProps) {
   return (
     <button
       data-testid={testId}
-      onClick={onClick}
+      onClick={!disabled ? onClick : undefined}
+      disabled={disabled}
       style={{
         width: full ? '100%' : 'auto',
+        minHeight: 44, // touch-target floor (Apple HIG / WCAG 2.5.5)
         padding: '12px 18px',
-        background: 'rgba(20,20,23,0.6)',
-        color: '#a9b8ce',
+        display: 'inline-flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        background: 'var(--ln-surface-2)',
+        color: 'var(--ln-text-dim)',
         fontFamily: 'var(--ln-font-display)',
         fontWeight: 700,
         fontSize: 13,
         letterSpacing: '0.18em',
         textTransform: 'uppercase',
-        border: '1px solid rgba(169,184,206,0.18)',
+        border: '1px solid var(--ln-hairline)',
         borderRadius: 10,
-        cursor: 'pointer',
+        cursor: disabled ? 'not-allowed' : 'pointer',
+        opacity: disabled ? 0.45 : 1,
       }}
     >
       {children}
@@ -86,8 +92,8 @@ export function IconBtn({
   onClick,
   ariaLabel,
   testId,
-  color = '#cde4ff',
-  size = 38,
+  color = 'var(--ln-text-dim)',
+  size = 44, // touch-target floor (Apple HIG / WCAG 2.5.5) — was 38
 }: {
   children: React.ReactNode
   onClick?: () => void
@@ -106,9 +112,8 @@ export function IconBtn({
         height: size,
         flexShrink: 0,
         borderRadius: 999,
-        background: 'rgba(20,20,23,0.7)',
-        backdropFilter: 'blur(6px)',
-        border: '1px solid rgba(112,217,234,0.35)',
+        background: 'var(--ln-panel-2)',
+        border: '1px solid var(--ln-cyan-border)',
         color,
         display: 'inline-flex',
         alignItems: 'center',

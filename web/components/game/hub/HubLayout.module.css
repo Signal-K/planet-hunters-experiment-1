@@ -1,0 +1,140 @@
+.root {
+  /* Enlarged from 22% (KES-263) — the ground plane read as too thin a strip
+     under the sky; kept proportional across the breakpoints below so plot
+     positions (which read this same token) scale together. Re-applied
+     2026-09-04 after f3a6a291 (KES-260) silently reverted these values as a
+     side effect of an unrelated rail/seam fix. */
+  --hub-ground: 28%;
+  --hub-structure-max: 9999px;
+}
+
+.surface {
+  overflow: hidden;
+}
+
+.topHud {
+  position: absolute;
+  inset: 0 0 auto;
+  z-index: 18;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 16px 16px 24px;
+  pointer-events: none;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--ln-void) 68%, transparent) 0%, color-mix(in srgb, var(--ln-void) 22%, transparent) 48%, transparent 100%);
+}
+
+.topRow {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  pointer-events: auto;
+}
+
+.titleBlock { min-width: 0; }
+.eyebrow {
+  color: color-mix(in srgb, var(--ln-text) 70%, transparent);
+  font: 700 9.5px var(--ln-font-display);
+  letter-spacing: .18em;
+  text-transform: uppercase;
+}
+.eyebrow[data-dev-launcher='true'] { margin-left: 64px; }
+.titleText {
+  margin: 4px 0 0;
+  color: var(--ln-text);
+  font: 800 23px/1 var(--ln-font-display);
+  letter-spacing: -.01em;
+  text-shadow: 0 4px 8px color-mix(in srgb, var(--ln-void) 60%, transparent);
+}
+.balance { pointer-events: auto; }
+
+.surface::before {
+  position: absolute;
+  right: 0;
+  bottom: var(--hub-ground);
+  left: 0;
+  height: 18%;
+  content: '';
+  pointer-events: none;
+  background: linear-gradient(
+    180deg,
+    transparent,
+    color-mix(in srgb, var(--hub-hill-near) 32%, transparent)
+  );
+  z-index: 3;
+}
+
+.surface::after {
+  position: absolute;
+  right: 4%;
+  bottom: calc(var(--hub-ground) - 1px);
+  left: 4%;
+  /* Thickened from 1px and brightened from .42 opacity (KES-263) so the
+     ground/sky boundary reads as a deliberate horizon line rather than a
+     hairline that only shows up on close inspection. */
+  height: 2px;
+  content: '';
+  pointer-events: none;
+  background: linear-gradient(90deg, transparent, var(--hub-cyan), transparent);
+  opacity: 0.6;
+  z-index: 5;
+}
+
+.progressionStack {
+  right: 14px;
+  width: calc(100% - 28px);
+}
+
+.progressionCard {
+  min-width: 0;
+}
+
+@media (min-width: 1024px) {
+  .root {
+    --hub-ground: 40%;
+    --hub-structure-max: min(460px, 42vh);
+  }
+
+  .progressionStack {
+    right: clamp(24px, 4vw, 56px);
+    width: min(340px, 30vw);
+    max-width: 340px;
+    gap: 8px;
+  }
+}
+
+@media (max-width: 720px) {
+  /* Keep the progression rail below the stacked HUD and above the dock's
+     reserved lower zone on narrow portrait screens. The internal scroll
+     remains available when several cards are present. */
+  .progressionStack {
+    top: max(168px, 22vh) !important;
+    bottom: 104px;
+  }
+
+  .topHud { padding: 12px 12px 20px; gap: 8px; }
+  .topRow { min-height: 42px; align-items: center; }
+  .eyebrow { font-size: 8px; }
+  .eyebrow[data-dev-launcher='true'] { margin-left: 52px; }
+  .titleText { font-size: 20px; }
+  .balance { margin-top: 4px; }
+}
+
+@media (min-width: 721px) and (max-width: 1023px) and (max-height: 700px) {
+  .root {
+    --hub-ground: 34%;
+  }
+
+  .progressionStack {
+    top: 96px !important;
+    right: 20px;
+    width: min(300px, 38vw);
+  }
+
+  /* The launchpad hit target is intentionally wider than its art. Nudge its
+     first-plot anchor inward on short landscape canvases so the target remains
+     fully usable without changing the established portrait plot spacing. */
+}

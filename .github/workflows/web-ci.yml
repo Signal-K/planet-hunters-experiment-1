@@ -2,9 +2,8 @@ name: Web CI
 
 on:
   push:
-    # Every branch, not a glob list. Staging deploys on any green push, so a
-    # branch whose name happens not to match a pattern must not silently skip
-    # CI and the deploy with it.
+    # Every branch, not a glob list, so a branch whose name happens not to
+    # match a pattern must not silently skip CI. Only pushes to main deploy.
     branches: ["**"]
     paths:
       - "web/**"
@@ -17,6 +16,16 @@ on:
       - "pocketbase/pb_migrations/**"
       - ".github/workflows/web-ci.yml"
   workflow_dispatch:
+  schedule:
+    # KES-115: nightly deep coverage independent of push/PR activity, so a
+    # regression that lands between reviewed PRs (or drifts in from a live
+    # backend/content change with no code push at all) doesn't sit
+    # undetected until the next person happens to touch web/. Runs the full
+    # journeys suite (e2e-staging-full below) against whatever build is
+    # currently live on landnam-web.liam-55d.workers.dev -- not tied to a
+    # specific commit's deploy, since a schedule event has no push to deploy
+    # from.
+    - cron: "0 3 * * *"
 
 permissions:
   contents: read
@@ -93,23 +102,17 @@ jobs:
 
   deploy:
     name: Deploy
-    # Only after typecheck, unit tests and a real build have passed. There is no
-    # point aliasing staging to a red commit.
+    # Only after typecheck, unit tests and a real build have passed, and only
+    # from main: this publishes the production Worker served at playlandnam.space.
     needs: build
-    if: github.event_name == 'push'
+    if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
     runs-on: ubuntu-latest
     environment:
-      name: staging
-      url: https://landnam-test.vercel.app
-
-    env:
-      # These already exist as repository secrets — use them rather than
-      # hardcoding the ids. VERCEL_TEAM_ID is Vercel's name for the org id.
-      VERCEL_ORG_ID: ${{ secrets.VERCEL_TEAM_ID }}
-      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
-      # The staging alias. Every branch CI runs on points it here, so staging
-      # always reflects the most recent green push regardless of branch.
-      STAGING_ALIAS: landnam-test.vercel.app
+      name: production
+      url: https://playlandnam.space
+    defaults:
+      run:
+        working-directory: web
 
     steps:
       - uses: actions/checkout@v4
@@ -120,49 +123,137 @@ jobs:
           cache: npm
           cache-dependency-path: web/package-lock.json
 
-      # Pinned, not @latest (STS-639): vercel@58.4.4 has a regression in
-      # `deploy --prebuilt`'s remote file-dedup logic that under-uploads
-      # deployment files referenced via each function's .vc-config.json
-      # filePathMap (e.g. web/node_modules/client-only/index.js, pulled in by
-      # styled-jsx), causing every deploy to fail with an ENOENT on Vercel's
-      # build machine. Reproduced locally: identical `vercel build` output,
-      # 53.1.1 uploads ~919 files and deploys cleanly, 58.4.4 uploads ~802
-      # files and fails; reverting to 53.1.1 immediately succeeds again
-      # against the same remote project/cache state. Bump this deliberately
-      # once a newer release is confirmed not to regress, not by switching
-      # back to @latest.
-      - name: Install Vercel CLI
-        run: npm install --global vercel@53.1.1
+      - name: Install dependencies
+        run: npm ci
 
-      # Deploys run from the repo root, matching scripts/deploy-test.mjs — the
-      # Vercel project's own Root Directory setting points at web/.
-      # Always a *preview* build, never --prod. landnam-test.vercel.app is
-      # staging, and it is reached by aliasing a preview deployment — exactly
-      # what scripts/deploy-test.mjs does. Using --prod here would publish to
-      # the project's production domain instead, which nothing in this repo
-      # asks for.
-      - name: Pull Vercel environment
-        run: vercel pull --yes --environment=preview --token=${{ secrets.VERCEL_TOKEN }}
-
-      - name: Build
-        run: vercel build --token=${{ secrets.VERCEL_TOKEN }}
+      # KES-193: every push to main deploys straight to the landnam-web Worker,
+      # which wrangler.jsonc binds to playlandnam.space as a custom domain.
+      # NEXT_PUBLIC_* vars are inlined at build time (Next.js convention).
+      - name: Build (OpenNext/Cloudflare)
+        run: npm run build:cf
         env:
           NEXT_TELEMETRY_DISABLED: 1
+          NEXT_PUBLIC_SHARED_PB_URL: https://signal-k-starsailors.fly.dev
+          NEXT_PUBLIC_LANDNAM_PB_URL: https://signal-k-landnam.fly.dev
+          NEXT_PUBLIC_LANDNAM_ENV: production
+          NEXT_PUBLIC_POSTHOG_HOST: https://us.i.posthog.com
+          NEXT_PUBLIC_POSTHOG_KEY: ${{ secrets.NEXT_PUBLIC_POSTHOG_KEY }}
+          NEXT_PUBLIC_VAPID_PUBLIC_KEY: ${{ secrets.NEXT_PUBLIC_VAPID_PUBLIC_KEY }}
+          NEXT_PUBLIC_FEATURE_SCAN_STATION: true
 
       - name: Deploy
-        id: deploy
-        run: |
-          URL=$(vercel deploy --prebuilt --token=${{ secrets.VERCEL_TOKEN }})
-          echo "url=$URL" >> "$GITHUB_OUTPUT"
-          echo "Deployed: $URL" >> "$GITHUB_STEP_SUMMARY"
+        run: npx wrangler deploy
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
 
-      # Every branch CI runs on moves the alias — main, sprint/** and claude/**
-      # alike. Staging therefore means "the last green push", not "the last push
-      # to main". concurrency is scoped per ref, so two branches pushed close
-      # together can still race for the alias; last writer wins, which is the
-      # accepted trade for having every branch land on one URL.
-      - name: Point staging alias at this deploy
+  deploy-staging:
+    name: Deploy staging
+    needs: build
+    if: github.ref != 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - name: Install dependencies
+        run: npm ci
+      - name: Build (OpenNext/Cloudflare staging)
+        run: npm run build:cf
+        env:
+          NEXT_TELEMETRY_DISABLED: 1
+          NEXT_PUBLIC_SHARED_PB_URL: https://signal-k-starsailors.fly.dev
+          NEXT_PUBLIC_LANDNAM_PB_URL: https://signal-k-landnam.fly.dev
+          NEXT_PUBLIC_LANDNAM_ENV: staging
+          NEXT_PUBLIC_POSTHOG_HOST: https://us.i.posthog.com
+          NEXT_PUBLIC_POSTHOG_KEY: ${{ secrets.NEXT_PUBLIC_POSTHOG_KEY }}
+          NEXT_PUBLIC_VAPID_PUBLIC_KEY: ${{ secrets.NEXT_PUBLIC_VAPID_PUBLIC_KEY }}
+          NEXT_PUBLIC_FEATURE_SCAN_STATION: true
+      - name: Deploy staging worker
+        run: npx wrangler deploy --env staging
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+
+  e2e-staging-full:
+    name: E2E — full journeys against staging (manual + nightly)
+    # Manual (workflow_dispatch) or nightly (schedule), not on every push:
+    # this runs the entire journeys suite for real against the live staging
+    # deployment, including clean-start-loop.cy.ts's real account
+    # registration and playthrough over the network against the actual
+    # staging PocketBase backends. A local run of this same scope didn't
+    # finish in 10+ minutes, so it isn't a reliable per-push gate yet —
+    # trigger it by hand, or let the nightly cron (KES-115) catch drift that
+    # happens between reviewed pushes. No `needs: deploy` deliberately: a
+    # schedule event has no push/deploy in the same run, so this always
+    # tests whatever build is currently live on
+    # landnam-web.liam-55d.workers.dev, not a specific commit's fresh
+    # deploy. Any @landnam.test account it creates
+    # is cleaned up by the existing KES-149 purge migrations on the next
+    # backend deploy.
+    if: github.event_name == 'workflow_dispatch' || github.event_name == 'schedule'
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: web
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Wait for staging to serve this deploy
         run: |
-          vercel alias set "${{ steps.deploy.outputs.url }}" "$STAGING_ALIAS" \
-            --scope "$VERCEL_ORG_ID" --token=${{ secrets.VERCEL_TOKEN }}
-          echo "Staging: https://$STAGING_ALIAS" >> "$GITHUB_STEP_SUMMARY"
+          for i in {1..30}; do
+            if curl -sf "https://landnam-web.liam-55d.workers.dev/api/backend-health" > /dev/null; then
+              echo "Staging is responding."
+              exit 0
+            fi
+            echo "Attempt $i/30 — staging not ready yet"
+            sleep 5
+          done
+          echo "Staging never became reachable" >&2
+          exit 1
+
+      - name: Run full journeys suite against staging
+        id: cypress
+        uses: cypress-io/github-action@v6
+        with:
+          working-directory: web
+          browser: chrome
+          install: false
+        env:
+          CYPRESS_PROFILE: staging-full
+          CYPRESS_baseUrl: https://landnam-web.liam-55d.workers.dev
+          CI: true
+
+      - name: Upload screenshots
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: e2e-staging-full-screenshots-${{ github.sha }}
+          path: web/cypress/screenshots/
+          if-no-files-found: ignore
+          retention-days: 14
+
+      - name: Upload videos
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: e2e-staging-full-videos-${{ github.sha }}
+          path: web/cypress/videos/
+          if-no-files-found: ignore
+          retention-days: 7

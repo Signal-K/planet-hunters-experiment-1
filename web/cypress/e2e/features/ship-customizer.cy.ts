@@ -2,13 +2,13 @@ describe('Ship Customiser staged build', () => {
   function visitCustomizer() {
     cy.visit('/game/hangar', {
       onBeforeLoad(win) {
-        win.localStorage.setItem('landnam-guest-credentials', JSON.stringify({
-          email: 'e2e@landnam.guest',
+        win.localStorage.setItem('landnam-account-credentials', JSON.stringify({
+          email: 'e2e@example.com',
           password: 'e2e-password',
         }))
         win.localStorage.setItem('pocketbase_auth', JSON.stringify({
           token: 'e2e-token',
-          record: { id: 'e2e-user', email: 'e2e@landnam.guest' },
+          record: { id: 'e2e-user', email: 'e2e@example.com' },
         }))
         win.localStorage.setItem('landnam-game-state-v1', JSON.stringify({
           screen: 'hangar',
@@ -47,7 +47,7 @@ describe('Ship Customiser staged build', () => {
       }
     })
     cy.get('[data-testid="open-ship-customizer"]', { timeout: 8000 }).should('be.visible').click()
-    cy.get('[data-testid="ship-interior-sr1"]').should('be.visible')
+    cy.get('[data-testid="ship-interior-explorer"]').should('be.visible')
   }
 
   beforeEach(() => {
@@ -104,7 +104,7 @@ describe('Ship Customiser staged build', () => {
 
     cy.get('[data-testid="confirm-ship-config"]').should('not.be.disabled').click()
     // onClose() fires immediately after confirm, so the interior unmounts and the fleet page returns
-    cy.get('[data-testid="ship-interior-sr1"]').should('not.exist')
+    cy.get('[data-testid="ship-interior-explorer"]').should('not.exist')
     cy.contains('Rocket Fleet').should('be.visible')
 
     // Confirmed loadout is real game state, not a mock that resets on close —

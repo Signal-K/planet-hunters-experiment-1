@@ -4,36 +4,56 @@ import { useMemo, useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { GameProvider, useGame } from '@/game-context'
 import { M1_STEPS, M2_STEPS, M3_STEPS } from '@/lib/data'
+import { FREE_OPS_START_MISSIONS_DONE } from '@/lib/data/mission-generator'
 import type { Screen } from '@/lib/game-types'
 import { ScreenContent } from '@/components/game/GameScreenRouter'
 import TutorialCoach from '@/components/game/TutorialCoach'
 import MissionTicker from '@/components/game/MissionTicker'
-import SaveProgressPrompt from '@/components/game/SaveProgressPrompt'
 import UnlockPopup from '@/components/game/UnlockPopup'
+import { TutorialCompleteSheet } from '@/components/game/TutorialCompleteSheet'
 import BottomTabBar from '@/components/layout/BottomTabBar'
 import BackendStatus from '@/components/game/BackendStatus'
 import LandnamSyncStatus from '@/components/game/LandnamSyncStatus'
 import { PushOptIn } from '@/components/game/PushOptIn'
-import ContentUpdateNotice from '@/components/game/ContentUpdateNotice'
 import FeedbackButton from '@/components/ui/FeedbackButton'
 import SurveySheet from '@/components/ui/SurveySheet'
 import ToastLayer from '@/components/ui/ToastLayer'
-import { initPostHog } from '@/lib/posthog'
+import { initPostHog, captureScreenView, captureGameEvent } from '@/lib/posthog'
+import { SURVEY_SAFE_SCREENS } from '@/lib/survey-gating'
 import DevShortcuts from '@/components/dev/DevShortcuts'
 import AuthGateSheet from '@/components/game/AuthGateSheet'
 import SettingsSheet from '@/components/game/SettingsSheet'
-import SettingsButton from '@/components/game/SettingsButton'
-import TerritoryClaimPopup from '@/components/game/TerritoryClaimPopup'
+import FriendsButton from '@/components/game/FriendsButton'
+import FriendsSheet from '@/components/game/FriendsSheet'
+import CommunityButton from '@/components/game/CommunityButton'
+import CommunityHubSheet from '@/components/game/CommunityHubSheet'
+import TakeOnPwaPreload from '@/components/takeon/TakeOnPwaPreload'
 import { UI_ZONES } from '@/lib/ui-zones'
-
-if (typeof window !== 'undefined') initPostHog()
 
 function GameCanvas() {
   const game = useGame()
   const router = useRouter()
   const arrivalScheduledFor = useRef<number | null>(null)
   const returnScheduledKey = useRef<string | null>(null)
+  const priorScreenRef = useRef<Screen | null>(null)
   const [settingsOpen, setSettingsOpen] = useState(false)
+  const [friendsOpen, setFriendsOpen] = useState(false)
+  const [hubOpen, setHubOpen] = useState(false)
+
+  // PostHog injects recorder/survey scripts. Initialising during module
+  // evaluation can let those scripts mutate the document while React is
+  // still hydrating, producing a real production hydration mismatch. Run it
+  // after the first client commit instead.
+  useEffect(() => {
+    initPostHog()
+  }, [])
+
+  // The game is a single-page SPA — `screen` changes without a real
+  // navigation, so PostHog needs a manual pageview per screen to power
+  // Paths/Funnels/Trends the same way a multi-page site gets for free.
+  useEffect(() => {
+    captureScreenView(game.screen)
+  }, [game.screen])
 
   // When a timed transit starts, schedule a push notification.
   useEffect(() => {
@@ -43,7 +63,7 @@ function GameCanvas() {
     arrivalScheduledFor.current = arrivalAt
 
     async function schedule() {
-      if (!('serviceWorker' in navigator)) return
+      if (!('serviceWorker' in navigator) || !('PushManager' in window)) return
       const reg = await navigator.serviceWorker.ready
       const sub = await reg.pushManager.getSubscription()
       if (!sub) return
@@ -61,7 +81,7 @@ function GameCanvas() {
         }),
       })
     }
-    void schedule()
+    void schedule().catch(() => {})
   }, [game.screen, game.player.arrivalAt, game.mission, game.target])
 
   // Current gameplay returns immediately when mining completes; schedule that return alert
@@ -75,7 +95,7 @@ function GameCanvas() {
     returnScheduledKey.current = key
 
     async function schedule() {
-      if (!('serviceWorker' in navigator)) return
+      if (!('serviceWorker' in navigator) || !('PushManager' in window)) return
       const reg = await navigator.serviceWorker.ready
       const sub = await reg.pushManager.getSubscription()
       if (!sub) return
@@ -91,11 +111,11 @@ function GameCanvas() {
         }),
       })
     }
-    void schedule()
+    void schedule().catch(() => {})
   }, [game.screen, game.lastCargo, game.mission, game.target])
 
   const coachSteps = useMemo(() => {
-    if (!game.tutorial) return []
+    if (!game.tutorial || game.player.missionsDone >= FREE_OPS_START_MISSIONS_DONE) return []
     if (game.player.missionsDone === 0) return M1_STEPS
     if (game.player.missionsDone === 1) return M2_STEPS
     if (game.player.missionsDone === 2) return M3_STEPS
@@ -103,11 +123,45 @@ function GameCanvas() {
   }, [game.player.missionsDone, game.tutorial])
 
   const coach = useMemo(() => {
-    return coachSteps.find(step => step.screen === game.screen && !game.doneSteps[step.id]) ?? null
-  }, [coachSteps, game.doneSteps, game.screen])
+    const activeCoach = coachSteps.find(step => step.screen === game.screen && !game.doneSteps[step.id]) ?? null
+    // The Launchpad mission chooser is a modal owned by the current scene.
+    // Hide the coach while it is open so onboarding copy never sits over, or
+    // points back at, the control the player is already using.
+    if (game.subsurfaceView || settingsOpen || friendsOpen || hubOpen || game.popup || game.authGateOpen || (game.screen === 'launchpad' && game.launchpadMissionMenuOpen)) return null
+    return activeCoach
+  }, [coachSteps, friendsOpen, hubOpen, game.authGateOpen, game.doneSteps, game.launchpadMissionMenuOpen, game.popup, game.screen, game.subsurfaceView, settingsOpen])
 
   const coachIndex = coach ? coachSteps.findIndex(step => step.id === coach.id) : -1
   const hasCoach = !!coach
+
+  // No onboarding-step-level analytics existed before — only the
+  // mission-level events (mission_completed etc). Without per-step coverage
+  // there's no way to see where inside M1/M2/M3 players actually stall.
+  useEffect(() => {
+    if (!coach) return
+    captureGameEvent('tutorial_step_started', {
+      step_id: coach.id,
+      screen: coach.screen,
+      step_index: coachIndex,
+      total_steps: coachSteps.length,
+    })
+    // Only re-fire when the active step itself changes, not on every
+    // re-render that keeps the same coach step.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [coach?.id])
+
+  // A status toast belongs to the action that caused it. Keeping it mounted
+  // after a screen change made Earth-recovery and payout messages obscure the
+  // next mission setup, especially on portrait mobile.
+  useEffect(() => {
+    if (priorScreenRef.current === null) {
+      priorScreenRef.current = game.screen
+      return
+    }
+    if (priorScreenRef.current === game.screen) return
+    priorScreenRef.current = game.screen
+    game.toasts.forEach(toast => game.dismissToast(toast.id))
+  }, [game.dismissToast, game.screen, game.toasts])
 
   function goFromNav(id: string) {
     if (id === 'missions') {
@@ -139,51 +193,83 @@ function GameCanvas() {
 
   const currentNav = game.screen === 'missions' || game.screen === 'targets'
     ? 'missions'
-    : game.screen === 'galaxy' ? 'galaxy' : game.screen === 'fab' ? 'fab' : game.screen === 'skills' ? 'skills' : 'hub'
+    : game.screen === 'mission-history' ? 'mission-history' : game.screen === 'galaxy' ? 'galaxy' : game.screen === 'fab' ? 'fab' : game.screen === 'skills' ? 'skills' : 'hub'
   const showHub = game.screen === 'hub' || (game.screen === 'market' && !game.player.freeOperations)
-  const showNav = (showHub || ['missions', 'skills', 'targets'].includes(game.screen)) && !(game.screen === 'targets' && hasCoach)
-  const showFeedback = ['hub', 'missions', 'market', 'hangar', 'skills'].includes(game.screen)
-    && !showNav
+  const missionCreatorActive = game.screen === 'missions'
+    || game.screen === 'targets'
+    || game.screen === 'rocket-buy'
+    || (game.screen === 'fab' && !!game.mission && !!game.target)
+  const showNav = (showHub || ['missions', 'skills', 'targets', 'mission-history'].includes(game.screen))
+    && !(game.screen === 'targets' && hasCoach)
+    && !missionCreatorActive
+  const showFeedback = game.screen === 'hub'
+    && !game.subsurfaceView
     && !game.popup
-    && !game.upgradePromptOpen
     && !game.authGateOpen
 
-  // Allowlist, not a blocklist — surveys should only ever appear in a scene
-  // AFTER an action (a genuine "resting" screen), never while a player is
-  // mid-setup or mid-execution of a mission. A blocklist of "screens to
-  // avoid" rots exactly like the target/mineral bypass did earlier: miss one
-  // screen (targets, rocket-buy) and a survey slides up mid-setup again the
-  // moment the player leaves the one screen that WAS blocked (e.g. debrief).
-  const SURVEY_SAFE_SCREENS: Screen[] = ['hub', 'missions', 'market', 'hangar', 'skills', 'galaxy', 'refinery']
   const surveyBlocked = !!coach
     || !!game.popup
     || !SURVEY_SAFE_SCREENS.includes(game.screen)
 
   return (
-    <main className="game-stage" aria-label="Landnam game">
+    <main
+      className="game-stage"
+      aria-label="Landnam game"
+      aria-busy={!game.hydrated}
+      data-game-hydrated={game.hydrated ? 'true' : 'false'}
+    >
+      <TakeOnPwaPreload />
       <div className="portrait-canvas">
         <BackendStatus />
         <LandnamSyncStatus />
         {/* Mission alerts have a reserved desktop slot to the left of the
             horizontal resource HUD. They are hidden at compact widths rather
             than wrapping over progression controls. */}
-        {game.player.freeOperations && game.screen === 'hub' && (
+        {game.player.freeOperations && game.screen === 'hub' && !game.subsurfaceView && (
           <div data-ui-zone={UI_ZONES.ambientPrompt} className="hub-push-opt-in">
             <PushOptIn userId={game.authUserId ?? undefined} />
           </div>
         )}
-        {/* Settings — previously only reachable from the desktop sidebar's
-            gear. Small corner affordance so removing that rail doesn't strand
-            it. Hub only, so it never sits over gameplay chrome. */}
-        {game.screen === 'hub' && (
-          <SettingsButton onClick={() => setSettingsOpen(true)} />
+        {/* Utility controls live in the top command cluster. Keeping them out
+            of the ground dock prevents the mission status row and bottom nav
+            from becoming their accidental hit target at narrow widths. */}
+        {game.screen === 'hub' && !game.subsurfaceView && (
+          <button
+            data-testid="settings-button"
+            aria-label="Settings"
+            aria-haspopup="dialog"
+            aria-expanded={settingsOpen}
+            onClick={() => setSettingsOpen(true)}
+            style={{
+              position: 'absolute', top: 56, right: 12, zIndex: 22,
+              width: 34, height: 34, borderRadius: 999, cursor: 'pointer',
+              display: 'grid', placeItems: 'center', padding: 0,
+              background: 'var(--hub-panel, #080d18)',
+              border: '1.5px solid var(--hub-outline, rgba(255,255,255,0.55))',
+              color: 'var(--hub-cyan, #6cd4ff)',
+            }}
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="12" r="3" />
+              <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 01-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z" />
+            </svg>
+          </button>
+        )}
+        {game.screen === 'hub' && !game.subsurfaceView && !game.authGateOpen && (
+          <>
+            <FriendsButton onClick={() => setFriendsOpen(true)} />
+            <CommunityButton onClick={() => setHubOpen(true)} />
+          </>
         )}
         <DevShortcuts />
-        <div className="game-screen-area">
+        <div
+          className="game-screen-area"
+          style={{ pointerEvents: game.hydrated ? 'auto' : 'none' }}
+        >
           {/* Gated the same way as [screen]/page.tsx — see STS-624. */}
           {!game.authGateOpen && (
             <ScreenContent screen={game.screen} game={game} hasCoach={hasCoach} onBackFromHangar={() => {
-              game.go('hub')
+              game.returnFromHangar()
               if (window.location.pathname.includes('/game/ship-customizer')) {
                 router.replace('/game')
               }
@@ -192,21 +278,14 @@ function GameCanvas() {
         </div>
 
         <ToastLayer toasts={game.toasts} onDismiss={game.dismissToast} />
-        {!coach && !game.popup && !game.upgradePromptOpen && !game.authGateOpen && (
+        {!coach && !game.popup && !game.authGateOpen && (
           <MissionTicker player={game.player} screen={game.screen} onResume={game.go} />
         )}
         {showFeedback && <FeedbackButton />}
-        {['hub', 'missions', 'launchpad'].includes(game.screen) && (
-          <ContentUpdateNotice
-            player={game.player}
-            blocked={surveyBlocked || game.upgradePromptOpen || game.authGateOpen}
-            onNavigate={screen => game.go(screen)}
-          />
-        )}
         <SurveySheet blockWhile={surveyBlocked} />
         {showNav && <BottomTabBar current={currentNav} onNav={goFromNav} />}
 
-        {coach && (
+        {coach && !game.authGateOpen && (
           <TutorialCoach
             key={coach.id}
             stepIndex={coachIndex}
@@ -214,18 +293,38 @@ function GameCanvas() {
             step={coach}
             total={coachSteps.length}
             onManualNext={game.coachManualNext}
-            onSkip={() => game.skipTutorial(coachSteps.map(s => s.id))}
+            onSkip={() => {
+              // Distinct from a step being completed in the normal flow —
+              // this is the player bailing out of onboarding entirely, which
+              // mission_completed/tutorial_step_started alone can't surface.
+              captureGameEvent('tutorial_skipped', {
+                step_id: coach?.id ?? null,
+                screen: coach?.screen ?? null,
+                step_index: coachIndex,
+                total_steps: coachSteps.length,
+              })
+              game.skipTutorial(coachSteps.map(s => s.id))
+            }}
           />
         )}
-        {game.popup && game.screen !== 'market' && (
+        {game.popup === 'tutorial-complete' && !game.authGateOpen && (
+          <TutorialCompleteSheet
+            onDone={focuses => {
+              game.setPlayer(player => ({ ...player, programFocuses: focuses }))
+              game.setPopup(null)
+            }}
+            onBuildSilo={focuses => {
+              game.setPlayer(player => ({ ...player, programFocuses: focuses }))
+              game.setPopup(null)
+              game.go('build')
+            }}
+          />
+        )}
+        {game.popup && game.popup !== 'tutorial-complete' && game.screen !== 'market' && !game.authGateOpen && (
           <UnlockPopup
             kind={game.popup}
             onClose={() => {
               const popup = game.popup
-              if (popup === 'loan') {
-                game.acceptLoan()
-                return
-              }
               game.setPopup(null)
               if (popup === 'sr2') {
                 game.go('hub')
@@ -234,27 +333,13 @@ function GameCanvas() {
                 game.go('hangar')
               }
             }}
-            onDismiss={game.popup === 'loan' ? () => game.setPopup(null) : undefined}
           />
-        )}
-        {game.upgradePromptOpen && !game.popup && (
-          <SaveProgressPrompt onUpgrade={game.upgradeAccount} />
         )}
         {game.authGateOpen && (
           <AuthGateSheet
             error={game.authGateError}
             onSignIn={game.signInFromGate}
             onCreateAccount={game.createAccountFromGate}
-            onContinue={game.continueWithEmail}
-            otpPending={game.authGateOtpId !== null}
-            onVerifyOtp={game.verifyOtp}
-          />
-        )}
-        {game.pendingTerritoryClaimFor && (
-          <TerritoryClaimPopup
-            targetId={game.pendingTerritoryClaimFor.targetId}
-            clientId={game.pendingTerritoryClaimFor.clientId}
-            onDismiss={game.clearTerritoryClaimPopup}
           />
         )}
       </div>
@@ -264,6 +349,8 @@ function GameCanvas() {
           permanent nav rail is redundant chrome. Settings moved to the small
           corner button above; everything else routes through the base. */}
       {settingsOpen && <SettingsSheet onClose={() => setSettingsOpen(false)} />}
+      {friendsOpen && <FriendsSheet onClose={() => setFriendsOpen(false)} />}
+      {hubOpen && <CommunityHubSheet onClose={() => setHubOpen(false)} />}
     </main>
   )
 }

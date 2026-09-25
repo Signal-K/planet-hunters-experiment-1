@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react'
 import { formatCountdownUnit } from '@/lib/format'
-import Sheet from '@/components/ui/Sheet'
+import PageSurface from '@/components/ui/PageSurface'
 
 // July 5, 2026 10:00 AEST = 00:00 UTC
 export const NEXT_SPRINT_UTC = new Date('2026-07-05T00:00:00Z')
@@ -72,17 +72,13 @@ function formatSprintLabel(date: Date) {
 
 export function ComingSoonSheet({ feature, description, onClose, target = NEXT_SPRINT_UTC }: ComingSoonSheetProps) {
   return (
-    <Sheet
-      onDismiss={onClose}
+    <PageSurface
       zIndex={200}
-      scrimStyle={{ background: 'rgba(1,5,14,0.82)', backdropFilter: 'blur(6px)' }}
-      panelStyle={{
+      contentStyle={{
           background: '#06121f',
           border: '1px solid rgba(112,217,234,0.18)',
           padding: '28px 20px 44px',
       }}
-      handleContainerStyle={{ marginBottom: 24 }}
-      handleStyle={{ width: 36, height: 3, background: 'rgba(112,217,234,0.25)' }}
     >
 
         <div style={{ textAlign: 'center' }}>
@@ -132,6 +128,6 @@ export function ComingSoonSheet({ feature, description, onClose, target = NEXT_S
         >
           Got It
         </button>
-    </Sheet>
+    </PageSurface>
   )
 }

@@ -1,7 +1,7 @@
 // Landnam game data — all shared types and interfaces
 
 export interface MissionPayload {
-  type: 'rover' | 'satellite'
+  type: 'rover' | 'satellite' | 'deep-space-survey'
   name: string
   cargoCost: number
 }
@@ -9,7 +9,7 @@ export interface MissionPayload {
 export interface MissionSurveyPlan {
   scanRequired: boolean
   scanCount: number
-  scanSource: 'station' | 'satellite' | 'rover'
+  scanSource: 'satellite' | 'rover'
   depositsToMap: number
   revealsMinerals: boolean
   revealsLandmarks: string[]
@@ -45,9 +45,11 @@ export interface ClientStructureRecord {
   clientId: string
   state: TargetStructureState
   startedAt?: number
+  /** Set once when construction becomes operational; drives daily client XP. */
+  completedAt?: number
 }
 
-export type DailyQuestKind = 'scan' | 'land' | 'map'
+export type DailyQuestKind = 'land'
 export type DailyQuestTargetScope = 'any' | 'any-asteroid' | 'any-planet' | 'specific'
 
 export interface DailyQuestTemplate {
@@ -59,7 +61,6 @@ export interface DailyQuestTemplate {
   targetId?: string
   count: number
   payout: { francs: number; affinity: number }
-  requiresScannerBuilt?: boolean
   requiresSurveyClear?: boolean
 }
 
@@ -132,6 +133,13 @@ export interface Target {
   // archetypeForDiscovery() in tess-candidates.ts.
   archetype?: import('./target-archetypes').TargetArchetype
   recommended?: boolean
+  // Exoplanet transit physics carried from the TESS candidate at discovery
+  // (SSL-317). Used by biomes.ts to judge habitability: rocky size + a
+  // temperate equilibrium temperature makes a "habitable candidate" whose
+  // latent biomes can bloom late-game.
+  planetRadiusEarth?: number
+  periodDays?: number
+  starTeffK?: number
 }
 
 export interface Part {
@@ -211,7 +219,7 @@ export interface StructureBlueprint {
   cost: number
   costMaterials?: Record<string, number>
   unlocksAt: string
-  unlockTrigger?: 'always' | 'client-mission-trigger' | 'academy-research' | 'deep-space-telescope-unlock' | 'manual'
+  unlockTrigger?: 'always' | 'free-operations' | 'client-mission-trigger' | 'academy-research' | 'deep-space-telescope-unlock' | 'manual'
   description: string
 }
 
