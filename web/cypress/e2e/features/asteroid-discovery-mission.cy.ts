@@ -2,9 +2,10 @@
 // bare numeric threshold (deepSpaceTelescopeUnlocked — SMS lvl2 + a client at
 // affinity lvl2) with no mission and no coach, unlike the Transit Telescope's
 // story-mission on-ramp + ObservatoryCoach treatment. This spec covers the
-// new story-deep-space-telescope-survey mission gating the build slot, and
-// the new AsteroidDiscoveryCoach — beyond mission-type-matrix.cy.ts's
-// existing (mission-bypassing) build-gate/classify coverage.
+// story-deep-space-telescope-survey mission on-ramp and the
+// AsteroidDiscoveryCoach. Since the unlock gates were removed, the survey
+// mission no longer gates the build slot: in Free Ops the telescope is
+// limited only by cost.
 
 import type { GameState } from '@/game-context'
 import { seedFixtureSession } from '../../support/authenticated-fixture'
@@ -100,19 +101,20 @@ describe('Asteroid Discovery mission on-ramp (KES-128)', () => {
     cy.contains('Deep Space Telescope').should('not.exist')
   })
 
-  it('keeps Deep Space Telescope locked at Build/Place until the survey mission is completed', () => {
+  // Unlock gates were removed: after the tutorial every Base structure is
+  // limited only by cost, so the survey mission no longer gates the slot.
+  it('offers Deep Space Telescope at Build/Place in Free Ops before the survey mission', () => {
     openBuildFromHub({
-      clientMissions: { 'earthbound-minerals': 10 },
+      clientMissions: {},
       deepSpaceTelescopeMissionCompletedAt: null,
+      stash: { aluminium: 100, copper: 100, silicon: 100 },
     })
-    cy.contains('button', 'Deep Space Telescope', { timeout: 10000 }).scrollIntoView()
     cy.wait(1500)
-    // Locked Build cards stay tappable (so the reason can be shown) and are
-    // marked aria-disabled rather than natively disabled.
     cy.contains('button', 'Deep Space Telescope', { timeout: 10000 })
+      .scrollIntoView()
       .should('be.visible')
-      .and('have.attr', 'aria-disabled', 'true')
-      .and('contain.text', 'Transit telescope level 2 and client level 2 with a client')
+      .and('not.have.attr', 'aria-disabled', 'true')
+      .and('not.contain.text', 'Transit telescope level 2')
   })
 
   it('unlocks Deep Space Telescope at Build/Place once the survey mission is completed', () => {

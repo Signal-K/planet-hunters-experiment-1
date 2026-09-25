@@ -310,7 +310,6 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       upgradeLicenseGrade: loop.upgradeLicenseGrade,
       unlockBlueprint: loop.unlockBlueprint,
       claimFriendGift,
-      researchAcademy: academy.researchAcademy,
       researchLanding: academy.researchLanding,
       setAcademyFunding: academy.setAcademyFunding,
       hireCrew: academy.hireCrew,

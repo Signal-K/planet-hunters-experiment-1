@@ -5,7 +5,7 @@ import type { GameState } from '@/lib/game-types'
 import type { RefineryRecipe, ShipRoomKind, StructureBlueprint, RocketModel, SubsurfaceRoomId } from '@/lib/data'
 import { rocketConfigForModel } from '@/lib/data'
 import { recipeIsAffordable, rocketCompositionForId, rocketStageRecoveryForId } from '@/lib/data/rocket-composition'
-import { MINERAL_META, CLIENT_SLOTS, LAUNCHPAD_UPGRADE_COST, OPEN_MARKET_SELL_RATE, MINERAL_SILO_CAPACITY, SURFACE_SILO_CAPACITY, DEEP_MINERAL_SILO_CAPACITY, REMOTE_MINERAL_SILO_CAPACITY, customizerPartById, deepSpaceTelescopeUnlocked, SUBSURFACE_EXCAVATE_COST, SUBSURFACE_ROOMS, canAffordSubsurface } from '@/lib/data'
+import { MINERAL_META, CLIENT_SLOTS, LAUNCHPAD_UPGRADE_COST, OPEN_MARKET_SELL_RATE, MINERAL_SILO_CAPACITY, SURFACE_SILO_CAPACITY, DEEP_MINERAL_SILO_CAPACITY, REMOTE_MINERAL_SILO_CAPACITY, customizerPartById, structureUnlocked, SUBSURFACE_EXCAVATE_COST, SUBSURFACE_ROOMS, canAffordSubsurface } from '@/lib/data'
 import { structureIsStaffed } from './AcademySystem'
 
 // Sell to open market (raw): ~80% of book value — see [[Economy and Minerals]].
@@ -438,8 +438,8 @@ export function applyRocketStageRecovery(s: GameState, rocket: RocketModel): Gam
 export function applyPlaceStructure(s: GameState, structure: StructureBlueprint | undefined, kind: string, plot: number): GameState {
   if (!structure || structure.kind !== kind) return s
   if (s.player.placed.includes(kind)) return s
-  if (kind === 'astronaut-academy' && !s.player.academyResearched) return s
-  if (kind === 'deep-space-telescope' && !deepSpaceTelescopeUnlocked({ transitSatelliteLevel: s.player.transitSatelliteLevel, clientMissions: s.player.clientMissions })) return s
+  // The tutorial's own order is enforced here; after it, only cost limits a build.
+  if (!structureUnlocked(structure, { placed: s.player.placed, freeOperations: s.player.freeOperations })) return s
   if (s.player.francs < structure.cost) return s
   if (!Object.entries(structure.costMaterials ?? {}).every(([mineral, amount]) => (s.player.stash?.[mineral] ?? 0) >= amount)) return s
   const stash = { ...(s.player.stash ?? {}) }
