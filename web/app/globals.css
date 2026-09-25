@@ -752,6 +752,17 @@ button { cursor: pointer; }
   border-top: 1px solid rgba(255, 255, 255, 0.14);
 }
 
+/* SSL-346: shell-owned controls are available on every live surface. */
+.game-chrome-top { position:absolute; z-index:70; top:12px; left:12px; display:flex; align-items:center; gap:8px; pointer-events:none; }
+.game-chrome-top__readout, .game-chrome-top__chip { min-height:32px; padding:8px 12px; border:1px solid var(--ln-hairline); border-radius:8px; background:color-mix(in srgb, var(--ln-void) 82%, transparent); color:var(--ln-cyan); font:800 12px var(--ln-font-display); letter-spacing:.12em; text-transform:uppercase; }
+.game-chrome-top__chip { pointer-events:auto; cursor:pointer; }
+.game-chrome-bottom { position:absolute; z-index:70; left:50%; bottom:12px; transform:translateX(-50%); display:flex; align-items:stretch; gap:4px; max-width:calc(100% - 24px); padding:4px; overflow-x:auto; border:1px solid var(--ln-hairline); border-radius:12px; background:color-mix(in srgb, var(--ln-void) 88%, transparent); }
+.game-chrome-bottom button { flex:0 0 auto; min-height:40px; padding:8px 12px; border:1px solid transparent; border-radius:8px; background:transparent; color:var(--ln-text); font:800 12px var(--ln-font-display); letter-spacing:.08em; text-transform:uppercase; cursor:pointer; }
+.game-chrome-bottom button[aria-current="page"], .game-chrome-bottom button:hover { border-color:var(--ln-cyan-border); background:var(--ln-cyan-soft); color:var(--ln-cyan-bright); }
+@media (min-width:1024px) { .game-chrome-bottom { bottom:24px; } .game-chrome-top { top:24px; left:24px; } }
+
+.hub-sky-craft-control { position:absolute; z-index:11; top:96px; right:16px; display:flex; align-items:center; gap:8px; min-height:40px; padding:8px 12px; border:1px solid var(--ln-cyan-border); border-radius:8px; background:color-mix(in srgb, var(--ln-void) 74%, transparent); color:var(--ln-cyan-bright); font:800 12px var(--ln-font-display); letter-spacing:.08em; text-transform:uppercase; cursor:pointer; }
+
 .game-screen { position: absolute; inset: 0; overflow: hidden; background: var(--ln-bg); }
 
 /* Fallback while a code-split screen chunk loads (GameScreenRouter's
@@ -761,21 +772,6 @@ button { cursor: pointer; }
 /* The Hub and Launchpad share one physical campus. Each screen enters with a
    short ground-line camera move so navigation feels like approaching the pad,
    not replacing the entire scene. */
-.earth-base-campus-transition { animation: 520ms var(--ln-ease-mech) both earth-base-approach; transform-origin: 50% 76%; }
-@keyframes earth-base-recede { to { opacity: 0; transform: scale(0.90); } }
-@keyframes earth-base-approach { from { opacity: 0.72; transform: scale(1.16); } to { opacity: 1; transform: scale(1); } }
-@media (prefers-reduced-motion: reduce) {
-  .earth-base-campus-transition { animation: none; }
-}
-/* The authored scene is wider than a narrow phone viewport. Scaling it from
-   the camera centre during the 520ms approach pushes the first launchpad plot
-   off the left edge before the animation settles, so the actionable building
-   is briefly clipped in the very viewport where it is most likely to be
-   tapped. Keep the composition stable on portrait phones; desktop and tablet
-   retain the camera move. */
-@media (max-width: 640px) {
-  .earth-base-campus-transition { animation: none; }
-}
 .backend-status {
   position: absolute;
   right: var(--ln-s-3);

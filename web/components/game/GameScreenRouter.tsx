@@ -231,7 +231,7 @@ export function ScreenContent({
             game.openLaunchpadMissionMenu()
           }}
           subsurface={game.subsurfaceView}
-          onSubsurfaceChange={game.setSubsurfaceView}
+          onSubsurfaceChange={open => game.go(open ? 'hub-subsurface' : 'hub')}
         />
       )
 
