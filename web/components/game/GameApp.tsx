@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useEffect, useRef, useState } from 'react'
+import { useMemo, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { GameProvider, useGame } from '@/game-context'
 import { M1_STEPS, M2_STEPS, M3_STEPS } from '@/lib/data'
@@ -11,24 +11,18 @@ import TutorialCoach from '@/components/game/TutorialCoach'
 import MissionTicker from '@/components/game/MissionTicker'
 import UnlockPopup from '@/components/game/UnlockPopup'
 import { TutorialCompleteSheet } from '@/components/game/TutorialCompleteSheet'
-import BottomTabBar from '@/components/layout/BottomTabBar'
 import BackendStatus from '@/components/game/BackendStatus'
 import LandnamSyncStatus from '@/components/game/LandnamSyncStatus'
 import { PushOptIn } from '@/components/game/PushOptIn'
-import FeedbackButton from '@/components/ui/FeedbackButton'
 import SurveySheet from '@/components/ui/SurveySheet'
 import ToastLayer from '@/components/ui/ToastLayer'
 import { initPostHog, captureScreenView, captureGameEvent } from '@/lib/posthog'
 import { SURVEY_SAFE_SCREENS } from '@/lib/survey-gating'
 import DevShortcuts from '@/components/dev/DevShortcuts'
 import AuthGateSheet from '@/components/game/AuthGateSheet'
-import SettingsSheet from '@/components/game/SettingsSheet'
-import FriendsButton from '@/components/game/FriendsButton'
-import FriendsSheet from '@/components/game/FriendsSheet'
-import CommunityButton from '@/components/game/CommunityButton'
-import CommunityHubSheet from '@/components/game/CommunityHubSheet'
 import TakeOnPwaPreload from '@/components/takeon/TakeOnPwaPreload'
 import { UI_ZONES } from '@/lib/ui-zones'
+import ShellSheets from '@/components/game/ShellSheets'
 
 function GameCanvas() {
   const game = useGame()
@@ -36,9 +30,6 @@ function GameCanvas() {
   const arrivalScheduledFor = useRef<number | null>(null)
   const returnScheduledKey = useRef<string | null>(null)
   const priorScreenRef = useRef<Screen | null>(null)
-  const [settingsOpen, setSettingsOpen] = useState(false)
-  const [friendsOpen, setFriendsOpen] = useState(false)
-  const [hubOpen, setHubOpen] = useState(false)
 
   // PostHog injects recorder/survey scripts. Initialising during module
   // evaluation can let those scripts mutate the document while React is
@@ -127,9 +118,9 @@ function GameCanvas() {
     // The Launchpad mission chooser is a modal owned by the current scene.
     // Hide the coach while it is open so onboarding copy never sits over, or
     // points back at, the control the player is already using.
-    if (game.subsurfaceView || settingsOpen || friendsOpen || hubOpen || game.popup || game.authGateOpen || (game.screen === 'launchpad' && game.launchpadMissionMenuOpen)) return null
+    if (game.subsurfaceView || game.shellSheet || game.popup || game.authGateOpen || (game.screen === 'launchpad' && game.launchpadMissionMenuOpen)) return null
     return activeCoach
-  }, [coachSteps, friendsOpen, hubOpen, game.authGateOpen, game.doneSteps, game.launchpadMissionMenuOpen, game.popup, game.screen, game.subsurfaceView, settingsOpen])
+  }, [coachSteps, game.authGateOpen, game.doneSteps, game.launchpadMissionMenuOpen, game.popup, game.screen, game.shellSheet, game.subsurfaceView])
 
   const coachIndex = coach ? coachSteps.findIndex(step => step.id === coach.id) : -1
   const hasCoach = !!coach
@@ -163,50 +154,6 @@ function GameCanvas() {
     game.toasts.forEach(toast => game.dismissToast(toast.id))
   }, [game.dismissToast, game.screen, game.toasts])
 
-  function goFromNav(id: string) {
-    if (id === 'missions') {
-      game.goToMissions()
-      return
-    }
-    if (id === 'fab') {
-      if (!game.player.freeOperations) {
-        game.go('hub')
-        return
-      }
-      // The Build tab is an entry point, not a resume button. Clear any
-      // completed/stale mission context so it opens the Free Ops chooser.
-      game.setMissionId(null)
-      game.setTargetId(null)
-      game.go('fab')
-      return
-    }
-    if (id === 'market') {
-      game.go('market')
-      return
-    }
-    if (id === 'skills') {
-      game.go('skills')
-      return
-    }
-    game.go(id as Screen)
-  }
-
-  const currentNav = game.screen === 'missions' || game.screen === 'targets'
-    ? 'missions'
-    : game.screen === 'mission-history' ? 'mission-history' : game.screen === 'instrument-hub' || game.screen === 'galaxy' ? 'instrument-hub' : game.screen === 'fab' ? 'fab' : game.screen === 'skills' ? 'skills' : 'hub'
-  const showHub = game.screen === 'hub' || (game.screen === 'market' && !game.player.freeOperations)
-  const missionCreatorActive = game.screen === 'missions'
-    || game.screen === 'targets'
-    || game.screen === 'rocket-buy'
-    || (game.screen === 'fab' && !!game.mission && !!game.target)
-  const showNav = (showHub || ['missions', 'skills', 'targets', 'mission-history'].includes(game.screen))
-    && !(game.screen === 'targets' && hasCoach)
-    && !missionCreatorActive
-  const showFeedback = game.screen === 'hub'
-    && !game.subsurfaceView
-    && !game.popup
-    && !game.authGateOpen
-
   const surveyBlocked = !!coach
     || !!game.popup
     || !SURVEY_SAFE_SCREENS.includes(game.screen)
@@ -230,37 +177,6 @@ function GameCanvas() {
             <PushOptIn userId={game.authUserId ?? undefined} />
           </div>
         )}
-        {/* Utility controls live in the top command cluster. Keeping them out
-            of the ground dock prevents the mission status row and bottom nav
-            from becoming their accidental hit target at narrow widths. */}
-        {game.screen === 'hub' && !game.subsurfaceView && (
-          <button
-            data-testid="settings-button"
-            aria-label="Settings"
-            aria-haspopup="dialog"
-            aria-expanded={settingsOpen}
-            onClick={() => setSettingsOpen(true)}
-            style={{
-              position: 'absolute', top: 56, right: 12, zIndex: 22,
-              width: 34, height: 34, borderRadius: 999, cursor: 'pointer',
-              display: 'grid', placeItems: 'center', padding: 0,
-              background: 'var(--hub-panel, #080d18)',
-              border: '1.5px solid var(--hub-outline, rgba(255,255,255,0.55))',
-              color: 'var(--hub-cyan, #6cd4ff)',
-            }}
-          >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <circle cx="12" cy="12" r="3" />
-              <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 01-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z" />
-            </svg>
-          </button>
-        )}
-        {game.screen === 'hub' && !game.subsurfaceView && !game.authGateOpen && (
-          <>
-            <FriendsButton onClick={() => setFriendsOpen(true)} />
-            <CommunityButton onClick={() => setHubOpen(true)} />
-          </>
-        )}
         <DevShortcuts />
         <div
           className="game-screen-area"
@@ -281,9 +197,7 @@ function GameCanvas() {
         {!coach && !game.popup && !game.authGateOpen && (
           <MissionTicker player={game.player} screen={game.screen} onResume={game.go} />
         )}
-        {showFeedback && <FeedbackButton />}
         <SurveySheet blockWhile={surveyBlocked} />
-        {showNav && <BottomTabBar current={currentNav} onNav={goFromNav} />}
 
         {coach && !game.authGateOpen && (
           <TutorialCoach
@@ -348,9 +262,7 @@ function GameCanvas() {
           one — the Earth Base's structures and action rail are the menu, so a
           permanent nav rail is redundant chrome. Settings moved to the small
           corner button above; everything else routes through the base. */}
-      {settingsOpen && <SettingsSheet onClose={() => setSettingsOpen(false)} />}
-      {friendsOpen && <FriendsSheet onClose={() => setFriendsOpen(false)} />}
-      {hubOpen && <CommunityHubSheet onClose={() => setHubOpen(false)} />}
+      {!game.authGateOpen && <ShellSheets />}
     </main>
   )
 }

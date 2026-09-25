@@ -44,6 +44,7 @@ import {
   markInstrumentDigestNotified,
 } from '@/lib/systems/InstrumentFeedSystem'
 import { missionResumeScreen } from '@/lib/mission-resume'
+import { missionRunsFor } from '@/lib/mission-runs'
 import { surfaceForScreen } from '@/lib/screen-layouts'
 import { SurfaceLayout } from '@/components/layout/frame/ScreenLayouts'
 
@@ -242,7 +243,6 @@ function ScreenBody({
               return game.openLaunchpadMissionMenu()
             }
           }}
-          onUpgradeLaunchpad={() => game.upgradeLaunchpad()}
           onExcavateSubsurface={() => game.excavateSubsurface()}
           onBuildSubsurfaceRoom={roomId => game.buildSubsurfaceRoom(roomId)}
           onFocusResources={(label, minerals) => {
@@ -252,6 +252,19 @@ function ScreenBody({
           }}
           subsurface={game.subsurfaceView}
           onSubsurfaceChange={game.setSubsurfaceView}
+          onResumeRun={run => {
+            captureGameEvent('mission_resumed', { mission_phase: run.phase })
+            if (run.current) game.go(missionResumeScreen(game.player))
+            else game.resumeMissionRun(run.key)
+          }}
+          onOpenPendingLaunch={() => game.go('fab')}
+          shell={{
+            showMarket: game.player.freeOperations,
+            marketOpen: false,
+            menuOpen: game.shellSheet === 'menu',
+            onMarket: () => game.go('market'),
+            onMenu: () => game.setShellSheet(game.shellSheet === 'menu' ? null : 'menu'),
+          }}
         />
       )
 
@@ -430,21 +443,9 @@ function ScreenBody({
 
     case 'launchpad':
       {
-        const currentRunKey = game.player.activeMission
-          ? (game.player.missionRunId ?? `${game.player.activeMission.id}:${game.player.transitStartedAt ?? 'current'}`)
-          : null
-        const missionRuns = [
-          ...(game.player.activeMission && currentRunKey ? [{
-            key: currentRunKey,
-            label: game.player.activeMission.label,
-            phase: game.player.missionPhase ?? 'transit',
-          }] : []),
-          ...(game.player.pausedMissionRuns ?? []).map(run => ({
-            key: run.key,
-            label: run.activeMission.label,
-            phase: run.missionPhase ?? 'transit',
-          })),
-        ]
+        const runs = missionRunsFor(game.player)
+        const currentRunKey = runs.find(run => run.current)?.key ?? null
+        const missionRuns = runs.map(({ key, label, phase }) => ({ key, label, phase }))
       return (
         <LaunchpadScreen
           onBack={() => game.goBack()}

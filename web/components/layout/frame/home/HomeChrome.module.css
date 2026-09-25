@@ -1,0 +1,187 @@
+/* SSL-35 / SSL-340 Home chrome. Quiet, flat, no gradients beyond the thin
+   legibility scrim; every control keeps a 44px touch target. */
+
+.topBar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px;
+  background: color-mix(in srgb, var(--ln-void) 48%, transparent);
+}
+.topBar[data-dev-launcher='true'] { padding-left: 64px; }
+
+.meta {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+  margin-right: auto;
+}
+.eyebrow {
+  color: color-mix(in srgb, var(--ln-text) 72%, transparent);
+  font: 700 9px/1 var(--ln-font-display);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.title {
+  margin: 0;
+  color: var(--ln-text);
+  font: 800 16px/1 var(--ln-font-mono);
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
+.hubButton,
+.barButton,
+.switchButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0 12px;
+  border: 1.5px solid color-mix(in srgb, var(--ln-text) 28%, transparent);
+  border-radius: var(--ln-r-pill);
+  background: color-mix(in srgb, var(--ln-void) 55%, transparent);
+  color: var(--ln-text);
+  font: 800 10px/1 var(--ln-font-display);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+.hubButton[data-attention='true'] { border-color: var(--ln-cyan); color: var(--ln-cyan); }
+.hubButton svg,
+.barButton svg,
+.switchButton svg { width: 18px; height: 18px; flex-shrink: 0; }
+
+.bottomBar {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  padding: 8px 16px 16px;
+}
+
+.missionSwitch {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+  margin-right: auto;
+}
+.switchButton { padding: 0; width: 44px; }
+.switchButton:disabled { opacity: 0.35; cursor: default; }
+
+.runChip {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 4px;
+  min-width: 0;
+  max-width: 152px;
+  min-height: 44px;
+  padding: 0 12px;
+  border: 1.5px solid var(--ln-cyan);
+  border-radius: var(--ln-r-lg);
+  background: color-mix(in srgb, var(--ln-void) 64%, transparent);
+  color: var(--ln-text);
+  text-align: left;
+  cursor: pointer;
+}
+.runChip span {
+  color: var(--ln-cyan);
+  font: 800 8px/1 var(--ln-font-display);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+.runChip strong {
+  overflow: hidden;
+  font: 700 11px/1.1 var(--ln-font-display);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.barButton {
+  flex-direction: column;
+  gap: 4px;
+  width: 56px;
+  min-height: 52px;
+  padding: 4px 0;
+  border: 0;
+  border-radius: var(--ln-r-lg);
+  background: transparent;
+  font-size: 8px;
+  text-shadow: 0 1px 4px var(--ln-void);
+}
+.barButton svg { filter: drop-shadow(0 1px 3px var(--ln-void)); }
+.barButton[aria-expanded='true'] { color: var(--ln-cyan); }
+
+/* Sky: rockets that need a tap. Sits in the upper sky, clear of the top
+   bar, and never on the ground line where buildings take taps. */
+.sky {
+  position: absolute;
+  top: calc(72px + env(safe-area-inset-top, 0px));
+  left: 16px;
+  right: 16px;
+  z-index: 12;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  pointer-events: none;
+}
+.skyRocket {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 4px 12px 4px 4px;
+  border: 1.5px solid var(--ln-cyan);
+  border-radius: var(--ln-r-pill);
+  background: color-mix(in srgb, var(--ln-void) 70%, transparent);
+  color: var(--ln-text);
+  cursor: pointer;
+  pointer-events: auto;
+  animation: sky-rocket-bob 3.2s ease-in-out infinite;
+}
+.skyRocket:nth-child(2n) { animation-delay: -1.6s; }
+.skyRocketGlyph {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--ln-cyan);
+  color: var(--ln-void);
+}
+.skyRocketGlyph svg { width: 18px; height: 18px; }
+.skyRocketText { display: flex; flex-direction: column; gap: 4px; text-align: left; min-width: 0; }
+.skyRocketText span {
+  color: var(--ln-cyan);
+  font: 800 8px/1 var(--ln-font-display);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+.skyRocketText strong {
+  max-width: 128px;
+  overflow: hidden;
+  font: 700 11px/1.1 var(--ln-font-display);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@keyframes sky-rocket-bob {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .skyRocket { animation: none; }
+}
+
+@media (min-width: 1024px) {
+  .topBar { padding: 16px 32px; }
+  .bottomBar { padding: 8px 32px 24px; }
+  .runChip { max-width: 240px; }
+  .sky { top: 96px; }
+}

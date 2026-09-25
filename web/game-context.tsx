@@ -260,6 +260,8 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       openLaunchpadMissionMenu: ui.openLaunchpadMissionMenu,
       launchpadMissionMenuOpen: ui.launchpadMissionMenuOpen,
       setLaunchpadMissionMenuOpen: ui.setLaunchpadMissionMenuOpen,
+      shellSheet: ui.shellSheet,
+      setShellSheet: ui.setShellSheet,
       returnFromHangar: ui.returnFromHangar,
       goToMissions: ui.goToMissions,
       markContractsOpened: ui.markContractsOpened,

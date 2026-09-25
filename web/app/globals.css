@@ -694,48 +694,13 @@ button { cursor: pointer; }
   outline-offset: 2px;
 }
 
-/* right:96 clears the shared shell's Menu pill (.game-menu-button occupies
-   12–84px from the edge). Compact landscape drops both pills to the 8px
-   command cluster so they do not sit on the hub HUD. */
-.game-friends-button {
-  position: absolute;
-  top: 56px;
-  right: 96px;
-  z-index: 22;
-  min-height: 34px;
-  border-radius: 999px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 0 12px;
-  background: var(--ln-panel);
-  border: 1px solid var(--ln-hairline);
-  color: var(--ln-cyan);
-  font-family: var(--ln-font-display);
-  font-size: 10px;
-  font-weight: 800;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-}
-
-/* Hub utilities form one deliberate two-row header on device-sized canvases:
-   title/time above, balance/friends/menu below. They used to be four unrelated
-   absolute coordinates, which drifted as soon as the viewport changed. */
-@media (max-width: 1023px) {
-  .portrait-canvas:has([data-screen="hub"]) .game-menu-button { top: 66px; right: 12px; }
-  .portrait-canvas:has([data-screen="hub"]) .hub-friends-button { top: 66px !important; right: 92px !important; }
-  .portrait-canvas:has([data-screen="hub"]) .hub-community-button { top: 66px !important; right: 196px !important; }
-  .portrait-canvas:has([data-screen="hub"]) .sync-status { top: 110px; bottom: auto !important; left: 12px; height: max-content; }
-  .portrait-canvas:has([data-screen="hub"]) .feedback-launcher { top: 110px !important; right: 12px !important; bottom: auto !important; }
-  .portrait-canvas:has([data-screen="hub"]) .feedback-panel { right: 12px !important; bottom: calc(var(--ln-nav-h) + 12px) !important; }
-}
-
-@media (max-width: 379px) {
-  .portrait-canvas:has([data-screen="hub"]) .hub-friends-button { width: 36px; min-width: 36px; padding: 0 !important; justify-content: center; }
-  .portrait-canvas:has([data-screen="hub"]) .hub-friends-button span { display: none; }
-  .portrait-canvas:has([data-screen="hub"]) .hub-community-button { width: 36px; min-width: 36px; padding: 0 !important; justify-content: center; right: 136px !important; }
-  .portrait-canvas:has([data-screen="hub"]) .hub-community-button span { display: none; }
+/* SSL-35: Home carries Menu, Market and the mission switch in its bottom
+   bar; Friends, Community, Feedback and Garden moved into Menu. Keep the
+   quiet status chips just above that bar instead of on top of it. */
+.portrait-canvas:has([data-layout="home"]) .sync-status,
+.portrait-canvas:has([data-layout="home"]) .backend-status {
+  top: auto !important;
+  bottom: calc(80px + env(safe-area-inset-bottom, 0px)) !important;
 }
 
 .bottom-tab-bar {
@@ -923,8 +888,7 @@ button { cursor: pointer; }
    the same breakpoint the mobile bar uses; desktop status indicators keep
    their normal position above the full-width command rail. */
 @media (orientation: landscape) and (max-width: 1023px) and (max-height: 500px) {
-  .game-menu-button,
-  .game-friends-button {
+  .game-menu-button {
     top: var(--ln-s-2);
   }
   [data-testid="tutorial-coach-block"] {

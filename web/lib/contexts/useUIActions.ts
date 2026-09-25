@@ -1,6 +1,6 @@
 import { useRef, useState, useCallback } from 'react'
 import type { Toast } from '@/components/ui/ToastLayer'
-import type { Screen, GameState } from '@/lib/game-types'
+import type { Screen, GameState, ShellSheet } from '@/lib/game-types'
 import { EARTH_BASE_SCOPE } from '@/lib/scene-scope'
 import type { SceneScope } from '@/lib/scene-scope'
 import { isHostScene, resolveLogicalBack, type HostScene } from '@/lib/screen-back'
@@ -25,6 +25,9 @@ export function useUIActions(
   // Every Launchpad entry is now the physical scene. The retired overview was
   // a generic dashboard that broke the Base's scene-first game flow.
   const [launchpadMissionMenuOpen, setLaunchpadMissionMenuOpen] = useState(false)
+  // SSL-35: the one shell-level sheet or pop-up open over the current
+  // screen (Menu and the things it opens). Chrome, not save data.
+  const [shellSheet, setShellSheet] = useState<ShellSheet | null>(null)
   // Last physical place the player stood in (Hub / Launchpad / Academy).
   // Overlay Back uses this instead of visit history, so Launchpad never
   // returns to Hangar. Not persisted — it is chrome, not save data.
@@ -150,5 +153,5 @@ export function useUIActions(
     setState(s => ({ ...s, pendingTerritoryClaimFor: undefined, screen: s.tutorial ? 'hub' : 'market' }))
   }, [setState])
 
-  return { go, goBack, recordScreenTransition, goToMissions, markContractsOpened, setScreenFromUrl, skipNextUrlSync, setPopup, setMenuOpen, addToast, dismissToast, clearTerritoryClaimPopup, toasts, subsurfaceView, setSubsurfaceView, openLaunchpad, openLaunchpadMissionMenu, launchpadMissionMenuOpen, setLaunchpadMissionMenuOpen, returnFromHangar }
+  return { go, goBack, recordScreenTransition, goToMissions, markContractsOpened, setScreenFromUrl, skipNextUrlSync, setPopup, setMenuOpen, addToast, dismissToast, clearTerritoryClaimPopup, toasts, subsurfaceView, setSubsurfaceView, openLaunchpad, openLaunchpadMissionMenu, launchpadMissionMenuOpen, setLaunchpadMissionMenuOpen, returnFromHangar, shellSheet, setShellSheet }
 }
