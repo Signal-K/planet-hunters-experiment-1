@@ -153,7 +153,9 @@ describe('Visual QA — game screens and mining canvas', () => {
     // The app always mounts a hidden portrait-guard dialog whose copy starts
     // with "LANDNAM OPERATIONS". Scope this assertion to the actual intro
     // title so the hidden guard cannot win Cypress's text lookup in portrait.
-    cy.get('.intro-title', { timeout: 12000 }).should('be.visible').and('have.text', 'LANDNAM')
+    // SSL-35: the intro is the Landing flow; a signed-in fresh save shows the
+    // wordmark heading with Start new game.
+    cy.get('[data-layout="landing"] h1', { timeout: 12000 }).should('be.visible').and('have.text', 'LANDNAM')
     cy.screenshot('01-intro-screen')
 
     // Begin → hub setup
