@@ -702,6 +702,12 @@ button { cursor: pointer; }
   top: auto !important;
   bottom: calc(80px + env(safe-area-inset-bottom, 0px)) !important;
 }
+/* A pop-up in the frame's overlay slot (e.g. Market) covers the screen; the
+   status chips would otherwise print on top of it. */
+.portrait-canvas:has([data-frame-slot="overlay"]:not(:empty)) .sync-status,
+.portrait-canvas:has([data-frame-slot="overlay"]:not(:empty)) .backend-status {
+  display: none;
+}
 
 .bottom-tab-bar {
   flex: none;

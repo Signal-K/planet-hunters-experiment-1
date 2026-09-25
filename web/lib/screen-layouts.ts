@@ -75,7 +75,8 @@ export const GAME_ROUTES = [
   { path: '/game/hub', screen: 'hub', surface: 'home' },
   { path: '/game/hub-subsurface', screen: 'hub-subsurface', surface: 'home' },
   { path: '/game/build', screen: 'build', surface: 'home' },
-  { path: '/game/market', screen: 'market', surface: 'home' },
+  // Market is a pop-up over Home; the old page URL opens it there.
+  { path: '/game/market', screen: 'market', surface: 'home', redirectTo: '/game/hub (Market pop-up open)' },
 
   // Mission setup
   { path: '/game/missions', screen: 'missions', surface: 'mission-setup' },
