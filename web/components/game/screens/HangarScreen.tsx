@@ -3,7 +3,7 @@
 import Image from 'next/image'
 import { useState } from 'react'
 import TopBar from '@/components/ui/TopBar'
-import { ROCKET_MODELS, hasShipCustomizer, calculateShipSuccessChance, selectedCustomizerPartIds, getBuildSequence } from '@/lib/data'
+import { ROCKET_MODELS, missionsRequirementMet, rocketModelAvailable, hasShipCustomizer, calculateShipSuccessChance, selectedCustomizerPartIds, getBuildSequence } from '@/lib/data'
 import type { RocketModel, InstalledCustomizerPartsByKind } from '@/lib/data'
 import { UI_ZONES } from '@/lib/ui-zones'
 import ShipInteriorPreview from '@/components/game/ShipInteriorPreview'
@@ -39,7 +39,7 @@ function StatBar({ label, value, max }: { label: string; value: number; max: num
 }
 
 function RocketCard({ rocket, missionsDone, onSelect }: { rocket: RocketModel; missionsDone: number; onSelect?: (id: string) => void }) {
-  const missionUnlocked = missionsDone >= rocket.missionsRequired
+  const missionUnlocked = missionsRequirementMet(rocket.missionsRequired, missionsDone)
   const isAvailable = !rocket.locked && missionUnlocked
   const isLocked = rocket.locked || !missionUnlocked
   const hasCost = rocket.costFrancs > 0
@@ -153,7 +153,7 @@ export default function HangarScreen({ francs, missionsDone, unlockedSkillNodes,
   const successChance = hasLoadout ? calculateShipSuccessChance(installedIds, sequence) : null
   const constructionRocket = [...ROCKET_MODELS]
     .reverse()
-    .find(rocket => !rocket.locked && missionsDone >= rocket.missionsRequired) ?? ROCKET_MODELS[0]
+    .find(rocket => rocketModelAvailable(rocket, missionsDone)) ?? ROCKET_MODELS[0]
 
   return (
     <div className={`game-screen theme-light ${styles.screen}`}>
@@ -168,7 +168,7 @@ export default function HangarScreen({ francs, missionsDone, unlockedSkillNodes,
             </div>
             <div className={styles.fleetReadout} data-testid="hangar-fleet-readout">
               <span className={styles.railLabel}>{pendingLaunch ? 'Vehicle in build' : 'Cleared fleet'}</span>
-              <strong className={styles.fleetValue}>{pendingLaunch ? pendingRocketName ?? 'STAGED VEHICLE' : `${ROCKET_MODELS.filter(rocket => !rocket.locked && missionsDone >= rocket.missionsRequired).length}/${ROCKET_MODELS.length}`}</strong>
+              <strong className={styles.fleetValue}>{pendingLaunch ? pendingRocketName ?? 'STAGED VEHICLE' : `${ROCKET_MODELS.filter(rocket => rocketModelAvailable(rocket, missionsDone)).length}/${ROCKET_MODELS.length}`}</strong>
             </div>
           </div>
 

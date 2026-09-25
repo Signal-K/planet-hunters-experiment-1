@@ -1,7 +1,6 @@
 import type { GameState, Player } from '@/lib/game-types'
 import {
   ACADEMY_DAILY_UPKEEP,
-  ACADEMY_RESEARCH_XP_COST,
   CLIENT_AFFINITY_MISSION_THRESHOLD,
   CREW_DAILY_UPKEEP,
   CREW_FIRST_HIRE_COST,
@@ -84,7 +83,7 @@ export function crewHireEligibility(
   now: number = Date.now(),
 ): HireEligibility {
   const cost = hireCost(player)
-  if (!player.academyResearched || !academyBuilt) {
+  if (!academyBuilt) {
     return { ok: false, reason: 'academy-locked', cost }
   }
   const source = crewSourcesForClients(clients).find(item => item.id === sourceId)
@@ -221,27 +220,13 @@ export function settleCrewEconomy(state: GameState, now: number = Date.now()): G
   }
 }
 
-export function applyResearchAcademy(state: GameState): GameState {
-  if (state.player.academyResearched || !academyAffinityUnlocked(state.player)) return state
-  if ((state.player.researchXP ?? 0) < ACADEMY_RESEARCH_XP_COST) return state
-  return {
-    ...state,
-    player: {
-      ...state.player,
-      researchXP: (state.player.researchXP ?? 0) - ACADEMY_RESEARCH_XP_COST,
-      academyResearched: true,
-      academyFunded: true,
-    },
-  }
-}
-
 export function applySetAcademyFunding(state: GameState, funded: boolean): GameState {
   if (!state.player.placed.includes('astronaut-academy')) return state
   return { ...state, player: { ...state.player, academyFunded: funded } }
 }
 
 export function applyResearchCrewModule(state: GameState): GameState {
-  if (state.player.crewModuleResearched || !state.player.academyResearched) return state
+  if (state.player.crewModuleResearched || !state.player.placed.includes('astronaut-academy')) return state
   if ((state.player.researchXP ?? 0) < CREW_MODULE_RESEARCH_XP_COST) return state
   return {
     ...state,

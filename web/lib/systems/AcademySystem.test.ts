@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { STATIC_CATALOG } from '@/lib/catalog'
 import {
-  ACADEMY_RESEARCH_XP_COST,
   CREW_FIRST_HIRE_COST,
   CREW_HIRE_ESCALATION,
   CREW_MODULE_RESEARCH_XP_COST,
@@ -20,7 +19,6 @@ import {
   applyAwardMissionCrewXP,
   applyCollectCrewTraining,
   applyHireCrew,
-  applyResearchAcademy,
   applyResearchCrewModule,
   applyShareChartsWithClient,
   applyStartCandidateTraining,
@@ -60,22 +58,19 @@ function astronaut(id = 'crew-test', selfTrained = true): CrewMember {
 }
 
 describe('AcademySystem', () => {
-  it('unlocks Academy research after two clients reach affinity level 2', () => {
+  it('derives client affinity levels used by the Academy intro mission offer', () => {
     const threshold = 5
     expect(clientAffinityLevel(threshold - 1)).toBe(1)
     expect(clientAffinityLevel(threshold)).toBe(2)
     expect(academyAffinityUnlocked(game({
       clientMissions: { alpha: threshold, beta: threshold },
     }).player)).toBe(true)
+  })
 
-    const researched = applyResearchAcademy(game({
-      academyResearched: false,
-      placed: [],
-      researchXP: ACADEMY_RESEARCH_XP_COST,
-      clientMissions: { alpha: threshold, beta: threshold },
-    }))
-    expect(researched.player.academyResearched).toBe(true)
-    expect(researched.player.researchXP).toBe(0)
+  it('opens hiring once the Academy is built, with no separate research step', () => {
+    const player = game({ academyResearched: false }).player
+    expect(crewHireEligibility(player, 'nasa', STATIC_CATALOG.clients, true, NOW).ok).toBe(true)
+    expect(crewHireEligibility(player, 'nasa', STATIC_CATALOG.clients, false, NOW).reason).toBe('academy-locked')
   })
 
   it('hires level-3 named astronauts with escalating costs and weekly limits', () => {

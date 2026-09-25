@@ -148,6 +148,7 @@ describe('Smoke — Landnam', () => {
     cy.get('[data-testid="hub-edit-build-btn"]', { timeout: 15000 }).click()
     cy.get('[data-testid="hub-new-structure-btn"]').click()
     cy.get('[data-testid="build-place-screen"]').should('be.visible')
-    cy.contains('button', 'Refinery').should('be.visible')
+    // No silo or settlement prerequisite any more: only the cost applies.
+    cy.contains('button', 'Refinery').should('be.visible').and('not.have.attr', 'aria-disabled', 'true')
   })
 })

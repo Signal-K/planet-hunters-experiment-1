@@ -1,7 +1,7 @@
 // Landnam game data — the rocket models a player can buy.
 //
 // Players purchase a rocket per mission. Explorer is always free; Prospector
-// and above cost Francs and require mission history.
+// and above cost Francs. During the tutorial Prospector waits for M1.
 //
 // Explorer and Prospector are the canonical runtime identifiers. Legacy sr*
 // strings are accepted only at compatibility boundaries for old room layouts

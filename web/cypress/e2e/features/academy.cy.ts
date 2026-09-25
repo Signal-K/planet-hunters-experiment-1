@@ -36,7 +36,9 @@ function basePlayer(overrides: Partial<GameState['player']> = {}): GameState['pl
 }
 
 describe('Astronaut Academy', () => {
-  it('does not offer the mission before two-client affinity level 2 is reached', () => {
+  // Unlock gates were removed: after the tutorial the Academy is limited only
+  // by its build cost, with no client-level or Research XP step first.
+  it('pre-build: offers building the Academy straight away, with no client-level or research step', () => {
     cy.visit('/game/academy', {
       onBeforeLoad(win) {
         const full: GameState = {
@@ -44,38 +46,18 @@ describe('Astronaut Academy', () => {
           missionId: null, targetId: null,
           rocket: { chassis: 'hull-mk2', propulsion: 'fusion-b2', drill: 'hand-drill' },
           lastCargo: null, tutorial: false, doneSteps: {}, popup: null, menuOpen: false,
-          player: basePlayer({ clientMissions: { 'helios-propulsion-depot': 10 } }),
-        } as GameState
-        seedAuthenticatedFixture(win, full, 'e2e-academy-user')
-      },
-    })
-    cy.get('[data-testid="academy-screen"]', { timeout: 10000 }).should('be.visible')
-    cy.contains('Client level progress: 1/2 partner programmes').should('be.visible')
-    cy.contains('button', 'Research Academy').should('not.exist')
-  })
-
-  it('pre-build: shows the affinity/research/build steps and gates on research XP', () => {
-    cy.visit('/game/academy', {
-      onBeforeLoad(win) {
-        const full: GameState = {
-          screen: 'academy',
-          missionId: null, targetId: null,
-          rocket: { chassis: 'hull-mk2', propulsion: 'fusion-b2', drill: 'hand-drill' },
-          lastCargo: null, tutorial: false, doneSteps: {}, popup: null, menuOpen: false,
-          player: basePlayer({
-            clientMissions: { 'helios-propulsion-depot': 10, 'arcturus-battery-systems': 10 },
-            academyResearched: false,
-            researchXP: 0,
-          }),
+          player: basePlayer({ clientMissions: {}, academyResearched: false, researchXP: 0 }),
         } as GameState
         seedAuthenticatedFixture(win, full, 'e2e-academy-user')
       },
     })
     cy.get('[data-testid="academy-screen"]', { timeout: 10000 }).should('be.visible')
     cy.contains('Establish the Academy').should('be.visible')
-    cy.contains('Research the Academy').should('be.visible')
-    // researchXP is 0, so the Research Academy button must be disabled
-    cy.contains('button', 'Research Academy').should('be.disabled')
+    cy.contains('Build at Base').should('be.visible')
+    cy.contains('Research the Academy').should('not.exist')
+    cy.contains(/Client level progress/).should('not.exist')
+    cy.contains('button', 'Open Build & Place').should('not.be.disabled').click()
+    cy.location('pathname').should('eq', '/game/build')
   })
 
   it('built: renders the management view with tabs, and the AcademyCoach explains it on first visit', () => {

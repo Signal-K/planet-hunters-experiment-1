@@ -12,6 +12,7 @@ import {
   rocketDisplayForConfig,
   rocketModelForConfig,
   validateBuild,
+  rocketModelAvailable,
 } from '@/lib/data'
 import { clientAffinityLevel, crewRequirementStatus } from '@/lib/systems/AcademySystem'
 import { getRequiredRocketModel } from '@/lib/rockets'
@@ -210,7 +211,7 @@ export default function MissionSetupRoutes({ screen, game, hasCoach, rocketDispl
   const [targetId, setTargetId] = useState('')
   const requiredRocket = getRequiredRocketModel(game.player.missionsDone)
   const availableRockets = useMemo(
-    () => ROCKET_MODELS.filter(model => !model.locked && model.missionsRequired <= game.player.missionsDone),
+    () => ROCKET_MODELS.filter(model => rocketModelAvailable(model, game.player.missionsDone)),
     [game.player.missionsDone],
   )
   const selectableRockets = useMemo(() => {

@@ -4,8 +4,6 @@ import React from 'react'
 import Image from 'next/image'
 import PageSurface from '@/components/ui/PageSurface'
 
-type UnlockKind = 'sr2' | 'loan' | 'ship-customizer'
-
 interface UnlockPopupProps {
   kind: string
   onClose: () => void
@@ -50,15 +48,6 @@ const UNLOCKS: Record<string, {
     art: 'coin',
     stats: [['ADVANCE', '5,000 F'], ['TERM', '2 RUNS'], ['RATE', '8%']],
     cta: 'Accept Loan',
-  },
-  'ship-customizer': {
-    accent: '#39d36a',
-    eyebrow: 'Facility Unlocked',
-    title: 'SHIP ROOMS',
-    body: 'The hangar now shows a full interior view of your ship — slot rooms to customise layout, capacity, and crew stations. Open Hangar from the base menu to explore it.',
-    art: 'rooms',
-    stats: [['VIEW', 'INTERIOR'], ['SLOTS', 'CUSTOM'], ['ACCESS', 'HANGAR']],
-    cta: 'Open Hangar',
   },
   'tutorial-complete': {
     accent: '#39d9ff',

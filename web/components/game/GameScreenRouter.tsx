@@ -6,7 +6,6 @@ import { useGame } from '@/game-context'
 import { ACADEMY_INTRO_MISSION_ID, M1_STEPS, M2_STEPS, M3_STEPS, rocketDisplayForConfig, rocketModelForConfig } from '@/lib/data'
 import { FREE_OPS_START_MISSIONS_DONE } from '@/lib/data/mission-generator'
 import type { Screen } from '@/lib/game-types'
-import { hasEstablishedMiningSettlement } from '@/lib/systems/SurfaceOpsSystem'
 // LandingFlow and HubScreen are the two most likely first paints (cold start
 // and post-onboarding default), so they stay in the main bundle. Every other
 // screen below is code-split with next/dynamic — the switch below only ever
@@ -194,13 +193,7 @@ function ScreenBody({
             stash: game.player.stash,
             placed: game.player.placed,
             freeOperations: game.player.freeOperations,
-            refineryUnlocked: !!game.player.refineryUnlocked,
-            academyResearched: !!game.player.academyResearched,
             placementPlots: game.player.placementPlots,
-            transitSatelliteLevel: game.player.transitSatelliteLevel,
-            clientMissions: game.player.clientMissions,
-            deepSpaceTelescopeMissionCompletedAt: game.player.deepSpaceTelescopeMissionCompletedAt,
-            hasMiningSettlement: hasEstablishedMiningSettlement(game.player),
           }}
           onPlaced={(kind, plot) => {
             const structure = game.catalog.structures.find(s => s.id === kind)
@@ -515,7 +508,6 @@ function ScreenBody({
           onBack={() => game.goBack()}
           onBuild={() => game.go('build')}
           onOpenHangar={() => game.go('hangar')}
-          onResearch={game.researchAcademy}
           onFunding={game.setAcademyFunding}
           onHire={game.hireCrew}
           onRehire={game.rehireCrew}
