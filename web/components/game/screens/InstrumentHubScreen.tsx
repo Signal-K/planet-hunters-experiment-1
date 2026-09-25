@@ -7,6 +7,7 @@ import { InstrumentHubControlsBar } from '@/components/game/instrument-hub/Instr
 import { InstrumentHubScene } from '@/components/game/instrument-hub/InstrumentHubScene'
 import { InstrumentHubWorkSurface } from '@/components/game/instrument-hub/InstrumentHubWorkSurface'
 import { useInstrumentSignals } from '@/lib/hooks/useInstrumentSignals'
+import { UI_ZONES } from '@/lib/ui-zones'
 import {
   DEFAULT_INSTRUMENT_HUB_VIEW,
   cycleSourceFilter,
@@ -45,6 +46,10 @@ export default function InstrumentHubScreen({ player, onBack, onInspect }: Instr
   const deepSpaceOnline = !!player.deepSpaceTelescopeBuilt
 
   const selectedSignal = filteredSignals[view.selectedIndex] ?? null
+  // Same online rule useInstrumentSignals uses to decide which feeds to fetch,
+  // so the courtyard window label never claims a link the queue isn't reading.
+  const transitOnline = !!player.freeOperations && !!player.transitSatelliteLaunchedAt
+  const deepSpaceOnline = !!player.freeOperations && !!player.deepSpaceTelescopeBuilt
 
   const openSelectedInspector = () => {
     if (!selectedSignal) return
