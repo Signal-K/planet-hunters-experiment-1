@@ -1,22 +1,20 @@
-export { GameObject, Transform } from './GameObject'
+
 export { Scene } from './Scene'
 export { GameLoop } from './GameLoop'
-export { SceneManager } from './SceneManager'
+
 export type { TransitionType, SceneLifecycle, SceneWirer, SceneManagerOptions } from './SceneManager'
-export { GameCanvas } from './GameCanvas'
-export { InputManager, screenToWorld, pointInBounds } from './InputManager'
+
+export { InputManager } from './InputManager'
 export type { PointerEventType, PointerEvent2D, PointerListener, EntityBounds, ClientRect } from './InputManager'
-export { AssetManager, PLACEHOLDER_TINT } from './AssetManager'
+
 export type { AssetManifest, ResolvedTexture } from './AssetManager'
 export { RuntimeContext } from './RuntimeContext'
 export type { AuthContext } from './RuntimeContext'
-export { ScriptBehaviour } from './components/ScriptBehaviour'
-export { SpriteRenderer, wireSpriteRenderers } from './components/SpriteRenderer'
-export { ShapeRenderer, wireShapeRenderers } from './components/ShapeRenderer'
+
 export type { ShapeKind, ShapeRendererData } from './components/ShapeRenderer'
-export { MiningController } from './scripts/MiningController'
+
 export type { MiningControllerOptions } from './scripts/MiningController'
-export { ConstructionController } from './scripts/ConstructionController'
+
 export type { ConstructionControllerOptions, ConstructionPadConfig, ConstructionState } from './scripts/ConstructionController'
 export { DeliveryController } from './scripts/DeliveryController'
 export type { DeliveryControllerOptions } from './scripts/DeliveryController'

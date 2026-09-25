@@ -11,8 +11,8 @@ export const SCROLL_SPEED_MIN = 16
 export const SCROLL_SPEED_MAX = 96
 const LASER_SPEED = 480
 export const SHIP_X = 80
-export const SHIP_Y = 112
-export const SURFACE_Y = 320
+const SHIP_Y = 112
+const SURFACE_Y = 320
 // Wider than ship X so ore movement during laser flight doesn't cause misses on tall screens
 const HIT_TOLERANCE = 48
 const LASER_SIZE = { width: 4, height: 16 }
@@ -82,6 +82,16 @@ export interface MiningControllerOptions {
   /** Called when any ore enters or leaves the "fire now" window around SHIP_X. */
   onOreNearby?: (near: boolean) => void
   /**
+   * SSL-307: when true, the field starts at SCROLL_SPEED_MIN instead of the
+   * normal SCROLL_SPEED, giving a player who has never fired before a wider
+   * window to actually see the drift-and-align mechanic play out. Ends
+   * automatically (scroll speed restored, onAimAssistEnd fired) on the
+   * player's first shot, hit or miss.
+   */
+  aimAssistActive?: boolean
+  /** Called once, when aim-assist ends (the player's first shot). */
+  onAimAssistEnd?: () => void
+  /**
    * Live-updating set of mineral keys still needed to fill the order. When
    * set, the "fire now" window only lights up for ore whose mineral is still
    * needed — an ore of an already-satisfied or off-order mineral never flashes.
@@ -132,10 +142,15 @@ export class MiningController extends ScriptBehaviour {
   private totalScrollX = 0
   private scrollSpeed = SCROLL_SPEED
   private oreNearState = false
+  private aimAssisting = false
 
   constructor(context: RuntimeContext, opts: MiningControllerOptions) {
     super(context)
     this.opts = opts
+    if (opts.aimAssistActive) {
+      this.aimAssisting = true
+      this.scrollSpeed = SCROLL_SPEED_MIN
+    }
   }
 
   /** Override the terrain scroll speed (px/s). Clamped to SCROLL_SPEED_MIN..SCROLL_SPEED_MAX. */
@@ -212,6 +227,11 @@ export class MiningController extends ScriptBehaviour {
   }
 
   fireLaser(): void {
+    if (this.aimAssisting) {
+      this.aimAssisting = false
+      this.scrollSpeed = SCROLL_SPEED
+      this.opts.onAimAssistEnd?.()
+    }
     const go = new GameObject(`laser-${this.laserCounter++}`, 'Laser', {
       position: { x: SHIP_X, y: (this.opts.shipY ?? SHIP_Y) + 16 },
     })

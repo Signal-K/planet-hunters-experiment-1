@@ -1,4 +1,5 @@
-import type { LightcurvePoint } from '@/components/game/LightcurvePlot'
+/** One flux sample on a TESS lightcurve: x is time in days, y normalised flux. */
+export interface LightcurvePoint { x: number; y: number }
 import { TESS_SETTLED_LABELS, recordHasOpenConsensus } from '@/lib/citizen-science/open-anomaly'
 import { mineralsForArchetype, type TargetArchetype } from './target-archetypes'
 
@@ -90,10 +91,6 @@ export function tessLightcurvePoints(candidate: TessCandidate): LightcurvePoint[
   return points
 }
 
-export function nextUnclassifiedTessCandidate(candidates: TessCandidate[], classifications: Record<string, TessClassification> = {}): TessCandidate | null {
-  return candidates.find(candidate => !classifications[candidate.id]) ?? candidates[0] ?? null
-}
-
 // `preferredId` is the player's satellite-pointing choice (see
 // Player.satelliteTargetId) — if it's still in the reviewable pool, honour
 // it over the deterministic daily hash pick.
@@ -121,7 +118,7 @@ export function dailyTessCandidates(candidates: TessCandidate[], dateKey: string
 // `lightcurve_points` is one continuous curve — so "switching sectors"
 // means windowing the one curve we have, but the *sector numbers* shown
 // are real, parsed from this field, not invented.
-export function parseSectorList(sectorText: string): string[] {
+function parseSectorList(sectorText: string): string[] {
   const text = (sectorText ?? '').trim()
   if (!text) return []
 
@@ -291,7 +288,7 @@ export function periodFromRanges(ranges: TransitRange[]): number | null {
   return gaps.reduce((sum, gap) => sum + gap, 0) / gaps.length
 }
 
-export function depthFromRanges(points: LightcurvePoint[], ranges: TransitRange[]): number | null {
+function depthFromRanges(points: LightcurvePoint[], ranges: TransitRange[]): number | null {
   if (ranges.length === 0 || points.length === 0) return null
   const depths = ranges
     .map(range => {

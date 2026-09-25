@@ -166,13 +166,6 @@ export function surfaceSiteProgress(
   return player.surfaceOps?.sites[siteId] ?? EMPTY_SITE
 }
 
-// SSL-74: gates the Earth Base Refinery — an established mining settlement is
-// any off-world site where the player has purchased site access, regardless
-// of how far its launchpad/ferry build-out has progressed.
-export function hasEstablishedMiningSettlement(player: Pick<Player, 'surfaceOps'>): boolean {
-  return Object.values(player.surfaceOps?.sites ?? {}).some(site => !!site.siteAccessPurchasedAt)
-}
-
 function updateSite(
   state: GameState,
   siteId: string,
@@ -312,7 +305,7 @@ function hasLaunchpadMaterials(player: Player): boolean {
     .every(([id, amount]) => (player.stash?.[id] ?? 0) >= amount)
 }
 
-export function canBuildSettlementLaunchpad(
+function canBuildSettlementLaunchpad(
   state: GameState,
   siteId: string
 ): boolean {

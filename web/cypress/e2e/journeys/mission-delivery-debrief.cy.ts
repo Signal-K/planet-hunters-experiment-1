@@ -5,9 +5,10 @@
 // delivery target — so the entire delivery leg silently vanished from the
 // player-facing summary, making the courier mechanic feel like it never
 // happened. Fixed in GameApp.tsx / app/game/(main)/[screen]/page.tsx by
-// resolving the debrief "From X" text from mission.deliveryTargetId when set.
+// resolving the debrief "RETURNED FROM X" text from mission.deliveryTargetId when set.
 
 import type { GameState } from '@/game-context'
+import { seedFixtureSession } from '../../support/authenticated-fixture'
 
 const STORAGE_KEY = 'landnam-game-state-v1'
 
@@ -54,7 +55,7 @@ function visitDebriefWithState(state: Partial<GameState>) {
   cy.visit('/game/debrief', {
     onBeforeLoad(win) {
       win.localStorage.setItem(STORAGE_KEY, JSON.stringify(full))
-      win.localStorage.setItem('landnam-account-credentials', JSON.stringify({ email: 'e2e@example.com', password: 'e2e-guest-test' }))
+      seedFixtureSession(win)
     },
   })
 }
@@ -67,8 +68,8 @@ describe('Debrief screen origin attribution for two-leg delivery missions', () =
       deliveryTargetId: 'vesta',
       lastCargo: { iron: 3, carbon: 2 },
     })
-    cy.contains('From 4 Vesta', { timeout: 10000 }).should('be.visible')
-    cy.contains('From 101955 Bennu').should('not.exist')
+    // The debrief summary labels the return leg "RETURNED FROM <body>".
+    cy.contains('span', 'RETURNED FROM', { timeout: 10000 }).next().should('have.text', '4 Vesta')
   })
 
   it('resolves the debrief origin from the mission definition, not the injected top-level state field', () => {
@@ -82,7 +83,6 @@ describe('Debrief screen origin attribution for two-leg delivery missions', () =
       deliveryTargetId: null,
       lastCargo: { nickel: 3 },
     })
-    cy.contains('From 433 Eros', { timeout: 10000 }).should('be.visible')
-    cy.contains('From 25143 Itokawa').should('not.exist')
+    cy.contains('span', 'RETURNED FROM', { timeout: 10000 }).next().should('have.text', '433 Eros')
   })
 })

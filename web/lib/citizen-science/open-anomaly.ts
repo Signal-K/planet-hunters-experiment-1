@@ -8,11 +8,11 @@
 
 export const TESS_SETTLED_LABELS = ['planet', 'not_planet'] as const
 export const ASTEROID_SETTLED_LABELS = ['likely_real', 'likely_artifact'] as const
-export const OPEN_CONSENSUS_LABELS = ['', 'unsure'] as const
+const OPEN_CONSENSUS_LABELS = ['', 'unsure'] as const
 
 export type SettledLabel = (typeof TESS_SETTLED_LABELS)[number] | (typeof ASTEROID_SETTLED_LABELS)[number]
 
-export function readAnomalyLabel(value: unknown): string {
+function readAnomalyLabel(value: unknown): string {
   return String(value ?? '').trim().toLowerCase()
 }
 

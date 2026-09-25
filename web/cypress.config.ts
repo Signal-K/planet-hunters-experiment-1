@@ -93,12 +93,6 @@ const profiles: Record<string, Cypress.EndToEndConfigOptions> = {
     viewportWidth: 390,
     viewportHeight: 844,
   },
-  'clean-start-loop': {
-    baseUrl: 'http://localhost:3001',
-    specPattern: ['cypress/e2e/journeys/clean-start-loop.cy.ts'],
-    viewportWidth: 390,
-    viewportHeight: 844,
-  },
   surveys: {
     baseUrl: 'http://localhost:3001',
     specPattern: ['cypress/e2e/features/surveys.cy.ts'],
@@ -112,7 +106,7 @@ const profiles: Record<string, Cypress.EndToEndConfigOptions> = {
     env: { livePocketBase: true },
   },
   // Runs against an already-deployed environment (e.g. the
-  // landnam-web.liam-55d.workers.dev staging Worker) instead of a locally-started dev
+  // landnam-web-staging.liam-55d.workers.dev staging Worker) instead of a locally-started dev
   // server. Scoped to c1-c4-viewport-matrix.cy.ts specifically: it's fast
   // (~25s, no real backend calls beyond initial page load) and, unlike every
   // other journeys spec, was actually confirmed passing against the real
@@ -127,9 +121,8 @@ const profiles: Record<string, Cypress.EndToEndConfigOptions> = {
     viewportHeight: 844,
     env: { livePocketBase: true },
   },
-  // Full journeys suite against a live deployment, including
-  // clean-start-loop.cy.ts's real registration/playthrough against the
-  // actual staging PocketBase backends. Slow and not yet proven reliable
+  // Full journeys suite against a live deployment and the actual staging
+  // PocketBase backends. Slow and not yet proven reliable
   // end-to-end (see 'staging' above) — run manually via workflow_dispatch,
   // not on every push.
   'staging-full': {

@@ -18,6 +18,7 @@ import NebulaBackdrop from '@/components/game/NebulaBackdrop'
 import { deriveObservatoryStats, periodFromRanges, sectorWindows, tessCandidateToExoplanetTarget, tessLightcurvePoints, type Target, type TessCandidate, type TessClassification, type TessVerdict, type TransitRange } from '@/lib/data'
 import type { Player } from '@/lib/game-types'
 import { UI_ZONES } from '@/lib/ui-zones'
+import { captureGameEvent } from '@/lib/posthog'
 import { fetchReviewableTessCandidates } from '@/lib/tess-subjects'
 import { sharedBackendMisconfigured } from '@/lib/pb-config'
 import { useIsDesktop } from '@/lib/hooks/useIsDesktop'
@@ -121,6 +122,7 @@ export default function TessDiscoveryScreen({ player, inspectSubjectId, visualCa
       .catch(error => {
         console.warn('[TESS] live candidate fetch failed', error)
         if (cancelled) return
+        captureGameEvent('tess_downlink_load_failed', { error: error instanceof Error ? error.message : String(error) })
         setPool([])
         setCandidate(null)
         setLoadFailed(true)
@@ -212,7 +214,7 @@ export default function TessDiscoveryScreen({ player, inspectSubjectId, visualCa
             : 'Every live TESS transit subject is currently confirmed, rejected, or already resolved by consensus.'}
         onBack={onBack}
         action={loadFailed && !misconfigured ? (
-          <GhostBtn onClick={() => setRetryToken(t => t + 1)}>Retry Downlink</GhostBtn>
+          <GhostBtn onClick={() => { captureGameEvent('tess_downlink_retry'); setRetryToken(t => t + 1) }}>Retry Downlink</GhostBtn>
         ) : undefined}
         devBar={process.env.NODE_ENV === 'development' ? (
           <DevDaySkipBar offset={devDayOffset} onAdvance={() => setDevDayOffset(o => o + 1)} onReset={() => setDevDayOffset(0)} />

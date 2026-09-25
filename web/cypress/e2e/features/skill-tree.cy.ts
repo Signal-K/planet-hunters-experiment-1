@@ -8,6 +8,7 @@
 // covers node select -> spend point -> confirm, and the new coach.
 
 import type { GameState } from '@/game-context'
+import { seedFixtureSession } from '../../support/authenticated-fixture'
 
 const STORAGE_KEY = 'landnam-game-state-v1'
 const COACH_KEY = 'landnam_skill_tree_coach_seen_v1'
@@ -57,7 +58,7 @@ function visitSkills(playerOverrides: Partial<GameState['player']> = {}, coachSe
   cy.visit('/game/skills', {
     onBeforeLoad(win) {
       win.localStorage.setItem(STORAGE_KEY, JSON.stringify(full))
-      win.localStorage.setItem('landnam-account-credentials', JSON.stringify({ email: 'e2e@example.com', password: 'e2e-guest-test' }))
+      seedFixtureSession(win)
       win.localStorage.setItem('ln_tutorial_complete_ack', '1')
       if (coachSeen) {
         win.localStorage.setItem(COACH_KEY, '1')
@@ -95,7 +96,7 @@ describe('Skill Tree screen', () => {
   it('renders the license grade panel and every skill node', () => {
     visitSkills({}, true)
     cy.get('[data-testid="skill-tree-screen"]', { timeout: 10000 }).should('be.visible')
-    cy.contains('License Grade').should('be.visible')
+    cy.contains('FLIGHT AUTHORITY').should('exist')
     cy.contains('Skill Nodes').should('be.visible')
     cy.contains('Laser Charge I').should('be.visible')
   })
@@ -113,10 +114,12 @@ describe('Skill Tree screen', () => {
 
     cy.get('[data-testid="skill-tree-coach"]').should('be.visible')
     cy.contains('SKILL POINTS ARE EARNED, NOT BOUGHT').should('be.visible')
+    // The coach sits at the top of the scrolling screen; bring it back into
+    // view before reading each step.
     cy.get('[data-testid="skill-tree-coach-next"]').click()
-    cy.contains('LICENSE GRADE GATES YOUR CEILING').should('be.visible')
+    cy.get('[data-testid="skill-tree-coach"]').scrollIntoView().should('contain', 'LICENSE GRADE GATES YOUR CEILING')
     cy.get('[data-testid="skill-tree-coach-next"]').click()
-    cy.contains('UNLOCKS ARE PERMANENT').should('be.visible')
+    cy.get('[data-testid="skill-tree-coach"]').scrollIntoView().should('contain', 'UNLOCKS ARE PERMANENT')
     cy.get('[data-testid="skill-tree-coach-next"]').click()
     cy.get('[data-testid="skill-tree-coach"]').should('not.exist')
     cy.window().then(win => {

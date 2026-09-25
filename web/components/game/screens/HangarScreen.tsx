@@ -3,12 +3,13 @@
 import Image from 'next/image'
 import { useState } from 'react'
 import TopBar from '@/components/ui/TopBar'
-import { ROCKET_MODELS, hasShipCustomizer, calculateShipSuccessChance, selectedCustomizerPartIds, getBuildSequence } from '@/lib/data'
+import { ROCKET_MODELS, missionsRequirementMet, rocketModelAvailable, hasShipCustomizer, calculateShipSuccessChance, selectedCustomizerPartIds, getBuildSequence } from '@/lib/data'
 import type { RocketModel, InstalledCustomizerPartsByKind } from '@/lib/data'
 import { UI_ZONES } from '@/lib/ui-zones'
 import ShipInteriorPreview from '@/components/game/ShipInteriorPreview'
 import { formatCurrency } from '@/lib/format'
 import { rocketCompositionForId } from '@/lib/data/rocket-composition'
+import { captureGameEvent } from '@/lib/posthog'
 import styles from './HangarScreen.module.css'
 
 interface HangarScreenProps {
@@ -38,7 +39,7 @@ function StatBar({ label, value, max }: { label: string; value: number; max: num
 }
 
 function RocketCard({ rocket, missionsDone, onSelect }: { rocket: RocketModel; missionsDone: number; onSelect?: (id: string) => void }) {
-  const missionUnlocked = missionsDone >= rocket.missionsRequired
+  const missionUnlocked = missionsRequirementMet(rocket.missionsRequired, missionsDone)
   const isAvailable = !rocket.locked && missionUnlocked
   const isLocked = rocket.locked || !missionUnlocked
   const hasCost = rocket.costFrancs > 0
@@ -152,7 +153,7 @@ export default function HangarScreen({ francs, missionsDone, unlockedSkillNodes,
   const successChance = hasLoadout ? calculateShipSuccessChance(installedIds, sequence) : null
   const constructionRocket = [...ROCKET_MODELS]
     .reverse()
-    .find(rocket => !rocket.locked && missionsDone >= rocket.missionsRequired) ?? ROCKET_MODELS[0]
+    .find(rocket => rocketModelAvailable(rocket, missionsDone)) ?? ROCKET_MODELS[0]
 
   return (
     <div className={`game-screen theme-light ${styles.screen}`}>
@@ -167,14 +168,14 @@ export default function HangarScreen({ francs, missionsDone, unlockedSkillNodes,
             </div>
             <div className={styles.fleetReadout} data-testid="hangar-fleet-readout">
               <span className={styles.railLabel}>{pendingLaunch ? 'Vehicle in build' : 'Cleared fleet'}</span>
-              <strong className={styles.fleetValue}>{pendingLaunch ? pendingRocketName ?? 'STAGED VEHICLE' : `${ROCKET_MODELS.filter(rocket => !rocket.locked && missionsDone >= rocket.missionsRequired).length}/${ROCKET_MODELS.length}`}</strong>
+              <strong className={styles.fleetValue}>{pendingLaunch ? pendingRocketName ?? 'STAGED VEHICLE' : `${ROCKET_MODELS.filter(rocket => rocketModelAvailable(rocket, missionsDone)).length}/${ROCKET_MODELS.length}`}</strong>
             </div>
           </div>
 
         {customizerUnlocked && (
           <button
             data-testid="open-ship-customizer"
-            onClick={() => setCustomizerOpen(true)}
+            onClick={() => { captureGameEvent('hangar_customizer_opened'); setCustomizerOpen(true) }}
             className={styles.customizer}
           >
             {/* Icon */}
@@ -195,7 +196,7 @@ export default function HangarScreen({ francs, missionsDone, unlockedSkillNodes,
 
         <div className={styles.sectionHeader}><span>Vehicle registry</span><span>{ROCKET_MODELS.length} registry entries</span></div>
         <div className={styles.fleetGrid}>{ROCKET_MODELS.map(rocket => (
-          <RocketCard key={rocket.id} rocket={rocket} missionsDone={missionsDone} onSelect={onSelect} />
+          <RocketCard key={rocket.id} rocket={rocket} missionsDone={missionsDone} onSelect={onSelect ? (id) => { captureGameEvent('hangar_rocket_selected', { rocket_id: id, cost_francs: rocket.costFrancs }); onSelect(id) } : onSelect} />
         ))}</div>
         <div className={styles.rail}><span><i className={styles.railValue}>●</i> Registry online</span><span>{missionsDone} missions logged</span><span>Balance {formatCurrency(francs, { compact: true })}</span></div>
         </div>
@@ -210,7 +211,11 @@ export default function HangarScreen({ francs, missionsDone, unlockedSkillNodes,
             installedParts={installed}
             crewModuleResearched={crewModuleResearched}
             landingResearched={landingResearched}
-            onConfirm={onConfirmShipCustomizerBuild}
+            onConfirm={onConfirmShipCustomizerBuild ? (installed, prevInstalled) => {
+              const ok = onConfirmShipCustomizerBuild(installed, prevInstalled)
+              captureGameEvent('hangar_customizer_build_confirmed', { success: ok })
+              return ok
+            } : onConfirmShipCustomizerBuild}
             onClose={() => setCustomizerOpen(false)}
           />
         </div>

@@ -4,7 +4,7 @@ import { CREW_MODULE_PRICE, LANDER_MODULE_PRICE } from './economy'
 
 export const CUSTOMIZER_BUILD_SEQUENCE: ShipRoomKind[] = ['engine', 'booster', 'cockpit', 'payload']
 
-export const BUILD_SEQUENCES: Record<number, ShipRoomKind[]> = {
+const BUILD_SEQUENCES: Record<number, ShipRoomKind[]> = {
   1: ['engine', 'booster', 'cockpit', 'payload'],
   2: ['fuel-stage', 'engine', 'booster', 'cockpit', 'fairing', 'payload'],
   3: ['fuel-stage', 'engine', 'booster', 'cockpit', 'fairing', 'payload', 'docking-port'],
@@ -547,13 +547,6 @@ export function getRoomIconArt(kind: ShipRoomKind, installedPartId: string | und
 export function getRoomDetailArt(kind: ShipRoomKind, installedPartId: string | undefined): string {
   const part = installedPartId ? customizerPartById(installedPartId) : undefined
   return part?.detailImg ?? SHIP_ROOM_DETAIL_ASSETS[kind]
-}
-
-export function installedPartIds(owned: OwnedCustomizerPart[], installed: InstalledCustomizerParts): string[] {
-  const byUid = new Map(owned.map(part => [part.uid, part.partId]))
-  return Object.values(installed)
-    .map(uid => (uid ? byUid.get(uid) : undefined))
-    .filter((id): id is string => !!id)
 }
 
 export function calculateShipSuccessChance(

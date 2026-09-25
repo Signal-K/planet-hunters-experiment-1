@@ -12,8 +12,8 @@ export const M1_STEPS: TutorialStep[] = [
     desktopCoachId: 'build-confirm|build-plot-0', desktopDir: 'down' },
   { id: 1, screen: 'hub',     title: 'Open a Mission',
     body: 'Mining contracts are on the mission board.',
-    action: 'Tap MISSIONS',
-    anchor: 'bottom', spot: null, coachId: 'bottom-tab-missions', dir: 'down', cta: 'MISSIONS',
+    action: 'Tap the Launchpad',
+    anchor: 'bottom', spot: null, coachId: 'building-launchpad', dir: 'up', cta: 'Launchpad',
     desktopBody: 'Mining contracts are on the mission board.',
     desktopAction: 'Click the Launchpad',
     desktopCoachId: 'building-launchpad', desktopDir: 'up' },
@@ -49,10 +49,18 @@ export const M1_STEPS: TutorialStep[] = [
     body: 'Everything checks out. The selected vehicle is entering the launch sequence.',
     action: 'Review the flight manifest while the sequence starts',
     anchor: 'top', spot: null, cta: 'the flight manifest' },
+  // SSL-307: this used to read "Tap an exposed deposit to fire", describing a
+  // point-and-aim mechanic the game doesn't have. The laser always fires
+  // straight down from the ship's fixed screen position while the ore field
+  // drifts underneath — it's a timing game, not aim-and-click. This is the
+  // coach a first-time player actually sees (the separate MiningAimCoach
+  // hint is suppressed for the whole tutorial, since `hasCoach` is true),
+  // so the correction has to live here, not just in that component.
   { id: 6, screen: 'mining',   title: 'Mine the Asteroid',
-    body: 'Ore deposits are the coloured seams in the rock. Fire the laser at one now; this guide will leave once you demonstrate the control.',
-    action: 'Tap an exposed deposit to fire',
-    anchor: 'top', spot: null, cta: 'Fire the laser' },
+    body: 'You can\'t aim the laser — it always fires straight down from your ship. Ore deposits (the coloured seams) drift past underneath. Wait for one to line up, then fire.',
+    action: 'Tap FIRE LASER when a deposit lines up',
+    anchor: 'top', spot: null, cta: 'Fire the laser',
+    desktopAction: 'Click FIRE LASER when a deposit lines up' },
 ]
 
 export const M2_STEPS: TutorialStep[] = [
@@ -60,8 +68,8 @@ export const M2_STEPS: TutorialStep[] = [
   // Mirrors M1 step 1: highlights the radial menu so the user knows exactly what to tap.
   { id: 20, screen: 'hub', title: 'Guided Ops · Mission 2',
     body: 'Prospector is now available — bigger cargo bay and stronger drill. You\'re still in guided operations. Accept a new mining contract to continue.',
-    action: 'Tap MISSIONS',
-    anchor: 'bottom', spot: null, cta: 'Missions', coachId: 'bottom-tab-missions', dir: 'down',
+    action: 'Tap the Launchpad',
+    anchor: 'bottom', spot: null, cta: 'Launchpad', coachId: 'building-launchpad', dir: 'up',
     desktopBody: 'Prospector is now available — bigger cargo bay and stronger drill. You\'re still in guided operations. Click MISSIONS to continue.',
     desktopAction: 'Click the Launchpad',
     desktopCoachId: 'building-launchpad', desktopDir: 'up' },
@@ -85,8 +93,8 @@ export const M2_STEPS: TutorialStep[] = [
 export const M3_STEPS: TutorialStep[] = [
   { id: 30, screen: 'hub', title: 'Guided Ops · Mission 3',
     body: 'This client needs more than ore returned to Earth. You will mine at one site, carry the order to their build site, then bring the rover home. The contract pays for both pieces of work.',
-    action: 'Tap MISSIONS',
-    anchor: 'bottom', spot: null, cta: 'Missions', coachId: 'bottom-tab-missions', dir: 'down',
+    action: 'Tap the Launchpad',
+    anchor: 'bottom', spot: null, cta: 'Launchpad', coachId: 'building-launchpad', dir: 'up',
     desktopBody: 'This client needs more than ore returned to Earth. You will mine at one site, carry the order to their build site, then bring the rover home. Click the Launchpad to begin.',
     desktopAction: 'Click the Launchpad',
     desktopCoachId: 'building-launchpad', desktopDir: 'up' },

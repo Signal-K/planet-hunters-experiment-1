@@ -1,4 +1,5 @@
 import type { GameState } from '@/game-context'
+import { seedFixtureSession } from '../../support/authenticated-fixture'
 
 const STORAGE_KEY = 'landnam-game-state-v1'
 const AUTHENTICATED_STORAGE_KEY = `${STORAGE_KEY}:user:e2e-user`
@@ -73,7 +74,7 @@ function visitGame(path: string, overrides: GameStateOverride = {}) {
     onBeforeLoad(win) {
       win.localStorage.setItem(STORAGE_KEY, JSON.stringify(state))
       win.localStorage.setItem(AUTHENTICATED_STORAGE_KEY, JSON.stringify(state))
-      win.localStorage.setItem('landnam-account-credentials', JSON.stringify({ email: 'e2e@example.com', password: 'e2e-guest-test' }))
+      seedFixtureSession(win, 'e2e-user')
       win.localStorage.setItem('ln_missionboard_freeops_explainer_ack', '1')
       win.localStorage.setItem('ln_mining_freeops_first_entry_ack', '1')
       win.localStorage.setItem('ln_mining_freeops_first_success_ack', '1')
@@ -112,33 +113,43 @@ function interceptTessSubjects(count = 4) {
   }).as('subjects')
 }
 
-describe('Active mission guard (STS-487)', () => {
-  it('does not let a stale mission-board tab pick a second mission while one is active', () => {
-    visitGame('/game/missions', {
-      screen: 'missions',
-      missionId: null,
-      targetId: null,
+describe('Parallel mission runs (replaces the STS-487 single-mission guard)', () => {
+  // STS-487 made picking a second mission a no-op while one was active. Runs
+  // are now independently resumable (useGameLoop onPickMission): accepting
+  // another contract parks the current run instead of discarding it.
+  it('parks the active run when another contract is accepted', () => {
+    visitGame('/game/hub', {
+      screen: 'hub',
+      missionId: 'generated-s1-starter-bulk-1',
+      targetId: 'eros',
       player: {
-        activeMission: { id: 'generated-s1-starter-bulk-1', label: 'Iron starter order -> Eros' },
+        activeMission: { id: 'generated-s1-starter-bulk-1', label: 'Platinum starter order -> Eros' },
+        missionPhase: 'transit',
+        missionRunId: 'run-active-1',
+        transitStartedAt: Date.now() - 60_000,
+        arrivalAt: Date.now() + 60 * 60_000,
         missionsDone: 3,
         freeOperations: true,
       },
     })
 
-    cy.contains('Mission Board', { timeout: 10000 }).should('be.visible')
-    cy.get('button[data-testid^="mission-card-"]').first().click({ force: true })
-
-    savedState().then(state => {
-      expect(state.screen).to.eq('missions')
-      expect(state.missionId).to.eq(null)
-      expect(state.targetId).to.eq(null)
-      expect(state.player.activeMission?.id).to.eq('generated-s1-starter-bulk-1')
+    cy.get('[data-testid="bottom-tab-missions"]', { timeout: 10000 }).click()
+    cy.get('[data-testid^="mission-accept-"]', { timeout: 10000 }).first().then($accept => {
+      const acceptedId = $accept.attr('data-testid')!.replace('mission-accept-', '')
+      cy.wrap($accept).click()
+      cy.get('[data-testid="mission-target-map"]', { timeout: 10000 }).should('be.visible')
+      savedState().should(state => {
+        expect(state.missionId).to.eq(acceptedId)
+        expect(state.player.activeMission ?? null).to.eq(null)
+        expect(state.player.pausedMissionRuns?.map(run => run.key)).to.deep.eq(['run-active-1'])
+        expect(state.player.pausedMissionRuns?.[0].missionId).to.eq('generated-s1-starter-bulk-1')
+      })
     })
   })
 })
 
 describe('Surface Silo placement persistence (KES-271)', () => {
-  it.only('persists the placed silo and plot after returning to the base and reloading', () => {
+  it('persists the placed silo and plot after returning to the base and reloading', () => {
     visitGame('/game/hub', {
       screen: 'hub',
       player: {
@@ -226,7 +237,7 @@ describe('Rover pause/resume (KES-205)', () => {
       },
     })
 
-    cy.contains('Rover Mining', { timeout: 10000 }).should('be.visible')
+    cy.get('[data-testid="rover-mining-screen"]', { timeout: 10000 }).should('be.visible')
     cy.get('[data-testid="deploy-surface-ops-confirm"]', { timeout: 10000 }).click()
     cy.get('[data-testid="rover-mining-screen"] canvas[aria-label]', { timeout: 10000 }).should('be.visible')
     cy.get('[data-testid="top-bar-back"]').click()
@@ -314,10 +325,11 @@ describe('Satellite/TESS level plumbing (STS-493)', () => {
       },
     })
 
-    cy.contains('MISSION COMPLETE', { timeout: 10000 }).should('be.visible')
-    // This post-onboarding fixture still uses the normal resolve -> collect
-    // debrief path; the no-cargo satellite run must not become a free haul.
-    cy.get('[data-testid="resolve-cargo-btn"]').click()
+    // An orbital instrument deployment has no vehicle teardown: the telescope
+    // stays in orbit, so the debrief opens already resolved and only logs the
+    // program outcome.
+    cy.contains('COMMISSIONED', { timeout: 10000 }).should('be.visible')
+    cy.get('[data-testid="resolve-cargo-btn"]').should('not.exist')
     cy.get('[data-testid="collect-reward-btn"]').click()
 
     savedState().then(state => {

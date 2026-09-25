@@ -2,10 +2,11 @@ name: PocketBase Deploy
 
 # Deploys straight to the one real Fly app (signal-k-landnam) for every branch,
 # not just main — there is no separate staging Fly app (budget reasons). Note
-# PocketBase runs with Automigrate: true (pocketbase/main.go), so any
-# pb_migrations/*.js on the pushed branch runs against the live prod database
-# the moment this deploys. The validate job exists to keep an unbuildable or
-# test-failing branch from ever reaching that step.
+# fly.toml's release_command runs `migrate up`, so any compiled Go migration
+# under pocketbase/migrations/ on the pushed branch runs against the live prod
+# database the moment this deploys (this binary never loads JS migrations).
+# The validate job exists to keep an unbuildable or test-failing branch from
+# ever reaching that step.
 
 on:
   push:

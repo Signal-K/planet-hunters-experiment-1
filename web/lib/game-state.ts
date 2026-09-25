@@ -339,7 +339,7 @@ export function normalizeState(input: PartialSave): GameState {
   }
 }
 
-export function repairStateRoute(input: GameState): GameState {
+function repairStateRoute(input: GameState): GameState {
   const mission = input.missionId
     ? (MISSIONS.find(m => m.id === input.missionId)
        ?? input.player.dailyClientPool?.missions.find(m => m.id === input.missionId)
@@ -376,9 +376,8 @@ export function repairStateRoute(input: GameState): GameState {
   if (input.screen === 'instrument-hub' && !input.player.freeOperations) {
     return { ...input, screen: 'hub' }
   }
-  // The retired solo-settlement surface screen must not be restored from an
-  // old route. Its state stays in the save for a future site-right migration.
-  if (input.screen === 'surface-ops') {
+  // Surface Ops is live (Hub dock "Sites"), but only offered in Free Ops.
+  if (input.screen === 'surface-ops' && !input.player.freeOperations) {
     return { ...input, screen: 'hub' }
   }
   if (input.screen === 'refinery' && !input.player.refineryBuilt) {

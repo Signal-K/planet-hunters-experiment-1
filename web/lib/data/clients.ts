@@ -1,10 +1,6 @@
 // Landnam game data — clients and client economy
 
 import type { Client, ClientSlot } from './types'
-
-export const CLIENT_COOLDOWN_MS = 30 * 60 * 1000
-export const CLIENT_STREAK_LIMIT = 2
-export const MAX_AFFINITY_BONUS = 0.15
 export const CLIENT_AFFINITY_MISSION_THRESHOLD = 5
 
 export const CLIENT_SLOTS: ClientSlot[] = [
@@ -222,16 +218,4 @@ export function toClient(slot: ClientSlot): Client {
     affinityNotes: slot.affinityNotes,
     suppliesCrew: slot.suppliesCrew,
   }
-}
-
-export function clientAffinityBonus(client: Client, completedJobs = 0): number {
-  return Math.min(MAX_AFFINITY_BONUS, completedJobs * client.affinityBonusPerMission)
-}
-
-export function clientPayoutMultiplier(client: Client, completedJobs = 0): number {
-  return 1 + client.payoutPremium + clientAffinityBonus(client, completedJobs)
-}
-
-export function clientUnlocked(client: Client, sequence: number): boolean {
-  return client.unlockTier <= sequence
 }

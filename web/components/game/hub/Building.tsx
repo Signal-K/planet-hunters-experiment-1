@@ -313,38 +313,3 @@ export function Building({ kind, label, sub, status, buildStartedAt, w, hitH, st
     </div>
   )
 }
-
-export function EmptyPlot({ w = 90, style, onClick, plot }: { w?: number; style?: React.CSSProperties; onClick: () => void; plot?: number }) {
-  return (
-    <button
-      data-testid={plot != null ? `build-plot-${plot}` : 'build-plot'}
-      onClick={onClick}
-      style={{
-        position: 'absolute', background: 'transparent', border: 'none', padding: 0, cursor: 'pointer',
-        pointerEvents: 'auto',
-        display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, ...style,
-      }}
-    >
-      <div style={{ width: w, height: w * 0.5, position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <div style={{
-          width: '88%', height: 26, borderRadius: '50% / 60%',
-          // 0.04 trailing gradient stop has no matching --ln-* token (nothing
-          // that faint exists); left as a literal fade-out, not swapped.
-          background: 'radial-gradient(ellipse at 50% 35%, var(--ln-cyan-soft), rgba(112,217,234,0.04) 70%)',
-          border: '2px dashed var(--ln-cyan-border)',
-          display: 'grid', placeItems: 'center',
-          animation: 'hub-pad-pulse 2s ease-in-out infinite',
-        }}>
-          <span style={{ fontFamily: 'var(--ln-font-mono)', fontSize: 15, fontWeight: 800, color: 'var(--ln-cyan-bright)' }}>+</span>
-        </div>
-      </div>
-      <div style={{
-        background: 'var(--hub-panel-deep)', border: '1px solid var(--hub-outline)', borderRadius: 999,
-        padding: 'var(--ln-s-1) var(--ln-s-2)', fontFamily: 'var(--ln-font-display)', fontWeight: 800, fontSize: 8,
-        letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--hub-cyan)', whiteSpace: 'nowrap',
-      }}>
-        Build
-      </div>
-    </button>
-  )
-}

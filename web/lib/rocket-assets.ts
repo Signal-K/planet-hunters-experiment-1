@@ -15,7 +15,3 @@ export const ROCKET_ASSETS = {
 } as const
 
 export type RocketAssetId = keyof typeof ROCKET_ASSETS
-
-export function rocketAssetsForId(id: string): (typeof ROCKET_ASSETS)[RocketAssetId] {
-  return ROCKET_ASSETS[id as RocketAssetId] ?? ROCKET_ASSETS.explorer
-}

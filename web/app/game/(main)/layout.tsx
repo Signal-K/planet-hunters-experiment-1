@@ -1,90 +1,57 @@
 'use client'
 
-import { type ReactNode, useMemo, useEffect, useRef, useState } from 'react'
+import { type ReactNode, useMemo, useEffect, useRef } from 'react'
 import { GameProvider, useGame } from '@/game-context'
 import { M1_STEPS, M2_STEPS, M3_STEPS } from '@/lib/data'
 import { FREE_OPS_START_MISSIONS_DONE } from '@/lib/data/mission-generator'
 import TutorialCoach from '@/components/game/TutorialCoach'
 import UnlockPopup from '@/components/game/UnlockPopup'
 import { TutorialCompleteSheet } from '@/components/game/TutorialCompleteSheet'
-import BottomTabBar from '@/components/layout/BottomTabBar'
 import BackendStatus from '@/components/game/BackendStatus'
 import LandnamSyncStatus from '@/components/game/LandnamSyncStatus'
 import { PushOptIn } from '@/components/game/PushOptIn'
-import FeedbackButton from '@/components/ui/FeedbackButton'
 import SurveySheet from '@/components/ui/SurveySheet'
 import ToastLayer from '@/components/ui/ToastLayer'
 import { initPostHog } from '@/lib/posthog'
 import DevShortcuts from '@/components/dev/DevShortcuts'
-import AuthGateSheet from '@/components/game/AuthGateSheet'
-import SettingsSheet from '@/components/game/SettingsSheet'
-import FriendsButton from '@/components/game/FriendsButton'
-import FriendsSheet from '@/components/game/FriendsSheet'
-import CommunityButton from '@/components/game/CommunityButton'
-import CommunityHubSheet from '@/components/game/CommunityHubSheet'
-import SuiteHopRail from '@/components/game/SuiteHopRail'
+import GateLanding from '@/components/game/landing/GateLanding'
+import ShellSheets from '@/components/game/ShellSheets'
+import TakeOnPwaPreload from '@/components/takeon/TakeOnPwaPreload'
 import TerritoryClaimPopup from '@/components/game/TerritoryClaimPopup'
 import { UI_ZONES } from '@/lib/ui-zones'
 import { isSurveySafeScreen } from '@/lib/survey-gating'
-import { LOCATION_SCREENS, type Screen } from '@/lib/game-types'
-import { HubWorldBackground } from '@/components/game/hub/HubWorldBackground'
-import { useTimeOfDay } from '@/lib/hooks/useTimeOfDay'
 import { ScreenContent } from '@/components/game/GameScreenRouter'
+import { returnNotification, type ReturnNotification } from '@/lib/return-notification'
 
 function GameChrome({ children }: { children: ReactNode }) {
   const game = useGame()
-  const arrivalScheduledFor = useRef<number | null>(null)
-  const returnScheduledKey = useRef<string | null>(null)
-  const [settingsOpen, setSettingsOpen] = useState(false)
-  const [friendsOpen, setFriendsOpen] = useState(false)
-  const [communityOpen, setCommunityOpen] = useState(false)
-  const { phase: backdropSkyPhase } = useTimeOfDay()
+  const returnScheduledFor = useRef<number | null>(null)
 
-  // Keep third-party analytics script injection out of React hydration. See
-  // GameApp's equivalent effect for the legacy route shell.
+  // PostHog injects recorder/survey scripts. Initialising during module
+  // evaluation can let those scripts mutate the document while React is
+  // still hydrating, producing a real production hydration mismatch. Run it
+  // after the first client commit instead.
   useEffect(() => {
     initPostHog()
   }, [])
 
-  // Schedule push notification when transit starts
+  // Schedule the "rocket returned" push when the Earth-return leg starts, for
+  // the moment that leg actually lands. The rocket returns from the delivery
+  // stop on two-leg jobs, otherwise from the mining target.
   useEffect(() => {
-    const arrivalAt = game.player.arrivalAt
-    if (game.screen !== 'transit' || !arrivalAt) return
-    if (arrivalScheduledFor.current === arrivalAt) return
-    arrivalScheduledFor.current = arrivalAt
+    const notice = returnNotification({
+      arrivalAt: game.player.arrivalAt,
+      returningToEarth: game.player.returningToEarth,
+      missionTitle: game.mission?.title,
+      originName: (game.mission?.deliveryTargetId
+        ? game.catalog.targets.find(t => t.id === game.mission?.deliveryTargetId)
+        : game.target)?.name,
+    })
+    if (game.screen !== 'transit' || !notice) return
+    if (returnScheduledFor.current === notice.scheduledFor) return
+    returnScheduledFor.current = notice.scheduledFor
 
-    async function schedule() {
-      if (!('serviceWorker' in navigator) || !('PushManager' in window)) return
-      const reg = await navigator.serviceWorker.ready
-      const sub = await reg.pushManager.getSubscription()
-      if (!sub) return
-      const mission = game.mission
-      const target = game.target
-      await fetch('/api/push/schedule', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          endpoint: sub.endpoint,
-          keys: sub.toJSON().keys,
-          scheduledFor: Date.now() + 1000,
-          title: mission ? `${mission.title} — RETURNED` : 'ROCKET RETURNED',
-          body: target ? `Your rocket has returned from ${target.name}. Cargo is ready for debrief.` : 'Your rocket has returned to Earth.',
-        }),
-      })
-    }
-    void schedule().catch(() => {})
-  }, [game.screen, game.player.arrivalAt, game.mission, game.target])
-
-  // Schedule return notification when debrief is reached
-  useEffect(() => {
-    if (game.screen !== 'debrief' || !game.lastCargo) return
-    const mission = game.mission
-    const target = game.target
-    const key = `${mission?.id ?? 'mission'}:${target?.id ?? 'target'}:${JSON.stringify(game.lastCargo)}`
-    if (returnScheduledKey.current === key) return
-    returnScheduledKey.current = key
-
-    async function schedule() {
+    async function schedule(payload: ReturnNotification) {
       if (!('serviceWorker' in navigator) || !('PushManager' in window)) return
       const reg = await navigator.serviceWorker.ready
       const sub = await reg.pushManager.getSubscription()
@@ -95,14 +62,12 @@ function GameChrome({ children }: { children: ReactNode }) {
         body: JSON.stringify({
           endpoint: sub.endpoint,
           keys: sub.toJSON().keys,
-          scheduledFor: Date.now() + 1000,
-          title: mission ? `${mission.title} — RETURNED` : 'ROCKET RETURNED',
-          body: target ? `Your rocket has returned from ${target.name}. Cargo is ready for debrief.` : 'Your rocket has returned to Earth.',
+          ...payload,
         }),
       })
     }
-    void schedule().catch(() => {})
-  }, [game.screen, game.lastCargo, game.mission, game.target])
+    void schedule(notice).catch(() => {})
+  }, [game.screen, game.player.arrivalAt, game.player.returningToEarth, game.mission, game.target, game.catalog.targets])
 
   const coachSteps = useMemo(() => {
     if (!game.tutorial || game.player.missionsDone >= FREE_OPS_START_MISSIONS_DONE) return []
@@ -122,63 +87,22 @@ function GameChrome({ children }: { children: ReactNode }) {
     // The Launchpad mission chooser is a modal owned by the current scene.
     // Hide the coach while it is open so onboarding copy never sits over, or
     // points back at, the control the player is already using.
-    if (settingsOpen || friendsOpen || communityOpen || game.popup || game.authGateOpen || (currentScreen === 'launchpad' && game.launchpadMissionMenuOpen)) return null
+    if (game.shellSheet || game.popup || game.authGateOpen || (currentScreen === 'launchpad' && game.launchpadMissionMenuOpen)) return null
     return routeCoach
-  }, [coachSteps, communityOpen, currentScreen, friendsOpen, game.authGateOpen, game.doneSteps, game.launchpadMissionMenuOpen, game.popup, game.subsurfaceView, settingsOpen])
+  }, [coachSteps, currentScreen, game.authGateOpen, game.doneSteps, game.launchpadMissionMenuOpen, game.popup, game.shellSheet, game.subsurfaceView])
 
   const coachIndex = coach ? coachSteps.findIndex(step => step.id === coach.id) : -1
   const hasCoach = !!coach
 
-  // The Mission → Target → Rocket → Launch flow owns one stable frame. The
-  // bottom navigation would reserve a different amount of viewport height on
-  // the Mission step and make that frame jump when the player advances.
-  const showNav = ['hub', 'skills', 'mission-history'].includes(currentScreen)
-  const showFeedback = currentScreen === 'hub'
-    && !game.subsurfaceView
-    && !game.popup
-    && !game.authGateOpen
-
-  function goFromNav(id: string) {
-    if (id === 'missions') { game.goToMissions(); return }
-    if (id === 'fab') { game.go(game.mission && game.target ? 'fab' : 'missions'); return }
-    if (id === 'market') { game.go('market'); return }
-    if (id === 'skills') { game.go('skills'); return }
-    game.go(id as Parameters<typeof game.go>[0])
-  }
-
-  const currentNav = ['missions', 'targets'].includes(currentScreen)
-    ? 'missions'
-    : currentScreen === 'mission-history' ? 'mission-history' : currentScreen === 'galaxy' ? 'galaxy' : currentScreen === 'fab' ? 'fab' : currentScreen === 'skills' ? 'skills' : 'hub'
-  // Location screens (physical places in the game world, and the mission-run
-  // sequence through them) own the full viewport instead of sitting inside
-  // the generic desktop device-card — that boxed treatment is for menus
-  // (Missions, Market, Skills, ...) and reads as a modal over the game
-  // itself when applied to a place the player is actually standing in.
-  // See LOCATION_SCREENS.
-  const isImmersiveEarthBaseRoute = LOCATION_SCREENS.has(currentScreen as Screen)
-
   return (
     <main className="game-stage" aria-label="Landnam game">
-      {/* Boxed/menu screens (Mission Board, Market, Skills, Debrief, ...)
-          leave real margin around the device-card on desktop — that used to
-          be a flat neutral gradient, which read as a blank grey void behind
-          the modal instead of the game continuing underneath it. Earth Base
-          is the one location every player always has (the de facto home),
-          so it stands in as "the world behind the modal" for every boxed
-          screen rather than trying to track and re-render whichever
-          specific screen the player was on before navigating into a menu.
-          Fully covered by `.portrait-canvas--full-page` on location screens,
-          so no conditional render needed. */}
-      {!isImmersiveEarthBaseRoute && (
-        <div
-          className="game-stage-backdrop"
-          aria-hidden="true"
-          style={{ position: 'absolute', inset: 0, zIndex: 0, overflow: 'hidden' }}
-        >
-          <HubWorldBackground phase={backdropSkyPhase} />
-        </div>
-      )}
-      <div className={`portrait-canvas ${isImmersiveEarthBaseRoute ? 'portrait-canvas--full-page' : ''}`}>
+      {/* No-op unless running as an installed PWA; warms the Takeon/Pixi
+          chunks so Surface Ops works offline (see web/vendor/takeon/README.md). */}
+      <TakeOnPwaPreload />
+      {/* SSL-35: every screen sits on the shared full-page frame. The old
+          boxed desktop device-card for menu screens (and the blurred Earth
+          Base backdrop behind it) is retired; see lib/screen-layouts.ts. */}
+      <div className="portrait-canvas portrait-canvas--full-page">
         <BackendStatus />
         <LandnamSyncStatus />
         {/* Mission alerts have a reserved desktop slot to the left of the
@@ -197,36 +121,8 @@ function GameChrome({ children }: { children: ReactNode }) {
         {/* Account access belongs to the shared shell, not to one scene. A
             player can leave the Hub for mission setup, flight, or debrief,
             so this remains available across every gameplay route. */}
-        {currentScreen !== 'intro' && !game.authGateOpen && (
-          <button
-            data-testid="settings-button"
-            aria-label="Open menu"
-            aria-expanded={settingsOpen}
-            onClick={() => setSettingsOpen(true)}
-            className="game-menu-button"
-          >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <circle cx="12" cy="12" r="3" />
-              <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 01-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z" />
-            </svg>
-            <span>Menu</span>
-          </button>
-        )}
-
-        {/* Friends — same porting fix as Settings above (KES-233): the
-            legacy GameApp.tsx shell isn't what serves /game/hub, so KES-83's
-            corner button needs its own copy here too. Hub only. */}
-        {currentScreen === 'hub' && !game.subsurfaceView && !game.authGateOpen && (
-          <>
-            <FriendsButton onClick={() => setFriendsOpen(true)} />
-            <CommunityButton onClick={() => setCommunityOpen(true)} />
-          </>
-        )}
-
-        {/* Suite return rail (SSL-296): hop back to the SSC garden / Spectra. */}
-        {(currentScreen === 'hub' || currentScreen === 'launchpad') && !game.subsurfaceView && !game.authGateOpen && (
-          <SuiteHopRail signedIn={!!game.authUserId} />
-        )}
+        {/* SSL-35: Menu lives in Home's bottom bar. The old corner Menu pill
+            sat on top of every other screen's header at phone width. */}
 
         {/* The route page remains mounted below as a URL/state synchronizer,
             but the visible game tree belongs to this persistent layout. */}
@@ -238,9 +134,7 @@ function GameChrome({ children }: { children: ReactNode }) {
         {children}
 
         <ToastLayer toasts={game.toasts} onDismiss={game.dismissToast} />
-        {showFeedback && <FeedbackButton />}
         <SurveySheet blockWhile={!!game.popup || !!coach || !!game.pendingTerritoryClaimFor || !isSurveySafeScreen(currentScreen)} />
-        {showNav && <BottomTabBar current={currentNav} onNav={goFromNav} />}
 
         {coach && !game.popup && !game.authGateOpen && (
           <TutorialCoach
@@ -267,7 +161,7 @@ function GameChrome({ children }: { children: ReactNode }) {
             }}
           />
         )}
-        {game.popup && game.popup !== 'tutorial-complete' && currentScreen !== 'market' && !game.authGateOpen && (
+        {game.popup && game.popup !== 'tutorial-complete' && game.shellSheet !== 'market' && !game.authGateOpen && (
           <UnlockPopup
             kind={game.popup}
             onClose={() => {
@@ -275,18 +169,11 @@ function GameChrome({ children }: { children: ReactNode }) {
               if (popup === 'loan') { game.acceptLoan(); return }
               game.setPopup(null)
               if (popup === 'sr2') game.go('hub')
-              if (popup === 'ship-customizer') game.go('hangar')
             }}
             onDismiss={game.popup === 'loan' ? () => game.setPopup(null) : undefined}
           />
         )}
-        {game.authGateOpen && (
-          <AuthGateSheet
-            error={game.authGateError}
-            onSignIn={game.signInFromGate}
-            onCreateAccount={game.createAccountFromGate}
-          />
-        )}
+        {game.authGateOpen && <GateLanding />}
         {game.pendingTerritoryClaimFor && !game.authGateOpen && (
           <TerritoryClaimPopup
             targetId={game.pendingTerritoryClaimFor.targetId}
@@ -296,9 +183,7 @@ function GameChrome({ children }: { children: ReactNode }) {
         )}
       </div>
 
-      {settingsOpen && <SettingsSheet onClose={() => setSettingsOpen(false)} />}
-      {friendsOpen && <FriendsSheet onClose={() => setFriendsOpen(false)} />}
-      {communityOpen && <CommunityHubSheet onClose={() => setCommunityOpen(false)} />}
+      {!game.authGateOpen && <ShellSheets />}
     </main>
   )
 }

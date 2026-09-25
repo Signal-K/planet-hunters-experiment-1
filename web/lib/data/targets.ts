@@ -1,6 +1,6 @@
 // Landnam game data — targets and stars
 
-import type { Target, Star, Mission, Part, RocketConfig } from './types'
+import type { Target, Mission, Part, RocketConfig } from './types'
 import { mineralsForArchetype } from './target-archetypes'
 import { ONBOARDING_SEQUENCE_COUNT } from './mission-generator'
 import { suggestBuild, validateBuild } from './parts'
@@ -126,23 +126,6 @@ export const TARGETS: Target[] = [
     brief: 'Gas giant with hydrogen, helium, and a high gravity penalty. Jupiter itself is not a conventional mining site.',
     archetype: 'gas-giant',
   }),
-]
-
-export const STARS: Star[] = [
-  { id: 'sol',     name: 'Sol',       x: 48, y: 55, kind: 'sol',  dist: '0 ly' },
-  { id: 'proxima', name: 'Proxima',   x: 22, y: 30, kind: 'red',  dist: '4.2 ly' },
-  { id: 'alpha',   name: 'Alpha Cen', x: 28, y: 42, kind: 'warm', dist: '4.4 ly' },
-  { id: 'barnard', name: 'Barnard\'s', x: 38, y: 22, kind: 'red',  dist: '5.9 ly' },
-  { id: 'sirius',  name: 'Sirius',    x: 62, y: 20, kind: 'pale', dist: '8.6 ly' },
-  { id: 'tau',     name: 'Tau Ceti',  x: 72, y: 38, kind: 'cool', dist: '11.9 ly' },
-  { id: 'epsilon', name: 'Eps Eri',   x: 80, y: 62, kind: 'warm', dist: '10.5 ly' },
-  { id: 'vega',    name: 'Vega',      x: 58, y: 76, kind: 'pale', dist: '25.0 ly' },
-]
-
-export const STAR_LINKS: [string, string][] = [
-  ['sol', 'proxima'], ['sol', 'alpha'], ['sol', 'barnard'],
-  ['proxima', 'alpha'], ['alpha', 'barnard'], ['barnard', 'sirius'],
-  ['sol', 'tau'], ['tau', 'epsilon'], ['epsilon', 'vega'], ['sol', 'vega'],
 ]
 
 export function compatibleTargetsFor(mission: Mission, targets: Target[] = TARGETS): Target[] {

@@ -1,4 +1,5 @@
 import type { GameState } from '../../../game-context'
+import { seedFixtureSession } from '../../support/authenticated-fixture'
 
 /**
  * The hub's progression cards stopped responding to clicks once the tutorial
@@ -19,7 +20,6 @@ import type { GameState } from '../../../game-context'
  */
 
 const STORAGE_KEY = 'landnam-game-state-v1'
-const GUEST_KEY = 'landnam-account-credentials'
 const SURVEY_KEY = 'landnam-surveys-shown'
 const SNOOZE_KEY = 'landnam-upgrade-prompt-snooze-until'
 // The sheet shown once when onboarding completes. Pre-acknowledged here: it is
@@ -27,7 +27,6 @@ const SNOOZE_KEY = 'landnam-upgrade-prompt-snooze-until'
 // test. (That two sheets *can* stack — this one plus the auth gate — is a
 // separate problem, see STS-614.)
 const TUTORIAL_ACK_KEY = 'ln_tutorial_complete_ack'
-const GUEST = JSON.stringify({ email: 'e2e@example.com', password: 'e2e-guest-test' })
 const FAR_FUTURE = String(Date.now() + 365 * 24 * 60 * 60 * 1000)
 const ALL_SURVEYS = [
   'lnm_first_launch', 'lnm_mining_feel', 'lnm_client_pick',
@@ -80,12 +79,12 @@ function visitHub(state: Partial<GameState> = POST_TUTORIAL) {
   cy.visit('/game', {
     onBeforeLoad(win) {
       win.localStorage.clear()
-      // Guest credentials, or the auth gate covers the whole screen.
-      win.localStorage.setItem(GUEST_KEY, GUEST)
       win.localStorage.setItem(SNOOZE_KEY, FAR_FUTURE)
       win.localStorage.setItem(SURVEY_KEY, JSON.stringify(ALL_SURVEYS))
       win.localStorage.setItem(TUTORIAL_ACK_KEY, '1')
       win.localStorage.setItem(STORAGE_KEY, JSON.stringify(state))
+      // A fixture session, or the auth gate covers the whole screen.
+      seedFixtureSession(win)
     },
   })
 }
@@ -105,23 +104,24 @@ describe('hub progression cards are clickable after the tutorial', () => {
     cy.contains('Skill Nodes').should('not.exist')
   })
 
-  it('Browse Contracts navigates to the mission board', () => {
-    cy.get('[data-testid="progression-card-next-mission"]').should('be.visible').click()
-    cy.location('pathname', { timeout: 10_000 }).should('not.eq', '/game/hub')
+  it('does not repeat a Browse Contracts card once Free Ops has a mission entry', () => {
+    // In Free Ops the persistent Missions entry is the single way to the
+    // board (ProgressionCard); the old Browse Contracts card was retired.
+    cy.get('[data-testid="progression-card-skills"]').should('be.visible')
+    cy.get('[data-testid="progression-card-next-mission"]').should('not.exist')
   })
 
-  it('Open Launchpad enters the full Launchpad UI', () => {
+  it('Open Launchpad enters the Launchpad scene', () => {
+    // The separate full Launchpad UI was folded into the one Launchpad scene.
     cy.get('[data-testid="progression-card-transit-satellite"]').should('be.visible').click()
-    cy.get('[data-testid="launchpad-ui-screen"]', { timeout: 10_000 }).should('be.visible')
+    cy.get('[data-testid="launchpad-focus-screen"]', { timeout: 10_000 }).should('be.visible')
     cy.get('[data-testid="launchpad-status-card"]').should('be.visible')
     cy.get('[data-testid="launchpad-rocket-fleet"]').should('be.visible')
-    cy.get('[data-testid="launchpad-focus-screen"]').should('not.exist')
   })
 
-  it('the physical Launchpad keeps its separate close-up focus entry', () => {
+  it('the physical Launchpad opens the same Launchpad scene', () => {
     cy.get('[data-testid="building-launchpad-hit"]').click({ force: true })
     cy.get('[data-testid="launchpad-focus-screen"]', { timeout: 10_000 }).should('be.visible')
-    cy.get('[data-testid="launchpad-ui-screen"]').should('not.exist')
   })
 
   it('an active Launchpad opens its scene and exposes explicit resume controls', () => {
@@ -130,7 +130,9 @@ describe('hub progression cards are clickable after the tutorial', () => {
     cy.get('[data-testid="launchpad-focus-screen"]', { timeout: 10_000 }).should('be.visible')
     cy.get('[data-testid="launchpad-resume-mission-btn"]').should('be.visible')
     cy.get('[data-testid="launchpad-mission-log-btn"]').should('be.visible')
-    cy.get('[data-testid="launchpad-status-card"]').should('contain', 'MISSION ACTIVE')
+    // The pad opens its New Mission menu; closing it shows the active run.
+    cy.get('[data-testid="launchpad-new-mission-close"]').click()
+    cy.get('[data-testid="launchpad-active-mission-callout"]').should('contain', 'MISSION IN PROGRESS')
   })
 
   it('nothing transparent is covering the cards', () => {

@@ -1292,6 +1292,11 @@ func seedCatalog(app core.App) {
 		{"habitat", structureBlueprint{"Habitat", "habitat", "manual", "Completed by upgrading a habitat-frame — not placed directly", "A finished pressurised outpost. Recharges and slowly repairs a rover parked alongside it.", "habitat", 0, map[string]float64{}}},
 		{"generator", structureBlueprint{"Generator", "generator", "manual", "", "Radioisotope plant. Powers nearby structures day and night.", "generator", 0, map[string]float64{}}},
 		{"pylon", structureBlueprint{"Power Pylon", "pylon", "manual", "", "Relays power onward, extending the grid to distant drills and pads.", "pylon", 0, map[string]float64{}}},
+		// Landnam sandbox types (SSL-316). A placed structure stores
+		// blueprint_slug as text; these rows are the catalog that slug names.
+		{"road", structureBlueprint{"Road segment", "road", "manual", "", "Packed surface strip. Guides the rover and marks a route between structures.", "road", 0, map[string]float64{}}},
+		{"factory", structureBlueprint{"Factory", "factory", "manual", "", "Turns refined goods into rocket components on site.", "factory", 0, map[string]float64{}}},
+		{"silo", structureBlueprint{"Storage silo", "silo", "manual", "", "Holds raw ore until a cargo ferry collects it.", "silo", 0, map[string]float64{}}},
 	}
 	for _, s := range structures {
 		seedRecord(app, "structure_blueprints", s.slug, map[string]any{

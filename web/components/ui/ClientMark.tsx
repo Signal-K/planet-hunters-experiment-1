@@ -49,7 +49,6 @@ const CLIENT_GLYPHS: Record<string, (color: string, size: number) => React.React
     const mid = s / 2
     const r = mid - 2
     const a30 = Math.PI / 6
-    const a90 = Math.PI / 2
     return (
       <>
         <line x1={mid - r * Math.cos(a30)} y1={mid + r * Math.sin(a30)} x2={mid + r * Math.cos(a30)} y2={mid - r * Math.sin(a30)} stroke={color} strokeWidth={1.2} opacity={0.55} />

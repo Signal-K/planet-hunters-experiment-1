@@ -43,4 +43,5 @@ describe('HubWorldBackground', () => {
     expect(pad).toContain('repeating-linear-gradient')
     expect((pad.match(/data-road-bed="site-service-road"/g) ?? []).length).toBe(1)
   })
+
 })

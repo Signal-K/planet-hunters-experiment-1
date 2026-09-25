@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useEffect } from 'react'
 import CoachAvatar from '@/components/layout/CoachAvatar'
 import CoachPointer from './CoachPointer'
 import type { TutorialStep } from '@/lib/data'

@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react'
 import TopBar from '@/components/ui/TopBar'
-import { partitionByOwner, RESOURCE_FOCUS_MISSION_ID, SELF_DIRECTED_MINING_MISSION_ID } from '@/lib/data'
+import { partitionByOwner, rocketModelAvailable, RESOURCE_FOCUS_MISSION_ID, SELF_DIRECTED_MINING_MISSION_ID } from '@/lib/data'
 import type { Mission } from '@/lib/data'
 import { ROCKET_MODELS } from '@/lib/data/rockets'
 import { SATELLITE_MODELS } from '@/lib/data/satellites'
@@ -18,6 +18,7 @@ import { EARTH_BASE_PAD } from '@/lib/scene/compositions'
 import { earthStorageBuilt, sellUnitPrice } from '@/lib/systems/EconomySystem'
 import { hasActiveBuildSiteRight, ownProgramStructureDelivered } from '@/lib/systems/ConstructionSystem'
 import { REFINERY_BUILD_MISSION_ID } from '@/lib/data/missions'
+import { captureGameEvent } from '@/lib/posthog'
 
 interface LaunchpadScreenProps {
   onBack: () => void
@@ -120,7 +121,7 @@ export default function LaunchpadScreen({
     setMissionMenuOpen(open)
     onMissionMenuOpenChange?.(open)
   }
-  const fleet = ROCKET_MODELS.map(model => ({ model, unlocked: missionsDone >= model.missionsRequired && !model.locked }))
+  const fleet = ROCKET_MODELS.map(model => ({ model, unlocked: rocketModelAvailable(model, missionsDone) }))
   const unlockedFleet = fleet.filter(item => item.unlocked)
   const launchedSatellites = player.transitSatelliteLaunchedAt ? SATELLITE_MODELS.length : 0
   const { own } = partitionByOwner(catalog.missions, mission => mission)
@@ -135,6 +136,10 @@ export default function LaunchpadScreen({
   const focusVisible = (focus: 'client-contracts' | 'mining' | 'instruments' | 'construction') =>
     showAllOperations || !hasProgramFocus || focusSet.has(focus)
   const operations = own.filter(mission => hasFreeOpsAccess || mission.sequence === sequence)
+  const pickOperation = (id: string, freeHaulDisposition?: 'store' | 'sell') => {
+    captureGameEvent('launchpad_operation_picked', { mission_id: id, disposition: freeHaulDisposition ?? null })
+    onPick(id, freeHaulDisposition)
+  }
   // Academy/crew progression remains deferred until it has a replacement for
   // the retired affinity ladder, so it cannot become the next required launch.
   const ownMiningOperation = operations.find(mission => mission.tag === 'FREE OPS' && !mission.client && !mission.payload && !mission.construction)
@@ -339,7 +344,7 @@ export default function LaunchpadScreen({
                   type="button"
                   className="launchpad-mission-choice launchpad-mission-choice--focus"
                   data-testid="launchpad-new-mission-resource-focus-btn"
-                  onClick={() => onPick(resourceFocusOperation.id, 'store')}
+                  onClick={() => pickOperation(resourceFocusOperation.id, 'store')}
                 >
                   <MiningGlyph />
                   <strong>RESOURCE FOCUS</strong>
@@ -351,7 +356,7 @@ export default function LaunchpadScreen({
                   {showAllOperations ? 'SHOW MY SUBSCRIPTIONS' : 'SHOW ALL OPERATIONS'}
                 </button>
               )}
-            </div> : <OperationBrief kind={operationBrief} instrument={infrastructureOperation} mining={ownMiningOperation} builds={buildOperations} player={player} catalog={catalog} onPick={onPick} onBack={() => setOperationBrief(null)} onOpenSiloBuild={onOpenSiloBuild} />}
+            </div> : <OperationBrief kind={operationBrief} instrument={infrastructureOperation} mining={ownMiningOperation} builds={buildOperations} player={player} catalog={catalog} onPick={pickOperation} onBack={() => setOperationBrief(null)} onOpenSiloBuild={onOpenSiloBuild} />}
           </section>
         )}
 

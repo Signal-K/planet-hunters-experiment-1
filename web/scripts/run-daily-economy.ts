@@ -80,7 +80,13 @@ function parseArguments(args: readonly string[]): Arguments {
   for (let index = 0; index < args.length; index += 1) {
     const option = args[index]
     const value = args[index + 1]
-    if ((option === '--input' || option === '--output' || option === '--date' || option === '--publish-url') && value) {
+    const known = option === '--input' || option === '--output' || option === '--date' || option === '--publish-url'
+    if (known && !value) {
+      // An unset CI variable expands to "" — name the option and the cause
+      // instead of reporting it as unknown.
+      throw new Error(`${option} needs a non-empty value`)
+    }
+    if (known && value) {
       if (option === '--input') parsed.inputPath = value
       else if (option === '--output') parsed.outputPath = value
       else if (option === '--date') parsed.snapshotDate = value as DateKey
@@ -88,7 +94,7 @@ function parseArguments(args: readonly string[]): Arguments {
       index += 1
       continue
     }
-    throw new Error(`Unknown or incomplete argument: ${option}`)
+    throw new Error(`Unknown argument: ${option}`)
   }
   return parsed
 }

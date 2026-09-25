@@ -63,6 +63,12 @@ function visitHubWithState(playerOverrides: Partial<GameState['player']>) {
   visitWithState('/game', 'hub', playerOverrides)
 }
 
+/** The telescope rides a Prospector; setup lands on the vehicle blueprint. */
+function expectTelescopeBlueprint() {
+  cy.get('[data-testid="mission-rocket-blueprint"]', { timeout: 10000 }).should('be.visible')
+  cy.get('[data-testid="purchase-rocket-btn"]').should('contain', 'PROSPECTOR')
+}
+
 describe('Telescope construction/launch mission (STS-138)', () => {
   // 2026-08-21 (Liam, direct correction): launching a transit telescope is
   // what TESS citizen science is for, and must be reachable directly —
@@ -90,7 +96,7 @@ describe('Telescope construction/launch mission (STS-138)', () => {
     // Earth Orbit is the telescope's fixed compatible target, so the current
     // setup flow proceeds directly to the rocket blueprint rather than
     // presenting a one-option target picker.
-    cy.contains('BUILD ANOTHER PROSPECTOR', { timeout: 10000 }).should('be.visible')
+    expectTelescopeBlueprint()
 
     visitWithState('/game/missions', 'missions', {
       transitSatelliteLaunchedAt: undefined,
@@ -99,7 +105,15 @@ describe('Telescope construction/launch mission (STS-138)', () => {
     // mission-setup scene, not the retired standalone Mission Dispatch view.
     cy.get('[data-testid="mission-setup-scaffold"]', { timeout: 10000 }).should('have.attr', 'data-step', '1')
     cy.contains('h1', 'Contract').should('be.visible')
-    cy.get('[data-testid="mission-card-story-transit-telescope-launch"]').should('not.exist')
+    // The board is a one-contract carousel: walk every contract.
+    cy.contains(/^CONTRACT 1 \/ \d+$/).invoke('text').then(text => {
+      const total = Number(text.split('/')[1])
+      for (let i = 0; i < total; i++) {
+        cy.get('[data-testid="mission-accept-story-transit-telescope-launch"]').should('not.exist')
+        cy.contains(`CONTRACT ${i + 1} / ${total}`).should('exist')
+        if (i < total - 1) cy.get('button[aria-label="Next contract"]').click()
+      }
+    })
   })
 
   it('can start the telescope deployment from the Launchpad with no SMS built', () => {
@@ -115,7 +129,7 @@ describe('Telescope construction/launch mission (STS-138)', () => {
       .should('not.be.disabled')
       .click()
     cy.get('[data-testid="launchpad-prepare-instrument-btn"]', { timeout: 10000 }).click()
-    cy.contains('BUILD ANOTHER PROSPECTOR', { timeout: 10000 }).should('be.visible')
+    expectTelescopeBlueprint()
   })
 
   it('gates the TESS discovery screen behind launching the telescope, with no SMS prerequisite', () => {

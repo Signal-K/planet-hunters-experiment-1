@@ -18,7 +18,7 @@
 import { useEffect, useRef } from 'react'
 import { capDpr } from '@/lib/engine/pixiDisplay'
 import { Application, Container, Graphics, Text, TextStyle } from 'pixi.js'
-import type { LightcurvePoint } from '@/components/game/LightcurvePlot'
+import type { LightcurvePoint } from '@/lib/data/tess-candidates'
 import type { TransitRange } from '@/lib/data'
 
 // Warm nebula sky, dialed back on blue: the flux scatter reads as pale
@@ -36,6 +36,20 @@ const LINE_COLOR = 0xbfaee0
 const DOT_LO     = 0xb8a4e0  // shallow dip — pale lavender, not cyan
 const DOT_MID    = 0x9d6fd6  // mid dip — violet
 const DOT_HI     = 0xf5a623  // deep dip — amber
+
+/**
+ * SSL-301: a fixed 3-decimal formatter on an auto Y domain produced runs of
+ * identical tick labels ("1.000, 1.000, 1.000") whenever the flux span was
+ * under a few millimag. Pick the smallest precision (3..6 dp) at which every
+ * tick's label is distinct.
+ */
+function yTickDecimals(ticks: number[]): number {
+  for (let decimals = 3; decimals <= 6; decimals++) {
+    const labels = new Set(ticks.map(tick => tick.toFixed(decimals)))
+    if (labels.size === ticks.length) return decimals
+  }
+  return 6
+}
 
 function lerpChannel(a: number, b: number, t: number): number {
   const ar = (a >> 16) & 255, ag = (a >> 8) & 255, ab = a & 255
@@ -288,10 +302,12 @@ export default function ObservatoryChart({ points, ranges, onRange, onRemoveRang
         t.anchor.set(0.5, 0); t.x = cx; t.y = PAD_TOP + plotH + 5
         labelsC.addChild(t)
       }
+      const yTickValues = Array.from({ length: Y_TICKS + 1 }, (_, i) => yMin + (i / Y_TICKS) * yRange)
+      const yDecimals = yTickDecimals(yTickValues)
       for (let i = 0; i <= Y_TICKS; i++) {
-        const v = yMin + (i / Y_TICKS) * yRange
+        const v = yTickValues[i]
         const cy = PAD_TOP + (1 - i / Y_TICKS) * plotH
-        const t = new Text({ text: v.toFixed(3), style: tickStyle })
+        const t = new Text({ text: v.toFixed(yDecimals), style: tickStyle })
         t.anchor.set(1, 0.5); t.x = PAD_LEFT - 6; t.y = cy
         labelsC.addChild(t)
       }

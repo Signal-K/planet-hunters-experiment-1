@@ -12,16 +12,15 @@ import {
   rocketDisplayForConfig,
   rocketModelForConfig,
   validateBuild,
+  rocketModelAvailable,
 } from '@/lib/data'
 import { clientAffinityLevel, crewRequirementStatus } from '@/lib/systems/AcademySystem'
 import { getRequiredRocketModel } from '@/lib/rockets'
 import { rocketCompositionForId, type RocketRoomRole } from '@/lib/data/rocket-composition'
 import { useMissionRelayModels } from '@/lib/hooks/useMissionRelayModels'
 import { formatCurrency } from '@/lib/format'
-import ErrorBoundary from '@/components/ui/ErrorBoundary'
 import ClientMark from '@/components/ui/ClientMark'
 import GalaxyMap from '@/components/TargetPicker/GalaxyMap'
-import { LaunchSequenceCanvas } from '@/components/game/LaunchSequenceCanvas'
 import FreeOpsBuildScreen from '@/components/game/screens/FreeOpsBuildScreen'
 import { HubWorldBackground } from '@/components/game/hub/HubWorldBackground'
 import { HangarModules, LaunchpadModules } from '@/components/game/hub/EarthBaseModules'
@@ -39,10 +38,9 @@ interface MissionSetupRoutesProps {
   coachManual: boolean
   deliveryTargetName?: string
   rocketDisplay: RocketDisplay
-  launchPending: boolean
   onTransferToLaunchpad: () => void
+  /** Starts the launch; the sequence itself renders in the Launch layout. */
   onLaunch: () => void
-  onLaunchComplete: () => void
 }
 
 const STEP_LABELS = ['CONTRACT', 'MAP', 'BLUEPRINT', 'REVIEW'] as const
@@ -192,7 +190,7 @@ function SetupFrame({ step, title, onBack, hasCoach, children }: {
   )
 }
 
-export default function MissionSetupRoutes({ screen, game, hasCoach, rocketDisplay, launchPending, onTransferToLaunchpad, onLaunch, onLaunchComplete }: MissionSetupRoutesProps) {
+export default function MissionSetupRoutes({ screen, game, hasCoach, rocketDisplay, onTransferToLaunchpad, onLaunch }: MissionSetupRoutesProps) {
   const relay = useMissionRelayModels({
     catalog: game.catalog,
     missionsDone: game.player.missionsDone,
@@ -213,7 +211,7 @@ export default function MissionSetupRoutes({ screen, game, hasCoach, rocketDispl
   const [targetId, setTargetId] = useState('')
   const requiredRocket = getRequiredRocketModel(game.player.missionsDone)
   const availableRockets = useMemo(
-    () => ROCKET_MODELS.filter(model => !model.locked && model.missionsRequired <= game.player.missionsDone),
+    () => ROCKET_MODELS.filter(model => rocketModelAvailable(model, game.player.missionsDone)),
     [game.player.missionsDone],
   )
   const selectableRockets = useMemo(() => {
@@ -418,7 +416,6 @@ export default function MissionSetupRoutes({ screen, game, hasCoach, rocketDispl
           </aside>
         </section>
       </SetupFrame>
-      {launchPending && !vehicleInHangar && <ErrorBoundary fallback={null} onError={onLaunchComplete}><LaunchSequenceCanvas rocketName={rocketDisplay.name} rocketImageSrc={rocketDisplay.img} targetName={game.target.name} onComplete={onLaunchComplete} /></ErrorBoundary>}
     </>
   }
 

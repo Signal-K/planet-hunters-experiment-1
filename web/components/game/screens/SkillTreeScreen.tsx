@@ -9,6 +9,7 @@ import type { LicenseGrade } from '@/lib/game-types'
 import type { SkillBranch, SkillNodeId } from '@/lib/data/skills'
 import { HubWorldBackground } from '@/components/game/hub/HubWorldBackground'
 import SkillTreeCoach, { useSkillTreeCoach } from '@/components/game/SkillTreeCoach'
+import { captureGameEvent } from '@/lib/posthog'
 import styles from './SkillTreeScreen.module.css'
 
 interface Firsts {
@@ -57,6 +58,16 @@ export default function SkillTreeScreen({
   const selectedUnlocked = hasSkill(unlockedSkillNodes, selectedNode.id)
   const selectedAffordable = canUnlockSkillNode({ id: selectedNode.id, skillPoints, unlockedSkillNodes })
   const coach = useSkillTreeCoach()
+
+  function unlockNode(id: string) {
+    captureGameEvent('skill_node_unlocked', { node_id: id })
+    onUnlock(id)
+  }
+
+  function upgradeLicense(grade: Exclude<LicenseGrade, 'Grade I'>) {
+    captureGameEvent('skill_license_upgraded', { grade })
+    onUpgradeLicenseGrade(grade)
+  }
 
   return (
     <div className={styles.screen} data-testid="skill-tree-screen">
@@ -168,7 +179,7 @@ export default function SkillTreeScreen({
                           <button
                             className={styles.nodeAction}
                             disabled={!affordable}
-                            onClick={() => onUnlock(node.id)}
+                            onClick={() => unlockNode(node.id)}
                           >
                             Unlock
                           </button>
@@ -204,7 +215,7 @@ export default function SkillTreeScreen({
                 <button
                   className={styles.installButton}
                   disabled={!selectedAffordable}
-                  onClick={() => onUnlock(selectedNode.id)}
+                  onClick={() => unlockNode(selectedNode.id)}
                 >
                   {selectedAffordable ? 'Install Upgrade' : 'Insufficient SP'}
                 </button>
@@ -227,7 +238,7 @@ export default function SkillTreeScreen({
                 <span>{nextGrade ? `${nextGateXP} XP TO ${nextGrade.toUpperCase()}` : 'MAX GRADE REACHED'}</span>
               </div>
               {nextGrade && (
-                <button className={styles.gradeButton} disabled={!canUpgrade} onClick={() => onUpgradeLicenseGrade(nextGrade as Exclude<LicenseGrade, 'Grade I'>)}>
+                <button className={styles.gradeButton} disabled={!canUpgrade} onClick={() => upgradeLicense(nextGrade as Exclude<LicenseGrade, 'Grade I'>)}>
                   Upgrade to {nextGrade}
                 </button>
               )}

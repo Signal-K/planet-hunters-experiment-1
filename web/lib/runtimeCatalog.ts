@@ -7,7 +7,7 @@ import { deepSpaceTelescopeUnlocked } from './data/structures'
 export const TRANSIT_TELESCOPE_TARGET_ID = 'earth-orbit-transit-telescope'
 export const TRANSIT_TELESCOPE_MISSION_ID = 'story-transit-telescope-launch'
 
-export const TRANSIT_TELESCOPE_TARGET: Target = {
+const TRANSIT_TELESCOPE_TARGET: Target = {
   id: TRANSIT_TELESCOPE_TARGET_ID,
   name: 'Earth Orbit',
   type: 'planet',
@@ -24,7 +24,7 @@ export const TRANSIT_TELESCOPE_TARGET: Target = {
 export const DEEP_SPACE_TELESCOPE_TARGET_ID = 'earth-orbit-deep-space-telescope'
 export const DEEP_SPACE_TELESCOPE_MISSION_ID = 'story-deep-space-telescope-survey'
 
-export const DEEP_SPACE_TELESCOPE_TARGET: Target = {
+const DEEP_SPACE_TELESCOPE_TARGET: Target = {
   id: DEEP_SPACE_TELESCOPE_TARGET_ID,
   name: 'Earth Orbit',
   type: 'planet',

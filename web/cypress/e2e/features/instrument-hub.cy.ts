@@ -1,11 +1,10 @@
 import type { GameState } from '../../../game-context'
+import { seedFixtureSession } from '../../support/authenticated-fixture'
 
 const STORAGE_KEY = 'landnam-game-state-v1'
-const GUEST_KEY = 'landnam-account-credentials'
 const SURVEY_KEY = 'landnam-surveys-shown'
 const SNOOZE_KEY = 'landnam-upgrade-prompt-snooze-until'
 const TUTORIAL_ACK_KEY = 'ln_tutorial_complete_ack'
-const GUEST = JSON.stringify({ email: 'e2e@example.com', password: 'e2e-guest-test' })
 const FAR_FUTURE = String(Date.now() + 365 * 24 * 60 * 60 * 1000)
 const ALL_SURVEYS = [
   'lnm_first_launch', 'lnm_mining_feel', 'lnm_client_pick',
@@ -67,11 +66,10 @@ function interceptFeeds() {
       }],
     },
   }).as('asteroids')
-  return e2eToken
 }
 
 function visitHub() {
-  const e2eToken = interceptFeeds()
+  interceptFeeds()
   const state: Partial<GameState> = {
     screen: 'hub',
     tutorial: false,
@@ -104,26 +102,23 @@ function visitHub() {
     },
   }
 
-  cy.visit('/game', {
+  cy.visit('/game?preset=ui-instrument-hub', {
     onBeforeLoad(win) {
       win.localStorage.clear()
-      win.localStorage.setItem(GUEST_KEY, GUEST)
       win.localStorage.setItem(SNOOZE_KEY, FAR_FUTURE)
       win.localStorage.setItem(SURVEY_KEY, JSON.stringify(ALL_SURVEYS))
       win.localStorage.setItem(TUTORIAL_ACK_KEY, '1')
       win.localStorage.setItem(STORAGE_KEY, JSON.stringify(state))
-      win.localStorage.setItem('pocketbase_auth', JSON.stringify({ token: e2eToken, record: { id: 'e2e-subject-user', email: 'e2e@example.com' } }))
+      seedFixtureSession(win, 'e2e-subject-user')
     },
   })
 }
 
 describe('instrument hub orbit downlink', () => {
-  it('pings the orbit widget and opens the inspector from the dedicated hub', () => {
+  it('opens the inspector from the dedicated instrument hub route', () => {
     visitHub()
-    cy.get('[data-testid="hub-orbital-network"]', { timeout: 15_000 }).should('be.visible')
-    cy.get('[data-testid="hub-orbital-ping"]', { timeout: 15_000 }).should('exist')
-    cy.get('[data-testid="hub-orbital-network"]').click()
     cy.get('[data-testid="instrument-hub-screen"]', { timeout: 10_000 }).should('be.visible')
+    cy.get('[data-testid="instrument-signal"]', { timeout: 15_000 }).should('exist')
     cy.get('[data-testid="instrument-signal-inspect"]').first().click()
     cy.get('[data-testid="tess-discovery-screen"], [data-testid="asteroid-discovery-screen"]', { timeout: 10_000 }).should('be.visible')
   })

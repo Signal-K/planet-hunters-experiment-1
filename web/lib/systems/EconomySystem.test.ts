@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { GameState } from '@/lib/game-types'
+import { normalizeAndRepair, type PartialSave } from '@/lib/game-state'
 import { MINERAL_META, CLIENT_SLOTS, MINERAL_SILO_CAPACITY, SURFACE_SILO_CAPACITY, DEEP_MINERAL_SILO_CAPACITY, STRUCTURES, customizerPartById } from '@/lib/data'
 import { applyAssembleFabricatedRocket, applyFabricateRocketPart, applyFreeHaulDisposition, applyRemoteHaulDisposition, applyRocketStageRecovery, applySellMinerals, applySellRefinedGoods, applyConfirmShipCustomizerBuild, applyPlaceStructure, applyPurchaseRocket, applyStartRefine, decayedUnitsSold, earthStorageBuilt, openMarketSellPrice, sellQuote, sellUnitPrice, siloCount, storageCapacity, storedUnits, supplyDipMultiplier } from './EconomySystem'
 import { rocketCompositionForId } from '@/lib/data/rocket-composition'
@@ -284,14 +285,18 @@ describe('applyConfirmShipCustomizerBuild', () => {
 })
 
 describe('Academy and staffing economy', () => {
-  it('charges the Academy build cost and materials only after research', () => {
+  it('charges the Academy build cost and materials in Free Ops without a research step', () => {
     const academy = STRUCTURES.find(structure => structure.id === 'astronaut-academy')!
     const stash = { aluminium: 24, silicon: 12, copper: 8 }
-    const locked = makeState({ francs: academy.cost, stash, academyResearched: false })
-    expect(applyPlaceStructure(locked, academy, academy.kind, 2)).toBe(locked)
+    // The tutorial's own order still holds: nothing but the Launchpad before Free Ops.
+    const tutorial = makeState({ francs: academy.cost, stash, freeOperations: false, missionsDone: 1 })
+    expect(applyPlaceStructure(tutorial, academy, academy.kind, 2)).toBe(tutorial)
+    // Cost checks stay.
+    const short = makeState({ francs: academy.cost - 1, stash })
+    expect(applyPlaceStructure(short, academy, academy.kind, 2)).toBe(short)
 
     const built = applyPlaceStructure(
-      makeState({ francs: academy.cost, stash, academyResearched: true }),
+      makeState({ francs: academy.cost, stash, academyResearched: false }),
       academy,
       academy.kind,
       2,
@@ -302,6 +307,14 @@ describe('Academy and staffing economy', () => {
     expect(built.player.academyFunded).toBe(true)
     expect(built.player.crewUpkeepSettledDate).toMatch(/^\d{4}-\d{2}-\d{2}$/)
     expect(built.player.underConstruction?.['astronaut-academy']).toBeGreaterThan(0)
+  })
+
+  it('keeps a placed surface silo after the save is reloaded', () => {
+    const silo = STRUCTURES.find(structure => structure.id === 'surface-silo')!
+    const placed = applyPlaceStructure(makeState({ francs: silo.cost }), silo, silo.kind, 1)
+    const reloaded = normalizeAndRepair(JSON.parse(JSON.stringify(placed)) as PartialSave)
+    expect(reloaded.player.placed).toContain('surface-silo')
+    expect(reloaded.player.placementPlots['surface-silo']).toBe(1)
   })
 
   it('stamps underConstruction on placement without disturbing an existing entry for another kind', () => {

@@ -1,7 +1,7 @@
 import { useCallback, useRef } from 'react'
 import {
-  MISSIONS, TARGETS, ROCKET_MODELS, FREE_OPS_START_MISSIONS_DONE,
-  getLaserChargeCap, rocketModelForConfig, travelDurationMs, suggestBuild,
+  ROCKET_MODELS, FREE_OPS_START_MISSIONS_DONE,
+  rocketModelForConfig, travelDurationMs, suggestBuild,
   feasibleTargetsFor, validateBuild,
   isOwnProgramMission,
   isFreeHaulMission,
@@ -950,7 +950,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
         popup,
         doneSteps: { ...s.doneSteps, 9: true },
           screen: mission?.payload?.type === 'satellite'
-            ? 'galaxy'
+            ? 'instrument-hub'
             : isProgramOperation
               ? 'launchpad'
               : (stillInTutorial || justFinishedOnboardingNow)

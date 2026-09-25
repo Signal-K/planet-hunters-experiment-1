@@ -19,7 +19,6 @@ import {
   REFINERY_RECIPES,
   SKILL_NODES,
   spendMinerals,
-  surfaceSiteById,
   type CraftingRecipe,
   type SurfaceTarget,
   type TerritoryClaim,
@@ -31,7 +30,7 @@ import { surfaceSiteProgress } from './SurfaceOpsSystem'
 /** One refinery pass per this interval per field. */
 export const FIELD_REFINE_INTERVAL_MS = 60_000
 /** Units of ore one field refinery pass converts. */
-export const FIELD_REFINE_BATCH = 1
+const FIELD_REFINE_BATCH = 1
 
 export interface FieldIdentity {
   /** Landnam target the field sits on (planet, moon, asteroid or discovered exoplanet). */
@@ -56,7 +55,7 @@ export interface FieldBuildResult {
   claim?: TerritoryClaim
 }
 
-export function fieldStructuresFor(player: Pick<Player, 'fieldStructures'>, targetId: string): FieldStructureRecord[] {
+function fieldStructuresFor(player: Pick<Player, 'fieldStructures'>, targetId: string): FieldStructureRecord[] {
   return player.fieldStructures?.[targetId] ?? []
 }
 
@@ -263,7 +262,7 @@ export function factoryRecipes(): readonly CraftingRecipe[] {
   return FACTORY_RECIPES
 }
 
-export function techTreeComplete(player: Pick<Player, 'unlockedSkillNodes'>): boolean {
+function techTreeComplete(player: Pick<Player, 'unlockedSkillNodes'>): boolean {
   const unlocked = new Set(player.unlockedSkillNodes ?? [])
   return SKILL_NODES.every(node => unlocked.has(node.id))
 }
@@ -301,9 +300,4 @@ export function applySeedBiosphere(state: GameState, target: SurfaceTarget, now:
       },
     },
   }
-}
-
-/** Landnam target id a surface site's field belongs to. */
-export function targetIdForSite(siteId: string): string {
-  return surfaceSiteById(siteId)?.bodyId ?? siteId
 }

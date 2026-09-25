@@ -20,6 +20,7 @@ import type {
 import type { LifeStage, SurfaceTarget } from '@/lib/data'
 import { LandnamSync } from '@/lib/takeon/LandnamSync'
 import { buildLandnamBody, registerLandnamSandbox } from '@/lib/takeon/sandbox'
+import { installLandnamStructureGlyphs } from '@/lib/takeon/structureGlyphs'
 import {
   bindTakeonHostEvents,
   notificationForTakeonEvent,
@@ -131,7 +132,7 @@ export function takeOnViewportSize(canvas: Pick<HTMLCanvasElement, 'clientWidth'
 }
 
 /** Tile in front of the rover. Facing follows takeon's iso convention: 0 SE, 1 SW, 2 NW, 3 NE. */
-export function facedTile(pos: { x: number; y: number }, facing: 0 | 1 | 2 | 3): { x: number; y: number } {
+function facedTile(pos: { x: number; y: number }, facing: 0 | 1 | 2 | 3): { x: number; y: number } {
   const delta = [[1, 0], [0, 1], [-1, 0], [0, -1]][facing] ?? [1, 0]
   return { x: pos.x + delta[0], y: pos.y + delta[1] }
 }
@@ -271,6 +272,7 @@ const TakeOnMount = forwardRef<TakeOnMountHandle, TakeOnMountProps>(function Tak
         // Landnam's structures (roads, factories, silos…) and its biome
         // palette must exist before a saved mission referencing them resumes.
         registerLandnamSandbox(engine)
+        installLandnamStructureGlyphs(engine)
         const currentTarget = targetRef.current
         const body = currentTarget
           ? buildLandnamBody(engine, bodyId, currentTarget, lifeStage)

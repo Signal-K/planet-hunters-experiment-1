@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react'
 import TopBar from '@/components/ui/TopBar'
 import { PrimaryBtn } from '@/components/ui/Button'
-import { canAffordStructure, STRUCTURES, structureAffordabilityGaps, structureUnlocked } from '@/lib/data'
+import { canAffordStructure, STRUCTURES, structureAffordabilityGaps, structureUnlockLabel, structureUnlocked } from '@/lib/data'
 import type { StructureBlueprint } from '@/lib/data'
 import type { EntityData } from '@/lib/engine/types'
 import { buildPlotEntities } from '@/lib/engine/prefabs'
@@ -38,13 +38,7 @@ interface BuildPlaceScreenProps {
     stash?: Record<string, number>
     placed: string[]
     freeOperations: boolean
-    refineryUnlocked?: boolean
-    academyResearched?: boolean
     placementPlots?: Record<string, number>
-    transitSatelliteLevel?: number
-    clientMissions?: Record<string, number>
-    deepSpaceTelescopeMissionCompletedAt?: number | null
-    hasMiningSettlement?: boolean
   }
 }
 
@@ -84,10 +78,6 @@ export default function BuildPlaceScreen({ onPlaced, onBack, hasCoach, player }:
     // condition no mission ever satisfied — a permanent dead end. It's now a
     // normal Earth Base plot purchase (same unlock shape as Surface Silo), so
     // it belongs in this strip.
-    // Academy/crew progression is deferred with the retired affinity ladder.
-    // Existing placed academies remain readable, but no new Base plot offers
-    // this unrelated progression branch in the simplified launch loop.
-    && s.id !== 'astronaut-academy'
     && !player.placed.includes(s.id)
   )
   const sel = catalog.find(c => c.id === picked) ?? catalog[0]
@@ -133,7 +123,7 @@ export default function BuildPlaceScreen({ onPlaced, onBack, hasCoach, player }:
   const canSelectStructure = (structure: StructureBlueprint) => {
     const alreadyBuilt = player.placed.includes(structure.id)
     return !alreadyBuilt
-      && structureUnlocked(structure, { refineryUnlocked: player.refineryUnlocked, academyResearched: player.academyResearched, placed: player.placed, freeOperations: player.freeOperations, transitSatelliteLevel: player.transitSatelliteLevel, clientMissions: player.clientMissions, deepSpaceTelescopeMissionCompletedAt: player.deepSpaceTelescopeMissionCompletedAt, hasMiningSettlement: player.hasMiningSettlement })
+      && structureUnlocked(structure, { placed: player.placed, freeOperations: player.freeOperations })
       && canAffordStructure(structure, { francs: player.francs, stash: player.stash })
   }
 
@@ -143,7 +133,7 @@ export default function BuildPlaceScreen({ onPlaced, onBack, hasCoach, player }:
       const first = catalog.find(canSelectStructure)
       if (first) setPicked(first.id)
     }
-  }, [catalog, picked, player.academyResearched, player.francs, player.freeOperations, player.placed, player.refineryUnlocked, player.stash])
+  }, [catalog, picked, player.francs, player.freeOperations, player.placed, player.stash])
 
   function handlePick(id: string) {
     setPicked(id)
@@ -274,7 +264,7 @@ export default function BuildPlaceScreen({ onPlaced, onBack, hasCoach, player }:
           }}>
             {catalog.map(c => {
               const on = c.id === sel?.id
-              const unlocked = structureUnlocked(c, { refineryUnlocked: player.refineryUnlocked, academyResearched: player.academyResearched, placed: player.placed, freeOperations: player.freeOperations, transitSatelliteLevel: player.transitSatelliteLevel, clientMissions: player.clientMissions, deepSpaceTelescopeMissionCompletedAt: player.deepSpaceTelescopeMissionCompletedAt, hasMiningSettlement: player.hasMiningSettlement })
+              const unlocked = structureUnlocked(c, { placed: player.placed, freeOperations: player.freeOperations })
               const affordable = canAffordStructure(c, { francs: player.francs, stash: player.stash })
               const canSelect = unlocked && affordable
               const color = STRUCTURE_COLORS[c.id] ?? '#3fa9ff'
@@ -296,7 +286,7 @@ export default function BuildPlaceScreen({ onPlaced, onBack, hasCoach, player }:
                     setBlocked({
                       id: c.id,
                       reason: !unlocked
-                        ? `Unlocks at ${c.unlocksAt}`
+                        ? `Unlocks at ${structureUnlockLabel(c)}`
                         : `Need ${gaps.join(', ')}`,
                     })
                     captureGameEvent('structure_placement_blocked', {
@@ -348,7 +338,7 @@ export default function BuildPlaceScreen({ onPlaced, onBack, hasCoach, player }:
                         fontWeight: 700,
                         letterSpacing: '0.04em',
                       }}>
-                        {unlocked ? (c.cost === 0 ? 'FREE' : formatCurrency(c.cost, { compact: true })) : c.unlocksAt}
+                        {unlocked ? (c.cost === 0 ? 'FREE' : formatCurrency(c.cost, { compact: true })) : structureUnlockLabel(c)}
                       </div>
                     </div>
                   </div>

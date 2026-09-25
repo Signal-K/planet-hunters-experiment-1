@@ -37,6 +37,11 @@ const ORDER_SEGMENTS = 12
 // conflated, leaving the mining screen with zero "no client" first-entry cue.
 const FREE_OPS_MINING_ACK_KEY = 'ln_mining_freeops_first_entry_ack'
 const FREE_OPS_FIRST_SUCCESS_ACK_KEY = 'ln_mining_freeops_first_success_ack'
+// SSL-333: first-ever mining run, any mission type, opens the controls guide
+// automatically once so a player never has to discover the "?" button on
+// their own. Separate from FREE_OPS_MINING_ACK_KEY, which only covers the
+// no-client explainer and never fires on a client mission's first mining run.
+const HUD_GUIDE_ACK_KEY = 'ln_mining_hud_guide_ack'
 
 function useFreeOpsMiningAck(alreadyExperienced: boolean) {
   const [show, setShow] = useState(false)
@@ -63,15 +68,53 @@ function useFreeOpsFirstSuccessAck() {
   return { dismissed, dismiss }
 }
 
+// SSL-334: the design-language doc (landnam-ui-design-language-style-prompt)
+// specifies flat color fills with 2-3 discrete facets (lit top, shaded side)
+// for chunky cel-shaded style, everywhere in the game. These icons were a
+// single flat fill with no faceting at all, which read as plain next to
+// faceted rocket/structure art elsewhere. shadeHex only touches hex colors;
+// non-hex inputs (the muted "done" state uses a CSS var) fall back to the
+// prior flat single-color render rather than risk a malformed fill.
+function shadeHex(hex: string, amount: number): string | null {
+  if (!hex.startsWith('#')) return null
+  const n = parseInt(hex.slice(1), 16)
+  const r = Math.min(255, Math.max(0, ((n >> 16) & 0xff) + amount))
+  const g = Math.min(255, Math.max(0, ((n >> 8) & 0xff) + amount))
+  const b = Math.min(255, Math.max(0, (n & 0xff) + amount))
+  return `#${((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1)}`
+}
+
 function OreShapeIcon({ id, color, size = 14, minerals }: { id: string; color: string; size?: number; minerals: Record<string, MineralMeta> }) {
   const shape = minerals[id]?.shape ?? 'circle'
+  const lit = shadeHex(color, 30) ?? color
+  const dark = shadeHex(color, -35) ?? color
   if (shape === 'diamond')
-    return <svg width={size} height={size} viewBox="0 0 14 14" aria-hidden="true"><polygon points="7,1 13,7 7,13 1,7" fill={color} /></svg>
+    return (
+      <svg width={size} height={size} viewBox="0 0 14 14" aria-hidden="true">
+        <polygon points="7,1 13,7 7,13 1,7" fill={dark} />
+        <polygon points="7,1 13,7 7,7 1,7" fill={lit} />
+      </svg>
+    )
   if (shape === 'rect')
-    return <svg width={size} height={size} viewBox="0 0 14 14" aria-hidden="true"><rect x="2" y="3" width="10" height="8" rx="1" fill={color} /></svg>
+    return (
+      <svg width={size} height={size} viewBox="0 0 14 14" aria-hidden="true">
+        <rect x="2" y="3" width="10" height="8" rx="1" fill={dark} />
+        <rect x="2" y="3" width="10" height="4" fill={lit} />
+      </svg>
+    )
   if (shape === 'triangle')
-    return <svg width={size} height={size} viewBox="0 0 14 14" aria-hidden="true"><polygon points="7,1 13,13 1,13" fill={color} /></svg>
-  return <svg width={size} height={size} viewBox="0 0 14 14" aria-hidden="true"><circle cx="7" cy="7" r="6" fill={color} /></svg>
+    return (
+      <svg width={size} height={size} viewBox="0 0 14 14" aria-hidden="true">
+        <polygon points="7,1 13,13 1,13" fill={dark} />
+        <polygon points="7,1 13,13 7,13" fill={lit} />
+      </svg>
+    )
+  return (
+    <svg width={size} height={size} viewBox="0 0 14 14" aria-hidden="true">
+      <circle cx="7" cy="7" r="6" fill={dark} />
+      <path d="M7 1 A6 6 0 0 1 13 7 L7 7 Z" fill={lit} />
+    </svg>
+  )
 }
 
 // Horizontal drag track — left = slow, center = normal, right = fast forward
@@ -148,6 +191,8 @@ function ScrollTrack({ scrollRef, disabled = false }: { scrollRef: React.Mutable
 function miningGuide(deliveryTargetName?: string) {
   return [
     { label: 'FIRE LASER', desc: 'Fires your mining laser at the asteroid. Collect ore by hitting ore veins (Space/F).' },
+    { label: 'CHARGE METER', desc: 'The laser bolt readout in the stats strip, showing how many shots you have left. Runs out and the order isn\'t filled, the run fails.' },
+    { label: 'ORDER PROGRESS', desc: 'The bar under your mineral counts, showing how much of this order you\'ve mined so far. Fills as your collected minerals meet what\'s required.' },
     { label: 'SCROLL', desc: 'Drag the scroll track left to slow down, right to fast-forward camera movement.' },
     { label: 'INVENTORY', desc: 'Shows collected vs. required per mineral. Fill all slots to unlock return.' },
     { label: 'MISSION GOALS', desc: 'Combined ore progress and value context for the current contract.' },
@@ -348,6 +393,16 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
   const [guideOpen, setGuideOpen] = useState(false)
   const [confirmingAbandon, setConfirmingAbandon] = useState(false)
 
+  // SSL-333: open the guide once, unprompted, on the player's first-ever
+  // mining run. After that it's opt-in via the "?" button same as before.
+  useEffect(() => {
+    if (!localStorage.getItem(HUD_GUIDE_ACK_KEY)) {
+      setGuideOpen(true)
+      localStorage.setItem(HUD_GUIDE_ACK_KEY, '1')
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
   const isFreeOps = !mission.client
   const { show: showFreeOpsMiningExplainer, dismiss: dismissFreeOpsMiningExplainer } = useFreeOpsMiningAck(!isFreeOps || !!hasPriorFreeOpsExperience)
   const { dismissed: freeOpsFirstSuccessDismissed, dismiss: dismissFreeOpsFirstSuccess } = useFreeOpsFirstSuccessAck()
@@ -505,8 +560,22 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
       </button>
 
       {activeOverlay === 'guide' && (
-        <aside className="mining-guide-overlay" aria-label="Mining controls" style={{ position: 'absolute', right: 16, bottom: 'calc(var(--ln-nav-h, 64px) + 16px)', zIndex: 70, width: 'min(360px, calc(100% - 32px))' }}>
-          <div className="mining-guide-panel">
+        // SSL-330/SSL-331: this panel used to anchor from the bottom via
+        // var(--ln-nav-h, 64px), a fallback built for a bottom nav bar. The
+        // mining screen has none; its actual bottom rail is .mining-controls,
+        // whose real height (caption, stats, progress bar, action row) runs
+        // well past 64px, so the panel's own bottom edge sat on top of the
+        // charge meter and action buttons instead of clearing them (visible
+        // live at 2026-09-23 with the default onboarding save). Anchoring
+        // from the top below TopBar, with a capped scrollable height, avoids
+        // needing to measure that variable-height rail at all, and also
+        // means a longer guide list never gets clipped with no way to see
+        // the rest of it. Wrapped in the shared Panel component (like the
+        // success/failure overlays on this same screen) instead of the old
+        // bare, unstyled div, so it reads as the same chrome as the rest of
+        // the mining HUD rather than floating text with no card behind it.
+        <aside className="mining-guide-overlay" aria-label="Mining controls" style={{ position: 'absolute', right: 16, top: 64, zIndex: 70, width: 'min(360px, calc(100% - 32px))', maxHeight: 'calc(100% - 220px)', overflowY: 'auto' }}>
+          <Panel accent="var(--ln-cyan)" surface="glass" style={{ padding: 12 }}>
             <div style={{ fontFamily: 'var(--ln-font-display)', fontSize: 9, fontWeight: 800, letterSpacing: '0.2em', color: 'var(--ln-cyan)', textTransform: 'uppercase', marginBottom: 10 }}>Mining Controls</div>
             {miningGuide(deliveryTargetName).map(item => (
               <div key={item.label} style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
@@ -514,8 +583,18 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
                 <span style={{ fontFamily: 'var(--ln-font-body)', fontSize: 12, color: 'var(--ln-text-dim)', lineHeight: 1.4 }}>{item.desc}</span>
               </div>
             ))}
-            <button className="mining-guide-close" onClick={() => setGuideOpen(false)}>Close</button>
-          </div>
+            <button
+              onClick={() => setGuideOpen(false)}
+              style={{
+                width: '100%', marginTop: 4, padding: '8px 0', borderRadius: 8,
+                border: '1px solid var(--ln-cyan-border)', background: 'var(--ln-cyan-soft)',
+                color: 'var(--ln-cyan)', font: '800 10px var(--ln-font-display)',
+                letterSpacing: '0.12em', textTransform: 'uppercase', cursor: 'pointer',
+              }}
+            >
+              Close
+            </button>
+          </Panel>
         </aside>
       )}
 
@@ -596,6 +675,7 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
           scrollRef={scrollRef}
           oreNearRef={oreNearRef}
           neededMineralsRef={neededMineralsRef}
+          aimAssistActive={aimCoach.visible}
         />
         {sceneStatus !== 'ready' && (
           <div className="mining-scene-status" role="status" aria-live="polite" data-testid="mining-scene-status">

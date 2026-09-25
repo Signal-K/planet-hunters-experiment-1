@@ -65,7 +65,6 @@ export type Screen =
   | 'intro'
   | 'build'
   | 'hub'
-  | 'hub-subsurface'
   | 'missions'
   | 'galaxy'
   | 'targets'
@@ -89,33 +88,13 @@ export type Screen =
   | 'mission-history'
   | 'narrative-ledger'
 
-// Screens that render a physical place in the game world (or a step in a
-// mission run through one) get the full, edge-to-edge viewport on desktop —
-// they are locations, not menus, and boxing them in the device-card chrome
-// reads as a modal sitting over the game rather than the game itself.
-// Screens NOT in this set ('intro', 'build', 'missions', 'targets', 'fab',
-// 'market', 'skills', 'rocket-buy', 'debrief') are menus/UI concepts and keep
-// the boxed card treatment. Debrief in particular is a mission-results
-// summary/paperwork screen, not a place — it was wrongly added here in
-// KES-261 and got full-screen treatment it never should have (KES-265).
-// See `.portrait-canvas--full-page` in globals.css.
-export const LOCATION_SCREENS: ReadonlySet<Screen> = new Set<Screen>([
-  'hub',
-  'hub-subsurface',
-  'launchpad',
-  'transit',
-  'landing',
-  'mining',
-  'rover-mining',
-  'delivery',
-  'refinery',
-  'academy',
-  'hangar',
-  'surface-ops',
-  'galaxy',
-  'asteroid-discovery',
-  'instrument-hub',
-])
+// SSL-35: which layout each screen renders in lives in lib/screen-layouts.ts
+// (GAME_ROUTES). The old LOCATION_SCREENS boxed-vs-full-page split is retired:
+// every screen now sits on the shared full-page frame.
+
+/** Shell-level sheets and pop-ups (SSL-35). Market and Menu open from Home's
+ * bottom bar; Friends, Community and Feedback open from Menu. */
+export type ShellSheet = 'menu' | 'market' | 'friends' | 'community' | 'feedback'
 
 export type LicenseGrade = 'Grade I' | 'Grade II' | 'Grade III'
 
@@ -510,6 +489,8 @@ export interface GameActions {
   openLaunchpadMissionMenu: () => void
   launchpadMissionMenuOpen: boolean
   setLaunchpadMissionMenuOpen: (open: boolean) => void
+  shellSheet: ShellSheet | null
+  setShellSheet: (sheet: ShellSheet | null) => void
   returnFromHangar: () => void
   goToMissions: (scope?: SceneScope) => void
   markContractsOpened: (scope?: SceneScope) => void
@@ -581,7 +562,6 @@ export interface GameActions {
   upgradeLicenseGrade: (grade: Exclude<LicenseGrade, 'Grade I'>) => void
   unlockBlueprint: (blueprintId: string, costFrancs?: number, costXP?: number, costMaterials?: Record<string, number>) => void
   claimFriendGift: (giftId: string) => Promise<void>
-  researchAcademy: () => void
   researchLanding: () => void
   setAcademyFunding: (funded: boolean) => void
   hireCrew: (sourceId: string) => void

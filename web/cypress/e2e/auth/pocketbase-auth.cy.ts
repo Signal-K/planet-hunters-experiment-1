@@ -3,6 +3,8 @@ describe('PocketBase Guest Auth Pattern', () => {
   // game_states lives on the Landnam game backend, not the shared auth backend
   const landnamPbUrl = Cypress.env('LANDNAM_PB_URL') || Cypress.env('POCKETBASE_URL') || 'http://localhost:8091'
   const STORAGE_KEY = 'landnam-game-state-v1'
+  // Signed-in saves live in the account's own slot.
+  const accountStorageKey = () => `${STORAGE_KEY}:user:${record.id as string}`
   const PB_AUTH_KEY = 'pocketbase_auth'
 
   let guestId: string
@@ -157,7 +159,7 @@ describe('PocketBase Guest Auth Pattern', () => {
         win.localStorage.clear()
         // Exercise the production shared-to-Landnam auth exchange on load.
         win.localStorage.setItem(PB_AUTH_KEY, JSON.stringify({ token, record }))
-        win.localStorage.setItem(STORAGE_KEY, JSON.stringify(makeState('hub')))
+        win.localStorage.setItem(accountStorageKey(), JSON.stringify(makeState('hub')))
       },
     })
 
@@ -165,7 +167,7 @@ describe('PocketBase Guest Auth Pattern', () => {
     cy.wait('@createGameState', { timeout: 15000 }).its('response.statusCode').should('be.oneOf', [200, 201])
     cy.window().then(win => {
       expect(win.localStorage.getItem(PB_AUTH_KEY), PB_AUTH_KEY).to.contain(record.id as string)
-      expect(win.localStorage.getItem(STORAGE_KEY), STORAGE_KEY).to.contain('Grade II')
+      expect(win.localStorage.getItem(accountStorageKey()), 'account save').to.contain('Grade II')
     })
     cy.wait(3000)
 
@@ -193,7 +195,7 @@ describe('PocketBase Guest Auth Pattern', () => {
 
     cy.contains('BASE', { timeout: 15000 }).should('be.visible')
     cy.window({ timeout: 15000 }).should(win => {
-      const restored = JSON.parse(win.localStorage.getItem(STORAGE_KEY) || '{}')
+      const restored = JSON.parse(win.localStorage.getItem(accountStorageKey()) || '{}')
       expect(restored.screen).to.eq('hub')
       expect(restored.player.francs).to.eq(9_500_000_000)
       expect(restored.player.licenseGrade).to.eq('Grade II')

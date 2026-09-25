@@ -28,19 +28,50 @@ jobs:
         with:
           node-version: "24"
 
+      # The job needs repository configuration that is not in the repo:
+      # vars.LANDNAM_DAILY_ECONOMY_INPUT_JSON (the event/snapshot payload),
+      # and, to publish, vars.LANDNAM_PB_URL plus the service secrets. Until
+      # the input is configured, say so on the run and stop, rather than
+      # failing every day with no snapshot to resolve.
+      - name: Check configuration
+        id: config
+        env:
+          INPUT_JSON: ${{ vars.LANDNAM_DAILY_ECONOMY_INPUT_JSON }}
+        run: |
+          if [ -z "$INPUT_JSON" ]; then
+            echo "::warning title=Daily economy not configured::vars.LANDNAM_DAILY_ECONOMY_INPUT_JSON is empty; no snapshot was resolved or published."
+            echo "Daily economy skipped: \`LANDNAM_DAILY_ECONOMY_INPUT_JSON\` repository variable is not set." >> "$GITHUB_STEP_SUMMARY"
+            echo "configured=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "configured=true" >> "$GITHUB_OUTPUT"
+          fi
+
       # The event/snapshot adapter supplies immutable client-build events,
       # client experience, material baselines, and the last published snapshot
       # as one JSON payload. It must atomically persist the output under its
       # idempotencyKey after this workflow. No Docker or network service starts
       # here, so the deterministic calculation is runnable offline.
+      # --publish-url is only passed when vars.LANDNAM_PB_URL is set: an unset
+      # variable expands to an empty string, which the script rejects as an
+      # incomplete argument.
       - name: Resolve authoritative daily snapshot
+        if: steps.config.outputs.configured == 'true'
         env:
           LANDNAM_DAILY_ECONOMY_INPUT_JSON: ${{ vars.LANDNAM_DAILY_ECONOMY_INPUT_JSON }}
+          LANDNAM_PB_URL: ${{ vars.LANDNAM_PB_URL }}
           LANDNAM_PB_SERVICE_EMAIL: ${{ secrets.LANDNAM_PB_SERVICE_EMAIL }}
           LANDNAM_PB_SERVICE_PASSWORD: ${{ secrets.LANDNAM_PB_SERVICE_PASSWORD }}
-        run: node --experimental-strip-types scripts/run-daily-economy.ts --output daily-economy-snapshot.json --publish-url "${{ vars.LANDNAM_PB_URL }}"
+        run: |
+          args=(--output daily-economy-snapshot.json)
+          if [ -n "$LANDNAM_PB_URL" ]; then
+            args+=(--publish-url "$LANDNAM_PB_URL")
+          else
+            echo "::warning title=Daily economy not published::vars.LANDNAM_PB_URL is empty; the snapshot is only uploaded as a run artifact."
+          fi
+          node --experimental-strip-types scripts/run-daily-economy.ts "${args[@]}"
 
       - name: Upload auditable daily snapshot
+        if: steps.config.outputs.configured == 'true'
         uses: actions/upload-artifact@v4
         with:
           name: landnam-daily-economy-${{ github.run_id }}

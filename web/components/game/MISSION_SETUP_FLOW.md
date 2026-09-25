@@ -32,7 +32,7 @@ All setup states use the canonical `/game/missions` URL. The internal `GameState
 - Flow mutation lives in `lib/contexts/useGameLoop.ts`.
 - Rocket purchase/fabrication mutation lives in `lib/systems/EconomySystem.ts`.
 - Mission, target, rocket, and the `player.stagedRockets` prepared-vehicle ledger live in `GameState` and persist through the existing game-state sync path. The old single pending fields mirror the currently inspected vehicle for legacy surfaces only.
-- Tutorial coach selection and rendering live above this boundary in `GameScreenRouter.tsx` and `GameApp.tsx`.
+- Tutorial coach selection and rendering live above this boundary in `GameScreenRouter.tsx` and `app/game/(main)/layout.tsx`.
 - URL canonicalization lives in `lib/game-route.ts`; individual setup routes are intentionally not exposed.
 - `LaunchSequenceCanvas` remains downstream of the setup scaffold and calls `game.onLaunch()` only after completion.
 

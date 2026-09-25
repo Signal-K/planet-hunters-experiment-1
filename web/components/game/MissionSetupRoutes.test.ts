@@ -79,9 +79,11 @@ describe('mission setup replacement boundary', () => {
 
     expect(hub).toContain('data-screen="hub"')
     expect(hub).toContain('left: `clamp(62px,')
-    expect(globals).toContain('.portrait-canvas:has([data-screen="hub"]) .hub-friends-button')
-    expect(globals).toContain('.portrait-canvas:has([data-screen="hub"]) .feedback-launcher')
-    expect(globals).toContain('bottom: auto !important')
+    // SSL-35: Home chrome lives in the shared frame's slots, not in
+    // absolutely-positioned corner buttons.
+    expect(hub).toContain('<FrameSlot name="top">')
+    expect(hub).toContain('<FrameSlot name="bottom">')
+    expect(globals).toContain('.portrait-canvas:has([data-layout="home"]) .sync-status')
     expect(structures).toContain('.earth-base-flat-sprite')
   })
 

@@ -2,6 +2,7 @@
 
 import type { Part, Mission, Target, RocketConfig, BuildCheck } from './types'
 import { effectiveCargoCapacity, effectiveMaxOrbit } from './skills'
+import { missionsRequirementMet } from './tutorial-gates'
 
 export const PARTS: { chassis: Part[]; propulsion: Part[]; drill: Part[] } = {
   chassis: [
@@ -50,7 +51,7 @@ export function suggestBuild(opts: {
 
   const available = (p: Part) => {
     if (p.locked) return false
-    if (p.missionsRequired && effectiveMissionsDone < p.missionsRequired) return false
+    if (!missionsRequirementMet(p.missionsRequired, effectiveMissionsDone)) return false
     return true
   }
   const bestAvail = <T extends Part>(arr: T[]) => [...arr].reverse().find(p => available(p)) ?? arr[0]

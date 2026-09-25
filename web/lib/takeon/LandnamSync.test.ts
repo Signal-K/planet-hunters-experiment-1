@@ -144,6 +144,94 @@ describe('LandnamSync', () => {
     expect(structures.records).toHaveLength(0)
   })
 
+  it('persists a storage silo as a finished structure and reloads it that way', async () => {
+    const { client, structures } = memoryClient()
+    const sync = new LandnamSync({ client })
+    const state = missionFixture()
+    state.structures = [{
+      id: 'silo-1',
+      type: 'silo',
+      pos: { x: 8, y: 4 },
+      buffer: { iron: 2 },
+      facing: 1,
+    }]
+
+    await sync.saveMission(state, 'Pathfinder')
+    const loaded = await sync.loadMission(state.id)
+
+    expect(structures.records[0]).toMatchObject({
+      blueprint_slug: 'silo',
+      structure_id: 'silo-1',
+      pos_x: 8,
+      pos_y: 4,
+      progress: null,
+    })
+    expect(loaded?.structures[0]).toMatchObject({
+      id: 'silo-1',
+      type: 'silo',
+      pos: { x: 8, y: 4 },
+      buffer: { iron: 2 },
+      facing: 1,
+    })
+    expect(loaded?.structures[0]).not.toHaveProperty('progress')
+
+    // Rows saved before this fix stored the missing progress as 0, which the
+    // flat view paints as an unfinished blueprint.
+    structures.records[0].progress = 0
+    const repaired = await sync.loadMission(state.id)
+    expect(repaired?.structures[0]).not.toHaveProperty('progress')
+  })
+
+  it('still round-trips habitat-frame construction progress', async () => {
+    const { client, structures } = memoryClient()
+    const sync = new LandnamSync({ client })
+    const state = missionFixture()
+    state.structures = [{
+      id: 'frame-1',
+      type: 'habitat-frame',
+      pos: { x: 1, y: 1 },
+      buffer: {},
+      progress: 0.4,
+    }]
+
+    await sync.saveMission(state, 'Pathfinder')
+    const loaded = await sync.loadMission(state.id)
+
+    expect(structures.records[0].progress).toBe(0.4)
+    expect(loaded?.structures[0]).toMatchObject({ type: 'habitat-frame', progress: 0.4 })
+  })
+
+  it('reloads every placed field structure type in a fresh session (SSL-341)', async () => {
+    const { client, structures } = memoryClient()
+    const state = missionFixture()
+    const types = [
+      'solar-array', 'beacon', 'drill-rig', 'cache', 'refinery', 'habitat-frame',
+      'habitat', 'launch-pad', 'generator', 'pylon', 'road', 'factory', 'silo',
+    ] as const
+    state.structures = types.map((type, index) => ({
+      id: `placed-${type}`,
+      type,
+      pos: { x: index, y: index + 1 },
+      buffer: {},
+      facing: 3,
+      ...(type === 'habitat-frame' ? { progress: 0.5 } : {}),
+    }))
+
+    await new LandnamSync({ client }).saveMission(state, 'Pathfinder')
+    // A reload builds a new adapter; nothing may survive in memory.
+    const reloaded = await new LandnamSync({ client }).loadMission(state.id)
+
+    expect(structures.records).toHaveLength(types.length)
+    expect(reloaded?.structures.map(structure => structure.type).sort()).toEqual([...types].sort())
+    for (const [index, type] of types.entries()) {
+      expect(reloaded?.structures.find(structure => structure.id === `placed-${type}`)).toMatchObject({
+        type,
+        pos: { x: index, y: index + 1 },
+        facing: 3,
+      })
+    }
+  })
+
   it('stores Takeon launch-pad instances under the canonical Landnam blueprint', async () => {
     const { client, structures } = memoryClient()
     const sync = new LandnamSync({ client })
