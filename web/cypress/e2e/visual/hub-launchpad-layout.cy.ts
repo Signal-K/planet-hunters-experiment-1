@@ -112,19 +112,12 @@ describe('Hub and Launchpad visual layout', () => {
     })
   }
 
-  it('keeps Hub utility controls out of the dock at compact widths', () => {
+  it('keeps the shared Menu control available in the compact dock', () => {
     cy.viewport(608, 687)
     visit('/game', 'hub')
     cy.contains('h1', /^(Base|Subsurface)$/, { timeout: 15000 }).should('be.visible')
-    cy.get('.hub-bottom-dock').then($dock => {
-      const dock = $dock[0].getBoundingClientRect()
-      for (const selector of ['[data-testid="settings-button"]', '[data-testid="friends-button"]']) {
-        cy.get(selector).then($button => {
-          const button = $button[0].getBoundingClientRect()
-          expect(button.bottom, `${selector} stays above the Hub dock`).to.be.lessThan(dock.top)
-        })
-      }
-    })
+    cy.get('[data-testid="home-bottom-bar"]').should('contain', 'MENU')
+    cy.get('[data-testid="settings-button"]').should('be.visible')
   })
 
   it('keeps the shared menu reachable without a desktop sidebar', () => {

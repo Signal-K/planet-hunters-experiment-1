@@ -10,6 +10,7 @@ type GameChromeBarsProps = {
   onOperations: () => void
   onMarket: () => void
   onMenu: () => void
+  menuExpanded?: boolean
 }
 
 /**
@@ -18,7 +19,7 @@ type GameChromeBarsProps = {
  * leave an operations screen's contextual control (fire, collect, confirm)
  * unobscured.
  */
-export function GameChromeBars({ screen, missionsDone, hasActiveRun, onHome, onOperations, onMarket, onMenu }: GameChromeBarsProps) {
+export function GameChromeBars({ screen, missionsDone, hasActiveRun, onHome, onOperations, onMarket, onMenu, menuExpanded = false }: GameChromeBarsProps) {
   const onBase = screen === 'hub' || screen === 'hub-subsurface'
   const operationsLabel = hasActiveRun ? 'RESUME' : 'OPS'
 
@@ -33,7 +34,7 @@ export function GameChromeBars({ screen, missionsDone, hasActiveRun, onHome, onO
         <button type="button" data-testid="home-bar-hub" aria-current={onBase ? 'page' : undefined} onClick={onHome}>HUB</button>
         <button type="button" data-testid="home-bar-switch" onClick={onOperations} aria-label="Switch operation">« »</button>
         <button type="button" data-testid="home-bar-market" onClick={onMarket}>MARKET</button>
-        <button type="button" data-testid="home-bar-menu" onClick={onMenu}>MENU</button>
+        <button type="button" data-testid="settings-button" aria-label="Open menu" aria-expanded={menuExpanded} onClick={onMenu}>MENU</button>
       </nav>
     </>
   )

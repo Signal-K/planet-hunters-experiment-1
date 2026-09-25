@@ -41,7 +41,7 @@ describe('Hub shared chrome and sky controls', () => {
       cy.get('[data-testid="home-bar-ops"]').should('be.visible')
       cy.get('[data-testid="home-bar-hub"]').should('be.visible')
       cy.get('[data-testid="home-bar-market"]').should('be.visible')
-      cy.get('[data-testid="home-bar-menu"]').should('be.visible')
+      cy.get('[data-testid="settings-button"]').should('be.visible')
     })
   })
 

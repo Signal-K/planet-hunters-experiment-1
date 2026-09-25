@@ -12,7 +12,7 @@ describe('GameChromeBars', () => {
     expect(markup).toContain('data-testid="home-bottom-bar"')
     expect(markup).toContain('data-testid="home-bar-hub"')
     expect(markup).toContain('data-testid="home-bar-market"')
-    expect(markup).toContain('data-testid="home-bar-menu"')
+    expect(markup).toContain('data-testid="settings-button"')
     expect(markup).toContain('« »')
   })
 })
