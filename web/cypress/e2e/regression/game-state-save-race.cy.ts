@@ -1,3 +1,5 @@
+import { seedFixtureSession } from '../../support/authenticated-fixture'
+
 // Regression tests for two real prod bugs on POST .../game_states/records.
 //
 // (1) 2026-07-14 — two near-simultaneous first-saves for the same
@@ -109,7 +111,7 @@ describe('game_states save race recovery', () => {
           popup: null,
           menuOpen: false,
         }))
-        win.localStorage.setItem('landnam-account-credentials', JSON.stringify({ email: 'e2e@example.com', password: 'e2e-guest-test' }))
+        seedFixtureSession(win)
         // Seed pbShared's authStore directly (PocketBase SDK default
         // 'pocketbase_auth' key) instead of relying on the async
         // ensureAccountAuth() -> authWithPassword() round trip to populate it —

@@ -1,3 +1,5 @@
+import { seedFixtureSession } from './authenticated-fixture'
+
 /**
  * Responsive testing helpers
  * Test the same flow across multiple viewports to catch layout breakage
@@ -46,13 +48,12 @@ export function shouldBeVisibleAtAllViewports(selector: string) {
  * Setup game state for responsive testing
  */
 export function setupGameState(state: Record<string, any>) {
-  cy.visit('/game', {
+  // /game always resumes a signed-in player to Earth Base; open other
+  // screens on their own route.
+  cy.visit(`/game/${state.screen ?? 'hub'}`, {
     onBeforeLoad(win) {
       win.localStorage.setItem('landnam-game-state-v1', JSON.stringify(state));
-      win.localStorage.setItem('landnam-account-credentials', JSON.stringify({
-        email: 'responsive-test@example.com',
-        password: 'test-password',
-      }));
+      seedFixtureSession(win);
       win.localStorage.setItem('landnam-surveys-shown', JSON.stringify([
         'lnm_first_launch', 'lnm_mining_feel', 'lnm_client_pick',
         'lnm_mission_friction', 'lnm_progression_feel', 'lnm_end_of_content',

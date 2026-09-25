@@ -1,4 +1,5 @@
 import type { GameState } from '@/game-context'
+import { seedFixtureSession } from '../../support/authenticated-fixture'
 
 const STORAGE_KEY = 'landnam-game-state-v1'
 
@@ -84,13 +85,15 @@ function visitWithState(state: StateOverride) {
     statusCode: 200,
     body: { id: 'ui-zone-state', user: 'e2e-user', state: {} },
   })
-  cy.visit('/game', {
+  // /game resumes a signed-in player to Earth Base, so open each state on its
+  // own route. Mission setup (board, map, blueprint, review) is one routed
+  // scene at /game/missions.
+  const screen = state.screen ?? 'hub'
+  const route = ['missions', 'targets', 'rocket-buy'].includes(screen) ? 'missions' : screen
+  cy.visit(`/game/${route}`, {
     onBeforeLoad(win) {
       win.localStorage.setItem(STORAGE_KEY, JSON.stringify(fullState(state)))
-      win.localStorage.setItem('landnam-account-credentials', JSON.stringify({
-        email: 'e2e@example.com',
-        password: 'e2e-guest-test',
-      }))
+      seedFixtureSession(win)
     },
   })
 }
@@ -134,6 +137,25 @@ function assertTransactionalScreenZones() {
   assertNoZone('ambient-prompt')
   assertNoZone('feedback-launcher')
   assertZoneAvoids('toast-stack', 'bottom-actions')
+}
+
+/** Mission setup (map, blueprint, launch review) is one routed scene whose
+ *  steps carry their primary action inline in the step panel rather than in
+ *  a bottom-actions strip, so the action itself is what global UI must avoid. */
+function assertMissionSetupActionClear(actionTestId: string) {
+  cy.get(`[data-testid="${actionTestId}"]`).should('be.visible')
+  assertKnownZonesOnly()
+  assertNoZone('bottom-nav')
+  assertNoZone('ambient-prompt')
+  assertNoZone('feedback-launcher')
+  cy.get(`[data-testid="${actionTestId}"]`).then($action => {
+    const actionRect = $action[0].getBoundingClientRect()
+    cy.document().then(doc => {
+      doc.querySelectorAll('[data-ui-zone="toast-stack"]').forEach(toast => {
+        expect(rectsIntersect(toast.getBoundingClientRect(), actionRect), `toast-stack must not overlap ${actionTestId}`).to.equal(false)
+      })
+    })
+  })
 }
 
 function assertKnownZonesOnly() {
@@ -192,11 +214,14 @@ describe('UI zone contract', () => {
       })
 
       it('uses named zones for global UI on the hub without overlapping tutorial space', () => {
+        // Onboarding player: Free Operations is derived from missionsDone on
+        // load, so the tutorial rail and the Free Ops-only push prompt never
+        // share the hub.
         visitWithState({
           screen: 'hub',
           tutorial: true,
           doneSteps: { 0: true },
-          player: { freeOperations: true, missionsDone: 0 },
+          player: { missionsDone: 0 },
         })
 
         cy.get('[data-ui-zone="tutorial-rail"]').should('be.visible')
@@ -208,18 +233,28 @@ describe('UI zone contract', () => {
           // at >=1024px) rather than unmounted, so assertNoZone (DOM-absence)
           // doesn't fit here the way it does for genuinely-unrendered zones.
           cy.get('[data-ui-zone="bottom-nav"]').should('not.be.visible')
-          // The push-notification opt-in prompt is desktop-only — CSS-hidden
-          // below 1024px (`.hub-push-opt-in { display: none }`), same
-          // present-but-hidden pattern as bottom-nav above.
-          cy.get('[data-ui-zone="ambient-prompt"]').should('be.visible')
-          assertZoneAvoids('ambient-prompt', 'tutorial-rail')
         } else {
           cy.get('[data-ui-zone="bottom-nav"]').should('be.visible')
           assertZoneAvoids('bottom-nav', 'tutorial-rail')
+        }
+        assertNoZone('ambient-prompt')
+        assertKnownZonesOnly()
+        assertNoZone('feedback-launcher')
+      })
+
+      it('shows the Free Ops push prompt only in the desktop ambient zone', () => {
+        visitWithState({ screen: 'hub', player: { missionsDone: 3 } })
+
+        cy.get('[data-testid="building-launchpad"]', { timeout: 15000 }).should('exist')
+        // The push-notification opt-in prompt is desktop-only — CSS-hidden
+        // below 1024px (`.hub-push-opt-in { display: none }`).
+        if (viewport.width >= 1024) {
+          cy.get('[data-ui-zone="ambient-prompt"]').should('be.visible')
+          assertZoneAvoids('ambient-prompt', 'bottom-nav')
+        } else {
           cy.get('[data-ui-zone="ambient-prompt"]').should('not.be.visible')
         }
         assertKnownZonesOnly()
-        assertNoZone('feedback-launcher')
       })
 
       it('keeps target picker continue actions free of global nav, prompts, and feedback', () => {
@@ -230,8 +265,7 @@ describe('UI zone contract', () => {
           player: { missionsDone: 0 },
         })
 
-        cy.contains('Continue · Build').should('be.visible')
-        assertTransactionalScreenZones()
+        assertMissionSetupActionClear('continue-build-btn')
       })
 
       it('keeps rocket purchase actions free of global nav, prompts, and feedback', () => {
@@ -242,8 +276,7 @@ describe('UI zone contract', () => {
           player: { missionsDone: 0 },
         })
 
-        cy.contains('Select Rocket').should('be.visible')
-        assertTransactionalScreenZones()
+        assertMissionSetupActionClear('purchase-rocket-btn')
       })
 
       it('keeps assembly launch actions free of global nav, prompts, and feedback', () => {
@@ -254,8 +287,7 @@ describe('UI zone contract', () => {
           player: { missionsDone: 0 },
         })
 
-        cy.get('[data-testid="launch-btn"]').should('be.visible')
-        assertTransactionalScreenZones()
+        assertMissionSetupActionClear('launch-btn')
       })
 
       it('keeps transit actions free of global nav, prompts, and feedback', () => {
@@ -269,7 +301,7 @@ describe('UI zone contract', () => {
           },
         })
 
-        cy.contains('Arrive').should('be.visible')
+        cy.contains(/arrive/i).should('be.visible')
         assertTransactionalScreenZones()
       })
 
@@ -295,19 +327,20 @@ describe('UI zone contract', () => {
           screen: 'debrief',
           missionId: 'generated-s1-starter-bulk-1',
           targetId: 'mars',
-          lastCargo: { iron: 6 },
+          lastCargo: { platinum: 5 },
           player: {
-            activeMission: { id: 'generated-s1-starter-bulk-1', label: 'Iron starter order -> Mars' },
+            activeMission: { id: 'generated-s1-starter-bulk-1', label: 'Platinum starter order -> Mars' },
             missionPhase: 'debrief',
-            stash: { iron: 6 },
+            stash: { platinum: 5 },
             freeOperations: true,
           },
         })
 
-        // freeOperations is recomputed from missionsDone (game-state.ts) and this
-        // fixture doesn't set missionsDone, so it resolves to an onboarding
-        // mission (missionsDone 0) — debrief auto-resolves on mount there.
-        cy.get('[data-testid="resolve-cargo-btn"]').should('not.exist')
+        // Every debrief starts with the explicit vehicle teardown (KES-348),
+        // then offers the reward.
+        cy.get('[data-testid="resolve-cargo-btn"]').should('be.visible').click()
+        cy.get('[data-testid="scrap-sequence-skip-btn"]', { timeout: 10000 }).click()
+        cy.get('[data-testid="collect-reward-btn"]').should('be.visible')
         assertTransactionalScreenZones()
       })
 

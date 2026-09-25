@@ -185,9 +185,8 @@ jobs:
     name: E2E — full journeys against staging (manual + nightly)
     # Manual (workflow_dispatch) or nightly (schedule), not on every push:
     # this runs the entire journeys suite for real against the live staging
-    # deployment, including clean-start-loop.cy.ts's real account
-    # registration and playthrough over the network against the actual
-    # staging PocketBase backends. A local run of this same scope didn't
+    # deployment over the network against the actual staging PocketBase
+    # backends. A local run of this same scope didn't
     # finish in 10+ minutes, so it isn't a reliable per-push gate yet —
     # trigger it by hand, or let the nightly cron (KES-115) catch drift that
     # happens between reviewed pushes. No `needs: deploy` deliberately: a

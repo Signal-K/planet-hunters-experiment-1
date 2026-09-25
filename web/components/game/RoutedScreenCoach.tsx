@@ -80,13 +80,6 @@ export default function RoutedScreenCoach({ steps, onDismiss, testId, tone, fina
             {current.title}
           </div>
         </div>
-        <button
-          data-testid={`${testId}-skip`}
-          onClick={onDismiss}
-          style={{ fontFamily: 'var(--ln-font-display)', fontSize: 10, letterSpacing: '0.08em', color: 'var(--ln-text-muted)', background: 'none', border: 'none', cursor: 'pointer', textTransform: 'uppercase', padding: 4, minHeight: 32 }}
-        >
-          Skip
-        </button>
       </div>
       <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 12, color: palette.body, lineHeight: 1.45, marginBottom: 10 }}>
         {current.body}
@@ -101,16 +94,27 @@ export default function RoutedScreenCoach({ steps, onDismiss, testId, tone, fina
             }} />
           ))}
         </div>
-        <button
-          data-testid={`${testId}-next`}
-          onClick={() => (step < steps.length - 1 ? setStep(s => s + 1) : onDismiss())}
-          style={{
-            fontFamily: 'var(--ln-font-display)', fontSize: 11, fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase',
-            background: palette.nextBg, color: palette.nextColor, border: palette.nextBorder, borderRadius: 8, padding: '6px 14px', cursor: 'pointer', minHeight: 32,
-          }}
-        >
-          {step === steps.length - 1 ? finalLabel : 'Next ›'}
-        </button>
+        {/* Skip sits beside Next, not in the header's top-right corner: on
+            compact landscape that corner is under the shell's Menu button. */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+          <button
+            data-testid={`${testId}-skip`}
+            onClick={onDismiss}
+            style={{ fontFamily: 'var(--ln-font-display)', fontSize: 10, letterSpacing: '0.08em', color: 'var(--ln-text-muted)', background: 'none', border: 'none', cursor: 'pointer', textTransform: 'uppercase', padding: 4, minHeight: 32 }}
+          >
+            Skip
+          </button>
+          <button
+            data-testid={`${testId}-next`}
+            onClick={() => (step < steps.length - 1 ? setStep(s => s + 1) : onDismiss())}
+            style={{
+              fontFamily: 'var(--ln-font-display)', fontSize: 11, fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase',
+              background: palette.nextBg, color: palette.nextColor, border: palette.nextBorder, borderRadius: 8, padding: '6px 14px', cursor: 'pointer', minHeight: 32,
+            }}
+          >
+            {step === steps.length - 1 ? finalLabel : 'Next ›'}
+          </button>
+        </div>
       </div>
     </div>
   )

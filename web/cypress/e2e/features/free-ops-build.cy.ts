@@ -6,6 +6,7 @@
 // rendering, navigation out of the screen, and the new FreeOpsBuildCoach.
 
 import type { GameState } from '@/game-context'
+import { seedFixtureSession } from '../../support/authenticated-fixture'
 
 const STORAGE_KEY = 'landnam-game-state-v1'
 const COACH_KEY = 'landnam_free_ops_build_coach_seen_v1'
@@ -51,7 +52,7 @@ function visitFab(playerOverrides: Partial<GameState['player']> = {}, coachSeen 
   cy.visit('/game/fab', {
     onBeforeLoad(win) {
       win.localStorage.setItem(STORAGE_KEY, JSON.stringify(full))
-      win.localStorage.setItem('landnam-account-credentials', JSON.stringify({ email: 'e2e@example.com', password: 'e2e-guest-test' }))
+      seedFixtureSession(win)
       win.localStorage.setItem('ln_tutorial_complete_ack', '1')
       if (coachSeen) {
         win.localStorage.setItem(COACH_KEY, '1')
@@ -78,7 +79,8 @@ describe('Free Ops Build screen', () => {
     visitFab({}, true)
     cy.get('[data-testid="free-ops-build-screen"]', { timeout: 10000 }).should('be.visible')
     cy.contains('Choose Mining').click()
-    cy.contains('Mission Board', { timeout: 10000 }).should('be.visible')
+    cy.get('[data-testid="mission-setup-scaffold"][data-step="1"]', { timeout: 10000 }).should('be.visible')
+    cy.get('[data-testid="mission-board-section-client"]').should('be.visible')
   })
 
   it('shows the FreeOpsBuildCoach on first visit, walks all 3 steps, then dismisses and persists', () => {

@@ -1,11 +1,9 @@
+import { seedFixtureSession } from '../../support/authenticated-fixture'
+
 const STORAGE_KEY = 'landnam-game-state-v1'
 
 function seedState(win: Window, player: Record<string, unknown>, screen = 'hub') {
   win.localStorage.setItem('ln_tutorial_complete_ack', '1')
-  // The offline auth stub in cypress/support/e2e.ts always resolves to an
-  // @example.com email regardless of what dismissAuthGate() submits, which
-  // otherwise trips the auth gate and
-  // covers the surface-ops UI. See tutorial-m1.cy.ts's suppressSurveys().
   win.localStorage.setItem('landnam-upgrade-prompt-snooze-until', String(Date.now() + 365 * 24 * 60 * 60 * 1000))
   win.localStorage.setItem(STORAGE_KEY, JSON.stringify({
     screen,
@@ -45,12 +43,9 @@ function seedState(win: Window, player: Record<string, unknown>, screen = 'hub')
     popup: null,
     menuOpen: false,
   }))
-}
-
-function dismissAuthGate() {
-  cy.get('[data-testid="auth-gate-quick-email"]', { timeout: 15000 }).type(`cy-surface-ops-${Date.now()}@example.com`)
-  cy.get('[data-testid="auth-gate-quick-submit"]').click()
-  cy.get('[data-testid="auth-gate-quick-email"]').should('not.exist')
+  // Accounts are required: seed a signed-in session so the auth gate stays
+  // closed (the quick-email guest path was retired).
+  seedFixtureSession(win)
 }
 
 describe('Surface Ops settlement journey', () => {
@@ -59,11 +54,6 @@ describe('Surface Ops settlement journey', () => {
     cy.visit('/game/hub', {
       onBeforeLoad: win => seedState(win, {}),
     })
-    // No stored session/credentials are seeded, so the auth gate opens on a
-    // brand-new visitor (STS-624: the gameplay screen underneath doesn't
-    // mount at all until the gate resolves) -- it must be dismissed before
-    // any hub element can be asserted visible, not after.
-    dismissAuthGate()
     cy.get('[data-testid="hub-surface-ops"]', { timeout: 15000 }).should('be.visible')
 
     cy.get('[data-testid="hub-surface-ops"]').click()
@@ -96,7 +86,6 @@ describe('Surface Ops settlement journey', () => {
       }, 'surface-ops'),
     })
     cy.get('[data-testid="surface-dispatch-ferry"]', { timeout: 15000 }).should('be.visible')
-    dismissAuthGate()
 
     cy.get('[data-testid="surface-dispatch-ferry"]').click()
     cy.contains('FERRY IN FLIGHT').should('be.visible')

@@ -1,6 +1,8 @@
+import { seedFixtureSession } from '../../support/authenticated-fixture'
+
 describe('Rocket setup visual contract', () => {
   const visitRocket = () => {
-    cy.visit('/game', {
+    cy.visit('/game/missions', {
       onBeforeLoad(win) {
         win.localStorage.setItem('landnam-game-state-v1', JSON.stringify({
           screen: 'rocket-buy',
@@ -18,7 +20,7 @@ describe('Rocket setup visual contract', () => {
             freeOperations: false,
           },
         }))
-        win.localStorage.setItem('landnam-account-credentials', JSON.stringify({ email: 'e2e@example.com', password: 'e2e-guest-test' }))
+        seedFixtureSession(win)
       },
     })
   }
@@ -26,16 +28,20 @@ describe('Rocket setup visual contract', () => {
   it('keeps the vehicle stage readable on portrait and desktop', () => {
     cy.viewport(390, 844)
     visitRocket()
-    cy.get('[data-testid="rocket-cutaway"]', { timeout: 10000 }).should('be.visible')
-    cy.get('[aria-label="Inspect Payload Bay"]').should('be.visible')
-    cy.get('.mission-setup-card').scrollIntoView().should('be.visible')
+    // Vehicle selection is the Blueprint step of the mission-setup scene: a
+    // schematic plus its fixed room manifest.
+    cy.get('[data-testid="mission-rocket-blueprint"]', { timeout: 10000 }).should('be.visible')
+    cy.get('[aria-label$=" schematic"]').should('be.visible')
+    cy.contains('ROOM SLOTS').scrollIntoView().should('be.visible')
+    cy.get('[data-testid="purchase-rocket-btn"]').scrollIntoView().should('be.visible')
     cy.screenshot('sprint-13-rocket-setup-mobile')
 
     cy.viewport(1440, 900)
     visitRocket()
-    cy.get('[data-testid="rocket-cutaway"]', { timeout: 10000 }).should('be.visible')
-    cy.get('[aria-label="Inspect Engine"]').should('be.visible')
-    cy.get('.mission-setup-card').scrollIntoView().should('be.visible')
+    cy.get('[data-testid="mission-rocket-blueprint"]', { timeout: 10000 }).should('be.visible')
+    cy.get('[aria-label$=" schematic"]').should('be.visible')
+    cy.contains('ROOM SLOTS').should('be.visible')
+    cy.get('[data-testid="purchase-rocket-btn"]').should('be.visible')
     cy.screenshot('sprint-13-rocket-setup-desktop')
   })
 })
