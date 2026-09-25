@@ -28,17 +28,14 @@ describe('Responsive Layout — Critical Screens Matrix', () => {
         // scene-attached affordance that must remain reachable at every size.
         cy.get('[data-testid="hub-edit-build-btn"]').should('exist');
 
-        // Navigation must be visible and accessible
-        if (vp.width >= 1024) {
-          // Desktop uses the scene-attached Base dock, not the retired sidebar.
-          cy.get('[data-testid="hub-desktop-missions-btn"]').should('be.visible');
-          cy.get('[data-testid="hub-edit-build-btn"]').should('be.visible');
-        } else {
-          // Mobile: bottom tab bar
-          cy.get('[data-testid="bottom-tab-launchpad"]').should('be.visible');
-          cy.get('[data-testid="bottom-tab-missions"]').should('be.visible');
-          cy.get('[data-testid="bottom-tab-market"]').should('be.visible');
-        }
+        // Shell-owned controls are identical on phone and desktop, so live
+        // operations never lose navigation outside the Base route.
+        cy.get('[data-testid="home-top-bar"]').should('be.visible');
+        cy.get('[data-testid="home-bottom-bar"]').should('be.visible');
+        cy.get('[data-testid="home-bar-hub"]').should('be.visible');
+        cy.get('[data-testid="home-bar-ops"]').should('be.visible');
+        cy.get('[data-testid="home-bar-market"]').should('be.visible');
+        cy.get('[data-testid="home-bar-menu"]').should('be.visible');
 
         // Buttons should not be clipped or misaligned
         cy.get('[data-testid="hub-edit-build-btn"]', { timeout: 5000 })
@@ -137,11 +134,7 @@ describe('Responsive Layout — Critical Screens Matrix', () => {
         setupGameState(BASE_RESPONSIVE_STATE);
 
         // From Hub → Market
-        if (vp.width >= 1024) {
-          cy.contains('button', 'Market').click();
-        } else {
-          cy.get('[data-testid="bottom-tab-market"]').click();
-        }
+        cy.get('[data-testid="home-bar-market"]').click();
 
         cy.contains('Commodity Exchange', { timeout: 5000 }).should('be.visible');
 
