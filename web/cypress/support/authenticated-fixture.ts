@@ -36,9 +36,12 @@ export function seedFixtureSession(win: Window, userId = 'e2e-fixture-user') {
  * email-account-only. This intentionally seeds PocketBase's browser auth store
  * before React imports it; no retired guest/password shortcut is involved.
  */
+/** A saved game as a fixture writes it: hydration fills every missing field. */
+export type FixtureState = Omit<Partial<GameState>, 'player'> & { player?: Partial<GameState['player']> }
+
 export function seedAuthenticatedFixture(
   win: Window,
-  state: Partial<GameState>,
+  state: FixtureState,
   userId = 'e2e-fixture-user',
 ) {
   win.localStorage.setItem(STORAGE_KEY, JSON.stringify(state))

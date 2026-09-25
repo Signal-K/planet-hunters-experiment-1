@@ -201,6 +201,37 @@ describe('LandnamSync', () => {
     expect(loaded?.structures[0]).toMatchObject({ type: 'habitat-frame', progress: 0.4 })
   })
 
+  it('reloads every placed field structure type in a fresh session (SSL-341)', async () => {
+    const { client, structures } = memoryClient()
+    const state = missionFixture()
+    const types = [
+      'solar-array', 'beacon', 'drill-rig', 'cache', 'refinery', 'habitat-frame',
+      'habitat', 'launch-pad', 'generator', 'pylon', 'road', 'factory', 'silo',
+    ] as const
+    state.structures = types.map((type, index) => ({
+      id: `placed-${type}`,
+      type,
+      pos: { x: index, y: index + 1 },
+      buffer: {},
+      facing: 3,
+      ...(type === 'habitat-frame' ? { progress: 0.5 } : {}),
+    }))
+
+    await new LandnamSync({ client }).saveMission(state, 'Pathfinder')
+    // A reload builds a new adapter; nothing may survive in memory.
+    const reloaded = await new LandnamSync({ client }).loadMission(state.id)
+
+    expect(structures.records).toHaveLength(types.length)
+    expect(reloaded?.structures.map(structure => structure.type).sort()).toEqual([...types].sort())
+    for (const [index, type] of types.entries()) {
+      expect(reloaded?.structures.find(structure => structure.id === `placed-${type}`)).toMatchObject({
+        type,
+        pos: { x: index, y: index + 1 },
+        facing: 3,
+      })
+    }
+  })
+
   it('stores Takeon launch-pad instances under the canonical Landnam blueprint', async () => {
     const { client, structures } = memoryClient()
     const sync = new LandnamSync({ client })
