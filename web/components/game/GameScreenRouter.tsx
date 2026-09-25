@@ -7,12 +7,13 @@ import { ACADEMY_INTRO_MISSION_ID, M1_STEPS, M2_STEPS, M3_STEPS, rocketDisplayFo
 import { FREE_OPS_START_MISSIONS_DONE } from '@/lib/data/mission-generator'
 import type { Screen } from '@/lib/game-types'
 import { hasEstablishedMiningSettlement } from '@/lib/systems/SurfaceOpsSystem'
-// IntroScreen and HubScreen are the two most likely first paints (cold start
+// LandingFlow and HubScreen are the two most likely first paints (cold start
 // and post-onboarding default), so they stay in the main bundle. Every other
 // screen below is code-split with next/dynamic — the switch below only ever
 // renders one of them at a time, so there's no reason to ship all ~20
 // screens' JS on the very first load.
-import IntroScreen from '@/components/game/screens/IntroScreen'
+import LandingFlow from '@/components/game/landing/LandingFlow'
+import { formatCurrency } from '@/lib/format'
 import HubScreen from '@/components/game/screens/HubScreen'
 
 const ScreenLoading = () => <div className="game-screen-loading" aria-hidden="true" />
@@ -161,16 +162,21 @@ function ScreenBody({
   }, [screen, game.setSubsurfaceView])
 
   switch (screen) {
-    case 'intro':
+    case 'intro': {
+      const hasSave = game.player.missionsDone > 0 || game.player.placed.length > 0
       return (
-        <IntroScreen
-          onBegin={() => game.go('build')}
-          returning={game.player.missionsDone > 0 || game.player.placed.length > 0}
-          missionsDone={game.player.missionsDone}
-          totalEarned={game.player.francs}
-          awaitingRemoteState={!game.hydrated}
+        <LandingFlow
+          signedIn
+          restoring={!game.hydrated || game.awaitingRemoteState}
+          hasSave={hasSave}
+          saveSummary={`${game.player.missionsDone} missions flown · ${formatCurrency(game.player.francs, { compact: true })} in the bank`}
+          onSignIn={game.signInFromGate}
+          onCreateAccount={game.createAccountFromGate}
+          onContinue={() => game.go('hub')}
+          onStartNew={() => (hasSave ? game.resetGame() : game.go('build'))}
         />
       )
+    }
 
     case 'build':
       return (

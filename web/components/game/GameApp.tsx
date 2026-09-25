@@ -19,7 +19,7 @@ import ToastLayer from '@/components/ui/ToastLayer'
 import { initPostHog, captureScreenView, captureGameEvent } from '@/lib/posthog'
 import { SURVEY_SAFE_SCREENS } from '@/lib/survey-gating'
 import DevShortcuts from '@/components/dev/DevShortcuts'
-import AuthGateSheet from '@/components/game/AuthGateSheet'
+import GateLanding from '@/components/game/landing/GateLanding'
 import TakeOnPwaPreload from '@/components/takeon/TakeOnPwaPreload'
 import { UI_ZONES } from '@/lib/ui-zones'
 import ShellSheets from '@/components/game/ShellSheets'
@@ -249,13 +249,7 @@ function GameCanvas() {
             }}
           />
         )}
-        {game.authGateOpen && (
-          <AuthGateSheet
-            error={game.authGateError}
-            onSignIn={game.signInFromGate}
-            onCreateAccount={game.createAccountFromGate}
-          />
-        )}
+        {game.authGateOpen && <GateLanding />}
       </div>
 
       {/* No desktop sidebar. The redesign's goal was for desktop not to need
