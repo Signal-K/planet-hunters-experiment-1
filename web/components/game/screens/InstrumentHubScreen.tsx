@@ -15,6 +15,7 @@ import {
 } from '@/lib/instrument-hub-state'
 import type { Player } from '@/lib/game-types'
 import type { InstrumentSignal } from '@/lib/systems/InstrumentFeedSystem'
+import { UI_ZONES } from '@/lib/ui-zones'
 import styles from './InstrumentHubScreen.module.css'
 import { ControlRoomBackdrop } from './ControlRoomBackdrop'
 import { DownlinkControlDesk } from './DownlinkControlDesk'
@@ -39,6 +40,9 @@ export default function InstrumentHubScreen({ player, onBack, onInspect }: Instr
   useEffect(() => {
     setView(current => selectInstrumentSignalIndex(current, current.selectedIndex, filteredSignals.length))
   }, [filteredSignals.length])
+
+  const transitOnline = !!player.transitSatelliteLaunchedAt
+  const deepSpaceOnline = !!player.deepSpaceTelescopeBuilt
 
   const selectedSignal = filteredSignals[view.selectedIndex] ?? null
 
