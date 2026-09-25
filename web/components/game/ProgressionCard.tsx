@@ -31,9 +31,6 @@ function SkillGlyph() {
 function TelescopeGlyph() {
   return <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" /></svg>
 }
-function ContractGlyph() {
-  return <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><rect x="3" y="3" width="18" height="18" rx="2" /><line x1="8" y1="9" x2="16" y2="9" /><line x1="8" y1="13" x2="16" y2="13" /><line x1="8" y1="17" x2="12" y2="17" /></svg>
-}
 
 interface ProgressionCardProps {
   player: Player
@@ -185,23 +182,8 @@ export default function ProgressionCard({ player, onOpenScene, onDismissPrompt, 
         />
       )
     }
-    // Once free operations is unlocked, the persistent Jobs rail is the
-    // single mission-board entry point. Repeating Browse Contracts here made
-    // the Hub present the same action twice beside the clickable Launchpad.
-    if (player.missionsDone === 0) {
-      cards.push(
-        <CardButton
-          key="next-mission"
-          testId="progression-card-next-mission"
-          accent="var(--hub-mint)"
-          icon={<ContractGlyph />}
-          eyebrow="Next Mission"
-          title="Choose a client contract"
-          cta="Browse Contracts"
-          onClick={() => onOpenScene('missions')}
-        />
-      )
-    }
+    // Free Ops reaches the mission board from the persistent Missions entry;
+    // the Hub does not repeat a Browse Contracts card.
   }
 
   if (cards.length === 0) return null

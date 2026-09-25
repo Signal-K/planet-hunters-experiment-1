@@ -134,7 +134,6 @@ export function drawPlanet(g: Graphics, cx: number, cy: number, r: number, kind:
   g.circle(cx + r * 0.22, cy + r * 0.05, r * 0.92).fill({ color: 0x000510, alpha: 0.55 })
 }
 
-export { transitOriginEarthRadius, transitRocketScreenPos } from './transitFlight'
 
 function drawRocket(g: Graphics, rx: number, ry: number, flicker: number) {
   g.clear()

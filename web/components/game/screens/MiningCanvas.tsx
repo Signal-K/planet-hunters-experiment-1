@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { capDpr } from '@/lib/engine/pixiDisplay'
 import { Application, Assets, Container, Graphics, Sprite, type Texture } from 'pixi.js'
-import { Scene, GameLoop, InputManager, RuntimeContext, screenToWorld } from '@/lib/engine'
+import { Scene, GameLoop, InputManager, RuntimeContext } from '@/lib/engine'
 import { wireShapeRenderers } from '@/lib/engine/components/ShapeRenderer'
 import { MiningController, SHIP_X, SCROLL_SPEED, SCROLL_SPEED_MIN, SCROLL_SPEED_MAX } from '@/lib/engine/scripts/MiningController'
 import type { MineralMeta } from '@/lib/data'
@@ -326,4 +326,4 @@ export default function MiningCanvas({ rocketImageSrc, minerals, requiredMineral
   )
 }
 
-export { screenToWorld }
+

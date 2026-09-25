@@ -10,8 +10,6 @@
 import { ROCKET_MODELS } from './rockets'
 import { CARGO_BONUS_CAP, CONTRACT_FEES, CONTRACT_FEE_STEP } from './economy'
 
-export const MISSION_PAYOUT_FLOORS = CONTRACT_FEES
-
 export function missionPayoutFloor(sequence: number): number {
   if (sequence <= 1) return CONTRACT_FEES[1]
   if (sequence === 2) return CONTRACT_FEES[2]

@@ -312,7 +312,7 @@ function hasLaunchpadMaterials(player: Player): boolean {
     .every(([id, amount]) => (player.stash?.[id] ?? 0) >= amount)
 }
 
-export function canBuildSettlementLaunchpad(
+function canBuildSettlementLaunchpad(
   state: GameState,
   siteId: string
 ): boolean {

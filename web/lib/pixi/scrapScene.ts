@@ -35,7 +35,7 @@ const C = {
 // Trimmed from the original 3.7s total (KES-316) — early-onboarding debriefs
 // auto-play this as a full-screen blocking overlay with no visible skip
 // affordance, so its length reads as dead time rather than pacing.
-export const SCRAP_TIMELINE = {
+const SCRAP_TIMELINE = {
   hold:      0.55,
   burst:     1.05,
   collect:   2.05,

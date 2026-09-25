@@ -14,7 +14,7 @@ import {
   generateSelfDirectedMiningPoolFromRules,
 } from './mission-generator'
 
-export { FREE_OPS_START_MISSIONS_DONE, OFFLINE_MISSION_COUNT }
+export { FREE_OPS_START_MISSIONS_DONE }
 export { tutorialClientMissionOptions } from './mission-generator'
 export const MISSION_TEMPLATES = DEFAULT_MISSION_TEMPLATES
 

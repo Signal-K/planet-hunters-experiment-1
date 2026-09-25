@@ -9,9 +9,9 @@
  * already lets these test accounts sign in without an email challenge; Landnam
  * marks the exchanged users row verified and exposes purge-playtest.
  */
-export const STAGING_PLAYTEST_EMAIL_SUFFIX = '@landnam.test'
+const STAGING_PLAYTEST_EMAIL_SUFFIX = '@landnam.test'
 
-export function isStagingDeploy(): boolean {
+function isStagingDeploy(): boolean {
   const deployEnv = process.env.NEXT_PUBLIC_LANDNAM_ENV ?? process.env.NEXT_PUBLIC_DEPLOY_ENV
   if (deployEnv === 'production') return false
   if (deployEnv === 'staged' || deployEnv === 'staging' || deployEnv === 'preview') return true

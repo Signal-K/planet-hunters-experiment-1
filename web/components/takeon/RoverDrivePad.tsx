@@ -48,7 +48,7 @@ export function driveButtons(view: ViewKind | null): DriveButton[] {
 }
 
 /** Why a press did nothing, in the player's words. */
-export const BLOCKED_COPY: Record<TakeOnBlockedReason, string> = {
+const BLOCKED_COPY: Record<TakeOnBlockedReason, string> = {
   cliff: 'BLOCKED · TOO STEEP THAT WAY',
   edge: 'BLOCKED · EDGE OF THE FIELD',
   battery: 'BLOCKED · BATTERY EMPTY',

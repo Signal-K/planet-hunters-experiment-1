@@ -1,7 +1,5 @@
 import PocketBase, { LocalAuthStore, type RecordModel } from 'pocketbase'
-import { pbShared } from '@/lib/pb'
 import { landnamPbUrl } from '@/lib/pb-config'
-import { isStagingPlaytestAccount } from '@/lib/staging-account'
 
 // Explicit, distinct storage key — PocketBase's SDK defaults every client to
 // the same localStorage key ('pocketbase_auth') when none is given, so
@@ -36,29 +34,6 @@ let exchangeInFlightFor: string | null = null
  * token, etc.) — callers should treat this the same as any other
  * offline-tolerant backend call.
  */
-export async function purgeStagingPlaytestAccount(): Promise<void> {
-  const email = pbShared.authStore.record?.email
-  if (typeof email !== 'string' || !isStagingPlaytestAccount(email)) {
-    throw new Error('Only @landnam.test playtest accounts can be purged')
-  }
-  const base = landnamPbUrl().replace(/\/$/, '')
-  const res = await fetch(`${base}/api/landnam-auth/purge-playtest`, {
-    method: 'POST',
-    headers: { Authorization: `Bearer ${pbLandnam.authStore.token}` },
-  })
-  if (!res.ok) throw new Error(`purge-playtest failed: ${res.status}`)
-  const userId = pbShared.authStore.record?.id
-  if (userId) {
-    try {
-      await pbShared.collection('users').delete(userId)
-    } catch {
-      // Shared-backend delete may be denied by collection rules; Landnam data is already gone.
-    }
-  }
-  pbShared.authStore.clear()
-  pbLandnam.authStore.clear()
-}
-
 export async function exchangeLandnamAuth(sharedToken: string): Promise<{
   token: string
   record: RecordModel

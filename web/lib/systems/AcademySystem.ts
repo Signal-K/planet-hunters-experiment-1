@@ -29,8 +29,8 @@ import { ACADEMY_XP_CURVE, levelForXP } from './XPSystem'
 import { createCrewMember, crewLevel, pickCrewName } from './CrewSystem'
 
 const DAY_MS = 24 * 60 * 60 * 1000
-export const FATIGUE_RECOVERY_MS = 12 * 60 * 60 * 1000
-export const INJURY_RECOVERY_MS = 3 * DAY_MS
+const FATIGUE_RECOVERY_MS = 12 * 60 * 60 * 1000
+const INJURY_RECOVERY_MS = 3 * DAY_MS
 
 export function utcDateKey(now: number = Date.now()): string {
   return new Date(now).toISOString().slice(0, 10)
@@ -458,7 +458,7 @@ export function structureIsStaffed(player: Pick<Player, 'structureCrewAssignment
   return !!player.structureCrewAssignments?.[structureId]
 }
 
-export function diplomacyActive(player: Player): boolean {
+function diplomacyActive(player: Player): boolean {
   return structureIsStaffed(player, 'diplomacy')
 }
 

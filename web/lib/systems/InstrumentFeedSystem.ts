@@ -2,7 +2,7 @@ import { dailyTessCandidates, dailyAsteroidCandidates, type TessCandidate, type 
 import type { Player } from '@/lib/game-types'
 
 export const TRANSIT_TELESCOPE_INSTRUMENT_ID = 'transit-telescope'
-export const DEEP_SPACE_TELESCOPE_INSTRUMENT_ID = 'deep-space-telescope'
+const DEEP_SPACE_TELESCOPE_INSTRUMENT_ID = 'deep-space-telescope'
 
 export type InstrumentSignalKind = 'transit' | 'deep-space'
 
@@ -35,7 +35,7 @@ export function instrumentDigestDateKey(now: Date = new Date()): string {
   return now.toISOString().slice(0, 10)
 }
 
-export function transitInstrumentLevel(player: InstrumentFeedPlayer): number {
+function transitInstrumentLevel(player: InstrumentFeedPlayer): number {
   return Math.max(
     1,
     Math.floor(player.transitSatelliteLevel ?? 1)
@@ -77,7 +77,7 @@ export function unresolvedTransitInstrumentDigest(
   )
 }
 
-export function deepSpaceInstrumentLevel(player: DeepSpaceInstrumentFeedPlayer): number {
+function deepSpaceInstrumentLevel(player: DeepSpaceInstrumentFeedPlayer): number {
   return Math.max(1, Math.floor(player.deepSpaceTelescopeLevel ?? 1))
 }
 

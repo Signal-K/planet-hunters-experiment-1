@@ -41,25 +41,6 @@ export const MINERAL_RARITY: Record<string, MineralRarity> = Object.fromEntries(
   Object.entries(MINERAL_META).map(([id, meta]) => [id, meta.rarity as MineralRarity]),
 )
 
-export const MINERAL_COLORS: Record<string, string> = {
-  platinum:  '#e8e4d8',
-  palladium: '#d4cce8',
-  iridium:   '#b8b4cc',
-  rhodium:   '#f0e8d4',
-  gold:      '#ffd166',
-  rare:      '#c084ff',
-  iron:      '#d97150',
-  silicon:   '#b9d8ff',
-  ice:       '#9becff',
-  carbon:    '#6a7280',
-  nickel:    '#b0b8c4',
-  cobalt:    '#4f9cf7',
-  copper:    '#c9824b',
-  aluminium: '#c7d0dc',
-  hydrogen:  '#9becff',
-  uranium:   '#8fd16a',
-}
-
 export function sellCargo(cargo: Record<string, number>, minerals: Record<string, MineralMeta> = MINERAL_META): number {
   return Object.entries(cargo).reduce((sum, [k, v]) => {
     const meta = minerals[k]

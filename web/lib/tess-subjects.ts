@@ -2,7 +2,7 @@ import { REVIEWABLE_TESS_SUBJECT_FILTER, TESS_SUBJECT_SORT } from '@/lib/citizen
 import { pbShared } from '@/lib/pb'
 import { isReviewableTessSubject, toTessCandidate, type TessCandidate } from '@/lib/data'
 
-export { REVIEWABLE_TESS_SUBJECT_FILTER, TESS_SUBJECT_SORT }
+export { REVIEWABLE_TESS_SUBJECT_FILTER }
 
 export async function fetchReviewableTessCandidates(): Promise<TessCandidate[]> {
   // Let PocketBase make the request even while auth restoration is finishing.

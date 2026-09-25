@@ -2,7 +2,7 @@ import type { GameState, Screen } from '@/lib/game-types'
 
 type RouteState = Pick<GameState, 'screen' | 'missionId' | 'targetId'>
 
-export const MISSION_SETUP_INTERNAL_SCREENS = new Set<Screen>([
+const MISSION_SETUP_INTERNAL_SCREENS = new Set<Screen>([
   'missions',
   'targets',
   'rocket-buy',

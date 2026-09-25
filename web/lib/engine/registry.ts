@@ -12,9 +12,7 @@
 
 import type { Container } from 'pixi.js'
 import type { Component, ComponentData, EntityData } from './types'
-import type { Scene } from './Scene'
 import { ShapeRenderer, type ShapeRendererData } from './components/ShapeRenderer'
-import { SpriteRenderer } from './components/SpriteRenderer'
 
 /**
  * What a component *is*, structurally:
@@ -127,7 +125,7 @@ export function unknownComponentTypes(entities: readonly EntityData[]): string[]
  * `.find(c => c.type === 'BuildPlot')?.index as number` pattern — the caller
  * names the field's type once, at the read, instead of casting blind.
  */
-export function readComponent(entity: EntityData, type: string): ComponentData | undefined {
+function readComponent(entity: EntityData, type: string): ComponentData | undefined {
   return entity.components.find(c => c.type === type)
 }
 
@@ -141,24 +139,7 @@ export function readComponentString(entity: EntityData, type: string, field: str
   return typeof value === 'string' ? value : fallback
 }
 
-/**
- * Wire every renderer in a loaded scene, driven by the registry rather than by
- * one hardcoded function per component type. Controllers and markers are
- * skipped — see `ComponentCategory`.
- */
-export function wireSceneRenderers(container: Container, entityData: readonly EntityData[], scene: Scene): void {
-  for (const e of entityData) {
-    const obj = scene.find(e.id)
-    if (!obj) continue
-    for (const cd of e.components) {
-      const descriptor = BY_TYPE.get(cd.type)
-      if (!descriptor?.create) continue
-      obj.addComponent(descriptor.create(cd, container))
-    }
-  }
-}
-
 // Re-exported so a screen wiring sprites can reach the sprite path without
 // importing from two places. SpriteRenderer needs a resolved texture rather
 // than raw scene data, which is why it has no `create` above.
-export { SpriteRenderer }
+

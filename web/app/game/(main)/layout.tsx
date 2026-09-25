@@ -23,6 +23,7 @@ import FriendsSheet from '@/components/game/FriendsSheet'
 import CommunityButton from '@/components/game/CommunityButton'
 import CommunityHubSheet from '@/components/game/CommunityHubSheet'
 import SuiteHopRail from '@/components/game/SuiteHopRail'
+import TakeOnPwaPreload from '@/components/takeon/TakeOnPwaPreload'
 import TerritoryClaimPopup from '@/components/game/TerritoryClaimPopup'
 import { UI_ZONES } from '@/lib/ui-zones'
 import { isSurveySafeScreen } from '@/lib/survey-gating'
@@ -40,8 +41,10 @@ function GameChrome({ children }: { children: ReactNode }) {
   const [communityOpen, setCommunityOpen] = useState(false)
   const { phase: backdropSkyPhase } = useTimeOfDay()
 
-  // Keep third-party analytics script injection out of React hydration. See
-  // GameApp's equivalent effect for the legacy route shell.
+  // PostHog injects recorder/survey scripts. Initialising during module
+  // evaluation can let those scripts mutate the document while React is
+  // still hydrating, producing a real production hydration mismatch. Run it
+  // after the first client commit instead.
   useEffect(() => {
     initPostHog()
   }, [])
@@ -178,6 +181,9 @@ function GameChrome({ children }: { children: ReactNode }) {
           <HubWorldBackground phase={backdropSkyPhase} />
         </div>
       )}
+      {/* No-op unless running as an installed PWA; warms the Takeon/Pixi
+          chunks so Surface Ops works offline (see web/vendor/takeon/README.md). */}
+      <TakeOnPwaPreload />
       <div className={`portrait-canvas ${isImmersiveEarthBaseRoute ? 'portrait-canvas--full-page' : ''}`}>
         <BackendStatus />
         <LandnamSyncStatus />
@@ -213,9 +219,7 @@ function GameChrome({ children }: { children: ReactNode }) {
           </button>
         )}
 
-        {/* Friends — same porting fix as Settings above (KES-233): the
-            legacy GameApp.tsx shell isn't what serves /game/hub, so KES-83's
-            corner button needs its own copy here too. Hub only. */}
+        {/* Friends and Community corner buttons (KES-83, KES-233). Hub only. */}
         {currentScreen === 'hub' && !game.subsurfaceView && !game.authGateOpen && (
           <>
             <FriendsButton onClick={() => setFriendsOpen(true)} />

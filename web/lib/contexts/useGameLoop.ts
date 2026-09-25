@@ -1,7 +1,7 @@
 import { useCallback, useRef } from 'react'
 import {
-  MISSIONS, TARGETS, ROCKET_MODELS, FREE_OPS_START_MISSIONS_DONE,
-  getLaserChargeCap, rocketModelForConfig, travelDurationMs, suggestBuild,
+  ROCKET_MODELS, FREE_OPS_START_MISSIONS_DONE,
+  rocketModelForConfig, travelDurationMs, suggestBuild,
   feasibleTargetsFor, validateBuild,
   isOwnProgramMission,
   isFreeHaulMission,

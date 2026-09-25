@@ -24,7 +24,7 @@ function cssToken(name: string): string {
 
 /** Top-down storage silo: a round tank with a hatch. Returns false when the
  *  theme tokens are unavailable so the caller can keep the built-in painter. */
-export function paintStorageSilo(ctx: CanvasRenderingContext2D, paint: { tile: number }): boolean {
+function paintStorageSilo(ctx: CanvasRenderingContext2D, paint: { tile: number }): boolean {
   const body = cssToken('--ln-text-dim')
   const ink = cssToken('--ln-void')
   if (!body || !ink) return false

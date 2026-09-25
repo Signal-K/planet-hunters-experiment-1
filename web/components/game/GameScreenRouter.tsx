@@ -37,16 +37,10 @@ import { VISUAL_ASTEROID_CANDIDATE, VISUAL_TESS_CANDIDATE } from '@/lib/visual-f
 import { captureGameEvent } from '@/lib/posthog'
 import { dismissHubPrompt } from '@/lib/hub-prompts'
 import type { InstrumentSignal } from '@/lib/systems/InstrumentFeedSystem'
-import {
-  DEEP_SPACE_TELESCOPE_INSTRUMENT_ID,
-  TRANSIT_TELESCOPE_INSTRUMENT_ID,
-  instrumentDigestDateKey,
-  markInstrumentDigestNotified,
-} from '@/lib/systems/InstrumentFeedSystem'
 import { missionResumeScreen } from '@/lib/mission-resume'
 
 export const VALID_SCREENS = new Set<Screen>([
-  'intro', 'build', 'hub', 'hub-subsurface', 'missions', 'galaxy', 'targets', 'fab',
+  'intro', 'build', 'hub', 'missions', 'galaxy', 'targets', 'fab',
   'transit', 'landing', 'mining', 'rover-mining', 'delivery', 'debrief', 'refinery',
   'market', 'hangar', 'rocket-buy', 'skills',
   'launchpad',
@@ -58,21 +52,16 @@ export const VALID_SCREENS = new Set<Screen>([
   'narrative-ledger',
 ])
 
-// Shared per-screen render map — the single source of truth for "which
-// component renders for game.screen". Used by both the URL-synced
-// (main)/[screen] route and the standalone ship-customizer dev route, which
-// otherwise diverged silently (each bugfix had to be ported twice).
+// Per-screen render map — the single source of truth for "which component
+// renders for game.screen", mounted by the (main) layout shell.
 export function ScreenContent({
   screen,
   game,
   hasCoach,
-  onBackFromHangar,
 }: {
   screen: Screen
   game: ReturnType<typeof useGame>
   hasCoach: boolean
-  /** Overrides HangarScreen's onBack; falls back to the remembered entry scene. */
-  onBackFromHangar?: () => void
 }) {
   // Launch sequence state lives here so it's scoped to the fab screen
   const [launchPending, setLaunchPending] = useState(false)
@@ -135,14 +124,11 @@ export function ScreenContent({
     // newly unlocked structure.
   }, [screen, game.player.freeOperations, game.player.hasLanded, game.mission, game.target, game.go])
 
-  // HubScreen's surface/subsurface slide is driven by ephemeral UI state
-  // (game.subsurfaceView), not the route, so a real navigation into
-  // 'hub-subsurface' (e.g. Launchpad's "Open Subsurface") or plain 'hub'
-  // needs to seed/reset that state the same way the old per-mount
-  // `initialSubsurface` prop used to.
+  // HubScreen's surface/subsurface slide is ephemeral UI state
+  // (game.subsurfaceView), not a route. Arriving at 'hub' always shows the
+  // surface; the dock's Subsurface button is the only way into the slide.
   useEffect(() => {
-    if (screen === 'hub-subsurface') game.setSubsurfaceView(true)
-    else if (screen === 'hub') game.setSubsurfaceView(false)
+    if (screen === 'hub') game.setSubsurfaceView(false)
   }, [screen, game.setSubsurfaceView])
 
   switch (screen) {
@@ -188,7 +174,6 @@ export function ScreenContent({
       )
 
     case 'hub':
-    case 'hub-subsurface':
       return (
         <HubScreen
           player={game.player}
@@ -249,14 +234,6 @@ export function ScreenContent({
           onInspect={signal => {
             setInspectSignal(signal)
             game.go(signal.inspectorScreen)
-          }}
-          onSnoozePing={() => {
-            const dateKey = instrumentDigestDateKey()
-            game.setPlayer(player => markInstrumentDigestNotified(
-              markInstrumentDigestNotified(player, TRANSIT_TELESCOPE_INSTRUMENT_ID, dateKey),
-              DEEP_SPACE_TELESCOPE_INSTRUMENT_ID,
-              dateKey,
-            ))
           }}
         />
       )
@@ -375,7 +352,7 @@ export function ScreenContent({
           pendingLaunch={game.player.pendingLaunch}
           pendingRocketName={rocketDisplay.name}
           onConfirmShipCustomizerBuild={game.confirmShipCustomizerBuild}
-          onBack={onBackFromHangar ?? game.returnFromHangar}
+          onBack={game.returnFromHangar}
         />
       )
 

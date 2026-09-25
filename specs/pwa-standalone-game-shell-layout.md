@@ -5,7 +5,7 @@
 
 ## Overview
 
-Defines how the game shell (`web/app/game/page.tsx` → `GameApp.tsx`) renders
+Defines how the game shell (`web/app/game/(main)/layout.tsx`) renders
 and behaves when installed as a PWA in `standalone` display mode. The goal is a
 full-bleed canvas — portrait on mobile, full-viewport on desktop/landscape —
 that hides browser chrome and adapts to device safe areas. Every screen must
