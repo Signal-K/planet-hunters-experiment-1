@@ -5,20 +5,20 @@
 
 - Commit only after a coherent ticket outcome or acceptance slice is implemented and verified; never use checkpoint, progress, one-file, or speculative commits.
 - From the Landnam repository root, inspect `git status --short`, run appropriate checks, stage the complete task with `git add .`, then review `git diff --cached` and `git status --short`. Preserve and disclose unrelated user-owned work instead of staging it.
-- Every subject must be `🚀🐺 ↝ [KES-299 ATL-999]: Commit message`: two different non-flag, non-smiley/human-face emoji; exact arrow and spacing; every worked ticket key in one space-separated bracket pair including the active Desk key; concise achieved outcome.
+- Every subject must be `🚀🐺 ↝ [KES-299 ATL-999]: Commit message`: two different non-flag, non-smiley/human-face emoji; exact arrow and spacing; every worked ticket key in one space-separated bracket pair including the active Linear key; concise achieved outcome.
 - A coding request authorizes the final task commit unless the user says not to commit. Never bypass the hook with `--no-verify`.
 
-## Desk-first agent workflow
+## Linear-first agent workflow
 
-**Desk is the sole project-management system for Landnam.** Resolve or create the relevant Desk ticket before changing code, keep its status current, and add implementation evidence before finishing. Historical `KES-` references may be included alongside the active Desk key, but Linear is not the live task system.
+**Linear is the project-management system for Landnam.** Resolve or create the relevant Linear issue before changing code, keep its status current, and add implementation evidence before finishing. Historical `KES-` references may be included alongside the active Linear key.
 
-ZenNotes in the parent Navigation workspace is the source of truth for durable decisions and specifications; Desk tickets should link to it rather than duplicating it.
+ZenNotes in the parent Navigation workspace is the source of truth for durable decisions and specifications; Linear issues should link to it rather than duplicating it.
 
 > **Canonical guidance**: Read this file plus the applicable ZenNotes decision in the parent Navigation workspace before changing product or game logic.
 
 ## Product context
 
-Landnam has no local decision store. Read applicable ZenNotes decisions in the parent Navigation workspace before changing product or game logic; use Craft only for planning and feedback context associated with a Desk ticket.
+Landnam has no local decision store. Read applicable ZenNotes decisions in the parent Navigation workspace before changing product or game logic; use Craft only for planning and feedback context associated with a Linear issue.
 
 ## Repo Layout
 
