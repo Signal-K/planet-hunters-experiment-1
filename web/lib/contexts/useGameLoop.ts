@@ -17,6 +17,7 @@ import { applyAssembleFabricatedRocket, applyFabricateRocketPart, applyFreeHaulD
 import { rocketCompatibleWithMission } from '@/lib/rockets'
 import { applyConstructionCompletion } from '@/lib/systems/ConstructionSystem'
 import { loanOutstanding, repayBankruptcyLoan } from '@/lib/systems/TreasurySystem'
+import { instrumentDigestDateKey } from '@/lib/systems/InstrumentFeedSystem'
 import { TREASURY_PLAYER_ID } from '@/lib/systems/ProgressionSystem'
 import { enqueueSurvey, isRepeatSurveyEligible, getMilestoneSurveyVariant } from '@/lib/surveys'
 import { captureGameEvent } from '@/lib/posthog'
@@ -722,13 +723,18 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
 
   // Player picks where the satellite points for the *next* daily downlink
   // (see PixiGalaxyStarMap / TessDiscoveryScreen) — this doesn't change today's
-  // candidate, just what dailyTessCandidates prefers once today's is done.
-  const chooseSatelliteTarget = useCallback((subjectId: string) => {
+  // candidate: satelliteTargetChosenOn keeps the pick out of today's digest
+  // (satelliteTargetForDay), so it lands with tomorrow's UTC downlink (SSL-358).
+  // `dateKey` is the day the screen is showing, which differs from the real
+  // date only under the dev day-skip control.
+  const chooseSatelliteTarget = useCallback((subjectId: string, dateKey = instrumentDigestDateKey()) => {
     setState(s => ({
       ...s,
-      player: { ...s.player, satelliteTargetId: subjectId, pendingRepick: false },
+      player: { ...s.player, satelliteTargetId: subjectId, satelliteTargetChosenOn: dateKey, pendingRepick: false },
     }))
     captureGameEvent('satellite_target_chosen', { subject_id: subjectId })
+    // Held by the survey gate until the player is back on Home — never over
+    // the TESS screen mid-flow (SSL-358).
     enqueueSurvey('lnm_satellite_clarity', 1200)
   }, [setState])
 

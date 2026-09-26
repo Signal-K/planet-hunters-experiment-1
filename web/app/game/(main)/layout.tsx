@@ -12,7 +12,8 @@ import LandnamSyncStatus from '@/components/game/LandnamSyncStatus'
 import { PushOptIn } from '@/components/game/PushOptIn'
 import SurveySheet from '@/components/ui/SurveySheet'
 import ToastLayer from '@/components/ui/ToastLayer'
-import { initPostHog } from '@/lib/posthog'
+import { captureGameEvent, captureScreenView, initPostHog } from '@/lib/posthog'
+import { routeSegmentForScreen } from '@/lib/game-route'
 import DevShortcuts from '@/components/dev/DevShortcuts'
 import GateLanding from '@/components/game/landing/GateLanding'
 import ShellSheets from '@/components/game/ShellSheets'
@@ -94,6 +95,46 @@ function GameChrome({ children }: { children: ReactNode }) {
   const coachIndex = coach ? coachSteps.findIndex(step => step.id === coach.id) : -1
   const hasCoach = !!coach
 
+  // SSL-351: the SPA never navigates, so PostHog's own pageview capture is
+  // off (lib/posthog.ts). Report each screen the player lands on instead.
+  useEffect(() => {
+    if (!game.hydrated) return
+    captureScreenView(currentScreen, `/game/${routeSegmentForScreen(currentScreen)}`)
+  }, [currentScreen, game.hydrated])
+
+  // SSL-351: per-step onboarding analytics. These lived in the retired
+  // GameApp shell and were lost with it (SSL-75), so none ever reached
+  // PostHog from the live shell. `started` fires when the active step
+  // changes; `completed` when the step that was showing is marked done.
+  const trackedCoach = useRef<{ id: number; screen: string; index: number } | null>(null)
+  useEffect(() => {
+    let previous = trackedCoach.current
+    if (previous && previous.id !== coach?.id && game.doneSteps[previous.id]) {
+      captureGameEvent('tutorial_step_completed', {
+        tutorial: 'onboarding',
+        step_id: previous.id,
+        screen: previous.screen,
+        step_index: previous.index,
+        total_steps: coachSteps.length,
+      })
+      previous = null
+    }
+    if (coach && previous?.id !== coach.id) {
+      captureGameEvent('tutorial_step_started', {
+        tutorial: 'onboarding',
+        step_id: coach.id,
+        screen: coach.screen,
+        step_index: coachIndex,
+        total_steps: coachSteps.length,
+      })
+    }
+    // A step hidden behind a popup or sheet is still the tracked step.
+    trackedCoach.current = coach ? { id: coach.id, screen: coach.screen, index: coachIndex } : previous
+    // Only re-evaluate when the active step or the done set changes, not on
+    // every render that keeps the same coach step.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [coach?.id, game.doneSteps])
+
   return (
     <main className="game-stage" aria-label="Landnam game">
       {/* No-op unless running as an installed PWA; warms the Takeon/Pixi
@@ -144,7 +185,18 @@ function GameChrome({ children }: { children: ReactNode }) {
             step={coach}
             total={coachSteps.length}
             onManualNext={game.coachManualNext}
-            onSkip={() => game.skipTutorial(coachSteps.map(s => s.id))}
+            onSkip={() => {
+              captureGameEvent('tutorial_skipped', {
+                tutorial: 'onboarding',
+                step_id: coach.id,
+                screen: coach.screen,
+                step_index: coachIndex,
+                total_steps: coachSteps.length,
+              })
+              // A skipped step is not a completed one.
+              trackedCoach.current = null
+              game.skipTutorial(coachSteps.map(s => s.id))
+            }}
           />
         )}
 

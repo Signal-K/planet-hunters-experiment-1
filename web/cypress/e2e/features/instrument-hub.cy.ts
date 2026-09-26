@@ -108,6 +108,7 @@ function visitHub() {
       win.localStorage.setItem(SNOOZE_KEY, FAR_FUTURE)
       win.localStorage.setItem(SURVEY_KEY, JSON.stringify(ALL_SURVEYS))
       win.localStorage.setItem(TUTORIAL_ACK_KEY, '1')
+      win.localStorage.setItem('landnam_tess_coach_done_v1', '1')
       win.localStorage.setItem(STORAGE_KEY, JSON.stringify(state))
       seedFixtureSession(win, 'e2e-subject-user')
     },

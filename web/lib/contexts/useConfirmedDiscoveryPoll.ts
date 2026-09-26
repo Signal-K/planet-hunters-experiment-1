@@ -42,7 +42,7 @@ export function useConfirmedDiscoveryPoll({ stateRef, setState, hydrated, enable
           // would fire for every historical confirmation on first launch,
           // not just genuinely new ones.
           if (alreadyKnew) {
-            addToast('A candidate was just confirmed as a real planet — point the satellite anywhere, right now', 'ok')
+            addToast('A candidate was just confirmed as a real planet — you can re-point the satellite for tomorrow now', 'ok')
           }
         }
       } catch {

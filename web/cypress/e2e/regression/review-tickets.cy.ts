@@ -79,6 +79,7 @@ function visitGame(path: string, overrides: GameStateOverride = {}) {
       win.localStorage.setItem('ln_mining_freeops_first_entry_ack', '1')
       win.localStorage.setItem('ln_mining_freeops_first_success_ack', '1')
       win.localStorage.setItem('ln_tutorial_complete_ack', '1')
+      win.localStorage.setItem('landnam_tess_coach_done_v1', '1')
     },
   })
 }

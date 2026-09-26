@@ -18,8 +18,8 @@ export interface InstrumentSignal {
 type InstrumentFeedPlayer = Pick<
   Player,
   | 'transitSatelliteLevel'
-  | 'transitSatelliteLevel'
   | 'satelliteTargetId'
+  | 'satelliteTargetChosenOn'
   | 'tessClassifications'
   | 'instrumentDigestNotifiedOn'
 >
@@ -56,8 +56,21 @@ export function transitInstrumentDigest(
     candidates,
     dateKey,
     transitInstrumentLevel(player),
-    player.satelliteTargetId
+    satelliteTargetForDay(player, dateKey)
   )
+}
+
+/**
+ * SSL-358: "Tap a star to point the satellite tomorrow". A pick feeds the
+ * downlinks dated after the day it was made, never the one already on screen.
+ */
+function satelliteTargetForDay(
+  player: Pick<Player, 'satelliteTargetId' | 'satelliteTargetChosenOn'>,
+  dateKey: string
+): string | null {
+  if (!player.satelliteTargetId) return null
+  if (player.satelliteTargetChosenOn && player.satelliteTargetChosenOn >= dateKey) return null
+  return player.satelliteTargetId
 }
 
 export function unresolvedTransitInstrumentDigest(
@@ -152,6 +165,7 @@ export function collectInstrumentSignals(opts: {
     | 'deepSpaceTelescopeBuilt'
     | 'transitSatelliteLevel'
     | 'satelliteTargetId'
+    | 'satelliteTargetChosenOn'
     | 'tessClassifications'
     | 'deepSpaceTelescopeLevel'
     | 'asteroidClassifications'

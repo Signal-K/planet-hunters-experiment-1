@@ -83,6 +83,8 @@ function visitGalaxyScreen() {
   cy.visit('/game/galaxy', {
     onBeforeLoad(win) {
       win.localStorage.setItem(STORAGE_KEY, JSON.stringify(base))
+      // SSL-359: this spec checks the layout, not the first-visit coach.
+      win.localStorage.setItem('landnam_tess_coach_done_v1', '1')
       seedFixtureSession(win, 'e2e-subject-user')
     },
   })

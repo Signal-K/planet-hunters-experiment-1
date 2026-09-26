@@ -115,6 +115,7 @@ export function useInstrumentFeedNotifications({
     player.instrumentDigestNotifiedOn,
     player.transitSatelliteLevel,
     player.satelliteTargetId,
+    player.satelliteTargetChosenOn,
     player.tessClassifications,
     player.transitSatelliteLaunchedAt,
     player.transitSatelliteLevel,

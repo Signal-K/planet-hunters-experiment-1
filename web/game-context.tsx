@@ -97,8 +97,9 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       : loadedState
     setState(entryState)
     setHydrated(true)
-    const record = pbShared.authStore.record
-    if (record?.id) identifyUser(record.id, record.email ? { email: record.email } : undefined)
+    // SSL-357: an expired record restored from localStorage (e.g. an old
+    // guest session) must not become this device's PostHog person.
+    identifyUser(pbShared.authStore.record, pbShared.authStore.isValid)
   }, [])
 
   // Survey on return visit

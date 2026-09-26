@@ -73,7 +73,7 @@ export function tessLightcurvePoints(candidate: TessCandidate): LightcurvePoint[
   const points: LightcurvePoint[] = []
   const spanDays = 27.4
   const depth = candidate.depthPpm / 1_000_000
-  const transitWidth = Math.max(0.045, Math.min(0.16, candidate.periodDays * 0.018))
+  const transitWidth = transitSigmaDays(candidate)
 
   for (let i = 0; i < SYNTHETIC_POINT_COUNT; i += 1) {
     const x = (i / (SYNTHETIC_POINT_COUNT - 1)) * spanDays
@@ -89,6 +89,26 @@ export function tessLightcurvePoints(candidate: TessCandidate): LightcurvePoint[
   }
 
   return points
+}
+
+// Gaussian width (days) of the synthetic transit profile above.
+function transitSigmaDays(candidate: TessCandidate): number {
+  return Math.max(0.045, Math.min(0.16, candidate.periodDays * 0.018))
+}
+
+/**
+ * Whether a marked range overlaps one of the candidate's transits (centre
+ * epoch + n·period, give or take two profile widths). Only meaningful for a
+ * curve whose ephemeris is known — the TESS tutorial's confirmed planet.
+ */
+export function rangeCoversTransit(candidate: TessCandidate, range: TransitRange): boolean {
+  const margin = transitSigmaDays(candidate) * 2
+  const lo = Math.min(range.x1, range.x2) - margin
+  const hi = Math.max(range.x1, range.x2) + margin
+  const period = candidate.periodDays
+  if (!(period > 0)) return false
+  const firstN = Math.ceil((lo - candidate.transitEpoch) / period)
+  return candidate.transitEpoch + firstN * period <= hi
 }
 
 // `preferredId` is the player's satellite-pointing choice (see

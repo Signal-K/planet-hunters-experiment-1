@@ -202,4 +202,19 @@ describe('InstrumentFeedSystem', () => {
     expect(pickInstrumentInspectCandidate(digest, 'missing')?.id).toBe(digest[0].id)
     expect(pickInstrumentInspectCandidate([], 'missing')).toBeNull()
   })
+
+  it('points the satellite at a picked star from the next UTC day, never today (SSL-358)', () => {
+    const pool = ['a', 'b', 'c', 'd', 'e'].map(candidate)
+    const today = '2026-09-26'
+    const tomorrow = '2026-09-27'
+    const untouched = transitInstrumentDigest(pool, player(), today)[0].id
+    const picked = pool.find(item => item.id !== untouched)!.id
+    const afterPick = player({ satelliteTargetId: picked, satelliteTargetChosenOn: today })
+
+    expect(transitInstrumentDigest(pool, afterPick, today)[0].id).toBe(untouched)
+    expect(collectInstrumentSignals({ tess: pool, asteroids: [], player: { ...afterPick, transitSatelliteLaunchedAt: 1 }, dateKey: today })[0].id).toBe(untouched)
+    expect(transitInstrumentDigest(pool, afterPick, tomorrow)[0].id).toBe(picked)
+    // Picks saved before the date was recorded keep applying straight away.
+    expect(transitInstrumentDigest(pool, player({ satelliteTargetId: picked }), today)[0].id).toBe(picked)
+  })
 })

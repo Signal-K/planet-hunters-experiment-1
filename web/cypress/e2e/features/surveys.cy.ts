@@ -17,12 +17,12 @@ type SurveyPayload = {
   [key: string]: unknown
 }
 
-type SurveyTestWindow = Window & { __landnamTriggerSurvey?: (surveyKey: string) => void }
+type SurveyTestWindow = Window & {
+  __landnamTriggerSurvey?: (surveyKey: string) => void
+  __sentSurveys?: SurveyPayload[]
+}
 
 const SURVEY_KEYS = Object.keys(SURVEY_DEFS)
-const SURVEY_KEY_BY_ID = Object.fromEntries(
-  Object.entries(SURVEY_DEFS).map(([key, survey]) => [survey.id, key]),
-)
 
 const baseState = {
   screen: 'hub',
@@ -71,6 +71,13 @@ function visitGame() {
       win.localStorage.removeItem(SURVEY_STORAGE_KEY)
       seedFixtureSession(win)
       win.localStorage.setItem('landnam-upgrade-prompt-snooze-until', String(Date.now() + 365 * 24 * 60 * 60 * 1000))
+      // SSL-357: answers are captured by the browser's PostHog client, which
+      // announces each one on the window so this spec can read the payload.
+      const testWindow = win as SurveyTestWindow
+      testWindow.__sentSurveys = []
+      win.addEventListener('landnam:survey-sent', event => {
+        testWindow.__sentSurveys?.push((event as CustomEvent<SurveyPayload>).detail)
+      })
     },
   })
 }
@@ -125,8 +132,10 @@ function answerSurvey(surveyKey: string) {
     }
   })
 
-  cy.wait(`@submit-${surveyKey}`).then(interception => {
-    const body = interception.request.body as { payload: SurveyPayload; distinctId?: string }
+  cy.window().its('__sentSurveys').should((sent: SurveyPayload[]) => {
+    expect(sent.some(payload => payload.$survey_id === def.id)).to.eq(true)
+  }).then((sent: SurveyPayload[]) => {
+    const body = { payload: sent.find(payload => payload.$survey_id === def.id) as SurveyPayload }
     expect(body.payload.$survey_id).to.eq(def.id)
     expect(body.payload.$survey_name).to.eq(def.name)
     expect(body.payload.$survey_completed).to.eq(true)
@@ -150,12 +159,6 @@ function answerSurvey(surveyKey: string) {
 
 describe('Survey QA flow', () => {
   it('triggers and answers every registered Landnam survey with PostHog-compatible payloads', () => {
-    cy.intercept('POST', '/api/surveys', req => {
-      const surveyId = req.body?.payload?.$survey_id
-      const surveyKey = SURVEY_KEY_BY_ID[surveyId]
-      if (surveyKey) req.alias = `submit-${surveyKey}`
-      req.reply({ statusCode: 200, body: { ok: true } })
-    })
     cy.intercept('POST', '/api/milestone-feedback', { statusCode: 200, body: { ok: true } }).as('milestoneFeedback')
 
     visitGame()
