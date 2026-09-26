@@ -8,9 +8,13 @@ import type { Screen } from '@/lib/game-types'
 // "resting" screen, never mid-setup or mid-execution of a mission. A
 // blocklist of "screens to avoid" rots the same way: miss one screen and a
 // survey slides up over it the moment that's the one screen not blocked.
-export const SURVEY_SAFE_SCREENS: Screen[] = [
-  'hub', 'missions', 'market', 'hangar', 'skills', 'galaxy', 'refinery', 'instrument-hub',
-]
+//
+// SSL-358: surveys appear only on Home. A player on the TESS screen
+// ('galaxy'), its instrument feed, the Mission Board or a menu screen may be
+// in the middle of a mission; a survey queued there (e.g. Satellite Clarity
+// after a star pick, or a mission-end survey from Debrief) is held until
+// they are back on Home.
+export const SURVEY_SAFE_SCREENS: Screen[] = ['hub']
 
 export function isSurveySafeScreen(screen: Screen | string): boolean {
   return (SURVEY_SAFE_SCREENS as string[]).includes(screen)

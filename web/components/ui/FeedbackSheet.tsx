@@ -1,7 +1,8 @@
 'use client'
 
 import React, { useState } from 'react'
-import { posthog } from '@/lib/posthog'
+import { captureSurveySent } from '@/lib/posthog'
+import { feedbackSurveyPayload } from '@/lib/feedback-survey'
 import PageSurface from '@/components/ui/PageSurface'
 
 export default function FeedbackSheet({ onClose }: { onClose: () => void }) {
@@ -11,10 +12,11 @@ export default function FeedbackSheet({ onClose }: { onClose: () => void }) {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     if (!text.trim()) return
+    captureSurveySent(feedbackSurveyPayload(text.trim()))
     fetch('/api/feedback', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ text: text.trim(), distinctId: posthog.get_distinct_id?.() }),
+      body: JSON.stringify({ text: text.trim() }),
     }).catch(() => {})
     setSent(true)
     setTimeout(onClose, 1400)

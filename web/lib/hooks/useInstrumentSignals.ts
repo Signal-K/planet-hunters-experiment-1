@@ -58,6 +58,7 @@ export function useInstrumentSignals(player: Player): {
     player.transitSatelliteLevel,
     player.deepSpaceTelescopeLevel,
     player.satelliteTargetId,
+    player.satelliteTargetChosenOn,
   ])
 
   return { signals, loading }

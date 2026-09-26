@@ -85,7 +85,7 @@ function suppressNonGameplaySurfaces(win: Window) {
   // The science-console coach has dedicated walkthrough coverage. The release
   // matrix captures the working console underneath it, otherwise the overlay
   // hides the data evidence it is meant to audit.
-  win.localStorage.setItem('landnam_observatory_coach_seen_v1', '1')
+  win.localStorage.setItem('landnam_tess_coach_done_v1', '1')
   win.localStorage.setItem('landnam_asteroid_discovery_coach_seen_v1', '1')
   // The normal shell derives its storage namespace from PocketBase's restored
   // user record. Seed a valid-shaped fixture record, not retired credentials,

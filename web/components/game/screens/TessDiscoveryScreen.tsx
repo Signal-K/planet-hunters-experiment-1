@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useState, type ReactNode } from 'react'
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { Radio, Satellite } from 'lucide-react'
 import TopBar from '@/components/ui/TopBar'
 import StatCard from '@/components/ui/StatCard'
@@ -11,11 +11,11 @@ import ObservatoryChart from '@/components/game/ObservatoryChart'
 import TelescopeConsole from '@/components/game/TelescopeConsole'
 import ObservatoryReadout from '@/components/game/ObservatoryReadout'
 import CommentsPanel from '@/components/game/CommentsPanel'
-import ObservatoryCoach, { useObservatoryCoach } from '@/components/game/ObservatoryCoach'
+import { TessCoachHelpButton, TessCoachOverlay, useTessCoach } from '@/components/game/TessCoachMarks'
 import PixiGalaxyStarMap from '@/components/game/PixiGalaxyStarMap'
 import SolSystemPreview from '@/components/game/SolSystemPreview'
 import NebulaBackdrop from '@/components/game/NebulaBackdrop'
-import { deriveObservatoryStats, periodFromRanges, sectorWindows, tessCandidateToExoplanetTarget, tessLightcurvePoints, type Target, type TessCandidate, type TessClassification, type TessVerdict, type TransitRange } from '@/lib/data'
+import { deriveObservatoryStats, periodFromRanges, rangeCoversTransit, sectorWindows, tessCandidateToExoplanetTarget, tessLightcurvePoints, type Target, type TessCandidate, type TessClassification, type TessVerdict, type TransitRange } from '@/lib/data'
 import type { Player } from '@/lib/game-types'
 import { UI_ZONES } from '@/lib/ui-zones'
 import { captureGameEvent } from '@/lib/posthog'
@@ -23,6 +23,7 @@ import { fetchReviewableTessCandidates } from '@/lib/tess-subjects'
 import { sharedBackendMisconfigured } from '@/lib/pb-config'
 import { useIsDesktop } from '@/lib/hooks/useIsDesktop'
 import { instrumentDigestDateKey, pickInstrumentInspectCandidate, unresolvedTransitInstrumentDigest } from '@/lib/systems/InstrumentFeedSystem'
+import { dipInView, gainDomain, gainFromSlider, gainLabel, GAIN_MAX, GAIN_MIN, sliderFromGain, TESS_COACH_MISSED_HINT, TESS_TRAINING_CANDIDATE } from '@/lib/tess-coach'
 
 interface TessDiscoveryScreenProps {
   player: Player
@@ -33,7 +34,8 @@ interface TessDiscoveryScreenProps {
   onBuildStation: () => void
   onOpenProgram: () => void
   onSubmit: (subjectId: string, verdict: TessVerdict, ranges: TransitRange[], discoveredTarget?: Target) => void
-  onChooseTarget: (subjectId: string) => void
+  /** `dateKey` is the day on screen; the pick applies from the next one. */
+  onChooseTarget: (subjectId: string, dateKey: string) => void
 }
 
 // Direct-action verdict buttons (tap = submit immediately), matching the
@@ -58,7 +60,7 @@ export default function TessDiscoveryScreen({ player, inspectSubjectId, visualCa
   // PixiGalaxyStarMap after a prior classification) plus a deterministic daily
   // hash fallback. `pool` keeps the full reviewable list around so the
   // pointing map has something to plot.
-  const [candidate, setCandidate] = useState<TessCandidate | null>(null)
+  const [dailyCandidate, setCandidate] = useState<TessCandidate | null>(null)
   const [pool, setPool] = useState<TessCandidate[]>([])
   const [ranges, setRanges] = useState<TransitRange[]>([])
   const [sectorIndex, setSectorIndex] = useState(0)
@@ -109,9 +111,7 @@ export default function TessDiscoveryScreen({ player, inspectSubjectId, visualCa
     fetchReviewableTessCandidates()
       .then(liveCandidates => {
         if (cancelled) return
-        const todayDate = new Date()
-        if (devDayOffset) todayDate.setDate(todayDate.getDate() + devDayOffset)
-        const today = instrumentDigestDateKey(todayDate)
+        const today = screenDateKey(devDayOffset)
         const nextDaily = unresolvedTransitInstrumentDigest(liveCandidates, player, today)
         setPool(liveCandidates)
         setCandidate(pickInstrumentInspectCandidate(nextDaily, inspectSubjectId))
@@ -132,32 +132,86 @@ export default function TessDiscoveryScreen({ player, inspectSubjectId, visualCa
       })
 
     return () => { cancelled = true }
-    // Do not refetch merely because this screen submitted a classification.
-    // The current candidate must remain mounted long enough to show the
-    // post-confirmation target-selection map. Re-entering the screen remounts
-    // it and naturally resolves the next still-unclassified daily candidate.
+    // Do not refetch merely because this screen submitted a classification
+    // or pointed the satellite. The current candidate must remain mounted to
+    // show the post-confirmation target-selection map, and a star pick only
+    // applies to the next day's downlink (SSL-358) — refetching on
+    // satelliteTargetId swapped in a new curve the moment a star was tapped.
+    // Re-entering the screen, or the dev day-skip, resolves the next daily
+    // candidate.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [visualCandidate, inspectSubjectId, player.freeOperations, player.transitSatelliteLaunchedAt, player.transitSatelliteLevel, player.satelliteTargetId, devDayOffset, retryToken])
+  }, [visualCandidate, inspectSubjectId, player.freeOperations, player.transitSatelliteLaunchedAt, player.transitSatelliteLevel, devDayOffset, retryToken])
 
-  const classification: TessClassification | undefined = candidate ? classifications[candidate.id] : undefined
-  const discoveredTarget = candidate && classification?.verdict === 'planet'
-    ? tessCandidateToExoplanetTarget(candidate, periodFromRanges(classification.ranges))
+  // SSL-359: the first-ever visit teaches on a confirmed planet (training
+  // curve) before today's live candidate. The coach owns the gates below.
+  const screenRef = useRef<HTMLDivElement>(null)
+  const coachEligible = Object.keys(classifications).length === 0 && !!player.freeOperations && !!player.transitSatelliteLaunchedAt
+  const coach = useTessCoach(coachEligible)
+  const completeCoachStep = coach.complete
+  const [gain, setGain] = useState(GAIN_MAX)
+  const [trainingRanges, setTrainingRanges] = useState<TransitRange[]>([])
+  const [missedMark, setMissedMark] = useState(false)
+  const training = coach.training
+  const liveCandidate = dailyCandidate
+  const shownCandidate = training ? TESS_TRAINING_CANDIDATE : liveCandidate
+  const shownRanges = training ? trainingRanges : ranges
+  const setShownRanges = training ? setTrainingRanges : setRanges
+  const coachStepId = coach.step?.id ?? null
+
+  const classification: TessClassification | undefined = liveCandidate && !training ? classifications[liveCandidate.id] : undefined
+  const discoveredTarget = liveCandidate && classification?.verdict === 'planet'
+    ? tessCandidateToExoplanetTarget(liveCandidate, periodFromRanges(classification.ranges))
     : null
-  const points = useMemo(() => candidate ? tessLightcurvePoints(candidate) : [], [candidate])
-  const sectors = useMemo(() => candidate ? sectorWindows(points, candidate.sector) : [], [candidate, points])
+  const points = useMemo(() => shownCandidate ? tessLightcurvePoints(shownCandidate) : [], [shownCandidate])
+  const sectors = useMemo(() => shownCandidate ? sectorWindows(points, shownCandidate.sector) : [], [shownCandidate, points])
   const activeSector = sectors[Math.min(sectorIndex, Math.max(0, sectors.length - 1))]
   const sectorPoints = activeSector?.points ?? points
   // Fixed across all sectors — see ObservatoryChart's yDomain doc comment.
-  const yDomain = useMemo<[number, number] | undefined>(() => {
+  const fluxRange = useMemo<[number, number] | undefined>(() => {
     if (!points.length) return undefined
     const ys = points.map(p => p.y)
     return [Math.min(...ys), Math.max(...ys)]
   }, [points])
+  // SSL-359: display gain stretches that fixed range; full gain is the
+  // pre-gain view.
+  const yDomain = fluxRange ? gainDomain(fluxRange[0], fluxRange[1], gain) : undefined
+  const dipShowing = !!shownCandidate && !!fluxRange && dipInView(shownCandidate.depthPpm, fluxRange[0], fluxRange[1], gain)
   // Hooks must run unconditionally — the gate screens below return early,
   // so anything hook-based (not just plain derived values) has to sit
   // above them, or its call order breaks the moment a gate flag flips
-  const coach = useObservatoryCoach()
   const isDesktop = useIsDesktop()
+
+  // Each coach step starts from the state that makes its action meaningful:
+  // gain step starts flat (dip hidden), the training run starts unmarked.
+  useEffect(() => {
+    if (coachStepId === 'gain') {
+      setGain(GAIN_MIN)
+      setMissedMark(false)
+      if (training) setTrainingRanges([])
+      else setRanges([])
+    }
+  }, [coachStepId, training])
+
+  // Step 1 gate: the dip is in view. Waits for the drag to settle so the
+  // hint does not jump mid-gesture.
+  useEffect(() => {
+    if (coachStepId !== 'gain' || !dipShowing) return
+    const timer = window.setTimeout(() => completeCoachStep('gain'), 450)
+    return () => window.clearTimeout(timer)
+  }, [completeCoachStep, coachStepId, dipShowing])
+
+  // Step 2 gate: a mark. On the known-planet curve it must land on a
+  // transit; a miss is cleared with a nudge so the retry starts clean.
+  useEffect(() => {
+    if (coachStepId !== 'mark' || shownRanges.length === 0 || !shownCandidate) return
+    if (training && !shownRanges.some(range => rangeCoversTransit(shownCandidate, range))) {
+      setMissedMark(true)
+      setTrainingRanges([])
+      return
+    }
+    setMissedMark(false)
+    completeCoachStep('mark')
+  }, [completeCoachStep, coachStepId, shownCandidate, shownRanges, training])
 
   if (!player.freeOperations) {
     return (
@@ -186,7 +240,7 @@ export default function TessDiscoveryScreen({ player, inspectSubjectId, visualCa
     )
   }
 
-  if (loading) {
+  if (loading && !training) {
     return (
       <GateScreen
         eyebrow="BASE / DAILY DOWNLINK"
@@ -199,7 +253,7 @@ export default function TessDiscoveryScreen({ player, inspectSubjectId, visualCa
     )
   }
 
-  if (!candidate) {
+  if (!shownCandidate) {
     const misconfigured = loadFailed && sharedBackendMisconfigured()
     return (
       <GateScreen
@@ -223,18 +277,29 @@ export default function TessDiscoveryScreen({ player, inspectSubjectId, visualCa
     )
   }
 
+  const candidate = shownCandidate
+  // A landscape phone (844x390) has to show the chart and the gain control
+  // together for the first coach step.
+  const chartHeight = isCompactLandscape ? 168 : 280
   const castVerdict = (id: TessVerdict) => {
     if (classification) return
+    // The training curve is a known planet, not a live subject: confirming
+    // it teaches the step and is never sent to the shared feed.
+    if (training) {
+      if (id === 'planet') coach.complete('confirm')
+      return
+    }
     const measuredPeriod = periodFromRanges(ranges)
     onSubmit(candidate.id, id, ranges, id === 'planet' ? tessCandidateToExoplanetTarget(candidate, measuredPeriod) : undefined)
+    if (coachStepId === 'confirm' && id === 'planet') coach.complete('confirm')
   }
 
-  const activeRanges = classification?.ranges ?? ranges
+  const activeRanges = classification?.ranges ?? shownRanges
   const markCount = activeRanges.length
   const stats = deriveObservatoryStats(candidate, points, activeRanges)
-  const showCoach = coach.visible && !classification
   const visitedIds = new Set(Object.keys(classifications))
   const targetChosen = pendingTargetId ?? player.satelliteTargetId ?? null
+  const coachHint = coachStepId === 'mark' && missedMark ? TESS_COACH_MISSED_HINT : coach.step?.hint ?? ''
   // A global 5-vote confirmation lets the player re-pick their satellite
   // target immediately, without waiting for the normal post-classification
   // moment — but doesn't replace today's review flow, so this is a
@@ -258,8 +323,8 @@ export default function TessDiscoveryScreen({ player, inspectSubjectId, visualCa
                 {candidate.constellation.toUpperCase()} / {candidate.distanceLy} LY / S/N {candidate.signalToNoise.toFixed(1)} / {candidate.periodDays.toFixed(1)}D
               </div>
             </div>
-            <StatusPill kind={classification ? 'ok' : 'info'}>
-              {classification ? classification.verdict.replace('_', ' ').toUpperCase() : 'REVIEW'}
+            <StatusPill kind={classification || coachStepId === 'outcome' ? 'ok' : 'info'}>
+              {classification ? classification.verdict.replace('_', ' ').toUpperCase() : training ? 'KNOWN PLANET' : 'REVIEW'}
             </StatusPill>
           </div>
 
@@ -270,7 +335,9 @@ export default function TessDiscoveryScreen({ player, inspectSubjectId, visualCa
               textTransform: 'uppercase', marginBottom: 8, marginTop: -4,
             }}
           >
-            Real light-curve data · NASA TESS / Planet Hunters — your call feeds live classification consensus
+            {training
+              ? `Training curve · modelled on confirmed planet ${candidate.toi} (NASA TESS) · not sent to the live feed`
+              : 'Real light-curve data · NASA TESS / Planet Hunters — your call feeds live classification consensus'}
           </div>
 
           {!classification && sectors.length > 1 && (
@@ -312,7 +379,7 @@ export default function TessDiscoveryScreen({ player, inspectSubjectId, visualCa
                   fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase',
                 }}
               >
-                Point Satellite Now
+                Re-point Satellite
               </button>
             </div>
           )}
@@ -320,43 +387,51 @@ export default function TessDiscoveryScreen({ player, inspectSubjectId, visualCa
           {/* Viewport: the lightcurve while reviewing, replaced by the
               galaxy star map (pick tomorrow's target) once classified, or
               immediately via the re-pick banner above. */}
-          <TelescopeConsole
-            sector={showMap ? 'TARGET SELECT' : (activeSector?.label ?? candidate.sector)}
-            targetCount={showMap ? pool.length : 1}
-            signal={candidate.signalToNoise}
-          >
-            {showMap ? (
-              viewingSol ? (
-                <div style={{ height: 280 }}>
-                  <SolSystemPreview onBack={() => setViewingSol(false)} />
-                </div>
+          <div data-coach-target="tess-chart">
+            <TelescopeConsole
+              sector={showMap ? 'TARGET SELECT' : (activeSector?.label ?? candidate.sector)}
+              targetCount={showMap ? pool.length : 1}
+              signal={candidate.signalToNoise}
+              compact={isCompactLandscape}
+            >
+              {showMap ? (
+                viewingSol ? (
+                  <div style={{ height: 280 }}>
+                    <SolSystemPreview onBack={() => setViewingSol(false)} />
+                  </div>
+                ) : (
+                  <PixiGalaxyStarMap
+                    candidates={pool}
+                    visitedIds={visitedIds}
+                    selectedId={targetChosen}
+                    onSelect={id => { setPendingTargetId(id); onChooseTarget(id, screenDateKey(devDayOffset)); setForceMapView(false) }}
+                    onOpenSol={() => setViewingSol(true)}
+                    height={280}
+                  />
+                )
               ) : (
-                <PixiGalaxyStarMap
-                  candidates={pool}
-                  visitedIds={visitedIds}
-                  selectedId={targetChosen}
-                  onSelect={id => { setPendingTargetId(id); onChooseTarget(id); setForceMapView(false) }}
-                  onOpenSol={() => setViewingSol(true)}
-                  height={280}
+                <ObservatoryChart
+                  points={sectorPoints}
+                  ranges={activeRanges}
+                  onRange={(x1, x2) => setShownRanges(prev => [...prev, { x1, x2 }])}
+                  onRemoveRange={index => setShownRanges(prev => prev.filter((_, current) => current !== index))}
+                  // Marking waits until the dip is in view (coach step 1).
+                  locked={coachStepId === 'gain' || coachStepId === 'outcome'}
+                  height={chartHeight}
+                  yDomain={yDomain}
                 />
-              )
-            ) : (
-              <ObservatoryChart
-                points={sectorPoints}
-                ranges={activeRanges}
-                onRange={(x1, x2) => setRanges(prev => [...prev, { x1, x2 }])}
-                onRemoveRange={index => setRanges(prev => prev.filter((_, current) => current !== index))}
-                locked={false}
-                height={280}
-                yDomain={yDomain}
-              />
-            )}
-          </TelescopeConsole>
+              )}
+            </TelescopeConsole>
+          </div>
+
+          {!showMap && (
+            <GainControl gain={gain} onChange={setGain} />
+          )}
 
           {showMap ? (
             <div style={{ marginTop: 8, textAlign: 'center', fontFamily: 'var(--ln-font-mono)', fontSize: 10, color: targetChosen ? 'var(--ln-cyan)' : 'var(--ln-text-muted)' }}>
               {targetChosen
-                ? `Target locked — ${pool.find(c => c.id === targetChosen)?.toi ?? targetChosen}`
+                ? `Satellite will point here tomorrow — ${pool.find(c => c.id === targetChosen)?.toi ?? targetChosen}`
                 : 'Tap a star to point the satellite tomorrow · green = already searched'}
               {forceMapView && !classification && (
                 <>
@@ -373,7 +448,7 @@ export default function TessDiscoveryScreen({ player, inspectSubjectId, visualCa
           ) : (
             <div style={{ marginTop: 8, textAlign: 'center', fontFamily: 'var(--ln-font-mono)', fontSize: 10, color: markCount > 0 ? 'var(--ln-cyan)' : 'var(--ln-text-muted)' }}>
               {markCount === 0
-                ? 'Drag over the lightcurve to mark a transit'
+                ? 'Tap or drag over a dip to mark a transit'
                 : `${markCount} region${markCount !== 1 ? 's' : ''} marked`}
             </div>
           )}
@@ -400,12 +475,13 @@ export default function TessDiscoveryScreen({ player, inspectSubjectId, visualCa
               action={action}
               disabled={action.requiresMark && markCount === 0}
               onClick={() => castVerdict(action.id)}
+              coachTarget={action.id === 'planet' ? 'tess-confirm' : undefined}
             />
           ))}
         </div>
         {markCount > 0 && (
           <div style={{ marginTop: 8 }}>
-            <GhostBtn onClick={() => setRanges([])}>CLEAR MARKS</GhostBtn>
+            <GhostBtn onClick={() => setShownRanges([])}>CLEAR MARKS</GhostBtn>
           </div>
         )}
       </>
@@ -433,8 +509,13 @@ export default function TessDiscoveryScreen({ player, inspectSubjectId, visualCa
   ) : null
 
   return (
-    <div className="game-screen theme-deep ln-scene-tess-discovery" data-testid="tess-discovery-screen">
-      <TopBar eyebrow="INSTRUMENT DATA FEED · DAILY DOWNLINK" title={candidate.toi} onBack={onBack} />
+    <div ref={screenRef} className="game-screen theme-deep ln-scene-tess-discovery" data-testid="tess-discovery-screen">
+      <TopBar
+        eyebrow={training ? 'INSTRUMENT DATA FEED · TRAINING CURVE' : 'INSTRUMENT DATA FEED · DAILY DOWNLINK'}
+        title={candidate.toi}
+        onBack={onBack}
+        right={!classification && !coach.active ? <TessCoachHelpButton onClick={() => coach.start(false)} /> : undefined}
+      />
       {isDesktop || isCompactLandscape ? (
         /* SSL-300: the DEV day-skip bar used to be absolutely positioned over
            the grid, so its height was never subtracted from the space the
@@ -456,7 +537,7 @@ export default function TessDiscoveryScreen({ player, inspectSubjectId, visualCa
               <div style={{ display: 'flex', flexDirection: 'column', gap: 12, flex: '1 1 0px', minHeight: 0, overflowY: 'auto' }}>
                 <ObservatoryReadout stats={stats} />
                 {payoffPanel}
-                <CommentsPanel recordType="classification" recordId={candidate.id} />
+                {!training && <CommentsPanel recordType="classification" recordId={candidate.id} />}
               </div>
               <div style={{ flex: '0 0 auto', background: 'var(--ln-void)' }} data-ui-zone={UI_ZONES.bottomActions}>
                 {verdictActions}
@@ -474,9 +555,11 @@ export default function TessDiscoveryScreen({ player, inspectSubjectId, visualCa
           <div className={`screen-scroll${!classification && markCount > 0 ? ' screen-scroll--tall-actions' : ''}`} data-ui-zone={UI_ZONES.screenContent}>
             {chartPanel(true)}
             {payoffPanel && <div style={{ marginTop: 12 }}>{payoffPanel}</div>}
-            <div style={{ marginTop: 12 }}>
-              <CommentsPanel recordType="classification" recordId={candidate.id} />
-            </div>
+            {!training && (
+              <div style={{ marginTop: 12 }}>
+                <CommentsPanel recordType="classification" recordId={candidate.id} />
+              </div>
+            )}
           </div>
           <div className="sticky-actions" data-ui-zone={UI_ZONES.bottomActions}>
             {verdictActions}
@@ -484,7 +567,17 @@ export default function TessDiscoveryScreen({ player, inspectSubjectId, visualCa
         </>
       )}
 
-      {showCoach && <ObservatoryCoach onDismiss={coach.dismiss} />}
+      {coach.step && coach.stepIndex != null && (
+        <TessCoachOverlay
+          step={coach.step}
+          stepIndex={coach.stepIndex}
+          total={coach.total}
+          hint={coachHint}
+          rootRef={screenRef}
+          onSkip={coach.skip}
+          onDone={coachStepId === 'outcome' ? () => completeCoachStep('outcome') : undefined}
+        />
+      )}
     </div>
   )
 }
@@ -577,7 +670,7 @@ function LiveDot({ active }: { active: boolean }) {
   )
 }
 
-function VerdictButton({ action, disabled, onClick }: { action: { id: TessVerdict; label: string; kind: 'amber' | 'cyan' | 'ghost' }; disabled: boolean; onClick: () => void }) {
+function VerdictButton({ action, disabled, onClick, coachTarget }: { action: { id: TessVerdict; label: string; kind: 'amber' | 'cyan' | 'ghost' }; disabled: boolean; onClick: () => void; coachTarget?: string }) {
   const palette: Record<typeof action.kind, { border: string; bg: string; color: string; glow: string }> = {
     // "amber" kind is reserved for a future reward-tier verdict action; not
     // wired up by VERDICT_ACTIONS today. {/* amber allowed */}
@@ -589,6 +682,7 @@ function VerdictButton({ action, disabled, onClick }: { action: { id: TessVerdic
   return (
     <button
       data-testid={`tess-verdict-${action.id}`}
+      data-coach-target={coachTarget}
       onClick={!disabled ? onClick : undefined}
       disabled={disabled}
       style={{
@@ -609,5 +703,44 @@ function VerdictButton({ action, disabled, onClick }: { action: { id: TessVerdic
     >
       {action.label}
     </button>
+  )
+}
+
+// The UTC day the screen is showing: today, moved by the dev day-skip.
+function screenDateKey(devDayOffset: number): string {
+  const date = new Date()
+  if (devDayOffset) date.setDate(date.getDate() + devDayOffset)
+  return instrumentDigestDateKey(date)
+}
+
+// SSL-359: display gain for the flux axis. Low gain flattens the curve; the
+// TESS coach starts here so the player raises it until the dip shows.
+function GainControl({ gain, onChange }: { gain: number; onChange: (gain: number) => void }) {
+  return (
+    <label
+      data-coach-target="tess-gain"
+      style={{
+        display: 'flex', alignItems: 'center', gap: 'var(--ln-s-3)', minHeight: 44,
+        marginTop: 'var(--ln-s-2)', padding: '0 var(--ln-s-2)',
+      }}
+    >
+      <span style={{ fontFamily: 'var(--ln-font-display)', fontSize: 10, fontWeight: 800, letterSpacing: '0.16em', color: 'var(--ln-text-muted)', textTransform: 'uppercase' }}>
+        Gain
+      </span>
+      <input
+        type="range"
+        data-testid="tess-gain"
+        aria-label="Flux gain"
+        min={0}
+        max={1}
+        step={0.01}
+        value={sliderFromGain(gain)}
+        onChange={event => onChange(gainFromSlider(Number(event.target.value)))}
+        style={{ flex: 1, minWidth: 0, height: 32, accentColor: 'var(--ln-cyan)', cursor: 'pointer' }}
+      />
+      <span style={{ fontFamily: 'var(--ln-font-mono)', fontSize: 11, color: 'var(--ln-cyan)', minWidth: 32, textAlign: 'right' }}>
+        {gainLabel(gain)}
+      </span>
+    </label>
   )
 }

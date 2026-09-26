@@ -3,7 +3,7 @@ import { useRouter } from 'next/navigation'
 import type { RecordModel } from 'pocketbase'
 import { pbShared } from '@/lib/pb'
 import { pbLandnam, exchangeLandnamAuth } from '@/lib/pb-landnam'
-import { identifyUser, captureGameEvent } from '@/lib/posthog'
+import { identifyUser, captureGameEvent, resetAnalyticsIdentity } from '@/lib/posthog'
 import { DEFAULT_STATE, loadState, mergeRemoteState, type PartialSave } from '@/lib/game-state'
 import { accountGameStateStorageKey, gameStateStorageKey } from '@/lib/game-state-storage'
 import { isResumableMissionScreen } from '@/lib/initial-route'
@@ -280,7 +280,7 @@ export function useAuthSync({
     }
     if (!record) pbLandnam.authStore.clear()
     setAuthUserId(record?.id ?? null)
-    if (record?.id) identifyUser(record.id, record.email ? { email: record.email } : undefined)
+    identifyUser(record, pbShared.authStore.isValid)
   }), [])
 
   // Exchange the shared-backend session for a native Landnam auth token.
@@ -771,6 +771,9 @@ export function useAuthSync({
 
     pbShared.authStore.clear()
     pbLandnam.authStore.clear()
+    // SSL-357: the next sign-in on this device must start a new PostHog
+    // person, not inherit this one's distinct_id.
+    resetAnalyticsIdentity()
     localStorage.removeItem('landnam-account-credentials')
     localStorage.removeItem(storageKey)
     if (signedOutUserId) localStorage.removeItem(accountGameStateStorageKey(storageKey, signedOutUserId))

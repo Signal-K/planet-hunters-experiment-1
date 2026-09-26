@@ -1,4 +1,4 @@
-import { initPostHog, posthog } from '@/lib/posthog'
+import { captureSurveySent, initPostHog, posthog } from '@/lib/posthog'
 import { pbShared } from '@/lib/pb'
 import { queueCreate } from '@/lib/offline/pbOutbox'
 import { SURVEY_DEFS, type Survey } from '@/lib/survey-defs'
@@ -135,18 +135,7 @@ export function buildPostHogSurveyPayload(def: Survey, responses: SurveyResponse
 export function submitSurveyResponse(surveyKey: string, responses: SurveyResponses) {
   const def = SURVEY_DEFS[surveyKey]
   if (!def) return
-  initPostHog()
-  const payload = buildPostHogSurveyPayload(def, responses)
-  const fallbackCapture = () => posthog.capture('survey sent', payload)
-
-  fetch('/api/surveys', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ payload, distinctId: posthog.get_distinct_id?.() }),
-    keepalive: true,
-  }).then(response => {
-    if (!response.ok) fallbackCapture()
-  }).catch(fallbackCapture)
+  captureSurveySent(buildPostHogSurveyPayload(def, responses))
 
   const missionId = ONBOARDING_MISSION_ID[surveyKey]
   if (missionId) {

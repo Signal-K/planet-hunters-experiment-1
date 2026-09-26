@@ -5,7 +5,6 @@ import { useMemo, useState, type ReactNode } from 'react'
 import ObservatoryChart from '@/components/game/ObservatoryChart'
 import TelescopeConsole from '@/components/game/TelescopeConsole'
 import ObservatoryReadout from '@/components/game/ObservatoryReadout'
-import ObservatoryCoach, { useObservatoryCoach } from '@/components/game/ObservatoryCoach'
 import PixiGalaxyStarMap from '@/components/game/PixiGalaxyStarMap'
 import SolSystemPreview from '@/components/game/SolSystemPreview'
 import TopBar from '@/components/ui/TopBar'
@@ -171,8 +170,6 @@ function TransitDemo() {
     return [Math.min(...ys), Math.max(...ys)]
   }, [points])
   const stats = deriveObservatoryStats(candidate, points, activeRanges)
-  const coach = useObservatoryCoach()
-  const showCoach = coach.visible && !logged
 
   const castVerdict = (verdict: TessVerdict) => {
     if (logged) return
@@ -288,8 +285,6 @@ function TransitDemo() {
               </div>
             </Panel>
           </div>
-
-          {showCoach && <ObservatoryCoach onDismiss={coach.dismiss} />}
 
           <div className="sticky-actions" data-ui-zone={UI_ZONES.bottomActions}>
             {logged ? (

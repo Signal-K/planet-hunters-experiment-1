@@ -18,11 +18,15 @@ export default function TelescopeConsole({
   sector,
   targetCount,
   signal,
+  compact = false,
   children,
 }: {
   sector: string
   targetCount: number
   signal: number
+  /** Drops the decorative gauge row and status strip so the viewport and
+   *  the controls under it fit a landscape phone's height (SSL-359). */
+  compact?: boolean
   children: ReactNode
 }) {
   return (
@@ -57,24 +61,28 @@ export default function TelescopeConsole({
         {children}
       </div>
 
-      {/* Compact gauge row (compressed side-panel from the reference into one strip) */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gap: 6, padding: '8px 4px 4px' }}>
-        <GaugeBox icon={<Gauge size={13} />} label="FOCUS" level={0.7} color="var(--ln-cyan)" />
-        <GaugeBox icon={<Zap size={13} />} label="SIG" level={Math.max(0.05, Math.min(1, signal / 25))} color="var(--ln-amber)" />
-        <GaugeBox icon={<Wifi size={13} />} label="LINK" level={0.9} color="var(--ln-ok)" />
-        <GaugeBox icon={<Cpu size={13} />} label="DATA" level={0.55} color="#c084ff" />
-      </div>
+      {!compact && (
+        <>
+          {/* Compact gauge row (compressed side-panel from the reference into one strip) */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gap: 6, padding: '8px 4px 4px' }}>
+            <GaugeBox icon={<Gauge size={13} />} label="FOCUS" level={0.7} color="var(--ln-cyan)" />
+            <GaugeBox icon={<Zap size={13} />} label="SIG" level={Math.max(0.05, Math.min(1, signal / 25))} color="var(--ln-amber)" />
+            <GaugeBox icon={<Wifi size={13} />} label="LINK" level={0.9} color="var(--ln-ok)" />
+            <GaugeBox icon={<Cpu size={13} />} label="DATA" level={0.55} color="#c084ff" />
+          </div>
 
-      {/* Bottom status strip */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '6px 8px 4px', flexWrap: 'wrap' }}>
-        <span style={{ display: 'flex', alignItems: 'center', gap: 4, fontFamily: 'var(--ln-font-mono)', fontSize: 9, color: 'var(--ln-cyan-bright)' }}>
-          <HardDrive size={11} /> {sector.toUpperCase()}
-        </span>
-        <span style={{ width: 1, height: 12, background: 'var(--ln-hairline)' }} />
-        <span style={{ display: 'flex', alignItems: 'center', gap: 4, fontFamily: 'var(--ln-font-mono)', fontSize: 9, color: 'var(--ln-amber)' }}>
-          <Zap size={11} /> {targetCount} TARGET{targetCount !== 1 ? 'S' : ''}
-        </span>
-      </div>
+          {/* Bottom status strip */}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '6px 8px 4px', flexWrap: 'wrap' }}>
+            <span style={{ display: 'flex', alignItems: 'center', gap: 4, fontFamily: 'var(--ln-font-mono)', fontSize: 9, color: 'var(--ln-cyan-bright)' }}>
+              <HardDrive size={11} /> {sector.toUpperCase()}
+            </span>
+            <span style={{ width: 1, height: 12, background: 'var(--ln-hairline)' }} />
+            <span style={{ display: 'flex', alignItems: 'center', gap: 4, fontFamily: 'var(--ln-font-mono)', fontSize: 9, color: 'var(--ln-amber)' }}>
+              <Zap size={11} /> {targetCount} TARGET{targetCount !== 1 ? 'S' : ''}
+            </span>
+          </div>
+        </>
+      )}
     </div>
   )
 }

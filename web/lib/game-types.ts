@@ -347,6 +347,11 @@ export interface Player {
   // picked from the PixiGalaxyStarMap after classifying today's candidate.
   // Consumed (cleared) once that candidate becomes today's daily pick.
   satelliteTargetId?: string | null
+  // UTC date key (instrumentDigestDateKey) the pointing choice was made on.
+  // The pick only feeds downlinks dated after this day, so choosing a star
+  // never swaps out the curve the player is looking at (SSL-358). Absent on
+  // picks saved before this field existed; those apply straight away.
+  satelliteTargetChosenOn?: string | null
   // True when a global "5 players confirmed a planet" event happened that
   // this player hasn't acted on yet — lets them re-pick their satellite
   // target immediately instead of waiting for the normal daily cycle. See
@@ -538,7 +543,7 @@ export interface GameActions {
   abandonMission: () => void
   launchTransitSatellite: () => void
   submitTessClassification: (subjectId: string, verdict: TessVerdict, ranges: TransitRange[], discoveredTarget?: Target) => void
-  chooseSatelliteTarget: (subjectId: string) => void
+  chooseSatelliteTarget: (subjectId: string, dateKey?: string) => void
   submitAsteroidClassification: (candidateId: string, verdict: AsteroidVerdict) => void
   onRoverMiningDone: (cargo: Record<string, number>) => void
   onLandingTouchdown: () => void
