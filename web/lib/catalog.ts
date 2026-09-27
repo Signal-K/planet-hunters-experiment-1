@@ -33,6 +33,20 @@ export function mergeStructureCatalog(remote: StructureBlueprint[]): StructureBl
   return Array.from(merged.values())
 }
 
+// PocketBase JSON fields that are supposed to hold a mineral/material map
+// come back pre-parsed as an object when populated. JSON.parse() coerces its
+// argument to a string first, so calling it on a non-string (an array from a
+// misconfigured `[]` default, or an already-parsed object) throws instead of
+// parsing — only ever call it on an actual string.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function parseJsonMapField<T>(value: any, fallback: T): T {
+  if (value == null) return fallback
+  if (typeof value === 'string') {
+    try { return JSON.parse(value) } catch { return fallback }
+  }
+  return Array.isArray(value) ? fallback : value
+}
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function toTarget(r: any): Target {
   return {
@@ -52,19 +66,13 @@ export function toMission(r: any): Mission {
   if (r.slug === 'lnm_m3_ore_delivery' || r.slug === 'm3-nickel-cobalt' || r.slug === 'm3-gold' || r.slug === 'lnm_m3_custom_mining') {
     return AUTHORED_MISSIONS.find(m => m.sequence === M3_SEQUENCE) ?? AUTHORED_MISSIONS[0]
   }
-  const minerals = typeof r.requires_minerals === 'object' && !Array.isArray(r.requires_minerals)
-    ? r.requires_minerals
-    : JSON.parse(r.requires_minerals || '{}')
+  const minerals = parseJsonMapField<Record<string, number>>(r.requires_minerals, {})
   const fallbackClient = r.client_slug ? CLIENTS[r.client_slug] : undefined
   const rawBrief = r.brief ?? ''
   const brief = fallbackClient && /^(?:Client|Contractor) Slot\s+/i.test(rawBrief)
     ? rawBrief.replace(/(?:Client|Contractor) Slot\s+\d+[A-Z]?/i, fallbackClient.name)
     : rawBrief
-  const constructionMaterials = typeof r.construction_required_materials === 'object' && !Array.isArray(r.construction_required_materials)
-    ? r.construction_required_materials
-    : r.construction_required_materials
-      ? JSON.parse(r.construction_required_materials)
-      : undefined
+  const constructionMaterials = parseJsonMapField<Record<string, number> | undefined>(r.construction_required_materials, undefined)
   return {
     id: r.slug,
     title: r.title,
@@ -197,9 +205,7 @@ export function toStructure(r: any): StructureBlueprint {
     name: r.name,
     kind: r.kind ?? r.slug,
     cost: r.cost_francs ?? 0,
-    costMaterials: typeof r.cost_materials === 'object' && !Array.isArray(r.cost_materials)
-      ? r.cost_materials
-      : (r.cost_materials ? JSON.parse(r.cost_materials) : undefined),
+    costMaterials: parseJsonMapField<Record<string, number> | undefined>(r.cost_materials, undefined),
     unlocksAt: r.unlocks_at ?? '',
     unlockTrigger: r.unlock_trigger_type || undefined,
     description: r.description ?? '',

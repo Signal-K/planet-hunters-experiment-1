@@ -96,6 +96,8 @@ interface MiningCanvasProps {
   /** Signals an initialization failure so the enclosing screen can recover. */
   onFailure?: () => void
   fireRef: React.MutableRefObject<(() => void) | null>
+  /** Direct canvas tap/click must route back through the screen's fireLaser() so the charge-budget and gate checks it owns aren't bypassed — see the pointerdown handler below. */
+  onFireRequest?: () => void
   scrollRef: React.MutableRefObject<((dx: number) => void) | null>
   oreNearRef?: React.MutableRefObject<((near: boolean) => void) | null>
   /** Live-updating set of mineral keys still needed to fill the order — see MiningControllerOptions.neededMineralsRef. */
@@ -104,10 +106,12 @@ interface MiningCanvasProps {
   chargingRef?: React.MutableRefObject<((charging: boolean) => void) | null>
 }
 
-export default function MiningCanvas({ rocketImageSrc, minerals, requiredMinerals, mineralMeta, laserTier, onCollect, onReady, onFailure, fireRef, scrollRef, oreNearRef, neededMineralsRef, chargingRef }: MiningCanvasProps) {
+export default function MiningCanvas({ rocketImageSrc, minerals, requiredMinerals, mineralMeta, laserTier, onCollect, onReady, onFailure, fireRef, onFireRequest, scrollRef, oreNearRef, neededMineralsRef, chargingRef }: MiningCanvasProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const onCollectRef = useRef(onCollect)
   onCollectRef.current = onCollect
+  const onFireRequestRef = useRef(onFireRequest)
+  onFireRequestRef.current = onFireRequest
   const onReadyRef = useRef(onReady)
   onReadyRef.current = onReady
   const onFailureRef = useRef(onFailure)
@@ -296,7 +300,11 @@ export default function MiningCanvas({ rocketImageSrc, minerals, requiredMineral
 
         input = new InputManager(canvas, worldW, worldH)
         input.onAny(event => {
-          if (event.type === 'pointerdown') attemptFire()
+          // A direct canvas tap must go through the screen's fireLaser(), not
+          // straight to attemptFire() — otherwise it fires for real without
+          // ever consuming a laser charge, bypassing the charge-budget gate
+          // that fireLaser() owns (laserCharges, gateOpen, sceneStatus).
+          if (event.type === 'pointerdown') onFireRequestRef.current?.()
         })
         fireRef.current = attemptFire
         scrollRef.current = (dx: number) => {
@@ -344,6 +352,9 @@ export default function MiningCanvas({ rocketImageSrc, minerals, requiredMineral
       cancelAnimationFrame(rafId)
       destroyed = true
       if (chargeTimer) clearTimeout(chargeTimer)
+      if (missFlashTimerRef.current) clearTimeout(missFlashTimerRef.current)
+      if (hitFlashTimerRef.current) clearTimeout(hitFlashTimerRef.current)
+      if (tapAckTimerRef.current) clearTimeout(tapAckTimerRef.current)
       chargingRef?.current?.(false)
       fireRef.current = null
       scrollRef.current = null

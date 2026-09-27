@@ -691,6 +691,7 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
           onReady={() => setSceneStatus('ready')}
           onFailure={() => setSceneStatus('failed')}
           fireRef={fireRef}
+          onFireRequest={fireLaser}
           scrollRef={scrollRef}
           oreNearRef={oreNearRef}
           neededMineralsRef={neededMineralsRef}
