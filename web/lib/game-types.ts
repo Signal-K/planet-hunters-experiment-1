@@ -545,7 +545,7 @@ export interface GameActions {
   resetGame: () => void
   signOut: () => void
   upgradeLaunchpad: () => void
-  placeStructure: (structure: import('@/lib/data').StructureBlueprint | undefined, kind: string, plot: number) => void
+  placeStructure: (structure: import('@/lib/data').StructureBlueprint | undefined, kind: string, plot: number) => boolean
   excavateSubsurface: () => void
   buildSubsurfaceRoom: (roomId: import('@/lib/data').SubsurfaceRoomId) => void
   sellMinerals: (mineralId: string, amount: number) => void

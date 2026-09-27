@@ -13,6 +13,7 @@ import {
   filterInstrumentSignals,
   selectInstrumentSignalIndex,
 } from '@/lib/instrument-hub-state'
+import { UI_ZONES } from '@/lib/ui-zones'
 import type { Player } from '@/lib/game-types'
 import type { InstrumentSignal } from '@/lib/systems/InstrumentFeedSystem'
 import styles from './InstrumentHubScreen.module.css'
@@ -28,6 +29,8 @@ interface InstrumentHubScreenProps {
 
 export default function InstrumentHubScreen({ player, onBack, onInspect }: InstrumentHubScreenProps) {
   const { signals, loading } = useInstrumentSignals(player)
+  const transitOnline = !!player.transitSatelliteLaunchedAt
+  const deepSpaceOnline = !!player.deepSpaceTelescopeBuilt
   const [view, setView] = useState(DEFAULT_INSTRUMENT_HUB_VIEW)
   const [armed, setArmed] = useState(false)
 

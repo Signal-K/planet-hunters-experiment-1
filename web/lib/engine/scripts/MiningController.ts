@@ -77,6 +77,8 @@ export interface MiningControllerOptions {
   onCollect: (mineral: string) => void
   /** Called when a laser exits the world without hitting any ore (miss). */
   onMiss?: () => void
+  /** Called the instant a laser collides with ore. Fires on every hit, whether or not it destroys the ore. */
+  onHit?: () => void
   /** Called every update with the total horizontal scroll distance so callers can sync visual layers. */
   onScroll?: (scrollX: number) => void
   /** Called when any ore enters or leaves the "fire now" window around SHIP_X. */
@@ -327,6 +329,7 @@ export class MiningController extends ScriptBehaviour {
 
         ore.hp -= 1
         laser.go.active = false
+        this.opts.onHit?.()
 
         if (ore.hp <= 0) {
           ore.go.active = false

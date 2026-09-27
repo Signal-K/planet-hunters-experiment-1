@@ -30,7 +30,7 @@ const STRUCTURE_COLORS: Record<string, string> = {
 }
 
 interface BuildPlaceScreenProps {
-  onPlaced: (kind: string, plot: number) => void
+  onPlaced: (kind: string, plot: number) => boolean
   onBack: () => void
   hasCoach?: boolean
   player: {
@@ -439,7 +439,18 @@ export default function BuildPlaceScreen({ onPlaced, onBack, hasCoach, player }:
         {/* Mint/green, not amber: the Earth Base flow carries no amber (see
             landnam-earth-base-v2.html, whose confirm sheet is --ln-ok), and
             amber is reserved for payout emphasis, never a primary button. */}
-        <PrimaryBtn kind="green" disabled={cell == null || !sel} onClick={() => cell != null && sel && onPlaced(sel.id, cell)}>
+        <PrimaryBtn
+          kind="green"
+          disabled={cell == null || !sel}
+          onClick={() => {
+            if (cell == null || !sel) return
+            if (onPlaced(sel.id, cell)) return
+            setBlocked({
+              id: sel.id,
+              reason: 'Placement could not be confirmed. Check requirements and try again.',
+            })
+          }}
+        >
           Confirm · Build Here →
         </PrimaryBtn>
       </div>

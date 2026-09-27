@@ -25,6 +25,11 @@ export function initPostHog() {
     // — see the 2026-09-11 instrumentation coverage audit) get a passive
     // usage signal this way instead of adding more popovers.
     capture_heatmaps: true,
+    // SSL-342: a click that produces no visible DOM change within PostHog's
+    // own dead-click window is the clearest signal of "player expected this
+    // to do something and it didn't": exactly the friction the agency-loop
+    // funnel needs alongside the explicit screen/tutorial/Free-Ops events.
+    capture_dead_clicks: true,
     // Session replay complements the qualitative surveys (mining feel,
     // launch feel, mission friction) by letting the team watch the actual
     // friction instead of only reading a rating. Mask all text inputs by

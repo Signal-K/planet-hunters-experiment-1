@@ -160,6 +160,7 @@ export const DEV_GROUPS: DevGroup[] = [
     color: '#39d36a',
     shots: [
       { key: 'ui-mission-board', label: 'Mission Board', hint: 'Recent OD layout restyle with client cards — Free Ops unlocked, tutorial off', stage: 'free-ops' },
+      { key: 'ui-build', label: 'Build', hint: 'Free Ops construction state with a silo, mining settlement, and refinery materials', stage: 'free-ops' },
       { key: 'ui-skill-tree', label: 'Skill Tree', hint: 'License Grade and research XP progress screen — post-onboarding, Free Ops unlocked', stage: 'free-ops' },
       { key: 'ui-target-picker', label: 'Target Picker', hint: 'Solar map target selection with a mission loaded — missionsDone: 2, Free Ops NOT unlocked', stage: 'tutorial' },
       { key: 'ui-tess-discovery', label: 'TESS Console', hint: 'Transit telescope classification screen — post-onboarding, Free Ops unlocked', stage: 'free-ops' },
@@ -411,6 +412,26 @@ export function resolvePreset(name: string): Partial<GameState> | null {
         },
         tutorial: false,
         doneSteps: M1_AND_M2_DONE,
+        missionId: null,
+        targetId: null,
+        rocket: { chassis: 'hull-mk2', propulsion: 'fusion-b2', drill: 'laser-t2' },
+        lastCargo: null,
+        popup: null,
+      }
+
+    case 'ui-build':
+      return {
+        screen: 'build',
+        player: {
+          ...POST_ONBOARDING_PLAYER,
+          francs: 1_000_000_000,
+          placed: ['launchpad', 'surface-silo'],
+          placementPlots: { launchpad: 0, 'surface-silo': 2 },
+          stash: { aluminium: 20, copper: 10 },
+          surfaceOps: { sites: { 'mars-arcadia': { storage: {}, siteAccessPurchasedAt: 1 } } },
+        },
+        tutorial: false,
+        doneSteps: M1_M2_M3_DONE,
         missionId: null,
         targetId: null,
         rocket: { chassis: 'hull-mk2', propulsion: 'fusion-b2', drill: 'laser-t2' },

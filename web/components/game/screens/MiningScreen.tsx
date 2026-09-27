@@ -285,6 +285,15 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
   const [oreNear, setOreNear] = useState(false)
   oreNearRef.current = (near: boolean) => setOreNear(near)
 
+  // Fire cooldown state lives in MiningCanvas (it must gate both the button
+  // and a direct canvas tap). chargingRef mirrors it up here the same way
+  // oreNearRef mirrors ore-proximity, purely for the button's own display.
+  const chargingRef = useRef<((charging: boolean) => void) | null>(null)
+  const [isCharging, setIsCharging] = useState(false)
+  chargingRef.current = (charging: boolean) => setIsCharging(charging)
+  const [tapDenied, setTapDenied] = useState(false)
+  const tapDeniedTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
   // Kept current every render (cheap Set build) so the "fire now" flash only
   // lights up for ore whose mineral is still short of the order — not any
   // ore in the deposit's full mineral pool.
@@ -310,6 +319,8 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
     firedRef.current = false
     setSceneStatus('loading')
     setRunKey(k => k + 1)
+    if (tapDeniedTimerRef.current) clearTimeout(tapDeniedTimerRef.current)
+    setTapDenied(false)
   }
 
   const collectMineral = useCallback((mineral: string) => {
@@ -344,6 +355,14 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
 
   function fireLaser() {
     if (gateOpen || sceneStatus !== 'ready' || laserCharges <= 0) return
+    if (isCharging) {
+      // Tap landed mid-cooldown: acknowledge it instead of silently dropping
+      // it, so a phone tester never wonders whether the tap registered.
+      if (tapDeniedTimerRef.current) clearTimeout(tapDeniedTimerRef.current)
+      setTapDenied(true)
+      tapDeniedTimerRef.current = setTimeout(() => setTapDenied(false), 160)
+      return
+    }
     if (aimCoach.visible) aimCoach.dismiss()
     setLaserCharges(c => c - 1)
     fireRef.current?.()
@@ -362,7 +381,7 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [laserCharges, sceneStatus])
+  }, [laserCharges, sceneStatus, isCharging])
 
   function handleReturn() {
     if (orderFilled || laserCharges <= 0) onComplete(cargoRef.current, remoteDisposition, earthDisposition ?? undefined)
@@ -675,6 +694,7 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
           scrollRef={scrollRef}
           oreNearRef={oreNearRef}
           neededMineralsRef={neededMineralsRef}
+          chargingRef={chargingRef}
         />
         {sceneStatus !== 'ready' && (
           <div className="mining-scene-status" role="status" aria-live="polite" data-testid="mining-scene-status">
@@ -803,13 +823,18 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
               transition: 'box-shadow 150ms',
             }}>
           <button
-            className="mining-command mining-command--fire"
+            className={[
+              'mining-command mining-command--fire',
+              isCharging && 'mining-command--charging',
+              tapDenied && 'mining-command--tap-denied',
+            ].filter(Boolean).join(' ')}
             type="button"
             disabled={gateOpen || sceneStatus !== 'ready' || laserCharges <= 0}
             data-testid="fire-laser-btn"
+            data-charging={isCharging}
             onClick={fireLaser}
           >
-            {laserCharges > 0 ? 'FIRE LASER' : 'DEPLETED'}
+            {laserCharges <= 0 ? 'DEPLETED' : isCharging ? 'CHARGING' : 'FIRE LASER'}
           </button>
           </div>
           <div style={{ minWidth: 0 }}>

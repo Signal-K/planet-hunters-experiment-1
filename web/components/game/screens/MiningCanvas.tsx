@@ -24,6 +24,10 @@ const SURFACE_TILE_W = 320
 
 const SKY_COLOR = 0x03060c
 
+// Minimum gap between shots: long enough that a mashed tap reads as
+// deliberately ignored (not dropped input), short enough not to feel laggy.
+const FIRE_COOLDOWN_MS = 420
+
 function buildStars(worldW: number, surfaceY: number): Graphics {
   const g = new Graphics()
   const stars: [number, number, number, number][] = [
@@ -96,9 +100,11 @@ interface MiningCanvasProps {
   oreNearRef?: React.MutableRefObject<((near: boolean) => void) | null>
   /** Live-updating set of mineral keys still needed to fill the order — see MiningControllerOptions.neededMineralsRef. */
   neededMineralsRef?: React.MutableRefObject<Set<string> | null>
+  /** Pushed true immediately after a shot fires, false once the cooldown clears. Mirrors the oreNearRef push pattern so the screen can show ready/charging state without owning the timer. */
+  chargingRef?: React.MutableRefObject<((charging: boolean) => void) | null>
 }
 
-export default function MiningCanvas({ rocketImageSrc, minerals, requiredMinerals, mineralMeta, laserTier, onCollect, onReady, onFailure, fireRef, scrollRef, oreNearRef, neededMineralsRef }: MiningCanvasProps) {
+export default function MiningCanvas({ rocketImageSrc, minerals, requiredMinerals, mineralMeta, laserTier, onCollect, onReady, onFailure, fireRef, scrollRef, oreNearRef, neededMineralsRef, chargingRef }: MiningCanvasProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const onCollectRef = useRef(onCollect)
   onCollectRef.current = onCollect
@@ -115,6 +121,22 @@ export default function MiningCanvas({ rocketImageSrc, minerals, requiredMineral
     setMissFlash(true)
     missFlashTimerRef.current = setTimeout(() => setMissFlash(false), 280)
   }
+  const [hitFlash, setHitFlash] = useState(false)
+  const hitFlashTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const onHitRef = useRef<(() => void) | null>(null)
+  onHitRef.current = () => {
+    if (hitFlashTimerRef.current) clearTimeout(hitFlashTimerRef.current)
+    setHitFlash(true)
+    hitFlashTimerRef.current = setTimeout(() => setHitFlash(false), 220)
+  }
+  const [tapAck, setTapAck] = useState(false)
+  const tapAckTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const onTapAckRef = useRef<(() => void) | null>(null)
+  onTapAckRef.current = () => {
+    if (tapAckTimerRef.current) clearTimeout(tapAckTimerRef.current)
+    setTapAck(true)
+    tapAckTimerRef.current = setTimeout(() => setTapAck(false), 160)
+  }
 
   useEffect(() => {
     const parent = containerRef.current
@@ -130,6 +152,7 @@ export default function MiningCanvas({ rocketImageSrc, minerals, requiredMineral
     let input: InputManager | null = null
     let destroyed = false
     let rafId = 0
+    let chargeTimer: ReturnType<typeof setTimeout> | null = null
 
     const doInit = async () => {
       try {
@@ -227,6 +250,7 @@ export default function MiningCanvas({ rocketImageSrc, minerals, requiredMineral
             shakeState.timer = 0.28
             onMissRef.current?.()
           },
+          onHit: () => onHitRef.current?.(),
           onScroll: scrollX => {
             surfaceContainer.x = -(scrollX % SURFACE_TILE_W)
           },
@@ -248,11 +272,33 @@ export default function MiningCanvas({ rocketImageSrc, minerals, requiredMineral
         controllerObj?.addComponent(controller)
         controllerRef.current = controller
 
+        // Cooldown lives here, not in MiningScreen, because it must gate BOTH
+        // entry points to controller.fireLaser(): the FIRE LASER button (via
+        // fireRef) and a direct tap/click on the canvas itself (pointerdown
+        // below). isCharging is pushed up through chargingRef the same way
+        // oreNearRef pushes ore-proximity — the screen just mirrors it, it
+        // never owns the timer.
+        let isCharging = false
+        const attemptFire = () => {
+          if (isCharging) {
+            onTapAckRef.current?.()
+            return
+          }
+          controller.fireLaser()
+          isCharging = true
+          chargingRef?.current?.(true)
+          if (chargeTimer) clearTimeout(chargeTimer)
+          chargeTimer = setTimeout(() => {
+            isCharging = false
+            chargingRef?.current?.(false)
+          }, FIRE_COOLDOWN_MS)
+        }
+
         input = new InputManager(canvas, worldW, worldH)
         input.onAny(event => {
-          if (event.type === 'pointerdown') controller.fireLaser()
+          if (event.type === 'pointerdown') attemptFire()
         })
-        fireRef.current = () => controller.fireLaser()
+        fireRef.current = attemptFire
         scrollRef.current = (dx: number) => {
           const speed = SCROLL_SPEED + dx * (dx > 0 ? SCROLL_SPEED_MAX - SCROLL_SPEED : SCROLL_SPEED - SCROLL_SPEED_MIN)
           controller.setScrollSpeed(speed)
@@ -297,6 +343,8 @@ export default function MiningCanvas({ rocketImageSrc, minerals, requiredMineral
     return () => {
       cancelAnimationFrame(rafId)
       destroyed = true
+      if (chargeTimer) clearTimeout(chargeTimer)
+      chargingRef?.current?.(false)
       fireRef.current = null
       scrollRef.current = null
       if (oreNearRef) oreNearRef.current = null
@@ -321,6 +369,22 @@ export default function MiningCanvas({ rocketImageSrc, minerals, requiredMineral
         background: 'radial-gradient(circle at 50% 52%, rgba(255,90,106,0.48) 0%, rgba(255,90,106,0.18) 18%, transparent 42%)',
         opacity: missFlash ? 1 : 0,
         transition: missFlash ? 'none' : 'opacity 280ms ease-out',
+      }} />
+      <div data-testid="mining-hit-flash" style={{
+        position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 10,
+        // Same localized-lane treatment as the miss flash, cyan instead of red
+        // so hit vs miss reads instantly without needing to watch the ore itself.
+        background: 'radial-gradient(circle at 50% 52%, rgba(156,236,255,0.42) 0%, rgba(156,236,255,0.14) 18%, transparent 42%)',
+        opacity: hitFlash ? 1 : 0,
+        transition: hitFlash ? 'none' : 'opacity 220ms ease-out',
+      }} />
+      <div data-testid="mining-tap-ack" style={{
+        position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 10,
+        // Neutral, low-opacity: a tap during the fire cooldown, distinct from
+        // both the cyan hit flash and red miss flash so it never reads as a shot result.
+        background: 'radial-gradient(circle at 50% 52%, rgba(255,255,255,0.22) 0%, transparent 32%)',
+        opacity: tapAck ? 1 : 0,
+        transition: tapAck ? 'none' : 'opacity 160ms ease-out',
       }} />
     </div>
   )

@@ -158,7 +158,7 @@ describe('Smoke — Landnam', () => {
     cy.contains('Arcturus Battery Systems').scrollIntoView().should('exist')
   })
 
-  it('shows refinery as buildable from structure seed data in Free Ops', () => {
+  it('places a refinery from the Build screen in Free Ops', () => {
     visitWithState({
       screen: 'build',
       tutorial: false,
@@ -167,9 +167,10 @@ describe('Smoke — Landnam', () => {
         missionsDone: 3,
         freeOperations: true,
         refineryUnlocked: true,
-        placed: ['launchpad'],
-        placementPlots: { launchpad: 0 },
+        placed: ['launchpad', 'surface-silo'],
+        placementPlots: { launchpad: 0, 'surface-silo': 2 },
         stash: { aluminium: 20, copper: 10 },
+        surfaceOps: { sites: { 'mars-arcadia': { storage: {}, siteAccessPurchasedAt: 1 } } },
       },
     })
 
@@ -177,5 +178,9 @@ describe('Smoke — Landnam', () => {
     cy.contains('8,000,000').should('be.visible')
     cy.contains('20 aluminium').should('be.visible')
     cy.contains('10 copper').should('be.visible')
+    cy.contains('button', 'Refinery').click()
+    cy.get('[data-testid="build-plot-1"]').click()
+    cy.contains('button', 'Confirm · Build Here').click()
+    cy.get('[data-testid="building-refinery-hit"]', { timeout: 10000 }).should('be.visible')
   })
 })

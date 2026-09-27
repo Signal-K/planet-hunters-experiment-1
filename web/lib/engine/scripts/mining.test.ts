@@ -173,6 +173,23 @@ describe('MiningController', () => {
     expect(onCollect).toHaveBeenCalled()
     expect(onCollect.mock.calls[0][0]).toBe('iron')
   })
+
+  it('calls onHit on every collision, including a partial hit that does not destroy the ore', () => {
+    const onHit = vi.fn()
+    const { controller, host } = makeController(vi.fn(), { onHit })
+    controller.start()
+    const ore = host.children.find(c => c.id === 'ore-0')!
+    ore.transform.position.x = 80
+    ore.transform.position.y = 190
+
+    controller.fireLaser()
+    const laser = host.children.find(c => c.id.startsWith('laser-') && c.active)!
+    laser.transform.position.x = 80
+    laser.transform.position.y = 190
+    controller.update(0)
+
+    expect(onHit).toHaveBeenCalledTimes(1)
+  })
 })
 
 interface MockLabel { text: string; x: number; visible: boolean; destroy: () => void; style: { fontSize: number } }

@@ -8,6 +8,16 @@
 - Every subject must be `🚀🐺 ↝ [KES-299 ATL-999]: Commit message`: two different non-flag, non-smiley/human-face emoji; exact arrow and spacing; every worked ticket key in one space-separated bracket pair including the active Desk key; concise achieved outcome.
 - A coding request authorizes the final task commit unless the user says not to commit. Never bypass the hook with `--no-verify`.
 
+## Branching workflow (Linear cycle branches)
+
+Decided 2026-09-27. Full rationale in ZenNotes `projects/landnam/decisions/Landnam branching workflow (cycle branches, Friday PR, Saturday review).md`. Applies to every agent working in this repo (Claude, Codex, OpenCode).
+
+- At the start of each Linear cycle, create (or check out) an integration branch `cycle/<cycle-number>` off `main` (e.g. `cycle/3`). This is the week's development branch: all ticket work for that cycle lands here first.
+- Never push directly to `main`/`master` during the week, not even for a single small fix. Work happens on `cycle/<N>` (or a short-lived branch merged into it).
+- Friday: open a PR from `cycle/<N>` into `main`/`master` covering that week's work.
+- Saturday: review day for that PR. Fixes from review go back onto `cycle/<N>`, updating the PR, before it merges.
+- Before starting any coding task, confirm you are on (or have branched from) the current cycle's `cycle/<N>` branch, not `main` and not a stale branch from a prior cycle.
+
 ## Desk-first agent workflow
 
 **Desk is the sole project-management system for Landnam.** Resolve or create the relevant Desk ticket before changing code, keep its status current, and add implementation evidence before finishing. Historical `KES-` references may be included alongside the active Desk key, but Linear is not the live task system.

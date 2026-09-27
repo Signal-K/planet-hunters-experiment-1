@@ -644,7 +644,7 @@
 @keyframes inspect-vehicle { 0%, 70% { left: 2%; opacity: 0; } 76% { opacity: 1; } 94% { left: 98%; opacity: 1; } 100% { left: 98%; opacity: 0; } }
 @keyframes assembly-cable { 0% { transform: scaleY(.2); } 24% { transform: scaleY(1); } 70%, 100% { transform: scaleY(.45); } }
 
-button:focus-visible { outline: 4px solid var(--ln-cyan); outline-offset: 3px; }
+.root button:focus-visible { outline: 4px solid var(--ln-cyan); outline-offset: 3px; }
 
 @media (max-width: 980px) {
   .header { inset-inline: 16px; }

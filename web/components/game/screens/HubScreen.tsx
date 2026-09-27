@@ -2,7 +2,6 @@
 
 import React, { useEffect, useState } from 'react'
 import type { Player, Screen } from '@/game-context'
-import ProgressionCard from '@/components/game/ProgressionCard'
 import ActionConfirmBar from '@/components/game/ActionConfirmBar'
 import { Scene } from '@/lib/engine/Scene'
 import type { EntityData } from '@/lib/engine/types'
@@ -313,17 +312,9 @@ export default function HubScreen({ player, rocketVariant = 'explorer', hasCoach
     }]
   })
   const launchpadPlot = hubBuildings.find(building => building.kind === 'launchpad')
-  // Launchpad speech bubble — the base "speaking up" when it has a prompt and
-  // nothing else on screen is already making it.
-  //
-  // It is deliberately mutually exclusive with ProgressionCard: that stack
-  // renders whenever there's an active mission, a pending launch, or any
-  // completed mission, and it phrases the very same prompts ("Browse
-  // Contracts", "Open Launchpad"). Showing both put two copies of one call to
-  // action on screen at once, physically overlapping at portrait width. So the
-  // callout is scoped to the one state the card stack stays empty for — a
-  // launchpad standing on an Ops 0 base with nothing in flight, which is
-  // exactly the state the Open Design mockup depicts.
+  // The launchpad speaks only while the Base has no live run. Progression is
+  // now exposed through contextual buildings and the persistent chrome rather
+  // than a generic card laid over the landscape.
   const hasProgressionCards = !!player.activeMission || !!player.pendingLaunch || player.missionsDone > 0
   const launchpadCallout: BuildingCallout | undefined =
     hasCoach || hasProgressionCards
@@ -402,14 +393,10 @@ export default function HubScreen({ player, rocketVariant = 'explorer', hasCoach
   return (
     <div className={layoutStyles.root} data-screen="hub" style={{ width: '100%', height: '100%', position: 'relative', overflow: 'hidden' }}>
 
-      {/* ── Sliding world: surface (top 50%) + subsurface (bottom 50%) ── */}
-      <div className="earth-base-campus-transition" style={{
-        position: 'absolute', left: 0, right: 0,
-        top: subsurface ? '-100%' : '0%',
-        height: '200%',
-        transition: 'top 0.55s cubic-bezier(0.4, 0, 0.2, 1)',
-        willChange: 'top',
-      }}>
+      {/* Base stays mounted at its authored camera frame while a tray is open.
+          The former 200%-tall slider moved the whole world before revealing
+          Subsurface, which made close feel like a navigation reset. */}
+      <div style={{ position: 'absolute', inset: 0 }}>
 
         {/* ─── ABOVE GROUND ─── top half of slider */}
         {/* The scene still runs full-bleed behind the translucent dock — that
@@ -419,7 +406,7 @@ export default function HubScreen({ player, rocketVariant = 'explorer', hasCoach
             any lift at all. */}
         <div
           className={layoutStyles.surface}
-          style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '50%', overflow: 'hidden' }}
+          style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '100%', overflow: 'hidden' }}
         >
           {/* World background: sky, starfield, ridge parallax, ground, plateau */}
           <HubWorldBackground phase={skyPhase} />
@@ -428,6 +415,19 @@ export default function HubScreen({ player, rocketVariant = 'explorer', hasCoach
           {/* Drifting ambient motes — replaces the old daylight cloud layer,
               which read as overcast weather against the new deep-blue sky. */}
           <AmbientMotes />
+
+          {player.activeMission && (
+            <button
+              type="button"
+              className="hub-sky-craft-control"
+              data-testid="hub-sky-craft"
+              aria-label={`Resume ${player.activeMission.label}`}
+              onClick={() => onOpenScene(missionResumeScreen(player))}
+            >
+              <span aria-hidden="true">◇</span>
+              <span>{player.missionPhase === 'mining' ? 'MINING CRAFT' : 'CRAFT IN TRANSIT'}</span>
+            </button>
+          )}
 
           {(player.transitSatelliteLaunchedAt || player.deepSpaceTelescopeBuilt) && (
             <OrbitalInstrumentNetwork
@@ -482,8 +482,8 @@ export default function HubScreen({ player, rocketVariant = 'explorer', hasCoach
           <SoilCrossSection />
         </div>
 
-        {/* ─── BELOW GROUND ─── bottom half of slider */}
-        <div style={{ position: 'absolute', top: '50%', left: 0, right: 0, height: '50%', overflow: 'hidden' }}>
+        {/* Subsurface is a tray over the still-mounted Base, never a camera slide. */}
+        <div style={{ position: 'absolute', inset: 0, zIndex: 30, overflow: 'auto', display: subsurface ? 'block' : 'none', background: 'var(--ln-void)' }}>
           <HubSubsurfaceView
             stash={player.stash}
             installedParts={player.shipCustomizerParts}
@@ -498,7 +498,7 @@ export default function HubScreen({ player, rocketVariant = 'explorer', hasCoach
         </div>
 
       </div>
-      {/* ── End sliding world ── */}
+      {/* ── End persistent Base world ── */}
 
       {/* Top HUD — always fixed above the slide. Rebuilt 2026-08-21 (KES-226)
           back to a dark scrim (the KES-220 light version was scrapped same
@@ -528,20 +528,6 @@ export default function HubScreen({ player, rocketVariant = 'explorer', hasCoach
           </div>
         )}
       </div>
-
-      {/* The progression card is the Hub's single action surface. Buildings
-          remain directly selectable in edit mode; a second generic actions
-          panel duplicated these same routes and obscured the scene. */}
-      {!player.activeMission && (!hasCoach || !!player.pendingLaunch) && !subsurface && (
-        <>
-          <ProgressionCard
-            player={player}
-            onOpenScene={onOpenScene}
-            onDismissPrompt={onDismissHubPrompt}
-            top={hasCoach ? TUTORIAL_CONTENT_TOP : TUTORIAL_RAIL.TOP_CHROME_HEIGHT + 8 + HUB_HUD_RAIL_CLEARANCE}
-          />
-        </>
-      )}
 
       {confirmingLaunchpadUpgrade && onUpgradeLaunchpad && (
         <ActionConfirmBar

@@ -7,7 +7,7 @@ import { FREE_OPS_START_MISSIONS_DONE } from '@/lib/data/mission-generator'
 import TutorialCoach from '@/components/game/TutorialCoach'
 import UnlockPopup from '@/components/game/UnlockPopup'
 import { TutorialCompleteSheet } from '@/components/game/TutorialCompleteSheet'
-import BottomTabBar from '@/components/layout/BottomTabBar'
+import { GameChromeBars } from '@/components/layout/GameChromeBars'
 import BackendStatus from '@/components/game/BackendStatus'
 import LandnamSyncStatus from '@/components/game/LandnamSyncStatus'
 import { PushOptIn } from '@/components/game/PushOptIn'
@@ -129,26 +129,33 @@ function GameChrome({ children }: { children: ReactNode }) {
   const coachIndex = coach ? coachSteps.findIndex(step => step.id === coach.id) : -1
   const hasCoach = !!coach
 
-  // The Mission → Target → Rocket → Launch flow owns one stable frame. The
-  // bottom navigation would reserve a different amount of viewport height on
-  // the Mission step and make that frame jump when the player advances.
-  const showNav = ['hub', 'skills', 'mission-history'].includes(currentScreen)
   const showFeedback = currentScreen === 'hub'
     && !game.subsurfaceView
     && !game.popup
     && !game.authGateOpen
 
-  function goFromNav(id: string) {
-    if (id === 'missions') { game.goToMissions(); return }
-    if (id === 'fab') { game.go(game.mission && game.target ? 'fab' : 'missions'); return }
-    if (id === 'market') { game.go('market'); return }
-    if (id === 'skills') { game.go('skills'); return }
-    game.go(id as Parameters<typeof game.go>[0])
+  const resumeOperations = () => {
+    if (game.player.activeMission) {
+      const phase = game.player.missionPhase
+      game.go(phase === 'mining' ? 'mining' : phase === 'debrief' ? 'debrief' : 'transit')
+      return
+    }
+    game.goToMissions()
   }
 
   const currentNav = ['missions', 'targets'].includes(currentScreen)
     ? 'missions'
     : currentScreen === 'mission-history' ? 'mission-history' : currentScreen === 'instrument-hub' || currentScreen === 'galaxy' ? 'instrument-hub' : currentScreen === 'fab' ? 'fab' : currentScreen === 'skills' ? 'skills' : 'hub'
+  useEffect(() => {
+    function onKeyDown(event: KeyboardEvent) {
+      if (event.defaultPrevented || event.metaKey || event.ctrlKey || event.altKey) return
+      if (event.key === 'Escape') { setSettingsOpen(false); setFriendsOpen(false); setCommunityOpen(false); return }
+      if (event.key.toLowerCase() === 'm') { if (game.player.freeOperations) game.go('market'); return }
+      if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') resumeOperations()
+    }
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+  }, [game, resumeOperations])
   // Location screens (physical places in the game world, and the mission-run
   // sequence through them) own the full viewport instead of sitting inside
   // the generic desktop device-card — that boxed treatment is for menus
@@ -194,25 +201,6 @@ function GameChrome({ children }: { children: ReactNode }) {
         )}
         <DevShortcuts />
 
-        {/* Account access belongs to the shared shell, not to one scene. A
-            player can leave the Hub for mission setup, flight, or debrief,
-            so this remains available across every gameplay route. */}
-        {currentScreen !== 'intro' && !game.authGateOpen && (
-          <button
-            data-testid="settings-button"
-            aria-label="Open menu"
-            aria-expanded={settingsOpen}
-            onClick={() => setSettingsOpen(true)}
-            className="game-menu-button"
-          >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <circle cx="12" cy="12" r="3" />
-              <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 01-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z" />
-            </svg>
-            <span>Menu</span>
-          </button>
-        )}
-
         {/* Friends — same porting fix as Settings above (KES-233): the
             legacy GameApp.tsx shell isn't what serves /game/hub, so KES-83's
             corner button needs its own copy here too. Hub only. */}
@@ -240,7 +228,18 @@ function GameChrome({ children }: { children: ReactNode }) {
         <ToastLayer toasts={game.toasts} onDismiss={game.dismissToast} />
         {showFeedback && <FeedbackButton />}
         <SurveySheet blockWhile={!!game.popup || !!coach || !!game.pendingTerritoryClaimFor || !isSurveySafeScreen(currentScreen)} />
-        {showNav && <BottomTabBar current={currentNav} onNav={goFromNav} />}
+        {currentScreen !== 'intro' && !game.authGateOpen && (
+          <GameChromeBars
+            screen={currentScreen}
+            missionsDone={game.player.missionsDone}
+            hasActiveRun={!!game.player.activeMission}
+            onHome={() => game.go('hub')}
+            onOperations={resumeOperations}
+            onMarket={() => game.player.freeOperations && game.go('market')}
+            onMenu={() => setSettingsOpen(true)}
+            menuExpanded={settingsOpen}
+          />
+        )}
 
         {coach && !game.popup && !game.authGateOpen && (
           <TutorialCoach
