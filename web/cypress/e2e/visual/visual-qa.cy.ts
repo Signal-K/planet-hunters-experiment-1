@@ -278,8 +278,11 @@ describe('Visual QA — game screens and mining canvas', () => {
       .invoke('prop', 'height')
       .should('be.gt', 0)
 
-    // Fire all 5 laser charges — some will miss → flash overlay activates.
-    // 5 is the energy cap; firing more makes the button disabled.
+    // Fire up to 5 laser charges — some will miss → flash overlay activates.
+    // 5 is the energy cap. SSL-360 added a ~420ms fire cooldown, so most of
+    // these clicks land mid-cooldown and are acknowledged-but-ignored rather
+    // than actually firing — that's fine here, this only needs one real shot
+    // to exercise the canvas's flash overlays, not five.
     for (let i = 0; i < 5; i++) {
       cy.get('[data-testid="fire-laser-btn"]').should('not.be.disabled').click()
       cy.wait(100)

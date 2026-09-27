@@ -2100,6 +2100,27 @@ button { cursor: pointer; }
   color: var(--ln-text-muted) !important;
   cursor: not-allowed;
 }
+/* SSL-360: distinct states for the fire cooldown — CHARGING must read as
+   "busy, not broken" (pulsing border, dimmed fill) and a tap that lands mid-
+   cooldown must visibly bounce so the player knows the tap registered. */
+.theme-deep.mining-screen .mining-command--charging {
+  border-color: var(--ln-cyan-border);
+  background: rgba(63, 169, 255, 0.06) !important;
+  color: var(--ln-text-muted) !important;
+  animation: ln-mining-charge-pulse 420ms ease-in-out;
+}
+.theme-deep.mining-screen .mining-command--tap-denied {
+  animation: ln-mining-tap-denied 160ms ease-out;
+}
+@keyframes ln-mining-charge-pulse {
+  0% { box-shadow: 0 0 0 0 rgba(63, 169, 255, 0.55) !important; }
+  100% { box-shadow: 0 0 0 6px rgba(63, 169, 255, 0) !important; }
+}
+@keyframes ln-mining-tap-denied {
+  0% { transform: scale(1); }
+  40% { transform: scale(0.94); }
+  100% { transform: scale(1); }
+}
 
 .debrief-screen { background: var(--ln-void); }
 .debrief-arrival-board { position: relative; min-height: 240px; overflow: hidden; border: 1px solid var(--ln-hairline); border-radius: 10px; background: var(--ln-void); }
