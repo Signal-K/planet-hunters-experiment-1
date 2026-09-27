@@ -36,7 +36,13 @@ export function useEconomyActions(
   }, [setState])
 
   const placeStructure = useCallback((structure: StructureBlueprint | undefined, kind: string, plot: number) => {
-    setState(s => applyPlaceStructure(s, structure, kind, plot))
+    let placed = false
+    setState(s => {
+      const next = applyPlaceStructure(s, structure, kind, plot)
+      placed = next !== s
+      return next
+    })
+    return placed
   }, [setState])
 
   const upgradeLaunchpad = useCallback(() => {

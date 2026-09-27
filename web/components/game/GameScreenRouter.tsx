@@ -171,12 +171,14 @@ export function ScreenContent({
           }}
           onPlaced={(kind, plot) => {
             const structure = game.catalog.structures.find(s => s.id === kind)
-            game.placeStructure(structure, kind, plot)
+            const placed = game.placeStructure(structure, kind, plot)
+            if (!placed) return false
             game.completeStep(0)
             captureGameEvent('structure_placed', { structure_kind: kind })
             enqueueSurvey('lnm_base_building', 1200)
             if (kind === 'astronaut-academy') enqueueSurvey('lnm_crew_academy_built', 1200)
             game.go('hub')
+            return true
           }}
         />
       )

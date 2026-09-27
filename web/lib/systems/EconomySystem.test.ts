@@ -284,6 +284,18 @@ describe('applyConfirmShipCustomizerBuild', () => {
 })
 
 describe('Academy and staffing economy', () => {
+  it('leaves an unaffordable refinery placement unchanged', () => {
+    const refinery = STRUCTURES.find(structure => structure.id === 'refinery')!
+    const before = makeState({
+      francs: refinery.cost,
+      stash: { aluminium: 0, copper: 0 },
+      freeOperations: true,
+      placed: ['surface-silo'],
+    })
+
+    expect(applyPlaceStructure(before, refinery, refinery.kind, 2)).toBe(before)
+  })
+
   it('charges the Academy build cost and materials only after research', () => {
     const academy = STRUCTURES.find(structure => structure.id === 'astronaut-academy')!
     const stash = { aluminium: 24, silicon: 12, copper: 8 }
