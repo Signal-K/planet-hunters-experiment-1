@@ -1006,6 +1006,13 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
       is_story_mission: completedIsStoryMission,
       payout_francs: total,
     })
+    // SSL-342: fires exactly once, on the same tick as the 'tutorial-complete'
+    // popup and the freeOperations flip above: the one moment onboarding
+    // actually ends, needed to close out the agency-loop funnel end to end.
+    if (justFinishedOnboarding(current.player.missionsDone, newMissionsDone)) {
+      captureGameEvent('tutorial_completed', { missions_done: newMissionsDone })
+      captureGameEvent('free_ops_unlocked', { missions_done: newMissionsDone })
+    }
     // Mission feedback belongs to the post-mission checkpoint. Queue it only
     // after debrief collection so it cannot surface over the next mission
     // board while the player is choosing a new contract.
