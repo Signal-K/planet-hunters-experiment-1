@@ -1,4 +1,4 @@
-describe('SSL-360 — mining laser charging + tap feedback', () => {
+describe('SSL-360: mining laser charging + tap feedback', () => {
   it('shows a CHARGING state after firing and does not consume ammo on a mashed second tap', () => {
     cy.visit('/game/mining?preset=m1-mining')
 
@@ -13,7 +13,7 @@ describe('SSL-360 — mining laser charging + tap feedback', () => {
     cy.get('[data-testid="fire-laser-btn"]').should('have.attr', 'data-charging', 'true')
 
     // A mashed tap mid-cooldown must not fire again (no ammo spent) and must
-    // not be silently swallowed either — the button stays visibly CHARGING.
+    // not be silently swallowed either: the button stays visibly CHARGING.
     cy.get('[data-testid="fire-laser-btn"]').click({ force: true })
     cy.contains('[data-testid="fire-laser-btn"]', 'CHARGING').should('be.visible')
 

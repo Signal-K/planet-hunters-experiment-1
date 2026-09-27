@@ -286,7 +286,7 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
   oreNearRef.current = (near: boolean) => setOreNear(near)
 
   // Fire cooldown state lives in MiningCanvas (it must gate both the button
-  // and a direct canvas tap) — chargingRef mirrors it up here the same way
+  // and a direct canvas tap). chargingRef mirrors it up here the same way
   // oreNearRef mirrors ore-proximity, purely for the button's own display.
   const chargingRef = useRef<((charging: boolean) => void) | null>(null)
   const [isCharging, setIsCharging] = useState(false)
@@ -356,7 +356,7 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
   function fireLaser() {
     if (gateOpen || sceneStatus !== 'ready' || laserCharges <= 0) return
     if (isCharging) {
-      // Tap landed mid-cooldown — acknowledge it instead of silently dropping
+      // Tap landed mid-cooldown: acknowledge it instead of silently dropping
       // it, so a phone tester never wonders whether the tap registered.
       if (tapDeniedTimerRef.current) clearTimeout(tapDeniedTimerRef.current)
       setTapDenied(true)

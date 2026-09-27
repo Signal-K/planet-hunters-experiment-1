@@ -24,7 +24,7 @@ const SURFACE_TILE_W = 320
 
 const SKY_COLOR = 0x03060c
 
-// Minimum gap between shots — long enough that a mashed tap reads as
+// Minimum gap between shots: long enough that a mashed tap reads as
 // deliberately ignored (not dropped input), short enough not to feel laggy.
 const FIRE_COOLDOWN_MS = 420
 
@@ -100,7 +100,7 @@ interface MiningCanvasProps {
   oreNearRef?: React.MutableRefObject<((near: boolean) => void) | null>
   /** Live-updating set of mineral keys still needed to fill the order — see MiningControllerOptions.neededMineralsRef. */
   neededMineralsRef?: React.MutableRefObject<Set<string> | null>
-  /** Pushed true immediately after a shot fires, false once the cooldown clears — mirrors the oreNearRef push pattern so the screen can show ready/charging state without owning the timer. */
+  /** Pushed true immediately after a shot fires, false once the cooldown clears. Mirrors the oreNearRef push pattern so the screen can show ready/charging state without owning the timer. */
   chargingRef?: React.MutableRefObject<((charging: boolean) => void) | null>
 }
 
@@ -380,7 +380,7 @@ export default function MiningCanvas({ rocketImageSrc, minerals, requiredMineral
       }} />
       <div data-testid="mining-tap-ack" style={{
         position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 10,
-        // Neutral, low-opacity — a tap during the fire cooldown, distinct from
+        // Neutral, low-opacity: a tap during the fire cooldown, distinct from
         // both the cyan hit flash and red miss flash so it never reads as a shot result.
         background: 'radial-gradient(circle at 50% 52%, rgba(255,255,255,0.22) 0%, transparent 32%)',
         opacity: tapAck ? 1 : 0,
