@@ -138,3 +138,12 @@
      first-plot anchor inward on short landscape canvases so the target remains
      fully usable without changing the established portrait plot spacing. */
 }
+
+/* Landscape phones: title and balance share one row (see globals.css for
+   the matching right-hand buttons). */
+@media (orientation: landscape) and (max-height: 500px) {
+  .topHud { flex-direction: row; align-items: center; gap: 12px; padding: 8px 12px 16px; }
+  .topRow { width: auto; }
+  .eyebrow { display: none; }
+  .titleText { margin: 0; font-size: 18px; }
+}

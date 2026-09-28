@@ -29,10 +29,10 @@ export default function TutorialCoach({ stepIndex, steps, step, total, onManualN
   // rectangle started at 76px, which put the coach directly over the Jobs
   // chip and made the rest of the navigation look missing. Leave a small
   // gap below that chrome on the one screen with the extra HUD row.
-  // Compact landscape (SSL-326) cannot spend 160+150px on the rail — park it
-  // under the 48px command cluster so the base stays visible.
+  // Compact landscape (SSL-326) cannot spend 160+150px on the rail; the Base
+  // header is a single 48px row there, so the coach parks just under it.
   const coachRail = step.screen === 'hub'
-    ? (isShort ? { top: 48, height: 112 } : { top: 160, height: 150 })
+    ? (isShort ? { top: 52, height: 112 } : { top: 160, height: 150 })
     : reserved_rect(step.anchor === 'bottom' ? 'bottom' : 'top')
 
   const resolvedBody   = (isDesktop && step.desktopBody   !== undefined) ? step.desktopBody   : step.body

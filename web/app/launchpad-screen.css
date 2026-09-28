@@ -552,3 +552,17 @@ button.launchpad-scene-object { cursor: pointer; }
   }
 
 }
+
+/* Landscape phones: a 48px title line and a 48px command rail leave the pad
+   most of the height, and New Mission uses the whole game area so every
+   option is on screen instead of in a clipped strip. */
+@media (orientation: landscape) and (max-height: 500px) {
+  .launchpad-visual-scene { inset: 48px 0 48px; }
+  .launchpad-scene-rail { height: 48px; padding: 4px 8px; }
+  .launchpad-rail-actions button { height: 40px; }
+  .launchpad-mission-menu { top: 8px; bottom: 8px; max-height: none; }
+  .launchpad-mission-menu-options { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .portrait-canvas:has(.launchpad-scene-rail) .suite-hop-rail { top: 56px; flex-direction: row; align-items: center; }
+  .portrait-canvas:has(.launchpad-scene-rail) .suite-identity-chip { display: none; }
+  .portrait-canvas:has(.launchpad-mission-menu) .suite-hop-rail { display: none; }
+}

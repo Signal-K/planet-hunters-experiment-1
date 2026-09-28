@@ -186,48 +186,66 @@ function GameChrome({ children }: { children: ReactNode }) {
         </div>
       )}
       <div className={`portrait-canvas ${isImmersiveEarthBaseRoute ? 'portrait-canvas--full-page' : ''}`}>
-        <BackendStatus />
-        <LandnamSyncStatus />
-        {/* Mission alerts have a reserved desktop slot to the left of the
-            horizontal resource HUD. They are hidden at compact widths rather
-            than wrapping over progression controls. Base-surface only — Hub
-            renders Subsurface as a slide within the same 'hub' route rather
-            than a real navigation (see game.subsurfaceView), so the screen
-            check alone can't tell the two apart. */}
-        {game.player.freeOperations && currentScreen === 'hub' && !game.subsurfaceView && (
-          <div data-ui-zone={UI_ZONES.ambientPrompt} className="hub-push-opt-in">
-            <PushOptIn userId={game.authUserId ?? undefined} />
+        {/* Everything that belongs to the game area, overlays included, is
+            positioned inside this stage so it can never land on the shared
+            nav — a bottom row in portrait, a left rail on landscape phones. */}
+        <div className="game-stage-main">
+          <BackendStatus />
+          <LandnamSyncStatus />
+          {/* Mission alerts have a reserved desktop slot to the left of the
+              horizontal resource HUD. They are hidden at compact widths rather
+              than wrapping over progression controls. Base-surface only — Hub
+              renders Subsurface as a slide within the same 'hub' route rather
+              than a real navigation (see game.subsurfaceView), so the screen
+              check alone can't tell the two apart. */}
+          {game.player.freeOperations && currentScreen === 'hub' && !game.subsurfaceView && (
+            <div data-ui-zone={UI_ZONES.ambientPrompt} className="hub-push-opt-in">
+              <PushOptIn userId={game.authUserId ?? undefined} />
+            </div>
+          )}
+          <DevShortcuts />
+
+          {/* Friends — same porting fix as Settings above (KES-233): the
+              legacy GameApp.tsx shell isn't what serves /game/hub, so KES-83's
+              corner button needs its own copy here too. Hub only. */}
+          {currentScreen === 'hub' && !game.subsurfaceView && !game.authGateOpen && (
+            <>
+              <FriendsButton onClick={() => setFriendsOpen(true)} />
+              <CommunityButton onClick={() => setCommunityOpen(true)} />
+            </>
+          )}
+
+          {/* Suite return rail (SSL-296): hop back to the SSC garden / Spectra. */}
+          {(currentScreen === 'hub' || currentScreen === 'launchpad') && !game.subsurfaceView && !game.authGateOpen && (
+            <SuiteHopRail signedIn={!!game.authUserId} />
+          )}
+
+          {/* The route page remains mounted below as a URL/state synchronizer,
+              but the visible game tree belongs to this persistent layout. */}
+          <div className="game-screen-area">
+            {!game.authGateOpen && (
+              <ScreenContent screen={game.screen} game={game} hasCoach={hasCoach} />
+            )}
           </div>
-        )}
-        <DevShortcuts />
+          {children}
 
-        {/* Friends — same porting fix as Settings above (KES-233): the
-            legacy GameApp.tsx shell isn't what serves /game/hub, so KES-83's
-            corner button needs its own copy here too. Hub only. */}
-        {currentScreen === 'hub' && !game.subsurfaceView && !game.authGateOpen && (
-          <>
-            <FriendsButton onClick={() => setFriendsOpen(true)} />
-            <CommunityButton onClick={() => setCommunityOpen(true)} />
-          </>
-        )}
+          <ToastLayer toasts={game.toasts} onDismiss={game.dismissToast} />
+          {showFeedback && <FeedbackButton />}
+          <SurveySheet blockWhile={!!game.popup || !!coach || !!game.pendingTerritoryClaimFor || !isSurveySafeScreen(currentScreen)} />
 
-        {/* Suite return rail (SSL-296): hop back to the SSC garden / Spectra. */}
-        {(currentScreen === 'hub' || currentScreen === 'launchpad') && !game.subsurfaceView && !game.authGateOpen && (
-          <SuiteHopRail signedIn={!!game.authUserId} />
-        )}
-
-        {/* The route page remains mounted below as a URL/state synchronizer,
-            but the visible game tree belongs to this persistent layout. */}
-        <div className="game-screen-area">
-          {!game.authGateOpen && (
-            <ScreenContent screen={game.screen} game={game} hasCoach={hasCoach} />
+          {coach && !game.popup && !game.authGateOpen && (
+            <TutorialCoach
+              key={coach.id}
+              stepIndex={coachIndex}
+              steps={coachSteps}
+              step={coach}
+              total={coachSteps.length}
+              onManualNext={game.coachManualNext}
+              onSkip={() => game.skipTutorial(coachSteps.map(s => s.id))}
+            />
           )}
         </div>
-        {children}
 
-        <ToastLayer toasts={game.toasts} onDismiss={game.dismissToast} />
-        {showFeedback && <FeedbackButton />}
-        <SurveySheet blockWhile={!!game.popup || !!coach || !!game.pendingTerritoryClaimFor || !isSurveySafeScreen(currentScreen)} />
         {currentScreen !== 'intro' && !game.authGateOpen && (
           <GameChromeBars
             screen={currentScreen}
@@ -238,18 +256,6 @@ function GameChrome({ children }: { children: ReactNode }) {
             onMarket={() => game.player.freeOperations && game.go('market')}
             onMenu={() => setSettingsOpen(true)}
             menuExpanded={settingsOpen}
-          />
-        )}
-
-        {coach && !game.popup && !game.authGateOpen && (
-          <TutorialCoach
-            key={coach.id}
-            stepIndex={coachIndex}
-            steps={coachSteps}
-            step={coach}
-            total={coachSteps.length}
-            onManualNext={game.coachManualNext}
-            onSkip={() => game.skipTutorial(coachSteps.map(s => s.id))}
           />
         )}
 
