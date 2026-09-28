@@ -14,7 +14,7 @@ import { PushOptIn } from '@/components/game/PushOptIn'
 import FeedbackButton from '@/components/ui/FeedbackButton'
 import SurveySheet from '@/components/ui/SurveySheet'
 import ToastLayer from '@/components/ui/ToastLayer'
-import { initPostHog } from '@/lib/posthog'
+import { initPostHog, captureScreenView, captureGameEvent } from '@/lib/posthog'
 import DevShortcuts from '@/components/dev/DevShortcuts'
 import AuthGateSheet from '@/components/game/AuthGateSheet'
 import SettingsSheet from '@/components/game/SettingsSheet'
@@ -45,6 +45,13 @@ function GameChrome({ children }: { children: ReactNode }) {
   useEffect(() => {
     initPostHog()
   }, [])
+
+  // SSL-342: this shell serves every live /game/* route, so the per-screen
+  // pageview has to fire here too; the legacy GameApp copy only covers the
+  // ship customizer.
+  useEffect(() => {
+    captureScreenView(game.screen)
+  }, [game.screen])
 
   // Schedule push notification when transit starts
   useEffect(() => {
@@ -128,6 +135,19 @@ function GameChrome({ children }: { children: ReactNode }) {
 
   const coachIndex = coach ? coachSteps.findIndex(step => step.id === coach.id) : -1
   const hasCoach = !!coach
+
+  // SSL-342: per-step training analytics for the live shell (mirrors GameApp).
+  // Fire only when the active step itself changes.
+  useEffect(() => {
+    if (!coach) return
+    captureGameEvent('tutorial_step_started', {
+      step_id: coach.id,
+      screen: coach.screen,
+      step_index: coachIndex,
+      total_steps: coachSteps.length,
+    })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [coach?.id])
 
   const showFeedback = currentScreen === 'hub'
     && !game.subsurfaceView
@@ -241,7 +261,15 @@ function GameChrome({ children }: { children: ReactNode }) {
               step={coach}
               total={coachSteps.length}
               onManualNext={game.coachManualNext}
-              onSkip={() => game.skipTutorial(coachSteps.map(s => s.id))}
+              onSkip={() => {
+                captureGameEvent('tutorial_skipped', {
+                  step_id: coach.id,
+                  screen: coach.screen,
+                  step_index: coachIndex,
+                  total_steps: coachSteps.length,
+                })
+                game.skipTutorial(coachSteps.map(s => s.id))
+              }}
             />
           )}
         </div>
