@@ -719,23 +719,66 @@ button { cursor: pointer; }
   text-transform: uppercase;
 }
 
-/* Hub utilities form one deliberate two-row header on device-sized canvases:
-   title/time above, balance/friends/menu below. They used to be four unrelated
-   absolute coordinates, which drifted as soon as the viewport changed. */
+/* Cross-game links (Garden, Spectra) and the shared-account chip. */
+.suite-hop-rail {
+  position: absolute; top: 96px; right: 12px; z-index: 22;
+  display: flex; flex-direction: column; align-items: flex-end; gap: 8px;
+}
+
+/* Hub utilities form one deliberate stacked header on device-sized canvases:
+   title/time, then balance/community/friends, then sync/suite links/feedback.
+   They used to be unrelated absolute coordinates, which drifted as soon as
+   the viewport changed. */
 @media (max-width: 1023px) {
-  .portrait-canvas:has([data-screen="hub"]) .game-menu-button { top: 66px; right: 12px; }
-  .portrait-canvas:has([data-screen="hub"]) .hub-friends-button { top: 66px !important; right: 92px !important; }
-  .portrait-canvas:has([data-screen="hub"]) .hub-community-button { top: 66px !important; right: 196px !important; }
+  /* MENU moved to the bottom bar, so this row no longer reserves its corner:
+     at 196px from the right, HUB ran over the balance pill on phones. */
+  .portrait-canvas:has([data-screen="hub"]) .hub-friends-button { top: 66px !important; right: 12px !important; }
+  .portrait-canvas:has([data-screen="hub"]) .hub-community-button { top: 66px !important; right: 121px !important; }
   .portrait-canvas:has([data-screen="hub"]) .sync-status { top: 110px; bottom: auto !important; left: 12px; height: max-content; }
-  .portrait-canvas:has([data-screen="hub"]) .feedback-launcher { top: 110px !important; right: 12px !important; bottom: auto !important; }
+  .portrait-canvas:has([data-screen="hub"]) .feedback-launcher { top: 110px !important; right: 12px !important; bottom: auto !important; min-height: 32px; }
+  /* Third header row: [sync]  ...  [GARDEN][FEEDBACK]. The rail used to be a
+     column at the same corner, so Feedback sat on top of it. The identity
+     chip is dropped here for room; GARDEN still carries its caption. */
+  .portrait-canvas:has([data-screen="hub"]) .suite-hop-rail { top: 110px; right: 108px; flex-direction: row; align-items: center; }
+  .portrait-canvas:has([data-screen="hub"]) .suite-identity-chip { display: none; }
   .portrait-canvas:has([data-screen="hub"]) .feedback-panel { right: 12px !important; bottom: calc(var(--ln-nav-h) + 12px) !important; }
 }
 
 @media (max-width: 379px) {
   .portrait-canvas:has([data-screen="hub"]) .hub-friends-button { width: 36px; min-width: 36px; padding: 0 !important; justify-content: center; }
   .portrait-canvas:has([data-screen="hub"]) .hub-friends-button span { display: none; }
-  .portrait-canvas:has([data-screen="hub"]) .hub-community-button { width: 36px; min-width: 36px; padding: 0 !important; justify-content: center; right: 136px !important; }
+  .portrait-canvas:has([data-screen="hub"]) .hub-community-button { width: 36px; min-width: 36px; padding: 0 !important; justify-content: center; right: 56px !important; }
   .portrait-canvas:has([data-screen="hub"]) .hub-community-button span { display: none; }
+}
+
+/* Desktop Base: the dock is a full-width band at the bottom of the game
+   area, so the sync note sits just above it rather than on its status text. */
+@media (min-width: 1024px) {
+  .portrait-canvas:has([data-screen="hub"]) .sync-status { bottom: 76px; }
+}
+
+/* Landscape phones: the Base header is one 48px row — title and balance on
+   the left, icon buttons and suite links on the right — and the dock loses
+   its panel so its buttons float over the ground instead of taking a band
+   of the scene. */
+@media (orientation: landscape) and (max-height: 500px) {
+  .portrait-canvas:has([data-screen="hub"]) .hub-friends-button,
+  .portrait-canvas:has([data-screen="hub"]) .hub-community-button { top: 8px !important; width: 32px; min-width: 32px; height: 32px; min-height: 32px; padding: 0 !important; justify-content: center; }
+  .portrait-canvas:has([data-screen="hub"]) .hub-friends-button span,
+  .portrait-canvas:has([data-screen="hub"]) .hub-community-button span { display: none; }
+  .portrait-canvas:has([data-screen="hub"]) .hub-friends-button { right: 188px !important; }
+  .portrait-canvas:has([data-screen="hub"]) .hub-community-button { right: 228px !important; }
+  .portrait-canvas:has([data-screen="hub"]) .suite-hop-rail { top: 8px; right: 108px; flex-direction: row; align-items: center; }
+  .portrait-canvas:has([data-screen="hub"]) .suite-identity-chip { display: none; }
+  .portrait-canvas:has([data-screen="hub"]) .feedback-launcher { top: 8px !important; right: 12px !important; bottom: auto !important; min-height: 32px; }
+  .portrait-canvas:has([data-screen="hub"]) .sync-status { top: 36px; bottom: auto !important; left: 12px; }
+  .portrait-canvas:has([data-screen="hub"]) [data-testid="hub-clock-widget"] { display: none !important; }
+
+  .hub-bottom-dock-inner { max-width: none !important; padding: 8px 12px !important; border-top: 0 !important; border-radius: 0 !important; background: none !important; box-shadow: none !important; display: flex; align-items: center; justify-content: flex-end; gap: 8px; }
+  /* "Launchpad · Ready" repeats the building's own label; a live mission's
+     status (the banner variant) stays. */
+  .hub-bottom-dock-main:not([data-testid]) > div:first-child { display: none; }
+  .hub-bottom-dock-actions { margin-top: 0 !important; }
 }
 
 .bottom-tab-bar {
@@ -760,6 +803,29 @@ button { cursor: pointer; }
 .game-chrome-bottom button { flex:0 0 auto; min-height:40px; padding:8px 12px; border:1px solid transparent; border-radius:8px; background:transparent; color:var(--ln-text); font:800 12px var(--ln-font-display); letter-spacing:.08em; text-transform:uppercase; cursor:pointer; }
 .game-chrome-bottom button[aria-current="page"], .game-chrome-bottom button:hover { border-color:var(--ln-cyan-border); background:var(--ln-cyan-soft); color:var(--ln-cyan-bright); }
 @media (min-width:1024px) { .game-chrome-bottom { bottom:24px; } .game-chrome-top { top:24px; left:24px; } }
+@media (min-width:600px) { .game-chrome-bottom__readout { display:inline-flex; } }
+/* Landscape phones: every screen's title bar shrinks to one 48px line. */
+@media (orientation:landscape) and (max-height:500px) {
+  .top-bar { padding-top:8px !important; padding-bottom:8px !important; }
+  .top-bar__eyebrow { display:none; }
+  .top-bar__title { margin:0 !important; font-size:18px !important; }
+  /* Bottom-left belongs to each screen's command rail here; sit the sync
+     note just under the title line instead. */
+  .portrait-canvas .sync-status { top:52px; bottom:auto; }
+}
+
+/* The game area inside .portrait-canvas. Screen overlays are positioned
+   against this, so none of them can land on the nav beside it. */
+.game-stage-main { position:relative; flex:1 1 auto; min-width:0; min-height:0; display:flex; flex-direction:column; }
+
+/* Landscape phones: height is the scarce axis, so the nav becomes a left
+   rail and the game keeps the full height. */
+@media (orientation:landscape) and (max-height:500px) {
+  .portrait-canvas { flex-direction:row; }
+  .game-chrome-bottom { order:-1; flex-direction:column; justify-content:flex-start; align-items:stretch; width:72px; padding:8px 4px; border-top:0; border-right:1px solid var(--ln-hairline); }
+  .game-chrome-bottom__readout { display:inline-flex; justify-content:center; padding:4px 0 8px; font-size:10px; }
+  .game-chrome-bottom button { flex:1 1 0; max-width:none; max-height:56px; min-height:32px; padding:4px; font-size:10px; letter-spacing:.06em; }
+}
 
 .hub-sky-craft-control { position:absolute; z-index:11; top:96px; right:16px; display:flex; align-items:center; gap:8px; min-height:40px; padding:8px 12px; border:1px solid var(--ln-cyan-border); border-radius:8px; background:color-mix(in srgb, var(--ln-void) 74%, transparent); color:var(--ln-cyan-bright); font:800 12px var(--ln-font-display); letter-spacing:.08em; text-transform:uppercase; cursor:pointer; }
 

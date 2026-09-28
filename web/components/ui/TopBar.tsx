@@ -56,7 +56,7 @@ function ClockIcon() {
 
 export default function TopBar({ eyebrow, title, onBack, right, dense, solid, glass, scene, levelBadge, francs }: TopBarProps) {
   return (
-    <div data-ui-zone={UI_ZONES.topChrome} style={{
+    <div className="top-bar" data-ui-zone={UI_ZONES.topChrome} style={{
       position: 'absolute',
       top: 0,
       left: 0,
@@ -104,7 +104,7 @@ export default function TopBar({ eyebrow, title, onBack, right, dense, solid, gl
       </div>
       <div style={{ flex: 1, pointerEvents: 'none' }}>
         {eyebrow && (
-          <div style={{
+          <div className="top-bar__eyebrow" style={{
             fontFamily: 'var(--ln-font-display)',
             fontSize: 9,
             fontWeight: 700,
@@ -116,7 +116,7 @@ export default function TopBar({ eyebrow, title, onBack, right, dense, solid, gl
           </div>
         )}
         {title && (
-          <h1 style={{
+          <h1 className="top-bar__title" style={{
             margin: '2px 0 0 0',
             fontFamily: 'var(--ln-font-display)',
             fontSize: dense ? 18 : 22,
