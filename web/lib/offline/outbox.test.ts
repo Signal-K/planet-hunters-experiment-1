@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { syncLabel } from '@/components/game/LandnamSyncStatus'
 import { backoffMs, createOutbox, MAX_ATTEMPTS, memoryStore, newRecordId, type OutboxFailure, type OutboxOp } from './outbox'
 import { classifyHttpStatus } from './pbOutbox'
@@ -28,6 +28,36 @@ describe('outbox', () => {
     expect(h.outbox.pending()).toHaveLength(2)
     await h.outbox.flush()
     expect(h.calls.map(c => (c.type === 'upsert' ? c.data.time : null))).toEqual([2, 3])
+  })
+
+  it('sends a write enqueued mid-flush in a follow-up pass', async () => {
+    const calls: OutboxOp[] = []
+    let release: () => void = () => {}
+    const gate = new Promise<void>(resolve => { release = resolve })
+    const outbox = createOutbox({
+      store: memoryStore(),
+      execute: async op => { calls.push(op); if (calls.length === 1) await gate; return null },
+      isOnline: () => true,
+    })
+    const upsert = (time: number): OutboxOp => ({ type: 'upsert', collection: 'game_states', id: 'ccccccccccccccc', filter: 'user = "u1"', data: { time } })
+    await outbox.enqueue(upsert(1))
+    await outbox.enqueue(upsert(2))
+    release()
+    await vi.waitFor(() => expect(outbox.pending()).toHaveLength(0))
+    expect(calls.map(c => (c.type === 'upsert' ? c.data.time : null))).toEqual([1, 2])
+  })
+
+  it('reports and discards matching queued writes', async () => {
+    const h = harness([])
+    const save = (user: string): OutboxOp => ({ type: 'upsert', collection: 'game_states', id: 'ddddddddddddddd', filter: `user = "${user}"`, data: {} })
+    await h.outbox.enqueue(save('u1'))
+    await h.outbox.enqueue(save('u2'))
+    await h.outbox.enqueue(create)
+    const isU1 = (op: OutboxOp) => op.type === 'upsert' && op.filter === 'user = "u1"'
+    expect(await h.outbox.has(isU1)).toBe(true)
+    expect(await h.outbox.discard(isU1)).toBe(1)
+    expect(await h.outbox.has(isU1)).toBe(false)
+    expect(h.outbox.pending().map(i => i.op.type)).toEqual(['upsert', 'create'])
   })
 
   it('classifies community HTTP statuses for retry', () => {
