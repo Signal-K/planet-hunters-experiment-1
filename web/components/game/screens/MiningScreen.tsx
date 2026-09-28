@@ -605,8 +605,11 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
             <button
               onClick={() => setGuideOpen(false)}
               style={{
+                // Pinned to the bottom of the scrolling guide so a short
+                // landscape viewport never hides the way out (SSL-21).
+                position: 'sticky', bottom: 0,
                 width: '100%', marginTop: 4, padding: '8px 0', borderRadius: 8,
-                border: '1px solid var(--ln-cyan-border)', background: 'var(--ln-cyan-soft)',
+                border: '1px solid var(--ln-cyan-border)', background: 'color-mix(in srgb, var(--ln-cyan) 16%, var(--ln-void))',
                 color: 'var(--ln-cyan)', font: '800 10px var(--ln-font-display)',
                 letterSpacing: '0.12em', textTransform: 'uppercase', cursor: 'pointer',
               }}

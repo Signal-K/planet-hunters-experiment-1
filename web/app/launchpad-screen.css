@@ -436,7 +436,10 @@ button.launchpad-scene-object { cursor: pointer; }
 .hub-bottom-dock-actions::-webkit-scrollbar { display: none; }
 @media (max-width: 860px) {
   .hub-bottom-dock-inner { gap: 12px; padding: 8px 12px !important; }
-  .hub-bottom-dock-main { flex-basis: 150px; }
+  /* SSL-21: a fixed 150px column squeezed the status label to "R..." beside
+     Edit · Build in compact landscape. Size it to its content instead; the
+     action strip beside it has the spare width. */
+  .hub-bottom-dock-main { flex: 0 0 auto; }
 }
 @media (max-width: 860px) {
   .launchpad-object-label { min-width: 0; padding: 6px 8px; }

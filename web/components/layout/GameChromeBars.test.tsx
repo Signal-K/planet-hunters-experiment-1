@@ -8,7 +8,7 @@ describe('GameChromeBars', () => {
     const markup = renderToStaticMarkup(
       <GameChromeBars screen="mining" missionsDone={3} hasActiveRun onHome={vi.fn()} onOperations={vi.fn()} onMarket={vi.fn()} onMenu={vi.fn()} />,
     )
-    expect(markup).toContain('data-testid="home-top-bar"')
+    expect(markup).toContain('data-testid="home-ops-readout"')
     expect(markup).toContain('data-testid="home-bottom-bar"')
     expect(markup).toContain('data-testid="home-bar-hub"')
     expect(markup).toContain('data-testid="home-bar-market"')

@@ -36,7 +36,7 @@ describe('Hub shared chrome and sky controls', () => {
   it('replaces the retired progression card with persistent bars', () => {
     visitHub()
     cy.get('[data-testid^="progression-card-"]').should('not.exist')
-    cy.get('[data-testid="home-top-bar"]').should('be.visible')
+    cy.get('[data-testid="home-ops-readout"]').should('contain.text', 'OPS')
     cy.get('[data-testid="home-bottom-bar"]').within(() => {
       cy.get('[data-testid="home-bar-ops"]').should('be.visible')
       cy.get('[data-testid="home-bar-hub"]').should('be.visible')

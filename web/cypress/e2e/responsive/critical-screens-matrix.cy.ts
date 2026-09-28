@@ -30,7 +30,7 @@ describe('Responsive Layout — Critical Screens Matrix', () => {
 
         // Shell-owned controls are identical on phone and desktop, so live
         // operations never lose navigation outside the Base route.
-        cy.get('[data-testid="home-top-bar"]').should('be.visible');
+        cy.get('[data-testid="home-ops-readout"]').should('contain.text', 'OPS');
         cy.get('[data-testid="home-bottom-bar"]').should('be.visible');
         cy.get('[data-testid="home-bar-hub"]').should('be.visible');
         cy.get('[data-testid="home-bar-ops"]').should('be.visible');

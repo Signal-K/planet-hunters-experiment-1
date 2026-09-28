@@ -622,7 +622,11 @@
 .reviewBrief { position: absolute; z-index: 10; inset: 0 0 0 69%; display: flex; flex-direction: column; min-width: 0; padding: 20px; border-left: 4px solid var(--mission-ink); background: var(--mission-paper-bright); color: var(--mission-ink); }
 .reviewHeading { flex: 0 0 auto; }
 .reviewHeading h2 { margin: 6px 0 0; font: 800 clamp(20px, 2vw, 32px)/1 var(--ln-font-display); text-wrap: balance; }
-.reviewFacts { display: grid; align-content: start; gap: 0; min-height: 0; margin: 14px 0 0; }
+.reviewFacts { display: grid; align-content: start; gap: 0; min-height: 0; margin: 14px 0 0; overflow-y: auto; overscroll-behavior: contain; }
+/* SSL-21: in compact landscape the facts list shrinks to fit the brief, so it
+   scrolls inside its own box instead of painting under Launch Clearance and
+   the CTA (the clipped VEHICLE / REQUIRED CARGO rows). */
+.clearance, .reviewBrief > .primary { flex-shrink: 0; }
 .reviewFacts > div { padding: 9px 0; border-top: 2px solid color-mix(in srgb, var(--mission-ink) 23%, transparent); }
 .reviewFacts dt { font: 800 7px var(--ln-font-display); letter-spacing: .16em; }
 .reviewFacts dd { margin: 4px 0 0; font: 800 11px/1.25 var(--ln-font-display); text-transform: uppercase; }
@@ -879,4 +883,12 @@
   .clearance small { display: none; }
   .assemblyTimeline span,
   .assemblyTimeline strong { overflow: visible; font-size: 5px; line-height: 1.1; letter-spacing: .05em; text-overflow: clip; white-space: normal; }
+}
+
+/* SSL-21: below ~300px of height (a landscape phone with browser toolbars
+   showing) the brief cannot fit heading, facts, clearance and CTA at once.
+   Scroll the whole brief instead so ACCEPT & PREPARE LAUNCH stays reachable. */
+@media (orientation: landscape) and (max-height: 300px) {
+  .reviewBrief { overflow-y: auto; overscroll-behavior: contain; }
+  .reviewFacts { flex-shrink: 0; overflow: visible; }
 }
