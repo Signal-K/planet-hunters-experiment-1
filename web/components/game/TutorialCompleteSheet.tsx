@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import type { ProgramFocus } from '@/lib/game-types'
+import type { AgencyTrainingStep } from '@/lib/systems/AgencyOnboardingSystem'
 import PageSurface from '@/components/ui/PageSurface'
 import styles from './TutorialCompleteSheet.module.css'
 
@@ -13,6 +14,10 @@ const FOCUSES: Array<{ id: ProgramFocus; label: string; body: string }> = [
 ]
 
 interface TutorialCompleteSheetProps {
+  /** SSL-332 agency training track, shown so the handoff reads as founding an
+   *  agency (launchpad, extraction, transport, storage) rather than as the end
+   *  of three numbered missions. */
+  track: AgencyTrainingStep[]
   onDone: (focuses: ProgramFocus[]) => void
   onBuildSilo: (focuses: ProgramFocus[]) => void
 }
@@ -20,7 +25,7 @@ interface TutorialCompleteSheetProps {
 /** The guided handoff is a choice, not a dismissal. Focus areas tune the
  * Launchpad's first Free Operations menu; an empty selection is explicit
  * free-form mode and leaves every operation visible. */
-export function TutorialCompleteSheet({ onDone, onBuildSilo }: TutorialCompleteSheetProps) {
+export function TutorialCompleteSheet({ track, onDone, onBuildSilo }: TutorialCompleteSheetProps) {
   const [choosing, setChoosing] = useState(false)
   const [selected, setSelected] = useState<ProgramFocus[]>(['construction'])
 
@@ -34,6 +39,15 @@ export function TutorialCompleteSheet({ onDone, onBuildSilo }: TutorialCompleteS
         <section className={styles.intro}>
           <span className={styles.eyebrow}>GUIDED OPERATIONS COMPLETE</span>
           <h1>Your program starts here</h1>
+          <ol className={styles.track} aria-label="Agency training">
+            {track.map(step => (
+              <li key={step.stage} className={styles.trackStep} data-status={step.status} data-testid={`agency-track-${step.stage}`}>
+                <span className={styles.trackMarker} aria-hidden="true" />
+                <span>{step.label}</span>
+                <span className={styles.trackStatus}>{step.status === 'done' ? 'Done' : step.status === 'current' ? 'Next' : 'Later'}</span>
+              </li>
+            ))}
+          </ol>
           <p>You can now choose client work, mine for yourself, launch science instruments, or build permanent infrastructure. First, tell Mission Control what you want close at hand.</p>
           <button type="button" className={styles.primary} onClick={() => setChoosing(true)}>START MY PROGRAM</button>
         </section>

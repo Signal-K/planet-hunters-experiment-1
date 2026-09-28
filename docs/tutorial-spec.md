@@ -10,6 +10,22 @@ Current onboarding covers M1 and M2 only.
 
 Earlier onboarding and post-onboarding plans are intentionally not part of this spec.
 
+## Onboarding v2 — establish your space agency (SSL-332, in progress)
+
+Onboarding is being reframed from "three mining missions" to founding an agency. The training track is:
+
+**Place Launchpad → Extraction → Transport → Build Storage Silo → Free Ops**
+
+Free Ops then offers **Client work / Space telescope / Build refinery** immediately. Existing players keep all unlocks, and the training stays replayable.
+
+Current state (first slice):
+
+- `web/lib/systems/AgencyOnboardingSystem.ts` derives the player's training stage from existing state. Extraction covers the mine-and-return onboarding missions, Transport is the final two-stop haul mission (KES-313), and Storage is complete once a `surface-silo` is placed.
+- The stage model gates nothing. `player.freeOperations` is still derived from `missionsDone` in `web/lib/game-state.ts`, so the Storage stage is a recommended next beat, not a lock.
+- The Guided Operations handoff sheet (`TutorialCompleteSheet`) shows the track, with Storage Silo as the next step.
+
+Not yet done: coach steps per stage, the Build Storage Silo guided step, the three-activity Free Ops menu, replaying training, and any change to the mission count before Free Ops.
+
 ## Steps
 
 `M1_STEPS` walks the first mission end-to-end:

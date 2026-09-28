@@ -19,6 +19,15 @@
 .eyebrow,
 .siloRecommendation span { color: var(--ln-cyan); font: 800 9px var(--ln-font-display); letter-spacing: .2em; text-transform: uppercase; }
 .heading { display: grid; gap: 8px; }
+.track { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; margin: 0; padding: 0; list-style: none; }
+.trackStep { display: grid; gap: 4px; padding: 8px; border: 1px solid var(--ln-hairline); border-radius: 8px; background: var(--ln-surface-2); color: var(--ln-text-muted); font: 800 9px var(--ln-font-display); letter-spacing: .12em; text-transform: uppercase; }
+.trackStep[data-status='done'] { color: var(--ln-text-dim); }
+.trackStep[data-status='current'] { border-color: var(--ln-cyan); background: var(--ln-cyan-soft); color: var(--ln-text); }
+.trackMarker { width: 8px; height: 8px; border: 2px solid var(--ln-text-muted); border-radius: 50%; }
+.trackStep[data-status='done'] .trackMarker { border-color: var(--ln-ok); background: var(--ln-ok); }
+.trackStep[data-status='current'] .trackMarker { border-color: var(--ln-cyan); }
+.trackStatus { color: var(--ln-text-muted); font-size: 8px; }
+.trackStep[data-status='current'] .trackStatus { color: var(--ln-cyan); }
 .focusGrid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
 .focus { position: relative; display: grid; gap: 6px; min-height: 116px; padding: 16px 16px 16px 48px; border: 1px solid var(--ln-hairline); border-radius: 12px; background: var(--ln-surface-2); color: var(--ln-text); text-align: left; cursor: pointer; }
 .focus[data-active='true'] { border-color: var(--ln-cyan); background: var(--ln-cyan-soft); }
@@ -43,6 +52,8 @@
      (components/dev/DevShortcuts.tsx), which sits above every screen. */
   .surface { padding: 40px 16px 24px; }
   .focusGrid { grid-template-columns: 1fr; }
+  .track { grid-template-columns: 1fr; gap: 4px; }
+  .trackStep { grid-template-columns: auto 1fr auto; align-items: center; gap: 8px; padding: 4px 8px; }
   .siloRecommendation { align-items: stretch; flex-direction: column; }
   .actions { flex-direction: column-reverse; }
 }

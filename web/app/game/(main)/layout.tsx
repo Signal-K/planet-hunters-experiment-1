@@ -7,6 +7,7 @@ import { FREE_OPS_START_MISSIONS_DONE } from '@/lib/data/mission-generator'
 import TutorialCoach from '@/components/game/TutorialCoach'
 import UnlockPopup from '@/components/game/UnlockPopup'
 import { TutorialCompleteSheet } from '@/components/game/TutorialCompleteSheet'
+import { agencyTrainingTrack } from '@/lib/systems/AgencyOnboardingSystem'
 import BackendStatus from '@/components/game/BackendStatus'
 import LandnamSyncStatus from '@/components/game/LandnamSyncStatus'
 import { PushOptIn } from '@/components/game/PushOptIn'
@@ -202,6 +203,7 @@ function GameChrome({ children }: { children: ReactNode }) {
 
         {game.popup === 'tutorial-complete' && !game.authGateOpen && (
           <TutorialCompleteSheet
+            track={agencyTrainingTrack(game.player)}
             onDone={focuses => {
               game.setPlayer(player => ({ ...player, programFocuses: focuses }))
               game.setPopup(null)
