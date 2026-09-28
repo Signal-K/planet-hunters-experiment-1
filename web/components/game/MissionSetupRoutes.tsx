@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useState, type CSSProperties, type ReactNode } from 'react'
+import { useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode, type RefObject } from 'react'
 import type { useGame } from '@/game-context'
 import type { Catalog } from '@/lib/catalog'
 import type { Screen } from '@/lib/game-types'
@@ -192,6 +192,34 @@ function SetupFrame({ step, title, onBack, hasCoach, children }: {
   )
 }
 
+// The tutorial coach is drawn by the route layout, above this stage, at a
+// fixed top-left anchor. The map lays itself out around the coach's real
+// footprint instead of letting the card sit on the chart or its controls.
+function useCoachFootprint(ref: RefObject<HTMLElement | null>, active: boolean) {
+  const [footprint, setFootprint] = useState({ h: 0, w: 0 })
+  useEffect(() => {
+    if (!active) { setFootprint({ h: 0, w: 0 }); return }
+    const measure = () => {
+      const section = ref.current
+      const coach = document.querySelector<HTMLElement>('[data-testid="tutorial-coach-block"]')
+      if (!section || !coach) { setFootprint(prev => prev.h || prev.w ? { h: 0, w: 0 } : prev); return }
+      const s = section.getBoundingClientRect()
+      const c = coach.getBoundingClientRect()
+      const overlaps = c.width > 0 && c.left < s.right && c.right > s.left && c.top < s.bottom && c.bottom > s.top
+      const next = overlaps ? { h: Math.max(0, Math.ceil(c.bottom - s.top) + 8), w: Math.max(0, Math.ceil(c.right - s.left) + 8) } : { h: 0, w: 0 }
+      setFootprint(prev => prev.h === next.h && prev.w === next.w ? prev : next)
+    }
+    measure()
+    const ro = new ResizeObserver(measure)
+    if (ref.current) ro.observe(ref.current)
+    // The coach mounts, changes copy and unmounts on its own schedule.
+    const timer = window.setInterval(measure, 400)
+    window.addEventListener('resize', measure)
+    return () => { ro.disconnect(); window.clearInterval(timer); window.removeEventListener('resize', measure) }
+  }, [active, ref])
+  return footprint
+}
+
 export default function MissionSetupRoutes({ screen, game, hasCoach, rocketDisplay, launchPending, onTransferToLaunchpad, onLaunch, onLaunchComplete }: MissionSetupRoutesProps) {
   const relay = useMissionRelayModels({
     catalog: game.catalog,
@@ -211,6 +239,8 @@ export default function MissionSetupRoutes({ screen, game, hasCoach, rocketDispl
     game.player.unlockedSkillNodes ?? [],
   ) : [], [game.catalog.parts, game.catalog.targets, game.mission, game.player.launchpadUpgraded, game.player.missionsDone, game.player.unlockedSkillNodes])
   const [targetId, setTargetId] = useState('')
+  const mapRef = useRef<HTMLElement>(null)
+  const coachFootprint = useCoachFootprint(mapRef, screen === 'targets' && hasCoach)
   const requiredRocket = getRequiredRocketModel(game.player.missionsDone)
   const availableRockets = useMemo(
     () => ROCKET_MODELS.filter(model => !model.locked && model.missionsRequired <= game.player.missionsDone),
@@ -318,17 +348,26 @@ export default function MissionSetupRoutes({ screen, game, hasCoach, rocketDispl
     const selectedTarget = compatibleTargets.find(target => target.id === targetId)
     return (
       <SetupFrame step={2} title="Map" onBack={() => game.go('missions')} hasCoach={hasCoach}>
-        <section className={styles.targetMap} data-testid="mission-target-map">
-          <div className={styles.mapCanvas}>
+        <section
+          ref={mapRef}
+          className={styles.targetMap}
+          data-testid="mission-target-map"
+          data-coach={coachFootprint.h > 0}
+          style={{ '--coach-h': `${coachFootprint.h}px`, '--coach-w': `${coachFootprint.w}px` } as CSSProperties}
+        >
+          <div className={styles.mapFilter} data-testid="mission-target-filter">
+            <strong>MISSION FILTER</strong>
+            <RequiredCargo minerals={game.mission.requires.minerals} catalog={game.catalog.minerals} />
+            <p>ONLY TARGETS WITH THE REQUIRED MINERALS, RANGE, CARGO, AND DRILL PARAMETERS ARE HIGHLIGHTED.</p>
+          </div>
+          <div className={styles.mapField}>
             <GalaxyMap mission={game.mission} targets={game.catalog.targets} compatibleIds={new Set(compatibleTargets.map(target => target.id))} pickedId={targetId} onPick={setTargetId} eligibleOnlyHighlight />
           </div>
-          <div className={styles.filterRibbon}>
-            <strong>MISSION FILTER ACTIVE</strong>
-            <span>ONLY TARGETS WITH THE REQUIRED MINERALS, RANGE, CARGO, AND DRILL PARAMETERS ARE HIGHLIGHTED.</span>
-            <RequiredCargo minerals={game.mission.requires.minerals} catalog={game.catalog.minerals} />
-          </div>
-          <div className={styles.mapAction} data-testid="target-selection-summary">
-            <div><span>{selectedTarget ? `${targetTypeLabel(selectedTarget.type)} · ELIGIBLE TARGET` : 'ELIGIBLE TARGET'}</span><h2>{selectedTarget?.name ?? 'SELECT A HIGHLIGHTED BODY'}</h2>{selectedTarget && <p><b>{targetTypeLabel(selectedTarget.type)}</b> · ORBIT {selectedTarget.orbit} · MISSION PARAMETERS PASS</p>}</div>
+          <div className={styles.mapRail} data-testid="target-selection-summary">
+            <div className={styles.mapPick}>
+              <span>{selectedTarget ? `${targetTypeLabel(selectedTarget.type)} · ORBIT ${selectedTarget.orbit}` : `${compatibleTargets.length} ELIGIBLE`}</span>
+              <h2>{selectedTarget?.name ?? 'Select a highlighted body'}</h2>
+            </div>
             <button type="button" className={styles.primary} data-testid="continue-build-btn" disabled={!selectedTarget} onClick={() => selectedTarget && game.onPickTarget(selectedTarget.id)}><StepGlyph step={2} /> CONFIRM TARGET</button>
           </div>
         </section>

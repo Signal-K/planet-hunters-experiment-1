@@ -110,9 +110,13 @@
 }
 
 .title {
-  align-self: stretch;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  height: 48px;
   min-width: 248px;
-  padding: 7px 12px;
+  padding: 4px 12px;
+  border-radius: 5px;
   border-left: 7px solid var(--mission-green);
 }
 
@@ -120,8 +124,6 @@
 .contractIdentity span,
 .contractFacts span,
 .contractCargo > span,
-.filterRibbon,
-.mapAction span,
 .blueprintHeading span,
 .manifestHeading span,
 .rocketSwitcher span,
@@ -133,8 +135,10 @@
   text-transform: uppercase;
 }
 
+.title span { font-size: 10px; }
+
 .title h1 {
-  margin: 4px 0 0;
+  margin: 2px 0 0;
   font: 800 21px/1 var(--ln-font-display);
   letter-spacing: .01em;
 }
@@ -151,22 +155,23 @@
 .progress li {
   display: flex;
   align-items: center;
-  gap: 6px;
-  height: 36px;
-  padding: 4px 10px 4px 4px;
+  gap: 8px;
+  height: 48px;
+  padding: 4px 12px 4px 8px;
+  border-radius: 5px;
   color: color-mix(in srgb, var(--mission-ink) 60%, transparent);
-  font: 800 8px var(--ln-font-display);
+  font: 800 10px var(--ln-font-display);
   letter-spacing: .11em;
 }
 
 .progress i {
   display: grid;
   place-items: center;
-  width: 24px;
-  height: 24px;
+  width: 28px;
+  height: 28px;
   border: 2px solid currentColor;
   border-radius: 50%;
-  font: 800 9px var(--ln-font-mono);
+  font: 800 11px var(--ln-font-mono);
 }
 
 .progress li[data-current='true'] {
@@ -180,6 +185,7 @@
 
 /* This is the only mission-setup container. Its bounds never change by step. */
 .stage {
+  container: setup-stage / size;
   position: absolute;
   inset: 96px 32px 32px;
   z-index: 10;
@@ -395,7 +401,10 @@
 
 .empty { display: grid; place-items: center; width: 100%; height: 100%; font: 800 18px var(--ln-font-display); letter-spacing: .14em; }
 
-/* Step 2: the atlas itself fills the stage; only its control strips overlay it. */
+/* Step 2: the filter, the chart and the selection rail are separate bands,
+   so nothing sits on the chart or on each other. The tutorial coach is drawn
+   by the route layout above the stage; the map measures its footprint
+   (--coach-h / --coach-w) and leaves that space empty. */
 .targetMap {
   --ln-text: var(--mission-paper-bright);
   --ln-panel: var(--mission-ink);
@@ -404,54 +413,86 @@
   --ln-map-star: var(--mission-ink);
   --ln-map-sun: var(--ln-warn);
   --ln-map-sun-soft: color-mix(in srgb, var(--ln-warn) 35%, var(--mission-paper-bright));
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: var(--coach-h, 0px) auto minmax(0, 1fr) auto;
+  grid-template-areas: "coach" "filter" "map" "rail";
   background: var(--mission-paper-bright);
 }
 
-.mapCanvas { position: absolute; inset: 0; }
-.mapCanvas > div > div:first-child { min-height: 0 !important; padding: 0 !important; }
-.mapCanvas > div > div:last-child { padding: 8px 20px 10px 28% !important; }
-
-.filterRibbon {
-  position: absolute;
-  z-index: 4;
-  right: 16px;
-  top: 16px;
-  display: grid;
-  gap: 6px;
-  width: min(410px, 40%);
-  padding: 12px 16px;
-  border: 3px solid var(--mission-ink);
-  border-left: 8px solid var(--mission-green);
-  border-radius: 5px;
-  background: color-mix(in srgb, var(--mission-paper-bright) 96%, transparent);
-  box-shadow: 0 5px 0 color-mix(in srgb, var(--mission-ink) 34%, transparent);
+.mapFilter {
+  grid-area: filter;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  align-content: flex-start;
+  gap: 8px 12px;
+  min-width: 0;
+  padding: 8px 16px;
+  border-bottom: 2px solid var(--mission-ink);
+  background: var(--mission-paper);
 }
 
-.filterRibbon strong { font: 800 12px var(--ln-font-display); letter-spacing: .14em; }
-.filterRibbon > span { font: 700 10px/1.35 var(--ln-font-body); letter-spacing: .03em; }
-.filterRibbon > div { display: flex; flex-wrap: wrap; gap: 6px; }
+.mapFilter strong { font: 800 10px/1 var(--ln-font-display); letter-spacing: .14em; }
+.mapFilter p {
+  flex: 1 1 100%;
+  margin: 0;
+  color: color-mix(in srgb, var(--mission-ink) 72%, transparent);
+  font: 700 11px/1.4 var(--ln-font-body);
+  letter-spacing: .02em;
+}
 
-.mapAction {
-  position: absolute;
-  z-index: 4;
-  right: 16px;
-  bottom: 16px;
+.mapField { grid-area: map; position: relative; min-width: 0; min-height: 0; }
+
+.mapRail {
+  grid-area: rail;
   display: flex;
   align-items: center;
-  gap: 20px;
-  min-width: min(590px, 68%);
-  padding: 12px;
-  border: 3px solid var(--mission-ink);
-  border-radius: 5px;
-  background: color-mix(in srgb, var(--mission-paper-bright) 96%, transparent);
-  box-shadow: 0 5px 0 color-mix(in srgb, var(--mission-ink) 34%, transparent);
+  gap: 16px;
+  min-width: 0;
+  padding: 8px 8px 8px 16px;
+  border-top: 2px solid var(--mission-ink);
+  background: var(--mission-paper);
 }
 
-.mapAction > div:first-child { flex: 1; min-width: 0; }
-.mapAction h2 { margin: 4px 0 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: 800 20px var(--ln-font-display); }
-.mapAction p { margin: 0; font: 700 9px var(--ln-font-mono); letter-spacing: .07em; }
-.mapAction p b { display: inline-block; padding: 3px 6px; border: 2px solid var(--mission-ink); background: var(--mission-green); font: inherit; }
-.mapAction .primary { flex: 0 0 auto; }
+.mapPick { flex: 1 1 auto; min-width: 0; }
+.mapPick span {
+  display: block;
+  color: color-mix(in srgb, var(--mission-ink) 72%, transparent);
+  font: 800 10px/1 var(--ln-font-display);
+  letter-spacing: .14em;
+}
+.mapPick h2 {
+  margin: 4px 0 0;
+  overflow: hidden;
+  font: 800 18px/1.1 var(--ln-font-display);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.mapRail .primary { flex: 0 0 auto; min-height: 48px; padding: 8px 16px; font-size: 12px; }
+
+/* A wide stage gives the chart its full height: the filter moves into a
+   side column under the coach, and only the rail spans the width. */
+@container setup-stage (min-aspect-ratio: 5 / 4) {
+  .targetMap {
+    grid-template-columns: max(var(--coach-w, 0px), 264px) minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr) auto;
+    grid-template-areas: "filter map" "rail rail";
+  }
+  .mapFilter {
+    padding: max(16px, var(--coach-h, 0px)) 16px 16px;
+    overflow: hidden;
+    border-bottom: 0;
+    border-right: 2px solid var(--mission-ink);
+  }
+}
+
+/* Very short stages keep the filter to its label and cargo. */
+@container setup-stage (max-height: 300px) {
+  .mapFilter p { display: none; }
+  .mapRail { padding-block: 4px; }
+  .mapRail .primary { min-height: 40px; }
+}
 
 /* Step 3: one restrained blueprint field, with the vehicle lifted above it. */
 .rocketBlueprint {
@@ -654,28 +695,24 @@
   .title { min-width: 190px; }
   .contractDescription { max-width: 48vw; }
   .contractRocket { right: 8%; width: 27%; }
-  .filterRibbon { width: 47%; }
-  .mapAction { min-width: 61%; }
 }
 
 @media (max-width: 720px), (max-height: 520px) {
-  /* SSL-303: the global .game-menu-button (top:56px, right:12px, 72×36 —
-     see app/globals.css) sits inside this header's vertical band whenever
-     the header is pushed down for the dev launcher, and always shares its
-     right edge. Reserve the pill's footprint on the right so the step dots
-     end before the pill starts instead of underneath it. */
-  .header { inset: 6px 96px auto 8px; height: 48px; }
+  /* One 40px row: back, title and the four step markers share a height
+     and border. The old right-hand reserve was for a menu pill that is now
+     part of the shared nav. */
+  .header { inset: 8px 8px auto; height: 40px; }
+  .header[data-dev-launcher='true'] { top: 8px; left: 56px; }
   .back, .titleGlyph { width: 40px; height: 40px; }
-  .title { min-width: 0; width: 164px; padding: 5px 8px; overflow: hidden; }
-  .title span { display: block; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font-size: 7px; }
-  .title h1 { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font-size: 15px; }
-  .progress { gap: 4px; }
-  .progress li { height: 30px; border-width: 2px; box-shadow: none; }
-  .progress i { width: 20px; height: 20px; }
-  /* top clears the global .game-menu-button (top:56px + height:36px = bottom
-     92px), which is a fixed-position sibling outside this component and
-     can't be reasoned about from in here. */
-  .stage { inset: 96px 8px 16px; border-width: 3px; border-radius: 5px; box-shadow: 0 6px 0 color-mix(in srgb, var(--mission-ink) 42%, transparent); }
+  .titleGlyph { display: none; }
+  .title { display: flex; flex: 1 1 auto; flex-direction: column; justify-content: center; min-width: 0; width: auto; height: 40px; padding: 4px 8px; overflow: hidden; }
+  .title span { display: block; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font-size: 10px; letter-spacing: .12em; }
+  .title h1 { overflow: hidden; margin-top: 2px; white-space: nowrap; text-overflow: ellipsis; font-size: 16px; }
+  .progress { flex: 0 0 auto; gap: 4px; }
+  .progress li { width: 32px; height: 40px; padding: 0; justify-content: center; }
+  .progress li span { display: none; }
+  .progress i { width: 24px; height: 24px; font-size: 10px; }
+  .stage { inset: 56px 8px 24px; border-width: 3px; border-radius: 5px; box-shadow: 0 6px 0 color-mix(in srgb, var(--mission-ink) 42%, transparent); }
 
   .contractGallery::before { inset: 12px; }
   .contractIdentity { left: 6%; top: 6%; gap: 8px; }
@@ -693,19 +730,6 @@
   .carouselArrow { width: 38px; height: 54px; border-width: 2px; }
   .galleryDots { bottom: 2%; }
 
-  .filterRibbon { right: 8px; top: 8px; width: 42%; padding: 8px 10px; border-width: 2px; border-left-width: 6px; }
-  .filterRibbon strong { font-size: 9px; }
-  .filterRibbon > span { font-size: 8px; }
-  .filterRibbon .cargoReadout { gap: 4px; }
-  .filterRibbon .cargoChip { min-height: 24px; border-width: 1px; box-shadow: none; }
-  .filterRibbon .cargoChip i { min-width: 24px; border-right-width: 1px; font-size: 8px; }
-  .filterRibbon .cargoChip strong { padding-left: 5px; font-size: 9px; }
-  .filterRibbon .cargoChip span { padding-inline: 3px 5px; font-size: 7px; }
-  .mapCanvas > div > div:last-child { display: none !important; }
-  .mapAction { right: 8px; bottom: 8px; min-width: 52%; padding: 8px; border-width: 2px; gap: 8px; }
-  .mapAction h2 { font-size: 15px; }
-  .mapAction p { display: none; }
-  .mapAction .primary { min-height: 40px; padding: 7px 10px; font-size: 9px; }
 
   .blueprintHeading { left: 5%; top: 5%; }
   .blueprintHeading h2 { font-size: 28px; }
@@ -758,17 +782,21 @@
 /* The narrow app panel is tall, not compact landscape. Recompose around that
    vertical room instead of squeezing desktop's two columns into half-widths. */
 @media (orientation: portrait) {
-  /* SSL-303: same MENU-pill clearance as the compact-landscape block above. */
-  .header { inset: 6px 96px auto 8px; height: 48px; gap: 6px; }
-  .back { width: 40px; height: 40px; }
+  /* One 40px row: back, title and the four step markers share a height
+     and border. The old right-hand reserve was for a menu pill that is now
+     part of the shared nav. */
+  .header { inset: 8px 8px auto; height: 40px; }
+  .header[data-dev-launcher='true'] { top: 8px; left: 56px; }
+  .back, .titleGlyph { width: 40px; height: 40px; }
   .titleGlyph { display: none; }
-  .title { flex: 1 1 auto; min-width: 76px; width: auto; padding: 5px 7px; }
-  .title span { font-size: 6px; letter-spacing: .12em; white-space: nowrap; }
-  .title h1 { overflow: hidden; margin-top: 3px; font-size: clamp(12px, 2.6vw, 18px); text-overflow: ellipsis; white-space: nowrap; }
-  .progress { flex: 0 0 auto; gap: 3px; }
-  .progress li { width: 28px; height: 30px; padding: 2px; justify-content: center; }
-  .progress i { width: 20px; height: 20px; }
-  .stage { inset: 96px 8px 16px; }
+  .title { display: flex; flex: 1 1 auto; flex-direction: column; justify-content: center; min-width: 0; width: auto; height: 40px; padding: 4px 8px; overflow: hidden; }
+  .title span { display: block; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font-size: 10px; letter-spacing: .12em; }
+  .title h1 { overflow: hidden; margin-top: 2px; white-space: nowrap; text-overflow: ellipsis; font-size: 16px; }
+  .progress { flex: 0 0 auto; gap: 4px; }
+  .progress li { width: 32px; height: 40px; padding: 0; justify-content: center; }
+  .progress li span { display: none; }
+  .progress i { width: 24px; height: 24px; font-size: 10px; }
+  .stage { inset: 56px 8px 24px; border-width: 3px; border-radius: 5px; box-shadow: 0 6px 0 color-mix(in srgb, var(--mission-ink) 42%, transparent); }
   .contractGallery::before { inset: 10px; }
   .contractIdentity { left: 7%; top: 5%; gap: 8px; }
   .contractIdentity > div:first-child { transform: scale(.72); transform-origin: left center; margin-right: -28px; }
@@ -815,12 +843,6 @@
   .root[data-step='1'][data-coach='true'] .contractCopy { width: min(48%, calc(100% - 372px - 34%)); }
   .root[data-step='1'][data-coach='true'] .contractCopy h2 { font-size: clamp(28px, 3.6vw, 52px); }
 
-  .filterRibbon { left: 6%; right: 6%; top: 3%; width: auto; }
-  .filterRibbon > span { max-width: 420px; }
-  .mapAction { left: 6%; right: 6%; bottom: 3%; display: grid; grid-template-columns: minmax(0, 1fr) auto; width: auto; min-width: 0; }
-  .mapAction h2 { font-size: 17px; }
-  .mapAction .primary { min-width: 150px; }
-  .root[data-step='2'][data-coach='true'] .filterRibbon { top: 24%; }
 
   .rocketBlueprint::after { left: 6%; right: 6%; top: 43%; bottom: auto; border-left: 0; border-top: 2px dashed color-mix(in srgb, var(--mission-ink) 28%, transparent); }
   .blueprintHeading { left: 6%; top: 4%; }
