@@ -91,9 +91,16 @@ export function queueCreate(collection: string, data: Record<string, unknown>, i
   return id
 }
 
-/** Create-or-update the record matching `filter`; safe to replay. */
-export function queueUpsert(collection: string, filter: string, data: Record<string, unknown>): void {
-  void getOutbox().enqueue({ type: 'upsert', collection, id: newRecordId(), filter, data })
+/**
+ * Create-or-update the record matching `filter`; safe to replay. `id` is used
+ * only if the record has to be created. Resolves once the write is stored.
+ */
+export function queueUpsert(collection: string, filter: string, data: Record<string, unknown>, id: string = newRecordId()): Promise<void> {
+  return getOutbox().enqueue({ type: 'upsert', collection, id, filter, data })
+}
+
+export function isQueuedUpsert(op: OutboxOp, collection: string, filter: string): boolean {
+  return op.type === 'upsert' && op.collection === collection && op.filter === filter
 }
 
 /** Queue a community API POST. Returns the client id sent as `body.id` so the server can dedupe replays. */

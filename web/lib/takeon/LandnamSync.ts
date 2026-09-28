@@ -315,7 +315,7 @@ export class LandnamSync implements SyncAdapter {
    * Keyed upserts mean only the latest snapshot per world/structure is kept.
    */
   private queueMissionUpload(userId: string, state: MissionState, roverName: string): void {
-    queueUpsert('voxel_worlds', this.worldFilter(userId, state.id), {
+    void queueUpsert('voxel_worlds', this.worldFilter(userId, state.id), {
       user: userId,
       target_id: state.id,
       body_id: state.bodyId,
@@ -331,7 +331,7 @@ export class LandnamSync implements SyncAdapter {
       weather: state.weather ?? null,
     })
     for (const structure of state.structures) {
-      queueUpsert(
+      void queueUpsert(
         'structures',
         `${this.worldFilter(userId, state.id)} && structure_id = "${filterValue(structure.id)}"`,
         {
