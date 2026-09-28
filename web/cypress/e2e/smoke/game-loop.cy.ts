@@ -523,7 +523,7 @@ describe('Full Game Loop — Landnam', () => {
       cy.get('[data-testid="tutorial-coach-block"]')
         .should('be.visible')
         .should('contain', 'Guided Ops')
-        .should('contain', 'MISSIONS')
+        .should('contain', 'Tap OPS')
     })
   })
 

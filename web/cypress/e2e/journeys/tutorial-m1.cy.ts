@@ -242,7 +242,7 @@ function playM1() {
   completeDebrief()
 
   // Collecting the M1 reward returns to Hub and the coach immediately opens
-  // M2's guided-ops card ("Tap MISSIONS") — Market is not part of the
+  // M2's guided-ops card ("Tap OPS") — Market is not part of the
   // current M1 exit flow at all (confirmed by actually watching where the
   // coach points next, not by assuming the old "...to market completion"
   // test name still describes the real flow). Clicking Market here just
