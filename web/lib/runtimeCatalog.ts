@@ -89,7 +89,7 @@ export function buildRuntimeCatalog({
       difficulty: 'L2',
       locked: false,
       sequence: missionsDone + 1,
-      unlockAt: 'Complete M3',
+      unlockAt: 'Reach Free Operations',
       requires: { minerals: { nickel: 2, cobalt: 2 }, cargo_min: 4, drill_tier: 2, max_orbit: 8 },
       payout: { francs: 0, affinity: 0 },
     }

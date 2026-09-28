@@ -2,53 +2,50 @@
 
 ## Scope
 
-Current onboarding covers M1 and M2 only.
+Onboarding teaches Landnam as **establishing your own space agency** (SSL-332, decided 2026-09-28). It replaces the earlier three-mission ladder (M1 extraction, M2 Prospector bulk haul, M3 transport). Do not revive that ladder or older post-onboarding plans.
 
-- M1 teaches launchpad placement, mission selection, target selection, preflight, mining, and debrief.
-- M2 teaches the Prospector purchase flow for a larger single-use vessel.
-- M3 is not yet fully described. Do not implement or document M3 from older plans.
-
-Earlier onboarding and post-onboarding plans are intentionally not part of this spec.
-
-## Onboarding v2 — establish your space agency (SSL-332, in progress)
-
-Onboarding is being reframed from "three mining missions" to founding an agency. The training track is:
+The training track is:
 
 **Place Launchpad → Extraction → Transport → Build Storage Silo → Free Ops**
 
-Free Ops then offers **Client work / Space telescope / Build refinery** immediately. Existing players keep all unlocks, and the training stays replayable.
+| Stage | What the player does | Completes when |
+|---|---|---|
+| Place Launchpad | Build the first structure | `launchpad` is placed |
+| Extraction | Guided mission 1: accept a client contract, pick a target, fly the included Explorer, mine, return, debrief | `missionsDone` reaches 1 |
+| Transport | Guided mission 2: a two-stop job — mine at one target, deliver to a second, fly home; paid a mining fee and a transport fee (KES-313). Prospector is purchasable but not forced | `missionsDone` reaches 2 |
+| Build Storage Silo | Place the Earth `surface-silo` (required) | silo is placed; this opens Free Ops |
+| Free Ops | Pick an activity: Client work / Space telescope / Build refinery | — |
 
-Current state (first slice):
+Mining, transport and construction are taught as separate agency activities: one stage each.
 
-- `web/lib/systems/AgencyOnboardingSystem.ts` derives the player's training stage from existing state. Extraction covers the mine-and-return onboarding missions, Transport is the final two-stop haul mission (KES-313), and Storage is complete once a `surface-silo` is placed.
-- The stage model gates nothing. `player.freeOperations` is still derived from `missionsDone` in `web/lib/game-state.ts`, so the Storage stage is a recommended next beat, not a lock.
-- The Guided Operations handoff sheet (`TutorialCompleteSheet`) shows the track, with Storage Silo as the next step.
+## Rules
 
-Not yet done: coach steps per stage, the Build Storage Silo guided step, the three-activity Free Ops menu, replaying training, and any change to the mission count before Free Ops.
+- **Free Ops boundary.** `freeOperationsUnlocked` in `web/lib/systems/AgencyOnboardingSystem.ts`: both guided missions flown **and** a storage silo placed. `player.freeOperations` is derived from it on every load (`web/lib/game-state.ts`), on mission completion (`useGameLoop`) and on structure placement (`applyPlaceStructure`).
+- **Existing players keep their unlocks.** Saves with `missionsDone >= 3` reached Free Ops under the old ladder and keep it without a silo (`LEGACY_FREE_OPS_MISSIONS_DONE`).
+- **Silo unlock.** The Surface Silo's unlock trigger is `onboarding-missions`: it becomes buildable once both guided missions are flown, before Free Ops.
+- **Handoff.** Placing the silo raises the `tutorial-complete` popup once. The sheet shows the finished track and the three Free Ops activities:
+  - Client work → mission board
+  - Space telescope → Launchpad (where the transit telescope launches) until one is in orbit, then the Instrument Hub
+  - Build refinery → Build placement until a refinery exists, then the Refinery
+- **Replayable.** Menu → Agency Training (Free Ops only) reopens the same sheet in review mode: each stage with a one-line summary of what it taught, plus the three activities. It never changes progress.
+- Post-onboarding missions keep the old contract-fee tier (`FREE_OPS_MISSION_SEQUENCE = 4`), so the shorter onboarding does not change Free Ops pay.
 
-## Steps
+## Coach steps
 
-`M1_STEPS` walks the first mission end-to-end:
+`web/lib/data/tutorial.ts`, selected by `trainingCoachSteps(agencyTrainingStage(player))`:
 
-1. Build a Launchpad.
-2. Open Missions.
-3. Pick the M1 contract.
-4. Choose a compatible target.
-5. Review the prebuilt Explorer.
-6. Launch.
-7. Mine the required ore.
-8. Debrief and sell cargo.
+- `EXTRACTION_STEPS` (ids 0–8): place the Launchpad, open the mission board, pick a contract and target, review the Explorer, launch, mine.
+- `TRANSPORT_STEPS` (ids 30–33): open contracts, the two-stop route at vehicle selection, confirm the run, unload at the client depot.
+- `STORAGE_STEPS` (ids 40–41): tap the Hub's "Build Storage Silo" card, then place the silo on an open plot.
 
-`M2_STEPS` covers the current M2 proposal:
-
-1. Explain that M2 needs Prospector because Explorer cannot carry the required silicon.
-2. Purchase Prospector in the rocket selection step before launch.
+While the player is waiting on the silo, the Hub shows a Storage Silo progression card and the mission board says to build the silo instead of showing an empty list.
 
 ## Presentation
 
-`TutorialCoach` renders compact coach marks and manual cards from `web/lib/data/tutorial.ts`.
+`TutorialCoach` renders compact coach marks and manual cards from `web/lib/data/tutorial.ts`. `TutorialCompleteSheet` renders the Free Ops handoff and the training review.
 
 ## State
 
-- `game.tutorial` tracks whether authored tutorial guidance is active.
-- `game.doneSteps` tracks completed step IDs.
+- `game.tutorial` is true for every player not yet in Free Ops (it is repaired back on if a save lost it).
+- `game.doneSteps` tracks completed step IDs; skipping marks the current stage's steps done.
+- `game.popup === 'tutorial-complete'` is the one-time handoff; `'agency-training'` is the menu review.

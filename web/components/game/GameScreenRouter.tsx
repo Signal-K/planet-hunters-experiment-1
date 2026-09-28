@@ -3,8 +3,8 @@
 import { useEffect, useState, useCallback } from 'react'
 import dynamic from 'next/dynamic'
 import { useGame } from '@/game-context'
-import { ACADEMY_INTRO_MISSION_ID, M1_STEPS, M2_STEPS, M3_STEPS, rocketDisplayForConfig, rocketModelForConfig } from '@/lib/data'
-import { FREE_OPS_START_MISSIONS_DONE } from '@/lib/data/mission-generator'
+import { ACADEMY_INTRO_MISSION_ID, rocketDisplayForConfig, rocketModelForConfig, trainingCoachSteps } from '@/lib/data'
+import { agencyTrainingStage } from '@/lib/systems/AgencyOnboardingSystem'
 import type { Screen } from '@/lib/game-types'
 // LandingFlow and HubScreen are the two most likely first paints (cold start
 // and post-onboarding default), so they stay in the main bundle. Every other
@@ -123,10 +123,7 @@ function ScreenBody({
     : undefined
 
   // Derive the coach step for coachManual (needed by AssemblyScreen)
-  const coachSteps = !game.tutorial || game.player.missionsDone >= FREE_OPS_START_MISSIONS_DONE ? [] :
-    game.player.missionsDone === 0 ? M1_STEPS :
-    game.player.missionsDone === 1 ? M2_STEPS :
-    game.player.missionsDone === 2 ? M3_STEPS : []
+  const coachSteps = !game.tutorial || game.player.freeOperations ? [] : trainingCoachSteps(agencyTrainingStage(game.player))
   // An active run always outranks onboarding copy. A player returning to an
   // in-flight mission must see the resume affordance, not a fresh-contract
   // coach card that routes them back to mission creation.
@@ -193,6 +190,7 @@ function ScreenBody({
             stash: game.player.stash,
             placed: game.player.placed,
             freeOperations: game.player.freeOperations,
+            missionsDone: game.player.missionsDone,
             placementPlots: game.player.placementPlots,
           }}
           onPlaced={(kind, plot) => {

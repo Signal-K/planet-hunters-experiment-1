@@ -37,9 +37,10 @@ Landnam has no local decision store. Read applicable ZenNotes decisions in the p
 
 Landnam is a mining and resource-management game in the Star Sailors ecosystem.
 Players manage a space program: build rockets, accept client jobs, fly to
-targets, mine minerals, sell cargo, and reinvest. The active onboarding scope is
-M1 and M2. M2 uses the newer Prospector purchase flow. M3 is not yet fully
-described; do not revive earlier onboarding or post-onboarding plans.
+targets, mine minerals, sell cargo, and reinvest. Onboarding is "establish your
+space agency" (SSL-332): Place Launchpad → Extraction → Transport → Build
+Storage Silo → Free Ops. Do not revive earlier onboarding or post-onboarding
+plans (the three-mission M1/M2 Prospector/M3 ladder is retired).
 
 ## Tech stack
 
@@ -84,10 +85,12 @@ Durable rules pulled from sprint-planning discussion (Craft doc "Landnam sprint 
 - **Terminology: clients, not contractors.** "Contractor"/"subcontractor" naming is retired in-game. Use "client" for whoever issues a mission. Do not reintroduce "contractor" wording in new UI copy, survey copy, or code identifiers — this includes live PostHog survey definitions, not just local code (see the 2026-07-12 client-terminology sync in Saily/Landnam PostHog surveys).
 - **Docker must never require network access.** `make up` and every container in `docker-compose.yml` must start and run fully offline. Never add a build/run step that fetches updates or external resources at container start; if a base image needs bumping, do that as an explicit, separate maintenance action, never as a side effect of a normal `make up`.
 - **PostHog surveys must be live, real, and non-blocking.** Every survey ID referenced in code must resolve to a real, non-archived PostHog survey — no demo/dummy/placeholder IDs. Survey popups must never block or cover gameplay UI. Every sprint, audit answered-vs-ignored survey volume against the milestone events meant to trigger them (see the `per-sprint-survey-audit-process` ticket pattern for the checklist) — this is a standing process, not a one-off task.
-- **Onboarding mission content mapping** — do not reorder without a new design decision:
-  - Mission 1 — pick a mission, pick a target, build and send a rocket
-  - Mission 2 — unlock a new, larger-capacity rocket; expose a mission-tier indicator to the player
-  - Mission 3 — two-stop mineral mining and haul job: mine the required minerals at one target, deliver them to a second target; payout splits into a mining fee and a transport fee (decided 2026-09-05, KES-313 — supersedes the earlier "non-mineral cargo / flat service fee" line, which was never implemented and had only landed as an incidental docs-sync edit on 2026-07-15, not a deliberate design decision)
+- **Onboarding (agency training) mapping** — do not reorder without a new design decision (decided 2026-09-28, SSL-332; supersedes the M1/M2/M3 ladder):
+  - Place Launchpad — the first structure
+  - Extraction (guided mission 1) — pick a client contract, pick a target, send a rocket, mine and return
+  - Transport (guided mission 2) — two-stop mineral mining and haul job: mine at one target, deliver to a second; payout splits into a mining fee and a transport fee (KES-313). Prospector is purchasable from here but no longer forced; the old M2 Prospector bulk haul is retired
+  - Build Storage Silo — required; placing the Earth silo is what opens Free Ops. Saves that finished the old three-mission onboarding keep Free Ops without one
+  - Free Ops — opens on three activities: Client work / Space telescope / Build refinery. Training is reviewable from Menu → Agency Training
 
 ## Backend connections
 

@@ -1,6 +1,6 @@
 import { useCallback, useRef } from 'react'
 import {
-  ROCKET_MODELS, FREE_OPS_START_MISSIONS_DONE,
+  ROCKET_MODELS,
   rocketModelForConfig, travelDurationMs, suggestBuild,
   feasibleTargetsFor, validateBuild,
   isOwnProgramMission,
@@ -29,7 +29,8 @@ import { applyGainResearchXP, applyUpgradeLicenseGrade, applyUnlockBlueprint } f
 import { pbShared } from '@/lib/pb'
 import { pbLandnam } from '@/lib/pb-landnam'
 import { queueCreate, queueUpdate } from '@/lib/offline/pbOutbox'
-import { justFinishedOnboarding } from '@/lib/game-state'
+import { freeOperationsUnlocked } from '@/lib/systems/AgencyOnboardingSystem'
+import { FREE_OPS_MISSION_SEQUENCE } from '@/lib/data/mission-generator'
 
 // 42s/orbit-unit — a ~65% cut from the original 2min/unit pace (KES-262):
 // full round trips were running long enough that players felt locked out of
@@ -403,7 +404,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
       const crewStatus = crewRequirementStatus(mission.requires.crew, s.player.crew ?? [])
       const missionCrewIds = missionCrewForLaunch(s, mission)
       if (mission.requires.crew && (!crewStatus.met || missionCrewIds.length === 0)) return s
-      const timedTransit = s.player.missionsDone >= FREE_OPS_START_MISSIONS_DONE
+      const timedTransit = s.player.freeOperations
       const transitStartedAt = Date.now()
       launchedTransitStartedAt = transitStartedAt
       const remainingStagedRockets = (s.player.stagedRockets ?? []).filter(candidate => candidate.id !== vehicle.id)
@@ -470,7 +471,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
       const nextLegTarget = hasDelivery
         ? catalog.targets.find(t => t.id === s.deliveryTargetId)
         : (s.targetId ? catalog.targets.find(t => t.id === s.targetId) : null)
-      const timedTransit = s.player.missionsDone >= FREE_OPS_START_MISSIONS_DONE
+      const timedTransit = s.player.freeOperations
       const arrivalAt = (timedTransit && nextLegTarget)
         ? transitStartedAt + travelDurationMs(nextLegTarget, s.player.unlockedSkillNodes ?? [], ORBIT_MS_PER_UNIT)
         : null
@@ -512,7 +513,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
     const transitStartedAt = Date.now()
     setState(s => {
       const deliveryTarget = s.deliveryTargetId ? catalog.targets.find(t => t.id === s.deliveryTargetId) : null
-      const timedTransit = s.player.missionsDone >= FREE_OPS_START_MISSIONS_DONE
+      const timedTransit = s.player.freeOperations
       const arrivalAt = (timedTransit && deliveryTarget)
         ? transitStartedAt + travelDurationMs(deliveryTarget, s.player.unlockedSkillNodes ?? [], ORBIT_MS_PER_UNIT)
         : null
@@ -542,7 +543,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
       const nextLegTarget = hasDelivery
         ? catalog.targets.find(t => t.id === s.deliveryTargetId)
         : (s.targetId ? catalog.targets.find(t => t.id === s.targetId) : null)
-      const timedTransit = s.player.missionsDone >= FREE_OPS_START_MISSIONS_DONE
+      const timedTransit = s.player.freeOperations
       const arrivalAt = (timedTransit && nextLegTarget)
         ? transitStartedAt + travelDurationMs(nextLegTarget, s.player.unlockedSkillNodes ?? [], ORBIT_MS_PER_UNIT)
         : null
@@ -564,7 +565,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
       const nextLegTarget = hasDelivery
         ? catalog.targets.find(t => t.id === s.deliveryTargetId)
         : (s.targetId ? catalog.targets.find(t => t.id === s.targetId) : null)
-      const timedTransit = s.player.missionsDone >= FREE_OPS_START_MISSIONS_DONE
+      const timedTransit = s.player.freeOperations
       const arrivalAt = (timedTransit && nextLegTarget)
         ? transitStartedAt + travelDurationMs(nextLegTarget, s.player.unlockedSkillNodes ?? [], ORBIT_MS_PER_UNIT)
         : null
@@ -878,28 +879,25 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
           kind: isProgramOperation ? 'program' as const : 'client' as const,
         },
       ].slice(-100)
-      const stillInTutorial = missionsDone < FREE_OPS_START_MISSIONS_DONE && catalog.missions.some(m => m.sequence === missionsDone + 1)
-      // M3 (the last onboarding mission) also flips freeOperations true on this
-      // same tick, which would otherwise auto-open the market straight out of
-      // debrief with no player action requesting it. Land on hub for that one
-      // boundary mission; auto-market-open only kicks in for Free Ops missions
-      // completed after onboarding has actually ended.
-      const justFinishedOnboardingNow = justFinishedOnboarding(s.player.missionsDone, missionsDone)
-      // Skip the Prospector upsell popup during guided onboarding — the tutorial
-      // coach already delivers the same "Prospector available" message inline
-      // (lib/data/tutorial.ts step 20), and the popup pre-empts the coach.
-      //
+      // SSL-332: Free Ops needs the guided missions AND a storage silo, so
+      // finishing the Transport lesson normally leaves the player in training
+      // (Storage stage). Only a save that already qualifies — e.g. a legacy
+      // three-mission run completing M3 — crosses into Free Ops here.
+      const nextFreeOperations = freeOperationsUnlocked({ missionsDone, placed: s.player.placed })
+      const stillInTutorial = !nextFreeOperations
+      // Crossing into Free Ops on a mission tick lands on hub rather than
+      // auto-opening the market straight out of debrief.
+      const justFinishedOnboardingNow = !s.player.freeOperations && nextFreeOperations
       // 'tutorial-complete' fires exactly once, on the single tick Free Ops
-      // actually starts — not derived from missionsDone on every render (that
-      // was TutorialCompleteSheet's old, never-wired localStorage-only
-      // approach). It rides in `popup`, which is part of the GameState blob
-      // already persisted to game_states, so the ack survives reload and
-      // syncs across devices with the rest of the save (KES-167).
+      // actually starts — here, or on silo placement (applyPlaceStructure). It
+      // rides in `popup`, which is part of the GameState blob already
+      // persisted to game_states, so the ack survives reload and syncs across
+      // devices with the rest of the save (KES-167).
       const popup = justFinishedOnboardingNow
         ? 'tutorial-complete'
         : showLoanOffer
           ? 'loan'
-          : (missionsDone === 1 && !stillInTutorial) ? 'sr2' : s.popup
+          : s.popup
       const recovered = applyRocketStageRecovery(
         { ...s, player: { ...s.player, stash } },
         rocketModelForConfig(s.rocket),
@@ -927,7 +925,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
           // mission no longer mints a second progression currency.
           skillPoints: s.player.skillPoints ?? 0,
           missionCount: catalog.missions.filter(m => m.sequence === missionsDone + 1).length,
-          freeOperations: missionsDone >= FREE_OPS_START_MISSIONS_DONE,
+          freeOperations: nextFreeOperations,
           clientMissions,
           completedMissions,
           stash: recovered.player.stash,
@@ -1033,13 +1031,15 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
       enqueueSurvey('lnm_m1_complete', 3000)
       enqueueSurvey('lnm_progression_feel', 8000)
     }
-    // M2 vs M3 completion feedback is split between players rather than
-    // both landing on everyone — which survey a player sees is decided by
-    // the `landnam-milestone-survey-variant` PostHog flag. `milestone_reached`
-    // fires for both milestones regardless of variant, so reaching M2/M3
-    // stays visible for players who didn't get that milestone's survey.
-    if (newMissionsDone === 2 || newMissionsDone === 3) {
-      captureGameEvent('milestone_reached', { milestone: `m${newMissionsDone}` })
+    // Guided-mission-2 feedback is split between players rather than both
+    // landing on everyone — which survey a player sees is decided by the
+    // `landnam-milestone-survey-variant` PostHog flag. Since SSL-332 mission 2
+    // is the Transport lesson (after the Prospector purchase), so the 'm2'
+    // cohort gets the mission-choice / rocket surveys and the 'm3' cohort the
+    // transport surveys at the same milestone. `milestone_reached` fires
+    // regardless of variant.
+    if (newMissionsDone === 2) {
+      captureGameEvent('milestone_reached', { milestone: 'm2' })
     }
     const milestoneVariant = getMilestoneSurveyVariant()
     // Split 2026-08-27 (KES-262) — was one 4-question survey paged in a
@@ -1051,13 +1051,16 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
       enqueueSurvey('lnm_m2_rating', 3000)
       enqueueSurvey('lnm_m2_freetext', 3000)
     }
-    if (newMissionsDone === 3 && milestoneVariant === 'm3') {
+    if (newMissionsDone === 2 && milestoneVariant === 'm3') {
       enqueueSurvey('lnm_m3_transport_clarity', 5000)
       enqueueSurvey('lnm_m3_client_choice', 5000)
       enqueueSurvey('lnm_m3_rating', 5000)
       enqueueSurvey('lnm_m3_freetext', 5000)
     }
-    if (!catalog.missions.some(m => m.sequence === newMissionsDone + 1)) enqueueSurvey('lnm_end_of_content', 5000)
+    // Guided missions are followed by the silo build, not a mission at the next
+    // sequence, so only count "ran out of missions" from the first Free Ops
+    // tier onward (the same point it could first fire before SSL-332).
+    if (newMissionsDone >= FREE_OPS_MISSION_SEQUENCE && !catalog.missions.some(m => m.sequence === newMissionsDone + 1)) enqueueSurvey('lnm_end_of_content', 5000)
   }, [addToast, catalog.missions, setState, stateRef])
 
   return {

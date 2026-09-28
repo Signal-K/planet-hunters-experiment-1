@@ -419,7 +419,7 @@ describe('Full Game Loop — Landnam', () => {
       cy.contains('Select Prospector').should('be.visible')
     })
 
-    it('M1 completion returns to hub with Prospector popup and does not open the market', () => {
+    it('M1 completion returns to hub with the Transport coach and does not open the market', () => {
       // M1 requires 5 platinum; player mined 7 so 2 are excess after delivery
       visitWithState(fullState({
         screen: 'debrief',
@@ -455,9 +455,10 @@ describe('Full Game Loop — Landnam', () => {
       cy.get('[data-testid="collect-reward-btn"]').click()
 
       cy.contains('Commodity Exchange').should('not.exist')
-      cy.contains('Guided Ops · Mission 2').should('be.visible')
-      // The M2 coach opens collapsed; its body still names the new vehicle.
-      cy.contains('Prospector is now available').should('exist')
+      // SSL-332: guided mission 2 is the Transport lesson. Its coach opens
+      // collapsed on the Hub; the body still explains the two-stop job.
+      cy.contains('Tap the Launchpad').should('be.visible')
+      cy.contains('Next, moving cargo').should('exist')
     })
   })
 
@@ -493,7 +494,7 @@ describe('Full Game Loop — Landnam', () => {
       cy.contains('Select Prospector').should('be.visible')
     })
 
-    it('M2 coach step 20 shows on hub after M1 — no controlBuilt needed', () => {
+    it('Transport coach step 30 shows on hub after M1 — no controlBuilt needed', () => {
       visitWithState(fullState({
         screen: 'hub',
         popup: null,
@@ -522,13 +523,13 @@ describe('Full Game Loop — Landnam', () => {
       }))
       cy.get('[data-testid="tutorial-coach-block"]')
         .should('be.visible')
-        .should('contain', 'Guided Ops')
-        .should('contain', 'MISSIONS')
+        .should('contain', 'Transport')
+        .should('contain', 'Launchpad')
     })
   })
 
-  describe('Phase 7: M2 — Iron starter order', () => {
-    it('M2 accessible on mission board after M1 without old Control Base gate', () => {
+  describe('Phase 7: Transport lesson (guided mission 2, SSL-332)', () => {
+    it('Transport contracts are on the mission board after M1 without old Control Base gate', () => {
       visitWithState(fullState({
         screen: 'missions',
         doneSteps: { 1: true },
@@ -554,15 +555,17 @@ describe('Full Game Loop — Landnam', () => {
         },
         tutorial: false,
       }))
-      cy.get('[data-testid^="mission-accept-generated-s2-"]').should('be.visible').and('not.be.disabled')
+      cy.get('[data-testid="mission-accept-lnm_m3_relay_bennu_vesta"]').should('be.visible').and('not.be.disabled')
+      cy.get('[data-testid^="mission-accept-generated-s2-"]').should('not.exist')
     })
 
-    it('M2 rocket purchase shows Prospector and purchase coach step', () => {
+    it('Transport rocket selection shows the two-stop route coach step', () => {
       visitWithState(fullState({
         screen: 'rocket-buy',
-        missionId: 'generated-s2-volatile-bulk-4',
-        targetId: 'eros',
-        doneSteps: { 1: true, 2: true, 3: true, 4: true, 5: true, 6: true, 9: true, 20: true },
+        missionId: 'lnm_m3_relay_bennu_vesta',
+        targetId: 'bennu',
+        deliveryTargetId: 'vesta',
+        doneSteps: { 1: true, 2: true, 3: true, 4: true, 5: true, 6: true, 9: true, 30: true },
         player: {
           francs: 9_000_000_000,
           activeMission: null,
@@ -586,15 +589,16 @@ describe('Full Game Loop — Landnam', () => {
         tutorial: true,
       }))
       cy.contains('Prospector').should('be.visible')
-      cy.contains('Select Your Rocket').should('be.visible')
+      cy.contains('Two-Stop Route').should('be.visible')
     })
 
-    it('M2 preflight launch button visible with prebuilt Prospector', () => {
+    it('Transport preflight launch button visible with prebuilt Prospector', () => {
       visitWithState(fullState({
         screen: 'fab',
-        missionId: 'generated-s2-volatile-bulk-4',
-        targetId: 'eros',
-        doneSteps: { 1: true, 2: true, 3: true, 4: true, 5: true, 6: true, 9: true, 20: true, 21: true },
+        missionId: 'lnm_m3_relay_bennu_vesta',
+        targetId: 'bennu',
+        deliveryTargetId: 'vesta',
+        doneSteps: { 1: true, 2: true, 3: true, 4: true, 5: true, 6: true, 9: true, 30: true, 31: true },
         rocket: { chassis: 'hull-mk2', propulsion: 'fusion-b2', drill: 'laser-t2' },
         player: {
           francs: 9_000_000_000,

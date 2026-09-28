@@ -178,7 +178,6 @@ export interface FieldStructureRecord {
   siteId?: string
 }
 
-export type ProgramFocus = 'client-contracts' | 'mining' | 'instruments' | 'construction'
 
 export interface ResourceFocus {
   label: string
@@ -244,8 +243,6 @@ export interface Player {
   skillPoints?: number
   unlockedSkillNodes?: string[]
   freeOperations: boolean
-  /** Operation areas chosen when guided onboarding hands the program to the player. */
-  programFocuses?: ProgramFocus[]
   /** Materials currently being gathered for a player-selected construction. */
   resourceFocus?: ResourceFocus
   debriefPending?: boolean

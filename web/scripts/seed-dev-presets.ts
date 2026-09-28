@@ -136,13 +136,13 @@ async function clearMissionLog(token: string, userId: string) {
   }
 }
 
-// Mirrors devPresets.ts's own FIRST_MISSION/SECOND_MISSION/THIRD_MISSION
-// picks so seeded mission_log rows reference the same missions the coached
-// M1/M2/M3 flow actually assigns, rather than an arbitrary same-sequence
+// Mirrors devPresets.ts's own FIRST_MISSION/TRANSPORT_MISSION picks so seeded
+// mission_log rows reference the same missions the coached Extraction and
+// Transport flow actually assigns, rather than an arbitrary same-sequence
 // mission that might not match what a real playthrough would have logged.
 function missionForSequence(seq: number) {
-  if (seq === 3) {
-    return MISSIONS.find(m => m.id === 'lnm_m3_relay_bennu_vesta') ?? MISSIONS.find(m => m.sequence === 3)
+  if (seq === 2) {
+    return MISSIONS.find(m => m.id === 'lnm_m3_relay_bennu_vesta') ?? MISSIONS.find(m => m.sequence === 2)
   }
   return MISSIONS.find(m => m.sequence === seq)
 }

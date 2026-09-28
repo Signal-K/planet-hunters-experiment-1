@@ -6,7 +6,7 @@ import { FREE_OPS_START_MISSIONS_DONE } from './mission-generator'
 
 /**
  * Mission-count requirements only order the tutorial (M1 unlocks Prospector).
- * From Free Operations on, nothing is gated by mission count; cost and a
+ * Once the guided missions are flown, nothing is gated by mission count; cost and a
  * model being built at all (`locked`) are the only limits.
  */
 export function missionsRequirementMet(missionsRequired: number | undefined, missionsDone: number): boolean {

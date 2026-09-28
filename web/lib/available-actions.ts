@@ -10,7 +10,7 @@ export function unplacedUnlockedStructures(player: Player): StructureBlueprint[]
   return STRUCTURES.filter(structure =>
     structure.id !== 'launchpad'
     && !player.placed.includes(structure.id)
-    && structureUnlocked(structure, { placed: player.placed, freeOperations: player.freeOperations }),
+    && structureUnlocked(structure, { placed: player.placed, freeOperations: player.freeOperations, missionsDone: player.missionsDone }),
   ).sort((a, b) => {
     if (a.id === 'astronaut-academy') return -1
     if (b.id === 'astronaut-academy') return 1

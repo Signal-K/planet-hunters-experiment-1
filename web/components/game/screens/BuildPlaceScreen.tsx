@@ -38,6 +38,7 @@ interface BuildPlaceScreenProps {
     stash?: Record<string, number>
     placed: string[]
     freeOperations: boolean
+    missionsDone?: number
     placementPlots?: Record<string, number>
   }
 }
@@ -95,6 +96,11 @@ export default function BuildPlaceScreen({ onPlaced, onBack, hasCoach, player }:
     ...(legacyLaunchpadPlot0 ? { launchpad: 0 } : {}),
   }
   const occupiedPlots = new Set<number>(Object.values(effectivePlots))
+  // Coach anchor for later guided builds (the SSL-332 storage silo), once plot
+  // 0 already holds the launchpad.
+  const firstOpenPlot = sortedEntities
+    .map(entity => readComponentNumber(entity, 'BuildPlot', 'index', 0))
+    .find(index => !occupiedPlots.has(index))
   const existingBuildings: HubBuildingDef[] = sortedEntities.flatMap(entity => {
     const index = readComponentNumber(entity, 'BuildPlot', 'index', 0)
     const kind = Object.entries(effectivePlots).find(([, plot]) => plot === index)?.[0]
@@ -123,7 +129,7 @@ export default function BuildPlaceScreen({ onPlaced, onBack, hasCoach, player }:
   const canSelectStructure = (structure: StructureBlueprint) => {
     const alreadyBuilt = player.placed.includes(structure.id)
     return !alreadyBuilt
-      && structureUnlocked(structure, { placed: player.placed, freeOperations: player.freeOperations })
+      && structureUnlocked(structure, { placed: player.placed, freeOperations: player.freeOperations, missionsDone: player.missionsDone })
       && canAffordStructure(structure, { francs: player.francs, stash: player.stash })
   }
 
@@ -133,7 +139,7 @@ export default function BuildPlaceScreen({ onPlaced, onBack, hasCoach, player }:
       const first = catalog.find(canSelectStructure)
       if (first) setPicked(first.id)
     }
-  }, [catalog, picked, player.francs, player.freeOperations, player.placed, player.stash])
+  }, [catalog, picked, player.francs, player.freeOperations, player.missionsDone, player.placed, player.stash])
 
   function handlePick(id: string) {
     setPicked(id)
@@ -215,7 +221,7 @@ export default function BuildPlaceScreen({ onPlaced, onBack, hasCoach, player }:
                   {on && sel && <span style={{ color: 'var(--ln-amber)' }}><StructureIcon kind={sel.id} size={44} /></span>}
                 </div>
                 <div
-                  data-coach-id={idx === 0 ? 'build-plot-0' : undefined}
+                  data-coach-id={idx === 0 ? 'build-plot-0' : idx === firstOpenPlot ? 'build-plot-open' : undefined}
                   style={{
                   width: '100%',
                   height: 30,
@@ -264,7 +270,7 @@ export default function BuildPlaceScreen({ onPlaced, onBack, hasCoach, player }:
           }}>
             {catalog.map(c => {
               const on = c.id === sel?.id
-              const unlocked = structureUnlocked(c, { placed: player.placed, freeOperations: player.freeOperations })
+              const unlocked = structureUnlocked(c, { placed: player.placed, freeOperations: player.freeOperations, missionsDone: player.missionsDone })
               const affordable = canAffordStructure(c, { francs: player.francs, stash: player.stash })
               const canSelect = unlocked && affordable
               const color = STRUCTURE_COLORS[c.id] ?? '#3fa9ff'

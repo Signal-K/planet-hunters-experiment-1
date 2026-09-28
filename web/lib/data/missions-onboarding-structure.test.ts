@@ -1,7 +1,8 @@
 /**
- * Review coverage for "Segment M1-M3 onboarding: distinct mission types per
- * milestone, with client/mission choice and affinity"
- * (segment-m1-m3-onboarding-mission-types).
+ * Review coverage for the guided onboarding missions: distinct mission types
+ * per milestone, with client/mission choice and affinity. Since SSL-332 there
+ * are two: Extraction (sequence 1) and Transport (sequence 2); the old M2
+ * Prospector bulk haul is retired.
  *
  * Exercises the ticket's own acceptance criteria directly against the real
  * production data (MISSIONS, ROCKET_MODELS) rather than a mirrored
@@ -11,14 +12,10 @@
  */
 
 import { describe, it, expect } from 'vitest'
-import { MISSIONS } from '@/lib/data/missions'
-import { ROCKET_MODELS } from '@/lib/data/rockets'
+import { MISSIONS, TRANSPORT_SEQUENCE } from '@/lib/data/missions'
 import { tutorialClientMissionOptions } from '@/lib/data/mission-generator'
 
-const EXPLORER_CARGO = ROCKET_MODELS.find(r => r.name === 'Explorer')!.stats.cargo
-const PROSPECTOR_CARGO = ROCKET_MODELS.find(r => r.name === 'Prospector')!.stats.cargo
-
-describe('Onboarding mission structure (M1-M3)', () => {
+describe('Onboarding mission structure (Extraction, Transport)', () => {
   it('removes the cut self-directed "Independent Prospect" mission from the onboarding ladder entirely', () => {
     expect(MISSIONS.find(m => m.id === 'lnm_m3_custom_mining')).toBeUndefined()
   })
@@ -32,44 +29,36 @@ describe('Onboarding mission structure (M1-M3)', () => {
     expect(Math.max(...m1.map(m => m.payout.francs)) / Math.min(...m1.map(m => m.payout.francs))).toBeLessThanOrEqual(1.1)
   })
 
-  it('M2 presents exactly two competing client choices', () => {
-    const m2 = MISSIONS.filter(m => m.sequence === 2)
-    expect(m2).toHaveLength(2)
-    expect(new Set(m2.map(m => m.title))).toEqual(new Set(['Heavy Haul']))
-    expect(new Set(m2.map(m => m.client)).size).toBe(2)
-    expect(Math.max(...m2.map(m => m.payout.francs)) / Math.min(...m2.map(m => m.payout.francs))).toBeLessThanOrEqual(1.1)
+  it('retires the M2 Prospector bulk haul: no generated "Heavy Haul" missions remain', () => {
+    expect(MISSIONS.some(m => m.title === 'Heavy Haul')).toBe(false)
   })
 
-  it('every M2 option requires more cargo than Explorer can carry, forcing a Prospector purchase', () => {
-    expect(EXPLORER_CARGO).toBeLessThan(PROSPECTOR_CARGO)
-    const m2 = MISSIONS.filter(m => m.sequence === 2)
-    expect(m2.length).toBeGreaterThan(0)
-    for (const mission of m2) {
-      expect(mission.requires.cargo_min).toBeGreaterThan(EXPLORER_CARGO)
-    }
-  })
-
-  it('M3 presents a short list of clients offering transport work, each a two-leg mine-then-deliver job', () => {
-    const m3 = MISSIONS.filter(m => m.sequence === 3)
-    expect(m3.length).toBeGreaterThanOrEqual(2)
-    const clients = new Set(m3.map(m => m.client))
-    expect(clients.size).toBe(m3.length)
-    for (const mission of m3) {
+  it('Transport presents a short list of clients offering transport work, each a two-leg mine-then-deliver job', () => {
+    const transport = MISSIONS.filter(m => m.sequence === TRANSPORT_SEQUENCE)
+    expect(TRANSPORT_SEQUENCE).toBe(2)
+    expect(transport.length).toBeGreaterThanOrEqual(2)
+    const clients = new Set(transport.map(m => m.client))
+    expect(clients.size).toBe(transport.length)
+    for (const mission of transport) {
       expect(mission.tag).toBe('TRANSPORT')
       expect(mission.deliveryTargetId).toBeTruthy()
       expect(mission.deliveryTargetId).not.toBe(mission.targetId)
     }
   })
 
+  it('no guided mission exists past Transport — the storage silo, not a third mission, opens Free Ops', () => {
+    expect(MISSIONS.filter(m => m.sequence === 3)).toHaveLength(0)
+  })
+
   it('mission type per milestone is enforced by template/tag, not just flavor text', () => {
     const m1 = MISSIONS.filter(m => m.sequence === 1)
-    const m3 = MISSIONS.filter(m => m.sequence === 3)
-    // M1 is plain mining/bulk work — no two-leg delivery requirement yet.
+    const transport = MISSIONS.filter(m => m.sequence === TRANSPORT_SEQUENCE)
+    // Extraction is plain mining work — no two-leg delivery requirement yet.
     for (const mission of m1) {
       expect(mission.deliveryTargetId).toBeFalsy()
     }
-    // M3 is transport-tagged and structurally two-leg (asserted above too).
-    for (const mission of m3) {
+    // Transport is transport-tagged and structurally two-leg (asserted above too).
+    for (const mission of transport) {
       expect(mission.tag).toBe('TRANSPORT')
     }
   })

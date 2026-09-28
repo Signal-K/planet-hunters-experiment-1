@@ -9,6 +9,7 @@ import { gardenCampLabel, getSuiteHops } from '@/lib/suite-hops'
 import { LAUNCHPAD_UPGRADE_COST } from '@/lib/data'
 import { formatCurrency } from '@/lib/format'
 import type { ShellSheet } from '@/lib/game-types'
+import { AGENCY_TRAINING_POPUP } from '@/lib/systems/AgencyOnboardingSystem'
 
 interface MenuSheetProps {
   onClose: () => void
@@ -103,6 +104,13 @@ export default function MenuSheet({ onClose, onOpen }: MenuSheetProps) {
     game.go(screen)
   }
 
+  // SSL-332: training stays replayable without touching progress — this
+  // reopens the training track and the Free Ops activities.
+  function openAgencyTraining() {
+    onClose()
+    game.setPopup(AGENCY_TRAINING_POPUP)
+  }
+
   function openSubsurface() {
     onClose()
     // Menu only opens from Home's bottom bar, so the Hub is already mounted;
@@ -161,6 +169,9 @@ export default function MenuSheet({ onClose, onOpen }: MenuSheetProps) {
           <NavRow label="Mission Log" detail="Completed runs" onClick={() => goTo('mission-history')} testId="menu-mission-log" />
           {game.player.freeOperations && (
             <NavRow label="Sites" detail="Off-world surface operations" onClick={() => goTo('surface-ops')} testId="hub-surface-ops" />
+          )}
+          {game.player.freeOperations && (
+            <NavRow label="Agency Training" detail="Review what your agency learned and pick an activity" onClick={openAgencyTraining} testId="menu-agency-training" />
           )}
           {canUpgradeLaunchpad && (
             <Row>

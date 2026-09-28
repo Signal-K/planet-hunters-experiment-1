@@ -33,7 +33,7 @@ import {
   CUSTOMIZER_PARTS,
   effectiveCargoCapacity,
   effectiveMaxOrbit,
-  FREE_OPS_START_MISSIONS_DONE,
+  FREE_OPS_MISSION_SEQUENCE,
   TARGET_STRUCTURES,
   findTargetStructure,
   generateFreeOpsMissions,
@@ -562,7 +562,9 @@ describe('seed bible v0 catalog', () => {
     // Generated missions must map to a known template tag
     expect(generated.every(m => MISSION_TEMPLATES.some(t => t.tag === m.tag))).toBe(true)
     expect(generated.filter(m => m.sequence === 1).length).toBeGreaterThan(1)
-    expect(generated.filter(m => m.sequence === 2).length).toBeGreaterThan(1)
+    // Sequence 2 is the authored Transport lesson (SSL-332), so nothing is generated there.
+    expect(generated.filter(m => m.sequence === 2)).toHaveLength(0)
+    expect(generated.filter(m => m.sequence === FREE_OPS_MISSION_SEQUENCE).length).toBeGreaterThan(1)
     expect(generated.every(m => {
       const client = CLIENT_SLOTS.find(c => c.id === m.client)
       return client && client.unlockTier <= m.sequence
@@ -580,7 +582,7 @@ describe('seed bible v0 catalog', () => {
     })
   })
 
-  it('generates 0-2 Free Ops missions per starting client after M3', () => {
+  it('generates 0-2 Free Ops missions per starting client after onboarding', () => {
     const missions = generateFreeOpsMissions()
     const startingClientIds = CLIENT_SLOTS.filter(c => c.unlockTier === 1).map(c => c.id)
     expect(new Set(missions.map(m => m.client))).toEqual(new Set(startingClientIds))
@@ -589,15 +591,15 @@ describe('seed bible v0 catalog', () => {
       expect(offers.length).toBeGreaterThanOrEqual(0)
       expect(offers.length).toBeLessThanOrEqual(2)
     }
-    expect(missions.every(m => m.sequence === FREE_OPS_START_MISSIONS_DONE + 1)).toBe(true)
+    expect(missions.every(m => m.sequence === FREE_OPS_MISSION_SEQUENCE)).toBe(true)
     expect(missions.every(m => compatibleTargetsFor(m, TARGETS).length > 0)).toBe(true)
   })
 
-  it('authored M3 is a two-client transport-job choice, not self-directed mining', () => {
+  it('authored Transport lesson is a two-client transport-job choice, not self-directed mining', () => {
     const authored = MISSIONS.filter(m => !m.id.startsWith('generated-'))
     expect(authored.length).toBeGreaterThan(0)
     expect(authored.every(m => m.id && m.title)).toBe(true)
-    const m3Missions = authored.filter(m => m.sequence === 3)
+    const m3Missions = authored.filter(m => m.sequence === 2)
     expect(m3Missions.length).toBe(2)
     for (const m3 of m3Missions) {
       expect(m3.client).toBeDefined()
@@ -607,8 +609,8 @@ describe('seed bible v0 catalog', () => {
       expect(TARGETS.some(t => t.id === m3.deliveryTargetId)).toBe(true)
       expect(CLIENT_SLOTS.some(c => c.id === m3.client)).toBe(true)
     }
-    // No generic generated missions leak into the curated M3 slot.
-    expect(MISSIONS.some(m => m.id.startsWith('generated-') && m.sequence === 3)).toBe(false)
+    // No generic generated missions leak into the curated Transport slot.
+    expect(MISSIONS.some(m => m.id.startsWith('generated-') && m.sequence === 2)).toBe(false)
   })
 
   it('Free Ops self-directed mining mission has no client and reachable requirements', () => {
@@ -616,7 +618,7 @@ describe('seed bible v0 catalog', () => {
     expect(selfDirected).toBeDefined()
     expect(selfDirected?.client).toBeUndefined()
     expect(selfDirected?.targetId).toBeUndefined()
-    expect(selfDirected?.sequence).toBe(FREE_OPS_START_MISSIONS_DONE + 1)
+    expect(selfDirected?.sequence).toBe(FREE_OPS_MISSION_SEQUENCE)
     const compatible = compatibleTargetsFor(selfDirected!, TARGETS)
     expect(compatible.length).toBeGreaterThan(0)
   })
@@ -649,7 +651,7 @@ describe('seed bible v0 catalog', () => {
         Object.values(mission.requires.minerals).reduce((sum, amount) => sum + amount, 0),
       )
       expect(mission.requires.max_orbit).toBe(mission.id === 'program-build-mars-mining-settlement' ? 4 : 5)
-      expect(mission.sequence).toBe(FREE_OPS_START_MISSIONS_DONE + 1)
+      expect(mission.sequence).toBe(FREE_OPS_MISSION_SEQUENCE)
       expect(MISSIONS).toContainEqual(mission)
     }
 

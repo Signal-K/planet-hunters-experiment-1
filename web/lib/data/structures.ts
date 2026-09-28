@@ -4,6 +4,7 @@ import type { StructureBlueprint, RefineryRecipe } from './types'
 import { MINERAL_VALUE, REFINING_COST_RATE, REFINING_VALUE_MULTIPLIER, STRUCTURE_PRICES, SURFACE_SILO_PRICE } from './economy'
 import { MINERAL_RARITY } from './minerals'
 import { CLIENT_AFFINITY_MISSION_THRESHOLD } from './clients'
+import { FREE_OPS_START_MISSIONS_DONE } from './mission-generator'
 
 // Refining takes raw ore and returns it worth REFINING_VALUE_MULTIPLIER more,
 // for a cycle fee proportional to the input's value. Previously each recipe
@@ -38,8 +39,9 @@ export const STRUCTURES: StructureBlueprint[] = [
     name: 'Surface Silo',
     kind: 'surface-silo',
     cost: SURFACE_SILO_PRICE,
-    unlocksAt: 'Free Operations',
-    unlockTrigger: 'free-operations',
+    // SSL-332: building it is the last guided step, and it is what opens Free Ops.
+    unlocksAt: 'Complete the guided missions',
+    unlockTrigger: 'onboarding-missions',
     description: 'Small Earth-side mineral storage. Hold ore for a better market window or for refinery input.',
   },
   {
@@ -100,10 +102,11 @@ export function deepSpaceTelescopeUnlocked(opts: { transitSatelliteLevel?: numbe
  * its cost limits it. 'manual' blueprints have no Base building behind them
  * yet, so they stay unavailable. A structure already placed stays available.
  */
-export function structureUnlocked(structure: StructureBlueprint, opts: { placed?: string[]; freeOperations?: boolean } = {}): boolean {
+export function structureUnlocked(structure: StructureBlueprint, opts: { placed?: string[]; freeOperations?: boolean; missionsDone?: number } = {}): boolean {
   if (structure.unlockTrigger === 'always') return true
   if (opts.placed?.includes(structure.id)) return true
   if (structure.unlockTrigger === 'manual') return false
+  if (structure.unlockTrigger === 'onboarding-missions' && (opts.missionsDone ?? 0) >= FREE_OPS_START_MISSIONS_DONE) return true
   return !!opts.freeOperations
 }
 
@@ -111,6 +114,7 @@ export function structureUnlocked(structure: StructureBlueprint, opts: { placed?
  *  older catalog row's unlocksAt copy cannot promise a retired gate. */
 export function structureUnlockLabel(structure: StructureBlueprint): string {
   if (structure.unlockTrigger === 'manual') return structure.unlocksAt || 'Not yet available'
+  if (structure.unlockTrigger === 'onboarding-missions') return 'Complete the guided missions'
   return 'Free Operations'
 }
 

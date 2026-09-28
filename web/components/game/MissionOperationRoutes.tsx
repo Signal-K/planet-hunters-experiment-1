@@ -11,6 +11,7 @@ import RoverMiningScreen from '@/components/game/screens/RoverMiningScreen'
 import DeliveryScreen from '@/components/game/screens/DeliveryScreen'
 import DebriefScreen from '@/components/game/screens/DebriefScreen'
 import { earthStorageBuilt, hasOperationalRemoteSilo, storageCapacity, storedUnits, sellQuote } from '@/lib/systems/EconomySystem'
+import { TRANSPORT_LESSON_MISSIONS_DONE } from '@/lib/systems/AgencyOnboardingSystem'
 import { ownershipIdentity } from '@/lib/systems/SandboxSystem'
 import { isFreeHaulEligibleMission } from '@/lib/data'
 
@@ -71,7 +72,7 @@ export default function MissionOperationRoutes({
             }
             const isRoverMission = game.mission?.survey?.onWorldVehicle === 'starter-rover'
             const hasLander = !isRoverMission && !!game.player.shipCustomizerParts?.lander
-            const isTutorialDelivery = game.player.missionsDone === 2 && !!game.mission?.deliveryTargetId
+            const isTutorialDelivery = game.player.missionsDone === TRANSPORT_LESSON_MISSIONS_DONE && !!game.mission?.deliveryTargetId
             if (game.mission?.payload?.type === 'satellite' || game.mission?.payload?.type === 'deep-space-survey' || game.target?.type === 'exoplanet') {
               game.setPlayer(player => ({
                 ...player,
@@ -134,7 +135,7 @@ export default function MissionOperationRoutes({
           onBack={() => game.go('hub')}
           onContinue={() => {
             if (mode === 'descend') {
-              if (game.player.missionsDone === 2 && !!game.mission?.deliveryTargetId) {
+              if (game.player.missionsDone === TRANSPORT_LESSON_MISSIONS_DONE && !!game.mission?.deliveryTargetId) {
                 game.setPlayer(player => ({
                   ...player,
                   missionPhase: 'mining',
@@ -247,7 +248,7 @@ export default function MissionOperationRoutes({
           onBack={() => game.go('hub')}
           onComplete={game.onDeliveryUnloadComplete}
           clientName={game.mission.client ? game.catalog.clients[game.mission.client]?.name : undefined}
-          useTakeonDropoff={game.player.missionsDone === 2}
+          useTakeonDropoff={game.player.missionsDone === TRANSPORT_LESSON_MISSIONS_DONE}
           rocketImageSrc={rocketDisplay.img}
         />
       )

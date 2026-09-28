@@ -467,7 +467,7 @@ export function useAuthSync({
           setState(current => {
             if (current.player.activeMission) return current
             const transitStartedAt = Number.isFinite(launchedAt) ? launchedAt : null
-            const arrivalAt = phase === 'transit' && target && transitStartedAt !== null && current.player.missionsDone >= 3
+            const arrivalAt = phase === 'transit' && target && transitStartedAt !== null && current.player.freeOperations
               ? transitStartedAt + travelDurationMs(target, current.player.unlockedSkillNodes ?? [], 42 * 1000)
               : null
             const label = `${mission?.title ?? 'Active mission'} → ${target?.name ?? targetId}`

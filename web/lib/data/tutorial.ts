@@ -1,8 +1,15 @@
 // Landnam game data — tutorial steps
+//
+// SSL-332 agency training: EXTRACTION_STEPS (place the launchpad, then the
+// first mine-and-return contract), TRANSPORT_STEPS (the two-stop mine-and-haul
+// contract) and STORAGE_STEPS (build the Earth silo that opens Free Ops). The
+// old M2 Prospector steps are retired. Stage selection lives in
+// trainingCoachSteps below.
 
 import type { TutorialStep } from './types'
+import type { AgencyTrainingStage } from '@/lib/systems/AgencyOnboardingSystem'
 
-export const M1_STEPS: TutorialStep[] = [
+export const EXTRACTION_STEPS: TutorialStep[] = [
   { id: 0, screen: 'build',   title: 'Build a Launchpad',
     body: 'Your first structure — all missions launch from here.',
     action: 'Tap a build pad, then confirm',
@@ -10,11 +17,11 @@ export const M1_STEPS: TutorialStep[] = [
     desktopBody: 'Your first structure — all missions launch from here.',
     desktopAction: 'Click a build pad, then confirm placement',
     desktopCoachId: 'build-confirm|build-plot-0', desktopDir: 'down' },
-  { id: 1, screen: 'hub',     title: 'Open a Mission',
-    body: 'Mining contracts are on the mission board.',
+  { id: 1, screen: 'hub',     title: 'Extraction',
+    body: 'Your agency\'s first job: mine ore for a client and bring it home. Contracts are on the mission board.',
     action: 'Tap the Launchpad',
     anchor: 'bottom', spot: null, coachId: 'building-launchpad', dir: 'up', cta: 'Launchpad',
-    desktopBody: 'Mining contracts are on the mission board.',
+    desktopBody: 'Your agency\'s first job: mine ore for a client and bring it home. Contracts are on the mission board.',
     desktopAction: 'Click the Launchpad',
     desktopCoachId: 'building-launchpad', desktopDir: 'up' },
   // Sibling of step 1, same id — tapping the launchpad now opens its own
@@ -63,43 +70,16 @@ export const M1_STEPS: TutorialStep[] = [
     desktopAction: 'Click FIRE LASER when a deposit lines up' },
 ]
 
-export const M2_STEPS: TutorialStep[] = [
-  // Step 20: hub — action step (auto-dismisses when user navigates to missions).
-  // Mirrors M1 step 1: highlights the radial menu so the user knows exactly what to tap.
-  { id: 20, screen: 'hub', title: 'Guided Ops · Mission 2',
-    body: 'Prospector is now available — bigger cargo bay and stronger drill. You\'re still in guided operations. Accept a new mining contract to continue.',
+export const TRANSPORT_STEPS: TutorialStep[] = [
+  { id: 30, screen: 'hub', title: 'Transport',
+    body: 'Next, moving cargo. You will mine at one site, carry the order to the client\'s build site, then fly home. The contract pays for both jobs.',
     action: 'Tap the Launchpad',
     anchor: 'bottom', spot: null, cta: 'Launchpad', coachId: 'building-launchpad', dir: 'up',
-    desktopBody: 'Prospector is now available — bigger cargo bay and stronger drill. You\'re still in guided operations. Click MISSIONS to continue.',
-    desktopAction: 'Click the Launchpad',
-    desktopCoachId: 'building-launchpad', desktopDir: 'up' },
-  // Sibling of step 20 — see the id:1 launchpad sibling above for why this exists.
-  { id: 20, screen: 'launchpad', title: 'Guided Ops · Mission 2',
-    body: 'Your own program is here — client contracts are one press further in.',
-    action: 'Tap View All Contracts',
-    anchor: 'bottom', spot: null, cta: 'View All Contracts', coachId: 'launchpad-view-contracts', dir: 'down',
-    desktopAction: 'Click View All Contracts',
-    desktopCoachId: 'launchpad-view-contracts', desktopDir: 'down' },
-  { id: 22, screen: 'missions', title: 'Choose Your Second Contract',
-    body: 'You already know the loop: accept a client contract, choose a viable target, mine the order, then return for payment and client experience. Prospector lets you take the larger order.',
-    action: 'Accept the available Mission 2 contract',
-    anchor: 'bottom', spot: null, cta: 'Accept contract' },
-  { id: 21, screen: 'rocket-buy', title: 'Prospector — Select Your Rocket',
-    body: 'Prospector has been assigned to this mission. It carries more ore than Explorer and reaches deeper mineral tiers.',
-    manual: true,
-    anchor: 'top', spot: null, cta: 'Got it' },
-]
-
-export const M3_STEPS: TutorialStep[] = [
-  { id: 30, screen: 'hub', title: 'Guided Ops · Mission 3',
-    body: 'This client needs more than ore returned to Earth. You will mine at one site, carry the order to their build site, then bring the rover home. The contract pays for both pieces of work.',
-    action: 'Tap the Launchpad',
-    anchor: 'bottom', spot: null, cta: 'Launchpad', coachId: 'building-launchpad', dir: 'up',
-    desktopBody: 'This client needs more than ore returned to Earth. You will mine at one site, carry the order to their build site, then bring the rover home. Click the Launchpad to begin.',
+    desktopBody: 'Next, moving cargo. You will mine at one site, carry the order to the client\'s build site, then fly home. Click the Launchpad to begin.',
     desktopAction: 'Click the Launchpad',
     desktopCoachId: 'building-launchpad', desktopDir: 'up' },
   // Sibling of step 30 — see the id:1 launchpad sibling above for why this exists.
-  { id: 30, screen: 'launchpad', title: 'Guided Ops · Mission 3',
+  { id: 30, screen: 'launchpad', title: 'Transport',
     body: 'Your own program is here — client contracts are one press further in.',
     action: 'Tap View All Contracts',
     anchor: 'bottom', spot: null, cta: 'View All Contracts', coachId: 'launchpad-view-contracts', dir: 'down',
@@ -119,8 +99,32 @@ export const M3_STEPS: TutorialStep[] = [
     anchor: 'top', spot: null, cta: 'Got it' },
 ]
 
-export const PROGRESSION_STEPS: TutorialStep[] = [
-  ...M1_STEPS,
-  ...M2_STEPS,
-  ...M3_STEPS,
+export const STORAGE_STEPS: TutorialStep[] = [
+  { id: 40, screen: 'hub', title: 'Build a Storage Silo',
+    body: 'Your agency can mine and haul. Now give it somewhere to keep ore on Earth. Building the silo opens Free Ops.',
+    action: 'Tap Build Storage Silo',
+    anchor: 'bottom', spot: null, cta: 'Build Storage Silo', coachId: 'progression-card-storage-silo', dir: 'up',
+    desktopAction: 'Click Build Storage Silo',
+    desktopCoachId: 'progression-card-storage-silo', desktopDir: 'up' },
+  { id: 41, screen: 'build', title: 'Place the Silo',
+    body: 'Pick an open plot for the Surface Silo, then confirm.',
+    action: 'Tap an open plot, then confirm',
+    anchor: 'bottom', spot: null, coachId: 'build-confirm|build-plot-open', dir: 'down', cta: 'Build Surface Silo',
+    desktopAction: 'Click an open plot, then confirm placement',
+    desktopCoachId: 'build-confirm|build-plot-open', desktopDir: 'down' },
 ]
+
+export const PROGRESSION_STEPS: TutorialStep[] = [
+  ...EXTRACTION_STEPS,
+  ...TRANSPORT_STEPS,
+  ...STORAGE_STEPS,
+]
+
+/** Coach steps for an agency training stage. Launchpad placement is the
+ *  first beat of the Extraction step list; Free Ops has no coach. */
+export function trainingCoachSteps(stage: AgencyTrainingStage): TutorialStep[] {
+  if (stage === 'launchpad' || stage === 'extraction') return EXTRACTION_STEPS
+  if (stage === 'transport') return TRANSPORT_STEPS
+  if (stage === 'storage') return STORAGE_STEPS
+  return []
+}

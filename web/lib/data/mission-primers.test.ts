@@ -18,10 +18,9 @@ describe('missionTypePrimer', () => {
     expect(primer.owner).toBe('client')
   })
 
-  it('names the second onboarding milestone as a heavier haul', () => {
-    const primer = missionTypePrimer({ ...base, sequence: 2 })
-    expect(primer.label).toBe('Heavy haul')
-    expect(primer.summary).toContain('larger Prospector')
+  it('reads the second onboarding milestone (Transport) by its two-stop route, not the retired Heavy Haul', () => {
+    const primer = missionTypePrimer({ ...base, sequence: 2, deliveryTargetId: 'vesta' })
+    expect(primer.label).toBe('Two-stop delivery')
   })
 
   it('reads a delivery leg as a two-stop job', () => {

@@ -2,8 +2,15 @@ import { CARGO_BONUS_RATE } from './economy'
 import type { ClientSlot, MineralMeta, Mission, MissionTemplate, MissionConstructionPlan } from './types'
 import { normalizeMissionPayout } from './payouts'
 
-export const FREE_OPS_START_MISSIONS_DONE = 3
+// SSL-332: onboarding is Extraction (M1) then Transport (M2), followed by a
+// required Storage Silo build before Free Ops. This is the number of guided
+// missions; Free Ops itself also needs the silo (see freeOperationsUnlocked in
+// systems/AgencyOnboardingSystem.ts).
+export const FREE_OPS_START_MISSIONS_DONE = 2
 export const ONBOARDING_SEQUENCE_COUNT = 2
+// Post-onboarding missions keep the contract-fee tier they had under the old
+// three-mission onboarding, so shortening onboarding does not cut Free Ops pay.
+export const FREE_OPS_MISSION_SEQUENCE = 4
 export const OFFLINE_MISSION_COUNT = 12
 
 export interface MissionComplexity {
@@ -120,13 +127,8 @@ export const DEFAULT_COMPLEXITY_BANDS: MissionComplexity[] = [
   // Give the second card a different client role so the requests genuinely
   // differ while the sequence payout floor keeps both offers close together.
   { sequence: 1, templateId: 'volatile-bulk', mineralCount: 1, amountBias: 1, clientOffset: 0, mineralOffset: 0 },
-  { sequence: 2, templateId: 'starter-bulk', mineralCount: 1, amountBias: 2, clientOffset: 3 },
-  // Both M2 choices still need more cargo than Explorer can carry, forcing
-  // the Prospector purchase while keeping the choice client-led and legible.
-  { sequence: 2, templateId: 'volatile-bulk', mineralCount: 1, amountBias: 2, clientOffset: 0, mineralOffset: 0 },
-  { sequence: 3, templateId: 'volatile-bulk', mineralCount: 2, amountBias: 1, clientOffset: 6 },
-  { sequence: 3, templateId: 'metal-prospect', mineralCount: 2, amountBias: 1, clientOffset: 7 },
-  { sequence: 3, templateId: 'command-reserve', mineralCount: 1, amountBias: 0, clientOffset: 8 },
+  // Sequence 2 is the authored Transport lesson (TRANSPORT_SEQUENCE in
+  // missions.ts), so it has no generated bands.
   { sequence: 4, templateId: 'metal-prospect', mineralCount: 2, amountBias: 2, clientOffset: 9 },
   { sequence: 4, templateId: 'command-reserve', mineralCount: 2, amountBias: 1, clientOffset: 0 },
   { sequence: 4, templateId: 'command-reserve', mineralCount: 3, amountBias: 2, clientOffset: 1 },
@@ -248,9 +250,7 @@ export function generateMissionsFromRules(input: MissionGeneratorInput, count = 
     )
     const title = band.sequence === 1
       ? 'Baseline Extraction'
-      : band.sequence === 2
-        ? 'Heavy Haul'
-        : `${primary} ${template.tag.toLowerCase().replace('-', ' ')} order`
+      : `${primary} ${template.tag.toLowerCase().replace('-', ' ')} order`
 
     return {
       id: `generated-s${band.sequence}-${template.id}-${index + 1}`,
@@ -303,8 +303,8 @@ export function generateFreeOpsMissionsFromRules(input: MissionGeneratorInput): 
         tag: template.tag,
         difficulty: template.difficulty,
         locked: false,
-        sequence: FREE_OPS_START_MISSIONS_DONE + 1,
-        unlockAt: 'Complete M3',
+        sequence: FREE_OPS_MISSION_SEQUENCE,
+        unlockAt: 'Reach Free Operations',
         requires: {
           minerals: { [mineral]: amount },
           cargo_min: amount,
@@ -312,7 +312,7 @@ export function generateFreeOpsMissionsFromRules(input: MissionGeneratorInput): 
           max_orbit: template.orbitMax,
         },
         payout: {
-          francs: normalizeMissionPayout(francs, FREE_OPS_START_MISSIONS_DONE + 1),
+          francs: normalizeMissionPayout(francs, FREE_OPS_MISSION_SEQUENCE),
           affinity: Math.max(5, Math.round(8 + amount / 2)),
         },
         survey: template.survey,
@@ -346,8 +346,8 @@ export function generateSelfDirectedMiningPoolFromRules(input: MissionGeneratorI
       tag: 'FREE OPS',
       difficulty: template.difficulty,
       locked: false,
-      sequence: FREE_OPS_START_MISSIONS_DONE + 1,
-      unlockAt: 'Complete M3',
+      sequence: FREE_OPS_MISSION_SEQUENCE,
+      unlockAt: 'Reach Free Operations',
       requires: {
         minerals: { [mineral]: amount },
         cargo_min: amount,
@@ -355,7 +355,7 @@ export function generateSelfDirectedMiningPoolFromRules(input: MissionGeneratorI
         max_orbit: template.orbitMax,
       },
       payout: {
-        francs: normalizeMissionPayout(francs, FREE_OPS_START_MISSIONS_DONE + 1),
+        francs: normalizeMissionPayout(francs, FREE_OPS_MISSION_SEQUENCE),
         affinity: 0,
       },
       survey: template.survey,

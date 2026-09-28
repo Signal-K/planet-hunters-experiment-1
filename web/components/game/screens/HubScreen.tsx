@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from 'react'
 import type { Player, Screen } from '@/game-context'
 import ProgressionCard from '@/components/game/ProgressionCard'
+import { awaitingStorageSilo } from '@/lib/systems/AgencyOnboardingSystem'
 import { Scene } from '@/lib/engine/Scene'
 import type { EntityData } from '@/lib/engine/types'
 import { buildPlotEntities } from '@/lib/engine/prefabs'
@@ -385,12 +386,13 @@ export default function HubScreen({ player, rocketVariant = 'explorer', hasCoach
 
       {/* The progression card is the Hub's single prompt surface. A rocket
           waiting on the pad is already a sky rocket, so the card skips it. */}
-      {!player.activeMission && (!hasCoach || !!player.pendingLaunch) && !subsurface && (
+      {!player.activeMission && (!hasCoach || !!player.pendingLaunch || awaitingStorageSilo(player)) && !subsurface && (
         <ProgressionCard
           player={player}
           onOpenScene={onOpenScene}
           onDismissPrompt={onDismissHubPrompt}
           hidePendingLaunch
+          coached={hasCoach}
           top={hasCoach ? TUTORIAL_CONTENT_TOP : HOME_TOP_BAR_CLEARANCE + (skyRockets.length > 0 ? HOME_SKY_ROW_HEIGHT : 0)}
         />
       )}

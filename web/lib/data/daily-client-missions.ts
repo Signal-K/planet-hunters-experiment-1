@@ -1,7 +1,7 @@
 // Daily client mission pool — deterministic per calendar day, resets at midnight.
 
 import type { ClientSlot, MineralMeta, Mission } from './types'
-import { DEFAULT_MISSION_TEMPLATES, FREE_OPS_START_MISSIONS_DONE, requiredDrillTier, deliveryEligibleMineralKeys } from './mission-generator'
+import { DEFAULT_MISSION_TEMPLATES, FREE_OPS_MISSION_SEQUENCE, requiredDrillTier, deliveryEligibleMineralKeys } from './mission-generator'
 import { CLIENT_AFFINITY_MISSION_THRESHOLD } from './clients'
 import { normalizeMissionPayout } from './payouts'
 
@@ -107,7 +107,7 @@ export function generateDailyClientPool(
         tag: template.tag,
         difficulty: template.difficulty,
         locked: false,
-        sequence: FREE_OPS_START_MISSIONS_DONE + 1,
+        sequence: FREE_OPS_MISSION_SEQUENCE,
         requires: {
           minerals: { [mineralKey]: amount },
           cargo_min: amount,
@@ -115,7 +115,7 @@ export function generateDailyClientPool(
           max_orbit: template.orbitMax,
         },
         payout: {
-          francs: normalizeMissionPayout(francs, FREE_OPS_START_MISSIONS_DONE + 1),
+          francs: normalizeMissionPayout(francs, FREE_OPS_MISSION_SEQUENCE),
           affinity: Math.max(5, Math.round(8 + amount / 2)),
         },
       })

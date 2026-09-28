@@ -7,6 +7,7 @@ import { rocketConfigForModel } from '@/lib/data'
 import { recipeIsAffordable, rocketCompositionForId, rocketStageRecoveryForId } from '@/lib/data/rocket-composition'
 import { MINERAL_META, CLIENT_SLOTS, LAUNCHPAD_UPGRADE_COST, OPEN_MARKET_SELL_RATE, MINERAL_SILO_CAPACITY, SURFACE_SILO_CAPACITY, DEEP_MINERAL_SILO_CAPACITY, REMOTE_MINERAL_SILO_CAPACITY, customizerPartById, structureUnlocked, SUBSURFACE_EXCAVATE_COST, SUBSURFACE_ROOMS, canAffordSubsurface } from '@/lib/data'
 import { structureIsStaffed } from './AcademySystem'
+import { freeOperationsUnlocked } from './AgencyOnboardingSystem'
 
 // Sell to open market (raw): ~80% of book value — see [[Economy and Minerals]].
 
@@ -439,20 +440,27 @@ export function applyPlaceStructure(s: GameState, structure: StructureBlueprint 
   if (!structure || structure.kind !== kind) return s
   if (s.player.placed.includes(kind)) return s
   // The tutorial's own order is enforced here; after it, only cost limits a build.
-  if (!structureUnlocked(structure, { placed: s.player.placed, freeOperations: s.player.freeOperations })) return s
+  if (!structureUnlocked(structure, { placed: s.player.placed, freeOperations: s.player.freeOperations, missionsDone: s.player.missionsDone })) return s
   if (s.player.francs < structure.cost) return s
   if (!Object.entries(structure.costMaterials ?? {}).every(([mineral, amount]) => (s.player.stash?.[mineral] ?? 0) >= amount)) return s
   const stash = { ...(s.player.stash ?? {}) }
   for (const [mineral, amount] of Object.entries(structure.costMaterials ?? {})) {
     stash[mineral] = Math.max(0, (stash[mineral] ?? 0) - amount)
   }
+  const placed = Array.from(new Set([...s.player.placed, kind]))
+  // SSL-332: placing the storage silo is the last training step. The tick it
+  // opens Free Ops ends the coach and raises the Free Ops handoff sheet.
+  const enteredFreeOperations = !s.player.freeOperations
+    && freeOperationsUnlocked({ missionsDone: s.player.missionsDone, placed })
   return {
     ...s,
+    ...(enteredFreeOperations ? { tutorial: false, popup: 'tutorial-complete' } : {}),
     player: {
       ...s.player,
+      ...(enteredFreeOperations ? { freeOperations: true } : {}),
       francs: s.player.francs - structure.cost,
       stash,
-      placed: Array.from(new Set([...s.player.placed, kind])),
+      placed,
       placementPlots: { ...s.player.placementPlots, [kind]: plot },
       underConstruction: { ...s.player.underConstruction, [kind]: Date.now() },
       refineryBuilt: kind === 'refinery' ? true : s.player.refineryBuilt,

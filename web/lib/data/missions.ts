@@ -7,6 +7,7 @@ import { MINERAL_META } from './minerals'
 import { STRUCTURES } from './structures'
 import {
   DEFAULT_MISSION_TEMPLATES,
+  FREE_OPS_MISSION_SEQUENCE,
   FREE_OPS_START_MISSIONS_DONE,
   OFFLINE_MISSION_COUNT,
   generateFreeOpsMissionsFromRules,
@@ -14,16 +15,16 @@ import {
   generateSelfDirectedMiningPoolFromRules,
 } from './mission-generator'
 
-export { FREE_OPS_START_MISSIONS_DONE }
+export { FREE_OPS_MISSION_SEQUENCE, FREE_OPS_START_MISSIONS_DONE }
 export { tutorialClientMissionOptions } from './mission-generator'
 export const MISSION_TEMPLATES = DEFAULT_MISSION_TEMPLATES
 
 export function generateMissions(count = OFFLINE_MISSION_COUNT): Mission[] {
-  // Sequence 3 (M3) is exclusively the authored transport-client list
-  // above — drop any generically-generated sequence-3 bands so the M3 board
+  // The Transport lesson is exclusively the authored transport-client list
+  // below — drop any generically-generated band at that sequence so its board
   // only ever shows the curated client choices.
   return generateMissionsFromRules({ clients: CLIENT_SLOTS, minerals: MINERAL_META }, count)
-    .filter(m => m.sequence !== 3)
+    .filter(m => m.sequence !== TRANSPORT_SEQUENCE)
 }
 
 export function generateFreeOpsMissions(): Mission[] {
@@ -39,12 +40,12 @@ export function generateSelfDirectedMiningPool(): Mission[] {
   return generateSelfDirectedMiningPoolFromRules({ clients: CLIENT_SLOTS, minerals: MINERAL_META })
 }
 
-// M3 onboarding: the player picks between two clients offering a
-// two-leg transport job (mine at the pickup target, deliver to a second
-// target, then fly home) — the self-directed "Independent Prospect" custom
-// mining mission that used to fill this slot has been cut; self-directed
-// mining now lives in Free Ops instead (see generateFreeOpsMissions).
-export const M3_SEQUENCE = 3
+// Transport lesson (SSL-332 onboarding mission 2, formerly M3): the player
+// picks between two clients offering a two-leg transport job (mine at the
+// pickup target, deliver to a second target, then fly home). The old M2
+// Prospector bulk-haul mission it replaced is retired; self-directed mining
+// lives in Free Ops (see generateFreeOpsMissions).
+export const TRANSPORT_SEQUENCE = 2
 
 // Free Ops self-directed mining — no client, no daily limit, no cooldown.
 export const SELF_DIRECTED_MINING_MISSION_ID = 'freeops-self-directed-mining'
@@ -68,7 +69,7 @@ export const OWN_PROGRAM_BUILD_MISSIONS: Mission[] = [
   {
     id: 'program-build-mars-mining-settlement', title: 'Establish Mars Mining Settlement',
     brief: 'Carry a starter settlement kit to the program’s assigned Mars area. The permanent site anchors later extraction and support structures.',
-    tag: 'PROGRAM', difficulty: 'L1', locked: false, sequence: FREE_OPS_START_MISSIONS_DONE + 1,
+    tag: 'PROGRAM', difficulty: 'L1', locked: false, sequence: FREE_OPS_MISSION_SEQUENCE,
     unlockAt: 'Reach Free Operations · Mars allocation ready', targetId: 'mars',
     construction: { structureKind: 'mining-settlement', requiredMaterials: { aluminium: 12, iron: 16, silicon: 8 }, placementMode: 'confirm', buildTimeMs: 45 * 60 * 1000 },
     programReward: { researchXP: 0, outcome: 'Mars mining settlement established · permanent program site online' },
@@ -79,7 +80,7 @@ export const OWN_PROGRAM_BUILD_MISSIONS: Mission[] = [
     title: 'Build a Remote Mineral Silo',
     brief: 'Send construction materials to a target with build rights. The sealed silo stores your extracted ore off-world instead of forcing every haul into an Earth sale.',
     tag: 'PROGRAM', difficulty: 'L2', locked: false,
-    sequence: FREE_OPS_START_MISSIONS_DONE + 1,
+    sequence: FREE_OPS_MISSION_SEQUENCE,
     unlockAt: 'Reach Free Operations',
     construction: { structureKind: 'mineral-silo', requiredMaterials: { ...remoteSiloBlueprint.requiredMaterials }, placementMode: 'confirm', buildTimeMs: 45 * 60 * 1000 },
     programReward: { researchXP: 0, outcome: 'Remote Mineral Silo commissioned · ore can be held at the selected target' },
@@ -93,7 +94,7 @@ export const OWN_PROGRAM_BUILD_MISSIONS: Mission[] = [
     tag: 'PROGRAM',
     difficulty: 'L1',
     locked: false,
-    sequence: FREE_OPS_START_MISSIONS_DONE + 1,
+    sequence: FREE_OPS_MISSION_SEQUENCE,
     unlockAt: 'Reach Free Operations and choose a site you own or lease',
     construction: {
       structureKind: refineryBlueprint.kind,
@@ -123,7 +124,7 @@ export const AUTHORED_MISSIONS: Mission[] = [
     tag: 'STORY',
     difficulty: 'L1',
     locked: true,
-    sequence: FREE_OPS_START_MISSIONS_DONE + 1,
+    sequence: FREE_OPS_MISSION_SEQUENCE,
     unlockAt: 'Reach client level 2 with two clients',
     requires: { minerals: {}, cargo_min: 0, drill_tier: 1, max_orbit: 0 },
     programReward: {
@@ -140,8 +141,8 @@ export const AUTHORED_MISSIONS: Mission[] = [
     tag: 'TRANSPORT',
     difficulty: 'L1',
     locked: false,
-    sequence: M3_SEQUENCE,
-    unlockAt: 'Complete 2 contracts',
+    sequence: TRANSPORT_SEQUENCE,
+    unlockAt: 'Complete 1 contract',
     targetId: 'bennu',
     deliveryTargetId: 'vesta',
     requires: {
@@ -151,9 +152,8 @@ export const AUTHORED_MISSIONS: Mission[] = [
       max_orbit: 4,
     },
     payout: {
-      // M3 still forces a fresh Prospector purchase (rockets are single-use), so
-      // this rides the shared sequence-3 contract fee, which clears that cost
-      // the same way M1/M2's do without ballooning into a jackpot.
+      // Transport still pays the old M3 contract fee: it is two jobs (mining
+      // plus relay) and still needs a fresh single-use vehicle.
       francs: missionPayoutFloor(3),
       affinity: 3,
     },
@@ -166,8 +166,8 @@ export const AUTHORED_MISSIONS: Mission[] = [
     tag: 'TRANSPORT',
     difficulty: 'L1',
     locked: false,
-    sequence: M3_SEQUENCE,
-    unlockAt: 'Complete 2 contracts',
+    sequence: TRANSPORT_SEQUENCE,
+    unlockAt: 'Complete 1 contract',
     targetId: 'itokawa',
     deliveryTargetId: 'eros',
     requires: {
@@ -177,9 +177,8 @@ export const AUTHORED_MISSIONS: Mission[] = [
       max_orbit: 4,
     },
     payout: {
-      // M3 still forces a fresh Prospector purchase (rockets are single-use), so
-      // this rides the shared sequence-3 contract fee, which clears that cost
-      // the same way M1/M2's do without ballooning into a jackpot.
+      // Transport still pays the old M3 contract fee: it is two jobs (mining
+      // plus relay) and still needs a fresh single-use vehicle.
       francs: missionPayoutFloor(3),
       affinity: 3,
     },
@@ -192,8 +191,8 @@ export const AUTHORED_MISSIONS: Mission[] = [
     tag: 'TRANSPORT',
     difficulty: 'L2',
     locked: false,
-    sequence: FREE_OPS_START_MISSIONS_DONE + 1,
-    unlockAt: 'Complete 3 contracts',
+    sequence: FREE_OPS_MISSION_SEQUENCE,
+    unlockAt: 'Reach Free Operations',
     targetId: 'psyche',
     deliveryTargetId: 'ceres',
     requires: {
@@ -220,8 +219,8 @@ export const AUTHORED_MISSIONS: Mission[] = [
     tag: 'FREE OPS',
     difficulty: 'L2',
     locked: false,
-    sequence: FREE_OPS_START_MISSIONS_DONE + 1,
-    unlockAt: 'Complete M3',
+    sequence: FREE_OPS_MISSION_SEQUENCE,
+    unlockAt: 'Reach Free Operations',
     requires: {
       // Sold at market on Earth return, so this must avoid earthAbundant
       // minerals (iron, silicon, carbon, ...) — Earth already has plenty.
@@ -244,7 +243,7 @@ export const AUTHORED_MISSIONS: Mission[] = [
     tag: 'CREW',
     difficulty: 'L2',
     locked: false,
-    sequence: FREE_OPS_START_MISSIONS_DONE + 1,
+    sequence: FREE_OPS_MISSION_SEQUENCE,
     unlockAt: 'Build the Astronaut Academy and fit Crew Quarters',
     targetId: 'eros',
     requires: {
