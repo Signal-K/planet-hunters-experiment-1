@@ -68,7 +68,9 @@ describe('mission setup replacement boundary', () => {
     expect(styles).toContain('.reviewFacts > div:nth-child(3) { display: block; }')
     expect(styles).toContain('.purchaseTerms')
     expect(styles).toContain(".root[data-step='1'][data-coach='true'] .contractIdentity")
-    expect(styles).toContain(".root[data-step='2'][data-coach='true'] .filterRibbon")
+    expect(routes).toContain('useCoachFootprint(mapRef')
+    expect(styles).toContain('grid-template-areas: "coach" "filter" "map" "rail"')
+    expect(styles).toContain('container: setup-stage / size')
     expect(styles).toContain(".root[data-step='4'][data-coach='true'] .hangarBayHeading")
   })
 
@@ -89,7 +91,7 @@ describe('mission setup replacement boundary', () => {
     const coach = read('./TutorialCoach.tsx')
     const globals = read('../../app/globals.css')
 
-    expect(coach).toContain("left: 16, top: TUTORIAL_RAIL.RESERVED_TOP, width: 320")
+    expect(coach).toContain("left: 'var(--ln-setup-coach-left, 16px)', top: `var(--ln-setup-coach-top, ${TUTORIAL_RAIL.RESERVED_TOP}px)`, width: 320")
     expect(coach).toContain('tutorial-coach-overlay tutorial-coach-overlay--mission-setup')
     expect(globals).toContain('.tutorial-coach-overlay:not(.tutorial-coach-overlay--mission-setup)')
   })
