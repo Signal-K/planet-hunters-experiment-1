@@ -14,6 +14,9 @@ interface ButtonProps {
   size?: ButtonSize
   variant?: 'primary' | 'secondary' | 'danger'
   testId?: string
+  /** Physical target for the tutorial pointer. Kept on the actual button so
+   *  the highlighted affordance remains directly operable. */
+  coachId?: string
 }
 
 const KIND_TOKENS: Record<ButtonKind, { color: string; border: string }> = {
@@ -22,11 +25,12 @@ const KIND_TOKENS: Record<ButtonKind, { color: string; border: string }> = {
   green: { color: 'var(--ln-ok)', border: 'var(--ln-ok)' },
 }
 
-export function PrimaryBtn({ children, onClick, disabled, full = true, kind = 'cyan', testId }: ButtonProps) {
+export function PrimaryBtn({ children, onClick, disabled, full = true, kind = 'cyan', testId, coachId }: ButtonProps) {
   const { color, border } = KIND_TOKENS[kind]
   return (
     <button
       data-testid={testId}
+      data-coach-id={coachId}
       onClick={!disabled ? onClick : undefined}
       disabled={disabled}
       style={{

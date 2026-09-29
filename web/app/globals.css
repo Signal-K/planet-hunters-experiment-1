@@ -3038,6 +3038,12 @@ html[data-coach-target="build-structure-strip"] [data-coach-id="build-structure-
   background: linear-gradient(180deg, transparent, rgba(10, 10, 12, 0.75) 26%, var(--ln-void) 100%);
   border-top: 1px solid var(--ln-hairline-strong);
 }
+.build-place-screen [data-coach-id="build-structure-strip"] {
+  /* The shared command rail is a physical, always-on object on this scene.
+     Stack picker and confirmation controls above it; otherwise the rail
+     covers the exact confirmation affordance the Storage Silo coach names. */
+  bottom: 120px !important;
+}
 .build-place-screen [data-coach-id="build-structure-strip"] button {
   background: var(--ln-surface);
   border-color: var(--ln-cyan-border);
@@ -3054,6 +3060,7 @@ html[data-coach-target="build-structure-strip"] [data-coach-id="build-structure-
   color: var(--ln-text-dim);
 }
 .build-place-screen .sticky-actions {
+  bottom: 64px;
   background: var(--ln-surface);
   border-top: 1px solid var(--ln-cyan-border);
 }

@@ -3,15 +3,14 @@
 import { useMemo, useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { GameProvider, useGame } from '@/game-context'
-import { M1_STEPS, M2_STEPS, M3_STEPS } from '@/lib/data'
-import { FREE_OPS_START_MISSIONS_DONE } from '@/lib/data/mission-generator'
+import { trainingCoachSteps } from '@/lib/data'
 import type { Screen } from '@/lib/game-types'
 import { ScreenContent } from '@/components/game/GameScreenRouter'
 import TutorialCoach from '@/components/game/TutorialCoach'
 import MissionTicker from '@/components/game/MissionTicker'
 import UnlockPopup from '@/components/game/UnlockPopup'
 import { TutorialCompleteSheet } from '@/components/game/TutorialCompleteSheet'
-import { agencyTrainingTrack, freeOpsActivities } from '@/lib/systems/AgencyOnboardingSystem'
+import { agencyTrainingStage, agencyTrainingTrack, freeOpsActivities } from '@/lib/systems/AgencyOnboardingSystem'
 import BottomTabBar from '@/components/layout/BottomTabBar'
 import BackendStatus from '@/components/game/BackendStatus'
 import LandnamSyncStatus from '@/components/game/LandnamSyncStatus'
@@ -116,12 +115,9 @@ function GameCanvas() {
   }, [game.screen, game.lastCargo, game.mission, game.target])
 
   const coachSteps = useMemo(() => {
-    if (!game.tutorial || game.player.missionsDone >= FREE_OPS_START_MISSIONS_DONE) return []
-    if (game.player.missionsDone === 0) return M1_STEPS
-    if (game.player.missionsDone === 1) return M2_STEPS
-    if (game.player.missionsDone === 2) return M3_STEPS
-    return []
-  }, [game.player.missionsDone, game.tutorial])
+    if (!game.tutorial || game.player.freeOperations) return []
+    return trainingCoachSteps(agencyTrainingStage(game.player))
+  }, [game.player, game.tutorial])
 
   const coach = useMemo(() => {
     const activeCoach = coachSteps.find(step => step.screen === game.screen && !game.doneSteps[step.id]) ?? null

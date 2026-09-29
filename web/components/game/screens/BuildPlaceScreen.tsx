@@ -439,7 +439,6 @@ export default function BuildPlaceScreen({ onPlaced, onBack, hasCoach, player }:
       <div
         className="sticky-actions"
         data-ui-zone={UI_ZONES.bottomActions}
-        data-coach-id={cell != null ? 'build-confirm' : undefined}
         style={{ zIndex: 15 }}
       >
         {/* Mint/green, not amber: the Earth Base flow carries no amber (see
@@ -447,6 +446,7 @@ export default function BuildPlaceScreen({ onPlaced, onBack, hasCoach, player }:
             amber is reserved for payout emphasis, never a primary button. */}
         <PrimaryBtn
           kind="green"
+          coachId={cell != null ? 'build-confirm' : undefined}
           disabled={cell == null || !sel}
           onClick={() => {
             if (cell == null || !sel) return
