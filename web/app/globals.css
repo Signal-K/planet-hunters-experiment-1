@@ -2063,6 +2063,17 @@ button { cursor: pointer; }
   box-shadow: 0 -12px 28px rgba(0, 0, 0, 0.3);
   color: var(--ln-text);
 }
+/* The shared command rail stays available during a live operation, but the
+   Mining HUD owns the primary action. Reserve the rail's real footprint so
+   FIRE LASER is never visually or physically hidden behind global navigation. */
+.portrait-canvas--mining .mining-controls {
+  bottom: 68px;
+}
+@media (min-width: 1024px) {
+  .portrait-canvas--mining .mining-controls {
+    bottom: 84px;
+  }
+}
 .theme-deep.mining-screen {
   background: var(--ln-void);
 }

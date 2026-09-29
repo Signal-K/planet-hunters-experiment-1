@@ -182,7 +182,7 @@ function GameChrome({ children }: { children: ReactNode }) {
           <HubWorldBackground phase={backdropSkyPhase} />
         </div>
       )}
-      <div className={`portrait-canvas ${isImmersiveEarthBaseRoute ? 'portrait-canvas--full-page' : ''}`}>
+      <div className={`portrait-canvas ${isImmersiveEarthBaseRoute ? 'portrait-canvas--full-page' : ''} ${currentScreen === 'mining' ? 'portrait-canvas--mining' : ''}`}>
         <BackendStatus />
         <LandnamSyncStatus />
         {/* Mission alerts have a reserved desktop slot to the left of the
