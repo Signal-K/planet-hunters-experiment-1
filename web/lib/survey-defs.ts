@@ -127,6 +127,10 @@ export const SURVEY_DEFS: Record<string, Survey> = {
   // enqueued together through the existing 60s-gap FIFO dispatcher instead of
   // one multi-question SurveySheet. Old PostHog survey definitions stopped,
   // not deleted, for response-history continuity.
+  // Copy rewritten 2026-09-29 for the courier Transport lesson (SSL-362):
+  // mission 2 no longer forces a Prospector purchase and has no mining or
+  // second stop, so the rocket / transport / rating questions describe the
+  // courier job. Survey and question IDs are unchanged.
   lnm_m2_mission_choice: {
     id: '01a04132-ecf7-0000-6fd8-14eec14d4fa0',
     name: '[Landnam / Onboarding] M2 Mission Choice',
@@ -140,7 +144,7 @@ export const SURVEY_DEFS: Record<string, Survey> = {
     name: '[Landnam / Onboarding] M2 Rocket Clarity',
     posthogUrl: 'https://us.posthog.com/project/199773/surveys/01a04133-4313-0000-d7cc-81dbda5f592e',
     questions: [
-      { id: 'm2-rocket-clarity', type: 'multiple_choice', question: 'How clear was the Prospector purchase step?', choices: ['Totally clear', 'A bit confusing', 'I wasn\'t sure why I needed a new rocket', 'I missed it at first'] },
+      { id: 'm2-rocket-clarity', type: 'multiple_choice', question: 'How clear was it which rocket to send on the delivery job?', choices: ['Totally clear', 'A bit confusing', 'I was not sure which rocket could carry the cargo', 'I did not notice I had a choice'] },
     ],
   },
   lnm_m2_rating: {
@@ -164,7 +168,7 @@ export const SURVEY_DEFS: Record<string, Survey> = {
     name: '[Landnam / Onboarding] M3 Transport Clarity',
     posthogUrl: 'https://us.posthog.com/project/199773/surveys/01a04133-c454-0000-ab38-aabdb839e333',
     questions: [
-      { id: 'm3-transport-clarity', type: 'multiple_choice', question: 'How clear was it that this was a two-stop delivery job — mine, then drop cargo at a second target?', choices: ['Crystal clear', 'Mostly clear', 'A bit confusing', 'I did not realize there were two stops'] },
+      { id: 'm3-transport-clarity', type: 'multiple_choice', question: 'How clear was the delivery job: carry the client\'s cargo to their depot, unload, then fly home?', choices: ['Crystal clear', 'Mostly clear', 'A bit confusing', 'I expected to mine something'] },
     ],
   },
   lnm_m3_client_choice: {
@@ -180,7 +184,7 @@ export const SURVEY_DEFS: Record<string, Survey> = {
     name: '[Landnam / Onboarding] M3 Mission Rating',
     posthogUrl: 'https://us.posthog.com/project/199773/surveys/01a04133-fe23-0000-a0a0-052be8975548',
     questions: [
-      { id: 'm3-rating', type: 'rating', question: 'How are you feeling about the game after three missions?', scale: 5 },
+      { id: 'm3-rating', type: 'rating', question: 'How are you feeling about the game after your first two jobs?', scale: 5 },
     ],
   },
   lnm_m3_freetext: {

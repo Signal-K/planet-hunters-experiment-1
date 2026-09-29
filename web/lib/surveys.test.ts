@@ -56,9 +56,9 @@ describe('buildPostHogSurveyPayload', () => {
     const multiQuestionSurvey = {
       ...survey,
       questions: [
-        { id: 'm3-transport-clarity', type: 'multiple_choice' as const, question: 'How clear was it that this was a two-stop delivery job?', choices: ['Crystal clear', 'Mostly clear'] },
+        { id: 'm3-transport-clarity', type: 'multiple_choice' as const, question: 'How clear was the delivery job?', choices: ['Crystal clear', 'Mostly clear'] },
         { id: 'm3-client-choice', type: 'multiple_choice' as const, question: 'How did picking between the two clients feel?', choices: ['Meaningful', 'Confusing'] },
-        { id: 'm3-rating', type: 'rating' as const, question: 'How are you feeling about the game after three missions?', scale: 5 },
+        { id: 'm3-rating', type: 'rating' as const, question: 'How are you feeling about the game after your first two jobs?', scale: 5 },
         { id: 'm3-freetext', type: 'open' as const, question: 'Anything we should know before you play more?' },
       ],
     }
