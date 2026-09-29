@@ -2,19 +2,19 @@
 
 import { type ReactNode, useMemo, useEffect, useRef, useState } from 'react'
 import { GameProvider, useGame } from '@/game-context'
-import { M1_STEPS, M2_STEPS, M3_STEPS } from '@/lib/data'
-import { FREE_OPS_START_MISSIONS_DONE } from '@/lib/data/mission-generator'
+import { trainingCoachSteps } from '@/lib/data'
 import TutorialCoach from '@/components/game/TutorialCoach'
 import UnlockPopup from '@/components/game/UnlockPopup'
 import { TutorialCompleteSheet } from '@/components/game/TutorialCompleteSheet'
 import { GameChromeBars } from '@/components/layout/GameChromeBars'
+import { AGENCY_TRAINING_POPUP, agencyTrainingStage, agencyTrainingTrack, freeOpsActivities } from '@/lib/systems/AgencyOnboardingSystem'
 import BackendStatus from '@/components/game/BackendStatus'
 import LandnamSyncStatus from '@/components/game/LandnamSyncStatus'
 import { PushOptIn } from '@/components/game/PushOptIn'
 import FeedbackButton from '@/components/ui/FeedbackButton'
 import SurveySheet from '@/components/ui/SurveySheet'
 import ToastLayer from '@/components/ui/ToastLayer'
-import { initPostHog } from '@/lib/posthog'
+import { captureGameEvent, initPostHog } from '@/lib/posthog'
 import DevShortcuts from '@/components/dev/DevShortcuts'
 import AuthGateSheet from '@/components/game/AuthGateSheet'
 import SettingsSheet from '@/components/game/SettingsSheet'
@@ -105,12 +105,9 @@ function GameChrome({ children }: { children: ReactNode }) {
   }, [game.screen, game.lastCargo, game.mission, game.target])
 
   const coachSteps = useMemo(() => {
-    if (!game.tutorial || game.player.missionsDone >= FREE_OPS_START_MISSIONS_DONE) return []
-    if (game.player.missionsDone === 0) return M1_STEPS
-    if (game.player.missionsDone === 1) return M2_STEPS
-    if (game.player.missionsDone === 2) return M3_STEPS
-    return []
-  }, [game.player.missionsDone, game.tutorial])
+    if (!game.tutorial || game.player.freeOperations) return []
+    return trainingCoachSteps(agencyTrainingStage(game.player))
+  }, [game.player, game.tutorial])
 
   // The game state changes synchronously, while the URL follows in a client
   // navigation. Render the persistent scene from that state so route segment
@@ -253,20 +250,22 @@ function GameChrome({ children }: { children: ReactNode }) {
           />
         )}
 
-        {game.popup === 'tutorial-complete' && !game.authGateOpen && (
+        {(game.popup === 'tutorial-complete' || game.popup === AGENCY_TRAINING_POPUP) && !game.authGateOpen && (
           <TutorialCompleteSheet
-            onDone={focuses => {
-              game.setPlayer(player => ({ ...player, programFocuses: focuses }))
+            track={agencyTrainingTrack(game.player)}
+            activities={freeOpsActivities(game.player)}
+            mode={game.popup === AGENCY_TRAINING_POPUP ? 'review' : 'handoff'}
+            onChoose={activity => {
+              captureGameEvent('free_ops_activity_chosen', { activity: activity.id, source: game.popup })
               game.setPopup(null)
+              if (activity.screen === 'missions') game.goToMissions()
+              else if (activity.screen === 'launchpad') game.openLaunchpad()
+              else game.go(activity.screen)
             }}
-            onBuildSilo={focuses => {
-              game.setPlayer(player => ({ ...player, programFocuses: focuses }))
-              game.setPopup(null)
-              game.go('build')
-            }}
+            onClose={() => game.setPopup(null)}
           />
         )}
-        {game.popup && game.popup !== 'tutorial-complete' && currentScreen !== 'market' && !game.authGateOpen && (
+        {game.popup && game.popup !== 'tutorial-complete' && game.popup !== AGENCY_TRAINING_POPUP && currentScreen !== 'market' && !game.authGateOpen && (
           <UnlockPopup
             kind={game.popup}
             onClose={() => {

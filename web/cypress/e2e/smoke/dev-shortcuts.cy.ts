@@ -1,3 +1,5 @@
+import { seedFixtureSession } from '../../support/authenticated-fixture'
+
 // Tests for the ?preset= URL param and the DEV panel one-shots.
 // Runs in the offline profile (no PocketBase required).
 
@@ -11,31 +13,38 @@ const presetCases: Array<{ key: string; assertion: () => void }> = [
     assertion: () => cy.contains('h1', /^(Base|Earth Base)$/).should('be.visible'),
   },
   {
+    // Mission setup owns one route: target, vehicle and launch review are
+    // internal steps of /game/missions (canonicalGameRoute), not /game/fab.
     key: 'm1-fab',
-    assertion: () => cy.url().should('include', '/game/fab'),
+    assertion: () => {
+      cy.location('pathname').should('eq', '/game/missions')
+      cy.get('[data-testid="mission-launch-review"]').should('be.visible')
+    },
   },
   {
-    key: 'm2-hub',
+    key: 'transport-hub',
     assertion: () => {
       cy.contains('h1', /^(Base|Earth Base)$/).should('be.visible')
     },
   },
   {
-    key: 'm2-fab',
+    key: 'transport-fab',
     assertion: () => {
-      cy.url().should('include', '/game/fab')
+      cy.location('pathname').should('eq', '/game/missions')
+      cy.get('[data-testid="assembly-selected-rocket"]').should('contain', 'Prospector')
     },
   },
   {
-    key: 'm3-hub',
+    // SSL-332: after both guided missions the Hub offers the silo build.
+    key: 'storage-hub',
     assertion: () => {
-      cy.contains('h1', /^(Base|Earth Base)$/).should('be.visible')
+      cy.get('[data-testid="progression-card-storage-silo"]').should('be.visible')
     },
   },
   {
-    key: 'm3-debrief',
+    key: 'transport-debrief',
     assertion: () => {
-      cy.contains('Debrief').should('be.visible')
+      cy.contains(/^debrief$/i).should('be.visible')
     },
   },
 ]
@@ -49,22 +58,19 @@ describe('Dev preset URL param (?preset=)', () => {
     })
   })
 
-  it('unknown preset falls back to normal load (intro screen)', () => {
+  it('unknown preset falls back to normal load (Earth Base)', () => {
     // resolvePreset() returns null for an unrecognized key, so this device
     // takes the ordinary (non-preview) hydration path — which, same as any
-    // other fresh session with no stored credentials, opens the auth gate
-    // before gameplay (STS-624). Seed guest credentials first so the
-    // fallback path actually reaches the intro screen instead of stalling
-    // on sign-in.
+    // other fresh session, opens the auth gate before gameplay (STS-624).
+    // Seed a signed-in session so the fallback path reaches gameplay; a
+    // signed-in player always lands on Earth Base (initial-route.ts).
     cy.visit('/game?preset=does-not-exist', {
       onBeforeLoad(win) {
-        win.localStorage.setItem(
-          'landnam-account-credentials',
-          JSON.stringify({ email: 'e2e@example.com', password: 'e2e-guest-test' }),
-        )
+        seedFixtureSession(win)
       },
     })
-    cy.contains('BEGIN OPERATIONS').should('be.visible')
+    cy.location('pathname').should('eq', '/game/hub')
+    cy.contains('h1', /^(Base|Earth Base)$/).should('be.visible')
   })
 
   it('preset param is stripped from URL after load', () => {
@@ -86,9 +92,9 @@ describe('DEV panel UI', () => {
     cy.get('[data-testid="dev-shortcuts-toggle"]').click()
     cy.get('[data-testid="dev-shortcuts-panel"]').should('be.visible')
     cy.get('[data-testid="dev-return-to-game"]').should('be.visible')
-    cy.get('[data-testid="dev-group-mission-1"]').should('exist')
-    cy.get('[data-testid="dev-group-mission-2"]').should('exist')
-    cy.get('[data-testid="dev-group-mission-3"]').should('exist')
+    cy.get('[data-testid="dev-group-extraction"]').should('exist')
+    cy.get('[data-testid="dev-group-transport"]').should('exist')
+    cy.get('[data-testid="dev-group-storage-silo"]').should('exist')
     cy.get('[data-testid="dev-group-first-satellite-launch"]').should('exist')
     cy.get('[data-testid^="dev-group-"]').should('have.length', 5)
   })
@@ -98,15 +104,14 @@ describe('DEV panel UI', () => {
     // M1 shots
     cy.get('[data-testid="dev-shot-m1-hub"]').should('exist')
     cy.get('[data-testid="dev-shot-m1-fab"]').should('exist')
-    // M2 shots
-    cy.get('[data-testid="dev-shot-m2-hub"]').should('exist')
-    cy.get('[data-testid="dev-shot-m2-rocket-buy"]').should('exist')
-    cy.get('[data-testid="dev-shot-m2-fab"]').should('exist')
-    // M3 shots
-    cy.get('[data-testid="dev-shot-m3-hub"]').should('exist')
-    cy.get('[data-testid="dev-shot-m3-fab"]').should('exist')
-    cy.get('[data-testid="dev-shot-m3-mining"]').should('exist')
-    cy.get('[data-testid="dev-shot-m3-debrief"]').should('exist')
+    // Transport shots
+    cy.get('[data-testid="dev-shot-transport-hub"]').should('exist')
+    cy.get('[data-testid="dev-shot-transport-fab"]').should('exist')
+    cy.get('[data-testid="dev-shot-transport-mining"]').should('exist')
+    cy.get('[data-testid="dev-shot-transport-debrief"]').should('exist')
+    // Storage Silo shots
+    cy.get('[data-testid="dev-shot-storage-hub"]').should('exist')
+    cy.get('[data-testid="dev-shot-storage-build"]').should('exist')
     // First Satellite Launch shots
     cy.get('[data-testid="dev-shot-telescope-hub"]').should('exist')
     cy.get('[data-testid="dev-shot-telescope-fab"]').should('exist')
@@ -121,43 +126,51 @@ describe('DEV panel UI', () => {
     cy.get('[data-testid="dev-shot-ship-customizer"]').should('exist')
     cy.get('[data-testid="dev-shot-ui-asteroid-discovery"]').should('exist')
     cy.get('[data-testid="dev-shot-ui-academy"]').should('exist')
-    cy.get('[data-testid^="dev-shot-"]').should('have.length', 27)
+    cy.get('[data-testid="dev-shot-ui-hangar-assembly"]').should('exist')
+    cy.get('[data-testid="dev-shot-ui-instrument-hub"]').should('exist')
+    // ui-tess-discovery is listed in two groups, so 25 presets render 26 buttons.
+    cy.get('[data-testid^="dev-shot-"]').should('have.length', 26)
   })
 
-  it('clicking M2 Hub navigates to hub with M2 coach, no Save Progress prompt', () => {
+  it('clicking Transport Hub lands on the two-leg client pick with the Transport coach', () => {
     cy.get('[data-testid="dev-shortcuts-toggle"]').click()
-    cy.get('[data-testid="dev-shot-m2-hub"]').click()
-    cy.contains('Prospector').should('be.visible')
+    cy.get('[data-testid="dev-shot-transport-hub"]').click()
+    // Compact coach on the Hub: title plus the action.
+    cy.contains('Tap the Launchpad').should('be.visible')
+    cy.contains(/^transport$/i).should('be.visible')
     cy.contains('Create a free account').should('not.exist')
   })
 
-  it('clicking M2 rocket purchase shows purchasable Prospector', () => {
+  it('clicking Transport Fab shows fab screen with the Prospector staged', () => {
     cy.get('[data-testid="dev-shortcuts-toggle"]').click()
-    cy.get('[data-testid="dev-shot-m2-rocket-buy"]').click()
-    cy.contains('Select Rocket').should('be.visible')
-    cy.contains('Prospector').should('be.visible')
-    cy.contains('Purchase').should('be.visible')
-  })
-
-  it('clicking M2 Fab shows fab screen after Prospector purchase', () => {
-    cy.get('[data-testid="dev-shortcuts-toggle"]').click()
-    cy.get('[data-testid="dev-shot-m2-fab"]').click()
+    cy.get('[data-testid="dev-shot-transport-fab"]').click()
     cy.contains('Prospector').should('be.visible')
     cy.contains('LAUNCH').should('be.visible')
   })
 
-  it('clicking M3 Hub lands back on the two-leg client pick, replaying mission 3', () => {
+  it('clicking Transport Debrief shows the two-leg mission attributed to the delivery target', () => {
     cy.get('[data-testid="dev-shortcuts-toggle"]').click()
-    cy.get('[data-testid="dev-shot-m3-hub"]').click()
-    cy.contains('Guided Ops · Mission 3').should('be.visible')
-    cy.contains('Create a free account').should('not.exist')
+    cy.get('[data-testid="dev-shot-transport-debrief"]').click()
+    // The ship returns from the delivery stop; the route chip still names the
+    // mining site first (KES-352).
+    cy.contains('span', 'RETURNED FROM').next().should('have.text', '4 Vesta')
   })
 
-  it('clicking M3 Debrief shows the two-leg mission attributed to the delivery target', () => {
+  it('clicking Storage Hub shows the Storage coach and silo card, and placing the silo opens Free Ops', () => {
     cy.get('[data-testid="dev-shortcuts-toggle"]').click()
-    cy.get('[data-testid="dev-shot-m3-debrief"]').click()
-    cy.contains('From 4 Vesta').should('be.visible')
-    cy.contains('From 101955 Bennu').should('not.exist')
+    cy.get('[data-testid="dev-shot-storage-hub"]').click()
+    cy.contains('Build a Storage Silo').should('be.visible')
+    // scrollBehavior:false — the hub's sliding world is taller than the
+    // viewport, and Cypress's default scroll-to-top tucks the card under the
+    // fixed top bar (same pattern as earth-base-redesign.cy.ts).
+    cy.get('[data-testid="progression-card-storage-silo"]').click({ scrollBehavior: false })
+    cy.location('pathname').should('eq', '/game/build')
+    cy.get('[data-coach-id="build-plot-open"]').first().parents('button').first().click()
+    cy.get('[data-coach-id="build-confirm"]').click()
+    cy.get('[data-testid="tutorial-complete-sheet"]').should('be.visible')
+    cy.get('[data-testid="free-ops-activity-client-work"]').should('be.visible')
+    cy.get('[data-testid="free-ops-activity-space-telescope"]').should('be.visible')
+    cy.get('[data-testid="free-ops-activity-build-refinery"]').should('be.visible')
   })
 
   it('closes panel when DEV button clicked again', () => {

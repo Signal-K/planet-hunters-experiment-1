@@ -1,7 +1,7 @@
 import { STARTING_FRANCS } from '@/lib/data/economy'
 import type { CompletedMissionRecord, GameState, LicenseGrade, Player, Screen } from '@/lib/game-types'
 import { MISSIONS, OWN_PROGRAM_CLIENT_ID, TARGETS } from '@/lib/data'
-import { FREE_OPS_START_MISSIONS_DONE } from '@/lib/data/mission-generator'
+import { freeOperationsUnlocked } from '@/lib/systems/AgencyOnboardingSystem'
 import { migrateCrewRoster } from '@/lib/systems/CrewSystem'
 import { normalizeSurfaceOps } from '@/lib/systems/SurfaceOpsSystem'
 import { settleCrewEconomy } from '@/lib/systems/AcademySystem'
@@ -43,7 +43,6 @@ export const DEFAULT_STATE: GameState = {
     skillPoints: 0,
     unlockedSkillNodes: [],
     freeOperations: false,
-    programFocuses: [],
     clientMissions: {},
     completedMissions: [],
     clientStreaks: {},
@@ -280,12 +279,13 @@ export function normalizeState(input: PartialSave): GameState {
   const refineryBuilt = builtFrom('refinery', player.refineryBuilt)
   // KES-177: Free Operations is a progression boundary, not a freely
   // persisted toggle. Older/incorrect remote saves can have the flag set
-  // before M3; derive it from missionsDone so the early game can never expose
-  // the post-onboarding telescope flow.
+  // early; derive it (SSL-332: guided missions flown plus a storage silo, or a
+  // save that already reached Free Ops under the old onboarding) so the early
+  // game can never expose the post-onboarding telescope flow.
   const missionsDone = Number.isFinite(player.missionsDone)
     ? Math.max(0, Math.floor(player.missionsDone ?? 0))
     : DEFAULT_STATE.player.missionsDone
-  const freeOperations = missionsDone >= FREE_OPS_START_MISSIONS_DONE
+  const freeOperations = freeOperationsUnlocked({ missionsDone, placed: placedList })
   const legacyClaim = input.pendingTerritoryClaimFor as unknown as { targetId: string; clientId?: string; contractorId?: string } | undefined
   const pendingTerritoryClaimFor = legacyClaim
     ? { targetId: legacyClaim.targetId, clientId: legacyClaim.clientId ?? legacyClaim.contractorId ?? '' }
@@ -332,14 +332,49 @@ export function normalizeState(input: PartialSave): GameState {
     // The retired private emergency-loan popup must not survive an old save.
     popup: input.popup === 'loan' || input.popup === undefined ? null : input.popup,
     // Free Ops is the durable boundary. If an older save left `tutorial` true
-    // after the final onboarding debrief, do not let that stale flag resurrect
-    // the coach on the next load.
-    tutorial: missionsDone >= FREE_OPS_START_MISSIONS_DONE ? false : (input.tutorial ?? DEFAULT_STATE.tutorial),
+    // after onboarding ended, do not let that stale flag resurrect the coach
+    // on the next load.
+    tutorial: freeOperations ? false : (input.tutorial ?? DEFAULT_STATE.tutorial),
     ...(pendingTerritoryClaimFor ? { pendingTerritoryClaimFor } : {}),
   }
 }
 
-export function repairStateRoute(input: GameState): GameState {
+// SSL-332 retired the M2 Prospector bulk haul (generated "Heavy Haul" rows and
+// PocketBase's m2-silicon). A save caught mid-run on one has no mission to
+// resume, so drop that run and hand the player back to the Hub, where the
+// Transport lesson picks up as guided mission 2.
+function isRetiredOnboardingMission(id: string | null | undefined): boolean {
+  return !!id && (id.startsWith('generated-s2-') || id === 'm2-silicon')
+}
+
+function dropRetiredOnboardingRun(input: GameState): GameState {
+  const activeId = input.player.activeMission?.id
+  const pausedRuns = input.player.pausedMissionRuns ?? []
+  const pausedRetired = pausedRuns.some(run => isRetiredOnboardingMission(run.missionId))
+  if (!isRetiredOnboardingMission(input.missionId) && !isRetiredOnboardingMission(activeId) && !pausedRetired) return input
+  const runIsRetired = isRetiredOnboardingMission(input.missionId) || isRetiredOnboardingMission(activeId)
+  return {
+    ...input,
+    ...(runIsRetired ? { screen: 'hub' as Screen, missionId: null, targetId: null, deliveryTargetId: null, lastCargo: null } : {}),
+    player: {
+      ...input.player,
+      ...(runIsRetired ? {
+        activeMission: null,
+        missionPhase: undefined,
+        missionRunId: undefined,
+        debriefPending: false,
+        pendingLaunch: false,
+        pendingRocketId: undefined,
+        stagedRockets: (input.player.stagedRockets ?? []).filter(rocket => !isRetiredOnboardingMission(rocket.missionId)),
+        selectedStagedRocketId: undefined,
+      } : {}),
+      pausedMissionRuns: pausedRuns.filter(run => !isRetiredOnboardingMission(run.missionId)),
+    },
+  }
+}
+
+function repairStateRoute(rawInput: GameState): GameState {
+  const input = dropRetiredOnboardingRun(rawInput)
   const mission = input.missionId
     ? (MISSIONS.find(m => m.id === input.missionId)
        ?? input.player.dailyClientPool?.missions.find(m => m.id === input.missionId)
@@ -384,21 +419,17 @@ export function repairStateRoute(input: GameState): GameState {
   if (input.screen === 'refinery' && !input.player.refineryBuilt) {
     return { ...input, screen: 'hub' }
   }
-  // Repair the tutorial flag: during onboarding (missionsDone < FREE_OPS_START_MISSIONS_DONE),
+  // Repair the tutorial flag: during agency training (before Free Ops),
   // tutorial must always be active. It can become false if the catalog had no next-sequence
-  // mission at the moment onDebriefDone ran, leaving M2/M3 coach permanently dark.
+  // mission at the moment onDebriefDone ran, leaving the Transport or Storage coach permanently dark.
   // Explicit skips are still respected: skipTutorial marks every step done, so the coach
   // finds no matching step and hides itself without needing tutorial=false.
-  if (input.player.missionsDone < FREE_OPS_START_MISSIONS_DONE && !input.tutorial) {
+  if (!input.player.freeOperations && !input.tutorial) {
     return { ...input, tutorial: true }
   }
   return input
 }
 
-/** True only when a mission-completion transition crosses into Free Ops. */
-export function justFinishedOnboarding(previousMissionsDone: number, nextMissionsDone: number): boolean {
-  return previousMissionsDone < FREE_OPS_START_MISSIONS_DONE && nextMissionsDone >= FREE_OPS_START_MISSIONS_DONE
-}
 
 export function normalizeAndRepair(partial: PartialSave): GameState {
   return repairStateRoute(settleCrewEconomy(normalizeState(partial)))

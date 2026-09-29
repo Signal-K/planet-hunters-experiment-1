@@ -338,7 +338,17 @@ export default function MissionSetupRoutes({ screen, game, hasCoach, rocketDispl
             </article>
             <button type="button" className={`${styles.carouselArrow} ${styles.next}`} onClick={() => relay.selectRelativeSignal(1)} disabled={relay.cardModels.length < 2} aria-label="Next contract"><ChevronGlyph direction="next" /></button>
             <div className={styles.galleryDots} aria-hidden="true">{relay.cardModels.map((item, index) => <i key={item.mission.id} data-active={index === relay.selectedIndex} />)}</div>
-          </> : <div className={styles.empty}>NO COMPATIBLE CLIENT SIGNALS</div>}
+          </> : relay.onboardingComplete ? (
+            // SSL-332: both guided contracts are flown; the silo is what opens
+            // Free Ops, so say so instead of showing an empty board.
+            <div className={styles.empty} data-testid="mission-board-awaiting-silo">
+              <div className={styles.emptyPrompt}>
+                <span>AGENCY TRAINING</span>
+                <strong>Build a storage silo to open Free Ops</strong>
+                <button type="button" className={styles.primary} onClick={() => game.go('build')}>BUILD STORAGE SILO</button>
+              </div>
+            </div>
+          ) : <div className={styles.empty}>NO COMPATIBLE CLIENT SIGNALS</div>}
         </section>
       </SetupFrame>
     )

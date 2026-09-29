@@ -5,6 +5,7 @@ import { useGame } from '@/game-context'
 import { pbShared } from '@/lib/pb'
 import { DEV_GROUPS } from '@/lib/devPresets'
 import PageSurface from '@/components/ui/PageSurface'
+import { AGENCY_TRAINING_POPUP } from '@/lib/systems/AgencyOnboardingSystem'
 
 interface SettingsSheetProps {
   onClose: () => void
@@ -125,6 +126,15 @@ export default function SettingsSheet({ onClose }: SettingsSheetProps) {
         </Section>
 
         <Section label="Data">
+          {game.player.missionsDone > 0 && (
+            <Row>
+              <div>
+                <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 13, color: 'var(--ln-text)' }}>Agency training</div>
+                <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 11, color: 'var(--ln-text-muted)', marginTop: 2 }}>Review launchpad, extraction, transport, storage, and Free Ops</div>
+              </div>
+              <Btn label="Review" onClick={() => { onClose(); game.setPopup(AGENCY_TRAINING_POPUP) }} variant="primary" />
+            </Row>
+          )}
           <Row>
             <div>
               <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 13, color: 'var(--ln-text)' }}>Reset game</div>

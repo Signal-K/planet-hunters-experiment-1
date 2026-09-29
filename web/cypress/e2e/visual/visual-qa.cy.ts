@@ -233,8 +233,9 @@ describe('Visual QA — game screens and mining canvas', () => {
     cy.get('[data-testid="scrap-sequence-skip-btn"]', { timeout: 10000 }).should('be.visible').click()
     cy.get('[data-testid="collect-reward-btn"]', { timeout: 10000 }).should('be.visible').click()
 
-    // Guided M2 handoff
-    cy.contains('Guided Ops · Mission 2', { timeout: 10000 }).should('be.visible')
+    // Guided Transport handoff (SSL-332: mission 2 is the two-stop haul)
+    cy.contains('Tap the Launchpad', { timeout: 10000 }).should('be.visible')
+    cy.contains(/^transport$/i).should('be.visible')
     // Wait for the destination scene, not only the coach overlay. This keeps
     // the visual checkpoint honest when the Hub route is still settling after
     // the debrief transition (KES-167/KES-186).

@@ -3,12 +3,11 @@ import type { GameState, Player } from '@/game-context'
 import { MISSIONS } from '@/lib/data'
 
 const FIRST_MISSION = MISSIONS.find(m => m.sequence === 1) ?? MISSIONS[0]
-const SECOND_MISSION = MISSIONS.find(m => m.sequence === 2) ?? MISSIONS[1] ?? FIRST_MISSION
 const FIRST_MINERAL = Object.keys(FIRST_MISSION.requires.minerals)[0] ?? 'iron'
-const SECOND_MINERAL = Object.keys(SECOND_MISSION.requires.minerals)[0] ?? 'silicon'
-// M3 is the two-leg "mine then deliver" client choice — Belt Courier Run
-// (Bennu -> Vesta) is the authored pick used for these dev shots.
-const THIRD_MISSION = MISSIONS.find(m => m.id === 'lnm_m3_relay_bennu_vesta') ?? MISSIONS.find(m => m.sequence === 3) ?? SECOND_MISSION
+// SSL-332 Transport lesson (guided mission 2) is the two-leg "mine then
+// deliver" client choice — Belt Courier Run (Bennu -> Vesta) is the authored
+// pick used for these dev shots.
+const TRANSPORT_MISSION = MISSIONS.find(m => m.id === 'lnm_m3_relay_bennu_vesta') ?? MISSIONS.find(m => m.sequence === 2) ?? FIRST_MISSION
 
 const BASE_PLAYER: Player = {
   francs: 150_000_000,
@@ -34,9 +33,9 @@ const BASE_PLAYER: Player = {
   loanOffered: false,
 }
 
-const M1_DONE: Record<number, boolean> = { 0: true, 1: true, 2: true, 3: true, 4: true, 5: true, 6: true, 8: true, 9: true }
-const M1_AND_M2_DONE: Record<number, boolean> = { ...M1_DONE, 20: true, 21: true }
-const M1_M2_M3_DONE: Record<number, boolean> = { ...M1_AND_M2_DONE, 30: true, 31: true, 32: true }
+const EXTRACTION_DONE: Record<number, boolean> = { 0: true, 1: true, 2: true, 3: true, 4: true, 5: true, 6: true, 8: true, 9: true }
+const TRANSPORT_DONE: Record<number, boolean> = { ...EXTRACTION_DONE, 30: true, 31: true, 32: true, 33: true }
+const TRAINING_DONE: Record<number, boolean> = { ...TRANSPORT_DONE, 40: true, 41: true }
 
 // Story mission synthesized at runtime in game-context.tsx once free ops +
 // the transit telescope are unlocked — not in MISSIONS, so these
@@ -104,35 +103,32 @@ export interface DevGroup {
 
 export const DEV_GROUPS: DevGroup[] = [
   {
-    label: 'Mission 1',
+    label: 'Extraction',
     color: '#d97150',
     shots: [
       { key: 'm1-intro',  label: 'Intro',   hint: 'Fresh start, no progress', stage: 'tutorial' },
-      { key: 'm1-hub',    label: 'Hub',     hint: 'Launchpad built, M1 coach active', stage: 'tutorial' },
+      { key: 'm1-hub',    label: 'Hub',     hint: 'Launchpad built, Extraction coach active', stage: 'tutorial' },
       { key: 'm1-fab',    label: 'Fab',     hint: 'First generated mission + Eros picked, at fab', stage: 'tutorial' },
       { key: 'm1-mining', label: 'Mining',  hint: 'In mining with iron target', stage: 'tutorial' },
       { key: 'm1-debrief',label: 'Debrief', hint: 'Post-mine debrief, 6 iron', stage: 'tutorial' },
     ],
   },
   {
-    label: 'Mission 2',
-    color: '#3fa9ff',
+    label: 'Transport',
+    color: '#c084fc',
     shots: [
-      { key: 'm2-hub',    label: 'Hub',     hint: 'Prospector unlocked, M2 coach active', stage: 'tutorial' },
-      { key: 'm2-rocket-buy', label: 'Rocket', hint: 'Second generated mission + Eros, Prospector purchase step', stage: 'tutorial' },
-      { key: 'm2-fab',    label: 'Fab',     hint: 'Second generated mission + Eros after Prospector purchase', stage: 'tutorial' },
-      { key: 'm2-mining', label: 'Mining',  hint: 'In mining with second generated target', stage: 'tutorial' },
-      { key: 'm2-post-debrief', label: 'Done',  hint: 'Second mission complete, returned to hub with stash retained — M3 not yet started, Free Ops still locked', stage: 'tutorial' },
+      { key: 'transport-hub',     label: 'Hub',     hint: 'Extraction done (missionsDone: 1), Transport coach active — pick the two-leg client job', stage: 'tutorial' },
+      { key: 'transport-fab',     label: 'Fab',     hint: 'Belt Courier Run accepted (Bennu -> Vesta), at fab', stage: 'tutorial' },
+      { key: 'transport-mining',  label: 'Mining',  hint: 'In mining at Bennu, delivery leg to Vesta pending', stage: 'tutorial' },
+      { key: 'transport-debrief', label: 'Debrief', hint: 'Two-leg run complete, delivered at Vesta then returned', stage: 'tutorial' },
     ],
   },
   {
-    label: 'Mission 3',
-    color: '#c084fc',
+    label: 'Storage Silo',
+    color: '#39d3b4',
     shots: [
-      { key: 'm3-hub',     label: 'Hub',     hint: 'MID mission 3 (missionsDone: 2), M3 coach still active, Free Ops NOT unlocked yet — replay the two-leg client pick', stage: 'tutorial' },
-      { key: 'm3-fab',     label: 'Fab',     hint: 'Belt Courier Run accepted (Bennu -> Vesta), at fab — still mid-tutorial', stage: 'tutorial' },
-      { key: 'm3-mining',  label: 'Mining',  hint: 'In mining at Bennu, delivery leg to Vesta pending — still mid-tutorial', stage: 'tutorial' },
-      { key: 'm3-debrief', label: 'Debrief', hint: 'Two-leg run complete, delivered at Vesta then returned — still mid-tutorial', stage: 'tutorial' },
+      { key: 'storage-hub',   label: 'Hub',   hint: 'Both guided missions done (missionsDone: 2), no silo yet — Storage coach active, Free Ops still locked', stage: 'tutorial' },
+      { key: 'storage-build', label: 'Build', hint: 'Build screen with the Surface Silo ready to place — placing it opens Free Ops', stage: 'tutorial' },
     ],
   },
   {
@@ -162,11 +158,11 @@ export const DEV_GROUPS: DevGroup[] = [
       { key: 'ui-mission-board', label: 'Mission Board', hint: 'Recent OD layout restyle with client cards — Free Ops unlocked, tutorial off', stage: 'free-ops' },
       { key: 'ui-build', label: 'Build', hint: 'Free Ops construction state with a silo, mining settlement, and refinery materials', stage: 'free-ops' },
       { key: 'ui-skill-tree', label: 'Skill Tree', hint: 'License Grade and research XP progress screen — post-onboarding, Free Ops unlocked', stage: 'free-ops' },
-      { key: 'ui-target-picker', label: 'Target Picker', hint: 'Solar map target selection with a mission loaded — missionsDone: 2, Free Ops NOT unlocked', stage: 'tutorial' },
+      { key: 'ui-target-picker', label: 'Target Picker', hint: 'Solar map target selection with the Transport mission loaded — missionsDone: 1, Free Ops NOT unlocked', stage: 'tutorial' },
       { key: 'ui-tess-discovery', label: 'TESS Console', hint: 'Transit telescope classification screen — post-onboarding, Free Ops unlocked', stage: 'free-ops' },
-      { key: 'ui-rover-mining', label: 'Rover Mining', hint: 'Starter-rover live TakeOn field — missionsDone: 2, Free Ops NOT unlocked', stage: 'tutorial' },
+      { key: 'ui-rover-mining', label: 'Rover Mining', hint: 'Starter-rover live TakeOn field — missionsDone: 1, Free Ops NOT unlocked', stage: 'tutorial' },
       { key: 'ship-customizer', label: 'Ship Customiser', hint: 'Unlocked hangar interior view with Explorer room slots — missionsDone: 1, Free Ops NOT unlocked', stage: 'tutorial' },
-      { key: 'ui-hangar-assembly', label: 'Hangar Assembly', hint: 'Prospector shipment fitting in the hangar before launchpad transfer — missionsDone: 2', stage: 'tutorial' },
+      { key: 'ui-hangar-assembly', label: 'Hangar Assembly', hint: 'Prospector shipment fitting in the hangar before launchpad transfer — missionsDone: 1', stage: 'tutorial' },
       { key: 'ui-instrument-hub', label: 'Instrument Hub', hint: 'Orbit downlink queue for owned telescopes and satellites — post-onboarding, Free Ops unlocked', stage: 'free-ops' },
       { key: 'ui-asteroid-discovery', label: 'Asteroid Discovery', hint: 'Deep Space Telescope built (STS-622) — live NEOCP candidate review, requires seeded asteroid_candidates on the shared backend. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
       { key: 'ui-academy', label: 'Academy', hint: 'Astronaut Academy built + funded, two clients at affinity L2 — management view, AcademyCoach fires on first load. Post-onboarding, Free Ops unlocked', stage: 'free-ops' },
@@ -227,96 +223,66 @@ export function resolvePreset(name: string): Partial<GameState> | null {
         lastCargo: FIRST_MISSION.requires.minerals, popup: null,
       }
 
-    // ── Mission 2 ──
-    case 'm2-hub':
+    // ── Transport (guided mission 2: two-leg "mine then deliver" client pick) ──
+    case 'transport-hub':
       return {
         screen: 'hub',
         player: { ...BASE_PLAYER, missionsDone: 1 },
-        tutorial: true, doneSteps: M1_DONE,
-        missionId: null, targetId: null,
+        tutorial: true, doneSteps: EXTRACTION_DONE,
+        missionId: null, targetId: null, deliveryTargetId: null,
         rocket: { chassis: 'hull-mk1', propulsion: 'ion-a1', drill: 'hand-drill' },
         lastCargo: null, popup: null,
       }
 
-    case 'm2-rocket-buy':
-      return {
-        screen: 'rocket-buy',
-        player: { ...BASE_PLAYER, missionsDone: 1 },
-        tutorial: true, doneSteps: { ...M1_DONE, 20: true },
-        missionId: SECOND_MISSION.id, targetId: 'eros',
-        rocket: { chassis: 'hull-mk1', propulsion: 'ion-a1', drill: 'hand-drill' },
-        lastCargo: null, popup: null,
-      }
-
-    case 'm2-fab':
+    case 'transport-fab':
       return {
         screen: 'fab',
         player: { ...BASE_PLAYER, missionsDone: 1, francs: BASE_PLAYER.francs - ROCKET_PRICES.prospector },
-        tutorial: true, doneSteps: { ...M1_DONE, 20: true, 21: true },
-        missionId: SECOND_MISSION.id, targetId: 'eros',
+        tutorial: true, doneSteps: { ...EXTRACTION_DONE, 30: true, 31: true },
+        missionId: TRANSPORT_MISSION.id, targetId: TRANSPORT_MISSION.targetId ?? 'bennu', deliveryTargetId: TRANSPORT_MISSION.deliveryTargetId ?? 'vesta',
         rocket: { chassis: 'hull-mk2', propulsion: 'fusion-b2', drill: 'laser-t2' },
         lastCargo: null, popup: null,
       }
 
-    case 'm2-mining':
+    case 'transport-mining':
       return {
         screen: 'mining',
-        player: { ...BASE_PLAYER, missionsDone: 1, activeMission: { id: SECOND_MISSION.id, label: `${SECOND_MISSION.title} → Eros` } },
-        tutorial: true, doneSteps: { ...M1_DONE, 20: true, 21: true },
-        missionId: SECOND_MISSION.id, targetId: 'eros',
+        player: { ...BASE_PLAYER, missionsDone: 1, activeMission: { id: TRANSPORT_MISSION.id, label: `${TRANSPORT_MISSION.title} → ${TRANSPORT_MISSION.targetId}` } },
+        tutorial: true, doneSteps: { ...EXTRACTION_DONE, 30: true, 31: true, 32: true },
+        missionId: TRANSPORT_MISSION.id, targetId: TRANSPORT_MISSION.targetId ?? 'bennu', deliveryTargetId: TRANSPORT_MISSION.deliveryTargetId ?? 'vesta',
         rocket: { chassis: 'hull-mk2', propulsion: 'fusion-b2', drill: 'laser-t2' },
         lastCargo: null, popup: null,
       }
 
-    case 'm2-post-debrief':
+    case 'transport-debrief':
       return {
-        screen: 'hub',
-        player: { ...BASE_PLAYER, missionsDone: 1, stash: { [SECOND_MINERAL]: SECOND_MISSION.requires.minerals[SECOND_MINERAL] ?? 1 }, lastClient: SECOND_MISSION.client },
-        tutorial: false, doneSteps: M1_DONE,
-        missionId: null, targetId: null,
+        screen: 'debrief',
+        player: { ...BASE_PLAYER, missionsDone: 1 },
+        tutorial: true, doneSteps: { ...EXTRACTION_DONE, 30: true, 31: true, 32: true },
+        missionId: TRANSPORT_MISSION.id, targetId: TRANSPORT_MISSION.targetId ?? 'bennu', deliveryTargetId: TRANSPORT_MISSION.deliveryTargetId ?? 'vesta',
         rocket: { chassis: 'hull-mk2', propulsion: 'fusion-b2', drill: 'laser-t2' },
-        lastCargo: SECOND_MISSION.requires.minerals, popup: null,
+        lastCargo: TRANSPORT_MISSION.requires.minerals, popup: null,
       }
 
-    // ── Mission 3 (two-leg "mine then deliver" client pick) ──
-    case 'm3-hub':
+    // ── Storage Silo (last training step; placing it opens Free Ops) ──
+    case 'storage-hub':
       return {
         screen: 'hub',
         player: { ...BASE_PLAYER, missionsDone: 2 },
-        tutorial: true, doneSteps: M1_AND_M2_DONE,
+        tutorial: true, doneSteps: TRANSPORT_DONE,
         missionId: null, targetId: null, deliveryTargetId: null,
         rocket: { chassis: 'hull-mk2', propulsion: 'fusion-b2', drill: 'laser-t2' },
         lastCargo: null, popup: null,
       }
 
-    case 'm3-fab':
+    case 'storage-build':
       return {
-        screen: 'fab',
-        player: { ...BASE_PLAYER, missionsDone: 2, francs: BASE_PLAYER.francs - ROCKET_PRICES.prospector },
-        tutorial: true, doneSteps: { ...M1_AND_M2_DONE, 30: true, 31: true },
-        missionId: THIRD_MISSION.id, targetId: THIRD_MISSION.targetId ?? 'bennu', deliveryTargetId: THIRD_MISSION.deliveryTargetId ?? 'vesta',
-        rocket: { chassis: 'hull-mk2', propulsion: 'fusion-b2', drill: 'laser-t2' },
-        lastCargo: null, popup: null,
-      }
-
-    case 'm3-mining':
-      return {
-        screen: 'mining',
-        player: { ...BASE_PLAYER, missionsDone: 2, activeMission: { id: THIRD_MISSION.id, label: `${THIRD_MISSION.title} → ${THIRD_MISSION.targetId}` } },
-        tutorial: true, doneSteps: { ...M1_AND_M2_DONE, 30: true, 31: true, 32: true },
-        missionId: THIRD_MISSION.id, targetId: THIRD_MISSION.targetId ?? 'bennu', deliveryTargetId: THIRD_MISSION.deliveryTargetId ?? 'vesta',
-        rocket: { chassis: 'hull-mk2', propulsion: 'fusion-b2', drill: 'laser-t2' },
-        lastCargo: null, popup: null,
-      }
-
-    case 'm3-debrief':
-      return {
-        screen: 'debrief',
+        screen: 'build',
         player: { ...BASE_PLAYER, missionsDone: 2 },
-        tutorial: true, doneSteps: { ...M1_AND_M2_DONE, 30: true, 31: true, 32: true },
-        missionId: THIRD_MISSION.id, targetId: THIRD_MISSION.targetId ?? 'bennu', deliveryTargetId: THIRD_MISSION.deliveryTargetId ?? 'vesta',
+        tutorial: true, doneSteps: { ...TRANSPORT_DONE, 40: true },
+        missionId: null, targetId: null, deliveryTargetId: null,
         rocket: { chassis: 'hull-mk2', propulsion: 'fusion-b2', drill: 'laser-t2' },
-        lastCargo: THIRD_MISSION.requires.minerals, popup: null,
+        lastCargo: null, popup: null,
       }
 
     // ── First Satellite Launch (post-onboarding story mission) ──
@@ -324,7 +290,7 @@ export function resolvePreset(name: string): Partial<GameState> | null {
       return {
         screen: 'hub',
         player: POST_ONBOARDING_PLAYER,
-        tutorial: false, doneSteps: M1_M2_M3_DONE,
+        tutorial: false, doneSteps: TRAINING_DONE,
         missionId: null, targetId: null,
         rocket: { chassis: 'hull-mk2', propulsion: 'fusion-b2', drill: 'laser-t2' },
         lastCargo: null, popup: null,
@@ -334,7 +300,7 @@ export function resolvePreset(name: string): Partial<GameState> | null {
       return {
         screen: 'fab',
         player: POST_ONBOARDING_PLAYER,
-        tutorial: false, doneSteps: M1_M2_M3_DONE,
+        tutorial: false, doneSteps: TRAINING_DONE,
         missionId: TRANSIT_TELESCOPE_MISSION_ID, targetId: TRANSIT_TELESCOPE_TARGET_ID,
         rocket: { chassis: 'hull-mk2', propulsion: 'fusion-b2', drill: 'laser-t2' },
         lastCargo: null, popup: null,
@@ -346,7 +312,7 @@ export function resolvePreset(name: string): Partial<GameState> | null {
       return {
         screen: 'transit',
         player: { ...POST_ONBOARDING_PLAYER, activeMission: { id: TRANSIT_TELESCOPE_MISSION_ID, label: 'Launch Transit Telescope → Earth Orbit' }, transitStartedAt, arrivalAt: transitStartedAt + 90_000 },
-        tutorial: false, doneSteps: M1_M2_M3_DONE,
+        tutorial: false, doneSteps: TRAINING_DONE,
         missionId: TRANSIT_TELESCOPE_MISSION_ID, targetId: TRANSIT_TELESCOPE_TARGET_ID,
         rocket: { chassis: 'hull-mk2', propulsion: 'fusion-b2', drill: 'laser-t2' },
         lastCargo: null, popup: null,
@@ -357,7 +323,7 @@ export function resolvePreset(name: string): Partial<GameState> | null {
       return {
         screen: 'debrief',
         player: { ...POST_ONBOARDING_PLAYER, transitSatelliteLaunchedAt: Date.now(), transitSatelliteLevel: 1 },
-        tutorial: false, doneSteps: M1_M2_M3_DONE,
+        tutorial: false, doneSteps: TRAINING_DONE,
         missionId: TRANSIT_TELESCOPE_MISSION_ID, targetId: TRANSIT_TELESCOPE_TARGET_ID,
         rocket: { chassis: 'hull-mk2', propulsion: 'fusion-b2', drill: 'laser-t2' },
         lastCargo: {}, popup: null,
@@ -373,9 +339,9 @@ export function resolvePreset(name: string): Partial<GameState> | null {
           unlockedSkillNodes: ['ship-customizer-1'],
         },
         tutorial: false,
-        doneSteps: M1_DONE,
-        missionId: SECOND_MISSION.id,
-        targetId: 'eros',
+        doneSteps: EXTRACTION_DONE,
+        missionId: TRANSPORT_MISSION.id,
+        targetId: TRANSPORT_MISSION.targetId ?? 'bennu',
         rocket: { chassis: 'hull-mk1', propulsion: 'ion-a1', drill: 'hand-drill' },
         lastCargo: null,
         popup: null,
@@ -386,14 +352,14 @@ export function resolvePreset(name: string): Partial<GameState> | null {
         screen: 'hangar',
         player: {
           ...BASE_PLAYER,
-          missionsDone: 2,
+          missionsDone: 1,
           pendingLaunch: true,
           unlockedSkillNodes: ['ship-customizer-1'],
         },
         tutorial: false,
-        doneSteps: M1_AND_M2_DONE,
-        missionId: THIRD_MISSION.id,
-        targetId: THIRD_MISSION.targetId,
+        doneSteps: EXTRACTION_DONE,
+        missionId: TRANSPORT_MISSION.id,
+        targetId: TRANSPORT_MISSION.targetId,
         rocket: { chassis: 'hull-mk2', propulsion: 'fusion-b2', drill: 'laser-t2' },
         lastCargo: null,
         popup: null,
@@ -406,12 +372,14 @@ export function resolvePreset(name: string): Partial<GameState> | null {
         player: {
           ...BASE_PLAYER,
           missionsDone: 2,
+          placed: ['launchpad', 'surface-silo'],
+          placementPlots: { launchpad: 0, 'surface-silo': 1 },
           freeOperations: true,
           clientMissions: { 'helios-propulsion-depot': 2, 'lumen-research': 1 },
           lastClient: 'helios-propulsion-depot',
         },
         tutorial: false,
-        doneSteps: M1_AND_M2_DONE,
+        doneSteps: TRANSPORT_DONE,
         missionId: null,
         targetId: null,
         rocket: { chassis: 'hull-mk2', propulsion: 'fusion-b2', drill: 'laser-t2' },
@@ -431,7 +399,7 @@ export function resolvePreset(name: string): Partial<GameState> | null {
           surfaceOps: { sites: { 'mars-arcadia': { storage: {}, siteAccessPurchasedAt: 1 } } },
         },
         tutorial: false,
-        doneSteps: M1_M2_M3_DONE,
+        doneSteps: TRANSPORT_DONE,
         missionId: null,
         targetId: null,
         rocket: { chassis: 'hull-mk2', propulsion: 'fusion-b2', drill: 'laser-t2' },
@@ -454,7 +422,7 @@ export function resolvePreset(name: string): Partial<GameState> | null {
           transitSatelliteLaunchedAt: Date.now(),
         },
         tutorial: false,
-        doneSteps: M1_M2_M3_DONE,
+        doneSteps: TRAINING_DONE,
         missionId: null,
         targetId: null,
         rocket: { chassis: 'hull-mk2', propulsion: 'fusion-b2', drill: 'laser-t2' },
@@ -465,12 +433,12 @@ export function resolvePreset(name: string): Partial<GameState> | null {
     case 'ui-target-picker':
       return {
         screen: 'targets',
-        player: { ...BASE_PLAYER, missionsDone: 2 },
+        player: { ...BASE_PLAYER, missionsDone: 1 },
         tutorial: false,
-        doneSteps: M1_AND_M2_DONE,
-        missionId: THIRD_MISSION.id,
+        doneSteps: EXTRACTION_DONE,
+        missionId: TRANSPORT_MISSION.id,
         targetId: null,
-        deliveryTargetId: THIRD_MISSION.deliveryTargetId ?? 'vesta',
+        deliveryTargetId: TRANSPORT_MISSION.deliveryTargetId ?? 'vesta',
         rocket: { chassis: 'hull-mk2', propulsion: 'fusion-b2', drill: 'laser-t2' },
         lastCargo: null,
         popup: null,
@@ -488,7 +456,7 @@ export function resolvePreset(name: string): Partial<GameState> | null {
           researchXP: 180,
         },
         tutorial: false,
-        doneSteps: M1_M2_M3_DONE,
+        doneSteps: TRAINING_DONE,
         missionId: null,
         targetId: null,
         rocket: { chassis: 'hull-mk2', propulsion: 'fusion-b2', drill: 'laser-t2' },
@@ -501,14 +469,14 @@ export function resolvePreset(name: string): Partial<GameState> | null {
         screen: 'rover-mining',
         player: {
           ...BASE_PLAYER,
-          missionsDone: 2,
-          activeMission: { id: THIRD_MISSION.id, label: `${THIRD_MISSION.title} → ${THIRD_MISSION.targetId ?? 'bennu'}` },
+          missionsDone: 1,
+          activeMission: { id: TRANSPORT_MISSION.id, label: `${TRANSPORT_MISSION.title} → ${TRANSPORT_MISSION.targetId ?? 'bennu'}` },
         },
         tutorial: false,
-        doneSteps: M1_AND_M2_DONE,
-        missionId: THIRD_MISSION.id,
-        targetId: THIRD_MISSION.targetId ?? 'bennu',
-        deliveryTargetId: THIRD_MISSION.deliveryTargetId ?? null,
+        doneSteps: EXTRACTION_DONE,
+        missionId: TRANSPORT_MISSION.id,
+        targetId: TRANSPORT_MISSION.targetId ?? 'bennu',
+        deliveryTargetId: TRANSPORT_MISSION.deliveryTargetId ?? null,
         rocket: { chassis: 'hull-mk2', propulsion: 'fusion-b2', drill: 'laser-t2' },
         lastCargo: null,
         popup: null,
@@ -524,7 +492,7 @@ export function resolvePreset(name: string): Partial<GameState> | null {
           deepSpaceTelescopeBuilt: true,
         },
         tutorial: false,
-        doneSteps: M1_M2_M3_DONE,
+        doneSteps: TRAINING_DONE,
         missionId: null,
         targetId: null,
         rocket: { chassis: 'hull-mk2', propulsion: 'fusion-b2', drill: 'laser-t2' },
@@ -538,7 +506,7 @@ export function resolvePreset(name: string): Partial<GameState> | null {
         visualFixture: 'asteroid',
         player: ASTEROID_DISCOVERY_PLAYER,
         tutorial: false,
-        doneSteps: M1_M2_M3_DONE,
+        doneSteps: TRAINING_DONE,
         missionId: null,
         targetId: null,
         rocket: { chassis: 'hull-mk2', propulsion: 'fusion-b2', drill: 'laser-t2' },
@@ -551,7 +519,7 @@ export function resolvePreset(name: string): Partial<GameState> | null {
         screen: 'academy',
         player: ACADEMY_PLAYER,
         tutorial: false,
-        doneSteps: M1_M2_M3_DONE,
+        doneSteps: TRAINING_DONE,
         missionId: null,
         targetId: null,
         rocket: { chassis: 'hull-mk2', propulsion: 'fusion-b2', drill: 'laser-t2' },

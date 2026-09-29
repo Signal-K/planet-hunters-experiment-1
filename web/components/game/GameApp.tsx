@@ -11,6 +11,7 @@ import TutorialCoach from '@/components/game/TutorialCoach'
 import MissionTicker from '@/components/game/MissionTicker'
 import UnlockPopup from '@/components/game/UnlockPopup'
 import { TutorialCompleteSheet } from '@/components/game/TutorialCompleteSheet'
+import { agencyTrainingTrack, freeOpsActivities } from '@/lib/systems/AgencyOnboardingSystem'
 import BottomTabBar from '@/components/layout/BottomTabBar'
 import BackendStatus from '@/components/game/BackendStatus'
 import LandnamSyncStatus from '@/components/game/LandnamSyncStatus'
@@ -309,15 +310,10 @@ function GameCanvas() {
         )}
         {game.popup === 'tutorial-complete' && !game.authGateOpen && (
           <TutorialCompleteSheet
-            onDone={focuses => {
-              game.setPlayer(player => ({ ...player, programFocuses: focuses }))
-              game.setPopup(null)
-            }}
-            onBuildSilo={focuses => {
-              game.setPlayer(player => ({ ...player, programFocuses: focuses }))
-              game.setPopup(null)
-              game.go('build')
-            }}
+            track={agencyTrainingTrack(game.player)}
+            activities={freeOpsActivities(game.player)}
+            onChoose={activity => { game.setPopup(null); activity.screen === 'missions' ? game.goToMissions() : game.go(activity.screen) }}
+            onClose={() => game.setPopup(null)}
           />
         )}
         {game.popup && game.popup !== 'tutorial-complete' && game.screen !== 'market' && !game.authGateOpen && (

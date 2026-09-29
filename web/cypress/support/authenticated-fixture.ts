@@ -29,3 +29,8 @@ export function seedAuthenticatedFixture(
   win.localStorage.setItem(STORAGE_KEY, JSON.stringify(state))
   win.localStorage.setItem(`${STORAGE_KEY}:user:${userId}`, JSON.stringify(state))
 }
+
+/** Compatibility shorthand for Cypress journeys that only need an auth slot. */
+export function seedFixtureSession(win: Window, userId = 'e2e-fixture-user') {
+  seedAuthenticatedFixture(win, {}, userId)
+}

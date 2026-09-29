@@ -2,7 +2,7 @@
 
 import React from 'react'
 import type { Player, Screen } from '@/game-context'
-import { FREE_OPS_START_MISSIONS_DONE } from '@/lib/data/mission-generator'
+import { awaitingStorageSilo } from '@/lib/systems/AgencyOnboardingSystem'
 import { TUTORIAL_RAIL } from '@/lib/tutorial-layout'
 import IconBadge from '@/components/ui/IconBadge'
 import layoutStyles from '@/components/game/hub/HubLayout.module.css'
@@ -28,6 +28,9 @@ function LaunchpadGlyph() {
 function SkillGlyph() {
   return <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M12 2l2.5 7.5H22l-6 4.6 2.3 7.4L12 17l-6.3 4.5 2.3-7.4-6-4.6h7.5z" /></svg>
 }
+function SiloGlyph() {
+  return <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M6 21V8a6 3 0 0 1 12 0v13M4 21h16M6 12h12M6 16h12" /></svg>
+}
 function TelescopeGlyph() {
   return <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" /></svg>
 }
@@ -42,9 +45,13 @@ interface ProgressionCardProps {
   onOpenScene: (s: Screen) => void
   onDismissPrompt?: (key: HubPromptKey) => void
   top?: number
+  /** Home shows a rocket waiting on the pad in the sky instead (SSL-340). */
+  hidePendingLaunch?: boolean
+  /** A tutorial coach is on screen; the stack must sit below its rail. */
+  coached?: boolean
 }
 
-function CardButton({ accent, icon, eyebrow, title, cta, onClick, onDismiss, testId }: {
+function CardButton({ accent, icon, eyebrow, title, cta, onClick, onDismiss, testId, coachId }: {
   accent: string
   icon: React.ReactNode
   eyebrow: string
@@ -53,6 +60,8 @@ function CardButton({ accent, icon, eyebrow, title, cta, onClick, onDismiss, tes
   onClick: () => void
   onDismiss?: () => void
   testId?: string
+  /** Anchor for a TutorialCoach step that points at this card. */
+  coachId?: string
 }) {
   return (
     <div
@@ -67,6 +76,7 @@ function CardButton({ accent, icon, eyebrow, title, cta, onClick, onDismiss, tes
     >
       <button
         data-testid={testId}
+        data-coach-id={coachId}
         onClick={onClick}
         style={{
           flex: 1, minWidth: 0, boxSizing: 'border-box', textAlign: 'left', cursor: 'pointer',
@@ -121,7 +131,7 @@ function CardButton({ accent, icon, eyebrow, title, cta, onClick, onDismiss, tes
   )
 }
 
-export default function ProgressionCard({ player, onOpenScene, onDismissPrompt, top = 132 }: ProgressionCardProps) {
+export default function ProgressionCard({ player, onOpenScene, onDismissPrompt, top = 132, hidePendingLaunch = false, coached = false }: ProgressionCardProps) {
   const cards: React.ReactElement[] = []
 
   if (player.activeMission) {
@@ -137,7 +147,7 @@ export default function ProgressionCard({ player, onOpenScene, onDismissPrompt, 
         onClick={() => onOpenScene(player.missionPhase ?? 'transit')}
       />
     )
-  } else if (player.pendingLaunch) {
+  } else if (player.pendingLaunch && !hidePendingLaunch) {
     cards.push(
       <CardButton
         key="pending"
@@ -152,7 +162,25 @@ export default function ProgressionCard({ player, onOpenScene, onDismissPrompt, 
     )
   }
 
-  const inOnboarding = player.missionsDone < FREE_OPS_START_MISSIONS_DONE
+  const inOnboarding = !player.freeOperations
+
+  // SSL-332: the last training step. The Build screen is otherwise only
+  // reachable from the menu, so the Hub offers it directly.
+  if (!player.activeMission && awaitingStorageSilo(player)) {
+    cards.push(
+      <CardButton
+        key="storage-silo"
+        testId="progression-card-storage-silo"
+        coachId="progression-card-storage-silo"
+        accent="var(--hub-mint)"
+        icon={<SiloGlyph />}
+        eyebrow="Agency Training"
+        title="Build a storage silo"
+        cta="Build Storage Silo"
+        onClick={() => onOpenScene('build')}
+      />
+    )
+  }
 
   if (!player.activeMission && player.missionsDone > 0) {
     if (!inOnboarding && (player.skillPoints ?? 0) > 0 && !isHubPromptDismissed(player, HUB_PROMPT_SKILLS)) {
@@ -213,7 +241,7 @@ export default function ProgressionCard({ player, onOpenScene, onDismissPrompt, 
     // Hub root is `overflow: hidden`, so without an internal scroll
     // affordance here, cards below the fold were silently unreachable
     // rather than just visually tight (STS-612).
-    <div className={`${layoutStyles.progressionStack} hub-progression-stack`} style={{
+    <div className={`${layoutStyles.progressionStack} hub-progression-stack`} data-coached={coached ? 'true' : undefined} style={{
       position: 'absolute', top, bottom: TUTORIAL_RAIL.BOTTOM_PILL_Y, zIndex: 8,
       pointerEvents: 'auto',
       display: 'flex', flexDirection: 'column', gap: 6,

@@ -60,15 +60,15 @@ describe('selectRocketForMission', () => {
     expect(selectRocketForMission(3, telescopeLaunch).id).toBe(ROCKET_IDS.explorer)
   })
 
-  it('defaults M2 Heavy Haul to Prospector because Explorer cannot carry the job', () => {
-    const heavyHaul = MISSIONS.find(mission => mission.sequence === 2)!
-    const explorer = ROCKET_MODELS.find(rocket => rocket.id === ROCKET_IDS.explorer)!
-    const prospector = ROCKET_MODELS.find(rocket => rocket.id === ROCKET_IDS.prospector)!
+  it('defaults the Transport lesson to the cheapest vehicle that can fly both legs', () => {
+    const transport = MISSIONS.find(mission => mission.sequence === 2)!
+    const selected = selectRocketForMission(1, transport)
 
-    expect(heavyHaul.requires.cargo_min).toBeGreaterThan(explorer.stats.cargo)
-    expect(rocketCompatibleWithMission(explorer, heavyHaul)).toBe(false)
-    expect(rocketCompatibleWithMission(prospector, heavyHaul)).toBe(true)
-    expect(selectRocketForMission(1, heavyHaul).id).toBe(ROCKET_IDS.prospector)
+    expect(transport.deliveryTargetId).toBeTruthy()
+    expect(rocketCompatibleWithMission(selected, transport)).toBe(true)
+    const cheaperCompatible = ROCKET_MODELS.filter(rocket =>
+      rocketCompatibleWithMission(rocket, transport) && rocket.costFrancs < selected.costFrancs)
+    expect(cheaperCompatible).toHaveLength(0)
   })
 
   it('reports cargo, orbit, and drill against the current job', () => {

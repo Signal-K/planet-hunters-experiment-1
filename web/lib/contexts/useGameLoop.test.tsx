@@ -6,6 +6,7 @@ import { describe, expect, it, vi } from 'vitest'
 
 import { useGameLoop } from './useGameLoop'
 import { STATIC_CATALOG } from '@/lib/catalog'
+import { ROCKET_MODELS } from '@/lib/data'
 import { buildRuntimeCatalog } from '@/lib/runtimeCatalog'
 import { DEFAULT_STATE } from '@/lib/game-state'
 import type { GameState } from '@/lib/game-types'
@@ -206,8 +207,15 @@ describe('useGameLoop concurrent mission runs', () => {
 })
 
 describe('useGameLoop rocket compatibility', () => {
-  it('rejects Explorer on an M2 Heavy Haul and accepts Prospector', async () => {
-    const heavyHaul = STATIC_CATALOG.missions.find(mission => mission.sequence === 2)
+  it('rejects Explorer on a haul bigger than its hold and accepts Prospector', async () => {
+    // The M2 Heavy Haul that used to force this is retired (SSL-332); any
+    // catalog job needing more cargo than Explorer carries exercises the gate.
+    const explorerCargo = ROCKET_MODELS.find(rocket => rocket.id === 'explorer')!.stats.cargo
+    const prospectorCargo = ROCKET_MODELS.find(rocket => rocket.id === 'prospector')!.stats.cargo
+    const heavyHaul = STATIC_CATALOG.missions.find(mission =>
+      !mission.targetId && !mission.construction && !mission.payload
+      && mission.requires.cargo_min > explorerCargo && mission.requires.cargo_min <= prospectorCargo
+      && mission.requires.drill_tier <= 2 && mission.requires.max_orbit >= 3)
     expect(heavyHaul).toBeTruthy()
     const staged: GameState = {
       ...DEFAULT_STATE,

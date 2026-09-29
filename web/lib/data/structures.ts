@@ -4,6 +4,7 @@ import type { StructureBlueprint, RefineryRecipe, MarketTemplate } from './types
 import { MINERAL_VALUE, REFINING_COST_RATE, REFINING_VALUE_MULTIPLIER, STRUCTURE_PRICES, SURFACE_SILO_PRICE } from './economy'
 import { MINERAL_RARITY } from './minerals'
 import { CLIENT_AFFINITY_MISSION_THRESHOLD } from './clients'
+import { FREE_OPS_START_MISSIONS_DONE } from './mission-generator'
 
 // Refining takes raw ore and returns it worth REFINING_VALUE_MULTIPLIER more,
 // for a cycle fee proportional to the input's value. Previously each recipe
@@ -38,8 +39,9 @@ export const STRUCTURES: StructureBlueprint[] = [
     name: 'Surface Silo',
     kind: 'surface-silo',
     cost: SURFACE_SILO_PRICE,
-    unlocksAt: 'Free Operations',
-    unlockTrigger: 'free-operations',
+    // SSL-332: building it is the last guided step, and it is what opens Free Ops.
+    unlocksAt: 'Complete the guided missions',
+    unlockTrigger: 'onboarding-missions',
     description: 'Small Earth-side mineral storage. Hold ore for a better market window or for refinery input.',
   },
   {
@@ -103,8 +105,11 @@ export function deepSpaceTelescopeUnlocked(opts: { transitSatelliteLevel?: numbe
   )
 }
 
-export function structureUnlocked(structure: StructureBlueprint, opts: { refineryUnlocked?: boolean; academyResearched?: boolean; placed?: string[]; freeOperations?: boolean; transitSatelliteLevel?: number; clientMissions?: Record<string, number>; deepSpaceTelescopeMissionCompletedAt?: number | null; hasMiningSettlement?: boolean } = {}): boolean {
-  if (structure.id === 'surface-silo') return !!opts.freeOperations || !!opts.placed?.includes('surface-silo')
+export function structureUnlocked(structure: StructureBlueprint, opts: { refineryUnlocked?: boolean; academyResearched?: boolean; placed?: string[]; freeOperations?: boolean; missionsDone?: number; transitSatelliteLevel?: number; clientMissions?: Record<string, number>; deepSpaceTelescopeMissionCompletedAt?: number | null; hasMiningSettlement?: boolean } = {}): boolean {
+  // SSL-332's storage silo is the only pre-Free-Ops construction step: it
+  // becomes available after Extraction and Transport, and placement opens
+  // Free Ops. Existing players retain access through their saved unlock.
+  if (structure.id === 'surface-silo') return !!opts.freeOperations || (opts.missionsDone ?? 0) >= FREE_OPS_START_MISSIONS_DONE || !!opts.placed?.includes('surface-silo')
   if (structure.id === 'astronaut-academy') return !!opts.academyResearched || !!opts.placed?.includes('astronaut-academy')
   // KES-128: the numeric threshold (deepSpaceTelescopeUnlocked) now only
   // decides when the story-deep-space-telescope-survey mission (see
@@ -120,15 +125,12 @@ export function structureUnlocked(structure: StructureBlueprint, opts: { refiner
   // site-commissioned structure whose unlock condition no mission ever
   // satisfied — that broken trigger is retired for good.
   //
-  // SSL-74 adds two live, player-controlled prerequisites on top of
-  // Free Operations (neither is a dead trigger like KES-286's): the Surface
-  // Silo must already be built, and the player must have an established
-  // off-world mining settlement (purchased site access). Both are ordinary
-  // purchases the player can always complete, so this cannot reproduce
-  // KES-286's permanently-unreachable failure mode.
+  // SSL-332 makes this an immediate Free Ops activity. The storage silo is
+  // the prerequisite because it provides the refinery's input buffer; an
+  // off-world settlement remains useful later, but is not a dead-end gate.
   if (structure.id === 'refinery') {
     return !!opts.placed?.includes('refinery')
-      || (!!opts.freeOperations && !!opts.placed?.includes('surface-silo') && !!opts.hasMiningSettlement)
+      || (!!opts.freeOperations && !!opts.placed?.includes('surface-silo'))
   }
   return false
 }

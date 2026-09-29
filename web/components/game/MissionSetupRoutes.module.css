@@ -400,6 +400,9 @@
 .galleryDots i[data-active='true'] { width: 24px; border-radius: 6px; background: var(--mission-green); }
 
 .empty { display: grid; place-items: center; width: 100%; height: 100%; font: 800 18px var(--ln-font-display); letter-spacing: .14em; }
+.emptyPrompt { display: grid; justify-items: center; gap: 12px; padding: 16px; text-align: center; }
+.emptyPrompt span { color: var(--ln-cyan); font-size: 9px; letter-spacing: .2em; }
+.emptyPrompt strong { font-size: 16px; letter-spacing: .08em; text-transform: uppercase; }
 
 /* Step 2: the filter, the chart and the selection rail are separate bands,
    so nothing sits on the chart or on each other. The tutorial coach is drawn

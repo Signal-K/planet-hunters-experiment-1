@@ -32,7 +32,7 @@ export function unplacedUnlockedStructures(player: Player): StructureBlueprint[]
     // design replaces its former affinity dependency.
     && structure.id !== 'astronaut-academy'
     && !player.placed.includes(structure.id)
-    && structureUnlocked(structure, opts),
+    && structureUnlocked(structure, { ...opts, missionsDone: player.missionsDone }),
   ).sort((a, b) => {
     if (a.id === 'astronaut-academy') return -1
     if (b.id === 'astronaut-academy') return 1

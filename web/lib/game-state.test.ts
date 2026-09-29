@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { DEFAULT_STATE, justFinishedOnboarding, loadState, mergeRemoteState, normalizeAndRepair, normalizeState, type PartialSave } from './game-state'
+import { DEFAULT_STATE, loadState, mergeRemoteState, normalizeAndRepair, normalizeState, type PartialSave } from './game-state'
 import type { GameState } from './game-types'
 import { MISSIONS, TARGETS } from './data'
 
@@ -266,14 +266,50 @@ describe('game state hydration normalization', () => {
 })
 
 describe('onboarding completion boundary', () => {
-  it('fires only when the saved mission count crosses into Free Ops', () => {
-    expect(justFinishedOnboarding(2, 3)).toBe(true)
-    expect(justFinishedOnboarding(0, 3)).toBe(true)
-    expect(justFinishedOnboarding(3, 3)).toBe(false)
-    expect(justFinishedOnboarding(4, 5)).toBe(false)
+  it('keeps a player in training after both guided missions until a storage silo is placed (SSL-332)', () => {
+    const noSilo = normalizeAndRepair({
+      player: { missionsDone: 2, placed: ['launchpad'], freeOperations: true },
+      tutorial: false,
+    })
+    expect(noSilo.player.freeOperations).toBe(false)
+    expect(noSilo.tutorial).toBe(true)
+
+    const withSilo = normalizeAndRepair({
+      player: { missionsDone: 2, placed: ['launchpad', 'surface-silo'] },
+      tutorial: true,
+    })
+    expect(withSilo.player.freeOperations).toBe(true)
+    expect(withSilo.tutorial).toBe(false)
   })
 
-  it('repairs a stale Free Ops flag before the three-mission boundary', () => {
+  it('keeps Free Ops for saves that finished the old three-mission onboarding without a silo', () => {
+    const legacy = normalizeAndRepair({
+      player: { missionsDone: 3, placed: ['launchpad'] },
+    })
+    expect(legacy.player.freeOperations).toBe(true)
+    expect(legacy.tutorial).toBe(false)
+  })
+
+  it('drops a run caught on a retired M2 Prospector mission and returns to the Hub', () => {
+    const repaired = normalizeAndRepair({
+      screen: 'mining',
+      missionId: 'generated-s2-volatile-bulk-4',
+      targetId: 'eros',
+      player: {
+        missionsDone: 1,
+        placed: ['launchpad'],
+        activeMission: { id: 'generated-s2-volatile-bulk-4', label: 'Heavy Haul → Eros' },
+        missionPhase: 'mining',
+      },
+    })
+    expect(repaired.screen).toBe('hub')
+    expect(repaired.missionId).toBeNull()
+    expect(repaired.player.activeMission).toBeNull()
+    expect(repaired.player.missionsDone).toBe(1)
+    expect(repaired.tutorial).toBe(true)
+  })
+
+  it('repairs a stale Free Ops flag before the guided missions are flown', () => {
     const normalized = normalizeAndRepair({
       player: { missionsDone: 1, freeOperations: true },
     })

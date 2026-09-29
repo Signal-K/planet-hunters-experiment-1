@@ -1,6 +1,6 @@
 import { pbLandnam } from './pb-landnam'
 import type { Target, Mission, Part, MineralMeta, Client, StructureBlueprint } from './data'
-import { TARGETS, MISSIONS, AUTHORED_MISSIONS, M3_SEQUENCE, PARTS, MINERAL_META, CLIENTS, CLIENT_SLOTS, STRUCTURES, toClient as slotToClient, generateFreeOpsMissions, generateMissions, generateSelfDirectedMiningPool, isOwnProgramMission } from './data'
+import { TARGETS, MISSIONS, AUTHORED_MISSIONS, TRANSPORT_SEQUENCE, PARTS, MINERAL_META, CLIENTS, CLIENT_SLOTS, STRUCTURES, toClient as slotToClient, generateFreeOpsMissions, generateMissions, generateSelfDirectedMiningPool, isOwnProgramMission } from './data'
 import { normalizeMissionPayout } from './data/payouts'
 
 export interface Catalog {
@@ -64,7 +64,7 @@ export function toTarget(r: any): Target {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function toMission(r: any): Mission {
   if (r.slug === 'lnm_m3_ore_delivery' || r.slug === 'm3-nickel-cobalt' || r.slug === 'm3-gold' || r.slug === 'lnm_m3_custom_mining') {
-    return AUTHORED_MISSIONS.find(m => m.sequence === M3_SEQUENCE) ?? AUTHORED_MISSIONS[0]
+    return AUTHORED_MISSIONS.find(m => m.sequence === TRANSPORT_SEQUENCE) ?? AUTHORED_MISSIONS[0]
   }
   const minerals = parseJsonMapField<Record<string, number>>(r.requires_minerals, {})
   const fallbackClient = r.client_slug ? CLIENTS[r.client_slug] : undefined
@@ -114,12 +114,15 @@ export function toMission(r: any): Mission {
   }
 }
 
-// Applies the M3-sequence correction (PocketBase's seeded legacy M3 rows are
-// always replaced by the curated transport-client AUTHORED_MISSIONS pair),
+// Applies the Transport-sequence correction (PocketBase's seeded legacy M3 rows
+// and the retired M2 Prospector row, m2-silicon, which shares the Transport
+// sequence since SSL-332, are always replaced by the curated transport-client
+// AUTHORED_MISSIONS pair),
 // then generalizes that same "authored content PocketBase doesn't seed must
 // still reach the runtime catalog" pattern to every clientless authored
 // mission. seedCatalog() (pocketbase/main.go) only ever seeds the two
-// client-bearing onboarding rows (m1-iron, m2-silicon), so any AUTHORED_MISSIONS
+// client-bearing onboarding row (m1-iron; older databases may still hold the
+// retired m2-silicon row, dropped above), so any AUTHORED_MISSIONS
 // entry with no client — the academy intro, the self-directed mining intro,
 // crewed prospecting, ... — is never present in PocketBase's response and
 // would otherwise silently vanish whenever `missions` (the raw PB rows) is
@@ -127,14 +130,14 @@ export function toMission(r: any): Mission {
 // back in here, deduped by id, so a real PB row (should one ever share an id)
 // still wins.
 export function withAuthoredExtras(missions: Mission[]): Mission[] {
-  const correctedM3 = AUTHORED_MISSIONS.filter(m => m.sequence === M3_SEQUENCE)
+  const correctedM3 = AUTHORED_MISSIONS.filter(m => m.sequence === TRANSPORT_SEQUENCE)
   const correctedM3Ids = new Set(correctedM3.map(m => m.id))
   const withoutLegacyM3 = missions.filter(m =>
     m.id !== 'lnm_m3_ore_delivery' &&
     m.id !== 'm3-nickel-cobalt' &&
     m.id !== 'm3-gold' &&
     m.id !== 'lnm_m3_custom_mining' &&
-    m.sequence !== M3_SEQUENCE &&
+    m.sequence !== TRANSPORT_SEQUENCE &&
     !correctedM3Ids.has(m.id)
   )
   const merged = [...withoutLegacyM3, ...correctedM3]

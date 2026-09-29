@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { content_rect, reserved_rect, TUTORIAL_CONTENT_TOP, TUTORIAL_RAIL } from '@/lib/tutorial-layout'
-import { M1_STEPS } from '@/lib/data/tutorial'
+import { EXTRACTION_STEPS } from '@/lib/data/tutorial'
 
 describe('tutorial layout rail', () => {
   it('reserves the same dedicated top rail for every coach anchor', () => {
@@ -33,7 +33,7 @@ describe('tutorial layout rail', () => {
 
   it('coaches every mission setup step inside the shared frame (KES-347)', () => {
     const coachedSetupScreens = new Set(
-      M1_STEPS
+      EXTRACTION_STEPS
         .filter(step => ['missions', 'targets', 'rocket-buy', 'fab'].includes(step.screen))
         .map(step => step.screen),
     )
