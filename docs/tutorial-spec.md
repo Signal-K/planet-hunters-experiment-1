@@ -12,7 +12,7 @@ The training track is:
 |---|---|---|
 | Place Launchpad | Build the first structure | `launchpad` is placed |
 | Extraction | Guided mission 1: accept a client contract, pick a target, fly the included Explorer, mine, return, debrief | `missionsDone` reaches 1 |
-| Transport | Guided mission 2: a two-stop job — mine at one target, deliver to a second, fly home; paid a mining fee and a transport fee (KES-313). Prospector is purchasable but not forced | `missionsDone` reaches 2 |
+| Transport | Guided mission 2: a courier job (SSL-362) — the client's cargo is loaded on Earth, flown to their depot, unloaded, and the ship flies home. No mining; paid as a transport fee. Prospector is purchasable but not forced | `missionsDone` reaches 2 |
 | Build Storage Silo | Place the Earth `surface-silo` (required) | silo is placed; this opens Free Ops |
 | Free Ops | Pick an activity: Client work / Space telescope / Build refinery | — |
 
@@ -28,6 +28,7 @@ Mining, transport and construction are taught as separate agency activities: one
   - Space telescope → Launchpad (where the transit telescope launches) until one is in orbit, then the Instrument Hub
   - Build refinery → Build placement until a refinery exists, then the Refinery
 - **Replayable.** Menu → Agency Training (Free Ops only) reopens the same sheet in review mode: each stage with a one-line summary of what it taught, plus the three activities. It never changes progress.
+- **Courier jobs.** A mission with `loadedCargo` (the two Transport contracts, `lnm_transport_courier_vesta` and `lnm_transport_courier_eros`) targets the depot directly. `applyCourierLaunchCargo` loads the hold at launch and sets `headingToDelivery`, so the first arrival opens the delivery scene. Saves mid-run on the retired relay lessons (`lnm_m3_relay_*`) are returned to the Hub.
 - Post-onboarding missions keep the old contract-fee tier (`FREE_OPS_MISSION_SEQUENCE = 4`), so the shorter onboarding does not change Free Ops pay.
 
 ## Coach steps
@@ -35,7 +36,7 @@ Mining, transport and construction are taught as separate agency activities: one
 `web/lib/data/tutorial.ts`, selected by `trainingCoachSteps(agencyTrainingStage(player))`:
 
 - `EXTRACTION_STEPS` (ids 0–8): place the Launchpad, open the mission board, pick a contract and target, review the Explorer, launch, mine.
-- `TRANSPORT_STEPS` (ids 30–33): open contracts, the two-stop route at vehicle selection, confirm the run, unload at the client depot.
+- `TRANSPORT_STEPS` (ids 30–33): open contracts, the cargo delivery at vehicle selection, confirm the run, unload at the client depot.
 - `STORAGE_STEPS` (ids 40–41): tap the Hub's "Build Storage Silo" card, then place the silo on an open plot.
 
 While the player is waiting on the silo, the Hub shows a Storage Silo progression card and the mission board says to build the silo instead of showing an empty list.

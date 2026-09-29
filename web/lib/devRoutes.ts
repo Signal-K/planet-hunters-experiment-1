@@ -22,7 +22,7 @@ const MISSION_ROUTE_SHOTS: Record<string, Record<string, string>> = {
   transport: {
     hub: 'transport-hub',
     fab: 'transport-fab',
-    mining: 'transport-mining',
+    delivery: 'transport-delivery',
     debrief: 'transport-debrief',
   },
   storage: {

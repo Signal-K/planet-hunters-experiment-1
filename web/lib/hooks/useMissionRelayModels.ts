@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { ACADEMY_INTRO_MISSION_ID, feasibleTargetsFor, FREE_OPS_START_MISSIONS_DONE, isMissionBoardMission, tutorialClientMissionOptions } from '@/lib/data'
+import { ACADEMY_INTRO_MISSION_ID, feasibleTargetsFor, FREE_OPS_START_MISSIONS_DONE, isCourierMission, isMissionBoardMission, tutorialClientMissionOptions } from '@/lib/data'
 import type { Catalog } from '@/lib/catalog'
 import { formatCurrency } from '@/lib/format'
 import { academyAffinityUnlocked, crewRequirementStatus } from '@/lib/systems/AcademySystem'
@@ -125,7 +125,7 @@ export function useMissionRelayModels({
             ? 'Completed'
             : m.unlockAt
       const routeLabel = m.deliveryTargetId
-        ? `${targets.find(t => t.id === m.targetId)?.name ?? m.targetId} → ${targets.find(t => t.id === m.deliveryTargetId)?.name ?? m.deliveryTargetId}`
+        ? `${isCourierMission(m) ? 'Earth' : targets.find(t => t.id === m.targetId)?.name ?? m.targetId} → ${targets.find(t => t.id === m.deliveryTargetId)?.name ?? m.deliveryTargetId}`
         : undefined
       const crewStatus = crewRequirementStatus(m.requires.crew, crew)
       return {

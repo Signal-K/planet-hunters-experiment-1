@@ -2,7 +2,7 @@
 
 import { useRef, useState, type ReactNode } from 'react'
 import type { Mission, Target, MineralMeta, Client, RocketConfig } from '@/lib/data'
-import { calibrateOnboardingPayout, FIRST_CREW_ARRIVAL_BONUS, isOwnProgramMission, isFreeHaulMission, rocketDisplayForConfig, rocketModelForConfig, loanInstalmentFor } from '@/lib/data'
+import { calibrateOnboardingPayout, FIRST_CREW_ARRIVAL_BONUS, isCourierMission, isOwnProgramMission, isFreeHaulMission, rocketDisplayForConfig, rocketModelForConfig, loanInstalmentFor } from '@/lib/data'
 import { FREE_OPS_START_MISSIONS_DONE } from '@/lib/data/mission-generator'
 import { PrimaryBtn } from '@/components/ui/Button'
 import Panel from '@/components/ui/Panel'
@@ -97,8 +97,11 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
   // Two-leg jobs (mine at targetId, drop at deliveryTargetId) are paid for both
   // services — split the flat contract payout into mining/transport lines so
   // that's visible, rather than implying it's a single flat fee.
+  // Courier jobs (SSL-362) mine nothing, so the whole contract is the
+  // transport fee.
   const isTwoLegJob = !!mission.deliveryTargetId
-  const miningFee = isTwoLegJob ? Math.round(mission.payout.francs * 0.5) : 0
+  const isCourierJob = isCourierMission(mission)
+  const miningFee = isTwoLegJob && !isCourierJob ? Math.round(mission.payout.francs * 0.5) : 0
   const transportFee = isTwoLegJob ? mission.payout.francs - miningFee : 0
   // Repaid out of this payout the moment it is collected (see onDebriefDone),
   // so it belongs in the expense panel and in Net — not silently off the balance.
@@ -229,8 +232,8 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
               <div className="ln-section-label" style={{ marginBottom: 8 }}>Ledger</div>
               {isTwoLegJob ? (
                 <>
-                  <PayRow label={`Mining fee · ${client?.name ?? 'Client'}`} value={miningFee} />
-                  <PayRow label="Transport fee · relay" value={transportFee} />
+                  {!isCourierJob && <PayRow label={`Mining fee · ${client?.name ?? 'Client'}`} value={miningFee} />}
+                  <PayRow label={isCourierJob ? `Transport fee · ${client?.name ?? 'Client'}` : 'Transport fee · relay'} value={transportFee} />
                 </>
               ) : (
                 <PayRow label={isStoryMission ? 'Mission funding' : 'Contract value'} value={mission.payout.francs} />

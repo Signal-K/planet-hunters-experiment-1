@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { defaultSpec, type ResourceKey } from '@takeon/engine'
-import type { MineralMeta, Mission, Target } from '@/lib/data'
+import { isCourierMission, type MineralMeta, type Mission, type Target } from '@/lib/data'
 import { deliveryUnloadProgress } from '@/lib/systems/DeliverySystem'
 import { LANDNAM_TO_TAKEON_MINERAL } from '@/lib/takeon/minerals'
 import { formatCurrency, formatCountdown } from '@/lib/format'
@@ -48,7 +48,8 @@ export default function DeliveryScreen({
   const remainingMs = Math.max(0, 8000 - Math.max(0, now - (startedAt ?? now)))
   const cargoEntries = Object.entries(cargo).filter(([, amount]) => amount > 0)
   const cargoUnits = cargoEntries.reduce((total, [, amount]) => total + amount, 0)
-  const transportFee = mission.payout.francs - Math.round(mission.payout.francs * 0.5)
+  // Two-stop relays split the fee with mining; a courier job is all transport.
+  const transportFee = isCourierMission(mission) ? mission.payout.francs : mission.payout.francs - Math.round(mission.payout.francs * 0.5)
 
   useEffect(() => {
     setNow(Date.now())
@@ -210,7 +211,7 @@ export default function DeliveryScreen({
           )}
           {dumped && !roverReturned && (
             <div className={styles.transferNote} role="status">
-              Minerals delivered beside the landed Prospector. Return the empty Mule rover to the ship before launch.
+              Minerals delivered beside the landed ship. Return the empty Mule rover to the ship before launch.
             </div>
           )}
           {roverReturned && (

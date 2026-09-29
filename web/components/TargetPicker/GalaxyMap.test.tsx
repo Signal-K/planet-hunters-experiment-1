@@ -5,9 +5,9 @@ import { MISSIONS, TARGETS } from '@/lib/data'
 import GalaxyMap from './GalaxyMap'
 
 describe('GalaxyMap', () => {
-  it('renders the orbital chart and bodies for the authored M3 mission', () => {
-    const mission = MISSIONS.find(item => item.id === 'lnm_m3_relay_bennu_vesta')
-    if (!mission) throw new Error('M3 mission fixture is missing')
+  it('renders the orbital chart and bodies for an authored relay mission', () => {
+    const mission = MISSIONS.find(item => item.id === 'lnm_relay_psyche_ceres')
+    if (!mission) throw new Error('relay mission fixture is missing')
 
     const markup = renderToStaticMarkup(
       <GalaxyMap

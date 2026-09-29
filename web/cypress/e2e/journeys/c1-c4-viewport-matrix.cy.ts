@@ -244,9 +244,9 @@ describe('C1–C3 persisted mission edge states', () => {
 
   it('keeps a two-leg mission in delivery mode after pickup cargo is secured', () => {
     visit('/game/transit', stateWith('transit', {
-      missionId: 'lnm_m3_relay_bennu_vesta',
-      targetId: 'bennu',
-      deliveryTargetId: 'vesta',
+      missionId: 'lnm_relay_psyche_ceres',
+      targetId: 'psyche',
+      deliveryTargetId: 'ceres',
       player: basePlayer({
         headingToDelivery: true,
         missionRunId: 'e2e-delivery-run',
@@ -256,7 +256,7 @@ describe('C1–C3 persisted mission edge states', () => {
       }),
     }))
     cy.contains('Delivery', { timeout: 10000 }).should('be.visible')
-    cy.contains('Vesta').should('be.visible')
+    cy.contains('Ceres').should('be.visible')
   })
 
   it('shows an explicit zero payout when an incomplete run returns empty', () => {

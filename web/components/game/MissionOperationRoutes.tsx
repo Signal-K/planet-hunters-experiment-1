@@ -72,7 +72,6 @@ export default function MissionOperationRoutes({
             }
             const isRoverMission = game.mission?.survey?.onWorldVehicle === 'starter-rover'
             const hasLander = !isRoverMission && !!game.player.shipCustomizerParts?.lander
-            const isTutorialDelivery = game.player.missionsDone === TRANSPORT_LESSON_MISSIONS_DONE && !!game.mission?.deliveryTargetId
             if (game.mission?.payload?.type === 'satellite' || game.mission?.payload?.type === 'deep-space-survey' || game.target?.type === 'exoplanet') {
               game.setPlayer(player => ({
                 ...player,
@@ -100,16 +99,6 @@ export default function MissionOperationRoutes({
               game.go('landing')
               return
             }
-            if (isTutorialDelivery) {
-              game.setPlayer(player => ({
-                ...player,
-                missionPhase: 'mining',
-                landingStartedAt: undefined,
-                hasLanded: true,
-              }))
-              game.go('rover-mining')
-              return
-            }
             game.setPlayer(player => ({
               ...player,
               missionPhase: 'mining',
@@ -135,17 +124,7 @@ export default function MissionOperationRoutes({
           onBack={() => game.go('hub')}
           onContinue={() => {
             if (mode === 'descend') {
-              if (game.player.missionsDone === TRANSPORT_LESSON_MISSIONS_DONE && !!game.mission?.deliveryTargetId) {
-                game.setPlayer(player => ({
-                  ...player,
-                  missionPhase: 'mining',
-                  landingStartedAt: undefined,
-                  hasLanded: true,
-                }))
-                game.go('rover-mining')
-              } else {
-                game.onLandingTouchdown()
-              }
+              game.onLandingTouchdown()
               return
             }
             game.onRedockComplete(game.player.miningCargoInProgress ?? {}, game.player.pendingRemoteDisposition)

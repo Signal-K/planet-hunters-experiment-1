@@ -7,7 +7,7 @@ const FIRST_MINERAL = Object.keys(FIRST_MISSION.requires.minerals)[0] ?? 'iron'
 // SSL-332 Transport lesson (guided mission 2) is the two-leg "mine then
 // deliver" client choice — Belt Courier Run (Bennu -> Vesta) is the authored
 // pick used for these dev shots.
-const TRANSPORT_MISSION = MISSIONS.find(m => m.id === 'lnm_m3_relay_bennu_vesta') ?? MISSIONS.find(m => m.sequence === 2) ?? FIRST_MISSION
+const TRANSPORT_MISSION = MISSIONS.find(m => m.id === 'lnm_transport_courier_vesta') ?? MISSIONS.find(m => m.sequence === 2) ?? FIRST_MISSION
 
 const BASE_PLAYER: Player = {
   francs: 150_000_000,
@@ -117,10 +117,10 @@ export const DEV_GROUPS: DevGroup[] = [
     label: 'Transport',
     color: '#c084fc',
     shots: [
-      { key: 'transport-hub',     label: 'Hub',     hint: 'Extraction done (missionsDone: 1), Transport coach active — pick the two-leg client job', stage: 'tutorial' },
-      { key: 'transport-fab',     label: 'Fab',     hint: 'Belt Courier Run accepted (Bennu -> Vesta), at fab', stage: 'tutorial' },
-      { key: 'transport-mining',  label: 'Mining',  hint: 'In mining at Bennu, delivery leg to Vesta pending', stage: 'tutorial' },
-      { key: 'transport-debrief', label: 'Debrief', hint: 'Two-leg run complete, delivered at Vesta then returned', stage: 'tutorial' },
+      { key: 'transport-hub',     label: 'Hub',     hint: 'Extraction done (missionsDone: 1), Transport coach active — pick a courier job', stage: 'tutorial' },
+      { key: 'transport-fab',     label: 'Fab',     hint: 'Vesta Depot Run accepted (cargo loaded, Earth -> Vesta), at fab', stage: 'tutorial' },
+      { key: 'transport-delivery', label: 'Delivery', hint: 'Arrived at the Vesta depot with the loaded hold, unloading', stage: 'tutorial' },
+      { key: 'transport-debrief', label: 'Debrief', hint: 'Courier run complete, delivered at Vesta then returned', stage: 'tutorial' },
     ],
   },
   {
@@ -222,7 +222,7 @@ export function resolvePreset(name: string): Partial<GameState> | null {
         lastCargo: FIRST_MISSION.requires.minerals, popup: null,
       }
 
-    // ── Transport (guided mission 2: two-leg "mine then deliver" client pick) ──
+    // ── Transport (guided mission 2: courier job, hold loaded on Earth, SSL-362) ──
     case 'transport-hub':
       return {
         screen: 'hub',
@@ -238,19 +238,26 @@ export function resolvePreset(name: string): Partial<GameState> | null {
         screen: 'fab',
         player: { ...BASE_PLAYER, missionsDone: 1, francs: BASE_PLAYER.francs - ROCKET_PRICES.prospector },
         tutorial: true, doneSteps: { ...EXTRACTION_DONE, 30: true, 31: true },
-        missionId: TRANSPORT_MISSION.id, targetId: TRANSPORT_MISSION.targetId ?? 'bennu', deliveryTargetId: TRANSPORT_MISSION.deliveryTargetId ?? 'vesta',
+        missionId: TRANSPORT_MISSION.id, targetId: TRANSPORT_MISSION.targetId ?? 'vesta', deliveryTargetId: TRANSPORT_MISSION.deliveryTargetId ?? 'vesta',
         rocket: { chassis: 'hull-mk2', propulsion: 'fusion-b2', drill: 'laser-t2' },
         lastCargo: null, popup: null,
       }
 
-    case 'transport-mining':
+    case 'transport-delivery':
       return {
-        screen: 'mining',
-        player: { ...BASE_PLAYER, missionsDone: 1, activeMission: { id: TRANSPORT_MISSION.id, label: `${TRANSPORT_MISSION.title} → ${TRANSPORT_MISSION.targetId}` } },
+        screen: 'delivery',
+        player: {
+          ...BASE_PLAYER,
+          missionsDone: 1,
+          activeMission: { id: TRANSPORT_MISSION.id, label: `${TRANSPORT_MISSION.title} → ${TRANSPORT_MISSION.targetId}` },
+          missionPhase: 'delivery',
+          headingToDelivery: true,
+          deliveryUnloadStartedAt: Date.now(),
+        },
         tutorial: true, doneSteps: { ...EXTRACTION_DONE, 30: true, 31: true, 32: true },
-        missionId: TRANSPORT_MISSION.id, targetId: TRANSPORT_MISSION.targetId ?? 'bennu', deliveryTargetId: TRANSPORT_MISSION.deliveryTargetId ?? 'vesta',
+        missionId: TRANSPORT_MISSION.id, targetId: TRANSPORT_MISSION.targetId ?? 'vesta', deliveryTargetId: TRANSPORT_MISSION.deliveryTargetId ?? 'vesta',
         rocket: { chassis: 'hull-mk2', propulsion: 'fusion-b2', drill: 'laser-t2' },
-        lastCargo: null, popup: null,
+        lastCargo: { ...(TRANSPORT_MISSION.loadedCargo ?? TRANSPORT_MISSION.requires.minerals) }, popup: null,
       }
 
     case 'transport-debrief':
@@ -258,7 +265,7 @@ export function resolvePreset(name: string): Partial<GameState> | null {
         screen: 'debrief',
         player: { ...BASE_PLAYER, missionsDone: 1 },
         tutorial: true, doneSteps: { ...EXTRACTION_DONE, 30: true, 31: true, 32: true },
-        missionId: TRANSPORT_MISSION.id, targetId: TRANSPORT_MISSION.targetId ?? 'bennu', deliveryTargetId: TRANSPORT_MISSION.deliveryTargetId ?? 'vesta',
+        missionId: TRANSPORT_MISSION.id, targetId: TRANSPORT_MISSION.targetId ?? 'vesta', deliveryTargetId: TRANSPORT_MISSION.deliveryTargetId ?? 'vesta',
         rocket: { chassis: 'hull-mk2', propulsion: 'fusion-b2', drill: 'laser-t2' },
         lastCargo: TRANSPORT_MISSION.requires.minerals, popup: null,
       }
@@ -340,7 +347,7 @@ export function resolvePreset(name: string): Partial<GameState> | null {
         tutorial: false,
         doneSteps: EXTRACTION_DONE,
         missionId: TRANSPORT_MISSION.id,
-        targetId: TRANSPORT_MISSION.targetId ?? 'bennu',
+        targetId: TRANSPORT_MISSION.targetId ?? 'vesta',
         rocket: { chassis: 'hull-mk1', propulsion: 'ion-a1', drill: 'hand-drill' },
         lastCargo: null,
         popup: null,
@@ -412,12 +419,14 @@ export function resolvePreset(name: string): Partial<GameState> | null {
     case 'ui-target-picker':
       return {
         screen: 'targets',
-        player: { ...BASE_PLAYER, missionsDone: 1 },
+        // The Transport lesson has a fixed depot (SSL-362), so the picker is
+        // shown for the Extraction contract, which lets the player choose.
+        player: { ...BASE_PLAYER, missionsDone: 0 },
         tutorial: false,
-        doneSteps: EXTRACTION_DONE,
-        missionId: TRANSPORT_MISSION.id,
+        doneSteps: {},
+        missionId: FIRST_MISSION.id,
         targetId: null,
-        deliveryTargetId: TRANSPORT_MISSION.deliveryTargetId ?? 'vesta',
+        deliveryTargetId: null,
         rocket: { chassis: 'hull-mk2', propulsion: 'fusion-b2', drill: 'laser-t2' },
         lastCargo: null,
         popup: null,
@@ -449,12 +458,12 @@ export function resolvePreset(name: string): Partial<GameState> | null {
         player: {
           ...BASE_PLAYER,
           missionsDone: 1,
-          activeMission: { id: TRANSPORT_MISSION.id, label: `${TRANSPORT_MISSION.title} → ${TRANSPORT_MISSION.targetId ?? 'bennu'}` },
+          activeMission: { id: TRANSPORT_MISSION.id, label: `${TRANSPORT_MISSION.title} → ${TRANSPORT_MISSION.targetId ?? 'vesta'}` },
         },
         tutorial: false,
         doneSteps: EXTRACTION_DONE,
         missionId: TRANSPORT_MISSION.id,
-        targetId: TRANSPORT_MISSION.targetId ?? 'bennu',
+        targetId: TRANSPORT_MISSION.targetId ?? 'vesta',
         deliveryTargetId: TRANSPORT_MISSION.deliveryTargetId ?? null,
         rocket: { chassis: 'hull-mk2', propulsion: 'fusion-b2', drill: 'laser-t2' },
         lastCargo: null,

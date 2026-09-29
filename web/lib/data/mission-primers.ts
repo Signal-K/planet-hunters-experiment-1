@@ -61,6 +61,12 @@ export function isFreeHaulMission(mission: Mission, cargo: Record<string, number
     && Object.values(cargo ?? {}).some(units => units > 0)
 }
 
+/** A courier job (SSL-362): cargo is loaded on Earth, flown to the client's
+ * depot and unloaded. No mining leg. */
+export function isCourierMission(mission: Pick<Mission, 'loadedCargo' | 'deliveryTargetId'>): boolean {
+  return !!mission.loadedCargo && !!mission.deliveryTargetId
+}
+
 /**
  * Same shape test as {@link isFreeHaulMission} but usable before any ore has
  * been collected — at mission start, not just at debrief. A self-directed
@@ -168,6 +174,15 @@ export function missionTypePrimer(mission: Mission): MissionTypePrimer {
       label: 'Discovery survey',
       summary: 'A follow-up flight to a world you found yourself. Fly out, run the survey, come home.',
       steps: ['Launch', 'Survey', 'Return'],
+      owner,
+    }
+  }
+
+  if (isCourierMission(mission)) {
+    return {
+      label: 'Cargo delivery',
+      summary: 'The hold is loaded on Earth. Fly it to the client depot, unload, then fly home. No mining. You are paid a transport fee.',
+      steps: ['Launch', 'Deliver', 'Return'],
       owner,
     }
   }

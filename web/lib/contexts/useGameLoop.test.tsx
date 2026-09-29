@@ -61,7 +61,7 @@ describe('useGameLoop concurrent mission runs', () => {
     ;(globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT: boolean }).IS_REACT_ACT_ENVIRONMENT = true
 
     await act(async () => { root.render(<LoopHarness initial={stagedState} onReady={onReady} />) })
-    await act(async () => { handleRef.current?.onPickMission('lnm_m3_relay_bennu_vesta') })
+    await act(async () => { handleRef.current?.onPickMission('lnm_transport_courier_vesta') })
     expect(handleRef.current?.state.screen).toBe('rocket-buy')
     await act(async () => { handleRef.current?.onMoveStagedRocket('prospector-old') })
     expect(handleRef.current?.state.screen).toBe('fab')

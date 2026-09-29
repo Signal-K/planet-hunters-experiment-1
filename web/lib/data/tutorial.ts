@@ -1,8 +1,8 @@
 // Landnam game data — tutorial steps
 //
 // SSL-332 agency training: EXTRACTION_STEPS (place the launchpad, then the
-// first mine-and-return contract), TRANSPORT_STEPS (the two-stop mine-and-haul
-// contract) and STORAGE_STEPS (build the Earth silo that opens Free Ops). The
+// first mine-and-return contract), TRANSPORT_STEPS (the courier contract: the
+// hold is loaded on Earth, flown to a client depot and unloaded) and STORAGE_STEPS (build the Earth silo that opens Free Ops). The
 // old M2 Prospector steps are retired. Stage selection lives in
 // trainingCoachSteps below.
 
@@ -72,10 +72,10 @@ export const EXTRACTION_STEPS: TutorialStep[] = [
 
 export const TRANSPORT_STEPS: TutorialStep[] = [
   { id: 30, screen: 'hub', title: 'Transport',
-    body: 'Next, moving cargo. You will mine at one site, carry the order to the client\'s build site, then fly home. The contract pays for both jobs.',
+    body: 'Next, moving cargo. The client loads your hold on Earth. Fly it to their depot, unload, and fly home. No mining.',
     action: 'Tap the Launchpad',
     anchor: 'bottom', spot: null, cta: 'Launchpad', coachId: 'building-launchpad', dir: 'up',
-    desktopBody: 'Next, moving cargo. You will mine at one site, carry the order to the client\'s build site, then fly home. Click the Launchpad to begin.',
+    desktopBody: 'Next, moving cargo. The client loads your hold on Earth. Fly it to their depot, unload, and fly home. No mining. Click the Launchpad to begin.',
     desktopAction: 'Click the Launchpad',
     desktopCoachId: 'building-launchpad', desktopDir: 'up' },
   // Sibling of step 30 — see the id:1 launchpad sibling above for why this exists.
@@ -85,12 +85,12 @@ export const TRANSPORT_STEPS: TutorialStep[] = [
     anchor: 'bottom', spot: null, cta: 'View All Contracts', coachId: 'launchpad-view-contracts', dir: 'down',
     desktopAction: 'Click View All Contracts',
     desktopCoachId: 'launchpad-view-contracts', desktopDir: 'down' },
-  { id: 31, screen: 'rocket-buy', title: 'Two-Stop Route',
-    body: 'This contract has two legs — pickup, then delivery. Buy a rocket with enough range to reach both before launching. Your payout at debrief will break out as a mining fee and a transport fee.',
+  { id: 31, screen: 'rocket-buy', title: 'Cargo Delivery',
+    body: 'The client\'s cargo goes in your hold before launch. Pick a rocket with room for it and range to reach the depot. You are paid a transport fee at debrief.',
     manual: true,
     anchor: 'top', spot: null, cta: 'Got it' },
   { id: 32, screen: 'fab', title: 'Confirm The Run',
-    body: 'Confirm your loadout and launch. You will get a new heading once the pickup cargo is secured.',
+    body: 'Confirm your loadout and launch. The cargo is already aboard, so you fly straight to the depot.',
     manual: true,
     anchor: 'top', spot: null, cta: 'Got it' },
   { id: 33, screen: 'delivery', title: 'Unload At The Depot',

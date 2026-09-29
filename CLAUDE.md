@@ -88,7 +88,7 @@ Durable rules pulled from sprint-planning discussion (Craft doc "Landnam sprint 
 - **Onboarding (agency training) mapping** — do not reorder without a new design decision (decided 2026-09-28, SSL-332; supersedes the M1/M2/M3 ladder):
   - Place Launchpad — the first structure
   - Extraction (guided mission 1) — pick a client contract, pick a target, send a rocket, mine and return
-  - Transport (guided mission 2) — two-stop mineral mining and haul job: mine at one target, deliver to a second; payout splits into a mining fee and a transport fee (KES-313). Prospector is purchasable from here but no longer forced; the old M2 Prospector bulk haul is retired
+  - Transport (guided mission 2) — courier job (SSL-362): the client's cargo is loaded on Earth, flown to their depot and unloaded, then the ship flies home; no mining, paid as a transport fee. Prospector is purchasable from here but no longer forced; the old M2 Prospector bulk haul and the M3 mine-then-deliver relays are retired from onboarding (mine-then-deliver relays stay in Free Ops)
   - Build Storage Silo — required; placing the Earth silo is what opens Free Ops. Saves that finished the old three-mission onboarding keep Free Ops without one
   - Free Ops — opens on three activities: Client work / Space telescope / Build refinery. Training is reviewable from Menu → Agency Training
 

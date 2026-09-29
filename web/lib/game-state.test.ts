@@ -316,6 +316,26 @@ describe('onboarding completion boundary', () => {
     expect(repaired.tutorial).toBe(true)
   })
 
+  it('drops a run caught on a retired mine-then-deliver Transport relay (SSL-362)', () => {
+    const repaired = normalizeAndRepair({
+      screen: 'rover-mining',
+      missionId: 'lnm_m3_relay_bennu_vesta',
+      targetId: 'bennu',
+      deliveryTargetId: 'vesta',
+      player: {
+        missionsDone: 1,
+        placed: ['launchpad'],
+        activeMission: { id: 'lnm_m3_relay_bennu_vesta', label: 'Two-Stop Route' },
+        missionPhase: 'mining',
+      },
+    })
+    expect(repaired.screen).toBe('hub')
+    expect(repaired.missionId).toBeNull()
+    expect(repaired.deliveryTargetId).toBeNull()
+    expect(repaired.player.activeMission).toBeNull()
+    expect(repaired.player.missionsDone).toBe(1)
+  })
+
   it('repairs a stale Free Ops flag before the guided missions are flown', () => {
     const normalized = normalizeAndRepair({
       player: { missionsDone: 1, freeOperations: true },

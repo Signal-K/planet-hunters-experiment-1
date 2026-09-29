@@ -1,4 +1,5 @@
-// Dedicated M3 mission review harness (KES-235).
+// Dedicated Transport lesson review harness (KES-235; the old M3 relay became
+// the SSL-362 courier job, so there is no landing or rover-mining phase).
 // Opt-in: CYPRESS_PROFILE=visual-extended. Not part of the per-push Visual QA
 // playthrough (SSL-294).
 // This is intentionally a state-seeded review environment: it reaches each
@@ -6,8 +7,8 @@
 // mounts the real TakeOn canvas and exercises the real dump/redock controls.
 //
 // Validates:
-// - Complete M3 delivery flow across 4 viewports (mobile/tablet/desktop/landscape)
-// - Landing, rover mining, and cargo delivery phases
+// - Complete Transport courier delivery across 4 viewports (mobile/tablet/desktop/landscape)
+// - Cargo delivery at the client depot
 // - TakeOn canvas rendering and dump/redock controls
 // - Game state transitions and mission completion
 
@@ -17,7 +18,7 @@ import { seedAuthenticatedFixture } from '../../support/authenticated-fixture'
 const INITIAL_FRANCS = 9_000_000_000
 const EXPECTED_CARGO = { iron: 3, carbon: 2 }
 const CLIENT_NAME = 'Atlas Aggregate'
-const M3_MISSION_ID = 'lnm_m3_relay_bennu_vesta'
+const M3_MISSION_ID = 'lnm_transport_courier_vesta'
 
 const VIEWPORTS = [
   { key: 'mobile-portrait', label: 'mobile portrait', width: 390, height: 844 },
@@ -31,13 +32,13 @@ const reviewViewports = VIEWPORTS.filter(viewport => !requestedViewport || viewp
 function basePlayer(overrides: Partial<GameState['player']> = {}): GameState['player'] {
   return {
     francs: INITIAL_FRANCS,
-    activeMission: { id: M3_MISSION_ID, label: 'Belt Courier Run' },
+    activeMission: { id: M3_MISSION_ID, label: 'Vesta Depot Run' },
     missionCount: 2,
     pendingLaunch: false,
     placed: ['launchpad'],
     placementPlots: { launchpad: 0 },
     controlBuilt: false,
-    missionsDone: 2,
+    missionsDone: 1,
     freeOperations: false,
     clientMissions: {},
     clientCooldowns: {},
@@ -78,59 +79,17 @@ function visitWithState(path: string, state: Partial<GameState>) {
   })
 }
 
-describe('M3 mission review environment', () => {
+describe('Transport lesson review environment', () => {
   reviewViewports.forEach(({ key, label, width, height }) => {
     it(`reviews the complete handoff at ${label} (${width}x${height})`, () => {
       cy.viewport(width, height)
 
-      // Phase 1: Landing confirmation
-      visitWithState('/game/landing', {
-        screen: 'landing',
-        missionId: M3_MISSION_ID,
-        targetId: 'bennu',
-        player: basePlayer({
-          missionPhase: 'landing',
-          landingStartedAt: Date.now() - 10_000,
-        }),
-      })
-      cy.get('[data-testid="landing-screen"]', { timeout: 15000 }).should('be.visible')
-      cy.contains('TOUCHDOWN CONFIRMED').should('be.visible')
-      cy.screenshot(`m3-${key}-01-landing`, { capture: 'viewport' })
-
-      cy.get('[data-testid="landing-continue"]').click()
-      cy.get('[data-testid="rover-mining-screen"]', { timeout: 15000 }).should('be.visible')
-      // Deploy always starts unclicked on a fresh mount (RoverMiningScreen's
-      // `deployed` state), so wait for it to settle visible rather than
-      // snapshotting visibility once — a one-shot check can catch the panel
-      // mid-layout under CI load and silently skip the click.
-      cy.get('[data-testid="deploy-surface-ops-confirm"]', { timeout: 15000 }).should('be.visible').click()
-      cy.get('[data-testid="rover-mining-screen"]').should('contain.text', 'Field Rover')
-      cy.get('[data-testid="rover-mining-screen"] canvas[aria-label]', { timeout: 15000 }).should('be.visible')
-      cy.screenshot(`m3-${key}-02-rover-survey`, { capture: 'viewport' })
-
-      // Phase 2: Rover mining with minerals loaded
-      visitWithState('/game/rover-mining', {
-        screen: 'rover-mining',
-        missionId: M3_MISSION_ID,
-        targetId: 'bennu',
-        player: basePlayer({
-          missionPhase: 'mining',
-          roverTerrainClassifications: { bennu: 'vein' },
-          roverMiningStartedAt: Date.now() - 121_000,
-        }),
-      })
-      cy.get('[data-testid="rover-mining-screen"]', { timeout: 15000 }).should('be.visible')
-      cy.get('[data-testid="deploy-surface-ops-confirm"]', { timeout: 15000 }).should('be.visible').click()
-      cy.contains('CLIENT ORDER').should('be.visible')
-      cy.get('[data-testid="rover-mining-screen"] canvas[aria-label]', { timeout: 15000 }).should('be.visible')
-      cy.screenshot(`m3-${key}-03-rover-loaded`, { capture: 'viewport' })
-
-      // Phase 3: Delivery leg — cargo handoff to client building site
+      // Delivery — the hold was loaded on Earth; hand the cargo to the client depot
       const initialFrancs = INITIAL_FRANCS
       visitWithState('/game/delivery', {
         screen: 'delivery',
         missionId: M3_MISSION_ID,
-        targetId: 'bennu',
+        targetId: 'vesta',
         deliveryTargetId: 'vesta',
         lastCargo: EXPECTED_CARGO,
         player: basePlayer({
@@ -151,26 +110,26 @@ describe('M3 mission review environment', () => {
       // Dump cargo button visible before unload (canvas render time: ~1.2s for TakeOn scene setup)
       cy.get('[data-testid="delivery-dump-cargo"]').should('be.visible')
       cy.wait(1200) // Allow TakeOn scene animation to settle before screenshot
-      cy.screenshot(`m3-${key}-04-building-site-before-unload`, { capture: 'viewport' })
+      cy.screenshot(`m3-${key}-01-building-site-before-unload`, { capture: 'viewport' })
 
       // Unload cargo at building site
       cy.get('[data-testid="delivery-dump-cargo"]').click({ force: true })
       cy.contains('MINERALS UNLOADED').should('be.visible')
       cy.contains('Return the empty Mule rover to the ship').should('be.visible')
       cy.get('[data-testid="delivery-return-rover"]').should('be.visible').and('contain.text', 'Return Rover To Ship')
-      cy.screenshot(`m3-${key}-05-building-site-unloaded`, { capture: 'viewport' })
+      cy.screenshot(`m3-${key}-02-building-site-unloaded`, { capture: 'viewport' })
 
       // Redock rover and confirm launch ready
       cy.get('[data-testid="delivery-return-rover"]').click()
       cy.contains('ROVER REDOCKED').should('be.visible')
       cy.contains('LAUNCH READY').should('be.visible')
-      cy.screenshot(`m3-${key}-06-rover-redocked`, { capture: 'viewport' })
+      cy.screenshot(`m3-${key}-03-rover-redocked`, { capture: 'viewport' })
 
-      // The M3 handoff settles into Debrief after redock. Verify the real
+      // The courier handoff settles into Debrief after redock. Verify the real
       // client completion state, then finish the explicit teardown/reward path.
       cy.get('.debrief-game', { timeout: 15000 }).should('be.visible')
       cy.contains('MISSION COMPLETE').should('be.visible')
-      cy.contains('Belt Courier Run').should('be.visible')
+      cy.contains('Vesta Depot Run').should('be.visible')
       cy.get('[data-testid="resolve-cargo-btn"]').should('be.visible').click()
       cy.get('[data-testid="scrap-sequence-skip-btn"]', { timeout: 10000 }).should('be.visible').click()
       cy.get('[data-testid="collect-reward-btn"]', { timeout: 10000 }).should('be.visible').click()

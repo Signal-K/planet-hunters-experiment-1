@@ -340,11 +340,14 @@ export function normalizeState(input: PartialSave): GameState {
 }
 
 // SSL-332 retired the M2 Prospector bulk haul (generated "Heavy Haul" rows and
-// PocketBase's m2-silicon). A save caught mid-run on one has no mission to
-// resume, so drop that run and hand the player back to the Hub, where the
-// Transport lesson picks up as guided mission 2.
+// PocketBase's m2-silicon), and SSL-362 replaced the mine-then-deliver
+// Transport relays with courier jobs. A save caught mid-run on one has no
+// mission to resume, so drop that run and hand the player back to the Hub,
+// where the Transport lesson picks up as guided mission 2.
+const RETIRED_ONBOARDING_MISSION_IDS = new Set(['m2-silicon', 'lnm_m3_relay_bennu_vesta', 'lnm_m3_relay_itokawa_eros'])
+
 function isRetiredOnboardingMission(id: string | null | undefined): boolean {
-  return !!id && (id.startsWith('generated-s2-') || id === 'm2-silicon')
+  return !!id && (id.startsWith('generated-s2-') || RETIRED_ONBOARDING_MISSION_IDS.has(id))
 }
 
 function dropRetiredOnboardingRun(input: GameState): GameState {

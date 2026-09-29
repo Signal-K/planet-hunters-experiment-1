@@ -110,10 +110,10 @@ describe('Mine-Then-Deliver: mid-flight leg resolution', () => {
   it('shows a distinct "Delivery" header and cargo manifest, not the generic "Outbound" scene', () => {
     visitWithState('/game/transit', {
       screen: 'transit',
-      missionId: 'lnm_m3_relay_bennu_vesta',
-      targetId: 'bennu',
-      deliveryTargetId: 'vesta',
-      lastCargo: { iron: 3, carbon: 2 },
+      missionId: 'lnm_relay_psyche_ceres',
+      targetId: 'psyche',
+      deliveryTargetId: 'ceres',
+      lastCargo: { nickel: 3, cobalt: 2 },
       player: basePlayer({
         headingToDelivery: true,
         returningToEarth: false,
@@ -123,12 +123,12 @@ describe('Mine-Then-Deliver: mid-flight leg resolution', () => {
     // TopBar eyebrow names the leg; the destination is the delivery body.
     cy.contains(/Delivery LEG · MISSION TRANSIT/i, { timeout: 10000 }).should('be.visible')
     cy.contains(/Outbound LEG/i).should('not.exist')
-    cy.contains('h1', '4 Vesta').should('be.visible')
-    cy.get('[data-testid="transit-mission-context"]').should('contain', 'Dropping cargo at 4 Vesta')
+    cy.contains('h1', '1 Ceres').should('be.visible')
+    cy.get('[data-testid="transit-mission-context"]').should('contain', 'Dropping cargo at 1 Ceres')
     cy.get('.transit-cargo-strip')
-      .should('contain', 'CARGO FOR 4 VESTA')
-      .and('contain', '3 Iron')
-      .and('contain', '2 Carbon')
+      .should('contain', 'CARGO FOR 1 CERES')
+      .and('contain', '3 Nickel')
+      .and('contain', '2 Cobalt')
   })
 
   it('shows the delivery target (not the mining site) while heading to delivery', () => {
@@ -215,10 +215,10 @@ describe('MiningScreen return button on a two-leg delivery mission', () => {
   it('says FILL ORDER TO DELIVER, not RETURN, while mining the pickup leg', () => {
     visitWithState('/game/mining', {
       screen: 'mining',
-      missionId: 'lnm_m3_relay_bennu_vesta',
-      targetId: 'bennu',
-      deliveryTargetId: 'vesta',
-      player: basePlayer({ freeOperations: true, missionsDone: 2 }),
+      missionId: 'lnm_relay_psyche_ceres',
+      targetId: 'psyche',
+      deliveryTargetId: 'ceres',
+      player: basePlayer({ freeOperations: true, missionsDone: 4 }),
     })
     cy.get('[data-testid="return-home-btn"]', { timeout: 10000 })
       .should('be.visible')
@@ -228,10 +228,8 @@ describe('MiningScreen return button on a two-leg delivery mission', () => {
 
   it('says RETURN TO EARTH for a normal single-leg mission (no delivery target)', () => {
     // freeops-self-directed-mining has no deliveryTargetId anywhere in its
-    // definition — lnm_m3_relay_itokawa_eros looked like a plausible
-    // single-leg control at first glance but is actually ALSO a two-leg
-    // Itokawa -> Eros job (deliveryTargetId: 'eros' on the mission
-    // definition itself), so it would have asserted the wrong thing here.
+    // definition, so it is a true single-leg control. (Check the mission
+    // definition, not the name: several contracts carry deliveryTargetId.)
     visitWithState('/game/mining', {
       screen: 'mining',
       missionId: 'freeops-self-directed-mining',

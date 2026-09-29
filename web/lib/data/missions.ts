@@ -40,11 +40,11 @@ export function generateSelfDirectedMiningPool(): Mission[] {
   return generateSelfDirectedMiningPoolFromRules({ clients: CLIENT_SLOTS, minerals: MINERAL_META })
 }
 
-// Transport lesson (SSL-332 onboarding mission 2, formerly M3): the player
-// picks between two clients offering a two-leg transport job (mine at the
-// pickup target, deliver to a second target, then fly home). The old M2
-// Prospector bulk-haul mission it replaced is retired; self-directed mining
-// lives in Free Ops (see generateFreeOpsMissions).
+// Transport lesson (SSL-332 onboarding mission 2, SSL-362): the player picks
+// between two clients offering a courier job. The hold is loaded on Earth, so
+// the run is launch, deliver, return; no mining. Mine-then-deliver relays and
+// self-directed mining live in Free Ops. The old M2 Prospector bulk haul and
+// the M3 mine-then-deliver relays it used to teach are retired.
 export const TRANSPORT_SEQUENCE = 2
 
 // Free Ops self-directed mining — no client, no daily limit, no cooldown.
@@ -134,17 +134,18 @@ export const AUTHORED_MISSIONS: Mission[] = [
     payout: { francs: 0, affinity: 0 },
   },
   {
-    id: 'lnm_m3_relay_bennu_vesta',
-    title: 'Belt Courier Run',
-    brief: 'Atlas Aggregate needs iron and carbon lifted from Bennu, then dropped at their Vesta depot for off-world construction — bulk metals like these are too plentiful on Earth to ship home, but Vesta has none. You\'re paid for both jobs: mining the ore and running the relay to Vesta.',
+    id: 'lnm_transport_courier_vesta',
+    title: 'Vesta Depot Run',
+    brief: 'Atlas Aggregate has iron and carbon crated on the pad for their Vesta construction depot. Your hold is loaded before launch: fly it out, unload at the depot, and come home. No mining on this job.',
     client: 'atlas-aggregate',
     tag: 'TRANSPORT',
     difficulty: 'L1',
     locked: false,
     sequence: TRANSPORT_SEQUENCE,
     unlockAt: 'Complete 1 contract',
-    targetId: 'bennu',
+    targetId: 'vesta',
     deliveryTargetId: 'vesta',
+    loadedCargo: { iron: 3, carbon: 2 },
     requires: {
       minerals: { iron: 3, carbon: 2 },
       cargo_min: 5,
@@ -152,24 +153,25 @@ export const AUTHORED_MISSIONS: Mission[] = [
       max_orbit: 4,
     },
     payout: {
-      // Transport still pays the old M3 contract fee: it is two jobs (mining
-      // plus relay) and still needs a fresh single-use vehicle.
+      // The Transport lesson keeps the old M3 contract fee: it still needs a
+      // fresh single-use vehicle.
       francs: missionPayoutFloor(3),
       affinity: 3,
     },
   },
   {
-    id: 'lnm_m3_relay_itokawa_eros',
-    title: 'Nickel Line Handoff',
-    brief: 'Helioforge Metals needs nickel pulled from Itokawa, then handed off at Eros before you fly home. You\'re paid for both jobs: mining the ore and running the relay to Eros.',
+    id: 'lnm_transport_courier_eros',
+    title: 'Eros Nickel Drop',
+    brief: 'Helioforge Metals has refined nickel stock waiting on the pad for their Eros yard. Your hold is loaded before launch: fly it out, unload at the yard, and come home. No mining on this job.',
     client: 'helioforge-metals',
     tag: 'TRANSPORT',
     difficulty: 'L1',
     locked: false,
     sequence: TRANSPORT_SEQUENCE,
     unlockAt: 'Complete 1 contract',
-    targetId: 'itokawa',
+    targetId: 'eros',
     deliveryTargetId: 'eros',
+    loadedCargo: { nickel: 3 },
     requires: {
       minerals: { nickel: 3 },
       cargo_min: 3,
@@ -177,8 +179,6 @@ export const AUTHORED_MISSIONS: Mission[] = [
       max_orbit: 4,
     },
     payout: {
-      // Transport still pays the old M3 contract fee: it is two jobs (mining
-      // plus relay) and still needs a fresh single-use vehicle.
       francs: missionPayoutFloor(3),
       affinity: 3,
     },

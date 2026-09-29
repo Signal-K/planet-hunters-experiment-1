@@ -33,7 +33,7 @@ describe('Onboarding mission structure (Extraction, Transport)', () => {
     expect(MISSIONS.some(m => m.title === 'Heavy Haul')).toBe(false)
   })
 
-  it('Transport presents a short list of clients offering transport work, each a two-leg mine-then-deliver job', () => {
+  it('Transport presents a short list of clients offering courier work: cargo loaded on Earth, flown to a depot, no mining (SSL-362)', () => {
     const transport = MISSIONS.filter(m => m.sequence === TRANSPORT_SEQUENCE)
     expect(TRANSPORT_SEQUENCE).toBe(2)
     expect(transport.length).toBeGreaterThanOrEqual(2)
@@ -42,7 +42,11 @@ describe('Onboarding mission structure (Extraction, Transport)', () => {
     for (const mission of transport) {
       expect(mission.tag).toBe('TRANSPORT')
       expect(mission.deliveryTargetId).toBeTruthy()
-      expect(mission.deliveryTargetId).not.toBe(mission.targetId)
+      expect(mission.targetId).toBe(mission.deliveryTargetId)
+      // The loaded hold is exactly the contract, and it fits the Explorer.
+      expect(mission.loadedCargo).toEqual(mission.requires.minerals)
+      const units = Object.values(mission.loadedCargo ?? {}).reduce((sum, n) => sum + n, 0)
+      expect(units).toBe(mission.requires.cargo_min)
     }
   })
 
@@ -57,7 +61,7 @@ describe('Onboarding mission structure (Extraction, Transport)', () => {
     for (const mission of m1) {
       expect(mission.deliveryTargetId).toBeFalsy()
     }
-    // Transport is transport-tagged and structurally two-leg (asserted above too).
+    // Transport is transport-tagged courier work (asserted above too).
     for (const mission of transport) {
       expect(mission.tag).toBe('TRANSPORT')
     }

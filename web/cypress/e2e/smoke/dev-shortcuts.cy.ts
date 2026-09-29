@@ -107,7 +107,7 @@ describe('DEV panel UI', () => {
     // Transport shots
     cy.get('[data-testid="dev-shot-transport-hub"]').should('exist')
     cy.get('[data-testid="dev-shot-transport-fab"]').should('exist')
-    cy.get('[data-testid="dev-shot-transport-mining"]').should('exist')
+    cy.get('[data-testid="dev-shot-transport-delivery"]').should('exist')
     cy.get('[data-testid="dev-shot-transport-debrief"]').should('exist')
     // Storage Silo shots
     cy.get('[data-testid="dev-shot-storage-hub"]').should('exist')

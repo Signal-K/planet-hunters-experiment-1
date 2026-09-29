@@ -1,4 +1,5 @@
 import type { GameState } from '@/lib/game-types'
+import type { Mission } from '@/lib/data/types'
 
 export const DELIVERY_UNLOAD_DURATION_MS = 8_000
 
@@ -9,6 +10,30 @@ export function deliveryUnloadProgress(
 ): number {
   if (!startedAt || !Number.isFinite(startedAt) || durationMs <= 0) return 0
   return Math.max(0, Math.min(1, (now - startedAt) / durationMs))
+}
+
+/**
+ * Courier jobs (SSL-362) launch with the client's cargo already in the hold
+ * and fly straight to the depot: the first transit leg is the delivery leg.
+ * Every other mission launches with an empty hold, so it is left unchanged.
+ */
+export function applyCourierLaunchCargo(
+  state: GameState,
+  mission: Pick<Mission, 'loadedCargo' | 'deliveryTargetId'>,
+): GameState {
+  if (!mission.loadedCargo || !mission.deliveryTargetId) return state
+  return {
+    ...state,
+    lastCargo: { ...mission.loadedCargo },
+    deliveredCargo: null,
+    deliveryTargetId: mission.deliveryTargetId,
+    player: {
+      ...state.player,
+      headingToDelivery: true,
+      debriefPending: false,
+      returningToEarth: false,
+    },
+  }
 }
 
 /** Enter the physical unload scene when the delivery transit leg arrives. */

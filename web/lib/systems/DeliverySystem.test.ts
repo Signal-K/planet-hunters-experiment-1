@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest'
+import { MISSIONS } from '@/lib/data'
 import type { GameState } from '@/lib/game-types'
 import {
+  applyCourierLaunchCargo,
   applyDeliveryArrived,
   applyDeliveryUnloadComplete,
   DELIVERY_UNLOAD_DURATION_MS,
@@ -10,9 +12,9 @@ import {
 function state(overrides: Partial<GameState> = {}): GameState {
   const base = {
     screen: 'transit',
-    missionId: 'lnm_m3_relay_bennu_vesta',
-    targetId: 'bennu',
-    deliveryTargetId: 'vesta',
+    missionId: 'lnm_relay_psyche_ceres',
+    targetId: 'psyche',
+    deliveryTargetId: 'ceres',
     rocket: { chassis: 'hull-mk1', propulsion: 'ion-a1', drill: 'hand-drill' },
     lastCargo: { iron: 3, carbon: 2 },
     deliveredCargo: null,
@@ -22,7 +24,7 @@ function state(overrides: Partial<GameState> = {}): GameState {
     menuOpen: false,
     player: {
       francs: 0,
-      activeMission: { id: 'lnm_m3_relay_bennu_vesta', label: 'Relay' },
+      activeMission: { id: 'lnm_relay_psyche_ceres', label: 'Relay' },
       missionPhase: 'transit',
       missionCount: 1,
       pendingLaunch: false,
@@ -89,5 +91,25 @@ describe('DeliverySystem', () => {
     const transit = state()
     expect(applyDeliveryArrived(hub, 2_000)).toBe(hub)
     expect(applyDeliveryUnloadComplete(transit, 9_000, 3_000)).toBe(transit)
+  })
+
+  it('launches a courier job with the client cargo loaded and the depot as the first leg', () => {
+    const courier = MISSIONS.find(m => m.id === 'lnm_transport_courier_vesta')!
+    const launched = state({ lastCargo: null, deliveryTargetId: null, player: { headingToDelivery: false } as GameState['player'] })
+    const next = applyCourierLaunchCargo(launched, courier)
+
+    expect(next.lastCargo).toEqual(courier.loadedCargo)
+    expect(next.lastCargo).not.toBe(courier.loadedCargo)
+    expect(next.deliveryTargetId).toBe('vesta')
+    expect(next.player.headingToDelivery).toBe(true)
+    expect(next.player.returningToEarth).toBe(false)
+    // The courier's first arrival is the unload scene, not mining.
+    expect(applyDeliveryArrived(next, 2_000).screen).toBe('delivery')
+  })
+
+  it('leaves a mining launch with an empty hold', () => {
+    const relay = MISSIONS.find(m => m.id === 'lnm_relay_psyche_ceres')!
+    const launched = state({ lastCargo: null, player: { headingToDelivery: false } as GameState['player'] })
+    expect(applyCourierLaunchCargo(launched, relay)).toBe(launched)
   })
 })

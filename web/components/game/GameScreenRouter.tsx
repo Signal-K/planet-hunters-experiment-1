@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback } from 'react'
 import dynamic from 'next/dynamic'
 import { useGame } from '@/game-context'
-import { ACADEMY_INTRO_MISSION_ID, rocketDisplayForConfig, rocketModelForConfig, trainingCoachSteps } from '@/lib/data'
+import { ACADEMY_INTRO_MISSION_ID, isCourierMission, rocketDisplayForConfig, rocketModelForConfig, trainingCoachSteps } from '@/lib/data'
 import { agencyTrainingStage } from '@/lib/systems/AgencyOnboardingSystem'
 import type { Screen } from '@/lib/game-types'
 // LandingFlow and HubScreen are the two most likely first paints (cold start
@@ -118,8 +118,9 @@ function ScreenBody({
   // needs the actual mining site's name separately, resolved from
   // mission.targetId rather than reusing debriefOriginTarget (KES-352 —
   // this rendered as "deliveryTarget -> deliveryTarget" before this fix).
+  // A courier job (SSL-362) starts on Earth, so its route reads Earth → depot.
   const originTargetName = game.mission?.deliveryTargetId
-    ? game.catalog.targets.find(t => t.id === game.mission!.targetId)?.name
+    ? (isCourierMission(game.mission) ? 'Earth' : game.catalog.targets.find(t => t.id === game.mission!.targetId)?.name)
     : undefined
 
   // Derive the coach step for coachManual (needed by AssemblyScreen)

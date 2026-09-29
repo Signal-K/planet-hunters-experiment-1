@@ -6,7 +6,7 @@ import { MISSIONS } from './data'
 // Every key listed in DEV_GROUPS must resolve to a valid preset
 const ALL_KEYS = DEV_GROUPS.flatMap(g => g.shots.map(s => s.key))
 const FIRST_MISSION = MISSIONS.find(m => m.sequence === 1)!
-const TRANSPORT_MISSION = MISSIONS.find(m => m.id === 'lnm_m3_relay_bennu_vesta')!
+const TRANSPORT_MISSION = MISSIONS.find(m => m.id === 'lnm_transport_courier_vesta')!
 
 describe('DEV_GROUPS', () => {
   it('has groups for each agency training stage (SSL-332)', () => {
@@ -103,7 +103,7 @@ describe('resolvePreset — Transport arc (two-leg mine-then-deliver)', () => {
     expect(p.deliveryTargetId).toBeNull()
   })
 
-  it('transport-fab: missionsDone=1, fab screen, Belt Courier Run accepted with delivery target set', () => {
+  it('transport-fab: missionsDone=1, fab screen, courier job accepted with delivery target set', () => {
     const p = resolvePreset('transport-fab')!
     expect(p.screen).toBe('fab')
     expect(p.player!.missionsDone).toBe(1)
@@ -113,15 +113,17 @@ describe('resolvePreset — Transport arc (two-leg mine-then-deliver)', () => {
     expect(p.rocket!.chassis).toBe('hull-mk2')
   })
 
-  it('transport-mining: missionsDone=1, mining screen with active two-leg mission', () => {
-    const p = resolvePreset('transport-mining')!
-    expect(p.screen).toBe('mining')
+  it('transport-delivery: missionsDone=1, unloading the loaded hold at the depot', () => {
+    const p = resolvePreset('transport-delivery')!
+    expect(p.screen).toBe('delivery')
     expect(p.missionId).toBe(TRANSPORT_MISSION.id)
     expect(p.deliveryTargetId).toBe(TRANSPORT_MISSION.deliveryTargetId)
+    expect(p.player!.headingToDelivery).toBe(true)
+    expect(p.lastCargo).toEqual(TRANSPORT_MISSION.loadedCargo)
     expect(p.player!.activeMission?.id).toBe(TRANSPORT_MISSION.id)
   })
 
-  it('transport-debrief: debrief screen with two-leg mission cargo and delivery target set', () => {
+  it('transport-debrief: debrief screen with courier cargo and delivery target set', () => {
     const p = resolvePreset('transport-debrief')!
     expect(p.screen).toBe('debrief')
     expect(p.missionId).toBe(TRANSPORT_MISSION.id)
@@ -192,7 +194,7 @@ describe('resolvePreset — recent UI surfaces', () => {
   it('opens Target Picker with a real mission loaded', () => {
     const p = resolvePreset('ui-target-picker')!
     expect(p.screen).toBe('targets')
-    expect(p.missionId).toBe(TRANSPORT_MISSION.id)
+    expect(p.missionId).toBe(FIRST_MISSION.id)
     expect(p.targetId).toBeNull()
   })
 
@@ -213,7 +215,7 @@ describe('dev shortcut routes', () => {
   it('maps dedicated mission URLs to preset keys', () => {
     expect(presetForMissionRoute(['m1'])).toBe('m1-hub')
     expect(presetForMissionRoute(['m2'])).toBe('transport-hub')
-    expect(presetForMissionRoute(['mission2', 'mining'])).toBe('transport-mining')
+    expect(presetForMissionRoute(['mission2', 'delivery'])).toBe('transport-delivery')
     expect(presetForMissionRoute(['transport', 'fab'])).toBe('transport-fab')
     expect(presetForMissionRoute(['storage', 'build'])).toBe('storage-build')
     expect(presetForMissionRoute(['m3'])).toBeNull()

@@ -92,6 +92,10 @@ export interface Mission {
   // When set, this is a two-leg "mine then deliver" job: mine/collect cargo
   // at targetId, then fly to deliveryTargetId before the Earth-return leg.
   deliveryTargetId?: string
+  // Courier job (SSL-362): the hold is loaded on Earth before launch, so the
+  // run flies straight to deliveryTargetId, unloads, and returns. No mining.
+  // targetId and deliveryTargetId are the same depot.
+  loadedCargo?: Record<string, number>
   payload?: MissionPayload
   survey?: MissionSurveyPlan
   construction?: MissionConstructionPlan

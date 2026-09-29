@@ -142,7 +142,7 @@ async function clearMissionLog(token: string, userId: string) {
 // mission that might not match what a real playthrough would have logged.
 function missionForSequence(seq: number) {
   if (seq === 2) {
-    return MISSIONS.find(m => m.id === 'lnm_m3_relay_bennu_vesta') ?? MISSIONS.find(m => m.sequence === 2)
+    return MISSIONS.find(m => m.id === 'lnm_transport_courier_vesta') ?? MISSIONS.find(m => m.sequence === 2)
   }
   return MISSIONS.find(m => m.sequence === seq)
 }

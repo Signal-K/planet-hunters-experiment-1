@@ -555,15 +555,15 @@ describe('Full Game Loop — Landnam', () => {
         },
         tutorial: false,
       }))
-      cy.get('[data-testid="mission-accept-lnm_m3_relay_bennu_vesta"]').should('be.visible').and('not.be.disabled')
+      cy.get('[data-testid="mission-accept-lnm_transport_courier_vesta"]').should('be.visible').and('not.be.disabled')
       cy.get('[data-testid^="mission-accept-generated-s2-"]').should('not.exist')
     })
 
-    it('Transport rocket selection shows the two-stop route coach step', () => {
+    it('Transport rocket selection shows the cargo delivery coach step', () => {
       visitWithState(fullState({
         screen: 'rocket-buy',
-        missionId: 'lnm_m3_relay_bennu_vesta',
-        targetId: 'bennu',
+        missionId: 'lnm_transport_courier_vesta',
+        targetId: 'vesta',
         deliveryTargetId: 'vesta',
         doneSteps: { 1: true, 2: true, 3: true, 4: true, 5: true, 6: true, 9: true, 30: true },
         player: {
@@ -589,14 +589,14 @@ describe('Full Game Loop — Landnam', () => {
         tutorial: true,
       }))
       cy.contains('Prospector').should('be.visible')
-      cy.contains('Two-Stop Route').should('be.visible')
+      cy.contains('Cargo Delivery').should('be.visible')
     })
 
     it('Transport preflight launch button visible with prebuilt Prospector', () => {
       visitWithState(fullState({
         screen: 'fab',
-        missionId: 'lnm_m3_relay_bennu_vesta',
-        targetId: 'bennu',
+        missionId: 'lnm_transport_courier_vesta',
+        targetId: 'vesta',
         deliveryTargetId: 'vesta',
         doneSteps: { 1: true, 2: true, 3: true, 4: true, 5: true, 6: true, 9: true, 30: true, 31: true },
         rocket: { chassis: 'hull-mk2', propulsion: 'fusion-b2', drill: 'laser-t2' },

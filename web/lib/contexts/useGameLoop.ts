@@ -10,7 +10,7 @@ import {
   BANKRUPTCY_THRESHOLD,
 } from '@/lib/data'
 import { applyMiningDone, applyReturnArrived, applyRoverMiningDone } from '@/lib/systems/MiningSystem'
-import { applyDeliveryArrived, applyDeliveryUnloadComplete } from '@/lib/systems/DeliverySystem'
+import { applyCourierLaunchCargo, applyDeliveryArrived, applyDeliveryUnloadComplete } from '@/lib/systems/DeliverySystem'
 import { applyLandingTouchdown, applyRedockComplete } from '@/lib/systems/LandingSystem'
 import { applyAwardMissionCrewXP, crewRequirementStatus, diplomacyPayoutMultiplier, missionCrewForLaunch } from '@/lib/systems/AcademySystem'
 import { applyAssembleFabricatedRocket, applyFabricateRocketPart, applyFreeHaulDisposition, applyPurchaseRocket, applyRemoteHaulDisposition, applyRocketStageRecovery, earthStorageBuilt, hasOperationalRemoteSilo } from '@/lib/systems/EconomySystem'
@@ -412,7 +412,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
       const arrivalAt = (timedTransit && target)
         ? transitStartedAt + travelDurationMs(target, s.player.unlockedSkillNodes ?? [], ORBIT_MS_PER_UNIT)
         : null
-      return {
+      const launched: GameState = {
         ...s,
         player: {
           ...s.player,
@@ -437,6 +437,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
         screen: 'transit',
         doneSteps: { ...s.doneSteps, 5: true },
       }
+      return applyCourierLaunchCargo(launched, mission)
     })
     const userId = pbLandnam.authStore.record?.id
     if (userId) {
@@ -450,7 +451,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
         target_id: current.targetId,
         status: 'in_progress',
         phase: 'transit',
-        cargo: {},
+        cargo: currentMission.loadedCargo ?? {},
         launched_at: new Date().toISOString(),
       })
       missionRunIdRef.current = runId

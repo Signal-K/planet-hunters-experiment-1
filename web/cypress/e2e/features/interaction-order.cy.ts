@@ -87,24 +87,23 @@ describe('Interaction order hardening', () => {
   })
 
   it('a fixed-target mission skips the target map and goes straight to the vehicle', () => {
-    // lnm_m3_ore_delivery is a retired M3 slug — withCorrectedM3 (lib/catalog.ts)
-    // now maps it away entirely, so it never resolves to a mission. Use a current
-    // fixed-target M3 mission (lib/data/missions.ts) instead.
-    visitWithState({ screen: 'hub', player: { missionsDone: 2, missionCount: 3 } })
+    // The Transport lesson's courier contracts have a fixed depot
+    // (lib/data/missions.ts, SSL-362).
+    visitWithState({ screen: 'hub', player: { missionsDone: 1, missionCount: 2 } })
     cy.get('[data-testid="bottom-tab-missions"]').click()
-    cy.get('[data-testid="mission-accept-lnm_m3_relay_bennu_vesta"]').click()
+    cy.get('[data-testid="mission-accept-lnm_transport_courier_vesta"]').click()
     cy.get('[data-testid="mission-rocket-blueprint"]').should('be.visible')
     cy.get('[data-testid="mission-target-map"]').should('not.exist')
   })
 
   it('backs out of fixed-target rocket purchase to its fixed target, never an empty target picker', () => {
-    visitWithState({ screen: 'hub', player: { missionsDone: 2, missionCount: 3 } })
+    visitWithState({ screen: 'hub', player: { missionsDone: 1, missionCount: 2 } })
     cy.get('[data-testid="bottom-tab-missions"]').click()
-    cy.get('[data-testid="mission-accept-lnm_m3_relay_bennu_vesta"]').click()
+    cy.get('[data-testid="mission-accept-lnm_transport_courier_vesta"]').click()
     cy.get('[data-testid="mission-rocket-blueprint"]').should('be.visible')
     cy.get('[data-testid="mission-setup-scaffold"] button[aria-label="Back"]').click()
     // Back steps to the map with the mission's fixed target already selected.
-    cy.get('[data-testid="target-selection-summary"]').should('contain', '101955 Bennu')
+    cy.get('[data-testid="target-selection-summary"]').should('contain', '4 Vesta')
     cy.get('[data-testid="continue-build-btn"]').should('not.be.disabled')
   })
 
@@ -154,7 +153,7 @@ describe('Interaction order hardening', () => {
     // debrief settlement routes to the hub tutorial rail, not the market — see the
     // identical assertion in smoke/game-loop.cy.ts "M1 completion returns to hub".
     cy.contains('Commodity Exchange').should('not.exist')
-    cy.contains('Guided Ops · Mission 2').should('be.visible')
+    cy.get('.tutorial-coach-title').should('contain.text', 'Transport')
     readSavedState().should(state => {
       expect(state.player.missionsDone).to.eq(1)
       expect(state.missionId).to.eq(null)

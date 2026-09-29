@@ -161,17 +161,17 @@ describe('Takeon visual audit: actual rendered gameplay, not just presence', () 
     cy.screenshot('takeon-surface-ops-field-view-mobile')
   })
 
-  it('renders the Takeon dropoff scene during the M3 tutorial delivery leg', () => {
+  it('renders the Takeon dropoff scene during the Transport lesson delivery', () => {
     cy.viewport(390, 844)
     visitWithState('/game/delivery', {
       screen: 'delivery',
-      missionId: 'lnm_m3_relay_bennu_vesta',
-      targetId: 'bennu',
+      missionId: 'lnm_transport_courier_vesta',
+      targetId: 'vesta',
       deliveryTargetId: 'vesta',
       lastCargo: { iron: 3, carbon: 2 },
       player: basePlayer({
-        missionsDone: 2,
-        activeMission: { id: 'lnm_m3_relay_bennu_vesta', label: 'Two-Stop Route' },
+        missionsDone: 1,
+        activeMission: { id: 'lnm_transport_courier_vesta', label: 'Cargo delivery → 4 Vesta' },
         missionPhase: 'delivery',
         headingToDelivery: true,
         returningToEarth: false,

@@ -18,10 +18,11 @@ function basePlayer(overrides: Partial<GameState['player']> = {}): GameState['pl
     activeMission: null,
     missionCount: 3,
     pendingLaunch: false,
-    placed: ['launchpad'],
-    placementPlots: { launchpad: 0 },
+    // Mine-then-deliver relays are Free Ops work since SSL-362.
+    placed: ['launchpad', 'surface-silo'],
+    placementPlots: { launchpad: 0, 'surface-silo': 1 },
     controlBuilt: false,
-    missionsDone: 2,
+    missionsDone: 3,
     freeOperations: false,
     clientMissions: {},
     clientCooldowns: {},
@@ -63,26 +64,26 @@ function visitDebriefWithState(state: Partial<GameState>) {
 describe('Debrief screen origin attribution for two-leg delivery missions', () => {
   it('attributes the return leg to the delivery target, not the mining site, for a two-leg mission', () => {
     visitDebriefWithState({
-      missionId: 'lnm_m3_relay_bennu_vesta',
-      targetId: 'bennu',
-      deliveryTargetId: 'vesta',
-      lastCargo: { iron: 3, carbon: 2 },
+      missionId: 'lnm_relay_psyche_ceres',
+      targetId: 'psyche',
+      deliveryTargetId: 'ceres',
+      lastCargo: { nickel: 2, cobalt: 2 },
     })
     // The debrief summary labels the return leg "RETURNED FROM <body>".
-    cy.contains('span', 'RETURNED FROM', { timeout: 10000 }).next().should('have.text', '4 Vesta')
+    cy.contains('span', 'RETURNED FROM', { timeout: 10000 }).next().should('have.text', '1 Ceres')
   })
 
   it('resolves the debrief origin from the mission definition, not the injected top-level state field', () => {
     // Deliberately leave top-level deliveryTargetId unset (null) — the fix
     // reads mission.deliveryTargetId via the catalog lookup, so this must
-    // still correctly show the delivery target (Eros), not the mining site
-    // (Itokawa), proving the origin isn't just echoing back injected state.
+    // still correctly show the delivery target (Ceres), not the mining site
+    // (Psyche), proving the origin isn't just echoing back injected state.
     visitDebriefWithState({
-      missionId: 'lnm_m3_relay_itokawa_eros',
-      targetId: 'itokawa',
+      missionId: 'lnm_relay_psyche_ceres',
+      targetId: 'psyche',
       deliveryTargetId: null,
-      lastCargo: { nickel: 3 },
+      lastCargo: { nickel: 2, cobalt: 2 },
     })
-    cy.contains('span', 'RETURNED FROM', { timeout: 10000 }).next().should('have.text', '433 Eros')
+    cy.contains('span', 'RETURNED FROM', { timeout: 10000 }).next().should('have.text', '1 Ceres')
   })
 })

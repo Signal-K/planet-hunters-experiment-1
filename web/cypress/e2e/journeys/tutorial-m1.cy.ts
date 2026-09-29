@@ -1,7 +1,8 @@
 import { seedFixtureSession } from '../../support/authenticated-fixture'
 
 export {}
-// Full M1/M2/M3 tutorial play-through tests.
+// Full agency-training play-through tests: Extraction (M1), then the Transport
+// courier job (SSL-332, SSL-362).
 //
 // These tests play the game as a real user would — they navigate using whatever
 // nav element is VISIBLE on screen, not by force-clicking hidden elements.
@@ -241,68 +242,31 @@ function playM1() {
   completeMining()
   completeDebrief()
 
-  // Collecting the M1 reward returns to Hub and the coach immediately opens
-  // M2's guided-ops card. Case-insensitive: the label is visually all-caps
-  // via CSS text-transform, not literal uppercase DOM text.
+  // Collecting the Extraction reward returns to Hub and the coach immediately
+  // opens the Transport lesson. Case-insensitive: the label is visually
+  // all-caps via CSS text-transform, not literal uppercase DOM text.
   cy.contains('h1', /^(Base|Earth Base)$/, { timeout: 10000 }).should('be.visible')
-  cy.get('[data-testid="tutorial-coach-block"]', { timeout: 8000 }).contains(/guided ops · mission 2/i).should('be.visible')
+  cy.get('[data-testid="tutorial-coach-block"]', { timeout: 8000 }).contains(/transport/i).should('be.visible')
 }
 
-// ─── Full M2 play-through ─────────────────────────────────────────────────────
+// ─── Full Transport play-through ──────────────────────────────────────────────
 //
-// Starts from hub with missionsDone=1 and M2 tutorial active. Step 20 is an
-// action coach card on hub (auto-dismisses on nav); step 21 is a manual
-// coach card on the vehicle blueprint.
+// Guided mission 2 (SSL-332) is a courier job (SSL-362): the client's cargo is
+// loaded on Earth, flown to their depot and unloaded. The depot is fixed, so
+// accepting a contract skips the target map; there is no mining leg.
 
-function playM2() {
+function playTransport() {
   cy.contains('h1', /^(Base|Earth Base)$/, { timeout: 10000 }).should('be.visible')
-  expectCoach('Guided Ops')
+
+  // Step 30: hub action step (auto-dismisses on nav).
+  expectCoach('Transport')
   navToMissions()
 
-  // M2's generated palladium order (see lib/data/missions.ts).
-  expectCoach('Choose Your Second Contract')
-  cy.get('[data-testid="mission-accept-generated-s2-starter-bulk-3"]').should('be.visible').click()
+  cy.get('[data-testid="mission-accept-lnm_transport_courier_vesta"]').should('be.visible').click()
 
-  // Target map: an eligible body is preselected, so confirm it.
-  cy.get('[data-testid="mission-target-map"]', { timeout: 8000 }).should('be.visible')
-  cy.get('[data-testid="continue-build-btn"]').should('not.be.disabled').click()
-
-  // Blueprint — step 21 fires here as a manual card.
+  // Blueprint — step 31 fires here (no target map since the depot is fixed).
   cy.get('[data-testid="mission-rocket-blueprint"]', { timeout: 8000 }).should('be.visible')
-  expectCoach('Select Your Rocket')
-  cy.get('[data-testid="coach-got-it-btn"]').should('be.visible').click()
-  cy.get('[data-testid="tutorial-coach-block"]').should('not.exist')
-
-  // M2 unlocks the Prospector.
-  cy.get('[data-testid="purchase-rocket-btn"]').should('contain', 'PROSPECTOR').click()
-  rollOutAndLaunch()
-
-  completeMining()
-  completeDebrief()
-
-  cy.contains('h1', /^(Base|Earth Base)$/, { timeout: 10000 }).should('be.visible')
-  cy.get('[data-testid="tutorial-coach-block"]', { timeout: 8000 }).contains(/guided ops · mission 3/i).should('be.visible')
-}
-
-// ─── Full M3 play-through ─────────────────────────────────────────────────────
-//
-// M3 is a two-stop mining and haul job (mine at a pickup target, deliver to
-// a second target before flying home). Both M3 missions have preset targets,
-// so accepting one skips the target map and goes straight to the blueprint.
-
-function playM3ToDeliveryLeg() {
-  cy.contains('h1', /^(Base|Earth Base)$/, { timeout: 10000 }).should('be.visible')
-
-  // Step 30: hub action step (auto-dismisses on nav, like M2's step 20).
-  expectCoach('Guided Ops')
-  navToMissions()
-
-  // Pick one of the two M3 client missions.
-  cy.get('[data-testid="mission-accept-lnm_m3_relay_bennu_vesta"]').should('be.visible').click()
-
-  // Blueprint — step 31 fires here (no target map since the route is preset).
-  cy.get('[data-testid="mission-rocket-blueprint"]', { timeout: 8000 }).should('be.visible')
-  expectCoach('Two-Stop Route')
+  expectCoach('Cargo Delivery')
   cy.get('[data-testid="coach-got-it-btn"]').should('be.visible').click()
   cy.get('[data-testid="purchase-rocket-btn"]').should('be.visible').click()
 
@@ -311,15 +275,18 @@ function playM3ToDeliveryLeg() {
   cy.get('[data-testid="coach-got-it-btn"]').should('be.visible').click()
   rollOutAndLaunch()
 
-  // The pickup leg is worked by the surface rover (DEV-only skip, as above).
-  cy.location('pathname', { timeout: 20000 }).should('eq', '/game/rover-mining')
-  cy.get('[data-testid="dev-skip-rover-mining-btn"]', { timeout: 15000 }).click()
-
-  // Cargo secured for the pickup leg — the two-leg mechanic routes to the
-  // delivery target next, not straight home.
-  cy.location('pathname', { timeout: 15000 }).should('eq', '/game/transit')
+  // The hold was loaded on Earth, so the first leg is the delivery leg.
   cy.contains(/Delivery LEG · MISSION TRANSIT/i).should('be.visible')
-  cy.contains('h1', '4 Vesta').should('be.visible')
+  cy.location('pathname', { timeout: 20000 }).should('eq', '/game/delivery')
+  expectCoach('Unload At The Depot')
+  cy.get('[data-testid="coach-got-it-btn"]').should('be.visible').click()
+  cy.get('[data-testid="delivery-dump-cargo"]', { timeout: 15000 }).should('not.be.disabled').click()
+  cy.get('[data-testid="delivery-return-rover"]', { timeout: 15000 }).should('be.visible').click()
+
+  completeDebrief()
+
+  // Transport done: the Hub points at the Storage Silo, the last training step.
+  cy.get('[data-testid="progression-card-storage-silo"]', { timeout: 10000 }).should('exist')
 }
 
 // ─── Viewport configurations ──────────────────────────────────────────────────
@@ -335,7 +302,7 @@ const VIEWPORTS = [
 // Unset by default — every describe below runs, exactly as before. Set to
 // scope a single spec run to one mission's playthrough (e.g. for a per-
 // mission onboarding video, one file per mission rather than one file
-// covering the full layout-guard + M1 + M2 + M3 matrix):
+// covering the full layout-guard + M1 + Transport matrix):
 //
 //   CYPRESS_mission=M1 CYPRESS_viewportLabel="mobile portrait" \
 //     npx cypress run --spec cypress/e2e/journeys/tutorial-m1.cy.ts --config video=true
@@ -343,7 +310,7 @@ const VIEWPORTS = [
 // `mission` also skips the layout-guard describes below (not a mission
 // playthrough, so out of scope for a mission-specific video).
 
-const MISSION_FILTER = Cypress.env('mission') as 'M1' | 'M2' | 'M3' | undefined
+const MISSION_FILTER = Cypress.env('mission') as 'M1' | 'Transport' | undefined
 const VIEWPORT_FILTER = Cypress.env('viewportLabel') as string | undefined
 const viewportsToRun = VIEWPORTS.filter(v => !VIEWPORT_FILTER || v.label === VIEWPORT_FILTER)
 
@@ -407,55 +374,30 @@ if (!MISSION_FILTER || MISSION_FILTER === 'M1') viewportsToRun.forEach(({ label,
   describe(`M1 full play-through — ${label} (${w}×${h})`, () => {
     beforeEach(() => cy.viewport(w, h))
 
-    it('plays M1 from hub through debrief to the M2 guided-ops handoff', () => {
+    it('plays Extraction from hub through debrief to the Transport handoff', () => {
       visitHub({ doneSteps: { 0: true }, tutorial: true })
       playM1()
     })
   })
 })
 
-// ─── M2 full play-through ─────────────────────────────────────────────────────
+// ─── Transport full play-through ──────────────────────────────────────────────
 
-// Every coach step a real player completes during M1, including the
+// Every coach step a real player completes during Extraction, including the
 // blueprint's "Choose a Vehicle" (8).
 const M1_DONE_STEPS = { 0: true, 1: true, 2: true, 3: true, 4: true, 5: true, 6: true, 8: true, 9: true }
 
-if (!MISSION_FILTER || MISSION_FILTER === 'M2') viewportsToRun.forEach(({ label, w, h }) => {
-  describe(`M2 full play-through — ${label} (${w}×${h})`, () => {
+if (!MISSION_FILTER || MISSION_FILTER === 'Transport') viewportsToRun.forEach(({ label, w, h }) => {
+  describe(`Transport full play-through — ${label} (${w}×${h})`, () => {
     beforeEach(() => cy.viewport(w, h))
 
-    it('plays M2 from hub through debrief to the M3 guided-ops handoff', () => {
+    it('plays the courier job from hub through debrief to the Storage Silo stage', () => {
       visitHub({
         tutorial: true,
         doneSteps: M1_DONE_STEPS,
-        player: basePlayer({ missionsDone: 1, missionCount: 1 }),
+        player: basePlayer({ missionsDone: 1, missionCount: 1, francs: 9_000_000_000 }),
       })
-      playM2()
-    })
-  })
-})
-
-// ─── M3 full play-through (through the pickup leg) ────────────────────────────
-// Excluded from an onboarding-video pass over M1/M2 (MISSION_FILTER), but
-// runs in the normal/CI/full-matrix case: the coach steps and screens it
-// exercises deserve regression coverage.
-
-if (!MISSION_FILTER || MISSION_FILTER === 'M3') viewportsToRun.forEach(({ label, w, h }) => {
-  describe(`M3 tutorial steps and launch — ${label} (${w}×${h})`, () => {
-    beforeEach(() => cy.viewport(w, h))
-
-    it('clears all M3 coach steps, mines the pickup site, and heads for the delivery target', () => {
-      visitHub({
-        tutorial: true,
-        doneSteps: { ...M1_DONE_STEPS, 20: true, 21: true, 22: true },
-        player: basePlayer({
-          missionsDone: 2,
-          missionCount: 2,
-          francs: 9_000_000_000,
-        }),
-        rocket: { chassis: 'hull-mk2', propulsion: 'fusion-b2', drill: 'hand-drill' },
-      })
-      playM3ToDeliveryLeg()
+      playTransport()
     })
   })
 })

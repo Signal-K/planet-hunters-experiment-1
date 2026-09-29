@@ -22,10 +22,10 @@ describe('scene scope', () => {
   })
 
   it('matches a fixed-target mission only at its pickup body', () => {
-    const mission = MISSIONS.find(candidate => candidate.targetId === 'bennu')
+    const mission = MISSIONS.find(candidate => candidate.id === 'lnm_relay_psyche_ceres')
     expect(mission).toBeDefined()
-    expect(missionMatchesSceneScope(mission!, { kind: 'body', id: 'bennu', label: '101955 Bennu' }, TARGETS)).toBe(true)
-    expect(missionMatchesSceneScope(mission!, { kind: 'body', id: 'vesta', label: '4 Vesta' }, TARGETS)).toBe(false)
+    expect(missionMatchesSceneScope(mission!, { kind: 'body', id: 'psyche', label: '16 Psyche' }, TARGETS)).toBe(true)
+    expect(missionMatchesSceneScope(mission!, { kind: 'body', id: 'ceres', label: '1 Ceres' }, TARGETS)).toBe(false)
   })
 
   it('does not narrow onboarding, even when a body scope is present', () => {
