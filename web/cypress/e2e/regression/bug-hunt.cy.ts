@@ -4,9 +4,27 @@
  */
 
 import type { GameState } from '@/game-context'
+import { seedFixtureSession } from '../../support/authenticated-fixture'
 
 const STORAGE_KEY = 'landnam-game-state-v1'
-const GUEST_KEY = 'landnam-account-credentials'
+// A signed-in player's save lives in the account slot (seedFixtureSession's user).
+const ACCOUNT_STORAGE_KEY = `${STORAGE_KEY}:user:e2e-fixture-user`
+const CONTRACT_STEP = '[data-testid="mission-setup-scaffold"][data-step="1"]'
+const HUB_TITLE = /^(Base|Earth Base)$/
+
+/** A signed-in reload always lands on Earth Base (initial-route.ts); open
+ *  the contract board from there the way a player does. */
+function openContracts() {
+  cy.contains('h1', HUB_TITLE, { timeout: 8000 }).should('be.visible')
+  cy.get('[data-testid="bottom-tab-missions"]').click()
+  cy.get(CONTRACT_STEP, { timeout: 8000 }).should('be.visible')
+}
+
+/** Authorise the teardown and skip its Pixi scrap sequence (KES-348). */
+function teardownVehicle() {
+  cy.get('[data-testid="resolve-cargo-btn"]').click()
+  cy.get('[data-testid="scrap-sequence-skip-btn"]', { timeout: 10000 }).click()
+}
 const SURVEY_KEY = 'landnam-surveys-shown'
 
 const ALL_SURVEYS = [
@@ -18,15 +36,14 @@ const ALL_SURVEYS = [
 
 const SNOOZE_KEY = 'landnam-upgrade-prompt-snooze-until'
 const FAR_FUTURE = String(Date.now() + 365 * 24 * 60 * 60 * 1000)
-const GUEST = JSON.stringify({ email: 'e2e@example.com', password: 'e2e-guest-test' })
 
 function baseLoad(extra: Record<string, string> = {}) {
   return (win: Window) => {
     win.localStorage.clear()
-    win.localStorage.setItem(GUEST_KEY, GUEST)
     win.localStorage.setItem(SNOOZE_KEY, FAR_FUTURE)
     win.localStorage.setItem(SURVEY_KEY, JSON.stringify(ALL_SURVEYS))
     for (const [k, v] of Object.entries(extra)) win.localStorage.setItem(k, v)
+    seedFixtureSession(win)
   }
 }
 
@@ -91,12 +108,11 @@ describe('Bug hunt — edge cases', () => {
         tutorial: false,
       }) }),
     })
-    cy.contains('Returned', { timeout: 8000 }).should('be.visible')
-    // Onboarding missions (missionsDone < 3) auto-resolve on mount — see
-    // DebriefScreen.tsx — so there's no resolve step to click here.
-    cy.get('[data-testid="resolve-cargo-btn"]').should('not.exist')
-    // Payout might be 0 but UI should not crash
-    cy.contains('Francs Earned').should('be.visible')
+    cy.contains('RETURNED FROM', { timeout: 8000 }).should('be.visible')
+    cy.contains('Order incomplete').should('be.visible')
+    // Every debrief asks for an explicit teardown first (KES-348).
+    teardownVehicle()
+    // Nothing is paid for an incomplete order, but the player can still leave.
     cy.get('[data-testid="collect-reward-btn"]').should('be.visible').click()
     cy.contains('h1', /^(Base|Earth Base)$/, { timeout: 8000 }).should('be.visible')
   })
@@ -108,7 +124,7 @@ describe('Bug hunt — edge cases', () => {
         screen: 'debrief',
         missionId: 'generated-s1-starter-bulk-1',
         targetId: 'eros',
-        lastCargo: { iron: 4, silicon: 2 },
+        lastCargo: { platinum: 5 },
         tutorial: false,
         player: {
           francs: 0,
@@ -120,12 +136,12 @@ describe('Bug hunt — edge cases', () => {
         },
       }) }),
     })
-    cy.get('[data-testid="resolve-cargo-btn"]').should('not.exist')
+    teardownVehicle()
     cy.get('[data-testid="collect-reward-btn"]').click()
     cy.contains('h1', /^(Base|Earth Base)$/, { timeout: 8000 }).should('be.visible')
     // Should not crash and state should not have negative francs
     cy.window().then(win => {
-      const state = JSON.parse(win.localStorage.getItem(STORAGE_KEY) || '{}') as GameState
+      const state = JSON.parse(win.localStorage.getItem(ACCOUNT_STORAGE_KEY) || '{}') as GameState
       expect(state.player.francs).to.be.at.least(0)
     })
   })
@@ -149,16 +165,17 @@ describe('Bug hunt — edge cases', () => {
   it('navigating back from target picker does not corrupt mission state', () => {
     cy.visit('/game', {
       onBeforeLoad: baseLoad({ [STORAGE_KEY]: stateWith({
-        screen: 'targets',
-        missionId: 'generated-s1-starter-bulk-1',
+        screen: 'hub',
         tutorial: false,
       }) }),
     })
-    cy.contains('Pick Target', { timeout: 8000 }).should('be.visible')
-    cy.get('[data-testid="top-bar-back"]').click()
-    cy.contains('Mission Board', { timeout: 8000 }).should('be.visible')
+    openContracts()
+    cy.get('[data-testid="mission-accept-generated-s1-starter-bulk-1"]').click()
+    cy.get('[data-testid="mission-target-map"]', { timeout: 8000 }).should('be.visible')
+    cy.get('[data-testid="mission-setup-scaffold"] button[aria-label="Back"]').click()
+    cy.get(CONTRACT_STEP, { timeout: 8000 }).should('be.visible')
     // Mission should still be selectable after back navigation
-    cy.get('[data-testid="mission-card-generated-s1-starter-bulk-1"]').scrollIntoView().should('be.visible')
+    cy.get('[data-testid="mission-accept-generated-s1-starter-bulk-1"]').should('be.visible').and('not.be.disabled')
   })
 
   // ─── 5. State repair: loading with targets screen but no missionId ────────────
@@ -172,12 +189,17 @@ describe('Bug hunt — edge cases', () => {
         player: { placed: ['launchpad'], missionsDone: 0, francs: 10_000_000_000 },
       }) }),
     })
-    // Should repair to missions screen since no mission context
-    cy.contains('Mission Board', { timeout: 8000 }).should('be.visible')
+    // With no mission context the reload repairs to Earth Base, not a
+    // broken target step.
+    cy.contains('h1', HUB_TITLE, { timeout: 8000 }).should('be.visible')
+    cy.get('[data-testid="mission-target-map"]').should('not.exist')
   })
 
-  // ─── 6. Client streak: 2 missions → cooldown appears, 3rd client available ──
-  it('client cooldown shows after 2 missions and other clients remain available', () => {
+  // ─── 6. Retired client cooldowns: a stored cooldown no longer hides work ──
+  // The Free Ops board is the catalog of client work; per-client cooldown
+  // gates were removed on purpose (useMissionRelayModels). An old save that
+  // still carries a cooldown must not hide that client's contracts.
+  it('a stored client cooldown from an old save does not hide that client', () => {
     const thirtyMinutesFromNow = Date.now() + 30 * 60 * 1000
     cy.visit('/game', {
       onBeforeLoad: baseLoad({ [STORAGE_KEY]: stateWith({
@@ -195,11 +217,9 @@ describe('Bug hunt — edge cases', () => {
         },
       }) }),
     })
-    cy.contains('EARTH BASE · FREE OPS', { timeout: 8000 }).should('be.visible')
-    // Helios on cooldown: no Helios mission cards shown in legacy freeops mode (filtered out)
-    cy.get('[data-testid^="mission-card-freeops-helios-propulsion-depot"]').should('not.exist')
-    // Other clients' missions still show
-    cy.contains('Atlas Aggregate', { timeout: 10000 }).scrollIntoView().should('be.visible')
+    openContracts()
+    cy.get('[data-testid="mission-board-section-client"]').should('contain', 'Helios Propulsion Depot')
+    cy.get('[data-testid^="mission-accept-"]').should('not.be.disabled')
   })
 
   // ─── 7. Transit → back does not softlock the player ──────────────────────────
@@ -234,11 +254,11 @@ describe('Bug hunt — edge cases', () => {
         player: { placed: ['launchpad'], missionsDone: 0, francs: 10_000_000_000 },
       }) }),
     })
-    cy.contains('Mission Board', { timeout: 8000 }).should('be.visible')
-    // Double-click the same mission card
-    cy.get('[data-testid="mission-card-generated-s1-starter-bulk-1"]').dblclick({ force: true })
+    openContracts()
+    // Double-click the same contract
+    cy.get('[data-testid="mission-accept-generated-s1-starter-bulk-1"]').dblclick({ force: true })
     // Should still navigate correctly (not crash or go to wrong screen)
-    cy.contains('Pick Target', { timeout: 8000 }).should('be.visible')
+    cy.get('[data-testid="mission-target-map"]', { timeout: 8000 }).should('be.visible')
   })
 
   // ─── 9. Screen guard: mining screen without mission context redirects ─────────
@@ -252,8 +272,10 @@ describe('Bug hunt — edge cases', () => {
         player: { placed: ['launchpad'], missionsDone: 0, francs: 10_000_000_000 },
       }) }),
     })
-    // repair should redirect to missions
-    cy.contains('Mission Board', { timeout: 8000 }).should('be.visible')
+    // With no mission context the reload repairs to Earth Base, not a
+    // mining screen with nothing to mine.
+    cy.contains('h1', HUB_TITLE, { timeout: 8000 }).should('be.visible')
+    cy.get('[data-testid="mining-canvas"]').should('not.exist')
   })
 
   // ─── 10. Refinery: attempt to queue without having built the refinery ─────────
@@ -295,7 +317,7 @@ describe('Bug hunt — edge cases', () => {
     cy.visit('/game', { onBeforeLoad: baseLoad({ [STORAGE_KEY]: legacySaveState }) })
     cy.get('[data-testid="building-launchpad"]', { timeout: 8000 })
       .should('have.attr', 'style')
-      .and('match', /left:\s*calc\(14\.925[34]/)
+      .and('match', /left:\s*clamp\(\d+px,\s*14\.925[34]%/)
   })
 
   it('legacy pre-placementPlots save renders launchpad at plot 0 (desktop)', () => {
@@ -303,6 +325,6 @@ describe('Bug hunt — edge cases', () => {
     cy.visit('/game', { onBeforeLoad: baseLoad({ [STORAGE_KEY]: legacySaveState }) })
     cy.get('[data-testid="building-launchpad"]', { timeout: 8000 })
       .should('have.attr', 'style')
-      .and('match', /left:\s*calc\(14\.925[34]/)
+      .and('match', /left:\s*clamp\(\d+px,\s*14\.925[34]%/)
   })
 })

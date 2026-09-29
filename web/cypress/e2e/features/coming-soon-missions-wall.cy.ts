@@ -7,8 +7,7 @@
 // click-through to a broken/unbuilt feature).
 
 import type { GameState } from '@/game-context'
-
-const STORAGE_KEY = 'landnam-game-state-v1'
+import { seedAuthenticatedFixture } from '../../support/authenticated-fixture'
 
 function basePlayer(overrides: Partial<GameState['player']> = {}): GameState['player'] {
   return {
@@ -51,8 +50,7 @@ function visitMissionBoard(playerOverrides: Partial<GameState['player']> = {}) {
 
   cy.visit('/game/missions', {
     onBeforeLoad(win) {
-      win.localStorage.setItem(STORAGE_KEY, JSON.stringify(full))
-      win.localStorage.setItem('landnam-account-credentials', JSON.stringify({ email: 'e2e@example.com', password: 'e2e-guest-test' }))
+      seedAuthenticatedFixture(win, full)
     },
   })
 }

@@ -1,6 +1,7 @@
 // E2E tests for M3 transport-client pick and post-onboarding Free Ops.
 
 import type { GameState } from '@/game-context'
+import { seedFixtureSession, showContract } from '../../support/authenticated-fixture'
 
 const STORAGE_KEY = 'landnam-game-state-v1'
 
@@ -38,10 +39,13 @@ function visitWithState(state: Partial<GameState>) {
     popup: null,
     menuOpen: false,
   }
-  cy.visit('/game', {
+  // /game always resumes to Earth Base; the board is opened from there
+  // (openContracts), and in-flight screens resume from their own route.
+  const screen = (state.screen ?? base.screen) === 'missions' ? 'hub' : (state.screen ?? base.screen)
+  cy.visit(`/game/${screen}`, {
     onBeforeLoad(win) {
-      win.localStorage.setItem(STORAGE_KEY, JSON.stringify({ ...base, ...state }))
-      win.localStorage.setItem('landnam-account-credentials', JSON.stringify({ email: 'e2e@example.com', password: 'e2e-guest-test' }))
+      win.localStorage.setItem(STORAGE_KEY, JSON.stringify({ ...base, ...state, screen }))
+      seedFixtureSession(win)
       // Unset, TutorialCompleteSheet (components/game/TutorialCompleteSheet.tsx)
       // full-screens over the hub the first time missionsDone crosses the
       // onboarding threshold, which is exactly the transition the M3 reward
@@ -52,15 +56,21 @@ function visitWithState(state: Partial<GameState>) {
   })
 }
 
+function openContracts() {
+  cy.contains('h1', /^(Base|Earth Base)$/, { timeout: 10000 }).should('be.visible')
+  cy.get('[data-testid="bottom-tab-missions"]').click()
+  cy.get('[data-testid="mission-board-section-client"]', { timeout: 10000 }).should('be.visible')
+}
+
 describe('M3 — Transport client pick and Free Ops unlock', () => {
   describe('Mission board — M3 availability', () => {
     it('shows both M3 transport-client mission cards when missionsDone === 2', () => {
       visitWithState({ screen: 'missions' })
-      cy.contains('Belt Courier Run').scrollIntoView().should('be.visible')
-      cy.contains('Nickel Line Handoff').scrollIntoView().should('be.visible')
-      cy.get('[data-testid="mission-card-lnm_m3_relay_bennu_vesta"]').scrollIntoView().should('be.visible')
-      cy.get('[data-testid="mission-card-lnm_m3_relay_itokawa_eros"]').scrollIntoView().should('be.visible')
-      cy.contains('Client Request').should('not.exist')
+      openContracts()
+      showContract('lnm_m3_relay_bennu_vesta').should('be.visible')
+      cy.get('[data-testid="mission-board-section-client"]').should('contain', 'Belt Courier Run')
+      showContract('lnm_m3_relay_itokawa_eros').should('be.visible')
+      cy.get('[data-testid="mission-board-section-client"]').should('contain', 'Nickel Line Handoff')
     })
 
     it('shows post-onboarding holding screen when missionsDone >= 1 and no missions available', () => {
@@ -99,9 +109,10 @@ describe('M3 — Transport client pick and Free Ops unlock', () => {
   describe('M3 transport mission — preset route', () => {
     it('picking an M3 mission skips the target picker and goes straight to rocket-buy', () => {
       visitWithState({ screen: 'missions' })
-      cy.get('[data-testid="mission-card-lnm_m3_relay_bennu_vesta"]').scrollIntoView().click()
-      cy.contains('Select Rocket', { timeout: 8000 }).should('be.visible')
-      cy.contains('Pick Target').should('not.exist')
+      openContracts()
+      showContract('lnm_m3_relay_bennu_vesta').click()
+      cy.get('[data-testid="mission-rocket-blueprint"]', { timeout: 8000 }).should('be.visible')
+      cy.get('[data-testid="mission-target-map"]').should('not.exist')
     })
 
     it('fab screen for M3 keeps mining drill installed', () => {
@@ -136,36 +147,42 @@ describe('M3 — Transport client pick and Free Ops unlock', () => {
         targetId: 'bennu',
         lastCargo: { iron: 3, carbon: 2 },
       })
-      // Onboarding missions (missionsDone < 3, which M3 still is) auto-resolve
-      // on mount — see DebriefScreen.tsx.
-      cy.get('[data-testid="resolve-cargo-btn"]').should('not.exist')
+      // Every debrief asks for an explicit vehicle teardown first (KES-348).
+      cy.get('[data-testid="resolve-cargo-btn"]').click()
+      cy.get('[data-testid="scrap-sequence-skip-btn"]', { timeout: 10000 }).click()
       cy.get('[data-testid="collect-reward-btn"]').click()
       cy.get('[role="dialog"][aria-label="Territory established"]').should('not.exist')
       // Completing M3 raises the persisted TutorialCompleteSheet before the
       // Hub's navigation is actionable. Dismiss the real product modal rather
       // than forcing a covered bottom-tab click.
-      cy.contains('button', 'Start Playing', { timeout: 10000 }).click()
+      cy.contains('button', 'START MY PROGRAM', { timeout: 10000 }).click()
+      cy.contains('button', 'USE FREE-FORM PROGRAM').click()
       // Debrief routes back to the Hub (not the Market screen) — navigate to
-      // the mission board from there to see the Free Ops explanation.
-      cy.contains('h1', /^(Base|Earth Base)$/, { timeout: 10000 }).should('be.visible')
-      cy.get('[data-testid="bottom-tab-missions"]').click()
+      // the mission board from there.
+      openContracts()
       // The M3 relay run is itself a client mission (Bennu -> Vesta transport
       // for Atlas Aggregate), so completing it already satisfies
       // MissionBoardScreen's `hasPriorFreeOpsExperience` check — the
       // one-time "Custom Missions Unlocked" explainer correctly stays
       // suppressed (see its comment: anyone who's completed a client
       // mission has plainly already seen how Free Ops works). What this
-      // test actually needs to prove is that Free Ops itself is live.
-      cy.contains('FREE OPS', { timeout: 10000 }).should('be.visible')
-      cy.contains('Client Requests', { matchCase: false }).should('be.visible')
+      // test actually needs to prove is that Free Ops itself is live: the
+      // board is the open client catalog, no longer the two M3 options.
+      cy.get('[data-testid^="mission-accept-"]').should('not.be.disabled')
+      cy.get('[data-testid="mission-board-section-client"]').should('contain', 'CONTRACT 1 /')
+      cy.window().should(win => {
+        const saved = JSON.parse(win.localStorage.getItem(`${STORAGE_KEY}:user:e2e-fixture-user`) ?? '{}')
+        expect(saved.player?.freeOperations).to.eq(true)
+      })
     })
   })
 
-  describe('Post-M3 holding screen', () => {
-    it('shows Training Arc Complete when board is empty (missionsDone beyond static catalog)', () => {
-      // Static offline catalog has generated missions up to sequence 4.
-      // missionsDone=4 → sequence=5 → board empty → holding screen shows.
-      // (In production, PB catalog only has 3 onboarding sequences, so this fires after M3.)
+  describe('After M3', () => {
+    it('opens the Free Ops client catalog instead of an empty onboarding board', () => {
+      // The old "Training Arc Complete" holding screen lived on the retired
+      // MissionBoardScreen and could only show for !freeOperations with
+      // missionsDone >= 3, which normalizeState now makes impossible: past
+      // M3 the player is always in Free Ops and the board is never empty.
       visitWithState({
         screen: 'missions',
         player: {
@@ -191,8 +208,8 @@ describe('M3 — Transport client pick and Free Ops unlock', () => {
           clientTerritories: {},
         },
       })
-      cy.contains('Training Arc Complete').should('be.visible')
-      cy.contains('Three Operations Down').should('be.visible')
+      openContracts()
+      cy.get('[data-testid^="mission-accept-"]').should('be.visible').and('not.be.disabled')
     })
   })
 

@@ -1,4 +1,5 @@
 import type { GameState } from '@/game-context'
+import { seedFixtureSession } from '../../support/authenticated-fixture'
 
 const STORAGE_KEY = 'landnam-game-state-v1'
 
@@ -40,7 +41,7 @@ function visitRoverMining() {
   cy.visit('/game/rover-mining', {
     onBeforeLoad(win) {
       win.localStorage.setItem(STORAGE_KEY, JSON.stringify(state))
-      win.localStorage.setItem('landnam-account-credentials', JSON.stringify({ email: 'e2e@example.com', password: 'e2e-guest-test' }))
+      seedFixtureSession(win)
     },
   })
 }
@@ -49,7 +50,7 @@ describe('Sprint 13 rover visual polish (KES-166)', () => {
   it('loads the playable TakeOn rover scene', () => {
     visitRoverMining()
 
-    cy.contains('Rover Mining', { timeout: 10000 }).should('be.visible')
+    cy.get('[data-testid="rover-mining-screen"]', { timeout: 10000 }).should('be.visible')
     cy.get('[data-testid="rover-mining-screen"] canvas[aria-label]', { timeout: 10000 }).should('be.visible')
   })
 })

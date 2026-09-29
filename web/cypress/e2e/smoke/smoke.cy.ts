@@ -1,3 +1,5 @@
+import { seedAuthenticatedFixture } from '../../support/authenticated-fixture'
+
 describe('Smoke — Landnam', () => {
   const dailyPoolMission = (
     client: string,
@@ -29,9 +31,7 @@ describe('Smoke — Landnam', () => {
     const screen = typeof state.screen === 'string' ? state.screen : 'hub'
     cy.visit(`/game/${screen}`, {
       onBeforeLoad(win) {
-        win.localStorage.setItem('landnam-game-state-v1', JSON.stringify(state))
-        // Suppress AuthGateSheet so it doesn't cover interactive elements
-        win.localStorage.setItem('landnam-account-credentials', JSON.stringify({ email: 'e2e@example.com', password: 'e2e-guest-test' }))
+        seedAuthenticatedFixture(win, state)
       },
     })
   }

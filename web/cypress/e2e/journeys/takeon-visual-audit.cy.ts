@@ -22,6 +22,7 @@
 // test below is the reproducible geometry check that finding asked for.
 
 import type { GameState } from '@/game-context'
+import { seedFixtureSession } from '../../support/authenticated-fixture'
 
 const STORAGE_KEY = 'landnam-game-state-v1'
 
@@ -72,7 +73,7 @@ function visitWithState(path: string, state: Partial<GameState>) {
       // does — the offline auth stub in cypress/support/e2e.ts always
       // resolves to this guest identity regardless of the credentials'
       // actual values.
-      win.localStorage.setItem('landnam-account-credentials', JSON.stringify({ email: 'e2e@example.com', password: 'e2e-guest-test' }))
+      seedFixtureSession(win)
     },
   })
 }

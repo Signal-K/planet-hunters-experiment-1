@@ -1,4 +1,5 @@
 import type { GameState } from '@/game-context'
+import { seedFixtureSession } from '../../support/authenticated-fixture'
 
 const STORAGE_KEY = 'landnam-game-state-v1'
 const EPOCH = 1_800_000_000_000
@@ -47,7 +48,7 @@ function visitTransit(now = EPOCH, elapsedMs = 0, useClock = true) {
   cy.visit('/game/transit', {
     onBeforeLoad(win) {
       win.localStorage.setItem(STORAGE_KEY, JSON.stringify(transitState(now, elapsedMs)))
-      win.localStorage.setItem('landnam-account-credentials', JSON.stringify({ email: 'e2e@example.com', password: 'e2e-guest-test' }))
+      seedFixtureSession(win)
     },
   })
   cy.contains('MISSION TRANSIT', { timeout: 15000 }).should('be.visible')
@@ -72,7 +73,7 @@ function visitTutorialTransit(now = EPOCH, elapsedMs = 0) {
   cy.visit('/game/transit', {
     onBeforeLoad(win) {
       win.localStorage.setItem(STORAGE_KEY, JSON.stringify(tutorialTransitState(now, elapsedMs)))
-      win.localStorage.setItem('landnam-account-credentials', JSON.stringify({ email: 'e2e@example.com', password: 'e2e-guest-test' }))
+      seedFixtureSession(win)
     },
   })
   cy.contains('MISSION TRANSIT', { timeout: 15000 }).should('be.visible')
@@ -104,30 +105,35 @@ describe('Transit wall-clock continuity', () => {
   it('keeps the same travel position after the transit screen remounts', () => {
     const now = Date.now()
     visitTransit(now, 45_000, false)
-    cy.get('.transit-readout').invoke('attr', 'data-transit-progress').then(value => {
-      expect(Number(value)).to.be.within(35, 45)
+    cy.get('.transit-readout').should($readout => {
+      expect(Number($readout.attr('data-transit-progress'))).to.be.within(35, 45)
     })
 
     cy.reload()
     cy.contains('MISSION TRANSIT', { timeout: 15000 }).should('be.visible')
-    cy.get('.transit-readout').invoke('attr', 'data-transit-progress').then(value => {
-      expect(Number(value)).to.be.within(35, 50)
+    cy.get('.transit-readout').should($readout => {
+      expect(Number($readout.attr('data-transit-progress'))).to.be.within(35, 50)
     })
-    // Reload latency can consume the boundary second; the persisted wall
-    // clock is the contract, not one exact painted frame.
-    cy.get('.transit-readout').invoke('text').should('match', /01:1[45]/)
+    // The persisted wall clock is the contract, not one exact painted frame:
+    // reload latency (seconds on a cold dev server) keeps counting down, but
+    // the ETA must never restart from the full 02:00 leg.
+    cy.get('.transit-readout').should($readout => {
+      const [, minutes, seconds] = $readout.text().match(/ETA(\d{2}):(\d{2})/) ?? []
+      const remaining = Number(minutes) * 60 + Number(seconds)
+      expect(remaining, 'seconds remaining after remount').to.be.within(30, 75)
+    })
   })
 
   it('keeps tutorial flight progress after the transit screen remounts', () => {
     visitTutorialTransit(EPOCH, 2_200)
-    cy.get('.transit-readout').invoke('attr', 'data-transit-progress').then(value => {
-      expect(Number(value)).to.be.within(50, 60)
+    cy.get('.transit-readout').should($readout => {
+      expect(Number($readout.attr('data-transit-progress'))).to.be.within(50, 60)
     })
 
     cy.reload()
     cy.contains('MISSION TRANSIT', { timeout: 15000 }).should('be.visible')
-    cy.get('.transit-readout').invoke('attr', 'data-transit-progress').then(value => {
-      expect(Number(value)).to.be.within(50, 60)
+    cy.get('.transit-readout').should($readout => {
+      expect(Number($readout.attr('data-transit-progress'))).to.be.within(50, 60)
     })
   })
 })

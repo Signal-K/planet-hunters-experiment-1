@@ -3,7 +3,6 @@ describe('Email account persistence (KES-49 / KES-97)', () => {
   const landnamPbUrl = Cypress.env('LANDNAM_PB_URL') || Cypress.env('POCKETBASE_URL') || 'http://localhost:8091'
   const PB_AUTH_KEY = 'pocketbase_auth'
   const LANDNAM_AUTH_KEY = 'pocketbase_auth_landnam'
-  const ACCOUNT_CREDENTIALS_KEY = 'landnam-account-credentials'
   const STORAGE_KEY = 'landnam-game-state-v1'
 
   let createdUserId: string | undefined
@@ -46,7 +45,6 @@ describe('Email account persistence (KES-49 / KES-97)', () => {
           win.localStorage.clear()
           win.localStorage.setItem(PB_AUTH_KEY, JSON.stringify({ token: sharedToken, record: { id: createdUserId, email } }))
           win.localStorage.setItem(LANDNAM_AUTH_KEY, JSON.stringify(landnamAuth))
-          win.localStorage.setItem(ACCOUNT_CREDENTIALS_KEY, JSON.stringify({ email, password }))
           win.localStorage.setItem(STORAGE_KEY, JSON.stringify({ screen: 'hub', tutorial: false }))
         },
       })
@@ -56,7 +54,6 @@ describe('Email account persistence (KES-49 / KES-97)', () => {
     cy.get('[data-testid="auth-gate-quick-email"]').should('not.exist')
     cy.window().then(win => {
       expect(JSON.parse(win.localStorage.getItem(PB_AUTH_KEY) || '{}').record.email).to.eq(email)
-      expect(JSON.parse(win.localStorage.getItem(ACCOUNT_CREDENTIALS_KEY) || '{}').email).to.eq(email)
     })
   })
 })

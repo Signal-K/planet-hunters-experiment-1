@@ -3,6 +3,7 @@
 // *types* — which TypeScript erases before webpack ever tries to resolve them.
 // This is the one spec importing a runtime value, so it is the one that broke.
 import { SURVEY_DEFS } from '../../../lib/survey-defs'
+import { seedFixtureSession } from '../../support/authenticated-fixture'
 
 const STORAGE_KEY = 'landnam-game-state-v1'
 const SURVEY_STORAGE_KEY = 'landnam-surveys-shown'
@@ -68,7 +69,7 @@ function visitGame() {
     onBeforeLoad(win) {
       win.localStorage.setItem(STORAGE_KEY, JSON.stringify(baseState))
       win.localStorage.removeItem(SURVEY_STORAGE_KEY)
-      win.localStorage.setItem('landnam-account-credentials', JSON.stringify({ email: 'e2e@example.com', password: 'e2e-guest-test' }))
+      seedFixtureSession(win)
       win.localStorage.setItem('landnam-upgrade-prompt-snooze-until', String(Date.now() + 365 * 24 * 60 * 60 * 1000))
     },
   })

@@ -1,9 +1,7 @@
 import type { GameState } from '../../../game-context'
+import { seedAuthenticatedFixture } from '../../support/authenticated-fixture'
 
-const STORAGE_KEY = 'landnam-game-state-v1'
-const GUEST_KEY = 'landnam-account-credentials'
 const TUTORIAL_ACK_KEY = 'ln_tutorial_complete_ack'
-const GUEST = JSON.stringify({ email: 'e2e@example.com', password: 'e2e-guest-test' })
 
 const POST_TUTORIAL: Partial<GameState> = {
   screen: 'hub', tutorial: false, doneSteps: {},
@@ -26,9 +24,8 @@ const ACTIVE_RUN: Partial<GameState> = {
 function visitHub(state: Partial<GameState> = POST_TUTORIAL) {
   cy.visit('/game', { onBeforeLoad(win) {
     win.localStorage.clear()
-    win.localStorage.setItem(GUEST_KEY, GUEST)
     win.localStorage.setItem(TUTORIAL_ACK_KEY, '1')
-    win.localStorage.setItem(STORAGE_KEY, JSON.stringify(state))
+    seedAuthenticatedFixture(win, state)
   } })
 }
 

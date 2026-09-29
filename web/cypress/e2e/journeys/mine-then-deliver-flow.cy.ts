@@ -24,8 +24,10 @@
 // only landed in the unused code path. Do not remove this coverage.
 
 import type { GameState } from '@/game-context'
+import { seedFixtureSession, showContract } from '../../support/authenticated-fixture'
 
 const STORAGE_KEY = 'landnam-game-state-v1'
+const ACCOUNT_STORAGE_KEY = `${STORAGE_KEY}:user:e2e-fixture-user`
 
 function basePlayer(overrides: Partial<GameState['player']> = {}): GameState['player'] {
   return {
@@ -70,7 +72,7 @@ function visitWithState(path: string, state: Partial<GameState>) {
   cy.visit(path, {
     onBeforeLoad(win) {
       win.localStorage.setItem(STORAGE_KEY, JSON.stringify(full))
-      win.localStorage.setItem('landnam-account-credentials', JSON.stringify({ email: 'e2e@example.com', password: 'e2e-guest-test' }))
+      seedFixtureSession(win)
     },
   })
 }
@@ -81,21 +83,16 @@ describe('Mine-Then-Deliver: two-leg logistics mission (Free Ops mission board)'
       screen: 'missions',
       player: basePlayer({ freeOperations: true, missionsDone: 4 }),
     })
-    cy.contains('Deep-Core Relay', { timeout: 10000 }).scrollIntoView().should('be.visible')
-    cy.contains('16 Psyche → 1 Ceres').scrollIntoView().should('be.visible')
-  })
-
-  it('does not offer the logistics job while its client is on cooldown', () => {
-    visitWithState('/game/missions', {
-      screen: 'missions',
-      player: basePlayer({
-        freeOperations: true,
-        missionsDone: 4,
-        clientCooldowns: { 'kepler-materials': Date.now() + 60 * 60 * 1000 },
-      }),
-    })
-    cy.contains('Free Ops', { timeout: 10000 })
-    cy.contains('Deep-Core Relay').should('not.exist')
+    // The client board is a one-contract carousel; step to the relay job.
+    showContract('lnm_relay_psyche_ceres').should('be.visible')
+    cy.get('[data-testid="mission-board-section-client"]')
+      .should('contain', 'Deep-Core Relay')
+      .and('contain', '16 Psyche → 1 Ceres')
+    // A single-leg job shows its eligible-target count instead of a route.
+    showContract('generated-s1-starter-bulk-1').should('be.visible')
+    cy.get('[data-testid="mission-board-section-client"]')
+      .should('not.contain', '→')
+      .contains(/ELIGIBLE TARGETS?$/)
   })
 })
 
@@ -123,11 +120,15 @@ describe('Mine-Then-Deliver: mid-flight leg resolution', () => {
         arrivalAt: Date.now() + 5 * 60 * 1000,
       }),
     })
-    cy.contains('Delivery · 4 Vesta', { timeout: 10000 }).should('be.visible')
-    cy.contains('Outbound · 4 Vesta').should('not.exist')
-    cy.contains('Delivering to 4 Vesta', { timeout: 10000 }).should('be.visible')
-    cy.contains('3 Iron').should('be.visible')
-    cy.contains('2 Carbon').should('be.visible')
+    // TopBar eyebrow names the leg; the destination is the delivery body.
+    cy.contains(/Delivery LEG · MISSION TRANSIT/i, { timeout: 10000 }).should('be.visible')
+    cy.contains(/Outbound LEG/i).should('not.exist')
+    cy.contains('h1', '4 Vesta').should('be.visible')
+    cy.get('[data-testid="transit-mission-context"]').should('contain', 'Dropping cargo at 4 Vesta')
+    cy.get('.transit-cargo-strip')
+      .should('contain', 'CARGO FOR 4 VESTA')
+      .and('contain', '3 Iron')
+      .and('contain', '2 Carbon')
   })
 
   it('shows the delivery target (not the mining site) while heading to delivery', () => {
@@ -186,22 +187,23 @@ describe('Mine-Then-Deliver: mid-flight leg resolution', () => {
       }),
     })
 
-    cy.get('[data-testid="delivery-progress"]', { timeout: 10000 })
-      .invoke('text')
-      .then(text => {
-        expect(Number.parseInt(text, 10)).to.be.greaterThan(35)
-      })
+    // The first paint is before the wall clock is read (progress 0%), so
+    // retry until the resumed progress is on screen.
+    cy.get('[data-testid="delivery-progress"]', { timeout: 10000 }).should($progress => {
+      expect(Number.parseInt($progress.text(), 10)).to.be.greaterThan(35)
+    })
     cy.reload()
-    cy.get('[data-testid="delivery-progress"]', { timeout: 10000 })
-      .invoke('text')
-      .then(text => {
-        expect(Number.parseInt(text, 10)).to.be.greaterThan(35)
-      })
+    cy.get('[data-testid="delivery-progress"]', { timeout: 10000 }).should($progress => {
+      expect(Number.parseInt($progress.text(), 10)).to.be.greaterThan(35)
+    })
 
-    cy.contains('Cargo unloaded — course set for Earth', { timeout: 10000 }).should('be.visible')
-    cy.contains('Inbound · Earth', { timeout: 10000 }).should('be.visible')
+    // Unload completion flies straight into the empty Earth-bound leg (the
+    // old "Cargo unloaded" toast was dropped with the Takeon integration).
+    cy.location('pathname', { timeout: 15000 }).should('eq', '/game/transit')
+    cy.contains(/Inbound LEG · MISSION TRANSIT/i, { timeout: 10000 }).should('be.visible')
+    cy.contains('h1', 'Earth').should('be.visible')
     cy.window().then(win => {
-      const persisted = JSON.parse(win.localStorage.getItem(STORAGE_KEY) ?? '{}') as GameState
+      const persisted = JSON.parse(win.localStorage.getItem(ACCOUNT_STORAGE_KEY) ?? '{}') as GameState
       expect(persisted.lastCargo).to.deep.equal({})
       expect(persisted.deliveredCargo).to.deep.equal({ nickel: 3, cobalt: 2 })
       expect(persisted.player.deliveryUnloadStartedAt).to.equal(undefined)

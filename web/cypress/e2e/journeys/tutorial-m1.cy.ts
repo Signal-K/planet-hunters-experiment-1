@@ -1,11 +1,17 @@
+import { seedFixtureSession } from '../../support/authenticated-fixture'
+
 export {}
 // Full M1/M2/M3 tutorial play-through tests.
 //
 // These tests play the game as a real user would — they navigate using whatever
 // nav element is VISIBLE on screen, not by force-clicking hidden elements.
 //
-// Desktop (≥1024px): bottom tab bar is display:none; use sidebar-nav-* instead.
-// Mobile (<1024px):  sidebar is display:none; use bottom-tab-* directly.
+// Desktop (≥1024px): bottom tab bar is display:none; use the hub's own
+//                    desktop Missions action (the sidebar nav is retired).
+// Mobile (<1024px):  use bottom-tab-* directly.
+//
+// Mission setup is one routed scene at /game/missions: contract carousel,
+// target map, vehicle blueprint, then hangar assembly / launch review.
 //
 // Failure modes caught:
 //   - Tutorial coach pointing to a nav element that doesn't exist on this layout
@@ -71,13 +77,14 @@ function basePlayer(overrides: Record<string, unknown> = {}) {
 function suppressSurveys(win: Window) {
   win.localStorage.setItem(SURVEY_KEY, JSON.stringify(ALL_SURVEY_KEYS))
   win.localStorage.setItem(SNOOZE_KEY, String(Date.now() + 365 * 24 * 60 * 60 * 1000))
-  win.localStorage.setItem('landnam-account-credentials', JSON.stringify({ email: 'e2e@example.com', password: 'e2e-guest-test' }))
+  seedFixtureSession(win)
 }
 
 function visitHub(overrides: Record<string, unknown> = {}) {
   cy.visit('/game', {
     onBeforeLoad(win) {
-      suppressSurveys(win)
+      // Write the save before the session: seedFixtureSession mirrors it
+      // into the signed-in account's slot, which is what the game loads.
       win.localStorage.setItem(STORAGE_KEY, JSON.stringify({
         screen: 'hub',
         player: basePlayer(),
@@ -91,6 +98,7 @@ function visitHub(overrides: Record<string, unknown> = {}) {
         menuOpen: false,
         ...overrides,
       }))
+      suppressSurveys(win)
     },
   })
 }
@@ -98,78 +106,81 @@ function visitHub(overrides: Record<string, unknown> = {}) {
 // ─── Layout-aware nav helper ──────────────────────────────────────────────────
 //
 // This is the crux of the desktop bug: on mobile the bottom tab bar is
-// visible and the sidebar is hidden, and vice versa on desktop. Tests MUST
-// use the element the user can actually see.
+// visible, on desktop it is hidden. Tests MUST use the element the user can
+// actually see.
 
 function navToMissions() {
   cy.window().then(win => {
     const isDesktop = win.innerWidth >= 1024
     if (isDesktop) {
-      // The old always-on desktop sidebar nav (`.desktop-sidebar`,
-      // `sidebar-nav-missions`) was retired in favour of screen-embedded
-      // navigation — see globals.css's ".desktop-sidebar { display: none }"
-      // and the comment on `.hub-desktop-nav`. During an active tutorial
-      // coach (hasCoach true), the Launchpad's own "View Missions" callout
-      // is also suppressed (HubScreen.tsx), so the one nav element that's
-      // always present regardless of desktop/mobile or tutorial state is
-      // the Hub dock's desktop Missions action.
+      // The old always-on desktop sidebar nav (`sidebar-nav-missions`) was
+      // retired; the Hub dock's desktop Missions action is the entry point
+      // that is present regardless of tutorial state.
       cy.get('[data-testid="bottom-tab-missions"]').should('not.be.visible')
-      cy.contains('button', 'Missions').should('be.visible').click()
+      cy.get('[data-testid="hub-desktop-missions-btn"]').should('be.visible').click()
     } else {
       cy.get('[data-testid="bottom-tab-missions"]').should('be.visible').click()
     }
   })
-  cy.contains('Mission Board', { timeout: 8000 }).should('be.visible')
+  cy.get('[data-testid="mission-board-section-client"]', { timeout: 10000 }).should('be.visible')
 }
 
-function navToMarket() {
-  cy.window().then(win => {
-    const isDesktop = win.innerWidth >= 1024
-    if (isDesktop) {
-      cy.get('[data-testid="bottom-tab-market"]').should('not.be.visible')
-      cy.get('[data-testid="sidebar-nav-market"]').should('be.visible').click()
-    } else {
-      cy.get('[data-testid="bottom-tab-market"]').should('be.visible').click()
-    }
+function expectCoach(title: string) {
+  cy.get('[data-testid="tutorial-coach-block"]', { timeout: 10000 })
+    .should('be.visible')
+    .should('contain', title)
+}
+
+/** Tap a body on the target map at its own touch circle, as a finger would. */
+function pickTarget(targetId: string) {
+  cy.get(`[data-testid="target-${targetId}"]`).then($body => {
+    const group = $body[0].getBoundingClientRect()
+    const hit = $body.find('circle')[0].getBoundingClientRect()
+    cy.wrap($body).click(hit.left + hit.width / 2 - group.left, hit.top + hit.height / 2 - group.top)
   })
-  cy.contains('Commodity Exchange', { timeout: 8000 }).should('be.visible')
+}
+
+/** Hangar assembly → roll out → launch → (dev) skip the Pixi launch scene. */
+function rollOutAndLaunch() {
+  cy.get('[data-testid="mission-launch-review"]', { timeout: 10000 }).should('have.attr', 'data-location', 'hangar')
+  cy.get('[data-testid="transfer-to-launchpad-btn"]').should('be.visible').click()
+  cy.get('[data-testid="mission-launch-review"]').should('have.attr', 'data-location', 'launchpad')
+  cy.get('[data-testid="launch-btn"]').should('be.visible').click()
+  // DEV-only skip for the Pixi launch sequence (same trade-off as mining below).
+  cy.get('[data-testid="launch-sequence-skip-btn"]', { timeout: 10000 }).click()
+  cy.location('pathname', { timeout: 15000 }).should('eq', '/game/transit')
+  cy.contains(/MISSION TRANSIT/i).should('be.visible')
 }
 
 // ─── Mining play-through (same on mobile/desktop) ─────────────────────────────
 
 // `mineReal=true` (CYPRESS_mineReal env var) plays the actual firing
-// minigame — slow and, even after fixing MiningScreen's onboarding charge
-// budget (30→80, KES-<n>), still bottlenecked by real ore-transit timing
-// (ore sweeps through the firing zone in bursts with multi-second gaps) and
-// by Cypress retrying the ENTIRE test from scratch on failure, not just the
-// mining step. Default is the DEV-only "Skip Mining" shortcut
+// minigame — slow and bottlenecked by real ore-transit timing (ore sweeps
+// through the firing zone in bursts with multi-second gaps) and by Cypress
+// retrying the ENTIRE test from scratch on failure, not just the mining
+// step. Default is the DEV-only "Skip Mining" shortcut
 // (`dev-skip-mining-btn`, MiningScreen.tsx, NODE_ENV==='development' only) —
 // fills the order instantly. This is a deliberate trade-off for recording/CI
-// reliability, not a claim that real mining is unplayable; a human player
-// isn't bound by Cypress's whole-test retry cost on one failed attempt.
+// reliability, not a claim that real mining is unplayable.
 const MINE_REAL = Cypress.env('mineReal') === true || Cypress.env('mineReal') === 'true'
 
 function completeMining() {
-  // Launch animation is 8.5s — allow 15s for the animation to complete and transit to appear
-  cy.contains('MISSION TRANSIT', { timeout: 15000 }).should('be.visible')
+  // Onboarding transit is a short timed flight that lands on the mining scene.
+  cy.location('pathname', { timeout: 20000 }).should('eq', '/game/mining')
   cy.get('[data-testid="mining-canvas"]', { timeout: 20000 }).should('be.visible')
 
   if (!MINE_REAL) {
     cy.get('[data-testid="dev-skip-mining-btn"]', { timeout: 8000 }).should('be.visible').click()
     // The development shortcut fills the order and calls onComplete directly;
     // it intentionally bypasses the real player's Return/Deliver button.
-    cy.contains('MISSION TRANSIT', { timeout: 15000 }).should('be.visible')
+    cy.location('pathname', { timeout: 15000 }).should('eq', '/game/transit')
     return
   }
 
   // Firing doesn't guarantee a hit — the laser only collects ore that's swept
-  // through the firing zone at that instant (real-time collision, not per-click).
-  // Blind-firing on a fixed interval regardless of ore position was unreliable
-  // (could exhaust laser charges — "Laser Depleted" — well before the order
-  // filled, since most shots landed while no ore was in range). MiningScreen
-  // exposes a `data-ore-near` attribute (the same signal that drives the
-  // tutorial-coach pulse ring) — poll it and only fire while it's true, same
-  // as how a player would time shots by watching the pulse.
+  // through the firing zone at that instant. MiningScreen exposes a
+  // `data-ore-near` attribute (the same signal that drives the coach pulse
+  // ring) — poll it and only fire while it's true, as a player times shots.
   function fireWhenNear(attemptsLeft: number) {
     cy.get('[data-testid="return-home-btn"]').then($btn => {
       if (!$btn.is(':disabled') || attemptsLeft <= 0) return
@@ -188,16 +199,12 @@ function completeMining() {
 }
 
 function completeDebrief() {
-  cy.contains('MISSION COMPLETE', { timeout: 8000 }).should('be.visible')
-  // DebriefScreen.tsx auto-resolves onboarding missions (missionsDone <
-  // FREE_OPS_START_MISSIONS_DONE) on mount, skipping the "Resolve Cargo" tap
-  // entirely — a tutorial playthrough never sees that button.
-  // DebriefScreen.tsx branches on `resolved && delivered` — a successful,
-  // fully-delivered mission (the only path a tutorial playthrough exercises)
-  // renders a "Payout" panel with a "Total" line, not "Francs Earned" ("Francs
-  // Earned" is the `resolved && !delivered` partial/failed-delivery copy,
-  // DebriefScreen.tsx:257-268 — this assertion was checking the wrong branch).
-  cy.contains('Payout').should('be.visible')
+  // The Earth-return leg lands on the debrief. Every debrief starts with the
+  // explicit vehicle teardown (KES-348) — onboarding included — before the
+  // reward can be collected.
+  cy.location('pathname', { timeout: 20000 }).should('eq', '/game/debrief')
+  cy.get('[data-testid="resolve-cargo-btn"]', { timeout: 10000 }).should('be.visible').click()
+  cy.get('[data-testid="scrap-sequence-skip-btn"]', { timeout: 10000 }).click()
   cy.get('[data-testid="collect-reward-btn"]').should('be.visible').click()
 }
 
@@ -207,159 +214,112 @@ function playM1() {
   cy.contains('h1', /^(Base|Earth Base)$/, { timeout: 10000 }).should('be.visible')
 
   // Step 1: tutorial coach says to open missions — follow what's VISIBLE on screen
-  cy.get('[data-testid="tutorial-coach-block"]').should('be.visible')
+  expectCoach('Open a Mission')
   navToMissions()
 
-  // Step 2: pick M1 contract
-  // Small settle wait: the coach action-card is a fresh mount here (font/layout
-  // can still be settling right after the missions-screen transition), and an
-  // early actionability check can otherwise see a transient overlap.
-  cy.wait(300)
-  // Cypress's actionability check intermittently reports this card as "covered"
-  // by the tutorial coach card, but measuring both elements' real
-  // getBoundingClientRect() at click time shows a large gap (coach bottom
-  // ~150-160px, card top ~260-270px on both viewports) and
-  // document.elementFromPoint(cardCenter) resolves to the card itself — this
-  // is the same class of Cypress false-positive as the coach-ring visibility
-  // check above, not a real layout overlap. Force the click like the other
-  // canvas/coach-adjacent interactions in this file.
-  cy.get('[data-testid="mission-card-generated-s1-starter-bulk-1"]')
-    .should('be.visible').click({ force: true })
+  // Step 2: pick the M1 contract
+  expectCoach('Select a Mission')
+  cy.get('[data-testid="mission-accept-generated-s1-starter-bulk-1"]').should('be.visible').click()
 
-  // Step 3: pick target
-  cy.contains('Pick Target', { timeout: 8000 }).should('be.visible')
-  cy.get('[data-testid="target-eros"]').should('exist').click({ force: true })
+  // Step 3: pick a target on the map
+  cy.get('[data-testid="mission-target-map"]', { timeout: 8000 }).should('be.visible')
+  expectCoach('Choose a Destination')
+  pickTarget('eros')
+  cy.get('[data-testid="target-selection-summary"]').should('contain', '433 Eros')
   cy.get('[data-testid="continue-build-btn"]').should('be.visible').click()
 
-  // Step 4: rocket selection — Explorer is free
-  cy.contains('Select Rocket', { timeout: 8000 }).should('be.visible')
-  cy.contains('button', 'Launch with Explorer').should('be.visible').click()
+  // Step 4: vehicle blueprint — the Explorer is free during onboarding
+  cy.get('[data-testid="mission-rocket-blueprint"]', { timeout: 8000 }).should('be.visible')
+  expectCoach('Choose a Vehicle')
+  cy.get('[data-testid="purchase-rocket-btn"]').should('contain', 'BUILD EXPLORER').click()
 
-  // Step 5: assembly → confirm launch
-  cy.get('[data-testid="launch-btn"]', { timeout: 8000 }).should('be.visible').click()
+  // Step 5: hangar assembly (manual coach card), then roll out and launch
+  expectCoach('Assemble the Rocket')
+  cy.get('[data-testid="coach-got-it-btn"]').should('be.visible').click()
+  rollOutAndLaunch()
 
   completeMining()
   completeDebrief()
 
   // Collecting the M1 reward returns to Hub and the coach immediately opens
-  // M2's guided-ops card ("Tap MISSIONS") — Market is not part of the
-  // current M1 exit flow at all (confirmed by actually watching where the
-  // coach points next, not by assuming the old "...to market completion"
-  // test name still describes the real flow). Clicking Market here just
-  // clicks a tab the coach isn't directing the player toward yet; it doesn't
-  // navigate anywhere. Assert the real post-M1 state instead: back on Hub,
-  // M2 guided-ops coaching visible.
+  // M2's guided-ops card. Case-insensitive: the label is visually all-caps
+  // via CSS text-transform, not literal uppercase DOM text.
   cy.contains('h1', /^(Base|Earth Base)$/, { timeout: 10000 }).should('be.visible')
-  // Case-insensitive: the label is visually all-caps via CSS text-transform
-  // (this project's standing "UPPERCASE + letter-spacing for instrument
-  // labels" rule), not literal uppercase DOM text — a plain 'GUIDED OPS'
-  // string match against the real (likely mixed-case) source text failed
-  // even though the card was clearly on screen in the failure screenshot.
-  cy.contains(/guided ops/i, { timeout: 8000 }).should('be.visible')
+  cy.get('[data-testid="tutorial-coach-block"]', { timeout: 8000 }).contains(/guided ops · mission 2/i).should('be.visible')
 }
 
 // ─── Full M2 play-through ─────────────────────────────────────────────────────
 //
-// Starts from hub with missionsDone=1 and M2 tutorial active.
-// Step 20 is an action coach card on hub (auto-dismisses on nav); step 21 is
-// a manual coach card on rocket-buy.
+// Starts from hub with missionsDone=1 and M2 tutorial active. Step 20 is an
+// action coach card on hub (auto-dismisses on nav); step 21 is a manual
+// coach card on the vehicle blueprint.
 
 function playM2() {
   cy.contains('h1', /^(Base|Earth Base)$/, { timeout: 10000 }).should('be.visible')
-
-  // M2 step 20: hub action step (not manual — no "got it" button, it
-  // auto-dismisses when the player navigates to missions). Current copy is
-  // 'Guided Ops · Mission 2' (see lib/data/tutorial.ts M2_STEPS[0]).
-  cy.get('[data-testid="tutorial-coach-block"]')
-    .should('be.visible')
-    .should('contain', 'Guided Ops')
-
-  // Navigate to missions using the layout-correct nav
+  expectCoach('Guided Ops')
   navToMissions()
 
-  // Pick M2 order — s2-starter-bulk-4 is a palladium order (not silicon,
-  // despite the old comment here), so Eros (an S-type body — no palladium
-  // in its pool, see target-archetypes.ts) is never a selectable target for
-  // it; confirmed via the actual "COMPATIBLE · 3" Pick Target screen, which
-  // lists bennu/ryugu/psyche (C/C/M-type — all carry palladium at their
-  // orbits) and never eros. Use bennu instead — closest orbit of the three.
-  cy.get('[data-testid="mission-card-generated-s2-starter-bulk-4"]')
-    .scrollIntoView().should('be.visible').click()
+  // M2's generated palladium order (see lib/data/missions.ts).
+  expectCoach('Choose Your Second Contract')
+  cy.get('[data-testid="mission-accept-generated-s2-starter-bulk-3"]').should('be.visible').click()
 
-  // Pick target
-  cy.contains('Pick Target', { timeout: 8000 }).should('be.visible')
-  cy.get('[data-testid="target-bennu"]').should('exist').click({ force: true })
-  cy.get('[data-testid="continue-build-btn"]').should('be.visible').click()
+  // Target map: an eligible body is preselected, so confirm it.
+  cy.get('[data-testid="mission-target-map"]', { timeout: 8000 }).should('be.visible')
+  cy.get('[data-testid="continue-build-btn"]').should('not.be.disabled').click()
 
-  // Rocket purchase screen — step 21 fires here (manual card, current copy is
-  // 'Prospector — Select Your Rocket', see lib/data/tutorial.ts M2_STEPS[1])
-  cy.contains('Select Rocket', { timeout: 8000 }).should('be.visible')
-  cy.get('[data-testid="tutorial-coach-block"]')
-    .should('be.visible')
-    .should('contain', 'Select Your Rocket')
+  // Blueprint — step 21 fires here as a manual card.
+  cy.get('[data-testid="mission-rocket-blueprint"]', { timeout: 8000 }).should('be.visible')
+  expectCoach('Select Your Rocket')
   cy.get('[data-testid="coach-got-it-btn"]').should('be.visible').click()
+  cy.get('[data-testid="tutorial-coach-block"]').should('not.exist')
 
-  // Purchase Prospector
-  cy.contains('button', /Purchase/).should('be.visible').click()
-
-  // Fab → launch
-  cy.get('[data-testid="launch-btn"]', { timeout: 8000 }).should('be.visible').click()
+  // M2 unlocks the Prospector.
+  cy.get('[data-testid="purchase-rocket-btn"]').should('contain', 'PROSPECTOR').click()
+  rollOutAndLaunch()
 
   completeMining()
   completeDebrief()
+
+  cy.contains('h1', /^(Base|Earth Base)$/, { timeout: 10000 }).should('be.visible')
+  cy.get('[data-testid="tutorial-coach-block"]', { timeout: 8000 }).contains(/guided ops · mission 3/i).should('be.visible')
 }
 
 // ─── Full M3 play-through ─────────────────────────────────────────────────────
 //
-// M3 is now a two-leg client transport job (mine at a pickup target, then
-// deliver to a second target before flying home) — see [[Decide: M3 becomes
-// a transport mission]]. Both M3 missions have preset targetId/deliveryTargetId,
-// so picking one skips the target picker and goes straight to rocket-buy, same
-// as the old self-directed M3 flow it replaced.
+// M3 is a two-stop mining and haul job (mine at a pickup target, deliver to
+// a second target before flying home). Both M3 missions have preset targets,
+// so accepting one skips the target map and goes straight to the blueprint.
 
-function playM3ToLaunch() {
+function playM3ToDeliveryLeg() {
   cy.contains('h1', /^(Base|Earth Base)$/, { timeout: 10000 }).should('be.visible')
 
-  // Step 30: hub action step (not manual — auto-dismisses on nav, like M2's
-  // step 20). Current copy is 'Guided Ops · Mission 3' (lib/data/tutorial.ts
-  // M3_STEPS[0]).
-  cy.get('[data-testid="tutorial-coach-block"]')
-    .should('be.visible')
-    .should('contain', 'Guided Ops')
-
-  // Navigate to missions
+  // Step 30: hub action step (auto-dismisses on nav, like M2's step 20).
+  expectCoach('Guided Ops')
   navToMissions()
 
-  // Pick one of the two M3 transport-client missions.
-  cy.get('[data-testid="mission-card-lnm_m3_relay_bennu_vesta"]')
-    .scrollIntoView().should('be.visible').click()
+  // Pick one of the two M3 client missions.
+  cy.get('[data-testid="mission-accept-lnm_m3_relay_bennu_vesta"]').should('be.visible').click()
 
-  // Rocket-buy — step 31 fires here (no target picker since targetId is preset).
-  // Current copy is 'Two-Stop Route' (lib/data/tutorial.ts M3_STEPS[1]).
-  cy.contains('Select Rocket', { timeout: 8000 }).should('be.visible')
-  cy.get('[data-testid="tutorial-coach-block"]')
-    .should('be.visible')
-    .should('contain', 'Two-Stop Route')
+  // Blueprint — step 31 fires here (no target map since the route is preset).
+  cy.get('[data-testid="mission-rocket-blueprint"]', { timeout: 8000 }).should('be.visible')
+  expectCoach('Two-Stop Route')
   cy.get('[data-testid="coach-got-it-btn"]').should('be.visible').click()
+  cy.get('[data-testid="purchase-rocket-btn"]').should('be.visible').click()
 
-  // Purchase the suggested rocket
-  cy.contains('button', /Purchase/).should('be.visible').click()
-
-  // Fab — step 32 fires here. Current copy is 'Confirm The Run'
-  // (lib/data/tutorial.ts M3_STEPS[2]).
-  cy.get('[data-testid="tutorial-coach-block"]', { timeout: 8000 })
-    .should('be.visible')
-    .should('contain', 'Confirm The Run')
+  // Hangar assembly — step 32 fires here.
+  expectCoach('Confirm The Run')
   cy.get('[data-testid="coach-got-it-btn"]').should('be.visible').click()
+  rollOutAndLaunch()
 
-  // Launch
-  cy.get('[data-testid="launch-btn"]', { timeout: 8000 }).should('be.visible').click()
-
-  completeMining()
+  // The pickup leg is worked by the surface rover (DEV-only skip, as above).
+  cy.location('pathname', { timeout: 20000 }).should('eq', '/game/rover-mining')
+  cy.get('[data-testid="dev-skip-rover-mining-btn"]', { timeout: 15000 }).click()
 
   // Cargo secured for the pickup leg — the two-leg mechanic routes to the
   // delivery target next, not straight home.
-  cy.contains('MISSION TRANSIT', { timeout: 15000 }).should('be.visible')
+  cy.location('pathname', { timeout: 15000 }).should('eq', '/game/transit')
+  cy.contains(/Delivery LEG · MISSION TRANSIT/i).should('be.visible')
+  cy.contains('h1', '4 Vesta').should('be.visible')
 }
 
 // ─── Viewport configurations ──────────────────────────────────────────────────
@@ -387,31 +347,31 @@ const MISSION_FILTER = Cypress.env('mission') as 'M1' | 'M2' | 'M3' | undefined
 const VIEWPORT_FILTER = Cypress.env('viewportLabel') as string | undefined
 const viewportsToRun = VIEWPORTS.filter(v => !VIEWPORT_FILTER || v.label === VIEWPORT_FILTER)
 
+
 // ─── Desktop nav guard ────────────────────────────────────────────────────────
 //
 // Explicitly asserts that on desktop the bottom tab bar is hidden and the
-// sidebar is shown — catching any regression where the CSS breakpoint breaks.
+// hub's own Missions action is shown — catching any regression where the CSS
+// breakpoint breaks.
 
 if (!MISSION_FILTER) describe('Desktop layout: bottom tab bar hidden, sidebar retired', () => {
   beforeEach(() => cy.viewport(1280, 800))
 
-  it('bottom-tab-missions and the retired sidebar are both hidden on desktop hub; the desktop Missions action remains available', () => {
+  it('bottom-tab-missions is hidden and the retired sidebar is gone on desktop hub; the desktop Missions action remains available', () => {
     visitHub({ doneSteps: { 0: true } })
     cy.contains('h1', /^(Base|Earth Base)$/, { timeout: 10000 }).should('be.visible')
     cy.get('[data-testid="bottom-tab-missions"]').should('not.be.visible')
-    // The old always-on desktop sidebar (`.desktop-sidebar`) is retired —
-    // CSS-hidden unconditionally (globals.css). The Hub dock's desktop-only
-    // Missions action is the current path to Missions at this breakpoint.
-    cy.get('[data-testid="sidebar-nav-missions"]').should('not.be.visible')
+    // The old always-on desktop sidebar is retired and no longer rendered.
+    cy.get('[data-testid="sidebar-nav-missions"]').should('not.exist')
     cy.get('[data-testid="hub-desktop-missions-btn"]').should('be.visible')
   })
 
-  it('tutorial coach on step 1 does NOT show a spot over the hidden bottom tab bar', () => {
+  it('tutorial coach on step 1 does NOT ring the hidden bottom tab bar', () => {
     visitHub({ doneSteps: { 0: true } })
     cy.contains('h1', /^(Base|Earth Base)$/, { timeout: 10000 }).should('be.visible')
     cy.get('[data-testid="tutorial-coach-block"]').should('contain', 'Open a Mission')
-    // On desktop, desktopSpot is null so the pulsing spot element must not exist
-    cy.get('[data-testid="tutorial-coach-spot"]').should('not.exist')
+    // The desktop instruction names the Launchpad; no measured ring is drawn.
+    cy.get('[data-testid="tutorial-coach-ring"]').should('not.exist')
     // And the instruction must not say "Tap menu" (the old two-stage copy)
     cy.get('[data-testid="tutorial-coach-block"]').should('not.contain', 'Tap menu')
   })
@@ -422,35 +382,22 @@ if (!MISSION_FILTER) describe('Desktop layout: bottom tab bar hidden, sidebar re
 if (!MISSION_FILTER) describe('Mobile layout: bottom tab bar visible, sidebar hidden', () => {
   beforeEach(() => cy.viewport(390, 844))
 
-  it('bottom-tab-missions is visible and sidebar is not visible on mobile hub', () => {
+  it('bottom-tab-missions is visible and the retired sidebar is gone on mobile hub', () => {
     visitHub({ doneSteps: { 0: true } })
     cy.contains('h1', /^(Base|Earth Base)$/, { timeout: 10000 }).should('be.visible')
     cy.get('[data-testid="bottom-tab-missions"]').should('be.visible')
-    cy.get('[data-testid="sidebar-nav-missions"]').should('not.be.visible')
+    cy.get('[data-testid="sidebar-nav-missions"]').should('not.exist')
   })
 
-  it('tutorial coach ring on step 1 overlaps the Missions tab on mobile', () => {
-    // The old 'spot' rectangle concept (tutorial-coach-spot) was replaced by
-    // CoachPointer's measured ring (tutorial-coach-ring), which highlights
-    // the element matching step.coachId ('bottom-tab-missions' for step 1)
-    // — see lib/data/tutorial.ts and components/game/CoachPointer.tsx.
+  it('tutorial coach on step 1 highlights the Missions tab on mobile', () => {
+    // The Missions tab is highlighted by CSS on the element itself
+    // (html[data-coach-target] in globals.css), which can't drift; the
+    // separately measured CoachPointer ring is suppressed for it (SSL-280).
     visitHub({ doneSteps: { 0: true } })
     cy.contains('h1', /^(Base|Earth Base)$/, { timeout: 10000 }).should('be.visible')
     cy.get('[data-testid="tutorial-coach-block"]').should('contain', 'Open a Mission')
-    // The ring is a decorative, pointerEvents:'none' overlay — Cypress's
-    // be.visible check uses elementFromPoint, which always reports it as
-    // "covered" by whatever's underneath since it's excluded from hit-testing.
-    // Assert existence + the bounding-rect overlap instead of visibility.
-    cy.get('[data-testid="tutorial-coach-ring"]').should('exist').then($ring => {
-      const s = $ring[0].getBoundingClientRect()
-      cy.get('[data-testid="bottom-tab-missions"]').then($btn => {
-        const b = $btn[0].getBoundingClientRect()
-        expect(s.left, 'ring left < btn right').to.be.lessThan(b.right)
-        expect(s.right, 'ring right > btn left').to.be.greaterThan(b.left)
-        expect(s.top, 'ring top < btn bottom').to.be.lessThan(b.bottom)
-        expect(s.bottom, 'ring bottom > btn top').to.be.greaterThan(b.top)
-      })
-    })
+    cy.get('html').should('have.attr', 'data-coach-target', 'bottom-tab-missions')
+    cy.get('[data-testid="tutorial-coach-ring"]').should('not.exist')
   })
 })
 
@@ -469,14 +416,18 @@ if (!MISSION_FILTER || MISSION_FILTER === 'M1') viewportsToRun.forEach(({ label,
 
 // ─── M2 full play-through ─────────────────────────────────────────────────────
 
+// Every coach step a real player completes during M1, including the
+// blueprint's "Choose a Vehicle" (8).
+const M1_DONE_STEPS = { 0: true, 1: true, 2: true, 3: true, 4: true, 5: true, 6: true, 8: true, 9: true }
+
 if (!MISSION_FILTER || MISSION_FILTER === 'M2') viewportsToRun.forEach(({ label, w, h }) => {
   describe(`M2 full play-through — ${label} (${w}×${h})`, () => {
     beforeEach(() => cy.viewport(w, h))
 
-    it('plays M2 from hub through debrief', () => {
+    it('plays M2 from hub through debrief to the M3 guided-ops handoff', () => {
       visitHub({
         tutorial: true,
-        doneSteps: { 0: true, 1: true, 2: true, 3: true, 4: true, 5: true, 6: true, 9: true },
+        doneSteps: M1_DONE_STEPS,
         player: basePlayer({ missionsDone: 1, missionCount: 1 }),
       })
       playM2()
@@ -484,31 +435,27 @@ if (!MISSION_FILTER || MISSION_FILTER === 'M2') viewportsToRun.forEach(({ label,
   })
 })
 
-// ─── M3 full play-through (through launch) ────────────────────────────────────
-// M3 is intentionally pending a new design direction (not part of the active
-// onboarding scope — see the "Landnam current onboarding boundary" decision) —
-// excluded from an onboarding-video pass over M1/M2 for that reason, but this
-// still runs in the normal/CI/full-matrix case (MISSION_FILTER unset), same as
-// before: the coach steps and screens it exercises still exist in the app and
-// still deserve regression coverage regardless of product-scope status.
+// ─── M3 full play-through (through the pickup leg) ────────────────────────────
+// Excluded from an onboarding-video pass over M1/M2 (MISSION_FILTER), but
+// runs in the normal/CI/full-matrix case: the coach steps and screens it
+// exercises deserve regression coverage.
 
 if (!MISSION_FILTER || MISSION_FILTER === 'M3') viewportsToRun.forEach(({ label, w, h }) => {
   describe(`M3 tutorial steps and launch — ${label} (${w}×${h})`, () => {
     beforeEach(() => cy.viewport(w, h))
 
-    it('clears all M3 coach steps, navigates to missions, and reaches transit', () => {
+    it('clears all M3 coach steps, mines the pickup site, and heads for the delivery target', () => {
       visitHub({
         tutorial: true,
-        doneSteps: { 0: true, 1: true, 2: true, 3: true, 4: true, 5: true, 6: true, 9: true, 20: true, 21: true },
+        doneSteps: { ...M1_DONE_STEPS, 20: true, 21: true, 22: true },
         player: basePlayer({
           missionsDone: 2,
           missionCount: 2,
           francs: 9_000_000_000,
-          rocket: { chassis: 'hull-mk2', propulsion: 'fusion-b2', drill: 'hand-drill' },
         }),
         rocket: { chassis: 'hull-mk2', propulsion: 'fusion-b2', drill: 'hand-drill' },
       })
-      playM3ToLaunch()
+      playM3ToDeliveryLeg()
     })
   })
 })

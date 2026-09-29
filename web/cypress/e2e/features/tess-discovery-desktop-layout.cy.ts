@@ -4,6 +4,7 @@
 // lightcurve column and a 45% metadata + actions column.
 
 import type { GameState } from '@/game-context'
+import { seedFixtureSession } from '../../support/authenticated-fixture'
 
 const STORAGE_KEY = 'landnam-game-state-v1'
 
@@ -78,11 +79,11 @@ function visitGalaxyScreen() {
     menuOpen: false,
   }
 
-  cy.visit('/game', {
+  // /game itself always resumes to Earth Base; open the screen's own route.
+  cy.visit('/game/galaxy', {
     onBeforeLoad(win) {
       win.localStorage.setItem(STORAGE_KEY, JSON.stringify(base))
-      win.localStorage.setItem('landnam-account-credentials', JSON.stringify({ email: 'e2e@example.com', password: 'e2e-guest-test' }))
-      win.localStorage.setItem('pocketbase_auth', JSON.stringify({ token: e2eToken, record: { id: 'e2e-subject-user', email: 'e2e@example.com' } }))
+      seedFixtureSession(win, 'e2e-subject-user')
     },
   })
   cy.wait('@subjects')

@@ -96,14 +96,16 @@ describe('Launchpad · your own program', () => {
 
     // This is a Launchpad interaction test. Its account-scoped fixture keeps
     // the independent email/password gate out of the spatial scene contract.
-    cy.get('[data-testid="launchpad-ui-focus-pad-btn"]', { timeout: 15000 }).click()
+    // /game/launchpad opens the one Launchpad scene directly (the separate
+    // overview UI and its "focus pad" button were folded into it).
     cy.get('[data-testid="launchpad-focus-screen"]', { timeout: 15000 }).should('be.visible')
     cy.get('[data-testid="launchpad-status-card"]', { timeout: 15000 }).click()
     cy.get('[data-testid="launchpad-new-mission-menu"]', { timeout: 15000 }).should('be.visible')
     cy.get('[data-testid="launchpad-new-mission-satellite-btn"]').should('not.be.disabled')
     cy.get('[data-testid="launchpad-new-mission-mining-btn"]').should('not.be.disabled')
     cy.get('[data-testid="launchpad-new-mission-build-btn"]').should('not.be.disabled')
-    cy.contains('Client contracts remain on the Mission Board.').should('be.visible')
+    // Client work is one separate entry that leads to the Mission Board.
+    cy.get('[data-testid="launchpad-new-mission-contracts-btn"]').should('be.visible')
     cy.contains('Pick Target').should('not.exist')
   })
 
@@ -122,11 +124,11 @@ describe('Launchpad · your own program', () => {
     cy.viewport(1280, 900)
     visitLaunchpad(freeOpsSave())
 
-    cy.get('[data-testid="launchpad-ui-open-hangar-btn"], [data-testid="launchpad-open-hangar-btn"]', { timeout: 15000 })
-      .first()
-      .click()
-    cy.contains('Rocket Fleet', { timeout: 15000 }).should('be.visible')
+    // The rocket on the pad is the way into the Hangar.
+    cy.get('[data-testid="launchpad-rocket-fleet"]', { timeout: 15000 }).click()
+    cy.get('[data-testid="hangar-fleet-readout"]', { timeout: 15000 }).should('be.visible')
     cy.get('[data-testid="top-bar-back"]').click()
-    cy.contains('Your Program', { timeout: 15000 }).should('be.visible')
+    cy.get('[data-testid="launchpad-focus-screen"]', { timeout: 15000 }).should('be.visible')
+    cy.contains('Your Program').should('be.visible')
   })
 })
