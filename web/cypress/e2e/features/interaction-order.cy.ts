@@ -72,6 +72,24 @@ function readSavedState() {
 }
 
 describe('Interaction order hardening', () => {
+  // The generic fixture stubs answer auth-refresh and the Landnam exchange with
+  // 503, so auth re-resolves after load and the [screen] route re-applies its
+  // stale URL over a screen the test just opened (the click lands, then the
+  // page snaps back to the hub). Let auth settle successfully instead, as
+  // takeon-visual-audit does.
+  beforeEach(() => {
+    const tokenPayload = btoa(JSON.stringify({ exp: Math.floor(Date.now() / 1000) + 3600 }))
+    const e2eToken = `e30.${tokenPayload}.test`
+    cy.intercept('POST', '**/api/collections/users/auth-refresh', {
+      statusCode: 200,
+      body: { token: e2eToken, record: { id: 'e2e-fixture-user', email: 'e2e-fixture-user@example.com' } },
+    })
+    cy.intercept('POST', '**/api/landnam-auth/exchange', {
+      statusCode: 200,
+      body: { token: e2eToken, record: { id: 'e2e-fixture-user' } },
+    })
+  })
+
   it('repairs context screens when persisted mission context is missing', () => {
     visitWithState({
       screen: 'fab',
