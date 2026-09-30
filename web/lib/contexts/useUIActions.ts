@@ -125,6 +125,11 @@ export function useUIActions(
       // should not be pushed back. A repaired route, however, must be written
       // back to the canonical URL instead of leaving /game/build rendering a
       // stale screen component forever.
+      // Arm the skip only when state.screen really changes: the URL-sync
+      // effect is the only thing that clears it, and it runs only on a change.
+      // A no-op here would leave the flag armed and swallow the next real
+      // navigation's push, stranding the URL on the old route.
+      if (s.screen === safeScreen) return s
       skipNextUrlSync.current = safeScreen === screen
       return { ...s, screen: safeScreen }
     })
