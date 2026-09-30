@@ -6,6 +6,7 @@ import { trainingCoachSteps } from '@/lib/data'
 import TutorialCoach from '@/components/game/TutorialCoach'
 import UnlockPopup from '@/components/game/UnlockPopup'
 import { TutorialCompleteSheet } from '@/components/game/TutorialCompleteSheet'
+import { resolveShortcut } from '@/lib/game-shortcuts'
 import { GameChromeBars } from '@/components/layout/GameChromeBars'
 import { AGENCY_TRAINING_POPUP, agencyTrainingStage, agencyTrainingTrack, freeOpsActivities } from '@/lib/systems/AgencyOnboardingSystem'
 import BackendStatus from '@/components/game/BackendStatus'
@@ -165,14 +166,19 @@ function GameChrome({ children }: { children: ReactNode }) {
     : currentScreen === 'mission-history' ? 'mission-history' : currentScreen === 'instrument-hub' || currentScreen === 'galaxy' ? 'instrument-hub' : currentScreen === 'fab' ? 'fab' : currentScreen === 'skills' ? 'skills' : 'hub'
   useEffect(() => {
     function onKeyDown(event: KeyboardEvent) {
-      if (event.defaultPrevented || event.metaKey || event.ctrlKey || event.altKey) return
-      if (event.key === 'Escape') { setSettingsOpen(false); setFriendsOpen(false); setCommunityOpen(false); return }
-      if (event.key.toLowerCase() === 'm') { if (game.player.freeOperations) game.go('market'); return }
-      if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') resumeOperations()
+      const action = resolveShortcut(event)
+      if (action === 'close-tray') {
+        setSettingsOpen(false); setFriendsOpen(false); setCommunityOpen(false)
+        if (currentScreen === 'market') game.goBack('hub')
+      } else if (action === 'open-market') {
+        if (game.player.freeOperations) game.go('market')
+      } else if (action === 'switch-operation') {
+        resumeOperations()
+      }
     }
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
-  }, [game, resumeOperations])
+  }, [game, resumeOperations, currentScreen])
   // Location screens (physical places in the game world, and the mission-run
   // sequence through them) own the full viewport instead of sitting inside
   // the generic desktop device-card — that boxed treatment is for menus
