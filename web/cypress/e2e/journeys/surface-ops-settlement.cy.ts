@@ -51,6 +51,17 @@ function seedState(win: Window, player: Record<string, unknown>, screen = 'hub')
 describe('Surface Ops settlement journey', () => {
   it('navigates from Earth Base, opens site access, and starts launchpad construction', () => {
     cy.viewport(390, 844)
+    // The deed is recorded on the shared treasury by an authenticated PocketBase
+    // route; the fixture session has no real account, so stub the quoted price.
+    cy.intercept('POST', '**/api/treasury/site-deed', {
+      statusCode: 200,
+      body: {
+        acquired: true,
+        priceFrancs: 4_000_000,
+        referenceId: 'site-deed:e2e-fixture-user:moon-south-pole:purchase',
+        state: { balanceFrancs: 4_000_000, ledger: [], loans: {} },
+      },
+    })
     cy.visit('/game/hub', {
       onBeforeLoad: win => seedState(win, {}),
     })
@@ -68,7 +79,9 @@ describe('Surface Ops settlement journey', () => {
   it('dispatches one ready cargo manifest through an operational settlement pad', () => {
     const now = Date.now()
     cy.viewport(1280, 900)
-    cy.visit('/game/surface-ops', {
+    // /game/surface-ops is not restorable from a route (game-state.ts sends it to
+    // the hub), so open it in-app the way a player does.
+    cy.visit('/game/hub', {
       onBeforeLoad: win => seedState(win, {
         surfaceOps: {
           sites: {
@@ -83,8 +96,10 @@ describe('Surface Ops settlement journey', () => {
             },
           },
         },
-      }, 'surface-ops'),
+      }),
     })
+    cy.get('[data-testid="hub-surface-ops"]', { timeout: 15000 }).click()
+    cy.location('pathname').should('eq', '/game/surface-ops')
     cy.get('[data-testid="surface-dispatch-ferry"]', { timeout: 15000 }).should('be.visible')
 
     cy.get('[data-testid="surface-dispatch-ferry"]').click()

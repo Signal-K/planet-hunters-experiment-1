@@ -171,6 +171,9 @@ describe('Interaction order hardening', () => {
       missionId: 'generated-s1-starter-bulk-1',
       targetId: 'mars',
       player: {
+        // Free Ops: agency training would otherwise redirect a mid-run screen.
+        missionsDone: 3,
+        freeOperations: true,
         activeMission: { id: 'generated-s1-starter-bulk-1', label: 'Iron starter order -> Mars' },
         missionPhase: 'mining',
       },
