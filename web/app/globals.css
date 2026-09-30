@@ -742,6 +742,9 @@ button { cursor: pointer; }
   .portrait-canvas:has([data-screen="hub"]) .suite-hop-rail { top: 110px; right: 108px; flex-direction: row; align-items: center; }
   .portrait-canvas:has([data-screen="hub"]) .suite-identity-chip { display: none; }
   .portrait-canvas:has([data-screen="hub"]) .feedback-panel { right: 12px !important; bottom: calc(var(--ln-nav-h) + 12px) !important; }
+  /* SSL-381: the active-craft control used to sit at top:96px, which is now the
+     third header row (sync / GARDEN / FEEDBACK at 110px). Start it below that row. */
+  .portrait-canvas:has([data-screen="hub"]) .hub-sky-craft-control { top: 156px; }
 }
 
 @media (max-width: 379px) {
@@ -772,6 +775,7 @@ button { cursor: pointer; }
   .portrait-canvas:has([data-screen="hub"]) .suite-identity-chip { display: none; }
   .portrait-canvas:has([data-screen="hub"]) .feedback-launcher { top: 8px !important; right: 12px !important; bottom: auto !important; min-height: 32px; }
   .portrait-canvas:has([data-screen="hub"]) .sync-status { top: 36px; bottom: auto !important; left: 12px; }
+  .portrait-canvas:has([data-screen="hub"]) .hub-sky-craft-control { top: 56px; }
   .portrait-canvas:has([data-screen="hub"]) [data-testid="hub-clock-widget"] { display: none !important; }
 
   .hub-bottom-dock-inner { max-width: none !important; padding: 8px 12px !important; border-top: 0 !important; border-radius: 0 !important; background: none !important; box-shadow: none !important; display: flex; align-items: center; justify-content: flex-end; gap: 8px; }

@@ -5,13 +5,15 @@ name: Cypress specs (local stack)
 # touches staging or production, and needs no secrets. Cypress cannot start on
 # macOS 27, so this is the place to run the layout/nav specs.
 #
-# Runs automatically when this file changes on a cycle/** branch, and on demand
+# Runs automatically when this file or anything under web/ changes on a cycle/**
+# branch (remove the web/** path to make it opt-in), and on demand
 # once it exists on the default branch. Edit the matrix below to choose specs.
 on:
   push:
     branches: ["cycle/**"]
     paths:
       - ".github/workflows/cypress-spec.yml"
+      - "web/**"
   workflow_dispatch:
 
 permissions:
