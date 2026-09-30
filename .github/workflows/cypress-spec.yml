@@ -6,22 +6,13 @@ name: Cypress specs (local stack)
 # macOS 27, so this is the place to run the layout/nav specs.
 #
 # Runs automatically when this file changes on a cycle/** branch, and on demand
-# once it exists on the default branch.
+# once it exists on the default branch. Edit the matrix below to choose specs.
 on:
   push:
     branches: ["cycle/**"]
     paths:
       - ".github/workflows/cypress-spec.yml"
   workflow_dispatch:
-    inputs:
-      profile:
-        description: "CYPRESS_PROFILE (viewport + defaults)"
-        default: "responsive"
-        required: true
-      spec:
-        description: "Comma-separated spec paths, relative to web/"
-        default: "cypress/e2e/responsive/critical-screens-matrix.cy.ts,cypress/e2e/journeys/tutorial-m1.cy.ts,cypress/e2e/regression/hub-progression-cards.cy.ts"
-        required: true
 
 permissions:
   contents: read
@@ -31,11 +22,18 @@ jobs:
     name: Cypress on a local stack
     runs-on: ubuntu-latest
     timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # Each spec needs its own profile: a profile's specPattern excludes
+          # specs that live in another profile's folder.
+          - { profile: responsive, spec: cypress/e2e/responsive/critical-screens-matrix.cy.ts }
+          - { profile: journeys, spec: cypress/e2e/journeys/tutorial-m1.cy.ts }
+          - { profile: regression, spec: cypress/e2e/regression/hub-progression-cards.cy.ts }
     env:
       NEXT_PUBLIC_FEATURE_SCAN_STATION: "true"
       NEXT_PUBLIC_E2E_AUTH_AUTO_CONTINUE: "true"
-      CYPRESS_PROFILE_INPUT: ${{ github.event.inputs.profile || 'responsive' }}
-      CYPRESS_SPEC_INPUT: ${{ github.event.inputs.spec || 'cypress/e2e/responsive/critical-screens-matrix.cy.ts,cypress/e2e/journeys/tutorial-m1.cy.ts,cypress/e2e/regression/hub-progression-cards.cy.ts' }}
 
     steps:
       - uses: actions/checkout@v4
@@ -110,9 +108,9 @@ jobs:
           start: npm run dev
           wait-on: "http://localhost:3099"
           wait-on-timeout: 120
-          spec: ${{ env.CYPRESS_SPEC_INPUT }}
+          spec: ${{ matrix.spec }}
         env:
-          CYPRESS_PROFILE: ${{ env.CYPRESS_PROFILE_INPUT }}
+          CYPRESS_PROFILE: ${{ matrix.profile }}
           CYPRESS_baseUrl: http://localhost:3099
           NEXT_PUBLIC_LANDNAM_PB_URL: http://127.0.0.1:8091
           NEXT_PUBLIC_SHARED_PB_URL: http://127.0.0.1:8090
@@ -123,7 +121,7 @@ jobs:
         uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: cypress-spec-screenshots-${{ github.sha }}
+          name: cypress-spec-screenshots-${{ matrix.profile }}-${{ github.sha }}
           path: web/cypress/screenshots/
           if-no-files-found: ignore
           retention-days: 7
@@ -132,7 +130,7 @@ jobs:
         uses: actions/upload-artifact@v4
         if: failure()
         with:
-          name: cypress-spec-videos-${{ github.sha }}
+          name: cypress-spec-videos-${{ matrix.profile }}-${{ github.sha }}
           path: web/cypress/videos/
           if-no-files-found: ignore
           retention-days: 7
