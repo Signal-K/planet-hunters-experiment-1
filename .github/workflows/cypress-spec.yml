@@ -42,6 +42,7 @@ jobs:
           - { profile: full, spec: cypress/e2e/journeys/takeon-visual-audit.cy.ts }
           - { profile: full, spec: cypress/e2e/features/interaction-order.cy.ts }
           - { profile: full, spec: cypress/e2e/features/orientation-guard.cy.ts }
+          - { profile: full, spec: cypress/e2e/features/base-trays.cy.ts }
           - { profile: surveys, spec: cypress/e2e/features/surveys.cy.ts }
           - { profile: full, spec: cypress/e2e/features/tutorial-rail.cy.ts }
           - { profile: full, spec: cypress/e2e/features/ui-zones.cy.ts }
