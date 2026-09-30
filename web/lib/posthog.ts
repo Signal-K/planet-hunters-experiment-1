@@ -82,4 +82,12 @@ export function captureGameEvent(name: string, props?: Record<string, unknown>) 
   posthog.capture(name, props)
 }
 
+// SSL-342: the end of training and the start of Free Ops are one moment in
+// the agency loop. Two routes reach it (the last guided mission, or placing
+// the storage silo), so both call this to emit identical events.
+export function captureFreeOpsUnlocked(missionsDone: number, trigger: 'mission' | 'silo') {
+  captureGameEvent('tutorial_completed', { missions_done: missionsDone, trigger })
+  captureGameEvent('free_ops_unlocked', { missions_done: missionsDone, trigger })
+}
+
 export { posthog }

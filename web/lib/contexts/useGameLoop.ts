@@ -19,7 +19,7 @@ import { applyConstructionCompletion } from '@/lib/systems/ConstructionSystem'
 import { loanOutstanding, repayBankruptcyLoan } from '@/lib/systems/TreasurySystem'
 import { TREASURY_PLAYER_ID } from '@/lib/systems/ProgressionSystem'
 import { enqueueSurvey, isRepeatSurveyEligible, getMilestoneSurveyVariant } from '@/lib/surveys'
-import { captureGameEvent } from '@/lib/posthog'
+import { captureFreeOpsUnlocked, captureGameEvent } from '@/lib/posthog'
 import type { Catalog } from '@/lib/catalog'
 import type { GameState, LicenseGrade, MissionRunSnapshot, StagedRocket } from '@/lib/game-types'
 import type { Mission, Target, TessVerdict, TransitRange, AsteroidVerdict } from '@/lib/data'
@@ -1004,9 +1004,12 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
       is_story_mission: completedIsStoryMission,
       payout_francs: total,
     })
-    // SSL-342: fires exactly once, on the same tick as the 'tutorial-complete'
-    // popup and the freeOperations flip above: the one moment onboarding
-    // actually ends, needed to close out the agency-loop funnel end to end.
+    // SSL-342: fires exactly once, on the tick the freeOperations flip above
+    // happens (the silo-placement route fires it from GameScreenRouter). Read
+    // from `current`, not the setState updater, which may run twice.
+    if (!current.player.freeOperations && freeOperationsUnlocked({ missionsDone: newMissionsDone, placed: current.player.placed })) {
+      captureFreeOpsUnlocked(newMissionsDone, 'mission')
+    }
     // Mission feedback belongs to the post-mission checkpoint. Queue it only
     // after debrief collection so it cannot surface over the next mission
     // board while the player is choosing a new contract.

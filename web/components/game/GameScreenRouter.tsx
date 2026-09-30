@@ -4,7 +4,7 @@ import { useEffect, useState, useCallback } from 'react'
 import dynamic from 'next/dynamic'
 import { useGame } from '@/game-context'
 import { ACADEMY_INTRO_MISSION_ID, rocketDisplayForConfig, rocketModelForConfig, trainingCoachSteps } from '@/lib/data'
-import { agencyTrainingStage } from '@/lib/systems/AgencyOnboardingSystem'
+import { agencyTrainingStage, freeOperationsUnlocked } from '@/lib/systems/AgencyOnboardingSystem'
 import type { Screen } from '@/lib/game-types'
 import { hasEstablishedMiningSettlement } from '@/lib/systems/SurfaceOpsSystem'
 // IntroScreen and HubScreen are the two most likely first paints (cold start
@@ -34,7 +34,7 @@ const MissionHistoryScreen = dynamic(() => import('@/components/game/screens/Mis
 const NarrativeLedgerScreen = dynamic(() => import('@/components/game/screens/NarrativeLedgerScreen'), { loading: ScreenLoading })
 import { enqueueSurvey } from '@/lib/surveys'
 import { VISUAL_ASTEROID_CANDIDATE, VISUAL_TESS_CANDIDATE } from '@/lib/visual-fixtures'
-import { captureGameEvent } from '@/lib/posthog'
+import { captureFreeOpsUnlocked, captureGameEvent } from '@/lib/posthog'
 import { dismissHubPrompt } from '@/lib/hub-prompts'
 import type { InstrumentSignal } from '@/lib/systems/InstrumentFeedSystem'
 import {
@@ -175,10 +175,13 @@ export function ScreenContent({
           }}
           onPlaced={(kind, plot) => {
             const structure = game.catalog.structures.find(s => s.id === kind)
+            const enteringFreeOps = !game.player.freeOperations
+              && freeOperationsUnlocked({ missionsDone: game.player.missionsDone, placed: [...game.player.placed, kind] })
             const placed = game.placeStructure(structure, kind, plot)
             if (!placed) return false
             game.completeStep(0)
             captureGameEvent('structure_placed', { structure_kind: kind })
+            if (enteringFreeOps) captureFreeOpsUnlocked(game.player.missionsDone, 'silo')
             enqueueSurvey('lnm_base_building', 1200)
             if (kind === 'astronaut-academy') enqueueSurvey('lnm_crew_academy_built', 1200)
             game.go('hub')
