@@ -344,7 +344,7 @@ if (!MISSION_FILTER) describe('Desktop layout: Home chrome is the operations ent
 
   it('keeps the operations control available without retired navigation', () => {
     visitHub({ doneSteps: { 0: true } })
-    cy.get('[data-testid="home-top-bar"]').should('be.visible')
+    cy.get('[data-testid="home-bottom-bar"]').should('be.visible')
     cy.get('[data-testid="home-bar-ops"]').should('be.visible')
     cy.get('[data-testid="sidebar-nav-missions"]').should('not.exist')
   })

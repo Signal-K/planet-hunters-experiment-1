@@ -899,9 +899,18 @@
   .reviewBrief { grid-template-columns: minmax(0, 1fr) minmax(124px, .9fr); }
   .reviewFacts { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .reviewFacts > div:nth-child(odd) { border-left: 0; }
-  .reviewFacts dt { white-space: normal; }
-  .reviewFacts dd { overflow: visible; white-space: normal; text-overflow: clip; }
+  /* SSL-381: a long word in a 6px letter-spaced label ("DESTINATION") is wider than its
+     column here and ran into the next fact; break it inside its own cell instead. */
+  .reviewFacts > div:first-child { grid-column: 1 / -1; }
+  .reviewFacts dt { white-space: normal; overflow-wrap: anywhere; letter-spacing: .1em; }
+  .reviewFacts dd { overflow: visible; white-space: normal; overflow-wrap: anywhere; text-overflow: clip; }
   .clearance small { display: none; }
   .assemblyTimeline span,
   .assemblyTimeline strong { overflow: visible; font-size: 5px; line-height: 1.1; letter-spacing: .05em; text-overflow: clip; white-space: normal; }
+}
+
+/* SSL-381: at 320-360px the facts column is ~95px, too narrow for two facts side by side
+   ("EXPLORER" broke mid-word and the cargo chip clipped). Stack them. */
+@media (orientation: portrait) and (max-width: 360px) {
+  .reviewFacts { grid-template-columns: minmax(0, 1fr); }
 }

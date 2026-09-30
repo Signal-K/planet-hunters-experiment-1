@@ -796,13 +796,10 @@ button { cursor: pointer; }
 }
 
 /* SSL-346: shell-owned controls are available on every live surface. */
-.game-chrome-top { position:absolute; z-index:70; top:12px; left:12px; display:flex; align-items:center; gap:8px; pointer-events:none; }
-.game-chrome-top__readout, .game-chrome-top__chip { min-height:32px; padding:8px 12px; border:1px solid var(--ln-hairline); border-radius:8px; background:color-mix(in srgb, var(--ln-void) 82%, transparent); color:var(--ln-cyan); font:800 12px var(--ln-font-display); letter-spacing:.12em; text-transform:uppercase; }
-.game-chrome-top__chip { pointer-events:auto; cursor:pointer; }
-.game-chrome-bottom { position:absolute; z-index:70; left:50%; bottom:12px; transform:translateX(-50%); display:flex; align-items:stretch; gap:4px; max-width:calc(100% - 24px); padding:4px; overflow-x:auto; border:1px solid var(--ln-hairline); border-radius:12px; background:color-mix(in srgb, var(--ln-void) 88%, transparent); }
-.game-chrome-bottom button { flex:0 0 auto; min-height:40px; padding:8px 12px; border:1px solid transparent; border-radius:8px; background:transparent; color:var(--ln-text); font:800 12px var(--ln-font-display); letter-spacing:.08em; text-transform:uppercase; cursor:pointer; }
+.game-chrome-bottom { position:relative; z-index:70; flex:0 0 auto; display:flex; align-items:stretch; justify-content:center; gap:4px; padding:4px 8px; border-top:1px solid var(--ln-hairline); background:var(--ln-void); }
+.game-chrome-bottom__readout { display:none; align-items:center; padding:0 12px; color:var(--ln-cyan); font:800 12px var(--ln-font-display); letter-spacing:.12em; text-transform:uppercase; white-space:nowrap; }
+.game-chrome-bottom button { flex:1 1 0; min-width:0; max-width:128px; min-height:40px; padding:8px 4px; border:1px solid transparent; border-radius:8px; background:transparent; color:var(--ln-text); font:800 12px var(--ln-font-display); letter-spacing:.08em; text-transform:uppercase; white-space:nowrap; cursor:pointer; }
 .game-chrome-bottom button[aria-current="page"], .game-chrome-bottom button:hover { border-color:var(--ln-cyan-border); background:var(--ln-cyan-soft); color:var(--ln-cyan-bright); }
-@media (min-width:1024px) { .game-chrome-bottom { bottom:24px; } .game-chrome-top { top:24px; left:24px; } }
 @media (min-width:600px) { .game-chrome-bottom__readout { display:inline-flex; } }
 /* Landscape phones: every screen's title bar shrinks to one 48px line. */
 @media (orientation:landscape) and (max-height:500px) {
