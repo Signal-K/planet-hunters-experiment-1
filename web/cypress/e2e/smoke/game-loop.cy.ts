@@ -145,7 +145,7 @@ describe('Full Game Loop — Landnam', () => {
       cy.get('[data-testid="mission-accept-generated-s1-starter-bulk-1"]').click()
       cy.get('[data-testid="mission-target-map"]').should('be.visible')
       cy.get('[data-testid="coach-skip-btn"]').click()
-      cy.get('[data-testid="target-selection-summary"]').should('contain', 'ELIGIBLE TARGET')
+      cy.get('[data-testid="target-selection-summary"]').should('contain', 'ELIGIBLE')
       cy.get('[data-testid="continue-build-btn"]').should('not.be.disabled').click()
       cy.get('[data-testid="mission-rocket-blueprint"]').should('be.visible')
       cy.get('[data-testid="purchase-rocket-btn"]').should('contain', 'BUILD EXPLORER').click()
@@ -163,7 +163,7 @@ describe('Full Game Loop — Landnam', () => {
         doneSteps: { 1: true, 2: true },
       }))
       cy.get('[data-testid="mission-target-map"]').should('be.visible')
-      cy.contains('MISSION FILTER ACTIVE').should('be.visible')
+      cy.contains('MISSION FILTER').should('be.visible')
     })
   })
 

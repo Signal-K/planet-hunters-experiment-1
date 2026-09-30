@@ -118,8 +118,10 @@ describe('Parallel mission runs (replaces the STS-487 single-mission guard)', ()
   // are now independently resumable (useGameLoop onPickMission): accepting
   // another contract parks the current run instead of discarding it.
   it('parks the active run when another contract is accepted', () => {
-    visitGame('/game/hub', {
-      screen: 'hub',
+    // With a run in flight the Home bar's OPS control resumes it (RESUME), so
+    // open the mission board directly to accept a second contract.
+    visitGame('/game/missions', {
+      screen: 'missions',
       missionId: 'generated-s1-starter-bulk-1',
       targetId: 'eros',
       player: {
@@ -133,7 +135,6 @@ describe('Parallel mission runs (replaces the STS-487 single-mission guard)', ()
       },
     })
 
-    cy.get('[data-testid="home-bar-ops"]', { timeout: 10000 }).click()
     cy.get('[data-testid^="mission-accept-"]', { timeout: 10000 }).first().then($accept => {
       const acceptedId = $accept.attr('data-testid')!.replace('mission-accept-', '')
       cy.wrap($accept).click()

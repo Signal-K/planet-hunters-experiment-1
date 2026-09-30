@@ -122,7 +122,7 @@ describe('Tutorial rail regression', () => {
           doneSteps: { 0: true },
         }))
 
-        cy.get('[data-testid="tutorial-coach-block"]').should('contain', 'Open a Mission')
+        cy.get('[data-testid="tutorial-coach-block"]').should('contain', 'Extraction')
 
         // On mobile the bottom tab bar's Missions tab is always visible. The
         // old always-on desktop sidebar nav (`.desktop-sidebar`,

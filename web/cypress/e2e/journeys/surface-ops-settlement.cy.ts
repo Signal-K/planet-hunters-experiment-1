@@ -59,7 +59,7 @@ describe('Surface Ops settlement journey', () => {
     cy.get('[data-testid="hub-surface-ops"]').click()
     cy.location('pathname').should('eq', '/game/surface-ops')
     cy.get('[data-testid="surface-purchase-access"]').click()
-    cy.contains('ACCESS PERMIT ACTIVE').should('be.visible')
+    cy.contains('CLIENT SITE RIGHT ACTIVE').should('be.visible')
     cy.get('[data-testid="surface-build-launchpad"]').click()
     cy.contains('CONSTRUCTION ACTIVE').should('be.visible')
     cy.screenshot('surface-ops-portrait-building')

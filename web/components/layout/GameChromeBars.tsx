@@ -1,6 +1,7 @@
 'use client'
 
 import type { Screen } from '@/lib/game-types'
+import { UI_ZONES } from '@/lib/ui-zones'
 
 type GameChromeBarsProps = {
   screen: Screen
@@ -26,7 +27,7 @@ export function GameChromeBars({ screen, missionsDone, hasActiveRun, onHome, onO
   const operationsLabel = hasActiveRun ? 'RESUME' : 'OPS'
 
   return (
-    <nav className="game-chrome-bottom" data-testid="home-bottom-bar" aria-label="Primary navigation">
+    <nav className="game-chrome-bottom" data-ui-zone={UI_ZONES.bottomNav} data-testid="home-bottom-bar" aria-label="Primary navigation">
       <span className="game-chrome-bottom__readout" data-testid="home-ops-readout">OPS {missionsDone}</span>
       <button type="button" data-testid="home-bar-ops" data-coach-id="bottom-tab-missions" onClick={onOperations}>{operationsLabel}</button>
       <button type="button" data-testid="home-bar-hub" aria-current={onBase ? 'page' : undefined} onClick={onHome}>HUB</button>

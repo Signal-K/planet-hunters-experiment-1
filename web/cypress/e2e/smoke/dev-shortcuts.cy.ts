@@ -129,8 +129,8 @@ describe('DEV panel UI', () => {
     cy.get('[data-testid="dev-shot-ui-academy"]').should('exist')
     cy.get('[data-testid="dev-shot-ui-hangar-assembly"]').should('exist')
     cy.get('[data-testid="dev-shot-ui-instrument-hub"]').should('exist')
-    // ui-tess-discovery is listed in two groups, so 25 presets render 26 buttons.
-    cy.get('[data-testid^="dev-shot-"]').should('have.length', 26)
+    // ui-tess-discovery is listed in two groups, so 26 presets render 27 buttons.
+    cy.get('[data-testid^="dev-shot-"]').should('have.length', 27)
   })
 
   it('clicking Transport Hub lands on the two-leg client pick with the Transport coach', () => {

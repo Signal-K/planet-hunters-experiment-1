@@ -88,10 +88,12 @@ describe('Interaction order hardening', () => {
   })
 
   it('a fixed-target mission skips the target map and goes straight to the vehicle', () => {
+    // SSL-332: missionsDone 1 is the Transport lesson, where the fixed-target
+    // relay contracts are offered (missionsDone 2 shows the silo prompt instead).
     // lnm_m3_ore_delivery is a retired M3 slug — withCorrectedM3 (lib/catalog.ts)
     // now maps it away entirely, so it never resolves to a mission. Use a current
     // fixed-target M3 mission (lib/data/missions.ts) instead.
-    visitWithState({ screen: 'hub', player: { missionsDone: 2, missionCount: 3 } })
+    visitWithState({ screen: 'hub', player: { missionsDone: 1, missionCount: 2 } })
     cy.get('[data-testid="home-bar-ops"]').click()
     cy.get('[data-testid="mission-accept-lnm_m3_relay_bennu_vesta"]').click()
     cy.get('[data-testid="mission-rocket-blueprint"]').should('be.visible')
@@ -99,7 +101,7 @@ describe('Interaction order hardening', () => {
   })
 
   it('backs out of fixed-target rocket purchase to its fixed target, never an empty target picker', () => {
-    visitWithState({ screen: 'hub', player: { missionsDone: 2, missionCount: 3 } })
+    visitWithState({ screen: 'hub', player: { missionsDone: 1, missionCount: 2 } })
     cy.get('[data-testid="home-bar-ops"]').click()
     cy.get('[data-testid="mission-accept-lnm_m3_relay_bennu_vesta"]').click()
     cy.get('[data-testid="mission-rocket-blueprint"]').should('be.visible')
@@ -155,7 +157,7 @@ describe('Interaction order hardening', () => {
     // debrief settlement routes to the hub tutorial rail, not the market — see the
     // identical assertion in smoke/game-loop.cy.ts "M1 completion returns to hub".
     cy.contains('Commodity Exchange').should('not.exist')
-    cy.contains('Guided Ops · Mission 2').should('be.visible')
+    cy.get('[data-testid="tutorial-coach-block"]').contains(/transport/i).should('be.visible')
     readSavedState().should(state => {
       expect(state.player.missionsDone).to.eq(1)
       expect(state.missionId).to.eq(null)

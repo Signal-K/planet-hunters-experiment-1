@@ -225,18 +225,9 @@ describe('UI zone contract', () => {
         })
 
         cy.get('[data-ui-zone="tutorial-rail"]').should('be.visible')
-        // Desktop (>=1024px) deliberately has no bottom tab bar — its destinations
-        // hang off the hub's own action rail instead (see `.hub-desktop-nav` /
-        // `.bottom-tab-bar { display: none }` in HubScreen.tsx / globals.css).
-        if (viewport.width >= 1024) {
-          // Present in the DOM but CSS-hidden (`.bottom-tab-bar { display: none }`
-          // at >=1024px) rather than unmounted, so assertNoZone (DOM-absence)
-          // doesn't fit here the way it does for genuinely-unrendered zones.
-          cy.get('[data-ui-zone="bottom-nav"]').should('not.be.visible')
-        } else {
-          cy.get('[data-ui-zone="bottom-nav"]').should('be.visible')
-          assertZoneAvoids('bottom-nav', 'tutorial-rail')
-        }
+        // The shared Home chrome bar is the bottom-nav zone at every width.
+        cy.get('[data-ui-zone="bottom-nav"]').should('be.visible')
+        assertZoneAvoids('bottom-nav', 'tutorial-rail')
         assertNoZone('ambient-prompt')
         assertKnownZonesOnly()
         assertNoZone('feedback-launcher')
