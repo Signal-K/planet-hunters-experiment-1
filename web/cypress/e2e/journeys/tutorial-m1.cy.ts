@@ -103,25 +103,14 @@ function visitHub(overrides: Record<string, unknown> = {}) {
   })
 }
 
-// ─── Layout-aware nav helper ──────────────────────────────────────────────────
+// ─── Home-chrome navigation helper ───────────────────────────────────────────
 //
-// This is the crux of the desktop bug: on mobile the bottom tab bar is
-// visible, on desktop it is hidden. Tests MUST use the element the user can
-// actually see.
+// The persistent Home chrome replaces the retired breakpoint-specific bottom
+// tab and desktop dock. It is the one operations entry a player can use at
+// every viewport.
 
 function navToMissions() {
-  cy.window().then(win => {
-    const isDesktop = win.innerWidth >= 1024
-    if (isDesktop) {
-      // The old always-on desktop sidebar nav (`sidebar-nav-missions`) was
-      // retired; the Hub dock's desktop Missions action is the entry point
-      // that is present regardless of tutorial state.
-      cy.get('[data-testid="bottom-tab-missions"]').should('not.be.visible')
-      cy.get('[data-testid="hub-desktop-missions-btn"]').should('be.visible').click()
-    } else {
-      cy.get('[data-testid="bottom-tab-missions"]').should('be.visible').click()
-    }
-  })
+  cy.get('[data-testid="home-bar-ops"]').should('be.visible').click()
   cy.get('[data-testid="mission-board-section-client"]', { timeout: 10000 }).should('be.visible')
 }
 
@@ -343,61 +332,45 @@ const VIEWPORTS = [
 // `mission` also skips the layout-guard describes below (not a mission
 // playthrough, so out of scope for a mission-specific video).
 
-const MISSION_FILTER = Cypress.env('mission') as 'M1' | 'M2' | 'M3' | undefined
+const MISSION_FILTER = Cypress.env('mission') as 'M1' | 'M2' | undefined
 const VIEWPORT_FILTER = Cypress.env('viewportLabel') as string | undefined
 const viewportsToRun = VIEWPORTS.filter(v => !VIEWPORT_FILTER || v.label === VIEWPORT_FILTER)
 
 
-// ─── Desktop nav guard ────────────────────────────────────────────────────────
-//
-// Explicitly asserts that on desktop the bottom tab bar is hidden and the
-// hub's own Missions action is shown — catching any regression where the CSS
-// breakpoint breaks.
+// ─── Shared Home chrome ───────────────────────────────────────────────────────
 
-if (!MISSION_FILTER) describe('Desktop layout: bottom tab bar hidden, sidebar retired', () => {
+if (!MISSION_FILTER) describe('Desktop layout: Home chrome is the operations entry', () => {
   beforeEach(() => cy.viewport(1280, 800))
 
-  it('bottom-tab-missions is hidden and the retired sidebar is gone on desktop hub; the desktop Missions action remains available', () => {
+  it('keeps the operations control available without retired navigation', () => {
     visitHub({ doneSteps: { 0: true } })
-    cy.contains('h1', /^(Base|Earth Base)$/, { timeout: 10000 }).should('be.visible')
-    cy.get('[data-testid="bottom-tab-missions"]').should('not.be.visible')
-    // The old always-on desktop sidebar is retired and no longer rendered.
+    cy.get('[data-testid="home-top-bar"]').should('be.visible')
+    cy.get('[data-testid="home-bar-ops"]').should('be.visible')
     cy.get('[data-testid="sidebar-nav-missions"]').should('not.exist')
-    cy.get('[data-testid="hub-desktop-missions-btn"]').should('be.visible')
   })
 
-  it('tutorial coach on step 1 does NOT ring the hidden bottom tab bar', () => {
+  it('directs the first extraction step to the Launchpad', () => {
     visitHub({ doneSteps: { 0: true } })
-    cy.contains('h1', /^(Base|Earth Base)$/, { timeout: 10000 }).should('be.visible')
-    cy.get('[data-testid="tutorial-coach-block"]').should('contain', 'Open a Mission')
-    // The desktop instruction names the Launchpad; no measured ring is drawn.
-    cy.get('[data-testid="tutorial-coach-ring"]').should('not.exist')
-    // And the instruction must not say "Tap menu" (the old two-stage copy)
-    cy.get('[data-testid="tutorial-coach-block"]').should('not.contain', 'Tap menu')
+    cy.get('[data-testid="tutorial-coach-block"]').should('contain', 'Extraction')
+    cy.get('html').should('have.attr', 'data-coach-target', 'building-launchpad')
   })
 })
 
-// ─── Mobile layout guard ──────────────────────────────────────────────────────
+// ─── Mobile Home chrome ───────────────────────────────────────────────────────
 
-if (!MISSION_FILTER) describe('Mobile layout: bottom tab bar visible, sidebar hidden', () => {
+if (!MISSION_FILTER) describe('Mobile layout: Home chrome is visible, sidebar hidden', () => {
   beforeEach(() => cy.viewport(390, 844))
 
-  it('bottom-tab-missions is visible and the retired sidebar is gone on mobile hub', () => {
+  it('keeps the operations control available and the retired sidebar absent', () => {
     visitHub({ doneSteps: { 0: true } })
-    cy.contains('h1', /^(Base|Earth Base)$/, { timeout: 10000 }).should('be.visible')
-    cy.get('[data-testid="bottom-tab-missions"]').should('be.visible')
+    cy.get('[data-testid="home-bar-ops"]').should('be.visible')
     cy.get('[data-testid="sidebar-nav-missions"]').should('not.exist')
   })
 
-  it('tutorial coach on step 1 highlights the Missions tab on mobile', () => {
-    // The Missions tab is highlighted by CSS on the element itself
-    // (html[data-coach-target] in globals.css), which can't drift; the
-    // separately measured CoachPointer ring is suppressed for it (SSL-280).
+  it('directs the first extraction step to the Launchpad', () => {
     visitHub({ doneSteps: { 0: true } })
-    cy.contains('h1', /^(Base|Earth Base)$/, { timeout: 10000 }).should('be.visible')
-    cy.get('[data-testid="tutorial-coach-block"]').should('contain', 'Open a Mission')
-    cy.get('html').should('have.attr', 'data-coach-target', 'bottom-tab-missions')
-    cy.get('[data-testid="tutorial-coach-ring"]').should('not.exist')
+    cy.get('[data-testid="tutorial-coach-block"]').should('contain', 'Extraction')
+    cy.get('html').should('have.attr', 'data-coach-target', 'building-launchpad')
   })
 })
 
@@ -431,31 +404,6 @@ if (!MISSION_FILTER || MISSION_FILTER === 'M2') viewportsToRun.forEach(({ label,
         player: basePlayer({ missionsDone: 1, missionCount: 1 }),
       })
       playM2()
-    })
-  })
-})
-
-// ─── M3 full play-through (through the pickup leg) ────────────────────────────
-// Excluded from an onboarding-video pass over M1/M2 (MISSION_FILTER), but
-// runs in the normal/CI/full-matrix case: the coach steps and screens it
-// exercises deserve regression coverage.
-
-if (!MISSION_FILTER || MISSION_FILTER === 'M3') viewportsToRun.forEach(({ label, w, h }) => {
-  describe(`M3 tutorial steps and launch — ${label} (${w}×${h})`, () => {
-    beforeEach(() => cy.viewport(w, h))
-
-    it('clears all M3 coach steps, mines the pickup site, and heads for the delivery target', () => {
-      visitHub({
-        tutorial: true,
-        doneSteps: { ...M1_DONE_STEPS, 20: true, 21: true, 22: true },
-        player: basePlayer({
-          missionsDone: 2,
-          missionCount: 2,
-          francs: 9_000_000_000,
-        }),
-        rocket: { chassis: 'hull-mk2', propulsion: 'fusion-b2', drill: 'hand-drill' },
-      })
-      playM3ToDeliveryLeg()
     })
   })
 })

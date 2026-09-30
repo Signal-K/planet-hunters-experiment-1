@@ -133,7 +133,7 @@ describe('Parallel mission runs (replaces the STS-487 single-mission guard)', ()
       },
     })
 
-    cy.get('[data-testid="bottom-tab-missions"]', { timeout: 10000 }).click()
+    cy.get('[data-testid="home-bar-ops"]', { timeout: 10000 }).click()
     cy.get('[data-testid^="mission-accept-"]', { timeout: 10000 }).first().then($accept => {
       const acceptedId = $accept.attr('data-testid')!.replace('mission-accept-', '')
       cy.wrap($accept).click()

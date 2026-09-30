@@ -102,7 +102,7 @@ function openContracts() {
     // No standing missions nav on desktop; the launchpad callout's
     // "View Missions" is the entry there (see the retirement note below).
     if (win.innerWidth >= 1024) cy.contains('button', 'View Missions', { timeout: 10000 }).click()
-    else cy.get('[data-testid="bottom-tab-missions"]').click()
+    else cy.get('[data-testid="home-bar-ops"]').click()
   })
   cy.get('[data-testid="mission-board-section-client"]', { timeout: 10000 }).should('be.visible')
 }
@@ -135,9 +135,9 @@ describe('Tutorial rail regression', () => {
         cy.window().then(win => {
           if (win.innerWidth >= 1024) {
             cy.get('[data-testid="sidebar-nav-missions"]').should('not.exist')
-            cy.get('[data-testid="bottom-tab-missions"]').should('not.be.visible')
+            cy.get('[data-testid="home-bar-ops"]').should('be.visible')
           } else {
-            cy.get('[data-testid="bottom-tab-missions"]').should('be.visible')
+            cy.get('[data-testid="home-bar-ops"]').should('be.visible')
           }
         })
 
@@ -238,7 +238,7 @@ describe('Tutorial rail regression', () => {
             // path once a mission is actionable.
             cy.contains('button', 'View Missions', { timeout: 10000 }).click()
           } else {
-            cy.get('[data-testid="bottom-tab-missions"]').click()
+            cy.get('[data-testid="home-bar-ops"]').click()
           }
         })
         cy.get('[data-testid="mission-accept-generated-s1-starter-bulk-1"]').should('be.visible').click()

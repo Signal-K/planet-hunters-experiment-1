@@ -101,7 +101,7 @@ function navToMissions() {
     if (win.innerWidth >= 1024) {
       cy.get('[data-testid="hub-desktop-missions-btn"]').should('be.visible').click()
     } else {
-      cy.get('[data-testid="bottom-tab-missions"]').should('be.visible').click()
+      cy.get('[data-testid="home-bar-ops"]').should('be.visible').click()
     }
   })
 }

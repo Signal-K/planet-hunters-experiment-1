@@ -82,7 +82,7 @@ describe('Interaction order hardening', () => {
     // it falls back to Earth Base, where the coach points at the contracts.
     cy.contains('h1', /^(Base|Earth Base)$/).should('be.visible')
     cy.get('[data-testid="mission-launch-review"]').should('not.exist')
-    cy.get('[data-testid="bottom-tab-missions"]').click()
+    cy.get('[data-testid="home-bar-ops"]').click()
     cy.get('[data-testid="mission-accept-generated-s1-starter-bulk-1"]').should('be.visible')
   })
 
@@ -91,7 +91,7 @@ describe('Interaction order hardening', () => {
     // now maps it away entirely, so it never resolves to a mission. Use a current
     // fixed-target M3 mission (lib/data/missions.ts) instead.
     visitWithState({ screen: 'hub', player: { missionsDone: 2, missionCount: 3 } })
-    cy.get('[data-testid="bottom-tab-missions"]').click()
+    cy.get('[data-testid="home-bar-ops"]').click()
     cy.get('[data-testid="mission-accept-lnm_m3_relay_bennu_vesta"]').click()
     cy.get('[data-testid="mission-rocket-blueprint"]').should('be.visible')
     cy.get('[data-testid="mission-target-map"]').should('not.exist')
@@ -99,7 +99,7 @@ describe('Interaction order hardening', () => {
 
   it('backs out of fixed-target rocket purchase to its fixed target, never an empty target picker', () => {
     visitWithState({ screen: 'hub', player: { missionsDone: 2, missionCount: 3 } })
-    cy.get('[data-testid="bottom-tab-missions"]').click()
+    cy.get('[data-testid="home-bar-ops"]').click()
     cy.get('[data-testid="mission-accept-lnm_m3_relay_bennu_vesta"]').click()
     cy.get('[data-testid="mission-rocket-blueprint"]').should('be.visible')
     cy.get('[data-testid="mission-setup-scaffold"] button[aria-label="Back"]').click()

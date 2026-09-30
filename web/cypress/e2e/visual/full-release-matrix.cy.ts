@@ -109,10 +109,9 @@ function continuePastAuthIfShown() {
 function goToMissions() {
   cy.window().then(win => {
     if (win.innerWidth >= 1024) {
-      cy.get('[data-testid="bottom-tab-missions"]').should('not.be.visible')
-      clickDom('[data-testid="hub-desktop-missions-btn"]')
+      clickDom('[data-testid="home-bar-ops"]')
     } else {
-      clickDom('[data-testid="bottom-tab-missions"]')
+      clickDom('[data-testid="home-bar-ops"]')
     }
   })
   cy.get('[data-testid="mission-board-section-client"]', { timeout: 10000 }).should('be.visible')

@@ -418,8 +418,10 @@
 
 .content[data-view='field'] .takeonMount {
   --takeon-min-height: 0px;
-  flex: 1 1 auto;
-  min-height: 0;
+  /* A live field without visible terrain is not an operation. Reserve the
+     compact-phone acceptance floor before the control deck consumes space. */
+  flex: 1 1 160px;
+  min-height: 160px;
 }
 
 @media (max-width: 880px) {
@@ -470,6 +472,8 @@
 
   .content[data-view='field'] .takeonMount {
     margin-top: var(--ln-s-3);
+    flex-basis: 160px;
+    min-height: 160px;
   }
 }
 

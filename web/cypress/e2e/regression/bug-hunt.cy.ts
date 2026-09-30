@@ -16,7 +16,7 @@ const HUB_TITLE = /^(Base|Earth Base)$/
  *  the contract board from there the way a player does. */
 function openContracts() {
   cy.contains('h1', HUB_TITLE, { timeout: 8000 }).should('be.visible')
-  cy.get('[data-testid="bottom-tab-missions"]').click()
+  cy.get('[data-testid="home-bar-ops"]').click()
   cy.get(CONTRACT_STEP, { timeout: 8000 }).should('be.visible')
 }
 
@@ -241,7 +241,7 @@ describe('Bug hunt — edge cases', () => {
     cy.contains('MISSION TRANSIT', { timeout: 8000 }).should('be.visible')
     cy.get('[data-testid="top-bar-back"]').click()
     // Back from transit goes to hub (player can re-enter missions from there — no softlock)
-    cy.get('[data-testid="bottom-tab-missions"]', { timeout: 8000 }).should('be.visible')
+    cy.get('[data-testid="home-bar-ops"]', { timeout: 8000 }).should('be.visible')
   })
 
   // ─── 8. Duplicate mission pick (tap twice quickly) ───────────────────────────
