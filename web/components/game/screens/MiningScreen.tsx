@@ -708,7 +708,7 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
         )}
       </div>
 
-      <div className="mining-controls">
+      <div className="mining-controls" data-testid="mining-controls">
         {/* Caption — clarifies the fractions below are mission-order fulfillment, not cargo capacity */}
         <div style={{
           fontFamily: 'var(--ln-font-display)', fontSize: 8, fontWeight: 700,

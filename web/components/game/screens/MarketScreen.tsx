@@ -67,7 +67,7 @@ export default function MarketScreen({ stash, marketSupply, marketSupplyUpdatedA
   return (
     <div className={`theme-light market-screen ${styles.screen}`}>
       <header className={styles.header}>
-        <button className={styles.backButton} onClick={onBack} aria-label="Back to previous screen" type="button">
+        <button className={styles.backButton} onClick={onBack} aria-label="Back to previous screen" type="button" data-testid="market-back-btn">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
             <path d="M15 18l-6-6 6-6" />
           </svg>
@@ -124,7 +124,7 @@ export default function MarketScreen({ stash, marketSupply, marketSupplyUpdatedA
               <div className={styles.sectionLabel}>Cargo manifest</div>
               <h2>Mineral Inventory</h2>
             </div>
-            <button className={styles.sellButton} onClick={() => setSellAllConfirm(true)} type="button">Sell All Minerals</button>
+            <button className={styles.sellButton} onClick={() => setSellAllConfirm(true)} type="button" data-testid="sell-all-btn">Sell All Minerals</button>
           </div>
         )}
 
@@ -241,7 +241,7 @@ export default function MarketScreen({ stash, marketSupply, marketSupplyUpdatedA
               const { price, base, premiumApplied } = unitPrice(id)
               const demandExplanation = dailyEconomySnapshot?.prices[id]?.explanation
               return (
-                <article className={styles.commodityCard} key={id}>
+                <article className={styles.commodityCard} key={id} data-testid={`commodity-${id}`}>
               <div className={styles.commodityTop}>
                 <div className={styles.commodityIdentity}>
                   <MineralChip mineral={id} variant="avatar" size={36} />
