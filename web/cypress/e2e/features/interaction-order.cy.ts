@@ -65,6 +65,10 @@ function visitWithState(state: StateOverride) {
       seedFixtureSession(win)
     },
   })
+  // The bar renders before auth and the remote load settle, and the [screen]
+  // route re-applies its URL when they do, undoing a click made in between.
+  // The first account save only fires once both have settled.
+  cy.wait('@pbGameStateUpdate', { timeout: 20000 })
 }
 
 function readSavedState() {

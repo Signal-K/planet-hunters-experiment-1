@@ -133,7 +133,9 @@ function assertZoneAvoids(zone: string, forbidden: string) {
 function assertTransactionalScreenZones() {
   cy.get('[data-ui-zone="bottom-actions"]').should('be.visible')
   assertKnownZonesOnly()
-  assertNoZone('bottom-nav')
+  // The Home dock is shell chrome on every screen (GameChromeBars), laid out
+  // in-flow below the screen area, so it must clear the actions, not vanish.
+  assertZoneAvoids('bottom-nav', 'bottom-actions')
   assertNoZone('ambient-prompt')
   assertNoZone('feedback-launcher')
   assertZoneAvoids('toast-stack', 'bottom-actions')
@@ -145,12 +147,15 @@ function assertTransactionalScreenZones() {
 function assertMissionSetupActionClear(actionTestId: string) {
   cy.get(`[data-testid="${actionTestId}"]`).should('be.visible')
   assertKnownZonesOnly()
-  assertNoZone('bottom-nav')
   assertNoZone('ambient-prompt')
   assertNoZone('feedback-launcher')
   cy.get(`[data-testid="${actionTestId}"]`).then($action => {
     const actionRect = $action[0].getBoundingClientRect()
     cy.document().then(doc => {
+      // The Home dock is in-flow shell chrome on every screen; it must not sit on the action.
+      doc.querySelectorAll('[data-ui-zone="bottom-nav"]').forEach(nav => {
+        expect(rectsIntersect(nav.getBoundingClientRect(), actionRect), `bottom-nav must not overlap ${actionTestId}`).to.equal(false)
+      })
       doc.querySelectorAll('[data-ui-zone="toast-stack"]').forEach(toast => {
         expect(rectsIntersect(toast.getBoundingClientRect(), actionRect), `toast-stack must not overlap ${actionTestId}`).to.equal(false)
       })
@@ -230,7 +235,10 @@ describe('UI zone contract', () => {
         assertZoneAvoids('bottom-nav', 'tutorial-rail')
         assertNoZone('ambient-prompt')
         assertKnownZonesOnly()
-        assertNoZone('feedback-launcher')
+        // The hub is the one screen that carries the Feedback launcher
+        // (layout.tsx showFeedback); it must stay clear of the rail and dock.
+        assertZoneAvoids('feedback-launcher', 'tutorial-rail')
+        assertZoneAvoids('feedback-launcher', 'bottom-nav')
       })
 
       it('shows the Free Ops push prompt only in the desktop ambient zone', () => {
