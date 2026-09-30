@@ -204,7 +204,7 @@ function playM1() {
   assertOnHome(10000)
 
   // Step 1: tutorial coach says to open missions — follow what's VISIBLE on screen
-  expectCoach('Open a Mission')
+  expectCoach('Extraction')
   navToMissions()
 
   // Step 2: pick the M1 contract
@@ -232,62 +232,26 @@ function playM1() {
   completeDebrief()
 
   // Collecting the M1 reward returns to Hub and the coach immediately opens
-  // M2's guided-ops card. Case-insensitive: the label is visually all-caps
-  // via CSS text-transform, not literal uppercase DOM text.
+  // the Transport lesson (SSL-332). Case-insensitive: the label is visually
+  // all-caps via CSS text-transform, not literal uppercase DOM text.
   assertOnHome(10000)
-  cy.get('[data-testid="tutorial-coach-block"]', { timeout: 8000 }).contains(/guided ops · mission 2/i).should('be.visible')
+  cy.get('[data-testid="tutorial-coach-block"]', { timeout: 8000 }).contains(/transport/i).should('be.visible')
 }
 
-// ─── Full M2 play-through ─────────────────────────────────────────────────────
+// ─── Full M2 (Transport) play-through ─────────────────────────────────────────
 //
-// Starts from hub with missionsDone=1 and M2 tutorial active. Step 20 is an
-// action coach card on hub (auto-dismisses on nav); step 21 is a manual
-// coach card on the vehicle blueprint.
-
-function playM2() {
-  assertOnHome(10000)
-  expectCoach('Guided Ops')
-  navToMissions()
-
-  // M2's generated palladium order (see lib/data/missions.ts).
-  expectCoach('Choose Your Second Contract')
-  cy.get('[data-testid="mission-accept-generated-s2-starter-bulk-3"]').should('be.visible').click()
-
-  // Target map: an eligible body is preselected, so confirm it.
-  cy.get('[data-testid="mission-target-map"]', { timeout: 8000 }).should('be.visible')
-  cy.get('[data-testid="continue-build-btn"]').should('not.be.disabled').click()
-
-  // Blueprint — step 21 fires here as a manual card.
-  cy.get('[data-testid="mission-rocket-blueprint"]', { timeout: 8000 }).should('be.visible')
-  expectCoach('Select Your Rocket')
-  cy.get('[data-testid="coach-got-it-btn"]').should('be.visible').click()
-  cy.get('[data-testid="tutorial-coach-block"]').should('not.exist')
-
-  // M2 unlocks the Prospector.
-  cy.get('[data-testid="purchase-rocket-btn"]').should('contain', 'PROSPECTOR').click()
-  rollOutAndLaunch()
-
-  completeMining()
-  completeDebrief()
-
-  assertOnHome(10000)
-  cy.get('[data-testid="tutorial-coach-block"]', { timeout: 8000 }).contains(/guided ops · mission 3/i).should('be.visible')
-}
-
-// ─── Full M3 play-through ─────────────────────────────────────────────────────
-//
-// M3 is a two-stop mining and haul job (mine at a pickup target, deliver to
+// SSL-332: guided mission 2 is the Transport lesson, a two-stop mining and haul job (mine at a pickup target, deliver to
 // a second target before flying home). Both M3 missions have preset targets,
 // so accepting one skips the target map and goes straight to the blueprint.
 
-function playM3ToDeliveryLeg() {
+function playM2ToDeliveryLeg() {
   assertOnHome(10000)
 
-  // Step 30: hub action step (auto-dismisses on nav, like M2's step 20).
-  expectCoach('Guided Ops')
+  // Step 30: hub action step (auto-dismisses on nav).
+  expectCoach('Transport')
   navToMissions()
 
-  // Pick one of the two M3 client missions.
+  // Pick one of the two Transport client missions.
   cy.get('[data-testid="mission-accept-lnm_m3_relay_bennu_vesta"]').should('be.visible').click()
 
   // Blueprint — step 31 fires here (no target map since the route is preset).
@@ -381,7 +345,7 @@ if (!MISSION_FILTER || MISSION_FILTER === 'M1') viewportsToRun.forEach(({ label,
   describe(`M1 full play-through — ${label} (${w}×${h})`, () => {
     beforeEach(() => cy.viewport(w, h))
 
-    it('plays M1 from hub through debrief to the M2 guided-ops handoff', () => {
+    it('plays M1 from hub through debrief to the Transport handoff', () => {
       visitHub({ doneSteps: { 0: true }, tutorial: true })
       playM1()
     })
@@ -398,13 +362,13 @@ if (!MISSION_FILTER || MISSION_FILTER === 'M2') viewportsToRun.forEach(({ label,
   describe(`M2 full play-through — ${label} (${w}×${h})`, () => {
     beforeEach(() => cy.viewport(w, h))
 
-    it('plays M2 from hub through debrief to the M3 guided-ops handoff', () => {
+    it('plays M2 from hub through the Transport pickup leg to the delivery leg', () => {
       visitHub({
         tutorial: true,
         doneSteps: M1_DONE_STEPS,
         player: basePlayer({ missionsDone: 1, missionCount: 1 }),
       })
-      playM2()
+      playM2ToDeliveryLeg()
     })
   })
 })

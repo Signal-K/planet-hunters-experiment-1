@@ -10,6 +10,14 @@ import { VIEWPORTS, setupGameState, BASE_RESPONSIVE_STATE } from '../../support/
 
 const STORAGE_KEY = 'landnam-game-state-v1';
 
+// The Market is a Free Ops destination (SSL-332): the chrome button only
+// navigates once `player.freeOperations` holds, and it is re-derived on load
+// (silo placed, or the legacy missionsDone >= 3 path). Seed the legacy path.
+const FREE_OPS_STATE = {
+  ...BASE_RESPONSIVE_STATE,
+  player: { ...BASE_RESPONSIVE_STATE.player, missionsDone: 3, freeOperations: true },
+};
+
 describe('Responsive Layout — Critical Screens Matrix', () => {
   beforeEach(() => {
     cy.intercept('GET', '**/api/**', { statusCode: 500 }).as('blockBackend');
@@ -52,10 +60,10 @@ describe('Responsive Layout — Critical Screens Matrix', () => {
       it(`Market renders properly at ${vp.name} (${vp.width}×${vp.height})`, () => {
         cy.viewport(vp.width, vp.height);
         setupGameState({
-          ...BASE_RESPONSIVE_STATE,
+          ...FREE_OPS_STATE,
           screen: 'market',
           player: {
-            ...BASE_RESPONSIVE_STATE.player,
+            ...FREE_OPS_STATE.player,
             stash: { iron: 500, ice: 250, regolith: 100 },
           },
         });
@@ -104,8 +112,10 @@ describe('Responsive Layout — Critical Screens Matrix', () => {
         // Canvas must render
         cy.get('[data-testid="mining-canvas"]', { timeout: 20000 })
           .should('be.visible')
-          .invoke('width').should('be.gt', 0)
-          .invoke('height').should('be.gt', 0);
+          .should($canvas => {
+            expect($canvas.width(), 'canvas width').to.be.gt(0);
+            expect($canvas.height(), 'canvas height').to.be.gt(0);
+          });
 
         // Mining HUD controls must be visible and accessible
         cy.get('[data-testid="fire-laser-btn"]', { timeout: 5000 }).should('be.visible');
@@ -131,7 +141,7 @@ describe('Responsive Layout — Critical Screens Matrix', () => {
     it('can navigate between screens at all viewports', () => {
       Object.entries(VIEWPORTS).forEach(([_vpKey, vp]) => {
         cy.viewport(vp.width, vp.height);
-        setupGameState(BASE_RESPONSIVE_STATE);
+        setupGameState(FREE_OPS_STATE);
 
         // From Hub → Market
         cy.get('[data-testid="home-bar-market"]').click();
