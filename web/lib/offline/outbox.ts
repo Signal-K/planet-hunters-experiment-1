@@ -20,7 +20,11 @@ export interface OutboxItem {
   createdAt: number
   attempts: number
   nextAttemptAt: number
-  /** Set once attempts reach MAX_ATTEMPTS; kept in the queue and surfaced, never dropped. */
+  /**
+   * Set once attempts reach MAX_ATTEMPTS so the UI can surface a problem.
+   * The item is still retried at the capped backoff: a temporary server-side
+   * rejection must not turn into a permanently stranded Safari outbox item.
+   */
   failed: boolean
   lastError?: string
 }
@@ -203,7 +207,9 @@ export function createOutbox({ store, execute, now = Date.now, isOnline = () => 
     await ensureLoaded()
     emit()
     for (const item of [...items]) {
-      if (item.failed || item.nextAttemptAt > now()) continue
+      // A failed item is deliberately retained and retried. `failed` is a
+      // user-visible warning threshold, not a terminal state.
+      if (item.nextAttemptAt > now()) continue
       const failure = await execute(item.op)
       if (failure === null || failure.kind === 'already-applied') {
         items = items.filter(i => i !== item)

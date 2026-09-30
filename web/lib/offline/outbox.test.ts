@@ -114,6 +114,25 @@ describe('outbox', () => {
     expect(failing.outbox.pending()).toHaveLength(1)
   })
 
+  it('retries a surfaced failure and clears it when the server recovers', async () => {
+    const results: OutboxFailure[] = [
+      ...Array.from({ length: MAX_ATTEMPTS }, () => ({ kind: 'rejected', message: '500' }) as OutboxFailure),
+    ]
+    const h = harness(results)
+    await h.outbox.enqueue(create)
+    for (let i = 0; i < MAX_ATTEMPTS; i++) {
+      h.advance(10 * 60_000)
+      await h.outbox.flush()
+    }
+    expect(h.outbox.snapshot()).toMatchObject({ waiting: 0, failed: 1 })
+
+    h.advance(10 * 60_000)
+    await h.outbox.flush()
+
+    expect(h.outbox.snapshot()).toMatchObject({ waiting: 0, failed: 0 })
+    expect(h.outbox.pending()).toHaveLength(0)
+  })
+
   it('reloads a persisted queue from the store', async () => {
     const store = memoryStore()
     const first = createOutbox({ store, execute: async () => ({ kind: 'offline' }), isOnline: () => false })
