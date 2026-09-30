@@ -928,6 +928,23 @@ button { cursor: pointer; }
   }
 }
 
+/* SSL-381: the mission-setup coach is a fixed 320px card, which leaves ~146px for its copy
+   and clips it to "Each..." / "accept..." between phone and desktop widths (tablets,
+   narrow windows). Give it room to show the two lines it is clamped to. */
+@media (min-width: 521px) and (max-width: 899px) {
+  .tutorial-coach-overlay--mission-setup [data-testid="tutorial-coach-block"] {
+    width: min(480px, calc(100% - 2 * var(--ln-setup-coach-left, 16px))) !important;
+  }
+  /* Portrait has the vertical room: show the whole instruction, not a clamp that stops
+     mid-sentence. Landscape keeps the compact one-line card (below) so it stays clear of
+     the client header. */
+  .tutorial-coach-overlay--mission-setup .tutorial-coach-card .tutorial-coach-body { display: block; -webkit-line-clamp: unset; }
+  .tutorial-coach-overlay--mission-setup .tutorial-coach-card--manual { max-height: none !important; }
+}
+@media (min-width: 521px) and (max-width: 899px) and (orientation: landscape) {
+  .tutorial-coach-overlay--mission-setup .tutorial-coach-card .tutorial-coach-body { display: none; }
+}
+
 @media (max-width: 899px) {
   .tutorial-coach-card {
     gap: 8px !important;
