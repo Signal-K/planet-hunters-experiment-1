@@ -101,7 +101,9 @@ describe('Hub and Launchpad visual layout', () => {
       if (viewport.name === 'compact-landscape') {
         cy.get('.launchpad-scene-rail').then($rail => {
           const rail = $rail[0].getBoundingClientRect()
-          cy.get('.launchpad-rail-actions button').each($button => {
+          // GUIDE is deliberately suppressed in this constrained rail; only
+          // commands available to the player must occupy the fixed row.
+          cy.get('.launchpad-rail-actions button:visible').each($button => {
             const button = $button[0].getBoundingClientRect()
             expect(button.top, 'compact rail action stays inside rail').to.be.gte(rail.top)
             expect(button.bottom, 'compact rail action stays inside rail').to.be.lte(rail.bottom)
