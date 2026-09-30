@@ -875,8 +875,10 @@ button { cursor: pointer; }
 /* Mission setup: compact layouts start the stage at 56px (one 40px header
    row), so the coach anchors to the stage's inner top-left and the sync
    note sits in the gutter under the stage. */
-/* Desktop stage: inset 96/32 plus its 4px border and an 8px gap. */
-.tutorial-coach-overlay--mission-setup { --ln-setup-coach-top: 108px; --ln-setup-coach-left: 44px; }
+/* Desktop stage: inset 96/32 plus its 4px border and an 8px gap. The contract
+   carousel's Previous arrow sits on the stage's left edge (52px wide) at mid
+   height, so the card starts to its right instead of covering it (SSL-383). */
+.tutorial-coach-overlay--mission-setup { --ln-setup-coach-top: 108px; --ln-setup-coach-left: 100px; }
 @media (max-width:980px) { .tutorial-coach-overlay--mission-setup { --ln-setup-coach-top: 92px; --ln-setup-coach-left: 28px; } }
 @media (max-width:720px), (max-height:520px), (orientation:portrait) {
   .tutorial-coach-overlay--mission-setup { --ln-setup-coach-top: 64px; --ln-setup-coach-left: 16px; }
