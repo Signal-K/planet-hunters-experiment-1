@@ -511,6 +511,7 @@ export interface GameActions {
   goToMissions: (scope?: SceneScope) => void
   markContractsOpened: (scope?: SceneScope) => void
   setScreenFromUrl: (screen: Screen) => void
+  isStaleRoute: (screen: string) => boolean
   setPlayer: React.Dispatch<React.SetStateAction<Player>>
   setMissionId: (id: string | null) => void
   setTargetId: (id: string | null) => void

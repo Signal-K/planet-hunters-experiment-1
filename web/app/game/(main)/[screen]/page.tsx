@@ -20,6 +20,9 @@ export default function ScreenPage({ params }: { params: Promise<{ screen: strin
   // coach since it keys off game.screen, not the URL).
   useEffect(() => {
     if (!game.hydrated) return
+    // A push the game issued is still in flight. Params from earlier, slower
+    // navigations are stale; only the awaited path may land.
+    if (game.isStaleRoute(screen)) return
     // Until authentication is resolved, a deep URL is only the route that
     // opened underneath the entry gate. Letting it write into GameState here
     // races sign-in's canonical Earth Base redirect and can reopen Contracts.

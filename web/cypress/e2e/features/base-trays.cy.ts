@@ -67,6 +67,10 @@ describe('Base trays and shared bar', () => {
       it('opens Market with the M key', () => {
         visitTray('/game/hub')
         cy.get('[data-testid="home-bar-hub"]').should('be.visible')
+        // The auth store's first change reloads the account save slot shortly
+        // after load and overwrites a screen change made in that window. This
+        // spec has no request to wait on, so let it finish before pressing M.
+        cy.wait(2000)
         cy.get('body').type('m')
         cy.location('pathname').should('eq', '/game/market')
       })

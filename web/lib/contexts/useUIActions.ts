@@ -14,6 +14,11 @@ export function useUIActions(
   const [toasts, setToasts] = useState<Toast[]>([])
   // Set by setScreenFromUrl to tell the URL-sync effect to skip one cycle
   const skipNextUrlSync = useRef(false)
+  // Path of a router.push the URL-sync effect has issued but Next has not
+  // committed yet. window.location.pathname is stale until then, so a quick
+  // second navigation (Back then Resume) would compare against the old path,
+  // push nothing, and let the slower first push land last.
+  const inflightPath = useRef<string | null>(null)
   // Whether Hub is showing its Subsurface half. HubScreen slides between
   // surface/subsurface as one continuous scene without a route change (a
   // real navigation would fight the slide animation and add spurious
@@ -135,6 +140,16 @@ export function useUIActions(
     })
   }, [setState])
 
+  // The [screen] page asks this before trusting a route param. True means the
+  // param belongs to an earlier navigation that a newer push has superseded.
+  const isStaleRoute = useCallback((screen: string) => {
+    const inflight = inflightPath.current
+    if (!inflight) return false
+    if (inflight !== `/game/${screen}`) return true
+    inflightPath.current = null
+    return false
+  }, [])
+
   const setPopup = useCallback((v: string | null) => {
     setState(s => ({ ...s, popup: v }))
   }, [setState])
@@ -155,5 +170,5 @@ export function useUIActions(
     setState(s => ({ ...s, pendingTerritoryClaimFor: undefined, screen: s.tutorial ? 'hub' : 'market' }))
   }, [setState])
 
-  return { go, goBack, recordScreenTransition, goToMissions, markContractsOpened, setScreenFromUrl, skipNextUrlSync, setPopup, setMenuOpen, addToast, dismissToast, clearTerritoryClaimPopup, toasts, subsurfaceView, setSubsurfaceView, openLaunchpad, openLaunchpadMissionMenu, launchpadMissionMenuOpen, setLaunchpadMissionMenuOpen, returnFromHangar }
+  return { go, goBack, recordScreenTransition, goToMissions, markContractsOpened, setScreenFromUrl, skipNextUrlSync, inflightPath, isStaleRoute, setPopup, setMenuOpen, addToast, dismissToast, clearTerritoryClaimPopup, toasts, subsurfaceView, setSubsurfaceView, openLaunchpad, openLaunchpadMissionMenu, launchpadMissionMenuOpen, setLaunchpadMissionMenuOpen, returnFromHangar }
 }

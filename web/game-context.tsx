@@ -223,7 +223,10 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       return
     }
     const nextPath = canonicalGamePath(state)
-    if (window.location.pathname !== nextPath) router.push(nextPath)
+    if ((ui.inflightPath.current ?? window.location.pathname) !== nextPath) {
+      ui.inflightPath.current = nextPath
+      router.push(nextPath)
+    }
   }, [state.screen, state.missionId, state.targetId]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Derived values ─────────────────────────────────────────────────────────
@@ -265,6 +268,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       goToMissions: ui.goToMissions,
       markContractsOpened: ui.markContractsOpened,
       setScreenFromUrl: ui.setScreenFromUrl,
+      isStaleRoute: ui.isStaleRoute,
       setPopup: ui.setPopup,
       setMenuOpen: ui.setMenuOpen,
       dismissToast: ui.dismissToast,
