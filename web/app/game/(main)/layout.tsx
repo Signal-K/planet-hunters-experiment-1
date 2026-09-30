@@ -285,6 +285,10 @@ function GameChrome({ children }: { children: ReactNode }) {
             mode={game.popup === AGENCY_TRAINING_POPUP ? 'review' : 'handoff'}
             onChoose={activity => {
               captureGameEvent('free_ops_activity_chosen', { activity: activity.id, source: game.popup })
+              // SSL-342: the handoff sheet shows once, when Free Ops opens, so a
+              // choice made from it (not the later 'review' replay) is the
+              // player's first exercise of agency.
+              if (game.popup === 'tutorial-complete') captureGameEvent('free_ops_first_choice', { activity: activity.id })
               game.setPopup(null)
               if (activity.screen === 'missions') game.goToMissions()
               else if (activity.screen === 'launchpad') game.openLaunchpad()

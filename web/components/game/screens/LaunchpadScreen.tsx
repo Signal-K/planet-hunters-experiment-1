@@ -20,10 +20,6 @@ import { hasActiveBuildSiteRight, ownProgramStructureDelivered } from '@/lib/sys
 import { REFINERY_BUILD_MISSION_ID } from '@/lib/data/missions'
 import { captureGameEvent } from '@/lib/posthog'
 
-// SSL-342: analytics-only, mirrors the FREE_OPS_MINING_ACK_KEY pattern in
-// MiningScreen.tsx. Not player-facing state, so a device-local ack is fine.
-const FREE_OPS_FIRST_CHOICE_ACK_KEY = 'ln_free_ops_first_choice_ack'
-
 interface LaunchpadScreenProps {
   onBack: () => void
   onPick: (id: string, freeHaulDisposition?: 'store' | 'sell') => void
@@ -135,23 +131,6 @@ export default function LaunchpadScreen({
   const operations = own.filter(mission => hasFreeOpsAccess || mission.sequence === sequence)
   const pickOperation = (id: string, freeHaulDisposition?: 'store' | 'sell') => {
     captureGameEvent('launchpad_operation_picked', { mission_id: id, disposition: freeHaulDisposition ?? null })
-    // SSL-342: the agency-loop funnel needs the moment a player exercises
-    // that agency for the first time, not every pick after. A one-time
-    // localStorage ack (same pattern as the Free Ops explainer acks above)
-    // instead of new persisted player state, since this is analytics-only.
-    // Wrapped defensively: this must never block a real pick over a storage
-    // read/write failure (Safari ITP, private browsing, or a test/SSR
-    // environment with no localStorage at all).
-    if (hasFreeOpsAccess) {
-      try {
-        if (!localStorage.getItem(FREE_OPS_FIRST_CHOICE_ACK_KEY)) {
-          localStorage.setItem(FREE_OPS_FIRST_CHOICE_ACK_KEY, '1')
-          captureGameEvent('free_ops_first_choice', { mission_id: id })
-        }
-      } catch {
-        // Storage unavailable: skip the one-time ack, not the pick itself.
-      }
-    }
     onPick(id, freeHaulDisposition)
   }
   // Academy/crew progression remains deferred until it has a replacement for
