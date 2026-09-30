@@ -124,23 +124,10 @@ describe('Tutorial rail regression', () => {
 
         cy.get('[data-testid="tutorial-coach-block"]').should('contain', 'Extraction')
 
-        // On mobile the bottom tab bar's Missions tab is always visible. The
-        // old always-on desktop sidebar nav (`.desktop-sidebar`,
-        // `sidebar-nav-missions`) was retired in favour of screen-embedded
-        // navigation (`.hub-desktop-nav`, clicking the Launchpad itself,
-        // the progression card's "View Missions" CTA) — at this exact
-        // tutorial step ("Click the Launchpad") there is no persistent
-        // missions-nav element on desktop by design, so just confirm the
-        // retired sidebar and the mobile-only bottom tab bar both stay
-        // hidden rather than asserting a stand-in that doesn't exist here.
-        cy.window().then(win => {
-          if (win.innerWidth >= 1024) {
-            cy.get('[data-testid="sidebar-nav-missions"]').should('not.exist')
-            cy.get('[data-testid="home-bar-ops"]').should('be.visible')
-          } else {
-            cy.get('[data-testid="home-bar-ops"]').should('be.visible')
-          }
-        })
+        // The retired desktop sidebar must stay gone; the shared bar's OPS
+        // action is the one persistent way into Missions at every width.
+        cy.get('[data-testid="sidebar-nav-missions"]').should('not.exist')
+        cy.get('[data-testid="home-bar-ops"]').should('be.visible')
 
         assertGameplayButtonsAvoidCoachBlock()
       })

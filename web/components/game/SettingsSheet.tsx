@@ -90,6 +90,7 @@ export default function SettingsSheet({ onClose }: SettingsSheetProps) {
 
   return (
     <PageSurface
+      tray
       contentStyle={{
         background: 'linear-gradient(180deg, var(--ln-panel-2), var(--ln-void))',
         border: '1px solid var(--ln-cyan-soft)',

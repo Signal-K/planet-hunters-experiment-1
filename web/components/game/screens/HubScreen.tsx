@@ -69,22 +69,11 @@ function SubsurfaceGlyph() {
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M12 5v14M5 12l7 7 7-7" /></svg>
   )
 }
-function MarketGlyph() {
-  return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M4 10h16l-2-6H6l-2 6zM5 10v10h14V10M9 20v-6h6v6" /></svg>
-  )
-}
-function SkillsGlyph() {
-  return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M12 2l2.5 7.5H22l-6 4.6 2.3 7.4L12 17l-6.3 4.5 2.3-7.4-6-4.6h7.5z" /></svg>
-  )
-}
 function HistoryGlyph() {
   return (
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M4 5h16v14H4z" /><path d="M8 9h8M8 13h6M8 17h4" /></svg>
   )
 }
-
 /**
  * Docked bottom sheet, rebuilt 2026-08-21 (KES-226) — replaces the
  * floating `flexWrap` pill row (`.hub-action-rail`), which wrapped onto
@@ -624,22 +613,6 @@ export default function HubScreen({ player, rocketVariant = 'explorer', hasCoach
                   <DockIconBtn icon={<HistoryGlyph />} label="Mission Log" onClick={() => onOpenScene('mission-history')} />
                   {player.freeOperations && (
                     <DockIconBtn testId="hub-surface-ops" icon={<SurfaceGlyph />} label="Sites" onClick={() => onOpenScene('surface-ops')} />
-                  )}
-
-                  {/* Desktop has no nav rail and no bottom bar, so the
-                      destinations without a building of their own hang off
-                      the dock instead. Mobile reaches these via the bottom
-                      tab bar, so `.hub-desktop-nav` keeps them out of the
-                      way there. */}
-                  <span className="hub-desktop-nav">
-                    <DockIconBtn testId="hub-desktop-missions-btn" icon={<HistoryGlyph />} label="Missions" onClick={() => onOpenScene('missions')} />
-                  </span>
-                  {player.freeOperations && (
-                    <>
-                      <span className="hub-desktop-nav">
-                        <DockIconBtn icon={<MarketGlyph />} label="Market" onClick={() => onOpenScene('market')} />
-                      </span>
-                    </>
                   )}
                 </div>
               </>

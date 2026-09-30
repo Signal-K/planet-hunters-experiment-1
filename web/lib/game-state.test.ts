@@ -807,3 +807,9 @@ describe('structure flags are derived from `placed`', () => {
   })
 
 })
+
+describe('tray screens survive normalization', () => {
+  it.each(['market', 'hub-subsurface'] as const)('keeps %s as the saved screen', screen => {
+    expect(normalizeState({ screen } as PartialSave).screen).toBe(screen)
+  })
+})

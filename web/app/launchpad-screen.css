@@ -400,7 +400,7 @@ button.launchpad-scene-object { cursor: pointer; }
 /* The Hub dock is an action rail, not a floating modal. Keep its status and
    actions on the ground line so the widened launchpad remains visible above
    it and the last action cannot be hidden below a clipped sheet. */
-/* Hub itself has no BottomTabBar. The prior nav-height offset lifted its dock
+/* The prior nav-height offset lifted the Hub dock
    into the middle of the screen on desktop and portrait; anchor it to the
    actual canvas edge. */
 .hub-bottom-dock { bottom: 0 !important; }

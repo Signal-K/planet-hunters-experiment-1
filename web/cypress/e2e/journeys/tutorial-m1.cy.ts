@@ -7,9 +7,7 @@ export {}
 // These tests play the game as a real user would — they navigate using whatever
 // nav element is VISIBLE on screen, not by force-clicking hidden elements.
 //
-// Desktop (≥1024px): bottom tab bar is display:none; use the hub's own
-//                    desktop Missions action (the sidebar nav is retired).
-// Mobile (<1024px):  use bottom-tab-* directly.
+// Every width: the shared bottom bar (home-bar-*) is the navigation.
 //
 // Mission setup is one routed scene at /game/missions: contract carousel,
 // target map, vehicle blueprint, then hangar assembly / launch review.

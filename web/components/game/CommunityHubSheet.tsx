@@ -369,6 +369,7 @@ export default function CommunityHubSheet({ onClose }: CommunityHubSheetProps) {
 
   return (
     <PageSurface
+      tray
       className="theme-deep"
       zIndex={210}
       contentTestId="community-hub-page"

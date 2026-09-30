@@ -300,6 +300,7 @@ export default function FriendsSheet({ onClose }: FriendsSheetProps) {
 
   return (
     <PageSurface
+      tray
       className="theme-deep"
       zIndex={210}
       contentTestId="friends-page"

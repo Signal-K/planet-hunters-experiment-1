@@ -14,6 +14,12 @@ type GameChromeBarsProps = {
   menuExpanded?: boolean
 }
 
+/** The shared bar mounts on every screen except the intro, and stays out of the
+ * way while the auth gate owns the page. */
+export function mountsSharedChrome(screen: Screen, authGateOpen: boolean): boolean {
+  return screen !== 'intro' && !authGateOpen
+}
+
 /**
  * Navigation belongs to the game shell, rather than to the one scene that
  * happened to introduce it. The dock is an in-flow row below the screen area

@@ -7,7 +7,7 @@ import TutorialCoach from '@/components/game/TutorialCoach'
 import UnlockPopup from '@/components/game/UnlockPopup'
 import { TutorialCompleteSheet } from '@/components/game/TutorialCompleteSheet'
 import { resolveShortcut } from '@/lib/game-shortcuts'
-import { GameChromeBars } from '@/components/layout/GameChromeBars'
+import { GameChromeBars, mountsSharedChrome } from '@/components/layout/GameChromeBars'
 import { AGENCY_TRAINING_POPUP, agencyTrainingStage, agencyTrainingTrack, freeOpsActivities } from '@/lib/systems/AgencyOnboardingSystem'
 import BackendStatus from '@/components/game/BackendStatus'
 import LandnamSyncStatus from '@/components/game/LandnamSyncStatus'
@@ -169,7 +169,7 @@ function GameChrome({ children }: { children: ReactNode }) {
       const action = resolveShortcut(event)
       if (action === 'close-tray') {
         setSettingsOpen(false); setFriendsOpen(false); setCommunityOpen(false)
-        if (currentScreen === 'market') game.goBack('hub')
+        if (currentScreen === 'market' || currentScreen === 'hub-subsurface') game.goBack('hub')
       } else if (action === 'open-market') {
         if (game.player.freeOperations) game.go('market')
       } else if (action === 'switch-operation') {
@@ -277,7 +277,7 @@ function GameChrome({ children }: { children: ReactNode }) {
           )}
         </div>
 
-        {currentScreen !== 'intro' && !game.authGateOpen && (
+        {mountsSharedChrome(currentScreen, game.authGateOpen) && (
           <GameChromeBars
             screen={currentScreen}
             missionsDone={game.player.missionsDone}

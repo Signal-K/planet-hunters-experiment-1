@@ -26,7 +26,7 @@ import { deriveSceneScope, EARTH_BASE_SCOPE } from '@/lib/scene-scope'
 import { claimFriendGift as claimFriendGiftRequest } from '@/lib/friends/client'
 import { applyFriendGiftToPlayer, friendGiftToastMessage } from '@/lib/friends/applyGift'
 import { GAME_STATE_STORAGE_KEY, gameStateStorageKey } from '@/lib/game-state-storage'
-import { canonicalGamePath } from '@/lib/game-route'
+import { canonicalGamePath, trayScreenFromPath } from '@/lib/game-route'
 
 export type { Screen, Player, GameState } from '@/lib/game-types'
 
@@ -92,9 +92,10 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     // hydrates. Keep that entry decision authoritative; otherwise hydration
     // restores the previous Contracts screen and the URL-sync effect pushes
     // the player straight back to `/game/missions` (KES-226).
+    const trayScreen = trayScreenFromPath(window.location.pathname)
     const entryState = window.location.pathname === '/game/hub'
       ? { ...loadedState, screen: 'hub' as Screen }
-      : loadedState
+      : trayScreen ? { ...loadedState, screen: trayScreen } : loadedState
     setState(entryState)
     setHydrated(true)
     const record = pbShared.authStore.record

@@ -25,3 +25,14 @@ export function canonicalGameRoute({ screen, missionId, targetId }: RouteState):
 export function canonicalGamePath(state: RouteState): string {
   return `/game/${canonicalGameRoute(state)}`
 }
+
+/** Trays (Market, Subsurface) are stable URLs that open over the Base. A cold
+ * load of one must keep that tray instead of restoring the saved screen, which
+ * would make the state -> URL sync rewrite the path to the saved screen. */
+export const TRAY_ROUTE_SCREENS = new Set<Screen>(['market', 'hub-subsurface'])
+
+export function trayScreenFromPath(pathname: string): Screen | null {
+  const match = /^\/game\/([^/]+)\/?$/.exec(pathname)
+  const screen = match?.[1] as Screen | undefined
+  return screen && TRAY_ROUTE_SCREENS.has(screen) ? screen : null
+}

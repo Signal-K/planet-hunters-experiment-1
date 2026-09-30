@@ -10,6 +10,8 @@ interface PageSurfaceProps {
   style?: React.CSSProperties
   contentStyle?: React.CSSProperties
   zIndex?: number
+  /** Base tray: a centered card over the still-mounted Base from 768px up (SSL-347). Phones keep the full-bleed page. */
+  tray?: boolean
   testId?: string
   contentTestId?: string
   ariaLabel?: string
@@ -30,6 +32,7 @@ export default function PageSurface({
   style,
   contentStyle,
   zIndex = 89,
+  tray = false,
   testId,
   contentTestId,
   ariaLabel,
@@ -37,7 +40,7 @@ export default function PageSurface({
 }: PageSurfaceProps) {
   return (
     <div
-      className={['ln-page-surface', className].filter(Boolean).join(' ')}
+      className={['ln-page-surface', tray && 'ln-page-surface--tray', className].filter(Boolean).join(' ')}
       data-ui-zone={UI_ZONES.screenContent}
       data-testid={testId}
       style={{ zIndex, ...style }}

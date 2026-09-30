@@ -97,13 +97,7 @@ function skipAuthGateIfShown() {
 }
 
 function navToMissions() {
-  cy.window().then(win => {
-    if (win.innerWidth >= 1024) {
-      cy.get('[data-testid="hub-desktop-missions-btn"]').should('be.visible').click()
-    } else {
-      cy.get('[data-testid="home-bar-ops"]').should('be.visible').click()
-    }
-  })
+  cy.get('[data-testid="home-bar-ops"]').should('be.visible').click()
 }
 
 function jumpToCompletedDebrief(cargo: Record<string, number>) {

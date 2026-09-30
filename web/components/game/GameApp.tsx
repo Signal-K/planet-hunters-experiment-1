@@ -11,7 +11,6 @@ import MissionTicker from '@/components/game/MissionTicker'
 import UnlockPopup from '@/components/game/UnlockPopup'
 import { TutorialCompleteSheet } from '@/components/game/TutorialCompleteSheet'
 import { agencyTrainingStage, agencyTrainingTrack, freeOpsActivities } from '@/lib/systems/AgencyOnboardingSystem'
-import BottomTabBar from '@/components/layout/BottomTabBar'
 import BackendStatus from '@/components/game/BackendStatus'
 import LandnamSyncStatus from '@/components/game/LandnamSyncStatus'
 import { PushOptIn } from '@/components/game/PushOptIn'
@@ -160,45 +159,6 @@ function GameCanvas() {
     game.toasts.forEach(toast => game.dismissToast(toast.id))
   }, [game.dismissToast, game.screen, game.toasts])
 
-  function goFromNav(id: string) {
-    if (id === 'missions') {
-      game.goToMissions()
-      return
-    }
-    if (id === 'fab') {
-      if (!game.player.freeOperations) {
-        game.go('hub')
-        return
-      }
-      // The Build tab is an entry point, not a resume button. Clear any
-      // completed/stale mission context so it opens the Free Ops chooser.
-      game.setMissionId(null)
-      game.setTargetId(null)
-      game.go('fab')
-      return
-    }
-    if (id === 'market') {
-      game.go('market')
-      return
-    }
-    if (id === 'skills') {
-      game.go('skills')
-      return
-    }
-    game.go(id as Screen)
-  }
-
-  const currentNav = game.screen === 'missions' || game.screen === 'targets'
-    ? 'missions'
-    : game.screen === 'mission-history' ? 'mission-history' : game.screen === 'instrument-hub' || game.screen === 'galaxy' ? 'instrument-hub' : game.screen === 'fab' ? 'fab' : game.screen === 'skills' ? 'skills' : 'hub'
-  const showHub = game.screen === 'hub' || (game.screen === 'market' && !game.player.freeOperations)
-  const missionCreatorActive = game.screen === 'missions'
-    || game.screen === 'targets'
-    || game.screen === 'rocket-buy'
-    || (game.screen === 'fab' && !!game.mission && !!game.target)
-  const showNav = (showHub || ['missions', 'skills', 'targets', 'mission-history'].includes(game.screen))
-    && !(game.screen === 'targets' && hasCoach)
-    && !missionCreatorActive
   const showFeedback = game.screen === 'hub'
     && !game.subsurfaceView
     && !game.popup
@@ -280,7 +240,6 @@ function GameCanvas() {
         )}
         {showFeedback && <FeedbackButton />}
         <SurveySheet blockWhile={surveyBlocked} />
-        {showNav && <BottomTabBar current={currentNav} onNav={goFromNav} />}
 
         {coach && !game.authGateOpen && (
           <TutorialCoach
