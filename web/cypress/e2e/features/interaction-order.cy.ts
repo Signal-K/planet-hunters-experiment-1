@@ -67,8 +67,9 @@ function visitWithState(state: StateOverride) {
   })
   // The bar renders before auth and the remote load settle, and the [screen]
   // route re-applies its URL when they do, undoing a click made in between.
-  // The first account save only fires once both have settled.
-  cy.wait('@pbGameStateUpdate', { timeout: 20000 })
+  // The first account save (a create after the 404 load) only fires once both
+  // have settled; the follow-up PATCH is not guaranteed, so wait on the create.
+  cy.wait('@pbGameStateCreate', { timeout: 20000 })
 }
 
 function readSavedState() {
