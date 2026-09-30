@@ -1,3 +1,4 @@
+import { assertOnHome } from '../../support/home-helpers'
 import type { GameState } from '@/game-context'
 import { seedFixtureSession } from '../../support/authenticated-fixture'
 
@@ -80,7 +81,7 @@ describe('Interaction order hardening', () => {
 
     // An onboarding assembly route with no mission has nothing to assemble;
     // it falls back to Earth Base, where the coach points at the contracts.
-    cy.contains('h1', /^(Base|Earth Base)$/).should('be.visible')
+    assertOnHome()
     cy.get('[data-testid="mission-launch-review"]').should('not.exist')
     cy.get('[data-testid="home-bar-ops"]').click()
     cy.get('[data-testid="mission-accept-generated-s1-starter-bulk-1"]').should('be.visible')
@@ -122,14 +123,14 @@ describe('Interaction order hardening', () => {
       },
     })
 
-    cy.contains('h1', /^(Base|Earth Base)$/).should('be.visible')
+    assertOnHome()
     cy.contains('EMERGENCY LOAN').should('not.exist')
     readSavedState().should(state => {
       expect(state.player.francs).to.eq(100_000_000)
       expect(state.player.loanDebt).to.eq(0)
     })
     cy.reload()
-    cy.contains('h1', /^(Base|Earth Base)$/).should('be.visible')
+    assertOnHome()
     cy.contains('EMERGENCY LOAN').should('not.exist')
   })
 
@@ -174,7 +175,7 @@ describe('Interaction order hardening', () => {
     })
 
     cy.get('[aria-label="back"]').click()
-    cy.contains('h1', /^(Base|Earth Base)$/).should('be.visible')
+    assertOnHome()
     cy.get('[data-testid="hub-resume-mission-btn"]').click()
     cy.location('pathname').should('eq', '/game/mining')
     cy.get('[data-testid="mining-canvas"]').should('be.visible')

@@ -1,3 +1,4 @@
+import { assertOnHome } from '../../support/home-helpers'
 /**
  * Bug-hunt: edge cases and break scenarios from manual-play simulation.
  * Each test targets a realistic failure mode that basic smoke tests miss.
@@ -114,7 +115,7 @@ describe('Bug hunt — edge cases', () => {
     teardownVehicle()
     // Nothing is paid for an incomplete order, but the player can still leave.
     cy.get('[data-testid="collect-reward-btn"]').should('be.visible').click()
-    cy.contains('h1', /^(Base|Earth Base)$/, { timeout: 8000 }).should('be.visible')
+    assertOnHome(8000)
   })
 
   // ─── 2. Loan system: player in debt clears it from debrief payout ────────────
@@ -138,7 +139,7 @@ describe('Bug hunt — edge cases', () => {
     })
     teardownVehicle()
     cy.get('[data-testid="collect-reward-btn"]').click()
-    cy.contains('h1', /^(Base|Earth Base)$/, { timeout: 8000 }).should('be.visible')
+    assertOnHome(8000)
     // Should not crash and state should not have negative francs
     cy.window().then(win => {
       const state = JSON.parse(win.localStorage.getItem(ACCOUNT_STORAGE_KEY) || '{}') as GameState

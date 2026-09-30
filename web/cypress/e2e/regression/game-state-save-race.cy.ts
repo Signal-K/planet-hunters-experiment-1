@@ -1,3 +1,4 @@
+import { assertOnHome } from '../../support/home-helpers'
 import { seedFixtureSession } from '../../support/authenticated-fixture'
 
 // Regression tests for two real prod bugs on POST .../game_states/records.
@@ -127,7 +128,7 @@ describe('game_states save race recovery', () => {
         }))
       },
     })
-    cy.contains('h1', /^(Base|Earth Base)$/, { timeout: 15000 }).should('be.visible')
+    assertOnHome(15000)
 
     cy.wait('@pbGameStateCreateConflict', { timeout: 20000 })
     cy.wait('@pbGameStateLookup', { timeout: 20000 })

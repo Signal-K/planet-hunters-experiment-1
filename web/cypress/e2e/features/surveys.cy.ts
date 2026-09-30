@@ -1,3 +1,4 @@
+import { assertOnHome } from '../../support/home-helpers'
 // Relative, not the `@/` alias. Cypress's bundler does not read tsconfig
 // `paths`, and every other spec gets away with `@/` only because they import
 // *types* — which TypeScript erases before webpack ever tries to resolve them.
@@ -159,7 +160,7 @@ describe('Survey QA flow', () => {
     cy.intercept('POST', '/api/milestone-feedback', { statusCode: 200, body: { ok: true } }).as('milestoneFeedback')
 
     visitGame()
-    cy.contains('h1', /^(Base|Earth Base)$/, { timeout: 10000 }).should('be.visible')
+    assertOnHome(10000)
     cy.window({ timeout: 10000 })
       .its('__landnamTriggerSurvey')
       .should('be.a', 'function')

@@ -1,3 +1,4 @@
+import { assertOnHome } from '../../support/home-helpers'
 export {}
 
 import { seedAuthenticatedFixture } from '../../support/authenticated-fixture'
@@ -205,7 +206,7 @@ function completeDebrief() {
     .click({ force: true })
   cy.contains('Ledger').scrollIntoView().should('be.visible')
   clickDom('[data-testid="collect-reward-btn"]')
-  cy.contains('h1', /^(Base|Earth Base)$/i, { timeout: 10000 }).should('be.visible')
+  assertOnHome(10000)
 }
 
 function captureExtendedSurfaces(viewport: typeof VIEWPORTS[number]) {
@@ -354,7 +355,7 @@ describe('Release journey — onboarding and late-game operations across viewpor
       })
 
       continuePastAuthIfShown()
-      cy.get('h1.intro-title', { timeout: 10000 }).should('be.visible').and('have.text', 'LANDNAM')
+      cy.get('[data-testid="intro-title"]', { timeout: 10000 }).should('be.visible').and('have.text', 'LANDNAM')
       screenshot(viewport.label, 'intro')
 
       cy.get('[data-testid="intro-begin-btn"]').should('be.visible').click({ force: true })

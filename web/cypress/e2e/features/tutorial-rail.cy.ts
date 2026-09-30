@@ -1,3 +1,4 @@
+import { assertOnHome } from '../../support/home-helpers'
 import type { GameState } from '@/game-context'
 import { seedFixtureSession } from '../../support/authenticated-fixture'
 
@@ -97,7 +98,7 @@ function assertGameplayButtonsAvoidCoachBlock() {
 }
 
 function openContracts() {
-  cy.contains('h1', /^(Base|Earth Base)$/, { timeout: 10000 }).should('be.visible')
+  assertOnHome(10000)
   cy.window().then(win => {
     // No standing missions nav on desktop; the launchpad callout's
     // "View Missions" is the entry there (see the retirement note below).

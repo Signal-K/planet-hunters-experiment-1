@@ -35,7 +35,7 @@ export default function IntroScreen({
         <div className="intro-content">
           <div className="intro-badge">{PRODUCT_OPERATIONS_LABEL}</div>
           <img className="intro-logo-mark" src="/icons/landnam-logo-mark.png" alt="" aria-hidden="true" />
-          <h1 className="intro-title">{PRODUCT_WORDMARK}</h1>
+          <h1 className="intro-title" data-testid="intro-title">{PRODUCT_WORDMARK}</h1>
           <p className="intro-welcome">Welcome back, Commander.</p>
           <p className="intro-subtitle">Restoring your mission data&hellip;</p>
           <div className="intro-reconnecting-indicator" aria-label="Connecting to backend">
@@ -46,7 +46,7 @@ export default function IntroScreen({
         <div className="intro-content">
           <div className="intro-badge">{PRODUCT_OPERATIONS_LABEL}</div>
           <img className="intro-logo-mark" src="/icons/landnam-logo-mark.png" alt="" aria-hidden="true" />
-          <h1 className="intro-title">{PRODUCT_WORDMARK}</h1>
+          <h1 className="intro-title" data-testid="intro-title">{PRODUCT_WORDMARK}</h1>
           <p className="intro-welcome">{returning ? 'Welcome back, Commander.' : 'Welcome, Commander.'}</p>
           <p className="intro-subtitle">
             {returning

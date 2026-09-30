@@ -92,7 +92,7 @@ describe('Full Game Loop — Landnam', () => {
       // Intro and other chrome both say LANDNAM. Pin this to the authored
       // intro title so a compact-landscape session cannot pass against a
       // leftover rotate-to-portrait overlay (retired in SSL-326).
-      cy.get('.intro-title').should('be.visible').and('contain.text', 'LANDNAM')
+      cy.get('[data-testid="intro-title"]').should('be.visible').and('contain.text', 'LANDNAM')
       cy.contains('BEGIN OPERATIONS').should('be.visible')
       cy.get('[data-testid="intro-begin-btn"]').click()
       cy.get('[data-testid="build-place-screen"]').should('be.visible')

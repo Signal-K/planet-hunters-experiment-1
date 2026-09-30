@@ -1,3 +1,4 @@
+import { assertOnHome } from '../../support/home-helpers'
 import type { GameState } from '@/game-context'
 import { seedAuthenticatedFixture } from '../../support/authenticated-fixture'
 
@@ -107,7 +108,7 @@ describe('C1–C4 screen contracts across viewport classes', () => {
         // KES-329/330: HubScreen.tsx's h1 is now the short "Base" /
         // "Subsurface" copy (state-dependent), with the fuller identity in
         // the "BASE · OPS N" / "BASE · SUBSURFACE" eyebrow above it.
-        cy.contains('h1', /^(Base|Subsurface)$/, { timeout: 10000 }).should('be.visible')
+        assertOnHome(10000)
         // Which specific progression card shows (skills, telescope, daily
         // downlink, ...) depends on player state; the contract this test
         // holds is that *some* primary progression action is present and

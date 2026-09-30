@@ -1,3 +1,4 @@
+import { assertOnHome } from '../../support/home-helpers'
 import { seedFixtureSession } from '../../support/authenticated-fixture'
 
 export {}
@@ -200,7 +201,7 @@ function completeDebrief() {
 // ─── Full M1 play-through ─────────────────────────────────────────────────────
 
 function playM1() {
-  cy.contains('h1', /^(Base|Earth Base)$/, { timeout: 10000 }).should('be.visible')
+  assertOnHome(10000)
 
   // Step 1: tutorial coach says to open missions — follow what's VISIBLE on screen
   expectCoach('Open a Mission')
@@ -233,7 +234,7 @@ function playM1() {
   // Collecting the M1 reward returns to Hub and the coach immediately opens
   // M2's guided-ops card. Case-insensitive: the label is visually all-caps
   // via CSS text-transform, not literal uppercase DOM text.
-  cy.contains('h1', /^(Base|Earth Base)$/, { timeout: 10000 }).should('be.visible')
+  assertOnHome(10000)
   cy.get('[data-testid="tutorial-coach-block"]', { timeout: 8000 }).contains(/guided ops · mission 2/i).should('be.visible')
 }
 
@@ -244,7 +245,7 @@ function playM1() {
 // coach card on the vehicle blueprint.
 
 function playM2() {
-  cy.contains('h1', /^(Base|Earth Base)$/, { timeout: 10000 }).should('be.visible')
+  assertOnHome(10000)
   expectCoach('Guided Ops')
   navToMissions()
 
@@ -269,7 +270,7 @@ function playM2() {
   completeMining()
   completeDebrief()
 
-  cy.contains('h1', /^(Base|Earth Base)$/, { timeout: 10000 }).should('be.visible')
+  assertOnHome(10000)
   cy.get('[data-testid="tutorial-coach-block"]', { timeout: 8000 }).contains(/guided ops · mission 3/i).should('be.visible')
 }
 
@@ -280,7 +281,7 @@ function playM2() {
 // so accepting one skips the target map and goes straight to the blueprint.
 
 function playM3ToDeliveryLeg() {
-  cy.contains('h1', /^(Base|Earth Base)$/, { timeout: 10000 }).should('be.visible')
+  assertOnHome(10000)
 
   // Step 30: hub action step (auto-dismisses on nav, like M2's step 20).
   expectCoach('Guided Ops')

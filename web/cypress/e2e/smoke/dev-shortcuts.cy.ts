@@ -1,3 +1,4 @@
+import { assertOnHome } from '../../support/home-helpers'
 import { seedFixtureSession } from '../../support/authenticated-fixture'
 
 // Tests for the ?preset= URL param and the DEV panel one-shots.
@@ -10,7 +11,7 @@ const presetCases: Array<{ key: string; assertion: () => void }> = [
   },
   {
     key: 'm1-hub',
-    assertion: () => cy.contains('h1', /^(Base|Earth Base)$/).should('be.visible'),
+    assertion: () => assertOnHome(),
   },
   {
     // Mission setup owns one route: target, vehicle and launch review are
@@ -24,7 +25,7 @@ const presetCases: Array<{ key: string; assertion: () => void }> = [
   {
     key: 'transport-hub',
     assertion: () => {
-      cy.contains('h1', /^(Base|Earth Base)$/).should('be.visible')
+      assertOnHome()
     },
   },
   {
@@ -70,7 +71,7 @@ describe('Dev preset URL param (?preset=)', () => {
       },
     })
     cy.location('pathname').should('eq', '/game/hub')
-    cy.contains('h1', /^(Base|Earth Base)$/).should('be.visible')
+    assertOnHome()
   })
 
   it('preset param is stripped from URL after load', () => {

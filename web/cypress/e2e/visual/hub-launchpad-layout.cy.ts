@@ -1,3 +1,4 @@
+import { assertOnHome } from '../../support/home-helpers'
 import type { GameState } from '@/game-context'
 import { seedAuthenticatedFixture } from '../../support/authenticated-fixture'
 
@@ -71,7 +72,7 @@ describe('Hub and Launchpad visual layout', () => {
       visit('/game', 'hub')
       // KES-329/330: HubScreen.tsx's h1 is now the short "Base" / "Subsurface"
       // copy, with the fuller identity in the "BASE · OPS N" eyebrow above it.
-      cy.contains('h1', /^(Base|Subsurface)$/, { timeout: 15000 }).should('be.visible')
+      assertOnHome(15000)
       cy.get('[data-testid="building-launchpad-hit"]').should('be.visible')
       cy.get('[data-testid="building-refinery-hit"]').should('be.visible')
       cy.get('[data-testid="terrain-scene"]').should('exist')
@@ -117,7 +118,7 @@ describe('Hub and Launchpad visual layout', () => {
   it('keeps the shared Menu control available in the compact dock', () => {
     cy.viewport(608, 687)
     visit('/game', 'hub')
-    cy.contains('h1', /^(Base|Subsurface)$/, { timeout: 15000 }).should('be.visible')
+    assertOnHome(15000)
     cy.get('[data-testid="home-bottom-bar"]').should('contain', 'MENU')
     cy.get('[data-testid="settings-button"]').should('be.visible')
   })
@@ -125,7 +126,7 @@ describe('Hub and Launchpad visual layout', () => {
   it('keeps the shared menu reachable without a desktop sidebar', () => {
     cy.viewport(1280, 800)
     visit('/game/hub', 'hub')
-    cy.contains('h1', /^(Base|Subsurface)$/, { timeout: 15000 }).should('be.visible')
+    assertOnHome(15000)
     cy.get('.desktop-sidebar').should('not.exist')
     cy.get('[data-testid="settings-button"]')
       .should('be.visible')
