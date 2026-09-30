@@ -83,44 +83,15 @@
   z-index: 5;
 }
 
-.progressionStack {
-  right: 14px;
-  width: calc(100% - 28px);
-}
-
-.progressionCard {
-  min-width: 0;
-}
-
 @media (min-width: 1024px) {
   .root {
     --hub-ground: 40%;
     --hub-structure-max: min(460px, 42vh);
   }
 
-  .progressionStack {
-    right: clamp(24px, 4vw, 56px);
-    width: min(340px, 30vw);
-    max-width: 340px;
-    gap: 8px;
-  }
 }
 
 @media (max-width: 720px) {
-  /* Keep the progression rail below the stacked HUD and above the dock's
-     reserved lower zone on narrow portrait screens. The internal scroll
-     remains available when several cards are present. */
-  .progressionStack {
-    top: max(168px, 22vh) !important;
-    bottom: 104px;
-  }
-
-  /* With a coach on screen (the SSL-332 storage-silo step), clear the whole
-     tutorial rail — TUTORIAL_CONTENT_TOP in lib/tutorial-layout.ts. */
-  .progressionStack[data-coached='true'] {
-    top: 256px !important;
-  }
-
   .topHud { padding: 12px 12px 20px; gap: 8px; }
   .topRow { min-height: 42px; align-items: center; }
   .eyebrow { font-size: 8px; }
@@ -132,16 +103,6 @@
 @media (min-width: 721px) and (max-width: 1023px) and (max-height: 700px) {
   .root {
     --hub-ground: 34%;
-  }
-
-  .progressionStack {
-    top: 96px !important;
-    right: 20px;
-    width: min(300px, 38vw);
-  }
-
-  .progressionStack[data-coached='true'] {
-    top: 128px !important;
   }
 
   /* The launchpad hit target is intentionally wider than its art. Nudge its

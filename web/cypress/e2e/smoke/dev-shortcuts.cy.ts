@@ -39,7 +39,7 @@ const presetCases: Array<{ key: string; assertion: () => void }> = [
     // SSL-332: after both guided missions the Hub offers the silo build.
     key: 'storage-hub',
     assertion: () => {
-      cy.get('[data-testid="progression-card-storage-silo"]').should('be.visible')
+      cy.get('[data-testid="hub-build-storage-silo"]').should('be.visible')
     },
   },
   {
@@ -164,7 +164,7 @@ describe('DEV panel UI', () => {
     // scrollBehavior:false — the hub's sliding world is taller than the
     // viewport, and Cypress's default scroll-to-top tucks the card under the
     // fixed top bar (same pattern as earth-base-redesign.cy.ts).
-    cy.get('[data-testid="progression-card-storage-silo"]').click({ scrollBehavior: false })
+    cy.get('[data-testid="hub-build-storage-silo"]').click({ scrollBehavior: false })
     cy.location('pathname').should('eq', '/game/build')
     cy.get('[data-coach-id="build-plot-open"]').first().parents('button').first().click()
     cy.get('[data-coach-id="build-confirm"]').click()

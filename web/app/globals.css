@@ -803,6 +803,12 @@ button { cursor: pointer; }
 }
 
 .hub-sky-craft-control { position:absolute; z-index:11; top:96px; right:16px; display:flex; align-items:center; gap:8px; min-height:40px; padding:8px 12px; border:1px solid var(--ln-cyan-border); border-radius:8px; background:color-mix(in srgb, var(--ln-void) 74%, transparent); color:var(--ln-cyan-bright); font:800 12px var(--ln-font-display); letter-spacing:.08em; text-transform:uppercase; cursor:pointer; }
+/* Wide screens: the top-right corner is the Hub/Friends/Garden chrome, which
+   covered this control. Park the craft in open sky, left of the orbit. */
+@media (min-width: 1024px) {
+  .hub-sky-craft-control { top: 27%; right: auto; left: 50%; transform: translateX(-50%); }
+  .portrait-canvas:has([data-screen="hub"]) .hub-sky-craft-control { top: 27%; }
+}
 
 .game-screen { position: absolute; inset: 0; overflow: hidden; background: var(--ln-bg); }
 
@@ -3025,6 +3031,21 @@ html[data-coach-target="build-structure-strip"] [data-coach-id="build-structure-
   line-height: 1;
   white-space: nowrap;
 }
+
+.hub-orbital-network__hit {
+  position: absolute;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+}
+.hub-orbital-network__hit:focus-visible { outline: 2px solid var(--ln-cyan); outline-offset: -2px; }
+.hub-orbital-network__hit--transit { top: -8px; right: 0; }
+.hub-orbital-network__hit--deep-space { bottom: -6px; left: 0; }
+button.hub-orbital-network__status { cursor: pointer; font-family: var(--ln-font-display); }
+button.hub-orbital-network__status:disabled { cursor: default; }
 
 .hub-orbital-network__status--ready { color: var(--hub-chalk); border-color: var(--hub-chalk); }
 .hub-orbital-network__dot { width: 4px; height: 4px; background: currentColor; border-radius: 50%; }

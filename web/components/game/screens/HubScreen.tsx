@@ -3,7 +3,6 @@
 import React, { useEffect, useState } from 'react'
 import type { Player, Screen } from '@/game-context'
 import ActionConfirmBar from '@/components/game/ActionConfirmBar'
-import ProgressionCard from '@/components/game/ProgressionCard'
 import { awaitingStorageSilo } from '@/lib/systems/AgencyOnboardingSystem'
 import { Scene } from '@/lib/engine/Scene'
 import type { EntityData } from '@/lib/engine/types'
@@ -21,7 +20,6 @@ import { EARTH_BASE_WIDE } from '@/lib/scene/compositions'
 import { HubSubsurfaceView } from '@/components/game/hub/HubSubsurfaceView'
 import { Building, EmptyPlot } from '@/components/game/hub/Building'
 import type { BuildingCallout } from '@/components/game/hub/Building'
-import { TUTORIAL_CONTENT_TOP, TUTORIAL_RAIL } from '@/lib/tutorial-layout'
 import { LAUNCHPAD_UPGRADE_COST, MISSIONS, missionTypePrimer, type SubsurfaceRoomId } from '@/lib/data'
 import { formatCurrency } from '@/lib/format'
 import { FEATURE_FLAGS } from '@/lib/featureFlags'
@@ -29,7 +27,7 @@ import { isDevLauncherEnabled } from '@/lib/devAccess'
 import type { HubBuildingDef } from '@/components/game/hub/EarthBaseModules'
 import { OrbitalInstrumentNetwork } from '@/components/game/hub/OrbitalInstrumentNetwork'
 import { useInstrumentSignals } from '@/lib/hooks/useInstrumentSignals'
-import type { HubPromptKey } from '@/lib/hub-prompts'
+import { HUB_PROMPT_TRANSIT_TELESCOPE, isHubPromptDismissed, type HubPromptKey } from '@/lib/hub-prompts'
 import HUDStrip from '@/components/ui/HUDStrip'
 import layoutStyles from '@/components/game/hub/HubLayout.module.css'
 import { sceneXPercent } from '@/lib/scene/terrain-kit'
@@ -138,11 +136,12 @@ function DockIconBtn({ icon, label, onClick, active, accent, pulse, testId }: {
   )
 }
 
-function DockPrimaryBtn({ children, onClick, testId, pulse }: { children: React.ReactNode; onClick: () => void; testId?: string; pulse?: boolean }) {
+function DockPrimaryBtn({ children, onClick, testId, coachId, pulse }: { children: React.ReactNode; onClick: () => void; testId?: string; coachId?: string; pulse?: boolean }) {
   return (
     <button
       onClick={onClick}
       data-testid={testId}
+      data-coach-id={coachId}
       style={{
         flexShrink: 0, background: 'var(--hub-chalk-soft)',
         border: '4px solid var(--hub-chalk)', borderRadius: 14, padding: '8px 16px',
@@ -156,18 +155,6 @@ function DockPrimaryBtn({ children, onClick, testId, pulse }: { children: React.
     </button>
   )
 }
-
-// KES-220: the top HUD grew from a single-row bar into a stacked left-edge
-// rail (eyebrow/title + two HUDStrip cards), which now reaches to ~148px
-// from the screen top at the mobile viewport — well past the old
-// TUTORIAL_RAIL.TOP_CHROME_HEIGHT (68px) this offset was tuned against.
-// Without this, ProgressionCard's `top` left it starting at y=76, directly
-// under the new rail (bug reported 2026-08-21: "Your Program" card text
-// clipped behind the Francs/Jobs stack). Measured live at 390px width:
-// rail bottom ~148px; this adds headroom on top of the shared constant
-// rather than changing TUTORIAL_RAIL itself, which other screens still
-// tune the old single-row height against.
-const HUB_HUD_RAIL_CLEARANCE = 84
 
 /**
  * How far a building's status pill hangs below the ground line. `Building`
@@ -307,15 +294,49 @@ export default function HubScreen({ player, rocketVariant = 'explorer', hasCoach
   // now exposed through contextual buildings and the persistent chrome rather
   // than a generic card laid over the landscape.
   const hasProgressionCards = !!player.activeMission || !!player.pendingLaunch || player.missionsDone > 0
+  // After the first run the launchpad offers the transit telescope, the one
+  // prompt that used to live on a Home card. It is dismissible and goes away
+  // once the satellite has launched.
+  const offersTransitTelescope = !hasCoach && !player.activeMission && player.missionsDone > 0
+    && !!player.freeOperations && !player.transitSatelliteLaunchedAt
+    && !isHubPromptDismissed(player, HUB_PROMPT_TRANSIT_TELESCOPE)
   const launchpadCallout: BuildingCallout | undefined =
-    hasCoach || hasProgressionCards
-      ? undefined
-      : {
-        title: 'Choose your first contract',
-        body: 'A client job is open at the Mission Board. Your launchpad is ready to fly it.',
-        cta: 'View Missions',
-        onCta: () => onOpenScene('missions'),
+    offersTransitTelescope
+      ? {
+        title: 'Launch a transit telescope',
+        body: 'Your program can put a telescope in orbit. It sends back planet candidates to review.',
+        cta: 'Open Launchpad',
+        onCta: () => onOpenScene('launchpad'),
+        onDismiss: onDismissHubPrompt ? () => onDismissHubPrompt(HUB_PROMPT_TRANSIT_TELESCOPE) : undefined,
       }
+      : hasCoach || hasProgressionCards
+        ? undefined
+        : {
+          title: 'Choose your first contract',
+          body: 'A client job is open at the Mission Board. Your launchpad is ready to fly it.',
+          cta: 'View Missions',
+          onCta: () => onOpenScene('missions'),
+        }
+
+  // One sky control for the craft: flying, arrived and waiting on the pad.
+  const skyCraft: { state: 'mining' | 'arrived' | 'transit' | 'waiting'; label: string; ariaLabel: string; onOpen: () => void } | null = (() => {
+    if (player.activeMission) {
+      const resume = missionResumeScreen(player)
+      const arrived = (player.missionPhase ?? 'transit') === 'transit' && resume !== 'transit'
+      const state = player.missionPhase === 'mining' ? 'mining' : arrived ? 'arrived' : 'transit'
+      return {
+        state,
+        label: state === 'mining' ? 'MINING CRAFT' : state === 'arrived' ? 'CRAFT ARRIVED' : 'CRAFT IN TRANSIT',
+        ariaLabel: `Resume ${player.activeMission.label}`,
+        onOpen: () => onOpenScene(resume),
+      }
+    }
+    if (player.pendingLaunch) {
+      return { state: 'waiting', label: 'CRAFT ON PAD', ariaLabel: 'Open Launchpad: craft waiting on the pad', onOpen: () => onOpenScene('launchpad') }
+    }
+    return null
+  })()
+  const showStorageSiloCta = !player.activeMission && awaitingStorageSilo(player) && !subsurface
 
   const structureProps = (kind: string) => {
     if (kind === 'launchpad') {
@@ -407,16 +428,17 @@ export default function HubScreen({ player, rocketVariant = 'explorer', hasCoach
               which read as overcast weather against the new deep-blue sky. */}
           <AmbientMotes />
 
-          {player.activeMission && (
+          {skyCraft && (
             <button
               type="button"
               className="hub-sky-craft-control"
               data-testid="hub-sky-craft"
-              aria-label={`Resume ${player.activeMission.label}`}
-              onClick={() => onOpenScene(missionResumeScreen(player))}
+              data-craft-state={skyCraft.state}
+              aria-label={skyCraft.ariaLabel}
+              onClick={skyCraft.onOpen}
             >
               <span aria-hidden="true">◇</span>
-              <span>{player.missionPhase === 'mining' ? 'MINING CRAFT' : 'CRAFT IN TRANSIT'}</span>
+              <span>{skyCraft.label}</span>
             </button>
           )}
 
@@ -427,6 +449,8 @@ export default function HubScreen({ player, rocketVariant = 'explorer', hasCoach
               readyCount={signals.length}
               ping
               onOpen={() => onOpenScene('instrument-hub')}
+              onOpenTransit={() => onOpenScene('instrument-hub')}
+              onOpenDeepSpace={() => onOpenScene('asteroid-discovery')}
             />
           )}
 
@@ -530,19 +554,6 @@ export default function HubScreen({ player, rocketVariant = 'explorer', hasCoach
           onDismiss={() => setConfirmingLaunchpadUpgrade(false)}
         />
       )}
-      {/* The progression card is the Hub's single prompt surface. A rocket
-          waiting on the pad is already a sky rocket, so the card skips it. */}
-      {!player.activeMission && (!hasCoach || !!player.pendingLaunch || awaitingStorageSilo(player)) && !subsurface && (
-        <ProgressionCard
-          player={player}
-          onOpenScene={onOpenScene}
-          onDismissPrompt={onDismissHubPrompt}
-          hidePendingLaunch
-          coached={hasCoach}
-          top={hasCoach ? TUTORIAL_CONTENT_TOP : HUB_HUD_RAIL_CLEARANCE + 64}
-        />
-      )}
-
       {/* Bottom dock — rebuilt 2026-08-21 (KES-226) as a docked sheet, not a
           floating pill row (see DockIconBtn/DockPrimaryBtn doc comment for
           why). It remains available during onboarding so the tutorial can
@@ -584,7 +595,13 @@ export default function HubScreen({ player, rocketVariant = 'explorer', hasCoach
                       {player.activeMission ? activeMissionDisplayLabel(player.activeMission) : 'Ready'}
                     </div>
                   </div>
-                  {player.activeMission ? (
+                  {showStorageSiloCta ? (
+                    // SSL-332: the last training step. The Build screen is only
+                    // otherwise reachable from Edit, so the dock offers it.
+                    <DockPrimaryBtn testId="hub-build-storage-silo" coachId="hub-build-storage-silo" onClick={() => onOpenScene('build')} pulse>
+                      Build Silo
+                    </DockPrimaryBtn>
+                  ) : player.activeMission ? (
                     <DockIconBtn testId="hub-resume-mission-btn" icon={<HistoryGlyph />} label="Resume" onClick={() => onOpenScene(missionResumeScreen(player))} accent />
                   ) : (
                     <DockPrimaryBtn testId="hub-edit-build-btn" onClick={() => setEditMode(v => !v)}>

@@ -48,6 +48,35 @@ describe('Hub shared chrome and sky controls', () => {
     cy.location('pathname', { timeout: 10_000 }).should('match', /\/game\/transit$/)
   })
 
+  it('shows an arrived craft as one sky control that resumes the run', () => {
+    visitHub({
+      ...POST_TUTORIAL,
+      player: {
+        ...POST_TUTORIAL.player,
+        activeMission: { id: 'baseline-extraction', label: 'Baseline extraction → Eros' },
+        missionPhase: 'transit', arrivalAt: Date.now() - 60_000,
+      } as GameState['player'],
+    })
+    cy.get('[data-testid="hub-sky-craft"]').should('have.length', 1).and('have.attr', 'data-craft-state', 'arrived').click()
+    cy.location('pathname', { timeout: 10_000 }).should('match', /\/game\/landing$/)
+  })
+
+  it('shows a craft waiting on the pad in the sky and opens the Launchpad', () => {
+    visitHub({ ...POST_TUTORIAL, player: { ...POST_TUTORIAL.player, pendingLaunch: true } as GameState['player'] })
+    cy.get('[data-testid="hub-sky-craft"]').should('have.attr', 'data-craft-state', 'waiting').click()
+    cy.location('pathname', { timeout: 10_000 }).should('match', /\/game\/launchpad$/)
+  })
+
+  it('opens Instrument Hub and asteroid discovery from owned telescopes in the sky', () => {
+    const owned = { ...POST_TUTORIAL, player: { ...POST_TUTORIAL.player, transitSatelliteLaunchedAt: Date.now() - 60_000, deepSpaceTelescopeBuilt: true } as GameState['player'] }
+    visitHub(owned)
+    cy.get('[data-testid="hub-sky-telescope-transit"]').click({ force: true })
+    cy.location('pathname', { timeout: 10_000 }).should('match', /\/game\/instrument-hub$/)
+    visitHub(owned)
+    cy.get('[data-testid="hub-sky-telescope-deep-space"]').click({ force: true })
+    cy.location('pathname', { timeout: 10_000 }).should('match', /\/game\/asteroid-discovery$/)
+  })
+
   it('uses an addressable Subsurface tray without removing the Base root', () => {
     visitHub()
     cy.get('[data-testid="hub-subsurface-btn"]').click()

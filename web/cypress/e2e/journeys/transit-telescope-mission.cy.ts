@@ -80,9 +80,9 @@ describe('Telescope construction/launch mission (STS-138)', () => {
 
   it('offers telescope deployment under Your Program and never on the Mission Board, with no SMS prerequisite', () => {
     visitHubWithState({ transitSatelliteLaunchedAt: undefined })
-    cy.get('[data-testid="progression-card-transit-satellite"]', { timeout: 10000 }).should('be.visible')
+    cy.get('[data-testid="building-launchpad-callout"]', { timeout: 10000 }).should('be.visible')
     cy.contains('Launch a transit telescope').should('be.visible')
-    cy.get('[data-testid="progression-card-transit-satellite"]').click({ force: true })
+    cy.get('[data-testid="building-launchpad-callout"]').contains('button', 'Open Launchpad').click({ force: true })
     cy.contains('Your Program', { timeout: 10000 }).should('be.visible')
     // KES-329/330 replaced the single aggregate OPS button with an explicit
     // mission-menu -> operation-brief flow off the physical launchpad: the

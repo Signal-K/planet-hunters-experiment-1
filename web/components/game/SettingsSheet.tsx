@@ -126,6 +126,20 @@ export default function SettingsSheet({ onClose }: SettingsSheetProps) {
           </Row>
         </Section>
 
+        {game.player.missionsDone > 0 && (
+          <Section label="Program">
+            <Row>
+              <div>
+                <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 13, color: 'var(--ln-text)' }}>Skill tree</div>
+                <div data-testid="menu-skill-points" style={{ fontFamily: 'var(--ln-font-body)', fontSize: 11, color: 'var(--ln-text-muted)', marginTop: 2 }}>
+                  {(game.player.skillPoints ?? 0) > 0 ? `${game.player.skillPoints} skill points available` : 'Spend skill points on upgrades'}
+                </div>
+              </div>
+              <Btn label="Open" onClick={() => { onClose(); game.go('skills') }} variant="primary" />
+            </Row>
+          </Section>
+        )}
+
         <Section label="Data">
           {game.player.missionsDone > 0 && (
             <Row>

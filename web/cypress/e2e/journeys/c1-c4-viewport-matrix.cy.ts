@@ -114,8 +114,8 @@ describe('C1–C4 screen contracts across viewport classes', () => {
         // holds is that *some* primary progression action is present and
         // reachable, not a specific card variant (`next-mission` only ever
         // renders pre-first-mission, which this post-onboarding fixture isn't).
-        cy.get('[data-testid^="progression-card-"]', { timeout: 10000 })
-          .first()
+        cy.get('[data-testid^="progression-card-"]').should('not.exist')
+        cy.get('[data-testid="hub-subsurface-btn"]', { timeout: 10000 })
           .scrollIntoView().should('be.visible')
 
         visit('/game/missions', stateWith('missions'))

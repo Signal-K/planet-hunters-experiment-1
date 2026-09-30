@@ -18,6 +18,8 @@ export interface BuildingCallout {
   body: string
   cta: string
   onCta: () => void
+  /** Optional "not now" for prompts the player can wave off. */
+  onDismiss?: () => void
 }
 
 export interface BuildingProps {
@@ -294,6 +296,21 @@ export function Building({ kind, label, sub, status, buildStartedAt, w, hitH, st
             >
               {callout.cta} <ArrowGlyph />
             </button>
+            {callout.onDismiss && (
+              <button
+                type="button"
+                data-testid={`building-${kind}-callout-dismiss`}
+                onClick={e => { e.stopPropagation(); setCalloutOpen(false); callout.onDismiss?.() }}
+                style={{
+                  display: 'inline-flex', marginTop: 9, marginLeft: 12, padding: 0, cursor: 'pointer',
+                  background: 'transparent', border: 'none',
+                  fontFamily: 'var(--ln-font-display)', fontWeight: 700, fontSize: 9.5,
+                  letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--ln-text-muted)',
+                }}
+              >
+                Dismiss
+              </button>
+            )}
             {/* Bubble tail — outline triangle with a fill triangle stacked over it */}
             <span style={{
               position: 'absolute', left: tailLeft, top: '100%', transform: 'translateX(-50%)',
