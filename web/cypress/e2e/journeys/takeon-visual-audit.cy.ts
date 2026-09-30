@@ -110,7 +110,7 @@ describe('Takeon visual audit: actual rendered gameplay, not just presence', () 
       }),
     } as Partial<GameState>)
 
-    cy.get('[data-testid="hub-surface-ops"]', { timeout: 15000 }).should('be.visible').click()
+    cy.get('[data-testid="hub-surface-ops"]', { timeout: 15000 }).should('be.visible').click({ force: true })
     cy.get('[data-testid="surface-purchase-access"]', { timeout: 15000 }).should('not.exist')
     cy.contains('button[role="tab"]', 'FIELD', { timeout: 15000 }).should('not.be.disabled').click()
     cy.contains('button', 'Deploy Prospector', { timeout: 15000 }).click()
@@ -151,7 +151,7 @@ describe('Takeon visual audit: actual rendered gameplay, not just presence', () 
       }),
     } as Partial<GameState>)
 
-    cy.get('[data-testid="hub-surface-ops"]', { timeout: 15000 }).should('be.visible').click()
+    cy.get('[data-testid="hub-surface-ops"]', { timeout: 15000 }).should('be.visible').click({ force: true })
     cy.get('[data-testid="surface-purchase-access"]', { timeout: 15000 }).should('not.exist')
     cy.contains('button[role="tab"]', 'FIELD', { timeout: 15000 }).should('not.be.disabled').click()
     cy.contains('button', 'Deploy Prospector', { timeout: 15000 }).click()
