@@ -13,6 +13,7 @@ import { hasEstablishedMiningSettlement } from '@/lib/systems/SurfaceOpsSystem'
 // renders one of them at a time, so there's no reason to ship all ~20
 // screens' JS on the very first load.
 import IntroScreen from '@/components/game/screens/IntroScreen'
+import PageSurface from '@/components/ui/PageSurface'
 import HubScreen from '@/components/game/screens/HubScreen'
 
 const ScreenLoading = () => <div className="game-screen-loading" aria-hidden="true" />
@@ -192,7 +193,11 @@ export function ScreenContent({
 
     case 'hub':
     case 'hub-subsurface':
-      return (
+    case 'mission-history': {
+      // Mission Log is a tray over the still-mounted Base (SSL-347): same
+      // HubScreen element position, so opening/closing it never remounts or
+      // re-frames the landscape.
+      const hub = (
         <HubScreen
           player={game.player}
           rocketVariant={rocketModelForConfig(game.rocket).tier >= 2 ? 'prospector' : 'explorer'}
@@ -243,6 +248,23 @@ export function ScreenContent({
           onSubsurfaceChange={open => game.go(open ? 'hub-subsurface' : 'hub')}
         />
       )
+      return (
+        <>
+          {hub}
+          {screen === 'mission-history' && (
+            <PageSurface tray testId="mission-history-tray" ariaLabel="Mission Log">
+              <MissionHistoryScreen
+                records={game.player.completedMissions ?? []}
+                clients={game.catalog.clients}
+                targets={game.catalog.targets}
+                player={game.player}
+                onBack={() => game.goBack('hub')}
+              />
+            </PageSurface>
+          )}
+        </>
+      )
+    }
 
     case 'instrument-hub':
       return (
@@ -400,17 +422,6 @@ export function ScreenContent({
             refineryBuilt: game.player.refineryBuilt,
             launchpadUpgraded: game.player.launchpadUpgraded,
           }}
-        />
-      )
-
-    case 'mission-history':
-      return (
-        <MissionHistoryScreen
-          records={game.player.completedMissions ?? []}
-          clients={game.catalog.clients}
-          targets={game.catalog.targets}
-          player={game.player}
-          onBack={() => game.goBack()}
         />
       )
 

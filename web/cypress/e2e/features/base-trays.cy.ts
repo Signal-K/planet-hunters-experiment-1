@@ -105,6 +105,23 @@ describe('Base trays and shared bar', () => {
         cy.get('body').type('{esc}')
         cy.get('.ln-page-surface--tray').should('not.exist')
       })
+      it('opens Mission Log as a tray over a still Base and closes it with Escape', () => {
+        visitTray('/game/hub')
+        cy.get('[data-screen="hub"]').should('be.visible').then($hub => {
+          const before = $hub[0].getBoundingClientRect()
+          visitTray('/game/mission-history')
+          cy.get('[data-testid="mission-history-tray"]').should('be.visible')
+          cy.get('[data-screen="hub"]').should('exist').then($still => {
+            const after = $still[0].getBoundingClientRect()
+            expect(after.width).to.eq(before.width)
+            expect(after.height).to.eq(before.height)
+            expect(after.top).to.eq(before.top)
+          })
+        })
+        cy.get('body').type('{esc}')
+        cy.location('pathname').should('eq', '/game/hub')
+        cy.get('[data-testid="mission-history-tray"]').should('not.exist')
+      })
     })
   })
 })
