@@ -911,7 +911,8 @@
   .reviewFacts > div:nth-child(odd) { border-left: 0; }
   /* SSL-381: a long word in a 6px letter-spaced label ("DESTINATION") is wider than its
      column here and ran into the next fact; break it inside its own cell instead. */
-  .reviewFacts > div:first-child { grid-column: 1 / -1; }
+  .reviewFacts > div:first-child,
+  .reviewFacts > div:nth-child(2) { grid-column: 1 / -1; }
   .reviewFacts dt { white-space: normal; overflow-wrap: anywhere; letter-spacing: .1em; }
   .reviewFacts dd { overflow: visible; white-space: normal; overflow-wrap: anywhere; text-overflow: clip; }
   .clearance small { display: none; }
