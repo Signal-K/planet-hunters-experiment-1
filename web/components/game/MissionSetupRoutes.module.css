@@ -718,15 +718,17 @@
   .contractGallery::before { inset: 12px; }
   .contractIdentity { left: 6%; top: 6%; gap: 8px; }
   .contractIdentity > div:first-child { transform: scale(.68); transform-origin: left top; margin-right: -32px; }
-  .contractCopy { left: 6%; top: 34%; width: 50%; }
+  .contractCopy { left: 6%; top: 34%; width: 48%; }
   .contractCopy h2 { font-size: clamp(22px, 4.5vw, 34px); }
   .contractRoute { margin-top: 7px; font-size: 8px; }
   .contractDescription { display: none; }
   .contractFacts { left: 6%; bottom: 14%; gap: 10px; }
   .contractFacts > div { min-width: 72px; }
   .contractFacts strong { font-size: 14px; }
-  .contractCargo { right: 6%; top: 7%; width: 30%; }
-  .contractRocket { right: 8%; top: 22%; width: 24%; height: 51%; }
+  .contractCargo { right: 6%; top: 7%; width: 38%; }
+  /* SSL-417: widen the cargo column so its chips sit side by side, then park
+     the rocket in the gap between that block and the accept button. */
+  .contractRocket { right: 12%; top: 53%; width: 26%; height: 19%; }
   .contractSlide > .primary { right: 5%; bottom: 7%; min-width: 32%; }
   .carouselArrow { width: 38px; height: 54px; border-width: 2px; }
   .galleryDots { bottom: 2%; }
@@ -774,6 +776,12 @@
   .primary { min-height: 40px; padding: 7px 12px; border-width: 2px; font-size: 9px; box-shadow: 0 3px 0 color-mix(in srgb, var(--mission-ink) 72%, transparent); }
 }
 
+/* SSL-417: below ~720px wide in landscape there is no free pocket left for the
+   Prospector artwork between the cargo block, facts and accept button. */
+@media (orientation: landscape) and (max-width: 720px) {
+  .contractRocket { display: none; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .rocketPart, .overheadCrane i { animation: none; opacity: 0; }
   .assembledRocket { animation: none; opacity: 1; }
@@ -793,10 +801,14 @@
   .title { display: flex; flex: 1 1 auto; flex-direction: column; justify-content: center; min-width: 0; width: auto; height: 40px; padding: 4px 8px; overflow: hidden; }
   .title span { display: block; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font-size: 10px; letter-spacing: .12em; }
   .title h1 { overflow: hidden; margin-top: 2px; white-space: nowrap; text-overflow: ellipsis; font-size: 16px; }
-  .progress { flex: 0 0 auto; gap: 4px; }
-  .progress li { width: 32px; height: 40px; padding: 0; justify-content: center; }
+  .progress { flex: 0 0 auto; gap: 2px; }
+  .progress li { width: 26px; height: 40px; padding: 0; justify-content: center; }
   .progress li span { display: none; }
-  .progress i { width: 24px; height: 24px; font-size: 10px; }
+  .progress i { width: 22px; height: 22px; font-size: 10px; }
+  /* SSL-418: "Hangar assembly" read "Hangar ass…" beside the dev toggle
+     clearance and four step markers; give the title the room it needs. */
+  .title { padding: 4px 6px; }
+  .title h1 { font-size: 15px; letter-spacing: 0; }
   .stage { inset: 56px 8px 24px; border-width: 3px; border-radius: 5px; box-shadow: 0 6px 0 color-mix(in srgb, var(--mission-ink) 42%, transparent); }
   .contractGallery::before { inset: 10px; }
   .contractIdentity { left: 7%; top: 5%; gap: 8px; }
@@ -870,6 +882,15 @@
   .vehicleReadout span { font-size: 11px; }
   .launchpadReview img { width: 70%; height: 64%; }
 
+}
+
+/* SSL-418: at 360px the title column still lost "Hangar assembly"; trim the
+   step markers and type another notch so the full name stays readable. */
+@media (orientation: portrait) and (max-width: 380px) {
+  .back { width: 34px; }
+  .title h1 { font-size: 13px; }
+  .progress li { width: 22px; }
+  .progress i { width: 20px; height: 20px; font-size: 9px; }
 }
 
 @media (orientation: portrait) and (max-width: 560px) {
