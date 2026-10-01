@@ -30,7 +30,6 @@ export default function FlightPlan({ stepIndex, total, step, onManualNext, onSki
   const [hidden, setHidden] = useState(false)
 
   useEffect(() => { if (persistedHidden !== undefined) setHidden(persistedHidden) }, [persistedHidden])
-  useEffect(() => { if (hint) setExpanded(true) }, [hint])
 
   const isTryStep = 'try' in step
   const targetId = isTryStep ? step.beacon : ((isDesktop && step.desktopCoachId !== undefined) ? step.desktopCoachId : step.coachId)
@@ -73,7 +72,7 @@ export default function FlightPlan({ stepIndex, total, step, onManualNext, onSki
           onClick={() => setExpanded(v => !v)}
         >
           <span className="flight-plan-kicker">Flight Plan · {isTryStep ? step.try : step.title} · {stepIndex + 1}/{total}</span>
-          <span className="flight-plan-action">{action}</span>
+          <span className="flight-plan-action">{hint && !expanded ? `Hint: ${hint}` : action}</span>
         </button>
         {!isTryStep && step.manual && (
           <button type="button" className="flight-plan-btn is-primary" data-testid="flight-plan-continue" onClick={onManualNext}>
