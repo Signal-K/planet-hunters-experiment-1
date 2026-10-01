@@ -10,7 +10,6 @@ import IconBadge from '@/components/ui/IconBadge'
 import SegmentedBar from '@/components/ui/SegmentedBar'
 import ActionConfirmBar from '@/components/game/ActionConfirmBar'
 import MiningCanvas from './MiningCanvas'
-import MiningAimCoach, { useMiningAimCoach } from '@/components/game/MiningAimCoach'
 
 // Out There: Omega Edition bolt glyph — used inside the charge-meter IconBadge.
 // Kept local since it's a one-off HUD glyph, not a shared icon set yet.
@@ -276,7 +275,6 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
   const [laserCharges, setLaserCharges] = useState(MAX_CHARGES)
   const [runKey, setRunKey] = useState(0)  // bump to reset MiningCanvas
   const [sceneStatus, setSceneStatus] = useState<'loading' | 'ready' | 'failed'>('loading')
-  const aimCoach = useMiningAimCoach()
   const firedRef = useRef(false)
   const hintedFirstHitRef = useRef(false)
   const hintedWrongOreRef = useRef(false)
@@ -363,7 +361,6 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
       tapDeniedTimerRef.current = setTimeout(() => setTapDenied(false), 160)
       return
     }
-    if (aimCoach.visible) aimCoach.dismiss()
     setLaserCharges(c => c - 1)
     fireRef.current?.()
     if (!firedRef.current && hasCoach) {
@@ -667,17 +664,12 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
 
       {/* Low-charge warning banner — fades in when running short without filling the order */}
       {activeOverlay === 'warning' && (
-        <div className="mining-charge-warning" style={{ position: 'absolute', top: hasCoach ? (coachManual ? 'var(--tutorial-manual-content-top)' : 'var(--tutorial-content-top)') : 56, left: 0, right: 0, zIndex: 40, display: 'flex', justifyContent: 'center', pointerEvents: 'none' }}>
+        <div className="mining-charge-warning" style={{ position: 'absolute', top: 56, left: 0, right: 0, zIndex: 40, display: 'flex', justifyContent: 'center', pointerEvents: 'none' }}>
           <div>
             {laserCharges} charge{laserCharges !== 1 ? 's' : ''} remaining — order not filled
           </div>
         </div>
       )}
-
-      {aimCoach.visible && !hasCoach && !gateOpen && activeOverlay === null && sceneStatus === 'ready' && (
-        <MiningAimCoach onDismiss={aimCoach.dismiss} />
-      )}
-
       <div className="mining-viewport">
         <div className="mining-stars" />
         <MiningCanvas
@@ -832,6 +824,7 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
             type="button"
             disabled={gateOpen || sceneStatus !== 'ready' || laserCharges <= 0}
             data-testid="fire-laser-btn"
+            data-coach-id="mining-fire-laser"
             data-charging={isCharging}
             onClick={fireLaser}
           >

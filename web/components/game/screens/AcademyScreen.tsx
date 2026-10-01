@@ -29,7 +29,6 @@ import TopBar from '@/components/ui/TopBar'
 import { GhostBtn, PrimaryBtn } from '@/components/ui/Button'
 import ProgressBar from '@/components/ui/ProgressBar'
 import AcademyCanvas from './AcademyCanvas'
-import AcademyCoach, { useAcademyCoach } from '@/components/game/AcademyCoach'
 import { UI_ZONES } from '@/lib/ui-zones'
 import { captureGameEvent } from '@/lib/posthog'
 import styles from './AcademyScreen.module.css'
@@ -76,8 +75,6 @@ export default function AcademyScreen(props: AcademyScreenProps) {
   const sessions = props.player.crewTraining ?? []
   const sources = availableCrewSources(props.player, props.catalog.clients)
   const level = academyLevel(props.player)
-  const coach = useAcademyCoach()
-  const showCoach = coach.visible && built
   const crewCounts = useMemo(() => ({
     astronaut: crew.filter(member => member.crewClass === 'astronaut').length,
     rover: crew.filter(member => member.crewClass === 'rover').length,
@@ -101,7 +98,6 @@ export default function AcademyScreen(props: AcademyScreenProps) {
   return (
     <div className={`game-screen theme-light ${styles.screen}`} data-testid="academy-screen">
       <TopBar eyebrow="BASE · CREW" title="Astronaut Academy" onBack={props.onBack} solid />
-      {showCoach && <AcademyCoach onDismiss={coach.dismiss} />}
 
       {!built ? (
         <main className={styles.locked}>

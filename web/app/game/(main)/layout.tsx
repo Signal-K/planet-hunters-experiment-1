@@ -3,7 +3,7 @@
 import { type ReactNode, useMemo, useEffect, useRef, useState } from 'react'
 import { GameProvider, useGame } from '@/game-context'
 import { trainingCoachSteps } from '@/lib/data'
-import TutorialCoach from '@/components/game/TutorialCoach'
+import FlightPlan from '@/components/game/FlightPlan'
 import UnlockPopup from '@/components/game/UnlockPopup'
 import { TutorialCompleteSheet } from '@/components/game/TutorialCompleteSheet'
 import { resolveShortcut } from '@/lib/game-shortcuts'
@@ -250,31 +250,30 @@ function GameChrome({ children }: { children: ReactNode }) {
               <ScreenContent screen={game.screen} game={game} hasCoach={hasCoach} />
             )}
           </div>
+        {coach && !game.popup && !game.authGateOpen && (
+          <FlightPlan
+            key={coach.id}
+            stepIndex={coachIndex}
+              step={coach}
+            total={coachSteps.length}
+            onManualNext={game.coachManualNext}
+            onSkip={() => {
+              captureGameEvent('tutorial_skipped', {
+                step_id: coach.id,
+                screen: coach.screen,
+                step_index: coachIndex,
+                total_steps: coachSteps.length,
+              })
+              game.skipTutorial(coachSteps.map(s => s.id))
+            }}
+          />
+        )}
           {children}
 
           <ToastLayer toasts={game.toasts} onDismiss={game.dismissToast} />
-          {showFeedback && <FeedbackButton />}
+          {showFeedback && !coach && <FeedbackButton />}
           <SurveySheet blockWhile={!!game.popup || !!coach || !!game.pendingTerritoryClaimFor || !isSurveySafeScreen(currentScreen)} />
 
-          {coach && !game.popup && !game.authGateOpen && (
-            <TutorialCoach
-              key={coach.id}
-              stepIndex={coachIndex}
-              steps={coachSteps}
-              step={coach}
-              total={coachSteps.length}
-              onManualNext={game.coachManualNext}
-              onSkip={() => {
-                captureGameEvent('tutorial_skipped', {
-                  step_id: coach.id,
-                  screen: coach.screen,
-                  step_index: coachIndex,
-                  total_steps: coachSteps.length,
-                })
-                game.skipTutorial(coachSteps.map(s => s.id))
-              }}
-            />
-          )}
         </div>
 
         {mountsSharedChrome(currentScreen, game.authGateOpen) && (

@@ -466,7 +466,7 @@ export default function PixiGalaxyMap(props: PixiGalaxyMapProps) {
           onClick={goToSolar}
           style={{
             position: 'absolute',
-            top: props.hasCoach ? 74 : 10,
+            top: 10,
             left: 10,
             zIndex: 10,
             display: 'flex', alignItems: 'center', gap: 5,

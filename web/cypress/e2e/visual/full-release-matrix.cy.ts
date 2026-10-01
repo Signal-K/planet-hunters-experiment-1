@@ -178,8 +178,8 @@ function completeM3Delivery(viewport: string) {
   cy.get('[data-testid="delivery-screen"]', { timeout: 15000 }).should('be.visible')
   cy.get('[data-testid="delivery-cargo-hold"]', { timeout: 15000 }).should('be.visible')
   cy.get('body').then($body => {
-    if ($body.find('[data-testid="coach-got-it-btn"]').length > 0) {
-      cy.get('[data-testid="coach-got-it-btn"]').click({ force: true })
+    if ($body.find('[data-testid="flight-plan-continue"]').length > 0) {
+      cy.get('[data-testid="flight-plan-continue"]').click({ force: true })
     }
   })
   cy.get('[data-testid="delivery-screen"] canvas[aria-label]', { timeout: 15000 }).should('be.visible')
@@ -321,14 +321,14 @@ function playM3(viewport: string) {
   cy.get('[data-testid="mission-rocket-blueprint"]', { timeout: 10000 }).should('be.visible')
   screenshot(viewport, 'm3-rocket-selection')
   cy.get('body').then($body => {
-    if ($body.find('[data-testid="coach-got-it-btn"]').length > 0) {
-      cy.get('[data-testid="coach-got-it-btn"]').click({ force: true })
+    if ($body.find('[data-testid="flight-plan-continue"]').length > 0) {
+      cy.get('[data-testid="flight-plan-continue"]').click({ force: true })
     }
   })
   cy.contains('button', /BUILD ANOTHER/).first().should('be.visible').click({ force: true })
   cy.get('body').then($body => {
-    if ($body.find('[data-testid="coach-got-it-btn"]').length > 0) {
-      cy.get('[data-testid="coach-got-it-btn"]').click({ force: true })
+    if ($body.find('[data-testid="flight-plan-continue"]').length > 0) {
+      cy.get('[data-testid="flight-plan-continue"]').click({ force: true })
     }
   })
   rollOutToLaunchpad()

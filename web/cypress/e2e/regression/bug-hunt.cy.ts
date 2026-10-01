@@ -158,7 +158,7 @@ describe('Bug hunt — edge cases', () => {
         doneSteps: { 1: true, 2: true, 3: true },
       }) }),
     })
-    cy.get('[data-testid="tutorial-coach-overlay"]', { timeout: 8000 }).should('be.visible')
+    cy.get('[data-testid="flight-plan"]', { timeout: 8000 }).should('be.visible')
     cy.get('[data-testid="launch-btn"]').should('be.visible').and('not.be.disabled')
   })
 

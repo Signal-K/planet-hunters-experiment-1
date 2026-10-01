@@ -438,7 +438,7 @@ describe('UI zone contract', () => {
 
         for (const state of states) {
           visitWithState(state)
-          cy.get('[data-testid="tutorial-coach-block"]').should('be.visible')
+          cy.get('[data-testid="flight-plan"]').should('be.visible')
           assertVisibleControlsAreTopmost()
         }
       })

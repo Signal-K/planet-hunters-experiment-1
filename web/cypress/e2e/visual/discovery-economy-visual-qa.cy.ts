@@ -86,11 +86,6 @@ function visitWithState(path: string, screen: GameState['screen'], playerOverrid
       win.localStorage.clear()
       win.localStorage.setItem('landnam-surveys-shown', JSON.stringify(ALL_SURVEY_KEYS))
       win.localStorage.setItem('landnam-upgrade-prompt-snooze-until', String(Date.now() + 365 * 24 * 60 * 60 * 1000))
-      // ObservatoryCoach is a separate one-time beat from the main M1-M3
-      // tutorial (gated by its own localStorage key, not GameState.tutorial)
-      // — mark it seen so it doesn't render its banner/spacer over the
-      // chart during the drag-mark gesture below.
-      win.localStorage.setItem('landnam_observatory_coach_seen_v1', '1')
       seedAuthenticatedFixture(win, full, 'e2e-discovery-user')
     },
   })

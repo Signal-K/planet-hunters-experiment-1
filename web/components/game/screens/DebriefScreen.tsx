@@ -123,7 +123,7 @@ export default function DebriefScreen({ mission, target, cargo, onDone, minerals
         <span className="debrief-hud-header__location">{isOrbitalInstrumentDeployment ? 'EARTH ORBIT · INSTRUMENT ONLINE' : 'EARTH RECEIVING BERTH · 01'}</span>
       </header>
 
-      <div className={`debrief-game__content screen-scroll${hasCoach ? ' screen-scroll--coach' : ''}`} data-ui-zone={UI_ZONES.screenContent}>
+      <div className={`debrief-game__content screen-scroll`} data-ui-zone={UI_ZONES.screenContent}>
         <section className="debrief-mission-strip" aria-label="Mission result">
           <div className="debrief-mission-strip__status"><span aria-hidden="true" /> {shipDestroyed ? 'HULL LOST · CARGO RECOVERED' : isProgramOperation ? 'COMMISSIONED · INSTRUMENT ONLINE' : 'DOCKED · MISSION COMPLETE'}</div>
           <div className="debrief-mission-strip__route">

@@ -9,7 +9,6 @@ import type { GameState } from '@/game-context'
 import { seedFixtureSession } from '../../support/authenticated-fixture'
 
 const STORAGE_KEY = 'landnam-game-state-v1'
-const COACH_KEY = 'landnam_free_ops_build_coach_seen_v1'
 
 function basePlayer(overrides: Partial<GameState['player']> = {}): GameState['player'] {
   return {
@@ -35,7 +34,7 @@ function basePlayer(overrides: Partial<GameState['player']> = {}): GameState['pl
   } as GameState['player']
 }
 
-function visitFab(playerOverrides: Partial<GameState['player']> = {}, coachSeen = false) {
+function visitFab(playerOverrides: Partial<GameState['player']> = {}) {
   const full: GameState = {
     screen: 'fab',
     missionId: null,
@@ -54,18 +53,13 @@ function visitFab(playerOverrides: Partial<GameState['player']> = {}, coachSeen 
       win.localStorage.setItem(STORAGE_KEY, JSON.stringify(full))
       seedFixtureSession(win)
       win.localStorage.setItem('ln_tutorial_complete_ack', '1')
-      if (coachSeen) {
-        win.localStorage.setItem(COACH_KEY, '1')
-      } else {
-        win.localStorage.removeItem(COACH_KEY)
-      }
     },
   })
 }
 
 describe('Free Ops Build screen', () => {
   it('renders both the own-operation and client-work paths with no mission/target selected', () => {
-    visitFab({}, true)
+    visitFab({})
     cy.get('[data-testid="free-ops-build-screen"]', { timeout: 10000 }).should('be.visible')
     cy.contains('Start with an objective').should('be.visible')
     cy.contains('Your own operation').should('be.visible')
@@ -76,36 +70,11 @@ describe('Free Ops Build screen', () => {
   })
 
   it('routes "Choose Mining" and "Browse Client Missions" to the Mission Board', () => {
-    visitFab({}, true)
+    visitFab({})
     cy.get('[data-testid="free-ops-build-screen"]', { timeout: 10000 }).should('be.visible')
     cy.contains('Choose Mining').click()
     cy.get('[data-testid="mission-setup-scaffold"][data-step="1"]', { timeout: 10000 }).should('be.visible')
     cy.get('[data-testid="mission-board-section-client"]').should('be.visible')
   })
 
-  it('shows the FreeOpsBuildCoach on first visit, walks all 3 steps, then dismisses and persists', () => {
-    visitFab({}, false)
-    cy.get('[data-testid="free-ops-build-screen"]', { timeout: 10000 }).should('be.visible')
-
-    cy.get('[data-testid="free-ops-build-coach"]')
-      .should('be.visible')
-      .within(() => {
-        cy.contains('BUILD HAS TWO PATHS').should('be.visible')
-        cy.get('[data-testid="free-ops-build-coach-next"]').click()
-        cy.contains('YOUR OWN OPERATION').should('be.visible')
-        cy.get('[data-testid="free-ops-build-coach-next"]').click()
-        cy.contains('CLIENT WORK').should('be.visible')
-        cy.get('[data-testid="free-ops-build-coach-next"]').click()
-      })
-    cy.get('[data-testid="free-ops-build-coach"]').should('not.exist')
-    cy.window().then(win => {
-      expect(win.localStorage.getItem(COACH_KEY)).to.eq('1')
-    })
-  })
-
-  it('does not show the coach again on a second visit once dismissed', () => {
-    visitFab({}, true)
-    cy.get('[data-testid="free-ops-build-screen"]', { timeout: 10000 }).should('be.visible')
-    cy.get('[data-testid="free-ops-build-coach"]').should('not.exist')
-  })
 })

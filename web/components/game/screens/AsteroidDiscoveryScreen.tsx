@@ -17,7 +17,6 @@ import { fetchReviewableAsteroidCandidates } from '@/lib/asteroid-subjects'
 import { sharedBackendMisconfigured } from '@/lib/pb-config'
 import { useIsDesktop } from '@/lib/hooks/useIsDesktop'
 import { instrumentDigestDateKey, pickInstrumentInspectCandidate, unresolvedDeepSpaceInstrumentDigest } from '@/lib/systems/InstrumentFeedSystem'
-import AsteroidDiscoveryCoach, { useAsteroidDiscoveryCoach } from '@/components/game/AsteroidDiscoveryCoach'
 
 interface AsteroidDiscoveryScreenProps {
   player: Player
@@ -113,7 +112,6 @@ export default function AsteroidDiscoveryScreen({ player, inspectSubjectId, visu
 
   const isDesktop = useIsDesktop()
   const [isCompactLandscape, setIsCompactLandscape] = useState(false)
-  const coach = useAsteroidDiscoveryCoach()
 
   useEffect(() => {
     const query = window.matchMedia('(orientation: landscape) and (max-height: 520px)')
@@ -296,7 +294,6 @@ export default function AsteroidDiscoveryScreen({ player, inspectSubjectId, visu
       {isDesktop || isCompactLandscape ? (
         <div data-testid="asteroid-discovery-desktop-grid" style={{ position: 'absolute', inset: 0, top: 72, display: 'grid', gridTemplateColumns: '55% 45%', gap: 16, padding: '0 var(--ln-s-4) var(--ln-s-4)' }}>
           <div style={{ overflowY: 'auto' }} data-ui-zone={UI_ZONES.screenContent}>
-            {coach.visible && <AsteroidDiscoveryCoach onDismiss={coach.dismiss} />}
             {devBar}
             {dataPanel}
           </div>
@@ -313,7 +310,6 @@ export default function AsteroidDiscoveryScreen({ player, inspectSubjectId, visu
       ) : (
         <>
           <div className="screen-scroll" data-ui-zone={UI_ZONES.screenContent}>
-            {coach.visible && <AsteroidDiscoveryCoach onDismiss={coach.dismiss} />}
             {devBar}
             {dataPanel}
             {payoffPanel && <div style={{ marginTop: 12 }}>{payoffPanel}</div>}

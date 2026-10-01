@@ -114,7 +114,7 @@ function navToMissions() {
 }
 
 function expectCoach(title: string) {
-  cy.get('[data-testid="tutorial-coach-block"]', { timeout: 10000 })
+  cy.get('[data-testid="flight-plan"]', { timeout: 10000 })
     .should('be.visible')
     .should('contain', title)
 }
@@ -223,7 +223,7 @@ function playM1() {
 
   // Step 5: hangar assembly (manual coach card), then roll out and launch
   expectCoach('Assemble the Rocket')
-  cy.get('[data-testid="coach-got-it-btn"]').should('be.visible').click()
+  cy.get('[data-testid="flight-plan-continue"]').should('be.visible').click()
   rollOutAndLaunch()
 
   completeMining()
@@ -233,7 +233,7 @@ function playM1() {
   // the Transport lesson (SSL-332). Case-insensitive: the label is visually
   // all-caps via CSS text-transform, not literal uppercase DOM text.
   assertOnHome(10000)
-  cy.get('[data-testid="tutorial-coach-block"]', { timeout: 8000 }).contains(/transport/i).should('be.visible')
+  cy.get('[data-testid="flight-plan"]', { timeout: 8000 }).contains(/transport/i).should('be.visible')
 }
 
 // ─── Full M2 (Transport) play-through ─────────────────────────────────────────
@@ -255,12 +255,12 @@ function playM2ToDeliveryLeg() {
   // Blueprint — step 31 fires here (no target map since the route is preset).
   cy.get('[data-testid="mission-rocket-blueprint"]', { timeout: 8000 }).should('be.visible')
   expectCoach('Two-Stop Route')
-  cy.get('[data-testid="coach-got-it-btn"]').should('be.visible').click()
+  cy.get('[data-testid="flight-plan-continue"]').should('be.visible').click()
   cy.get('[data-testid="purchase-rocket-btn"]').should('be.visible').click()
 
   // Hangar assembly — step 32 fires here.
   expectCoach('Confirm The Run')
-  cy.get('[data-testid="coach-got-it-btn"]').should('be.visible').click()
+  cy.get('[data-testid="flight-plan-continue"]').should('be.visible').click()
   rollOutAndLaunch()
 
   // The pickup leg is worked by the surface rover (DEV-only skip, as above).
@@ -314,7 +314,7 @@ if (!MISSION_FILTER) describe('Desktop layout: Home chrome is the operations ent
 
   it('directs the first extraction step to the Launchpad', () => {
     visitHub({ doneSteps: { 0: true } })
-    cy.get('[data-testid="tutorial-coach-block"]').should('contain', 'Extraction')
+    cy.get('[data-testid="flight-plan"]').should('contain', 'Extraction')
     cy.get('html').should('have.attr', 'data-coach-target', 'building-launchpad')
   })
 })
@@ -332,7 +332,7 @@ if (!MISSION_FILTER) describe('Mobile layout: Home chrome is visible, sidebar hi
 
   it('directs the first extraction step to the Launchpad', () => {
     visitHub({ doneSteps: { 0: true } })
-    cy.get('[data-testid="tutorial-coach-block"]').should('contain', 'Extraction')
+    cy.get('[data-testid="flight-plan"]').should('contain', 'Extraction')
     cy.get('html').should('have.attr', 'data-coach-target', 'building-launchpad')
   })
 })

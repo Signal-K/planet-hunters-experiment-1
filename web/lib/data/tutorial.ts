@@ -60,13 +60,13 @@ export const EXTRACTION_STEPS: TutorialStep[] = [
   // point-and-aim mechanic the game doesn't have. The laser always fires
   // straight down from the ship's fixed screen position while the ore field
   // drifts underneath — it's a timing game, not aim-and-click. This is the
-  // coach a first-time player actually sees (the separate MiningAimCoach
+  // coach a first-time player actually sees (the separate Mining HUD
   // hint is suppressed for the whole tutorial, since `hasCoach` is true),
   // so the correction has to live here, not just in that component.
   { id: 6, screen: 'mining',   title: 'Mine the Asteroid',
     body: 'You can\'t aim the laser — it always fires straight down from your ship. Ore deposits (the coloured seams) drift past underneath. Wait for one to line up, then fire.',
     action: 'Tap FIRE LASER when a deposit lines up',
-    anchor: 'top', spot: null, cta: 'Fire the laser',
+    anchor: 'top', spot: null, cta: 'Fire the laser', coachId: 'mining-fire-laser',
     desktopAction: 'Click FIRE LASER when a deposit lines up' },
 ]
 

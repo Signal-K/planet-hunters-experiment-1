@@ -67,11 +67,8 @@ describe('mission setup replacement boundary', () => {
     expect(styles).toContain('grid-template-columns: repeat(4, minmax(0, 1fr))')
     expect(styles).toContain('.reviewFacts > div:nth-child(3) { display: block; }')
     expect(styles).toContain('.purchaseTerms')
-    expect(styles).toContain(".root[data-step='1'][data-coach='true'] .contractIdentity")
-    expect(routes).toContain('useCoachFootprint(mapRef')
-    expect(styles).toContain('grid-template-areas: "coach" "filter" "map" "rail"')
+    expect(styles).toContain('grid-template-areas: "filter" "map" "rail"')
     expect(styles).toContain('container: setup-stage / size')
-    expect(styles).toContain(".root[data-step='4'][data-coach='true'] .hangarBayHeading")
   })
 
   it('keeps Hub mobile chrome and scene objects in non-overlapping zones', () => {
@@ -87,13 +84,11 @@ describe('mission setup replacement boundary', () => {
     expect(structures).toContain('.earth-base-flat-sprite')
   })
 
-  it('keeps the mission coach at one fixed width and anchor', () => {
-    const coach = read('./TutorialCoach.tsx')
+  it('has no coach overlay and mounts the in-flow Flight Plan instead (SSL-395)', () => {
     const globals = read('../../app/globals.css')
-
-    expect(coach).toContain("left: 'var(--ln-setup-coach-left, 16px)', top: `var(--ln-setup-coach-top, ${TUTORIAL_RAIL.RESERVED_TOP}px)`, width: 320")
-    expect(coach).toContain('tutorial-coach-overlay tutorial-coach-overlay--mission-setup')
-    expect(globals).toContain('.tutorial-coach-overlay:not(.tutorial-coach-overlay--mission-setup)')
+    expect(globals).not.toContain('tutorial-coach')
+    expect(globals).toContain('.flight-plan')
+    expect(globals).toContain('data-flight-target')
   })
 
   it('retains the state-transition actions needed by a replacement component set', () => {

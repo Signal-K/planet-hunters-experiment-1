@@ -5,7 +5,8 @@ import { useGame } from '@/game-context'
 import { pbShared } from '@/lib/pb'
 import { DEV_GROUPS } from '@/lib/devPresets'
 import PageSurface from '@/components/ui/PageSurface'
-import { AGENCY_TRAINING_POPUP } from '@/lib/systems/AgencyOnboardingSystem'
+import { AGENCY_TRAINING_POPUP, agencyTrainingStage, agencyTrainingTrack } from '@/lib/systems/AgencyOnboardingSystem'
+import { trainingCoachSteps } from '@/lib/data'
 
 interface SettingsSheetProps {
   onClose: () => void
@@ -141,13 +142,31 @@ export default function SettingsSheet({ onClose }: SettingsSheetProps) {
         )}
 
         <Section label="Data">
-          {game.player.missionsDone > 0 && (
+          <Row>
+            <div>
+              <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 14, color: 'var(--ln-text)' }}>Training log</div>
+              <div data-testid="training-log" style={{ fontFamily: 'var(--ln-font-body)', fontSize: 14, color: 'var(--ln-text-muted)', marginTop: 2 }}>
+                {agencyTrainingTrack(game.player)
+                  .filter(s => s.stage !== 'launchpad')
+                  .map(s => `${s.label}: ${s.status === 'done' ? 'done' : s.status === 'current' ? 'in progress' : 'to do'}`)
+                  .join(' · ')}
+              </div>
+            </div>
+            <Btn label="Replay" onClick={() => { onClose(); game.setPopup(AGENCY_TRAINING_POPUP) }} variant="primary" />
+          </Row>
+          {game.tutorial && !game.player.freeOperations && (
             <Row>
               <div>
-                <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 13, color: 'var(--ln-text)' }}>Agency training</div>
-                <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 11, color: 'var(--ln-text-muted)', marginTop: 2 }}>Review launchpad, extraction, transport, storage, and Free Ops</div>
+                <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 14, color: 'var(--ln-text)' }}>Skip training</div>
+                <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 14, color: 'var(--ln-text-muted)', marginTop: 2 }}>Hides the Flight Plan</div>
               </div>
-              <Btn label="Review" onClick={() => { onClose(); game.setPopup(AGENCY_TRAINING_POPUP) }} variant="primary" />
+              <Btn
+                label="Skip"
+                onClick={() => {
+                  onClose()
+                  game.skipTutorial(trainingCoachSteps(agencyTrainingStage(game.player)).map(s => s.id))
+                }}
+              />
             </Row>
           )}
           <Row>

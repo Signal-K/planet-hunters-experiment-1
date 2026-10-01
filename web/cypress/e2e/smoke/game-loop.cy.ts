@@ -124,7 +124,7 @@ describe('Full Game Loop — Landnam', () => {
     // internal steps. The old MissionCard board and TargetPicker are gone.
     it('mission board shows the M1 contract with the coach when landing on missions', () => {
       visitWithState(fullState({ screen: 'missions', doneSteps: { 1: true } }))
-      cy.get('[data-testid="tutorial-coach-block"]').should('be.visible').and('contain', 'Select a Mission')
+      cy.get('[data-testid="flight-plan"]').should('be.visible').and('contain', 'Select a Mission')
       cy.get('[data-testid="mission-board-section-client"]').should('be.visible').and('contain', 'Helios Propulsion Depot')
       cy.get('[data-testid="mission-accept-generated-s1-starter-bulk-1"]').should('be.visible').and('not.be.disabled')
     })
@@ -144,7 +144,8 @@ describe('Full Game Loop — Landnam', () => {
       }))
       cy.get('[data-testid="mission-accept-generated-s1-starter-bulk-1"]').click()
       cy.get('[data-testid="mission-target-map"]').should('be.visible')
-      cy.get('[data-testid="coach-skip-btn"]').click()
+      cy.get('[data-testid=\"flight-plan-objective\"]').click()
+      cy.get('[data-testid=\"flight-plan-skip\"]').click()
       // The only compatible target is auto-selected, so the summary shows its orbit
       // rather than the "N ELIGIBLE" count.
       cy.get('[data-testid="target-selection-summary"]').should('contain', 'ORBIT')
@@ -188,7 +189,8 @@ describe('Full Game Loop — Landnam', () => {
       // real setup flow rather than seeding the launch review directly.
       visitWithState(fullState({ screen: 'missions', doneSteps: { 1: true } }))
       cy.get('[data-testid="mission-accept-generated-s1-starter-bulk-1"]').click()
-      cy.get('[data-testid="coach-skip-btn"]').click()
+      cy.get('[data-testid=\"flight-plan-objective\"]').click()
+      cy.get('[data-testid=\"flight-plan-skip\"]').click()
       cy.get('[data-testid="continue-build-btn"]').click()
       cy.get('[data-testid="purchase-rocket-btn"]').click()
       cy.get('[data-testid="transfer-to-launchpad-btn"]').click()
@@ -523,7 +525,7 @@ describe('Full Game Loop — Landnam', () => {
         },
         tutorial: true,
       }))
-      cy.get('[data-testid="tutorial-coach-block"]')
+      cy.get('[data-testid="flight-plan"]')
         .should('be.visible')
         .should('contain', 'Transport')
         .should('contain', 'Launchpad')

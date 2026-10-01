@@ -180,7 +180,7 @@ describe('Interaction order hardening', () => {
     // debrief settlement routes to the hub tutorial rail, not the market — see the
     // identical assertion in smoke/game-loop.cy.ts "M1 completion returns to hub".
     cy.contains('Commodity Exchange').should('not.exist')
-    cy.get('[data-testid="tutorial-coach-block"]').contains(/transport/i).should('be.visible')
+    cy.get('[data-testid="flight-plan"]').contains(/transport/i).should('be.visible')
     readSavedState().should(state => {
       expect(state.player.missionsDone).to.eq(1)
       expect(state.missionId).to.eq(null)

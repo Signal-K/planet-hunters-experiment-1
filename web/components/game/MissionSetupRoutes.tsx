@@ -159,7 +159,7 @@ function SetupFrame({ step, title, onBack, hasCoach, children }: {
   children: ReactNode
 }) {
   return (
-    <div className={`game-screen ${styles.root}`} data-testid="mission-setup-scaffold" data-step={step} data-coach={hasCoach}>
+    <div className={`game-screen ${styles.root}`} data-testid="mission-setup-scaffold" data-step={step}>
       <div className={styles.landscape} data-testid="mission-setup-landscape" aria-hidden="true">
         {/* SSL-311: this is the Earth Base operations place (same family as
             Launchpad's STS-630 scene panel), not a washed steel/light-card
@@ -192,34 +192,6 @@ function SetupFrame({ step, title, onBack, hasCoach, children }: {
   )
 }
 
-// The tutorial coach is drawn by the route layout, above this stage, at a
-// fixed top-left anchor. The map lays itself out around the coach's real
-// footprint instead of letting the card sit on the chart or its controls.
-function useCoachFootprint(ref: RefObject<HTMLElement | null>, active: boolean) {
-  const [footprint, setFootprint] = useState({ h: 0, w: 0 })
-  useEffect(() => {
-    if (!active) { setFootprint({ h: 0, w: 0 }); return }
-    const measure = () => {
-      const section = ref.current
-      const coach = document.querySelector<HTMLElement>('[data-testid="tutorial-coach-block"]')
-      if (!section || !coach) { setFootprint(prev => prev.h || prev.w ? { h: 0, w: 0 } : prev); return }
-      const s = section.getBoundingClientRect()
-      const c = coach.getBoundingClientRect()
-      const overlaps = c.width > 0 && c.left < s.right && c.right > s.left && c.top < s.bottom && c.bottom > s.top
-      const next = overlaps ? { h: Math.max(0, Math.ceil(c.bottom - s.top) + 8), w: Math.max(0, Math.ceil(c.right - s.left) + 8) } : { h: 0, w: 0 }
-      setFootprint(prev => prev.h === next.h && prev.w === next.w ? prev : next)
-    }
-    measure()
-    const ro = new ResizeObserver(measure)
-    if (ref.current) ro.observe(ref.current)
-    // The coach mounts, changes copy and unmounts on its own schedule.
-    const timer = window.setInterval(measure, 400)
-    window.addEventListener('resize', measure)
-    return () => { ro.disconnect(); window.clearInterval(timer); window.removeEventListener('resize', measure) }
-  }, [active, ref])
-  return footprint
-}
-
 export default function MissionSetupRoutes({ screen, game, hasCoach, rocketDisplay, launchPending, onTransferToLaunchpad, onLaunch, onLaunchComplete }: MissionSetupRoutesProps) {
   const relay = useMissionRelayModels({
     catalog: game.catalog,
@@ -240,7 +212,6 @@ export default function MissionSetupRoutes({ screen, game, hasCoach, rocketDispl
   ) : [], [game.catalog.parts, game.catalog.targets, game.mission, game.player.launchpadUpgraded, game.player.missionsDone, game.player.unlockedSkillNodes])
   const [targetId, setTargetId] = useState('')
   const mapRef = useRef<HTMLElement>(null)
-  const coachFootprint = useCoachFootprint(mapRef, screen === 'targets' && hasCoach)
   const requiredRocket = getRequiredRocketModel(game.player.missionsDone)
   const availableRockets = useMemo(
     () => ROCKET_MODELS.filter(model => !model.locked && model.missionsRequired <= game.player.missionsDone),
@@ -362,8 +333,6 @@ export default function MissionSetupRoutes({ screen, game, hasCoach, rocketDispl
           ref={mapRef}
           className={styles.targetMap}
           data-testid="mission-target-map"
-          data-coach={coachFootprint.h > 0}
-          style={{ '--coach-h': `${coachFootprint.h}px`, '--coach-w': `${coachFootprint.w}px` } as CSSProperties}
         >
           <div className={styles.mapFilter} data-testid="mission-target-filter">
             <strong>MISSION FILTER</strong>

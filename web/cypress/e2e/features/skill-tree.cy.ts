@@ -5,13 +5,12 @@
 // where Skill Points come from or what License Grade does. Liam decided
 // (2026-08-07) this stays plain DOM/CSS rather than a PixiJS node-graph, so
 // SkillTreeCoach is the full remediation for the explanation gap. This spec
-// covers node select -> spend point -> confirm, and the new coach.
+// covers node select -> spend point -> confirm.
 
 import type { GameState } from '@/game-context'
 import { seedFixtureSession } from '../../support/authenticated-fixture'
 
 const STORAGE_KEY = 'landnam-game-state-v1'
-const COACH_KEY = 'landnam_skill_tree_coach_seen_v1'
 
 function basePlayer(overrides: Partial<GameState['player']> = {}): GameState['player'] {
   return {
@@ -41,7 +40,7 @@ function basePlayer(overrides: Partial<GameState['player']> = {}): GameState['pl
   } as GameState['player']
 }
 
-function visitSkills(playerOverrides: Partial<GameState['player']> = {}, coachSeen = false) {
+function visitSkills(playerOverrides: Partial<GameState['player']> = {}) {
   const full: GameState = {
     screen: 'skills',
     missionId: null,
@@ -60,11 +59,6 @@ function visitSkills(playerOverrides: Partial<GameState['player']> = {}, coachSe
       win.localStorage.setItem(STORAGE_KEY, JSON.stringify(full))
       seedFixtureSession(win)
       win.localStorage.setItem('ln_tutorial_complete_ack', '1')
-      if (coachSeen) {
-        win.localStorage.setItem(COACH_KEY, '1')
-      } else {
-        win.localStorage.removeItem(COACH_KEY)
-      }
     },
   })
 }
@@ -74,7 +68,7 @@ describe('Skill Tree screen', () => {
     const height = index === 0 ? 390 : 428
     it(`keeps compact landscape install controls reachable at ${width}x${height}`, () => {
       cy.viewport(width, height)
-      visitSkills({}, true)
+      visitSkills({})
       cy.get('[data-testid="skill-tree-screen"]', { timeout: 10000 }).should('be.visible')
       cy.contains('[data-testid="skill-tree-screen"] button', 'Install Upgrade').then($button => {
         const rect = $button[0].getBoundingClientRect()
@@ -94,7 +88,7 @@ describe('Skill Tree screen', () => {
   })
 
   it('renders the license grade panel and every skill node', () => {
-    visitSkills({}, true)
+    visitSkills({})
     cy.get('[data-testid="skill-tree-screen"]', { timeout: 10000 }).should('be.visible')
     cy.contains('FLIGHT AUTHORITY').should('exist')
     cy.contains('Skill Nodes').should('be.visible')
@@ -102,34 +96,9 @@ describe('Skill Tree screen', () => {
   })
 
   it('unlocks a node: select an affordable node, spend the point, and see it flip to Unlocked', () => {
-    visitSkills({ skillPoints: 3, unlockedSkillNodes: [] }, true)
+    visitSkills({ skillPoints: 3, unlockedSkillNodes: [] })
     cy.get('[data-testid="skill-tree-screen"]', { timeout: 10000 }).should('be.visible')
     cy.contains('button', 'Unlock').first().click()
     cy.contains('Unlocked', { timeout: 10000 }).should('be.visible')
-  })
-
-  it('shows the SkillTreeCoach on first visit, walks all 3 steps, then dismisses and persists', () => {
-    visitSkills({}, false)
-    cy.get('[data-testid="skill-tree-screen"]', { timeout: 10000 }).should('be.visible')
-
-    cy.get('[data-testid="skill-tree-coach"]').should('be.visible')
-    cy.contains('SKILL POINTS ARE EARNED, NOT BOUGHT').should('be.visible')
-    // The coach sits at the top of the scrolling screen; bring it back into
-    // view before reading each step.
-    cy.get('[data-testid="skill-tree-coach-next"]').click()
-    cy.get('[data-testid="skill-tree-coach"]').scrollIntoView().should('contain', 'LICENSE GRADE GATES YOUR CEILING')
-    cy.get('[data-testid="skill-tree-coach-next"]').click()
-    cy.get('[data-testid="skill-tree-coach"]').scrollIntoView().should('contain', 'UNLOCKS ARE PERMANENT')
-    cy.get('[data-testid="skill-tree-coach-next"]').click()
-    cy.get('[data-testid="skill-tree-coach"]').should('not.exist')
-    cy.window().then(win => {
-      expect(win.localStorage.getItem(COACH_KEY)).to.eq('1')
-    })
-  })
-
-  it('does not show the coach again on a second visit once dismissed', () => {
-    visitSkills({}, true)
-    cy.get('[data-testid="skill-tree-screen"]', { timeout: 10000 }).should('be.visible')
-    cy.get('[data-testid="skill-tree-coach"]').should('not.exist')
   })
 })

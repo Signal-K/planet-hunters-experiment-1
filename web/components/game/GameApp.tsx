@@ -6,7 +6,7 @@ import { GameProvider, useGame } from '@/game-context'
 import { trainingCoachSteps } from '@/lib/data'
 import type { Screen } from '@/lib/game-types'
 import { ScreenContent } from '@/components/game/GameScreenRouter'
-import TutorialCoach from '@/components/game/TutorialCoach'
+import FlightPlan from '@/components/game/FlightPlan'
 import MissionTicker from '@/components/game/MissionTicker'
 import UnlockPopup from '@/components/game/UnlockPopup'
 import { TutorialCompleteSheet } from '@/components/game/TutorialCompleteSheet'
@@ -233,36 +233,35 @@ function GameCanvas() {
             }} />
           )}
         </div>
+          {coach && !game.authGateOpen && (
+            <FlightPlan
+              key={coach.id}
+              stepIndex={coachIndex}
+              step={coach}
+              total={coachSteps.length}
+              onManualNext={game.coachManualNext}
+              onSkip={() => {
+                // Distinct from a step being completed in the normal flow —
+                // this is the player bailing out of onboarding entirely, which
+                // mission_completed/tutorial_step_started alone can't surface.
+                captureGameEvent('tutorial_skipped', {
+                  step_id: coach?.id ?? null,
+                  screen: coach?.screen ?? null,
+                  step_index: coachIndex,
+                  total_steps: coachSteps.length,
+                })
+                game.skipTutorial(coachSteps.map(s => s.id))
+              }}
+            />
+          )}
 
         <ToastLayer toasts={game.toasts} onDismiss={game.dismissToast} />
         {!coach && !game.popup && !game.authGateOpen && (
           <MissionTicker player={game.player} screen={game.screen} onResume={game.go} />
         )}
-        {showFeedback && <FeedbackButton />}
+        {showFeedback && !coach && <FeedbackButton />}
         <SurveySheet blockWhile={surveyBlocked} />
 
-        {coach && !game.authGateOpen && (
-          <TutorialCoach
-            key={coach.id}
-            stepIndex={coachIndex}
-            steps={coachSteps}
-            step={coach}
-            total={coachSteps.length}
-            onManualNext={game.coachManualNext}
-            onSkip={() => {
-              // Distinct from a step being completed in the normal flow —
-              // this is the player bailing out of onboarding entirely, which
-              // mission_completed/tutorial_step_started alone can't surface.
-              captureGameEvent('tutorial_skipped', {
-                step_id: coach?.id ?? null,
-                screen: coach?.screen ?? null,
-                step_index: coachIndex,
-                total_steps: coachSteps.length,
-              })
-              game.skipTutorial(coachSteps.map(s => s.id))
-            }}
-          />
-        )}
         {game.popup === 'tutorial-complete' && !game.authGateOpen && (
           <TutorialCompleteSheet
             track={agencyTrainingTrack(game.player)}

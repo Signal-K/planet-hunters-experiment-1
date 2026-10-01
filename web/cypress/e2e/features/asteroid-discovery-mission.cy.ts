@@ -11,7 +11,6 @@ import { seedFixtureSession } from '../../support/authenticated-fixture'
 
 const STORAGE_KEY = 'landnam-game-state-v1'
 const AUTHENTICATED_STORAGE_KEY = `${STORAGE_KEY}:user:e2e-user`
-const COACH_KEY = 'landnam_asteroid_discovery_coach_seen_v1'
 
 function basePlayer(overrides: Partial<GameState['player']> = {}): GameState['player'] {
   return {
@@ -154,44 +153,9 @@ function interceptCandidates() {
   }).as('asteroidCandidates')
 }
 
-describe('AsteroidDiscoveryCoach (KES-128)', () => {
-  it('shows the coach on first visit once the telescope is built, walks all 3 steps, then persists dismissal', () => {
-    interceptCandidates()
-    visitWithState('/game/asteroid-discovery', 'asteroid-discovery', {
-      deepSpaceTelescopeBuilt: true,
-      deepSpaceTelescopeMissionCompletedAt: Date.now(),
-    })
-
-    cy.get('[data-testid="asteroid-discovery-screen"]', { timeout: 15000 }).should('be.visible')
-    cy.get('[data-testid="asteroid-discovery-coach"]').should('be.visible')
-    cy.contains('A REAL UNCONFIRMED OBJECT FEED').should('be.visible')
-    cy.get('[data-testid="asteroid-discovery-coach-next"]').click()
-    cy.contains('READ THE SKY POSITION').should('be.visible')
-    cy.get('[data-testid="asteroid-discovery-coach-next"]').click()
-    cy.contains('FLAG, MARK, OR SKIP').should('be.visible')
-    cy.get('[data-testid="asteroid-discovery-coach-next"]').click()
-    cy.get('[data-testid="asteroid-discovery-coach"]').should('not.exist')
-    cy.window().then(win => {
-      expect(win.localStorage.getItem(COACH_KEY)).to.eq('1')
-    })
-  })
-
-  it('does not show the coach again on a second visit once dismissed', () => {
-    interceptCandidates()
-    visitWithState('/game/asteroid-discovery', 'asteroid-discovery', {
-      deepSpaceTelescopeBuilt: true,
-      deepSpaceTelescopeMissionCompletedAt: Date.now(),
-    })
-    cy.window().then(win => win.localStorage.setItem(COACH_KEY, '1'))
-    cy.visit('/game/asteroid-discovery')
-    cy.get('[data-testid="asteroid-discovery-screen"]', { timeout: 15000 }).should('be.visible')
-    cy.get('[data-testid="asteroid-discovery-coach"]').should('not.exist')
-  })
-})
-
 // KES-342: compact-landscape rendered regression. The old AsteroidDiscoveryCoach
 // absolutely-positioned itself over the top of the screen; these confirm the
-// coach reserves its own space instead, that the new truthful sky-position
+// that the new truthful sky-position
 // visualization renders with the real candidate fields, and that verdict
 // actions stay reachable at a real touch size through to the saved state.
 const LANDSCAPE_VIEWPORTS = [
@@ -201,33 +165,6 @@ const LANDSCAPE_VIEWPORTS = [
 
 describe('Asteroid Discovery compact-landscape visualization (KES-342)', () => {
   LANDSCAPE_VIEWPORTS.forEach(({ key, width, height }) => {
-    it(`[${key}] renders the sky plot from real candidate fields, coach visible and dismissed`, () => {
-      cy.viewport(width, height)
-      interceptCandidates()
-      visitWithState('/game/asteroid-discovery', 'asteroid-discovery', {
-        deepSpaceTelescopeBuilt: true,
-        deepSpaceTelescopeMissionCompletedAt: Date.now(),
-      })
-
-      cy.get('[data-testid="asteroid-discovery-screen"]', { timeout: 15000 }).should('be.visible')
-      cy.get('[data-testid="asteroid-discovery-coach"]').should('be.visible')
-      cy.get('[data-testid="asteroid-sky-plot"]').should('be.visible')
-        .and('contain.text', MOCK_CANDIDATE.ra.toFixed(4))
-        .and('contain.text', MOCK_CANDIDATE.decl.toFixed(4))
-      // Verdict buttons stay attached and real touch size even while the
-      // coach is up — it must never cover them.
-      cy.get('[data-testid="neocp-verdict-likely_real"]').should('be.visible').then($btn => {
-        // The touch target is the border box; jQuery height() drops padding
-        // and border.
-        expect($btn.outerHeight()).to.be.at.least(44)
-      })
-
-      cy.get('[data-testid="asteroid-discovery-coach-skip"]').click()
-      cy.get('[data-testid="asteroid-discovery-coach"]').should('not.exist')
-      cy.get('[data-testid="asteroid-sky-plot"]').should('be.visible')
-      cy.screenshot(`asteroid-discovery-${key}-coach-dismissed`)
-    })
-
     it(`[${key}] reduces to the primary readouts by default, with the rest behind More Data`, () => {
       cy.viewport(width, height)
       interceptCandidates()
@@ -235,7 +172,6 @@ describe('Asteroid Discovery compact-landscape visualization (KES-342)', () => {
         deepSpaceTelescopeBuilt: true,
         deepSpaceTelescopeMissionCompletedAt: Date.now(),
       })
-      cy.window().then(win => win.localStorage.setItem(COACH_KEY, '1'))
       cy.visit('/game/asteroid-discovery')
       cy.get('[data-testid="asteroid-discovery-screen"]', { timeout: 15000 }).should('be.visible')
       // Compact landscape scrolls the readout column; reachable is the contract.
@@ -252,7 +188,6 @@ describe('Asteroid Discovery compact-landscape visualization (KES-342)', () => {
         deepSpaceTelescopeBuilt: true,
         deepSpaceTelescopeMissionCompletedAt: Date.now(),
       })
-      cy.window().then(win => win.localStorage.setItem(COACH_KEY, '1'))
       cy.visit('/game/asteroid-discovery')
       cy.get('[data-testid="asteroid-discovery-screen"]', { timeout: 15000 }).should('be.visible')
       cy.get('[data-testid="neocp-verdict-likely_artifact"]').click()

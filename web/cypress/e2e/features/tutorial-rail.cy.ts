@@ -77,12 +77,12 @@ function rectsIntersect(a: DOMRect, b: DOMRect) {
 }
 
 function assertGameplayButtonsAvoidCoachBlock() {
-  cy.get('[data-testid="tutorial-coach-block"]').should('be.visible').then($coach => {
+  cy.get('[data-testid="flight-plan"]').should('be.visible').then($coach => {
     const coachRect = $coach[0].getBoundingClientRect()
 
     cy.get('.portrait-canvas button').each($button => {
       const button = $button[0] as HTMLButtonElement
-      if ($button.closest('[data-testid="tutorial-coach-overlay"]').length > 0) return
+      if ($button.closest('[data-testid="flight-plan"]').length > 0) return
 
       const style = getComputedStyle(button)
       if (style.display === 'none' || style.visibility === 'hidden' || style.pointerEvents === 'none') return
@@ -122,7 +122,7 @@ describe('Tutorial rail regression', () => {
           doneSteps: { 0: true },
         }))
 
-        cy.get('[data-testid="tutorial-coach-block"]').should('contain', 'Extraction')
+        cy.get('[data-testid="flight-plan"]').should('contain', 'Extraction')
 
         // The retired desktop sidebar must stay gone; the shared bar's OPS
         // action is the one persistent way into Missions at every width.
@@ -140,7 +140,7 @@ describe('Tutorial rail regression', () => {
         }))
         openContracts()
 
-        cy.get('[data-testid="tutorial-coach-block"]').should('contain', 'Select a Mission')
+        cy.get('[data-testid="flight-plan"]').should('contain', 'Select a Mission')
         cy.get('[data-testid="mission-accept-generated-s1-starter-bulk-1"]').should('be.visible')
         assertGameplayButtonsAvoidCoachBlock()
       })
@@ -154,7 +154,7 @@ describe('Tutorial rail regression', () => {
         openContracts()
         cy.get('[data-testid="mission-accept-generated-s1-starter-bulk-1"]').click()
 
-        cy.get('[data-testid="tutorial-coach-block"]').should('contain', 'Choose a Destination')
+        cy.get('[data-testid="flight-plan"]').should('contain', 'Choose a Destination')
         cy.get('[data-testid="continue-build-btn"]').should('be.visible')
         assertGameplayButtonsAvoidCoachBlock()
       })
@@ -173,8 +173,7 @@ describe('Tutorial rail regression', () => {
         openContracts()
         cy.get('[data-testid="mission-accept-generated-s1-starter-bulk-1"]').click()
 
-        cy.get('[data-testid="mission-setup-scaffold"]').should('have.attr', 'data-coach', 'true')
-        cy.get('[data-testid="tutorial-coach-block"]').should('be.visible').then($coach => {
+        cy.get('[data-testid="flight-plan"]').should('be.visible').then($coach => {
           const style = getComputedStyle($coach[0])
           expect(style.borderTopColor).not.to.equal('rgb(245, 166, 35)')
           expect(style.outlineColor).not.to.equal('rgb(245, 166, 35)')
@@ -196,7 +195,7 @@ describe('Tutorial rail regression', () => {
           doneSteps: { 0: true, 1: true, 2: true, 3: true },
         }))
 
-        cy.get('[data-testid="tutorial-coach-block"]').should('contain', 'Assemble the Rocket')
+        cy.get('[data-testid="flight-plan"]').should('contain', 'Assemble the Rocket')
         cy.get('[data-testid="launch-btn"]').should('be.visible')
         assertGameplayButtonsAvoidCoachBlock()
       })
@@ -212,9 +211,10 @@ describe('Tutorial rail regression', () => {
           },
         }))
 
-        cy.get('[data-testid="tutorial-coach-block"]').should('contain', 'Build a Launchpad')
-        cy.contains('[data-testid="tutorial-coach-overlay"] button', 'Skip').click()
-        cy.get('[data-testid="tutorial-coach-overlay"]').should('not.exist')
+        cy.get('[data-testid="flight-plan"]').should('contain', 'Build a Launchpad')
+        cy.get('[data-testid="flight-plan-objective"]').click()
+        cy.get('[data-testid="flight-plan-skip"]').click()
+        cy.get('[data-testid="flight-plan"]').should('not.exist')
         cy.get('[data-testid="building-launchpad"]').should('be.visible')
         cy.window().then(win => {
           if (win.innerWidth >= 1024) {

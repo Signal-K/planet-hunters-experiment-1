@@ -11,7 +11,6 @@ import ObservatoryChart from '@/components/game/ObservatoryChart'
 import TelescopeConsole from '@/components/game/TelescopeConsole'
 import ObservatoryReadout from '@/components/game/ObservatoryReadout'
 import CommentsPanel from '@/components/game/CommentsPanel'
-import ObservatoryCoach, { useObservatoryCoach } from '@/components/game/ObservatoryCoach'
 import PixiGalaxyStarMap from '@/components/game/PixiGalaxyStarMap'
 import SolSystemPreview from '@/components/game/SolSystemPreview'
 import NebulaBackdrop from '@/components/game/NebulaBackdrop'
@@ -156,7 +155,6 @@ export default function TessDiscoveryScreen({ player, inspectSubjectId, visualCa
   // Hooks must run unconditionally — the gate screens below return early,
   // so anything hook-based (not just plain derived values) has to sit
   // above them, or its call order breaks the moment a gate flag flips
-  const coach = useObservatoryCoach()
   const isDesktop = useIsDesktop()
 
   if (!player.freeOperations) {
@@ -232,7 +230,6 @@ export default function TessDiscoveryScreen({ player, inspectSubjectId, visualCa
   const activeRanges = classification?.ranges ?? ranges
   const markCount = activeRanges.length
   const stats = deriveObservatoryStats(candidate, points, activeRanges)
-  const showCoach = coach.visible && !classification
   const visitedIds = new Set(Object.keys(classifications))
   const targetChosen = pendingTargetId ?? player.satelliteTargetId ?? null
   // A global 5-vote confirmation lets the player re-pick their satellite
@@ -483,8 +480,6 @@ export default function TessDiscoveryScreen({ player, inspectSubjectId, visualCa
           </div>
         </>
       )}
-
-      {showCoach && <ObservatoryCoach onDismiss={coach.dismiss} />}
     </div>
   )
 }
