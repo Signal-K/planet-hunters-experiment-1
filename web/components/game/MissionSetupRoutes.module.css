@@ -899,6 +899,11 @@
   .progress li { width: 22px; }
   .progress i { width: 20px; height: 20px; font-size: 9px; }
 }
+@media (orientation: portrait) and (max-width: 340px) {
+  .title { padding: 4px 4px; }
+  .title h1 { font-size: 11px; }
+  .title span { letter-spacing: .06em; }
+}
 
 @media (orientation: portrait) and (max-width: 560px) {
   .reviewBrief { grid-template-columns: minmax(0, 1fr) minmax(124px, .9fr); }
