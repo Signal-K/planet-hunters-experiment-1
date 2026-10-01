@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { TutorialStep, TrainingTryStep } from '@/lib/data'
 import { useIsDesktop } from '@/lib/hooks/useIsDesktop'
 import { UI_ZONES } from '@/lib/ui-zones'
@@ -28,6 +28,7 @@ export default function FlightPlan({ stepIndex, total, step, onManualNext, onSki
   const isDesktop = useIsDesktop()
   const [expanded, setExpanded] = useState(false)
   const [hidden, setHidden] = useState(false)
+  const stripRef = useRef<HTMLElement>(null)
 
   useEffect(() => { if (persistedHidden !== undefined) setHidden(persistedHidden) }, [persistedHidden])
 
@@ -47,6 +48,19 @@ export default function FlightPlan({ stepIndex, total, step, onManualNext, onSki
     return () => { html.removeAttribute('data-flight-target') }
   }, [hidden, targetId])
 
+  // Publish the strip's height so bottom-anchored status pills (the sync note)
+  // sit above it instead of on top of its text.
+  useEffect(() => {
+    const el = stripRef.current
+    if (hidden || !el) return
+    const root = document.documentElement
+    const publish = () => root.style.setProperty('--flight-plan-h', `${el.offsetHeight}px`)
+    publish()
+    const observer = new ResizeObserver(publish)
+    observer.observe(el)
+    return () => { observer.disconnect(); root.style.removeProperty('--flight-plan-h') }
+  }, [hidden])
+
   if (hidden) {
     return (
       <button
@@ -62,7 +76,7 @@ export default function FlightPlan({ stepIndex, total, step, onManualNext, onSki
   }
 
   return (
-    <section className="flight-plan" data-ui-zone={UI_ZONES.tutorialRail} data-testid="flight-plan" data-expanded={expanded} aria-label="Flight Plan">
+    <section ref={stripRef} className="flight-plan" data-ui-zone={UI_ZONES.tutorialRail} data-testid="flight-plan" data-expanded={expanded} aria-label="Flight Plan">
       <div className="flight-plan-row">
         <button
           type="button"

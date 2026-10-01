@@ -54,7 +54,7 @@ function Btn({
       onClick={onClick}
       disabled={disabled}
       style={{
-        padding: 'var(--ln-s-2) var(--ln-s-4)', borderRadius: 8,
+        padding: 'var(--ln-s-2) var(--ln-s-4)', borderRadius: 8, minHeight: 44, minWidth: 44,
         background: c.bg, border: `1px solid ${c.border}`, color: c.color,
         fontFamily: 'var(--ln-font-display)', fontSize: 11, fontWeight: 800,
         letterSpacing: '0.12em', textTransform: 'uppercase',
