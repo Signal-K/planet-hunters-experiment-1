@@ -1,6 +1,7 @@
 import { STARTING_FRANCS } from '@/lib/data/economy'
 import type { CompletedMissionRecord, GameState, LicenseGrade, Player, Screen } from '@/lib/game-types'
 import { MISSIONS, OWN_PROGRAM_CLIENT_ID, TARGETS } from '@/lib/data'
+import { currentTrainingTry } from '@/lib/systems/FlightPlanSystem'
 import { freeOperationsUnlocked } from '@/lib/systems/AgencyOnboardingSystem'
 import { migrateCrewRoster } from '@/lib/systems/CrewSystem'
 import { normalizeSurfaceOps } from '@/lib/systems/SurfaceOpsSystem'
@@ -407,7 +408,7 @@ function repairStateRoute(rawInput: GameState): GameState {
   if (input.screen === 'targets' && mission?.targetId) {
     return { ...input, screen: 'rocket-buy', targetId: mission.targetId }
   }
-  if (input.screen === 'galaxy' && !input.player.freeOperations) {
+  if (input.screen === 'galaxy' && !input.player.freeOperations && currentTrainingTry(input.player.flightPlan) !== 'scan') {
     return { ...input, screen: 'missions' }
   }
   if (input.screen === 'instrument-hub' && !input.player.freeOperations) {

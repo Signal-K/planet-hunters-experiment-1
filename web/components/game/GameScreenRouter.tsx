@@ -35,7 +35,7 @@ const AcademyScreen = dynamic(() => import('@/components/game/screens/AcademyScr
 const MissionHistoryScreen = dynamic(() => import('@/components/game/screens/MissionHistoryScreen'), { loading: ScreenLoading })
 const NarrativeLedgerScreen = dynamic(() => import('@/components/game/screens/NarrativeLedgerScreen'), { loading: ScreenLoading })
 import { enqueueSurvey } from '@/lib/surveys'
-import { VISUAL_ASTEROID_CANDIDATE, VISUAL_TESS_CANDIDATE } from '@/lib/visual-fixtures'
+import { TRAINING_TESS_CANDIDATE, VISUAL_ASTEROID_CANDIDATE, VISUAL_TESS_CANDIDATE } from '@/lib/visual-fixtures'
 import { captureFreeOpsUnlocked, captureGameEvent } from '@/lib/posthog'
 import { dismissHubPrompt } from '@/lib/hub-prompts'
 import type { InstrumentSignal } from '@/lib/systems/InstrumentFeedSystem'
@@ -297,7 +297,9 @@ export function ScreenContent({
         <TessDiscoveryScreen
           player={game.player}
           inspectSubjectId={inspectSignal?.kind === 'transit' ? inspectSignal.id : undefined}
-          visualCandidate={game.visualFixture === 'tess' ? VISUAL_TESS_CANDIDATE : undefined}
+          visualCandidate={currentTrainingTry(game.player.flightPlan) === 'scan'
+            ? TRAINING_TESS_CANDIDATE
+            : game.visualFixture === 'tess' ? VISUAL_TESS_CANDIDATE : undefined}
           onBack={() => game.goBack()}
           onBuildStation={() => game.go('build')}
           onOpenProgram={game.openLaunchpad}

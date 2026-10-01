@@ -58,7 +58,6 @@ export function useTutorialActions(
     setState(s => ({
       ...s,
       screen: tryId === 'scan' ? 'galaxy' : tryId === 'part' ? 'hangar' : 'launchpad',
-      visualFixture: tryId === 'scan' ? 'tess' : undefined,
       player: { ...s.player, flightPlan: replayFlightPlanTry(s.player.flightPlan, tryId) },
     }))
   }, [setState])

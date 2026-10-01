@@ -120,14 +120,15 @@ function GameChrome({ children }: { children: ReactNode }) {
   const activeTry = currentTrainingTry(game.player.flightPlan)
   const flightStep = activeTry ? trainingTryStep(activeTry, currentScreen) : undefined
   const coach = useMemo(() => {
-    const routeCoach = !game.player.freeOperations && game.tutorial ? flightStep ?? null : null
+    // A Menu Replay re-arms its try even after Free Ops, when the tutorial flag is off.
+    const routeCoach = (!game.player.freeOperations && game.tutorial) || game.player.flightPlan?.replayTry ? flightStep ?? null : null
     if (currentScreen === 'hub' && game.subsurfaceView) return null
     // The Launchpad mission chooser is a modal owned by the current scene.
     // Hide the coach while it is open so onboarding copy never sits over, or
     // points back at, the control the player is already using.
     if (settingsOpen || friendsOpen || communityOpen || game.popup || game.authGateOpen || (currentScreen === 'launchpad' && game.launchpadMissionMenuOpen)) return null
     return routeCoach
-  }, [communityOpen, flightStep, friendsOpen, game.authGateOpen, game.launchpadMissionMenuOpen, game.player.freeOperations, game.popup, game.subsurfaceView, game.tutorial, settingsOpen])
+  }, [communityOpen, flightStep, friendsOpen, game.authGateOpen, game.launchpadMissionMenuOpen, game.player.flightPlan?.replayTry, game.player.freeOperations, game.popup, game.subsurfaceView, game.tutorial, settingsOpen])
 
   const coachIndex = activeTry ? ['mining', 'scan', 'part'].indexOf(activeTry) : -1
   const hasCoach = !!coach

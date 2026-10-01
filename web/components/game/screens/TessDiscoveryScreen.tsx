@@ -20,6 +20,7 @@ import { UI_ZONES } from '@/lib/ui-zones'
 import { captureGameEvent } from '@/lib/posthog'
 import { fetchReviewableTessCandidates } from '@/lib/tess-subjects'
 import { sharedBackendMisconfigured } from '@/lib/pb-config'
+import { TRAINING_ID_PREFIX } from '@/lib/visual-fixtures'
 import { useIsDesktop } from '@/lib/hooks/useIsDesktop'
 import { instrumentDigestDateKey, pickInstrumentInspectCandidate, unresolvedTransitInstrumentDigest } from '@/lib/systems/InstrumentFeedSystem'
 
@@ -138,7 +139,8 @@ export default function TessDiscoveryScreen({ player, inspectSubjectId, visualCa
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [visualCandidate, inspectSubjectId, player.freeOperations, player.transitSatelliteLaunchedAt, player.transitSatelliteLevel, player.satelliteTargetId, devDayOffset, retryToken])
 
-  const classification: TessClassification | undefined = candidate ? classifications[candidate.id] : undefined
+  // The Flight Plan training record is replayable, so a past verdict never locks it.
+  const classification: TessClassification | undefined = candidate && !candidate.id.startsWith(TRAINING_ID_PREFIX) ? classifications[candidate.id] : undefined
   const discoveredTarget = candidate && classification?.verdict === 'planet'
     ? tessCandidateToExoplanetTarget(candidate, periodFromRanges(classification.ranges))
     : null
@@ -157,7 +159,7 @@ export default function TessDiscoveryScreen({ player, inspectSubjectId, visualCa
   // above them, or its call order breaks the moment a gate flag flips
   const isDesktop = useIsDesktop()
 
-  if (!player.freeOperations) {
+  if (!visualCandidate && !player.freeOperations) {
     return (
       <GateScreen
         eyebrow="BASE / LOCKED"
@@ -170,7 +172,7 @@ export default function TessDiscoveryScreen({ player, inspectSubjectId, visualCa
     )
   }
 
-  if (!player.transitSatelliteLaunchedAt) {
+  if (!visualCandidate && !player.transitSatelliteLaunchedAt) {
     return (
       <GateScreen
         eyebrow="BASE / TELESCOPE"

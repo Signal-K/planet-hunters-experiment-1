@@ -18,6 +18,15 @@ export const VISUAL_TESS_CANDIDATE: TessCandidate = {
   signalToNoise: 13.6,
 }
 
+// Flight Plan scan try (SSL-409): a fixed local candidate so the lesson works
+// before Free Ops / a launched telescope and without the live feed. The
+// `training-` id prefix keeps it out of shared classifications and targets.
+export const TRAINING_ID_PREFIX = 'training-'
+export const TRAINING_TESS_CANDIDATE: TessCandidate = {
+  ...VISUAL_TESS_CANDIDATE,
+  id: `${TRAINING_ID_PREFIX}tess-toi-7001`,
+}
+
 export const VISUAL_ASTEROID_CANDIDATE: AsteroidCandidate = {
   id: 'visual-neocp-2026-aa1',
   tempDesig: '2026 AA1',

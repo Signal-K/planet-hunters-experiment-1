@@ -30,6 +30,7 @@ import { pbLandnam } from '@/lib/pb-landnam'
 import { queueCreate, queueUpdate } from '@/lib/offline/pbOutbox'
 import { freeOperationsUnlocked } from '@/lib/systems/AgencyOnboardingSystem'
 import { completeFlightPlanEvent } from '@/lib/systems/FlightPlanSystem'
+import { TRAINING_ID_PREFIX } from '@/lib/visual-fixtures'
 import { FREE_OPS_MISSION_SEQUENCE } from '@/lib/data/mission-generator'
 
 // 42s/orbit-unit — a ~65% cut from the original 2min/unit pace (KES-262):
@@ -639,7 +640,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
           artifactNarrativeSeenAt: showArtifactNarrative
             ? submittedAt
             : s.player.artifactNarrativeSeenAt,
-          discoveredExoplanetTargets: verdict === 'planet' && discoveredTarget
+          discoveredExoplanetTargets: verdict === 'planet' && discoveredTarget && !subjectId.startsWith(TRAINING_ID_PREFIX)
             ? {
                 ...(s.player.discoveredExoplanetTargets ?? {}),
                 [discoveredTarget.id]: discoveredTarget,
@@ -661,7 +662,8 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
     })
 
     const userId = pbShared.authStore.record?.id
-    if (userId) {
+    // Flight Plan training verdicts stay local: the subject is not a real record.
+    if (userId && !subjectId.startsWith(TRAINING_ID_PREFIX)) {
       // subject_classifications.dip_markers is a JSON array of single x
       // positions (see backend/migrations/7_subjects_pipeline.go) — the
       // shared backend schema predates the range-drag interaction, so we
@@ -956,7 +958,6 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
         tutorial: stillInTutorial,
         popup,
         doneSteps: { ...s.doneSteps, 9: true },
-        visualFixture: flightPlan.completed.mining && !flightPlan.completed.scan ? 'tess' : s.visualFixture,
           screen: mission?.payload?.type === 'satellite'
             ? 'instrument-hub'
             : isProgramOperation
