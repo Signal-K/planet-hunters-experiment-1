@@ -23,6 +23,7 @@ interface MissionOperationRoutesProps {
   screen: MissionOperationRoute
   game: Game
   hasCoach: boolean
+  trainingMiningTry: boolean
   coachManual: boolean
   transitTarget: Target
   debriefOriginTarget: Target
@@ -35,6 +36,7 @@ export default function MissionOperationRoutes({
   screen,
   game,
   hasCoach,
+  trainingMiningTry,
   coachManual,
   transitTarget,
   debriefOriginTarget,
@@ -191,6 +193,7 @@ export default function MissionOperationRoutes({
           laserChargeCap={game.laserChargeCap}
           laserTier={game.catalog.parts.drill.find(p => p.id === game.rocket.drill)?.tier ?? 1}
           hasCoach={hasCoach}
+          trainingMiningTry={trainingMiningTry}
           coachManual={coachManual}
           onCoachDone={() => game.completeStep(6)}
           deliveryTargetName={deliveryTargetName}

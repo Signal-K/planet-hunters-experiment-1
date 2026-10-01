@@ -5,6 +5,7 @@ import dynamic from 'next/dynamic'
 import { useGame } from '@/game-context'
 import { ACADEMY_INTRO_MISSION_ID, rocketDisplayForConfig, rocketModelForConfig, trainingCoachSteps } from '@/lib/data'
 import { agencyTrainingStage, freeOperationsUnlocked } from '@/lib/systems/AgencyOnboardingSystem'
+import { currentTrainingTry } from '@/lib/systems/FlightPlanSystem'
 import type { Screen } from '@/lib/game-types'
 import { hasEstablishedMiningSettlement } from '@/lib/systems/SurfaceOpsSystem'
 // IntroScreen and HubScreen are the two most likely first paints (cold start
@@ -113,6 +114,9 @@ export function ScreenContent({
   const coach = game.player.activeMission
     ? null
     : coachSteps.find(s => s.screen === screen && !game.doneSteps[s.id]) ?? null
+  // Flight Plan supersedes the retired coach sequence. Keep the contextual
+  // mining seam tied to the active try rather than the legacy coach state.
+  const trainingMiningTry = currentTrainingTry(game.player.flightPlan) === 'mining'
 
   // Market is a Free Ops feature — a player without freeOperations landing
   // here directly (bookmarked URL, back/forward) shouldn't see a locked
@@ -345,6 +349,7 @@ export function ScreenContent({
           screen={screen}
           game={game}
           hasCoach={hasCoach}
+          trainingMiningTry={trainingMiningTry}
           coachManual={coach?.manual ?? false}
           transitTarget={transitTarget}
           debriefOriginTarget={debriefOriginTarget}

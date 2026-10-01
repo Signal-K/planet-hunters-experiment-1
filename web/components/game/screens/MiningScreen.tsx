@@ -201,7 +201,7 @@ function miningGuide(deliveryTargetName?: string) {
   ]
 }
 
-export default function MiningScreen({ mission, target, rocketImageSrc, onComplete, onBack, onAbandon, minerals, laserChargeCap, laserTier, hasCoach, coachManual, onCoachDone, addToast, deliveryTargetName, hasPriorFreeOpsExperience, initialCargo, remoteSiloAvailable, remoteSiloUsed = 0, isFreeHaulEligible, hasEarthStorage, initialEarthDisposition }: {
+export default function MiningScreen({ mission, target, rocketImageSrc, onComplete, onBack, onAbandon, minerals, laserChargeCap, laserTier, hasCoach, trainingMiningTry = false, coachManual, onCoachDone, addToast, deliveryTargetName, hasPriorFreeOpsExperience, initialCargo, remoteSiloAvailable, remoteSiloUsed = 0, isFreeHaulEligible, hasEarthStorage, initialEarthDisposition }: {
   mission: Mission
   target: Target
   rocketImageSrc?: string
@@ -214,6 +214,7 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
   /** Equipped drill/laser part tier (1-3). Gates how deep ore is reachable — deeper veins tease an upgrade. */
   laserTier?: number
   hasCoach?: boolean
+  trainingMiningTry?: boolean
   coachManual?: boolean
   onCoachDone?: () => void
   /** Transient Temple-Run-style hints ("Nice shot!", "You don't need that yet") — tutorial-scoped, not the persistent coach banner. */
@@ -688,7 +689,7 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
           oreNearRef={oreNearRef}
           neededMineralsRef={neededMineralsRef}
           chargingRef={chargingRef}
-          trainingMiningTry={hasCoach}
+          trainingMiningTry={trainingMiningTry}
         />
         {sceneStatus !== 'ready' && (
           <div className="mining-scene-status" role="status" aria-live="polite" data-testid="mining-scene-status">
