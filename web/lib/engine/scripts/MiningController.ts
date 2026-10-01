@@ -5,6 +5,7 @@ import type { ShapeKind } from '../components/ShapeRenderer'
 import { GameObject } from '../GameObject'
 import type { RuntimeContext } from '../RuntimeContext'
 import type { EntityBounds } from '../InputManager'
+import { devMiningSpeedMultiplier } from '@/lib/devMiningSpeed'
 
 export const SCROLL_SPEED = 48
 export const SCROLL_SPEED_MIN = 16
@@ -134,6 +135,8 @@ export class MiningController extends ScriptBehaviour {
   private totalScrollX = 0
   private scrollSpeed = SCROLL_SPEED
   private oreNearState = false
+  /** Local-dev QA multiplier (1 everywhere else), see lib/devMiningSpeed.ts. */
+  private readonly devSpeed = devMiningSpeedMultiplier()
 
   constructor(context: RuntimeContext, opts: MiningControllerOptions) {
     super(context)
@@ -169,7 +172,7 @@ export class MiningController extends ScriptBehaviour {
   }
 
   update(dt: number): void {
-    const dx = this.scrollSpeed * dt
+    const dx = this.scrollSpeed * this.devSpeed * dt
     this.totalScrollX += dx
 
     for (const ore of this.ores) {
