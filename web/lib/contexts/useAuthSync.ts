@@ -660,6 +660,16 @@ export function useAuthSync({
     // deep-linked screen. Replace the URL here as well as the game state so
     // that the route's URL -> state effect cannot put the player straight
     // back onto Contracts after the gate closes (especially on mobile).
+    //
+    // A player with no launchpad yet has not finished first-time placement:
+    // Base would show the "Tap the Launchpad" coach over an empty scene. Keep
+    // them on the intro/build flow instead (SSL-365).
+    if (current.player.placed.length === 0 && !current.player.freeOperations) {
+      const firstTimeScreen = current.screen === 'intro' ? 'intro' : 'build'
+      if (current.screen !== firstTimeScreen) setState(s => ({ ...s, screen: firstTimeScreen }))
+      router.replace(`/game/${firstTimeScreen}`)
+      return
+    }
     if (current.screen !== 'hub') setState(s => ({ ...s, screen: 'hub' }))
     router.replace('/game/hub')
   }, [router, setState, stateRef])

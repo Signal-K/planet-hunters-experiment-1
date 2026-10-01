@@ -1176,9 +1176,11 @@ button { cursor: pointer; }
 }
 
 @media (max-width: 520px) {
+  /* iOS keyboard: lift the gate above it (--gate-kb set from visualViewport) */
+  .auth-gate { bottom: var(--gate-kb, 0px); }
   .auth-gate__panel {
     display: block;
-    max-height: calc(100dvh - 32px);
+    max-height: calc(100dvh - 32px - var(--gate-kb, 0px));
     overflow-y: auto;
   }
   .auth-gate__scene { display: none; }
@@ -1246,7 +1248,7 @@ button { cursor: pointer; }
 .auth-gate__tab { flex: 1; padding: var(--ln-s-3); color: var(--ln-text-muted); background: transparent; border: 1px solid var(--ln-hairline); border-radius: var(--ln-r-md); cursor: pointer; font: 700 12px var(--ln-font-display); letter-spacing: .14em; text-transform: uppercase; }
 .auth-gate__tab.is-active { color: var(--ln-cyan); background: rgba(63,169,255,.12); border-color: var(--ln-cyan-border-strong); }
 .auth-gate__form { display: flex; flex-direction: column; gap: var(--ln-s-3); }
-.auth-gate__input { width: 100%; box-sizing: border-box; padding: var(--ln-s-4); color: var(--ln-text); background: var(--ln-void); border: 1px solid var(--ln-cyan-border); border-radius: var(--ln-r-md); outline: none; font: 400 15px var(--ln-font-body); }
+.auth-gate__input { width: 100%; box-sizing: border-box; padding: var(--ln-s-4); color: var(--ln-text); background: var(--ln-void); border: 1px solid var(--ln-cyan-border); border-radius: var(--ln-r-md); outline: none; font: 400 16px var(--ln-font-body); }
 .auth-gate__input:focus { border-color: var(--ln-cyan); box-shadow: 0 0 0 2px rgba(63,169,255,.14), 0 0 18px rgba(63,169,255,.12); }
 .auth-gate__input::placeholder { color: var(--ln-text-muted); }
 .auth-gate__error { padding: var(--ln-s-3); color: var(--ln-crit); background: rgba(255,90,106,.1); border: 1px solid rgba(255,90,106,.36); border-radius: var(--ln-r-md); font: 400 12px/1.4 var(--ln-font-body); }

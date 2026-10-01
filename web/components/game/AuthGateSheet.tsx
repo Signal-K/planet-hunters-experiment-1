@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { PRODUCT_DESCRIPTOR, PRODUCT_WORDMARK } from '@/lib/brand'
 import { ROCKET_ASSETS } from '@/lib/rocket-assets'
 
@@ -8,6 +8,13 @@ interface AuthGateSheetProps {
   error: string | null
   onSignIn: (email: string, password: string) => Promise<void>
   onCreateAccount: (email: string, password: string) => Promise<void>
+}
+
+// iOS Safari's keyboard covers the lower fields and does not scroll the sheet
+// for us; bring the focused input into view once the keyboard has animated in.
+function revealOnFocus(e: React.FocusEvent<HTMLInputElement>) {
+  const el = e.currentTarget
+  window.setTimeout(() => el.scrollIntoView({ block: 'center', behavior: 'smooth' }), 300)
 }
 
 export default function AuthGateSheet({ error, onSignIn, onCreateAccount }: AuthGateSheetProps) {
@@ -20,6 +27,23 @@ export default function AuthGateSheet({ error, onSignIn, onCreateAccount }: Auth
   const [passwordConfirmation, setPasswordConfirmation] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [validationError, setValidationError] = useState<string | null>(null)
+  // iOS leaves the layout viewport at full height when the keyboard opens, so
+  // the bounded panel runs under it. Mirror the keyboard's height into a CSS
+  // var so the sheet lifts above it and the panel scrolls internally.
+  const [keyboardInset, setKeyboardInset] = useState<number | null>(null)
+  useEffect(() => {
+    const vv = window.visualViewport
+    if (!vv) return
+    // Only treat a large gap as the keyboard; toolbar/URL-bar changes must
+    // leave the panel at its normal size.
+    const sync = () => {
+      const inset = window.innerHeight - vv.height - vv.offsetTop
+      setKeyboardInset(inset > 120 ? Math.round(inset) : null)
+    }
+    sync()
+    vv.addEventListener('resize', sync)
+    return () => vv.removeEventListener('resize', sync)
+  }, [])
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -43,7 +67,10 @@ export default function AuthGateSheet({ error, onSignIn, onCreateAccount }: Auth
   }
 
   return (
-    <div className="ln-sheet ln-sheet--bottom auth-gate">
+    <div
+      className="ln-sheet ln-sheet--bottom auth-gate"
+      style={keyboardInset ? ({ '--gate-kb': `${keyboardInset}px` } as React.CSSProperties) : undefined}
+    >
       <div className="auth-gate__scrim" aria-hidden="true" />
       <section className="ln-sheet__panel auth-gate__panel">
         <div className="ln-sheet__handle-wrap auth-gate__handle" aria-hidden="true">
@@ -95,6 +122,7 @@ export default function AuthGateSheet({ error, onSignIn, onCreateAccount }: Auth
             placeholder="Email"
             data-testid="auth-gate-email"
             className="auth-gate__input"
+            onFocus={revealOnFocus}
           />
           <input
             type="password"
@@ -105,6 +133,7 @@ export default function AuthGateSheet({ error, onSignIn, onCreateAccount }: Auth
             placeholder="Password"
             data-testid="auth-gate-password"
             className="auth-gate__input"
+            onFocus={revealOnFocus}
           />
           {mode === 'signup' && (
             <input
@@ -116,6 +145,7 @@ export default function AuthGateSheet({ error, onSignIn, onCreateAccount }: Auth
               placeholder="Confirm password"
               data-testid="auth-gate-password-confirmation"
               className="auth-gate__input"
+            onFocus={revealOnFocus}
             />
           )}
 

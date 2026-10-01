@@ -38,7 +38,12 @@ function GameRouteBridge() {
       missionId: preset?.missionId ?? null,
       targetId: preset?.targetId ?? null,
     })
-    const query = presetName ? `?preset=${encodeURIComponent(presetName)}` : ''
+    const params = new URLSearchParams()
+    if (presetName) params.set('preset', presetName)
+    // The landing page's "Create account" link opens the gate on Sign Up.
+    if (searchParams.get('gate') === 'signup') params.set('gate', 'signup')
+    const qs = params.toString()
+    const query = qs ? `?${qs}` : ''
     router.replace(`/game/${route}${query}`)
   }, [router, searchParams])
 
