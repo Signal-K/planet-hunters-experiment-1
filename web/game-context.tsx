@@ -331,6 +331,12 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       setDoneSteps: tutorial.setDoneSteps,
       completeStep: tutorial.completeStep,
       coachManualNext: tutorial.coachManualNext,
+      startFlightPlan: tutorial.startFlightPlan,
+      completeFlightPlan: tutorial.completeFlightPlan,
+      showFlightPlanHint: tutorial.showFlightPlanHint,
+      replayTrainingTry: tutorial.replayTrainingTry,
+      openTrainingTry: tutorial.openTrainingTry,
+      skipFlightPlan: tutorial.skipFlightPlan,
       // Economy
       sellMinerals: economy.sellMinerals,
       sellRefinedGoods: economy.sellRefinedGoods,

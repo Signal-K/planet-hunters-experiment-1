@@ -2,13 +2,14 @@
 
 import { type ReactNode, useMemo, useEffect, useRef, useState } from 'react'
 import { GameProvider, useGame } from '@/game-context'
-import { trainingCoachSteps } from '@/lib/data'
+import { trainingTryStep } from '@/lib/data'
 import FlightPlan from '@/components/game/FlightPlan'
 import UnlockPopup from '@/components/game/UnlockPopup'
 import { TutorialCompleteSheet } from '@/components/game/TutorialCompleteSheet'
 import { resolveShortcut } from '@/lib/game-shortcuts'
 import { GameChromeBars, mountsSharedChrome } from '@/components/layout/GameChromeBars'
 import { AGENCY_TRAINING_POPUP, agencyTrainingStage, agencyTrainingTrack, freeOpsActivities } from '@/lib/systems/AgencyOnboardingSystem'
+import { currentTrainingTry } from '@/lib/systems/FlightPlanSystem'
 import BackendStatus from '@/components/game/BackendStatus'
 import LandnamSyncStatus from '@/components/game/LandnamSyncStatus'
 import { PushOptIn } from '@/components/game/PushOptIn'
@@ -112,27 +113,31 @@ function GameChrome({ children }: { children: ReactNode }) {
     void schedule().catch(() => {})
   }, [game.screen, game.lastCargo, game.mission, game.target])
 
-  const coachSteps = useMemo(() => {
-    if (!game.tutorial || game.player.freeOperations) return []
-    return trainingCoachSteps(agencyTrainingStage(game.player))
-  }, [game.player, game.tutorial])
-
   // The game state changes synchronously, while the URL follows in a client
   // navigation. Render the persistent scene from that state so route segment
   // replacement cannot tear down and recreate the background between steps.
   const currentScreen = game.screen
+  const activeTry = currentTrainingTry(game.player.flightPlan)
+  const flightStep = activeTry ? trainingTryStep(activeTry, currentScreen) : undefined
   const coach = useMemo(() => {
-    const routeCoach = coachSteps.find(step => step.screen === currentScreen && !game.doneSteps[step.id]) ?? null
+    const routeCoach = !game.player.freeOperations && game.tutorial ? flightStep ?? null : null
     if (currentScreen === 'hub' && game.subsurfaceView) return null
     // The Launchpad mission chooser is a modal owned by the current scene.
     // Hide the coach while it is open so onboarding copy never sits over, or
     // points back at, the control the player is already using.
     if (settingsOpen || friendsOpen || communityOpen || game.popup || game.authGateOpen || (currentScreen === 'launchpad' && game.launchpadMissionMenuOpen)) return null
     return routeCoach
-  }, [coachSteps, communityOpen, currentScreen, friendsOpen, game.authGateOpen, game.doneSteps, game.launchpadMissionMenuOpen, game.popup, game.subsurfaceView, settingsOpen])
+  }, [communityOpen, flightStep, friendsOpen, game.authGateOpen, game.launchpadMissionMenuOpen, game.player.freeOperations, game.popup, game.subsurfaceView, game.tutorial, settingsOpen])
 
-  const coachIndex = coach ? coachSteps.findIndex(step => step.id === coach.id) : -1
+  const coachIndex = activeTry ? ['mining', 'scan', 'part'].indexOf(activeTry) : -1
   const hasCoach = !!coach
+
+  useEffect(() => {
+    if (!coach) return
+    game.startFlightPlan()
+    const timer = window.setTimeout(() => game.showFlightPlanHint(), 8_000)
+    return () => window.clearTimeout(timer)
+  }, [coach?.id, currentScreen])
 
   // SSL-342: per-step training analytics for the live shell (mirrors GameApp).
   // Fires only when the active step itself changes.
@@ -142,7 +147,7 @@ function GameChrome({ children }: { children: ReactNode }) {
       step_id: coach.id,
       screen: coach.screen,
       step_index: coachIndex,
-      total_steps: coachSteps.length,
+      total_steps: 3,
     })
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [coach?.id])
@@ -255,16 +260,19 @@ function GameChrome({ children }: { children: ReactNode }) {
             key={coach.id}
             stepIndex={coachIndex}
               step={coach}
-            total={coachSteps.length}
+            total={3}
             onManualNext={game.coachManualNext}
+            hidden={game.player.flightPlan?.hidden}
+            onHiddenChange={hidden => game.setPlayer(player => ({ ...player, flightPlan: { ...(player.flightPlan ?? { completed: {} }), hidden } }))}
+            hint={activeTry && game.player.flightPlan?.hintShownFor === activeTry ? coach.hint : undefined}
             onSkip={() => {
               captureGameEvent('tutorial_skipped', {
                 step_id: coach.id,
                 screen: coach.screen,
                 step_index: coachIndex,
-                total_steps: coachSteps.length,
+                total_steps: 3,
               })
-              game.skipTutorial(coachSteps.map(s => s.id))
+              game.skipFlightPlan()
             }}
           />
         )}
@@ -286,6 +294,7 @@ function GameChrome({ children }: { children: ReactNode }) {
             onMarket={() => game.player.freeOperations && game.go('market')}
             onMenu={() => setSettingsOpen(true)}
             menuExpanded={settingsOpen}
+            trainingProgress={game.player.freeOperations ? undefined : (game.player.flightPlan ? Object.keys(game.player.flightPlan.completed).length : 0)}
           />
         )}
 

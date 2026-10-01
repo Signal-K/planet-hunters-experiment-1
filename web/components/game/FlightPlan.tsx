@@ -1,16 +1,19 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import type { TutorialStep } from '@/lib/data'
+import type { TutorialStep, TrainingTryStep } from '@/lib/data'
 import { useIsDesktop } from '@/lib/hooks/useIsDesktop'
 import { UI_ZONES } from '@/lib/ui-zones'
 
 interface FlightPlanProps {
   stepIndex: number
   total: number
-  step: TutorialStep
+  step: TutorialStep | TrainingTryStep
   onManualNext: () => void
   onSkip: () => void
+  hidden?: boolean
+  onHiddenChange?: (hidden: boolean) => void
+  hint?: string
 }
 
 /**
@@ -21,16 +24,20 @@ interface FlightPlanProps {
  * Action gating is unchanged: steps still complete from real game actions;
  * `manual` steps get a Continue button here.
  */
-export default function FlightPlan({ stepIndex, total, step, onManualNext, onSkip }: FlightPlanProps) {
+export default function FlightPlan({ stepIndex, total, step, onManualNext, onSkip, hidden: persistedHidden, onHiddenChange, hint }: FlightPlanProps) {
   const isDesktop = useIsDesktop()
   const [expanded, setExpanded] = useState(false)
   const [hidden, setHidden] = useState(false)
 
-  const targetId = (isDesktop && step.desktopCoachId !== undefined) ? step.desktopCoachId : step.coachId
-  const body = (isDesktop && step.desktopBody !== undefined) ? step.desktopBody : step.body
-  const action = (isDesktop && step.desktopAction !== undefined)
+  useEffect(() => { if (persistedHidden !== undefined) setHidden(persistedHidden) }, [persistedHidden])
+  useEffect(() => { if (hint) setExpanded(true) }, [hint])
+
+  const isTryStep = 'try' in step
+  const targetId = isTryStep ? step.beacon : ((isDesktop && step.desktopCoachId !== undefined) ? step.desktopCoachId : step.coachId)
+  const body = isTryStep ? step.radio : ((isDesktop && step.desktopBody !== undefined) ? step.desktopBody : step.body)
+  const action = isTryStep ? step.objective : ((isDesktop && step.desktopAction !== undefined)
     ? step.desktopAction
-    : step.action ?? (step.manual && body ? body : (isDesktop ? 'Click ' : 'Tap ') + step.cta)
+    : step.action ?? (step.manual && body ? body : (isDesktop ? 'Click ' : 'Tap ') + step.cta))
 
   useEffect(() => { setExpanded(false) }, [step.id, step.screen])
 
@@ -48,7 +55,7 @@ export default function FlightPlan({ stepIndex, total, step, onManualNext, onSki
         className="flight-plan-chip"
         data-testid="flight-plan-chip"
         aria-label={`Show Flight Plan, training ${stepIndex + 1} of ${total}`}
-        onClick={() => setHidden(false)}
+        onClick={() => { setHidden(false); onHiddenChange?.(false) }}
       >
         Training {stepIndex + 1}/{total}
       </button>
@@ -65,22 +72,23 @@ export default function FlightPlan({ stepIndex, total, step, onManualNext, onSki
           aria-expanded={expanded}
           onClick={() => setExpanded(v => !v)}
         >
-          <span className="flight-plan-kicker">Flight Plan · {step.title} · {stepIndex + 1}/{total}</span>
+          <span className="flight-plan-kicker">Flight Plan · {isTryStep ? step.try : step.title} · {stepIndex + 1}/{total}</span>
           <span className="flight-plan-action">{action}</span>
         </button>
-        {step.manual && (
+        {!isTryStep && step.manual && (
           <button type="button" className="flight-plan-btn is-primary" data-testid="flight-plan-continue" onClick={onManualNext}>
             Continue
           </button>
         )}
-        <button type="button" className="flight-plan-btn" data-testid="flight-plan-hide" aria-label="Hide Flight Plan" onClick={() => setHidden(true)}>
+        <button type="button" className="flight-plan-btn" data-testid="flight-plan-hide" aria-label="Hide Flight Plan" onClick={() => { setHidden(true); onHiddenChange?.(true) }}>
           ▾
         </button>
       </div>
       {expanded && (
         <div className="flight-plan-radio" data-testid="flight-plan-radio">
-          <span className="flight-plan-kicker">{step.title} · Ops radio</span>
+          <span className="flight-plan-kicker">{isTryStep ? step.try : step.title} · Ops radio</span>
           {body && <p>{body}</p>}
+          {hint && <p className="flight-plan-hint">Hint: {hint}</p>}
           <button type="button" className="flight-plan-skip" data-testid="flight-plan-skip" onClick={onSkip}>
             Skip training
           </button>

@@ -141,7 +141,7 @@ function DockPrimaryBtn({ children, onClick, testId, coachId, pulse }: { childre
     <button
       onClick={onClick}
       data-testid={testId}
-      data-coach-id={coachId}
+      data-beacon={coachId}
       style={{
         flexShrink: 0, background: 'var(--hub-chalk-soft)',
         border: '4px solid var(--hub-chalk)', borderRadius: 14, padding: '8px 16px',

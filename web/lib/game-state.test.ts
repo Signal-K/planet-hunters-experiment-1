@@ -266,7 +266,7 @@ describe('game state hydration normalization', () => {
 })
 
 describe('onboarding completion boundary', () => {
-  it('keeps a player in training after both guided missions until a storage silo is placed (SSL-332)', () => {
+  it('keeps a player in training until all three Flight Plan tries are complete (SSL-405)', () => {
     const noSilo = normalizeAndRepair({
       player: { missionsDone: 2, placed: ['launchpad'], freeOperations: true },
       tutorial: false,
@@ -274,12 +274,12 @@ describe('onboarding completion boundary', () => {
     expect(noSilo.player.freeOperations).toBe(false)
     expect(noSilo.tutorial).toBe(true)
 
-    const withSilo = normalizeAndRepair({
-      player: { missionsDone: 2, placed: ['launchpad', 'surface-silo'] },
+    const withTries = normalizeAndRepair({
+      player: { missionsDone: 2, placed: ['launchpad'], flightPlan: { completed: { mining: true, scan: true, part: true }, hidden: false } },
       tutorial: true,
     })
-    expect(withSilo.player.freeOperations).toBe(true)
-    expect(withSilo.tutorial).toBe(false)
+    expect(withTries.player.freeOperations).toBe(true)
+    expect(withTries.tutorial).toBe(false)
   })
 
   it('keeps Free Ops for saves that finished the old three-mission onboarding without a silo', () => {

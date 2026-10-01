@@ -1,29 +1,25 @@
 import { describe, expect, it } from 'vitest'
-import { FREE_OPS_START_MISSIONS_DONE } from '@/lib/data/mission-generator'
 import { EXTRACTION_STEPS, STORAGE_STEPS, TRANSPORT_STEPS, trainingCoachSteps } from '@/lib/data/tutorial'
 import {
   AGENCY_TRAINING_STAGES,
   LEGACY_FREE_OPS_MISSIONS_DONE,
   agencyTrainingStage,
   agencyTrainingTrack,
-  awaitingStorageSilo,
   freeOperationsUnlocked,
   freeOpsActivities,
   TRANSPORT_LESSON_MISSIONS_DONE,
 } from './AgencyOnboardingSystem'
 
 describe('agency training constants', () => {
-  it('has two guided missions: Extraction, then Transport', () => {
-    expect(FREE_OPS_START_MISSIONS_DONE).toBe(2)
+  it('keeps transport as a later Free Ops suggestion', () => {
     expect(TRANSPORT_LESSON_MISSIONS_DONE).toBe(1)
   })
 })
 
 describe('freeOperationsUnlocked', () => {
-  it('needs both guided missions and a storage silo', () => {
-    expect(freeOperationsUnlocked({ placed: ['launchpad'], missionsDone: 1 })).toBe(false)
-    expect(freeOperationsUnlocked({ placed: ['launchpad'], missionsDone: 2 })).toBe(false)
-    expect(freeOperationsUnlocked({ placed: ['launchpad', 'surface-silo'], missionsDone: 2 })).toBe(true)
+  it('needs the mining, scan and part tries', () => {
+    expect(freeOperationsUnlocked({ placed: ['launchpad'], missionsDone: 1, flightPlan: { completed: { mining: true, scan: true }, hidden: false } })).toBe(false)
+    expect(freeOperationsUnlocked({ placed: ['launchpad'], missionsDone: 2, flightPlan: { completed: { mining: true, scan: true, part: true }, hidden: false } })).toBe(true)
   })
 
   it('keeps Free Ops for saves past the old three-mission onboarding, silo or not', () => {
@@ -31,30 +27,12 @@ describe('freeOperationsUnlocked', () => {
   })
 })
 
-describe('awaitingStorageSilo', () => {
-  it('is true only between the Transport debrief and the silo placement', () => {
-    expect(awaitingStorageSilo({ placed: ['launchpad'], missionsDone: 1 })).toBe(false)
-    expect(awaitingStorageSilo({ placed: ['launchpad'], missionsDone: 2 })).toBe(true)
-    expect(awaitingStorageSilo({ placed: ['launchpad', 'surface-silo'], missionsDone: 2 })).toBe(false)
-    expect(awaitingStorageSilo({ placed: ['launchpad'], missionsDone: 5 })).toBe(false)
-  })
-})
-
 describe('agencyTrainingStage', () => {
-  it('walks Place Launchpad → Extraction → Transport → Storage → Free Ops', () => {
-    expect(agencyTrainingStage({ placed: [], missionsDone: 0 })).toBe('launchpad')
-    expect(agencyTrainingStage({ placed: ['launchpad'], missionsDone: 0 })).toBe('extraction')
-    expect(agencyTrainingStage({ placed: ['launchpad'], missionsDone: 1 })).toBe('transport')
-    expect(agencyTrainingStage({ placed: ['launchpad'], missionsDone: 2 })).toBe('storage')
-    expect(agencyTrainingStage({ placed: ['launchpad', 'surface-silo'], missionsDone: 2 })).toBe('free-ops')
-  })
-
-  it('does not send a player who has flown missions back to launchpad placement', () => {
-    expect(agencyTrainingStage({ placed: [], missionsDone: 1 })).not.toBe('launchpad')
-  })
-
-  it('treats a non-finite missionsDone as a fresh save', () => {
-    expect(agencyTrainingStage({ placed: [], missionsDone: Number.NaN })).toBe('launchpad')
+  it('walks mining → scan → part → Free Ops', () => {
+    expect(agencyTrainingStage({ placed: [], missionsDone: 0 })).toBe('mining')
+    expect(agencyTrainingStage({ placed: [], missionsDone: 0, flightPlan: { completed: { mining: true }, hidden: false } })).toBe('scan')
+    expect(agencyTrainingStage({ placed: [], missionsDone: 0, flightPlan: { completed: { mining: true, scan: true }, hidden: false } })).toBe('part')
+    expect(agencyTrainingStage({ placed: [], missionsDone: 0, flightPlan: { completed: { mining: true, scan: true, part: true }, hidden: false } })).toBe('free-ops')
   })
 
   it('puts legacy Free Ops saves in Free Ops, not the Storage stage', () => {
@@ -68,12 +46,12 @@ describe('agencyTrainingTrack', () => {
   })
 
   it('marks earlier stages done and later ones upcoming', () => {
-    const track = agencyTrainingTrack({ placed: ['launchpad'], missionsDone: TRANSPORT_LESSON_MISSIONS_DONE })
-    expect(track.map(step => step.status)).toEqual(['done', 'done', 'current', 'upcoming', 'upcoming'])
+    const track = agencyTrainingTrack({ placed: ['launchpad'], missionsDone: 1, flightPlan: { completed: { mining: true }, hidden: false } })
+    expect(track.map(step => step.status)).toEqual(['done', 'current', 'upcoming', 'upcoming'])
   })
 
-  it('shows Free Ops as current once the silo is built', () => {
-    const track = agencyTrainingTrack({ placed: ['launchpad', 'surface-silo'], missionsDone: 2 })
+  it('shows Free Ops as current once every try is done', () => {
+    const track = agencyTrainingTrack({ placed: ['launchpad'], missionsDone: 2, flightPlan: { completed: { mining: true, scan: true, part: true }, hidden: false } })
     expect(track.at(-1)).toMatchObject({ stage: 'free-ops', status: 'current' })
   })
 })
@@ -96,8 +74,8 @@ describe('trainingCoachSteps', () => {
 })
 
 describe('freeOpsActivities', () => {
-  it('offers client work, space telescope and build refinery in that order', () => {
-    expect(freeOpsActivities({}).map(activity => activity.id)).toEqual(['client-work', 'space-telescope', 'build-refinery'])
+  it('offers client work, science, refinery, transport and storage suggestions', () => {
+    expect(freeOpsActivities({}).map(activity => activity.id)).toEqual(['client-work', 'space-telescope', 'build-refinery', 'transport', 'storage-silo'])
   })
 
   it('routes client work to the mission board', () => {

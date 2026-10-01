@@ -30,7 +30,7 @@ export function PrimaryBtn({ children, onClick, disabled, full = true, kind = 'c
   return (
     <button
       data-testid={testId}
-      data-coach-id={coachId}
+      data-beacon={coachId}
       onClick={!disabled ? onClick : undefined}
       disabled={disabled}
       style={{

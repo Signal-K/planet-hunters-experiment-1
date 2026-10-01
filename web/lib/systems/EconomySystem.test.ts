@@ -317,16 +317,16 @@ describe('Academy and staffing economy', () => {
     expect(built.player.underConstruction?.['astronaut-academy']).toBeGreaterThan(0)
   })
 
-  it('lets the storage silo be placed once both guided missions are flown, and opens Free Ops (SSL-332)', () => {
+  it('keeps the storage silo as a build option without using it as the Free Ops gate (SSL-409)', () => {
     const silo = STRUCTURES.find(structure => structure.id === 'surface-silo')!
     const training = makeState({ francs: silo.cost, missionsDone: 2, freeOperations: false, placed: ['launchpad'] })
     const trainingState = { ...training, tutorial: true, popup: null }
 
     const built = applyPlaceStructure(trainingState, silo, silo.kind, 1)
     expect(built.player.placed).toContain('surface-silo')
-    expect(built.player.freeOperations).toBe(true)
-    expect(built.tutorial).toBe(false)
-    expect(built.popup).toBe('tutorial-complete')
+    expect(built.player.freeOperations).toBe(false)
+    expect(built.tutorial).toBe(true)
+    expect(built.popup).toBeNull()
   })
 
   it('keeps the storage silo locked before the guided missions are flown', () => {

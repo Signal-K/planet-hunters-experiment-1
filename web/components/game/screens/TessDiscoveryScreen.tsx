@@ -338,15 +338,17 @@ export default function TessDiscoveryScreen({ player, inspectSubjectId, visualCa
                 />
               )
             ) : (
-              <ObservatoryChart
-                points={sectorPoints}
-                ranges={activeRanges}
-                onRange={(x1, x2) => setRanges(prev => [...prev, { x1, x2 }])}
-                onRemoveRange={index => setRanges(prev => prev.filter((_, current) => current !== index))}
-                locked={false}
-                height={280}
-                yDomain={yDomain}
-              />
+              <div className={visualCandidate ? 'tess-training-dip-band' : undefined}>
+                <ObservatoryChart
+                  points={sectorPoints}
+                  ranges={activeRanges}
+                  onRange={(x1, x2) => setRanges(prev => [...prev, { x1, x2 }])}
+                  onRemoveRange={index => setRanges(prev => prev.filter((_, current) => current !== index))}
+                  locked={false}
+                  height={280}
+                  yDomain={yDomain}
+                />
+              </div>
             )}
           </TelescopeConsole>
 

@@ -13,6 +13,7 @@ import { EARTH_BASE_SCOPE } from '@/lib/scene-scope'
 import { aestDateKey, type ClientBuildCompletionEvent } from '@/lib/systems/DailyEconomySystem'
 import { CLIENT_TERRITORIES } from '@/lib/data/site-rights'
 import { createSiteRightsState } from '@/lib/systems/SiteRightsSystem'
+import { EMPTY_FLIGHT_PLAN } from '@/lib/systems/FlightPlanSystem'
 
 // Represents untrusted/partial saved state (e.g. from localStorage or remote sync)
 // where player fields are optional since older saves may be missing new fields.
@@ -43,6 +44,7 @@ export const DEFAULT_STATE: GameState = {
     skillPoints: 0,
     unlockedSkillNodes: [],
     freeOperations: false,
+    flightPlan: EMPTY_FLIGHT_PLAN,
     clientMissions: {},
     completedMissions: [],
     clientStreaks: {},
@@ -285,7 +287,7 @@ export function normalizeState(input: PartialSave): GameState {
   const missionsDone = Number.isFinite(player.missionsDone)
     ? Math.max(0, Math.floor(player.missionsDone ?? 0))
     : DEFAULT_STATE.player.missionsDone
-  const freeOperations = freeOperationsUnlocked({ missionsDone, placed: placedList })
+  const freeOperations = freeOperationsUnlocked({ missionsDone, placed: placedList, flightPlan: player.flightPlan })
   const legacyClaim = input.pendingTerritoryClaimFor as unknown as { targetId: string; clientId?: string; contractorId?: string } | undefined
   const pendingTerritoryClaimFor = legacyClaim
     ? { targetId: legacyClaim.targetId, clientId: legacyClaim.clientId ?? legacyClaim.contractorId ?? '' }

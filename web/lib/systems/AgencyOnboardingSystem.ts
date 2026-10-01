@@ -12,17 +12,18 @@
 // placed (freeOperationsUnlocked). Players who reached Free Ops under the old
 // three-mission onboarding keep it without a silo, so nobody loses an unlock.
 
-import { FREE_OPS_START_MISSIONS_DONE } from '@/lib/data/mission-generator'
+import { isTrainingComplete, type FlightPlanProgress, type TrainingTryId } from './FlightPlanSystem'
 
 /** The structure whose placement completes the Storage stage. Kept here (not
  *  imported from EconomySystem) so EconomySystem can depend on this module. */
-const STORAGE_SILO_KIND = 'surface-silo'
+export type AgencyTrainingStage = TrainingTryId | 'launchpad' | 'extraction' | 'transport' | 'storage' | 'free-ops'
 
-export type AgencyTrainingStage = 'launchpad' | 'extraction' | 'transport' | 'storage' | 'free-ops'
-
-export const AGENCY_TRAINING_STAGES: readonly AgencyTrainingStage[] = ['launchpad', 'extraction', 'transport', 'storage', 'free-ops']
+export const AGENCY_TRAINING_STAGES: readonly AgencyTrainingStage[] = ['mining', 'scan', 'part', 'free-ops']
 
 const AGENCY_TRAINING_LABELS: Record<AgencyTrainingStage, string> = {
+  mining: 'Mining try',
+  scan: 'Planet scan try',
+  part: 'Part tweak try',
   launchpad: 'Place Launchpad',
   extraction: 'Extraction',
   transport: 'Transport',
@@ -32,7 +33,7 @@ const AGENCY_TRAINING_LABELS: Record<AgencyTrainingStage, string> = {
 
 /** Missions completed before the Transport lesson (the two-stop mine-and-haul
  *  job, KES-313) starts: Extraction is the single mission before it. */
-export const TRANSPORT_LESSON_MISSIONS_DONE = FREE_OPS_START_MISSIONS_DONE - 1
+export const TRANSPORT_LESSON_MISSIONS_DONE = 1
 
 /** Missions that put a player in Free Ops under the pre-SSL-332 onboarding
  *  (M1, M2 Prospector, M3). Those saves keep Free Ops without a silo. */
@@ -41,6 +42,7 @@ export const LEGACY_FREE_OPS_MISSIONS_DONE = 3
 export interface AgencyTrainingPlayer {
   placed?: string[]
   missionsDone: number
+  flightPlan?: FlightPlanProgress
 }
 
 function finiteMissionsDone(player: AgencyTrainingPlayer): number {
@@ -52,25 +54,21 @@ function finiteMissionsDone(player: AgencyTrainingPlayer): number {
 export function freeOperationsUnlocked(player: AgencyTrainingPlayer): boolean {
   const missionsDone = finiteMissionsDone(player)
   if (missionsDone >= LEGACY_FREE_OPS_MISSIONS_DONE) return true
-  return missionsDone >= FREE_OPS_START_MISSIONS_DONE && (player.placed ?? []).includes(STORAGE_SILO_KIND)
+  return isTrainingComplete(player.flightPlan)
 }
 
 /** True while the player has flown both guided missions but has not yet
  *  placed the storage silo that opens Free Ops. */
 export function awaitingStorageSilo(player: AgencyTrainingPlayer): boolean {
-  return finiteMissionsDone(player) >= FREE_OPS_START_MISSIONS_DONE && !freeOperationsUnlocked(player)
+  return false
 }
 
 /** The training stage the player is currently on (the first incomplete one). */
 export function agencyTrainingStage(player: AgencyTrainingPlayer): AgencyTrainingStage {
   if (freeOperationsUnlocked(player)) return 'free-ops'
-  const missionsDone = finiteMissionsDone(player)
-  // Mission progress wins over a missing launchpad: an older save that
-  // somehow lost its pad record has still demonstrably flown missions.
-  if (missionsDone < 1 && !(player.placed ?? []).includes('launchpad')) return 'launchpad'
-  if (missionsDone < TRANSPORT_LESSON_MISSIONS_DONE) return 'extraction'
-  if (missionsDone < FREE_OPS_START_MISSIONS_DONE) return 'transport'
-  return 'storage'
+  if (!player.flightPlan?.completed?.mining) return 'mining'
+  if (!player.flightPlan?.completed?.scan) return 'scan'
+  return 'part'
 }
 
 export interface AgencyTrainingStep {
@@ -93,7 +91,7 @@ export function agencyTrainingTrack(player: AgencyTrainingPlayer): AgencyTrainin
  *  from the menu (the replayable review of training). */
 export const AGENCY_TRAINING_POPUP = 'agency-training'
 
-export type FreeOpsActivityId = 'client-work' | 'space-telescope' | 'build-refinery'
+export type FreeOpsActivityId = 'client-work' | 'space-telescope' | 'build-refinery' | 'transport' | 'storage-silo'
 
 export interface FreeOpsActivity {
   id: FreeOpsActivityId
@@ -139,6 +137,20 @@ export function freeOpsActivities(player: FreeOpsActivityPlayer): FreeOpsActivit
         : 'Construct a refinery at your base to turn stored ore into higher-value goods.',
       cta: player.refineryBuilt ? 'Open refinery' : 'Open build',
       screen: player.refineryBuilt ? 'refinery' : 'build',
+    },
+    {
+      id: 'transport',
+      label: 'Transport work',
+      body: 'Take a two-stop client haul when your program needs a change of pace.',
+      cta: 'Open contracts',
+      screen: 'missions',
+    },
+    {
+      id: 'storage-silo',
+      label: 'Storage Silo',
+      body: 'Build Earth-side storage before expanding your material operations.',
+      cta: 'Open build',
+      screen: 'build',
     },
   ]
 }

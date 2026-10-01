@@ -5,8 +5,7 @@ import { useGame } from '@/game-context'
 import { pbShared } from '@/lib/pb'
 import { DEV_GROUPS } from '@/lib/devPresets'
 import PageSurface from '@/components/ui/PageSurface'
-import { AGENCY_TRAINING_POPUP, agencyTrainingStage, agencyTrainingTrack } from '@/lib/systems/AgencyOnboardingSystem'
-import { trainingCoachSteps } from '@/lib/data'
+import { TRAINING_TRY_IDS, currentTrainingTry, type TrainingTryId } from '@/lib/systems/FlightPlanSystem'
 
 interface SettingsSheetProps {
   onClose: () => void
@@ -70,6 +69,7 @@ function Btn({
 export default function SettingsSheet({ onClose }: SettingsSheetProps) {
   const game = useGame()
   const [confirmReset, setConfirmReset] = useState(false)
+  const [confirmSkipTraining, setConfirmSkipTraining] = useState(false)
   const email = pbShared.authStore.record?.email as string | undefined
 
   function handleSignOut() {
@@ -87,6 +87,11 @@ export default function SettingsSheet({ onClose }: SettingsSheetProps) {
     const url = new URL(window.location.href)
     url.searchParams.set('preset', key)
     window.location.href = url.toString()
+  }
+
+  function replay(tryId: TrainingTryId) {
+    onClose()
+    game.openTrainingTry(tryId)
   }
 
   return (
@@ -141,30 +146,31 @@ export default function SettingsSheet({ onClose }: SettingsSheetProps) {
           </Section>
         )}
 
-        <Section label="Data">
-          <Row>
-            <div>
-              <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 14, color: 'var(--ln-text)' }}>Training log</div>
-              <div data-testid="training-log" style={{ fontFamily: 'var(--ln-font-body)', fontSize: 14, color: 'var(--ln-text-muted)', marginTop: 2 }}>
-                {agencyTrainingTrack(game.player)
-                  .filter(s => s.stage !== 'launchpad')
-                  .map(s => `${s.label}: ${s.status === 'done' ? 'done' : s.status === 'current' ? 'in progress' : 'to do'}`)
-                  .join(' · ')}
+        <Section label="Training">
+          {TRAINING_TRY_IDS.map(tryId => {
+            const active = currentTrainingTry(game.player.flightPlan) === tryId
+            const done = !!game.player.flightPlan?.completed?.[tryId]
+            const status = done ? 'Done' : active ? 'Now' : 'Next'
+            return <Row key={tryId}>
+              <div data-testid={`training-${tryId}-status`}>
+                <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 14, color: 'var(--ln-text)', textTransform: 'capitalize' }}>{tryId === 'part' ? 'Part tweak' : tryId}</div>
+                <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 12, color: done ? 'var(--ln-ok)' : 'var(--ln-text-muted)', marginTop: 2 }}>{status}</div>
               </div>
-            </div>
-            <Btn label="Replay" onClick={() => { onClose(); game.setPopup(AGENCY_TRAINING_POPUP) }} variant="primary" />
-          </Row>
-          {game.tutorial && !game.player.freeOperations && (
+              <Btn label="Replay" onClick={() => replay(tryId)} variant="primary" />
+            </Row>
+          })}
+          {!game.player.freeOperations && (
             <Row>
               <div>
                 <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 14, color: 'var(--ln-text)' }}>Skip training</div>
-                <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 14, color: 'var(--ln-text-muted)', marginTop: 2 }}>Hides the Flight Plan</div>
+                <div style={{ fontFamily: 'var(--ln-font-body)', fontSize: 14, color: 'var(--ln-text-muted)', marginTop: 2 }}>{confirmSkipTraining ? 'Confirm: all three tries will be marked done.' : 'Marks every try done and opens Free Ops.'}</div>
               </div>
               <Btn
-                label="Skip"
+                label={confirmSkipTraining ? 'Confirm' : 'Skip'}
                 onClick={() => {
+                  if (!confirmSkipTraining) { setConfirmSkipTraining(true); return }
+                  game.skipFlightPlan()
                   onClose()
-                  game.skipTutorial(trainingCoachSteps(agencyTrainingStage(game.player)).map(s => s.id))
                 }}
               />
             </Row>

@@ -9,6 +9,8 @@ import type { ClientBuildCompletionEvent, DailyEconomySnapshot } from './systems
 import type { TreasuryState } from './systems/TreasurySystem'
 import type { SiteRightsState } from './systems/SiteRightsSystem'
 import type { OffworldRefineryDeployment } from './systems/OffworldRefinerySystem'
+import type { FlightPlanProgress } from './systems/FlightPlanSystem'
+import type { FlightPlanEvent, TrainingTryId } from './systems/FlightPlanSystem'
 
 export interface DailyClientPool {
   date: string        // 'YYYY-MM-DD'
@@ -264,6 +266,8 @@ export interface Player {
   skillPoints?: number
   unlockedSkillNodes?: string[]
   freeOperations: boolean
+  /** Durable three-try onboarding state, persisted and synced with the save. */
+  flightPlan?: FlightPlanProgress
   /** Materials currently being gathered for a player-selected construction. */
   resourceFocus?: ResourceFocus
   debriefPending?: boolean
@@ -539,6 +543,12 @@ export interface GameActions {
   onReturnArrived: () => void
   onDebriefDone: (total: number, affinity: number, consumed?: Record<string, number>, disposition?: 'store' | 'sell') => void
   coachManualNext: () => void
+  startFlightPlan: () => void
+  completeFlightPlan: (event: FlightPlanEvent) => void
+  showFlightPlanHint: () => void
+  replayTrainingTry: (tryId: TrainingTryId) => void
+  openTrainingTry: (tryId: TrainingTryId) => void
+  skipFlightPlan: () => void
   completeStep: (id: number) => void
   resetGame: () => void
   signOut: () => void

@@ -8,6 +8,35 @@
 
 import type { TutorialStep } from './types'
 import type { AgencyTrainingStage } from '@/lib/systems/AgencyOnboardingSystem'
+import type { TrainingTryId } from '@/lib/systems/FlightPlanSystem'
+
+export interface TrainingTryStep {
+  id: string
+  try: TrainingTryId
+  screen: string
+  objective: string
+  radio: string
+  hint?: string
+  beacon?: string
+  doneOn: 'mining-debriefed' | 'tess-classified' | 'part-tweaked'
+}
+
+/** The durable three-try plan. Steps are screen-local instructions; only the
+ * named real game event completes a try. */
+export const TRAINING_TRIES: readonly TrainingTryStep[] = [
+  { id: 'mine-launchpad', try: 'mining', screen: 'launchpad', objective: 'Open client contracts', radio: 'The first try is a complete mine-and-return run.', beacon: 'launchpad-view-contracts', doneOn: 'mining-debriefed' },
+  { id: 'mine-contract', try: 'mining', screen: 'missions', objective: 'Accept a mining contract', radio: 'A client order funds this first field run.', doneOn: 'mining-debriefed' },
+  { id: 'mine-target', try: 'mining', screen: 'targets', objective: 'Choose the highlighted target', radio: 'The target carries the mineral named by the order.', doneOn: 'mining-debriefed' },
+  { id: 'mine-fire', try: 'mining', screen: 'mining', objective: 'Fire the laser on a seam', radio: 'Wait for a coloured seam to pass beneath the fixed laser line.', hint: 'The seam will cross the laser line; fire when it does.', beacon: 'mining-fire-laser', doneOn: 'mining-debriefed' },
+  { id: 'mine-debrief', try: 'mining', screen: 'debrief', objective: 'Close the mission debrief', radio: 'The first try is recorded when the order is settled.', doneOn: 'mining-debriefed' },
+  { id: 'scan-classify', try: 'scan', screen: 'galaxy', objective: 'Classify the transit candidate', radio: 'Review the light curve and submit a science verdict.', hint: 'The expected transit sits in the shaded dip band.', doneOn: 'tess-classified' },
+  { id: 'part-fit', try: 'part', screen: 'hangar', objective: 'Swap one ship module', radio: 'Fit a different module in the ship customiser, then confirm.', doneOn: 'part-tweaked' },
+]
+
+export function trainingTryStep(tryId: TrainingTryId, screen: string): TrainingTryStep | undefined {
+  return TRAINING_TRIES.find(step => step.try === tryId && step.screen === screen)
+    ?? TRAINING_TRIES.find(step => step.try === tryId)
+}
 
 export const EXTRACTION_STEPS: TutorialStep[] = [
   { id: 0, screen: 'build',   title: 'Build a Launchpad',

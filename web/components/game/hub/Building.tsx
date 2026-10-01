@@ -157,7 +157,7 @@ export function Building({ kind, label, sub, status, buildStartedAt, w, hitH, st
       data-testid={`building-${kind}`}
       // Desktop tutorial spotlight target. With the sidebar gone, "open a
       // mission" is coached on the launchpad itself rather than a nav rail.
-      data-coach-id={`building-${kind}`}
+      data-beacon={`building-${kind}`}
       // 'auto' because the hub's buildings layer is pointerEvents:'none' — it
       // must not be a full-screen click catcher over the progression cards.
       style={{ position: 'absolute', display: 'flex', flexDirection: 'column', alignItems: 'center', width: w, minWidth: w, maxWidth: w, pointerEvents: 'auto', opacity: dimmed ? 0.62 : 1, transition: 'opacity 200ms', ...style }}

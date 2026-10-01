@@ -249,7 +249,7 @@ export default function LaunchpadScreen({
             straight to Contracts pre-Free-Ops (see openMissionMenu above) —
             there is no separate "View All Contracts" button to ring at that
             stage, only this pad. The ring silently never appeared. */}
-        <button type="button" className="launchpad-scene-object launchpad-tower" data-testid="launchpad-status-card" data-coach-id="launchpad-view-contracts" data-action="primary-mission" onClick={openMissionMenu} aria-label={padActionLabel}>
+        <button type="button" className="launchpad-scene-object launchpad-tower" data-testid="launchpad-status-card" data-beacon="launchpad-view-contracts" data-action="primary-mission" onClick={openMissionMenu} aria-label={padActionLabel}>
           <span className="launchpad-tower-art" data-launch-state={player.pendingLaunch ? 'hot' : 'idle'}>
             <LaunchpadModules />
             {player.pendingLaunch && <img className="launchpad-tower-rocket" src={rocketImageSrc} alt="Rocket on launchpad" />}

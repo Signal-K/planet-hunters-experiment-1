@@ -231,7 +231,7 @@ export default function BuildPlaceScreen({ onPlaced, onBack, hasCoach, player }:
                   {on && sel && <span style={{ color: 'var(--ln-amber)' }}><StructureIcon kind={sel.id} size={44} /></span>}
                 </div>
                 <div
-                  data-coach-id={idx === 0 ? 'build-plot-0' : idx === firstOpenPlot ? 'build-plot-open' : undefined}
+                  data-beacon={idx === 0 ? 'build-plot-0' : idx === firstOpenPlot ? 'build-plot-open' : undefined}
                   style={{
                   width: '100%',
                   height: 30,
@@ -256,7 +256,7 @@ export default function BuildPlaceScreen({ onPlaced, onBack, hasCoach, player }:
       </div>
 
       {/* Structure picker — compact strip below plots, above sticky actions */}
-      <div data-ui-zone={UI_ZONES.screenContent} data-coach-id="build-structure-strip" style={{
+      <div data-ui-zone={UI_ZONES.screenContent} data-beacon="build-structure-strip" style={{
         position: 'absolute',
         left: 0, right: 0,
         bottom: 64,

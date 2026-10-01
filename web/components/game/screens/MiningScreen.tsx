@@ -688,6 +688,7 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
           oreNearRef={oreNearRef}
           neededMineralsRef={neededMineralsRef}
           chargingRef={chargingRef}
+          trainingMiningTry={hasCoach}
         />
         {sceneStatus !== 'ready' && (
           <div className="mining-scene-status" role="status" aria-live="polite" data-testid="mining-scene-status">
@@ -824,7 +825,7 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
             type="button"
             disabled={gateOpen || sceneStatus !== 'ready' || laserCharges <= 0}
             data-testid="fire-laser-btn"
-            data-coach-id="mining-fire-laser"
+            data-beacon="mining-fire-laser"
             data-charging={isCharging}
             onClick={fireLaser}
           >

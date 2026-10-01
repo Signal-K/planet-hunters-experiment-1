@@ -2504,20 +2504,20 @@ button { cursor: pointer; }
   0%,100% { box-shadow: 0 0 0 2px rgba(112,217,234,0.7), 0 0 10px rgba(112,217,234,0.2); }
   50%      { box-shadow: 0 0 0 4px rgba(112,217,234,1),   0 0 24px rgba(112,217,234,0.5); }
 }
-html[data-flight-target~="bottom-tab-missions"] [data-coach-id="bottom-tab-missions"],
-html[data-flight-target~="build-structure-strip"] [data-coach-id="build-structure-strip"],
-html[data-flight-target~="building-launchpad"] [data-coach-id="building-launchpad"],
-html[data-flight-target~="launchpad-view-contracts"] [data-coach-id="launchpad-view-contracts"],
-html[data-flight-target~="hub-build-storage-silo"] [data-coach-id="hub-build-storage-silo"],
-html[data-flight-target~="build-confirm"] [data-coach-id="build-confirm"],
-html[data-flight-target~="build-plot-0"] [data-coach-id="build-plot-0"],
-html[data-flight-target~="build-plot-open"] [data-coach-id="build-plot-open"],
-html[data-flight-target~="mining-fire-laser"] [data-coach-id="mining-fire-laser"] {
+html[data-flight-target~="bottom-tab-missions"] [data-beacon="bottom-tab-missions"],
+html[data-flight-target~="build-structure-strip"] [data-beacon="build-structure-strip"],
+html[data-flight-target~="building-launchpad"] [data-beacon="building-launchpad"],
+html[data-flight-target~="launchpad-view-contracts"] [data-beacon="launchpad-view-contracts"],
+html[data-flight-target~="hub-build-storage-silo"] [data-beacon="hub-build-storage-silo"],
+html[data-flight-target~="build-confirm"] [data-beacon="build-confirm"],
+html[data-flight-target~="build-plot-0"] [data-beacon="build-plot-0"],
+html[data-flight-target~="build-plot-open"] [data-beacon="build-plot-open"],
+html[data-flight-target~="mining-fire-laser"] [data-beacon="mining-fire-laser"] {
   animation: flight-beacon-pulse 1.4s ease-in-out infinite;
   border-radius: 8px;
 }
 @media (prefers-reduced-motion: reduce) {
-  html[data-flight-target] [data-coach-id] { animation: none !important; }
+  html[data-flight-target] [data-beacon] { animation: none !important; box-shadow: 0 0 0 2px var(--ln-cyan) !important; }
 }
 
 /* SSL-395 Flight Plan: in-flow strip between the screen and the nav. */
@@ -2543,9 +2543,18 @@ html[data-flight-target~="mining-fire-laser"] [data-coach-id="mining-fire-laser"
 .flight-plan-btn.is-primary { background: var(--ln-cyan, #70d9ea); color: #06121a; }
 .flight-plan-radio { padding: 0 4px 6px; display: flex; flex-direction: column; gap: 4px; }
 .flight-plan-radio p { margin: 0; font-size: 14px; line-height: 1.4; color: var(--ln-text-muted, #b4c4d8); max-width: 760px; }
+.flight-plan-radio .flight-plan-hint { color: var(--ln-cyan); }
 .flight-plan-skip { align-self: flex-start; margin-top: 4px; }
 .flight-plan-chip { position: absolute; right: 8px; bottom: 8px; background: var(--ln-panel-2, #101722); }
+.game-chrome-bottom__training-dot { display: inline-block; width: 6px; height: 6px; margin-left: 4px; border-radius: 999px; background: var(--ln-cyan); }
+.game-chrome-bottom__training-chip { margin-left: 4px; font-size: 10px; color: var(--ln-cyan); }
 @keyframes pad-pulse { 0%,100% { transform: scale(1); opacity: 0.85; } 50% { transform: scale(1.05); opacity: 1; } }
+
+/* SSL-407: scene-local cues, not positioned coach overlays. */
+.mining-training-seam { position: absolute; z-index: 11; pointer-events: none; left: 18%; right: 18%; top: 52%; height: 10px; border-radius: 999px; background: rgba(112,217,234,0.22); box-shadow: 0 0 12px 4px rgba(112,217,234,0.38); animation: flight-beacon-pulse 1.4s ease-in-out infinite; }
+.tess-training-dip-band { position: relative; }
+.tess-training-dip-band::after { content: ''; position: absolute; pointer-events: none; z-index: 2; left: 42%; width: 14%; top: 16%; bottom: 16%; background: rgba(112,217,234,0.12); border-inline: 1px solid var(--ln-cyan-border); }
+@media (prefers-reduced-motion: reduce) { .mining-training-seam { animation: none; } }
 
 /* ── Earth Base scene (Open Design "landnam-earth-base-v2") ──────────────
    Ported 2026-07-26. Rebuilt 2026-08-21 (KES-220) into a light daylight

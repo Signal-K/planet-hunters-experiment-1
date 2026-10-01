@@ -29,6 +29,7 @@ import { pbShared } from '@/lib/pb'
 import { pbLandnam } from '@/lib/pb-landnam'
 import { queueCreate, queueUpdate } from '@/lib/offline/pbOutbox'
 import { freeOperationsUnlocked } from '@/lib/systems/AgencyOnboardingSystem'
+import { completeFlightPlanEvent } from '@/lib/systems/FlightPlanSystem'
 import { FREE_OPS_MISSION_SEQUENCE } from '@/lib/data/mission-generator'
 
 // 42s/orbit-unit — a ~65% cut from the original 2min/unit pace (KES-262):
@@ -630,6 +631,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
         player: {
           ...s.player,
           researchAnnotations: existing ? s.player.researchAnnotations : s.player.researchAnnotations + 1,
+          flightPlan: completeFlightPlanEvent(s.player.flightPlan, 'tess-classified'),
           tessClassifications: {
             ...(s.player.tessClassifications ?? {}),
             [subjectId]: { subjectId, verdict, ranges: roundedRanges, submittedAt },
@@ -650,7 +652,12 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
         },
         popup: showArtifactNarrative ? 'artifact-signal' : s.popup,
       }
-      return existing ? next : applyGainResearchXP(next, RESEARCH_XP_PER_FIRST_TESS_CLASSIFICATION)
+      const settled = {
+        ...next,
+        player: { ...next.player, freeOperations: freeOperationsUnlocked(next.player) },
+        tutorial: !freeOperationsUnlocked(next.player),
+      }
+      return existing ? settled : applyGainResearchXP(settled, RESEARCH_XP_PER_FIRST_TESS_CLASSIFICATION)
     })
 
     const userId = pbShared.authStore.record?.id
@@ -877,7 +884,8 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
       // finishing the Transport lesson normally leaves the player in training
       // (Storage stage). Only a save that already qualifies — e.g. a legacy
       // three-mission run completing M3 — crosses into Free Ops here.
-      const nextFreeOperations = freeOperationsUnlocked({ missionsDone, placed: s.player.placed })
+      const flightPlan = completeFlightPlanEvent(s.player.flightPlan, 'mining-debriefed')
+      const nextFreeOperations = freeOperationsUnlocked({ ...s.player, missionsDone, flightPlan })
       const stillInTutorial = !nextFreeOperations
       // Crossing into Free Ops on a mission tick lands on hub rather than
       // auto-opening the market straight out of debrief.
@@ -914,6 +922,7 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
           loanOffered: loanOffered || showLoanOffer,
           treasury,
           missionsDone,
+          flightPlan,
           // Player progression is intentionally deferred by the client-led
           // operating model. Keep old saved points intact, but completing a
           // mission no longer mints a second progression currency.
@@ -947,10 +956,13 @@ export function useGameLoop({ stateRef, setState, catalog, addToast }: GameLoopO
         tutorial: stillInTutorial,
         popup,
         doneSteps: { ...s.doneSteps, 9: true },
+        visualFixture: flightPlan.completed.mining && !flightPlan.completed.scan ? 'tess' : s.visualFixture,
           screen: mission?.payload?.type === 'satellite'
             ? 'instrument-hub'
             : isProgramOperation
               ? 'launchpad'
+              : flightPlan.completed.mining && !flightPlan.completed.scan
+                ? 'galaxy'
               : (stillInTutorial || justFinishedOnboardingNow)
                 ? 'hub'
                 : 'market',

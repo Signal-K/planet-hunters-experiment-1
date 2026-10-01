@@ -7,7 +7,7 @@ import { TutorialCompleteSheet } from './TutorialCompleteSheet'
 
 ;(globalThis as unknown as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true
 
-const FREE_OPS_PLAYER = { placed: ['launchpad', 'surface-silo'], missionsDone: 2 }
+const FREE_OPS_PLAYER = { placed: ['launchpad'], missionsDone: 2, flightPlan: { completed: { mining: true as const, scan: true as const, part: true as const }, hidden: false } }
 
 describe('TutorialCompleteSheet — Free Ops handoff (SSL-332)', () => {
   let container: HTMLDivElement
@@ -30,11 +30,11 @@ describe('TutorialCompleteSheet — Free Ops handoff (SSL-332)', () => {
     act(() => root.render(
       <TutorialCompleteSheet track={agencyTrainingTrack(FREE_OPS_PLAYER)} activities={freeOpsActivities({})} onChoose={() => {}} onClose={() => {}} />,
     ))
-    for (const stage of ['launchpad', 'extraction', 'transport', 'storage']) expect(status(stage)).toBe('done')
+    for (const stage of ['mining', 'scan', 'part']) expect(status(stage)).toBe('done')
     expect(status('free-ops')).toBe('current')
   })
 
-  it('offers exactly client work, space telescope and build refinery, and reports the choice', () => {
+  it('offers Free Ops work and reports the choice', () => {
     const chosen: FreeOpsActivity[] = []
     act(() => root.render(
       <TutorialCompleteSheet track={agencyTrainingTrack(FREE_OPS_PLAYER)} activities={freeOpsActivities({})} onChoose={activity => chosen.push(activity)} onClose={() => {}} />,
@@ -44,6 +44,8 @@ describe('TutorialCompleteSheet — Free Ops handoff (SSL-332)', () => {
       'free-ops-activity-client-work',
       'free-ops-activity-space-telescope',
       'free-ops-activity-build-refinery',
+      'free-ops-activity-transport',
+      'free-ops-activity-storage-silo',
     ])
     act(() => { (buttons[1] as HTMLButtonElement).click() })
     expect(chosen.map(activity => activity.id)).toEqual(['space-telescope'])
@@ -53,7 +55,7 @@ describe('TutorialCompleteSheet — Free Ops handoff (SSL-332)', () => {
     act(() => root.render(
       <TutorialCompleteSheet track={agencyTrainingTrack(FREE_OPS_PLAYER)} activities={freeOpsActivities({})} mode="review" onChoose={() => {}} onClose={() => {}} />,
     ))
-    expect(document.querySelector('[data-testid="agency-track-transport"]')?.textContent).toContain('deliver to another')
+    expect(document.querySelector('[data-testid="agency-track-scan"]')?.textContent).toContain('Classify a real transit')
     expect(document.body.textContent).toContain('How your agency works')
   })
 })

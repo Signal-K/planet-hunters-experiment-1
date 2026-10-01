@@ -21,6 +21,7 @@ interface HangarScreenProps {
   landingResearched?: boolean
   pendingLaunch?: boolean
   pendingRocketName?: string
+  trainingPartTry?: boolean
   onConfirmShipCustomizerBuild?: (installed: InstalledCustomizerPartsByKind, prevInstalled: InstalledCustomizerPartsByKind) => boolean
   onBack: () => void
   onSelect?: (rocketId: string) => void
@@ -140,11 +141,11 @@ function Step({ label, status }: { label: string; status: string }) {
   return <div className={styles.constructionStep}><span>{label}</span><strong>{status}</strong></div>
 }
 
-export default function HangarScreen({ francs, missionsDone, unlockedSkillNodes, shipCustomizerParts, crewModuleResearched, landingResearched, pendingLaunch, pendingRocketName, onConfirmShipCustomizerBuild, onBack, onSelect }: HangarScreenProps) {
+export default function HangarScreen({ francs, missionsDone, unlockedSkillNodes, shipCustomizerParts, crewModuleResearched, landingResearched, pendingLaunch, pendingRocketName, trainingPartTry = false, onConfirmShipCustomizerBuild, onBack, onSelect }: HangarScreenProps) {
   // Academy research is a second, explicit unlock path: a player who has
   // researched Crew Quarters must be able to enter the fitter even if they
   // have not purchased the general-purpose customiser skill node.
-  const customizerUnlocked = hasShipCustomizer(unlockedSkillNodes) || !!crewModuleResearched || !!landingResearched
+  const customizerUnlocked = trainingPartTry || hasShipCustomizer(unlockedSkillNodes) || !!crewModuleResearched || !!landingResearched
   const [customizerOpen, setCustomizerOpen] = useState(false)
   const installed = shipCustomizerParts ?? {}
   const sequence = getBuildSequence(missionsDone, crewModuleResearched, landingResearched)

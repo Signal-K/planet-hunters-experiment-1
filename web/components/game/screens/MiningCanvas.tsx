@@ -104,9 +104,10 @@ interface MiningCanvasProps {
   neededMineralsRef?: React.MutableRefObject<Set<string> | null>
   /** Pushed true immediately after a shot fires, false once the cooldown clears. Mirrors the oreNearRef push pattern so the screen can show ready/charging state without owning the timer. */
   chargingRef?: React.MutableRefObject<((charging: boolean) => void) | null>
+  trainingMiningTry?: boolean
 }
 
-export default function MiningCanvas({ rocketImageSrc, minerals, requiredMinerals, mineralMeta, laserTier, onCollect, onReady, onFailure, fireRef, onFireRequest, scrollRef, oreNearRef, neededMineralsRef, chargingRef }: MiningCanvasProps) {
+export default function MiningCanvas({ rocketImageSrc, minerals, requiredMinerals, mineralMeta, laserTier, onCollect, onReady, onFailure, fireRef, onFireRequest, scrollRef, oreNearRef, neededMineralsRef, chargingRef, trainingMiningTry = false }: MiningCanvasProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const onCollectRef = useRef(onCollect)
   onCollectRef.current = onCollect
@@ -372,7 +373,8 @@ export default function MiningCanvas({ rocketImageSrc, minerals, requiredMineral
   }, [rocketImageSrc])
 
   return (
-    <div ref={containerRef} className="mining-canvas" data-testid="mining-canvas">
+    <div ref={containerRef} className="mining-canvas" data-testid="mining-canvas" data-training-mining={trainingMiningTry || undefined}>
+      {trainingMiningTry && <div className="mining-training-seam" aria-hidden="true" />}
       <div style={{
         position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 10,
         // Keep miss feedback at the firing lane. A full-canvas red wash reads

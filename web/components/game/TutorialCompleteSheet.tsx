@@ -7,6 +7,9 @@ import styles from './TutorialCompleteSheet.module.css'
 // What each training stage taught, shown when the player reviews training
 // from the menu. Free Ops is the destination, not a lesson.
 const STAGE_SUMMARIES: Record<Exclude<AgencyTrainingStage, 'free-ops'>, string> = {
+  mining: 'Complete a mine-and-return client order.',
+  scan: 'Classify a real transit light curve.',
+  part: 'Swap one ship module in the customiser.',
   launchpad: 'Every mission launches from your pad.',
   extraction: 'Mine ore for a client and bring it home.',
   transport: 'Mine at one site, deliver to another.',

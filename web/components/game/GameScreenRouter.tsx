@@ -399,6 +399,7 @@ export function ScreenContent({
           landingResearched={game.player.landingResearched}
           pendingLaunch={game.player.pendingLaunch}
           pendingRocketName={rocketDisplay.name}
+          trainingPartTry={game.player.flightPlan?.replayTry === 'part' || (!game.player.flightPlan?.completed?.part && !!game.player.flightPlan?.completed?.scan)}
           onConfirmShipCustomizerBuild={game.confirmShipCustomizerBuild}
           onBack={onBackFromHangar ?? game.returnFromHangar}
         />
