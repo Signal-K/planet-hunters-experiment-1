@@ -373,7 +373,9 @@ export default function CommunityHubSheet({ onClose }: CommunityHubSheetProps) {
       className="theme-deep"
       zIndex={210}
       contentTestId="community-hub-page"
-      contentStyle={{ background: 'transparent', padding: 0, overflow: 'hidden' }}
+      // SSL-419: ScenePanel is absolutely positioned, so the tray card needs a
+      // definite height or it collapses to 0 and the sheet renders off-screen.
+      contentStyle={{ background: 'transparent', padding: 0, overflow: 'hidden', height: '100%' }}
     >
       <ScenePanel ambient="survey" scene={<HubWorldBackground phase={skyPhase} />}>
         <div className={styles.shell}>
