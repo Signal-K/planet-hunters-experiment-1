@@ -718,7 +718,7 @@
   .contractGallery::before { inset: 12px; }
   .contractIdentity { left: 6%; top: 6%; gap: 8px; }
   .contractIdentity > div:first-child { transform: scale(.68); transform-origin: left top; margin-right: -32px; }
-  .contractCopy { left: 6%; top: 34%; width: 48%; }
+  .contractCopy { left: 6%; top: 38%; width: 48%; }
   .contractCopy h2 { font-size: clamp(22px, 4.5vw, 34px); }
   .contractRoute { margin-top: 7px; font-size: 8px; }
   .contractDescription { display: none; }
@@ -780,6 +780,13 @@
    Prospector artwork between the cargo block, facts and accept button. */
 @media (orientation: landscape) and (max-width: 720px) {
   .contractRocket { display: none; }
+  .contractCopy, .contractFacts { left: 9%; }
+  /* The facts row ran under the accept button here and hid MISSION TIER. */
+  .contractFacts { gap: 8px; }
+  .contractFacts > div { min-width: 0; }
+  .contractFacts span { font-size: 7px; letter-spacing: .12em; }
+  .contractFacts strong { font-size: 12px; }
+  .contractSlide > .primary { min-width: 0; width: 28%; font-size: 10px; letter-spacing: .06em; }
 }
 
 @media (prefers-reduced-motion: reduce) {
