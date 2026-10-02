@@ -352,9 +352,10 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
     }
   }, [hasCoach, addToast, mission.requires.minerals, minerals])
 
-  function fireLaser() {
+  function fireLaser(quiet = false) {
     if (gateOpen || sceneStatus !== 'ready' || laserCharges <= 0) return
     if (isCharging) {
+      if (quiet) return
       // Tap landed mid-cooldown: acknowledge it instead of silently dropping
       // it, so a phone tester never wonders whether the tap registered.
       if (tapDeniedTimerRef.current) clearTimeout(tapDeniedTimerRef.current)
@@ -369,6 +370,19 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
       onCoachDone?.()
     }
   }
+
+  // SSL-413: players mashed FIRE LASER every ~0.6s in 15s bursts (rageclicks).
+  // Holding the button now re-fires the moment the laser has recharged.
+  const fireLaserRef = useRef(fireLaser)
+  fireLaserRef.current = fireLaser
+  const fireHoldRef = useRef(0)
+  const endFireHold = useCallback(() => window.clearInterval(fireHoldRef.current), [])
+  const beginFireHold = useCallback(() => {
+    window.clearInterval(fireHoldRef.current)
+    fireLaserRef.current()
+    fireHoldRef.current = window.setInterval(() => fireLaserRef.current(true), 120)
+  }, [])
+  useEffect(() => endFireHold, [endFireHold])
 
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
@@ -684,7 +698,7 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
           onReady={() => setSceneStatus('ready')}
           onFailure={() => setSceneStatus('failed')}
           fireRef={fireRef}
-          onFireRequest={fireLaser}
+          onFireRequest={() => fireLaser()}
           scrollRef={scrollRef}
           oreNearRef={oreNearRef}
           neededMineralsRef={neededMineralsRef}
@@ -828,7 +842,11 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
             data-testid="fire-laser-btn"
             data-beacon="mining-fire-laser"
             data-charging={isCharging}
-            onClick={fireLaser}
+            onPointerDown={e => { if (e.button === 0) beginFireHold() }}
+            onPointerUp={endFireHold}
+            onPointerLeave={endFireHold}
+            onPointerCancel={endFireHold}
+            onClick={e => { if (e.detail === 0) fireLaser() }}
           >
             {laserCharges <= 0 ? 'DEPLETED' : isCharging ? 'CHARGING' : 'FIRE LASER'}
           </button>

@@ -93,6 +93,10 @@ const EMPTY: Snapshot = { order: null, routeSteps: 0, view: null, rover: null }
 /** How long a refused press stays on the readout before the pose returns. */
 const BLOCKED_MS = 1600
 
+/** Hold a direction this long before it starts repeating, then repeat at this rate. */
+const HOLD_DELAY_MS = 350
+const HOLD_REPEAT_MS = 250
+
 /**
  * A press the engine refused as `busy` is replayed the moment the rover is
  * free. Nothing replays while the pose is unknown or a step is still
@@ -183,7 +187,26 @@ export default function RoverDrivePad({ handle, compact = false, trailing }: Rov
     setSnapshot(read(handle))
   }, [handle])
 
+  // SSL-420: players walked the rover by mashing one arrow 10-30 times (read
+  // as rageclicks). Holding an arrow now keeps driving that way. Keyboard
+  // activation (click with detail 0) still moves exactly one tile.
+  const holdTimer = useRef(0)
+  const holdRepeat = useRef(0)
+  const endHold = useCallback(() => {
+    window.clearTimeout(holdTimer.current)
+    window.clearInterval(holdRepeat.current)
+  }, [])
+  const beginHold = useCallback((dir: DriveDir) => {
+    endHold()
+    move(dir)
+    holdTimer.current = window.setTimeout(() => {
+      holdRepeat.current = window.setInterval(() => move(dir), HOLD_REPEAT_MS)
+    }, HOLD_DELAY_MS)
+  }, [endHold, move])
+  useEffect(() => endHold, [endHold])
+
   const stop = useCallback(() => {
+    endHold()
     pendingDir.current = null
     handle.current?.cancelOrder()
     setSnapshot(read(handle))
@@ -211,7 +234,11 @@ export default function RoverDrivePad({ handle, compact = false, trailing }: Rov
               type="button"
               className={styles.dir}
               data-slot={button.slot}
-              onClick={() => move(button.dir)}
+              onPointerDown={event => { if (event.button === 0) beginHold(button.dir) }}
+              onPointerUp={endHold}
+              onPointerLeave={endHold}
+              onPointerCancel={endHold}
+              onClick={event => { if (event.detail === 0) move(button.dir) }}
               aria-label={`Drive ${button.label.toLowerCase()}`}
               data-testid={`rover-drive-${button.slot}`}
             >
