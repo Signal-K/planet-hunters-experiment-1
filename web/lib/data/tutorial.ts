@@ -24,7 +24,7 @@ export interface TrainingTryStep {
 /** The durable three-try plan. Steps are screen-local instructions; only the
  * named real game event completes a try. */
 export const TRAINING_TRIES: readonly TrainingTryStep[] = [
-  { id: 'mine-launchpad', try: 'mining', screen: 'launchpad', objective: 'Open client contracts', radio: 'The first try is a complete mine-and-return run.', beacon: 'launchpad-view-contracts', doneOn: 'mining-debriefed' },
+  { id: 'mine-launchpad', try: 'mining', screen: 'launchpad', objective: 'Open client contracts', radio: 'The first try is a complete mine-and-return run.', beacon: 'launchpad-view-contracts|building-launchpad', doneOn: 'mining-debriefed' },
   { id: 'mine-contract', try: 'mining', screen: 'missions', objective: 'Accept a mining contract', radio: 'A client order funds this first field run.', doneOn: 'mining-debriefed' },
   { id: 'mine-target', try: 'mining', screen: 'targets', objective: 'Choose the highlighted target', radio: 'The target carries the mineral named by the order.', doneOn: 'mining-debriefed' },
   { id: 'mine-fire', try: 'mining', screen: 'mining', objective: 'Fire the laser on a seam', radio: 'Wait for a coloured seam to pass beneath the fixed laser line.', hint: 'The seam will cross the laser line; fire when it does.', beacon: 'mining-fire-laser', doneOn: 'mining-debriefed' },

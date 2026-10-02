@@ -2549,6 +2549,12 @@ html[data-flight-target~="mining-fire-laser"] [data-beacon="mining-fire-laser"] 
 .flight-plan-chip { position: absolute; right: 8px; bottom: 8px; background: var(--ln-panel-2, #101722); }
 .game-chrome-bottom__training-dot { display: inline-block; width: 6px; height: 6px; margin-left: 4px; border-radius: 999px; background: var(--ln-cyan); }
 .game-chrome-bottom__training-chip { margin-left: 4px; font-size: 10px; color: var(--ln-cyan); }
+/* Phone widths: MENU + dot + "0/3" is wider than its slot and spilled past the
+   bar edge. The chip already carries the state, so drop the dot there. */
+@media (max-width: 600px), (max-height: 500px) {
+  .game-chrome-bottom__training-dot { display: none; }
+  .game-chrome-bottom__training-chip { margin-left: 3px; font-size: 9px; letter-spacing: 0; }
+}
 @keyframes pad-pulse { 0%,100% { transform: scale(1); opacity: 0.85; } 50% { transform: scale(1.05); opacity: 1; } }
 
 /* SSL-407: scene-local cues, not positioned coach overlays. */

@@ -835,11 +835,6 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
             style={{
               minWidth: 0,
               borderRadius: 10,
-              boxShadow: hasCoach && oreNear
-                ? '0 0 0 2px rgba(112,217,234,0.7), 0 0 18px rgba(112,217,234,0.35)'
-                : 'none',
-              animation: hasCoach && oreNear ? 'ln-pulse 0.75s ease-in-out infinite' : 'none',
-              transition: 'box-shadow 150ms',
             }}>
           <button
             className={[

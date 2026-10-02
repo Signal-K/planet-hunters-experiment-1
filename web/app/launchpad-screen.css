@@ -166,6 +166,13 @@ button.launchpad-scene-object { cursor: pointer; }
 }
 .launchpad-tower:focus-visible { outline: none; }
 .launchpad-tower:focus-visible .launchpad-primary-pad-control { outline: 2px solid var(--ln-text); outline-offset: 3px; }
+/* Phone portrait: the tower is only ~117px wide, so a 232px control centred on
+   it hung 10px off the left edge. Anchor it to the tower's left edge instead. */
+@media (max-width: 600px) and (orientation: portrait) {
+  .launchpad-tower .launchpad-primary-pad-control { left: 0; transform: none; min-width: 0; width: max-content; max-width: 200px; }
+  .launchpad-tower:hover .launchpad-primary-pad-control,
+  .launchpad-tower:focus-visible .launchpad-primary-pad-control { transform: translateY(-2px); }
+}
 .launchpad-tower-rocket { position: absolute; z-index: 4; left: 50%; bottom: 16%; width: 42%; transform: translateX(-50%) rotate(-90deg); filter: drop-shadow(0 8px 14px rgba(0,0,0,.55)); }
 .launchpad-rocket { right: 3%; bottom: var(--hub-ground); width: 37%; height: auto; justify-content: flex-end; }
 .launchpad-rocket-art {
