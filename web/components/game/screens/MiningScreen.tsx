@@ -396,7 +396,17 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
   }, [laserCharges, sceneStatus, isCharging])
 
   function handleReturn() {
-    if (orderFilled || laserCharges <= 0) onComplete(cargoRef.current, remoteDisposition, earthDisposition ?? undefined)
+    if (orderFilled || laserCharges <= 0) {
+      onComplete(cargoRef.current, remoteDisposition, earthDisposition ?? undefined)
+      return
+    }
+    // SSL-411: a disabled RETURN swallowed taps (read as rageclicks on the
+    // bare controls panel). Stay tappable and say what is still missing.
+    const missing = Object.entries(mission.requires.minerals)
+      .map(([id, amount]) => ({ id, left: amount - (cargoRef.current[id] ?? 0) }))
+      .filter(m => m.left > 0)
+      .map(m => `${m.left} more ${minerals[m.id]?.name ?? m.id}`)
+    addToast?.(`Order not filled yet: mine ${missing.join(' and ')}`, 'warn')
   }
 
   // Local-dev-only shortcut: fills the order instantly so testing later
@@ -855,7 +865,7 @@ export default function MiningScreen({ mission, target, rocketImageSrc, onComple
           <button
             className="mining-command mining-command--return"
             type="button"
-            disabled={!orderFilled && laserCharges > 0}
+            aria-disabled={(!orderFilled && laserCharges > 0) || undefined}
             data-testid="return-home-btn"
             onClick={handleReturn}
           >

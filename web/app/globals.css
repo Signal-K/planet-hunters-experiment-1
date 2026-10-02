@@ -2080,7 +2080,8 @@ button { cursor: pointer; }
 .theme-deep.mining-screen .mining-command:active:not(:disabled) {
   background: rgba(63, 169, 255, 0.24) !important;
 }
-.theme-deep.mining-screen .mining-command:disabled {
+.theme-deep.mining-screen .mining-command:disabled,
+.theme-deep.mining-screen .mining-command[aria-disabled="true"] {
   border-color: var(--ln-hairline);
   background: rgba(18, 34, 54, 0.42) !important;
   color: var(--ln-text-muted) !important;
