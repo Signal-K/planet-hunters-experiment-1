@@ -231,7 +231,8 @@
 
 .primary:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 6px 0 color-mix(in srgb, var(--mission-ink) 72%, transparent); }
 .primary:active:not(:disabled) { transform: translateY(3px); box-shadow: 0 2px 0 color-mix(in srgb, var(--mission-ink) 72%, transparent); }
-.primary:disabled { opacity: .48; cursor: not-allowed; }
+.primary:disabled,
+.primary[aria-disabled="true"] { opacity: .48; cursor: not-allowed; }
 
 /* Step 1: one portfolio work fills the stage. */
 .contractGallery {

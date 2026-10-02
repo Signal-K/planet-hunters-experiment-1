@@ -292,7 +292,11 @@ function GameChrome({ children }: { children: ReactNode }) {
             hasActiveRun={!!game.player.activeMission}
             onHome={() => game.go('hub')}
             onOperations={resumeOperations}
-            onMarket={() => game.player.freeOperations && game.go('market')}
+            onMarket={() => {
+              // SSL-416: Market is locked until training ends; say so instead of ignoring the tap.
+              if (game.player.freeOperations) game.go('market')
+              else game.addToast('Market opens after you finish training', 'warn')
+            }}
             onMenu={() => setSettingsOpen(true)}
             menuExpanded={settingsOpen}
             trainingProgress={game.player.freeOperations ? undefined : (game.player.flightPlan ? Object.keys(game.player.flightPlan.completed).length : 0)}

@@ -95,7 +95,7 @@ export default function AuthGateSheet({ error, onSignIn, onCreateAccount }: Auth
 
         <div className="auth-gate__content">
           <div className="auth-gate__eyebrow">{PRODUCT_WORDMARK} · {PRODUCT_DESCRIPTOR}</div>
-          <div className="auth-gate__heading">{mode === 'signin' ? 'Welcome Back' : 'Create Account'}</div>
+          <div className="auth-gate__heading">{mode === 'signin' ? 'Welcome Back' : 'New Space Program'}</div>
           {/* SSL-302: the subtitle used to stay on the "resume" line for both
               tabs — a brand-new player on Sign Up has nothing to resume. */}
           <p className="auth-gate__intro" data-testid="auth-gate-intro">
